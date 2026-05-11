@@ -89,6 +89,7 @@ fn helper_call_arguments<'a>(source: &'a str, helper: &str) -> Vec<&'a str> {
     }
 
     let bytes = source.as_bytes();
+    let comment_masked = js_scan::mask_comments(source);
     let mut arguments = Vec::new();
     let mut offset = 0;
 
@@ -108,7 +109,7 @@ fn helper_call_arguments<'a>(source: &'a str, helper: &str) -> Vec<&'a str> {
             continue;
         }
 
-        if let Some(close) = find_matching_paren(source, open) {
+        if let Some(close) = find_matching_paren(&comment_masked, open) {
             arguments.push(&source[open + 1..close]);
             offset = close + 1;
         } else {

@@ -6,6 +6,7 @@ test('covers scanner edge cases', async ({ page }) => {
   // await page.goto('/line-comment');
   /* await page.click('a[href="/block-comment"]'); */
   await page.goto('/docs/guides/install');
+  await page.goto(/* ) */ '/docs/comment-paren');
   await page.goto('/shop');
   await page.goto('http://localhost:3000/shop/shoes/red');
   await page.goto('//example.com/external');
@@ -18,3 +19,5 @@ test('covers scanner edge cases', async ({ page }) => {
   // await page.getByTestId('commented-line').click();
   /* await page.locator('[data-testid="commented-block"]').click(); */
 });
+
+/* unfinished static-analysis comment
