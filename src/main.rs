@@ -185,13 +185,16 @@ fn analyze(root: &Path, settings: &Settings) -> Result<Analysis> {
     let app_selectors = if settings.selector_attributes.is_empty() {
         Vec::new()
     } else {
-        selectors::collect_app_selectors(&route_root, &settings.selector_attributes)?
+        collect_app_selectors(root, settings)?
     };
 
     let mut edges = BTreeSet::new();
     for test_file in test_files {
         let source = std::fs::read_to_string(&test_file)?;
-        for raw_url in playwright_urls::extract_playwright_url_literals(&source) {
+        for raw_url in playwright_urls::extract_playwright_url_literals_with_helpers(
+            &source,
+            &settings.navigation_helpers,
+        ) {
             let Some(url) = normalize_url(&raw_url, &base_urls) else {
                 continue;
             };
@@ -235,6 +238,39 @@ fn analyze(root: &Path, settings: &Settings) -> Result<Analysis> {
         coverage,
         edges: edge_report,
     })
+}
+
+fn collect_app_selectors(root: &Path, settings: &Settings) -> Result<Vec<selectors::AppSelector>> {
+    let include = build_globset(&settings.selector_include)?;
+    let exclude = build_globset(&settings.selector_exclude)?;
+    let include_all = settings.selector_include.is_empty();
+    let mut app_selectors = BTreeSet::new();
+
+    for selector_root in &settings.selector_roots {
+        let source_root = root.join(selector_root);
+        if !source_root.exists() {
+            continue;
+        }
+
+        for path in walk_files(&source_root) {
+            if !selectors::is_source_file(&path) {
+                continue;
+            }
+            let rel = relative_string(root, &path);
+            if (!include_all && !include.is_match(&rel)) || exclude.is_match(&rel) {
+                continue;
+            }
+
+            let source = std::fs::read_to_string(&path)?;
+            app_selectors.extend(selectors::extract_app_selectors(
+                &path,
+                &source,
+                &settings.selector_attributes,
+            ));
+        }
+    }
+
+    Ok(app_selectors.into_iter().collect())
 }
 
 fn discover_test_files(
@@ -612,7 +648,11 @@ mod tests {
             test_include: vec![],
             test_exclude: vec![],
             ignore_routes: vec![],
+            navigation_helpers: vec![],
             selector_attributes: vec!["data-testid".to_string(), "data-pw".to_string()],
+            selector_roots: vec!["web/app".to_string()],
+            selector_include: vec![],
+            selector_exclude: vec![],
         };
         let report = build_coverage(root, &routes, &[], &[], &settings);
         assert_eq!(report.routes[0].file, "web/app/a/page.tsx");
@@ -633,7 +673,11 @@ mod tests {
             test_include: vec![],
             test_exclude: vec![],
             ignore_routes: vec![],
+            navigation_helpers: vec![],
             selector_attributes: vec!["data-testid".to_string()],
+            selector_roots: vec!["web/app".to_string()],
+            selector_include: vec![],
+            selector_exclude: vec![],
         };
         let report = build_coverage(root, &[], &app_selectors, &[], &settings);
         assert_eq!(report.summary.total_selectors, 1);
@@ -667,7 +711,11 @@ mod tests {
             test_include: vec![],
             test_exclude: vec![],
             ignore_routes: vec![],
+            navigation_helpers: vec![],
             selector_attributes: vec!["data-testid".to_string()],
+            selector_roots: vec!["web/app".to_string()],
+            selector_include: vec![],
+            selector_exclude: vec![],
         };
         let report = build_coverage(root, &[], &app_selectors, &[], &settings);
         assert_eq!(report.selectors[0].file, "web/app/a.tsx");
@@ -696,7 +744,11 @@ mod tests {
             test_include: vec![],
             test_exclude: vec![],
             ignore_routes: vec![],
+            navigation_helpers: vec![],
             selector_attributes: vec!["data-testid".to_string()],
+            selector_roots: vec!["web/app".to_string()],
+            selector_include: vec![],
+            selector_exclude: vec![],
         };
         let report = build_coverage(root, &[], &app_selectors, &edges, &settings);
         assert_eq!(report.summary.covered_selectors, 1);
@@ -722,7 +774,11 @@ mod tests {
             test_include: vec![],
             test_exclude: vec![],
             ignore_routes: vec![],
+            navigation_helpers: vec![],
             selector_attributes: vec!["data-testid".to_string()],
+            selector_roots: vec!["web/app".to_string()],
+            selector_include: vec![],
+            selector_exclude: vec![],
         };
         let report = build_coverage(root, &routes, &[], &edges, &settings);
         assert_eq!(report.summary.covered_routes, 1);
@@ -750,7 +806,11 @@ mod tests {
             test_include: vec!["tests/**/*.spec.ts".to_string()],
             test_exclude: vec![],
             ignore_routes: vec![],
+            navigation_helpers: vec![],
             selector_attributes: vec![],
+            selector_roots: vec!["web/app".to_string()],
+            selector_include: vec![],
+            selector_exclude: vec![],
         };
 
         let analysis = analyze(dir.path(), &settings).unwrap();

@@ -73,15 +73,31 @@ playwrightConfig: playwright.config.ts
 testInclude: []
 testExclude: []
 ignoreRoutes: []
+navigationHelpers:
+  - navigateTo
 selectorAttributes:
   - data-testid
   - data-pw
+selectorRoots:
+  - web/app
+  - web/components
+selectorInclude: []
+selectorExclude:
+  - '**/*.test.tsx'
+  - '**/*.stories.tsx'
+  - '**/__tests__/**'
 ```
 
 `testInclude` overrides test discovery from `playwright.config.*` when non-empty.
 `testExclude` is applied in addition to Playwright `testIgnore`.
 `ignoreRoutes` removes matching route patterns from uncovered-route failures.
+`navigationHelpers` adds project-defined route helpers such as
+`navigateTo(page, '/settings')`; the first URL-like string literal in each call
+is counted like a Playwright navigation.
 `selectorAttributes: []` disables selector coverage.
+`selectorRoots` defaults to `[frontendRoot]` and can include component
+directories outside the App Router route tree. `selectorInclude` and
+`selectorExclude` filter app selector sources by root-relative glob.
 
 Selector coverage supports static JSX values, configured custom attributes such
 as `data-test`, and template-literal patterns such as

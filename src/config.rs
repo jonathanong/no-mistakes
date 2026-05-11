@@ -22,7 +22,11 @@ struct FileConfig {
     test_include: Vec<String>,
     test_exclude: Vec<String>,
     ignore_routes: Vec<String>,
+    navigation_helpers: Vec<String>,
     selector_attributes: Option<Vec<String>>,
+    selector_roots: Option<Vec<String>>,
+    selector_include: Vec<String>,
+    selector_exclude: Vec<String>,
 }
 
 #[derive(Clone)]
@@ -32,7 +36,11 @@ pub struct Settings {
     pub test_include: Vec<String>,
     pub test_exclude: Vec<String>,
     pub ignore_routes: Vec<String>,
+    pub navigation_helpers: Vec<String>,
     pub selector_attributes: Vec<String>,
+    pub selector_roots: Vec<String>,
+    pub selector_include: Vec<String>,
+    pub selector_exclude: Vec<String>,
 }
 
 pub fn load_settings(
@@ -51,17 +59,26 @@ pub fn load_settings(
         })
         .or_else(|| find_default_playwright_config(root));
 
+    let frontend_root = file_config
+        .frontend_root
+        .unwrap_or_else(|| DEFAULT_FRONTEND_ROOT.to_string());
+    let selector_roots = file_config
+        .selector_roots
+        .unwrap_or_else(|| vec![frontend_root.clone()]);
+
     Ok(Settings {
-        frontend_root: file_config
-            .frontend_root
-            .unwrap_or_else(|| DEFAULT_FRONTEND_ROOT.to_string()),
+        frontend_root,
         playwright_config,
         test_include: file_config.test_include,
         test_exclude: file_config.test_exclude,
         ignore_routes: file_config.ignore_routes,
+        navigation_helpers: file_config.navigation_helpers,
         selector_attributes: file_config
             .selector_attributes
             .unwrap_or_else(default_selector_attributes),
+        selector_roots,
+        selector_include: file_config.selector_include,
+        selector_exclude: file_config.selector_exclude,
     })
 }
 
@@ -116,6 +133,7 @@ mod tests {
         assert_eq!(settings.frontend_root, "app");
         assert!(settings.playwright_config.is_none());
         assert_eq!(settings.selector_attributes, vec!["data-testid", "data-pw"]);
+        assert_eq!(settings.selector_roots, vec!["app"]);
     }
 
     #[test]
@@ -132,7 +150,7 @@ mod tests {
         let dir = TempDir::new().unwrap();
         fs::write(
             dir.path().join(".playwright-ast-coverage.yaml"),
-            "frontendRoot: web/app\ntestExclude: ['**/skip/**']\n",
+            "frontendRoot: web/app\ntestExclude: ['**/skip/**']\nnavigationHelpers: ['navigateTo']\nselectorRoots: ['web/components']\nselectorInclude: ['web/components/**/*.tsx']\nselectorExclude: ['**/*.test.tsx']\n",
         )
         .unwrap();
         fs::write(
@@ -144,6 +162,10 @@ mod tests {
         let settings = load_settings(dir.path(), None, None).unwrap();
         assert_eq!(settings.frontend_root, "web/app");
         assert_eq!(settings.test_exclude, vec!["**/skip/**"]);
+        assert_eq!(settings.navigation_helpers, vec!["navigateTo"]);
+        assert_eq!(settings.selector_roots, vec!["web/components"]);
+        assert_eq!(settings.selector_include, vec!["web/components/**/*.tsx"]);
+        assert_eq!(settings.selector_exclude, vec!["**/*.test.tsx"]);
         assert_eq!(
             settings.playwright_config,
             Some(dir.path().join("playwright.config.mts"))

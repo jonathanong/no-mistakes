@@ -1,7 +1,9 @@
+#[cfg(test)]
 use anyhow::Result;
 use regex::Regex;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+#[cfg(test)]
 use walkdir::WalkDir;
 
 const SOURCE_EXTS: &[&str] = &["ts", "tsx", "js", "jsx"];
@@ -180,6 +182,7 @@ impl SelectorMatcher {
     }
 }
 
+#[cfg(test)]
 pub fn collect_app_selectors(
     frontend_root: &Path,
     attributes: &[String],
@@ -339,12 +342,13 @@ fn template_parts(source: &str) -> Vec<String> {
     parts
 }
 
-fn is_source_file(path: &Path) -> bool {
+pub fn is_source_file(path: &Path) -> bool {
     path.extension()
         .and_then(|extension| extension.to_str())
         .is_some_and(|extension| SOURCE_EXTS.contains(&extension))
 }
 
+#[cfg(test)]
 fn is_skipped_dir(path: &Path) -> bool {
     path.file_name()
         .and_then(|name| name.to_str())

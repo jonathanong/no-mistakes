@@ -8,13 +8,16 @@ use std::collections::BTreeSet;
 /// - `page.click('a[href="<url>"]')`
 #[cfg(test)]
 pub fn extract_playwright_urls(source: &str) -> Vec<String> {
-    extract_playwright_url_literals(source)
+    extract_playwright_url_literals_with_helpers(source, &[])
         .into_iter()
         .filter(|url| url.starts_with('/'))
         .collect()
 }
 
-pub fn extract_playwright_url_literals(source: &str) -> Vec<String> {
+pub fn extract_playwright_url_literals_with_helpers(
+    source: &str,
+    navigation_helpers: &[String],
+) -> Vec<String> {
     let mut urls = BTreeSet::new();
 
     let goto =
@@ -32,6 +35,26 @@ pub fn extract_playwright_url_literals(source: &str) -> Vec<String> {
         let selector = captured_string(&cap);
         if let Some(url) = extract_href_from_selector(selector) {
             urls.insert(url);
+        }
+    }
+
+    for arguments in helper_call_arguments(source, ".toHaveURL") {
+        for url in string_literals(arguments) {
+            if is_candidate_url(&url) {
+                urls.insert(url);
+                break;
+            }
+        }
+    }
+
+    for helper in navigation_helpers {
+        for arguments in helper_call_arguments(source, helper) {
+            for url in string_literals(arguments) {
+                if is_candidate_url(&url) {
+                    urls.insert(url);
+                    break;
+                }
+            }
         }
     }
 
@@ -66,6 +89,120 @@ fn extract_href_from_selector(selector: &str) -> Option<String> {
     } else {
         None
     }
+}
+
+fn helper_call_arguments<'a>(source: &'a str, helper: &str) -> Vec<&'a str> {
+    if helper.trim().is_empty() {
+        return Vec::new();
+    }
+
+    let bytes = source.as_bytes();
+    let mut arguments = Vec::new();
+    let mut offset = 0;
+
+    while let Some(relative) = source[offset..].find(helper) {
+        let start = offset + relative;
+        let after_helper = start + helper.len();
+        if !has_callee_boundary(bytes, start, after_helper) {
+            offset = after_helper;
+            continue;
+        }
+
+        let mut open = after_helper;
+        while open < bytes.len() && bytes[open].is_ascii_whitespace() {
+            open += 1;
+        }
+        if bytes.get(open) != Some(&b'(') {
+            offset = after_helper;
+            continue;
+        }
+
+        if let Some(close) = find_matching_paren(source, open) {
+            arguments.push(&source[open + 1..close]);
+            offset = close + 1;
+        } else {
+            offset = open + 1;
+        }
+    }
+
+    arguments
+}
+
+fn has_callee_boundary(bytes: &[u8], start: usize, end: usize) -> bool {
+    let before_ok = start == 0 || !is_ident(bytes[start - 1]);
+    let after_ok = end >= bytes.len() || !is_ident(bytes[end]);
+    before_ok && after_ok
+}
+
+fn find_matching_paren(source: &str, open: usize) -> Option<usize> {
+    let bytes = source.as_bytes();
+    let mut depth = 0usize;
+    let mut quote: Option<u8> = None;
+    let mut escaped = false;
+
+    for (i, byte) in bytes.iter().copied().enumerate().skip(open) {
+        if let Some(q) = quote {
+            if escaped {
+                escaped = false;
+            } else if byte == b'\\' {
+                escaped = true;
+            } else if byte == q {
+                quote = None;
+            }
+            continue;
+        }
+
+        match byte {
+            b'\'' | b'"' | b'`' => quote = Some(byte),
+            b'(' => depth += 1,
+            b')' => {
+                depth = depth.saturating_sub(1);
+                if depth == 0 {
+                    return Some(i);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    None
+}
+
+fn string_literals(source: &str) -> Vec<String> {
+    let bytes = source.as_bytes();
+    let mut strings = Vec::new();
+    let mut i = 0;
+    while i < bytes.len() {
+        if matches!(bytes[i], b'\'' | b'"' | b'`') {
+            if let Some(end) = find_string_end(source, i) {
+                strings.push(source[i + 1..end].to_string());
+                i = end + 1;
+                continue;
+            }
+        }
+        i += 1;
+    }
+    strings
+}
+
+fn find_string_end(source: &str, start: usize) -> Option<usize> {
+    let bytes = source.as_bytes();
+    let quote = *bytes.get(start)?;
+    let mut escaped = false;
+    for (i, byte) in bytes.iter().enumerate().skip(start + 1) {
+        if escaped {
+            escaped = false;
+        } else if *byte == b'\\' {
+            escaped = true;
+        } else if *byte == quote {
+            return Some(i);
+        }
+    }
+    None
+}
+
+fn is_ident(byte: u8) -> bool {
+    byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$')
 }
 
 #[cfg(test)]
@@ -136,7 +273,7 @@ await page.click('button.submit');
         let src = r#"
 await page.click('a[href="mailto:test@example.com"]');
 "#;
-        let urls = extract_playwright_url_literals(src);
+        let urls = extract_playwright_urls(src);
         assert!(urls.is_empty());
     }
 
@@ -144,5 +281,43 @@ await page.click('a[href="mailto:test@example.com"]');
     fn empty_file_returns_empty() {
         let urls = extract_playwright_urls("");
         assert!(urls.is_empty());
+    }
+
+    #[test]
+    fn extracts_configured_navigation_helper_urls() {
+        let src = r#"
+await navigateTo(page, '/settings');
+await testHelpers.openPath(page, "/profile");
+await notnavigateTo(page, '/ignored-prefix');
+await navigateToSomething(page, '/ignored-suffix');
+"#;
+        let urls = extract_playwright_url_literals_with_helpers(
+            src,
+            &["navigateTo".to_string(), "testHelpers.openPath".to_string()],
+        );
+        assert_eq!(urls, vec!["/profile", "/settings"]);
+    }
+
+    #[test]
+    fn helper_url_extraction_skips_non_url_literals() {
+        let src = r#"
+await navigateTo(page, "button name", { fallback: '/fallback' });
+await navigateTo(page, getPath('/dynamic'));
+"#;
+        let urls = extract_playwright_url_literals_with_helpers(src, &["navigateTo".to_string()]);
+        assert_eq!(urls, vec!["/dynamic", "/fallback"]);
+    }
+
+    #[test]
+    fn extracts_to_have_url_assertion_paths() {
+        let src = r#"
+await expect(page).toHaveURL('/settings');
+await expect(page).toHaveURL(new RegExp(`/user/${username}/rss-feed-items/viewed`));
+"#;
+        let urls = extract_playwright_urls(src);
+        assert_eq!(
+            urls,
+            vec!["/settings", "/user/${username}/rss-feed-items/viewed"]
+        );
     }
 }

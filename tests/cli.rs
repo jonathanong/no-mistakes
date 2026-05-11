@@ -136,6 +136,47 @@ fn reads_playwright_config_by_default() {
 }
 
 #[test]
+fn nonliteral_playwright_config_values_are_ignored_when_optional() {
+    Command::cargo_bin("playwright-ast-coverage")
+        .unwrap()
+        .arg("--root")
+        .arg(fixture("nonliteral-playwright-config"))
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "All routes and selectors covered.",
+        ));
+}
+
+#[test]
+fn navigation_helpers_cover_routes() {
+    Command::cargo_bin("playwright-ast-coverage")
+        .unwrap()
+        .arg("--root")
+        .arg(fixture("navigation-helper"))
+        .arg("--json")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(r#""uncoveredRoutes": 0"#))
+        .stdout(predicate::str::contains(r#""/users/42""#));
+}
+
+#[test]
+fn selector_roots_and_excludes_are_configurable() {
+    Command::cargo_bin("playwright-ast-coverage")
+        .unwrap()
+        .arg("--root")
+        .arg(fixture("selector-roots"))
+        .arg("--json")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(r#""totalSelectors": 1"#))
+        .stdout(predicate::str::contains(r#""value": "save-button""#))
+        .stdout(predicate::str::contains(r#""uncoveredSelectors": 0"#))
+        .stdout(predicate::str::contains("ignored-test-selector").not());
+}
+
+#[test]
 fn missing_explicit_config_exits_with_error() {
     Command::cargo_bin("playwright-ast-coverage")
         .unwrap()

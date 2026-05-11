@@ -187,13 +187,15 @@ fn parse_options(source: &str) -> Result<ParsedOptions> {
         base_url: use_source
             .and_then(|value| property_value(value, "baseURL"))
             .or_else(|| property_value(source, "baseURL"))
-            .map(parse_string)
-            .transpose()?,
+            .map(parse_optional_string)
+            .transpose()?
+            .flatten(),
         test_id_attribute: use_source
             .and_then(|value| property_value(value, "testIdAttribute"))
             .or_else(|| property_value(source, "testIdAttribute"))
-            .map(parse_string)
-            .transpose()?,
+            .map(parse_optional_string)
+            .transpose()?
+            .flatten(),
     })
 }
 
@@ -326,6 +328,20 @@ fn parse_string(value: &str) -> Result<String> {
         anyhow::bail!("unterminated string literal");
     };
     Ok(value[1..end].to_string())
+}
+
+fn parse_optional_string(value: &str) -> Result<Option<String>> {
+    let value = value.trim();
+    if value.is_empty() {
+        return Ok(None);
+    }
+    let Some(quote) = value.as_bytes().first().copied() else {
+        return Ok(None);
+    };
+    if !matches!(quote, b'\'' | b'"' | b'`') {
+        return Ok(None);
+    }
+    parse_string(value).map(Some)
 }
 
 fn parse_string_or_array(value: &str) -> Result<Vec<String>> {
@@ -493,6 +509,22 @@ export default {
     }
 
     #[test]
+    fn ignores_non_literal_optional_playwright_values() {
+        let source = r#"
+const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
+const TEST_ID = process.env.TEST_ID ?? 'data-pw';
+export default {
+  testDir: './tests',
+  use: { baseURL: BASE_URL, testIdAttribute: TEST_ID },
+};
+"#;
+        let parsed = parse(source, Path::new("/repo")).unwrap();
+        assert_eq!(parsed.projects[0].test_dir, "./tests");
+        assert_eq!(parsed.projects[0].base_url, None);
+        assert_eq!(parsed.projects[0].test_id_attribute, "data-testid");
+    }
+
+    #[test]
     fn load_without_config_uses_default_project() {
         let parsed = load(Path::new("/repo"), None).unwrap();
         assert_eq!(parsed.projects[0].test_dir, ".");
@@ -578,7 +610,7 @@ export default {
     }
 
     #[test]
-    fn parser_rejects_unsupported_values() {
+    fn parser_rejects_unsupported_required_values() {
         assert!(parse("export default { testDir: }", Path::new("/repo")).is_err());
         assert!(parse("export default { testDir: 123 }", Path::new("/repo")).is_err());
         assert!(parse(
@@ -587,12 +619,6 @@ export default {
         )
         .is_err());
         assert!(parse("export default { testIgnore: 123 }", Path::new("/repo")).is_err());
-        assert!(parse("export default { baseURL: 123 }", Path::new("/repo")).is_err());
-        assert!(parse(
-            "export default { testIdAttribute: 123 }",
-            Path::new("/repo")
-        )
-        .is_err());
         assert!(parse(
             "export default { testMatch: [/.*\\.spec\\.ts/] }",
             Path::new("/repo")
