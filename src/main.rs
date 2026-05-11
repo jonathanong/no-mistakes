@@ -222,11 +222,16 @@ fn analyze(root: &Path, settings: &Settings) -> Result<Analysis> {
         selector_regexes: &selector_regexes,
     };
 
-    let edge_batches: Vec<Vec<Edge>> = test_files
+    let edges: BTreeSet<Edge> = test_files
         .par_iter()
-        .map(|test_file| analyze_test_file(test_file, &test_analysis))
-        .collect::<Result<_>>()?;
-    let edges: BTreeSet<Edge> = edge_batches.into_iter().flatten().collect();
+        .try_fold(BTreeSet::new, |mut edges, test_file| -> Result<_> {
+            edges.extend(analyze_test_file(test_file, &test_analysis)?);
+            Ok(edges)
+        })
+        .try_reduce(BTreeSet::new, |mut left, right| -> Result<_> {
+            left.extend(right);
+            Ok(left)
+        })?;
 
     let edge_report = EdgeReport {
         edges: edges.into_iter().collect(),
@@ -323,22 +328,21 @@ fn collect_app_selectors(
     let include_all = settings.selector_include.is_empty();
     let source_files =
         collect_selector_source_files(root, settings, &include, &exclude, include_all);
-    let selector_batches: Vec<Vec<selectors::AppSelector>> = source_files
+    let app_selectors = source_files
         .par_iter()
-        .map(|path| {
+        .try_fold(BTreeSet::new, |mut app_selectors, path| -> Result<_> {
             let source = std::fs::read_to_string(path)?;
-            Ok(selectors::extract_app_selectors_with_regexes(
+            app_selectors.extend(selectors::extract_app_selectors_with_regexes(
                 path,
                 &source,
                 selector_regexes,
-            ))
+            ));
+            Ok(app_selectors)
         })
-        .collect::<Result<_>>()?;
-
-    let mut app_selectors = BTreeSet::new();
-    for batch in selector_batches {
-        app_selectors.extend(batch);
-    }
+        .try_reduce(BTreeSet::new, |mut left, right| -> Result<_> {
+            left.extend(right);
+            Ok(left)
+        })?;
 
     Ok(app_selectors.into_iter().collect())
 }
@@ -722,13 +726,14 @@ mod tests {
         let dir = tempfile::TempDir::new().unwrap();
         std::fs::create_dir_all(dir.path().join("src")).unwrap();
         std::fs::create_dir_all(dir.path().join("node_modules/pkg")).unwrap();
-        std::fs::write(dir.path().join("src/app.ts"), "").unwrap();
+        std::fs::write(dir.path().join("src/b.ts"), "").unwrap();
+        std::fs::write(dir.path().join("src/a.ts"), "").unwrap();
         std::fs::write(dir.path().join("node_modules/pkg/app.ts"), "").unwrap();
         let files: Vec<String> = walk_files(dir.path())
             .into_iter()
             .map(|path| relative_string(dir.path(), &path))
             .collect();
-        assert_eq!(files, vec!["src/app.ts"]);
+        assert_eq!(files, vec!["src/a.ts", "src/b.ts"]);
     }
 
     #[test]
