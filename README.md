@@ -6,6 +6,38 @@ The CLI scans Playwright tests for visited paths and selectors, derives route
 patterns and configured test-id attributes from a Next.js app, and reports which
 routes or selectors are not covered.
 
+This CLI is intended to be a heuristic for AI coding agents to ensure that all pages
+and components (with test IDs) have Playwright coverage. It is not intended as a replacement
+for test coverage.
+
+Currently, only Next.js is supported. PRs welcomed for other frameworks.
+
+## Usage
+
+`CLAUDE.md` or `AGENTS.md`:
+
+```md
+All non-Shadcn UI components should have at least one `data-pw` attribute.
+`data-pw` attributes should be unique, mapping to a component or a component state.
+All Next.js routes should have at least one Playwright test asserting the route.
+All `data-pw` attributes should have at least one Playwright test asserting the test hook ID. 
+```
+
+Setup `.playwright-ast-coverage.yaml` below.
+
+Add a git prepush hook:
+
+```sh
+playwright-ast-coverage
+```
+
+Add a CI check:
+
+```sh
+playwright-ast-coverage
+```
+
+
 ## Install
 
 ```sh
