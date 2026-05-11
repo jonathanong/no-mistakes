@@ -630,6 +630,38 @@ mod tests {
     }
 
     #[test]
+    fn collect_app_selectors_skips_missing_roots_and_non_source_files() {
+        let dir = tempfile::TempDir::new().unwrap();
+        std::fs::create_dir_all(dir.path().join("web/app")).unwrap();
+        std::fs::write(
+            dir.path().join("web/app/page.tsx"),
+            r#"<button data-testid="save" />"#,
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("web/app/style.css"),
+            r#"[data-testid="ignored"] {}"#,
+        )
+        .unwrap();
+        let settings = Settings {
+            frontend_root: "web/app".to_string(),
+            playwright_config: None,
+            test_include: vec![],
+            test_exclude: vec![],
+            ignore_routes: vec![],
+            navigation_helpers: vec![],
+            selector_attributes: vec!["data-testid".to_string()],
+            selector_roots: vec!["missing".to_string(), "web/app".to_string()],
+            selector_include: vec![],
+            selector_exclude: vec![],
+        };
+
+        let selectors = collect_app_selectors(dir.path(), &settings).unwrap();
+        assert_eq!(selectors.len(), 1);
+        assert_eq!(selectors[0].display_value(), "save");
+    }
+
+    #[test]
     fn coverage_sort_uses_file_as_tiebreaker() {
         let root = Path::new("/repo");
         let routes = vec![

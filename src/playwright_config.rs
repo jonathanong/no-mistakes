@@ -335,9 +335,7 @@ fn parse_optional_string(value: &str) -> Result<Option<String>> {
     if value.is_empty() {
         return Ok(None);
     }
-    let Some(quote) = value.as_bytes().first().copied() else {
-        return Ok(None);
-    };
+    let quote = value.as_bytes()[0];
     if !matches!(quote, b'\'' | b'"' | b'`') {
         return Ok(None);
     }
@@ -520,6 +518,17 @@ export default {
 "#;
         let parsed = parse(source, Path::new("/repo")).unwrap();
         assert_eq!(parsed.projects[0].test_dir, "./tests");
+        assert_eq!(parsed.projects[0].base_url, None);
+        assert_eq!(parsed.projects[0].test_id_attribute, "data-testid");
+    }
+
+    #[test]
+    fn ignores_empty_optional_playwright_values() {
+        let parsed = parse(
+            "export default { use: { baseURL: , testIdAttribute: } }",
+            Path::new("/repo"),
+        )
+        .unwrap();
         assert_eq!(parsed.projects[0].base_url, None);
         assert_eq!(parsed.projects[0].test_id_attribute, "data-testid");
     }

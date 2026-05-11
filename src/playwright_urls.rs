@@ -187,7 +187,7 @@ fn string_literals(source: &str) -> Vec<String> {
 
 fn find_string_end(source: &str, start: usize) -> Option<usize> {
     let bytes = source.as_bytes();
-    let quote = *bytes.get(start)?;
+    let quote = bytes[start];
     let mut escaped = false;
     for (i, byte) in bytes.iter().enumerate().skip(start + 1) {
         if escaped {
@@ -254,6 +254,7 @@ await page.goto('/users/1');
     fn ignores_external_urls() {
         let src = r#"
 await page.goto('https://example.com/page');
+await page.goto('about:blank');
 "#;
         let urls = extract_playwright_urls(src);
         assert!(urls.is_empty());
@@ -319,5 +320,42 @@ await expect(page).toHaveURL(new RegExp(`/user/${username}/rss-feed-items/viewed
             urls,
             vec!["/settings", "/user/${username}/rss-feed-items/viewed"]
         );
+    }
+
+    #[test]
+    fn to_have_url_uses_first_url_literal_argument() {
+        let src = r#"
+await expect(page).toHaveURL('label', '/settings');
+"#;
+        let urls = extract_playwright_url_literals_with_helpers(src, &[]);
+        assert_eq!(urls, vec!["/settings"]);
+    }
+
+    #[test]
+    fn helper_argument_scanner_handles_empty_helpers_and_unclosed_calls() {
+        assert!(helper_call_arguments("navigateTo(page, '/settings'", "").is_empty());
+        assert!(helper_call_arguments("navigateTo(page, '/settings'", "navigateTo").is_empty());
+    }
+
+    #[test]
+    fn helper_argument_scanner_handles_escaped_quotes() {
+        let source = r#"navigateTo(page, "a\"b", '/settings')"#;
+        let open = source.find('(').unwrap();
+        assert_eq!(find_matching_paren(source, open), Some(source.len() - 1));
+        assert_eq!(
+            helper_call_arguments(source, "navigateTo"),
+            vec![r#"page, "a\"b", '/settings'"#]
+        );
+    }
+
+    #[test]
+    fn string_literal_scanner_handles_escapes_and_unterminated_strings() {
+        assert_eq!(
+            string_literals(r#""a\"b" '/settings'"#),
+            vec![r#"a\"b"#, "/settings"]
+        );
+        assert!(string_literals("\"unterminated").is_empty());
+        assert_eq!(find_string_end(r#""a\"b""#, 0), Some(5));
+        assert_eq!(find_string_end("\"unterminated", 0), None);
     }
 }

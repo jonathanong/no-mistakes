@@ -1,3 +1,4 @@
+.codex/worktrees/
 /target/
 *.profraw
 *.profdata

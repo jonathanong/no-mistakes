@@ -42,4 +42,4 @@ jobs:
         uses: taiki-e/install-action@cargo-llvm-cov
 
       - name: Enforce line coverage
-        run: cargo llvm-cov --all-features --fail-under-lines 100 --summary-only
+        run: cargo llvm-cov --all-features --fail-uncovered-lines 0 --fail-uncovered-functions 0 --show-missing-lines
