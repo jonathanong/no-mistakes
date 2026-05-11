@@ -1,4 +1,4 @@
-use regex::Regex;
+use crate::js_scan;
 use std::collections::BTreeSet;
 
 /// Extract local URL string literals navigated to in a Playwright test file.
@@ -20,26 +20,26 @@ pub fn extract_playwright_url_literals_with_helpers(
 ) -> Vec<String> {
     let mut urls = BTreeSet::new();
 
-    let goto =
-        Regex::new(r#"\.goto\s*\(\s*(?:'([^']+)'|"([^"]+)"|`([^`]+)`)"#).expect("valid goto regex");
-    for cap in goto.captures_iter(source) {
-        let url = captured_string(&cap);
-        if is_candidate_url(url) {
-            urls.insert(url.to_string());
+    for arguments in helper_call_arguments(source, ".goto") {
+        let Some(url) = first_literal_argument(arguments) else {
+            continue;
+        };
+        if is_candidate_url(&url) {
+            urls.insert(url);
         }
     }
 
-    let click = Regex::new(r#"\.click\s*\(\s*(?:'([^']+)'|"([^"]+)"|`([^`]+)`)"#)
-        .expect("valid click regex");
-    for cap in click.captures_iter(source) {
-        let selector = captured_string(&cap);
-        if let Some(url) = extract_href_from_selector(selector) {
+    for arguments in helper_call_arguments(source, ".click") {
+        let Some(selector) = first_literal_argument(arguments) else {
+            continue;
+        };
+        if let Some(url) = extract_href_from_selector(&selector) {
             urls.insert(url);
         }
     }
 
     for arguments in helper_call_arguments(source, ".toHaveURL") {
-        for url in string_literals(arguments) {
+        for url in string_literals_outside_comments(arguments) {
             if is_candidate_url(&url) {
                 urls.insert(url);
                 break;
@@ -49,7 +49,7 @@ pub fn extract_playwright_url_literals_with_helpers(
 
     for helper in navigation_helpers {
         for arguments in helper_call_arguments(source, helper) {
-            for url in string_literals(arguments) {
+            for url in string_literals_outside_comments(arguments) {
                 if is_candidate_url(&url) {
                     urls.insert(url);
                     break;
@@ -59,14 +59,6 @@ pub fn extract_playwright_url_literals_with_helpers(
     }
 
     urls.into_iter().collect()
-}
-
-fn captured_string<'h>(cap: &regex::Captures<'h>) -> &'h str {
-    cap.get(1)
-        .or_else(|| cap.get(2))
-        .or_else(|| cap.get(3))
-        .expect("regex has one string capture")
-        .as_str()
 }
 
 fn is_candidate_url(url: &str) -> bool {
@@ -97,13 +89,13 @@ fn helper_call_arguments<'a>(source: &'a str, helper: &str) -> Vec<&'a str> {
     }
 
     let bytes = source.as_bytes();
+    let comment_masked = js_scan::mask_comments(source);
     let mut arguments = Vec::new();
     let mut offset = 0;
 
-    while let Some(relative) = source[offset..].find(helper) {
-        let start = offset + relative;
+    while let Some(start) = js_scan::find_outside_syntax(source, helper, offset) {
         let after_helper = start + helper.len();
-        if !has_callee_boundary(bytes, start, after_helper) {
+        if !has_callee_boundary(bytes, start, after_helper, helper.starts_with('.')) {
             offset = after_helper;
             continue;
         }
@@ -117,7 +109,7 @@ fn helper_call_arguments<'a>(source: &'a str, helper: &str) -> Vec<&'a str> {
             continue;
         }
 
-        if let Some(close) = find_matching_paren(source, open) {
+        if let Some(close) = find_matching_paren(&comment_masked, open) {
             arguments.push(&source[open + 1..close]);
             offset = close + 1;
         } else {
@@ -128,8 +120,26 @@ fn helper_call_arguments<'a>(source: &'a str, helper: &str) -> Vec<&'a str> {
     arguments
 }
 
-fn has_callee_boundary(bytes: &[u8], start: usize, end: usize) -> bool {
-    let before_ok = start == 0 || !is_ident(bytes[start - 1]);
+fn first_literal_argument(source: &str) -> Option<String> {
+    let source = js_scan::mask_comments(source);
+    let bytes = source.as_bytes();
+    let mut i = 0usize;
+    while i < bytes.len() && bytes[i].is_ascii_whitespace() {
+        i += 1;
+    }
+    if !matches!(bytes.get(i), Some(b'\'' | b'"' | b'`')) {
+        return None;
+    }
+    let end = find_string_end(&source, i)?;
+    Some(source[i + 1..end].to_string())
+}
+
+fn string_literals_outside_comments(source: &str) -> Vec<String> {
+    string_literals(&js_scan::mask_comments(source))
+}
+
+fn has_callee_boundary(bytes: &[u8], start: usize, end: usize, method_call: bool) -> bool {
+    let before_ok = method_call || start == 0 || !is_ident(bytes[start - 1]);
     let after_ok = end >= bytes.len() || !is_ident(bytes[end]);
     before_ok && after_ok
 }

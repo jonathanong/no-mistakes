@@ -1,3 +1,4 @@
+use crate::js_scan;
 #[cfg(test)]
 use anyhow::Result;
 use regex::Regex;
@@ -248,9 +249,10 @@ pub fn extract_app_selectors_with_regexes(
     source: &str,
     regexes: &SelectorRegexes,
 ) -> Vec<AppSelector> {
+    let source = js_scan::mask_comments(source);
     let mut selectors = BTreeSet::new();
     for attribute in &regexes.app_attributes {
-        for captures in attribute.regex.captures_iter(source) {
+        for captures in attribute.regex.captures_iter(&source) {
             let value = app_selector_value(&captures);
             selectors.insert(AppSelector {
                 file: path.to_path_buf(),
@@ -277,9 +279,10 @@ pub fn extract_playwright_selectors_with_regexes(
     regexes: &SelectorRegexes,
     test_id_attributes: &[String],
 ) -> Vec<PlaywrightSelector> {
+    let source = js_scan::mask_comments(source);
     let mut selectors = BTreeSet::new();
-    extract_css_attribute_selectors(source, &regexes.playwright_attributes, &mut selectors);
-    extract_get_by_test_id_selectors(source, test_id_attributes, &mut selectors);
+    extract_css_attribute_selectors(&source, &regexes.playwright_attributes, &mut selectors);
+    extract_get_by_test_id_selectors(&source, test_id_attributes, &mut selectors);
     selectors.into_iter().collect()
 }
 

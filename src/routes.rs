@@ -56,7 +56,12 @@ pub fn path_to_route_pattern(relative: &Path) -> String {
         };
         let segment = segment.to_str().unwrap_or("");
 
-        if segment.starts_with('(') && segment.ends_with(')') {
+        if segment.starts_with('@') || (segment.starts_with('(') && segment.ends_with(')')) {
+            continue;
+        }
+
+        if segment.starts_with("[[...") && segment.ends_with("]]") {
+            segments.push("**".to_string());
             continue;
         }
 
