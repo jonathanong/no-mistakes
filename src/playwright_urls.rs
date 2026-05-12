@@ -1,6 +1,6 @@
 use crate::ast;
 use anyhow::Result;
-use oxc_ast::ast::{Argument, CallExpression, Expression};
+use oxc_ast::ast::{Argument, CallExpression};
 use oxc_ast_visit::{walk, Visit};
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -69,7 +69,7 @@ struct UrlVisitor<'a, 'h> {
 
 impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        let callee = expression_path(&call.callee);
+        let callee = ast::expression_path(&call.callee);
         let callee_name = callee.as_deref().map(|parts| parts.join("."));
 
         if callee_ends_with(&callee, "goto") {
@@ -148,21 +148,6 @@ fn argument_literal(argument: &Argument<'_>, source: &str) -> Option<String> {
     match argument {
         Argument::StringLiteral(literal) => Some(literal.value.to_string()),
         Argument::TemplateLiteral(template) => Some(ast::template_literal_text(template, source)),
-        _ => None,
-    }
-}
-
-fn expression_path(expression: &Expression<'_>) -> Option<Vec<String>> {
-    match expression {
-        Expression::Identifier(identifier) => Some(vec![identifier.name.to_string()]),
-        Expression::StaticMemberExpression(member) => {
-            let mut parts = expression_path(&member.object).unwrap_or_default();
-            parts.push(member.property.name.to_string());
-            Some(parts)
-        }
-        Expression::ParenthesizedExpression(parenthesized) => {
-            expression_path(&parenthesized.expression)
-        }
         _ => None,
     }
 }

@@ -333,7 +333,7 @@ struct PlaywrightSelectorVisitor<'a, 'r> {
 
 impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightSelectorVisitor<'a, '_> {
     fn visit_call_expression(&mut self, call: &oxc_ast::ast::CallExpression<'a>) {
-        if expression_path(&call.callee)
+        if ast::expression_path(&call.callee)
             .and_then(|parts| parts.last().cloned())
             .is_some_and(|last| last == "getByTestId")
         {
@@ -507,21 +507,6 @@ fn template_parts(source: &str) -> Vec<String> {
     }
     parts.push(rest.to_string());
     parts
-}
-
-fn expression_path(expression: &oxc_ast::ast::Expression<'_>) -> Option<Vec<String>> {
-    match expression {
-        oxc_ast::ast::Expression::Identifier(identifier) => Some(vec![identifier.name.to_string()]),
-        oxc_ast::ast::Expression::StaticMemberExpression(member) => {
-            let mut parts = expression_path(&member.object).unwrap_or_default();
-            parts.push(member.property.name.to_string());
-            Some(parts)
-        }
-        oxc_ast::ast::Expression::ParenthesizedExpression(parenthesized) => {
-            expression_path(&parenthesized.expression)
-        }
-        _ => None,
-    }
 }
 
 pub fn is_source_file(path: &Path) -> bool {
