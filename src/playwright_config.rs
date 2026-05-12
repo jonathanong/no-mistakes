@@ -1,9 +1,11 @@
 use crate::ast;
 use anyhow::Result;
 use oxc_ast::ast::{
-    Argument, ArrayExpression, ArrayExpressionElement, ExportDefaultDeclarationKind, Expression,
-    ObjectExpression, ObjectPropertyKind, Program, PropertyKey,
+    Argument, ArrayExpression, ArrayExpressionElement, AssignmentTarget, BindingPattern,
+    ExportDefaultDeclarationKind, Expression, ObjectExpression, ObjectPropertyKind, Program,
+    PropertyKey, Statement,
 };
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 const DEFAULT_TEST_MATCH: &[&str] = &[
@@ -220,33 +222,130 @@ fn default_test_match() -> Vec<String> {
 }
 
 fn default_export_object<'a>(program: &'a Program<'a>) -> Option<&'a ObjectExpression<'a>> {
+    let bindings = top_level_object_bindings(program);
+
     for statement in &program.body {
-        let oxc_ast::ast::Statement::ExportDefaultDeclaration(export) = statement else {
-            continue;
-        };
-        return match &export.declaration {
-            ExportDefaultDeclarationKind::ObjectExpression(object) => Some(object),
-            ExportDefaultDeclarationKind::CallExpression(call) => {
-                call.arguments.first().and_then(argument_object)
-            }
-            _ => None,
-        };
+        if let Statement::ExportDefaultDeclaration(export) = statement {
+            return export_config_object(&export.declaration, &bindings);
+        }
+
+        if let Some(object) = commonjs_config_object(statement, &bindings) {
+            return Some(object);
+        }
     }
     None
 }
 
-fn argument_object<'a>(argument: &'a Argument<'a>) -> Option<&'a ObjectExpression<'a>> {
+fn top_level_object_bindings<'a>(program: &'a Program<'a>) -> BTreeMap<String, &'a Expression<'a>> {
+    let mut bindings = BTreeMap::new();
+    for statement in &program.body {
+        let Statement::VariableDeclaration(declaration) = statement else {
+            continue;
+        };
+        for declarator in &declaration.declarations {
+            let (Some(name), Some(init)) =
+                (binding_identifier_name(&declarator.id), &declarator.init)
+            else {
+                continue;
+            };
+            bindings.insert(name.to_string(), init);
+        }
+    }
+    bindings
+}
+
+fn binding_identifier_name<'a>(binding: &'a BindingPattern<'a>) -> Option<&'a str> {
+    match binding {
+        BindingPattern::BindingIdentifier(identifier) => Some(identifier.name.as_str()),
+        _ => None,
+    }
+}
+
+fn export_config_object<'a>(
+    export: &'a ExportDefaultDeclarationKind<'a>,
+    bindings: &BTreeMap<String, &'a Expression<'a>>,
+) -> Option<&'a ObjectExpression<'a>> {
+    match export {
+        ExportDefaultDeclarationKind::ObjectExpression(object) => Some(object),
+        ExportDefaultDeclarationKind::CallExpression(call) => call
+            .arguments
+            .first()
+            .and_then(|argument| argument_config_object(argument, bindings)),
+        ExportDefaultDeclarationKind::Identifier(identifier) => bindings
+            .get(identifier.name.as_str())
+            .and_then(|expression| expression_config_object(expression, bindings)),
+        ExportDefaultDeclarationKind::ParenthesizedExpression(parenthesized) => {
+            expression_config_object(&parenthesized.expression, bindings)
+        }
+        _ => None,
+    }
+}
+
+fn commonjs_config_object<'a>(
+    statement: &'a Statement<'a>,
+    bindings: &BTreeMap<String, &'a Expression<'a>>,
+) -> Option<&'a ObjectExpression<'a>> {
+    let Statement::ExpressionStatement(statement) = statement else {
+        return None;
+    };
+    let Expression::AssignmentExpression(assignment) = &statement.expression else {
+        return None;
+    };
+    if assignment_target_path(&assignment.left)
+        .as_deref()
+        .is_none_or(|parts| parts != ["module", "exports"])
+    {
+        return None;
+    }
+    expression_config_object(&assignment.right, bindings)
+}
+
+fn assignment_target_path(target: &AssignmentTarget<'_>) -> Option<Vec<String>> {
+    match target {
+        AssignmentTarget::StaticMemberExpression(member) => {
+            let mut parts = ast::expression_path(&member.object)?;
+            parts.push(member.property.name.to_string());
+            Some(parts)
+        }
+        _ => None,
+    }
+}
+
+fn argument_config_object<'a>(
+    argument: &'a Argument<'a>,
+    bindings: &BTreeMap<String, &'a Expression<'a>>,
+) -> Option<&'a ObjectExpression<'a>> {
     match argument {
         Argument::ObjectExpression(object) => Some(object),
+        Argument::Identifier(identifier) => bindings
+            .get(identifier.name.as_str())
+            .and_then(|expression| expression_config_object(expression, bindings)),
+        Argument::ParenthesizedExpression(parenthesized) => {
+            expression_config_object(&parenthesized.expression, bindings)
+        }
         _ => None,
     }
 }
 
 fn expression_object<'a>(expression: &'a Expression<'a>) -> Option<&'a ObjectExpression<'a>> {
+    expression_config_object(expression, &BTreeMap::new())
+}
+
+fn expression_config_object<'a>(
+    expression: &'a Expression<'a>,
+    bindings: &BTreeMap<String, &'a Expression<'a>>,
+) -> Option<&'a ObjectExpression<'a>> {
     match expression {
         Expression::ObjectExpression(object) => Some(object),
+        Expression::Identifier(identifier) => bindings
+            .get(identifier.name.as_str())
+            .and_then(|expression| expression_config_object(expression, bindings)),
+        Expression::CallExpression(call) => call
+            .arguments
+            .first()
+            .and_then(|argument| argument_config_object(argument, bindings)),
         Expression::ParenthesizedExpression(parenthesized) => {
-            expression_object(&parenthesized.expression)
+            expression_config_object(&parenthesized.expression, bindings)
         }
         _ => None,
     }
@@ -403,6 +502,78 @@ mod tests {
         );
         assert_eq!(parsed.projects[0].test_ignore, vec!["**/skip/**"]);
         assert_eq!(parsed.projects[0].test_id_attribute, "data-test-id");
+    }
+
+    #[test]
+    fn parses_default_export_identifier() {
+        let source = fixture_source(&["playwright_config", "default-identifier.ts"]);
+        let parsed = parse(&source, Path::new("/repo")).unwrap();
+        assert_eq!(parsed.projects[0].test_dir, "./identifier-tests");
+        assert_eq!(parsed.projects[0].test_match, vec!["**/*.identifier.ts"]);
+        assert_eq!(
+            parsed.projects[0].base_url.as_deref(),
+            Some("http://localhost:4100")
+        );
+        assert_eq!(parsed.projects[0].test_id_attribute, "data-identifier");
+    }
+
+    #[test]
+    fn parses_define_config_identifier_argument() {
+        let source = fixture_source(&["playwright_config", "define-config-identifier.ts"]);
+        let parsed = parse(&source, Path::new("/repo")).unwrap();
+        assert_eq!(parsed.projects[0].test_dir, "./define-config-tests");
+        assert_eq!(parsed.projects[0].test_match, vec!["**/*.define-config.ts"]);
+    }
+
+    #[test]
+    fn parses_commonjs_config_exports() {
+        let source = fixture_source(&["playwright_config", "commonjs-object.cjs"]);
+        let parsed = parse_from_path(
+            &source,
+            Path::new("playwright.config.cjs"),
+            Path::new("/repo"),
+        )
+        .unwrap();
+        assert_eq!(parsed.projects[0].test_dir, "./commonjs-object-tests");
+        assert_eq!(
+            parsed.projects[0].test_match,
+            vec!["**/*.commonjs-object.js"]
+        );
+
+        let source = fixture_source(&["playwright_config", "commonjs-define-config.cjs"]);
+        let parsed = parse_from_path(
+            &source,
+            Path::new("playwright.config.cjs"),
+            Path::new("/repo"),
+        )
+        .unwrap();
+        assert_eq!(
+            parsed.projects[0].test_dir,
+            "./commonjs-define-config-tests"
+        );
+        assert_eq!(
+            parsed.projects[0].test_match,
+            vec!["**/*.commonjs-define-config.js"]
+        );
+        assert_eq!(
+            parsed.projects[0].base_url.as_deref(),
+            Some("http://localhost:5100")
+        );
+    }
+
+    #[test]
+    fn parser_handles_advanced_export_shapes() {
+        let source = fixture_source(&["playwright_config", "advanced-export-shapes.ts"]);
+        let parsed = parse(&source, Path::new("/repo")).unwrap();
+        assert_eq!(parsed.projects[0].test_dir, "./advanced-export-tests");
+        assert_eq!(
+            parsed.projects[0].test_match,
+            vec!["**/*.advanced-export.ts"]
+        );
+
+        let source = fixture_source(&["playwright_config", "non-object-binding.ts"]);
+        let parsed = parse(&source, Path::new("/repo")).unwrap();
+        assert_eq!(parsed.projects[0].test_dir, ".");
     }
 
     #[test]

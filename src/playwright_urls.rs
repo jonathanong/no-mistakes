@@ -81,7 +81,6 @@ struct UrlVisitor<'a, 'h> {
 impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         let callee = ast::expression_path(&call.callee);
-        let callee_name = callee.as_deref().map(|parts| parts.join("."));
 
         if callee_is_member_named(&call.callee, "goto") {
             if let Some(url) = call
@@ -104,9 +103,7 @@ impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
                 }
             }
         } else if callee_is_member_named(&call.callee, "toHaveURL")
-            || callee_name
-                .as_deref()
-                .is_some_and(|name| self.navigation_helpers.iter().any(|helper| helper == name))
+            || callee_matches_navigation_helper(&callee, self.navigation_helpers)
         {
             if let Some(url) = first_candidate_literal(&call.arguments, self.source) {
                 self.urls.insert(url);
@@ -115,6 +112,17 @@ impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
 
         walk::walk_call_expression(self, call);
     }
+}
+
+fn callee_matches_navigation_helper(callee: &Option<Vec<String>>, helpers: &[String]) -> bool {
+    let Some(parts) = callee else {
+        return false;
+    };
+    let full_name = parts.join(".");
+    helpers.iter().any(|helper| {
+        helper == &full_name
+            || (!helper.contains('.') && parts.last().is_some_and(|part| part == helper))
+    })
 }
 
 fn callee_is_member_named(callee: &oxc_ast::ast::Expression<'_>, method: &str) -> bool {
@@ -230,7 +238,7 @@ mod tests {
             &src,
             &["navigateTo".to_string(), "testHelpers.openPath".to_string()],
         );
-        assert_eq!(urls, vec!["/profile", "/settings"]);
+        assert_eq!(urls, vec!["/profile", "/settings", "/team"]);
     }
 
     #[test]
