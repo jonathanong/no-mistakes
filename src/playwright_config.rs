@@ -1,5 +1,9 @@
-use crate::js_scan;
+use crate::ast;
 use anyhow::Result;
+use oxc_ast::ast::{
+    Argument, ArrayExpression, ArrayExpressionElement, ExportDefaultDeclarationKind, Expression,
+    ObjectExpression, ObjectPropertyKind, Program, PropertyKey,
+};
 use std::path::{Path, PathBuf};
 
 const DEFAULT_TEST_MATCH: &[&str] = &[
@@ -35,6 +39,7 @@ pub struct TestProject {
     pub test_id_attribute: String,
 }
 
+#[derive(Default)]
 struct ParsedOptions {
     test_dir: Option<String>,
     test_match: Option<Vec<String>>,
@@ -93,7 +98,7 @@ pub fn load(root: &Path, config_path: Option<&Path>) -> Result<PlaywrightConfig>
     }
 
     let source = std::fs::read_to_string(config_path)?;
-    parse(&source, config_path.parent().unwrap_or(root))
+    parse_from_path(&source, config_path, config_path.parent().unwrap_or(root))
 }
 
 fn default_config(root: &Path) -> PlaywrightConfig {
@@ -109,31 +114,42 @@ fn default_config(root: &Path) -> PlaywrightConfig {
     }
 }
 
-#[allow(clippy::question_mark)]
+#[cfg(test)]
 fn parse(source: &str, config_dir: &Path) -> Result<PlaywrightConfig> {
-    let root_source = without_projects_value(source);
-    let root_options = match parse_options(&root_source) {
-        Ok(options) => options,
-        Err(err) => return Err(err),
-    };
-    let project_sources = project_object_sources(source);
+    parse_from_path(source, Path::new("playwright.config.ts"), config_dir)
+}
 
-    if project_sources.is_empty() {
+fn parse_from_path(source: &str, path: &Path, config_dir: &Path) -> Result<PlaywrightConfig> {
+    ast::with_program(path, source, |program, source| {
+        parse_program(program, source, config_dir)
+    })?
+}
+
+fn parse_program(
+    program: &Program<'_>,
+    source: &str,
+    config_dir: &Path,
+) -> Result<PlaywrightConfig> {
+    let Some(root_object) = default_export_object(program) else {
+        return Ok(PlaywrightConfig {
+            projects: vec![merge_project(config_dir, &ParsedOptions::default(), None)],
+        });
+    };
+    let root_options = parse_options(root_object, source)?;
+    let project_objects = project_objects(root_object);
+
+    if project_objects.is_empty() {
         return Ok(PlaywrightConfig {
             projects: vec![merge_project(config_dir, &root_options, None)],
         });
     }
 
     let mut projects = Vec::new();
-    for project_source in project_sources {
-        let project_options = match parse_options(&project_source) {
-            Ok(options) => options,
-            Err(err) => return Err(err),
-        };
+    for project_object in project_objects {
         projects.push(merge_project(
             config_dir,
             &root_options,
-            Some(project_options),
+            Some(parse_options(project_object, source)?),
         ));
     }
 
@@ -145,13 +161,7 @@ fn merge_project(
     root: &ParsedOptions,
     project: Option<ParsedOptions>,
 ) -> TestProject {
-    let project = project.unwrap_or(ParsedOptions {
-        test_dir: None,
-        test_match: None,
-        test_ignore: None,
-        base_url: None,
-        test_id_attribute: None,
-    });
+    let project = project.unwrap_or_default();
 
     TestProject {
         config_dir: config_dir.to_path_buf(),
@@ -172,31 +182,27 @@ fn merge_project(
     }
 }
 
-fn parse_options(source: &str) -> Result<ParsedOptions> {
-    let use_source = property_value(source, "use");
+fn parse_options(object: &ObjectExpression<'_>, source: &str) -> Result<ParsedOptions> {
+    let use_object = property_expression(object, "use").and_then(expression_object);
 
     Ok(ParsedOptions {
-        test_dir: property_value(source, "testDir")
-            .map(parse_string)
+        test_dir: property_expression(object, "testDir")
+            .map(|value| required_string(value, source, "testDir"))
             .transpose()?,
-        test_match: property_value(source, "testMatch")
-            .map(parse_string_or_array)
+        test_match: property_expression(object, "testMatch")
+            .map(|value| required_string_or_array(value, source, "testMatch"))
             .transpose()?,
-        test_ignore: property_value(source, "testIgnore")
-            .map(parse_string_or_array)
+        test_ignore: property_expression(object, "testIgnore")
+            .map(|value| required_string_or_array(value, source, "testIgnore"))
             .transpose()?,
-        base_url: use_source
-            .and_then(|value| property_value(value, "baseURL"))
-            .or_else(|| property_value(source, "baseURL"))
-            .map(parse_optional_string)
-            .transpose()?
-            .flatten(),
-        test_id_attribute: use_source
-            .and_then(|value| property_value(value, "testIdAttribute"))
-            .or_else(|| property_value(source, "testIdAttribute"))
-            .map(parse_optional_string)
-            .transpose()?
-            .flatten(),
+        base_url: use_object
+            .and_then(|value| property_expression(value, "baseURL"))
+            .or_else(|| property_expression(object, "baseURL"))
+            .and_then(|value| optional_string(value, source)),
+        test_id_attribute: use_object
+            .and_then(|value| property_expression(value, "testIdAttribute"))
+            .or_else(|| property_expression(object, "testIdAttribute"))
+            .and_then(|value| optional_string(value, source)),
     })
 }
 
@@ -213,237 +219,147 @@ fn default_test_match() -> Vec<String> {
         .collect()
 }
 
-fn property_value<'a>(source: &'a str, key: &str) -> Option<&'a str> {
-    let (value_start, value_end) = property_value_span(source, key)?;
-    Some(source[value_start..value_end].trim())
-}
-
-fn without_projects_value(source: &str) -> String {
-    let Some((value_start, value_end)) = property_value_span(source, "projects") else {
-        return source.to_string();
-    };
-    let mut masked = String::with_capacity(source.len());
-    masked.push_str(&source[..value_start]);
-    masked.push_str(" []");
-    masked.push_str(&source[value_end..]);
-    masked
-}
-
-fn property_value_span(source: &str, key: &str) -> Option<(usize, usize)> {
-    let key_mask = js_scan::mask_comments_and_strings(source);
-    let value_mask = js_scan::mask_comments(source);
-    let bytes = key_mask.as_bytes();
-    let mut offset = 0;
-
-    while let Some(relative) = key_mask[offset..].find(key) {
-        let start = offset + relative;
-        let before_ok = start == 0 || !is_ident(bytes[start - 1]);
-        let after_key = start + key.len();
-        let after_ok = after_key >= bytes.len() || !is_ident(bytes[after_key]);
-        if !before_ok || !after_ok {
-            offset = after_key;
+fn default_export_object<'a>(program: &'a Program<'a>) -> Option<&'a ObjectExpression<'a>> {
+    for statement in &program.body {
+        let oxc_ast::ast::Statement::ExportDefaultDeclaration(export) = statement else {
             continue;
-        }
-
-        let mut i = after_key;
-        while i < bytes.len() && bytes[i].is_ascii_whitespace() {
-            i += 1;
-        }
-        if i < bytes.len() && bytes[i] == b':' {
-            let value_start = i + 1;
-            let value_end = find_value_end(&value_mask, value_start);
-            return Some((value_start, value_end));
-        }
-        offset = after_key;
+        };
+        return match &export.declaration {
+            ExportDefaultDeclarationKind::ObjectExpression(object) => Some(object),
+            ExportDefaultDeclarationKind::CallExpression(call) => {
+                call.arguments.first().and_then(argument_object)
+            }
+            _ => None,
+        };
     }
-
     None
 }
 
-fn is_ident(byte: u8) -> bool {
-    byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$')
+fn argument_object<'a>(argument: &'a Argument<'a>) -> Option<&'a ObjectExpression<'a>> {
+    match argument {
+        Argument::ObjectExpression(object) => Some(object),
+        _ => None,
+    }
 }
 
-fn find_value_end(source: &str, start: usize) -> usize {
-    let bytes = source.as_bytes();
-    let mut i = start;
-    let mut curly = 0usize;
-    let mut square = 0usize;
-    let mut paren = 0usize;
-    let mut quote: Option<u8> = None;
-    let mut escaped = false;
+fn expression_object<'a>(expression: &'a Expression<'a>) -> Option<&'a ObjectExpression<'a>> {
+    match expression {
+        Expression::ObjectExpression(object) => Some(object),
+        Expression::ParenthesizedExpression(parenthesized) => {
+            expression_object(&parenthesized.expression)
+        }
+        _ => None,
+    }
+}
 
-    while i < bytes.len() {
-        let byte = bytes[i];
-        if let Some(q) = quote {
-            if escaped {
-                escaped = false;
-            } else if byte == b'\\' {
-                escaped = true;
-            } else if byte == q {
-                quote = None;
-            }
-            i += 1;
+fn property_expression<'a>(
+    object: &'a ObjectExpression<'a>,
+    name: &str,
+) -> Option<&'a Expression<'a>> {
+    for property in &object.properties {
+        let ObjectPropertyKind::ObjectProperty(property) = property else {
+            continue;
+        };
+        if property.computed || property.method {
             continue;
         }
-
-        match byte {
-            b'\'' | b'"' | b'`' => quote = Some(byte),
-            b'{' => curly += 1,
-            b'}' => {
-                if curly == 0 {
-                    break;
-                }
-                curly -= 1;
-            }
-            b'[' => square += 1,
-            b']' => {
-                if square == 0 {
-                    break;
-                }
-                square -= 1;
-            }
-            b'(' => paren += 1,
-            b')' => {
-                if paren == 0 {
-                    break;
-                }
-                paren -= 1;
-            }
-            b',' if curly == 0 && square == 0 && paren == 0 => break,
-            _ => {}
-        }
-        i += 1;
-    }
-
-    i
-}
-
-fn parse_string(value: &str) -> Result<String> {
-    let value = value.trim();
-    let Some(quote) = value.as_bytes().first().copied() else {
-        anyhow::bail!("expected string literal, found empty value");
-    };
-    if !matches!(quote, b'\'' | b'"' | b'`') {
-        anyhow::bail!("expected string literal, found {value:?}");
-    }
-    let Some(end) = find_string_end(value, 0) else {
-        anyhow::bail!("unterminated string literal");
-    };
-    Ok(value[1..end].to_string())
-}
-
-fn parse_optional_string(value: &str) -> Result<Option<String>> {
-    let value = value.trim();
-    if value.is_empty() {
-        return Ok(None);
-    }
-    let quote = value.as_bytes()[0];
-    if !matches!(quote, b'\'' | b'"' | b'`') {
-        return Ok(None);
-    }
-    parse_string(value).map(Some)
-}
-
-fn parse_string_or_array(value: &str) -> Result<Vec<String>> {
-    let value = value.trim();
-    if value.starts_with('[') {
-        let strings = collect_strings(value)?;
-        if strings.is_empty() && value.contains('/') {
-            anyhow::bail!("regular-expression test patterns are not supported; use string globs");
-        }
-        return Ok(strings);
-    }
-    Ok(vec![parse_string(value)?])
-}
-
-fn collect_strings(source: &str) -> Result<Vec<String>> {
-    let source = js_scan::mask_comments(source);
-    let bytes = source.as_bytes();
-    let mut strings = Vec::new();
-    let mut i = 0;
-    while i < bytes.len() {
-        if matches!(bytes[i], b'\'' | b'"' | b'`') {
-            let Some(end) = find_string_end(&source, i) else {
-                anyhow::bail!("unterminated string literal");
-            };
-            strings.push(source[i + 1..end].to_string());
-            i = end + 1;
-        } else {
-            i += 1;
-        }
-    }
-    Ok(strings)
-}
-
-fn find_string_end(source: &str, start: usize) -> Option<usize> {
-    let bytes = source.as_bytes();
-    let quote = *bytes.get(start)?;
-    let mut escaped = false;
-    for (i, byte) in bytes.iter().enumerate().skip(start + 1) {
-        if escaped {
-            escaped = false;
-        } else if *byte == b'\\' {
-            escaped = true;
-        } else if *byte == quote {
-            return Some(i);
+        if property_key_name(&property.key).as_deref() == Some(name) {
+            return Some(&property.value);
         }
     }
     None
 }
 
-fn project_object_sources(source: &str) -> Vec<String> {
-    let Some(projects) = property_value(source, "projects") else {
-        return Vec::new();
-    };
-    let projects = projects.trim();
-    if !projects.starts_with('[') {
-        return Vec::new();
+fn property_key_name(key: &PropertyKey<'_>) -> Option<String> {
+    match key {
+        PropertyKey::StaticIdentifier(identifier) => Some(identifier.name.to_string()),
+        PropertyKey::StringLiteral(literal) => Some(literal.value.to_string()),
+        _ => None,
     }
-
-    split_top_level_objects(projects)
 }
 
-fn split_top_level_objects(source: &str) -> Vec<String> {
-    let bytes = source.as_bytes();
-    let mut objects = Vec::new();
-    let mut quote: Option<u8> = None;
-    let mut escaped = false;
-    let mut depth = 0usize;
-    let mut object_start: Option<usize> = None;
+fn project_objects<'a>(root: &'a ObjectExpression<'a>) -> Vec<&'a ObjectExpression<'a>> {
+    let Some(Expression::ArrayExpression(projects)) = property_expression(root, "projects") else {
+        return Vec::new();
+    };
+    projects
+        .elements
+        .iter()
+        .filter_map(array_element_object)
+        .collect()
+}
 
-    for (i, byte) in bytes.iter().copied().enumerate() {
-        if let Some(q) = quote {
-            if escaped {
-                escaped = false;
-            } else if byte == b'\\' {
-                escaped = true;
-            } else if byte == q {
-                quote = None;
-            }
-            continue;
+fn array_element_object<'a>(
+    element: &'a ArrayExpressionElement<'a>,
+) -> Option<&'a ObjectExpression<'a>> {
+    match element {
+        ArrayExpressionElement::ObjectExpression(object) => Some(object),
+        _ => None,
+    }
+}
+
+fn required_string(expression: &Expression<'_>, source: &str, name: &str) -> Result<String> {
+    optional_string(expression, source)
+        .ok_or_else(|| anyhow::anyhow!("expected string literal for {name}"))
+}
+
+fn optional_string(expression: &Expression<'_>, source: &str) -> Option<String> {
+    match expression {
+        Expression::StringLiteral(literal) => Some(literal.value.to_string()),
+        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
+            Some(ast::template_literal_text(template, source))
         }
+        Expression::ParenthesizedExpression(parenthesized) => {
+            optional_string(&parenthesized.expression, source)
+        }
+        _ => None,
+    }
+}
 
-        match byte {
-            b'\'' | b'"' | b'`' => quote = Some(byte),
-            b'{' => {
-                if depth == 0 {
-                    object_start = Some(i);
-                }
-                depth += 1;
+fn required_string_or_array(
+    expression: &Expression<'_>,
+    source: &str,
+    name: &str,
+) -> Result<Vec<String>> {
+    if let Some(value) = optional_string(expression, source) {
+        return Ok(vec![value]);
+    }
+    let Some(Expression::ArrayExpression(array)) = parenthesized_expression(expression) else {
+        anyhow::bail!("expected string literal or string array for {name}");
+    };
+    string_array(array, source, name)
+}
+
+fn parenthesized_expression<'a>(expression: &'a Expression<'a>) -> Option<&'a Expression<'a>> {
+    match expression {
+        Expression::ParenthesizedExpression(parenthesized) => {
+            parenthesized_expression(&parenthesized.expression)
+        }
+        _ => Some(expression),
+    }
+}
+
+fn string_array(array: &ArrayExpression<'_>, source: &str, name: &str) -> Result<Vec<String>> {
+    let mut values = Vec::new();
+    let mut saw_regex = false;
+    for element in &array.elements {
+        match element {
+            ArrayExpressionElement::StringLiteral(literal) => {
+                values.push(literal.value.to_string())
             }
-            b'}' => {
-                depth = depth.saturating_sub(1);
-                if depth == 0 && object_start.is_some() {
-                    let start = object_start.take().expect("checked object_start");
-                    objects.push(source[start..=i].to_string());
-                }
+            ArrayExpressionElement::TemplateLiteral(template)
+                if template.expressions.is_empty() =>
+            {
+                values.push(ast::template_literal_text(template, source));
             }
+            ArrayExpressionElement::RegExpLiteral(_) => saw_regex = true,
             _ => {}
         }
     }
-
-    objects
+    if values.is_empty() && saw_regex {
+        anyhow::bail!("regular-expression {name} patterns are not supported; use string globs");
+    }
+    Ok(values)
 }
 
 #[cfg(test)]
@@ -494,17 +410,6 @@ mod tests {
         let source = fixture_source(&["playwright_config", "nonliteral-optional-values.ts"]);
         let parsed = parse(&source, Path::new("/repo")).unwrap();
         assert_eq!(parsed.projects[0].test_dir, "./tests");
-        assert_eq!(parsed.projects[0].base_url, None);
-        assert_eq!(parsed.projects[0].test_id_attribute, "data-testid");
-    }
-
-    #[test]
-    fn ignores_empty_optional_playwright_values() {
-        let parsed = parse(
-            "export default { use: { baseURL: , testIdAttribute: } }",
-            Path::new("/repo"),
-        )
-        .unwrap();
         assert_eq!(parsed.projects[0].base_url, None);
         assert_eq!(parsed.projects[0].test_id_attribute, "data-testid");
     }
@@ -589,18 +494,12 @@ mod tests {
     fn parse_accepts_spaced_property_and_escaped_string() {
         let source = fixture_source(&["playwright_config", "spaced-property.ts"]);
         let parsed = parse(&source, Path::new("/repo")).unwrap();
-        assert_eq!(parsed.projects[0].test_dir, r#"tests\\e2e"#);
+        assert_eq!(parsed.projects[0].test_dir, r#"tests\e2e"#);
     }
 
     #[test]
     fn parser_rejects_unsupported_required_values() {
-        assert!(parse("export default { testDir: }", Path::new("/repo")).is_err());
         assert!(parse("export default { testDir: 123 }", Path::new("/repo")).is_err());
-        assert!(parse(
-            "export default { testDir: 'unterminated }",
-            Path::new("/repo")
-        )
-        .is_err());
         assert!(parse("export default { testIgnore: 123 }", Path::new("/repo")).is_err());
         assert!(parse(
             "export default { testMatch: [/.*\\.spec\\.ts/] }",
@@ -608,11 +507,6 @@ mod tests {
         )
         .is_err());
         assert!(parse("export default { testMatch: 123 }", Path::new("/repo")).is_err());
-        assert!(parse(
-            "export default { testMatch: ['unterminated] }",
-            Path::new("/repo")
-        )
-        .is_err());
         assert!(parse(
             "export default { projects: [{ testDir: 123 }] }",
             Path::new("/repo")
@@ -631,22 +525,6 @@ mod tests {
     }
 
     #[test]
-    fn property_value_ignores_matching_key_without_colon() {
-        assert_eq!(
-            property_value("export default { testDir = 'tests' }", "testDir"),
-            None
-        );
-    }
-
-    #[test]
-    fn property_value_skips_key_inside_larger_identifier() {
-        assert_eq!(
-            property_value("contestDir: 'wrong', testDir: 'tests'", "testDir"),
-            Some("'tests'")
-        );
-    }
-
-    #[test]
     fn root_options_ignore_project_values() {
         let source = fixture_source(&["playwright_config", "project-values-only.ts"]);
         let parsed = parse(&source, Path::new("/repo")).unwrap();
@@ -655,28 +533,29 @@ mod tests {
     }
 
     #[test]
-    fn collect_strings_handles_non_string_prefixes() {
+    fn parser_handles_ast_edge_shapes() {
+        let source = fixture_source(&["playwright_config", "no-default-export.ts"]);
+        let parsed = parse(&source, Path::new("/repo")).unwrap();
+        assert_eq!(parsed.projects[0].test_dir, ".");
+
+        let source = fixture_source(&["playwright_config", "non-object-default.ts"]);
+        let parsed = parse(&source, Path::new("/repo")).unwrap();
+        assert_eq!(parsed.projects[0].test_dir, ".");
+
+        let source = fixture_source(&["playwright_config", "default-function.ts"]);
+        let parsed = parse(&source, Path::new("/repo")).unwrap();
+        assert_eq!(parsed.projects[0].test_dir, ".");
+
+        let source = fixture_source(&["playwright_config", "edge-shapes.ts"]);
+        let parsed = parse(&source, Path::new("/repo")).unwrap();
+        assert_eq!(parsed.projects.len(), 1);
+        assert_eq!(parsed.projects[0].test_dir, "./project-tests");
+        assert_eq!(parsed.projects[0].test_match, vec!["**/*.project.ts"]);
+        assert_eq!(parsed.projects[0].test_ignore, vec!["**/skip/**"]);
         assert_eq!(
-            collect_strings("[foo, 'a', \"b\"]").unwrap(),
-            vec!["a", "b"]
+            parsed.projects[0].base_url.as_deref(),
+            Some("http://localhost:3000")
         );
-    }
-
-    #[test]
-    fn delimiter_scanner_handles_early_closers_and_escaped_quotes() {
-        assert_eq!(find_value_end("testMatch: ]", 10), 11);
-        assert_eq!(find_value_end("testMatch: )", 10), 11);
-        assert_eq!(find_value_end(r#"testDir: "a\"b", next: true"#, 8), 15);
-        assert_eq!(find_string_end("", 0), None);
-        assert_eq!(find_string_end(r#""a\"b""#, 0), Some(5));
-    }
-
-    #[test]
-    fn split_projects_handles_quoted_braces_and_escapes() {
-        let projects = split_top_level_objects(
-            r#"[{ name: "a\"{", use: { baseURL: "x" }, testDir: "a" }, { name: 'b', testDir: 'b' }]"#,
-        );
-        assert_eq!(projects.len(), 2);
-        assert!(split_top_level_objects("}").is_empty());
+        assert_eq!(parsed.projects[0].test_id_attribute, "data-test");
     }
 }

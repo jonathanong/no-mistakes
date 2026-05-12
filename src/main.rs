@@ -1,5 +1,5 @@
+mod ast;
 mod config;
-mod js_scan;
 mod matcher;
 mod playwright_config;
 mod playwright_urls;
@@ -251,10 +251,11 @@ fn analyze_test_file(test_file: &Path, context: &TestAnalysisContext<'_>) -> Res
     let rel_test_file = relative_string(context.root, test_file);
     let mut edges = Vec::new();
 
-    for raw_url in playwright_urls::extract_playwright_url_literals_with_helpers(
+    for raw_url in playwright_urls::extract_playwright_url_literals_from_path(
+        test_file,
         &source,
         context.navigation_helpers,
-    ) {
+    )? {
         let Some(url) = normalize_url(&raw_url, context.base_urls) else {
             continue;
         };
@@ -272,10 +273,12 @@ fn analyze_test_file(test_file: &Path, context: &TestAnalysisContext<'_>) -> Res
 
     if !context.app_selector_targets.is_empty() {
         let playwright_selectors = selectors::extract_playwright_selectors_with_regexes(
+            test_file,
             &source,
             context.selector_regexes,
             context.test_id_attributes,
-        );
+        )
+        .expect("test source already parsed while extracting Playwright URLs");
         for app_selector in context.app_selector_targets {
             for playwright_selector in &playwright_selectors {
                 if app_selector
@@ -339,7 +342,7 @@ fn collect_app_selectors(
                 path,
                 &source,
                 selector_regexes,
-            ));
+            )?);
             Ok(app_selectors)
         })
         .try_reduce(BTreeSet::new, |mut left, right| -> Result<_> {
@@ -936,6 +939,45 @@ mod tests {
         let analysis = analyze(&root, &settings).unwrap();
         assert_eq!(analysis.coverage.summary.covered_routes, 1);
         assert_eq!(analysis.edges.edges.len(), 1);
+    }
+
+    #[test]
+    fn analyze_surfaces_parser_errors() {
+        let root = fixture_path(&["main", "invalid-test-source"]);
+        let settings = Settings {
+            frontend_root: "web/app".to_string(),
+            playwright_config: None,
+            test_include: vec!["tests/**/*.spec.ts".to_string()],
+            test_exclude: vec![],
+            ignore_routes: vec![],
+            navigation_helpers: vec![],
+            selector_attributes: vec![],
+            selector_roots: vec!["web/app".to_string()],
+            selector_include: vec![],
+            selector_exclude: vec![],
+        };
+
+        let err = analyze(&root, &settings).err().unwrap();
+        assert!(err.to_string().contains("failed to parse"));
+
+        let root = fixture_path(&["main", "invalid-selector-source"]);
+        let settings = Settings {
+            frontend_root: "web/app".to_string(),
+            playwright_config: None,
+            test_include: vec![],
+            test_exclude: vec![],
+            ignore_routes: vec![],
+            navigation_helpers: vec![],
+            selector_attributes: vec!["data-testid".to_string()],
+            selector_roots: vec!["web/app".to_string()],
+            selector_include: vec![],
+            selector_exclude: vec![],
+        };
+        let selector_regexes = selectors::compile_selector_regexes(&settings.selector_attributes);
+        let err = collect_app_selectors(&root, &settings, &selector_regexes)
+            .err()
+            .unwrap();
+        assert!(err.to_string().contains("failed to parse"));
     }
 
     #[test]

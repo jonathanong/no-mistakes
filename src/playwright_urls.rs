@@ -1,11 +1,11 @@
-use crate::js_scan;
+use crate::ast;
+use anyhow::Result;
+use oxc_ast::ast::{Argument, CallExpression, Expression};
+use oxc_ast_visit::{walk, Visit};
 use std::collections::BTreeSet;
+use std::path::Path;
 
 /// Extract local URL string literals navigated to in a Playwright test file.
-///
-/// Recognizes:
-/// - `page.goto('<url>')`
-/// - `page.click('a[href="<url>"]')`
 #[cfg(test)]
 pub fn extract_playwright_urls(source: &str) -> Vec<String> {
     extract_playwright_url_literals_with_helpers(source, &[])
@@ -14,51 +14,29 @@ pub fn extract_playwright_urls(source: &str) -> Vec<String> {
         .collect()
 }
 
+#[cfg(test)]
 pub fn extract_playwright_url_literals_with_helpers(
     source: &str,
     navigation_helpers: &[String],
 ) -> Vec<String> {
-    let mut urls = BTreeSet::new();
+    extract_playwright_url_literals_from_path(Path::new("fixture.ts"), source, navigation_helpers)
+        .expect("fixture should parse")
+}
 
-    for arguments in helper_call_arguments(source, ".goto") {
-        let Some(url) = first_literal_argument(arguments) else {
-            continue;
+pub fn extract_playwright_url_literals_from_path(
+    path: &Path,
+    source: &str,
+    navigation_helpers: &[String],
+) -> Result<Vec<String>> {
+    ast::with_program(path, source, |program, source| {
+        let mut visitor = UrlVisitor {
+            source,
+            navigation_helpers,
+            urls: BTreeSet::new(),
         };
-        if is_candidate_url(&url) {
-            urls.insert(url);
-        }
-    }
-
-    for arguments in helper_call_arguments(source, ".click") {
-        let Some(selector) = first_literal_argument(arguments) else {
-            continue;
-        };
-        if let Some(url) = extract_href_from_selector(&selector) {
-            urls.insert(url);
-        }
-    }
-
-    for arguments in helper_call_arguments(source, ".toHaveURL") {
-        for url in string_literals_outside_comments(arguments) {
-            if is_candidate_url(&url) {
-                urls.insert(url);
-                break;
-            }
-        }
-    }
-
-    for helper in navigation_helpers {
-        for arguments in helper_call_arguments(source, helper) {
-            for url in string_literals_outside_comments(arguments) {
-                if is_candidate_url(&url) {
-                    urls.insert(url);
-                    break;
-                }
-            }
-        }
-    }
-
-    urls.into_iter().collect()
+        visitor.visit_program(program);
+        visitor.urls.into_iter().collect()
+    })
 }
 
 fn is_candidate_url(url: &str) -> bool {
@@ -83,136 +61,110 @@ fn extract_href_from_selector(selector: &str) -> Option<String> {
     }
 }
 
-fn helper_call_arguments<'a>(source: &'a str, helper: &str) -> Vec<&'a str> {
-    if helper.trim().is_empty() {
-        return Vec::new();
-    }
-
-    let bytes = source.as_bytes();
-    let comment_masked = js_scan::mask_comments(source);
-    let mut arguments = Vec::new();
-    let mut offset = 0;
-
-    while let Some(start) = js_scan::find_outside_syntax(source, helper, offset) {
-        let after_helper = start + helper.len();
-        if !has_callee_boundary(bytes, start, after_helper, helper.starts_with('.')) {
-            offset = after_helper;
-            continue;
-        }
-
-        let mut open = after_helper;
-        while open < bytes.len() && bytes[open].is_ascii_whitespace() {
-            open += 1;
-        }
-        if bytes.get(open) != Some(&b'(') {
-            offset = after_helper;
-            continue;
-        }
-
-        if let Some(close) = find_matching_paren(&comment_masked, open) {
-            arguments.push(&source[open + 1..close]);
-            offset = close + 1;
-        } else {
-            offset = open + 1;
-        }
-    }
-
-    arguments
+struct UrlVisitor<'a, 'h> {
+    source: &'a str,
+    navigation_helpers: &'h [String],
+    urls: BTreeSet<String>,
 }
 
-fn first_literal_argument(source: &str) -> Option<String> {
-    let source = js_scan::mask_comments(source);
-    let bytes = source.as_bytes();
-    let mut i = 0usize;
-    while i < bytes.len() && bytes[i].is_ascii_whitespace() {
-        i += 1;
-    }
-    if !matches!(bytes.get(i), Some(b'\'' | b'"' | b'`')) {
-        return None;
-    }
-    let end = find_string_end(&source, i)?;
-    Some(source[i + 1..end].to_string())
-}
+impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
+    fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        let callee = expression_path(&call.callee);
+        let callee_name = callee.as_deref().map(|parts| parts.join("."));
 
-fn string_literals_outside_comments(source: &str) -> Vec<String> {
-    string_literals(&js_scan::mask_comments(source))
-}
-
-fn has_callee_boundary(bytes: &[u8], start: usize, end: usize, method_call: bool) -> bool {
-    let before_ok = method_call || start == 0 || !is_ident(bytes[start - 1]);
-    let after_ok = end >= bytes.len() || !is_ident(bytes[end]);
-    before_ok && after_ok
-}
-
-fn find_matching_paren(source: &str, open: usize) -> Option<usize> {
-    let bytes = source.as_bytes();
-    let mut depth = 0usize;
-    let mut quote: Option<u8> = None;
-    let mut escaped = false;
-
-    for (i, byte) in bytes.iter().copied().enumerate().skip(open) {
-        if let Some(q) = quote {
-            if escaped {
-                escaped = false;
-            } else if byte == b'\\' {
-                escaped = true;
-            } else if byte == q {
-                quote = None;
-            }
-            continue;
-        }
-
-        match byte {
-            b'\'' | b'"' | b'`' => quote = Some(byte),
-            b'(' => depth += 1,
-            b')' => {
-                depth = depth.saturating_sub(1);
-                if depth == 0 {
-                    return Some(i);
+        if callee_ends_with(&callee, "goto") {
+            if let Some(url) = call
+                .arguments
+                .first()
+                .and_then(|arg| argument_literal(arg, self.source))
+            {
+                if is_candidate_url(&url) {
+                    self.urls.insert(url);
                 }
             }
-            _ => {}
-        }
-    }
-
-    None
-}
-
-fn string_literals(source: &str) -> Vec<String> {
-    let bytes = source.as_bytes();
-    let mut strings = Vec::new();
-    let mut i = 0;
-    while i < bytes.len() {
-        if matches!(bytes[i], b'\'' | b'"' | b'`') {
-            if let Some(end) = find_string_end(source, i) {
-                strings.push(source[i + 1..end].to_string());
-                i = end + 1;
-                continue;
+        } else if callee_ends_with(&callee, "click") {
+            if let Some(selector) = call
+                .arguments
+                .first()
+                .and_then(|arg| argument_literal(arg, self.source))
+            {
+                if let Some(url) = extract_href_from_selector(&selector) {
+                    self.urls.insert(url);
+                }
+            }
+        } else if callee_ends_with(&callee, "toHaveURL")
+            || callee_name
+                .as_deref()
+                .is_some_and(|name| self.navigation_helpers.iter().any(|helper| helper == name))
+        {
+            if let Some(url) = first_candidate_literal(&call.arguments, self.source) {
+                self.urls.insert(url);
             }
         }
-        i += 1;
+
+        walk::walk_call_expression(self, call);
     }
-    strings
 }
 
-fn find_string_end(source: &str, start: usize) -> Option<usize> {
-    let bytes = source.as_bytes();
-    let quote = bytes[start];
-    let mut escaped = false;
-    for (i, byte) in bytes.iter().enumerate().skip(start + 1) {
-        if escaped {
-            escaped = false;
-        } else if *byte == b'\\' {
-            escaped = true;
-        } else if *byte == quote {
-            return Some(i);
+fn callee_ends_with(callee: &Option<Vec<String>>, method: &str) -> bool {
+    callee
+        .as_ref()
+        .and_then(|parts| parts.last())
+        .is_some_and(|last| last == method)
+}
+
+fn first_candidate_literal(arguments: &[Argument<'_>], source: &str) -> Option<String> {
+    let mut visitor = LiteralVisitor {
+        source,
+        literals: Vec::new(),
+    };
+    for argument in arguments {
+        visitor.visit_argument(argument);
+    }
+    visitor
+        .literals
+        .into_iter()
+        .find(|url| is_candidate_url(url))
+}
+
+struct LiteralVisitor<'a> {
+    source: &'a str,
+    literals: Vec<String>,
+}
+
+impl<'a> Visit<'a> for LiteralVisitor<'a> {
+    fn visit_string_literal(&mut self, literal: &oxc_ast::ast::StringLiteral<'a>) {
+        self.literals.push(literal.value.to_string());
+    }
+
+    fn visit_template_literal(&mut self, template: &oxc_ast::ast::TemplateLiteral<'a>) {
+        self.literals
+            .push(ast::template_literal_text(template, self.source));
+        walk::walk_template_literal(self, template);
+    }
+}
+
+fn argument_literal(argument: &Argument<'_>, source: &str) -> Option<String> {
+    match argument {
+        Argument::StringLiteral(literal) => Some(literal.value.to_string()),
+        Argument::TemplateLiteral(template) => Some(ast::template_literal_text(template, source)),
+        _ => None,
+    }
+}
+
+fn expression_path(expression: &Expression<'_>) -> Option<Vec<String>> {
+    match expression {
+        Expression::Identifier(identifier) => Some(vec![identifier.name.to_string()]),
+        Expression::StaticMemberExpression(member) => {
+            let mut parts = expression_path(&member.object).unwrap_or_default();
+            parts.push(member.property.name.to_string());
+            Some(parts)
         }
+        Expression::ParenthesizedExpression(parenthesized) => {
+            expression_path(&parenthesized.expression)
+        }
+        _ => None,
     }
-    None
-}
-
-fn is_ident(byte: u8) -> bool {
-    byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$')
 }
 
 #[cfg(test)]
@@ -310,30 +262,9 @@ mod tests {
     }
 
     #[test]
-    fn helper_argument_scanner_handles_empty_helpers_and_unclosed_calls() {
-        assert!(helper_call_arguments("navigateTo(page, '/settings'", "").is_empty());
-        assert!(helper_call_arguments("navigateTo(page, '/settings'", "navigateTo").is_empty());
-    }
-
-    #[test]
-    fn helper_argument_scanner_handles_escaped_quotes() {
-        let source = r#"navigateTo(page, "a\"b", '/settings')"#;
-        let open = source.find('(').unwrap();
-        assert_eq!(find_matching_paren(source, open), Some(source.len() - 1));
-        assert_eq!(
-            helper_call_arguments(source, "navigateTo"),
-            vec![r#"page, "a\"b", '/settings'"#]
-        );
-    }
-
-    #[test]
-    fn string_literal_scanner_handles_escapes_and_unterminated_strings() {
-        assert_eq!(
-            string_literals(r#""a\"b" '/settings'"#),
-            vec![r#"a\"b"#, "/settings"]
-        );
-        assert!(string_literals("\"unterminated").is_empty());
-        assert_eq!(find_string_end(r#""a\"b""#, 0), Some(5));
-        assert_eq!(find_string_end("\"unterminated", 0), None);
+    fn parenthesized_callee_is_supported() {
+        let src = fixture_source(&["playwright_urls", "parenthesized-callee.ts"]);
+        let urls = extract_playwright_urls(&src);
+        assert_eq!(urls, vec!["/settings"]);
     }
 }
