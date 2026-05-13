@@ -29,6 +29,17 @@ playwright-ast-coverage related 'web/app/users/[id]/page.tsx'
 playwright-ast-coverage edges --json
 ```
 
+For editor and lint-time feedback, install the matching ESLint plugin:
+
+```sh
+npm install --save-dev eslint-plugin-playwright-ast-coverage
+```
+
+The plugin exports ESLint flat configs and can also be loaded by Oxlint through
+`jsPlugins`. Use `playwright-ast-coverage check --assert-unique-selectors` in CI
+when selector values must be unique across the whole configured app, not just
+within one linted file.
+
 Use `related` when a page or component changes and you want to run the matching
 Playwright tests:
 

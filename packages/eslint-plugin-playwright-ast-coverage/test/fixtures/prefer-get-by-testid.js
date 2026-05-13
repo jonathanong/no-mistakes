@@ -1,0 +1,11 @@
+page[method]('[data-pw="computed"]');
+locator('[data-pw="direct"]');
+page.locator();
+page.locator(selector);
+page.locator("");
+page.locator('[data-pw="save"]');
+page.locator("[data-pw='open']");
+page.click('[data-testid^="user-"]');
+page.dragAndDrop('[data-testid="source"]', '[data-pw="target"]');
+page.getByTestId("save");
+const selector = '[data-pw="ignored"]';

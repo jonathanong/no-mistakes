@@ -20,9 +20,12 @@
     "README.md",
     "LICENSE"
   ],
+  "workspaces": [
+    "packages/eslint-plugin-playwright-ast-coverage"
+  ],
   "scripts": {
     "postinstall": "node scripts/install.js",
-    "test": "node --test scripts/*.test.js",
+    "test": "node --test scripts/*.test.js && npm test --workspace eslint-plugin-playwright-ast-coverage",
     "pack:check": "npm pack --dry-run"
   },
   "engines": {

@@ -1,0 +1,30 @@
+{
+  "name": "eslint-plugin-playwright-ast-coverage",
+  "version": "0.1.0",
+  "description": "ESLint and Oxlint rules for playwright-ast-coverage test IDs",
+  "license": "MIT",
+  "main": "src/index.js",
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "vitest run --coverage"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "peerDependencies": {
+    "eslint": ">=9"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.6",
+    "eslint": "^10.3.0",
+    "oxlint": "^1.64.0",
+    "vitest": "^4.1.6"
+  }
+}
