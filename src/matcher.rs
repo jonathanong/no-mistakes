@@ -85,8 +85,20 @@ mod tests {
     }
 
     #[test]
+    fn catch_all_and_optional_catch_all_match_remaining_segments() {
+        assert!(matches("/docs/a/b", "/docs/*"));
+        assert!(matches("/shop", "/shop/**"));
+        assert!(matches("/shop/a/b", "/shop/**"));
+    }
+
+    #[test]
     fn length_mismatch() {
         assert!(!matches("/api/v1", "/api/v1/users"));
+    }
+
+    #[test]
+    fn dynamic_segments_reject_empty_segments() {
+        assert!(!matches("/users//settings", "/users/:id/settings"));
     }
 
     #[test]

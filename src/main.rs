@@ -475,22 +475,22 @@ fn selector_index<'a>(targets: &'a [AppSelectorTarget<'a>]) -> SelectorIndex<'a>
             .entry(target.selector.attribute.clone())
             .or_default()
             .push(target);
-        match &target.selector.value {
-            selectors::AppSelectorValue::Exact(value) => {
-                index
-                    .exact
-                    .entry((target.selector.attribute.clone(), value.clone()))
-                    .or_default()
-                    .push(target);
-            }
-            selectors::AppSelectorValue::Template(_) => {
-                index
-                    .templates_by_attribute
-                    .entry(target.selector.attribute.clone())
-                    .or_default()
-                    .push(target);
-            }
-            selectors::AppSelectorValue::Unsupported(_) => {}
+        if let selectors::AppSelectorValue::Exact(value) = &target.selector.value {
+            index
+                .exact
+                .entry((target.selector.attribute.clone(), value.clone()))
+                .or_default()
+                .push(target);
+        }
+        if matches!(
+            target.selector.value,
+            selectors::AppSelectorValue::Template(_)
+        ) {
+            index
+                .templates_by_attribute
+                .entry(target.selector.attribute.clone())
+                .or_default()
+                .push(target);
         }
     }
     index
@@ -1156,6 +1156,75 @@ mod tests {
     }
 
     #[test]
+    fn compiled_route_matching_handles_edge_segments() {
+        assert_eq!(
+            reference_segments("/users/42/?tab=profile"),
+            vec!["users", "42"]
+        );
+        assert_eq!(
+            pattern_segments("/users/:id"),
+            vec!["users".to_string(), ":id".to_string()]
+        );
+        assert!(route_matches_segments(
+            &["shop"],
+            &["shop".to_string(), "**".to_string()]
+        ));
+        assert!(!route_matches_segments(
+            &["shop"],
+            &["shop".to_string(), "item".to_string()]
+        ));
+    }
+
+    #[test]
+    fn selector_index_matches_exact_template_and_fuzzy_selectors() {
+        let root = Path::new("/repo");
+        let app_selectors = selectors::extract_app_selectors(
+            Path::new("/repo/web/app/page.tsx"),
+            r#"
+                export function Page({ id }) {
+                    return <>
+                        <button data-testid="save-button" />
+                        <div data-testid={`user-${id}`} />
+                        <span data-pw="other" />
+                    </>;
+                }
+            "#,
+            &["data-testid".to_string(), "data-pw".to_string()],
+        )
+        .unwrap();
+        let targets = app_selector_targets(root, &app_selectors);
+        let index = selector_index(&targets);
+
+        let exact = selectors::extract_playwright_selectors(
+            "await page.getByTestId('user-123');",
+            &["data-testid".to_string()],
+            &["data-testid".to_string()],
+        );
+        assert_eq!(index.matches(&exact[0]).len(), 1);
+
+        let fuzzy = selectors::extract_playwright_selectors(
+            r#"await page.locator('[data-testid^="save"]');"#,
+            &["data-testid".to_string()],
+            &["data-testid".to_string()],
+        );
+        assert_eq!(index.matches(&fuzzy[0]).len(), 1);
+
+        let missing_value = selectors::extract_playwright_selectors(
+            r#"await page.locator('[data-testid^="missing"]');"#,
+            &["data-testid".to_string()],
+            &["data-testid".to_string()],
+        );
+        assert!(index.matches(&missing_value[0]).is_empty());
+
+        let missing_attribute = selectors::extract_playwright_selectors(
+            r#"await page.locator('[data-role^="save"]');"#,
+            &["data-role".to_string()],
+            &["data-role".to_string()],
+        );
+        assert!(index.matches(&missing_attribute[0]).is_empty());
+    }
+
+    #[test]
     fn build_globset_rejects_invalid_patterns() {
         assert!(build_globset(&["[".to_string()]).is_err());
     }
@@ -1417,6 +1486,38 @@ mod tests {
         let files = discover_test_files(&root, &settings, &playwright).unwrap();
         assert_eq!(files.len(), 1);
         assert_eq!(files[0].contexts.len(), 2);
+    }
+
+    #[test]
+    fn discover_test_files_applies_yaml_exclude_before_project_matching() {
+        let root = fixture_path(&["main", "analyze-basic"]);
+        let settings = Settings {
+            frontend_root: "web/app".to_string(),
+            playwright_configs: vec![],
+            project: None,
+            test_include: vec![],
+            test_exclude: vec!["tests/**".to_string()],
+            ignore_routes: vec![],
+            navigation_helpers: vec![],
+            selector_attributes: vec![],
+            selector_roots: vec!["web/app".to_string()],
+            selector_include: vec![],
+            selector_exclude: vec![],
+        };
+        let playwright = playwright_config::PlaywrightConfig {
+            name: None,
+            projects: vec![playwright_config::TestProject {
+                config_dir: root.clone(),
+                test_dir: "tests".to_string(),
+                test_match: vec!["**/*.spec.ts".to_string()],
+                test_ignore: vec![],
+                base_url: None,
+                test_id_attribute: "data-testid".to_string(),
+            }],
+        };
+
+        let files = discover_test_files(&root, &settings, &playwright).unwrap();
+        assert!(files.is_empty());
     }
 
     #[test]
