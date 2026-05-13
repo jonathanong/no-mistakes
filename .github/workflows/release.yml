@@ -222,6 +222,19 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
 
+      - name: Publish Cargo crate
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ needs.prepare.outputs.version }}"
+          if curl --fail --silent --output /dev/null "https://crates.io/api/v1/crates/playwright-ast-coverage/$version"; then
+            echo "playwright-ast-coverage $version is already published on crates.io; skipping"
+          else
+            cargo publish --locked
+          fi
+
       - name: Download release assets
         uses: actions/download-artifact@v7
         with:
@@ -247,9 +260,12 @@ jobs:
           npx playwright-ast-coverage --version
 
       - name: Publish npm package
-        run: npm publish --provenance --access public
-
-      - name: Publish Cargo crate
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo publish --locked
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ needs.prepare.outputs.version }}"
+          if npm view "playwright-ast-coverage@$version" version >/dev/null 2>&1; then
+            echo "playwright-ast-coverage $version is already published on npm; skipping"
+          else
+            npm publish --provenance --access public
+          fi
