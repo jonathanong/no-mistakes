@@ -137,9 +137,14 @@ impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
             }
         }
 
-        self.visit_expression(&call.callee);
         let callback_index = playwright_tests::callback_argument_index(call);
         let callback_status = playwright_tests::test_callback_status(call);
+        if callback_status.is_none() {
+            walk::walk_call_expression(self, call);
+            return;
+        }
+
+        self.visit_expression(&call.callee);
         for (index, argument) in call.arguments.iter().enumerate() {
             if Some(index) == callback_index {
                 let status = callback_status
@@ -401,6 +406,9 @@ mod tests {
             test.skip(false, 'skip false', async ({ page }) => {
                 await page.goto('/skip-false');
             });
+            helpers.skipIf(featureFlag)(async () => {
+                await page.goto('/unrelated-skip-if');
+            });
             test('active', async ({ page }) => {
                 await page.goto('/active');
             });
@@ -427,6 +435,7 @@ mod tests {
                 ("/skip-false".to_string(), TestStatus::Active),
                 ("/skip-if".to_string(), TestStatus::Conditional),
                 ("/skipped".to_string(), TestStatus::Skipped),
+                ("/unrelated-skip-if".to_string(), TestStatus::Active),
             ]
         );
     }

@@ -44,7 +44,7 @@ pub fn callback_argument_index(call: &CallExpression<'_>) -> Option<usize> {
 
 pub fn test_callback_status(call: &CallExpression<'_>) -> Option<TestStatus> {
     callback_argument_index(call)?;
-    if callee_contains_skip_if(&call.callee) {
+    if callee_contains_playwright_skip_if(&call.callee) {
         return Some(TestStatus::Conditional);
     }
 
@@ -72,7 +72,7 @@ pub fn function_argument_annotation_status(argument: &Argument<'_>) -> Option<Te
 }
 
 pub fn annotation_status_for_call(call: &CallExpression<'_>) -> Option<TestStatus> {
-    if callee_contains_skip_if(&call.callee) {
+    if callee_contains_playwright_skip_if(&call.callee) {
         return Some(TestStatus::Conditional);
     }
 
@@ -127,18 +127,23 @@ fn is_skip_path(parts: &[String]) -> bool {
         && parts.iter().any(|part| part == "skip")
 }
 
-fn callee_contains_skip_if(expression: &Expression<'_>) -> bool {
+fn callee_contains_playwright_skip_if(expression: &Expression<'_>) -> bool {
+    if ast::expression_path(expression).is_some_and(|parts| is_playwright_skip_if_path(&parts)) {
+        return true;
+    }
+
     match expression {
-        Expression::Identifier(identifier) => identifier.name == "skipIf",
-        Expression::StaticMemberExpression(member) => {
-            member.property.name == "skipIf" || callee_contains_skip_if(&member.object)
-        }
-        Expression::CallExpression(call) => callee_contains_skip_if(&call.callee),
+        Expression::CallExpression(call) => callee_contains_playwright_skip_if(&call.callee),
         Expression::ParenthesizedExpression(parenthesized) => {
-            callee_contains_skip_if(&parenthesized.expression)
+            callee_contains_playwright_skip_if(&parenthesized.expression)
         }
         _ => false,
     }
+}
+
+fn is_playwright_skip_if_path(parts: &[String]) -> bool {
+    matches!(parts.first().map(String::as_str), Some("test"))
+        && parts.iter().any(|part| part == "skipIf")
 }
 
 fn argument_is_function(argument: &Argument<'_>) -> bool {

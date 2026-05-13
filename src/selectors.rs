@@ -401,9 +401,14 @@ impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightSelectorVisitor<'a, '_> {
             }
         }
 
-        self.visit_expression(&call.callee);
         let callback_index = playwright_tests::callback_argument_index(call);
         let callback_status = playwright_tests::test_callback_status(call);
+        if callback_status.is_none() {
+            oxc_ast_visit::walk::walk_call_expression(self, call);
+            return;
+        }
+
+        self.visit_expression(&call.callee);
         for (index, argument) in call.arguments.iter().enumerate() {
             if Some(index) == callback_index {
                 let status = callback_status
