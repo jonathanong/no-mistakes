@@ -451,11 +451,15 @@ fn selector_taking_call(callee: &oxc_ast::ast::Expression<'_>) -> bool {
         matches!(
             name,
             "$" | "$$"
+                | "$$eval"
+                | "$eval"
                 | "check"
                 | "click"
                 | "dblclick"
                 | "dispatchEvent"
                 | "dragTo"
+                | "evalOnSelector"
+                | "evalOnSelectorAll"
                 | "fill"
                 | "focus"
                 | "getAttribute"
@@ -475,6 +479,7 @@ fn selector_taking_call(callee: &oxc_ast::ast::Expression<'_>) -> bool {
                 | "setChecked"
                 | "tap"
                 | "textContent"
+                | "type"
                 | "uncheck"
                 | "waitForSelector"
         )
@@ -655,6 +660,9 @@ mod tests {
             const unused = '[data-testid="save"]';
             await page.locator('[data-testid="publish"]').click();
             await page.click(`[data-pw="open"]`);
+            await page.type('[data-testid="search"]', 'query');
+            await page.$eval('[data-pw="panel"]', node => node.textContent);
+            await page.$$eval('[data-testid="items"]', nodes => nodes.length);
         "#;
         let selectors =
             extract_playwright_selectors(source, &attrs(), &["data-testid".to_string()]);
@@ -664,6 +672,15 @@ mod tests {
         assert!(selectors
             .iter()
             .any(|selector| selector.selector == r#"[data-pw="open"]"#));
+        assert!(selectors
+            .iter()
+            .any(|selector| selector.selector == r#"[data-testid="search"]"#));
+        assert!(selectors
+            .iter()
+            .any(|selector| selector.selector == r#"[data-pw="panel"]"#));
+        assert!(selectors
+            .iter()
+            .any(|selector| selector.selector == r#"[data-testid="items"]"#));
         assert!(selectors
             .iter()
             .all(|selector| selector.selector != r#"[data-testid="save"]"#));
