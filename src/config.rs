@@ -261,6 +261,22 @@ mod tests {
     }
 
     #[test]
+    fn explicit_extensionless_config_errors() {
+        let root = fixture_path(&["config", "extensionless"]);
+        let err = load_settings(
+            &root,
+            Some(Path::new(".playwright-ast-coverage")),
+            &[],
+            None,
+        )
+        .err()
+        .expect("expected extensionless config to fail");
+        assert!(err
+            .to_string()
+            .contains("unsupported config file without extension"));
+    }
+
+    #[test]
     fn reads_yaml_and_finds_default_playwright_config() {
         let root = fixture_path(&["config", "full"]);
         let settings = load_settings(&root, None, &[], None).unwrap();
@@ -297,6 +313,15 @@ mod tests {
         let settings = load_settings(&root, None, &[], None).unwrap();
         assert_eq!(settings.frontend_root, "web/jsonc-app");
         assert_eq!(settings.test_exclude, vec!["**/jsonc-skip/**"]);
+    }
+
+    #[test]
+    fn jsonc_config_rejects_json5_object_keys() {
+        let root = fixture_path(&["config", "invalid-jsonc"]);
+        let err = load_settings(&root, None, &[], None)
+            .err()
+            .expect("expected invalid JSONC to fail");
+        assert!(!err.to_string().is_empty());
     }
 
     #[test]
