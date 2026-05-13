@@ -138,9 +138,6 @@ impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
         }
 
         self.visit_expression(&call.callee);
-        if let Some(type_arguments) = &call.type_arguments {
-            self.visit_ts_type_parameter_instantiation(type_arguments);
-        }
         let callback_index = playwright_tests::callback_argument_index(call);
         let callback_status = playwright_tests::test_callback_status(call);
         for (index, argument) in call.arguments.iter().enumerate() {
@@ -383,6 +380,10 @@ mod tests {
                 test('conditional wrapper', async ({ page }) => {
                     await page.goto('/conditional-wrapper');
                 });
+            } else {
+                test('conditional alternate', async ({ page }) => {
+                    await page.goto('/conditional-alternate');
+                });
             }
             test.skipIf(browserName === 'webkit')('skip if', async ({ page }) => {
                 await page.goto('/skip-if');
@@ -401,6 +402,10 @@ mod tests {
             urls,
             vec![
                 ("/active".to_string(), TestStatus::Active),
+                (
+                    "/conditional-alternate".to_string(),
+                    TestStatus::Conditional
+                ),
                 (
                     "/conditional-annotation".to_string(),
                     TestStatus::Conditional

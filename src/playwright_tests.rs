@@ -161,9 +161,6 @@ impl<'a> Visit<'a> for AnnotationVisitor {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         if let Some(callback_index) = callback_argument_index(call) {
             self.visit_expression(&call.callee);
-            if let Some(type_arguments) = &call.type_arguments {
-                self.visit_ts_type_parameter_instantiation(type_arguments);
-            }
             for (index, argument) in call.arguments.iter().enumerate() {
                 if index != callback_index {
                     self.visit_argument(argument);

@@ -289,6 +289,27 @@ pub fn extract_playwright_selectors_with_regexes(
 }
 
 #[cfg(test)]
+pub fn extract_playwright_selector_occurrences(
+    source: &str,
+    selector_attributes: &[String],
+    test_id_attributes: &[String],
+) -> Vec<(String, playwright_tests::TestStatus)> {
+    let regexes = compile_selector_regexes(selector_attributes);
+    ast::with_program(Path::new("fixture.ts"), source, |program, source| {
+        extract_playwright_selector_occurrences_from_program(
+            program,
+            source,
+            &regexes,
+            test_id_attributes,
+        )
+        .into_iter()
+        .map(|occurrence| (occurrence.value.selector, occurrence.status))
+        .collect()
+    })
+    .expect("fixture should parse")
+}
+
+#[cfg(test)]
 pub fn extract_playwright_selectors_from_program(
     program: &oxc_ast::ast::Program<'_>,
     source: &str,
@@ -381,9 +402,6 @@ impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightSelectorVisitor<'a, '_> {
         }
 
         self.visit_expression(&call.callee);
-        if let Some(type_arguments) = &call.type_arguments {
-            self.visit_ts_type_parameter_instantiation(type_arguments);
-        }
         let callback_index = playwright_tests::callback_argument_index(call);
         let callback_status = playwright_tests::test_callback_status(call);
         for (index, argument) in call.arguments.iter().enumerate() {
@@ -641,6 +659,7 @@ fn is_skipped_dir(path: &Path) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::playwright_tests::TestStatus;
     use crate::test_support::{fixture_path, fixture_source};
 
     fn attrs() -> Vec<String> {
@@ -702,6 +721,47 @@ mod tests {
         assert!(selectors
             .iter()
             .any(|selector| selector.selector == "getByTestId(/^account-/)"));
+    }
+
+    #[test]
+    fn marks_selectors_inside_skipped_and_conditional_tests() {
+        let selectors = extract_playwright_selector_occurrences(
+            r#"
+            test.skip('skipped', async ({ page }) => {
+                await page.getByTestId('skipped');
+            });
+            if (process.env.E2E) {
+                test('conditional wrapper', async ({ page }) => {
+                    await page.getByTestId('conditional-wrapper');
+                });
+            } else {
+                test('conditional alternate', async ({ page }) => {
+                    await page.locator('[data-testid="conditional-alternate"]');
+                });
+            }
+            test('active', async ({ page }) => {
+                await page.getByTestId('active');
+            });
+            "#,
+            &attrs(),
+            &["data-testid".to_string()],
+        );
+
+        assert_eq!(
+            selectors,
+            vec![
+                (
+                    r#"[data-testid="conditional-alternate"]"#.to_string(),
+                    TestStatus::Conditional
+                ),
+                ("getByTestId(active)".to_string(), TestStatus::Active),
+                (
+                    "getByTestId(conditional-wrapper)".to_string(),
+                    TestStatus::Conditional
+                ),
+                ("getByTestId(skipped)".to_string(), TestStatus::Skipped),
+            ]
+        );
     }
 
     #[test]
