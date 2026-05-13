@@ -70,6 +70,7 @@ pub fn extract_playwright_url_occurrences_from_program(
         source,
         navigation_helpers,
         status: playwright_tests::TestStatus::Active,
+        annotation_status: playwright_tests::TestStatus::Active,
         urls: BTreeSet::new(),
     };
     visitor.visit_program(program);
@@ -102,6 +103,7 @@ struct UrlVisitor<'a, 'h> {
     source: &'a str,
     navigation_helpers: &'h [String],
     status: playwright_tests::TestStatus,
+    annotation_status: playwright_tests::TestStatus,
     urls: BTreeSet<playwright_tests::TestOccurrence<String>>,
 }
 
@@ -140,20 +142,27 @@ impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
         let callback_index = playwright_tests::callback_argument_index(call);
         let callback_status = playwright_tests::test_callback_status(call);
         if callback_status.is_none() {
+            if playwright_tests::annotation_status_for_call(call).is_some() {
+                self.apply_annotation_call(call);
+                for (index, argument) in call.arguments.iter().enumerate() {
+                    if Some(index) != callback_index {
+                        self.visit_argument(argument);
+                    }
+                }
+                return;
+            }
             walk::walk_call_expression(self, call);
             return;
         }
 
-        self.visit_expression(&call.callee);
         for (index, argument) in call.arguments.iter().enumerate() {
             if Some(index) == callback_index {
                 let status = callback_status
                     .unwrap_or(playwright_tests::TestStatus::Active)
-                    .merge(
-                        playwright_tests::function_argument_annotation_status(argument)
-                            .unwrap_or(playwright_tests::TestStatus::Active),
-                    );
-                self.with_status(status, |visitor| visitor.visit_argument(argument));
+                    .merge(self.annotation_status);
+                self.with_status(status, |visitor| {
+                    visitor.with_annotation_scope(|visitor| visitor.visit_argument(argument));
+                });
             } else {
                 self.visit_argument(argument);
             }
@@ -176,7 +185,7 @@ impl UrlVisitor<'_, '_> {
     fn insert(&mut self, value: String) {
         self.urls.insert(playwright_tests::TestOccurrence {
             value,
-            status: self.status,
+            status: self.status.merge(self.annotation_status),
         });
     }
 
@@ -185,6 +194,21 @@ impl UrlVisitor<'_, '_> {
         self.status = previous.merge(status);
         visit(self);
         self.status = previous;
+    }
+
+    fn with_annotation_scope(&mut self, visit: impl FnOnce(&mut Self)) {
+        let previous = self.annotation_status;
+        self.annotation_status = playwright_tests::TestStatus::Active;
+        visit(self);
+        self.annotation_status = previous;
+    }
+
+    fn apply_annotation_call(&mut self, call: &CallExpression<'_>) {
+        if let Some(status) = playwright_tests::annotation_status_for_call(call) {
+            let status = playwright_tests::merge_annotation_status(self.status, status);
+            self.annotation_status =
+                playwright_tests::merge_annotation_status(self.annotation_status, status);
+        }
     }
 }
 
@@ -393,9 +417,23 @@ mod tests {
             test.skipIf(browserName === 'webkit')('skip if', async ({ page }) => {
                 await page.goto('/skip-if');
             });
+            test.describe.skip(() => {
+                test('describe skip callback', async ({ page }) => {
+                    await page.goto('/describe-skip-callback');
+                });
+            });
+            test.fixme('fixme test', async ({ page }) => {
+                await page.goto('/fixme');
+            });
             test('annotation', async ({ page, browserName }) => {
                 test.skip(browserName === 'webkit', 'conditional');
                 await page.goto('/conditional-annotation');
+            });
+            test.describe('scope annotation', () => {
+                test.skip(({ browserName }) => browserName === 'webkit', 'conditional');
+                test('describe scope annotation', async ({ page }) => {
+                    await page.goto('/describe-scope-annotation');
+                });
             });
             test('conditional skip annotation', async ({ page }) => {
                 if (process.env.SKIP_E2E) {
@@ -411,6 +449,10 @@ mod tests {
             });
             test('active', async ({ page }) => {
                 await page.goto('/active');
+            });
+            test.skip(({ browserName }) => browserName === 'webkit', 'conditional');
+            test('file scope annotation', async ({ page }) => {
+                await page.goto('/scope-annotation');
             });
             "#,
         );
@@ -432,6 +474,13 @@ mod tests {
                     TestStatus::Conditional
                 ),
                 ("/conditional-wrapper".to_string(), TestStatus::Conditional),
+                (
+                    "/describe-scope-annotation".to_string(),
+                    TestStatus::Conditional
+                ),
+                ("/describe-skip-callback".to_string(), TestStatus::Skipped),
+                ("/fixme".to_string(), TestStatus::Skipped),
+                ("/scope-annotation".to_string(), TestStatus::Conditional),
                 ("/skip-false".to_string(), TestStatus::Active),
                 ("/skip-if".to_string(), TestStatus::Conditional),
                 ("/skipped".to_string(), TestStatus::Skipped),
