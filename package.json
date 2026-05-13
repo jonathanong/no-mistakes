@@ -20,9 +20,12 @@
     "README.md",
     "LICENSE"
   ],
+  "workspaces": [
+    "packages/eslint-plugin-playwright-ast-coverage"
+  ],
   "scripts": {
     "postinstall": "node scripts/install.js",
-    "test": "node --test scripts/*.test.js",
+    "test": "node --test scripts/*.test.js && npm test --workspace eslint-plugin-playwright-ast-coverage",
     "pack:check": "npm pack --dry-run"
   },
   "engines": {
@@ -30,5 +33,13 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "@emnapi/core": "^1.10.0",
+    "@emnapi/runtime": "^1.10.0",
+    "@vitest/coverage-v8": "^4.1.6",
+    "eslint": "^10.3.0",
+    "oxlint": "^1.64.0",
+    "vitest": "^4.1.6"
   }
 }

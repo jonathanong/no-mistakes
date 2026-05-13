@@ -48,6 +48,9 @@ struct Cli {
     #[arg(long, global = true)]
     allow_skipped_tests: bool,
 
+    #[arg(long, global = true)]
+    assert_unique_selectors: bool,
+
     #[command(subcommand)]
     command: Command,
 }
@@ -71,6 +74,7 @@ struct Summary {
     total_selectors: usize,
     covered_selectors: usize,
     uncovered_selectors: usize,
+    duplicate_selectors: usize,
 }
 
 #[derive(Serialize)]
@@ -96,10 +100,20 @@ struct CoverageSelector {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DuplicateSelector {
+    attribute: String,
+    value: String,
+    file: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 struct CoverageReport {
     summary: Summary,
     routes: Vec<CoverageRoute>,
     selectors: Vec<CoverageSelector>,
+    duplicate_selectors: Vec<DuplicateSelector>,
 }
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Serialize)]
@@ -255,6 +269,7 @@ fn run() -> Result<ExitCode> {
             assert_conditional_tests: cli.assert_conditional_tests,
             allow_skipped_tests: cli.allow_skipped_tests,
         },
+        cli.assert_unique_selectors,
     )?;
     match cli.command {
         Command::Check => {
@@ -265,6 +280,7 @@ fn run() -> Result<ExitCode> {
             }
             if analysis.coverage.summary.uncovered_routes > 0
                 || analysis.coverage.summary.uncovered_selectors > 0
+                || analysis.coverage.summary.duplicate_selectors > 0
             {
                 Ok(ExitCode::from(1))
             } else {
@@ -293,13 +309,19 @@ fn run() -> Result<ExitCode> {
 
 #[cfg(test)]
 fn analyze(root: &Path, settings: &Settings) -> Result<Analysis> {
-    analyze_with_policy(root, settings, playwright_tests::TestPolicy::default())
+    analyze_with_policy(
+        root,
+        settings,
+        playwright_tests::TestPolicy::default(),
+        false,
+    )
 }
 
 fn analyze_with_policy(
     root: &Path,
     settings: &Settings,
     test_policy: playwright_tests::TestPolicy,
+    assert_unique_selectors: bool,
 ) -> Result<Analysis> {
     let route_root = root.join(&settings.frontend_root);
     let routes = routes::collect_routes(&route_root)?;
@@ -323,13 +345,16 @@ fn analyze_with_policy(
         &settings.selector_attributes,
         &settings.component_selector_attributes,
     );
-    let app_selectors = if settings.selector_attributes.is_empty()
+    let app_selector_occurrences = if settings.selector_attributes.is_empty()
         && settings.component_selector_attributes.is_empty()
     {
         Vec::new()
     } else {
-        collect_app_selectors(root, settings, &selector_regexes)?
+        collect_app_selector_occurrences(root, settings, &selector_regexes)?
     };
+    let mut app_selectors = app_selector_occurrences.clone();
+    app_selectors.sort();
+    app_selectors.dedup();
     let route_index = route_index(root, &routes);
     let app_selector_targets = app_selector_targets(root, &app_selectors);
     let selector_index = selector_index(&app_selector_targets);
@@ -357,7 +382,15 @@ fn analyze_with_policy(
     edges.dedup();
 
     let edge_report = EdgeReport { edges };
-    let coverage = build_coverage(root, &routes, &app_selectors, &edge_report.edges, settings);
+    let coverage = build_coverage(
+        root,
+        &routes,
+        &app_selectors,
+        &app_selector_occurrences,
+        &edge_report.edges,
+        settings,
+        assert_unique_selectors,
+    );
     Ok(Analysis {
         coverage,
         edges: edge_report,
@@ -590,7 +623,20 @@ fn route_specificity(segments: &[String]) -> Vec<u8> {
     specificity
 }
 
+#[cfg(test)]
 fn collect_app_selectors(
+    root: &Path,
+    settings: &Settings,
+    selector_regexes: &selectors::SelectorRegexes,
+) -> Result<Vec<selectors::AppSelector>> {
+    let mut app_selectors = collect_app_selector_occurrences(root, settings, selector_regexes)?;
+    app_selectors.sort();
+    app_selectors.dedup();
+
+    Ok(app_selectors)
+}
+
+fn collect_app_selector_occurrences(
     root: &Path,
     settings: &Settings,
     selector_regexes: &selectors::SelectorRegexes,
@@ -600,7 +646,7 @@ fn collect_app_selectors(
     let include_all = settings.selector_include.is_empty();
     let source_files =
         collect_selector_source_files(root, settings, &include, &exclude, include_all);
-    let mut app_selectors = source_files
+    let app_selectors = source_files
         .par_iter()
         .try_fold(Vec::new, |mut app_selectors, path| -> Result<_> {
             let source = std::fs::read_to_string(path)?;
@@ -615,9 +661,6 @@ fn collect_app_selectors(
             left.append(&mut right);
             Ok(left)
         })?;
-    app_selectors.sort();
-    app_selectors.dedup();
-
     Ok(app_selectors)
 }
 
@@ -781,8 +824,10 @@ fn build_coverage(
     root: &Path,
     routes: &[Route],
     app_selectors: &[selectors::AppSelector],
+    app_selector_occurrences: &[selectors::AppSelector],
     edges: &[Edge],
     settings: &Settings,
+    assert_unique_selectors: bool,
 ) -> CoverageReport {
     let ignored: Vec<String> = settings.ignore_routes.clone();
     let mut by_route: BTreeMap<&str, (BTreeSet<String>, BTreeSet<String>)> = BTreeMap::new();
@@ -874,6 +919,12 @@ fn build_coverage(
         .filter(|selector| selector.covered)
         .count();
     let uncovered_selectors = total_selectors.saturating_sub(covered_selectors);
+    let duplicate_selectors = if assert_unique_selectors {
+        build_duplicate_selectors(root, app_selector_occurrences)
+    } else {
+        Vec::new()
+    };
+    let duplicate_selector_count = duplicate_selectors.len();
 
     CoverageReport {
         summary: Summary {
@@ -883,10 +934,45 @@ fn build_coverage(
             total_selectors,
             covered_selectors,
             uncovered_selectors,
+            duplicate_selectors: duplicate_selector_count,
         },
         routes: coverage_routes,
         selectors: coverage_selectors,
+        duplicate_selectors,
     }
+}
+
+fn build_duplicate_selectors(
+    root: &Path,
+    app_selectors: &[selectors::AppSelector],
+) -> Vec<DuplicateSelector> {
+    let mut by_value: BTreeMap<&str, Vec<&selectors::AppSelector>> = BTreeMap::new();
+    for selector in app_selectors {
+        if let selectors::AppSelectorValue::Exact(value) = &selector.value {
+            by_value.entry(value.as_str()).or_default().push(selector);
+        }
+    }
+
+    let mut duplicates = Vec::new();
+    for (value, selectors) in by_value {
+        if selectors.len() < 2 {
+            continue;
+        }
+        for selector in selectors {
+            duplicates.push(DuplicateSelector {
+                attribute: selector.attribute.clone(),
+                value: value.to_string(),
+                file: relative_string(root, &selector.file),
+            });
+        }
+    }
+    duplicates.sort_by(|a, b| {
+        a.value
+            .cmp(&b.value)
+            .then_with(|| a.file.cmp(&b.file))
+            .then_with(|| a.attribute.cmp(&b.attribute))
+    });
+    duplicates
 }
 
 fn print_coverage_text(report: &CoverageReport) {
@@ -899,8 +985,15 @@ fn print_coverage_text(report: &CoverageReport) {
         "Uncovered selectors: {}",
         report.summary.uncovered_selectors
     );
+    println!(
+        "Duplicate selectors: {}",
+        report.summary.duplicate_selectors
+    );
 
-    if report.summary.uncovered_routes == 0 && report.summary.uncovered_selectors == 0 {
+    if report.summary.uncovered_routes == 0
+        && report.summary.uncovered_selectors == 0
+        && report.summary.duplicate_selectors == 0
+    {
         println!();
         println!("All routes and selectors covered.");
         return;
@@ -918,6 +1011,17 @@ fn print_coverage_text(report: &CoverageReport) {
         println!();
         println!("Uncovered selectors:");
         for selector in report.selectors.iter().filter(|selector| !selector.covered) {
+            println!(
+                "  [{}=\"{}\"]  {}",
+                selector.attribute, selector.value, selector.file
+            );
+        }
+    }
+
+    if report.summary.duplicate_selectors > 0 {
+        println!();
+        println!("Duplicate selectors:");
+        for selector in &report.duplicate_selectors {
             println!(
                 "  [{}=\"{}\"]  {}",
                 selector.attribute, selector.value, selector.file
@@ -1128,6 +1232,11 @@ mod tests {
 
     #[test]
     fn compiled_route_matching_handles_edge_segments() {
+        assert!(is_dynamic_pattern_segment(":id"));
+        assert!(is_dynamic_pattern_segment("*"));
+        assert!(is_dynamic_pattern_segment("**"));
+        assert!(!is_dynamic_pattern_segment("users"));
+
         assert_eq!(
             matcher::reference_segments("/users/42/?tab=profile"),
             vec!["users", "42"]
@@ -1288,7 +1397,7 @@ mod tests {
             selector_include: vec![],
             selector_exclude: vec![],
         };
-        let report = build_coverage(root, &routes, &[], &[], &settings);
+        let report = build_coverage(root, &routes, &[], &[], &[], &settings, false);
         assert_eq!(report.routes[0].file, "web/app/a/page.tsx");
         assert_eq!(report.routes[1].file, "web/app/b/page.tsx");
     }
@@ -1315,7 +1424,15 @@ mod tests {
             selector_include: vec![],
             selector_exclude: vec![],
         };
-        let report = build_coverage(root, &[], &app_selectors, &[], &settings);
+        let report = build_coverage(
+            root,
+            &[],
+            &app_selectors,
+            &app_selectors,
+            &[],
+            &settings,
+            false,
+        );
         assert_eq!(report.summary.total_selectors, 1);
         assert_eq!(report.summary.uncovered_selectors, 1);
         assert_eq!(report.selectors[0].file, "web/app/page.tsx");
@@ -1355,10 +1472,62 @@ mod tests {
             selector_include: vec![],
             selector_exclude: vec![],
         };
-        let report = build_coverage(root, &[], &app_selectors, &[], &settings);
+        let report = build_coverage(
+            root,
+            &[],
+            &app_selectors,
+            &app_selectors,
+            &[],
+            &settings,
+            false,
+        );
         assert_eq!(report.selectors[0].file, "web/app/a.tsx");
         assert_eq!(report.selectors[1].file, "web/app/b.tsx");
         assert_eq!(report.selectors[2].value, "zzz");
+    }
+
+    #[test]
+    fn duplicate_selector_report_includes_exact_values_only() {
+        let root = Path::new("/repo");
+        let app_selectors = vec![
+            selectors::AppSelector {
+                file: PathBuf::from("/repo/web/app/b.tsx"),
+                attribute: "data-pw".to_string(),
+                value: selectors::AppSelectorValue::Exact("same".to_string()),
+            },
+            selectors::AppSelector {
+                file: PathBuf::from("/repo/web/app/b.tsx"),
+                attribute: "data-pw".to_string(),
+                value: selectors::AppSelectorValue::Exact("same".to_string()),
+            },
+            selectors::AppSelector {
+                file: PathBuf::from("/repo/web/app/b.tsx"),
+                attribute: "data-testid".to_string(),
+                value: selectors::AppSelectorValue::Exact("same".to_string()),
+            },
+            selectors::AppSelector {
+                file: PathBuf::from("/repo/web/app/a.tsx"),
+                attribute: "data-testid".to_string(),
+                value: selectors::AppSelectorValue::Exact("same".to_string()),
+            },
+            selectors::AppSelector {
+                file: PathBuf::from("/repo/web/app/c.tsx"),
+                attribute: "data-testid".to_string(),
+                value: selectors::AppSelectorValue::Unsupported("id".to_string()),
+            },
+            selectors::AppSelector {
+                file: PathBuf::from("/repo/web/app/d.tsx"),
+                attribute: "data-testid".to_string(),
+                value: selectors::AppSelectorValue::Exact("unique".to_string()),
+            },
+        ];
+
+        let duplicates = build_duplicate_selectors(root, &app_selectors);
+        assert_eq!(duplicates.len(), 4);
+        assert_eq!(duplicates[0].file, "web/app/a.tsx");
+        assert_eq!(duplicates[1].attribute, "data-pw");
+        assert_eq!(duplicates[2].attribute, "data-pw");
+        assert_eq!(duplicates[3].attribute, "data-testid");
     }
 
     #[test]
@@ -1390,7 +1559,15 @@ mod tests {
             selector_include: vec![],
             selector_exclude: vec![],
         };
-        let report = build_coverage(root, &[], &app_selectors, &edges, &settings);
+        let report = build_coverage(
+            root,
+            &[],
+            &app_selectors,
+            &app_selectors,
+            &edges,
+            &settings,
+            false,
+        );
         assert_eq!(report.summary.covered_selectors, 1);
         assert_eq!(report.selectors[0].tests, vec!["tests/e2e/app.spec.ts"]);
     }
@@ -1422,7 +1599,7 @@ mod tests {
             selector_include: vec![],
             selector_exclude: vec![],
         };
-        let report = build_coverage(root, &routes, &[], &edges, &settings);
+        let report = build_coverage(root, &routes, &[], &[], &edges, &settings, false);
         assert_eq!(report.summary.covered_routes, 1);
         assert_eq!(report.routes[0].urls, vec!["/users/42"]);
     }
@@ -1583,6 +1760,7 @@ mod tests {
                 total_selectors: 1,
                 covered_selectors: 0,
                 uncovered_selectors: 1,
+                duplicate_selectors: 1,
             },
             routes: vec![CoverageRoute {
                 route: "/missing".to_string(),
@@ -1599,6 +1777,11 @@ mod tests {
                 unsupported_dynamic: false,
                 tests: vec![],
                 selectors: vec![],
+            }],
+            duplicate_selectors: vec![DuplicateSelector {
+                attribute: "data-testid".to_string(),
+                value: "missing".to_string(),
+                file: "web/app/other.tsx".to_string(),
             }],
         };
         print_coverage_text(&coverage);

@@ -95,6 +95,20 @@ fn duplicate_routes_and_selectors_are_sorted_deterministically() {
 }
 
 #[test]
+fn check_can_fail_on_duplicate_selector_literals() {
+    Command::cargo_bin("playwright-ast-coverage")
+        .unwrap()
+        .arg("--root")
+        .arg(fixture("sort-tiebreakers"))
+        .arg("--assert-unique-selectors")
+        .arg("check")
+        .assert()
+        .code(1)
+        .stdout(predicate::str::contains("Duplicate selectors:"))
+        .stdout(predicate::str::contains(r#"[data-testid="dup"]"#));
+}
+
+#[test]
 fn coverage_text_reports_uncovered_routes() {
     Command::cargo_bin("playwright-ast-coverage")
         .unwrap()
