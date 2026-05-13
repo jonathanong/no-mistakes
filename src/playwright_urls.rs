@@ -135,12 +135,14 @@ impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
                 }
             }
         } else if (callee_is_member_named(&call.callee, "toHaveURL") && !callee_has_not(&callee))
-            || callee_is_member_named(&call.callee, "waitForURL")
+            || (callee_is_playwright_wait_for_url(&call.callee) && !callee_has_not(&callee))
             || (callee_is_page_url_to_match(&call.callee) && !callee_has_not(&callee))
         {
-            for url in
-                direct_candidate_literals(&call.arguments, self.source, self.static_zero_arg_paths)
-            {
+            for url in direct_url_pattern_literals(
+                &call.arguments,
+                self.source,
+                self.static_zero_arg_paths,
+            ) {
                 self.insert(url);
             }
         } else if callee_matches_navigation_helper(&callee, self.navigation_helpers) {
@@ -265,6 +267,20 @@ fn callee_is_member_named(callee: &oxc_ast::ast::Expression<'_>, method: &str) -
     }
 }
 
+fn callee_is_playwright_wait_for_url(callee: &oxc_ast::ast::Expression<'_>) -> bool {
+    let oxc_ast::ast::Expression::StaticMemberExpression(member) = callee else {
+        return false;
+    };
+    if member.property.name != "waitForURL" {
+        return false;
+    }
+
+    ast::expression_path(&member.object).is_some_and(|path| {
+        path.last()
+            .is_some_and(|receiver| matches!(receiver.as_str(), "page" | "frame"))
+    })
+}
+
 fn callee_is_page_url_to_match(callee: &oxc_ast::ast::Expression<'_>) -> bool {
     let oxc_ast::ast::Expression::StaticMemberExpression(member) = callee else {
         return false;
@@ -279,7 +295,14 @@ fn callee_is_page_url_to_match(callee: &oxc_ast::ast::Expression<'_>) -> bool {
     let Some(expect_callee) = ast::expression_path(&expect_call.callee) else {
         return false;
     };
-    if expect_callee != ["expect"] {
+    if !matches!(
+        expect_callee
+            .iter()
+            .map(String::as_str)
+            .collect::<Vec<_>>()
+            .as_slice(),
+        ["expect"] | ["expect", "soft"]
+    ) {
         return false;
     }
 
@@ -326,7 +349,7 @@ fn candidate_literals(
         .collect()
 }
 
-fn direct_candidate_literals(
+fn direct_url_pattern_literals(
     arguments: &[Argument<'_>],
     source: &str,
     static_zero_arg_paths: &HashMap<String, Vec<String>>,
@@ -342,8 +365,63 @@ fn direct_candidate_literals(
     visitor
         .literals
         .into_iter()
-        .filter(|url| is_candidate_url(url))
+        .filter_map(|url| normalize_url_pattern(&url))
         .collect()
+}
+
+fn normalize_url_pattern(url: &str) -> Option<String> {
+    if is_candidate_url(url) && !url.contains('*') {
+        Some(url.to_string())
+    } else {
+        glob_url_sample(url)
+    }
+}
+
+fn glob_url_sample(glob: &str) -> Option<String> {
+    if !glob.contains('*') {
+        return None;
+    }
+
+    let (without_scheme, was_leading_wildcard) = glob
+        .strip_prefix("**/")
+        .map(|value| (value, true))
+        .or_else(|| glob.strip_prefix("*/").map(|value| (value, true)))
+        .unwrap_or((glob, false));
+    let candidate = if is_candidate_url(glob) {
+        glob.to_string()
+    } else if was_leading_wildcard {
+        format!("/{}", without_scheme.trim_start_matches('/'))
+    } else if let Some(first_slash) = without_scheme.find('/') {
+        let first_segment = &without_scheme[..first_slash];
+        if first_segment.contains('.') {
+            format!(
+                "/{}",
+                without_scheme[first_slash + 1..].trim_start_matches('/')
+            )
+        } else {
+            format!("/{}", without_scheme.trim_start_matches('/'))
+        }
+    } else {
+        format!("/{without_scheme}")
+    };
+    if candidate == "/" || candidate.contains("${") {
+        return None;
+    }
+
+    let mut sample = String::new();
+    let mut chars = candidate.chars().peekable();
+    while let Some(ch) = chars.next() {
+        if ch == '*' {
+            while matches!(chars.peek(), Some('*')) {
+                chars.next();
+            }
+            sample.push('x');
+        } else {
+            sample.push(ch);
+        }
+    }
+
+    is_candidate_url(&sample).then_some(sample)
 }
 
 struct LiteralVisitor<'a> {
@@ -509,19 +587,17 @@ fn source_offset_is_code(source: &str, offset: usize) -> bool {
 }
 
 fn regex_path_sample(pattern: &str) -> Option<String> {
-    let mut chars = pattern.trim_start_matches('^').chars().peekable();
+    let pattern = pattern.trim_start_matches('^').replace(r"\/", "/");
+    let mut chars = pattern.chars().peekable();
     let mut sample = String::new();
-    let mut started = false;
+    let mut started = pattern.starts_with("http://") || pattern.starts_with("https://");
     let mut unsupported = false;
     while let Some(ch) = chars.next() {
         if ch == '\\' {
             let Some(next) = chars.next() else {
                 break;
             };
-            if next == '/' {
-                started = true;
-                sample.push('/');
-            } else if started && is_literal_path_char(next) && !next.is_ascii_alphanumeric() {
+            if started && is_literal_path_char(next) && !next.is_ascii_alphanumeric() {
                 sample.push(next);
             } else if started {
                 unsupported = true;
@@ -599,7 +675,7 @@ fn consume_regex_quantifier(chars: &mut std::iter::Peekable<std::str::Chars<'_>>
 }
 
 fn is_literal_path_char(ch: char) -> bool {
-    ch.is_ascii_alphanumeric() || matches!(ch, '/' | '-' | '_' | '.' | '~' | '%')
+    ch.is_ascii_alphanumeric() || matches!(ch, '/' | '-' | '_' | '.' | '~' | '%' | ':')
 }
 
 #[cfg(test)]
@@ -706,20 +782,33 @@ mod tests {
             const settings = { path: () => "/settings" };
             await page.waitForURL(details());
             await page.waitForURL(routes.details());
+            await page.waitForURL("**/orders/globbed");
             await expect(page.url()).toMatch(overview());
+            await expect.soft(page.url()).toMatch(/\/orders\/soft$/);
             await expect(page.url()).toMatch(metrics());
             await expect(page.url()).toMatch(dynamic("42"));
             await page.waitForURL(account.path());
             await page.waitForURL(settings.path());
+            await frame.waitForURL(/^https:\/\/example.com\/orders\/absolute$/);
             await page.waitForURL(path());
             await page.waitForURL(getPath()());
+            await app.waitForURL("/unrelated");
             await page.goto();
             await page.goto(routeName);
             await page.waitForURL(ghost());
             await page.waitForURL(text());
             "#,
         );
-        assert_eq!(urls, vec!["/orders", "/orders/42", "/orders/metrics",]);
+        assert_eq!(
+            urls,
+            vec![
+                "/orders",
+                "/orders/42",
+                "/orders/globbed",
+                "/orders/metrics",
+                "/orders/soft",
+            ]
+        );
     }
 
     #[test]
@@ -745,12 +834,45 @@ mod tests {
             regex_path_sample(r#"^\/orders\/\"#),
             Some("/orders/".to_string())
         );
+        assert_eq!(
+            regex_path_sample(r#"^https:\/\/example.com\/orders$"#),
+            Some("https://examplexcom/orders".to_string())
+        );
+        assert_eq!(
+            regex_path_sample(r#"^https:\/\/example\.com\/orders$"#),
+            Some("https://example.com/orders".to_string())
+        );
         assert_eq!(regex_path_sample(r#"^/orders/<id>$"#), None);
         assert_eq!(regex_path_sample(r#"^/orders/(\d+)$"#), None);
         assert_eq!(regex_path_sample(r#"^\/users\/\d+$"#), None);
         assert_eq!(regex_path_sample(r#"^not-a-path$"#), None);
         assert_eq!(regex_path_sample(r#"^/$"#), Some("/".to_string()));
         assert_eq!(regex_path_sample(r#"^\/$"#), Some("/".to_string()));
+    }
+
+    #[test]
+    fn samples_glob_url_patterns() {
+        assert_eq!(
+            glob_url_sample("**/orders/*/details"),
+            Some("/orders/x/details".to_string())
+        );
+        assert_eq!(
+            glob_url_sample("*/orders/**"),
+            Some("/orders/x".to_string())
+        );
+        assert_eq!(
+            glob_url_sample("https://example.com/orders/**"),
+            Some("https://example.com/orders/x".to_string())
+        );
+        assert_eq!(
+            glob_url_sample("example.com/orders/**"),
+            Some("/orders/x".to_string())
+        );
+        assert_eq!(glob_url_sample("orders/**"), Some("/orders/x".to_string()));
+        assert_eq!(glob_url_sample("orders*"), Some("/ordersx".to_string()));
+        assert_eq!(glob_url_sample("**/"), None);
+        assert_eq!(glob_url_sample("**/${path}"), None);
+        assert_eq!(glob_url_sample("/orders"), None);
     }
 
     #[test]
@@ -785,6 +907,7 @@ mod tests {
             await expect(page.url()).toMatch(/^\/$/);
             await (expect(page.url())).toMatch(/\/account$/);
             await expect(page.url()).toMatch(/\/settings$/);
+            await expect.soft(page.url()).toMatch(/\/soft$/);
             await expect(page.url()).not.toMatch(/\/blocked$/);
             await expect(otherpage.url()).toMatch(/\/other$/);
             await expect(page.title()).toMatch(/\/title$/);
@@ -802,6 +925,7 @@ mod tests {
                 "/",
                 "/account",
                 "/settings",
+                "/soft",
                 "/users/${role === 'admin' ? '/admin' : '/user'}"
             ]
         );
