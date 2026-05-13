@@ -5,6 +5,8 @@ page.locator(selector);
 page.locator("");
 page.locator('[data-pw="save"]');
 page.locator("[data-pw='open']");
+page.locator("[ data-pw = unquoted ]");
+page.locator("[data-pw=flagged i]");
 page.click('[data-testid^="user-"]');
 page.dragAndDrop('[data-testid="source"]', '[data-pw="target"]');
 page.getByTestId("save");

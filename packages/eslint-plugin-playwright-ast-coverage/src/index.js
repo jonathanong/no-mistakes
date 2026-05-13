@@ -108,10 +108,10 @@ function cssSelectorValues(source, attrs) {
   const values = [];
   for (const attr of attrs) {
     const escaped = attr.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(`\\[${escaped}\\s*([*^$]?=)\\s*(?:"([^"]*)"|'([^']*)')\\]`, "g");
+    const regex = new RegExp(`\\[\\s*${escaped}\\s*([*^$]?=)\\s*(?:"([^"]*)"|'([^']*)'|([^\\s\\]]+))\\s*(?:[is])?\\s*\\]`, "g");
     let match = regex.exec(source);
     while (match) {
-      values.push({ attribute: attr, operator: match[1], value: match[2] ?? match[3] });
+      values.push({ attribute: attr, operator: match[1], value: match[2] ?? match[3] ?? match[4] });
       match = regex.exec(source);
     }
   }
@@ -384,7 +384,7 @@ function isInteractiveElement(elementName, attributes) {
     if (attributeName(attr) !== "role") {
       return false;
     }
-    return ["button", "link", "menuitem"].includes(selectorLiteral(attr));
+    return ["button", "checkbox", "link", "menuitem", "option", "radio", "switch", "tab", "textbox"].includes(selectorLiteral(attr));
   });
 }
 
