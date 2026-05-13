@@ -637,6 +637,7 @@ fn jsx_expression_value(
                 identifier.name.as_str(),
                 identifier.span(),
                 scoped_static_identifier_defaults,
+                source,
             )
             .map(AppSelectorValue::Exact)
             .unwrap_or_else(|| AppSelectorValue::Unsupported(identifier.name.to_string())),
@@ -718,6 +719,7 @@ fn scoped_static_default_for_identifier(
     name: &str,
     span: Span,
     defaults: &[ScopedStaticIdentifierDefault],
+    source: &str,
 ) -> Option<String> {
     defaults
         .iter()
@@ -726,8 +728,26 @@ fn scoped_static_default_for_identifier(
                 && default.scope.start <= span.start
                 && span.end <= default.scope.end
         })
+        .filter(|default| {
+            !identifier_may_be_shadowed_or_reassigned(name, span, default.scope, source)
+        })
         .min_by_key(|default| default.scope.end - default.scope.start)
         .map(|default| default.value.clone())
+}
+
+fn identifier_may_be_shadowed_or_reassigned(
+    name: &str,
+    span: Span,
+    scope: Span,
+    source: &str,
+) -> bool {
+    let start = scope.start as usize;
+    let end = span.start as usize;
+    let prefix = source.get(start..end).unwrap_or("");
+    prefix.contains("function")
+        || prefix.contains("=>")
+        || prefix.contains(&format!("{name} ="))
+        || prefix.contains(&format!("{name}="))
 }
 
 fn extract_css_attribute_selectors(
@@ -970,6 +990,18 @@ mod tests {
             export function NonStringDefault({ value = makeId() }) {
                 return <a data-pw={value}>Computed</a>;
             }
+
+            export function NestedShadow({ dataPw = 'outer-link' }) {
+                function Inner({ dataPw }) {
+                    return <a data-pw={dataPw}>Inner</a>;
+                }
+                return <Inner />;
+            }
+
+            export function Reassigned({ reassigned = 'assigned-link' }) {
+                reassigned = makeId();
+                return <a data-pw={reassigned}>Assigned</a>;
+            }
             "#,
             &attrs(),
         )
@@ -987,6 +1019,7 @@ mod tests {
                 "{1 + 1}",
                 "{dataPw}",
                 "{passThrough}",
+                "{reassigned}",
                 "{value}",
             ]
         );

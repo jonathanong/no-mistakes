@@ -399,6 +399,9 @@ fn static_zero_arg_path_call(
         return None;
     }
     let path = ast::expression_path(&call.callee)?;
+    if path.len() != 1 {
+        return None;
+    }
     let name = path.last()?;
     static_zero_arg_paths.get(name.as_str()).cloned()
 }
@@ -597,10 +600,10 @@ mod tests {
             };
             const account = { path: () => "/account" };
             const settings = { path: () => "/settings" };
-            await page.waitForURL(routes.details());
-            await expect(page.url()).toMatch(routes.overview());
-            await expect(page.url()).toMatch(routes.metrics());
-            await expect(page.url()).toMatch(routes.dynamic("42"));
+            await page.waitForURL(details());
+            await expect(page.url()).toMatch(overview());
+            await expect(page.url()).toMatch(metrics());
+            await expect(page.url()).toMatch(dynamic("42"));
             await page.waitForURL(account.path());
             await page.waitForURL(settings.path());
             await page.goto(routeName);
