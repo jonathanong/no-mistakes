@@ -397,15 +397,29 @@ fn analyze_test_file(
             continue;
         };
         let ref_segments = matcher::reference_segments(&url);
-        for route in context.route_index.candidates(&ref_segments) {
-            if matcher::matches_segments(&ref_segments, &route.segments) {
-                edges.push(Edge::Route {
-                    test_file: rel_test_file.clone(),
-                    route_file: route.route_file.clone(),
-                    route: route.pattern.clone(),
-                    url: url.clone(),
-                });
-            }
+        let matching_routes: Vec<&RouteTarget> = context
+            .route_index
+            .candidates(&ref_segments)
+            .into_iter()
+            .filter(|route| matcher::matches_segments(&ref_segments, &route.segments))
+            .collect();
+        let Some(best_specificity) = matching_routes
+            .iter()
+            .map(|route| route_specificity(&route.segments))
+            .max()
+        else {
+            continue;
+        };
+        for route in matching_routes
+            .into_iter()
+            .filter(|route| route_specificity(&route.segments) == best_specificity)
+        {
+            edges.push(Edge::Route {
+                test_file: rel_test_file.clone(),
+                route_file: route.route_file.clone(),
+                route: route.pattern.clone(),
+                url: url.clone(),
+            });
         }
     }
 
@@ -550,6 +564,28 @@ impl<'a> SelectorIndex<'a> {
         }
         matches
     }
+}
+
+fn route_specificity(segments: &[String]) -> (usize, usize, usize, usize) {
+    let static_segments = segments
+        .iter()
+        .filter(|segment| !segment.starts_with(':') && *segment != "*" && *segment != "**")
+        .count();
+    let dynamic_segments = segments
+        .iter()
+        .filter(|segment| segment.starts_with(':'))
+        .count();
+    let wildcard_penalty = segments
+        .iter()
+        .filter(|segment| **segment == "*" || **segment == "**")
+        .count();
+
+    (
+        static_segments,
+        dynamic_segments,
+        segments.len(),
+        usize::MAX - wildcard_penalty,
+    )
 }
 
 fn collect_app_selectors(

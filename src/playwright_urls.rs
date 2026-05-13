@@ -5,6 +5,7 @@ use oxc_ast::ast::{
     Argument, CallExpression, ConditionalExpression, IfStatement, LogicalExpression, Program,
 };
 use oxc_ast_visit::{walk, Visit};
+use oxc_span::GetSpan;
 use std::collections::BTreeSet;
 #[cfg(test)]
 use std::path::Path;
@@ -134,6 +135,8 @@ impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
                 }
             }
         } else if (callee_is_member_named(&call.callee, "toHaveURL") && !callee_has_not(&callee))
+            || callee_is_member_named(&call.callee, "waitForURL")
+            || callee_is_page_url_to_match(&call.callee, self.source)
             || callee_matches_navigation_helper(&callee, self.navigation_helpers)
         {
             if let Some(url) = first_candidate_literal(&call.arguments, self.source) {
@@ -254,6 +257,17 @@ fn callee_is_member_named(callee: &oxc_ast::ast::Expression<'_>, method: &str) -
     }
 }
 
+fn callee_is_page_url_to_match(callee: &oxc_ast::ast::Expression<'_>, source: &str) -> bool {
+    let oxc_ast::ast::Expression::StaticMemberExpression(member) = callee else {
+        return false;
+    };
+    if member.property.name != "toMatch" {
+        return false;
+    }
+
+    ast::span_text(source, member.object.span()).contains("page.url()")
+}
+
 fn first_candidate_literal(arguments: &[Argument<'_>], source: &str) -> Option<String> {
     let mut visitor = LiteralVisitor {
         source,
@@ -274,8 +288,22 @@ struct LiteralVisitor<'a> {
 }
 
 impl<'a> Visit<'a> for LiteralVisitor<'a> {
+    fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        if let Some(url) = static_zero_arg_path_call(call, self.source) {
+            self.literals.push(url);
+            return;
+        }
+        walk::walk_call_expression(self, call);
+    }
+
     fn visit_string_literal(&mut self, literal: &oxc_ast::ast::StringLiteral<'a>) {
         self.literals.push(literal.value.to_string());
+    }
+
+    fn visit_reg_exp_literal(&mut self, literal: &oxc_ast::ast::RegExpLiteral<'a>) {
+        if let Some(sample) = regex_path_sample(literal.regex.pattern.text.as_str()) {
+            self.literals.push(sample);
+        }
     }
 
     fn visit_template_literal(&mut self, template: &oxc_ast::ast::TemplateLiteral<'a>) {
@@ -289,8 +317,101 @@ fn argument_literal(argument: &Argument<'_>, source: &str) -> Option<String> {
     match argument {
         Argument::StringLiteral(literal) => Some(literal.value.to_string()),
         Argument::TemplateLiteral(template) => Some(ast::template_literal_text(template, source)),
+        Argument::CallExpression(call) => static_zero_arg_path_call(call, source),
         _ => None,
     }
+}
+
+fn static_zero_arg_path_call(call: &CallExpression<'_>, source: &str) -> Option<String> {
+    if !call.arguments.is_empty() {
+        return None;
+    }
+    let path = ast::expression_path(&call.callee)?;
+    let name = path.last()?;
+    let pattern = regex::Regex::new(&format!(
+        r#"{}\s*:\s*\(\s*\)\s*=>\s*(?:"([^"`]+)"|'([^'`]+)'|`([^'"`]+)`)"#,
+        regex::escape(name)
+    ))
+    .ok()?;
+    pattern
+        .captures(source)
+        .and_then(|captures| {
+            captures
+                .get(1)
+                .or_else(|| captures.get(2))
+                .or_else(|| captures.get(3))
+        })
+        .map(|capture| capture.as_str().to_string())
+}
+
+fn regex_path_sample(pattern: &str) -> Option<String> {
+    let mut chars = pattern.trim_start_matches('^').chars().peekable();
+    let mut sample = String::new();
+    let mut started = false;
+    while let Some(ch) = chars.next() {
+        if ch == '\\' {
+            let Some(next) = chars.next() else {
+                break;
+            };
+            if next == '/' {
+                started = true;
+                sample.push('/');
+            } else if started && is_literal_path_char(next) {
+                sample.push(next);
+            } else if started {
+                break;
+            }
+            continue;
+        }
+
+        if !started {
+            if ch == '/' {
+                started = true;
+                sample.push(ch);
+            }
+            continue;
+        }
+
+        match ch {
+            '[' => {
+                for next in chars.by_ref() {
+                    if next == ']' {
+                        break;
+                    }
+                }
+                sample.push('x');
+                while matches!(chars.peek(), Some('+' | '*' | '?' | '{')) {
+                    let quantifier = chars.next();
+                    if quantifier == Some('{') {
+                        for next in chars.by_ref() {
+                            if next == '}' {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            '.' => {
+                sample.push('x');
+                if matches!(chars.peek(), Some('+' | '*')) {
+                    chars.next();
+                }
+            }
+            '$' | '|' | '(' | ')' => break,
+            ch if is_literal_path_char(ch) => sample.push(ch),
+            _ => break,
+        }
+    }
+
+    if is_candidate_url(&sample) && sample != "/" {
+        Some(sample)
+    } else {
+        None
+    }
+}
+
+fn is_literal_path_char(ch: char) -> bool {
+    ch.is_ascii_alphanumeric() || matches!(ch, '/' | '-' | '_' | '.' | '~' | '%')
 }
 
 #[cfg(test)]

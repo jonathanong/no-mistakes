@@ -576,10 +576,27 @@ fn jsx_expression_value(
                     .unwrap_or_else(|| AppSelectorValue::Unsupported(raw)),
             )
         }
+        oxc_ast::ast::JSXExpression::Identifier(identifier) => Some(
+            static_default_for_identifier(identifier.name.as_str(), source)
+                .map(AppSelectorValue::Exact)
+                .unwrap_or_else(|| AppSelectorValue::Unsupported(identifier.name.to_string())),
+        ),
         _ => Some(AppSelectorValue::Unsupported(
             ast::span_text(source, expression.span()).trim().to_string(),
         )),
     }
+}
+
+fn static_default_for_identifier(name: &str, source: &str) -> Option<String> {
+    let pattern = Regex::new(&format!(
+        r#"{}\s*=\s*(?:"([^"]+)"|'([^']+)')"#,
+        regex::escape(name)
+    ))
+    .ok()?;
+    pattern
+        .captures(source)
+        .and_then(|captures| captures.get(1).or_else(|| captures.get(2)))
+        .map(|capture| capture.as_str().to_string())
 }
 
 fn extract_css_attribute_selectors(
