@@ -150,7 +150,7 @@ describe("oxlint support", () => {
         jsPlugins: [{ name: "playwright-ast-coverage", specifier: resolve(__dirname, "../src/index.js") }],
         rules: { "playwright-ast-coverage/literals": "error" },
       }));
-      const result = spawnSync(resolve(__dirname, "../../../node_modules/.bin/oxlint"), ["--config", ".oxlintrc.json", "fixture.jsx"], {
+      const result = spawnSync(process.execPath, [resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"), "--config", ".oxlintrc.json", "fixture.jsx"], {
         cwd: root,
         encoding: "utf8",
       });

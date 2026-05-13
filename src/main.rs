@@ -345,13 +345,16 @@ fn analyze_with_policy(
         &settings.selector_attributes,
         &settings.component_selector_attributes,
     );
-    let app_selectors = if settings.selector_attributes.is_empty()
+    let app_selector_occurrences = if settings.selector_attributes.is_empty()
         && settings.component_selector_attributes.is_empty()
     {
         Vec::new()
     } else {
-        collect_app_selectors(root, settings, &selector_regexes)?
+        collect_app_selector_occurrences(root, settings, &selector_regexes)?
     };
+    let mut app_selectors = app_selector_occurrences.clone();
+    app_selectors.sort();
+    app_selectors.dedup();
     let route_index = route_index(root, &routes);
     let app_selector_targets = app_selector_targets(root, &app_selectors);
     let selector_index = selector_index(&app_selector_targets);
@@ -383,6 +386,7 @@ fn analyze_with_policy(
         root,
         &routes,
         &app_selectors,
+        &app_selector_occurrences,
         &edge_report.edges,
         settings,
         assert_unique_selectors,
@@ -619,7 +623,20 @@ fn route_specificity(segments: &[String]) -> Vec<u8> {
     specificity
 }
 
+#[cfg(test)]
 fn collect_app_selectors(
+    root: &Path,
+    settings: &Settings,
+    selector_regexes: &selectors::SelectorRegexes,
+) -> Result<Vec<selectors::AppSelector>> {
+    let mut app_selectors = collect_app_selector_occurrences(root, settings, selector_regexes)?;
+    app_selectors.sort();
+    app_selectors.dedup();
+
+    Ok(app_selectors)
+}
+
+fn collect_app_selector_occurrences(
     root: &Path,
     settings: &Settings,
     selector_regexes: &selectors::SelectorRegexes,
@@ -629,7 +646,7 @@ fn collect_app_selectors(
     let include_all = settings.selector_include.is_empty();
     let source_files =
         collect_selector_source_files(root, settings, &include, &exclude, include_all);
-    let mut app_selectors = source_files
+    let app_selectors = source_files
         .par_iter()
         .try_fold(Vec::new, |mut app_selectors, path| -> Result<_> {
             let source = std::fs::read_to_string(path)?;
@@ -644,9 +661,6 @@ fn collect_app_selectors(
             left.append(&mut right);
             Ok(left)
         })?;
-    app_selectors.sort();
-    app_selectors.dedup();
-
     Ok(app_selectors)
 }
 
@@ -810,6 +824,7 @@ fn build_coverage(
     root: &Path,
     routes: &[Route],
     app_selectors: &[selectors::AppSelector],
+    app_selector_occurrences: &[selectors::AppSelector],
     edges: &[Edge],
     settings: &Settings,
     assert_unique_selectors: bool,
@@ -905,7 +920,7 @@ fn build_coverage(
         .count();
     let uncovered_selectors = total_selectors.saturating_sub(covered_selectors);
     let duplicate_selectors = if assert_unique_selectors {
-        build_duplicate_selectors(root, app_selectors)
+        build_duplicate_selectors(root, app_selector_occurrences)
     } else {
         Vec::new()
     };
@@ -1382,7 +1397,7 @@ mod tests {
             selector_include: vec![],
             selector_exclude: vec![],
         };
-        let report = build_coverage(root, &routes, &[], &[], &settings, false);
+        let report = build_coverage(root, &routes, &[], &[], &[], &settings, false);
         assert_eq!(report.routes[0].file, "web/app/a/page.tsx");
         assert_eq!(report.routes[1].file, "web/app/b/page.tsx");
     }
@@ -1409,7 +1424,15 @@ mod tests {
             selector_include: vec![],
             selector_exclude: vec![],
         };
-        let report = build_coverage(root, &[], &app_selectors, &[], &settings, false);
+        let report = build_coverage(
+            root,
+            &[],
+            &app_selectors,
+            &app_selectors,
+            &[],
+            &settings,
+            false,
+        );
         assert_eq!(report.summary.total_selectors, 1);
         assert_eq!(report.summary.uncovered_selectors, 1);
         assert_eq!(report.selectors[0].file, "web/app/page.tsx");
@@ -1449,7 +1472,15 @@ mod tests {
             selector_include: vec![],
             selector_exclude: vec![],
         };
-        let report = build_coverage(root, &[], &app_selectors, &[], &settings, false);
+        let report = build_coverage(
+            root,
+            &[],
+            &app_selectors,
+            &app_selectors,
+            &[],
+            &settings,
+            false,
+        );
         assert_eq!(report.selectors[0].file, "web/app/a.tsx");
         assert_eq!(report.selectors[1].file, "web/app/b.tsx");
         assert_eq!(report.selectors[2].value, "zzz");
@@ -1459,6 +1490,11 @@ mod tests {
     fn duplicate_selector_report_includes_exact_values_only() {
         let root = Path::new("/repo");
         let app_selectors = vec![
+            selectors::AppSelector {
+                file: PathBuf::from("/repo/web/app/b.tsx"),
+                attribute: "data-pw".to_string(),
+                value: selectors::AppSelectorValue::Exact("same".to_string()),
+            },
             selectors::AppSelector {
                 file: PathBuf::from("/repo/web/app/b.tsx"),
                 attribute: "data-pw".to_string(),
@@ -1487,10 +1523,11 @@ mod tests {
         ];
 
         let duplicates = build_duplicate_selectors(root, &app_selectors);
-        assert_eq!(duplicates.len(), 3);
+        assert_eq!(duplicates.len(), 4);
         assert_eq!(duplicates[0].file, "web/app/a.tsx");
         assert_eq!(duplicates[1].attribute, "data-pw");
-        assert_eq!(duplicates[2].attribute, "data-testid");
+        assert_eq!(duplicates[2].attribute, "data-pw");
+        assert_eq!(duplicates[3].attribute, "data-testid");
     }
 
     #[test]
@@ -1522,7 +1559,15 @@ mod tests {
             selector_include: vec![],
             selector_exclude: vec![],
         };
-        let report = build_coverage(root, &[], &app_selectors, &edges, &settings, false);
+        let report = build_coverage(
+            root,
+            &[],
+            &app_selectors,
+            &app_selectors,
+            &edges,
+            &settings,
+            false,
+        );
         assert_eq!(report.summary.covered_selectors, 1);
         assert_eq!(report.selectors[0].tests, vec!["tests/e2e/app.spec.ts"]);
     }
@@ -1554,7 +1599,7 @@ mod tests {
             selector_include: vec![],
             selector_exclude: vec![],
         };
-        let report = build_coverage(root, &routes, &[], &edges, &settings, false);
+        let report = build_coverage(root, &routes, &[], &[], &edges, &settings, false);
         assert_eq!(report.summary.covered_routes, 1);
         assert_eq!(report.routes[0].urls, vec!["/users/42"]);
     }
