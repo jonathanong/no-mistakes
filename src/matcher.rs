@@ -8,6 +8,12 @@
 /// matches one or more segments. A final `**` segment matches zero or more
 /// segments.
 pub fn matches(reference: &str, defined_pattern: &str) -> bool {
+    let ref_segs = reference_segments(reference);
+    let def_segs = pattern_segments(defined_pattern);
+    matches_segments(&ref_segs, &def_segs)
+}
+
+pub fn reference_segments(reference: &str) -> Vec<&str> {
     let ref_path = reference
         .split('?')
         .next()
@@ -22,21 +28,27 @@ pub fn matches(reference: &str, defined_pattern: &str) -> bool {
         ref_path
     };
 
-    let ref_segs = segments(ref_path);
-    let def_segs = segments(defined_pattern);
+    segments(ref_path)
+}
 
-    for (index, def_seg) in def_segs.iter().enumerate() {
-        let is_last = index + 1 == def_segs.len();
-        if *def_seg == "**" && is_last {
-            return ref_segs[index..].iter().all(|segment| !segment.is_empty());
+pub fn pattern_segments(pattern: &str) -> Vec<&str> {
+    segments(pattern)
+}
+
+pub fn matches_segments<S: AsRef<str>>(reference: &[&str], defined_pattern: &[S]) -> bool {
+    for (index, def_seg) in defined_pattern.iter().enumerate() {
+        let def_seg = def_seg.as_ref();
+        let is_last = index + 1 == defined_pattern.len();
+        if def_seg == "**" && is_last {
+            return reference[index..].iter().all(|segment| !segment.is_empty());
         }
 
-        if *def_seg == "*" && is_last {
-            return ref_segs.len() > index
-                && ref_segs[index..].iter().all(|segment| !segment.is_empty());
+        if def_seg == "*" && is_last {
+            return reference.len() > index
+                && reference[index..].iter().all(|segment| !segment.is_empty());
         }
 
-        let Some(ref_seg) = ref_segs.get(index) else {
+        let Some(ref_seg) = reference.get(index) else {
             return false;
         };
         if !segment_matches(ref_seg, def_seg) {
@@ -44,7 +56,7 @@ pub fn matches(reference: &str, defined_pattern: &str) -> bool {
         }
     }
 
-    ref_segs.len() == def_segs.len()
+    reference.len() == defined_pattern.len()
 }
 
 fn segments(path: &str) -> Vec<&str> {

@@ -396,9 +396,9 @@ fn analyze_test_file(
         let Some(url) = normalize_url(&raw_url.value, &base_urls) else {
             continue;
         };
-        let ref_segments = reference_segments(&url);
+        let ref_segments = matcher::reference_segments(&url);
         for route in context.route_index.candidates(&ref_segments) {
-            if route_matches_segments(&ref_segments, &route.segments) {
+            if matcher::matches_segments(&ref_segments, &route.segments) {
                 edges.push(Edge::Route {
                     test_file: rel_test_file.clone(),
                     route_file: route.route_file.clone(),
@@ -435,7 +435,10 @@ fn route_index(root: &Path, routes: &[Route]) -> RouteIndex {
         let target = RouteTarget {
             route_file: relative_string(root, &route.file),
             pattern: route.pattern.clone(),
-            segments: pattern_segments(&route.pattern),
+            segments: matcher::pattern_segments(&route.pattern)
+                .into_iter()
+                .map(str::to_string)
+                .collect(),
         };
         match target.segments.first() {
             None => index.root.push(target),
@@ -976,78 +979,6 @@ fn normalize_url(raw: &str, base_urls: &[String]) -> Option<String> {
     None
 }
 
-fn reference_segments(reference: &str) -> Vec<&str> {
-    let ref_path = reference
-        .split('?')
-        .next()
-        .unwrap_or(reference)
-        .split('#')
-        .next()
-        .unwrap_or(reference);
-
-    let ref_path = if ref_path.len() > 1 && ref_path.ends_with('/') {
-        &ref_path[..ref_path.len() - 1]
-    } else {
-        ref_path
-    };
-
-    if ref_path == "/" || ref_path.is_empty() {
-        Vec::new()
-    } else {
-        ref_path
-            .strip_prefix('/')
-            .unwrap_or(ref_path)
-            .split('/')
-            .collect()
-    }
-}
-
-fn pattern_segments(pattern: &str) -> Vec<String> {
-    if pattern == "/" || pattern.is_empty() {
-        Vec::new()
-    } else {
-        pattern
-            .strip_prefix('/')
-            .unwrap_or(pattern)
-            .split('/')
-            .map(str::to_string)
-            .collect()
-    }
-}
-
-fn route_matches_segments(reference: &[&str], defined_pattern: &[String]) -> bool {
-    for (index, def_seg) in defined_pattern.iter().enumerate() {
-        let is_last = index + 1 == defined_pattern.len();
-        if def_seg == "**" && is_last {
-            return reference[index..].iter().all(|segment| !segment.is_empty());
-        }
-
-        if def_seg == "*" && is_last {
-            return reference.len() > index
-                && reference[index..].iter().all(|segment| !segment.is_empty());
-        }
-
-        let Some(ref_seg) = reference.get(index) else {
-            return false;
-        };
-        if !route_segment_matches(ref_seg, def_seg) {
-            return false;
-        }
-    }
-
-    reference.len() == defined_pattern.len()
-}
-
-fn route_segment_matches(reference: &str, defined_pattern: &str) -> bool {
-    if reference.is_empty() {
-        return false;
-    }
-    if defined_pattern.starts_with(':') || defined_pattern == "*" {
-        return true;
-    }
-    reference == defined_pattern
-}
-
 fn is_dynamic_pattern_segment(segment: &str) -> bool {
     segment.starts_with(':') || segment == "*" || segment == "**"
 }
@@ -1160,18 +1091,18 @@ mod tests {
     #[test]
     fn compiled_route_matching_handles_edge_segments() {
         assert_eq!(
-            reference_segments("/users/42/?tab=profile"),
+            matcher::reference_segments("/users/42/?tab=profile"),
             vec!["users", "42"]
         );
         assert_eq!(
-            pattern_segments("/users/:id"),
-            vec!["users".to_string(), ":id".to_string()]
+            matcher::pattern_segments("/users/:id"),
+            vec!["users", ":id"]
         );
-        assert!(route_matches_segments(
+        assert!(matcher::matches_segments(
             &["shop"],
             &["shop".to_string(), "**".to_string()]
         ));
-        assert!(!route_matches_segments(
+        assert!(!matcher::matches_segments(
             &["shop"],
             &["shop".to_string(), "item".to_string()]
         ));
