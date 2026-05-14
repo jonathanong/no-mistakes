@@ -83,6 +83,7 @@ enum CacheKind {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 struct RouteReport {
     route: String,
     file: String,
@@ -950,6 +951,49 @@ mod tests {
         assert!(!visitor.fetches[2].dynamic);
         assert_eq!(visitor.fetches[2].method, "GET");
         assert!(visitor.fetches[2].rsc);
+    }
+
+    #[test]
+    fn test_visitor_route_handler_fetches_are_non_rsc() {
+        let allocator = oxc_allocator::Allocator::default();
+        let source = "fetch('/api/route');";
+        let source_type = oxc_span::SourceType::default();
+        let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+        let mut visitor = FetchVisitor {
+            source,
+            file: "app/api/route.ts".to_string(),
+            fetches: Vec::new(),
+            is_client: false,
+            is_route_handler: true,
+        };
+        visitor.visit_program(&parsed.program);
+        assert_eq!(visitor.fetches.len(), 1);
+        assert!(!visitor.fetches[0].rsc);
+    }
+
+    #[test]
+    fn test_route_report_api_calls_uses_camel_case() {
+        let report = RouteReport {
+            route: "/".to_string(),
+            file: "app/page.tsx".to_string(),
+            api_calls: vec![FetchOccurrence {
+                path: "/api/example".to_string(),
+                raw_path: "/api/example".to_string(),
+                method: "GET".to_string(),
+                file: "app/page.tsx".to_string(),
+                line: 3,
+                side: FetchSide::Server,
+                rsc: true,
+                cached: false,
+                cache_kind: CacheKind::None,
+                cached_function: None,
+                dynamic: false,
+                unsupported: false,
+            }],
+        };
+        let serialized = serde_json::to_string(&report).unwrap();
+        assert!(serialized.contains("\"apiCalls\""));
+        assert!(!serialized.contains("\"api_calls\""));
     }
 
     #[test]
