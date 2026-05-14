@@ -62,6 +62,7 @@ struct FetchOccurrence {
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[serde(rename_all = "lowercase")]
+#[allow(dead_code)]
 enum FetchSide {
     Client,
     Server,
@@ -70,6 +71,7 @@ enum FetchSide {
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 #[serde(rename_all = "kebab-case")]
+#[allow(dead_code)]
 enum CacheKind {
     None,
     FetchCache,
@@ -458,12 +460,10 @@ fn main() -> Result<()> {
             client_api_calls,
             server_api_calls,
             rsc_api_calls,
-            ..Default::default()
         },
         routes: reports,
         duplicates,
         unsupported,
-        ..Default::default()
     };
 
     final_report.unsupported.sort_by(|a, b| {
