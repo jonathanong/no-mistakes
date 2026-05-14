@@ -45,7 +45,9 @@ struct FetchOccurrence {
     url: String,
     method: String,
     file: String,
+    line: usize,
     is_dynamic: bool,
+    is_rsc: bool,
 }
 
 #[derive(Serialize)]
@@ -77,6 +79,7 @@ struct FetchVisitor<'a> {
     source: &'a str,
     file: String,
     fetches: Vec<FetchOccurrence>,
+    is_client: bool,
 }
 
 impl<'a> Visit<'a> for FetchVisitor<'a> {
@@ -86,6 +89,7 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
                 let mut url = "unknown".to_string();
                 let mut method = "GET".to_string();
                 let mut is_dynamic = false;
+                let line = self.source[..expr.span.start as usize].lines().count() + 1;
 
                 if let Some(arg) = expr.arguments.first() {
                     let result = extract_url_from_argument(arg, self.source);
@@ -111,7 +115,9 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
                     url,
                     method,
                     file: self.file.clone(),
+                    line,
                     is_dynamic,
+                    is_rsc: !self.is_client,
                 });
             }
         }
@@ -151,22 +157,30 @@ fn main() -> Result<()> {
         );
     }
     let stems = ["page", "route"];
-    let routes = routes::collect_routes(&frontend_root, &stems)?;
+    let all_routes = routes::collect_routes(&frontend_root, &stems)?;
 
     let mut cache = Cache {
         files: HashMap::new(),
     };
     let mut reports = Vec::new();
     let mut global_fetches = Vec::new();
+    let mut matched_targets = HashSet::new();
 
-    for route in routes {
+    for route in all_routes {
         // Filter by targets if provided
         if !cli.targets.is_empty() {
-            let matched = cli.targets.iter().any(|t| {
-                route.pattern == *t
+            let mut matched = false;
+            for t in &cli.targets {
+                if route.pattern == *t
                     || route.file.to_string_lossy().contains(t)
-                    || route.pattern.starts_with(t)
-            });
+                    || (t.ends_with('/') && route.pattern.starts_with(t))
+                    || route.pattern == format!("/{}", t)
+                {
+                    matched = true;
+                    matched_targets.insert(t.clone());
+                    break;
+                }
+            }
             if !matched {
                 continue;
             }
@@ -205,7 +219,7 @@ fn main() -> Result<()> {
         }
 
         fetches.sort();
-        fetches.dedup();
+        // Keep non-deduplicated list for global duplicate detection
         global_fetches.extend(fetches.clone());
 
         reports.push(RouteReport {
@@ -213,6 +227,16 @@ fn main() -> Result<()> {
             file: relative_string(&root, &route.file),
             fetches,
         });
+    }
+
+    if !cli.targets.is_empty() && matched_targets.len() < cli.targets.len() {
+        let unmatched: Vec<_> = cli
+            .targets
+            .iter()
+            .filter(|t| !matched_targets.contains(*t))
+            .collect();
+        eprintln!("Error: targets not found: {:?}", unmatched);
+        std::process::exit(2);
     }
 
     let mut final_report = FinalReport {
@@ -285,10 +309,12 @@ fn analyze_file(
 
     let mut file_fetches = Vec::new();
     ast::with_program(path, &source, |program, source| -> Result<()> {
+        let is_client = program.directives.iter().any(|d| d.directive == "use client");
         let mut visitor = FetchVisitor {
             source,
             file: rel_file,
             fetches: Vec::new(),
+            is_client,
         };
         visitor.visit_program(program);
         file_fetches.extend(visitor.fetches);
@@ -353,14 +379,19 @@ fn print_markdown_report(report: &FinalReport) {
         if route.fetches.is_empty() {
             println!("(no fetches found)");
         } else {
-            println!("| Method | URL | File | Dynamic |");
-            println!("| --- | --- | --- | --- |");
-            for fetch in &route.fetches {
+            println!("| Method | URL | File | Line | Side | Dynamic |");
+            println!("| --- | --- | --- | --- | --- | --- |");
+            let mut unique_fetches = route.fetches.clone();
+            unique_fetches.sort();
+            unique_fetches.dedup();
+            for fetch in &unique_fetches {
                 println!(
-                    "| {} | `{}` | {} | {} |",
+                    "| {} | `{}` | {} | {} | {} | {} |",
                     fetch.method,
                     fetch.url,
                     fetch.file,
+                    fetch.line,
+                    if fetch.is_rsc { "S" } else { "C" },
                     if fetch.is_dynamic { "✅" } else { "❌" }
                 );
             }
@@ -423,6 +454,7 @@ mod tests {
             source,
             file: "test.ts".to_string(),
             fetches: Vec::new(),
+            is_client: false,
         };
         visitor.visit_program(&parsed.program);
         assert_eq!(visitor.fetches.len(), 0);
@@ -444,12 +476,14 @@ mod tests {
             source,
             file: "test.ts".to_string(),
             fetches: Vec::new(),
+            is_client: false,
         };
         visitor.visit_program(&parsed.program);
         assert_eq!(visitor.fetches.len(), 5);
         for fetch in &visitor.fetches {
             assert_eq!(fetch.method, "GET");
             assert!(fetch.is_dynamic);
+            assert!(fetch.line > 0);
         }
     }
 
@@ -463,6 +497,7 @@ mod tests {
             source,
             file: "test.ts".to_string(),
             fetches: Vec::new(),
+            is_client: false,
         };
         visitor.visit_program(&parsed.program);
         assert_eq!(visitor.fetches.len(), 1);
@@ -480,17 +515,21 @@ mod tests {
             source,
             file: "test.ts".to_string(),
             fetches: Vec::new(),
+            is_client: false,
         };
         visitor.visit_program(&parsed.program);
         assert_eq!(visitor.fetches.len(), 3);
         assert_eq!(visitor.fetches[0].url, "dynamic");
         assert!(visitor.fetches[0].is_dynamic);
+        assert!(visitor.fetches[0].is_rsc);
         assert_eq!(visitor.fetches[1].url, "/api/${id}");
         assert!(visitor.fetches[1].is_dynamic);
         assert_eq!(visitor.fetches[1].method, "PATCH");
+        assert!(visitor.fetches[1].is_rsc);
         assert_eq!(visitor.fetches[2].url, "/api/get");
         assert!(!visitor.fetches[2].is_dynamic);
         assert_eq!(visitor.fetches[2].method, "GET");
+        assert!(visitor.fetches[2].is_rsc);
     }
 
     #[test]
