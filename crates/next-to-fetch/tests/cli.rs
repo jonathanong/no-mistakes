@@ -54,6 +54,26 @@ fn test_cli_missing_root() {
 }
 
 #[test]
+fn test_cli_layout_traversal() {
+    let root = Path::new("tests/fixtures/layout-traversal");
+    fs::create_dir_all(root.join("app/sub")).unwrap();
+    fs::write(root.join(".no-mistakes.yaml"), "frontendRoot: app\n").unwrap();
+    fs::write(root.join("app/layout.tsx"), "fetch('/api/root-layout')").unwrap();
+    fs::write(root.join("app/sub/layout.tsx"), "fetch('/api/sub-layout')").unwrap();
+    fs::write(root.join("app/sub/page.tsx"), "fetch('/api/page')").unwrap();
+
+    let mut cmd = Command::cargo_bin("next-to-fetch").unwrap();
+    cmd.arg("--root").arg(root);
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("GET /api/root-layout"))
+        .stdout(predicate::str::contains("GET /api/sub-layout"))
+        .stdout(predicate::str::contains("GET /api/page"));
+
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
 fn test_cli_config_not_found() {
     let mut cmd = Command::cargo_bin("next-to-fetch").unwrap();
     cmd.arg("--config").arg("non-existent.yaml");

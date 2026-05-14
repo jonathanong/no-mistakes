@@ -187,7 +187,7 @@ fn analyze_file(
     let source = std::fs::read_to_string(&abs_path)?;
     let rel_file = relative_string(root, &abs_path);
 
-    ast::with_program(path, &source, |program, source| -> Result<()> {
+    let _ = ast::with_program(path, &source, |program, source| -> Result<()> {
         let mut visitor = FetchVisitor {
             source,
             file: rel_file,
