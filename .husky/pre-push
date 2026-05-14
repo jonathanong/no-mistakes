@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Pre-push hook: checks only, no mutations.
+# Pre-push hook: checks only; it should not modify tracked files.
 
 remote="$1"
 remote_url="$2"

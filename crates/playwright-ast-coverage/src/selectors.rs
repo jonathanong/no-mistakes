@@ -353,7 +353,7 @@ pub fn extract_playwright_selectors(
     let component_attributes = BTreeMap::new();
     let regexes = compile_selector_regexes(selector_attributes, &component_attributes);
     extract_playwright_selectors_with_regexes(
-        Path::new("fixture.tsx"),
+        Path::new("fixture.ts"),
         source,
         &regexes,
         test_id_attributes,
@@ -1987,11 +1987,15 @@ mod tests {
     #[test]
     fn component_jsx_name_checks() {
         let source = "const x = <ns:name />; const y = <this />;";
-        let selectors = extract_playwright_selectors(
+        let component_attributes = BTreeMap::new();
+        let regexes = compile_selector_regexes(&["data-testid".to_string()], &component_attributes);
+        let selectors = extract_playwright_selectors_with_regexes(
+            Path::new("fixture.tsx"),
             source,
+            &regexes,
             &["data-testid".to_string()],
-            &["data-testid".to_string()],
-        );
+        )
+        .unwrap();
         assert!(selectors.is_empty());
     }
 

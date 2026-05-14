@@ -7,6 +7,11 @@
 /target/
 /vendor/
 *.tgz
+coverage*.json
+coverage*.txt
+*_cov.txt
+missing_*.txt
+lcov.info
 *.profraw
 *.profdata
 .DS_Store
