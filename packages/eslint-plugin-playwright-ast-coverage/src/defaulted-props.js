@@ -26,6 +26,12 @@ function collectDefaultedProps(params) {
   return props;
 }
 
+function collectFunctionDefaultedProps(fn) {
+  const props = collectDefaultedProps(fn.params);
+  collectConstPatternDefaults(fn.body, props);
+  return props;
+}
+
 function collectPatternDefaults(pattern, props) {
   if (pattern.type === "AssignmentPattern") {
     collectDefaultName(pattern.left, props, isStringLiteralNode(pattern.right));
@@ -58,14 +64,70 @@ function collectDefaultName(node, props, hasLiteralDefault) {
   }
 }
 
+function collectConstPatternDefaults(node, props) {
+  if (!node) {
+    return;
+  }
+  if (node.type === "VariableDeclaration") {
+    if (node.kind === "const") {
+      for (const declaration of node.declarations) {
+        if (declaration.id.type === "ObjectPattern") {
+          collectPatternDefaults(declaration.id, props);
+        }
+      }
+    }
+    return;
+  }
+  if (node.type !== "BlockStatement" && isFunctionNode(node)) {
+    return;
+  }
+  for (const value of Object.values(node)) {
+    if (!value || value === node.parent) {
+      continue;
+    }
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (item?.type) {
+          collectConstPatternDefaults(item, props);
+        }
+      }
+      continue;
+    }
+    if (value.type) {
+      collectConstPatternDefaults(value, props);
+    }
+  }
+}
+
+function patternHasLiteralDefault(pattern, name) {
+  if (pattern.type === "AssignmentPattern") {
+    return pattern.left.type === "Identifier"
+      ? pattern.left.name === name && isStringLiteralNode(pattern.right)
+      : patternHasLiteralDefault(pattern.left, name);
+  }
+  if (pattern.type !== "ObjectPattern") {
+    return false;
+  }
+  return pattern.properties.some((prop) => {
+    if (prop.type === "RestElement") {
+      return false;
+    }
+    return patternHasLiteralDefault(prop.value, name);
+  });
+}
+
+function isFunctionNode(node) {
+  return (
+    node.type === "FunctionDeclaration" ||
+    node.type === "FunctionExpression" ||
+    node.type === "ArrowFunctionExpression"
+  );
+}
+
 function nearestFunction(node) {
   let current = node.parent;
   while (current) {
-    if (
-      current.type === "FunctionDeclaration" ||
-      current.type === "FunctionExpression" ||
-      current.type === "ArrowFunctionExpression"
-    ) {
+    if (isFunctionNode(current)) {
       return current;
     }
     current = current.parent;
@@ -81,7 +143,7 @@ function defaultedPropsForNode(node) {
   }
   let props = DEFAULTED_PROPS.get(fn);
   if (!props) {
-    props = collectDefaultedProps(fn.params);
+    props = collectFunctionDefaultedProps(fn);
     DEFAULTED_PROPS.set(fn, props);
   }
   return props;
@@ -92,7 +154,20 @@ function isDefaultedPropReference(node, context) {
     return false;
   }
   const variable = findVariable(context.sourceCode.getScope(node), node.name);
-  return Boolean(variable?.defs.some((def) => def.type === "Parameter"));
+  return Boolean(
+    variable?.defs.some(
+      (def) => def.type === "Parameter" || hasLiteralConstPatternDefault(def, node.name),
+    ),
+  );
+}
+
+function hasLiteralConstPatternDefault(def, name) {
+  return (
+    def.type === "Variable" &&
+    def.parent?.kind === "const" &&
+    def.node?.id?.type === "ObjectPattern" &&
+    patternHasLiteralDefault(def.node.id, name)
+  );
 }
 
 function findVariable(scope, name) {

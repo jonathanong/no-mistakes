@@ -87,6 +87,16 @@ describe("literals", () => {
     assert.deepEqual(messages(code, "literals"), []);
   });
 
+  it("accepts const destructured literal defaults", () => {
+    const code = `function A(props) { const { "data-pw": dataPw = "save" } = props; page.getByTestId(dataPw); return <button data-pw={dataPw} />; }`;
+    assert.deepEqual(messages(code, "literals"), []);
+  });
+
+  it("rejects unsafe const destructured defaults", () => {
+    const code = `function A(props) { const { "data-pw": missing } = props; const { "data-testid": dynamic = id } = props; let { "data-qa": mutable = "open" } = props; return <><button data-pw={missing} /><button data-pw={dynamic} /><button data-pw={mutable} /></>; }`;
+    assert.deepEqual(messages(code, "literals"), ["literal", "literal", "literal"]);
+  });
+
   it("rejects missing getByTestId arguments and identifiers outside functions", () => {
     assert.deepEqual(messages("page.getByTestId(); page.getByTestId(testId);", "literals"), [
       "literal",
@@ -110,6 +120,16 @@ describe("defaults", () => {
       }
     `;
     assert.deepEqual(messages(code, "defaults"), ["default"]);
+  });
+
+  it("accepts const destructured literal defaults", () => {
+    const code = `function A(props) { const { "data-pw": dataPw = "save" } = props; return <button data-pw={dataPw} />; }`;
+    assert.deepEqual(messages(code, "defaults"), []);
+  });
+
+  it("rejects shadowed and unsafe const destructured defaults", () => {
+    const code = `function A(props) { const { "data-pw": dataPw = "save" } = props; const { "data-testid": dynamic = id } = props; let { "data-qa": mutable = "open" } = props; { const dataPw = id; return <><button data-pw={dataPw} /><button data-pw={dynamic} /><button data-pw={mutable} /></>; } }`;
+    assert.deepEqual(messages(code, "defaults"), ["default", "default", "default"]);
   });
 });
 
