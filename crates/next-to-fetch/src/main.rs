@@ -3,7 +3,10 @@ use clap::Parser;
 use no_mistakes_core::ast;
 use no_mistakes_core::config;
 use no_mistakes_core::routes;
-use oxc_ast::ast::{Argument, CallExpression, Expression};
+use oxc_ast::ast::{
+    Argument, CallExpression, Expression, ImportDeclarationSpecifier, ImportOrExportKind,
+    Statement,
+};
 use oxc_ast_visit::{walk, Visit};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -71,8 +74,15 @@ struct Summary {
     total_fetches: usize,
 }
 
+#[derive(Clone)]
+struct TargetSpec {
+    raw: String,
+    file: Option<PathBuf>,
+}
+
 struct Cache {
-    files: HashMap<PathBuf, Vec<FetchOccurrence>>,
+    files: HashMap<(PathBuf, bool), Vec<FetchOccurrence>>,
+    imports: HashMap<PathBuf, Vec<PathBuf>>,
 }
 
 struct FetchVisitor<'a> {
@@ -161,24 +171,46 @@ fn main() -> Result<()> {
 
     let mut cache = Cache {
         files: HashMap::new(),
+        imports: HashMap::new(),
     };
+    let target_specs = cli
+        .targets
+        .iter()
+        .map(|target| TargetSpec {
+            raw: target.clone(),
+            file: resolve_target_file(&root, target).ok(),
+        })
+        .collect::<Vec<_>>();
     let mut reports = Vec::new();
     let mut global_fetches = Vec::new();
     let mut matched_targets = HashSet::new();
 
     for route in all_routes {
         // Filter by targets if provided
-        if !cli.targets.is_empty() {
+        if !target_specs.is_empty() {
             let mut matched = false;
-            for t in &cli.targets {
-                if route.pattern == *t
-                    || route.file.to_string_lossy().contains(t)
-                    || (t.ends_with('/') && route.pattern.starts_with(t))
-                    || route.pattern == format!("/{}", t)
+            for target in &target_specs {
+                if target.raw == route.pattern
+                    || route.file.to_string_lossy().contains(&target.raw)
+                    || (target.raw.ends_with('/') && route.pattern.starts_with(&target.raw))
+                    || route.pattern == format!("/{}", target.raw)
                 {
                     matched = true;
-                    matched_targets.insert(t.clone());
-                    break;
+                    matched_targets.insert(target.raw.clone());
+                    continue;
+                }
+
+                if let Some(target_file) = &target.file {
+                    let mut visited_targets = HashSet::new();
+                    if route_reaches_target(
+                        &route.file,
+                        target_file,
+                        &mut visited_targets,
+                        &mut cache.imports,
+                    )? {
+                        matched = true;
+                        matched_targets.insert(target.raw.clone());
+                    }
                 }
             }
             if !matched {
@@ -186,11 +218,20 @@ fn main() -> Result<()> {
             }
         }
 
+        let route_is_client = is_client_route_file(&route.file)?;
+
         let mut fetches = Vec::new();
         let mut visited = HashSet::new();
 
         // Analyze the page/route file itself
-        analyze_file(&route.file, &root, &mut visited, &mut fetches, &mut cache)?;
+        analyze_file(
+            &route.file,
+            &root,
+            &mut visited,
+            &mut fetches,
+            &mut cache,
+            route_is_client,
+        )?;
 
         // Traverse up and find parent layouts/loadings if it's a page (UI)
         if route.file.file_stem().and_then(|s| s.to_str()) == Some("page") {
@@ -210,6 +251,7 @@ fn main() -> Result<()> {
                                 &mut visited,
                                 &mut fetches,
                                 &mut cache,
+                                route_is_client,
                             )?;
                         }
                     }
@@ -229,7 +271,7 @@ fn main() -> Result<()> {
         });
     }
 
-    if !cli.targets.is_empty() && matched_targets.len() < cli.targets.len() {
+    if !target_specs.is_empty() && matched_targets.len() < target_specs.len() {
         let unmatched: Vec<_> = cli
             .targets
             .iter()
@@ -288,6 +330,7 @@ fn analyze_file(
     visited: &mut HashSet<PathBuf>,
     fetches: &mut Vec<FetchOccurrence>,
     cache: &mut Cache,
+    inherited_is_client: bool,
 ) -> Result<()> {
     if !path.exists() {
         return Ok(());
@@ -299,7 +342,7 @@ fn analyze_file(
     }
     visited.insert(abs_path.clone());
 
-    if let Some(cached_fetches) = cache.files.get(&abs_path) {
+    if let Some(cached_fetches) = cache.files.get(&(abs_path.clone(), inherited_is_client)) {
         fetches.extend(cached_fetches.clone());
         return Ok(());
     }
@@ -308,11 +351,12 @@ fn analyze_file(
     let rel_file = relative_string(root, &abs_path);
 
     let mut file_fetches = Vec::new();
-    ast::with_program(path, &source, |program, source| -> Result<()> {
-        let is_client = program
-            .directives
-            .iter()
-            .any(|d| d.directive == "use client");
+    let is_client = ast::with_program(path, &source, |program, source| -> Result<bool> {
+        let is_client = inherited_is_client
+            || program
+                .directives
+                .iter()
+                .any(|d| d.directive == "use client");
         let mut visitor = FetchVisitor {
             source,
             file: rel_file,
@@ -322,22 +366,124 @@ fn analyze_file(
         visitor.visit_program(program);
         file_fetches.extend(visitor.fetches);
 
-        // Find imports and recurse
+        for import in collect_imports(&abs_path, &mut cache.imports)? {
+            analyze_file(&import, root, visited, &mut file_fetches, cache, is_client)?;
+        }
+        Ok(is_client)
+    })??;
+
+    cache.files.insert((abs_path.clone(), is_client), file_fetches.clone());
+    fetches.extend(file_fetches);
+
+    Ok(())
+}
+
+fn collect_imports(
+    path: &Path,
+    import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
+) -> Result<Vec<PathBuf>> {
+    let abs_path = path.canonicalize()?;
+    if let Some(cached_imports) = import_cache.get(&abs_path) {
+        return Ok(cached_imports.clone());
+    }
+
+    let source = std::fs::read_to_string(&abs_path)?;
+    let mut imports = Vec::new();
+    ast::with_program(path, &source, |program, _| -> Result<()> {
         for stmt in &program.body {
-            if let oxc_ast::ast::Statement::ImportDeclaration(import) = stmt {
+            if let Statement::ImportDeclaration(import) = stmt {
+                if !is_runtime_import(import) {
+                    continue;
+                }
                 let specifier = import.source.value.as_str();
-                if let Some(resolved) = resolve_import(path, specifier) {
-                    analyze_file(&resolved, root, visited, &mut file_fetches, cache)?;
+                if let Some(resolved) = resolve_import(&abs_path, specifier) {
+                    imports.push(resolved);
                 }
             }
         }
         Ok(())
     })??;
 
-    cache.files.insert(abs_path, file_fetches.clone());
-    fetches.extend(file_fetches);
+    import_cache.insert(abs_path.clone(), imports.clone());
+    Ok(imports)
+}
 
-    Ok(())
+fn is_runtime_import(import: &oxc_ast::ast::ImportDeclaration) -> bool {
+    if import.import_kind == ImportOrExportKind::Type {
+        return false;
+    }
+
+    let specifiers = &import.specifiers;
+    if specifiers.is_empty() {
+        return true;
+    }
+
+    for specifier in specifiers {
+        if let ImportDeclarationSpecifier::ImportSpecifier(specifier) = specifier {
+            if specifier.import_kind == ImportOrExportKind::Value {
+                return true;
+            }
+            continue;
+        }
+        return true;
+    }
+
+    false
+}
+
+fn route_reaches_target(
+    path: &Path,
+    target: &Path,
+    visited: &mut HashSet<PathBuf>,
+    import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
+) -> Result<bool> {
+    let abs_path = path.canonicalize()?;
+    if abs_path == target {
+        return Ok(true);
+    }
+    if visited.contains(&abs_path) {
+        return Ok(false);
+    }
+    visited.insert(abs_path.clone());
+
+    for import in collect_imports(&abs_path, import_cache)? {
+        if route_reaches_target(&import, target, visited, import_cache)? {
+            return Ok(true);
+        }
+    }
+
+    Ok(false)
+}
+
+fn resolve_target_file(root: &Path, target: &str) -> Result<PathBuf> {
+    let trimmed = target.trim();
+    if trimmed.is_empty() {
+        anyhow::bail!("target path cannot be empty");
+    }
+
+    let candidate = if trimmed.starts_with('/') {
+        root.join(trimmed.trim_start_matches('/'))
+    } else {
+        root.join(trimmed)
+    };
+    if !candidate.is_file() {
+        anyhow::bail!("target path is not a file: {}", candidate.display());
+    }
+    candidate.canonicalize()
+}
+
+fn is_client_route_file(path: &Path) -> Result<bool> {
+    if !path.exists() {
+        return Ok(false);
+    }
+
+    let source = std::fs::read_to_string(path)?;
+    ast::with_program(path, &source, |program, _| {
+        Ok(program
+            .directives
+            .iter()
+            .any(|directive| directive.directive == "use client"))
+    })
 }
 
 fn resolve_import(current_file: &Path, specifier: &str) -> Option<PathBuf> {
@@ -373,7 +519,7 @@ fn print_markdown_report(report: &FinalReport) {
     println!();
     println!("## Summary");
     println!("- Total Routes: {}", report.summary.total_routes);
-    println!("- Total Unique Fetches: {}", report.summary.total_fetches);
+    println!("- Total Fetch Calls: {}", report.summary.total_fetches);
     println!();
 
     println!("## Routes");
@@ -560,8 +706,35 @@ mod tests {
 
     #[test]
     fn test_resolve_import_root() {
- Richmond: I am adding a test for explicit extension.
         assert_eq!(resolve_import(Path::new("page.ts"), "./lib"), None);
+    }
+    
+    #[test]
+    fn test_route_reaches_target_client_file() {
+        let dir = tempdir().unwrap();
+        let file = dir.path().join("client.ts");
+        fs::write(
+            &file,
+            "
+            'use client';
+            import { helper } from './helper';
+            export {};
+            ",
+        )
+        .unwrap();
+
+        let helper = dir.path().join("helper.ts");
+        fs::write(&helper, "export const helper = () => fetch('/api/helper');").unwrap();
+
+        let mut cache = Cache {
+            files: HashMap::new(),
+            imports: HashMap::new(),
+        };
+        let mut visited = HashSet::new();
+        let mut fetches = Vec::new();
+        analyze_file(&file, dir.path(), &mut visited, &mut fetches, &mut cache, false).unwrap();
+        assert!(fetches.iter().any(|fetch| fetch.url == "/api/helper"));
+        assert!(fetches.iter().any(|fetch| !fetch.is_rsc));
     }
 
     #[test]
@@ -579,15 +752,16 @@ mod tests {
 
         let mut cache = Cache {
             files: HashMap::new(),
+            imports: HashMap::new(),
         };
         let mut visited = HashSet::new();
         let mut fetches = Vec::new();
-        analyze_file(&file, dir.path(), &mut visited, &mut fetches, &mut cache).unwrap();
+        analyze_file(&file, dir.path(), &mut visited, &mut fetches, &mut cache, false).unwrap();
         assert_eq!(fetches.len(), 1);
 
         let mut visited2 = HashSet::new();
         let mut fetches2 = Vec::new();
-        analyze_file(&file, dir.path(), &mut visited2, &mut fetches2, &mut cache).unwrap();
+        analyze_file(&file, dir.path(), &mut visited2, &mut fetches2, &mut cache, false).unwrap();
         assert_eq!(fetches2.len(), 1);
         assert_eq!(fetches2[0].url, "/api/cache");
     }
@@ -598,6 +772,7 @@ mod tests {
         let mut fetches = Vec::new();
         let mut cache = Cache {
             files: HashMap::new(),
+            imports: HashMap::new(),
         };
         analyze_file(
             Path::new("missing.ts"),
@@ -605,6 +780,7 @@ mod tests {
             &mut visited,
             &mut fetches,
             &mut cache,
+            false,
         )
         .unwrap();
         assert!(fetches.is_empty());
@@ -647,8 +823,9 @@ mod tests {
         let mut fetches = Vec::new();
         let mut cache = Cache {
             files: HashMap::new(),
+            imports: HashMap::new(),
         };
-        analyze_file(&file, dir.path(), &mut visited, &mut fetches, &mut cache).unwrap();
+        analyze_file(&file, dir.path(), &mut visited, &mut fetches, &mut cache, false).unwrap();
         assert!(fetches.is_empty());
     }
 
@@ -661,8 +838,16 @@ mod tests {
         let mut fetches = Vec::new();
         let mut cache = Cache {
             files: HashMap::new(),
+            imports: HashMap::new(),
         };
-        let err = analyze_file(&path, dir.path(), &mut visited, &mut fetches, &mut cache)
+        let err = analyze_file(
+            &path,
+            dir.path(),
+            &mut visited,
+            &mut fetches,
+            &mut cache,
+            false,
+        )
             .err()
             .unwrap();
         assert!(

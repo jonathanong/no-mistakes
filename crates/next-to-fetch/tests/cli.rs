@@ -133,6 +133,63 @@ fn test_cli_targets() {
 }
 
 #[test]
+fn test_cli_targets_imported_file() {
+    let root = Path::new("tests/fixtures/targets-imported");
+    fs::create_dir_all(root.join("app")).unwrap();
+    fs::write(root.join(".no-mistakes.yaml"), "frontendRoot: app\n").unwrap();
+    fs::write(
+        root.join("app/page.tsx"),
+        "
+        import { getUsers } from './users';
+        getUsers();
+        ",
+    )
+    .unwrap();
+    fs::write(root.join("app/users.ts"), "export const getUsers = () => fetch('/api/users');").unwrap();
+
+    let mut cmd = Command::cargo_bin("next-to-fetch").unwrap();
+    cmd.arg("--root").arg(root).arg("app/users.ts");
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("### / (app/page.tsx)"))
+        .stdout(predicate::str::contains("GET | `/api/users`"));
+
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn test_cli_skips_type_only_imports() {
+    let root = Path::new("tests/fixtures/type-only-import");
+    fs::create_dir_all(root.join("app")).unwrap();
+    fs::write(root.join(".no-mistakes.yaml"), "frontendRoot: app\n").unwrap();
+    fs::write(
+        root.join("app/page.tsx"),
+        "
+        import type { User } from './types';
+        import { getData } from './runtime';
+        export const user: User = {};
+        getData();
+        ",
+    )
+    .unwrap();
+    fs::write(
+        root.join("app/types.ts"),
+        "export type User = {\n  id: string;\n};\nexport const getUser = () => fetch('/api/type-only');\n",
+    )
+    .unwrap();
+    fs::write(root.join("app/runtime.ts"), "export const getData = () => fetch('/api/runtime');").unwrap();
+
+    let mut cmd = Command::cargo_bin("next-to-fetch").unwrap();
+    cmd.arg("--root").arg(root);
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("GET | `/api/runtime`"))
+        .stdout(predicate::str::contains("GET | `/api/type-only`").not());
+
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
 fn test_cli_targets_unmatched() {
     let root = Path::new("tests/fixtures/targets-unmatched");
     fs::create_dir_all(root.join("app")).unwrap();
@@ -144,7 +201,9 @@ fn test_cli_targets_unmatched() {
     cmd.assert()
         .failure()
         .code(2)
-        .stderr(predicate::str::contains("Error: targets not found: [\"/missing\"]"));
+        .stderr(predicate::str::contains(
+            "Error: targets not found: [\"/missing\"]",
+        ));
 
     fs::remove_dir_all(root).unwrap();
 }

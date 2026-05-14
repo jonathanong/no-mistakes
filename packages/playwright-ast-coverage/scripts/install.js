@@ -3,11 +3,11 @@
 
 const { join } = require("node:path");
 const PACKAGE_ROOT = join(__dirname, "..");
+const pkg = require(join(PACKAGE_ROOT, "package.json"));
 const core = require("no-mistakes-core");
 
 async function main() {
   try {
-    const pkg = require(join(PACKAGE_ROOT, "package.json"));
     const destination = await core.install(
       "playwright-ast-coverage",
       "jonathanong/playwright-ast-coverage",
@@ -42,6 +42,8 @@ module.exports = {
     if (typeof binName === "object" && repository === undefined) {
       // Old signature: install(options)
       const mergedOptions = {
+        version: pkg.version,
+        vendorDir: join(PACKAGE_ROOT, "vendor"),
         envVar: "PLAYWRIGHT_AST_COVERAGE_RELEASE_BASE_URL",
         ...binName,
       };
