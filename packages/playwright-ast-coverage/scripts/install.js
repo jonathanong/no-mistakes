@@ -54,13 +54,9 @@ module.exports = {
         mergedOptions,
       );
     }
-    return core.install(
-      binName,
-      repository,
-      {
-        ...INSTALL_DEFAULTS,
-        ...options,
-      },
-    );
+    return core.install(binName, repository, {
+      ...INSTALL_DEFAULTS,
+      ...options,
+    });
   },
 };
