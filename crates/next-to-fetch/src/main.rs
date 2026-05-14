@@ -4,8 +4,8 @@ use no_mistakes_core::ast;
 use no_mistakes_core::config;
 use no_mistakes_core::routes;
 use oxc_ast::ast::{
-    Argument, CallExpression, ExportNamedDeclaration, ExportSpecifier,
-    Expression, ImportDeclarationSpecifier, ImportOrExportKind, Statement,
+    Argument, CallExpression, ExportNamedDeclaration, ExportSpecifier, Expression,
+    ImportDeclarationSpecifier, ImportOrExportKind, Statement,
 };
 use oxc_ast_visit::{walk, Visit};
 use serde::{Deserialize, Serialize};
@@ -412,9 +412,7 @@ fn collect_imports(
                         continue;
                     }
                     if let Some(source) = &export.source {
-                        if let Some(resolved) =
-                            resolve_import(&abs_path, source.value.as_str())
-                        {
+                        if let Some(resolved) = resolve_import(&abs_path, source.value.as_str()) {
                             imports.push(resolved);
                         }
                     }
@@ -423,9 +421,7 @@ fn collect_imports(
                     if export.export_kind == ImportOrExportKind::Type {
                         continue;
                     }
-                    if let Some(resolved) =
-                        resolve_import(&abs_path, export.source.value.as_str())
-                    {
+                    if let Some(resolved) = resolve_import(&abs_path, export.source.value.as_str()) {
                         imports.push(resolved);
                     }
                 }
@@ -530,14 +526,12 @@ fn is_client_route_file(path: &Path) -> Result<bool> {
     }
 
     let source = std::fs::read_to_string(path)?;
-    Ok(
-        ast::with_program(path, &source, |program, _| {
-            Ok(program
-                .directives
-                .iter()
-                .any(|directive| directive.directive == "use client"))
-        })?,
-    )
+    Ok(ast::with_program(path, &source, |program, _| {
+        Ok(program
+            .directives
+            .iter()
+            .any(|directive| directive.directive == "use client"))
+    })?)
 }
 
 fn resolve_import(current_file: &Path, specifier: &str) -> Option<PathBuf> {
