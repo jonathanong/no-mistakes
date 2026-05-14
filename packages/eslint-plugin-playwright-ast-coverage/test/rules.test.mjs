@@ -18,8 +18,6 @@ describe("defaulted prop helpers", () => {
   it("returns an empty set outside functions", () => {
     const { defaultedPropsForNode } = require("../src/defaulted-props");
     assert.equal(defaultedPropsForNode({ parent: null }).size, 0);
-    const fn = { type: "FunctionDeclaration", params: [], body: null, parent: null };
-    assert.equal(defaultedPropsForNode({ parent: fn }), defaultedPropsForNode({ parent: fn }));
   });
 });
 
@@ -131,6 +129,11 @@ describe("defaults", () => {
 
   it("rejects shadowed and unsafe const destructured defaults", () => {
     const code = `function A(props) { const { "data-pw": dataPw = "save" } = props; const { "data-testid": dynamic = id } = props; let { "data-qa": mutable = "open" } = props; { const dataPw = id; return <><button data-pw={dataPw} /><button data-pw={dynamic} /><button data-pw={mutable} /></>; } }`;
+    assert.deepEqual(messages(code, "defaults"), ["default", "default", "default"]);
+  });
+
+  it("rejects const defaults from non-props, before declaration, and mismatched parameters", () => {
+    const code = `function A(props, cfg) { const { "data-pw": fromCfg = "cfg" } = cfg; const before = <button data-pw={late} />; const { "data-pw": late = "late" } = props; return <><button data-pw={fromCfg} />{before}</>; } function B(testId, props) { { const { "data-pw": testId = "save" } = props; } return <button data-pw={testId} />; }`;
     assert.deepEqual(messages(code, "defaults"), ["default", "default", "default"]);
   });
 });

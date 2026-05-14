@@ -2,8 +2,6 @@
 
 const { isStringLiteralNode, literalString, staticTemplate } = require("./helpers");
 
-const DEFAULTED_PROPS = new WeakMap();
-
 function isLiteralLike(node, opts, context) {
   const value = literalString(node);
   if (value !== null) {
@@ -23,12 +21,6 @@ function collectDefaultedProps(params) {
   for (const param of params) {
     collectPatternDefaults(param, props);
   }
-  return props;
-}
-
-function collectFunctionDefaultedProps(fn) {
-  const props = collectDefaultedProps(fn.params);
-  collectConstPatternDefaults(fn.body, props);
   return props;
 }
 
@@ -123,30 +115,6 @@ function constDefaultTraversalChildren(node) {
   if (node.type === "IfStatement") {
     return [node.consequent, node.alternate].filter(Boolean);
   }
-  /* v8 ignore next -- traversal support for less common statement containers */
-  if (node.type === "ForStatement") {
-    return [node.init, node.body].filter(Boolean);
-  }
-  /* v8 ignore next -- traversal support for less common statement containers */
-  if (node.type === "ForInStatement" || node.type === "ForOfStatement") {
-    return [node.left, node.body];
-  }
-  /* v8 ignore next -- traversal support for less common statement containers */
-  if (node.type === "WhileStatement" || node.type === "DoWhileStatement") {
-    return [node.body];
-  }
-  /* v8 ignore next -- traversal support for less common statement containers */
-  if (node.type === "SwitchStatement") {
-    return node.cases.flatMap((item) => item.consequent);
-  }
-  /* v8 ignore next -- traversal support for less common statement containers */
-  if (node.type === "TryStatement") {
-    return [node.block, node.handler?.body, node.finalizer].filter(Boolean);
-  }
-  /* v8 ignore next -- traversal support for less common statement containers */
-  if (node.type === "LabeledStatement" || node.type === "WithStatement") {
-    return [node.body];
-  }
   /* v8 ignore next -- non-container statements cannot hold const declarations */
   return [];
 }
@@ -176,12 +144,8 @@ function defaultedPropsForNode(node) {
   if (!fn) {
     return new Set();
   }
-  let props = DEFAULTED_PROPS.get(fn);
-  /* v8 ignore next -- cache hits are a performance detail */
-  if (!props) {
-    props = collectFunctionDefaultedProps(fn);
-    DEFAULTED_PROPS.set(fn, props);
-  }
+  const props = collectDefaultedProps(fn.params);
+  collectConstPatternDefaults(fn.body, props);
   return props;
 }
 
@@ -191,30 +155,55 @@ function isDefaultedPropReference(node, context) {
   }
   const variable = findVariable(context.sourceCode.getScope(node), node.name);
   return Boolean(
-    variable?.defs.some(
-      (def) => def.type === "Parameter" || hasLiteralConstPatternDefault(def, node.name),
-    ),
+    variable?.defs.some((def) => {
+      if (def.type === "Parameter") {
+        return hasLiteralParameterDefault(node, node.name);
+      }
+      return hasLiteralConstPatternDefault(def, node, context);
+    }),
   );
 }
 
-function hasLiteralConstPatternDefault(def, name) {
+function hasLiteralParameterDefault(node, name) {
+  return Boolean(
+    nearestFunction(node)?.params.some((param) => patternHasLiteralDefault(param, name)),
+  );
+}
+
+function hasLiteralConstPatternDefault(def, node, context) {
   return (
     def.type === "Variable" &&
     def.parent?.kind === "const" &&
     (def.node?.id?.type === "ObjectPattern" || def.node?.id?.type === "ArrayPattern") &&
-    patternHasLiteralDefault(def.node.id, name)
+    patternHasLiteralDefault(def.node.id, node.name) &&
+    isAfterDeclaration(node, def.node) &&
+    isFunctionParameterSource(def.node.init, context)
   );
+}
+
+function isAfterDeclaration(node, declaration) {
+  return node.range?.[0] >= declaration.range?.[1];
+}
+
+function isFunctionParameterSource(node, context) {
+  if (node?.type === "MemberExpression") {
+    return isFunctionParameterSource(node.object, context);
+  }
+  if (node?.type !== "Identifier" || !/props$/i.test(node.name)) {
+    return false;
+  }
+  const variable = findVariable(context.sourceCode.getScope(node), node.name);
+  return Boolean(variable?.defs.some((def) => def.type === "Parameter"));
 }
 
 function findVariable(scope, name) {
   let current = scope;
   while (current) {
     const variable = current.variables.find((item) => item.name === name);
-    /* v8 ignore next -- recorded identifiers should resolve in ESLint scope */
+    /* v8 ignore next -- covered by ESLint scope integration behavior */
     if (variable) {
       return variable;
     }
-    /* v8 ignore next -- upper-scope traversal is covered by rule integration tests */
     current = current.upper;
   }
   return null;
