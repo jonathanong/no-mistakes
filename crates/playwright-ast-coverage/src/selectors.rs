@@ -353,7 +353,7 @@ pub fn extract_playwright_selectors(
     let component_attributes = BTreeMap::new();
     let regexes = compile_selector_regexes(selector_attributes, &component_attributes);
     extract_playwright_selectors_with_regexes(
-        Path::new("fixture.ts"),
+        Path::new("fixture.tsx"),
         source,
         &regexes,
         test_id_attributes,
@@ -1881,6 +1881,16 @@ mod tests {
         assert!(selectors
             .iter()
             .all(|selector| app.matches_playwright(selector)));
+
+        assert!(!AppSelectorValue::Unsupported("x".to_string())
+            .matches_selector(&SelectorMatcher::Exact("x".to_string())));
+
+        let mut regexes = BTreeMap::new();
+        regexes.insert("dataPw".to_string(), "data-pw".to_string());
+        let selector_regexes = compile_selector_regexes(&["data-testid".to_string()], &regexes);
+        assert!(selector_regexes
+            .app_attributes
+            .contains(&"data-testid".to_string()));
     }
 
     #[test]
@@ -1972,6 +1982,17 @@ mod tests {
                 .collect::<Vec<_>>(),
             vec![(0, "v"), (1, "v"), (2, "v"), (3, "v"), (4, "^v")]
         );
+    }
+
+    #[test]
+    fn component_jsx_name_checks() {
+        let source = "const x = <ns:name />; const y = <this />;";
+        let selectors = extract_playwright_selectors(
+            source,
+            &["data-testid".to_string()],
+            &["data-testid".to_string()],
+        );
+        assert!(selectors.is_empty());
     }
 
     #[test]

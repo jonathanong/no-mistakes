@@ -721,6 +721,33 @@ mod tests {
     use crate::test_support::fixture_source;
 
     #[test]
+    fn regex_path_sample_edge_cases() {
+        assert_eq!(
+            regex_path_sample(r#"^\/orders"#),
+            Some("/orders".to_string())
+        );
+        assert_eq!(
+            regex_path_sample(r#"^\/orders\/$"#),
+            Some("/orders/".to_string())
+        );
+        assert_eq!(
+            regex_path_sample(r#"^\/orders\/\"#),
+            Some("/orders/".to_string())
+        );
+        assert_eq!(regex_path_sample(r#"^\/"#), Some("/".to_string()));
+        assert_eq!(regex_path_sample(r#"^\/a\xb"#), None);
+        assert_eq!(regex_path_sample(r#"^"#), None);
+        assert_eq!(regex_path_sample(r#"^\"#), None);
+    }
+
+    #[test]
+    fn callee_checks_handle_non_member_expressions() {
+        let src = "goto('/')";
+        let urls = extract_playwright_urls(src);
+        assert!(urls.is_empty());
+    }
+
+    #[test]
     fn extracts_page_goto_url() {
         let src = fixture_source(&["playwright_urls", "page-goto.ts"]);
         let urls = extract_playwright_urls(&src);
@@ -782,6 +809,16 @@ mod tests {
         assert!(is_candidate_url("https://localhost"));
         assert!(!is_candidate_url("localhost"));
         assert!(!is_candidate_url("ws://localhost"));
+    }
+
+    #[test]
+    fn glob_url_sample_handles_edge_cases() {
+        assert_eq!(glob_url_sample("/${path}"), None);
+        assert_eq!(
+            glob_url_sample("host.com/*/path"),
+            Some("/x/path".to_string())
+        );
+        assert_eq!(glob_url_sample("*/path"), Some("/path".to_string()));
     }
 
     #[test]

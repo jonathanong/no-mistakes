@@ -1,23 +1,27 @@
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
 
-# Determine if we are pushing to main or if we are behind main
-remote_name=$1
+# Pre-push hook: checks only, no mutations.
+
+remote="$1"
+
+# Fetch the latest from origin/main to ensure comparison is accurate
+echo "Fetching $remote main..."
+git fetch "$remote" main >/dev/null 2>&1
 
 while read local_ref local_sha remote_ref remote_sha
 do
-  # Get branch name from local_ref (e.g., refs/heads/main -> main)
-  branch_name="${local_ref#refs/heads/}"
-  
-  if [ "$branch_name" != "main" ]; then
-    # Ensure we have the latest from origin
-    git fetch "$remote_name" main >/dev/null 2>&1
-    
-    # Check if the commit we are pushing is behind origin/main
-    behind_count=$(git rev-list --count "$local_sha".."$remote_name"/main)
+  # Only check if we are not pushing main itself
+  if [ "$local_ref" != "refs/heads/main" ]; then
+    # Skip if we're deleting the remote branch (local_sha is all zeros)
+    if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+      continue
+    fi
+
+    # Check if the branch being pushed is behind origin/main
+    behind_count=$(git rev-list --count "$local_sha".."$remote"/main)
     if [ "$behind_count" -gt 0 ]; then
-      echo "Error: Branch '$branch_name' is behind $remote_name/main by $behind_count commit(s)."
-      echo "Please rebase onto $remote_name/main before pushing."
+      echo "Error: Branch '${local_ref#refs/heads/}' is behind $remote/main by $behind_count commit(s)."
+      echo "Please rebase onto $remote/main before pushing."
       exit 1
     fi
   fi
@@ -34,3 +38,6 @@ npm run fmt:js:check || exit 1
 
 echo "Running oxlint..."
 npm run lint:js || exit 1
+
+echo "Checking Rust test coverage (99% required)..."
+cargo llvm-cov --all-features --workspace --fail-under-lines 99 || exit 1
