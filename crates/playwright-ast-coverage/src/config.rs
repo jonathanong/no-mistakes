@@ -430,9 +430,51 @@ mod tests {
     }
 
     #[test]
-    fn playwright_config_name_filter_rejects_paths_without_file_or_extension() {
+    fn load_settings_handles_one_playwright_config() {
+        let root = fixture_path(&["config", "yaml-playwright-config"]);
+        let settings = load_settings(&root, None, &[], None).unwrap();
+        assert_eq!(settings.playwright_configs.len(), 1);
+    }
+
+    #[test]
+    fn find_default_playwright_configs_missing_root_returns_empty() {
+        let root = Path::new("/non-existent-path-12345");
+        assert!(find_default_playwright_configs(root).unwrap().is_empty());
+    }
+
+    #[test]
+    fn is_playwright_config_name_handles_no_name_or_no_extension() {
         assert!(!is_playwright_config_name(Path::new("")));
-        assert!(!is_playwright_config_name(Path::new("playwright")));
         assert!(!is_playwright_config_name(Path::new("playwright.config")));
+        assert!(!is_playwright_config_name(Path::new(".config.ts")));
+        assert!(!is_playwright_config_name(Path::new("playwright.ts")));
+        assert!(!is_playwright_config_name(Path::new("config")));
+    }
+
+    #[test]
+    fn playwright_config_name_filter_rejects_missing_extension() {
+        assert!(!is_playwright_config_name(Path::new("playwright.config.")));
+        assert!(!is_playwright_config_name(Path::new(
+            "playwright.config.other"
+        )));
+    }
+
+    #[test]
+    fn is_playwright_config_name_handles_non_utf8() {
+        #[cfg(unix)]
+        {
+            use std::os::unix::ffi::OsStrExt;
+            let p = Path::new(std::ffi::OsStr::from_bytes(b"playwright.config.\xff"));
+            assert!(!is_playwright_config_name(p));
+
+            let p2 = Path::new(std::ffi::OsStr::from_bytes(b"\xff.config.ts"));
+            assert!(!is_playwright_config_name(p2));
+        }
+    }
+
+    #[test]
+    fn resolve_handles_absolute_paths() {
+        let p = Path::new("/absolute/path");
+        assert_eq!(resolve(Path::new("/root"), p), p);
     }
 }

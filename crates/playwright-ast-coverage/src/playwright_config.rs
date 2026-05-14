@@ -572,6 +572,41 @@ mod tests {
     }
 
     #[test]
+    fn parser_handles_parenthesized_expressions() {
+        let source = "export default ({ testDir: 'parenthesized' });";
+        let parsed = parse(source, Path::new("/repo")).unwrap();
+        assert_eq!(parsed.projects[0].test_dir, "parenthesized");
+    }
+
+    #[test]
+    fn property_key_name_handles_edge_cases() {
+        let source = "export default { ['computed']: 'value' };";
+        let parsed = parse(source, Path::new("/repo")).unwrap();
+        assert_eq!(parsed.projects[0].test_dir, "."); // default if not found
+    }
+
+    #[test]
+    fn array_element_object_handles_non_objects() {
+        let source = "export default { projects: [1] };";
+        let parsed = parse(source, Path::new("/repo")).unwrap();
+        assert_eq!(parsed.projects.len(), 1); // falls back to single project if projects array is invalid
+    }
+
+    #[test]
+    fn property_key_name_handles_all_cases() {
+        let source = "export default { testDir: 'v1', 'testMatch': 'v2', [1+1]: 'v3' };";
+        let parsed = parse(source, Path::new("/repo")).unwrap();
+        assert!(!parsed.projects.is_empty());
+    }
+
+    #[test]
+    fn parser_handles_advanced_assignment_targets() {
+        let source = "export default { use: { baseURL: (x = 'y') } };";
+        let parsed = parse(source, Path::new("/repo")).unwrap();
+        assert!(!parsed.projects.is_empty());
+    }
+
+    #[test]
     fn parses_projects_with_inheritance() {
         let source = fixture_source(&["playwright_config", "projects-with-inheritance.ts"]);
         let parsed = parse(&source, Path::new("/repo")).unwrap();
@@ -637,6 +672,19 @@ mod tests {
             vec!["**/*.commonjs-object.js"]
         );
 
+        // Coverage for assignment_target_path error
+        let source = "(1).exports = {}";
+        let parsed = parse_from_path(
+            source,
+            Path::new("playwright.config.cjs"),
+            Path::new("/repo"),
+        )
+        .unwrap();
+        assert_eq!(parsed.projects[0].test_dir, ".");
+    }
+
+    #[test]
+    fn parses_commonjs_define_config_exports() {
         let source = fixture_source(&["playwright_config", "commonjs-define-config.cjs"]);
         let parsed = parse_from_path(
             &source,
@@ -742,6 +790,40 @@ mod tests {
             .err()
             .expect("expected missing config name to fail");
         assert!(err.to_string().contains("no Playwright config found"));
+    }
+
+    #[test]
+    fn load_many_errors_when_config_is_missing_name_for_filter() {
+        let dir = fixture_path(&["playwright_config", "load-existing"]);
+        let config = dir.join("playwright.config.ts");
+        let err = load_many(&dir, &[config], Some("project"))
+            .err()
+            .expect("expected missing name to fail");
+        assert!(err.to_string().contains("must define top-level name"));
+    }
+
+    #[test]
+    fn validate_config_names_errors_on_duplicate_names() {
+        let path1 = PathBuf::from("a.ts");
+        let path2 = PathBuf::from("b.ts");
+        let configs = vec![
+            (
+                &path1,
+                PlaywrightConfig {
+                    name: Some("same".to_string()),
+                    projects: vec![],
+                },
+            ),
+            (
+                &path2,
+                PlaywrightConfig {
+                    name: Some("same".to_string()),
+                    projects: vec![],
+                },
+            ),
+        ];
+        let err = validate_config_names(&configs, None).err().unwrap();
+        assert!(err.to_string().contains("duplicated"));
     }
 
     #[test]

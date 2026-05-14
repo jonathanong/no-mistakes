@@ -1881,6 +1881,16 @@ mod tests {
         assert!(selectors
             .iter()
             .all(|selector| app.matches_playwright(selector)));
+
+        assert!(!AppSelectorValue::Unsupported("x".to_string())
+            .matches_selector(&SelectorMatcher::Exact("x".to_string())));
+
+        let mut regexes = BTreeMap::new();
+        regexes.insert("dataPw".to_string(), "data-pw".to_string());
+        let selector_regexes = compile_selector_regexes(&["data-testid".to_string()], &regexes);
+        assert!(selector_regexes
+            .app_attributes
+            .contains(&"data-testid".to_string()));
     }
 
     #[test]
@@ -1975,6 +1985,21 @@ mod tests {
     }
 
     #[test]
+    fn component_jsx_name_checks() {
+        let source = "const x = <ns:name />; const y = <this />;";
+        let component_attributes = BTreeMap::new();
+        let regexes = compile_selector_regexes(&["data-testid".to_string()], &component_attributes);
+        let selectors = extract_playwright_selectors_with_regexes(
+            Path::new("fixture.tsx"),
+            source,
+            &regexes,
+            &["data-testid".to_string()],
+        )
+        .unwrap();
+        assert!(selectors.is_empty());
+    }
+
+    #[test]
     fn malformed_template_is_treated_as_literal_pattern() {
         let pattern = TemplatePattern::new("user-${id").unwrap();
         assert!(pattern.matches_exact("user-${id"));
@@ -1998,6 +2023,16 @@ mod tests {
     #[test]
     fn identifier_reassignment_uses_identifier_boundaries_and_assignment_operator() {
         assert!(has_identifier_reassignment("dataPw = makeId();", "dataPw"));
+        assert!(has_identifier_reassignment(
+            "data$Pw = makeId();",
+            "data$Pw"
+        ));
+        assert!(!has_identifier_reassignment("xdataPw = 1;", "dataPw"));
+        assert!(!has_identifier_reassignment("dataPwx = 1;", "dataPw"));
+        assert!(has_identifier_reassignment("dataPw = 1;", "dataPw"));
+        assert!(has_identifier_reassignment("dataPw += 1;", "dataPw"));
+        assert!(has_identifier_reassignment("dataPw++", "dataPw"));
+        assert!(has_identifier_reassignment("++dataPw", "dataPw"));
         assert!(has_identifier_reassignment("dataPw += '-x';", "dataPw"));
         assert!(has_identifier_reassignment(
             "dataPw ??= makeId();",
@@ -2013,6 +2048,12 @@ mod tests {
         ));
         assert!(!has_identifier_reassignment("userid = makeId();", "id"));
         assert!(!has_identifier_reassignment("id => id", "id"));
+    }
+
+    #[test]
+    fn css_escapes_handle_hex_and_non_hex() {
+        assert_eq!(css_escape(r#"\20"#, 0).unwrap().0, ' ');
+        assert_eq!(css_escape(r#"\:"#, 0).unwrap().0, ':');
     }
 
     #[test]
