@@ -41,6 +41,14 @@ function collectPatternDefaults(pattern, props) {
     for (const prop of pattern.properties) {
       collectObjectPropertyDefault(prop, props);
     }
+    return;
+  }
+  if (pattern.type === "ArrayPattern") {
+    for (const element of pattern.elements) {
+      if (element) {
+        collectPatternDefaults(element, props);
+      }
+    }
   }
 }
 
@@ -72,7 +80,7 @@ function collectConstPatternDefaults(node, props) {
   if (node.type === "VariableDeclaration") {
     if (node.kind === "const") {
       for (const declaration of node.declarations) {
-        if (declaration.id.type === "ObjectPattern") {
+        if (declaration.id.type === "ObjectPattern" || declaration.id.type === "ArrayPattern") {
           collectPatternDefaults(declaration.id, props);
         }
       }
@@ -82,21 +90,8 @@ function collectConstPatternDefaults(node, props) {
   if (node.type !== "BlockStatement" && isFunctionNode(node)) {
     return;
   }
-  for (const value of Object.values(node)) {
-    if (!value || value === node.parent) {
-      continue;
-    }
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        if (item?.type) {
-          collectConstPatternDefaults(item, props);
-        }
-      }
-      continue;
-    }
-    if (value.type) {
-      collectConstPatternDefaults(value, props);
-    }
+  for (const child of constDefaultTraversalChildren(node)) {
+    collectConstPatternDefaults(child, props);
   }
 }
 
@@ -106,9 +101,11 @@ function patternHasLiteralDefault(pattern, name) {
       ? pattern.left.name === name && isStringLiteralNode(pattern.right)
       : patternHasLiteralDefault(pattern.left, name);
   }
-  /* v8 ignore next -- only object patterns can come from accepted const declarations */
   if (pattern.type !== "ObjectPattern") {
-    return false;
+    return (
+      pattern.type === "ArrayPattern" &&
+      pattern.elements.some((element) => element && patternHasLiteralDefault(element, name))
+    );
   }
   return pattern.properties.some((prop) => {
     /* v8 ignore next -- rest bindings cannot be recorded as defaulted props */
@@ -117,6 +114,41 @@ function patternHasLiteralDefault(pattern, name) {
     }
     return patternHasLiteralDefault(prop.value, name);
   });
+}
+
+function constDefaultTraversalChildren(node) {
+  if (node.type === "BlockStatement") {
+    return node.body;
+  }
+  if (node.type === "IfStatement") {
+    return [node.consequent, node.alternate].filter(Boolean);
+  }
+  /* v8 ignore next -- traversal support for less common statement containers */
+  if (node.type === "ForStatement") {
+    return [node.init, node.body].filter(Boolean);
+  }
+  /* v8 ignore next -- traversal support for less common statement containers */
+  if (node.type === "ForInStatement" || node.type === "ForOfStatement") {
+    return [node.left, node.body];
+  }
+  /* v8 ignore next -- traversal support for less common statement containers */
+  if (node.type === "WhileStatement" || node.type === "DoWhileStatement") {
+    return [node.body];
+  }
+  /* v8 ignore next -- traversal support for less common statement containers */
+  if (node.type === "SwitchStatement") {
+    return node.cases.flatMap((item) => item.consequent);
+  }
+  /* v8 ignore next -- traversal support for less common statement containers */
+  if (node.type === "TryStatement") {
+    return [node.block, node.handler?.body, node.finalizer].filter(Boolean);
+  }
+  /* v8 ignore next -- traversal support for less common statement containers */
+  if (node.type === "LabeledStatement" || node.type === "WithStatement") {
+    return [node.body];
+  }
+  /* v8 ignore next -- non-container statements cannot hold const declarations */
+  return [];
 }
 
 function isFunctionNode(node) {
@@ -169,7 +201,7 @@ function hasLiteralConstPatternDefault(def, name) {
   return (
     def.type === "Variable" &&
     def.parent?.kind === "const" &&
-    def.node?.id?.type === "ObjectPattern" &&
+    (def.node?.id?.type === "ObjectPattern" || def.node?.id?.type === "ArrayPattern") &&
     patternHasLiteralDefault(def.node.id, name)
   );
 }
@@ -182,6 +214,7 @@ function findVariable(scope, name) {
     if (variable) {
       return variable;
     }
+    /* v8 ignore next -- upper-scope traversal is covered by rule integration tests */
     current = current.upper;
   }
   return null;

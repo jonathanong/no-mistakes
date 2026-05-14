@@ -90,7 +90,7 @@ describe("literals", () => {
   });
 
   it("accepts const destructured literal defaults", () => {
-    const code = `function A(props) { const { "data-pw": dataPw = "save", nested: { nestedPw = "open" } = {} } = props; page.getByTestId(dataPw); return <><button data-pw={dataPw} /><button data-pw={nestedPw} /></>; }`;
+    const code = `function A(props) { const { "data-pw": dataPw = "save", nested: { nestedPw = "open" } = {} } = props; const [, arrayPw = "array"] = props.items; page.getByTestId(dataPw); if (props.ready) { const { readyPw = "ready" } = props; return <button data-pw={readyPw} />; } return <><button data-pw={dataPw} /><button data-pw={nestedPw} /><button data-pw={arrayPw} /></>; }`;
     assert.deepEqual(messages(code, "literals"), []);
   });
 
