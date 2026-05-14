@@ -267,7 +267,8 @@ fn main() -> Result<()> {
             let mut matched = false;
             for target in &target_specs {
                 if target.raw == route.pattern
-                    || (!target.raw.ends_with('/') && route.file.to_string_lossy().contains(&target.raw))
+                    || (!target.raw.ends_with('/')
+                        && route.file.to_string_lossy().contains(&target.raw))
                     || (target.raw.ends_with('/') && route.pattern.starts_with(&target.raw))
                     || route.pattern == format!("/{}", target.raw)
                 {
@@ -363,12 +364,13 @@ fn main() -> Result<()> {
     }
 
     let total_routes = reports.len();
-    let routes_with_api_calls = reports.iter().filter(|route| !route.api_calls.is_empty()).count();
+    let routes_with_api_calls = reports
+        .iter()
+        .filter(|route| !route.api_calls.is_empty())
+        .count();
 
-    let mut duplicate_key_map: HashMap<
-        (String, String, FetchSide, bool),
-        Vec<ApiCallOccurrence>,
-    > = HashMap::new();
+    let mut duplicate_key_map: HashMap<(String, String, FetchSide, bool), Vec<ApiCallOccurrence>> =
+        HashMap::new();
     let mut unique_api_calls = HashSet::new();
     let mut dynamic_api_calls = 0usize;
     let mut cached_api_calls = 0usize;
@@ -439,7 +441,10 @@ fn main() -> Result<()> {
         }
     }
 
-    let duplicate_api_calls: usize = duplicates.iter().map(|entry| entry.count.saturating_sub(1)).sum();
+    let duplicate_api_calls: usize = duplicates
+        .iter()
+        .map(|entry| entry.count.saturating_sub(1))
+        .sum();
 
     let mut final_report = FinalReport {
         summary: Summary {
@@ -512,7 +517,7 @@ fn analyze_file(
     let rel_file = relative_string(root, &abs_path);
 
     let mut file_fetches = Vec::new();
-        let is_client = ast::with_program(path, &source, |program, source| -> Result<bool> {
+    let is_client = ast::with_program(path, &source, |program, source| -> Result<bool> {
         let is_client = inherited_is_client
             || (!inherited_is_route_handler
                 && program
@@ -543,12 +548,10 @@ fn analyze_file(
         Ok(is_client)
     })??;
 
-    cache
-        .files
-        .insert(
-            (abs_path.clone(), is_client, inherited_is_route_handler),
-            file_fetches.clone(),
-        );
+    cache.files.insert(
+        (abs_path.clone(), is_client, inherited_is_route_handler),
+        file_fetches.clone(),
+    );
     fetches.extend(file_fetches);
 
     Ok(())
@@ -604,8 +607,8 @@ fn collect_imports(
 }
 
 fn is_runtime_import(import: &oxc_ast::ast::ImportDeclaration, source: &str) -> bool {
-    let raw = declaration_text(import.span.start as usize, import.span.end as usize, source)
-        .trim_start();
+    let raw =
+        declaration_text(import.span.start as usize, import.span.end as usize, source).trim_start();
     if raw.starts_with("import type ") {
         return false;
     }
@@ -624,8 +627,8 @@ fn is_runtime_import(import: &oxc_ast::ast::ImportDeclaration, source: &str) -> 
 }
 
 fn is_runtime_export(export: &ExportNamedDeclaration, source: &str) -> bool {
-    let raw = declaration_text(export.span.start as usize, export.span.end as usize, source)
-        .trim_start();
+    let raw =
+        declaration_text(export.span.start as usize, export.span.end as usize, source).trim_start();
     if raw.starts_with("export type ") {
         return false;
     }
@@ -756,10 +759,16 @@ fn print_markdown_report(report: &FinalReport) {
     println!();
     println!("## Summary");
     println!("- Total Routes: {}", report.summary.total_routes);
-    println!("- Routes with API Calls: {}", report.summary.routes_with_api_calls);
+    println!(
+        "- Routes with API Calls: {}",
+        report.summary.routes_with_api_calls
+    );
     println!("- Total API Calls: {}", report.summary.total_api_calls);
     println!("- Unique API Calls: {}", report.summary.unique_api_calls);
-    println!("- Duplicate API Calls: {}", report.summary.duplicate_api_calls);
+    println!(
+        "- Duplicate API Calls: {}",
+        report.summary.duplicate_api_calls
+    );
     println!("- Dynamic API Calls: {}", report.summary.dynamic_api_calls);
     println!("- Cached API Calls: {}", report.summary.cached_api_calls);
     println!("- Server API Calls: {}", report.summary.server_api_calls);
