@@ -175,7 +175,14 @@ struct FetchVisitor<'a> {
     is_route_handler: bool,
     cached_function: Option<String>,
     cached_kind: Option<CacheKind>,
-    fetch_scope_stack: Vec<HashSet<String>>,
+    fetch_scope_stack: Vec<FetchScope>,
+    in_var_declaration: bool,
+}
+
+#[derive(Default)]
+struct FetchScope {
+    shadowed_identifiers: HashSet<String>,
+    tracks_var_bindings: bool,
 }
 
 impl<'a> FetchVisitor<'a> {
@@ -188,12 +195,19 @@ impl<'a> FetchVisitor<'a> {
             is_route_handler,
             cached_function: None,
             cached_kind: None,
-            fetch_scope_stack: vec![HashSet::new()],
+            fetch_scope_stack: vec![FetchScope {
+                shadowed_identifiers: HashSet::new(),
+                tracks_var_bindings: true,
+            }],
+            in_var_declaration: false,
         }
     }
 
-    fn enter_fetch_scope(&mut self) {
-        self.fetch_scope_stack.push(HashSet::new());
+    fn enter_fetch_scope(&mut self, tracks_var_bindings: bool) {
+        self.fetch_scope_stack.push(FetchScope {
+            shadowed_identifiers: HashSet::new(),
+            tracks_var_bindings,
+        });
     }
 
     fn leave_fetch_scope(&mut self) {
@@ -202,26 +216,43 @@ impl<'a> FetchVisitor<'a> {
 
     fn mark_fetch_shadowed(&mut self) {
         if let Some(scope) = self.fetch_scope_stack.last_mut() {
-            scope.insert("fetch".to_string());
+            scope.shadowed_identifiers.insert("fetch".to_string());
+        }
+    }
+
+    fn mark_identifier_shadowed_in_var_scope(&mut self, name: &str) {
+        for scope in self.fetch_scope_stack.iter_mut().rev() {
+            if scope.tracks_var_bindings {
+                scope.shadowed_identifiers.insert(name.to_string());
+                return;
+            }
+        }
+
+        if let Some(scope) = self.fetch_scope_stack.last_mut() {
+            scope.shadowed_identifiers.insert(name.to_string());
         }
     }
 
     fn mark_identifier_shadowed(&mut self, name: &str) {
         if let Some(scope) = self.fetch_scope_stack.last_mut() {
-            scope.insert(name.to_string());
+            scope.shadowed_identifiers.insert(name.to_string());
         }
     }
 
     fn is_fetch_shadowed(&self) -> bool {
         self.fetch_scope_stack
             .iter()
-            .any(|scope| scope.contains("fetch"))
+            .any(|scope| scope.shadowed_identifiers.contains("fetch"))
     }
 }
 
 impl<'a> Visit<'a> for FetchVisitor<'a> {
     fn visit_binding_identifier(&mut self, ident: &oxc_ast::ast::BindingIdentifier<'a>) {
-        self.mark_identifier_shadowed(ident.name.as_ref());
+        if self.in_var_declaration {
+            self.mark_identifier_shadowed_in_var_scope(ident.name.as_ref());
+        } else {
+            self.mark_identifier_shadowed(ident.name.as_ref());
+        }
         if ident.name.as_ref() == "fetch" {
             self.mark_fetch_shadowed();
         }
@@ -252,7 +283,21 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
         function: &oxc_ast::ast::Function<'a>,
         flags: oxc_syntax::scope::ScopeFlags,
     ) {
-        self.enter_fetch_scope();
+        if matches!(
+            function.r#type,
+            oxc_ast::ast::FunctionType::FunctionDeclaration
+                | oxc_ast::ast::FunctionType::TSDeclareFunction
+        ) {
+            self.mark_identifier_shadowed_in_var_scope(
+                function
+                    .id
+                    .as_ref()
+                    .expect("named function declarations should include an identifier")
+                    .name
+                    .as_ref(),
+            );
+        }
+        self.enter_fetch_scope(true);
         walk::walk_function(self, function, flags);
         self.leave_fetch_scope();
     }
@@ -261,19 +306,27 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
         &mut self,
         arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
     ) {
-        self.enter_fetch_scope();
+        self.enter_fetch_scope(false);
         walk::walk_arrow_function_expression(self, arrow);
         self.leave_fetch_scope();
     }
 
     fn visit_catch_clause(&mut self, catch_clause: &oxc_ast::ast::CatchClause<'a>) {
-        self.enter_fetch_scope();
+        self.enter_fetch_scope(false);
         walk::walk_catch_clause(self, catch_clause);
         self.leave_fetch_scope();
     }
 
+    fn visit_variable_declaration(&mut self, declaration: &oxc_ast::ast::VariableDeclaration<'a>) {
+        let previous_in_var_declaration = self.in_var_declaration;
+        self.in_var_declaration = declaration.kind
+            == oxc_ast::ast::VariableDeclarationKind::Var;
+        walk::walk_variable_declaration(self, declaration);
+        self.in_var_declaration = previous_in_var_declaration;
+    }
+
     fn visit_block_statement(&mut self, block: &oxc_ast::ast::BlockStatement<'a>) {
-        self.enter_fetch_scope();
+        self.enter_fetch_scope(false);
         walk::walk_block_statement(self, block);
         self.leave_fetch_scope();
     }
@@ -525,8 +578,27 @@ fn main() -> ExitCode {
 }
 
 fn run() -> Result<()> {
-    let cli = Cli::parse();
-    let root = std::env::current_dir()?.join(&cli.root);
+    let cli = if cfg!(test) {
+        if let Ok(raw_args) = std::env::var("NEXT_TO_FETCH_TEST_ARGS") {
+            Cli::parse_from(raw_args.split('\u{1f}'))
+        } else {
+            Cli::parse()
+        }
+    } else {
+        Cli::parse()
+    };
+    let base_root = std::env::current_dir()?;
+    let report = run_with_base_root(&base_root, &cli)?;
+    if cli.json {
+        println!("{}", serde_json::to_string_pretty(&report)?);
+    } else {
+        print_markdown_report(&report);
+    }
+    Ok(())
+}
+
+fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalReport> {
+    let root = base_root.join(&cli.root);
     if !root.exists() {
         anyhow::bail!("root directory does not exist: {}", root.display());
     }
@@ -551,14 +623,16 @@ fn run() -> Result<()> {
         files: HashMap::new(),
         imports: HashMap::new(),
     };
-    let target_specs = cli
-        .targets
-        .iter()
-        .map(|target| TargetSpec {
-            raw: target.clone(),
-            file: resolve_target_file(&root, target).ok(),
-        })
-        .collect::<Vec<_>>();
+    let mut target_specs = Vec::new();
+    let mut unique_targets = HashSet::new();
+    for target in &cli.targets {
+        if unique_targets.insert(target.clone()) {
+            target_specs.push(TargetSpec {
+                raw: target.clone(),
+                file: resolve_target_file(&root, target).ok(),
+            });
+        }
+    }
     let mut reports = Vec::new();
     let mut matched_targets = HashSet::new();
 
@@ -583,12 +657,15 @@ fn run() -> Result<()> {
 
             if let Some(target_file) = &target.file {
                 let mut visited_targets = HashSet::new();
-                let reaches_route_target = route_reaches_target(
+                let reaches_route_target = match route_reaches_target(
                     &route.file,
                     target_file,
                     &mut visited_targets,
                     &mut cache.imports,
-                )?;
+                ) {
+                    Ok(reaches_route_target) => reaches_route_target,
+                    Err(err) => return Err(err),
+                };
                 if reaches_route_target {
                     matched = true;
                     matched_targets.insert(target.raw.clone());
@@ -603,16 +680,16 @@ fn run() -> Result<()> {
                     }
 
                     let mut wrapper_targets = HashSet::new();
-                    let reaches_wrapper_target = route_reaches_target(
+                    let reaches_wrapper_target = match route_reaches_target(
                         wrapper_file,
                         target_file,
                         &mut wrapper_targets,
                         &mut cache.imports,
-                    )?;
-                    if reaches_wrapper_target {
-                        wrapper_file_matches = true;
-                        break;
-                    }
+                    ) {
+                        Ok(reaches_wrapper_target) => reaches_wrapper_target,
+                        Err(err) => return Err(err),
+                    };
+                    if reaches_wrapper_target { wrapper_file_matches = true; break; }
                 }
 
                 if wrapper_file_matches {
@@ -632,7 +709,7 @@ fn run() -> Result<()> {
 
         let route_is_route_handler = is_route_handler_file(&route.file);
         // Analyze the page/route file itself
-        let _route_is_client = analyze_file(
+        let _route_is_client = match analyze_file(
             &route.file,
             &root,
             &mut visited,
@@ -640,7 +717,10 @@ fn run() -> Result<()> {
             &mut cache,
             false,
             route_is_route_handler,
-        )?;
+        ) {
+            Ok(route_is_client) => route_is_client,
+            Err(err) => return Err(err),
+        };
 
         // Traverse up and find parent layouts/loadings if it's a page (UI)
         if route_is_page {
@@ -654,7 +734,7 @@ fn run() -> Result<()> {
                     for ext in ["tsx", "ts", "jsx", "js"] {
                         let layout_file = parent.join(format!("{stem}.{ext}"));
                         if layout_file.exists() {
-                            let _ = analyze_file(
+                            match analyze_file(
                                 &layout_file,
                                 &root,
                                 &mut visited,
@@ -662,7 +742,10 @@ fn run() -> Result<()> {
                                 &mut cache,
                                 false,
                                 route_is_route_handler,
-                            )?;
+                            ) {
+                                Ok(_) => {}
+                                Err(err) => return Err(err),
+                            };
                         }
                     }
                 }
@@ -680,13 +763,12 @@ fn run() -> Result<()> {
     }
 
     if !target_specs.is_empty() && matched_targets.len() < target_specs.len() {
-        let unmatched: Vec<_> = cli
-            .targets
+        let unmatched: Vec<_> = target_specs
             .iter()
-            .filter(|t| !matched_targets.contains(*t))
+            .filter(|target| !matched_targets.contains(&target.raw))
+            .map(|target| target.raw.as_str())
             .collect();
-        eprintln!("Error: targets not found: {:?}", unmatched);
-        std::process::exit(2);
+        return Err(anyhow::anyhow!("Error: targets not found: {:?}", unmatched));
     }
 
     let total_routes = reports.len();
@@ -802,13 +884,7 @@ fn run() -> Result<()> {
         .duplicates
         .sort_by(|a, b| a.key.cmp(&b.key).then(a.count.cmp(&b.count)));
 
-    if cli.json {
-        println!("{}", serde_json::to_string_pretty(&final_report)?);
-    } else {
-        print_markdown_report(&final_report);
-    }
-
-    Ok(())
+    Ok(final_report)
 }
 
 fn normalize_target_pattern(target: &str) -> Option<String> {
@@ -879,20 +955,31 @@ fn analyze_file(
     let rel_file = relative_string(root, &abs_path);
 
     let mut file_fetches = Vec::new();
-    let is_client = ast::with_program(path, &source, |program, source| -> Result<bool> {
-        let is_client = inherited_is_client
-            || (!inherited_is_route_handler
-                && program
-                    .directives
-                    .iter()
-                    .any(|d| d.directive == "use client"));
+    let is_client = ast::with_program(path, &source, |program, _| -> Result<bool> {
+        let has_use_server_directive = program
+            .directives
+            .iter()
+            .any(|directive| directive.directive == "use server");
+        let has_use_client_directive = program
+            .directives
+            .iter()
+            .any(|directive| directive.directive == "use client");
+        let is_client = if inherited_is_route_handler {
+            false
+        } else if has_use_server_directive {
+            false
+        } else {
+            inherited_is_client || has_use_client_directive
+        };
         let mut visitor =
-            FetchVisitor::new(source, &rel_file, is_client, inherited_is_route_handler);
+            FetchVisitor::new(&source, rel_file.as_str(), is_client, inherited_is_route_handler);
         visitor.visit_program(program);
         file_fetches.extend(visitor.fetches);
-        let imports = collect_imports_from_program(&abs_path, program, source, &mut cache.imports)?;
+        let referenced_identifiers = collect_identifier_references(program);
+        let imports =
+            collect_runtime_imports_from_program(&abs_path, program, &referenced_identifiers)?;
         for import in imports {
-            let _ = analyze_file(
+            match analyze_file(
                 &import,
                 root,
                 visited,
@@ -900,7 +987,10 @@ fn analyze_file(
                 cache,
                 is_client,
                 inherited_is_route_handler,
-            )?;
+            ) {
+                Ok(_) => {}
+                Err(err) => return Err(err),
+            }
         }
         Ok(is_client)
     })??;
@@ -937,6 +1027,74 @@ fn collect_imports(
         Ok(())
     })??;
     Ok(imports)
+}
+
+#[derive(Default)]
+struct IdentifierReferenceCollector {
+    identifiers: HashSet<String>,
+}
+
+impl<'a> Visit<'a> for IdentifierReferenceCollector {
+    fn visit_identifier_reference(&mut self, it: &oxc_ast::ast::IdentifierReference<'a>) {
+        self.identifiers.insert(it.name.to_string());
+        walk::walk_identifier_reference(self, it);
+    }
+}
+
+fn collect_identifier_references(program: &oxc_ast::ast::Program<'_>) -> HashSet<String> {
+    let mut collector = IdentifierReferenceCollector::default();
+    collector.visit_program(program);
+    collector.identifiers
+}
+
+fn collect_runtime_imports_from_program<'a>(
+    abs_path: &Path,
+    program: &oxc_ast::ast::Program<'a>,
+    referenced_identifiers: &HashSet<String>,
+) -> Result<Vec<PathBuf>> {
+    let mut imports = Vec::new();
+    for stmt in &program.body {
+        if let Statement::ImportDeclaration(import) = stmt {
+            if !is_runtime_import(import) || !is_import_used(import, referenced_identifiers) {
+                continue;
+            }
+            if let Some(resolved) = resolve_import(abs_path, import.source.value.as_str()) {
+                imports.push(resolved);
+            }
+        }
+    }
+    Ok(imports)
+}
+
+fn is_import_used(
+    import: &oxc_ast::ast::ImportDeclaration<'_>,
+    referenced_identifiers: &HashSet<String>,
+) -> bool {
+    let Some(specifiers) = &import.specifiers else {
+        return true;
+    };
+    if specifiers.is_empty() {
+        return true;
+    }
+
+    for specifier in specifiers {
+        let local_name = match specifier {
+            ImportDeclarationSpecifier::ImportDefaultSpecifier(default_import) => {
+                default_import.local.name.as_ref()
+            }
+            ImportDeclarationSpecifier::ImportNamespaceSpecifier(namespace_import) => {
+                namespace_import.local.name.as_ref()
+            }
+            ImportDeclarationSpecifier::ImportSpecifier(import_specifier) => {
+                import_specifier.local.name.as_ref()
+            }
+        };
+        if referenced_identifiers.contains(local_name) {
+            return true;
+        }
+    }
+
+    false
 }
 
 fn collect_imports_from_program<'a>(
@@ -1463,6 +1621,50 @@ mod tests {
     }
 
     #[test]
+    fn test_extract_url_from_argument_template_literal_uses_fallback_for_invalid_source_slice() {
+        let allocator = oxc_allocator::Allocator::default();
+        let source = "fetch(`/api/${dynamic}`)";
+        let source_type = oxc_span::SourceType::default();
+        let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+        let call = first_call_expression(&parsed.program.body[0]);
+        let arg = &call.arguments[0];
+
+        let result = extract_url_from_argument(arg, "`");
+
+        assert_eq!(
+            result,
+            UrlExtraction {
+                path: "/api/${}".to_string(),
+                raw_path: "dynamic".to_string(),
+                is_dynamic: true,
+                is_unsupported: true,
+            }
+        );
+    }
+
+    #[test]
+    fn test_extract_url_from_argument_uses_fallback_for_invalid_source_slice() {
+        let allocator = oxc_allocator::Allocator::default();
+        let source = "fetch(url)";
+        let source_type = oxc_span::SourceType::default();
+        let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+        let call = first_call_expression(&parsed.program.body[0]);
+        let arg = &call.arguments[0];
+
+        let result = extract_url_from_argument(arg, "");
+
+        assert_eq!(
+            result,
+            UrlExtraction {
+                path: "dynamic".to_string(),
+                raw_path: "dynamic".to_string(),
+                is_dynamic: true,
+                is_unsupported: true,
+            }
+        );
+    }
+
+    #[test]
     fn test_infer_cached_wrapper_name_parses_cached_identifiers() {
         let allocator = oxc_allocator::Allocator::default();
         let source = "cachedFn = cache(() => {});";
@@ -1702,6 +1904,37 @@ mod tests {
     }
 
     #[test]
+    fn test_collect_imports_from_program_reuses_cached_value() {
+        let dir = tempdir().unwrap();
+        let file = dir.path().join("main.ts");
+        fs::write(file.parent().unwrap().join("side-effect.ts"), "").unwrap();
+        fs::write(
+            &file,
+            "
+            import './side-effect';
+            ",
+        )
+        .unwrap();
+
+        let abs_path = file.canonicalize().unwrap();
+        let source = std::fs::read_to_string(&abs_path).unwrap();
+        let mut import_cache = HashMap::new();
+        let mut from_source = false;
+        let _ = ast::with_program(&abs_path, &source, |program, source| -> Result<()> {
+            let first =
+                collect_imports_from_program(&abs_path, program, source, &mut import_cache).unwrap();
+            let second =
+                collect_imports_from_program(&abs_path, program, source, &mut import_cache).unwrap();
+            assert_eq!(first, second);
+            assert_eq!(first.len(), 1);
+            from_source = !first.is_empty();
+            Ok(())
+        })
+        .unwrap();
+        assert!(from_source);
+    }
+
+    #[test]
     fn test_visitor_non_fetch() {
         let allocator = oxc_allocator::Allocator::default();
         let source = "notFetch();";
@@ -1732,6 +1965,23 @@ mod tests {
             assert!(fetch.dynamic);
             assert!(fetch.line > 0);
         }
+    }
+
+    #[test]
+    fn test_visitor_arrow_function_expression() {
+        let allocator = oxc_allocator::Allocator::default();
+        let source = "
+            const run = () => {
+                fetch('/api/arrow');
+            };
+            run();
+        ";
+        let source_type = oxc_span::SourceType::default();
+        let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+        let mut visitor = FetchVisitor::new(source, "test.ts", false, false);
+        visitor.visit_program(&parsed.program);
+        assert_eq!(visitor.fetches.len(), 1);
+        assert_eq!(visitor.fetches[0].path, "/api/arrow");
     }
 
     #[test]
@@ -1770,6 +2020,75 @@ mod tests {
                 const fetch = () => {};
                 fetch('/api/inner');
             }
+        ";
+        let source_type = oxc_span::SourceType::default();
+        let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+        let mut visitor = FetchVisitor::new(source, "test.ts", false, false);
+        visitor.visit_program(&parsed.program);
+        assert_eq!(visitor.fetches.len(), 1);
+        assert_eq!(visitor.fetches[0].path, "/api/outer");
+    }
+
+    #[test]
+    fn test_mark_identifier_shadowed_in_var_scope_falls_back_without_var_scope() {
+        let mut visitor = FetchVisitor::new("fetch('/api/outer')", "test.ts", false, false);
+        visitor.fetch_scope_stack = vec![FetchScope {
+            shadowed_identifiers: HashSet::new(),
+            tracks_var_bindings: false,
+        }];
+        visitor.mark_identifier_shadowed_in_var_scope("fetch");
+        assert!(visitor.fetch_scope_stack.last().unwrap().shadowed_identifiers.contains("fetch"));
+    }
+
+    #[test]
+    fn test_visitor_function_declaration_shadows_fetch() {
+        let allocator = oxc_allocator::Allocator::default();
+        let source = "
+            function fetch() {}
+            fetch('/api/function');
+        ";
+        let source_type = oxc_span::SourceType::default();
+        let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+        let mut visitor = FetchVisitor::new(source, "test.ts", false, false);
+        visitor.visit_program(&parsed.program);
+        assert_eq!(visitor.fetches.len(), 0);
+    }
+
+    #[test]
+    fn test_visitor_ts_declare_function_shadows_fetch() {
+        let allocator = oxc_allocator::Allocator::default();
+        let source = "declare function fetch(): void;";
+        let source_type = oxc_span::SourceType::from_path(std::path::Path::new("test.ts")).unwrap();
+        let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+        let mut visitor = FetchVisitor::new(source, "test.ts", false, false);
+        visitor.visit_program(&parsed.program);
+        assert_eq!(visitor.fetches.len(), 0);
+    }
+
+    #[test]
+    fn test_visitor_anonymous_function_expression_does_not_mark_fetch_shadowing() {
+        let allocator = oxc_allocator::Allocator::default();
+        let source = "
+            const f = function() {};
+            fetch('/api/outer');
+        ";
+        let source_type = oxc_span::SourceType::default();
+        let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+        let mut visitor = FetchVisitor::new(source, "test.ts", false, false);
+        visitor.visit_program(&parsed.program);
+        assert_eq!(visitor.fetches.len(), 1);
+        assert_eq!(visitor.fetches[0].path, "/api/outer");
+    }
+
+    #[test]
+    fn test_visitor_var_shadowing_survives_blocks() {
+        let allocator = oxc_allocator::Allocator::default();
+        let source = "
+            fetch('/api/outer');
+            if (true) {
+                var fetch = () => {};
+            }
+            fetch('/api/inner');
         ";
         let source_type = oxc_span::SourceType::default();
         let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
@@ -2343,6 +2662,27 @@ mod tests {
     }
 
     #[test]
+    fn test_is_runtime_export_declaration_without_named_specifiers_is_runtime() {
+        let allocator = oxc_allocator::Allocator::default();
+        let source = "const marker = 1;\nexport const foo = 1;";
+        let source_type = oxc_span::SourceType::from_path(std::path::Path::new("test.ts")).unwrap();
+        let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+        let export = parsed
+            .program
+            .body
+            .iter()
+            .find_map(|statement| {
+                if let Statement::ExportNamedDeclaration(export) = statement {
+                    Some(export)
+                } else {
+                    None
+                }
+            })
+            .expect("expected export declaration");
+        assert!(is_runtime_export(export, source));
+    }
+
+    #[test]
     fn test_collect_imports_filters_runtime_and_type_only_imports_exports() {
         let dir = tempdir().unwrap();
         fs::create_dir_all(dir.path().join("pkg")).unwrap();
@@ -2376,6 +2716,364 @@ mod tests {
     }
 
     #[test]
+    fn test_collect_runtime_imports_from_program_follows_used_runtime_imports_only() {
+        let allocator = oxc_allocator::Allocator::default();
+        let source = "
+            import './side-effect';
+            import type { Foo } from './types';
+            import { used, unused } from './named';
+            import defaultImport from './default';
+            import * as namespaceImport from './namespace';
+            import { onlyUnused } from './only-unused';
+            defaultImport();
+            namespaceImport.helper();
+            used();
+            fetch('/api/entry');
+        ";
+        let source_type = oxc_span::SourceType::from_path(std::path::Path::new("main.ts")).unwrap();
+        let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+        let dir = tempdir().unwrap();
+        fs::create_dir_all(dir.path()).unwrap();
+        fs::write(dir.path().join("side-effect.ts"), "").unwrap();
+        fs::write(dir.path().join("named.ts"), "").unwrap();
+        fs::write(dir.path().join("default.ts"), "").unwrap();
+        fs::write(dir.path().join("namespace.ts"), "").unwrap();
+        fs::write(dir.path().join("only-unused.ts"), "").unwrap();
+
+        let main_file = dir.path().join("main.ts");
+        fs::write(&main_file, source).unwrap();
+        let referenced_identifiers = collect_identifier_references(&parsed.program);
+        let imports = collect_runtime_imports_from_program(
+            &main_file,
+            &parsed.program,
+            &referenced_identifiers,
+        )
+        .unwrap();
+
+        assert_eq!(imports.len(), 4);
+        assert!(imports.iter().any(|path| path.ends_with("side-effect.ts")));
+        assert!(imports.iter().any(|path| path.ends_with("named.ts")));
+        assert!(imports.iter().any(|path| path.ends_with("default.ts")));
+        assert!(imports.iter().any(|path| path.ends_with("namespace.ts")));
+        assert!(!imports.iter().any(|path| path.ends_with("only-unused.ts")));
+        assert!(!imports.iter().any(|path| path.ends_with("types.ts")));
+    }
+
+    #[test]
+    fn test_is_import_used_respects_identifier_set() {
+        let allocator = oxc_allocator::Allocator::default();
+        let source = "const marker = 1;\nimport { used, unused } from './dep';\nused();\n";
+        let source_type = oxc_span::SourceType::from_path(std::path::Path::new("test.ts")).unwrap();
+        let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+        let import = parsed
+            .program
+            .body
+            .iter()
+            .find_map(|stmt| {
+                if let Statement::ImportDeclaration(import) = stmt {
+                    Some(import)
+                } else {
+                    None
+                }
+            })
+            .expect("expected import declaration");
+        let referenced_identifiers = collect_identifier_references(&parsed.program);
+        assert!(is_import_used(import, &referenced_identifiers));
+
+        let unused_references: HashSet<String> = HashSet::from([String::from("other"), String::from("other2")]);
+        assert!(!is_import_used(import, &unused_references));
+    }
+
+    #[test]
+    fn test_is_import_used_is_false_when_named_import_is_not_referenced() {
+        let allocator = oxc_allocator::Allocator::default();
+        let source = "const marker = 1;\nimport { used, unused } from './dep';\n";
+        let source_type = oxc_span::SourceType::from_path(std::path::Path::new("test.ts")).unwrap();
+        let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+        let import = parsed
+            .program
+            .body
+            .iter()
+            .find_map(|stmt| {
+                if let Statement::ImportDeclaration(import) = stmt {
+                    Some(import)
+                } else {
+                    None
+                }
+            })
+            .expect("expected import declaration");
+        let referenced_identifiers = HashSet::from([String::from("other"), String::from("marker")]);
+        assert!(!is_import_used(import, &referenced_identifiers));
+    }
+
+    #[test]
+    fn test_is_import_used_with_empty_specifiers_is_included() {
+        let allocator = oxc_allocator::Allocator::default();
+        let source = "const marker = 1;\nimport {} from './dep';\n";
+        let source_type = oxc_span::SourceType::from_path(std::path::Path::new("test.ts")).unwrap();
+        let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+        let import = parsed
+            .program
+            .body
+            .iter()
+            .find_map(|stmt| {
+                if let Statement::ImportDeclaration(import) = stmt {
+                    Some(import)
+                } else {
+                    None
+                }
+            })
+            .expect("expected import declaration");
+        let referenced_identifiers = collect_identifier_references(&parsed.program);
+        assert!(is_import_used(import, &referenced_identifiers));
+        assert!(is_import_used(import, &HashSet::new()));
+    }
+
+    static RUN_ARGS_MUTEX: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    struct RunArgsEnvGuard {
+        _guard: Option<std::sync::MutexGuard<'static, ()>>,
+        previous: Option<std::ffi::OsString>,
+    }
+
+    impl Drop for RunArgsEnvGuard {
+        fn drop(&mut self) {
+            const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
+            match self.previous.clone() {
+                Some(previous) => std::env::set_var(ENV_VAR, previous),
+                None => std::env::remove_var(ENV_VAR),
+            }
+        }
+    }
+
+    impl RunArgsEnvGuard {
+        fn release(mut self) -> std::sync::MutexGuard<'static, ()> {
+            const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
+            match self.previous.take() {
+                Some(previous) => std::env::set_var(ENV_VAR, previous),
+                None => std::env::remove_var(ENV_VAR),
+            }
+            let guard = self._guard.take().unwrap();
+            std::mem::forget(self);
+            guard
+        }
+    }
+
+    fn with_run_args_env(next_value: Option<String>, existing: Option<String>) -> RunArgsEnvGuard {
+        let _guard = RUN_ARGS_MUTEX.lock().unwrap_or_else(|err| err.into_inner());
+        const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
+        let previous: Option<std::ffi::OsString> = match existing {
+            Some(existing) => {
+                std::env::set_var(ENV_VAR, &existing);
+                Some(existing.into())
+            }
+            None => {
+                std::env::remove_var(ENV_VAR);
+                None
+            }
+        };
+        match next_value {
+            Some(next_value) => std::env::set_var(ENV_VAR, &next_value),
+            None => std::env::remove_var(ENV_VAR),
+        }
+
+        RunArgsEnvGuard {
+            _guard: Some(_guard),
+            previous,
+        }
+    }
+
+    #[test]
+    fn test_run_without_test_argv_uses_real_cli_args() {
+        const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
+        let previous = "next-to-fetch\x1f--json";
+
+        {
+            let _run_args = with_run_args_env(Some(previous.to_string()), None);
+            assert_eq!(std::env::var(ENV_VAR).unwrap(), previous);
+            run().unwrap_or_else(|_| ());
+        }
+    }
+
+    #[test]
+    fn test_with_run_args_unset_restores_existing_value() {
+        const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
+        let previous = "next-to-fetch\x1f--json";
+
+        {
+            let run_args = with_run_args_env(None, Some(previous.to_string()));
+            std::env::remove_var(ENV_VAR);
+            assert!(std::env::var_os(ENV_VAR).is_none());
+            let _guard = run_args.release();
+            assert_eq!(std::env::var(ENV_VAR).unwrap(), previous);
+        }
+    }
+
+    #[test]
+    fn test_run_without_test_argv_uses_real_cli_args_from_absence() {
+        {
+            let _run_args = with_run_args_env(None, None);
+            run().unwrap_or_else(|_| ());
+        }
+    }
+
+    #[test]
+    fn test_with_run_args_restores_existing_value() {
+        const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
+        let previous = "next-to-fetch\x1f--json";
+
+        let args = "next-to-fetch\x1f--root\x1f.";
+
+        {
+            let run_args = with_run_args_env(Some(args.to_string()), Some(previous.to_string()));
+            assert_eq!(std::env::var(ENV_VAR).unwrap(), args);
+            let _guard = run_args.release();
+            assert_eq!(std::env::var(ENV_VAR).unwrap(), previous);
+        }
+    }
+
+    #[test]
+    fn test_with_run_args_restores_unset_value() {
+        const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
+        std::env::remove_var(ENV_VAR);
+
+        {
+            let run_args = with_run_args_env(None, None);
+            std::env::set_var(ENV_VAR, "next-to-fetch\x1f--root\x1f.");
+            assert_eq!(std::env::var(ENV_VAR).unwrap(), "next-to-fetch\x1f--root\x1f.");
+            let _guard = run_args.release();
+            assert!(std::env::var_os(ENV_VAR).is_none());
+        }
+    }
+
+    #[test]
+    fn test_with_run_args_env_restores_previous_on_drop() {
+        const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
+        let previous = "next-to-fetch\x1f--json";
+
+        {
+            let _run_args = with_run_args_env(
+                Some("next-to-fetch\x1f--root\x1f.".to_string()),
+                Some(previous.to_string()),
+            );
+            assert_eq!(std::env::var(ENV_VAR).unwrap(), "next-to-fetch\x1f--root\x1f.");
+        }
+
+        assert_eq!(std::env::var(ENV_VAR).unwrap(), previous);
+    }
+
+    #[test]
+    fn test_with_run_args_env_macro_path() {
+        const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
+        let next = "next-to-fetch\x1f--root\x1f.";
+        let previous = "next-to-fetch\x1f--json";
+
+        let run_args = with_run_args_env(Some(next.to_string()), Some(previous.to_string()));
+        assert_eq!(std::env::var(ENV_VAR).unwrap(), next);
+        let _guard = run_args.release();
+        assert_eq!(std::env::var(ENV_VAR).unwrap(), previous);
+    }
+
+    #[test]
+    fn test_with_run_args_state_resumes_panic() {
+        const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
+        let previous = "next-to-fetch\x1f--json";
+
+        let panic_result = {
+            let run_args = with_run_args_env(
+                Some("next-to-fetch\x1f--root\x1f.".to_string()),
+                Some(previous.to_string()),
+            );
+            let panic_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                panic!("with_run_args_state panic-path");
+            }));
+            let _guard = run_args.release();
+            assert_eq!(std::env::var(ENV_VAR).unwrap(), previous);
+            panic_result
+        };
+
+        assert!(panic_result.is_err());
+    }
+
+    #[test]
+    fn test_run_and_main_are_exercised_with_test_argv() {
+        let root = tempdir().unwrap();
+        fs::create_dir(root.path().join("app/page.tsx").parent().unwrap()).unwrap();
+        fs::write(root.path().join("app/page.tsx"), "fetch('/api/page');").unwrap();
+
+        {
+            let next_value = format!(
+                "next-to-fetch\x1f--root\x1f{}\x1f--json",
+                root.path().to_string_lossy()
+            );
+            let _run_args = with_run_args_env(Some(next_value.to_string()), None);
+            assert!(run().is_ok());
+            assert_eq!(main(), ExitCode::SUCCESS);
+        }
+    }
+
+    #[test]
+    fn test_print_markdown_report_is_rendered() {
+        let report = FinalReport {
+            summary: Summary {
+                total_routes: 1,
+                routes_with_api_calls: 1,
+                total_api_calls: 1,
+                unique_api_calls: 1,
+                duplicate_api_calls: 0,
+                dynamic_api_calls: 0,
+                cached_api_calls: 0,
+                client_api_calls: 0,
+                server_api_calls: 1,
+                rsc_api_calls: 1,
+            },
+            routes: vec![RouteReport {
+                route: "/".to_string(),
+                file: "app/page.tsx".to_string(),
+                api_calls: vec![FetchOccurrence {
+                    path: "/api/page".to_string(),
+                    raw_path: "/api/page".to_string(),
+                    method: "GET".to_string(),
+                    file: "app/page.tsx".to_string(),
+                    line: 1,
+                    side: FetchSide::Server,
+                    rsc: true,
+                    cached: false,
+                    cache_kind: CacheKind::None,
+                    cached_function: None,
+                    dynamic: false,
+                    unsupported: false,
+                }],
+            }],
+            duplicates: vec![DuplicateApiCall {
+                key: "GET /api/page server rsc".to_string(),
+                count: 2,
+                occurrences: vec![
+                    ApiCallOccurrence {
+                        route: "/".to_string(),
+                        file: "app/page.tsx".to_string(),
+                        line: 1,
+                    },
+                    ApiCallOccurrence {
+                        route: "/about".to_string(),
+                        file: "app/about/page.tsx".to_string(),
+                        line: 2,
+                    },
+                ],
+            }],
+            unsupported: vec![UnsupportedApiCall {
+                route: "/".to_string(),
+                file: "app/page.tsx".to_string(),
+                line: 3,
+                reason: "dynamic-path".to_string(),
+                raw_path: "fetch(url)".to_string(),
+            }],
+        };
+
+        print_markdown_report(&report);
+    }
+
+    #[test]
     fn test_route_reaches_target_client_file() {
         let dir = tempdir().unwrap();
         let file = dir.path().join("client.ts");
@@ -2384,6 +3082,7 @@ mod tests {
             "
             'use client';
             import { helper } from './helper';
+            helper();
             export {};
             ",
         )
@@ -2545,12 +3244,39 @@ mod tests {
     }
 
     #[test]
+    fn test_analyze_file_use_server_overrides_inherited_client_state() {
+        let dir = tempdir().unwrap();
+        let file = dir.path().join("helper.ts");
+        fs::write(&file, "'use server';\nfetch('/api/server');").unwrap();
+
+        let mut cache = Cache {
+            files: HashMap::new(),
+            imports: HashMap::new(),
+        };
+        let mut visited = HashSet::new();
+        let mut fetches = Vec::new();
+        let is_client = analyze_file(
+            &file,
+            dir.path(),
+            &mut visited,
+            &mut fetches,
+            &mut cache,
+            true,
+            false,
+        )
+        .unwrap();
+        assert!(!is_client);
+        assert_eq!(fetches.len(), 1);
+        assert_eq!(fetches[0].side, FetchSide::Server);
+    }
+
+    #[test]
     fn test_analyze_file_imported_file_is_analyzed() {
         let dir = tempdir().unwrap();
         let helper = dir.path().join("helper.ts");
         fs::write(&helper, "export const helper = () => fetch('/api/helper');").unwrap();
         let file = dir.path().join("file.ts");
-        fs::write(&file, "import { helper } from './helper';").unwrap();
+        fs::write(&file, "import { helper } from './helper';\nhelper();").unwrap();
 
         let mut cache = Cache {
             files: HashMap::new(),
@@ -2571,6 +3297,35 @@ mod tests {
 
         assert_eq!(fetches.len(), 1);
         assert_eq!(fetches[0].path, "/api/helper");
+    }
+
+    #[test]
+    fn test_analyze_file_ignores_unused_imported_helper() {
+        let dir = tempdir().unwrap();
+        let helper = dir.path().join("helper.ts");
+        fs::write(&helper, "export const helper = () => fetch('/api/helper');").unwrap();
+        let file = dir.path().join("file.ts");
+        fs::write(&file, "import { helper } from './helper';\nfetch('/api/file');").unwrap();
+
+        let mut cache = Cache {
+            files: HashMap::new(),
+            imports: HashMap::new(),
+        };
+        let mut visited = HashSet::new();
+        let mut fetches = Vec::new();
+        analyze_file(
+            &file,
+            dir.path(),
+            &mut visited,
+            &mut fetches,
+            &mut cache,
+            false,
+            false,
+        )
+        .unwrap();
+
+        assert_eq!(fetches.len(), 1);
+        assert_eq!(fetches[0].path, "/api/file");
     }
 
     #[test]
@@ -2669,8 +3424,16 @@ mod tests {
         let page = root.path().join("app/page.tsx");
         let middle = root.path().join("app/middle.ts");
         let target = root.path().join("app/target.ts");
-        fs::write(&page, "import { helper } from './middle';").unwrap();
-        fs::write(&middle, "import { helper } from './target';").unwrap();
+        fs::write(
+            &page,
+            "import { helper } from './middle';\nhelper();",
+        )
+        .unwrap();
+        fs::write(
+            &middle,
+            "import { helper } from './target';\nhelper();",
+        )
+        .unwrap();
         fs::write(&target, "fetch('/api/targeted');").unwrap();
 
         let mut cmd = Command::cargo_bin("next-to-fetch").unwrap();
@@ -2729,6 +3492,135 @@ mod tests {
     }
 
     #[test]
+    fn test_run_with_base_root_errors_when_route_target_matcher_fails() {
+        let root = tempdir().unwrap();
+        fs::create_dir(root.path().join("app")).unwrap();
+        fs::write(root.path().join("app/page.tsx"), "export const = invalid;").unwrap();
+        fs::write(root.path().join("app/target.ts"), "fetch('/api/target');").unwrap();
+
+        let cli = Cli {
+            root: PathBuf::from("."),
+            config: None,
+            json: false,
+            targets: vec!["app/target.ts".to_string()],
+        };
+
+        let err = run_with_base_root(root.path(), &cli).err().unwrap();
+        assert!(err.to_string().contains("parse") || err.to_string().contains("expected"));
+    }
+
+    #[test]
+    fn test_run_with_base_root_errors_when_layout_target_matcher_fails() {
+        let root = tempdir().unwrap();
+        fs::create_dir(root.path().join("app")).unwrap();
+        fs::write(root.path().join("app/page.tsx"), "export {}").unwrap();
+        fs::write(
+            root.path().join("app/layout.tsx"),
+            "import { helper } from './target'; const = invalid;",
+        )
+        .unwrap();
+        fs::write(root.path().join("app/target.ts"), "export {}").unwrap();
+
+        let cli = Cli {
+            root: PathBuf::from("."),
+            config: None,
+            json: false,
+            targets: vec!["app/target.ts".to_string()],
+        };
+
+        let err = run_with_base_root(root.path(), &cli).err().unwrap();
+        assert!(err.to_string().contains("parse") || err.to_string().contains("expected"));
+    }
+
+    #[test]
+    fn test_run_with_base_root_errors_when_route_analysis_fails() {
+        let root = tempdir().unwrap();
+        fs::create_dir(root.path().join("app")).unwrap();
+        fs::write(root.path().join("app/page.tsx"), "export const = invalid;").unwrap();
+
+        let cli = Cli {
+            root: PathBuf::from("."),
+            config: None,
+            json: false,
+            targets: vec![],
+        };
+
+        let err = run_with_base_root(root.path(), &cli).err().unwrap();
+        assert!(err.to_string().contains("parse") || err.to_string().contains("expected"));
+    }
+
+    #[test]
+    fn test_run_with_base_root_errors_when_layout_analysis_fails() {
+        let root = tempdir().unwrap();
+        fs::create_dir(root.path().join("app")).unwrap();
+        fs::write(root.path().join("app/page.tsx"), "fetch('/api/page');").unwrap();
+        fs::write(
+            root.path().join("app/layout.tsx"),
+            "export const = invalid;",
+        )
+        .unwrap();
+
+        let cli = Cli {
+            root: PathBuf::from("."),
+            config: None,
+            json: false,
+            targets: vec![],
+        };
+
+        let err = run_with_base_root(root.path(), &cli).err().unwrap();
+        assert!(err.to_string().contains("parse") || err.to_string().contains("expected"));
+    }
+
+    #[test]
+    fn test_run_with_base_root_errors_when_target_is_unmatched() {
+        let root = tempdir().unwrap();
+        fs::create_dir(root.path().join("app")).unwrap();
+        fs::write(root.path().join("app/page.tsx"), "fetch('/api/page');").unwrap();
+
+        let cli = Cli {
+            root: PathBuf::from("."),
+            config: None,
+            json: false,
+            targets: vec!["app/missing.ts".to_string()],
+        };
+
+        let err = run_with_base_root(root.path(), &cli).err().unwrap();
+        let message = err.to_string();
+        assert!(message.contains("Error: targets not found"));
+        assert!(message.contains("app/missing.ts"));
+    }
+
+    #[test]
+    fn test_analyze_file_imported_file_parse_error_is_propagated() {
+        let root = tempdir().unwrap();
+        fs::write(
+            root.path().join("file.ts"),
+            "import { helper } from './helper';\nhelper();",
+        )
+        .unwrap();
+        fs::write(root.path().join("helper.ts"), "export const = invalid;").unwrap();
+
+        let mut cache = Cache {
+            files: HashMap::new(),
+            imports: HashMap::new(),
+        };
+        let mut visited = HashSet::new();
+        let mut fetches = Vec::new();
+
+        let err = analyze_file(
+            &root.path().join("file.ts"),
+            root.path(),
+            &mut visited,
+            &mut fetches,
+            &mut cache,
+            false,
+            false,
+        )
+        .unwrap_err();
+        assert!(err.to_string().contains("parse") || err.to_string().contains("expected"));
+    }
+
+    #[test]
     fn test_cli_includes_page_and_layout_routes_by_default() {
         use assert_cmd::Command;
 
@@ -2777,13 +3669,13 @@ mod tests {
         let root = tempdir().unwrap();
         fs::create_dir(root.path().join("app")).unwrap();
         fs::write(
-            root.path().join("app/page.tsx"),
-            "import { fetchUsers } from './helper';",
+            root.path().join("app/helper.ts"),
+            "export const fetchUsers = () => fetch('/api/users');",
         )
         .unwrap();
         fs::write(
-            root.path().join("app/helper.ts"),
-            "export const fetchUsers = () => fetch('/api/users');",
+            root.path().join("app/page.tsx"),
+            "import { fetchUsers } from './helper';\nfetchUsers();",
         )
         .unwrap();
 
@@ -2792,6 +3684,23 @@ mod tests {
         cmd.assert()
             .success()
             .stdout(predicates::str::contains("/api/users"));
+    }
+
+    #[test]
+    fn test_cli_target_duplicates_are_deduplicated() {
+        use assert_cmd::Command;
+
+        let root = tempdir().unwrap();
+        fs::create_dir(root.path().join("app")).unwrap();
+        let page = root.path().join("app/page.tsx");
+        fs::write(&page, "fetch('/api/page');").unwrap();
+
+        let mut cmd = Command::cargo_bin("next-to-fetch").unwrap();
+        cmd.arg("--root")
+            .arg(root.path())
+            .arg(&page)
+            .arg(&page);
+        cmd.assert().success();
     }
 
     #[test]
@@ -2895,6 +3804,15 @@ mod tests {
             ",
         )
         .unwrap();
+        fs::create_dir_all(root.path().join("app/about")).unwrap();
+        fs::write(
+            root.path().join("app/about/page.tsx"),
+            "
+            fetch('/api/second-duplicate');
+            fetch('/api/second-duplicate');
+            ",
+        )
+        .unwrap();
 
         let mut cmd = Command::cargo_bin("next-to-fetch").unwrap();
         cmd.arg("--root").arg(root.path());
@@ -2902,6 +3820,53 @@ mod tests {
             .success()
             .stdout(predicates::str::contains("## Duplicates"))
             .stdout(predicates::str::contains("## Unsupported (Dynamic)"));
+    }
+
+    #[test]
+    fn test_run_with_base_root_sorts_duplicates_and_unsupported_entries() {
+        let root = tempdir().unwrap();
+        fs::create_dir_all(root.path().join("app/about")).unwrap();
+        fs::write(
+            root.path().join("app/page.tsx"),
+            "
+            fetch(`/api/${route}/users`);
+            fetch('/api/duplicate');
+            fetch('/api/duplicate');
+            ",
+        )
+        .unwrap();
+        fs::write(
+            root.path().join("app/about/page.tsx"),
+            "
+            fetch(`/api/${about}/users`);
+            fetch('/api/other');
+            fetch('/api/other');
+            ",
+        )
+        .unwrap();
+
+        let cli = Cli {
+            root: PathBuf::from("."),
+            config: None,
+            json: false,
+            targets: vec![],
+        };
+        let report = run_with_base_root(root.path(), &cli).unwrap();
+
+        assert_eq!(report.unsupported.len(), 2);
+        assert_eq!(report.unsupported[0].route, "/");
+        assert!(report.unsupported[0].file.ends_with("app/page.tsx"));
+        assert_eq!(report.unsupported[1].route, "/about");
+        assert!(report.unsupported[1].file.ends_with("app/about/page.tsx"));
+
+        assert_eq!(report.unsupported[0].reason, "dynamic-path");
+        assert_eq!(report.unsupported[1].reason, "dynamic-path");
+
+        assert_eq!(report.duplicates.len(), 2);
+        assert_eq!(report.duplicates[0].key, "GET /api/duplicate server rsc");
+        assert_eq!(report.duplicates[0].count, 2);
+        assert_eq!(report.duplicates[1].key, "GET /api/other server rsc");
+        assert_eq!(report.duplicates[1].count, 2);
     }
 
     #[test]
