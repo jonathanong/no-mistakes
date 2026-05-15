@@ -250,7 +250,7 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
     }
 }
 
-fn cache_wrapper_name(expr: &CallExpression<'_>) -> Option<(&str, CacheKind)> {
+fn cache_wrapper_name<'a>(expr: &CallExpression<'a>) -> Option<(&'a str, CacheKind)> {
     let Expression::Identifier(identifier) = &expr.callee else {
         return None;
     };
