@@ -2455,13 +2455,17 @@ mod tests {
 
         let root = tempdir().unwrap();
         fs::create_dir(root.path().join("app")).unwrap();
-        fs::write(root.path().join("app/page.tsx"), "'use client';\nfetch('/api/client');").unwrap();
+        fs::write(
+            root.path().join("app/page.tsx"),
+            "'use client';\nfetch('/api/client');",
+        )
+        .unwrap();
 
         let mut cmd = Command::cargo_bin("next-to-fetch").unwrap();
         cmd.arg("--root").arg(root.path());
-        cmd.assert()
-            .success()
-            .stdout(predicates::str::contains("| GET | `/api/client` | client |"));
+        cmd.assert().success().stdout(predicates::str::contains(
+            "| GET | `/api/client` | client |",
+        ));
     }
 
     #[test]
@@ -2471,11 +2475,7 @@ mod tests {
         let root = tempdir().unwrap();
         fs::create_dir_all(root.path().join("app/about")).unwrap();
         fs::write(root.path().join("app/page.tsx"), "fetch(url);").unwrap();
-        fs::write(
-            root.path().join("app/about/page.tsx"),
-            "fetch(dynamic);",
-        )
-        .unwrap();
+        fs::write(root.path().join("app/about/page.tsx"), "fetch(dynamic);").unwrap();
 
         let mut cmd = Command::cargo_bin("next-to-fetch").unwrap();
         cmd.arg("--root").arg(root.path());
