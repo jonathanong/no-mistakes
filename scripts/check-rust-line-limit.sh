@@ -21,6 +21,13 @@ fail=0
 
 json=$(tokei crates --files --output json)
 
+# Sanity check: ensure tokei produced at least one Rust report so schema changes are caught loudly.
+rust_count=$(echo "$json" | jq -r '(.Rust?.reports // []) | length')
+if [ "$rust_count" -eq 0 ]; then
+    echo "Error: tokei reported 0 Rust files — either schema changed or crates/ is empty" >&2
+    exit 1
+fi
+
 while IFS=$'\t' read -r lines file; do
     if [ -n "$file" ] && [[ "$lines" =~ ^[0-9]+$ ]] && [ "$lines" -gt "$SRC_MAX" ]; then
         echo "$file: $lines code lines exceeds max $SRC_MAX" >&2
