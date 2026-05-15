@@ -107,58 +107,97 @@ mod tests {
     #[test]
     fn test_template_literal_text() {
         let allocator = Allocator::default();
-        let source = "`${a}b${c}`";
         let source_type = SourceType::from_path(Path::new("test.ts")).unwrap();
+        let source = "`${a}b${c}`";
         let parsed = Parser::new(&allocator, source, source_type).parse();
+        assert!(
+            parsed.errors.is_empty(),
+            "template literal parse errors: {:?}",
+            parsed.errors
+        );
         let stmt = &parsed.program.body[0];
-        if let oxc_ast::ast::Statement::ExpressionStatement(expr_stmt) = stmt {
-            if let Expression::TemplateLiteral(t) = &expr_stmt.expression {
-                assert_eq!(template_literal_text(t, source), "${a}b${c}");
-            }
-        }
+        let oxc_ast::ast::Statement::ExpressionStatement(expr_stmt) = stmt else {
+            panic!("expected expression statement");
+        };
+        let Expression::TemplateLiteral(t) = &expr_stmt.expression else {
+            panic!("expected template literal");
+        };
+        assert_eq!(template_literal_text(t, source), "${a}b${c}");
 
         let source = "`no_expressions`";
         let parsed = Parser::new(&allocator, source, source_type).parse();
+        assert!(
+            parsed.errors.is_empty(),
+            "template literal parse errors: {:?}",
+            parsed.errors
+        );
         let stmt = &parsed.program.body[0];
-        if let oxc_ast::ast::Statement::ExpressionStatement(expr_stmt) = stmt {
-            if let Expression::TemplateLiteral(t) = &expr_stmt.expression {
-                assert_eq!(template_literal_text(t, source), "no_expressions");
-            }
-        }
+        let oxc_ast::ast::Statement::ExpressionStatement(expr_stmt) = stmt else {
+            panic!("expected expression statement");
+        };
+        let Expression::TemplateLiteral(t) = &expr_stmt.expression else {
+            panic!("expected template literal");
+        };
+        assert_eq!(template_literal_text(t, source), "no_expressions");
     }
 
     #[test]
     fn test_expression_path() {
         let allocator = Allocator::default();
-        let source = "a.b.c";
         let source_type = SourceType::from_path(Path::new("test.ts")).unwrap();
+
+        let source = "a.b.c";
         let parsed = Parser::new(&allocator, source, source_type).parse();
+        assert!(
+            parsed.errors.is_empty(),
+            "parse errors: {:?}",
+            parsed.errors
+        );
         let stmt = &parsed.program.body[0];
-        if let oxc_ast::ast::Statement::ExpressionStatement(expr_stmt) = stmt {
-            let path = expression_path(&expr_stmt.expression).unwrap();
-            assert_eq!(path, vec!["a", "b", "c"]);
-        }
+        let oxc_ast::ast::Statement::ExpressionStatement(expr_stmt) = stmt else {
+            panic!("expected expression statement");
+        };
+        let path = expression_path(&expr_stmt.expression).unwrap();
+        assert_eq!(path, vec!["a", "b", "c"]);
 
         let source = "(a).b";
         let parsed = Parser::new(&allocator, source, source_type).parse();
+        assert!(
+            parsed.errors.is_empty(),
+            "parse errors: {:?}",
+            parsed.errors
+        );
         let stmt = &parsed.program.body[0];
-        if let oxc_ast::ast::Statement::ExpressionStatement(expr_stmt) = stmt {
-            let path = expression_path(&expr_stmt.expression).unwrap();
-            assert_eq!(path, vec!["a", "b"]);
-        }
+        let oxc_ast::ast::Statement::ExpressionStatement(expr_stmt) = stmt else {
+            panic!("expected expression statement");
+        };
+        let path = expression_path(&expr_stmt.expression).unwrap();
+        assert_eq!(path, vec!["a", "b"]);
 
         let source = "123";
         let parsed = Parser::new(&allocator, source, source_type).parse();
+        assert!(
+            parsed.errors.is_empty(),
+            "parse errors: {:?}",
+            parsed.errors
+        );
         let stmt = &parsed.program.body[0];
-        if let oxc_ast::ast::Statement::ExpressionStatement(expr_stmt) = stmt {
-            assert_eq!(expression_path(&expr_stmt.expression), None);
-        }
+        let oxc_ast::ast::Statement::ExpressionStatement(expr_stmt) = stmt else {
+            panic!("expected expression statement");
+        };
+        assert_eq!(expression_path(&expr_stmt.expression), None);
 
         let source = "a['b']";
         let parsed = Parser::new(&allocator, source, source_type).parse();
+        assert!(
+            parsed.errors.is_empty(),
+            "parse errors: {:?}",
+            parsed.errors
+        );
         let stmt = &parsed.program.body[0];
-        if let oxc_ast::ast::Statement::ExpressionStatement(expr_stmt) = stmt {
-            assert_eq!(expression_path(&expr_stmt.expression), None);
-        }
+        let oxc_ast::ast::Statement::ExpressionStatement(expr_stmt) = stmt else {
+            panic!("expected expression statement");
+        };
+        assert_eq!(expression_path(&expr_stmt.expression), None);
     }
 }

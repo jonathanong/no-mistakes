@@ -77,7 +77,6 @@ struct UrlExtraction {
 enum FetchSide {
     Client,
     Server,
-    Unknown,
 }
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -158,8 +157,13 @@ struct TargetSpec {
 }
 
 struct Cache {
-    files: HashMap<(PathBuf, bool, bool), Vec<FetchOccurrence>>,
+    files: HashMap<(PathBuf, bool, bool), CachedFile>,
     imports: HashMap<PathBuf, Vec<PathBuf>>,
+}
+
+struct CachedFile {
+    is_client: bool,
+    fetches: Vec<FetchOccurrence>,
 }
 
 struct FetchVisitor<'a> {
@@ -268,19 +272,36 @@ fn infer_cached_wrapper_name(source: &str, expr: &CallExpression<'_>) -> Option<
     }
 
     let mut cursor = lhs.len();
-    let bytes = lhs.as_bytes();
-    while cursor > 0 && bytes[cursor - 1].is_ascii_whitespace() {
-        cursor -= 1;
+    while cursor > 0 {
+        let ch = lhs[..cursor].chars().last()?;
+        if ch.is_ascii_whitespace() {
+            cursor -= ch.len_utf8();
+        } else {
+            break;
+        }
     }
     let end = cursor;
-    while cursor > 0 && is_identifier_char(bytes[cursor - 1]) {
-        cursor -= 1;
+    while cursor > 0 {
+        let ch = lhs[..cursor].chars().last()?;
+        if is_identifier_char(ch) {
+            cursor -= ch.len_utf8();
+        } else {
+            break;
+        }
     }
     if cursor == end {
         return None;
     }
 
     let name = &lhs[cursor..end];
+    if cursor > 0
+        && lhs[..cursor]
+            .chars()
+            .last()
+            .is_some_and(|ch| ch == '.' || ch == '?' || ch == ':' || ch == ')' || ch == ']')
+    {
+        return None;
+    }
     if name
         .chars()
         .next()
@@ -292,8 +313,8 @@ fn infer_cached_wrapper_name(source: &str, expr: &CallExpression<'_>) -> Option<
     }
 }
 
-fn is_identifier_char(byte: u8) -> bool {
-    byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'$'
+fn is_identifier_char(ch: char) -> bool {
+    ch.is_alphanumeric() || ch == '_' || ch == '$'
 }
 
 fn cache_wrapper_name(expr: &CallExpression<'_>) -> Option<(String, CacheKind)> {
@@ -341,8 +362,12 @@ fn extract_fetch_cache_options(obj: &oxc_ast::ast::ObjectExpression<'_>) -> (boo
                         };
                         match next_name.as_ref() {
                             "revalidate" => {
-                                cached = true;
-                                cache_kind = CacheKind::FetchNextRevalidate;
+                                if let Expression::NumericLiteral(value) = &next_property.value {
+                                    if value.value > 0.0 {
+                                        cached = true;
+                                        cache_kind = CacheKind::FetchNextRevalidate;
+                                    }
+                                }
                             }
                             "tags" => {
                                 cached = true;
@@ -460,12 +485,7 @@ fn run() -> Result<()> {
 
         let mut matched = target_specs.is_empty();
         'target_match: for target in &target_specs {
-            if target.raw == route.pattern
-                || (!target.raw.ends_with('/')
-                    && route.file.to_string_lossy().contains(&target.raw))
-                || (target.raw.ends_with('/') && route.pattern.starts_with(&target.raw))
-                || route.pattern == format!("/{}", target.raw)
-            {
+            if route_matches_target(&route.pattern, &target.raw) {
                 matched = true;
                 matched_targets.insert(target.raw.clone());
                 continue;
@@ -533,7 +553,7 @@ fn run() -> Result<()> {
                     break;
                 }
 
-                for stem in ["layout", "loading", "error", "not-found"] {
+                for stem in ["layout", "loading", "error", "not-found", "template"] {
                     for ext in ["tsx", "ts", "jsx", "js"] {
                         let layout_file = parent.join(format!("{stem}.{ext}"));
                         if layout_file.exists() {
@@ -627,7 +647,6 @@ fn run() -> Result<()> {
             match api_call.side {
                 FetchSide::Client => client_api_calls += 1,
                 FetchSide::Server => server_api_calls += 1,
-                FetchSide::Unknown => {}
             }
             if api_call.rsc {
                 rsc_api_calls += 1;
@@ -644,7 +663,6 @@ fn run() -> Result<()> {
                     match side {
                         FetchSide::Client => "client",
                         FetchSide::Server => "server",
-                        FetchSide::Unknown => "unknown",
                     },
                     if rsc { "rsc" } else { "non-rsc" }
                 ),
@@ -696,6 +714,31 @@ fn run() -> Result<()> {
     Ok(())
 }
 
+fn normalize_target_pattern(target: &str) -> Option<String> {
+    let trimmed = target.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+
+    Some(if trimmed.starts_with('/') {
+        trimmed.to_string()
+    } else {
+        format!("/{trimmed}")
+    })
+}
+
+fn route_matches_target(route_pattern: &str, target_raw: &str) -> bool {
+    let Some(normalized_target) = normalize_target_pattern(target_raw) else {
+        return false;
+    };
+
+    if normalized_target.ends_with('/') {
+        return route_pattern.starts_with(&normalized_target);
+    }
+
+    route_pattern == normalized_target
+}
+
 fn analyze_file(
     path: &Path,
     root: &Path,
@@ -725,8 +768,8 @@ fn analyze_file(
         inherited_is_client,
         inherited_is_route_handler,
     )) {
-        fetches.extend(cached_fetches.clone());
-        return Ok(inherited_is_client);
+        fetches.extend(cached_fetches.fetches.clone());
+        return Ok(cached_fetches.is_client);
     }
 
     let source = std::fs::read_to_string(&abs_path)?;
@@ -767,8 +810,15 @@ fn analyze_file(
     })??;
 
     cache.files.insert(
-        (abs_path.clone(), is_client, inherited_is_route_handler),
-        file_fetches.clone(),
+        (
+            abs_path.clone(),
+            inherited_is_client,
+            inherited_is_route_handler,
+        ),
+        CachedFile {
+            is_client,
+            fetches: file_fetches.clone(),
+        },
     );
     fetches.extend(file_fetches);
 
@@ -945,7 +995,7 @@ fn collect_layout_chain_files(route_file: &Path, frontend_root: &Path) -> Vec<Pa
             break;
         }
 
-        for stem in ["layout", "loading", "error", "not-found"] {
+        for stem in ["layout", "loading", "error", "not-found", "template"] {
             for ext in ["tsx", "ts", "jsx", "js"] {
                 let layout_file = parent.join(format!("{stem}.{ext}"));
                 if layout_file.exists() {
@@ -990,8 +1040,8 @@ fn resolve_target_file(root: &Path, target: &str) -> Result<PathBuf> {
         anyhow::bail!("target path cannot be empty");
     }
 
-    let candidate = if trimmed.starts_with('/') {
-        root.join(trimmed.trim_start_matches('/'))
+    let candidate = if Path::new(trimmed).is_absolute() {
+        Path::new(trimmed).to_path_buf()
     } else {
         root.join(trimmed)
     };
@@ -1140,20 +1190,147 @@ mod tests {
         let source_type = oxc_span::SourceType::default();
         let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
         let stmt = &parsed.program.body[0];
-        if let oxc_ast::ast::Statement::ExpressionStatement(expr_stmt) = stmt {
-            if let Expression::CallExpression(call) = &expr_stmt.expression {
-                let arg = &call.arguments[0];
-                assert_eq!(
-                    extract_url_from_argument(arg, source),
-                    UrlExtraction {
-                        path: "dynamic".to_string(),
-                        raw_path: "true".to_string(),
-                        is_dynamic: true,
-                        is_unsupported: true,
-                    }
-                );
+        let oxc_ast::ast::Statement::ExpressionStatement(expr_stmt) = stmt else {
+            panic!("expected expression statement");
+        };
+        let Expression::CallExpression(call) = &expr_stmt.expression else {
+            panic!("expected call expression");
+        };
+        let arg = &call.arguments[0];
+        assert_eq!(
+            extract_url_from_argument(arg, source),
+            UrlExtraction {
+                path: "dynamic".to_string(),
+                raw_path: "true".to_string(),
+                is_dynamic: true,
+                is_unsupported: true,
             }
+        );
+    }
+
+    #[test]
+    fn test_infer_cached_wrapper_name_parses_cached_identifiers() {
+        let allocator = oxc_allocator::Allocator::default();
+        let source = "cachedFn = cache(() => {});";
+        let source_type = oxc_span::SourceType::default();
+        let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+        let stmt = &parsed.program.body[0];
+        let Statement::ExpressionStatement(expr_stmt) = stmt else {
+            panic!("expected expression statement");
+        };
+        let Expression::AssignmentExpression(assignment) = &expr_stmt.expression else {
+            panic!("expected assignment expression");
+        };
+        let Expression::CallExpression(call) = &assignment.right else {
+            panic!("expected cache call expression");
+        };
+        assert_eq!(
+            infer_cached_wrapper_name(source, call),
+            Some("cachedFn".to_string())
+        );
+    }
+
+    #[test]
+    fn test_infer_cached_wrapper_name_returns_none_for_non_identifier_assignment_target() {
+        let allocator = oxc_allocator::Allocator::default();
+        let source = "obj.cached_fn = cache(() => {});";
+        let source_type = oxc_span::SourceType::default();
+        let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+        assert!(
+            parsed.errors.is_empty(),
+            "unexpected parse errors: {:?}",
+            parsed.errors
+        );
+        let stmt = &parsed.program.body[0];
+        let Statement::ExpressionStatement(expr_stmt) = stmt else {
+            panic!("expected expression statement");
+        };
+        let Expression::AssignmentExpression(assignment) = &expr_stmt.expression else {
+            panic!("expected assignment expression");
+        };
+        let Expression::CallExpression(call) = &assignment.right else {
+            panic!("expected cache call expression");
+        };
+        assert_eq!(infer_cached_wrapper_name(source, call), None);
+    }
+
+    #[test]
+    fn test_infer_cached_wrapper_name_returns_none_for_non_ascii_identifier_start() {
+        let allocator = oxc_allocator::Allocator::default();
+        let source = "µcached = cache(() => {});";
+        let source_type = oxc_span::SourceType::default();
+        let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+        let stmt = &parsed.program.body[0];
+        let Statement::ExpressionStatement(expr_stmt) = stmt else {
+            panic!("expected expression statement");
+        };
+        let Expression::AssignmentExpression(assignment) = &expr_stmt.expression else {
+            panic!("expected assignment expression");
+        };
+        let Expression::CallExpression(call) = &assignment.right else {
+            panic!("expected cache call expression");
+        };
+        assert_eq!(infer_cached_wrapper_name(source, call), None);
+    }
+
+    #[test]
+    fn test_source_text_handles_invalid_slices() {
+        assert!(source_text(1, 0, "abc").is_none());
+        assert!(source_text(0, 4, "abc").is_none());
+        assert!(source_text(1, 2, "é").is_none());
+        assert_eq!(source_text(0, 2, "é"), Some("é".to_string()));
+    }
+
+    #[test]
+    fn test_visitor_cache_options_unknown_flags_are_ignored() {
+        let allocator = oxc_allocator::Allocator::default();
+        let source = "
+            fetch('/api/no-store', { cache: 'no-store' });
+            fetch('/api/not-object', { next: ['revalidate'] });
+            fetch('/api/next-unknown', { next: { unknown: true, ...tags }});
+        ";
+        let source_type = oxc_span::SourceType::default();
+        let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+        let mut visitor = FetchVisitor {
+            source,
+            file: "test.ts".to_string(),
+            fetches: Vec::new(),
+            is_client: false,
+            is_route_handler: false,
+            cached_function: None,
+            cached_kind: None,
+        };
+        visitor.visit_program(&parsed.program);
+        assert_eq!(visitor.fetches.len(), 3);
+        for fetch in &visitor.fetches {
+            assert!(!fetch.cached);
         }
+
+        assert_eq!(visitor.fetches[0].cache_kind, CacheKind::None);
+        assert_eq!(visitor.fetches[1].cache_kind, CacheKind::None);
+        assert_eq!(visitor.fetches[2].cache_kind, CacheKind::None);
+    }
+
+    #[test]
+    fn test_collect_imports_reuses_cached_imports() {
+        let dir = tempdir().unwrap();
+        fs::create_dir_all(dir.path().join("pkg")).unwrap();
+        fs::write(dir.path().join("pkg/side-effect.ts"), "").unwrap();
+        fs::write(dir.path().join("pkg/types.ts"), "").unwrap();
+        let file = dir.path().join("pkg/index.ts");
+        fs::write(
+            &file,
+            "
+                import './side-effect';
+                import type { Foo } from './types';
+            ",
+        )
+        .unwrap();
+
+        let mut import_cache = HashMap::new();
+        let first = collect_imports(&file, &mut import_cache).unwrap();
+        let second = collect_imports(&file, &mut import_cache).unwrap();
+        assert_eq!(first, second);
     }
 
     #[test]
@@ -1211,6 +1388,7 @@ mod tests {
         let source = "
             fetch('/api/cache', { cache: 'force-cache' });
             fetch('/api/next', { next: { revalidate: 60 }});
+            fetch('/api/next-zero', { next: { revalidate: 0 }});
             fetch('/api/tags', { next: { tags: ['a', 'b'] }});
         ";
         let source_type = oxc_span::SourceType::default();
@@ -1225,7 +1403,7 @@ mod tests {
             cached_kind: None,
         };
         visitor.visit_program(&parsed.program);
-        assert_eq!(visitor.fetches.len(), 3);
+        assert_eq!(visitor.fetches.len(), 4);
         assert!(visitor.fetches[0].cached);
         assert_eq!(visitor.fetches[0].cache_kind, CacheKind::FetchCache);
         assert!(visitor.fetches[1].cached);
@@ -1233,8 +1411,21 @@ mod tests {
             visitor.fetches[1].cache_kind,
             CacheKind::FetchNextRevalidate
         );
-        assert!(visitor.fetches[2].cached);
-        assert_eq!(visitor.fetches[2].cache_kind, CacheKind::FetchNextTags);
+        assert!(!visitor.fetches[2].cached);
+        assert_eq!(visitor.fetches[2].cache_kind, CacheKind::None);
+        assert!(visitor.fetches[3].cached);
+        assert_eq!(visitor.fetches[3].cache_kind, CacheKind::FetchNextTags);
+    }
+
+    #[test]
+    fn test_route_matches_target() {
+        assert!(route_matches_target("/users", "users"));
+        assert!(!route_matches_target("/users-team", "users"));
+        assert!(route_matches_target("/users/team", "users/"));
+        assert!(!route_matches_target("/users-team/page", "users/"));
+        assert!(route_matches_target("/users", "/users"));
+        assert!(!route_matches_target("/users/team", "/users"));
+        assert!(route_matches_target("/users/team", "/users/"));
     }
 
     #[test]
@@ -1443,6 +1634,25 @@ mod tests {
     }
 
     #[test]
+    fn test_fetch_cache_label_without_cached_function() {
+        let fetch = FetchOccurrence {
+            path: "/api/example".to_string(),
+            raw_path: "/api/example".to_string(),
+            method: "GET".to_string(),
+            file: "app/page.tsx".to_string(),
+            line: 1,
+            side: FetchSide::Server,
+            rsc: true,
+            cached: true,
+            cache_kind: CacheKind::FetchCache,
+            cached_function: None,
+            dynamic: false,
+            unsupported: false,
+        };
+        assert_eq!(fetch_cache_label(&fetch), "fetch-cache");
+    }
+
+    #[test]
     fn test_is_route_handler_file_variants() {
         assert!(is_route_handler_file(Path::new("route.ts")));
         assert!(is_route_handler_file(Path::new("route")));
@@ -1457,14 +1667,18 @@ mod tests {
         fs::create_dir_all(app.join("dashboard")).unwrap();
 
         fs::write(app.join("layout.tsx"), "export {}").unwrap();
+        fs::write(app.join("template.tsx"), "export {}").unwrap();
         fs::write(app.join("dashboard/layout.tsx"), "export {}").unwrap();
+        fs::write(app.join("dashboard/template.tsx"), "export {}").unwrap();
         let page = app.join("dashboard/page.tsx");
         fs::write(&page, "export {}").unwrap();
 
         let chain = collect_layout_chain_files(&page, &app);
-        assert_eq!(chain.len(), 2);
+        assert_eq!(chain.len(), 4);
+        assert!(chain.contains(&app.join("template.tsx")));
         assert!(chain.contains(&app.join("dashboard/layout.tsx")));
         assert!(chain.contains(&app.join("layout.tsx")));
+        assert!(chain.contains(&app.join("dashboard/template.tsx")));
     }
 
     #[test]
@@ -1473,13 +1687,37 @@ mod tests {
     }
 
     #[test]
+    fn test_is_client_route_file_with_use_client_directive() {
+        let dir = tempdir().unwrap();
+        let file = dir.path().join("client.ts");
+        fs::write(&file, "'use client';\nexport {};").unwrap();
+
+        assert!(is_client_route_file(&file).unwrap());
+    }
+
+    #[test]
+    fn test_is_client_route_file_without_use_client_directive() {
+        let dir = tempdir().unwrap();
+        let file = dir.path().join("server.ts");
+        fs::write(&file, "export {};").unwrap();
+
+        assert!(!is_client_route_file(&file).unwrap());
+    }
+
+    #[test]
     fn test_resolve_target_file_errors() {
         let dir = tempdir().unwrap();
+        let file = dir.path().join("absolute.ts");
+        fs::write(&file, "").unwrap();
 
         let empty = resolve_target_file(dir.path(), "   ");
         assert!(empty.is_err());
         let err = empty.unwrap_err();
         assert!(err.to_string().contains("target path cannot be empty"));
+
+        let absolute = file.canonicalize().unwrap();
+        let resolved = resolve_target_file(dir.path(), absolute.to_str().unwrap()).unwrap();
+        assert_eq!(resolved, absolute);
 
         let dir_target = dir.path().join("dir");
         fs::create_dir(&dir_target).unwrap();
@@ -1552,6 +1790,7 @@ mod tests {
             import { type Bar } from './bar';
             import { Baz } from './baz';
             import Widget, { type Props } from './widget';
+            import * as all from './all';
         ";
         let source_type = oxc_span::SourceType::from_path(std::path::Path::new("test.ts")).unwrap();
         let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
@@ -1569,12 +1808,13 @@ mod tests {
                 _ => None,
             })
             .collect::<Vec<_>>();
-        assert_eq!(imports.len(), 5);
+        assert_eq!(imports.len(), 6);
         assert!(!is_runtime_import(imports[0]));
         assert!(is_runtime_import(imports[1]));
         assert!(!is_runtime_import(imports[2]));
         assert!(is_runtime_import(imports[3]));
         assert!(is_runtime_import(imports[4]));
+        assert!(is_runtime_import(imports[5]));
     }
 
     #[test]
@@ -1626,6 +1866,7 @@ mod tests {
             import './side-effect';
             import type { Foo } from './types';
             export type { Foo } from './types';
+            export type * from './types';
             export { runtimeExport } from './runtime';
             export * from './runtime-all';
             ",
@@ -1726,6 +1967,49 @@ mod tests {
     }
 
     #[test]
+    fn test_analyze_file_cache_hit_reuses_client_state() {
+        let dir = tempdir().unwrap();
+        let file = dir.path().join("file.ts");
+        fs::write(&file, "'use client'; fetch('/api/cache')").unwrap();
+
+        let mut cache = Cache {
+            files: HashMap::new(),
+            imports: HashMap::new(),
+        };
+        let mut visited = HashSet::new();
+        let mut fetches = Vec::new();
+        let route_is_client = analyze_file(
+            &file,
+            dir.path(),
+            &mut visited,
+            &mut fetches,
+            &mut cache,
+            false,
+            false,
+        )
+        .unwrap();
+        assert!(route_is_client);
+        assert_eq!(cache.files.len(), 1);
+
+        let mut visited2 = HashSet::new();
+        let mut fetches2 = Vec::new();
+        let route_is_client = analyze_file(
+            &file,
+            dir.path(),
+            &mut visited2,
+            &mut fetches2,
+            &mut cache,
+            false,
+            false,
+        )
+        .unwrap();
+        assert!(route_is_client);
+        assert_eq!(cache.files.len(), 1);
+        assert_eq!(fetches2.len(), 1);
+        assert_eq!(fetches2[0].path, "/api/cache");
+    }
+
+    #[test]
     fn test_analyze_file_not_exists() {
         let mut visited = HashSet::new();
         let mut fetches = Vec::new();
@@ -1799,6 +2083,50 @@ mod tests {
         cmd.assert()
             .success()
             .stdout(predicates::str::contains("/api/layout"));
+    }
+
+    #[test]
+    fn test_cli_target_file_match_uses_wrapper_chain() {
+        use assert_cmd::Command;
+
+        let root = tempdir().unwrap();
+        let app = root.path().join("app");
+        fs::create_dir_all(app.join("dashboard")).unwrap();
+
+        let layout = app.join("layout.tsx");
+        fs::write(&layout, "fetch('/api/layout');").unwrap();
+        let page = app.join("dashboard/page.tsx");
+        fs::write(&page, "fetch('/api/page');").unwrap();
+
+        let mut cmd = Command::cargo_bin("next-to-fetch").unwrap();
+        cmd.arg("--root").arg(root.path()).arg(&layout);
+        cmd.assert()
+            .success()
+            .stdout(predicates::str::contains("/api/layout"));
+    }
+
+    #[test]
+    fn test_cli_includes_duplicates_and_unsupported_sections() {
+        use assert_cmd::Command;
+
+        let root = tempdir().unwrap();
+        fs::create_dir(root.path().join("app")).unwrap();
+        fs::write(
+            root.path().join("app/page.tsx"),
+            "
+            fetch(`/api/${dynamic}`);
+            fetch('/api/duplicate');
+            fetch('/api/duplicate');
+            ",
+        )
+        .unwrap();
+
+        let mut cmd = Command::cargo_bin("next-to-fetch").unwrap();
+        cmd.arg("--root").arg(root.path());
+        cmd.assert()
+            .success()
+            .stdout(predicates::str::contains("## Duplicates"))
+            .stdout(predicates::str::contains("## Unsupported (Dynamic)"));
     }
 
     #[test]
