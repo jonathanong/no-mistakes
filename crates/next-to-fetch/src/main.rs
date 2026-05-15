@@ -252,7 +252,9 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
 }
 
 fn infer_cached_wrapper_name(source: &str, expr: &CallExpression<'_>) -> Option<String> {
-    let statement_start = source[..expr.span().start as usize].rfind('\n').map_or(0, |idx| idx + 1);
+    let statement_start = source[..expr.span().start as usize]
+        .rfind('\n')
+        .map_or(0, |idx| idx + 1);
     let assignment = source[statement_start..expr.span().start as usize].trim_end();
     let equal_sign = assignment.rfind('=')?;
 
@@ -275,9 +277,11 @@ fn infer_cached_wrapper_name(source: &str, expr: &CallExpression<'_>) -> Option<
     }
 
     let name = &lhs[cursor..end];
-    if name.chars().next().is_some_and(|char| {
-        char.is_ascii_alphabetic() || char == '_' || char == '$'
-    }) {
+    if name
+        .chars()
+        .next()
+        .is_some_and(|char| char.is_ascii_alphabetic() || char == '_' || char == '$')
+    {
         Some(name.to_string())
     } else {
         None
@@ -1265,7 +1269,10 @@ mod tests {
 
         assert!(visitor.fetches[2].cached);
         assert_eq!(visitor.fetches[2].cache_kind, CacheKind::ReactCache);
-        assert_eq!(visitor.fetches[2].cached_function.as_deref(), Some("getUsers"));
+        assert_eq!(
+            visitor.fetches[2].cached_function.as_deref(),
+            Some("getUsers")
+        );
         assert_eq!(visitor.fetches[2].method, "PUT");
     }
 
@@ -1401,7 +1408,10 @@ mod tests {
     fn test_fetch_cache_kind_names() {
         assert_eq!(cache_kind_name(&CacheKind::None), "none");
         assert_eq!(cache_kind_name(&CacheKind::FetchCache), "fetch-cache");
-        assert_eq!(cache_kind_name(&CacheKind::FetchNextRevalidate), "next-revalidate");
+        assert_eq!(
+            cache_kind_name(&CacheKind::FetchNextRevalidate),
+            "next-revalidate"
+        );
         assert_eq!(cache_kind_name(&CacheKind::FetchNextTags), "next-tags");
         assert_eq!(cache_kind_name(&CacheKind::ReactCache), "react-cache");
         assert_eq!(cache_kind_name(&CacheKind::Cache), "cache");
@@ -1760,7 +1770,10 @@ mod tests {
         fs::write(&page, "fetch('/api/explicit-target');").unwrap();
 
         let mut cmd = Command::cargo_bin("next-to-fetch").unwrap();
-        cmd.arg("--root").arg(root.path()).arg("--target").arg(&page);
+        cmd.arg("--root")
+            .arg(root.path())
+            .arg("--target")
+            .arg(&page);
         cmd.assert()
             .success()
             .stdout(predicates::str::contains("/api/explicit-target"));
@@ -1780,7 +1793,10 @@ mod tests {
         fs::write(&page, "fetch('/api/page');").unwrap();
 
         let mut cmd = Command::cargo_bin("next-to-fetch").unwrap();
-        cmd.arg("--root").arg(root.path()).arg("--target").arg(&layout);
+        cmd.arg("--root")
+            .arg(root.path())
+            .arg("--target")
+            .arg(&layout);
         cmd.assert()
             .success()
             .stdout(predicates::str::contains("/api/layout"));
