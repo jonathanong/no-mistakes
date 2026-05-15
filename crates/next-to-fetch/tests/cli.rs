@@ -262,7 +262,11 @@ fn test_cli_target_file_match_uses_layout_import_chain_transitively() {
         ",
     )
     .unwrap();
-    fs::write(root.join("app/shared.ts"), "import { target } from './target';").unwrap();
+    fs::write(
+        root.join("app/shared.ts"),
+        "import { target } from './target';",
+    )
+    .unwrap();
     fs::write(root.join("app/target.ts"), "export const target = 123;").unwrap();
     fs::write(root.join("app/page.tsx"), "fetch('/api/page');").unwrap();
 
@@ -291,7 +295,11 @@ fn test_cli_target_file_match_uses_layout_import_chain_transitively_abs_path() {
         ",
     )
     .unwrap();
-    fs::write(root.join("app/shared.ts"), "import { target } from './target';").unwrap();
+    fs::write(
+        root.join("app/shared.ts"),
+        "import { target } from './target';",
+    )
+    .unwrap();
     fs::write(root.join("app/target.ts"), "export const target = 123;").unwrap();
     fs::write(root.join("app/page.tsx"), "fetch('/api/page');").unwrap();
 

@@ -179,12 +179,7 @@ struct FetchVisitor<'a> {
 }
 
 impl<'a> FetchVisitor<'a> {
-    fn new(
-        source: &'a str,
-        file: &str,
-        is_client: bool,
-        is_route_handler: bool,
-    ) -> Self {
+    fn new(source: &'a str, file: &str, is_client: bool, is_route_handler: bool) -> Self {
         Self {
             source,
             file: file.to_string(),
@@ -218,7 +213,9 @@ impl<'a> FetchVisitor<'a> {
     }
 
     fn is_fetch_shadowed(&self) -> bool {
-        self.fetch_scope_stack.iter().any(|scope| scope.contains("fetch"))
+        self.fetch_scope_stack
+            .iter()
+            .any(|scope| scope.contains("fetch"))
     }
 }
 
@@ -260,7 +257,10 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
         self.leave_fetch_scope();
     }
 
-    fn visit_arrow_function_expression(&mut self, arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>) {
+    fn visit_arrow_function_expression(
+        &mut self,
+        arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
+    ) {
         self.enter_fetch_scope();
         walk::walk_arrow_function_expression(self, arrow);
         self.leave_fetch_scope();
@@ -583,7 +583,12 @@ fn run() -> Result<()> {
 
             if let Some(target_file) = &target.file {
                 let mut visited_targets = HashSet::new();
-                let reaches_route_target = route_reaches_target(&route.file, target_file, &mut visited_targets, &mut cache.imports)?;
+                let reaches_route_target = route_reaches_target(
+                    &route.file,
+                    target_file,
+                    &mut visited_targets,
+                    &mut cache.imports,
+                )?;
                 if reaches_route_target {
                     matched = true;
                     matched_targets.insert(target.raw.clone());
@@ -598,8 +603,16 @@ fn run() -> Result<()> {
                     }
 
                     let mut wrapper_targets = HashSet::new();
-                    let reaches_wrapper_target = route_reaches_target(wrapper_file, target_file, &mut wrapper_targets, &mut cache.imports)?;
-                    if reaches_wrapper_target { wrapper_file_matches = true; break; }
+                    let reaches_wrapper_target = route_reaches_target(
+                        wrapper_file,
+                        target_file,
+                        &mut wrapper_targets,
+                        &mut cache.imports,
+                    )?;
+                    if reaches_wrapper_target {
+                        wrapper_file_matches = true;
+                        break;
+                    }
                 }
 
                 if wrapper_file_matches {
@@ -619,7 +632,15 @@ fn run() -> Result<()> {
 
         let route_is_route_handler = is_route_handler_file(&route.file);
         // Analyze the page/route file itself
-        let _route_is_client = analyze_file(&route.file, &root, &mut visited, &mut fetches, &mut cache, false, route_is_route_handler)?;
+        let _route_is_client = analyze_file(
+            &route.file,
+            &root,
+            &mut visited,
+            &mut fetches,
+            &mut cache,
+            false,
+            route_is_route_handler,
+        )?;
 
         // Traverse up and find parent layouts/loadings if it's a page (UI)
         if route_is_page {
@@ -633,7 +654,15 @@ fn run() -> Result<()> {
                     for ext in ["tsx", "ts", "jsx", "js"] {
                         let layout_file = parent.join(format!("{stem}.{ext}"));
                         if layout_file.exists() {
-                            let _ = analyze_file(&layout_file, &root, &mut visited, &mut fetches, &mut cache, false, route_is_route_handler)?;
+                            let _ = analyze_file(
+                                &layout_file,
+                                &root,
+                                &mut visited,
+                                &mut fetches,
+                                &mut cache,
+                                false,
+                                route_is_route_handler,
+                            )?;
                         }
                     }
                 }
@@ -857,12 +886,21 @@ fn analyze_file(
                     .directives
                     .iter()
                     .any(|d| d.directive == "use client"));
-        let mut visitor = FetchVisitor::new(source, &rel_file, is_client, inherited_is_route_handler);
+        let mut visitor =
+            FetchVisitor::new(source, &rel_file, is_client, inherited_is_route_handler);
         visitor.visit_program(program);
         file_fetches.extend(visitor.fetches);
         let imports = collect_imports_from_program(&abs_path, program, source, &mut cache.imports)?;
         for import in imports {
-            let _ = analyze_file(&import, root, visited, &mut file_fetches, cache, is_client, inherited_is_route_handler)?;
+            let _ = analyze_file(
+                &import,
+                root,
+                visited,
+                &mut file_fetches,
+                cache,
+                is_client,
+                inherited_is_route_handler,
+            )?;
         }
         Ok(is_client)
     })??;
@@ -1997,7 +2035,10 @@ mod tests {
             cache_kind_name(&CacheKind::FetchNextRevalidate),
             "fetch-next-revalidate"
         );
-        assert_eq!(cache_kind_name(&CacheKind::FetchNextTags), "fetch-next-tags");
+        assert_eq!(
+            cache_kind_name(&CacheKind::FetchNextTags),
+            "fetch-next-tags"
+        );
         assert_eq!(cache_kind_name(&CacheKind::ReactCache), "react-cache");
         assert_eq!(cache_kind_name(&CacheKind::Cache), "cache");
         assert_eq!(cache_kind_name(&CacheKind::UnstableCache), "unstable-cache");
