@@ -4,7 +4,8 @@ use no_mistakes_core::ast;
 use no_mistakes_core::config;
 use no_mistakes_core::routes;
 use oxc_ast::ast::{
-    Argument, CallExpression, ExportNamedDeclaration, Expression, ImportOrExportKind, Statement,
+    Argument, CallExpression, ExportNamedDeclaration, Expression, ImportDeclarationSpecifier,
+    ImportOrExportKind, Statement,
 };
 use oxc_ast_visit::{walk, Visit};
 use serde::{Deserialize, Serialize};
@@ -183,40 +184,17 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
                     for prop in &obj.properties {
                         if let oxc_ast::ast::ObjectPropertyKind::ObjectProperty(p) = prop {
                             if let Some(name) = p.key.static_name() {
-                                if name == "method" {
+                                if name.as_ref() == "method" {
                                     if let Expression::StringLiteral(s) = &p.value {
                                         method = s.value.to_string();
-                                    }
-                                } else if name == "cache" {
-                                    if let Expression::StringLiteral(s) = &p.value {
-                                        if s.value == "force-cache" {
-                                            cached = true;
-                                            cache_kind = CacheKind::FetchCache;
-                                        }
-                                    }
-                                } else if name == "next" {
-                                    if let Expression::ObjectExpression(next_obj) = &p.value {
-                                        for next_prop in &next_obj.properties {
-                                            if let oxc_ast::ast::ObjectPropertyKind::ObjectProperty(
-                                                np,
-                                            ) = next_prop
-                                            {
-                                                if let Some(next_name) = np.key.static_name() {
-                                                    if next_name == "revalidate" {
-                                                        cached = true;
-                                                        cache_kind = CacheKind::FetchNextRevalidate;
-                                                    } else if next_name == "tags" {
-                                                        cached = true;
-                                                        cache_kind = CacheKind::FetchNextTags;
-                                                    }
-                                                }
-                                            }
-                                        }
                                     }
                                 }
                             }
                         }
                     }
+                    let (seen_cached, seen_cache_kind) = extract_fetch_cache_options(obj);
+                    cached = seen_cached;
+                    cache_kind = seen_cache_kind;
                 }
 
                 let side = if self.is_client {
@@ -242,6 +220,58 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
         }
         walk::walk_call_expression(self, expr);
     }
+}
+
+fn extract_fetch_cache_options(obj: &oxc_ast::ast::ObjectExpression<'_>) -> (bool, CacheKind) {
+    let mut cached = false;
+    let mut cache_kind = CacheKind::None;
+
+    for property in &obj.properties {
+        let oxc_ast::ast::ObjectPropertyKind::ObjectProperty(property) = property else {
+            continue;
+        };
+        let Some(name) = property.key.static_name() else {
+            continue;
+        };
+
+        match name.as_ref() {
+            "cache" => {
+                if let Expression::StringLiteral(value) = &property.value {
+                    if value.value == "force-cache" {
+                        cached = true;
+                        cache_kind = CacheKind::FetchCache;
+                    }
+                }
+            }
+            "next" => {
+                if let Expression::ObjectExpression(next_obj) = &property.value {
+                    for next_property in &next_obj.properties {
+                        let oxc_ast::ast::ObjectPropertyKind::ObjectProperty(next_property) =
+                            next_property
+                        else {
+                            continue;
+                        };
+                        let Some(next_name) = next_property.key.static_name() else {
+                            continue;
+                        };
+                        match next_name.as_ref() {
+                            "revalidate" => {
+                                cached = true;
+                                cache_kind = CacheKind::FetchNextRevalidate;
+                            }
+                            "tags" => {
+                                cached = true;
+                                cache_kind = CacheKind::FetchNextTags;
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    (cached, cache_kind)
 }
 
 fn extract_url_from_argument(arg: &Argument, source: &str) -> (String, bool) {
@@ -304,36 +334,16 @@ fn run() -> Result<()> {
     let mut matched_targets = HashSet::new();
 
     for route in all_routes {
-        // Filter by targets if provided
-        if !target_specs.is_empty() {
-            let mut matched = false;
-            for target in &target_specs {
-                if target.raw == route.pattern
-                    || (!target.raw.ends_with('/')
-                        && route.file.to_string_lossy().contains(&target.raw))
-                    || (target.raw.ends_with('/') && route.pattern.starts_with(&target.raw))
-                    || route.pattern == format!("/{}", target.raw)
-                {
-                    matched = true;
-                    matched_targets.insert(target.raw.clone());
-                    continue;
-                }
-
-                if let Some(target_file) = &target.file {
-                    let mut visited_targets = HashSet::new();
-                    if route_reaches_target(
-                        &route.file,
-                        target_file,
-                        &mut visited_targets,
-                        &mut cache.imports,
-                    )? {
-                        matched = true;
-                        matched_targets.insert(target.raw.clone());
-                    }
-                }
-            }
-            if !matched {
-                continue;
+        let mut matched = target_specs.is_empty();
+        for target in &target_specs {
+            if target.raw == route.pattern
+                || (!target.raw.ends_with('/')
+                    && route.file.to_string_lossy().contains(&target.raw))
+                || (target.raw.ends_with('/') && route.pattern.starts_with(&target.raw))
+                || route.pattern == format!("/{}", target.raw)
+            {
+                matched = true;
+                matched_targets.insert(target.raw.clone());
             }
         }
 
@@ -357,6 +367,30 @@ fn run() -> Result<()> {
             route_is_client,
             route_is_route_handler,
         )?;
+
+        if !target_specs.is_empty() {
+            for target in &target_specs {
+                if matched_targets.contains(target.raw.as_str()) {
+                    continue;
+                }
+                if let Some(target_file) = &target.file {
+                    let mut visited_targets = HashSet::new();
+                    if route_reaches_target(
+                        &route.file,
+                        target_file,
+                        &mut visited_targets,
+                        &mut cache.imports,
+                    )? {
+                        matched = true;
+                        matched_targets.insert(target.raw.clone());
+                    }
+                }
+            }
+        }
+
+        if !matched {
+            continue;
+        }
 
         // Traverse up and find parent layouts/loadings if it's a page (UI)
         if route.file.file_stem().and_then(|s| s.to_str()) == Some("page") {
@@ -573,12 +607,7 @@ fn analyze_file(
         };
         visitor.visit_program(program);
         file_fetches.extend(visitor.fetches);
-        let imports = collect_imports_from_program(
-            &abs_path,
-            program,
-            source,
-            &mut cache.imports,
-        )?;
+        let imports = collect_imports_from_program(&abs_path, program, source, &mut cache.imports)?;
         for import in imports {
             analyze_file(
                 &import,
@@ -633,7 +662,7 @@ fn collect_imports_from_program<'a>(
     let mut imports = Vec::new();
     for stmt in &program.body {
         match stmt {
-            Statement::ImportDeclaration(import) if is_runtime_import(import, source) => {
+            Statement::ImportDeclaration(import) if is_runtime_import(import) => {
                 if let Some(resolved) = resolve_import(abs_path, import.source.value.as_str()) {
                     imports.push(resolved);
                 }
@@ -664,31 +693,31 @@ fn collect_imports_from_program<'a>(
     Ok(imports)
 }
 
-fn is_runtime_import(import: &oxc_ast::ast::ImportDeclaration, source: &str) -> bool {
-    let raw =
-        declaration_text(import.span.start as usize, import.span.end as usize, source).trim_start();
-    if raw.starts_with("import type ") {
+fn is_runtime_import(import: &oxc_ast::ast::ImportDeclaration) -> bool {
+    if import.import_kind == ImportOrExportKind::Type {
         return false;
     }
-    let after_import = raw.trim_start().strip_prefix("import").unwrap_or(raw).trim_start();
-    if after_import.starts_with("*") {
+
+    let Some(specifiers) = &import.specifiers else {
+        return true;
+    };
+    if specifiers.is_empty() {
         return true;
     }
-    if after_import.starts_with("{") {
-        match parse_named_specifiers(raw) {
-            Some(named_specifiers) => {
-                if named_specifiers.is_empty() {
+
+    for specifier in specifiers {
+        match specifier {
+            ImportDeclarationSpecifier::ImportDefaultSpecifier(_) => return true,
+            ImportDeclarationSpecifier::ImportNamespaceSpecifier(_) => return true,
+            ImportDeclarationSpecifier::ImportSpecifier(import_specifier) => {
+                if import_specifier.import_kind == ImportOrExportKind::Value {
                     return true;
                 }
-                named_specifiers
-                    .iter()
-                    .any(|specifier| !specifier.trim_start().starts_with("type "))
             }
-            None => true,
         }
-    } else {
-        true
     }
+
+    false
 }
 
 fn is_runtime_export(export: &ExportNamedDeclaration, source: &str) -> bool {
@@ -971,6 +1000,36 @@ mod tests {
     }
 
     #[test]
+    fn test_visitor_cache_options_are_extracted() {
+        let allocator = oxc_allocator::Allocator::default();
+        let source = "
+            fetch('/api/cache', { cache: 'force-cache' });
+            fetch('/api/next', { next: { revalidate: 60 }});
+            fetch('/api/tags', { next: { tags: ['a', 'b'] }});
+        ";
+        let source_type = oxc_span::SourceType::default();
+        let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+        let mut visitor = FetchVisitor {
+            source,
+            file: "test.ts".to_string(),
+            fetches: Vec::new(),
+            is_client: false,
+            is_route_handler: false,
+        };
+        visitor.visit_program(&parsed.program);
+        assert_eq!(visitor.fetches.len(), 3);
+        assert!(visitor.fetches[0].cached);
+        assert_eq!(visitor.fetches[0].cache_kind, CacheKind::FetchCache);
+        assert!(visitor.fetches[1].cached);
+        assert_eq!(
+            visitor.fetches[1].cache_kind,
+            CacheKind::FetchNextRevalidate
+        );
+        assert!(visitor.fetches[2].cached);
+        assert_eq!(visitor.fetches[2].cache_kind, CacheKind::FetchNextTags);
+    }
+
+    #[test]
     fn test_visitor_no_args() {
         let allocator = oxc_allocator::Allocator::default();
         let source = "fetch();";
@@ -1183,6 +1242,7 @@ mod tests {
             import {} from './empty';
             import { type Bar } from './bar';
             import { Baz } from './baz';
+            import Widget, { type Props } from './widget';
         ";
         let source_type = oxc_span::SourceType::from_path(std::path::Path::new("test.ts")).unwrap();
         let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
@@ -1200,11 +1260,12 @@ mod tests {
                 _ => None,
             })
             .collect::<Vec<_>>();
-        assert_eq!(imports.len(), 4);
-        assert!(!is_runtime_import(imports[0], source));
-        assert!(is_runtime_import(imports[1], source));
-        assert!(!is_runtime_import(imports[2], source));
-        assert!(is_runtime_import(imports[3], source));
+        assert_eq!(imports.len(), 5);
+        assert!(!is_runtime_import(imports[0]));
+        assert!(is_runtime_import(imports[1]));
+        assert!(!is_runtime_import(imports[2]));
+        assert!(is_runtime_import(imports[3]));
+        assert!(is_runtime_import(imports[4]));
     }
 
     #[test]
