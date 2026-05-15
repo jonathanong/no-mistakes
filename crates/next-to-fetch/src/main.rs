@@ -3761,12 +3761,20 @@ mod tests {
 
         // inner layout does NOT import the target
         let inner_layout = app.join("dashboard/layout.tsx");
-        fs::write(&inner_layout, "export default function Layout({ children }) { return children; }").unwrap();
+        fs::write(
+            &inner_layout,
+            "export default function Layout({ children }) { return children; }",
+        )
+        .unwrap();
         let page = app.join("dashboard/page.tsx");
         fs::write(&page, "fetch('/api/dashboard');").unwrap();
         // outer layout DOES import the target
         let outer_layout = app.join("layout.tsx");
-        fs::write(&outer_layout, "import { x } from './target.ts'; fetch('/api/root');").unwrap();
+        fs::write(
+            &outer_layout,
+            "import { x } from './target.ts'; fetch('/api/root');",
+        )
+        .unwrap();
         let target = app.join("target.ts");
         fs::write(&target, "export const x = 1;").unwrap();
 
