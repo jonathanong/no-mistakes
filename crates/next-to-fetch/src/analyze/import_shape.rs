@@ -1,4 +1,6 @@
-use oxc_ast::ast::{Declaration, ExportNamedDeclaration, ImportDeclarationSpecifier, ImportOrExportKind};
+use oxc_ast::ast::{
+    Declaration, ExportNamedDeclaration, ImportDeclarationSpecifier, ImportOrExportKind,
+};
 
 pub(crate) fn is_runtime_import(import: &oxc_ast::ast::ImportDeclaration) -> bool {
     if import.import_kind == ImportOrExportKind::Type {

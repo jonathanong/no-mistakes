@@ -50,10 +50,8 @@ fn test_collect_imports_from_program_reuses_cached_value() {
     let mut import_cache = HashMap::new();
     let mut from_source = false;
     let _ = ast::with_program(&abs_path, &source, |program, _source| -> Result<()> {
-        let first =
-            collect_imports_from_program(&abs_path, program, &mut import_cache).unwrap();
-        let second =
-            collect_imports_from_program(&abs_path, program, &mut import_cache).unwrap();
+        let first = collect_imports_from_program(&abs_path, program, &mut import_cache).unwrap();
+        let second = collect_imports_from_program(&abs_path, program, &mut import_cache).unwrap();
         assert_eq!(first, second);
         assert_eq!(first.len(), 1);
         from_source = !first.is_empty();

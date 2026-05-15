@@ -86,9 +86,9 @@ fn test_is_runtime_export_declaration_variants() {
     assert_eq!(exports.len(), 5);
     assert!(!is_runtime_export(exports[0])); // export interface
     assert!(!is_runtime_export(exports[1])); // export type alias
-    assert!(is_runtime_export(exports[2]));  // export class
-    assert!(is_runtime_export(exports[3]));  // export function
-    assert!(is_runtime_export(exports[4]));  // export const
+    assert!(is_runtime_export(exports[2])); // export class
+    assert!(is_runtime_export(exports[3])); // export function
+    assert!(is_runtime_export(exports[4])); // export const
 }
 
 #[test]
