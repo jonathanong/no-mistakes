@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+cd "$(dirname "$0")/.."
+
 SRC_MAX=200
 TEST_MAX=500
 fail=0
