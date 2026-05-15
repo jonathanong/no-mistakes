@@ -37,7 +37,7 @@ while IFS=$'\t' read -r lines file; do
     fi
 done < <(echo "$json" | jq -r '.Rust?.reports[]?
   | select(.name | test("(^|/)crates/[^/]+/src/"))
-  | select(.name | test("/tests[/.]") | not)
+  | select(.name | test("(^|/)tests([/.]|$)") | not)
   | [.stats.code, .name] | @tsv')
 
 while IFS=$'\t' read -r lines file; do
@@ -48,9 +48,9 @@ while IFS=$'\t' read -r lines file; do
     fi
 done < <(echo "$json" | jq -r '.Rust?.reports[]?
   | select(
-      (.name | test("(^|/)crates/[^/]+/tests/")) or
-      (.name | test("(^|/)crates/[^/]+/src/.+/tests[/.]")) or
-      (.name | test("(^|/)crates/[^/]+/src/tests[/.]"))
+      (.name | test("(^|/)crates/[^/]+/tests([/.]|$)")) or
+      (.name | test("(^|/)crates/[^/]+/src/.+(^|/)tests([/.]|$)")) or
+      (.name | test("(^|/)crates/[^/]+/src/tests([/.]|$)"))
     )
   | [.stats.code, .name] | @tsv')
 

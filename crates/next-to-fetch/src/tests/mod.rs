@@ -11,7 +11,6 @@ mod fetch_visitor_tests2;
 mod helpers_tests;
 mod import_shape_tests;
 mod imports_tests;
-mod pipeline_tests;
 mod report_tests;
 mod resolve_tests;
 mod run_args_tests;

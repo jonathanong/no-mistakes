@@ -20,7 +20,6 @@ rg_stdout=$(rg -n -U --pcre2 \
     crates 2>"$_rg_stderr_tmp")
 rg_exit=$?
 rg_stderr=$(cat "$_rg_stderr_tmp")
-rm -f "$_rg_stderr_tmp"
 set -e
 
 if [ "$rg_exit" -ge 2 ]; then
@@ -40,6 +39,7 @@ if [ "$rg_exit" -eq 0 ]; then
     echo "    mod tests;"
     echo
     echo "and put the tests in src/<module>/tests.rs"
+  echo "or src/<module>/tests/mod.rs (with sibling files) for larger test modules"
     exit 1
 fi
 
