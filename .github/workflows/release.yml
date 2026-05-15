@@ -74,7 +74,8 @@ jobs:
               npm pkg set "dependencies.no-mistakes-core=^$version" --workspace "$pkg"
             fi
           done
-          
+          npm install --package-lock-only
+
           # Bump Rust crate versions
           node - "$version" <<'NODE'
             const fs = require("node:fs");
