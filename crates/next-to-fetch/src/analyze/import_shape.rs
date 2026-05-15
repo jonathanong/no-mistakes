@@ -36,16 +36,16 @@ pub(crate) fn is_runtime_export(export: &ExportNamedDeclaration) -> bool {
 
     if let Some(decl) = &export.declaration {
         return match decl {
-            Declaration::TSTypeAliasDeclaration(_) | Declaration::TSInterfaceDeclaration(_) => {
-                false
-            }
             Declaration::VariableDeclaration(d) => !d.declare,
             Declaration::FunctionDeclaration(d) => !d.declare,
             Declaration::ClassDeclaration(d) => !d.declare,
             Declaration::TSEnumDeclaration(d) => !d.declare,
             Declaration::TSModuleDeclaration(d) => !d.declare,
             Declaration::TSImportEqualsDeclaration(d) => d.import_kind == ImportOrExportKind::Value,
-            _ => true,
+            // oxc sets export_kind=Type for all remaining declaration types
+            // (TSTypeAliasDeclaration, TSInterfaceDeclaration, TSGlobalDeclaration),
+            // so this arm is only reached if a future oxc version changes that behaviour.
+            _ => false,
         };
     }
 
