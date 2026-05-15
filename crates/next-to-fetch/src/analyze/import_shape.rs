@@ -29,15 +29,15 @@ pub(crate) fn is_runtime_import(import: &oxc_ast::ast::ImportDeclaration) -> boo
 }
 
 pub(crate) fn is_runtime_export(export: &ExportNamedDeclaration, source: &str) -> bool {
+    if export.export_kind == ImportOrExportKind::Type {
+        return false;
+    }
+
     let raw = declaration_text(
         export.span().start as usize,
         export.span().end as usize,
         source,
-    )
-    .trim_start();
-    if raw.starts_with("export type ") {
-        return false;
-    }
+    );
 
     match parse_named_specifiers(raw) {
         Some(named_specifiers) => {

@@ -14,7 +14,10 @@ pub(crate) fn route_reaches_target(
     import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
 ) -> Result<bool> {
     let abs_path = path.canonicalize()?;
-    if abs_path == target {
+    let abs_target = target
+        .canonicalize()
+        .unwrap_or_else(|_| target.to_path_buf());
+    if abs_path == abs_target {
         return Ok(true);
     }
     if visited.contains(&abs_path) {
@@ -23,7 +26,7 @@ pub(crate) fn route_reaches_target(
     visited.insert(abs_path.clone());
 
     for import in collect_imports(&abs_path, import_cache)? {
-        if route_reaches_target(&import, target, visited, import_cache)? {
+        if route_reaches_target(&import, &abs_target, visited, import_cache)? {
             return Ok(true);
         }
     }

@@ -70,6 +70,7 @@ fn template_matchers_cover_structured_dynamic_values() {
         &["data-testid".to_string()],
         &["data-testid".to_string()],
     );
+    assert!(!selectors.is_empty());
     assert!(selectors.iter().all(|s| app.matches_playwright(s)));
 }
 

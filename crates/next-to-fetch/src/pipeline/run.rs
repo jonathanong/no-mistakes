@@ -13,7 +13,7 @@ use std::path::Path;
 
 pub(crate) fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalReport> {
     let root = base_root.join(&cli.root);
-    if !root.exists() {
+    if !root.is_dir() {
         anyhow::bail!("root directory does not exist: {}", root.display());
     }
     let stems = [".no-mistakes", ".next-to-fetch"];
@@ -25,7 +25,7 @@ pub(crate) fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalRep
         .frontend_root
         .unwrap_or_else(|| "app".to_string());
     let frontend_root = root.join(&frontend_root_name);
-    if !frontend_root.exists() {
+    if !frontend_root.is_dir() {
         anyhow::bail!(
             "frontend root directory does not exist: {}",
             frontend_root.display()
@@ -114,12 +114,12 @@ fn verify_targets_matched(
     matched_targets: &HashSet<String>,
 ) -> Result<()> {
     let unique_target_raws: HashSet<_> = target_specs.iter().map(|t| t.raw.as_str()).collect();
-    if !unique_target_raws.is_empty() && matched_targets.len() < unique_target_raws.len() {
-        let mut unmatched: Vec<_> = unique_target_raws
-            .iter()
-            .copied()
-            .filter(|target| !matched_targets.contains(*target))
-            .collect();
+    let mut unmatched: Vec<_> = unique_target_raws
+        .iter()
+        .copied()
+        .filter(|target| !matched_targets.contains(*target))
+        .collect();
+    if !unmatched.is_empty() {
         unmatched.sort();
         return Err(anyhow::anyhow!("Error: targets not found: {:?}", unmatched));
     }

@@ -2,11 +2,12 @@ use crate::analyze::file::analyze_file;
 use crate::pipeline::cache::Cache;
 use std::collections::{HashMap, HashSet};
 use std::fs;
-use std::path::Path;
 use tempfile::tempdir;
 
 #[test]
 fn test_analyze_file_not_exists() {
+    let dir = tempdir().unwrap();
+    let missing = dir.path().join("missing.ts");
     let mut visited = HashSet::new();
     let mut fetches = Vec::new();
     let mut cache = Cache {
@@ -14,8 +15,8 @@ fn test_analyze_file_not_exists() {
         imports: HashMap::new(),
     };
     analyze_file(
-        Path::new("missing.ts"),
-        Path::new("."),
+        &missing,
+        dir.path(),
         &mut visited,
         &mut fetches,
         &mut cache,

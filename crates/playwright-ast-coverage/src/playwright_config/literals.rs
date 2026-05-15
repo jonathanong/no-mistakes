@@ -46,6 +46,7 @@ pub fn parenthesized_expression<'a>(expression: &'a Expression<'a>) -> Option<&'
 fn string_array(array: &ArrayExpression<'_>, source: &str, name: &str) -> Result<Vec<String>> {
     let mut values = Vec::new();
     let mut saw_regex = false;
+    let mut saw_unsupported = false;
     for element in &array.elements {
         match element {
             ArrayExpressionElement::StringLiteral(literal) => {
@@ -57,11 +58,14 @@ fn string_array(array: &ArrayExpression<'_>, source: &str, name: &str) -> Result
                 values.push(ast::template_literal_text(template, source));
             }
             ArrayExpressionElement::RegExpLiteral(_) => saw_regex = true,
-            _ => {}
+            _ => saw_unsupported = true,
         }
     }
-    if values.is_empty() && saw_regex {
+    if saw_regex {
         anyhow::bail!("regular-expression {name} patterns are not supported; use string globs");
+    }
+    if saw_unsupported || values.is_empty() {
+        anyhow::bail!("expected string literal or string array for {name}");
     }
     Ok(values)
 }

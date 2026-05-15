@@ -8,8 +8,8 @@ export default defineConfig({
   },
   123: 'ignored',
   "testDir": `./tests`,
-  testMatch: ([`**/*.spec.ts`, /ignored/]),
-  testIgnore: [ignored, '**/skip/**'],
+  testMatch: (`**/*.spec.ts`),
+  testIgnore: ['**/skip/**'],
   use: ({ baseURL: `http://localhost:3000`, testIdAttribute: 'data-test' }),
   projects: [
     ignored,

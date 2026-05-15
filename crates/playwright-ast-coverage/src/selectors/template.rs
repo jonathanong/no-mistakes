@@ -6,11 +6,13 @@ impl TemplatePattern {
         if parts.iter().all(|part| part.is_empty()) {
             return None;
         }
+        let starts_static = parts.first().is_some_and(|part| !part.is_empty());
+        let ends_static = parts.last().is_some_and(|part| !part.is_empty());
         Some(Self {
             raw: raw.to_string(),
             parts,
-            starts_static: !raw.starts_with("${"),
-            ends_static: !raw.ends_with('}'),
+            starts_static,
+            ends_static,
         })
     }
 

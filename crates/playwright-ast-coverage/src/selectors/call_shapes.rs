@@ -83,12 +83,31 @@ pub(super) fn extract_get_by_test_id_call(
             Some((value.clone(), SelectorMatcher::Exact(value)))
         }
         oxc_ast::ast::Argument::RegExpLiteral(regex) => {
-            let value = regex.regex.pattern.text.to_string();
-            let compiled = regex::Regex::new(&value).ok();
+            use oxc_ast::ast::RegExpFlags;
+            let pattern = regex.regex.pattern.text.to_string();
+            let flags = regex.regex.flags;
+            let flags_str = flags.to_string();
+            // Build inline flag prefix for flags supported by the `regex` crate
+            let mut prefix = String::new();
+            if flags.contains(RegExpFlags::I) {
+                prefix.push('i');
+            }
+            if flags.contains(RegExpFlags::M) {
+                prefix.push('m');
+            }
+            if flags.contains(RegExpFlags::S) {
+                prefix.push('s');
+            }
+            let compiled_pattern = if prefix.is_empty() {
+                pattern.clone()
+            } else {
+                format!("(?{prefix}){pattern}")
+            };
+            let compiled = regex::Regex::new(&compiled_pattern).ok();
             Some((
-                format!("/{value}/"),
+                format!("/{pattern}/{flags_str}"),
                 SelectorMatcher::Regex {
-                    pattern: value,
+                    pattern: compiled_pattern,
                     compiled,
                 },
             ))

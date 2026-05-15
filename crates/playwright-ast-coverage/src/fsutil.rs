@@ -15,7 +15,7 @@ pub(crate) fn build_globset(patterns: &[String]) -> Result<GlobSet> {
 pub(crate) fn walk_files(root: &Path) -> Vec<PathBuf> {
     let mut files: Vec<PathBuf> = WalkDir::new(root)
         .into_iter()
-        .filter_entry(|entry| !is_skipped_dir(entry.path()))
+        .filter_entry(|entry| !(entry.file_type().is_dir() && is_skipped_dir(entry.path())))
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.file_type().is_file())
         .map(|entry| entry.into_path())
