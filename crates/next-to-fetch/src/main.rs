@@ -319,8 +319,7 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
 
     fn visit_variable_declaration(&mut self, declaration: &oxc_ast::ast::VariableDeclaration<'a>) {
         let previous_in_var_declaration = self.in_var_declaration;
-        self.in_var_declaration = declaration.kind
-            == oxc_ast::ast::VariableDeclarationKind::Var;
+        self.in_var_declaration = declaration.kind == oxc_ast::ast::VariableDeclarationKind::Var;
         walk::walk_variable_declaration(self, declaration);
         self.in_var_declaration = previous_in_var_declaration;
     }
@@ -689,7 +688,10 @@ fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalReport> {
                         Ok(reaches_wrapper_target) => reaches_wrapper_target,
                         Err(err) => return Err(err),
                     };
-                    if reaches_wrapper_target { wrapper_file_matches = true; break; }
+                    if reaches_wrapper_target {
+                        wrapper_file_matches = true;
+                        break;
+                    }
                 }
 
                 if wrapper_file_matches {
@@ -971,8 +973,12 @@ fn analyze_file(
         } else {
             inherited_is_client || has_use_client_directive
         };
-        let mut visitor =
-            FetchVisitor::new(&source, rel_file.as_str(), is_client, inherited_is_route_handler);
+        let mut visitor = FetchVisitor::new(
+            &source,
+            rel_file.as_str(),
+            is_client,
+            inherited_is_route_handler,
+        );
         visitor.visit_program(program);
         file_fetches.extend(visitor.fetches);
         let referenced_identifiers = collect_identifier_references(program);
@@ -1921,10 +1927,11 @@ mod tests {
         let mut import_cache = HashMap::new();
         let mut from_source = false;
         let _ = ast::with_program(&abs_path, &source, |program, source| -> Result<()> {
-            let first =
-                collect_imports_from_program(&abs_path, program, source, &mut import_cache).unwrap();
+            let first = collect_imports_from_program(&abs_path, program, source, &mut import_cache)
+                .unwrap();
             let second =
-                collect_imports_from_program(&abs_path, program, source, &mut import_cache).unwrap();
+                collect_imports_from_program(&abs_path, program, source, &mut import_cache)
+                    .unwrap();
             assert_eq!(first, second);
             assert_eq!(first.len(), 1);
             from_source = !first.is_empty();
@@ -2037,7 +2044,12 @@ mod tests {
             tracks_var_bindings: false,
         }];
         visitor.mark_identifier_shadowed_in_var_scope("fetch");
-        assert!(visitor.fetch_scope_stack.last().unwrap().shadowed_identifiers.contains("fetch"));
+        assert!(visitor
+            .fetch_scope_stack
+            .last()
+            .unwrap()
+            .shadowed_identifiers
+            .contains("fetch"));
     }
 
     #[test]
@@ -2780,7 +2792,8 @@ mod tests {
         let referenced_identifiers = collect_identifier_references(&parsed.program);
         assert!(is_import_used(import, &referenced_identifiers));
 
-        let unused_references: HashSet<String> = HashSet::from([String::from("other"), String::from("other2")]);
+        let unused_references: HashSet<String> =
+            HashSet::from([String::from("other"), String::from("other2")]);
         assert!(!is_import_used(import, &unused_references));
     }
 
@@ -2940,7 +2953,10 @@ mod tests {
         {
             let run_args = with_run_args_env(None, None);
             std::env::set_var(ENV_VAR, "next-to-fetch\x1f--root\x1f.");
-            assert_eq!(std::env::var(ENV_VAR).unwrap(), "next-to-fetch\x1f--root\x1f.");
+            assert_eq!(
+                std::env::var(ENV_VAR).unwrap(),
+                "next-to-fetch\x1f--root\x1f."
+            );
             let _guard = run_args.release();
             assert!(std::env::var_os(ENV_VAR).is_none());
         }
@@ -2956,7 +2972,10 @@ mod tests {
                 Some("next-to-fetch\x1f--root\x1f.".to_string()),
                 Some(previous.to_string()),
             );
-            assert_eq!(std::env::var(ENV_VAR).unwrap(), "next-to-fetch\x1f--root\x1f.");
+            assert_eq!(
+                std::env::var(ENV_VAR).unwrap(),
+                "next-to-fetch\x1f--root\x1f."
+            );
         }
 
         assert_eq!(std::env::var(ENV_VAR).unwrap(), previous);
@@ -3305,7 +3324,11 @@ mod tests {
         let helper = dir.path().join("helper.ts");
         fs::write(&helper, "export const helper = () => fetch('/api/helper');").unwrap();
         let file = dir.path().join("file.ts");
-        fs::write(&file, "import { helper } from './helper';\nfetch('/api/file');").unwrap();
+        fs::write(
+            &file,
+            "import { helper } from './helper';\nfetch('/api/file');",
+        )
+        .unwrap();
 
         let mut cache = Cache {
             files: HashMap::new(),
@@ -3424,16 +3447,8 @@ mod tests {
         let page = root.path().join("app/page.tsx");
         let middle = root.path().join("app/middle.ts");
         let target = root.path().join("app/target.ts");
-        fs::write(
-            &page,
-            "import { helper } from './middle';\nhelper();",
-        )
-        .unwrap();
-        fs::write(
-            &middle,
-            "import { helper } from './target';\nhelper();",
-        )
-        .unwrap();
+        fs::write(&page, "import { helper } from './middle';\nhelper();").unwrap();
+        fs::write(&middle, "import { helper } from './target';\nhelper();").unwrap();
         fs::write(&target, "fetch('/api/targeted');").unwrap();
 
         let mut cmd = Command::cargo_bin("next-to-fetch").unwrap();
@@ -3696,10 +3711,7 @@ mod tests {
         fs::write(&page, "fetch('/api/page');").unwrap();
 
         let mut cmd = Command::cargo_bin("next-to-fetch").unwrap();
-        cmd.arg("--root")
-            .arg(root.path())
-            .arg(&page)
-            .arg(&page);
+        cmd.arg("--root").arg(root.path()).arg(&page).arg(&page);
         cmd.assert().success();
     }
 
