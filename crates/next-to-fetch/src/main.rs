@@ -656,15 +656,12 @@ fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalReport> {
 
             if let Some(target_file) = &target.file {
                 let mut visited_targets = HashSet::new();
-                let reaches_route_target = match route_reaches_target(
+                let reaches_route_target = route_reaches_target(
                     &route.file,
                     target_file,
                     &mut visited_targets,
                     &mut cache.imports,
-                ) {
-                    Ok(reaches_route_target) => reaches_route_target,
-                    Err(err) => return Err(err),
-                };
+                )?;
                 if reaches_route_target {
                     matched = true;
                     matched_targets.insert(target.raw.clone());
@@ -679,15 +676,12 @@ fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalReport> {
                     }
 
                     let mut wrapper_targets = HashSet::new();
-                    let reaches_wrapper_target = match route_reaches_target(
+                    let reaches_wrapper_target = route_reaches_target(
                         wrapper_file,
                         target_file,
                         &mut wrapper_targets,
                         &mut cache.imports,
-                    ) {
-                        Ok(reaches_wrapper_target) => reaches_wrapper_target,
-                        Err(err) => return Err(err),
-                    };
+                    )?;
                     if reaches_wrapper_target {
                         wrapper_file_matches = true;
                         break;
@@ -711,7 +705,7 @@ fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalReport> {
 
         let route_is_route_handler = is_route_handler_file(&route.file);
         // Analyze the page/route file itself
-        let _route_is_client = match analyze_file(
+        let _route_is_client = analyze_file(
             &route.file,
             &root,
             &mut visited,
@@ -719,10 +713,7 @@ fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalReport> {
             &mut cache,
             false,
             route_is_route_handler,
-        ) {
-            Ok(route_is_client) => route_is_client,
-            Err(err) => return Err(err),
-        };
+        )?;
 
         // Traverse up and find parent layouts/loadings if it's a page (UI)
         if route_is_page {
@@ -966,13 +957,9 @@ fn analyze_file(
             .directives
             .iter()
             .any(|directive| directive.directive == "use client");
-        let is_client = if inherited_is_route_handler {
-            false
-        } else if has_use_server_directive {
-            false
-        } else {
-            inherited_is_client || has_use_client_directive
-        };
+        let is_client = !inherited_is_route_handler
+            && !has_use_server_directive
+            && (inherited_is_client || has_use_client_directive);
         let mut visitor = FetchVisitor::new(
             &source,
             rel_file.as_str(),
