@@ -187,19 +187,13 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
                 let mut cache_kind = CacheKind::None;
                 let line = self.source[..expr.span().start as usize].lines().count() + 1;
 
-                let (path, raw_path, is_dynamic, is_unsupported) = if let Some(arg) =
-                    expr.arguments.first()
-                {
-                    let result = extract_url_from_argument(arg, self.source);
-                    (result.path, result.raw_path, result.is_dynamic, result.is_unsupported)
-                } else {
-                    (
-                        "unknown".to_string(),
-                        "unknown".to_string(),
-                        true,
-                        true,
-                    )
-                };
+                let (path, raw_path, is_dynamic, is_unsupported) =
+                    if let Some(arg) = expr.arguments.first() {
+                        let result = extract_url_from_argument(arg, self.source);
+                        (result.path, result.raw_path, result.is_dynamic, result.is_unsupported)
+                    } else {
+                        ("unknown".to_string(), "unknown".to_string(), true, true)
+                    };
 
                 if let Some(Argument::ObjectExpression(obj)) = expr.arguments.get(1) {
                     for prop in &obj.properties {
@@ -325,11 +319,7 @@ fn extract_url_from_argument(arg: &Argument, source: &str) -> UrlExtraction {
         }
         _ => UrlExtraction {
             path: "dynamic".to_string(),
-            raw_path: source_text(
-                arg.span().start as usize,
-                arg.span().end as usize,
-                source,
-            )
+            raw_path: source_text(arg.span().start as usize, arg.span().end as usize, source)
             .unwrap_or_else(|| "dynamic".to_string()),
             is_dynamic: true,
             is_unsupported: true,
@@ -805,8 +795,12 @@ fn is_runtime_import(import: &oxc_ast::ast::ImportDeclaration) -> bool {
 }
 
 fn is_runtime_export(export: &ExportNamedDeclaration, source: &str) -> bool {
-    let raw = declaration_text(export.span().start as usize, export.span().end as usize, source)
-        .trim_start();
+    let raw = declaration_text(
+        export.span().start as usize,
+        export.span().end as usize,
+        source,
+    )
+    .trim_start();
     if raw.starts_with("export type ") {
         return false;
     }

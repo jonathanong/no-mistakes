@@ -76,21 +76,28 @@ jobs:
           done
           
           # Bump Rust crate versions
-          node -e "
-            const fs = require('node:fs');
+          node - "$version" <<'NODE'
+            const fs = require("node:fs");
             const version = process.argv[1];
-            const crates = ['Cargo.toml', 'crates/no-mistakes-core/Cargo.toml', 'crates/next-to-fetch/Cargo.toml', 'crates/playwright-ast-coverage/Cargo.toml'];
+            const crates = [
+              "Cargo.toml",
+              "crates/no-mistakes-core/Cargo.toml",
+              "crates/next-to-fetch/Cargo.toml",
+              "crates/playwright-ast-coverage/Cargo.toml",
+            ];
             for (const file of crates) {
               if (!fs.existsSync(file)) continue;
-              let cargo = fs.readFileSync(file, 'utf8')
-                .replace(/^version = \".*\"$/m, \`version = \"\${version}\"\`);
+              let cargo = fs.readFileSync(file, "utf8").replace(
+                /^version = ".*"$/m,
+                `version = "${version}"`,
+              );
               cargo = cargo.replace(
                 /(\s*no-mistakes-core\s*=\s*\{[^{}]*\bversion\s*=\s*)"[^"]*"/g,
-                \`$1\"\\${version}\"\`,
+                `$1"${version}"`,
               );
               fs.writeFileSync(file, cargo);
             }
-          " "$version"
+          NODE
           
           cargo update -w
           git add .
