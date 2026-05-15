@@ -62,6 +62,14 @@ struct FetchOccurrence {
     unsupported: bool,
 }
 
+#[derive(Eq, PartialEq)]
+struct UrlExtraction {
+    path: String,
+    raw_path: String,
+    is_dynamic: bool,
+    is_unsupported: bool,
+}
+
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[serde(rename_all = "lowercase")]
 #[allow(dead_code)]
@@ -165,19 +173,30 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
     fn visit_call_expression(&mut self, expr: &CallExpression<'a>) {
         if let Expression::Identifier(ident) = &expr.callee {
             if ident.name == "fetch" {
-                let url = "unknown".to_string();
-                let mut path = url;
+                let mut path = "unknown".to_string();
+                let mut raw_path = "unknown".to_string();
                 let mut method = "GET".to_string();
                 let mut is_dynamic = false;
+                let mut is_unsupported = false;
                 let mut cached = false;
                 let mut cache_kind = CacheKind::None;
                 let line = self.source[..expr.span.start as usize].lines().count() + 1;
 
                 if let Some(arg) = expr.arguments.first() {
                     let result = extract_url_from_argument(arg, self.source);
-                    let (path_from_arg, dynamic) = result;
+                    let (path_from_arg, raw_path_from_arg, dynamic, unsupported) = (
+                        result.path,
+                        result.raw_path,
+                        result.is_dynamic,
+                        result.is_unsupported,
+                    );
                     path = path_from_arg;
                     is_dynamic = dynamic;
+                    raw_path = raw_path_from_arg;
+                    is_unsupported = unsupported;
+                } else {
+                    is_dynamic = true;
+                    is_unsupported = true;
                 }
 
                 if let Some(Argument::ObjectExpression(obj)) = expr.arguments.get(1) {
@@ -204,7 +223,7 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
                 };
                 self.fetches.push(FetchOccurrence {
                     path: path.clone(),
-                    raw_path: path.clone(),
+                    raw_path,
                     method,
                     file: self.file.clone(),
                     line,
@@ -214,7 +233,7 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
                     cache_kind,
                     cached_function: None,
                     dynamic: is_dynamic,
-                    unsupported: is_dynamic,
+                    unsupported: is_unsupported,
                 });
             }
         }
@@ -274,15 +293,44 @@ fn extract_fetch_cache_options(obj: &oxc_ast::ast::ObjectExpression<'_>) -> (boo
     (cached, cache_kind)
 }
 
-fn extract_url_from_argument(arg: &Argument, source: &str) -> (String, bool) {
+fn extract_url_from_argument(arg: &Argument, source: &str) -> UrlExtraction {
     match arg {
-        Argument::StringLiteral(s) => (s.value.to_string(), false),
+        Argument::StringLiteral(s) => UrlExtraction {
+            path: s.value.to_string(),
+            raw_path: s.value.to_string(),
+            is_dynamic: false,
+            is_unsupported: false,
+        },
         Argument::TemplateLiteral(t) => {
             let is_dynamic = !t.expressions.is_empty();
-            (ast::template_literal_text(t, source), is_dynamic)
+            UrlExtraction {
+                path: ast::template_literal_text(t, source),
+                raw_path: source_text(t.span.start as usize, t.span.end as usize, source)
+                    .unwrap_or_else(|| "dynamic".to_string()),
+                is_dynamic,
+                is_unsupported: is_dynamic,
+            }
         }
-        _ => ("dynamic".to_string(), true),
+        _ => UrlExtraction {
+            path: "dynamic".to_string(),
+            raw_path: source_text(arg.span.start as usize, arg.span.end as usize, source)
+                .unwrap_or_else(|| "dynamic".to_string()),
+            is_dynamic: true,
+            is_unsupported: true,
+        },
     }
+}
+
+fn source_text(start: usize, end: usize, source: &str) -> Option<String> {
+    if start > end || end > source.len() {
+        return None;
+    }
+
+    if !source.is_char_boundary(start) || !source.is_char_boundary(end) {
+        return None;
+    }
+
+    Some(source[start..end].trim().to_string())
 }
 
 fn main() -> ExitCode {
@@ -334,6 +382,16 @@ fn run() -> Result<()> {
     let mut matched_targets = HashSet::new();
 
     for route in all_routes {
+        let route_is_page = route.file.file_stem().and_then(|s| s.to_str()) == Some("page");
+        let wrapper_files = if route_is_page {
+            collect_layout_chain_files(&route.file, &frontend_root)
+                .into_iter()
+                .filter_map(|path| path.canonicalize().ok())
+                .collect::<Vec<_>>()
+        } else {
+            Vec::new()
+        };
+
         let mut matched = target_specs.is_empty();
         for target in &target_specs {
             if target.raw == route.pattern
@@ -344,6 +402,26 @@ fn run() -> Result<()> {
             {
                 matched = true;
                 matched_targets.insert(target.raw.clone());
+                continue;
+            }
+
+            if let Some(target_file) = &target.file {
+                let mut visited_targets = HashSet::new();
+                if route_reaches_target(
+                    &route.file,
+                    target_file,
+                    &mut visited_targets,
+                    &mut cache.imports,
+                )? {
+                    matched = true;
+                    matched_targets.insert(target.raw.clone());
+                    continue;
+                }
+
+                if wrapper_files.iter().any(|file| file == target_file) {
+                    matched = true;
+                    matched_targets.insert(target.raw.clone());
+                }
             }
         }
 
@@ -354,8 +432,12 @@ fn run() -> Result<()> {
             is_client_route_file(&route.file)?
         };
 
-        let mut fetches = Vec::new();
         let mut visited = HashSet::new();
+        let mut fetches = Vec::new();
+
+        if !matched {
+            continue;
+        }
 
         // Analyze the page/route file itself
         analyze_file(
@@ -368,32 +450,8 @@ fn run() -> Result<()> {
             route_is_route_handler,
         )?;
 
-        if !target_specs.is_empty() {
-            for target in &target_specs {
-                if matched_targets.contains(target.raw.as_str()) {
-                    continue;
-                }
-                if let Some(target_file) = &target.file {
-                    let mut visited_targets = HashSet::new();
-                    if route_reaches_target(
-                        &route.file,
-                        target_file,
-                        &mut visited_targets,
-                        &mut cache.imports,
-                    )? {
-                        matched = true;
-                        matched_targets.insert(target.raw.clone());
-                    }
-                }
-            }
-        }
-
-        if !matched {
-            continue;
-        }
-
         // Traverse up and find parent layouts/loadings if it's a page (UI)
-        if route.file.file_stem().and_then(|s| s.to_str()) == Some("page") {
+        if route_is_page {
             let mut current = route.file.parent();
             while let Some(parent) = current {
                 if !parent.starts_with(&frontend_root) {
@@ -505,10 +563,14 @@ fn run() -> Result<()> {
     let mut duplicates = Vec::new();
     for ((method, path, side, rsc), occurrences) in duplicate_key_map {
         if occurrences.len() > 1 {
-            duplicates.push(DuplicateApiCall {
+        duplicates.push(DuplicateApiCall {
                 key: format!(
                     "{method} {path} {:?} {}",
-                    side,
+                    match side {
+                        FetchSide::Client => "client",
+                        FetchSide::Server => "server",
+                        FetchSide::Unknown => "unknown",
+                    },
                     if rsc { "rsc" } else { "non-rsc" }
                 ),
                 count: occurrences.len(),
@@ -562,7 +624,7 @@ fn run() -> Result<()> {
 fn analyze_file(
     path: &Path,
     root: &Path,
-    visited: &mut HashSet<PathBuf>,
+    visited: &mut HashSet<(PathBuf, bool, bool)>,
     fetches: &mut Vec<FetchOccurrence>,
     cache: &mut Cache,
     inherited_is_client: bool,
@@ -573,10 +635,11 @@ fn analyze_file(
     }
 
     let abs_path = path.canonicalize()?;
-    if visited.contains(&abs_path) {
+    let visit_key = (abs_path.clone(), inherited_is_client, inherited_is_route_handler);
+    if visited.contains(&visit_key) {
         return Ok(());
     }
-    visited.insert(abs_path.clone());
+    visited.insert(visit_key);
 
     if let Some(cached_fetches) = cache.files.get(&(
         abs_path.clone(),
@@ -789,6 +852,53 @@ fn route_reaches_target(
     Ok(false)
 }
 
+fn collect_layout_chain_files(route_file: &Path, frontend_root: &Path) -> Vec<PathBuf> {
+    let mut layout_files = Vec::new();
+    let mut current = route_file.parent();
+    while let Some(parent) = current {
+        if !parent.starts_with(frontend_root) {
+            break;
+        }
+
+        for stem in ["layout", "loading", "error", "not-found"] {
+            for ext in ["tsx", "ts", "jsx", "js"] {
+                let layout_file = parent.join(format!("{stem}.{ext}"));
+                if layout_file.exists() {
+                    layout_files.push(layout_file);
+                }
+            }
+        }
+
+        current = parent.parent();
+    }
+
+    layout_files
+}
+
+fn cache_kind_name(cache_kind: &CacheKind) -> &'static str {
+    match cache_kind {
+        CacheKind::None => "none",
+        CacheKind::FetchCache => "fetch-cache",
+        CacheKind::FetchNextRevalidate => "next-revalidate",
+        CacheKind::FetchNextTags => "next-tags",
+        CacheKind::ReactCache => "react-cache",
+        CacheKind::Cache => "cache",
+        CacheKind::UnstableCache => "unstable-cache",
+    }
+}
+
+fn fetch_cache_label(fetch: &FetchOccurrence) -> String {
+    if !fetch.cached {
+        return "no".to_string();
+    }
+
+    let kind = cache_kind_name(&fetch.cache_kind);
+    match &fetch.cached_function {
+        Some(cached_function) => format!("{kind} ({cached_function})"),
+        None => kind.to_string(),
+    }
+}
+
 fn resolve_target_file(root: &Path, target: &str) -> Result<PathBuf> {
     let trimmed = target.trim();
     if trimmed.is_empty() {
@@ -876,14 +986,14 @@ fn print_markdown_report(report: &FinalReport) {
         if route.api_calls.is_empty() {
             println!("(no fetches found)");
         } else {
-            println!("| Method | Path | Side | File | Line | RSC | Dynamic |");
-            println!("| --- | --- | --- | --- | --- | --- | --- |");
+            println!("| Method | Path | Side | File | Line | RSC | Dynamic | Cache |");
+            println!("| --- | --- | --- | --- | --- | --- | --- | --- |");
             let mut unique_fetches = route.api_calls.clone();
             unique_fetches.sort();
             unique_fetches.dedup();
             for fetch in &unique_fetches {
                 println!(
-                    "| {} | `{}` | {} | {} | {} | {} | {} |",
+                    "| {} | `{}` | {} | {} | {} | {} | {} | {} |",
                     fetch.method,
                     fetch.path,
                     if matches!(fetch.side, FetchSide::Client) {
@@ -894,7 +1004,8 @@ fn print_markdown_report(report: &FinalReport) {
                     fetch.file,
                     fetch.line,
                     if fetch.rsc { "yes" } else { "no" },
-                    if fetch.dynamic { "✅" } else { "❌" }
+                    if fetch.dynamic { "✅" } else { "❌" },
+                    fetch_cache_label(fetch)
                 );
             }
         }
@@ -948,7 +1059,12 @@ mod tests {
                 let arg = &call.arguments[0];
                 assert_eq!(
                     extract_url_from_argument(arg, source),
-                    ("dynamic".to_string(), true)
+                    UrlExtraction {
+                        path: "dynamic".to_string(),
+                        raw_path: "url".to_string(),
+                        is_dynamic: true,
+                        is_unsupported: true,
+                    }
                 );
             }
         }
@@ -1045,7 +1161,8 @@ mod tests {
         visitor.visit_program(&parsed.program);
         assert_eq!(visitor.fetches.len(), 1);
         assert_eq!(visitor.fetches[0].path, "unknown");
-        assert!(!visitor.fetches[0].dynamic);
+        assert!(visitor.fetches[0].dynamic);
+        assert!(visitor.fetches[0].unsupported);
     }
 
     #[test]
@@ -1470,7 +1587,7 @@ mod tests {
         fs::write(&file, "").unwrap();
 
         let mut visited = HashSet::new();
-        visited.insert(file.canonicalize().unwrap());
+        visited.insert((file.canonicalize().unwrap(), false, false));
         let mut fetches = Vec::new();
         let mut cache = Cache {
             files: HashMap::new(),

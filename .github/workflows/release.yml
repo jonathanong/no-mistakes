@@ -70,6 +70,9 @@ jobs:
           # Bump npm workspace versions
           for pkg in eslint-plugin-playwright-ast-coverage no-mistakes-core next-to-fetch playwright-ast-coverage; do
             npm version "$version" --workspace "$pkg" --no-git-tag-version
+            if [[ "$pkg" == "playwright-ast-coverage" || "$pkg" == "next-to-fetch" ]]; then
+              npm pkg set "dependencies.no-mistakes-core=^$version" --workspace "$pkg"
+            fi
           done
           
           # Bump Rust crate versions
