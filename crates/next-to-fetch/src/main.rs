@@ -3,6 +3,7 @@ use clap::Parser;
 use no_mistakes_core::ast;
 use no_mistakes_core::config;
 use no_mistakes_core::routes;
+use oxc_span::GetSpan;
 use oxc_ast::ast::{
     Argument, CallExpression, ExportNamedDeclaration, Expression, ImportDeclarationSpecifier,
     ImportOrExportKind, Statement,
@@ -168,15 +169,19 @@ struct FetchVisitor<'a> {
     is_client: bool,
     is_route_handler: bool,
     cached_function: Option<String>,
+    cached_kind: Option<CacheKind>,
 }
 
 impl<'a> Visit<'a> for FetchVisitor<'a> {
     fn visit_call_expression(&mut self, expr: &CallExpression<'a>) {
-        if let Some(wrapper_name) = cache_wrapper_name(expr) {
+        if let Some((wrapper_name, cached_kind)) = cache_wrapper_name(expr) {
             let previous_cached_function = self.cached_function.clone();
+            let previous_cached_kind = self.cached_kind.clone();
             self.cached_function = Some(wrapper_name.to_string());
+            self.cached_kind = Some(cached_kind);
             walk::walk_call_expression(self, expr);
             self.cached_function = previous_cached_function;
+            self.cached_kind = previous_cached_kind;
             return;
         }
 
@@ -200,7 +205,10 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
                         ("unknown".to_string(), "unknown".to_string(), true, true)
                     };
 
-                if let Some(Argument::ObjectExpression(obj)) = expr.arguments.get(1) {
+                if let Some(cached_kind) = &self.cached_kind {
+                    cached = true;
+                    cache_kind = cached_kind.clone();
+                } else if let Some(Argument::ObjectExpression(obj)) = expr.arguments.get(1) {
                     for prop in &obj.properties {
                         if let oxc_ast::ast::ObjectPropertyKind::ObjectProperty(p) = prop {
                             if let Some(name) = p.key.static_name() {
@@ -242,12 +250,13 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
     }
 }
 
-fn cache_wrapper_name(expr: &CallExpression<'_>) -> Option<&str> {
+fn cache_wrapper_name(expr: &CallExpression<'_>) -> Option<(&str, CacheKind)> {
     let Expression::Identifier(identifier) = &expr.callee else {
         return None;
     };
     match identifier.name.as_ref() {
-        "cache" | "unstable_cache" => Some(identifier.name.as_ref()),
+        "cache" => Some((identifier.name.as_ref(), CacheKind::ReactCache)),
+        "unstable_cache" => Some((identifier.name.as_ref(), CacheKind::UnstableCache)),
         _ => None,
     }
 }
@@ -404,7 +413,7 @@ fn run() -> Result<()> {
         };
 
         let mut matched = target_specs.is_empty();
-        for target in &target_specs {
+        'target_match: for target in &target_specs {
             if target.raw == route.pattern
                 || (!target.raw.ends_with('/')
                     && route.file.to_string_lossy().contains(&target.raw))
@@ -426,12 +435,27 @@ fn run() -> Result<()> {
                 )? {
                     matched = true;
                     matched_targets.insert(target.raw.clone());
-                    continue;
+                    continue 'target_match;
+                }
+
+                for wrapper_file in &wrapper_files {
+                    let mut visited_wrapper_targets = HashSet::new();
+                    if route_reaches_target(
+                        wrapper_file,
+                        target_file,
+                        &mut visited_wrapper_targets,
+                        &mut cache.imports,
+                    )? {
+                        matched = true;
+                        matched_targets.insert(target.raw.clone());
+                        continue 'target_match;
+                    }
                 }
 
                 if wrapper_files.iter().any(|file| file == target_file) {
                     matched = true;
                     matched_targets.insert(target.raw.clone());
+                    continue 'target_match;
                 }
             }
         }
@@ -683,6 +707,7 @@ fn analyze_file(
             is_client,
             is_route_handler: inherited_is_route_handler,
             cached_function: None,
+            cached_kind: None,
         };
         visitor.visit_program(program);
         file_fetches.extend(visitor.fetches);
@@ -1103,6 +1128,7 @@ mod tests {
             is_client: false,
             is_route_handler: false,
             cached_function: None,
+            cached_kind: None,
         };
         visitor.visit_program(&parsed.program);
         assert_eq!(visitor.fetches.len(), 0);
@@ -1127,6 +1153,7 @@ mod tests {
             is_client: false,
             is_route_handler: false,
             cached_function: None,
+            cached_kind: None,
         };
         visitor.visit_program(&parsed.program);
         assert_eq!(visitor.fetches.len(), 5);
@@ -1154,6 +1181,7 @@ mod tests {
             is_client: false,
             is_route_handler: false,
             cached_function: None,
+            cached_kind: None,
         };
         visitor.visit_program(&parsed.program);
         assert_eq!(visitor.fetches.len(), 3);
@@ -1181,6 +1209,7 @@ mod tests {
             is_client: false,
             is_route_handler: false,
             cached_function: None,
+            cached_kind: None,
         };
         visitor.visit_program(&parsed.program);
         assert_eq!(visitor.fetches.len(), 1);
@@ -1202,6 +1231,7 @@ mod tests {
             is_client: false,
             is_route_handler: false,
             cached_function: None,
+            cached_kind: None,
         };
         visitor.visit_program(&parsed.program);
         assert_eq!(visitor.fetches.len(), 3);
@@ -1231,6 +1261,7 @@ mod tests {
             is_client: false,
             is_route_handler: true,
             cached_function: None,
+            cached_kind: None,
         };
         visitor.visit_program(&parsed.program);
         assert_eq!(visitor.fetches.len(), 1);

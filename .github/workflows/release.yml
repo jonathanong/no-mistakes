@@ -78,7 +78,7 @@ jobs:
           # Bump Rust crate versions
           node - "$version" <<'NODE'
             const fs = require("node:fs");
-            const version = process.argv[1];
+            const version = process.argv[2];
             const crates = [
               "Cargo.toml",
               "crates/no-mistakes-core/Cargo.toml",
