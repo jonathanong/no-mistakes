@@ -1,8 +1,8 @@
-use crate::analyze::components::{extract_components, is_component_expr};
+use crate::analyze::components::is_component_name;
 use crate::analyze::import_table::ImportTable;
 use oxc_ast::ast::{
-    BindingPattern, JSXElementName, JSXMemberExpression, JSXMemberExpressionObject, Program,
-    Statement,
+    BindingPattern, Declaration, ExportDefaultDeclarationKind, JSXElementName, JSXMemberExpression,
+    JSXMemberExpressionObject, Program, Statement,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::Span;
@@ -94,26 +94,50 @@ fn jsx_member_suffix(m: &JSXMemberExpression<'_>) -> String {
 
 fn collect_local_components(program: &Program<'_>) -> HashMap<String, String> {
     let mut map: HashMap<String, String> = HashMap::new();
-    // Named exports from extract_components
-    for def in extract_components(program) {
-        if def.name != "default" {
-            map.insert(def.name.clone(), def.name);
-        } else {
-            // Try to find the function name for the default export from top-level vars
-            for stmt in &program.body {
-                if let Statement::VariableDeclaration(v) = stmt {
-                    for decl in &v.declarations {
-                        if let BindingPattern::BindingIdentifier(id) = &decl.id {
-                            let name = id.name.as_ref();
-                            if let Some(init) = &decl.init {
-                                if is_component_expr(init) {
-                                    map.insert(name.to_string(), "default".to_string());
+    for stmt in &program.body {
+        match stmt {
+            Statement::ExportDefaultDeclaration(e) => {
+                // `export default Page` — map local symbol "Page" -> "default"
+                if let ExportDefaultDeclarationKind::Identifier(id) = &e.declaration {
+                    map.insert(id.name.as_ref().to_string(), "default".to_string());
+                }
+            }
+            Statement::ExportNamedDeclaration(e) => {
+                if let Some(decl) = &e.declaration {
+                    // Inline export: local name == exported name
+                    match decl {
+                        Declaration::FunctionDeclaration(f) => {
+                            if let Some(id) = &f.id {
+                                if is_component_name(id.name.as_ref()) {
+                                    let n = id.name.as_ref().to_string();
+                                    map.insert(n.clone(), n);
                                 }
                             }
+                        }
+                        Declaration::VariableDeclaration(v) => {
+                            for d in &v.declarations {
+                                if let BindingPattern::BindingIdentifier(id) = &d.id {
+                                    if is_component_name(id.name.as_ref()) {
+                                        let n = id.name.as_ref().to_string();
+                                        map.insert(n.clone(), n);
+                                    }
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                } else {
+                    // `export { Foo, Bar as Baz }` — local symbol -> exported name
+                    for spec in &e.specifiers {
+                        let local = spec.local.name().as_ref().to_string();
+                        let exported = spec.exported.name().as_ref().to_string();
+                        if is_component_name(&local) {
+                            map.insert(local, exported);
                         }
                     }
                 }
             }
+            _ => {}
         }
     }
     map

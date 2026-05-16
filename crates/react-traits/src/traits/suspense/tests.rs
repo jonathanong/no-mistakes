@@ -66,6 +66,34 @@ fn detects_react_suspense_member() {
 }
 
 #[test]
+fn export_default_dynamic_is_suspense() {
+    // `export default dynamic(...)` — component itself is a dynamic wrapper
+    assert!(check("export default dynamic(() => import('./Heavy'));"));
+}
+
+#[test]
+fn export_default_lazy_is_suspense() {
+    // `export default lazy(...)` — component itself is a lazy wrapper
+    assert!(check("export default lazy(() => import('./Heavy'));"));
+}
+
+#[test]
+fn export_const_dynamic_component_is_suspense() {
+    // `export const Lazy = dynamic(...)` — named export dynamic wrapper is suspense
+    assert!(check(
+        "export const Lazy = dynamic(() => import('./Heavy'));"
+    ));
+}
+
+#[test]
+fn named_dynamic_component_rendered_from_named_export() {
+    // `export const Lazy = dynamic(...)` then render `<Lazy/>` — suspense from rendering it
+    assert!(check(
+        "export const Lazy = dynamic(() => import('./Heavy')); export default function App() { return <Lazy/>; }"
+    ));
+}
+
+#[test]
 fn suspense_outside_span_not_detected() {
     // Span that covers nothing — visit_jsx_opening_element returns early (line 16-17).
     let source =

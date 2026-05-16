@@ -1,6 +1,9 @@
+mod helpers;
+
+use helpers::is_class_component;
+pub(crate) use helpers::is_component_expr;
 use oxc_ast::ast::{
-    BindingPattern, Class, Declaration, ExportDefaultDeclarationKind, Expression, Program,
-    Statement,
+    BindingPattern, Declaration, ExportDefaultDeclarationKind, Expression, Program, Statement,
 };
 use oxc_span::Span;
 use std::collections::HashMap;
@@ -12,7 +15,7 @@ pub(crate) struct ComponentDef {
     pub(crate) span: Span,
 }
 
-fn is_component_name(name: &str) -> bool {
+pub(crate) fn is_component_name(name: &str) -> bool {
     name.chars().next().is_some_and(|c| c.is_uppercase())
 }
 
@@ -68,7 +71,7 @@ pub(crate) fn extract_components(program: &Program<'_>) -> Vec<ComponentDef> {
                             span: f.span,
                         });
                     }
-                    ExportDefaultDeclarationKind::ClassDeclaration(c) => {
+                    ExportDefaultDeclarationKind::ClassDeclaration(c) if is_class_component(c) => {
                         components.push(ComponentDef {
                             name: "default".to_string(),
                             span: c.span,
@@ -87,10 +90,22 @@ pub(crate) fn extract_components(program: &Program<'_>) -> Vec<ComponentDef> {
                             Expression::StaticMemberExpression(m) => m.property.name.as_ref(),
                             _ => "",
                         };
-                        if matches!(callee_name, "memo" | "forwardRef" | "lazy") {
+                        if matches!(callee_name, "memo" | "forwardRef" | "lazy" | "dynamic") {
+                            // If wrapping a named identifier, use that identifier's local span so
+                            // span-scoped trait visitors capture hooks inside the wrapped function.
+                            let component_span = if let Some(first_arg) = call.arguments.first() {
+                                if let Some(Expression::Identifier(id)) = first_arg.as_expression()
+                                {
+                                    local_vars.get(id.name.as_ref()).copied().unwrap_or(span)
+                                } else {
+                                    span
+                                }
+                            } else {
+                                span
+                            };
                             components.push(ComponentDef {
                                 name: "default".to_string(),
-                                span,
+                                span: component_span,
                             });
                         }
                     }
@@ -179,33 +194,3 @@ pub(crate) fn extract_components(program: &Program<'_>) -> Vec<ComponentDef> {
 
 #[cfg(test)]
 mod tests;
-
-fn is_class_component(c: &Class<'_>) -> bool {
-    let Some(super_class) = &c.super_class else {
-        return false;
-    };
-    match super_class {
-        Expression::Identifier(id) => id.name == "Component" || id.name == "PureComponent",
-        Expression::StaticMemberExpression(m) => {
-            matches!(&m.object, Expression::Identifier(obj) if obj.name == "React")
-                && (m.property.name == "Component" || m.property.name == "PureComponent")
-        }
-        _ => false,
-    }
-}
-
-pub(crate) fn is_component_expr(expr: &Expression<'_>) -> bool {
-    match expr {
-        Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_) => true,
-        Expression::CallExpression(call) => {
-            let name = match &call.callee {
-                Expression::Identifier(id) => id.name.as_ref(),
-                Expression::StaticMemberExpression(m) => m.property.name.as_ref(),
-                _ => return false,
-            };
-            matches!(name, "memo" | "forwardRef" | "lazy")
-        }
-        Expression::ParenthesizedExpression(p) => is_component_expr(&p.expression),
-        _ => false,
-    }
-}

@@ -1,5 +1,6 @@
 use oxc_ast::ast::{
-    BindingPattern, Expression, JSXElementName, Program, Statement, VariableDeclaration,
+    BindingPattern, Declaration, ExportDefaultDeclarationKind, Expression, JSXElementName, Program,
+    Statement, VariableDeclaration,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::Span;
@@ -35,15 +36,75 @@ impl<'a> Visit<'a> for SuspenseVisitor<'a> {
     }
 }
 
+fn overlaps(a: Span, b: Span) -> bool {
+    a.start < b.end && a.end > b.start
+}
+
 fn collect_dynamic_names(program: &Program<'_>) -> HashSet<String> {
     let mut names = HashSet::new();
     for stmt in &program.body {
-        let Statement::VariableDeclaration(v) = stmt else {
-            continue;
-        };
-        collect_from_var_decl(v, &mut names);
+        match stmt {
+            Statement::VariableDeclaration(v) => collect_from_var_decl(v, &mut names),
+            Statement::ExportNamedDeclaration(e) => {
+                if let Some(Declaration::VariableDeclaration(v)) = &e.declaration {
+                    collect_from_var_decl(v, &mut names);
+                }
+            }
+            _ => {}
+        }
     }
     names
+}
+
+fn is_component_direct_lazy(program: &Program<'_>, span: Span) -> bool {
+    for stmt in &program.body {
+        match stmt {
+            Statement::ExportDefaultDeclaration(e) if overlaps(e.span, span) => {
+                if let ExportDefaultDeclarationKind::CallExpression(call) = &e.declaration {
+                    if is_dynamic_or_lazy_call_by_callee(&call.callee) {
+                        return true;
+                    }
+                }
+            }
+            Statement::ExportNamedDeclaration(e) => {
+                if let Some(Declaration::VariableDeclaration(v)) = &e.declaration {
+                    for d in &v.declarations {
+                        if overlaps(d.span, span) {
+                            if let Some(init) = &d.init {
+                                if is_dynamic_or_lazy_call(init) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Statement::VariableDeclaration(v) => {
+                for d in &v.declarations {
+                    if overlaps(d.span, span) {
+                        if let Some(init) = &d.init {
+                            if is_dynamic_or_lazy_call(init) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    false
+}
+
+fn is_dynamic_or_lazy_call_by_callee(callee: &Expression<'_>) -> bool {
+    let name = match callee {
+        Expression::Identifier(id) => id.name.as_ref(),
+        Expression::StaticMemberExpression(m) if matches!(&m.object, Expression::Identifier(obj) if obj.name == "React") => {
+            m.property.name.as_ref()
+        }
+        _ => return false,
+    };
+    matches!(name, "dynamic" | "lazy")
 }
 
 fn collect_from_var_decl(v: &VariableDeclaration<'_>, names: &mut HashSet<String>) {
@@ -75,6 +136,9 @@ fn is_dynamic_or_lazy_call(expr: &Expression<'_>) -> bool {
 }
 
 pub(crate) fn detect_uses_suspense(program: &Program<'_>, span: Span) -> bool {
+    if is_component_direct_lazy(program, span) {
+        return true;
+    }
     let dynamic_names = collect_dynamic_names(program);
     let mut visitor = SuspenseVisitor {
         has_suspense: false,

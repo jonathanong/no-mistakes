@@ -63,7 +63,7 @@ fn export_default_lazy() {
 
 #[test]
 fn export_default_class() {
-    let names = check_names("export default class Foo {}");
+    let names = check_names("export default class Foo extends Component {}");
     assert_eq!(names, vec!["default"]);
 }
 
@@ -291,6 +291,34 @@ fn export_list_resolves_function_decl() {
     // `function Foo() {}; export { Foo };` — FunctionDeclaration via export-list
     let names = check_names("function Foo() { return <div/>; }\nexport { Foo };");
     assert_eq!(names, vec!["Foo"]);
+}
+
+#[test]
+fn export_default_class_no_superclass_not_component() {
+    // Default class without Component ancestry — should NOT be extracted (P2 guard)
+    let names = check_names("export default class Foo {}");
+    assert!(names.is_empty());
+}
+
+#[test]
+fn export_default_class_extends_component_is_component() {
+    let names = check_names("export default class Foo extends Component {}");
+    assert_eq!(names, vec!["default"]);
+}
+
+#[test]
+fn export_default_memo_wraps_identifier_uses_decl_span() {
+    // `const Page = (props) => ...; export default memo(Page)` — span should cover Page's decl
+    // We just verify extraction succeeds and the name is "default"
+    let names = check_names("const Page = (props) => <div/>;\nexport default memo(Page);");
+    assert_eq!(names, vec!["default"]);
+}
+
+#[test]
+fn export_default_dynamic_extracted_as_component() {
+    // `export default dynamic(...)` should be extracted (dynamic added to callee list)
+    let names = check_names("export default dynamic(() => import('./Heavy'));");
+    assert_eq!(names, vec!["default"]);
 }
 
 #[test]

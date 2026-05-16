@@ -126,6 +126,36 @@ fn no_memo_wrapped_computed_callee() {
 }
 
 #[test]
+fn named_export_memo_wrapper_detected() {
+    // `export const Foo = memo(() => <div/>)` — named export memo wrapper should be usesMemo
+    let source = "export const Foo = memo(() => <div/>);";
+    let path = std::path::Path::new("test.tsx");
+    let span = oxc_span::Span::new(0, source.len() as u32);
+    let result = no_mistakes_core::ast::with_program(path, source, |program, _| {
+        let defs = crate::analyze::components::extract_components(program);
+        let foo_def = defs.iter().find(|d| d.name == "Foo").cloned().unwrap();
+        super::detect_uses_memo(program, span, &foo_def)
+    })
+    .unwrap();
+    assert!(result);
+}
+
+#[test]
+fn named_export_react_memo_wrapper_detected() {
+    // `export const Foo = React.memo(() => <div/>)` — React.memo on named export
+    let source = "export const Foo = React.memo(() => <div/>);";
+    let path = std::path::Path::new("test.tsx");
+    let span = oxc_span::Span::new(0, source.len() as u32);
+    let result = no_mistakes_core::ast::with_program(path, source, |program, _| {
+        let defs = crate::analyze::components::extract_components(program);
+        let foo_def = defs.iter().find(|d| d.name == "Foo").cloned().unwrap();
+        super::detect_uses_memo(program, span, &foo_def)
+    })
+    .unwrap();
+    assert!(result);
+}
+
+#[test]
 fn use_memo_outside_span_not_detected() {
     // Span that covers nothing — visit_call_expression returns early (line 18).
     let source = "export default function App() { const x = useMemo(() => 1, []); return null; }";

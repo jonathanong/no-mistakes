@@ -123,6 +123,34 @@ fn no_props_memo_wrapped_no_params() {
 }
 
 #[test]
+fn has_props_default_identifier_export_with_arrow() {
+    // `const Page = (props) => ...; export default Page;` — detects props via local decl span
+    let (has_props, _) = check("const Page = (props) => <div/>;\nexport default Page;");
+    assert!(has_props);
+}
+
+#[test]
+fn has_props_default_identifier_export_with_function() {
+    // `function Page(props) {}; export default Page;` — detects props via FunctionDeclaration span
+    let (has_props, _) = check("function Page(props) { return <div/>; }\nexport default Page;");
+    assert!(has_props);
+}
+
+#[test]
+fn no_props_default_identifier_export_no_params() {
+    // `const Page = () => ...; export default Page;` — no params, should be false
+    let (has_props, _) = check("const Page = () => <div/>;\nexport default Page;");
+    assert!(!has_props);
+}
+
+#[test]
+fn has_props_export_list_arrow() {
+    // `const Foo = (props) => ...; export { Foo };` — detects props via local decl
+    let (has_props, _) = check("const Foo = (props) => <div/>;\nexport { Foo };");
+    assert!(has_props);
+}
+
+#[test]
 fn jsx_props_outside_span_not_detected() {
     // Span that covers nothing — visit_jsx_opening_element returns early (line 22-24).
     let source = "export default function App() { return <Child name=\"x\" />; }";

@@ -15,19 +15,22 @@ pub(crate) fn run_analyze(
 ) -> Result<Vec<ComponentFacts>> {
     let (root, file_config) = load_root_and_config(base_root, cli)?;
     let frontend_root = root.join(file_config.frontend_root.as_deref().unwrap_or("app"));
-    if !frontend_root.exists() {
-        anyhow::bail!("frontend root not found: {}", frontend_root.display());
-    }
     // Expand globs from root first; only fall back to frontend_root when root yields no matches.
-    // This avoids doubling filesystem traversal on large repos when patterns are already rooted.
+    // Skip the frontend_root.exists() gate entirely when patterns match at root level.
     let files = if !targets.is_empty() {
         let from_root = expand_globs(&root, targets)?;
         if !from_root.is_empty() {
             from_root
         } else {
+            if !frontend_root.exists() {
+                anyhow::bail!("frontend root not found: {}", frontend_root.display());
+            }
             expand_globs(&frontend_root, targets)?
         }
     } else {
+        if !frontend_root.exists() {
+            anyhow::bail!("frontend root not found: {}", frontend_root.display());
+        }
         expand_globs(&frontend_root, targets)?
     };
 

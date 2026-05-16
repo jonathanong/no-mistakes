@@ -159,6 +159,30 @@ fn run_analyze_child_with_mismatched_name_is_skipped() {
 }
 
 #[test]
+fn run_analyze_missing_frontend_root_ok_when_root_matches() {
+    // When targets match at root level, the frontend_root.exists() check is skipped,
+    // even if the configured frontendRoot doesn't exist.
+    let fixture_root = fixture("react-traits-config", "missing-frontend-root");
+    let cli = make_cli(PathBuf::from("."));
+    let targets = vec!["Greeting.tsx".to_string()];
+    let results = run_analyze(&fixture_root, &cli, &targets, None).expect("should succeed");
+    assert_eq!(results.len(), 1);
+}
+
+#[test]
+fn run_analyze_missing_frontend_root_err_when_no_root_match() {
+    // When targets do NOT match at root and frontend_root is missing, error is returned.
+    let fixture_root = fixture("react-traits-config", "missing-frontend-root");
+    let cli = make_cli(PathBuf::from("."));
+    let targets = vec!["app/components/Greeting.tsx".to_string()];
+    let result = run_analyze(&fixture_root, &cli, &targets, None);
+    assert!(
+        result.is_err(),
+        "should error when frontend_root is missing and root yields no match"
+    );
+}
+
+#[test]
 fn run_analyze_invalid_glob_returns_error() {
     // An invalid glob pattern causes expand_globs to fail, exercising the `?` at line 21.
     let fixture_root = fixture("react-traits-components", "basic");

@@ -121,3 +121,45 @@ fn same_file_component_resolved() {
     .unwrap();
     assert_eq!(names, vec!["Child"]);
 }
+
+#[test]
+fn same_file_aliased_export_resolved_by_local_name() {
+    // `export { Foo as Bar }` — JSX uses `<Foo/>` (local name), should resolve to "Bar"
+    let dir = fixture_dir();
+    let file = dir.join("Consumer.tsx");
+    let source =
+        "const Foo = () => <div/>;\nexport { Foo as Bar };\nexport default function P() { return <Foo/>; }";
+    let names = ast::with_program(&file, source, |program, _| {
+        let table = build_import_table(&file, program);
+        let span = oxc_span::Span::new(0, source.len() as u32);
+        collect_jsx_children(program, &table, &file.to_path_buf(), span)
+            .into_iter()
+            .map(|(_, name)| name)
+            .collect::<Vec<_>>()
+    })
+    .unwrap();
+    assert_eq!(names, vec!["Bar"]);
+}
+
+#[test]
+fn same_file_default_export_identifier_not_mapped_to_other_components() {
+    // `const Foo = () => ...; const Page = () => ...; export default Page;`
+    // Only "Page" should map to "default"; "Foo" should NOT be in the local_components map.
+    let dir = fixture_dir();
+    let file = dir.join("Consumer.tsx");
+    let source = "const Foo = () => <div/>;\nconst Page = () => <Foo/>;\nexport default Page;";
+    let names = ast::with_program(&file, source, |program, _| {
+        let table = build_import_table(&file, program);
+        let span = oxc_span::Span::new(0, source.len() as u32);
+        collect_jsx_children(program, &table, &file.to_path_buf(), span)
+            .into_iter()
+            .map(|(_, name)| name)
+            .collect::<Vec<_>>()
+    })
+    .unwrap();
+    // <Foo/> is rendered inside Page; Foo is not in the export map, so it's not resolved
+    assert!(
+        names.is_empty(),
+        "Foo should not be mapped as a child since it is not exported"
+    );
+}

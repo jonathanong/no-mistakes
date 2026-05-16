@@ -1,5 +1,7 @@
 use crate::analyze::components::ComponentDef;
-use oxc_ast::ast::{ExportDefaultDeclarationKind, Expression, Program, Statement};
+use oxc_ast::ast::{
+    BindingPattern, Declaration, ExportDefaultDeclarationKind, Expression, Program, Statement,
+};
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::Span;
 
@@ -37,25 +39,42 @@ impl<'a> Visit<'a> for MemoVisitor {
     }
 }
 
-fn is_wrapped_in_memo(program: &Program<'_>, def: &ComponentDef) -> bool {
-    if def.name != "default" {
-        return false;
+fn memo_callee_name<'a>(callee: &'a Expression<'_>) -> &'a str {
+    match callee {
+        Expression::Identifier(id) => id.name.as_ref(),
+        Expression::StaticMemberExpression(m) if matches!(&m.object, Expression::Identifier(obj) if obj.name == "React") => {
+            m.property.name.as_ref()
+        }
+        _ => "",
     }
+}
+
+fn is_wrapped_in_memo(program: &Program<'_>, def: &ComponentDef) -> bool {
     for stmt in &program.body {
-        let Statement::ExportDefaultDeclaration(e) = stmt else {
-            continue;
-        };
-        if let ExportDefaultDeclarationKind::CallExpression(call) = &e.declaration {
-            let name = match &call.callee {
-                Expression::Identifier(id) => id.name.as_ref(),
-                Expression::StaticMemberExpression(m) if matches!(&m.object, Expression::Identifier(obj) if obj.name == "React") => {
-                    m.property.name.as_ref()
+        match stmt {
+            Statement::ExportDefaultDeclaration(e) if def.name == "default" => {
+                if let ExportDefaultDeclarationKind::CallExpression(call) = &e.declaration {
+                    if memo_callee_name(&call.callee) == "memo" {
+                        return true;
+                    }
                 }
-                _ => "",
-            };
-            if name == "memo" {
-                return true;
             }
+            Statement::ExportNamedDeclaration(e) if def.name != "default" => {
+                if let Some(Declaration::VariableDeclaration(v)) = &e.declaration {
+                    for d in &v.declarations {
+                        if let BindingPattern::BindingIdentifier(id) = &d.id {
+                            if id.name.as_ref() == def.name {
+                                if let Some(Expression::CallExpression(call)) = &d.init {
+                                    if memo_callee_name(&call.callee) == "memo" {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            _ => {}
         }
     }
     false

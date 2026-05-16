@@ -108,6 +108,31 @@ fn has_function_params(program: &Program<'_>, span: Span) -> bool {
                     }
                 }
             }
+            // Non-exported top-level decls whose span was used as the component span
+            // (e.g. `const Page = (props) => ...; export default Page;`)
+            Statement::VariableDeclaration(v) => {
+                for d in &v.declarations {
+                    if !overlaps(d.span, span) {
+                        continue;
+                    }
+                    match &d.init {
+                        Some(Expression::ArrowFunctionExpression(a))
+                            if !a.params.items.is_empty() =>
+                        {
+                            return true;
+                        }
+                        Some(Expression::FunctionExpression(f)) if !f.params.items.is_empty() => {
+                            return true;
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            Statement::FunctionDeclaration(f)
+                if !f.params.items.is_empty() && overlaps(f.span, span) =>
+            {
+                return true;
+            }
             _ => {}
         }
     }
