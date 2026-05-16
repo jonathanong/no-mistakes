@@ -214,3 +214,39 @@ fn outer_dynamic_shadowed_by_inner_non_dynamic_not_suspense() {
         "inner non-dynamic shadow should suppress outer dynamic"
     );
 }
+
+#[test]
+fn function_parameter_shadows_outer_dynamic() {
+    // `function App({ Lazy }) { return <Lazy/>; }` — param Lazy shadows outer dynamic binding.
+    let source =
+        "const Lazy = dynamic(() => import('./Foo'));\nfunction App({ Lazy }) { return <Lazy/>; }";
+    let path = std::path::Path::new("test.tsx");
+    let app_start = source.find("function App").unwrap() as u32;
+    let span = oxc_span::Span::new(app_start, source.len() as u32);
+    let result = no_mistakes_core::ast::with_program(path, source, |program, _| {
+        super::detect_uses_suspense(program, span)
+    })
+    .unwrap();
+    assert!(
+        !result,
+        "function parameter should shadow outer dynamic and suppress suspense"
+    );
+}
+
+#[test]
+fn function_declaration_shadows_outer_dynamic() {
+    // `function App() { function Lazy() {} return <Lazy/>; }` — inner fn name shadows outer dynamic.
+    let source =
+        "const Lazy = dynamic(() => import('./Foo'));\nfunction App() { function Lazy() {} return <Lazy/>; }";
+    let path = std::path::Path::new("test.tsx");
+    let app_start = source.find("function App").unwrap() as u32;
+    let span = oxc_span::Span::new(app_start, source.len() as u32);
+    let result = no_mistakes_core::ast::with_program(path, source, |program, _| {
+        super::detect_uses_suspense(program, span)
+    })
+    .unwrap();
+    assert!(
+        !result,
+        "inner function declaration should shadow outer dynamic and suppress suspense"
+    );
+}

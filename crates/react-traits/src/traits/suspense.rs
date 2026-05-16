@@ -1,9 +1,10 @@
 use oxc_ast::ast::{
-    BindingPattern, Declaration, ExportDefaultDeclarationKind, Expression, JSXElementName, Program,
-    Statement, VariableDeclaration,
+    BindingPattern, Declaration, ExportDefaultDeclarationKind, Expression, Function,
+    JSXElementName, Program, Statement, VariableDeclaration,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::Span;
+use oxc_syntax::scope::ScopeFlags;
 use std::collections::HashSet;
 
 struct DynamicNameCollector {
@@ -18,6 +19,28 @@ impl<'a> Visit<'a> for DynamicNameCollector {
         let in_component = within(v.span, self.component_span);
         collect_from_var_decl(v, in_component, self);
         walk::walk_variable_declaration(self, v);
+    }
+
+    fn visit_binding_pattern(&mut self, it: &BindingPattern<'a>) {
+        // Track every BindingIdentifier within the component span as a potential
+        // shadow of an outer dynamic name (covers function params, destructuring, etc.).
+        if let BindingPattern::BindingIdentifier(id) = it {
+            if within(id.span, self.component_span) {
+                self.inner_non_dynamic.insert(id.name.as_ref().to_string());
+            }
+        }
+        walk::walk_binding_pattern(self, it);
+    }
+
+    fn visit_function(&mut self, func: &Function<'a>, flags: ScopeFlags) {
+        // A function declaration name (e.g. `function Lazy() {}`) inside the component
+        // span shadows any outer `const Lazy = dynamic(...)` binding.
+        if within(func.span, self.component_span) {
+            if let Some(id) = &func.id {
+                self.inner_non_dynamic.insert(id.name.as_ref().to_string());
+            }
+        }
+        walk::walk_function(self, func, flags);
     }
 }
 

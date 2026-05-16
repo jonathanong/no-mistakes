@@ -92,29 +92,29 @@ fn aggregate_children(
                 Err(_) => continue,
             }
         }
-        let components = file_cache
+        // Clone only the matching component (not the whole Vec) so the borrow of
+        // file_cache is dropped before the recursive mutable borrow in aggregate_children.
+        let child_facts_opt = file_cache
             .get(&child_path)
             .or_else(|| child_canonical.as_ref().and_then(|p| file_cache.get(p)))
-            .unwrap()
-            .clone();
-        for child_facts in &components {
-            if child_facts.name == child_ref.name {
-                agg.has_state |= child_facts.has_state;
-                agg.has_props |= child_facts.has_props;
-                agg.passes_props |= child_facts.passes_props;
-                agg.uses_memo |= child_facts.uses_memo;
-                agg.uses_context_provider |= child_facts.uses_context_provider;
-                agg.uses_suspense |= child_facts.uses_suspense;
-                agg.has_fetch |= !child_facts.fetches.is_empty();
-                let child_agg = aggregate_children(child_facts, file_cache, root, visited);
-                agg.has_state |= child_agg.has_state;
-                agg.has_fetch |= child_agg.has_fetch;
-                agg.uses_suspense |= child_agg.uses_suspense;
-                agg.uses_context_provider |= child_agg.uses_context_provider;
-                agg.uses_memo |= child_agg.uses_memo;
-                agg.has_props |= child_agg.has_props;
-                agg.passes_props |= child_agg.passes_props;
-            }
+            .and_then(|comps| comps.iter().find(|c| c.name == child_ref.name))
+            .cloned();
+        if let Some(child_facts) = child_facts_opt {
+            agg.has_state |= child_facts.has_state;
+            agg.has_props |= child_facts.has_props;
+            agg.passes_props |= child_facts.passes_props;
+            agg.uses_memo |= child_facts.uses_memo;
+            agg.uses_context_provider |= child_facts.uses_context_provider;
+            agg.uses_suspense |= child_facts.uses_suspense;
+            agg.has_fetch |= !child_facts.fetches.is_empty();
+            let child_agg = aggregate_children(&child_facts, file_cache, root, visited);
+            agg.has_state |= child_agg.has_state;
+            agg.has_fetch |= child_agg.has_fetch;
+            agg.uses_suspense |= child_agg.uses_suspense;
+            agg.uses_context_provider |= child_agg.uses_context_provider;
+            agg.uses_memo |= child_agg.uses_memo;
+            agg.has_props |= child_agg.has_props;
+            agg.passes_props |= child_agg.passes_props;
         }
     }
     agg
