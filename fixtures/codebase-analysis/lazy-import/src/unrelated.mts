@@ -1,0 +1,1 @@
+import './unrelated-dep.mts';

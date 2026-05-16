@@ -1,0 +1,9 @@
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - run: cargo run -p tool-one -- --help
+      - run: cargo run -p tool-one --bin side-tool -- --help
+      - run: cargo run --bin pg-schema -- --help
+      - run: target/x86_64-unknown-linux-gnu/release/pg-schema --version
+      - run: cargo run -p excluded -- --help
