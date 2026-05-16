@@ -129,6 +129,20 @@ describe("static-fetch-method", () => {
     );
   });
 
+  it("accepts fetch with string literal method key and literal value", () => {
+    assert.deepEqual(
+      messages("fetch('https://api.example.com', { 'method': 'POST' });", "static-fetch-method"),
+      [],
+    );
+  });
+
+  it("reports string literal method key with non-literal value", () => {
+    assert.deepEqual(
+      messages("fetch('https://api.example.com', { 'method': verb });", "static-fetch-method"),
+      ["dynamic"],
+    );
+  });
+
   it("reports identifier method values", () => {
     assert.deepEqual(
       messages("fetch('https://api.example.com', { method: method });", "static-fetch-method"),

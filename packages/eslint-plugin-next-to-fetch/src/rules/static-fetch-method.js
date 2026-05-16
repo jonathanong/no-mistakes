@@ -23,8 +23,8 @@ module.exports = rule(
         (p) =>
           p.type === "Property" &&
           !p.computed &&
-          p.key.type === "Identifier" &&
-          p.key.name === "method",
+          ((p.key.type === "Identifier" && p.key.name === "method") ||
+            (p.key.type === "Literal" && p.key.value === "method")),
       );
       if (!methodProp) return;
       if (!isStaticString(methodProp.value)) {
