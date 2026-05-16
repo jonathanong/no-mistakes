@@ -29,13 +29,12 @@ pub fn collect_routes(frontend_root: &Path, stems: &[&str]) -> Vec<Route> {
             continue;
         }
 
-        let Ok(relative) = path.strip_prefix(frontend_root) else {
-            continue;
-        };
-        routes.push(Route {
-            file: path.to_path_buf(),
-            pattern: path_to_route_pattern(relative),
-        });
+        if let Ok(relative) = path.strip_prefix(frontend_root) {
+            routes.push(Route {
+                file: path.to_path_buf(),
+                pattern: path_to_route_pattern(relative),
+            });
+        }
     }
 
     routes.sort_by(|a, b| a.pattern.cmp(&b.pattern).then_with(|| a.file.cmp(&b.file)));
