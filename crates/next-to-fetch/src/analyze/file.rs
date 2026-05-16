@@ -71,7 +71,7 @@ pub(crate) fn analyze_file(
         file_fetches.extend(visitor.fetches);
         let referenced_identifiers = collect_identifier_references(program);
         let imports =
-            collect_runtime_imports_from_program(&abs_path, program, &referenced_identifiers)?;
+            collect_runtime_imports_from_program(&abs_path, program, &referenced_identifiers);
         for import in imports {
             match analyze_file(
                 &import,

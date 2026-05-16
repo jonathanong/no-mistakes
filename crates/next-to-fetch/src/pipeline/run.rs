@@ -32,7 +32,7 @@ pub(crate) fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalRep
         );
     }
     let stems = ["page", "route"];
-    let all_routes = routes::collect_routes(&frontend_root, &stems)?;
+    let all_routes = routes::collect_routes(&frontend_root, &stems);
 
     let mut cache = Cache {
         files: HashMap::new(),
@@ -53,6 +53,8 @@ fn resolve_targets(base_root: &Path, root: &Path, targets: &[String]) -> Result<
     let mut unique_targets = HashSet::new();
     for target in targets {
         if unique_targets.insert(target.clone()) {
+            // Targets that look like route patterns (e.g. "/users") won't resolve as files;
+            // that's expected — `file: None` causes route-pattern matching downstream.
             let file = resolve_target_file(root, target)
                 .or_else(|_| resolve_target_file(base_root, target))
                 .ok();

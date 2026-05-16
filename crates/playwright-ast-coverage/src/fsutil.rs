@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
@@ -47,6 +47,8 @@ pub(crate) fn absolutize(path: &Path) -> Result<PathBuf> {
     if path.is_absolute() {
         Ok(path.to_path_buf())
     } else {
-        Ok(std::env::current_dir()?.join(path))
+        let cwd =
+            std::env::current_dir().context("current working directory must be accessible")?;
+        Ok(cwd.join(path))
     }
 }

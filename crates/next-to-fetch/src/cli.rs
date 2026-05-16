@@ -1,6 +1,6 @@
 use crate::pipeline::run::run_with_base_root;
 use crate::report::print::print_markdown_report;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -31,10 +31,14 @@ pub fn run_cli() -> Result<ExitCode> {
     } else {
         Cli::parse()
     };
-    let base_root = std::env::current_dir()?;
+    let base_root =
+        std::env::current_dir().context("current working directory must be accessible")?;
     let report = run_with_base_root(&base_root, &cli)?;
     if cli.json {
-        println!("{}", serde_json::to_string_pretty(&report)?);
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&report).context("failed to serialize report as JSON")?
+        );
     } else {
         print_markdown_report(&report);
     }
