@@ -81,17 +81,20 @@ fn resolve_child(
 }
 
 fn imported_binding(import: &ImportBinding, facts: &FileFacts) -> Option<String> {
-    if import.imported != "default"
-        && (facts.exports.contains(&import.imported)
-            || facts.bindings.contains_key(&import.imported))
-    {
+    if let Some(local) = facts.exports.get(&import.imported) {
+        return Some(local.clone());
+    }
+    if import.imported != "default" && facts.bindings.contains_key(&import.imported) {
         return Some(import.imported.clone());
     }
-    if facts.exports.contains(&import.local) || facts.bindings.contains_key(&import.local) {
+    if let Some(local) = facts.exports.get(&import.local) {
+        return Some(local.clone());
+    }
+    if facts.bindings.contains_key(&import.local) {
         return Some(import.local.clone());
     }
     if facts.exports.len() == 1 {
-        return facts.exports.iter().next().cloned();
+        return facts.exports.values().next().cloned();
     }
     None
 }

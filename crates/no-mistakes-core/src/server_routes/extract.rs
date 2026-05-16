@@ -5,7 +5,10 @@ mod records;
 
 use crate::ast;
 use crate::server_routes::model::FileFacts;
-use oxc_ast::ast::{CallExpression, Expression, ImportDeclarationSpecifier};
+use oxc_ast::ast::{
+    CallExpression, ExportDefaultDeclarationKind, Expression, ImportDeclarationSpecifier,
+    ModuleExportName,
+};
 use oxc_ast_visit::{walk, Visit};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -72,16 +75,46 @@ impl<'a> Visit<'a> for ServerRouteVisitor<'a> {
         {
             for decl in &var_decl.declarations {
                 if let Some(name) = helpers::binding_name(&decl.id) {
-                    self.facts.exports.insert(name);
+                    self.facts.exports.insert(name.clone(), name);
                 }
             }
         }
+        for specifier in &export.specifiers {
+            let exported = module_export_name(&specifier.exported);
+            let local = module_export_name(&specifier.local);
+            self.facts.exports.insert(exported, local);
+        }
         walk::walk_export_named_declaration(self, export);
+    }
+
+    fn visit_export_default_declaration(
+        &mut self,
+        export: &oxc_ast::ast::ExportDefaultDeclaration<'a>,
+    ) {
+        let local =
+            default_export_name(&export.declaration).unwrap_or_else(|| "default".to_string());
+        self.facts.exports.insert("default".to_string(), local);
+        walk::walk_export_default_declaration(self, export);
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         self.record_call(call);
         walk::walk_call_expression(self, call);
+    }
+}
+
+fn module_export_name(name: &ModuleExportName<'_>) -> String {
+    match name {
+        ModuleExportName::IdentifierName(id) => id.name.to_string(),
+        ModuleExportName::IdentifierReference(id) => id.name.to_string(),
+        ModuleExportName::StringLiteral(value) => value.value.to_string(),
+    }
+}
+
+fn default_export_name(decl: &ExportDefaultDeclarationKind<'_>) -> Option<String> {
+    match decl {
+        ExportDefaultDeclarationKind::Identifier(id) => Some(id.name.to_string()),
+        _ => None,
     }
 }
 
@@ -126,11 +159,7 @@ pub(super) fn import_names(specifier: &ImportDeclarationSpecifier<'_>) -> (Strin
         }
         ImportDeclarationSpecifier::ImportSpecifier(spec) => (
             spec.local.name.to_string(),
-            match &spec.imported {
-                oxc_ast::ast::ModuleExportName::IdentifierName(id) => id.name.to_string(),
-                oxc_ast::ast::ModuleExportName::IdentifierReference(id) => id.name.to_string(),
-                oxc_ast::ast::ModuleExportName::StringLiteral(value) => value.value.to_string(),
-            },
+            module_export_name(&spec.imported),
         ),
     }
 }

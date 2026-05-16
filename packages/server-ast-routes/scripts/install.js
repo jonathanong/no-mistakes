@@ -9,7 +9,7 @@ const PACKAGE_ROOT = join(__dirname, "..");
 async function main() {
   try {
     const pkg = require(join(PACKAGE_ROOT, "package.json"));
-    const destination = await install("server-ast-routes", "jonathanong/playwright-ast-coverage", {
+    const destination = await install("server-ast-routes", "jonathanong/no-mistakes", {
       version: pkg.version,
       vendorDir: join(PACKAGE_ROOT, "vendor"),
       envVar: "SERVER_AST_ROUTES_RELEASE_BASE_URL",

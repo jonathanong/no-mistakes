@@ -1,7 +1,9 @@
-import express from "express";
+import { Router } from "express";
 
-export const users = express.Router();
+const users = Router();
 
 users.get("/:id", getUser);
+
+export { users as members };
 
 function getUser() {}

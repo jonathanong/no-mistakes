@@ -4,7 +4,7 @@ import pathMatch from "koa-path-match";
 import Router from "@koa/router";
 import { Hono } from "hono";
 
-const { ignored } = {};
+const ignored = undefined;
 const path = "/dynamic";
 const expressApp = express();
 const api = createApp();
@@ -20,6 +20,7 @@ export const exported = new Router();
 
 expressApp.get(["/array/:id", "/array/:id/edit"], () => {});
 expressApp.get(path, () => {});
+// Deliberately lacks a leading slash to ensure non-Koa named routes are ignored.
 expressApp.all("not-a-route", () => {});
 const bookRoute = expressApp.route("/books/:id");
 bookRoute.get(() => {});

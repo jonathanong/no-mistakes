@@ -71,11 +71,15 @@ fn build_report(root: &Path, facts: &HashMap<PathBuf, FileFacts>) -> ProjectRepo
     edges.dedup();
     diagnostics.sort();
     diagnostics.dedup();
+    let dynamic_routes = routes
+        .iter()
+        .filter(|route| route.route.contains('*'))
+        .count();
     ProjectReport {
         summary: Summary {
             total_routes: routes.len(),
             total_files: facts.len(),
-            dynamic_routes: diagnostics.len(),
+            dynamic_routes,
         },
         routes,
         edges,

@@ -11,7 +11,7 @@ impl ServerRouteVisitor<'_> {
     ) {
         let (local, imported) = import_names(specifier);
         match source {
-            "express" if imported == "default" => {
+            "express" if imported == "default" || imported == "Router" => {
                 self.express_names.insert(local.clone());
             }
             "hono" | "@hono/hono" if imported == "Hono" => {

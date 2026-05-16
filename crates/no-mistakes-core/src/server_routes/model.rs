@@ -1,6 +1,6 @@
 use crate::server_routes::types::Framework;
 use serde::Serialize;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -37,7 +37,7 @@ pub(crate) struct ImportBinding {
 #[derive(Debug, Default, Clone)]
 pub(crate) struct FileFacts {
     pub bindings: HashMap<String, Binding>,
-    pub exports: HashSet<String>,
+    pub exports: HashMap<String, String>,
     pub imports: Vec<ImportBinding>,
     pub routes: Vec<RouteSite>,
     pub mounts: Vec<MountSite>,
