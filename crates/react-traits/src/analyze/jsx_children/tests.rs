@@ -163,3 +163,36 @@ fn same_file_default_export_identifier_not_mapped_to_other_components() {
         "Foo should not be mapped as a child since it is not exported"
     );
 }
+
+#[test]
+fn namespace_import_member_resolved_to_suffix() {
+    // `import * as Foo from './Foo'; <Foo.Bar/>` — namespace wildcard import with member
+    // expression; exercises the `suffix.clone()` branch (line 66)
+    let dir = fixture_dir();
+    let file = dir.join("Consumer.tsx");
+    let source =
+        "import * as Foo from './Foo';\nexport default function App() { return <Foo.Bar/>; }";
+    let names = collect_children_names(source, &file);
+    assert_eq!(names, vec!["Bar"]);
+}
+
+#[test]
+fn destructured_export_var_not_in_local_components() {
+    // `export const [Foo] = []` — ArrayPattern binding; hits line 124 in collect_local_components
+    let dir = fixture_dir();
+    let file = dir.join("Consumer.tsx");
+    let source = "export const [Foo] = [];\nexport default function App() { return <Foo/>; }";
+    let names = collect_children_names(source, &file);
+    assert!(names.is_empty());
+}
+
+#[test]
+fn class_export_not_in_local_components() {
+    // `export class Foo {}` — ClassDeclaration hits `_ => {}` arm (line 127) in
+    // collect_local_components; Foo is not mapped so <Foo/> is not resolved
+    let dir = fixture_dir();
+    let file = dir.join("Consumer.tsx");
+    let source = "export class Foo {};\nexport default function App() { return <Foo/>; }";
+    let names = collect_children_names(source, &file);
+    assert!(names.is_empty());
+}

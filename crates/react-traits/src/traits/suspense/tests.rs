@@ -105,3 +105,68 @@ fn suspense_outside_span_not_detected() {
     .unwrap();
     assert!(!result);
 }
+
+#[test]
+fn export_default_react_lazy_is_suspense() {
+    // `export default React.lazy(...)` — hits StaticMemberExpression arm in is_dynamic_or_lazy_call_by_callee
+    assert!(check("export default React.lazy(() => import('./Heavy'));"));
+}
+
+#[test]
+fn export_default_computed_callee_not_suspense() {
+    // computed callee (obj[key]()) — hits `_ => return false` in is_dynamic_or_lazy_call_by_callee
+    assert!(!check("export default obj[key]();"));
+}
+
+#[test]
+fn export_named_non_dynamic_not_suspense() {
+    // `export const Foo = notDynamic()` — callee is not dynamic/lazy; exercises false-path
+    // closing braces in ExportNamedDeclaration branch of is_component_direct_lazy
+    assert!(!check("export const Foo = notDynamic();"));
+}
+
+#[test]
+fn const_memo_not_suspense() {
+    // `const Foo = memo(...)` — is_dynamic_or_lazy_call(memo()) is false (memo not in list)
+    assert!(!check("const Foo = memo(() => <div/>);"));
+}
+
+#[test]
+fn const_arrow_init_not_suspense() {
+    // ArrowFunctionExpression init — not a CallExpression, hits `return false` in is_dynamic_or_lazy_call
+    assert!(!check("const Lazy = () => <div/>;"));
+}
+
+#[test]
+fn const_computed_callee_not_suspense() {
+    // `const Lazy = obj[key]()` — computed callee hits `_ => return false` in is_dynamic_or_lazy_call
+    assert!(!check("const Lazy = obj[key]();"));
+}
+
+#[test]
+fn destructured_var_dynamic_not_detected() {
+    // `const [a] = [dynamic(...)]` — ArrayPattern binding hits `continue` in collect_from_var_decl
+    assert!(!check("const [a] = [dynamic(() => import('./Foo'))];"));
+}
+
+#[test]
+fn no_init_var_not_dynamic() {
+    // `let Lazy;` — no init hits `continue` in collect_from_var_decl
+    assert!(!check("let Lazy;"));
+}
+
+#[test]
+fn exported_const_dynamic_detected_via_named_branch() {
+    // `export const Lazy = dynamic(...)` is outside the passed span, so is_component_direct_lazy
+    // returns false; collect_dynamic_names must walk the ExportNamedDeclaration branch to find
+    // Lazy, then the JSX visitor detects `<Lazy/>` inside the span.
+    let source = "export const Lazy = dynamic(() => import('./Foo')); export default function App() { return <Lazy/>; }";
+    let path = std::path::Path::new("test.tsx");
+    let app_start = source.find("export default").unwrap() as u32;
+    let span = oxc_span::Span::new(app_start, source.len() as u32);
+    let result = no_mistakes_core::ast::with_program(path, source, |program, _| {
+        super::detect_uses_suspense(program, span)
+    })
+    .unwrap();
+    assert!(result, "exported dynamic rendered inside span should be suspense");
+}

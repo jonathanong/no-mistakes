@@ -156,6 +156,57 @@ fn named_export_react_memo_wrapper_detected() {
 }
 
 #[test]
+fn named_export_non_memo_call_not_detected() {
+    // `export const Foo = notMemo(...)` — callee is not "memo"; hits closing } at line 70
+    let source = "export const Foo = notMemo(() => <div/>);";
+    let path = std::path::Path::new("test.tsx");
+    let span = oxc_span::Span::new(0, source.len() as u32);
+    let result = no_mistakes_core::ast::with_program(path, source, |program, _| {
+        let def = crate::analyze::components::ComponentDef {
+            name: "Foo".to_string(),
+            span: oxc_span::Span::default(),
+        };
+        super::detect_uses_memo(program, span, &def)
+    })
+    .unwrap();
+    assert!(!result);
+}
+
+#[test]
+fn named_export_name_mismatch_not_detected() {
+    // `export const Bar = memo(...)` when looking for "Foo" — id.name != def.name, hits line 72
+    let source = "export const Bar = memo(() => <div/>);";
+    let path = std::path::Path::new("test.tsx");
+    let span = oxc_span::Span::new(0, source.len() as u32);
+    let result = no_mistakes_core::ast::with_program(path, source, |program, _| {
+        let def = crate::analyze::components::ComponentDef {
+            name: "Foo".to_string(),
+            span: oxc_span::Span::default(),
+        };
+        super::detect_uses_memo(program, span, &def)
+    })
+    .unwrap();
+    assert!(!result);
+}
+
+#[test]
+fn named_export_destructured_not_detected() {
+    // `export const [Foo] = [memo(...)]` — ArrayPattern hits line 73
+    let source = "export const [Foo] = [memo(() => <div/>)];";
+    let path = std::path::Path::new("test.tsx");
+    let span = oxc_span::Span::new(0, source.len() as u32);
+    let result = no_mistakes_core::ast::with_program(path, source, |program, _| {
+        let def = crate::analyze::components::ComponentDef {
+            name: "Foo".to_string(),
+            span: oxc_span::Span::default(),
+        };
+        super::detect_uses_memo(program, span, &def)
+    })
+    .unwrap();
+    assert!(!result);
+}
+
+#[test]
 fn use_memo_outside_span_not_detected() {
     // Span that covers nothing — visit_call_expression returns early (line 18).
     let source = "export default function App() { const x = useMemo(() => 1, []); return null; }";

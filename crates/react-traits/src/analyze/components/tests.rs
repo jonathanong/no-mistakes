@@ -335,3 +335,40 @@ fn is_component_expr_parenthesized_wraps_arrow() {
     .unwrap();
     assert_eq!(names, vec!["Foo"]);
 }
+
+#[test]
+fn local_var_with_non_component_init_ignored() {
+    // `const Foo = 42` — component name but non-component expr init; exercises line 37
+    // (closing } of `if let Some(init)` when is_component_expr returns false)
+    let names = check_names("const Foo = 42;\nexport default Foo;");
+    assert!(names.is_empty());
+}
+
+#[test]
+fn local_destructured_var_not_tracked() {
+    // `const [Foo] = []` — ArrayPattern binding, not BindingIdentifier; exercises line 39
+    let names = check_names("const [Foo] = [];\nexport default Foo;");
+    assert!(names.is_empty());
+}
+
+#[test]
+fn export_default_memo_no_args_is_component() {
+    // `export default memo()` — no args; exercises the `else { span }` branch at line 104
+    let names = check_names("export default memo();");
+    assert_eq!(names, vec!["default"]);
+}
+
+#[test]
+fn export_named_ts_type_ignored() {
+    // TypeScript type alias hits the `_ => {}` arm in ExportNamedDeclaration (line 172)
+    let names = check_names("export type Foo = {};");
+    assert!(names.is_empty());
+}
+
+#[test]
+fn export_class_extends_call_not_component() {
+    // `class Foo extends getBase()` — superclass is a CallExpression; hits `_ => false`
+    // in is_class_component (helpers.rs line 13)
+    let names = check_names("export default class Foo extends getBase() {}");
+    assert!(names.is_empty());
+}

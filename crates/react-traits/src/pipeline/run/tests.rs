@@ -221,3 +221,25 @@ fn run_analyze_child_not_in_cache_uses_canonicalize() {
     assert_eq!(results.len(), 1);
     // Child is not in file_cache so inherited facts won't include child's fetch.
 }
+
+#[test]
+fn run_analyze_no_targets_missing_frontend_root_returns_error() {
+    // Empty targets + missing frontendRoot should error (exercises line 32 in run.rs)
+    let fixture_root = fixture("react-traits-config", "missing-frontend-root");
+    let cli = make_cli(PathBuf::from("."));
+    let result = run_analyze(&fixture_root, &cli, &[], None);
+    assert!(result.is_err(), "empty targets with missing frontend_root should error");
+}
+
+#[test]
+fn run_analyze_broken_on_demand_child_skipped() {
+    // Parent renders Child; Child exists but has broken syntax.
+    // aggregate_children tries to analyze Child on-demand → Err → skipped (line 88).
+    let fixture_root = fixture("react-traits-components", "broken-child");
+    let cli = make_cli(PathBuf::from("."));
+    let targets = vec!["app/components/Parent.tsx".to_string()];
+    let results =
+        run_analyze(&fixture_root, &cli, &targets, None).expect("parent should analyze ok");
+    let parent = results.iter().find(|f| f.file.contains("Parent")).unwrap();
+    assert!(parent.inherited_from_children.is_none(), "broken child skipped so no aggregation");
+}

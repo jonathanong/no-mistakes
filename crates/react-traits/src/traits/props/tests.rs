@@ -164,3 +164,55 @@ fn jsx_props_outside_span_not_detected() {
         "passes_props should be false when span is empty"
     );
 }
+
+#[test]
+fn has_props_default_identifier_export_with_function_expr() {
+    // `const Page = function(props) {}; export default Page;` — FunctionExpression in a
+    // non-exported VariableDeclaration; exercises lines 124-125 in detect_props
+    let (has_props, _) = check("const Page = function(props) { return <div/>; };\nexport default Page;");
+    assert!(has_props);
+}
+
+#[test]
+fn memo_no_args_not_has_props() {
+    // `export default memo()` — no args; call.arguments.first() is None; hits line 75
+    let (has_props, _) = check("export default memo();");
+    assert!(!has_props);
+}
+
+#[test]
+fn memo_spread_arg_not_has_props() {
+    // `export default memo(...fn)` — spread arg; first_arg.as_expression() is None; hits line 74
+    let (has_props, _) = check("export default memo(...fn);");
+    assert!(!has_props);
+}
+
+#[test]
+fn non_overlapping_named_decl_declarator_skipped() {
+    // `export const A = 1, B = (props) => ...` — A's span does not overlap B's component
+    // span, so the loop hits `continue` at line 90
+    let source = "export const A = 1, B = (props) => <div/>;";
+    let path = std::path::Path::new("test.tsx");
+    let result = no_mistakes_core::ast::with_program(path, source, |program, _| {
+        let defs = crate::analyze::components::extract_components(program);
+        let b = defs.iter().find(|d| d.name == "B").expect("B");
+        super::detect_props(program, b.span)
+    })
+    .unwrap();
+    assert!(result.0, "B has props");
+}
+
+#[test]
+fn non_overlapping_local_decl_declarator_skipped() {
+    // `const A = 1, B = (props) => ...; export default B` — A does not overlap B's span;
+    // hits `continue` at line 116
+    let source = "const A = 1, B = (props) => <div/>;\nexport default B;";
+    let path = std::path::Path::new("test.tsx");
+    let result = no_mistakes_core::ast::with_program(path, source, |program, _| {
+        let defs = crate::analyze::components::extract_components(program);
+        let def = defs.first().expect("default");
+        super::detect_props(program, def.span)
+    })
+    .unwrap();
+    assert!(result.0, "B has props");
+}
