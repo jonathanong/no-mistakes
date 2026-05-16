@@ -27,6 +27,20 @@ fn cargo_run_package_long() {
 }
 
 #[test]
+fn cargo_run_package_with_bin_uses_bin_target() {
+    let names = extract_binary_names("cargo run -p tool-one --bin side-tool -- --help");
+    assert_eq!(names, vec!["side-tool"]);
+    let targets = extract_cargo_targets("cargo run -p tool-one --bin side-tool -- --help");
+    assert_eq!(
+        targets,
+        vec![CargoTarget {
+            package: Some("tool-one".to_string()),
+            binary: "side-tool".to_string()
+        }]
+    );
+}
+
+#[test]
 fn cargo_run_multiline_bin() {
     let names = extract_binary_names(
         r#"cargo run \
@@ -46,6 +60,13 @@ fn cargo_run_ignores_binary_args_after_separator() {
 fn target_binary() {
     let names = extract_binary_names("./target/release/dependencies --help");
     assert_eq!(names, vec!["dependencies"]);
+}
+
+#[test]
+fn target_triple_binary() {
+    let names =
+        extract_binary_names("target/x86_64-unknown-linux-gnu/release/no-mistakes --version");
+    assert_eq!(names, vec!["no-mistakes"]);
 }
 
 #[test]
@@ -228,4 +249,27 @@ members = ["crates/*", "tools/checker"]
 "#;
     let members = parse_cargo_workspace_members(toml_str).unwrap();
     assert_eq!(members, vec!["crates/*", "tools/checker"]);
+}
+
+#[test]
+fn parses_workspace_excludes() {
+    let toml_str = r#"
+[workspace]
+members = ["crates/*"]
+exclude = ["crates/excluded"]
+"#;
+    let excludes = parse_cargo_workspace_excludes(toml_str).unwrap();
+    assert_eq!(excludes, vec!["crates/excluded"]);
+}
+
+#[test]
+fn parses_package_name() {
+    let toml_str = r#"
+[package]
+name = "tool-one"
+"#;
+    assert_eq!(
+        parse_cargo_package_name(toml_str).unwrap(),
+        Some("tool-one".to_string())
+    );
 }

@@ -5,3 +5,7 @@ edition = "2021"
 
 [[bin]]
 name = "pg-schema"
+
+[[bin]]
+name = "side-tool"
+path = "src/bin/side-tool.rs"

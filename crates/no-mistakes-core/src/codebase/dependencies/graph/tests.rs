@@ -255,6 +255,23 @@ fn ci_edges_include_workspace_member_bins() {
         .join("src")
         .join("bin")
         .join("pg-schema.rs");
+    let package_scoped_bin = root
+        .join("crates")
+        .join("tool-one")
+        .join("src")
+        .join("bin")
+        .join("side-tool.rs");
+    let colliding_bin = root
+        .join("crates")
+        .join("pg-schema")
+        .join("src")
+        .join("bin")
+        .join("side-tool.rs");
+    let excluded_main = root
+        .join("crates")
+        .join("excluded")
+        .join("src")
+        .join("main.rs");
     let deps = graph.deps_of(
         &[NodeId::File(workflow)],
         None,
@@ -269,6 +286,51 @@ fn ci_edges_include_workspace_member_bins() {
         deps.iter()
             .any(|e| e.node.as_file() == Some(hyphenated_bin.as_path())),
         "cargo run --bin should link to a hyphenated default bin path"
+    );
+    assert!(
+        deps.iter()
+            .any(|e| e.node.as_file() == Some(package_scoped_bin.as_path())),
+        "cargo run -p <pkg> --bin <bin> should link to that package's bin"
+    );
+    assert!(
+        !deps
+            .iter()
+            .any(|e| e.node.as_file() == Some(colliding_bin.as_path())),
+        "package-qualified --bin should not link to another package's same-named bin"
+    );
+    assert!(
+        !deps
+            .iter()
+            .any(|e| e.node.as_file() == Some(excluded_main.as_path())),
+        "workspace exclude entries should not contribute CI bin edges"
+    );
+}
+
+#[test]
+fn ci_edges_include_implicit_workspace_member_bins() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("cargo-implicit-members"));
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+    };
+    let graph = DepGraph::build(&root, &tsconfig).unwrap();
+
+    let workflow = root.join(".github").join("workflows").join("ci.yml");
+    let implicit_main = root
+        .join("crates")
+        .join("implicit-tool")
+        .join("src")
+        .join("main.rs");
+    let deps = graph.deps_of(
+        &[NodeId::File(workflow)],
+        None,
+        Some(&[EdgeKind::CiInvocation].into()),
+    );
+    assert!(
+        deps.iter()
+            .any(|e| e.node.as_file() == Some(implicit_main.as_path())),
+        "workspace member bins should be discovered even when members is omitted"
     );
 }
 
