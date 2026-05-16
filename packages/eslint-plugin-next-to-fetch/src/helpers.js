@@ -11,10 +11,12 @@ function isStaticString(node) {
   return false;
 }
 
+const LOCAL_BINDING_TYPES = new Set(["Variable", "Parameter", "CatchClause", "FunctionName"]);
+
 function isFetchShadowed(scope) {
   while (scope) {
     const variable = scope.variables.find((v) => v.name === "fetch");
-    if (variable) return scope.type !== "global";
+    if (variable) return variable.defs.some((def) => LOCAL_BINDING_TYPES.has(def.type));
     scope = scope.upper;
   }
   return false;

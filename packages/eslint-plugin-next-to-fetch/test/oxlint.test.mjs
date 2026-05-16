@@ -29,7 +29,8 @@ describe("oxlint support", () => {
           encoding: "utf8",
         },
       );
-      assert.notEqual(result.status, 0);
+      assert.equal(result.error, undefined);
+      assert.equal(result.status, 1);
       assert.match(
         `${result.stderr || ""}${result.stdout || ""}`,
         /expression-free template literal/,

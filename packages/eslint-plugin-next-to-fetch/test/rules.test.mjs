@@ -78,6 +78,12 @@ describe("static-fetch-url", () => {
       "dynamic",
     ]);
   });
+
+  it("does not treat imported fetch as shadowed", () => {
+    assert.deepEqual(messages("import { fetch } from 'undici'; fetch(url);", "static-fetch-url"), [
+      "dynamic",
+    ]);
+  });
 });
 
 describe("static-fetch-method", () => {
