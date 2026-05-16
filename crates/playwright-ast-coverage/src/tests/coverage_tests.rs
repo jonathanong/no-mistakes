@@ -3,6 +3,7 @@ use crate::analysis::types::{Edge, FetchIndex, UniqueSelectorPolicy};
 use crate::config::Settings;
 use crate::routes::Route;
 use crate::selectors::{self, AppSelectorValue};
+use no_mistakes_core::fetch::types::{CacheKind, FetchOccurrence, FetchSide};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -249,4 +250,57 @@ fn route_edges_mark_routes_covered() {
     );
     assert_eq!(report.summary.covered_routes, 1);
     assert_eq!(report.routes[0].urls, vec!["/users/42"]);
+}
+
+#[test]
+fn seed_fetch_coverage_skips_dynamic_and_unsupported() {
+    let root = Path::new("/repo");
+    let mut fetch_index = FetchIndex::new();
+    fetch_index.insert(
+        "web/app/page.tsx".to_string(),
+        vec![
+            FetchOccurrence {
+                method: "GET".to_string(),
+                path: "/api/data".to_string(),
+                raw_path: "/api/data".to_string(),
+                file: "web/app/page.tsx".to_string(),
+                line: 1,
+                side: FetchSide::Server,
+                rsc: true,
+                cached: false,
+                cache_kind: CacheKind::None,
+                cached_function: None,
+                dynamic: true,
+                unsupported: false,
+            },
+            FetchOccurrence {
+                method: "GET".to_string(),
+                path: "/api/static".to_string(),
+                raw_path: "/api/static".to_string(),
+                file: "web/app/page.tsx".to_string(),
+                line: 2,
+                side: FetchSide::Server,
+                rsc: true,
+                cached: false,
+                cache_kind: CacheKind::None,
+                cached_function: None,
+                dynamic: false,
+                unsupported: false,
+            },
+        ],
+    );
+    let settings = default_settings(vec![]);
+    let report = build_coverage(
+        root,
+        &[],
+        &[],
+        &[],
+        &[],
+        &settings,
+        UniqueSelectorPolicy::default(),
+        &fetch_index,
+    );
+    assert_eq!(report.summary.total_fetch_apis, 1);
+    assert_eq!(report.fetch_apis[0].path, "/api/static");
+    assert!(!report.fetch_apis[0].covered);
 }
