@@ -250,3 +250,25 @@ fn function_declaration_shadows_outer_dynamic() {
         "inner function declaration should shadow outer dynamic and suppress suspense"
     );
 }
+
+#[test]
+fn non_react_suspense_member_not_detected() {
+    // `<Foo.Suspense>` — member expression whose object is not React should NOT trigger suspense
+    assert!(!check(
+        "export default function App() { return <Foo.Suspense fallback={null}><div/></Foo.Suspense>; }"
+    ));
+}
+
+#[test]
+fn react_dynamic_callee_not_suspense() {
+    // `React.dynamic(...)` — dynamic is a Next.js helper; only React.lazy counts in the React.* form
+    assert!(!check("export default React.dynamic(() => import('./Heavy'));"));
+}
+
+#[test]
+fn react_dynamic_not_direct_lazy() {
+    // `const Lazy = React.dynamic(...)` — React.dynamic should not be recognized as a lazy call
+    assert!(!check(
+        "const Lazy = React.dynamic(() => import('./Foo')); export default function App() { return <Lazy/>; }"
+    ));
+}

@@ -1,6 +1,6 @@
 use oxc_ast::ast::{
     BindingPattern, Declaration, ExportDefaultDeclarationKind, Expression, Function,
-    JSXElementName, Program, Statement, VariableDeclaration,
+    JSXElementName, JSXMemberExpressionObject, Program, Statement, VariableDeclaration,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::Span;
@@ -64,7 +64,13 @@ impl<'a> Visit<'a> for SuspenseVisitor<'a> {
             JSXElementName::IdentifierReference(id) => {
                 id.name == "Suspense" || self.dynamic_names.contains(id.name.as_ref())
             }
-            JSXElementName::MemberExpression(m) => m.property.name == "Suspense",
+            JSXElementName::MemberExpression(m) => {
+                m.property.name == "Suspense"
+                    && matches!(
+                        &m.object,
+                        JSXMemberExpressionObject::IdentifierReference(obj) if obj.name == "React"
+                    )
+            }
             _ => false,
         };
         if is_suspense {
@@ -140,14 +146,15 @@ fn is_component_direct_lazy(program: &Program<'_>, span: Span) -> bool {
 }
 
 fn is_dynamic_or_lazy_call_by_callee(callee: &Expression<'_>) -> bool {
-    let name = match callee {
-        Expression::Identifier(id) => id.name.as_ref(),
-        Expression::StaticMemberExpression(m) if matches!(&m.object, Expression::Identifier(obj) if obj.name == "React") => {
-            m.property.name.as_ref()
+    match callee {
+        Expression::Identifier(id) => matches!(id.name.as_ref(), "dynamic" | "lazy"),
+        Expression::StaticMemberExpression(m)
+            if matches!(&m.object, Expression::Identifier(obj) if obj.name == "React") =>
+        {
+            m.property.name.as_ref() == "lazy"
         }
-        _ => return false,
-    };
-    matches!(name, "dynamic" | "lazy")
+        _ => false,
+    }
 }
 
 fn collect_from_var_decl(
@@ -179,14 +186,15 @@ fn is_dynamic_or_lazy_call(expr: &Expression<'_>) -> bool {
     let Expression::CallExpression(call) = expr else {
         return false;
     };
-    let name = match &call.callee {
-        Expression::Identifier(id) => id.name.as_ref(),
-        Expression::StaticMemberExpression(m) if matches!(&m.object, Expression::Identifier(obj) if obj.name == "React") => {
-            m.property.name.as_ref()
+    match &call.callee {
+        Expression::Identifier(id) => matches!(id.name.as_ref(), "dynamic" | "lazy"),
+        Expression::StaticMemberExpression(m)
+            if matches!(&m.object, Expression::Identifier(obj) if obj.name == "React") =>
+        {
+            m.property.name.as_ref() == "lazy"
         }
-        _ => return false,
-    };
-    matches!(name, "dynamic" | "lazy")
+        _ => false,
+    }
 }
 
 pub(crate) fn detect_uses_suspense(program: &Program<'_>, span: Span) -> bool {
