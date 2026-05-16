@@ -1,5 +1,5 @@
 use crate::analysis::coverage::build_coverage;
-use crate::analysis::types::{Edge, UniqueSelectorPolicy};
+use crate::analysis::types::{Edge, FetchIndex, UniqueSelectorPolicy};
 use crate::config::Settings;
 use crate::routes::Route;
 use crate::selectors::{self, AppSelectorValue};
@@ -46,6 +46,7 @@ fn fetch_edges_mark_fetch_apis_covered() {
         &edges,
         &settings,
         UniqueSelectorPolicy::default(),
+        &FetchIndex::new(),
     );
     assert_eq!(report.summary.total_fetch_apis, 2);
     assert_eq!(report.summary.covered_fetch_apis, 2);
@@ -59,7 +60,7 @@ fn fetch_edges_mark_fetch_apis_covered() {
 
 #[test]
 fn has_configured_html_id_via_component_attributes() {
-    use crate::analysis::coverage::has_configured_html_id_selector;
+    use crate::config::has_configured_html_id_selector;
     use crate::selectors::HTML_ID_ATTRIBUTE;
     let settings_with_component_id = Settings {
         frontend_root: "web/app".to_string(),
@@ -122,6 +123,7 @@ fn coverage_sort_uses_file_as_tiebreaker() {
         &[],
         &settings,
         UniqueSelectorPolicy::default(),
+        &FetchIndex::new(),
     );
     assert_eq!(report.routes[0].file, "web/app/a/page.tsx");
     assert_eq!(report.routes[1].file, "web/app/b/page.tsx");
@@ -144,6 +146,7 @@ fn selector_coverage_sorts_and_counts_uncovered() {
         &[],
         &settings,
         UniqueSelectorPolicy::default(),
+        &FetchIndex::new(),
     );
     assert_eq!(report.summary.total_selectors, 1);
     assert_eq!(report.summary.uncovered_selectors, 1);
@@ -179,6 +182,7 @@ fn selector_coverage_sort_uses_value_and_file_tiebreakers() {
         &[],
         &settings,
         UniqueSelectorPolicy::default(),
+        &FetchIndex::new(),
     );
     assert_eq!(report.selectors[0].file, "web/app/a.tsx");
     assert_eq!(report.selectors[1].file, "web/app/b.tsx");
@@ -211,6 +215,7 @@ fn selector_edges_mark_targets_covered() {
         &edges,
         &settings,
         UniqueSelectorPolicy::default(),
+        &FetchIndex::new(),
     );
     assert_eq!(report.summary.covered_selectors, 1);
     assert_eq!(report.selectors[0].tests, vec!["tests/e2e/app.spec.ts"]);
@@ -240,6 +245,7 @@ fn route_edges_mark_routes_covered() {
         &edges,
         &settings,
         UniqueSelectorPolicy::default(),
+        &FetchIndex::new(),
     );
     assert_eq!(report.summary.covered_routes, 1);
     assert_eq!(report.routes[0].urls, vec!["/users/42"]);
