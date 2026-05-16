@@ -1244,7 +1244,6 @@ fn add_queue_edges(
     use crate::codebase::config::{load_config, QueueOptions};
     use crate::codebase::ts_queues::factory::{find_create_queue_line, find_queue_name};
     use crate::codebase::ts_queues::usage::extract_queue_usage;
-    use crate::codebase::ts_symbols::extract_symbols;
     use globset::GlobBuilder;
 
     let config = match load_config(root) {
@@ -1315,6 +1314,7 @@ fn add_queue_edges(
     let mut enqueue_sites: Vec<(PathBuf, PathBuf, String)> = Vec::new();
     // worker_sites: (worker_file, queue_def_file, processor_file, job_names)
     let mut worker_sites: Vec<(PathBuf, PathBuf, PathBuf, Vec<String>)> = Vec::new();
+    let mut processor_job_names: HashMap<PathBuf, Vec<String>> = HashMap::new();
 
     let queue_def_paths: HashSet<PathBuf> = def_to_queue_name.keys().cloned().collect();
 
@@ -1366,35 +1366,14 @@ fn add_queue_edges(
                 None => continue,
             };
 
-            // Extract job names from the processors module.
-            let proc_source = match std::fs::read_to_string(&processors_file) {
-                Ok(s) => s,
-                Err(_) => continue,
-            };
-            let is_tsx = processors_file
-                .extension()
-                .and_then(|e| e.to_str())
-                .map(|e| e == "tsx" || e == "jsx")
-                .unwrap_or(false);
-            let job_names: Vec<String> = match extract_symbols(&proc_source, is_tsx) {
-                Ok(symbols) => symbols
-                    .exports
-                    .into_iter()
-                    .filter_map(|e| {
-                        if matches!(
-                            e.kind,
-                            crate::codebase::ts_symbols::ExportKind::Function
-                                | crate::codebase::ts_symbols::ExportKind::Const
-                                | crate::codebase::ts_symbols::ExportKind::Let
-                                | crate::codebase::ts_symbols::ExportKind::Var
-                        ) {
-                            Some(e.name)
-                        } else {
-                            None
-                        }
-                    })
-                    .collect(),
-                Err(_) => continue,
+            let job_names = if let Some(job_names) = processor_job_names.get(&processors_file) {
+                job_names.clone()
+            } else {
+                let Some(job_names) = extract_processor_job_names(&processors_file) else {
+                    continue;
+                };
+                processor_job_names.insert(processors_file.clone(), job_names.clone());
+                job_names
             };
 
             if !job_names.is_empty() {
@@ -1477,6 +1456,31 @@ fn add_queue_edges(
             );
         }
     }
+}
+
+fn extract_processor_job_names(processors_file: &Path) -> Option<Vec<String>> {
+    use crate::codebase::ts_symbols::{extract_symbols, ExportKind};
+
+    let proc_source = std::fs::read_to_string(processors_file).ok()?;
+    let is_tsx = processors_file
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|e| e == "tsx" || e == "jsx")
+        .unwrap_or(false);
+    let symbols = extract_symbols(&proc_source, is_tsx).ok()?;
+    Some(
+        symbols
+            .exports
+            .into_iter()
+            .filter_map(|e| {
+                matches!(
+                    e.kind,
+                    ExportKind::Function | ExportKind::Const | ExportKind::Let | ExportKind::Var
+                )
+                .then_some(e.name)
+            })
+            .collect(),
+    )
 }
 
 /// Collect `RouteTest` edges from playwright test files to the frontend page files they visit.

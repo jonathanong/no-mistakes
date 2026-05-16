@@ -1,6 +1,4 @@
 use super::*;
-use std::process::Command;
-use tempfile::TempDir;
 
 fn p(s: &str) -> PathBuf {
     PathBuf::from(s)
@@ -29,43 +27,10 @@ fn mk_entry(path: &str, depth: usize) -> NodeEntry {
     }
 }
 
-fn git_init(dir: &Path) {
-    let output = Command::new("git")
-        .args(["init", "-q", "--initial-branch=main"])
-        .current_dir(dir)
-        .env_remove("GIT_DIR")
-        .env_remove("GIT_WORK_TREE")
-        .env_remove("GIT_INDEX_FILE")
-        .output()
-        .unwrap();
-    assert!(
-        output.status.success(),
-        "git init failed: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-}
-
-fn git_add_all(dir: &Path) {
-    let output = Command::new("git")
-        .args(["add", "."])
-        .current_dir(dir)
-        .env_remove("GIT_DIR")
-        .env_remove("GIT_WORK_TREE")
-        .env_remove("GIT_INDEX_FILE")
-        .output()
-        .unwrap();
-    assert!(
-        output.status.success(),
-        "git add failed: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-}
-
-fn write(dir: &Path, rel: &str, content: &str) -> PathBuf {
-    let path = dir.join(rel);
-    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-    std::fs::write(&path, content).unwrap();
-    path
+fn fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase-analysis")
+        .join(name)
 }
 
 // ── bfs ─────────────────────────────────────────────────────────────────
@@ -308,33 +273,23 @@ fn ci_edges_include_workspace_member_bins() {
 }
 
 #[test]
-fn build_graph_excludes_gitignored_files() {
-    let dir = TempDir::new().unwrap();
-    git_init(dir.path());
-    write(dir.path(), ".gitignore", "ignored/\n");
-    let source = write(dir.path(), "src/source.mts", "export const value = 1;\n");
-    let visible = write(
-        dir.path(),
-        "src/visible.mts",
-        "import { value } from './source.mts';\n",
-    );
-    write(
-        dir.path(),
-        "ignored/hidden.mts",
-        "import { value } from '../src/source.mts';\n",
-    );
-    git_add_all(dir.path());
+fn build_graph_excludes_skipped_fixture_files() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("skipped-files"));
+    let source = root.join("src/source.mts");
+    let visible = root.join("src/visible.mts");
+    let skipped = root.join("fixtures/hidden.mts");
 
     let tsconfig = TsConfig {
-        dir: dir.path().to_path_buf(),
+        dir: root.clone(),
         paths: vec![],
-        paths_dir: dir.path().to_path_buf(),
+        paths_dir: root.clone(),
     };
-    let graph = DepGraph::build(dir.path(), &tsconfig).unwrap();
+    let graph = DepGraph::build(&root, &tsconfig).unwrap();
 
     let dependents = graph.dependents_of(&[NodeId::File(source)], None, None);
     let paths: Vec<_> = dependents.iter().filter_map(|e| e.node.as_file()).collect();
     assert_eq!(paths, vec![visible.as_path()]);
+    assert!(!paths.contains(&skipped.as_path()));
 }
 
 #[test]
@@ -365,29 +320,17 @@ fn package_dependency_names_returns_dependency_names() {
 
 #[test]
 fn lazy_import_deps_walks_only_reachable_import_graph() {
-    let dir = TempDir::new().unwrap();
-    git_init(dir.path());
-    let entry = write(dir.path(), "src/a.mts", "import './b.mts';\n");
-    let b = write(dir.path(), "src/b.mts", "export const b = 1;\n");
-    write(
-        dir.path(),
-        "src/unrelated.mts",
-        "import './unrelated-dep.mts';\n",
-    );
-    write(
-        dir.path(),
-        "src/unrelated-dep.mts",
-        "export const other = 1;\n",
-    );
-    git_add_all(dir.path());
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("lazy-import"));
+    let entry = root.join("src/a.mts");
+    let b = root.join("src/b.mts");
 
     let tsconfig = TsConfig {
-        dir: dir.path().to_path_buf(),
+        dir: root.clone(),
         paths: vec![],
-        paths_dir: dir.path().to_path_buf(),
+        paths_dir: root.clone(),
     };
 
-    let deps = lazy_import_deps_of(&[NodeId::File(entry)], dir.path(), &tsconfig, None).unwrap();
+    let deps = lazy_import_deps_of(&[NodeId::File(entry)], &root, &tsconfig, None).unwrap();
 
     assert_eq!(
         deps.iter()

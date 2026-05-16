@@ -4,6 +4,7 @@ pub mod output;
 
 use anyhow::{bail, Context, Result};
 use is_terminal::IsTerminal;
+use std::collections::HashMap;
 use std::io;
 use std::path::PathBuf;
 
@@ -278,7 +279,7 @@ pub fn run(args: TraverseArgs, direction: Direction) -> Result<()> {
             .context("building dependency graph")?;
             let any_symbol = entrypoints.iter().any(|e| e.symbol.is_some());
             if any_symbol {
-                let mut all_entries = Vec::new();
+                let mut all_entries: HashMap<NodeId, graph::NodeEntry> = HashMap::new();
                 let symbol_index = graph::SymbolIndex::build_from_files(&tsconfig, &graph_files)?;
                 for ep in &entrypoints {
                     if let Some(sym) = &ep.symbol {
@@ -289,31 +290,23 @@ pub fn run(args: TraverseArgs, direction: Direction) -> Result<()> {
                             allowed.as_ref(),
                             &symbol_index,
                         );
-                        for e in entries {
-                            if !all_entries
-                                .iter()
-                                .any(|x: &graph::NodeEntry| x.node == e.node)
-                            {
-                                all_entries.push(e);
-                            }
-                        }
+                        merge_node_entries(&mut all_entries, entries);
                     } else {
                         let entries = graph.dependents_of(
                             std::slice::from_ref(&NodeId::File(ep.file.clone())),
                             args.depth,
                             allowed.as_ref(),
                         );
-                        for e in entries {
-                            if !all_entries
-                                .iter()
-                                .any(|x: &graph::NodeEntry| x.node == e.node)
-                            {
-                                all_entries.push(e);
-                            }
-                        }
+                        merge_node_entries(&mut all_entries, entries);
                     }
                 }
-                all_entries
+                let mut entries: Vec<_> = all_entries.into_values().collect();
+                entries.sort_by(|a, b| {
+                    a.depth
+                        .cmp(&b.depth)
+                        .then_with(|| a.node.display_name(&root).cmp(&b.node.display_name(&root)))
+                });
+                entries
             } else {
                 let roots: Vec<NodeId> = entrypoints
                     .iter()
@@ -364,6 +357,23 @@ pub fn run(args: TraverseArgs, direction: Direction) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn merge_node_entries(
+    merged: &mut HashMap<NodeId, graph::NodeEntry>,
+    entries: Vec<graph::NodeEntry>,
+) {
+    for entry in entries {
+        merged
+            .entry(entry.node.clone())
+            .and_modify(|existing| {
+                existing.depth = existing.depth.min(entry.depth);
+                existing.via.extend(entry.via.iter().copied());
+                existing.via.sort_by_key(|kind| *kind as u8);
+                existing.via.dedup();
+            })
+            .or_insert(entry);
+    }
 }
 
 #[derive(clap::Parser)]
