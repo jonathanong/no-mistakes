@@ -17,6 +17,9 @@ pub(crate) struct FileAnalysis {
     pub(crate) dependencies: Vec<PathBuf>,
 }
 
+#[cfg(test)]
+mod tests;
+
 pub(crate) fn analyze_file(abs_path: &Path, root: &Path) -> Result<FileAnalysis> {
     let source = std::fs::read_to_string(abs_path)?;
     let rel_path = relative_string(root, abs_path);

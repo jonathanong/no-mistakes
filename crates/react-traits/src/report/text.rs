@@ -42,6 +42,9 @@ fn print_component(facts: &ComponentFacts, max_depth: usize, current_depth: usiz
     }
 }
 
+#[cfg(test)]
+mod tests;
+
 pub(crate) fn print_violations(violations: &[Violation]) {
     for v in violations {
         println!(

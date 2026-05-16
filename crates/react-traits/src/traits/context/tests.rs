@@ -20,3 +20,10 @@ fn detects_context_provider() {
 fn no_context_provider() {
     assert!(!check("export default function App() { return <div/>; }"));
 }
+
+#[test]
+fn detects_standalone_provider_tag() {
+    assert!(check(
+        "export default function App() { return <Provider value={1}><div/></Provider>; }"
+    ));
+}

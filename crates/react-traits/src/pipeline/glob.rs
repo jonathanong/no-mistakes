@@ -34,6 +34,9 @@ pub(crate) fn expand_globs(root: &Path, patterns: &[String]) -> Result<Vec<PathB
     Ok(files)
 }
 
+#[cfg(test)]
+mod tests;
+
 fn is_skip_dir(path: &Path) -> bool {
     path.file_name().and_then(|n| n.to_str()).is_some_and(|n| {
         matches!(

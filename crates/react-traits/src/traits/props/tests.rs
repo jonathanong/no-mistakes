@@ -24,3 +24,72 @@ fn passes_props_to_child() {
     let (_, passes_props) = check("export default function App() { return <Child name=\"x\" />; }");
     assert!(passes_props);
 }
+
+#[test]
+fn passes_props_spread_attribute() {
+    let (_, passes_props) = check("export default function App(props) { return <Child {...props} />; }");
+    assert!(passes_props);
+}
+
+#[test]
+fn has_props_named_export_function() {
+    let (has_props, _) = check("export function Foo({ name }) { return <div/>; }");
+    assert!(has_props);
+}
+
+#[test]
+fn has_props_named_export_arrow() {
+    let (has_props, _) = check("export const Foo = (props) => <div/>;");
+    assert!(has_props);
+}
+
+#[test]
+fn no_props_named_export_arrow_no_params() {
+    // Arrow with no params — exercises the fall-through path in VariableDeclaration branch.
+    let (has_props, _) = check("export const Foo = () => <div/>;");
+    assert!(!has_props);
+}
+
+#[test]
+fn no_props_named_export_class() {
+    // Class declaration as named export — hits the _ => {} arm in named export match.
+    let (has_props, _) = check("export class Foo {}");
+    assert!(!has_props);
+}
+
+#[test]
+fn no_props_named_export_const_non_arrow() {
+    // Variable export where init is not an arrow function — exercises fall-through
+    // of the `if let Some(ArrowFunctionExpression)` check.
+    let (has_props, _) = check("export const foo = 42;");
+    assert!(!has_props);
+}
+
+#[test]
+fn no_props_named_reexport() {
+    // Re-export (no declaration) — e.declaration is None, exercises the outer if-let fall-through.
+    let (has_props, _) = check("export { foo } from 'some-module';");
+    assert!(!has_props);
+}
+
+#[test]
+fn has_props_default_arrow() {
+    let (has_props, _) = check("export default ({ name }) => <div/>;");
+    assert!(has_props);
+}
+
+#[test]
+fn has_props_default_fn_expression() {
+    let (has_props, _) = check("export default function(props) { return <div/>; }");
+    assert!(has_props);
+}
+
+
+#[test]
+fn passes_props_to_member_expression_component() {
+    // <Foo.Bar prop="x"/> — MemberExpression branch returns true for is_component
+    let (_, passes_props) = check(
+        "export default function App() { return <Foo.Bar prop=\"x\" />; }",
+    );
+    assert!(passes_props);
+}

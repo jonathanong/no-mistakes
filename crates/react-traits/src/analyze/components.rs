@@ -107,6 +107,9 @@ pub(crate) fn extract_components(program: &Program<'_>) -> Vec<ComponentDef> {
     components
 }
 
+#[cfg(test)]
+mod tests;
+
 pub(crate) fn is_component_expr(expr: &Expression<'_>) -> bool {
     match expr {
         Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_) => true,

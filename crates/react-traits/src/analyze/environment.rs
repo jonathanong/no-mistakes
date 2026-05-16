@@ -7,6 +7,9 @@ pub(crate) enum FileEnvironment {
     Unknown,
 }
 
+#[cfg(test)]
+mod tests;
+
 pub(crate) fn detect_file_environment(program: &Program<'_>) -> FileEnvironment {
     let has_use_server = program
         .directives

@@ -6,6 +6,9 @@ use anyhow::Result;
 use no_mistakes_core::config;
 use std::path::Path;
 
+#[cfg(test)]
+mod tests;
+
 pub(crate) fn run_check(
     base_root: &Path,
     cli: &Cli,

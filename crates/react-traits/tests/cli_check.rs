@@ -30,3 +30,16 @@ fn check_no_violation_without_fetch() {
         .assert()
         .success();
 }
+
+#[test]
+fn check_json_output_with_violations() {
+    let root = common::fixture("react-traits-config", "assert-no-fetch");
+    cmd()
+        .arg("--json")
+        .arg("check")
+        .arg("app/components/Fetcher.tsx")
+        .arg("--root")
+        .arg(&root)
+        .assert()
+        .failure();
+}

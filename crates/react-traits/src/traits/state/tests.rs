@@ -30,3 +30,9 @@ fn no_state() {
 fn detects_this_set_state() {
     assert!(check("function App() { this.setState({}); }"));
 }
+
+#[test]
+fn no_state_computed_callee() {
+    // obj[key]() — computed callee hits _ => None branch.
+    assert!(!check("const x = obj[key]();"));
+}

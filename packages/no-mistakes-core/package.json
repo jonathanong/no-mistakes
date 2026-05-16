@@ -8,10 +8,10 @@
     "url": "git+https://github.com/jonathanong/playwright-ast-coverage.git",
     "directory": "packages/no-mistakes-core"
   },
-  "main": "lib/index.js",
   "files": [
     "lib/"
   ],
+  "main": "lib/index.js",
   "publishConfig": {
     "access": "public"
   }

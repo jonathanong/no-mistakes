@@ -62,3 +62,34 @@ fn analyze_json_output() {
         .assert()
         .success();
 }
+
+#[test]
+fn analyze_nested_with_depth() {
+    let root = common::fixture("react-traits-components", "nested");
+    cmd()
+        .arg("analyze")
+        .arg("app/components/Parent.tsx")
+        .arg("app/components/Child.tsx")
+        .arg("--root")
+        .arg(&root)
+        .arg("--return-depth")
+        .arg("1")
+        .assert()
+        .success();
+}
+
+#[test]
+fn analyze_error_exit_code_on_failure() {
+    // Passing an invalid config file path causes run_cli to return Err,
+    // which exercises the error exit path in main.rs.
+    cmd()
+        .arg("analyze")
+        .arg("**/*.tsx")
+        .arg("--root")
+        .arg(".")
+        .arg("--config")
+        .arg("/nonexistent/path/config.yaml")
+        .assert()
+        .code(2);
+}
+

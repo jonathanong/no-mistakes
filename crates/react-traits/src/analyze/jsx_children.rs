@@ -57,6 +57,9 @@ fn jsx_member_root(m: &JSXMemberExpression<'_>) -> String {
     }
 }
 
+#[cfg(test)]
+mod tests;
+
 pub(crate) fn collect_jsx_children(
     program: &Program<'_>,
     import_table: &ImportTable,

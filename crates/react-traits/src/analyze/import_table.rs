@@ -12,6 +12,9 @@ pub(crate) struct ImportEntry {
 
 pub(crate) type ImportTable = HashMap<String, ImportEntry>;
 
+#[cfg(test)]
+mod tests;
+
 pub(crate) fn build_import_table(abs_path: &Path, program: &Program<'_>) -> ImportTable {
     let mut table = ImportTable::new();
     for stmt in &program.body {

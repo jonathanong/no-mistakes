@@ -96,6 +96,9 @@ fn aggregate_children(
     agg
 }
 
+#[cfg(test)]
+mod tests;
+
 pub(crate) fn load_root_and_config(base_root: &Path, cli: &Cli) -> Result<(PathBuf, FileConfig)> {
     let root = base_root.join(&cli.root);
     let stems = [".no-mistakes", ".react-traits"];

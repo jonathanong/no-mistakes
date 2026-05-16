@@ -27,3 +27,10 @@ fn detects_next_dynamic_import() {
 fn no_suspense() {
     assert!(!check("export default function App() { return <div/>; }"));
 }
+
+#[test]
+fn detects_react_suspense_member() {
+    assert!(check(
+        "export default function App() { return <React.Suspense fallback={null}><div/></React.Suspense>; }"
+    ));
+}
