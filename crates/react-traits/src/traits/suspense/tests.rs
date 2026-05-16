@@ -126,6 +126,12 @@ fn export_named_non_dynamic_not_suspense() {
 }
 
 #[test]
+fn export_named_no_init_not_suspense() {
+    // `export let Foo;` — init is None, exercises the None path of if let Some(init) (line 77)
+    assert!(!check("export let Foo;"));
+}
+
+#[test]
 fn const_memo_not_suspense() {
     // `const Foo = memo(...)` — is_dynamic_or_lazy_call(memo()) is false (memo not in list)
     assert!(!check("const Foo = memo(() => <div/>);"));

@@ -366,6 +366,13 @@ fn export_named_ts_type_ignored() {
 }
 
 #[test]
+fn local_var_no_init_not_tracked() {
+    // `let Foo;` — no init exercises the None path of if let Some(init) (line 37)
+    let names = check_names("let Foo;\nexport default Foo;");
+    assert!(names.is_empty());
+}
+
+#[test]
 fn export_const_dynamic_wrapped() {
     // `export const Foo = dynamic(...)` — dynamic added to is_component_expr callee list
     let names = check_names("export const Foo = dynamic(() => import('./Heavy'));");

@@ -74,11 +74,8 @@ fn aggregate_children(
             || child_canonical
                 .as_ref()
                 .is_some_and(|p| file_cache.contains_key(p));
+        // Analyze on-demand and cache so repeated child refs avoid redundant parsing (Cgv-B).
         if !in_cache {
-            if !child_path.is_file() {
-                continue;
-            }
-            // Analyze on-demand and cache so repeated child refs avoid redundant parsing (Cgv-B).
             match analyze_file(&child_path, root) {
                 Ok(a) => {
                     file_cache.insert(child_path.clone(), a.components);
@@ -86,13 +83,11 @@ fn aggregate_children(
                 Err(_) => continue,
             }
         }
-        let components: Vec<ComponentFacts> = match file_cache
+        let components = file_cache
             .get(&child_path)
             .or_else(|| child_canonical.as_ref().and_then(|p| file_cache.get(p)))
-        {
-            Some(c) => c.clone(),
-            None => continue,
-        };
+            .unwrap()
+            .clone();
         for child_facts in &components {
             if child_facts.name == child_ref.name {
                 agg.has_state |= child_facts.has_state;

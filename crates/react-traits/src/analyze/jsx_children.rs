@@ -44,11 +44,12 @@ impl<'a> Visit<'a> for JsxChildrenVisitor<'a> {
         let (root_name, member_suffix) = match &elem.opening_element.name {
             JSXElementName::IdentifierReference(id) => {
                 let n = id.name.as_ref();
-                if n.chars().next().is_some_and(|c| c.is_uppercase()) {
-                    (Some(n.to_string()), None)
-                } else {
-                    (None, None)
-                }
+                let root = n
+                    .chars()
+                    .next()
+                    .is_some_and(|c| c.is_uppercase())
+                    .then(|| n.to_string());
+                (root, None)
             }
             JSXElementName::MemberExpression(m) => {
                 let root = jsx_member_root(m);
@@ -106,12 +107,11 @@ fn collect_local_components(program: &Program<'_>) -> HashMap<String, String> {
                 if let Some(decl) = &e.declaration {
                     // Inline export: local name == exported name
                     match decl {
-                        Declaration::FunctionDeclaration(f) => {
-                            if let Some(id) = &f.id {
-                                if is_component_name(id.name.as_ref()) {
-                                    let n = id.name.as_ref().to_string();
-                                    map.insert(n.clone(), n);
-                                }
+                        Declaration::FunctionDeclaration(f) if f.id.is_some() => {
+                            let id = f.id.as_ref().unwrap();
+                            if is_component_name(id.name.as_ref()) {
+                                let n = id.name.as_ref().to_string();
+                                map.insert(n.clone(), n);
                             }
                         }
                         Declaration::VariableDeclaration(v) => {

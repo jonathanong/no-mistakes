@@ -39,19 +39,17 @@ pub(crate) fn extract_components(program: &Program<'_>) -> Vec<ComponentDef> {
                     }
                 }
             }
-            Statement::FunctionDeclaration(f) => {
-                if let Some(id) = &f.id {
-                    let name = id.name.as_ref();
-                    if is_component_name(name) {
-                        local_vars.insert(name, f.span);
-                    }
+            Statement::FunctionDeclaration(f) if f.id.is_some() => {
+                let id = f.id.as_ref().unwrap();
+                let name = id.name.as_ref();
+                if is_component_name(name) {
+                    local_vars.insert(name, f.span);
                 }
             }
-            Statement::ClassDeclaration(c) => {
-                if let Some(id) = &c.id {
-                    if is_component_name(id.name.as_ref()) && is_class_component(c) {
-                        local_vars.insert(id.name.as_ref(), c.span);
-                    }
+            Statement::ClassDeclaration(c) if c.id.is_some() => {
+                let id = c.id.as_ref().unwrap();
+                if is_component_name(id.name.as_ref()) && is_class_component(c) {
+                    local_vars.insert(id.name.as_ref(), c.span);
                 }
             }
             _ => {}
