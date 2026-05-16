@@ -168,5 +168,8 @@ fn exported_const_dynamic_detected_via_named_branch() {
         super::detect_uses_suspense(program, span)
     })
     .unwrap();
-    assert!(result, "exported dynamic rendered inside span should be suspense");
+    assert!(
+        result,
+        "exported dynamic rendered inside span should be suspense"
+    );
 }

@@ -169,7 +169,8 @@ fn jsx_props_outside_span_not_detected() {
 fn has_props_default_identifier_export_with_function_expr() {
     // `const Page = function(props) {}; export default Page;` — FunctionExpression in a
     // non-exported VariableDeclaration; exercises lines 124-125 in detect_props
-    let (has_props, _) = check("const Page = function(props) { return <div/>; };\nexport default Page;");
+    let (has_props, _) =
+        check("const Page = function(props) { return <div/>; };\nexport default Page;");
     assert!(has_props);
 }
 
