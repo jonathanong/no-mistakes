@@ -13,6 +13,9 @@ pub fn route_reaches_target(
     visited: &mut HashSet<PathBuf>,
     import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
 ) -> Result<bool> {
+    if !path.exists() {
+        return Ok(false);
+    }
     let abs_path = path.canonicalize()?;
     let abs_target = target
         .canonicalize()
