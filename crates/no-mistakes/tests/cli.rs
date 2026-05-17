@@ -415,6 +415,107 @@ fn server_edges_json_with_root_filter() {
 }
 
 #[test]
+fn queues_related_direction_deps() {
+    let root = queue_fixture("basic");
+    let output = run(&[
+        "queues",
+        "--root",
+        root.to_str().unwrap(),
+        "related",
+        "enqueue.ts",
+        "--direction",
+        "deps",
+    ]);
+
+    assert!(output.status.success());
+}
+
+#[test]
+fn queues_related_direction_dependents() {
+    let root = queue_fixture("basic");
+    let output = run(&[
+        "queues",
+        "--root",
+        root.to_str().unwrap(),
+        "related",
+        "enqueue.ts",
+        "--direction",
+        "dependents",
+    ]);
+
+    assert!(output.status.success());
+}
+
+#[test]
+fn server_related_direction_deps() {
+    let root = server_fixture("express");
+    let output = run(&[
+        "server",
+        "--root",
+        root.to_str().unwrap(),
+        "related",
+        "backend/api/users.ts",
+        "--direction",
+        "deps",
+    ]);
+
+    assert!(output.status.success());
+}
+
+#[test]
+fn server_related_direction_dependents() {
+    let root = server_fixture("express");
+    let output = run(&[
+        "server",
+        "--root",
+        root.to_str().unwrap(),
+        "related",
+        "backend/api/users.ts",
+        "--direction",
+        "dependents",
+    ]);
+
+    assert!(output.status.success());
+}
+
+#[test]
+fn server_relative_root_is_resolved() {
+    let output = Command::new(bin())
+        .current_dir(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../..")
+                .canonicalize()
+                .unwrap(),
+        )
+        .args([
+            "server",
+            "--root",
+            "fixtures/server-ast-routes/express",
+            "routes",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+
+    assert!(output.status.success());
+}
+
+#[test]
+fn queues_relative_root_is_resolved() {
+    let output = Command::new(bin())
+        .current_dir(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../..")
+                .canonicalize()
+                .unwrap(),
+        )
+        .args(["queues", "--root", "fixtures/queue-ast-hop/basic", "edges"])
+        .output()
+        .expect("no-mistakes should run");
+
+    assert!(output.status.success());
+}
+
+#[test]
 fn react_analyze_json_outputs_components() {
     let root = react_fixture("react-traits-components", "basic");
     let output = run(&[
