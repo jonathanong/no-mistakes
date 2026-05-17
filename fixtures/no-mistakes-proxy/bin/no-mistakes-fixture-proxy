@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+case "${1:-}" in
+  --fail)
+    echo "proxy failed"
+    exit 7
+    ;;
+  *)
+    printf 'fixture-proxy'
+    for arg in "$@"; do
+      printf ':%s' "$arg"
+    done
+    printf '\n'
+    ;;
+esac

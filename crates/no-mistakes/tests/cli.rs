@@ -106,6 +106,7 @@ fn help_lists_scoped_subcommands() {
     assert!(help.contains("react"));
     assert!(help.contains("queues"));
     assert!(help.contains("server"));
+    assert!(help.contains("External subcommands"));
 }
 
 fn queue_fixture(name: &str) -> PathBuf {
