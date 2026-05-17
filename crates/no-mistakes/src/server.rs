@@ -11,9 +11,6 @@ pub(crate) struct ServerArgs {
     /// Project root directory.
     #[arg(long, default_value = ".", global = true)]
     root: PathBuf,
-    /// Path to tsconfig.json for path alias resolution.
-    #[arg(long, global = true)]
-    tsconfig: Option<PathBuf>,
     /// Filter to files matching this glob. Can be repeated.
     #[arg(long = "filter", global = true)]
     filters: Vec<String>,
@@ -69,7 +66,7 @@ pub(crate) fn run(args: ServerArgs) -> Result<ExitCode> {
     } else {
         base.join(&args.root)
     };
-    let report = analyze_project(&root, args.tsconfig.as_deref(), &args.filters)?;
+    let report = analyze_project(&root, None, &args.filters)?;
     match &args.command {
         ServerCommand::Routes { files } => {
             print_routes(&report, files, args.json)?;
