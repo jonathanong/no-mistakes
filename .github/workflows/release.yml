@@ -369,6 +369,7 @@ jobs:
                   sleep 15
                 done
               fi
+              cargo publish --dry-run --locked -p "$pkg"
               cargo publish --locked -p "$pkg"
             fi
           done
