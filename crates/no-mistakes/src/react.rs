@@ -61,14 +61,22 @@ pub(crate) fn run(args: ReactArgs) -> Result<ExitCode> {
     match &command {
         ReactCommand::Analyze { targets } => {
             let results = react_traits::run_analyze(&root, config.as_deref(), targets, None)?;
-            if matches!(effective_format, Format::Json | Format::Md | Format::Yml) {
-                println!(
-                    "{}",
-                    serde_json::to_string_pretty(&results)
-                        .expect("serialization of Rust structs never fails")
-                );
-            } else {
-                react_traits::print_results(&results, 0);
+            match effective_format {
+                Format::Json | Format::Md | Format::Yml => {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&results)
+                            .expect("serialization of Rust structs never fails")
+                    );
+                }
+                Format::Paths => {
+                    for r in &results {
+                        println!("{}", r.file);
+                    }
+                }
+                Format::Human => {
+                    react_traits::print_results(&results, 0);
+                }
             }
             Ok(ExitCode::SUCCESS)
         }
@@ -81,14 +89,22 @@ pub(crate) fn run(args: ReactArgs) -> Result<ExitCode> {
             if violations.is_empty() {
                 return Ok(ExitCode::SUCCESS);
             }
-            if matches!(effective_format, Format::Json | Format::Md | Format::Yml) {
-                println!(
-                    "{}",
-                    serde_json::to_string_pretty(&violations)
-                        .expect("serialization of Rust structs never fails")
-                );
-            } else {
-                react_traits::print_violations(&violations);
+            match effective_format {
+                Format::Json | Format::Md | Format::Yml => {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&violations)
+                            .expect("serialization of Rust structs never fails")
+                    );
+                }
+                Format::Paths => {
+                    for v in &violations {
+                        println!("{}", v.file);
+                    }
+                }
+                Format::Human => {
+                    react_traits::print_violations(&violations);
+                }
             }
             Ok(ExitCode::from(1))
         }

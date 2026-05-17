@@ -109,8 +109,9 @@ fn print_routes(report: &ProjectReport, files: &[String], format: Format) -> Res
             println!("{}", serde_json::to_string_pretty(&routes)?);
         }
         Format::Paths => {
-            for route in &routes {
-                println!("{}", route.file);
+            let files: BTreeSet<&str> = routes.iter().map(|r| r.file.as_str()).collect();
+            for f in files {
+                println!("{f}");
             }
         }
         Format::Human => {

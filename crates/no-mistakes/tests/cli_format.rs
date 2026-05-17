@@ -90,6 +90,7 @@ fn queues_related_format_paths_prints_one_per_line() {
     ]);
     assert!(output.status.success());
     let out = stdout(&output);
+    assert!(!out.is_empty(), "paths related output should be non-empty");
     for line in out.lines() {
         assert!(!line.contains("->"), "paths format should not contain ->");
     }
@@ -159,6 +160,7 @@ fn server_related_format_paths_prints_one_per_line() {
     ]);
     assert!(output.status.success());
     let out = stdout(&output);
+    assert!(!out.is_empty(), "paths related output should be non-empty");
     for line in out.lines() {
         assert!(!line.contains("->"), "paths format should not contain ->");
     }
@@ -233,7 +235,7 @@ fn global_check_passes_on_clean_queue_fixture() {
 fn global_check_fails_on_bad_queue_fixture() {
     let root = queue_fixture("dynamic");
     let output = run(&["check", "--root", root.to_str().unwrap()]);
-    assert!(!output.status.success());
+    assert_eq!(output.status.code(), Some(1));
 }
 
 #[test]
