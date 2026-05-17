@@ -13,6 +13,8 @@ pub struct TsConfig {
     /// Directory of the tsconfig that *defines* `paths`. May differ from `dir` when the
     /// entry tsconfig inherits `paths` via `extends`. Used to anchor alias substitution.
     pub paths_dir: PathBuf,
+    /// Absolute directory used for TypeScript `baseUrl` bare-specifier resolution.
+    pub base_url: Option<PathBuf>,
 }
 
 /// Load and parse a `tsconfig.json` at `path`, following `extends` chains.
@@ -78,6 +80,11 @@ fn load_tsconfig_inner(
                 })
                 .collect()
         });
+    let own_base_url = v
+        .get("compilerOptions")
+        .and_then(|co| co.get("baseUrl"))
+        .and_then(|p| p.as_str())
+        .map(|base_url| normalize_path(&dir.join(base_url)));
 
     // Child defines its own paths (even if empty) — done, no need to follow extends.
     // An explicit `paths: {}` overrides any paths from the extends chain.
@@ -89,6 +96,7 @@ fn load_tsconfig_inner(
                 dir,
                 paths,
                 paths_dir,
+                base_url: own_base_url,
             },
             paths_found: true,
         });
@@ -161,6 +169,7 @@ fn load_tsconfig_inner(
                     dir,
                     paths: base.inner.paths,
                     paths_dir: base.inner.paths_dir,
+                    base_url: own_base_url.or(base.inner.base_url),
                 },
                 paths_found: true,
             });
@@ -173,6 +182,7 @@ fn load_tsconfig_inner(
             dir: dir.clone(),
             paths: vec![],
             paths_dir: dir,
+            base_url: own_base_url,
         },
         paths_found: false,
     })
@@ -299,6 +309,12 @@ impl<'a> ImportResolver<'a> {
                         return Some(p);
                     }
                 }
+            }
+        }
+
+        if let Some(base_url) = &self.tsconfig.base_url {
+            if let Some(p) = self.try_path(&base_url.join(specifier)) {
+                return Some(p);
             }
         }
 

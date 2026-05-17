@@ -91,6 +91,7 @@ fn resolves_relative_with_extension() {
         dir: dir.path().to_path_buf(),
         paths: vec![],
         paths_dir: dir.path().to_path_buf(),
+        base_url: None,
     };
     assert_eq!(resolve_import("./utils.mts", &importer, &tc), Some(target));
 }
@@ -105,6 +106,7 @@ fn resolves_relative_no_ext_tries_mts() {
         dir: dir.path().to_path_buf(),
         paths: vec![],
         paths_dir: dir.path().to_path_buf(),
+        base_url: None,
     };
     assert_eq!(resolve_import("./utils", &importer, &tc), Some(target));
 }
@@ -119,6 +121,7 @@ fn resolves_relative_no_ext_falls_back_to_ts() {
         dir: dir.path().to_path_buf(),
         paths: vec![],
         paths_dir: dir.path().to_path_buf(),
+        base_url: None,
     };
     assert_eq!(resolve_import("./utils", &importer, &tc), Some(target));
 }
@@ -136,6 +139,7 @@ fn resolves_relative_parent() {
         dir: dir.path().to_path_buf(),
         paths: vec![],
         paths_dir: dir.path().to_path_buf(),
+        base_url: None,
     };
     assert_eq!(resolve_import("../lib.mts", &importer, &tc), Some(target));
 }
@@ -150,6 +154,7 @@ fn resolves_relative_index_fallback() {
         dir: dir.path().to_path_buf(),
         paths: vec![],
         paths_dir: dir.path().to_path_buf(),
+        base_url: None,
     };
     assert_eq!(resolve_import("./utils", &importer, &tc), Some(target));
 }
@@ -162,6 +167,7 @@ fn relative_nonexistent_returns_none() {
         dir: dir.path().to_path_buf(),
         paths: vec![],
         paths_dir: dir.path().to_path_buf(),
+        base_url: None,
     };
     assert!(resolve_import("./ghost", &importer, &tc).is_none());
 }
@@ -219,6 +225,7 @@ fn bare_npm_returns_none() {
         dir: dir.path().to_path_buf(),
         paths: vec![],
         paths_dir: dir.path().to_path_buf(),
+        base_url: None,
     };
     let importer = dir.path().join("main.mts");
     assert!(resolve_import("express", &importer, &tc).is_none());
@@ -242,6 +249,7 @@ fn import_resolver_uses_visible_file_set() {
         dir: dir.path().to_path_buf(),
         paths: vec![],
         paths_dir: dir.path().to_path_buf(),
+        base_url: None,
     };
     let visible: HashSet<PathBuf> = [target.clone()].into();
     let resolver = ImportResolver::new(&tc).with_visible(&visible);
@@ -258,6 +266,7 @@ fn import_resolver_cache_preserves_missing_result() {
         dir: dir.path().to_path_buf(),
         paths: vec![],
         paths_dir: dir.path().to_path_buf(),
+        base_url: None,
     };
     let resolver = ImportResolver::new(&tc);
 
