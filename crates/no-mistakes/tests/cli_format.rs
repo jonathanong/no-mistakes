@@ -110,6 +110,16 @@ fn queues_check_format_paths_prints_file_line() {
     assert!(!output.status.success());
     let out = stdout(&output);
     assert!(!out.is_empty(), "paths check output should be non-empty");
+    for line in out.lines() {
+        assert!(
+            line.contains(':'),
+            "paths check line should be file:line format"
+        );
+        assert!(
+            !line.contains("->"),
+            "paths check line should not contain ->"
+        );
+    }
 }
 
 #[test]
@@ -141,6 +151,7 @@ fn server_edges_format_paths_prints_one_per_line() {
     ]);
     assert!(output.status.success());
     let out = stdout(&output);
+    assert!(!out.is_empty(), "paths edges output should be non-empty");
     for line in out.lines() {
         assert!(!line.contains("->"), "paths format should not contain ->");
     }

@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
 use no_mistakes_core::cli::Format;
 use no_mistakes_core::react_traits;
@@ -52,7 +52,7 @@ pub(crate) fn run(args: ReactArgs) -> Result<ExitCode> {
         command,
     } = args;
     let effective_format = if json { Format::Json } else { format };
-    let cwd = std::env::current_dir()?;
+    let cwd = std::env::current_dir().context("cwd must be accessible")?;
     let root = if root.is_absolute() {
         root
     } else {

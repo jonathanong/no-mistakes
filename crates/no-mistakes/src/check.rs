@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Args;
 use no_mistakes_core::cli::Format;
 use no_mistakes_core::queue::analyze_project as analyze_queues;
@@ -23,7 +23,7 @@ pub(crate) struct CheckArgs {
 }
 
 pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
-    let cwd = std::env::current_dir()?;
+    let cwd = std::env::current_dir().context("cwd must be accessible")?;
     let root = if args.root.is_absolute() {
         args.root.clone()
     } else {
