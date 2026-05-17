@@ -1,6 +1,6 @@
 {
   "name": "next-to-fetch",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Map Next.js App Router routes to fetch API calls",
   "license": "MIT",
   "repository": {
@@ -24,6 +24,6 @@
     "postinstall": "node scripts/install.js"
   },
   "dependencies": {
-    "no-mistakes-core": "^0.2.1"
+    "no-mistakes-core": "^0.2.2"
   }
 }
