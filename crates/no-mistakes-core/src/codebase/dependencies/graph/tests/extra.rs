@@ -197,7 +197,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         .all_files()
         .any(|node| node.as_file() == Some(emails.as_path())));
 
-    let symbol_index = SymbolIndex::build_from_root(&root, &tsconfig);
+    let symbol_index = SymbolIndex::build_from_root(&root, &tsconfig).unwrap();
     let dependents = graph.dependents_of_symbol(
         &emails,
         "sendWelcomeEmail",
@@ -221,6 +221,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
     };
     assert!(
         SymbolIndex::build_from_root(&missing_root, &missing_tsconfig)
+            .unwrap()
             .importers_of(&emails, "none")
             .is_none()
     );

@@ -219,7 +219,6 @@ fn merge_edges(forward: &mut EdgeMap, reverse: &mut EdgeMap, edges: Vec<Edge>) {
 
 /// Directed dependency graph: node → nodes it depends on, and the reverse.
 pub struct DepGraph {
-    #[cfg(test)]
     root: PathBuf,
     /// forward: node → nodes it imports/references (with edge kinds)
     forward: EdgeMap,
@@ -228,13 +227,18 @@ pub struct DepGraph {
 }
 
 impl DepGraph {
-    pub fn build(root: &Path, tsconfig: &TsConfig) -> Self {
+    pub fn build(root: &Path, tsconfig: &TsConfig) -> Result<Self> {
         Self::build_with_plan(root, tsconfig, GraphBuildPlan::all())
     }
 
-    pub fn build_with_plan(root: &Path, tsconfig: &TsConfig, plan: GraphBuildPlan) -> Self {
+    pub fn build_with_plan(root: &Path, tsconfig: &TsConfig, plan: GraphBuildPlan) -> Result<Self> {
         let graph_files = GraphFiles::discover(root);
-        Self::build_with_plan_and_files(root, tsconfig, plan, &graph_files)
+        Ok(Self::build_with_plan_and_files(
+            root,
+            tsconfig,
+            plan,
+            &graph_files,
+        ))
     }
 
     pub(crate) fn build_with_plan_and_files(
@@ -350,7 +354,6 @@ impl DepGraph {
         }
 
         Self {
-            #[cfg(test)]
             root: root.to_path_buf(),
             forward,
             reverse,
@@ -460,12 +463,10 @@ impl DepGraph {
         bfs(&roots, &self.reverse, max_depth, allowed)
     }
 
-    #[cfg(test)]
     pub fn root(&self) -> &Path {
         &self.root
     }
 
-    #[cfg(test)]
     pub fn all_files(&self) -> impl Iterator<Item = &NodeId> {
         self.forward.keys()
     }
@@ -483,7 +484,6 @@ fn push_unvisited_symbol_pair(
 
 /// Demand-driven import traversal used by `dependencies --relationship import`.
 /// It parses only roots and files reached through static import edges.
-#[cfg(test)]
 pub fn lazy_import_deps_of(
     roots: &[NodeId],
     root: &Path,
@@ -1870,9 +1870,9 @@ impl SymbolIndex {
     ///
     /// This is the companion index required by `DepGraph::dependents_of_symbol`
     /// for `file#exportName` queries.
-    pub fn build_from_root(root: &Path, tsconfig: &TsConfig) -> Self {
+    pub fn build_from_root(root: &Path, tsconfig: &TsConfig) -> Result<Self> {
         let graph_files = GraphFiles::discover(root);
-        Self::build_from_files(tsconfig, &graph_files)
+        Ok(Self::build_from_files(tsconfig, &graph_files))
     }
 
     pub(crate) fn build_from_files(tsconfig: &TsConfig, graph_files: &GraphFiles) -> Self {

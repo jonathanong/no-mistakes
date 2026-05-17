@@ -97,7 +97,7 @@ struct PlaywrightVisit {
 
 pub fn run(args: CoverageArgs) -> Result<ExitStatus> {
     let mut timings = crate::codebase::timing::PhaseTimings::start();
-    let cwd = std::env::current_dir().expect("current directory is readable");
+    let cwd = std::env::current_dir().context("reading current directory")?;
     let root = resolve_root(args.root.as_deref(), &cwd);
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let config = match load_config(&root) {
