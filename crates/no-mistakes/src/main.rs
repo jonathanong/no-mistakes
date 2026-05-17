@@ -20,6 +20,8 @@ enum Command {
     Dependencies(TraverseArgs),
     /// Find files that depend on the given files.
     Dependents(TraverseArgs),
+    /// Find files that depend on the given files (alias for `dependents`).
+    Related(TraverseArgs),
     /// Dump named exports and imports of TS/JS files.
     Symbols(SymbolsArgs),
 }
@@ -51,7 +53,9 @@ fn run() -> Result<()> {
     init_threads(cli.jobs);
     match cli.command {
         Command::Dependencies(args) => dependencies::run(args, Direction::Deps),
-        Command::Dependents(args) => dependencies::run(args, Direction::Dependents),
+        Command::Dependents(args) | Command::Related(args) => {
+            dependencies::run(args, Direction::Dependents)
+        }
         Command::Symbols(args) => symbols::run(args),
     }
 }

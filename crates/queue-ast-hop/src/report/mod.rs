@@ -1,15 +1,6 @@
-use clap::ValueEnum;
+pub(crate) use no_mistakes_core::cli::Format;
 use no_mistakes_core::queue::{Edge, ProjectReport};
 use serde::Serialize;
-
-#[derive(Debug, Clone, Copy, Eq, PartialEq, ValueEnum)]
-pub(crate) enum Format {
-    Json,
-    Md,
-    Yml,
-    Paths,
-    Human,
-}
 
 pub(crate) fn print_edges(
     report: &ProjectReport,

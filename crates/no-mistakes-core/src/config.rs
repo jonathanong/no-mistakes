@@ -3,7 +3,7 @@ use jsonc_parser::ParseOptions;
 use serde::de::DeserializeOwned;
 use std::path::{Path, PathBuf};
 
-const CONFIG_EXTENSIONS: &[&str] = &["yaml", "yml", "json", "jsonc"];
+pub(crate) const CONFIG_EXTENSIONS: &[&str] = &["yaml", "yml", "json", "jsonc"];
 
 pub fn load_config<T: DeserializeOwned + Default>(
     root: &Path,
@@ -95,6 +95,8 @@ pub fn resolve(root: &Path, path: &Path) -> PathBuf {
         root.join(path)
     }
 }
+
+pub mod v2;
 
 #[cfg(test)]
 mod tests;

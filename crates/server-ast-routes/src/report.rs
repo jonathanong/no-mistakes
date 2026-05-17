@@ -1,15 +1,6 @@
-use clap::ValueEnum;
+pub(crate) use no_mistakes_core::cli::Format;
 use no_mistakes_core::server_routes::{Edge, ProjectReport, ServerRoute};
 use serde::Serialize;
-
-#[derive(Debug, Clone, Copy, Eq, PartialEq, ValueEnum)]
-pub(crate) enum Format {
-    Json,
-    Md,
-    Yml,
-    Paths,
-    Human,
-}
 
 pub(crate) fn print_routes(
     report: &ProjectReport,

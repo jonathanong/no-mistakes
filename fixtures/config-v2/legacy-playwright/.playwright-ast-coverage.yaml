@@ -1,0 +1,14 @@
+frontendRoot: web/app
+playwrightConfig: playwright.config.mts
+selectorAttributes:
+  - data-pw
+  - data-testid
+componentSelectorAttributes:
+  dataPw: data-pw
+htmlIds: false
+selectorRoots:
+  - web/app
+  - web/components
+selectorExclude:
+  - '**/*.test.tsx'
+  - '**/*.stories.tsx'

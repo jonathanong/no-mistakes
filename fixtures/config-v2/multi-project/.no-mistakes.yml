@@ -1,0 +1,50 @@
+filesystem:
+  skipDirectories:
+    - .next
+    - node_modules
+projects:
+  backend:
+    type: server
+    root: backend
+    include:
+      - backend/**
+    routes:
+      - backend/api/**
+    queues:
+      enqueues:
+        - backend/queues/**
+      workers:
+        - backend/workers/**
+    rules:
+      - http-route-static-paths
+  web:
+    type: nextjs
+    root: web
+    include:
+      - web/**
+    rules:
+      - no-dynamic-server-components
+tests:
+  playwright:
+    configs: playwright.config.ts
+    selectors:
+      htmlIds: false
+      testIds:
+        - data-testid
+        - data-pw
+      componentTestIds:
+        dataPw: data-pw
+    selectorRoots:
+      - web/app
+      - web/components
+    selectorExclude:
+      - '**/*.test.tsx'
+      - '**/*.stories.tsx'
+  vitest:
+    configs: vitest.config.ts
+rules:
+  http-route-static-paths:
+    message: Route paths must be static literals
+    backendPattern: backend/api/**
+  no-dynamic-server-components:
+    message: No dynamic server components allowed

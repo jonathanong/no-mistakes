@@ -1,0 +1,19 @@
+filesystem:
+  skipDirectories:
+    - .next
+    - node_modules
+projects:
+  backend:
+    rootPath: backend
+    rules:
+      - http-route-static-paths
+  web:
+    rootPath: web
+    rules:
+      - no-dynamic-server-components
+rules:
+  http-route-static-paths:
+    message: Route paths must be static literals
+    backendPattern: backend/api/**
+  no-dynamic-server-components:
+    message: No dynamic server components

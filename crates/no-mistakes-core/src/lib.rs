@@ -1,4 +1,5 @@
 pub mod ast;
+pub mod cli;
 pub mod codebase;
 pub mod config;
 pub mod fetch;

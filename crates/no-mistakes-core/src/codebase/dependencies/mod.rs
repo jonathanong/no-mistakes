@@ -11,20 +11,7 @@ use std::path::PathBuf;
 pub use crate::codebase::ts_resolver::TsConfig;
 pub use graph::{DepGraph, EdgeKind, NodeId};
 
-/// Output format for dependency results.
-#[derive(Debug, Clone, Copy, PartialEq, clap::ValueEnum)]
-pub enum Format {
-    /// JSON object `{roots, files}`. Default when stdout is not a TTY.
-    Json,
-    /// Markdown nested bullet list.
-    Md,
-    /// YAML document with the same structure as JSON.
-    Yml,
-    /// One relative path per line (for shell `$()` substitution).
-    Paths,
-    /// Indented tree (default on TTY).
-    Human,
-}
+pub use crate::cli::Format;
 
 /// Map a `--test <framework>` value to its corresponding glob patterns.
 pub(crate) fn test_globs(framework: &str) -> Vec<String> {
@@ -393,8 +380,8 @@ pub struct TraverseArgs {
     #[arg(long, value_name = "FILE")]
     pub tsconfig: Option<PathBuf>,
 
-    /// Maximum traversal depth (default: unlimited).
-    #[arg(long, value_name = "N")]
+    /// Maximum traversal depth (default: unlimited). Alias: `--max-depth`.
+    #[arg(long, alias = "max-depth", value_name = "N")]
     pub depth: Option<usize>,
 
     /// Only include files matching this glob pattern. Can be repeated (OR logic).

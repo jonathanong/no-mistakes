@@ -1,0 +1,13 @@
+projects:
+  backend:
+    type: server
+    root: backend
+    include:
+      - backend/**
+    routes:
+      - backend/api/**
+    rules:
+      - http-route-static-paths
+rules:
+  http-route-static-paths:
+    message: Route paths must be static literals

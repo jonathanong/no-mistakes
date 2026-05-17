@@ -1,0 +1,17 @@
+projects:
+  web:
+    type: nextjs
+    root: web
+tests:
+  playwright:
+    configs:
+      - playwright.config.ts
+      - playwright.storybook.config.ts
+    selectors:
+      htmlIds: true
+      testIds:
+        - data-testid
+  vitest:
+    configs: vitest.config.ts
+  storybook:
+    configs: .storybook/main.ts
