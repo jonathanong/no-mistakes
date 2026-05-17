@@ -213,6 +213,17 @@ pub fn find_tsconfig(start: &Path) -> Option<PathBuf> {
 }
 
 const EXTENSIONS: &[&str] = &[".mts", ".ts", ".tsx", ".mjs", ".js", ".jsx", ".cjs", ".cts"];
+const EXPLICIT_EXTENSIONS: &[&str] = &[
+    "mts", "ts", "tsx", "mjs", "js", "jsx", "cjs", "cts", "json", "css", "scss", "sass", "less",
+    "svg", "png", "jpg", "jpeg", "gif", "webp", "avif", "txt", "wasm",
+];
+
+fn has_explicit_extension(path: &Path) -> bool {
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| EXPLICIT_EXTENSIONS.contains(&ext))
+        .unwrap_or(false)
+}
 
 /// Resolve `specifier` (as it appears in an import in `importing_file`) to an
 /// absolute path on disk. Returns `None` for bare npm specifiers or if no file
@@ -336,16 +347,10 @@ impl<'a> ImportResolver<'a> {
     fn try_path(&self, base: &Path) -> Option<PathBuf> {
         let base = normalize_path(base);
         let s = base.to_string_lossy();
-        let has_ext = base
-            .file_name()
-            .and_then(|n| n.to_str())
-            .map(|n| n.contains('.'))
-            .unwrap_or(false);
-
-        if has_ext {
-            if self.path_exists(&base) {
-                return Some(base);
-            }
+        if self.path_is_file(&base) {
+            return Some(base);
+        }
+        if has_explicit_extension(&base) {
             return None;
         }
 
@@ -370,6 +375,12 @@ impl<'a> ImportResolver<'a> {
         self.visible
             .map(|visible| visible.contains(path))
             .unwrap_or_else(|| path.exists())
+    }
+
+    fn path_is_file(&self, path: &Path) -> bool {
+        self.visible
+            .map(|visible| visible.contains(path))
+            .unwrap_or_else(|| path.is_file())
     }
 }
 
