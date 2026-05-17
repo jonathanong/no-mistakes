@@ -1,5 +1,5 @@
 use crate::report::{print_check, print_edges, print_related, Format};
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{Parser, Subcommand, ValueEnum};
 use no_mistakes_core::cli::{init_rayon_threads, resolve_root, JobsArg};
 use no_mistakes_core::queue::{analyze_project, related, RelatedDirection};
@@ -53,7 +53,7 @@ enum DirectionArg {
 pub fn run_cli() -> Result<ExitCode> {
     let cli = Cli::parse();
     init_rayon_threads(cli.jobs);
-    let base = std::env::current_dir()?;
+    let base = std::env::current_dir().context("reading current directory")?;
     let root = resolve_root(&cli.root, &base);
     if cli.timings {
         eprintln!("search: 0.000ms");

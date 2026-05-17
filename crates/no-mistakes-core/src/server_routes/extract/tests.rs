@@ -21,6 +21,7 @@ fn extract_file_covers_import_binding_route_and_mount_shapes() {
     assert_eq!(facts.bindings["api"].framework, Framework::Express);
     assert_eq!(facts.bindings["hono"].prefixes, vec!["/hono"]);
     assert_eq!(facts.bindings["koa"].prefixes, vec!["/koa"]);
+    assert_eq!(facts.bindings["loose"].prefixes, vec!["/loose"]);
 
     let route_pairs: Vec<_> = facts
         .routes

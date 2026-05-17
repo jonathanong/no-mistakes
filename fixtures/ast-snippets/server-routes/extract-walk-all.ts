@@ -47,6 +47,7 @@ api.get();
 api.post;
 unknown().use("/dynamic-parent", router);
 unknown.get("/heuristic");
+loose.prefix("/loose");
 router.get([ARRAY, `/template-array`]);
 router.get(["/spread-array", ...dynamicRoutes, 1]);
 koa.get("named", ["/named", ROOT]);

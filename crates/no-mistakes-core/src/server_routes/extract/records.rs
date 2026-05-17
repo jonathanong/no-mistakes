@@ -105,7 +105,7 @@ impl ServerRouteVisitor<'_> {
         self.facts
             .bindings
             .entry(binding)
-            .or_insert(Binding::new(Framework::Heuristic, None))
+            .or_insert_with(|| Binding::new(Framework::Heuristic, None))
             .prefixes
             .push(prefix);
     }
