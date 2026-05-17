@@ -36,7 +36,13 @@ The canonical documentation lives in [docs/](docs/README.md):
 Use the published packages where available:
 
 ```sh
-npm install --save-dev no-mistakes no-mistakes-scripts playwright-ast-coverage eslint-plugin-playwright-ast-coverage
+npm install --save-dev no-mistakes playwright-ast-coverage eslint-plugin-playwright-ast-coverage
+```
+
+On macOS/Linux, add the portable shell checks:
+
+```sh
+npm install --save-dev no-mistakes-scripts
 ```
 
 Or install the Rust binary directly:
