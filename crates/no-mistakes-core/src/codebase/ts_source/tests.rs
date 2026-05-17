@@ -331,6 +331,9 @@ fn fallback_walk_includes_github_workflows() {
     assert!(files
         .iter()
         .any(|path| path.ends_with(".github/workflows/ci.yml")));
+    assert!(!files
+        .iter()
+        .any(|path| path.ends_with(".github/workflows/ignored.yml")));
     assert!(files.iter().any(|path| path.ends_with("src/main.mts")));
     assert!(!files.iter().any(|path| path.ends_with(".env")));
     assert!(files
@@ -339,6 +342,11 @@ fn fallback_walk_includes_github_workflows() {
     assert!(!files
         .iter()
         .any(|path| path.ends_with(".cache/ignored.mts")));
+
+    let files = walk_files(&dir, &[".github".to_string()]);
+    assert!(!files
+        .iter()
+        .any(|path| path.ends_with(".github/workflows/ci.yml")));
 }
 
 #[test]
