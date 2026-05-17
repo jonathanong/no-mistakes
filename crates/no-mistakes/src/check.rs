@@ -115,7 +115,7 @@ pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
                 println!("{}:{}", f.file, f.line);
             }
             for f in &codebase_findings {
-                println!("{}:{}", f.file, f.line);
+                println!("{}:{}:{}", f.file, f.line, f.export_name);
             }
         }
         Format::Human => {

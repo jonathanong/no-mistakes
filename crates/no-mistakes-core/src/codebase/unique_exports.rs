@@ -109,7 +109,7 @@ pub fn analyze_project(
         root,
         all_files.clone(),
         &config.filesystem.skip_file_patterns,
-    );
+    )?;
     let tsconfig = match tsconfig_path {
         Some(path) => {
             let path = if path.is_absolute() {
@@ -126,7 +126,7 @@ pub fn analyze_project(
     };
     let resolver = ImportResolver::new(&tsconfig);
     let workspace = workspaces::load_from_files(root, &all_files).unwrap_or_default();
-    let source_files = collect_source_files(root, &files);
+    let source_files = collect_source_files(root, &files)?;
     let by_path: HashMap<PathBuf, SourceFile> = source_files
         .into_iter()
         .map(|file| (file.path.clone(), file))

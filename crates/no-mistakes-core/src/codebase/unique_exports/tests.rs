@@ -190,22 +190,24 @@ fn covers_reexport_resolution_edge_cases() {
 #[test]
 fn scan_helpers_cover_filter_and_parse_edges() {
     let root = fixture("unique-exports-edge-cases");
-    let files = vec![
-        root.join("src/direct.ts"),
-        root.join("src/invalid.ts"),
-        root.join("src/not-present.ts"),
-        root.join("package.json"),
-    ];
-    let filtered = scan::filter_source_files(&root, files.clone(), &["[".to_string()]);
-    assert_eq!(filtered.len(), 3);
+    let files = vec![root.join("src/direct.ts"), root.join("package.json")];
+    assert!(
+        scan::filter_source_files(&root, vec![root.join("src/direct.ts")], &["[".to_string()])
+            .unwrap_err()
+            .to_string()
+            .contains("invalid skip file pattern")
+    );
 
-    let filtered = scan::filter_source_files(&root, files, &["invalid\\.ts$".to_string()]);
-    assert_eq!(filtered.len(), 2);
+    let filtered = scan::filter_source_files(&root, files, &["invalid\\.ts$".to_string()]).unwrap();
+    assert_eq!(filtered.len(), 1);
     assert!(!filtered.iter().any(|path| path.ends_with("src/invalid.ts")));
 
-    let sources = scan::collect_source_files(&root, &filtered);
+    let sources = scan::collect_source_files(&root, &filtered).unwrap();
     assert_eq!(sources.len(), 1);
     assert_eq!(sources[0].rel, "src/direct.ts");
+
+    assert!(scan::collect_source_files(&root, &[root.join("src/not-present.ts")]).is_err());
+    assert!(scan::collect_source_files(&root, &[root.join("src/invalid.ts")]).is_err());
 
     let lookup = scan::NextJsProjectLookup::new(&fixture("unique-exports-nextjs"), &[]);
     assert!(!lookup.contains_file(&root.join("src/direct.ts")));
@@ -215,7 +217,9 @@ fn scan_helpers_cover_filter_and_parse_edges() {
 fn defensive_helpers_ignore_missing_targets_and_non_matching_default_exports() {
     let root = fixture("unique-exports-edge-cases");
     let all_files = discover_files(&root, &[]);
-    let source_files = scan::collect_source_files(&root, &all_files);
+    let files =
+        scan::filter_source_files(&root, all_files, &["invalid\\.ts$".to_string()]).unwrap();
+    let source_files = scan::collect_source_files(&root, &files).unwrap();
     let files: HashMap<PathBuf, SourceFile> = source_files
         .into_iter()
         .map(|file| (file.path.clone(), file))

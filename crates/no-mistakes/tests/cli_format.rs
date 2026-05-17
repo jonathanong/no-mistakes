@@ -334,6 +334,7 @@ fn global_check_reports_unique_exports_in_all_formats() {
         let stdout = stdout(&output);
         if format == "paths" {
             assert!(stdout.contains("src/"));
+            assert!(stdout.contains(":shared"));
         } else {
             assert!(stdout.contains("shared"));
         }
