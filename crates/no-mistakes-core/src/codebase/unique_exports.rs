@@ -144,7 +144,7 @@ pub fn analyze_project(
     let mut findings = Vec::new();
     for ((name, bucket), mut occurrences) in buckets {
         occurrences.sort_by(|a, b| (&a.file, a.line, &a.kind).cmp(&(&b.file, b.line, &b.kind)));
-        occurrences.dedup_by(|a, b| a.file == b.file && a.line == b.line && a.name == b.name);
+        occurrences.dedup_by(|a, b| a.file == b.file && a.line == b.line);
         if occurrences.len() < 2 {
             continue;
         }

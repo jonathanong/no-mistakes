@@ -94,6 +94,16 @@ fn explicit_tsconfig_resolves_path_aliases() {
 }
 
 #[test]
+fn nearest_tsconfig_is_discovered_and_explicit_errors_are_reported() {
+    let root = fixture("unique-exports-tsconfig-paths");
+    let findings = analyze_project(&root, None, None).unwrap();
+    assert!(findings
+        .iter()
+        .any(|finding| finding.export_name == "ViaConfig"));
+    assert!(analyze_project(&root, None, Some(&root.join("missing-tsconfig.json"))).is_err());
+}
+
+#[test]
 fn covers_reexport_resolution_edge_cases() {
     let findings = findings("unique-exports-edge-cases");
     let names = finding_names(&findings);
@@ -104,6 +114,27 @@ fn covers_reexport_resolution_edge_cases() {
     assert!(names.contains(&("StarResolved".to_string(), "value".to_string())));
     assert!(names.contains(&("Hidden".to_string(), "value".to_string())));
     assert!(names.contains(&("Skipped".to_string(), "value".to_string())));
+}
+
+#[test]
+fn scan_helpers_cover_filter_and_parse_edges() {
+    let root = fixture("unique-exports-edge-cases");
+    let files = vec![
+        root.join("src/direct.ts"),
+        root.join("src/invalid.ts"),
+        root.join("src/not-present.ts"),
+        root.join("package.json"),
+    ];
+    let filtered = scan::filter_source_files(&root, files.clone(), &["[".to_string()]);
+    assert_eq!(filtered.len(), 3);
+
+    let filtered = scan::filter_source_files(&root, files, &["invalid\\.ts$".to_string()]);
+    assert_eq!(filtered.len(), 2);
+    assert!(!filtered.iter().any(|path| path.ends_with("src/invalid.ts")));
+
+    let sources = scan::collect_source_files(&root, &filtered);
+    assert_eq!(sources.len(), 1);
+    assert_eq!(sources[0].rel, "src/direct.ts");
 }
 
 #[test]
