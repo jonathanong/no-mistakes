@@ -44,8 +44,7 @@ pub fn run_cli() -> Result<ExitCode> {
     let root = base_root.join(&cli.root);
     match &cli.command {
         Command::Analyze { targets } => {
-            let results =
-                react_traits::run_analyze(&root, cli.config.as_deref(), targets, None)?;
+            let results = react_traits::run_analyze(&root, cli.config.as_deref(), targets, None)?;
             if cli.json {
                 println!(
                     "{}",
@@ -71,7 +70,7 @@ pub fn run_cli() -> Result<ExitCode> {
                         "{}",
                         serde_json::to_string_pretty(&violations)
                             .expect("serialization of Rust structs never fails")
-                        );
+                    );
                 } else {
                     no_mistakes_core::react_traits::report::text::print_violations(&violations);
                 }

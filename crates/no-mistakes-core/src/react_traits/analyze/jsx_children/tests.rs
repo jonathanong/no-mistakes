@@ -1,6 +1,6 @@
 use super::collect_jsx_children;
-use crate::react_traits::analyze::import_table::build_import_table;
 use crate::ast;
+use crate::react_traits::analyze::import_table::build_import_table;
 use std::path::PathBuf;
 
 fn fixture_dir() -> PathBuf {

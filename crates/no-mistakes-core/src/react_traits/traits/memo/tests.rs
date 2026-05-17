@@ -1,19 +1,18 @@
 use super::detect_uses_memo;
-use crate::react_traits::analyze::components::extract_components;
 use crate::ast;
+use crate::react_traits::analyze::components::extract_components;
 
 fn check(source: &str) -> bool {
     let path = std::path::Path::new("test.tsx");
     let span = oxc_span::Span::new(0, source.len() as u32);
     ast::with_program(path, source, |program, _| {
         let defs = extract_components(program);
-        let def = defs
-            .first()
-            .cloned()
-            .unwrap_or_else(|| crate::react_traits::analyze::components::ComponentDef {
+        let def = defs.first().cloned().unwrap_or_else(|| {
+            crate::react_traits::analyze::components::ComponentDef {
                 name: "default".to_string(),
                 span: oxc_span::Span::default(),
-            });
+            }
+        });
         detect_uses_memo(program, span, &def)
     })
     .unwrap()
@@ -213,13 +212,12 @@ fn use_memo_outside_span_not_detected() {
     let path = std::path::Path::new("test.tsx");
     let result = crate::ast::with_program(path, source, |program, _| {
         let defs = crate::react_traits::analyze::components::extract_components(program);
-        let def = defs
-            .first()
-            .cloned()
-            .unwrap_or_else(|| crate::react_traits::analyze::components::ComponentDef {
+        let def = defs.first().cloned().unwrap_or_else(|| {
+            crate::react_traits::analyze::components::ComponentDef {
                 name: "default".to_string(),
                 span: oxc_span::Span::default(),
-            });
+            }
+        });
         super::detect_uses_memo(program, oxc_span::Span::new(0, 0), &def)
     })
     .unwrap();

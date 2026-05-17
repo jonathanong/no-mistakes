@@ -1,3 +1,7 @@
+use crate::ast;
+use crate::imports::{
+    collect_identifier_references, collect_runtime_imports_from_program, relative_string,
+};
 use crate::react_traits::analyze::components::extract_components;
 use crate::react_traits::analyze::environment::{detect_file_environment, FileEnvironment};
 use crate::react_traits::analyze::import_table::build_import_table;
@@ -5,10 +9,6 @@ use crate::react_traits::analyze::jsx_children::collect_jsx_children;
 use crate::react_traits::report::types::{ComponentFacts, ComponentRef, Environment, FetchCall};
 use crate::react_traits::traits;
 use anyhow::Result;
-use crate::ast;
-use crate::imports::{
-    collect_identifier_references, collect_runtime_imports_from_program, relative_string,
-};
 use std::path::{Path, PathBuf};
 
 pub(crate) struct FileAnalysis {
@@ -48,8 +48,7 @@ pub(crate) fn analyze_file(abs_path: &Path, root: &Path) -> Result<FileAnalysis>
             let uses_memo = traits::memo::detect_uses_memo(program, span, &def);
             let uses_context_provider = traits::context::detect_context_provider(program, span);
             let uses_suspense = traits::suspense::detect_uses_suspense(program, span);
-            let fetch_calls =
-                traits::fetch::collect_fetch_calls(program, &source, &rel_path, span);
+            let fetch_calls = traits::fetch::collect_fetch_calls(program, &source, &rel_path, span);
 
             let fetches = fetch_calls
                 .into_iter()
