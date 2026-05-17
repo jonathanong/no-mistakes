@@ -1,7 +1,9 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
+
+use crate::config::v2::{find_config_root, load_v2_config, schema::NoMistakesConfig};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -111,29 +113,31 @@ impl Config {
 }
 
 pub fn load_config(start: &Path) -> Result<Config> {
-    let Some(path) = find_config_file(start) else {
-        let mut config = Config::default();
-        config.augment_from_gitignore(start);
-        return Ok(config);
-    };
-
-    let yaml =
-        std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
-    let mut config =
-        Config::from_yaml(&yaml).with_context(|| format!("parsing {}", path.display()))?;
-    config.augment_from_gitignore(path.parent().unwrap_or(start));
+    let v2 = load_v2_config(start, None)?;
+    let mut config = config_from_v2(v2);
+    config.augment_from_gitignore(&find_config_root(start));
     Ok(config)
 }
 
-fn find_config_file(start: &Path) -> Option<PathBuf> {
-    let mut current = start.to_path_buf();
-    loop {
-        let candidate = current.join(".guardrailsrc.yml");
-        if candidate.exists() {
-            return Some(candidate);
-        }
-        if !current.pop() {
-            return None;
-        }
+fn config_from_v2(v2: NoMistakesConfig) -> Config {
+    let rules = v2
+        .rules
+        .into_iter()
+        .map(|(id, def)| {
+            (
+                id,
+                RuleConfig {
+                    enabled: def.enabled,
+                    options: def.options,
+                },
+            )
+        })
+        .collect();
+    Config {
+        filesystem: FilesystemConfig {
+            skip_directories: v2.filesystem.skip_directories,
+            skip_file_patterns: v2.filesystem.skip_file_patterns,
+        },
+        rules,
     }
 }
