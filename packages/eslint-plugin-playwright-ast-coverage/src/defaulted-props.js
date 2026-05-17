@@ -1,6 +1,7 @@
 "use strict";
 
 const { isStringLiteralNode, literalString, staticTemplate } = require("./helpers");
+const EMPTY_FUNCTION = { params: [], body: null };
 
 function isLiteralLike(node, opts, context) {
   const value = literalString(node);
@@ -65,7 +66,6 @@ function collectDefaultName(node, props, hasLiteralDefault) {
 }
 
 function collectConstPatternDefaults(node, props) {
-  /* v8 ignore next -- function-like nodes without bodies are defensive traversal */
   if (!node) {
     return;
   }
@@ -100,7 +100,6 @@ function patternHasLiteralDefault(pattern, name) {
     );
   }
   return pattern.properties.some((prop) => {
-    /* v8 ignore next -- rest bindings cannot be recorded as defaulted props */
     if (prop.type === "RestElement") {
       return false;
     }
@@ -115,7 +114,6 @@ function constDefaultTraversalChildren(node) {
   if (node.type === "IfStatement") {
     return [node.consequent, node.alternate].filter(Boolean);
   }
-  /* v8 ignore next -- non-container statements cannot hold const declarations */
   return [];
 }
 
@@ -139,11 +137,7 @@ function nearestFunction(node) {
 }
 
 function defaultedPropsForNode(node) {
-  const fn = nearestFunction(node);
-  /* v8 ignore next -- direct helper tests cover the no-function return */
-  if (!fn) {
-    return new Set();
-  }
+  const fn = nearestFunction(node) || EMPTY_FUNCTION;
   const props = collectDefaultedProps(fn.params);
   collectConstPatternDefaults(fn.body, props);
   return props;
@@ -197,19 +191,18 @@ function isFunctionParameterSource(node, context) {
 }
 
 function findVariable(scope, name) {
-  let current = scope;
-  while (current) {
-    const variable = current.variables.find((item) => item.name === name);
-    /* v8 ignore next -- covered by ESLint scope integration behavior */
-    if (variable) {
-      return variable;
-    }
-    current = current.upper;
+  let variable = null;
+  for (let current = scope; current && variable === null; current = current.upper) {
+    variable = current.variables.find((item) => item.name === name) || null;
   }
-  return null;
+  return variable;
 }
 
 module.exports = {
+  __test: {
+    findVariable,
+    patternHasLiteralDefault,
+  },
   defaultedPropsForNode,
   isDefaultedPropReference,
   isLiteralLike,

@@ -44,7 +44,6 @@ function isInteractiveElement(elementName, attributes) {
   if (INTERACTIVE_ELEMENTS.has(elementName)) {
     return true;
   }
-  /* v8 ignore next -- covered behavior is asserted through require-interactive-test-id */
   if (elementName === "a" && attributes.some((attr) => attributeName(attr) === "href")) {
     return true;
   }

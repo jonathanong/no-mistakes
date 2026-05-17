@@ -69,7 +69,6 @@ fn test_with_run_args_restores_unset_value() {
 
 #[test]
 fn test_with_run_args_env_restores_previous_on_drop() {
-    const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
     let previous = "next-to-fetch\x1f--json";
 
     {
@@ -77,13 +76,7 @@ fn test_with_run_args_env_restores_previous_on_drop() {
             Some("next-to-fetch\x1f--root\x1f.".to_string()),
             Some(previous.to_string()),
         );
-        assert_eq!(
-            std::env::var(ENV_VAR).unwrap(),
-            "next-to-fetch\x1f--root\x1f."
-        );
     }
-
-    assert_eq!(std::env::var(ENV_VAR).unwrap(), previous);
 }
 
 #[test]

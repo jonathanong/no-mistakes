@@ -163,3 +163,6 @@ pub(super) fn import_names(specifier: &ImportDeclarationSpecifier<'_>) -> (Strin
         ),
     }
 }
+
+#[cfg(test)]
+mod tests;

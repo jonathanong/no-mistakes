@@ -5,6 +5,7 @@ const { mkdir, mkdtemp, readFile, rm, stat, writeFile } = require("node:fs/promi
 const { join } = require("node:path");
 const { tmpdir } = require("node:os");
 const { pathToFileURL } = require("node:url");
+const core = require("no-mistakes-core");
 
 const { assetName, install, platformTarget, unsupportedPlatformMessage } = require("./install");
 
@@ -22,6 +23,14 @@ const binName = "playwright-ast-coverage";
 const version = "9.8.7";
 
 test("rejects unsupported install targets", async () => {
+  await assert.rejects(
+    () => core.install("simple", "owner/repo", { target: "x86_64-unknown-linux-gnu" }),
+    /version is required/,
+  );
+  await assert.rejects(
+    () => core.install("simple", "owner/repo", { target: "x86_64-unknown-linux-gnu", version }),
+    /vendorDir is required/,
+  );
   await assert.rejects(() => install({ target: null, version }), /Unsupported platform/);
   assert.match(
     unsupportedPlatformMessage(binName, "freebsd", "x64"),
@@ -35,6 +44,21 @@ test("rejects unsupported install targets", async () => {
     unsupportedPlatformMessage(binName, "linux", "arm64", { getReport: () => ({ header: {} }) }),
     /glibc 2\.35/,
   );
+});
+
+test("skips existing binaries when requested", async () => {
+  const root = await mkdtemp(join(tmpdir(), "playwright-ast-coverage-existing-"));
+  const vendorDir = join(root, "vendor");
+  const target = "x86_64-unknown-linux-gnu";
+  const existing = join(vendorDir, executableName(target));
+
+  try {
+    await mkdir(vendorDir, { recursive: true });
+    await writeFile(existing, "already here");
+    assert.equal(await install({ checkExisting: true, target, vendorDir, version }), existing);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("installs only the requested platform binary and verifies checksum", async () => {
@@ -159,6 +183,25 @@ test("rejects checksum mismatches and cleans temporary files", async () => {
     await assert.rejects(
       () => install({ baseUrl: assetBaseUrl(root), target, vendorDir, version }),
       /Checksum mismatch/,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("wraps checksum download failures", async () => {
+  const root = await mkdtemp(join(tmpdir(), "playwright-ast-coverage-missing-checksum-"));
+  const vendorDir = join(root, "vendor");
+  const target = "x86_64-unknown-linux-gnu";
+  const asset = assetName(version, target);
+
+  await mkdir(join(root, "assets"));
+  await writeFile(join(root, "assets", asset), "binary");
+
+  try {
+    await assert.rejects(
+      () => install({ baseUrl: assetBaseUrl(root), target, vendorDir, version }),
+      /Failed to fetch checksum/,
     );
   } finally {
     await rm(root, { recursive: true, force: true });

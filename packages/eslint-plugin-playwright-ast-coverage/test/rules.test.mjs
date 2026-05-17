@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
-import { fixture, lint, messages, plugin, require } from "./helpers.mjs";
+import { fixture, lint, messages, plugin } from "./helpers.mjs";
 
 describe("plugin exports", () => {
   it("exposes rules and flat configs", () => {
@@ -11,13 +11,6 @@ describe("plugin exports", () => {
       "error",
       { canonicalAttribute: "data-pw" },
     ]);
-  });
-});
-
-describe("defaulted prop helpers", () => {
-  it("returns an empty set outside functions", () => {
-    const { defaultedPropsForNode } = require("../src/defaulted-props");
-    assert.equal(defaultedPropsForNode({ parent: null }).size, 0);
   });
 });
 
@@ -95,6 +88,11 @@ describe("literals", () => {
   it("rejects unsafe const destructured defaults", () => {
     const code = `function A(props) { function B() { const { "data-pw": inner = "inner" } = props; } const { "data-pw": missing } = props; const { "data-testid": dynamic = id } = props; let { "data-qa": mutable = "open" } = props; return <><button data-pw={inner} /><button data-pw={missing} /><button data-pw={dynamic} /><button data-pw={mutable} /></>; }`;
     assert.deepEqual(messages(code, "literals"), ["literal", "literal", "literal", "literal"]);
+  });
+
+  it("does not treat rest bindings as defaulted props", () => {
+    const code = `function A(props) { const { ...rest } = props; return <button data-pw={rest} />; }`;
+    assert.deepEqual(messages(code, "literals"), ["literal"]);
   });
 
   it("rejects missing getByTestId arguments and identifiers outside functions", () => {

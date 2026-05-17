@@ -23,9 +23,15 @@ function download(url, destination, redirects = 0) {
   );
 }
 
-function request(url, handleResponse, redirects = 0) {
+function request(
+  url,
+  handleResponse,
+  redirects = 0,
+  clients = { http, https },
+  timeoutMs = DOWNLOAD_TIMEOUT_MS,
+) {
   return new Promise((resolve, reject) => {
-    const client = url.startsWith("http://") ? http : https;
+    const client = url.startsWith("http://") ? clients.http : clients.https;
     const req = client.get(url, (response) => {
       if (isRedirectStatus(response.statusCode)) {
         response.resume();
@@ -41,6 +47,8 @@ function request(url, handleResponse, redirects = 0) {
           new URL(response.headers.location, url).toString(),
           handleResponse,
           redirects + 1,
+          clients,
+          timeoutMs,
         ).then(resolve, reject);
         return;
       }
@@ -54,9 +62,8 @@ function request(url, handleResponse, redirects = 0) {
       Promise.resolve(handleResponse(response)).then(resolve, reject);
     });
 
-    /* v8 ignore next 3 -- real timeout coverage would make tests slow and flaky */
-    req.setTimeout(DOWNLOAD_TIMEOUT_MS, () => {
-      req.destroy(new Error(`Download timed out after ${DOWNLOAD_TIMEOUT_MS}ms: ${url}`));
+    req.setTimeout(timeoutMs, () => {
+      req.destroy(new Error(`Download timed out after ${timeoutMs}ms: ${url}`));
     });
     req.on("error", reject);
   });

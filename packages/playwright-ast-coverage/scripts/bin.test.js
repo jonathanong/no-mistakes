@@ -5,6 +5,7 @@ const { join } = require("node:path");
 const { tmpdir } = require("node:os");
 
 const { binaryPath, run } = require("../bin/cli");
+const entrypoint = require("../bin/playwright-ast-coverage");
 
 const BIN = join(__dirname, "..", "bin", "playwright-ast-coverage.js");
 
@@ -54,6 +55,20 @@ test("wrapper helpers resolve binary paths and return statuses", () => {
   assert.equal(binaryPath(env, "linux"), "/tmp/custom-binary");
   assert.match(binaryPath({}, "win32"), /playwright-ast-coverage\.exe$/);
   assert.equal(run([], { PLAYWRIGHT_AST_COVERAGE_BINARY: join(tmpdir(), "missing-pac") }), 1);
+});
+
+test("entrypoint exits with run status", () => {
+  const originalExit = process.exit;
+  const exits = [];
+  process.exit = (code) => {
+    exits.push(code);
+  };
+  try {
+    entrypoint.main();
+  } finally {
+    process.exit = originalExit;
+  }
+  assert.deepEqual(exits, [1]);
 });
 
 test("wrapper returns native binary results", async () => {

@@ -1,5 +1,12 @@
 use super::*;
 
+fn queue_fixture_source(name: &str) -> String {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/ast-snippets/ts-queues")
+        .join(name);
+    std::fs::read_to_string(path).expect("queue fixture source must be readable")
+}
+
 // ── collect_import_specifiers ───────────────────────────────────────────
 
 #[test]
@@ -72,6 +79,69 @@ export const q = createQueue('name');
     assert!(result.is_none());
 }
 
+#[test]
+fn detects_create_queue_in_expression_statement_fixture() {
+    let source = queue_fixture_source("factory-expression-statement.ts");
+    let result = find_create_queue_line(&source, "@factory/pkg", "createQueue");
+    assert_eq!(result, Some(3));
+}
+
+#[test]
+fn detects_create_queue_with_side_effect_import_fixture() {
+    let source = queue_fixture_source("factory-side-effect-import.ts");
+    let result = find_create_queue_line(&source, "@factory/pkg", "createQueue");
+    assert_eq!(result, Some(4));
+}
+
+#[test]
+fn detects_create_queue_in_variable_declaration_fixture() {
+    let source = queue_fixture_source("factory-variable-declaration.ts");
+    let result = find_create_queue_line(&source, "@factory/pkg", "createQueue");
+    assert_eq!(result, Some(4));
+}
+
+#[test]
+fn detects_create_queue_in_nested_call_argument_fixture() {
+    let source = queue_fixture_source("factory-nested-call.ts");
+    let result = find_create_queue_line(&source, "@factory/pkg", "createQueue");
+    assert_eq!(result, Some(3));
+}
+
+#[test]
+fn detects_create_queue_in_casted_fixture() {
+    let source = queue_fixture_source("factory-casted-call.ts");
+    let result = find_create_queue_line(&source, "@factory/pkg", "createQueue");
+    assert_eq!(result, Some(3));
+}
+
+#[test]
+fn detects_create_queue_in_non_null_fixture() {
+    let source = queue_fixture_source("factory-non-null-call.ts");
+    let result = find_create_queue_line(&source, "@factory/pkg", "createQueue");
+    assert_eq!(result, Some(3));
+}
+
+#[test]
+fn ignores_non_variable_export_declarations() {
+    let source = queue_fixture_source("factory-non-variable-export.ts");
+    let result = find_create_queue_line(&source, "@factory/pkg", "createQueue");
+    assert_eq!(result, None);
+}
+
+#[test]
+fn ignores_export_specifier_without_declaration() {
+    let source = queue_fixture_source("factory-export-specifier-only.ts");
+    let result = find_create_queue_line(&source, "@factory/pkg", "createQueue");
+    assert_eq!(result, None);
+}
+
+#[test]
+fn no_matching_expression_fixture_returns_none() {
+    let source = queue_fixture_source("factory-no-matching-expression.ts");
+    let result = find_create_queue_line(&source, "@factory/pkg", "createQueue");
+    assert_eq!(result, None);
+}
+
 // ── find_queue_name with const identifier ────────────────────────────────
 
 #[test]
@@ -92,6 +162,69 @@ export const q = createQueue(QUEUE_NAME);
 "#;
     let result = find_queue_name(source, "@factory/glide-mq", "createQueue");
     assert_eq!(result, Some("<unknown>".to_string()));
+}
+
+#[test]
+fn find_queue_name_resolves_expression_statement_fixture() {
+    let source = queue_fixture_source("factory-expression-statement.ts");
+    let result = find_queue_name(&source, "@factory/pkg", "createQueue");
+    assert_eq!(result, Some("expression".to_string()));
+}
+
+#[test]
+fn find_queue_name_resolves_variable_declaration_fixture() {
+    let source = queue_fixture_source("factory-variable-declaration.ts");
+    let result = find_queue_name(&source, "@factory/pkg", "createQueue");
+    assert_eq!(result, Some("variable".to_string()));
+}
+
+#[test]
+fn find_queue_name_with_side_effect_import_fixture() {
+    let source = queue_fixture_source("factory-side-effect-import.ts");
+    let result = find_queue_name(&source, "@factory/pkg", "createQueue");
+    assert_eq!(result, Some("side-effect".to_string()));
+}
+
+#[test]
+fn find_queue_name_resolves_const_binding_fixture() {
+    let source = queue_fixture_source("factory-const-bindings.ts");
+    let result = find_queue_name(&source, "@factory/pkg", "createQueue");
+    assert_eq!(result, Some("constant".to_string()));
+}
+
+#[test]
+fn find_queue_name_returns_unknown_for_dynamic_argument_fixture() {
+    let source = queue_fixture_source("factory-unknown-argument.ts");
+    let result = find_queue_name(&source, "@factory/pkg", "createQueue");
+    assert_eq!(result, Some("<unknown>".to_string()));
+}
+
+#[test]
+fn find_queue_name_resolves_casted_fixture() {
+    let source = queue_fixture_source("factory-casted-call.ts");
+    let result = find_queue_name(&source, "@factory/pkg", "createQueue");
+    assert_eq!(result, Some("casted".to_string()));
+}
+
+#[test]
+fn find_queue_name_resolves_non_null_fixture() {
+    let source = queue_fixture_source("factory-non-null-call.ts");
+    let result = find_queue_name(&source, "@factory/pkg", "createQueue");
+    assert_eq!(result, Some("nonnull".to_string()));
+}
+
+#[test]
+fn find_queue_name_ignores_export_specifier_without_declaration() {
+    let source = queue_fixture_source("factory-export-specifier-only.ts");
+    let result = find_queue_name(&source, "@factory/pkg", "createQueue");
+    assert_eq!(result, None);
+}
+
+#[test]
+fn find_queue_name_no_matching_expression_fixture_returns_none() {
+    let source = queue_fixture_source("factory-no-matching-expression.ts");
+    let result = find_queue_name(&source, "@factory/pkg", "createQueue");
+    assert_eq!(result, None);
 }
 
 // ── queue-usage fixture ─────────────────────────────────────────────────
@@ -142,4 +275,36 @@ fn bfs_reachable_visits_fixture_queue_files() {
         .collect();
     assert!(names.contains(&"glidemq-dashboard.mts".to_string()));
     assert!(names.contains(&"queues.mts".to_string()));
+}
+
+#[test]
+fn bfs_reachable_handles_cycles_and_missing_imports() {
+    let fixture =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/ast-snippets/ts-queues");
+    let tsconfig = ts_resolver::TsConfig {
+        dir: fixture.clone(),
+        paths: vec![],
+        paths_dir: fixture.clone(),
+        base_url: None,
+    };
+    let entrypoint = fixture.join("reachable-a.ts");
+    let result = bfs_reachable(&entrypoint, &tsconfig);
+    assert!(result.iter().any(|path| path.ends_with("reachable-a.ts")));
+    assert!(result.iter().any(|path| path.ends_with("reachable-b.ts")));
+}
+
+#[test]
+fn bfs_reachable_handles_unreadable_start_file() {
+    let fixture =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/ast-snippets/ts-queues");
+    let tsconfig = ts_resolver::TsConfig {
+        dir: fixture.clone(),
+        paths: vec![],
+        paths_dir: fixture.clone(),
+        base_url: None,
+    };
+    let entrypoint = fixture.join("not-created.ts");
+    let result = bfs_reachable(&entrypoint, &tsconfig);
+    assert_eq!(result.len(), 1);
+    assert!(result.iter().any(|path| path.ends_with("not-created.ts")));
 }

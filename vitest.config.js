@@ -4,6 +4,7 @@ module.exports = defineConfig({
   test: {
     globals: true,
     include: [
+      "packages/*/scripts/*.test.js",
       "packages/playwright-ast-coverage/scripts/*.test.js",
       "packages/queue-ast-hop/scripts/*.test.js",
       "packages/server-ast-routes/scripts/*.test.js",
@@ -13,6 +14,9 @@ module.exports = defineConfig({
     coverage: {
       provider: "v8",
       include: [
+        "packages/*/bin/**/*.js",
+        "packages/*/scripts/**/*.js",
+        "packages/no-mistakes-core/lib/**/*.js",
         "packages/playwright-ast-coverage/bin/**/*.js",
         "packages/playwright-ast-coverage/scripts/**/*.js",
         "packages/queue-ast-hop/bin/**/*.js",
@@ -21,18 +25,6 @@ module.exports = defineConfig({
         "packages/server-ast-routes/scripts/**/*.js",
         "packages/eslint-plugin-playwright-ast-coverage/src/**/*.js",
         "packages/eslint-plugin-next-to-fetch/src/**/*.js",
-      ],
-      exclude: [
-        "packages/playwright-ast-coverage/bin/playwright-ast-coverage.js",
-        "packages/queue-ast-hop/bin/queue-ast-hop.js",
-        "packages/server-ast-routes/bin/server-ast-routes.js",
-        "packages/playwright-ast-coverage/scripts/install.js",
-        "packages/queue-ast-hop/scripts/install.js",
-        "packages/server-ast-routes/scripts/install.js",
-        "packages/queue-ast-hop/scripts/**/*.test.js",
-        "packages/server-ast-routes/scripts/**/*.test.js",
-        "packages/playwright-ast-coverage/scripts/**/*.test.js",
-        "packages/eslint-plugin-playwright-ast-coverage/test/**",
       ],
       reporter: ["text", "lcov"],
       thresholds: {

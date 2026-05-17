@@ -62,6 +62,15 @@ fn extracts_star_export() {
 }
 
 #[test]
+fn extracts_type_star_export() {
+    let imports = ts_extractor()
+        .extract("export type * from './types.mts';")
+        .unwrap();
+    assert_eq!(specs(&imports), vec!["./types.mts"]);
+    assert_eq!(kinds(&imports), vec![ImportKind::Type]);
+}
+
+#[test]
 fn extracts_named_reexport() {
     let imports = ts_extractor()
         .extract("export { foo } from './foo.mts';")
@@ -168,6 +177,12 @@ fn non_literal_require_call_is_ignored() {
     let imports = ts_extractor()
         .extract("const mod = require(moduleName);")
         .unwrap();
+    assert!(imports.is_empty());
+}
+
+#[test]
+fn require_without_arguments_is_ignored() {
+    let imports = ts_extractor().extract("require();").unwrap();
     assert!(imports.is_empty());
 }
 

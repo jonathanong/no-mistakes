@@ -24,5 +24,4 @@ plugin.configs.recommended = {
   },
 };
 
-/* v8 ignore next */
 module.exports = plugin;

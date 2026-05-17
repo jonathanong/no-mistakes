@@ -33,6 +33,60 @@ fn fixture(name: &str) -> PathBuf {
         .join(name)
 }
 
+#[test]
+fn node_display_and_normalization_cover_file_and_queue_nodes() {
+    let root = p("/repo");
+    let file = NodeId::File(p("/repo/src/file.ts"));
+    let queue = NodeId::QueueJob {
+        queue_file: p("/repo/src/queues.ts"),
+        job: "send".to_string(),
+    };
+
+    assert_eq!(file.display_name(&root), "src/file.ts");
+    assert_eq!(queue.display_name(&root), "src/queues.ts#send");
+    assert!(file.as_file().is_some());
+    assert!(queue.as_file().is_none());
+
+    let nodes = normalize_nodes(&[file, queue]);
+    assert_eq!(nodes.len(), 2);
+    assert!(matches!(nodes[1], NodeId::QueueJob { .. }));
+}
+
+#[test]
+fn graph_build_plan_from_allowed_covers_each_edge_family() {
+    assert!(GraphBuildPlan::all().imports);
+    assert!(!GraphBuildPlan::all().import_only());
+
+    let allowed: HashSet<_> = [
+        EdgeKind::TypeImport,
+        EdgeKind::WorkspaceImport,
+        EdgeKind::TestOf,
+        EdgeKind::MarkdownLink,
+        EdgeKind::CiInvocation,
+        EdgeKind::RouteRef,
+        EdgeKind::QueueEnqueue,
+        EdgeKind::QueueWorker,
+        EdgeKind::RouteTest,
+        EdgeKind::HttpCall,
+        EdgeKind::ProcessSpawn,
+    ]
+    .into();
+    let plan = GraphBuildPlan::from_allowed(Some(&allowed));
+    assert!(plan.imports);
+    assert!(plan.workspace);
+    assert!(plan.tests);
+    assert!(plan.markdown);
+    assert!(plan.ci);
+    assert!(plan.routes);
+    assert!(plan.queues);
+    assert!(plan.playwright_routes);
+    assert!(plan.http);
+    assert!(plan.process);
+
+    let import_only: HashSet<_> = [EdgeKind::Require].into();
+    assert!(GraphBuildPlan::from_allowed(Some(&import_only)).import_only());
+}
+
 // ── bfs ─────────────────────────────────────────────────────────────────
 
 #[test]
@@ -356,6 +410,32 @@ fn build_graph_excludes_skipped_fixture_files() {
     let paths: Vec<_> = dependents.iter().filter_map(|e| e.node.as_file()).collect();
     assert_eq!(paths, vec![visible.as_path()]);
     assert!(!paths.contains(&skipped.as_path()));
+}
+
+#[test]
+fn build_graph_over_fixture_corpus_exercises_all_edge_producers() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/codebase-analysis");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![
+            (
+                "@systems/*".to_string(),
+                vec!["queue-dashboard/good/systems/*".to_string()],
+            ),
+            (
+                "@example/api/*".to_string(),
+                vec!["queue-dashboard/good/api/*".to_string()],
+            ),
+        ],
+        paths_dir: root.clone(),
+        base_url: Some(root.clone()),
+    };
+
+    let graph = DepGraph::build(&root, &tsconfig).unwrap();
+
+    assert_eq!(graph.root(), root.as_path());
+    assert!(graph.all_files().count() > 10);
 }
 
 #[test]

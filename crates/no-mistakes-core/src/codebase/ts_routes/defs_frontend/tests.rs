@@ -73,3 +73,28 @@ fn collect_frontend_routes_finds_pages() {
     assert!(routes.contains(&"/communities/:slug".to_string()));
     assert!(routes.contains(&"/user/:id".to_string()));
 }
+
+#[test]
+fn collect_frontend_routes_from_files_filters_and_sorts_pages() {
+    let root = Path::new("/repo/web/app");
+    let files = vec![
+        PathBuf::from("/repo/web/app/users/[id]/page.tsx"),
+        PathBuf::from("/repo/web/app/page.js"),
+        PathBuf::from("/repo/web/app/users/layout.tsx"),
+        PathBuf::from("/repo/web/app/users/[id]/route.ts"),
+        PathBuf::from("/repo/other/page.tsx"),
+    ];
+
+    let routes = collect_frontend_routes_from_files(root, &files);
+
+    assert_eq!(
+        routes,
+        vec![
+            (PathBuf::from("/repo/web/app/page.js"), "/".to_string()),
+            (
+                PathBuf::from("/repo/web/app/users/[id]/page.tsx"),
+                "/users/:id".to_string()
+            )
+        ]
+    );
+}

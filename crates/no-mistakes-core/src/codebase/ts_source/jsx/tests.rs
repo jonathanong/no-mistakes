@@ -3,11 +3,19 @@ use oxc::allocator::Allocator;
 use oxc::ast::ast::JSXElementName;
 use oxc::parser::Parser;
 use oxc::span::SourceType;
+use std::path::PathBuf;
 
 fn parse<'a>(allocator: &'a Allocator, source: &'a str) -> oxc::ast::ast::Program<'a> {
     Parser::new(allocator, source, SourceType::tsx())
         .parse()
         .program
+}
+
+fn fixture_source(name: &str) -> String {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/ast-snippets/ts-source")
+        .join(name);
+    std::fs::read_to_string(path).expect("fixture source must be readable")
 }
 
 #[test]
@@ -188,4 +196,47 @@ fn visit_expression_hits_assignment_inside_spread_attr() {
     let mut c = CountAssigns(0);
     walk_program(&program, &mut c);
     assert_eq!(c.0, 1);
+}
+
+#[test]
+fn walker_visits_statement_expression_and_jsx_variants_from_fixture() {
+    struct Counts {
+        expressions: usize,
+        jsx_openings: usize,
+        jsx_containers: usize,
+        imports: usize,
+    }
+    impl Visitor for Counts {
+        fn visit_import(&mut self, _import: &oxc::ast::ast::ImportDeclaration) {
+            self.imports += 1;
+        }
+
+        fn visit_expression(&mut self, _expr: &Expression) {
+            self.expressions += 1;
+        }
+
+        fn visit_jsx_opening(&mut self, _opening: &JSXOpeningElement) {
+            self.jsx_openings += 1;
+        }
+
+        fn visit_jsx_expression_container(&mut self, _expr: &JSXExpression, _span_start: u32) {
+            self.jsx_containers += 1;
+        }
+    }
+
+    let source = fixture_source("jsx-walk-all.tsx");
+    let allocator = Allocator::default();
+    let program = parse(&allocator, &source);
+    let mut counts = Counts {
+        expressions: 0,
+        jsx_openings: 0,
+        jsx_containers: 0,
+        imports: 0,
+    };
+    walk_program(&program, &mut counts);
+
+    assert_eq!(counts.imports, 1);
+    assert!(counts.expressions > 70, "{:?}", counts.expressions);
+    assert!(counts.jsx_openings >= 8, "{:?}", counts.jsx_openings);
+    assert!(counts.jsx_containers >= 7, "{:?}", counts.jsx_containers);
 }

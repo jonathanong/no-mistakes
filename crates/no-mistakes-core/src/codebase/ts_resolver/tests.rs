@@ -258,6 +258,26 @@ fn import_resolver_uses_visible_file_set() {
 }
 
 #[test]
+fn import_resolver_cache_reuses_present_result() {
+    let dir = TempDir::new().unwrap();
+    let target = normalize_path(&dir.path().join("src").join("utils.mts"));
+    let importer = dir.path().join("src").join("main.mts");
+    let tc = TsConfig {
+        dir: dir.path().to_path_buf(),
+        paths: vec![],
+        paths_dir: dir.path().to_path_buf(),
+        base_url: None,
+    };
+    let visible: HashSet<PathBuf> = [target.clone()].into();
+    let resolver = ImportResolver::new(&tc).with_visible(&visible);
+
+    assert_eq!(resolver.resolve("./utils", &importer), Some(target.clone()));
+    assert_eq!(resolver.resolve("./utils", &importer), Some(target));
+    assert!(resolver.resolve("./utils.mts", &importer).is_some());
+    assert!(resolver.resolve("./missing.mts", &importer).is_none());
+}
+
+#[test]
 fn import_resolver_cache_preserves_missing_result() {
     let dir = TempDir::new().unwrap();
     let importer = dir.path().join("src").join("main.mts");
@@ -469,6 +489,22 @@ fn load_tsconfig_extends_directory_appends_tsconfig_json() {
     let subdir = dir.path().join("base");
     std::fs::create_dir_all(&subdir).unwrap();
     let base_p = subdir.join("tsconfig.json");
+    write(
+        &base_p,
+        r#"{"compilerOptions": {"paths": {"@lib/*": ["./lib/*"]}}}"#,
+    );
+    let child_p = dir.path().join("tsconfig.json");
+    write(&child_p, r#"{"extends": "./base"}"#);
+
+    let tc = load_tsconfig(&child_p).unwrap();
+    assert_eq!(tc.paths.len(), 1);
+    assert_eq!(tc.paths[0].0, "@lib/*");
+}
+
+#[test]
+fn load_tsconfig_extends_extensionless_file_appends_json() {
+    let dir = TempDir::new().unwrap();
+    let base_p = dir.path().join("base.json");
     write(
         &base_p,
         r#"{"compilerOptions": {"paths": {"@lib/*": ["./lib/*"]}}}"#,

@@ -1,4 +1,12 @@
 use super::*;
+use std::path::PathBuf;
+
+fn route_fixture_source(name: &str) -> String {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/ast-snippets/ts-routes")
+        .join(name);
+    std::fs::read_to_string(path).expect("route fixture source must be readable")
+}
 
 #[test]
 fn extracts_simple_get_route() {
@@ -136,4 +144,22 @@ fn fixture_routes_backend_extracts_nested_router_pattern() {
         patterns.iter().all(|p| *p == "/api/v1/users/:idOrSlug"),
         "all routes should be /api/v1/users/:idOrSlug, got: {patterns:?}"
     );
+}
+
+#[test]
+fn fixture_backend_walker_covers_statement_shadowing_and_route_shapes() {
+    let source = route_fixture_source("backend-walk-all.ts");
+    let routes = extract_backend_routes(&source, "app");
+    let patterns: Vec<&str> = routes
+        .iter()
+        .map(|(pattern, _line)| pattern.as_str())
+        .collect();
+
+    assert!(patterns.contains(&"/chain"));
+    assert!(patterns.contains(&"/direct"));
+    assert!(patterns.contains(&"/wrapped"));
+    assert!(patterns.contains(&"/block"));
+    assert!(patterns.contains(&"/export-var"));
+    assert!(patterns.contains(&"/export-function"));
+    assert!(!patterns.iter().any(|pattern| pattern.contains("ignored")));
 }

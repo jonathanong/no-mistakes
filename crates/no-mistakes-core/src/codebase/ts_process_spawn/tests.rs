@@ -170,3 +170,54 @@ export default defineConfig({
     let edges = extract_spawn_edges(src, &config_path, root.path());
     assert!(edges.is_empty(), "conditional command must be skipped");
 }
+
+#[test]
+fn fixture_spawn_walker_covers_statement_expression_and_resolution_shapes() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/ast-snippets/ts-process-spawn/project"),
+    );
+    let config_path = root.join("configs/spawn-all.tsx");
+    let source = std::fs::read_to_string(&config_path).expect("spawn fixture must be readable");
+    let edges = extract_spawn_edges(&source, &config_path, &root);
+    let entries: Vec<String> = edges
+        .iter()
+        .map(|edge| {
+            edge.entry
+                .strip_prefix(&root)
+                .unwrap()
+                .to_string_lossy()
+                .into_owned()
+        })
+        .collect();
+
+    for expected in [
+        "scripts/root.mts",
+        "scripts/exec-file.mts",
+        "scripts/fork.mts",
+        "apps/site/scripts/spawn.mts",
+        "apps/site/scripts/web.mts",
+        "scripts/block.mts",
+        "scripts/function.mts",
+        "scripts/export-var.mts",
+        "scripts/export-function.mts",
+        "scripts/default-arrow.mts",
+        "scripts/if.mts",
+        "scripts/else.mts",
+        "scripts/try.mts",
+        "scripts/catch.mts",
+        "scripts/finally.mts",
+        "scripts/while.mts",
+        "scripts/for.mts",
+        "scripts/for-in.mts",
+        "scripts/for-of.mts",
+        "scripts/await.mts",
+        "scripts/nested.mts",
+    ] {
+        assert!(
+            entries.iter().any(|entry| entry == expected),
+            "{expected} missing from {entries:?}"
+        );
+    }
+    assert!(!entries.iter().any(|entry| entry.contains("missing")));
+}

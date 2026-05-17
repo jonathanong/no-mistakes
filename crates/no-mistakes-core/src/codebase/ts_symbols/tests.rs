@@ -133,6 +133,26 @@ fn export_default_anonymous() {
     assert_eq!(s.exports[0].name, "default");
 }
 
+#[test]
+fn export_default_class_interface_and_identifier_names() {
+    let s = syms(
+        r#"
+const value = 1;
+export default value;
+"#,
+    );
+    assert_eq!(s.exports[0].name, "value");
+
+    let class_symbols = syms("export default class NamedDefault {}");
+    assert_eq!(class_symbols.exports[0].name, "NamedDefault");
+
+    let anonymous_class = syms("export default class {}");
+    assert_eq!(anonymous_class.exports[0].name, "default");
+
+    let interface_symbols = syms("export default interface DefaultShape {}");
+    assert_eq!(interface_symbols.exports[0].name, "DefaultShape");
+}
+
 // ── Exports — re-exports ─────────────────────────────────────────────────
 
 #[test]
@@ -177,6 +197,26 @@ fn export_star_reexport() {
 fn multiple_exports() {
     let s = syms("export function a() {}\nexport const b = 1;");
     assert_eq!(s.exports.len(), 2);
+}
+
+#[test]
+fn export_destructuring_and_local_specifiers() {
+    let s = syms(
+        r#"
+const local = 1;
+export const { a, b: renamed, ...rest } = source;
+export let [first, second = fallback, ...others] = values;
+export { local as publicLocal };
+"#,
+    );
+    let names: Vec<_> = s
+        .exports
+        .iter()
+        .map(|export| export.name.as_str())
+        .collect();
+    for expected in ["a", "renamed", "first", "second", "publicLocal"] {
+        assert!(names.contains(&expected), "missing export {expected}");
+    }
 }
 
 #[test]

@@ -1,4 +1,12 @@
 use super::*;
+use std::path::PathBuf;
+
+fn route_fixture_source(name: &str) -> String {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/ast-snippets/ts-routes")
+        .join(name);
+    std::fs::read_to_string(path).expect("route fixture source must be readable")
+}
 
 #[test]
 fn extracts_simple_href() {
@@ -318,4 +326,55 @@ fn should_skip_checks() {
     assert!(should_skip(""));
     assert!(should_skip(":param/rest"));
     assert!(!should_skip("/communities"));
+}
+
+#[test]
+fn fixture_refs_walker_covers_router_jsx_fetch_and_scope_shapes() {
+    let source = route_fixture_source("refs-walk-all.tsx");
+    let refs = extract_route_refs(&source, "fixture.tsx");
+    let patterns: Vec<&str> = refs
+        .iter()
+        .map(|route_ref| route_ref.pattern.as_str())
+        .collect();
+
+    for expected in [
+        "/router",
+        "/router/:id",
+        "/prefetch/:param",
+        "/member-router",
+        "/method",
+        "/replace",
+        "/redirect",
+        "/api/local",
+        "/api/member",
+        "/spread",
+        "/href",
+        "/to/:param",
+        "/string-key/:slug/",
+        "/namespaced",
+        "/if",
+        "/else",
+        "/conditional",
+        "/alternate",
+        "/sequence-one",
+        "/sequence-two",
+        "/assignment",
+        "/satisfies",
+        "/non-null",
+        "/parenthesized",
+        "/return",
+        "/arrow",
+        "/function-expression",
+        "/export-var",
+        "/export-function",
+        "/default-export",
+        "/after-let-for-of",
+    ] {
+        assert!(
+            patterns.contains(&expected),
+            "expected {expected} in {patterns:?}"
+        );
+    }
+    assert!(!patterns.iter().any(|pattern| pattern.contains("ignored")));
+    assert!(!patterns.contains(&"?query"));
 }

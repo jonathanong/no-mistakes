@@ -4,24 +4,40 @@
 const { spawn } = require("node:child_process");
 const { join } = require("node:path");
 
-const binName = process.platform === "win32" ? "queue-ast-hop.exe" : "queue-ast-hop";
-const binPath = process.env.QUEUE_AST_HOP_BINARY || join(__dirname, "..", "vendor", binName);
+function binaryPath(env = process.env, platform = process.platform) {
+  const binName = platform === "win32" ? "queue-ast-hop.exe" : "queue-ast-hop";
+  return env.QUEUE_AST_HOP_BINARY || join(__dirname, "..", "vendor", binName);
+}
 
-const child = spawn(binPath, process.argv.slice(2), {
-  stdio: "inherit",
-});
+function run(
+  argv = process.argv.slice(2),
+  env = process.env,
+  platform = process.platform,
+  io = process,
+  spawnFn = spawn,
+) {
+  const child = spawnFn(binaryPath(env, platform), argv, {
+    stdio: "inherit",
+  });
 
-child.on("exit", (code, signal) => {
-  if (code !== null) {
-    process.exit(code);
-  }
-  if (signal !== null) {
-    process.exit(1);
-  }
-  process.exit(0);
-});
+  child.on("exit", (code, signal) => {
+    if (code !== null) {
+      io.exit(code);
+      return;
+    }
+    if (signal !== null) {
+      io.exit(1);
+      return;
+    }
+    io.exit(0);
+  });
 
-child.on("error", (error) => {
-  console.error(error);
-  process.exit(1);
-});
+  child.on("error", (error) => {
+    console.error(error);
+    io.exit(1);
+  });
+}
+
+if (require.main === module) run();
+
+module.exports = { binaryPath, run };

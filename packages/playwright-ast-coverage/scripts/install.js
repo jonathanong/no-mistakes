@@ -37,25 +37,23 @@ function unsupportedPlatformMessage(binNameOrPlatform, platform, arch, report) {
   return core.unsupportedPlatformMessage(binNameOrPlatform, platform, arch, report);
 }
 
-async function main() {
+async function main(installFn = core.install, io = process, logger = console) {
   try {
-    const destination = await core.install(
+    const destination = await installFn(
       "playwright-ast-coverage",
       "jonathanong/playwright-ast-coverage",
       {
         ...INSTALL_DEFAULTS,
       },
     );
-    console.log(`Installed playwright-ast-coverage native binary to ${destination}`);
+    logger.log(`Installed playwright-ast-coverage native binary to ${destination}`);
   } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
-    process.exit(1);
+    logger.error(error instanceof Error ? error.message : String(error));
+    io.exit(1);
   }
 }
 
-if (require.main === module) {
-  main();
-}
+if (require.main === module) main();
 
 module.exports = {
   ...core,
@@ -90,4 +88,5 @@ module.exports = {
       ...options,
     });
   },
+  main,
 };

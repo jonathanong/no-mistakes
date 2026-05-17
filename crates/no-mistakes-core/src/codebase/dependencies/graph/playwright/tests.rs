@@ -1,4 +1,12 @@
 use super::*;
+use std::path::PathBuf;
+
+fn fixture_source(name: &str) -> String {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/ast-snippets/playwright-urls")
+        .join(name);
+    std::fs::read_to_string(path).expect("playwright URL fixture must be readable")
+}
 
 #[test]
 fn extracts_page_goto_url() {
@@ -204,4 +212,36 @@ await page.click('a[data-href="/dashboard"]');
 fn empty_file_returns_empty() {
     let urls = extract_playwright_urls("");
     assert!(urls.is_empty());
+}
+
+#[test]
+fn fixture_walks_statement_and_expression_shapes() {
+    let source = fixture_source("walk-all.ts");
+    let urls = extract_playwright_urls(&source);
+
+    for expected in [
+        "/alternate",
+        "/arrow",
+        "/block",
+        "/conditional",
+        "/do-body",
+        "/do-test",
+        "/for-body",
+        "/for-in-body",
+        "/for-in-right",
+        "/for-init-expr",
+        "/for-of-body",
+        "/for-of-right",
+        "/for-test",
+        "/for-update",
+        "/logical",
+        "/navigate-second",
+        "/return",
+        "/sequence-one",
+        "/sequence-two",
+        "/var-init",
+    ] {
+        assert!(urls.iter().any(|url| url == expected), "missing {expected}");
+    }
+    assert!(!urls.iter().any(|url| url.contains("ignored")));
 }

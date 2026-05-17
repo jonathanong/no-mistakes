@@ -141,3 +141,6 @@ fn config_from_v2(v2: NoMistakesConfig) -> Config {
         rules,
     }
 }
+
+#[cfg(test)]
+mod tests;
