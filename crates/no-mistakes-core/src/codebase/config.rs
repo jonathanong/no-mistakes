@@ -113,7 +113,11 @@ impl Config {
 }
 
 pub fn load_config(start: &Path) -> Result<Config> {
-    let v2 = load_v2_config(start, None)?;
+    load_config_with_path(start, None)
+}
+
+pub fn load_config_with_path(start: &Path, config_path: Option<&Path>) -> Result<Config> {
+    let v2 = load_v2_config(start, config_path)?;
     let mut config = config_from_v2(v2);
     config.augment_from_gitignore(&find_config_root(start));
     Ok(config)

@@ -1,0 +1,162 @@
+use super::*;
+use crate::codebase::ts_resolver::normalize_path;
+use crate::codebase::workspaces::WorkspaceMap;
+
+fn fixture(name: &str) -> PathBuf {
+    normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase-analysis")
+            .join(name),
+    )
+}
+
+fn findings(name: &str) -> Vec<UniqueExportFinding> {
+    analyze_project(&fixture(name), None, None).unwrap()
+}
+
+fn finding_names(findings: &[UniqueExportFinding]) -> Vec<(String, String)> {
+    findings
+        .iter()
+        .map(|finding| (finding.export_name.clone(), finding.export_kind.clone()))
+        .collect()
+}
+
+#[test]
+fn reports_duplicate_value_and_type_exports_separately() {
+    let findings = findings("unique-exports-basic");
+    assert_eq!(findings.len(), 2);
+    assert!(findings
+        .iter()
+        .any(|f| f.export_name == "shared" && f.export_kind == "value"));
+    assert!(findings
+        .iter()
+        .any(|f| f.export_name == "SharedType" && f.export_kind == "type"));
+    assert!(!findings.iter().any(|f| f.export_name == "default"));
+}
+
+#[test]
+fn strict_mode_reports_cross_type_duplicates() {
+    let findings = findings("unique-exports-strict");
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].export_name, "Shared");
+    assert_eq!(findings[0].export_kind, "export");
+}
+
+#[test]
+fn follows_explicit_and_star_reexports() {
+    let findings = findings("unique-exports-reexports");
+    let alpha = findings
+        .iter()
+        .filter(|f| f.export_name == "Alpha" && f.export_kind == "value")
+        .count();
+    let beta = findings
+        .iter()
+        .filter(|f| f.export_name == "Beta" && f.export_kind == "type")
+        .count();
+    assert_eq!(alpha, 2);
+    assert_eq!(beta, 2);
+}
+
+#[test]
+fn honors_rule_disable_comments() {
+    let findings = findings("unique-exports-disabled");
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn exempts_known_nextjs_framework_exports_only_in_convention_files() {
+    let findings = findings("unique-exports-nextjs");
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].export_name, "metadata");
+    assert!(findings[0].file.starts_with("web/components/"));
+}
+
+#[test]
+fn checks_across_workspace_packages() {
+    let findings = findings("unique-exports-workspace");
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].export_name, "WorkspaceDuplicate");
+}
+
+#[test]
+fn disabled_config_skips_rule() {
+    assert!(findings("unique-exports-config-disabled").is_empty());
+}
+
+#[test]
+fn explicit_tsconfig_resolves_path_aliases() {
+    let root = fixture("unique-exports-tsconfig-paths");
+    let findings = analyze_project(&root, None, Some(&root.join("tsconfig.json"))).unwrap();
+    assert_eq!(findings.len(), 2);
+    assert!(findings
+        .iter()
+        .all(|finding| finding.export_name == "ViaConfig"));
+}
+
+#[test]
+fn covers_reexport_resolution_edge_cases() {
+    let findings = findings("unique-exports-edge-cases");
+    let names = finding_names(&findings);
+    assert!(names.contains(&("Direct".to_string(), "value".to_string())));
+    assert!(names.contains(&("DirectType".to_string(), "type".to_string())));
+    assert!(names.contains(&("DefaultAlias".to_string(), "value".to_string())));
+    assert!(names.contains(&("ChainAlias".to_string(), "type".to_string())));
+    assert!(names.contains(&("StarResolved".to_string(), "value".to_string())));
+    assert!(names.contains(&("Hidden".to_string(), "value".to_string())));
+    assert!(names.contains(&("Skipped".to_string(), "value".to_string())));
+}
+
+#[test]
+fn defensive_helpers_ignore_missing_targets_and_non_matching_default_exports() {
+    let root = fixture("unique-exports-edge-cases");
+    let all_files = discover_files(&root, &[]);
+    let source_files = scan::collect_source_files(&root, &all_files);
+    let files: HashMap<PathBuf, SourceFile> = source_files
+        .into_iter()
+        .map(|file| (file.path.clone(), file))
+        .collect();
+    let tsconfig = crate::codebase::ts_resolver::TsConfig {
+        dir: root.clone(),
+        paths: Vec::new(),
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let resolver = ImportResolver::new(&tsconfig);
+    let workspace = WorkspaceMap::default();
+
+    let mut visiting = HashSet::new();
+    assert!(collector::collect_file_exports(
+        &root.join("src/not-present.ts"),
+        &files,
+        &resolver,
+        &workspace,
+        &mut visiting,
+    )
+    .is_empty());
+
+    let mut visiting = HashSet::new();
+    assert_eq!(
+        collector::find_target_export_bucket(
+            &root.join("src/not-present.ts"),
+            "Missing",
+            &files,
+            &resolver,
+            &workspace,
+            &mut visiting,
+        ),
+        None
+    );
+
+    let mut visiting = HashSet::new();
+    assert_eq!(
+        collector::find_target_export_bucket(
+            &root.join("src/default-source.ts"),
+            "NotDefault",
+            &files,
+            &resolver,
+            &workspace,
+            &mut visiting,
+        ),
+        None
+    );
+}
