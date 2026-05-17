@@ -39,13 +39,9 @@ function unsupportedPlatformMessage(binNameOrPlatform, platform, arch, report) {
 
 async function main(installFn = core.install, io = process, logger = console) {
   try {
-    const destination = await installFn(
-      "playwright-ast-coverage",
-      "jonathanong/playwright-ast-coverage",
-      {
-        ...INSTALL_DEFAULTS,
-      },
-    );
+    const destination = await installFn("playwright-ast-coverage", "jonathanong/no-mistakes", {
+      ...INSTALL_DEFAULTS,
+    });
     logger.log(`Installed playwright-ast-coverage native binary to ${destination}`);
   } catch (error) {
     logger.error(error instanceof Error ? error.message : String(error));
@@ -64,10 +60,10 @@ module.exports = {
   },
   assetName: (version, target) => core.assetName("playwright-ast-coverage", version, target),
   releaseBaseUrl: (version, envVar = "PLAYWRIGHT_AST_COVERAGE_RELEASE_BASE_URL") =>
-    core.releaseBaseUrl("jonathanong/playwright-ast-coverage", version, envVar),
+    core.releaseBaseUrl("jonathanong/no-mistakes", version, envVar),
   install: (binName, repository, options) => {
     if (binName === undefined) {
-      return core.install("playwright-ast-coverage", "jonathanong/playwright-ast-coverage", {
+      return core.install("playwright-ast-coverage", "jonathanong/no-mistakes", {
         ...INSTALL_DEFAULTS,
       });
     }
@@ -77,11 +73,7 @@ module.exports = {
         ...INSTALL_DEFAULTS,
         ...binName,
       };
-      return core.install(
-        "playwright-ast-coverage",
-        "jonathanong/playwright-ast-coverage",
-        mergedOptions,
-      );
+      return core.install("playwright-ast-coverage", "jonathanong/no-mistakes", mergedOptions);
     }
     return core.install(binName, repository, {
       ...INSTALL_DEFAULTS,
