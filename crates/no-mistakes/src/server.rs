@@ -28,12 +28,12 @@ pub(crate) struct ServerArgs {
 enum ServerCommand {
     /// List extracted server routes.
     Routes {
-        /// Only show routes from these files/patterns.
+        /// Only show routes whose file or route exactly matches one of these values.
         files: Vec<String>,
     },
     /// Print server route dependency edges.
     Edges {
-        /// Only show edges reachable from these files/nodes.
+        /// Only show edges whose source exactly matches these files/nodes.
         roots: Vec<String>,
     },
     /// Print files related to the given files via route edges.

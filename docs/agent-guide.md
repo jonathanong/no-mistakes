@@ -64,7 +64,13 @@ runner:
 vitest related $(no-mistakes related src/foo.ts --format paths)
 
 # Run only tests related to files changed since the last commit
-git diff --name-only HEAD~1 | xargs no-mistakes related --format paths | xargs vitest related
+changed_files=$(git diff --name-only HEAD~1)
+if [ -n "$changed_files" ]; then
+  tests=$(printf '%s\n' "$changed_files" | xargs no-mistakes related --format paths)
+  if [ -n "$tests" ]; then
+    vitest related $tests
+  fi
+fi
 ```
 
 Use `no-mistakes queues` and `no-mistakes server` to explore queue and server-route

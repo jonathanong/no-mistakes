@@ -28,7 +28,7 @@ pub(crate) struct QueuesArgs {
 enum QueuesCommand {
     /// Print queue dependency edges.
     Edges {
-        /// Only show edges reachable from these files/nodes.
+        /// Only show edges whose source exactly matches these files/nodes.
         files: Vec<String>,
     },
     /// Print files/nodes related to the given files/nodes.
