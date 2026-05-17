@@ -489,9 +489,15 @@ pub fn lazy_import_deps_of(
     root: &Path,
     tsconfig: &TsConfig,
     max_depth: Option<usize>,
-) -> Vec<NodeEntry> {
+) -> Result<Vec<NodeEntry>> {
     let graph_files = GraphFiles::discover(root);
-    lazy_import_deps_of_with_files(roots, root, tsconfig, max_depth, &graph_files)
+    Ok(lazy_import_deps_of_with_files(
+        roots,
+        root,
+        tsconfig,
+        max_depth,
+        &graph_files,
+    ))
 }
 
 pub(crate) fn lazy_import_deps_of_with_files(

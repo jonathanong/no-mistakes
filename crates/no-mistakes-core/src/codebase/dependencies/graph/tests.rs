@@ -507,7 +507,7 @@ fn lazy_import_deps_walks_only_reachable_import_graph() {
         base_url: None,
     };
 
-    let deps = lazy_import_deps_of(&[NodeId::File(entry)], &root, &tsconfig, None);
+    let deps = lazy_import_deps_of(&[NodeId::File(entry)], &root, &tsconfig, None).unwrap();
 
     assert_eq!(
         deps.iter()
