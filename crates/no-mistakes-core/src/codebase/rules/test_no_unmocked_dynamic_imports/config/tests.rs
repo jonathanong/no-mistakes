@@ -3,19 +3,22 @@ use crate::config::v2::schema::Project;
 
 #[test]
 fn extracts_setup_files_and_include_exclude_strings() {
-    let source = "export default { test: { include: ['a.test.mts'], exclude: ['b.test.mts'], setupFiles: ['./setup.mts'] } }";
+    let source = "export default { coverage: { exclude: ['ignored.mts'] }, test: { include: ['a.test.mts'], exclude: ['b.test.mts'], setupFiles: ['./setup.mts'] } }";
     assert_eq!(
-        extract_property_strings(source, "setupFiles"),
+        extract_test_property_strings(source, "setupFiles"),
         vec!["./setup.mts"]
     );
     assert_eq!(
-        extract_property_strings(source, "include"),
+        extract_test_property_strings(source, "include"),
         vec!["a.test.mts"]
     );
     assert_eq!(
-        extract_property_strings(source, "exclude"),
+        extract_test_property_strings(source, "exclude"),
         vec!["b.test.mts"]
     );
+    assert!(extract_test_property_strings(source, "exclude")
+        .iter()
+        .all(|value| value != "ignored.mts"));
 }
 
 #[test]
@@ -48,19 +51,46 @@ fn project_include_restricts_default_test_globs() {
             ..Default::default()
         },
     );
+    config.projects.insert(
+        "other".to_string(),
+        Project {
+            include: vec!["other/**/*.test.ts".to_string()],
+            rules: vec!["different-rule".to_string()],
+            ..Default::default()
+        },
+    );
     let filter = test_filter(Path::new("."), &config).unwrap();
     assert!(filter.is_match("web/storybook/__tests__/a.test.tsx".to_string()));
     assert!(filter.is_match("tests/a.test.ts".to_string()));
     assert!(!filter.is_match("web/components/a.test.tsx".to_string()));
+    assert!(!filter.is_match("other/a.test.ts".to_string()));
 }
 
 #[test]
 fn scoped_glob_leaves_root_project_includes_unprefixed() {
-    assert_eq!(scoped_glob(".", "tests/**/*.test.ts"), "tests/**/*.test.ts");
-    assert_eq!(
-        scoped_glob("web/storybook", "./**/*.test.tsx"),
-        "web/storybook/**/*.test.tsx"
+    let mut config = NoMistakesConfig::default();
+    config.projects.insert(
+        "root-tests".to_string(),
+        Project {
+            root: Some(".".to_string()),
+            include: vec!["tests/**/*.test.ts".to_string()],
+            rules: vec![super::super::RULE_ID.to_string()],
+            ..Default::default()
+        },
     );
+    config.projects.insert(
+        "storybook".to_string(),
+        Project {
+            root: Some("web/storybook".to_string()),
+            include: vec!["./**/*.test.tsx".to_string()],
+            rules: vec![super::super::RULE_ID.to_string()],
+            ..Default::default()
+        },
+    );
+    let filter = test_filter(Path::new("."), &config).unwrap();
+    assert!(filter.is_match("tests/example.test.ts".to_string()));
+    assert!(filter.is_match("web/storybook/example.test.tsx".to_string()));
+    assert!(!filter.is_match("web/storybook/example.test.ts".to_string()));
 }
 
 #[test]
@@ -74,6 +104,25 @@ fn setup_files_resolves_config_relative_existing_files() {
     assert!(files
         .iter()
         .any(|path| path.ends_with("tests/setup-vitest.mts")));
+    assert!(files
+        .iter()
+        .any(|path| path.ends_with("tests/setup-jest.mts")));
+    assert!(files
+        .iter()
+        .any(|path| path.ends_with("tests/setup-jest-after-env.mts")));
+}
+
+#[test]
+fn setup_files_for_test_uses_default_globs_when_config_has_no_matcher() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+    );
+    let mut config = NoMistakesConfig::default();
+    config.tests.jest.configs = Some(crate::config::v2::schema::StringOrList::One(
+        "jest.no-match.config.cjs".to_string(),
+    ));
+    let files = setup_files_for_test(&root, &config, "tests/good.test.mts".to_string()).unwrap();
     assert!(files
         .iter()
         .any(|path| path.ends_with("tests/setup-jest.mts")));
@@ -91,7 +140,23 @@ fn explicit_config_files_skip_default_discovery() {
     ));
     let files = config_files(&root, &config);
     assert_eq!(files.len(), 1);
-    assert!(files[0].ends_with("jest.config.mjs"));
+    assert!(files[0].path.ends_with("jest.config.mjs"));
+}
+
+#[test]
+fn invalid_config_globs_do_not_block_default_discovery() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+    );
+    let mut config = NoMistakesConfig::default();
+    config.tests.jest.configs = Some(crate::config::v2::schema::StringOrList::One(
+        "[".to_string(),
+    ));
+    let files = config_files(&root, &config);
+    assert!(files
+        .iter()
+        .any(|file| file.path.ends_with("jest.config.mjs")));
 }
 
 #[test]
@@ -101,6 +166,92 @@ fn default_config_discovery_normalizes_existing_files() {
             .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
     );
     let files = config_files(&root, &NoMistakesConfig::default());
-    assert!(files.iter().any(|file| file.ends_with("vitest.config.mts")));
-    assert!(files.iter().any(|file| file.ends_with("jest.config.mjs")));
+    assert!(files
+        .iter()
+        .any(|file| file.path.ends_with("vitest.config.mts")));
+    assert!(files
+        .iter()
+        .any(|file| file.path.ends_with("jest.config.mjs")));
+    assert!(files
+        .iter()
+        .any(|file| file.path.ends_with("jest.config.cjs")));
+}
+
+#[test]
+fn configured_config_globs_expand_existing_files() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+    );
+    let mut config = NoMistakesConfig::default();
+    config.tests.jest.configs = Some(crate::config::v2::schema::StringOrList::One(
+        "jest.config.*".to_string(),
+    ));
+    let files = config_files(&root, &config);
+    assert!(files
+        .iter()
+        .any(|file| file.path.ends_with("jest.config.mjs")));
+    assert!(files
+        .iter()
+        .any(|file| file.path.ends_with("jest.config.cjs")));
+}
+
+#[test]
+fn jest_test_regex_is_used_as_include_pattern() {
+    let source = "module.exports = { testRegex: ['.*\\\\.spec\\\\.mts$'] }";
+    assert_eq!(extract_test_regexes(source), vec![r#".*\\.spec\\.mts$"#]);
+}
+
+#[test]
+fn jest_test_regex_literal_is_used_as_include_pattern() {
+    let source = r#"module.exports = { testRegex: /.*\.test\.mts$/ }"#;
+    assert_eq!(extract_test_regexes(source), vec![r#".*\.test\.mts$"#]);
+}
+
+#[test]
+fn test_filter_matches_jest_regex_includes() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+    );
+    let mut config = NoMistakesConfig::default();
+    config.tests.jest.configs = Some(crate::config::v2::schema::StringOrList::One(
+        "jest.regex.config.cjs".to_string(),
+    ));
+    let filter = test_filter(&root, &config).unwrap();
+    assert!(filter.is_match("tests/example.regex-test.mts".to_string()));
+    assert!(!filter.is_match("tests/example.regex-test.ts".to_string()));
+}
+
+#[test]
+fn invalid_regex_patterns_return_error() {
+    assert!(build_regexes(&["(".to_string()]).is_err());
+}
+
+#[test]
+fn test_block_parser_ignores_braces_inside_quoted_strings() {
+    let source = r#"export default {
+        test: {
+            nested: { label: "inner" },
+            include: ["tests/quoted.test.mts"],
+            exclude: ['tests/ignored.test.mts'],
+            name: 'escaped \\ backslash',
+            title: `template } brace`,
+        },
+        include: ['outside.test.mts'],
+    }"#;
+    assert_eq!(
+        extract_test_property_strings(source, "include"),
+        vec!["tests/quoted.test.mts"]
+    );
+    assert_eq!(
+        extract_test_property_strings(source, "exclude"),
+        vec!["tests/ignored.test.mts"]
+    );
+}
+
+#[test]
+fn malformed_test_block_returns_no_properties() {
+    let source = "export default { test: { include: ['a.test.mts']";
+    assert!(extract_test_property_strings(source, "include").is_empty());
 }

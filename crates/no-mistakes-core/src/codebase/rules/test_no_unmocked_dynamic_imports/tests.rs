@@ -24,6 +24,10 @@ fn fixture_reports_unmocked_transitive_and_nonliteral_dynamic_imports() {
     assert!(!findings
         .iter()
         .any(|f| f.target.as_deref() == Some("src/types.mts")));
+    assert!(findings.iter().any(|f| {
+        f.file == "tests/jest-setup-leak.test.mts"
+            && f.target.as_deref() == Some("src/jest-setup-target.mts")
+    }));
 }
 
 #[test]

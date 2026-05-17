@@ -21,6 +21,9 @@ fn mocked_targets(root: &Path, mock_file: &Path) -> Vec<PathBuf> {
     if let Some(rooted) = rooted_target(root, mock_file) {
         targets.push(rooted);
     }
+    if let Some(module) = module_target(root, mock_file) {
+        targets.push(module);
+    }
     targets
 }
 
@@ -36,6 +39,9 @@ fn adjacent_target(mock_file: &Path) -> Option<PathBuf> {
 
 fn rooted_target(root: &Path, mock_file: &Path) -> Option<PathBuf> {
     let rel = mock_file.strip_prefix(root).ok()?;
+    if rel.components().next()?.as_os_str() != "__mocks__" {
+        return None;
+    }
     let mut seen_mocks = false;
     let mut target = PathBuf::from(root);
     for component in rel.components() {
@@ -48,6 +54,21 @@ fn rooted_target(root: &Path, mock_file: &Path) -> Option<PathBuf> {
         target.push(component.as_os_str());
     }
     seen_mocks.then(|| normalize_path(&target))
+}
+
+fn module_target(root: &Path, mock_file: &Path) -> Option<PathBuf> {
+    let rel = mock_file.strip_prefix(root).ok()?;
+    if rel.components().next()?.as_os_str() != "__mocks__" {
+        return None;
+    }
+    let module = rel.strip_prefix("__mocks__").ok()?;
+    Some(strip_extension(module))
+}
+
+fn strip_extension(path: &Path) -> PathBuf {
+    let mut stripped = path.to_path_buf();
+    stripped.set_extension("");
+    stripped
 }
 
 #[cfg(test)]

@@ -22,7 +22,7 @@ pub fn check(
     let tsconfig = resolve_tsconfig(root, tsconfig_path)?;
     let resolver = ImportResolver::new(&tsconfig);
     let graph = DepGraph::build_with_plan(root, &tsconfig, GraphBuildPlan::all())?;
-    let setup_mocks = setup_mocks(root, config, &resolver)?;
+    let manual_mocks = manual_mocks::discover(root, &config.filesystem.skip_directories);
     let mut findings = Vec::new();
 
     for file in matching_test_files(root, &files, config)? {
@@ -31,7 +31,8 @@ pub fn check(
             continue;
         }
         let facts = ast::extract(&file, &source)?;
-        let mut mocks = setup_mocks.clone();
+        let mut mocks = manual_mocks.clone();
+        mocks.extend(setup_mocks(root, config, &file, &resolver)?);
         mocks.extend(resolve_mock_specifiers(
             &facts.mock_specifiers,
             &file,
@@ -106,7 +107,6 @@ fn runtime_deps(graph: &DepGraph, target: PathBuf) -> Vec<PathBuf> {
     graph
         .deps_of(&[NodeId::File(target)], None, Some(&allowed))
         .into_iter()
-        .filter(|entry| !entry.via.contains(&EdgeKind::TypeImport))
         .filter_map(|entry| entry.node.as_file().map(Path::to_path_buf))
         .collect()
 }
@@ -171,10 +171,12 @@ fn resolve_mock_specifiers(
 fn setup_mocks(
     root: &Path,
     config: &NoMistakesConfig,
+    test_file: &Path,
     resolver: &ImportResolver<'_>,
 ) -> Result<HashSet<PathBuf>> {
     let mut mocks = HashSet::new();
-    for setup in config::setup_files(root, config)? {
+    let rel_path = crate::codebase::ts_source::relative_slash_path(root, test_file);
+    for setup in config::setup_files_for_test(root, config, rel_path)? {
         let source = std::fs::read_to_string(&setup).unwrap_or_default();
         let facts = ast::extract(&setup, &source)?;
         mocks.extend(resolve_mock_specifiers(
@@ -183,10 +185,6 @@ fn setup_mocks(
             resolver,
         ));
     }
-    mocks.extend(manual_mocks::discover(
-        root,
-        &config.filesystem.skip_directories,
-    ));
     Ok(mocks)
 }
 
