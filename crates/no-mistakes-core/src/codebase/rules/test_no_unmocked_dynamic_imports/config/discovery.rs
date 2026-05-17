@@ -1,8 +1,10 @@
+mod property_strings;
 mod regex_literals;
 
 use crate::config::v2::{ConfigView, NoMistakesConfig};
 use anyhow::Result;
 use globset::{Glob, GlobSet, GlobSetBuilder};
+pub(super) use property_strings::extract_property_strings;
 use regex::Regex;
 use regex_literals::extract_test_regex_literals;
 use std::path::{Path, PathBuf};
@@ -15,7 +17,7 @@ pub(super) enum Runner {
 
 pub(super) struct ConfigFile {
     pub path: PathBuf,
-    runner: Runner,
+    pub(super) runner: Runner,
 }
 
 impl ConfigFile {
@@ -24,12 +26,22 @@ impl ConfigFile {
             Runner::Vitest => extract_test_property_strings(source, "include"),
             Runner::Jest => extract_property_strings(source, "testMatch"),
         };
-        if includes.is_empty() {
+        if includes.is_empty() && !self.has_configured_matcher(source) {
             for pattern in crate::codebase::dependencies::VITEST_JEST_TEST_GLOBS {
                 includes.push((*pattern).to_string());
             }
         }
         includes
+    }
+
+    fn has_configured_matcher(&self, source: &str) -> bool {
+        match self.runner {
+            Runner::Vitest => !extract_test_property_strings(source, "include").is_empty(),
+            Runner::Jest => {
+                !extract_property_strings(source, "testMatch").is_empty()
+                    || !extract_test_regexes(source).is_empty()
+            }
+        }
     }
 }
 
@@ -138,23 +150,6 @@ pub(super) fn build_regexes(patterns: &[String]) -> Result<Vec<Regex>> {
         regexes.push(Regex::new(pattern)?);
     }
     Ok(regexes)
-}
-
-pub(super) fn extract_property_strings(source: &str, property: &str) -> Vec<String> {
-    let re = Regex::new(&format!(
-        r#"(?s)\b{}\s*:\s*(\[[^\]]*\]|['"][^'"]+['"])"#,
-        regex::escape(property)
-    ))
-    .expect("property regex compiles");
-    let string_re = Regex::new(r#"['"]([^'"]+)['"]"#).expect("string regex compiles");
-    re.captures_iter(source)
-        .flat_map(|capture| {
-            string_re
-                .captures_iter(&capture[1])
-                .filter_map(|string| string.get(1).map(|m| m.as_str().to_string()))
-                .collect::<Vec<_>>()
-        })
-        .collect()
 }
 
 pub(super) fn extract_test_property_strings(source: &str, property: &str) -> Vec<String> {

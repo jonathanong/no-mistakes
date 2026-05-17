@@ -145,10 +145,30 @@ fn setup_files_resolves_jest_root_dir_entries() {
 }
 
 #[test]
+fn setup_files_resolves_jest_root_dir_from_config_directory() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+    );
+    let mut config = NoMistakesConfig::default();
+    config.tests.jest.configs = Some(crate::config::v2::schema::StringOrList::One(
+        "packages/nested/jest.config.cjs".to_string(),
+    ));
+    let files = setup_files_for_test(
+        &root,
+        &config,
+        "packages/nested/example.test.mts".to_string(),
+    )
+    .unwrap();
+    assert!(files
+        .iter()
+        .any(|path| path.ends_with("packages/nested/setup-jest.mts")));
+}
+
+#[test]
 fn resolve_setup_file_accepts_exact_root_dir_token() {
-    let root = Path::new("/repo");
     let base = Path::new("/repo/config");
-    assert_eq!(resolve_setup_file(root, base, "<rootDir>"), root);
+    assert_eq!(resolve_setup_file(base, "<rootDir>"), base);
 }
 
 #[test]
@@ -249,6 +269,64 @@ fn malformed_jest_test_regex_literals_are_ignored() {
 }
 
 #[test]
+fn jest_test_match_accepts_bracketed_globs_inside_arrays() {
+    let source = r#"module.exports = {
+        testMatch: ["**/?(*.)+(spec|test).[jt]s?(x)", "**/__tests__/**/*.mts"],
+    }"#;
+    assert_eq!(
+        extract_property_strings(source, "testMatch"),
+        vec!["**/?(*.)+(spec|test).[jt]s?(x)", "**/__tests__/**/*.mts"]
+    );
+}
+
+#[test]
+fn property_string_parser_handles_single_and_malformed_strings() {
+    assert_eq!(
+        extract_property_strings(
+            "module.exports = { testMatch: '**/*.test.ts' }",
+            "testMatch"
+        ),
+        vec!["**/*.test.ts"]
+    );
+    assert!(
+        extract_property_strings("module.exports = { testMatch: \"unterminated", "testMatch")
+            .is_empty()
+    );
+    assert!(extract_property_strings(
+        "module.exports = { testMatch: [\"unterminated] }",
+        "testMatch"
+    )
+    .is_empty());
+}
+
+#[test]
+fn jest_test_regex_does_not_fall_back_to_default_globs() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+    );
+    let mut config = NoMistakesConfig::default();
+    config.tests.jest.configs = Some(crate::config::v2::schema::StringOrList::One(
+        "jest.regex.config.cjs".to_string(),
+    ));
+    let files = config_files(&root, &config);
+    let source = std::fs::read_to_string(&files[0].path).unwrap();
+    assert!(files[0].includes(&source).is_empty());
+}
+
+#[test]
+fn vitest_config_without_include_uses_default_globs() {
+    let config_file = discovery::ConfigFile {
+        path: PathBuf::from("vitest.config.mts"),
+        runner: discovery::Runner::Vitest,
+    };
+    assert!(config_file
+        .includes("export default { test: { setupFiles: ['./setup.mts'] } }")
+        .iter()
+        .any(|pattern| pattern.contains("test")));
+}
+
+#[test]
 fn test_filter_matches_jest_regex_includes() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -261,6 +339,7 @@ fn test_filter_matches_jest_regex_includes() {
     let filter = test_filter(&root, &config).unwrap();
     assert!(filter.is_match("tests/example.regex-test.mts".to_string()));
     assert!(!filter.is_match("tests/example.regex-test.ts".to_string()));
+    assert!(!filter.is_match("tests/plain.test.ts".to_string()));
 }
 
 #[test]

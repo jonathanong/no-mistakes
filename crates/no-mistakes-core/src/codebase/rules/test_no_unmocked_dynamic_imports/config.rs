@@ -33,20 +33,26 @@ impl TestFilter {
 
 pub fn test_filter(root: &Path, config: &NoMistakesConfig) -> Result<TestFilter> {
     let mut includes = project_rule_includes(config);
-    if includes.is_empty() {
+    let has_project_includes = !includes.is_empty();
+    let mut excludes = Vec::new();
+    let mut include_regex = Vec::new();
+    let mut config_includes = Vec::new();
+    for config_file in config_files(root, config) {
+        let source = std::fs::read_to_string(&config_file.path)?;
+        config_includes.extend(extract_test_property_strings(&source, "include"));
+        config_includes.extend(extract_property_strings(&source, "testMatch"));
+        include_regex.extend(extract_test_regexes(&source));
+        excludes.extend(extract_test_property_strings(&source, "exclude"));
+    }
+    if has_project_includes {
+        includes.extend(config_includes);
+    } else if !config_includes.is_empty() || !include_regex.is_empty() {
+        includes = config_includes;
+    } else {
         includes = crate::codebase::dependencies::VITEST_JEST_TEST_GLOBS
             .iter()
             .map(|s| (*s).to_string())
             .collect::<Vec<_>>();
-    }
-    let mut excludes = Vec::new();
-    let mut include_regex = Vec::new();
-    for config_file in config_files(root, config) {
-        let source = std::fs::read_to_string(&config_file.path)?;
-        includes.extend(extract_test_property_strings(&source, "include"));
-        includes.extend(extract_property_strings(&source, "testMatch"));
-        include_regex.extend(extract_test_regexes(&source));
-        excludes.extend(extract_test_property_strings(&source, "exclude"));
     }
     Ok(TestFilter {
         include: build_globset(&includes)?,
@@ -119,7 +125,7 @@ fn setup_files_from_configs(root: &Path, config_files: Vec<PathBuf>) -> Result<V
         setups.extend(extract_property_strings(&source, "setupFiles"));
         setups.extend(extract_property_strings(&source, "setupFilesAfterEnv"));
         for setup in setups {
-            let path = resolve_setup_file(root, base, &setup);
+            let path = resolve_setup_file(base, &setup);
             if path.exists() {
                 files.push(crate::codebase::ts_resolver::normalize_path(&path));
             }
@@ -130,12 +136,12 @@ fn setup_files_from_configs(root: &Path, config_files: Vec<PathBuf>) -> Result<V
     Ok(files)
 }
 
-fn resolve_setup_file(root: &Path, base: &Path, setup: &str) -> PathBuf {
+fn resolve_setup_file(base: &Path, setup: &str) -> PathBuf {
     if setup == "<rootDir>" {
-        return root.to_path_buf();
+        return base.to_path_buf();
     }
     if let Some(rest) = setup.strip_prefix("<rootDir>/") {
-        return root.join(rest);
+        return base.join(rest);
     }
     crate::config::resolve(base, Path::new(setup))
 }
