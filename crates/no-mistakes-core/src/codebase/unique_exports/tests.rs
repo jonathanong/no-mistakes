@@ -168,6 +168,15 @@ fn nearest_tsconfig_is_discovered_and_explicit_errors_are_reported() {
 }
 
 #[test]
+fn invalid_skip_file_patterns_are_reported_from_project_analysis() {
+    let root = fixture("unique-exports-invalid-skip");
+
+    let error = analyze_project(&root, None, None).unwrap_err();
+
+    assert!(error.to_string().contains("invalid skip file pattern"));
+}
+
+#[test]
 fn covers_reexport_resolution_edge_cases() {
     let findings = findings("unique-exports-edge-cases");
     let names = finding_names(&findings);
@@ -211,6 +220,10 @@ fn scan_helpers_cover_filter_and_parse_edges() {
 
     let lookup = scan::NextJsProjectLookup::new(&fixture("unique-exports-nextjs"), &[]);
     assert!(!lookup.contains_file(&root.join("src/direct.ts")));
+
+    assert!(!scan::package_json_has_next_dependency(
+        &fixture("unique-exports-malformed-package").join("package.json")
+    ));
 }
 
 #[test]

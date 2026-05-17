@@ -140,7 +140,7 @@ pub fn load_codebase_config_with_path(start: &Path, config_path: Option<&Path>) 
         return load_config_with_path(start, config_path);
     }
 
-    let Some(path) = find_codebase_config_path(start) else {
+    let Some(path) = find_codebase_config_path(start)? else {
         let mut config = Config::default();
         config.augment_from_gitignore(start);
         return Ok(config);
@@ -152,23 +152,37 @@ pub fn load_codebase_config_with_path(start: &Path, config_path: Option<&Path>) 
     Ok(config)
 }
 
-fn find_codebase_config_path(start: &Path) -> Option<std::path::PathBuf> {
+fn find_codebase_config_path(start: &Path) -> Result<Option<std::path::PathBuf>> {
     let mut current = start.to_path_buf();
     loop {
-        for ext in CONFIG_EXTENSIONS {
-            let path = current.join(format!(".no-mistakes.{ext}"));
-            if path.exists() {
-                return Some(path);
-            }
+        if let Some(path) = find_config_for_stem(&current, ".no-mistakes")? {
+            return Ok(Some(path));
         }
-        for ext in CONFIG_EXTENSIONS {
-            let path = current.join(format!(".guardrailsrc.{ext}"));
-            if path.exists() {
-                return Some(path);
-            }
+        if let Some(path) = find_config_for_stem(&current, ".guardrailsrc")? {
+            return Ok(Some(path));
         }
         if !current.pop() {
-            return None;
+            return Ok(None);
+        }
+    }
+}
+
+fn find_config_for_stem(root: &Path, stem: &str) -> Result<Option<std::path::PathBuf>> {
+    let found = CONFIG_EXTENSIONS
+        .iter()
+        .map(|ext| root.join(format!("{stem}.{ext}")))
+        .filter(|path| path.exists())
+        .collect::<Vec<_>>();
+    match found.len() {
+        0 => Ok(None),
+        1 => Ok(found.into_iter().next()),
+        _ => {
+            let files = found
+                .iter()
+                .map(|path| path.display().to_string())
+                .collect::<Vec<_>>()
+                .join(", ");
+            anyhow::bail!("multiple config files found under --root: {files}");
         }
     }
 }

@@ -91,3 +91,13 @@ fn load_codebase_config_finds_parent_no_mistakes_config() {
 
     assert!(!config.is_rule_enabled("unique-exports"));
 }
+
+#[test]
+fn load_codebase_config_rejects_duplicate_parent_configs() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/config-v2/duplicate-stems");
+
+    let error = load_codebase_config_with_path(&root, None).unwrap_err();
+
+    assert!(error.to_string().contains("multiple config files found"));
+}
