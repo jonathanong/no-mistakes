@@ -56,6 +56,18 @@ fn external_subcommand_preserves_proxy_exit_status() {
     assert!(stdout(&output).contains("proxy failed"));
 }
 
+#[cfg(unix)]
+#[test]
+fn external_subcommand_maps_signal_exit_status() {
+    let output = Command::new(bin())
+        .env("PATH", proxy_path())
+        .args(["fixture-proxy", "--signal-int"])
+        .output()
+        .expect("no-mistakes should run");
+
+    assert_eq!(output.status.code(), Some(130));
+}
+
 #[test]
 fn external_subcommand_reports_missing_executable() {
     let output = Command::new(bin())

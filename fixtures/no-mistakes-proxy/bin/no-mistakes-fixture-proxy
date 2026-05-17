@@ -6,6 +6,9 @@ case "${1:-}" in
     echo "proxy failed"
     exit 7
     ;;
+  --signal-int)
+    kill -INT "$$"
+    ;;
   *)
     printf 'fixture-proxy'
     for arg in "$@"; do

@@ -90,7 +90,7 @@ fn proxy_external(args: Vec<OsString>) -> Result<ExitCode> {
     let subcommand = subcommand.to_string_lossy();
     let executable = format!("no-mistakes-{subcommand}");
     let executable_path = find_in_path(&executable).ok_or_else(|| {
-        anyhow::anyhow!("unknown command `{subcommand}` and `{executable}` was not found on PATH")
+        anyhow::anyhow!("unknown command `{subcommand}`; `{executable}` was not found on PATH")
     })?;
 
     let status = ProcessCommand::new(executable_path)
@@ -103,7 +103,20 @@ fn proxy_external(args: Vec<OsString>) -> Result<ExitCode> {
     #[cfg(windows)]
     std::process::exit(status.code().unwrap_or(1));
 
-    #[cfg(not(windows))]
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::ExitStatusExt;
+
+        let code = status
+            .code()
+            .or_else(|| status.signal().map(|signal| 128 + signal))
+            .and_then(|code| u8::try_from(code).ok())
+            .unwrap_or(1);
+
+        Ok(ExitCode::from(code))
+    }
+
+    #[cfg(not(any(unix, windows)))]
     {
         Ok(ExitCode::from(
             status
