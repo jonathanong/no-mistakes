@@ -150,6 +150,20 @@ fn resolves_relative_dotted_stem_by_appending_known_extension() {
 }
 
 #[test]
+fn resolves_relative_explicit_non_javascript_extension() {
+    let root = fixture("explicit-json");
+    let importer = root.join("src/main.mts");
+    let target = normalize_path(&root.join("src/data.json"));
+    let tc = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root,
+        base_url: None,
+    };
+    assert_eq!(resolve_import("./data.json", &importer, &tc), Some(target));
+}
+
+#[test]
 fn resolves_relative_parent() {
     let dir = TempDir::new().unwrap();
     let target = dir.path().join("lib.mts");

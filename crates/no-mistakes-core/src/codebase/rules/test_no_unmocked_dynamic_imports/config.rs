@@ -119,7 +119,7 @@ fn setup_files_from_configs(root: &Path, config_files: Vec<PathBuf>) -> Result<V
         setups.extend(extract_property_strings(&source, "setupFiles"));
         setups.extend(extract_property_strings(&source, "setupFilesAfterEnv"));
         for setup in setups {
-            let path = crate::config::resolve(base, Path::new(&setup));
+            let path = resolve_setup_file(root, base, &setup);
             if path.exists() {
                 files.push(crate::codebase::ts_resolver::normalize_path(&path));
             }
@@ -128,6 +128,16 @@ fn setup_files_from_configs(root: &Path, config_files: Vec<PathBuf>) -> Result<V
     files.sort();
     files.dedup();
     Ok(files)
+}
+
+fn resolve_setup_file(root: &Path, base: &Path, setup: &str) -> PathBuf {
+    if setup == "<rootDir>" {
+        return root.to_path_buf();
+    }
+    if let Some(rest) = setup.strip_prefix("<rootDir>/") {
+        return root.join(rest);
+    }
+    crate::config::resolve(base, Path::new(setup))
 }
 
 #[cfg(test)]

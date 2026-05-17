@@ -129,6 +129,29 @@ fn setup_files_for_test_uses_default_globs_when_config_has_no_matcher() {
 }
 
 #[test]
+fn setup_files_resolves_jest_root_dir_entries() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+    );
+    let mut config = NoMistakesConfig::default();
+    config.tests.jest.configs = Some(crate::config::v2::schema::StringOrList::One(
+        "jest.root-dir.config.cjs".to_string(),
+    ));
+    let files = setup_files_for_test(&root, &config, "tests/good.test.mts".to_string()).unwrap();
+    assert!(files
+        .iter()
+        .any(|path| path.ends_with("tests/setup-jest.mts")));
+}
+
+#[test]
+fn resolve_setup_file_accepts_exact_root_dir_token() {
+    let root = Path::new("/repo");
+    let base = Path::new("/repo/config");
+    assert_eq!(resolve_setup_file(root, base, "<rootDir>"), root);
+}
+
+#[test]
 fn explicit_config_files_skip_default_discovery() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

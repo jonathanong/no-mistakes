@@ -343,10 +343,10 @@ impl<'a> ImportResolver<'a> {
     fn try_path(&self, base: &Path) -> Option<PathBuf> {
         let base = normalize_path(base);
         let s = base.to_string_lossy();
+        if self.path_is_file(&base) {
+            return Some(base);
+        }
         if has_known_extension(&base) {
-            if self.path_exists(&base) {
-                return Some(base);
-            }
             return None;
         }
 
@@ -371,6 +371,12 @@ impl<'a> ImportResolver<'a> {
         self.visible
             .map(|visible| visible.contains(path))
             .unwrap_or_else(|| path.exists())
+    }
+
+    fn path_is_file(&self, path: &Path) -> bool {
+        self.visible
+            .map(|visible| visible.contains(path))
+            .unwrap_or_else(|| path.is_file())
     }
 }
 
