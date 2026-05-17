@@ -8,7 +8,7 @@ no-mistakes-rust-max-lines-per-file
 Enforce maximum Rust code lines per file.
 
 Usage:
-  no-mistakes-rust-max-lines-per-file [options] <src_dir> [<tests_dir>]
+  no-mistakes-rust-max-lines-per-file [options] <src_or_tests_dir> [<src_or_tests_dir>...]
   no-mistakes-rust-max-lines-per-file --help
 
 Options:
@@ -23,6 +23,7 @@ Requires:
 Examples:
   no-mistakes-rust-max-lines-per-file crates/no-mistakes/src
   no-mistakes-rust-max-lines-per-file crates/no-mistakes/src crates/no-mistakes/tests
+  no-mistakes-rust-max-lines-per-file crates/*/src crates/*/tests
 USAGE
 }
 
@@ -98,12 +99,6 @@ if [ "${#paths[@]}" -lt 1 ]; then
   exit 2
 fi
 
-if [ "${#paths[@]}" -gt 2 ]; then
-  echo "Error: too many positional arguments (expected <src_dir> [<tests_dir>])." >&2
-  usage >&2
-  exit 2
-fi
-
 if ! command -v tokei >/dev/null 2>&1; then
   echo "Error: tokei is required." >&2
   echo "  macOS: brew install tokei" >&2
@@ -132,11 +127,13 @@ check_dir() {
   done < <(printf '%s' "$json" | jq -r '.Rust?.reports[]? | [.stats.code, .name] | @tsv')
 }
 
-check_dir "${paths[0]}" "$src_max"
-
-if [ "${#paths[@]}" -ge 2 ]; then
-  check_dir "${paths[1]}" "$test_max"
-fi
+for path in "${paths[@]}"; do
+  if [ "$(basename "$path")" = "tests" ]; then
+    check_dir "$path" "$test_max"
+  else
+    check_dir "$path" "$src_max"
+  fi
+done
 
 if [ "$fail" -eq 0 ]; then
   echo "All Rust files within line limits."

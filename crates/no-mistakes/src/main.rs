@@ -100,12 +100,18 @@ fn proxy_external(args: Vec<OsString>) -> Result<ExitCode> {
         .stderr(Stdio::inherit())
         .status()?;
 
-    Ok(ExitCode::from(
-        status
-            .code()
-            .and_then(|code| u8::try_from(code).ok())
-            .unwrap_or(1),
-    ))
+    #[cfg(windows)]
+    std::process::exit(status.code().unwrap_or(1));
+
+    #[cfg(not(windows))]
+    {
+        Ok(ExitCode::from(
+            status
+                .code()
+                .and_then(|code| u8::try_from(code).ok())
+                .unwrap_or(1),
+        ))
+    }
 }
 
 fn find_in_path(executable: &str) -> Option<PathBuf> {

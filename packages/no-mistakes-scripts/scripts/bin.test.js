@@ -90,6 +90,23 @@ test(
 );
 
 test(
+  "rust-max-lines-per-file accepts multiple source and test directories",
+  { skip: !hasCommand("tokei") || !hasCommand("jq") },
+  async () => {
+    const { stdout } = await run("no-mistakes-rust-max-lines-per-file", [
+      "--src-max",
+      "5",
+      "--test-max",
+      "5",
+      fixture("rust-max-lines-per-file", "small/src"),
+      fixture("rust-max-lines-per-file", "excluded/src"),
+      fixture("rust-max-lines-per-file", "small/tests"),
+    ]);
+    assert.match(stdout, /within line limits/);
+  },
+);
+
+test(
   "rust-max-lines-per-file emits GitHub annotation on failure",
   { skip: !hasCommand("tokei") || !hasCommand("jq") },
   async () => {
