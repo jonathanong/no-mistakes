@@ -1,4 +1,5 @@
 use crate::codebase::ts_source::byte_offset_to_line;
+use anyhow::{bail, Result};
 use oxc::allocator::Allocator;
 use oxc::ast::ast::{
     BindingPattern, Declaration, ExportDefaultDeclarationKind, Program, Statement,
@@ -55,7 +56,7 @@ pub struct FileSymbols {
 }
 
 /// Extract top-level exports and named imports from TypeScript/TSX source.
-pub fn extract_symbols(source: &str, is_tsx: bool) -> FileSymbols {
+pub fn extract_symbols(source: &str, is_tsx: bool) -> Result<FileSymbols> {
     let allocator = Allocator::default();
     let source_type = if is_tsx {
         SourceType::tsx()
@@ -63,8 +64,16 @@ pub fn extract_symbols(source: &str, is_tsx: bool) -> FileSymbols {
         SourceType::ts()
     };
     let ret = Parser::new(&allocator, source, source_type).parse();
+    if ret.panicked || !ret.errors.is_empty() {
+        let detail = ret
+            .errors
+            .first()
+            .map(|err| format!("{err:?}"))
+            .unwrap_or("unknown error (parser panicked)".to_string());
+        bail!("failed to parse TypeScript source: {detail}");
+    }
 
-    extract_symbols_from_program(&ret.program, source)
+    Ok(extract_symbols_from_program(&ret.program, source))
 }
 
 pub fn extract_symbols_from_program(program: &Program<'_>, source: &str) -> FileSymbols {

@@ -59,6 +59,18 @@ fn collect_entries_surfaces_read_errors() {
 }
 
 #[test]
+fn collect_entries_surfaces_parse_errors() {
+    let invalid_source = fixture_args(vec!["src/invalid.mts"], Format::Json);
+
+    let err = collect_entries(&invalid_source).unwrap_err();
+    let detail = format!("{err:#}");
+
+    assert!(detail.contains("extracting symbols from"));
+    assert!(detail.contains("src/invalid.mts"));
+    assert!(detail.contains("failed to parse TypeScript source"));
+}
+
+#[test]
 fn json_simple_exports() {
     let out = run_capture(fixture_args(vec!["src/utils.mts"], Format::Json));
     let v: serde_json::Value = serde_json::from_str(&out).unwrap();

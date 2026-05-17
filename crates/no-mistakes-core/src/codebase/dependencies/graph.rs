@@ -1529,7 +1529,7 @@ fn extract_processor_job_names(processors_file: &Path) -> Option<Vec<String>> {
         .and_then(|e| e.to_str())
         .map(|e| e == "tsx" || e == "jsx")
         .unwrap_or(false);
-    let symbols = extract_symbols(&proc_source, is_tsx);
+    let symbols = extract_symbols(&proc_source, is_tsx).ok()?;
     Some(
         symbols
             .exports

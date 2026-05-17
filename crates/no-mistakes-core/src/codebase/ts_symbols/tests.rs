@@ -1,11 +1,11 @@
 use super::*;
 
 fn syms(src: &str) -> FileSymbols {
-    extract_symbols(src, false)
+    extract_symbols(src, false).unwrap()
 }
 
 fn syms_tsx(src: &str) -> FileSymbols {
-    extract_symbols(src, true)
+    extract_symbols(src, true).unwrap()
 }
 
 // ── Imports ──────────────────────────────────────────────────────────────
@@ -62,6 +62,12 @@ fn multiple_named_imports() {
 fn side_effect_import_has_no_symbols() {
     let s = syms("import './setup.mts';");
     assert!(s.imports.is_empty());
+}
+
+#[test]
+fn invalid_source_returns_error() {
+    let err = extract_symbols("export const = ;", false).unwrap_err();
+    assert!(format!("{err:#}").contains("failed to parse TypeScript source"));
 }
 
 // ── Exports — functions and classes ──────────────────────────────────────
