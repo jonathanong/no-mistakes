@@ -1,4 +1,4 @@
-use crate::react_traits::report::types::{FileConfig, RootConfig, Violation};
+use crate::react_traits::report::types::{RootConfig, Violation};
 use anyhow::Result;
 use std::path::Path;
 
@@ -10,7 +10,7 @@ pub fn run_check(
 ) -> Result<Vec<Violation>> {
     let stems = [".no-mistakes", ".react-traits"];
     let root_config: RootConfig = crate::config::load_config(root, config_path, &stems)?;
-    let file_config = build_file_config(root_config);
+    let file_config = root_config.into_file_config();
     let effective_no_fetch = assert_no_fetch || file_config.assert_no_fetch.unwrap_or(false);
     let facts_list =
         crate::react_traits::pipeline::run::run_analyze_inner(root, &file_config, targets, None)?;
@@ -33,17 +33,4 @@ pub fn run_check(
         }
     }
     Ok(violations)
-}
-
-fn build_file_config(root_config: RootConfig) -> FileConfig {
-    let mut file_config = root_config.legacy;
-    if let Some(overrides) = root_config.react_traits {
-        if overrides.frontend_root.is_some() {
-            file_config.frontend_root = overrides.frontend_root;
-        }
-        if overrides.assert_no_fetch.is_some() {
-            file_config.assert_no_fetch = overrides.assert_no_fetch;
-        }
-    }
-    file_config
 }
