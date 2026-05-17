@@ -1,0 +1,12 @@
+projects:
+  backend:
+    root: backend
+    rules:
+      - active-rule
+      - disabled-rule
+rules:
+  active-rule:
+    message: Active rule
+  disabled-rule:
+    enabled: false
+    message: Disabled rule

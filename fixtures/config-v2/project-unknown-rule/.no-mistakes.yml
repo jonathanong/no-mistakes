@@ -1,0 +1,10 @@
+projects:
+  backend:
+    type: server
+    root: backend
+    rules:
+      - known-rule
+      - ghost-rule
+rules:
+  known-rule:
+    message: Known rule
