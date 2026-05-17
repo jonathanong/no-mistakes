@@ -22,6 +22,8 @@
     "fmt:js": "oxfmt --write packages/ vitest.config.js",
     "fmt:js:check": "oxfmt --check packages/ vitest.config.js",
     "lint:js": "oxlint packages/ vitest.config.js",
+    "lint:shell": "shellcheck packages/no-mistakes-scripts/bin/*",
+    "lint:spell": "cspell lint README.md \"docs/**/*.md\" \"packages/no-mistakes*/README.md\" cspell.config.yaml package.json --no-progress --no-gitignore --show-suggestions --no-must-find-files",
     "pack:check": "npm --workspaces pack --dry-run",
     "prepare": "husky"
   },
@@ -29,6 +31,7 @@
     "@emnapi/core": "^1.10.0",
     "@emnapi/runtime": "^1.10.0",
     "@vitest/coverage-v8": "^4.1.6",
+    "cspell": "^9.8.0",
     "eslint": "^10.3.0",
     "husky": "^9.1.7",
     "oxfmt": "^0.49.0",

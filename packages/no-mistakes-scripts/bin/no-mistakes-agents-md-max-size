@@ -1,0 +1,138 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+no-mistakes-agents-md-max-size
+
+Enforce line and character limits on AGENTS.md and CLAUDE.md files.
+
+Usage:
+  no-mistakes-agents-md-max-size [options] [<max_lines>] [<max_chars>]
+  no-mistakes-agents-md-max-size --help
+
+Options:
+  --root <path>    Repository root or subdirectory to check (default: .)
+
+Defaults:
+  max_lines: 200
+  max_chars: 12000
+
+Requires:
+  git
+USAGE
+}
+
+require_positive_int() {
+  case "$2" in
+    ''|0|*[!0-9]*)
+      echo "Error: $1 requires a positive integer." >&2
+      usage >&2
+      exit 2
+      ;;
+  esac
+}
+
+root="."
+positionals=()
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --root)
+      if [ "$#" -lt 2 ] || [ -z "${2:-}" ]; then
+        echo "Error: --root requires a non-empty value." >&2
+        exit 2
+      fi
+      root="$2"
+      shift 2
+      ;;
+    --)
+      shift
+      while [ "$#" -gt 0 ]; do
+        positionals+=("$1")
+        shift
+      done
+      ;;
+    -*)
+      echo "Error: unknown option $1" >&2
+      usage >&2
+      exit 2
+      ;;
+    *)
+      positionals+=("$1")
+      shift
+      ;;
+  esac
+done
+
+if [ "${#positionals[@]}" -gt 2 ]; then
+  echo "Error: too many positional arguments." >&2
+  usage >&2
+  exit 2
+fi
+
+max_lines="${positionals[0]:-200}"
+max_chars="${positionals[1]:-12000}"
+require_positive_int "max_lines" "$max_lines"
+require_positive_int "max_chars" "$max_chars"
+
+if ! command -v git >/dev/null 2>&1; then
+  echo "Error: git is required." >&2
+  echo "  macOS: brew install git" >&2
+  echo "  Linux: apt-get install git" >&2
+  exit 1
+fi
+
+if ! git -C "$root" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "Error: must be run from inside a git repository." >&2
+  echo "  Action: cd into your project and try again." >&2
+  exit 1
+fi
+
+repo_root=$(git -C "$root" rev-parse --show-toplevel)
+scope_abs=$(cd "$root" && pwd -P)
+repo_abs=$(cd "$repo_root" && pwd -P)
+
+if [[ "$scope_abs" != "$repo_abs" && "$scope_abs" != "$repo_abs/"* ]]; then
+  echo "Error: --root must be inside the git repository." >&2
+  exit 1
+fi
+
+if LC_ALL=C.UTF-8 locale >/dev/null 2>&1; then
+  wc_locale=C.UTF-8
+elif LC_ALL=en_US.UTF-8 locale >/dev/null 2>&1; then
+  wc_locale=en_US.UTF-8
+else
+  wc_locale=C
+fi
+
+fail=0
+
+while IFS= read -r -d '' full_path; do
+  case "$full_path" in
+    "$repo_abs"/*) file="${full_path#"$repo_abs/"}" ;;
+    *) continue ;;
+  esac
+
+  lines=$(awk 'END { print NR + 0 }' "$full_path")
+  chars=$(LC_ALL="$wc_locale" wc -m < "$full_path" | tr -d ' ')
+
+  if [ "$lines" -gt "$max_lines" ]; then
+    echo "::error file=$file::$file has $lines lines (max $max_lines) - trim to keep agent context lean"
+    fail=1
+  fi
+  if [ "$chars" -gt "$max_chars" ]; then
+    echo "::error file=$file::$file has $chars characters (max $max_chars) - trim to keep agent context lean"
+    fail=1
+  fi
+done < <(find "$scope_abs" \( -name AGENTS.md -o -name CLAUDE.md \) -type f -print0)
+
+if [ "$fail" -eq 0 ]; then
+  echo "All AGENTS.md / CLAUDE.md files within size limits."
+fi
+
+exit "$fail"

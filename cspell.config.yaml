@@ -1,0 +1,35 @@
+version: "0.2"
+language: en
+useGitignore: true
+ignorePaths:
+  - "Cargo.lock"
+  - "package-lock.json"
+  - "pnpm-lock.yaml"
+  - "target/**"
+  - "coverage/**"
+  - "node_modules/**"
+  - "packages/*/vendor/**"
+  - "fixtures/**"
+  - "crates/**/target/**"
+words:
+  - arm64
+  - codebase
+  - codecov
+  - emnapi
+  - glibc
+  - jsonc
+  - linecount
+  - markdown
+  - nextjs
+  - Ong
+  - oxlint
+  - PCRE
+  - pnpm
+  - rustfmt
+  - shellcheck
+  - shasum
+  - subpaths
+  - tokei
+  - tsconfig
+  - vitest
+  - worktree

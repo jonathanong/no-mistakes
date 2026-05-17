@@ -11,5 +11,14 @@ npx no-mistakes symbols src/utils.mts --json
 npx no-mistakes check --json
 ```
 
+External `no-mistakes-*` executables on `PATH` can be invoked as subcommands.
+For example, after installing `no-mistakes-scripts`:
+
+```bash
+npm install --save-dev no-mistakes-scripts
+npx no-mistakes rust-no-inline-tests crates/*/src
+npx no-mistakes rust-max-lines-per-file crates/*/src crates/*/tests
+```
+
 See the full documentation in [docs/](../../docs/README.md) and the
 [CLI reference](../../docs/cli-reference.md).

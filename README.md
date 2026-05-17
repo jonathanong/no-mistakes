@@ -27,6 +27,7 @@ The canonical documentation lives in [docs/](docs/README.md):
 | `queue-ast-hop` | Map BullMQ and glide-mq producers to workers. |
 | `server-ast-routes` | Extract Express, Hono, Koa, and related server route graphs. |
 | `react-traits` | Report React component traits and rendered component relationships. |
+| `no-mistakes-scripts` | Portable macOS/Linux shell checks proxied through `no-mistakes`. |
 | `eslint-plugin-playwright-ast-coverage` | Keep Playwright test IDs static, unique, and consistent. |
 | `eslint-plugin-next-to-fetch` | Keep `fetch()` URLs and methods statically analyzable. |
 
@@ -35,7 +36,13 @@ The canonical documentation lives in [docs/](docs/README.md):
 Use the published packages where available:
 
 ```sh
-npm install --save-dev playwright-ast-coverage eslint-plugin-playwright-ast-coverage
+npm install --save-dev no-mistakes playwright-ast-coverage eslint-plugin-playwright-ast-coverage
+```
+
+On macOS/Linux, add the portable shell checks:
+
+```sh
+npm install --save-dev no-mistakes-scripts
 ```
 
 Or install the Rust binary directly:

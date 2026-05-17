@@ -23,6 +23,7 @@ no-mistakes server routes [FILES]...
 no-mistakes server edges [ROOTS]... [--depth N]
 no-mistakes server related <ROOTS>... [--direction deps|dependents|both]
 no-mistakes check
+no-mistakes <external-subcommand> [ARGS]...
 ```
 
 ### Graph Commands
@@ -112,6 +113,22 @@ no-mistakes check --json
 Runs configured React and queue checks. Options: `--root`, `--config`,
 `--tsconfig`, `--format`, and `--json`. `--jobs` is a global wrapper option,
 for example `no-mistakes --jobs 4 check ...`.
+
+### External Script Commands
+
+Unknown `no-mistakes` subcommands are proxied to matching `no-mistakes-*`
+executables on `PATH`. This lets packages such as `no-mistakes-scripts` extend
+the CLI without shipping native Rust subcommands.
+
+```sh
+npm install --save-dev no-mistakes-scripts
+no-mistakes rust-no-inline-tests crates/*/src
+no-mistakes rust-max-lines-per-file crates/*/src crates/*/tests
+no-mistakes agents-md-max-size
+```
+
+`no-mistakes rust-no-inline-tests` executes
+`no-mistakes-rust-no-inline-tests` and forwards all remaining arguments.
 
 ## `playwright-ast-coverage`
 
