@@ -84,12 +84,10 @@ fn run() -> Result<ExitCode> {
 }
 
 fn proxy_external(args: Vec<OsString>) -> Result<ExitCode> {
-    let Some((subcommand, forwarded)) = args.split_first() else {
-        anyhow::bail!("missing external subcommand");
-    };
-    let subcommand = subcommand
-        .to_str()
-        .ok_or_else(|| anyhow::anyhow!("external subcommand is not valid UTF-8"))?;
+    let (subcommand, forwarded) = args
+        .split_first()
+        .expect("clap external subcommands include a command");
+    let subcommand = subcommand.to_string_lossy();
     let executable = format!("no-mistakes-{subcommand}");
     let executable_path = find_in_path(&executable).ok_or_else(|| {
         anyhow::anyhow!("unknown command `{subcommand}` and `{executable}` was not found on PATH")
@@ -102,10 +100,12 @@ fn proxy_external(args: Vec<OsString>) -> Result<ExitCode> {
         .stderr(Stdio::inherit())
         .status()?;
 
-    Ok(match status.code() {
-        Some(code) => ExitCode::from(u8::try_from(code).unwrap_or(1)),
-        None => ExitCode::from(1),
-    })
+    Ok(ExitCode::from(
+        status
+            .code()
+            .and_then(|code| u8::try_from(code).ok())
+            .unwrap_or(1),
+    ))
 }
 
 fn find_in_path(executable: &str) -> Option<PathBuf> {
@@ -117,9 +117,16 @@ fn find_in_path(executable: &str) -> Option<PathBuf> {
         }
         #[cfg(windows)]
         {
-            let candidate = dir.join(format!("{executable}.exe"));
-            if candidate.is_file() {
-                return Some(candidate);
+            let pathext =
+                std::env::var_os("PATHEXT").unwrap_or_else(|| ".COM;.EXE;.BAT;.CMD".into());
+            for extension in std::env::split_paths(&pathext) {
+                let Some(extension) = extension.to_str() else {
+                    continue;
+                };
+                let candidate = dir.join(format!("{executable}{extension}"));
+                if candidate.is_file() {
+                    return Some(candidate);
+                }
             }
         }
     }
