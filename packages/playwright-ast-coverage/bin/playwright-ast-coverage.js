@@ -3,4 +3,10 @@
 
 const { run } = require("./cli");
 
-process.exit(run());
+function main() {
+  process.exit(run());
+}
+
+if (require.main === module) main();
+
+module.exports = { main };

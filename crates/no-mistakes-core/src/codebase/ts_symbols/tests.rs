@@ -58,6 +58,18 @@ fn multiple_named_imports() {
     assert!(names.contains(&"c"));
 }
 
+#[test]
+fn side_effect_import_has_no_symbols() {
+    let s = syms("import './setup.mts';");
+    assert!(s.imports.is_empty());
+}
+
+#[test]
+fn panicked_parse_returns_error() {
+    let err = extract_symbols("export const = ;", false).unwrap_err();
+    assert!(format!("{err:#}").contains("failed to parse TypeScript source"));
+}
+
 // ── Exports — functions and classes ──────────────────────────────────────
 
 #[test]
@@ -92,6 +104,19 @@ fn export_let() {
 fn export_var() {
     let s = syms("export var z = 3;");
     assert_eq!(s.exports[0].kind, ExportKind::Var);
+}
+
+#[test]
+fn ignored_export_declaration_has_no_symbol() {
+    let s = syms("export namespace Internal { export const value = 1; }");
+    assert!(s.exports.is_empty());
+}
+
+#[test]
+fn unnamed_inline_exports_are_ignored() {
+    let mut out = FileSymbols::default();
+    push_export_if_named(&mut out, None, ExportKind::Function, 1);
+    assert!(out.exports.is_empty());
 }
 
 // ── Exports — type-level ─────────────────────────────────────────────────
@@ -131,6 +156,26 @@ fn export_default_anonymous() {
     let s = syms("export default 42;");
     assert_eq!(s.exports[0].kind, ExportKind::Default);
     assert_eq!(s.exports[0].name, "default");
+}
+
+#[test]
+fn export_default_class_interface_and_identifier_names() {
+    let s = syms(
+        r#"
+const value = 1;
+export default value;
+"#,
+    );
+    assert_eq!(s.exports[0].name, "value");
+
+    let class_symbols = syms("export default class NamedDefault {}");
+    assert_eq!(class_symbols.exports[0].name, "NamedDefault");
+
+    let anonymous_class = syms("export default class {}");
+    assert_eq!(anonymous_class.exports[0].name, "default");
+
+    let interface_symbols = syms("export default interface DefaultShape {}");
+    assert_eq!(interface_symbols.exports[0].name, "DefaultShape");
 }
 
 // ── Exports — re-exports ─────────────────────────────────────────────────
@@ -177,6 +222,26 @@ fn export_star_reexport() {
 fn multiple_exports() {
     let s = syms("export function a() {}\nexport const b = 1;");
     assert_eq!(s.exports.len(), 2);
+}
+
+#[test]
+fn export_destructuring_and_local_specifiers() {
+    let s = syms(
+        r#"
+const local = 1;
+export const { a, b: renamed, ...rest } = source;
+export let [first, second = fallback, ...others] = values;
+export { local as publicLocal };
+"#,
+    );
+    let names: Vec<_> = s
+        .exports
+        .iter()
+        .map(|export| export.name.as_str())
+        .collect();
+    for expected in ["a", "renamed", "first", "second", "publicLocal"] {
+        assert!(names.contains(&expected), "missing export {expected}");
+    }
 }
 
 #[test]

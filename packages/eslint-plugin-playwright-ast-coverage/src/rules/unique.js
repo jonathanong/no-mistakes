@@ -25,7 +25,6 @@ module.exports = rule(
     const seen = new Map();
     return selectorAttributeVisitors(context, (node) => {
       const value = selectorLiteral(node);
-      /* v8 ignore next -- covered by non-literal selector values in rule tests */
       if (value === null) {
         return;
       }

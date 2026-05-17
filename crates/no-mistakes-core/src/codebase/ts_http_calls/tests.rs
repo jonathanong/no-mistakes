@@ -1,6 +1,14 @@
 use super::*;
+use std::path::PathBuf;
 
 const API_PREFIXES: &[&str] = &["/api/", "/infra/", "/sitemaps/"];
+
+fn fixture_source(name: &str) -> String {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/ast-snippets/ts-http-calls")
+        .join(name);
+    std::fs::read_to_string(path).expect("HTTP call fixture source must be readable")
+}
 
 #[test]
 fn detects_method_call_with_literal_path() {
@@ -122,4 +130,76 @@ fn detects_all_http_verbs() {
         assert_eq!(calls.len(), 1, "failed for verb {verb}");
         assert_eq!(calls[0].path, *path);
     }
+}
+
+#[test]
+fn fixture_walks_statement_and_expression_shapes() {
+    let source = fixture_source("walk-all.tsx");
+    let calls = extract_http_calls(&source, API_PREFIXES);
+    let paths: Vec<_> = calls.iter().map(|call| call.path.as_str()).collect();
+
+    for expected in [
+        "/api/top",
+        "/api/var",
+        "/api/exported-function",
+        "/api/default-arrow",
+        "/api/default-function",
+        "/api/if",
+        "/api/else",
+        "/api/try",
+        "/api/catch",
+        "/api/for-init",
+        "/api/for-body",
+        "/api/for-in",
+        "/api/for-of",
+        "/api/while",
+        "/api/do-while",
+        "/api/arrow",
+        "/api/conditional",
+        "/api/alternate",
+        "/api/logical",
+        "/api/sequence-one",
+        "/api/sequence-two",
+        "/api/chained",
+        "/api/casted",
+        "/api/non-null",
+    ] {
+        assert!(paths.contains(&expected), "missing HTTP call {expected}");
+    }
+    assert!(!paths.contains(&"/other/top"));
+}
+
+#[test]
+fn covers_sparse_statement_declaration_and_default_export_shapes() {
+    let source = r#"
+declare function ambient(): void;
+export declare function exportedAmbient(): void;
+export class Ignored {}
+export default class IgnoredDefault {}
+export default function defaultAmbient(): void;
+export default client.get("/api/default-expression");
+
+if (ready) {
+  client.get("/api/if-only");
+}
+
+try {
+  client.get("/api/try-only");
+} finally {
+  client.get("/api/finally-ignored");
+}
+
+for (i = client.get("/api/for-expr-init"); i < 1; i++) {
+  client.get("/api/for-expr-body");
+}
+"#;
+    let calls = extract_http_calls(source, API_PREFIXES);
+    let paths: Vec<_> = calls.iter().map(|call| call.path.as_str()).collect();
+
+    for expected in ["/api/if-only", "/api/try-only", "/api/for-expr-body"] {
+        assert!(paths.contains(&expected), "missing {expected}");
+    }
+    assert!(!paths.contains(&"/api/default-expression"));
+    assert!(!paths.contains(&"/api/finally-ignored"));
+    assert!(!paths.contains(&"/api/for-expr-init"));
 }

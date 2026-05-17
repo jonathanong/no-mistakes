@@ -1,11 +1,13 @@
 const assert = require("node:assert/strict");
 const { createServer } = require("node:http");
+const { EventEmitter } = require("node:events");
 const { mkdtemp, readFile, rm, writeFile } = require("node:fs/promises");
 const { join } = require("node:path");
 const { tmpdir } = require("node:os");
 const { pathToFileURL } = require("node:url");
 
 const { download, fetchText, isRedirectStatus } = require("./install");
+const { request } = require("no-mistakes-core");
 
 test("downloads file URLs and fetches text over HTTP redirects", async () => {
   const root = await mkdtemp(join(tmpdir(), "playwright-ast-coverage-download-"));
@@ -73,4 +75,24 @@ test("rejects redirect loops", async () => {
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
+});
+
+test("request rejects timeout errors", async () => {
+  const client = {
+    get() {
+      const req = new EventEmitter();
+      req.setTimeout = (_timeout, callback) => {
+        queueMicrotask(callback);
+      };
+      req.destroy = (error) => {
+        req.emit("error", error);
+      };
+      return req;
+    },
+  };
+
+  await assert.rejects(
+    () => request("http://example.test/file", () => {}, 0, { http: client, https: client }, 1),
+    /timed out after 1ms/,
+  );
 });

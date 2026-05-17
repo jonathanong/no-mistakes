@@ -1,5 +1,5 @@
 use crate::codebase::ts_source::byte_offset_to_line;
-use anyhow::Result;
+use anyhow::{bail, Result};
 use oxc::allocator::Allocator;
 use oxc::ast::ast::{
     BindingPattern, Declaration, ExportDefaultDeclarationKind, Program, Statement,
@@ -64,6 +64,14 @@ pub fn extract_symbols(source: &str, is_tsx: bool) -> Result<FileSymbols> {
         SourceType::ts()
     };
     let ret = Parser::new(&allocator, source, source_type).parse();
+    if ret.panicked {
+        let detail = ret
+            .errors
+            .first()
+            .map(|err| format!("{err:?}"))
+            .unwrap_or("unknown error (parser panicked)".to_string());
+        bail!("failed to parse TypeScript source: {detail}");
+    }
 
     Ok(extract_symbols_from_program(&ret.program, source))
 }
@@ -148,29 +156,30 @@ fn process_statement(stmt: &Statement, source: &str, out: &mut FileSymbols) {
             if let Some(decl) = &export.declaration {
                 match decl {
                     Declaration::FunctionDeclaration(func) => {
-                        if let Some(id) = &func.id {
-                            out.exports.push(Export {
-                                name: id.name.as_str().to_string(),
-                                kind: ExportKind::Function,
-                                line,
-                            });
-                        }
+                        push_export_if_named(
+                            out,
+                            func.id.as_ref().map(|id| id.name.as_str()),
+                            ExportKind::Function,
+                            line,
+                        );
                     }
                     Declaration::ClassDeclaration(cls) => {
-                        if let Some(id) = &cls.id {
-                            out.exports.push(Export {
-                                name: id.name.as_str().to_string(),
-                                kind: ExportKind::Class,
-                                line,
-                            });
-                        }
+                        push_export_if_named(
+                            out,
+                            cls.id.as_ref().map(|id| id.name.as_str()),
+                            ExportKind::Class,
+                            line,
+                        );
                     }
                     Declaration::VariableDeclaration(var) => {
                         let kind = match var.kind {
-                            oxc::ast::ast::VariableDeclarationKind::Const => ExportKind::Const,
+                            oxc::ast::ast::VariableDeclarationKind::Const
+                            | oxc::ast::ast::VariableDeclarationKind::Using
+                            | oxc::ast::ast::VariableDeclarationKind::AwaitUsing => {
+                                ExportKind::Const
+                            }
                             oxc::ast::ast::VariableDeclarationKind::Let => ExportKind::Let,
                             oxc::ast::ast::VariableDeclarationKind::Var => ExportKind::Var,
-                            _ => ExportKind::Const, // using/await using treated as const
                         };
                         for decl in &var.declarations {
                             collect_binding_names(&decl.id, kind.clone(), line, out);
@@ -217,14 +226,10 @@ fn process_statement(stmt: &Statement, source: &str, out: &mut FileSymbols) {
             let line = byte_offset_to_line(source, export.span.start as usize);
             let name = match &export.declaration {
                 ExportDefaultDeclarationKind::FunctionDeclaration(f) => {
-                    f.id.as_ref()
-                        .map(|id| id.name.as_str().to_string())
-                        .unwrap_or_else(|| "default".to_string())
+                    default_export_name(f.id.as_ref().map(|id| id.name.as_str()))
                 }
                 ExportDefaultDeclarationKind::ClassDeclaration(c) => {
-                    c.id.as_ref()
-                        .map(|id| id.name.as_str().to_string())
-                        .unwrap_or_else(|| "default".to_string())
+                    default_export_name(c.id.as_ref().map(|id| id.name.as_str()))
                 }
                 ExportDefaultDeclarationKind::TSInterfaceDeclaration(i) => {
                     i.id.name.as_str().to_string()
@@ -254,6 +259,20 @@ fn process_statement(stmt: &Statement, source: &str, out: &mut FileSymbols) {
 
         _ => {}
     }
+}
+
+fn push_export_if_named(out: &mut FileSymbols, name: Option<&str>, kind: ExportKind, line: u32) {
+    if let Some(name) = name {
+        out.exports.push(Export {
+            name: name.to_string(),
+            kind,
+            line,
+        });
+    }
+}
+
+fn default_export_name(name: Option<&str>) -> String {
+    name.unwrap_or("default").to_string()
 }
 
 fn collect_binding_names(pat: &BindingPattern, kind: ExportKind, line: u32, out: &mut FileSymbols) {

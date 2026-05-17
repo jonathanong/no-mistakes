@@ -22,7 +22,6 @@ module.exports = rule(
   (context) =>
     selectorAttributeVisitors(context, (node, name) => {
       const expected = canonicalAttribute(options(context));
-      /* v8 ignore next -- matching canonical attrs are asserted through no reports */
       if (name !== expected) {
         context.report({
           node: node.name,

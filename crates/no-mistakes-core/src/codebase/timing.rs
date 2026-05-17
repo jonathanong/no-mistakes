@@ -25,3 +25,6 @@ impl PhaseTimings {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

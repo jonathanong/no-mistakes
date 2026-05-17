@@ -115,18 +115,13 @@ impl ServerRouteVisitor<'_> {
             return None;
         };
         if let Expression::Identifier(id) = &call.callee {
-            if self
+            return self
                 .facts
                 .bindings
                 .get(id.name.as_str())
-                .is_some_and(|binding| binding.framework == Framework::KoaPathMatch)
-            {
-                let path = call
-                    .arguments
-                    .first()
-                    .and_then(|arg| self.literal_arg(arg))?;
-                return Some((id.name.to_string(), path));
-            }
+                .filter(|binding| binding.framework == Framework::KoaPathMatch)
+                .and_then(|_| call.arguments.first().and_then(|arg| self.literal_arg(arg)))
+                .map(|path| (id.name.to_string(), path));
         }
         let Expression::StaticMemberExpression(member) = &call.callee else {
             return None;

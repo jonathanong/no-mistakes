@@ -17,16 +17,21 @@ pub struct JobsArg {
 }
 
 pub fn init_rayon_threads(args: JobsArg) {
-    let threads = if args.jobs > 0 {
-        args.jobs
-    } else if let Ok(raw) = std::env::var("RAYON_NUM_THREADS") {
-        raw.parse().unwrap_or_else(|_| num_cpus::get())
-    } else {
-        num_cpus::get()
-    };
+    let raw_threads = std::env::var("RAYON_NUM_THREADS").ok();
+    let threads = rayon_thread_count(args, raw_threads.as_deref());
     let _ = rayon::ThreadPoolBuilder::new()
         .num_threads(threads)
         .build_global();
+}
+
+fn rayon_thread_count(args: JobsArg, raw_threads: Option<&str>) -> usize {
+    if args.jobs > 0 {
+        args.jobs
+    } else if let Some(raw) = raw_threads {
+        raw.parse().unwrap_or_else(|_| num_cpus::get())
+    } else {
+        num_cpus::get()
+    }
 }
 
 pub fn resolve_root(root: &Path, cwd: &Path) -> PathBuf {

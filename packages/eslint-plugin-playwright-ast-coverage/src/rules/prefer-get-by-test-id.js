@@ -33,12 +33,10 @@ module.exports = rule(
         }
         for (const arg of node.arguments.slice(0, methodName === "dragAndDrop" ? 2 : 1)) {
           const source = literalString(arg);
-          /* v8 ignore next -- non-literal selector args are intentionally skipped */
           if (!source) {
             continue;
           }
           for (const selector of cssSelectorValues(source, attrs)) {
-            /* v8 ignore next -- non-exact operators are intentionally skipped */
             if (selector.operator === "=") {
               context.report({ node: arg, messageId: "prefer", data: { value: selector.value } });
             }

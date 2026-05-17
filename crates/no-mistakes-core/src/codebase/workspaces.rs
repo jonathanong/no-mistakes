@@ -1,6 +1,7 @@
 use anyhow::Result;
 use globset::{Glob, GlobSetBuilder};
 use serde::Deserialize;
+use std::cmp::Ordering;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
@@ -26,12 +27,12 @@ pub struct WorkspaceMap {
 }
 
 impl WorkspaceMap {
-    /// Find a workspace package by name and return its entry file, if any.
+    /// Resolve a workspace package name to its entry file.
     pub fn resolve_package(&self, name: &str) -> Option<&PathBuf> {
         self.packages
             .iter()
-            .find(|p| p.name == name)
-            .and_then(|p| p.entry.as_ref())
+            .find(|package| package.name == name)
+            .and_then(|package| package.entry.as_ref())
     }
 
     /// Resolve a bare workspace import specifier to the package entry or an exported subpath.
@@ -46,16 +47,16 @@ impl WorkspaceMap {
 }
 
 impl WorkspacePackage {
+    #[inline(never)]
     fn resolve_subpath(&self, subpath: &str) -> Option<PathBuf> {
         if let Some(exports) = &self.exports {
-            return resolve_export_subpath(exports, subpath)
-                .and_then(|target| try_resolve(&normalize_path(&self.dir.join(target))));
+            let target = resolve_export_subpath(exports, subpath)?;
+            return try_resolve(&normalize_path(&self.dir.join(target)));
         }
 
-        subpath
-            .strip_prefix("./")
-            .map(|relative| normalize_path(&self.dir.join(relative)))
-            .and_then(|candidate| try_resolve(&candidate))
+        let relative = subpath.strip_prefix("./")?;
+        let candidate = normalize_path(&self.dir.join(relative));
+        try_resolve(&candidate)
     }
 }
 
@@ -133,32 +134,32 @@ pub fn load_workspace_globs(root: &Path) -> Result<Vec<String>> {
     Ok(Vec::new())
 }
 
-fn build_glob_set(patterns: impl Iterator<Item = String>) -> Option<globset::GlobSet> {
+fn build_glob_set(glob_strs: &[String], excluded: bool) -> globset::GlobSet {
     let mut builder = GlobSetBuilder::new();
-    for pattern in patterns {
-        let Ok(glob) = Glob::new(&pattern) else {
+    for pattern in glob_strs {
+        let pattern = if excluded {
+            let Some(stripped) = pattern.strip_prefix('!') else {
+                continue;
+            };
+            stripped
+        } else if pattern.starts_with('!') {
+            continue;
+        } else {
+            pattern.as_str()
+        };
+        let Ok(glob) = Glob::new(pattern) else {
             continue;
         };
         let _ = builder.add(glob);
     }
-    builder.build().ok()
+    builder
+        .build()
+        .expect("globset with individually validated globs should build")
 }
 
 fn expand_workspace_globs(root: &Path, glob_strs: &[String]) -> Vec<PathBuf> {
-    let include = match build_glob_set(
-        glob_strs
-            .iter()
-            .filter(|pattern| !pattern.starts_with('!'))
-            .cloned(),
-    ) {
-        Some(g) => g,
-        None => return vec![],
-    };
-    let exclude = build_glob_set(
-        glob_strs
-            .iter()
-            .filter_map(|pattern| pattern.strip_prefix('!').map(String::from)),
-    );
+    let include = build_glob_set(glob_strs, false);
+    let exclude = build_glob_set(glob_strs, true);
 
     let mut dirs = Vec::new();
 
@@ -182,11 +183,11 @@ fn expand_workspace_globs(root: &Path, glob_strs: &[String]) -> Vec<PathBuf> {
         .filter_map(|e| e.ok())
         .filter(|e| e.file_type().is_dir())
     {
-        let rel = match entry.path().strip_prefix(root) {
-            Ok(r) => r,
-            Err(_) => continue,
-        };
-        if include.is_match(rel) && !exclude.as_ref().is_some_and(|set| set.is_match(rel)) {
+        let rel = entry
+            .path()
+            .strip_prefix(root)
+            .expect("walkdir entries are rooted under the walk root");
+        if include.is_match(rel) && !exclude.is_match(rel) {
             dirs.push(entry.into_path());
         }
     }
@@ -199,20 +200,8 @@ fn expand_workspace_globs_from_files(
     glob_strs: &[String],
     files: &[PathBuf],
 ) -> Vec<PathBuf> {
-    let include = match build_glob_set(
-        glob_strs
-            .iter()
-            .filter(|pattern| !pattern.starts_with('!'))
-            .cloned(),
-    ) {
-        Some(g) => g,
-        None => return vec![],
-    };
-    let exclude = build_glob_set(
-        glob_strs
-            .iter()
-            .filter_map(|pattern| pattern.strip_prefix('!').map(String::from)),
-    );
+    let include = build_glob_set(glob_strs, false);
+    let exclude = build_glob_set(glob_strs, true);
 
     let mut dirs: Vec<PathBuf> = files
         .iter()
@@ -220,7 +209,7 @@ fn expand_workspace_globs_from_files(
         .filter_map(|path| path.parent())
         .filter_map(|dir| {
             let rel = dir.strip_prefix(root).ok()?;
-            if include.is_match(rel) && !exclude.as_ref().is_some_and(|set| set.is_match(rel)) {
+            if include.is_match(rel) && !exclude.is_match(rel) {
                 Some(dir.to_path_buf())
             } else {
                 None
@@ -257,12 +246,13 @@ fn load_package(dir: &Path) -> Result<Option<WorkspacePackage>> {
     }))
 }
 
+#[inline(never)]
 fn resolve_entry(dir: &Path, pkg: &PackageJson) -> Option<PathBuf> {
     // Check `exports` first (supports both string and `{".": ...}` forms).
     if let Some(exports) = &pkg.exports {
         if let Some(entry_str) = exports_to_entry_path(exports) {
-            let p = normalize_path(&dir.join(&entry_str));
-            if let Some(resolved) = try_resolve(&p) {
+            let candidate = normalize_path(&dir.join(entry_str));
+            if let Some(resolved) = try_resolve(&candidate) {
                 return Some(resolved);
             }
         }
@@ -270,25 +260,25 @@ fn resolve_entry(dir: &Path, pkg: &PackageJson) -> Option<PathBuf> {
 
     // module field (ESM)
     if let Some(module) = &pkg.module {
-        let p = normalize_path(&dir.join(module));
-        if let Some(resolved) = try_resolve(&p) {
+        let candidate = normalize_path(&dir.join(module));
+        if let Some(resolved) = try_resolve(&candidate) {
             return Some(resolved);
         }
     }
 
     // main field (CJS/default)
     if let Some(main) = &pkg.main {
-        let p = normalize_path(&dir.join(main));
-        if let Some(resolved) = try_resolve(&p) {
+        let candidate = normalize_path(&dir.join(main));
+        if let Some(resolved) = try_resolve(&candidate) {
             return Some(resolved);
         }
     }
 
     // types field
     if let Some(types) = &pkg.types {
-        let p = normalize_path(&dir.join(types));
-        if p.exists() {
-            return Some(p);
+        let candidate = normalize_path(&dir.join(types));
+        if candidate.exists() {
+            return Some(candidate);
         }
     }
 
@@ -316,19 +306,15 @@ fn exports_to_entry_path(exports: &serde_json::Value) -> Option<String> {
             if let Some(dot) = map.get(".") {
                 return exports_to_entry_path(dot);
             }
-            for key in &["import", "default", "require", "types"] {
-                if let Some(v) = map.get(*key) {
-                    if let Some(s) = exports_to_entry_path(v) {
-                        return Some(s);
-                    }
-                }
-            }
-            None
+            ["import", "default", "require", "types"]
+                .iter()
+                .find_map(|key| map.get(*key).and_then(exports_to_entry_path))
         }
         _ => None,
     }
 }
 
+#[inline(never)]
 fn resolve_export_subpath(exports: &serde_json::Value, subpath: &str) -> Option<String> {
     let serde_json::Value::Object(map) = exports else {
         return None;
@@ -338,11 +324,13 @@ fn resolve_export_subpath(exports: &serde_json::Value, subpath: &str) -> Option<
         return exports_to_entry_path(value);
     }
 
-    let mut patterns: Vec<_> = map
-        .iter()
-        .filter_map(|(pattern, value)| pattern.find('*').map(|star_idx| (pattern, value, star_idx)))
-        .collect();
-    patterns.sort_by(|(a, _, a_star), (b, _, b_star)| b_star.cmp(a_star).then_with(|| a.cmp(b)));
+    let mut patterns = Vec::new();
+    for (pattern, value) in map {
+        if let Some(star_idx) = pattern.find('*') {
+            patterns.push((pattern, value, star_idx));
+        }
+    }
+    patterns.sort_by(compare_export_patterns);
 
     for (pattern, value, star_idx) in patterns {
         if pattern[star_idx + 1..].contains('*') {
@@ -367,13 +355,25 @@ fn resolve_export_subpath(exports: &serde_json::Value, subpath: &str) -> Option<
     None
 }
 
+fn compare_export_patterns(
+    (a, _, a_star): &(&String, &serde_json::Value, usize),
+    (b, _, b_star): &(&String, &serde_json::Value, usize),
+) -> Ordering {
+    let star_order = b_star.cmp(a_star);
+    if star_order != Ordering::Equal {
+        return star_order;
+    }
+    a.cmp(b)
+}
+
+#[inline(never)]
 fn package_name_and_subpath(specifier: &str) -> Option<(String, Option<String>)> {
     if specifier.starts_with('.') || specifier.starts_with('/') {
         return None;
     }
 
     let mut parts = specifier.splitn(3, '/');
-    let first = parts.next()?;
+    let first = parts.next().unwrap_or("");
     if first.starts_with('@') {
         let scope_pkg = parts.next()?;
         let name_len = first.len() + 1 + scope_pkg.len();

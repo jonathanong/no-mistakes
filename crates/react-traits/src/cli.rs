@@ -31,16 +31,21 @@ pub(crate) enum Command {
     },
 }
 
+#[cfg(test)]
+fn parse_cli_args() -> Cli {
+    let raw_args = std::env::var("REACT_TRAITS_TEST_ARGS")
+        .expect("REACT_TRAITS_TEST_ARGS must be set in tests - use with_run_args_env()");
+    Cli::parse_from(raw_args.split('\u{1f}'))
+}
+
+#[cfg(not(test))]
+fn parse_cli_args() -> Cli {
+    Cli::parse()
+}
+
 pub fn run_cli() -> Result<ExitCode> {
-    let cli = if cfg!(test) {
-        let raw_args = std::env::var("REACT_TRAITS_TEST_ARGS")
-            .expect("REACT_TRAITS_TEST_ARGS must be set in tests — use with_run_args_env()");
-        Cli::parse_from(raw_args.split('\u{1f}'))
-    } else {
-        Cli::parse()
-    };
-    let base_root =
-        std::env::current_dir().context("current working directory must be accessible")?;
+    let cli = parse_cli_args();
+    let base_root = std::env::current_dir().context("reading current directory")?;
     let root = base_root.join(&cli.root);
     match &cli.command {
         Command::Analyze { targets } => {
@@ -49,7 +54,7 @@ pub fn run_cli() -> Result<ExitCode> {
                 println!(
                     "{}",
                     serde_json::to_string_pretty(&results)
-                        .expect("serialization of Rust structs never fails")
+                        .context("serializing analysis results")?
                 );
             } else {
                 react_traits::print_results(&results, 0);
@@ -69,7 +74,7 @@ pub fn run_cli() -> Result<ExitCode> {
                     println!(
                         "{}",
                         serde_json::to_string_pretty(&violations)
-                            .expect("serialization of Rust structs never fails")
+                            .context("serializing check violations")?
                     );
                 } else {
                     react_traits::print_violations(&violations);

@@ -53,7 +53,7 @@ enum DirectionArg {
 pub fn run_cli() -> Result<ExitCode> {
     let cli = Cli::parse();
     init_rayon_threads(cli.jobs);
-    let base = std::env::current_dir().context("current working directory must be accessible")?;
+    let base = std::env::current_dir().context("reading current directory")?;
     let root = resolve_root(&cli.root, &base);
     if cli.timings {
         eprintln!("search: 0.000ms");

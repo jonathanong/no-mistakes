@@ -45,5 +45,4 @@ plugin.configs.strict = {
   },
 };
 
-/* v8 ignore next */
 module.exports = plugin;

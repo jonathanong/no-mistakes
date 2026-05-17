@@ -41,6 +41,26 @@ fn cargo_run_package_with_bin_uses_bin_target() {
 }
 
 #[test]
+fn cargo_run_equals_options() {
+    let targets = extract_cargo_targets(
+        "cargo run --package=tool-one --bin=side-tool -- --ignored\ncargo test -p=tool-two --bin=test-tool",
+    );
+    assert_eq!(
+        targets,
+        vec![
+            CargoTarget {
+                package: Some("tool-one".to_string()),
+                binary: "side-tool".to_string()
+            },
+            CargoTarget {
+                package: Some("tool-two".to_string()),
+                binary: "test-tool".to_string()
+            }
+        ]
+    );
+}
+
+#[test]
 fn cargo_run_multiline_bin() {
     let names = extract_binary_names(
         r#"cargo run \
@@ -140,6 +160,19 @@ jobs:
 #[test]
 fn empty_yaml_returns_empty() {
     let invocations = extract_invocations("{}").unwrap();
+    assert!(invocations.is_empty());
+}
+
+#[test]
+fn job_without_steps_is_ignored() {
+    let invocations = extract_invocations(
+        r#"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+"#,
+    )
+    .unwrap();
     assert!(invocations.is_empty());
 }
 

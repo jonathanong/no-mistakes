@@ -1,0 +1,10 @@
+# ignored comments
+node_modules
+dist
+dist
+!keep
+src/generated
+*.tmp
+cache?
+[abc]
+

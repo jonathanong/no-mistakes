@@ -66,3 +66,6 @@ fn collect_file_facts(path: &Path, plan: TsFactPlan) -> Option<TsFileFacts> {
         .then(|| extract_symbols_from_program(&parsed.program, &source));
     Some(TsFileFacts { imports, symbols })
 }
+
+#[cfg(test)]
+mod tests;

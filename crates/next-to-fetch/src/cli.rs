@@ -21,23 +21,28 @@ pub(crate) struct Cli {
     pub(crate) targets: Vec<String>,
 }
 
-pub fn run_cli() -> Result<ExitCode> {
-    let cli = if cfg!(test) {
-        if let Ok(raw_args) = std::env::var("NEXT_TO_FETCH_TEST_ARGS") {
-            Cli::parse_from(raw_args.split('\u{1f}'))
-        } else {
-            Cli::parse()
-        }
+#[cfg(test)]
+fn parse_cli_args() -> Cli {
+    if let Ok(raw_args) = std::env::var("NEXT_TO_FETCH_TEST_ARGS") {
+        Cli::parse_from(raw_args.split('\u{1f}'))
     } else {
         Cli::parse()
-    };
-    let base_root =
-        std::env::current_dir().context("current working directory must be accessible")?;
+    }
+}
+
+#[cfg(not(test))]
+fn parse_cli_args() -> Cli {
+    Cli::parse()
+}
+
+pub fn run_cli() -> Result<ExitCode> {
+    let cli = parse_cli_args();
+    let base_root = std::env::current_dir().context("reading current directory")?;
     let report = run_with_base_root(&base_root, &cli)?;
     if cli.json {
         println!(
             "{}",
-            serde_json::to_string_pretty(&report).context("failed to serialize report as JSON")?
+            serde_json::to_string_pretty(&report).context("serializing fetch report")?
         );
     } else {
         print_markdown_report(&report);
