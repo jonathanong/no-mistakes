@@ -342,6 +342,19 @@ fn fallback_walk_includes_github_workflows() {
 }
 
 #[test]
+fn fallback_walk_does_not_prune_skipped_named_root() {
+    let dir =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/ast-snippets/ts-source/dist");
+
+    let files = walk_files(&dir, &[]);
+
+    assert_eq!(files.len(), 1);
+    assert!(files
+        .iter()
+        .any(|path| path.ends_with("dist/root-main.mts")));
+}
+
+#[test]
 fn discover_source_files_filters_non_ts_js_extensions() {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/ast-snippets/ts-source");
 

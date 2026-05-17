@@ -56,7 +56,7 @@ fn walk_non_ignored_files(
         .hidden(!include_hidden)
         .filter_entry(move |e| {
             let name = e.file_name().to_str().unwrap_or("");
-            if e.file_type().is_some_and(|ft| ft.is_dir()) {
+            if e.depth() > 0 && e.file_type().is_some_and(|ft| ft.is_dir()) {
                 return !SKIP_DIRS.contains(&name) && !extra_skip.contains(name);
             }
             true
