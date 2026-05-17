@@ -36,7 +36,7 @@ pub fn is_skipped_dir(name: &str) -> bool {
 pub fn walk_files(root: &Path, extra_skip: &[String]) -> Vec<PathBuf> {
     let extra_skip: HashSet<String> = extra_skip.iter().cloned().collect();
 
-    let mut files = walk_non_ignored_files(root, &extra_skip, false);
+    let mut files = walk_non_ignored_files(root, &extra_skip);
     files.extend(walk_github_workflow_files(root, &extra_skip));
     if !files.is_empty() {
         files.sort();
@@ -45,14 +45,10 @@ pub fn walk_files(root: &Path, extra_skip: &[String]) -> Vec<PathBuf> {
     files
 }
 
-fn walk_non_ignored_files(
-    root: &Path,
-    extra_skip: &HashSet<String>,
-    include_hidden: bool,
-) -> Vec<PathBuf> {
+fn walk_non_ignored_files(root: &Path, extra_skip: &HashSet<String>) -> Vec<PathBuf> {
     let extra_skip = extra_skip.clone();
     WalkBuilder::new(root)
-        .hidden(!include_hidden)
+        .hidden(true)
         .filter_entry(move |e| {
             let name = e.file_name().to_str().unwrap_or("");
             if e.depth() > 0 && e.file_type().is_some_and(|ft| ft.is_dir()) {
@@ -77,6 +73,8 @@ fn walk_github_workflow_files(root: &Path, extra_skip: &HashSet<String>) -> Vec<
     }
 
     let extra_skip = extra_skip.clone();
+    let filter_root = root.to_path_buf();
+    let file_root = root.to_path_buf();
     WalkBuilder::new(root)
         .hidden(false)
         .filter_entry(move |e| {
@@ -87,22 +85,23 @@ fn walk_github_workflow_files(root: &Path, extra_skip: &HashSet<String>) -> Vec<
             {
                 return false;
             }
-            e.depth() == 0 || is_github_workflows_prefix(e.path())
+            e.depth() == 0 || is_github_workflows_prefix(&filter_root, e.path())
         })
         .build()
         .filter_map(|e| e.ok())
         .filter(|e| e.file_type().is_some_and(|ft| ft.is_file()))
-        .filter(|e| is_github_workflows_prefix(e.path()))
+        .filter(|e| is_github_workflows_prefix(&file_root, e.path()))
         .map(|e| normalize_discovery_path(e.path()))
         .collect()
 }
 
-fn is_github_workflows_prefix(path: &Path) -> bool {
-    let mut components = path
+fn is_github_workflows_prefix(root: &Path, path: &Path) -> bool {
+    let rel = path.strip_prefix(root).unwrap_or(path);
+    let mut components = rel
         .components()
         .filter_map(|component| component.as_os_str().to_str().filter(|name| *name != "."));
 
-    if !components.any(|name| name == ".github") {
+    if components.next() != Some(".github") {
         return false;
     }
 
