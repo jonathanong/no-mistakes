@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use super::discover::load_v2_config;
+use super::discover::{find_config_root, load_v2_config};
 use super::schema::{NoMistakesConfig, ProjectType, RuleDef, StringOrList};
 use super::view::ConfigView;
 
@@ -402,4 +402,24 @@ fn malformed_react_traits_config_errors() {
         .err()
         .unwrap();
     assert!(!err.to_string().is_empty());
+}
+
+// ── find_config_root ──────────────────────────────────────────────────────────
+
+#[test]
+fn find_config_root_v2_stem_returns_root() {
+    let dir = fixture("basic");
+    assert_eq!(find_config_root(&dir), dir);
+}
+
+#[test]
+fn find_config_root_tool_stem_returns_root() {
+    let dir = fixture("legacy-playwright");
+    assert_eq!(find_config_root(&dir), dir);
+}
+
+#[test]
+fn find_config_root_no_config_returns_start() {
+    let dir = fixture("empty");
+    assert_eq!(find_config_root(&dir), dir);
 }
