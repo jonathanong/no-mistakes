@@ -293,6 +293,7 @@ jobs:
         working-directory: release-assets
         run: |
           for artifact in *; do
+            [[ "$artifact" == *.sha256 ]] && continue
             shasum -a 256 "$artifact" > "$artifact.sha256"
           done
 
