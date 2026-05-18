@@ -1,11 +1,15 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::config::resolve;
 use crate::config::v2::{find_config_root, load_v2_config, schema::NoMistakesConfig};
-use crate::config::CONFIG_EXTENSIONS;
+
+mod discovery;
+mod project;
+
+pub use project::ProjectConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -66,6 +70,8 @@ pub struct Config {
     #[serde(default)]
     pub filesystem: FilesystemConfig,
     #[serde(default)]
+    pub projects: HashMap<String, ProjectConfig>,
+    #[serde(default)]
     pub rules: HashMap<String, RuleConfig>,
 }
 
@@ -86,6 +92,10 @@ impl Config {
             .get(rule_id)
             .map(|rule| rule.enabled)
             .unwrap_or(true)
+    }
+
+    pub fn project_roots_for_rule(&self, root: &Path, rule_id: &str) -> Vec<PathBuf> {
+        project::roots_for_rule(&self.projects, &self.rules, root, rule_id)
     }
 
     pub fn augment_from_gitignore(&mut self, root: &Path) {
@@ -140,7 +150,7 @@ pub fn load_codebase_config_with_path(start: &Path, config_path: Option<&Path>) 
         return load_config_with_path(start, config_path);
     }
 
-    let Some(path) = find_codebase_config_path(start)? else {
+    let Some(path) = discovery::find_codebase_config_path(start)? else {
         let mut config = Config::default();
         config.augment_from_gitignore(start);
         return Ok(config);
@@ -150,41 +160,6 @@ pub fn load_codebase_config_with_path(start: &Path, config_path: Option<&Path>) 
     let mut config = config_from_v2(v2);
     config.augment_from_gitignore(path.parent().unwrap_or(start));
     Ok(config)
-}
-
-fn find_codebase_config_path(start: &Path) -> Result<Option<std::path::PathBuf>> {
-    let mut current = start.to_path_buf();
-    loop {
-        if let Some(path) = find_config_for_stem(&current, ".no-mistakes")? {
-            return Ok(Some(path));
-        }
-        if let Some(path) = find_config_for_stem(&current, ".guardrailsrc")? {
-            return Ok(Some(path));
-        }
-        if !current.pop() {
-            return Ok(None);
-        }
-    }
-}
-
-fn find_config_for_stem(root: &Path, stem: &str) -> Result<Option<std::path::PathBuf>> {
-    let found = CONFIG_EXTENSIONS
-        .iter()
-        .map(|ext| root.join(format!("{stem}.{ext}")))
-        .filter(|path| path.exists())
-        .collect::<Vec<_>>();
-    match found.len() {
-        0 => Ok(None),
-        1 => Ok(found.into_iter().next()),
-        _ => {
-            let files = found
-                .iter()
-                .map(|path| path.display().to_string())
-                .collect::<Vec<_>>()
-                .join(", ");
-            anyhow::bail!("multiple config files found under --root: {files}");
-        }
-    }
 }
 
 fn config_from_v2(v2: NoMistakesConfig) -> Config {
@@ -206,6 +181,19 @@ fn config_from_v2(v2: NoMistakesConfig) -> Config {
             skip_directories: v2.filesystem.skip_directories,
             skip_file_patterns: v2.filesystem.skip_file_patterns,
         },
+        projects: v2
+            .projects
+            .into_iter()
+            .map(|(name, project)| {
+                (
+                    name,
+                    ProjectConfig {
+                        root: project.root,
+                        rules: project.rules,
+                    },
+                )
+            })
+            .collect(),
         rules,
     }
 }
