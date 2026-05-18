@@ -212,3 +212,54 @@ describe("strict config", () => {
     ]);
   });
 });
+
+describe("require-interactive-test-id", () => {
+  it("does not require a selector for non-interactive elements", () => {
+    assert.deepEqual(messages("<div />;", "require-interactive-test-id"), []);
+  });
+
+  it("treats non-interactive roles as non-interactive", () => {
+    assert.deepEqual(messages("<div role='presentation' />;", "require-interactive-test-id"), []);
+  });
+
+  it("requires selector attributes on clickables", () => {
+    assert.deepEqual(messages("<div role='button' />;", "require-interactive-test-id"), [
+      "missing",
+    ]);
+  });
+
+  it("requires selector attributes on anchors and onClick", () => {
+    assert.deepEqual(
+      messages("<><a href='/x' /><div onClick={fn} /></>", "require-interactive-test-id"),
+      ["missing", "missing"],
+    );
+  });
+
+  it("reports missing test IDs for interactive member-expression elements", () => {
+    assert.deepEqual(messages("<Foo.Bar onClick={handler} />;", "require-interactive-test-id"), [
+      "missing",
+    ]);
+  });
+
+  it("handles non-interactive attributes before click handlers", () => {
+    assert.deepEqual(messages("<div id='x' onClick={fn} />;", "require-interactive-test-id"), [
+      "missing",
+    ]);
+  });
+
+  it("supports custom selector attributes", () => {
+    assert.deepEqual(
+      messages(
+        `<>
+          <button data-qa="save" />
+          <button data-pw="save" />
+        </>`,
+        "require-interactive-test-id",
+        {
+          selectorAttributes: ["data-qa"],
+        },
+      ),
+      ["missing"],
+    );
+  });
+});
