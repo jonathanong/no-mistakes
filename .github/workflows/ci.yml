@@ -88,10 +88,7 @@ jobs:
           done
 
       - name: Check npm packages
-        run: |
-          for pkg in no-mistakes-core no-mistakes no-mistakes-scripts playwright-ast-coverage next-to-fetch queue-ast-hop react-traits server-ast-routes eslint-plugin-next-to-fetch eslint-plugin-playwright-ast-coverage; do
-            npm pack --dry-run --workspace "$pkg"
-          done
+        run: npm pack --dry-run --workspaces
 
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov

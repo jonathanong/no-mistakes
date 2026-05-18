@@ -177,7 +177,11 @@ test("agents-md-max-size fails scoped fixtures", async () => {
       "2",
       "200",
     ]),
-    { code: 1, stdout: /CLAUDE\.md has 3 lines/ },
+    {
+      code: 1,
+      stdout:
+        /::error file=fixtures\/no-mistakes-scripts\/agents-md-max-size\/fail\/CLAUDE\.md::.*CLAUDE\.md has 3 lines/,
+    },
   );
 });
 
