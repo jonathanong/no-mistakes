@@ -14,10 +14,14 @@ fn function_declarations_shadow_global_fetch() {
 }
 
 #[test]
-fn test_is_fetch_shadowed() {
+fn is_fetch_shadowed_respects_scope_stack() {
     let mut visitor = FetchVisitor::new("", "fixture.ts", false, false);
 
     // Initially, fetch is not shadowed
+    assert!(!visitor.is_fetch_shadowed());
+
+    // Shadowing another identifier should not affect fetch tracking
+    visitor.mark_identifier_shadowed("not_fetch");
     assert!(!visitor.is_fetch_shadowed());
 
     // Enter a new scope
@@ -39,6 +43,7 @@ fn test_is_fetch_shadowed() {
     // Leave the scope where fetch was shadowed, now it's no longer shadowed
     visitor.leave_fetch_scope();
     assert!(!visitor.is_fetch_shadowed());
+    assert_eq!(visitor.fetch_scope_stack.len(), 1);
 }
 
 #[test]
