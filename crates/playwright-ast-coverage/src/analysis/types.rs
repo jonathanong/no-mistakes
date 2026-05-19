@@ -1,4 +1,5 @@
 use serde::Serialize;
+use std::sync::Arc;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -18,11 +19,11 @@ pub(crate) struct Summary {
 #[derive(Serialize, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct TestRef {
-    pub(crate) file: String,
+    pub(crate) file: Arc<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) name: Option<String>,
-    #[serde(skip_serializing_if = "Vec::is_empty", default)]
-    pub(crate) describe_path: Vec<String>,
+    pub(crate) name: Option<Arc<String>>,
+    #[serde(skip_serializing_if = "is_arc_empty", default)]
+    pub(crate) describe_path: Arc<Vec<String>>,
 }
 
 #[derive(Serialize)]
@@ -83,13 +84,13 @@ pub(crate) struct CoverageReport {
 pub(crate) enum Edge {
     #[serde(rename_all = "camelCase")]
     Fetch {
-        test_file: String,
+        test_file: Arc<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        test_name: Option<String>,
-        #[serde(skip_serializing_if = "Vec::is_empty", default)]
-        describe_path: Vec<String>,
-        route_file: String,
-        route: String,
+        test_name: Option<Arc<String>>,
+        #[serde(skip_serializing_if = "is_arc_empty", default)]
+        describe_path: Arc<Vec<String>>,
+        route_file: Arc<String>,
+        route: Arc<String>,
         method: String,
         path: String,
         side: String,
@@ -97,27 +98,34 @@ pub(crate) enum Edge {
     },
     #[serde(rename_all = "camelCase")]
     Route {
-        test_file: String,
+        test_file: Arc<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        test_name: Option<String>,
-        #[serde(skip_serializing_if = "Vec::is_empty", default)]
-        describe_path: Vec<String>,
-        route_file: String,
-        route: String,
-        url: String,
+        test_name: Option<Arc<String>>,
+        #[serde(skip_serializing_if = "is_arc_empty", default)]
+        describe_path: Arc<Vec<String>>,
+        route_file: Arc<String>,
+        route: Arc<String>,
+        url: Arc<String>,
     },
     #[serde(rename_all = "camelCase")]
     Selector {
-        test_file: String,
+        test_file: Arc<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        test_name: Option<String>,
-        #[serde(skip_serializing_if = "Vec::is_empty", default)]
-        describe_path: Vec<String>,
-        app_file: String,
+        test_name: Option<Arc<String>>,
+        #[serde(skip_serializing_if = "is_arc_empty", default)]
+        describe_path: Arc<Vec<String>>,
+        app_file: Arc<String>,
         attribute: String,
         value: String,
         selector: String,
     },
+}
+
+fn is_arc_empty<T>(arc: &Arc<Vec<T>>) -> bool {
+    // Serde calls this predicate with `&Arc<Vec<T>>`, and `Arc` has no
+    // `is_empty`, so this helper preserves the same skip-behavior as `Vec::is_empty`
+    // for arc-backed paths.
+    arc.is_empty()
 }
 
 #[derive(Serialize)]
@@ -168,8 +176,8 @@ pub(crate) struct UniqueSelectorPolicy {
 
 pub(crate) type FetchIndex =
     std::collections::HashMap<String, Vec<no_mistakes_core::fetch::types::FetchOccurrence>>;
-pub(crate) type SelectorCoverageKey = (String, String, String);
+pub(crate) type SelectorCoverageKey = (Arc<String>, String, String);
 pub(crate) type CoverageLinks = (
-    std::collections::BTreeSet<String>,
+    std::collections::BTreeSet<Arc<String>>,
     std::collections::BTreeSet<String>,
 );
