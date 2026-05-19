@@ -1,5 +1,5 @@
 use super::*;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 fn fixture() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -187,6 +187,16 @@ fn repeated_dynamic_import_target_uses_dependency_cache() {
             line: 1,
         },
     );
+    let target = root.join("src").join("lazy.mts");
+    let cached_deps = dependency_cache
+        .lock()
+        .unwrap()
+        .get(&target)
+        .map(Arc::clone)
+        .expect("target should be cached after first call");
+    let expected_deps = runtime_deps(&graph, target.clone());
+    assert_eq!(*cached_deps, expected_deps);
+
     let cache_len = dependency_cache.lock().unwrap().len();
     check_dynamic_import(
         &mut context,

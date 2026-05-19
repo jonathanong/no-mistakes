@@ -174,10 +174,12 @@ vi.mock('@lib/setup-target.mts', () => ({ setupValue: 'mocked' }))\n",
 }
 
 #[test]
-fn run_check_with_facts_surfaces_reachable_dependency_errors() {
+fn run_check_with_facts_skips_reachable_deps_with_parse_errors() {
     let root = dynamic_import_fixture();
     let test = root.join("tests/bad.test.mts");
     let setup = root.join("tests/setup-vitest.mts");
+    // src/unreadable.mts is a directory on disk, so collect_check_facts will
+    // store a parse_error for it in CheckFactMap.
     let unreadable = root.join("src/unreadable.mts");
     let files = vec![test.clone(), setup, unreadable];
     let facts = crate::codebase::check_facts::collect_check_facts(
@@ -204,9 +206,9 @@ test('bad', async () => {\n\
         .ts
         .insert(test.clone(), dynamic_import_test_facts(&test, source));
 
-    let error = run_check_with_facts(&root, None, None, &shared).unwrap_err();
-
-    assert!(error.to_string().contains("failed to read dependency file"));
+    // Reachable deps with parse_error in CheckFactMap are silently skipped
+    // rather than re-attempted from disk, so the check succeeds.
+    run_check_with_facts(&root, None, None, &shared).unwrap();
 }
 
 #[test]
