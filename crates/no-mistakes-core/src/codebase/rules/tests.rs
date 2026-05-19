@@ -229,8 +229,13 @@ test('bad', async () => {\n\
         files: vec![test.clone(), setup.clone(), unreadable],
         ..Default::default()
     };
-    shared.ts.insert(test.clone(), dynamic_import_test_facts(&test, source));
-    shared.ts.insert(setup.clone(), dynamic_import_test_facts(&setup, &setup_source));
+    shared
+        .ts
+        .insert(test.clone(), dynamic_import_test_facts(&test, source));
+    shared.ts.insert(
+        setup.clone(),
+        dynamic_import_test_facts(&setup, &setup_source),
+    );
     let error = run_check_with_facts(&root, None, None, &shared).unwrap_err();
     assert!(error.to_string().contains("failed to read dependency file"));
 }

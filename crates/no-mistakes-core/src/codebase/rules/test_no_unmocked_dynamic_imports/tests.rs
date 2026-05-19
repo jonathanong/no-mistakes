@@ -329,8 +329,7 @@ fn check_inner_propagates_reachable_dep_disk_error() {
     let graph = DepGraph::from_raw_maps(root.clone(), forward, Default::default());
     let files = vec![test_file];
     let manual_mocks = HashSet::new();
-    let error =
-        check_inner(&root, &config, &files, &tsconfig, &graph, &manual_mocks).unwrap_err();
+    let error = check_inner(&root, &config, &files, &tsconfig, &graph, &manual_mocks).unwrap_err();
     assert!(error.to_string().contains("failed to read dependency file"));
 }
 
