@@ -1,6 +1,6 @@
 use super::{extract_components, is_component_expr};
 use crate::ast;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -279,6 +279,12 @@ fn local_class_non_component_ignored() {
 }
 
 #[test]
+fn export_class_extends_react_pure_component() {
+    let names = check_names("export-class-extends-react-pure-component");
+    assert_eq!(names, vec!["Foo"]);
+}
+
+#[test]
 fn local_class_component_resolves_via_export_list() {
     let names = check_names("local-class-component-export-list");
     assert_eq!(names, vec!["Foo"]);
@@ -381,5 +387,49 @@ fn is_component_expr_react_memo_is_component() {
 #[test]
 fn export_default_non_react_member_call_not_component() {
     let names = check_names("export-default-non-react-member-call");
+    assert!(names.is_empty());
+}
+
+#[test]
+fn anon_class_statement_no_id_not_tracked() {
+    let names = check_names("no-components-anon-class");
+    assert!(names.is_empty());
+}
+
+#[test]
+fn local_class_no_superclass_not_tracked() {
+    let names = check_names("local-class-no-superclass");
+    assert!(names.is_empty());
+}
+
+#[test]
+fn export_named_anon_class_no_id_ignored() {
+    let names = check_names("export-named-anon-class");
+    assert!(names.is_empty());
+}
+
+fn extract_names_allow_parse_errors(source: &str) -> Vec<String> {
+    use oxc_allocator::Allocator;
+    use oxc_parser::Parser;
+    use oxc_span::SourceType;
+
+    let allocator = Allocator::default();
+    let source_type = SourceType::from_path(Path::new("test.tsx")).unwrap();
+    let parsed = Parser::new(&allocator, source, source_type).parse();
+    extract_components(&parsed.program)
+        .into_iter()
+        .map(|c| c.name)
+        .collect()
+}
+
+#[test]
+fn anon_function_statement_no_id_not_tracked() {
+    let names = extract_names_allow_parse_errors("function() {}");
+    assert!(names.is_empty());
+}
+
+#[test]
+fn export_named_anon_function_no_id_ignored() {
+    let names = extract_names_allow_parse_errors("export function() {}");
     assert!(names.is_empty());
 }
