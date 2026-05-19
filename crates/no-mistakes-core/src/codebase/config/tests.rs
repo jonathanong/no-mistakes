@@ -62,9 +62,9 @@ fn load_codebase_config_uses_explicit_config_path() {
 
 #[test]
 fn load_codebase_config_defaults_when_no_config_exists() {
-    let root = Path::new("/__no_mistakes_config_free_root__");
+    let root = tempfile::tempdir().unwrap();
 
-    let config = load_codebase_config_with_path(root, None).unwrap();
+    let config = load_codebase_config_with_path(root.path(), None).unwrap();
 
     assert!(config.filesystem.skip_directories.is_empty());
     assert!(config.projects.is_empty());

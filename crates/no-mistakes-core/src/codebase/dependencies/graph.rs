@@ -544,9 +544,9 @@ impl DepGraph {
             merge_edges(&mut forward, &mut reverse, playwright_edges);
         }
 
-        // Read file contents once and share across steps 9 and 10 to avoid
-        // redundant disk reads (files are already in OS page cache but the
-        // syscall overhead adds up across thousands of files).
+        // HTTP and process collectors consume shared TS facts in this path.
+        // Keep the file-content fallback empty so graph builds do not add a
+        // second source read pass.
         if plan.http || plan.process {
             let file_contents: Vec<(PathBuf, String)> = Vec::new();
 
