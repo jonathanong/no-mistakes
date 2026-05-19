@@ -19,15 +19,10 @@ pub(super) fn check(
     dependency_cache: &DashMap<PathBuf, Arc<Vec<PathBuf>>>,
     findings: &mut Vec<RuleFinding>,
 ) -> Result<()> {
-    let test_reachable = if let Some(hit) = dependency_cache.get(test_file) {
-        hit.clone()
-    } else {
-        let computed = Arc::new(runtime_deps(ctx.graph, test_file.to_path_buf()));
-        let entry = dependency_cache
-            .entry(test_file.to_path_buf())
-            .or_insert(computed);
-        entry.clone()
-    };
+    let test_reachable = dependency_cache
+        .entry(test_file.to_path_buf())
+        .or_insert_with(|| Arc::new(runtime_deps(ctx.graph, test_file.to_path_buf())))
+        .clone();
     for file in test_reachable.iter() {
         if !crate::codebase::dependencies::extract::is_indexable(file)
             || is_under_skipped_dir(ctx.root, ctx.config, file)

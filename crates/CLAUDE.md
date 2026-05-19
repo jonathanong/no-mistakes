@@ -10,14 +10,12 @@ parallel speedup. Use `DashMap<K, V>` instead:
 // Bad – contended lock dominates runtime at high thread counts
 let cache: Mutex<HashMap<PathBuf, Arc<Vec<PathBuf>>>> = Mutex::new(HashMap::new());
 
-// Good – lock-free concurrent map; use entry() to preserve "compute-once" semantics
+// Good – concurrent map with sharded locks; or_insert_with runs the closure only once per key
 let cache: DashMap<PathBuf, Arc<Vec<PathBuf>>> = DashMap::new();
-let deps = if let Some(hit) = cache.get(&key) {
-    hit.clone()
-} else {
-    let computed = Arc::new(expensive_compute(&key));
-    cache.entry(key.clone()).or_insert(computed).clone()
-};
+let deps = cache
+    .entry(key.clone())
+    .or_insert_with(|| Arc::new(expensive_compute(&key)))
+    .clone();
 ```
 
 ### Hoist per-iteration I/O and parsing out of hot loops
@@ -72,8 +70,9 @@ expensive computation scale linearly:
 ```rust
 // Pre-populate cache for all test files before the per-test loop
 test_files.par_iter().for_each(|file| {
-    let deps = Arc::new(runtime_deps(&graph, file.clone()));
-    dependency_cache.entry(file.clone()).or_insert(deps);
+    dependency_cache
+        .entry(file.clone())
+        .or_insert_with(|| Arc::new(runtime_deps(&graph, file.clone())));
 });
 
 // Now every per-test reachable check is a cache hit

@@ -158,7 +158,9 @@ fn matching_test_files(
     Ok(files
         .iter()
         .filter(|file| crate::codebase::dependencies::extract::is_indexable(file))
-        .filter(|file| filter.is_match(crate::codebase::ts_source::relative_slash_path(root, file)))
+        .filter(|file| {
+            filter.is_match(&crate::codebase::ts_source::relative_slash_path(root, file))
+        })
         .map(|file| normalize_path(file))
         .collect())
 }

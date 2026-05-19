@@ -39,8 +39,9 @@ pub fn check_with_facts(
     // `reachable::check` hits the cache instead of re-running BFS per test.
     let dependency_cache: DashMap<PathBuf, Arc<Vec<PathBuf>>> = DashMap::new();
     test_files.par_iter().for_each(|file| {
-        let deps = Arc::new(runtime_deps(&graph, file.clone()));
-        dependency_cache.entry(file.clone()).or_insert(deps);
+        dependency_cache
+            .entry(file.clone())
+            .or_insert_with(|| Arc::new(runtime_deps(&graph, file.clone())));
     });
 
     let per_test: Vec<Vec<RuleFinding>> = test_files

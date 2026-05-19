@@ -38,16 +38,11 @@ pub(super) fn check_dynamic_import(ctx: &mut DynamicCheckContext<'_>, import: as
     if ctx.mocks.contains(&target) {
         return;
     }
-    let deps = if let Some(hit) = ctx.dependency_cache.get(&target) {
-        hit.clone()
-    } else {
-        let computed = Arc::new(runtime_deps(ctx.graph, target.clone()));
-        let entry = ctx
-            .dependency_cache
-            .entry(target.clone())
-            .or_insert(computed);
-        entry.clone()
-    };
+    let deps = ctx
+        .dependency_cache
+        .entry(target.clone())
+        .or_insert_with(|| Arc::new(runtime_deps(ctx.graph, target.clone())))
+        .clone();
     for dependency in std::iter::once(&target).chain(deps.iter()) {
         if !ctx.mocks.contains(dependency) {
             push_finding(

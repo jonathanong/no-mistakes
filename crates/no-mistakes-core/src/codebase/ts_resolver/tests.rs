@@ -586,7 +586,7 @@ fn load_tsconfig_extends_nonstring_toplevel_errors() {
 }
 
 #[test]
-fn resolver_caches_results_and_returns_consistent_value_under_concurrent_access() {
+fn resolver_caches_results_and_returns_consistent_value() {
     let dir = TempDir::new().unwrap();
     let file = dir.path().join("src").join("main.mts");
     let dep = dir.path().join("src").join("dep.mts");

@@ -23,22 +23,22 @@ pub struct ConfigSetupData {
 
 impl ConfigSetupData {
     pub fn filter_matches(&self, rel_path: &str) -> bool {
-        self.filter.is_match(rel_path.to_string())
+        self.filter.is_match(rel_path)
     }
 }
 
 impl TestFilter {
-    pub fn is_match(&self, rel_path: String) -> bool {
-        let mut included = self.include.is_match(&rel_path);
+    pub fn is_match(&self, rel_path: &str) -> bool {
+        let mut included = self.include.is_match(rel_path);
         if !included {
             for regex in &self.include_regex {
-                if regex.is_match(&rel_path) {
+                if regex.is_match(rel_path) {
                     included = true;
                     break;
                 }
             }
         }
-        included && !self.exclude.is_match(&rel_path)
+        included && !self.exclude.is_match(rel_path)
     }
 }
 

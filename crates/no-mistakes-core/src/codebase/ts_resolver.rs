@@ -302,7 +302,7 @@ impl<'a> ImportResolver<'a> {
             return cached.clone();
         }
         let resolved = self.resolve_uncached(specifier, importing_file);
-        self.cache.entry(key).or_insert(resolved.clone());
+        self.cache.insert(key, resolved.clone());
         resolved
     }
 
