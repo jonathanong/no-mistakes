@@ -408,8 +408,6 @@ impl DepGraph {
         graph_files: &GraphFiles,
         facts: Option<&TsFactMap>,
     ) -> Self {
-        let ts_ex = ImportExtractor::for_typescript().expect("typescript import extractor builds");
-        let tsx_ex = ImportExtractor::for_tsx().expect("tsx import extractor builds");
         let resolver = ImportResolver::new(tsconfig).with_visible(graph_files.visible());
         let fact_plan = plan.ts_fact_plan();
         let config_options = graph_config_options(root);
@@ -436,10 +434,10 @@ impl DepGraph {
         }
 
         let parsed_imports = if plan.imports || plan.workspace {
-            match facts {
-                Some(facts) => collect_parsed_imports_from_facts(files, facts),
-                None => collect_parsed_imports(files, &ts_ex, &tsx_ex),
-            }
+            let facts = facts.expect(
+                "TS import facts are collected when import or workspace edges are requested",
+            );
+            collect_parsed_imports_from_facts(files, facts)
         } else {
             Vec::new()
         };
@@ -899,22 +897,6 @@ fn node_sort_key(n: &NodeId) -> String {
 }
 
 // ── Edge producers ────────────────────────────────────────────────────────────
-
-fn collect_parsed_imports(
-    files: &[PathBuf],
-    ts_ex: &ImportExtractor,
-    tsx_ex: &ImportExtractor,
-) -> ParsedImports {
-    files
-        .par_iter()
-        .map(|path| {
-            let source = std::fs::read_to_string(path).unwrap_or_default();
-            let extractor = if is_tsx_file(path) { tsx_ex } else { ts_ex };
-            let imports = extractor.extract(&source).unwrap_or_default();
-            (path.clone(), imports)
-        })
-        .collect()
-}
 
 fn collect_parsed_imports_from_facts(files: &[PathBuf], facts: &TsFactMap) -> ParsedImports {
     files

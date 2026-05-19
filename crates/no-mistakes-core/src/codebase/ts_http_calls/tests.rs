@@ -203,6 +203,10 @@ try {
 for (i = client.get("/api/for-expr-init"); client.get("/api/for-test"); client.get("/api/for-update")) {
   client.get("/api/for-expr-body");
 }
+
+for (; client.get("/api/for-no-init-test"); client.get("/api/for-no-init-update")) {
+  client.get("/api/for-no-init-body");
+}
 "#;
     let calls = extract_http_calls(source, API_PREFIXES);
     let paths: Vec<_> = calls.iter().map(|call| call.path.as_str()).collect();
@@ -215,6 +219,9 @@ for (i = client.get("/api/for-expr-init"); client.get("/api/for-test"); client.g
         "/api/for-test",
         "/api/for-update",
         "/api/for-expr-body",
+        "/api/for-no-init-test",
+        "/api/for-no-init-update",
+        "/api/for-no-init-body",
     ] {
         assert!(paths.contains(&expected), "missing {expected}");
     }

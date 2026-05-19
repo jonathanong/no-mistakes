@@ -1,6 +1,6 @@
-use crate::check_parallel::run_domain_checks;
+use crate::check_parallel::{run_domain_checks, DomainResults};
 use crate::check_tasks::{
-    filesystem_rules_configured, queues_configured, unique_exports_configured,
+    filesystem_rules_configured, queues_configured, unique_exports_configured, CheckTask,
 };
 use anyhow::Result;
 use no_mistakes_core::codebase::check_facts::{collect_check_facts, CheckFactPlan};
@@ -21,6 +21,15 @@ pub(crate) struct CheckResults {
     pub(crate) codebase: Vec<UniqueExportFinding>,
     pub(crate) warnings: Vec<String>,
     pub(crate) timings: Vec<(&'static str, Duration)>,
+}
+
+struct CompletedDomainChecks {
+    react: CheckTask<Vec<react_traits::Violation>>,
+    queues: CheckTask<Vec<CheckFinding>>,
+    rules: CheckTask<Vec<RuleFinding>>,
+    integration: CheckTask<Vec<IntegrationFinding>>,
+    codebase: CheckTask<Vec<UniqueExportFinding>>,
+    filesystem_rules: CheckTask<Vec<RuleFinding>>,
 }
 
 impl CheckResults {
@@ -93,12 +102,20 @@ pub(crate) fn run_all(
         &facts,
     );
 
-    let react = react?;
-    let queues = queues?;
-    let mut rules = rules?;
-    let integration = integration?;
-    let codebase = codebase?;
-    let filesystem_rules = filesystem_rules?;
+    let completed = complete_domain_checks((
+        react,
+        queues,
+        rules,
+        integration,
+        codebase,
+        filesystem_rules,
+    ))?;
+    let react = completed.react;
+    let queues = completed.queues;
+    let mut rules = completed.rules;
+    let integration = completed.integration;
+    let codebase = completed.codebase;
+    let filesystem_rules = completed.filesystem_rules;
     let warnings = [
         react_warning,
         react.warning.clone(),
@@ -131,6 +148,18 @@ pub(crate) fn run_all(
         integration: integration.findings,
         codebase: codebase.findings,
         warnings,
+    })
+}
+
+fn complete_domain_checks(results: DomainResults) -> Result<CompletedDomainChecks> {
+    let (react, queues, rules, integration, codebase, filesystem_rules) = results;
+    Ok(CompletedDomainChecks {
+        react: react?,
+        queues: queues?,
+        rules: rules?,
+        integration: integration?,
+        codebase: codebase?,
+        filesystem_rules: filesystem_rules?,
     })
 }
 
@@ -194,5 +223,183 @@ fn test_dynamic_imports_configured(
 }
 
 fn integration_configured(config: &no_mistakes_core::config::v2::NoMistakesConfig) -> bool {
-    !config.tests.vitest.suites.is_empty() || !config.tests.playwright.suites.is_empty()
+    let vitest_configured = !config.tests.vitest.suites.is_empty();
+    let playwright_configured = !config.tests.playwright.suites.is_empty();
+    if vitest_configured {
+        return true;
+    }
+    if playwright_configured {
+        return true;
+    }
+    false
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::anyhow;
+    use no_mistakes_core::codebase::rules::{RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_TESTS};
+
+    #[test]
+    fn run_all_keeps_filesystem_files_when_fact_collection_is_needed() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/check-runner/facts-and-filesystem");
+        let config = root.join(".no-mistakes.yml");
+
+        let results = run_all(root, Some(config), None).unwrap();
+
+        assert!(results.has_findings());
+        assert!(results
+            .rules
+            .iter()
+            .any(|finding| finding.rule == RUST_MAX_LINES_PER_FILE));
+        assert_eq!(results.rules.len(), 2);
+        let mut rule_ids = vec![
+            results.rules[0].rule.as_str(),
+            results.rules[1].rule.as_str(),
+        ];
+        rule_ids.sort();
+        assert_eq!(
+            rule_ids,
+            vec![RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_TESTS]
+        );
+    }
+
+    #[test]
+    fn run_all_surfaces_react_enabled_config_errors() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/check-runner/react-config-error");
+        let config = root.join(".no-mistakes.yml");
+
+        let err = run_all(root, Some(config), None)
+            .err()
+            .expect("expected react config error");
+
+        assert!(err.to_string().contains("failed to parse"));
+    }
+
+    #[test]
+    fn integration_configured_covers_vitest_and_playwright_suites() {
+        let empty = no_mistakes_core::config::v2::NoMistakesConfig::default();
+        assert!(!integration_configured(&empty));
+
+        let mut vitest = no_mistakes_core::config::v2::NoMistakesConfig::default();
+        vitest.tests.vitest.suites.push(Default::default());
+        assert!(integration_configured(&vitest));
+
+        let mut playwright = no_mistakes_core::config::v2::NoMistakesConfig::default();
+        playwright.tests.playwright.suites.push(Default::default());
+        assert!(integration_configured(&playwright));
+    }
+
+    #[test]
+    fn complete_domain_checks_surfaces_each_domain_error() {
+        assert_domain_error(err_react(), "react");
+        assert_domain_error(err_queues(), "queues");
+        assert_domain_error(err_rules(), "rules");
+        assert_domain_error(err_integration(), "integration");
+        assert_domain_error(err_codebase(), "codebase");
+        assert_domain_error(err_filesystem_rules(), "filesystem_rules");
+    }
+
+    fn assert_domain_error(results: DomainResults, expected: &str) {
+        let err = complete_domain_checks(results)
+            .err()
+            .expect("expected domain check error");
+        assert_eq!(err.to_string(), expected);
+    }
+
+    fn empty_task<T>(findings: T) -> CheckTask<T> {
+        CheckTask {
+            findings,
+            warning: None,
+            duration: Duration::ZERO,
+        }
+    }
+
+    fn ok_react() -> anyhow::Result<CheckTask<Vec<react_traits::Violation>>> {
+        Ok(empty_task(Vec::new()))
+    }
+
+    fn ok_queues() -> anyhow::Result<CheckTask<Vec<CheckFinding>>> {
+        Ok(empty_task(Vec::new()))
+    }
+
+    fn ok_rules() -> anyhow::Result<CheckTask<Vec<RuleFinding>>> {
+        Ok(empty_task(Vec::new()))
+    }
+
+    fn ok_integration() -> anyhow::Result<CheckTask<Vec<IntegrationFinding>>> {
+        Ok(empty_task(Vec::new()))
+    }
+
+    fn ok_codebase() -> anyhow::Result<CheckTask<Vec<UniqueExportFinding>>> {
+        Ok(empty_task(Vec::new()))
+    }
+
+    fn err_react() -> DomainResults {
+        (
+            Err(anyhow!("react")),
+            ok_queues(),
+            ok_rules(),
+            ok_integration(),
+            ok_codebase(),
+            ok_rules(),
+        )
+    }
+
+    fn err_queues() -> DomainResults {
+        (
+            ok_react(),
+            Err(anyhow!("queues")),
+            ok_rules(),
+            ok_integration(),
+            ok_codebase(),
+            ok_rules(),
+        )
+    }
+
+    fn err_rules() -> DomainResults {
+        (
+            ok_react(),
+            ok_queues(),
+            Err(anyhow!("rules")),
+            ok_integration(),
+            ok_codebase(),
+            ok_rules(),
+        )
+    }
+
+    fn err_integration() -> DomainResults {
+        (
+            ok_react(),
+            ok_queues(),
+            ok_rules(),
+            Err(anyhow!("integration")),
+            ok_codebase(),
+            ok_rules(),
+        )
+    }
+
+    fn err_codebase() -> DomainResults {
+        (
+            ok_react(),
+            ok_queues(),
+            ok_rules(),
+            ok_integration(),
+            Err(anyhow!("codebase")),
+            ok_rules(),
+        )
+    }
+
+    fn err_filesystem_rules() -> DomainResults {
+        (
+            ok_react(),
+            ok_queues(),
+            ok_rules(),
+            ok_integration(),
+            ok_codebase(),
+            Err(anyhow!("filesystem_rules")),
+        )
+    }
 }

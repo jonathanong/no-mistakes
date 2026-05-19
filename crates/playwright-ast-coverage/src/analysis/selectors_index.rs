@@ -74,13 +74,40 @@ impl<'a> SelectorIndex<'a> {
             return matches;
         }
 
-        if let Some(attribute_targets) = self.by_attribute.get(&playwright_selector.attribute) {
-            for target in attribute_targets {
-                if target.selector.matches_playwright(playwright_selector) {
-                    matches.push(*target);
-                }
+        if !self
+            .by_attribute
+            .contains_key(&playwright_selector.attribute)
+        {
+            return matches;
+        }
+        let attribute_targets = &self.by_attribute[&playwright_selector.attribute];
+        let mut index = 0;
+        while index < attribute_targets.len() {
+            let target = attribute_targets[index];
+            if target.selector.matches_playwright(playwright_selector) {
+                matches.push(target);
             }
+            index += 1;
         }
         matches
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::selectors::SelectorMatcher;
+
+    #[test]
+    fn matches_handles_empty_attribute_target_bucket() {
+        let mut index = SelectorIndex::default();
+        index.by_attribute.insert("data-testid".into(), Vec::new());
+        let selector = selectors::PlaywrightSelector::for_test(
+            "data-testid",
+            "button",
+            SelectorMatcher::Contains("button".into()),
+        );
+
+        assert!(index.matches(&selector).is_empty());
     }
 }

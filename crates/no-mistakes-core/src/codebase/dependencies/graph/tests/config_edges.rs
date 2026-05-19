@@ -260,6 +260,11 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         Some("backend/**/*.mts".to_string()),
     );
     add_backend_route_extractor(&mut manual_context, Some("app".to_string()), None);
+    add_backend_route_extractor(
+        &mut manual_context,
+        Some("app".to_string()),
+        Some("[".to_string()),
+    );
     assert!(manual_context.backend_route_extractors.is_empty());
 
     assert!(compile_graph_glob("").is_none());
@@ -304,6 +309,44 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
     };
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&explicit.join("tsconfig.json")).unwrap();
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
+    assert!(
+        collect_route_edges(&explicit, &tsconfig, &[], None, Some(&explicit_options),).is_empty()
+    );
+    assert!(collect_http_call_edges(
+        &explicit,
+        &tsconfig,
+        None,
+        &[],
+        &[],
+        &[],
+        Some(&explicit_options),
+    )
+    .is_empty());
+
+    let queue_options = GraphConfigOptions {
+        route: crate::codebase::config::RouteOptions::default(),
+        queue: crate::codebase::config::QueueOptions {
+            queue_pattern: "src/**/*.ts".to_string(),
+            factory_specifier: "@app/queue".to_string(),
+            factory_function: "createQueue".to_string(),
+        },
+        http_route: crate::codebase::config::HttpRouteOptions::default(),
+        http_call: crate::codebase::config::HttpCallOptions::default(),
+    };
+    let mut forward = EdgeMap::new();
+    let mut reverse = EdgeMap::new();
+    add_queue_edges(
+        &explicit,
+        &resolver,
+        &[],
+        None,
+        Some(&queue_options),
+        &mut forward,
+        &mut reverse,
+    );
+    assert!(forward.is_empty());
+
     assert!(collect_http_call_edges(
         &explicit,
         &tsconfig,

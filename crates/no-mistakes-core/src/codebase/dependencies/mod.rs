@@ -168,8 +168,22 @@ fn parse_entrypoint(s: &str) -> Entrypoint {
 }
 
 pub fn run(args: TraverseArgs, direction: Direction) -> Result<()> {
-    let mut timings = crate::codebase::timing::PhaseTimings::start();
     let cwd_early = std::env::current_dir().context("reading current directory")?;
+    let stdout = io::stdout();
+    let stdout_is_terminal = stdout.is_terminal();
+    let mut out = stdout.lock();
+
+    run_with_cwd_and_writer(args, direction, cwd_early, stdout_is_terminal, &mut out)
+}
+
+fn run_with_cwd_and_writer(
+    args: TraverseArgs,
+    direction: Direction,
+    cwd_early: PathBuf,
+    stdout_is_terminal: bool,
+    out: &mut dyn Write,
+) -> Result<()> {
+    let mut timings = crate::codebase::timing::PhaseTimings::start();
     let root = resolve_root(&args, &cwd_early);
     let root = crate::codebase::ts_resolver::normalize_path(&root);
 
@@ -223,12 +237,9 @@ pub fn run(args: TraverseArgs, direction: Direction) -> Result<()> {
     timings.mark("analysis");
 
     // Resolve output format.
-    let format = resolve_format(args.json, args.format, io::stdout().is_terminal());
+    let format = resolve_format(args.json, args.format, stdout_is_terminal);
 
-    let stdout = io::stdout();
-    let mut out = stdout.lock();
-
-    write_entries(format, &root_strs, &entries, &root, &mut out)?;
+    write_entries(format, &root_strs, &entries, &root, out)?;
 
     timings.mark("output");
     if args.timings {

@@ -218,3 +218,12 @@ fn collect_ts_facts_can_skip_import_collection() {
     assert!(facts[&ts].imports.is_empty());
     assert!(facts[&ts].symbols.is_none());
 }
+
+#[test]
+fn collect_file_facts_falls_back_to_ts_source_type_for_unknown_extension() {
+    let unknown = fixture("unknown-extension.source");
+    let facts = collect_file_facts(&unknown, TsFactPlan::imports(), &TsFactContext::default())
+        .expect("unknown extension fixture should still parse as TypeScript");
+
+    assert_eq!(facts.imports.len(), 1);
+}
