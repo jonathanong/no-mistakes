@@ -34,11 +34,8 @@ do
   fi
 done
 
-echo "Checking Rust file line limits..."
-bash scripts/check-rust-line-limit.sh || exit 1
-
-echo "Checking for inline #[cfg(test)] mod blocks..."
-bash scripts/check-rust-test-modules.sh || exit 1
+echo "Running no-mistakes check..."
+cargo run -p no-mistakes --quiet -- check || exit 1
 
 echo "Running cargo fmt..."
 cargo fmt --all -- --check || exit 1

@@ -1,5 +1,7 @@
 use crate::check_parallel::run_domain_checks;
-use crate::check_tasks::{queues_configured, unique_exports_configured};
+use crate::check_tasks::{
+    filesystem_rules_configured, queues_configured, unique_exports_configured,
+};
 use anyhow::Result;
 use no_mistakes_core::codebase::check_facts::{collect_check_facts, CheckFactPlan};
 use no_mistakes_core::codebase::rules::RuleFinding;
@@ -41,6 +43,7 @@ pub(crate) fn run_all(
     let queues_enabled = queues_configured(&config);
     let unique_exports_enabled = unique_exports_configured(&config);
     let rules_enabled = test_dynamic_imports_configured(&config);
+    let filesystem_rules_enabled = filesystem_rules_configured(&config);
     let integration_enabled = integration_configured(&config);
     let react_enabled = react_traits::check_enabled(&root, config_path.as_deref(), false)?;
     let react_warning = None;
@@ -51,12 +54,12 @@ pub(crate) fn run_all(
         integration_enabled,
         unique_exports_enabled,
     );
-    if !plan_requests_facts(&plan) {
+    if !plan_requests_facts(&plan) && !filesystem_rules_enabled {
         return Ok(empty_results([react_warning]));
     }
     let discover_start = Instant::now();
     let skip_directories = config.filesystem.skip_directories.clone();
-    let files = crate::check_discovery::discover_check_files(
+    let discovered = crate::check_discovery::discover_check_files(
         &root,
         &config,
         &skip_directories,
@@ -64,24 +67,38 @@ pub(crate) fn run_all(
     );
     let discover_duration = discover_start.elapsed();
     let facts_start = Instant::now();
-    let facts = collect_check_facts(&root, files, plan);
+    // When only filesystem rules are enabled, no TS/JS parsing is needed.
+    let (fs_files, facts) = if plan_requests_facts(&plan) {
+        let fs = if filesystem_rules_enabled {
+            discovered.clone()
+        } else {
+            Vec::new()
+        };
+        let f = collect_check_facts(&root, discovered, plan);
+        (fs, f)
+    } else {
+        (discovered, Default::default())
+    };
     let facts_duration = facts_start.elapsed();
 
-    let (react, queues, rules, integration, codebase) = run_domain_checks(
+    let (react, queues, rules, integration, codebase, filesystem_rules) = run_domain_checks(
         &root,
         &config_path,
         &tsconfig_path,
         react_enabled,
         queues_enabled,
         unique_exports_enabled,
+        filesystem_rules_enabled,
+        fs_files,
         &facts,
     );
 
     let react = react?;
     let queues = queues?;
-    let rules = rules?;
+    let mut rules = rules?;
     let integration = integration?;
     let codebase = codebase?;
+    let filesystem_rules = filesystem_rules?;
     let warnings = [
         react_warning,
         react.warning.clone(),
@@ -89,10 +106,13 @@ pub(crate) fn run_all(
         rules.warning.clone(),
         integration.warning.clone(),
         codebase.warning.clone(),
+        filesystem_rules.warning.clone(),
     ]
     .into_iter()
     .flatten()
     .collect();
+
+    rules.findings.extend(filesystem_rules.findings);
 
     Ok(CheckResults {
         timings: vec![
@@ -103,6 +123,7 @@ pub(crate) fn run_all(
             ("rules", rules.duration),
             ("integration", integration.duration),
             ("codebase", codebase.duration),
+            ("filesystem_rules", filesystem_rules.duration),
         ],
         react: react.findings,
         queues: queues.findings,
@@ -158,6 +179,7 @@ fn empty_results(warnings: [Option<String>; 1]) -> CheckResults {
             ("rules", Duration::ZERO),
             ("integration", Duration::ZERO),
             ("codebase", Duration::ZERO),
+            ("filesystem_rules", Duration::ZERO),
         ],
     }
 }
