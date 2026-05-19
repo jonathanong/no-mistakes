@@ -100,7 +100,7 @@ type Edge = (NodeId, NodeId, EdgeKind);
 type ParsedImports = Vec<(PathBuf, Vec<ExtractedImport>)>;
 
 /// Selects which edge producers run while building a dependency graph.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct GraphBuildPlan {
     pub imports: bool,
     pub workspace: bool,
@@ -127,6 +127,15 @@ impl GraphBuildPlan {
             playwright_routes: true,
             http: true,
             process: true,
+        }
+    }
+
+    /// Minimal plan for import-only traversal (no routes, queues, http, etc.).
+    pub fn imports_and_workspace() -> Self {
+        Self {
+            imports: true,
+            workspace: true,
+            ..Self::default()
         }
     }
 

@@ -174,10 +174,12 @@ vi.mock('@lib/setup-target.mts', () => ({ setupValue: 'mocked' }))\n",
 }
 
 #[test]
-fn run_check_with_facts_surfaces_reachable_dependency_errors() {
+fn run_check_with_facts_skips_reachable_deps_with_parse_errors() {
     let root = dynamic_import_fixture();
     let test = root.join("tests/bad.test.mts");
     let setup = root.join("tests/setup-vitest.mts");
+    // src/unreadable.mts is a directory on disk, so collect_check_facts will
+    // store a parse_error for it in CheckFactMap.
     let unreadable = root.join("src/unreadable.mts");
     let files = vec![test.clone(), setup, unreadable];
     let facts = crate::codebase::check_facts::collect_check_facts(
@@ -204,8 +206,37 @@ test('bad', async () => {\n\
         .ts
         .insert(test.clone(), dynamic_import_test_facts(&test, source));
 
-    let error = run_check_with_facts(&root, None, None, &shared).unwrap_err();
+    // Reachable deps with parse_error in CheckFactMap are silently skipped
+    // rather than re-attempted from disk, so the check succeeds.
+    run_check_with_facts(&root, None, None, &shared).unwrap();
+}
 
+#[test]
+fn run_check_with_facts_propagates_reachable_dep_disk_error() {
+    // Coverage for with_facts.rs: reachable::check error branch.
+    // unreadable.mts is a directory; putting it in shared.files but not shared.ts
+    // causes reachable::check to fall back to disk and fail.
+    let root = dynamic_import_fixture();
+    let test = root.join("tests/bad.test.mts");
+    let setup = root.join("tests/setup-vitest.mts");
+    let unreadable = root.join("src/unreadable.mts");
+    let source = "import '@lib/unreadable.mts'\n\
+test('bad', async () => {\n\
+  await import('@lib/setup-target.mts')\n\
+})\n";
+    let setup_source = std::fs::read_to_string(&setup).unwrap();
+    let mut shared = crate::codebase::check_facts::CheckFactMap {
+        files: vec![test.clone(), setup.clone(), unreadable],
+        ..Default::default()
+    };
+    shared
+        .ts
+        .insert(test.clone(), dynamic_import_test_facts(&test, source));
+    shared.ts.insert(
+        setup.clone(),
+        dynamic_import_test_facts(&setup, &setup_source),
+    );
+    let error = run_check_with_facts(&root, None, None, &shared).unwrap_err();
     assert!(error.to_string().contains("failed to read dependency file"));
 }
 
@@ -250,4 +281,25 @@ fn run_check_with_facts_reports_missing_setup_fact_shapes() {
     assert!(missing_dynamic
         .to_string()
         .contains("missing dynamic import facts"));
+}
+
+#[test]
+fn run_check_with_facts_reports_test_file_parse_error() {
+    // with_facts.rs:48 — parse_error bail for the test file itself (without disable comment)
+    let root = dynamic_import_fixture();
+    let test = root.join("tests/bad.test.mts");
+    let mut shared = crate::codebase::check_facts::CheckFactMap {
+        files: vec![test.clone()],
+        ..Default::default()
+    };
+    shared.ts.insert(
+        test,
+        crate::codebase::check_facts::CheckFileFacts {
+            source: Some("test('broken', () => {})".to_string()),
+            parse_error: Some("syntax error".to_string()),
+            ..Default::default()
+        },
+    );
+    let error = run_check_with_facts(&root, None, None, &shared).unwrap_err();
+    assert!(format!("{error:#}").contains("syntax error"));
 }
