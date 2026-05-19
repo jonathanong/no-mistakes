@@ -166,7 +166,9 @@ fn repeated_dynamic_import_target_uses_dependency_cache() {
     let root = fixture();
     let tsconfig = load_tsconfig(&root.join("tsconfig.json")).unwrap();
     let resolver = ImportResolver::new(&tsconfig);
-    let graph = DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::all()).unwrap();
+    let graph =
+        DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
+            .unwrap();
     let test_file = root.join("tests").join("bad.test.mts");
     let mocks = HashSet::new();
     let dependency_cache = Mutex::new(HashMap::new());

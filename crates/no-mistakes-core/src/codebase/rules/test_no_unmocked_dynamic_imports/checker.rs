@@ -54,14 +54,14 @@ pub(super) fn check_dynamic_import(ctx: &mut DynamicCheckContext<'_>, import: as
             new_deps
         }
     };
-    for dependency in std::iter::once(target).chain(deps.iter().cloned()) {
-        if !ctx.mocks.contains(&dependency) {
+    for dependency in std::iter::once(&target).chain(deps.iter()) {
+        if !ctx.mocks.contains(dependency) {
             push_finding(
                 ctx.root,
                 ctx.file,
                 import.line,
                 Some(specifier.clone()),
-                Some(dependency),
+                Some(dependency.clone()),
                 ctx.findings,
             );
         }
