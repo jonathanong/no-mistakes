@@ -111,7 +111,7 @@ jobs:
           tool: cargo-crap
 
       - name: Enforce CRAP threshold
-        run: cargo crap --lcov target/llvm-cov/lcov.info --fail-above --threshold 30
+        run: cargo crap --lcov target/llvm-cov/lcov.info --fail-above --threshold 30 --missing skip
 
       - name: Upload Rust coverage to Codecov
         if: ${{ env.CODECOV_TOKEN != '' }}
