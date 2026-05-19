@@ -215,44 +215,77 @@ impl GraphFiles {
 }
 
 pub(crate) fn ts_fact_context_for_plan(root: &Path, plan: GraphBuildPlan) -> TsFactContext {
+    let options = graph_config_options(root);
+    ts_fact_context_from_options(root, plan, options.as_ref())
+}
+
+#[derive(Clone)]
+struct GraphConfigOptions {
+    route: crate::codebase::config::RouteOptions,
+    queue: crate::codebase::config::QueueOptions,
+    http_route: crate::codebase::config::HttpRouteOptions,
+    http_call: crate::codebase::config::HttpCallOptions,
+}
+
+fn graph_config_options(root: &Path) -> Option<GraphConfigOptions> {
+    let config = crate::codebase::config::load_config(root).ok()?;
+    Some(GraphConfigOptions {
+        route: config.rule_options("route-consistency"),
+        queue: config.rule_options("queue-dashboard-reachability"),
+        http_route: config.rule_options("http-route-static-paths"),
+        http_call: config.rule_options("http-call-static-paths"),
+    })
+}
+
+fn ts_fact_context_from_options(
+    root: &Path,
+    plan: GraphBuildPlan,
+    options: Option<&GraphConfigOptions>,
+) -> TsFactContext {
     let mut context = TsFactContext::new(root);
-    if plan.routes || plan.http || plan.queues {
-        if let Ok(config) = crate::codebase::config::load_config(root) {
-            if plan.routes || plan.http {
-                let route_opts: crate::codebase::config::RouteOptions =
-                    config.rule_options("route-consistency");
-                let http_route_opts: crate::codebase::config::HttpRouteOptions =
-                    config.rule_options("http-route-static-paths");
-                context.backend_register_object = if !http_route_opts.register_object.is_empty() {
-                    Some(http_route_opts.register_object)
-                } else if !route_opts.backend_register_object.is_empty() {
-                    Some(route_opts.backend_register_object)
-                } else {
-                    None
-                };
-                let http_call_opts: crate::codebase::config::HttpCallOptions =
-                    config.rule_options("http-call-static-paths");
-                context.http_prefixes = if !http_call_opts.backend_prefixes.is_empty() {
-                    http_call_opts.backend_prefixes
-                } else if !route_opts.backend_prefixes.is_empty() {
-                    route_opts.backend_prefixes
-                } else {
-                    Vec::new()
-                };
-            }
-            if plan.queues {
-                let queue_opts: crate::codebase::config::QueueOptions =
-                    config.rule_options("queue-dashboard-reachability");
-                if !queue_opts.factory_specifier.is_empty()
-                    && !queue_opts.factory_function.is_empty()
-                {
-                    context.queue_factory_specifier = Some(queue_opts.factory_specifier);
-                    context.queue_factory_function = Some(queue_opts.factory_function);
-                }
-            }
-        }
+    let Some(options) = options else {
+        return context;
+    };
+    if plan.routes || plan.http {
+        context.backend_register_object = resolved_backend_register_object(options);
+        context.http_prefixes = resolved_backend_prefixes(options);
+    }
+    if plan.queues
+        && !options.queue.factory_specifier.is_empty()
+        && !options.queue.factory_function.is_empty()
+    {
+        context.queue_factory_specifier = Some(options.queue.factory_specifier.clone());
+        context.queue_factory_function = Some(options.queue.factory_function.clone());
     }
     context
+}
+
+fn resolved_backend_pattern(options: &GraphConfigOptions) -> Option<String> {
+    if !options.http_route.backend_pattern.is_empty() {
+        Some(options.http_route.backend_pattern.clone())
+    } else if !options.route.backend_pattern.is_empty() {
+        Some(options.route.backend_pattern.clone())
+    } else {
+        None
+    }
+}
+
+fn resolved_backend_register_object(options: &GraphConfigOptions) -> Option<String> {
+    if !options.http_route.register_object.is_empty() {
+        Some(options.http_route.register_object.clone())
+    } else if !options.route.backend_register_object.is_empty() {
+        Some(options.route.backend_register_object.clone())
+    } else {
+        None
+    }
+}
+
+fn resolved_backend_prefixes(options: &GraphConfigOptions) -> Vec<String> {
+    if !options.http_call.backend_prefixes.is_empty() {
+        options.http_call.backend_prefixes.clone()
+    } else {
+        options.route.backend_prefixes.clone()
+    }
 }
 
 fn add_edge(map: &mut EdgeMap, from: NodeId, to: NodeId, kind: EdgeKind) {
@@ -331,7 +364,8 @@ impl DepGraph {
         let tsx_ex = ImportExtractor::for_tsx().expect("tsx import extractor builds");
         let resolver = ImportResolver::new(tsconfig).with_visible(graph_files.visible());
         let fact_plan = plan.ts_fact_plan();
-        let fact_context = ts_fact_context_for_plan(root, plan);
+        let config_options = graph_config_options(root);
+        let fact_context = ts_fact_context_from_options(root, plan, config_options.as_ref());
         let owned_facts = if !fact_plan.is_empty() && facts.is_none() {
             Some(collect_ts_facts_with_context(
                 graph_files.indexable(),
@@ -393,7 +427,13 @@ impl DepGraph {
         }
 
         if plan.routes {
-            let route_edges = collect_route_edges(root, tsconfig, &graph_files.all, facts);
+            let route_edges = collect_route_edges(
+                root,
+                tsconfig,
+                &graph_files.all,
+                facts,
+                config_options.as_ref(),
+            );
             merge_edges(&mut forward, &mut reverse, route_edges);
         }
 
@@ -425,13 +465,20 @@ impl DepGraph {
                     tsconfig,
                     facts,
                     &file_contents,
+                    graph_files.indexable(),
                     &graph_files.all,
+                    config_options.as_ref(),
                 );
                 merge_edges(&mut forward, &mut reverse, http_call_edges);
             }
 
             if plan.process {
-                let spawn_edges = collect_process_spawn_edges(root, facts, &file_contents);
+                let spawn_edges = collect_process_spawn_edges(
+                    root,
+                    facts,
+                    &file_contents,
+                    graph_files.indexable(),
+                );
                 merge_edges(&mut forward, &mut reverse, spawn_edges);
             }
         }
@@ -1294,17 +1341,15 @@ fn collect_route_edges(
     tsconfig: &TsConfig,
     all_files: &[PathBuf],
     facts: Option<&TsFactMap>,
+    config_options: Option<&GraphConfigOptions>,
 ) -> Vec<Edge> {
-    use crate::codebase::config::{load_config, RouteOptions};
     use crate::codebase::ts_routes::{defs_frontend, matcher, refs};
     use globset::{GlobBuilder, GlobSetBuilder};
 
-    let config = match load_config(root) {
-        Ok(c) => c,
-        Err(_) => return vec![],
+    let Some(config_options) = config_options else {
+        return vec![];
     };
-
-    let opts: RouteOptions = config.rule_options("route-consistency");
+    let opts = &config_options.route;
 
     if (opts.backend_pattern.is_empty() || opts.backend_register_object.is_empty())
         && opts.frontend_root.is_empty()
@@ -1765,15 +1810,17 @@ enum HttpCallSource {
 fn http_call_sources(
     facts: Option<&TsFactMap>,
     files: &[(PathBuf, String)],
+    graph_files: &[PathBuf],
 ) -> Vec<(PathBuf, HttpCallSource)> {
     if let Some(facts) = facts {
-        return facts
+        return graph_files
             .iter()
-            .map(|(path, file_facts)| {
-                (
+            .filter_map(|path| {
+                let file_facts = facts.get(path)?;
+                Some((
                     path.clone(),
                     HttpCallSource::Facts(file_facts.http_calls.clone()),
-                )
+                ))
             })
             .collect();
     }
@@ -1800,43 +1847,27 @@ fn collect_http_call_edges(
     tsconfig: &TsConfig,
     facts: Option<&TsFactMap>,
     files: &[(PathBuf, String)],
+    graph_files: &[PathBuf],
     all_files: &[PathBuf],
+    config_options: Option<&GraphConfigOptions>,
 ) -> Vec<Edge> {
-    use crate::codebase::config::{load_config, HttpCallOptions, HttpRouteOptions, RouteOptions};
     use crate::codebase::ts_http_calls::extract_http_calls;
     use crate::codebase::ts_routes::matcher;
     use globset::{GlobBuilder, GlobSetBuilder};
 
-    // Determine backend route scan pattern, register object, and backend prefixes.
-    // Priority: http-route-static-paths / http-call-static-paths options (new rules)
-    // fall back to route-consistency options (legacy). No defaults are inferred.
-    let Ok(config) = load_config(root) else {
+    let Some(config_options) = config_options else {
         return vec![];
     };
-    let route_opts: RouteOptions = config.rule_options("route-consistency");
-    let http_route_opts: HttpRouteOptions = config.rule_options("http-route-static-paths");
-    let http_call_opts: HttpCallOptions = config.rule_options("http-call-static-paths");
-    let backend_pattern = if !http_route_opts.backend_pattern.is_empty() {
-        http_route_opts.backend_pattern.clone()
-    } else if !route_opts.backend_pattern.is_empty() {
-        route_opts.backend_pattern.clone()
-    } else {
+    let Some(backend_pattern) = resolved_backend_pattern(config_options) else {
         return vec![];
     };
-    let register_object = if !http_route_opts.register_object.is_empty() {
-        http_route_opts.register_object.clone()
-    } else if !route_opts.backend_register_object.is_empty() {
-        route_opts.backend_register_object.clone()
-    } else {
+    let Some(register_object) = resolved_backend_register_object(config_options) else {
         return vec![];
     };
-    let backend_prefixes = if !http_call_opts.backend_prefixes.is_empty() {
-        http_call_opts.backend_prefixes.clone()
-    } else if !route_opts.backend_prefixes.is_empty() {
-        route_opts.backend_prefixes.clone()
-    } else {
+    let backend_prefixes = resolved_backend_prefixes(config_options);
+    if backend_prefixes.is_empty() {
         return vec![];
-    };
+    }
 
     let glob = match GlobBuilder::new(&backend_pattern)
         .literal_separator(false)
@@ -1863,7 +1894,7 @@ fn collect_http_call_edges(
     let _ = tsconfig; // reserved for future alias-aware call resolution
 
     // For each source file, find HTTP calls and match against route defs.
-    http_call_sources(facts, files)
+    http_call_sources(facts, files, graph_files)
         .into_par_iter()
         .flat_map_iter(|(caller, calls_or_source)| {
             let calls = match calls_or_source {
@@ -1902,12 +1933,14 @@ fn collect_process_spawn_edges(
     root: &Path,
     facts: Option<&TsFactMap>,
     files: &[(PathBuf, String)],
+    graph_files: &[PathBuf],
 ) -> Vec<Edge> {
     use crate::codebase::ts_process_spawn::extract_spawn_edges;
 
     if let Some(facts) = facts {
-        return facts
-            .values()
+        return graph_files
+            .iter()
+            .filter_map(|path| facts.get(path))
             .flat_map(|file_facts| {
                 file_facts.process_spawns.iter().map(|e| {
                     (
