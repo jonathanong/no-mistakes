@@ -56,13 +56,21 @@ fn analyze_discovers_tests_and_builds_reports() {
 
     let mut cli_edges = cli.clone();
     cli_edges.command = Command::Edges;
-    assert_eq!(run(cli_edges).unwrap(), ExitCode::SUCCESS);
+    assert_eq!(run(cli_edges.clone()).unwrap(), ExitCode::SUCCESS);
+
+    let mut cli_edges_json = cli_edges;
+    cli_edges_json.json = true;
+    assert_eq!(run(cli_edges_json).unwrap(), ExitCode::SUCCESS);
 
     let mut cli_related = cli.clone();
     cli_related.command = Command::Related {
         files: vec![PathBuf::from("app/page.tsx")],
     };
-    assert_eq!(run(cli_related).unwrap(), ExitCode::SUCCESS);
+    assert_eq!(run(cli_related.clone()).unwrap(), ExitCode::SUCCESS);
+
+    let mut cli_related_json = cli_related;
+    cli_related_json.json = true;
+    assert_eq!(run(cli_related_json).unwrap(), ExitCode::SUCCESS);
 
     let mut cli_unique = cli.clone();
     cli_unique.assert_unique_selectors = true;
