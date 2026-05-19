@@ -148,7 +148,11 @@ fn check_with_files_respects_roots() {
     let config = config_with_rule(&format!("{{srcMax: 3, roots: [\"{sub_str}\"]}}"));
     let all_files = vec![outside, inside];
     let findings = check_with_files(root, &config, &all_files).unwrap();
-    assert_eq!(findings.len(), 1, "only the file within roots should be flagged");
+    assert_eq!(
+        findings.len(),
+        1,
+        "only the file within roots should be flagged"
+    );
     assert!(findings[0].file.contains("sub"));
 }
 
