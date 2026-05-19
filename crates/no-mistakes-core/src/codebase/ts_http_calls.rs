@@ -36,11 +36,10 @@ pub fn extract_http_calls_from_program<'a>(
     prefixes: &[&str],
 ) -> Vec<HttpCall> {
     let mut results = Vec::new();
-
-    for stmt in &program.body {
-        collect_from_stmt(stmt, source, prefixes, &mut results);
-    }
-
+    program
+        .body
+        .iter()
+        .for_each(|stmt| collect_from_stmt(stmt, source, prefixes, &mut results));
     results
 }
 
@@ -206,7 +205,7 @@ fn collect_from_expr(expr: &Expression, source: &str, prefixes: &[&str], out: &m
             collect_from_expr(&logical.right, source, prefixes, out);
         }
         Expression::StaticMemberExpression(m) => {
-            collect_from_expr(&m.object, source, prefixes, out);
+            collect_from_expr(&m.object, source, prefixes, out)
         }
         Expression::SequenceExpression(s) => {
             for e in &s.expressions {

@@ -1,14 +1,10 @@
 use crate::codebase::dependencies::extract::{
     extract_imports_from_program, is_indexable, is_tsx_file, ExtractedImport,
 };
-use crate::codebase::ts_http_calls::{extract_http_calls_from_program, HttpCall};
-use crate::codebase::ts_process_spawn::{extract_spawn_edges_from_program, SpawnEdge};
-use crate::codebase::ts_queues::factory::{
-    find_create_queue_line_from_program, find_queue_name_from_program,
-};
-use crate::codebase::ts_queues::usage::{extract_queue_usage_from_program, QueueUsage};
-use crate::codebase::ts_routes::defs_backend::extract_backend_routes_from_program;
-use crate::codebase::ts_routes::refs::{extract_route_refs_from_program, RouteRef};
+use crate::codebase::ts_http_calls::HttpCall;
+use crate::codebase::ts_process_spawn::SpawnEdge;
+use crate::codebase::ts_queues::usage::QueueUsage;
+use crate::codebase::ts_routes::refs::RouteRef;
 use crate::codebase::ts_symbols::{extract_symbols_from_program, FileSymbols};
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
@@ -16,6 +12,9 @@ use oxc_span::SourceType;
 use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+
+mod domain;
+pub use domain::TsFactContext;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct TsFactPlan {
@@ -67,36 +66,6 @@ impl TsFactPlan {
             || self.queue_factory
             || self.http_calls
             || self.process_spawns
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct TsFactContext {
-    pub root: PathBuf,
-    pub backend_register_object: Option<String>,
-    pub queue_factory_specifier: Option<String>,
-    pub queue_factory_function: Option<String>,
-    pub http_prefixes: Vec<String>,
-}
-
-impl TsFactContext {
-    pub fn new(root: &Path) -> Self {
-        Self {
-            root: root.to_path_buf(),
-            ..Self::default()
-        }
-    }
-}
-
-impl Default for TsFactContext {
-    fn default() -> Self {
-        Self {
-            root: PathBuf::new(),
-            backend_register_object: None,
-            queue_factory_specifier: None,
-            queue_factory_function: None,
-            http_prefixes: Vec::new(),
-        }
     }
 }
 
@@ -157,75 +126,19 @@ fn collect_file_facts(
     let symbols = plan
         .symbols
         .then(|| extract_symbols_from_program(&parsed.program, &source));
-    let route_file = route_file_name(path, context);
-    let route_refs = if plan.route_refs {
-        extract_route_refs_from_program(&parsed.program, &source, &route_file)
-    } else {
-        Vec::new()
-    };
-    let backend_routes = if plan.backend_routes {
-        context
-            .backend_register_object
-            .as_ref()
-            .map(|register_object| {
-                extract_backend_routes_from_program(&parsed.program, &source, register_object)
-            })
-            .unwrap_or_default()
-    } else {
-        Vec::new()
-    };
-    let queue_usage = plan
-        .queue_usage
-        .then(|| extract_queue_usage_from_program(&parsed.program, &source));
-    let (queue_create_line, queue_name) = if plan.queue_factory {
-        match (
-            context.queue_factory_specifier.as_deref(),
-            context.queue_factory_function.as_deref(),
-        ) {
-            (Some(factory_specifier), Some(factory_function)) => (
-                find_create_queue_line_from_program(
-                    &parsed.program,
-                    &source,
-                    factory_specifier,
-                    factory_function,
-                ),
-                find_queue_name_from_program(&parsed.program, factory_specifier, factory_function),
-            ),
-            _ => (None, None),
-        }
-    } else {
-        (None, None)
-    };
-    let http_prefixes: Vec<&str> = context.http_prefixes.iter().map(String::as_str).collect();
-    let http_calls = if plan.http_calls {
-        extract_http_calls_from_program(&parsed.program, &source, &http_prefixes)
-    } else {
-        Vec::new()
-    };
-    let process_spawns = if plan.process_spawns {
-        extract_spawn_edges_from_program(&parsed.program, &source, path, &context.root)
-    } else {
-        Vec::new()
-    };
+    let domain = domain::collect_domain_facts(&parsed.program, path, &source, plan, context);
     Some(TsFileFacts {
         source: plan.source.then_some(source),
         imports,
         symbols,
-        route_refs,
-        backend_routes,
-        queue_usage,
-        queue_create_line,
-        queue_name,
-        http_calls,
-        process_spawns,
+        route_refs: domain.route_refs,
+        backend_routes: domain.backend_routes,
+        queue_usage: domain.queue_usage,
+        queue_create_line: domain.queue_create_line,
+        queue_name: domain.queue_name,
+        http_calls: domain.http_calls,
+        process_spawns: domain.process_spawns,
     })
-}
-
-fn route_file_name(path: &Path, context: &TsFactContext) -> String {
-    path.strip_prefix(&context.root)
-        .unwrap_or(path)
-        .to_string_lossy()
-        .into_owned()
 }
 
 #[cfg(test)]
