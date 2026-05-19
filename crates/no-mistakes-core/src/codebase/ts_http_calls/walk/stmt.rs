@@ -1,7 +1,5 @@
 use super::{collect_from_expr, HttpCall};
-use oxc::ast::ast::{
-    Declaration, ExportDefaultDeclarationKind, ForStatementInit, Statement,
-};
+use oxc::ast::ast::{Declaration, ExportDefaultDeclarationKind, ForStatementInit, Statement};
 
 pub(super) fn collect_from_stmt(
     stmt: &Statement,
@@ -119,12 +117,7 @@ fn collect_from_for_stmt(
     collect_from_stmt(&stmt.body, source, prefixes, out);
 }
 
-fn collect_from_decl(
-    decl: &Declaration,
-    source: &str,
-    prefixes: &[&str],
-    out: &mut Vec<HttpCall>,
-) {
+fn collect_from_decl(decl: &Declaration, source: &str, prefixes: &[&str], out: &mut Vec<HttpCall>) {
     match decl {
         Declaration::VariableDeclaration(v) => {
             for d in &v.declarations {

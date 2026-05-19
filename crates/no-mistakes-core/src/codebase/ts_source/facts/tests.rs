@@ -86,7 +86,11 @@ fn collect_ts_facts_can_include_source_without_domain_context() {
         },
     );
 
-    assert!(facts[&ts].source.as_deref().unwrap_or("").contains("import"));
+    assert!(facts[&ts]
+        .source
+        .as_deref()
+        .unwrap_or("")
+        .contains("import"));
 }
 
 #[test]
