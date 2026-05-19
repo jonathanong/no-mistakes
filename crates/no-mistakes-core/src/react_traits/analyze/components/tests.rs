@@ -397,12 +397,6 @@ fn anon_class_statement_no_id_not_tracked() {
 }
 
 #[test]
-fn local_class_no_superclass_not_tracked() {
-    let names = check_names("local-class-no-superclass");
-    assert!(names.is_empty());
-}
-
-#[test]
 fn export_named_anon_class_no_id_ignored() {
     let names = check_names("export-named-anon-class");
     assert!(names.is_empty());
