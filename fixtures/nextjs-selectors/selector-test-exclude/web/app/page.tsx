@@ -1,3 +1,3 @@
 export default function Page() {
-  return <main><button data-testid="save">Save</button></main>;
+  return <main><button type="button" data-testid="save">Save</button></main>;
 }
