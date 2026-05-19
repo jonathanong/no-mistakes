@@ -506,14 +506,7 @@ impl DepGraph {
         // redundant disk reads (files are already in OS page cache but the
         // syscall overhead adds up across thousands of files).
         if plan.http || plan.process {
-            let file_contents: Vec<(PathBuf, String)> = if facts.is_some() {
-                Vec::new()
-            } else {
-                files
-                    .par_iter()
-                    .filter_map(|p| std::fs::read_to_string(p).ok().map(|s| (p.clone(), s)))
-                    .collect()
-            };
+            let file_contents: Vec<(PathBuf, String)> = Vec::new();
 
             if plan.http {
                 let http_call_edges = collect_http_call_edges(

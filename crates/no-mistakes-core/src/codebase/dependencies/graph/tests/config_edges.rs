@@ -250,6 +250,17 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
     assert!(context.backend_route_extractors.is_empty());
     assert!(context.queue_factory_glob.is_none());
     assert!(context.http_prefixes.is_empty());
+    let context_without_options = ts_fact_context_from_options(&empty, plan, None);
+    assert!(context_without_options.backend_route_extractors.is_empty());
+
+    let mut manual_context = TsFactContext::new(&empty);
+    add_backend_route_extractor(
+        &mut manual_context,
+        None,
+        Some("backend/**/*.mts".to_string()),
+    );
+    add_backend_route_extractor(&mut manual_context, Some("app".to_string()), None);
+    assert!(manual_context.backend_route_extractors.is_empty());
 
     assert!(compile_graph_glob("").is_none());
     assert!(compile_graph_glob("[").is_none());
@@ -268,4 +279,49 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         route_backend_prefixes(&explicit_options),
         vec!["/api/".to_string()]
     );
+
+    let missing_register_options = GraphConfigOptions {
+        route: crate::codebase::config::RouteOptions::default(),
+        queue: crate::codebase::config::QueueOptions::default(),
+        http_route: crate::codebase::config::HttpRouteOptions {
+            backend_pattern: "backend/**/*.mts".to_string(),
+            register_object: String::new(),
+        },
+        http_call: crate::codebase::config::HttpCallOptions {
+            backend_prefixes: vec!["/api/".to_string()],
+        },
+    };
+    let invalid_glob_options = GraphConfigOptions {
+        route: crate::codebase::config::RouteOptions::default(),
+        queue: crate::codebase::config::QueueOptions::default(),
+        http_route: crate::codebase::config::HttpRouteOptions {
+            backend_pattern: "[".to_string(),
+            register_object: "app".to_string(),
+        },
+        http_call: crate::codebase::config::HttpCallOptions {
+            backend_prefixes: vec!["/api/".to_string()],
+        },
+    };
+    let tsconfig =
+        crate::codebase::ts_resolver::load_tsconfig(&explicit.join("tsconfig.json")).unwrap();
+    assert!(collect_http_call_edges(
+        &explicit,
+        &tsconfig,
+        None,
+        &[],
+        &[],
+        &[],
+        Some(&missing_register_options),
+    )
+    .is_empty());
+    assert!(collect_http_call_edges(
+        &explicit,
+        &tsconfig,
+        None,
+        &[],
+        &[],
+        &[],
+        Some(&invalid_glob_options),
+    )
+    .is_empty());
 }

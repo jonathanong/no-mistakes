@@ -154,6 +154,8 @@ fn fixture_walks_statement_and_expression_shapes() {
         "/api/for-test",
         "/api/for-update",
         "/api/for-body",
+        "/api/for-call-init",
+        "/api/for-call-body",
         "/api/for-in-right",
         "/api/for-in",
         "/api/for-of-right",

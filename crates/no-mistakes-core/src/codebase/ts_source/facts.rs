@@ -1,5 +1,5 @@
 use crate::codebase::dependencies::extract::{
-    extract_imports_from_program, is_indexable, is_tsx_file, ExtractedImport,
+    extract_imports_from_program, is_indexable, ExtractedImport,
 };
 use crate::codebase::ts_http_calls::HttpCall;
 use crate::codebase::ts_process_spawn::SpawnEdge;
@@ -120,13 +120,7 @@ fn collect_file_facts(
 ) -> Option<TsFileFacts> {
     let source = std::fs::read_to_string(path).ok()?;
     let allocator = Allocator::default();
-    let source_type = SourceType::from_path(path).unwrap_or_else(|_| {
-        if is_tsx_file(path) {
-            SourceType::tsx()
-        } else {
-            SourceType::ts()
-        }
-    });
+    let source_type = SourceType::from_path(path).unwrap_or_else(|_| SourceType::ts());
     let parsed = Parser::new(&allocator, &source, source_type).parse();
     let imports = if plan.imports {
         extract_imports_from_program(&parsed.program)

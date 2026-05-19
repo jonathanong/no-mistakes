@@ -160,6 +160,26 @@ fn unscoped_domain_fact_context_does_not_collect_config_scoped_facts() {
 }
 
 #[test]
+fn queue_factory_context_requires_specifier_and_function_even_when_glob_matches() {
+    let ts = fixture("imports.ts");
+    let mut builder = globset::GlobSetBuilder::new();
+    builder.add(globset::Glob::new("*.ts").unwrap());
+    let mut context = TsFactContext::new(ts.parent().unwrap());
+    context.queue_factory_glob = Some(builder.build().unwrap());
+    let facts = collect_ts_facts_with_context(
+        std::slice::from_ref(&ts),
+        TsFactPlan {
+            queue_factory: true,
+            ..TsFactPlan::default()
+        },
+        &context,
+    );
+
+    assert!(facts[&ts].queue_create_line.is_none());
+    assert!(facts[&ts].queue_name.is_none());
+}
+
+#[test]
 fn collect_ts_facts_skips_non_indexable_and_unreadable_files() {
     let ts = fixture("imports.ts");
     let txt = fixture("plain.txt");

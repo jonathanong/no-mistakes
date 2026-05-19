@@ -33,6 +33,10 @@ for (let item = fetch("/api/for-init"); fetch("/api/for-test"); fetch("/api/for-
   fetch("/api/for-body");
 }
 
+for (fetch("/api/for-call-init"); ready; ready = false) {
+  fetch("/api/for-call-body");
+}
+
 for (const key in fetch("/api/for-in-right")) {
   fetch("/api/for-in");
 }
