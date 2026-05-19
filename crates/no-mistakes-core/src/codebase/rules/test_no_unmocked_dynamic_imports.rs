@@ -31,10 +31,10 @@ pub fn check(
     let files = discover_files(root, &config.filesystem.skip_directories);
     let tsconfig = resolve_tsconfig(root, tsconfig_path)?;
     let resolver = ImportResolver::new(&tsconfig);
-    let graph = DepGraph::build_with_plan(root, &tsconfig, GraphBuildPlan::imports_and_workspace())?;
+    let graph =
+        DepGraph::build_with_plan(root, &tsconfig, GraphBuildPlan::imports_and_workspace())?;
     let manual_mocks = manual_mocks::discover(root, &config.filesystem.skip_directories);
-    let dependency_cache: Mutex<HashMap<PathBuf, Arc<Vec<PathBuf>>>> =
-        Mutex::new(HashMap::new());
+    let dependency_cache: Mutex<HashMap<PathBuf, Arc<Vec<PathBuf>>>> = Mutex::new(HashMap::new());
     let mut findings = Vec::new();
 
     for file in matching_test_files(root, &files, config)? {

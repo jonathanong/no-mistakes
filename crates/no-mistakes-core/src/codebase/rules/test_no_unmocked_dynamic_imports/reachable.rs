@@ -29,9 +29,10 @@ pub(super) fn check(
                 if file_facts.parse_error.is_some() {
                     continue;
                 }
-                let (Some(source), Some(facts)) =
-                    (file_facts.source.as_deref(), file_facts.dynamic_imports.as_ref())
-                else {
+                let (Some(source), Some(facts)) = (
+                    file_facts.source.as_deref(),
+                    file_facts.dynamic_imports.as_ref(),
+                ) else {
                     continue;
                 };
                 if has_disable_file_comment(source, RULE_ID) {

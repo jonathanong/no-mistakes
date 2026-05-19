@@ -30,8 +30,7 @@ pub fn check_with_facts(
         &ts_facts,
     );
     let manual_mocks = manual_mocks::discover(root, &config.filesystem.skip_directories);
-    let dependency_cache: Mutex<HashMap<PathBuf, Arc<Vec<PathBuf>>>> =
-        Mutex::new(HashMap::new());
+    let dependency_cache: Mutex<HashMap<PathBuf, Arc<Vec<PathBuf>>>> = Mutex::new(HashMap::new());
 
     let per_test: Vec<Vec<RuleFinding>> = matching_test_files(root, &files, config)?
         .into_par_iter()
@@ -52,8 +51,14 @@ pub fn check_with_facts(
                 anyhow::bail!("missing dynamic import facts for {}", file.display());
             };
             let mut mocks = manual_mocks.clone();
-            mocks.extend(setup_mocks_with_facts(root, config, &file, &resolver, shared)?);
-            mocks.extend(resolve_mock_specifiers(&facts.mock_specifiers, &file, &resolver));
+            mocks.extend(setup_mocks_with_facts(
+                root, config, &file, &resolver, shared,
+            )?);
+            mocks.extend(resolve_mock_specifiers(
+                &facts.mock_specifiers,
+                &file,
+                &resolver,
+            ));
             let mut local_findings = Vec::new();
             {
                 let mut check_context = DynamicCheckContext {

@@ -37,7 +37,12 @@ pub(super) fn check_dynamic_import(ctx: &mut DynamicCheckContext<'_>, import: as
     if ctx.mocks.contains(&target) {
         return;
     }
-    let cache_hit = ctx.dependency_cache.lock().unwrap().get(&target).map(Arc::clone);
+    let cache_hit = ctx
+        .dependency_cache
+        .lock()
+        .unwrap()
+        .get(&target)
+        .map(Arc::clone);
     let deps = match cache_hit {
         Some(d) => d,
         None => {
