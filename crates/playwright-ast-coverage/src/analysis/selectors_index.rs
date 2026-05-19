@@ -74,20 +74,12 @@ impl<'a> SelectorIndex<'a> {
             return matches;
         }
 
-        if !self
-            .by_attribute
-            .contains_key(&playwright_selector.attribute)
-        {
-            return matches;
-        }
-        let attribute_targets = &self.by_attribute[&playwright_selector.attribute];
-        let mut index = 0;
-        while index < attribute_targets.len() {
-            let target = attribute_targets[index];
-            if target.selector.matches_playwright(playwright_selector) {
-                matches.push(target);
+        if let Some(attribute_targets) = self.by_attribute.get(&playwright_selector.attribute) {
+            for target in attribute_targets {
+                if target.selector.matches_playwright(playwright_selector) {
+                    matches.push(target);
+                }
             }
-            index += 1;
         }
         matches
     }
