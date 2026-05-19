@@ -143,7 +143,7 @@ Parallelism is expected at every independent layer:
 2. Edge producers use `par_iter` or `into_par_iter` when each file can be
    analyzed independently.
 3. Top-level domain checks run concurrently when they consume shared facts.
-4. Traversal precomputation can run per root when roots are independent.
+4. Traversal pre-computation can run per root when roots are independent.
 5. Expensive caches must be concurrent or thread-local plus merged.
 
 The CLI initializes the global rayon pool from `--jobs`,
