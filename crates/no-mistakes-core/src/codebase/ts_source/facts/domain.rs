@@ -42,13 +42,9 @@ impl TsFactContext {
         pattern: String,
         glob: GlobSet,
     ) {
-        if self
-            .backend_route_extractors
-            .iter()
-            .any(|extractor| {
-                extractor.register_object == register_object && extractor.pattern == pattern
-            })
-        {
+        if self.backend_route_extractors.iter().any(|extractor| {
+            extractor.register_object == register_object && extractor.pattern == pattern
+        }) {
             return;
         }
         self.backend_route_extractors.push(BackendRouteExtractor {

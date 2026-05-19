@@ -181,12 +181,14 @@ fn route_and_http_fact_context_keep_separate_backend_matchers() {
     assert_eq!(context.backend_route_extractors.len(), 2);
 
     let facts = collect_ts_facts_with_context(&all_files, plan.ts_fact_plan(), &context);
-    assert!(facts[&route_def].backend_routes.iter().any(|route| {
-        route.register_object == "routeApp" && route.route == "/route/users/:id"
-    }));
-    assert!(facts[&http_def].backend_routes.iter().any(|route| {
-        route.register_object == "httpApp" && route.route == "/http/users/:id"
-    }));
+    assert!(facts[&route_def]
+        .backend_routes
+        .iter()
+        .any(|route| { route.register_object == "routeApp" && route.route == "/route/users/:id" }));
+    assert!(facts[&http_def]
+        .backend_routes
+        .iter()
+        .any(|route| { route.register_object == "httpApp" && route.route == "/http/users/:id" }));
     assert!(facts[&route_def]
         .backend_routes
         .iter()
