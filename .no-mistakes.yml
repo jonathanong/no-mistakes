@@ -25,6 +25,8 @@ rules:
       - crates/no-mistakes-core/src/codebase/ts_routes/refs.rs
   rust-no-inline-tests:
     enabled: true
+    excludes:
+      - fixtures/
   agents-md-max-size:
     enabled: true
     maxLines: 200

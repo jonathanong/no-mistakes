@@ -55,12 +55,17 @@ pub(crate) fn check_with_files(
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
     let opts = parse_opts(config);
+    let roots = opts
+        .roots
+        .clone()
+        .unwrap_or_else(|| vec![root.to_path_buf()]);
     let files: Vec<PathBuf> = all_files
         .iter()
         .filter(|p| {
-            p.extension()
-                .and_then(|e| e.to_str())
-                .is_some_and(|e| e == "rs")
+            roots.iter().any(|r| p.starts_with(r))
+                && p.extension()
+                    .and_then(|e| e.to_str())
+                    .is_some_and(|e| e == "rs")
                 && !is_excluded(root, p, &opts.excludes)
                 && !super::rust_max_lines_per_file::is_test_file(root, p)
         })

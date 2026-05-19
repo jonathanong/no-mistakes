@@ -54,6 +54,9 @@ jobs:
       - name: Run Oxlint
         run: npm run lint:js
 
+      - name: Run no-mistakes check
+        run: cargo run -p no-mistakes --quiet -- check
+
       - name: Run CSpell
         run: npm run lint:spell
 

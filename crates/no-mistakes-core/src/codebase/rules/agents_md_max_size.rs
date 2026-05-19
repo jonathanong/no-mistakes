@@ -43,15 +43,18 @@ pub(crate) fn check_with_files(
 ) -> Result<Vec<RuleFinding>> {
     let opts = parse_opts(config);
     let filenames = filenames_from_opts(&opts);
-    let files: Vec<&PathBuf> = all_files
+    let roots = roots_from_opts(&opts, root);
+    let files: Vec<PathBuf> = all_files
         .iter()
         .filter(|p| {
-            p.file_name()
-                .and_then(|n| n.to_str())
-                .is_some_and(|n| filenames.contains(&n))
+            roots.iter().any(|r| p.starts_with(r))
+                && p.file_name()
+                    .and_then(|n| n.to_str())
+                    .is_some_and(|n| filenames.contains(&n))
         })
+        .cloned()
         .collect();
-    scan(root, &opts, &files.into_iter().cloned().collect::<Vec<_>>())
+    scan(root, &opts, &files)
 }
 
 fn parse_opts(config: &NoMistakesConfig) -> Options {
