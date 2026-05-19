@@ -50,6 +50,7 @@ fn graph_collectors_cover_malformed_and_invalid_config_branches() {
         &resolver,
         &files,
         None,
+        malformed_options.as_ref(),
         &mut forward,
         &mut reverse,
     );
@@ -58,10 +59,19 @@ fn graph_collectors_cover_malformed_and_invalid_config_branches() {
         &resolver,
         &files,
         None,
+        invalid_options.as_ref(),
         &mut forward,
         &mut reverse,
     );
-    add_queue_edges(&empty, &resolver, &files, None, &mut forward, &mut reverse);
+    add_queue_edges(
+        &empty,
+        &resolver,
+        &files,
+        None,
+        empty_options.as_ref(),
+        &mut forward,
+        &mut reverse,
+    );
     assert!(forward.is_empty());
 
     let sources = vec![(files[0].clone(), "fetch('/api/users')".to_string())];
@@ -149,4 +159,41 @@ fn route_collectors_cover_configured_prefixes_and_scan_globs() {
             && from.as_file() == Some(client.as_path())
             && to.as_file() == Some(route.as_path())
     }));
+}
+
+#[test]
+fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
+    let empty = crate::codebase::ts_resolver::normalize_path(&fixture("graph-empty-route-config"));
+    let empty_options = graph_config_options(&empty).unwrap();
+    assert!(resolved_backend_prefixes(&empty_options).is_empty());
+    assert!(route_backend_prefixes(&empty_options).is_empty());
+
+    let plan = GraphBuildPlan {
+        routes: true,
+        queues: true,
+        http: true,
+        ..GraphBuildPlan::default()
+    };
+    let context = ts_fact_context_from_options(&empty, plan, Some(&empty_options));
+    assert!(context.backend_route_glob.is_none());
+    assert!(context.queue_factory_glob.is_none());
+    assert!(context.http_prefixes.is_empty());
+
+    assert!(compile_graph_glob("").is_none());
+    assert!(compile_graph_glob("[").is_none());
+    assert!(compile_graph_glob("backend/**/*.mts")
+        .expect("valid graph glob should compile")
+        .is_match(Path::new("backend/api/users.mts")));
+
+    let explicit =
+        crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
+    let explicit_options = graph_config_options(&explicit).unwrap();
+    assert_eq!(
+        resolved_backend_prefixes(&explicit_options),
+        vec!["/api/".to_string()]
+    );
+    assert_eq!(
+        route_backend_prefixes(&explicit_options),
+        vec!["/api/".to_string()]
+    );
 }

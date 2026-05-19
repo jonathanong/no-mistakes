@@ -360,6 +360,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
         &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
         &[],
         None,
+        None,
         &mut forward,
         &mut reverse,
     );

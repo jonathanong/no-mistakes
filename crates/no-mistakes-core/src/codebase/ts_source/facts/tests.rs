@@ -62,6 +62,72 @@ fn plan_domain_fact_detection_tracks_domain_flags() {
 }
 
 #[test]
+fn plan_empty_detection_tracks_all_flags() {
+    assert!(TsFactPlan::default().is_empty());
+
+    for plan in [
+        TsFactPlan {
+            imports: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
+            symbols: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
+            source: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
+            route_refs: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
+            backend_routes: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
+            queue_usage: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
+            queue_factory: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
+            http_calls: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
+            process_spawns: true,
+            ..TsFactPlan::default()
+        },
+    ] {
+        assert!(!plan.is_empty());
+    }
+}
+
+#[test]
+fn unscoped_domain_fact_context_does_not_collect_config_scoped_facts() {
+    let ts = fixture("imports.ts");
+    let context = TsFactContext::new(ts.parent().unwrap());
+    let facts = collect_ts_facts_with_context(
+        std::slice::from_ref(&ts),
+        TsFactPlan {
+            backend_routes: true,
+            queue_factory: true,
+            ..TsFactPlan::default()
+        },
+        &context,
+    );
+    let file_facts = &facts[&ts];
+
+    assert!(file_facts.backend_routes.is_empty());
+    assert!(file_facts.queue_create_line.is_none());
+    assert!(file_facts.queue_name.is_none());
+}
+
+#[test]
 fn collect_ts_facts_skips_non_indexable_and_unreadable_files() {
     let ts = fixture("imports.ts");
     let txt = fixture("plain.txt");

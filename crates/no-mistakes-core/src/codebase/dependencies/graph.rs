@@ -301,8 +301,12 @@ fn resolved_backend_prefixes(options: &GraphConfigOptions) -> Vec<String> {
     if !options.http_call.backend_prefixes.is_empty() {
         options.http_call.backend_prefixes.clone()
     } else {
-        options.route.backend_prefixes.clone()
+        route_backend_prefixes(options)
     }
+}
+
+fn route_backend_prefixes(options: &GraphConfigOptions) -> Vec<String> {
+    options.route.backend_prefixes.clone()
 }
 
 fn add_edge(map: &mut EdgeMap, from: NodeId, to: NodeId, kind: EdgeKind) {
@@ -455,7 +459,15 @@ impl DepGraph {
         }
 
         if plan.queues {
-            add_queue_edges(root, &resolver, files, facts, &mut forward, &mut reverse);
+            add_queue_edges(
+                root,
+                &resolver,
+                files,
+                facts,
+                config_options.as_ref(),
+                &mut forward,
+                &mut reverse,
+            );
         }
 
         if plan.playwright_routes {
@@ -1420,7 +1432,7 @@ fn collect_route_edges(
     }
     let all_patterns: Vec<String> = pattern_to_files.keys().cloned().collect();
 
-    let backend_prefixes = opts.backend_prefixes.clone();
+    let backend_prefixes = route_backend_prefixes(config_options);
     let backend_exact = opts.backend_exact_paths.clone();
 
     let scan_globs: Vec<String> = if opts.scan_patterns.is_empty() {
@@ -1539,20 +1551,18 @@ fn add_queue_edges(
     resolver: &ImportResolver<'_>,
     files: &[PathBuf],
     facts: Option<&TsFactMap>,
+    config_options: Option<&GraphConfigOptions>,
     forward: &mut EdgeMap,
     reverse: &mut EdgeMap,
 ) {
-    use crate::codebase::config::{load_config, QueueOptions};
     use crate::codebase::ts_queues::factory::{find_create_queue_line, find_queue_name};
     use crate::codebase::ts_queues::usage::extract_queue_usage;
     use globset::GlobBuilder;
 
-    let config = match load_config(root) {
-        Ok(c) => c,
-        Err(_) => return,
+    let Some(config_options) = config_options else {
+        return;
     };
-
-    let opts: QueueOptions = config.rule_options("queue-dashboard-reachability");
+    let opts = &config_options.queue;
 
     if opts.queue_pattern.is_empty() || opts.factory_specifier.is_empty() {
         return;
