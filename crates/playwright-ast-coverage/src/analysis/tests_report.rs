@@ -3,14 +3,23 @@ use crate::fsutil::relative_string;
 use crate::selectors;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
-type TestKey = (String, Option<String>, Vec<String>);
+type TestKey = (Arc<String>, Option<Arc<String>>, Arc<Vec<String>>);
 type TestBuckets = (
     BTreeSet<String>,
     BTreeSet<String>,
     BTreeSet<String>,
     BTreeSet<String>,
 );
+
+fn arc_to_string(arc: Arc<String>) -> String {
+    Arc::try_unwrap(arc).unwrap_or_else(|arc| (*arc).clone())
+}
+
+fn arc_vec_to_vec(arc: Arc<Vec<String>>) -> Vec<String> {
+    Arc::try_unwrap(arc).unwrap_or_else(|arc| (*arc).clone())
+}
 
 pub(crate) fn build_tests_report(edges: &[Edge], files: &[PathBuf], root: &Path) -> TestsReport {
     let filter_files: BTreeSet<String> = files.iter().map(|f| input_file(root, f)).collect();
@@ -29,11 +38,7 @@ pub(crate) fn build_tests_report(edges: &[Edge], files: &[PathBuf], root: &Path)
                 if !filter_files.is_empty() && !filter_files.contains(test_file.as_str()) {
                     continue;
                 }
-                let key: TestKey = (
-                    test_file.to_string(),
-                    test_name.as_ref().map(|n| n.to_string()),
-                    describe_path.to_vec(),
-                );
+                let key: TestKey = (test_file.clone(), test_name.clone(), describe_path.clone());
                 by_test.entry(key).or_default().2.insert(route.to_string());
             }
             Edge::Selector {
@@ -47,11 +52,7 @@ pub(crate) fn build_tests_report(edges: &[Edge], files: &[PathBuf], root: &Path)
                 if !filter_files.is_empty() && !filter_files.contains(test_file.as_str()) {
                     continue;
                 }
-                let key: TestKey = (
-                    test_file.to_string(),
-                    test_name.as_ref().map(|n| n.to_string()),
-                    describe_path.to_vec(),
-                );
+                let key: TestKey = (test_file.clone(), test_name.clone(), describe_path.clone());
                 let entry = by_test.entry(key).or_default();
                 if attribute == selectors::HTML_ID_ATTRIBUTE {
                     entry.1.insert(value.clone());
@@ -70,11 +71,7 @@ pub(crate) fn build_tests_report(edges: &[Edge], files: &[PathBuf], root: &Path)
                 if !filter_files.is_empty() && !filter_files.contains(test_file.as_str()) {
                     continue;
                 }
-                let key: TestKey = (
-                    test_file.to_string(),
-                    test_name.as_ref().map(|n| n.to_string()),
-                    describe_path.to_vec(),
-                );
+                let key: TestKey = (test_file.clone(), test_name.clone(), describe_path.clone());
                 by_test
                     .entry(key)
                     .or_default()
@@ -88,9 +85,9 @@ pub(crate) fn build_tests_report(edges: &[Edge], files: &[PathBuf], root: &Path)
         .into_iter()
         .map(
             |((file, name, describe_path), (test_ids, html_ids, routes, fetch_apis))| TestEntry {
-                file,
-                name,
-                describe_path,
+                file: arc_to_string(file),
+                name: name.map(arc_to_string),
+                describe_path: arc_vec_to_vec(describe_path),
                 test_ids: test_ids.into_iter().collect(),
                 html_ids: html_ids.into_iter().collect(),
                 routes: routes.into_iter().collect(),

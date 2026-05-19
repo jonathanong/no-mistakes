@@ -19,6 +19,9 @@ oxc_span = "0.130.0"
 oxc_syntax = "0.130.0"
 rayon = "1"
 regex = "1"
+# `rc` enables serde support for `Rc`/`Arc` on serialization only.
+# Deserialization of shared pointers produces fresh values and does not preserve
+# pointer identity.
 serde = { version = "1", features = ["derive", "rc"] }
 serde_json = "1"
 serde_yaml = "0.9"
@@ -27,7 +30,6 @@ no-mistakes-core = { path = "../no-mistakes-core", version = "0.3.3" }
 
 [dev-dependencies]
 assert_cmd = "2"
-criterion = "0.8.2"
 predicates = "3"
 
 [lints.rust]

@@ -9,8 +9,14 @@ use std::path::Path;
 use std::sync::Arc;
 
 pub(crate) type FetchKey = (String, String);
-pub(crate) type FetchCoverageEntry =
-    BTreeMap<FetchKey, (BTreeSet<String>, BTreeSet<TestRef>, BTreeSet<String>)>;
+pub(crate) type FetchCoverageEntry = BTreeMap<
+    FetchKey,
+    (
+        BTreeSet<Arc<String>>,
+        BTreeSet<TestRef>,
+        BTreeSet<Arc<String>>,
+    ),
+>;
 
 pub(crate) fn seed_fetch_coverage(fetch_index: &FetchIndex) -> FetchCoverageEntry {
     let mut by_fetch: FetchCoverageEntry = BTreeMap::new();
@@ -24,7 +30,7 @@ pub(crate) fn seed_fetch_coverage(fetch_index: &FetchIndex) -> FetchCoverageEntr
                 .entry(key)
                 .or_insert_with(|| (Default::default(), Default::default(), Default::default()))
                 .2
-                .insert(route_file.clone());
+                .insert(std::sync::Arc::new(route_file.clone()));
         }
     }
     by_fetch
