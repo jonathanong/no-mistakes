@@ -54,6 +54,15 @@ fn matches_path_form_allow_attribute() {
 }
 
 #[test]
+fn normalizes_namespaced_lint_tokens() {
+    let findings = check_fixture("unit/namespaced_allow.rs");
+    assert_eq!(findings.len(), 1);
+    assert!(findings[0]
+        .message
+        .contains("allow(clippy::all,unused_imports)"));
+}
+
+#[test]
 fn invalid_rust_source_returns_no_findings() {
     assert!(check_fixture("unit/invalid.rs").is_empty());
 }

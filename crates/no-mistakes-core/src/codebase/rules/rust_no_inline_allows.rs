@@ -154,7 +154,12 @@ impl<'ast> Visit<'ast> for AllowAttrVisitor {
 
 fn allow_lints(attr: &Attribute) -> String {
     match &attr.meta {
-        Meta::List(list) => list.tokens.to_string(),
+        Meta::List(list) => list
+            .tokens
+            .to_string()
+            .chars()
+            .filter(|c| !c.is_whitespace())
+            .collect(),
         _ => String::new(),
     }
 }
