@@ -27,7 +27,8 @@ pub fn run(args: TraverseArgs, direction: Direction) -> Result<()> {
     let mut timings = crate::codebase::timing::PhaseTimings::start();
     let cwd_early = std::env::current_dir().context("reading current directory")?;
 
-    let (entries, root_strs, root) = collect_and_filter_entries(&args, direction, &cwd_early, &mut timings)?;
+    let (entries, root_strs, root) =
+        collect_and_filter_entries(&args, direction, &cwd_early, &mut timings)?;
 
     let stdout = io::stdout();
     let stdout_is_terminal = stdout.is_terminal();
