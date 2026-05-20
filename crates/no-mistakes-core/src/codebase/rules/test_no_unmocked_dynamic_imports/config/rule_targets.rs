@@ -81,17 +81,21 @@ fn append_test_project_globs(
     includes: &mut Vec<String>,
     excludes: &mut Vec<String>,
 ) -> Result<()> {
-    let Some(project) = projects
+    let mut matched = false;
+    for project in projects
         .iter()
-        .find(|project| project.name.as_deref() == Some(project_name))
-    else {
+        .filter(|project| project.name.as_deref() == Some(project_name))
+    {
+        matched = true;
+        includes.extend(project.include.clone());
+        excludes.extend(project.exclude.clone());
+    }
+    if !matched {
         anyhow::bail!(
             "test-no-unmocked-dynamic-imports references unknown {} project {project_name}",
             framework.as_str()
         );
-    };
-    includes.extend(project.include.clone());
-    excludes.extend(project.exclude.clone());
+    }
     Ok(())
 }
 
