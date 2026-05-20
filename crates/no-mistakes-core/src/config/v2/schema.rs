@@ -194,15 +194,7 @@ impl NoMistakesConfig {
 
     pub fn rule_configured(&self, rule_id: &str) -> bool {
         self.rules.iter().any(|rule| {
-            rule.enabled
-                && rule.rule == rule_id
-                && (rule.scope == Some(RuleScope::Repository)
-                    || rule
-                        .projects
-                        .iter()
-                        .any(|project| self.projects.contains_key(project))
-                    || !rule.tests.vitest.is_empty()
-                    || !rule.tests.playwright.is_empty())
+            rule.enabled && rule.rule == rule_id && self.rule_has_effective_target(rule)
         })
     }
 
@@ -213,4 +205,18 @@ impl NoMistakesConfig {
             .map(RuleDef::rule_options)
             .unwrap_or_default()
     }
+
+    fn rule_has_effective_target(&self, rule: &RuleDef) -> bool {
+        rule.scope == Some(RuleScope::Repository)
+            || rule
+                .projects
+                .iter()
+                .any(|project| self.projects.contains_key(project))
+            || (rule_supports_test_targets(&rule.rule)
+                && (!rule.tests.vitest.is_empty() || !rule.tests.playwright.is_empty()))
+    }
+}
+
+fn rule_supports_test_targets(rule_id: &str) -> bool {
+    rule_id == "test-no-unmocked-dynamic-imports"
 }

@@ -334,6 +334,9 @@ fn rule_configured_requires_an_effective_target() {
 
     let test_target = load_v2_config(&fixture("rule-test-target"), None).unwrap();
     assert!(test_target.rule_configured("test-no-unmocked-dynamic-imports"));
+
+    let non_test_rule = load_v2_config(&fixture("non-test-rule-test-target"), None).unwrap();
+    assert!(!non_test_rule.rule_configured("unique-exports"));
 }
 
 #[test]
