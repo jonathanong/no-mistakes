@@ -7,7 +7,7 @@ const { tmpdir } = require("node:os");
 const { pathToFileURL } = require("node:url");
 
 const { download, fetchText, isRedirectStatus } = require("./install");
-const { request } = require("no-mistakes-core");
+const { request } = require("./install/index");
 
 test("downloads file URLs and fetches text over HTTP redirects", async () => {
   const root = await mkdtemp(join(tmpdir(), "playwright-ast-coverage-download-"));

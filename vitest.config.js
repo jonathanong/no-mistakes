@@ -10,13 +10,14 @@ module.exports = defineConfig({
       "packages/server-ast-routes/scripts/*.test.js",
       "packages/eslint-plugin-playwright-ast-coverage/test/**/*.test.mjs",
       "packages/eslint-plugin-next-to-fetch/test/**/*.test.mjs",
+      "tests/js/**/*.test.js",
     ],
     coverage: {
       provider: "v8",
       include: [
         "packages/*/bin/**/*.js",
         "packages/*/scripts/install.js",
-        "packages/no-mistakes-core/lib/**/*.js",
+        "packages/playwright-ast-coverage/scripts/install/**/*.js",
         "packages/playwright-ast-coverage/bin/**/*.js",
         "packages/playwright-ast-coverage/scripts/install.js",
         "packages/queue-ast-hop/bin/**/*.js",
