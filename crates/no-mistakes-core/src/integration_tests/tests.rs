@@ -278,6 +278,18 @@ fn configured_suites_reject_duplicate_project_names() {
 }
 
 #[test]
+fn configured_suites_support_vitest_commonjs_auto_discovery() {
+    let root = fixture("vitest-cjs-config");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+
+    let suites = config::configured_suites(&root, &config).unwrap();
+
+    assert_eq!(suites.len(), 1);
+    assert_eq!(suites[0].name, "unit.openai");
+    assert_eq!(suites[0].include, vec!["unit/**/*.test.ts"]);
+}
+
+#[test]
 fn analyze_files_covers_import_and_function_shapes() {
     let file = fixture_file("coverage", "src/source.test.ts");
     let missing = fixture_file("coverage", "src/does-not-exist.ts");
