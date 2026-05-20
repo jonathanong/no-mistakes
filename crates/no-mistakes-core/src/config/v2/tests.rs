@@ -271,6 +271,14 @@ fn config_view_server_route_globs_skips_projects_without_routes() {
 }
 
 #[test]
+fn config_view_server_route_globs_skips_empty_projects_in_fixture() {
+    let cfg = load_v2_config(&fixture("server-route-globs-empty-project"), None).unwrap();
+    let view = ConfigView::new(&cfg);
+
+    assert_eq!(view.server_route_globs(), vec!["api/routes/**"]);
+}
+
+#[test]
 fn config_view_playwright_configs() {
     let cfg = load_v2_config(&fixture("multi-project"), None).unwrap();
     let view = ConfigView::new(&cfg);

@@ -9,4 +9,5 @@ mod types;
 mod tests;
 
 pub use load::load_many;
+pub use parse::parse;
 pub use types::{PlaywrightConfig, TestProject};

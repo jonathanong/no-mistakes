@@ -147,28 +147,3 @@ fn package_dependency_names(package_json: &serde_json::Value) -> Vec<String> {
     names.dedup();
     names
 }
-
-#[cfg(test)]
-fn package_name_from_spec(spec: &str) -> &str {
-    if spec.starts_with('@') {
-        // @scope/pkg[/subpath]
-        let after_scope = spec.trim_start_matches('@');
-        let slash_idx = after_scope.find('/').map(|i| i + 1);
-        if let Some(idx) = slash_idx {
-            let after_first_slash = &after_scope[idx..];
-            let end = after_first_slash
-                .find('/')
-                .map(|i| idx + i + 1)
-                .unwrap_or(spec.len());
-            &spec[..end]
-        } else {
-            spec
-        }
-    } else {
-        // pkg[/subpath]
-        match spec.find('/') {
-            Some(idx) => &spec[..idx],
-            None => spec,
-        }
-    }
-}

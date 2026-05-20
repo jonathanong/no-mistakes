@@ -1,21 +1,14 @@
 pub use super::visitor::extract_playwright_url_occurrences_from_program;
 
-#[cfg(test)]
 use crate::{ast, playwright_tests};
-#[cfg(test)]
 use oxc_ast::ast::Program;
-#[cfg(test)]
 use {anyhow::Result, std::path::Path};
-
-#[cfg(test)]
 pub fn extract_playwright_urls(source: &str) -> Vec<String> {
     extract_playwright_url_literals_with_helpers(source, &[])
         .into_iter()
         .filter(|url| url.starts_with('/'))
         .collect()
 }
-
-#[cfg(test)]
 pub fn extract_playwright_url_literals_with_helpers(
     source: &str,
     navigation_helpers: &[String],
@@ -23,8 +16,6 @@ pub fn extract_playwright_url_literals_with_helpers(
     extract_playwright_url_literals_from_path(Path::new("fixture.ts"), source, navigation_helpers)
         .expect("fixture should parse")
 }
-
-#[cfg(test)]
 pub fn extract_playwright_url_literals_from_path(
     path: &Path,
     source: &str,
@@ -34,8 +25,6 @@ pub fn extract_playwright_url_literals_from_path(
         extract_playwright_url_literals_from_program(program, source, navigation_helpers)
     })
 }
-
-#[cfg(test)]
 pub fn extract_playwright_url_occurrences(
     source: &str,
 ) -> Vec<(String, playwright_tests::TestStatus)> {
@@ -47,8 +36,6 @@ pub fn extract_playwright_url_occurrences(
     })
     .expect("fixture should parse")
 }
-
-#[cfg(test)]
 pub fn extract_playwright_url_literals_from_program(
     program: &Program<'_>,
     source: &str,

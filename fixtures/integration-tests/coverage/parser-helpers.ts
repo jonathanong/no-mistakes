@@ -18,6 +18,7 @@ const object = {
   emptyList: [],
   wrappedList: ([`three`]),
   spreadList: ['one', ...extra, , `two`],
+  wrappedSpreadList: (([`four`])),
   nonArray: 1,
   badList: [1],
   nested,

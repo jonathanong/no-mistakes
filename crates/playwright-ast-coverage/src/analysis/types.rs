@@ -1,5 +1,10 @@
 use serde::Serialize;
+use std::path::Path;
 use std::sync::Arc;
+
+use crate::config::Settings;
+use crate::routes::Route;
+use crate::selectors;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -164,6 +169,17 @@ pub(crate) struct TestEntry {
 pub(crate) struct Analysis {
     pub(crate) coverage: CoverageReport,
     pub(crate) edges: EdgeReport,
+}
+
+pub(crate) struct CoverageInputs<'a> {
+    pub(crate) root: &'a Path,
+    pub(crate) routes: &'a [Route],
+    pub(crate) app_selectors: &'a [selectors::AppSelector],
+    pub(crate) app_selector_occurrences: &'a [selectors::AppSelector],
+    pub(crate) edges: &'a [Edge],
+    pub(crate) settings: &'a Settings,
+    pub(crate) unique_selector_policy: UniqueSelectorPolicy,
+    pub(crate) fetch_index: &'a FetchIndex,
 }
 
 #[derive(Clone, Copy, Default)]

@@ -1,6 +1,5 @@
 mod analyze;
 mod cli;
-mod fetch;
 mod pipeline;
 mod report;
 

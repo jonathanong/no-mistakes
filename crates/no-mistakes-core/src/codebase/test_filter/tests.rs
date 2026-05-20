@@ -30,6 +30,16 @@ fn configured_suite_filters_skip_when_project_config_fails_to_load() {
     assert!(filter.suites.is_empty());
 }
 
+#[test]
+fn invalid_project_config_falls_back_to_default_test_matching() {
+    let root = tempfile::tempdir().unwrap();
+    let config = load_config_fixture(&fixture_root(), "missing-vite-config");
+    let filter = TestFileFilter::new(root.path(), &config);
+
+    assert!(filter.is_match_rel("web/example.test.ts"));
+    assert!(!filter.is_match_rel("web/example.ts"));
+}
+
 fn fixture_root() -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/codebase-analysis/test-filter")
 }

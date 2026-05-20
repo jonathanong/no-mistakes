@@ -329,13 +329,13 @@ fn checks_framework_named_exports_outside_nextjs_projects() {
     assert!(scan::package_json_has_next_dependency(
         &next_root.join("package.json")
     ));
-    assert!(scan::file_is_in_nextjs_project(
+    assert!(scan::test_support::file_is_in_nextjs_project(
         &next_root,
         &next_root.join("web/app/users/page.tsx")
     ));
 
     let not_next_root = fixture("unique-exports-not-next-app");
-    assert!(!scan::file_is_in_nextjs_project(
+    assert!(!scan::test_support::file_is_in_nextjs_project(
         &not_next_root,
         Path::new("")
     ));
@@ -424,18 +424,25 @@ fn scan_helpers_cover_filter_and_parse_edges() {
     let filtered = scan::filter_source_files(&files);
     assert_eq!(filtered.len(), 1);
 
-    let sources = scan::collect_source_files(&root, &filtered).unwrap();
+    let sources = scan::test_support::collect_source_files(&root, &filtered).unwrap();
     assert_eq!(sources.len(), 1);
     assert_eq!(sources[0].rel, "src/direct.ts");
 
-    assert!(scan::collect_source_files(&root, &[root.join("src/not-present.ts")]).is_err());
+    assert!(
+        scan::test_support::collect_source_files(&root, &[root.join("src/not-present.ts")])
+            .is_err()
+    );
     let invalid_root = fixture("unique-exports-invalid-source");
-    let error = scan::collect_source_files(&invalid_root, &[invalid_root.join("src/broken.ts")])
-        .unwrap_err();
+    let error = scan::test_support::collect_source_files(
+        &invalid_root,
+        &[invalid_root.join("src/broken.ts")],
+    )
+    .unwrap_err();
     assert!(format!("{error:#}").contains("extracting symbols from"));
 
     let disabled_invalid =
-        scan::collect_source_files(&root, &[root.join("src/disabled-invalid.ts")]).unwrap();
+        scan::test_support::collect_source_files(&root, &[root.join("src/disabled-invalid.ts")])
+            .unwrap();
     assert!(disabled_invalid[0].disabled);
     assert!(disabled_invalid[0].symbols.exports.is_empty());
 
@@ -456,8 +463,9 @@ fn scan_helpers_cover_filter_and_parse_edges() {
 fn defensive_helpers_ignore_missing_targets_and_non_matching_default_exports() {
     let root = fixture("unique-exports-edge-cases");
     let all_files = discover_files(&root, &[]);
-    let files = scan::filter_source_files(&all_files);
-    let source_files = scan::collect_source_files(&root, &files).unwrap();
+    let mut files = scan::filter_source_files(&all_files);
+    files.retain(|file| file.file_name().and_then(|name| name.to_str()) != Some("invalid.ts"));
+    let source_files = scan::test_support::collect_source_files(&root, &files).unwrap();
     let files: HashMap<PathBuf, SourceFile> = source_files
         .into_iter()
         .map(|file| (file.path.clone(), file))

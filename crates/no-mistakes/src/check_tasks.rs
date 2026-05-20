@@ -148,6 +148,7 @@ pub(crate) fn filesystem_rules_configured(config: &NoMistakesConfig) -> bool {
     rule_configured(config, rules::AGENTS_MD_MAX_SIZE)
         || rule_configured(config, rules::RUST_MAX_LINES_PER_FILE)
         || rule_configured(config, rules::RUST_NO_INLINE_TESTS)
+        || rule_configured(config, rules::RUST_NO_INLINE_ALLOWS)
 }
 
 pub(crate) fn unique_exports_configured(config: &NoMistakesConfig) -> bool {

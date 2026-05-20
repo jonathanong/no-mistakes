@@ -1,9 +1,15 @@
 mod common;
 
 use assert_cmd::Command;
-use common::{fixture, has_route_edge};
+use common::fixture;
 use predicates::prelude::*;
 use serde_json::Value;
+
+fn has_route_edge(edges: &[Value], route: &str, url: &str) -> bool {
+    edges
+        .iter()
+        .any(|edge| edge["kind"] == "route" && edge["route"] == route && edge["url"] == url)
+}
 
 #[test]
 fn coverage_json_reports_uncovered_routes() {

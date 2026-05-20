@@ -1,9 +1,9 @@
-use crate::analyze::import_shape::is_runtime_import;
-use crate::analyze::imports::{
+use no_mistakes_core::ast;
+use no_mistakes_core::fetch::import_shape::is_runtime_import;
+use no_mistakes_core::fetch::imports::{
     collect_identifier_references, collect_imports, collect_imports_from_program,
     collect_runtime_imports_from_program,
 };
-use no_mistakes_core::ast;
 use oxc_ast::ast::Statement;
 use std::collections::HashMap;
 use std::fs;

@@ -3,6 +3,7 @@ use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
+use std::path::{Path, PathBuf};
 
 fn config_with_rule(yaml: &str) -> NoMistakesConfig {
     let mut config = NoMistakesConfig::default();
@@ -13,6 +14,17 @@ fn config_with_rule(yaml: &str) -> NoMistakesConfig {
         ..Default::default()
     });
     config
+}
+
+fn fixture(path: &str) -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/rust-no-inline-tests")
+        .join(path)
+}
+
+fn check_fixture(path: &str) -> Vec<RuleFinding> {
+    let path = fixture(path);
+    check_file(&path, path.parent().unwrap())
 }
 
 fn check_source(source: &str) -> Vec<RuleFinding> {
@@ -61,6 +73,35 @@ fn matches_pub_mod() {
 }
 
 #[test]
+fn matches_cfg_test_function() {
+    let src = "#[cfg(test)]\npub fn helper() {}\n";
+    let findings = check_source(src);
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].line, 1);
+    assert!(
+        findings[0].message.contains("inline #[cfg(test)] item"),
+        "{}",
+        findings[0].message
+    );
+}
+
+#[test]
+fn matches_cfg_test_use() {
+    let src = "#[cfg(test)]\nuse std::collections::HashMap;\n";
+    let findings = check_source(src);
+    assert_eq!(findings.len(), 1);
+}
+
+#[test]
+fn matches_cfg_test_impl_item() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/rust-no-inline-tests/fail-associated");
+    let findings = check_file(&root.join("lib.rs"), &root);
+    assert_eq!(findings.len(), 3);
+    assert_eq!(findings[0].line, 4);
+}
+
+#[test]
 fn matches_with_whitespace_in_cfg() {
     let src = "# [ cfg ( test ) ]\nmod tests {}\n";
     let findings = check_source(src);
@@ -69,9 +110,13 @@ fn matches_with_whitespace_in_cfg() {
 
 #[test]
 fn matches_with_extra_attributes() {
-    let src = "#[cfg(test)]\n#[allow(clippy::all)]\nmod tests {\n}\n";
-    let findings = check_source(src);
+    let findings = check_fixture("unit/extra_attrs.rs");
     assert_eq!(findings.len(), 1);
+}
+
+#[test]
+fn ignores_cfg_path_attribute_without_tokens() {
+    assert!(check_fixture("unit/path_cfg.rs").is_empty());
 }
 
 #[test]

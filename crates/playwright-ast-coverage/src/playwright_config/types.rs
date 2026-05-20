@@ -25,7 +25,6 @@ pub(super) struct ParsedOptions {
 }
 
 impl PlaywrightConfig {
-    #[cfg(test)]
     pub fn test_id_attributes(&self) -> Vec<String> {
         let mut attributes: Vec<String> = self
             .projects

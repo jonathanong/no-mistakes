@@ -1,4 +1,4 @@
-use crate::check_parallel::run_domain_checks;
+use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
 use crate::check_tasks::{
     filesystem_rules_configured, queues_configured, unique_exports_configured,
 };
@@ -62,17 +62,18 @@ pub(crate) fn run_all(
     };
     let facts_duration = facts_start.elapsed();
 
-    let (react, queues, rules, integration, codebase, filesystem_rules) = run_domain_checks(
-        &root,
-        &config_path,
-        &tsconfig_path,
-        react_enabled,
-        queues_enabled,
-        unique_exports_enabled,
-        filesystem_rules_enabled,
-        fs_files,
-        &facts,
-    );
+    let (react, queues, rules, integration, codebase, filesystem_rules) =
+        run_domain_checks(DomainCheckInputs {
+            root: &root,
+            config_path: &config_path,
+            tsconfig_path: &tsconfig_path,
+            react_enabled,
+            queues_enabled,
+            unique_exports_enabled,
+            filesystem_rules_enabled,
+            discovered_files: fs_files,
+            facts: &facts,
+        });
 
     let completed = complete_domain_checks((
         react,

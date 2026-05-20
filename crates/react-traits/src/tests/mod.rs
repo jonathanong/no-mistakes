@@ -17,20 +17,6 @@ impl Drop for RunArgsEnvGuard {
     }
 }
 
-impl RunArgsEnvGuard {
-    #[allow(dead_code)]
-    pub(crate) fn release(mut self) -> std::sync::MutexGuard<'static, ()> {
-        const ENV_VAR: &str = "REACT_TRAITS_TEST_ARGS";
-        match self.previous.take() {
-            Some(previous) => std::env::set_var(ENV_VAR, previous),
-            None => std::env::remove_var(ENV_VAR),
-        }
-        let guard = self._guard.take().unwrap();
-        std::mem::forget(self);
-        guard
-    }
-}
-
 pub(crate) fn with_run_args_env(
     next_value: Option<String>,
     existing: Option<String>,

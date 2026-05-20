@@ -1,0 +1,8 @@
+rules:
+  - rule: rust-no-inline-allows
+    scope: repository
+    options:
+      roots:
+        - "__ROOT__"
+      excludes:
+        - generated

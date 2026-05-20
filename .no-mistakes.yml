@@ -9,6 +9,11 @@ rules:
     options:
       excludes:
         - fixtures/
+  - rule: rust-no-inline-allows
+    scope: repository
+    options:
+      excludes:
+        - fixtures/
   - rule: agents-md-max-size
     scope: repository
     options:

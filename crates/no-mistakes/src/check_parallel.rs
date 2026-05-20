@@ -19,18 +19,29 @@ pub(crate) type DomainResults = (
     anyhow::Result<CheckTask<Vec<RuleFinding>>>,
 );
 
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn run_domain_checks(
-    root: &Path,
-    config_path: &Option<PathBuf>,
-    tsconfig_path: &Option<PathBuf>,
-    react_enabled: bool,
-    queues_enabled: bool,
-    unique_exports_enabled: bool,
-    filesystem_rules_enabled: bool,
-    discovered_files: Vec<PathBuf>,
-    facts: &CheckFactMap,
-) -> DomainResults {
+pub(crate) struct DomainCheckInputs<'a> {
+    pub(crate) root: &'a Path,
+    pub(crate) config_path: &'a Option<PathBuf>,
+    pub(crate) tsconfig_path: &'a Option<PathBuf>,
+    pub(crate) react_enabled: bool,
+    pub(crate) queues_enabled: bool,
+    pub(crate) unique_exports_enabled: bool,
+    pub(crate) filesystem_rules_enabled: bool,
+    pub(crate) discovered_files: Vec<PathBuf>,
+    pub(crate) facts: &'a CheckFactMap,
+}
+
+pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults {
+    let root = inputs.root;
+    let config_path = inputs.config_path;
+    let tsconfig_path = inputs.tsconfig_path;
+    let react_enabled = inputs.react_enabled;
+    let queues_enabled = inputs.queues_enabled;
+    let unique_exports_enabled = inputs.unique_exports_enabled;
+    let filesystem_rules_enabled = inputs.filesystem_rules_enabled;
+    let discovered_files = inputs.discovered_files;
+    let facts = inputs.facts;
+
     let ((react, queues), (rules, (integration, (codebase, filesystem_rules)))) = rayon::join(
         || {
             rayon::join(

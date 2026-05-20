@@ -1,5 +1,5 @@
-use crate::fetch::visitor::FetchVisitor;
 use crate::report::types::CacheKind;
+use no_mistakes_core::fetch::visitor::FetchVisitor;
 use oxc_ast_visit::Visit;
 
 #[test]

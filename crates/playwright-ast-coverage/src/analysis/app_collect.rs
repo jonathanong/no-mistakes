@@ -64,15 +64,3 @@ pub(crate) fn collect_selector_source_files(
 
     source_files.into_iter().collect()
 }
-
-#[cfg(test)]
-pub(crate) fn collect_app_selectors(
-    root: &Path,
-    settings: &Settings,
-    selector_regexes: &selectors::SelectorRegexes,
-) -> Result<Vec<selectors::AppSelector>> {
-    let mut app_selectors = collect_app_selector_occurrences(root, settings, selector_regexes)?;
-    app_selectors.sort();
-    app_selectors.dedup();
-    Ok(app_selectors)
-}

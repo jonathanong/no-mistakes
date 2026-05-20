@@ -9,12 +9,10 @@ use crate::react_traits::analyze::jsx_children::collect_jsx_children;
 use crate::react_traits::report::types::{ComponentFacts, ComponentRef, Environment, FetchCall};
 use crate::react_traits::traits;
 use anyhow::Result;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub(crate) struct FileAnalysis {
     pub(crate) components: Vec<ComponentFacts>,
-    #[allow(dead_code)]
-    pub(crate) dependencies: Vec<PathBuf>,
 }
 
 #[cfg(test)]
@@ -35,7 +33,7 @@ pub(crate) fn analyze_program(
 ) -> FileAnalysis {
     let rel_path = relative_string(root, abs_path);
 
-    let (components, dependencies) = {
+    let components = {
         let env = detect_file_environment(program);
         let import_table = build_import_table(abs_path, program);
         let component_defs = extract_components(program);
@@ -96,11 +94,8 @@ pub(crate) fn analyze_program(
             });
         }
 
-        (components, deps)
+        components
     };
 
-    FileAnalysis {
-        components,
-        dependencies,
-    }
+    FileAnalysis { components }
 }

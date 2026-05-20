@@ -36,17 +36,12 @@ pub(crate) struct Cli {
     pub(crate) targets: Vec<String>,
 }
 
-#[cfg(test)]
 fn parse_cli_args() -> Cli {
-    if let Ok(raw_args) = std::env::var("NEXT_TO_FETCH_TEST_ARGS") {
-        Cli::parse_from(raw_args.split('\u{1f}'))
-    } else {
-        Cli::parse()
+    if cfg!(test) {
+        if let Ok(raw_args) = std::env::var("NEXT_TO_FETCH_TEST_ARGS") {
+            return Cli::parse_from(raw_args.split('\u{1f}'));
+        }
     }
-}
-
-#[cfg(not(test))]
-fn parse_cli_args() -> Cli {
     Cli::parse()
 }
 

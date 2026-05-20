@@ -122,10 +122,11 @@ adding it to `.no-mistakes.yml`.
 
 ### Filesystem Rules via `no-mistakes check`
 
-The `rust-max-lines-per-file`, `rust-no-inline-tests`, and
-`agents-md-max-size` checks are built into `no-mistakes check` and run when
-configured in `.no-mistakes.yml`. See the Global Check section above and the
-configuration reference for available options.
+The `rust-max-lines-per-file`, `rust-no-inline-tests`,
+`rust-no-inline-allows`, and `agents-md-max-size` checks are built into
+`no-mistakes check` and run when configured in `.no-mistakes.yml`. See the
+Global Check section above and the configuration reference for available
+options.
 
 ## `playwright-ast-coverage`
 

@@ -1,2 +1,24 @@
+fn package_name_from_spec(spec: &str) -> &str {
+    if spec.starts_with('@') {
+        let after_scope = spec.trim_start_matches('@');
+        let slash_idx = after_scope.find('/').map(|i| i + 1);
+        if let Some(idx) = slash_idx {
+            let after_first_slash = &after_scope[idx..];
+            let end = after_first_slash
+                .find('/')
+                .map(|i| idx + i + 1)
+                .unwrap_or(spec.len());
+            &spec[..end]
+        } else {
+            spec
+        }
+    } else {
+        match spec.find('/') {
+            Some(idx) => &spec[..idx],
+            None => spec,
+        }
+    }
+}
+
 include!("core.rs");
 include!("extra_cases.rs");

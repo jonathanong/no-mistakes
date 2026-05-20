@@ -2,8 +2,8 @@ use super::helpers::{
     first_call_expression, first_statement_assignment_call_expression,
     object_argument_from_call_expression,
 };
-use crate::fetch::cache_opts::{extract_fetch_cache_options, infer_cached_wrapper_name};
 use crate::report::types::CacheKind;
+use no_mistakes_core::fetch::cache_opts::{extract_fetch_cache_options, infer_cached_wrapper_name};
 
 #[test]
 fn test_extract_fetch_cache_options_cache_non_string() {

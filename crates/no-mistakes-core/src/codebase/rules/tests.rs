@@ -369,7 +369,10 @@ fn run_check_with_facts_reports_test_file_parse_error() {
 fn filesystem_rule_ids_are_distinct() {
     assert_ne!(AGENTS_MD_MAX_SIZE, RUST_MAX_LINES_PER_FILE);
     assert_ne!(RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_TESTS);
+    assert_ne!(RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS);
     assert_ne!(AGENTS_MD_MAX_SIZE, RUST_NO_INLINE_TESTS);
+    assert_ne!(AGENTS_MD_MAX_SIZE, RUST_NO_INLINE_ALLOWS);
+    assert_ne!(RUST_NO_INLINE_TESTS, RUST_NO_INLINE_ALLOWS);
 }
 
 #[test]
@@ -404,6 +407,15 @@ fn run_filesystem_rules_executes_enabled_rust_no_inline_tests_rule() {
     let findings = run_filesystem_rules(&root, Some(&config)).unwrap();
     assert!(!findings.is_empty());
     assert!(findings.iter().any(|f| f.rule == RUST_NO_INLINE_TESTS));
+}
+
+#[test]
+fn run_filesystem_rules_executes_enabled_rust_no_inline_allows_rule() {
+    let root = fixture("rules/rust-no-inline-allows/fail");
+    let config = root.join(".no-mistakes.yml");
+    let findings = run_filesystem_rules(&root, Some(&config)).unwrap();
+    assert!(!findings.is_empty());
+    assert!(findings.iter().any(|f| f.rule == RUST_NO_INLINE_ALLOWS));
 }
 
 #[test]

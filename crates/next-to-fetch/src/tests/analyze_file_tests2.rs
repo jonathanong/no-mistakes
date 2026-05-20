@@ -1,5 +1,5 @@
-use crate::analyze::file::analyze_file;
 use crate::pipeline::cache::Cache;
+use no_mistakes_core::fetch::file_analysis::analyze_file;
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use tempfile::tempdir;

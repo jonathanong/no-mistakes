@@ -1,4 +1,5 @@
-use crate::analysis::coverage::build_coverage;
+use crate::analysis::coverage::build_coverage as build_coverage_report;
+use crate::analysis::types::CoverageInputs;
 use crate::analysis::types::{Edge, FetchIndex, UniqueSelectorPolicy};
 use crate::config::Settings;
 use crate::routes::Route;
@@ -6,6 +7,27 @@ use crate::selectors::{self, AppSelectorValue};
 use no_mistakes_core::fetch::types::{CacheKind, FetchOccurrence, FetchSide};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+
+fn build_coverage(
+    root: &Path,
+    routes: &[Route],
+    app_selectors: &[selectors::AppSelector],
+    edges: &[Edge],
+    settings: &Settings,
+    unique_selector_policy: UniqueSelectorPolicy,
+    fetch_index: &FetchIndex,
+) -> crate::analysis::types::CoverageReport {
+    build_coverage_report(CoverageInputs {
+        root,
+        routes,
+        app_selectors,
+        app_selector_occurrences: app_selectors,
+        edges,
+        settings,
+        unique_selector_policy,
+        fetch_index,
+    })
+}
 
 #[test]
 fn fetch_edges_mark_fetch_apis_covered() {
@@ -42,7 +64,6 @@ fn fetch_edges_mark_fetch_apis_covered() {
     let report = build_coverage(
         root,
         &routes,
-        &[],
         &[],
         &edges,
         &settings,
@@ -121,7 +142,6 @@ fn coverage_sort_uses_file_as_tiebreaker() {
         &routes,
         &[],
         &[],
-        &[],
         &settings,
         UniqueSelectorPolicy::default(),
         &FetchIndex::new(),
@@ -142,7 +162,6 @@ fn selector_coverage_sorts_and_counts_uncovered() {
     let report = build_coverage(
         root,
         &[],
-        &app_selectors,
         &app_selectors,
         &[],
         &settings,
@@ -179,7 +198,6 @@ fn selector_coverage_sort_uses_value_and_file_tiebreakers() {
         root,
         &[],
         &app_selectors,
-        &app_selectors,
         &[],
         &settings,
         UniqueSelectorPolicy::default(),
@@ -212,7 +230,6 @@ fn selector_edges_mark_targets_covered() {
         root,
         &[],
         &app_selectors,
-        &app_selectors,
         &edges,
         &settings,
         UniqueSelectorPolicy::default(),
@@ -241,7 +258,6 @@ fn route_edges_mark_routes_covered() {
     let report = build_coverage(
         root,
         &routes,
-        &[],
         &[],
         &edges,
         &settings,
@@ -292,7 +308,6 @@ fn seed_fetch_coverage_skips_dynamic_and_unsupported() {
     let settings = default_settings(vec![]);
     let report = build_coverage(
         root,
-        &[],
         &[],
         &[],
         &[],
