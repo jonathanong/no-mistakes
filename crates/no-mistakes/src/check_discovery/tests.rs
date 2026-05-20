@@ -29,6 +29,13 @@ fn unique_exports_project_roots_cover_target_variants() {
         },
     );
     config.projects.insert(
+        "marketing".to_string(),
+        Project {
+            type_: Some(ProjectType::Nextjs),
+            ..Default::default()
+        },
+    );
+    config.projects.insert(
         "backend".to_string(),
         Project {
             root: Some("backend".to_string()),
@@ -39,7 +46,11 @@ fn unique_exports_project_roots_cover_target_variants() {
         .projects
         .insert("repo".to_string(), Project::default());
     config.rules.push(unique_exports_rule(vec![
-        "missing", "web", "backend", "repo",
+        "missing",
+        "web",
+        "marketing",
+        "backend",
+        "repo",
     ]));
     config.rules.push(RuleDef {
         rule: no_mistakes_core::codebase::unique_exports::RULE_ID.to_string(),

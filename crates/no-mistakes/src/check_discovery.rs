@@ -24,6 +24,7 @@ pub(crate) fn discover_check_files(
 fn unique_exports_project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
     let rule_id = no_mistakes_core::codebase::unique_exports::RULE_ID;
     let mut roots = Vec::new();
+    let mut inferred_nextjs_root = None;
     for rule in config.rule_applications(rule_id) {
         if rule.applies_to_repository() {
             roots.push(root.to_path_buf());
@@ -32,7 +33,7 @@ fn unique_exports_project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<P
             let Some(project) = config.projects.get(project_name) else {
                 continue;
             };
-            if let Some(project_root) = project_root(root, project) {
+            if let Some(project_root) = project_root(root, project, &mut inferred_nextjs_root) {
                 roots.push(project_root);
             }
         }
@@ -45,36 +46,17 @@ fn unique_exports_project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<P
 fn project_root(
     root: &Path,
     project: &no_mistakes_core::config::v2::schema::Project,
+    inferred_nextjs_root: &mut Option<Option<PathBuf>>,
 ) -> Option<PathBuf> {
     if let Some(project_root) = project.root.as_deref() {
         return Some(root.join(project_root));
     }
     if project.type_ == Some(no_mistakes_core::config::v2::schema::ProjectType::Nextjs) {
-        return inferred_nextjs_root(root);
+        return inferred_nextjs_root
+            .get_or_insert_with(|| no_mistakes_core::codebase::config::infer_nextjs_root(root))
+            .clone();
     }
     Some(root.to_path_buf())
-}
-
-fn inferred_nextjs_root(root: &Path) -> Option<PathBuf> {
-    let mut roots = no_mistakes_core::codebase::ts_source::discover_with_basenames(
-        root,
-        &[],
-        &[
-            "next.config.js",
-            "next.config.mjs",
-            "next.config.ts",
-            "next.config.mts",
-        ],
-    )
-    .into_iter()
-    .filter_map(|path| path.parent().map(Path::to_path_buf))
-    .collect::<Vec<_>>();
-    roots.sort();
-    roots.dedup();
-    match roots.as_slice() {
-        [root] => Some(root.clone()),
-        _ => None,
-    }
 }
 
 #[cfg(test)]

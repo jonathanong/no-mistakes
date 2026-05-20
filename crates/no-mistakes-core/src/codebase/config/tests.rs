@@ -219,12 +219,33 @@ fn project_roots_for_rule_infers_nextjs_root() {
         .join("../../fixtures/config-v2/nextjs-inferred-root");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
 
-    let config = load_codebase_config_with_path(&root, None).unwrap();
+    let mut config = load_codebase_config_with_path(&root, None).unwrap();
+    config.projects.insert(
+        "marketing".to_string(),
+        project::ProjectConfig {
+            type_: Some(crate::config::v2::schema::ProjectType::Nextjs),
+            rules: vec!["unique-exports".to_string()],
+            ..Default::default()
+        },
+    );
 
     assert_eq!(
         config.project_roots_for_rule(&root, "unique-exports"),
         vec![root.join("web")]
     );
+}
+
+#[test]
+fn project_config_effective_root_infers_nextjs_root() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/config-v2/nextjs-inferred-root");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let project = project::ProjectConfig {
+        type_: Some(crate::config::v2::schema::ProjectType::Nextjs),
+        ..Default::default()
+    };
+
+    assert_eq!(project.effective_root(&root), Some(root.join("web")));
 }
 
 #[test]

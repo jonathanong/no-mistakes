@@ -10,7 +10,7 @@ mod conversion;
 mod discovery;
 mod project;
 
-pub use project::ProjectConfig;
+pub use project::{infer_nextjs_root, ProjectConfig};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
