@@ -73,8 +73,8 @@ fn suites_for_framework(
             name: policy_suite_name(project_name, policy),
             include: project.include.clone(),
             exclude: project.exclude.clone(),
-            policy: EffectiveIntegrationPolicy::Suites {
-                suites: allowed_integrations,
+            policy: EffectiveIntegrationPolicy::AllowedIntegrations {
+                integrations: allowed_integrations,
             },
         });
     }

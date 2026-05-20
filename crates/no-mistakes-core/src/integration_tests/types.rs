@@ -44,7 +44,7 @@ pub(super) struct Suite {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum EffectiveIntegrationPolicy {
-    Suites { suites: Vec<String> },
+    AllowedIntegrations { integrations: Vec<String> },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -9,9 +9,9 @@ pub(super) fn enforce_policy(
     integrations: &[String],
 ) -> Vec<IntegrationFinding> {
     match &suite.policy {
-        EffectiveIntegrationPolicy::Suites { suites } => {
-            enforce_suite_policy(root, suite, test, integrations, suites)
-        }
+        EffectiveIntegrationPolicy::AllowedIntegrations {
+            integrations: allowed_integrations,
+        } => enforce_suite_policy(root, suite, test, integrations, allowed_integrations),
     }
 }
 
@@ -20,11 +20,11 @@ fn enforce_suite_policy(
     suite: &Suite,
     test: &TestCase,
     integrations: &[String],
-    suites: &[String],
+    allowed_integrations: &[String],
 ) -> Vec<IntegrationFinding> {
     let mut findings = Vec::new();
     for name in integrations {
-        if suites.contains(name) {
+        if allowed_integrations.contains(name) {
             continue;
         }
         findings.push(finding(
@@ -36,7 +36,7 @@ fn enforce_suite_policy(
                 "{} suite {} allows only integration={}; found integration={name}",
                 suite.framework.as_str(),
                 suite.name,
-                suites.join(",")
+                allowed_integrations.join(",")
             ),
         ));
     }

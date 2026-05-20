@@ -338,6 +338,7 @@ fn config_view_project_rules() {
 fn config_view_unknown_project_targets_are_empty() {
     let cfg = load_v2_config(&fixture("unknown-rule-project-target"), None).unwrap();
     let view = ConfigView::new(&cfg);
+    assert!(view.rule("unique-exports").is_none());
     assert!(view.project_rules("missing").is_empty());
     assert!(view.enabled_rules_for("missing").is_empty());
 }
