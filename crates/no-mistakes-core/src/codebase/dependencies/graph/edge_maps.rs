@@ -2,10 +2,6 @@ fn add_edge(map: &mut EdgeMap, from: NodeId, to: NodeId, kind: EdgeKind) {
     map.entry(from).or_default().push((to, kind));
 }
 
-fn add_file_edge(map: &mut EdgeMap, from: PathBuf, to: PathBuf, kind: EdgeKind) {
-    add_edge(map, NodeId::File(from), NodeId::File(to), kind);
-}
-
 fn normalize_nodes(nodes: &[NodeId]) -> Vec<NodeId> {
     nodes
         .iter()

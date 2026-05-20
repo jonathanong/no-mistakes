@@ -47,11 +47,7 @@ pub(crate) fn test_globs(framework: &str) -> Vec<String> {
 }
 
 fn globs_to_strings(globs: &[&str]) -> Vec<String> {
-    let mut strings = Vec::with_capacity(globs.len());
-    for glob in globs {
-        strings.push((*glob).to_string());
-    }
-    strings
+    globs.iter().map(|&s| s.to_string()).collect()
 }
 
 pub enum Direction {

@@ -30,19 +30,6 @@ fn collect_test_edges(files: &[PathBuf]) -> Vec<Edge> {
                         ));
                     }
                 }
-            } else {
-                for variant in &test_variants {
-                    for ext in &test_exts {
-                        let test_path = dir.join(format!("{stem}.{variant}.{ext}"));
-                        if file_set.contains(&test_path) {
-                            edges.push((
-                                NodeId::File(test_path),
-                                NodeId::File(path.clone()),
-                                EdgeKind::TestOf,
-                            ));
-                        }
-                    }
-                }
             }
             edges
         })

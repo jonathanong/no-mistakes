@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use super::discover::{find_config_root, load_v2_config};
-use super::schema::{NoMistakesConfig, ProjectType, RuleDef, StringOrList};
+use super::schema::{NoMistakesConfig, Project, ProjectType, RuleDef, StringOrList};
 use super::view::ConfigView;
 
 fn fixture(sub: &str) -> std::path::PathBuf {
@@ -252,6 +252,22 @@ fn config_view_server_route_globs_are_project_root_relative() {
             "backend/legacy/**".to_string()
         ]
     );
+}
+
+#[test]
+fn config_view_server_route_globs_skips_projects_without_routes() {
+    let mut cfg = NoMistakesConfig::default();
+    cfg.projects.insert(
+        "backend".to_string(),
+        Project {
+            type_: Some(ProjectType::Server),
+            root: Some("backend".to_string()),
+            ..Default::default()
+        },
+    );
+    let view = ConfigView::new(&cfg);
+
+    assert!(view.server_route_globs().is_empty());
 }
 
 #[test]

@@ -162,9 +162,11 @@ impl DepGraph {
         // Sort adjacency lists for deterministic BFS output.
         for adj in forward.values_mut() {
             adj.sort_by_key(|(n, k)| (node_sort_key(n), *k as u8));
+            adj.dedup();
         }
         for adj in reverse.values_mut() {
             adj.sort_by_key(|(n, k)| (node_sort_key(n), *k as u8));
+            adj.dedup();
         }
 
         Self {

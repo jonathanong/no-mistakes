@@ -85,7 +85,7 @@ type EdgeMap = HashMap<NodeId, Vec<(NodeId, EdgeKind)>>;
 // An edge in both directions: (from, to, kind).
 type Edge = (NodeId, NodeId, EdgeKind);
 
-type ParsedImports = Vec<(PathBuf, Vec<ExtractedImport>)>;
+type ParsedImports<'a> = Vec<(&'a PathBuf, &'a [ExtractedImport])>;
 
 /// Selects which edge producers run while building a dependency graph.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -182,4 +182,3 @@ fn effective_ts_fact_plan(
     fact_plan.queue_factory &= queue_configured;
     fact_plan
 }
-

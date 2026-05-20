@@ -7,8 +7,7 @@ fn normalize_discovery_path(path: &Path) -> PathBuf {
     }
 }
 
-fn is_under_skipped_dir(root: &Path, path: &Path, extra_skip: &[String]) -> bool {
-    let extra_skip: HashSet<&str> = extra_skip.iter().map(String::as_str).collect();
+fn is_under_skipped_dir(root: &Path, path: &Path, extra_skip: &HashSet<&str>) -> bool {
     path.strip_prefix(root).ok().is_some_and(|rel| {
         rel.components().any(|component| {
             component
@@ -19,28 +18,27 @@ fn is_under_skipped_dir(root: &Path, path: &Path, extra_skip: &[String]) -> bool
     })
 }
 
-fn git_ls_files(root: &Path, others: bool) -> Option<Vec<String>> {
+fn git_ls_files(root: &Path) -> Option<Vec<String>> {
     let mut cmd = Command::new("git");
     cmd.arg("-C").arg(root).arg("ls-files");
     cmd.env_remove("GIT_DIR")
         .env_remove("GIT_COMMON_DIR")
         .env_remove("GIT_WORK_TREE")
         .env_remove("GIT_INDEX_FILE");
-    if others {
-        cmd.arg("--others").arg("--exclude-standard");
-    }
+    cmd.arg("--cached").arg("--others").arg("--exclude-standard");
     let out = cmd.output().ok()?;
     if !out.status.success() {
         return None;
     }
     let stdout = String::from_utf8(out.stdout).ok()?;
-    Some(
-        stdout
-            .lines()
-            .filter(|line| !line.is_empty())
-            .map(str::to_string)
-            .collect(),
-    )
+    let mut files: Vec<String> = stdout
+        .lines()
+        .filter(|line| !line.is_empty())
+        .map(str::to_string)
+        .collect();
+    files.sort();
+    files.dedup();
+    Some(files)
 }
 
 pub fn byte_offset_to_line(source: &str, byte_offset: usize) -> u32 {

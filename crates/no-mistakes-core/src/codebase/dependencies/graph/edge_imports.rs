@@ -1,16 +1,19 @@
-fn collect_parsed_imports_from_facts(files: &[PathBuf], facts: &TsFactMap) -> ParsedImports {
+fn collect_parsed_imports_from_facts<'a>(
+    files: &'a [PathBuf],
+    facts: &'a TsFactMap,
+) -> ParsedImports<'a> {
     files
         .par_iter()
         .filter_map(|path| {
             facts
                 .get(path)
-                .map(|file_facts| (path.clone(), file_facts.imports.clone()))
+                .map(|file_facts| (path, file_facts.imports.as_slice()))
         })
         .collect()
 }
 
 fn collect_import_edges(
-    parsed_imports: &ParsedImports,
+    parsed_imports: &ParsedImports<'_>,
     resolver: &ImportResolver<'_>,
     graph_files: &GraphFiles,
 ) -> Vec<Edge> {
@@ -25,7 +28,7 @@ fn collect_import_edges(
                             return None;
                         }
                         let kind = edge_kind_for_import(imp);
-                        Some((NodeId::File(path.clone()), NodeId::File(target), kind))
+                        Some((NodeId::File((*path).clone()), NodeId::File(target), kind))
                     })
                 })
                 .collect::<Vec<_>>()
@@ -34,7 +37,7 @@ fn collect_import_edges(
 }
 
 fn collect_workspace_edges(
-    parsed_imports: &ParsedImports,
+    parsed_imports: &ParsedImports<'_>,
     _resolver: &ImportResolver<'_>,
     workspace: &crate::codebase::workspaces::WorkspaceMap,
     graph_files: &GraphFiles,
@@ -58,7 +61,7 @@ fn collect_workspace_edges(
                             return None;
                         }
                         Some((
-                            NodeId::File(path.clone()),
+                            NodeId::File((*path).clone()),
                             NodeId::File(entry),
                             EdgeKind::WorkspaceImport,
                         ))
@@ -169,4 +172,3 @@ fn package_name_from_spec(spec: &str) -> &str {
         }
     }
 }
-

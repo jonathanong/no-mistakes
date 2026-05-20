@@ -6,52 +6,53 @@ fn add_ci_edges(root: &Path, all_files: &[PathBuf], forward: &mut EdgeMap, rever
 
     // Walk .github/workflows/*.yml
     let workflows_dir = root.join(".github").join("workflows");
-    for path in all_files
-        .iter()
-        .filter(|path| workflows_dir.is_dir() && path.starts_with(&workflows_dir))
-    {
-        let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
-        if ext != "yml" && ext != "yaml" {
-            continue;
-        }
-
-        let source = std::fs::read_to_string(path).unwrap_or_default();
-
-        let invocations = match crate::codebase::ci_workflows::extract_invocations(&source) {
-            Ok(inv) => inv,
-            Err(_) => continue,
-        };
-
-        for inv in invocations {
-            let cargo_target_files = inv
-                .cargo_targets
-                .iter()
-                .filter_map(|target| bins.get_cargo_target(target));
-            let direct_binary_files = inv
-                .binaries
-                .iter()
-                .filter(|binary_name| {
-                    !inv.cargo_targets
-                        .iter()
-                        .any(|target| target.binary == **binary_name)
-                })
-                .filter_map(|binary_name| bins.by_name.get(binary_name));
-            for source_file in cargo_target_files.chain(direct_binary_files) {
-                add_file_edge(
-                    forward,
-                    path.clone(),
-                    source_file.clone(),
-                    EdgeKind::CiInvocation,
-                );
-                add_file_edge(
-                    reverse,
-                    source_file.clone(),
-                    path.clone(),
-                    EdgeKind::CiInvocation,
-                );
-            }
-        }
+    if !workflows_dir.is_dir() {
+        return;
     }
+
+    let edges: Vec<Edge> = all_files
+        .par_iter()
+        .filter(|path| path.starts_with(&workflows_dir))
+        .filter(|path| {
+            matches!(
+                path.extension().and_then(|e| e.to_str()),
+                Some("yml" | "yaml")
+            )
+        })
+        .flat_map_iter(|path| {
+            let source = std::fs::read_to_string(path).unwrap_or_default();
+            let Ok(invocations) = crate::codebase::ci_workflows::extract_invocations(&source)
+            else {
+                return Vec::new();
+            };
+
+            let mut edges = Vec::new();
+            for inv in invocations {
+                let cargo_target_files = inv
+                    .cargo_targets
+                    .iter()
+                    .filter_map(|target| bins.get_cargo_target(target));
+                let direct_binary_files = inv
+                    .binaries
+                    .iter()
+                    .filter(|binary_name| {
+                        !inv.cargo_targets
+                            .iter()
+                            .any(|target| target.binary == **binary_name)
+                    })
+                    .filter_map(|binary_name| bins.by_name.get(binary_name));
+                for source_file in cargo_target_files.chain(direct_binary_files) {
+                    edges.push((
+                        NodeId::File(path.clone()),
+                        NodeId::File(source_file.clone()),
+                        EdgeKind::CiInvocation,
+                    ));
+                }
+            }
+            edges
+        })
+        .collect();
+    merge_edges(forward, reverse, edges);
 }
 
 #[derive(Default)]

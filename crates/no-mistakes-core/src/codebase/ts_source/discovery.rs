@@ -105,12 +105,7 @@ fn is_github_workflows_prefix(root: &Path, path: &Path) -> bool {
 /// file discovery: tracked files plus untracked files that are not hidden by
 /// `.gitignore`. The result is repo-relative, sorted, and deduplicated.
 pub fn git_visible_files(root: &Path) -> Option<Vec<String>> {
-    let tracked = git_ls_files(root, false)?;
-    let untracked = git_ls_files(root, true)?;
-    let mut combined: Vec<String> = tracked.into_iter().chain(untracked).collect();
-    combined.sort();
-    combined.dedup();
-    Some(combined)
+    git_ls_files(root)
 }
 
 /// Return git-visible files as absolute paths. Falls back to the ignore-based
@@ -119,12 +114,15 @@ pub fn git_visible_files(root: &Path) -> Option<Vec<String>> {
 pub fn discover_files(root: &Path, extra_skip: &[String]) -> Vec<PathBuf> {
     let root = normalize_discovery_path(root);
     match git_visible_files(&root) {
-        Some(files) => files
-            .into_iter()
-            .map(|rel| normalize_discovery_path(&root.join(rel)))
-            .filter(|p| p.exists())
-            .filter(|p| !is_under_skipped_dir(&root, p, extra_skip))
-            .collect(),
+        Some(files) => {
+            let extra_skip: HashSet<&str> = extra_skip.iter().map(String::as_str).collect();
+            files
+                .into_iter()
+                .map(|rel| normalize_discovery_path(&root.join(rel)))
+                .filter(|p| p.exists())
+                .filter(|p| !is_under_skipped_dir(&root, p, &extra_skip))
+                .collect()
+        }
         None => walk_files(&root, extra_skip),
     }
 }
