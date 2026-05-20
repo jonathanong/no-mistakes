@@ -1,6 +1,9 @@
+use crate::config::v2::schema::{StringOrList, TestProjectPolicy};
 use crate::config::v2::NoMistakesConfig;
+use crate::integration_tests::types::{ConfigProject, Framework};
 use anyhow::Result;
 use globset::{Glob, GlobSet, GlobSetBuilder};
+use std::collections::BTreeMap;
 use std::path::Path;
 
 type RunnerTestFilter =
@@ -26,7 +29,7 @@ impl TestFileFilter {
                     root, config,
                 )
                 .ok(),
-            suites: configured_suite_filters(config),
+            suites: configured_suite_filters(root, config),
         }
     }
 
@@ -79,20 +82,61 @@ impl TestSuiteFilter {
     }
 }
 
-fn configured_suite_filters(config: &NoMistakesConfig) -> Vec<TestSuiteFilter> {
-    config
-        .tests
-        .vitest
-        .suites
+fn configured_suite_filters(root: &Path, config: &NoMistakesConfig) -> Vec<TestSuiteFilter> {
+    let mut filters = Vec::new();
+    filters.extend(configured_project_filters(
+        root,
+        Framework::Vitest,
+        config.tests.vitest.configs.as_ref(),
+        &config.tests.vitest.projects,
+    ));
+    filters.extend(configured_project_filters(
+        root,
+        Framework::Playwright,
+        config.tests.playwright.configs.as_ref(),
+        &config.tests.playwright.projects,
+    ));
+    filters
+}
+
+fn configured_project_filters(
+    root: &Path,
+    framework: Framework,
+    configs: Option<&StringOrList>,
+    policies: &BTreeMap<String, TestProjectPolicy>,
+) -> Vec<TestSuiteFilter> {
+    if policies
+        .values()
+        .all(|policy| policy.integration_suites.is_empty())
+    {
+        return Vec::new();
+    }
+
+    let Ok(projects) =
+        crate::integration_tests::project_config::load_projects(root, framework, configs)
+    else {
+        return Vec::new();
+    };
+
+    policies
         .iter()
-        .chain(config.tests.playwright.suites.iter())
-        .filter_map(|suite| {
-            let include = compile_optional_globset(&suite.include).ok().flatten();
+        .filter(|(_, policy)| !policy.integration_suites.is_empty())
+        .filter_map(|(project_name, _)| exact_project(project_name, &projects))
+        .filter_map(|project| {
+            let include = compile_optional_globset(&project.include).ok().flatten();
             include.as_ref()?;
-            let exclude = compile_optional_globset(&suite.exclude).ok().flatten();
+            let exclude = compile_optional_globset(&project.exclude).ok().flatten();
             Some(TestSuiteFilter { include, exclude })
         })
         .collect()
+}
+
+fn exact_project<'a>(name: &str, projects: &'a [ConfigProject]) -> Option<&'a ConfigProject> {
+    let mut matches = projects
+        .iter()
+        .filter(|project| project.name.as_deref() == Some(name));
+    let project = matches.next()?;
+    matches.next().is_none().then_some(project)
 }
 
 fn compile_optional_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
