@@ -325,6 +325,18 @@ fn config_view_rule_lookup() {
 }
 
 #[test]
+fn rule_configured_requires_an_effective_target() {
+    let unknown_project = load_v2_config(&fixture("unknown-rule-project-target"), None).unwrap();
+    assert!(!unknown_project.rule_configured("unique-exports"));
+
+    let repository = load_v2_config(&fixture("repository-and-project-rule"), None).unwrap();
+    assert!(repository.rule_configured("unique-exports"));
+
+    let test_target = load_v2_config(&fixture("rule-test-target"), None).unwrap();
+    assert!(test_target.rule_configured("test-no-unmocked-dynamic-imports"));
+}
+
+#[test]
 fn config_view_enabled_rules() {
     let cfg = load_v2_config(&fixture("multi-project"), None).unwrap();
     let view = ConfigView::new(&cfg);

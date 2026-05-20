@@ -79,6 +79,24 @@ fn discover_check_files_includes_inferred_nextjs_project_files() {
 }
 
 #[test]
+fn discover_check_files_does_not_rescan_repository_root() {
+    let root = fixture("config-v2/nextjs-inferred-root");
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: no_mistakes_core::codebase::unique_exports::RULE_ID.to_string(),
+        scope: Some(RuleScope::Repository),
+        ..Default::default()
+    });
+    let mut expected = no_mistakes_core::codebase::ts_source::discover_files(&root, &[]);
+    expected.sort();
+    expected.dedup();
+
+    let files = discover_check_files(&root, &config, &[], true);
+
+    assert_eq!(files, expected);
+}
+
+#[test]
 fn nextjs_project_without_single_config_root_is_ignored() {
     let root = fixture("config-v2/empty");
     let mut config = NoMistakesConfig::default();

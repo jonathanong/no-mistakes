@@ -1,0 +1,4 @@
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests:
+      vitest: [unit]

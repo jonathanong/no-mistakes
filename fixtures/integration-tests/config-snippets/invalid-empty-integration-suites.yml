@@ -1,0 +1,6 @@
+tests:
+  vitest:
+    projects:
+      web:
+        integration_suites:
+          openai: []

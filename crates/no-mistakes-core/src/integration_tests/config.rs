@@ -80,14 +80,22 @@ fn exact_project<'a>(
     project_name: &str,
     projects: &'a [ConfigProject],
 ) -> Result<&'a ConfigProject> {
-    projects
+    let matches = projects
         .iter()
-        .find(|project| project.name.as_deref() == Some(project_name))
-        .ok_or_else(|| {
-            anyhow::anyhow!(
-                "{} integration policy references unknown project {}",
-                framework.as_str(),
-                project_name
-            )
-        })
+        .filter(|project| project.name.as_deref() == Some(project_name))
+        .collect::<Vec<_>>();
+    match matches.as_slice() {
+        [project] => Ok(*project),
+        [] => Err(anyhow::anyhow!(
+            "{} integration policy references unknown project {}",
+            framework.as_str(),
+            project_name
+        )),
+        matches => Err(anyhow::anyhow!(
+            "{} integration policy references ambiguous project {} ({} matches)",
+            framework.as_str(),
+            project_name,
+            matches.len()
+        )),
+    }
 }

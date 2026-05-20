@@ -2,6 +2,17 @@ use super::*;
 use crate::config::v2::NoMistakesConfig;
 use std::path::PathBuf;
 
+fn v2_config_fixture(name: &str) -> NoMistakesConfig {
+    let yaml = std::fs::read_to_string(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/config-v2")
+            .join(name)
+            .join(".no-mistakes.yml"),
+    )
+    .unwrap();
+    serde_yaml::from_str(&yaml).unwrap()
+}
+
 #[test]
 fn rule_enabled_defaults_true_and_reads_false() {
     let config = Config::from_yaml(
@@ -109,22 +120,7 @@ fn load_codebase_config_finds_parent_no_mistakes_config() {
 
 #[test]
 fn v2_duplicate_rule_applications_enable_rule_when_any_application_is_enabled() {
-    let config: NoMistakesConfig = serde_yaml::from_str(
-        r#"
-projects:
-  disabled:
-    root: disabled
-  web:
-    root: web
-rules:
-  - rule: unique-exports
-    enabled: false
-    projects: [disabled]
-  - rule: unique-exports
-    projects: [web]
-"#,
-    )
-    .unwrap();
+    let config = v2_config_fixture("duplicate-rule-applications");
 
     let config = conversion::config_from_v2(config);
 
@@ -137,19 +133,7 @@ rules:
 
 #[test]
 fn v2_repository_rule_application_keeps_workspace_root_with_project_targets() {
-    let config: NoMistakesConfig = serde_yaml::from_str(
-        r#"
-projects:
-  web:
-    root: web
-rules:
-  - rule: unique-exports
-    scope: repository
-  - rule: unique-exports
-    projects: [web]
-"#,
-    )
-    .unwrap();
+    let config = v2_config_fixture("repository-and-project-rule");
 
     let config = conversion::config_from_v2(config);
 
@@ -161,17 +145,7 @@ rules:
 
 #[test]
 fn v2_unknown_rule_project_targets_are_ignored() {
-    let config: NoMistakesConfig = serde_yaml::from_str(
-        r#"
-projects:
-  web:
-    root: web
-rules:
-  - rule: unique-exports
-    projects: [missing]
-"#,
-    )
-    .unwrap();
+    let config = v2_config_fixture("unknown-rule-project-target");
 
     let config = conversion::config_from_v2(config);
 

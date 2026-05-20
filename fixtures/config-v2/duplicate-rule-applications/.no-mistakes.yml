@@ -1,0 +1,11 @@
+projects:
+  disabled:
+    root: disabled
+  web:
+    root: web
+rules:
+  - rule: unique-exports
+    enabled: false
+    projects: [disabled]
+  - rule: unique-exports
+    projects: [web]

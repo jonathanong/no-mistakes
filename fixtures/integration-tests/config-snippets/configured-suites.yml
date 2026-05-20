@@ -1,0 +1,16 @@
+tests:
+  playwright:
+    configs: playwright.projects.ts
+    projects:
+      inherits:
+        integration_suites:
+          openai: [openai]
+      absolute:
+        integration_suites:
+          openai: [openai]
+  vitest:
+    configs: vitest.object.mts
+    projects:
+      root-vitest:
+        integration_suites:
+          openai: [openai]

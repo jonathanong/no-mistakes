@@ -10,6 +10,9 @@ pub(crate) fn discover_check_files(
     let mut files = no_mistakes_core::codebase::ts_source::discover_files(root, skip_directories);
     if unique_exports_enabled {
         for project_root in unique_exports_project_roots(root, config) {
+            if project_root == root {
+                continue;
+            }
             files.extend(no_mistakes_core::codebase::ts_source::discover_files(
                 &project_root,
                 skip_directories,

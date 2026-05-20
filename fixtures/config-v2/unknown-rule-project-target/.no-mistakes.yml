@@ -1,0 +1,6 @@
+projects:
+  web:
+    root: web
+rules:
+  - rule: unique-exports
+    projects: [missing]

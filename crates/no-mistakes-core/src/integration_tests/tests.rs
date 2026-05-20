@@ -17,6 +17,11 @@ fn fixture_file(name: &str, file: &str) -> PathBuf {
     fixture(name).join(file)
 }
 
+fn config_snippet(name: &str) -> crate::config::v2::schema::NoMistakesConfig {
+    let yaml = std::fs::read_to_string(fixture_file("config-snippets", name)).unwrap();
+    serde_yaml::from_str(&yaml).unwrap()
+}
+
 #[test]
 fn check_reports_integration_policy_violations() {
     let findings = check(&fixture("basic"), None).unwrap();
@@ -80,15 +85,13 @@ fn check_reports_integration_policy_violations() {
 
 #[test]
 fn empty_project_policy_is_allowed() {
-    let yaml = "tests:\n  vitest:\n    projects:\n      web: {}\n";
-    let config: crate::config::v2::schema::NoMistakesConfig = serde_yaml::from_str(yaml).unwrap();
+    let config = config_snippet("empty-project-policy.yml");
     config::validate_config(&config).unwrap();
 }
 
 #[test]
 fn invalid_empty_integration_suites_is_rejected() {
-    let yaml = "tests:\n  vitest:\n    projects:\n      web:\n        integration_suites:\n          openai: []\n";
-    let config: crate::config::v2::schema::NoMistakesConfig = serde_yaml::from_str(yaml).unwrap();
+    let config = config_snippet("invalid-empty-integration-suites.yml");
     let err = config::validate_config(&config).unwrap_err();
     assert!(err
         .to_string()
@@ -176,25 +179,7 @@ fn invalid_suite_project_and_missing_config_are_rejected() {
 #[test]
 fn configured_suites_cover_matching_variants() {
     let root = fixture("coverage");
-    let yaml = r#"
-tests:
-  playwright:
-    configs: playwright.projects.ts
-    projects:
-      inherits:
-        integration_suites:
-          openai: [openai]
-      absolute:
-        integration_suites:
-          openai: [openai]
-  vitest:
-    configs: vitest.object.mts
-    projects:
-      root-vitest:
-        integration_suites:
-          openai: [openai]
-"#;
-    let config: crate::config::v2::schema::NoMistakesConfig = serde_yaml::from_str(yaml).unwrap();
+    let config = config_snippet("configured-suites.yml");
     let suites = config::configured_suites(&root, &config).unwrap();
     assert!(suites.iter().any(|suite| suite.name == "inherits.openai"));
     assert!(suites.iter().any(|suite| suite.name == "absolute.openai"
@@ -203,45 +188,16 @@ tests:
         .iter()
         .any(|suite| suite.name == "root-vitest.openai"));
 
-    let missing_config = r#"
-tests:
-  playwright:
-    configs: missing.ts
-    projects:
-      inherits:
-        integration_suites:
-          openai: [openai]
-"#;
-    let config: crate::config::v2::schema::NoMistakesConfig =
-        serde_yaml::from_str(missing_config).unwrap();
+    let config = config_snippet("missing-playwright-config.yml");
     let err = config::configured_suites(&root, &config).unwrap_err();
     assert!(err.to_string().contains("config does not exist"));
 
-    let empty_policy = r#"
-tests:
-  vitest:
-    configs: missing.ts
-    projects:
-      stale: {}
-"#;
-    let config: crate::config::v2::schema::NoMistakesConfig =
-        serde_yaml::from_str(empty_policy).unwrap();
+    let config = config_snippet("empty-policy-with-missing-config.yml");
     assert!(config::configured_suites(&root, &config)
         .unwrap()
         .is_empty());
 
-    let mixed_policy = r#"
-tests:
-  vitest:
-    configs: vitest.object.mts
-    projects:
-      stale: {}
-      root-vitest:
-        integration_suites:
-          openai: [openai]
-"#;
-    let config: crate::config::v2::schema::NoMistakesConfig =
-        serde_yaml::from_str(mixed_policy).unwrap();
+    let config = config_snippet("mixed-empty-and-nonempty-policy.yml");
     let suites = config::configured_suites(&root, &config).unwrap();
     assert_eq!(suites.len(), 1);
     assert_eq!(suites[0].name, "root-vitest.openai");
@@ -295,19 +251,21 @@ tests:
     )
     .is_err());
 
-    let missing_config_and_project = r#"
-tests:
-  playwright:
-    configs: missing.ts
-    projects:
-      missing:
-        integration_suites:
-          openai: [openai]
-"#;
-    let config: crate::config::v2::schema::NoMistakesConfig =
-        serde_yaml::from_str(missing_config_and_project).unwrap();
+    let config = config_snippet("missing-config-and-project.yml");
     let err = config::configured_suites(&root, &config).unwrap_err();
     assert!(err.to_string().contains("config does not exist"));
+}
+
+#[test]
+fn configured_suites_reject_duplicate_project_names() {
+    let root = fixture("duplicate-projects");
+    let config = config_snippet("duplicate-vitest-project-policy.yml");
+
+    let err = config::configured_suites(&root, &config).unwrap_err();
+
+    assert!(err
+        .to_string()
+        .contains("vitest integration policy references ambiguous project unit"));
 }
 
 #[test]

@@ -193,7 +193,17 @@ impl NoMistakesConfig {
     }
 
     pub fn rule_configured(&self, rule_id: &str) -> bool {
-        !self.rule_applications(rule_id).is_empty()
+        self.rules.iter().any(|rule| {
+            rule.enabled
+                && rule.rule == rule_id
+                && (rule.scope == Some(RuleScope::Repository)
+                    || rule
+                        .projects
+                        .iter()
+                        .any(|project| self.projects.contains_key(project))
+                    || !rule.tests.vitest.is_empty()
+                    || !rule.tests.playwright.is_empty())
+        })
     }
 
     pub fn rule_options<T: for<'de> serde::Deserialize<'de> + Default>(&self, rule_id: &str) -> T {

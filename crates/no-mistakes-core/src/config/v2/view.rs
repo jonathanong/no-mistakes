@@ -128,7 +128,10 @@ impl<'a> ConfigView<'a> {
 
     /// Look up the first enabled rule application by rule ID.
     pub fn rule(&self, id: &str) -> Option<&RuleDef> {
-        self.config.rule_applications(id).into_iter().next()
+        self.config
+            .rules
+            .iter()
+            .find(|rule| rule.enabled && rule.rule == id)
     }
 
     /// All rule applications enabled for a project.
