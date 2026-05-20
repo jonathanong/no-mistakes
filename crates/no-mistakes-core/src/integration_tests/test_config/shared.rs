@@ -34,16 +34,13 @@ pub(in crate::integration_tests) fn top_level_object_bindings<'a>(
 pub(in crate::integration_tests) fn default_export_object<'a>(
     program: &'a Program<'a>,
     bindings: &BTreeMap<String, &'a Expression<'a>>,
-    allow_commonjs: bool,
 ) -> Option<&'a ObjectExpression<'a>> {
     for statement in &program.body {
         if let Statement::ExportDefaultDeclaration(export) = statement {
             return export_config_object(&export.declaration, bindings);
         }
-        if allow_commonjs {
-            if let Some(object) = commonjs_config_object(statement, bindings) {
-                return Some(object);
-            }
+        if let Some(object) = commonjs_config_object(statement, bindings) {
+            return Some(object);
         }
     }
     None

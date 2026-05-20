@@ -57,7 +57,7 @@ fn shared_config_helpers_cover_ast_edge_shapes() {
         assert!(!bindings.contains_key("noInit"));
         assert!(!bindings.contains_key("destructured"));
 
-        let object = test_config::shared::default_export_object(program, &bindings, true).unwrap();
+        let object = test_config::shared::default_export_object(program, &bindings).unwrap();
         assert_eq!(
             test_config::shared::property_expression(object, "name")
                 .and_then(|expr| test_config::shared::optional_string(expr, source))
@@ -125,7 +125,7 @@ fn shared_config_helpers_cover_ast_edge_shapes() {
     let source = std::fs::read_to_string(&path).unwrap();
     crate::ast::with_program(&path, &source, |program, _| {
         let bindings = test_config::shared::top_level_object_bindings(program);
-        assert!(test_config::shared::default_export_object(program, &bindings, true).is_none());
+        assert!(test_config::shared::default_export_object(program, &bindings).is_none());
         let oxc_ast::ast::Expression::ObjectExpression(object) = bindings.get("object").unwrap()
         else {
             panic!("expected object binding");
@@ -139,7 +139,7 @@ fn shared_config_helpers_cover_ast_edge_shapes() {
     let source = std::fs::read_to_string(&path).unwrap();
     crate::ast::with_program(&path, &source, |program, _| {
         let bindings = test_config::shared::top_level_object_bindings(program);
-        assert!(test_config::shared::default_export_object(program, &bindings, true).is_none());
+        assert!(test_config::shared::default_export_object(program, &bindings).is_none());
     })
     .unwrap();
 
@@ -147,7 +147,7 @@ fn shared_config_helpers_cover_ast_edge_shapes() {
     let source = std::fs::read_to_string(&path).unwrap();
     crate::ast::with_program(&path, &source, |program, _| {
         let bindings = test_config::shared::top_level_object_bindings(program);
-        assert!(test_config::shared::default_export_object(program, &bindings, true).is_none());
+        assert!(test_config::shared::default_export_object(program, &bindings).is_none());
     })
     .unwrap();
 }

@@ -36,7 +36,7 @@ fn parse_program(
     root: &Path,
 ) -> Result<Vec<ConfigProject>> {
     let bindings = shared::top_level_object_bindings(program);
-    let Some(root_object) = shared::default_export_object(program, &bindings, true) else {
+    let Some(root_object) = shared::default_export_object(program, &bindings) else {
         return Ok(Vec::new());
     };
     let test_object =

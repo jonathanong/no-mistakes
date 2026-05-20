@@ -82,7 +82,7 @@ fn parse_program(
     config_dir: &Path,
 ) -> Result<ParsedPlaywrightConfig> {
     let bindings = shared::top_level_object_bindings(program);
-    let Some(root_object) = shared::default_export_object(program, &bindings, true) else {
+    let Some(root_object) = shared::default_export_object(program, &bindings) else {
         return Ok(single_project(config_dir, &Options::default(), None));
     };
     let root_options = parse_options(root_object, source)?;
