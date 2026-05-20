@@ -146,8 +146,10 @@ fn run_with_cwd_and_writer_surfaces_output_errors() {
     let args = traverse_args(root, vec![PathBuf::from("a.mts")]);
     let cwd = std::env::current_dir().unwrap();
     let mut out = FailingWriter;
+    let mut timings = crate::codebase::timing::PhaseTimings::start();
 
-    let err = run_with_cwd_and_writer(args, Direction::Deps, cwd, false, &mut out).unwrap_err();
+    let (entries, root_strs, root) = collect_and_filter_entries(&args, Direction::Deps, &cwd, &mut timings).unwrap();
+    let err = write_entries(Format::Json, &root_strs, &entries, &root, &mut out).unwrap_err();
 
     assert!(err.to_string().contains("synthetic write failure"));
 }
