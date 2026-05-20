@@ -246,6 +246,21 @@ fn prefers_exports_over_other_entry_fields() {
 }
 
 #[test]
+fn resolves_directory_entry_to_index_file() {
+    let dir = TempDir::new().unwrap();
+    write(&dir.path().join("dist/index.js"), "");
+    let pkg = PackageJson {
+        main: Some("dist".to_string()),
+        ..Default::default()
+    };
+
+    let entry = resolve_entry(dir.path(), &pkg).unwrap();
+
+    assert!(entry.ends_with("dist/index.js"));
+    assert!(entry.is_file());
+}
+
+#[test]
 fn falls_back_to_main_then_types() {
     let main_dir = TempDir::new().unwrap();
     write(&main_dir.path().join("cjs.js"), "");

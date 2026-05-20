@@ -129,25 +129,25 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         ],
     };
 
+    let empty_imports = Vec::new();
     assert!(
-        collect_workspace_edges(&vec![], &resolver, &Default::default(), &graph_files).is_empty()
+        collect_workspace_edges(&empty_imports, &resolver, &Default::default(), &graph_files)
+            .is_empty()
     );
-    let imports = vec![(
-        root.join("packages/api/src/users.mts"),
-        vec![ExtractedImport {
-            specifier: "@x/web".to_string(),
-            kind: ImportKind::Static,
-        }],
-    )];
+    let imports_path = root.join("packages/api/src/users.mts");
+    let imports_items = vec![ExtractedImport {
+        specifier: "@x/web".to_string(),
+        kind: ImportKind::Static,
+    }];
+    let imports = vec![(&imports_path, imports_items.as_slice())];
     let edges = collect_workspace_edges(&imports, &resolver, &workspace, &graph_files);
     assert_eq!(edges.len(), 1);
-    let hidden_workspace_import = vec![(
-        root.join("packages/api/src/users.mts"),
-        vec![ExtractedImport {
-            specifier: "@x/hidden".to_string(),
-            kind: ImportKind::Static,
-        }],
-    )];
+    let hidden_workspace_path = root.join("packages/api/src/users.mts");
+    let hidden_workspace_items = vec![ExtractedImport {
+        specifier: "@x/hidden".to_string(),
+        kind: ImportKind::Static,
+    }];
+    let hidden_workspace_import = vec![(&hidden_workspace_path, hidden_workspace_items.as_slice())];
     assert!(collect_workspace_edges(
         &hidden_workspace_import,
         &resolver,
@@ -174,13 +174,12 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         collect_import_edges(&imports, &resolver, &graph_files).len(),
         1
     );
-    let hidden_imports = vec![(
-        root.join("packages/api/src/users.mts"),
-        vec![ExtractedImport {
-            specifier: "./index.mts".to_string(),
-            kind: ImportKind::Static,
-        }],
-    )];
+    let hidden_imports_path = root.join("packages/api/src/users.mts");
+    let hidden_imports_items = vec![ExtractedImport {
+        specifier: "./index.mts".to_string(),
+        kind: ImportKind::Static,
+    }];
+    let hidden_imports = vec![(&hidden_imports_path, hidden_imports_items.as_slice())];
     assert!(collect_import_edges(&hidden_imports, &resolver, &graph_files).is_empty());
     assert_eq!(package_name_from_spec("@scope/pkg/path"), "@scope/pkg");
     assert_eq!(package_name_from_spec("@scope"), "@scope");
@@ -274,6 +273,21 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &mut nested_reverse,
     );
     assert!(nested_forward.is_empty());
+
+    let no_workflows_root =
+        crate::codebase::ts_resolver::normalize_path(&fixture("cargo-no-workflows"));
+    let mut no_workflows_forward = EdgeMap::new();
+    let mut no_workflows_reverse = EdgeMap::new();
+    add_ci_edges(
+        &no_workflows_root,
+        &[
+            no_workflows_root.join("Cargo.toml"),
+            no_workflows_root.join("src/bin/standalone.rs"),
+        ],
+        &mut no_workflows_forward,
+        &mut no_workflows_reverse,
+    );
+    assert!(no_workflows_forward.is_empty());
     add_ci_edges(
         &nested_root,
         &[
