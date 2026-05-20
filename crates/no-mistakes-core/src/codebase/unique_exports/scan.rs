@@ -1,13 +1,12 @@
 use super::{SourceFile, RULE_ID};
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path, TS_JS_EXTENSIONS};
-#[cfg(test)]
-use anyhow::Context;
 use anyhow::Result;
-#[cfg(test)]
-use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
+
+#[cfg(test)]
+pub(super) mod test_support;
 
 pub(super) fn filter_source_files(files: &[PathBuf]) -> Vec<PathBuf> {
     files
@@ -18,37 +17,6 @@ pub(super) fn filter_source_files(files: &[PathBuf]) -> Vec<PathBuf> {
                 .is_some_and(|ext| TS_JS_EXTENSIONS.contains(&ext))
         })
         .cloned()
-        .collect()
-}
-
-#[cfg(test)]
-pub(super) fn collect_source_files(root: &Path, files: &[PathBuf]) -> Result<Vec<SourceFile>> {
-    let nextjs_projects = NextJsProjectLookup::new(root, files);
-    files
-        .par_iter()
-        .map(|path| {
-            let source = std::fs::read_to_string(path)
-                .with_context(|| format!("reading source file {}", path.display()))?;
-            let is_tsx = matches!(
-                path.extension().and_then(|ext| ext.to_str()),
-                Some("tsx" | "jsx")
-            );
-            let disabled = has_disable_file_comment(&source, RULE_ID);
-            let symbols = if disabled {
-                Default::default()
-            } else {
-                crate::codebase::ts_symbols::extract_symbols(&source, is_tsx)
-                    .with_context(|| format!("extracting symbols from {}", path.display()))?
-            };
-            Ok(SourceFile {
-                path: normalize_path(path),
-                rel: relative_slash_path(root, path),
-                disabled,
-                is_nextjs_project: nextjs_projects.contains_file(path),
-                source,
-                symbols,
-            })
-        })
         .collect()
 }
 
@@ -136,23 +104,6 @@ impl NextJsProjectLookup {
             .map(normalize_path)
             .and_then(|directory| self.directories.get(&directory).copied())
             .unwrap_or(false)
-    }
-}
-
-#[cfg(test)]
-pub(super) fn file_is_in_nextjs_project(root: &Path, path: &Path) -> bool {
-    let root = normalize_path(root);
-    let mut current = match path.parent() {
-        Some(parent) => normalize_path(parent),
-        None => root.clone(),
-    };
-    loop {
-        if package_json_has_next_dependency(&current.join("package.json")) {
-            return true;
-        }
-        if current == root || !current.pop() {
-            return false;
-        }
     }
 }
 

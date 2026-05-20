@@ -10,7 +10,7 @@ use crate::analysis::routes_index::route_index;
 use crate::analysis::selectors_index::{app_selector_targets, selector_index};
 use crate::analysis::test_file::analyze_test_file;
 use crate::analysis::tests_report::{build_tests_report, print_tests_text};
-use crate::analysis::types::{Analysis, EdgeReport, UniqueSelectorPolicy};
+use crate::analysis::types::{Analysis, CoverageInputs, EdgeReport, UniqueSelectorPolicy};
 use crate::cli::{Cli, Command};
 use crate::config;
 use crate::config::has_configured_html_id_selector;
@@ -90,17 +90,6 @@ pub fn run(cli: Cli) -> Result<ExitCode> {
         }
     }
 }
-
-#[cfg(test)]
-pub(crate) fn analyze(root: &Path, settings: &config::Settings) -> Result<Analysis> {
-    analyze_with_policy(
-        root,
-        settings,
-        playwright_tests::TestPolicy::default(),
-        UniqueSelectorPolicy::default(),
-    )
-}
-
 pub(crate) fn analyze_with_policy(
     root: &Path,
     settings: &config::Settings,
@@ -187,16 +176,16 @@ pub(crate) fn analyze_with_policy(
     edges.dedup();
 
     let edge_report = EdgeReport { edges };
-    let coverage = build_coverage(
+    let coverage = build_coverage(CoverageInputs {
         root,
-        &routes,
-        &app_selectors,
-        &app_selector_occurrences,
-        &edge_report.edges,
+        routes: &routes,
+        app_selectors: &app_selectors,
+        app_selector_occurrences: &app_selector_occurrences,
+        edges: &edge_report.edges,
         settings,
         unique_selector_policy,
-        &fetch_idx,
-    );
+        fetch_index: &fetch_idx,
+    });
     Ok(Analysis {
         coverage,
         edges: edge_report,

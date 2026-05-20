@@ -199,6 +199,22 @@ fn rust_no_inline_tests_fails_inline_block() {
 }
 
 #[test]
+fn rust_no_inline_tests_fails_cfg_test_helper_item() {
+    let root = fixture("rust-no-inline-tests", "fail-helper");
+    let out = check(
+        &root,
+        "rules:\n  - rule: rust-no-inline-tests\n    scope: repository\n",
+    );
+    assert!(!out.status.success(), "expected exit 1");
+    assert!(
+        stdout(&out).contains("inline #[cfg(test)] item"),
+        "{}",
+        stdout(&out)
+    );
+    assert!(stdout(&out).contains("lib.rs"), "{}", stdout(&out));
+}
+
+#[test]
 fn rust_no_inline_tests_disabled_skips() {
     let root = fixture("rust-no-inline-tests", "fail");
     let out = check(
@@ -235,6 +251,74 @@ fn rust_no_inline_tests_json_has_rule_id() {
         stdout(&out)
     );
     assert!(!out.status.success());
+}
+
+// ── rust-no-inline-allows ─────────────────────────────────────────────────────
+
+#[test]
+fn rust_no_inline_allows_passes_without_allow_attributes() {
+    let root = fixture("rust-no-inline-allows", "pass");
+    let out = check(
+        &root,
+        "rules:\n  - rule: rust-no-inline-allows\n    scope: repository\n",
+    );
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn rust_no_inline_allows_fails_inline_allow() {
+    let root = fixture("rust-no-inline-allows", "fail");
+    let out = check(
+        &root,
+        "rules:\n  - rule: rust-no-inline-allows\n    scope: repository\n",
+    );
+    assert!(!out.status.success(), "expected exit 1");
+    assert!(
+        stdout(&out).contains("allow(dead_code)"),
+        "{}",
+        stdout(&out)
+    );
+    assert!(stdout(&out).contains("lib.rs"), "{}", stdout(&out));
+}
+
+#[test]
+fn rust_no_inline_allows_filesystem_runner_discovers_files() {
+    let root = fixture("rust-no-inline-allows", "fail");
+    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
+    std::fs::write(
+        config.path(),
+        "rules:\n  - rule: rust-no-inline-allows\n    scope: repository\n",
+    )
+    .unwrap();
+
+    let findings =
+        no_mistakes_core::codebase::rules::run_filesystem_rules(&root, Some(config.path()))
+            .unwrap();
+
+    assert!(findings
+        .iter()
+        .any(|finding| finding.rule == no_mistakes_core::codebase::rules::RUST_NO_INLINE_ALLOWS));
+}
+
+#[test]
+fn rust_no_inline_allows_filesystem_runner_accepts_absolute_roots() {
+    let fixture_root = fixture("rust-no-inline-allows", "absolute-roots");
+    let src = fixture_root.join("src");
+    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
+    let template = std::fs::read_to_string(fixture_root.join(".no-mistakes.yml.in")).unwrap();
+    std::fs::write(
+        config.path(),
+        template.replace("__ROOT__", &src.to_string_lossy()),
+    )
+    .unwrap();
+
+    let findings =
+        no_mistakes_core::codebase::rules::run_filesystem_rules(&fixture_root, Some(config.path()))
+            .unwrap();
+
+    assert_eq!(findings.len(), 2);
+    assert_eq!(findings[0].file, "src/a.rs");
+    assert_eq!(findings[1].file, "src/b.rs");
 }
 
 // ── gitignored files are skipped ─────────────────────────────────────────────

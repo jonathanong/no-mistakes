@@ -43,8 +43,7 @@ pub struct PlaywrightSelector {
 }
 
 impl PlaywrightSelector {
-    #[cfg(test)]
-    pub(crate) fn for_test(attribute: &str, selector: &str, matcher: SelectorMatcher) -> Self {
+    pub fn for_test(attribute: &str, selector: &str, matcher: SelectorMatcher) -> Self {
         Self {
             attribute: attribute.into(),
             selector: selector.into(),

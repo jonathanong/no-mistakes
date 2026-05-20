@@ -2,8 +2,6 @@ use super::types::{AttributeRegex, SelectorMatcher, SelectorRegexes};
 use super::HTML_ID_ATTRIBUTE;
 use regex::Regex;
 use std::collections::BTreeMap;
-
-#[cfg(test)]
 pub fn compile_selector_regexes(
     attributes: &[String],
     component_attributes: &BTreeMap<String, String>,

@@ -1,5 +1,5 @@
-use crate::analyze::import_shape::{is_runtime_export, is_runtime_import};
-use crate::analyze::imports::{collect_identifier_references, is_import_used};
+use no_mistakes_core::fetch::import_shape::{is_runtime_export, is_runtime_import};
+use no_mistakes_core::fetch::imports::{collect_identifier_references, is_import_used};
 use oxc_ast::ast::Statement;
 use std::collections::HashSet;
 

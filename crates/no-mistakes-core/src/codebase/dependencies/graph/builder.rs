@@ -187,39 +187,4 @@ impl DepGraph {
         Self::build_with_plan_files_and_facts(root, tsconfig, plan, &graph_files, Some(facts))
     }
 
-    /// Construct a graph directly from pre-built maps (for testing).
-    #[cfg(test)]
-    pub fn from_raw_maps(
-        root: PathBuf,
-        forward: HashMap<PathBuf, Vec<PathBuf>>,
-        reverse: HashMap<PathBuf, Vec<PathBuf>>,
-    ) -> Self {
-        let typed_fwd: EdgeMap = forward
-            .into_iter()
-            .map(|(k, vs)| {
-                (
-                    NodeId::File(k),
-                    vs.into_iter()
-                        .map(|v| (NodeId::File(v), EdgeKind::Import))
-                        .collect(),
-                )
-            })
-            .collect();
-        let typed_rev: EdgeMap = reverse
-            .into_iter()
-            .map(|(k, vs)| {
-                (
-                    NodeId::File(k),
-                    vs.into_iter()
-                        .map(|v| (NodeId::File(v), EdgeKind::Import))
-                        .collect(),
-                )
-            })
-            .collect();
-        Self {
-            root,
-            forward: typed_fwd,
-            reverse: typed_rev,
-        }
-    }
 }

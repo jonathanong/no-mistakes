@@ -47,16 +47,14 @@ pub(crate) enum Command {
     },
 }
 
-#[cfg(test)]
 fn parse_cli_args() -> Cli {
-    let raw_args = std::env::var("REACT_TRAITS_TEST_ARGS")
-        .expect("REACT_TRAITS_TEST_ARGS must be set in tests - use with_run_args_env()");
-    Cli::parse_from(raw_args.split('\u{1f}'))
-}
-
-#[cfg(not(test))]
-fn parse_cli_args() -> Cli {
-    Cli::parse()
+    if cfg!(test) {
+        let raw_args = std::env::var("REACT_TRAITS_TEST_ARGS")
+            .expect("REACT_TRAITS_TEST_ARGS must be set in tests - use with_run_args_env()");
+        Cli::parse_from(raw_args.split('\u{1f}'))
+    } else {
+        Cli::parse()
+    }
 }
 
 pub fn run_cli() -> Result<ExitCode> {

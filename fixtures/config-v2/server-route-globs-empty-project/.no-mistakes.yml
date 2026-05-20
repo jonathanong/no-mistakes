@@ -1,0 +1,9 @@
+projects:
+  empty:
+    type: server
+    root: backend
+  api:
+    type: server
+    root: api
+    routes:
+      - routes/**

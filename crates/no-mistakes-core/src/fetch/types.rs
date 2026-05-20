@@ -29,7 +29,6 @@ pub struct UrlExtraction {
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[serde(rename_all = "lowercase")]
-#[allow(dead_code)]
 pub enum FetchSide {
     Client,
     Server,
@@ -37,7 +36,6 @@ pub enum FetchSide {
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 #[serde(rename_all = "kebab-case")]
-#[allow(dead_code)]
 pub enum CacheKind {
     None,
     FetchCache,

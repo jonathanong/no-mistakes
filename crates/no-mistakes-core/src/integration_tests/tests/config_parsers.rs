@@ -1,4 +1,5 @@
 use super::super::*;
+use oxc_ast::ast::{ArrayExpressionElement, Expression};
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
@@ -11,6 +12,46 @@ fn fixture(name: &str) -> PathBuf {
 
 fn fixture_file(name: &str, file: &str) -> PathBuf {
     fixture(name).join(file)
+}
+
+fn required_string_or_array(
+    expression: &Expression<'_>,
+    source: &str,
+    name: &str,
+) -> anyhow::Result<Vec<String>> {
+    if let Some(value) = test_config::shared::optional_string(expression, source) {
+        return Ok(vec![value]);
+    }
+    let Expression::ArrayExpression(array) = parenthesized_expression(expression) else {
+        anyhow::bail!("expected string literal or string array for {name}");
+    };
+    let mut values = Vec::new();
+    for element in &array.elements {
+        match element {
+            ArrayExpressionElement::StringLiteral(literal) => {
+                values.push(literal.value.to_string())
+            }
+            ArrayExpressionElement::TemplateLiteral(template)
+                if template.expressions.is_empty() =>
+            {
+                values.push(crate::ast::template_literal_text(template, source));
+            }
+            _ => anyhow::bail!("expected string literal array entries for {name}"),
+        }
+    }
+    if values.is_empty() {
+        anyhow::bail!("expected string literal or string array for {name}");
+    }
+    Ok(values)
+}
+
+fn parenthesized_expression<'a>(expression: &'a Expression<'a>) -> &'a Expression<'a> {
+    match expression {
+        Expression::ParenthesizedExpression(parenthesized) => {
+            parenthesized_expression(&parenthesized.expression)
+        }
+        _ => expression,
+    }
 }
 
 #[test]
@@ -83,32 +124,25 @@ fn shared_config_helpers_cover_ast_edge_shapes() {
 
         let list = test_config::shared::property_expression(object, "list").unwrap();
         assert_eq!(
-            test_config::shared::required_string_or_array(list, source, "list").unwrap(),
+            required_string_or_array(list, source, "list").unwrap(),
             vec!["one".to_string(), "two".to_string()]
         );
         let name = test_config::shared::property_expression(object, "name").unwrap();
         assert_eq!(
-            test_config::shared::required_string_or_array(name, source, "name").unwrap(),
+            required_string_or_array(name, source, "name").unwrap(),
             vec!["literal".to_string()]
         );
         let wrapped_list = test_config::shared::property_expression(object, "wrappedList").unwrap();
         assert_eq!(
-            test_config::shared::required_string_or_array(wrapped_list, source, "wrappedList")
-                .unwrap(),
+            required_string_or_array(wrapped_list, source, "wrappedList").unwrap(),
             vec!["three".to_string()]
         );
         let non_array = test_config::shared::property_expression(object, "nonArray").unwrap();
-        assert!(
-            test_config::shared::required_string_or_array(non_array, source, "nonArray").is_err()
-        );
+        assert!(required_string_or_array(non_array, source, "nonArray").is_err());
         let bad_list = test_config::shared::property_expression(object, "badList").unwrap();
-        assert!(
-            test_config::shared::required_string_or_array(bad_list, source, "badList").is_err()
-        );
+        assert!(required_string_or_array(bad_list, source, "badList").is_err());
         let empty_list = test_config::shared::property_expression(object, "emptyList").unwrap();
-        assert!(
-            test_config::shared::required_string_or_array(empty_list, source, "emptyList").is_err()
-        );
+        assert!(required_string_or_array(empty_list, source, "emptyList").is_err());
         assert!(
             test_config::shared::inferred_string_or_array(non_array, source, "nonArray").is_err()
         );
@@ -117,6 +151,17 @@ fn shared_config_helpers_cover_ast_edge_shapes() {
             test_config::shared::inferred_string_or_array(spread_list, source, "spreadList")
                 .unwrap(),
             vec!["one".to_string(), "two".to_string()]
+        );
+        let wrapped_spread_list =
+            test_config::shared::property_expression(object, "wrappedSpreadList").unwrap();
+        assert_eq!(
+            test_config::shared::inferred_string_or_array(
+                wrapped_spread_list,
+                source,
+                "wrappedSpreadList"
+            )
+            .unwrap(),
+            vec!["four".to_string()]
         );
     })
     .unwrap();

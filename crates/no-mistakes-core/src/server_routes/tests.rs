@@ -263,7 +263,7 @@ fn mount_resolver_covers_local_imported_fallback_and_recursive_prefixes() {
         (child.clone(), child_facts),
         (grand.clone(), grand_facts),
     ]);
-    let mounts = super::mounts::resolve_mounts(&facts);
+    let mounts = super::mounts::test_support::resolve_mounts(&facts);
     assert!(mounts
         .iter()
         .any(|mount| mount.child_file == child && mount.child == "localRouter"));
@@ -292,7 +292,7 @@ fn mount_resolver_ignores_unresolvable_and_non_relative_imports() {
     });
 
     let facts = HashMap::from([(parent, parent_facts)]);
-    assert!(super::mounts::resolve_mounts(&facts).is_empty());
+    assert!(super::mounts::test_support::resolve_mounts(&facts).is_empty());
 }
 
 #[test]
@@ -384,7 +384,7 @@ fn mount_resolver_covers_import_binding_fallbacks_and_cycles() {
         (local.clone(), local_facts),
         (ambiguous, ambiguous_facts),
     ]);
-    let mounts = super::mounts::resolve_mounts(&facts);
+    let mounts = super::mounts::test_support::resolve_mounts(&facts);
     assert!(mounts
         .iter()
         .any(|mount| mount.child_file == local && mount.child == "sameName"));
@@ -492,7 +492,7 @@ fn mount_resolver_covers_single_export_none_and_cycle_guards() {
         .insert("only".to_string(), "actual".to_string());
 
     let facts = HashMap::from([(parent.clone(), parent_facts), (child.clone(), child_facts)]);
-    let mounts = super::mounts::resolve_mounts(&facts);
+    let mounts = super::mounts::test_support::resolve_mounts(&facts);
     assert!(mounts.iter().any(|mount| mount.child == "actual"));
 
     let cycle = [

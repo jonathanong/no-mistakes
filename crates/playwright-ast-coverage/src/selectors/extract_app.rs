@@ -9,14 +9,9 @@ use oxc_ast_visit::Visit;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-#[cfg(test)]
 use anyhow::Result;
-#[cfg(test)]
 use std::collections::BTreeSet;
-#[cfg(test)]
 use walkdir::WalkDir;
-
-#[cfg(test)]
 pub fn collect_app_selectors(
     frontend_root: &Path,
     attributes: &[String],
@@ -48,8 +43,6 @@ pub fn collect_app_selectors(
         Ok(Vec::new())
     }
 }
-
-#[cfg(test)]
 pub fn extract_app_selectors(
     path: &Path,
     source: &str,

@@ -1,27 +1,16 @@
 use super::RuleFinding;
 use crate::codebase::ts_source::{
-    byte_offset_to_line, discover_with_extensions, has_disable_file_comment, relative_slash_path,
+    discover_with_extensions, has_disable_file_comment, relative_slash_path,
 };
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
-use regex::Regex;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
 
 pub const RULE_ID: &str = "rust-no-inline-tests";
 
-static INLINE_TEST_RE: OnceLock<Regex> = OnceLock::new();
-
-fn inline_test_re() -> &'static Regex {
-    INLINE_TEST_RE.get_or_init(|| {
-        Regex::new(
-            r"(?s)#\s*\[\s*cfg\s*\(\s*test\s*\)\s*\]\s*(?:(?:#\s*\[[^\]]*\]|//[^\n]*|/\*.*?\*/)\s*)*(?:pub(?:\([^)]*\))?\s+)?mod\s+(?:r#)?\w+\s*\{"
-        )
-        .expect("inline test regex is valid")
-    })
-}
+mod ast;
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -118,14 +107,17 @@ pub(crate) fn check_file(path: &Path, root: &Path) -> Vec<RuleFinding> {
     if has_disable_file_comment(&content, RULE_ID) {
         return Vec::new();
     }
+    let Ok(parsed) = syn::parse_file(&content) else {
+        return Vec::new();
+    };
     let file = relative_slash_path(root, path);
-    inline_test_re()
-        .find_iter(&content)
-        .map(|m| RuleFinding {
+    ast::cfg_test_lines(&parsed)
+        .into_iter()
+        .map(|line| RuleFinding {
             rule: RULE_ID.to_string(),
             file: file.clone(),
-            line: byte_offset_to_line(&content, m.start()) as usize,
-            message: "inline #[cfg(test)] mod block - use #[cfg(test)] mod tests; with a sibling tests.rs".to_string(),
+            line,
+            message: "inline #[cfg(test)] item - move test-only code to a sibling test module and keep only #[cfg(test)] mod tests; in source".to_string(),
             import: None,
             target: None,
         })

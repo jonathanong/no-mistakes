@@ -1,5 +1,5 @@
-use crate::fetch::visitor::{FetchScope, FetchVisitor};
 use crate::report::types::CacheKind;
+use no_mistakes_core::fetch::visitor::{FetchScope, FetchVisitor};
 use oxc_ast_visit::Visit;
 use std::collections::HashSet;
 

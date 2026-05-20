@@ -228,7 +228,7 @@ fn bfs_via_accumulated_from_two_paths() {
 fn dep_graph_deps_of() {
     let fwd = raw_fwd(&[("/root/a.mts", &["/root/b.mts"]), ("/root/b.mts", &[])]);
     let rev = raw_rev(&[]);
-    let g = DepGraph::from_raw_maps(p("/root"), fwd, rev);
+    let g = test_support::from_raw_maps(p("/root"), fwd, rev);
     let entries = g.deps_of(&[NodeId::File(p("/root/a.mts"))], None, None);
     assert_eq!(entries.len(), 1);
     assert_eq!(
@@ -241,7 +241,7 @@ fn dep_graph_deps_of() {
 fn dep_graph_dependents_of() {
     let fwd = raw_fwd(&[]);
     let rev = raw_rev(&[("/root/b.mts", &["/root/a.mts"])]);
-    let g = DepGraph::from_raw_maps(p("/root"), fwd, rev);
+    let g = test_support::from_raw_maps(p("/root"), fwd, rev);
     let entries = g.dependents_of(&[NodeId::File(p("/root/b.mts"))], None, None);
     assert_eq!(entries.len(), 1);
     assert_eq!(

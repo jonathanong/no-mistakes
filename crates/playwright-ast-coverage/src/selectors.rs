@@ -13,14 +13,11 @@ mod tests;
 mod types;
 
 pub use extract_app::extract_app_selectors_with_regexes;
-#[cfg(test)]
 pub use extract_app::{collect_app_selectors, extract_app_selectors};
 pub use extract_playwright::extract_playwright_selector_occurrences_from_program;
-#[cfg(test)]
 pub use regex_mod::compile_selector_regexes;
 pub use regex_mod::compile_selector_regexes_with_html_ids;
 pub(crate) use types::{AppSelector, AppSelectorValue, PlaywrightSelector, SelectorRegexes};
-#[cfg(test)]
 pub use types::{SelectorMatcher, TemplatePattern};
 
 pub(crate) const HTML_ID_ATTRIBUTE: &str = "id";
@@ -32,15 +29,11 @@ pub fn is_source_file(path: &std::path::Path) -> bool {
         .and_then(|extension| extension.to_str())
         .is_some_and(|extension| SOURCE_EXTS.contains(&extension))
 }
-
-#[cfg(test)]
 pub(crate) fn is_skipped_dir(path: &std::path::Path) -> bool {
     path.file_name()
         .and_then(|name| name.to_str())
         .is_some_and(|name| matches!(name, ".git" | "node_modules" | "target" | "dist" | "build"))
 }
-
-#[cfg(test)]
 pub fn extract_playwright_selectors(
     source: &str,
     selector_attributes: &[String],

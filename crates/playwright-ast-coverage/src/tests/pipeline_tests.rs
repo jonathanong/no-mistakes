@@ -1,15 +1,38 @@
-use crate::analysis::app_collect::collect_app_selectors;
+use crate::analysis::app_collect::collect_app_selector_occurrences;
 use crate::analysis::context::{DiscoveredTestFile, TestAnalysisContext, TestProjectContext};
 use crate::analysis::output::{build_related_report, print_edges_text, print_related_text};
-use crate::analysis::pipeline::{analyze, run};
+use crate::analysis::pipeline::{analyze_with_policy, run};
 use crate::analysis::test_file::analyze_test_file;
+use crate::analysis::types::{Analysis, UniqueSelectorPolicy};
 use crate::cli::{Cli, Command};
 use crate::config::Settings;
+use crate::playwright_tests;
 use crate::selectors;
 use crate::test_support::fixture_path;
+use anyhow::Result;
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
+
+fn analyze(root: &Path, settings: &Settings) -> Result<Analysis> {
+    analyze_with_policy(
+        root,
+        settings,
+        playwright_tests::TestPolicy::default(),
+        UniqueSelectorPolicy::default(),
+    )
+}
+
+fn collect_app_selectors(
+    root: &Path,
+    settings: &Settings,
+    selector_regexes: &selectors::SelectorRegexes,
+) -> Result<Vec<selectors::AppSelector>> {
+    let mut app_selectors = collect_app_selector_occurrences(root, settings, selector_regexes)?;
+    app_selectors.sort();
+    app_selectors.dedup();
+    Ok(app_selectors)
+}
 
 #[test]
 fn analyze_discovers_tests_and_builds_reports() {

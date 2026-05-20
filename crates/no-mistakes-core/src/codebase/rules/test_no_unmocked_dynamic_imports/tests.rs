@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::dependencies::graph::test_support::from_raw_maps;
 use dashmap::DashMap;
 use std::collections::HashMap;
 
@@ -51,7 +52,7 @@ fn next_line_disable_and_unresolved_import_branches_are_reported() {
         base_url: None,
     };
     let resolver = ImportResolver::new(&tsconfig);
-    let graph = DepGraph::from_raw_maps(root.clone(), Default::default(), Default::default());
+    let graph = from_raw_maps(root.clone(), Default::default(), Default::default());
     let mocks = HashSet::new();
     let dependency_cache = DashMap::new();
     let mut findings = Vec::new();
@@ -137,7 +138,7 @@ fn reachable_dependencies_respect_skips_and_disable_comments() {
         let dependency = root.join(dependency);
         let mut forward = HashMap::new();
         forward.insert(test_file.clone(), vec![dependency]);
-        let graph = DepGraph::from_raw_maps(root.clone(), forward, Default::default());
+        let graph = from_raw_maps(root.clone(), forward, Default::default());
         let mut config = NoMistakesConfig::default();
         config.filesystem.skip_directories = skip_directories;
         let dependency_cache = DashMap::new();
@@ -225,7 +226,7 @@ fn reachable_check_shared_skips_dep_with_disable_file_comment() {
     let dep = root.join("src").join("reachable-disabled-file.mts");
     let mut forward = HashMap::new();
     forward.insert(test_file.clone(), vec![dep.clone()]);
-    let graph = DepGraph::from_raw_maps(root.clone(), forward, Default::default());
+    let graph = from_raw_maps(root.clone(), forward, Default::default());
     let dep_source = std::fs::read_to_string(&dep).unwrap();
     let dep_facts = ast::extract(&dep, &dep_source).unwrap();
     let mut shared_ts = HashMap::new();
@@ -281,7 +282,7 @@ fn reachable_check_uses_shared_facts_without_disk_read() {
     let fake_dep = root.join("src").join("nonexistent-dep.mts");
     let mut forward = HashMap::new();
     forward.insert(test_file.clone(), vec![fake_dep.clone()]);
-    let graph = DepGraph::from_raw_maps(root.clone(), forward, Default::default());
+    let graph = from_raw_maps(root.clone(), forward, Default::default());
     let mut shared_ts = HashMap::new();
     shared_ts.insert(
         fake_dep.clone(),
@@ -335,7 +336,7 @@ fn reachable_check_falls_back_to_disk_when_dep_facts_incomplete() {
     let dep = root.join("src").join("child.mts");
     let mut forward = HashMap::new();
     forward.insert(test_file.clone(), vec![dep.clone()]);
-    let graph = DepGraph::from_raw_maps(root.clone(), forward, Default::default());
+    let graph = from_raw_maps(root.clone(), forward, Default::default());
     let mut shared_ts = HashMap::new();
     // dep is in shared.ts but with source=None (incomplete facts)
     shared_ts.insert(
@@ -382,7 +383,7 @@ fn check_inner_propagates_reachable_dep_disk_error() {
     let unreadable = root.join("src").join("unreadable.mts");
     let mut forward = HashMap::new();
     forward.insert(test_file.clone(), vec![unreadable]);
-    let graph = DepGraph::from_raw_maps(root.clone(), forward, Default::default());
+    let graph = from_raw_maps(root.clone(), forward, Default::default());
     let files = vec![test_file];
     let manual_mocks = HashSet::new();
     let error = check_inner(&root, &config, &files, &tsconfig, &graph, &manual_mocks).unwrap_err();

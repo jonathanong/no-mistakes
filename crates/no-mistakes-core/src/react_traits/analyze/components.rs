@@ -10,7 +10,6 @@ use oxc_span::Span;
 #[derive(Debug, Clone)]
 pub(crate) struct ComponentDef {
     pub(crate) name: String,
-    #[allow(dead_code)]
     pub(crate) span: Span,
 }
 

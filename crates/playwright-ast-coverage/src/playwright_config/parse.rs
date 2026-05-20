@@ -5,8 +5,6 @@ use crate::ast;
 use anyhow::Result;
 use oxc_ast::ast::Program;
 use std::path::Path;
-
-#[cfg(test)]
 pub fn parse(source: &str, config_dir: &Path) -> Result<PlaywrightConfig> {
     parse_from_path(source, Path::new("playwright.config.ts"), config_dir)
 }

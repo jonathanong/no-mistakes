@@ -1,9 +1,22 @@
-use crate::analysis::app_collect::{collect_app_selector_occurrences, collect_app_selectors};
+use crate::analysis::app_collect::collect_app_selector_occurrences;
 use crate::config::Settings;
 use crate::fsutil::{build_globset, relative_string, walk_files};
 use crate::selectors;
 use crate::test_support::fixture_path;
+use anyhow::Result;
 use std::collections::BTreeMap;
+use std::path::Path;
+
+fn collect_app_selectors(
+    root: &Path,
+    settings: &Settings,
+    selector_regexes: &selectors::SelectorRegexes,
+) -> Result<Vec<selectors::AppSelector>> {
+    let mut app_selectors = collect_app_selector_occurrences(root, settings, selector_regexes)?;
+    app_selectors.sort();
+    app_selectors.dedup();
+    Ok(app_selectors)
+}
 
 #[test]
 fn skipped_directories_are_detected() {

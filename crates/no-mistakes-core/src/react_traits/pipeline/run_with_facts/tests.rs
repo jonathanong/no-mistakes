@@ -37,10 +37,7 @@ fn facts(entries: Vec<(PathBuf, Vec<ComponentFacts>)>) -> CheckFactMap {
                 (
                     path,
                     CheckFileFacts {
-                        react: Some(FileAnalysis {
-                            components,
-                            dependencies: Vec::new(),
-                        }),
+                        react: Some(FileAnalysis { components }),
                         ..CheckFileFacts::default()
                     },
                 )

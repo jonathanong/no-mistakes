@@ -1,16 +1,12 @@
 use crate::analysis::duplicates::build_duplicate_selectors;
 use crate::analysis::fetch::{seed_fetch_coverage, FetchCoverageEntry};
 use crate::analysis::types::{
-    CoverageFetch, CoverageLinks, CoverageReport, CoverageRoute, CoverageSelector, Edge,
-    FetchIndex, SelectorCoverageKey, Summary, TestRef, UniqueSelectorPolicy,
+    CoverageFetch, CoverageInputs, CoverageLinks, CoverageReport, CoverageRoute, CoverageSelector,
+    Edge, SelectorCoverageKey, Summary, TestRef,
 };
-use crate::config::Settings;
 use crate::fsutil::relative_string;
-use crate::routes::Route;
-use crate::selectors;
 use crate::url::is_ignored;
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
 use std::sync::Arc;
 
 type RouteCoverageEntry<'a> = BTreeMap<
@@ -23,17 +19,16 @@ type RouteCoverageEntry<'a> = BTreeMap<
 >;
 type SelectorCoverageEntry = BTreeMap<SelectorCoverageKey, (CoverageLinks, BTreeSet<TestRef>)>;
 
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn build_coverage(
-    root: &Path,
-    routes: &[Route],
-    app_selectors: &[selectors::AppSelector],
-    app_selector_occurrences: &[selectors::AppSelector],
-    edges: &[Edge],
-    settings: &Settings,
-    unique_selector_policy: UniqueSelectorPolicy,
-    fetch_index: &FetchIndex,
-) -> CoverageReport {
+pub(crate) fn build_coverage(inputs: CoverageInputs<'_>) -> CoverageReport {
+    let root = inputs.root;
+    let routes = inputs.routes;
+    let app_selectors = inputs.app_selectors;
+    let app_selector_occurrences = inputs.app_selector_occurrences;
+    let edges = inputs.edges;
+    let settings = inputs.settings;
+    let unique_selector_policy = inputs.unique_selector_policy;
+    let fetch_index = inputs.fetch_index;
+
     let ignored: Vec<String> = settings.ignore_routes.clone();
     let mut by_route: RouteCoverageEntry<'_> = BTreeMap::new();
     let mut by_selector: SelectorCoverageEntry = BTreeMap::new();

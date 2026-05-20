@@ -1,0 +1,8 @@
+tests:
+  vitest:
+    configs: missing.config.ts
+    projects:
+      unit:
+        integration_suites:
+          api:
+            - web/**/*.test.ts
