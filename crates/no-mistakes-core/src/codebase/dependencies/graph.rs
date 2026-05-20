@@ -1478,7 +1478,12 @@ fn collect_route_edges(
         };
     all_defs.extend(backend_defs);
     if has_project_routes {
-        all_defs.extend(collect_project_server_route_defs(root));
+        all_defs.extend(collect_project_server_route_defs(
+            root,
+            all_files,
+            &config_options.project_route_globs,
+            config_options.test_filter.as_ref(),
+        ));
     }
     if !opts.frontend_root.is_empty() {
         let frontend_abs = root.join(&opts.frontend_root);
@@ -1578,15 +1583,34 @@ fn collect_route_edges(
         .collect()
 }
 
-fn collect_project_server_route_defs(root: &Path) -> Vec<(PathBuf, String)> {
-    let Ok(report) = crate::server_routes::analyze_project(root, None, &[]) else {
-        return Vec::new();
-    };
-    report
-        .routes
-        .into_iter()
-        .map(|route| (root.join(route.file), route.route))
-        .collect()
+fn collect_project_server_route_defs(
+    root: &Path,
+    all_files: &[PathBuf],
+    project_route_globs: &[String],
+    test_filter: Option<&crate::codebase::test_filter::TestFileFilter>,
+) -> Vec<(PathBuf, String)> {
+    let mut builder = GlobSetBuilder::new();
+    for pattern in project_route_globs {
+        let Ok(glob) = GlobBuilder::new(pattern).literal_separator(false).build() else {
+            return Vec::new();
+        };
+        builder.add(glob);
+    }
+    let route_globset = builder
+        .build()
+        .expect("globset with validated project route globs should build");
+    let route_files: Vec<PathBuf> = all_files
+        .par_iter()
+        .filter(|path| {
+            path.strip_prefix(root)
+                .map(|rel| route_globset.is_match(rel))
+                .unwrap_or(false)
+                && !test_filter.is_some_and(|filter| filter.is_match(root, path.as_path()))
+        })
+        .cloned()
+        .collect();
+
+    crate::server_routes::route_defs_from_files(root, &route_files)
 }
 
 fn collect_backend_routes_from_graph_inputs(
@@ -1598,7 +1622,7 @@ fn collect_backend_routes_from_graph_inputs(
     test_filter: Option<&crate::codebase::test_filter::TestFileFilter>,
 ) -> Vec<(PathBuf, String)> {
     let route_files: Vec<PathBuf> = all_files
-        .iter()
+        .par_iter()
         .filter(|path| {
             path.strip_prefix(root)
                 .map(|rel| pattern_globset.is_match(rel))

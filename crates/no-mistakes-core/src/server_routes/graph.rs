@@ -58,15 +58,31 @@ pub fn analyze_project(
         }
     }
 
-    let facts = files
+    let facts = collect_file_facts(&files);
+    Ok(build_report(&root, &facts, &tsconfig))
+}
+
+pub(crate) fn route_defs_from_files(root: &Path, files: &[PathBuf]) -> Vec<(PathBuf, String)> {
+    let root = root.canonicalize().unwrap_or(root.to_path_buf());
+    let tsconfig =
+        resolve_tsconfig(&root, None).expect("implicit tsconfig resolution should not fail");
+    let facts = collect_file_facts(files);
+    build_report(&root, &facts, &tsconfig)
+        .routes
+        .into_iter()
+        .map(|route| (root.join(route.file), route.route))
+        .collect()
+}
+
+fn collect_file_facts(files: &[PathBuf]) -> HashMap<PathBuf, FileFacts> {
+    files
         .par_iter()
         .filter_map(|path| {
             extract_file(path)
                 .ok()
                 .map(|file_facts| (path.clone(), file_facts))
         })
-        .collect();
-    Ok(build_report(&root, &facts, &tsconfig))
+        .collect()
 }
 
 pub(super) fn build_report(

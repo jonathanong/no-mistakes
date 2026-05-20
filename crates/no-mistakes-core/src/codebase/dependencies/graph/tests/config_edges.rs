@@ -206,8 +206,10 @@ fn project_route_globs_drive_graph_route_edges_without_guardrails() {
 fn project_route_def_collection_returns_empty_for_invalid_config_globs() {
     let root =
         crate::codebase::ts_resolver::normalize_path(&fixture("graph-invalid-project-route-glob"));
+    let all_files = GraphFiles::discover(&root).all;
+    let invalid_globs = vec!["[".to_string()];
 
-    assert!(collect_project_server_route_defs(&root).is_empty());
+    assert!(collect_project_server_route_defs(&root, &all_files, &invalid_globs, None).is_empty());
 }
 
 #[test]
