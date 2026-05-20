@@ -118,6 +118,9 @@ impl<'a> ConfigView<'a> {
 
     /// Rules enabled for a named project.
     pub fn project_rules(&self, project: &str) -> Vec<&str> {
+        if !self.config.projects.contains_key(project) {
+            return Vec::new();
+        }
         self.config
             .rules
             .iter()
@@ -136,6 +139,9 @@ impl<'a> ConfigView<'a> {
 
     /// All rule applications enabled for a project.
     pub fn enabled_rules_for(&self, project: &str) -> Vec<(&str, &RuleDef)> {
+        if !self.config.projects.contains_key(project) {
+            return Vec::new();
+        }
         self.config
             .rules
             .iter()
