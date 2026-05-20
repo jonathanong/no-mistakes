@@ -245,7 +245,7 @@ struct GraphConfigOptions {
     queue: crate::codebase::config::QueueOptions,
     http_route: crate::codebase::config::HttpRouteOptions,
     http_call: crate::codebase::config::HttpCallOptions,
-    project_route_globs: Vec<String>,
+    project_route_globset: Option<GlobSet>,
     test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
 }
 
@@ -256,6 +256,7 @@ fn graph_config_options(root: &Path) -> Option<GraphConfigOptions> {
         .as_ref()
         .map(|config| ConfigView::new(config).server_route_globs())
         .unwrap_or_default();
+    let project_route_globset = compile_project_route_globset(&project_route_globs);
     let test_filter = v2_config
         .as_ref()
         .map(|config| crate::codebase::test_filter::TestFileFilter::new(root, config));
@@ -264,7 +265,7 @@ fn graph_config_options(root: &Path) -> Option<GraphConfigOptions> {
         queue: config.rule_options("queue-dashboard-reachability"),
         http_route: config.rule_options("http-route-static-paths"),
         http_call: config.rule_options("http-call-static-paths"),
-        project_route_globs,
+        project_route_globset,
         test_filter,
     })
 }
@@ -307,7 +308,7 @@ fn ts_fact_context_from_options(
 fn route_ref_facts_configured(options: &GraphConfigOptions) -> bool {
     route_backend_facts_configured(options)
         || !options.route.frontend_root.is_empty()
-        || !options.project_route_globs.is_empty()
+        || options.project_route_globset.is_some()
 }
 
 fn route_backend_facts_configured(options: &GraphConfigOptions) -> bool {
@@ -1441,7 +1442,8 @@ fn collect_route_edges(
         return vec![];
     };
     let opts = &config_options.route;
-    let has_project_routes = !config_options.project_route_globs.is_empty();
+    let project_route_globset = config_options.project_route_globset.as_ref();
+    let has_project_routes = project_route_globset.is_some();
 
     if !has_project_routes
         && (opts.backend_pattern.is_empty() || opts.backend_register_object.is_empty())
@@ -1481,7 +1483,7 @@ fn collect_route_edges(
         all_defs.extend(collect_project_server_route_defs(
             root,
             all_files,
-            &config_options.project_route_globs,
+            project_route_globset.expect("project route globset checked above"),
             config_options.test_filter.as_ref(),
         ));
     }
@@ -1586,19 +1588,9 @@ fn collect_route_edges(
 fn collect_project_server_route_defs(
     root: &Path,
     all_files: &[PathBuf],
-    project_route_globs: &[String],
+    route_globset: &GlobSet,
     test_filter: Option<&crate::codebase::test_filter::TestFileFilter>,
 ) -> Vec<(PathBuf, String)> {
-    let mut builder = GlobSetBuilder::new();
-    for pattern in project_route_globs {
-        let Ok(glob) = GlobBuilder::new(pattern).literal_separator(false).build() else {
-            return Vec::new();
-        };
-        builder.add(glob);
-    }
-    let route_globset = builder
-        .build()
-        .expect("globset with validated project route globs should build");
     let route_files: Vec<PathBuf> = all_files
         .par_iter()
         .filter(|path| {
@@ -1611,6 +1603,24 @@ fn collect_project_server_route_defs(
         .collect();
 
     crate::server_routes::route_defs_from_files(root, &route_files)
+}
+
+fn compile_project_route_globset(project_route_globs: &[String]) -> Option<GlobSet> {
+    if project_route_globs.is_empty() {
+        return None;
+    }
+    let mut builder = GlobSetBuilder::new();
+    for pattern in project_route_globs {
+        let Ok(glob) = GlobBuilder::new(pattern).literal_separator(false).build() else {
+            return None;
+        };
+        builder.add(glob);
+    }
+    Some(
+        builder
+            .build()
+            .expect("globset with validated project route globs should build"),
+    )
 }
 
 fn collect_backend_routes_from_graph_inputs(

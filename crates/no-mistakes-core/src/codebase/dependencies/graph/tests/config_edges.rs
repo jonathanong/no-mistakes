@@ -173,10 +173,9 @@ fn project_route_globs_drive_graph_route_edges_without_guardrails() {
     let ignored_route = root.join("backend/services/ignored.mts");
     let config_options = graph_config_options(&root).unwrap();
 
-    assert_eq!(
-        config_options.project_route_globs,
-        vec!["backend/api/**".to_string()]
-    );
+    let project_route_globset = config_options.project_route_globset.as_ref().unwrap();
+    assert!(project_route_globset.is_match("backend/api/users.mts"));
+    assert!(!project_route_globset.is_match("backend/services/ignored.mts"));
 
     let fact_plan = effective_ts_fact_plan(
         GraphBuildPlan {
@@ -206,10 +205,19 @@ fn project_route_globs_drive_graph_route_edges_without_guardrails() {
 fn project_route_def_collection_returns_empty_for_invalid_config_globs() {
     let root =
         crate::codebase::ts_resolver::normalize_path(&fixture("graph-invalid-project-route-glob"));
-    let all_files = GraphFiles::discover(&root).all;
-    let invalid_globs = vec!["[".to_string()];
+    let config_options = graph_config_options(&root).unwrap();
+    let invalid_globs = vec!["backend/[".to_string()];
+    let fact_plan = effective_ts_fact_plan(
+        GraphBuildPlan {
+            routes: true,
+            ..GraphBuildPlan::default()
+        },
+        Some(&config_options),
+    );
 
-    assert!(collect_project_server_route_defs(&root, &all_files, &invalid_globs, None).is_empty());
+    assert!(config_options.project_route_globset.is_none());
+    assert!(!fact_plan.route_refs);
+    assert!(compile_project_route_globset(&invalid_globs).is_none());
 }
 
 #[test]
@@ -346,7 +354,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         http_call: crate::codebase::config::HttpCallOptions {
             backend_prefixes: vec!["/api/".to_string()],
         },
-        project_route_globs: Vec::new(),
+        project_route_globset: None,
         test_filter: None,
     };
     let invalid_glob_options = GraphConfigOptions {
@@ -359,7 +367,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         http_call: crate::codebase::config::HttpCallOptions {
             backend_prefixes: vec!["/api/".to_string()],
         },
-        project_route_globs: Vec::new(),
+        project_route_globset: None,
         test_filter: None,
     };
     let tsconfig =
@@ -388,7 +396,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         },
         http_route: crate::codebase::config::HttpRouteOptions::default(),
         http_call: crate::codebase::config::HttpCallOptions::default(),
-        project_route_globs: Vec::new(),
+        project_route_globset: None,
         test_filter: None,
     };
     let mut forward = EdgeMap::new();
@@ -460,7 +468,7 @@ fn effective_fact_plan_skips_config_dependent_domains_without_required_config() 
         },
         http_route: crate::codebase::config::HttpRouteOptions::default(),
         http_call: crate::codebase::config::HttpCallOptions::default(),
-        project_route_globs: Vec::new(),
+        project_route_globset: None,
         test_filter: None,
     };
     let queue_only = effective_ts_fact_plan(
