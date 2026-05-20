@@ -217,6 +217,35 @@ tests:
     let err = config::configured_suites(&root, &config).unwrap_err();
     assert!(err.to_string().contains("config does not exist"));
 
+    let empty_policy = r#"
+tests:
+  vitest:
+    configs: missing.ts
+    projects:
+      stale: {}
+"#;
+    let config: crate::config::v2::schema::NoMistakesConfig =
+        serde_yaml::from_str(empty_policy).unwrap();
+    assert!(config::configured_suites(&root, &config)
+        .unwrap()
+        .is_empty());
+
+    let mixed_policy = r#"
+tests:
+  vitest:
+    configs: vitest.object.mts
+    projects:
+      stale: {}
+      root-vitest:
+        integration_suites:
+          openai: [openai]
+"#;
+    let config: crate::config::v2::schema::NoMistakesConfig =
+        serde_yaml::from_str(mixed_policy).unwrap();
+    let suites = config::configured_suites(&root, &config).unwrap();
+    assert_eq!(suites.len(), 1);
+    assert_eq!(suites[0].name, "root-vitest.openai");
+
     assert!(
         project_config::load_projects(&root, types::Framework::Vitest, None)
             .unwrap()

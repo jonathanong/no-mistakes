@@ -1,4 +1,7 @@
+use crate::config::v2::schema::StringOrList;
 use crate::config::v2::NoMistakesConfig;
+use crate::integration_tests::project_config::load_projects;
+use crate::integration_tests::types::{ConfigProject, Framework};
 use anyhow::Result;
 use std::path::Path;
 
@@ -13,25 +16,40 @@ pub(super) fn rule_test_project_globs(
         .iter()
         .flat_map(|rule| rule.tests.vitest.iter())
         .collect::<Vec<_>>();
-    let projects = if vitest_project_names.is_empty() {
-        Vec::new()
-    } else {
-        crate::integration_tests::project_config::load_projects(
-            root,
-            crate::integration_tests::types::Framework::Vitest,
-            config.tests.vitest.configs.as_ref(),
-        )?
-    };
+    let playwright_project_names = rules
+        .iter()
+        .flat_map(|rule| rule.tests.playwright.iter())
+        .collect::<Vec<_>>();
+    let vitest_projects = load_target_projects(
+        root,
+        Framework::Vitest,
+        config.tests.vitest.configs.as_ref(),
+        &vitest_project_names,
+    )?;
+    let playwright_projects = load_target_projects(
+        root,
+        Framework::Playwright,
+        config.tests.playwright.configs.as_ref(),
+        &playwright_project_names,
+    )?;
     for rule in rules {
         for project_name in &rule.tests.vitest {
-            let Some(project) = projects
-                .iter()
-                .find(|project| project.name.as_deref() == Some(project_name.as_str()))
-            else {
-                anyhow::bail!("test-no-unmocked-dynamic-imports references unknown vitest project {project_name}");
-            };
-            includes.extend(project.include.clone());
-            excludes.extend(project.exclude.clone());
+            append_test_project_globs(
+                Framework::Vitest,
+                project_name,
+                &vitest_projects,
+                &mut includes,
+                &mut excludes,
+            )?;
+        }
+        for project_name in &rule.tests.playwright {
+            append_test_project_globs(
+                Framework::Playwright,
+                project_name,
+                &playwright_projects,
+                &mut includes,
+                &mut excludes,
+            )?;
         }
         for project_name in &rule.projects {
             append_project_includes(config, project_name, &mut includes);
@@ -42,6 +60,39 @@ pub(super) fn rule_test_project_globs(
     excludes.sort();
     excludes.dedup();
     Ok((includes, excludes))
+}
+
+fn load_target_projects(
+    root: &Path,
+    framework: Framework,
+    configs: Option<&StringOrList>,
+    project_names: &[&String],
+) -> Result<Vec<ConfigProject>> {
+    if project_names.is_empty() {
+        return Ok(Vec::new());
+    }
+    load_projects(root, framework, configs)
+}
+
+fn append_test_project_globs(
+    framework: Framework,
+    project_name: &str,
+    projects: &[ConfigProject],
+    includes: &mut Vec<String>,
+    excludes: &mut Vec<String>,
+) -> Result<()> {
+    let Some(project) = projects
+        .iter()
+        .find(|project| project.name.as_deref() == Some(project_name))
+    else {
+        anyhow::bail!(
+            "test-no-unmocked-dynamic-imports references unknown {} project {project_name}",
+            framework.as_str()
+        );
+    };
+    includes.extend(project.include.clone());
+    excludes.extend(project.exclude.clone());
+    Ok(())
 }
 
 fn append_project_includes(

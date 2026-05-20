@@ -156,6 +156,15 @@ fn rule_def_enabled_defaults_to_true() {
 }
 
 #[test]
+fn v2_rule_applications_require_rule_id() {
+    let err = load_v2_config(&fixture("missing-rule-id"), None)
+        .err()
+        .unwrap();
+
+    assert!(err.to_string().contains("rules[0].rule is required"));
+}
+
+#[test]
 fn rule_def_options_deserialized() {
     let cfg = load_v2_config(&fixture("multi-project"), None).unwrap();
     let rule = cfg.rule_applications("http-route-static-paths")[0];

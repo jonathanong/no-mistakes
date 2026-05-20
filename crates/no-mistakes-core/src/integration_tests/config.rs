@@ -46,13 +46,19 @@ fn suites_for_framework(
     configs: Option<&StringOrList>,
     policies: &BTreeMap<String, TestProjectPolicy>,
 ) -> Result<Vec<Suite>> {
-    if policies.is_empty() {
+    if policies
+        .values()
+        .all(|policy| policy.integration_suites.is_empty())
+    {
         return Ok(Vec::new());
     }
 
     let projects = project_config::load_projects(root, framework, configs)?;
     let mut suites = Vec::new();
     for (project_name, policy) in policies {
+        if policy.integration_suites.is_empty() {
+            continue;
+        }
         let project = exact_project(framework, project_name, &projects)?;
         for (suite_name, integrations) in &policy.integration_suites {
             suites.push(Suite {

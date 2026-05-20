@@ -30,6 +30,25 @@ fn vitest_rule_target_uses_exact_project_globs() {
 }
 
 #[test]
+fn playwright_rule_target_uses_exact_project_globs() {
+    let root = root_fixture("integration-tests/basic");
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: super::super::super::RULE_ID.to_string(),
+        tests: RuleTestTargets {
+            playwright: vec!["pw-unit".to_string()],
+            ..Default::default()
+        },
+        ..Default::default()
+    });
+
+    let filter = test_filter(&root, &config).unwrap();
+
+    assert!(filter.is_match("playwright/unit/unit.spec.ts"));
+    assert!(!filter.is_match("playwright/openai/openai.spec.ts"));
+}
+
+#[test]
 fn vitest_rule_target_rejects_unknown_project() {
     let root = root_fixture("integration-tests/basic");
     let mut config = NoMistakesConfig::default();
@@ -48,6 +67,29 @@ fn vitest_rule_target_rejects_unknown_project() {
     };
 
     assert!(error.to_string().contains("unknown vitest project missing"));
+}
+
+#[test]
+fn playwright_rule_target_rejects_unknown_project() {
+    let root = root_fixture("integration-tests/basic");
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: super::super::super::RULE_ID.to_string(),
+        tests: RuleTestTargets {
+            playwright: vec!["missing".to_string()],
+            ..Default::default()
+        },
+        ..Default::default()
+    });
+
+    let error = match test_filter(&root, &config) {
+        Ok(_) => panic!("expected unknown project error"),
+        Err(error) => error,
+    };
+
+    assert!(error
+        .to_string()
+        .contains("unknown playwright project missing"));
 }
 
 #[test]
@@ -70,6 +112,32 @@ fn vitest_rule_target_reports_missing_explicit_config() {
     };
 
     assert!(error.to_string().contains("vitest config does not exist"));
+}
+
+#[test]
+fn playwright_rule_target_reports_missing_explicit_config() {
+    let root = root_fixture("integration-tests/basic");
+    let mut config = NoMistakesConfig::default();
+    config.tests.playwright.configs = Some(StringOrList::One(
+        "missing.playwright.config.mts".to_string(),
+    ));
+    config.rules.push(RuleDef {
+        rule: super::super::super::RULE_ID.to_string(),
+        tests: RuleTestTargets {
+            playwright: vec!["pw-unit".to_string()],
+            ..Default::default()
+        },
+        ..Default::default()
+    });
+
+    let error = match test_filter(&root, &config) {
+        Ok(_) => panic!("expected missing explicit config error"),
+        Err(error) => error,
+    };
+
+    assert!(error
+        .to_string()
+        .contains("playwright config does not exist"));
 }
 
 #[test]
