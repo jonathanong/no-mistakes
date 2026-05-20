@@ -48,7 +48,7 @@ pub fn run(args: TraverseArgs, direction: Direction) -> Result<()> {
 pub(crate) fn collect_and_filter_entries(
     args: &TraverseArgs,
     direction: Direction,
-    cwd_early: &PathBuf,
+    cwd_early: &Path,
     timings: &mut crate::codebase::timing::PhaseTimings,
 ) -> Result<(Vec<graph::NodeEntry>, Vec<String>, PathBuf)> {
     let root = resolve_root(args, cwd_early);
