@@ -1,7 +1,7 @@
 {
   "name": "no-mistakes-core",
   "version": "0.5.0",
-  "description": "Shared core logic for no-mistakes static analysis tools",
+  "description": "Shared JavaScript installer logic for no-mistakes CLI packages",
   "license": "MIT",
   "repository": {
     "type": "git",

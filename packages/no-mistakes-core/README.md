@@ -1,6 +1,6 @@
 # no-mistakes-core
 
-Shared JavaScript package for no-mistakes tooling internals.
+Shared JavaScript installer logic for no-mistakes CLI packages.
 
 Most users should install the CLI packages instead:
 

@@ -17,8 +17,8 @@ npm install --save-dev playwright-ast-coverage
 npx playwright-ast-coverage check
 ```
 
-The npm package installs a small JavaScript wrapper and downloads the matching
-native binary from GitHub Releases. Unsupported platforms can install from
+The npm package downloads the matching native binary from GitHub Releases during
+postinstall. Unsupported platforms can install from
 Cargo:
 
 ```sh

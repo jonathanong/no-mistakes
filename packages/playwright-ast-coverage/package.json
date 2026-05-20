@@ -13,7 +13,7 @@
     "directory": "packages/playwright-ast-coverage"
   },
   "bin": {
-    "playwright-ast-coverage": "bin/playwright-ast-coverage.js"
+    "playwright-ast-coverage": "bin/playwright-ast-coverage"
   },
   "files": [
     "bin/",
@@ -30,6 +30,6 @@
     "pack:check": "npm pack --dry-run"
   },
   "dependencies": {
-    "no-mistakes-core": "^0.5.0"
+    "no-mistakes-core": "0.5.0"
   }
 }

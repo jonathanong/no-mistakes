@@ -1,14 +1,16 @@
 "use strict";
 
 const { createHash } = require("node:crypto");
-const { createReadStream } = require("node:fs");
+const { closeSync, createReadStream, existsSync, openSync, readSync } = require("node:fs");
 const { chmod, mkdir, rename, rm } = require("node:fs/promises");
 const { join } = require("node:path");
 
 const { assetName, parseChecksum, releaseBaseUrl } = require("./assets");
 const { download, fetchText } = require("./download");
 const { platformTarget, supportedGlibc } = require("./platform");
-const { existsSync } = require("node:fs");
+
+const PLACEHOLDER_TEXT = "Native binary placeholder.";
+const PLACEHOLDER_READ_BYTES = 256;
 
 async function sha256(path) {
   const hash = createHash("sha256");
@@ -28,18 +30,25 @@ async function install(binName, repository, options = {}) {
     throw new Error(unsupportedPlatformMessage(binName));
   }
 
-  const executable =
-    process.platform === "win32" || target.endsWith("windows-msvc") ? `${binName}.exe` : binName;
-
   const vendorDir = options.vendorDir;
   if (!vendorDir) {
     throw new Error("vendorDir is required for install()");
   }
+  const executable = options.destinationName || binName;
   const destination = join(vendorDir, executable);
+  const destinationExists = existsSync(destination);
+  const destinationIsPlaceholder = destinationExists && isPlaceholder(destination);
 
-  // Skip download if binary already exists (e.g. from a local build or previous install)
-  // In development/local environments, we might already have the binary.
-  if (process.env.SKIP_BINARY_DOWNLOAD || (options.checkExisting && existsSync(destination))) {
+  if (process.env.SKIP_BINARY_DOWNLOAD) {
+    if (destinationExists && !destinationIsPlaceholder) {
+      return destination;
+    }
+    throw new Error(
+      `SKIP_BINARY_DOWNLOAD is set but ${destination} is missing or still a placeholder; unset SKIP_BINARY_DOWNLOAD to install ${binName}.`,
+    );
+  }
+
+  if (options.checkExisting && destinationExists && !destinationIsPlaceholder) {
     return destination;
   }
 
@@ -76,6 +85,25 @@ async function install(binName, repository, options = {}) {
   }
 }
 
+function isPlaceholder(path) {
+  let fd;
+  try {
+    fd = openSync(path, "r");
+    const buffer = Buffer.alloc(PLACEHOLDER_READ_BYTES);
+    const bytesRead = readSync(fd, buffer, 0, buffer.length, 0);
+    return buffer.subarray(0, bytesRead).toString("utf8").includes(PLACEHOLDER_TEXT);
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return false;
+    }
+    throw new Error(`Failed to inspect native binary placeholder ${path}: ${error.message}`);
+  } finally {
+    if (fd !== undefined) {
+      closeSync(fd);
+    }
+  }
+}
+
 function unsupportedPlatformMessage(
   binName,
   platform = process.platform,
@@ -90,6 +118,7 @@ function unsupportedPlatformMessage(
 
 module.exports = {
   install,
+  isPlaceholder,
   sha256,
   unsupportedPlatformMessage,
 };

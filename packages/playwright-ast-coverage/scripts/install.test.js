@@ -32,6 +32,7 @@ function muslReport() {
 }
 
 test("maps supported platforms to Rust targets", () => {
+  assert.equal(platformTarget("darwin", "x64"), "x86_64-apple-darwin");
   assert.equal(platformTarget("darwin", "arm64"), "aarch64-apple-darwin");
   assert.equal(platformTarget("win32", "x64"), "x86_64-pc-windows-msvc");
   assert.equal(platformTarget("linux", "x64", glibcReport("2.35")), "x86_64-unknown-linux-gnu");
@@ -39,18 +40,13 @@ test("maps supported platforms to Rust targets", () => {
 });
 
 test("installer main succeeds when binary download is skipped", async () => {
-  const vendor = join(__dirname, "..", "vendor");
-  const executable = join(
-    vendor,
-    process.platform === "win32" ? "playwright-ast-coverage.exe" : "playwright-ast-coverage",
-  );
-  try {
-    await mkdir(vendor, { recursive: true });
-    await writeFile(executable, "already here");
-    await main();
-  } finally {
-    await rm(vendor, { recursive: true, force: true });
-  }
+  const calls = [];
+  await main(async (...args) => {
+    calls.push(args);
+    return "/tmp/playwright-ast-coverage";
+  });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0][2].destinationName, "playwright-ast-coverage");
 });
 
 test("installer main reports failures", async () => {
@@ -76,7 +72,6 @@ test("installer main reports failures", async () => {
 });
 
 test("rejects unsupported platform targets", () => {
-  assert.equal(platformTarget("darwin", "x64"), null);
   assert.equal(platformTarget("linux", "x64", muslReport()), null);
   assert.equal(platformTarget("linux", "x64", glibcReport("2.31")), null);
   assert.equal(platformTarget("freebsd", "x64"), null);
@@ -126,20 +121,30 @@ test("formats release base URLs", () => {
 });
 
 test("supports legacy install overloads and unsupported platform overload", async () => {
+  const previousSkip = process.env.SKIP_BINARY_DOWNLOAD;
   const vendor = join(__dirname, "..", "vendor");
-  const executable = join(
-    vendor,
-    process.platform === "win32" ? "playwright-ast-coverage.exe" : "playwright-ast-coverage",
-  );
+  const executable = join(__dirname, "..", "bin", "playwright-ast-coverage");
   const custom = join(vendor, "custom-bin");
+  const customDestination = join(vendor, "custom-dest");
 
   try {
     await mkdir(vendor, { recursive: true });
-    await writeFile(executable, "already here");
     await writeFile(custom, "custom");
+    await writeFile(customDestination, "custom destination");
 
-    assert.equal(await install(), executable);
-    assert.equal(await install({ checkExisting: true }), executable);
+    assert.equal(executable.endsWith("bin/playwright-ast-coverage"), true);
+    process.env.SKIP_BINARY_DOWNLOAD = "1";
+    await assert.rejects(() => install(), /SKIP_BINARY_DOWNLOAD is set/);
+    assert.equal(
+      await install("custom-bin", "owner/repo", {
+        destinationName: "custom-dest",
+        target: "x86_64-unknown-linux-gnu",
+        vendorDir: vendor,
+        version: "1.0.0",
+      }),
+      customDestination,
+    );
+    delete process.env.SKIP_BINARY_DOWNLOAD;
     assert.equal(
       await install("custom-bin", "owner/repo", {
         checkExisting: true,
@@ -154,6 +159,11 @@ test("supports legacy install overloads and unsupported platform overload", asyn
       /glibc/,
     );
   } finally {
+    if (previousSkip === undefined) {
+      delete process.env.SKIP_BINARY_DOWNLOAD;
+    } else {
+      process.env.SKIP_BINARY_DOWNLOAD = previousSkip;
+    }
     await rm(vendor, { recursive: true, force: true });
   }
 });

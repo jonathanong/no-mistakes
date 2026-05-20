@@ -3,6 +3,9 @@
 const MIN_GLIBC = [2, 35];
 
 function platformTarget(platform = process.platform, arch = process.arch, report = process.report) {
+  if (platform === "darwin" && arch === "x64") {
+    return "x86_64-apple-darwin";
+  }
   if (platform === "darwin" && arch === "arm64") {
     return "aarch64-apple-darwin";
   }

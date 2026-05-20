@@ -2,7 +2,7 @@
 "use strict";
 
 const { join } = require("node:path");
-const { install } = require("no-mistakes-core");
+const { install } = require("./install/index");
 
 const PACKAGE_ROOT = join(__dirname, "..");
 
@@ -11,7 +11,8 @@ async function main(installFn = install, io = process, logger = console) {
     const pkg = require(join(PACKAGE_ROOT, "package.json"));
     const destination = await installFn("next-to-fetch", "jonathanong/no-mistakes", {
       version: pkg.version,
-      vendorDir: join(PACKAGE_ROOT, "vendor"),
+      vendorDir: join(PACKAGE_ROOT, "bin"),
+      destinationName: "next-to-fetch",
       envVar: "NEXT_TO_FETCH_RELEASE_BASE_URL",
       checkExisting: true,
     });

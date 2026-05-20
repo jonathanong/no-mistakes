@@ -5,7 +5,7 @@ const { mkdir, mkdtemp, readFile, rm, stat, writeFile } = require("node:fs/promi
 const { join } = require("node:path");
 const { tmpdir } = require("node:os");
 const { pathToFileURL } = require("node:url");
-const core = require("no-mistakes-core");
+const core = require("./install/index");
 
 const { assetName, install, platformTarget, unsupportedPlatformMessage } = require("./install");
 
@@ -13,10 +13,8 @@ function assetBaseUrl(root) {
   return pathToFileURL(join(root, "assets")).toString();
 }
 
-function executableName(target) {
-  return process.platform === "win32" || target.endsWith("windows-msvc")
-    ? "playwright-ast-coverage.exe"
-    : "playwright-ast-coverage";
+function executableName() {
+  return "playwright-ast-coverage";
 }
 
 const binName = "playwright-ast-coverage";
@@ -70,6 +68,8 @@ test("installs only the requested platform binary and verifies checksum", async 
   const hash = createHash("sha256").update(content).digest("hex");
 
   await mkdir(join(root, "assets"));
+  await mkdir(vendorDir, { recursive: true });
+  await writeFile(join(vendorDir, executableName(target)), "Native binary placeholder.\n");
   await writeFile(join(root, "assets", asset), content);
   await writeFile(join(root, "assets", `${asset}.sha256`), `${hash}  ${asset}\n`);
   await writeFile(
@@ -96,6 +96,7 @@ test("installs only the requested platform binary and verifies checksum", async 
   try {
     const installed = await install({
       baseUrl: `http://127.0.0.1:${address.port}`,
+      checkExisting: true,
       target,
       vendorDir,
       version,
@@ -162,7 +163,7 @@ test("installs Windows assets without chmod", async () => {
       vendorDir,
       version,
     });
-    assert.equal(installed, join(vendorDir, "playwright-ast-coverage.exe"));
+    assert.equal(installed, join(vendorDir, "playwright-ast-coverage"));
   } finally {
     await rm(root, { recursive: true, force: true });
   }
