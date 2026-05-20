@@ -54,7 +54,7 @@ fn resolve_entry(dir: &Path, pkg: &PackageJson) -> Option<PathBuf> {
     // types field
     if let Some(types) = &pkg.types {
         let candidate = normalize_path(&dir.join(types));
-        if candidate.exists() {
+        if candidate.is_file() {
             return Some(candidate);
         }
     }
@@ -68,7 +68,7 @@ fn resolve_entry(dir: &Path, pkg: &PackageJson) -> Option<PathBuf> {
         "index.ts",
     ] {
         let p = dir.join(name);
-        if p.exists() {
+        if p.is_file() {
             return Some(p);
         }
     }
