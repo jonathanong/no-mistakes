@@ -1,5 +1,6 @@
 use super::*;
-use no_mistakes_core::config::v2::schema::{Project, ProjectType, RuleDef, RuleScope};
+use no_mistakes_core::config::v2::{load_v2_config, NoMistakesConfig};
+use std::path::{Path, PathBuf};
 
 fn fixture(path: &str) -> PathBuf {
     no_mistakes_core::codebase::ts_resolver::normalize_path(
@@ -9,54 +10,14 @@ fn fixture(path: &str) -> PathBuf {
     )
 }
 
-fn unique_exports_rule(projects: Vec<&str>) -> RuleDef {
-    RuleDef {
-        rule: no_mistakes_core::codebase::unique_exports::RULE_ID.to_string(),
-        projects: projects.into_iter().map(str::to_string).collect(),
-        ..Default::default()
-    }
+fn load_config(root: &Path) -> NoMistakesConfig {
+    load_v2_config(root, None).unwrap()
 }
 
 #[test]
 fn unique_exports_project_roots_cover_target_variants() {
-    let root = fixture("config-v2/nextjs-inferred-root");
-    let mut config = NoMistakesConfig::default();
-    config.projects.insert(
-        "web".to_string(),
-        Project {
-            type_: Some(ProjectType::Nextjs),
-            ..Default::default()
-        },
-    );
-    config.projects.insert(
-        "marketing".to_string(),
-        Project {
-            type_: Some(ProjectType::Nextjs),
-            ..Default::default()
-        },
-    );
-    config.projects.insert(
-        "backend".to_string(),
-        Project {
-            root: Some("backend".to_string()),
-            ..Default::default()
-        },
-    );
-    config
-        .projects
-        .insert("repo".to_string(), Project::default());
-    config.rules.push(unique_exports_rule(vec![
-        "missing",
-        "web",
-        "marketing",
-        "backend",
-        "repo",
-    ]));
-    config.rules.push(RuleDef {
-        rule: no_mistakes_core::codebase::unique_exports::RULE_ID.to_string(),
-        scope: Some(RuleScope::Repository),
-        ..Default::default()
-    });
+    let root = fixture("check-discovery/unique-exports-target-roots");
+    let config = load_config(&root);
 
     let roots = unique_exports_project_roots(&root, &config);
 
@@ -69,9 +30,7 @@ fn unique_exports_project_roots_cover_target_variants() {
 #[test]
 fn discover_check_files_includes_inferred_nextjs_project_files() {
     let root = fixture("config-v2/nextjs-inferred-root");
-    let config: NoMistakesConfig =
-        serde_yaml::from_str(&std::fs::read_to_string(root.join(".no-mistakes.yml")).unwrap())
-            .unwrap();
+    let config = load_config(&root);
 
     let files = discover_check_files(&root, &config, &[], true);
 
@@ -80,13 +39,8 @@ fn discover_check_files_includes_inferred_nextjs_project_files() {
 
 #[test]
 fn discover_check_files_does_not_rescan_repository_root() {
-    let root = fixture("config-v2/nextjs-inferred-root");
-    let mut config = NoMistakesConfig::default();
-    config.rules.push(RuleDef {
-        rule: no_mistakes_core::codebase::unique_exports::RULE_ID.to_string(),
-        scope: Some(RuleScope::Repository),
-        ..Default::default()
-    });
+    let root = fixture("check-discovery/repository-root-only");
+    let config = load_config(&root);
     let mut expected = no_mistakes_core::codebase::ts_source::discover_files(&root, &[]);
     expected.sort();
     expected.dedup();
@@ -98,16 +52,8 @@ fn discover_check_files_does_not_rescan_repository_root() {
 
 #[test]
 fn nextjs_project_without_single_config_root_is_ignored() {
-    let root = fixture("config-v2/empty");
-    let mut config = NoMistakesConfig::default();
-    config.projects.insert(
-        "web".to_string(),
-        Project {
-            type_: Some(ProjectType::Nextjs),
-            ..Default::default()
-        },
-    );
-    config.rules.push(unique_exports_rule(vec!["web"]));
+    let root = fixture("check-discovery/nextjs-without-config");
+    let config = load_config(&root);
 
     let roots = unique_exports_project_roots(&root, &config);
 
