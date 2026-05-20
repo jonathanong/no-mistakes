@@ -5,14 +5,15 @@ const { join } = require("node:path");
 const PACKAGE_ROOT = join(__dirname, "..");
 const pkg = require(join(PACKAGE_ROOT, "package.json"));
 const core = require("./install/index");
+const DEFAULT_BIN_NAME = "playwright-ast-coverage";
+const DEFAULT_REPOSITORY = "jonathanong/no-mistakes";
 const INSTALL_DEFAULTS = {
   version: pkg.version,
-  vendorDir: join(PACKAGE_ROOT, "vendor"),
+  vendorDir: join(PACKAGE_ROOT, "bin"),
+  destinationName: DEFAULT_BIN_NAME,
   envVar: "PLAYWRIGHT_AST_COVERAGE_RELEASE_BASE_URL",
   checkExisting: true,
 };
-const DEFAULT_BIN_NAME = "playwright-ast-coverage";
-const DEFAULT_REPOSITORY = "jonathanong/no-mistakes";
 
 function isPlatform(value) {
   return (
@@ -76,10 +77,14 @@ module.exports = {
       };
       return core.install(DEFAULT_BIN_NAME, DEFAULT_REPOSITORY, mergedOptions);
     }
-    return core.install(binName, repository, {
+    const mergedOptions = {
       ...INSTALL_DEFAULTS,
       ...options,
-    });
+    };
+    if (!Object.hasOwn(options || {}, "destinationName")) {
+      delete mergedOptions.destinationName;
+    }
+    return core.install(binName, repository, mergedOptions);
   },
   main,
 };

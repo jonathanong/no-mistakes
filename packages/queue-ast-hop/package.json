@@ -9,7 +9,7 @@
     "directory": "packages/queue-ast-hop"
   },
   "bin": {
-    "queue-ast-hop": "bin/queue-ast-hop.js"
+    "queue-ast-hop": "bin/queue-ast-hop"
   },
   "files": [
     "bin/",
@@ -23,5 +23,8 @@
   },
   "scripts": {
     "postinstall": "node scripts/install.js"
+  },
+  "dependencies": {
+    "no-mistakes-core": "0.5.0"
   }
 }

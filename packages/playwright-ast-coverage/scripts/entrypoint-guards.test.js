@@ -1,5 +1,4 @@
 const assert = require("node:assert/strict");
-const { EventEmitter } = require("node:events");
 const { readFile } = require("node:fs/promises");
 const { createRequire } = require("node:module");
 const { join } = require("node:path");
@@ -43,14 +42,6 @@ async function runEntrypoint(relativePath, requireMock) {
   return module.exports;
 }
 
-function childProcessMock() {
-  return {
-    spawn() {
-      return new EventEmitter();
-    },
-  };
-}
-
 function coreMock(calls = []) {
   return {
     install: async (...args) => {
@@ -59,21 +50,6 @@ function coreMock(calls = []) {
     },
   };
 }
-
-test("package entrypoint guards execute their CLI path", async () => {
-  for (const relativePath of [
-    "packages/no-mistakes/bin/no-mistakes.js",
-    "packages/next-to-fetch/bin/next-to-fetch.js",
-    "packages/queue-ast-hop/bin/queue-ast-hop.js",
-    "packages/react-traits/bin/react-traits.js",
-    "packages/server-ast-routes/bin/server-ast-routes.js",
-  ]) {
-    const exports = await runEntrypoint(relativePath, {
-      "node:child_process": childProcessMock(),
-    });
-    assert.equal(typeof exports.run, "function");
-  }
-});
 
 test("install entrypoint guards execute their main path", async () => {
   const installers = [
@@ -96,15 +72,7 @@ test("install entrypoint guards execute their main path", async () => {
   }
 });
 
-test("playwright package entrypoint guards execute", async () => {
-  const binExports = await runEntrypoint(
-    "packages/playwright-ast-coverage/bin/playwright-ast-coverage.js",
-    {
-      "./cli": { run: () => 0 },
-    },
-  );
-  assert.equal(typeof binExports.main, "function");
-
+test("playwright install entrypoint guard executes", async () => {
   const calls = [];
   const installExports = await runEntrypoint(
     "packages/playwright-ast-coverage/scripts/install.js",

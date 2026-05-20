@@ -11,7 +11,8 @@ async function main(installFn = install, io = process, logger = console) {
     const pkg = require(join(PACKAGE_ROOT, "package.json"));
     const destination = await installFn("server-ast-routes", "jonathanong/no-mistakes", {
       version: pkg.version,
-      vendorDir: join(PACKAGE_ROOT, "vendor"),
+      vendorDir: join(PACKAGE_ROOT, "bin"),
+      destinationName: "server-ast-routes",
       envVar: "SERVER_AST_ROUTES_RELEASE_BASE_URL",
       checkExisting: true,
     });

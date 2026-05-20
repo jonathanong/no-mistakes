@@ -2,7 +2,7 @@
 
 Deterministic AST-based codebase intelligence for humans and AI agents.
 
-This repository contains Rust CLIs, npm wrappers, ESLint/Oxlint plugins, and
+This repository contains Rust CLIs, npm packages, ESLint/Oxlint plugins, and
 Codex skills for answering structural questions about TypeScript, JavaScript,
 React, Next.js, Playwright, queue, and server-route code without running the
 application or calling an AI model.
