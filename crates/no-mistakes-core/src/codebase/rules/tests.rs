@@ -1,13 +1,23 @@
 use super::*;
+use crate::config::v2::schema::{Project, ProjectType, RuleDef, RuleScope};
+
+fn fixture(path: &str) -> std::path::PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures")
+            .join(path),
+    )
+}
 
 #[test]
 fn rule_enabled_requires_configured_rule() {
     let mut config = crate::config::v2::NoMistakesConfig::default();
     assert!(!rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS));
-    config.rules.insert(
-        TEST_NO_UNMOCKED_DYNAMIC_IMPORTS.to_string(),
-        serde_yaml::from_str("{}").unwrap(),
-    );
+    config.rules.push(RuleDef {
+        rule: TEST_NO_UNMOCKED_DYNAMIC_IMPORTS.to_string(),
+        scope: Some(RuleScope::Repository),
+        ..Default::default()
+    });
     assert!(rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS));
 }
 
@@ -16,12 +26,67 @@ fn rule_enabled_accepts_project_rule_without_top_level_options() {
     let mut config = crate::config::v2::NoMistakesConfig::default();
     config.projects.insert(
         "tests".to_string(),
-        crate::config::v2::schema::Project {
-            rules: vec![TEST_NO_UNMOCKED_DYNAMIC_IMPORTS.to_string()],
+        crate::config::v2::schema::Project::default(),
+    );
+    config.rules.push(RuleDef {
+        rule: TEST_NO_UNMOCKED_DYNAMIC_IMPORTS.to_string(),
+        projects: vec!["tests".to_string()],
+        ..Default::default()
+    });
+    assert!(rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS));
+}
+
+#[test]
+fn target_roots_ignore_unknown_projects() {
+    let config = crate::config::v2::NoMistakesConfig::default();
+    let rule = RuleDef {
+        rule: RUST_MAX_LINES_PER_FILE.to_string(),
+        projects: vec!["missing".to_string()],
+        ..Default::default()
+    };
+
+    let roots = target_roots(std::path::Path::new("/repo"), &config, &rule);
+
+    assert!(roots.is_empty());
+}
+
+#[test]
+fn target_roots_use_workspace_root_for_project_without_root() {
+    let mut config = crate::config::v2::NoMistakesConfig::default();
+    config
+        .projects
+        .insert("backend".to_string(), Project::default());
+    let rule = RuleDef {
+        rule: RUST_MAX_LINES_PER_FILE.to_string(),
+        projects: vec!["backend".to_string()],
+        ..Default::default()
+    };
+
+    let roots = target_roots(std::path::Path::new("/repo"), &config, &rule);
+
+    assert_eq!(roots, vec![std::path::PathBuf::from("/repo")]);
+}
+
+#[test]
+fn target_roots_infer_nextjs_project_root() {
+    let root = fixture("config-v2/nextjs-inferred-root");
+    let mut config = crate::config::v2::NoMistakesConfig::default();
+    config.projects.insert(
+        "web".to_string(),
+        Project {
+            type_: Some(ProjectType::Nextjs),
             ..Default::default()
         },
     );
-    assert!(rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS));
+    let rule = RuleDef {
+        rule: RUST_MAX_LINES_PER_FILE.to_string(),
+        projects: vec!["web".to_string()],
+        ..Default::default()
+    };
+
+    let roots = target_roots(&root, &config, &rule);
+
+    assert_eq!(roots, vec![root.join("web")]);
 }
 
 #[test]
@@ -33,17 +98,13 @@ fn run_check_returns_empty_when_rule_is_not_enabled() {
 
 #[test]
 fn run_check_executes_enabled_rule() {
-    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports");
+    let root = fixture("codebase-analysis/test-no-unmocked-dynamic-imports");
 
     run_check(&root, None, None).unwrap();
 }
 
 fn dynamic_import_fixture() -> std::path::PathBuf {
-    crate::codebase::ts_resolver::normalize_path(
-        &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
-    )
+    fixture("codebase-analysis/test-no-unmocked-dynamic-imports")
 }
 
 fn dynamic_import_test_facts(
@@ -320,63 +381,27 @@ fn run_filesystem_rules_returns_empty_when_not_configured() {
 
 #[test]
 fn run_filesystem_rules_executes_enabled_agents_md_rule() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    let big: String = "line\n".repeat(300);
-    std::fs::write(root.join("AGENTS.md"), big).unwrap();
-    let config_file = tempfile::Builder::new()
-        .suffix(".yml")
-        .tempfile_in(root)
-        .unwrap();
-    std::fs::write(
-        config_file.path(),
-        "rules:\n  agents-md-max-size:\n    enabled: true\n    maxLines: 5\n",
-    )
-    .unwrap();
-    let findings = run_filesystem_rules(root, Some(config_file.path())).unwrap();
+    let root = fixture("codebase-analysis/filesystem-rules/agents-md-max-size");
+    let config = root.join(".no-mistakes.yml");
+    let findings = run_filesystem_rules(&root, Some(&config)).unwrap();
     assert!(!findings.is_empty());
     assert!(findings.iter().any(|f| f.rule == AGENTS_MD_MAX_SIZE));
 }
 
 #[test]
 fn run_filesystem_rules_executes_enabled_rust_max_lines_rule() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    let big: String = (0..10).map(|i| format!("fn f{i}() {{}}\n")).collect();
-    std::fs::write(root.join("big.rs"), big).unwrap();
-    let config_file = tempfile::Builder::new()
-        .suffix(".yml")
-        .tempfile_in(root)
-        .unwrap();
-    std::fs::write(
-        config_file.path(),
-        "rules:\n  rust-max-lines-per-file:\n    enabled: true\n    srcMax: 3\n",
-    )
-    .unwrap();
-    let findings = run_filesystem_rules(root, Some(config_file.path())).unwrap();
+    let root = fixture("codebase-analysis/filesystem-rules/rust-max-lines-per-file");
+    let config = root.join(".no-mistakes.yml");
+    let findings = run_filesystem_rules(&root, Some(&config)).unwrap();
     assert!(!findings.is_empty());
     assert!(findings.iter().any(|f| f.rule == RUST_MAX_LINES_PER_FILE));
 }
 
 #[test]
 fn run_filesystem_rules_executes_enabled_rust_no_inline_tests_rule() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::write(
-        root.join("lib.rs"),
-        "pub fn ok() {}\n#[cfg(test)]\nmod tests {\n}\n",
-    )
-    .unwrap();
-    let config_file = tempfile::Builder::new()
-        .suffix(".yml")
-        .tempfile_in(root)
-        .unwrap();
-    std::fs::write(
-        config_file.path(),
-        "rules:\n  rust-no-inline-tests:\n    enabled: true\n",
-    )
-    .unwrap();
-    let findings = run_filesystem_rules(root, Some(config_file.path())).unwrap();
+    let root = fixture("codebase-analysis/filesystem-rules/rust-no-inline-tests");
+    let config = root.join(".no-mistakes.yml");
+    let findings = run_filesystem_rules(&root, Some(&config)).unwrap();
     assert!(!findings.is_empty());
     assert!(findings.iter().any(|f| f.rule == RUST_NO_INLINE_TESTS));
 }

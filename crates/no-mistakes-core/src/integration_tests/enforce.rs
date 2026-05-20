@@ -9,21 +9,9 @@ pub(super) fn enforce_policy(
     integrations: &[String],
 ) -> Vec<IntegrationFinding> {
     match &suite.policy {
-        EffectiveIntegrationPolicy::Disabled => integrations
-            .iter()
-            .map(|name| {
-                finding(
-                    root,
-                    suite,
-                    test,
-                    Some(name.clone()),
-                    disabled_message(suite, name),
-                )
-            })
-            .collect(),
-        EffectiveIntegrationPolicy::Suites { suites, strict } => {
-            enforce_suite_policy(root, suite, test, integrations, suites, *strict)
-        }
+        EffectiveIntegrationPolicy::AllowedIntegrations {
+            integrations: allowed_integrations,
+        } => enforce_suite_policy(root, suite, test, integrations, allowed_integrations),
     }
 }
 
@@ -32,12 +20,11 @@ fn enforce_suite_policy(
     suite: &Suite,
     test: &TestCase,
     integrations: &[String],
-    suites: &[String],
-    strict: bool,
+    allowed_integrations: &[String],
 ) -> Vec<IntegrationFinding> {
     let mut findings = Vec::new();
     for name in integrations {
-        if suites.contains(name) {
+        if allowed_integrations.contains(name) {
             continue;
         }
         findings.push(finding(
@@ -49,33 +36,11 @@ fn enforce_suite_policy(
                 "{} suite {} allows only integration={}; found integration={name}",
                 suite.framework.as_str(),
                 suite.name,
-                suites.join(",")
-            ),
-        ));
-    }
-    if findings.is_empty() && integrations.is_empty() && strict {
-        findings.push(finding(
-            root,
-            suite,
-            test,
-            None,
-            format!(
-                "{} suite {} requires integration={}",
-                suite.framework.as_str(),
-                suite.name,
-                suites.join(",")
+                allowed_integrations.join(",")
             ),
         ));
     }
     findings
-}
-
-fn disabled_message(suite: &Suite, name: &str) -> String {
-    format!(
-        "{} suite {} does not allow integration tests; found integration={name}",
-        suite.framework.as_str(),
-        suite.name
-    )
 }
 
 fn finding(

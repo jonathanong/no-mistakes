@@ -1,0 +1,4 @@
+rules:
+  - rule: unique-exports
+    tests:
+      vitest: [unit]

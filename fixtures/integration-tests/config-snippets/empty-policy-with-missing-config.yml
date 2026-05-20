@@ -1,0 +1,5 @@
+tests:
+  vitest:
+    configs: missing.ts
+    projects:
+      stale: {}

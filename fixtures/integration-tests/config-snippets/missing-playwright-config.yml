@@ -1,0 +1,7 @@
+tests:
+  playwright:
+    configs: missing.ts
+    projects:
+      inherits:
+        integration_suites:
+          openai: [openai]

@@ -1,23 +1,22 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use crate::config::resolve;
-use crate::config::v2::{find_config_root, load_v2_config, schema::NoMistakesConfig};
+use crate::config::v2::{find_config_root, load_v2_config};
 
+mod conversion;
 mod discovery;
 mod project;
 
-pub use project::ProjectConfig;
+pub use project::{infer_nextjs_root, ProjectConfig};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct FilesystemConfig {
     #[serde(default)]
     pub skip_directories: Vec<String>,
-    #[serde(default)]
-    pub skip_file_patterns: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Default, PartialEq, Eq)]
@@ -60,6 +59,24 @@ pub struct RuleConfig {
     pub options: serde_yaml::Value,
 }
 
+#[derive(Debug, Clone, Deserialize, Default, PartialEq)]
+pub struct RuleApplicationConfig {
+    #[serde(default)]
+    pub rule: String,
+    #[serde(default)]
+    pub projects: Vec<String>,
+    #[serde(default)]
+    pub repository: bool,
+    #[serde(default)]
+    pub options: serde_yaml::Value,
+}
+
+impl RuleApplicationConfig {
+    pub fn rule_options<T: for<'de> Deserialize<'de> + Default>(&self) -> T {
+        serde_yaml::from_value(self.options.clone()).unwrap_or_default()
+    }
+}
+
 fn default_true() -> bool {
     true
 }
@@ -72,7 +89,11 @@ pub struct Config {
     #[serde(default)]
     pub projects: HashMap<String, ProjectConfig>,
     #[serde(default)]
+    pub repository_rules: HashSet<String>,
+    #[serde(default)]
     pub rules: HashMap<String, RuleConfig>,
+    #[serde(default)]
+    pub rule_applications: Vec<RuleApplicationConfig>,
 }
 
 impl Config {
@@ -95,7 +116,45 @@ impl Config {
     }
 
     pub fn project_roots_for_rule(&self, root: &Path, rule_id: &str) -> Vec<PathBuf> {
-        project::roots_for_rule(&self.projects, &self.rules, root, rule_id)
+        project::roots_for_rule(
+            &self.projects,
+            &self.rules,
+            &self.repository_rules,
+            root,
+            rule_id,
+        )
+    }
+
+    pub fn rule_applications_for(&self, rule_id: &str) -> Vec<&RuleApplicationConfig> {
+        self.rule_applications
+            .iter()
+            .filter(|application| application.rule == rule_id)
+            .collect()
+    }
+
+    pub fn project_roots_for_rule_application(
+        &self,
+        root: &Path,
+        application: &RuleApplicationConfig,
+    ) -> Vec<PathBuf> {
+        let mut roots = Vec::new();
+        for project in application
+            .projects
+            .iter()
+            .filter_map(|project_name| self.projects.get(project_name))
+        {
+            roots.push(
+                project
+                    .effective_root(root)
+                    .unwrap_or_else(|| root.to_path_buf()),
+            );
+        }
+        if application.repository {
+            roots.push(root.to_path_buf());
+        }
+        roots.sort();
+        roots.dedup();
+        roots
     }
 
     pub fn augment_from_gitignore(&mut self, root: &Path) {
@@ -130,7 +189,7 @@ pub fn load_config(start: &Path) -> Result<Config> {
 
 pub fn load_config_with_path(start: &Path, config_path: Option<&Path>) -> Result<Config> {
     let v2 = load_v2_config(start, config_path)?;
-    let mut config = config_from_v2(v2);
+    let mut config = conversion::config_from_v2(v2);
     let gitignore_root = match config_path {
         Some(path) => {
             let resolved = resolve(start, path);
@@ -157,45 +216,9 @@ pub fn load_codebase_config_with_path(start: &Path, config_path: Option<&Path>) 
     };
 
     let v2 = load_v2_config(start, Some(&path))?;
-    let mut config = config_from_v2(v2);
+    let mut config = conversion::config_from_v2(v2);
     config.augment_from_gitignore(path.parent().unwrap_or(start));
     Ok(config)
-}
-
-fn config_from_v2(v2: NoMistakesConfig) -> Config {
-    let rules = v2
-        .rules
-        .into_iter()
-        .map(|(id, def)| {
-            (
-                id,
-                RuleConfig {
-                    enabled: def.enabled,
-                    options: def.options,
-                },
-            )
-        })
-        .collect();
-    Config {
-        filesystem: FilesystemConfig {
-            skip_directories: v2.filesystem.skip_directories,
-            skip_file_patterns: v2.filesystem.skip_file_patterns,
-        },
-        projects: v2
-            .projects
-            .into_iter()
-            .map(|(name, project)| {
-                (
-                    name,
-                    ProjectConfig {
-                        root: project.root,
-                        rules: project.rules,
-                    },
-                )
-            })
-            .collect(),
-        rules,
-    }
 }
 
 #[cfg(test)]

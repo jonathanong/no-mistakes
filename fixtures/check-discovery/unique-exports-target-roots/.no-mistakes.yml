@@ -1,0 +1,18 @@
+projects:
+  web:
+    type: nextjs
+  marketing:
+    type: nextjs
+  backend:
+    root: backend
+  repo: {}
+rules:
+  - rule: unique-exports
+    projects:
+      - missing
+      - web
+      - marketing
+      - backend
+      - repo
+  - rule: unique-exports
+    scope: repository

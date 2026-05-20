@@ -1,0 +1,8 @@
+tests:
+  vitest:
+    configs: vitest.object.mts
+    projects:
+      stale: {}
+      root-vitest:
+        integration_suites:
+          openai: [openai]

@@ -1,0 +1,6 @@
+projects:
+  web: {}
+rules:
+  - rule: unique-exports
+    projects:
+      - web

@@ -5,8 +5,10 @@ use oxc_ast::ast::{
 };
 use std::collections::{BTreeMap, BTreeSet};
 
+#[cfg(test)]
+pub(in crate::integration_tests) use super::shared_literals::required_string_or_array;
 pub(in crate::integration_tests) use super::shared_literals::{
-    optional_string, property_key_name, required_string, required_string_or_array,
+    inferred_string_or_array, optional_string, property_key_name, required_string,
 };
 
 pub(in crate::integration_tests) fn top_level_object_bindings<'a>(
@@ -32,16 +34,13 @@ pub(in crate::integration_tests) fn top_level_object_bindings<'a>(
 pub(in crate::integration_tests) fn default_export_object<'a>(
     program: &'a Program<'a>,
     bindings: &BTreeMap<String, &'a Expression<'a>>,
-    allow_commonjs: bool,
 ) -> Option<&'a ObjectExpression<'a>> {
     for statement in &program.body {
         if let Statement::ExportDefaultDeclaration(export) = statement {
             return export_config_object(&export.declaration, bindings);
         }
-        if allow_commonjs {
-            if let Some(object) = commonjs_config_object(statement, bindings) {
-                return Some(object);
-            }
+        if let Some(object) = commonjs_config_object(statement, bindings) {
+            return Some(object);
         }
     }
     None

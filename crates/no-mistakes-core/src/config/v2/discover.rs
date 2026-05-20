@@ -34,7 +34,7 @@ pub fn load_v2_config(root: &Path, cli_config: Option<&Path>) -> Result<NoMistak
     }
 
     if let Some((path, source)) = find_by_stems(root, V2_STEMS)? {
-        return parse_config::<NoMistakesConfig>(&source, &path);
+        return parse_v2_config(&source, &path);
     }
 
     for (stem, kind) in TOOL_STEMS {
@@ -59,8 +59,23 @@ fn detect_and_parse(source: &str, path: &Path) -> Result<NoMistakesConfig> {
         s if s == ".guardrailsrc" || s == "guardrailsrc" => {
             legacy::from_guardrails_config(source, path)
         }
-        _ => parse_config::<NoMistakesConfig>(source, path),
+        _ => parse_v2_config(source, path),
     }
+}
+
+fn parse_v2_config(source: &str, path: &Path) -> Result<NoMistakesConfig> {
+    let config = parse_config::<NoMistakesConfig>(source, path)?;
+    validate_v2_config(&config)?;
+    Ok(config)
+}
+
+fn validate_v2_config(config: &NoMistakesConfig) -> Result<()> {
+    for (index, rule) in config.rules.iter().enumerate() {
+        if rule.rule.trim().is_empty() {
+            anyhow::bail!("rules[{index}].rule is required");
+        }
+    }
+    Ok(())
 }
 
 /// Return the directory that contains the effective config for `root`.

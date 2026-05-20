@@ -1,0 +1,16 @@
+projects:
+  strict:
+    root: strict
+  loose:
+    root: loose
+rules:
+  - rule: unique-exports
+    projects:
+      - strict
+    options:
+      uniqueAcrossTypesAndValues: true
+  - rule: unique-exports
+    projects:
+      - loose
+    options:
+      uniqueAcrossTypesAndValues: false

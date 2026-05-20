@@ -1,12 +1,18 @@
 use super::*;
-use crate::config::v2::NoMistakesConfig;
+use crate::config::v2::{
+    schema::{RuleDef, RuleScope},
+    NoMistakesConfig,
+};
 use std::path::Path;
 
 fn config_with_rule(yaml: &str) -> NoMistakesConfig {
     let mut config = NoMistakesConfig::default();
-    config
-        .rules
-        .insert(RULE_ID.to_string(), serde_yaml::from_str(yaml).unwrap());
+    config.rules.push(RuleDef {
+        rule: RULE_ID.to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str(yaml).unwrap(),
+        ..Default::default()
+    });
     config
 }
 
@@ -220,6 +226,20 @@ fn check_with_files_normalizes_relative_roots() {
     let findings = check_with_files(root, &config, &all_files).unwrap();
     assert_eq!(findings.len(), 1, "relative root resolves relative to root");
     assert!(findings[0].file.contains("sub"));
+}
+
+#[test]
+fn check_with_files_uses_options_per_rule_application() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/multiple-rule-applications");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let all_files = vec![root.join("api/lib.rs"), root.join("worker/lib.rs")];
+
+    let findings = check_with_files(&root, &config, &all_files).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "worker/lib.rs");
+    assert!(findings[0].message.contains("max 1"));
 }
 
 #[test]

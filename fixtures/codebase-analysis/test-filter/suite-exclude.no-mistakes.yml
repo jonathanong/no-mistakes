@@ -1,0 +1,12 @@
+tests:
+  vitest:
+    configs: suite-exclude.vitest.config.mts
+    projects:
+      backend:
+        integration_suites:
+          openai:
+            - openai
+      integration:
+        integration_suites:
+          openai:
+            - openai

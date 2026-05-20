@@ -82,7 +82,7 @@ fn parse_program(
     config_dir: &Path,
 ) -> Result<ParsedPlaywrightConfig> {
     let bindings = shared::top_level_object_bindings(program);
-    let Some(root_object) = shared::default_export_object(program, &bindings, true) else {
+    let Some(root_object) = shared::default_export_object(program, &bindings) else {
         return Ok(single_project(config_dir, &Options::default(), None));
     };
     let root_options = parse_options(root_object, source)?;
@@ -167,7 +167,13 @@ fn string_array_property(
     name: &str,
 ) -> Result<Option<Vec<String>>> {
     shared::property_expression(object, name)
-        .map(|value| shared::required_string_or_array(value, source, name))
+        .map(|value| {
+            let values = shared::inferred_string_or_array(value, source, name)?;
+            if values.is_empty() && name != "testIgnore" {
+                anyhow::bail!("expected string literal or string array for {name}");
+            }
+            Ok(values)
+        })
         .transpose()
 }
 
