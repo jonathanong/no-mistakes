@@ -3,6 +3,7 @@ const { join } = require("node:path");
 
 const PACKAGE_ROOT = join(__dirname, "..");
 const { main } = require("./install");
+const { testInstallerMainDownloads } = require("../../../tests/js/test-helpers");
 
 test("package bin points directly to the native executable target", () => {
   const pkg = require("../package.json");
@@ -10,13 +11,5 @@ test("package bin points directly to the native executable target", () => {
 });
 
 test("installer main downloads into the direct bin target", async () => {
-  const calls = [];
-  await main(async (...args) => {
-    calls.push(args);
-    return "/tmp/playwright-ast-coverage";
-  });
-  assert.equal(calls.length, 1);
-  assert.deepEqual(calls[0].slice(0, 2), ["playwright-ast-coverage", "jonathanong/no-mistakes"]);
-  assert.equal(calls[0][2].vendorDir, join(PACKAGE_ROOT, "bin"));
-  assert.equal(calls[0][2].destinationName, "playwright-ast-coverage");
+  await testInstallerMainDownloads(main, "playwright-ast-coverage", PACKAGE_ROOT, join, assert);
 });

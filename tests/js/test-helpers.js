@@ -24,6 +24,18 @@ function runWithChildWithEnv(run, defaultArgs, event, ...eventArgs) {
   return _runWithChild(run, [defaultArgs, {}, "linux"], event, ...eventArgs);
 }
 
+async function testInstallerMainDownloads(main, name, packageRoot, join, assert) {
+  const calls = [];
+  await main(async (...args) => {
+    calls.push(args);
+    return `/tmp/${name}`;
+  });
+  assert.equal(calls.length, 1);
+  assert.deepEqual(calls[0].slice(0, 2), [name, "jonathanong/no-mistakes"]);
+  assert.equal(calls[0][2].vendorDir, join(packageRoot, "bin"));
+  assert.equal(calls[0][2].destinationName, name);
+}
+
 async function testInstallerFailures(main, assert) {
   const exits = [];
   const errors = [];
@@ -52,5 +64,6 @@ async function testInstallerFailures(main, assert) {
 module.exports = {
   runWithChild,
   runWithChildWithEnv,
+  testInstallerMainDownloads,
   testInstallerFailures,
 };
