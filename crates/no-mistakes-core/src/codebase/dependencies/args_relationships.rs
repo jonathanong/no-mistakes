@@ -1,0 +1,152 @@
+pub(crate) const VITEST_JEST_TEST_GLOBS: &[&str] = &[
+    "**/*.test.mts",
+    "**/*.spec.mts",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/*.test.tsx",
+    "**/*.spec.tsx",
+    "**/*.test.mjs",
+    "**/*.spec.mjs",
+    "**/*.test.js",
+    "**/*.spec.js",
+    "**/*.test.jsx",
+    "**/*.spec.jsx",
+    "**/__tests__/**/*.mts",
+    "**/__tests__/**/*.ts",
+    "**/__tests__/**/*.tsx",
+    "**/__tests__/**/*.mjs",
+    "**/__tests__/**/*.js",
+    "**/__tests__/**/*.jsx",
+];
+
+/// Map a `--test <framework>` value to its corresponding glob patterns.
+pub(crate) fn test_globs(framework: &str) -> Vec<String> {
+    const PLAYWRIGHT: &[&str] = &[
+        "**/tests/e2e/**/*.mts",
+        "**/tests/e2e/**/*.ts",
+        "**/tests/e2e/**/*.tsx",
+        "**/tests/e2e/**/*.mjs",
+        "**/tests/e2e/**/*.js",
+        "**/tests/e2e/**/*.jsx",
+        "**/playwright/**/*.spec.mts",
+        "**/playwright/**/*.spec.ts",
+        "**/playwright/**/*.spec.tsx",
+        "**/playwright/**/*.spec.mjs",
+        "**/playwright/**/*.spec.js",
+        "**/playwright/**/*.spec.jsx",
+    ];
+    const CARGO: &[&str] = &["**/tests/**/*.rs", "src/**/*_test.rs"];
+
+    match framework {
+        "vitest" => globs_to_strings(VITEST_JEST_TEST_GLOBS),
+        "jest" => globs_to_strings(VITEST_JEST_TEST_GLOBS),
+        "playwright" => globs_to_strings(PLAYWRIGHT),
+        "cargo" => globs_to_strings(CARGO),
+        _ => vec![],
+    }
+}
+
+fn globs_to_strings(globs: &[&str]) -> Vec<String> {
+    let mut strings = Vec::with_capacity(globs.len());
+    for glob in globs {
+        strings.push((*glob).to_string());
+    }
+    strings
+}
+
+pub enum Direction {
+    Deps,
+    Dependents,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, clap::ValueEnum)]
+#[clap(rename_all = "kebab-case")]
+pub enum RelationshipArg {
+    Import,
+    Workspace,
+    Test,
+    Route,
+    Queue,
+    Md,
+    Ci,
+    Http,
+    Process,
+    All,
+}
+
+/// Convert `--relationship` values into a `HashSet<EdgeKind>` filter.
+/// Returns `None` when "all" is present or the list is empty (= no filter).
+#[inline(never)]
+fn relationship_filter(
+    relationships: &[RelationshipArg],
+) -> Option<std::collections::HashSet<EdgeKind>> {
+    if relationships.is_empty() {
+        return None;
+    }
+    let mut set = std::collections::HashSet::new();
+    for r in relationships {
+        match r {
+            RelationshipArg::Import => {
+                set.insert(EdgeKind::Import);
+                set.insert(EdgeKind::TypeImport);
+                set.insert(EdgeKind::DynamicImport);
+                set.insert(EdgeKind::Require);
+            }
+            RelationshipArg::Workspace => {
+                set.insert(EdgeKind::WorkspaceImport);
+            }
+            RelationshipArg::Test => {
+                set.insert(EdgeKind::TestOf);
+                set.insert(EdgeKind::RouteTest);
+            }
+            RelationshipArg::Route => {
+                set.insert(EdgeKind::RouteRef);
+                set.insert(EdgeKind::RouteTest);
+            }
+            RelationshipArg::Queue => {
+                set.insert(EdgeKind::QueueEnqueue);
+                set.insert(EdgeKind::QueueWorker);
+            }
+            RelationshipArg::Md => {
+                set.insert(EdgeKind::MarkdownLink);
+            }
+            RelationshipArg::Ci => {
+                set.insert(EdgeKind::CiInvocation);
+            }
+            RelationshipArg::Http => {
+                set.insert(EdgeKind::HttpCall);
+            }
+            RelationshipArg::Process => {
+                set.insert(EdgeKind::ProcessSpawn);
+            }
+            RelationshipArg::All => return None,
+        }
+    }
+    Some(set)
+}
+
+fn relationships_are_import_only(relationships: &[RelationshipArg]) -> bool {
+    !relationships.is_empty()
+        && relationships
+            .iter()
+            .all(|relationship| *relationship == RelationshipArg::Import)
+}
+
+/// A parsed entrypoint: either a plain file path, or a file + exported symbol / queue job name.
+struct Entrypoint {
+    file: PathBuf,
+    symbol: Option<String>,
+}
+
+fn parse_entrypoint(s: &str) -> Entrypoint {
+    match s.split_once('#') {
+        Some((file, symbol)) => Entrypoint {
+            file: PathBuf::from(file),
+            symbol: Some(symbol.to_string()),
+        },
+        None => Entrypoint {
+            file: PathBuf::from(s),
+            symbol: None,
+        },
+    }
+}

@@ -6,8 +6,11 @@ use std::path::{Path, PathBuf};
 use crate::config::resolve;
 use crate::config::v2::{find_config_root, load_v2_config};
 
+#[path = "config/conversion.rs"]
 mod conversion;
+#[path = "config/discovery.rs"]
 mod discovery;
+#[path = "config/project.rs"]
 mod project;
 
 pub use project::{infer_nextjs_root, ProjectConfig};
