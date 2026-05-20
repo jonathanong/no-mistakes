@@ -6,6 +6,7 @@ use crate::codebase::ts_source::facts::{
     collect_ts_facts, collect_ts_facts_with_context, TsFactContext, TsFactMap, TsFactPlan,
 };
 use crate::codebase::ts_symbols::ExportKind;
+use crate::config::v2::{load_v2_config, ConfigView};
 use anyhow::Result;
 use globset::{Glob, GlobBuilder, GlobSet, GlobSetBuilder};
 use rayon::prelude::*;
@@ -244,15 +245,27 @@ struct GraphConfigOptions {
     queue: crate::codebase::config::QueueOptions,
     http_route: crate::codebase::config::HttpRouteOptions,
     http_call: crate::codebase::config::HttpCallOptions,
+    project_route_globs: Vec<String>,
+    test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
 }
 
 fn graph_config_options(root: &Path) -> Option<GraphConfigOptions> {
     let config = crate::codebase::config::load_config(root).ok()?;
+    let v2_config = load_v2_config(root, None).ok();
+    let project_route_globs = v2_config
+        .as_ref()
+        .map(|config| ConfigView::new(config).server_route_globs())
+        .unwrap_or_default();
+    let test_filter = v2_config
+        .as_ref()
+        .map(|config| crate::codebase::test_filter::TestFileFilter::new(root, config));
     Some(GraphConfigOptions {
         route: config.rule_options("route-consistency"),
         queue: config.rule_options("queue-dashboard-reachability"),
         http_route: config.rule_options("http-route-static-paths"),
         http_call: config.rule_options("http-call-static-paths"),
+        project_route_globs,
+        test_filter,
     })
 }
 
@@ -292,7 +305,9 @@ fn ts_fact_context_from_options(
 }
 
 fn route_ref_facts_configured(options: &GraphConfigOptions) -> bool {
-    route_backend_facts_configured(options) || !options.route.frontend_root.is_empty()
+    route_backend_facts_configured(options)
+        || !options.route.frontend_root.is_empty()
+        || !options.project_route_globs.is_empty()
 }
 
 fn route_backend_facts_configured(options: &GraphConfigOptions) -> bool {
@@ -1410,7 +1425,8 @@ fn resolve_cargo_bin_source(manifest_dir: &Path, name: &str, rel_path: &str) -> 
 }
 
 /// Collect `RouteRef` edges from route-referencing files to route-definition files.
-/// Only fires if `.guardrailsrc.yml` has route-consistency configuration.
+/// Uses project route globs from `.no-mistakes.yml` when present, otherwise
+/// falls back to legacy `route-consistency` configuration.
 fn collect_route_edges(
     root: &Path,
     tsconfig: &TsConfig,
@@ -1425,8 +1441,10 @@ fn collect_route_edges(
         return vec![];
     };
     let opts = &config_options.route;
+    let has_project_routes = !config_options.project_route_globs.is_empty();
 
-    if (opts.backend_pattern.is_empty() || opts.backend_register_object.is_empty())
+    if !has_project_routes
+        && (opts.backend_pattern.is_empty() || opts.backend_register_object.is_empty())
         && opts.frontend_root.is_empty()
     {
         return vec![];
@@ -1453,11 +1471,15 @@ fn collect_route_edges(
                 &opts.backend_register_object,
                 &gs,
                 facts,
+                config_options.test_filter.as_ref(),
             )
         } else {
             Vec::new()
         };
     all_defs.extend(backend_defs);
+    if has_project_routes {
+        all_defs.extend(collect_project_server_route_defs(root));
+    }
     if !opts.frontend_root.is_empty() {
         let frontend_abs = root.join(&opts.frontend_root);
         all_defs.extend(defs_frontend::collect_frontend_routes_from_files(
@@ -1465,6 +1487,8 @@ fn collect_route_edges(
             all_files,
         ));
     }
+    all_defs.sort();
+    all_defs.dedup();
     if all_defs.is_empty() {
         return vec![];
     }
@@ -1480,6 +1504,7 @@ fn collect_route_edges(
 
     let backend_prefixes = route_backend_prefixes(config_options);
     let backend_exact = opts.backend_exact_paths.clone();
+    let has_backend_filter = !backend_prefixes.is_empty() || !backend_exact.is_empty();
 
     let scan_globs: Vec<String> = if opts.scan_patterns.is_empty() {
         vec![
@@ -1526,7 +1551,7 @@ fn collect_route_edges(
                             .iter()
                             .any(|p| route_ref.pattern.starts_with(p.as_str()));
                         let is_backend = is_backend || backend_exact.contains(&route_ref.pattern);
-                        if !is_backend && opts.frontend_root.is_empty() {
+                        if has_backend_filter && !is_backend && opts.frontend_root.is_empty() {
                             continue;
                         }
                         for pattern in &all_patterns {
@@ -1553,21 +1578,38 @@ fn collect_route_edges(
         .collect()
 }
 
+fn collect_project_server_route_defs(root: &Path) -> Vec<(PathBuf, String)> {
+    let Ok(report) = crate::server_routes::analyze_project(root, None, &[]) else {
+        return Vec::new();
+    };
+    report
+        .routes
+        .into_iter()
+        .map(|route| (root.join(route.file), route.route))
+        .collect()
+}
+
 fn collect_backend_routes_from_graph_inputs(
     root: &Path,
     all_files: &[PathBuf],
     register_object: &str,
     pattern_globset: &GlobSet,
     facts: Option<&TsFactMap>,
+    test_filter: Option<&crate::codebase::test_filter::TestFileFilter>,
 ) -> Vec<(PathBuf, String)> {
+    let route_files: Vec<PathBuf> = all_files
+        .iter()
+        .filter(|path| {
+            path.strip_prefix(root)
+                .map(|rel| pattern_globset.is_match(rel))
+                .unwrap_or(false)
+                && !test_filter.is_some_and(|filter| filter.is_match(root, path.as_path()))
+        })
+        .cloned()
+        .collect();
     if let Some(facts) = facts {
-        return all_files
+        return route_files
             .par_iter()
-            .filter(|path| {
-                path.strip_prefix(root)
-                    .map(|rel| pattern_globset.is_match(rel))
-                    .unwrap_or(false)
-            })
             .filter_map(|path| facts.get(path).map(|file_facts| (path, file_facts)))
             .flat_map(|(path, file_facts)| {
                 file_facts
@@ -1582,7 +1624,7 @@ fn collect_backend_routes_from_graph_inputs(
 
     crate::codebase::ts_routes::defs_backend::collect_backend_routes_from_files(
         root,
-        all_files,
+        &route_files,
         register_object,
         pattern_globset,
     )
@@ -1925,8 +1967,14 @@ fn collect_http_call_edges(
     };
 
     // Collect backend route definitions: (file, pattern)
-    let route_defs =
-        collect_backend_routes_from_graph_inputs(root, all_files, &register_object, &gs, facts);
+    let route_defs = collect_backend_routes_from_graph_inputs(
+        root,
+        all_files,
+        &register_object,
+        &gs,
+        facts,
+        config_options.test_filter.as_ref(),
+    );
     if route_defs.is_empty() {
         return vec![];
     }

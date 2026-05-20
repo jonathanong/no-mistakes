@@ -162,6 +162,47 @@ fn route_collectors_cover_configured_prefixes_and_scan_globs() {
 }
 
 #[test]
+fn project_route_globs_drive_graph_route_edges_without_guardrails() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-project-route-config"));
+    let tsconfig =
+        crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
+    let all_files = GraphFiles::discover(&root).all;
+    let client = root.join("src/client.ts");
+    let route = root.join("backend/api/users.mts");
+    let test_route = root.join("backend/api/users.test.mts");
+    let ignored_route = root.join("backend/services/ignored.mts");
+    let config_options = graph_config_options(&root).unwrap();
+
+    assert_eq!(
+        config_options.project_route_globs,
+        vec!["backend/api/**".to_string()]
+    );
+
+    let fact_plan = effective_ts_fact_plan(
+        GraphBuildPlan {
+            routes: true,
+            ..GraphBuildPlan::default()
+        },
+        Some(&config_options),
+    );
+    assert!(fact_plan.route_refs);
+    assert!(!fact_plan.backend_routes);
+
+    let route_edges =
+        collect_route_edges(&root, &tsconfig, &all_files, None, Some(&config_options));
+    assert!(route_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RouteRef
+            && from.as_file() == Some(client.as_path())
+            && to.as_file() == Some(route.as_path())
+    }));
+    assert!(route_edges.iter().all(|(_from, to, kind)| {
+        *kind != EdgeKind::RouteRef
+            || (to.as_file() != Some(test_route.as_path())
+                && to.as_file() != Some(ignored_route.as_path()))
+    }));
+}
+
+#[test]
 fn route_and_http_fact_context_keep_separate_backend_matchers() {
     let root =
         crate::codebase::ts_resolver::normalize_path(&fixture("graph-split-route-http-config"));
@@ -295,6 +336,8 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         http_call: crate::codebase::config::HttpCallOptions {
             backend_prefixes: vec!["/api/".to_string()],
         },
+        project_route_globs: Vec::new(),
+        test_filter: None,
     };
     let invalid_glob_options = GraphConfigOptions {
         route: crate::codebase::config::RouteOptions::default(),
@@ -306,6 +349,8 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         http_call: crate::codebase::config::HttpCallOptions {
             backend_prefixes: vec!["/api/".to_string()],
         },
+        project_route_globs: Vec::new(),
+        test_filter: None,
     };
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&explicit.join("tsconfig.json")).unwrap();
@@ -333,6 +378,8 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         },
         http_route: crate::codebase::config::HttpRouteOptions::default(),
         http_call: crate::codebase::config::HttpCallOptions::default(),
+        project_route_globs: Vec::new(),
+        test_filter: None,
     };
     let mut forward = EdgeMap::new();
     let mut reverse = EdgeMap::new();
@@ -403,6 +450,8 @@ fn effective_fact_plan_skips_config_dependent_domains_without_required_config() 
         },
         http_route: crate::codebase::config::HttpRouteOptions::default(),
         http_call: crate::codebase::config::HttpCallOptions::default(),
+        project_route_globs: Vec::new(),
+        test_filter: None,
     };
     let queue_only = effective_ts_fact_plan(
         GraphBuildPlan {

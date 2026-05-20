@@ -1,4 +1,5 @@
 use crate::codebase::ts_resolver::{find_tsconfig, load_tsconfig, ImportResolver, TsConfig};
+use crate::config::v2::{load_v2_config, ConfigView};
 use crate::server_routes::extract::extract_file;
 use crate::server_routes::model::{FileFacts, ProjectReport, RouteSite};
 use crate::server_routes::mounts::{prefixes_for, resolve_mounts_with_resolver};
@@ -25,15 +26,34 @@ pub fn analyze_project(
 ) -> anyhow::Result<ProjectReport> {
     let root = root.canonicalize().unwrap_or(root.to_path_buf());
     let tsconfig = resolve_tsconfig(&root, tsconfig_path)?;
+    let v2_config = load_v2_config(&root, None).ok();
+    let config_route_filter = match v2_config.as_ref() {
+        Some(config) => build_filter(&ConfigView::new(config).server_route_globs())?,
+        None => None,
+    };
+    let test_filter = v2_config
+        .as_ref()
+        .map(|config| crate::codebase::test_filter::TestFileFilter::new(&root, config));
+    let extra_skip = v2_config
+        .as_ref()
+        .map(|config| config.filesystem.skip_directories.as_slice())
+        .unwrap_or(&[]);
     let filter = build_filter(filters)?;
     let mut files = Vec::new();
-    for path in discover_source_files(&root) {
+    for path in discover_source_files(&root, extra_skip) {
         let rel = path.strip_prefix(&root).unwrap_or(&path);
-        let matches = match &filter {
-            Some(filter) => filter.is_match(rel),
-            None => true,
-        };
-        if matches {
+        let matches_config = config_route_filter
+            .as_ref()
+            .map(|filter| filter.is_match(rel))
+            .unwrap_or(true);
+        let matches_cli = filter
+            .as_ref()
+            .map(|filter| filter.is_match(rel))
+            .unwrap_or(true);
+        let is_test = test_filter
+            .as_ref()
+            .is_some_and(|filter| filter.is_match(&root, &path));
+        if matches_config && matches_cli && !is_test {
             files.push(path);
         }
     }
