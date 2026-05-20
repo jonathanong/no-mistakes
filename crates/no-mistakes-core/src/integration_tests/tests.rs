@@ -84,6 +84,15 @@ fn check_reports_integration_policy_violations() {
 }
 
 #[test]
+fn multiple_integration_suites_for_one_project_share_project_scope_once() {
+    let root = fixture("basic");
+    let config = fixture_file("basic", "multiple-integration-suites.no-mistakes.yml");
+    let findings = check(&root, Some(&config)).unwrap();
+
+    assert_eq!(findings, Vec::new());
+}
+
+#[test]
 fn empty_project_policy_is_allowed() {
     let config = config_snippet("empty-project-policy.yml");
     config::validate_config(&config).unwrap();

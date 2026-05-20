@@ -1,0 +1,8 @@
+tests:
+  vitest:
+    configs: vitest.config.mts
+    projects:
+      mixed:
+        integration_suites:
+          openai: [openai]
+          anthropic: [anthropic]

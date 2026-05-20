@@ -2,7 +2,7 @@ use super::project_config;
 use super::types::{ConfigProject, EffectiveIntegrationPolicy, Framework, Suite};
 use crate::config::v2::schema::{NoMistakesConfig, StringOrList, TestProjectPolicy};
 use anyhow::Result;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 pub(super) fn validate_config(config: &NoMistakesConfig) -> Result<()> {
@@ -60,19 +60,35 @@ fn suites_for_framework(
             continue;
         }
         let project = exact_project(framework, project_name, &projects)?;
-        for (suite_name, integrations) in &policy.integration_suites {
-            suites.push(Suite {
-                framework,
-                name: format!("{project_name}.{suite_name}"),
-                include: project.include.clone(),
-                exclude: project.exclude.clone(),
-                policy: EffectiveIntegrationPolicy::Suites {
-                    suites: integrations.clone(),
-                },
-            });
-        }
+        let allowed_integrations = policy
+            .integration_suites
+            .values()
+            .flatten()
+            .cloned()
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect::<Vec<_>>();
+        suites.push(Suite {
+            framework,
+            name: policy_suite_name(project_name, policy),
+            include: project.include.clone(),
+            exclude: project.exclude.clone(),
+            policy: EffectiveIntegrationPolicy::Suites {
+                suites: allowed_integrations,
+            },
+        });
     }
     Ok(suites)
+}
+
+fn policy_suite_name(project_name: &str, policy: &TestProjectPolicy) -> String {
+    let suffix = policy
+        .integration_suites
+        .keys()
+        .cloned()
+        .collect::<Vec<_>>()
+        .join("+");
+    format!("{project_name}.{suffix}")
 }
 
 fn exact_project<'a>(
