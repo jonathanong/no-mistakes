@@ -35,7 +35,7 @@ pub(super) fn config_from_v2(v2: NoMistakesConfig) -> Config {
             .cloned()
             .collect::<Vec<_>>();
         let applies_to_repository = def.applies_to_repository();
-        if !applies_to_repository && !def.projects.is_empty() && valid_projects.is_empty() {
+        if !applies_to_repository && valid_projects.is_empty() {
             continue;
         }
         let entry = rules.entry(def.rule.clone()).or_insert_with(|| RuleConfig {

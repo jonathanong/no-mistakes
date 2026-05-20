@@ -155,6 +155,18 @@ fn v2_unknown_rule_project_targets_are_ignored() {
 }
 
 #[test]
+fn v2_untargeted_enabled_rules_are_not_converted_to_global_codebase_rules() {
+    let config = v2_config_fixture("untargeted-enabled-rule");
+
+    let config = conversion::config_from_v2(config);
+
+    assert!(!config.rules.contains_key("unique-exports"));
+    assert!(config
+        .project_roots_for_rule(Path::new("/repo"), "unique-exports")
+        .is_empty());
+}
+
+#[test]
 fn load_codebase_config_rejects_duplicate_parent_configs() {
     let root =
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/config-v2/duplicate-stems");
