@@ -32,7 +32,6 @@ function muslReport() {
 }
 
 test("maps supported platforms to Rust targets", () => {
-  assert.equal(platformTarget("darwin", "x64"), "x86_64-apple-darwin");
   assert.equal(platformTarget("darwin", "arm64"), "aarch64-apple-darwin");
   assert.equal(platformTarget("win32", "x64"), "x86_64-pc-windows-msvc");
   assert.equal(platformTarget("linux", "x64", glibcReport("2.35")), "x86_64-unknown-linux-gnu");
@@ -77,6 +76,7 @@ test("installer main reports failures", async () => {
 });
 
 test("rejects unsupported platform targets", () => {
+  assert.equal(platformTarget("darwin", "x64"), null);
   assert.equal(platformTarget("linux", "x64", muslReport()), null);
   assert.equal(platformTarget("linux", "x64", glibcReport("2.31")), null);
   assert.equal(platformTarget("freebsd", "x64"), null);
