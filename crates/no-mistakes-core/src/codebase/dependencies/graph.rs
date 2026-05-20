@@ -1455,26 +1455,27 @@ fn collect_route_edges(
     let mut all_defs: Vec<(PathBuf, String)> = Vec::new();
     let backend_defs =
         if !opts.backend_pattern.is_empty() && !opts.backend_register_object.is_empty() {
-            let glob = match GlobBuilder::new(&opts.backend_pattern)
+            match GlobBuilder::new(&opts.backend_pattern)
                 .literal_separator(false)
                 .build()
             {
-                Ok(g) => g,
-                Err(_) => return vec![],
-            };
-            let mut gb = GlobSetBuilder::new();
-            gb.add(glob);
-            let gs = gb
-                .build()
-                .expect("globset with one validated backend route glob should build");
-            collect_backend_routes_from_graph_inputs(
-                root,
-                all_files,
-                &opts.backend_register_object,
-                &gs,
-                facts,
-                config_options.test_filter.as_ref(),
-            )
+                Ok(glob) => {
+                    let mut gb = GlobSetBuilder::new();
+                    gb.add(glob);
+                    let gs = gb
+                        .build()
+                        .expect("globset with one validated backend route glob should build");
+                    collect_backend_routes_from_graph_inputs(
+                        root,
+                        all_files,
+                        &opts.backend_register_object,
+                        &gs,
+                        facts,
+                        config_options.test_filter.as_ref(),
+                    )
+                }
+                Err(_) => Vec::new(),
+            }
         } else {
             Vec::new()
         };
@@ -1483,6 +1484,7 @@ fn collect_route_edges(
         all_defs.extend(collect_project_server_route_defs(
             root,
             all_files,
+            tsconfig,
             project_route_globset.expect("project route globset checked above"),
             config_options.test_filter.as_ref(),
         ));
@@ -1588,6 +1590,7 @@ fn collect_route_edges(
 fn collect_project_server_route_defs(
     root: &Path,
     all_files: &[PathBuf],
+    tsconfig: &TsConfig,
     route_globset: &GlobSet,
     test_filter: Option<&crate::codebase::test_filter::TestFileFilter>,
 ) -> Vec<(PathBuf, String)> {
@@ -1602,7 +1605,7 @@ fn collect_project_server_route_defs(
         .cloned()
         .collect();
 
-    crate::server_routes::route_defs_from_files(root, &route_files)
+    crate::server_routes::route_defs_from_files(root, &route_files, tsconfig)
 }
 
 fn compile_project_route_globset(project_route_globs: &[String]) -> Option<GlobSet> {

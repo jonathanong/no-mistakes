@@ -62,12 +62,14 @@ pub fn analyze_project(
     Ok(build_report(&root, &facts, &tsconfig))
 }
 
-pub(crate) fn route_defs_from_files(root: &Path, files: &[PathBuf]) -> Vec<(PathBuf, String)> {
+pub(crate) fn route_defs_from_files(
+    root: &Path,
+    files: &[PathBuf],
+    tsconfig: &TsConfig,
+) -> Vec<(PathBuf, String)> {
     let root = root.canonicalize().unwrap_or(root.to_path_buf());
-    let tsconfig =
-        resolve_tsconfig(&root, None).expect("implicit tsconfig resolution should not fail");
     let facts = collect_file_facts(files);
-    build_report(&root, &facts, &tsconfig)
+    build_report(&root, &facts, tsconfig)
         .routes
         .into_iter()
         .map(|route| (root.join(route.file), route.route))

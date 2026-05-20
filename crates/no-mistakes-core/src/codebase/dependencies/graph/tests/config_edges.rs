@@ -199,6 +199,22 @@ fn project_route_globs_drive_graph_route_edges_without_guardrails() {
             || (to.as_file() != Some(test_route.as_path())
                 && to.as_file() != Some(ignored_route.as_path()))
     }));
+
+    let mut invalid_legacy_options = config_options.clone();
+    invalid_legacy_options.route.backend_pattern = "[".to_string();
+    invalid_legacy_options.route.backend_register_object = "app".to_string();
+    let invalid_legacy_route_edges = collect_route_edges(
+        &root,
+        &tsconfig,
+        &all_files,
+        None,
+        Some(&invalid_legacy_options),
+    );
+    assert!(invalid_legacy_route_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RouteRef
+            && from.as_file() == Some(client.as_path())
+            && to.as_file() == Some(route.as_path())
+    }));
 }
 
 #[test]
