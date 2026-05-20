@@ -19,21 +19,32 @@ pub(crate) type FetchCoverageEntry = BTreeMap<
 >;
 
 pub(crate) fn seed_fetch_coverage(fetch_index: &FetchIndex) -> FetchCoverageEntry {
-    let mut by_fetch: FetchCoverageEntry = BTreeMap::new();
+    type EntryValues = (
+        BTreeSet<Arc<String>>,
+        BTreeSet<TestRef>,
+        BTreeSet<Arc<String>>,
+    );
+    let mut by_fetch: std::collections::HashMap<(&str, &str), EntryValues> =
+        std::collections::HashMap::new();
+
     for (route_file, fetches) in fetch_index {
         for fetch_occ in fetches {
             if fetch_occ.dynamic || fetch_occ.unsupported {
                 continue;
             }
-            let key = (fetch_occ.method.clone(), fetch_occ.path.clone());
+            let key = (fetch_occ.method.as_str(), fetch_occ.path.as_str());
             by_fetch
                 .entry(key)
-                .or_insert((Default::default(), Default::default(), Default::default()))
+                .or_insert_with(|| (Default::default(), Default::default(), Default::default()))
                 .2
                 .insert(std::sync::Arc::new(route_file.clone()));
         }
     }
+
     by_fetch
+        .into_iter()
+        .map(|((method, path), value)| ((method.to_string(), path.to_string()), value))
+        .collect()
 }
 
 pub(crate) fn collect_fetches_for_routes(
