@@ -1,7 +1,7 @@
 use super::RuleConfig;
 use crate::config::v2::schema::ProjectType;
 use serde::Deserialize;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Deserialize, Default, PartialEq, Eq)]
@@ -17,6 +17,7 @@ pub struct ProjectConfig {
 pub(super) fn roots_for_rule(
     projects: &HashMap<String, ProjectConfig>,
     rules: &HashMap<String, RuleConfig>,
+    repository_rules: &HashSet<String>,
     root: &Path,
     rule_id: &str,
 ) -> Vec<PathBuf> {
@@ -35,7 +36,12 @@ pub(super) fn roots_for_rule(
             project_roots.push(root.to_path_buf());
         }
     }
+    if repository_rules.contains(rule_id) {
+        project_roots.push(root.to_path_buf());
+    }
     if !project_roots.is_empty() {
+        project_roots.sort();
+        project_roots.dedup();
         return project_roots;
     }
 

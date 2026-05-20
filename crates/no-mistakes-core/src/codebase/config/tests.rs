@@ -1,4 +1,5 @@
 use super::*;
+use crate::config::v2::NoMistakesConfig;
 use std::path::PathBuf;
 
 #[test]
@@ -27,6 +28,7 @@ fn augment_from_gitignore_adds_plain_directory_names_once() {
             skip_directories: vec!["dist".to_string()],
         },
         projects: HashMap::new(),
+        repository_rules: HashSet::new(),
         rules: HashMap::new(),
     };
 
@@ -124,13 +126,58 @@ rules:
     )
     .unwrap();
 
-    let config = config_from_v2(config);
+    let config = conversion::config_from_v2(config);
 
     assert!(config.is_rule_enabled("unique-exports"));
     assert_eq!(
         config.project_roots_for_rule(Path::new("/repo"), "unique-exports"),
         vec![PathBuf::from("/repo/web")]
     );
+}
+
+#[test]
+fn v2_repository_rule_application_keeps_workspace_root_with_project_targets() {
+    let config: NoMistakesConfig = serde_yaml::from_str(
+        r#"
+projects:
+  web:
+    root: web
+rules:
+  - rule: unique-exports
+    scope: repository
+  - rule: unique-exports
+    projects: [web]
+"#,
+    )
+    .unwrap();
+
+    let config = conversion::config_from_v2(config);
+
+    assert_eq!(
+        config.project_roots_for_rule(Path::new("/repo"), "unique-exports"),
+        vec![PathBuf::from("/repo"), PathBuf::from("/repo/web")]
+    );
+}
+
+#[test]
+fn v2_unknown_rule_project_targets_are_ignored() {
+    let config: NoMistakesConfig = serde_yaml::from_str(
+        r#"
+projects:
+  web:
+    root: web
+rules:
+  - rule: unique-exports
+    projects: [missing]
+"#,
+    )
+    .unwrap();
+
+    let config = conversion::config_from_v2(config);
+
+    assert!(config
+        .project_roots_for_rule(Path::new("/repo"), "unique-exports")
+        .is_empty());
 }
 
 #[test]
@@ -194,7 +241,13 @@ fn project_roots_for_rule_falls_back_when_nextjs_root_is_not_inferred() {
     );
 
     assert_eq!(
-        project::roots_for_rule(&projects, &HashMap::new(), root, "unique-exports"),
+        project::roots_for_rule(
+            &projects,
+            &HashMap::new(),
+            &HashSet::new(),
+            root,
+            "unique-exports"
+        ),
         vec![PathBuf::from("/repo")]
     );
 }

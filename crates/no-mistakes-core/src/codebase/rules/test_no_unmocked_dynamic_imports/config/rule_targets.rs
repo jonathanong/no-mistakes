@@ -8,12 +8,21 @@ pub(super) fn rule_test_project_globs(
 ) -> Result<(Vec<String>, Vec<String>)> {
     let mut includes = Vec::new();
     let mut excludes = Vec::new();
-    let projects = crate::integration_tests::project_config::load_projects(
-        root,
-        crate::integration_tests::types::Framework::Vitest,
-        config.tests.vitest.configs.as_ref(),
-    )?;
-    for rule in config.rule_applications(super::super::RULE_ID) {
+    let rules = config.rule_applications(super::super::RULE_ID);
+    let vitest_project_names = rules
+        .iter()
+        .flat_map(|rule| rule.tests.vitest.iter())
+        .collect::<Vec<_>>();
+    let projects = if vitest_project_names.is_empty() {
+        Vec::new()
+    } else {
+        crate::integration_tests::project_config::load_projects(
+            root,
+            crate::integration_tests::types::Framework::Vitest,
+            config.tests.vitest.configs.as_ref(),
+        )?
+    };
+    for rule in rules {
         for project_name in &rule.tests.vitest {
             let Some(project) = projects
                 .iter()

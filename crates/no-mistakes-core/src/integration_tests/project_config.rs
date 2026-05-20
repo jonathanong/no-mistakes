@@ -10,14 +10,18 @@ use std::path::Path;
 const PLAYWRIGHT_CONFIGS: &[&str] = &[
     "playwright.config.ts",
     "playwright.config.mts",
+    "playwright.config.cts",
     "playwright.config.js",
     "playwright.config.mjs",
+    "playwright.config.cjs",
 ];
 const VITEST_CONFIGS: &[&str] = &[
     "vitest.config.ts",
     "vitest.config.mts",
+    "vitest.config.cts",
     "vitest.config.js",
     "vitest.config.mjs",
+    "vitest.config.cjs",
 ];
 
 pub(crate) fn load_projects(

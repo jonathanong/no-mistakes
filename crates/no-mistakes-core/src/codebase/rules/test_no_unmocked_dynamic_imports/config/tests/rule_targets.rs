@@ -89,6 +89,31 @@ fn missing_project_rule_target_falls_back_to_config_globs() {
 }
 
 #[test]
+fn project_rule_target_does_not_require_vitest_config_loading() {
+    let root = root_fixture("codebase-analysis/test-no-unmocked-dynamic-imports");
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.configs = Some(StringOrList::One("missing.vitest.config.mts".to_string()));
+    config.projects.insert(
+        "tests".to_string(),
+        Project {
+            root: Some("tests".to_string()),
+            include: vec!["good.test.mts".to_string()],
+            ..Default::default()
+        },
+    );
+    config.rules.push(RuleDef {
+        rule: super::super::super::RULE_ID.to_string(),
+        projects: vec!["tests".to_string()],
+        ..Default::default()
+    });
+
+    let filter = test_filter(&root, &config).unwrap();
+
+    assert!(filter.is_match("tests/good.test.mts"));
+    assert!(!filter.is_match("tests/bad.test.mts"));
+}
+
+#[test]
 fn empty_project_rule_target_matches_everything_under_project_root() {
     let mut config = NoMistakesConfig::default();
     config

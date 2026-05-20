@@ -222,6 +222,22 @@ tests:
             .unwrap()
             .is_empty()
     );
+    let commonjs_root = fixture("cjs-cts-configs");
+    assert!(
+        project_config::load_projects(&commonjs_root, types::Framework::Vitest, None)
+            .unwrap()
+            .iter()
+            .any(
+                |project| project.config.as_deref() == Some("vitest.config.cts")
+                    && project.name.as_deref() == Some("unit")
+            )
+    );
+    assert!(
+        project_config::load_projects(&commonjs_root, types::Framework::Playwright, None)
+            .unwrap()
+            .iter()
+            .any(|project| project.config.as_deref() == Some("playwright.config.cjs"))
+    );
     assert!(
         !project_config::load_projects(&fixture("basic"), types::Framework::Playwright, None)
             .unwrap()

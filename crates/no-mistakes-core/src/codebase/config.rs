@@ -1,11 +1,12 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use crate::config::resolve;
-use crate::config::v2::{find_config_root, load_v2_config, schema::NoMistakesConfig};
+use crate::config::v2::{find_config_root, load_v2_config};
 
+mod conversion;
 mod discovery;
 mod project;
 
@@ -70,6 +71,8 @@ pub struct Config {
     #[serde(default)]
     pub projects: HashMap<String, ProjectConfig>,
     #[serde(default)]
+    pub repository_rules: HashSet<String>,
+    #[serde(default)]
     pub rules: HashMap<String, RuleConfig>,
 }
 
@@ -93,7 +96,13 @@ impl Config {
     }
 
     pub fn project_roots_for_rule(&self, root: &Path, rule_id: &str) -> Vec<PathBuf> {
-        project::roots_for_rule(&self.projects, &self.rules, root, rule_id)
+        project::roots_for_rule(
+            &self.projects,
+            &self.rules,
+            &self.repository_rules,
+            root,
+            rule_id,
+        )
     }
 
     pub fn augment_from_gitignore(&mut self, root: &Path) {
@@ -128,7 +137,7 @@ pub fn load_config(start: &Path) -> Result<Config> {
 
 pub fn load_config_with_path(start: &Path, config_path: Option<&Path>) -> Result<Config> {
     let v2 = load_v2_config(start, config_path)?;
-    let mut config = config_from_v2(v2);
+    let mut config = conversion::config_from_v2(v2);
     let gitignore_root = match config_path {
         Some(path) => {
             let resolved = resolve(start, path);
@@ -155,59 +164,9 @@ pub fn load_codebase_config_with_path(start: &Path, config_path: Option<&Path>) 
     };
 
     let v2 = load_v2_config(start, Some(&path))?;
-    let mut config = config_from_v2(v2);
+    let mut config = conversion::config_from_v2(v2);
     config.augment_from_gitignore(path.parent().unwrap_or(start));
     Ok(config)
-}
-
-fn config_from_v2(v2: NoMistakesConfig) -> Config {
-    let mut projects: HashMap<String, ProjectConfig> = v2
-        .projects
-        .into_iter()
-        .map(|(name, project)| {
-            (
-                name,
-                ProjectConfig {
-                    type_: project.type_,
-                    root: project.root,
-                    include: project.include,
-                    rules: Vec::new(),
-                },
-            )
-        })
-        .collect();
-    let mut rules = HashMap::new();
-    for def in v2.rules {
-        if !def.enabled {
-            rules.entry(def.rule.clone()).or_insert_with(|| RuleConfig {
-                enabled: false,
-                options: def.options.clone(),
-            });
-            continue;
-        }
-        let entry = rules.entry(def.rule.clone()).or_insert_with(|| RuleConfig {
-            enabled: true,
-            options: def.options.clone(),
-        });
-        if !entry.enabled {
-            entry.enabled = true;
-            entry.options = def.options.clone();
-        }
-        for project in def.projects {
-            projects
-                .entry(project)
-                .or_default()
-                .rules
-                .push(def.rule.clone());
-        }
-    }
-    Config {
-        filesystem: FilesystemConfig {
-            skip_directories: v2.filesystem.skip_directories,
-        },
-        projects,
-        rules,
-    }
 }
 
 #[cfg(test)]
