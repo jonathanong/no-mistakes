@@ -59,6 +59,24 @@ pub struct RuleConfig {
     pub options: serde_yaml::Value,
 }
 
+#[derive(Debug, Clone, Deserialize, Default, PartialEq)]
+pub struct RuleApplicationConfig {
+    #[serde(default)]
+    pub rule: String,
+    #[serde(default)]
+    pub projects: Vec<String>,
+    #[serde(default)]
+    pub repository: bool,
+    #[serde(default)]
+    pub options: serde_yaml::Value,
+}
+
+impl RuleApplicationConfig {
+    pub fn rule_options<T: for<'de> Deserialize<'de> + Default>(&self) -> T {
+        serde_yaml::from_value(self.options.clone()).unwrap_or_default()
+    }
+}
+
 fn default_true() -> bool {
     true
 }
@@ -74,6 +92,8 @@ pub struct Config {
     pub repository_rules: HashSet<String>,
     #[serde(default)]
     pub rules: HashMap<String, RuleConfig>,
+    #[serde(default)]
+    pub rule_applications: Vec<RuleApplicationConfig>,
 }
 
 impl Config {
@@ -103,6 +123,38 @@ impl Config {
             root,
             rule_id,
         )
+    }
+
+    pub fn rule_applications_for(&self, rule_id: &str) -> Vec<&RuleApplicationConfig> {
+        self.rule_applications
+            .iter()
+            .filter(|application| application.rule == rule_id)
+            .collect()
+    }
+
+    pub fn project_roots_for_rule_application(
+        &self,
+        root: &Path,
+        application: &RuleApplicationConfig,
+    ) -> Vec<PathBuf> {
+        let mut roots = Vec::new();
+        for project in application
+            .projects
+            .iter()
+            .filter_map(|project_name| self.projects.get(project_name))
+        {
+            roots.push(
+                project
+                    .effective_root(root)
+                    .unwrap_or_else(|| root.to_path_buf()),
+            );
+        }
+        if application.repository {
+            roots.push(root.to_path_buf());
+        }
+        roots.sort();
+        roots.dedup();
+        roots
     }
 
     pub fn augment_from_gitignore(&mut self, root: &Path) {

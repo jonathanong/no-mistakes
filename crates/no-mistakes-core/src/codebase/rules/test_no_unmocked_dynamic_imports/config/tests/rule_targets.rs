@@ -92,6 +92,25 @@ fn playwright_rule_target_uses_exact_project_globs() {
 }
 
 #[test]
+fn vitest_rule_target_matches_unnamed_default_project() {
+    let root = root_fixture("codebase-analysis/test-no-unmocked-dynamic-imports");
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: super::super::super::RULE_ID.to_string(),
+        tests: RuleTestTargets {
+            vitest: vec!["default".to_string()],
+            ..Default::default()
+        },
+        ..Default::default()
+    });
+
+    let filter = test_filter(&root, &config).unwrap();
+
+    assert!(filter.is_match("tests/good.test.mts"));
+    assert!(!filter.is_match("src/unmocked-child.mts"));
+}
+
+#[test]
 fn vitest_rule_target_rejects_unknown_project() {
     let root = root_fixture("integration-tests/basic");
     let mut config = NoMistakesConfig::default();

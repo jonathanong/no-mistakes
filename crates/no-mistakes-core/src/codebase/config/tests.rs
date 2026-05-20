@@ -41,6 +41,7 @@ fn augment_from_gitignore_adds_plain_directory_names_once() {
         projects: HashMap::new(),
         repository_rules: HashSet::new(),
         rules: HashMap::new(),
+        rule_applications: Vec::new(),
     };
 
     config.augment_from_gitignore(&root);
@@ -128,6 +129,37 @@ fn v2_duplicate_rule_applications_enable_rule_when_any_application_is_enabled() 
     assert_eq!(
         config.project_roots_for_rule(Path::new("/repo"), "unique-exports"),
         vec![PathBuf::from("/repo/web")]
+    );
+}
+
+#[test]
+fn v2_rule_applications_preserve_per_application_options() {
+    let config = v2_config_fixture("multiple-rule-application-options");
+
+    let config = conversion::config_from_v2(config);
+    let options = config
+        .rule_applications_for("rust-max-lines-per-file")
+        .into_iter()
+        .map(|application| {
+            application.rule_options::<super::super::rules::rust_max_lines_per_file::Options>()
+        })
+        .map(|options| options.src_max)
+        .collect::<Vec<_>>();
+
+    assert_eq!(options, vec![Some(100), Some(80)]);
+}
+
+#[test]
+fn v2_rule_application_project_without_root_uses_workspace_root() {
+    let config = v2_config_fixture("rule-application-default-root");
+
+    let config = conversion::config_from_v2(config);
+    let applications = config.rule_applications_for("unique-exports");
+
+    assert_eq!(applications.len(), 1);
+    assert_eq!(
+        config.project_roots_for_rule_application(Path::new("/repo"), applications[0]),
+        vec![PathBuf::from("/repo")]
     );
 }
 

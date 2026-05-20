@@ -1,4 +1,4 @@
-use super::{Config, FilesystemConfig, ProjectConfig, RuleConfig};
+use super::{Config, FilesystemConfig, ProjectConfig, RuleApplicationConfig, RuleConfig};
 use crate::config::v2::schema::NoMistakesConfig;
 use std::collections::{HashMap, HashSet};
 
@@ -20,6 +20,7 @@ pub(super) fn config_from_v2(v2: NoMistakesConfig) -> Config {
         .collect();
     let mut rules = HashMap::new();
     let mut repository_rules = HashSet::new();
+    let mut rule_applications = Vec::new();
     for def in v2.rules {
         if !def.enabled {
             rules.entry(def.rule.clone()).or_insert_with(|| RuleConfig {
@@ -38,6 +39,12 @@ pub(super) fn config_from_v2(v2: NoMistakesConfig) -> Config {
         if !applies_to_repository && valid_projects.is_empty() {
             continue;
         }
+        rule_applications.push(RuleApplicationConfig {
+            rule: def.rule.clone(),
+            projects: valid_projects.clone(),
+            repository: applies_to_repository,
+            options: def.options.clone(),
+        });
         let entry = rules.entry(def.rule.clone()).or_insert_with(|| RuleConfig {
             enabled: true,
             options: def.options.clone(),
@@ -62,5 +69,6 @@ pub(super) fn config_from_v2(v2: NoMistakesConfig) -> Config {
         projects,
         repository_rules,
         rules,
+        rule_applications,
     }
 }

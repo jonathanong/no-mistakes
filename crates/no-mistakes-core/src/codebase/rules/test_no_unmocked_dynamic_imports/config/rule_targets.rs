@@ -84,7 +84,7 @@ fn append_test_project_globs(
     let mut matched = false;
     for project in projects
         .iter()
-        .filter(|project| project.name.as_deref() == Some(project_name))
+        .filter(|project| test_project_matches(project, project_name))
     {
         matched = true;
         includes.extend(project.include.clone());
@@ -97,6 +97,11 @@ fn append_test_project_globs(
         );
     }
     Ok(())
+}
+
+fn test_project_matches(project: &ConfigProject, project_name: &str) -> bool {
+    project.name.as_deref() == Some(project_name)
+        || (project.name.is_none() && project_name == "default")
 }
 
 fn append_project_includes(

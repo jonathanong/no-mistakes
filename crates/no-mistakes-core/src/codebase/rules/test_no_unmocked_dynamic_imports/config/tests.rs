@@ -317,6 +317,22 @@ fn default_config_discovery_normalizes_existing_files() {
 }
 
 #[test]
+fn default_config_discovery_reads_vitest_commonjs_setup_files() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/integration-tests/vitest-cjs-config"),
+    );
+
+    let files = config_files(&root, &NoMistakesConfig::default());
+    let setups = setup_files(&root, &NoMistakesConfig::default()).unwrap();
+
+    assert!(files
+        .iter()
+        .any(|file| file.path.ends_with("vitest.config.cjs")));
+    assert!(setups.iter().any(|file| file.ends_with("setup.ts")));
+}
+
+#[test]
 fn configured_config_globs_expand_existing_files() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

@@ -81,6 +81,39 @@ fn analyzes_nextjs_project_from_shared_facts() {
 }
 
 #[test]
+fn analyze_project_with_facts_applies_options_per_rule_application() {
+    let root = fixture("unique-exports-per-application-options");
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        files,
+        crate::codebase::check_facts::CheckFactPlan {
+            symbols: true,
+            source: true,
+            ..Default::default()
+        },
+    );
+
+    let findings = analyze_project_with_facts(&root, None, None, &facts).unwrap();
+
+    assert!(findings.iter().any(|finding| finding.file == "strict/a.ts"));
+    assert!(!findings.iter().any(|finding| finding.file == "loose/a.ts"));
+}
+
+#[test]
+fn analyze_project_with_facts_surfaces_per_application_errors() {
+    let root = fixture("unique-exports-per-application-options");
+    let facts = crate::codebase::check_facts::CheckFactMap {
+        files: vec![root.join("strict/a.ts")],
+        ..Default::default()
+    };
+
+    let error = analyze_project_with_facts(&root, None, None, &facts).unwrap_err();
+
+    assert!(error.to_string().contains("missing shared facts"));
+}
+
+#[test]
 fn analyze_project_with_facts_returns_empty_without_enabled_projects() {
     let root = fixture("unique-exports-config-disabled");
     let facts = crate::codebase::check_facts::CheckFactMap::default();

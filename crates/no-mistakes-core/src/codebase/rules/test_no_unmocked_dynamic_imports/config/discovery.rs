@@ -68,8 +68,10 @@ fn discovered_configs(root: &Path) -> Vec<ConfigFile> {
     let discovered = [
         "vitest.config.ts",
         "vitest.config.mts",
+        "vitest.config.cts",
         "vitest.config.js",
         "vitest.config.mjs",
+        "vitest.config.cjs",
     ]
     .into_iter()
     .map(|path| ConfigFile {
