@@ -9,7 +9,7 @@ const VENDOR = join(__dirname, "..", "vendor");
 const NATIVE = join(VENDOR, process.platform === "win32" ? "queue-ast-hop.exe" : "queue-ast-hop");
 const { binaryPath, run } = require("../bin/queue-ast-hop");
 const { main } = require("./install");
-const { runWithChildWithEnv, testInstallerFailures } = require("no-mistakes-core/lib/test-helpers");
+const { runWithChildWithEnv, testInstallerFailures } = require("../../../tests/js/test-helpers");
 
 test("wrapper helpers resolve binary paths and handle child outcomes", async () => {
   assert.equal(binaryPath({ QUEUE_AST_HOP_BINARY: "/tmp/custom" }, "linux"), "/tmp/custom");

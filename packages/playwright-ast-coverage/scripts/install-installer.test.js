@@ -5,7 +5,7 @@ const { mkdir, mkdtemp, readFile, rm, stat, writeFile } = require("node:fs/promi
 const { join } = require("node:path");
 const { tmpdir } = require("node:os");
 const { pathToFileURL } = require("node:url");
-const core = require("no-mistakes-core");
+const core = require("./install/index");
 
 const { assetName, install, platformTarget, unsupportedPlatformMessage } = require("./install");
 

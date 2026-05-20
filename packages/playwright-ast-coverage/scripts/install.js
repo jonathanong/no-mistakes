@@ -4,7 +4,7 @@
 const { join } = require("node:path");
 const PACKAGE_ROOT = join(__dirname, "..");
 const pkg = require(join(PACKAGE_ROOT, "package.json"));
-const core = require("no-mistakes-core");
+const core = require("./install/index");
 const INSTALL_DEFAULTS = {
   version: pkg.version,
   vendorDir: join(PACKAGE_ROOT, "vendor"),

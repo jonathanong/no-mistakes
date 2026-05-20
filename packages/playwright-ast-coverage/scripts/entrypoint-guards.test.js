@@ -86,7 +86,7 @@ test("install entrypoint guards execute their main path", async () => {
   for (const [relativePath, binary] of installers) {
     const calls = [];
     const exports = await runEntrypoint(relativePath, {
-      "no-mistakes-core": coreMock(calls),
+      "./install/index": coreMock(calls),
     });
     assert.equal(typeof exports.main, "function");
     assert.deepEqual(
@@ -109,7 +109,7 @@ test("playwright package entrypoint guards execute", async () => {
   const installExports = await runEntrypoint(
     "packages/playwright-ast-coverage/scripts/install.js",
     {
-      "no-mistakes-core": {
+      "./install/index": {
         ...coreMock(calls),
         assetName: (bin, version, target) => `${bin}-${version}-${target}`,
         releaseBaseUrl: () => "https://example.test",

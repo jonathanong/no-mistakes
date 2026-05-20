@@ -2,7 +2,7 @@
 "use strict";
 
 const { join } = require("node:path");
-const { install } = require("no-mistakes-core");
+const { install } = require("./install/index");
 
 const PACKAGE_ROOT = join(__dirname, "..");
 

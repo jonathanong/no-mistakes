@@ -9,7 +9,7 @@ const VENDOR = join(PACKAGE_ROOT, "vendor");
 const NATIVE = join(VENDOR, process.platform === "win32" ? "react-traits.exe" : "react-traits");
 const { binaryPath, run } = require("../bin/react-traits");
 const { main } = require("./install");
-const { runWithChild, testInstallerFailures } = require("no-mistakes-core/lib/test-helpers");
+const { runWithChild, testInstallerFailures } = require("../../../tests/js/test-helpers");
 
 test("wrapper helpers resolve binary paths and handle child outcomes", async () => {
   assert.match(binaryPath("win32"), /react-traits\.exe$/);

@@ -12,7 +12,7 @@ const NATIVE = join(
 );
 const { binaryPath, run } = require("../bin/server-ast-routes");
 const { main } = require("./install");
-const { runWithChildWithEnv, testInstallerFailures } = require("no-mistakes-core/lib/test-helpers");
+const { runWithChildWithEnv, testInstallerFailures } = require("../../../tests/js/test-helpers");
 
 test("wrapper helpers resolve binary paths and handle child outcomes", async () => {
   assert.equal(binaryPath({ SERVER_AST_ROUTES_BINARY: "/tmp/custom" }, "linux"), "/tmp/custom");
