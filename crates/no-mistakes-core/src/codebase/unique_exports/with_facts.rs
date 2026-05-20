@@ -26,7 +26,6 @@ pub fn analyze_project_with_facts(
             let options = application.rule_options();
             let application_findings = analyze_project_roots_with_facts(
                 root,
-                &config,
                 tsconfig_path,
                 shared,
                 project_roots,
@@ -45,7 +44,6 @@ pub fn analyze_project_with_facts(
         .collect::<Vec<_>>();
     analyze_project_roots_with_facts(
         root,
-        &config,
         tsconfig_path,
         shared,
         project_roots,
@@ -55,7 +53,6 @@ pub fn analyze_project_with_facts(
 
 fn analyze_project_roots_with_facts(
     root: &Path,
-    config: &crate::codebase::config::Config,
     tsconfig_path: Option<&Path>,
     shared: &CheckFactMap,
     project_roots: Vec<std::path::PathBuf>,
@@ -77,7 +74,7 @@ fn analyze_project_roots_with_facts(
     analysis_files.sort();
     analysis_files.dedup();
     let analysis_files = filter_source_files(&analysis_files);
-    let symbol_files = shared_symbol_files(&workspace_files, &analysis_files, config);
+    let symbol_files = shared_symbol_files(&workspace_files, &analysis_files);
     let tsconfig = match tsconfig_path {
         Some(path) => {
             let path = if path.is_absolute() {
@@ -108,7 +105,6 @@ fn analyze_project_roots_with_facts(
 fn shared_symbol_files(
     workspace_files: &[std::path::PathBuf],
     analysis_files: &[std::path::PathBuf],
-    _config: &crate::codebase::config::Config,
 ) -> Vec<std::path::PathBuf> {
     let mut symbol_files = workspace_files.to_vec();
     symbol_files.extend(analysis_files.iter().cloned());
