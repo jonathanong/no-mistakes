@@ -188,22 +188,24 @@ impl NoMistakesConfig {
     pub fn rule_applications<'a>(&'a self, rule_id: &str) -> Vec<&'a RuleDef> {
         self.rules
             .iter()
-            .filter(move |rule| rule.enabled && rule.rule == rule_id)
+            .filter(move |rule| {
+                rule.enabled && rule.rule == rule_id && self.rule_has_effective_target(rule)
+            })
             .collect()
     }
 
     pub fn rule_configured(&self, rule_id: &str) -> bool {
-        self.rules.iter().any(|rule| {
-            rule.enabled && rule.rule == rule_id && self.rule_has_effective_target(rule)
-        })
+        !self.rule_applications(rule_id).is_empty()
     }
 
-    pub fn rule_options<T: for<'de> serde::Deserialize<'de> + Default>(&self, rule_id: &str) -> T {
+    pub fn rule_application_options<T: for<'de> serde::Deserialize<'de> + Default>(
+        &self,
+        rule_id: &str,
+    ) -> Vec<T> {
         self.rule_applications(rule_id)
             .into_iter()
-            .next()
             .map(RuleDef::rule_options)
-            .unwrap_or_default()
+            .collect()
     }
 
     fn rule_has_effective_target(&self, rule: &RuleDef) -> bool {

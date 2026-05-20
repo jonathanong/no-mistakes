@@ -1,0 +1,19 @@
+projects:
+  api:
+    root: crates/api
+  worker:
+    root: crates/worker
+rules:
+  - rule: rust-max-lines-per-file
+    projects:
+      - api
+    options:
+      srcMax: 100
+  - rule: rust-max-lines-per-file
+    projects:
+      - worker
+    options:
+      srcMax: 80
+  - rule: rust-max-lines-per-file
+    options:
+      srcMax: 1

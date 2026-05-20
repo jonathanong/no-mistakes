@@ -30,6 +30,26 @@ fn vitest_rule_target_uses_exact_project_globs() {
 }
 
 #[test]
+fn vitest_rule_target_ignores_unknown_code_project_target() {
+    let root = root_fixture("integration-tests/basic");
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: super::super::super::RULE_ID.to_string(),
+        projects: vec!["missing".to_string()],
+        tests: RuleTestTargets {
+            vitest: vec!["unit".to_string()],
+            ..Default::default()
+        },
+        ..Default::default()
+    });
+
+    let filter = test_filter(&root, &config).unwrap();
+
+    assert!(filter.is_match("backend/unit.test.mts"));
+    assert!(!filter.is_match("integration/openai.test.mts"));
+}
+
+#[test]
 fn vitest_rule_target_combines_duplicate_project_names() {
     let root = root_fixture("integration-tests/duplicate-projects");
     let mut config = NoMistakesConfig::default();

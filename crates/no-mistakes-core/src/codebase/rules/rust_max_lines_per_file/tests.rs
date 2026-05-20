@@ -229,6 +229,20 @@ fn check_with_files_normalizes_relative_roots() {
 }
 
 #[test]
+fn check_with_files_uses_options_per_rule_application() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/multiple-rule-applications");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let all_files = vec![root.join("api/lib.rs"), root.join("worker/lib.rs")];
+
+    let findings = check_with_files(&root, &config, &all_files).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "worker/lib.rs");
+    assert!(findings[0].message.contains("max 1"));
+}
+
+#[test]
 fn check_respects_disable_file_comment() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("big.rs");

@@ -195,6 +195,24 @@ fn rule_def_options_returns_default_on_bad_type() {
     assert_eq!(opts, Opts::default());
 }
 
+#[test]
+fn rule_application_options_return_all_effective_applications() {
+    let cfg = load_v2_config(&fixture("multiple-rule-application-options"), None).unwrap();
+
+    #[derive(serde::Deserialize, Default)]
+    #[serde(rename_all = "camelCase")]
+    struct Opts {
+        src_max: Option<usize>,
+    }
+
+    let opts = cfg.rule_application_options::<Opts>("rust-max-lines-per-file");
+
+    assert_eq!(
+        opts.iter().map(|opt| opt.src_max).collect::<Vec<_>>(),
+        vec![Some(100), Some(80)]
+    );
+}
+
 // ── ConfigView ────────────────────────────────────────────────────────────────
 
 #[test]

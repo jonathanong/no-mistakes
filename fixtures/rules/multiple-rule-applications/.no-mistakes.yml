@@ -1,0 +1,16 @@
+projects:
+  api:
+    root: api
+  worker:
+    root: worker
+rules:
+  - rule: rust-max-lines-per-file
+    projects:
+      - api
+    options:
+      srcMax: 5
+  - rule: rust-max-lines-per-file
+    projects:
+      - worker
+    options:
+      srcMax: 1

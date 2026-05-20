@@ -12,7 +12,7 @@ pub use rust_max_lines_per_file::RULE_ID as RUST_MAX_LINES_PER_FILE;
 pub use rust_no_inline_tests::RULE_ID as RUST_NO_INLINE_TESTS;
 pub use test_no_unmocked_dynamic_imports::RULE_ID as TEST_NO_UNMOCKED_DYNAMIC_IMPORTS;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RuleFinding {
     pub rule: String,
@@ -92,6 +92,50 @@ pub fn run_filesystem_rules(root: &Path, config_path: Option<&Path>) -> Result<V
 
 pub(crate) fn rule_enabled(config: &crate::config::v2::NoMistakesConfig, rule_id: &str) -> bool {
     config.rule_configured(rule_id)
+}
+
+pub(crate) fn target_roots(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    rule: &crate::config::v2::schema::RuleDef,
+) -> Vec<PathBuf> {
+    let mut roots = Vec::new();
+    if rule.applies_to_repository() {
+        roots.push(root.to_path_buf());
+    }
+    let mut inferred_nextjs_root = None;
+    for project_name in &rule.projects {
+        let Some(project) = config.projects.get(project_name) else {
+            continue;
+        };
+        if let Some(project_root) = target_project_root(root, project, &mut inferred_nextjs_root) {
+            roots.push(project_root);
+        }
+    }
+    roots.sort();
+    roots.dedup();
+    roots
+}
+
+fn target_project_root(
+    root: &Path,
+    project: &crate::config::v2::schema::Project,
+    inferred_nextjs_root: &mut Option<Option<PathBuf>>,
+) -> Option<PathBuf> {
+    if let Some(project_root) = project.root.as_deref() {
+        return Some(root.join(project_root));
+    }
+    if project.type_ == Some(crate::config::v2::schema::ProjectType::Nextjs) {
+        return inferred_nextjs_root
+            .get_or_insert_with(|| crate::codebase::config::infer_nextjs_root(root))
+            .clone();
+    }
+    Some(root.to_path_buf())
+}
+
+pub(crate) fn sort_findings(findings: &mut Vec<RuleFinding>) {
+    findings.sort();
+    findings.dedup();
 }
 
 #[cfg(test)]
