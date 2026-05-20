@@ -112,8 +112,6 @@ fn collect_route_edges(
         .cloned()
         .collect();
 
-    let _ = tsconfig;
-
     scan_files
         .into_par_iter()
         .flat_map_iter(|path| {

@@ -1,4 +1,4 @@
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct SpawnEdge {
     /// File that contains the spawn call or webServer declaration.
     pub spawner: PathBuf,

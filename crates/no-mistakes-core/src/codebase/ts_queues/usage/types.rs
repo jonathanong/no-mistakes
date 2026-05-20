@@ -1,4 +1,4 @@
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct EnqueueCall {
     /// Local binding identifier used (e.g. `emailsQueue`).
     pub binding: String,
@@ -8,7 +8,7 @@ pub struct EnqueueCall {
 }
 
 /// A `new Worker('queueName', handler)` declaration.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct WorkerDeclaration {
     /// Queue name string literal (e.g. `"emails"`), if present.
     pub queue_name: Option<String>,

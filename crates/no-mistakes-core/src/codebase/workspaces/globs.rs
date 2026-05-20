@@ -40,7 +40,7 @@ fn build_glob_set(glob_strs: &[String], excluded: bool) -> globset::GlobSet {
         let Ok(glob) = Glob::new(pattern) else {
             continue;
         };
-        let _ = builder.add(glob);
+        builder.add(glob);
     }
     builder
         .build()

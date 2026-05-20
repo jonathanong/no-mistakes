@@ -1,3 +1,4 @@
+#[derive(Debug, Clone, Default)]
 pub struct TsConfig {
     /// Directory containing the entry tsconfig (used as base for relative-path resolution).
     pub dir: PathBuf,
@@ -186,4 +187,3 @@ fn load_tsconfig_inner(
         paths_found: false,
     })
 }
-
