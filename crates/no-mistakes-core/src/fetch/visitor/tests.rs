@@ -15,6 +15,15 @@ fn function_declarations_shadow_global_fetch() {
 }
 
 #[test]
+fn test_is_fetch_shadowed() {
+    let mut visitor = FetchVisitor::new("", "fixture.ts", false, false);
+    assert!(!visitor.is_fetch_shadowed());
+
+    visitor.mark_identifier_shadowed("fetch");
+    assert!(visitor.is_fetch_shadowed());
+}
+
+#[test]
 fn is_fetch_shadowed_respects_scope_stack() {
     let mut visitor = FetchVisitor::new("", "fixture.ts", false, false);
 
