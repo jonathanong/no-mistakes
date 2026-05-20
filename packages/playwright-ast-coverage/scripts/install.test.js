@@ -125,14 +125,16 @@ test("supports legacy install overloads and unsupported platform overload", asyn
   const vendor = join(__dirname, "..", "vendor");
   const executable = join(__dirname, "..", "bin", "playwright-ast-coverage");
   const custom = join(vendor, "custom-bin");
+  const customDestination = join(vendor, "custom-dest");
 
   try {
-    process.env.SKIP_BINARY_DOWNLOAD = "1";
     await mkdir(vendor, { recursive: true });
     await writeFile(custom, "custom");
+    await writeFile(customDestination, "custom destination");
 
-    assert.equal(await install(), executable);
-    assert.equal(await install({ checkExisting: true }), executable);
+    assert.equal(executable.endsWith("bin/playwright-ast-coverage"), true);
+    process.env.SKIP_BINARY_DOWNLOAD = "1";
+    await assert.rejects(() => install(), /SKIP_BINARY_DOWNLOAD is set/);
     assert.equal(
       await install("custom-bin", "owner/repo", {
         destinationName: "custom-dest",
@@ -140,7 +142,7 @@ test("supports legacy install overloads and unsupported platform overload", asyn
         vendorDir: vendor,
         version: "1.0.0",
       }),
-      join(vendor, "custom-dest"),
+      customDestination,
     );
     delete process.env.SKIP_BINARY_DOWNLOAD;
     assert.equal(

@@ -36,11 +36,19 @@ async function install(binName, repository, options = {}) {
   }
   const executable = options.destinationName || binName;
   const destination = join(vendorDir, executable);
+  const destinationExists = existsSync(destination);
+  const destinationIsPlaceholder = destinationExists && isPlaceholder(destination);
 
-  if (
-    process.env.SKIP_BINARY_DOWNLOAD ||
-    (options.checkExisting && existsSync(destination) && !isPlaceholder(destination))
-  ) {
+  if (process.env.SKIP_BINARY_DOWNLOAD) {
+    if (destinationExists && !destinationIsPlaceholder) {
+      return destination;
+    }
+    throw new Error(
+      `SKIP_BINARY_DOWNLOAD is set but ${destination} is missing or still a placeholder; unset SKIP_BINARY_DOWNLOAD to install ${binName}.`,
+    );
+  }
+
+  if (options.checkExisting && destinationExists && !destinationIsPlaceholder) {
     return destination;
   }
 
