@@ -25,10 +25,21 @@ jobs:
       - name: Check committed binary files
         shell: bash
         run: |
+          escape_workflow_command_property() {
+            local value="$1"
+            value="${value//'%'/'%25'}"
+            value="${value//$'\r'/'%0D'}"
+            value="${value//$'\n'/'%0A'}"
+            value="${value//':'/'%3A'}"
+            value="${value//','/'%2C'}"
+            printf '%s' "$value"
+          }
+
           fail=0
           while IFS= read -r -d '' path; do
-            if [[ -s "$path" ]] && ! LC_ALL=C grep -Iq "" "$path"; then
-              printf '::error file=%s::Committed binary file detected; remove it from Git or replace it with a text placeholder.\n' "$path"
+            if [[ -f "$path" && -s "$path" ]] && ! LC_ALL=C grep -Iq "" -- "$path"; then
+              escaped_path="$(escape_workflow_command_property "$path")"
+              printf '::error file=%s::Committed binary file detected; remove it from Git or replace it with a text placeholder.\n' "$escaped_path"
               fail=1
             fi
           done < <(git ls-files -z)
