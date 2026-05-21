@@ -61,17 +61,36 @@ impl<'a> SourceItem<'a> {
     }
 }
 
+struct LoadedSourceItem {
+    path: PathBuf,
+    source: String,
+}
+
+impl LoadedSourceItem {
+    fn new(path: PathBuf, source: String) -> Self {
+        Self { path, source }
+    }
+}
+
 fn check_files(
     root: &Path,
     config: &NoMistakesConfig,
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources: Vec<_> = files
+        .par_iter()
+        .filter_map(|path| {
+            std::fs::read_to_string(path)
+                .ok()
+                .map(|source| LoadedSourceItem::new(path.clone(), source))
+        })
+        .collect();
     check_items(
         root,
         config,
-        files,
-        |path| path.as_path(),
-        |path| std::fs::read_to_string(path).ok(),
+        &sources,
+        |item| item.path.as_path(),
+        |item| item.source.as_str(),
     )
 }
 
@@ -80,25 +99,18 @@ fn check_sources(
     config: &NoMistakesConfig,
     sources: &[SourceItem<'_>],
 ) -> Result<Vec<RuleFinding>> {
-    check_items(
-        root,
-        config,
-        sources,
-        |item| item.path,
-        |item| Some(item.source),
-    )
+    check_items(root, config, sources, |item| item.path, |item| item.source)
 }
 
-fn check_items<T, S>(
+fn check_items<T>(
     root: &Path,
     config: &NoMistakesConfig,
     items: &[T],
     path_for: impl Fn(&T) -> &Path + Sync,
-    source_for: impl Fn(&T) -> Option<S> + Sync,
+    source_for: impl Fn(&T) -> &str + Sync,
 ) -> Result<Vec<RuleFinding>>
 where
     T: Sync,
-    S: AsRef<str>,
 {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
@@ -113,13 +125,12 @@ where
                 let path = path_for(item);
                 (route_globset.is_match(relative_path(root, path))
                     && !exclude_matcher.is_match(root, path))
-                .then(|| source_for(item))
-                .flatten()
-                .and_then(|source| {
-                    ast::has_server_like_route_call(path, source.as_ref())
+                .then(|| {
+                    ast::has_server_like_route_call(path, source_for(item))
                         .then(|| path.parent().map(Path::to_path_buf))
                         .flatten()
                 })
+                .flatten()
             })
             .collect();
         if route_dirs.is_empty() {
@@ -135,9 +146,7 @@ where
                 })
                 .flat_map(|item| {
                     let path = path_for(item);
-                    source_for(item)
-                        .map(|source| client_findings_for_file(root, path, source.as_ref()))
-                        .unwrap_or_default()
+                    client_findings_for_file(root, path, source_for(item))
                 })
                 .collect::<Vec<_>>(),
         );
