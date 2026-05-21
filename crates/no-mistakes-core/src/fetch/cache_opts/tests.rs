@@ -379,3 +379,43 @@ fn test_next_dynamic_key_continues_to_next_property() {
     assert!(cached);
     assert_eq!(kind, CacheKind::FetchNextRevalidate);
 }
+
+#[test]
+fn test_cache_wrapper_name_case_sensitivity() {
+    with_call_expression("CACHE(fn)", |expr| {
+        let result = cache_wrapper_name(expr);
+        assert!(result.is_none());
+    });
+    with_call_expression("Unstable_Cache(fn)", |expr| {
+        let result = cache_wrapper_name(expr);
+        assert!(result.is_none());
+    });
+    with_call_expression("unstableCache(fn)", |expr| {
+        let result = cache_wrapper_name(expr);
+        assert!(result.is_none());
+    });
+}
+
+#[test]
+fn test_cache_wrapper_name_prefix_suffix() {
+    with_call_expression("my_cache(fn)", |expr| {
+        let result = cache_wrapper_name(expr);
+        assert!(result.is_none());
+    });
+    with_call_expression("unstable_cache_2(fn)", |expr| {
+        let result = cache_wrapper_name(expr);
+        assert!(result.is_none());
+    });
+}
+
+#[test]
+fn test_cache_wrapper_name_empty_or_special() {
+    with_call_expression("_(fn)", |expr| {
+        let result = cache_wrapper_name(expr);
+        assert!(result.is_none());
+    });
+    with_call_expression("$cache(fn)", |expr| {
+        let result = cache_wrapper_name(expr);
+        assert!(result.is_none());
+    });
+}
