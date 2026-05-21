@@ -274,10 +274,10 @@ fn large_graph_monorepo_exercises_all_relationships() {
     );
 
     let files = value["files"].as_array().expect("files should be an array");
-    assert!(
-        files.len() > 150,
-        "large fixture should produce a substantial traversal result, got {}",
-        files.len()
+    assert_eq!(
+        files.len(),
+        176,
+        "large fixture traversal should stay stable"
     );
 
     let mut kinds = BTreeSet::new();

@@ -24,7 +24,7 @@ fn no_mistakes_bin() -> PathBuf {
 fn run_dependencies_large_repo(bin: &Path, root: &Path) -> usize {
     let output = Command::new(bin)
         .arg("-j")
-        .arg("4")
+        .arg("0")
         .arg("dependencies")
         .arg("--root")
         .arg(root)
