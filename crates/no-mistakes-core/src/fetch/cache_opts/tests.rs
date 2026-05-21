@@ -390,6 +390,10 @@ fn test_cache_wrapper_name_case_sensitivity() {
         let result = cache_wrapper_name(expr);
         assert!(result.is_none());
     });
+    with_call_expression("unstableCache(fn)", |expr| {
+        let result = cache_wrapper_name(expr);
+        assert!(result.is_none());
+    });
 }
 
 #[test]
