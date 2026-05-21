@@ -801,6 +801,7 @@ dependencies = [
  "clap",
  "no-mistakes-core",
  "rayon",
+ "rustix",
  "serde",
  "serde_json",
  "serde_yaml",
