@@ -28,6 +28,16 @@ pub fn run(args: TraverseArgs, direction: Direction) -> Result<()> {
     let mut timings = crate::codebase::timing::PhaseTimings::start();
 
     let result = collect_and_filter_entries(&args, direction, &cwd_early, &mut timings)?;
+    output_results(&args, &result, &mut timings)?;
+
+    Ok(())
+}
+
+fn output_results(
+    args: &TraverseArgs,
+    result: &TraversalResult,
+    timings: &mut crate::codebase::timing::PhaseTimings,
+) -> Result<()> {
     let root_strs: Vec<String> = args.files.iter().map(|f| f.display().to_string()).collect();
 
     let stdout = io::stdout();
