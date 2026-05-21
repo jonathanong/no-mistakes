@@ -28,16 +28,19 @@ pub fn run(args: TraverseArgs, direction: Direction) -> Result<()> {
     let mut timings = crate::codebase::timing::PhaseTimings::start();
 
     let result = collect_and_filter_entries(&args, direction, &cwd_early, &mut timings)?;
-    output_results(&args, &result, &mut timings)?;
+    let output_result = output_results(&args, &result);
+
+    timings.mark("output");
+    if args.timings {
+        timings.print_stderr();
+    }
+
+    output_result?;
 
     Ok(())
 }
 
-fn output_results(
-    args: &TraverseArgs,
-    result: &TraversalResult,
-    timings: &mut crate::codebase::timing::PhaseTimings,
-) -> Result<()> {
+fn output_results(args: &TraverseArgs, result: &TraversalResult) -> Result<()> {
     let root_strs: Vec<String> = args.files.iter().map(|f| f.display().to_string()).collect();
 
     let stdout = io::stdout();
@@ -45,14 +48,16 @@ fn output_results(
     let mut out = stdout.lock();
 
     let format = resolve_format(args.json, args.format, stdout_is_terminal);
-    write_entries(format, &root_strs, &result.entries, &result.root, &mut out)?;
+    write_output_results(format, &root_strs, result, &mut out)
+}
 
-    timings.mark("output");
-    if args.timings {
-        timings.print_stderr();
-    }
-
-    Ok(())
+fn write_output_results(
+    format: Format,
+    root_strs: &[String],
+    result: &TraversalResult,
+    out: &mut dyn Write,
+) -> Result<()> {
+    write_entries(format, root_strs, &result.entries, &result.root, out)
 }
 
 pub(crate) struct TraversalResult {
