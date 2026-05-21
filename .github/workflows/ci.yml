@@ -134,4 +134,4 @@ jobs:
           key: bench
 
       - name: Run benchmarks
-        run: cargo bench --workspace
+        run: cargo bench --workspace -- --noplot
