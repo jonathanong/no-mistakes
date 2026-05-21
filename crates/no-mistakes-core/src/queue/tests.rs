@@ -134,10 +134,10 @@ fn related_dependents_is_transitive() {
     assert_eq!(edges.len(), 2);
     assert!(edges
         .iter()
-        .any(|edge| edge.from == "a.ts" && edge.to == "b.ts"));
+        .any(|edge| edge.from == "c.ts" && edge.to == "b.ts"));
     assert!(edges
         .iter()
-        .any(|edge| edge.from == "b.ts" && edge.to == "c.ts"));
+        .any(|edge| edge.from == "b.ts" && edge.to == "a.ts"));
 }
 
 #[test]
