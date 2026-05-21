@@ -2,9 +2,10 @@ use super::*;
 use crate::queue::extract::extract_file;
 use crate::queue::extract_helpers::quoted_prefix;
 use crate::queue::extract_model::FileFacts;
-use crate::queue::graph_model::diagnostics;
+use crate::queue::graph_model::{diagnostics, ProjectReport};
 use crate::queue::resolver::{load_tsconfig, resolve_import};
 use crate::queue::source::discover_source_files;
+use crate::queue::types::{Edge, EdgeKind};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -138,6 +139,59 @@ fn related_dependents_is_transitive() {
     assert!(edges
         .iter()
         .any(|edge| edge.from == "b.ts" && edge.to == "a.ts"));
+}
+
+#[test]
+fn related_deduplicates_paths_to_seen_nodes() {
+    let report = ProjectReport {
+        producers: vec![],
+        workers: vec![],
+        jobs: vec![],
+        edges: vec![
+            Edge {
+                from: "producer.ts".into(),
+                to: "shared.ts#sendWelcome".into(),
+                kind: EdgeKind::QueueEnqueue,
+            },
+            Edge {
+                from: "alias.ts".into(),
+                to: "shared.ts#sendWelcome".into(),
+                kind: EdgeKind::QueueWorker,
+            },
+            Edge {
+                from: "shared.ts#sendWelcome".into(),
+                to: "worker.ts".into(),
+                kind: EdgeKind::QueueWorker,
+            },
+        ],
+        diagnostics: vec![],
+        check: vec![],
+    };
+    let edges = related(
+        &report,
+        &["producer.ts".into(), "alias.ts".into()],
+        RelatedDirection::Deps,
+    );
+    assert_eq!(
+        edges,
+        vec![
+            Edge {
+                from: "alias.ts".into(),
+                to: "shared.ts#sendWelcome".into(),
+                kind: EdgeKind::QueueWorker
+            },
+            Edge {
+                from: "producer.ts".into(),
+                to: "shared.ts#sendWelcome".into(),
+                kind: EdgeKind::QueueEnqueue
+            },
+            Edge {
+                from: "shared.ts#sendWelcome".into(),
+                to: "worker.ts".into(),
+                kind: EdgeKind::QueueWorker
+            },
+        ]
+    );
 }
 
 #[test]
