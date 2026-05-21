@@ -3,6 +3,8 @@ mod check_discovery;
 mod check_parallel;
 mod check_runner;
 mod check_tasks;
+#[cfg(all(test, unix))]
+mod executable_file_tests;
 mod queues;
 mod react;
 mod server;
@@ -191,37 +193,4 @@ fn is_executable_file(path: &Path) -> bool {
 #[cfg(not(unix))]
 fn is_executable_file(path: &Path) -> bool {
     path.is_file()
-}
-
-#[cfg(all(test, unix))]
-mod executable_file_tests {
-    use super::is_executable_file;
-    use std::path::PathBuf;
-
-    fn proxy_fixture(name: &str) -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/no-mistakes-proxy")
-            .join(name)
-    }
-
-    #[test]
-    fn is_executable_file_accepts_regular_file_with_execute_bit() {
-        assert!(is_executable_file(&proxy_fixture(
-            "bin/no-mistakes-fixture-proxy"
-        )));
-    }
-
-    #[test]
-    fn is_executable_file_rejects_regular_file_without_execute_bit() {
-        assert!(!is_executable_file(&proxy_fixture(
-            "non-executable-bin/no-mistakes-fixture-proxy"
-        )));
-    }
-
-    #[test]
-    fn is_executable_file_rejects_directory_with_execute_bit() {
-        assert!(!is_executable_file(&proxy_fixture(
-            "directory-bin/no-mistakes-fixture-proxy"
-        )));
-    }
 }
