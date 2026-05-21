@@ -1,4 +1,4 @@
-use crate::tests::plan::TestPlan;
+use crate::tests::TestPlan;
 use crate::tests::{GraphArgs, GraphFormat};
 use anyhow::{Context, Result};
 use serde::Serialize;
@@ -111,6 +111,13 @@ pub(crate) fn run(args: GraphArgs) -> Result<ExitCode> {
     Ok(ExitCode::SUCCESS)
 }
 
+fn escape_mermaid_label(s: &str) -> String {
+    s.replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace('|', "&#124;")
+        .replace('\n', " ")
+}
+
 fn render_mermaid(
     nodes: &[String],
     edges: &[(String, String, String)],
@@ -150,7 +157,12 @@ fn render_mermaid(
         for (from, to, via) in edges {
             let from_id = node_ids.get(from).cloned().unwrap_or_else(|| from.clone());
             let to_id = node_ids.get(to).cloned().unwrap_or_else(|| to.clone());
-            out.push_str(&format!("    {} -->|{}| {}\n", from_id, via, to_id));
+            out.push_str(&format!(
+                "    {} -->|{}| {}\n",
+                from_id,
+                escape_mermaid_label(via),
+                to_id
+            ));
         }
     }
 

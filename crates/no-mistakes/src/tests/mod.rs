@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::{Args, Subcommand, ValueEnum};
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -7,6 +8,53 @@ pub(crate) mod comment;
 pub(crate) mod graph;
 pub(crate) mod plan;
 pub(crate) mod why;
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct TestPlan {
+    pub selected_tests: Vec<SelectedTest>,
+    pub warnings: Vec<Warning>,
+    pub fallback_triggered: bool,
+    pub fallback_reason: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct SelectedTest {
+    pub test_file: String,
+    pub confidence: Confidence,
+    pub reasons: Vec<ImpactReason>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "lowercase")]
+pub enum Confidence {
+    Low = 0,
+    Medium = 1,
+    High = 2,
+}
+
+impl Confidence {
+    pub fn display_emoji(self) -> &'static str {
+        match self {
+            Confidence::Low => "🔴 Low",
+            Confidence::Medium => "🟡 Medium",
+            Confidence::High => "🟢 High",
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct ImpactReason {
+    pub changed_file: String,
+    pub path: Vec<String>,
+    pub via: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct Warning {
+    pub r#type: String,
+    pub message: String,
+    pub file: String,
+}
 
 #[derive(Args, Debug)]
 pub(crate) struct TestsArgs {

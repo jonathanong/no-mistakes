@@ -46,7 +46,13 @@ fn tests_plan_json_outputs_impacted_tests() {
     assert_eq!(plan["fallback_triggered"], false);
 
     let selected = plan["selected_tests"].as_array().unwrap();
-    assert!(selected.len() >= 2);
+    assert_eq!(selected.len(), 2);
+    let mut names: Vec<&str> = selected
+        .iter()
+        .map(|t| t["test_file"].as_str().unwrap())
+        .collect();
+    names.sort_unstable();
+    assert_eq!(names, vec!["a.test.mts", "dynamic.test.mts"]);
 
     let a_test = selected
         .iter()
@@ -129,8 +135,14 @@ fn tests_plan_fallback_on_package_json() {
         .contains("Global configuration file changed"));
 
     let selected = plan["selected_tests"].as_array().unwrap();
-    // It should select all tests
-    assert!(selected.len() >= 2);
+    // It should select all tests in this fixture
+    assert_eq!(selected.len(), 2);
+    let mut names: Vec<&str> = selected
+        .iter()
+        .map(|t| t["test_file"].as_str().unwrap())
+        .collect();
+    names.sort_unstable();
+    assert_eq!(names, vec!["a.test.mts", "dynamic.test.mts"]);
     for t in selected {
         assert_eq!(t["confidence"], "high");
     }
@@ -249,5 +261,6 @@ fn tests_graph_mermaid_outputs_flowchart() {
     let json_str = stdout(&output_json);
     let graph: serde_json::Value = serde_json::from_str(&json_str).unwrap();
     assert!(graph["nodes"].as_array().unwrap().len() >= 4);
-    assert_eq!(graph["edges"].as_array().unwrap()[0]["via"], "Import");
+    let edges = graph["edges"].as_array().unwrap();
+    assert!(edges.iter().any(|e| e["via"] == "Import"));
 }

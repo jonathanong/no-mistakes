@@ -1,61 +1,15 @@
 use crate::tests::comment::render_markdown_plan;
-use crate::tests::{PlanArgs, PlanFormat};
+use crate::tests::{
+    Confidence, ImpactReason, PlanArgs, PlanFormat, SelectedTest, TestPlan, Warning,
+};
 use anyhow::{Context, Result};
 use no_mistakes_core::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use no_mistakes_core::codebase::test_filter::TestFileFilter;
 use no_mistakes_core::config::v2::load_v2_config;
-use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
-pub struct TestPlan {
-    pub selected_tests: Vec<SelectedTest>,
-    pub warnings: Vec<Warning>,
-    pub fallback_triggered: bool,
-    pub fallback_reason: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
-pub struct SelectedTest {
-    pub test_file: String,
-    pub confidence: Confidence,
-    pub reasons: Vec<ImpactReason>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-#[serde(rename_all = "lowercase")]
-pub enum Confidence {
-    Low = 0,
-    Medium = 1,
-    High = 2,
-}
-
-impl Confidence {
-    pub fn display_emoji(self) -> &'static str {
-        match self {
-            Confidence::Low => "🔴 Low",
-            Confidence::Medium => "🟡 Medium",
-            Confidence::High => "🟢 High",
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
-pub struct ImpactReason {
-    pub changed_file: String,
-    pub path: Vec<String>,
-    pub via: Vec<String>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
-pub struct Warning {
-    pub r#type: String,
-    pub message: String,
-    pub file: String,
-}
 
 pub(crate) fn run(args: PlanArgs) -> Result<ExitCode> {
     let plan = generate_plan(&args)?;
@@ -188,28 +142,15 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
             // Compute confidence of the path
             let path_conf = path_confidence(&edge_path);
 
-            // Reconstruct path node chain as relative strings
+            // Reconstruct path node chain and collect warnings in a single pass
             let mut node_chain = Vec::new();
             let mut curr = test_node.clone();
             node_chain.push(curr.display_name(&root));
-            while let Some((parent, _)) = path_parents.get(&curr) {
+
+            while let Some((parent, kind)) = path_parents.get(&curr) {
                 node_chain.push(parent.display_name(&root));
-                curr = parent.clone();
-            }
-            node_chain.reverse();
 
-            // Collect edge kinds as strings
-            let via_strings: Vec<String> = edge_path.iter().map(|k| format!("{:?}", k)).collect();
-
-            let reason = ImpactReason {
-                changed_file: rel_changed.clone(),
-                path: node_chain,
-                via: via_strings,
-            };
-
-            // Collect warnings for traversed dynamic/unresolved edges
-            for (parent, edge_k, child) in traverse_path_edges(&path_parents, &test_node) {
-                match edge_k {
+                match kind {
                     EdgeKind::DynamicImport => {
                         let warn = Warning {
                             r#type: "dynamic-import".to_string(),
@@ -229,7 +170,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                             message: format!(
                                 "Dynamic HTTP call in `{}` to backend `{}`.",
                                 parent.display_name(&root),
-                                child.display_name(&root)
+                                curr.display_name(&root)
                             ),
                             file: parent.display_name(&root),
                         };
@@ -252,7 +193,17 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                     }
                     _ => {}
                 }
+                curr = parent.clone();
             }
+            node_chain.reverse();
+
+            let via_strings: Vec<String> = edge_path.iter().map(|k| format!("{:?}", k)).collect();
+
+            let reason = ImpactReason {
+                changed_file: rel_changed.clone(),
+                path: node_chain,
+                via: via_strings,
+            };
 
             let entry = selected_map
                 .entry(test_path)
@@ -325,6 +276,7 @@ fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Vec<PathBuf>> {
                     return Err(e);
                 }
                 // Otherwise, fail silently / log warning
+                eprintln!("warning: failed to retrieve changed files from git: {}", e);
             }
         }
     }
@@ -354,6 +306,7 @@ fn get_git_changed_files(
         let output = run_git(
             &[
                 "diff",
+                "--relative",
                 "--name-only",
                 &format!("{}..{}", base_commit, head_commit),
             ],
@@ -367,7 +320,7 @@ fn get_git_changed_files(
         }
     } else {
         // Unstaged changes
-        if let Ok(output) = run_git(&["diff", "--name-only"], root) {
+        if let Ok(output) = run_git(&["diff", "--relative", "--name-only"], root) {
             for line in output.lines() {
                 let trimmed = line.trim();
                 if !trimmed.is_empty() {
@@ -376,7 +329,7 @@ fn get_git_changed_files(
             }
         }
         // Staged changes
-        if let Ok(output) = run_git(&["diff", "--cached", "--name-only"], root) {
+        if let Ok(output) = run_git(&["diff", "--cached", "--relative", "--name-only"], root) {
             for line in output.lines() {
                 let trimmed = line.trim();
                 if !trimmed.is_empty() {
@@ -385,11 +338,14 @@ fn get_git_changed_files(
             }
         }
         // Untracked changes
-        if let Ok(output) = run_git(&["status", "--porcelain"], root) {
+        if let Ok(output) = run_git(
+            &["ls-files", "--others", "--exclude-standard", "--relative"],
+            root,
+        ) {
             for line in output.lines() {
                 let trimmed = line.trim();
-                if let Some(file_path) = trimmed.strip_prefix("?? ") {
-                    changed.insert(PathBuf::from(file_path));
+                if !trimmed.is_empty() {
+                    changed.insert(PathBuf::from(trimmed));
                 }
             }
         }
@@ -414,9 +370,9 @@ fn run_git(args: &[&str], root: &Path) -> Result<String> {
     Ok(String::from_utf8(output.stdout)?)
 }
 
-fn is_global_config_name(name: &str) -> bool {
+fn is_global_config_name(n: &str) -> bool {
     matches!(
-        name,
+        n,
         "package.json"
             | "pnpm-lock.yaml"
             | "package-lock.json"
@@ -431,15 +387,13 @@ fn discover_all_tests(
     root: &Path,
     config: &no_mistakes_core::config::v2::NoMistakesConfig,
 ) -> Result<Vec<PathBuf>> {
-    let test_filter = TestFileFilter::new(root, config);
-    let files = no_mistakes_core::codebase::ts_source::discover_files(root, &[]);
-    let mut tests = Vec::new();
-    for f in files {
-        if test_filter.is_match(root, &f) {
-            tests.push(f);
-        }
-    }
-    Ok(tests)
+    let filter = TestFileFilter::new(root, config);
+    Ok(
+        no_mistakes_core::codebase::ts_source::discover_files(root, &[])
+            .into_iter()
+            .filter(|f| filter.is_match(root, f))
+            .collect(),
+    )
 }
 
 fn relative_path(root: &Path, absolute: &Path) -> String {
@@ -505,28 +459,15 @@ fn path_confidence(edges: &[EdgeKind]) -> Confidence {
     let mut conf = Confidence::High;
     for edge in edges {
         match edge {
-            EdgeKind::HttpCall | EdgeKind::ProcessSpawn => {
-                return Confidence::Low;
-            }
-            EdgeKind::DynamicImport => {
-                conf = Confidence::Medium;
-            }
+            EdgeKind::HttpCall
+            | EdgeKind::ProcessSpawn
+            | EdgeKind::QueueEnqueue
+            | EdgeKind::QueueWorker
+            | EdgeKind::RouteRef
+            | EdgeKind::RouteTest => return Confidence::Low,
+            EdgeKind::DynamicImport => conf = Confidence::Medium,
             _ => {}
         }
     }
     conf
-}
-
-fn traverse_path_edges(
-    parents: &HashMap<NodeId, (NodeId, EdgeKind)>,
-    target: &NodeId,
-) -> Vec<(NodeId, EdgeKind, NodeId)> {
-    let mut path = Vec::new();
-    let mut curr = target.clone();
-    while let Some((parent, kind)) = parents.get(&curr) {
-        path.push((parent.clone(), *kind, curr.clone()));
-        curr = parent.clone();
-    }
-    path.reverse();
-    path
 }

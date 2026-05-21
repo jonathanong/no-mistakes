@@ -1,5 +1,5 @@
-use crate::tests::plan::TestPlan;
 use crate::tests::CommentArgs;
+use crate::tests::TestPlan;
 use anyhow::{Context, Result};
 use std::fs;
 use std::process::ExitCode;
@@ -21,6 +21,10 @@ pub(crate) fn run(args: CommentArgs) -> Result<ExitCode> {
     }
 
     Ok(ExitCode::SUCCESS)
+}
+
+fn escape_md_table_cell(s: &str) -> String {
+    s.replace('|', "\\|").replace('\n', "<br>")
 }
 
 pub fn render_markdown_plan(plan: &TestPlan) -> String {
@@ -56,9 +60,9 @@ pub fn render_markdown_plan(plan: &TestPlan) -> String {
             }
             out.push_str(&format!(
                 "| `{}` | {} | {} |\n",
-                test.test_file,
+                escape_md_table_cell(&test.test_file),
                 test.confidence.display_emoji(),
-                reason_desc
+                escape_md_table_cell(&reason_desc)
             ));
         }
         out.push('\n');

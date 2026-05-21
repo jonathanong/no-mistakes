@@ -1,8 +1,9 @@
-use crate::tests::plan::{generate_plan, TestPlan};
+use crate::tests::plan::generate_plan;
+use crate::tests::TestPlan;
 use crate::tests::{PlanArgs, WhyArgs, WhyFormat};
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 use std::process::ExitCode;
@@ -68,12 +69,12 @@ fn read_from_plan(
     plan_path: &Path,
     test_rel: &str,
     changed_rel: Option<&str>,
-) -> Result<HashMap<String, Vec<WhyStep>>> {
+) -> Result<BTreeMap<String, Vec<WhyStep>>> {
     let content = fs::read_to_string(plan_path)
         .with_context(|| format!("Failed to read plan from {}", plan_path.display()))?;
     let plan: TestPlan = serde_json::from_str(&content)?;
 
-    let mut result = HashMap::new();
+    let mut result = BTreeMap::new();
 
     if let Some(selected) = plan.selected_tests.iter().find(|t| t.test_file == test_rel) {
         for reason in &selected.reasons {
@@ -100,7 +101,7 @@ fn read_from_plan(
     Ok(result)
 }
 
-fn run_live_analysis(args: &WhyArgs, test_rel: &str) -> Result<HashMap<String, Vec<WhyStep>>> {
+fn run_live_analysis(args: &WhyArgs, test_rel: &str) -> Result<BTreeMap<String, Vec<WhyStep>>> {
     // Generate plan live to find all connections and warn/fallback correctly
     let plan_args = PlanArgs {
         root: args.root.clone(),
@@ -115,7 +116,7 @@ fn run_live_analysis(args: &WhyArgs, test_rel: &str) -> Result<HashMap<String, V
     };
 
     let plan = generate_plan(&plan_args)?;
-    let mut result = HashMap::new();
+    let mut result = BTreeMap::new();
 
     if let Some(selected) = plan.selected_tests.iter().find(|t| t.test_file == test_rel) {
         for reason in &selected.reasons {
