@@ -150,16 +150,11 @@ fn external_subcommand_skips_relative_path_entries() {
         .current_dir(proxy_fixture("relative-cwd"))
         .env(
             "PATH",
-            env::join_paths(
-                [
-                    PathBuf::from("."),
-                    proxy_fixture("non-executable-bin"),
-                    proxy_fixture("bin"),
-                ]
-                .into_iter()
-                .chain(env::split_paths(&env::var_os("PATH").unwrap_or_default())),
-            )
-            .expect("PATH should join"),
+            proxy_path_with(&[
+                PathBuf::from("."),
+                proxy_fixture("non-executable-bin"),
+                proxy_fixture("bin"),
+            ]),
         )
         .args(["fixture-proxy", "--print", "fallback"])
         .output()
