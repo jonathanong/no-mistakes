@@ -1,8 +1,4 @@
 use std::env;
-#[cfg(unix)]
-use std::fs;
-#[cfg(unix)]
-use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
@@ -145,26 +141,25 @@ fn external_subcommand_skips_non_executable_path_match() {
 
 #[cfg(unix)]
 #[test]
-fn external_subcommand_skips_file_current_user_cannot_execute() {
-    let blocked = proxy_fixture("owner-blocked-bin/no-mistakes-fixture-proxy");
-    let original_permissions = fs::metadata(&blocked)
-        .expect("blocked fixture should exist")
-        .permissions();
-
-    let mut blocked_permissions = original_permissions.clone();
-    blocked_permissions.set_mode(0o001);
-    fs::set_permissions(&blocked, blocked_permissions).expect("fixture mode should change");
-
+fn external_subcommand_skips_relative_path_entries() {
     let output = Command::new(bin())
+        .current_dir(proxy_fixture("relative-cwd"))
         .env(
             "PATH",
-            proxy_path_with(&[proxy_fixture("owner-blocked-bin"), proxy_fixture("bin")]),
+            env::join_paths(
+                [
+                    PathBuf::from("."),
+                    proxy_fixture("non-executable-bin"),
+                    proxy_fixture("bin"),
+                ]
+                .into_iter()
+                .chain(env::split_paths(&env::var_os("PATH").unwrap_or_default())),
+            )
+            .expect("PATH should join"),
         )
         .args(["fixture-proxy", "--print", "fallback"])
         .output()
         .expect("no-mistakes should run");
-
-    fs::set_permissions(&blocked, original_permissions).expect("fixture mode should restore");
 
     assert!(output.status.success());
     assert_eq!(stdout(&output).trim(), "fixture-proxy:--print:fallback");

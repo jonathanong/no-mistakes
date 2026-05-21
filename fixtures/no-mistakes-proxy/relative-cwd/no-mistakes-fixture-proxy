@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+printf 'relative-cwd-proxy'
+for arg in "$@"; do
+  printf ':%s' "$arg"
+done
+printf '\n'
