@@ -451,6 +451,42 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
 }
 
 #[test]
+fn graph_config_options_are_loaded_only_for_config_driven_plans() {
+    let explicit =
+        crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
+    assert!(graph_config_options_for_plan(
+        &explicit,
+        GraphBuildPlan::imports_and_workspace()
+    )
+    .is_none());
+
+    assert!(graph_config_options_for_plan(
+        &explicit,
+        GraphBuildPlan {
+            routes: true,
+            ..GraphBuildPlan::default()
+        }
+    )
+    .is_some());
+    assert!(graph_config_options_for_plan(
+        &explicit,
+        GraphBuildPlan {
+            queues: true,
+            ..GraphBuildPlan::default()
+        }
+    )
+    .is_some());
+    assert!(graph_config_options_for_plan(
+        &explicit,
+        GraphBuildPlan {
+            http: true,
+            ..GraphBuildPlan::default()
+        }
+    )
+    .is_some());
+}
+
+#[test]
 fn effective_fact_plan_skips_config_dependent_domains_without_required_config() {
     let requested = GraphBuildPlan {
         routes: true,

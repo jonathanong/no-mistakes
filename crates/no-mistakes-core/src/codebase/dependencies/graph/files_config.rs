@@ -34,7 +34,7 @@ impl GraphFiles {
 }
 
 pub(crate) fn ts_fact_context_for_plan(root: &Path, plan: GraphBuildPlan) -> TsFactContext {
-    let options = graph_config_options(root);
+    let options = graph_config_options_for_plan(root, plan);
     ts_fact_context_from_options(root, plan, options.as_ref())
 }
 
@@ -67,6 +67,18 @@ fn graph_config_options(root: &Path) -> Option<GraphConfigOptions> {
         project_route_globset,
         test_filter,
     })
+}
+
+fn graph_config_options_for_plan(root: &Path, plan: GraphBuildPlan) -> Option<GraphConfigOptions> {
+    if graph_plan_needs_config(plan) {
+        graph_config_options(root)
+    } else {
+        None
+    }
+}
+
+fn graph_plan_needs_config(plan: GraphBuildPlan) -> bool {
+    plan.routes || plan.queues || plan.http
 }
 
 fn ts_fact_context_from_options(

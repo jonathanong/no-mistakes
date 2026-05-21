@@ -37,7 +37,7 @@ impl DepGraph {
         graph_files: &GraphFiles,
         facts: Option<&TsFactMap>,
     ) -> Self {
-        let config_options = graph_config_options(root);
+        let config_options = graph_config_options_for_plan(root, plan);
         let resolver = ImportResolver::new(tsconfig).with_visible(graph_files.visible());
         let fact_plan = effective_ts_fact_plan(plan, config_options.as_ref());
         let fact_context = ts_fact_context_from_options(root, plan, config_options.as_ref());
