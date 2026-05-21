@@ -1,4 +1,4 @@
-use super::{is_client_method_name, ClientHttpVisitor};
+use super::{is_client_method_name, modules::is_client_named_callee, ClientHttpVisitor};
 use oxc_ast::ast::{Expression, MemberExpression};
 
 impl ClientHttpVisitor<'_> {
@@ -16,9 +16,8 @@ impl ClientHttpVisitor<'_> {
     }
 
     fn client_call_member(&self, member: &MemberExpression<'_>) -> bool {
-        member
-            .static_property_name()
-            .is_some_and(is_client_method_name)
-            && self.client_expr(member.object())
+        member.static_property_name().is_some_and(|name| {
+            is_client_method_name(name) || is_client_named_callee("undici", name)
+        }) && self.client_expr(member.object())
     }
 }

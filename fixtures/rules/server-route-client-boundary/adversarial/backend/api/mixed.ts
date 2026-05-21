@@ -34,3 +34,11 @@ chained.get("/chained");
 
 const cjsCreated = require("axios").create();
 cjsCreated.get("/cjs-created");
+
+const undici = require("undici");
+undici.fetch("/undici-fetch");
+
+let reassignedClient = axios;
+({ x: reassignedDefault = reassignedClient.get("/stale-default") } = (reassignedClient = {
+  get(_path: string) {},
+}));

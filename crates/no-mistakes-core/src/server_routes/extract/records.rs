@@ -9,18 +9,21 @@ use oxc_ast::ast::{CallExpression, Expression};
 
 impl ServerRouteVisitor<'_> {
     pub(super) fn record_call(&mut self, call: &CallExpression<'_>) {
-        let Expression::StaticMemberExpression(member) = &call.callee else {
+        let Some(member) = call.callee.as_member_expression() else {
             return;
         };
-        let method = member.property.name.as_str();
+        let Some(method) = member.static_property_name() else {
+            return;
+        };
+        let object = member.object();
         if method == "use" || method == "route" {
-            self.record_mount_or_api_route(call, &member.object, method);
+            self.record_mount_or_api_route(call, object, method);
         } else if method == "prefix" || method == "basePath" {
-            self.record_prefix(call, &member.object);
+            self.record_prefix(call, object);
         } else if method == "on" {
-            self.record_hono_on(call, &member.object);
+            self.record_hono_on(call, object);
         } else if VERBS.contains(&method) {
-            self.record_verb(call, &member.object, method);
+            self.record_verb(call, object, method);
         }
     }
 

@@ -120,6 +120,7 @@ api.prefix("/prefix");
 api.prefix();
 api.get();
 api.post;
+api[dynamicMethod]("/dynamic-computed");
 unknown().use("/dynamic-parent", router);
 unknown.get("/heuristic");
 stringNamedClient.get("/string-module-name-route");
