@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn graph_config_options_are_loaded_only_for_config_driven_plans() {
+fn graph_config_options_for_plan_returns_none_without_config_driven_edges() {
     let explicit =
         crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
     assert!(graph_config_options_for_plan(
