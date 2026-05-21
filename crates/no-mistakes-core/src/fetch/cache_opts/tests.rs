@@ -173,6 +173,54 @@ fn test_extract_fetch_cache_options_direct_ast_construction() {
 }
 
 #[test]
+fn test_spread_property_with_valid_cache() {
+    let source = "fetch('url', { ...spread, cache: 'force-cache' });";
+    let (cached, kind) = extract_from_source(source);
+    assert!(cached);
+    assert_eq!(kind, CacheKind::FetchCache);
+}
+
+#[test]
+fn test_dynamic_key_with_valid_cache() {
+    let source = "fetch('url', { [dynamic]: 'value', cache: 'force-cache' });";
+    let (cached, kind) = extract_from_source(source);
+    assert!(cached);
+    assert_eq!(kind, CacheKind::FetchCache);
+}
+
+#[test]
+fn test_spread_property_in_next_with_valid_revalidate() {
+    let source = "fetch('url', { next: { ...spread, revalidate: 60 } });";
+    let (cached, kind) = extract_from_source(source);
+    assert!(cached);
+    assert_eq!(kind, CacheKind::FetchNextRevalidate);
+}
+
+#[test]
+fn test_dynamic_key_in_next_with_valid_revalidate() {
+    let source = "fetch('url', { next: { [dynamic]: 'value', revalidate: 60 } });";
+    let (cached, kind) = extract_from_source(source);
+    assert!(cached);
+    assert_eq!(kind, CacheKind::FetchNextRevalidate);
+}
+
+#[test]
+fn test_method_property() {
+    let source = "fetch('url', { method() {}, cache: 'force-cache' });";
+    let (cached, kind) = extract_from_source(source);
+    assert!(cached);
+    assert_eq!(kind, CacheKind::FetchCache);
+}
+
+#[test]
+fn test_method_property_in_next() {
+    let source = "fetch('url', { next: { method() {}, revalidate: 60 } });";
+    let (cached, kind) = extract_from_source(source);
+    assert!(cached);
+    assert_eq!(kind, CacheKind::FetchNextRevalidate);
+}
+
+#[test]
 fn test_other_options() {
     let source = "fetch('url', { method: 'POST', cache: 'no-store' });";
     let (cached, kind) = extract_from_source(source);
