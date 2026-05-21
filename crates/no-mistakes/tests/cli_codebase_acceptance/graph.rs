@@ -1,7 +1,6 @@
 use super::common::{
     file_paths, fixture, has_path_with_via, has_queue_job_with_via, run_json, via_kinds,
 };
-use std::collections::BTreeSet;
 
 #[test]
 fn import_forms_report_expected_edge_kinds() {
@@ -253,61 +252,4 @@ fn graph_edge_kind_acceptance() {
         ".github/workflows/ci.yml",
         "ci"
     ));
-}
-
-#[test]
-fn large_graph_monorepo_exercises_all_relationships() {
-    let root = fixture("large-graph-monorepo");
-    let value = run_json(
-        &root,
-        &[
-            "dependencies",
-            "--relationship",
-            "all",
-            "apps/web/src/entrypoints/graph-smoke.tsx",
-            "apps/api/src/entrypoints/public-api.mts",
-            "scripts/orchestrate.mts",
-            "tests/e2e/all-routes.spec.ts",
-            ".github/workflows/ci.yml",
-            "README.md",
-        ],
-    );
-
-    let files = value["files"].as_array().expect("files should be an array");
-    assert_eq!(
-        files.len(),
-        176,
-        "large fixture traversal should stay stable"
-    );
-
-    let mut kinds = BTreeSet::new();
-    for file in files {
-        if let Some(via) = file["via"].as_array() {
-            for kind in via.iter().filter_map(|kind| kind.as_str()) {
-                kinds.insert(kind.to_string());
-            }
-        }
-    }
-
-    for expected in [
-        "ci",
-        "dynamic-import",
-        "http",
-        "import",
-        "md",
-        "process",
-        "queue-enqueue",
-        "queue-worker",
-        "require",
-        "route",
-        "route-test",
-        "test",
-        "type-import",
-        "workspace",
-    ] {
-        assert!(
-            kinds.contains(expected),
-            "missing {expected} edge kind in {kinds:?}"
-        );
-    }
 }

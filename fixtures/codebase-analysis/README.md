@@ -15,7 +15,6 @@ file whenever you add a new fixture so orphans are immediately visible.
 | `format-output/` | `src/dependencies/tests.rs` — `--format` output modes |
 | `guardrails-config/` | `src/guardrails/config/tests.rs::parses_guardrails_config_fixture` |
 | `import-forms/` | `tests/cli_codebase_acceptance.rs` — static, type-only, dynamic, require, and re-export edge kinds |
-| `large-graph-monorepo/` | `tests/cli_codebase_acceptance.rs`; `crates/no-mistakes/benches/dependencies_large_repo.rs` — large synthetic `dependencies --relationship all` fixture |
 | `migrations/` | `src/pg_schema/lint/tests.rs` — no-drop-view lint rule |
 | `mixed-type-import/` | `src/dependencies/extract/tests.rs::fixture_mixed_type_import_file` |
 | `lockfiles/` | `src/guardrails/rules/package_manager_lockfiles/tests.rs` |
