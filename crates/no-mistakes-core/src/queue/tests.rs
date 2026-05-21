@@ -110,6 +110,37 @@ fn related_crosses_virtual_queue_jobs() {
 }
 
 #[test]
+fn related_dependents_is_transitive() {
+    let report = ProjectReport {
+        producers: vec![],
+        workers: vec![],
+        jobs: vec![],
+        edges: vec![
+            Edge {
+                from: "a.ts".to_string(),
+                to: "b.ts".to_string(),
+                kind: EdgeKind::QueueEnqueue,
+            },
+            Edge {
+                from: "b.ts".to_string(),
+                to: "c.ts".to_string(),
+                kind: EdgeKind::QueueEnqueue,
+            },
+        ],
+        diagnostics: vec![],
+        check: vec![],
+    };
+    let edges = related(&report, &["c.ts".to_string()], RelatedDirection::Dependents);
+    assert_eq!(edges.len(), 2);
+    assert!(edges
+        .iter()
+        .any(|edge| edge.from == "a.ts" && edge.to == "b.ts"));
+    assert!(edges
+        .iter()
+        .any(|edge| edge.from == "b.ts" && edge.to == "c.ts"));
+}
+
+#[test]
 fn add_bulk_and_wildcard_worker_are_supported() {
     let report = analyze_project(&fixture("bulk"), None, &[]).unwrap();
     assert_eq!(report.check, vec![]);
