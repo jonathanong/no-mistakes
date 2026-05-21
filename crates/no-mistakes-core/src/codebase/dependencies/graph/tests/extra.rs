@@ -40,7 +40,7 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
         },
         NodeId::File(a),
     ];
-    let limited = lazy_import_deps_of_with_files(&roots, &root, &tsconfig, Some(1), &graph_files);
+    let limited = lazy_import_deps_of_with_files(&roots, &root, &tsconfig, Some(1), &graph_files, None);
     assert!(has_file(&limited, &b));
     assert!(!has_file(&limited, &c));
 
@@ -50,6 +50,7 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
         &tsconfig,
         None,
         &graph_files,
+        None,
     );
     assert!(has_file(&full, &b));
     assert!(has_file(&full, &c));
@@ -68,6 +69,7 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
         &duplicate_tsconfig,
         None,
         &duplicate_files,
+        None,
     );
     let duplicate_b = duplicate_root.join("b.mts");
     let b_entry = duplicate
@@ -94,6 +96,7 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
         &hidden_tsconfig,
         None,
         &hidden_graph_files,
+        None,
     )
     .is_empty());
 }
@@ -334,6 +337,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
         &tsconfig,
         None,
         &graph_files,
+        None,
     )
     .is_empty());
     assert!(import_neighbors(
@@ -342,6 +346,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
         &ImportExtractor::for_typescript().unwrap(),
         &ImportExtractor::for_tsx().unwrap(),
         &graph_files,
+        None,
     )
     .is_empty());
 

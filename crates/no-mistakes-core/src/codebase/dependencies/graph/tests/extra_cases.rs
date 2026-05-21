@@ -82,6 +82,92 @@ fn lazy_import_deps_walks_only_reachable_import_graph() {
     );
 }
 
+#[test]
+fn lazy_import_deps_filters_granular_relationships() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("granular-imports"));
+    let entry = root.join("src/entry.mts");
+    let static_file = root.join("src/static.mts");
+    let type_file = root.join("src/type.mts");
+    let dynamic_file = root.join("src/dynamic.mts");
+    let require_file = root.join("src/require.mts");
+
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph_files = GraphFiles::discover(&root);
+
+    // Test static only
+    let static_allowed = Some([EdgeKind::Import].into());
+    let static_deps = lazy_import_deps_of_with_files(
+        &[NodeId::File(entry.clone())],
+        &root,
+        &tsconfig,
+        None,
+        &graph_files,
+        static_allowed.as_ref(),
+    );
+    let static_paths: Vec<_> = static_deps.iter().filter_map(|e| e.node.as_file()).collect();
+    assert_eq!(static_paths, vec![static_file.as_path()]);
+
+    // Test dynamic only
+    let dynamic_allowed = Some([EdgeKind::DynamicImport].into());
+    let dynamic_deps = lazy_import_deps_of_with_files(
+        &[NodeId::File(entry.clone())],
+        &root,
+        &tsconfig,
+        None,
+        &graph_files,
+        dynamic_allowed.as_ref(),
+    );
+    let dynamic_paths: Vec<_> = dynamic_deps.iter().filter_map(|e| e.node.as_file()).collect();
+    assert_eq!(dynamic_paths, vec![dynamic_file.as_path()]);
+
+    // Test type only
+    let type_allowed = Some([EdgeKind::TypeImport].into());
+    let type_deps = lazy_import_deps_of_with_files(
+        &[NodeId::File(entry.clone())],
+        &root,
+        &tsconfig,
+        None,
+        &graph_files,
+        type_allowed.as_ref(),
+    );
+    let type_paths: Vec<_> = type_deps.iter().filter_map(|e| e.node.as_file()).collect();
+    assert_eq!(type_paths, vec![type_file.as_path()]);
+
+    // Test require only
+    let require_allowed = Some([EdgeKind::Require].into());
+    let require_deps = lazy_import_deps_of_with_files(
+        &[NodeId::File(entry.clone())],
+        &root,
+        &tsconfig,
+        None,
+        &graph_files,
+        require_allowed.as_ref(),
+    );
+    let require_paths: Vec<_> = require_deps.iter().filter_map(|e| e.node.as_file()).collect();
+    assert_eq!(require_paths, vec![require_file.as_path()]);
+
+    // Test all allowed (None)
+    let all_deps = lazy_import_deps_of_with_files(
+        &[NodeId::File(entry)],
+        &root,
+        &tsconfig,
+        None,
+        &graph_files,
+        None,
+    );
+    let all_paths: HashSet<_> = all_deps.iter().filter_map(|e| e.node.as_file()).collect();
+    assert_eq!(all_paths.len(), 4);
+    assert!(all_paths.contains(static_file.as_path()));
+    assert!(all_paths.contains(dynamic_file.as_path()));
+    assert!(all_paths.contains(type_file.as_path()));
+    assert!(all_paths.contains(require_file.as_path()));
+}
+
 // ── build_filter / apply_filter ─────────────────────────────────────────
 
 #[test]

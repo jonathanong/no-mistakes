@@ -79,7 +79,7 @@ fn deps_entries(
     ctx: &TraversalCtx<'_>,
 ) -> Vec<graph::NodeEntry> {
     if import_only {
-        graph::lazy_import_deps_of_with_files(roots, ctx.root, ctx.tsconfig, depth, ctx.graph_files)
+        graph::lazy_import_deps_of_with_files(roots, ctx.root, ctx.tsconfig, depth, ctx.graph_files, ctx.allowed)
     } else {
         graph::DepGraph::build_with_plan_and_files(
             ctx.root,

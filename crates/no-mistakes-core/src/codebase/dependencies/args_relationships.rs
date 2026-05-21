@@ -59,6 +59,10 @@ pub enum Direction {
 #[clap(rename_all = "kebab-case")]
 pub enum RelationshipArg {
     Import,
+    ImportStatic,
+    ImportDynamic,
+    ImportType,
+    ImportRequire,
     Workspace,
     Test,
     Route,
@@ -86,6 +90,18 @@ fn relationship_filter(
                 set.insert(EdgeKind::Import);
                 set.insert(EdgeKind::TypeImport);
                 set.insert(EdgeKind::DynamicImport);
+                set.insert(EdgeKind::Require);
+            }
+            RelationshipArg::ImportStatic => {
+                set.insert(EdgeKind::Import);
+            }
+            RelationshipArg::ImportDynamic => {
+                set.insert(EdgeKind::DynamicImport);
+            }
+            RelationshipArg::ImportType => {
+                set.insert(EdgeKind::TypeImport);
+            }
+            RelationshipArg::ImportRequire => {
                 set.insert(EdgeKind::Require);
             }
             RelationshipArg::Workspace => {
@@ -123,9 +139,16 @@ fn relationship_filter(
 
 fn relationships_are_import_only(relationships: &[RelationshipArg]) -> bool {
     !relationships.is_empty()
-        && relationships
-            .iter()
-            .all(|relationship| *relationship == RelationshipArg::Import)
+        && relationships.iter().all(|relationship| {
+            matches!(
+                relationship,
+                RelationshipArg::Import
+                    | RelationshipArg::ImportStatic
+                    | RelationshipArg::ImportDynamic
+                    | RelationshipArg::ImportType
+                    | RelationshipArg::ImportRequire
+            )
+        })
 }
 
 /// A parsed entrypoint: either a plain file path, or a file + exported symbol / queue job name.

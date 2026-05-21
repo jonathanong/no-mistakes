@@ -13,8 +13,18 @@ fn http_and_process_relationships_map_to_edge_kinds() {
 fn import_only_detection_requires_nonempty_all_import_relationships() {
     assert!(!relationships_are_import_only(&[]));
     assert!(relationships_are_import_only(&[RelationshipArg::Import]));
+    assert!(relationships_are_import_only(&[RelationshipArg::ImportStatic]));
+    assert!(relationships_are_import_only(&[RelationshipArg::ImportDynamic]));
+    assert!(relationships_are_import_only(&[RelationshipArg::ImportType]));
+    assert!(relationships_are_import_only(&[RelationshipArg::ImportRequire]));
+    assert!(relationships_are_import_only(&[
+        RelationshipArg::ImportStatic,
+        RelationshipArg::ImportDynamic,
+        RelationshipArg::ImportType,
+        RelationshipArg::ImportRequire,
+    ]));
     assert!(!relationships_are_import_only(&[
-        RelationshipArg::Import,
+        RelationshipArg::ImportStatic,
         RelationshipArg::Test,
     ]));
 }
