@@ -19,42 +19,24 @@ fn process_import_declaration(import: &ImportDeclaration<'_>, source: &str, out:
     let is_type = import.import_kind.is_type();
     if let Some(specifiers) = &import.specifiers {
         for spec in specifiers {
-            match spec {
+            let (imported, local, span, is_specifier_type) = match spec {
                 ImportDeclarationSpecifier::ImportSpecifier(s) => {
-                    let imported = s.imported.name().to_string();
-                    let local = s.local.name.as_str().to_string();
-                    let line = byte_offset_to_line(source, s.span.start as usize);
-                    out.imports.push(NamedImport {
-                        source: src.to_string(),
-                        imported,
-                        local,
-                        line,
-                        is_type_only: is_type || s.import_kind.is_type(),
-                    });
+                    (s.imported.name().to_string(), s.local.name.as_str().to_string(), s.span, s.import_kind.is_type())
                 }
                 ImportDeclarationSpecifier::ImportNamespaceSpecifier(s) => {
-                    let local = s.local.name.as_str().to_string();
-                    let line = byte_offset_to_line(source, s.span.start as usize);
-                    out.imports.push(NamedImport {
-                        source: src.to_string(),
-                        imported: "*".to_string(),
-                        local,
-                        line,
-                        is_type_only: is_type,
-                    });
+                    ("*".to_string(), s.local.name.as_str().to_string(), s.span, false)
                 }
                 ImportDeclarationSpecifier::ImportDefaultSpecifier(s) => {
-                    let local = s.local.name.as_str().to_string();
-                    let line = byte_offset_to_line(source, s.span.start as usize);
-                    out.imports.push(NamedImport {
-                        source: src.to_string(),
-                        imported: "default".to_string(),
-                        local,
-                        line,
-                        is_type_only: is_type,
-                    });
+                    ("default".to_string(), s.local.name.as_str().to_string(), s.span, false)
                 }
-            }
+            };
+            out.imports.push(NamedImport {
+                source: src.to_string(),
+                imported,
+                local,
+                line: byte_offset_to_line(source, span.start as usize),
+                is_type_only: is_type || is_specifier_type,
+            });
         }
     }
 }
