@@ -71,6 +71,8 @@ fn extract_file_covers_import_binding_route_and_mount_shapes() {
         ("get", "/paren-interop-default-member-router"),
         ("get", "/heuristic"),
         ("get", "/string-module-name-route"),
+        ("get", "/destructured-const-string"),
+        ("get", "/destructured-bound-api"),
     ] {
         assert!(
             route_pairs.contains(&expected),
@@ -90,6 +92,12 @@ fn extract_file_covers_import_binding_route_and_mount_shapes() {
         ("get", "/client-node-http"),
         ("get", "/client-const"),
         ("get", "/client-cjs-destructured"),
+        ("post", "/client-cjs-nested-destructured"),
+        ("get", "/client-imported-destructured"),
+        ("post", "/client-created-destructured"),
+        ("get", "/client-cjs-created-destructured"),
+        ("get", "/client-array-destructured"),
+        ("get", "/client-array-rest-destructured"),
         ("get", "/client-cjs-created"),
         ("get", "/client-cjs-factory"),
         ("get", "/client-paren-cjs"),

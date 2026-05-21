@@ -1,10 +1,11 @@
 use super::{
-    bindings::is_client_http_module, commonjs::commonjs_property_is_framework,
-    helpers::binding_name, import_names, ServerRouteVisitor,
+    bindings::is_client_http_module, commonjs::commonjs_property_is_framework, const_string,
+    helpers::binding_names, import_names, ServerRouteVisitor,
 };
 use crate::server_routes::model::ImportBinding;
 use oxc_ast::ast::{
-    BindingPattern, ImportDeclarationSpecifier, TSImportEqualsDeclaration, TSModuleReference,
+    BindingPattern, Expression, ImportDeclarationSpecifier, TSImportEqualsDeclaration,
+    TSModuleReference,
 };
 
 impl ServerRouteVisitor<'_> {
@@ -71,13 +72,37 @@ impl ServerRouteVisitor<'_> {
             let Some(key) = prop.key.static_name() else {
                 continue;
             };
-            if let Some(local) = binding_name(&prop.value) {
+            for local in binding_names(&prop.value) {
                 if commonjs_property_is_framework(source, key.as_ref()) {
                     self.record_commonjs_module(&local, source);
                 }
                 if is_client_http_module(source) {
                     self.client_http_names.insert(local);
                 }
+            }
+        }
+    }
+
+    pub(super) fn record_destructured_bindings(
+        &mut self,
+        pattern: &BindingPattern<'_>,
+        init: &Expression<'_>,
+    ) {
+        let BindingPattern::ObjectPattern(_) = pattern else {
+            return;
+        };
+        let const_value = const_string(init);
+        let is_client = self.client_http_module_from_expr(init) || self.client_http_from_expr(init);
+        let binding = self.binding_from_expr(init);
+        for name in binding_names(pattern) {
+            if let Some(value) = &const_value {
+                self.const_strings.insert(name.clone(), value.clone());
+            }
+            if is_client {
+                self.client_http_names.insert(name.clone());
+            }
+            if let Some(binding) = &binding {
+                self.facts.bindings.insert(name, binding.clone());
             }
         }
     }

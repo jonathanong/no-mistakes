@@ -18,6 +18,33 @@ pub(super) fn binding_name(pattern: &BindingPattern<'_>) -> Option<String> {
     None
 }
 
+pub(super) fn binding_names(pattern: &BindingPattern<'_>) -> Vec<String> {
+    match pattern {
+        BindingPattern::BindingIdentifier(id) => vec![id.name.to_string()],
+        BindingPattern::ObjectPattern(object) => {
+            let mut names = Vec::new();
+            for prop in &object.properties {
+                names.extend(binding_names(&prop.value));
+            }
+            if let Some(rest) = &object.rest {
+                names.extend(binding_names(&rest.argument));
+            }
+            names
+        }
+        BindingPattern::ArrayPattern(array) => {
+            let mut names = Vec::new();
+            for element in array.elements.iter().flatten() {
+                names.extend(binding_names(element));
+            }
+            if let Some(rest) = &array.rest {
+                names.extend(binding_names(&rest.argument));
+            }
+            names
+        }
+        BindingPattern::AssignmentPattern(assign) => binding_names(&assign.left),
+    }
+}
+
 pub(super) fn first_object_prefix(args: &[Argument<'_>]) -> Option<String> {
     let Argument::ObjectExpression(object) = args.first()? else {
         return None;

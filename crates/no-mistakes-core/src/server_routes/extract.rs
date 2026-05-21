@@ -62,6 +62,9 @@ impl<'a> Visit<'a> for ServerRouteVisitor<'a> {
         if let Some(source) = commonjs_source {
             self.record_commonjs_pattern(&decl.id, source);
         }
+        if let Some(init) = init {
+            self.record_destructured_bindings(&decl.id, init);
+        }
         let Some(name) = helpers::binding_name(&decl.id) else {
             walk::walk_variable_declarator(self, decl);
             return;
