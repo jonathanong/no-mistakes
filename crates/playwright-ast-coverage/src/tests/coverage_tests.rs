@@ -319,3 +319,61 @@ fn seed_fetch_coverage_skips_dynamic_and_unsupported() {
     assert_eq!(report.fetch_apis[0].path, "/api/static");
     assert!(!report.fetch_apis[0].covered);
 }
+
+#[test]
+fn seed_fetch_coverage_aggregates_route_files_and_sorts_keys() {
+    let root = Path::new("/repo");
+    let mut fetch_index = FetchIndex::new();
+    fetch_index.insert(
+        "web/app/z/page.tsx".to_string(),
+        vec![
+            fetch_occurrence("GET", "/api/shared", false, false),
+            fetch_occurrence("POST", "/api/later", false, false),
+            fetch_occurrence("GET", "/api/skipped", true, false),
+        ],
+    );
+    fetch_index.insert(
+        "web/app/a/page.tsx".to_string(),
+        vec![
+            fetch_occurrence("GET", "/api/shared", false, false),
+            fetch_occurrence("GET", "/api/ignored", false, true),
+        ],
+    );
+    let settings = default_settings(vec![]);
+    let report = build_coverage(
+        root,
+        &[],
+        &[],
+        &[],
+        &settings,
+        UniqueSelectorPolicy::default(),
+        &fetch_index,
+    );
+
+    assert_eq!(report.summary.total_fetch_apis, 2);
+    assert_eq!(report.fetch_apis[0].method, "GET");
+    assert_eq!(report.fetch_apis[0].path, "/api/shared");
+    assert_eq!(
+        report.fetch_apis[0].route_files,
+        vec!["web/app/a/page.tsx", "web/app/z/page.tsx"]
+    );
+    assert_eq!(report.fetch_apis[1].method, "POST");
+    assert_eq!(report.fetch_apis[1].path, "/api/later");
+}
+
+fn fetch_occurrence(method: &str, path: &str, dynamic: bool, unsupported: bool) -> FetchOccurrence {
+    FetchOccurrence {
+        method: method.to_string(),
+        path: path.to_string(),
+        raw_path: path.to_string(),
+        file: "web/app/page.tsx".to_string(),
+        line: 1,
+        side: FetchSide::Server,
+        rsc: true,
+        cached: false,
+        cache_kind: CacheKind::None,
+        cached_function: None,
+        dynamic,
+        unsupported,
+    }
+}
