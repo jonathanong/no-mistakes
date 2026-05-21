@@ -41,6 +41,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     let cwd = std::env::current_dir().context("cwd must be accessible")?;
     let root = no_mistakes_core::cli::resolve_optional_root(Some(&args.root), &cwd);
     let root = no_mistakes_core::codebase::ts_resolver::normalize_path(&root);
+    let root = root.canonicalize().unwrap_or(root);
 
     let config = load_v2_config(&root, args.config.as_deref())?;
     let tsconfig = crate::tests::why::resolve_tsconfig(args.tsconfig.as_deref(), &root)?;
@@ -195,7 +196,15 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
             }
             node_chain.reverse();
 
-            let via_strings: Vec<String> = edge_path.iter().map(|k| format!("{:?}", k)).collect();
+            let via_strings: Vec<String> = edge_path
+                .iter()
+                .map(|k| {
+                    serde_json::to_value(k)
+                        .ok()
+                        .and_then(|v| v.as_str().map(|s| s.to_string()))
+                        .unwrap_or_else(|| format!("{:?}", k))
+                })
+                .collect();
 
             let reason = ImpactReason {
                 changed_file: rel_changed.clone(),

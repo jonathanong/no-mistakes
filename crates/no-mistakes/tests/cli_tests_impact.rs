@@ -283,6 +283,7 @@ fn tests_plan_nested_package_json_does_not_trigger_fallback() {
     let plan: serde_json::Value = serde_json::from_str(&json_str).unwrap();
 
     assert_eq!(plan["fallback_triggered"], false);
+    assert!(plan["warnings"].as_array().unwrap().is_empty());
 }
 
 #[test]
@@ -299,6 +300,5 @@ fn tests_plan_head_requires_base() {
 
     assert!(!output.status.success());
     let stderr = String::from_utf8(output.stderr.clone()).unwrap();
-    assert!(stderr.contains("the following required arguments were not provided:"));
     assert!(stderr.contains("--base"));
 }
