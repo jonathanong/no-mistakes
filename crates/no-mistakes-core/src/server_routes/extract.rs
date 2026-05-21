@@ -57,23 +57,23 @@ impl<'a> Visit<'a> for ServerRouteVisitor<'a> {
     }
 
     fn visit_variable_declarator(&mut self, decl: &oxc_ast::ast::VariableDeclarator<'a>) {
-        if let Some(init) = &decl.init {
-            if let Some(source) = commonjs::server_module_from_require(init) {
-                self.record_commonjs_pattern(&decl.id, source);
-            }
+        let init = decl.init.as_ref();
+        let commonjs_source = init.and_then(|init| commonjs::server_module_from_require(init));
+        if let Some(source) = commonjs_source {
+            self.record_commonjs_pattern(&decl.id, source);
         }
         let Some(name) = helpers::binding_name(&decl.id) else {
             walk::walk_variable_declarator(self, decl);
             return;
         };
-        if let Some(init) = &decl.init {
+        if let Some(init) = init {
             if let Some(value) = const_string(init) {
                 self.const_strings.insert(name.clone(), value);
             }
             if self.client_http_module_from_expr(init) || self.client_http_from_expr(init) {
                 self.client_http_names.insert(name.clone());
             }
-            if let Some(source) = commonjs::server_module_from_require(init) {
+            if let Some(source) = commonjs_source {
                 self.record_commonjs_module(&name, source);
             }
             if let Some(binding) = self.binding_from_expr(init) {
