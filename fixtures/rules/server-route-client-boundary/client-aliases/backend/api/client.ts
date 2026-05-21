@@ -226,6 +226,24 @@ function loopAndTryHoistedVarShadow() {
   }
 }
 
+for (let axios = localSource;;) {
+  axios.get("/for-let-local-only");
+  break;
+}
+axios.get("/api/users");
+
+for (const axios of [localSource]) {
+  axios.get("/for-of-local-only");
+}
+axios.get("/api/users");
+
+for (const key in { one: localSource }) {
+  const axios = localSource;
+  axios.get("/for-in-local-only");
+  void key;
+}
+axios.get("/api/users");
+
 function nestedFunctionVarsDoNotShadow() {
   const notVar = 1;
   function nested() {

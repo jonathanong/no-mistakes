@@ -1,12 +1,18 @@
 use super::{binding_names, is_client_http_module, ClientHttpVisitor};
 use oxc_ast::ast::{
-    AssignmentExpression, CallExpression, Class, ClassType, FunctionType, ImportOrExportKind,
-    SwitchStatement, TSImportEqualsDeclaration, TSModuleReference, VariableDeclarationKind,
+    AssignmentExpression, CallExpression, Class, ClassType, ForInStatement, ForOfStatement,
+    ForStatement, FunctionType, ImportOrExportKind, Program, SwitchStatement,
+    TSImportEqualsDeclaration, TSModuleReference, VariableDeclarationKind,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
 
 impl<'a> Visit<'a> for ClientHttpVisitor<'a> {
+    fn visit_program(&mut self, program: &Program<'a>) {
+        self.mark_lexical_declarations_shadowed(&program.body);
+        walk::walk_program(self, program);
+    }
+
     fn visit_import_declaration(&mut self, import: &oxc_ast::ast::ImportDeclaration<'a>) {
         let source = import.source.value.as_str();
         if is_client_http_module(source) {
@@ -26,6 +32,7 @@ impl<'a> Visit<'a> for ClientHttpVisitor<'a> {
                 TSModuleReference::ExternalModuleReference(reference)
                     if is_client_http_module(reference.expression.value.as_str())
             )
+            && !self.is_shadowed_name(import.id.name.as_str())
         {
             self.add_client_name(import.id.name.to_string());
         }
@@ -149,6 +156,24 @@ impl<'a> Visit<'a> for ClientHttpVisitor<'a> {
         self.enter_scope(false);
         self.mark_switch_lexical_declarations_shadowed(&switch.cases);
         self.visit_switch_cases(&switch.cases);
+        self.leave_scope();
+    }
+
+    fn visit_for_statement(&mut self, for_statement: &ForStatement<'a>) {
+        self.enter_scope(false);
+        walk::walk_for_statement(self, for_statement);
+        self.leave_scope();
+    }
+
+    fn visit_for_in_statement(&mut self, for_statement: &ForInStatement<'a>) {
+        self.enter_scope(false);
+        walk::walk_for_in_statement(self, for_statement);
+        self.leave_scope();
+    }
+
+    fn visit_for_of_statement(&mut self, for_statement: &ForOfStatement<'a>) {
+        self.enter_scope(false);
+        walk::walk_for_of_statement(self, for_statement);
         self.leave_scope();
     }
 

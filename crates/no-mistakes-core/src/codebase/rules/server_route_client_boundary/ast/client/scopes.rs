@@ -122,6 +122,14 @@ impl ClientScopes {
             .is_some_and(|scope| scope.client_factory_callee_names.contains(name))
     }
 
+    pub(super) fn is_shadowed_name(&self, name: &str) -> bool {
+        self.stack
+            .iter()
+            .rev()
+            .find(|scope| Self::name_present(scope, name))
+            .is_some_and(|scope| scope.shadowed_names.contains(name))
+    }
+
     fn target_scope_mut(&mut self, in_var_declaration: bool) -> &mut ClientScope {
         let var_scope_index = in_var_declaration
             .then(|| {

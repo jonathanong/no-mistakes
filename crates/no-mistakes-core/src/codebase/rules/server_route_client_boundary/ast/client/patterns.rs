@@ -47,6 +47,9 @@ impl ClientHttpVisitor<'_> {
         specifier: &ImportDeclarationSpecifier<'_>,
     ) {
         let local = import_local_name(specifier);
+        if self.is_shadowed_name(&local) {
+            return;
+        }
         match specifier {
             ImportDeclarationSpecifier::ImportDefaultSpecifier(_)
             | ImportDeclarationSpecifier::ImportNamespaceSpecifier(_) => {

@@ -289,6 +289,14 @@ fn middleware_mounts_do_not_mark_route_folders() {
 }
 
 #[test]
+fn module_scope_shadows_are_predeclared_before_calls() {
+    let findings = check(&fixture("module-shadow"), &config()).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].line, 12);
+}
+
+#[test]
 fn chained_routes_mark_route_folders() {
     let findings = check(&fixture("chained-route"), &config()).unwrap();
 
@@ -306,7 +314,7 @@ fn non_server_static_calls_do_not_mark_route_folders() {
 fn client_identifier_aliases_inline_require_and_shadows_are_handled() {
     let findings = check(&fixture("client-aliases"), &config()).unwrap();
 
-    assert_eq!(findings.len(), 52);
+    assert_eq!(findings.len(), 55);
     assert_eq!(
         findings
             .iter()
@@ -315,7 +323,7 @@ fn client_identifier_aliases_inline_require_and_shadows_are_handled() {
         vec![
             60, 61, 62, 64, 65, 66, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 79, 81, 83, 85, 87, 89,
             91, 92, 93, 94, 95, 96, 97, 98, 100, 112, 114, 123, 126, 128, 130, 134, 136, 145, 148,
-            156, 158, 161, 162, 163, 164, 172, 194, 238, 297, 302,
+            156, 158, 161, 162, 163, 164, 172, 194, 233, 238, 245, 256, 315, 320,
         ]
     );
 }

@@ -84,6 +84,10 @@ impl<'a> ClientHttpVisitor<'a> {
         self.scopes.shadow_name(name, self.in_var_declaration);
     }
 
+    fn is_shadowed_name(&self, name: &str) -> bool {
+        self.scopes.is_shadowed_name(name)
+    }
+
     fn assign_client_name(&mut self, name: String) {
         self.scopes.assign_client_name(name);
     }
