@@ -1,0 +1,12 @@
+[package]
+name = "large-graph-fixture"
+version = "0.0.0"
+edition = "2021"
+
+[[bin]]
+name = "fixture-helper"
+path = "src/bin/fixture_helper.rs"
+
+[[bin]]
+name = "fixture-worker"
+path = "src/bin/fixture_worker.rs"
