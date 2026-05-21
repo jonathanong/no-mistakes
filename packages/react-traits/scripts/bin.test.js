@@ -3,7 +3,10 @@ const { join } = require("node:path");
 
 const PACKAGE_ROOT = join(__dirname, "..");
 const { main } = require("./install");
-const { testInstallerMainDownloads, testInstallerFailures } = require("../../../tests/js/test-helpers");
+const {
+  testInstallerMainDownloads,
+  testInstallerFailures,
+} = require("../../../tests/js/test-helpers");
 
 test("package bin points directly to the native executable target", () => {
   const pkg = require("../package.json");
@@ -11,7 +14,7 @@ test("package bin points directly to the native executable target", () => {
 });
 
 test("installer main downloads into the direct bin target", async () => {
-  await testInstallerMainDownloads(main, "react-traits", PACKAGE_ROOT, join, assert);
+  await testInstallerMainDownloads(main, "react-traits", PACKAGE_ROOT, assert);
 });
 
 test("installer reports failures", async () => {

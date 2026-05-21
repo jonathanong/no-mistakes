@@ -11,5 +11,5 @@ test("package bin points directly to the native executable target", () => {
 });
 
 test("installer main downloads into the direct bin target", async () => {
-  await testInstallerMainDownloads(main, "playwright-ast-coverage", PACKAGE_ROOT, join, assert);
+  await testInstallerMainDownloads(main, "playwright-ast-coverage", PACKAGE_ROOT, assert);
 });

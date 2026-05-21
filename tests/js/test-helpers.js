@@ -1,6 +1,7 @@
 "use strict";
 
 const { EventEmitter } = require("node:events");
+const { join } = require("node:path");
 
 function _runWithChild(run, runArgs, event, ...eventArgs) {
   const child = new EventEmitter();
@@ -24,7 +25,7 @@ function runWithChildWithEnv(run, defaultArgs, event, ...eventArgs) {
   return _runWithChild(run, [defaultArgs, {}, "linux"], event, ...eventArgs);
 }
 
-async function testInstallerMainDownloads(main, name, packageRoot, join, assert) {
+async function testInstallerMainDownloads(main, name, packageRoot, assert) {
   const calls = [];
   await main(async (...args) => {
     calls.push(args);
