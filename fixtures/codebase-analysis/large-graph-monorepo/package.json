@@ -1,0 +1,14 @@
+{
+  "name": "large-graph-monorepo",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "dependencies": {
+    "@fixture/core": "workspace:*",
+    "@fixture/ui": "workspace:*",
+    "@fixture/data": "workspace:*",
+    "@fixture/jobs": "workspace:*",
+    "@fixture/http": "workspace:*",
+    "@fixture/config": "workspace:*",
+    "@fixture/queue-factory": "workspace:*"
+  }
+}
