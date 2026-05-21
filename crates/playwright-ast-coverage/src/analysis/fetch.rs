@@ -4,7 +4,7 @@ use no_mistakes_core::fetch::resolve::relative_string;
 use no_mistakes_core::fetch::route_analysis::collect_route_fetches;
 use no_mistakes_core::fetch::types::{FetchOccurrence, FetchSide};
 use no_mistakes_core::routes::Route;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -24,10 +24,9 @@ pub(crate) fn seed_fetch_coverage(fetch_index: &FetchIndex) -> FetchCoverageEntr
         BTreeSet<TestRef>,
         BTreeSet<Arc<String>>,
     );
-    let mut by_fetch: std::collections::HashMap<(&str, &str), EntryValues> =
-        std::collections::HashMap::new();
-
+    let mut by_fetch: HashMap<(&str, &str), EntryValues> = HashMap::new();
     for (route_file, fetches) in fetch_index {
+        let route_file_arc = Arc::new(route_file.clone());
         for fetch_occ in fetches {
             if fetch_occ.dynamic || fetch_occ.unsupported {
                 continue;
@@ -37,7 +36,7 @@ pub(crate) fn seed_fetch_coverage(fetch_index: &FetchIndex) -> FetchCoverageEntr
                 .entry(key)
                 .or_insert_with(|| (Default::default(), Default::default(), Default::default()))
                 .2
-                .insert(std::sync::Arc::new(route_file.clone()));
+                .insert(Arc::clone(&route_file_arc));
         }
     }
 
