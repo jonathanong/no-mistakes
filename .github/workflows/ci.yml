@@ -43,7 +43,9 @@ jobs:
               continue
             fi
 
-            if ! git cat-file blob "$object" | perl -MEncode=decode,FB_CROAK -0777 -ne 'my $text = eval { decode("UTF-8", $_, FB_CROAK) }; exit 1 if $@ || $text =~ /[^\P{Cc}\t\n\r]/'; then
+            if git cat-file blob "$object" | perl -0777 -ne 'exit 1 if /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/'; then
+              continue
+            else
               escaped_path="$(escape_workflow_command_property "$path")"
               printf '::error file=%s::Committed binary file detected; remove it from Git or replace it with a text placeholder.\n' "$escaped_path"
               fail=1
