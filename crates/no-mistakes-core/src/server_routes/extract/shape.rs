@@ -31,11 +31,7 @@ pub(crate) fn has_server_route_shape(path: &Path, source: &str) -> bool {
         let child_known = facts
             .bindings
             .get(&mount.child)
-            .is_some_and(|binding| binding.framework != Framework::Heuristic)
-            || facts
-                .imports
-                .iter()
-                .any(|import| import.local == mount.child);
+            .is_some_and(|binding| binding.framework != Framework::Heuristic);
         parent_known && child_known
     });
     has_known_route || has_known_mount

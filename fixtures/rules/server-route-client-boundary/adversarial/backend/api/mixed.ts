@@ -42,3 +42,9 @@ let reassignedClient = axios;
 ({ x: reassignedDefault = reassignedClient.get("/stale-default") } = (reassignedClient = {
   get(_path: string) {},
 }));
+
+reassignedClient = axios;
+const target: Record<string, unknown> = {};
+target[reassignedClient.get("/computed-target-before-rhs")] = (reassignedClient = {
+  get(_path: string) {},
+});

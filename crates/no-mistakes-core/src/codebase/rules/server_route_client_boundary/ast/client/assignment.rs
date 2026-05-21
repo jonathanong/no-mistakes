@@ -5,8 +5,19 @@ use oxc_ast::ast::{
     AssignmentExpression, AssignmentTarget, AssignmentTargetMaybeDefault, AssignmentTargetProperty,
     AssignmentTargetRest,
 };
+use oxc_ast_visit::Visit;
 
-impl ClientHttpVisitor<'_> {
+impl<'a> ClientHttpVisitor<'a> {
+    pub(super) fn visit_assignment_target_reference_exprs(
+        &mut self,
+        target: &AssignmentTarget<'a>,
+    ) {
+        if let AssignmentTarget::ComputedMemberExpression(member) = target {
+            self.visit_expression(&member.object);
+            self.visit_expression(&member.expression);
+        }
+    }
+
     pub(super) fn update_client_assignment(&mut self, assignment: &AssignmentExpression<'_>) {
         if self.client_factory_method_expr(&assignment.right) {
             for name in assignment_target_names(&assignment.left) {

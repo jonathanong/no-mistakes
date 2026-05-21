@@ -296,6 +296,13 @@ fn middleware_mounts_do_not_mark_route_folders() {
 }
 
 #[test]
+fn imported_middleware_mounts_do_not_mark_route_folders() {
+    let findings = check(&fixture("imported-middleware-only"), &config()).unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn module_scope_shadows_are_predeclared_before_calls() {
     let findings = check(&fixture("module-shadow"), &config()).unwrap();
 
@@ -384,7 +391,7 @@ fn adversarial_client_shapes_are_detected_without_routes() {
     assert!(!ast::has_server_like_route_call(&path, &source));
     assert_eq!(
         ast::client_call_lines(&path, &source),
-        vec![11, 13, 14, 17, 29, 36, 39]
+        vec![11, 13, 14, 17, 29, 36, 39, 48]
     );
 }
 
@@ -397,7 +404,7 @@ fn ast_helpers_fallback_to_typescript_for_unknown_extensions() {
     assert!(!ast::has_server_like_route_call(unknown_path, &source));
     assert_eq!(
         ast::client_call_lines(unknown_path, &source),
-        vec![11, 13, 14, 17, 29, 36, 39]
+        vec![11, 13, 14, 17, 29, 36, 39, 48]
     );
 }
 

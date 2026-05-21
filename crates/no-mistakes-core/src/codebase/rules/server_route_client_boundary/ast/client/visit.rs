@@ -51,6 +51,7 @@ impl<'a> Visit<'a> for ClientHttpVisitor<'a> {
             walk::walk_assignment_expression(self, assignment);
             return;
         }
+        self.visit_assignment_target_reference_exprs(&assignment.left);
         self.visit_expression(&assignment.right);
         self.visit_assignment_target(&assignment.left);
         self.update_client_assignment(assignment);
