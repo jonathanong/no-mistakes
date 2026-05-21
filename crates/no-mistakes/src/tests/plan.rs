@@ -145,10 +145,10 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
             // Reconstruct path node chain and collect warnings in a single pass
             let mut node_chain = Vec::new();
             let mut curr = test_node.clone();
-            node_chain.push(curr.display_name(&root));
+            node_chain.push(slash_node_name(&curr, &root));
 
             while let Some((parent, kind)) = path_parents.get(&curr) {
-                node_chain.push(parent.display_name(&root));
+                node_chain.push(slash_node_name(parent, &root));
 
                 match kind {
                     EdgeKind::DynamicImport => {
@@ -156,9 +156,9 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                             r#type: "dynamic-import".to_string(),
                             message: format!(
                                 "Dynamic import in `{}` might not be fully resolved.",
-                                parent.display_name(&root)
+                                slash_node_name(parent, &root)
                             ),
-                            file: parent.display_name(&root),
+                            file: slash_node_name(parent, &root),
                         };
                         if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
                             warnings.push(warn);
@@ -169,10 +169,10 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                             r#type: "http-call".to_string(),
                             message: format!(
                                 "Dynamic HTTP call in `{}` to backend `{}`.",
-                                parent.display_name(&root),
-                                curr.display_name(&root)
+                                slash_node_name(parent, &root),
+                                slash_node_name(&curr, &root)
                             ),
-                            file: parent.display_name(&root),
+                            file: slash_node_name(parent, &root),
                         };
                         if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
                             warnings.push(warn);
@@ -183,9 +183,9 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                             r#type: "process-spawn".to_string(),
                             message: format!(
                                 "Process spawned in `{}`.",
-                                parent.display_name(&root)
+                                slash_node_name(parent, &root)
                             ),
-                            file: parent.display_name(&root),
+                            file: slash_node_name(parent, &root),
                         };
                         if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
                             warnings.push(warn);
@@ -245,7 +245,15 @@ fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Vec<PathBuf>> {
 
     // From changed-file arguments
     for f in &args.changed_file {
-        files.push(f.canonicalize().unwrap_or_else(|_| root.join(f)));
+        let path = if f.is_absolute() {
+            f.clone()
+        } else {
+            root.join(f)
+        };
+        let resolved = path
+            .canonicalize()
+            .unwrap_or_else(|_| no_mistakes_core::codebase::ts_resolver::normalize_path(&path));
+        files.push(resolved);
     }
 
     // From changed-files file list
@@ -257,7 +265,11 @@ fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Vec<PathBuf>> {
             let line = line.trim();
             if !line.is_empty() {
                 let p = PathBuf::from(line);
-                files.push(p.canonicalize().unwrap_or_else(|_| root.join(p)));
+                let path = if p.is_absolute() { p } else { root.join(p) };
+                let resolved = path.canonicalize().unwrap_or_else(|_| {
+                    no_mistakes_core::codebase::ts_resolver::normalize_path(&path)
+                });
+                files.push(resolved);
             }
         }
     }
@@ -396,12 +408,18 @@ fn discover_all_tests(
     )
 }
 
+fn slash_node_name(node: &NodeId, root: &Path) -> String {
+    match node {
+        NodeId::File(p) => no_mistakes_core::codebase::ts_source::relative_slash_path(root, p),
+        NodeId::QueueJob { queue_file, job } => {
+            let rel = no_mistakes_core::codebase::ts_source::relative_slash_path(root, queue_file);
+            format!("{}#{}", rel, job)
+        }
+    }
+}
+
 fn relative_path(root: &Path, absolute: &Path) -> String {
-    absolute
-        .strip_prefix(root)
-        .unwrap_or(absolute)
-        .to_string_lossy()
-        .into_owned()
+    no_mistakes_core::codebase::ts_source::relative_slash_path(root, absolute)
 }
 
 /// Custom BFS path finder in the reverse (dependents) direction.

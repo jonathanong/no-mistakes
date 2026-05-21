@@ -15,7 +15,11 @@ pub struct WhyStep {
 }
 
 pub(crate) fn run(args: WhyArgs) -> Result<ExitCode> {
-    let test_rel = relative_path_str(&args.root, &args.test);
+    let cwd = std::env::current_dir().context("cwd must be accessible")?;
+    let root = no_mistakes_core::cli::resolve_optional_root(Some(&args.root), &cwd);
+    let root = no_mistakes_core::codebase::ts_resolver::normalize_path(&root);
+
+    let test_rel = relative_path_str(&root, &args.test);
 
     // 1. If plan JSON is provided, read from it
     let path_steps = if let Some(ref plan_path) = args.plan {
@@ -24,12 +28,12 @@ pub(crate) fn run(args: WhyArgs) -> Result<ExitCode> {
             &test_rel,
             args.changed
                 .as_ref()
-                .map(|p| relative_path_str(&args.root, p))
+                .map(|p| relative_path_str(&root, p))
                 .as_deref(),
         )?
     } else {
         // 2. Otherwise run live analysis
-        run_live_analysis(&args, &test_rel)?
+        run_live_analysis(&args, &root, &test_rel)?
     };
 
     if path_steps.is_empty() {
@@ -101,10 +105,14 @@ fn read_from_plan(
     Ok(result)
 }
 
-fn run_live_analysis(args: &WhyArgs, test_rel: &str) -> Result<BTreeMap<String, Vec<WhyStep>>> {
+fn run_live_analysis(
+    args: &WhyArgs,
+    root: &Path,
+    test_rel: &str,
+) -> Result<BTreeMap<String, Vec<WhyStep>>> {
     // Generate plan live to find all connections and warn/fallback correctly
     let plan_args = PlanArgs {
-        root: args.root.clone(),
+        root: root.to_path_buf(),
         config: args.config.clone(),
         tsconfig: args.tsconfig.clone(),
         base: None,
@@ -143,11 +151,8 @@ fn relative_path_str(root: &Path, path: &Path) -> String {
     } else {
         root.join(path)
     };
-    absolute
-        .strip_prefix(root)
-        .unwrap_or(&absolute)
-        .to_string_lossy()
-        .into_owned()
+    let absolute_normalized = no_mistakes_core::codebase::ts_resolver::normalize_path(&absolute);
+    no_mistakes_core::codebase::ts_source::relative_slash_path(root, &absolute_normalized)
 }
 
 pub(crate) fn resolve_tsconfig(
