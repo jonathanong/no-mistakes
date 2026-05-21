@@ -134,4 +134,4 @@ jobs:
           key: bench
 
       - name: Run benchmarks
-        run: cargo bench --workspace -- --noplot
+        run: cargo bench -p no-mistakes-core --bench graph_related -- --noplot
