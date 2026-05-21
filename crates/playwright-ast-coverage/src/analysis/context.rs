@@ -4,16 +4,17 @@ use crate::selectors;
 use globset::GlobSet;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 pub(crate) struct RouteTarget {
-    pub(crate) route_file: String,
-    pub(crate) pattern: String,
+    pub(crate) route_file: Arc<String>,
+    pub(crate) pattern: Arc<String>,
     pub(crate) segments: Vec<String>,
 }
 
 pub(crate) struct AppSelectorTarget<'a> {
     pub(crate) selector: &'a selectors::AppSelector,
-    pub(crate) app_file: String,
+    pub(crate) app_file: Arc<String>,
     pub(crate) value: String,
 }
 

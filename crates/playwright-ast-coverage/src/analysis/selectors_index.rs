@@ -11,7 +11,7 @@ pub(crate) fn app_selector_targets<'a>(
         .iter()
         .map(|selector| AppSelectorTarget {
             selector,
-            app_file: relative_string(root, &selector.file),
+            app_file: std::sync::Arc::new(relative_string(root, &selector.file)),
             value: selector.display_value(),
         })
         .collect()

@@ -9,8 +9,8 @@ pub(crate) fn route_index(root: &Path, routes: &[Route]) -> RouteIndex {
     let mut index = RouteIndex::default();
     for route in routes {
         let target = RouteTarget {
-            route_file: relative_string(root, &route.file),
-            pattern: route.pattern.clone(),
+            route_file: std::sync::Arc::new(relative_string(root, &route.file)),
+            pattern: std::sync::Arc::new(route.pattern.clone()),
             segments: matcher::pattern_segments(&route.pattern)
                 .into_iter()
                 .map(str::to_string)

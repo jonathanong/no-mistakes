@@ -7,7 +7,6 @@ use crate::selectors;
 use crate::url::normalize_url;
 use crate::{ast, playwright_urls};
 use anyhow::{Context, Result};
-use std::collections::HashMap;
 
 pub(crate) fn analyze_test_file(
     test_file: &DiscoveredTestFile,
@@ -17,8 +16,6 @@ pub(crate) fn analyze_test_file(
         .context(format!("reading test file {}", test_file.path.display()))?;
     let rel_test_file = std::sync::Arc::new(relative_string(context.root, &test_file.path));
     let mut edges = Vec::new();
-    let mut route_cache =
-        HashMap::<(String, String), (std::sync::Arc<String>, std::sync::Arc<String>)>::new();
     let base_urls = test_file.base_urls();
     let test_id_attributes = test_file.test_id_attributes();
 
@@ -72,20 +69,12 @@ pub(crate) fn analyze_test_file(
             .into_iter()
             .filter(|route| route_specificity(&route.segments) == best_specificity)
         {
-            let (route_file, route_pattern) = route_cache
-                .entry((route.route_file.clone(), route.pattern.clone()))
-                .or_insert_with(|| {
-                    (
-                        std::sync::Arc::new(route.route_file.clone()),
-                        std::sync::Arc::new(route.pattern.clone()),
-                    )
-                });
             edges.push(Edge::Route {
                 test_file: rel_test_file.clone(),
                 test_name: test_name_arc.clone(),
                 describe_path: describe_path_arc.clone(),
-                route_file: route_file.clone(),
-                route: route_pattern.clone(),
+                route_file: route.route_file.clone(),
+                route: route.pattern.clone(),
                 url: url_arc.clone(),
             });
         }
@@ -101,12 +90,11 @@ pub(crate) fn analyze_test_file(
             let describe_path_arc = std::sync::Arc::new(playwright_selector.describe_path);
 
             for app_selector in context.selector_index.matches(&playwright_selector.value) {
-                let app_file = std::sync::Arc::new(app_selector.app_file.clone());
                 edges.push(Edge::Selector {
                     test_file: rel_test_file.clone(),
                     test_name: test_name_arc.clone(),
                     describe_path: describe_path_arc.clone(),
-                    app_file,
+                    app_file: app_selector.app_file.clone(),
                     attribute: app_selector.selector.attribute.clone(),
                     value: app_selector.value.clone(),
                     selector: playwright_selector.value.selector.clone(),
