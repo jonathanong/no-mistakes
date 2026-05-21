@@ -9,6 +9,7 @@ mod graph_related;
 mod resolver;
 mod source;
 mod types;
+pub(crate) mod utils;
 
 pub use graph::{analyze_project, analyze_project_with_facts, RelatedDirection};
 pub use graph_model::{CheckFinding, ProjectReport};
