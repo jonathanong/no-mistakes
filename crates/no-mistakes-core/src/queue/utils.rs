@@ -59,7 +59,7 @@ where
         if include_dependents {
             for edge in reverse.get(&node).into_iter().flatten() {
                 if seen.insert(edge.source().to_owned()) {
-                    queue.push_back(edge.source().to_owned());
+                    queue.push_back(edge.target().to_owned());
                 }
                 out.push(edge.clone());
             }
