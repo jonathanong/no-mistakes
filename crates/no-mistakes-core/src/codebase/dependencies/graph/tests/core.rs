@@ -1,6 +1,7 @@
 use super::*;
 
 mod config_edges;
+mod config_plan;
 mod extra;
 
 fn p(s: &str) -> PathBuf {
@@ -462,4 +463,3 @@ fn test_graph_methods_lazy() {
         }
     }
 }
-
