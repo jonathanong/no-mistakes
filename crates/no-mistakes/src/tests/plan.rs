@@ -92,7 +92,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     for changed in &changed_files {
         let rel_changed = relative_path(&root, changed);
 
-        // If it does not exist, add a warning and skip
+        // If it does not exist, add a warning
         if !changed.exists() {
             let warn = Warning {
                 r#type: "file-not-found".to_string(),
@@ -102,7 +102,6 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
             if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
                 warnings.push(warn);
             }
-            continue;
         }
 
         // If the changed file is a test file itself, select it directly
@@ -319,7 +318,7 @@ fn get_git_changed_files(
                 "diff",
                 "--relative",
                 "--name-only",
-                &format!("{}..{}", base_commit, head_commit),
+                &format!("{}...{}", base_commit, head_commit),
             ],
             root,
         )?;
@@ -349,10 +348,7 @@ fn get_git_changed_files(
             }
         }
         // Untracked changes
-        if let Ok(output) = run_git(
-            &["ls-files", "--others", "--exclude-standard", "--relative"],
-            root,
-        ) {
+        if let Ok(output) = run_git(&["ls-files", "--others", "--exclude-standard"], root) {
             for line in output.lines() {
                 let trimmed = line.trim();
                 if !trimmed.is_empty() {
