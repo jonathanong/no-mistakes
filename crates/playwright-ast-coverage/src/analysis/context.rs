@@ -6,14 +6,14 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 pub(crate) struct RouteTarget {
-    pub(crate) route_file: String,
-    pub(crate) pattern: String,
+    pub(crate) route_file: std::sync::Arc<String>,
+    pub(crate) pattern: std::sync::Arc<String>,
     pub(crate) segments: Vec<String>,
 }
 
 pub(crate) struct AppSelectorTarget<'a> {
     pub(crate) selector: &'a selectors::AppSelector,
-    pub(crate) app_file: String,
+    pub(crate) app_file: std::sync::Arc<String>,
     pub(crate) value: String,
 }
 
