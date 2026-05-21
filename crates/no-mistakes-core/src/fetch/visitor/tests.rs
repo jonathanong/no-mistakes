@@ -15,7 +15,7 @@ fn function_declarations_shadow_global_fetch() {
 }
 
 #[test]
-fn test_is_fetch_shadowed() {
+fn mark_identifier_shadowed_marks_fetch_shadowed() {
     let mut visitor = FetchVisitor::new("", "fixture.ts", false, false);
     assert!(!visitor.is_fetch_shadowed());
 
