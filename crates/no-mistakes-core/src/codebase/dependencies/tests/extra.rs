@@ -160,10 +160,14 @@ fn run_with_cwd_and_writer_surfaces_output_errors() {
 
     let result = collect_and_filter_entries(&args, Direction::Deps, &cwd, &mut timings).unwrap();
     let root_strs: Vec<String> = args.files.iter().map(|f| f.display().to_string()).collect();
-    let err = write_entries(Format::Json, &root_strs, &result.entries, &result.root, &mut out)
-        .unwrap_err();
+    let err = write_output_results(Format::Json, &root_strs, &result, &mut out).unwrap_err();
+    timings.mark("output");
 
     assert!(err.to_string().contains("synthetic write failure"));
+    assert!(timings
+        .phases
+        .iter()
+        .any(|(label, _duration)| *label == "output"));
 }
 
 #[test]

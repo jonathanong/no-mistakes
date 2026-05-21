@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 pub struct PhaseTimings {
     last: Instant,
-    phases: Vec<(&'static str, Duration)>,
+    pub(crate) phases: Vec<(&'static str, Duration)>,
 }
 
 impl PhaseTimings {
