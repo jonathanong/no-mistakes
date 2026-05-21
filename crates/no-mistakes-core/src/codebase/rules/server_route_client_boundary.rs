@@ -66,6 +66,40 @@ fn check_files(
     config: &NoMistakesConfig,
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    check_items(
+        root,
+        config,
+        files,
+        |path| path.as_path(),
+        |path| std::fs::read_to_string(path).ok(),
+    )
+}
+
+fn check_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    sources: &[SourceItem<'_>],
+) -> Result<Vec<RuleFinding>> {
+    check_items(
+        root,
+        config,
+        sources,
+        |item| item.path,
+        |item| Some(item.source),
+    )
+}
+
+fn check_items<T, S>(
+    root: &Path,
+    config: &NoMistakesConfig,
+    items: &[T],
+    path_for: impl Fn(&T) -> &Path + Sync,
+    source_for: impl Fn(&T) -> Option<S> + Sync,
+) -> Result<Vec<RuleFinding>>
+where
+    T: Sync,
+    S: AsRef<str>,
+{
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.rule_options();
@@ -73,13 +107,16 @@ fn check_files(
         let Some(route_globset) = route_globset_for_rule(config, rule) else {
             continue;
         };
-        let route_dirs: HashSet<PathBuf> = files
+        let route_dirs: HashSet<PathBuf> = items
             .par_iter()
-            .filter(|path| route_globset.is_match(relative_path(root, path)))
-            .filter(|path| !exclude_matcher.is_match(root, path))
-            .filter_map(|path| {
-                std::fs::read_to_string(path).ok().and_then(|source| {
-                    ast::has_server_like_route_call(path, &source)
+            .filter_map(|item| {
+                let path = path_for(item);
+                (route_globset.is_match(relative_path(root, path))
+                    && !exclude_matcher.is_match(root, path))
+                .then(|| source_for(item))
+                .flatten()
+                .and_then(|source| {
+                    ast::has_server_like_route_call(path, source.as_ref())
                         .then(|| path.parent().map(Path::to_path_buf))
                         .flatten()
                 })
@@ -89,54 +126,19 @@ fn check_files(
             continue;
         }
         findings.extend(
-            files
+            items
                 .par_iter()
-                .filter(|path| !exclude_matcher.is_match(root, path))
-                .filter(|path| path.ancestors().any(|dir| route_dirs.contains(dir)))
-                .flat_map(|path| {
-                    std::fs::read_to_string(path)
-                        .ok()
-                        .map(|source| client_findings_for_file(root, path, &source))
+                .filter(|item| {
+                    let path = path_for(item);
+                    !exclude_matcher.is_match(root, path)
+                        && path.ancestors().any(|dir| route_dirs.contains(dir))
+                })
+                .flat_map(|item| {
+                    let path = path_for(item);
+                    source_for(item)
+                        .map(|source| client_findings_for_file(root, path, source.as_ref()))
                         .unwrap_or_default()
                 })
-                .collect::<Vec<_>>(),
-        );
-    }
-    super::sort_findings(&mut findings);
-    Ok(findings)
-}
-
-fn check_sources(
-    root: &Path,
-    config: &NoMistakesConfig,
-    sources: &[SourceItem<'_>],
-) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.rule_options();
-        let exclude_matcher = ExcludeMatcher::new(&opts.excludes);
-        let Some(route_globset) = route_globset_for_rule(config, rule) else {
-            continue;
-        };
-        let route_dirs: HashSet<PathBuf> = sources
-            .par_iter()
-            .filter(|item| {
-                let path = item.path;
-                route_globset.is_match(relative_path(root, path))
-                    && !exclude_matcher.is_match(root, path)
-                    && ast::has_server_like_route_call(path, item.source)
-            })
-            .filter_map(|item| item.path.parent().map(Path::to_path_buf))
-            .collect();
-        if route_dirs.is_empty() {
-            continue;
-        }
-        findings.extend(
-            sources
-                .par_iter()
-                .filter(|item| !exclude_matcher.is_match(root, item.path))
-                .filter(|item| item.path.ancestors().any(|dir| route_dirs.contains(dir)))
-                .flat_map(|item| client_findings_for_file(root, item.path, item.source))
                 .collect::<Vec<_>>(),
         );
     }
