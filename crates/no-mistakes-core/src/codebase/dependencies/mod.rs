@@ -24,18 +24,18 @@ include!("output_args.rs");
 mod tests;
 
 pub fn run(args: TraverseArgs, direction: Direction) -> Result<()> {
-    let mut timings = crate::codebase::timing::PhaseTimings::start();
     let cwd_early = std::env::current_dir().context("reading current directory")?;
+    let mut timings = crate::codebase::timing::PhaseTimings::start();
 
-    let (entries, root_strs, root) =
-        collect_and_filter_entries(&args, direction, &cwd_early, &mut timings)?;
+    let result = collect_and_filter_entries(&args, direction, &cwd_early, &mut timings)?;
+    let root_strs: Vec<String> = args.files.iter().map(|f| f.display().to_string()).collect();
 
     let stdout = io::stdout();
     let stdout_is_terminal = stdout.is_terminal();
     let mut out = stdout.lock();
 
     let format = resolve_format(args.json, args.format, stdout_is_terminal);
-    write_entries(format, &root_strs, &entries, &root, &mut out)?;
+    write_entries(format, &root_strs, &result.entries, &result.root, &mut out)?;
 
     timings.mark("output");
     if args.timings {
@@ -45,19 +45,22 @@ pub fn run(args: TraverseArgs, direction: Direction) -> Result<()> {
     Ok(())
 }
 
+pub(crate) struct TraversalResult {
+    entries: Vec<graph::NodeEntry>,
+    root: PathBuf,
+}
+
 pub(crate) fn collect_and_filter_entries(
     args: &TraverseArgs,
     direction: Direction,
     cwd_early: &Path,
     timings: &mut crate::codebase::timing::PhaseTimings,
-) -> Result<(Vec<graph::NodeEntry>, Vec<String>, PathBuf)> {
+) -> Result<TraversalResult> {
     let root = resolve_root(args, cwd_early);
     let root = crate::codebase::ts_resolver::normalize_path(&root);
 
     let tsconfig = resolve_tsconfig(args, &root)?;
     let entrypoints = resolve_entrypoints(&args.files, &root, cwd_early);
-
-    let root_strs: Vec<String> = args.files.iter().map(|f| f.display().to_string()).collect();
 
     timings.mark("search");
 
@@ -97,7 +100,7 @@ pub(crate) fn collect_and_filter_entries(
 
     timings.mark("analysis");
 
-    Ok((entries, root_strs, root))
+    Ok(TraversalResult { entries, root })
 }
 
 fn apply_filters(

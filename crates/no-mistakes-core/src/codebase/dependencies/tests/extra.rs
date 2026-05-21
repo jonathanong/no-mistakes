@@ -148,8 +148,10 @@ fn run_with_cwd_and_writer_surfaces_output_errors() {
     let mut out = FailingWriter;
     let mut timings = crate::codebase::timing::PhaseTimings::start();
 
-    let (entries, root_strs, root) = collect_and_filter_entries(&args, Direction::Deps, &cwd, &mut timings).unwrap();
-    let err = write_entries(Format::Json, &root_strs, &entries, &root, &mut out).unwrap_err();
+    let result = collect_and_filter_entries(&args, Direction::Deps, &cwd, &mut timings).unwrap();
+    let root_strs: Vec<String> = args.files.iter().map(|f| f.display().to_string()).collect();
+    let err = write_entries(Format::Json, &root_strs, &result.entries, &result.root, &mut out)
+        .unwrap_err();
 
     assert!(err.to_string().contains("synthetic write failure"));
 }
