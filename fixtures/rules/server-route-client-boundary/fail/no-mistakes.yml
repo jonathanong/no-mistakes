@@ -1,0 +1,15 @@
+projects:
+  backend:
+    type: server
+    root: backend
+    include:
+      - backend/**/*.ts
+    routes:
+      - api/**
+rules:
+  - rule: server-route-client-boundary
+    projects:
+      - backend
+  - rule: test-no-unmocked-dynamic-imports
+    projects:
+      - backend

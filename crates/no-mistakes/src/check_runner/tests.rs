@@ -126,6 +126,21 @@ fn integration_configured_covers_vitest_and_playwright_suites() {
 }
 
 #[test]
+fn fact_plan_keeps_boundary_only_rules_to_source_facts() {
+    let boundary_only = fact_plan(false, false, false, true, false, false);
+
+    assert!(boundary_only.source);
+    assert!(!boundary_only.imports);
+    assert!(!boundary_only.dynamic_imports);
+
+    let dynamic_import_rule = fact_plan(false, false, true, false, false, false);
+
+    assert!(dynamic_import_rule.source);
+    assert!(dynamic_import_rule.imports);
+    assert!(dynamic_import_rule.dynamic_imports);
+}
+
+#[test]
 fn complete_domain_checks_surfaces_each_domain_error() {
     assert_domain_error(err_react(), "react");
     assert_domain_error(err_queues(), "queues");

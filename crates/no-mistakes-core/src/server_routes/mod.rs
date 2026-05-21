@@ -7,6 +7,7 @@ mod related;
 mod source;
 mod types;
 
+pub(crate) use extract::{has_server_route_shape, is_client_http_module};
 pub(crate) use graph::route_defs_from_files;
 pub use graph::{analyze_project, RelatedDirection};
 pub use model::ProjectReport;

@@ -2,6 +2,7 @@ pub mod agents_md_max_size;
 pub mod rust_max_lines_per_file;
 pub mod rust_no_inline_allows;
 pub mod rust_no_inline_tests;
+pub mod server_route_client_boundary;
 pub mod test_no_unmocked_dynamic_imports;
 
 use anyhow::Result;
@@ -12,6 +13,7 @@ pub use agents_md_max_size::RULE_ID as AGENTS_MD_MAX_SIZE;
 pub use rust_max_lines_per_file::RULE_ID as RUST_MAX_LINES_PER_FILE;
 pub use rust_no_inline_allows::RULE_ID as RUST_NO_INLINE_ALLOWS;
 pub use rust_no_inline_tests::RULE_ID as RUST_NO_INLINE_TESTS;
+pub use server_route_client_boundary::RULE_ID as SERVER_ROUTE_CLIENT_BOUNDARY;
 pub use test_no_unmocked_dynamic_imports::RULE_ID as TEST_NO_UNMOCKED_DYNAMIC_IMPORTS;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
@@ -33,10 +35,21 @@ pub fn run_check(
     tsconfig_path: Option<&Path>,
 ) -> Result<Vec<RuleFinding>> {
     let config = crate::config::v2::load_v2_config(root, config_path)?;
-    if !rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
+    if !rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS)
+        && !rule_enabled(&config, SERVER_ROUTE_CLIENT_BOUNDARY)
+    {
         return Ok(Vec::new());
     }
-    test_no_unmocked_dynamic_imports::check(root, &config, tsconfig_path)
+    let mut findings = match rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
+        true => test_no_unmocked_dynamic_imports::check(root, &config, tsconfig_path)?,
+        false => Vec::new(),
+    };
+    if rule_enabled(&config, SERVER_ROUTE_CLIENT_BOUNDARY) {
+        let rule_findings = server_route_client_boundary::check(root, &config)?;
+        findings.extend(rule_findings);
+    }
+    sort_findings(&mut findings);
+    Ok(findings)
 }
 
 pub fn run_check_with_facts(
@@ -46,10 +59,27 @@ pub fn run_check_with_facts(
     shared: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let config = crate::config::v2::load_v2_config(root, config_path)?;
-    if !rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
+    if !rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS)
+        && !rule_enabled(&config, SERVER_ROUTE_CLIENT_BOUNDARY)
+    {
         return Ok(Vec::new());
     }
-    test_no_unmocked_dynamic_imports::check_with_facts(root, &config, tsconfig_path, shared)
+    let mut findings = Vec::new();
+    if rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
+        let rule_findings = test_no_unmocked_dynamic_imports::check_with_facts(
+            root,
+            &config,
+            tsconfig_path,
+            shared,
+        )?;
+        findings.extend(rule_findings);
+    }
+    if rule_enabled(&config, SERVER_ROUTE_CLIENT_BOUNDARY) {
+        let rule_findings = server_route_client_boundary::check_with_facts(root, &config, shared)?;
+        findings.extend(rule_findings);
+    }
+    sort_findings(&mut findings);
+    Ok(findings)
 }
 
 /// Run the filesystem rules using a pre-discovered file list so the

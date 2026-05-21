@@ -1,17 +1,23 @@
 mod bindings;
+mod commonjs;
 mod helpers;
+mod imports;
 mod literals;
 mod records;
+mod shape;
 
 use crate::ast;
 use crate::server_routes::model::FileFacts;
 use oxc_ast::ast::{
     CallExpression, ExportDefaultDeclarationKind, Expression, ImportDeclarationSpecifier,
-    ModuleExportName,
+    ImportOrExportKind, ModuleExportName, TSImportEqualsDeclaration,
 };
 use oxc_ast_visit::{walk, Visit};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
+
+pub(crate) use bindings::is_client_http_module;
+pub(crate) use shape::has_server_route_shape;
 
 pub(super) const VERBS: &[&str] = &[
     "get", "post", "put", "patch", "delete", "del", "head", "options", "all",
@@ -51,6 +57,11 @@ impl<'a> Visit<'a> for ServerRouteVisitor<'a> {
     }
 
     fn visit_variable_declarator(&mut self, decl: &oxc_ast::ast::VariableDeclarator<'a>) {
+        if let Some(init) = &decl.init {
+            if let Some(source) = commonjs::server_module_from_require(init) {
+                self.record_commonjs_pattern(&decl.id, source);
+            }
+        }
         let Some(name) = helpers::binding_name(&decl.id) else {
             walk::walk_variable_declarator(self, decl);
             return;
@@ -59,14 +70,24 @@ impl<'a> Visit<'a> for ServerRouteVisitor<'a> {
             if let Some(value) = const_string(init) {
                 self.const_strings.insert(name.clone(), value);
             }
-            if self.client_http_from_expr(init) {
+            if self.client_http_module_from_expr(init) || self.client_http_from_expr(init) {
                 self.client_http_names.insert(name.clone());
+            }
+            if let Some(source) = commonjs::server_module_from_require(init) {
+                self.record_commonjs_module(&name, source);
             }
             if let Some(binding) = self.binding_from_expr(init) {
                 self.facts.bindings.insert(name, binding);
             }
         }
         walk::walk_variable_declarator(self, decl);
+    }
+
+    fn visit_ts_import_equals_declaration(&mut self, import: &TSImportEqualsDeclaration<'a>) {
+        if import.import_kind == ImportOrExportKind::Value {
+            self.record_ts_import_equals(import);
+        }
+        walk::walk_ts_import_equals_declaration(self, import);
     }
 
     fn visit_export_named_declaration(

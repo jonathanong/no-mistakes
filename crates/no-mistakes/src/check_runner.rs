@@ -23,7 +23,8 @@ pub(crate) fn run_all(
     let config = load_v2_config(&root, config_path.as_deref())?;
     let queues_enabled = queues_configured(&config);
     let unique_exports_enabled = unique_exports_configured(&config);
-    let rules_enabled = test_dynamic_imports_configured(&config);
+    let dynamic_import_rules_enabled = dynamic_import_rules_configured(&config);
+    let boundary_rules_enabled = server_route_client_boundary_configured(&config);
     let filesystem_rules_enabled = filesystem_rules_configured(&config);
     let integration_enabled = integration_configured(&config);
     let react_enabled = react_traits::check_enabled(&root, config_path.as_deref(), false)?;
@@ -31,7 +32,8 @@ pub(crate) fn run_all(
     let plan = fact_plan(
         react_enabled,
         queues_enabled,
-        rules_enabled,
+        dynamic_import_rules_enabled,
+        boundary_rules_enabled,
         integration_enabled,
         unique_exports_enabled,
     );
@@ -127,18 +129,19 @@ pub(crate) fn run_all(
 fn fact_plan(
     react: bool,
     queue: bool,
-    rules: bool,
+    dynamic_import_rules: bool,
+    boundary_rules: bool,
     integration: bool,
     unique_exports: bool,
 ) -> CheckFactPlan {
     CheckFactPlan {
-        imports: rules,
+        imports: dynamic_import_rules,
         symbols: unique_exports,
         react,
         queue,
         integration,
-        dynamic_imports: rules,
-        source: rules || unique_exports,
+        dynamic_imports: dynamic_import_rules,
+        source: dynamic_import_rules || boundary_rules || unique_exports,
     }
 }
 
@@ -152,12 +155,21 @@ fn plan_requests_facts(plan: &CheckFactPlan) -> bool {
         || plan.source
 }
 
-fn test_dynamic_imports_configured(
+fn dynamic_import_rules_configured(
     config: &no_mistakes_core::config::v2::NoMistakesConfig,
 ) -> bool {
     crate::check_tasks::rule_configured(
         config,
         no_mistakes_core::codebase::rules::TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+    )
+}
+
+fn server_route_client_boundary_configured(
+    config: &no_mistakes_core::config::v2::NoMistakesConfig,
+) -> bool {
+    crate::check_tasks::rule_configured(
+        config,
+        no_mistakes_core::codebase::rules::SERVER_ROUTE_CLIENT_BOUNDARY,
     )
 }
 
