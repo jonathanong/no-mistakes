@@ -104,7 +104,7 @@ pub fn bench_unified_fact_collection(c: &mut Criterion) {
 
 pub fn bench_dep_graph_build(c: &mut Criterion) {
     let (dir, _files, tsconfig) = create_ts_fixture();
-    c.bench_function("dep_graph_full_build", |b| {
+    c.bench_function("dep_graph_import_workspace_public_build", |b| {
         b.iter(|| {
             DepGraph::build_with_plan(
                 black_box(dir.path()),
