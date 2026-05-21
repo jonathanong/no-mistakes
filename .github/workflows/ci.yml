@@ -25,6 +25,8 @@ jobs:
       - name: Check committed binary files
         shell: bash
         run: |
+          set -euo pipefail
+
           escape_workflow_command_property() {
             local value="$1"
             value="${value//'%'/'%25'}"
