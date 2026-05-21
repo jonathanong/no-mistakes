@@ -1,0 +1,17 @@
+filesystem:
+  skipDirectories: []
+projects: {}
+tests:
+  playwright:
+    projects: {}
+    selectors:
+      htmlIds: false
+      testIds: []
+      componentTestIds: {}
+    selectorRoots: []
+    selectorExclude: []
+  vitest:
+    projects: {}
+  jest: {}
+  storybook: {}
+rules: []
