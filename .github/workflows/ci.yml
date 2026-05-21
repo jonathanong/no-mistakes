@@ -36,13 +36,17 @@ jobs:
           }
 
           fail=0
-          while IFS= read -r -d '' path; do
-            if [[ -f "$path" && -s "$path" ]] && ! LC_ALL=C grep -Iq "" -- "$path"; then
+          while read -r -d '' mode object _ path; do
+            if [[ "$mode" != 100644 && "$mode" != 100755 ]]; then
+              continue
+            fi
+
+            if ! git cat-file blob "$object" | perl -MEncode=decode,FB_CROAK -0777 -ne 'my $text = eval { decode("UTF-8", $_, FB_CROAK) }; exit 1 if $@ || $text =~ /[^\P{Cc}\t\n\r]/'; then
               escaped_path="$(escape_workflow_command_property "$path")"
               printf '::error file=%s::Committed binary file detected; remove it from Git or replace it with a text placeholder.\n' "$escaped_path"
               fail=1
             fi
-          done < <(git ls-files -z)
+          done < <(git ls-files -s -z)
           exit "$fail"
 
       - name: Set up Node.js
