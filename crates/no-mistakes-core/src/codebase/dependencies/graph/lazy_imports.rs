@@ -24,6 +24,7 @@ pub fn lazy_import_deps_of(
         tsconfig,
         max_depth,
         &graph_files,
+        None,
     ))
 }
 
@@ -33,6 +34,7 @@ pub(crate) fn lazy_import_deps_of_with_files(
     tsconfig: &TsConfig,
     max_depth: Option<usize>,
     graph_files: &GraphFiles,
+    allowed: Option<&HashSet<EdgeKind>>,
 ) -> Vec<NodeEntry> {
     let ts_ex = ImportExtractor::for_typescript().expect("typescript import extractor builds");
     let tsx_ex = ImportExtractor::for_tsx().expect("tsx import extractor builds");
@@ -67,7 +69,7 @@ pub(crate) fn lazy_import_deps_of_with_files(
                 }
                 (
                     node.clone(),
-                    import_neighbors(path, &resolver, &ts_ex, &tsx_ex, graph_files),
+                    import_neighbors(path, &resolver, &ts_ex, &tsx_ex, graph_files, allowed),
                 )
             })
             .collect();
@@ -106,6 +108,7 @@ fn import_neighbors(
     ts_ex: &ImportExtractor,
     tsx_ex: &ImportExtractor,
     graph_files: &GraphFiles,
+    allowed: Option<&HashSet<EdgeKind>>,
 ) -> Vec<(NodeId, EdgeKind)> {
     let source = match std::fs::read_to_string(path) {
         Ok(source) => source,
@@ -122,6 +125,7 @@ fn import_neighbors(
                 .filter(|target| graph_files.is_visible(target))
                 .map(|target| (NodeId::File(target), edge_kind_for_import(&imp)))
         })
+        .filter(|(_, kind)| allowed.is_none_or(|a| a.contains(kind)))
         .collect();
     neighbors.sort_by_key(|(node, kind)| (node_sort_key(node), *kind as u8));
     neighbors
@@ -183,10 +187,8 @@ fn bfs(
 
         if let Some(neighbors) = edges.get(&node) {
             for (neighbor, kind) in neighbors {
-                if let Some(allowed) = allowed {
-                    if !allowed.contains(kind) {
-                        continue;
-                    }
+                if !allowed.is_none_or(|a| a.contains(kind)) {
+                    continue;
                 }
 
                 if visited.insert(neighbor.clone()) {
@@ -208,5 +210,4 @@ fn bfs(
 
     result
 }
-
 
