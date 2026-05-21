@@ -1,0 +1,9 @@
+name: fixture-ci
+on: [push]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: cargo run --bin fixture-helper
+      - run: cargo run --package large-graph-fixture --bin fixture-worker

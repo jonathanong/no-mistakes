@@ -52,6 +52,24 @@ no-mistakes dependents src/queues.mts#sendEmail --json
 no-mistakes related web/app/users/page.tsx --relationship test --format paths
 ```
 
+Benchmark the large synthetic graph fixture locally:
+
+```sh
+cargo bench -p no-mistakes --bench dependencies_large_repo -- --noplot
+cargo run --release -p no-mistakes -- dependencies \
+  --root fixtures/codebase-analysis/large-graph-monorepo \
+  --relationship all \
+  --timings \
+  --format json \
+  apps/web/src/entrypoints/graph-smoke.tsx \
+  apps/api/src/entrypoints/public-api.mts \
+  scripts/orchestrate.mts \
+  tests/e2e/all-routes.spec.ts \
+  .github/workflows/ci.yml \
+  README.md > /tmp/no-mistakes-large-graph.json
+wc -c /tmp/no-mistakes-large-graph.json
+```
+
 `FILE#SYMBOL` is supported only by `dependents`/`related`. It finds files that
 import that named export, including through re-export chains. Namespace imports
 match all symbols.
