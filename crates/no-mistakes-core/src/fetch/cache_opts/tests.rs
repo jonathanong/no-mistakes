@@ -331,3 +331,51 @@ fn test_cache_dynamic_expression() {
     assert!(!cached);
     assert_eq!(kind, CacheKind::None);
 }
+
+#[test]
+fn test_dynamic_cache_key_is_static_string_unrelated() {
+    let source = "fetch('url', { ['unrelated']: 'force-cache' });";
+    let (cached, kind) = extract_from_source(source);
+    assert!(!cached);
+    assert_eq!(kind, CacheKind::None);
+}
+
+#[test]
+fn test_next_dynamic_key_is_not_static_unrelated() {
+    let source = "fetch('url', { next: { [dynamicVarUnrelated]: 'force-cache' } });";
+    let (cached, kind) = extract_from_source(source);
+    assert!(!cached);
+    assert_eq!(kind, CacheKind::None);
+}
+
+#[test]
+fn test_cache_spread_continues_to_next_property() {
+    let source = "fetch('url', { ...spreadOpts, cache: 'force-cache' });";
+    let (cached, kind) = extract_from_source(source);
+    assert!(cached);
+    assert_eq!(kind, CacheKind::FetchCache);
+}
+
+#[test]
+fn test_cache_dynamic_key_continues_to_next_property() {
+    let source = "fetch('url', { [dynamicVar]: 'no-store', cache: 'force-cache' });";
+    let (cached, kind) = extract_from_source(source);
+    assert!(cached);
+    assert_eq!(kind, CacheKind::FetchCache);
+}
+
+#[test]
+fn test_next_spread_continues_to_next_property() {
+    let source = "fetch('url', { next: { ...spreadOpts, revalidate: 60 } });";
+    let (cached, kind) = extract_from_source(source);
+    assert!(cached);
+    assert_eq!(kind, CacheKind::FetchNextRevalidate);
+}
+
+#[test]
+fn test_next_dynamic_key_continues_to_next_property() {
+    let source = "fetch('url', { next: { [dynamicVar]: 'no-store', revalidate: 60 } });";
+    let (cached, kind) = extract_from_source(source);
+    assert!(cached);
+    assert_eq!(kind, CacheKind::FetchNextRevalidate);
+}
