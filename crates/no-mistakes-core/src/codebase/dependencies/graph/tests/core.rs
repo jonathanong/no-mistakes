@@ -433,3 +433,33 @@ fn build_graph_excludes_skipped_fixture_files() {
     assert_eq!(paths, vec![visible.as_path()]);
     assert!(!paths.contains(&skipped.as_path()));
 }
+
+#[test]
+fn test_graph_methods_lazy() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("skipped-files"));
+    let source = root.join("src/source.mts");
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = build_graph(&root, &tsconfig);
+
+    let node = NodeId::File(source);
+    let deps = graph.dependencies_of_node(&node);
+    let deps_none = graph.dependencies_of_node(&NodeId::File(PathBuf::from("/nonexistent")));
+    let deps_none_2 = graph.dependents_of_node(&NodeId::File(PathBuf::from("/nonexistent")));
+
+    assert!(deps_none.is_none());
+    assert!(deps_none_2.is_none());
+    if let Some(deps) = deps {
+        for (_dep, kind) in deps {
+            assert!(matches!(
+                kind,
+                EdgeKind::Import | EdgeKind::TypeImport | EdgeKind::DynamicImport | EdgeKind::Require
+            ));
+        }
+    }
+}
+

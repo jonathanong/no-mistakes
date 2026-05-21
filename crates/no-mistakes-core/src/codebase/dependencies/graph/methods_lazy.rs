@@ -1,4 +1,14 @@
 impl DepGraph {
+    /// Get the direct dependents (reverse edges) of a single node.
+    pub fn dependents_of_node(&self, node: &NodeId) -> Option<&Vec<(NodeId, EdgeKind)>> {
+        self.reverse.get(node)
+    }
+
+    /// Get the direct dependencies (forward edges) of a single node.
+    pub fn dependencies_of_node(&self, node: &NodeId) -> Option<&Vec<(NodeId, EdgeKind)>> {
+        self.forward.get(node)
+    }
+
     /// Find all nodes that `roots` transitively depend on (follow imports).
     pub fn deps_of(
         &self,
