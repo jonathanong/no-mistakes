@@ -136,6 +136,43 @@ fn test_empty_options() {
 }
 
 #[test]
+fn test_extract_fetch_cache_options_direct_ast_construction() {
+    let allocator = oxc_allocator::Allocator::default();
+
+    // Construct a dummy SpreadElement
+    let spread = oxc_ast::ast::SpreadElement {
+        node_id: std::cell::Cell::new(oxc_syntax::node::NodeId::new(0)),
+        span: oxc_span::Span::default(),
+        argument: Expression::Identifier(oxc_allocator::Box::new_in(
+            oxc_ast::ast::IdentifierReference {
+                node_id: std::cell::Cell::new(oxc_syntax::node::NodeId::new(0)),
+                span: oxc_span::Span::default(),
+                name: "spread".into(),
+                reference_id: std::cell::Cell::new(None),
+            },
+            &allocator,
+        )),
+    };
+
+    let properties = oxc_allocator::Vec::from_iter_in(
+        vec![oxc_ast::ast::ObjectPropertyKind::SpreadProperty(
+            oxc_allocator::Box::new_in(spread, &allocator),
+        )],
+        &allocator,
+    );
+
+    let obj = oxc_ast::ast::ObjectExpression {
+        node_id: std::cell::Cell::new(oxc_syntax::node::NodeId::new(0)),
+        span: oxc_span::Span::default(),
+        properties,
+    };
+
+    let (cached, kind) = extract_fetch_cache_options(&obj);
+    assert!(!cached);
+    assert_eq!(kind, CacheKind::None);
+}
+
+#[test]
 fn test_other_options() {
     let source = "fetch('url', { method: 'POST', cache: 'no-store' });";
     let (cached, kind) = extract_from_source(source);
