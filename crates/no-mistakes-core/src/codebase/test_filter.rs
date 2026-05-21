@@ -10,7 +10,7 @@ type RunnerTestFilter =
     crate::codebase::rules::test_no_unmocked_dynamic_imports::config::TestFilter;
 
 #[derive(Clone)]
-pub(crate) struct TestFileFilter {
+pub struct TestFileFilter {
     config_filter: Option<RunnerTestFilter>,
     suites: Vec<TestSuiteFilter>,
 }
@@ -22,7 +22,7 @@ struct TestSuiteFilter {
 }
 
 impl TestFileFilter {
-    pub(crate) fn new(root: &Path, config: &NoMistakesConfig) -> Self {
+    pub fn new(root: &Path, config: &NoMistakesConfig) -> Self {
         Self {
             config_filter:
                 crate::codebase::rules::test_no_unmocked_dynamic_imports::config::test_filter(
@@ -33,12 +33,12 @@ impl TestFileFilter {
         }
     }
 
-    pub(crate) fn is_match(&self, root: &Path, path: &Path) -> bool {
+    pub fn is_match(&self, root: &Path, path: &Path) -> bool {
         let rel = crate::codebase::ts_source::relative_slash_path(root, path);
         self.is_match_rel(&rel)
     }
 
-    pub(crate) fn is_match_rel(&self, rel_path: &str) -> bool {
+    pub fn is_match_rel(&self, rel_path: &str) -> bool {
         if let Some(is_match) = self.configured_suite_match(rel_path) {
             return is_match;
         }

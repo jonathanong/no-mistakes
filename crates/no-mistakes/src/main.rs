@@ -6,6 +6,7 @@ mod check_tasks;
 mod queues;
 mod react;
 mod server;
+mod tests;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -48,6 +49,8 @@ enum Command {
     Server(server::ServerArgs),
     /// Run configured project checks.
     Check(check::CheckArgs),
+    /// Plan, explain, and visualize test impacts based on changed files.
+    Tests(tests::TestsArgs),
     /// Proxy to a matching no-mistakes-* executable on PATH.
     #[command(external_subcommand)]
     External(Vec<OsString>),
@@ -83,6 +86,7 @@ fn run() -> Result<ExitCode> {
         Command::Queues(args) => queues::run(args),
         Command::Server(args) => server::run(args),
         Command::Check(args) => check::run(args),
+        Command::Tests(args) => tests::run(args),
         Command::External(args) => proxy_external(args),
     }
 }
