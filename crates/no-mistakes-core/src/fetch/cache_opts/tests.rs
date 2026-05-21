@@ -211,16 +211,14 @@ fn test_extract_fetch_cache_options_direct_ast_construction_next_spread() {
                     node_id: std::cell::Cell::new(oxc_syntax::node::NodeId::new(0)),
                     span: oxc_span::Span::default(),
                     kind: oxc_ast::ast::PropertyKind::Init,
-                    key: oxc_ast::ast::PropertyKey::StaticIdentifier(
-                        oxc_allocator::Box::new_in(
-                            oxc_ast::ast::IdentifierName {
-                                node_id: std::cell::Cell::new(oxc_syntax::node::NodeId::new(0)),
-                                span: oxc_span::Span::default(),
-                                name: "next".into(),
-                            },
-                            &allocator,
-                        ),
-                    ),
+                    key: oxc_ast::ast::PropertyKey::StaticIdentifier(oxc_allocator::Box::new_in(
+                        oxc_ast::ast::IdentifierName {
+                            node_id: std::cell::Cell::new(oxc_syntax::node::NodeId::new(0)),
+                            span: oxc_span::Span::default(),
+                            name: "next".into(),
+                        },
+                        &allocator,
+                    )),
                     value: Expression::ObjectExpression(oxc_allocator::Box::new_in(
                         next_obj, &allocator,
                     )),
