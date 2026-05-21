@@ -22,6 +22,42 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Check committed binary files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          escape_workflow_command_property() {
+            local value="$1"
+            value="${value//'%'/'%25'}"
+            value="${value//$'\r'/'%0D'}"
+            value="${value//$'\n'/'%0A'}"
+            value="${value//':'/'%3A'}"
+            value="${value//','/'%2C'}"
+            printf '%s' "$value"
+          }
+
+          fail=0
+          while IFS= read -r -d '' path; do
+            metadata="$(git ls-files -s -- "$path")"
+            mode="${metadata%% *}"
+            rest="${metadata#* }"
+            object="${rest%% *}"
+
+            if [[ "$mode" != 100644 && "$mode" != 100755 ]]; then
+              continue
+            fi
+
+            if git cat-file blob "$object" | perl -e 'while (1) { my $n = sysread(STDIN, my $buffer, 65536); die "read failed: $!" unless defined $n; last if $n == 0; exit 1 if $buffer =~ /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/; }'; then
+              continue
+            else
+              escaped_path="$(escape_workflow_command_property "$path")"
+              printf '::error file=%s::Committed binary file detected; remove it from Git or replace it with a text placeholder.\n' "$escaped_path"
+              fail=1
+            fi
+          done < <(git ls-files -z)
+          exit "$fail"
+
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
