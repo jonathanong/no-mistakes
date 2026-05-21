@@ -144,6 +144,10 @@ fn modular_mounts_apply_prefixes_across_files() {
     assert!(report
         .routes
         .iter()
+        .any(|route| route.route == "/equals/*" && route.file == "backend/api/users.ts"));
+    assert!(report
+        .routes
+        .iter()
         .any(|route| route.route == "/admin" && route.file == "backend/api/admin.ts"));
 }
 

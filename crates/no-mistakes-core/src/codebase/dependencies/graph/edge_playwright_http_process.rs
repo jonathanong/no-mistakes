@@ -74,7 +74,6 @@ fn collect_http_call_edges(
     if route_defs.is_empty() {
         return vec![];
     }
-
     let prefix_strs: Vec<&str> = backend_prefixes.iter().map(String::as_str).collect();
 
     let _ = tsconfig; // reserved for future alias-aware call resolution

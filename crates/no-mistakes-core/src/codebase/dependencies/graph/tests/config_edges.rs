@@ -105,6 +105,7 @@ fn route_collectors_cover_configured_prefixes_and_scan_globs() {
     let all_files = GraphFiles::discover(&root).all;
     let client = root.join("src/client.ts");
     let route = root.join("backend/api/users.mts");
+    let admin_route = root.join("backend/api/admin.mts");
     let fake_route = root.join("src/fake-backend.mts");
     let config_options = graph_config_options(&root);
 
@@ -130,6 +131,21 @@ fn route_collectors_cover_configured_prefixes_and_scan_globs() {
         *kind == EdgeKind::HttpCall
             && from.as_file() == Some(client.as_path())
             && to.as_file() == Some(route.as_path())
+    }));
+    let route_sources = vec![(route.clone(), std::fs::read_to_string(&route).unwrap())];
+    let route_http_edges = collect_http_call_edges(
+        &root,
+        &tsconfig,
+        None,
+        &route_sources,
+        &all_files,
+        &all_files,
+        config_options.as_ref(),
+    );
+    assert!(route_http_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::HttpCall
+            && from.as_file() == Some(route.as_path())
+            && to.as_file() == Some(admin_route.as_path())
     }));
 
     let fact_plan = GraphBuildPlan {
@@ -159,6 +175,11 @@ fn route_collectors_cover_configured_prefixes_and_scan_globs() {
             && from.as_file() == Some(client.as_path())
             && to.as_file() == Some(route.as_path())
     }));
+    assert!(http_edges_with_facts.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::HttpCall
+            && from.as_file() == Some(route.as_path())
+            && to.as_file() == Some(admin_route.as_path())
+    }));
 }
 
 #[test]
@@ -169,6 +190,7 @@ fn project_route_globs_drive_graph_route_edges_without_guardrails() {
     let all_files = GraphFiles::discover(&root).all;
     let client = root.join("src/client.ts");
     let route = root.join("backend/api/users.mts");
+    let client_route = root.join("backend/api/client.mts");
     let test_route = root.join("backend/api/users.test.mts");
     let ignored_route = root.join("backend/services/ignored.mts");
     let config_options = graph_config_options(&root).unwrap();
@@ -197,6 +219,7 @@ fn project_route_globs_drive_graph_route_edges_without_guardrails() {
     assert!(route_edges.iter().all(|(_from, to, kind)| {
         *kind != EdgeKind::RouteRef
             || (to.as_file() != Some(test_route.as_path())
+                && to.as_file() != Some(client_route.as_path())
                 && to.as_file() != Some(ignored_route.as_path()))
     }));
 

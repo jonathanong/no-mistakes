@@ -26,6 +26,11 @@ fn check(root: &PathBuf, yaml: &str) -> Output {
         .unwrap()
 }
 
+fn check_fixture_config(root: &PathBuf, name: &str) -> Output {
+    let yaml = std::fs::read_to_string(root.join(name)).unwrap();
+    check(root, &yaml)
+}
+
 fn stdout(o: &Output) -> String {
     String::from_utf8_lossy(&o.stdout).into_owned()
 }
@@ -41,6 +46,32 @@ fn git(root: &std::path::Path, args: &[&str]) -> bool {
         .status()
         .unwrap()
         .success()
+}
+
+// ── server-route-client-boundary ─────────────────────────────────────────────
+
+#[test]
+fn server_route_client_boundary_passes_when_separated() {
+    let root = fixture("server-route-client-boundary", "pass");
+    let out = check_fixture_config(&root, "check-config.yml");
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn server_route_client_boundary_fails_for_client_in_route_folder() {
+    let root = fixture("server-route-client-boundary", "fail");
+    let out = check_fixture_config(&root, "check-config.yml");
+    assert!(!out.status.success(), "expected exit 1");
+    assert!(
+        stdout(&out).contains("server-route-client-boundary"),
+        "{}",
+        stdout(&out)
+    );
+    assert!(
+        stdout(&out).contains("backend/api/client.ts"),
+        "{}",
+        stdout(&out)
+    );
 }
 
 // ── agents-md-max-size ────────────────────────────────────────────────────────
