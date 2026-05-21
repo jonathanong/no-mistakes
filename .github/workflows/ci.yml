@@ -22,6 +22,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Check committed binary files
+        shell: bash
+        run: |
+          fail=0
+          while IFS= read -r -d '' path; do
+            if [[ -s "$path" ]] && ! LC_ALL=C grep -Iq "" "$path"; then
+              printf '::error file=%s::Committed binary file detected; remove it from Git or replace it with a text placeholder.\n' "$path"
+              fail=1
+            fi
+          done < <(git ls-files -z)
+          exit "$fail"
+
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
