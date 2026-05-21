@@ -125,13 +125,7 @@ fn import_neighbors(
                 .filter(|target| graph_files.is_visible(target))
                 .map(|target| (NodeId::File(target), edge_kind_for_import(&imp)))
         })
-        .filter(|(_, kind)| {
-            if let Some(allowed) = allowed {
-                allowed.contains(kind)
-            } else {
-                true
-            }
-        })
+        .filter(|(_, kind)| allowed.map_or(true, |a| a.contains(kind)))
         .collect();
     neighbors.sort_by_key(|(node, kind)| (node_sort_key(node), *kind as u8));
     neighbors
@@ -193,10 +187,8 @@ fn bfs(
 
         if let Some(neighbors) = edges.get(&node) {
             for (neighbor, kind) in neighbors {
-                if let Some(allowed) = allowed {
-                    if !allowed.contains(kind) {
-                        continue;
-                    }
+                if !allowed.map_or(true, |a| a.contains(kind)) {
+                    continue;
                 }
 
                 if visited.insert(neighbor.clone()) {
