@@ -145,6 +145,27 @@ fn external_subcommand_skips_non_executable_path_match() {
 
 #[cfg(unix)]
 #[test]
+fn external_subcommand_skips_relative_path_entries() {
+    let output = Command::new(bin())
+        .current_dir(proxy_fixture("relative-cwd"))
+        .env(
+            "PATH",
+            proxy_path_with(&[
+                PathBuf::from("."),
+                proxy_fixture("non-executable-bin"),
+                proxy_fixture("bin"),
+            ]),
+        )
+        .args(["fixture-proxy", "--print", "fallback"])
+        .output()
+        .expect("no-mistakes should run");
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output).trim(), "fixture-proxy:--print:fallback");
+}
+
+#[cfg(unix)]
+#[test]
 fn external_subcommand_skips_file_current_user_cannot_execute() {
     let blocked = proxy_fixture("owner-blocked-bin/no-mistakes-fixture-proxy");
     let original_permissions = fs::metadata(&blocked)

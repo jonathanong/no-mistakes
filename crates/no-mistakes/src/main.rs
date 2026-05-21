@@ -3,6 +3,8 @@ mod check_discovery;
 mod check_parallel;
 mod check_runner;
 mod check_tasks;
+#[cfg(all(test, unix))]
+mod executable_file_tests;
 mod queues;
 mod react;
 mod server;
@@ -147,8 +149,16 @@ fn proxy_external(args: Vec<OsString>) -> Result<ExitCode> {
 }
 
 fn find_in_path(executable: &str) -> Option<PathBuf> {
+    let executable_path = Path::new(executable);
+    if executable_path.is_absolute() || executable_path.components().count() > 1 {
+        return is_executable_file(executable_path).then(|| executable_path.to_path_buf());
+    }
+
     let path = std::env::var_os("PATH")?;
     for dir in std::env::split_paths(&path) {
+        if !dir.is_absolute() {
+            continue;
+        }
         let candidate = dir.join(executable);
         if is_executable_file(&candidate) {
             return Some(candidate);
@@ -173,25 +183,10 @@ fn find_in_path(executable: &str) -> Option<PathBuf> {
 
 #[cfg(unix)]
 fn is_executable_file(path: &Path) -> bool {
-    fn test_executable(test_bin: &str, path: &Path) -> Option<bool> {
-        ProcessCommand::new(test_bin)
-            .arg("-x")
-            .arg(path)
-            .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .status()
-            .ok()
-            .map(|status| status.success())
-    }
-
     std::fs::metadata(path)
         .map(|metadata| metadata.is_file())
         .unwrap_or(false)
-        && ["/usr/bin/test", "/bin/test"]
-            .into_iter()
-            .find_map(|test_bin| test_executable(test_bin, path))
-            .unwrap_or(false)
+        && rustix::fs::access(path, rustix::fs::Access::EXEC_OK).is_ok()
 }
 
 #[cfg(not(unix))]
