@@ -135,11 +135,7 @@ fn render_mermaid(
         let id = format!("n{}", i);
         node_ids.insert(node.clone(), id.clone());
 
-        let label = if node.contains('"') {
-            node.replace('"', "\\\"")
-        } else {
-            node.clone()
-        };
+        let label = escape_mermaid_label(node);
 
         let style_class = if changed.contains(node) {
             ":::changed"

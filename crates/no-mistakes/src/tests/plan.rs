@@ -50,10 +50,9 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
 
     // 2. Check for global configuration files
     for file in &changed_files {
-        let name = file.file_name().and_then(|n| n.to_str()).unwrap_or("");
-        if is_global_config_name(name) {
+        let relative_changed = relative_path(&root, file);
+        if is_global_config_name(&relative_changed) {
             // Trigger fallback
-            let relative_changed = relative_path(&root, file);
             let all_test_files = discover_all_tests(&root, &config)?;
             let mut selected_tests = Vec::new();
             for test in all_test_files {
@@ -156,9 +155,9 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                             r#type: "dynamic-import".to_string(),
                             message: format!(
                                 "Dynamic import in `{}` might not be fully resolved.",
-                                slash_node_name(parent, &root)
+                                slash_node_name(&curr, &root)
                             ),
-                            file: slash_node_name(parent, &root),
+                            file: slash_node_name(&curr, &root),
                         };
                         if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
                             warnings.push(warn);
@@ -169,10 +168,10 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                             r#type: "http-call".to_string(),
                             message: format!(
                                 "Dynamic HTTP call in `{}` to backend `{}`.",
-                                slash_node_name(parent, &root),
-                                slash_node_name(&curr, &root)
+                                slash_node_name(&curr, &root),
+                                slash_node_name(parent, &root)
                             ),
-                            file: slash_node_name(parent, &root),
+                            file: slash_node_name(&curr, &root),
                         };
                         if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
                             warnings.push(warn);
@@ -183,9 +182,9 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                             r#type: "process-spawn".to_string(),
                             message: format!(
                                 "Process spawned in `{}`.",
-                                slash_node_name(parent, &root)
+                                slash_node_name(&curr, &root)
                             ),
-                            file: slash_node_name(parent, &root),
+                            file: slash_node_name(&curr, &root),
                         };
                         if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
                             warnings.push(warn);
@@ -400,12 +399,13 @@ fn discover_all_tests(
     config: &no_mistakes_core::config::v2::NoMistakesConfig,
 ) -> Result<Vec<PathBuf>> {
     let filter = TestFileFilter::new(root, config);
-    Ok(
-        no_mistakes_core::codebase::ts_source::discover_files(root, &[])
-            .into_iter()
-            .filter(|f| filter.is_match(root, f))
-            .collect(),
+    Ok(no_mistakes_core::codebase::ts_source::discover_files(
+        root,
+        &config.filesystem.skip_directories,
     )
+    .into_iter()
+    .filter(|f| filter.is_match(root, f))
+    .collect())
 }
 
 fn slash_node_name(node: &NodeId, root: &Path) -> String {

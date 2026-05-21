@@ -93,7 +93,7 @@ pub(crate) struct PlanArgs {
     pub(crate) base: Option<String>,
 
     /// Git head commit/branch to diff against (defaults to HEAD).
-    #[arg(long)]
+    #[arg(long, requires = "base")]
     pub(crate) head: Option<String>,
 
     /// Specific changed file path. Can be repeated.

@@ -264,3 +264,41 @@ fn tests_graph_mermaid_outputs_flowchart() {
     let edges = graph["edges"].as_array().unwrap();
     assert!(edges.iter().any(|e| e["via"] == "Import"));
 }
+
+#[test]
+fn tests_plan_nested_package_json_does_not_trigger_fallback() {
+    let root = fixture("tests-impact");
+    let output = run(&[
+        "tests",
+        "plan",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "nested/package.json",
+        "--json",
+    ]);
+
+    assert!(output.status.success());
+    let json_str = stdout(&output);
+    let plan: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+
+    assert_eq!(plan["fallback_triggered"], false);
+}
+
+#[test]
+fn tests_plan_head_requires_base() {
+    let root = fixture("tests-impact");
+    let output = run(&[
+        "tests",
+        "plan",
+        "--root",
+        root.to_str().unwrap(),
+        "--head",
+        "main",
+    ]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr.clone()).unwrap();
+    assert!(stderr.contains("the following required arguments were not provided:"));
+    assert!(stderr.contains("--base"));
+}
