@@ -38,19 +38,24 @@ jobs:
           }
 
           fail=0
-          while read -r -d '' mode object _ path; do
+          while IFS= read -r -d '' path; do
+            metadata="$(git ls-files -s -- "$path")"
+            mode="${metadata%% *}"
+            rest="${metadata#* }"
+            object="${rest%% *}"
+
             if [[ "$mode" != 100644 && "$mode" != 100755 ]]; then
               continue
             fi
 
-            if git cat-file blob "$object" | perl -0777 -ne 'exit 1 if /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/'; then
+            if git cat-file blob "$object" | perl -e 'while (1) { my $n = sysread(STDIN, my $buffer, 65536); die "read failed: $!" unless defined $n; last if $n == 0; exit 1 if $buffer =~ /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/; }'; then
               continue
             else
               escaped_path="$(escape_workflow_command_property "$path")"
               printf '::error file=%s::Committed binary file detected; remove it from Git or replace it with a text placeholder.\n' "$escaped_path"
               fail=1
             fi
-          done < <(git ls-files -s -z)
+          done < <(git ls-files -z)
           exit "$fail"
 
       - name: Set up Node.js
