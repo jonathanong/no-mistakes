@@ -50,18 +50,18 @@ where
     while let Some(node) = queue.pop_front() {
         if include_deps {
             for edge in forward.get(&node).into_iter().flatten() {
-                let next = edge.target();
-                if seen.insert(next.to_owned()) {
-                    queue.push_back(next.to_owned());
+                let next = edge.target().to_owned();
+                if seen.insert(next.clone()) {
+                    queue.push_back(next);
                 }
                 out.push(edge.clone());
             }
         }
         if include_dependents {
             for edge in reverse.get(&node).into_iter().flatten() {
-                let next = edge.target();
-                if seen.insert(next.to_owned()) {
-                    queue.push_back(next.to_owned());
+                let next = edge.target().to_owned();
+                if seen.insert(next.clone()) {
+                    queue.push_back(next);
                 }
                 out.push(edge.clone());
             }
