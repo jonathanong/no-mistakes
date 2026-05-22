@@ -1,6 +1,6 @@
 [package]
 name = "no-mistakes"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2021"
 license = "MIT"
 description = "Static analysis tools for codebase dependency and symbol queries"
@@ -9,7 +9,7 @@ repository = "https://github.com/jonathanong/no-mistakes"
 [dependencies]
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
-no-mistakes-core = { path = "../no-mistakes-core", version = "0.5.0" }
+no-mistakes-core = { path = "../no-mistakes-core", version = "0.6.0" }
 rayon = "1.10"
 rustix = { version = "1.1", features = ["fs"] }
 serde = { version = "1", features = ["derive"] }
