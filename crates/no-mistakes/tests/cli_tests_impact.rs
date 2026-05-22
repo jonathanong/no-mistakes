@@ -148,6 +148,25 @@ fn tests_plan_matches_all_playwright_tests_when_next_proxy_changes() {
 }
 
 #[test]
+fn tests_plan_matches_all_playwright_tests_for_src_app_next_project_proxy() {
+    let root = fixture("playwright-impact-routing");
+    let plan = plan_for(&root, "web/src-only/proxy.ts");
+
+    assert_eq!(plan["fallback_triggered"], true);
+    assert!(plan["fallback_reason"]
+        .as_str()
+        .unwrap()
+        .contains("Global configuration file changed"));
+    let selected = plan["selected_tests"].as_array().unwrap();
+    assert_eq!(selected.len(), 1);
+    assert_eq!(selected[0]["test_file"], "tests/e2e/routes.spec.ts");
+    assert_eq!(
+        only_reason_via(&plan, "tests/e2e/routes.spec.ts"),
+        vec!["global configuration"]
+    );
+}
+
+#[test]
 fn tests_plan_does_not_treat_arbitrary_nested_proxy_as_global_config() {
     let root = fixture("playwright-impact-routing");
     let plan = plan_for(&root, "web/nested/proxy.ts");
