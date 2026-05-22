@@ -253,6 +253,98 @@ fn graph_edge_kind_acceptance() {
         ".github/workflows/ci.yml",
         "ci"
     ));
+
+    let missing = fixture("graph-missing-edges");
+    let workspace = run_json(
+        &missing,
+        &[
+            "dependencies",
+            "--relationship",
+            "workspace",
+            "--depth",
+            "1",
+            "packages/app/src/entry.mts",
+        ],
+    );
+    assert!(has_path_with_via(
+        &workspace,
+        "packages/app/src/local.mts",
+        "workspace"
+    ));
+    assert!(has_path_with_via(
+        &workspace,
+        "packages/app/src/private.mts",
+        "workspace"
+    ));
+
+    let asset = run_json(
+        &missing,
+        &[
+            "dependencies",
+            "--relationship",
+            "asset",
+            "--depth",
+            "1",
+            "packages/app/src/entry.mts",
+        ],
+    );
+    assert!(has_path_with_via(
+        &asset,
+        "packages/app/src/data.json",
+        "asset"
+    ));
+    assert!(has_path_with_via(
+        &asset,
+        "packages/app/src/style.css",
+        "asset"
+    ));
+    let import_only = run_json(
+        &missing,
+        &[
+            "dependencies",
+            "--relationship",
+            "import",
+            "--depth",
+            "1",
+            "packages/app/src/entry.mts",
+        ],
+    );
+    assert!(!file_paths(&import_only).contains(&"packages/app/src/data.json".to_string()));
+    assert!(!file_paths(&import_only).contains(&"packages/app/src/style.css".to_string()));
+
+    let next_http = run_json(
+        &missing,
+        &[
+            "dependencies",
+            "--relationship",
+            "http",
+            "--depth",
+            "1",
+            "packages/web/src/client.ts",
+        ],
+    );
+    assert!(has_path_with_via(
+        &next_http,
+        "packages/web/app/api/users/[id]/route.ts",
+        "http"
+    ));
+
+    let react = run_json(
+        &missing,
+        &[
+            "dependencies",
+            "--relationship",
+            "react",
+            "--depth",
+            "1",
+            "packages/web/app/components/Parent.tsx",
+        ],
+    );
+    assert!(has_path_with_via(
+        &react,
+        "packages/web/app/components/Child.tsx",
+        "react-render"
+    ));
 }
 
 #[test]

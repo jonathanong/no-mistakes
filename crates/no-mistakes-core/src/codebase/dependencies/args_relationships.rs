@@ -71,6 +71,8 @@ pub enum RelationshipArg {
     Ci,
     Http,
     Process,
+    Asset,
+    React,
     All,
 }
 
@@ -132,6 +134,12 @@ fn relationship_filter(
             }
             RelationshipArg::Process => {
                 set.insert(EdgeKind::ProcessSpawn);
+            }
+            RelationshipArg::Asset => {
+                set.insert(EdgeKind::AssetImport);
+            }
+            RelationshipArg::React => {
+                set.insert(EdgeKind::ReactRender);
             }
             RelationshipArg::All => return None,
         }

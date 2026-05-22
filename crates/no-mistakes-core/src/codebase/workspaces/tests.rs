@@ -175,6 +175,7 @@ fn resolve_package_finds_by_name() {
             dir: dir.path().to_path_buf(),
             entry: Some(entry.clone()),
             exports: None,
+            imports: None,
         }],
     };
     assert_eq!(map.resolve_package("@x/api"), Some(&entry));
@@ -204,6 +205,7 @@ fn resolve_specifier_rejects_unprefixed_subpath_without_exports() {
             dir: dir.path().to_path_buf(),
             entry: None,
             exports: None,
+            imports: None,
         }],
     };
 
@@ -235,6 +237,7 @@ fn prefers_exports_over_other_entry_fields() {
     write(&dir.path().join("esm.mts"), "");
     let pkg = PackageJson {
         exports: Some(serde_json::json!("./dist/index.js")),
+        imports: None,
         module: Some("esm.mts".to_string()),
         main: Some("cjs.js".to_string()),
         ..Default::default()
@@ -299,6 +302,7 @@ fn resolve_entry_returns_none_when_no_candidates_exist() {
     let dir = TempDir::new().unwrap();
     let pkg = PackageJson {
         exports: Some(serde_json::json!("./missing.mts")),
+        imports: None,
         module: Some("missing-module.mts".to_string()),
         main: Some("missing-main.mts".to_string()),
         types: Some("missing.d.ts".to_string()),
@@ -314,6 +318,7 @@ fn resolve_entry_continues_when_exports_have_no_entry_path() {
     write(&dir.path().join("main.mts"), "");
     let pkg = PackageJson {
         exports: Some(serde_json::json!({"browser": false})),
+        imports: None,
         main: Some("main.mts".to_string()),
         ..Default::default()
     };
@@ -435,6 +440,7 @@ fn resolve_specifier_falls_back_to_subpath_without_exports() {
             dir: dir.path().to_path_buf(),
             entry: None,
             exports: None,
+            imports: None,
         }],
     };
 
@@ -452,6 +458,7 @@ fn resolve_specifier_supports_exact_subpath_export() {
             dir: dir.path().to_path_buf(),
             entry: None,
             exports: Some(serde_json::json!({"./public": "./src/public.mts"})),
+            imports: None,
         }],
     };
     assert_eq!(map.resolve_specifier("@x/api/public"), Some(entry));
@@ -468,6 +475,7 @@ fn resolve_specifier_supports_single_star_subpath_export() {
             dir: dir.path().to_path_buf(),
             entry: None,
             exports: Some(serde_json::json!({"./*": {"types": "./*.mts", "import": "./*.mts"}})),
+            imports: None,
         }],
     };
     assert_eq!(map.resolve_specifier("@systems/foo/enqueues"), Some(target));
@@ -483,6 +491,7 @@ fn resolve_specifier_does_not_fallback_when_exports_are_defined() {
             dir: dir.path().to_path_buf(),
             entry: None,
             exports: Some(serde_json::json!({"./public": "./public.mts"})),
+            imports: None,
         }],
     };
     assert_eq!(map.resolve_specifier("@x/api/internal"), None);
@@ -502,6 +511,7 @@ fn resolve_specifier_continues_after_unsupported_matching_pattern() {
                 "./foo/*": null,
                 "./*": "./src/*.mts"
             })),
+            imports: None,
         }],
     };
     assert_eq!(map.resolve_specifier("@x/api/foo/value"), Some(target));
@@ -523,6 +533,7 @@ fn resolve_specifier_prefers_more_specific_star_export() {
                 "./foo/*": "./broad/foo/*.mts",
                 "./foo/bar/*": "./specific/*.mts"
             })),
+            imports: None,
         }],
     };
     assert_eq!(

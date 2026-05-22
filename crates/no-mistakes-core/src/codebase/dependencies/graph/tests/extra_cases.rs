@@ -40,6 +40,8 @@ fn graph_build_plan_import_only_enables_only_imports() {
     assert!(!plan.playwright_routes);
     assert!(!plan.http);
     assert!(!plan.process);
+    assert!(!plan.assets);
+    assert!(!plan.react);
 }
 
 #[test]

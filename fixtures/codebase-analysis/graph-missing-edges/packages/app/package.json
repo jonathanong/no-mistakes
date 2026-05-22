@@ -1,0 +1,9 @@
+{
+  "name": "@fixture/app",
+  "exports": {
+    "./local": "./src/local.mts"
+  },
+  "imports": {
+    "#private": "./src/private.mts"
+  }
+}

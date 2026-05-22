@@ -2,9 +2,17 @@ use super::super::*;
 
 #[test]
 fn http_and_process_relationships_map_to_edge_kinds() {
-    let set = relationship_filter(&[RelationshipArg::Http, RelationshipArg::Process]).unwrap();
+    let set = relationship_filter(&[
+        RelationshipArg::Http,
+        RelationshipArg::Process,
+        RelationshipArg::Asset,
+        RelationshipArg::React,
+    ])
+    .unwrap();
     assert!(set.contains(&EdgeKind::HttpCall));
     assert!(set.contains(&EdgeKind::ProcessSpawn));
+    assert!(set.contains(&EdgeKind::AssetImport));
+    assert!(set.contains(&EdgeKind::ReactRender));
     assert!(relationship_filter(&[RelationshipArg::All]).is_none());
     assert!(relationship_filter(&[]).is_none());
 }

@@ -24,11 +24,39 @@ fn collect_import_edges(
                 .iter()
                 .filter_map(|imp| {
                     resolver.resolve(&imp.specifier, path).and_then(|target| {
-                        if !graph_files.is_visible(&target) {
+                        if !graph_files.is_visible(&target) || !is_indexable(&target) {
                             return None;
                         }
                         let kind = edge_kind_for_import(imp);
                         Some((NodeId::File((*path).clone()), NodeId::File(target), kind))
+                    })
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect()
+}
+
+fn collect_asset_edges(
+    parsed_imports: &ParsedImports<'_>,
+    resolver: &ImportResolver<'_>,
+    graph_files: &GraphFiles,
+) -> Vec<Edge> {
+    parsed_imports
+        .par_iter()
+        .flat_map_iter(|(path, imports)| {
+            imports
+                .iter()
+                .filter(|imp| imp.specifier.starts_with('.') || imp.specifier.starts_with('/'))
+                .filter_map(|imp| {
+                    resolver.resolve(&imp.specifier, path).and_then(|target| {
+                        if !graph_files.is_visible(&target) || is_indexable(&target) {
+                            return None;
+                        }
+                        Some((
+                            NodeId::File((*path).clone()),
+                            NodeId::File(target),
+                            EdgeKind::AssetImport,
+                        ))
                     })
                 })
                 .collect::<Vec<_>>()
@@ -56,7 +84,7 @@ fn collect_workspace_edges(
                     if spec.starts_with('.') {
                         return None;
                     }
-                    workspace.resolve_specifier(spec).and_then(|entry| {
+                    workspace.resolve_specifier_from(spec, path).and_then(|entry| {
                         if !graph_files.is_visible(&entry) {
                             return None;
                         }

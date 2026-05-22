@@ -1,72 +1,3 @@
-fn collect_playwright_route_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edge> {
-    let Ok(report) =
-        crate::codebase::playwright_coverage::collect_report_from_files(root, None, &[], all_files)
-    else {
-        return vec![];
-    };
-
-    let frontend_root = playwright_frontend_root(root);
-    let all_file_set: HashSet<PathBuf> = all_files.iter().cloned().collect();
-    let mut edges = Vec::new();
-    for route in report.routes {
-        let page_file = root.join(&route.file);
-        for test in route.tests {
-            edges.push((
-                NodeId::File(root.join(test.file)),
-                NodeId::File(page_file.clone()),
-                EdgeKind::RouteTest,
-            ));
-        }
-        for layout_file in collect_layout_chain_files_from_file_set(
-            &page_file,
-            &frontend_root,
-            &all_file_set,
-        ) {
-            edges.push((
-                NodeId::File(page_file.clone()),
-                NodeId::File(layout_file),
-                EdgeKind::Layout,
-            ));
-        }
-    }
-    edges
-}
-
-fn playwright_frontend_root(root: &Path) -> PathBuf {
-    let config = crate::codebase::config::load_config(root).ok();
-    match crate::codebase::playwright_coverage::resolve_frontend_root(None, root, config.as_ref()) {
-        Ok(frontend_root) => frontend_root,
-        Err(_) => root.join("web/app"),
-    }
-}
-
-fn collect_layout_chain_files_from_file_set(
-    route_file: &Path,
-    frontend_root: &Path,
-    all_files: &HashSet<PathBuf>,
-) -> Vec<PathBuf> {
-    let mut layout_files = Vec::new();
-    let mut current = route_file.parent();
-    while let Some(parent) = current {
-        if !parent.starts_with(frontend_root) {
-            break;
-        }
-
-        for stem in ["layout", "loading", "error", "not-found", "template"] {
-            for ext in ["tsx", "ts", "jsx", "js"] {
-                let layout_file = parent.join(format!("{stem}.{ext}"));
-                if all_files.contains(&layout_file) {
-                    layout_files.push(layout_file);
-                }
-            }
-        }
-
-        current = parent.parent();
-    }
-
-    layout_files
-}
-
 // ── HTTP call edges ───────────────────────────────────────────────────────────
 
 /// Collect `HttpCall` edges: files that make literal HTTP calls to paths that
@@ -94,30 +25,31 @@ fn collect_http_call_edges(
     let Some(config_options) = config_options else {
         return vec![];
     };
-    let Some(backend_pattern) = resolved_backend_pattern(config_options) else {
-        return vec![];
-    };
-    let Some(register_object) = resolved_backend_register_object(config_options) else {
-        return vec![];
-    };
     let backend_prefixes = resolved_backend_prefixes(config_options);
     if backend_prefixes.is_empty() {
         return vec![];
     }
 
-    let Some(gs) = compile_graph_glob(&backend_pattern) else {
-        return vec![];
-    };
-
     // Collect backend route definitions: (file, pattern)
-    let route_defs = collect_backend_routes_from_graph_inputs(
-        root,
-        all_files,
-        &register_object,
-        &gs,
-        facts,
-        config_options.test_filter.as_ref(),
-    );
+    let mut route_defs = match (
+        resolved_backend_pattern(config_options),
+        resolved_backend_register_object(config_options),
+    ) {
+        (Some(backend_pattern), Some(register_object)) => compile_graph_glob(&backend_pattern)
+            .map(|gs| {
+                collect_backend_routes_from_graph_inputs(
+                    root,
+                    all_files,
+                    &register_object,
+                    &gs,
+                    facts,
+                    config_options.test_filter.as_ref(),
+                )
+            })
+            .unwrap_or_default(),
+        _ => Vec::new(),
+    };
+    route_defs.extend(collect_next_route_handler_defs(root, all_files, config_options));
     if route_defs.is_empty() {
         return vec![];
     }
@@ -145,6 +77,39 @@ fn collect_http_call_edges(
             http_edges_for_calls(caller, &calls, &route_defs)
         })
         .collect()
+}
+
+fn collect_next_route_handler_defs(
+    root: &Path,
+    all_files: &[PathBuf],
+    config_options: &GraphConfigOptions,
+) -> Vec<(PathBuf, String)> {
+    let frontend_root = if !config_options.route.frontend_root.is_empty() {
+        root.join(&config_options.route.frontend_root)
+    } else {
+        return Vec::new();
+    };
+
+    all_files
+        .par_iter()
+        .filter(|path| path.starts_with(&frontend_root))
+        .filter(|path| path.file_stem().and_then(|name| name.to_str()) == Some("route"))
+        .filter(|path| {
+            matches!(
+                path.extension().and_then(|ext| ext.to_str()),
+                Some("ts" | "tsx" | "js" | "jsx")
+            )
+        })
+        .filter_map(|path| {
+            let rel = path.strip_prefix(&frontend_root).ok()?;
+            Some((path.clone(), next_route_handler_pattern(rel)))
+        })
+        .collect()
+}
+
+fn next_route_handler_pattern(relative: &Path) -> String {
+    let route_like = relative.with_file_name("page.tsx");
+    crate::codebase::ts_routes::defs_frontend::path_to_route_pattern(&route_like)
 }
 
 fn http_edges_for_calls(

@@ -37,7 +37,7 @@ no-mistakes <external-subcommand> [ARGS]...
 | `--depth <N>` | Maximum traversal depth. `--max-depth` is an alias on graph, queue, and server edge commands. Queue/server `edges` default to direct edges when roots are provided, and to the full edge list otherwise. |
 | `--filter <GLOB>` | Include only matching files. Repeatable; trailing `/` collapses to folder level. |
 | `--test <FRAMEWORK>` | Filter to `vitest`, `playwright`, or `cargo` test globs. Repeatable. |
-| `--relationship <KIND>` | Follow only `import`, `workspace`, `test`, `route`, `queue`, `md`, `ci`, `http`, `process`, or `all`. Repeatable. |
+| `--relationship <KIND>` | Follow only `import`, `workspace`, `test`, `route`, `queue`, `md`, `ci`, `http`, `process`, `asset`, `react`, or `all`. Repeatable. |
 | `--format <FORMAT>` | `json`, `md`, `yml`, `paths`, or `human`. |
 | `--json` | Shorthand for `--format json`. |
 | `--timings` | Emit phase timings on stderr. |

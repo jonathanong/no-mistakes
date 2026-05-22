@@ -518,7 +518,9 @@ fn path_confidence(edges: &[EdgeKind]) -> Confidence {
             | EdgeKind::QueueWorker
             | EdgeKind::RouteRef
             | EdgeKind::Layout
-            | EdgeKind::RouteTest => return Confidence::Low,
+            | EdgeKind::RouteTest
+            | EdgeKind::AssetImport
+            | EdgeKind::ReactRender => return Confidence::Low,
             EdgeKind::DynamicImport => conf = Confidence::Medium,
             _ => {}
         }
@@ -541,5 +543,7 @@ fn impact_reason_label(edge: EdgeKind) -> &'static str {
         EdgeKind::CiInvocation => "ci",
         EdgeKind::HttpCall => "http",
         EdgeKind::ProcessSpawn => "process",
+        EdgeKind::AssetImport => "asset",
+        EdgeKind::ReactRender => "react-render",
     }
 }

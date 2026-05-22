@@ -59,7 +59,7 @@ to explain cost.
 - `--depth <N>` or `--max-depth <N>` to limit traversal.
 - `--filter <GLOB>` to include only matching files; repeatable.
 - `--test vitest|playwright|cargo` to filter to test files.
-- `--relationship import|workspace|test|route|queue|md|ci|http|process|all`.
+- `--relationship import|workspace|test|route|queue|md|ci|http|process|asset|react|all`.
 - `--format json|md|yml|paths|human`, `--json`, `--timings`, and `--jobs`.
 
 `FILE#SYMBOL` works only for `dependents`/`related`, not `dependencies`.

@@ -134,7 +134,8 @@ fn http_facts_configured(options: &GraphConfigOptions) -> bool {
     let has_register_object = resolved_backend_register_object(options).is_some();
     let has_prefixes = !resolved_backend_prefixes(options).is_empty();
     let has_valid_glob = pattern.as_deref().and_then(compile_graph_glob).is_some();
-    has_register_object && has_prefixes && has_valid_glob
+    let has_next_route_handlers = !options.route.frontend_root.is_empty();
+    has_prefixes && ((has_register_object && has_valid_glob) || has_next_route_handlers)
 }
 
 fn queue_facts_configured(options: &GraphConfigOptions) -> bool {

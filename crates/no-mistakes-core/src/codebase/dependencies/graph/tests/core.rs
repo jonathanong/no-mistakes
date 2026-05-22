@@ -78,6 +78,8 @@ fn graph_build_plan_from_allowed_covers_each_edge_family() {
         EdgeKind::Layout,
         EdgeKind::HttpCall,
         EdgeKind::ProcessSpawn,
+        EdgeKind::AssetImport,
+        EdgeKind::ReactRender,
     ]
     .into();
     let plan = GraphBuildPlan::from_allowed(Some(&allowed));
@@ -91,6 +93,8 @@ fn graph_build_plan_from_allowed_covers_each_edge_family() {
     assert!(plan.playwright_routes);
     assert!(plan.http);
     assert!(plan.process);
+    assert!(plan.assets);
+    assert!(plan.react);
 
     let import_only: HashSet<_> = [EdgeKind::Require].into();
     let plan = GraphBuildPlan::from_allowed(Some(&import_only));
@@ -104,6 +108,53 @@ fn graph_build_plan_from_allowed_covers_each_edge_family() {
     assert!(!plan.playwright_routes);
     assert!(!plan.http);
     assert!(!plan.process);
+    assert!(!plan.assets);
+    assert!(!plan.react);
+}
+
+#[test]
+fn react_render_edges_cover_empty_and_same_file_children() {
+    use crate::codebase::ts_source::facts::{TsFactMap, TsFileFacts};
+    use crate::react_traits::report::types::{ComponentFacts, ComponentRef, Environment};
+
+    let root = p("/repo");
+    let parent = root.join("src/Parent.tsx");
+
+    assert!(collect_react_render_edges(&root, None, std::slice::from_ref(&parent)).is_empty());
+
+    let mut facts = TsFactMap::new();
+    facts.insert(
+        parent.clone(),
+        TsFileFacts {
+            react_components: vec![ComponentFacts {
+                name: "Parent".to_string(),
+                file: "src/Parent.tsx".to_string(),
+                environment: Environment::Server,
+                has_state: false,
+                has_props: false,
+                passes_props: false,
+                uses_memo: false,
+                uses_context_provider: false,
+                uses_suspense: false,
+                fetches: vec![],
+                dependencies: vec![],
+                children: vec![
+                    ComponentRef {
+                        name: "Parent".to_string(),
+                        file: "src/Parent.tsx".to_string(),
+                    },
+                    ComponentRef {
+                        name: "External".to_string(),
+                        file: "/tmp/External.tsx".to_string(),
+                    },
+                ],
+                inherited_from_children: None,
+            }],
+            ..Default::default()
+        },
+    );
+
+    assert!(collect_react_render_edges(&root, Some(&facts), &[parent]).is_empty());
 }
 
 // ── bfs ─────────────────────────────────────────────────────────────────

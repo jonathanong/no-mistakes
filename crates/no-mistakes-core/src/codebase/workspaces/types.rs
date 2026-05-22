@@ -8,6 +8,8 @@ pub struct WorkspacePackage {
     pub entry: Option<PathBuf>,
     /// Raw `exports` field from package.json, used for exact and pattern subpath exports.
     pub exports: Option<serde_json::Value>,
+    /// Raw `imports` field from package.json, used for local `#...` imports.
+    pub imports: Option<serde_json::Value>,
 }
 
 /// All NPM workspace packages resolved from a root `package.json`.
@@ -34,6 +36,22 @@ impl WorkspaceMap {
         }
         package.resolve_subpath(subpath.as_deref()?)
     }
+
+    /// Resolve a package specifier from the importing file's package context.
+    pub fn resolve_specifier_from(&self, specifier: &str, importing_file: &Path) -> Option<PathBuf> {
+        if specifier.starts_with('#') {
+            let package = self.nearest_package(importing_file)?;
+            return package.resolve_import(specifier);
+        }
+        self.resolve_specifier(specifier)
+    }
+
+    fn nearest_package(&self, importing_file: &Path) -> Option<&WorkspacePackage> {
+        self.packages
+            .iter()
+            .filter(|package| importing_file.starts_with(&package.dir))
+            .max_by_key(|package| package.dir.components().count())
+    }
 }
 
 impl WorkspacePackage {
@@ -48,6 +66,12 @@ impl WorkspacePackage {
         let candidate = normalize_path(&self.dir.join(relative));
         try_resolve(&candidate)
     }
+
+    fn resolve_import(&self, specifier: &str) -> Option<PathBuf> {
+        let imports = self.imports.as_ref()?;
+        let target = resolve_export_subpath(imports, specifier)?;
+        try_resolve(&normalize_path(&self.dir.join(target)))
+    }
 }
 
 #[derive(Deserialize, Default)]
@@ -57,6 +81,7 @@ struct PackageJson {
     main: Option<String>,
     module: Option<String>,
     exports: Option<serde_json::Value>,
+    imports: Option<serde_json::Value>,
     types: Option<String>,
 }
 
