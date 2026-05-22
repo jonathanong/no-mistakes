@@ -69,6 +69,10 @@ pub enum EdgeKind {
     HttpCall,
     /// Process spawn: a file launches another file via `spawn`/`exec`/playwright webServer.
     ProcessSpawn,
+    /// Explicit relative import of a non-code asset such as CSS, JSON, image, or wasm.
+    AssetImport,
+    /// React component render relationship: parent component file → rendered child component file.
+    ReactRender,
 }
 
 /// A single node in the traversal result.
@@ -102,6 +106,8 @@ pub struct GraphBuildPlan {
     pub playwright_routes: bool,
     pub http: bool,
     pub process: bool,
+    pub assets: bool,
+    pub react: bool,
 }
 
 impl GraphBuildPlan {
@@ -117,6 +123,8 @@ impl GraphBuildPlan {
             playwright_routes: true,
             http: true,
             process: true,
+            assets: true,
+            react: true,
         }
     }
 
@@ -149,12 +157,15 @@ impl GraphBuildPlan {
                 || allowed.contains(&EdgeKind::Layout),
             http: allowed.contains(&EdgeKind::HttpCall),
             process: allowed.contains(&EdgeKind::ProcessSpawn),
+            assets: allowed.contains(&EdgeKind::AssetImport),
+            react: allowed.contains(&EdgeKind::ReactRender),
         }
     }
 
     pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
         TsFactPlan {
-            imports: self.imports || self.workspace,
+            imports: self.imports || self.workspace || self.assets,
+            react: self.react,
             symbols: self.queues,
             route_refs: self.routes,
             backend_routes: self.routes || self.http,

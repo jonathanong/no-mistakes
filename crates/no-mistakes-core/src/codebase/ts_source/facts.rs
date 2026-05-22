@@ -6,6 +6,7 @@ use crate::codebase::ts_process_spawn::SpawnEdge;
 use crate::codebase::ts_queues::usage::QueueUsage;
 use crate::codebase::ts_routes::refs::RouteRef;
 use crate::codebase::ts_symbols::{extract_symbols_from_program, FileSymbols};
+use crate::react_traits::report::types::ComponentFacts;
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
@@ -27,6 +28,7 @@ pub struct TsFactPlan {
     pub queue_factory: bool,
     pub http_calls: bool,
     pub process_spawns: bool,
+    pub react: bool,
 }
 
 impl TsFactPlan {
@@ -56,6 +58,7 @@ impl TsFactPlan {
             && !self.queue_factory
             && !self.http_calls
             && !self.process_spawns
+            && !self.react
     }
 
     pub fn has_domain_facts(self) -> bool {
@@ -87,6 +90,7 @@ pub struct TsFileFacts {
     pub queue_name: Option<String>,
     pub http_calls: Vec<HttpCall>,
     pub process_spawns: Vec<SpawnEdge>,
+    pub react_components: Vec<ComponentFacts>,
 }
 
 pub type TsFactMap = HashMap<PathBuf, TsFileFacts>;
@@ -135,6 +139,17 @@ fn collect_file_facts(
     } else {
         domain::DomainFacts::default()
     };
+    let react_components = if plan.react {
+        crate::react_traits::analyze::file::analyze_program(
+            path,
+            &context.root,
+            &source,
+            &parsed.program,
+        )
+        .components
+    } else {
+        Vec::new()
+    };
     Some(TsFileFacts {
         source: plan.source.then_some(source),
         imports,
@@ -146,6 +161,7 @@ fn collect_file_facts(
         queue_name: domain.queue_name,
         http_calls: domain.http_calls,
         process_spawns: domain.process_spawns,
+        react_components,
     })
 }
 

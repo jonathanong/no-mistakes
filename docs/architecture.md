@@ -120,7 +120,7 @@ Nodes are:
 Edges are typed with `EdgeKind`. The current graph supports imports, type
 imports, dynamic imports, requires, workspace imports, test relationships,
 routes, queues, Playwright route tests, Markdown links, CI invocations, HTTP
-calls, and process spawns.
+calls, process spawns, asset imports, and React render relationships.
 
 Every relationship feature should produce edges into this graph unless there is
 a strong reason it cannot be represented as a source-to-target relationship.

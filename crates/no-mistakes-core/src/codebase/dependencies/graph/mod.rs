@@ -27,7 +27,9 @@ include!("edge_routes.rs");
 include!("edge_route_defs.rs");
 include!("edge_queues.rs");
 include!("edge_queue_processors.rs");
+include!("edge_playwright_routes.rs");
 include!("edge_playwright_http_process.rs");
+include!("edge_react.rs");
 include!("filter.rs");
 include!("symbol_index.rs");
 

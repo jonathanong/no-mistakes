@@ -122,7 +122,7 @@ fn import_neighbors(
         .filter_map(|imp| {
             resolver
                 .resolve(&imp.specifier, path)
-                .filter(|target| graph_files.is_visible(target))
+                .filter(|target| graph_files.is_visible(target) && is_indexable(target))
                 .map(|target| (NodeId::File(target), edge_kind_for_import(&imp)))
         })
         .filter(|(_, kind)| allowed.is_none_or(|a| a.contains(kind)))
@@ -210,4 +210,3 @@ fn bfs(
 
     result
 }
-

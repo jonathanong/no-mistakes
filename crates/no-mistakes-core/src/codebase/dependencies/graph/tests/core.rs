@@ -78,6 +78,8 @@ fn graph_build_plan_from_allowed_covers_each_edge_family() {
         EdgeKind::Layout,
         EdgeKind::HttpCall,
         EdgeKind::ProcessSpawn,
+        EdgeKind::AssetImport,
+        EdgeKind::ReactRender,
     ]
     .into();
     let plan = GraphBuildPlan::from_allowed(Some(&allowed));
@@ -91,6 +93,8 @@ fn graph_build_plan_from_allowed_covers_each_edge_family() {
     assert!(plan.playwright_routes);
     assert!(plan.http);
     assert!(plan.process);
+    assert!(plan.assets);
+    assert!(plan.react);
 
     let import_only: HashSet<_> = [EdgeKind::Require].into();
     let plan = GraphBuildPlan::from_allowed(Some(&import_only));
@@ -104,6 +108,8 @@ fn graph_build_plan_from_allowed_covers_each_edge_family() {
     assert!(!plan.playwright_routes);
     assert!(!plan.http);
     assert!(!plan.process);
+    assert!(!plan.assets);
+    assert!(!plan.react);
 }
 
 // ── bfs ─────────────────────────────────────────────────────────────────

@@ -122,12 +122,14 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
                 dir: root.join("packages/web"),
                 entry: Some(web_entry.clone()),
                 exports: None,
+            imports: None,
             },
             crate::codebase::workspaces::WorkspacePackage {
                 name: "@x/hidden".to_string(),
                 dir: root.join("hidden"),
                 entry: Some(root.join("hidden/index.ts")),
                 exports: None,
+            imports: None,
             },
         ],
     };
@@ -358,6 +360,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
                 dir: root.join("packages/missing"),
                 entry: Some(root.join("packages/missing/index.ts")),
                 exports: None,
+            imports: None,
             }],
         },
         &graph_files,

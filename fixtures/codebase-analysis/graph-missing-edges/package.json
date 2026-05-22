@@ -1,0 +1,4 @@
+{
+  "name": "graph-missing-edges",
+  "workspaces": ["packages/*"]
+}

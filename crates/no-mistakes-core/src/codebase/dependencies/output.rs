@@ -21,6 +21,8 @@ fn edge_kind_str(k: EdgeKind) -> &'static str {
         EdgeKind::CiInvocation => "ci",
         EdgeKind::HttpCall => "http",
         EdgeKind::ProcessSpawn => "process",
+        EdgeKind::AssetImport => "asset",
+        EdgeKind::ReactRender => "react-render",
     }
 }
 

@@ -30,6 +30,8 @@ selectors, fetch calls, queue hops, server routes, and React component traits.
   common examples for every binary.
 - [Architecture](architecture.md) codifies the single-pass, in-memory,
   graph-based, parallel execution model.
+- [Graph edges](graph-edges.md) lists every dependency graph edge kind with
+  fixture-backed proof.
 - [AST analysis behavior](ast-analysis.md) describes what static code forms are
   recognized and where heuristics intentionally stop.
 - [Agent guide](agent-guide.md) gives command-selection and pre-finish workflows

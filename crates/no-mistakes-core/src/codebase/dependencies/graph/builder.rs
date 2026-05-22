@@ -62,9 +62,9 @@ impl DepGraph {
             forward.entry(NodeId::File(f.clone())).or_default();
         }
 
-        let parsed_imports = if plan.imports || plan.workspace {
+        let parsed_imports = if plan.imports || plan.workspace || plan.assets {
             let facts = facts.expect(
-                "TS import facts are collected when import or workspace edges are requested",
+                "TS import facts are collected when import, workspace, or asset edges are requested",
             );
             collect_parsed_imports_from_facts(files, facts)
         } else {
@@ -85,6 +85,11 @@ impl DepGraph {
             let workspace_manifest_edges =
                 collect_workspace_manifest_edges(&graph_files.all, &workspace, graph_files);
             merge_edges(&mut forward, &mut reverse, workspace_manifest_edges);
+        }
+
+        if plan.assets {
+            let asset_edges = collect_asset_edges(&parsed_imports, &resolver, graph_files);
+            merge_edges(&mut forward, &mut reverse, asset_edges);
         }
 
         if plan.tests {
@@ -157,6 +162,11 @@ impl DepGraph {
                 );
                 merge_edges(&mut forward, &mut reverse, spawn_edges);
             }
+        }
+
+        if plan.react {
+            let react_edges = collect_react_render_edges(root, facts, graph_files.indexable());
+            merge_edges(&mut forward, &mut reverse, react_edges);
         }
 
         // Sort adjacency lists for deterministic BFS output.

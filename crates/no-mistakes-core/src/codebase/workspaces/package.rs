@@ -20,6 +20,7 @@ fn load_package(dir: &Path) -> Result<Option<WorkspacePackage>> {
         dir: dir.to_path_buf(),
         entry,
         exports: pkg.exports.clone(),
+        imports: pkg.imports.clone(),
     }))
 }
 

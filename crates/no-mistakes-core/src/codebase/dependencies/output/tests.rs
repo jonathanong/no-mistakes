@@ -337,4 +337,6 @@ fn edge_kind_str_all_variants() {
     assert_eq!(edge_kind_str(EdgeKind::CiInvocation), "ci");
     assert_eq!(edge_kind_str(EdgeKind::HttpCall), "http");
     assert_eq!(edge_kind_str(EdgeKind::ProcessSpawn), "process");
+    assert_eq!(edge_kind_str(EdgeKind::AssetImport), "asset");
+    assert_eq!(edge_kind_str(EdgeKind::ReactRender), "react-render");
 }
