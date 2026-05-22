@@ -331,6 +331,7 @@ fn edge_kind_str_all_variants() {
     assert_eq!(edge_kind_str(EdgeKind::QueueEnqueue), "queue-enqueue");
     assert_eq!(edge_kind_str(EdgeKind::QueueWorker), "queue-worker");
     assert_eq!(edge_kind_str(EdgeKind::RouteTest), "route-test");
+    assert_eq!(edge_kind_str(EdgeKind::Layout), "layout");
     assert_eq!(edge_kind_str(EdgeKind::MarkdownLink), "md");
     assert_eq!(edge_kind_str(EdgeKind::WorkspaceImport), "workspace");
     assert_eq!(edge_kind_str(EdgeKind::CiInvocation), "ci");

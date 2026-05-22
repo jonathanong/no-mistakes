@@ -110,10 +110,12 @@ fn relationship_filter(
             RelationshipArg::Test => {
                 set.insert(EdgeKind::TestOf);
                 set.insert(EdgeKind::RouteTest);
+                set.insert(EdgeKind::Layout);
             }
             RelationshipArg::Route => {
                 set.insert(EdgeKind::RouteRef);
                 set.insert(EdgeKind::RouteTest);
+                set.insert(EdgeKind::Layout);
             }
             RelationshipArg::Queue => {
                 set.insert(EdgeKind::QueueEnqueue);

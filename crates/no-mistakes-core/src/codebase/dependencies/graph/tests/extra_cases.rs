@@ -60,6 +60,31 @@ fn package_dependency_names_returns_dependency_names() {
 }
 
 #[test]
+fn playwright_layout_edges_use_discovered_file_set() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("playwright-impact-routing"));
+    let frontend_root = root.join("web/app");
+    let page = root.join("web/app/users/[id]/page.tsx");
+    let all_files: HashSet<PathBuf> = [
+        root.join("web/app/layout.tsx"),
+        root.join("web/app/users/layout.tsx"),
+        root.join("web/app/users/[id]/page.tsx"),
+    ]
+    .into();
+
+    assert_eq!(
+        collect_layout_chain_files_from_file_set(&page, &frontend_root, &all_files),
+        vec![
+            root.join("web/app/users/layout.tsx"),
+            root.join("web/app/layout.tsx")
+        ]
+    );
+    assert_eq!(
+        playwright_frontend_root(&fixture("simple")),
+        fixture("simple").join("web/app")
+    );
+}
+
+#[test]
 fn lazy_import_deps_walks_only_reachable_import_graph() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("lazy-import"));
     let entry = root.join("src/a.mts");

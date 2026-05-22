@@ -15,6 +15,7 @@ fn edge_kind_str(k: EdgeKind) -> &'static str {
         EdgeKind::QueueEnqueue => "queue-enqueue",
         EdgeKind::QueueWorker => "queue-worker",
         EdgeKind::RouteTest => "route-test",
+        EdgeKind::Layout => "layout",
         EdgeKind::MarkdownLink => "md",
         EdgeKind::WorkspaceImport => "workspace",
         EdgeKind::CiInvocation => "ci",

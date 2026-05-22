@@ -52,7 +52,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     // 2. Check for global configuration files
     for file in &changed_files {
         let relative_changed = relative_path(&root, file);
-        if is_global_config_name(&relative_changed) {
+        if is_global_config_path(&root, file, &relative_changed) {
             // Trigger fallback
             let all_test_files = discover_all_tests(&root, &config)?;
             let mut selected_tests = Vec::new();
@@ -64,7 +64,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                     reasons: vec![ImpactReason {
                         changed_file: relative_changed.clone(),
                         path: vec![relative_changed.clone(), rel_test],
-                        via: vec!["fallback".to_string()],
+                        via: vec!["global configuration".to_string()],
                     }],
                 });
             }
@@ -198,12 +198,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
 
             let via_strings: Vec<String> = edge_path
                 .iter()
-                .map(|k| {
-                    serde_json::to_value(k)
-                        .ok()
-                        .and_then(|v| v.as_str().map(|s| s.to_string()))
-                        .unwrap_or_else(|| format!("{:?}", k))
-                })
+                .map(|k| impact_reason_label(*k).to_string())
                 .collect();
 
             let reason = ImpactReason {
@@ -386,9 +381,9 @@ fn run_git(args: &[&str], root: &Path) -> Result<String> {
     Ok(String::from_utf8(output.stdout)?)
 }
 
-fn is_global_config_name(n: &str) -> bool {
-    matches!(
-        n,
+fn is_global_config_path(root: &Path, absolute: &Path, relative: &str) -> bool {
+    if matches!(
+        relative,
         "package.json"
             | "pnpm-lock.yaml"
             | "package-lock.json"
@@ -396,7 +391,42 @@ fn is_global_config_name(n: &str) -> bool {
             | "tsconfig.json"
             | ".no-mistakes.yml"
             | ".no-mistakes.yaml"
-    )
+    ) {
+        return true;
+    }
+
+    let Some(name) = absolute.file_name().and_then(|name| name.to_str()) else {
+        return false;
+    };
+    if !matches!(
+        name,
+        "next.config.js"
+            | "next.config.mjs"
+            | "next.config.ts"
+            | "next.config.mts"
+            | "proxy.js"
+            | "proxy.mjs"
+            | "proxy.ts"
+            | "proxy.mts"
+            | "middleware.js"
+            | "middleware.mjs"
+            | "middleware.ts"
+            | "middleware.mts"
+    ) {
+        return false;
+    }
+
+    let Some(parent) = absolute.parent() else {
+        return false;
+    };
+    parent == root || next_project_root(parent)
+}
+
+fn next_project_root(path: &Path) -> bool {
+    path.join("app").is_dir()
+        || path.join("pages").is_dir()
+        || path.join("src/app").is_dir()
+        || path.join("src/pages").is_dir()
 }
 
 fn discover_all_tests(
@@ -487,10 +517,29 @@ fn path_confidence(edges: &[EdgeKind]) -> Confidence {
             | EdgeKind::QueueEnqueue
             | EdgeKind::QueueWorker
             | EdgeKind::RouteRef
+            | EdgeKind::Layout
             | EdgeKind::RouteTest => return Confidence::Low,
             EdgeKind::DynamicImport => conf = Confidence::Medium,
             _ => {}
         }
     }
     conf
+}
+
+fn impact_reason_label(edge: EdgeKind) -> &'static str {
+    match edge {
+        EdgeKind::Import
+        | EdgeKind::TypeImport
+        | EdgeKind::DynamicImport
+        | EdgeKind::Require
+        | EdgeKind::WorkspaceImport => "dependency",
+        EdgeKind::RouteRef | EdgeKind::RouteTest => "route",
+        EdgeKind::Layout => "layout",
+        EdgeKind::TestOf => "test",
+        EdgeKind::QueueEnqueue | EdgeKind::QueueWorker => "queue",
+        EdgeKind::MarkdownLink => "md",
+        EdgeKind::CiInvocation => "ci",
+        EdgeKind::HttpCall => "http",
+        EdgeKind::ProcessSpawn => "process",
+    }
 }

@@ -6,7 +6,7 @@ fn resolve_root(arg: Option<&Path>, cwd: &Path) -> PathBuf {
     }
 }
 
-fn resolve_frontend_root(
+pub(crate) fn resolve_frontend_root(
     arg: Option<&Path>,
     root: &Path,
     config: Option<&Config>,
@@ -60,4 +60,3 @@ fn test_globs_or_default(globs: &[String]) -> Vec<String> {
         globs.to_vec()
     }
 }
-
