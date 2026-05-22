@@ -6,6 +6,7 @@ fn collect_react_render_edges(
     let Some(facts) = facts else {
         return Vec::new();
     };
+    let graph_files: HashSet<PathBuf> = files.iter().cloned().collect();
 
     files
         .par_iter()
@@ -20,6 +21,9 @@ fn collect_react_render_edges(
                             &root.join(&child.file),
                         );
                         if child_path == *path {
+                            return None;
+                        }
+                        if !graph_files.contains(&child_path) {
                             return None;
                         }
                         Some((

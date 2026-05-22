@@ -138,10 +138,16 @@ fn react_render_edges_cover_empty_and_same_file_children() {
                 uses_suspense: false,
                 fetches: vec![],
                 dependencies: vec![],
-                children: vec![ComponentRef {
-                    name: "Parent".to_string(),
-                    file: "src/Parent.tsx".to_string(),
-                }],
+                children: vec![
+                    ComponentRef {
+                        name: "Parent".to_string(),
+                        file: "src/Parent.tsx".to_string(),
+                    },
+                    ComponentRef {
+                        name: "External".to_string(),
+                        file: "/tmp/External.tsx".to_string(),
+                    },
+                ],
                 inherited_from_children: None,
             }],
             ..Default::default()
