@@ -52,7 +52,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     // 2. Check for global configuration files
     for file in &changed_files {
         let relative_changed = relative_path(&root, file);
-        if is_global_config_path(&relative_changed) {
+        if is_global_config_path(&root, file, &relative_changed) {
             // Trigger fallback
             let all_test_files = discover_all_tests(&root, &config)?;
             let mut selected_tests = Vec::new();
@@ -381,9 +381,9 @@ fn run_git(args: &[&str], root: &Path) -> Result<String> {
     Ok(String::from_utf8(output.stdout)?)
 }
 
-fn is_global_config_path(path: &str) -> bool {
+fn is_global_config_path(root: &Path, absolute: &Path, relative: &str) -> bool {
     if matches!(
-        path,
+        relative,
         "package.json"
             | "pnpm-lock.yaml"
             | "package-lock.json"
@@ -395,23 +395,35 @@ fn is_global_config_path(path: &str) -> bool {
         return true;
     }
 
-    matches!(
-        Path::new(path).file_name().and_then(|name| name.to_str()),
-        Some(
-            "next.config.js"
-                | "next.config.mjs"
-                | "next.config.ts"
-                | "next.config.mts"
-                | "proxy.js"
-                | "proxy.mjs"
-                | "proxy.ts"
-                | "proxy.mts"
-                | "middleware.js"
-                | "middleware.mjs"
-                | "middleware.ts"
-                | "middleware.mts"
-        )
-    )
+    let Some(name) = absolute.file_name().and_then(|name| name.to_str()) else {
+        return false;
+    };
+    if !matches!(
+        name,
+        "next.config.js"
+            | "next.config.mjs"
+            | "next.config.ts"
+            | "next.config.mts"
+            | "proxy.js"
+            | "proxy.mjs"
+            | "proxy.ts"
+            | "proxy.mts"
+            | "middleware.js"
+            | "middleware.mjs"
+            | "middleware.ts"
+            | "middleware.mts"
+    ) {
+        return false;
+    }
+
+    let Some(parent) = absolute.parent() else {
+        return false;
+    };
+    parent == root || next_project_root(parent)
+}
+
+fn next_project_root(path: &Path) -> bool {
+    path.join("app").is_dir() || path.join("pages").is_dir()
 }
 
 fn discover_all_tests(

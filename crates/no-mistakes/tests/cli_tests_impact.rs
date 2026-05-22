@@ -148,6 +148,15 @@ fn tests_plan_matches_all_playwright_tests_when_next_proxy_changes() {
 }
 
 #[test]
+fn tests_plan_does_not_treat_arbitrary_nested_proxy_as_global_config() {
+    let root = fixture("playwright-impact-routing");
+    let plan = plan_for(&root, "web/nested/proxy.ts");
+
+    assert_eq!(plan["fallback_triggered"], false);
+    assert!(plan["selected_tests"].as_array().unwrap().is_empty());
+}
+
+#[test]
 fn tests_plan_paths_outputs_newline_separated_paths() {
     let root = fixture("tests-impact");
     let output = run(&[

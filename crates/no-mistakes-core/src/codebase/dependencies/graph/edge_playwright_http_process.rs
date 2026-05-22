@@ -6,34 +6,30 @@ fn collect_playwright_route_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edg
     };
 
     let frontend_root = playwright_frontend_root(root);
-    report
-        .routes
-        .into_iter()
-        .flat_map(|route| {
-            let page_file = root.join(&route.file);
-            let route_test_edges = route.tests.into_iter().map({
-                let page_file = page_file.clone();
-                move |test| {
-                    (
-                        NodeId::File(root.join(test.file)),
-                        NodeId::File(page_file.clone()),
-                        EdgeKind::RouteTest,
-                    )
-                }
-            });
-            let layout_edges =
-                crate::fetch::import_routes::collect_layout_chain_files(&page_file, &frontend_root)
-                    .into_iter()
-                    .map(move |layout_file| {
-                        (
-                            NodeId::File(page_file.clone()),
-                            NodeId::File(layout_file),
-                            EdgeKind::Layout,
-                        )
-                    });
-            route_test_edges.chain(layout_edges)
-        })
-        .collect()
+    let all_file_set: HashSet<PathBuf> = all_files.iter().cloned().collect();
+    let mut edges = Vec::new();
+    for route in report.routes {
+        let page_file = root.join(&route.file);
+        for test in route.tests {
+            edges.push((
+                NodeId::File(root.join(test.file)),
+                NodeId::File(page_file.clone()),
+                EdgeKind::RouteTest,
+            ));
+        }
+        for layout_file in collect_layout_chain_files_from_file_set(
+            &page_file,
+            &frontend_root,
+            &all_file_set,
+        ) {
+            edges.push((
+                NodeId::File(page_file.clone()),
+                NodeId::File(layout_file),
+                EdgeKind::Layout,
+            ));
+        }
+    }
+    edges
 }
 
 fn playwright_frontend_root(root: &Path) -> PathBuf {
@@ -42,6 +38,33 @@ fn playwright_frontend_root(root: &Path) -> PathBuf {
         Ok(frontend_root) => frontend_root,
         Err(_) => root.join("web/app"),
     }
+}
+
+fn collect_layout_chain_files_from_file_set(
+    route_file: &Path,
+    frontend_root: &Path,
+    all_files: &HashSet<PathBuf>,
+) -> Vec<PathBuf> {
+    let mut layout_files = Vec::new();
+    let mut current = route_file.parent();
+    while let Some(parent) = current {
+        if !parent.starts_with(frontend_root) {
+            break;
+        }
+
+        for stem in ["layout", "loading", "error", "not-found", "template"] {
+            for ext in ["tsx", "ts", "jsx", "js"] {
+                let layout_file = parent.join(format!("{stem}.{ext}"));
+                if all_files.contains(&layout_file) {
+                    layout_files.push(layout_file);
+                }
+            }
+        }
+
+        current = parent.parent();
+    }
+
+    layout_files
 }
 
 // ── HTTP call edges ───────────────────────────────────────────────────────────
