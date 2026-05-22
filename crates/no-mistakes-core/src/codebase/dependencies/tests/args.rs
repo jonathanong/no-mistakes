@@ -281,6 +281,7 @@ fn test_maps_to_test_of_and_route_test() {
     let set = relationship_filter(&[RelationshipArg::Test]).unwrap();
     assert!(set.contains(&EdgeKind::TestOf));
     assert!(set.contains(&EdgeKind::RouteTest));
+    assert!(set.contains(&EdgeKind::Layout));
 }
 
 #[test]
@@ -288,6 +289,7 @@ fn route_maps_to_route_ref_and_route_test() {
     let set = relationship_filter(&[RelationshipArg::Route]).unwrap();
     assert!(set.contains(&EdgeKind::RouteRef));
     assert!(set.contains(&EdgeKind::RouteTest));
+    assert!(set.contains(&EdgeKind::Layout));
 }
 
 #[test]

@@ -5,19 +5,43 @@ fn collect_playwright_route_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edg
         return vec![];
     };
 
+    let frontend_root = playwright_frontend_root(root);
     report
         .routes
         .into_iter()
         .flat_map(|route| {
-            route.tests.into_iter().map(move |test| {
-                (
-                    NodeId::File(root.join(test.file)),
-                    NodeId::File(root.join(route.file.clone())),
-                    EdgeKind::RouteTest,
-                )
-            })
+            let page_file = root.join(&route.file);
+            let route_test_edges = route.tests.into_iter().map({
+                let page_file = page_file.clone();
+                move |test| {
+                    (
+                        NodeId::File(root.join(test.file)),
+                        NodeId::File(page_file.clone()),
+                        EdgeKind::RouteTest,
+                    )
+                }
+            });
+            let layout_edges =
+                crate::fetch::import_routes::collect_layout_chain_files(&page_file, &frontend_root)
+                    .into_iter()
+                    .map(move |layout_file| {
+                        (
+                            NodeId::File(page_file.clone()),
+                            NodeId::File(layout_file),
+                            EdgeKind::Layout,
+                        )
+                    });
+            route_test_edges.chain(layout_edges)
         })
         .collect()
+}
+
+fn playwright_frontend_root(root: &Path) -> PathBuf {
+    let config = crate::codebase::config::load_config(root).ok();
+    match crate::codebase::playwright_coverage::resolve_frontend_root(None, root, config.as_ref()) {
+        Ok(frontend_root) => frontend_root,
+        Err(_) => root.join("web/app"),
+    }
 }
 
 // ── HTTP call edges ───────────────────────────────────────────────────────────

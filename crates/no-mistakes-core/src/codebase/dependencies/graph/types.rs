@@ -57,6 +57,8 @@ pub enum EdgeKind {
     QueueWorker,
     /// Playwright test ↔ frontend page file.
     RouteTest,
+    /// Next.js App Router page → inherited layout/template/error file.
+    Layout,
     /// Markdown link: `*.md` → linked file.
     MarkdownLink,
     /// Cross-workspace package import (via npm workspace resolution).
@@ -143,7 +145,8 @@ impl GraphBuildPlan {
             routes: allowed.contains(&EdgeKind::RouteRef),
             queues: allowed.contains(&EdgeKind::QueueEnqueue)
                 || allowed.contains(&EdgeKind::QueueWorker),
-            playwright_routes: allowed.contains(&EdgeKind::RouteTest),
+            playwright_routes: allowed.contains(&EdgeKind::RouteTest)
+                || allowed.contains(&EdgeKind::Layout),
             http: allowed.contains(&EdgeKind::HttpCall),
             process: allowed.contains(&EdgeKind::ProcessSpawn),
         }

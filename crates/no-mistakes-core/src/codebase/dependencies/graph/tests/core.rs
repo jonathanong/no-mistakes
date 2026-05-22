@@ -75,6 +75,7 @@ fn graph_build_plan_from_allowed_covers_each_edge_family() {
         EdgeKind::QueueEnqueue,
         EdgeKind::QueueWorker,
         EdgeKind::RouteTest,
+        EdgeKind::Layout,
         EdgeKind::HttpCall,
         EdgeKind::ProcessSpawn,
     ]
@@ -458,7 +459,10 @@ fn test_graph_methods_lazy() {
         for (_dep, kind) in deps {
             assert!(matches!(
                 kind,
-                EdgeKind::Import | EdgeKind::TypeImport | EdgeKind::DynamicImport | EdgeKind::Require
+                EdgeKind::Import
+                    | EdgeKind::TypeImport
+                    | EdgeKind::DynamicImport
+                    | EdgeKind::Require
             ));
         }
     }

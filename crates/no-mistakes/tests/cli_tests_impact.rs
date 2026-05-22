@@ -26,6 +26,37 @@ fn stdout(output: &Output) -> String {
     String::from_utf8(output.stdout.clone()).expect("stdout should be utf8")
 }
 
+fn plan_for(root: &std::path::Path, changed_file: &str) -> serde_json::Value {
+    let output = run(&[
+        "tests",
+        "plan",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        changed_file,
+        "--json",
+    ]);
+
+    assert!(output.status.success());
+    serde_json::from_str(&stdout(&output)).unwrap()
+}
+
+fn only_reason_via(plan: &serde_json::Value, test_file: &str) -> Vec<String> {
+    let selected = plan["selected_tests"].as_array().unwrap();
+    let test = selected
+        .iter()
+        .find(|test| test["test_file"] == test_file)
+        .unwrap();
+    let reasons = test["reasons"].as_array().unwrap();
+    assert_eq!(reasons.len(), 1);
+    reasons[0]["via"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|kind| kind.as_str().unwrap().to_string())
+        .collect()
+}
+
 #[test]
 fn tests_plan_json_outputs_impacted_tests() {
     let root = fixture("tests-impact");
@@ -65,6 +96,55 @@ fn tests_plan_json_outputs_impacted_tests() {
         .find(|t| t["test_file"] == "dynamic.test.mts")
         .unwrap();
     assert_eq!(dynamic_test["confidence"], "medium");
+}
+
+#[test]
+fn tests_plan_matches_playwright_route_when_page_dependency_changes() {
+    let root = fixture("playwright-impact-routing");
+    let plan = plan_for(&root, "web/components/UserCard.tsx");
+
+    assert_eq!(plan["fallback_triggered"], false);
+    let selected = plan["selected_tests"].as_array().unwrap();
+    assert_eq!(selected.len(), 1);
+    assert_eq!(selected[0]["test_file"], "tests/e2e/routes.spec.ts");
+    assert_eq!(
+        only_reason_via(&plan, "tests/e2e/routes.spec.ts"),
+        vec!["dependency", "route"]
+    );
+}
+
+#[test]
+fn tests_plan_matches_playwright_route_when_parent_layout_changes() {
+    let root = fixture("playwright-impact-routing");
+    let plan = plan_for(&root, "web/app/users/layout.tsx");
+
+    assert_eq!(plan["fallback_triggered"], false);
+    let selected = plan["selected_tests"].as_array().unwrap();
+    assert_eq!(selected.len(), 1);
+    assert_eq!(selected[0]["test_file"], "tests/e2e/routes.spec.ts");
+    assert_eq!(
+        only_reason_via(&plan, "tests/e2e/routes.spec.ts"),
+        vec!["layout", "route"]
+    );
+}
+
+#[test]
+fn tests_plan_matches_all_playwright_tests_when_next_proxy_changes() {
+    let root = fixture("playwright-impact-routing");
+    let plan = plan_for(&root, "web/proxy.ts");
+
+    assert_eq!(plan["fallback_triggered"], true);
+    assert!(plan["fallback_reason"]
+        .as_str()
+        .unwrap()
+        .contains("Global configuration file changed"));
+    let selected = plan["selected_tests"].as_array().unwrap();
+    assert_eq!(selected.len(), 1);
+    assert_eq!(selected[0]["test_file"], "tests/e2e/routes.spec.ts");
+    assert_eq!(
+        only_reason_via(&plan, "tests/e2e/routes.spec.ts"),
+        vec!["global configuration"]
+    );
 }
 
 #[test]
