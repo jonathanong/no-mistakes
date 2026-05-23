@@ -85,6 +85,10 @@ function isInlineTestCallback(node) {
   return node.parent?.type === "CallExpression" && isTestCall(node.parent);
 }
 
+function isInlineSetupCallback(node) {
+  return node.parent?.type === "CallExpression" && isSetupCall(node.parent);
+}
+
 function isCalledFunction(node) {
   if (node.parent?.type === "CallExpression" && node.parent.callee === node) return true;
   const declarator = node.parent?.type === "VariableDeclarator" ? node.parent : null;
@@ -185,6 +189,7 @@ module.exports = {
   createCleanupTracker,
   isCalledFunction,
   isFunctionNode,
+  isInlineSetupCallback,
   isInlineTestCallback,
   isMutableInitializer,
   calleeName,

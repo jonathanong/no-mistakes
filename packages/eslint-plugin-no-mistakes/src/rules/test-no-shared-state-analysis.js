@@ -4,15 +4,19 @@ const {
   childNodes,
   isCalledFunction,
   isFunctionNode,
+  isInlineSetupCallback,
   isInlineTestCallback,
 } = require("./test-no-shared-state-helpers");
 
 function isInsideUncalledNestedFunction(node, testDepth, setupDepth) {
-  if (testDepth === 0 || setupDepth > 0) return false;
+  if (testDepth === 0 && setupDepth === 0) return false;
   let current = node.parent;
   while (current) {
     const isUncalledFunction =
-      isFunctionNode(current) && !isInlineTestCallback(current) && !isCalledFunction(current);
+      isFunctionNode(current) &&
+      !isInlineSetupCallback(current) &&
+      !isInlineTestCallback(current) &&
+      !isCalledFunction(current);
     if (isUncalledFunction) return true;
     current = current.parent;
   }
@@ -32,6 +36,18 @@ function isModuleMutable(context, mutableTopLevel, node, name) {
     scope = scope.upper;
   }
   return false;
+}
+
+function isResetAssignment(node, isMutableInitializer) {
+  if (node.left.type === "Identifier") return isMutableInitializer(node.right);
+  return (
+    node.left.type === "MemberExpression" &&
+    !node.left.computed &&
+    node.left.property.type === "Identifier" &&
+    node.left.property.name === "length" &&
+    node.right.type === "Literal" &&
+    node.right.value === 0
+  );
 }
 
 function walkSharedMutations(node, handlers) {
@@ -109,5 +125,6 @@ module.exports = {
   createViMockTracker,
   isInsideUncalledNestedFunction,
   isModuleMutable,
+  isResetAssignment,
   walkSharedMutations,
 };

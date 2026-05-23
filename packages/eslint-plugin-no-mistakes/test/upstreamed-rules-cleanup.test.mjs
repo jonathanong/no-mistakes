@@ -60,6 +60,24 @@ describe("upstreamed generic cleanup registry scoping", () => {
     );
     assert.deepEqual(
       messages(
+        fixture("shared-state-nested-cleanup-helper.invalid.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "shared-state-nested-cleanup-helper.invalid.test.ts",
+      ),
+      ["shared"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("shared-state-non-reset-assignment.invalid.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "shared-state-non-reset-assignment.invalid.test.ts",
+      ),
+      ["shared"],
+    );
+    assert.deepEqual(
+      messages(
         fixture("shared-state-cleanup-scope.invalid.test.ts"),
         "test-no-shared-state",
         undefined,

@@ -1,10 +1,8 @@
 let testDirs: string[] = [];
 
-afterEach(cleanupDirs);
-
-function cleanupDirs() {
-  testDirs = [];
-}
+afterEach(() => {
+  testDirs = testDirs.concat("/tmp/marker");
+});
 
 test("creates a temp dir", () => {
   testDirs.push("/tmp/example");

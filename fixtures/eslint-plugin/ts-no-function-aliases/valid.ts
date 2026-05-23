@@ -9,6 +9,7 @@ function addsWork(value: string) {
 
 const changesArguments = (value: string) => original(value, "extra");
 const literal = () => 42;
+api[method] = (value: string) => original(value);
 
 function original(value: string, extra?: string) {
   return extra ? value + extra : value;

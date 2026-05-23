@@ -6,6 +6,7 @@ const {
   createViMockTracker,
   isInsideUncalledNestedFunction,
   isModuleMutable,
+  isResetAssignment,
   walkSharedMutations,
 } = require("./test-no-shared-state-analysis");
 const {
@@ -86,9 +87,12 @@ module.exports = rule(
 
     function rememberAssignmentCleanup(node) {
       if (setupDepth === 0) return;
-      for (const name of collectPatternNames(node.left)) rememberSetupCleanup(node, name);
-      if (node.left.type === "MemberExpression")
-        rememberSetupCleanup(node, mutationRootName(node.left));
+      if (!isResetAssignment(node, isMutableInitializer)) return;
+      if (node.left.type === "Identifier") {
+        rememberSetupCleanup(node, node.left.name);
+        return;
+      }
+      rememberSetupCleanup(node, mutationRootName(node.left));
     }
 
     return {
