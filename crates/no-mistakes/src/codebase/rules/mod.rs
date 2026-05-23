@@ -1,11 +1,14 @@
 pub mod agents_md_max_size;
 pub mod nextjs_no_api_routes;
 pub mod nextjs_no_caching;
+pub mod require_storybook_stories;
 pub mod rust_max_lines_per_file;
 pub mod rust_no_inline_allows;
 pub mod rust_no_inline_tests;
 pub mod server_route_client_boundary;
 pub mod test_no_unmocked_dynamic_imports;
+
+mod run;
 
 use anyhow::Result;
 use serde::Serialize;
@@ -14,6 +17,8 @@ use std::path::{Path, PathBuf};
 pub use agents_md_max_size::RULE_ID as AGENTS_MD_MAX_SIZE;
 pub use nextjs_no_api_routes::RULE_ID as NEXTJS_NO_API_ROUTES;
 pub use nextjs_no_caching::RULE_ID as NEXTJS_NO_CACHING;
+pub use require_storybook_stories::RULE_ID as REQUIRE_STORYBOOK_STORIES;
+pub use run::{run_check, run_check_with_facts};
 pub use rust_max_lines_per_file::RULE_ID as RUST_MAX_LINES_PER_FILE;
 pub use rust_no_inline_allows::RULE_ID as RUST_NO_INLINE_ALLOWS;
 pub use rust_no_inline_tests::RULE_ID as RUST_NO_INLINE_TESTS;
@@ -31,79 +36,6 @@ pub struct RuleFinding {
     pub import: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub target: Option<String>,
-}
-
-pub fn run_check(
-    root: &Path,
-    config_path: Option<&Path>,
-    tsconfig_path: Option<&Path>,
-) -> Result<Vec<RuleFinding>> {
-    let config = crate::config::v2::load_v2_config(root, config_path)?;
-    if !rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS)
-        && !rule_enabled(&config, SERVER_ROUTE_CLIENT_BOUNDARY)
-        && !rule_enabled(&config, NEXTJS_NO_API_ROUTES)
-        && !rule_enabled(&config, NEXTJS_NO_CACHING)
-    {
-        return Ok(Vec::new());
-    }
-    let mut findings = match rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
-        true => test_no_unmocked_dynamic_imports::check(root, &config, tsconfig_path)?,
-        false => Vec::new(),
-    };
-    if rule_enabled(&config, SERVER_ROUTE_CLIENT_BOUNDARY) {
-        let rule_findings = server_route_client_boundary::check(root, &config)?;
-        findings.extend(rule_findings);
-    }
-    if rule_enabled(&config, NEXTJS_NO_API_ROUTES) {
-        let rule_findings = nextjs_no_api_routes::check(root, &config)?;
-        findings.extend(rule_findings);
-    }
-    if rule_enabled(&config, NEXTJS_NO_CACHING) {
-        let rule_findings = nextjs_no_caching::check(root, &config)?;
-        findings.extend(rule_findings);
-    }
-    sort_findings(&mut findings);
-    Ok(findings)
-}
-
-pub fn run_check_with_facts(
-    root: &Path,
-    config_path: Option<&Path>,
-    tsconfig_path: Option<&Path>,
-    shared: &crate::codebase::check_facts::CheckFactMap,
-) -> Result<Vec<RuleFinding>> {
-    let config = crate::config::v2::load_v2_config(root, config_path)?;
-    if !rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS)
-        && !rule_enabled(&config, SERVER_ROUTE_CLIENT_BOUNDARY)
-        && !rule_enabled(&config, NEXTJS_NO_API_ROUTES)
-        && !rule_enabled(&config, NEXTJS_NO_CACHING)
-    {
-        return Ok(Vec::new());
-    }
-    let mut findings = Vec::new();
-    if rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
-        let rule_findings = test_no_unmocked_dynamic_imports::check_with_facts(
-            root,
-            &config,
-            tsconfig_path,
-            shared,
-        )?;
-        findings.extend(rule_findings);
-    }
-    if rule_enabled(&config, SERVER_ROUTE_CLIENT_BOUNDARY) {
-        let rule_findings = server_route_client_boundary::check_with_facts(root, &config, shared)?;
-        findings.extend(rule_findings);
-    }
-    if rule_enabled(&config, NEXTJS_NO_API_ROUTES) {
-        let rule_findings = nextjs_no_api_routes::check_with_facts(root, &config, shared)?;
-        findings.extend(rule_findings);
-    }
-    if rule_enabled(&config, NEXTJS_NO_CACHING) {
-        let rule_findings = nextjs_no_caching::check_with_facts(root, &config, shared)?;
-        findings.extend(rule_findings);
-    }
-    sort_findings(&mut findings);
-    Ok(findings)
 }
 
 /// Run the filesystem rules using a pre-discovered file list so the

@@ -3,12 +3,14 @@ use crate::check_tasks::{
     filesystem_rules_configured, queues_configured, unique_exports_configured,
 };
 use anyhow::Result;
-use no_mistakes::codebase::check_facts::{collect_check_facts, CheckFactPlan};
+use enabled::{fact_plan, integration_configured, plan_requests_facts};
+use no_mistakes::codebase::check_facts::collect_check_facts;
 use no_mistakes::config::v2::load_v2_config;
 use no_mistakes::react_traits;
 use std::path::PathBuf;
 use std::time::Instant;
 
+mod enabled;
 mod results;
 
 pub(crate) use results::CheckResults;
@@ -23,21 +25,19 @@ pub(crate) fn run_all(
     let config = load_v2_config(&root, config_path.as_deref())?;
     let queues_enabled = queues_configured(&config);
     let unique_exports_enabled = unique_exports_configured(&config);
-    let dynamic_import_rules_enabled = dynamic_import_rules_configured(&config);
-    let boundary_rules_enabled = server_route_client_boundary_configured(&config);
-    let nextjs_api_routes_enabled = nextjs_api_routes_configured(&config);
-    let nextjs_caching_enabled = nextjs_caching_configured(&config);
+    let enabled = enabled::ConfiguredChecks::from_config(&config);
     let filesystem_rules_enabled = filesystem_rules_configured(&config);
     let integration_enabled = integration_configured(&config);
     let react_enabled = react_traits::check_enabled(&root, config_path.as_deref(), false)?;
     let react_warning = None;
-    let plan = fact_plan(EnabledChecks {
+    let plan = fact_plan(enabled::EnabledChecks {
         react: react_enabled,
         queue: queues_enabled,
-        dynamic_import_rules: dynamic_import_rules_enabled,
-        boundary_rules: boundary_rules_enabled,
-        nextjs_api_routes: nextjs_api_routes_enabled,
-        nextjs_caching: nextjs_caching_enabled,
+        dynamic_import_rules: enabled.dynamic_import_rules,
+        boundary_rules: enabled.boundary_rules,
+        nextjs_api_routes: enabled.nextjs_api_routes,
+        nextjs_caching: enabled.nextjs_caching,
+        storybook_stories: enabled.storybook_stories,
         integration: integration_enabled,
         unique_exports: unique_exports_enabled,
     });
@@ -128,87 +128,6 @@ pub(crate) fn run_all(
         codebase: codebase.findings,
         warnings,
     })
-}
-
-#[derive(Default)]
-struct EnabledChecks {
-    react: bool,
-    queue: bool,
-    dynamic_import_rules: bool,
-    boundary_rules: bool,
-    nextjs_api_routes: bool,
-    nextjs_caching: bool,
-    integration: bool,
-    unique_exports: bool,
-}
-
-fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
-    CheckFactPlan {
-        imports: enabled.dynamic_import_rules,
-        symbols: enabled.unique_exports,
-        react: enabled.react,
-        queue: enabled.queue,
-        integration: enabled.integration,
-        dynamic_imports: enabled.dynamic_import_rules,
-        nextjs_caching: enabled.nextjs_caching,
-        raw_source: enabled.nextjs_api_routes,
-        source: enabled.dynamic_import_rules
-            || enabled.boundary_rules
-            || enabled.nextjs_caching
-            || enabled.unique_exports,
-    }
-}
-
-fn plan_requests_facts(plan: &CheckFactPlan) -> bool {
-    plan.imports
-        || plan.symbols
-        || plan.react
-        || plan.queue
-        || plan.integration
-        || plan.dynamic_imports
-        || plan.nextjs_caching
-        || plan.raw_source
-        || plan.source
-}
-
-fn dynamic_import_rules_configured(config: &no_mistakes::config::v2::NoMistakesConfig) -> bool {
-    crate::check_tasks::rule_configured(
-        config,
-        no_mistakes::codebase::rules::TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
-    )
-}
-
-fn server_route_client_boundary_configured(
-    config: &no_mistakes::config::v2::NoMistakesConfig,
-) -> bool {
-    crate::check_tasks::rule_configured(
-        config,
-        no_mistakes::codebase::rules::SERVER_ROUTE_CLIENT_BOUNDARY,
-    )
-}
-
-fn nextjs_api_routes_configured(config: &no_mistakes::config::v2::NoMistakesConfig) -> bool {
-    crate::check_tasks::rule_configured(config, no_mistakes::codebase::rules::NEXTJS_NO_API_ROUTES)
-}
-
-fn nextjs_caching_configured(config: &no_mistakes::config::v2::NoMistakesConfig) -> bool {
-    crate::check_tasks::rule_configured(config, no_mistakes::codebase::rules::NEXTJS_NO_CACHING)
-}
-
-fn integration_configured(config: &no_mistakes::config::v2::NoMistakesConfig) -> bool {
-    let vitest_configured = config
-        .tests
-        .vitest
-        .projects
-        .values()
-        .any(|project| !project.integration_suites.is_empty());
-    let playwright_configured = config
-        .tests
-        .playwright
-        .projects
-        .values()
-        .any(|project| !project.integration_suites.is_empty());
-    vitest_configured || playwright_configured
 }
 
 #[cfg(test)]

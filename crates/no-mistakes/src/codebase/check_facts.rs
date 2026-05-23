@@ -1,6 +1,7 @@
 use crate::codebase::dependencies::extract::{is_indexable, ExtractedImport};
 use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts;
+use crate::codebase::storybook::StorybookFileFacts;
 use crate::codebase::ts_symbols::FileSymbols;
 use crate::integration_tests::types::FileAnalysis as IntegrationFileAnalysis;
 use crate::queue::extract::FileFacts as QueueFileFacts;
@@ -21,6 +22,7 @@ pub struct CheckFactPlan {
     pub integration: bool,
     pub dynamic_imports: bool,
     pub nextjs_caching: bool,
+    pub storybook: bool,
     pub source: bool,
     pub raw_source: bool,
 }
@@ -49,6 +51,7 @@ pub(crate) struct CheckFileFacts {
     pub integration: Option<IntegrationFileAnalysis>,
     pub dynamic_imports: Option<TestFacts>,
     pub nextjs_caching: Option<Vec<NextjsCachingFinding>>,
+    pub storybook: Option<StorybookFileFacts>,
     pub parse_error: Option<String>,
     pub(crate) parsed: bool,
 }
@@ -82,7 +85,7 @@ pub fn collect_check_facts(root: &Path, files: Vec<PathBuf>, plan: CheckFactPlan
     };
     let ts: HashMap<_, _> = files
         .par_iter()
-        .filter(|path| is_indexable(path))
+        .filter(|path| is_indexable(path) || (plan.storybook && is_mdx_file(path)))
         .filter_map(|path| collect_file_facts(root, path, plan).map(|facts| (path.clone(), facts)))
         .collect();
     let mut files_parsed = 0;
@@ -104,6 +107,10 @@ pub fn collect_check_facts(root: &Path, files: Vec<PathBuf>, plan: CheckFactPlan
             ..stats
         },
     }
+}
+
+fn is_mdx_file(path: &Path) -> bool {
+    path.extension().and_then(|ext| ext.to_str()) == Some("mdx")
 }
 
 #[cfg(test)]

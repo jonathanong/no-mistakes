@@ -1,3 +1,4 @@
+use super::enabled::EnabledChecks;
 use super::*;
 use crate::check_parallel::DomainResults;
 use crate::check_tasks::CheckTask;

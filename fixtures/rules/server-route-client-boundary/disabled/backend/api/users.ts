@@ -1,4 +1,4 @@
-// guardrails-disable-file server-route-client-boundary
+// no-mistakes-disable-file server-route-client-boundary
 import express from "express";
 import axios from "axios";
 

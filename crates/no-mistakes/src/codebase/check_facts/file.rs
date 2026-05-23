@@ -20,6 +20,13 @@ pub(crate) fn collect_file_facts(
             });
         }
     };
+    if plan.storybook && path.extension().and_then(|ext| ext.to_str()) == Some("mdx") {
+        return Some(CheckFileFacts {
+            source: should_store_source(plan).then_some(source.clone()),
+            storybook: Some(crate::codebase::storybook::extract_mdx_source(&source)),
+            ..CheckFileFacts::default()
+        });
+    }
     if plan.raw_source && !requires_parse(plan) {
         return Some(CheckFileFacts {
             source: Some(source),
@@ -98,6 +105,13 @@ pub(crate) fn collect_file_facts(
     } else {
         None
     };
+    let storybook = if plan.storybook {
+        Some(crate::codebase::storybook::extract_program(
+            &source, program,
+        ))
+    } else {
+        None
+    };
     Some(CheckFileFacts {
         source: should_store_source(plan).then_some(source),
         imports,
@@ -107,6 +121,7 @@ pub(crate) fn collect_file_facts(
         integration,
         dynamic_imports,
         nextjs_caching,
+        storybook,
         parse_error: None,
         parsed: true,
     })
@@ -124,6 +139,7 @@ fn requires_parse(plan: CheckFactPlan) -> bool {
         || plan.integration
         || plan.dynamic_imports
         || plan.nextjs_caching
+        || plan.storybook
         || plan.source
         || !plan.raw_source
 }

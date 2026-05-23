@@ -1,2 +1,2 @@
-// guardrails-disable-file unique-exports
+// no-mistakes-disable-file unique-exports
 export const DisabledFile = 1;

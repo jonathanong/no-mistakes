@@ -1,4 +1,4 @@
-// guardrails-disable-file test-no-unmocked-dynamic-imports
+// no-mistakes-disable-file test-no-unmocked-dynamic-imports
 export function disabledFileImport() {
   return import('./dynamic-leaf.mts')
 }
