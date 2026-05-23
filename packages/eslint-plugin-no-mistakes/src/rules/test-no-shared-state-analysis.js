@@ -102,11 +102,11 @@ function createRegistryReports(context, mutableTopLevel, cleanupTracker, isCaptu
 
   return {
     flush() {
-      for (const { node, name, suiteKey } of pending) {
-        if (!cleanupTracker.has(name, suiteKey)) context.report({ node, messageId: "shared" });
+      for (const { node, path, suiteKey } of pending) {
+        if (!cleanupTracker.has(path, suiteKey)) context.report({ node, messageId: "shared" });
       }
     },
-    remember(node, name, testDepth, setupDepth) {
+    remember(node, name, path, testDepth, setupDepth) {
       if (
         name &&
         testDepth > 0 &&
@@ -114,7 +114,7 @@ function createRegistryReports(context, mutableTopLevel, cleanupTracker, isCaptu
         !isCaptured(name) &&
         isModuleMutable(context, mutableTopLevel, node, name)
       ) {
-        pending.push({ node, name, suiteKey: cleanupTracker.currentSuiteKey() });
+        pending.push({ node, path, suiteKey: cleanupTracker.currentSuiteKey() });
       }
     },
   };

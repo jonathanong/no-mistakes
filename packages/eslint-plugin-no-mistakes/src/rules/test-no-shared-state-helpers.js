@@ -66,11 +66,26 @@ function propertyName(node) {
   return node.type === "Literal" ? String(node.value) : node.name;
 }
 
-function mutatingCallRootName(node) {
-  return node.callee.type === "MemberExpression" &&
-    MUTATING_METHODS.has(propertyName(node.callee.property))
-    ? mutationRootName(node.callee.object)
-    : null;
+function mutationPath(node) {
+  if (node.type === "Identifier") return node.name;
+  if (node.type !== "MemberExpression") return null;
+  const objectPath = mutationPath(node.object);
+  const property =
+    node.computed && node.property.type !== "Literal" ? null : propertyName(node.property);
+  return objectPath && property ? `${objectPath}.${property}` : null;
+}
+
+function mutatingCallTarget(node) {
+  if (
+    node.callee.type !== "MemberExpression" ||
+    !MUTATING_METHODS.has(propertyName(node.callee.property))
+  ) {
+    return { name: null, path: null };
+  }
+  return {
+    name: mutationRootName(node.callee.object),
+    path: mutationPath(node.callee.object),
+  };
 }
 
 function mutatingCallPropertyName(node) {
@@ -138,7 +153,7 @@ function firstNamedCallbackArgument(args) {
 }
 
 function createCleanupTracker() {
-  const mutablesBySuite = new Map();
+  const pathsBySuite = new Map();
   const suiteStack = [];
   let activeSuiteKey;
   let replaySuiteKey;
@@ -148,9 +163,10 @@ function createCleanupTracker() {
     return replaySuiteKey ?? suiteStack.join("/");
   }
 
-  function has(name, suiteKey) {
-    for (const [cleanupSuiteKey, names] of mutablesBySuite) {
-      if (!names.has(name)) continue;
+  function has(path, suiteKey) {
+    if (!path) return false;
+    for (const [cleanupSuiteKey, paths] of pathsBySuite) {
+      if (!paths.has(path)) continue;
       if (!cleanupSuiteKey || suiteKey === cleanupSuiteKey) return true;
       if (suiteKey.startsWith(`${cleanupSuiteKey}/`)) return true;
     }
@@ -175,11 +191,11 @@ function createCleanupTracker() {
       suiteStack.pop();
     },
     has,
-    remember(name) {
-      if (!name || activeSuiteKey === undefined) return;
-      const names = mutablesBySuite.get(activeSuiteKey) ?? new Set();
-      names.add(name);
-      mutablesBySuite.set(activeSuiteKey, names);
+    remember(path) {
+      if (!path || activeSuiteKey === undefined) return;
+      const paths = pathsBySuite.get(activeSuiteKey) ?? new Set();
+      paths.add(path);
+      pathsBySuite.set(activeSuiteKey, paths);
     },
     setReplaySuite(suiteKey) {
       replaySuiteKey = suiteKey;
@@ -201,7 +217,8 @@ module.exports = {
   isSetupCall,
   isTestCall,
   mutatingCallPropertyName,
-  mutatingCallRootName,
+  mutatingCallTarget,
+  mutationPath,
   mutationRootName,
   namedCallbackArgument,
   setupCallbackKind,

@@ -16,10 +16,10 @@ const {
   firstNamedCallbackArgument,
   isFunctionNode,
   isMutableInitializer,
-  isSetupCall,
   isTestCall,
   mutatingCallPropertyName,
-  mutatingCallRootName,
+  mutatingCallTarget,
+  mutationPath,
   mutationRootName,
   namedCallbackArgument,
   setupCallbackKind,
@@ -68,31 +68,33 @@ module.exports = rule(
       reportIfShared(node, mutationRootName(node.left));
     }
 
-    function rememberSetupCleanup(node, name) {
+    function rememberSetupCleanup(node, name, path) {
       if (
         name &&
         setupDepth > 0 &&
         mutableTopLevel.has(name) &&
         isModuleMutable(context, mutableTopLevel, node, name)
       ) {
-        cleanupTracker.remember(name);
+        cleanupTracker.remember(path);
       }
     }
 
-    function rememberSetupCallCleanup(node) {
+    function rememberCall(node) {
+      const { name, path } = mutatingCallTarget(node);
       if (mutatingCallPropertyName(node) === "clear") {
-        rememberSetupCleanup(node, mutatingCallRootName(node));
+        rememberSetupCleanup(node, name, path);
       }
+      registryReports.remember(node, name, path, testDepth, setupDepth);
     }
 
     function rememberAssignmentCleanup(node) {
       if (setupDepth === 0) return;
       if (!isResetAssignment(node, isMutableInitializer)) return;
       if (node.left.type === "Identifier") {
-        rememberSetupCleanup(node, node.left.name);
+        rememberSetupCleanup(node, node.left.name, node.left.name);
         return;
       }
-      rememberSetupCleanup(node, mutationRootName(node.left));
+      rememberSetupCleanup(node, mutationRootName(node.left), mutationPath(node.left.object));
     }
 
     function resolveFunctionCallback(node, callback) {
@@ -162,7 +164,7 @@ module.exports = rule(
             });
           }
         }
-        if (isSetupCall(node)) {
+        if (setupKind) {
           setupDepth += 1;
           cleanupTracker.beginSetup(setupKind);
         }
@@ -178,14 +180,13 @@ module.exports = rule(
       },
       "CallExpression:exit"(node) {
         if (isTestCall(node)) testDepth -= 1;
-        if (isSetupCall(node)) {
+        if (setupCallbackKind(node)) {
           setupDepth -= 1;
           cleanupTracker.endSetup();
         }
         const isInsideNested = isInsideUncalledNestedFunction(node, testDepth, setupDepth);
         if (!isInsideNested) {
-          rememberSetupCallCleanup(node);
-          registryReports.remember(node, mutatingCallRootName(node), testDepth, setupDepth);
+          rememberCall(node);
         }
         if (calleeName(node.callee) === "describe") cleanupTracker.exitSuite();
       },
@@ -198,8 +199,7 @@ module.exports = rule(
           reportAssignment(assignment);
         },
         onCall: (call) => {
-          rememberSetupCallCleanup(call);
-          registryReports.remember(call, mutatingCallRootName(call), testDepth, setupDepth);
+          rememberCall(call);
         },
         onUpdate: (update) => reportIfShared(update, mutationRootName(update.argument)),
       });

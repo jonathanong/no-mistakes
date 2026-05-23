@@ -112,5 +112,14 @@ describe("upstreamed generic cleanup registry scoping", () => {
       ),
       ["shared"],
     );
+    assert.deepEqual(
+      messages(
+        fixture("shared-state-cleanup-path.invalid.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "shared-state-cleanup-path.invalid.test.ts",
+      ),
+      ["shared", "shared"],
+    );
   });
 });
