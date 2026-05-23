@@ -14,6 +14,14 @@ fn fixture(category: &str, scenario: &str) -> PathBuf {
     )
 }
 
+fn codebase_fixture(scenario: &str) -> PathBuf {
+    no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase-analysis")
+            .join(scenario),
+    )
+}
+
 fn check(root: &PathBuf, yaml: &str) -> Output {
     let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
     std::fs::write(config.path(), yaml).unwrap();
@@ -72,6 +80,34 @@ fn server_route_client_boundary_fails_for_client_in_route_folder() {
         "{}",
         stdout(&out)
     );
+}
+
+// ── Next.js feature ban rules ────────────────────────────────────────────────
+
+#[test]
+fn nextjs_no_api_routes_fails_for_app_and_pages_routes() {
+    let root = codebase_fixture("no-nextjs-api-routes");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+
+    assert!(!out.status.success(), "expected exit 1");
+    assert!(body.contains("nextjs-no-api-routes"), "{body}");
+    assert!(body.contains("web/src/app/rss/route.ts"), "{body}");
+    assert!(body.contains("web/pages/api/legacy.ts"), "{body}");
+}
+
+#[test]
+fn nextjs_no_caching_fails_for_cache_features() {
+    let root = codebase_fixture("no-nextjs-caching");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+
+    assert!(!out.status.success(), "expected exit 1");
+    assert!(body.contains("nextjs-no-caching"), "{body}");
+    assert!(body.contains("web/app/fetch-options.ts"), "{body}");
+    assert!(body.contains("web/app/directive.ts"), "{body}");
+    assert!(body.contains("web/next.config.ts"), "{body}");
+    assert!(!body.contains("web/app/disabled.ts"), "{body}");
 }
 
 // ── agents-md-max-size ────────────────────────────────────────────────────────

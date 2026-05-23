@@ -25,18 +25,22 @@ pub(crate) fn run_all(
     let unique_exports_enabled = unique_exports_configured(&config);
     let dynamic_import_rules_enabled = dynamic_import_rules_configured(&config);
     let boundary_rules_enabled = server_route_client_boundary_configured(&config);
+    let nextjs_api_routes_enabled = nextjs_api_routes_configured(&config);
+    let nextjs_caching_enabled = nextjs_caching_configured(&config);
     let filesystem_rules_enabled = filesystem_rules_configured(&config);
     let integration_enabled = integration_configured(&config);
     let react_enabled = react_traits::check_enabled(&root, config_path.as_deref(), false)?;
     let react_warning = None;
-    let plan = fact_plan(
-        react_enabled,
-        queues_enabled,
-        dynamic_import_rules_enabled,
-        boundary_rules_enabled,
-        integration_enabled,
-        unique_exports_enabled,
-    );
+    let plan = fact_plan(EnabledChecks {
+        react: react_enabled,
+        queue: queues_enabled,
+        dynamic_import_rules: dynamic_import_rules_enabled,
+        boundary_rules: boundary_rules_enabled,
+        nextjs_api_routes: nextjs_api_routes_enabled,
+        nextjs_caching: nextjs_caching_enabled,
+        integration: integration_enabled,
+        unique_exports: unique_exports_enabled,
+    });
     if !plan_requests_facts(&plan) && !filesystem_rules_enabled {
         return Ok(empty_results([react_warning]));
     }
@@ -126,22 +130,32 @@ pub(crate) fn run_all(
     })
 }
 
-fn fact_plan(
+#[derive(Default)]
+struct EnabledChecks {
     react: bool,
     queue: bool,
     dynamic_import_rules: bool,
     boundary_rules: bool,
+    nextjs_api_routes: bool,
+    nextjs_caching: bool,
     integration: bool,
     unique_exports: bool,
-) -> CheckFactPlan {
+}
+
+fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
     CheckFactPlan {
-        imports: dynamic_import_rules,
-        symbols: unique_exports,
-        react,
-        queue,
-        integration,
-        dynamic_imports: dynamic_import_rules,
-        source: dynamic_import_rules || boundary_rules || unique_exports,
+        imports: enabled.dynamic_import_rules,
+        symbols: enabled.unique_exports,
+        react: enabled.react,
+        queue: enabled.queue,
+        integration: enabled.integration,
+        dynamic_imports: enabled.dynamic_import_rules,
+        nextjs_caching: enabled.nextjs_caching,
+        raw_source: enabled.nextjs_api_routes,
+        source: enabled.dynamic_import_rules
+            || enabled.boundary_rules
+            || enabled.nextjs_caching
+            || enabled.unique_exports,
     }
 }
 
@@ -152,6 +166,8 @@ fn plan_requests_facts(plan: &CheckFactPlan) -> bool {
         || plan.queue
         || plan.integration
         || plan.dynamic_imports
+        || plan.nextjs_caching
+        || plan.raw_source
         || plan.source
 }
 
@@ -171,6 +187,14 @@ fn server_route_client_boundary_configured(
     )
 }
 
+fn nextjs_api_routes_configured(config: &no_mistakes::config::v2::NoMistakesConfig) -> bool {
+    crate::check_tasks::rule_configured(config, no_mistakes::codebase::rules::NEXTJS_NO_API_ROUTES)
+}
+
+fn nextjs_caching_configured(config: &no_mistakes::config::v2::NoMistakesConfig) -> bool {
+    crate::check_tasks::rule_configured(config, no_mistakes::codebase::rules::NEXTJS_NO_CACHING)
+}
+
 fn integration_configured(config: &no_mistakes::config::v2::NoMistakesConfig) -> bool {
     let vitest_configured = config
         .tests
@@ -184,13 +208,7 @@ fn integration_configured(config: &no_mistakes::config::v2::NoMistakesConfig) ->
         .projects
         .values()
         .any(|project| !project.integration_suites.is_empty());
-    if vitest_configured {
-        return true;
-    }
-    if playwright_configured {
-        return true;
-    }
-    false
+    vitest_configured || playwright_configured
 }
 
 #[cfg(test)]

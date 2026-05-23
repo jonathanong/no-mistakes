@@ -1,0 +1,9 @@
+projects:
+  web:
+    type: nextjs
+    root: web
+
+rules:
+  - rule: nextjs-no-api-routes
+    projects:
+      - web

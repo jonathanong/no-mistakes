@@ -125,17 +125,40 @@ fn integration_configured_covers_vitest_and_playwright_suites() {
 
 #[test]
 fn fact_plan_keeps_boundary_only_rules_to_source_facts() {
-    let boundary_only = fact_plan(false, false, false, true, false, false);
+    let boundary_only = fact_plan(EnabledChecks {
+        boundary_rules: true,
+        ..Default::default()
+    });
 
     assert!(boundary_only.source);
     assert!(!boundary_only.imports);
     assert!(!boundary_only.dynamic_imports);
 
-    let dynamic_import_rule = fact_plan(false, false, true, false, false, false);
+    let dynamic_import_rule = fact_plan(EnabledChecks {
+        dynamic_import_rules: true,
+        ..Default::default()
+    });
 
     assert!(dynamic_import_rule.source);
     assert!(dynamic_import_rule.imports);
     assert!(dynamic_import_rule.dynamic_imports);
+
+    let nextjs_caching = fact_plan(EnabledChecks {
+        nextjs_caching: true,
+        ..Default::default()
+    });
+
+    assert!(nextjs_caching.source);
+    assert!(nextjs_caching.nextjs_caching);
+
+    let nextjs_api_routes = fact_plan(EnabledChecks {
+        nextjs_api_routes: true,
+        ..Default::default()
+    });
+
+    assert!(nextjs_api_routes.raw_source);
+    assert!(!nextjs_api_routes.source);
+    assert!(!nextjs_api_routes.nextjs_caching);
 }
 
 #[test]
