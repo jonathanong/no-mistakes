@@ -8,6 +8,7 @@ const {
   isFunctionNode,
   isInlineTestCallback,
   isMutableInitializer,
+  isSetupCall,
   isTestCall,
   mutatingCallRootName,
   mutationRootName,
@@ -28,7 +29,20 @@ module.exports = rule(
     const mutableTopLevel = new Set();
     const functionDeclarations = new Map();
     const pendingNamedCallbacks = [];
+    const viMockFactoryReferences = new Set();
+    const viMockCapturedMutables = new Set();
     let testDepth = 0;
+    let setupDepth = 0;
+
+    function markViMockCapturedMutable(name) {
+      if (
+        /^mock[A-Z0-9_]/.test(name) &&
+        mutableTopLevel.has(name) &&
+        viMockFactoryReferences.has(name)
+      ) {
+        viMockCapturedMutables.add(name);
+      }
+    }
 
     function isModuleMutable(node, name) {
       let scope = context.sourceCode.getScope(node);
@@ -46,8 +60,15 @@ module.exports = rule(
     }
 
     function reportIfShared(node, name) {
-      if (name && testDepth > 0 && isModuleMutable(node, name))
+      if (
+        name &&
+        testDepth > 0 &&
+        setupDepth === 0 &&
+        !viMockCapturedMutables.has(name) &&
+        isModuleMutable(node, name)
+      ) {
         context.report({ node, messageId: "shared" });
+      }
     }
 
     function reportAssignment(node) {
@@ -63,7 +84,10 @@ module.exports = rule(
             functionDeclarations.set(declaration.id.name, declaration.init);
           }
           if (node.kind === "const" && !isMutableInitializer(declaration.init)) continue;
-          for (const name of collectPatternNames(declaration.id)) mutableTopLevel.add(name);
+          for (const name of collectPatternNames(declaration.id)) {
+            mutableTopLevel.add(name);
+            markViMockCapturedMutable(name);
+          }
         }
       },
       "Program > FunctionDeclaration"(node) {
@@ -77,11 +101,13 @@ module.exports = rule(
         }
       },
       CallExpression(node) {
+        collectViMockFactoryReferences(node);
         if (isTestCall(node)) {
           testDepth += 1;
           const callback = namedCallbackArgument(node.arguments);
           if (callback) pendingNamedCallbacks.push(callback.name);
         }
+        if (isSetupCall(node)) setupDepth += 1;
       },
       AssignmentExpression(node) {
         if (isInsideUncalledNestedFunction(node)) return;
@@ -93,6 +119,7 @@ module.exports = rule(
       },
       "CallExpression:exit"(node) {
         if (isTestCall(node)) testDepth -= 1;
+        if (isSetupCall(node)) setupDepth -= 1;
         if (isInsideUncalledNestedFunction(node)) return;
         reportIfShared(node, mutatingCallRootName(node));
       },
@@ -120,6 +147,31 @@ module.exports = rule(
         reportIfShared(node, mutatingCallRootName(node));
       }
       for (const child of childNodes(node)) checkSharedMutations(child);
+    }
+
+    function collectViMockFactoryReferences(node) {
+      if (
+        node.callee.type !== "MemberExpression" ||
+        node.callee.object.type !== "Identifier" ||
+        node.callee.object.name !== "vi" ||
+        node.callee.property.type !== "Identifier" ||
+        node.callee.property.name !== "mock"
+      ) {
+        return;
+      }
+      const factory = node.arguments[1];
+      if (!isFunctionNode(factory)) return;
+      for (const name of collectIdentifierReferences(factory.body)) {
+        viMockFactoryReferences.add(name);
+        markViMockCapturedMutable(name);
+      }
+    }
+
+    function collectIdentifierReferences(node, names = new Set()) {
+      if (!node) return names;
+      if (node.type === "Identifier") names.add(node.name);
+      for (const child of childNodes(node)) collectIdentifierReferences(child, names);
+      return names;
     }
   },
 );

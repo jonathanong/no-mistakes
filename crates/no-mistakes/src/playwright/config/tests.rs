@@ -1,5 +1,7 @@
 use super::*;
 use crate::playwright::test_support::fixture_path;
+use load::helpers::is_playwright_config_name;
+use load::OneOrMany;
 
 #[test]
 fn missing_default_config_uses_defaults() {
@@ -48,6 +50,32 @@ fn no_mistakes_config_has_priority_and_supports_nesting() {
     let root = fixture_path(&["scan-config", "no-mistakes-nested"]);
     let settings = load_settings(&root, None, &[], None).unwrap();
     assert_eq!(settings.frontend_root, "nested-app");
+}
+
+#[test]
+fn no_mistakes_v2_config_wins_over_legacy_playwright_config() {
+    let root = fixture_path(&["scan-config", "no-mistakes-v2-priority"]);
+    let settings = load_settings(&root, None, &[], None).unwrap();
+    assert_eq!(settings.frontend_root, "v2-app");
+    assert_eq!(settings.selector_attributes, vec!["data-v2"]);
+    assert_eq!(settings.selector_roots, vec!["v2-components"]);
+    assert_eq!(
+        settings.playwright_configs,
+        vec![root.join("playwright.v2.config.ts")]
+    );
+}
+
+#[test]
+fn no_mistakes_without_playwright_settings_falls_back_to_legacy_playwright_config() {
+    let root = fixture_path(&["scan-config", "no-mistakes-fallback-legacy"]);
+    let settings = load_settings(&root, None, &[], None).unwrap();
+    assert_eq!(settings.frontend_root, "legacy-app");
+    assert_eq!(settings.selector_attributes, vec!["data-legacy"]);
+    assert_eq!(settings.selector_roots, vec!["legacy-components"]);
+    assert_eq!(
+        settings.playwright_configs,
+        vec![root.join("playwright.legacy.config.ts")]
+    );
 }
 
 #[test]

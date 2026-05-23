@@ -1,0 +1,13 @@
+projects:
+  web:
+    type: nextjs
+    root: v2-app
+tests:
+  playwright:
+    configs: playwright.v2.config.ts
+    selectors:
+      testIds:
+        - data-v2
+    selectorRoots:
+      - v2-components
+

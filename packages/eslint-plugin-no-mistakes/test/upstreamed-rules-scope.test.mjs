@@ -97,5 +97,32 @@ describe("upstreamed generic rule scoping", () => {
       ),
       [],
     );
+    assert.deepEqual(
+      messages(
+        fixture("next-script-inline-boot.tsx"),
+        "nextjs-no-manual-script-tags",
+        { allowInlineScriptIds: ["theme-init"] },
+        "app/layout.tsx",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("next-script-inline-boot.tsx"),
+        "nextjs-no-manual-script-tags",
+        undefined,
+        "app/layout.tsx",
+      ),
+      ["script"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("diagnostic-message.valid.test.ts"),
+        "test-no-error-message-matching",
+        undefined,
+        "static-code-analysis/rules/example.test.ts",
+      ),
+      [],
+    );
   });
 });

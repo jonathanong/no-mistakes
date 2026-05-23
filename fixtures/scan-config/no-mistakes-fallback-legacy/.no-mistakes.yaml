@@ -1,0 +1,5 @@
+projects:
+  backend:
+    type: server
+    root: backend
+

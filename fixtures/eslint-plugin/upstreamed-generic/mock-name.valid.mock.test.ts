@@ -1,4 +1,4 @@
 import { vi } from "vitest";
 
-vi.fn();
-vi["fn"]();
+vi.stubGlobal("crypto", undefined);
+vi["stubGlobal"]("crypto", undefined);
