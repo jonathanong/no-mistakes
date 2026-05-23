@@ -1,0 +1,71 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { describe, it } from "vitest";
+import { __dirname, messages } from "./helpers.mjs";
+
+function fixture(name) {
+  return readFileSync(
+    resolve(__dirname, "../../../fixtures/eslint-plugin/upstreamed-generic", name),
+    "utf8",
+  );
+}
+
+describe("upstreamed generic cleanup registry scoping", () => {
+  it("allows cleanup registries without allowing uncleaned shared state", () => {
+    assert.deepEqual(
+      messages(
+        fixture("shared-state-cleanup-registry.valid.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "shared-state-cleanup-registry.valid.test.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("shared-state-cleanup-named.valid.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "shared-state-cleanup-named.valid.test.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("shared-state-uncleaned-registry.invalid.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "shared-state-uncleaned-registry.invalid.test.ts",
+      ),
+      ["shared"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("shared-state-mutating-hook.invalid.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "shared-state-mutating-hook.invalid.test.ts",
+      ),
+      ["shared"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("shared-state-once-hook.invalid.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "shared-state-once-hook.invalid.test.ts",
+      ),
+      ["shared"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("shared-state-cleanup-scope.invalid.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "shared-state-cleanup-scope.invalid.test.ts",
+      ),
+      ["shared"],
+    );
+  });
+});

@@ -2,17 +2,25 @@
 
 const { rule } = require("../helpers");
 const {
-  childNodes,
+  createRegistryReports,
+  createViMockTracker,
+  isInsideUncalledNestedFunction,
+  isModuleMutable,
+  walkSharedMutations,
+} = require("./test-no-shared-state-analysis");
+const {
+  calleeName,
   collectPatternNames,
-  isCalledFunction,
+  createCleanupTracker,
   isFunctionNode,
-  isInlineTestCallback,
   isMutableInitializer,
   isSetupCall,
   isTestCall,
+  mutatingCallPropertyName,
   mutatingCallRootName,
   mutationRootName,
   namedCallbackArgument,
+  setupCallbackKind,
 } = require("./test-no-shared-state-helpers");
 
 module.exports = rule(
@@ -29,67 +37,27 @@ module.exports = rule(
     const mutableTopLevel = new Set();
     const functionDeclarations = new Map();
     const pendingNamedCallbacks = [];
-    const pendingRegistryReports = [];
-    const setupReferencedMutables = new Set();
-    const viMockFactoryReferences = new Set();
-    const viMockCapturedMutables = new Set();
+    const pendingNamedSetupCallbacks = [];
+    const cleanupTracker = createCleanupTracker();
+    const viMockTracker = createViMockTracker(context, mutableTopLevel);
+    const registryReports = createRegistryReports(
+      context,
+      mutableTopLevel,
+      cleanupTracker,
+      (name) => viMockTracker.isCaptured(name),
+    );
     let testDepth = 0;
     let setupDepth = 0;
-
-    function markViMockCapturedMutable(name) {
-      if (
-        name.startsWith("mock") &&
-        mutableTopLevel.has(name) &&
-        viMockFactoryReferences.has(name)
-      ) {
-        viMockCapturedMutables.add(name);
-      }
-    }
-
-    function isModuleMutable(node, name) {
-      let scope = context.sourceCode.getScope(node);
-      while (scope) {
-        const variable = scope.variables.find((candidate) => candidate.name === name);
-        if (variable) {
-          return (
-            mutableTopLevel.has(variable.name) &&
-            (variable.scope.type === "module" || variable.scope.block.type === "Program")
-          );
-        }
-        scope = scope.upper;
-      }
-      return false;
-    }
 
     function reportIfShared(node, name) {
       if (
         name &&
         testDepth > 0 &&
         setupDepth === 0 &&
-        !viMockCapturedMutables.has(name) &&
-        isModuleMutable(node, name)
+        !viMockTracker.isCaptured(name) &&
+        isModuleMutable(context, mutableTopLevel, node, name)
       ) {
         context.report({ node, messageId: "shared" });
-      }
-    }
-
-    function rememberRegistryReport(node, name) {
-      if (
-        name &&
-        testDepth > 0 &&
-        setupDepth === 0 &&
-        !viMockCapturedMutables.has(name) &&
-        isModuleMutable(node, name)
-      ) {
-        pendingRegistryReports.push({ node, name });
-      }
-    }
-
-    function flushRegistryReports() {
-      for (const { node, name } of pendingRegistryReports) {
-        if (!setupReferencedMutables.has(name)) {
-          context.report({ node, messageId: "shared" });
-        }
       }
     }
 
@@ -99,10 +67,28 @@ module.exports = rule(
       reportIfShared(node, mutationRootName(node.left));
     }
 
-    function rememberSetupMutation(node, name) {
-      if (name && setupDepth > 0 && mutableTopLevel.has(name) && isModuleMutable(node, name)) {
-        setupReferencedMutables.add(name);
+    function rememberSetupCleanup(node, name) {
+      if (
+        name &&
+        setupDepth > 0 &&
+        mutableTopLevel.has(name) &&
+        isModuleMutable(context, mutableTopLevel, node, name)
+      ) {
+        cleanupTracker.remember(name);
       }
+    }
+
+    function rememberSetupCallCleanup(node) {
+      if (mutatingCallPropertyName(node) === "clear") {
+        rememberSetupCleanup(node, mutatingCallRootName(node));
+      }
+    }
+
+    function rememberAssignmentCleanup(node) {
+      if (setupDepth === 0) return;
+      for (const name of collectPatternNames(node.left)) rememberSetupCleanup(node, name);
+      if (node.left.type === "MemberExpression")
+        rememberSetupCleanup(node, mutationRootName(node.left));
     }
 
     return {
@@ -114,7 +100,7 @@ module.exports = rule(
           if (node.kind === "const" && !isMutableInitializer(declaration.init)) continue;
           for (const name of collectPatternNames(declaration.id)) {
             mutableTopLevel.add(name);
-            markViMockCapturedMutable(name);
+            viMockTracker.markIfCaptured(name);
           }
         }
       },
@@ -122,87 +108,91 @@ module.exports = rule(
         if (node.id?.name) functionDeclarations.set(node.id.name, node);
       },
       "Program:exit"() {
-        testDepth = 1;
-        for (const name of pendingNamedCallbacks) {
+        for (const { name, suiteKey, kind } of pendingNamedSetupCallbacks) {
           const declaration = functionDeclarations.get(name);
-          if (declaration) checkSharedMutations(declaration.body);
+          if (!declaration) continue;
+          const previousSetupDepth = setupDepth;
+          setupDepth = 1;
+          cleanupTracker.beginSetup(kind, suiteKey);
+          checkSharedMutations(declaration.body);
+          setupDepth = previousSetupDepth;
+          cleanupTracker.endSetup();
         }
-        flushRegistryReports();
+        testDepth = 1;
+        for (const { name, suiteKey } of pendingNamedCallbacks) {
+          const declaration = functionDeclarations.get(name);
+          if (!declaration) continue;
+          cleanupTracker.setReplaySuite(suiteKey);
+          checkSharedMutations(declaration.body);
+          cleanupTracker.clearReplaySuite();
+        }
+        registryReports.flush();
       },
       CallExpression(node) {
-        collectViMockFactoryReferences(node);
+        viMockTracker.collectFactoryReferences(node);
+        if (calleeName(node.callee) === "describe") cleanupTracker.enterSuite();
         if (isTestCall(node)) {
           testDepth += 1;
           const callback = namedCallbackArgument(node.arguments);
-          if (callback) pendingNamedCallbacks.push(callback.name);
-        }
-        if (isSetupCall(node)) setupDepth += 1;
-      },
-      AssignmentExpression(node) {
-        if (isInsideUncalledNestedFunction(node)) return;
-        if (setupDepth > 0) {
-          for (const name of collectPatternNames(node.left)) rememberSetupMutation(node, name);
-          if (node.left.type === "MemberExpression") {
-            rememberSetupMutation(node, mutationRootName(node.left));
+          if (callback) {
+            pendingNamedCallbacks.push({
+              name: callback.name,
+              suiteKey: cleanupTracker.currentSuiteKey(),
+            });
           }
         }
+        const setupKind = setupCallbackKind(node);
+        if (setupKind) {
+          const callback = namedCallbackArgument(node.arguments);
+          if (callback) {
+            pendingNamedSetupCallbacks.push({
+              name: callback.name,
+              suiteKey: cleanupTracker.currentSuiteKey(),
+              kind: setupKind,
+            });
+          }
+        }
+        if (isSetupCall(node)) {
+          setupDepth += 1;
+          cleanupTracker.beginSetup(setupKind);
+        }
+      },
+      AssignmentExpression(node) {
+        if (isInsideUncalledNestedFunction(node, testDepth, setupDepth)) return;
+        rememberAssignmentCleanup(node);
         reportAssignment(node);
       },
       UpdateExpression(node) {
-        if (isInsideUncalledNestedFunction(node)) return;
-        rememberSetupMutation(node, mutationRootName(node.argument));
+        if (isInsideUncalledNestedFunction(node, testDepth, setupDepth)) return;
         reportIfShared(node, mutationRootName(node.argument));
       },
       "CallExpression:exit"(node) {
         if (isTestCall(node)) testDepth -= 1;
-        if (isSetupCall(node)) setupDepth -= 1;
-        if (isInsideUncalledNestedFunction(node)) return;
-        rememberSetupMutation(node, mutatingCallRootName(node));
-        rememberRegistryReport(node, mutatingCallRootName(node));
+        if (isSetupCall(node)) {
+          setupDepth -= 1;
+          cleanupTracker.endSetup();
+        }
+        const isInsideNested = isInsideUncalledNestedFunction(node, testDepth, setupDepth);
+        if (!isInsideNested) {
+          rememberSetupCallCleanup(node);
+          registryReports.remember(node, mutatingCallRootName(node), testDepth, setupDepth);
+        }
+        if (calleeName(node.callee) === "describe") cleanupTracker.exitSuite();
       },
     };
 
-    function isInsideUncalledNestedFunction(node) {
-      if (testDepth === 0) return false;
-      let current = node.parent;
-      while (current) {
-        const isUncalledFunction =
-          isFunctionNode(current) && !isInlineTestCallback(current) && !isCalledFunction(current);
-        if (isUncalledFunction) return true;
-        current = current.parent;
-      }
-      return false;
-    }
-
     function checkSharedMutations(node) {
-      if (isFunctionNode(node) && !isCalledFunction(node)) return;
-      if (node.type === "AssignmentExpression") {
-        reportAssignment(node);
-      } else if (node.type === "UpdateExpression") {
-        reportIfShared(node, mutationRootName(node.argument));
-      } else if (node.type === "CallExpression") {
-        rememberRegistryReport(node, mutatingCallRootName(node));
-      }
-      for (const child of childNodes(node)) checkSharedMutations(child);
-    }
-
-    function collectViMockFactoryReferences(node) {
-      if (
-        node.callee.type !== "MemberExpression" ||
-        node.callee.object.type !== "Identifier" ||
-        node.callee.object.name !== "vi" ||
-        node.callee.property.type !== "Identifier" ||
-        node.callee.property.name !== "mock"
-      ) {
-        return;
-      }
-      const factory = node.arguments[1];
-      if (!isFunctionNode(factory)) return;
-      for (const { identifier } of context.sourceCode.getScope(factory).through) {
-        const name = identifier.name;
-        viMockFactoryReferences.add(name);
-        markViMockCapturedMutable(name);
-      }
+      walkSharedMutations(node, {
+        onAssignment: (assignment) => {
+          rememberAssignmentCleanup(assignment);
+          reportAssignment(assignment);
+        },
+        onCall: (call) => {
+          rememberSetupCallCleanup(call);
+          registryReports.remember(call, mutatingCallRootName(call), testDepth, setupDepth);
+        },
+        onUpdate: (update) => reportIfShared(update, mutationRootName(update.argument)),
+      });
     }
   },
 );

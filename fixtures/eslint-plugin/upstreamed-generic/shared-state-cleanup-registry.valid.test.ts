@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const testDirs: string[] = [];
+const activeDirs = new Set<string>();
 let cleanupCount = 0;
 
 afterEach(async () => {
@@ -10,6 +11,7 @@ afterEach(async () => {
     await rm(dir, { recursive: true, force: true });
   }
   testDirs.length = 0;
+  activeDirs.clear();
   cleanupCount = 0;
   cleanupCount++;
 });
@@ -17,4 +19,5 @@ afterEach(async () => {
 test("creates a temp dir", async () => {
   const dir = await mkdtemp(join(tmpdir(), "no-mistakes-"));
   testDirs.push(dir);
+  activeDirs.add(dir);
 });

@@ -152,25 +152,4 @@ describe("upstreamed generic rule scoping", () => {
       ["script"],
     );
   });
-
-  it("allows cleanup registries without allowing uncleaned shared state", () => {
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-cleanup-registry.valid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-cleanup-registry.valid.test.ts",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("shared-state-uncleaned-registry.invalid.test.ts"),
-        "test-no-shared-state",
-        undefined,
-        "shared-state-uncleaned-registry.invalid.test.ts",
-      ),
-      ["shared"],
-    );
-  });
 });

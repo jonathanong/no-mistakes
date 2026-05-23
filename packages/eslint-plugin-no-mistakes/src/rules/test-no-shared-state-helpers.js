@@ -23,6 +23,15 @@ function isTestCall(node) {
   return TEST_CALLEES.has(calleeName(node.callee));
 }
 
+function setupCallbackKind(node) {
+  const name = calleeName(node.callee);
+  return name === "beforeEach" || name === "afterEach"
+    ? "per-test"
+    : name === "beforeAll" || name === "afterAll"
+      ? "once"
+      : null;
+}
+
 function isSetupCall(node) {
   return SETUP_CALLEES.has(calleeName(node.callee));
 }
@@ -62,6 +71,10 @@ function mutatingCallRootName(node) {
     MUTATING_METHODS.has(propertyName(node.callee.property))
     ? mutationRootName(node.callee.object)
     : null;
+}
+
+function mutatingCallPropertyName(node) {
+  return node.callee.type === "MemberExpression" ? propertyName(node.callee.property) : null;
 }
 
 function isFunctionNode(node) {
@@ -116,16 +129,70 @@ function namedCallbackArgument(args) {
   }
 }
 
+function createCleanupTracker() {
+  const mutablesBySuite = new Map();
+  const suiteStack = [];
+  let activeSuiteKey;
+  let replaySuiteKey;
+  let nextSuiteId = 0;
+
+  function currentSuiteKey() {
+    return replaySuiteKey ?? suiteStack.join("/");
+  }
+
+  function has(name, suiteKey) {
+    for (const [cleanupSuiteKey, names] of mutablesBySuite) {
+      if (!names.has(name)) continue;
+      if (!cleanupSuiteKey || suiteKey === cleanupSuiteKey) return true;
+      if (suiteKey.startsWith(`${cleanupSuiteKey}/`)) return true;
+    }
+    return false;
+  }
+
+  return {
+    beginSetup(kind, suiteKey = currentSuiteKey()) {
+      activeSuiteKey = kind === "per-test" ? suiteKey : undefined;
+    },
+    clearReplaySuite() {
+      replaySuiteKey = undefined;
+    },
+    currentSuiteKey,
+    endSetup() {
+      activeSuiteKey = undefined;
+    },
+    enterSuite() {
+      suiteStack.push(String(nextSuiteId++));
+    },
+    exitSuite() {
+      suiteStack.pop();
+    },
+    has,
+    remember(name) {
+      if (!name || activeSuiteKey === undefined) return;
+      const names = mutablesBySuite.get(activeSuiteKey) ?? new Set();
+      names.add(name);
+      mutablesBySuite.set(activeSuiteKey, names);
+    },
+    setReplaySuite(suiteKey) {
+      replaySuiteKey = suiteKey;
+    },
+  };
+}
+
 module.exports = {
   childNodes,
   collectPatternNames,
+  createCleanupTracker,
   isCalledFunction,
   isFunctionNode,
   isInlineTestCallback,
   isMutableInitializer,
+  calleeName,
   isSetupCall,
   isTestCall,
+  mutatingCallPropertyName,
   mutatingCallRootName,
   mutationRootName,
   namedCallbackArgument,
+  setupCallbackKind,
 };
