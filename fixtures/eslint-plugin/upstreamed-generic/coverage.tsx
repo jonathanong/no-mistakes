@@ -64,6 +64,14 @@ it.only("assigns", () => {
     shared = 9;
     sharedList.push(2);
   }
+  function now() {
+    shared = 10;
+  }
+  const nowVariable = () => {
+    sharedList.push(4);
+  };
+  now();
+  nowVariable();
   (() => {
     shared++;
   })();

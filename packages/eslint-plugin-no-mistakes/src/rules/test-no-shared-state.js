@@ -7,6 +7,11 @@ const MUTATING_METHODS = new Set(
   "add clear copyWithin delete fill pop push reverse set shift sort splice unshift".split(" "),
 );
 const MUTABLE_CONSTRUCTORS = new Set(["Map", "Set", "WeakMap", "WeakSet"]);
+const FUNCTION_NODES = new Set([
+  "FunctionDeclaration",
+  "FunctionExpression",
+  "ArrowFunctionExpression",
+]);
 
 function calleeName(node) {
   if (node?.type === "Identifier") return node.name;
@@ -57,9 +62,7 @@ function mutatingCallRootName(node) {
 }
 
 function isFunctionNode(node) {
-  return ["FunctionDeclaration", "FunctionExpression", "ArrowFunctionExpression"].includes(
-    node.type,
-  );
+  return FUNCTION_NODES.has(node?.type);
 }
 
 function isInlineTestCallback(node) {
@@ -67,16 +70,34 @@ function isInlineTestCallback(node) {
 }
 
 function isCalledFunction(node) {
-  return node.parent?.type === "CallExpression" && node.parent.callee === node;
+  if (node.parent?.type === "CallExpression" && node.parent.callee === node) return true;
+  const declarator = node.parent?.type === "VariableDeclarator" ? node.parent : null;
+  const name =
+    node.type === "FunctionDeclaration"
+      ? node.id?.name
+      : declarator?.id?.type === "Identifier"
+        ? declarator.id.name
+        : null;
+  const container = node.type === "FunctionDeclaration" ? node.parent : node.parent?.parent?.parent;
+  return Boolean(name && container && containsIdentifierCall(container, name));
+}
+
+function containsIdentifierCall(node, name) {
+  if (node.type === "CallExpression" && node.callee.type === "Identifier") {
+    return node.callee.name === name;
+  }
+  if (isFunctionNode(node)) return false;
+  return childNodes(node).some((child) => containsIdentifierCall(child, name));
 }
 
 function isMutableInitializer(node) {
-  if (!node) return false;
-  if (node.type === "ArrayExpression" || node.type === "ObjectExpression") return true;
-  return (
-    node.type === "NewExpression" &&
-    node.callee.type === "Identifier" &&
-    MUTABLE_CONSTRUCTORS.has(node.callee.name)
+  return Boolean(
+    node &&
+    (node.type === "ArrayExpression" ||
+      node.type === "ObjectExpression" ||
+      (node.type === "NewExpression" &&
+        node.callee.type === "Identifier" &&
+        MUTABLE_CONSTRUCTORS.has(node.callee.name))),
   );
 }
 
@@ -135,15 +156,9 @@ module.exports = rule(
     return {
       "Program > VariableDeclaration"(node) {
         for (const declaration of node.declarations) {
-          if (
-            declaration.id.type === "Identifier" &&
-            (declaration.init?.type === "FunctionExpression" ||
-              declaration.init?.type === "ArrowFunctionExpression")
-          ) {
+          if (declaration.id.type === "Identifier" && isFunctionNode(declaration.init)) {
             functionDeclarations.set(declaration.id.name, declaration.init);
           }
-        }
-        for (const declaration of node.declarations) {
           if (node.kind === "const" && !isMutableInitializer(declaration.init)) continue;
           for (const name of collectPatternNames(declaration.id)) mutableTopLevel.add(name);
         }
