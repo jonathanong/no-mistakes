@@ -141,8 +141,10 @@ component references are not expanded.
 
 The ESLint/Oxlint plugins enforce code shapes the AST tools can understand:
 
-- `eslint-plugin-playwright-ast-coverage` keeps test IDs literal, unique,
+- `eslint-plugin-no-mistakes` keeps Playwright test IDs literal, unique,
   defaulted, consistently named, and easy to assert with Playwright.
-- `eslint-plugin-next-to-fetch` keeps `fetch()` URL and method arguments static.
+- `eslint-plugin-no-mistakes` also keeps `fetch()` URL and method arguments
+  static, prevents confusing TS export/function indirection, and bans `??` on
+  explicitly typed ReactNode values.
 
 See [ESLint and Oxlint plugins](eslint-plugin.md).

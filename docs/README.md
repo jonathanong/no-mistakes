@@ -21,8 +21,7 @@ selectors, fetch calls, queue hops, server routes, and React component traits.
 | Tests related to a page/component | `playwright-ast-coverage related <file>` |
 | Playwright assertions grouped by test | `playwright-ast-coverage tests` |
 | Next.js routes to fetch calls | `next-to-fetch` |
-| Test ID linting | `eslint-plugin-playwright-ast-coverage` |
-| Static fetch linting | `eslint-plugin-next-to-fetch` |
+| File-local linting | `eslint-plugin-no-mistakes` |
 
 ## Documentation Map
 

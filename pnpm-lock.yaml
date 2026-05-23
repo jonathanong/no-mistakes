@@ -36,23 +36,11 @@ importers:
         specifier: ^4.1.6
         version: 4.1.6(@vitest/coverage-v8@4.1.6)(vite@8.0.13(yaml@2.9.0))
 
-  packages/eslint-plugin-next-to-fetch:
+  packages/eslint-plugin-no-mistakes:
     devDependencies:
-      '@vitest/coverage-v8':
-        specifier: ^4.1.6
-        version: 4.1.6(vitest@4.1.6)
-      eslint:
-        specifier: ^10.3.0
-        version: 10.3.0
-      oxlint:
-        specifier: ^1.64.0
-        version: 1.64.0
-      vitest:
-        specifier: ^4.1.6
-        version: 4.1.6(@vitest/coverage-v8@4.1.6)(vite@8.0.13(yaml@2.9.0))
-
-  packages/eslint-plugin-playwright-ast-coverage:
-    devDependencies:
+      '@typescript-eslint/parser':
+        specifier: ^8.48.0
+        version: 8.59.4(eslint@10.3.0)(typescript@6.0.3)
       '@vitest/coverage-v8':
         specifier: ^4.1.6
         version: 4.1.6(vitest@4.1.6)
@@ -69,40 +57,40 @@ importers:
   packages/next-to-fetch:
     dependencies:
       no-mistakes-core:
-        specifier: 0.5.0
-        version: 0.5.0
+        specifier: 0.6.0
+        version: 0.6.0
 
   packages/no-mistakes:
     dependencies:
       no-mistakes-core:
-        specifier: 0.5.0
-        version: 0.5.0
+        specifier: 0.6.0
+        version: 0.6.0
 
   packages/no-mistakes-core: {}
 
   packages/playwright-ast-coverage:
     dependencies:
       no-mistakes-core:
-        specifier: 0.5.0
-        version: 0.5.0
+        specifier: 0.6.0
+        version: 0.6.0
 
   packages/queue-ast-hop:
     dependencies:
       no-mistakes-core:
-        specifier: 0.5.0
-        version: 0.5.0
+        specifier: 0.6.0
+        version: 0.6.0
 
   packages/react-traits:
     dependencies:
       no-mistakes-core:
-        specifier: 0.5.0
-        version: 0.5.0
+        specifier: 0.6.0
+        version: 0.6.0
 
   packages/server-ast-routes:
     dependencies:
       no-mistakes-core:
-        specifier: 0.5.0
-        version: 0.5.0
+        specifier: 0.6.0
+        version: 0.6.0
 
 packages:
 
@@ -802,6 +790,43 @@ packages:
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
+  '@typescript-eslint/parser@8.59.4':
+    resolution: {integrity: sha512-zORHqO/tuhxY1zWuTvMUqddRxpiFJ72xVfcNoWpqdLjs6lfPbuQBJuW4pk+49/uBMy7Ssr4bzgjiKmmDB1UbZQ==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
+      typescript: '>=4.8.4 <6.1.0'
+
+  '@typescript-eslint/project-service@8.59.4':
+    resolution: {integrity: sha512-Ly00Vu4oAacfDeHp2Zg85ioNG6l8HG+tN1D7J+xTHSxu9y0awYKJ2zH1rFBn8ZSfuGK+7FxK3Cgl3uAz0aZZLg==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      typescript: '>=4.8.4 <6.1.0'
+
+  '@typescript-eslint/scope-manager@8.59.4':
+    resolution: {integrity: sha512-mUeR/3H1WrTAddJrwut8OoPjfauaztMQmRwV5fQTUyNVJCLiUXXe4lGEyYIL2oFDpP7UtgbGJXCt72wT0z2S3Q==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@typescript-eslint/tsconfig-utils@8.59.4':
+    resolution: {integrity: sha512-DLCpnKgD4alVxTBSKulK+gU1KCqOgUXfDRDXh2mZgzokQKa/70ax93I2uVO3m/LLvIAtWZIFoiifudmIqAxpMA==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      typescript: '>=4.8.4 <6.1.0'
+
+  '@typescript-eslint/types@8.59.4':
+    resolution: {integrity: sha512-F1o7WJcCq+bc8dwcO/YsSEOudAH8RDtaOhM6wcAQhcUsFhnWQl81JKy48q1hoxAU0qrzM89+31GYh1515Zde3Q==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@typescript-eslint/typescript-estree@8.59.4':
+    resolution: {integrity: sha512-F+RuOmcDXo4+TPdfd/TCLS3m2nw8gE9XXyZLrA3JBfaA5tz9TtdkyD3YJFmPxulyc2cKbEok/CvFE3MgSLWnag==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      typescript: '>=4.8.4 <6.1.0'
+
+  '@typescript-eslint/visitor-keys@8.59.4':
+    resolution: {integrity: sha512-U3gxVaDVnuZKhSspW/MzMxE1kq7zOdc072FcSNoqA1I9p8HyKbBFfEHoWckBAMgNMph4MamwS5iTVzFmrnt8TQ==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
   '@vitest/coverage-v8@4.1.6':
     resolution: {integrity: sha512-36l628fQ/9a/8ihy97eOtEnvWQEdqULQOJtcaxtoNq0G1w3Mxd4szSahOaMM9/NGyZ+hyKcMtIW/WIxq0XQViQ==}
     peerDependencies:
@@ -1266,8 +1291,8 @@ packages:
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
-  no-mistakes-core@0.5.0:
-    resolution: {integrity: sha512-hIx89154x08JXlSPXUPD+JbSfuczHWcLxdATtdUkJ51ZzOOj2k0mnCAxKpqziXCL9XhFE5eG4nZJNuN0s+QhRA==}
+  no-mistakes-core@0.6.0:
+    resolution: {integrity: sha512-52x5WRtl9AFkV6VUI3Px8lSI93Z9C9J7h/Ept5sLH6th5rFV3QC6ay0SvGg6Pk/+us1CTqKcMk4+2FP46v6OBA==}
 
   obug@2.1.1:
     resolution: {integrity: sha512-uTqF9MuPraAQ+IsnPf366RG4cP9RtUi7MLO1N3KEc+wb0a6yKpeL0lmk2IB1jY5KHPAlTc6T/JRdC/YqxHNwkQ==}
@@ -1408,12 +1433,23 @@ packages:
     resolution: {integrity: sha512-Bf+ILmBgretUrdJxzXM0SgXLZ3XfiaUuOj/IKQHuTXip+05Xn+uyEYdVg0kYDipTBcLrCVyUzAPz7QmArb0mmw==}
     engines: {node: '>=14.0.0'}
 
+  ts-api-utils@2.5.0:
+    resolution: {integrity: sha512-OJ/ibxhPlqrMM0UiNHJ/0CKQkoKF243/AEmplt3qpRgkW8VG7IfOS41h7V8TjITqdByHzrjcS/2si+y4lIh8NA==}
+    engines: {node: '>=18.12'}
+    peerDependencies:
+      typescript: '>=4.8.4'
+
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
     engines: {node: '>= 0.8.0'}
+
+  typescript@6.0.3:
+    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
 
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
@@ -2036,6 +2072,58 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
+  '@typescript-eslint/parser@8.59.4(eslint@10.3.0)(typescript@6.0.3)':
+    dependencies:
+      '@typescript-eslint/scope-manager': 8.59.4
+      '@typescript-eslint/types': 8.59.4
+      '@typescript-eslint/typescript-estree': 8.59.4(typescript@6.0.3)
+      '@typescript-eslint/visitor-keys': 8.59.4
+      debug: 4.4.3
+      eslint: 10.3.0
+      typescript: 6.0.3
+    transitivePeerDependencies:
+      - supports-color
+
+  '@typescript-eslint/project-service@8.59.4(typescript@6.0.3)':
+    dependencies:
+      '@typescript-eslint/tsconfig-utils': 8.59.4(typescript@6.0.3)
+      '@typescript-eslint/types': 8.59.4
+      debug: 4.4.3
+      typescript: 6.0.3
+    transitivePeerDependencies:
+      - supports-color
+
+  '@typescript-eslint/scope-manager@8.59.4':
+    dependencies:
+      '@typescript-eslint/types': 8.59.4
+      '@typescript-eslint/visitor-keys': 8.59.4
+
+  '@typescript-eslint/tsconfig-utils@8.59.4(typescript@6.0.3)':
+    dependencies:
+      typescript: 6.0.3
+
+  '@typescript-eslint/types@8.59.4': {}
+
+  '@typescript-eslint/typescript-estree@8.59.4(typescript@6.0.3)':
+    dependencies:
+      '@typescript-eslint/project-service': 8.59.4(typescript@6.0.3)
+      '@typescript-eslint/tsconfig-utils': 8.59.4(typescript@6.0.3)
+      '@typescript-eslint/types': 8.59.4
+      '@typescript-eslint/visitor-keys': 8.59.4
+      debug: 4.4.3
+      minimatch: 10.2.5
+      semver: 7.8.0
+      tinyglobby: 0.2.16
+      ts-api-utils: 2.5.0(typescript@6.0.3)
+      typescript: 6.0.3
+    transitivePeerDependencies:
+      - supports-color
+
+  '@typescript-eslint/visitor-keys@8.59.4':
+    dependencies:
+      '@typescript-eslint/types': 8.59.4
+      eslint-visitor-keys: 5.0.1
+
   '@vitest/coverage-v8@4.1.6(vitest@4.1.6)':
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
@@ -2508,7 +2596,7 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  no-mistakes-core@0.5.0: {}
+  no-mistakes-core@0.6.0: {}
 
   obug@2.1.1: {}
 
@@ -2663,11 +2751,17 @@ snapshots:
 
   tinyrainbow@3.1.0: {}
 
+  ts-api-utils@2.5.0(typescript@6.0.3):
+    dependencies:
+      typescript: 6.0.3
+
   tslib@2.8.1: {}
 
   type-check@0.4.0:
     dependencies:
       prelude-ls: 1.2.1
+
+  typescript@6.0.3: {}
 
   uri-js@4.4.1:
     dependencies:

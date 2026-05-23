@@ -69,7 +69,7 @@ next-to-fetch --format json
 
 If `next-to-fetch` reports dynamic paths, prefer static route strings or small
 static wrappers so agents can reason about route-to-API relationships.
-When the project uses `eslint-plugin-next-to-fetch`, run the project's own
+When the project uses `eslint-plugin-no-mistakes`, run the project's own
 ESLint command so local config, ignores, and package boundaries are respected.
 
 ### Queue Or Server Route Change
