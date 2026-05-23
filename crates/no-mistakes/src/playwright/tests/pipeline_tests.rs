@@ -1,11 +1,12 @@
 use crate::playwright::analysis::app_collect::collect_app_selector_occurrences;
+use crate::playwright::analysis::cli_run::run;
 use crate::playwright::analysis::context::{
     DiscoveredTestFile, TestAnalysisContext, TestProjectContext,
 };
 use crate::playwright::analysis::output::{
     build_related_report, print_edges_text, print_related_text,
 };
-use crate::playwright::analysis::pipeline::{analyze_with_policy, run};
+use crate::playwright::analysis::pipeline::analyze_with_policy;
 use crate::playwright::analysis::test_file::analyze_test_file;
 use crate::playwright::analysis::types::{Analysis, UniqueSelectorPolicy};
 use crate::playwright::cli::{Command, PlaywrightArgs as Cli};

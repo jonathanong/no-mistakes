@@ -17,8 +17,6 @@ use crate::playwright::selectors;
 use anyhow::Result;
 use rayon::prelude::*;
 use std::path::Path;
-
-pub use super::cli_run::run;
 pub(crate) fn analyze_with_policy(
     root: &Path,
     settings: &config::Settings,
