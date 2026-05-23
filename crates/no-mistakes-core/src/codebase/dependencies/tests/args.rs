@@ -522,6 +522,21 @@ fn resolve_entrypoints_treats_missing_source_path_with_existing_parent_as_file_n
 }
 
 #[test]
+fn entrypoint_package_helpers_cover_relative_scoped_and_invalid_roots() {
+    assert_eq!(raw_package_name("./local/file.ts"), None);
+    assert_eq!(
+        raw_package_name("@scope/pkg/subpath.js").as_deref(),
+        Some("@scope/pkg")
+    );
+
+    assert!(!root_declares_dependency(&fixture_root("simple"), "lodash"));
+    assert!(!root_declares_dependency(
+        &fixture_root("unique-exports-malformed-package"),
+        "lodash"
+    ));
+}
+
+#[test]
 fn validate_direction_allows_symbol_with_dependents() {
     let args = parse(&["deps", "a.mts#alpha", "b.mts"]);
     let root = fixture_root("simple");
