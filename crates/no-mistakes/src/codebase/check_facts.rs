@@ -112,8 +112,16 @@ fn collect_file_facts(root: &Path, path: &Path, plan: CheckFactPlan) -> Option<C
             });
         }
     };
-    let source_type =
-        SourceType::from_path(path).expect("indexable JavaScript/TypeScript extension");
+    let source_type = match SourceType::from_path(path) {
+        Ok(source_type) => source_type,
+        Err(err) => {
+            return Some(CheckFileFacts {
+                source: plan.source.then_some(source),
+                parse_error: Some(format!("unsupported file type: {err}")),
+                ..CheckFileFacts::default()
+            });
+        }
+    };
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, &source, source_type).parse();
     if parsed.panicked || !parsed.errors.is_empty() {

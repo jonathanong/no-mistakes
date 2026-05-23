@@ -1,9 +1,15 @@
-use super::{collect_check_facts, CheckFactPlan};
+use super::{collect_check_facts, collect_file_facts, CheckFactPlan};
 use std::path::PathBuf;
 
 fn fixture_path(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/codebase-analysis/shared-facts")
+        .join(name)
+}
+
+fn ast_fixture_path(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/ast-snippets/ts-source/facts")
         .join(name)
 }
 
@@ -74,6 +80,27 @@ fn collect_check_facts_records_parse_error_details() {
     assert!(file_facts.source.is_some());
     assert!(file_facts.imports.is_empty());
     assert!(file_facts.symbols.is_none());
+}
+
+#[test]
+fn collect_file_facts_records_unsupported_source_type() {
+    let root = ast_fixture_path("");
+    let file = ast_fixture_path("unknown-extension.source");
+    let facts = collect_file_facts(
+        &root,
+        &file,
+        CheckFactPlan {
+            source: true,
+            ..CheckFactPlan::default()
+        },
+    )
+    .expect("unsupported source type fact is recorded");
+
+    assert!(facts.source.is_some());
+    assert!(facts
+        .parse_error
+        .as_deref()
+        .is_some_and(|error| error.contains("unsupported file type")));
 }
 
 #[test]

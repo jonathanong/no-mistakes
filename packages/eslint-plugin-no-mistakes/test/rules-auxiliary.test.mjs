@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
+import { performance } from "node:perf_hooks";
 import { describe, it } from "vitest";
-import { fixture, lint, messages, plugin } from "./helpers.mjs";
+import { fixture, lint, messages, plugin, require } from "./helpers.mjs";
+
+const { cssSelectorValues } = require("../src/helpers");
 
 describe("playwright-no-empty", () => {
   it("reports empty literal test IDs", () => {
@@ -20,6 +23,16 @@ describe("playwright-prefer-get-by-test-id", () => {
       messages(fixture("prefer-get-by-testid.js"), "playwright-prefer-get-by-test-id"),
       ["prefer", "prefer", "prefer", "prefer", "prefer", "prefer", "prefer"],
     );
+  });
+
+  it("does not backtrack catastrophically on malformed CSS attribute selectors", () => {
+    const source = "[data-pw=save" + " ".repeat(5000);
+    const start = performance.now();
+    const values = cssSelectorValues(source, ["data-pw"]);
+    const elapsed = performance.now() - start;
+
+    assert.deepEqual(values, []);
+    assert.ok(elapsed < 100, `selector parsing took ${elapsed}ms`);
   });
 });
 
