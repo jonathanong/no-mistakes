@@ -103,6 +103,61 @@ fn collect_check_facts_reads_raw_source_without_parsing() {
 }
 
 #[test]
+fn collect_check_facts_keeps_raw_source_when_parsing_is_required() {
+    let root = fixture_path("");
+    let file = fixture_path("src/everything.tsx");
+    let facts = collect_check_facts(
+        &root,
+        vec![file.clone()],
+        CheckFactPlan {
+            react: true,
+            raw_source: true,
+            ..CheckFactPlan::default()
+        },
+    );
+    let file_facts = facts.ts.get(&file).expect("file facts are retained");
+
+    assert_eq!(facts.stats.files_parsed, 1);
+    assert!(file_facts.react.is_some());
+    assert!(file_facts.source.is_some());
+}
+
+#[test]
+fn collect_file_facts_keeps_raw_source_for_parse_and_source_type_errors() {
+    let root = ast_fixture_path("");
+    let unsupported = ast_fixture_path("unknown-extension.source");
+    let facts = collect_file_facts(
+        &root,
+        &unsupported,
+        CheckFactPlan {
+            react: true,
+            raw_source: true,
+            source: false,
+            ..CheckFactPlan::default()
+        },
+    )
+    .expect("unsupported source type fact is recorded");
+    assert!(facts.source.is_some());
+    assert!(facts.parse_error.is_some());
+
+    let root = fixture_path("");
+    let invalid = fixture_path("src/invalid.ts");
+    let facts = collect_file_facts(
+        &root,
+        &invalid,
+        CheckFactPlan {
+            react: true,
+            raw_source: true,
+            source: false,
+            ..CheckFactPlan::default()
+        },
+    )
+    .expect("parse error fact is recorded");
+    assert!(facts.source.is_some());
+    assert!(facts.parse_error.is_some());
+}
+
+#[test]
 fn collect_file_facts_records_unsupported_source_type() {
     let root = ast_fixture_path("");
     let file = ast_fixture_path("unknown-extension.source");

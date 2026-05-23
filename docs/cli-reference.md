@@ -153,8 +153,9 @@ rules:
     projects: [web]
 ```
 
-`nextjs-no-api-routes` rejects App Router `app/**/route.*` handlers and Pages
-Router `pages/api/**` files. `nextjs-no-caching` rejects Next.js cache
+`nextjs-no-api-routes` rejects App Router `app/**/route.*` and
+`src/app/**/route.*` handlers and Pages Router `pages/api/**` and
+`src/pages/api/**` files. `nextjs-no-caching` rejects Next.js cache
 directives, `next/cache` APIs, cached `fetch` options, static cache segment
 config, and cache-related `next.config.*` settings.
 

@@ -30,7 +30,7 @@ pub(crate) fn collect_file_facts(
         Ok(source_type) => source_type,
         Err(_) => {
             return Some(CheckFileFacts {
-                source: plan.source.then_some(source),
+                source: should_store_source(plan).then_some(source),
                 parse_error: Some(format!("unsupported file type: {}", path.display())),
                 ..CheckFileFacts::default()
             });
@@ -45,7 +45,7 @@ pub(crate) fn collect_file_facts(
             .map(|error| format!("{error:?}"))
             .unwrap_or("parser panicked without diagnostic details".to_string());
         return Some(CheckFileFacts {
-            source: plan.source.then_some(source),
+            source: should_store_source(plan).then_some(source),
             parse_error: Some(parse_error),
             ..CheckFileFacts::default()
         });
@@ -99,7 +99,7 @@ pub(crate) fn collect_file_facts(
         None
     };
     Some(CheckFileFacts {
-        source: plan.source.then_some(source),
+        source: should_store_source(plan).then_some(source),
         imports,
         symbols,
         react,
@@ -110,6 +110,10 @@ pub(crate) fn collect_file_facts(
         parse_error: None,
         parsed: true,
     })
+}
+
+fn should_store_source(plan: CheckFactPlan) -> bool {
+    plan.source || plan.raw_source
 }
 
 fn requires_parse(plan: CheckFactPlan) -> bool {

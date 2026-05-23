@@ -256,6 +256,19 @@ export default { ...opts, [key]: true, cacheComponents: 'yes' }\n";
 }
 
 #[test]
+fn extract_ignores_cached_options_for_locally_bound_fetch() {
+    for source in [
+        "import fetch from './client'\nfetch('/api', { cache: 'force-cache', next: { revalidate: 60 } })\n",
+        "import { request as fetch } from './client'\nfetch('/api', { cache: 'force-cache', next: { revalidate: 60 } })\n",
+        "import * as fetch from './client'\nfetch('/api', { cache: 'force-cache', next: { revalidate: 60 } })\n",
+        "const fetch = makeClient()\nfetch('/api', { cache: 'force-cache', next: { revalidate: 60 } })\n",
+    ] {
+        let findings = extract(Path::new("app/page.tsx"), source).unwrap();
+        assert!(findings.is_empty());
+    }
+}
+
+#[test]
 fn extract_ignores_non_cache_export_and_import_shapes() {
     let source = "import { notCache } from 'next/cache'\n\
 const cfg = {}\n\

@@ -16,6 +16,7 @@ pub(super) struct NextjsCachingVisitor<'a> {
     next_cache_namespaces: HashSet<String>,
     next_config_bindings: HashMap<String, Vec<(u32, String)>>,
     segment_config_bindings: HashMap<String, String>,
+    local_fetch: bool,
     segment_config: bool,
     next_config: bool,
 }
@@ -35,6 +36,7 @@ impl<'a> NextjsCachingVisitor<'a> {
             next_cache_namespaces: HashSet::new(),
             next_config_bindings: bindings.next_config,
             segment_config_bindings: bindings.segment_config,
+            local_fetch: bindings.local_fetch,
             segment_config,
             next_config,
         }
@@ -51,7 +53,7 @@ impl<'a> NextjsCachingVisitor<'a> {
         let Expression::Identifier(callee) = &call.callee else {
             return;
         };
-        if callee.name.as_str() != "fetch" {
+        if callee.name.as_str() != "fetch" || self.local_fetch {
             return;
         }
         let Some(Argument::ObjectExpression(options)) = call.arguments.get(1) else {
