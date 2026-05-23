@@ -261,6 +261,22 @@ export default { ...opts, [key]: true, cacheComponents: 'yes' }\n";
 }
 
 #[test]
+fn extract_ignores_non_cache_export_and_import_shapes() {
+    let source = "import { notCache } from 'next/cache'\n\
+const cfg = {}\n\
+const { cacheLife } = cfg\n\
+let nextConfig\n\
+export const { dynamic } = cfg\n\
+export let revalidate\n\
+export const fetchCache = 1\n\
+export const dynamicValue = 'force-static'\n\
+export default function config() {}\n";
+    let findings = extract(Path::new("next.config.ts"), source).unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn extract_reports_wrapped_next_config_object() {
     let source = "export default withSentryConfig({\n\
   cacheComponents: true,\n\
