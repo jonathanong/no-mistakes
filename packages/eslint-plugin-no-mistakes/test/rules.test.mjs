@@ -1,0 +1,176 @@
+import assert from "node:assert/strict";
+import { describe, it } from "vitest";
+import { fixture, messages, plugin } from "./helpers.mjs";
+
+describe("plugin exports", () => {
+  it("exposes rules and flat configs", () => {
+    assert.equal(plugin.meta.name, "eslint-plugin-no-mistakes");
+    assert.ok(plugin.rules["playwright-literals"]);
+    assert.equal(plugin.configs.recommended.rules["no-mistakes/playwright-literals"], "error");
+    assert.deepEqual(plugin.configs.strict.rules["no-mistakes/playwright-consistent-attribute"], [
+      "error",
+      { canonicalAttribute: "data-pw" },
+    ]);
+  });
+});
+
+describe("playwright-literals", () => {
+  it("accepts literals, expression literals, empty static templates, static templates, and defaulted props", () => {
+    assert.deepEqual(
+      messages(fixture("literals-valid.jsx"), "playwright-literals", {
+        allowStaticTemplates: true,
+      }),
+      [],
+    );
+  });
+
+  it("reports missing, dynamic, non-defaulted, and forbidden template values", () => {
+    assert.deepEqual(messages(fixture("literals-invalid.jsx"), "playwright-literals"), [
+      "literal",
+      "literal",
+      "literal",
+      "literal",
+      "literal",
+      "literal",
+    ]);
+  });
+
+  it("rejects templates without static text and allows defaulted identifiers outside props", () => {
+    const code = `
+      function A(testId = "save") {
+        helper();
+        page.getByTestId(testId);
+        return <button data-pw={\`\${id}\`} />;
+      }
+    `;
+    assert.deepEqual(messages(code, "playwright-literals", { allowStaticTemplates: true }), [
+      "literal",
+    ]);
+  });
+
+  it("can be configured for literal-only mode and custom attributes", () => {
+    const code = `
+      const A = ({ testId = "save" }) => <button data-qa={testId} />;
+    `;
+    assert.deepEqual(
+      messages(code, "playwright-literals", {
+        selectorAttributes: ["data-qa"],
+        allowDefaultedProps: false,
+      }),
+      ["literal"],
+    );
+  });
+
+  it("does not treat shadowed locals as defaulted props", () => {
+    const code = `
+      function A({ testId = "save" }) {
+        {
+          const testId = id;
+          return <button data-pw={testId} />;
+        }
+      }
+    `;
+    assert.deepEqual(messages(code, "playwright-literals"), ["literal"]);
+  });
+
+  it("accepts defaulted props through nested scopes only when unshadowed", () => {
+    const code = `
+      function A({ testId = "save" }) {
+        {
+          return <button data-pw={testId} />;
+        }
+      }
+    `;
+    assert.deepEqual(messages(code, "playwright-literals"), []);
+  });
+
+  it("accepts const destructured literal defaults", () => {
+    const code = `function A(props) { const { "data-pw": dataPw = "save", nested: { nestedPw = "open" } = {} } = props; const [, arrayPw = "array"] = props.items; page.getByTestId(dataPw); if (props.ready) { const { readyPw = "ready" } = props; return <button data-pw={readyPw} />; } return <><button data-pw={dataPw} /><button data-pw={nestedPw} /><button data-pw={arrayPw} /></>; }`;
+    assert.deepEqual(messages(code, "playwright-literals"), []);
+  });
+
+  it("rejects unsafe const destructured defaults", () => {
+    const code = `function A(props) { function B() { const { "data-pw": inner = "inner" } = props; } const { "data-pw": missing } = props; const { "data-testid": dynamic = id } = props; let { "data-qa": mutable = "open" } = props; return <><button data-pw={inner} /><button data-pw={missing} /><button data-pw={dynamic} /><button data-pw={mutable} /></>; }`;
+    assert.deepEqual(messages(code, "playwright-literals"), [
+      "literal",
+      "literal",
+      "literal",
+      "literal",
+    ]);
+  });
+
+  it("does not treat rest bindings as defaulted props", () => {
+    const code = `function A(props) { const { ...rest } = props; return <button data-pw={rest} />; }`;
+    assert.deepEqual(messages(code, "playwright-literals"), ["literal"]);
+  });
+
+  it("rejects missing getByTestId arguments and identifiers outside functions", () => {
+    assert.deepEqual(
+      messages("page.getByTestId(); page.getByTestId(testId);", "playwright-literals"),
+      ["literal", "literal"],
+    );
+  });
+});
+
+describe("playwright-defaults", () => {
+  it("requires literal defaults for prop passthrough", () => {
+    assert.deepEqual(messages(fixture("defaults.jsx"), "playwright-defaults"), [
+      "default",
+      "default",
+    ]);
+  });
+
+  it("rejects shadowed defaulted props", () => {
+    const code = `
+      function A({ testId = "save" }) {
+        {
+          const testId = id;
+          return <button data-pw={testId} />;
+        }
+      }
+    `;
+    assert.deepEqual(messages(code, "playwright-defaults"), ["default"]);
+  });
+
+  it("accepts const destructured literal defaults", () => {
+    const code = `function A(props) { const { "data-pw": dataPw = "save" } = props; return <button data-pw={dataPw} />; }`;
+    assert.deepEqual(messages(code, "playwright-defaults"), []);
+  });
+
+  it("rejects shadowed and unsafe const destructured defaults", () => {
+    const code = `function A(props) { const { "data-pw": dataPw = "save" } = props; const { "data-testid": dynamic = id } = props; let { "data-qa": mutable = "open" } = props; { const dataPw = id; return <><button data-pw={dataPw} /><button data-pw={dynamic} /><button data-pw={mutable} /></>; } }`;
+    assert.deepEqual(messages(code, "playwright-defaults"), ["default", "default", "default"]);
+  });
+
+  it("rejects const defaults from non-props, before declaration, and mismatched parameters", () => {
+    const code = `function A(props, cfg) { const { "data-pw": fromCfg = "cfg" } = cfg; const before = <button data-pw={late} />; const { "data-pw": late = "late" } = props; return <><button data-pw={fromCfg} />{before}</>; } function B(testId, props) { { const { "data-pw": testId = "save" } = props; } return <button data-pw={testId} />; }`;
+    assert.deepEqual(messages(code, "playwright-defaults"), ["default", "default", "default"]);
+  });
+});
+
+describe("playwright-unique", () => {
+  it("reports duplicate exact literals within a file", () => {
+    assert.deepEqual(messages(fixture("unique.jsx"), "playwright-unique"), [
+      "duplicate",
+      "duplicate",
+    ]);
+    assert.deepEqual(messages("<button data-pw={id} />;", "playwright-unique"), []);
+  });
+});
+
+describe("playwright-consistent-attribute", () => {
+  it("requires the configured canonical attribute", () => {
+    assert.deepEqual(
+      messages("<button data-testid='save' />;", "playwright-consistent-attribute"),
+      ["attribute"],
+    );
+    assert.deepEqual(messages("<button data-pw='save' />;", "playwright-consistent-attribute"), []);
+    assert.deepEqual(
+      messages("<button data-qa='save' />;", "playwright-consistent-attribute", {
+        selectorAttributes: ["data-qa"],
+        canonicalAttribute: "data-qa",
+      }),
+      [],
+    );
+  });
+});

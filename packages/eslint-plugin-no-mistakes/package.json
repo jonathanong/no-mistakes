@@ -1,0 +1,36 @@
+{
+  "name": "eslint-plugin-no-mistakes",
+  "version": "0.6.0",
+  "description": "ESLint and Oxlint rules for deterministic no-mistakes code analysis",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonathanong/no-mistakes.git",
+    "directory": "packages/eslint-plugin-no-mistakes"
+  },
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "src/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@typescript-eslint/parser": "^8.48.0",
+    "@vitest/coverage-v8": "^4.1.6",
+    "eslint": "^10.3.0",
+    "oxlint": "^1.64.0",
+    "vitest": "^4.1.6"
+  },
+  "peerDependencies": {
+    "eslint": ">=9"
+  },
+  "engines": {
+    "node": "^20.19.0 || ^22.13.0 || >=24"
+  }
+}
