@@ -527,11 +527,17 @@ fn resolve_entrypoints_treats_missing_source_path_with_existing_parent_as_file_n
 
 #[test]
 fn entrypoint_package_helpers_cover_relative_scoped_and_invalid_roots() {
+    let modules_root = fixture_root("graph-modules");
     assert_eq!(raw_package_name("./local/file.ts"), None);
     assert_eq!(
         raw_package_name("@scope/pkg/subpath.js").as_deref(),
         Some("@scope/pkg")
     );
+    assert!(!raw_looks_like_source_file(
+        "lodash/fp.js",
+        &modules_root.join("lodash/fp.js"),
+        &modules_root
+    ));
 
     assert!(!root_declares_dependency(&fixture_root("simple"), "lodash"));
     assert!(!root_declares_dependency(

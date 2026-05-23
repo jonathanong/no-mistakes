@@ -317,6 +317,24 @@ fn function_expression_declarator_binding_pattern_is_visited() {
     assert_eq!(facts.imports[0].function_scope, None);
 }
 
+#[test]
+fn fixture_object_function_properties_track_static_scopes() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase-analysis/import-facts/object-function-property.mts");
+    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
+    let allocator = Allocator::default();
+    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+    let scopes: Vec<_> = facts
+        .imports
+        .iter()
+        .map(|import| import.function_scope.as_deref())
+        .collect();
+
+    assert_eq!(scopes, vec![Some("load"), Some("fallback")]);
+}
+
 // ── is_indexable / is_tsx_file ──────────────────────────────────────
 
 #[test]
