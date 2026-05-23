@@ -109,6 +109,14 @@ fn file_filters_exclude_module_nodes_without_target_module_filter() {
             via: vec![EdgeKind::Import],
         },
         graph::NodeEntry {
+            node: NodeId::QueueJob {
+                queue_file: PathBuf::from("/repo/src/queue.mts"),
+                job: "send".to_string(),
+            },
+            depth: 1,
+            via: vec![EdgeKind::QueueEnqueue],
+        },
+        graph::NodeEntry {
             node: NodeId::File(PathBuf::from("/repo/src/local.mts")),
             depth: 1,
             via: vec![EdgeKind::Import],
@@ -119,11 +127,13 @@ fn file_filters_exclude_module_nodes_without_target_module_filter() {
 
     let filtered = apply_filters(entries, &args, Path::new("/repo")).unwrap();
 
-    assert_eq!(filtered.len(), 1);
-    assert_eq!(
-        filtered[0].node,
-        NodeId::File(PathBuf::from("/repo/src/local.mts"))
-    );
+    assert_eq!(filtered.len(), 2);
+    assert!(filtered
+        .iter()
+        .any(|entry| entry.node == NodeId::File(PathBuf::from("/repo/src/local.mts"))));
+    assert!(filtered
+        .iter()
+        .any(|entry| matches!(entry.node, NodeId::QueueJob { .. })));
 }
 
 #[test]

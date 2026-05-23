@@ -1,9 +1,9 @@
 # Graph Edges
 
 `DepGraph` is the canonical graph for `no-mistakes dependencies`,
-`dependents`, `related`, and test-impact traversal. Graph nodes are files or
-virtual queue jobs. Every edge has an `EdgeKind`, serialized in output through
-the `via` field.
+`dependents`, `related`, and test-impact traversal. Graph nodes are files,
+external modules, or virtual queue jobs. Every edge has an `EdgeKind`,
+serialized in output through the `via` field.
 
 ## Supported Edges
 

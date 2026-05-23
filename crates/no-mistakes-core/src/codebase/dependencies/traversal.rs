@@ -34,8 +34,12 @@ fn resolve_root(args: &TraverseArgs, cwd: &Path) -> PathBuf {
     }
 }
 
-fn resolve_entrypoints(raw_entrypoints: &[PathBuf], root: &Path, cwd: &Path) -> Vec<Entrypoint> {
-    let graph_files = graph::GraphFiles::discover(root);
+fn resolve_entrypoints_with_files(
+    raw_entrypoints: &[PathBuf],
+    root: &Path,
+    cwd: &Path,
+    graph_files: &graph::GraphFiles,
+) -> Vec<Entrypoint> {
     let workspace =
         crate::codebase::workspaces::load_from_files(root, graph_files.all()).unwrap_or_default();
     raw_entrypoints

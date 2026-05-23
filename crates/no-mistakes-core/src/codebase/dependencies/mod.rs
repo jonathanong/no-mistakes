@@ -76,7 +76,8 @@ pub(crate) fn collect_and_filter_entries(
     let root = crate::codebase::ts_resolver::normalize_path(&root);
 
     let tsconfig = resolve_tsconfig(args, &root)?;
-    let entrypoints = resolve_entrypoints(&args.files, &root, cwd_early);
+    let graph_files = graph::GraphFiles::discover(&root);
+    let entrypoints = resolve_entrypoints_with_files(&args.files, &root, cwd_early, &graph_files);
 
     timings.mark("search");
 
@@ -85,7 +86,6 @@ pub(crate) fn collect_and_filter_entries(
 
     let allowed = relationship_filter(&args.relationships);
     let build_plan = graph::GraphBuildPlan::from_allowed(allowed.as_ref());
-    let graph_files = graph::GraphFiles::discover(&root);
     let ctx = TraversalCtx {
         root: &root,
         tsconfig: &tsconfig,
@@ -131,7 +131,7 @@ fn apply_filters(
     let entries = if !all_filters.is_empty() && args.target_modules.is_empty() {
         entries
             .into_iter()
-            .filter(|entry| matches!(entry.node, graph::NodeId::File(_)))
+            .filter(|entry| !matches!(entry.node, graph::NodeId::Module(_)))
             .collect()
     } else {
         entries
