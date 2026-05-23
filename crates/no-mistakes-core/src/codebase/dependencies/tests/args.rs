@@ -407,6 +407,10 @@ fn resolve_entrypoints_prefers_root_before_cwd_fallback() {
     assert_eq!(entrypoints[0].file, root.join("a.mts"));
     assert_eq!(entrypoints[0].symbol, None);
     assert_eq!(entrypoints[1].file, cwd.join("does-not-exist.mts"));
+    assert_eq!(
+        entrypoints[1].node,
+        graph::NodeId::File(cwd.join("does-not-exist.mts"))
+    );
     assert_eq!(entrypoints[1].symbol, None);
     assert_eq!(
         entrypoints[2].file,

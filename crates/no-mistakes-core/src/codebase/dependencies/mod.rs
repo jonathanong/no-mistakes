@@ -17,6 +17,7 @@ pub use crate::cli::Format;
 
 include!("args_relationships.rs");
 
+include!("traversal_entrypoints.rs");
 include!("traversal.rs");
 include!("symbol_resolution.rs");
 include!("output_args.rs");

@@ -79,47 +79,17 @@ fn resolve_entrypoint_node(
             return NodeId::File(entry);
         }
     }
-    if path.exists() || raw.starts_with('.') || Path::new(raw).is_absolute() {
+    if path.exists()
+        || raw.starts_with('.')
+        || Path::new(raw).is_absolute()
+        || raw_looks_like_source_file(raw)
+    {
         return NodeId::File(path.to_path_buf());
     }
     if let Some(entry) = workspace.resolve_specifier(raw) {
         return NodeId::File(entry);
     }
     NodeId::Module(raw.to_string())
-}
-
-fn package_dir_entry(
-    dir: &Path,
-    workspace: &crate::codebase::workspaces::WorkspaceMap,
-) -> Option<PathBuf> {
-    workspace
-        .packages
-        .iter()
-        .find(|package| package.dir == dir)
-        .and_then(|package| package.entry.clone())
-        .or_else(|| {
-            [
-                "src/index.mts",
-                "src/index.ts",
-                "src/index.tsx",
-                "src/index.cts",
-                "src/index.js",
-                "src/index.mjs",
-                "src/index.jsx",
-                "src/index.cjs",
-                "index.mts",
-                "index.ts",
-                "index.tsx",
-                "index.cts",
-                "index.js",
-                "index.mjs",
-                "index.jsx",
-                "index.cjs",
-            ]
-            .iter()
-            .map(|candidate| dir.join(candidate))
-            .find(|candidate| candidate.is_file())
-        })
 }
 
 fn validate_direction(direction: &Direction, entrypoints: &[Entrypoint]) -> Result<()> {
