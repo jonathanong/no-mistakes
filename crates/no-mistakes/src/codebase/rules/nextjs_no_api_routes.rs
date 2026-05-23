@@ -63,8 +63,15 @@ fn check_files(
     config: &NoMistakesConfig,
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let target_roots = target_roots(root, config);
     let items: Vec<_> = files
         .par_iter()
+        .filter(|path| {
+            target_roots
+                .iter()
+                .any(|target_root| path.starts_with(target_root))
+                && is_nextjs_api_route(path, &target_roots)
+        })
         .map(|path| -> Result<LoadedSourceItem> {
             let source = std::fs::read_to_string(path)
                 .with_context(|| format!("failed to read {}", path.display()))?;

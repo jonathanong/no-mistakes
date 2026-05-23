@@ -312,3 +312,28 @@ export default nextConfig\n";
         .iter()
         .any(|finding| finding.message.contains("cacheLife")));
 }
+
+#[test]
+fn extract_reports_named_segment_config_reexports() {
+    let source = "const revalidate = 60\n\
+export { revalidate }\n";
+    let findings = extract(Path::new("app/page.ts"), source).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("revalidate")));
+}
+
+#[test]
+fn extract_ignores_nested_next_config_binding() {
+    let source = "function build() {\n\
+  const nextConfig = { cacheComponents: true }\n\
+  return nextConfig\n\
+}\n\
+const nextConfig = {}\n\
+export default nextConfig\n";
+    let findings = extract(Path::new("next.config.ts"), source).unwrap();
+
+    assert!(findings.is_empty());
+}

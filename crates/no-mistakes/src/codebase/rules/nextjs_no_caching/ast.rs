@@ -15,7 +15,8 @@ pub(crate) fn extract_program(source: &str, program: &Program<'_>) -> Vec<Nextjs
         }
     }
 
-    let mut visitor = NextjsCachingVisitor::new(source, findings);
+    let bindings = super::bindings::top_level_bindings(program);
+    let mut visitor = NextjsCachingVisitor::new(source, findings, bindings);
     visitor.visit_program(program);
     visitor.findings.sort();
     visitor.findings.dedup();

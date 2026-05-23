@@ -140,6 +140,15 @@ fn direct_runner_reports_file_read_errors() {
 }
 
 #[test]
+fn direct_runner_does_not_read_non_route_files() {
+    let root = fixture();
+    let missing = root.join("web/app/missing-page.tsx");
+    let findings = check_files(&root, &config(), &[missing]).unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn route_matching_rejects_paths_outside_target_roots() {
     let root = fixture();
     let target_roots = vec![root.join("web")];

@@ -11,6 +11,7 @@ use serde::Serialize;
 use std::path::{Path, PathBuf};
 
 mod ast;
+mod bindings;
 mod cache_imports;
 mod config;
 mod patterns;
