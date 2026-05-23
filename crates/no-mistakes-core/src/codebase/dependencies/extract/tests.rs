@@ -336,6 +336,46 @@ fn fixture_object_function_properties_track_static_scopes() {
 }
 
 #[test]
+fn fixture_object_arrow_properties_track_static_scopes() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase-analysis/import-facts/object-function-arrow-property.mts");
+    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
+    let allocator = Allocator::default();
+    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+
+    assert_eq!(facts.imports.len(), 1);
+    assert_eq!(facts.imports[0].function_scope.as_deref(), Some("lazy"));
+}
+
+#[test]
+fn fixture_computed_function_keys_are_visited_outside_scopes() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase-analysis/import-facts/computed-function-keys.mts");
+    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
+    let allocator = Allocator::default();
+    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+    let imports: Vec<_> = facts
+        .imports
+        .iter()
+        .map(|import| (import.specifier.as_str(), import.function_scope.as_deref()))
+        .collect();
+
+    assert_eq!(
+        imports,
+        vec![
+            ("./key.mts", None),
+            ("./loaded.mts", None),
+            ("./method-key.mts", None),
+            ("./loaded.mts", None)
+        ]
+    );
+}
+
+#[test]
 fn fixture_anonymous_function_expression_keeps_import_unscoped() {
     let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/codebase-analysis/import-facts/anonymous-function-expression.mts");

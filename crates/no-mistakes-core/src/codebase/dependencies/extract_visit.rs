@@ -60,6 +60,8 @@ impl<'a> Visit<'a> for ImportCollector {
 
     fn visit_method_definition(&mut self, method: &MethodDefinition<'a>) {
         let name = crate::codebase::ts_source::static_property_key_name(&method.key);
+        walk::walk_decorators(self, &method.decorators);
+        walk::walk_property_key(self, &method.key);
         let pushed = name.is_some();
         self.push_function_scope(name.map(str::to_string));
         walk::walk_function(self, &method.value, oxc_syntax::scope::ScopeFlags::empty());
@@ -67,14 +69,23 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_object_property(&mut self, property: &ObjectProperty<'a>) {
-        if let Expression::FunctionExpression(function) = &property.value {
-            let name = crate::codebase::ts_source::static_property_key_name(&property.key);
-            let pushed = name.is_some();
-            self.push_function_scope(name.map(str::to_string));
-            walk::walk_function(self, function, oxc_syntax::scope::ScopeFlags::empty());
-            self.pop_function_scope(pushed);
-        } else {
-            walk::walk_object_property(self, property);
+        let name = crate::codebase::ts_source::static_property_key_name(&property.key);
+        match &property.value {
+            Expression::FunctionExpression(function) => {
+                walk::walk_property_key(self, &property.key);
+                let pushed = name.is_some();
+                self.push_function_scope(name.map(str::to_string));
+                walk::walk_function(self, function, oxc_syntax::scope::ScopeFlags::empty());
+                self.pop_function_scope(pushed);
+            }
+            Expression::ArrowFunctionExpression(arrow) => {
+                walk::walk_property_key(self, &property.key);
+                let pushed = name.is_some();
+                self.push_function_scope(name.map(str::to_string));
+                walk::walk_arrow_function_expression(self, arrow);
+                self.pop_function_scope(pushed);
+            }
+            _ => walk::walk_object_property(self, property),
         }
     }
 

@@ -3,6 +3,16 @@ fn collect_workspace_manifest_edges(
     workspace: &crate::codebase::workspaces::WorkspaceMap,
     graph_files: &GraphFiles,
 ) -> Vec<Edge> {
+    let workspace_entries: HashMap<_, _> = workspace
+        .packages
+        .iter()
+        .filter_map(|package| {
+            let entry = package.entry.as_ref()?;
+            graph_files
+                .is_visible(entry)
+                .then(|| (package.name.as_str(), entry.clone()))
+        })
+        .collect();
     all_files
         .par_iter()
         .flat_map_iter(|path| {
@@ -17,12 +27,8 @@ fn collect_workspace_manifest_edges(
                 return edges;
             };
             for name in package_dependency_names(&package_json) {
-                let target = workspace
-                    .packages
-                    .iter()
-                    .find(|package| package.name == name)
-                    .and_then(|package| package.entry.as_ref())
-                    .filter(|entry| graph_files.is_visible(entry))
+                let target = workspace_entries
+                    .get(name.as_str())
                     .map(|entry| NodeId::File(entry.clone()))
                     .unwrap_or_else(|| NodeId::Module(name.clone()));
                 edges.push((
