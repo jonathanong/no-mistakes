@@ -80,24 +80,15 @@ pub fn infer_cached_wrapper_name(source: &str, expr: &CallExpression<'_>) -> Opt
 
     let lhs = assignment[..equal_sign].trim_end();
 
-    let mut cursor = lhs.len();
-    let end = cursor;
-    while cursor > 0 {
-        let ch = lhs[..cursor]
-            .chars()
-            .last()
-            .expect("non-empty slice always has a last char");
-        if is_identifier_char(ch) {
-            cursor -= ch.len_utf8();
-        } else {
-            break;
-        }
-    }
-    if cursor == end {
+    let (cursor, name) = lhs
+        .char_indices()
+        .rev()
+        .find(|(_, ch)| !is_identifier_char(*ch))
+        .map(|(index, ch)| (index + ch.len_utf8(), &lhs[index + ch.len_utf8()..]))
+        .or_else(|| (!lhs.is_empty()).then_some((0, lhs)))?;
+    if name.is_empty() {
         return None;
     }
-
-    let name = &lhs[cursor..end];
     if cursor > 0
         && lhs[..cursor]
             .chars()

@@ -109,7 +109,7 @@ function cssSelectorValues(source, attrs) {
   for (const attr of attrs) {
     const escaped = attr.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex = new RegExp(
-      `\\[\\s*${escaped}\\s*([*^$]?=)\\s*(?:"([^"]*)"|'([^']*)'|([^\\s\\]]+))\\s*(?:[is])?\\s*\\]`,
+      `\\[\\s*${escaped}\\s*([*^$]?=)\\s*(?:"([^"]*)"|'([^']*)'|([^\\s\\]]+))(?:[is]|\\s+[is])?\\s*\\]`,
       "g",
     );
     let match = regex.exec(source);

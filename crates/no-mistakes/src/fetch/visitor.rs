@@ -56,11 +56,9 @@ impl<'a> FetchVisitor<'a> {
     }
 
     pub fn mark_fetch_shadowed(&mut self) {
-        let scope = self
-            .fetch_scope_stack
-            .last_mut()
-            .expect("fetch_scope_stack is never empty");
-        scope.shadowed_identifiers.insert("fetch".to_string());
+        if let Some(scope) = self.fetch_scope_stack.last_mut() {
+            scope.shadowed_identifiers.insert("fetch".to_string());
+        }
     }
 
     #[inline(never)]
@@ -72,19 +70,15 @@ impl<'a> FetchVisitor<'a> {
             }
         }
 
-        let scope = self
-            .fetch_scope_stack
-            .last_mut()
-            .expect("fetch_scope_stack is never empty");
-        scope.shadowed_identifiers.insert(name.to_string());
+        if let Some(scope) = self.fetch_scope_stack.last_mut() {
+            scope.shadowed_identifiers.insert(name.to_string());
+        }
     }
 
     pub fn mark_identifier_shadowed(&mut self, name: &str) {
-        let scope = self
-            .fetch_scope_stack
-            .last_mut()
-            .expect("fetch_scope_stack is never empty");
-        scope.shadowed_identifiers.insert(name.to_string());
+        if let Some(scope) = self.fetch_scope_stack.last_mut() {
+            scope.shadowed_identifiers.insert(name.to_string());
+        }
     }
 
     pub fn is_fetch_shadowed(&self) -> bool {

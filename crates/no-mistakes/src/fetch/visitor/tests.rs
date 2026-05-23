@@ -128,3 +128,16 @@ fn mark_identifier_shadowed_in_var_scope_falls_back_when_no_var_scope_exists() {
         .shadowed_identifiers
         .contains("fetch"));
 }
+
+#[test]
+fn shadow_markers_ignore_empty_scope_stack() {
+    let mut visitor = FetchVisitor::new("", "fixture.ts", false, false);
+    visitor.fetch_scope_stack.clear();
+
+    visitor.mark_identifier_shadowed("fetch");
+    visitor.mark_fetch_shadowed();
+    visitor.mark_identifier_shadowed_in_var_scope("fetch");
+
+    assert!(visitor.fetch_scope_stack.is_empty());
+    assert!(!visitor.is_fetch_shadowed());
+}

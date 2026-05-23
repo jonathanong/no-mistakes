@@ -26,6 +26,12 @@ use std::path::Path;
 use std::process::ExitCode;
 
 pub fn run(cli: PlaywrightArgs) -> Result<ExitCode> {
+    if cli.assert_unique_selectors {
+        eprintln!(
+            "warning: --assert-unique-selectors is deprecated; use --assert-unique-test-ids and --assert-unique-html-ids instead."
+        );
+    }
+
     let root = absolutize(&cli.root).context("failed to resolve --root")?;
     let settings = config::load_settings(
         &root,

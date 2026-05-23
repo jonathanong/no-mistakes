@@ -47,8 +47,7 @@ pub(crate) fn run_analyze_inner(
         if !frontend_root.exists() {
             anyhow::bail!("frontend root not found: {}", frontend_root.display());
         }
-        expand_globs(&frontend_root, targets)
-            .expect("targets were already validated against the analysis root")
+        expand_globs(&frontend_root, targets)?
     };
 
     let mut file_cache: HashMap<PathBuf, Vec<ComponentFacts>> = HashMap::new();

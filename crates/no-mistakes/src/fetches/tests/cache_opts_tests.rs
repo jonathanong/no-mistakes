@@ -150,6 +150,19 @@ fn test_infer_cached_wrapper_name_ignores_non_ascii_target() {
 }
 
 #[test]
+fn test_infer_cached_wrapper_name_handles_non_ascii_identifier_tail() {
+    let allocator = oxc_allocator::Allocator::default();
+    let source = "cachedµ = cache(() => {});";
+    let source_type = oxc_span::SourceType::default();
+    let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
+    let call = first_statement_assignment_call_expression(&parsed.program.body[0]);
+    assert_eq!(
+        infer_cached_wrapper_name(source, call),
+        Some("cachedµ".to_string())
+    );
+}
+
+#[test]
 fn test_infer_cached_wrapper_name_returns_none_for_non_identifier_assignment_target() {
     let allocator = oxc_allocator::Allocator::default();
     let source = "obj.cached_fn = cache(() => {});";
