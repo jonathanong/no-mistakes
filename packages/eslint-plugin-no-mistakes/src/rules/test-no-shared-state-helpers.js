@@ -133,6 +133,10 @@ function namedCallbackArgument(args) {
   }
 }
 
+function firstNamedCallbackArgument(args) {
+  return args[0]?.type === "Identifier" ? args[0] : undefined;
+}
+
 function createCleanupTracker() {
   const mutablesBySuite = new Map();
   const suiteStack = [];
@@ -187,6 +191,7 @@ module.exports = {
   childNodes,
   collectPatternNames,
   createCleanupTracker,
+  firstNamedCallbackArgument,
   isCalledFunction,
   isFunctionNode,
   isInlineSetupCallback,

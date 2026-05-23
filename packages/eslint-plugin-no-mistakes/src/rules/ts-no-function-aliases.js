@@ -56,7 +56,7 @@ function isSameArgumentList(params, args) {
 
 function isSelfCall(node, call) {
   if (call.callee.type !== "Identifier") return false;
-  const wrapper = wrapperName(node);
+  const wrapper = variableWrapperName(node);
   if (wrapper) return wrapper === call.callee.name;
   if (node.id && node.id.name === call.callee.name) return true;
   const parent = node.parent;

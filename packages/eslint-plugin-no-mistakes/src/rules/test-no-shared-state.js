@@ -13,6 +13,7 @@ const {
   calleeName,
   collectPatternNames,
   createCleanupTracker,
+  firstNamedCallbackArgument,
   isFunctionNode,
   isMutableInitializer,
   isSetupCall,
@@ -98,9 +99,6 @@ module.exports = rule(
     return {
       "Program > VariableDeclaration"(node) {
         for (const declaration of node.declarations) {
-          if (declaration.id.type === "Identifier" && isFunctionNode(declaration.init)) {
-            functionDeclarations.set(declaration.id.name, declaration.init);
-          }
           if (node.kind === "const" && !isMutableInitializer(declaration.init)) continue;
           for (const name of collectPatternNames(declaration.id)) {
             mutableTopLevel.add(name);
@@ -108,8 +106,13 @@ module.exports = rule(
           }
         }
       },
-      "Program > FunctionDeclaration"(node) {
+      FunctionDeclaration(node) {
         if (node.id?.name) functionDeclarations.set(node.id.name, node);
+      },
+      VariableDeclarator(node) {
+        if (node.id.type === "Identifier" && isFunctionNode(node.init)) {
+          functionDeclarations.set(node.id.name, node.init);
+        }
       },
       "Program:exit"() {
         for (const { name, suiteKey, kind } of pendingNamedSetupCallbacks) {
@@ -147,7 +150,7 @@ module.exports = rule(
         }
         const setupKind = setupCallbackKind(node);
         if (setupKind) {
-          const callback = namedCallbackArgument(node.arguments);
+          const callback = firstNamedCallbackArgument(node.arguments);
           if (callback) {
             pendingNamedSetupCallbacks.push({
               name: callback.name,

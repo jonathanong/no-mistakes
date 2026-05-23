@@ -24,6 +24,8 @@ module.exports.propertyFunction = function (value: string) {
 
 api.property = (value: string) => original(value);
 
+exports.sameName = (value: string) => sameName(value);
+
 async function asyncAlias(value: string) {
   return await original(value);
 }
