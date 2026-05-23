@@ -17,6 +17,7 @@ pub(super) struct NextjsCachingVisitor<'a> {
     next_config_bindings: HashMap<String, Vec<(u32, String)>>,
     segment_config_bindings: HashMap<String, String>,
     segment_config: bool,
+    next_config: bool,
 }
 
 impl<'a> NextjsCachingVisitor<'a> {
@@ -25,6 +26,7 @@ impl<'a> NextjsCachingVisitor<'a> {
         findings: Vec<NextjsCachingFinding>,
         bindings: TopLevelBindings,
         segment_config: bool,
+        next_config: bool,
     ) -> Self {
         Self {
             source,
@@ -34,6 +36,7 @@ impl<'a> NextjsCachingVisitor<'a> {
             next_config_bindings: bindings.next_config,
             segment_config_bindings: bindings.segment_config,
             segment_config,
+            next_config,
         }
     }
 
@@ -124,6 +127,9 @@ impl<'a> NextjsCachingVisitor<'a> {
     }
 
     fn check_default_export(&mut self, export: &oxc_ast::ast::ExportDefaultDeclaration<'a>) {
+        if !self.next_config {
+            return;
+        }
         self.push_next_config_findings(super::config::default_export_findings(
             &export.declaration,
             &self.next_config_bindings,
@@ -131,6 +137,9 @@ impl<'a> NextjsCachingVisitor<'a> {
     }
 
     fn check_assignment(&mut self, assignment: &AssignmentExpression<'a>) {
+        if !self.next_config {
+            return;
+        }
         self.push_next_config_findings(super::config::assignment_findings(
             assignment,
             &self.next_config_bindings,

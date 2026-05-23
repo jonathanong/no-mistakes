@@ -374,10 +374,40 @@ fn extract_ignores_segment_config_exports_outside_route_segments() {
 }
 
 #[test]
+fn extract_ignores_segment_config_named_like_page_outside_app_router() {
+    let source = "export const revalidate = 60\n";
+    let findings = extract(Path::new("components/page.ts"), source).unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn extract_ignores_named_segment_config_reexports_from_other_modules() {
     let source = "const revalidate = 60\n\
 export { revalidate } from './config'\n";
     let findings = extract(Path::new("app/page.ts"), source).unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn extract_ignores_default_config_object_outside_next_config_files() {
+    let source = "export default {\n\
+  cacheComponents: true,\n\
+  cacheLife: {},\n\
+}\n";
+    let findings = extract(Path::new("app/config.ts"), source).unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn extract_ignores_commonjs_config_object_outside_next_config_files() {
+    let source = "module.exports = {\n\
+  cacheComponents: true,\n\
+  cacheHandlers: {},\n\
+}\n";
+    let findings = extract(Path::new("lib/config.cjs"), source).unwrap();
 
     assert!(findings.is_empty());
 }
