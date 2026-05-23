@@ -83,6 +83,26 @@ fn collect_check_facts_records_parse_error_details() {
 }
 
 #[test]
+fn collect_check_facts_reads_raw_source_without_parsing() {
+    let root = fixture_path("");
+    let file = fixture_path("src/invalid.ts");
+    let facts = collect_check_facts(
+        &root,
+        vec![file.clone()],
+        CheckFactPlan {
+            raw_source: true,
+            ..CheckFactPlan::default()
+        },
+    );
+    let file_facts = facts.ts.get(&file).expect("file facts are retained");
+
+    assert_eq!(facts.stats.files_parsed, 0);
+    assert_eq!(facts.stats.parse_errors, 0);
+    assert!(file_facts.source.is_some());
+    assert!(file_facts.parse_error.is_none());
+}
+
+#[test]
 fn collect_file_facts_records_unsupported_source_type() {
     let root = ast_fixture_path("");
     let file = ast_fixture_path("unknown-extension.source");
@@ -119,6 +139,7 @@ fn collect_check_facts_parses_once_for_overlapping_fact_categories() {
             dynamic_imports: true,
             nextjs_caching: true,
             source: true,
+            raw_source: false,
         },
     );
 

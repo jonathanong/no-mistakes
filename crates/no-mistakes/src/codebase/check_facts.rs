@@ -1,18 +1,16 @@
-use crate::codebase::dependencies::extract::{
-    extract_imports_from_program, is_indexable, ExtractedImport,
-};
+use crate::codebase::dependencies::extract::{is_indexable, ExtractedImport};
 use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts;
-use crate::codebase::ts_symbols::{extract_symbols_from_program, FileSymbols};
+use crate::codebase::ts_symbols::FileSymbols;
 use crate::integration_tests::types::FileAnalysis as IntegrationFileAnalysis;
 use crate::queue::extract::FileFacts as QueueFileFacts;
 use crate::react_traits::analyze::file::FileAnalysis as ReactFileAnalysis;
-use oxc_allocator::Allocator;
-use oxc_parser::Parser;
-use oxc_span::SourceType;
 use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+
+mod file;
+pub(crate) use file::collect_file_facts;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct CheckFactPlan {
@@ -24,6 +22,7 @@ pub struct CheckFactPlan {
     pub dynamic_imports: bool,
     pub nextjs_caching: bool,
     pub source: bool,
+    pub raw_source: bool,
 }
 
 #[derive(Default)]
@@ -51,6 +50,7 @@ pub(crate) struct CheckFileFacts {
     pub dynamic_imports: Option<TestFacts>,
     pub nextjs_caching: Option<Vec<NextjsCachingFinding>>,
     pub parse_error: Option<String>,
+    pub(crate) parsed: bool,
 }
 
 impl CheckFactMap {
@@ -88,9 +88,10 @@ pub fn collect_check_facts(root: &Path, files: Vec<PathBuf>, plan: CheckFactPlan
     let mut files_parsed = 0;
     let mut parse_errors = 0;
     for facts in ts.values() {
-        if facts.parse_error.is_none() {
+        if facts.parsed {
             files_parsed += 1;
-        } else {
+        }
+        if facts.parse_error.is_some() {
             parse_errors += 1;
         }
     }
@@ -103,101 +104,6 @@ pub fn collect_check_facts(root: &Path, files: Vec<PathBuf>, plan: CheckFactPlan
             ..stats
         },
     }
-}
-
-fn collect_file_facts(root: &Path, path: &Path, plan: CheckFactPlan) -> Option<CheckFileFacts> {
-    let source = match std::fs::read_to_string(path) {
-        Ok(source) => source,
-        Err(err) => {
-            return Some(CheckFileFacts {
-                parse_error: Some(format!("failed to read {}: {err}", path.display())),
-                ..CheckFileFacts::default()
-            });
-        }
-    };
-    let source_type = match SourceType::from_path(path) {
-        Ok(source_type) => source_type,
-        Err(_) => {
-            return Some(CheckFileFacts {
-                source: plan.source.then_some(source),
-                parse_error: Some(format!("unsupported file type: {}", path.display())),
-                ..CheckFileFacts::default()
-            });
-        }
-    };
-    let allocator = Allocator::default();
-    let parsed = Parser::new(&allocator, &source, source_type).parse();
-    if parsed.panicked || !parsed.errors.is_empty() {
-        let parse_error = parsed
-            .errors
-            .first()
-            .map(|error| format!("{error:?}"))
-            .unwrap_or("parser panicked without diagnostic details".to_string());
-        return Some(CheckFileFacts {
-            source: plan.source.then_some(source),
-            parse_error: Some(parse_error),
-            ..CheckFileFacts::default()
-        });
-    }
-    let program = &parsed.program;
-    let imports = if plan.imports {
-        extract_imports_from_program(program)
-    } else {
-        Vec::new()
-    };
-    let symbols = if plan.symbols {
-        Some(extract_symbols_from_program(program, &source))
-    } else {
-        None
-    };
-    let react = if plan.react {
-        Some(crate::react_traits::analyze::file::analyze_program(
-            path, root, &source, program,
-        ))
-    } else {
-        None
-    };
-    let queue = if plan.queue {
-        Some(crate::queue::extract::extract_program(
-            path, &source, program,
-        ))
-    } else {
-        None
-    };
-    let integration = if plan.integration {
-        Some(crate::integration_tests::analysis::analyze_program(
-            path, program, &source,
-        ))
-    } else {
-        None
-    };
-    let dynamic_imports = if plan.dynamic_imports {
-        Some(
-            crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::extract_program(
-                &source, program,
-            ),
-        )
-    } else {
-        None
-    };
-    let nextjs_caching = if plan.nextjs_caching {
-        Some(crate::codebase::rules::nextjs_no_caching::extract_program(
-            &source, program,
-        ))
-    } else {
-        None
-    };
-    Some(CheckFileFacts {
-        source: plan.source.then_some(source),
-        imports,
-        symbols,
-        react,
-        queue,
-        integration,
-        dynamic_imports,
-        nextjs_caching,
-        parse_error: None,
-    })
 }
 
 #[cfg(test)]

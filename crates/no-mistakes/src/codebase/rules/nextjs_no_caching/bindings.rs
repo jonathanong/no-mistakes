@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 pub(super) struct TopLevelBindings {
     pub(super) next_config: HashMap<String, Vec<(u32, String)>>,
-    pub(super) segment_config: HashMap<String, (u32, String)>,
+    pub(super) segment_config: HashMap<String, String>,
 }
 
 pub(super) fn top_level_bindings(program: &Program<'_>) -> TopLevelBindings {
@@ -39,10 +39,9 @@ fn collect_top_level_var(var: &VariableDeclaration<'_>, bindings: &mut TopLevelB
             bindings.next_config.insert(name.clone(), config_findings);
         }
         if banned_segment_config(name.as_str(), init) {
-            bindings.segment_config.insert(
-                name.clone(),
-                (decl.span.start, segment_config_message(&name)),
-            );
+            bindings
+                .segment_config
+                .insert(name.clone(), segment_config_message(&name));
         }
     }
 }

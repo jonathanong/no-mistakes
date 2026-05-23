@@ -151,9 +151,9 @@ fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         integration: enabled.integration,
         dynamic_imports: enabled.dynamic_import_rules,
         nextjs_caching: enabled.nextjs_caching,
+        raw_source: enabled.nextjs_api_routes,
         source: enabled.dynamic_import_rules
             || enabled.boundary_rules
-            || enabled.nextjs_api_routes
             || enabled.nextjs_caching
             || enabled.unique_exports,
     }
@@ -167,6 +167,7 @@ fn plan_requests_facts(plan: &CheckFactPlan) -> bool {
         || plan.integration
         || plan.dynamic_imports
         || plan.nextjs_caching
+        || plan.raw_source
         || plan.source
 }
 

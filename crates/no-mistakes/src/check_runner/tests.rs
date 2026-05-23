@@ -150,6 +150,15 @@ fn fact_plan_keeps_boundary_only_rules_to_source_facts() {
 
     assert!(nextjs_caching.source);
     assert!(nextjs_caching.nextjs_caching);
+
+    let nextjs_api_routes = fact_plan(EnabledChecks {
+        nextjs_api_routes: true,
+        ..Default::default()
+    });
+
+    assert!(nextjs_api_routes.raw_source);
+    assert!(!nextjs_api_routes.source);
+    assert!(!nextjs_api_routes.nextjs_caching);
 }
 
 #[test]

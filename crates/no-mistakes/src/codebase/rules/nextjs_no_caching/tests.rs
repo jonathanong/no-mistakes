@@ -320,6 +320,7 @@ export { revalidate }\n";
     let findings = extract(Path::new("app/page.ts"), source).unwrap();
 
     assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].line, 2);
     assert!(findings
         .iter()
         .any(|finding| finding.message.contains("revalidate")));

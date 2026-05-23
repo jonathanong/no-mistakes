@@ -15,7 +15,7 @@ pub(super) struct NextjsCachingVisitor<'a> {
     unstable_cache_bindings: HashSet<String>,
     next_cache_namespaces: HashSet<String>,
     next_config_bindings: HashMap<String, Vec<(u32, String)>>,
-    segment_config_bindings: HashMap<String, (u32, String)>,
+    segment_config_bindings: HashMap<String, String>,
 }
 
 impl<'a> NextjsCachingVisitor<'a> {
@@ -108,11 +108,11 @@ impl<'a> NextjsCachingVisitor<'a> {
             return;
         }
         for specifier in &export.specifiers {
-            if let Some((start, message)) = self
+            if let Some(message) = self
                 .segment_config_bindings
                 .get(specifier.local.name().as_str())
             {
-                self.push(*start, message.clone());
+                self.push(specifier.span.start, message.clone());
             }
         }
     }
