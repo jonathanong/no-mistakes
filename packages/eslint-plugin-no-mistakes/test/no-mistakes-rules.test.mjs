@@ -122,6 +122,7 @@ describe("ts-no-function-aliases", () => {
         "alias",
         "alias",
         "alias",
+        "alias",
       ],
     );
   });

@@ -26,6 +26,8 @@ api.property = (value: string) => original(value);
 
 exports.sameName = (value: string) => sameName(value);
 
+exports["computed"] = (value: string) => original(value);
+
 async function asyncAlias(value: string) {
   return await original(value);
 }

@@ -73,6 +73,9 @@ function assignmentWrapperName(node) {
   const left = node.parent.left;
   if (left.type === "Identifier") return left.name;
   if (left.type === "MemberExpression" && !left.computed) return identifierName(left.property);
+  if (left.type === "MemberExpression" && left.property.type === "Literal") {
+    return String(left.property.value);
+  }
   return null;
 }
 
