@@ -53,6 +53,13 @@ pub fn run(args: SymbolsArgs) -> Result<()> {
     Ok(())
 }
 
+pub fn run_json(args: SymbolsArgs) -> Result<String> {
+    let (entries, root_strs) = collect_entries(&args)?;
+    let mut out = Vec::new();
+    output::write_json(&root_strs, &entries, &mut out)?;
+    String::from_utf8(out).context("symbols JSON output must be UTF-8")
+}
+
 fn resolve_format(json: bool, format: Option<Format>, stdout_is_terminal: bool) -> Format {
     if json {
         Format::Json
