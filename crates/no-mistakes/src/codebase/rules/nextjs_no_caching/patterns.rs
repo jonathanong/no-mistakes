@@ -103,7 +103,6 @@ pub(super) fn boolean_value(value: &Expression<'_>) -> Option<bool> {
 pub(super) fn single_binding_name(pattern: &BindingPattern<'_>) -> Option<String> {
     match pattern {
         BindingPattern::BindingIdentifier(id) => Some(id.name.to_string()),
-        BindingPattern::AssignmentPattern(assign) => single_binding_name(&assign.left),
         _ => None,
     }
 }
