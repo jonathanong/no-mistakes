@@ -41,6 +41,13 @@ function mutationRootName(node) {
   return null;
 }
 
+function childNodes(node) {
+  return Object.entries(node)
+    .filter(([key]) => !["parent", "loc", "range", "tokens", "comments"].includes(key))
+    .flatMap(([, value]) => (Array.isArray(value) ? value : [value]))
+    .filter((value) => value && typeof value.type === "string");
+}
+
 module.exports = rule(
   {
     type: "problem",
@@ -53,6 +60,7 @@ module.exports = rule(
   },
   (context) => {
     const mutableTopLevel = new Set();
+    const functionDeclarations = new Map();
     let testDepth = 0;
 
     function reportIfShared(node, name) {
@@ -68,8 +76,18 @@ module.exports = rule(
           for (const name of collectPatternNames(declaration.id)) mutableTopLevel.add(name);
         }
       },
+      "Program > FunctionDeclaration"(node) {
+        if (node.id?.name) functionDeclarations.set(node.id.name, node);
+      },
       CallExpression(node) {
-        if (isTestCall(node)) testDepth += 1;
+        if (isTestCall(node)) {
+          testDepth += 1;
+          const callback = node.arguments.find((argument) => argument.type === "Identifier");
+          const declaration = callback ? functionDeclarations.get(callback.name) : null;
+          if (declaration) {
+            checkSharedMutations(declaration.body);
+          }
+        }
       },
       "CallExpression:exit"(node) {
         if (isTestCall(node)) testDepth -= 1;
@@ -86,5 +104,19 @@ module.exports = rule(
         if (rootName) reportIfShared(node, rootName);
       },
     };
+
+    function checkSharedMutations(node) {
+      if (node.type === "AssignmentExpression") {
+        for (const name of collectPatternNames(node.left)) reportIfShared(node, name);
+        if (node.left.type === "MemberExpression") {
+          const rootName = mutationRootName(node.left);
+          if (rootName) reportIfShared(node, rootName);
+        }
+      } else if (node.type === "UpdateExpression") {
+        const rootName = mutationRootName(node.argument);
+        if (rootName) reportIfShared(node, rootName);
+      }
+      for (const child of childNodes(node)) checkSharedMutations(child);
+    }
   },
 );

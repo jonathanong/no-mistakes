@@ -19,7 +19,7 @@ module.exports = rule(
   (context) => {
     const neverTypes = new Set();
     return {
-      TSTypeAliasDeclaration(node) {
+      "Program > TSTypeAliasDeclaration"(node) {
         if (node.typeAnnotation?.type === "TSNeverKeyword") neverTypes.add(node.id.name);
       },
       ExportNamedDeclaration(node) {

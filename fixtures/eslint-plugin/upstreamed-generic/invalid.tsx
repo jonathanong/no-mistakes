@@ -3,6 +3,7 @@ import { use as otherUse } from "not-react";
 
 const values = [3, 1, 2];
 await values.sort();
+await [1, 2].slice();
 delete values.length;
 export type Placeholder = never;
 type OtherPlaceholder = never;

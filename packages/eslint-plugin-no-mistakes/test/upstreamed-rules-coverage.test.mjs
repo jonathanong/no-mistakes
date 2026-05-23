@@ -20,7 +20,7 @@ describe("upstreamed generic rule coverage", () => {
       "delete",
     ]);
     assert.deepEqual(
-      messages(code, "nextjs-metadata-exports-location", undefined, "components/meta.tsx"),
+      messages(code, "nextjs-metadata-exports-location", undefined, "app/components/meta.tsx"),
       ["location"],
     );
     assert.deepEqual(messages(code, "test-no-error-message-matching", undefined, "coverage.tsx"), [
@@ -45,20 +45,30 @@ describe("upstreamed generic rule coverage", () => {
       "shared",
       "shared",
       "shared",
+      "shared",
+      "shared",
     ]);
     assert.deepEqual(messages(code, "no-vitest-sequential", undefined, "coverage.tsx"), [
       "sequential",
     ]);
-    assert.deepEqual(messages(code, "playwright-selector-priority", undefined, "coverage.tsx"), [
+    assert.deepEqual(messages(code, "playwright-selector-priority", undefined, "e2e.spec.tsx"), [
       "semantic",
     ]);
     assert.deepEqual(
-      messages(code, "playwright-assertion-timeout-cap", undefined, "coverage.tsx"),
+      messages(code, "playwright-assertion-timeout-cap", undefined, "e2e.spec.tsx"),
       ["timeout", "timeout", "timeout"],
     );
     assert.deepEqual(
-      messages(code, "playwright-assertion-timeout-cap", { max: 20000 }, "coverage.tsx"),
+      messages(code, "playwright-assertion-timeout-cap", { max: 20000 }, "e2e.spec.tsx"),
       ["timeout"],
+    );
+    assert.deepEqual(
+      messages(code, "playwright-assertion-timeout-cap", undefined, "unit.test.tsx"),
+      [],
+    );
+    assert.deepEqual(
+      messages(code, "playwright-selector-priority", undefined, "unit.test.tsx"),
+      [],
     );
   });
 });

@@ -2,8 +2,24 @@
 
 const { rule } = require("../helpers");
 
-function isReactUse(callee, useNames) {
-  if (callee?.type === "Identifier") return useNames.has(callee.name);
+function isImportedReactUse(node, context) {
+  let scope = context.sourceCode.getScope(node);
+  let variable = null;
+  while (scope && !variable) {
+    variable = scope.variables.find((scopeVariable) => scopeVariable.name === node.name);
+    scope = scope.upper;
+  }
+  return Boolean(
+    variable?.defs.some(
+      (def) => def.type === "ImportBinding" && def.parent?.source?.value === "react",
+    ),
+  );
+}
+
+function isReactUse(callee, context, useNames) {
+  if (callee?.type === "Identifier") {
+    return useNames.has(callee.name) && isImportedReactUse(callee, context);
+  }
   return (
     callee?.type === "MemberExpression" &&
     callee.object?.type === "Identifier" &&
@@ -49,7 +65,9 @@ module.exports = rule(
         }
       },
       CallExpression(node) {
-        if (!isReactUse(node.callee, useNames) || !isPromiseResolve(node.arguments[0])) return;
+        if (!isReactUse(node.callee, context, useNames) || !isPromiseResolve(node.arguments[0])) {
+          return;
+        }
         context.report({ node, messageId: "resolve" });
       },
     };

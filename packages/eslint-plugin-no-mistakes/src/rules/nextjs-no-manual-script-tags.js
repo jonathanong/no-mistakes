@@ -8,6 +8,17 @@ function isNextPath(filename) {
   return NEXT_FILE_PATTERN.test(filename.replace(/\\/g, "/"));
 }
 
+function isJsonLdScript(node) {
+  return node.attributes.some(
+    (attribute) =>
+      attribute.type === "JSXAttribute" &&
+      attribute.name.type === "JSXIdentifier" &&
+      attribute.name.name === "type" &&
+      attribute.value?.type === "Literal" &&
+      attribute.value.value === "application/ld+json",
+  );
+}
+
 module.exports = rule(
   {
     type: "problem",
@@ -26,6 +37,7 @@ module.exports = rule(
       JSXOpeningElement(node) {
         if (!isNextFile) return;
         if (node.name.type !== "JSXIdentifier" || node.name.name !== "script") return;
+        if (isJsonLdScript(node)) return;
         context.report({ node, messageId: "script" });
       },
     };

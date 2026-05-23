@@ -22,6 +22,11 @@ const ALLOWED_PREFIXES = [
   ":first-",
   ":last-",
 ];
+const PLAYWRIGHT_PATH_PATTERN = /(?:^|[/\\])(?:e2e|playwright)(?:[/\\]|\.|$)|\.pw\.(?:spec|test)\./;
+
+function isPlaywrightPath(filename) {
+  return PLAYWRIGHT_PATH_PATTERN.test(filename.replace(/\\/g, "/"));
+}
 
 function isAllowedSelector(selector) {
   return ALLOWED_PREFIXES.some((prefix) => selector.trim().startsWith(prefix));
@@ -41,21 +46,28 @@ module.exports = rule(
       text: "Use getByText() instead of a text= locator.",
     },
   },
-  (context) => ({
-    CallExpression(node) {
-      if (node.callee.type !== "MemberExpression") return;
-      if (node.callee.property.type !== "Identifier" || node.callee.property.name !== "locator") {
-        return;
-      }
-      const selector = literalString(node.arguments[0])?.trim();
-      if (!selector || isAllowedSelector(selector)) return;
-      if (/^\.[a-zA-Z_-]/.test(selector) || selector.startsWith("#")) {
-        context.report({ node, messageId: "semantic" });
-      } else if (HEADING_TAGS.has(selector.toLowerCase())) {
-        context.report({ node, messageId: "heading" });
-      } else if (selector === "text" || selector.startsWith("text=")) {
-        context.report({ node, messageId: "text" });
-      }
-    },
-  }),
+  (context) => {
+    let isPlaywrightFile = isPlaywrightPath(context.filename);
+    return {
+      ImportDeclaration(node) {
+        if (node.source.value === "@playwright/test") isPlaywrightFile = true;
+      },
+      CallExpression(node) {
+        if (!isPlaywrightFile) return;
+        if (node.callee.type !== "MemberExpression") return;
+        if (node.callee.property.type !== "Identifier" || node.callee.property.name !== "locator") {
+          return;
+        }
+        const selector = literalString(node.arguments[0])?.trim();
+        if (!selector || isAllowedSelector(selector)) return;
+        if (/^\.[a-zA-Z_-]/.test(selector) || selector.startsWith("#")) {
+          context.report({ node, messageId: "semantic" });
+        } else if (HEADING_TAGS.has(selector.toLowerCase())) {
+          context.report({ node, messageId: "heading" });
+        } else if (selector === "text" || selector.startsWith("text=")) {
+          context.report({ node, messageId: "text" });
+        }
+      },
+    };
+  },
 );

@@ -13,6 +13,20 @@ function isTestImportSource(source) {
   return typeof source === "string" && TEST_IMPORT_PATTERN.test(source);
 }
 
+function isTestRequire(statement) {
+  return (
+    statement.type === "ExpressionStatement" &&
+    statement.expression.type === "CallExpression" &&
+    statement.expression.callee.type === "Identifier" &&
+    statement.expression.callee.name === "require" &&
+    isTestImportSource(statement.expression.arguments[0]?.value)
+  );
+}
+
+function isTestImport(statement) {
+  return statement.type === "ImportDeclaration" && isTestImportSource(statement.source?.value);
+}
+
 module.exports = rule(
   {
     type: "problem",
@@ -29,8 +43,8 @@ module.exports = rule(
   (context) => ({
     Program(node) {
       if (!isTestFile(context.filename) || node.body.length === 0) return;
-      if (!node.body.every((statement) => statement.type === "ImportDeclaration")) return;
-      if (!node.body.every((statement) => isTestImportSource(statement.source?.value))) return;
+      if (!node.body.every((statement) => isTestImport(statement) || isTestRequire(statement)))
+        return;
       context.report({ node, messageId: "aggregate" });
     },
   }),

@@ -2,6 +2,7 @@ import React from "react";
 
 const values = [3, 1, 2];
 values.sort();
+await query.sort();
 const copy = { a: 1, b: 2 };
 const { b, ...withoutB } = copy;
 export type RealType = { id: string };

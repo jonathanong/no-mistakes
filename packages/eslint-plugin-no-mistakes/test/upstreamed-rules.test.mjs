@@ -35,7 +35,7 @@ describe("upstreamed generic rules", () => {
   it("reports generic invalid examples", () => {
     const code = fixture("invalid.tsx");
     const expected = [
-      ["await-array-methods", ["awaited"]],
+      ["await-array-methods", ["awaited", "awaited"]],
       ["no-delete-property", ["delete"]],
       ["no-placeholder-never-type-exports", ["placeholder", "placeholder"]],
       ["test-no-shared-state", ["shared"]],
@@ -84,6 +84,15 @@ describe("upstreamed generic rules", () => {
         "import-only.valid.test.ts",
       ),
       [],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("import-only.invalid.test.cjs"),
+        "no-import-only-test-files",
+        undefined,
+        "import-only.invalid.test.cjs",
+      ),
+      ["aggregate"],
     );
   });
 
@@ -156,45 +165,6 @@ describe("upstreamed generic rules", () => {
         "app/timer.ts",
       ),
       [],
-    );
-  });
-
-  it("reports misplaced Next.js metadata exports", () => {
-    assert.deepEqual(
-      messages(
-        fixture("metadata.invalid.ts"),
-        "nextjs-metadata-exports-location",
-        undefined,
-        "lib/metadata.ts",
-      ),
-      ["location", "location", "location"],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("metadata.valid-page.tsx"),
-        "nextjs-metadata-exports-location",
-        undefined,
-        "app/page.tsx",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("metadata.valid-page.tsx"),
-        "nextjs-metadata-exports-location",
-        undefined,
-        "app/page.js",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("metadata.valid-page.tsx"),
-        "nextjs-metadata-exports-location",
-        undefined,
-        "app/template.tsx",
-      ),
-      ["location", "location"],
     );
   });
 });

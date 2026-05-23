@@ -3,6 +3,11 @@
 const { rule } = require("../helpers");
 
 const DEFAULT_MAX_TIMEOUT_MS = 10000;
+const PLAYWRIGHT_PATH_PATTERN = /(?:^|[/\\])(?:e2e|playwright)(?:[/\\]|\.|$)|\.pw\.(?:spec|test)\./;
+
+function isPlaywrightPath(filename) {
+  return PLAYWRIGHT_PATH_PATTERN.test(filename.replace(/\\/g, "/"));
+}
 
 function isExpectChain(node) {
   let current = node;
@@ -41,8 +46,13 @@ module.exports = rule(
   },
   (context) => {
     const max = context.options[0]?.max ?? DEFAULT_MAX_TIMEOUT_MS;
+    let isPlaywrightFile = isPlaywrightPath(context.filename);
     return {
+      ImportDeclaration(node) {
+        if (node.source.value === "@playwright/test") isPlaywrightFile = true;
+      },
       CallExpression(node) {
+        if (!isPlaywrightFile) return;
         if (node.callee.type !== "MemberExpression" || !isExpectChain(node.callee)) return;
         const method = propertyName(node.callee.property);
         if (method !== "poll" && !method?.startsWith("to")) return;

@@ -17,9 +17,16 @@ if (error.code !== "missing") {
   throw error;
 }
 let shared = 0;
+let namedShared = 0;
 let { sharedFromObject, sharedDefault = 0, ...sharedRest } = seed;
 let [sharedFromArray = 0, , ...sharedRestArray] = list;
 shared = 2;
+function mutateNamedShared() {
+  namedShared++;
+}
+function mutateNamedMember() {
+  namedShared.value = 1;
+}
 it.only("assigns", () => {
   shared = 1;
   sharedFromObject = 3;
@@ -30,6 +37,8 @@ it.only("assigns", () => {
   sharedRest.value++;
   this.value = 8;
 });
+test("named callback", mutateNamedShared);
+test("named member callback", mutateNamedMember);
 describe.skip("suite", () => {});
 test["sequential"]("computed", () => {});
 page.locator("../..");

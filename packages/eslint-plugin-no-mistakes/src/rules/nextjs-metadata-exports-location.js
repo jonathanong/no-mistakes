@@ -13,9 +13,14 @@ const ALLOWED_SUFFIXES = [
   "/layout.js",
 ];
 const METADATA_EXPORTS = new Set(["metadata", "generateMetadata"]);
+const NEXT_FILE_PATTERN = /(?:^|[/\\])(?:app|pages)(?:[/\\]|$)/;
 
 function isAllowedFile(filename) {
   return ALLOWED_SUFFIXES.some((suffix) => filename.replace(/\\/g, "/").endsWith(suffix));
+}
+
+function isNextFile(filename) {
+  return NEXT_FILE_PATTERN.test(filename.replace(/\\/g, "/"));
 }
 
 function specifierName(specifier) {
@@ -41,6 +46,7 @@ module.exports = rule(
   },
   (context) => ({
     ExportNamedDeclaration(node) {
+      if (!isNextFile(context.filename)) return;
       if (isAllowedFile(context.filename)) return;
       if (node.declaration?.type === "VariableDeclaration") {
         if (
