@@ -353,10 +353,17 @@ fn framework_test_match(framework: TestFramework, rel: &str) -> bool {
                 || name.contains(".test.")
                 || name.contains(".spec."))
                 && !rel.split('/').any(|component| component == "playwright")
-                && !rel.starts_with("tests/e2e/")
+                && !has_path_segment_pair(rel, "tests", "e2e")
                 && !rel.starts_with("specs/")
         }
     }
+}
+
+fn has_path_segment_pair(path: &str, first: &str, second: &str) -> bool {
+    let segments = path.split('/').collect::<Vec<_>>();
+    segments
+        .windows(2)
+        .any(|pair| pair[0] == first && pair[1] == second)
 }
 
 fn compile_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
@@ -408,19 +415,17 @@ fn project_dependency_patterns(
         TestPlanProjectDependency::All(false) => Vec::new(),
         TestPlanProjectDependency::All(true) => {
             let root = project.root.as_deref().unwrap_or(project_name);
+            let mut patterns = project_root_patterns(root);
             if project.include.is_empty() {
-                let root = normalize_project_glob_part(root);
-                if root.is_empty() || root == "." {
-                    vec!["**".to_string()]
-                } else {
-                    vec![format!("{root}/**")]
-                }
+                patterns
             } else {
-                project
-                    .include
-                    .iter()
-                    .map(|pattern| project_relative_pattern(root, pattern))
-                    .collect()
+                patterns.extend(
+                    project
+                        .include
+                        .iter()
+                        .map(|pattern| project_relative_pattern(root, pattern)),
+                );
+                patterns
             }
         }
         TestPlanProjectDependency::Patterns(patterns) => {
@@ -430,6 +435,15 @@ fn project_dependency_patterns(
                 .map(|pattern| project_relative_pattern(root, pattern))
                 .collect()
         }
+    }
+}
+
+fn project_root_patterns(project_root: &str) -> Vec<String> {
+    let root = normalize_project_glob_part(project_root);
+    if root.is_empty() || root == "." {
+        vec!["**".to_string()]
+    } else {
+        vec![format!("{root}/**")]
     }
 }
 
