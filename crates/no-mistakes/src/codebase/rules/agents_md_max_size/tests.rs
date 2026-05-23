@@ -82,7 +82,7 @@ fn check_file_fails_both() {
 fn check_file_respects_disable_file_comment() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("AGENTS.md");
-    let content = format!("// guardrails-disable-file {RULE_ID}\na\nb\nc\n");
+    let content = format!("// no-mistakes-disable-file {RULE_ID}\na\nb\nc\n");
     std::fs::write(&path, content).unwrap();
     let findings = check_file(&path, tmp.path(), 2, 10000);
     assert!(findings.is_empty());

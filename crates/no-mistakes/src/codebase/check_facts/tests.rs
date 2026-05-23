@@ -193,6 +193,7 @@ fn collect_check_facts_parses_once_for_overlapping_fact_categories() {
             integration: true,
             dynamic_imports: true,
             nextjs_caching: true,
+            storybook: true,
             source: true,
             raw_source: false,
         },

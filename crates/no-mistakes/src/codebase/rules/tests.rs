@@ -167,7 +167,7 @@ fn run_check_with_facts_skips_disabled_parse_errors() {
     let root = dynamic_import_fixture();
     let test = root.join("tests/disabled.test.mts");
     let source =
-        "// guardrails-disable-file test-no-unmocked-dynamic-imports\nexport const Broken =";
+        "// no-mistakes-disable-file test-no-unmocked-dynamic-imports\nexport const Broken =";
     let mut shared = crate::codebase::check_facts::CheckFactMap {
         files: vec![test.clone()],
         ..Default::default()

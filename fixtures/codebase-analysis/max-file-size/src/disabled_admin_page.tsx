@@ -1,4 +1,4 @@
-// guardrails-disable-file max-file-size: admin page intentionally keeps state and actions colocated
+// no-mistakes-disable-file max-file-size: admin page intentionally keeps state and actions colocated
 'use client';
 
 import { useState } from 'react';

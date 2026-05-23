@@ -247,7 +247,7 @@ fn check_respects_disable_file_comment() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("big.rs");
     let content = format!(
-        "// guardrails-disable-file {RULE_ID}\n{}",
+        "// no-mistakes-disable-file {RULE_ID}\n{}",
         (0..10)
             .map(|i| format!("fn f{i}() {{}}\n"))
             .collect::<String>()

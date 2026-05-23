@@ -60,7 +60,7 @@ fn fixture(path: &str) -> PathBuf {
 
 #[test]
 fn detected_on_preceding_line() {
-    let source = "// guardrails-disable-next-line my-rule\nsome code here";
+    let source = "// no-mistakes-disable-next-line my-rule\nsome code here";
     assert!(has_disable_comment(source, 2, "my-rule"));
 }
 
@@ -72,25 +72,25 @@ fn not_triggered_on_line_1() {
 
 #[test]
 fn wrong_rule_not_matched() {
-    let source = "// guardrails-disable-next-line other-rule\nsome code here";
+    let source = "// no-mistakes-disable-next-line other-rule\nsome code here";
     assert!(!has_disable_comment(source, 2, "my-rule"));
 }
 
 #[test]
 fn matches_with_colon_reason() {
-    let source = "// guardrails-disable-next-line my-rule: some reason here\nsome code here";
+    let source = "// no-mistakes-disable-next-line my-rule: some reason here\nsome code here";
     assert!(has_disable_comment(source, 2, "my-rule"));
 }
 
 #[test]
 fn matches_with_space_reason() {
-    let source = "// guardrails-disable-next-line my-rule some reason here\nsome code here";
+    let source = "// no-mistakes-disable-next-line my-rule some reason here\nsome code here";
     assert!(has_disable_comment(source, 2, "my-rule"));
 }
 
 #[test]
 fn not_matched_when_in_string_literal() {
-    let source = "const s = \"guardrails-disable-next-line my-rule\"\nsome code here";
+    let source = "const s = \"no-mistakes-disable-next-line my-rule\"\nsome code here";
     assert!(!has_disable_comment(source, 2, "my-rule"));
 }
 
@@ -98,7 +98,7 @@ fn not_matched_when_in_string_literal() {
 fn not_matched_for_prefix_rule_id() {
     // "my-rule-extra" should NOT match "my-rule" since it's not "my-rule:" or "my-rule "
     // But "my-rule-extra" starts with "my-rule" so we verify the check is correct
-    let source = "// guardrails-disable-next-line my-rule-extra\nsome code here";
+    let source = "// no-mistakes-disable-next-line my-rule-extra\nsome code here";
     assert!(!has_disable_comment(source, 2, "my-rule"));
 }
 
@@ -117,27 +117,27 @@ fn disable_next_line_requires_directive_text() {
 
 #[test]
 fn file_disable_detected_in_leading_comment() {
-    let source = "// guardrails-disable-file my-rule: intentional\nexport const x = 1";
+    let source = "// no-mistakes-disable-file my-rule: intentional\nexport const x = 1";
     assert!(has_disable_file_comment(source, "my-rule"));
 }
 
 #[test]
 fn file_disable_skips_leading_blank_lines() {
-    let source = "\n\n// guardrails-disable-file my-rule\nexport const x = 1";
+    let source = "\n\n// no-mistakes-disable-file my-rule\nexport const x = 1";
     assert!(has_disable_file_comment(source, "my-rule"));
 }
 
 #[test]
 fn file_disable_skips_leading_line_comments() {
     let source =
-        "// Copyright 2026\n// eslint-disable no-console\n// guardrails-disable-file my-rule\nexport const x = 1";
+        "// Copyright 2026\n// eslint-disable no-console\n// no-mistakes-disable-file my-rule\nexport const x = 1";
     assert!(has_disable_file_comment(source, "my-rule"));
 }
 
 #[test]
 fn file_disable_skips_leading_block_comments() {
     let source =
-        "/*\n * Copyright 2026\n */\n// guardrails-disable-file my-rule\nexport const x = 1";
+        "/*\n * Copyright 2026\n */\n// no-mistakes-disable-file my-rule\nexport const x = 1";
     assert!(has_disable_file_comment(source, "my-rule"));
 }
 
@@ -146,56 +146,57 @@ fn file_disable_skips_long_leading_block_comments() {
     let header = (0..25)
         .map(|i| format!(" * line {i}\n"))
         .collect::<String>();
-    let source = format!("/*\n{header} */\n// guardrails-disable-file my-rule\nexport const x = 1");
+    let source =
+        format!("/*\n{header} */\n// no-mistakes-disable-file my-rule\nexport const x = 1");
     assert!(has_disable_file_comment(&source, "my-rule"));
 }
 
 #[test]
 fn file_disable_handles_same_line_block_comment_then_directive() {
-    let source = "/* Copyright 2026 */ // guardrails-disable-file my-rule\nexport const x = 1";
+    let source = "/* Copyright 2026 */ // no-mistakes-disable-file my-rule\nexport const x = 1";
     assert!(has_disable_file_comment(source, "my-rule"));
 }
 
 #[test]
 fn file_disable_after_block_comment_trailing_code_not_matched() {
-    let source = "/* Copyright 2026 */ export const x = 1\n// guardrails-disable-file my-rule";
+    let source = "/* Copyright 2026 */ export const x = 1\n// no-mistakes-disable-file my-rule";
     assert!(!has_disable_file_comment(source, "my-rule"));
 }
 
 #[test]
 fn file_disable_after_multiline_block_comment_trailing_code_not_matched() {
     let source =
-        "/*\n * Copyright 2026\n */ export const x = 1\n// guardrails-disable-file my-rule";
+        "/*\n * Copyright 2026\n */ export const x = 1\n// no-mistakes-disable-file my-rule";
     assert!(!has_disable_file_comment(source, "my-rule"));
 }
 
 #[test]
 fn file_disable_handles_bom() {
-    let source = "\u{FEFF}// guardrails-disable-file my-rule\nexport const x = 1";
+    let source = "\u{FEFF}// no-mistakes-disable-file my-rule\nexport const x = 1";
     assert!(has_disable_file_comment(source, "my-rule"));
 }
 
 #[test]
 fn file_disable_wrong_rule_not_matched() {
-    let source = "// guardrails-disable-file other-rule\nexport const x = 1";
+    let source = "// no-mistakes-disable-file other-rule\nexport const x = 1";
     assert!(!has_disable_file_comment(source, "my-rule"));
 }
 
 #[test]
 fn file_disable_matches_with_space_reason() {
-    let source = "// guardrails-disable-file my-rule because generated\nexport const x = 1";
+    let source = "// no-mistakes-disable-file my-rule because generated\nexport const x = 1";
     assert!(has_disable_file_comment(source, "my-rule"));
 }
 
 #[test]
 fn file_disable_skips_non_matching_file_directives() {
-    let source = "// guardrails-disable-file other-rule\n// guardrails-disable-file my-rule\nexport const x = 1";
+    let source = "// no-mistakes-disable-file other-rule\n// no-mistakes-disable-file my-rule\nexport const x = 1";
     assert!(has_disable_file_comment(source, "my-rule"));
 }
 
 #[test]
 fn file_disable_after_code_not_matched() {
-    let source = "export const x = 1\n// guardrails-disable-file my-rule";
+    let source = "export const x = 1\n// no-mistakes-disable-file my-rule";
     assert!(!has_disable_file_comment(source, "my-rule"));
 }
 

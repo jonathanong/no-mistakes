@@ -5,6 +5,7 @@ pub mod dependencies;
 pub mod md_links;
 pub mod playwright_coverage;
 pub mod rules;
+pub(crate) mod storybook;
 pub mod symbols;
 pub mod test_filter;
 pub mod timing;

@@ -121,7 +121,7 @@ fn ignores_cfg_path_attribute_without_tokens() {
 
 #[test]
 fn respects_disable_file_comment() {
-    let src = format!("// guardrails-disable-file {RULE_ID}\n#[cfg(test)]\nmod tests {{\n}}\n");
+    let src = format!("// no-mistakes-disable-file {RULE_ID}\n#[cfg(test)]\nmod tests {{\n}}\n");
     let findings = check_source(&src);
     assert!(findings.is_empty());
 }

@@ -1,6 +1,7 @@
 use crate::codebase::dependencies::extract::{is_indexable, ExtractedImport};
 use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts;
+use crate::codebase::storybook::StorybookFileFacts;
 use crate::codebase::ts_symbols::FileSymbols;
 use crate::integration_tests::types::FileAnalysis as IntegrationFileAnalysis;
 use crate::queue::extract::FileFacts as QueueFileFacts;
@@ -21,6 +22,7 @@ pub struct CheckFactPlan {
     pub integration: bool,
     pub dynamic_imports: bool,
     pub nextjs_caching: bool,
+    pub storybook: bool,
     pub source: bool,
     pub raw_source: bool,
 }
@@ -49,6 +51,7 @@ pub(crate) struct CheckFileFacts {
     pub integration: Option<IntegrationFileAnalysis>,
     pub dynamic_imports: Option<TestFacts>,
     pub nextjs_caching: Option<Vec<NextjsCachingFinding>>,
+    pub storybook: Option<StorybookFileFacts>,
     pub parse_error: Option<String>,
     pub(crate) parsed: bool,
 }

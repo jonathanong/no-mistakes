@@ -1,4 +1,4 @@
-// guardrails-disable-file nextjs-no-caching
+// no-mistakes-disable-file nextjs-no-caching
 import { unstable_cache } from 'next/cache'
 
 export const revalidate = 60

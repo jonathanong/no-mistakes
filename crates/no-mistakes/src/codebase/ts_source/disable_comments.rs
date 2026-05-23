@@ -48,12 +48,12 @@ pub fn byte_offset_to_line(source: &str, byte_offset: usize) -> u32 {
 }
 
 /// Returns `true` if the line immediately before `stmt_line` (1-based) contains
-/// a `guardrails-disable-next-line <rule_id>` directive comment.
+/// a `no-mistakes-disable-next-line <rule_id>` directive comment.
 ///
 /// Matches:
-/// - `// guardrails-disable-next-line <rule_id>`
-/// - `// guardrails-disable-next-line <rule_id>: <reason>`
-/// - `// guardrails-disable-next-line <rule_id> <reason>`
+/// - `// no-mistakes-disable-next-line <rule_id>`
+/// - `// no-mistakes-disable-next-line <rule_id>: <reason>`
+/// - `// no-mistakes-disable-next-line <rule_id> <reason>`
 pub fn has_disable_comment(source: &str, stmt_line: u32, rule_id: &str) -> bool {
     if stmt_line < 2 {
         return false;
@@ -70,7 +70,7 @@ pub fn has_disable_comment(source: &str, stmt_line: u32, rule_id: &str) -> bool 
                 .strip_prefix("//")
                 .expect("line starts with //")
                 .trim();
-            let Some(after_directive) = rest.strip_prefix("guardrails-disable-next-line ") else {
+            let Some(after_directive) = rest.strip_prefix("no-mistakes-disable-next-line ") else {
                 return false;
             };
             let rule_part = after_directive.trim();
@@ -86,9 +86,9 @@ pub fn has_disable_comment(source: &str, stmt_line: u32, rule_id: &str) -> bool 
 /// Returns `true` if a leading comment disables `rule_id` for the whole file.
 ///
 /// Matches:
-/// - `// guardrails-disable-file <rule_id>`
-/// - `// guardrails-disable-file <rule_id>: <reason>`
-/// - `// guardrails-disable-file <rule_id> <reason>`
+/// - `// no-mistakes-disable-file <rule_id>`
+/// - `// no-mistakes-disable-file <rule_id>: <reason>`
+/// - `// no-mistakes-disable-file <rule_id> <reason>`
 pub fn has_disable_file_comment(source: &str, rule_id: &str) -> bool {
     let mut in_block_comment = false;
 
@@ -121,7 +121,7 @@ pub fn has_disable_file_comment(source: &str, rule_id: &str) -> bool {
             let Some(rest) = rest.strip_prefix("//").map(|s| s.trim()) else {
                 return false;
             };
-            let Some(after_directive) = rest.strip_prefix("guardrails-disable-file ") else {
+            let Some(after_directive) = rest.strip_prefix("no-mistakes-disable-file ") else {
                 break;
             };
             let rule_part = after_directive.trim();

@@ -1,4 +1,4 @@
-// guardrails-disable-file test-no-unmocked-dynamic-imports
+// no-mistakes-disable-file test-no-unmocked-dynamic-imports
 import { test } from 'vitest'
 
 test('file disable suppresses findings', async () => {
