@@ -55,8 +55,7 @@ function isPromiseResolve(node) {
     node.callee?.type === "MemberExpression" &&
     node.callee.object?.type === "Identifier" &&
     node.callee.object.name === "Promise" &&
-    node.callee.property?.type === "Identifier" &&
-    node.callee.property.name === "resolve"
+    propertyName(node.callee.property) === "resolve"
   );
 }
 

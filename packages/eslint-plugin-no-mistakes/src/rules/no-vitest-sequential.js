@@ -9,8 +9,9 @@ function isTestFile(filename) {
   return TEST_FILE_PATTERN.test(filename.replace(/\\/g, "/"));
 }
 
-function propertyName(node) {
+function propertyName(node, computed = false) {
   if (node.type === "Literal") return String(node.value);
+  if (computed) return null;
   return node.name;
 }
 
@@ -23,7 +24,10 @@ function rootTestName(node) {
 
 function hasSequentialMember(node) {
   if (node?.type === "MemberExpression") {
-    return propertyName(node.property) === "sequential" || hasSequentialMember(node.object);
+    return (
+      propertyName(node.property, node.computed) === "sequential" ||
+      hasSequentialMember(node.object)
+    );
   }
   if (node?.type === "CallExpression") return hasSequentialMember(node.callee);
   return false;

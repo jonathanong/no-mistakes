@@ -17,6 +17,16 @@ function isWaitForTimeout(node) {
   );
 }
 
+function isGlobalSetTimeout(node, context) {
+  let scope = context.sourceCode.getScope(node);
+  while (scope) {
+    const variable = scope.variables.find((candidate) => candidate.name === "setTimeout");
+    if (variable) return variable.defs.length === 0;
+    scope = scope.upper;
+  }
+  return true;
+}
+
 module.exports = rule(
   {
     type: "problem",
@@ -36,7 +46,9 @@ module.exports = rule(
       CallExpression(node) {
         if (!isPlaywrightFile) return;
         if (
-          (node.callee.type === "Identifier" && node.callee.name === "setTimeout") ||
+          (node.callee.type === "Identifier" &&
+            node.callee.name === "setTimeout" &&
+            isGlobalSetTimeout(node.callee, context)) ||
           isWaitForTimeout(node)
         ) {
           context.report({ node, messageId: "timeout" });

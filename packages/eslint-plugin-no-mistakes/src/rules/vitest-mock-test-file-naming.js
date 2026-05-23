@@ -41,11 +41,24 @@ function isFrameworkBinding(node, context) {
     }
     return variable.defs.some(
       (def) =>
-        def.type === "ImportBinding" &&
-        (def.parent?.source?.value === "vitest" || def.parent?.source?.value === "@jest/globals"),
+        (def.type === "ImportBinding" &&
+          (def.parent?.source?.value === "vitest" ||
+            def.parent?.source?.value === "@jest/globals")) ||
+        isFrameworkRequire(def),
     );
   }
   return true;
+}
+
+function isFrameworkRequire(def) {
+  const init = def.node?.init;
+  return (
+    def.type === "Variable" &&
+    init?.type === "CallExpression" &&
+    init.callee.type === "Identifier" &&
+    init.callee.name === "require" &&
+    (init.arguments[0]?.value === "vitest" || init.arguments[0]?.value === "@jest/globals")
+  );
 }
 
 function isMockingCall(node, context) {

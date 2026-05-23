@@ -32,6 +32,7 @@ test("message checks", () => {
 test.sequential("runs", () => {});
 React.use(Promise.resolve("ok"));
 React["use"](Promise.resolve("ok"));
+React.use(Promise["resolve"]("ok"));
 R.use(Promise.resolve("ok"));
 use(Promise.resolve("ok"));
 otherUse(Promise.resolve("ok"));

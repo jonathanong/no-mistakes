@@ -121,6 +121,7 @@ module.exports = rule(
   (context) => {
     const mutableTopLevel = new Set();
     const functionDeclarations = new Map();
+    const pendingNamedCallbacks = [];
     let testDepth = 0;
 
     function isModuleMutable(node, name) {
@@ -139,18 +140,13 @@ module.exports = rule(
     }
 
     function reportIfShared(node, name) {
-      if (testDepth > 0 && isModuleMutable(node, name)) {
+      if (name && testDepth > 0 && isModuleMutable(node, name))
         context.report({ node, messageId: "shared" });
-      }
     }
     function reportAssignment(node) {
       for (const name of collectPatternNames(node.left)) reportIfShared(node, name);
       if (node.left.type !== "MemberExpression") return;
-      const rootName = mutationRootName(node.left);
-      if (rootName) reportIfShared(node, rootName);
-    }
-    function reportRootMutation(node, rootName) {
-      if (rootName) reportIfShared(node, rootName);
+      reportIfShared(node, mutationRootName(node.left));
     }
 
     return {
@@ -166,14 +162,18 @@ module.exports = rule(
       "Program > FunctionDeclaration"(node) {
         if (node.id?.name) functionDeclarations.set(node.id.name, node);
       },
+      "Program:exit"() {
+        testDepth = 1;
+        for (const name of pendingNamedCallbacks) {
+          const declaration = functionDeclarations.get(name);
+          if (declaration) checkSharedMutations(declaration.body);
+        }
+      },
       CallExpression(node) {
         if (isTestCall(node)) {
           testDepth += 1;
           const callback = node.arguments.find((argument) => argument.type === "Identifier");
-          const declaration = callback ? functionDeclarations.get(callback.name) : null;
-          if (declaration) {
-            checkSharedMutations(declaration.body);
-          }
+          if (callback) pendingNamedCallbacks.push(callback.name);
         }
       },
       AssignmentExpression(node) {
@@ -182,12 +182,12 @@ module.exports = rule(
       },
       UpdateExpression(node) {
         if (isInsideUncalledNestedFunction(node)) return;
-        reportRootMutation(node, mutationRootName(node.argument));
+        reportIfShared(node, mutationRootName(node.argument));
       },
       "CallExpression:exit"(node) {
         if (isTestCall(node)) testDepth -= 1;
         if (isInsideUncalledNestedFunction(node)) return;
-        reportRootMutation(node, mutatingCallRootName(node));
+        reportIfShared(node, mutatingCallRootName(node));
       },
     };
 
@@ -210,9 +210,9 @@ module.exports = rule(
       if (node.type === "AssignmentExpression") {
         reportAssignment(node);
       } else if (node.type === "UpdateExpression") {
-        reportRootMutation(node, mutationRootName(node.argument));
+        reportIfShared(node, mutationRootName(node.argument));
       } else if (node.type === "CallExpression") {
-        reportRootMutation(node, mutatingCallRootName(node));
+        reportIfShared(node, mutatingCallRootName(node));
       }
       for (const child of childNodes(node)) checkSharedMutations(child);
     }

@@ -20,6 +20,8 @@ delete (value as { x: string }).x;
 const maybe = value as { x: string };
 delete maybe.x;
 export { metadata };
+export const { metadata } = config;
+export const [metadata] = config;
 export const viewport = {};
 expect.soft(error.message).toMatch("missing");
 expect(error.message).not.toBe("missing");
@@ -95,8 +97,13 @@ test("named callback", mutateNamedShared);
 test("named member callback", mutateNamedMember);
 test("named method callback", mutateNamedMethod);
 test("variable callback", mutateVariableShared);
+test("late callback", mutateLateShared);
+function mutateLateShared() {
+  shared = 11;
+}
 describe.skip("suite", () => {});
 test["sequential"]("computed", () => {});
+test[sequential]("computed variable", () => {});
 describe.only.sequential("chained", () => {});
 test.skipIf(condition).sequential("call chained", () => {});
 test.sequential.each(cases)("each", () => {});

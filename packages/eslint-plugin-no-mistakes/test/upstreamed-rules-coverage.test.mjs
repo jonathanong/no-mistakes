@@ -24,7 +24,7 @@ describe("upstreamed generic rule coverage", () => {
     ]);
     assert.deepEqual(
       messages(code, "nextjs-metadata-exports-location", undefined, "app/components/meta.tsx"),
-      ["location"],
+      ["location", "location", "location"],
     );
     assert.deepEqual(messages(code, "test-no-error-message-matching", undefined, "coverage.tsx"), [
       "message",
@@ -45,6 +45,7 @@ describe("upstreamed generic rule coverage", () => {
       ["message"],
     );
     assert.deepEqual(messages(code, "test-no-shared-state", undefined, "coverage.tsx"), [
+      "shared",
       "shared",
       "shared",
       "shared",

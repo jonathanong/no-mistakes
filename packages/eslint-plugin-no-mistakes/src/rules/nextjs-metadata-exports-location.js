@@ -35,6 +35,19 @@ function declarationName(declaration) {
   return declaration.id?.type === "Identifier" ? declaration.id.name : null;
 }
 
+function collectPatternNames(node, names = new Set()) {
+  if (!node) return names;
+  if (node.type === "Identifier") names.add(node.name);
+  if (node.type === "ObjectPattern") {
+    for (const property of node.properties) collectPatternNames(property.value, names);
+  }
+  if (node.type === "ArrayPattern") {
+    for (const element of node.elements) collectPatternNames(element, names);
+  }
+  if (node.type === "RestElement") collectPatternNames(node.argument, names);
+  return names;
+}
+
 module.exports = rule(
   {
     type: "problem",
@@ -55,7 +68,9 @@ module.exports = rule(
       if (node.declaration?.type === "VariableDeclaration") {
         if (
           node.declaration.declarations.some((declaration) =>
-            METADATA_EXPORTS.has(declarationName(declaration)),
+            [...collectPatternNames(declaration.id), declarationName(declaration)].some((name) =>
+              METADATA_EXPORTS.has(name),
+            ),
           )
         ) {
           context.report({ node, messageId: "location" });

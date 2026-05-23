@@ -41,7 +41,7 @@ describe("upstreamed generic rules", () => {
       ["test-no-shared-state", ["shared"]],
       ["test-no-error-message-matching", ["message", "message", "message"]],
       ["no-vitest-sequential", ["sequential"]],
-      ["react-no-use-promise-resolve", ["resolve", "resolve", "resolve", "resolve"]],
+      ["react-no-use-promise-resolve", ["resolve", "resolve", "resolve", "resolve", "resolve"]],
       ["react-no-iife-in-jsx", ["iife", "iife"]],
     ];
 
@@ -139,6 +139,15 @@ describe("upstreamed generic rules", () => {
         "vitest-mock-test-file-naming",
         undefined,
         "mock-name.global.invalid.test.ts",
+      ),
+      ["needsMock"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("mock-name.cjs.invalid.test.cjs"),
+        "vitest-mock-test-file-naming",
+        undefined,
+        "mock-name.cjs.invalid.test.cjs",
       ),
       ["needsMock"],
     );
