@@ -118,10 +118,11 @@ no-mistakes check --json
 ```
 
 Runs configured React, queue, integration, and codebase rules such as
-`test-no-unmocked-dynamic-imports`. Independent check domains run in parallel,
-and results are printed in deterministic order. Options: `--root`, `--config`,
-`--tsconfig`, `--format`, `--json`, and `--timings`. `--jobs` is a global
-wrapper option, for example `no-mistakes --jobs 4 check ...`.
+`test-no-unmocked-dynamic-imports`, `nextjs-no-api-routes`, and
+`nextjs-no-caching`. Independent check domains run in parallel, and results are
+printed in deterministic order. Options: `--root`, `--config`, `--tsconfig`,
+`--format`, `--json`, and `--timings`. `--jobs` is a global wrapper option, for
+example `no-mistakes --jobs 4 check ...`.
 
 `check` only runs configured checks. Use direct subcommands such as
 `no-mistakes queues check` when you want a full scan for that domain without
@@ -134,6 +135,28 @@ The `rust-max-lines-per-file`, `rust-no-inline-tests`,
 `no-mistakes check` and run when configured in `.no-mistakes.yml`. See the
 Global Check section above and the configuration reference for available
 options.
+
+### Next.js Feature Ban Rules via `no-mistakes check`
+
+Use zero-option project rules to disable Next.js features:
+
+```yml
+projects:
+  web:
+    type: nextjs
+    root: web
+
+rules:
+  - rule: nextjs-no-api-routes
+    projects: [web]
+  - rule: nextjs-no-caching
+    projects: [web]
+```
+
+`nextjs-no-api-routes` rejects App Router `app/**/route.*` handlers and Pages
+Router `pages/api/**` files. `nextjs-no-caching` rejects Next.js cache
+directives, `next/cache` APIs, cached `fetch` options, static cache segment
+config, and cache-related `next.config.*` settings.
 
 ### Playwright
 

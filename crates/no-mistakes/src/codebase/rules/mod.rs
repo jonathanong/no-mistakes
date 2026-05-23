@@ -1,4 +1,6 @@
 pub mod agents_md_max_size;
+pub mod nextjs_no_api_routes;
+pub mod nextjs_no_caching;
 pub mod rust_max_lines_per_file;
 pub mod rust_no_inline_allows;
 pub mod rust_no_inline_tests;
@@ -10,6 +12,8 @@ use serde::Serialize;
 use std::path::{Path, PathBuf};
 
 pub use agents_md_max_size::RULE_ID as AGENTS_MD_MAX_SIZE;
+pub use nextjs_no_api_routes::RULE_ID as NEXTJS_NO_API_ROUTES;
+pub use nextjs_no_caching::RULE_ID as NEXTJS_NO_CACHING;
 pub use rust_max_lines_per_file::RULE_ID as RUST_MAX_LINES_PER_FILE;
 pub use rust_no_inline_allows::RULE_ID as RUST_NO_INLINE_ALLOWS;
 pub use rust_no_inline_tests::RULE_ID as RUST_NO_INLINE_TESTS;
@@ -37,6 +41,8 @@ pub fn run_check(
     let config = crate::config::v2::load_v2_config(root, config_path)?;
     if !rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS)
         && !rule_enabled(&config, SERVER_ROUTE_CLIENT_BOUNDARY)
+        && !rule_enabled(&config, NEXTJS_NO_API_ROUTES)
+        && !rule_enabled(&config, NEXTJS_NO_CACHING)
     {
         return Ok(Vec::new());
     }
@@ -46,6 +52,14 @@ pub fn run_check(
     };
     if rule_enabled(&config, SERVER_ROUTE_CLIENT_BOUNDARY) {
         let rule_findings = server_route_client_boundary::check(root, &config)?;
+        findings.extend(rule_findings);
+    }
+    if rule_enabled(&config, NEXTJS_NO_API_ROUTES) {
+        let rule_findings = nextjs_no_api_routes::check(root, &config)?;
+        findings.extend(rule_findings);
+    }
+    if rule_enabled(&config, NEXTJS_NO_CACHING) {
+        let rule_findings = nextjs_no_caching::check(root, &config)?;
         findings.extend(rule_findings);
     }
     sort_findings(&mut findings);
@@ -61,6 +75,8 @@ pub fn run_check_with_facts(
     let config = crate::config::v2::load_v2_config(root, config_path)?;
     if !rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS)
         && !rule_enabled(&config, SERVER_ROUTE_CLIENT_BOUNDARY)
+        && !rule_enabled(&config, NEXTJS_NO_API_ROUTES)
+        && !rule_enabled(&config, NEXTJS_NO_CACHING)
     {
         return Ok(Vec::new());
     }
@@ -76,6 +92,14 @@ pub fn run_check_with_facts(
     }
     if rule_enabled(&config, SERVER_ROUTE_CLIENT_BOUNDARY) {
         let rule_findings = server_route_client_boundary::check_with_facts(root, &config, shared)?;
+        findings.extend(rule_findings);
+    }
+    if rule_enabled(&config, NEXTJS_NO_API_ROUTES) {
+        let rule_findings = nextjs_no_api_routes::check_with_facts(root, &config, shared)?;
+        findings.extend(rule_findings);
+    }
+    if rule_enabled(&config, NEXTJS_NO_CACHING) {
+        let rule_findings = nextjs_no_caching::check_with_facts(root, &config, shared)?;
         findings.extend(rule_findings);
     }
     sort_findings(&mut findings);

@@ -1,6 +1,7 @@
 use crate::codebase::dependencies::extract::{
     extract_imports_from_program, is_indexable, ExtractedImport,
 };
+use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts;
 use crate::codebase::ts_symbols::{extract_symbols_from_program, FileSymbols};
 use crate::integration_tests::types::FileAnalysis as IntegrationFileAnalysis;
@@ -21,6 +22,7 @@ pub struct CheckFactPlan {
     pub queue: bool,
     pub integration: bool,
     pub dynamic_imports: bool,
+    pub nextjs_caching: bool,
     pub source: bool,
 }
 
@@ -47,6 +49,7 @@ pub(crate) struct CheckFileFacts {
     pub queue: Option<QueueFileFacts>,
     pub integration: Option<IntegrationFileAnalysis>,
     pub dynamic_imports: Option<TestFacts>,
+    pub nextjs_caching: Option<Vec<NextjsCachingFinding>>,
     pub parse_error: Option<String>,
 }
 
@@ -177,6 +180,13 @@ fn collect_file_facts(root: &Path, path: &Path, plan: CheckFactPlan) -> Option<C
     } else {
         None
     };
+    let nextjs_caching = if plan.nextjs_caching {
+        Some(crate::codebase::rules::nextjs_no_caching::extract_program(
+            &source, program,
+        ))
+    } else {
+        None
+    };
     Some(CheckFileFacts {
         source: plan.source.then_some(source),
         imports,
@@ -185,6 +195,7 @@ fn collect_file_facts(root: &Path, path: &Path, plan: CheckFactPlan) -> Option<C
         queue,
         integration,
         dynamic_imports,
+        nextjs_caching,
         parse_error: None,
     })
 }

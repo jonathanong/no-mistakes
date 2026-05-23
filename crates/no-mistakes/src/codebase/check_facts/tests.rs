@@ -117,6 +117,7 @@ fn collect_check_facts_parses_once_for_overlapping_fact_categories() {
             queue: true,
             integration: true,
             dynamic_imports: true,
+            nextjs_caching: true,
             source: true,
         },
     );
@@ -130,6 +131,7 @@ fn collect_check_facts_parses_once_for_overlapping_fact_categories() {
     assert!(file_facts.react.is_some());
     assert!(file_facts.queue.is_some());
     assert!(file_facts.integration.is_some());
+    assert!(file_facts.nextjs_caching.is_some());
     assert!(file_facts.dynamic_imports.is_some());
     assert!(file_facts.source.is_some());
 }
