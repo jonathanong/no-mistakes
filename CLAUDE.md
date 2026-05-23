@@ -13,6 +13,11 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
   forward/reverse dependency maps may be cached during a run, but never persisted.
 - Build one canonical graph — relationship features should produce typed edges
   in the shared dependency graph instead of maintaining separate graph shapes.
+- Programmatic API parity — every stable `no-mistakes` CLI capability must expose
+  an equivalent N-API API for Node/programmatic usage. Downstream tools should call
+  structured in-process APIs instead of shelling out to `no-mistakes`, avoiding
+  repeated graph builds, output parsing, subprocess overhead, and reliability issues
+  like jonathanong/filaments#4058.
 - Fully parallel, deterministic output — independent file analysis and domain
   checks should use rayon/concurrent data structures, then sort/merge before
   rendering results.
@@ -38,6 +43,8 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - Continuously add test fixtures to `fixtures/**` for cases you find
 - Test fixtures live under `fixtures/<category>/<name>/` at the repo root. Do NOT create fixtures inline in test code (no `fs::create_dir_all` / `fs::write` to build a fixture during a test run). Save the files to `fixtures/*` and reference them via the per-crate / per-package fixture helper.
 - All shared Rust code belongs in `no-mistakes`. Crates must not depend on one another directly. If two crates need the same helper, lift it into `no-mistakes` first.
+- When adding or changing a CLI-facing capability, update the Rust library entrypoint,
+  N-API binding, JS exports/types, and fixture-backed tests in the same change.
 
 ## Coverage
 
