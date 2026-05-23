@@ -82,6 +82,10 @@ describe("ts-no-export-renaming", () => {
       ),
       ["renamed", "renamed"],
     );
+    assert.deepEqual(
+      messages(code, "ts-no-export-renaming", { includePathPatterns: ["["] }, "backend/index.ts"),
+      [],
+    );
   });
 });
 

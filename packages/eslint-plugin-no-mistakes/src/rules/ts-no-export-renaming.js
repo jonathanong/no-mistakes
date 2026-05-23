@@ -31,7 +31,8 @@ function normalizedPaths(context) {
   return [normalized];
 }
 
-function shouldCheckFile(context, patterns) {
+function shouldCheckFile(context, options, patterns) {
+  if ((options.includePathPatterns || []).length > 0 && patterns.length === 0) return false;
   if (patterns.length === 0) return true;
   return normalizedPaths(context).some((path) => patterns.some((pattern) => pattern.test(path)));
 }
@@ -65,7 +66,7 @@ module.exports = rule(
   (context) => {
     const options = context.options[0] || {};
     const patterns = pathPatterns(options);
-    if (!shouldCheckFile(context, patterns)) return {};
+    if (!shouldCheckFile(context, options, patterns)) return {};
     return {
       ExportNamedDeclaration(node) {
         for (const specifier of node.specifiers || []) {
