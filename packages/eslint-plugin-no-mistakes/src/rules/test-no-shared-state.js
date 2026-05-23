@@ -37,7 +37,6 @@ module.exports = rule(
   },
   (context) => {
     const mutableTopLevel = new Set();
-    const functionDeclarations = new Map();
     const pendingNamedCallbacks = [];
     const pendingNamedSetupCallbacks = [];
     const cleanupTracker = createCleanupTracker();
@@ -96,6 +95,20 @@ module.exports = rule(
       rememberSetupCleanup(node, mutationRootName(node.left));
     }
 
+    function resolveFunctionCallback(node, callback) {
+      let scope = context.sourceCode.getScope(node);
+      while (scope) {
+        const variable = scope.variables.find((candidate) => candidate.name === callback.name);
+        const declaration = variable?.defs[0]?.node;
+        if (declaration?.type === "FunctionDeclaration") return declaration;
+        if (declaration?.type === "VariableDeclarator" && isFunctionNode(declaration.init)) {
+          return declaration.init;
+        }
+        scope = scope.upper;
+      }
+      return null;
+    }
+
     return {
       "Program > VariableDeclaration"(node) {
         for (const declaration of node.declarations) {
@@ -106,17 +119,8 @@ module.exports = rule(
           }
         }
       },
-      FunctionDeclaration(node) {
-        if (node.id?.name) functionDeclarations.set(node.id.name, node);
-      },
-      VariableDeclarator(node) {
-        if (node.id.type === "Identifier" && isFunctionNode(node.init)) {
-          functionDeclarations.set(node.id.name, node.init);
-        }
-      },
       "Program:exit"() {
-        for (const { name, suiteKey, kind } of pendingNamedSetupCallbacks) {
-          const declaration = functionDeclarations.get(name);
+        for (const { declaration, suiteKey, kind } of pendingNamedSetupCallbacks) {
           if (!declaration) continue;
           const previousSetupDepth = setupDepth;
           setupDepth = 1;
@@ -126,8 +130,7 @@ module.exports = rule(
           cleanupTracker.endSetup();
         }
         testDepth = 1;
-        for (const { name, suiteKey } of pendingNamedCallbacks) {
-          const declaration = functionDeclarations.get(name);
+        for (const { declaration, suiteKey } of pendingNamedCallbacks) {
           if (!declaration) continue;
           cleanupTracker.setReplaySuite(suiteKey);
           checkSharedMutations(declaration.body);
@@ -143,7 +146,7 @@ module.exports = rule(
           const callback = namedCallbackArgument(node.arguments);
           if (callback) {
             pendingNamedCallbacks.push({
-              name: callback.name,
+              declaration: resolveFunctionCallback(node, callback),
               suiteKey: cleanupTracker.currentSuiteKey(),
             });
           }
@@ -153,7 +156,7 @@ module.exports = rule(
           const callback = firstNamedCallbackArgument(node.arguments);
           if (callback) {
             pendingNamedSetupCallbacks.push({
-              name: callback.name,
+              declaration: resolveFunctionCallback(node, callback),
               suiteKey: cleanupTracker.currentSuiteKey(),
               kind: setupKind,
             });
