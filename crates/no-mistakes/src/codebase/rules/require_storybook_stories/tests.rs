@@ -150,6 +150,7 @@ export default {
 export default {
   stories: async function stories() {
     const ignored = "../ignored/**/*.stories.tsx";
+    doSetup();
     return { directory: "../function", files: "*.docs.tsx" };
   },
 };
@@ -686,6 +687,52 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
         .into_iter()
         .collect()
     );
+
+    let resolver = empty_resolver(project_root);
+    let same_project = root.join("components/SameProject.tsx");
+    let other_project = root.parent().unwrap().join("OtherProject.tsx");
+    let boundary_shared = CheckFactMap {
+        ts: HashMap::from([
+            (
+                root.join("loader.ts"),
+                CheckFileFacts {
+                    dynamic_imports: Some(
+                        crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts {
+                            dynamic_imports: vec![crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::DynamicImport {
+                                specifier: Some("./components/SameProject".to_string()),
+                                line: 1,
+                            }, crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::DynamicImport {
+                                specifier: Some("./components/MissingDynamic".to_string()),
+                                line: 2,
+                            }],
+                            mock_specifiers: vec!["../OtherProject".to_string()],
+                        },
+                    ),
+                    ..Default::default()
+                },
+            ),
+            (
+                root.parent().unwrap().join("loader.ts"),
+                CheckFileFacts {
+                    dynamic_imports: Some(
+                        crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts {
+                            dynamic_imports: vec![crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::DynamicImport {
+                                specifier: Some("./OtherProject".to_string()),
+                                line: 1,
+                            }],
+                            mock_specifiers: Vec::new(),
+                        },
+                    ),
+                    ..Default::default()
+                },
+            ),
+        ]),
+        ..Default::default()
+    };
+    let boundary_files =
+        coverage_graph::dynamic_or_mock_boundary_files(project_root, &boundary_shared, &resolver);
+    assert!(boundary_files.contains(&normalize_path(&same_project)));
+    assert!(!boundary_files.contains(&normalize_path(&other_project)));
 }
 
 #[test]

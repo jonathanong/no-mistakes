@@ -61,11 +61,15 @@ fn component_children(
 }
 
 pub(super) fn dynamic_or_mock_boundary_files(
+    project_root: &Path,
     shared: &CheckFactMap,
     resolver: &ImportResolver<'_>,
 ) -> HashSet<PathBuf> {
     let mut out = HashSet::new();
     for (file, facts) in &shared.ts {
+        if !file.starts_with(project_root) {
+            continue;
+        }
         let Some(dynamic) = facts.dynamic_imports.as_ref() else {
             continue;
         };
@@ -76,7 +80,10 @@ pub(super) fn dynamic_or_mock_boundary_files(
             .chain(dynamic.mock_specifiers.iter().map(String::as_str))
         {
             if let Some(resolved) = resolver.resolve(specifier, file) {
-                out.insert(normalize_path(&resolved));
+                let resolved = normalize_path(&resolved);
+                if resolved.starts_with(project_root) {
+                    out.insert(resolved);
+                }
             }
         }
     }

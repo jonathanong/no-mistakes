@@ -18,10 +18,24 @@ import DefaultButton, { Button as RenamedButton, Link } from "../components/Butt
 	} from "../components/MultilineCard";
 	import ignored from "../components/Ignored"
 
-```tsx
-import FencedExample from "../components/FencedExample";
-```
-	"#,
+	```tsx
+	~~~
+	import FencedExample from "../components/FencedExample";
+	```
+
+	~~~
+	import TildeFence from "../components/TildeFence";
+	~~~
+
+	<DefaultCard />
+	<DefaultButton />
+	<RenamedButton />
+	<Link />
+	<Cards.Card />
+	<Panel />
+	<RenamedMultilineCard />
+	{OtherMultilineCard}
+		"#,
     );
 
     assert_eq!(facts.side_effect_imports.len(), 2);
@@ -57,7 +71,6 @@ import FencedExample from "../components/FencedExample";
                 "../components/MultilineCard",
                 false,
             ),
-            ("default", "ignored", "../components/Ignored", false),
         ]
     );
 }
@@ -68,15 +81,19 @@ fn ignores_malformed_mdx_imports() {
         r#"
 import
 import nope
-import Bad from nope;
-import  from "../empty-default";
-import {} from "../empty";
-import { Missing from "../bad";
-const value = "import { Nope } from './Nope'";
-"#,
+	import Bad from nope;
+	import  from "../empty-default";
+	import {} from "../empty";
+	import { Missing from "../bad";
+	import {
+	import Later from "../Later";
+	<Later />
+	const value = "import { Nope } from './Nope'";
+	"#,
     );
 
-    assert!(facts.used_runtime_imports.is_empty());
+    assert_eq!(facts.used_runtime_imports.len(), 1);
+    assert_eq!(facts.used_runtime_imports[0].local, "Later");
     assert!(facts.side_effect_imports.is_empty());
 
     let mut imports = Vec::new();

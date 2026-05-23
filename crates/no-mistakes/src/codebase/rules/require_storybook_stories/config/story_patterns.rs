@@ -89,7 +89,10 @@ fn story_patterns_from_statements(statements: &[Statement<'_>], source: &str) ->
                 }
             }
             Statement::ExpressionStatement(expression) => {
-                return story_patterns_from_expression(&expression.expression, source);
+                let patterns = story_patterns_from_expression(&expression.expression, source);
+                if !patterns.is_empty() {
+                    return patterns;
+                }
             }
             _ => {}
         }

@@ -6,32 +6,46 @@ pub(crate) fn extract_mdx_source(source: &str) -> StorybookFileFacts {
     let mut used_runtime_imports = Vec::new();
     let mut side_effect_imports = Vec::new();
     let mut pending_import: Option<(String, u32)> = None;
-    let mut in_code_fence = false;
+    let mut active_code_fence: Option<&'static str> = None;
+    let mut reference_source = String::new();
     for (index, line) in source.lines().enumerate() {
         let line_number = (index + 1) as u32;
         let trimmed = line.trim();
-        if trimmed.starts_with("```") || trimmed.starts_with("~~~") {
-            in_code_fence = !in_code_fence;
-            continue;
-        }
-        if in_code_fence {
-            continue;
-        }
-        if let Some((pending, _)) = pending_import.as_mut() {
-            pending.push(' ');
-            pending.push_str(trimmed);
-            if mdx_import_complete(pending) {
-                let (import, line) = pending_import.take().expect("pending import exists");
-                push_mdx_import_line(
-                    &mut used_runtime_imports,
-                    &mut side_effect_imports,
-                    &import,
-                    line,
-                );
+        if let Some(fence) = active_code_fence {
+            if trimmed.starts_with(fence) {
+                active_code_fence = None;
             }
             continue;
         }
+        if trimmed.starts_with("```") {
+            active_code_fence = Some("```");
+            continue;
+        }
+        if trimmed.starts_with("~~~") {
+            active_code_fence = Some("~~~");
+            continue;
+        }
+        if let Some((pending, _)) = pending_import.as_mut() {
+            if trimmed.starts_with("import ") {
+                pending_import = None;
+            } else {
+                pending.push(' ');
+                pending.push_str(trimmed);
+                if mdx_import_complete(pending) {
+                    let (import, line) = pending_import.take().expect("pending import exists");
+                    push_mdx_import_line(
+                        &mut used_runtime_imports,
+                        &mut side_effect_imports,
+                        &import,
+                        line,
+                    );
+                }
+                continue;
+            }
+        }
         let Some(import) = trimmed.strip_prefix("import ") else {
+            reference_source.push_str(line);
+            reference_source.push('\n');
             continue;
         };
         let import = import.trim();
@@ -49,10 +63,17 @@ pub(crate) fn extract_mdx_source(source: &str) -> StorybookFileFacts {
             pending_import = Some((import.to_string(), line_number));
         }
     }
+    used_runtime_imports.retain(|import| mdx_references_local(&reference_source, &import.local));
     StorybookFileFacts {
         used_runtime_imports,
         side_effect_imports,
     }
+}
+
+fn mdx_references_local(source: &str, local: &str) -> bool {
+    source.contains(&format!("<{local}"))
+        || source.contains(&format!("{{{local}"))
+        || source.contains(&format!("{{ {local}"))
 }
 
 fn mdx_import_complete(import: &str) -> bool {
