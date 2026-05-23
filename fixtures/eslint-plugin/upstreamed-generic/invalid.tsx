@@ -1,0 +1,48 @@
+import React, { use } from "react";
+import * as R from "react";
+import { test } from "vitest";
+import { use as otherUse } from "not-react";
+
+const values = [3, 1, 2];
+await values.sort();
+await [1, 2].slice();
+async function localArray() {
+  const local = [1, 2];
+  await local.sort();
+}
+delete values.length;
+export type Placeholder = never;
+export type { ForwardPlaceholder };
+type ForwardPlaceholder = never;
+type OtherPlaceholder = never;
+export type { OtherPlaceholder };
+type metadata = {};
+export type { metadata };
+let counter = 0;
+it("mutates shared state", () => {
+  counter++;
+});
+expect(error.message).toContain("missing");
+test("message checks", () => {
+  error.message.includes("missing");
+  if (error.message === "missing") {
+    throw error;
+  }
+});
+test.sequential("runs", () => {});
+React.use(Promise.resolve("ok"));
+React["use"](Promise.resolve("ok"));
+React.use(Promise["resolve"]("ok"));
+R.use(Promise.resolve("ok"));
+use(Promise.resolve("ok"));
+otherUse(Promise.resolve("ok"));
+
+export default function Component() {
+  return (
+    <>
+      <script src="/x.js" />
+      <div>{(() => "inline")()}</div>
+      <button onClick={() => (() => "clicked")()} />
+    </>
+  );
+}

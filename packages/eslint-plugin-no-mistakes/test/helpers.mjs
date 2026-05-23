@@ -19,7 +19,7 @@ export function lint(code, rules, filename = "fixture.jsx", globals = {}) {
   return linter.verify(
     code,
     {
-      files: ["**/*.{js,jsx,ts,tsx,mjs,mts}"],
+      files: ["**/*.{js,jsx,ts,tsx,mjs,mts,cjs,cts}"],
       languageOptions: {
         ecmaVersion: 2024,
         sourceType: "module",
