@@ -113,6 +113,7 @@ fn test_plan_vitest_project_dependency_triggers_all_tests() {
         .unwrap()
         .contains("web project dependency changed"));
     assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 2);
+    assert!(plan["groups"][0]["limit"].is_null());
 }
 
 #[test]

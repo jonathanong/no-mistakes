@@ -39,7 +39,7 @@ pub(crate) fn generate_configured_plan(
             ),
             groups: vec![TestPlanGroupResult {
                 r#type: "global".to_string(),
-                ..all_group(root, &all_tests, global_limit)
+                ..all_group(root, &all_tests)
             }],
             warnings: missing_file_warnings(root, changed_files),
             fallback_triggered: true,
@@ -50,7 +50,7 @@ pub(crate) fn generate_configured_plan(
     if env.all {
         return Ok(TestPlan {
             selected_tests: selected_from_paths(root, &all_tests, "all", changed_files.first()),
-            groups: vec![all_group(root, &all_tests, global_limit)],
+            groups: vec![all_group(root, &all_tests)],
             warnings: missing_file_warnings(root, changed_files),
             fallback_triggered: true,
             fallback_reason: Some(format!(
@@ -73,7 +73,7 @@ pub(crate) fn generate_configured_plan(
             ),
             groups: vec![TestPlanGroupResult {
                 r#type: "dependencies".to_string(),
-                ..all_group(root, &all_tests, global_limit)
+                ..all_group(root, &all_tests)
             }],
             warnings: missing_file_warnings(root, changed_files),
             fallback_triggered: true,
@@ -147,7 +147,7 @@ pub(crate) fn generate_configured_plan(
     })
 }
 
-fn all_group(root: &Path, all_tests: &[PathBuf], global_limit: usize) -> TestPlanGroupResult {
+fn all_group(root: &Path, all_tests: &[PathBuf]) -> TestPlanGroupResult {
     TestPlanGroupResult {
         r#type: "all".to_string(),
         selected: all_tests
@@ -155,7 +155,7 @@ fn all_group(root: &Path, all_tests: &[PathBuf], global_limit: usize) -> TestPla
             .map(|test| relative_path(root, test))
             .collect(),
         remaining: 0,
-        limit: Some(global_limit).filter(|limit| *limit != usize::MAX),
+        limit: None,
     }
 }
 
@@ -284,6 +284,13 @@ fn discover_framework_tests(
     framework: TestFramework,
     env: &TestPlanEnvironment,
 ) -> Result<Vec<PathBuf>> {
+    if framework == TestFramework::Playwright {
+        return discover_playwright_tests(root, config, env);
+    }
+
+    let playwright_tests: HashSet<PathBuf> = discover_playwright_tests(root, config, env)?
+        .into_iter()
+        .collect();
     let include = compile_globset(&env.include)?;
     let exclude = compile_globset(&env.exclude)?;
     let filter = TestFileFilter::new(root, config);
@@ -294,6 +301,7 @@ fn discover_framework_tests(
                 let rel = relative_path(root, path);
                 framework_test_match(framework, &rel)
                     && filter.is_match(root, path)
+                    && !playwright_tests.contains(path)
                     && include.as_ref().is_none_or(|set| set.is_match(&rel))
                     && exclude.as_ref().is_none_or(|set| !set.is_match(&rel))
             })
@@ -302,9 +310,43 @@ fn discover_framework_tests(
     Ok(tests)
 }
 
+fn discover_playwright_tests(
+    root: &Path,
+    config: &NoMistakesConfig,
+    env: &TestPlanEnvironment,
+) -> Result<Vec<PathBuf>> {
+    let include = compile_globset(&env.include)?;
+    let exclude = compile_globset(&env.exclude)?;
+    let mut tests = fallback_playwright_tests(root, config);
+    tests.retain(|path| {
+        let rel = relative_path(root, path);
+        include.as_ref().is_none_or(|set| set.is_match(&rel))
+            && exclude.as_ref().is_none_or(|set| !set.is_match(&rel))
+    });
+    tests.sort();
+    tests.dedup();
+    Ok(tests)
+}
+
+fn fallback_playwright_tests(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
+    let filter = TestFileFilter::new(root, config);
+    no_mistakes::codebase::ts_source::discover_files(root, &config.filesystem.skip_directories)
+        .into_iter()
+        .filter(|path| {
+            let rel = relative_path(root, path);
+            filter.is_match(root, path)
+                && (rel.contains("/tests/e2e/")
+                    || rel.starts_with("tests/e2e/")
+                    || rel.contains("/playwright/")
+                    || rel.starts_with("playwright/")
+                    || rel.starts_with("specs/"))
+        })
+        .collect()
+}
+
 fn framework_test_match(framework: TestFramework, rel: &str) -> bool {
     match framework {
-        TestFramework::Playwright => true,
+        TestFramework::Playwright => unreachable!("playwright tests are discovered separately"),
         TestFramework::Vitest => {
             let name = rel.rsplit('/').next().unwrap_or(rel);
             (rel.split('/').any(|component| component == "__tests__")
@@ -312,6 +354,7 @@ fn framework_test_match(framework: TestFramework, rel: &str) -> bool {
                 || name.contains(".spec."))
                 && !rel.split('/').any(|component| component == "playwright")
                 && !rel.starts_with("tests/e2e/")
+                && !rel.starts_with("specs/")
         }
     }
 }
