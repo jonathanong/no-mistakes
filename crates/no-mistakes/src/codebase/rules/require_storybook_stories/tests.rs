@@ -74,6 +74,23 @@ include_all_react_named_exports: true
 }
 
 #[test]
+fn single_string_story_config_is_used() {
+    let root = fixture("single-story-config");
+    let findings = check(
+        &root,
+        &config_with_storybook(
+            r#"
+include_all_react_named_exports: true
+"#,
+        ),
+        None,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
 fn absolute_story_config_patterns_are_project_relative() {
     let root = fixture("defaults");
     let pattern = root.join("stories/**/*.stories.tsx");
@@ -84,6 +101,24 @@ fn absolute_story_config_patterns_are_project_relative() {
     );
 
     assert_eq!(relative, "stories/**/*.stories.tsx");
+}
+
+#[test]
+fn imported_story_files_count_as_reachable_coverage() {
+    let root = fixture("reachable-story-import");
+    let findings = check(
+        &root,
+        &config(
+            r#"
+stories: ["stories/entry.stories.tsx"]
+include_all_react_named_exports: true
+"#,
+        ),
+        None,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
 }
 
 #[test]

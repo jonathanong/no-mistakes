@@ -14,10 +14,7 @@ mod selection;
 mod types;
 
 use config::{effective_story_patterns, resolve_tsconfig};
-use coverage::{
-    all_react_component_keys, directly_covered_components, reachable_story_files,
-    story_files_matching,
-};
+use coverage::{all_react_component_keys, directly_covered_components, reachable_story_files};
 use coverage_graph::{dynamic_or_mock_boundary_files, transitive_covered_components};
 use findings::{namespace_import_findings, stale_or_blank_allow_findings};
 use selection::{component_disabled, file_disabled, selected_components};
@@ -102,20 +99,19 @@ fn check_rule(
     )?;
     let component_keys: HashSet<String> = components.iter().map(|c| c.key.clone()).collect();
     let all_component_keys = all_react_component_keys(&project_root, shared);
-    let _story_files = reachable_story_files(
+    let story_files = reachable_story_files(
         &project_root,
         shared,
         &stories,
         &resolver,
         &all_component_keys,
     )?;
-    let direct_story_files = story_files_matching(&project_root, shared, &stories);
     let mut namespace_findings =
-        namespace_import_findings(root, &project_root, shared, &direct_story_files, &resolver);
+        namespace_import_findings(root, &project_root, shared, &story_files, &resolver);
     let direct = directly_covered_components(
         &project_root,
         shared,
-        &direct_story_files,
+        &story_files,
         &resolver,
         &all_component_keys,
     );

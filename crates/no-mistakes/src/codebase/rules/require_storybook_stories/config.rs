@@ -108,14 +108,21 @@ impl<'a> Visit<'a> for StorybookConfigVisitor<'a> {
 }
 
 fn story_patterns_from_expression(expression: &Expression<'_>, source: &str) -> Vec<String> {
-    let Expression::ArrayExpression(array) = parenthesized_expression(expression) else {
-        return Vec::new();
-    };
-    array
-        .elements
-        .iter()
-        .filter_map(|element| story_pattern_from_element(element, source))
-        .collect()
+    let expression = parenthesized_expression(expression);
+    if let Some(pattern) = optional_string(expression, source) {
+        return vec![pattern];
+    }
+    match expression {
+        Expression::ArrayExpression(array) => array
+            .elements
+            .iter()
+            .filter_map(|element| story_pattern_from_element(element, source))
+            .collect(),
+        Expression::ObjectExpression(object) => story_pattern_from_object(object, source)
+            .into_iter()
+            .collect(),
+        _ => Vec::new(),
+    }
 }
 
 fn story_pattern_from_element(

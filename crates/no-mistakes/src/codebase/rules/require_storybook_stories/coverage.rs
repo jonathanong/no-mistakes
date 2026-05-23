@@ -39,8 +39,7 @@ pub(super) fn reachable_story_files(
             else {
                 continue;
             };
-            if resolved.starts_with(project_root)
-                && stories.is_match(&relative_slash_path(project_root, &resolved))
+            if resolved.starts_with(project_root) && is_story_file(project_root, stories, &resolved)
             {
                 queue.push_back(resolved);
             }
@@ -61,6 +60,15 @@ pub(super) fn story_files_matching(
         .filter(|path| stories.is_match(&relative_slash_path(project_root, path)))
         .map(|path| normalize_path(path))
         .collect()
+}
+
+fn is_story_file(project_root: &Path, stories: &GlobMatcher, path: &Path) -> bool {
+    let rel = relative_slash_path(project_root, path);
+    stories.is_match(&rel)
+        || path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .is_some_and(|name| name.contains(".stories.") || name.contains(".story."))
 }
 
 pub(super) fn directly_covered_components(
