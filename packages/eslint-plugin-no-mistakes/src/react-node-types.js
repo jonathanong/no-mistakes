@@ -3,21 +3,16 @@
 function keyName(node) {
   if (!node) return null;
   if (node.type === "Identifier") return node.name;
-  if (node.type === "Literal") return String(node.value);
-  return null;
+  return node.type === "Literal" ? String(node.value) : null;
 }
 
 function unwrapType(node) {
-  let current = node;
-  while (
-    current &&
-    (current.type === "TSParenthesizedType" ||
-      current.type === "TSOptionalType" ||
-      current.type === "TSRestType")
-  ) {
-    current = current.typeAnnotation;
-  }
-  return current;
+  return node &&
+    (node.type === "TSParenthesizedType" ||
+      node.type === "TSOptionalType" ||
+      node.type === "TSRestType")
+    ? unwrapType(node.typeAnnotation)
+    : node;
 }
 
 function typeName(node) {
@@ -26,14 +21,11 @@ function typeName(node) {
   if (current.type !== "TSTypeReference") return null;
   const name = current.typeName;
   if (name.type === "Identifier") return name.name;
-  if (
-    name.type === "TSQualifiedName" &&
+  return name.type === "TSQualifiedName" &&
     name.left.type === "Identifier" &&
     name.right.type === "Identifier"
-  ) {
-    return `${name.left.name}.${name.right.name}`;
-  }
-  return null;
+    ? `${name.left.name}.${name.right.name}`
+    : null;
 }
 
 function typeAnnotation(node) {

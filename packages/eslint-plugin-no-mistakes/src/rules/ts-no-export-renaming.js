@@ -5,8 +5,7 @@ const { rule } = require("../helpers");
 function exportName(node) {
   if (!node) return null;
   if (node.type === "Identifier") return node.name;
-  if (node.type === "Literal") return String(node.value);
-  return null;
+  return node.type === "Literal" ? String(node.value) : null;
 }
 
 function isTypeExport(node, specifier) {

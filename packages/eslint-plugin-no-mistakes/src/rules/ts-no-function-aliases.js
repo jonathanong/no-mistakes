@@ -6,9 +6,11 @@ function unwrapExpression(expression) {
   let current = expression;
   while (
     current &&
-    (current.type === "ChainExpression" || current.type === "TSNonNullExpression")
+    (current.type === "AwaitExpression" ||
+      current.type === "ChainExpression" ||
+      current.type === "TSNonNullExpression")
   ) {
-    current = current.expression;
+    current = current.type === "AwaitExpression" ? current.argument : current.expression;
   }
   return current;
 }
@@ -20,11 +22,7 @@ function expressionStatementCall(statement) {
 
 function returnStatementCall(statement) {
   if (statement.type !== "ReturnStatement") return null;
-  const argument = unwrapExpression(statement.argument);
-  if (argument && argument.type === "AwaitExpression") {
-    return unwrapExpression(argument.argument);
-  }
-  return argument;
+  return unwrapExpression(statement.argument);
 }
 
 function onlyCallExpression(body) {

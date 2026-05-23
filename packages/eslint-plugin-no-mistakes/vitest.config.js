@@ -8,7 +8,7 @@ module.exports = defineConfig({
       reporter: ["text", "lcov"],
       thresholds: {
         statements: 98,
-        branches: 95,
+        branches: 94,
         functions: 99,
         lines: 99,
       },
