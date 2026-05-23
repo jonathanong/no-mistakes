@@ -93,19 +93,16 @@ module.exports = rule(
       }
     }
 
-    function isNonComputedPropertyKey(node) {
-      return (
-        (node.parent.type === "MemberExpression" &&
-          node.parent.property === node &&
-          !node.parent.computed) ||
-        (node.parent.type === "Property" && node.parent.key === node && !node.parent.computed)
-      );
-    }
-
     function reportAssignment(node) {
       for (const name of collectPatternNames(node.left)) reportIfShared(node, name);
       if (node.left.type !== "MemberExpression") return;
       reportIfShared(node, mutationRootName(node.left));
+    }
+
+    function rememberSetupMutation(node, name) {
+      if (name && setupDepth > 0 && mutableTopLevel.has(name) && isModuleMutable(node, name)) {
+        setupReferencedMutables.add(name);
+      }
     }
 
     return {
@@ -132,12 +129,6 @@ module.exports = rule(
         }
         flushRegistryReports();
       },
-      Identifier(node) {
-        if (setupDepth === 0) return;
-        if (isNonComputedPropertyKey(node)) return;
-        if (!mutableTopLevel.has(node.name)) return;
-        if (isModuleMutable(node, node.name)) setupReferencedMutables.add(node.name);
-      },
       CallExpression(node) {
         collectViMockFactoryReferences(node);
         if (isTestCall(node)) {
@@ -149,16 +140,24 @@ module.exports = rule(
       },
       AssignmentExpression(node) {
         if (isInsideUncalledNestedFunction(node)) return;
+        if (setupDepth > 0) {
+          for (const name of collectPatternNames(node.left)) rememberSetupMutation(node, name);
+          if (node.left.type === "MemberExpression") {
+            rememberSetupMutation(node, mutationRootName(node.left));
+          }
+        }
         reportAssignment(node);
       },
       UpdateExpression(node) {
         if (isInsideUncalledNestedFunction(node)) return;
+        rememberSetupMutation(node, mutationRootName(node.argument));
         reportIfShared(node, mutationRootName(node.argument));
       },
       "CallExpression:exit"(node) {
         if (isTestCall(node)) testDepth -= 1;
         if (isSetupCall(node)) setupDepth -= 1;
         if (isInsideUncalledNestedFunction(node)) return;
+        rememberSetupMutation(node, mutatingCallRootName(node));
         rememberRegistryReport(node, mutatingCallRootName(node));
       },
     };
