@@ -15,6 +15,18 @@ export interface ExportedProps {
   nav?: UI.ReactNode;
 }
 
+export default interface DefaultProps {
+  defaultFooter?: R.ReactNode;
+}
+
+interface BaseProps {
+  inherited?: R.ReactNode;
+}
+
+interface ExtendedProps extends BaseProps {
+  label?: string;
+}
+
 interface Props {
   header?: React.ReactNode;
   footer?: Alias;
@@ -24,6 +36,8 @@ interface Props {
 const typedSlot: Alias = null;
 var globalSlot: UI.ReactNode = null;
 const props: Props = {};
+const defaultProps: DefaultProps = {};
+const inheritedProps: ExtendedProps = {};
 
 export const Arrow = ({ header = null }: Props) => header ?? <DefaultHeader />;
 
@@ -39,12 +53,18 @@ export const ExportedObject = ({ aside, nav }: ExportedProps) => (
 
 export const FromObject = () => props.footer ?? <DefaultFooter />;
 
+export const FromOptionalObject = () => props?.footer ?? <DefaultFooter />;
+
 export const FromDestructure = () => {
   const { footer = null } = props;
   return footer ?? <DefaultFooter />;
 };
 
 export const Direct = () => typedSlot ?? <DefaultFooter />;
+
+export const DefaultExported = () => defaultProps.defaultFooter ?? <DefaultFooter />;
+
+export const Inherited = () => inheritedProps.inherited ?? <DefaultFooter />;
 
 export const NamespaceDirect = () => globalSlot ?? <DefaultFooter />;
 
@@ -53,6 +73,10 @@ export function VarScope() {
     var blockSlot: R.ReactNode = null;
   }
   return blockSlot ?? <DefaultFooter />;
+}
+
+export function DefaultParam(slot: Alias = null) {
+  return slot ?? <DefaultFooter />;
 }
 
 export const Ignored = ({ title }: Props) => {

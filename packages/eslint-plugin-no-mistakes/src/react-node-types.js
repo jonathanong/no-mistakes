@@ -38,9 +38,24 @@ function createReactNodeFacts(program) {
   const objectProps = new Map();
 
   function topLevelDeclaration(statement) {
-    return statement.type === "ExportNamedDeclaration" && statement.declaration
+    return (statement.type === "ExportNamedDeclaration" ||
+      statement.type === "ExportDefaultDeclaration") &&
+      statement.declaration
       ? statement.declaration
       : statement;
+  }
+
+  function setChanged(previous, next) {
+    if (!previous || previous.size !== next.size) return true;
+    for (const value of next) {
+      if (!previous.has(value)) return true;
+    }
+    return false;
+  }
+
+  function heritageName(heritage) {
+    const expression = heritage && heritage.expression;
+    return expression && expression.type === "Identifier" ? expression.name : null;
   }
 
   function isReactNodeType(type) {
@@ -89,19 +104,34 @@ function createReactNodeFacts(program) {
     }
   }
 
-  for (const statement of program.body || []) {
-    const declaration = topLevelDeclaration(statement);
-    if (declaration.type === "TSInterfaceDeclaration") {
-      objectProps.set(
-        declaration.id.name,
-        collectMembers(declaration.body && declaration.body.body),
-      );
-    }
-    if (
-      declaration.type === "TSTypeAliasDeclaration" &&
-      declaration.typeAnnotation.type === "TSTypeLiteral"
-    ) {
-      objectProps.set(declaration.id.name, collectMembers(declaration.typeAnnotation.members));
+  let objectsChanged = true;
+  while (objectsChanged) {
+    objectsChanged = false;
+    for (const statement of program.body || []) {
+      const declaration = topLevelDeclaration(statement);
+      if (declaration.type === "TSInterfaceDeclaration") {
+        const props = collectMembers(declaration.body && declaration.body.body);
+        for (const heritage of declaration.extends || []) {
+          const inherited = objectProps.get(heritageName(heritage));
+          if (inherited) {
+            for (const prop of inherited) props.add(prop);
+          }
+        }
+        if (setChanged(objectProps.get(declaration.id.name), props)) {
+          objectProps.set(declaration.id.name, props);
+          objectsChanged = true;
+        }
+      }
+      if (
+        declaration.type === "TSTypeAliasDeclaration" &&
+        declaration.typeAnnotation.type === "TSTypeLiteral"
+      ) {
+        const props = collectMembers(declaration.typeAnnotation.members);
+        if (setChanged(objectProps.get(declaration.id.name), props)) {
+          objectProps.set(declaration.id.name, props);
+          objectsChanged = true;
+        }
+      }
     }
   }
 

@@ -48,8 +48,8 @@ function isSameArgumentList(params, args) {
         identifierName(param.argument) === identifierName(args[index].argument)
       );
     }
-    const unwrapped = param.type === "AssignmentPattern" ? param.left : param;
-    const name = identifierName(unwrapped);
+    if (param.type === "AssignmentPattern") return false;
+    const name = identifierName(param);
     return name && args[index].type === "Identifier" && args[index].name === name;
   });
 }

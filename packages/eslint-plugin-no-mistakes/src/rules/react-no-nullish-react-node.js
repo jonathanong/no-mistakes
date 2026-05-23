@@ -120,13 +120,14 @@ module.exports = rule(
     }
 
     function defineParam(param) {
-      const type = typeAnnotation(param);
-      if (isIdentifier(param)) {
-        currentScope().bindings.add(param.name);
-        if (isReactNodeType(type)) defineReactNode(param.name);
-        defineObjectType(param.name, type);
-      } else if (isObjectPattern(param)) {
-        definePattern(param, propsForType(type), defineBinding, defineReactNode);
+      const target = param.type === "AssignmentPattern" ? param.left : param;
+      const type = typeAnnotation(param) || typeAnnotation(target);
+      if (isIdentifier(target)) {
+        currentScope().bindings.add(target.name);
+        if (isReactNodeType(type)) defineReactNode(target.name);
+        defineObjectType(target.name, type);
+      } else if (isObjectPattern(target)) {
+        definePattern(target, propsForType(type), defineBinding, defineReactNode);
       }
     }
 
@@ -149,6 +150,7 @@ module.exports = rule(
     }
 
     function expressionIsReactNode(node) {
+      if (node && node.type === "ChainExpression") return expressionIsReactNode(node.expression);
       if (isIdentifier(node)) return variableIsReactNode(node.name);
       if (node && node.type === "MemberExpression" && !node.computed && isIdentifier(node.object)) {
         const props = objectProps(node.object.name);

@@ -79,7 +79,7 @@ describe("ts-no-function-aliases", () => {
         undefined,
         "coverage.ts",
       ),
-      ["alias", "alias", "alias", "alias"],
+      ["alias", "alias", "alias"],
     );
   });
 });
@@ -118,6 +118,10 @@ describe("react-no-nullish-react-node", () => {
         "coverage.tsx",
       ),
       [
+        "nullish",
+        "nullish",
+        "nullish",
+        "nullish",
         "nullish",
         "nullish",
         "nullish",
