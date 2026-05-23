@@ -93,7 +93,7 @@ pub(crate) fn collect_file_facts(
     };
     let nextjs_caching = if plan.nextjs_caching {
         Some(crate::codebase::rules::nextjs_no_caching::extract_program(
-            &source, program,
+            path, &source, program,
         ))
     } else {
         None

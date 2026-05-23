@@ -34,12 +34,8 @@ pub(crate) fn check_with_facts(
         let Some(facts) = shared.ts.get(path) else {
             continue;
         };
-        if let Some(parse_error) = facts.parse_error.as_ref() {
-            bail!(
-                "{} could not analyze {}: {parse_error}",
-                RULE_ID,
-                path.display()
-            );
+        if facts.parse_error.is_some() {
+            continue;
         }
         let Some(source) = facts.source.as_ref() else {
             bail!("{} requires source facts for {}", RULE_ID, path.display());

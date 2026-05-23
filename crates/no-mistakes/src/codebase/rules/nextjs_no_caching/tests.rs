@@ -41,16 +41,11 @@ fn reports_nextjs_cache_surfaces() {
             "web/app/bad.ts",
             "web/app/bad.ts",
             "web/app/bad.ts",
-            "web/app/bad.ts",
-            "web/app/bad.ts",
             "web/app/directive.ts",
             "web/app/fetch-options.ts",
             "web/app/fetch-options.ts",
             "web/app/fetch-options.ts",
             "web/app/fetch-options.ts",
-            "web/app/segment-config.ts",
-            "web/app/segment-config.ts",
-            "web/app/segment-config.ts",
             "web/next.config.ts",
             "web/next.config.ts",
             "web/next.config.ts",
@@ -87,7 +82,7 @@ fn generic_runner_checks_nextjs_caching() {
         crate::codebase::rules::run_check(&root, Some(&root.join(".no-mistakes.yml")), None)
             .unwrap();
 
-    assert_eq!(findings.len(), 16);
+    assert_eq!(findings.len(), 11);
 }
 
 #[test]
@@ -111,7 +106,7 @@ fn fact_runner_checks_nextjs_caching() {
     )
     .unwrap();
 
-    assert_eq!(findings.len(), 16);
+    assert_eq!(findings.len(), 11);
 }
 
 #[test]
@@ -314,6 +309,50 @@ export default nextConfig\n";
 }
 
 #[test]
+fn extract_reports_typed_next_config_object_exports() {
+    let source = "export default ({\n\
+  cacheComponents: true,\n\
+} satisfies NextConfig)\n";
+    let findings = extract(Path::new("next.config.ts"), source).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("cacheComponents")));
+}
+
+#[test]
+fn extract_reports_commonjs_next_config_object() {
+    let source = "module.exports = {\n\
+  cacheComponents: true,\n\
+  experimental: { cacheLife: {} },\n\
+}\n";
+    let findings = extract(Path::new("next.config.js"), source).unwrap();
+
+    assert_eq!(findings.len(), 2);
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("cacheComponents")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("cacheLife")));
+}
+
+#[test]
+fn extract_reports_wrapped_identifier_next_config_object() {
+    let source = "const nextConfig = {\n\
+  cacheHandlers: {},\n\
+}\n\
+export default withSentryConfig(nextConfig)\n";
+    let findings = extract(Path::new("next.config.ts"), source).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("cacheHandlers")));
+}
+
+#[test]
 fn extract_reports_named_segment_config_reexports() {
     let source = "const revalidate = 60\n\
 export { revalidate }\n";
@@ -324,6 +363,14 @@ export { revalidate }\n";
     assert!(findings
         .iter()
         .any(|finding| finding.message.contains("revalidate")));
+}
+
+#[test]
+fn extract_ignores_segment_config_exports_outside_route_segments() {
+    let source = "export const revalidate = 60\n";
+    let findings = extract(Path::new("app/lib.ts"), source).unwrap();
+
+    assert!(findings.is_empty());
 }
 
 #[test]

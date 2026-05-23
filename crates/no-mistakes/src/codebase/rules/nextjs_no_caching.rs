@@ -137,7 +137,9 @@ fn findings_for_file(
 }
 
 pub(crate) fn extract(path: &Path, source: &str) -> Result<Vec<NextjsCachingFinding>> {
-    crate::ast::with_program(path, source, |program, _| extract_program(source, program))
+    crate::ast::with_program(path, source, |program, _| {
+        extract_program(path, source, program)
+    })
 }
 
 #[cfg(test)]

@@ -145,7 +145,7 @@ fn fact_runner_requires_source_for_target_files() {
 }
 
 #[test]
-fn fact_runner_reports_parse_errors_for_route_files() {
+fn fact_runner_skips_parse_errors_for_route_files() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture());
     let inside = root.join("web/app/api/users/route.ts");
     let facts = CheckFactMap {
@@ -159,12 +159,9 @@ fn fact_runner_reports_parse_errors_for_route_files() {
         )]),
         ..Default::default()
     };
-    let err = check_with_facts(&root, &config(), &facts).unwrap_err();
+    let findings = check_with_facts(&root, &config(), &facts).unwrap();
 
-    assert!(
-        err.to_string().contains("failed to read fixture route"),
-        "{err:?}"
-    );
+    assert!(findings.is_empty());
 }
 
 #[test]

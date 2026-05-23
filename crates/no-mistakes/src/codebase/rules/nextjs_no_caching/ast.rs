@@ -1,10 +1,16 @@
+use std::path::Path;
+
 use super::visitor::NextjsCachingVisitor;
 use super::NextjsCachingFinding;
 use crate::codebase::ts_source::byte_offset_to_line;
 use oxc_ast::ast::Program;
 use oxc_ast_visit::Visit;
 
-pub(crate) fn extract_program(source: &str, program: &Program<'_>) -> Vec<NextjsCachingFinding> {
+pub(crate) fn extract_program(
+    path: &Path,
+    source: &str,
+    program: &Program<'_>,
+) -> Vec<NextjsCachingFinding> {
     let mut findings = Vec::new();
     for directive in &program.directives {
         if is_cache_directive(directive.directive.as_str()) {
@@ -15,12 +21,19 @@ pub(crate) fn extract_program(source: &str, program: &Program<'_>) -> Vec<Nextjs
         }
     }
 
-    let bindings = super::bindings::top_level_bindings(program);
-    let mut visitor = NextjsCachingVisitor::new(source, findings, bindings);
+    let segment_config = is_route_segment_file(path);
+    let bindings = super::bindings::top_level_bindings(program, segment_config);
+    let mut visitor = NextjsCachingVisitor::new(source, findings, bindings, segment_config);
     visitor.visit_program(program);
     visitor.findings.sort();
     visitor.findings.dedup();
     visitor.findings
+}
+
+fn is_route_segment_file(path: &Path) -> bool {
+    path.file_stem()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| matches!(name, "page" | "layout" | "route"))
 }
 
 pub(super) fn is_cache_directive(value: &str) -> bool {

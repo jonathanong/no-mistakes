@@ -7,17 +7,19 @@ pub(super) struct TopLevelBindings {
     pub(super) segment_config: HashMap<String, String>,
 }
 
-pub(super) fn top_level_bindings(program: &Program<'_>) -> TopLevelBindings {
+pub(super) fn top_level_bindings(program: &Program<'_>, segment_config: bool) -> TopLevelBindings {
     let mut bindings = TopLevelBindings {
         next_config: HashMap::new(),
         segment_config: HashMap::new(),
     };
     for statement in &program.body {
         match statement {
-            Statement::VariableDeclaration(var) => collect_top_level_var(var, &mut bindings),
+            Statement::VariableDeclaration(var) => {
+                collect_top_level_var(var, &mut bindings, segment_config);
+            }
             Statement::ExportNamedDeclaration(export) => {
                 if let Some(Declaration::VariableDeclaration(var)) = export.declaration.as_ref() {
-                    collect_top_level_var(var, &mut bindings);
+                    collect_top_level_var(var, &mut bindings, segment_config);
                 }
             }
             _ => {}
@@ -26,7 +28,11 @@ pub(super) fn top_level_bindings(program: &Program<'_>) -> TopLevelBindings {
     bindings
 }
 
-fn collect_top_level_var(var: &VariableDeclaration<'_>, bindings: &mut TopLevelBindings) {
+fn collect_top_level_var(
+    var: &VariableDeclaration<'_>,
+    bindings: &mut TopLevelBindings,
+    segment_config: bool,
+) {
     for decl in &var.declarations {
         let Some(name) = single_binding_name(&decl.id) else {
             continue;
@@ -38,7 +44,7 @@ fn collect_top_level_var(var: &VariableDeclaration<'_>, bindings: &mut TopLevelB
         if !config_findings.is_empty() {
             bindings.next_config.insert(name.clone(), config_findings);
         }
-        if banned_segment_config(name.as_str(), init) {
+        if segment_config && banned_segment_config(name.as_str(), init) {
             bindings
                 .segment_config
                 .insert(name.clone(), segment_config_message(&name));

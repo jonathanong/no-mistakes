@@ -4,7 +4,7 @@ use super::patterns::{banned_segment_config, fetch_cache_findings, single_bindin
 use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
 use crate::codebase::ts_source::byte_offset_to_line;
 use oxc_ast::ast::{
-    Argument, CallExpression, Declaration, ExportDefaultDeclarationKind, Expression, FunctionBody,
+    Argument, AssignmentExpression, CallExpression, Declaration, Expression, FunctionBody,
 };
 use oxc_ast_visit::{walk, Visit};
 use std::collections::{HashMap, HashSet};
@@ -16,6 +16,7 @@ pub(super) struct NextjsCachingVisitor<'a> {
     next_cache_namespaces: HashSet<String>,
     next_config_bindings: HashMap<String, Vec<(u32, String)>>,
     segment_config_bindings: HashMap<String, String>,
+    segment_config: bool,
 }
 
 impl<'a> NextjsCachingVisitor<'a> {
@@ -23,6 +24,7 @@ impl<'a> NextjsCachingVisitor<'a> {
         source: &'a str,
         findings: Vec<NextjsCachingFinding>,
         bindings: TopLevelBindings,
+        segment_config: bool,
     ) -> Self {
         Self {
             source,
@@ -31,6 +33,7 @@ impl<'a> NextjsCachingVisitor<'a> {
             next_cache_namespaces: HashSet::new(),
             next_config_bindings: bindings.next_config,
             segment_config_bindings: bindings.segment_config,
+            segment_config,
         }
     }
 
@@ -86,6 +89,9 @@ impl<'a> NextjsCachingVisitor<'a> {
     }
 
     fn check_export(&mut self, export: &oxc_ast::ast::ExportNamedDeclaration<'a>) {
+        if !self.segment_config {
+            return;
+        }
         let Some(Declaration::VariableDeclaration(var_decl)) = export.declaration.as_ref() else {
             self.check_export_specifiers(export);
             return;
@@ -118,20 +124,17 @@ impl<'a> NextjsCachingVisitor<'a> {
     }
 
     fn check_default_export(&mut self, export: &oxc_ast::ast::ExportDefaultDeclaration<'a>) {
-        match &export.declaration {
-            ExportDefaultDeclarationKind::ObjectExpression(obj) => {
-                self.push_next_config_findings(super::config::object_findings(obj));
-            }
-            ExportDefaultDeclarationKind::CallExpression(call) => {
-                self.push_next_config_findings(super::config::call_findings(call));
-            }
-            ExportDefaultDeclarationKind::Identifier(id) => {
-                if let Some(findings) = self.next_config_bindings.get(id.name.as_str()) {
-                    self.push_next_config_findings(findings.clone());
-                }
-            }
-            _ => {}
-        }
+        self.push_next_config_findings(super::config::default_export_findings(
+            &export.declaration,
+            &self.next_config_bindings,
+        ));
+    }
+
+    fn check_assignment(&mut self, assignment: &AssignmentExpression<'a>) {
+        self.push_next_config_findings(super::config::assignment_findings(
+            assignment,
+            &self.next_config_bindings,
+        ));
     }
 
     fn push_next_config_findings(&mut self, findings: Vec<(u32, String)>) {
@@ -190,6 +193,11 @@ impl<'a> Visit<'a> for NextjsCachingVisitor<'a> {
         self.check_call(call);
         self.check_fetch_call(call);
         walk::walk_call_expression(self, call);
+    }
+
+    fn visit_assignment_expression(&mut self, assignment: &AssignmentExpression<'a>) {
+        self.check_assignment(assignment);
+        walk::walk_assignment_expression(self, assignment);
     }
 }
 
