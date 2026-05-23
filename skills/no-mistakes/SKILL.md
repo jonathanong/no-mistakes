@@ -83,7 +83,8 @@ member usage.
 - `baseUrl`-only imports are not resolved; use `compilerOptions.paths`.
 - Dynamic `import()` and `require()` are tracked only with string literals.
 - Bare external specifiers such as `react` are terminal module nodes; their
-  `node_modules` sources are not parsed.
+  `node_modules` sources are not parsed. Node built-ins such as `node:path`
+  remain excluded from module nodes.
 - Graph tools answer file/symbol relationships, not exact call locations.
 - Dynamic queue names, route paths, fetch URLs, and selectors should be made
   static when agent-readable analysis is required.

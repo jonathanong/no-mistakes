@@ -37,7 +37,8 @@ serialized in output through the `via` field.
   support and is not a full shell, npm script, or workflow dependency graph.
 - External packages are terminal module nodes. They can be selected as roots,
   targets, or filtered with `--target-module`, but their `node_modules` source
-  is not parsed.
+  is not parsed. Node built-ins such as `node:path` remain excluded from the
+  graph.
 - Function-scoped dynamic `import()` and `require()` edges are pruned unless the
   containing function is statically called, exported, reached through an unknown
   top-level call shape, or contains an unknown call shape in reachable code.
