@@ -1,5 +1,7 @@
 use super::*;
+use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::config::v2::schema::{Project, ProjectType, RuleDef};
+use std::collections::HashMap;
 
 fn fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -75,4 +77,37 @@ fn fact_runner_checks_nextjs_api_routes() {
     .unwrap();
 
     assert_eq!(findings.len(), 4);
+}
+
+#[test]
+fn fact_runner_ignores_missing_source_outside_target_roots() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture());
+    let outside = root.join("other/app/api/users/route.ts");
+    let inside = root.join("web/app/api/users/route.ts");
+    let facts = CheckFactMap {
+        files: vec![outside.clone(), inside.clone()],
+        ts: HashMap::from([
+            (outside, CheckFileFacts::default()),
+            (
+                inside,
+                CheckFileFacts {
+                    source: Some("export function GET() {}".to_string()),
+                    ..Default::default()
+                },
+            ),
+        ]),
+        ..Default::default()
+    };
+    let findings = check_with_facts(&root, &config(), &facts).unwrap();
+
+    assert_eq!(findings.len(), 1);
+}
+
+#[test]
+fn direct_runner_reports_file_read_errors() {
+    let root = fixture();
+    let missing = root.join("web/app/api/missing/route.ts");
+    let err = check_files(&root, &config(), &[missing]).unwrap_err();
+
+    assert!(err.to_string().contains("failed to read"), "{err:?}");
 }

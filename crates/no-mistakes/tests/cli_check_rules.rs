@@ -92,7 +92,7 @@ fn nextjs_no_api_routes_fails_for_app_and_pages_routes() {
 
     assert!(!out.status.success(), "expected exit 1");
     assert!(body.contains("nextjs-no-api-routes"), "{body}");
-    assert!(body.contains("web/app/api/users/route.ts"), "{body}");
+    assert!(body.contains("web/src/app/rss/route.ts"), "{body}");
     assert!(body.contains("web/pages/api/legacy.ts"), "{body}");
 }
 

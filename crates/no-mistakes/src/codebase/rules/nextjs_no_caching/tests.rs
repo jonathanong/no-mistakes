@@ -149,6 +149,17 @@ export const value = cache.unstable_cache(async () => 1)\n";
 }
 
 #[test]
+fn extract_reports_next_cache_side_effect_import() {
+    let source = "import 'next/cache'\n";
+    let findings = extract(Path::new("app/cache.ts"), source).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("side-effect imports")));
+}
+
+#[test]
 fn extract_reports_wrapped_next_config_object() {
     let source = "export default withSentryConfig({\n\
   cacheComponents: true,\n\
@@ -163,4 +174,22 @@ fn extract_reports_wrapped_next_config_object() {
     assert!(findings
         .iter()
         .any(|finding| finding.message.contains("cacheHandlers")));
+}
+
+#[test]
+fn extract_reports_identifier_next_config_object() {
+    let source = "const nextConfig = {\n\
+  cacheComponents: true,\n\
+  cacheLife: {},\n\
+}\n\
+export default nextConfig\n";
+    let findings = extract(Path::new("next.config.ts"), source).unwrap();
+
+    assert_eq!(findings.len(), 2);
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("cacheComponents")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("cacheLife")));
 }

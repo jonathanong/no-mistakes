@@ -1,6 +1,6 @@
 use super::patterns::boolean_value;
 use crate::codebase::ts_source::static_property_key_name;
-use oxc_ast::ast::{Argument, CallExpression, ObjectExpression, ObjectPropertyKind};
+use oxc_ast::ast::{Argument, CallExpression, Expression, ObjectExpression, ObjectPropertyKind};
 
 pub(super) fn object_findings(obj: &ObjectExpression<'_>) -> Vec<(u32, String)> {
     let mut findings = Vec::new();
@@ -34,6 +34,14 @@ pub(super) fn call_findings(call: &CallExpression<'_>) -> Vec<(u32, String)> {
         })
         .flatten()
         .collect()
+}
+
+pub(super) fn expression_findings(expr: &Expression<'_>) -> Vec<(u32, String)> {
+    match expr {
+        Expression::ObjectExpression(obj) => object_findings(obj),
+        Expression::CallExpression(call) => call_findings(call),
+        _ => Vec::new(),
+    }
 }
 
 fn next_config_message(name: &str) -> String {
