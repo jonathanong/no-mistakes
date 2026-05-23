@@ -1,10 +1,12 @@
-use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
-
 pub use super::test_plan::{
     TestPlanConfig, TestPlanDependencies, TestPlanEnvironment, TestPlanFrameworkConfig,
     TestPlanGroup, TestPlanGroupType, TestPlanLimit, TestPlanPercent, TestPlanProjectDependency,
 };
+
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
+
+mod rule_targets;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
@@ -221,11 +223,6 @@ impl NoMistakesConfig {
                 .projects
                 .iter()
                 .any(|project| self.projects.contains_key(project))
-            || (rule_supports_test_targets(&rule.rule)
-                && (!rule.tests.vitest.is_empty() || !rule.tests.playwright.is_empty()))
+            || rule_targets::rule_has_effective_test_target(rule)
     }
-}
-
-fn rule_supports_test_targets(rule_id: &str) -> bool {
-    rule_id == "test-no-unmocked-dynamic-imports"
 }

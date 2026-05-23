@@ -1,6 +1,6 @@
+use crate::playwright::analysis::cli_run::run;
 use crate::playwright::analysis::discover::{build_project_discovery, discover_test_files};
 use crate::playwright::analysis::output::{build_related_report, print_related_text};
-use crate::playwright::analysis::pipeline::run;
 use crate::playwright::analysis::types::Edge;
 use crate::playwright::cli::{Command, PlaywrightArgs as Cli};
 use crate::playwright::config::Settings;

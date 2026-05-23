@@ -1,6 +1,7 @@
 use regex::Regex;
 use std::path::PathBuf;
 
+#[derive(Clone)]
 pub struct SelectorRegexes {
     pub(super) app_attributes: Vec<String>,
     pub(super) component_attributes: std::collections::BTreeMap<String, String>,
@@ -8,6 +9,7 @@ pub struct SelectorRegexes {
     pub(super) html_ids: bool,
 }
 
+#[derive(Clone)]
 pub(super) struct AttributeRegex {
     pub(super) attribute: String,
     pub(super) regex: Regex,

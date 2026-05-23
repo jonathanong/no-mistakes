@@ -33,6 +33,9 @@ pub fn run_check(
         let storybook_findings = require_storybook_stories::check(root, &config, tsconfig_path)?;
         findings.extend(storybook_findings);
     }
+    if crate::playwright::rules::configured(&config) {
+        findings.extend(crate::playwright::rules::check(root, config_path, &config)?);
+    }
     sort_findings(&mut findings);
     Ok(findings)
 }
@@ -73,6 +76,14 @@ pub fn run_check_with_facts(
             require_storybook_stories::check_with_facts(root, &config, tsconfig_path, shared)?;
         findings.extend(storybook_findings);
     }
+    if crate::playwright::rules::configured(&config) {
+        findings.extend(crate::playwright::rules::check_with_facts(
+            root,
+            config_path,
+            &config,
+            shared,
+        )?);
+    }
     sort_findings(&mut findings);
     Ok(findings)
 }
@@ -83,4 +94,5 @@ fn any_codebase_rule_enabled(config: &crate::config::v2::NoMistakesConfig) -> bo
         || rule_enabled(config, NEXTJS_NO_API_ROUTES)
         || rule_enabled(config, NEXTJS_NO_CACHING)
         || rule_enabled(config, REQUIRE_STORYBOOK_STORIES)
+        || crate::playwright::rules::configured(config)
 }

@@ -2,9 +2,9 @@ use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
 use crate::check_tasks::{
     filesystem_rules_configured, queues_configured, unique_exports_configured,
 };
-use anyhow::Result;
+use anyhow::{Context, Result};
 use enabled::{fact_plan, integration_configured, plan_requests_facts};
-use no_mistakes::codebase::check_facts::collect_check_facts;
+use no_mistakes::codebase::check_facts::collect_check_facts_with_playwright;
 use no_mistakes::config::v2::load_v2_config;
 use no_mistakes::react_traits;
 use std::path::PathBuf;
@@ -27,6 +27,10 @@ pub(crate) fn run_all(
     let unique_exports_enabled = unique_exports_configured(&config);
     let enabled = enabled::ConfiguredChecks::from_config(&config);
     let filesystem_rules_enabled = filesystem_rules_configured(&config);
+    let playwright_rules_enabled = no_mistakes::playwright::rules::configured(&config);
+    let playwright_fact_plan =
+        no_mistakes::playwright::rules::fact_plan(&root, config_path.as_deref(), &config)
+            .context("failed to prepare Playwright shared facts")?;
     let integration_enabled = integration_configured(&config);
     let react_enabled = react_traits::check_enabled(&root, config_path.as_deref(), false)?;
     let react_warning = None;
@@ -41,7 +45,8 @@ pub(crate) fn run_all(
         integration: integration_enabled,
         unique_exports: unique_exports_enabled,
     });
-    if !plan_requests_facts(&plan) && !filesystem_rules_enabled {
+    let needs_shared_facts = plan_requests_facts(&plan) || playwright_fact_plan.is_some();
+    if !needs_shared_facts && !filesystem_rules_enabled && !playwright_rules_enabled {
         return Ok(empty_results([react_warning]));
     }
     let discover_start = Instant::now();
@@ -55,13 +60,13 @@ pub(crate) fn run_all(
     let discover_duration = discover_start.elapsed();
     let facts_start = Instant::now();
     // When only filesystem rules are enabled, no TS/JS parsing is needed.
-    let (fs_files, facts) = if plan_requests_facts(&plan) {
+    let (fs_files, facts) = if needs_shared_facts {
         let fs = if filesystem_rules_enabled {
             discovered.clone()
         } else {
             Vec::new()
         };
-        let f = collect_check_facts(&root, discovered, plan);
+        let f = collect_check_facts_with_playwright(&root, discovered, plan, playwright_fact_plan);
         (fs, f)
     } else {
         (discovered, Default::default())

@@ -1,11 +1,12 @@
 use crate::playwright::analysis::app_collect::collect_app_selector_occurrences;
+use crate::playwright::analysis::cli_run::run;
 use crate::playwright::analysis::context::{
     DiscoveredTestFile, TestAnalysisContext, TestProjectContext,
 };
 use crate::playwright::analysis::output::{
     build_related_report, print_edges_text, print_related_text,
 };
-use crate::playwright::analysis::pipeline::{analyze_with_policy, run};
+use crate::playwright::analysis::pipeline::{analyze_with_policy, analyze_with_policy_and_facts};
 use crate::playwright::analysis::test_file::analyze_test_file;
 use crate::playwright::analysis::types::{Analysis, UniqueSelectorPolicy};
 use crate::playwright::cli::{Command, PlaywrightArgs as Cli};
@@ -36,6 +37,78 @@ fn collect_app_selectors(
     app_selectors.sort();
     app_selectors.dedup();
     Ok(app_selectors)
+}
+
+#[test]
+fn analyze_with_facts_falls_back_when_shared_facts_are_missing() {
+    let root = fixture_path(&["nextjs-coverage", "covered"]);
+    let settings = Settings {
+        frontend_root: "web/app".to_string(),
+        playwright_configs: vec![],
+        project: None,
+        test_include: vec![],
+        test_exclude: vec![],
+        ignore_routes: vec![],
+        navigation_helpers: vec![],
+        selector_attributes: vec!["data-testid".to_string()],
+        component_selector_attributes: BTreeMap::new(),
+        html_ids: false,
+        selector_roots: vec!["web/app".to_string()],
+        selector_include: vec![],
+        selector_exclude: vec![],
+    };
+    let facts = crate::codebase::check_facts::CheckFactMap::default();
+
+    let analysis = analyze_with_policy_and_facts(
+        &root,
+        &settings,
+        playwright_tests::TestPolicy::default(),
+        UniqueSelectorPolicy::default(),
+        &facts,
+    )
+    .unwrap();
+
+    assert!(!analysis.edges.edges.is_empty());
+}
+
+#[test]
+fn analyze_with_facts_falls_back_when_file_facts_do_not_include_playwright() {
+    let root = fixture_path(&["nextjs-coverage", "covered"]);
+    let settings = Settings {
+        frontend_root: "web/app".to_string(),
+        playwright_configs: vec![],
+        project: None,
+        test_include: vec![],
+        test_exclude: vec![],
+        ignore_routes: vec![],
+        navigation_helpers: vec![],
+        selector_attributes: vec!["data-testid".to_string()],
+        component_selector_attributes: BTreeMap::new(),
+        html_ids: false,
+        selector_roots: vec!["web/app".to_string()],
+        selector_include: vec![],
+        selector_exclude: vec![],
+    };
+    let mut facts = crate::codebase::check_facts::CheckFactMap::default();
+    facts.ts.insert(
+        root.join("tests/e2e/settings.spec.ts"),
+        crate::codebase::check_facts::CheckFileFacts::default(),
+    );
+    facts.ts.insert(
+        root.join("tests/e2e/users.spec.ts"),
+        crate::codebase::check_facts::CheckFileFacts::default(),
+    );
+
+    let analysis = analyze_with_policy_and_facts(
+        &root,
+        &settings,
+        playwright_tests::TestPolicy::default(),
+        UniqueSelectorPolicy::default(),
+        &facts,
+    )
+    .unwrap();
+
+    assert!(!analysis.edges.edges.is_empty());
 }
 
 #[test]
@@ -122,6 +195,88 @@ fn analyze_discovers_tests_and_builds_reports() {
     let mut cli_tests_json = cli_tests;
     cli_tests_json.json = true;
     assert_eq!(run(cli_tests_json).unwrap(), ExitCode::SUCCESS);
+}
+
+#[test]
+fn run_check_returns_success_for_fully_covered_project() {
+    let root = fixture_path(&["nextjs-selectors", "selector-covered"]);
+    let cli = Cli {
+        root,
+        config: None,
+        playwright_config: vec![],
+        project: None,
+        json: true,
+        assert_conditional_tests: false,
+        allow_skipped_tests: false,
+        assert_unique_test_ids: false,
+        assert_unique_html_ids: false,
+        assert_unique_selectors: false,
+        command: Command::Check,
+    };
+
+    assert_eq!(run(cli).unwrap(), ExitCode::SUCCESS);
+}
+
+#[test]
+fn run_check_fails_for_uncovered_selectors_without_uncovered_routes() {
+    let root = fixture_path(&["nextjs-selectors", "selector-uncovered"]);
+    let cli = Cli {
+        root,
+        config: None,
+        playwright_config: vec![],
+        project: None,
+        json: true,
+        assert_conditional_tests: false,
+        allow_skipped_tests: false,
+        assert_unique_test_ids: false,
+        assert_unique_html_ids: false,
+        assert_unique_selectors: false,
+        command: Command::Check,
+    };
+
+    assert_eq!(run(cli).unwrap(), ExitCode::from(1));
+}
+
+#[test]
+fn run_check_fails_for_duplicate_selectors_without_uncovered_coverage() {
+    let root = fixture_path(&["nextjs-coverage", "sort-tiebreakers"]);
+    let cli = Cli {
+        root,
+        config: None,
+        playwright_config: vec![],
+        project: None,
+        json: true,
+        assert_conditional_tests: false,
+        allow_skipped_tests: false,
+        assert_unique_test_ids: true,
+        assert_unique_html_ids: false,
+        assert_unique_selectors: false,
+        command: Command::Check,
+    };
+
+    assert_eq!(run(cli).unwrap(), ExitCode::from(1));
+}
+
+#[test]
+fn run_check_surfaces_settings_load_errors() {
+    let root = fixture_path(&["nextjs-selectors", "selector-covered"]);
+    let cli = Cli {
+        root,
+        config: Some(PathBuf::from("missing.no-mistakes.yml")),
+        playwright_config: vec![],
+        project: None,
+        json: true,
+        assert_conditional_tests: false,
+        allow_skipped_tests: false,
+        assert_unique_test_ids: false,
+        assert_unique_html_ids: false,
+        assert_unique_selectors: false,
+        command: Command::Check,
+    };
+
+    let error = run(cli).unwrap_err();
+
+    assert!(error.to_string().contains("config file does not exist"));
 }
 
 #[test]

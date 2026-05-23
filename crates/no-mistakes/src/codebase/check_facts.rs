@@ -4,16 +4,19 @@ use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts;
 use crate::codebase::storybook::StorybookFileFacts;
 use crate::codebase::ts_symbols::FileSymbols;
 use crate::integration_tests::types::FileAnalysis as IntegrationFileAnalysis;
+use crate::playwright::playwright_tests::TestOccurrence;
+use crate::playwright::selectors::{PlaywrightSelector, SelectorRegexes};
 use crate::queue::extract::FileFacts as QueueFileFacts;
 use crate::react_traits::analyze::file::FileAnalysis as ReactFileAnalysis;
 use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 mod file;
 pub(crate) use file::collect_file_facts;
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Clone, Default)]
 pub struct CheckFactPlan {
     pub imports: bool,
     pub symbols: bool,
@@ -25,6 +28,13 @@ pub struct CheckFactPlan {
     pub storybook: bool,
     pub source: bool,
     pub raw_source: bool,
+}
+
+#[derive(Clone)]
+pub struct PlaywrightFactPlan {
+    pub(crate) navigation_helpers: Vec<String>,
+    pub(crate) selector_regexes: Arc<SelectorRegexes>,
+    pub(crate) test_id_attributes_by_path: Arc<HashMap<PathBuf, Vec<String>>>,
 }
 
 #[derive(Default)]
@@ -52,8 +62,14 @@ pub(crate) struct CheckFileFacts {
     pub dynamic_imports: Option<TestFacts>,
     pub nextjs_caching: Option<Vec<NextjsCachingFinding>>,
     pub storybook: Option<StorybookFileFacts>,
+    pub(crate) playwright: Option<PlaywrightTestFacts>,
     pub parse_error: Option<String>,
     pub(crate) parsed: bool,
+}
+
+pub(crate) struct PlaywrightTestFacts {
+    pub(crate) urls: Vec<TestOccurrence<String>>,
+    pub(crate) selectors: Vec<TestOccurrence<PlaywrightSelector>>,
 }
 
 impl CheckFactMap {
@@ -79,14 +95,26 @@ impl CheckFactMap {
 }
 
 pub fn collect_check_facts(root: &Path, files: Vec<PathBuf>, plan: CheckFactPlan) -> CheckFactMap {
+    collect_check_facts_with_playwright(root, files, plan, None)
+}
+
+pub fn collect_check_facts_with_playwright(
+    root: &Path,
+    files: Vec<PathBuf>,
+    plan: CheckFactPlan,
+    playwright: Option<PlaywrightFactPlan>,
+) -> CheckFactMap {
     let stats = CheckFactStats {
         files_discovered: files.len(),
         ..CheckFactStats::default()
     };
+    let playwright = playwright.as_ref();
     let ts: HashMap<_, _> = files
         .par_iter()
         .filter(|path| is_indexable(path) || (plan.storybook && is_mdx_file(path)))
-        .filter_map(|path| collect_file_facts(root, path, plan).map(|facts| (path.clone(), facts)))
+        .filter_map(|path| {
+            collect_file_facts(root, path, &plan, playwright).map(|facts| (path.clone(), facts))
+        })
         .collect();
     let mut files_parsed = 0;
     let mut parse_errors = 0;
