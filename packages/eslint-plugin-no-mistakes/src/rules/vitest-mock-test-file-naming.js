@@ -5,6 +5,7 @@ const { rule } = require("../helpers");
 const TEST_FILE_PATTERN = /\.(?:test|spec)\.[cm]?[jt]sx?$/;
 const MOCK_TEST_FILE_PATTERN = /\.mock\.test\.[cm]?[jt]sx?$/;
 const MOCK_METHODS = new Set([
+  "fn",
   "mock",
   "doMock",
   "unmock",

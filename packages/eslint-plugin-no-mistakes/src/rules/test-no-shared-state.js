@@ -29,6 +29,8 @@ module.exports = rule(
     const mutableTopLevel = new Set();
     const functionDeclarations = new Map();
     const pendingNamedCallbacks = [];
+    const pendingRegistryReports = [];
+    const setupReferencedMutables = new Set();
     const viMockFactoryReferences = new Set();
     const viMockCapturedMutables = new Set();
     let testDepth = 0;
@@ -71,6 +73,26 @@ module.exports = rule(
       }
     }
 
+    function rememberRegistryReport(node, name) {
+      if (
+        name &&
+        testDepth > 0 &&
+        setupDepth === 0 &&
+        !viMockCapturedMutables.has(name) &&
+        isModuleMutable(node, name)
+      ) {
+        pendingRegistryReports.push({ node, name });
+      }
+    }
+
+    function flushRegistryReports() {
+      for (const { node, name } of pendingRegistryReports) {
+        if (!setupReferencedMutables.has(name)) {
+          context.report({ node, messageId: "shared" });
+        }
+      }
+    }
+
     function reportAssignment(node) {
       for (const name of collectPatternNames(node.left)) reportIfShared(node, name);
       if (node.left.type !== "MemberExpression") return;
@@ -99,6 +121,11 @@ module.exports = rule(
           const declaration = functionDeclarations.get(name);
           if (declaration) checkSharedMutations(declaration.body);
         }
+        flushRegistryReports();
+      },
+      Identifier(node) {
+        if (setupDepth === 0) return;
+        if (isModuleMutable(node, node.name)) setupReferencedMutables.add(node.name);
       },
       CallExpression(node) {
         collectViMockFactoryReferences(node);
@@ -121,7 +148,7 @@ module.exports = rule(
         if (isTestCall(node)) testDepth -= 1;
         if (isSetupCall(node)) setupDepth -= 1;
         if (isInsideUncalledNestedFunction(node)) return;
-        reportIfShared(node, mutatingCallRootName(node));
+        rememberRegistryReport(node, mutatingCallRootName(node));
       },
     };
 
@@ -144,7 +171,7 @@ module.exports = rule(
       } else if (node.type === "UpdateExpression") {
         reportIfShared(node, mutationRootName(node.argument));
       } else if (node.type === "CallExpression") {
-        reportIfShared(node, mutatingCallRootName(node));
+        rememberRegistryReport(node, mutatingCallRootName(node));
       }
       for (const child of childNodes(node)) checkSharedMutations(child);
     }

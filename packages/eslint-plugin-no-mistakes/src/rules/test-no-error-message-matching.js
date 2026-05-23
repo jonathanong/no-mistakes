@@ -62,6 +62,10 @@ function isStaticAnalysisPath(filename) {
   );
 }
 
+function isGeneratedTestPath(filename) {
+  return filename.replace(/\\/g, "/").includes(".generated.");
+}
+
 function isExpectCall(node) {
   const current = unwrap(node);
   if (current?.type !== "CallExpression") return false;
@@ -99,7 +103,7 @@ module.exports = rule(
     messages: { message: "Do not assert on err.message; check the error type or code instead." },
   },
   (context) => {
-    if (isStaticAnalysisPath(context.filename)) return {};
+    if (isStaticAnalysisPath(context.filename) || isGeneratedTestPath(context.filename)) return {};
     let testDepth = 0;
     return {
       CallExpression(node) {

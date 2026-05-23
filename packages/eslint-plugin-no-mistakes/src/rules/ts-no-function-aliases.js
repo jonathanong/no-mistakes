@@ -66,7 +66,19 @@ function isSelfCall(node, call) {
   );
 }
 
+function isNamedWrapper(node) {
+  if (node.type === "FunctionDeclaration") {
+    return (
+      node.parent?.type === "Program" ||
+      node.parent?.type === "ExportNamedDeclaration" ||
+      node.parent?.type === "ExportDefaultDeclaration"
+    );
+  }
+  return node.parent?.type === "VariableDeclarator" && node.parent.id.type === "Identifier";
+}
+
 function reportIfAlias(node, context) {
+  if (!isNamedWrapper(node)) return;
   const call = onlyCallExpression(node.body);
   if (!call || call.type !== "CallExpression") return;
   if (isSelfCall(node, call)) return;

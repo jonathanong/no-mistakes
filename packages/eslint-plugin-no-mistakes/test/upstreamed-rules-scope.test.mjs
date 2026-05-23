@@ -126,6 +126,15 @@ describe("upstreamed generic rule scoping", () => {
     );
     assert.deepEqual(
       messages(
+        fixture("generated-message.generated.test.ts"),
+        "test-no-error-message-matching",
+        undefined,
+        "backend/services/email-address-validator/errors.generated.test.mts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
         fixture("next-script-inline-boot.tsx"),
         "nextjs-no-manual-script-tags",
         { allowInlineScriptIdPatterns: ["^theme-"] },
@@ -141,6 +150,27 @@ describe("upstreamed generic rule scoping", () => {
         "app/layout.tsx",
       ),
       ["script"],
+    );
+  });
+
+  it("allows cleanup registries without allowing uncleaned shared state", () => {
+    assert.deepEqual(
+      messages(
+        fixture("shared-state-cleanup-registry.valid.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "shared-state-cleanup-registry.valid.test.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("shared-state-uncleaned-registry.invalid.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "shared-state-uncleaned-registry.invalid.test.ts",
+      ),
+      ["shared"],
     );
   });
 });
