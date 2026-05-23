@@ -192,6 +192,37 @@ fn all_relationships_is_same_as_omitted() {
 }
 
 #[test]
+fn queue_job_nodes_are_not_matched() {
+    use crate::codebase::dependencies::graph::test_support::from_typed_maps;
+    use crate::codebase::dependencies::{EdgeKind, NodeId};
+    let root = fixture("forbidden-dependencies-basic");
+    let root_file = crate::codebase::ts_resolver::normalize_path(&root.join("entrypoints/api.mts"));
+    let queue_file = crate::codebase::ts_resolver::normalize_path(&root.join("jobs/queue.mts"));
+    let root_node = NodeId::File(root_file.clone());
+    let queue_node = NodeId::QueueJob {
+        queue_file: queue_file.clone(),
+        job: "process".to_string(),
+    };
+    let forward = std::collections::HashMap::from([(
+        root_node.clone(),
+        vec![(queue_node.clone(), EdgeKind::QueueEnqueue)],
+    )]);
+    let reverse = std::collections::HashMap::from([(
+        queue_node.clone(),
+        vec![(root_node.clone(), EdgeKind::QueueEnqueue)],
+    )]);
+    let graph = from_typed_maps(root.clone(), forward, reverse);
+    let opts = Options {
+        roots: vec!["entrypoints/api.mts".to_string()],
+        forbidden_modules: vec!["*".to_string()],
+        forbidden_files: vec!["**".to_string()],
+        relationships: vec![],
+    };
+    let findings = check_application(&root, &opts, &graph).unwrap();
+    assert!(findings.is_empty(), "QueueJob nodes should not be matched");
+}
+
+#[test]
 fn no_rule_configured_returns_empty() {
     let root = fixture("forbidden-dependencies-basic");
     // Build a config that has no forbidden-dependencies rule at all

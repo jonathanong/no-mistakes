@@ -36,3 +36,12 @@ pub(crate) fn from_raw_maps(
         reverse: typed_rev,
     }
 }
+
+/// Construct a graph directly from typed edge maps for tests that need non-File nodes.
+pub(crate) fn from_typed_maps(root: PathBuf, forward: EdgeMap, reverse: EdgeMap) -> DepGraph {
+    DepGraph {
+        root,
+        forward,
+        reverse,
+    }
+}
