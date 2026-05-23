@@ -1,3 +1,11 @@
+const ignored = "stories";
+
 export default {
-  stories: ["../storybook/**/*.stories.tsx"],
+  // "../ignored/**/*.stories.tsx"
+  stories: [
+    {
+      directory: "../storybook",
+      files: `**/*.stories.tsx`,
+    },
+  ],
 };

@@ -3,6 +3,11 @@ use crate::codebase::ts_resolver::{load_tsconfig, normalize_path, TsConfig};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::schema::NoMistakesConfig;
 use anyhow::Result;
+use oxc_allocator::Allocator;
+use oxc_ast::ast::{ArrayExpressionElement, Expression, ObjectExpression, ObjectProperty};
+use oxc_ast_visit::{walk, Visit};
+use oxc_parser::Parser;
+use oxc_span::SourceType;
 use std::path::{Path, PathBuf};
 
 pub(super) fn resolve_tsconfig(root: &Path, tsconfig_path: Option<&Path>) -> Result<TsConfig> {
@@ -64,44 +69,17 @@ fn resolve_storybook_config_path(root: &Path, project_root: &Path, config_path: 
 }
 
 fn extract_storybook_story_patterns(source: &str) -> Vec<String> {
-    let Some(stories_start) = source.find("stories") else {
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
+    if parsed.panicked || !parsed.errors.is_empty() {
         return Vec::new();
-    };
-    let Some(array_start) = source[stories_start..]
-        .find('[')
-        .map(|idx| stories_start + idx)
-    else {
-        return Vec::new();
-    };
-    let Some(array_end) = source[array_start..].find(']').map(|idx| array_start + idx) else {
-        return Vec::new();
-    };
-    let array = &source[array_start + 1..array_end];
-    let mut out = Vec::new();
-    let mut chars = array.chars().peekable();
-    while let Some(quote) = chars.next() {
-        if quote != '\'' && quote != '"' {
-            continue;
-        }
-        let mut value = String::new();
-        let mut escaped = false;
-        for ch in chars.by_ref() {
-            if escaped {
-                value.push(ch);
-                escaped = false;
-            } else if ch == '\\' {
-                escaped = true;
-            } else if ch == quote {
-                if !value.is_empty() {
-                    out.push(value);
-                }
-                break;
-            } else {
-                value.push(ch);
-            }
-        }
     }
-    out
+    let mut visitor = StorybookConfigVisitor {
+        source,
+        patterns: Vec::new(),
+    };
+    visitor.visit_program(&parsed.program);
+    visitor.patterns
 }
 
 fn project_relative_pattern(project_root: &Path, base: &Path, pattern: &str) -> String {
@@ -111,4 +89,89 @@ fn project_relative_pattern(project_root: &Path, base: &Path, pattern: &str) -> 
     }
     let joined = base.join(pattern_path);
     relative_slash_path(project_root, &normalize_path(&joined))
+}
+
+struct StorybookConfigVisitor<'a> {
+    source: &'a str,
+    patterns: Vec<String>,
+}
+
+impl<'a> Visit<'a> for StorybookConfigVisitor<'a> {
+    fn visit_object_property(&mut self, property: &ObjectProperty<'a>) {
+        if crate::codebase::ts_source::static_property_key_name(&property.key) == Some("stories") {
+            self.patterns
+                .extend(story_patterns_from_expression(&property.value, self.source));
+        }
+        walk::walk_object_property(self, property);
+    }
+}
+
+fn story_patterns_from_expression(expression: &Expression<'_>, source: &str) -> Vec<String> {
+    let Expression::ArrayExpression(array) = parenthesized_expression(expression) else {
+        return Vec::new();
+    };
+    array
+        .elements
+        .iter()
+        .filter_map(|element| story_pattern_from_element(element, source))
+        .collect()
+}
+
+fn story_pattern_from_element(
+    element: &ArrayExpressionElement<'_>,
+    source: &str,
+) -> Option<String> {
+    match element {
+        ArrayExpressionElement::StringLiteral(literal) => Some(literal.value.to_string()),
+        ArrayExpressionElement::TemplateLiteral(template) if template.expressions.is_empty() => {
+            Some(crate::ast::template_literal_text(template, source))
+        }
+        ArrayExpressionElement::ObjectExpression(object) => {
+            story_pattern_from_object(object, source)
+        }
+        _ => None,
+    }
+}
+
+fn story_pattern_from_object(object: &ObjectExpression<'_>, source: &str) -> Option<String> {
+    let directory = object_string_property(object, "directory", source)?;
+    let files = object_string_property(object, "files", source)
+        .unwrap_or_else(|| "**/*.stories.@(js|jsx|mjs|ts|tsx)".to_string());
+    Some(format!("{}/{}", directory.trim_end_matches('/'), files))
+}
+
+fn object_string_property(
+    object: &ObjectExpression<'_>,
+    name: &str,
+    source: &str,
+) -> Option<String> {
+    object.properties.iter().find_map(|property| {
+        let oxc_ast::ast::ObjectPropertyKind::ObjectProperty(property) = property else {
+            return None;
+        };
+        if property.computed || property.method {
+            return None;
+        }
+        let key = crate::codebase::ts_source::static_property_key_name(&property.key)?;
+        (key == name).then(|| optional_string(&property.value, source))?
+    })
+}
+
+fn optional_string(expression: &Expression<'_>, source: &str) -> Option<String> {
+    match parenthesized_expression(expression) {
+        Expression::StringLiteral(literal) => Some(literal.value.to_string()),
+        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
+            Some(crate::ast::template_literal_text(template, source))
+        }
+        _ => None,
+    }
+}
+
+fn parenthesized_expression<'a>(expression: &'a Expression<'a>) -> &'a Expression<'a> {
+    match expression {
+        Expression::ParenthesizedExpression(parenthesized) => {
+            parenthesized_expression(&parenthesized.expression)
+        }
+        _ => expression,
+    }
 }

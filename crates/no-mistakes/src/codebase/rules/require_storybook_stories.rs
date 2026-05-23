@@ -115,7 +115,8 @@ fn check_rule(
         resolver,
         &all_component_keys,
     );
-    let covered = transitive_covered_components(root, shared, &direct, &component_keys);
+    let covered =
+        transitive_covered_components(root, &project_root, shared, &direct, &component_keys);
     let boundary_files = dynamic_or_mock_boundary_files(shared, resolver);
 
     let mut findings = Vec::new();

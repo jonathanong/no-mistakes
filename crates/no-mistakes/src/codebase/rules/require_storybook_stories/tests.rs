@@ -91,6 +91,28 @@ include_all_react_named_exports: true
 }
 
 #[test]
+fn same_file_siblings_are_not_implicitly_covered() {
+    let root = fixture("same-file-sibling");
+    let findings = check(
+        &root,
+        &config(
+            r#"
+stories: ["stories/**/*.stories.tsx"]
+include_all_react_named_exports: true
+"#,
+        ),
+        None,
+    )
+    .unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some("components/Card.tsx#Sibling")
+    );
+}
+
+#[test]
 fn component_and_file_opt_outs_use_no_mistakes_comments() {
     let root = fixture("comments");
     let findings = check(
