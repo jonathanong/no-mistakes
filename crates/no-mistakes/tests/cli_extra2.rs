@@ -111,10 +111,11 @@ fn wrapper_help_exposes_parity_flags() {
 #[test]
 fn playwright_deprecated_unique_selectors_flag_warns_on_stderr() {
     let root = fixture("nextjs-coverage", "covered").join("web");
+    let root_arg = root.to_string_lossy();
     let output = run(&[
         "playwright",
         "--root",
-        root.to_str().unwrap(),
+        root_arg.as_ref(),
         "--assert-unique-selectors",
         "check",
     ]);

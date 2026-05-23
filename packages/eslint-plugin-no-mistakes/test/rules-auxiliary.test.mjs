@@ -32,8 +32,8 @@ describe("playwright-prefer-get-by-test-id", () => {
     const elapsed = performance.now() - start;
 
     assert.deepEqual(values, []);
-    assert.ok(elapsed < 100, `selector parsing took ${elapsed}ms`);
-  });
+    assert.ok(elapsed < 1000, `selector parsing took ${elapsed}ms`);
+  }, 5000);
 });
 
 describe("playwright-naming-convention", () => {

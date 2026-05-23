@@ -114,10 +114,10 @@ fn collect_file_facts(root: &Path, path: &Path, plan: CheckFactPlan) -> Option<C
     };
     let source_type = match SourceType::from_path(path) {
         Ok(source_type) => source_type,
-        Err(err) => {
+        Err(_) => {
             return Some(CheckFileFacts {
                 source: plan.source.then_some(source),
-                parse_error: Some(format!("unsupported file type: {err}")),
+                parse_error: Some(format!("unsupported file type: {}", path.display())),
                 ..CheckFileFacts::default()
             });
         }
@@ -125,7 +125,11 @@ fn collect_file_facts(root: &Path, path: &Path, plan: CheckFactPlan) -> Option<C
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, &source, source_type).parse();
     if parsed.panicked || !parsed.errors.is_empty() {
-        let parse_error = format!("{:?}", parsed.errors.first().expect("parser error details"));
+        let parse_error = parsed
+            .errors
+            .first()
+            .map(|error| format!("{error:?}"))
+            .unwrap_or("parser panicked without diagnostic details".to_string());
         return Some(CheckFileFacts {
             source: plan.source.then_some(source),
             parse_error: Some(parse_error),
