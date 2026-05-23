@@ -138,6 +138,22 @@ fn run_all_surfaces_react_enabled_config_errors() {
 }
 
 #[test]
+fn run_all_propagates_integration_check_error() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/integration-tests/missing-config");
+    let config = root.join(".no-mistakes.yml");
+
+    let err = run_all(root, Some(config), None)
+        .err()
+        .expect("expected integration check error for missing vitest config");
+
+    assert!(
+        !err.to_string().is_empty(),
+        "error should have a message: {err}"
+    );
+}
+
+#[test]
 fn run_all_skips_discovery_for_forbidden_deps_only() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/codebase-analysis/forbidden-dependencies-basic");
