@@ -322,6 +322,39 @@ fn extract_reports_typed_next_config_object_exports() {
 }
 
 #[test]
+fn extract_reports_wrapped_typed_next_config_object_exports() {
+    let source = "export default (({ cacheLife: {} } as NextConfig))\n";
+    let findings = extract(Path::new("next.config.ts"), source).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("cacheLife")));
+}
+
+#[test]
+fn extract_reports_direct_as_next_config_object_export() {
+    let source = "export default { cacheLife: {} } as NextConfig\n";
+    let findings = extract(Path::new("next.config.ts"), source).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("cacheLife")));
+}
+
+#[test]
+fn extract_reports_direct_satisfies_next_config_object_export() {
+    let source = "export default { cacheHandlers: {} } satisfies NextConfig\n";
+    let findings = extract(Path::new("next.config.ts"), source).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("cacheHandlers")));
+}
+
+#[test]
 fn extract_reports_commonjs_next_config_object() {
     let source = "module.exports = {\n\
   cacheComponents: true,\n\
@@ -390,7 +423,8 @@ export const dynamic = 'error'\n";
 #[test]
 fn extract_ignores_non_banned_route_segment_config_shapes() {
     let source = "export const fetchCache = value\n\
-export const dynamic = value\n";
+export const dynamic = value\n\
+export const revalidate = value\n";
     let findings = extract(Path::new("app/route.ts"), source).unwrap();
 
     assert!(findings.is_empty());
@@ -425,7 +459,7 @@ export { revalidate } from './config'\n";
 fn extract_handles_defensive_next_config_shapes() {
     let source = "const key = 'cacheLife'\n\
 const nextConfig = { cacheHandlers: {} }\n\
-export default (withConfig('name', { ...nextConfig, [key]: {}, cacheComponents: 'yes' }) as NextConfig)\n";
+export default ({ ...nextConfig, [key]: {}, cacheComponents: 'yes' })\n";
     let findings = extract(Path::new("next.config.ts"), source).unwrap();
 
     assert!(findings.is_empty());
@@ -443,6 +477,46 @@ module.exports = (withConfig(nextConfig) satisfies NextConfig)\n";
     assert!(findings
         .iter()
         .any(|finding| finding.message.contains("cacheLife")));
+}
+
+#[test]
+fn extract_reports_commonjs_next_config_identifier_and_wrappers() {
+    let source = "const nextConfig = { cacheHandlers: {} }\n\
+module.exports = nextConfig\n\
+module.exports = (nextConfig as NextConfig)\n";
+    let findings = extract(Path::new("next.config.ts"), source).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("cacheHandlers")));
+}
+
+#[test]
+fn extract_reports_wrapped_commonjs_next_config_objects() {
+    let source = "module.exports = ({ cacheHandlers: {} })\n\
+module.exports = ({ cacheLife: {} } as NextConfig)\n";
+    let findings = extract(Path::new("next.config.ts"), source).unwrap();
+
+    assert_eq!(findings.len(), 2);
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("cacheHandlers")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("cacheLife")));
+}
+
+#[test]
+fn extract_handles_defensive_assignment_and_argument_shapes() {
+    let source = "export default withConfig('name', { cacheComponents: true });\n\
+({ value } = source)\n";
+    let findings = extract(Path::new("next.config.ts"), source).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("cacheComponents")));
 }
 
 #[test]

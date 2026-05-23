@@ -34,17 +34,6 @@ pub(super) fn object_findings(obj: &ObjectExpression<'_>) -> Vec<(u32, String)> 
     findings
 }
 
-pub(super) fn call_findings(call: &CallExpression<'_>) -> Vec<(u32, String)> {
-    call.arguments
-        .iter()
-        .filter_map(|argument| match argument {
-            Argument::ObjectExpression(obj) => Some(object_findings(obj)),
-            _ => None,
-        })
-        .flatten()
-        .collect()
-}
-
 pub(super) fn call_findings_with_bindings(
     call: &CallExpression<'_>,
     bindings: &HashMap<String, Vec<(u32, String)>>,
@@ -58,7 +47,6 @@ pub(super) fn call_findings_with_bindings(
 pub(super) fn expression_findings(expr: &Expression<'_>) -> Vec<(u32, String)> {
     match expr {
         Expression::ObjectExpression(obj) => object_findings(obj),
-        Expression::CallExpression(call) => call_findings(call),
         Expression::ParenthesizedExpression(expr) => expression_findings(&expr.expression),
         Expression::TSAsExpression(expr) => expression_findings(&expr.expression),
         Expression::TSSatisfiesExpression(expr) => expression_findings(&expr.expression),
@@ -129,9 +117,6 @@ fn argument_findings(
     match argument {
         Argument::Identifier(id) => bindings.get(id.name.as_str()).cloned().unwrap_or_default(),
         Argument::ObjectExpression(obj) => object_findings(obj),
-        Argument::ParenthesizedExpression(expr) => {
-            expression_findings_with_bindings(&expr.expression, bindings)
-        }
         _ => Vec::new(),
     }
 }
