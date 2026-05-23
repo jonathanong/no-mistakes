@@ -1,0 +1,17 @@
+[
+  {
+    "node": { "module": "@react/client" },
+    "depth": 1,
+    "via": ["import"]
+  },
+  {
+    "node": { "queue_file": "/repo/src/queue.mts", "job": "send" },
+    "depth": 1,
+    "via": ["queue-enqueue"]
+  },
+  {
+    "node": { "file": "/repo/src/local.mts" },
+    "depth": 1,
+    "via": ["import"]
+  }
+]

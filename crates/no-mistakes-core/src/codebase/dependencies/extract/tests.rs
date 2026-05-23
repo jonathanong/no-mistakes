@@ -277,13 +277,11 @@ fn fixture_function_expression_falls_back_to_inner_name() {
 
 #[test]
 fn local_string_named_export_is_not_marked_as_exported_function() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase-analysis/import-facts/local-string-named-export.mts");
+    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
     let allocator = Allocator::default();
-    let ret = Parser::new(
-        &allocator,
-        r#"function loader() { import("./loaded.mts"); } export { "loader" as loader };"#,
-        SourceType::ts(),
-    )
-    .parse();
+    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
 
     let facts = extract_import_facts_from_program(&ret.program);
 

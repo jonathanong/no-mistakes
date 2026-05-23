@@ -102,26 +102,7 @@ fn target_module_filter_keeps_only_matching_module_nodes() {
 
 #[test]
 fn file_filters_exclude_module_nodes_without_target_module_filter() {
-    let entries = vec![
-        graph::NodeEntry {
-            node: NodeId::Module("@react/client".to_string()),
-            depth: 1,
-            via: vec![EdgeKind::Import],
-        },
-        graph::NodeEntry {
-            node: NodeId::QueueJob {
-                queue_file: PathBuf::from("/repo/src/queue.mts"),
-                job: "send".to_string(),
-            },
-            depth: 1,
-            via: vec![EdgeKind::QueueEnqueue],
-        },
-        graph::NodeEntry {
-            node: NodeId::File(PathBuf::from("/repo/src/local.mts")),
-            depth: 1,
-            via: vec![EdgeKind::Import],
-        },
-    ];
+    let entries = node_entries_fixture("module-queue-file-filter.json");
     let mut args = traverse_args(PathBuf::from("/repo"), vec![PathBuf::from("src/entry.mts")]);
     args.filters = vec!["src/**".to_string()];
 
@@ -134,6 +115,44 @@ fn file_filters_exclude_module_nodes_without_target_module_filter() {
     assert!(filtered
         .iter()
         .any(|entry| matches!(entry.node, NodeId::QueueJob { .. })));
+}
+
+fn node_entries_fixture(name: &str) -> Vec<graph::NodeEntry> {
+    let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase-analysis/node-entries")
+        .join(name);
+    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
+    let values: Vec<serde_json::Value> = serde_json::from_str(&source).unwrap();
+    values.into_iter().map(node_entry_from_json).collect()
+}
+
+fn node_entry_from_json(value: serde_json::Value) -> graph::NodeEntry {
+    let node = value.get("node").unwrap();
+    let node = if let Some(module) = node.get("module").and_then(|value| value.as_str()) {
+        NodeId::Module(module.to_string())
+    } else if let Some(file) = node.get("file").and_then(|value| value.as_str()) {
+        NodeId::File(PathBuf::from(file))
+    } else {
+        NodeId::QueueJob {
+            queue_file: PathBuf::from(node["queue_file"].as_str().unwrap()),
+            job: node["job"].as_str().unwrap().to_string(),
+        }
+    };
+    let via = value["via"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|kind| match kind.as_str().unwrap() {
+            "import" => EdgeKind::Import,
+            "queue-enqueue" => EdgeKind::QueueEnqueue,
+            other => panic!("unsupported fixture edge kind {other}"),
+        })
+        .collect();
+    graph::NodeEntry {
+        node,
+        depth: value["depth"].as_u64().unwrap() as usize,
+        via,
+    }
 }
 
 #[test]
