@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Default)]
 pub(super) struct RuleSelection {
-    pub(super) project: Option<String>,
+    pub(super) playwright_project: Option<String>,
     pub(super) coverage: bool,
     pub(super) unique_test_ids: bool,
     pub(super) unique_html_ids: bool,
@@ -50,10 +50,12 @@ fn add_rule_selections(
                 .collect()
         };
         for project in projects {
-            let selection = by_project.entry(project.clone()).or_insert(RuleSelection {
-                project,
-                ..RuleSelection::default()
-            });
+            let selection = by_project
+                .entry(project.clone())
+                .or_insert_with(|| RuleSelection {
+                    playwright_project: project,
+                    ..RuleSelection::default()
+                });
             apply(selection);
         }
     }

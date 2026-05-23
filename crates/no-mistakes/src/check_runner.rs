@@ -2,7 +2,7 @@ use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
 use crate::check_tasks::{
     filesystem_rules_configured, queues_configured, unique_exports_configured,
 };
-use anyhow::Result;
+use anyhow::{Context, Result};
 use enabled::{fact_plan, integration_configured, plan_requests_facts};
 use no_mistakes::codebase::check_facts::collect_check_facts_with_playwright;
 use no_mistakes::config::v2::load_v2_config;
@@ -30,7 +30,7 @@ pub(crate) fn run_all(
     let playwright_rules_enabled = no_mistakes::playwright::rules::configured(&config);
     let playwright_fact_plan =
         no_mistakes::playwright::rules::fact_plan(&root, config_path.as_deref(), &config)
-            .unwrap_or_default();
+            .context("failed to prepare Playwright shared facts")?;
     let integration_enabled = integration_configured(&config);
     let react_enabled = react_traits::check_enabled(&root, config_path.as_deref(), false)?;
     let react_warning = None;

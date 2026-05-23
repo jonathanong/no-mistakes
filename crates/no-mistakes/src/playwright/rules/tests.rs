@@ -1,6 +1,7 @@
 use super::*;
 use crate::config::v2::schema::{RuleDef, RuleScope, RuleTestTargets, StringOrList};
 use crate::playwright::test_support::fixture_path;
+use std::fs;
 
 fn config_with_rule(rule: &str) -> NoMistakesConfig {
     NoMistakesConfig {
@@ -119,14 +120,14 @@ fn rule_selections_merge_rules_by_playwright_target() {
     assert_eq!(selections.len(), 2);
     let web = selections
         .iter()
-        .find(|selection| selection.project.as_deref() == Some("web"))
+        .find(|selection| selection.playwright_project.as_deref() == Some("web"))
         .expect("web selection");
     assert!(web.coverage);
     assert!(web.unique_test_ids);
     assert!(!web.unique_html_ids);
     let storybook = selections
         .iter()
-        .find(|selection| selection.project.as_deref() == Some("storybook"))
+        .find(|selection| selection.playwright_project.as_deref() == Some("storybook"))
         .expect("storybook selection");
     assert!(!storybook.coverage);
     assert!(storybook.unique_test_ids);
@@ -147,7 +148,7 @@ fn rule_selections_keep_unscoped_rules_global() {
     let selections = rule_selections(&config);
 
     assert_eq!(selections.len(), 1);
-    assert!(selections[0].project.is_none());
+    assert!(selections[0].playwright_project.is_none());
     assert!(selections[0].coverage);
 }
 
@@ -168,4 +169,45 @@ fn fact_plan_validates_targeted_playwright_config_names() {
     assert!(error
         .to_string()
         .contains("no Playwright config found with name missing"));
+}
+
+#[test]
+fn fact_plan_merges_test_id_attributes_for_shared_target_files() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    fs::create_dir_all(root.join("tests")).unwrap();
+    fs::write(
+        root.join("tests/shared.spec.ts"),
+        "import { test } from '@playwright/test'; test('shared', async ({ page }) => { await page.getByTestId('shared').click(); });",
+    )
+    .unwrap();
+    fs::write(
+        root.join("playwright.a.config.ts"),
+        "export default { name: 'a', testDir: './tests', use: { testIdAttribute: 'data-a' } };",
+    )
+    .unwrap();
+    fs::write(
+        root.join("playwright.b.config.ts"),
+        "export default { name: 'b', testDir: './tests', use: { testIdAttribute: 'data-b' } };",
+    )
+    .unwrap();
+    let mut config = config_with_targeted_rules(vec![
+        (PLAYWRIGHT_UNIQUE_TEST_IDS, vec!["a"]),
+        (PLAYWRIGHT_UNIQUE_HTML_IDS, vec!["b"]),
+    ]);
+    config.tests.playwright.configs = Some(StringOrList::Many(vec![
+        "playwright.a.config.ts".to_string(),
+        "playwright.b.config.ts".to_string(),
+    ]));
+
+    let plan = fact_plan(root, None, &config).unwrap().unwrap();
+    let attributes = plan
+        .test_id_attributes_by_path
+        .get(&root.join("tests/shared.spec.ts"))
+        .expect("shared test file attributes");
+
+    assert_eq!(
+        attributes,
+        &vec!["data-a".to_string(), "data-b".to_string()]
+    );
 }

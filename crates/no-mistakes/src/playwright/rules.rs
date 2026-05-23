@@ -39,7 +39,8 @@ pub fn check(
 
     let mut findings = Vec::new();
     for selection in selections {
-        let settings = config::load_settings(root, config_path, &[], selection.project.clone())?;
+        let settings =
+            config::load_settings(root, config_path, &[], selection.playwright_project.clone())?;
         let test_policy = playwright_tests::TestPolicy {
             assert_conditional_tests: false,
             allow_skipped_tests: false,
@@ -75,7 +76,7 @@ pub fn fact_plan(
     let mut selector_regexes = None;
     let mut test_id_attributes_by_path = HashMap::new();
     for selection in selections {
-        let settings = config::load_settings(root, config_path, &[], selection.project)?;
+        let settings = config::load_settings(root, config_path, &[], selection.playwright_project)?;
         if selector_regexes.is_none() {
             selector_regexes = Some(
                 crate::playwright::selectors::compile_selector_regexes_with_html_ids(
@@ -93,9 +94,12 @@ pub fn fact_plan(
         )?;
         for test_file in discover_test_files(root, &settings, &playwright)? {
             let attributes = test_file.test_id_attributes();
-            test_id_attributes_by_path
+            let entry = test_id_attributes_by_path
                 .entry(test_file.path)
-                .or_insert(attributes);
+                .or_insert_with(Vec::new);
+            entry.extend(attributes);
+            entry.sort();
+            entry.dedup();
         }
     }
     Ok(Some(PlaywrightFactPlan {
@@ -120,7 +124,8 @@ pub(crate) fn check_with_facts(
 
     let mut findings = Vec::new();
     for selection in selections {
-        let settings = config::load_settings(root, config_path, &[], selection.project.clone())?;
+        let settings =
+            config::load_settings(root, config_path, &[], selection.playwright_project.clone())?;
         let test_policy = playwright_tests::TestPolicy {
             assert_conditional_tests: false,
             allow_skipped_tests: false,
