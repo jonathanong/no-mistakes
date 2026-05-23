@@ -174,8 +174,8 @@ fn repro_command(
     relationships: &[RelationshipArg],
 ) -> String {
     let target_flag = match node {
-        NodeId::Module(_) => format!("--target-module '{target_name}'"),
-        _ => format!("--filter '{target_name}'"),
+        NodeId::Module(_) => format!("--target-module '{}'", target_name.replace('\'', "'\\''")),
+        _ => format!("--filter '{}'", target_name.replace('\'', "'\\''")),
     };
     let rel_flags = if relationships.is_empty() {
         " --relationship all".to_string()
