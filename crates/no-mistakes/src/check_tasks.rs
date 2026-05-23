@@ -151,6 +151,10 @@ pub(crate) fn filesystem_rules_configured(config: &NoMistakesConfig) -> bool {
         || rule_configured(config, rules::RUST_NO_INLINE_ALLOWS)
 }
 
+pub(crate) fn forbidden_dependencies_configured(config: &NoMistakesConfig) -> bool {
+    rule_configured(config, rules::FORBIDDEN_DEPENDENCIES)
+}
+
 pub(crate) fn unique_exports_configured(config: &NoMistakesConfig) -> bool {
     rule_configured(config, unique_exports::RULE_ID)
 }

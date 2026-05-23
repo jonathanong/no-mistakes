@@ -55,8 +55,9 @@ pub enum Direction {
     Dependents,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, clap::ValueEnum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, clap::ValueEnum, serde::Deserialize, serde::Serialize)]
 #[clap(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case")]
 pub enum RelationshipArg {
     Import,
     ImportStatic,
@@ -80,7 +81,7 @@ pub enum RelationshipArg {
 /// Convert `--relationship` values into a `HashSet<EdgeKind>` filter.
 /// Returns `None` when "all" is present or the list is empty (= no filter).
 #[inline(never)]
-fn relationship_filter(
+pub(crate) fn relationship_filter(
     relationships: &[RelationshipArg],
 ) -> Option<std::collections::HashSet<EdgeKind>> {
     if relationships.is_empty() {

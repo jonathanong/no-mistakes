@@ -1,0 +1,10 @@
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots:
+        - entrypoints/api.mts
+      forbiddenModules:
+        - sharp
+      relationships:
+        - import-type

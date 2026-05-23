@@ -1,6 +1,7 @@
 use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
 use crate::check_tasks::{
-    filesystem_rules_configured, queues_configured, unique_exports_configured,
+    filesystem_rules_configured, forbidden_dependencies_configured, queues_configured,
+    unique_exports_configured,
 };
 use anyhow::{Context, Result};
 use enabled::{fact_plan, integration_configured, plan_requests_facts};
@@ -27,6 +28,7 @@ pub(crate) fn run_all(
     let unique_exports_enabled = unique_exports_configured(&config);
     let enabled = enabled::ConfiguredChecks::from_config(&config);
     let filesystem_rules_enabled = filesystem_rules_configured(&config);
+    let forbidden_deps_enabled = forbidden_dependencies_configured(&config);
     let playwright_rules_enabled = no_mistakes::playwright::rules::configured(&config);
     let playwright_fact_plan =
         no_mistakes::playwright::rules::fact_plan(&root, config_path.as_deref(), &config)
@@ -46,7 +48,11 @@ pub(crate) fn run_all(
         unique_exports: unique_exports_enabled,
     });
     let needs_shared_facts = plan_requests_facts(&plan) || playwright_fact_plan.is_some();
-    if !needs_shared_facts && !filesystem_rules_enabled && !playwright_rules_enabled {
+    if !needs_shared_facts
+        && !filesystem_rules_enabled
+        && !playwright_rules_enabled
+        && !forbidden_deps_enabled
+    {
         return Ok(empty_results([react_warning]));
     }
     let discover_start = Instant::now();
