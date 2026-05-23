@@ -8,6 +8,7 @@ pub mod playwright_config;
 pub(crate) mod playwright_tests;
 pub mod playwright_urls;
 mod routes;
+mod rule_findings;
 pub mod rules;
 pub mod selectors;
 #[cfg(test)]
@@ -16,5 +17,5 @@ mod test_support;
 mod tests;
 mod url;
 
-pub use analysis::pipeline::run;
+pub use analysis::cli_run::run;
 pub use cli::PlaywrightArgs;

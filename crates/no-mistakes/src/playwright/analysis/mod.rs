@@ -1,4 +1,5 @@
 pub(crate) mod app_collect;
+pub(crate) mod cli_run;
 pub(crate) mod context;
 pub(crate) mod coverage;
 pub(crate) mod discover;
