@@ -44,6 +44,18 @@ pub(super) fn reachable_story_files(
                 queue.push_back(resolved);
             }
         }
+        for import in &storybook.side_effect_imports {
+            let Some(resolved) = resolver
+                .resolve(&import.source, &file)
+                .map(|p| normalize_path(&p))
+            else {
+                continue;
+            };
+            if resolved.starts_with(project_root) && is_story_file(project_root, stories, &resolved)
+            {
+                queue.push_back(resolved);
+            }
+        }
     }
     Ok(seen)
 }

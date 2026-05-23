@@ -122,6 +122,24 @@ include_all_react_named_exports: true
 }
 
 #[test]
+fn side_effect_story_imports_extend_reachable_coverage() {
+    let root = fixture("side-effect-story");
+    let findings = check(
+        &root,
+        &config(
+            r#"
+stories: ["stories/entry.stories.tsx"]
+include_all_react_named_exports: true
+"#,
+        ),
+        None,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
 fn mdx_story_imports_count_as_story_coverage() {
     let root = fixture("mdx-story");
     let findings = check(
