@@ -9,6 +9,13 @@ function propertyName(node) {
   return node.name;
 }
 
+function rootTestName(node) {
+  if (node?.type === "Identifier") return node.name;
+  if (node?.type === "MemberExpression") return rootTestName(node.object);
+  if (node?.type === "CallExpression") return rootTestName(node.callee);
+  return null;
+}
+
 module.exports = rule(
   {
     type: "problem",
@@ -17,10 +24,11 @@ module.exports = rule(
     messages: { sequential: "Use parallel tests instead of .sequential." },
   },
   (context) => ({
-    MemberExpression(node) {
-      if (propertyName(node.property) !== "sequential") return;
-      if (node.object.type !== "Identifier" || !TEST_NAMES.has(node.object.name)) return;
-      context.report({ node, messageId: "sequential" });
+    CallExpression(node) {
+      if (node.callee.type !== "MemberExpression") return;
+      if (propertyName(node.callee.property) !== "sequential") return;
+      if (!TEST_NAMES.has(rootTestName(node.callee.object))) return;
+      context.report({ node: node.callee, messageId: "sequential" });
     },
   }),
 );

@@ -45,6 +45,15 @@ describe("upstreamed generic rule scoping", () => {
         fixture("metadata.valid-page.tsx"),
         "nextjs-metadata-exports-location",
         undefined,
+        "pages/page.tsx",
+      ),
+      ["location", "location"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("metadata.valid-page.tsx"),
+        "nextjs-metadata-exports-location",
+        undefined,
         "app/page.js",
       ),
       [],

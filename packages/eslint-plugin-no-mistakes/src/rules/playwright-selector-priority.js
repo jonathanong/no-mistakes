@@ -23,7 +23,7 @@ const ALLOWED_PREFIXES = [
   ":last-",
 ];
 const PLAYWRIGHT_PATH_PATTERN =
-  /(?:^|[/\\])(?:e2e|playwright)(?:[/\\]|$)|\.(?:pw\.)?(?:spec|test)\.[cm]?[jt]sx?$/;
+  /(?:^|[/\\])(?:e2e|playwright)(?:[/\\]|$)|(?:^|[/\\])e2e\.(?:spec|test)\.[cm]?[jt]sx?$|\.pw\.(?:spec|test)\.[cm]?[jt]sx?$/;
 
 function isPlaywrightPath(filename) {
   return PLAYWRIGHT_PATH_PATTERN.test(filename.replace(/\\/g, "/"));

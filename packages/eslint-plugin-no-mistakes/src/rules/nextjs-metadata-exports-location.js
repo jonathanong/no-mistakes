@@ -16,7 +16,11 @@ const METADATA_EXPORTS = new Set(["metadata", "generateMetadata"]);
 const NEXT_FILE_PATTERN = /(?:^|[/\\])(?:app|pages)(?:[/\\]|$)/;
 
 function isAllowedFile(filename) {
-  return ALLOWED_SUFFIXES.some((suffix) => filename.replace(/\\/g, "/").endsWith(suffix));
+  const normalized = filename.replace(/\\/g, "/");
+  return (
+    (normalized.startsWith("app/") || normalized.includes("/app/")) &&
+    ALLOWED_SUFFIXES.some((suffix) => normalized.endsWith(suffix))
+  );
 }
 
 function isNextFile(filename) {
