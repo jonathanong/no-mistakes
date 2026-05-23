@@ -411,6 +411,58 @@ fn resolve_entrypoints_prefers_root_before_cwd_fallback() {
 }
 
 #[test]
+fn resolve_entrypoints_infers_workspace_package_directory_entry() {
+    let root = fixture_root("graph-modules");
+    let args = parse(&["deps", "packages/local"]);
+    let entrypoints = resolve_entrypoints(&args.files, &root, &root);
+
+    assert_eq!(
+        entrypoints[0].node,
+        graph::NodeId::File(root.join("packages/local/src/index.mts"))
+    );
+    assert_eq!(entrypoints[0].file, root.join("packages/local/src/index.mts"));
+}
+
+#[test]
+fn resolve_entrypoints_infers_plain_directory_index_entry() {
+    let root = fixture_root("graph-entrypoint-dir");
+    let args = parse(&["deps", "."]);
+    let entrypoints = resolve_entrypoints(&args.files, &root, &root);
+
+    assert_eq!(
+        entrypoints[0].node,
+        graph::NodeId::File(root.join("src/index.ts"))
+    );
+    assert_eq!(entrypoints[0].file, root.join("src/index.ts"));
+}
+
+#[test]
+fn resolve_entrypoints_keeps_directory_without_entry_as_file_node() {
+    let root = fixture_root("graph-empty-dir");
+    let args = parse(&["deps", "empty"]);
+    let entrypoints = resolve_entrypoints(&args.files, &root, &root);
+
+    assert_eq!(
+        entrypoints[0].node,
+        graph::NodeId::File(root.join("empty"))
+    );
+    assert_eq!(entrypoints[0].file, root.join("empty"));
+}
+
+#[test]
+fn resolve_entrypoints_accepts_workspace_package_specifier() {
+    let root = fixture_root("graph-modules");
+    let args = parse(&["deps", "@local/pkg"]);
+    let entrypoints = resolve_entrypoints(&args.files, &root, &root);
+
+    assert_eq!(
+        entrypoints[0].node,
+        graph::NodeId::File(root.join("packages/local/src/index.mts"))
+    );
+    assert_eq!(entrypoints[0].file, root.join("packages/local/src/index.mts"));
+}
+
+#[test]
 fn validate_direction_allows_symbol_with_dependents() {
     let args = parse(&["deps", "a.mts#alpha", "b.mts"]);
     let root = fixture_root("simple");

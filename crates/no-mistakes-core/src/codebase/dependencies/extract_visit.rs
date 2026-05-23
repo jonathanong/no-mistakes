@@ -45,7 +45,7 @@ impl<'a> Visit<'a> for ImportCollector {
         function: &oxc::ast::ast::Function<'a>,
         flags: oxc_syntax::scope::ScopeFlags,
     ) {
-        let name = function.id.as_ref().map(|id| id.name.to_string());
+        let name = function_name(function);
         let pushed = name.is_some();
         self.push_function_scope(name);
         walk::walk_function(self, function, flags);
@@ -62,8 +62,10 @@ impl<'a> Visit<'a> for ImportCollector {
                 self.pop_function_scope(pushed);
             }
             Some(Expression::FunctionExpression(function)) => {
-                let scope_name =
-                    name.or_else(|| function.id.as_ref().map(|id| id.name.to_string()));
+                let scope_name = match name {
+                    Some(name) => Some(name),
+                    None => function_name(function),
+                };
                 let pushed = scope_name.is_some();
                 self.push_function_scope(scope_name);
                 walk::walk_function(self, function, oxc_syntax::scope::ScopeFlags::empty());
@@ -132,4 +134,9 @@ impl<'a> Visit<'a> for ImportCollector {
         }
         walk::walk_call_expression(self, call);
     }
+}
+
+fn function_name(function: &oxc::ast::ast::Function<'_>) -> Option<String> {
+    let id = function.id.as_ref()?;
+    Some(id.name.to_string())
 }

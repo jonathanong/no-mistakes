@@ -242,6 +242,39 @@ fn fixture_mixed_type_import_file() {
     assert_eq!(specs(&imports), vec!["./types.mts", "./types.mts"]);
 }
 
+#[test]
+fn fixture_function_expression_import_tracks_named_scope() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase-analysis/import-facts/function-expression.mts");
+    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
+    let allocator = Allocator::default();
+    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+
+    assert_eq!(facts.imports.len(), 1);
+    assert_eq!(facts.imports[0].specifier, "./loaded.mts");
+    assert_eq!(facts.imports[0].function_scope.as_deref(), Some("loader"));
+    assert_eq!(facts.function_calls[0].callee, "loader");
+}
+
+#[test]
+fn fixture_function_expression_falls_back_to_inner_name() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase-analysis/import-facts/destructured-function-expression.mts");
+    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
+    let allocator = Allocator::default();
+    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+
+    assert_eq!(facts.imports.len(), 1);
+    assert_eq!(
+        facts.imports[0].function_scope.as_deref(),
+        Some("namedLoader")
+    );
+}
+
 // ── is_indexable / is_tsx_file ──────────────────────────────────────
 
 #[test]
