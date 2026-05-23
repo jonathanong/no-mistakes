@@ -198,6 +198,88 @@ fn analyze_discovers_tests_and_builds_reports() {
 }
 
 #[test]
+fn run_check_returns_success_for_fully_covered_project() {
+    let root = fixture_path(&["nextjs-selectors", "selector-covered"]);
+    let cli = Cli {
+        root,
+        config: None,
+        playwright_config: vec![],
+        project: None,
+        json: true,
+        assert_conditional_tests: false,
+        allow_skipped_tests: false,
+        assert_unique_test_ids: false,
+        assert_unique_html_ids: false,
+        assert_unique_selectors: false,
+        command: Command::Check,
+    };
+
+    assert_eq!(run(cli).unwrap(), ExitCode::SUCCESS);
+}
+
+#[test]
+fn run_check_fails_for_uncovered_selectors_without_uncovered_routes() {
+    let root = fixture_path(&["nextjs-selectors", "selector-uncovered"]);
+    let cli = Cli {
+        root,
+        config: None,
+        playwright_config: vec![],
+        project: None,
+        json: true,
+        assert_conditional_tests: false,
+        allow_skipped_tests: false,
+        assert_unique_test_ids: false,
+        assert_unique_html_ids: false,
+        assert_unique_selectors: false,
+        command: Command::Check,
+    };
+
+    assert_eq!(run(cli).unwrap(), ExitCode::from(1));
+}
+
+#[test]
+fn run_check_fails_for_duplicate_selectors_without_uncovered_coverage() {
+    let root = fixture_path(&["nextjs-coverage", "sort-tiebreakers"]);
+    let cli = Cli {
+        root,
+        config: None,
+        playwright_config: vec![],
+        project: None,
+        json: true,
+        assert_conditional_tests: false,
+        allow_skipped_tests: false,
+        assert_unique_test_ids: true,
+        assert_unique_html_ids: false,
+        assert_unique_selectors: false,
+        command: Command::Check,
+    };
+
+    assert_eq!(run(cli).unwrap(), ExitCode::from(1));
+}
+
+#[test]
+fn run_check_surfaces_settings_load_errors() {
+    let root = fixture_path(&["nextjs-selectors", "selector-covered"]);
+    let cli = Cli {
+        root,
+        config: Some(PathBuf::from("missing.no-mistakes.yml")),
+        playwright_config: vec![],
+        project: None,
+        json: true,
+        assert_conditional_tests: false,
+        allow_skipped_tests: false,
+        assert_unique_test_ids: false,
+        assert_unique_html_ids: false,
+        assert_unique_selectors: false,
+        command: Command::Check,
+    };
+
+    let error = run(cli).unwrap_err();
+
+    assert!(error.to_string().contains("config file does not exist"));
+}
+
+#[test]
 fn analyze_surfaces_parser_errors() {
     let root = fixture_path(&["ast-snippets", "main", "invalid-test-source"]);
     let settings = Settings {

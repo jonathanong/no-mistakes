@@ -113,6 +113,48 @@ fn run_check_executes_storybook_rule() {
 }
 
 #[test]
+fn run_check_executes_playwright_rules() {
+    let root = fixture("check-runner/playwright-unique-test-ids");
+
+    let findings = run_check(&root, None, None).unwrap();
+
+    assert!(findings
+        .iter()
+        .any(|finding| finding.rule == crate::playwright::rules::PLAYWRIGHT_UNIQUE_TEST_IDS));
+}
+
+#[test]
+fn run_check_with_facts_executes_playwright_rules() {
+    let root = fixture("check-runner/playwright-unique-test-ids");
+    let facts = crate::codebase::check_facts::CheckFactMap::default();
+
+    let findings = run_check_with_facts(&root, None, None, &facts).unwrap();
+
+    assert!(findings
+        .iter()
+        .any(|finding| finding.rule == crate::playwright::rules::PLAYWRIGHT_UNIQUE_TEST_IDS));
+}
+
+#[test]
+fn run_check_with_facts_propagates_playwright_rule_errors() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    let config_path = root.join(".no-mistakes.yml");
+    std::fs::write(
+        &config_path,
+        "tests:\n  playwright:\n    configs: missing.config.ts\nrules:\n  - rule: playwright-unique-test-ids\n    scope: repository\n",
+    )
+    .unwrap();
+    let facts = crate::codebase::check_facts::CheckFactMap::default();
+
+    let error = run_check_with_facts(root, Some(&config_path), None, &facts).unwrap_err();
+
+    assert!(error
+        .to_string()
+        .contains("Playwright config does not exist"));
+}
+
+#[test]
 fn run_check_with_facts_executes_storybook_rule() {
     let root = fixture("rules/require-storybook-stories/covered");
     let files = crate::codebase::ts_source::discover_files(&root, &[]);
