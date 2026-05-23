@@ -250,8 +250,6 @@ fn explicit_tsconfig_path_is_used() {
 #[test]
 fn absolute_root_path_resolves() {
     let root = fixture("forbidden-dependencies-basic");
-    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-    // Build opts with an absolute path for the root
     let abs_root = root.join("entrypoints/api.mts");
     let opts = Options {
         roots: vec![abs_root.to_string_lossy().to_string()],
@@ -276,5 +274,4 @@ fn absolute_root_path_resolves() {
         findings[0].file, "entrypoints/api.mts",
         "file should be repo-relative even when root is absolute"
     );
-    let _ = config;
 }

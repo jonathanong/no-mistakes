@@ -119,7 +119,7 @@ fn check_application(root: &Path, opts: &Options, graph: &DepGraph) -> Result<Ve
             let file = std::path::Path::new(root_str)
                 .strip_prefix(root)
                 .map(|rel| rel.to_string_lossy().replace('\\', "/"))
-                .unwrap_or_else(|_| root_str.clone());
+                .unwrap_or_else(|_| root_str.replace('\\', "/"));
             findings.push(RuleFinding {
                 rule: RULE_ID.to_string(),
                 file,
