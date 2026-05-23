@@ -124,5 +124,23 @@ describe("upstreamed generic rule scoping", () => {
       ),
       [],
     );
+    assert.deepEqual(
+      messages(
+        fixture("next-script-inline-boot.tsx"),
+        "nextjs-no-manual-script-tags",
+        { allowInlineScriptIdPatterns: ["^theme-"] },
+        "app/layout.tsx",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("next-script-inline-boot.tsx"),
+        "nextjs-no-manual-script-tags",
+        { allowInlineScriptIdPatterns: ["["] },
+        "app/layout.tsx",
+      ),
+      ["script"],
+    );
   });
 });

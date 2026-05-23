@@ -2,6 +2,16 @@ projects:
   web:
     type: nextjs
     root: v2-app
+testInclude:
+  - tests/**/*.spec.ts
+testExclude:
+  - tests/flaky/**
+ignoreRoutes:
+  - /ignored
+navigationHelpers:
+  - navigateTo
+selectorInclude:
+  - v2-components/**/*.tsx
 tests:
   playwright:
     configs: playwright.v2.config.ts
@@ -10,4 +20,3 @@ tests:
         - data-v2
     selectorRoots:
       - v2-components
-

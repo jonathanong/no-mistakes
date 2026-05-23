@@ -1,5 +1,5 @@
 use super::{FileConfig, OneOrMany, RootConfig};
-use crate::config::v2::schema::{NoMistakesConfig, PlaywrightTestConfig, ProjectType};
+use crate::config::v2::schema::{NoMistakesConfig, PlaywrightTestConfig};
 use crate::config::v2::ConfigView;
 use crate::config::{parse_config, resolve, CONFIG_EXTENSIONS};
 use anyhow::Result;
@@ -66,15 +66,7 @@ pub(super) fn parse_legacy_playwright_config(source: &str, path: &Path) -> Resul
 }
 
 pub(super) fn has_v2_playwright_settings(config: &NoMistakesConfig) -> bool {
-    let playwright = &config.tests.playwright;
-    has_nextjs_project(config) || is_v2_playwright_configured(playwright)
-}
-
-fn has_nextjs_project(config: &NoMistakesConfig) -> bool {
-    config
-        .projects
-        .values()
-        .any(|project| project.type_ == Some(ProjectType::Nextjs))
+    is_v2_playwright_configured(&config.tests.playwright)
 }
 
 fn is_v2_playwright_configured(playwright: &PlaywrightTestConfig) -> bool {
@@ -100,10 +92,6 @@ pub(super) fn is_legacy_playwright_configured(config: &FileConfig) -> bool {
         || config.selector_roots.is_some()
         || !config.selector_include.is_empty()
         || !config.selector_exclude.is_empty()
-}
-
-pub(super) fn is_v2_config_path(path: &Path) -> bool {
-    path.file_stem().and_then(|stem| stem.to_str()) == Some(".no-mistakes")
 }
 
 pub(super) fn find_by_stems(root: &Path, stems: &[&str]) -> Result<Option<(PathBuf, String)>> {

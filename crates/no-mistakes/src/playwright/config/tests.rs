@@ -25,6 +25,83 @@ fn explicit_missing_config_errors() {
 }
 
 #[test]
+fn explicit_generic_v2_config_uses_playwright_settings() {
+    let root = fixture_path(&["scan-config", "explicit-v2-config"]);
+    let settings = load_settings(&root, Some(Path::new("configs/ci.yaml")), &[], None).unwrap();
+    assert_eq!(settings.frontend_root, "explicit-app");
+    assert_eq!(settings.selector_attributes, vec!["data-explicit"]);
+    assert_eq!(
+        settings.playwright_configs,
+        vec![root.join("playwright.explicit.config.ts")]
+    );
+}
+
+#[test]
+fn explicit_generic_legacy_config_uses_legacy_settings() {
+    let root = fixture_path(&["scan-config", "explicit-legacy-config"]);
+    let settings = load_settings(&root, Some(Path::new("configs/ci.yaml")), &[], None).unwrap();
+    assert_eq!(settings.frontend_root, "explicit-legacy-app");
+    assert_eq!(settings.selector_attributes, vec!["data-legacy-explicit"]);
+    assert_eq!(
+        settings.playwright_configs,
+        vec![root.join("playwright.explicit-legacy.config.ts")]
+    );
+}
+
+#[test]
+fn v2_cli_playwright_configs_override_file_settings() {
+    let root = fixture_path(&["scan-config", "explicit-v2-config"]);
+    let settings = load_settings(
+        &root,
+        Some(Path::new("configs/ci.yaml")),
+        &[PathBuf::from("playwright.cli.config.ts")],
+        None,
+    )
+    .unwrap();
+    assert_eq!(
+        settings.playwright_configs,
+        vec![root.join("playwright.cli.config.ts")]
+    );
+}
+
+#[test]
+fn v2_without_config_paths_finds_default_playwright_config() {
+    let root = fixture_path(&["scan-config", "no-mistakes-v2-default-playwright"]);
+    let settings = load_settings(&root, None, &[], None).unwrap();
+    assert_eq!(settings.frontend_root, "v2-default-app");
+    assert_eq!(settings.selector_attributes, vec!["data-testid", "data-pw"]);
+    assert_eq!(
+        settings.playwright_configs,
+        vec![root.join("playwright.config.ts")]
+    );
+}
+
+#[test]
+fn legacy_cli_playwright_configs_override_file_settings() {
+    let root = fixture_path(&["scan-config", "full"]);
+    let settings = load_settings(
+        &root,
+        None,
+        &[PathBuf::from("playwright.cli.config.ts")],
+        None,
+    )
+    .unwrap();
+    assert_eq!(
+        settings.playwright_configs,
+        vec![root.join("playwright.cli.config.ts")]
+    );
+}
+
+#[test]
+fn duplicate_no_mistakes_configs_error() {
+    let root = fixture_path(&["scan-config", "multiple-no-mistakes"]);
+    let err = load_settings(&root, None, &[], None)
+        .err()
+        .expect("expected duplicate config files to fail");
+    assert!(err.to_string().contains("multiple config files found"));
+}
+
+#[test]
 fn reads_yaml_and_finds_default_playwright_config() {
     let root = fixture_path(&["scan-config", "full"]);
     let settings = load_settings(&root, None, &[], None).unwrap();
@@ -57,8 +134,13 @@ fn no_mistakes_v2_config_wins_over_legacy_playwright_config() {
     let root = fixture_path(&["scan-config", "no-mistakes-v2-priority"]);
     let settings = load_settings(&root, None, &[], None).unwrap();
     assert_eq!(settings.frontend_root, "v2-app");
+    assert_eq!(settings.test_include, vec!["tests/**/*.spec.ts"]);
+    assert_eq!(settings.test_exclude, vec!["tests/flaky/**"]);
+    assert_eq!(settings.ignore_routes, vec!["/ignored"]);
+    assert_eq!(settings.navigation_helpers, vec!["navigateTo"]);
     assert_eq!(settings.selector_attributes, vec!["data-v2"]);
     assert_eq!(settings.selector_roots, vec!["v2-components"]);
+    assert_eq!(settings.selector_include, vec!["v2-components/**/*.tsx"]);
     assert_eq!(
         settings.playwright_configs,
         vec![root.join("playwright.v2.config.ts")]

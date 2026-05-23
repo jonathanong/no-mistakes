@@ -1,0 +1,4 @@
+frontendRoot: explicit-legacy-app
+playwrightConfig: playwright.explicit-legacy.config.ts
+selectorAttributes:
+  - data-legacy-explicit

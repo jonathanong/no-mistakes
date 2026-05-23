@@ -64,6 +64,15 @@ describe("upstreamed generic rules", () => {
       ),
       ["script"],
     );
+    assert.deepEqual(
+      messages(
+        fixture("shared-state-shadow.invalid.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "shared-state-shadow.invalid.test.ts",
+      ),
+      ["shared"],
+    );
   });
 
   it("reports import-only test aggregators", () => {

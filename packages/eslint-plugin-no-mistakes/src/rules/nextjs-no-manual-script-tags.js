@@ -47,7 +47,13 @@ function hasAttribute(node, name) {
 }
 
 function allowedIdPatterns(options) {
-  return (options.allowInlineScriptIdPatterns || []).map((pattern) => new RegExp(pattern));
+  return (options.allowInlineScriptIdPatterns || []).flatMap((pattern) => {
+    try {
+      return [new RegExp(pattern)];
+    } catch {
+      return [];
+    }
+  });
 }
 
 function isAllowedInlineScript(node, options, patterns) {

@@ -1,5 +1,4 @@
 projects:
-  backend:
-    type: server
-    root: backend
-
+  web:
+    type: nextjs
+    root: v2-app-without-playwright-settings

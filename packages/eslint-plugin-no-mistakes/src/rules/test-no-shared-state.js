@@ -36,7 +36,7 @@ module.exports = rule(
 
     function markViMockCapturedMutable(name) {
       if (
-        /^mock[A-Z0-9_]/.test(name) &&
+        name.startsWith("mock") &&
         mutableTopLevel.has(name) &&
         viMockFactoryReferences.has(name)
       ) {
@@ -161,17 +161,11 @@ module.exports = rule(
       }
       const factory = node.arguments[1];
       if (!isFunctionNode(factory)) return;
-      for (const name of collectIdentifierReferences(factory.body)) {
+      for (const { identifier } of context.sourceCode.getScope(factory).through) {
+        const name = identifier.name;
         viMockFactoryReferences.add(name);
         markViMockCapturedMutable(name);
       }
-    }
-
-    function collectIdentifierReferences(node, names = new Set()) {
-      if (!node) return names;
-      if (node.type === "Identifier") names.add(node.name);
-      for (const child of childNodes(node)) collectIdentifierReferences(child, names);
-      return names;
     }
   },
 );

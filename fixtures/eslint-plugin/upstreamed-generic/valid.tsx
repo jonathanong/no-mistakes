@@ -32,8 +32,11 @@ describe("setup fixtures", () => {
 });
 let mockPathname = "/";
 vi.mock("next/navigation", () => ({ usePathname: () => mockPathname }));
+let mockdata = {};
+vi.mock("shared/data", () => ({ data: mockdata }));
 it("uses mock control", () => {
   mockPathname = "/next";
+  mockdata = { next: true };
 });
 test.parallel("runs", () => {});
 const promise = Promise.resolve("ok");

@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 pub(super) mod helpers;
 use helpers::{
     default_selector_attributes, find_by_stems, has_v2_playwright_settings,
-    is_legacy_playwright_configured, is_v2_config_path, parse_legacy_playwright_config,
+    is_legacy_playwright_configured, parse_legacy_playwright_config,
     playwright_configs_from_legacy, playwright_configs_from_v2,
 };
 
@@ -85,13 +85,12 @@ fn load_explicit(
     if !resolved.exists() {
         anyhow::bail!("config file does not exist: {}", resolved.display());
     }
-    if is_v2_config_path(&resolved) {
-        let v2 = load_v2_config(root, Some(&resolved))?;
-        if has_v2_playwright_settings(&v2) {
-            return settings_from_v2(root, &v2, cli_playwright_configs, cli_project);
-        }
-    }
     let source = std::fs::read_to_string(&resolved)?;
+    let v2 = load_v2_config(root, Some(&resolved))?;
+    if has_v2_playwright_settings(&v2) {
+        let legacy = parse_legacy_playwright_config(&source, &resolved)?;
+        return settings_from_v2(root, &v2, legacy, cli_playwright_configs, cli_project);
+    }
     let legacy = parse_legacy_playwright_config(&source, &resolved)?;
     settings_from_legacy_file_config(root, legacy, cli_playwright_configs, cli_project)
 }
@@ -105,10 +104,10 @@ fn load_discovered_v2(
         return Ok(None);
     };
     let v2 = load_v2_config(root, Some(&path))?;
-    if has_v2_playwright_settings(&v2) {
-        return settings_from_v2(root, &v2, cli_playwright_configs, cli_project).map(Some);
-    }
     let legacy = parse_legacy_playwright_config(&source, &path)?;
+    if has_v2_playwright_settings(&v2) {
+        return settings_from_v2(root, &v2, legacy, cli_playwright_configs, cli_project).map(Some);
+    }
     if is_legacy_playwright_configured(&legacy) {
         return settings_from_legacy_file_config(root, legacy, cli_playwright_configs, cli_project)
             .map(Some);
@@ -119,6 +118,7 @@ fn load_discovered_v2(
 fn settings_from_v2(
     root: &Path,
     config: &NoMistakesConfig,
+    legacy_overlay: FileConfig,
     cli_playwright_configs: &[PathBuf],
     cli_project: Option<String>,
 ) -> Result<Settings> {
@@ -140,15 +140,15 @@ fn settings_from_v2(
         frontend_root,
         playwright_configs,
         project: cli_project,
-        test_include: Vec::new(),
-        test_exclude: Vec::new(),
-        ignore_routes: Vec::new(),
-        navigation_helpers: Vec::new(),
+        test_include: legacy_overlay.test_include,
+        test_exclude: legacy_overlay.test_exclude,
+        ignore_routes: legacy_overlay.ignore_routes,
+        navigation_helpers: legacy_overlay.navigation_helpers,
         selector_attributes,
         component_selector_attributes: playwright.selectors.component_test_ids.clone(),
         html_ids: playwright.selectors.html_ids,
         selector_roots,
-        selector_include: Vec::new(),
+        selector_include: legacy_overlay.selector_include,
         selector_exclude: playwright.selector_exclude.clone(),
     })
 }
