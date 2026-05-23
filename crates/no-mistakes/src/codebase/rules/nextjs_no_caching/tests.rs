@@ -366,6 +366,37 @@ export { revalidate }\n";
 }
 
 #[test]
+fn extract_reports_route_segment_cache_config_exports() {
+    let source = "const cfg = {}\n\
+export const { revalidate } = cfg\n\
+export let runtime\n\
+export const revalidate = false\n\
+export const fetchCache = 'force-cache'\n\
+export const dynamic = 'error'\n";
+    let findings = extract(Path::new("src/app/page.ts"), source).unwrap();
+
+    assert_eq!(findings.len(), 3);
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("revalidate")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("fetchCache")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("dynamic")));
+}
+
+#[test]
+fn extract_ignores_non_banned_route_segment_config_shapes() {
+    let source = "export const fetchCache = value\n\
+export const dynamic = value\n";
+    let findings = extract(Path::new("app/route.ts"), source).unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn extract_ignores_segment_config_exports_outside_route_segments() {
     let source = "export const revalidate = 60\n";
     let findings = extract(Path::new("app/lib.ts"), source).unwrap();
@@ -386,6 +417,38 @@ fn extract_ignores_named_segment_config_reexports_from_other_modules() {
     let source = "const revalidate = 60\n\
 export { revalidate } from './config'\n";
     let findings = extract(Path::new("app/page.ts"), source).unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn extract_handles_defensive_next_config_shapes() {
+    let source = "const key = 'cacheLife'\n\
+const nextConfig = { cacheHandlers: {} }\n\
+export default (withConfig('name', { ...nextConfig, [key]: {}, cacheComponents: 'yes' }) as NextConfig)\n";
+    let findings = extract(Path::new("next.config.ts"), source).unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn extract_reports_wrapped_commonjs_next_config_identifier() {
+    let source = "const nextConfig = {\n\
+  cacheLife: {},\n\
+}\n\
+module.exports = (withConfig(nextConfig) satisfies NextConfig)\n";
+    let findings = extract(Path::new("next.config.ts"), source).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("cacheLife")));
+}
+
+#[test]
+fn extract_ignores_non_module_exports_assignment_in_next_config() {
+    let source = "exports.config = { cacheComponents: true }\n";
+    let findings = extract(Path::new("next.config.js"), source).unwrap();
 
     assert!(findings.is_empty());
 }
