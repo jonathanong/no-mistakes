@@ -63,8 +63,23 @@ module.exports = rule(
     const functionDeclarations = new Map();
     let testDepth = 0;
 
+    function isModuleMutable(node, name) {
+      let scope = context.sourceCode.getScope(node);
+      while (scope) {
+        const variable = scope.variables.find((candidate) => candidate.name === name);
+        if (variable) {
+          return (
+            mutableTopLevel.has(variable.name) &&
+            (variable.scope.type === "module" || variable.scope.block.type === "Program")
+          );
+        }
+        scope = scope.upper;
+      }
+      return false;
+    }
+
     function reportIfShared(node, name) {
-      if (testDepth > 0 && mutableTopLevel.has(name)) {
+      if (testDepth > 0 && isModuleMutable(node, name)) {
         context.report({ node, messageId: "shared" });
       }
     }

@@ -42,6 +42,7 @@ it.only("assigns", () => {
   sharedRestArray[0] = 7;
   sharedRest.value++;
   this.value = 8;
+  missingShared++;
 });
 test("named callback", mutateNamedShared);
 test("named member callback", mutateNamedMember);

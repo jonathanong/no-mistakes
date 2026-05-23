@@ -15,11 +15,6 @@ function visit(node, callback, seen = new Set()) {
   if (!node || seen.has(node)) return;
   seen.add(node);
   callback(node);
-  if (
-    ["ArrowFunctionExpression", "FunctionExpression", "JSXExpressionContainer"].includes(node.type)
-  ) {
-    return;
-  }
   for (const [key, value] of Object.entries(node)) {
     if (SKIP_KEYS.has(key) || !value) continue;
     const values = Array.isArray(value) ? value : [value];

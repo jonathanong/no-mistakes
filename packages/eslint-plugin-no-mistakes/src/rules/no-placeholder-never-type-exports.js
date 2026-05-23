@@ -30,6 +30,7 @@ module.exports = rule(
           return;
         }
         if (
+          !node.source &&
           node.specifiers?.some(
             (specifier) =>
               (node.exportKind === "type" || specifier.exportKind === "type") &&

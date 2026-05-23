@@ -3,7 +3,8 @@
 const { rule } = require("../helpers");
 
 const DEFAULT_MAX_TIMEOUT_MS = 10000;
-const PLAYWRIGHT_PATH_PATTERN = /(?:^|[/\\])(?:e2e|playwright)(?:[/\\]|\.|$)|\.pw\.(?:spec|test)\./;
+const PLAYWRIGHT_PATH_PATTERN =
+  /(?:^|[/\\])(?:e2e|playwright)(?:[/\\]|$)|\.(?:pw\.)?(?:spec|test)\.[cm]?[jt]sx?$/;
 
 function isPlaywrightPath(filename) {
   return PLAYWRIGHT_PATH_PATTERN.test(filename.replace(/\\/g, "/"));

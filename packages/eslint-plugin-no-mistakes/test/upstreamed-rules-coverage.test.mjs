@@ -64,13 +64,7 @@ describe("upstreamed generic rule coverage", () => {
       messages(code, "playwright-assertion-timeout-cap", { max: 20000 }, "e2e.spec.tsx"),
       ["timeout"],
     );
-    assert.deepEqual(
-      messages(code, "playwright-assertion-timeout-cap", undefined, "unit.test.tsx"),
-      [],
-    );
-    assert.deepEqual(
-      messages(code, "playwright-selector-priority", undefined, "unit.test.tsx"),
-      [],
-    );
+    assert.deepEqual(messages(code, "playwright-assertion-timeout-cap", undefined, "unit.tsx"), []);
+    assert.deepEqual(messages(code, "playwright-selector-priority", undefined, "unit.tsx"), []);
   });
 });

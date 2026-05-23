@@ -1,4 +1,5 @@
 import React, { use } from "react";
+import * as R from "react";
 import { use as otherUse } from "not-react";
 
 const values = [3, 1, 2];
@@ -25,6 +26,7 @@ if (error.message === "missing") {
 }
 test.sequential("runs", () => {});
 React.use(Promise.resolve("ok"));
+R.use(Promise.resolve("ok"));
 use(Promise.resolve("ok"));
 otherUse(Promise.resolve("ok"));
 
@@ -33,6 +35,7 @@ export default function Component() {
     <>
       <script src="/x.js" />
       <div>{(() => "inline")()}</div>
+      <button onClick={() => (() => "clicked")()} />
     </>
   );
 }

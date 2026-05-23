@@ -41,8 +41,8 @@ describe("upstreamed generic rules", () => {
       ["test-no-shared-state", ["shared"]],
       ["test-no-error-message-matching", ["message", "message", "message"]],
       ["no-vitest-sequential", ["sequential"]],
-      ["react-no-use-promise-resolve", ["resolve", "resolve"]],
-      ["react-no-iife-in-jsx", ["iife"]],
+      ["react-no-use-promise-resolve", ["resolve", "resolve", "resolve"]],
+      ["react-no-iife-in-jsx", ["iife", "iife"]],
     ];
 
     for (const [rule, ids] of expected) {
@@ -157,6 +157,15 @@ describe("upstreamed generic rules", () => {
     );
     assert.deepEqual(messages(valid, "playwright-selector-priority", undefined, "e2e.spec.ts"), []);
     assert.deepEqual(messages(valid, "playwright-no-set-timeout", undefined, "e2e.spec.ts"), []);
+    assert.deepEqual(
+      messages(
+        fixture("playwright.non-test.ts"),
+        "playwright-no-set-timeout",
+        undefined,
+        "playwright.non-test.ts",
+      ),
+      [],
+    );
     assert.deepEqual(
       messages(
         fixture("playwright.non-test.ts"),

@@ -4,9 +4,20 @@ const { callMethodName, rule } = require("../helpers");
 
 const BANNED_METHODS = new Set(["sort", "toSorted", "every", "findIndex", "slice", "toSpliced"]);
 
-function isKnownArrayReceiver(node, names) {
+function isKnownArrayReceiver(node, context) {
   if (node.type === "ArrayExpression") return true;
-  return node.type === "Identifier" && names.has(node.name);
+  if (node.type !== "Identifier") return false;
+  let scope = context.sourceCode.getScope(node);
+  while (scope) {
+    const variable = scope.variables.find((candidate) => candidate.name === node.name);
+    if (variable) {
+      return variable.defs.some(
+        (def) => def.type === "Variable" && def.node?.init?.type === "ArrayExpression",
+      );
+    }
+    scope = scope.upper;
+  }
+  return false;
 }
 
 module.exports = rule(
@@ -23,20 +34,14 @@ module.exports = rule(
     },
   },
   (context) => {
-    let arrays = new Set();
     return {
-      VariableDeclarator(node) {
-        if (node.id.type === "Identifier" && node.init?.type === "ArrayExpression") {
-          arrays.add(node.id.name);
-        }
-      },
       AwaitExpression(node) {
         if (node.argument.type !== "CallExpression") return;
         const method = callMethodName(node.argument);
         if (!BANNED_METHODS.has(method)) return;
         if (
           node.argument.callee.type !== "MemberExpression" ||
-          !isKnownArrayReceiver(node.argument.callee.object, arrays)
+          !isKnownArrayReceiver(node.argument.callee.object, context)
         ) {
           return;
         }

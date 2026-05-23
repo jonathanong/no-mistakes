@@ -16,6 +16,22 @@ function isImportedReactUse(node, context) {
   );
 }
 
+function isImportedFromReact(node, context) {
+  let scope = context.sourceCode.getScope(node);
+  let variable = null;
+  while (scope && !variable) {
+    variable = scope.variables.find((scopeVariable) => scopeVariable.name === node.name);
+    scope = scope.upper;
+  }
+  return Boolean(
+    variable?.defs.some(
+      (def) =>
+        (def.type === "ImportBinding" || def.type === "Variable") &&
+        def.parent?.source?.value === "react",
+    ),
+  );
+}
+
 function isReactUse(callee, context, useNames) {
   if (callee?.type === "Identifier") {
     return useNames.has(callee.name) && isImportedReactUse(callee, context);
@@ -23,7 +39,7 @@ function isReactUse(callee, context, useNames) {
   return (
     callee?.type === "MemberExpression" &&
     callee.object?.type === "Identifier" &&
-    callee.object.name === "React" &&
+    isImportedFromReact(callee.object, context) &&
     callee.property?.type === "Identifier" &&
     callee.property.name === "use"
   );

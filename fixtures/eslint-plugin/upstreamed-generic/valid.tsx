@@ -10,6 +10,11 @@ it("keeps state local", () => {
   let counter = 0;
   counter++;
 });
+let shadow = 0;
+it("allows local shadowing", () => {
+  let shadow = 0;
+  shadow++;
+});
 expect(error.code).toBe("ENOENT");
 test.parallel("runs", () => {});
 const promise = Promise.resolve("ok");
