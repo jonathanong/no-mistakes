@@ -78,6 +78,16 @@ describe("nextjs-static-fetch-method", () => {
     );
   });
 
+  it("reports computed method key with non-literal value", () => {
+    assert.deepEqual(
+      messages(
+        "fetch('https://api.example.com', { ['method']: verb });",
+        "nextjs-static-fetch-method",
+      ),
+      ["dynamic"],
+    );
+  });
+
   it("accepts fetch with string literal method key and literal value", () => {
     assert.deepEqual(
       messages(
