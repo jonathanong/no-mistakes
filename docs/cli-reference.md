@@ -19,6 +19,7 @@ no-mistakes playwright check [OPTIONS]
 no-mistakes playwright edges [OPTIONS]
 no-mistakes playwright related [OPTIONS] <FILES>...
 no-mistakes playwright tests [OPTIONS] [FILES]...
+no-mistakes test plan <playwright|vitest> [OPTIONS]
 no-mistakes react analyze [TARGETS]...
 no-mistakes react check [TARGETS]... [--assert-no-fetch]
 no-mistakes queues edges [FILES]... [--depth N]
@@ -127,6 +128,70 @@ example `no-mistakes --jobs 4 check ...`.
 `check` only runs configured checks. Use direct subcommands such as
 `no-mistakes queues check` when you want a full scan for that domain without
 adding it to `.no-mistakes.yml`.
+
+### Test Plans
+
+`no-mistakes test plan <playwright|vitest>` selects focused test files from
+changed files and configured priority groups. `tests plan` remains available as
+the compatibility spelling.
+
+```sh
+no-mistakes test plan vitest --changed-file src/user.ts --format paths
+no-mistakes test plan playwright --environment pre-push --json
+```
+
+| Option | Description |
+| --- | --- |
+| `--root <PATH>` | Project root. Defaults to the current working directory. |
+| `--config <CONFIG>` | `.no-mistakes.*` config file. |
+| `--tsconfig <FILE>` | tsconfig for path aliases. |
+| `--base <REF>` / `--head <REF>` | Git diff range. |
+| `--changed-file <FILE>` | Explicit changed file. Repeatable. |
+| `--changed-files <FILE>` | Newline-separated changed file list. |
+| `--environment <NAME>` | Test plan environment. Defaults to `pre-push`; `prePush` and `pre_push` config keys are equivalent. |
+| `--limit-percent <N>` | Override the environment limit percentage. |
+| `--limit-files <N>` | Override the environment file cap. |
+| `--format <FORMAT>` | `json`, `paths`, `markdown`, or `md`. |
+| `--json` | Shorthand for `--format json`. |
+
+Config is read from `testPlan` (`test_plan` is also accepted):
+
+```yml
+testPlan:
+  playwright:
+    dependencies:
+      projects:
+        cloudflare-worker: true
+        web:
+          - next.config.*
+          - proxy.ts
+    environments:
+      prePush:
+        limit:
+          percent: 5
+          files: 100
+        groups:
+          - type: direct
+          - type: coverage
+          - type: dependencies
+          - type: sample
+            limit:
+              percent: 1
+              files: 100
+  vitest:
+    environments:
+      prePush:
+        groups:
+          - type: direct
+          - type: dependencies
+```
+
+Groups are mutually exclusive in declaration order. `coverage` is Playwright
+only; Vitest supports `direct`, `dependencies`, and deterministic `sample`.
+`dependencies.projects.<name>: true` runs the full selected framework when a
+file under that configured project root/include set changes. Explicit project
+dependency globs are relative to that project's root unless they already include
+the root prefix.
 
 ### Filesystem Rules via `no-mistakes check`
 

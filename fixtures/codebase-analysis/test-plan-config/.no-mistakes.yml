@@ -1,0 +1,32 @@
+projects:
+  web:
+    type: nextjs
+    root: web
+  web-patterns:
+    type: nextjs
+    root: config
+tests:
+  vitest: {}
+test_plan:
+  vitest:
+    dependencies:
+      projects:
+        web: true
+        web-patterns:
+          - next.config.*
+    environments:
+      prePush:
+        limit:
+          files: 2
+        groups:
+          - type: direct
+          - type: dependencies
+          - type: sample
+            limit:
+              files: 1
+      all:
+        all: true
+      coverageOnly:
+        groups:
+          - type: coverage
+rules: []

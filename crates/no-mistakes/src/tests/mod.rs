@@ -4,7 +4,10 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
+pub(crate) mod changed_files;
 pub(crate) mod comment;
+pub(crate) mod configured_plan;
+pub(crate) mod configured_plan_candidates;
 pub(crate) mod graph;
 pub(crate) mod plan;
 pub(crate) mod why;
@@ -12,6 +15,8 @@ pub(crate) mod why;
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct TestPlan {
     pub selected_tests: Vec<SelectedTest>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub groups: Vec<TestPlanGroupResult>,
     pub warnings: Vec<Warning>,
     pub fallback_triggered: bool,
     pub fallback_reason: Option<String>,
@@ -22,6 +27,14 @@ pub struct SelectedTest {
     pub test_file: String,
     pub confidence: Confidence,
     pub reasons: Vec<ImpactReason>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct TestPlanGroupResult {
+    pub r#type: String,
+    pub selected: Vec<String>,
+    pub remaining: usize,
+    pub limit: Option<usize>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -76,6 +89,10 @@ pub(crate) enum TestsCommand {
 
 #[derive(Args, Debug, Clone)]
 pub(crate) struct PlanArgs {
+    /// Optional test framework for config-driven planning.
+    #[arg(value_enum)]
+    pub(crate) framework: Option<TestFramework>,
+
     /// Project root directory.
     #[arg(long, default_value = ".")]
     pub(crate) root: PathBuf,
@@ -104,6 +121,18 @@ pub(crate) struct PlanArgs {
     #[arg(long = "changed-files")]
     pub(crate) changed_files: Option<PathBuf>,
 
+    /// Test plan environment name from config.
+    #[arg(long, default_value = "pre-push")]
+    pub(crate) environment: String,
+
+    /// Override the configured plan limit percentage.
+    #[arg(long = "limit-percent")]
+    pub(crate) limit_percent: Option<f64>,
+
+    /// Override the configured plan limit file count.
+    #[arg(long = "limit-files")]
+    pub(crate) limit_files: Option<usize>,
+
     /// Output format.
     #[arg(long, value_enum, conflicts_with = "json")]
     pub(crate) format: Option<PlanFormat>,
@@ -111,6 +140,12 @@ pub(crate) struct PlanArgs {
     /// Shorthand for --format json.
     #[arg(long, default_value_t = false, conflicts_with = "format")]
     pub(crate) json: bool,
+}
+
+#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum TestFramework {
+    Playwright,
+    Vitest,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
