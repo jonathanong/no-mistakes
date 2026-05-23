@@ -26,13 +26,17 @@ function isMockTestFile(filename) {
   return MOCK_TEST_FILE_PATTERN.test(filename.replace(/\\/g, "/"));
 }
 
+function propertyName(node) {
+  if (node.type === "Literal") return String(node.value);
+  return node.name;
+}
+
 function isMockingCall(node) {
   return (
     node.callee.type === "MemberExpression" &&
-    !node.callee.computed &&
     node.callee.object.type === "Identifier" &&
     (node.callee.object.name === "vi" || node.callee.object.name === "jest") &&
-    MOCK_METHODS.has(node.callee.property.name)
+    MOCK_METHODS.has(propertyName(node.callee.property))
   );
 }
 

@@ -3,6 +3,21 @@
 const { rule } = require("../helpers");
 
 const TEST_CALLEES = new Set(["it", "test", "describe"]);
+const MUTATING_METHODS = new Set([
+  "add",
+  "clear",
+  "copyWithin",
+  "delete",
+  "fill",
+  "pop",
+  "push",
+  "reverse",
+  "set",
+  "shift",
+  "sort",
+  "splice",
+  "unshift",
+]);
 
 function calleeName(node) {
   if (node?.type === "Identifier") return node.name;
@@ -39,6 +54,29 @@ function mutationRootName(node) {
   if (node.type === "Identifier") return node.name;
   if (node.type === "MemberExpression") return mutationRootName(node.object);
   return null;
+}
+
+function propertyName(node) {
+  if (node.type === "Literal") return String(node.value);
+  return node.name;
+}
+
+function mutatingCallRootName(node) {
+  if (node.callee.type !== "MemberExpression") return null;
+  if (!MUTATING_METHODS.has(propertyName(node.callee.property))) return null;
+  return mutationRootName(node.callee.object);
+}
+
+function isFunctionNode(node) {
+  return (
+    node.type === "FunctionDeclaration" ||
+    node.type === "FunctionExpression" ||
+    node.type === "ArrowFunctionExpression"
+  );
+}
+
+function isInlineTestCallback(node) {
+  return node.parent?.type === "CallExpression" && isTestCall(node.parent);
 }
 
 function childNodes(node) {
@@ -113,10 +151,8 @@ module.exports = rule(
           }
         }
       },
-      "CallExpression:exit"(node) {
-        if (isTestCall(node)) testDepth -= 1;
-      },
       AssignmentExpression(node) {
+        if (isInsideUncalledNestedFunction(node)) return;
         for (const name of collectPatternNames(node.left)) reportIfShared(node, name);
         if (node.left.type === "MemberExpression") {
           const rootName = mutationRootName(node.left);
@@ -124,12 +160,30 @@ module.exports = rule(
         }
       },
       UpdateExpression(node) {
+        if (isInsideUncalledNestedFunction(node)) return;
         const rootName = mutationRootName(node.argument);
+        if (rootName) reportIfShared(node, rootName);
+      },
+      "CallExpression:exit"(node) {
+        if (isTestCall(node)) testDepth -= 1;
+        if (isInsideUncalledNestedFunction(node)) return;
+        const rootName = mutatingCallRootName(node);
         if (rootName) reportIfShared(node, rootName);
       },
     };
 
+    function isInsideUncalledNestedFunction(node) {
+      if (testDepth === 0) return false;
+      let current = node.parent;
+      while (current) {
+        if (isFunctionNode(current) && !isInlineTestCallback(current)) return true;
+        current = current.parent;
+      }
+      return false;
+    }
+
     function checkSharedMutations(node) {
+      if (isFunctionNode(node)) return;
       if (node.type === "AssignmentExpression") {
         for (const name of collectPatternNames(node.left)) reportIfShared(node, name);
         if (node.left.type === "MemberExpression") {
@@ -138,6 +192,9 @@ module.exports = rule(
         }
       } else if (node.type === "UpdateExpression") {
         const rootName = mutationRootName(node.argument);
+        if (rootName) reportIfShared(node, rootName);
+      } else if (node.type === "CallExpression") {
+        const rootName = mutatingCallRootName(node);
         if (rootName) reportIfShared(node, rootName);
       }
       for (const child of childNodes(node)) checkSharedMutations(child);

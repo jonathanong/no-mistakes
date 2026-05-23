@@ -1,3 +1,3 @@
 import { vi } from "vitest";
 
-vi.mock("./dep");
+vi["mock"]("./dep");

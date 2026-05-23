@@ -4,20 +4,42 @@ const { callMethodName, rule } = require("../helpers");
 
 const BANNED_METHODS = new Set(["sort", "toSorted", "every", "findIndex", "slice", "toSpliced"]);
 
-function isKnownArrayReceiver(node, context) {
-  if (node.type === "ArrayExpression") return true;
-  if (node.type !== "Identifier") return false;
+function unwrapChain(node) {
+  return node?.type === "ChainExpression" ? node.expression : node;
+}
+
+function findVariable(node, context) {
   let scope = context.sourceCode.getScope(node);
   while (scope) {
     const variable = scope.variables.find((candidate) => candidate.name === node.name);
-    if (variable) {
-      return variable.defs.some(
-        (def) => def.type === "Variable" && def.node?.init?.type === "ArrayExpression",
-      );
-    }
+    if (variable) return variable;
     scope = scope.upper;
   }
-  return false;
+  return null;
+}
+
+function isReassignedBeforeUse(variable, node) {
+  const definitionNames = new Set(variable.defs.map((def) => def.name));
+  return variable.references.some(
+    (reference) =>
+      reference.isWrite() &&
+      !definitionNames.has(reference.identifier) &&
+      reference.identifier.range[0] < node.range[0],
+  );
+}
+
+function isKnownArrayReceiver(node, context) {
+  node = unwrapChain(node);
+  if (node.type === "ArrayExpression") return true;
+  if (node.type !== "Identifier") return false;
+  const variable = findVariable(node, context);
+  return Boolean(
+    variable &&
+    variable.defs.some(
+      (def) => def.type === "Variable" && def.node?.init?.type === "ArrayExpression",
+    ) &&
+    !isReassignedBeforeUse(variable, node),
+  );
 }
 
 module.exports = rule(
@@ -36,12 +58,13 @@ module.exports = rule(
   (context) => {
     return {
       AwaitExpression(node) {
-        if (node.argument.type !== "CallExpression") return;
-        const method = callMethodName(node.argument);
+        const argument = unwrapChain(node.argument);
+        if (argument.type !== "CallExpression") return;
+        const method = callMethodName(argument);
         if (!BANNED_METHODS.has(method)) return;
         if (
-          node.argument.callee.type !== "MemberExpression" ||
-          !isKnownArrayReceiver(node.argument.callee.object, context)
+          argument.callee.type !== "MemberExpression" ||
+          !isKnownArrayReceiver(argument.callee.object, context)
         ) {
           return;
         }
