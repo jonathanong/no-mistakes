@@ -89,6 +89,26 @@ fn default_identifier_exports_keep_function_scoped_dynamic_imports() {
 }
 
 #[test]
+fn nested_functions_inside_exported_functions_are_not_exported() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
+        .unwrap();
+    let deps = graph.deps_of(
+        &[NodeId::File(root.join("src/export-nested.mts"))],
+        None,
+        Some(&[EdgeKind::DynamicImport].into()),
+    );
+
+    assert!(deps.is_empty());
+}
+
+#[test]
 fn unknown_calls_inside_reachable_functions_keep_function_scoped_dynamic_imports() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
     let tsconfig = TsConfig {

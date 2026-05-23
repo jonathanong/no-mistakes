@@ -247,3 +247,23 @@ fn run_dependents_covers_mixed_symbol_and_plain_entrypoints() {
 
     run(args, Direction::Dependents).unwrap();
 }
+
+#[test]
+fn dependents_treats_module_symbol_entrypoints_as_module_roots() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase-analysis")
+        .join("graph-modules");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let mut args = traverse_args(root.clone(), vec![PathBuf::from("@react/client#handler")]);
+    args.relationships = vec![RelationshipArg::Import];
+    let cwd = std::env::current_dir().unwrap();
+    let mut timings = crate::codebase::timing::PhaseTimings::start();
+
+    let result =
+        collect_and_filter_entries(&args, Direction::Dependents, &cwd, &mut timings).unwrap();
+
+    assert!(result
+        .entries
+        .iter()
+        .any(|entry| entry.node.as_file() == Some(root.join("src/entry.mts").as_path())));
+}

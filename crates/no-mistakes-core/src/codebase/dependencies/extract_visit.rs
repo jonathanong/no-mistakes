@@ -22,7 +22,7 @@ impl ImportCollector {
 
     fn push_function_scope(&mut self, name: Option<String>) {
         if let Some(name) = name {
-            if self.export_depth > 0 {
+            if self.export_depth > 0 && self.function_stack.is_empty() {
                 self.exported_functions.insert(name.clone());
             }
             self.function_stack.push(name);

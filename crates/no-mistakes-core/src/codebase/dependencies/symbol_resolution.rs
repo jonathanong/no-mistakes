@@ -9,7 +9,7 @@ fn resolve_symbol_dependents(
     let mut all_entries: HashMap<NodeId, graph::NodeEntry> = HashMap::new();
     let plain_roots: Vec<_> = entrypoints
         .iter()
-        .filter(|ep| ep.symbol.is_none())
+        .filter(|ep| ep.symbol.is_none() || matches!(ep.node, graph::NodeId::Module(_)))
         .map(|ep| ep.node.clone())
         .collect();
     if !plain_roots.is_empty() {
@@ -18,6 +18,9 @@ fn resolve_symbol_dependents(
     }
     for ep in entrypoints {
         if let Some(sym) = &ep.symbol {
+            if matches!(ep.node, graph::NodeId::Module(_)) {
+                continue;
+            }
             let entries = graph.dependents_of_symbol(&ep.file, sym, depth, allowed, symbol_index);
             merge_node_entries(&mut all_entries, entries);
         }
