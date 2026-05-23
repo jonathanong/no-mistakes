@@ -124,3 +124,43 @@ export async function load() {\n\
 
     assert!(findings.is_empty());
 }
+
+#[test]
+fn extract_ignores_unrelated_unstable_cache_method() {
+    let source = "const local = { unstable_cache() { return 1 } }\n\
+export const value = local.unstable_cache()\n";
+    let findings = extract(Path::new("app/local.ts"), source).unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn extract_reports_next_cache_namespace_unstable_cache_call() {
+    let source = "import * as cache from 'next/cache'\n\
+export const value = cache.unstable_cache(async () => 1)\n";
+    let findings = extract(Path::new("app/cache.ts"), source).unwrap();
+
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("namespace imports")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("unstable_cache")));
+}
+
+#[test]
+fn extract_reports_wrapped_next_config_object() {
+    let source = "export default withSentryConfig({\n\
+  cacheComponents: true,\n\
+  cacheHandlers: {},\n\
+})\n";
+    let findings = extract(Path::new("next.config.ts"), source).unwrap();
+
+    assert_eq!(findings.len(), 2);
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("cacheComponents")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("cacheHandlers")));
+}

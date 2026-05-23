@@ -15,7 +15,7 @@ pub(crate) fn extract_program(source: &str, program: &Program<'_>) -> Vec<Nextjs
         }
     }
 
-    let mut visitor = NextjsCachingVisitor { source, findings };
+    let mut visitor = NextjsCachingVisitor::new(source, findings);
     visitor.visit_program(program);
     visitor.findings.sort();
     visitor.findings.dedup();

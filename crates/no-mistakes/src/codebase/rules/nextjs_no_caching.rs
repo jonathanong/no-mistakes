@@ -11,6 +11,7 @@ use serde::Serialize;
 use std::path::{Path, PathBuf};
 
 mod ast;
+mod config;
 mod patterns;
 mod visitor;
 
@@ -41,30 +42,28 @@ pub(crate) fn check_with_facts(
 ) -> Result<Vec<RuleFinding>> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let target_roots = super::target_roots(&root, config, rule);
-        for path in shared.files() {
-            let Some(facts) = shared.ts.get(path) else {
-                continue;
-            };
-            if !target_roots
-                .iter()
-                .any(|target_root| path.starts_with(target_root))
-            {
-                continue;
-            }
-            let Some(source) = facts.source.as_ref() else {
-                bail!("{} requires source facts for {}", RULE_ID, path.display());
-            };
-            let Some(cache_facts) = facts.nextjs_caching.as_ref() else {
-                bail!(
-                    "{} requires Next.js caching facts for {}",
-                    RULE_ID,
-                    path.display()
-                );
-            };
-            findings.extend(findings_for_file(&root, path, source, cache_facts));
+    let target_roots = target_roots(&root, config);
+    for path in shared.files() {
+        let Some(facts) = shared.ts.get(path) else {
+            continue;
+        };
+        if !target_roots
+            .iter()
+            .any(|target_root| path.starts_with(target_root))
+        {
+            continue;
         }
+        let Some(source) = facts.source.as_ref() else {
+            bail!("{} requires source facts for {}", RULE_ID, path.display());
+        };
+        let Some(cache_facts) = facts.nextjs_caching.as_ref() else {
+            bail!(
+                "{} requires Next.js caching facts for {}",
+                RULE_ID,
+                path.display()
+            );
+        };
+        findings.extend(findings_for_file(&root, path, source, cache_facts));
     }
     super::sort_findings(&mut findings);
     Ok(findings)
@@ -75,30 +74,37 @@ fn check_files(
     config: &NoMistakesConfig,
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let target_roots = super::target_roots(root, config, rule);
-        let rule_findings: Vec<RuleFinding> = files
-            .par_iter()
-            .filter(|path| {
-                target_roots
-                    .iter()
-                    .any(|target_root| path.starts_with(target_root))
-            })
-            .flat_map(|path| {
-                let Ok(source) = std::fs::read_to_string(path) else {
-                    return Vec::new();
-                };
-                let Ok(cache_facts) = extract(path, &source) else {
-                    return Vec::new();
-                };
-                findings_for_file(root, path, &source, &cache_facts)
-            })
-            .collect();
-        findings.extend(rule_findings);
-    }
+    let target_roots = target_roots(root, config);
+    let mut findings: Vec<RuleFinding> = files
+        .par_iter()
+        .filter(|path| {
+            target_roots
+                .iter()
+                .any(|target_root| path.starts_with(target_root))
+        })
+        .flat_map(|path| {
+            let Ok(source) = std::fs::read_to_string(path) else {
+                return Vec::new();
+            };
+            let Ok(cache_facts) = extract(path, &source) else {
+                return Vec::new();
+            };
+            findings_for_file(root, path, &source, &cache_facts)
+        })
+        .collect();
     super::sort_findings(&mut findings);
     Ok(findings)
+}
+
+fn target_roots(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
+    let mut roots: Vec<_> = config
+        .rule_applications(RULE_ID)
+        .into_iter()
+        .flat_map(|rule| super::target_roots(root, config, rule))
+        .collect();
+    roots.sort();
+    roots.dedup();
+    roots
 }
 
 fn findings_for_file(

@@ -1,22 +1,33 @@
 use super::ast::is_cache_directive;
 use super::patterns::{
-    banned_next_cache_import, banned_segment_config, boolean_value, fetch_cache_findings,
-    single_binding_name,
+    banned_next_cache_import, banned_segment_config, fetch_cache_findings, single_binding_name,
 };
 use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
-use crate::codebase::ts_source::{byte_offset_to_line, static_property_key_name};
+use crate::codebase::ts_source::byte_offset_to_line;
 use oxc_ast::ast::{
     Argument, CallExpression, Declaration, ExportDefaultDeclarationKind, Expression, FunctionBody,
-    ImportDeclarationSpecifier, ObjectExpression, ObjectPropertyKind,
+    ImportDeclarationSpecifier,
 };
 use oxc_ast_visit::{walk, Visit};
+use std::collections::HashSet;
 
 pub(super) struct NextjsCachingVisitor<'a> {
     pub(super) source: &'a str,
     pub(super) findings: Vec<NextjsCachingFinding>,
+    unstable_cache_bindings: HashSet<String>,
+    next_cache_namespaces: HashSet<String>,
 }
 
 impl<'a> NextjsCachingVisitor<'a> {
+    pub(super) fn new(source: &'a str, findings: Vec<NextjsCachingFinding>) -> Self {
+        Self {
+            source,
+            findings,
+            unstable_cache_bindings: HashSet::new(),
+            next_cache_namespaces: HashSet::new(),
+        }
+    }
+
     fn push(&mut self, byte_offset: u32, message: impl Into<String>) {
         self.findings.push(NextjsCachingFinding {
             line: byte_offset_to_line(self.source, byte_offset as usize) as usize,
@@ -41,11 +52,14 @@ impl<'a> NextjsCachingVisitor<'a> {
 
     fn check_call(&mut self, call: &CallExpression<'a>) {
         match &call.callee {
-            Expression::Identifier(callee) if callee.name.as_str() == "unstable_cache" => {
+            Expression::Identifier(callee)
+                if self.unstable_cache_bindings.contains(callee.name.as_str()) =>
+            {
                 self.push(call.span.start, unstable_cache_message());
             }
             Expression::StaticMemberExpression(member)
-                if member.property.name.as_str() == "unstable_cache" =>
+                if member.property.name.as_str() == "unstable_cache"
+                    && self.is_next_cache_namespace(&member.object) =>
             {
                 self.push(call.span.start, unstable_cache_message());
             }
@@ -67,13 +81,21 @@ impl<'a> NextjsCachingVisitor<'a> {
 
     fn check_import_specifier(&mut self, specifier: &ImportDeclarationSpecifier<'a>) {
         match specifier {
-            ImportDeclarationSpecifier::ImportNamespaceSpecifier(spec) => self.push(
-                spec.span.start,
-                "next/cache namespace imports are disabled; avoid Next.js cache APIs",
-            ),
+            ImportDeclarationSpecifier::ImportNamespaceSpecifier(spec) => {
+                self.next_cache_namespaces
+                    .insert(spec.local.name.as_str().to_string());
+                self.push(
+                    spec.span.start,
+                    "next/cache namespace imports are disabled; avoid Next.js cache APIs",
+                );
+            }
             ImportDeclarationSpecifier::ImportSpecifier(spec) => {
                 let imported = spec.imported.name();
                 if banned_next_cache_import(&imported) {
+                    if imported.as_str() == "unstable_cache" {
+                        self.unstable_cache_bindings
+                            .insert(spec.local.name.as_str().to_string());
+                    }
                     self.push(
                         spec.span.start,
                         format!("next/cache `{imported}` is disabled; avoid Next.js cache APIs"),
@@ -105,29 +127,20 @@ impl<'a> NextjsCachingVisitor<'a> {
     }
 
     fn check_default_export(&mut self, export: &oxc_ast::ast::ExportDefaultDeclaration<'a>) {
-        if let ExportDefaultDeclarationKind::ObjectExpression(obj) = &export.declaration {
-            self.check_next_config_object(obj);
+        match &export.declaration {
+            ExportDefaultDeclarationKind::ObjectExpression(obj) => {
+                self.push_next_config_findings(super::config::object_findings(obj));
+            }
+            ExportDefaultDeclarationKind::CallExpression(call) => {
+                self.push_next_config_findings(super::config::call_findings(call));
+            }
+            _ => {}
         }
     }
 
-    fn check_next_config_object(&mut self, obj: &ObjectExpression<'a>) {
-        for prop in &obj.properties {
-            let ObjectPropertyKind::ObjectProperty(prop) = prop else {
-                continue;
-            };
-            let Some(name) = static_property_key_name(&prop.key) else {
-                continue;
-            };
-            match name {
-                "cacheComponents" if boolean_value(&prop.value) == Some(true) => self.push(
-                    prop.span.start,
-                    "Next.js cacheComponents config is disabled; remove static caching",
-                ),
-                "cacheLife" | "cacheHandlers" => {
-                    self.push(prop.span.start, next_config_message(name));
-                }
-                _ => {}
-            }
+    fn push_next_config_findings(&mut self, findings: Vec<(u32, String)>) {
+        for (start, message) in findings {
+            self.push(start, message);
         }
     }
 
@@ -140,6 +153,13 @@ impl<'a> NextjsCachingVisitor<'a> {
                 );
             }
         }
+    }
+
+    fn is_next_cache_namespace(&self, expr: &Expression<'a>) -> bool {
+        matches!(
+            expr,
+            Expression::Identifier(id) if self.next_cache_namespaces.contains(id.name.as_str())
+        )
     }
 }
 
@@ -183,8 +203,4 @@ fn unstable_cache_message() -> &'static str {
 
 fn segment_config_message(name: &str) -> String {
     format!("Next.js `{name}` cache segment config is disabled; remove static caching")
-}
-
-fn next_config_message(name: &str) -> String {
-    format!("Next.js `{name}` config is disabled; remove static caching")
 }
