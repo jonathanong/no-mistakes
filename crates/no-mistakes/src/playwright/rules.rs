@@ -2,7 +2,10 @@ use crate::codebase::check_facts::{CheckFactMap, PlaywrightFactPlan};
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use crate::playwright::analysis::discover::discover_test_files;
-use crate::playwright::analysis::pipeline::{analyze_with_policy, analyze_with_policy_and_facts};
+use crate::playwright::analysis::pipeline::{
+    analyze_selectors_with_policy, analyze_selectors_with_policy_and_facts, analyze_with_policy,
+    analyze_with_policy_and_facts,
+};
 use crate::playwright::analysis::types::UniqueSelectorPolicy;
 use crate::playwright::config;
 use crate::playwright::playwright_config;
@@ -37,15 +40,16 @@ pub fn check(
     let mut findings = Vec::new();
     for selection in selections {
         let settings = config::load_settings(root, config_path, &[], selection.project.clone())?;
-        let analysis = analyze_with_policy(
-            root,
-            &settings,
-            playwright_tests::TestPolicy {
-                assert_conditional_tests: false,
-                allow_skipped_tests: false,
-            },
-            unique_policy(selection.unique_test_ids, selection.unique_html_ids),
-        )?;
+        let test_policy = playwright_tests::TestPolicy {
+            assert_conditional_tests: false,
+            allow_skipped_tests: false,
+        };
+        let unique_policy = unique_policy(selection.unique_test_ids, selection.unique_html_ids);
+        let analysis = if selection.coverage {
+            analyze_with_policy(root, &settings, test_policy, unique_policy)
+        } else {
+            analyze_selectors_with_policy(root, &settings, test_policy, unique_policy)
+        }?;
         findings.extend(findings_from_report(
             &analysis.coverage,
             selection.coverage,
@@ -117,16 +121,22 @@ pub(crate) fn check_with_facts(
     let mut findings = Vec::new();
     for selection in selections {
         let settings = config::load_settings(root, config_path, &[], selection.project.clone())?;
-        let analysis = analyze_with_policy_and_facts(
-            root,
-            &settings,
-            playwright_tests::TestPolicy {
-                assert_conditional_tests: false,
-                allow_skipped_tests: false,
-            },
-            unique_policy(selection.unique_test_ids, selection.unique_html_ids),
-            facts,
-        )?;
+        let test_policy = playwright_tests::TestPolicy {
+            assert_conditional_tests: false,
+            allow_skipped_tests: false,
+        };
+        let unique_policy = unique_policy(selection.unique_test_ids, selection.unique_html_ids);
+        let analysis = if selection.coverage {
+            analyze_with_policy_and_facts(root, &settings, test_policy, unique_policy, facts)
+        } else {
+            analyze_selectors_with_policy_and_facts(
+                root,
+                &settings,
+                test_policy,
+                unique_policy,
+                facts,
+            )
+        }?;
         findings.extend(findings_from_report(
             &analysis.coverage,
             selection.coverage,

@@ -28,6 +28,23 @@ pub(crate) fn analyze_with_policy(
         settings,
         test_policy,
         unique_selector_policy,
+        true,
+        None,
+    )
+}
+
+pub(crate) fn analyze_selectors_with_policy(
+    root: &Path,
+    settings: &config::Settings,
+    test_policy: playwright_tests::TestPolicy,
+    unique_selector_policy: UniqueSelectorPolicy,
+) -> Result<Analysis> {
+    analyze_with_policy_and_optional_facts(
+        root,
+        settings,
+        test_policy,
+        unique_selector_policy,
+        false,
         None,
     )
 }
@@ -44,6 +61,24 @@ pub(crate) fn analyze_with_policy_and_facts(
         settings,
         test_policy,
         unique_selector_policy,
+        true,
+        Some(facts),
+    )
+}
+
+pub(crate) fn analyze_selectors_with_policy_and_facts(
+    root: &Path,
+    settings: &config::Settings,
+    test_policy: playwright_tests::TestPolicy,
+    unique_selector_policy: UniqueSelectorPolicy,
+    facts: &crate::codebase::check_facts::CheckFactMap,
+) -> Result<Analysis> {
+    analyze_with_policy_and_optional_facts(
+        root,
+        settings,
+        test_policy,
+        unique_selector_policy,
+        false,
         Some(facts),
     )
 }
@@ -53,18 +88,17 @@ fn analyze_with_policy_and_optional_facts(
     settings: &config::Settings,
     test_policy: playwright_tests::TestPolicy,
     mut unique_selector_policy: UniqueSelectorPolicy,
+    require_routes: bool,
     facts: Option<&crate::codebase::check_facts::CheckFactMap>,
 ) -> Result<Analysis> {
     unique_selector_policy.configured_html_id_selector = has_configured_html_id_selector(settings);
     let route_root = root.join(&settings.frontend_root);
     let routes = routes::collect_routes(&route_root);
-    if routes.is_empty() {
+    if require_routes && routes.is_empty() {
+        let route_display = route_root.strip_prefix(root).unwrap_or(&route_root);
         anyhow::bail!(
             "no Next.js page routes found under {}",
-            route_root
-                .strip_prefix(root)
-                .unwrap_or(&route_root)
-                .display()
+            route_display.display()
         );
     }
 
@@ -146,7 +180,11 @@ fn analyze_with_policy_and_optional_facts(
             Ok(left)
         })?;
 
-    let fetch_idx = collect_fetches_for_routes(&routes, &route_root, root)?;
+    let fetch_idx = if routes.is_empty() {
+        Default::default()
+    } else {
+        collect_fetches_for_routes(&routes, &route_root, root)?
+    };
     edges.extend(expand_fetch_edges(&edges, &fetch_idx));
     edges.sort();
     edges.dedup();

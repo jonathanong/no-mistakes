@@ -403,6 +403,19 @@ fn rule_configured_requires_an_effective_target() {
 }
 
 #[test]
+fn playwright_rules_do_not_accept_vitest_test_targets() {
+    let yaml = r#"
+rules:
+  - rule: playwright-unique-test-ids
+    tests:
+      vitest: [unit]
+"#;
+    let cfg: NoMistakesConfig = serde_yaml::from_str(yaml).unwrap();
+
+    assert!(!cfg.rule_configured("playwright-unique-test-ids"));
+}
+
+#[test]
 fn config_view_enabled_rules() {
     let cfg = load_v2_config(&fixture("multi-project"), None).unwrap();
     let view = ConfigView::new(&cfg);

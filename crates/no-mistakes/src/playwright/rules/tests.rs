@@ -86,6 +86,16 @@ fn check_reports_analysis_errors_without_shared_facts() {
 }
 
 #[test]
+fn check_unique_rules_do_not_require_nextjs_routes() {
+    let root = fixture_path(&["scan-config", "json"]);
+    let config = config_with_rule(PLAYWRIGHT_UNIQUE_TEST_IDS);
+
+    let findings = check(&root, None, &config).unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn check_with_facts_falls_back_when_shared_playwright_facts_are_missing() {
     let root = fixture_path(&["nextjs-coverage", "covered"]);
     let config = config_with_rule(PLAYWRIGHT_COVERAGE);
