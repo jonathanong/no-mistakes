@@ -104,9 +104,10 @@ fn nextjs_no_caching_fails_for_cache_features() {
 
     assert!(!out.status.success(), "expected exit 1");
     assert!(body.contains("nextjs-no-caching"), "{body}");
-    assert!(body.contains("web/app/bad.ts"), "{body}");
+    assert!(body.contains("web/app/fetch-options.ts"), "{body}");
+    assert!(body.contains("web/app/directive.ts"), "{body}");
     assert!(body.contains("web/next.config.ts"), "{body}");
-    assert!(!body.contains("web/app/good.ts"), "{body}");
+    assert!(!body.contains("web/app/disabled.ts"), "{body}");
 }
 
 // ── agents-md-max-size ────────────────────────────────────────────────────────
