@@ -3,7 +3,6 @@ use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::ts_resolver::{normalize_path, ImportResolver};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::ts_symbols::ExportKind;
-use anyhow::Result;
 use std::collections::{BTreeSet, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 
@@ -13,7 +12,7 @@ pub(super) fn reachable_story_files(
     stories: &GlobMatcher,
     resolver: &ImportResolver<'_>,
     _all_component_keys: &HashSet<String>,
-) -> Result<BTreeSet<PathBuf>> {
+) -> BTreeSet<PathBuf> {
     let mut queue: VecDeque<PathBuf> = story_files_matching(project_root, shared, stories)
         .into_iter()
         .collect();
@@ -56,7 +55,7 @@ pub(super) fn reachable_story_files(
             }
         }
     }
-    Ok(seen)
+    seen
 }
 
 pub(super) fn story_files_matching(

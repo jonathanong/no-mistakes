@@ -1,0 +1,11 @@
+version: 2
+projects:
+  web:
+    type: nextjs
+    root: "."
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      stories: ["stories/**/*.stories.tsx"]
+      include_all_react_named_exports: true

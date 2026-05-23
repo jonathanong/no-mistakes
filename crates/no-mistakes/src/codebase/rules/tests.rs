@@ -103,6 +103,37 @@ fn run_check_executes_enabled_rule() {
     run_check(&root, None, None).unwrap();
 }
 
+#[test]
+fn run_check_executes_storybook_rule() {
+    let root = fixture("rules/require-storybook-stories/covered");
+
+    let findings = run_check(&root, None, None).unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn run_check_with_facts_executes_storybook_rule() {
+    let root = fixture("rules/require-storybook-stories/covered");
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        files,
+        crate::codebase::check_facts::CheckFactPlan {
+            symbols: true,
+            react: true,
+            storybook: true,
+            source: true,
+            dynamic_imports: true,
+            ..Default::default()
+        },
+    );
+
+    let findings = run_check_with_facts(&root, None, None, &facts).unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
 fn dynamic_import_fixture() -> std::path::PathBuf {
     fixture("codebase-analysis/test-no-unmocked-dynamic-imports")
 }

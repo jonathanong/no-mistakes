@@ -6,11 +6,12 @@ use oxc_span::SourceType;
 #[test]
 fn extracts_used_and_side_effect_story_imports() {
     let source = r#"
-import "./setup.story";
-import UsedDefault from "./Default";
-import UnusedDefault from "./Unused";
-import { Used, Unused } from "./Named";
-import * as Namespace from "./Namespace";
+	import "./setup.story";
+	import type TypeOnlyDefault from "./TypeOnlyDefault";
+	import UsedDefault from "./Default";
+	import UnusedDefault from "./Unused";
+	import { Used, Unused, type TypeOnlyNamed } from "./Named";
+	import * as Namespace from "./Namespace";
 
 export const Basic = () => <><UsedDefault /><Used /><Namespace.Card /></>;
 "#;

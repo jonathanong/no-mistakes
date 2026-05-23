@@ -30,11 +30,8 @@ pub fn run_check(
         findings.extend(nextjs_no_caching::check(root, &config)?);
     }
     if rule_enabled(&config, REQUIRE_STORYBOOK_STORIES) {
-        findings.extend(require_storybook_stories::check(
-            root,
-            &config,
-            tsconfig_path,
-        )?);
+        let storybook_findings = require_storybook_stories::check(root, &config, tsconfig_path)?;
+        findings.extend(storybook_findings);
     }
     sort_findings(&mut findings);
     Ok(findings)
@@ -60,25 +57,21 @@ pub fn run_check_with_facts(
         )?);
     }
     if rule_enabled(&config, SERVER_ROUTE_CLIENT_BOUNDARY) {
-        findings.extend(server_route_client_boundary::check_with_facts(
-            root, &config, shared,
-        )?);
+        let boundary_findings =
+            server_route_client_boundary::check_with_facts(root, &config, shared)?;
+        findings.extend(boundary_findings);
     }
     if rule_enabled(&config, NEXTJS_NO_API_ROUTES) {
-        findings.extend(nextjs_no_api_routes::check_with_facts(
-            root, &config, shared,
-        )?);
+        let api_route_findings = nextjs_no_api_routes::check_with_facts(root, &config, shared)?;
+        findings.extend(api_route_findings);
     }
     if rule_enabled(&config, NEXTJS_NO_CACHING) {
         findings.extend(nextjs_no_caching::check_with_facts(root, &config, shared)?);
     }
     if rule_enabled(&config, REQUIRE_STORYBOOK_STORIES) {
-        findings.extend(require_storybook_stories::check_with_facts(
-            root,
-            &config,
-            tsconfig_path,
-            shared,
-        )?);
+        let storybook_findings =
+            require_storybook_stories::check_with_facts(root, &config, tsconfig_path, shared)?;
+        findings.extend(storybook_findings);
     }
     sort_findings(&mut findings);
     Ok(findings)

@@ -96,7 +96,7 @@ fn check_rule(
         &include,
         &exclude,
         &test_filter,
-    )?;
+    );
     let component_keys: HashSet<String> = components.iter().map(|c| c.key.clone()).collect();
     let all_component_keys = all_react_component_keys(&project_root, shared);
     let story_files = reachable_story_files(
@@ -105,7 +105,7 @@ fn check_rule(
         &stories,
         &resolver,
         &all_component_keys,
-    )?;
+    );
     let mut namespace_findings =
         namespace_import_findings(root, &project_root, shared, &story_files, &resolver);
     let direct = directly_covered_components(
@@ -128,7 +128,7 @@ fn check_rule(
         &component_keys,
         &allow_files,
         shared,
-    )?);
+    ));
 
     for component in components {
         if covered.contains(&component.key) {

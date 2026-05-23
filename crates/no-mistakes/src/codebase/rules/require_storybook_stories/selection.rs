@@ -9,7 +9,6 @@ use crate::codebase::ts_source::{
     has_disable_comment, has_disable_file_comment, relative_slash_path,
 };
 use crate::codebase::ts_symbols::ExportKind;
-use anyhow::Result;
 use std::path::Path;
 
 pub(super) fn selected_components(
@@ -20,7 +19,7 @@ pub(super) fn selected_components(
     include: &GlobMatcher,
     exclude: &GlobMatcher,
     test_filter: &crate::codebase::test_filter::TestFileFilter,
-) -> Result<Vec<Component>> {
+) -> Vec<Component> {
     let mut components = Vec::new();
     for (path, facts) in &shared.ts {
         if !path.starts_with(project_root) || !is_indexable(path) || !is_react_source_file(path) {
@@ -69,7 +68,7 @@ pub(super) fn selected_components(
     }
     components.sort_by_key(|c| (c.project_file.clone(), c.export_name.clone()));
     components.dedup_by_key(|c| c.key.clone());
-    Ok(components)
+    components
 }
 
 fn should_skip_file(facts: &CheckFileFacts, opts: &Options, explicit: bool) -> bool {

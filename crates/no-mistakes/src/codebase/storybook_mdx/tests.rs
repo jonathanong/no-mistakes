@@ -81,6 +81,12 @@ const value = "import { Nope } from './Nope'";
 
     let mut imports = Vec::new();
     super::push_mdx_default_import(&mut imports, "", "../empty-default", 1);
+    super::push_mdx_imports(&mut imports, "type Props", "../type-clause", 1);
     super::push_mdx_named_import(&mut imports, "Missing as ", "../bad-local", 1);
     assert!(imports.is_empty());
+
+    let mut side_effects = Vec::new();
+    super::push_mdx_import_line(&mut imports, &mut side_effects, "not a valid import", 1);
+    assert!(imports.is_empty());
+    assert!(side_effects.is_empty());
 }
