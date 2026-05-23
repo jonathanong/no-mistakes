@@ -35,15 +35,21 @@ function onlyCallExpression(body) {
   return returnStatementCall(statement) || expressionStatementCall(statement);
 }
 
-function parameterName(param) {
-  const unwrapped = param.type === "AssignmentPattern" ? param.left : param;
-  return unwrapped.type === "Identifier" ? unwrapped.name : null;
+function identifierName(node) {
+  return node && node.type === "Identifier" ? node.name : null;
 }
 
 function isSameArgumentList(params, args) {
   if (params.length !== args.length) return false;
   return params.every((param, index) => {
-    const name = parameterName(param);
+    if (param.type === "RestElement") {
+      return (
+        args[index].type === "SpreadElement" &&
+        identifierName(param.argument) === identifierName(args[index].argument)
+      );
+    }
+    const unwrapped = param.type === "AssignmentPattern" ? param.left : param;
+    const name = identifierName(unwrapped);
     return name && args[index].type === "Identifier" && args[index].name === name;
   });
 }

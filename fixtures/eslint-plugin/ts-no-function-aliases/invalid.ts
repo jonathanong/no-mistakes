@@ -14,6 +14,8 @@ export const arrow = (value: string) => original(value);
 
 export const asyncArrow = async (value: string) => await original(value);
 
+export const restArrow = (...args: string[]) => original(...args);
+
 async function asyncAlias(value: string) {
   return await original(value);
 }

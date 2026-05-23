@@ -47,8 +47,8 @@ module.exports = rule(
       return scopes[scopes.length - 1];
     }
 
-    function pushScope() {
-      scopes.push({ bindings: new Set(), objectTypes: new Map(), reactNodes: new Set() });
+    function pushScope(kind) {
+      scopes.push({ bindings: new Set(), kind, objectTypes: new Map(), reactNodes: new Set() });
     }
 
     function popScope() {
@@ -76,21 +76,29 @@ module.exports = rule(
       return name ? facts.objectProps.get(name) : null;
     }
 
-    function defineReactNode(name) {
-      currentScope().bindings.add(name);
-      currentScope().reactNodes.add(name);
+    function defineReactNode(name, scope = currentScope()) {
+      scope.bindings.add(name);
+      scope.reactNodes.add(name);
     }
 
-    function defineBinding(name) {
-      currentScope().bindings.add(name);
+    function defineBinding(name, scope = currentScope()) {
+      scope.bindings.add(name);
     }
 
-    function defineObjectType(name, type) {
-      currentScope().bindings.add(name);
+    function defineObjectType(name, type, scope = currentScope()) {
+      scope.bindings.add(name);
       const props = propsForType(type);
       if (props && props.size > 0) {
-        currentScope().objectTypes.set(name, props);
+        scope.objectTypes.set(name, props);
       }
+    }
+
+    function variableScope(node) {
+      if (!node.parent || node.parent.kind !== "var") return currentScope();
+      return (
+        scopes.findLast((scope) => scope.kind === "function" || scope.kind === "program") ||
+        currentScope()
+      );
     }
 
     function variableIsReactNode(name) {
@@ -123,14 +131,20 @@ module.exports = rule(
     }
 
     function defineVariable(node) {
+      const scope = variableScope(node);
       const type = typeAnnotation(node.id);
       if (isIdentifier(node.id)) {
-        currentScope().bindings.add(node.id.name);
-        if (isReactNodeType(type)) defineReactNode(node.id.name);
-        defineObjectType(node.id.name, type);
+        scope.bindings.add(node.id.name);
+        if (isReactNodeType(type)) defineReactNode(node.id.name, scope);
+        defineObjectType(node.id.name, type, scope);
       } else if (isObjectPattern(node.id)) {
         const initType = isIdentifier(node.init) ? objectProps(node.init.name) : null;
-        definePattern(node.id, propsForType(type) || initType, defineBinding, defineReactNode);
+        definePattern(
+          node.id,
+          propsForType(type) || initType,
+          (name) => defineBinding(name, scope),
+          (name) => defineReactNode(name, scope),
+        );
       }
     }
 
@@ -144,7 +158,7 @@ module.exports = rule(
     }
 
     function enterFunction(node) {
-      pushScope();
+      pushScope("function");
       for (const param of node.params || []) {
         defineParam(param);
       }
@@ -153,7 +167,7 @@ module.exports = rule(
     return {
       Program(node) {
         facts = createReactNodeFacts(node);
-        pushScope();
+        pushScope("program");
       },
       "Program:exit": popScope,
       FunctionDeclaration: enterFunction,
@@ -162,7 +176,9 @@ module.exports = rule(
       "FunctionExpression:exit": popScope,
       ArrowFunctionExpression: enterFunction,
       "ArrowFunctionExpression:exit": popScope,
-      BlockStatement: pushScope,
+      BlockStatement() {
+        pushScope("block");
+      },
       "BlockStatement:exit": popScope,
       VariableDeclarator: defineVariable,
       LogicalExpression(node) {

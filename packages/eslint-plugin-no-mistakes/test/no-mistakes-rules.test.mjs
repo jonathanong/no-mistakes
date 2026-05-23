@@ -67,7 +67,7 @@ describe("ts-no-function-aliases", () => {
         undefined,
         "invalid.ts",
       ),
-      ["alias", "alias", "alias", "alias", "alias", "alias"],
+      ["alias", "alias", "alias", "alias", "alias", "alias", "alias"],
     );
   });
 
@@ -117,7 +117,18 @@ describe("react-no-nullish-react-node", () => {
         undefined,
         "coverage.tsx",
       ),
-      ["nullish", "nullish", "nullish", "nullish", "nullish", "nullish"],
+      [
+        "nullish",
+        "nullish",
+        "nullish",
+        "nullish",
+        "nullish",
+        "nullish",
+        "nullish",
+        "nullish",
+        "nullish",
+        "nullish",
+      ],
     );
   });
 });

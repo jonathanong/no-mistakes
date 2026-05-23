@@ -37,6 +37,12 @@ function createReactNodeFacts(program) {
   const aliases = new Map();
   const objectProps = new Map();
 
+  function topLevelDeclaration(statement) {
+    return statement.type === "ExportNamedDeclaration" && statement.declaration
+      ? statement.declaration
+      : statement;
+  }
+
   function isReactNodeType(type) {
     const name = typeName(type);
     return Boolean(name && (reactNodeNames.has(name) || aliases.get(name) === true));
@@ -60,6 +66,12 @@ function createReactNodeFacts(program) {
       if (specifier.type === "ImportSpecifier" && keyName(specifier.imported) === "ReactNode") {
         reactNodeNames.add(specifier.local.name);
       }
+      if (
+        specifier.type === "ImportNamespaceSpecifier" ||
+        specifier.type === "ImportDefaultSpecifier"
+      ) {
+        reactNodeNames.add(`${specifier.local.name}.ReactNode`);
+      }
     }
   }
 
@@ -67,9 +79,10 @@ function createReactNodeFacts(program) {
   while (changed) {
     changed = false;
     for (const statement of program.body || []) {
-      if (statement.type !== "TSTypeAliasDeclaration") continue;
-      const name = statement.id.name;
-      if (!aliases.has(name) && isReactNodeType(statement.typeAnnotation)) {
+      const declaration = topLevelDeclaration(statement);
+      if (declaration.type !== "TSTypeAliasDeclaration") continue;
+      const name = declaration.id.name;
+      if (!aliases.has(name) && isReactNodeType(declaration.typeAnnotation)) {
         aliases.set(name, true);
         changed = true;
       }
@@ -77,14 +90,18 @@ function createReactNodeFacts(program) {
   }
 
   for (const statement of program.body || []) {
-    if (statement.type === "TSInterfaceDeclaration") {
-      objectProps.set(statement.id.name, collectMembers(statement.body && statement.body.body));
+    const declaration = topLevelDeclaration(statement);
+    if (declaration.type === "TSInterfaceDeclaration") {
+      objectProps.set(
+        declaration.id.name,
+        collectMembers(declaration.body && declaration.body.body),
+      );
     }
     if (
-      statement.type === "TSTypeAliasDeclaration" &&
-      statement.typeAnnotation.type === "TSTypeLiteral"
+      declaration.type === "TSTypeAliasDeclaration" &&
+      declaration.typeAnnotation.type === "TSTypeLiteral"
     ) {
-      objectProps.set(statement.id.name, collectMembers(statement.typeAnnotation.members));
+      objectProps.set(declaration.id.name, collectMembers(declaration.typeAnnotation.members));
     }
   }
 
