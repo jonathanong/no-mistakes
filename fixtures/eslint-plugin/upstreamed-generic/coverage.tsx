@@ -7,8 +7,11 @@ let reassignedValues = [3, 1, 2];
 reassignedValues = query;
 await task;
 await values.map((value) => value);
+await sort();
 await optionalValues?.sort();
 await optionalValues["sort"]();
+await optionalValues[method]();
+await getValues().sort();
 await destructuredClient.sort();
 await reassignedValues.sort();
 delete value;
@@ -30,6 +33,12 @@ if (error.code !== "missing") {
 test("message checks", () => {
   error.message.includes("missing");
   if (error.message != "missing") {
+    throw error;
+  }
+  if ("missing" === error.message) {
+    throw error;
+  }
+  if (error.message > "missing") {
     throw error;
   }
 });

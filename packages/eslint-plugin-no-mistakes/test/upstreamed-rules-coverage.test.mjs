@@ -33,6 +33,7 @@ describe("upstreamed generic rule coverage", () => {
       "message",
       "message",
       "message",
+      "message",
     ]);
     assert.deepEqual(
       messages(

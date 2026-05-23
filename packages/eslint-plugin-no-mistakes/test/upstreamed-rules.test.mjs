@@ -133,6 +133,15 @@ describe("upstreamed generic rules", () => {
       ),
       [],
     );
+    assert.deepEqual(
+      messages(
+        fixture("mock-name.global.invalid.test.ts"),
+        "vitest-mock-test-file-naming",
+        undefined,
+        "mock-name.global.invalid.test.ts",
+      ),
+      ["needsMock"],
+    );
   });
 
   it("reports Playwright policy violations", () => {
