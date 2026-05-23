@@ -326,6 +326,15 @@ export { revalidate }\n";
 }
 
 #[test]
+fn extract_ignores_named_segment_config_reexports_from_other_modules() {
+    let source = "const revalidate = 60\n\
+export { revalidate } from './config'\n";
+    let findings = extract(Path::new("app/page.ts"), source).unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn extract_ignores_nested_next_config_binding() {
     let source = "function build() {\n\
   const nextConfig = { cacheComponents: true }\n\
