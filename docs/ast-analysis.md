@@ -47,7 +47,7 @@ Intentional limits:
 
 ## Playwright Coverage
 
-`playwright-ast-coverage` scans Next.js App Router pages and Playwright tests.
+`no-mistakes playwright` scans Next.js App Router pages and Playwright tests.
 
 Route files are collected under `frontendRoot` from:
 
@@ -86,7 +86,7 @@ can be covered by matching static parts.
 
 ## Next.js Fetch Calls
 
-`next-to-fetch` maps route, layout, and template files to reachable `fetch()`
+`no-mistakes fetches` maps route, layout, and template files to reachable `fetch()`
 calls through static import traversal.
 
 Detected fetch forms include literal and expression-free template URL arguments:
@@ -106,7 +106,7 @@ instead of guessed.
 
 ## Queue Graphs
 
-`queue-ast-hop` and `no-mistakes queues` detect static BullMQ and glide-mq
+`no-mistakes queues` and `no-mistakes queues` detect static BullMQ and glide-mq
 producer/worker relationships.
 
 The graph uses virtual queue-job nodes such as `queues.ts#sendWelcome` so a
@@ -119,7 +119,7 @@ unmatched rather than guessed.
 
 ## Server Route Graphs
 
-`server-ast-routes` and `no-mistakes server` extract route definitions and edges
+`no-mistakes server` and `no-mistakes server` extract route definitions and edges
 from Node.js server frameworks.
 
 Supported frameworks include Express, Hono, Koa router patterns, and known
@@ -129,7 +129,7 @@ would create noisy graph edges.
 
 ## React Traits
 
-`react-traits` and `no-mistakes react` scan React component files and report
+`no-mistakes react` and `no-mistakes react` scan React component files and report
 traits such as state, props, memoization, environment directives, fetch usage,
 and rendered child components.
 

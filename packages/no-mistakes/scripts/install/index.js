@@ -1,3 +1,13 @@
 "use strict";
 
-module.exports = require("no-mistakes-core");
+const assets = require("./assets");
+const download = require("./download");
+const installer = require("./installer");
+const platform = require("./platform");
+
+module.exports = {
+  ...assets,
+  ...download,
+  ...installer,
+  ...platform,
+};

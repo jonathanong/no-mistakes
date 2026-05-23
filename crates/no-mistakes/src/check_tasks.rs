@@ -1,11 +1,11 @@
 use anyhow::Result;
-use no_mistakes_core::codebase::check_facts::CheckFactMap;
-use no_mistakes_core::codebase::rules::{self, RuleFinding};
-use no_mistakes_core::codebase::unique_exports::{self, UniqueExportFinding};
-use no_mistakes_core::config::v2::NoMistakesConfig;
-use no_mistakes_core::integration_tests::{self, IntegrationFinding};
-use no_mistakes_core::queue::CheckFinding;
-use no_mistakes_core::react_traits;
+use no_mistakes::codebase::check_facts::CheckFactMap;
+use no_mistakes::codebase::rules::{self, RuleFinding};
+use no_mistakes::codebase::unique_exports::{self, UniqueExportFinding};
+use no_mistakes::config::v2::NoMistakesConfig;
+use no_mistakes::integration_tests::{self, IntegrationFinding};
+use no_mistakes::queue::CheckFinding;
+use no_mistakes::react_traits;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
@@ -48,7 +48,7 @@ pub(crate) fn run_queue_check(
 ) -> Result<CheckTask<Vec<CheckFinding>>> {
     let start = Instant::now();
     let findings = if enabled {
-        no_mistakes_core::queue::analyze_project_with_facts(&root, tsconfig.as_deref(), &[], facts)?
+        no_mistakes::queue::analyze_project_with_facts(&root, tsconfig.as_deref(), &[], facts)?
             .check
     } else {
         Vec::new()

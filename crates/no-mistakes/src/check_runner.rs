@@ -3,9 +3,9 @@ use crate::check_tasks::{
     filesystem_rules_configured, queues_configured, unique_exports_configured,
 };
 use anyhow::Result;
-use no_mistakes_core::codebase::check_facts::{collect_check_facts, CheckFactPlan};
-use no_mistakes_core::config::v2::load_v2_config;
-use no_mistakes_core::react_traits;
+use no_mistakes::codebase::check_facts::{collect_check_facts, CheckFactPlan};
+use no_mistakes::config::v2::load_v2_config;
+use no_mistakes::react_traits;
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -155,25 +155,23 @@ fn plan_requests_facts(plan: &CheckFactPlan) -> bool {
         || plan.source
 }
 
-fn dynamic_import_rules_configured(
-    config: &no_mistakes_core::config::v2::NoMistakesConfig,
-) -> bool {
+fn dynamic_import_rules_configured(config: &no_mistakes::config::v2::NoMistakesConfig) -> bool {
     crate::check_tasks::rule_configured(
         config,
-        no_mistakes_core::codebase::rules::TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+        no_mistakes::codebase::rules::TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
     )
 }
 
 fn server_route_client_boundary_configured(
-    config: &no_mistakes_core::config::v2::NoMistakesConfig,
+    config: &no_mistakes::config::v2::NoMistakesConfig,
 ) -> bool {
     crate::check_tasks::rule_configured(
         config,
-        no_mistakes_core::codebase::rules::SERVER_ROUTE_CLIENT_BOUNDARY,
+        no_mistakes::codebase::rules::SERVER_ROUTE_CLIENT_BOUNDARY,
     )
 }
 
-fn integration_configured(config: &no_mistakes_core::config::v2::NoMistakesConfig) -> bool {
+fn integration_configured(config: &no_mistakes::config::v2::NoMistakesConfig) -> bool {
     let vitest_configured = config
         .tests
         .vitest

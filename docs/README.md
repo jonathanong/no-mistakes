@@ -13,14 +13,14 @@ selectors, fetch calls, queue hops, server routes, and React component traits.
 | Files affected by a change | `no-mistakes dependents <file>` or `no-mistakes related <file>` |
 | Files importing a named export | `no-mistakes dependents <file>#Symbol` |
 | Exports/imports of a TS/JS module | `no-mistakes symbols <file>` |
-| React component traits | `no-mistakes react analyze <glob>` or `react-traits analyze <glob>` |
-| Queue producer/worker hops | `no-mistakes queues edges` or `queue-ast-hop edges` |
-| Server route graph | `no-mistakes server routes` or `server-ast-routes routes` |
+| React component traits | `no-mistakes react analyze <glob>` |
+| Queue producer/worker hops | `no-mistakes queues edges` |
+| Server route graph | `no-mistakes server routes` |
 | Global project checks | `no-mistakes check` |
-| Playwright route/selector coverage | `playwright-ast-coverage check` |
-| Tests related to a page/component | `playwright-ast-coverage related <file>` |
-| Playwright assertions grouped by test | `playwright-ast-coverage tests` |
-| Next.js routes to fetch calls | `next-to-fetch` |
+| Playwright route/selector coverage | `no-mistakes playwright check` |
+| Tests related to a page/component | `no-mistakes playwright related <file>` |
+| Playwright assertions grouped by test | `no-mistakes playwright tests` |
+| Next.js routes to fetch calls | `no-mistakes fetches` |
 | File-local linting | `eslint-plugin-no-mistakes` |
 
 ## Documentation Map

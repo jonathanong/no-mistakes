@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
-use no_mistakes_core::cli::{edge_view, resolve_root, root_scoped_edge_depth, Format};
-use no_mistakes_core::server_routes::{
+use no_mistakes::cli::{edge_view, resolve_root, root_scoped_edge_depth, Format};
+use no_mistakes::server_routes::{
     analyze_project, related, Edge, ProjectReport, RelatedDirection, ServerRoute,
 };
 use std::collections::BTreeSet;

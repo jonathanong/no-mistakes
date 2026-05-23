@@ -14,6 +14,11 @@ no-mistakes dependencies <FILE>... [--root <PATH>] [--tsconfig <FILE>]
 no-mistakes dependents <FILE[#SYMBOL]>... [--root <PATH>] [--tsconfig <FILE>]
 no-mistakes related <FILE[#SYMBOL]>...
 no-mistakes symbols <FILE>...
+no-mistakes fetches [--root <ROOT>] [--config <CONFIG>] [--format <FORMAT>] [--json] [TARGETS]...
+no-mistakes playwright check [OPTIONS]
+no-mistakes playwright edges [OPTIONS]
+no-mistakes playwright related [OPTIONS] <FILES>...
+no-mistakes playwright tests [OPTIONS] [FILES]...
 no-mistakes react analyze [TARGETS]...
 no-mistakes react check [TARGETS]... [--assert-no-fetch]
 no-mistakes queues edges [FILES]... [--depth N]
@@ -23,7 +28,6 @@ no-mistakes server routes [FILES]...
 no-mistakes server edges [ROOTS]... [--depth N]
 no-mistakes server related <ROOTS>... [--direction deps|dependents|both]
 no-mistakes check
-no-mistakes <external-subcommand> [ARGS]...
 ```
 
 ### Graph Commands
@@ -131,16 +135,16 @@ The `rust-max-lines-per-file`, `rust-no-inline-tests`,
 Global Check section above and the configuration reference for available
 options.
 
-## `playwright-ast-coverage`
+### Playwright
 
 Static Playwright coverage for Next.js App Router routes, selectors, and fetch
 assertions.
 
 ```sh
-playwright-ast-coverage check [OPTIONS]
-playwright-ast-coverage edges [OPTIONS]
-playwright-ast-coverage related [OPTIONS] <FILES>...
-playwright-ast-coverage tests [OPTIONS] [FILES]...
+no-mistakes playwright check [OPTIONS]
+no-mistakes playwright edges [OPTIONS]
+no-mistakes playwright related [OPTIONS] <FILES>...
+no-mistakes playwright tests [OPTIONS] [FILES]...
 ```
 
 | Option | Description |
@@ -159,22 +163,22 @@ playwright-ast-coverage tests [OPTIONS] [FILES]...
 Examples:
 
 ```sh
-playwright-ast-coverage check --json
-playwright-ast-coverage related 'web/app/users/[id]/page.tsx'
-playwright-ast-coverage edges --json
-playwright-ast-coverage tests tests/e2e/users.spec.ts --json
+no-mistakes playwright check --json
+no-mistakes playwright related 'web/app/users/[id]/page.tsx'
+no-mistakes playwright edges --json
+no-mistakes playwright tests tests/e2e/users.spec.ts --json
 ```
 
 Supported analyzer config files: `.playwright-ast-coverage.yaml`,
 `.playwright-ast-coverage.yml`, `.playwright-ast-coverage.json`, and
 `.playwright-ast-coverage.jsonc`.
 
-## `next-to-fetch`
+### Fetches
 
 Maps Next.js App Router route files to static `fetch()` calls.
 
 ```sh
-next-to-fetch [--root <ROOT>] [--config <CONFIG>] [--format <FORMAT>] [--json] [TARGETS]...
+no-mistakes fetches [--root <ROOT>] [--config <CONFIG>] [--format <FORMAT>] [--json] [TARGETS]...
 ```
 
 Targets may be routes such as `/users`, route files, or files imported by route
@@ -182,26 +186,6 @@ or layout files. Formats are `json`, `yml`, `paths`, `md`, and `human`; `md` and
 `human` render the Markdown report.
 
 ```sh
-next-to-fetch --root web --format json
-next-to-fetch --root web /users app/shared/api.ts
+no-mistakes fetches --root web --format json
+no-mistakes fetches --root web /users app/shared/api.ts
 ```
-
-## Standalone Queue, Server, And React Binaries
-
-The standalone binaries expose the same analyzers as `no-mistakes` subcommands:
-
-```sh
-queue-ast-hop edges --json
-queue-ast-hop related backend/jobs/email.ts --direction both
-queue-ast-hop check
-
-server-ast-routes routes --format json
-server-ast-routes edges backend/api/users.ts --depth 1
-server-ast-routes related backend/api/users.ts --format paths
-
-react-traits analyze 'app/components/**/*.tsx' --format json
-react-traits check 'app/components/**/*.tsx' --assert-no-fetch
-```
-
-Prefer the `no-mistakes` wrapper when an agent needs one consistent command
-surface. Use standalone binaries when installing only one tool.

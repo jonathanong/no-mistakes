@@ -104,10 +104,7 @@ jobs:
 
       - name: Check Cargo packages
         run: |
-          cargo publish --dry-run --locked -p no-mistakes-core
-          for pkg in no-mistakes playwright-ast-coverage next-to-fetch queue-ast-hop react-traits server-ast-routes; do
-            cargo package --list --locked -p "$pkg" >/dev/null
-          done
+          cargo publish --dry-run --locked -p no-mistakes
 
       - name: Check npm packages
         run: npm pack --dry-run --workspaces
@@ -171,7 +168,7 @@ jobs:
 
       - name: Run benchmarks
         run: |
-          cargo bench -p no-mistakes-core --bench graph_related -- --noplot
+          cargo bench -p no-mistakes --bench graph_related -- --noplot
           cargo bench -p no-mistakes --bench dependencies_large_repo -- --noplot
 
       - name: Build release CLI for timing smoke

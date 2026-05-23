@@ -6,7 +6,7 @@ fn bin() -> PathBuf {
 }
 
 fn fixture(category: &str, name: &str) -> PathBuf {
-    no_mistakes_core::codebase::ts_resolver::normalize_path(
+    no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures")
             .join(category)
@@ -253,12 +253,12 @@ fn dependencies_with_unknown_test_framework_returns_unfiltered_results() {
 
 #[test]
 fn react_run_check_in_process_exercises_run_check_function() {
-    // Exercises no_mistakes_core::react_traits::run_check directly so the
+    // Exercises no_mistakes::react_traits::run_check directly so the
     // in-process test binary instantiation covers that function and the
     // assert_no_fetch_violations helper.
     let root = fixture("react-traits-config", "assert-no-fetch");
     let violations =
-        no_mistakes_core::react_traits::run_check(&root, None, &[], true).expect("run_check ok");
+        no_mistakes::react_traits::run_check(&root, None, &[], true).expect("run_check ok");
     assert!(
         !violations.is_empty(),
         "expected violations with assert_no_fetch=true"
@@ -266,20 +266,18 @@ fn react_run_check_in_process_exercises_run_check_function() {
 
     // Also exercise check_enabled to cover that instantiation.
     let enabled =
-        no_mistakes_core::react_traits::check_enabled(&root, None, true).expect("check_enabled ok");
+        no_mistakes::react_traits::check_enabled(&root, None, true).expect("check_enabled ok");
     assert!(enabled);
 
     // Trigger error paths (config not found) to cover the `?` error branches
     // in this binary instantiation.
     let bad_config = std::path::Path::new("nonexistent-config.yaml");
-    assert!(
-        no_mistakes_core::react_traits::run_check(&root, Some(bad_config), &[], false).is_err()
-    );
-    assert!(no_mistakes_core::react_traits::check_enabled(&root, Some(bad_config), false).is_err());
+    assert!(no_mistakes::react_traits::run_check(&root, Some(bad_config), &[], false).is_err());
+    assert!(no_mistakes::react_traits::check_enabled(&root, Some(bad_config), false).is_err());
 
     // Exercise run_check_with_facts error path.
-    let facts = no_mistakes_core::codebase::check_facts::CheckFactMap::default();
-    assert!(no_mistakes_core::react_traits::run_check_with_facts(
+    let facts = no_mistakes::codebase::check_facts::CheckFactMap::default();
+    assert!(no_mistakes::react_traits::run_check_with_facts(
         &root,
         Some(bad_config),
         &[],
@@ -291,7 +289,7 @@ fn react_run_check_in_process_exercises_run_check_function() {
     // Exercise the early-return path (effective_no_fetch=false) in this binary instantiation.
     // Uses a root with no assert_no_fetch config and assert_no_fetch=false.
     let no_fetch_root = fixture("react-traits-components", "nested");
-    let empty = no_mistakes_core::react_traits::run_check(&no_fetch_root, None, &[], false)
+    let empty = no_mistakes::react_traits::run_check(&no_fetch_root, None, &[], false)
         .expect("run_check with no-fetch disabled should succeed");
     assert!(
         empty.is_empty(),
@@ -299,8 +297,8 @@ fn react_run_check_in_process_exercises_run_check_function() {
     );
 
     // Also exercise run_check_with_facts early-return path.
-    let empty_facts = no_mistakes_core::codebase::check_facts::CheckFactMap::default();
-    let empty2 = no_mistakes_core::react_traits::run_check_with_facts(
+    let empty_facts = no_mistakes::codebase::check_facts::CheckFactMap::default();
+    let empty2 = no_mistakes::react_traits::run_check_with_facts(
         &no_fetch_root,
         None,
         &[],

@@ -6,7 +6,7 @@ fn bin() -> PathBuf {
 }
 
 fn fixture(category: &str, scenario: &str) -> PathBuf {
-    no_mistakes_core::codebase::ts_resolver::normalize_path(
+    no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/rules")
             .join(category)
@@ -323,12 +323,11 @@ fn rust_no_inline_allows_filesystem_runner_discovers_files() {
     .unwrap();
 
     let findings =
-        no_mistakes_core::codebase::rules::run_filesystem_rules(&root, Some(config.path()))
-            .unwrap();
+        no_mistakes::codebase::rules::run_filesystem_rules(&root, Some(config.path())).unwrap();
 
     assert!(findings
         .iter()
-        .any(|finding| finding.rule == no_mistakes_core::codebase::rules::RUST_NO_INLINE_ALLOWS));
+        .any(|finding| finding.rule == no_mistakes::codebase::rules::RUST_NO_INLINE_ALLOWS));
 }
 
 #[test]
@@ -344,7 +343,7 @@ fn rust_no_inline_allows_filesystem_runner_accepts_absolute_roots() {
     .unwrap();
 
     let findings =
-        no_mistakes_core::codebase::rules::run_filesystem_rules(&fixture_root, Some(config.path()))
+        no_mistakes::codebase::rules::run_filesystem_rules(&fixture_root, Some(config.path()))
             .unwrap();
 
     assert_eq!(findings.len(), 2);

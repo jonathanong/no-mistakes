@@ -2,12 +2,12 @@ use crate::check_tasks::{
     run_codebase_check, run_filesystem_rules_check, run_integration_check, run_queue_check,
     run_react_check, run_rules_check, CheckTask,
 };
-use no_mistakes_core::codebase::check_facts::CheckFactMap;
-use no_mistakes_core::codebase::rules::RuleFinding;
-use no_mistakes_core::codebase::unique_exports::UniqueExportFinding;
-use no_mistakes_core::integration_tests::IntegrationFinding;
-use no_mistakes_core::queue::CheckFinding;
-use no_mistakes_core::react_traits;
+use no_mistakes::codebase::check_facts::CheckFactMap;
+use no_mistakes::codebase::rules::RuleFinding;
+use no_mistakes::codebase::unique_exports::UniqueExportFinding;
+use no_mistakes::integration_tests::IntegrationFinding;
+use no_mistakes::queue::CheckFinding;
+use no_mistakes::react_traits;
 use std::path::{Path, PathBuf};
 
 pub(crate) type DomainResults = (

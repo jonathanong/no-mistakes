@@ -71,11 +71,8 @@ jobs:
           npm version "${{ inputs.bump }}" --no-git-tag-version
           version="$(node -p "require('./package.json').version")"
 
-          for pkg in eslint-plugin-no-mistakes no-mistakes-core no-mistakes next-to-fetch playwright-ast-coverage queue-ast-hop react-traits server-ast-routes; do
+          for pkg in no-mistakes eslint-plugin-no-mistakes; do
             npm pkg set "version=$version" --workspace "$pkg"
-          done
-          for pkg in no-mistakes next-to-fetch playwright-ast-coverage queue-ast-hop react-traits server-ast-routes; do
-            npm pkg set "dependencies.no-mistakes-core=$version" --workspace "$pkg"
           done
           npm install --package-lock-only --ignore-scripts
 
@@ -85,22 +82,12 @@ jobs:
           const crates = [
             "Cargo.toml",
             "crates/no-mistakes/Cargo.toml",
-            "crates/no-mistakes-core/Cargo.toml",
-            "crates/next-to-fetch/Cargo.toml",
-            "crates/playwright-ast-coverage/Cargo.toml",
-            "crates/queue-ast-hop/Cargo.toml",
-            "crates/react-traits/Cargo.toml",
-            "crates/server-ast-routes/Cargo.toml",
           ];
           for (const file of crates) {
             if (!fs.existsSync(file)) continue;
-            let cargo = fs.readFileSync(file, "utf8").replace(
+            const cargo = fs.readFileSync(file, "utf8").replace(
               /^version = ".*"$/m,
               `version = "${version}"`,
-            );
-            cargo = cargo.replace(
-              /(\s*no-mistakes-core\s*=\s*\{[^{}]*\bversion\s*=\s*)"[^"]*"/g,
-              `$1"${version}"`,
             );
             fs.writeFileSync(file, cargo);
           }
@@ -231,15 +218,11 @@ jobs:
         run: npm test
 
       - name: Check Cargo packages
-        run: |
-          cargo publish --dry-run --locked -p no-mistakes-core
-          for pkg in no-mistakes playwright-ast-coverage next-to-fetch queue-ast-hop react-traits server-ast-routes; do
-            cargo package --list --locked -p "$pkg" >/dev/null
-          done
+        run: cargo publish --dry-run --locked -p no-mistakes
 
       - name: Check npm packages
         run: |
-          for pkg in no-mistakes-core no-mistakes playwright-ast-coverage next-to-fetch queue-ast-hop react-traits server-ast-routes eslint-plugin-no-mistakes; do
+          for pkg in no-mistakes eslint-plugin-no-mistakes; do
             npm pack --dry-run --workspace "$pkg"
           done
 
@@ -288,7 +271,7 @@ jobs:
           cache-bin: "false"
 
       - name: Build binary
-        run: cargo build --release --locked --target ${{ matrix.target }} -p no-mistakes -p playwright-ast-coverage -p next-to-fetch -p queue-ast-hop -p react-traits -p server-ast-routes
+        run: cargo build --release --locked --target ${{ matrix.target }} -p no-mistakes
 
       - name: Stage assets
         shell: bash
@@ -298,12 +281,10 @@ jobs:
             *) ext="" ;;
           esac
           mkdir -p release-assets
-          for binary in no-mistakes playwright-ast-coverage next-to-fetch queue-ast-hop react-traits server-ast-routes; do
-            source="target/${{ matrix.target }}/release/$binary$ext"
-            artifact="release-assets/$binary-v${{ needs.prepare.outputs.version }}-${{ matrix.target }}$ext"
-            "$source" --version
-            cp "$source" "$artifact"
-          done
+          source="target/${{ matrix.target }}/release/no-mistakes$ext"
+          artifact="release-assets/no-mistakes-v${{ needs.prepare.outputs.version }}-${{ matrix.target }}$ext"
+          "$source" --version
+          cp "$source" "$artifact"
 
       - name: Generate checksum (Unix)
         if: runner.os != 'Windows'
@@ -415,29 +396,12 @@ jobs:
         run: |
           set -euo pipefail
           version="${{ needs.prepare.outputs.version }}"
-          for pkg in no-mistakes-core no-mistakes playwright-ast-coverage next-to-fetch queue-ast-hop react-traits server-ast-routes; do
+          for pkg in no-mistakes; do
             if curl --fail --silent --output /dev/null "https://crates.io/api/v1/crates/$pkg/$version"; then
               echo "$pkg $version is already published on crates.io; skipping"
             else
-              for attempt in {1..20}; do
-                dry_run_log="$RUNNER_TEMP/cargo-publish-dry-run-$pkg.log"
-                if cargo publish --dry-run --locked -p "$pkg" 2>&1 | tee "$dry_run_log"; then
-                  break
-                fi
-                if [ "$pkg" != "no-mistakes-core" ] &&
-                  grep -Eq "no matching package|failed to select a version" "$dry_run_log" &&
-                  grep -q "no-mistakes-core" "$dry_run_log"; then
-                  if [ "$attempt" = 20 ]; then
-                    echo "Timed out waiting for Cargo to resolve no-mistakes-core@$version"
-                    exit 1
-                  fi
-                  echo "Cargo cannot resolve no-mistakes-core@$version for $pkg yet; retrying..."
-                  sleep 15
-                  continue
-                fi
-                exit 1
-              done
               publish_log="$RUNNER_TEMP/cargo-publish-$pkg.log"
+              cargo publish --dry-run --locked -p "$pkg"
               if cargo publish --locked -p "$pkg" 2>&1 | tee "$publish_log"; then
                 :
               elif grep -q "already exists on crates.io index" "$publish_log"; then
@@ -481,7 +445,7 @@ jobs:
             echo "Publishing npm packages with OIDC trusted publishing"
           fi
           version="${{ needs.prepare.outputs.version }}"
-          for pkg in no-mistakes-core no-mistakes playwright-ast-coverage next-to-fetch queue-ast-hop react-traits server-ast-routes eslint-plugin-no-mistakes; do
+          for pkg in no-mistakes eslint-plugin-no-mistakes; do
             if npm view "$pkg@$version" version >/dev/null 2>&1; then
               echo "$pkg $version is already published on npm; skipping"
             else

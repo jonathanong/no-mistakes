@@ -2,10 +2,10 @@
   "name": "no-mistakes-monorepo",
   "version": "0.6.0",
   "private": true,
-  "description": "Static Playwright AST coverage for Next.js App Router routes",
-  "homepage": "https://github.com/jonathanong/playwright-ast-coverage#readme",
+  "description": "Deterministic AST-based codebase intelligence for humans and AI agents",
+  "homepage": "https://github.com/jonathanong/no-mistakes#readme",
   "bugs": {
-    "url": "https://github.com/jonathanong/playwright-ast-coverage/issues"
+    "url": "https://github.com/jonathanong/no-mistakes/issues"
   },
   "license": "MIT",
   "repository": {
@@ -22,7 +22,7 @@
     "fmt:js": "oxfmt --write packages/ vitest.config.js",
     "fmt:js:check": "oxfmt --check packages/ vitest.config.js",
     "lint:js": "oxlint packages/ vitest.config.js",
-    "lint:spell": "cspell lint README.md \"docs/**/*.md\" \"packages/no-mistakes*/README.md\" \"packages/eslint-plugin-no-mistakes/README.md\" cspell.config.yaml package.json --no-progress --no-gitignore --show-suggestions --no-must-find-files",
+    "lint:spell": "cspell lint README.md \"docs/**/*.md\" \"packages/no-mistakes/README.md\" \"packages/eslint-plugin-no-mistakes/README.md\" cspell.config.yaml package.json --no-progress --no-gitignore --show-suggestions --no-must-find-files",
     "pack:check": "npm --workspaces pack --dry-run",
     "prepare": "husky"
   },

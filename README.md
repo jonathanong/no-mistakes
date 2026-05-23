@@ -2,7 +2,7 @@
 
 Deterministic AST-based codebase intelligence for humans and AI agents.
 
-This repository contains Rust CLIs, npm packages, ESLint/Oxlint plugins, and
+This repository contains a Rust CLI, npm packages, ESLint/Oxlint plugins, and
 Codex skills for answering structural questions about TypeScript, JavaScript,
 React, Next.js, Playwright, queue, and server-route code without running the
 application or calling an AI model.
@@ -21,12 +21,7 @@ The canonical documentation lives in [docs/](docs/README.md):
 
 | Tool | Purpose |
 | --- | --- |
-| `no-mistakes` | Unified codebase graph, symbols, React, queue, server-route, and check commands. |
-| `playwright-ast-coverage` | Static Playwright coverage for Next.js App Router routes and selectors. |
-| `next-to-fetch` | Map Next.js routes to static `fetch()` API calls. |
-| `queue-ast-hop` | Map BullMQ and glide-mq producers to workers. |
-| `server-ast-routes` | Extract Express, Hono, Koa, and related server route graphs. |
-| `react-traits` | Report React component traits and rendered component relationships. |
+| `no-mistakes` | Unified codebase graph, symbols, Playwright coverage, fetch, React, queue, server-route, and check commands. |
 | `eslint-plugin-no-mistakes` | Keep Playwright test IDs, fetch calls, exports, function wrappers, and ReactNode fallbacks statically analyzable. |
 
 ## Install
@@ -34,13 +29,13 @@ The canonical documentation lives in [docs/](docs/README.md):
 Use the published packages where available:
 
 ```sh
-npm install --save-dev no-mistakes playwright-ast-coverage eslint-plugin-no-mistakes
+npm install --save-dev no-mistakes eslint-plugin-no-mistakes
 ```
 
 Or install the Rust binary directly:
 
 ```sh
-cargo install playwright-ast-coverage
+cargo install no-mistakes
 ```
 
 For local development from a clone, run workspace binaries with Cargo:

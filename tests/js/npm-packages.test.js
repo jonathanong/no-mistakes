@@ -3,18 +3,11 @@ const { readdirSync, readFileSync } = require("node:fs");
 const { join } = require("node:path");
 
 const root = join(__dirname, "..", "..");
-const nativeBinaryPackages = [
-  "next-to-fetch",
-  "no-mistakes",
-  "playwright-ast-coverage",
-  "queue-ast-hop",
-  "react-traits",
-  "server-ast-routes",
-];
+const nativeBinaryPackages = ["no-mistakes"];
 
-test("only native CLI npm packages depend on no-mistakes-core", () => {
+test("only the expected public npm packages remain", () => {
   const packagesDir = join(root, "packages");
-  const offenders = [];
+  const manifests = [];
 
   for (const name of readdirSync(packagesDir)) {
     const manifestPath = join(packagesDir, name, "package.json");
@@ -31,21 +24,15 @@ test("only native CLI npm packages depend on no-mistakes-core", () => {
     if (manifest.private) {
       continue;
     }
-    const shouldDepend = nativeBinaryPackages.includes(manifest.name);
-    const depends = Boolean(manifest.dependencies?.["no-mistakes-core"]);
-    if (shouldDepend) {
-      assert.equal(depends, true, `${manifest.name} should depend on no-mistakes-core`);
-      assert.equal(manifest.dependencies["no-mistakes-core"], manifest.version);
-      continue;
-    }
+    manifests.push(manifest.name);
     for (const field of ["dependencies", "devDependencies", "peerDependencies"]) {
       if (manifest[field]?.["no-mistakes-core"]) {
-        offenders.push(`${manifest.name}:${field}`);
+        assert.fail(`${manifest.name}:${field} must not depend on no-mistakes-core`);
       }
     }
   }
 
-  assert.deepEqual(offenders, []);
+  assert.deepEqual(manifests.sort(), ["eslint-plugin-no-mistakes", "no-mistakes"]);
 });
 
 test("native npm packages expose direct executable bin targets", () => {

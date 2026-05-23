@@ -1,11 +1,11 @@
 use crate::check_parallel::DomainResults;
 use crate::check_tasks::CheckTask;
 use anyhow::Result;
-use no_mistakes_core::codebase::rules::RuleFinding;
-use no_mistakes_core::codebase::unique_exports::UniqueExportFinding;
-use no_mistakes_core::integration_tests::IntegrationFinding;
-use no_mistakes_core::queue::CheckFinding;
-use no_mistakes_core::react_traits;
+use no_mistakes::codebase::rules::RuleFinding;
+use no_mistakes::codebase::unique_exports::UniqueExportFinding;
+use no_mistakes::integration_tests::IntegrationFinding;
+use no_mistakes::queue::CheckFinding;
+use no_mistakes::react_traits;
 use std::time::Duration;
 
 pub(crate) struct CheckResults {

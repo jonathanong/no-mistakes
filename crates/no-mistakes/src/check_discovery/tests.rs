@@ -1,9 +1,9 @@
 use super::*;
-use no_mistakes_core::config::v2::{load_v2_config, NoMistakesConfig};
+use no_mistakes::config::v2::{load_v2_config, NoMistakesConfig};
 use std::path::{Path, PathBuf};
 
 fn fixture(path: &str) -> PathBuf {
-    no_mistakes_core::codebase::ts_resolver::normalize_path(
+    no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures")
             .join(path),
@@ -41,7 +41,7 @@ fn discover_check_files_includes_inferred_nextjs_project_files() {
 fn discover_check_files_does_not_rescan_repository_root() {
     let root = fixture("check-discovery/repository-root-only");
     let config = load_config(&root);
-    let mut expected = no_mistakes_core::codebase::ts_source::discover_files(&root, &[]);
+    let mut expected = no_mistakes::codebase::ts_source::discover_files(&root, &[]);
     expected.sort();
     expected.dedup();
 
