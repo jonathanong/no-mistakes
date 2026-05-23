@@ -1,4 +1,8 @@
-fn raw_looks_like_source_file(raw: &str, path: &Path, root: &Path) -> bool {
+fn raw_looks_like_source_file(
+    raw: &str,
+    path: &Path,
+    root_dependencies: &std::collections::HashSet<String>,
+) -> bool {
     let has_source_extension = Path::new(raw)
         .extension()
         .and_then(std::ffi::OsStr::to_str)
@@ -11,7 +15,7 @@ fn raw_looks_like_source_file(raw: &str, path: &Path, root: &Path) -> bool {
     if !raw.contains('/') && !raw.contains('\\') {
         return true;
     }
-    if raw_package_name(raw).is_some_and(|name| root_declares_dependency(root, &name)) {
+    if raw_package_name(raw).is_some_and(|name| root_dependencies.contains(&name)) {
         return false;
     }
     path.parent().is_some_and(Path::exists)
@@ -30,12 +34,12 @@ fn raw_package_name(raw: &str) -> Option<String> {
     Some(first.to_string())
 }
 
-fn root_declares_dependency(root: &Path, name: &str) -> bool {
+fn root_dependency_names(root: &Path) -> std::collections::HashSet<String> {
     let Ok(source) = std::fs::read_to_string(root.join("package.json")) else {
-        return false;
+        return std::collections::HashSet::new();
     };
     let Ok(package_json) = serde_json::from_str::<serde_json::Value>(&source) else {
-        return false;
+        return std::collections::HashSet::new();
     };
     [
         "dependencies",
@@ -44,7 +48,9 @@ fn root_declares_dependency(root: &Path, name: &str) -> bool {
         "optionalDependencies",
     ]
     .iter()
-    .any(|field| package_json.get(field).and_then(|deps| deps.get(name)).is_some())
+    .filter_map(|field| package_json.get(field).and_then(|deps| deps.as_object()))
+    .flat_map(|deps| deps.keys().cloned())
+    .collect()
 }
 
 fn package_dir_entry(

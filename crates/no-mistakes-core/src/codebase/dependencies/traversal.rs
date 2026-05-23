@@ -42,6 +42,7 @@ fn resolve_entrypoints_with_files(
 ) -> Vec<Entrypoint> {
     let workspace =
         crate::codebase::workspaces::load_from_files(root, graph_files.all()).unwrap_or_default();
+    let root_dependencies = root_dependency_names(root);
     raw_entrypoints
         .iter()
         .map(|raw| {
@@ -59,7 +60,8 @@ fn resolve_entrypoints_with_files(
                 }
             };
             let normalized = crate::codebase::ts_resolver::normalize_path(&file);
-            let node = resolve_entrypoint_node(&raw_for_node, &normalized, root, &workspace);
+            let node =
+                resolve_entrypoint_node(&raw_for_node, &normalized, &workspace, &root_dependencies);
             let file = match &node {
                 NodeId::File(path) => path.clone(),
                 _ => normalized,
@@ -72,8 +74,8 @@ fn resolve_entrypoints_with_files(
 fn resolve_entrypoint_node(
     raw: &str,
     path: &Path,
-    root: &Path,
     workspace: &crate::codebase::workspaces::WorkspaceMap,
+    root_dependencies: &std::collections::HashSet<String>,
 ) -> NodeId {
     if path.is_dir() {
         if let Some(entry) = package_dir_entry(path, workspace) {
@@ -81,7 +83,7 @@ fn resolve_entrypoint_node(
         }
     }
     if workspace.resolve_specifier(raw).is_none()
-        && raw_package_name(raw).is_some_and(|name| root_declares_dependency(root, &name))
+        && raw_package_name(raw).is_some_and(|name| root_dependencies.contains(&name))
     {
         return NodeId::Module(raw.to_string());
     }
@@ -91,7 +93,7 @@ fn resolve_entrypoint_node(
     if let Some(entry) = workspace.resolve_specifier(raw) {
         return NodeId::File(entry);
     }
-    if raw_looks_like_source_file(raw, path, root) {
+    if raw_looks_like_source_file(raw, path, root_dependencies) {
         return NodeId::File(path.to_path_buf());
     }
     NodeId::Module(raw.to_string())
