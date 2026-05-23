@@ -10,7 +10,7 @@ fn resolve_symbol_dependents(
     let plain_roots: Vec<_> = entrypoints
         .iter()
         .filter(|ep| ep.symbol.is_none())
-        .map(|ep| NodeId::File(ep.file.clone()))
+        .map(|ep| ep.node.clone())
         .collect();
     if !plain_roots.is_empty() {
         let entries = graph.dependents_of(&plain_roots, depth, allowed);
@@ -95,4 +95,3 @@ fn merge_node_entries(
         }
     }
 }
-

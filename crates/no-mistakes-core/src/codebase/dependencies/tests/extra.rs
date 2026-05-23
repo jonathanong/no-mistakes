@@ -75,6 +75,32 @@ fn merge_node_entries_keeps_min_depth_and_dedupes_edge_kinds() {
 }
 
 #[test]
+fn target_module_filter_keeps_only_matching_module_nodes() {
+    let entries = vec![
+        graph::NodeEntry {
+            node: NodeId::Module("@react/client".to_string()),
+            depth: 1,
+            via: vec![EdgeKind::Import],
+        },
+        graph::NodeEntry {
+            node: NodeId::Module("lodash".to_string()),
+            depth: 1,
+            via: vec![EdgeKind::Import],
+        },
+        graph::NodeEntry {
+            node: NodeId::File(PathBuf::from("src/local.mts")),
+            depth: 1,
+            via: vec![EdgeKind::Import],
+        },
+    ];
+
+    let filtered = apply_target_module_filters(entries, &["@react/*".to_string()]).unwrap();
+
+    assert_eq!(filtered.len(), 1);
+    assert_eq!(filtered[0].node, NodeId::Module("@react/client".to_string()));
+}
+
+#[test]
 fn deps_direction_rejects_symbol_entrypoints() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/codebase-analysis")
@@ -85,6 +111,7 @@ fn deps_direction_rejects_symbol_entrypoints() {
         tsconfig: None,
         depth: None,
         filters: Vec::new(),
+        target_modules: Vec::new(),
         tests: Vec::new(),
         relationships: Vec::new(),
         format: Some(Format::Json),
@@ -128,6 +155,7 @@ fn traverse_args(root: PathBuf, files: Vec<PathBuf>) -> TraverseArgs {
         tsconfig: None,
         depth: Some(3),
         filters: Vec::new(),
+        target_modules: Vec::new(),
         tests: Vec::new(),
         relationships: Vec::new(),
         format: Some(Format::Json),

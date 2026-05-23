@@ -58,8 +58,9 @@ to explain cost.
 - `--tsconfig <FILE>` for path aliases; pass this explicitly in monorepos.
 - `--depth <N>` or `--max-depth <N>` to limit traversal.
 - `--filter <GLOB>` to include only matching files; repeatable.
+- `--target-module <GLOB>` to include only matching external module nodes.
 - `--test vitest|playwright|cargo` to filter to test files.
-- `--relationship import|workspace|test|route|queue|md|ci|http|process|asset|react|all`.
+- `--relationship import|workspace|package|test|route|queue|md|ci|http|process|asset|react|all`.
 - `--format json|md|yml|paths|human`, `--json`, `--timings`, and `--jobs`.
 
 `FILE#SYMBOL` works only for `dependents`/`related`, not `dependencies`.
@@ -81,7 +82,8 @@ member usage.
 
 - `baseUrl`-only imports are not resolved; use `compilerOptions.paths`.
 - Dynamic `import()` and `require()` are tracked only with string literals.
-- Bare external specifiers such as `react` and `node:path` are ignored.
+- Bare external specifiers such as `react` are terminal module nodes; their
+  `node_modules` sources are not parsed.
 - Graph tools answer file/symbol relationships, not exact call locations.
 - Dynamic queue names, route paths, fetch URLs, and selectors should be made
   static when agent-readable analysis is required.

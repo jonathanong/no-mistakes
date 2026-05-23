@@ -32,10 +32,12 @@ fn get_entries_supports_symbol_dependents() {
     let entrypoints = vec![
         Entrypoint {
             file: root.join("source.mts"),
+            node: NodeId::File(root.join("source.mts")),
             symbol: Some("alpha".into()),
         },
         Entrypoint {
             file: root.join("source.mts"),
+            node: NodeId::File(root.join("source.mts")),
             symbol: None,
         },
     ];

@@ -64,6 +64,7 @@ pub enum RelationshipArg {
     ImportType,
     ImportRequire,
     Workspace,
+    Package,
     Test,
     Route,
     Queue,
@@ -108,6 +109,9 @@ fn relationship_filter(
             }
             RelationshipArg::Workspace => {
                 set.insert(EdgeKind::WorkspaceImport);
+            }
+            RelationshipArg::Package => {
+                set.insert(EdgeKind::PackageDependency);
             }
             RelationshipArg::Test => {
                 set.insert(EdgeKind::TestOf);
@@ -161,21 +165,16 @@ fn relationships_are_import_only(relationships: &[RelationshipArg]) -> bool {
         })
 }
 
-/// A parsed entrypoint: either a plain file path, or a file + exported symbol / queue job name.
+/// A resolved entrypoint: a file/module node, plus an optional exported symbol / queue job name.
 struct Entrypoint {
     file: PathBuf,
+    node: NodeId,
     symbol: Option<String>,
 }
 
-fn parse_entrypoint(s: &str) -> Entrypoint {
+fn parse_entrypoint(s: &str) -> (PathBuf, Option<String>) {
     match s.split_once('#') {
-        Some((file, symbol)) => Entrypoint {
-            file: PathBuf::from(file),
-            symbol: Some(symbol.to_string()),
-        },
-        None => Entrypoint {
-            file: PathBuf::from(s),
-            symbol: None,
-        },
+        Some((file, symbol)) => (PathBuf::from(file), Some(symbol.to_string())),
+        None => (PathBuf::from(s), None),
     }
 }

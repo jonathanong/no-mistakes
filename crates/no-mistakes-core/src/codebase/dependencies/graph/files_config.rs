@@ -28,6 +28,10 @@ impl GraphFiles {
         &self.indexable
     }
 
+    pub(crate) fn all(&self) -> &[PathBuf] {
+        &self.all
+    }
+
     pub(crate) fn visible(&self) -> &HashSet<PathBuf> {
         &self.visible
     }

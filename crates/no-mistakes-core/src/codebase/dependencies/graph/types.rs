@@ -1,10 +1,12 @@
 pub use crate::codebase::ts_source::SKIP_DIRS;
 
-/// A node in the dependency graph: either a source file or a virtual queue-job node.
+/// A node in the dependency graph: a source file, external module, or virtual queue-job node.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum NodeId {
     /// A source file on disk.
     File(PathBuf),
+    /// A bare external module specifier that is not resolved to a local file.
+    Module(String),
     /// A virtual job node representing one (queue, jobName) pair.
     QueueJob { queue_file: PathBuf, job: String },
 }
@@ -14,6 +16,7 @@ impl NodeId {
     pub fn as_file(&self) -> Option<&Path> {
         match self {
             NodeId::File(p) => Some(p.as_path()),
+            NodeId::Module(_) => None,
             NodeId::QueueJob { .. } => None,
         }
     }
@@ -25,6 +28,7 @@ impl NodeId {
                 let rel = p.strip_prefix(root).unwrap_or(p);
                 rel.display().to_string()
             }
+            NodeId::Module(specifier) => specifier.clone(),
             NodeId::QueueJob { queue_file, job } => {
                 let rel = queue_file
                     .strip_prefix(root)
@@ -63,6 +67,8 @@ pub enum EdgeKind {
     MarkdownLink,
     /// Cross-workspace package import (via npm workspace resolution).
     WorkspaceImport,
+    /// Dependency declared in a package.json dependency field.
+    PackageDependency,
     /// CI workflow invokes a binary: `*.yml` → `src/bin/*.rs`.
     CiInvocation,
     /// HTTP call from a client file to a backend route-definition file.
@@ -91,13 +97,14 @@ type EdgeMap = HashMap<NodeId, Vec<(NodeId, EdgeKind)>>;
 // An edge in both directions: (from, to, kind).
 type Edge = (NodeId, NodeId, EdgeKind);
 
-type ParsedImports<'a> = Vec<(&'a PathBuf, &'a [ExtractedImport])>;
+type ParsedImports<'a> = Vec<(&'a PathBuf, &'a crate::codebase::ts_source::facts::TsFileFacts)>;
 
 /// Selects which edge producers run while building a dependency graph.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct GraphBuildPlan {
     pub imports: bool,
     pub workspace: bool,
+    pub package: bool,
     pub tests: bool,
     pub markdown: bool,
     pub ci: bool,
@@ -115,6 +122,7 @@ impl GraphBuildPlan {
         Self {
             imports: true,
             workspace: true,
+            package: true,
             tests: true,
             markdown: true,
             ci: true,
@@ -147,6 +155,7 @@ impl GraphBuildPlan {
                 || allowed.contains(&EdgeKind::DynamicImport)
                 || allowed.contains(&EdgeKind::Require),
             workspace: allowed.contains(&EdgeKind::WorkspaceImport),
+            package: allowed.contains(&EdgeKind::PackageDependency),
             tests: allowed.contains(&EdgeKind::TestOf),
             markdown: allowed.contains(&EdgeKind::MarkdownLink),
             ci: allowed.contains(&EdgeKind::CiInvocation),
@@ -165,6 +174,7 @@ impl GraphBuildPlan {
     pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
         TsFactPlan {
             imports: self.imports || self.workspace || self.assets,
+            function_calls: self.imports || self.workspace || self.assets,
             react: self.react,
             symbols: self.queues,
             route_refs: self.routes,

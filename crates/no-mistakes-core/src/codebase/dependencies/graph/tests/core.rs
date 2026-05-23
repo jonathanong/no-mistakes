@@ -3,6 +3,8 @@ use super::*;
 mod config_edges;
 mod config_plan;
 mod extra;
+mod extra_runtime;
+mod module_cases;
 
 fn p(s: &str) -> PathBuf {
     PathBuf::from(s)

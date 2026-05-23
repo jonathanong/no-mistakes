@@ -35,27 +35,78 @@ fn resolve_root(args: &TraverseArgs, cwd: &Path) -> PathBuf {
 }
 
 fn resolve_entrypoints(raw_entrypoints: &[PathBuf], root: &Path, cwd: &Path) -> Vec<Entrypoint> {
+    let graph_files = graph::GraphFiles::discover(root);
+    let workspace =
+        crate::codebase::workspaces::load_from_files(root, graph_files.all()).unwrap_or_default();
     raw_entrypoints
         .iter()
         .map(|raw| {
             let raw_str = raw.to_string_lossy();
-            let ep = parse_entrypoint(&raw_str);
-            let file = if ep.file.is_absolute() {
-                ep.file
+            let (raw_file, symbol) = parse_entrypoint(&raw_str);
+            let file = if raw_file.is_absolute() {
+                raw_file
             } else {
-                let from_root = root.join(&ep.file);
+                let from_root = root.join(&raw_file);
                 if from_root.exists() {
                     from_root
                 } else {
-                    cwd.join(ep.file)
+                    cwd.join(&raw_file)
                 }
             };
-            Entrypoint {
-                file,
-                symbol: ep.symbol,
-            }
+            let normalized = crate::codebase::ts_resolver::normalize_path(&file);
+            let node = resolve_entrypoint_node(&raw_str, &normalized, &workspace);
+            let file = match &node {
+                NodeId::File(path) => path.clone(),
+                _ => normalized,
+            };
+            Entrypoint { file, node, symbol }
         })
         .collect()
+}
+
+fn resolve_entrypoint_node(
+    raw: &str,
+    path: &Path,
+    workspace: &crate::codebase::workspaces::WorkspaceMap,
+) -> NodeId {
+    if path.is_dir() {
+        if let Some(entry) = package_dir_entry(path, workspace) {
+            return NodeId::File(entry);
+        }
+    }
+    if path.exists() || raw.starts_with('.') || raw.starts_with('/') {
+        return NodeId::File(path.to_path_buf());
+    }
+    if let Some(entry) = workspace.resolve_specifier(raw) {
+        return NodeId::File(entry);
+    }
+    NodeId::Module(raw.to_string())
+}
+
+fn package_dir_entry(
+    dir: &Path,
+    workspace: &crate::codebase::workspaces::WorkspaceMap,
+) -> Option<PathBuf> {
+    workspace
+        .packages
+        .iter()
+        .find(|package| package.dir == dir)
+        .and_then(|package| package.entry.clone())
+        .or_else(|| {
+            [
+                "src/index.mts",
+                "src/index.ts",
+                "src/index.tsx",
+                "index.mts",
+                "index.ts",
+                "index.tsx",
+                "index.js",
+                "index.mjs",
+            ]
+            .iter()
+            .map(|candidate| dir.join(candidate))
+            .find(|candidate| candidate.is_file())
+        })
 }
 
 fn validate_direction(direction: &Direction, entrypoints: &[Entrypoint]) -> Result<()> {

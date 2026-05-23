@@ -52,7 +52,8 @@ For workspace packages, exact subpath entries and single-`*` patterns are resolv
 
 ## Bare npm specifiers
 
-Imports of non-workspace npm packages (`express`, `node:path`, `react`) are silently dropped.
+Imports of non-workspace npm packages (`express`, `react`) are represented as
+terminal module nodes. Their installed `node_modules` source is not parsed.
 
 This is usually fine — external packages are not project files. If you need to find all consumers of a specific external package, use `rg 'from .express.'`.
 

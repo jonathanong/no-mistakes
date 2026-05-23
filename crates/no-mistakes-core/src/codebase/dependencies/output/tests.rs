@@ -38,6 +38,14 @@ fn queue_job_entry(queue_file: &str, job: &str, depth: usize) -> NodeEntry {
     }
 }
 
+fn module_entry(specifier: &str, depth: usize, via: Vec<EdgeKind>) -> NodeEntry {
+    NodeEntry {
+        node: NodeId::Module(specifier.to_string()),
+        depth,
+        via,
+    }
+}
+
 // ── write_json ──────────────────────────────────────────────────────────
 
 #[test]
@@ -99,6 +107,22 @@ fn json_queue_job_node() {
     );
 }
 
+#[test]
+fn json_module_node() {
+    let root = p("/root");
+    let entries = vec![module_entry("@react/client", 1, vec![EdgeKind::Import])];
+    let v = json_value(&["src/a.mts".to_string()], &entries, &root);
+    assert_eq!(
+        v,
+        serde_json::json!({
+            "roots": ["src/a.mts"],
+            "files": [
+                {"module": "@react/client", "depth": 1, "via": ["import"]},
+            ],
+        })
+    );
+}
+
 // ── write_paths ─────────────────────────────────────────────────────────
 
 #[test]
@@ -127,6 +151,16 @@ fn paths_queue_job_rendered_as_hash() {
     write_paths(&entries, &root, &mut buf).unwrap();
     let s = String::from_utf8(buf).unwrap();
     assert_eq!(s, "src/queues.mts#sendWelcome\n");
+}
+
+#[test]
+fn paths_module_rendered_as_specifier() {
+    let root = p("/root");
+    let entries = vec![module_entry("@react/client", 1, vec![])];
+    let mut buf = Vec::new();
+    write_paths(&entries, &root, &mut buf).unwrap();
+    let s = String::from_utf8(buf).unwrap();
+    assert_eq!(s, "@react/client\n");
 }
 
 // ── write_human ─────────────────────────────────────────────────────────
@@ -334,6 +368,7 @@ fn edge_kind_str_all_variants() {
     assert_eq!(edge_kind_str(EdgeKind::Layout), "layout");
     assert_eq!(edge_kind_str(EdgeKind::MarkdownLink), "md");
     assert_eq!(edge_kind_str(EdgeKind::WorkspaceImport), "workspace");
+    assert_eq!(edge_kind_str(EdgeKind::PackageDependency), "package");
     assert_eq!(edge_kind_str(EdgeKind::CiInvocation), "ci");
     assert_eq!(edge_kind_str(EdgeKind::HttpCall), "http");
     assert_eq!(edge_kind_str(EdgeKind::ProcessSpawn), "process");

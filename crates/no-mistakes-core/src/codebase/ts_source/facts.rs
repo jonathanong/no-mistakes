@@ -1,5 +1,5 @@
 use crate::codebase::dependencies::extract::{
-    extract_imports_from_program, is_indexable, ExtractedImport,
+    extract_import_facts_from_program, is_indexable, ExtractedImport, FunctionCall,
 };
 use crate::codebase::ts_http_calls::HttpCall;
 use crate::codebase::ts_process_spawn::SpawnEdge;
@@ -20,6 +20,7 @@ pub use domain::TsFactContext;
 #[derive(Debug, Clone, Copy, Default)]
 pub struct TsFactPlan {
     pub imports: bool,
+    pub function_calls: bool,
     pub symbols: bool,
     pub source: bool,
     pub route_refs: bool,
@@ -35,6 +36,7 @@ impl TsFactPlan {
     pub fn imports() -> Self {
         Self {
             imports: true,
+            function_calls: true,
             symbols: false,
             ..Self::default()
         }
@@ -43,6 +45,7 @@ impl TsFactPlan {
     pub fn imports_and_symbols() -> Self {
         Self {
             imports: true,
+            function_calls: true,
             symbols: true,
             ..Self::default()
         }
@@ -50,6 +53,7 @@ impl TsFactPlan {
 
     pub fn is_empty(self) -> bool {
         !self.imports
+            && !self.function_calls
             && !self.symbols
             && !self.source
             && !self.route_refs
@@ -82,6 +86,9 @@ pub struct BackendRouteFact {
 pub struct TsFileFacts {
     pub source: Option<String>,
     pub imports: Vec<ExtractedImport>,
+    pub function_calls: Vec<FunctionCall>,
+    pub exported_functions: Vec<String>,
+    pub has_unknown_top_level_call: bool,
     pub symbols: Option<FileSymbols>,
     pub route_refs: Vec<RouteRef>,
     pub backend_routes: Vec<BackendRouteFact>,
@@ -126,10 +133,10 @@ fn collect_file_facts(
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(path).unwrap_or_else(|_| SourceType::ts());
     let parsed = Parser::new(&allocator, &source, source_type).parse();
-    let imports = if plan.imports {
-        extract_imports_from_program(&parsed.program)
+    let import_facts = if plan.imports || plan.function_calls {
+        extract_import_facts_from_program(&parsed.program)
     } else {
-        Vec::new()
+        Default::default()
     };
     let symbols = plan
         .symbols
@@ -152,7 +159,10 @@ fn collect_file_facts(
     };
     Some(TsFileFacts {
         source: plan.source.then_some(source),
-        imports,
+        imports: import_facts.imports,
+        function_calls: import_facts.function_calls,
+        exported_functions: import_facts.exported_functions,
+        has_unknown_top_level_call: import_facts.has_unknown_top_level_call,
         symbols,
         route_refs: domain.route_refs,
         backend_routes: domain.backend_routes,

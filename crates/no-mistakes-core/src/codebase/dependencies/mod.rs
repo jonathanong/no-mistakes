@@ -3,6 +3,7 @@ pub mod graph;
 pub mod output;
 
 use anyhow::{bail, Context, Result};
+use globset::{Glob, GlobSetBuilder};
 use is_terminal::IsTerminal;
 use std::collections::HashMap;
 use std::io;
@@ -92,10 +93,7 @@ pub(crate) fn collect_and_filter_entries(
         build_plan,
         allowed: allowed.as_ref(),
     };
-    let roots: Vec<NodeId> = entrypoints
-        .iter()
-        .map(|e| NodeId::File(e.file.clone()))
-        .collect();
+    let roots: Vec<NodeId> = entrypoints.iter().map(|e| e.node.clone()).collect();
     let import_only = relationships_are_import_only(&args.relationships);
 
     timings.mark("ingest");
@@ -129,5 +127,27 @@ fn apply_filters(
         all_filters.extend(test_globs(framework));
     }
     let filter = graph::build_filter(&all_filters)?;
-    Ok(graph::apply_filter(entries, filter.as_ref(), root))
+    let entries = graph::apply_filter(entries, filter.as_ref(), root);
+    apply_target_module_filters(entries, &args.target_modules)
+}
+
+fn apply_target_module_filters(
+    entries: Vec<graph::NodeEntry>,
+    target_modules: &[String],
+) -> Result<Vec<graph::NodeEntry>> {
+    if target_modules.is_empty() {
+        return Ok(entries);
+    }
+    let mut builder = GlobSetBuilder::new();
+    for pattern in target_modules {
+        builder.add(Glob::new(pattern)?);
+    }
+    let filter = builder.build()?;
+    Ok(entries
+        .into_iter()
+        .filter(|entry| match &entry.node {
+            graph::NodeId::Module(specifier) => filter.is_match(specifier),
+            _ => false,
+        })
+        .collect())
 }

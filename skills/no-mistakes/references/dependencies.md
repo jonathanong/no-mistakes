@@ -54,8 +54,9 @@ no-mistakes dependencies src/main.mts --root /path/to/project --tsconfig tsconfi
 | `--tsconfig <FILE>` | auto-detected | Path to tsconfig.json |
 | `--depth <N>` | unlimited | Max traversal depth |
 | `--filter <GLOB>` | none | Include only matching files (repeatable, OR) |
+| `--target-module <GLOB>` | none | Include only matching external module nodes (repeatable, OR) |
 | `--test <FRAMEWORK>` | none | Expand to well-known test globs: `vitest`, `playwright`, `cargo` (repeatable) |
-| `--relationship <KIND>` | all | Follow only edges of this kind (repeatable, OR). Values: `import`, `workspace`, `test`, `route`, `queue`, `md`, `ci`, `http`, `process`, `asset`, `react`, `all` |
+| `--relationship <KIND>` | all | Follow only edges of this kind (repeatable, OR). Values: `import`, `workspace`, `package`, `test`, `route`, `queue`, `md`, `ci`, `http`, `process`, `asset`, `react`, `all` |
 | `--format <FORMAT>` | human (TTY) / json (pipe) | Output format: `json`, `md`, `yml`, `paths`, `human` |
 | `--json` | false | Shorthand for `--format json` |
 | `-j / --jobs <N>` | all cores | Worker threads. `0` or omitted = all cores. Honors `RAYON_NUM_THREADS`. |
@@ -93,7 +94,8 @@ src/main.mts
 
 ## Notes
 
-- Bare npm specifiers (`express`, `node:path`) are silently ignored
+- Bare npm specifiers (`express`, `@scope/pkg`) are terminal module nodes
+- `package.json` dependency declarations are reported as `package` edges
 - Static imports/re-exports, type-only imports/references, string-literal dynamic `import()`, and string-literal `require()` are tracked under `--relationship import`
 - Route/queue edges are only active when `.guardrailsrc.yml` defines the relevant config
 - Patterns ending in `/` in `--filter` collapse results to that folder level

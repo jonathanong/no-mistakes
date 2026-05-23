@@ -50,7 +50,8 @@ What are you trying to find?
 | Flag value | What edges it follows |
 |---|---|
 | `import` | Static TS/JS imports and `import type` |
-| `workspace` | Cross-package npm workspace imports and `package.json` workspace no-mistakes dependencies |
+| `workspace` | Cross-package npm workspace imports |
+| `package` | `package.json` dependency declarations to workspace entries or external module nodes |
 | `test` | `foo.mts` ↔ `foo.test.mts` test correspondence |
 | `route` | Route reference → route definition |
 | `queue` | Queue enqueue/worker relationship → virtual queue job |
@@ -58,6 +59,8 @@ What are you trying to find?
 | `ci` | CI workflow YAML → binary entry point |
 | `http` | HTTP client call with a static path → backend route definition |
 | `process` | `spawn`/`exec`/Playwright `webServer` → spawned entry file |
+| `asset` | Explicit non-code asset import |
+| `react` | React component render relationship |
 | `all` | All of the above (default) |
 
 Repeatable — `--relationship import --relationship workspace` follows both kinds.

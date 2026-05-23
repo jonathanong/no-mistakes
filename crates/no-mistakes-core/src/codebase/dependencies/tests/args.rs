@@ -34,6 +34,7 @@ fn run_surfaces_tsconfig_errors() {
         tsconfig: Some(root.join("tsconfig-invalid.json")),
         depth: None,
         filters: Vec::new(),
+        target_modules: Vec::new(),
         tests: Vec::new(),
         format: Some(Format::Json),
         json: false,
@@ -79,6 +80,19 @@ fn filter_flag_repeatable() {
         "**/*.spec.mts",
     ]);
     assert_eq!(a.filters.len(), 2);
+}
+
+#[test]
+fn target_module_flag_repeatable() {
+    let a = parse(&[
+        "deps",
+        "a.mts",
+        "--target-module",
+        "@react/*",
+        "--target-module",
+        "lodash",
+    ]);
+    assert_eq!(a.target_modules, vec!["@react/*", "lodash"]);
 }
 
 #[test]
@@ -277,6 +291,12 @@ fn workspace_maps_to_workspace_import() {
 }
 
 #[test]
+fn package_maps_to_package_dependency() {
+    let set = relationship_filter(&[RelationshipArg::Package]).unwrap();
+    assert!(set.contains(&EdgeKind::PackageDependency));
+}
+
+#[test]
 fn test_maps_to_test_of_and_route_test() {
     let set = relationship_filter(&[RelationshipArg::Test]).unwrap();
     assert!(set.contains(&EdgeKind::TestOf));
@@ -324,22 +344,22 @@ fn multiple_kinds_combined() {
 
 #[test]
 fn parse_plain_path() {
-    let ep = parse_entrypoint("src/main.mts");
-    assert_eq!(ep.file, PathBuf::from("src/main.mts"));
-    assert!(ep.symbol.is_none());
+    let (file, symbol) = parse_entrypoint("src/main.mts");
+    assert_eq!(file, PathBuf::from("src/main.mts"));
+    assert!(symbol.is_none());
 }
 
 #[test]
 fn parse_path_with_symbol() {
-    let ep = parse_entrypoint("src/queues.mts#enqueueBulkTopicEmbeddings");
-    assert_eq!(ep.file, PathBuf::from("src/queues.mts"));
-    assert_eq!(ep.symbol.as_deref(), Some("enqueueBulkTopicEmbeddings"));
+    let (file, symbol) = parse_entrypoint("src/queues.mts#enqueueBulkTopicEmbeddings");
+    assert_eq!(file, PathBuf::from("src/queues.mts"));
+    assert_eq!(symbol.as_deref(), Some("enqueueBulkTopicEmbeddings"));
 }
 
 #[test]
 fn parse_path_multiple_hashes_splits_on_first() {
-    let ep = parse_entrypoint("src/foo.mts#sym#extra");
-    assert_eq!(ep.symbol.as_deref(), Some("sym#extra"));
+    let (_file, symbol) = parse_entrypoint("src/foo.mts#sym#extra");
+    assert_eq!(symbol.as_deref(), Some("sym#extra"));
 }
 
 #[test]
@@ -383,7 +403,10 @@ fn resolve_entrypoints_prefers_root_before_cwd_fallback() {
     assert_eq!(entrypoints[0].symbol, None);
     assert_eq!(entrypoints[1].file, cwd.join("does-not-exist.mts"));
     assert_eq!(entrypoints[1].symbol, None);
-    assert_eq!(entrypoints[2].file, cwd.join("../../other.mts"));
+    assert_eq!(
+        entrypoints[2].file,
+        crate::codebase::ts_resolver::normalize_path(&cwd.join("../../other.mts"))
+    );
     assert_eq!(entrypoints[2].symbol.as_deref(), Some("exportName"));
 }
 
