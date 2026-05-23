@@ -3,6 +3,7 @@ use super::{RuleFinding, RULE_ID};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::ts_resolver::{normalize_path, ImportResolver};
 use crate::codebase::ts_source::relative_slash_path;
+use anyhow::Result;
 use std::collections::{BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
 
@@ -58,7 +59,7 @@ pub(super) fn stale_or_blank_allow_findings(
     component_keys: &HashSet<String>,
     _allow_files: &GlobMatcher,
     shared: &CheckFactMap,
-) -> Vec<RuleFinding> {
+) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for (key, reason) in &opts.allow_components {
         if reason.trim().is_empty() || !component_keys.contains(key) {
@@ -70,7 +71,7 @@ pub(super) fn stale_or_blank_allow_findings(
             findings.push(file_allow_finding(pattern, "must include a reason"));
             continue;
         }
-        let matcher = GlobMatcher::new(std::iter::once(pattern));
+        let matcher = GlobMatcher::new(std::iter::once(pattern))?;
         let matched = shared.files().iter().any(|path| {
             path.starts_with(project_root)
                 && matcher.is_match(&relative_slash_path(project_root, path))
@@ -82,7 +83,7 @@ pub(super) fn stale_or_blank_allow_findings(
             ));
         }
     }
-    findings
+    Ok(findings)
 }
 
 fn component_allow_finding(

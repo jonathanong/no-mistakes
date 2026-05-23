@@ -8,10 +8,20 @@ import "./setup.story";
 import './single-quote.story';
 import DefaultCard from "../components/DefaultCard";
 import DefaultButton, { Button as RenamedButton, Link } from "../components/Button";
-import * as Cards from "../components/Cards";
-import { type Props, Panel } from "../components/Panel";
-import ignored from "../components/Ignored"
-"#,
+	import * as Cards from "../components/Cards";
+	import { type Props, Panel } from "../components/Panel";
+	import type { TypeOnlyCard } from "../components/TypeOnlyCard";
+	import type DefaultTypeOnly from "../components/DefaultTypeOnly";
+	import {
+	  MultilineCard as RenamedMultilineCard,
+	  OtherMultilineCard,
+	} from "../components/MultilineCard";
+	import ignored from "../components/Ignored"
+
+```tsx
+import FencedExample from "../components/FencedExample";
+```
+	"#,
     );
 
     assert_eq!(facts.side_effect_imports.len(), 2);
@@ -35,6 +45,18 @@ import ignored from "../components/Ignored"
             ("Link", "Link", "../components/Button", false),
             ("*", "Cards", "../components/Cards", true),
             ("Panel", "Panel", "../components/Panel", false),
+            (
+                "MultilineCard",
+                "RenamedMultilineCard",
+                "../components/MultilineCard",
+                false,
+            ),
+            (
+                "OtherMultilineCard",
+                "OtherMultilineCard",
+                "../components/MultilineCard",
+                false,
+            ),
             ("default", "ignored", "../components/Ignored", false),
         ]
     );

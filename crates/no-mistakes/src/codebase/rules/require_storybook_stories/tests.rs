@@ -94,7 +94,7 @@ fn storybook_config_pattern_parser_handles_supported_shapes() {
         r#"
 export default {
   stories: (
-    [
+    async () => [
       "../components/**/*.story.tsx",
       `../examples/**/*.stories.tsx`,
       { directory: "../cards", files: "**/*.case.tsx" },
@@ -115,6 +115,39 @@ export default {
             "../defaults/**/*.stories.@(js|jsx|mjs|ts|tsx)",
         ]
     );
+
+    let function_patterns = config::extract_storybook_story_patterns(
+        r#"
+export default {
+  stories: async function stories() {
+    const ignored = "../ignored/**/*.stories.tsx";
+    return { directory: "../function", files: "*.docs.tsx" };
+  },
+};
+"#,
+    );
+    assert_eq!(function_patterns, vec!["../function/*.docs.tsx"]);
+
+    let expression_patterns = config::extract_storybook_story_patterns(
+        r#"
+export default {
+  stories: () => {
+    ("../expression/**/*.stories.tsx");
+  },
+};
+"#,
+    );
+    assert_eq!(expression_patterns, vec!["../expression/**/*.stories.tsx"]);
+
+    assert!(config::extract_storybook_story_patterns("export default { stories: [").is_empty());
+    assert!(config::extract_storybook_story_patterns(
+        r#"
+export default {
+  stories: { files: "*.stories.tsx" },
+};
+"#
+    )
+    .is_empty());
 }
 
 #[test]
@@ -134,18 +167,22 @@ fn required_prop_and_glob_helpers_match_expected_inputs() {
     ));
     assert!(!types::source_has_required_prop("<Card />", &opts));
 
-    let patterns = vec!["./components/**/*.tsx".to_string(), "[".to_string()];
-    let matcher = types::GlobMatcher::new(&patterns);
+    let patterns = vec!["./components/**/*.tsx".to_string()];
+    let matcher = types::GlobMatcher::new(&patterns).unwrap();
     assert!(matcher.is_match("components/Card.tsx"));
     assert!(!matcher.is_match("stories/Card.stories.tsx"));
+
+    let invalid = vec!["[".to_string()];
+    let error = types::GlobMatcher::new(&invalid).unwrap_err().to_string();
+    assert!(error.contains("invalid Storybook coverage glob"));
 }
 
 #[test]
-fn reachable_story_files_reports_story_fact_errors() {
+fn reachable_story_files_skip_unreadable_story_facts() {
     let root = normalize_path(&fixture("missing"));
     let story = normalize_path(&root.join("stories/card.stories.tsx"));
     let stories = vec!["stories/**/*.stories.tsx".to_string()];
-    let matcher = types::GlobMatcher::new(&stories);
+    let matcher = types::GlobMatcher::new(&stories).unwrap();
     let resolver = empty_resolver(&root);
     let components = HashSet::new();
 
@@ -160,16 +197,15 @@ fn reachable_story_files_reports_story_fact_errors() {
         )]),
         ..Default::default()
     };
-    let error = coverage::reachable_story_files(
+    let files = coverage::reachable_story_files(
         &root,
         &parse_error_facts,
         &matcher,
         &resolver,
         &components,
     )
-    .unwrap_err()
-    .to_string();
-    assert!(error.contains("failed to parse story file"));
+    .unwrap();
+    assert_eq!(files, [story.clone()].into_iter().collect());
 
     parse_error_facts.ts.insert(
         story.clone(),
@@ -178,16 +214,15 @@ fn reachable_story_files_reports_story_fact_errors() {
             ..Default::default()
         },
     );
-    let error = coverage::reachable_story_files(
+    let files = coverage::reachable_story_files(
         &root,
         &parse_error_facts,
         &matcher,
         &resolver,
         &components,
     )
-    .unwrap_err()
-    .to_string();
-    assert!(error.contains("requires Storybook facts"));
+    .unwrap();
+    assert_eq!(files, [story.clone()].into_iter().collect());
 
     parse_error_facts.ts.clear();
     let files = coverage::reachable_story_files(
@@ -252,9 +287,7 @@ fn namespace_and_allow_findings_cover_non_matching_edges() {
         "covered elsewhere".to_string(),
     );
     opts.allow_files.insert("blank".to_string(), "".to_string());
-    opts.allow_files
-        .insert("[".to_string(), "bad glob".to_string());
-    let allow_files = types::GlobMatcher::new(opts.allow_files.keys());
+    let allow_files = types::GlobMatcher::new(opts.allow_files.keys()).unwrap();
     let findings = findings::stale_or_blank_allow_findings(
         &root,
         project_root,
@@ -262,13 +295,11 @@ fn namespace_and_allow_findings_cover_non_matching_edges() {
         &HashSet::new(),
         &allow_files,
         &shared,
-    );
+    )
+    .unwrap();
     assert!(findings.iter().any(|finding| finding
         .message
         .contains("does not match a selected component")));
-    assert!(findings
-        .iter()
-        .any(|finding| finding.file == "[" && finding.message.contains("does not match")));
     assert!(findings
         .iter()
         .any(|finding| finding.message.contains("must include a reason")));
@@ -321,6 +352,21 @@ include_all_react_named_exports: true
         None,
     )
     .unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn storybook_config_paths_prefer_project_root() {
+    let root = fixture("config-project-root");
+    let mut cfg = config_with_project_root(
+        "web",
+        r#"
+include_all_react_named_exports: true
+"#,
+    );
+    cfg.tests.storybook.configs = Some(StringOrList::One(".storybook/main.ts".to_string()));
+    let findings = check(&root, &cfg, None).unwrap();
 
     assert!(findings.is_empty(), "{findings:#?}");
 }

@@ -81,11 +81,11 @@ fn check_rule(
     let tsconfig = resolve_tsconfig(&project_root, tsconfig_path)?;
     let resolver = ImportResolver::new(&tsconfig);
     let opts: Options = rule.rule_options();
-    let include = GlobMatcher::new(&opts.include);
-    let exclude = GlobMatcher::new(&opts.exclude);
+    let include = GlobMatcher::new(&opts.include)?;
+    let exclude = GlobMatcher::new(&opts.exclude)?;
     let story_patterns = effective_story_patterns(root, &project_root, config, &opts);
-    let stories = GlobMatcher::new(&story_patterns);
-    let allow_files = GlobMatcher::new(opts.allow_files.keys());
+    let stories = GlobMatcher::new(&story_patterns)?;
+    let allow_files = GlobMatcher::new(opts.allow_files.keys())?;
     let test_filter = crate::codebase::test_filter::TestFileFilter::new(root, config);
 
     let components = selected_components(
@@ -128,7 +128,7 @@ fn check_rule(
         &component_keys,
         &allow_files,
         shared,
-    ));
+    )?);
 
     for component in components {
         if covered.contains(&component.key) {

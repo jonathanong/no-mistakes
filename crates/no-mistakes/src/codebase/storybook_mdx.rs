@@ -5,31 +5,49 @@ use crate::codebase::storybook::{
 pub(crate) fn extract_mdx_source(source: &str) -> StorybookFileFacts {
     let mut used_runtime_imports = Vec::new();
     let mut side_effect_imports = Vec::new();
+    let mut pending_import: Option<(String, u32)> = None;
+    let mut in_code_fence = false;
     for (index, line) in source.lines().enumerate() {
         let line_number = (index + 1) as u32;
         let trimmed = line.trim();
+        if trimmed.starts_with("```") || trimmed.starts_with("~~~") {
+            in_code_fence = !in_code_fence;
+            continue;
+        }
+        if in_code_fence {
+            continue;
+        }
+        if let Some((pending, _)) = pending_import.as_mut() {
+            pending.push(' ');
+            pending.push_str(trimmed);
+            if mdx_import_complete(pending) {
+                let (import, line) = pending_import.take().expect("pending import exists");
+                push_mdx_import_line(
+                    &mut used_runtime_imports,
+                    &mut side_effect_imports,
+                    &import,
+                    line,
+                );
+            }
+            continue;
+        }
         let Some(import) = trimmed.strip_prefix("import ") else {
             continue;
         };
-        if let Some(source) = side_effect_source(import.trim()) {
-            side_effect_imports.push(StorybookSideEffectImport {
-                source: source.to_string(),
-                line: line_number,
-            });
+        let import = import.trim();
+        if import.starts_with("type ") {
             continue;
         }
-        let Some((clause, from)) = import.split_once(" from ") else {
-            continue;
-        };
-        let Some(source) = quoted_import_source(from.trim().trim_end_matches(';')) else {
-            continue;
-        };
-        push_mdx_imports(
-            &mut used_runtime_imports,
-            clause.trim(),
-            source,
-            line_number,
-        );
+        if mdx_import_complete(import) {
+            push_mdx_import_line(
+                &mut used_runtime_imports,
+                &mut side_effect_imports,
+                import,
+                line_number,
+            );
+        } else {
+            pending_import = Some((import.to_string(), line_number));
+        }
     }
     StorybookFileFacts {
         used_runtime_imports,
@@ -37,7 +55,36 @@ pub(crate) fn extract_mdx_source(source: &str) -> StorybookFileFacts {
     }
 }
 
+fn mdx_import_complete(import: &str) -> bool {
+    side_effect_source(import.trim()).is_some() || import.contains(" from ")
+}
+
+fn push_mdx_import_line(
+    used_runtime_imports: &mut Vec<UsedRuntimeImport>,
+    side_effect_imports: &mut Vec<StorybookSideEffectImport>,
+    import: &str,
+    line: u32,
+) {
+    if let Some(source) = side_effect_source(import.trim()) {
+        side_effect_imports.push(StorybookSideEffectImport {
+            source: source.to_string(),
+            line,
+        });
+        return;
+    }
+    let Some((clause, from)) = import.split_once(" from ") else {
+        return;
+    };
+    let Some(source) = quoted_import_source(from.trim().trim_end_matches(';')) else {
+        return;
+    };
+    push_mdx_imports(used_runtime_imports, clause.trim(), source, line);
+}
+
 fn push_mdx_imports(imports: &mut Vec<UsedRuntimeImport>, clause: &str, source: &str, line: u32) {
+    if clause.starts_with("type ") {
+        return;
+    }
     if let Some((default, rest)) = clause.split_once(", {") {
         push_mdx_default_import(imports, default.trim(), source, line);
         let named = format!("{{{}", rest.trim());

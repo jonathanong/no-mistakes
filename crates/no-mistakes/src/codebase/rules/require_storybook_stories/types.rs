@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -51,26 +52,28 @@ pub(super) fn source_has_required_prop(source: &str, opts: &Options) -> bool {
     })
 }
 
+#[derive(Debug)]
 pub(super) struct GlobMatcher {
     globset: Option<GlobSet>,
 }
 
 impl GlobMatcher {
-    pub(super) fn new<'a>(patterns: impl IntoIterator<Item = &'a String>) -> Self {
+    pub(super) fn new<'a>(patterns: impl IntoIterator<Item = &'a String>) -> Result<Self> {
         let mut builder = GlobSetBuilder::new();
         let mut added = 0usize;
         for pattern in patterns {
-            if let Ok(glob) = GlobBuilder::new(pattern.trim_start_matches("./"))
+            let glob = GlobBuilder::new(pattern.trim_start_matches("./"))
                 .literal_separator(false)
                 .build()
-            {
-                builder.add(glob);
-                added += 1;
-            }
+                .with_context(|| format!("invalid Storybook coverage glob `{pattern}`"))?;
+            builder.add(glob);
+            added += 1;
         }
-        Self {
-            globset: (added > 0).then(|| builder.build().ok()).flatten(),
-        }
+        let globset = (added > 0)
+            .then(|| builder.build())
+            .transpose()
+            .context("building Storybook coverage glob set")?;
+        Ok(Self { globset })
     }
 
     pub(super) fn is_match(&self, path: &str) -> bool {

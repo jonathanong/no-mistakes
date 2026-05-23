@@ -1,10 +1,9 @@
 use super::types::{component_key, GlobMatcher};
-use super::RULE_ID;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::ts_resolver::{normalize_path, ImportResolver};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::ts_symbols::ExportKind;
-use anyhow::{bail, Result};
+use anyhow::Result;
 use std::collections::{BTreeSet, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 
@@ -26,11 +25,11 @@ pub(super) fn reachable_story_files(
         let Some(facts) = shared.ts.get(&file) else {
             continue;
         };
-        if let Some(error) = &facts.parse_error {
-            bail!("failed to parse story file {}: {error}", file.display());
+        if facts.parse_error.is_some() {
+            continue;
         }
         let Some(storybook) = facts.storybook.as_ref() else {
-            bail!("{RULE_ID} requires Storybook facts for {}", file.display());
+            continue;
         };
         for import in &storybook.used_runtime_imports {
             let Some(resolved) = resolver
