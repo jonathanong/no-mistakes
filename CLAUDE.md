@@ -18,6 +18,9 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
   structured in-process APIs instead of shelling out to `no-mistakes`, avoiding
   repeated graph builds, output parsing, subprocess overhead, and reliability issues
   like jonathanong/filaments#4058.
+- N-API functions must be asynchronous. CPU-heavy analysis must run through
+  libuv async tasks and JS-facing helpers must return promises rather than
+  blocking the Node event loop.
 - Fully parallel, deterministic output — independent file analysis and domain
   checks should use rayon/concurrent data structures, then sort/merge before
   rendering results.

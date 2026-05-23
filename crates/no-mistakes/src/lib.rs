@@ -6,6 +6,7 @@ pub mod fetch;
 pub mod import_shape;
 pub mod imports;
 pub mod integration_tests;
+pub mod napi_api;
 pub mod playwright;
 pub mod queue;
 pub mod react_traits;

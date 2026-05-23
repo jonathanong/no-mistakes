@@ -52,10 +52,13 @@ test("installer main succeeds when binary download is skipped", async () => {
   const calls = [];
   await main(async (...args) => {
     calls.push(args);
-    return "/tmp/no-mistakes";
+    return `/tmp/${args[2].destinationName}`;
   });
-  assert.equal(calls.length, 1);
+  assert.equal(calls.length, 2);
   assert.equal(calls[0][2].destinationName, "no-mistakes");
+  assert.equal(calls[1][0], "no-mistakes-napi");
+  assert.equal(calls[1][2].destinationName, "no-mistakes.node");
+  assert.equal(calls[1][2].assetExtension, ".node");
 });
 
 test("installer main reports failures", async () => {
@@ -105,6 +108,10 @@ test("formats release asset names", () => {
   assert.equal(
     assetName("1.2.3", "x86_64-pc-windows-msvc"),
     "no-mistakes-v1.2.3-x86_64-pc-windows-msvc.exe",
+  );
+  assert.equal(
+    core.assetName("no-mistakes-napi", "1.2.3", "x86_64-pc-windows-msvc", ".node"),
+    "no-mistakes-napi-v1.2.3-x86_64-pc-windows-msvc.node",
   );
 });
 

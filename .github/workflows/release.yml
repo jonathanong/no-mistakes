@@ -271,20 +271,57 @@ jobs:
           cache-bin: "false"
 
       - name: Build binary
-        run: cargo build --release --locked --target ${{ matrix.target }} -p no-mistakes
+        shell: bash
+        run: |
+          cargo build --release --locked --target ${{ matrix.target }} -p no-mistakes
+          rm -f target/${{ matrix.target }}/release/libno_mistakes*.so
+          rm -f target/${{ matrix.target }}/release/libno_mistakes*.dylib
+          rm -f target/${{ matrix.target }}/release/no_mistakes*.dll
+          rm -f target/${{ matrix.target }}/release/deps/libno_mistakes*.so
+          rm -f target/${{ matrix.target }}/release/deps/libno_mistakes*.dylib
+          rm -f target/${{ matrix.target }}/release/deps/no_mistakes*.dll
+          NO_MISTAKES_BUILD_NAPI=1 cargo rustc --release --locked --target ${{ matrix.target }} -p no-mistakes --lib --crate-type cdylib
 
       - name: Stage assets
         shell: bash
         run: |
           case "${{ matrix.target }}" in
-            *windows*) ext=".exe" ;;
-            *) ext="" ;;
+            *windows*)
+              bin_ext=".exe"
+              lib_name="no_mistakes.dll"
+              lib_pattern="no_mistakes*.dll"
+              ;;
+            *apple-darwin*)
+              bin_ext=""
+              lib_name="libno_mistakes.dylib"
+              lib_pattern="libno_mistakes*.dylib"
+              ;;
+            *)
+              bin_ext=""
+              lib_name="libno_mistakes.so"
+              lib_pattern="libno_mistakes*.so"
+              ;;
           esac
           mkdir -p release-assets
-          source="target/${{ matrix.target }}/release/no-mistakes$ext"
-          artifact="release-assets/no-mistakes-v${{ needs.prepare.outputs.version }}-${{ matrix.target }}$ext"
-          "$source" --version
-          cp "$source" "$artifact"
+          binary_source="target/${{ matrix.target }}/release/no-mistakes$bin_ext"
+          binary_artifact="release-assets/no-mistakes-v${{ needs.prepare.outputs.version }}-${{ matrix.target }}$bin_ext"
+          addon_source="target/${{ matrix.target }}/release/$lib_name"
+          if [[ ! -f "$addon_source" ]]; then
+            addon_candidates=()
+            while IFS= read -r addon_candidate; do
+              addon_candidates+=("$addon_candidate")
+            done < <(find "target/${{ matrix.target }}/release/deps" -maxdepth 1 -type f -name "$lib_pattern" -print | sort)
+            if [[ "${#addon_candidates[@]}" -ne 1 ]]; then
+              echo "Expected exactly one N-API addon artifact matching $lib_pattern, found ${#addon_candidates[@]}" >&2
+              printf '%s\n' "${addon_candidates[@]}" >&2
+              exit 1
+            fi
+            addon_source="${addon_candidates[0]}"
+          fi
+          addon_artifact="release-assets/no-mistakes-napi-v${{ needs.prepare.outputs.version }}-${{ matrix.target }}.node"
+          "$binary_source" --version
+          cp "$binary_source" "$binary_artifact"
+          cp "$addon_source" "$addon_artifact"
 
       - name: Generate checksum (Unix)
         if: runner.os != 'Windows'

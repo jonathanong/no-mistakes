@@ -13,11 +13,15 @@
   },
   "files": [
     "bin/",
+    "index.d.ts",
+    "index.js",
     "scripts/install.js",
     "scripts/install/",
     "README.md",
     "LICENSE"
   ],
+  "main": "index.js",
+  "types": "index.d.ts",
   "publishConfig": {
     "access": "public"
   },

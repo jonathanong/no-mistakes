@@ -42,6 +42,16 @@ pub fn run(args: TraverseArgs, direction: Direction) -> Result<()> {
     Ok(())
 }
 
+pub fn run_json(args: TraverseArgs, direction: Direction) -> Result<String> {
+    let cwd_early = std::env::current_dir().context("reading current directory")?;
+    let mut timings = crate::codebase::timing::PhaseTimings::start();
+    let result = collect_and_filter_entries(&args, direction, &cwd_early, &mut timings)?;
+    let root_strs: Vec<String> = args.files.iter().map(|f| f.display().to_string()).collect();
+    let mut out = Vec::new();
+    write_output_results(Format::Json, &root_strs, &result, &mut out)?;
+    String::from_utf8(out).context("dependency JSON output must be UTF-8")
+}
+
 fn output_results(args: &TraverseArgs, result: &TraversalResult) -> Result<()> {
     let root_strs: Vec<String> = args.files.iter().map(|f| f.display().to_string()).collect();
 
