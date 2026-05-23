@@ -60,7 +60,7 @@ describe("ts-no-export-renaming", () => {
         code,
         "ts-no-export-renaming",
         { includePathPatterns: ["^backend/"] },
-        resolve(__dirname, "../web/app/index.ts"),
+        resolve(process.cwd(), "web/app/index.ts"),
       ),
       [],
     );
@@ -69,7 +69,7 @@ describe("ts-no-export-renaming", () => {
         code,
         "ts-no-export-renaming",
         { includePathPatterns: ["^backend/", "["] },
-        resolve(__dirname, "../backend/index.ts"),
+        resolve(process.cwd(), "backend/index.ts"),
       ),
       ["renamed", "renamed"],
     );
