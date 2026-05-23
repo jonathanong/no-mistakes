@@ -38,7 +38,7 @@ no-mistakes <external-subcommand> [ARGS]...
 | `--filter <GLOB>` | Include only matching files. Repeatable; trailing `/` collapses to folder level. |
 | `--target-module <GLOB>` | Include only matching external module nodes. Repeatable. |
 | `--test <FRAMEWORK>` | Filter to `vitest`, `playwright`, or `cargo` test globs. Repeatable. |
-| `--relationship <KIND>` | Follow only `import`, `workspace`, `package`, `test`, `route`, `queue`, `md`, `ci`, `http`, `process`, `asset`, `react`, or `all`. Repeatable. |
+| `--relationship <KIND>` | Follow only `import`, `import-static`, `import-dynamic`, `import-type`, `import-require`, `workspace`, `package`, `test`, `route`, `queue`, `md`, `ci`, `http`, `process`, `asset`, `react`, or `all`. Repeatable. |
 | `--format <FORMAT>` | `json`, `md`, `yml`, `paths`, or `human`. |
 | `--json` | Shorthand for `--format json`. |
 | `--timings` | Emit phase timings on stderr. |

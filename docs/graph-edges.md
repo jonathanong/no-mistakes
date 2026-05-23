@@ -39,5 +39,5 @@ serialized in output through the `via` field.
   targets, or filtered with `--target-module`, but their `node_modules` source
   is not parsed.
 - Function-scoped dynamic `import()` and `require()` edges are pruned unless the
-  containing function is statically called, exported, or reached through an
-  unknown top-level call shape.
+  containing function is statically called, exported, reached through an unknown
+  top-level call shape, or contains an unknown call shape in reachable code.

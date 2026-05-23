@@ -60,7 +60,7 @@ to explain cost.
 - `--filter <GLOB>` to include only matching files; repeatable.
 - `--target-module <GLOB>` to include only matching external module nodes.
 - `--test vitest|playwright|cargo` to filter to test files.
-- `--relationship import|workspace|package|test|route|queue|md|ci|http|process|asset|react|all`.
+- `--relationship import|import-static|import-dynamic|import-type|import-require|workspace|package|test|route|queue|md|ci|http|process|asset|react|all`.
 - `--format json|md|yml|paths|human`, `--json`, `--timings`, and `--jobs`.
 
 `FILE#SYMBOL` works only for `dependents`/`related`, not `dependencies`.
