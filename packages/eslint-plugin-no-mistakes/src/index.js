@@ -18,6 +18,7 @@ const rules = {
   "playwright-no-empty": require("./rules/playwright-no-empty"),
   "playwright-no-set-timeout": require("./rules/playwright-no-set-timeout"),
   "playwright-prefer-get-by-test-id": require("./rules/playwright-prefer-get-by-test-id"),
+  "playwright-require-exported-component-attribute": require("./rules/playwright-require-exported-component-attribute"),
   "playwright-require-interactive-test-id": require("./rules/playwright-require-interactive-test-id"),
   "playwright-selector-priority": require("./rules/playwright-selector-priority"),
   "react-no-iife-in-jsx": require("./rules/react-no-iife-in-jsx"),
