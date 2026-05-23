@@ -14,7 +14,10 @@ function fixture(name) {
 describe("upstreamed generic rule coverage", () => {
   it("covers additional branches in upstreamed rules", () => {
     const code = fixture("coverage.tsx");
-    assert.deepEqual(messages(code, "await-array-methods", undefined, "coverage.tsx"), ["awaited"]);
+    assert.deepEqual(messages(code, "await-array-methods", undefined, "coverage.tsx"), [
+      "awaited",
+      "awaited",
+    ]);
     assert.deepEqual(messages(code, "no-delete-property", undefined, "coverage.tsx"), [
       "delete",
       "delete",
@@ -24,6 +27,7 @@ describe("upstreamed generic rule coverage", () => {
       ["location"],
     );
     assert.deepEqual(messages(code, "test-no-error-message-matching", undefined, "coverage.tsx"), [
+      "message",
       "message",
       "message",
       "message",

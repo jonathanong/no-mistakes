@@ -1,3 +1,5 @@
+import { describe, test } from "vitest";
+
 const values = [3, 1, 2];
 const optionalValues = [3, 1, 2];
 const [destructuredClient] = [repo];
@@ -6,6 +8,7 @@ reassignedValues = query;
 await task;
 await values.map((value) => value);
 await optionalValues?.sort();
+await optionalValues["sort"]();
 await destructuredClient.sort();
 await reassignedValues.sort();
 delete value;
@@ -24,9 +27,12 @@ expect(error).toEqual(error.message);
 if (error.code !== "missing") {
   throw error;
 }
-if (error.message != "missing") {
-  throw error;
-}
+test("message checks", () => {
+  error.message.includes("missing");
+  if (error.message != "missing") {
+    throw error;
+  }
+});
 let shared = 0;
 let sharedList = [];
 let sharedMap = new Map();

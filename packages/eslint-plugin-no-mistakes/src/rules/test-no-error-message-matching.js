@@ -21,6 +21,7 @@ const MATCHERS = new Set([
 const MODIFIERS = new Set(
   "and at be been deep has have is not of rejects resolves same that to which with".split(" "),
 );
+const TEST_CALLEES = new Set(["it", "test"]);
 
 function propertyName(node) {
   if (node.type === "Identifier") return node.name;
@@ -57,6 +58,13 @@ function isExpectCall(node) {
   );
 }
 
+function calleeName(node) {
+  if (node?.type === "Identifier") return node.name;
+  if (node?.type === "MemberExpression" && !node.computed) return calleeName(node.object);
+  if (node?.type === "CallExpression") return calleeName(node.callee);
+  return null;
+}
+
 function unwrapMatcherObject(node) {
   let current = unwrap(node);
   while (current?.type === "MemberExpression") {
@@ -74,35 +82,46 @@ module.exports = rule(
     schema: [],
     messages: { message: "Do not assert on err.message; check the error type or code instead." },
   },
-  (context) => ({
-    CallExpression(node) {
-      const matcherObject =
-        node.callee.type === "MemberExpression" ? unwrapMatcherObject(node.callee.object) : null;
-      if (
-        node.callee.type === "MemberExpression" &&
-        MATCHERS.has(propertyName(node.callee.property)) &&
-        isExpectCall(matcherObject) &&
-        isMessageMember(matcherObject.arguments?.[0])
-      ) {
-        context.report({ node, messageId: "message" });
-        return;
-      }
-      if (
-        node.callee.type === "MemberExpression" &&
-        propertyName(node.callee.property) === "includes" &&
-        isMessageMember(node.callee.object)
-      ) {
-        context.report({ node, messageId: "message" });
-      }
-    },
-    BinaryExpression(node) {
-      if (!["!=", "==", "===", "!=="].includes(node.operator)) return;
-      if (
-        (isMessageMember(node.left) && node.right.type === "Literal") ||
-        (isMessageMember(node.right) && node.left.type === "Literal")
-      ) {
-        context.report({ node, messageId: "message" });
-      }
-    },
-  }),
+  (context) => {
+    let testDepth = 0;
+    return {
+      CallExpression(node) {
+        if (TEST_CALLEES.has(calleeName(node.callee))) {
+          testDepth += 1;
+        }
+        const matcherObject =
+          node.callee.type === "MemberExpression" ? unwrapMatcherObject(node.callee.object) : null;
+        if (
+          node.callee.type === "MemberExpression" &&
+          MATCHERS.has(propertyName(node.callee.property)) &&
+          isExpectCall(matcherObject) &&
+          isMessageMember(matcherObject.arguments?.[0])
+        ) {
+          context.report({ node, messageId: "message" });
+          return;
+        }
+        if (
+          node.callee.type === "MemberExpression" &&
+          propertyName(node.callee.property) === "includes" &&
+          testDepth > 0 &&
+          isMessageMember(node.callee.object)
+        ) {
+          context.report({ node, messageId: "message" });
+        }
+      },
+      "CallExpression:exit"(node) {
+        if (TEST_CALLEES.has(calleeName(node.callee))) testDepth -= 1;
+      },
+      BinaryExpression(node) {
+        if (testDepth <= 0) return;
+        if (!["!=", "==", "===", "!=="].includes(node.operator)) return;
+        if (
+          (isMessageMember(node.left) && node.right.type === "Literal") ||
+          (isMessageMember(node.right) && node.left.type === "Literal")
+        ) {
+          context.report({ node, messageId: "message" });
+        }
+      },
+    };
+  },
 );

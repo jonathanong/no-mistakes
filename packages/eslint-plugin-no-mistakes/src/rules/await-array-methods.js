@@ -4,6 +4,12 @@ const { callMethodName, rule } = require("../helpers");
 
 const BANNED_METHODS = new Set(["sort", "toSorted", "every", "findIndex", "slice", "toSpliced"]);
 
+function methodName(node) {
+  if (node.callee.type !== "MemberExpression") return callMethodName(node);
+  if (!node.callee.computed) return node.callee.property.name;
+  return node.callee.property.type === "Literal" ? String(node.callee.property.value) : null;
+}
+
 function unwrapChain(node) {
   return node?.type === "ChainExpression" ? node.expression : node;
 }
@@ -63,7 +69,7 @@ module.exports = rule(
       AwaitExpression(node) {
         const argument = unwrapChain(node.argument);
         if (argument.type !== "CallExpression") return;
-        const method = callMethodName(argument);
+        const method = methodName(argument);
         if (!BANNED_METHODS.has(method)) return;
         if (
           argument.callee.type !== "MemberExpression" ||

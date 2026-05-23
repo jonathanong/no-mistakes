@@ -1,5 +1,6 @@
 import React, { use } from "react";
 import * as R from "react";
+import { test } from "vitest";
 import { use as otherUse } from "not-react";
 
 const values = [3, 1, 2];
@@ -22,10 +23,12 @@ it("mutates shared state", () => {
   counter++;
 });
 expect(error.message).toContain("missing");
-error.message.includes("missing");
-if (error.message === "missing") {
-  throw error;
-}
+test("message checks", () => {
+  error.message.includes("missing");
+  if (error.message === "missing") {
+    throw error;
+  }
+});
 test.sequential("runs", () => {});
 React.use(Promise.resolve("ok"));
 React["use"](Promise.resolve("ok"));

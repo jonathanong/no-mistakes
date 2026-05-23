@@ -3,6 +3,11 @@
 const { rule } = require("../helpers");
 
 const TEST_NAMES = new Set(["test", "it", "describe"]);
+const TEST_FILE_PATTERN = /\.(?:test|spec)\.[cm]?[jt]sx?$/;
+
+function isTestFile(filename) {
+  return TEST_FILE_PATTERN.test(filename.replace(/\\/g, "/"));
+}
 
 function propertyName(node) {
   if (node.type === "Literal") return String(node.value);
@@ -47,15 +52,22 @@ module.exports = rule(
     schema: [],
     messages: { sequential: "Use parallel tests instead of .sequential." },
   },
-  (context) => ({
-    CallExpression(node) {
-      if (!TEST_NAMES.has(rootTestName(node.callee))) return;
-      if (node.callee.type === "MemberExpression" && hasSequentialMember(node.callee)) {
+  (context) => {
+    let usesVitestImport = false;
+    return {
+      ImportDeclaration(node) {
+        if (node.source.value === "vitest") usesVitestImport = true;
+      },
+      CallExpression(node) {
+        if (!isTestFile(context.filename) && !usesVitestImport) return;
+        if (!TEST_NAMES.has(rootTestName(node.callee))) return;
+        if (node.callee.type === "MemberExpression" && hasSequentialMember(node.callee)) {
+          context.report({ node: node.callee, messageId: "sequential" });
+          return;
+        }
+        if (!hasSequentialOption(node)) return;
         context.report({ node: node.callee, messageId: "sequential" });
-        return;
-      }
-      if (!hasSequentialOption(node)) return;
-      context.report({ node: node.callee, messageId: "sequential" });
-    },
-  }),
+      },
+    };
+  },
 );

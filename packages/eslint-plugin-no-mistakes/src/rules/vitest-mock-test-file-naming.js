@@ -31,11 +31,29 @@ function propertyName(node) {
   return node.name;
 }
 
-function isMockingCall(node) {
+function isFrameworkBinding(node, context) {
+  let scope = context.sourceCode.getScope(node);
+  while (scope) {
+    const variable = scope.variables.find((candidate) => candidate.name === node.name);
+    if (!variable) {
+      scope = scope.upper;
+      continue;
+    }
+    return variable.defs.some(
+      (def) =>
+        def.type === "ImportBinding" &&
+        (def.parent?.source?.value === "vitest" || def.parent?.source?.value === "@jest/globals"),
+    );
+  }
+  return true;
+}
+
+function isMockingCall(node, context) {
   return (
     node.callee.type === "MemberExpression" &&
     node.callee.object.type === "Identifier" &&
     (node.callee.object.name === "vi" || node.callee.object.name === "jest") &&
+    isFrameworkBinding(node.callee.object, context) &&
     MOCK_METHODS.has(propertyName(node.callee.property))
   );
 }
@@ -54,7 +72,7 @@ module.exports = rule(
     let usesMocking = false;
     return {
       CallExpression(node) {
-        if (isMockingCall(node)) usesMocking = true;
+        if (isMockingCall(node, context)) usesMocking = true;
       },
       "Program:exit"(node) {
         if (!isTestFile(context.filename)) return;
