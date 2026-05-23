@@ -104,10 +104,47 @@ fn fact_runner_ignores_missing_source_outside_target_roots() {
 }
 
 #[test]
+fn fact_runner_skips_missing_facts_inside_target_roots() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture());
+    let inside = root.join("web/app/api/users/route.ts");
+    let facts = CheckFactMap {
+        files: vec![inside],
+        ..Default::default()
+    };
+    let findings = check_with_facts(&root, &config(), &facts).unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn fact_runner_requires_source_for_target_files() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture());
+    let inside = root.join("web/app/api/users/route.ts");
+    let facts = CheckFactMap {
+        files: vec![inside.clone()],
+        ts: HashMap::from([(inside, CheckFileFacts::default())]),
+        ..Default::default()
+    };
+    let err = check_with_facts(&root, &config(), &facts).unwrap_err();
+
+    assert!(err.to_string().contains("requires source facts"), "{err:?}");
+}
+
+#[test]
 fn direct_runner_reports_file_read_errors() {
     let root = fixture();
     let missing = root.join("web/app/api/missing/route.ts");
     let err = check_files(&root, &config(), &[missing]).unwrap_err();
 
     assert!(err.to_string().contains("failed to read"), "{err:?}");
+}
+
+#[test]
+fn route_matching_rejects_paths_outside_target_roots() {
+    let root = fixture();
+    let target_roots = vec![root.join("web")];
+    let outside = root.join("other/app/api/users/route.ts");
+
+    assert!(finding_for_file(&root, &target_roots, &outside, "").is_none());
+    assert!(!is_nextjs_api_route(&outside, &target_roots));
 }

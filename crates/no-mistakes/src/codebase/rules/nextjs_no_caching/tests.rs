@@ -1,5 +1,7 @@
 use super::*;
+use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::config::v2::schema::{Project, ProjectType, RuleDef};
+use std::collections::HashMap;
 
 fn fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -113,6 +115,66 @@ fn fact_runner_checks_nextjs_caching() {
 }
 
 #[test]
+fn fact_runner_ignores_missing_facts_outside_target_roots() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture());
+    let outside = root.join("other/app/bad.ts");
+    let facts = CheckFactMap {
+        files: vec![outside.clone()],
+        ts: HashMap::from([(outside, CheckFileFacts::default())]),
+        ..Default::default()
+    };
+    let findings = check_with_facts(&root, &config(), &facts).unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn fact_runner_requires_source_and_cache_facts_for_target_files() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture());
+    let inside = root.join("web/app/bad.ts");
+    let missing_source = CheckFactMap {
+        files: vec![inside.clone()],
+        ts: HashMap::from([(inside.clone(), CheckFileFacts::default())]),
+        ..Default::default()
+    };
+    let err = check_with_facts(&root, &config(), &missing_source).unwrap_err();
+    assert!(err.to_string().contains("requires source facts"), "{err:?}");
+
+    let missing_cache = CheckFactMap {
+        files: vec![inside.clone()],
+        ts: HashMap::from([(
+            inside,
+            CheckFileFacts {
+                source: Some("export const value = 1".to_string()),
+                ..Default::default()
+            },
+        )]),
+        ..Default::default()
+    };
+    let err = check_with_facts(&root, &config(), &missing_cache).unwrap_err();
+    assert!(
+        err.to_string().contains("requires Next.js caching facts"),
+        "{err:?}"
+    );
+}
+
+#[test]
+fn direct_runner_ignores_unreadable_and_unparseable_files() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture());
+    let findings = check_files(
+        &root,
+        &config(),
+        &[
+            root.join("web/app/missing.ts"),
+            root.join("web/app/invalid.ts"),
+        ],
+    )
+    .unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn extract_allows_uncached_fetch_and_dynamic_segment_config() {
     let source = "export const dynamic = 'force-dynamic'\n\
 export const revalidate = 0\n\
@@ -123,6 +185,17 @@ export async function load() {\n\
     let findings = extract(Path::new("app/good.ts"), source).unwrap();
 
     assert!(findings.is_empty());
+}
+
+#[test]
+fn extract_reports_top_level_cache_directive() {
+    let source = "'use cache'\nexport const value = 1\n";
+    let findings = extract(Path::new("app/directive.ts"), source).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("cache directives")));
 }
 
 #[test]
@@ -149,6 +222,17 @@ export const value = cache.unstable_cache(async () => 1)\n";
 }
 
 #[test]
+fn extract_reports_next_cache_default_import() {
+    let source = "import cache from 'next/cache'\n";
+    let findings = extract(Path::new("app/cache.ts"), source).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("default imports")));
+}
+
+#[test]
 fn extract_reports_next_cache_side_effect_import() {
     let source = "import 'next/cache'\n";
     let findings = extract(Path::new("app/cache.ts"), source).unwrap();
@@ -157,6 +241,23 @@ fn extract_reports_next_cache_side_effect_import() {
     assert!(findings
         .iter()
         .any(|finding| finding.message.contains("side-effect imports")));
+}
+
+#[test]
+fn extract_ignores_dynamic_or_uncached_option_shapes() {
+    let source = "const key = 'cache'\n\
+const opts = {}\n\
+export const cacheComponents = 'no'\n\
+export const fetchCache = 'auto'\n\
+export const dynamic = 'auto'\n\
+export async function load() {\n\
+  await fetch('/api/a', { ...opts, [key]: 'force-cache', next: opts })\n\
+  await fetch('/api/b', { next: { ...opts, [key]: 1, revalidate: true } })\n\
+}\n\
+export default { ...opts, [key]: true, cacheComponents: 'yes' }\n";
+    let findings = extract(Path::new("app/good.ts"), source).unwrap();
+
+    assert!(findings.is_empty());
 }
 
 #[test]

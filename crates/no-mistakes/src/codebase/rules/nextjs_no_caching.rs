@@ -54,6 +54,9 @@ pub(crate) fn check_with_facts(
         {
             continue;
         }
+        if facts.parse_error.is_some() {
+            continue;
+        }
         let Some(source) = facts.source.as_ref() else {
             bail!("{} requires source facts for {}", RULE_ID, path.display());
         };
