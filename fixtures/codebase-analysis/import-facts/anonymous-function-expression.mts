@@ -1,0 +1,3 @@
+(function () {
+  import("./loaded.mts");
+})();

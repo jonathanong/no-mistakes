@@ -335,6 +335,20 @@ fn fixture_object_function_properties_track_static_scopes() {
     assert_eq!(scopes, vec![Some("load"), Some("fallback")]);
 }
 
+#[test]
+fn fixture_anonymous_function_expression_keeps_import_unscoped() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase-analysis/import-facts/anonymous-function-expression.mts");
+    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
+    let allocator = Allocator::default();
+    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+
+    assert_eq!(facts.imports.len(), 1);
+    assert_eq!(facts.imports[0].function_scope, None);
+}
+
 // ── is_indexable / is_tsx_file ──────────────────────────────────────
 
 #[test]
