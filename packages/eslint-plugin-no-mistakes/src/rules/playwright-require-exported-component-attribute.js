@@ -60,19 +60,18 @@ function normalizedOptions(option) {
 }
 
 function reportMissingBranches(context, component, opts) {
-  if (!shouldCheckComponent(component, opts)) {
-    return;
-  }
-  for (const jsx of returnedJsxBranches(component.fn)) {
-    if (!jsxTreeHasAttribute(jsx, opts)) {
-      context.report({
-        node: jsx,
-        messageId: "missing",
-        data: {
-          name: component.name,
-          attributes: opts.attributes.join(", "),
-        },
-      });
+  if (shouldCheckComponent(component, opts)) {
+    for (const jsx of returnedJsxBranches(component.fn)) {
+      if (!jsxTreeHasAttribute(jsx, opts)) {
+        context.report({
+          node: jsx,
+          messageId: "missing",
+          data: {
+            name: component.name,
+            attributes: opts.attributes.join(", "),
+          },
+        });
+      }
     }
   }
 }
