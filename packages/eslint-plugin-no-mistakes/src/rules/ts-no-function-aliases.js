@@ -56,6 +56,8 @@ function isSameArgumentList(params, args) {
 
 function isSelfCall(node, call) {
   if (call.callee.type !== "Identifier") return false;
+  const wrapper = variableWrapperName(node);
+  if (wrapper) return wrapper === call.callee.name;
   if (node.id && node.id.name === call.callee.name) return true;
   const parent = node.parent;
   return (
@@ -66,7 +68,36 @@ function isSelfCall(node, call) {
   );
 }
 
+function assignmentWrapperName(node) {
+  if (node.parent?.type !== "AssignmentExpression" || node.parent.right !== node) return null;
+  const left = node.parent.left;
+  if (left.type === "Identifier") return left.name;
+  if (left.type === "MemberExpression" && !left.computed) return identifierName(left.property);
+  if (left.type === "MemberExpression" && left.property.type === "Literal") {
+    return String(left.property.value);
+  }
+  return null;
+}
+
+function variableWrapperName(node) {
+  return node.parent?.type === "VariableDeclarator" && node.parent.id.type === "Identifier"
+    ? node.parent.id.name
+    : null;
+}
+
+function wrapperName(node) {
+  return variableWrapperName(node) || assignmentWrapperName(node);
+}
+
+function isNamedWrapper(node) {
+  if (node.type === "FunctionDeclaration") {
+    return true;
+  }
+  return Boolean(wrapperName(node));
+}
+
 function reportIfAlias(node, context) {
+  if (!isNamedWrapper(node)) return;
   const call = onlyCallExpression(node.body);
   if (!call || call.type !== "CallExpression") return;
   if (isSelfCall(node, call)) return;

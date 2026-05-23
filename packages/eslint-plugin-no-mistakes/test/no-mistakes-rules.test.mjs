@@ -44,6 +44,49 @@ describe("ts-no-export-renaming", () => {
       ["renamed", "renamed"],
     );
   });
+
+  it("supports default re-export and path scoping options", () => {
+    const code = ruleFixture("ts-no-export-renaming", "options.ts");
+    assert.deepEqual(messages(code, "ts-no-export-renaming", undefined, "web/app/index.ts"), [
+      "renamed",
+      "renamed",
+    ]);
+    assert.deepEqual(
+      messages(code, "ts-no-export-renaming", { allowDefaultReExports: true }, "web/app/index.ts"),
+      ["renamed"],
+    );
+    assert.deepEqual(
+      messages(
+        code,
+        "ts-no-export-renaming",
+        { includePathPatterns: ["^backend/"] },
+        "backend/index.ts",
+      ),
+      ["renamed", "renamed"],
+    );
+    assert.deepEqual(
+      messages(
+        code,
+        "ts-no-export-renaming",
+        { includePathPatterns: ["^backend/"] },
+        resolve(process.cwd(), "web/app/index.ts"),
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        code,
+        "ts-no-export-renaming",
+        { includePathPatterns: ["^backend/", "["] },
+        resolve(process.cwd(), "backend/index.ts"),
+      ),
+      ["renamed", "renamed"],
+    );
+    assert.deepEqual(
+      messages(code, "ts-no-export-renaming", { includePathPatterns: ["["] }, "backend/index.ts"),
+      [],
+    );
+  });
 });
 
 describe("ts-no-function-aliases", () => {
@@ -67,7 +110,21 @@ describe("ts-no-function-aliases", () => {
         undefined,
         "invalid.ts",
       ),
-      ["alias", "alias", "alias", "alias", "alias", "alias", "alias"],
+      [
+        "alias",
+        "alias",
+        "alias",
+        "alias",
+        "alias",
+        "alias",
+        "alias",
+        "alias",
+        "alias",
+        "alias",
+        "alias",
+        "alias",
+        "alias",
+      ],
     );
   });
 

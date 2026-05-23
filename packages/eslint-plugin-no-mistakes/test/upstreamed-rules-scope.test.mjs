@@ -126,6 +126,15 @@ describe("upstreamed generic rule scoping", () => {
     );
     assert.deepEqual(
       messages(
+        fixture("generated-message.generated.test.ts"),
+        "test-no-error-message-matching",
+        undefined,
+        "backend/services/email-address-validator/errors.generated.test.mts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
         fixture("next-script-inline-boot.tsx"),
         "nextjs-no-manual-script-tags",
         { allowInlineScriptIdPatterns: ["^theme-"] },

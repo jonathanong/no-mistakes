@@ -94,3 +94,27 @@ selectors per rule:
 Use `no-mistakes playwright check --assert-unique-test-ids` and
 `--assert-unique-html-ids` for project-wide uniqueness. The lint rule is
 file-local.
+
+`ts-no-export-renaming` is strict by default. To migrate projects that only
+want this rule in specific source roots or that intentionally expose default
+re-exports as named public APIs, configure it explicitly:
+
+```js
+{
+  "no-mistakes/ts-no-export-renaming": ["error", {
+    includePathPatterns: ["^backend/"],
+    allowDefaultReExports: true
+  }]
+}
+```
+
+`nextjs-no-manual-script-tags` allows vetted inline boot scripts by static id
+or id pattern while continuing to report other raw `<script>` tags:
+
+```js
+{
+  "no-mistakes/nextjs-no-manual-script-tags": ["error", {
+    allowInlineScriptIds: ["theme-init"]
+  }]
+}
+```

@@ -23,6 +23,15 @@ function isTestCall(node) {
   return TEST_CALLEES.has(calleeName(node.callee));
 }
 
+function setupCallbackKind(node) {
+  const name = calleeName(node.callee);
+  return name === "beforeEach" || name === "afterEach"
+    ? "per-test"
+    : name === "beforeAll" || name === "afterAll"
+      ? "once"
+      : null;
+}
+
 function isSetupCall(node) {
   return SETUP_CALLEES.has(calleeName(node.callee));
 }
@@ -57,11 +66,30 @@ function propertyName(node) {
   return node.type === "Literal" ? String(node.value) : node.name;
 }
 
-function mutatingCallRootName(node) {
-  return node.callee.type === "MemberExpression" &&
-    MUTATING_METHODS.has(propertyName(node.callee.property))
-    ? mutationRootName(node.callee.object)
-    : null;
+function mutationPath(node) {
+  if (node.type === "Identifier") return node.name;
+  if (node.type !== "MemberExpression") return null;
+  const objectPath = mutationPath(node.object);
+  const property =
+    node.computed && node.property.type !== "Literal" ? null : propertyName(node.property);
+  return objectPath && property ? `${objectPath}.${property}` : null;
+}
+
+function mutatingCallTarget(node) {
+  if (
+    node.callee.type !== "MemberExpression" ||
+    !MUTATING_METHODS.has(propertyName(node.callee.property))
+  ) {
+    return { name: null, path: null };
+  }
+  return {
+    name: mutationRootName(node.callee.object),
+    path: mutationPath(node.callee.object),
+  };
+}
+
+function mutatingCallPropertyName(node) {
+  return node.callee.type === "MemberExpression" ? propertyName(node.callee.property) : null;
 }
 
 function isFunctionNode(node) {
@@ -70,6 +98,10 @@ function isFunctionNode(node) {
 
 function isInlineTestCallback(node) {
   return node.parent?.type === "CallExpression" && isTestCall(node.parent);
+}
+
+function isInlineSetupCallback(node) {
+  return node.parent?.type === "CallExpression" && isSetupCall(node.parent);
 }
 
 function isCalledFunction(node) {
@@ -116,16 +148,78 @@ function namedCallbackArgument(args) {
   }
 }
 
+function firstNamedCallbackArgument(args) {
+  return args[0]?.type === "Identifier" ? args[0] : undefined;
+}
+
+function createCleanupTracker() {
+  const pathsBySuite = new Map();
+  const suiteStack = [];
+  let activeSuiteKey;
+  let replaySuiteKey;
+  let nextSuiteId = 0;
+
+  function currentSuiteKey() {
+    return replaySuiteKey ?? suiteStack.join("/");
+  }
+
+  function has(path, suiteKey) {
+    if (!path) return false;
+    for (const [cleanupSuiteKey, paths] of pathsBySuite) {
+      if (!paths.has(path)) continue;
+      if (!cleanupSuiteKey || suiteKey === cleanupSuiteKey) return true;
+      if (suiteKey.startsWith(`${cleanupSuiteKey}/`)) return true;
+    }
+    return false;
+  }
+
+  return {
+    beginSetup(kind, suiteKey = currentSuiteKey()) {
+      activeSuiteKey = kind === "per-test" ? suiteKey : undefined;
+    },
+    clearReplaySuite() {
+      replaySuiteKey = undefined;
+    },
+    currentSuiteKey,
+    endSetup() {
+      activeSuiteKey = undefined;
+    },
+    enterSuite() {
+      suiteStack.push(String(nextSuiteId++));
+    },
+    exitSuite() {
+      suiteStack.pop();
+    },
+    has,
+    remember(path) {
+      if (!path || activeSuiteKey === undefined) return;
+      const paths = pathsBySuite.get(activeSuiteKey) ?? new Set();
+      paths.add(path);
+      pathsBySuite.set(activeSuiteKey, paths);
+    },
+    setReplaySuite(suiteKey) {
+      replaySuiteKey = suiteKey;
+    },
+  };
+}
+
 module.exports = {
   childNodes,
   collectPatternNames,
+  createCleanupTracker,
+  firstNamedCallbackArgument,
   isCalledFunction,
   isFunctionNode,
+  isInlineSetupCallback,
   isInlineTestCallback,
   isMutableInitializer,
+  calleeName,
   isSetupCall,
   isTestCall,
-  mutatingCallRootName,
+  mutatingCallPropertyName,
+  mutatingCallTarget,
+  mutationPath,
   mutationRootName,
   namedCallbackArgument,
+  setupCallbackKind,
 };
