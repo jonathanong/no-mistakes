@@ -301,6 +301,22 @@ fn exported_functions_are_sorted() {
     assert_eq!(facts.exported_functions, vec!["alpha", "middle", "zeta"]);
 }
 
+#[test]
+fn function_expression_declarator_binding_pattern_is_visited() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../fixtures/codebase-analysis/import-facts/function-expression-binding-pattern.mts",
+    );
+    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
+    let allocator = Allocator::default();
+    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+
+    assert_eq!(facts.imports.len(), 1);
+    assert_eq!(facts.imports[0].specifier, "./cfg.mts");
+    assert_eq!(facts.imports[0].function_scope, None);
+}
+
 // ── is_indexable / is_tsx_file ──────────────────────────────────────
 
 #[test]

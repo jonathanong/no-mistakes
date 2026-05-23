@@ -62,12 +62,14 @@ impl<'a> Visit<'a> for ImportCollector {
         let name = binding_identifier_name(&declarator.id).map(str::to_string);
         match declarator.init.as_ref() {
             Some(Expression::ArrowFunctionExpression(arrow)) => {
+                walk::walk_binding_pattern(self, &declarator.id);
                 let pushed = name.is_some();
                 self.push_function_scope(name);
                 walk::walk_arrow_function_expression(self, arrow);
                 self.pop_function_scope(pushed);
             }
             Some(Expression::FunctionExpression(function)) => {
+                walk::walk_binding_pattern(self, &declarator.id);
                 let scope_name = match name {
                     Some(name) => Some(name),
                     None => function_name(function),

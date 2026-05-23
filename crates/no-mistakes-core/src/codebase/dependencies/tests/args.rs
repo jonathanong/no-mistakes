@@ -500,12 +500,12 @@ fn resolve_entrypoints_strips_symbol_suffix_from_module_node() {
 #[test]
 fn resolve_entrypoints_keeps_package_subpath_with_extension_as_module_node() {
     let root = fixture_root("graph-modules");
-    let args = parse(&["dependents", "react-dom/client.js"]);
+    let args = parse(&["dependents", "lodash/fp.js"]);
     let entrypoints = resolve_entrypoints(&args.files, &root, &root);
 
     assert_eq!(
         entrypoints[0].node,
-        graph::NodeId::Module("react-dom/client.js".to_string())
+        graph::NodeId::Module("lodash/fp.js".to_string())
     );
 }
 

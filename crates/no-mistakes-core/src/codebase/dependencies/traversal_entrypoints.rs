@@ -1,4 +1,4 @@
-fn raw_looks_like_source_file(raw: &str, path: &Path) -> bool {
+fn raw_looks_like_source_file(raw: &str, path: &Path, root: &Path) -> bool {
     let has_source_extension = Path::new(raw)
         .extension()
         .and_then(std::ffi::OsStr::to_str)
@@ -11,7 +11,40 @@ fn raw_looks_like_source_file(raw: &str, path: &Path) -> bool {
     if !raw.contains('/') && !raw.contains('\\') {
         return true;
     }
+    if raw_package_name(raw).is_some_and(|name| root_declares_dependency(root, &name)) {
+        return false;
+    }
     path.parent().is_some_and(Path::exists)
+}
+
+fn raw_package_name(raw: &str) -> Option<String> {
+    if raw.starts_with('.') || raw.starts_with('/') {
+        return None;
+    }
+    let mut parts = raw.split('/');
+    let first = parts.next()?;
+    if first.starts_with('@') {
+        let package = parts.next()?;
+        return Some(format!("{first}/{package}"));
+    }
+    Some(first.to_string())
+}
+
+fn root_declares_dependency(root: &Path, name: &str) -> bool {
+    let Ok(source) = std::fs::read_to_string(root.join("package.json")) else {
+        return false;
+    };
+    let Ok(package_json) = serde_json::from_str::<serde_json::Value>(&source) else {
+        return false;
+    };
+    [
+        "dependencies",
+        "devDependencies",
+        "peerDependencies",
+        "optionalDependencies",
+    ]
+    .iter()
+    .any(|field| package_json.get(field).and_then(|deps| deps.get(name)).is_some())
 }
 
 fn package_dir_entry(

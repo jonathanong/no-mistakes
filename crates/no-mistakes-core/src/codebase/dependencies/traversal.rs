@@ -59,7 +59,7 @@ fn resolve_entrypoints_with_files(
                 }
             };
             let normalized = crate::codebase::ts_resolver::normalize_path(&file);
-            let node = resolve_entrypoint_node(&raw_for_node, &normalized, &workspace);
+            let node = resolve_entrypoint_node(&raw_for_node, &normalized, root, &workspace);
             let file = match &node {
                 NodeId::File(path) => path.clone(),
                 _ => normalized,
@@ -72,6 +72,7 @@ fn resolve_entrypoints_with_files(
 fn resolve_entrypoint_node(
     raw: &str,
     path: &Path,
+    root: &Path,
     workspace: &crate::codebase::workspaces::WorkspaceMap,
 ) -> NodeId {
     if path.is_dir() {
@@ -85,7 +86,7 @@ fn resolve_entrypoint_node(
     if let Some(entry) = workspace.resolve_specifier(raw) {
         return NodeId::File(entry);
     }
-    if raw_looks_like_source_file(raw, path) {
+    if raw_looks_like_source_file(raw, path, root) {
         return NodeId::File(path.to_path_buf());
     }
     NodeId::Module(raw.to_string())

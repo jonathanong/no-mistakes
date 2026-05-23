@@ -90,6 +90,14 @@ fn resolve_callee_scope(caller: Option<&str>, callee: &str, known_scopes: &HashS
         if known_scopes.contains(&nested) {
             return nested;
         }
+        let mut parent = caller;
+        while let Some((scope, _)) = parent.rsplit_once('/') {
+            let sibling = format!("{scope}/{callee}");
+            if known_scopes.contains(&sibling) {
+                return sibling;
+            }
+            parent = scope;
+        }
     }
     callee.to_string()
 }

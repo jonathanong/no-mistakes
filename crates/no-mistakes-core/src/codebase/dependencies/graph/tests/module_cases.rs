@@ -131,6 +131,28 @@ fn same_named_nested_functions_do_not_share_reachability() {
 }
 
 #[test]
+fn nested_function_calls_resolve_sibling_scopes() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
+        .unwrap();
+    let deps = graph.deps_of(
+        &[NodeId::File(root.join("src/sibling.mts"))],
+        None,
+        Some(&[EdgeKind::DynamicImport].into()),
+    );
+
+    assert!(deps
+        .iter()
+        .any(|entry| entry.node.as_file() == Some(root.join("src/called.mts").as_path())));
+}
+
+#[test]
 fn unknown_calls_inside_reachable_functions_keep_function_scoped_dynamic_imports() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
     let tsconfig = TsConfig {
