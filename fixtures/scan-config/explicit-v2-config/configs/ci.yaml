@@ -1,0 +1,10 @@
+projects:
+  web:
+    type: nextjs
+    root: explicit-app
+tests:
+  playwright:
+    configs: playwright.explicit.config.ts
+    selectors:
+      testIds:
+        - data-explicit

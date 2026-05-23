@@ -10,11 +10,11 @@ const MOCK_METHODS = new Set([
   "unmock",
   "doUnmock",
   "spyOn",
-  "fn",
   "clearAllMocks",
   "resetAllMocks",
   "restoreAllMocks",
   "stubEnv",
+  "stubGlobal",
   "setSystemTime",
 ]);
 

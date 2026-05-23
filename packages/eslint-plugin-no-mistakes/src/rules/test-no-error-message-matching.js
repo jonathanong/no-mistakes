@@ -24,8 +24,8 @@ const MODIFIERS = new Set(
 const TEST_CALLEES = new Set(["it", "test"]);
 
 function propertyName(node) {
-  if (node.type === "Identifier") return node.name;
-  return node.type === "Literal" ? String(node.value) : null;
+  if (node?.type === "Identifier") return node.name;
+  return node?.type === "Literal" ? String(node.value) : null;
 }
 
 function unwrap(node) {
@@ -43,7 +43,23 @@ function unwrap(node) {
 
 function isMessageMember(node) {
   const current = unwrap(node);
-  return current?.type === "MemberExpression" && propertyName(current.property) === "message";
+  return (
+    current?.type === "MemberExpression" &&
+    propertyName(current.property) === "message" &&
+    !isBodyMember(current.object)
+  );
+}
+
+function isBodyMember(node) {
+  const current = unwrap(node);
+  return current?.type === "MemberExpression" && propertyName(current.property) === "body";
+}
+
+function isStaticAnalysisPath(filename) {
+  const normalized = filename.replace(/\\/g, "/");
+  return (
+    normalized.startsWith("static-code-analysis/") || normalized.includes("/static-code-analysis/")
+  );
 }
 
 function isExpectCall(node) {
@@ -83,6 +99,7 @@ module.exports = rule(
     messages: { message: "Do not assert on err.message; check the error type or code instead." },
   },
   (context) => {
+    if (isStaticAnalysisPath(context.filename)) return {};
     let testDepth = 0;
     return {
       CallExpression(node) {

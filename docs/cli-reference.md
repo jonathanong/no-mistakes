@@ -169,9 +169,11 @@ no-mistakes playwright edges --json
 no-mistakes playwright tests tests/e2e/users.spec.ts --json
 ```
 
-Supported analyzer config files: `.playwright-ast-coverage.yaml`,
-`.playwright-ast-coverage.yml`, `.playwright-ast-coverage.json`, and
-`.playwright-ast-coverage.jsonc`.
+Supported analyzer config files: `.no-mistakes.yaml`, `.no-mistakes.yml`,
+`.no-mistakes.json`, `.no-mistakes.jsonc`, and legacy
+`.playwright-ast-coverage.*` files. When both are present, Playwright settings
+from `.no-mistakes.*` are used first; if `.no-mistakes.*` has no Playwright
+settings, the legacy file is used.
 
 ### Fetches
 

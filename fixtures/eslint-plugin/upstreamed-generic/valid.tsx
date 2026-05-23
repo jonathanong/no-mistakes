@@ -16,6 +16,28 @@ it("allows local shadowing", () => {
   shadow++;
 });
 expect(error.code).toBe("ENOENT");
+expect(response.body.message).toBe("created");
+expect(result.body?.message).toContain("ok");
+let sharedFixture = null;
+describe("setup fixtures", () => {
+  beforeAll(() => {
+    sharedFixture = createFixture();
+  });
+  afterEach(() => {
+    sharedFixture = null;
+  });
+  it("uses setup fixture", () => {
+    console.log(sharedFixture);
+  });
+});
+let mockPathname = "/";
+vi.mock("next/navigation", () => ({ usePathname: () => mockPathname }));
+let mockdata = {};
+vi.mock("shared/data", () => ({ data: mockdata }));
+it("uses mock control", () => {
+  mockPathname = "/next";
+  mockdata = { next: true };
+});
 test.parallel("runs", () => {});
 const promise = Promise.resolve("ok");
 React.use(promise);

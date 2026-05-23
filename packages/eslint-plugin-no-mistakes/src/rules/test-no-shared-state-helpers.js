@@ -1,6 +1,7 @@
 "use strict";
 
 const TEST_CALLEES = new Set(["it", "test", "describe"]);
+const SETUP_CALLEES = new Set(["beforeEach", "afterEach", "beforeAll", "afterAll"]);
 const MUTATING_METHODS = new Set(
   "add clear copyWithin delete fill pop push reverse set shift sort splice unshift".split(" "),
 );
@@ -20,6 +21,10 @@ function calleeName(node) {
 
 function isTestCall(node) {
   return TEST_CALLEES.has(calleeName(node.callee));
+}
+
+function isSetupCall(node) {
+  return SETUP_CALLEES.has(calleeName(node.callee));
 }
 
 function collectPatternNames(node, names = new Set()) {
@@ -118,6 +123,7 @@ module.exports = {
   isFunctionNode,
   isInlineTestCallback,
   isMutableInitializer,
+  isSetupCall,
   isTestCall,
   mutatingCallRootName,
   mutationRootName,
