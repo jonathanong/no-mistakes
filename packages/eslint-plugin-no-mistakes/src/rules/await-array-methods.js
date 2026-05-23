@@ -36,7 +36,10 @@ function isKnownArrayReceiver(node, context) {
   return Boolean(
     variable &&
     variable.defs.some(
-      (def) => def.type === "Variable" && def.node?.init?.type === "ArrayExpression",
+      (def) =>
+        def.type === "Variable" &&
+        def.node?.id?.type === "Identifier" &&
+        def.node.init?.type === "ArrayExpression",
     ) &&
     !isReassignedBeforeUse(variable, node),
   );

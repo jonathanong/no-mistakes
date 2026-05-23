@@ -37,11 +37,11 @@ describe("upstreamed generic rules", () => {
     const expected = [
       ["await-array-methods", ["awaited", "awaited", "awaited"]],
       ["no-delete-property", ["delete"]],
-      ["no-placeholder-never-type-exports", ["placeholder", "placeholder"]],
+      ["no-placeholder-never-type-exports", ["placeholder", "placeholder", "placeholder"]],
       ["test-no-shared-state", ["shared"]],
       ["test-no-error-message-matching", ["message", "message", "message"]],
       ["no-vitest-sequential", ["sequential"]],
-      ["react-no-use-promise-resolve", ["resolve", "resolve", "resolve"]],
+      ["react-no-use-promise-resolve", ["resolve", "resolve", "resolve", "resolve"]],
       ["react-no-iife-in-jsx", ["iife", "iife"]],
     ];
 

@@ -11,6 +11,8 @@ async function localArray() {
 }
 delete values.length;
 export type Placeholder = never;
+export type { ForwardPlaceholder };
+type ForwardPlaceholder = never;
 type OtherPlaceholder = never;
 export type { OtherPlaceholder };
 type metadata = {};
@@ -26,6 +28,7 @@ if (error.message === "missing") {
 }
 test.sequential("runs", () => {});
 React.use(Promise.resolve("ok"));
+React["use"](Promise.resolve("ok"));
 R.use(Promise.resolve("ok"));
 use(Promise.resolve("ok"));
 otherUse(Promise.resolve("ok"));

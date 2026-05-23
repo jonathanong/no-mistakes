@@ -32,7 +32,8 @@ function unwrap(node) {
   while (
     current?.type === "ChainExpression" ||
     current?.type === "TSAsExpression" ||
-    current?.type === "TSTypeAssertion"
+    current?.type === "TSTypeAssertion" ||
+    current?.type === "TSNonNullExpression"
   ) {
     current = current.expression;
   }

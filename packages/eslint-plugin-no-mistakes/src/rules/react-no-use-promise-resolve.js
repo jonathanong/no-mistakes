@@ -32,6 +32,11 @@ function isImportedFromReact(node, context) {
   );
 }
 
+function propertyName(node) {
+  if (node.type === "Literal") return String(node.value);
+  return node.name;
+}
+
 function isReactUse(callee, context, useNames) {
   if (callee?.type === "Identifier") {
     return useNames.has(callee.name) && isImportedReactUse(callee, context);
@@ -40,8 +45,7 @@ function isReactUse(callee, context, useNames) {
     callee?.type === "MemberExpression" &&
     callee.object?.type === "Identifier" &&
     isImportedFromReact(callee.object, context) &&
-    callee.property?.type === "Identifier" &&
-    callee.property.name === "use"
+    propertyName(callee.property) === "use"
   );
 }
 

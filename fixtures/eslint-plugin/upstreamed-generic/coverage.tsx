@@ -1,10 +1,12 @@
 const values = [3, 1, 2];
 const optionalValues = [3, 1, 2];
+const [destructuredClient] = [repo];
 let reassignedValues = [3, 1, 2];
 reassignedValues = query;
 await task;
 await values.map((value) => value);
 await optionalValues?.sort();
+await destructuredClient.sort();
 await reassignedValues.sort();
 delete value;
 delete (value as unknown);
@@ -16,6 +18,7 @@ export const viewport = {};
 expect.soft(error.message).toMatch("missing");
 expect(error.message).not.toBe("missing");
 expect((error.message as string)).toBe("missing");
+expect(error.message!).toContain("missing");
 expect(error.message).custom("missing");
 expect(error).toEqual(error.message);
 if (error.code !== "missing") {
@@ -27,6 +30,7 @@ if (error.message != "missing") {
 let shared = 0;
 let sharedList = [];
 let sharedMap = new Map();
+const constSharedList = [];
 let namedShared = 0;
 let { sharedFromObject, sharedDefault = 0, ...sharedRest } = seed;
 let [sharedFromArray = 0, , ...sharedRestArray] = list;
@@ -47,6 +51,7 @@ it.only("assigns", () => {
   shared = 1;
   sharedList.push(1);
   sharedMap.set("key", "value");
+  constSharedList.push(1);
   sharedFromObject = 3;
   sharedDefault = 4;
   sharedRest.value = 5;
@@ -59,6 +64,9 @@ it.only("assigns", () => {
     shared = 9;
     sharedList.push(2);
   }
+  (() => {
+    shared++;
+  })();
 });
 test("named callback", mutateNamedShared);
 test("named member callback", mutateNamedMember);
@@ -68,6 +76,7 @@ describe.skip("suite", () => {});
 test["sequential"]("computed", () => {});
 describe.only.sequential("chained", () => {});
 test.skipIf(condition).sequential("call chained", () => {});
+test.sequential.each(cases)("each", () => {});
 test("option", { sequential: true }, () => {});
 describe("option suite", { sequential: true }, () => {});
 const sequentialRef = test.sequential;

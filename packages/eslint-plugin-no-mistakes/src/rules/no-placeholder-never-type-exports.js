@@ -18,9 +18,17 @@ module.exports = rule(
   },
   (context) => {
     const neverTypes = new Set();
+    const exportSpecifiers = [];
     return {
       "Program > TSTypeAliasDeclaration"(node) {
         if (node.typeAnnotation?.type === "TSNeverKeyword") neverTypes.add(node.id.name);
+      },
+      "Program:exit"() {
+        for (const node of exportSpecifiers) {
+          if (node.specifiers.some((specifier) => neverTypes.has(specifierName(specifier)))) {
+            context.report({ node, messageId: "placeholder" });
+          }
+        }
       },
       ExportNamedDeclaration(node) {
         const declaration = node.declaration;
@@ -32,12 +40,10 @@ module.exports = rule(
         if (
           !node.source &&
           node.specifiers?.some(
-            (specifier) =>
-              (node.exportKind === "type" || specifier.exportKind === "type") &&
-              neverTypes.has(specifierName(specifier)),
+            (specifier) => node.exportKind === "type" || specifier.exportKind === "type",
           )
         ) {
-          context.report({ node, messageId: "placeholder" });
+          exportSpecifiers.push(node);
         }
       },
     };

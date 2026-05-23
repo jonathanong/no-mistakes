@@ -3,21 +3,10 @@
 const { rule } = require("../helpers");
 
 const TEST_CALLEES = new Set(["it", "test", "describe"]);
-const MUTATING_METHODS = new Set([
-  "add",
-  "clear",
-  "copyWithin",
-  "delete",
-  "fill",
-  "pop",
-  "push",
-  "reverse",
-  "set",
-  "shift",
-  "sort",
-  "splice",
-  "unshift",
-]);
+const MUTATING_METHODS = new Set(
+  "add clear copyWithin delete fill pop push reverse set shift sort splice unshift".split(" "),
+);
+const MUTABLE_CONSTRUCTORS = new Set(["Map", "Set", "WeakMap", "WeakSet"]);
 
 function calleeName(node) {
   if (node?.type === "Identifier") return node.name;
@@ -34,19 +23,19 @@ function collectPatternNames(node, names = new Set()) {
   if (!node) return names;
   if (node.type === "Identifier") {
     names.add(node.name);
-  } else if (node.type === "ObjectPattern") {
-    for (const property of node.properties) {
-      collectPatternNames(property.value || property.argument, names);
-    }
-  } else if (node.type === "ArrayPattern") {
-    for (const element of node.elements) {
-      collectPatternNames(element, names);
-    }
-  } else if (node.type === "RestElement") {
-    collectPatternNames(node.argument, names);
-  } else if (node.type === "AssignmentPattern") {
-    collectPatternNames(node.left, names);
+    return names;
   }
+  const children =
+    node.type === "ObjectPattern"
+      ? node.properties.map((property) => property.value || property.argument)
+      : node.type === "ArrayPattern"
+        ? node.elements
+        : node.type === "RestElement"
+          ? [node.argument]
+          : node.type === "AssignmentPattern"
+            ? [node.left]
+            : [];
+  for (const child of children) collectPatternNames(child, names);
   return names;
 }
 
@@ -68,15 +57,27 @@ function mutatingCallRootName(node) {
 }
 
 function isFunctionNode(node) {
-  return (
-    node.type === "FunctionDeclaration" ||
-    node.type === "FunctionExpression" ||
-    node.type === "ArrowFunctionExpression"
+  return ["FunctionDeclaration", "FunctionExpression", "ArrowFunctionExpression"].includes(
+    node.type,
   );
 }
 
 function isInlineTestCallback(node) {
   return node.parent?.type === "CallExpression" && isTestCall(node.parent);
+}
+
+function isCalledFunction(node) {
+  return node.parent?.type === "CallExpression" && node.parent.callee === node;
+}
+
+function isMutableInitializer(node) {
+  if (!node) return false;
+  if (node.type === "ArrayExpression" || node.type === "ObjectExpression") return true;
+  return (
+    node.type === "NewExpression" &&
+    node.callee.type === "Identifier" &&
+    MUTABLE_CONSTRUCTORS.has(node.callee.name)
+  );
 }
 
 function childNodes(node) {
@@ -121,6 +122,15 @@ module.exports = rule(
         context.report({ node, messageId: "shared" });
       }
     }
+    function reportAssignment(node) {
+      for (const name of collectPatternNames(node.left)) reportIfShared(node, name);
+      if (node.left.type !== "MemberExpression") return;
+      const rootName = mutationRootName(node.left);
+      if (rootName) reportIfShared(node, rootName);
+    }
+    function reportRootMutation(node, rootName) {
+      if (rootName) reportIfShared(node, rootName);
+    }
 
     return {
       "Program > VariableDeclaration"(node) {
@@ -133,8 +143,8 @@ module.exports = rule(
             functionDeclarations.set(declaration.id.name, declaration.init);
           }
         }
-        if (node.kind === "const") return;
         for (const declaration of node.declarations) {
+          if (node.kind === "const" && !isMutableInitializer(declaration.init)) continue;
           for (const name of collectPatternNames(declaration.id)) mutableTopLevel.add(name);
         }
       },
@@ -153,22 +163,16 @@ module.exports = rule(
       },
       AssignmentExpression(node) {
         if (isInsideUncalledNestedFunction(node)) return;
-        for (const name of collectPatternNames(node.left)) reportIfShared(node, name);
-        if (node.left.type === "MemberExpression") {
-          const rootName = mutationRootName(node.left);
-          if (rootName) reportIfShared(node, rootName);
-        }
+        reportAssignment(node);
       },
       UpdateExpression(node) {
         if (isInsideUncalledNestedFunction(node)) return;
-        const rootName = mutationRootName(node.argument);
-        if (rootName) reportIfShared(node, rootName);
+        reportRootMutation(node, mutationRootName(node.argument));
       },
       "CallExpression:exit"(node) {
         if (isTestCall(node)) testDepth -= 1;
         if (isInsideUncalledNestedFunction(node)) return;
-        const rootName = mutatingCallRootName(node);
-        if (rootName) reportIfShared(node, rootName);
+        reportRootMutation(node, mutatingCallRootName(node));
       },
     };
 
@@ -176,26 +180,24 @@ module.exports = rule(
       if (testDepth === 0) return false;
       let current = node.parent;
       while (current) {
-        if (isFunctionNode(current) && !isInlineTestCallback(current)) return true;
+        const isUncalledFunction =
+          isFunctionNode(current) && !isInlineTestCallback(current) && !isCalledFunction(current);
+        if (isUncalledFunction) {
+          return true;
+        }
         current = current.parent;
       }
       return false;
     }
 
     function checkSharedMutations(node) {
-      if (isFunctionNode(node)) return;
+      if (isFunctionNode(node) && !isCalledFunction(node)) return;
       if (node.type === "AssignmentExpression") {
-        for (const name of collectPatternNames(node.left)) reportIfShared(node, name);
-        if (node.left.type === "MemberExpression") {
-          const rootName = mutationRootName(node.left);
-          if (rootName) reportIfShared(node, rootName);
-        }
+        reportAssignment(node);
       } else if (node.type === "UpdateExpression") {
-        const rootName = mutationRootName(node.argument);
-        if (rootName) reportIfShared(node, rootName);
+        reportRootMutation(node, mutationRootName(node.argument));
       } else if (node.type === "CallExpression") {
-        const rootName = mutatingCallRootName(node);
-        if (rootName) reportIfShared(node, rootName);
+        reportRootMutation(node, mutatingCallRootName(node));
       }
       for (const child of childNodes(node)) checkSharedMutations(child);
     }

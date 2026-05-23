@@ -16,6 +16,14 @@ function rootTestName(node) {
   return null;
 }
 
+function hasSequentialMember(node) {
+  if (node?.type === "MemberExpression") {
+    return propertyName(node.property) === "sequential" || hasSequentialMember(node.object);
+  }
+  if (node?.type === "CallExpression") return hasSequentialMember(node.callee);
+  return false;
+}
+
 function hasSequentialOption(node) {
   return node.arguments
     .slice(1)
@@ -41,13 +49,11 @@ module.exports = rule(
   },
   (context) => ({
     CallExpression(node) {
-      if (node.callee.type === "MemberExpression") {
-        if (propertyName(node.callee.property) !== "sequential") return;
-        if (!TEST_NAMES.has(rootTestName(node.callee.object))) return;
+      if (!TEST_NAMES.has(rootTestName(node.callee))) return;
+      if (node.callee.type === "MemberExpression" && hasSequentialMember(node.callee)) {
         context.report({ node: node.callee, messageId: "sequential" });
         return;
       }
-      if (!TEST_NAMES.has(rootTestName(node.callee))) return;
       if (!hasSequentialOption(node)) return;
       context.report({ node: node.callee, messageId: "sequential" });
     },
