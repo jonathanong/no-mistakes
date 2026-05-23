@@ -11,7 +11,8 @@ module.exports = rule(
     },
     schema: [],
     messages: {
-      dynamic: "fetch() method option must be a string literal so it can be statically analyzed.",
+      dynamic:
+        "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
     },
   },
   (context) => ({

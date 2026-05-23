@@ -54,7 +54,7 @@ Oxlint:
 | `no-mistakes/playwright-prefer-get-by-test-id` | Reports exact CSS test ID selectors passed to Playwright APIs. |
 | `no-mistakes/playwright-naming-convention` | Requires literal test IDs to match a regex. |
 | `no-mistakes/nextjs-static-fetch-url` | Requires `fetch()` URL arguments to be string literals or expression-free templates. |
-| `no-mistakes/nextjs-static-fetch-method` | Requires `fetch()` `method` options to be string literals. |
+| `no-mistakes/nextjs-static-fetch-method` | Requires `fetch()` `method` options to be string literals or expression-free templates. |
 | `no-mistakes/ts-no-export-renaming` | Disallows value export aliases such as `export { X as Y }`. |
 | `no-mistakes/ts-no-function-aliases` | Disallows wrappers that only forward to another function. |
 | `no-mistakes/react-no-nullish-react-node` | Disallows `??` on explicitly typed ReactNode values. |
