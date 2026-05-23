@@ -9,6 +9,7 @@ delete maybe.x;
 export { metadata };
 export const viewport = {};
 expect.soft(error.message).toMatch("missing");
+expect(error.message).not.toBe("missing");
 expect((error.message as string)).toBe("missing");
 expect(error.message).custom("missing");
 expect(error).toEqual(error.message);
@@ -26,6 +27,10 @@ page.locator("../..");
 page.locator("tbody tr");
 page.locator("#save");
 expect(locator).toBeVisible();
+locator.toBeVisible({ timeout: 20000 });
+function checkThis() {
+  this.toBeVisible({ timeout: 20000 });
+}
 expect.poll(fn, { timeout: 25000 }).toBe(1);
 expect(locator).toBeVisible({ timeout: "slow" });
 expect(locator).toBeVisible({ "timeout": 16000 });

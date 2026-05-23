@@ -154,6 +154,7 @@ describe("upstreamed generic rules", () => {
     assert.deepEqual(messages(code, "test-no-error-message-matching", undefined, "coverage.tsx"), [
       "message",
       "message",
+      "message",
     ]);
     assert.deepEqual(messages(code, "test-no-shared-state", undefined, "coverage.tsx"), ["shared"]);
     assert.deepEqual(messages(code, "no-vitest-sequential", undefined, "coverage.tsx"), []);
