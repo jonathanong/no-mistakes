@@ -40,7 +40,7 @@ fn collect_app_selectors(
 }
 
 #[test]
-fn analyze_with_facts_reports_missing_shared_playwright_facts() {
+fn analyze_with_facts_falls_back_when_shared_facts_are_missing() {
     let root = fixture_path(&["nextjs-coverage", "covered"]);
     let settings = Settings {
         frontend_root: "web/app".to_string(),
@@ -59,24 +59,20 @@ fn analyze_with_facts_reports_missing_shared_playwright_facts() {
     };
     let facts = crate::codebase::check_facts::CheckFactMap::default();
 
-    let error = match analyze_with_policy_and_facts(
+    let analysis = analyze_with_policy_and_facts(
         &root,
         &settings,
         playwright_tests::TestPolicy::default(),
         UniqueSelectorPolicy::default(),
         &facts,
-    ) {
-        Ok(_) => panic!("expected missing shared facts error"),
-        Err(error) => error,
-    };
+    )
+    .unwrap();
 
-    assert!(error
-        .to_string()
-        .contains("missing shared Playwright facts"));
+    assert!(!analysis.edges.edges.is_empty());
 }
 
 #[test]
-fn analyze_with_facts_reports_missing_playwright_entry_in_file_facts() {
+fn analyze_with_facts_falls_back_when_file_facts_do_not_include_playwright() {
     let root = fixture_path(&["nextjs-coverage", "covered"]);
     let settings = Settings {
         frontend_root: "web/app".to_string(),
@@ -103,20 +99,16 @@ fn analyze_with_facts_reports_missing_playwright_entry_in_file_facts() {
         crate::codebase::check_facts::CheckFileFacts::default(),
     );
 
-    let error = match analyze_with_policy_and_facts(
+    let analysis = analyze_with_policy_and_facts(
         &root,
         &settings,
         playwright_tests::TestPolicy::default(),
         UniqueSelectorPolicy::default(),
         &facts,
-    ) {
-        Ok(_) => panic!("expected missing shared facts error"),
-        Err(error) => error,
-    };
+    )
+    .unwrap();
 
-    assert!(error
-        .to_string()
-        .contains("missing shared Playwright facts"));
+    assert!(!analysis.edges.edges.is_empty());
 }
 
 #[test]

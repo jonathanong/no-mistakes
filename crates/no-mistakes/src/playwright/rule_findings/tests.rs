@@ -105,3 +105,34 @@ fn findings_from_report_filters_disabled_duplicate_rules() {
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].rule, PLAYWRIGHT_UNIQUE_HTML_IDS);
 }
+
+#[test]
+fn findings_from_report_maps_id_duplicates_to_test_ids_when_html_rule_is_disabled() {
+    let report = CoverageReport {
+        summary: Summary {
+            total_routes: 0,
+            covered_routes: 0,
+            uncovered_routes: 0,
+            total_selectors: 0,
+            covered_selectors: 0,
+            uncovered_selectors: 0,
+            duplicate_selectors: 1,
+            total_fetch_apis: 0,
+            covered_fetch_apis: 0,
+            uncovered_fetch_apis: 0,
+        },
+        routes: vec![],
+        selectors: vec![],
+        duplicate_selectors: vec![DuplicateSelector {
+            attribute: HTML_ID_ATTRIBUTE.to_string(),
+            value: "save".to_string(),
+            file: "web/app/page.tsx".to_string(),
+        }],
+        fetch_apis: vec![],
+    };
+
+    let findings = findings_from_report(&report, false, true, false);
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].rule, PLAYWRIGHT_UNIQUE_TEST_IDS);
+}

@@ -1,4 +1,4 @@
-use super::{CheckFactPlan, CheckFileFacts};
+use super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use crate::codebase::dependencies::extract::extract_imports_from_program;
 use crate::codebase::ts_symbols::extract_symbols_from_program;
 use oxc_allocator::Allocator;
@@ -10,6 +10,7 @@ pub(crate) fn collect_file_facts(
     root: &Path,
     path: &Path,
     plan: &CheckFactPlan,
+    playwright: Option<&PlaywrightFactPlan>,
 ) -> Option<CheckFileFacts> {
     let source = match std::fs::read_to_string(path) {
         Ok(source) => source,
@@ -27,11 +28,14 @@ pub(crate) fn collect_file_facts(
             ..CheckFileFacts::default()
         });
     }
-    if plan.raw_source && !requires_parse(plan) {
+    if plan.raw_source && !requires_parse(plan, path, playwright) {
         return Some(CheckFileFacts {
             source: Some(source),
             ..CheckFileFacts::default()
         });
+    }
+    if !requires_parse(plan, path, playwright) {
+        return Some(CheckFileFacts::default());
     }
     let source_type = match SourceType::from_path(path) {
         Ok(source_type) => source_type,
@@ -112,7 +116,7 @@ pub(crate) fn collect_file_facts(
     } else {
         None
     };
-    let playwright = plan.playwright.as_ref().and_then(|playwright| {
+    let playwright = playwright.and_then(|playwright| {
         let test_id_attributes = playwright.test_id_attributes_by_path.get(path)?;
         Some(super::PlaywrightTestFacts {
             urls:
@@ -150,7 +154,13 @@ fn should_store_source(plan: &CheckFactPlan) -> bool {
     plan.source || plan.raw_source
 }
 
-fn requires_parse(plan: &CheckFactPlan) -> bool {
+fn requires_parse(
+    plan: &CheckFactPlan,
+    path: &Path,
+    playwright: Option<&PlaywrightFactPlan>,
+) -> bool {
+    let playwright_file =
+        playwright.is_some_and(|plan| plan.test_id_attributes_by_path.contains_key(path));
     plan.imports
         || plan.symbols
         || plan.react
@@ -159,7 +169,7 @@ fn requires_parse(plan: &CheckFactPlan) -> bool {
         || plan.dynamic_imports
         || plan.nextjs_caching
         || plan.storybook
-        || plan.playwright.is_some()
+        || playwright_file
         || plan.source
-        || !plan.raw_source
+        || (!plan.raw_source && playwright.is_none())
 }

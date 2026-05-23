@@ -122,24 +122,19 @@ fn analyze_with_policy_and_optional_facts(
         .par_iter()
         .try_fold(Vec::new, |mut edges, test_file| -> Result<_> {
             let test_edges = if let Some(facts) = facts {
-                let file_facts = facts.ts.get(&test_file.path).ok_or_else(|| {
-                    anyhow::anyhow!(
-                        "missing shared Playwright facts for {}",
-                        test_file.path.display()
-                    )
-                })?;
-                let playwright = file_facts.playwright.as_ref().ok_or_else(|| {
-                    anyhow::anyhow!(
-                        "missing shared Playwright facts for {}",
-                        test_file.path.display()
-                    )
-                })?;
-                analyze_test_occurrences(
-                    test_file,
-                    &test_analysis,
-                    playwright.urls.clone(),
-                    playwright.selectors.clone(),
-                )
+                match facts
+                    .ts
+                    .get(&test_file.path)
+                    .and_then(|file_facts| file_facts.playwright.as_ref())
+                {
+                    Some(playwright) => analyze_test_occurrences(
+                        test_file,
+                        &test_analysis,
+                        playwright.urls.clone(),
+                        playwright.selectors.clone(),
+                    ),
+                    None => analyze_test_file(test_file, &test_analysis)?,
+                }
             } else {
                 analyze_test_file(test_file, &test_analysis)?
             };

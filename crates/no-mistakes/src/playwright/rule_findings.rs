@@ -67,7 +67,9 @@ fn unique_findings(
         .iter()
         .filter_map(|selector| {
             let rule = if selector.attribute == HTML_ID_ATTRIBUTE {
-                unique_html_ids.then_some(PLAYWRIGHT_UNIQUE_HTML_IDS)
+                unique_html_ids
+                    .then_some(PLAYWRIGHT_UNIQUE_HTML_IDS)
+                    .or_else(|| unique_test_ids.then_some(PLAYWRIGHT_UNIQUE_TEST_IDS))
             } else {
                 unique_test_ids.then_some(PLAYWRIGHT_UNIQUE_TEST_IDS)
             }?;

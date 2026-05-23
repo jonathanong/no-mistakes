@@ -1,4 +1,4 @@
-use no_mistakes::codebase::check_facts::{CheckFactPlan, PlaywrightFactPlan};
+use no_mistakes::codebase::check_facts::CheckFactPlan;
 
 #[derive(Default)]
 pub(crate) struct ConfiguredChecks {
@@ -47,7 +47,6 @@ pub(crate) struct EnabledChecks {
     pub(crate) storybook_stories: bool,
     pub(crate) integration: bool,
     pub(crate) unique_exports: bool,
-    pub(crate) playwright: Option<PlaywrightFactPlan>,
 }
 
 pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
@@ -60,7 +59,6 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         dynamic_imports: enabled.dynamic_import_rules || enabled.storybook_stories,
         nextjs_caching: enabled.nextjs_caching,
         storybook: enabled.storybook_stories,
-        playwright: enabled.playwright,
         raw_source: enabled.nextjs_api_routes,
         source: enabled.dynamic_import_rules
             || enabled.boundary_rules
@@ -79,7 +77,6 @@ pub(crate) fn plan_requests_facts(plan: &CheckFactPlan) -> bool {
         || plan.dynamic_imports
         || plan.nextjs_caching
         || plan.storybook
-        || plan.playwright.is_some()
         || plan.raw_source
         || plan.source
 }

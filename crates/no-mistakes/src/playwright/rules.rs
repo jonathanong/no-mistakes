@@ -9,9 +9,12 @@ use crate::playwright::playwright_config;
 use crate::playwright::playwright_tests;
 use crate::playwright::rule_findings::findings_from_report;
 use anyhow::Result;
+use selection::rule_selections;
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
+
+mod selection;
 
 pub const PLAYWRIGHT_COVERAGE: &str = "playwright-coverage";
 pub const PLAYWRIGHT_UNIQUE_TEST_IDS: &str = "playwright-unique-test-ids";
@@ -26,35 +29,33 @@ pub fn check(
     config_path: Option<&Path>,
     config: &NoMistakesConfig,
 ) -> Result<Vec<RuleFinding>> {
-    let coverage = coverage_enabled(config);
-    let unique_test_ids = unique_test_ids_enabled(config);
-    let unique_html_ids = unique_html_ids_enabled(config);
-    if !coverage && !unique_test_ids && !unique_html_ids {
+    let selections = rule_selections(config);
+    if selections.is_empty() {
         return Ok(Vec::new());
     }
 
-    let settings = config::load_settings(root, config_path, &[], None)?;
-    let analysis = analyze_with_policy(
-        root,
-        &settings,
-        playwright_tests::TestPolicy {
-            assert_conditional_tests: false,
-            allow_skipped_tests: false,
-        },
-        UniqueSelectorPolicy {
-            test_ids: unique_test_ids,
-            html_ids: unique_html_ids,
-            aggregate: false,
-            configured_html_id_selector: false,
-        },
-    )?;
-
-    Ok(findings_from_report(
-        &analysis.coverage,
-        coverage,
-        unique_test_ids,
-        unique_html_ids,
-    ))
+    let mut findings = Vec::new();
+    for selection in selections {
+        let settings = config::load_settings(root, config_path, &[], selection.project.clone())?;
+        let analysis = analyze_with_policy(
+            root,
+            &settings,
+            playwright_tests::TestPolicy {
+                assert_conditional_tests: false,
+                allow_skipped_tests: false,
+            },
+            unique_policy(selection.unique_test_ids, selection.unique_html_ids),
+        )?;
+        findings.extend(findings_from_report(
+            &analysis.coverage,
+            selection.coverage,
+            selection.unique_test_ids,
+            selection.unique_html_ids,
+        ));
+    }
+    findings.sort();
+    findings.dedup();
+    Ok(findings)
 }
 
 pub fn fact_plan(
@@ -62,31 +63,42 @@ pub fn fact_plan(
     config_path: Option<&Path>,
     config: &NoMistakesConfig,
 ) -> Result<Option<PlaywrightFactPlan>> {
-    if !configured(config) {
+    let selections = rule_selections(config);
+    if selections.is_empty() {
         return Ok(None);
     }
-    let settings = config::load_settings(root, config_path, &[], None)?;
-    let playwright = playwright_config::load_many(
-        root,
-        &settings.playwright_configs,
-        settings.project.as_deref(),
-    )?;
-    let test_files = discover_test_files(root, &settings, &playwright)?;
-    let selector_regexes = crate::playwright::selectors::compile_selector_regexes_with_html_ids(
-        &settings.selector_attributes,
-        &settings.component_selector_attributes,
-        settings.html_ids,
-    );
-    let test_id_attributes_by_path = test_files
-        .into_iter()
-        .map(|test_file| {
+    let mut navigation_helpers = Vec::new();
+    let mut selector_regexes = None;
+    let mut test_id_attributes_by_path = HashMap::new();
+    for selection in selections {
+        let settings = config::load_settings(root, config_path, &[], selection.project)?;
+        if selector_regexes.is_none() {
+            selector_regexes = Some(
+                crate::playwright::selectors::compile_selector_regexes_with_html_ids(
+                    &settings.selector_attributes,
+                    &settings.component_selector_attributes,
+                    settings.html_ids,
+                ),
+            );
+            navigation_helpers = settings.navigation_helpers.clone();
+        }
+        let playwright = playwright_config::load_many(
+            root,
+            &settings.playwright_configs,
+            settings.project.as_deref(),
+        )?;
+        for test_file in discover_test_files(root, &settings, &playwright)? {
             let attributes = test_file.test_id_attributes();
-            (test_file.path, attributes)
-        })
-        .collect::<HashMap<_, _>>();
+            test_id_attributes_by_path
+                .entry(test_file.path)
+                .or_insert(attributes);
+        }
+    }
     Ok(Some(PlaywrightFactPlan {
-        navigation_helpers: settings.navigation_helpers,
-        selector_regexes: Arc::new(selector_regexes),
+        navigation_helpers,
+        selector_regexes: Arc::new(
+            selector_regexes.expect("configured Playwright rule has at least one selection"),
+        ),
         test_id_attributes_by_path: Arc::new(test_id_attributes_by_path),
     }))
 }
@@ -97,36 +109,43 @@ pub(crate) fn check_with_facts(
     config: &NoMistakesConfig,
     facts: &CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
-    let coverage = coverage_enabled(config);
-    let unique_test_ids = unique_test_ids_enabled(config);
-    let unique_html_ids = unique_html_ids_enabled(config);
-    if !coverage && !unique_test_ids && !unique_html_ids {
+    let selections = rule_selections(config);
+    if selections.is_empty() {
         return Ok(Vec::new());
     }
 
-    let settings = config::load_settings(root, config_path, &[], None)?;
-    let analysis = analyze_with_policy_and_facts(
-        root,
-        &settings,
-        playwright_tests::TestPolicy {
-            assert_conditional_tests: false,
-            allow_skipped_tests: false,
-        },
-        UniqueSelectorPolicy {
-            test_ids: unique_test_ids,
-            html_ids: unique_html_ids,
-            aggregate: false,
-            configured_html_id_selector: false,
-        },
-        facts,
-    )?;
+    let mut findings = Vec::new();
+    for selection in selections {
+        let settings = config::load_settings(root, config_path, &[], selection.project.clone())?;
+        let analysis = analyze_with_policy_and_facts(
+            root,
+            &settings,
+            playwright_tests::TestPolicy {
+                assert_conditional_tests: false,
+                allow_skipped_tests: false,
+            },
+            unique_policy(selection.unique_test_ids, selection.unique_html_ids),
+            facts,
+        )?;
+        findings.extend(findings_from_report(
+            &analysis.coverage,
+            selection.coverage,
+            selection.unique_test_ids,
+            selection.unique_html_ids,
+        ));
+    }
+    findings.sort();
+    findings.dedup();
+    Ok(findings)
+}
 
-    Ok(findings_from_report(
-        &analysis.coverage,
-        coverage,
-        unique_test_ids,
-        unique_html_ids,
-    ))
+fn unique_policy(unique_test_ids: bool, unique_html_ids: bool) -> UniqueSelectorPolicy {
+    UniqueSelectorPolicy {
+        test_ids: unique_test_ids,
+        html_ids: unique_html_ids,
+        aggregate: false,
+        configured_html_id_selector: false,
+    }
 }
 
 fn coverage_enabled(config: &NoMistakesConfig) -> bool {

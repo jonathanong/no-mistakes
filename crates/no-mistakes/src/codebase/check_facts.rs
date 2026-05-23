@@ -26,7 +26,6 @@ pub struct CheckFactPlan {
     pub dynamic_imports: bool,
     pub nextjs_caching: bool,
     pub storybook: bool,
-    pub playwright: Option<PlaywrightFactPlan>,
     pub source: bool,
     pub raw_source: bool,
 }
@@ -96,14 +95,26 @@ impl CheckFactMap {
 }
 
 pub fn collect_check_facts(root: &Path, files: Vec<PathBuf>, plan: CheckFactPlan) -> CheckFactMap {
+    collect_check_facts_with_playwright(root, files, plan, None)
+}
+
+pub fn collect_check_facts_with_playwright(
+    root: &Path,
+    files: Vec<PathBuf>,
+    plan: CheckFactPlan,
+    playwright: Option<PlaywrightFactPlan>,
+) -> CheckFactMap {
     let stats = CheckFactStats {
         files_discovered: files.len(),
         ..CheckFactStats::default()
     };
+    let playwright = playwright.as_ref();
     let ts: HashMap<_, _> = files
         .par_iter()
         .filter(|path| is_indexable(path) || (plan.storybook && is_mdx_file(path)))
-        .filter_map(|path| collect_file_facts(root, path, &plan).map(|facts| (path.clone(), facts)))
+        .filter_map(|path| {
+            collect_file_facts(root, path, &plan, playwright).map(|facts| (path.clone(), facts))
+        })
         .collect();
     let mut files_parsed = 0;
     let mut parse_errors = 0;
