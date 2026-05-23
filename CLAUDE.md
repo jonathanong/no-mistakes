@@ -14,7 +14,7 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - Build one canonical graph — relationship features should produce typed edges
   in the shared dependency graph instead of maintaining separate graph shapes.
 - Programmatic API parity — every stable `no-mistakes` CLI capability must expose
-  an equivalent N-API API for Node/programmatic usage. Downstream tools should call
+  an equivalent N-API interface for Node/programmatic usage. Downstream tools should call
   structured in-process APIs instead of shelling out to `no-mistakes`, avoiding
   repeated graph builds, output parsing, subprocess overhead, and reliability issues
   like jonathanong/filaments#4058.
