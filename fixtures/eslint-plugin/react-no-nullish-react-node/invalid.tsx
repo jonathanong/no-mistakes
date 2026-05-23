@@ -17,6 +17,19 @@ export function Layout(props: Props) {
   );
 }
 
+export const InlineProps = ({
+  header,
+  title,
+}: {
+  header?: React.ReactNode;
+  title?: string;
+}) => (
+  <>
+    {header ?? <DefaultHeader />}
+    {title}
+  </>
+);
+
 function DefaultFooter() {
   return null;
 }

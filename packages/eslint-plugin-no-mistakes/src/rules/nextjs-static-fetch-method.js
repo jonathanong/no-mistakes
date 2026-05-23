@@ -19,7 +19,7 @@ module.exports = rule(
       if (!isFetchCall(node, context)) return;
       const opts = node.arguments[1];
       if (!opts || opts.type !== "ObjectExpression") return;
-      const methodProp = opts.properties.find(
+      const methodProp = opts.properties.findLast(
         (p) =>
           p.type === "Property" &&
           !p.computed &&

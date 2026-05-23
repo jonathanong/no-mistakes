@@ -108,6 +108,23 @@ describe("nextjs-static-fetch-method", () => {
     );
   });
 
+  it("uses the last duplicate method property", () => {
+    assert.deepEqual(
+      messages(
+        "fetch('https://api.example.com', { method: 'GET', method: verb });",
+        "nextjs-static-fetch-method",
+      ),
+      ["dynamic"],
+    );
+    assert.deepEqual(
+      messages(
+        "fetch('https://api.example.com', { method: verb, method: 'GET' });",
+        "nextjs-static-fetch-method",
+      ),
+      [],
+    );
+  });
+
   it("reports call expression method values", () => {
     assert.deepEqual(
       messages(

@@ -105,7 +105,7 @@ describe("react-no-nullish-react-node", () => {
         undefined,
         "invalid.tsx",
       ),
-      ["nullish", "nullish"],
+      ["nullish", "nullish", "nullish"],
     );
   });
 

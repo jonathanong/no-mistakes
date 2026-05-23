@@ -61,6 +61,17 @@ module.exports = rule(
     }
 
     function propsForType(type) {
+      if (type && type.type === "TSTypeLiteral") {
+        const props = new Set();
+        for (const member of type.members || []) {
+          if (member.type !== "TSPropertySignature" || !isReactNodeType(typeAnnotation(member))) {
+            continue;
+          }
+          const name = keyName(member.key);
+          if (name) props.add(name);
+        }
+        return props;
+      }
       const name = typeName(type);
       return name ? facts.objectProps.get(name) : null;
     }
