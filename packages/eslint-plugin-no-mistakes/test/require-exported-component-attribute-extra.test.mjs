@@ -38,7 +38,7 @@ describe("require-exported-component-attribute edge cases", () => {
       export function Button() {
         return <button />;
       }
-      export { Button };
+      export { Button as ButtonAlias };
     `;
     assert.deepEqual(messages(code, RULE), ["missing"]);
   });
