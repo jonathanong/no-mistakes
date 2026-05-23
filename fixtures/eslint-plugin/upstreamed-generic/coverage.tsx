@@ -1,0 +1,32 @@
+const values = [3, 1, 2];
+await task;
+await values.map((value) => value);
+delete value;
+delete (value as unknown);
+delete (value as { x: string }).x;
+const maybe = value as { x: string };
+delete maybe.x;
+export { metadata };
+export const viewport = {};
+expect.soft(error.message).toMatch("missing");
+expect((error.message as string)).toBe("missing");
+expect(error.message).custom("missing");
+expect(error).toEqual(error.message);
+if (error.code !== "missing") {
+  throw error;
+}
+let shared = 0;
+shared = 2;
+it.only("assigns", () => {
+  shared = 1;
+});
+describe.skip("suite", () => {});
+test["sequential"]("computed", () => {});
+page.locator("../..");
+page.locator("tbody tr");
+page.locator("#save");
+expect(locator).toBeVisible();
+expect.poll(fn, { timeout: 25000 }).toBe(1);
+expect(locator).toBeVisible({ timeout: "slow" });
+expect(locator).toBeVisible({ "timeout": 16000 });
+expect(locator).toBeVisible({ timeout: 15000 });
