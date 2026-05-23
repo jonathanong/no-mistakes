@@ -4,9 +4,11 @@ use crate::codebase::dependencies::{relationship_filter, EdgeKind, RelationshipA
 use crate::codebase::ts_resolver::{find_tsconfig as ts_find, load_tsconfig, TsConfig};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use globset::{Glob, GlobSet, GlobSetBuilder};
+use helpers::{build_globset, edge_kind_str, repro_command, resolve_root_path};
 use std::collections::HashSet;
 use std::path::Path;
+
+mod helpers;
 
 pub const RULE_ID: &str = "forbidden-dependencies";
 
@@ -41,7 +43,7 @@ pub fn check(
     Ok(findings)
 }
 
-fn resolve_tsconfig(root: &Path, tsconfig_path: Option<&Path>) -> Result<TsConfig> {
+pub(crate) fn resolve_tsconfig(root: &Path, tsconfig_path: Option<&Path>) -> Result<TsConfig> {
     match tsconfig_path {
         Some(path) => load_tsconfig(path),
         None => match ts_find(root) {
@@ -72,7 +74,11 @@ fn union_allowed_set(opts_list: &[Options]) -> Option<HashSet<EdgeKind>> {
     }
 }
 
-fn check_application(root: &Path, opts: &Options, graph: &DepGraph) -> Result<Vec<RuleFinding>> {
+pub(crate) fn check_application(
+    root: &Path,
+    opts: &Options,
+    graph: &DepGraph,
+) -> Result<Vec<RuleFinding>> {
     if opts.roots.is_empty()
         || (opts.forbidden_modules.is_empty() && opts.forbidden_files.is_empty())
     {
@@ -160,65 +166,6 @@ fn check_application(root: &Path, opts: &Options, graph: &DepGraph) -> Result<Ve
         }
     }
     Ok(findings)
-}
-
-fn resolve_root_path(root: &Path, raw: &str) -> Option<std::path::PathBuf> {
-    let p = std::path::Path::new(raw);
-    let path = if p.is_absolute() {
-        p.to_path_buf()
-    } else {
-        root.join(raw)
-    };
-    let normalized = crate::codebase::ts_resolver::normalize_path(&path);
-    normalized.is_file().then_some(normalized)
-}
-
-fn build_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
-    if patterns.is_empty() {
-        return Ok(None);
-    }
-    let mut builder = GlobSetBuilder::new();
-    for p in patterns {
-        builder.add(Glob::new(p)?);
-    }
-    Ok(Some(builder.build()?))
-}
-
-fn edge_kind_str(k: &EdgeKind) -> String {
-    serde_json::to_value(k)
-        .unwrap()
-        .as_str()
-        .unwrap()
-        .to_string()
-}
-
-fn repro_command(
-    root_str: &str,
-    target_name: &str,
-    node: &NodeId,
-    relationships: &[RelationshipArg],
-) -> String {
-    let target_flag = match node {
-        NodeId::Module(_) => format!("--target-module '{}'", target_name.replace('\'', "'\\''")),
-        _ => format!("--filter '{}'", target_name.replace('\'', "'\\''")),
-    };
-    let rel_flags = if relationships.is_empty() {
-        " --relationship all".to_string()
-    } else {
-        relationships
-            .iter()
-            .map(|r| {
-                format!(
-                    " --relationship {}",
-                    serde_json::to_value(r).unwrap().as_str().unwrap()
-                )
-            })
-            .collect::<String>()
-    };
-    format!(
-        "no-mistakes dependencies '{}' {target_flag}{rel_flags} --format json",
-        root_str.replace('\'', "'\\''")
-    )
 }
 
 #[cfg(test)]
