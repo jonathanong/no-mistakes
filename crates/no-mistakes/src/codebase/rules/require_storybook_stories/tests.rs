@@ -1,5 +1,9 @@
 use super::*;
+use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
+use crate::codebase::storybook::StorybookFileFacts;
+use crate::codebase::ts_resolver::{normalize_path, ImportResolver, TsConfig};
 use crate::config::v2::schema::{Project, ProjectType, StringOrList};
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
@@ -39,6 +43,239 @@ fn config_with_project_root(root: &str, options: &str) -> NoMistakesConfig {
     config
 }
 
+fn empty_resolver(root: &std::path::Path) -> ImportResolver<'static> {
+    let tsconfig = Box::leak(Box::new(TsConfig {
+        dir: root.to_path_buf(),
+        paths: vec![],
+        paths_dir: root.to_path_buf(),
+        base_url: None,
+    }));
+    ImportResolver::new(tsconfig)
+}
+
+#[test]
+fn rule_target_validation_and_unknown_projects_are_handled() {
+    let root = fixture("missing");
+    let mut invalid = config(
+        r#"
+stories: ["stories/**/*.stories.tsx"]
+"#,
+    );
+    invalid.projects.insert(
+        "api".to_string(),
+        Project {
+            root: Some(".".to_string()),
+            ..Default::default()
+        },
+    );
+    invalid.rules[0].projects = vec!["web".to_string(), "api".to_string()];
+
+    let error = check(&root, &invalid, None).unwrap_err().to_string();
+    assert!(error.contains("requires exactly one project target"));
+
+    let mut unknown = config(
+        r#"
+stories: ["stories/**/*.stories.tsx"]
+"#,
+    );
+    unknown.rules[0].projects = vec!["unknown".to_string()];
+
+    let findings = check(&root, &unknown, None).unwrap();
+    assert!(findings.is_empty());
+
+    let facts = CheckFactMap::default();
+    let direct = check_rule(&root, &unknown, &unknown.rules[0], &facts, None).unwrap();
+    assert!(direct.is_empty());
+}
+
+#[test]
+fn storybook_config_pattern_parser_handles_supported_shapes() {
+    let patterns = config::extract_storybook_story_patterns(
+        r#"
+export default {
+  stories: (
+    [
+      "../components/**/*.story.tsx",
+      `../examples/**/*.stories.tsx`,
+      { directory: "../cards", files: "**/*.case.tsx" },
+      { directory: "../defaults" },
+      { ["directory"]: "../ignored" },
+    ]
+  ),
+};
+"#,
+    );
+
+    assert_eq!(
+        patterns,
+        vec![
+            "../components/**/*.story.tsx",
+            "../examples/**/*.stories.tsx",
+            "../cards/**/*.case.tsx",
+            "../defaults/**/*.stories.@(js|jsx|mjs|ts|tsx)",
+        ]
+    );
+}
+
+#[test]
+fn required_prop_and_glob_helpers_match_expected_inputs() {
+    let opts = types::Options {
+        required_props: vec!["data-track".to_string(), "aria-label".to_string()],
+        ..Default::default()
+    };
+
+    assert!(types::source_has_required_prop(
+        "<Card data-track=\"x\" />",
+        &opts
+    ));
+    assert!(types::source_has_required_prop(
+        "{'aria-label': label}",
+        &opts
+    ));
+    assert!(!types::source_has_required_prop("<Card />", &opts));
+
+    let patterns = vec!["./components/**/*.tsx".to_string(), "[".to_string()];
+    let matcher = types::GlobMatcher::new(&patterns);
+    assert!(matcher.is_match("components/Card.tsx"));
+    assert!(!matcher.is_match("stories/Card.stories.tsx"));
+}
+
+#[test]
+fn reachable_story_files_reports_story_fact_errors() {
+    let root = normalize_path(&fixture("missing"));
+    let story = normalize_path(&root.join("stories/card.stories.tsx"));
+    let stories = vec!["stories/**/*.stories.tsx".to_string()];
+    let matcher = types::GlobMatcher::new(&stories);
+    let resolver = empty_resolver(&root);
+    let components = HashSet::new();
+
+    let mut parse_error_facts = CheckFactMap {
+        files: vec![story.clone()],
+        ts: HashMap::from([(
+            story.clone(),
+            CheckFileFacts {
+                parse_error: Some("bad syntax".to_string()),
+                ..Default::default()
+            },
+        )]),
+        ..Default::default()
+    };
+    let error = coverage::reachable_story_files(
+        &root,
+        &parse_error_facts,
+        &matcher,
+        &resolver,
+        &components,
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(error.contains("failed to parse story file"));
+
+    parse_error_facts.ts.insert(
+        story.clone(),
+        CheckFileFacts {
+            storybook: None,
+            ..Default::default()
+        },
+    );
+    let error = coverage::reachable_story_files(
+        &root,
+        &parse_error_facts,
+        &matcher,
+        &resolver,
+        &components,
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(error.contains("requires Storybook facts"));
+
+    parse_error_facts.ts.clear();
+    let files = coverage::reachable_story_files(
+        &root,
+        &parse_error_facts,
+        &matcher,
+        &resolver,
+        &components,
+    )
+    .unwrap();
+    assert_eq!(files, [story].into_iter().collect());
+}
+
+#[test]
+fn namespace_and_allow_findings_cover_non_matching_edges() {
+    let root = normalize_path(&fixture("missing"));
+    let project_root = root.as_path();
+    let story = normalize_path(&root.join("stories/card.stories.tsx"));
+    let outside = root.parent().unwrap().join("outside.tsx");
+    let resolver = empty_resolver(&root);
+    let mut shared = CheckFactMap {
+        files: vec![root.join("components/Card.tsx")],
+        ts: HashMap::from([(
+            story.clone(),
+            CheckFileFacts {
+                storybook: Some(StorybookFileFacts {
+                    used_runtime_imports: vec![
+                        crate::codebase::storybook::UsedRuntimeImport {
+                            source: outside.to_string_lossy().to_string(),
+                            imported: "*".to_string(),
+                            local: "Outside".to_string(),
+                            namespace: true,
+                            line: 7,
+                        },
+                        crate::codebase::storybook::UsedRuntimeImport {
+                            source: "../components/Card".to_string(),
+                            imported: "*".to_string(),
+                            local: "Cards".to_string(),
+                            namespace: true,
+                            line: 8,
+                        },
+                    ],
+                    side_effect_imports: vec![],
+                }),
+                ..Default::default()
+            },
+        )]),
+        ..Default::default()
+    };
+    let story_files = [story].into_iter().collect();
+
+    let namespace_findings =
+        findings::namespace_import_findings(&root, project_root, &shared, &story_files, &resolver);
+    assert_eq!(namespace_findings.len(), 1);
+    assert_eq!(namespace_findings[0].line, 8);
+
+    let mut opts = types::Options::default();
+    opts.allow_components
+        .insert("components/Gone.tsx#Gone".to_string(), "gone".to_string());
+    opts.allow_files.insert(
+        "components/*.tsx".to_string(),
+        "covered elsewhere".to_string(),
+    );
+    opts.allow_files.insert("blank".to_string(), "".to_string());
+    opts.allow_files
+        .insert("[".to_string(), "bad glob".to_string());
+    let allow_files = types::GlobMatcher::new(opts.allow_files.keys());
+    let findings = findings::stale_or_blank_allow_findings(
+        &root,
+        project_root,
+        &opts,
+        &HashSet::new(),
+        &allow_files,
+        &shared,
+    );
+    assert!(findings.iter().any(|finding| finding
+        .message
+        .contains("does not match a selected component")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.file == "[" && finding.message.contains("does not match")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("must include a reason")));
+
+    shared.files.clear();
+}
+
 #[test]
 fn direct_and_transitive_story_coverage_passes() {
     let root = fixture("covered");
@@ -52,6 +289,21 @@ include_all_react_named_exports: true
         None,
     )
     .unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn project_without_root_uses_repository_root() {
+    let root = fixture("covered");
+    let mut cfg = config(
+        r#"
+include_all_react_named_exports: true
+"#,
+    );
+    cfg.projects.get_mut("web").unwrap().root = None;
+
+    let findings = check(&root, &cfg, None).unwrap();
 
     assert!(findings.is_empty(), "{findings:#?}");
 }
@@ -240,6 +492,24 @@ include_all_react_named_exports: true
         findings[0].target.as_deref(),
         Some("components/Hidden.tsx#Hidden")
     );
+}
+
+#[test]
+fn story_imports_resolve_component_reexports() {
+    let root = fixture("reexport");
+    let findings = check(
+        &root,
+        &config(
+            r#"
+stories: ["stories/**/*.stories.tsx"]
+include_all_react_named_exports: true
+"#,
+        ),
+        None,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
 }
 
 #[test]

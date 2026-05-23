@@ -38,9 +38,10 @@ pub(crate) fn extract_mdx_source(source: &str) -> StorybookFileFacts {
 }
 
 fn push_mdx_imports(imports: &mut Vec<UsedRuntimeImport>, clause: &str, source: &str, line: u32) {
-    if let Some((default, rest)) = clause.split_once(',') {
+    if let Some((default, rest)) = clause.split_once(", {") {
         push_mdx_default_import(imports, default.trim(), source, line);
-        push_mdx_imports(imports, rest.trim(), source, line);
+        let named = format!("{{{}", rest.trim());
+        push_mdx_imports(imports, &named, source, line);
         return;
     }
     if let Some(namespace) = clause.strip_prefix("* as ") {
@@ -60,6 +61,9 @@ fn push_mdx_imports(imports: &mut Vec<UsedRuntimeImport>, clause: &str, source: 
         for specifier in clause[1..clause.len() - 1].split(',') {
             push_mdx_named_import(imports, specifier.trim(), source, line);
         }
+        return;
+    }
+    if clause.starts_with('{') || clause.ends_with('}') {
         return;
     }
     push_mdx_default_import(imports, clause, source, line);
@@ -123,3 +127,6 @@ fn quoted_import_source(value: &str) -> Option<&str> {
                 .and_then(|value| value.strip_suffix('\''))
         })
 }
+
+#[cfg(test)]
+mod tests;

@@ -68,7 +68,7 @@ fn resolve_storybook_config_path(root: &Path, project_root: &Path, config_path: 
     }
 }
 
-fn extract_storybook_story_patterns(source: &str) -> Vec<String> {
+pub(super) fn extract_storybook_story_patterns(source: &str) -> Vec<String> {
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
     if parsed.panicked || !parsed.errors.is_empty() {

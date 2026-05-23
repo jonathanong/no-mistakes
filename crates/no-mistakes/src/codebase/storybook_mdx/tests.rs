@@ -1,0 +1,64 @@
+use super::extract_mdx_source;
+
+#[test]
+fn extracts_mdx_runtime_import_shapes() {
+    let facts = extract_mdx_source(
+        r#"
+import "./setup.story";
+import './single-quote.story';
+import DefaultCard from "../components/DefaultCard";
+import DefaultButton, { Button as RenamedButton, Link } from "../components/Button";
+import * as Cards from "../components/Cards";
+import { type Props, Panel } from "../components/Panel";
+import ignored from "../components/Ignored"
+"#,
+    );
+
+    assert_eq!(facts.side_effect_imports.len(), 2);
+    assert_eq!(facts.side_effect_imports[0].source, "./setup.story");
+    assert_eq!(facts.side_effect_imports[1].source, "./single-quote.story");
+    assert_eq!(
+        facts
+            .used_runtime_imports
+            .iter()
+            .map(|import| (
+                import.imported.as_str(),
+                import.local.as_str(),
+                import.source.as_str(),
+                import.namespace,
+            ))
+            .collect::<Vec<_>>(),
+        vec![
+            ("default", "DefaultCard", "../components/DefaultCard", false,),
+            ("default", "DefaultButton", "../components/Button", false,),
+            ("Button", "RenamedButton", "../components/Button", false,),
+            ("Link", "Link", "../components/Button", false),
+            ("*", "Cards", "../components/Cards", true),
+            ("Panel", "Panel", "../components/Panel", false),
+            ("default", "ignored", "../components/Ignored", false),
+        ]
+    );
+}
+
+#[test]
+fn ignores_malformed_mdx_imports() {
+    let facts = extract_mdx_source(
+        r#"
+import
+import nope
+import Bad from nope;
+import  from "../empty-default";
+import {} from "../empty";
+import { Missing from "../bad";
+const value = "import { Nope } from './Nope'";
+"#,
+    );
+
+    assert!(facts.used_runtime_imports.is_empty());
+    assert!(facts.side_effect_imports.is_empty());
+
+    let mut imports = Vec::new();
+    super::push_mdx_default_import(&mut imports, "", "../empty-default", 1);
+    super::push_mdx_named_import(&mut imports, "Missing as ", "../bad-local", 1);
+    assert!(imports.is_empty());
+}

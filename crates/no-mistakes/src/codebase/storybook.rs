@@ -99,3 +99,6 @@ fn local_name<'a>(specifier: &'a ImportDeclarationSpecifier<'a>) -> &'a str {
         ImportDeclarationSpecifier::ImportSpecifier(specifier) => specifier.local.name.as_ref(),
     }
 }
+
+#[cfg(test)]
+mod tests;
