@@ -20,12 +20,15 @@ pub(super) fn transitive_covered_components(
             continue;
         };
         for child in children {
-            if component_keys.contains(child) && covered.insert(child.clone()) {
+            if covered.insert(child.clone()) {
                 queue.push_back(child.clone());
             }
         }
     }
     covered
+        .into_iter()
+        .filter(|key| component_keys.contains(key) || direct.contains(key))
+        .collect()
 }
 
 fn component_children(

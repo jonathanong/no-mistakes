@@ -85,7 +85,7 @@ pub fn collect_check_facts(root: &Path, files: Vec<PathBuf>, plan: CheckFactPlan
     };
     let ts: HashMap<_, _> = files
         .par_iter()
-        .filter(|path| is_indexable(path))
+        .filter(|path| is_indexable(path) || (plan.storybook && is_mdx_file(path)))
         .filter_map(|path| collect_file_facts(root, path, plan).map(|facts| (path.clone(), facts)))
         .collect();
     let mut files_parsed = 0;
@@ -107,6 +107,10 @@ pub fn collect_check_facts(root: &Path, files: Vec<PathBuf>, plan: CheckFactPlan
             ..stats
         },
     }
+}
+
+fn is_mdx_file(path: &Path) -> bool {
+    path.extension().and_then(|ext| ext.to_str()) == Some("mdx")
 }
 
 #[cfg(test)]

@@ -20,6 +20,13 @@ pub(crate) fn collect_file_facts(
             });
         }
     };
+    if plan.storybook && path.extension().and_then(|ext| ext.to_str()) == Some("mdx") {
+        return Some(CheckFileFacts {
+            source: should_store_source(plan).then_some(source.clone()),
+            storybook: Some(crate::codebase::storybook::extract_mdx_source(&source)),
+            ..CheckFileFacts::default()
+        });
+    }
     if plan.raw_source && !requires_parse(plan) {
         return Some(CheckFileFacts {
             source: Some(source),

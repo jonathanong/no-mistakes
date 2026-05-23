@@ -122,6 +122,42 @@ include_all_react_named_exports: true
 }
 
 #[test]
+fn mdx_story_imports_count_as_story_coverage() {
+    let root = fixture("mdx-story");
+    let findings = check(
+        &root,
+        &config(
+            r#"
+stories: ["stories/**/*.mdx"]
+include_all_react_named_exports: true
+"#,
+        ),
+        None,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn selected_leaves_are_covered_through_unselected_wrappers() {
+    let root = fixture("unselected-wrapper");
+    let findings = check(
+        &root,
+        &config(
+            r#"
+stories: ["stories/**/*.stories.tsx"]
+include: ["components/Leaf.tsx"]
+"#,
+        ),
+        None,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
 fn reports_selected_component_without_story() {
     let root = fixture("missing");
     let findings = check(
