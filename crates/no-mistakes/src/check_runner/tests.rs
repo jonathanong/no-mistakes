@@ -2,13 +2,11 @@ use super::*;
 use crate::check_parallel::DomainResults;
 use crate::check_tasks::CheckTask;
 use anyhow::anyhow;
-use no_mistakes_core::codebase::rules::{
-    RuleFinding, RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_TESTS,
-};
-use no_mistakes_core::codebase::unique_exports::UniqueExportFinding;
-use no_mistakes_core::integration_tests::IntegrationFinding;
-use no_mistakes_core::queue::CheckFinding;
-use no_mistakes_core::react_traits;
+use no_mistakes::codebase::rules::{RuleFinding, RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_TESTS};
+use no_mistakes::codebase::unique_exports::UniqueExportFinding;
+use no_mistakes::integration_tests::IntegrationFinding;
+use no_mistakes::queue::CheckFinding;
+use no_mistakes::react_traits;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -43,11 +41,11 @@ fn run_codebase_check_uses_explicit_tsconfig_with_shared_facts() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/codebase-analysis/unique-exports-basic");
     let config = root.join(".no-mistakes.yml");
-    let files = no_mistakes_core::codebase::ts_source::discover_files(&root, &[]);
-    let facts = no_mistakes_core::codebase::check_facts::collect_check_facts(
+    let files = no_mistakes::codebase::ts_source::discover_files(&root, &[]);
+    let facts = no_mistakes::codebase::check_facts::collect_check_facts(
         &root,
         files,
-        no_mistakes_core::codebase::check_facts::CheckFactPlan {
+        no_mistakes::codebase::check_facts::CheckFactPlan {
             source: true,
             symbols: true,
             ..Default::default()
@@ -70,7 +68,7 @@ fn run_codebase_check_uses_explicit_tsconfig_with_shared_facts() {
 fn run_codebase_check_propagates_unique_exports_errors() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/codebase-analysis/unique-exports-basic");
-    let facts = no_mistakes_core::codebase::check_facts::CheckFactMap::default();
+    let facts = no_mistakes::codebase::check_facts::CheckFactMap::default();
 
     let error = crate::check_tasks::run_codebase_check(
         root.clone(),
@@ -100,13 +98,13 @@ fn run_all_surfaces_react_enabled_config_errors() {
 
 #[test]
 fn integration_configured_covers_vitest_and_playwright_suites() {
-    let empty = no_mistakes_core::config::v2::NoMistakesConfig::default();
+    let empty = no_mistakes::config::v2::NoMistakesConfig::default();
     assert!(!integration_configured(&empty));
 
-    let mut vitest = no_mistakes_core::config::v2::NoMistakesConfig::default();
+    let mut vitest = no_mistakes::config::v2::NoMistakesConfig::default();
     vitest.tests.vitest.projects.insert(
         "web".to_string(),
-        no_mistakes_core::config::v2::schema::TestProjectPolicy {
+        no_mistakes::config::v2::schema::TestProjectPolicy {
             integration_suites: BTreeMap::from([(
                 "openai".to_string(),
                 vec!["openai".to_string()],
@@ -115,10 +113,10 @@ fn integration_configured_covers_vitest_and_playwright_suites() {
     );
     assert!(integration_configured(&vitest));
 
-    let mut playwright = no_mistakes_core::config::v2::NoMistakesConfig::default();
+    let mut playwright = no_mistakes::config::v2::NoMistakesConfig::default();
     playwright.tests.playwright.projects.insert(
         "e2e".to_string(),
-        no_mistakes_core::config::v2::schema::TestProjectPolicy {
+        no_mistakes::config::v2::schema::TestProjectPolicy {
             integration_suites: BTreeMap::from([("aws".to_string(), vec!["aws".to_string()])]),
         },
     );

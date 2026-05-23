@@ -39,7 +39,7 @@ work or sharing more in-memory facts during that run.
 
 ## Current Pipeline Shape
 
-The main graph pipeline is centered in `no-mistakes-core`:
+The main graph pipeline is centered in `no-mistakes`:
 
 | Stage | Current type/module | Role |
 | --- | --- | --- |
@@ -181,7 +181,7 @@ When adding a new analyzer:
 
 1. Decide whether it is file-local, fact-based, graph-based, or output-only.
 2. If it is file-local, prefer an ESLint/Oxlint rule.
-3. If it needs project context, put shared logic in `no-mistakes-core`.
+3. If it needs project context, put shared logic in `no-mistakes`.
 4. Extend `TsFactPlan` and `TsFileFacts` instead of adding a second TS/JS parse.
 5. Add a graph edge when the result is a relationship.
 6. Run extraction over files in parallel.

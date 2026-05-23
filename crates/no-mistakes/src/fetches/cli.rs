@@ -1,0 +1,86 @@
+use crate::fetches::pipeline::run::run_with_base_root;
+use crate::fetches::report::print::print_markdown_report;
+use anyhow::{Context, Result};
+use clap::Parser;
+use no_mistakes::cli::Format;
+use std::collections::BTreeSet;
+use std::path::PathBuf;
+use std::process::ExitCode;
+
+#[derive(Parser, Clone)]
+pub(crate) struct FetchesArgs {
+    /// Project root directory.
+    #[arg(long, default_value = ".", global = true)]
+    pub(crate) root: PathBuf,
+
+    /// Config file path. Relative paths are resolved from --root.
+    #[arg(long, global = true)]
+    pub(crate) config: Option<PathBuf>,
+
+    /// Output format: json, yml, paths, md, human.
+    #[arg(
+        long,
+        value_enum,
+        default_value = "human",
+        global = true,
+        conflicts_with = "json"
+    )]
+    pub(crate) format: Format,
+
+    /// Shorthand for --format json.
+    #[arg(long, global = true, conflicts_with = "format")]
+    pub(crate) json: bool,
+
+    #[arg(help = "Specific routes or files to analyze")]
+    pub(crate) targets: Vec<String>,
+}
+
+pub(crate) type Cli = FetchesArgs;
+
+fn parse_cli_args() -> FetchesArgs {
+    if cfg!(test) {
+        if let Ok(raw_args) = std::env::var("NEXT_TO_FETCH_TEST_ARGS") {
+            return FetchesArgs::parse_from(raw_args.split('\u{1f}'));
+        }
+    }
+    FetchesArgs::parse()
+}
+
+pub(crate) fn run_cli() -> Result<ExitCode> {
+    run(parse_cli_args())
+}
+
+const _: fn() -> Result<ExitCode> = run_cli;
+
+pub(crate) fn run(cli: FetchesArgs) -> Result<ExitCode> {
+    let base_root = std::env::current_dir().context("reading current directory")?;
+    let report = run_with_base_root(&base_root, &cli)?;
+    let format = if cli.json { Format::Json } else { cli.format };
+    match format {
+        Format::Json => {
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&report).context("serializing fetch report")?
+            );
+        }
+        Format::Yml => println!(
+            "{}",
+            serde_yaml::to_string(&report).context("serializing fetch report to YAML")?
+        ),
+        Format::Paths => {
+            for file in report
+                .routes
+                .iter()
+                .flat_map(|r| {
+                    std::iter::once(r.file.as_str())
+                        .chain(r.api_calls.iter().map(|f| f.file.as_str()))
+                })
+                .collect::<BTreeSet<_>>()
+            {
+                println!("{file}");
+            }
+        }
+        Format::Md | Format::Human => print_markdown_report(&report),
+    }
+    Ok(ExitCode::SUCCESS)
+}

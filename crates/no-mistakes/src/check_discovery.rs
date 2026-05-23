@@ -1,4 +1,4 @@
-use no_mistakes_core::config::v2::NoMistakesConfig;
+use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
 
 pub(crate) fn discover_check_files(
@@ -7,13 +7,13 @@ pub(crate) fn discover_check_files(
     skip_directories: &[String],
     unique_exports_enabled: bool,
 ) -> Vec<PathBuf> {
-    let mut files = no_mistakes_core::codebase::ts_source::discover_files(root, skip_directories);
+    let mut files = no_mistakes::codebase::ts_source::discover_files(root, skip_directories);
     if unique_exports_enabled {
         for project_root in unique_exports_project_roots(root, config) {
             if project_root == root {
                 continue;
             }
-            files.extend(no_mistakes_core::codebase::ts_source::discover_files(
+            files.extend(no_mistakes::codebase::ts_source::discover_files(
                 &project_root,
                 skip_directories,
             ));
@@ -25,7 +25,7 @@ pub(crate) fn discover_check_files(
 }
 
 fn unique_exports_project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
-    let rule_id = no_mistakes_core::codebase::unique_exports::RULE_ID;
+    let rule_id = no_mistakes::codebase::unique_exports::RULE_ID;
     let mut roots = Vec::new();
     let mut inferred_nextjs_root = None;
     for rule in config.rule_applications(rule_id) {
@@ -48,15 +48,15 @@ fn unique_exports_project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<P
 
 fn project_root(
     root: &Path,
-    project: &no_mistakes_core::config::v2::schema::Project,
+    project: &no_mistakes::config::v2::schema::Project,
     inferred_nextjs_root: &mut Option<Option<PathBuf>>,
 ) -> Option<PathBuf> {
     if let Some(project_root) = project.root.as_deref() {
         return Some(root.join(project_root));
     }
-    if project.type_ == Some(no_mistakes_core::config::v2::schema::ProjectType::Nextjs) {
+    if project.type_ == Some(no_mistakes::config::v2::schema::ProjectType::Nextjs) {
         return inferred_nextjs_root
-            .get_or_insert_with(|| no_mistakes_core::codebase::config::infer_nextjs_root(root))
+            .get_or_insert_with(|| no_mistakes::codebase::config::infer_nextjs_root(root))
             .clone();
     }
     Some(root.to_path_buf())

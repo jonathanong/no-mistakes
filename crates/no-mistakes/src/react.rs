@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
-use no_mistakes_core::cli::{resolve_root, Format};
-use no_mistakes_core::react_traits;
+use no_mistakes::cli::{resolve_root, Format};
+use no_mistakes::react_traits;
 use std::path::PathBuf;
 use std::process::ExitCode;
 

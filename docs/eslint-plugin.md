@@ -76,6 +76,6 @@ selectors per rule:
 }
 ```
 
-Use `playwright-ast-coverage check --assert-unique-test-ids` and
+Use `no-mistakes playwright check --assert-unique-test-ids` and
 `--assert-unique-html-ids` for project-wide uniqueness. The lint rule is
 file-local.

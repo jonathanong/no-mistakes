@@ -770,50 +770,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "next-to-fetch"
-version = "0.6.0"
-dependencies = [
- "anyhow",
- "assert_cmd",
- "clap",
- "globset",
- "no-mistakes-core",
- "oxc_allocator",
- "oxc_ast",
- "oxc_ast_visit",
- "oxc_parser",
- "oxc_span",
- "oxc_syntax",
- "predicates",
- "rayon",
- "serde",
- "serde_json",
- "serde_yaml",
- "tempfile",
- "walkdir",
-]
-
-[[package]]
 name = "no-mistakes"
 version = "0.6.0"
 dependencies = [
  "anyhow",
- "clap",
- "criterion",
- "no-mistakes-core",
- "rayon",
- "rustix",
- "serde",
- "serde_json",
- "serde_yaml",
- "tempfile",
-]
-
-[[package]]
-name = "no-mistakes-core"
-version = "0.6.0"
-dependencies = [
- "anyhow",
+ "assert_cmd",
  "clap",
  "criterion",
  "dashmap",
@@ -829,6 +790,7 @@ dependencies = [
  "oxc_parser",
  "oxc_span",
  "oxc_syntax",
+ "predicates",
  "proc-macro2",
  "pulldown-cmark",
  "rayon",
@@ -1459,31 +1421,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 
 [[package]]
-name = "playwright-ast-coverage"
-version = "0.6.0"
-dependencies = [
- "anyhow",
- "assert_cmd",
- "clap",
- "globset",
- "jsonc-parser",
- "no-mistakes-core",
- "oxc_allocator",
- "oxc_ast",
- "oxc_ast_visit",
- "oxc_parser",
- "oxc_span",
- "oxc_syntax",
- "predicates",
- "rayon",
- "regex",
- "serde",
- "serde_json",
- "serde_yaml",
- "walkdir",
-]
-
-[[package]]
 name = "plotters"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1592,20 +1529,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "007d8adb5ddab6f8e3f491ac63566a7d5002cc7ed73901f72057943fa71ae1ae"
 
 [[package]]
-name = "queue-ast-hop"
-version = "0.6.0"
-dependencies = [
- "anyhow",
- "assert_cmd",
- "clap",
- "no-mistakes-core",
- "predicates",
- "serde",
- "serde_json",
- "serde_yaml",
-]
-
-[[package]]
 name = "quote"
 version = "1.0.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1638,29 +1561,6 @@ checksum = "22e18b0f0062d30d4230b2e85ff77fdfe4326feb054b9783a3460d8435c8ab91"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-utils",
-]
-
-[[package]]
-name = "react-traits"
-version = "0.6.0"
-dependencies = [
- "anyhow",
- "assert_cmd",
- "clap",
- "globset",
- "no-mistakes-core",
- "oxc_allocator",
- "oxc_ast",
- "oxc_ast_visit",
- "oxc_parser",
- "oxc_span",
- "oxc_syntax",
- "predicates",
- "serde",
- "serde_json",
- "serde_yaml",
- "tempfile",
- "walkdir",
 ]
 
 [[package]]
@@ -1838,20 +1738,6 @@ dependencies = [
  "ryu",
  "serde",
  "unsafe-libyaml",
-]
-
-[[package]]
-name = "server-ast-routes"
-version = "0.6.0"
-dependencies = [
- "anyhow",
- "assert_cmd",
- "clap",
- "no-mistakes-core",
- "predicates",
- "serde",
- "serde_json",
- "serde_yaml",
 ]
 
 [[package]]

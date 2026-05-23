@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
-use no_mistakes_core::cli::{edge_view, resolve_root, root_scoped_edge_depth, Format};
-use no_mistakes_core::queue::{
+use no_mistakes::cli::{edge_view, resolve_root, root_scoped_edge_depth, Format};
+use no_mistakes::queue::{
     analyze_project, related, CheckFinding, Edge, ProjectReport, RelatedDirection,
 };
 use std::collections::BTreeSet;

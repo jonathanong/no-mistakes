@@ -3,9 +3,9 @@ use crate::tests::{
     Confidence, ImpactReason, PlanArgs, PlanFormat, SelectedTest, TestPlan, Warning,
 };
 use anyhow::{Context, Result};
-use no_mistakes_core::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
-use no_mistakes_core::codebase::test_filter::TestFileFilter;
-use no_mistakes_core::config::v2::load_v2_config;
+use no_mistakes::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
+use no_mistakes::codebase::test_filter::TestFileFilter;
+use no_mistakes::config::v2::load_v2_config;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -39,8 +39,8 @@ pub(crate) fn run(args: PlanArgs) -> Result<ExitCode> {
 
 pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     let cwd = std::env::current_dir().context("cwd must be accessible")?;
-    let root = no_mistakes_core::cli::resolve_optional_root(Some(&args.root), &cwd);
-    let root = no_mistakes_core::codebase::ts_resolver::normalize_path(&root);
+    let root = no_mistakes::cli::resolve_optional_root(Some(&args.root), &cwd);
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(&root);
     let root = root.canonicalize().unwrap_or(root);
 
     let config = load_v2_config(&root, args.config.as_deref())?;
@@ -254,7 +254,7 @@ fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Vec<PathBuf>> {
         };
         let resolved = path
             .canonicalize()
-            .unwrap_or_else(|_| no_mistakes_core::codebase::ts_resolver::normalize_path(&path));
+            .unwrap_or_else(|_| no_mistakes::codebase::ts_resolver::normalize_path(&path));
         files.push(resolved);
     }
 
@@ -268,9 +268,9 @@ fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Vec<PathBuf>> {
             if !line.is_empty() {
                 let p = PathBuf::from(line);
                 let path = if p.is_absolute() { p } else { root.join(p) };
-                let resolved = path.canonicalize().unwrap_or_else(|_| {
-                    no_mistakes_core::codebase::ts_resolver::normalize_path(&path)
-                });
+                let resolved = path
+                    .canonicalize()
+                    .unwrap_or_else(|_| no_mistakes::codebase::ts_resolver::normalize_path(&path));
                 files.push(resolved);
             }
         }
@@ -299,7 +299,7 @@ fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Vec<PathBuf>> {
     let mut unique = HashSet::new();
     let mut result = Vec::new();
     for f in files {
-        let normalized = no_mistakes_core::codebase::ts_resolver::normalize_path(&f);
+        let normalized = no_mistakes::codebase::ts_resolver::normalize_path(&f);
         if unique.insert(normalized.clone()) {
             result.push(normalized);
         }
@@ -431,31 +431,30 @@ fn next_project_root(path: &Path) -> bool {
 
 fn discover_all_tests(
     root: &Path,
-    config: &no_mistakes_core::config::v2::NoMistakesConfig,
+    config: &no_mistakes::config::v2::NoMistakesConfig,
 ) -> Result<Vec<PathBuf>> {
     let filter = TestFileFilter::new(root, config);
-    Ok(no_mistakes_core::codebase::ts_source::discover_files(
-        root,
-        &config.filesystem.skip_directories,
+    Ok(
+        no_mistakes::codebase::ts_source::discover_files(root, &config.filesystem.skip_directories)
+            .into_iter()
+            .filter(|f| filter.is_match(root, f))
+            .collect(),
     )
-    .into_iter()
-    .filter(|f| filter.is_match(root, f))
-    .collect())
 }
 
 fn slash_node_name(node: &NodeId, root: &Path) -> String {
     match node {
-        NodeId::File(p) => no_mistakes_core::codebase::ts_source::relative_slash_path(root, p),
+        NodeId::File(p) => no_mistakes::codebase::ts_source::relative_slash_path(root, p),
         NodeId::Module(specifier) => specifier.clone(),
         NodeId::QueueJob { queue_file, job } => {
-            let rel = no_mistakes_core::codebase::ts_source::relative_slash_path(root, queue_file);
+            let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, queue_file);
             format!("{}#{}", rel, job)
         }
     }
 }
 
 fn relative_path(root: &Path, absolute: &Path) -> String {
-    no_mistakes_core::codebase::ts_source::relative_slash_path(root, absolute)
+    no_mistakes::codebase::ts_source::relative_slash_path(root, absolute)
 }
 
 /// Custom BFS path finder in the reverse (dependents) direction.

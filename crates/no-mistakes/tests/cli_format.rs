@@ -6,7 +6,7 @@ fn bin() -> PathBuf {
 }
 
 fn queue_fixture(name: &str) -> PathBuf {
-    no_mistakes_core::codebase::ts_resolver::normalize_path(
+    no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/queue-ast-hop")
             .join(name),
@@ -14,7 +14,7 @@ fn queue_fixture(name: &str) -> PathBuf {
 }
 
 fn server_fixture(name: &str) -> PathBuf {
-    no_mistakes_core::codebase::ts_resolver::normalize_path(
+    no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/server-ast-routes")
             .join(name),
@@ -22,7 +22,7 @@ fn server_fixture(name: &str) -> PathBuf {
 }
 
 fn react_fixture(category: &str, name: &str) -> PathBuf {
-    no_mistakes_core::codebase::ts_resolver::normalize_path(
+    no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures")
             .join(category)
@@ -31,7 +31,7 @@ fn react_fixture(category: &str, name: &str) -> PathBuf {
 }
 
 fn codebase_fixture(name: &str) -> PathBuf {
-    no_mistakes_core::codebase::ts_resolver::normalize_path(
+    no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/codebase-analysis")
             .join(name),
