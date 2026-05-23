@@ -43,6 +43,7 @@ fn resolve_entrypoints(raw_entrypoints: &[PathBuf], root: &Path, cwd: &Path) -> 
         .map(|raw| {
             let raw_str = raw.to_string_lossy();
             let (raw_file, symbol) = parse_entrypoint(&raw_str);
+            let raw_for_node = raw_file.to_string_lossy().to_string();
             let file = if raw_file.is_absolute() {
                 raw_file
             } else {
@@ -54,7 +55,7 @@ fn resolve_entrypoints(raw_entrypoints: &[PathBuf], root: &Path, cwd: &Path) -> 
                 }
             };
             let normalized = crate::codebase::ts_resolver::normalize_path(&file);
-            let node = resolve_entrypoint_node(&raw_str, &normalized, &workspace);
+            let node = resolve_entrypoint_node(&raw_for_node, &normalized, &workspace);
             let file = match &node {
                 NodeId::File(path) => path.clone(),
                 _ => normalized,
@@ -74,7 +75,7 @@ fn resolve_entrypoint_node(
             return NodeId::File(entry);
         }
     }
-    if path.exists() || raw.starts_with('.') || raw.starts_with('/') {
+    if path.exists() || raw.starts_with('.') || Path::new(raw).is_absolute() {
         return NodeId::File(path.to_path_buf());
     }
     if let Some(entry) = workspace.resolve_specifier(raw) {

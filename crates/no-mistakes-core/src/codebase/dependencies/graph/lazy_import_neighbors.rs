@@ -1,8 +1,6 @@
 fn import_neighbors(
     path: &Path,
     resolver: &ImportResolver<'_>,
-    ts_ex: &ImportExtractor,
-    tsx_ex: &ImportExtractor,
     graph_files: &GraphFiles,
     allowed: Option<&HashSet<EdgeKind>>,
 ) -> Vec<(NodeId, EdgeKind)> {
@@ -10,25 +8,19 @@ fn import_neighbors(
         Ok(source) => source,
         Err(_) => return Vec::new(),
     };
-    let _extractor = if is_tsx_file(path) { tsx_ex } else { ts_ex };
     let facts = crate::ast::with_program(path, &source, |program, _| {
         crate::codebase::dependencies::extract::extract_import_facts_from_program(program)
     })
     .unwrap_or_default();
-    let reachable = reachable_function_scopes(&crate::codebase::ts_source::facts::TsFileFacts {
-        imports: facts.imports.clone(),
-        function_calls: facts.function_calls.clone(),
-        exported_functions: facts.exported_functions.clone(),
-        has_unknown_top_level_call: facts.has_unknown_top_level_call,
-        ..Default::default()
-    });
     let file_facts = crate::codebase::ts_source::facts::TsFileFacts {
         imports: facts.imports,
         function_calls: facts.function_calls,
         exported_functions: facts.exported_functions,
+        unknown_callers: facts.unknown_callers,
         has_unknown_top_level_call: facts.has_unknown_top_level_call,
         ..Default::default()
     };
+    let reachable = reachable_function_scopes(&file_facts);
     let mut neighbors: Vec<(NodeId, EdgeKind)> = file_facts
         .imports
         .iter()

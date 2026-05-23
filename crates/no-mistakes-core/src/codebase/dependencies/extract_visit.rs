@@ -2,6 +2,7 @@
 struct ImportCollector {
     imports: Vec<ExtractedImport>,
     function_calls: Vec<FunctionCall>,
+    unknown_callers: Vec<Option<String>>,
     function_stack: Vec<String>,
     exported_functions: HashSet<String>,
     export_depth: usize,
@@ -84,6 +85,15 @@ impl<'a> Visit<'a> for ImportCollector {
         if let Some(source) = &export.source {
             let kind = export_named_declaration_kind(export);
             self.push(source.value.as_str(), kind);
+        } else if !export.export_kind.is_type() {
+            for specifier in &export.specifiers {
+                if specifier.export_kind.is_type() {
+                    continue;
+                }
+                if let Some(name) = module_export_name_name(&specifier.local) {
+                    self.exported_functions.insert(name.to_string());
+                }
+            }
         }
         self.export_depth += 1;
         walk::walk_export_named_declaration(self, export);
@@ -100,6 +110,9 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_export_default_declaration(&mut self, export: &ExportDefaultDeclaration<'a>) {
+        if let ExportDefaultDeclarationKind::Identifier(identifier) = &export.declaration {
+            self.exported_functions.insert(identifier.name.to_string());
+        }
         self.export_depth += 1;
         walk::walk_export_default_declaration(self, export);
         self.export_depth -= 1;
@@ -129,8 +142,12 @@ impl<'a> Visit<'a> for ImportCollector {
                 caller: self.current_function(),
                 callee: callee.to_string(),
             });
-        } else if self.function_stack.is_empty() {
-            self.has_unknown_top_level_call = true;
+        } else {
+            let caller = self.current_function();
+            if caller.is_none() {
+                self.has_unknown_top_level_call = true;
+            }
+            self.unknown_callers.push(caller);
         }
         walk::walk_call_expression(self, call);
     }

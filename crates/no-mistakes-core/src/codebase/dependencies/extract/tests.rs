@@ -275,6 +275,21 @@ fn fixture_function_expression_falls_back_to_inner_name() {
     );
 }
 
+#[test]
+fn local_string_named_export_is_not_marked_as_exported_function() {
+    let allocator = Allocator::default();
+    let ret = Parser::new(
+        &allocator,
+        r#"function loader() { import("./loaded.mts"); } export { "loader" as loader };"#,
+        SourceType::ts(),
+    )
+    .parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+
+    assert!(facts.exported_functions.is_empty());
+}
+
 // ── is_indexable / is_tsx_file ──────────────────────────────────────
 
 #[test]

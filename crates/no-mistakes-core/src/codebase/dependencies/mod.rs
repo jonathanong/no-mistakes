@@ -128,6 +128,14 @@ fn apply_filters(
     }
     let filter = graph::build_filter(&all_filters)?;
     let entries = graph::apply_filter(entries, filter.as_ref(), root);
+    let entries = if !all_filters.is_empty() && args.target_modules.is_empty() {
+        entries
+            .into_iter()
+            .filter(|entry| matches!(entry.node, graph::NodeId::File(_)))
+            .collect()
+    } else {
+        entries
+    };
     apply_target_module_filters(entries, &args.target_modules)
 }
 

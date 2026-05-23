@@ -71,7 +71,7 @@ impl DepGraph {
             Vec::new()
         };
 
-        let workspace = if plan.workspace || plan.package {
+        let workspace = if plan.imports || plan.workspace || plan.package {
             crate::codebase::workspaces::load_from_files(root, &graph_files.all)
                 .unwrap_or_default()
         } else {
@@ -79,7 +79,8 @@ impl DepGraph {
         };
 
         if plan.imports {
-            let import_edges = collect_import_edges(&parsed_imports, &resolver, graph_files);
+            let import_edges =
+                collect_import_edges(&parsed_imports, &resolver, &workspace, graph_files);
             merge_edges(&mut forward, &mut reverse, import_edges);
         }
 

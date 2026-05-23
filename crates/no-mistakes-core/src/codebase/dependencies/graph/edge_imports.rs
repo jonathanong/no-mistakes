@@ -13,6 +13,7 @@ fn collect_parsed_imports_from_facts<'a>(
 fn collect_import_edges(
     parsed_imports: &ParsedImports<'_>,
     resolver: &ImportResolver<'_>,
+    workspace: &crate::codebase::workspaces::WorkspaceMap,
     graph_files: &GraphFiles,
 ) -> Vec<Edge> {
     parsed_imports
@@ -30,6 +31,9 @@ fn collect_import_edges(
                             return None;
                         }
                         return Some((NodeId::File((*path).clone()), NodeId::File(target), kind));
+                    }
+                    if workspace.resolve_specifier_from(&imp.specifier, path).is_some() {
+                        return None;
                     }
                     bare_module_node(&imp.specifier)
                         .map(|module| (NodeId::File((*path).clone()), module, kind))

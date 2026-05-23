@@ -36,8 +36,6 @@ pub(crate) fn lazy_import_deps_of_with_files(
     graph_files: &GraphFiles,
     allowed: Option<&HashSet<EdgeKind>>,
 ) -> Vec<NodeEntry> {
-    let ts_ex = ImportExtractor::for_typescript().expect("typescript import extractor builds");
-    let tsx_ex = ImportExtractor::for_tsx().expect("tsx import extractor builds");
     let resolver = ImportResolver::new(tsconfig).with_visible(&graph_files.visible);
 
     let mut visited: HashSet<NodeId> = HashSet::new();
@@ -69,7 +67,7 @@ pub(crate) fn lazy_import_deps_of_with_files(
                 }
                 (
                     node.clone(),
-                    import_neighbors(path, &resolver, &ts_ex, &tsx_ex, graph_files, allowed),
+                    import_neighbors(path, &resolver, graph_files, allowed),
                 )
             })
             .collect();

@@ -2,8 +2,9 @@ use anyhow::Result;
 use oxc::allocator::Allocator;
 use oxc::ast::ast::{
     Argument, CallExpression, ExportAllDeclaration, ExportDefaultDeclaration,
-    ExportNamedDeclaration, ExportSpecifier, Expression, ImportDeclaration,
-    ImportDeclarationSpecifier, ImportExpression, Program, TSImportType, VariableDeclarator,
+    ExportDefaultDeclarationKind, ExportNamedDeclaration, ExportSpecifier, Expression,
+    ImportDeclaration, ImportDeclarationSpecifier, ImportExpression, ModuleExportName, Program,
+    TSImportType, VariableDeclarator,
 };
 use oxc::ast_visit::{walk, Visit};
 use oxc::parser::Parser;
@@ -44,6 +45,7 @@ pub struct ImportFacts {
     pub imports: Vec<ExtractedImport>,
     pub function_calls: Vec<FunctionCall>,
     pub exported_functions: Vec<String>,
+    pub unknown_callers: Vec<Option<String>>,
     pub has_unknown_top_level_call: bool,
 }
 
@@ -87,6 +89,7 @@ pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFac
         imports: collector.imports,
         function_calls: collector.function_calls,
         exported_functions: collector.exported_functions.into_iter().collect(),
+        unknown_callers: collector.unknown_callers,
         has_unknown_top_level_call: collector.has_unknown_top_level_call,
     }
 }
@@ -145,6 +148,14 @@ fn all_named_specifiers_are_type(specifiers: Option<&[ImportDeclarationSpecifier
 
 fn all_export_specifiers_are_type(specifiers: &[ExportSpecifier<'_>]) -> bool {
     !specifiers.is_empty() && specifiers.iter().all(|s| s.export_kind.is_type())
+}
+
+fn module_export_name_name<'a>(name: &'a ModuleExportName<'a>) -> Option<&'a str> {
+    if let ModuleExportName::IdentifierReference(identifier) = name {
+        Some(identifier.name.as_str())
+    } else {
+        None
+    }
 }
 
 fn is_require_callee(expr: &Expression<'_>) -> bool {

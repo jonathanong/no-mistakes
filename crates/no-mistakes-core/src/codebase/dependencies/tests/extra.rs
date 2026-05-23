@@ -101,6 +101,32 @@ fn target_module_filter_keeps_only_matching_module_nodes() {
 }
 
 #[test]
+fn file_filters_exclude_module_nodes_without_target_module_filter() {
+    let entries = vec![
+        graph::NodeEntry {
+            node: NodeId::Module("@react/client".to_string()),
+            depth: 1,
+            via: vec![EdgeKind::Import],
+        },
+        graph::NodeEntry {
+            node: NodeId::File(PathBuf::from("/repo/src/local.mts")),
+            depth: 1,
+            via: vec![EdgeKind::Import],
+        },
+    ];
+    let mut args = traverse_args(PathBuf::from("/repo"), vec![PathBuf::from("src/entry.mts")]);
+    args.filters = vec!["src/**".to_string()];
+
+    let filtered = apply_filters(entries, &args, Path::new("/repo")).unwrap();
+
+    assert_eq!(filtered.len(), 1);
+    assert_eq!(
+        filtered[0].node,
+        NodeId::File(PathBuf::from("/repo/src/local.mts"))
+    );
+}
+
+#[test]
 fn deps_direction_rejects_symbol_entrypoints() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/codebase-analysis")

@@ -463,6 +463,19 @@ fn resolve_entrypoints_accepts_workspace_package_specifier() {
 }
 
 #[test]
+fn resolve_entrypoints_strips_symbol_suffix_from_module_node() {
+    let root = fixture_root("graph-modules");
+    let args = parse(&["dependents", "@external/pkg#handler"]);
+    let entrypoints = resolve_entrypoints(&args.files, &root, &root);
+
+    assert_eq!(
+        entrypoints[0].node,
+        graph::NodeId::Module("@external/pkg".to_string())
+    );
+    assert_eq!(entrypoints[0].symbol.as_deref(), Some("handler"));
+}
+
+#[test]
 fn validate_direction_allows_symbol_with_dependents() {
     let args = parse(&["deps", "a.mts#alpha", "b.mts"]);
     let root = fixture_root("simple");

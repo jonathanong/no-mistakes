@@ -16,8 +16,25 @@ fn import_is_reachable(
         return true;
     };
     facts.has_unknown_top_level_call
+        || has_reachable_unknown_call(facts, reachable)
         || reachable.contains(scope)
         || facts.exported_functions.iter().any(|name| name == scope)
+}
+
+fn has_reachable_unknown_call(
+    facts: &crate::codebase::ts_source::facts::TsFileFacts,
+    reachable: &HashSet<String>,
+) -> bool {
+    facts.unknown_callers.iter().any(|caller| match caller {
+        None => true,
+        Some(caller) => {
+            reachable.contains(caller)
+                || facts
+                    .exported_functions
+                    .iter()
+                    .any(|function| function == caller)
+        }
+    })
 }
 
 fn reachable_function_scopes(
@@ -52,7 +69,11 @@ fn reachable_function_scopes(
 }
 
 fn bare_module_node(specifier: &str) -> Option<NodeId> {
-    if specifier.starts_with('.') || specifier.starts_with('/') || specifier.starts_with('#') {
+    if specifier.starts_with('.')
+        || specifier.starts_with('/')
+        || specifier.starts_with('#')
+        || specifier.starts_with("node:")
+    {
         return None;
     }
     Some(NodeId::Module(specifier.to_string()))

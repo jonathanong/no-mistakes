@@ -1,6 +1,6 @@
 pub(crate) mod playwright;
 
-use super::extract::{is_indexable, is_tsx_file, ExtractedImport, ImportExtractor, ImportKind};
+use super::extract::{is_indexable, ExtractedImport, ImportKind};
 use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
 use crate::codebase::ts_source::facts::{
     collect_ts_facts, collect_ts_facts_with_context, TsFactContext, TsFactMap, TsFactPlan,

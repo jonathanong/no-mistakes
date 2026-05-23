@@ -186,7 +186,7 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
     }));
 
     assert_eq!(
-        collect_import_edges(&imports, &resolver, &graph_files).len(),
+        collect_import_edges(&imports, &resolver, &Default::default(), &graph_files).len(),
         1
     );
     let hidden_imports_path = root.join("packages/api/src/users.mts");
@@ -200,7 +200,7 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         ..Default::default()
     };
     let hidden_imports = vec![(&hidden_imports_path, &hidden_imports_facts)];
-    assert!(collect_import_edges(&hidden_imports, &resolver, &graph_files).is_empty());
+    assert!(collect_import_edges(&hidden_imports, &resolver, &Default::default(), &graph_files).is_empty());
     assert_eq!(package_name_from_spec("@scope/pkg/path"), "@scope/pkg");
     assert_eq!(package_name_from_spec("@scope"), "@scope");
 }
@@ -360,8 +360,6 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
     assert!(import_neighbors(
         &root.join("missing.mts"),
         &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
-        &ImportExtractor::for_typescript().unwrap(),
-        &ImportExtractor::for_tsx().unwrap(),
         &graph_files,
         None,
     )
