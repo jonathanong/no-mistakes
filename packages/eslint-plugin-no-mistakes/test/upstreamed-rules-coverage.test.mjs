@@ -27,6 +27,7 @@ describe("upstreamed generic rule coverage", () => {
       "message",
       "message",
       "message",
+      "message",
     ]);
     assert.deepEqual(
       messages(
@@ -38,6 +39,7 @@ describe("upstreamed generic rule coverage", () => {
       ["message"],
     );
     assert.deepEqual(messages(code, "test-no-shared-state", undefined, "coverage.tsx"), [
+      "shared",
       "shared",
       "shared",
       "shared",

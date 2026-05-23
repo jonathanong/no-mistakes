@@ -95,7 +95,7 @@ module.exports = rule(
       }
     },
     BinaryExpression(node) {
-      if (!["==", "===", "!=="].includes(node.operator)) return;
+      if (!["!=", "==", "===", "!=="].includes(node.operator)) return;
       if (
         (isMessageMember(node.left) && node.right.type === "Literal") ||
         (isMessageMember(node.right) && node.left.type === "Literal")

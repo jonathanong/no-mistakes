@@ -9,14 +9,20 @@ function isNextPath(filename) {
 }
 
 function isJsonLdScript(node) {
-  return node.attributes.some(
-    (attribute) =>
-      attribute.type === "JSXAttribute" &&
-      attribute.name.type === "JSXIdentifier" &&
-      attribute.name.name === "type" &&
-      attribute.value?.type === "Literal" &&
-      attribute.value.value === "application/ld+json",
-  );
+  return node.attributes.some((attribute) => {
+    if (
+      attribute.type !== "JSXAttribute" ||
+      attribute.name.type !== "JSXIdentifier" ||
+      attribute.name.name !== "type"
+    ) {
+      return false;
+    }
+    const value =
+      attribute.value?.type === "JSXExpressionContainer"
+        ? attribute.value.expression
+        : attribute.value;
+    return value?.type === "Literal" && value.value === "application/ld+json";
+  });
 }
 
 module.exports = rule(

@@ -35,7 +35,7 @@ describe("upstreamed generic rules", () => {
   it("reports generic invalid examples", () => {
     const code = fixture("invalid.tsx");
     const expected = [
-      ["await-array-methods", ["awaited", "awaited"]],
+      ["await-array-methods", ["awaited", "awaited", "awaited"]],
       ["no-delete-property", ["delete"]],
       ["no-placeholder-never-type-exports", ["placeholder", "placeholder"]],
       ["test-no-shared-state", ["shared"]],

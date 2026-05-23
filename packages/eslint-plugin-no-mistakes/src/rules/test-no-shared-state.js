@@ -71,6 +71,15 @@ module.exports = rule(
 
     return {
       "Program > VariableDeclaration"(node) {
+        for (const declaration of node.declarations) {
+          if (
+            declaration.id.type === "Identifier" &&
+            (declaration.init?.type === "FunctionExpression" ||
+              declaration.init?.type === "ArrowFunctionExpression")
+          ) {
+            functionDeclarations.set(declaration.id.name, declaration.init);
+          }
+        }
         if (node.kind === "const") return;
         for (const declaration of node.declarations) {
           for (const name of collectPatternNames(declaration.id)) mutableTopLevel.add(name);

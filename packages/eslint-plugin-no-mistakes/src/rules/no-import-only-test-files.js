@@ -14,12 +14,25 @@ function isTestImportSource(source) {
 }
 
 function isTestRequire(statement) {
-  return (
+  if (
     statement.type === "ExpressionStatement" &&
     statement.expression.type === "CallExpression" &&
     statement.expression.callee.type === "Identifier" &&
     statement.expression.callee.name === "require" &&
     isTestImportSource(statement.expression.arguments[0]?.value)
+  ) {
+    return true;
+  }
+  return (
+    statement.type === "VariableDeclaration" &&
+    statement.declarations.length > 0 &&
+    statement.declarations.every(
+      (declaration) =>
+        declaration.init?.type === "CallExpression" &&
+        declaration.init.callee.type === "Identifier" &&
+        declaration.init.callee.name === "require" &&
+        isTestImportSource(declaration.init.arguments[0]?.value),
+    )
   );
 }
 
@@ -43,7 +56,9 @@ module.exports = rule(
   (context) => ({
     Program(node) {
       if (!isTestFile(context.filename) || node.body.length === 0) return;
-      if (!node.body.every((statement) => isTestImport(statement) || isTestRequire(statement)))
+      const statements = node.body.filter((statement) => statement.directive === undefined);
+      if (statements.length === 0) return;
+      if (!statements.every((statement) => isTestImport(statement) || isTestRequire(statement)))
         return;
       context.report({ node, messageId: "aggregate" });
     },

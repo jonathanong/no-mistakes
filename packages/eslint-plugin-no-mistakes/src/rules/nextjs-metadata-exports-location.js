@@ -63,7 +63,13 @@ module.exports = rule(
       ) {
         context.report({ node, messageId: "location" });
       }
-      if (node.specifiers?.some((specifier) => METADATA_EXPORTS.has(specifierName(specifier)))) {
+      if (
+        node.exportKind !== "type" &&
+        node.specifiers?.some(
+          (specifier) =>
+            specifier.exportKind !== "type" && METADATA_EXPORTS.has(specifierName(specifier)),
+        )
+      ) {
         context.report({ node, messageId: "location" });
       }
     },

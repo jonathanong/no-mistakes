@@ -16,6 +16,9 @@ expect(error).toEqual(error.message);
 if (error.code !== "missing") {
   throw error;
 }
+if (error.message != "missing") {
+  throw error;
+}
 let shared = 0;
 let namedShared = 0;
 let { sharedFromObject, sharedDefault = 0, ...sharedRest } = seed;
@@ -27,6 +30,9 @@ function mutateNamedShared() {
 function mutateNamedMember() {
   namedShared.value = 1;
 }
+const mutateVariableShared = () => {
+  namedShared++;
+};
 it.only("assigns", () => {
   shared = 1;
   sharedFromObject = 3;
@@ -39,6 +45,7 @@ it.only("assigns", () => {
 });
 test("named callback", mutateNamedShared);
 test("named member callback", mutateNamedMember);
+test("variable callback", mutateVariableShared);
 describe.skip("suite", () => {});
 test["sequential"]("computed", () => {});
 page.locator("../..");

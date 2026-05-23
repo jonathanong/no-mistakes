@@ -4,10 +4,16 @@ import { use as otherUse } from "not-react";
 const values = [3, 1, 2];
 await values.sort();
 await [1, 2].slice();
+async function localArray() {
+  const local = [1, 2];
+  await local.sort();
+}
 delete values.length;
 export type Placeholder = never;
 type OtherPlaceholder = never;
 export type { OtherPlaceholder };
+type metadata = {};
+export type { metadata };
 let counter = 0;
 it("mutates shared state", () => {
   counter++;

@@ -4,19 +4,6 @@ const { callMethodName, rule } = require("../helpers");
 
 const BANNED_METHODS = new Set(["sort", "toSorted", "every", "findIndex", "slice", "toSpliced"]);
 
-function arrayVariableNames(program) {
-  const names = new Set();
-  for (const statement of program.body) {
-    if (statement.type !== "VariableDeclaration") continue;
-    for (const declaration of statement.declarations) {
-      if (declaration.id.type === "Identifier" && declaration.init?.type === "ArrayExpression") {
-        names.add(declaration.id.name);
-      }
-    }
-  }
-  return names;
-}
-
 function isKnownArrayReceiver(node, names) {
   if (node.type === "ArrayExpression") return true;
   return node.type === "Identifier" && names.has(node.name);
@@ -38,8 +25,10 @@ module.exports = rule(
   (context) => {
     let arrays = new Set();
     return {
-      Program(node) {
-        arrays = arrayVariableNames(node);
+      VariableDeclarator(node) {
+        if (node.id.type === "Identifier" && node.init?.type === "ArrayExpression") {
+          arrays.add(node.id.name);
+        }
       },
       AwaitExpression(node) {
         if (node.argument.type !== "CallExpression") return;
