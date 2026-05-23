@@ -117,6 +117,20 @@ fn fact_runner_skips_missing_facts_inside_target_roots() {
 }
 
 #[test]
+fn fact_runner_ignores_missing_source_for_non_route_target_files() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture());
+    let inside = root.join("web/app/page.tsx");
+    let facts = CheckFactMap {
+        files: vec![inside.clone()],
+        ts: HashMap::from([(inside, CheckFileFacts::default())]),
+        ..Default::default()
+    };
+    let findings = check_with_facts(&root, &config(), &facts).unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn fact_runner_requires_source_for_target_files() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture());
     let inside = root.join("web/app/api/users/route.ts");
@@ -128,6 +142,29 @@ fn fact_runner_requires_source_for_target_files() {
     let err = check_with_facts(&root, &config(), &facts).unwrap_err();
 
     assert!(err.to_string().contains("requires source facts"), "{err:?}");
+}
+
+#[test]
+fn fact_runner_reports_parse_errors_for_route_files() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture());
+    let inside = root.join("web/app/api/users/route.ts");
+    let facts = CheckFactMap {
+        files: vec![inside.clone()],
+        ts: HashMap::from([(
+            inside,
+            CheckFileFacts {
+                parse_error: Some("failed to read fixture route".to_string()),
+                ..Default::default()
+            },
+        )]),
+        ..Default::default()
+    };
+    let err = check_with_facts(&root, &config(), &facts).unwrap_err();
+
+    assert!(
+        err.to_string().contains("failed to read fixture route"),
+        "{err:?}"
+    );
 }
 
 #[test]

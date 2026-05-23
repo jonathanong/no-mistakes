@@ -28,15 +28,19 @@ pub(crate) fn check_with_facts(
     let target_roots = target_roots(&root, config);
     let mut items = Vec::new();
     for path in shared.files() {
-        if !target_roots
-            .iter()
-            .any(|target_root| path.starts_with(target_root))
-        {
+        if !is_nextjs_api_route(path, &target_roots) {
             continue;
         }
         let Some(facts) = shared.ts.get(path) else {
             continue;
         };
+        if let Some(parse_error) = facts.parse_error.as_ref() {
+            bail!(
+                "{} could not analyze {}: {parse_error}",
+                RULE_ID,
+                path.display()
+            );
+        }
         let Some(source) = facts.source.as_ref() else {
             bail!("{} requires source facts for {}", RULE_ID, path.display());
         };
