@@ -85,3 +85,6 @@ fn unique_findings(
         })
         .collect()
 }
+
+#[cfg(test)]
+mod tests;

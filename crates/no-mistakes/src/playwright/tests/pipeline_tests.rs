@@ -6,7 +6,7 @@ use crate::playwright::analysis::context::{
 use crate::playwright::analysis::output::{
     build_related_report, print_edges_text, print_related_text,
 };
-use crate::playwright::analysis::pipeline::analyze_with_policy;
+use crate::playwright::analysis::pipeline::{analyze_with_policy, analyze_with_policy_and_facts};
 use crate::playwright::analysis::test_file::analyze_test_file;
 use crate::playwright::analysis::types::{Analysis, UniqueSelectorPolicy};
 use crate::playwright::cli::{Command, PlaywrightArgs as Cli};
@@ -37,6 +37,86 @@ fn collect_app_selectors(
     app_selectors.sort();
     app_selectors.dedup();
     Ok(app_selectors)
+}
+
+#[test]
+fn analyze_with_facts_reports_missing_shared_playwright_facts() {
+    let root = fixture_path(&["nextjs-coverage", "covered"]);
+    let settings = Settings {
+        frontend_root: "web/app".to_string(),
+        playwright_configs: vec![],
+        project: None,
+        test_include: vec![],
+        test_exclude: vec![],
+        ignore_routes: vec![],
+        navigation_helpers: vec![],
+        selector_attributes: vec!["data-testid".to_string()],
+        component_selector_attributes: BTreeMap::new(),
+        html_ids: false,
+        selector_roots: vec!["web/app".to_string()],
+        selector_include: vec![],
+        selector_exclude: vec![],
+    };
+    let facts = crate::codebase::check_facts::CheckFactMap::default();
+
+    let error = match analyze_with_policy_and_facts(
+        &root,
+        &settings,
+        playwright_tests::TestPolicy::default(),
+        UniqueSelectorPolicy::default(),
+        &facts,
+    ) {
+        Ok(_) => panic!("expected missing shared facts error"),
+        Err(error) => error,
+    };
+
+    assert!(error
+        .to_string()
+        .contains("missing shared Playwright facts"));
+}
+
+#[test]
+fn analyze_with_facts_reports_missing_playwright_entry_in_file_facts() {
+    let root = fixture_path(&["nextjs-coverage", "covered"]);
+    let settings = Settings {
+        frontend_root: "web/app".to_string(),
+        playwright_configs: vec![],
+        project: None,
+        test_include: vec![],
+        test_exclude: vec![],
+        ignore_routes: vec![],
+        navigation_helpers: vec![],
+        selector_attributes: vec!["data-testid".to_string()],
+        component_selector_attributes: BTreeMap::new(),
+        html_ids: false,
+        selector_roots: vec!["web/app".to_string()],
+        selector_include: vec![],
+        selector_exclude: vec![],
+    };
+    let mut facts = crate::codebase::check_facts::CheckFactMap::default();
+    facts.ts.insert(
+        root.join("tests/e2e/settings.spec.ts"),
+        crate::codebase::check_facts::CheckFileFacts::default(),
+    );
+    facts.ts.insert(
+        root.join("tests/e2e/users.spec.ts"),
+        crate::codebase::check_facts::CheckFileFacts::default(),
+    );
+
+    let error = match analyze_with_policy_and_facts(
+        &root,
+        &settings,
+        playwright_tests::TestPolicy::default(),
+        UniqueSelectorPolicy::default(),
+        &facts,
+    ) {
+        Ok(_) => panic!("expected missing shared facts error"),
+        Err(error) => error,
+    };
+
+    assert!(error
+        .to_string()
+        .contains("missing shared Playwright facts"));
 }
 
 #[test]

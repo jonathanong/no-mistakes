@@ -140,3 +140,6 @@ fn unique_test_ids_enabled(config: &NoMistakesConfig) -> bool {
 fn unique_html_ids_enabled(config: &NoMistakesConfig) -> bool {
     config.rule_configured(PLAYWRIGHT_UNIQUE_HTML_IDS)
 }
+
+#[cfg(test)]
+mod tests;
