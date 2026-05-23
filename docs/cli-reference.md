@@ -36,8 +36,9 @@ no-mistakes <external-subcommand> [ARGS]...
 | `--tsconfig <FILE>` | tsconfig for path aliases. If omitted, searches upward from root. |
 | `--depth <N>` | Maximum traversal depth. `--max-depth` is an alias on graph, queue, and server edge commands. Queue/server `edges` default to direct edges when roots are provided, and to the full edge list otherwise. |
 | `--filter <GLOB>` | Include only matching files. Repeatable; trailing `/` collapses to folder level. |
+| `--target-module <GLOB>` | Include only matching external module nodes. Repeatable. |
 | `--test <FRAMEWORK>` | Filter to `vitest`, `playwright`, or `cargo` test globs. Repeatable. |
-| `--relationship <KIND>` | Follow only `import`, `workspace`, `test`, `route`, `queue`, `md`, `ci`, `http`, `process`, `asset`, `react`, or `all`. Repeatable. |
+| `--relationship <KIND>` | Follow only `import`, `import-static`, `import-dynamic`, `import-type`, `import-require`, `workspace`, `package`, `test`, `route`, `queue`, `md`, `ci`, `http`, `process`, `asset`, `react`, or `all`. Repeatable. |
 | `--format <FORMAT>` | `json`, `md`, `yml`, `paths`, or `human`. |
 | `--json` | Shorthand for `--format json`. |
 | `--timings` | Emit phase timings on stderr. |
@@ -47,6 +48,8 @@ Examples:
 
 ```sh
 no-mistakes dependencies src/main.mts --relationship import --format json
+no-mistakes dependencies src/main.mts --target-module '@react/*' --format paths
+no-mistakes dependents '@react/client' --format paths
 no-mistakes dependents src/utils.mts --test vitest --format paths
 no-mistakes dependents src/queues.mts#sendEmail --json
 no-mistakes related web/app/users/page.tsx --relationship test --format paths

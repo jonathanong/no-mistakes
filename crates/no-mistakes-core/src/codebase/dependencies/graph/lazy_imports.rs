@@ -30,15 +30,15 @@ pub fn lazy_import_deps_of(
 
 pub(crate) fn lazy_import_deps_of_with_files(
     roots: &[NodeId],
-    _root: &Path,
+    root: &Path,
     tsconfig: &TsConfig,
     max_depth: Option<usize>,
     graph_files: &GraphFiles,
     allowed: Option<&HashSet<EdgeKind>>,
 ) -> Vec<NodeEntry> {
-    let ts_ex = ImportExtractor::for_typescript().expect("typescript import extractor builds");
-    let tsx_ex = ImportExtractor::for_tsx().expect("tsx import extractor builds");
     let resolver = ImportResolver::new(tsconfig).with_visible(&graph_files.visible);
+    let workspace =
+        crate::codebase::workspaces::load_from_files(root, graph_files.all()).unwrap_or_default();
 
     let mut visited: HashSet<NodeId> = HashSet::new();
     let mut frontier: Vec<NodeId> = Vec::new();
@@ -69,7 +69,7 @@ pub(crate) fn lazy_import_deps_of_with_files(
                 }
                 (
                     node.clone(),
-                    import_neighbors(path, &resolver, &ts_ex, &tsx_ex, graph_files, allowed),
+                    import_neighbors(path, &resolver, &workspace, graph_files, allowed),
                 )
             })
             .collect();
@@ -100,35 +100,6 @@ pub(crate) fn lazy_import_deps_of_with_files(
     }
 
     result
-}
-
-fn import_neighbors(
-    path: &Path,
-    resolver: &ImportResolver<'_>,
-    ts_ex: &ImportExtractor,
-    tsx_ex: &ImportExtractor,
-    graph_files: &GraphFiles,
-    allowed: Option<&HashSet<EdgeKind>>,
-) -> Vec<(NodeId, EdgeKind)> {
-    let source = match std::fs::read_to_string(path) {
-        Ok(source) => source,
-        Err(_) => return Vec::new(),
-    };
-    let extractor = if is_tsx_file(path) { tsx_ex } else { ts_ex };
-    let mut neighbors: Vec<(NodeId, EdgeKind)> = extractor
-        .extract(&source)
-        .unwrap_or_default()
-        .into_iter()
-        .filter_map(|imp| {
-            resolver
-                .resolve(&imp.specifier, path)
-                .filter(|target| graph_files.is_visible(target) && is_indexable(target))
-                .map(|target| (NodeId::File(target), edge_kind_for_import(&imp)))
-        })
-        .filter(|(_, kind)| allowed.is_none_or(|a| a.contains(kind)))
-        .collect();
-    neighbors.sort_by_key(|(node, kind)| (node_sort_key(node), *kind as u8));
-    neighbors
 }
 
 fn push_route_ref_edge(edges: &mut Vec<Edge>, source: &Path, target: &Path) {

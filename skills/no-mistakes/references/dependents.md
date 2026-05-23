@@ -51,7 +51,7 @@ no-mistakes dependents src/utils.mts --root /path/to/project --tsconfig backend/
 | `--depth <N>` | unlimited | Max traversal depth |
 | `--filter <GLOB>` | none | Include only matching files (repeatable, OR) |
 | `--test <FRAMEWORK>` | none | Expand to well-known test globs: `vitest`, `playwright`, `cargo` (repeatable) |
-| `--relationship <KIND>` | all | Follow only edges of this kind (repeatable, OR). Values: `import`, `workspace`, `test`, `route`, `queue`, `md`, `ci`, `http`, `process`, `asset`, `react`, `all` |
+| `--relationship <KIND>` | all | Follow only edges of this kind (repeatable, OR). Values: `import`, `import-static`, `import-dynamic`, `import-type`, `import-require`, `workspace`, `package`, `test`, `route`, `queue`, `md`, `ci`, `http`, `process`, `asset`, `react`, `all` |
 | `--format <FORMAT>` | human (TTY) / json (pipe) | Output format: `json`, `md`, `yml`, `paths`, `human` |
 | `--json` | false | Shorthand for `--format json` |
 | `-j / --jobs <N>` | all cores | Worker threads. `0` or omitted = all cores. Honors `RAYON_NUM_THREADS`. |

@@ -1,13 +1,15 @@
 use anyhow::Result;
 use oxc::allocator::Allocator;
 use oxc::ast::ast::{
-    Argument, CallExpression, ExportAllDeclaration, ExportNamedDeclaration, ExportSpecifier,
-    Expression, ImportDeclaration, ImportDeclarationSpecifier, ImportExpression, Program,
-    TSImportType,
+    Argument, CallExpression, ExportAllDeclaration, ExportDefaultDeclaration,
+    ExportDefaultDeclarationKind, ExportNamedDeclaration, ExportSpecifier, Expression,
+    ImportDeclaration, ImportDeclarationSpecifier, ImportExpression, MethodDefinition,
+    ModuleExportName, ObjectProperty, Program, TSImportType, VariableDeclarator,
 };
 use oxc::ast_visit::{walk, Visit};
 use oxc::parser::Parser;
 use oxc::span::SourceType;
+use std::collections::HashSet;
 use std::path::Path;
 
 /// The syntactic import form that produced an extracted module specifier.
@@ -28,6 +30,23 @@ pub enum ImportKind {
 pub struct ExtractedImport {
     pub specifier: String,
     pub kind: ImportKind,
+    pub function_scope: Option<String>,
+}
+
+/// A statically visible function call in a file.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FunctionCall {
+    pub caller: Option<String>,
+    pub callee: String,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ImportFacts {
+    pub imports: Vec<ExtractedImport>,
+    pub function_calls: Vec<FunctionCall>,
+    pub exported_functions: Vec<String>,
+    pub unknown_callers: Vec<Option<String>>,
+    pub has_unknown_top_level_call: bool,
 }
 
 /// Holds parser configuration for TypeScript or TSX extraction.
@@ -55,76 +74,46 @@ impl ImportExtractor {
         };
         let ret = Parser::new(&allocator, source, source_type).parse();
 
-        Ok(extract_imports_from_program(&ret.program))
+        Ok(extract_import_facts_from_program(&ret.program).imports)
     }
 }
 
 pub fn extract_imports_from_program<'a>(program: &Program<'a>) -> Vec<ExtractedImport> {
+    extract_import_facts_from_program(program).imports
+}
+
+pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFacts {
     let mut collector = ImportCollector::default();
     collector.visit_program(program);
-    collector.imports
-}
-
-#[derive(Default)]
-struct ImportCollector {
-    imports: Vec<ExtractedImport>,
-}
-
-impl ImportCollector {
-    fn push(&mut self, specifier: &str, kind: ImportKind) {
-        if !specifier.is_empty() {
-            self.imports.push(ExtractedImport {
-                specifier: specifier.to_string(),
-                kind,
-            });
-        }
+    let mut exported_functions: Vec<_> = collector.exported_functions.into_iter().collect();
+    exported_functions.sort();
+    ImportFacts {
+        imports: collector.imports,
+        function_calls: collector.function_calls,
+        exported_functions,
+        unknown_callers: collector.unknown_callers,
+        has_unknown_top_level_call: collector.has_unknown_top_level_call,
     }
 }
 
-impl<'a> Visit<'a> for ImportCollector {
-    fn visit_import_declaration(&mut self, import: &ImportDeclaration<'a>) {
-        let kind = import_declaration_kind(import);
-        self.push(import.source.value.as_str(), kind);
-    }
+include!("extract_visit.rs");
 
-    fn visit_export_named_declaration(&mut self, export: &ExportNamedDeclaration<'a>) {
-        if let Some(source) = &export.source {
-            let kind = export_named_declaration_kind(export);
-            self.push(source.value.as_str(), kind);
+fn binding_identifier_name<'a>(pattern: &'a oxc::ast::ast::BindingPattern<'a>) -> Option<&'a str> {
+    match pattern {
+        oxc::ast::ast::BindingPattern::BindingIdentifier(identifier) => {
+            Some(identifier.name.as_str())
         }
-        walk::walk_export_named_declaration(self, export);
+        _ => None,
     }
+}
 
-    fn visit_export_all_declaration(&mut self, export: &ExportAllDeclaration<'a>) {
-        let kind = if export.export_kind.is_type() {
-            ImportKind::Type
-        } else {
-            ImportKind::Static
-        };
-        self.push(export.source.value.as_str(), kind);
-    }
-
-    fn visit_import_expression(&mut self, import: &ImportExpression<'a>) {
-        if let Some(specifier) = string_literal_expr(&import.source) {
-            self.push(specifier, ImportKind::Dynamic);
+fn simple_callee_name<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
+    match expr {
+        Expression::Identifier(ident) => Some(ident.name.as_str()),
+        Expression::ParenthesizedExpression(parenthesized) => {
+            simple_callee_name(&parenthesized.expression)
         }
-        walk::walk_import_expression(self, import);
-    }
-
-    fn visit_ts_import_type(&mut self, import: &TSImportType<'a>) {
-        self.push(import.source.value.as_str(), ImportKind::Type);
-        walk::walk_ts_import_type(self, import);
-    }
-
-    fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        if is_require_callee(&call.callee) {
-            if let Some(first) = call.arguments.first() {
-                if let Some(specifier) = string_literal_argument(first) {
-                    self.push(specifier, ImportKind::Require);
-                }
-            }
-        }
-        walk::walk_call_expression(self, call);
+        _ => None,
     }
 }
 
@@ -161,6 +150,14 @@ fn all_named_specifiers_are_type(specifiers: Option<&[ImportDeclarationSpecifier
 
 fn all_export_specifiers_are_type(specifiers: &[ExportSpecifier<'_>]) -> bool {
     !specifiers.is_empty() && specifiers.iter().all(|s| s.export_kind.is_type())
+}
+
+fn module_export_name_name<'a>(name: &'a ModuleExportName<'a>) -> Option<&'a str> {
+    if let ModuleExportName::IdentifierReference(identifier) = name {
+        Some(identifier.name.as_str())
+    } else {
+        None
+    }
 }
 
 fn is_require_callee(expr: &Expression<'_>) -> bool {

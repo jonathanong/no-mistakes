@@ -368,8 +368,15 @@ fn large_graph_monorepo_exercises_all_relationships() {
     let files = value["files"].as_array().expect("files should be an array");
     assert_eq!(
         files.len(),
-        176,
+        178,
         "large fixture traversal should stay stable"
+    );
+    assert!(
+        !files.iter().any(|file| {
+            file["path"].as_str() == Some("node:child_process")
+                || file["module"].as_str() == Some("node:child_process")
+        }),
+        "Node built-ins should not be reported as external module dependencies"
     );
 
     let mut kinds = BTreeSet::new();

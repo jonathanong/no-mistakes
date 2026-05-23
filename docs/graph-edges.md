@@ -1,9 +1,9 @@
 # Graph Edges
 
 `DepGraph` is the canonical graph for `no-mistakes dependencies`,
-`dependents`, `related`, and test-impact traversal. Graph nodes are files or
-virtual queue jobs. Every edge has an `EdgeKind`, serialized in output through
-the `via` field.
+`dependents`, `related`, and test-impact traversal. Graph nodes are files,
+external modules, or virtual queue jobs. Every edge has an `EdgeKind`,
+serialized in output through the `via` field.
 
 ## Supported Edges
 
@@ -13,7 +13,8 @@ the `via` field.
 | `type-import` | `import`, `import-type` | TS/JS file -> type-only dependency | [`import-forms/type-only.mts`](../fixtures/codebase-analysis/import-forms/type-only.mts), [`inline-type.mts`](../fixtures/codebase-analysis/import-forms/inline-type.mts), [`import-type.mts`](../fixtures/codebase-analysis/import-forms/import-type.mts) |
 | `dynamic-import` | `import`, `import-dynamic` | TS/JS file -> string-literal `import("...")` target | [`import-forms/dynamic.mts`](../fixtures/codebase-analysis/import-forms/dynamic.mts) |
 | `require` | `import`, `import-require` | JS/TS file -> string-literal `require("...")` target | [`import-forms/require.js`](../fixtures/codebase-analysis/import-forms/require.js) |
-| `workspace` | `workspace` | TS/JS file or `package.json` -> workspace package entry/export/import target | [`cross-boundary-monorepo`](../fixtures/codebase-analysis/cross-boundary-monorepo), [`graph-missing-edges`](../fixtures/codebase-analysis/graph-missing-edges) |
+| `workspace` | `workspace` | TS/JS file -> workspace package entry/export/import target | [`cross-boundary-monorepo`](../fixtures/codebase-analysis/cross-boundary-monorepo), [`graph-missing-edges`](../fixtures/codebase-analysis/graph-missing-edges) |
+| `package` | `package` | `package.json` -> declared workspace package entry or external module node | [`graph-modules`](../fixtures/codebase-analysis/graph-modules) |
 | `asset` | `asset` | TS/JS file -> explicit relative non-code asset import | [`graph-missing-edges/packages/app/src/entry.mts`](../fixtures/codebase-analysis/graph-missing-edges/packages/app/src/entry.mts) |
 | `test` | `test` | test file -> corresponding source file | [`codebase-intel/packages/api/src/index.test.mts`](../fixtures/codebase-analysis/codebase-intel/packages/api/src/index.test.mts) |
 | `route` | `route` | frontend route reference file -> backend route definition file | [`codebase-intel/packages/web/src/api-client.tsx`](../fixtures/codebase-analysis/codebase-intel/packages/web/src/api-client.tsx) |
@@ -34,5 +35,10 @@ the `via` field.
   supported expression-free shapes produce edges.
 - `ci` is intentionally narrow: it covers the current workflow-to-Rust-bin
   support and is not a full shell, npm script, or workflow dependency graph.
-- External packages remain outside the graph unless they resolve to local
-  workspace or package-local targets.
+- External packages are terminal module nodes. They can be selected as roots,
+  targets, or filtered with `--target-module`, but their `node_modules` source
+  is not parsed. Node built-ins such as `node:path` remain excluded from the
+  graph.
+- Function-scoped dynamic `import()` and `require()` edges are pruned unless the
+  containing function is statically called, exported, reached through an unknown
+  top-level call shape, or contains an unknown call shape in reachable code.

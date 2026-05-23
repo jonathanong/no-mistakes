@@ -18,6 +18,7 @@ fn edge_kind_str(k: EdgeKind) -> &'static str {
         EdgeKind::Layout => "layout",
         EdgeKind::MarkdownLink => "md",
         EdgeKind::WorkspaceImport => "workspace",
+        EdgeKind::PackageDependency => "package",
         EdgeKind::CiInvocation => "ci",
         EdgeKind::HttpCall => "http",
         EdgeKind::ProcessSpawn => "process",
@@ -33,6 +34,7 @@ fn edge_kind_str(k: EdgeKind) -> &'static str {
 enum OutputNode {
     File(OutputFile),
     QueueJob(OutputQueueJob),
+    Module(OutputModule),
 }
 
 #[derive(Serialize)]
@@ -48,6 +50,14 @@ struct OutputQueueJob {
     #[serde(rename = "queueFile")]
     queue_file: String,
     job: String,
+    depth: usize,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    via: Vec<&'static str>,
+}
+
+#[derive(Serialize)]
+struct OutputModule {
+    module: String,
     depth: usize,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     via: Vec<&'static str>,
@@ -86,6 +96,11 @@ fn build_output(roots: &[String], entries: &[NodeEntry], root_dir: &Path) -> Out
                             via,
                         })
                     }
+                    NodeId::Module(specifier) => OutputNode::Module(OutputModule {
+                        module: specifier.clone(),
+                        depth: entry.depth,
+                        via,
+                    }),
                 }
             })
             .collect(),
@@ -119,6 +134,9 @@ pub fn write_paths(entries: &[NodeEntry], root_dir: &Path, w: &mut dyn Write) ->
                     .strip_prefix(root_dir)
                     .unwrap_or(queue_file.as_path());
                 writeln!(w, "{}#{}", rel.display(), job)?;
+            }
+            NodeId::Module(specifier) => {
+                writeln!(w, "{specifier}")?;
             }
         }
     }

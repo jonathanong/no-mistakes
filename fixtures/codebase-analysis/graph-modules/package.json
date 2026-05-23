@@ -1,0 +1,10 @@
+{
+  "name": "graph-modules",
+  "workspaces": [
+    "packages/*"
+  ],
+  "dependencies": {
+    "@react/server": "^1.0.0",
+    "lodash": "^4.0.0"
+  }
+}

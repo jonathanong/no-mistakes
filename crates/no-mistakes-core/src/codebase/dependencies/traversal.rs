@@ -34,28 +34,69 @@ fn resolve_root(args: &TraverseArgs, cwd: &Path) -> PathBuf {
     }
 }
 
-fn resolve_entrypoints(raw_entrypoints: &[PathBuf], root: &Path, cwd: &Path) -> Vec<Entrypoint> {
+fn resolve_entrypoints_with_files(
+    raw_entrypoints: &[PathBuf],
+    root: &Path,
+    cwd: &Path,
+    graph_files: &graph::GraphFiles,
+) -> Vec<Entrypoint> {
+    let workspace =
+        crate::codebase::workspaces::load_from_files(root, graph_files.all()).unwrap_or_default();
+    let root_dependencies = root_dependency_names(root);
     raw_entrypoints
         .iter()
         .map(|raw| {
             let raw_str = raw.to_string_lossy();
-            let ep = parse_entrypoint(&raw_str);
-            let file = if ep.file.is_absolute() {
-                ep.file
+            let (raw_file, symbol) = parse_entrypoint(&raw_str);
+            let raw_for_node = raw_file.to_string_lossy().to_string();
+            let file = if raw_file.is_absolute() {
+                raw_file
             } else {
-                let from_root = root.join(&ep.file);
+                let from_root = root.join(&raw_file);
                 if from_root.exists() {
                     from_root
                 } else {
-                    cwd.join(ep.file)
+                    cwd.join(&raw_file)
                 }
             };
-            Entrypoint {
-                file,
-                symbol: ep.symbol,
-            }
+            let normalized = crate::codebase::ts_resolver::normalize_path(&file);
+            let node =
+                resolve_entrypoint_node(&raw_for_node, &normalized, &workspace, &root_dependencies);
+            let file = match &node {
+                NodeId::File(path) => path.clone(),
+                _ => normalized,
+            };
+            Entrypoint { file, node, symbol }
         })
         .collect()
+}
+
+fn resolve_entrypoint_node(
+    raw: &str,
+    path: &Path,
+    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    root_dependencies: &std::collections::HashSet<String>,
+) -> NodeId {
+    if path.is_dir() {
+        if let Some(entry) = package_dir_entry(path, workspace) {
+            return NodeId::File(entry);
+        }
+    }
+    if workspace.resolve_specifier(raw).is_none()
+        && raw_package_name(raw).is_some_and(|name| root_dependencies.contains(&name))
+    {
+        return NodeId::Module(raw.to_string());
+    }
+    if path.exists() || raw.starts_with('.') || Path::new(raw).is_absolute() {
+        return NodeId::File(path.to_path_buf());
+    }
+    if let Some(entry) = workspace.resolve_specifier(raw) {
+        return NodeId::File(entry);
+    }
+    if raw_looks_like_source_file(raw, path, root_dependencies) {
+        return NodeId::File(path.to_path_buf());
+    }
+    NodeId::Module(raw.to_string())
 }
 
 fn validate_direction(direction: &Direction, entrypoints: &[Entrypoint]) -> Result<()> {

@@ -71,17 +71,26 @@ impl DepGraph {
             Vec::new()
         };
 
+        let workspace = if plan.imports || plan.workspace || plan.package {
+            crate::codebase::workspaces::load_from_files(root, &graph_files.all)
+                .unwrap_or_default()
+        } else {
+            Default::default()
+        };
+
         if plan.imports {
-            let import_edges = collect_import_edges(&parsed_imports, &resolver, graph_files);
+            let import_edges =
+                collect_import_edges(&parsed_imports, &resolver, &workspace, graph_files);
             merge_edges(&mut forward, &mut reverse, import_edges);
         }
 
         if plan.workspace {
-            let workspace = crate::codebase::workspaces::load_from_files(root, &graph_files.all)
-                .unwrap_or_default();
             let workspace_edges =
                 collect_workspace_edges(&parsed_imports, &resolver, &workspace, graph_files);
             merge_edges(&mut forward, &mut reverse, workspace_edges);
+        }
+
+        if plan.package {
             let workspace_manifest_edges =
                 collect_workspace_manifest_edges(&graph_files.all, &workspace, graph_files);
             merge_edges(&mut forward, &mut reverse, workspace_manifest_edges);

@@ -541,25 +541,3 @@ fn md_edges_added_for_codebase_intel_fixture() {
         "README.md should have MarkdownLink edge to packages/api/src/index.mts"
     );
 }
-
-// ── package_name_from_spec ───────────────────────────────────────────────
-
-#[test]
-fn pkg_name_scoped_no_subpath() {
-    assert_eq!(package_name_from_spec("@x/api"), "@x/api");
-}
-
-#[test]
-fn pkg_name_scoped_with_subpath() {
-    assert_eq!(package_name_from_spec("@x/api/utils"), "@x/api");
-}
-
-#[test]
-fn pkg_name_unscoped_no_subpath() {
-    assert_eq!(package_name_from_spec("lodash"), "lodash");
-}
-
-#[test]
-fn pkg_name_unscoped_with_subpath() {
-    assert_eq!(package_name_from_spec("lodash/merge"), "lodash");
-}

@@ -78,6 +78,26 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
         .unwrap();
     assert_eq!(b_entry.via, vec![EdgeKind::Import, EdgeKind::TypeImport]);
 
+    let module_root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-modules"));
+    let module_tsconfig = TsConfig {
+        dir: module_root.clone(),
+        paths: vec![],
+        paths_dir: module_root.clone(),
+        base_url: None,
+    };
+    let module_files = GraphFiles::discover(&module_root);
+    let module_deps = lazy_import_deps_of_with_files(
+        &[NodeId::File(module_root.join("src/entry.mts"))],
+        &module_root,
+        &module_tsconfig,
+        None,
+        &module_files,
+        Some(&[EdgeKind::Import].into()),
+    );
+    assert!(!module_deps
+        .iter()
+        .any(|entry| entry.node == NodeId::Module("@local/pkg".to_string())));
+
     let hidden_root = crate::codebase::ts_resolver::normalize_path(&fixture("lazy-hidden"));
     let hidden_tsconfig = TsConfig {
         dir: hidden_root.clone(),
@@ -143,16 +163,26 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
     let imports_items = vec![ExtractedImport {
         specifier: "@x/web".to_string(),
         kind: ImportKind::Static,
+        function_scope: None,
     }];
-    let imports = vec![(&imports_path, imports_items.as_slice())];
+    let imports_facts = crate::codebase::ts_source::facts::TsFileFacts {
+        imports: imports_items,
+        ..Default::default()
+    };
+    let imports = vec![(&imports_path, &imports_facts)];
     let edges = collect_workspace_edges(&imports, &resolver, &workspace, &graph_files);
     assert_eq!(edges.len(), 1);
     let hidden_workspace_path = root.join("packages/api/src/users.mts");
     let hidden_workspace_items = vec![ExtractedImport {
         specifier: "@x/hidden".to_string(),
         kind: ImportKind::Static,
+        function_scope: None,
     }];
-    let hidden_workspace_import = vec![(&hidden_workspace_path, hidden_workspace_items.as_slice())];
+    let hidden_workspace_facts = crate::codebase::ts_source::facts::TsFileFacts {
+        imports: hidden_workspace_items,
+        ..Default::default()
+    };
+    let hidden_workspace_import = vec![(&hidden_workspace_path, &hidden_workspace_facts)];
     assert!(collect_workspace_edges(
         &hidden_workspace_import,
         &resolver,
@@ -172,20 +202,25 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         &graph_files,
     );
     assert!(manifest_edges.iter().any(|(_, to, kind)| {
-        *kind == EdgeKind::WorkspaceImport && to.as_file() == Some(web_entry.as_path())
+        *kind == EdgeKind::PackageDependency && to.as_file() == Some(web_entry.as_path())
     }));
 
     assert_eq!(
-        collect_import_edges(&imports, &resolver, &graph_files).len(),
+        collect_import_edges(&imports, &resolver, &Default::default(), &graph_files).len(),
         1
     );
     let hidden_imports_path = root.join("packages/api/src/users.mts");
     let hidden_imports_items = vec![ExtractedImport {
         specifier: "./index.mts".to_string(),
         kind: ImportKind::Static,
+        function_scope: None,
     }];
-    let hidden_imports = vec![(&hidden_imports_path, hidden_imports_items.as_slice())];
-    assert!(collect_import_edges(&hidden_imports, &resolver, &graph_files).is_empty());
+    let hidden_imports_facts = crate::codebase::ts_source::facts::TsFileFacts {
+        imports: hidden_imports_items,
+        ..Default::default()
+    };
+    let hidden_imports = vec![(&hidden_imports_path, &hidden_imports_facts)];
+    assert!(collect_import_edges(&hidden_imports, &resolver, &Default::default(), &graph_files).is_empty());
     assert_eq!(package_name_from_spec("@scope/pkg/path"), "@scope/pkg");
     assert_eq!(package_name_from_spec("@scope"), "@scope");
 }
@@ -345,8 +380,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
     assert!(import_neighbors(
         &root.join("missing.mts"),
         &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
-        &ImportExtractor::for_typescript().unwrap(),
-        &ImportExtractor::for_tsx().unwrap(),
+        &crate::codebase::workspaces::WorkspaceMap::default(),
         &graph_files,
         None,
     )
@@ -455,83 +489,4 @@ fn codebase_intel_graph_emits_queue_http_route_test_and_process_edges() {
         Some(&[EdgeKind::ProcessSpawn].into()),
     );
     assert!(has_file(&process, &spawn_target));
-}
-
-#[test]
-fn queue_edges_cover_disk_fallback_without_precomputed_facts() {
-    let root = crate::codebase::ts_resolver::normalize_path(&fixture("codebase-intel"));
-    let tsconfig =
-        crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let graph_files = GraphFiles::discover(&root);
-    let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
-    let config_options = graph_config_options(&root);
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
-    let send_email = root.join("packages/api/src/send-email.mts");
-    let emails = root.join("packages/api/src/emails.mts");
-    let processors = root.join("packages/api/src/processors.mts");
-
-    add_queue_edges(
-        &root,
-        &resolver,
-        graph_files.indexable(),
-        None,
-        config_options.as_ref(),
-        &mut forward,
-        &mut reverse,
-    );
-
-    assert!(forward
-        .get(&NodeId::File(send_email))
-        .map(|edges| {
-            edges.iter().any(|(node, kind)| {
-                matches!(
-                    (node, kind),
-                    (
-                        NodeId::QueueJob { queue_file, job },
-                        EdgeKind::QueueEnqueue
-                    ) if queue_file == &emails && job == "sendWelcomeEmail"
-                )
-            })
-        })
-        .unwrap_or(false));
-    let queue_job = NodeId::QueueJob {
-        queue_file: emails,
-        job: "sendWelcomeEmail".to_string(),
-    };
-    assert!(forward
-        .get(&queue_job)
-        .map(|edges| {
-            edges.iter().any(|(node, kind)| {
-                *kind == EdgeKind::QueueWorker && node.as_file() == Some(processors.as_path())
-            })
-        })
-        .unwrap_or(false));
-}
-
-#[test]
-fn process_spawn_edges_cover_source_fallback_without_precomputed_facts() {
-    let root = crate::codebase::ts_resolver::normalize_path(&fixture("codebase-intel"));
-    let spawner = root.join("packages/api/src/spawn-runner.mts");
-    let spawn_target = root.join("packages/api/src/spawn-target.mts");
-    let source = std::fs::read_to_string(&spawner).unwrap();
-
-    let edges = collect_process_spawn_edges(&root, None, &[(spawner.clone(), source)], &[]);
-
-    assert!(edges.iter().any(|(from, to, kind)| {
-        *kind == EdgeKind::ProcessSpawn
-            && from.as_file() == Some(spawner.as_path())
-            && to.as_file() == Some(spawn_target.as_path())
-    }));
-}
-
-#[test]
-fn processor_export_kind_accepts_runtime_exports_only() {
-    assert!(is_processor_export_kind(&ExportKind::Function));
-    assert!(is_processor_export_kind(&ExportKind::Const));
-    assert!(is_processor_export_kind(&ExportKind::Let));
-    assert!(is_processor_export_kind(&ExportKind::Var));
-    assert!(!is_processor_export_kind(&ExportKind::TypeAlias));
-    assert!(!is_processor_export_kind(&ExportKind::Interface));
-    assert!(!is_processor_export_kind(&ExportKind::Default));
 }

@@ -25,6 +25,11 @@ fn fixture_root(name: &str) -> PathBuf {
     )
 }
 
+fn resolve_entrypoints(raw_entrypoints: &[PathBuf], root: &Path, cwd: &Path) -> Vec<Entrypoint> {
+    let graph_files = graph::GraphFiles::discover(root);
+    resolve_entrypoints_with_files(raw_entrypoints, root, cwd, &graph_files)
+}
+
 #[test]
 fn run_surfaces_tsconfig_errors() {
     let root = fixture_root("symbols-output");
@@ -34,6 +39,7 @@ fn run_surfaces_tsconfig_errors() {
         tsconfig: Some(root.join("tsconfig-invalid.json")),
         depth: None,
         filters: Vec::new(),
+        target_modules: Vec::new(),
         tests: Vec::new(),
         format: Some(Format::Json),
         json: false,
@@ -79,6 +85,19 @@ fn filter_flag_repeatable() {
         "**/*.spec.mts",
     ]);
     assert_eq!(a.filters.len(), 2);
+}
+
+#[test]
+fn target_module_flag_repeatable() {
+    let a = parse(&[
+        "deps",
+        "a.mts",
+        "--target-module",
+        "@react/*",
+        "--target-module",
+        "lodash",
+    ]);
+    assert_eq!(a.target_modules, vec!["@react/*", "lodash"]);
 }
 
 #[test]
@@ -277,6 +296,12 @@ fn workspace_maps_to_workspace_import() {
 }
 
 #[test]
+fn package_maps_to_package_dependency() {
+    let set = relationship_filter(&[RelationshipArg::Package]).unwrap();
+    assert!(set.contains(&EdgeKind::PackageDependency));
+}
+
+#[test]
 fn test_maps_to_test_of_and_route_test() {
     let set = relationship_filter(&[RelationshipArg::Test]).unwrap();
     assert!(set.contains(&EdgeKind::TestOf));
@@ -324,22 +349,22 @@ fn multiple_kinds_combined() {
 
 #[test]
 fn parse_plain_path() {
-    let ep = parse_entrypoint("src/main.mts");
-    assert_eq!(ep.file, PathBuf::from("src/main.mts"));
-    assert!(ep.symbol.is_none());
+    let (file, symbol) = parse_entrypoint("src/main.mts");
+    assert_eq!(file, PathBuf::from("src/main.mts"));
+    assert!(symbol.is_none());
 }
 
 #[test]
 fn parse_path_with_symbol() {
-    let ep = parse_entrypoint("src/queues.mts#enqueueBulkTopicEmbeddings");
-    assert_eq!(ep.file, PathBuf::from("src/queues.mts"));
-    assert_eq!(ep.symbol.as_deref(), Some("enqueueBulkTopicEmbeddings"));
+    let (file, symbol) = parse_entrypoint("src/queues.mts#enqueueBulkTopicEmbeddings");
+    assert_eq!(file, PathBuf::from("src/queues.mts"));
+    assert_eq!(symbol.as_deref(), Some("enqueueBulkTopicEmbeddings"));
 }
 
 #[test]
 fn parse_path_multiple_hashes_splits_on_first() {
-    let ep = parse_entrypoint("src/foo.mts#sym#extra");
-    assert_eq!(ep.symbol.as_deref(), Some("sym#extra"));
+    let (_file, symbol) = parse_entrypoint("src/foo.mts#sym#extra");
+    assert_eq!(symbol.as_deref(), Some("sym#extra"));
 }
 
 #[test]
@@ -382,9 +407,142 @@ fn resolve_entrypoints_prefers_root_before_cwd_fallback() {
     assert_eq!(entrypoints[0].file, root.join("a.mts"));
     assert_eq!(entrypoints[0].symbol, None);
     assert_eq!(entrypoints[1].file, cwd.join("does-not-exist.mts"));
+    assert_eq!(
+        entrypoints[1].node,
+        graph::NodeId::File(cwd.join("does-not-exist.mts"))
+    );
     assert_eq!(entrypoints[1].symbol, None);
-    assert_eq!(entrypoints[2].file, cwd.join("../../other.mts"));
+    assert_eq!(
+        entrypoints[2].file,
+        crate::codebase::ts_resolver::normalize_path(&cwd.join("../../other.mts"))
+    );
     assert_eq!(entrypoints[2].symbol.as_deref(), Some("exportName"));
+}
+
+#[test]
+fn resolve_entrypoints_infers_workspace_package_directory_entry() {
+    let root = fixture_root("graph-modules");
+    let args = parse(&["deps", "packages/local"]);
+    let entrypoints = resolve_entrypoints(&args.files, &root, &root);
+
+    assert_eq!(
+        entrypoints[0].node,
+        graph::NodeId::File(root.join("packages/local/src/index.mts"))
+    );
+    assert_eq!(entrypoints[0].file, root.join("packages/local/src/index.mts"));
+}
+
+#[test]
+fn resolve_entrypoints_infers_plain_directory_index_entry() {
+    let root = fixture_root("graph-entrypoint-dir");
+    let args = parse(&["deps", "."]);
+    let entrypoints = resolve_entrypoints(&args.files, &root, &root);
+
+    assert_eq!(
+        entrypoints[0].node,
+        graph::NodeId::File(root.join("src/index.ts"))
+    );
+    assert_eq!(entrypoints[0].file, root.join("src/index.ts"));
+}
+
+#[test]
+fn resolve_entrypoints_infers_plain_directory_cjs_index_entry() {
+    let root = fixture_root("graph-entrypoint-dir-cjs");
+    let args = parse(&["deps", "."]);
+    let entrypoints = resolve_entrypoints(&args.files, &root, &root);
+
+    assert_eq!(
+        entrypoints[0].node,
+        graph::NodeId::File(root.join("index.cjs"))
+    );
+    assert_eq!(entrypoints[0].file, root.join("index.cjs"));
+}
+
+#[test]
+fn resolve_entrypoints_keeps_directory_without_entry_as_file_node() {
+    let root = fixture_root("graph-empty-dir");
+    let args = parse(&["deps", "empty"]);
+    let entrypoints = resolve_entrypoints(&args.files, &root, &root);
+
+    assert_eq!(
+        entrypoints[0].node,
+        graph::NodeId::File(root.join("empty"))
+    );
+    assert_eq!(entrypoints[0].file, root.join("empty"));
+}
+
+#[test]
+fn resolve_entrypoints_accepts_workspace_package_specifier() {
+    let root = fixture_root("graph-modules");
+    let args = parse(&["deps", "@local/pkg"]);
+    let entrypoints = resolve_entrypoints(&args.files, &root, &root);
+
+    assert_eq!(
+        entrypoints[0].node,
+        graph::NodeId::File(root.join("packages/local/src/index.mts"))
+    );
+    assert_eq!(entrypoints[0].file, root.join("packages/local/src/index.mts"));
+}
+
+#[test]
+fn resolve_entrypoints_strips_symbol_suffix_from_module_node() {
+    let root = fixture_root("graph-modules");
+    let args = parse(&["dependents", "@external/pkg#handler"]);
+    let entrypoints = resolve_entrypoints(&args.files, &root, &root);
+
+    assert_eq!(
+        entrypoints[0].node,
+        graph::NodeId::Module("@external/pkg".to_string())
+    );
+    assert_eq!(entrypoints[0].symbol.as_deref(), Some("handler"));
+}
+
+#[test]
+fn resolve_entrypoints_keeps_package_subpath_with_extension_as_module_node() {
+    let root = fixture_root("graph-modules");
+    let args = parse(&["dependents", "lodash", "lodash/fp.js"]);
+    let entrypoints = resolve_entrypoints(&args.files, &root, &root);
+
+    assert_eq!(
+        entrypoints[0].node,
+        graph::NodeId::Module("lodash".to_string())
+    );
+    assert_eq!(
+        entrypoints[1].node,
+        graph::NodeId::Module("lodash/fp.js".to_string())
+    );
+}
+
+#[test]
+fn resolve_entrypoints_treats_missing_source_path_with_existing_parent_as_file_node() {
+    let root = fixture_root("graph-modules");
+    let args = parse(&["dependents", "src/new-file.ts"]);
+    let entrypoints = resolve_entrypoints(&args.files, &root, &root);
+
+    assert_eq!(
+        entrypoints[0].node,
+        graph::NodeId::File(root.join("src/new-file.ts"))
+    );
+}
+
+#[test]
+fn entrypoint_package_helpers_cover_relative_scoped_and_invalid_roots() {
+    let modules_root = fixture_root("graph-modules");
+    let module_dependencies = root_dependency_names(&modules_root);
+    assert_eq!(raw_package_name("./local/file.ts"), None);
+    assert_eq!(
+        raw_package_name("@scope/pkg/subpath.js").as_deref(),
+        Some("@scope/pkg")
+    );
+    assert!(!raw_looks_like_source_file(
+        "lodash/fp.js",
+        &modules_root.join("lodash/fp.js"),
+        &module_dependencies
+    ));
+
+    assert!(!root_dependency_names(&fixture_root("simple")).contains("lodash"));
+    assert!(!root_dependency_names(&fixture_root("unique-exports-malformed-package"))
+        .contains("lodash"));
 }
 
 #[test]

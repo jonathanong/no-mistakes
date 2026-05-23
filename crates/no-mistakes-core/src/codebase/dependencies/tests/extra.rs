@@ -75,6 +75,87 @@ fn merge_node_entries_keeps_min_depth_and_dedupes_edge_kinds() {
 }
 
 #[test]
+fn target_module_filter_keeps_only_matching_module_nodes() {
+    let entries = vec![
+        graph::NodeEntry {
+            node: NodeId::Module("@react/client".to_string()),
+            depth: 1,
+            via: vec![EdgeKind::Import],
+        },
+        graph::NodeEntry {
+            node: NodeId::Module("lodash".to_string()),
+            depth: 1,
+            via: vec![EdgeKind::Import],
+        },
+        graph::NodeEntry {
+            node: NodeId::File(PathBuf::from("src/local.mts")),
+            depth: 1,
+            via: vec![EdgeKind::Import],
+        },
+    ];
+
+    let filtered = apply_target_module_filters(entries, &["@react/*".to_string()]).unwrap();
+
+    assert_eq!(filtered.len(), 1);
+    assert_eq!(filtered[0].node, NodeId::Module("@react/client".to_string()));
+}
+
+#[test]
+fn file_filters_exclude_module_nodes_without_target_module_filter() {
+    let entries = node_entries_fixture("module-queue-file-filter.json");
+    let mut args = traverse_args(PathBuf::from("/repo"), vec![PathBuf::from("src/entry.mts")]);
+    args.filters = vec!["src/**".to_string()];
+
+    let filtered = apply_filters(entries, &args, Path::new("/repo")).unwrap();
+
+    assert_eq!(filtered.len(), 2);
+    assert!(filtered
+        .iter()
+        .any(|entry| entry.node == NodeId::File(PathBuf::from("/repo/src/local.mts"))));
+    assert!(filtered
+        .iter()
+        .any(|entry| matches!(entry.node, NodeId::QueueJob { .. })));
+}
+
+fn node_entries_fixture(name: &str) -> Vec<graph::NodeEntry> {
+    let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase-analysis/node-entries")
+        .join(name);
+    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
+    let values: Vec<serde_json::Value> = serde_json::from_str(&source).unwrap();
+    values.into_iter().map(node_entry_from_json).collect()
+}
+
+fn node_entry_from_json(value: serde_json::Value) -> graph::NodeEntry {
+    let node = value.get("node").unwrap();
+    let node = if let Some(module) = node.get("module").and_then(|value| value.as_str()) {
+        NodeId::Module(module.to_string())
+    } else if let Some(file) = node.get("file").and_then(|value| value.as_str()) {
+        NodeId::File(PathBuf::from(file))
+    } else {
+        NodeId::QueueJob {
+            queue_file: PathBuf::from(node["queue_file"].as_str().unwrap()),
+            job: node["job"].as_str().unwrap().to_string(),
+        }
+    };
+    let via = value["via"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|kind| match kind.as_str().unwrap() {
+            "import" => EdgeKind::Import,
+            "queue-enqueue" => EdgeKind::QueueEnqueue,
+            other => panic!("unsupported fixture edge kind {other}"),
+        })
+        .collect();
+    graph::NodeEntry {
+        node,
+        depth: value["depth"].as_u64().unwrap() as usize,
+        via,
+    }
+}
+
+#[test]
 fn deps_direction_rejects_symbol_entrypoints() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/codebase-analysis")
@@ -85,6 +166,7 @@ fn deps_direction_rejects_symbol_entrypoints() {
         tsconfig: None,
         depth: None,
         filters: Vec::new(),
+        target_modules: Vec::new(),
         tests: Vec::new(),
         relationships: Vec::new(),
         format: Some(Format::Json),
@@ -128,6 +210,7 @@ fn traverse_args(root: PathBuf, files: Vec<PathBuf>) -> TraverseArgs {
         tsconfig: None,
         depth: Some(3),
         filters: Vec::new(),
+        target_modules: Vec::new(),
         tests: Vec::new(),
         relationships: Vec::new(),
         format: Some(Format::Json),
@@ -192,4 +275,24 @@ fn run_dependents_covers_mixed_symbol_and_plain_entrypoints() {
     args.format = Some(Format::Human);
 
     run(args, Direction::Dependents).unwrap();
+}
+
+#[test]
+fn dependents_treats_module_symbol_entrypoints_as_module_roots() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase-analysis")
+        .join("graph-modules");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let mut args = traverse_args(root.clone(), vec![PathBuf::from("@react/client#handler")]);
+    args.relationships = vec![RelationshipArg::Import];
+    let cwd = std::env::current_dir().unwrap();
+    let mut timings = crate::codebase::timing::PhaseTimings::start();
+
+    let result =
+        collect_and_filter_entries(&args, Direction::Dependents, &cwd, &mut timings).unwrap();
+
+    assert!(result
+        .entries
+        .iter()
+        .any(|entry| entry.node.as_file() == Some(root.join("src/entry.mts").as_path())));
 }

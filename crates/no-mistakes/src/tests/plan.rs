@@ -446,6 +446,7 @@ fn discover_all_tests(
 fn slash_node_name(node: &NodeId, root: &Path) -> String {
     match node {
         NodeId::File(p) => no_mistakes_core::codebase::ts_source::relative_slash_path(root, p),
+        NodeId::Module(specifier) => specifier.clone(),
         NodeId::QueueJob { queue_file, job } => {
             let rel = no_mistakes_core::codebase::ts_source::relative_slash_path(root, queue_file);
             format!("{}#{}", rel, job)
@@ -520,7 +521,8 @@ fn path_confidence(edges: &[EdgeKind]) -> Confidence {
             | EdgeKind::Layout
             | EdgeKind::RouteTest
             | EdgeKind::AssetImport
-            | EdgeKind::ReactRender => return Confidence::Low,
+            | EdgeKind::ReactRender
+            | EdgeKind::PackageDependency => return Confidence::Low,
             EdgeKind::DynamicImport => conf = Confidence::Medium,
             _ => {}
         }
@@ -535,6 +537,7 @@ fn impact_reason_label(edge: EdgeKind) -> &'static str {
         | EdgeKind::DynamicImport
         | EdgeKind::Require
         | EdgeKind::WorkspaceImport => "dependency",
+        EdgeKind::PackageDependency => "package-json dependency",
         EdgeKind::RouteRef | EdgeKind::RouteTest => "route",
         EdgeKind::Layout => "layout",
         EdgeKind::TestOf => "test",

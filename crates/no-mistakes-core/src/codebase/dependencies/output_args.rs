@@ -24,6 +24,10 @@ pub struct TraverseArgs {
     #[arg(long = "filter", value_name = "GLOB")]
     pub filters: Vec<String>,
 
+    /// Only include external module nodes matching this glob. Can be repeated (OR logic).
+    #[arg(long = "target-module", value_name = "GLOB")]
+    pub target_modules: Vec<String>,
+
     /// Filter to test files for a specific framework. Can be repeated.
     /// Values: vitest, playwright, cargo.
     #[arg(long = "test", value_name = "FRAMEWORK")]
@@ -39,7 +43,7 @@ pub struct TraverseArgs {
     pub json: bool,
 
     /// Only follow edges of this relationship kind. Can be repeated (OR logic).
-    /// Values: import, workspace, test, route, queue, md, ci, http, process, all.
+    /// Values: import, import-static, import-dynamic, import-type, import-require, workspace, package, test, route, queue, md, ci, http, process, asset, react, all.
     /// Default: all.
     #[arg(long = "relationship", value_enum, value_name = "KIND")]
     pub relationships: Vec<RelationshipArg>,

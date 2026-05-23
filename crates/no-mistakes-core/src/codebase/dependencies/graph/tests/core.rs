@@ -3,6 +3,8 @@ use super::*;
 mod config_edges;
 mod config_plan;
 mod extra;
+mod extra_runtime;
+mod module_cases;
 
 fn p(s: &str) -> PathBuf {
     PathBuf::from(s)
@@ -45,19 +47,22 @@ fn build_graph(root: &Path, tsconfig: &TsConfig) -> DepGraph {
 fn node_display_and_normalization_cover_file_and_queue_nodes() {
     let root = p("/repo");
     let file = NodeId::File(p("/repo/src/file.ts"));
+    let module = NodeId::Module("@react/client".to_string());
     let queue = NodeId::QueueJob {
         queue_file: p("/repo/src/queues.ts"),
         job: "send".to_string(),
     };
 
     assert_eq!(file.display_name(&root), "src/file.ts");
+    assert_eq!(module.display_name(&root), "@react/client");
     assert_eq!(queue.display_name(&root), "src/queues.ts#send");
     assert!(file.as_file().is_some());
+    assert!(module.as_file().is_none());
     assert!(queue.as_file().is_none());
 
-    let nodes = normalize_nodes(&[file, queue]);
-    assert_eq!(nodes.len(), 2);
-    assert!(matches!(nodes[1], NodeId::QueueJob { .. }));
+    let nodes = normalize_nodes(&[file, module, queue]);
+    assert_eq!(nodes.len(), 3);
+    assert!(matches!(nodes[2], NodeId::QueueJob { .. }));
 }
 
 #[test]
