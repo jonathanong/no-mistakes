@@ -288,6 +288,19 @@ fn local_string_named_export_is_not_marked_as_exported_function() {
     assert!(facts.exported_functions.is_empty());
 }
 
+#[test]
+fn exported_functions_are_sorted() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase-analysis/import-facts/exported-functions-order.mts");
+    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
+    let allocator = Allocator::default();
+    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+
+    assert_eq!(facts.exported_functions, vec!["alpha", "middle", "zeta"]);
+}
+
 // ── is_indexable / is_tsx_file ──────────────────────────────────────
 
 #[test]

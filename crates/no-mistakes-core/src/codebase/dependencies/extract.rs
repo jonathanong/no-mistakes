@@ -85,10 +85,12 @@ pub fn extract_imports_from_program<'a>(program: &Program<'a>) -> Vec<ExtractedI
 pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFacts {
     let mut collector = ImportCollector::default();
     collector.visit_program(program);
+    let mut exported_functions: Vec<_> = collector.exported_functions.into_iter().collect();
+    exported_functions.sort();
     ImportFacts {
         imports: collector.imports,
         function_calls: collector.function_calls,
-        exported_functions: collector.exported_functions.into_iter().collect(),
+        exported_functions,
         unknown_callers: collector.unknown_callers,
         has_unknown_top_level_call: collector.has_unknown_top_level_call,
     }
