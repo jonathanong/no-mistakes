@@ -167,6 +167,34 @@ fn nonexistent_root_is_silently_skipped() {
 }
 
 #[test]
+fn directory_root_is_silently_skipped() {
+    let root = fixture("forbidden-dependencies-basic");
+    let opts = Options {
+        roots: vec!["entrypoints".to_string()],
+        forbidden_modules: vec!["sharp".to_string()],
+        forbidden_files: vec![],
+        relationships: vec![],
+    };
+    let tsconfig = crate::codebase::ts_resolver::TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = crate::codebase::dependencies::graph::DepGraph::build_with_plan(
+        &root,
+        &tsconfig,
+        crate::codebase::dependencies::graph::GraphBuildPlan::imports_and_workspace(),
+    )
+    .unwrap();
+    let findings = check_application(&root, &opts, &graph).unwrap();
+    assert!(
+        findings.is_empty(),
+        "directory root should produce no findings (not a file)"
+    );
+}
+
+#[test]
 fn all_relationships_is_same_as_omitted() {
     let root = fixture("forbidden-dependencies-basic");
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();

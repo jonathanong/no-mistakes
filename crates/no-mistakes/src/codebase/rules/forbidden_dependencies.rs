@@ -145,7 +145,7 @@ fn resolve_root_node(root: &Path, raw: &str) -> Option<NodeId> {
         root.join(raw)
     };
     let normalized = crate::codebase::ts_resolver::normalize_path(&path);
-    normalized.exists().then_some(NodeId::File(normalized))
+    normalized.is_file().then_some(NodeId::File(normalized))
 }
 
 fn build_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
