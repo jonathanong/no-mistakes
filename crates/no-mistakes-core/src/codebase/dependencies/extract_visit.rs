@@ -58,6 +58,26 @@ impl<'a> Visit<'a> for ImportCollector {
         self.pop_function_scope(pushed);
     }
 
+    fn visit_method_definition(&mut self, method: &MethodDefinition<'a>) {
+        let name = crate::codebase::ts_source::static_property_key_name(&method.key);
+        let pushed = name.is_some();
+        self.push_function_scope(name.map(str::to_string));
+        walk::walk_function(self, &method.value, oxc_syntax::scope::ScopeFlags::empty());
+        self.pop_function_scope(pushed);
+    }
+
+    fn visit_object_property(&mut self, property: &ObjectProperty<'a>) {
+        if let Expression::FunctionExpression(function) = &property.value {
+            let name = crate::codebase::ts_source::static_property_key_name(&property.key);
+            let pushed = name.is_some();
+            self.push_function_scope(name.map(str::to_string));
+            walk::walk_function(self, function, oxc_syntax::scope::ScopeFlags::empty());
+            self.pop_function_scope(pushed);
+        } else {
+            walk::walk_object_property(self, property);
+        }
+    }
+
     fn visit_variable_declarator(&mut self, declarator: &VariableDeclarator<'a>) {
         let name = binding_identifier_name(&declarator.id).map(str::to_string);
         match declarator.init.as_ref() {

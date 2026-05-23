@@ -80,6 +80,11 @@ fn resolve_entrypoint_node(
             return NodeId::File(entry);
         }
     }
+    if workspace.resolve_specifier(raw).is_none()
+        && raw_package_name(raw).is_some_and(|name| root_declares_dependency(root, &name))
+    {
+        return NodeId::Module(raw.to_string());
+    }
     if path.exists() || raw.starts_with('.') || Path::new(raw).is_absolute() {
         return NodeId::File(path.to_path_buf());
     }

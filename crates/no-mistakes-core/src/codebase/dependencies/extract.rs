@@ -3,8 +3,8 @@ use oxc::allocator::Allocator;
 use oxc::ast::ast::{
     Argument, CallExpression, ExportAllDeclaration, ExportDefaultDeclaration,
     ExportDefaultDeclarationKind, ExportNamedDeclaration, ExportSpecifier, Expression,
-    ImportDeclaration, ImportDeclarationSpecifier, ImportExpression, ModuleExportName, Program,
-    TSImportType, VariableDeclarator,
+    ImportDeclaration, ImportDeclarationSpecifier, ImportExpression, MethodDefinition,
+    ModuleExportName, ObjectProperty, Program, TSImportType, VariableDeclarator,
 };
 use oxc::ast_visit::{walk, Visit};
 use oxc::parser::Parser;
