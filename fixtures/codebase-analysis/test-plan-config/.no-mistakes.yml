@@ -4,7 +4,12 @@ projects:
     root: web
   web-patterns:
     type: nextjs
-    root: config
+    root: patterns
+  config-include:
+    type: nextjs
+    root: ./config
+    include:
+      - ./next.config.*
 tests:
   vitest: {}
 test_plan:
@@ -14,6 +19,7 @@ test_plan:
         web: true
         web-patterns:
           - next.config.*
+        config-include: true
     environments:
       prePush:
         limit:

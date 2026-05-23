@@ -125,7 +125,7 @@ fn test_plan_vitest_project_dependency_patterns_are_project_relative() {
         "--root",
         root.to_str().unwrap(),
         "--changed-file",
-        "config/next.config.mjs",
+        "patterns/next.config.mjs",
         "--json",
     ]);
 
@@ -136,6 +136,30 @@ fn test_plan_vitest_project_dependency_patterns_are_project_relative() {
         .as_str()
         .unwrap()
         .contains("web-patterns project dependency changed"));
+    assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 2);
+}
+
+#[test]
+fn test_plan_vitest_project_dependency_include_is_project_relative() {
+    let root = fixture("test-plan-config");
+    let output = run(&[
+        "test",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "config/next.config.mjs",
+        "--json",
+    ]);
+
+    assert!(output.status.success());
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(plan["fallback_triggered"], true);
+    assert!(plan["fallback_reason"]
+        .as_str()
+        .unwrap()
+        .contains("config-include project dependency changed"));
     assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 2);
 }
 
@@ -187,6 +211,7 @@ fn test_plan_vitest_limit_overrides_configured_limit() {
     assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
     assert_eq!(plan["groups"][1]["selected"][0], "source.test.mts");
     assert_eq!(plan["groups"][2]["limit"], 0);
+    assert_eq!(plan["groups"][2]["remaining"], 1);
 }
 
 #[test]

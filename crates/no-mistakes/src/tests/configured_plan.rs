@@ -74,7 +74,10 @@ pub(crate) fn generate_configured_plan(
 
     for group in &groups {
         if remaining_global == 0 {
-            group_results.push(empty_group_result(group.type_));
+            group_results.push(empty_group_result(
+                group.type_,
+                all_tests.len().saturating_sub(used.len()),
+            ));
             continue;
         }
         if framework == TestFramework::Vitest && group.type_ == TestPlanGroupType::Coverage {
@@ -135,11 +138,11 @@ fn all_group(root: &Path, all_tests: &[PathBuf], global_limit: usize) -> TestPla
     }
 }
 
-fn empty_group_result(group: TestPlanGroupType) -> TestPlanGroupResult {
+fn empty_group_result(group: TestPlanGroupType, remaining: usize) -> TestPlanGroupResult {
     TestPlanGroupResult {
         r#type: group_type_name(group).to_string(),
         selected: Vec::new(),
-        remaining: 0,
+        remaining,
         limit: Some(0),
     }
 }
@@ -346,9 +349,13 @@ fn project_dependency_patterns(
         TestPlanProjectDependency::All(true) => {
             let root = project.root.as_deref().unwrap_or(project_name);
             if project.include.is_empty() {
-                vec![format!("{}/**", root.trim_matches('/'))]
+                vec![format!("{}/**", normalize_project_glob_part(root))]
             } else {
-                project.include.clone()
+                project
+                    .include
+                    .iter()
+                    .map(|pattern| project_relative_pattern(root, pattern))
+                    .collect()
             }
         }
         TestPlanProjectDependency::Patterns(patterns) => {
@@ -362,11 +369,19 @@ fn project_dependency_patterns(
 }
 
 fn project_relative_pattern(project_root: &str, pattern: &str) -> String {
-    let root = project_root.trim_matches('/');
-    let pattern = pattern.trim_start_matches('/');
+    let root = normalize_project_glob_part(project_root);
+    let pattern = normalize_project_glob_part(pattern);
     if root.is_empty() || root == "." || pattern.starts_with(&format!("{root}/")) {
-        pattern.to_string()
+        pattern
     } else {
         format!("{root}/{pattern}")
     }
+}
+
+fn normalize_project_glob_part(raw: &str) -> String {
+    let mut part = raw.trim().trim_matches('/').to_string();
+    while let Some(rest) = part.strip_prefix("./") {
+        part = rest.to_string();
+    }
+    part
 }
