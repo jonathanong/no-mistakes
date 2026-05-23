@@ -61,6 +61,10 @@ function mutateNamedMember() {
 function mutateNamedMethod() {
   sharedList.push(3);
 }
+const dynamicTestName = "dynamic callback";
+function mutateNamedTitleShared() {
+  shared = 12;
+}
 const mutateVariableShared = () => {
   namedShared++;
 };
@@ -98,6 +102,7 @@ test("named member callback", mutateNamedMember);
 test("named method callback", mutateNamedMethod);
 test("variable callback", mutateVariableShared);
 test("late callback", mutateLateShared);
+test(dynamicTestName, mutateNamedTitleShared);
 function mutateLateShared() {
   shared = 11;
 }
@@ -115,6 +120,7 @@ page.locator("../..");
 page.locator("tbody tr");
 page.locator("#save");
 expect(locator).toBeVisible();
+expect(value).toEqual({ timeout: 20000 });
 locator.toBeVisible({ timeout: 20000 });
 function checkThis() {
   this.toBeVisible({ timeout: 20000 });

@@ -47,7 +47,7 @@ function isFrameworkBinding(node, context) {
         isFrameworkRequire(def),
     );
   }
-  return true;
+  return node.name === "vi" || node.name === "jest";
 }
 
 function isFrameworkRequire(def) {
@@ -65,7 +65,6 @@ function isMockingCall(node, context) {
   return (
     node.callee.type === "MemberExpression" &&
     node.callee.object.type === "Identifier" &&
-    (node.callee.object.name === "vi" || node.callee.object.name === "jest") &&
     isFrameworkBinding(node.callee.object, context) &&
     MOCK_METHODS.has(propertyName(node.callee.property))
   );

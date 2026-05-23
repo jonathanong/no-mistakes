@@ -166,6 +166,7 @@ describe("upstreamed generic rules", () => {
     assert.deepEqual(messages(code, "playwright-no-set-timeout", undefined, "e2e.spec.ts"), [
       "timeout",
       "timeout",
+      "timeout",
     ]);
 
     const valid = fixture("playwright.valid.ts");

@@ -32,8 +32,9 @@ function isImportedFromReact(node, context) {
   );
 }
 
-function propertyName(node) {
+function propertyName(node, computed = false) {
   if (node.type === "Literal") return String(node.value);
+  if (computed) return null;
   return node.name;
 }
 
@@ -45,7 +46,7 @@ function isReactUse(callee, context, useNames) {
     callee?.type === "MemberExpression" &&
     callee.object?.type === "Identifier" &&
     isImportedFromReact(callee.object, context) &&
-    propertyName(callee.property) === "use"
+    propertyName(callee.property, callee.computed) === "use"
   );
 }
 
@@ -55,7 +56,7 @@ function isPromiseResolve(node) {
     node.callee?.type === "MemberExpression" &&
     node.callee.object?.type === "Identifier" &&
     node.callee.object.name === "Promise" &&
-    propertyName(node.callee.property) === "resolve"
+    propertyName(node.callee.property, node.callee.computed) === "resolve"
   );
 }
 

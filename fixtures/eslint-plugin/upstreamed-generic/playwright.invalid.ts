@@ -6,3 +6,4 @@ await page.locator("h2").click();
 await page.locator("text=Save").click();
 setTimeout(() => {}, 100);
 await page.waitForTimeout(100);
+await page["waitForTimeout"](100);

@@ -1,112 +1,18 @@
 "use strict";
 
 const { rule } = require("../helpers");
-
-const TEST_CALLEES = new Set(["it", "test", "describe"]);
-const MUTATING_METHODS = new Set(
-  "add clear copyWithin delete fill pop push reverse set shift sort splice unshift".split(" "),
-);
-const MUTABLE_CONSTRUCTORS = new Set(["Map", "Set", "WeakMap", "WeakSet"]);
-const FUNCTION_NODES = new Set([
-  "FunctionDeclaration",
-  "FunctionExpression",
-  "ArrowFunctionExpression",
-]);
-
-function calleeName(node) {
-  if (node?.type === "Identifier") return node.name;
-  if (node?.type === "MemberExpression" && !node.computed) return calleeName(node.object);
-  if (node?.type === "CallExpression") return calleeName(node.callee);
-  return null;
-}
-
-function isTestCall(node) {
-  return TEST_CALLEES.has(calleeName(node.callee));
-}
-
-function collectPatternNames(node, names = new Set()) {
-  if (!node) return names;
-  if (node.type === "Identifier") {
-    names.add(node.name);
-    return names;
-  }
-  const children =
-    node.type === "ObjectPattern"
-      ? node.properties.map((property) => property.value || property.argument)
-      : node.type === "ArrayPattern"
-        ? node.elements
-        : node.type === "RestElement"
-          ? [node.argument]
-          : node.type === "AssignmentPattern"
-            ? [node.left]
-            : [];
-  for (const child of children) collectPatternNames(child, names);
-  return names;
-}
-
-function mutationRootName(node) {
-  if (node.type === "Identifier") return node.name;
-  if (node.type === "MemberExpression") return mutationRootName(node.object);
-  return null;
-}
-
-function propertyName(node) {
-  if (node.type === "Literal") return String(node.value);
-  return node.name;
-}
-
-function mutatingCallRootName(node) {
-  if (node.callee.type !== "MemberExpression") return null;
-  if (!MUTATING_METHODS.has(propertyName(node.callee.property))) return null;
-  return mutationRootName(node.callee.object);
-}
-
-function isFunctionNode(node) {
-  return FUNCTION_NODES.has(node?.type);
-}
-
-function isInlineTestCallback(node) {
-  return node.parent?.type === "CallExpression" && isTestCall(node.parent);
-}
-
-function isCalledFunction(node) {
-  if (node.parent?.type === "CallExpression" && node.parent.callee === node) return true;
-  const declarator = node.parent?.type === "VariableDeclarator" ? node.parent : null;
-  const name =
-    node.type === "FunctionDeclaration"
-      ? node.id?.name
-      : declarator?.id?.type === "Identifier"
-        ? declarator.id.name
-        : null;
-  const container = node.type === "FunctionDeclaration" ? node.parent : node.parent?.parent?.parent;
-  return Boolean(name && container && containsIdentifierCall(container, name));
-}
-
-function containsIdentifierCall(node, name) {
-  if (node.type === "CallExpression" && node.callee.type === "Identifier") {
-    return node.callee.name === name;
-  }
-  if (isFunctionNode(node)) return false;
-  return childNodes(node).some((child) => containsIdentifierCall(child, name));
-}
-
-function isMutableInitializer(node) {
-  return Boolean(
-    node &&
-    (node.type === "ArrayExpression" ||
-      node.type === "ObjectExpression" ||
-      (node.type === "NewExpression" &&
-        node.callee.type === "Identifier" &&
-        MUTABLE_CONSTRUCTORS.has(node.callee.name))),
-  );
-}
-
-function childNodes(node) {
-  return Object.entries(node)
-    .filter(([key]) => !["parent", "loc", "range", "tokens", "comments"].includes(key))
-    .flatMap(([, value]) => (Array.isArray(value) ? value : [value]))
-    .filter((value) => value && typeof value.type === "string");
-}
+const {
+  childNodes,
+  collectPatternNames,
+  isCalledFunction,
+  isFunctionNode,
+  isInlineTestCallback,
+  isMutableInitializer,
+  isTestCall,
+  mutatingCallRootName,
+  mutationRootName,
+  namedCallbackArgument,
+} = require("./test-no-shared-state-helpers");
 
 module.exports = rule(
   {
@@ -143,6 +49,7 @@ module.exports = rule(
       if (name && testDepth > 0 && isModuleMutable(node, name))
         context.report({ node, messageId: "shared" });
     }
+
     function reportAssignment(node) {
       for (const name of collectPatternNames(node.left)) reportIfShared(node, name);
       if (node.left.type !== "MemberExpression") return;
@@ -172,7 +79,7 @@ module.exports = rule(
       CallExpression(node) {
         if (isTestCall(node)) {
           testDepth += 1;
-          const callback = node.arguments.find((argument) => argument.type === "Identifier");
+          const callback = namedCallbackArgument(node.arguments);
           if (callback) pendingNamedCallbacks.push(callback.name);
         }
       },
@@ -197,9 +104,7 @@ module.exports = rule(
       while (current) {
         const isUncalledFunction =
           isFunctionNode(current) && !isInlineTestCallback(current) && !isCalledFunction(current);
-        if (isUncalledFunction) {
-          return true;
-        }
+        if (isUncalledFunction) return true;
         current = current.parent;
       }
       return false;

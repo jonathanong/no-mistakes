@@ -3,6 +3,34 @@
 const { rule } = require("../helpers");
 
 const DEFAULT_MAX_TIMEOUT_MS = 10000;
+const TIMEOUT_MATCHERS = new Set([
+  "poll",
+  "toBeAttached",
+  "toBeChecked",
+  "toBeDisabled",
+  "toBeEditable",
+  "toBeEmpty",
+  "toBeEnabled",
+  "toBeFocused",
+  "toBeHidden",
+  "toBeInViewport",
+  "toBeOK",
+  "toBeVisible",
+  "toContainText",
+  "toHaveAttribute",
+  "toHaveClass",
+  "toHaveCount",
+  "toHaveCSS",
+  "toHaveId",
+  "toHaveJSProperty",
+  "toHaveRole",
+  "toHaveScreenshot",
+  "toHaveText",
+  "toHaveTitle",
+  "toHaveURL",
+  "toHaveValue",
+  "toHaveValues",
+]);
 const PLAYWRIGHT_PATH_PATTERN =
   /(?:^|[/\\])(?:e2e|playwright)(?:[/\\]|$)|(?:^|[/\\])e2e\.(?:spec|test)\.[cm]?[jt]sx?$|\.pw\.(?:spec|test)\.[cm]?[jt]sx?$/;
 
@@ -56,7 +84,7 @@ module.exports = rule(
         if (!isPlaywrightFile) return;
         if (node.callee.type !== "MemberExpression" || !isExpectChain(node.callee)) return;
         const method = propertyName(node.callee.property);
-        if (method !== "poll" && !method?.startsWith("to")) return;
+        if (!TIMEOUT_MATCHERS.has(method)) return;
         const options = node.arguments.at(-1);
         if (options?.type !== "ObjectExpression") return;
         const timeout = options.properties.find(

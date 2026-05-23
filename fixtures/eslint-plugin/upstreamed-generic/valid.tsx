@@ -19,6 +19,8 @@ expect(error.code).toBe("ENOENT");
 test.parallel("runs", () => {});
 const promise = Promise.resolve("ok");
 React.use(promise);
+const use = "memo";
+React[use](Promise.resolve("ok"));
 export const metadata = {};
 export default function Page() {
   const label = "Save";

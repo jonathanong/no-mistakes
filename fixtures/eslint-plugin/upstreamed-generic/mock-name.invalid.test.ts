@@ -1,3 +1,3 @@
-import { vi } from "vitest";
+import { vi as v } from "vitest";
 
-vi["mock"]("./dep");
+v["mock"]("./dep");

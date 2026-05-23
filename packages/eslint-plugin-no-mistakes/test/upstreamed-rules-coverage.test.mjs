@@ -63,6 +63,7 @@ describe("upstreamed generic rule coverage", () => {
       "shared",
       "shared",
       "shared",
+      "shared",
     ]);
     assert.deepEqual(messages(code, "no-vitest-sequential", undefined, "coverage.tsx"), [
       "sequential",

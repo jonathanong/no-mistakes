@@ -12,9 +12,14 @@ function isPlaywrightPath(filename) {
 function isWaitForTimeout(node) {
   return (
     node.callee.type === "MemberExpression" &&
-    !node.callee.computed &&
-    node.callee.property.name === "waitForTimeout"
+    propertyName(node.callee.property, node.callee.computed) === "waitForTimeout"
   );
+}
+
+function propertyName(node, computed = false) {
+  if (node.type === "Literal") return String(node.value);
+  if (computed) return null;
+  return node.name;
 }
 
 function isGlobalSetTimeout(node, context) {
