@@ -267,7 +267,9 @@ const cfg = {}\n\
 const { cacheLife } = cfg\n\
 let nextConfig\n\
 export const { dynamic } = cfg\n\
+export const { fetchCache = 'auto' } = cfg\n\
 export let revalidate\n\
+export const revalidate = '60'\n\
 export const fetchCache = 1\n\
 export const dynamicValue = 'force-static'\n\
 export default function config() {}\n";
