@@ -749,7 +749,7 @@ fn namespace_and_allow_findings_cover_non_matching_edges() {
                 storybook: Some(StorybookFileFacts {
                     used_runtime_imports: vec![
                         crate::codebase::storybook::UsedRuntimeImport {
-                            source: "../../outside".to_string(),
+                            source: "../../Outside".to_string(),
                             imported: "*".to_string(),
                             local: "Outside".to_string(),
                             namespace: true,
