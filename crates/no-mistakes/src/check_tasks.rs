@@ -146,9 +146,24 @@ pub(crate) fn run_filesystem_rules_check(
 
 pub(crate) fn filesystem_rules_configured(config: &NoMistakesConfig) -> bool {
     rule_configured(config, rules::AGENTS_MD_MAX_SIZE)
+        || rule_configured(config, rules::BANNED_RENAMED_FILES)
+        || rule_configured(config, rules::DOC_CONSISTENCY)
+        || rule_configured(config, rules::FILE_EXTENSION_POLICY)
+        || rule_configured(config, rules::LOCKFILE_ALLOWLIST)
+        || rule_configured(config, rules::NO_EMPTY_OR_COMMENTS_ONLY_FILES)
+        || rule_configured(config, rules::NO_GIT_IDENTITY_MUTATION)
+        || rule_configured(config, rules::PACKAGE_JSON_REGISTRY_ONLY)
+        || rule_configured(config, rules::REQUIRE_FILES_IN_SUBDIRS)
+        || rule_configured(config, rules::REQUIRE_TEST_PER_SUBDIR)
+        || rule_configured(config, rules::REQUIRED_DOC_SECTION)
+        || rule_configured(config, rules::REQUIRED_LOCAL_DOCS)
         || rule_configured(config, rules::RUST_MAX_LINES_PER_FILE)
-        || rule_configured(config, rules::RUST_NO_INLINE_TESTS)
         || rule_configured(config, rules::RUST_NO_INLINE_ALLOWS)
+        || rule_configured(config, rules::RUST_NO_INLINE_TESTS)
+        || rule_configured(config, rules::SHELLCHECK_RUNNER)
+        || rule_configured(config, rules::STRICT_PACKAGE_LAYOUT)
+        || rule_configured(config, rules::TSCONFIG_ALIAS_FOLDER_MAPPING)
+        || rule_configured(config, rules::VITEST_TEST_CORRESPONDENCE)
 }
 
 pub(crate) fn forbidden_dependencies_configured(config: &NoMistakesConfig) -> bool {

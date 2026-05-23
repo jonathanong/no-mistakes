@@ -1,0 +1,7 @@
+rules:
+  - rule: vitest-test-correspondence
+    scope: repository
+    options:
+      scopes: [backend]
+      testExtensions: [".test.mts"]
+      testsDir: __tests__

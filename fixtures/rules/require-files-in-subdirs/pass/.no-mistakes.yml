@@ -1,0 +1,9 @@
+rules:
+  - rule: require-files-in-subdirs
+    scope: repository
+    options:
+      packages:
+        - root: queues
+          requiredFiles: [package.json, queues.mts]
+          requireAnyOf:
+            - [enqueues.mts]

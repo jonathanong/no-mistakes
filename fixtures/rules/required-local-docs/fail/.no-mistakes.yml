@@ -1,0 +1,8 @@
+rules:
+  - rule: required-local-docs
+    scope: repository
+    options:
+      roots: [agents]
+      requiredFile: README.md
+      codeExtensions: [mts, ts]
+      testExcludePatterns: ["*.test.*", __tests__]

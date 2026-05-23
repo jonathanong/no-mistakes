@@ -1,0 +1,6 @@
+rules:
+  - rule: doc-consistency
+    scope: repository
+    options:
+      requiredFiles: [CLAUDE.md]
+      requiredHeading: "## Related issues"

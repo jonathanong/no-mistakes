@@ -316,6 +316,7 @@ for a whole file.
 at least one configured prop. Explicit `include` globs still select matching
 component files even when those props are absent.
 
+
 ### Playwright
 
 Static Playwright coverage for Next.js App Router routes, selectors, and fetch
