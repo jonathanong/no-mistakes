@@ -49,6 +49,15 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     let changed_files = super::changed_files::collect_changed_files(args, &root)?;
 
     if let Some(framework) = args.framework {
+        let forced_fallback = changed_files.iter().find_map(|file| {
+            let relative_changed = relative_path(&root, file);
+            is_global_config_path(&root, file, &relative_changed).then(|| {
+                (
+                    format!("Global configuration file changed: {}", relative_changed),
+                    file.clone(),
+                )
+            })
+        });
         return super::configured_plan::generate_configured_plan(
             args,
             framework,
@@ -56,6 +65,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
             &config,
             &tsconfig,
             &changed_files,
+            forced_fallback,
         );
     }
 

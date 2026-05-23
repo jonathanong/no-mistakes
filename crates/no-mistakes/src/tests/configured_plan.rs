@@ -21,6 +21,7 @@ pub(crate) fn generate_configured_plan(
     config: &NoMistakesConfig,
     tsconfig: &no_mistakes::codebase::dependencies::TsConfig,
     changed_files: &[PathBuf],
+    forced_fallback: Option<(String, PathBuf)>,
 ) -> Result<TestPlan> {
     let env = configured_environment(args, framework, config)?;
     let all_tests = discover_framework_tests(root, config, framework, &env)?;
@@ -28,9 +29,27 @@ pub(crate) fn generate_configured_plan(
     let effective_limit = override_limit(env.limit.as_ref(), args);
     let global_limit = limit_count(effective_limit.as_ref(), all_tests.len()).unwrap_or(usize::MAX);
 
+    if let Some((reason, trigger_file)) = forced_fallback.as_ref() {
+        return Ok(TestPlan {
+            selected_tests: selected_from_paths(
+                root,
+                &all_tests,
+                "global configuration",
+                Some(trigger_file),
+            ),
+            groups: vec![TestPlanGroupResult {
+                r#type: "global".to_string(),
+                ..all_group(root, &all_tests, global_limit)
+            }],
+            warnings: missing_file_warnings(root, changed_files),
+            fallback_triggered: true,
+            fallback_reason: Some(reason.clone()),
+        });
+    }
+
     if env.all {
         return Ok(TestPlan {
-            selected_tests: selected_from_paths(root, &all_tests, "all", changed_files),
+            selected_tests: selected_from_paths(root, &all_tests, "all", changed_files.first()),
             groups: vec![all_group(root, &all_tests, global_limit)],
             warnings: missing_file_warnings(root, changed_files),
             fallback_triggered: true,
@@ -42,13 +61,15 @@ pub(crate) fn generate_configured_plan(
         });
     }
 
-    if let Some(reason) = dependency_trigger(root, config, framework, changed_files)? {
+    if let Some((reason, trigger_file)) =
+        dependency_trigger(root, config, framework, changed_files)?
+    {
         return Ok(TestPlan {
             selected_tests: selected_from_paths(
                 root,
                 &all_tests,
                 "dependency configuration",
-                changed_files,
+                Some(&trigger_file),
             ),
             groups: vec![TestPlanGroupResult {
                 r#type: "dependencies".to_string(),
@@ -283,18 +304,14 @@ fn discover_framework_tests(
 
 fn framework_test_match(framework: TestFramework, rel: &str) -> bool {
     match framework {
-        TestFramework::Playwright => {
-            rel.contains("/tests/e2e/")
-                || rel.starts_with("tests/e2e/")
-                || rel.contains("/playwright/")
-                || rel.starts_with("playwright/")
-        }
+        TestFramework::Playwright => true,
         TestFramework::Vitest => {
             let name = rel.rsplit('/').next().unwrap_or(rel);
             (rel.split('/').any(|component| component == "__tests__")
                 || name.contains(".test.")
                 || name.contains(".spec."))
-                && !framework_test_match(TestFramework::Playwright, rel)
+                && !rel.split('/').any(|component| component == "playwright")
+                && !rel.starts_with("tests/e2e/")
         }
     }
 }
@@ -315,7 +332,7 @@ fn dependency_trigger(
     config: &NoMistakesConfig,
     framework: TestFramework,
     changed_files: &[PathBuf],
-) -> Result<Option<String>> {
+) -> Result<Option<(String, PathBuf)>> {
     let plan = match framework {
         TestFramework::Playwright => &config.test_plan.playwright,
         TestFramework::Vitest => &config.test_plan.vitest,
@@ -329,9 +346,9 @@ fn dependency_trigger(
         for changed in changed_files {
             let rel = relative_path(root, changed);
             if globset.as_ref().is_some_and(|set| set.is_match(&rel)) {
-                return Ok(Some(format!(
-                    "{} project dependency changed: {}",
-                    project_name, rel
+                return Ok(Some((
+                    format!("{} project dependency changed: {}", project_name, rel),
+                    changed.clone(),
                 )));
             }
         }
@@ -349,7 +366,12 @@ fn project_dependency_patterns(
         TestPlanProjectDependency::All(true) => {
             let root = project.root.as_deref().unwrap_or(project_name);
             if project.include.is_empty() {
-                vec![format!("{}/**", normalize_project_glob_part(root))]
+                let root = normalize_project_glob_part(root);
+                if root.is_empty() || root == "." {
+                    vec!["**".to_string()]
+                } else {
+                    vec![format!("{root}/**")]
+                }
             } else {
                 project
                     .include

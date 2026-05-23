@@ -160,10 +160,9 @@ pub(super) fn selected_from_paths(
     root: &Path,
     tests: &[PathBuf],
     via: &str,
-    changed_files: &[PathBuf],
+    changed_file: Option<&PathBuf>,
 ) -> Vec<SelectedTest> {
-    let changed = changed_files
-        .first()
+    let changed = changed_file
         .map(|path| relative_path(root, path))
         .unwrap_or_else(|| "*all*".to_string());
     tests

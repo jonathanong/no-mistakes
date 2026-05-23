@@ -1,0 +1,10 @@
+projects:
+  root:
+    type: library
+    root: .
+test_plan:
+  vitest:
+    dependencies:
+      projects:
+        root: true
+rules: []

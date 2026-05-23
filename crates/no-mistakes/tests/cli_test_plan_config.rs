@@ -164,6 +164,60 @@ fn test_plan_vitest_project_dependency_include_is_project_relative() {
 }
 
 #[test]
+fn test_plan_vitest_dependency_all_matches_dot_project_root() {
+    let root = fixture("test-plan-root-project");
+    let output = run(&[
+        "test",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "source.ts",
+        "--json",
+    ]);
+
+    assert!(output.status.success());
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(plan["fallback_triggered"], true);
+    assert!(plan["fallback_reason"]
+        .as_str()
+        .unwrap()
+        .contains("root project dependency changed"));
+    assert_eq!(
+        plan["selected_tests"][0]["reasons"][0]["changed_file"],
+        "source.ts"
+    );
+}
+
+#[test]
+fn test_plan_playwright_global_fallback_discovers_specs_outside_e2e_dirs() {
+    let root = fixture("playwright-coverage-alt");
+    let output = run(&[
+        "test",
+        "plan",
+        "playwright",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "package.json",
+        "--json",
+    ]);
+
+    assert!(output.status.success());
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(plan["fallback_triggered"], true);
+    assert_eq!(
+        plan["selected_tests"][0]["test_file"],
+        "specs/dashboard.spec.ts"
+    );
+    assert_eq!(
+        plan["selected_tests"][0]["reasons"][0]["changed_file"],
+        "package.json"
+    );
+}
+
+#[test]
 fn test_plan_vitest_all_environment_runs_all_tests() {
     let root = fixture("test-plan-config");
     let output = run(&[
