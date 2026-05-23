@@ -437,6 +437,19 @@ fn resolve_entrypoints_infers_plain_directory_index_entry() {
 }
 
 #[test]
+fn resolve_entrypoints_infers_plain_directory_cjs_index_entry() {
+    let root = fixture_root("graph-entrypoint-dir-cjs");
+    let args = parse(&["deps", "."]);
+    let entrypoints = resolve_entrypoints(&args.files, &root, &root);
+
+    assert_eq!(
+        entrypoints[0].node,
+        graph::NodeId::File(root.join("index.cjs"))
+    );
+    assert_eq!(entrypoints[0].file, root.join("index.cjs"));
+}
+
+#[test]
 fn resolve_entrypoints_keeps_directory_without_entry_as_file_node() {
     let root = fixture_root("graph-empty-dir");
     let args = parse(&["deps", "empty"]);

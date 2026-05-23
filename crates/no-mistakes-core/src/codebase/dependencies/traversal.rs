@@ -98,11 +98,19 @@ fn package_dir_entry(
                 "src/index.mts",
                 "src/index.ts",
                 "src/index.tsx",
+                "src/index.cts",
+                "src/index.js",
+                "src/index.mjs",
+                "src/index.jsx",
+                "src/index.cjs",
                 "index.mts",
                 "index.ts",
                 "index.tsx",
+                "index.cts",
                 "index.js",
                 "index.mjs",
+                "index.jsx",
+                "index.cjs",
             ]
             .iter()
             .map(|candidate| dir.join(candidate))

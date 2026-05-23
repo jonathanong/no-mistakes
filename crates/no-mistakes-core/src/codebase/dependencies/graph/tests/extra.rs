@@ -78,6 +78,26 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
         .unwrap();
     assert_eq!(b_entry.via, vec![EdgeKind::Import, EdgeKind::TypeImport]);
 
+    let module_root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-modules"));
+    let module_tsconfig = TsConfig {
+        dir: module_root.clone(),
+        paths: vec![],
+        paths_dir: module_root.clone(),
+        base_url: None,
+    };
+    let module_files = GraphFiles::discover(&module_root);
+    let module_deps = lazy_import_deps_of_with_files(
+        &[NodeId::File(module_root.join("src/entry.mts"))],
+        &module_root,
+        &module_tsconfig,
+        None,
+        &module_files,
+        Some(&[EdgeKind::Import].into()),
+    );
+    assert!(!module_deps
+        .iter()
+        .any(|entry| entry.node == NodeId::Module("@local/pkg".to_string())));
+
     let hidden_root = crate::codebase::ts_resolver::normalize_path(&fixture("lazy-hidden"));
     let hidden_tsconfig = TsConfig {
         dir: hidden_root.clone(),
@@ -360,6 +380,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
     assert!(import_neighbors(
         &root.join("missing.mts"),
         &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
+        &crate::codebase::workspaces::WorkspaceMap::default(),
         &graph_files,
         None,
     )

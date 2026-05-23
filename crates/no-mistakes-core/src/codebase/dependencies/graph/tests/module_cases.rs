@@ -109,6 +109,28 @@ fn nested_functions_inside_exported_functions_are_not_exported() {
 }
 
 #[test]
+fn same_named_nested_functions_do_not_share_reachability() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
+        .unwrap();
+    let deps = graph.deps_of(
+        &[NodeId::File(root.join("src/duplicate-name.mts"))],
+        None,
+        Some(&[EdgeKind::DynamicImport].into()),
+    );
+    let paths: HashSet<_> = deps.iter().filter_map(|entry| entry.node.as_file()).collect();
+
+    assert!(paths.contains(root.join("src/called.mts").as_path()));
+    assert!(!paths.contains(root.join("src/uncalled.mts").as_path()));
+}
+
+#[test]
 fn unknown_calls_inside_reachable_functions_keep_function_scoped_dynamic_imports() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
     let tsconfig = TsConfig {

@@ -30,13 +30,15 @@ pub fn lazy_import_deps_of(
 
 pub(crate) fn lazy_import_deps_of_with_files(
     roots: &[NodeId],
-    _root: &Path,
+    root: &Path,
     tsconfig: &TsConfig,
     max_depth: Option<usize>,
     graph_files: &GraphFiles,
     allowed: Option<&HashSet<EdgeKind>>,
 ) -> Vec<NodeEntry> {
     let resolver = ImportResolver::new(tsconfig).with_visible(&graph_files.visible);
+    let workspace =
+        crate::codebase::workspaces::load_from_files(root, graph_files.all()).unwrap_or_default();
 
     let mut visited: HashSet<NodeId> = HashSet::new();
     let mut frontier: Vec<NodeId> = Vec::new();
@@ -67,7 +69,7 @@ pub(crate) fn lazy_import_deps_of_with_files(
                 }
                 (
                     node.clone(),
-                    import_neighbors(path, &resolver, graph_files, allowed),
+                    import_neighbors(path, &resolver, &workspace, graph_files, allowed),
                 )
             })
             .collect();

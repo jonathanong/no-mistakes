@@ -1,6 +1,7 @@
 fn import_neighbors(
     path: &Path,
     resolver: &ImportResolver<'_>,
+    workspace: &crate::codebase::workspaces::WorkspaceMap,
     graph_files: &GraphFiles,
     allowed: Option<&HashSet<EdgeKind>>,
 ) -> Vec<(NodeId, EdgeKind)> {
@@ -32,6 +33,9 @@ fn import_neighbors(
                 .filter(|target| graph_files.is_visible(target) && is_indexable(target))
             {
                 return Some((NodeId::File(target), kind));
+            }
+            if workspace.resolve_specifier_from(&imp.specifier, path).is_some() {
+                return None;
             }
             bare_module_node(&imp.specifier).map(|module| (module, kind))
         })

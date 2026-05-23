@@ -40,12 +40,17 @@ fn has_reachable_unknown_call(
 fn reachable_function_scopes(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
 ) -> HashSet<String> {
+    let known_scopes = known_function_scopes(facts);
     let mut by_caller: HashMap<Option<String>, Vec<String>> = HashMap::new();
     for call in &facts.function_calls {
         by_caller
             .entry(call.caller.clone())
             .or_default()
-            .push(call.callee.clone());
+            .push(resolve_callee_scope(
+                call.caller.as_deref(),
+                &call.callee,
+                &known_scopes,
+            ));
     }
 
     let mut reachable = HashSet::new();
@@ -66,6 +71,27 @@ fn reachable_function_scopes(
         }
     }
     reachable
+}
+
+fn known_function_scopes(facts: &crate::codebase::ts_source::facts::TsFileFacts) -> HashSet<String> {
+    let mut scopes: HashSet<String> = facts
+        .imports
+        .iter()
+        .filter_map(|import| import.function_scope.clone())
+        .collect();
+    scopes.extend(facts.exported_functions.iter().cloned());
+    scopes.extend(facts.function_calls.iter().filter_map(|call| call.caller.clone()));
+    scopes
+}
+
+fn resolve_callee_scope(caller: Option<&str>, callee: &str, known_scopes: &HashSet<String>) -> String {
+    if let Some(caller) = caller {
+        let nested = format!("{caller}/{callee}");
+        if known_scopes.contains(&nested) {
+            return nested;
+        }
+    }
+    callee.to_string()
 }
 
 fn bare_module_node(specifier: &str) -> Option<NodeId> {
