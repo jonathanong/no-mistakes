@@ -4,6 +4,11 @@ const { rule } = require("../helpers");
 
 const TEST_NAMES = new Set(["test", "it", "describe"]);
 
+function propertyName(node) {
+  if (node.type === "Literal") return String(node.value);
+  return node.name;
+}
+
 module.exports = rule(
   {
     type: "problem",
@@ -13,8 +18,7 @@ module.exports = rule(
   },
   (context) => ({
     MemberExpression(node) {
-      if (node.computed) return;
-      if (node.property.type !== "Identifier" || node.property.name !== "sequential") return;
+      if (propertyName(node.property) !== "sequential") return;
       if (node.object.type !== "Identifier" || !TEST_NAMES.has(node.object.name)) return;
       context.report({ node, messageId: "sequential" });
     },

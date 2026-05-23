@@ -28,13 +28,27 @@ describe("upstreamed generic rule coverage", () => {
       "message",
       "message",
     ]);
+    assert.deepEqual(
+      messages(
+        fixture("message-angle.ts"),
+        "test-no-error-message-matching",
+        undefined,
+        "message-angle.ts",
+      ),
+      ["message"],
+    );
     assert.deepEqual(messages(code, "test-no-shared-state", undefined, "coverage.tsx"), [
       "shared",
       "shared",
       "shared",
       "shared",
+      "shared",
+      "shared",
+      "shared",
     ]);
-    assert.deepEqual(messages(code, "no-vitest-sequential", undefined, "coverage.tsx"), []);
+    assert.deepEqual(messages(code, "no-vitest-sequential", undefined, "coverage.tsx"), [
+      "sequential",
+    ]);
     assert.deepEqual(messages(code, "playwright-selector-priority", undefined, "coverage.tsx"), [
       "semantic",
     ]);

@@ -27,6 +27,8 @@ it.only("assigns", () => {
   sharedRest.value = 5;
   sharedFromArray = 6;
   sharedRestArray[0] = 7;
+  sharedRest.value++;
+  this.value = 8;
 });
 describe.skip("suite", () => {});
 test["sequential"]("computed", () => {});

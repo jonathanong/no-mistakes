@@ -35,6 +35,12 @@ function collectPatternNames(node, names = new Set()) {
   return names;
 }
 
+function mutationRootName(node) {
+  if (node.type === "Identifier") return node.name;
+  if (node.type === "MemberExpression") return mutationRootName(node.object);
+  return null;
+}
+
 module.exports = rule(
   {
     type: "problem",
@@ -70,9 +76,14 @@ module.exports = rule(
       },
       AssignmentExpression(node) {
         for (const name of collectPatternNames(node.left)) reportIfShared(node, name);
+        if (node.left.type === "MemberExpression") {
+          const rootName = mutationRootName(node.left);
+          if (rootName) reportIfShared(node, rootName);
+        }
       },
       UpdateExpression(node) {
-        if (node.argument.type === "Identifier") reportIfShared(node, node.argument.name);
+        const rootName = mutationRootName(node.argument);
+        if (rootName) reportIfShared(node, rootName);
       },
     };
   },

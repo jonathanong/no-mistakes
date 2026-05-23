@@ -3,13 +3,14 @@
 const { rule } = require("../helpers");
 
 const TEST_FILE_PATTERN = /\.(?:mock\.)?(?:test|spec)\.[cm]?[jt]sx?$/;
+const TEST_IMPORT_PATTERN = /\.(?:mock\.)?(?:test|spec)(?:\.[cm]?[jt]sx?)?$/;
 
 function isTestFile(filename) {
   return TEST_FILE_PATTERN.test(filename.replace(/\\/g, "/"));
 }
 
 function isTestImportSource(source) {
-  return typeof source === "string" && TEST_FILE_PATTERN.test(source);
+  return typeof source === "string" && TEST_IMPORT_PATTERN.test(source);
 }
 
 module.exports = rule(

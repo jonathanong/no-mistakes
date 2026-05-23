@@ -29,7 +29,11 @@ function propertyName(node) {
 
 function unwrap(node) {
   let current = node;
-  while (current?.type === "ChainExpression" || current?.type === "TSAsExpression") {
+  while (
+    current?.type === "ChainExpression" ||
+    current?.type === "TSAsExpression" ||
+    current?.type === "TSTypeAssertion"
+  ) {
     current = current.expression;
   }
   return current;

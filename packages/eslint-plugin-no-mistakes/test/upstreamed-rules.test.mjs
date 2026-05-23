@@ -37,18 +37,33 @@ describe("upstreamed generic rules", () => {
     const expected = [
       ["await-array-methods", ["awaited"]],
       ["no-delete-property", ["delete"]],
-      ["no-placeholder-never-type-exports", ["placeholder"]],
+      ["no-placeholder-never-type-exports", ["placeholder", "placeholder"]],
       ["test-no-shared-state", ["shared"]],
       ["test-no-error-message-matching", ["message", "message", "message"]],
       ["no-vitest-sequential", ["sequential"]],
-      ["react-no-use-promise-resolve", ["resolve"]],
+      ["react-no-use-promise-resolve", ["resolve", "resolve"]],
       ["react-no-iife-in-jsx", ["iife"]],
-      ["nextjs-no-manual-script-tags", ["script"]],
     ];
 
     for (const [rule, ids] of expected) {
       assert.deepEqual(messages(code, rule, undefined, "invalid.tsx"), ids, rule);
     }
+    assert.deepEqual(messages(code, "nextjs-no-manual-script-tags", undefined, "app/page.tsx"), [
+      "script",
+    ]);
+    assert.deepEqual(
+      messages(code, "nextjs-no-manual-script-tags", undefined, "components/widget.tsx"),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("next-script-import.tsx"),
+        "nextjs-no-manual-script-tags",
+        undefined,
+        "components/widget.tsx",
+      ),
+      ["script"],
+    );
   });
 
   it("reports import-only test aggregators", () => {

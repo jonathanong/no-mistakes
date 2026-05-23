@@ -2,6 +2,10 @@
 
 const { rule } = require("../helpers");
 
+function specifierName(specifier) {
+  return specifier.local?.name || specifier.exported?.name || specifier.exported?.value;
+}
+
 module.exports = rule(
   {
     type: "problem",
@@ -12,12 +16,29 @@ module.exports = rule(
         "Do not export placeholder never types. Define the real type or remove the export.",
     },
   },
-  (context) => ({
-    ExportNamedDeclaration(node) {
-      const declaration = node.declaration;
-      if (declaration?.type !== "TSTypeAliasDeclaration") return;
-      if (declaration.typeAnnotation?.type !== "TSNeverKeyword") return;
-      context.report({ node, messageId: "placeholder" });
-    },
-  }),
+  (context) => {
+    const neverTypes = new Set();
+    return {
+      TSTypeAliasDeclaration(node) {
+        if (node.typeAnnotation?.type === "TSNeverKeyword") neverTypes.add(node.id.name);
+      },
+      ExportNamedDeclaration(node) {
+        const declaration = node.declaration;
+        if (declaration?.type === "TSTypeAliasDeclaration") {
+          if (declaration.typeAnnotation?.type !== "TSNeverKeyword") return;
+          context.report({ node, messageId: "placeholder" });
+          return;
+        }
+        if (
+          node.specifiers?.some(
+            (specifier) =>
+              (node.exportKind === "type" || specifier.exportKind === "type") &&
+              neverTypes.has(specifierName(specifier)),
+          )
+        ) {
+          context.report({ node, messageId: "placeholder" });
+        }
+      },
+    };
+  },
 );
