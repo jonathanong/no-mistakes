@@ -57,16 +57,12 @@ pub(crate) fn run_all(
     }
     let discover_start = Instant::now();
     let skip_directories = config.filesystem.skip_directories.clone();
-    let discovered = if plan_requests_facts(&plan) || filesystem_rules_enabled {
-        crate::check_discovery::discover_check_files(
-            &root,
-            &config,
-            &skip_directories,
-            unique_exports_enabled,
-        )
-    } else {
-        Vec::new()
-    };
+    let discovered = crate::check_discovery::discover_check_files(
+        &root,
+        &config,
+        &skip_directories,
+        unique_exports_enabled,
+    );
     let discover_duration = discover_start.elapsed();
     let facts_start = Instant::now();
     // When only filesystem rules are enabled, no TS/JS parsing is needed.
