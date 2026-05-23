@@ -1,9 +1,9 @@
 "use strict";
 
-const { isFetchCall, isStaticString, rule } = require("../helpers");
+const { isFetchCall, isStaticString, literalString, rule } = require("../helpers");
 
 function isMethodKey(property) {
-  if (property.computed) return isStaticString(property.key) && property.key.value === "method";
+  if (property.computed) return literalString(property.key) === "method";
   return (
     (property.key.type === "Identifier" && property.key.name === "method") ||
     (property.key.type === "Literal" && property.key.value === "method")
