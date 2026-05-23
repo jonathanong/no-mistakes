@@ -8,6 +8,7 @@ import "./setup.story";
 import './single-quote.story';
 import DefaultCard from "../components/DefaultCard";
 import DefaultButton, { Button as RenamedButton, Link } from "../components/Button";
+import DefaultStory, * as StoryNamespace from "../components/Story";
 	import * as Cards from "../components/Cards";
 	import { type Props, Panel } from "../components/Panel";
 	import type { TypeOnlyCard } from "../components/TypeOnlyCard";
@@ -27,10 +28,14 @@ import DefaultButton, { Button as RenamedButton, Link } from "../components/Butt
 	import TildeFence from "../components/TildeFence";
 	~~~
 
+    import IndentedExample from "../components/IndentedExample";
+
 	<DefaultCard />
 	<DefaultButton />
 	<RenamedButton />
 	<Link />
+	<DefaultStory />
+	<StoryNamespace.Basic />
 	<Cards.Card />
 	<Panel />
 	<RenamedMultilineCard />
@@ -57,6 +62,8 @@ import DefaultButton, { Button as RenamedButton, Link } from "../components/Butt
             ("default", "DefaultButton", "../components/Button", false,),
             ("Button", "RenamedButton", "../components/Button", false,),
             ("Link", "Link", "../components/Button", false),
+            ("default", "DefaultStory", "../components/Story", false),
+            ("*", "StoryNamespace", "../components/Story", true),
             ("*", "Cards", "../components/Cards", true),
             ("Panel", "Panel", "../components/Panel", false),
             (

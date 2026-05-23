@@ -130,6 +130,9 @@ export default {
 	      { ["directory"]: "../ignored" },
     ]
   ),
+  parameters: {
+    stories: ["../ignored/**/*.stories.tsx"],
+  },
 };
 "#,
     );
@@ -140,10 +143,103 @@ export default {
             "../components/**/*.story.tsx",
             "../examples/**/*.stories.tsx",
             "../cards/**/*.case.tsx",
-            "../spread/**/*.stories.@(js|jsx|mjs|ts|tsx)",
-            "../defaults/**/*.stories.@(js|jsx|mjs|ts|tsx)",
+            "../spread/**/*.@(mdx|stories.@(js|jsx|mjs|ts|tsx))",
+            "../defaults/**/*.@(mdx|stories.@(js|jsx|mjs|ts|tsx))",
         ]
     );
+
+    let define_config_patterns = config::extract_storybook_story_patterns(
+        r#"
+const config = { stories: ["../config/**/*.stories.tsx"] };
+const unrelated = { stories: ["../ignored/**/*.stories.tsx"] };
+export default defineConfig(config);
+"#,
+    );
+    assert_eq!(define_config_patterns, vec!["../config/**/*.stories.tsx"]);
+
+    let export_identifier_patterns = config::extract_storybook_story_patterns(
+        r#"
+const config = { stories: ["../identifier/**/*.stories.tsx"] };
+export default config;
+"#,
+    );
+    assert_eq!(
+        export_identifier_patterns,
+        vec!["../identifier/**/*.stories.tsx"]
+    );
+
+    let direct_call_patterns = config::extract_storybook_story_patterns(
+        r#"
+export default defineConfig({ stories: ["../direct-call/**/*.stories.tsx"] });
+"#,
+    );
+    assert_eq!(
+        direct_call_patterns,
+        vec!["../direct-call/**/*.stories.tsx"]
+    );
+
+    let parenthesized_patterns = config::extract_storybook_story_patterns(
+        r#"
+export default defineConfig(({ stories: ["../parenthesized/**/*.stories.tsx"] }));
+"#,
+    );
+    assert_eq!(
+        parenthesized_patterns,
+        vec!["../parenthesized/**/*.stories.tsx"]
+    );
+
+    let parenthesized_export_patterns = config::extract_storybook_story_patterns(
+        r#"
+export default ({ stories: ["../parenthesized-export/**/*.stories.tsx"] });
+"#,
+    );
+    assert_eq!(
+        parenthesized_export_patterns,
+        vec!["../parenthesized-export/**/*.stories.tsx"]
+    );
+
+    let alias_patterns = config::extract_storybook_story_patterns(
+        r#"
+const config = { stories: ["../alias/**/*.stories.tsx"] };
+const alias = config;
+export default alias;
+"#,
+    );
+    assert_eq!(alias_patterns, vec!["../alias/**/*.stories.tsx"]);
+
+    let call_binding_patterns = config::extract_storybook_story_patterns(
+        r#"
+const config = defineConfig({ stories: ["../call-binding/**/*.stories.tsx"] });
+export default config;
+"#,
+    );
+    assert_eq!(
+        call_binding_patterns,
+        vec!["../call-binding/**/*.stories.tsx"]
+    );
+
+    let parenthesized_binding_patterns = config::extract_storybook_story_patterns(
+        r#"
+const config = ({ stories: ["../parenthesized-binding/**/*.stories.tsx"] });
+export default config;
+"#,
+    );
+    assert_eq!(
+        parenthesized_binding_patterns,
+        vec!["../parenthesized-binding/**/*.stories.tsx"]
+    );
+
+    for source in [
+        r#"const { config } = setup(); export default {};"#,
+        r#"const config = 1; export default config;"#,
+        r#"const a = b; const b = a; export default a;"#,
+        r#"export default defineConfig("not-object");"#,
+        r#"export default function config() {}"#,
+        r#"const unrelated = { stories: ["../ignored/**/*.stories.tsx"] };"#,
+        r#"export default { ...extra, stories() {}, ["stories"]: ["../ignored/**/*.stories.tsx"] };"#,
+    ] {
+        assert!(config::extract_storybook_story_patterns(source).is_empty());
+    }
 
     let function_patterns = config::extract_storybook_story_patterns(
         r#"

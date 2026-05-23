@@ -25,6 +25,9 @@ pub(crate) fn extract_mdx_source(source: &str) -> StorybookFileFacts {
             active_code_fence = Some("~~~");
             continue;
         }
+        if is_indented_code_block(line) {
+            continue;
+        }
         if let Some((pending, _)) = pending_import.as_mut() {
             if trimmed.starts_with("import ") {
                 pending_import = None;
@@ -76,6 +79,10 @@ fn mdx_references_local(source: &str, local: &str) -> bool {
         || source.contains(&format!("{{ {local}"))
 }
 
+fn is_indented_code_block(line: &str) -> bool {
+    line.starts_with("    ")
+}
+
 fn mdx_import_complete(import: &str) -> bool {
     side_effect_source(import.trim()).is_some() || import.contains(" from ")
 }
@@ -106,11 +113,15 @@ fn push_mdx_imports(imports: &mut Vec<UsedRuntimeImport>, clause: &str, source: 
     if clause.starts_with("type ") {
         return;
     }
-    if let Some((default, rest)) = clause.split_once(", {") {
-        push_mdx_default_import(imports, default.trim(), source, line);
-        let named = format!("{{{}", rest.trim());
-        push_mdx_imports(imports, &named, source, line);
-        return;
+    if !clause.starts_with('{') {
+        if let Some((default, rest)) = clause.split_once(',') {
+            let rest = rest.trim();
+            if rest.starts_with('{') || rest.starts_with("* as ") {
+                push_mdx_default_import(imports, default.trim(), source, line);
+                push_mdx_imports(imports, rest, source, line);
+            }
+            return;
+        }
     }
     if let Some(namespace) = clause.strip_prefix("* as ") {
         let local = namespace.trim();

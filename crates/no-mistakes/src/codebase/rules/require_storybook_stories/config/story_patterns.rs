@@ -1,13 +1,12 @@
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::relative_slash_path;
 use oxc_allocator::Allocator;
-use oxc_ast::ast::{
-    ArrayExpressionElement, Expression, ObjectExpression, ObjectProperty, Statement,
-};
-use oxc_ast_visit::{walk, Visit};
+use oxc_ast::ast::{ArrayExpressionElement, Expression, ObjectExpression, Statement};
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::path::Path;
+
+mod export_config;
 
 pub(in crate::codebase::rules::require_storybook_stories) fn extract_storybook_story_patterns(
     source: &str,
@@ -17,12 +16,9 @@ pub(in crate::codebase::rules::require_storybook_stories) fn extract_storybook_s
     if parsed.panicked || !parsed.errors.is_empty() {
         return Vec::new();
     }
-    let mut visitor = StorybookConfigVisitor {
-        source,
-        patterns: Vec::new(),
-    };
-    visitor.visit_program(&parsed.program);
-    visitor.patterns
+    export_config::stories_expression(&parsed.program)
+        .map(|expression| story_patterns_from_expression(expression, source))
+        .unwrap_or_default()
 }
 
 pub(in crate::codebase::rules::require_storybook_stories) fn project_relative_pattern(
@@ -37,21 +33,6 @@ pub(in crate::codebase::rules::require_storybook_stories) fn project_relative_pa
     }
     let joined = base.join(pattern_path);
     relative_slash_path(&project_root, &normalize_path(&joined))
-}
-
-struct StorybookConfigVisitor<'a> {
-    source: &'a str,
-    patterns: Vec<String>,
-}
-
-impl<'a> Visit<'a> for StorybookConfigVisitor<'a> {
-    fn visit_object_property(&mut self, property: &ObjectProperty<'a>) {
-        if crate::codebase::ts_source::static_property_key_name(&property.key) == Some("stories") {
-            self.patterns
-                .extend(story_patterns_from_expression(&property.value, self.source));
-        }
-        walk::walk_object_property(self, property);
-    }
 }
 
 fn story_patterns_from_expression(expression: &Expression<'_>, source: &str) -> Vec<String> {
@@ -119,7 +100,7 @@ fn story_pattern_from_element(
 fn story_pattern_from_object(object: &ObjectExpression<'_>, source: &str) -> Option<String> {
     let directory = object_string_property(object, "directory", source)?;
     let files = object_string_property(object, "files", source)
-        .unwrap_or_else(|| "**/*.stories.@(js|jsx|mjs|ts|tsx)".to_string());
+        .unwrap_or_else(|| "**/*.@(mdx|stories.@(js|jsx|mjs|ts|tsx))".to_string());
     Some(format!("{}/{}", directory.trim_end_matches('/'), files))
 }
 
