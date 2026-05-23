@@ -82,13 +82,14 @@ fn extract_storybook_story_patterns(source: &str) -> Vec<String> {
     visitor.patterns
 }
 
-fn project_relative_pattern(project_root: &Path, base: &Path, pattern: &str) -> String {
+pub(super) fn project_relative_pattern(project_root: &Path, base: &Path, pattern: &str) -> String {
+    let project_root = normalize_path(project_root);
     let pattern_path = Path::new(pattern);
     if pattern_path.is_absolute() {
-        return pattern.to_string();
+        return relative_slash_path(&project_root, &normalize_path(pattern_path));
     }
     let joined = base.join(pattern_path);
-    relative_slash_path(project_root, &normalize_path(&joined))
+    relative_slash_path(&project_root, &normalize_path(&joined))
 }
 
 struct StorybookConfigVisitor<'a> {

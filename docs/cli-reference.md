@@ -161,8 +161,8 @@ config, and cache-related `next.config.*` settings.
 
 ### Storybook Component Coverage via `no-mistakes check`
 
-`require-storybook-stories` requires selected exported React components to be
-covered by reachable Storybook stories. Coverage counts direct story imports and
+`require-storybook-stories` requires selected exported React components to have
+coverage from reachable Storybook stories. Coverage counts direct story imports and
 React child components rendered by covered components. Dynamic import and mock
 targets are not required by `include_all_react_*` unless explicitly included.
 

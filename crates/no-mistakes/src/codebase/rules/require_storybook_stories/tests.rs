@@ -74,6 +74,19 @@ include_all_react_named_exports: true
 }
 
 #[test]
+fn absolute_story_config_patterns_are_project_relative() {
+    let root = fixture("defaults");
+    let pattern = root.join("stories/**/*.stories.tsx");
+    let relative = config::project_relative_pattern(
+        &root,
+        &root.join(".storybook"),
+        &pattern.to_string_lossy(),
+    );
+
+    assert_eq!(relative, "stories/**/*.stories.tsx");
+}
+
+#[test]
 fn reports_selected_component_without_story() {
     let root = fixture("missing");
     let findings = check(
