@@ -1,0 +1,7 @@
+{
+  "name": "forbidden-dependencies-basic-fixture",
+  "version": "1.0.0",
+  "dependencies": {
+    "sharp": "^0.33.0"
+  }
+}

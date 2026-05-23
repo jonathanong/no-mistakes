@@ -1,4 +1,5 @@
 pub mod agents_md_max_size;
+pub mod forbidden_dependencies;
 pub mod nextjs_no_api_routes;
 pub mod nextjs_no_caching;
 pub mod require_storybook_stories;
@@ -15,6 +16,7 @@ use serde::Serialize;
 use std::path::{Path, PathBuf};
 
 pub use agents_md_max_size::RULE_ID as AGENTS_MD_MAX_SIZE;
+pub use forbidden_dependencies::RULE_ID as FORBIDDEN_DEPENDENCIES;
 pub use nextjs_no_api_routes::RULE_ID as NEXTJS_NO_API_ROUTES;
 pub use nextjs_no_caching::RULE_ID as NEXTJS_NO_CACHING;
 pub use require_storybook_stories::RULE_ID as REQUIRE_STORYBOOK_STORIES;

@@ -526,3 +526,18 @@ fn run_check_with_facts_surfaces_invalid_tsconfig() {
         "expected tsconfig path in error, got: {error:#}"
     );
 }
+
+#[test]
+fn run_check_executes_forbidden_dependencies_rule() {
+    let root = fixture("codebase-analysis/forbidden-dependencies-basic");
+    let findings = run_check(&root, None, None).unwrap();
+    assert!(findings.iter().any(|f| f.rule == FORBIDDEN_DEPENDENCIES));
+}
+
+#[test]
+fn run_check_with_facts_executes_forbidden_dependencies_rule() {
+    let root = fixture("codebase-analysis/forbidden-dependencies-basic");
+    let shared = crate::codebase::check_facts::CheckFactMap::default();
+    let findings = run_check_with_facts(&root, None, None, &shared).unwrap();
+    assert!(findings.iter().any(|f| f.rule == FORBIDDEN_DEPENDENCIES));
+}

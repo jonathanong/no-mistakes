@@ -1,8 +1,8 @@
 use super::{
-    nextjs_no_api_routes, nextjs_no_caching, require_storybook_stories, rule_enabled,
-    server_route_client_boundary, sort_findings, test_no_unmocked_dynamic_imports, RuleFinding,
-    NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, REQUIRE_STORYBOOK_STORIES,
-    SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+    forbidden_dependencies, nextjs_no_api_routes, nextjs_no_caching, require_storybook_stories,
+    rule_enabled, server_route_client_boundary, sort_findings, test_no_unmocked_dynamic_imports,
+    RuleFinding, FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
+    REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
 };
 use anyhow::Result;
 use std::path::Path;
@@ -35,6 +35,9 @@ pub fn run_check(
     }
     if crate::playwright::rules::configured(&config) {
         findings.extend(crate::playwright::rules::check(root, config_path, &config)?);
+    }
+    if rule_enabled(&config, FORBIDDEN_DEPENDENCIES) {
+        findings.extend(forbidden_dependencies::check(root, &config, tsconfig_path)?);
     }
     sort_findings(&mut findings);
     Ok(findings)
@@ -84,6 +87,9 @@ pub fn run_check_with_facts(
             shared,
         )?);
     }
+    if rule_enabled(&config, FORBIDDEN_DEPENDENCIES) {
+        findings.extend(forbidden_dependencies::check(root, &config, tsconfig_path)?);
+    }
     sort_findings(&mut findings);
     Ok(findings)
 }
@@ -95,4 +101,5 @@ fn any_codebase_rule_enabled(config: &crate::config::v2::NoMistakesConfig) -> bo
         || rule_enabled(config, NEXTJS_NO_CACHING)
         || rule_enabled(config, REQUIRE_STORYBOOK_STORIES)
         || crate::playwright::rules::configured(config)
+        || rule_enabled(config, FORBIDDEN_DEPENDENCIES)
 }

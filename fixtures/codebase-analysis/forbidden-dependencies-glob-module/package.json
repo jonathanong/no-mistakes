@@ -1,0 +1,7 @@
+{
+  "name": "forbidden-dependencies-glob-module-fixture",
+  "version": "1.0.0",
+  "dependencies": {
+    "@scope/heavy": "^1.0.0"
+  }
+}

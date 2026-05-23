@@ -1,0 +1,15 @@
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots:
+        - entrypoints/api.mts
+      forbiddenModules:
+        - sharp
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots:
+        - entrypoints/worker.mts
+      forbiddenModules:
+        - canvas
