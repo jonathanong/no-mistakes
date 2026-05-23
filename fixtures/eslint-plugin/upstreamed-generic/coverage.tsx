@@ -17,9 +17,16 @@ if (error.code !== "missing") {
   throw error;
 }
 let shared = 0;
+let { sharedFromObject, sharedDefault = 0, ...sharedRest } = seed;
+let [sharedFromArray = 0, , ...sharedRestArray] = list;
 shared = 2;
 it.only("assigns", () => {
   shared = 1;
+  sharedFromObject = 3;
+  sharedDefault = 4;
+  sharedRest.value = 5;
+  sharedFromArray = 6;
+  sharedRestArray[0] = 7;
 });
 describe.skip("suite", () => {});
 test["sequential"]("computed", () => {});

@@ -6,23 +6,24 @@ const ALLOWED_SUFFIXES = [
   "/page.tsx",
   "/page.ts",
   "/page.jsx",
+  "/page.js",
   "/layout.tsx",
   "/layout.ts",
   "/layout.jsx",
-  "/template.tsx",
-  "/template.ts",
-  "/template.jsx",
-  "/default.tsx",
-  "/default.ts",
-  "/default.jsx",
+  "/layout.js",
 ];
+const METADATA_EXPORTS = new Set(["metadata", "generateMetadata"]);
 
 function isAllowedFile(filename) {
   return ALLOWED_SUFFIXES.some((suffix) => filename.replace(/\\/g, "/").endsWith(suffix));
 }
 
 function specifierName(specifier) {
-  return specifier.local?.name || specifier.exported?.name || specifier.exported?.value;
+  return specifier.exported?.name || specifier.exported?.value || specifier.local?.name;
+}
+
+function declarationName(declaration) {
+  return declaration.id?.type === "Identifier" ? declaration.id.name : null;
 }
 
 module.exports = rule(
@@ -43,18 +44,20 @@ module.exports = rule(
       if (isAllowedFile(context.filename)) return;
       if (node.declaration?.type === "VariableDeclaration") {
         if (
-          node.declaration.declarations.some((declaration) => declaration.id?.name === "metadata")
+          node.declaration.declarations.some((declaration) =>
+            METADATA_EXPORTS.has(declarationName(declaration)),
+          )
         ) {
           context.report({ node, messageId: "location" });
         }
       }
       if (
         node.declaration?.type === "FunctionDeclaration" &&
-        node.declaration.id?.name === "generateMetadata"
+        METADATA_EXPORTS.has(declarationName(node.declaration))
       ) {
         context.report({ node, messageId: "location" });
       }
-      if (node.specifiers?.some((specifier) => specifierName(specifier) === "metadata")) {
+      if (node.specifiers?.some((specifier) => METADATA_EXPORTS.has(specifierName(specifier)))) {
         context.report({ node, messageId: "location" });
       }
     },

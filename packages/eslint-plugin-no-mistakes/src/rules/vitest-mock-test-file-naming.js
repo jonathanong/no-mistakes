@@ -1,6 +1,6 @@
 "use strict";
 
-const { callMethodName, rule } = require("../helpers");
+const { rule } = require("../helpers");
 
 const TEST_FILE_PATTERN = /\.(?:test|spec)\.[cm]?[jt]sx?$/;
 const MOCK_TEST_FILE_PATTERN = /\.mock\.test\.[cm]?[jt]sx?$/;
@@ -26,6 +26,16 @@ function isMockTestFile(filename) {
   return MOCK_TEST_FILE_PATTERN.test(filename.replace(/\\/g, "/"));
 }
 
+function isMockingCall(node) {
+  return (
+    node.callee.type === "MemberExpression" &&
+    !node.callee.computed &&
+    node.callee.object.type === "Identifier" &&
+    (node.callee.object.name === "vi" || node.callee.object.name === "jest") &&
+    MOCK_METHODS.has(node.callee.property.name)
+  );
+}
+
 module.exports = rule(
   {
     type: "problem",
@@ -40,8 +50,7 @@ module.exports = rule(
     let usesMocking = false;
     return {
       CallExpression(node) {
-        const method = callMethodName(node);
-        if (MOCK_METHODS.has(method)) usesMocking = true;
+        if (isMockingCall(node)) usesMocking = true;
       },
       "Program:exit"(node) {
         if (!isTestFile(context.filename)) return;

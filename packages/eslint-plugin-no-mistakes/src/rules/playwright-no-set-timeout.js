@@ -2,6 +2,20 @@
 
 const { rule } = require("../helpers");
 
+const PLAYWRIGHT_PATH_PATTERN = /(?:^|[/\\])(?:e2e|playwright)(?:[/\\]|\.|$)|\.pw\.(?:spec|test)\./;
+
+function isPlaywrightPath(filename) {
+  return PLAYWRIGHT_PATH_PATTERN.test(filename.replace(/\\/g, "/"));
+}
+
+function isWaitForTimeout(node) {
+  return (
+    node.callee.type === "MemberExpression" &&
+    !node.callee.computed &&
+    node.callee.property.name === "waitForTimeout"
+  );
+}
+
 module.exports = rule(
   {
     type: "problem",
@@ -12,10 +26,21 @@ module.exports = rule(
         "Do not use setTimeout() in Playwright tests. Wait for an observable condition instead.",
     },
   },
-  (context) => ({
-    CallExpression(node) {
-      if (node.callee.type !== "Identifier" || node.callee.name !== "setTimeout") return;
-      context.report({ node, messageId: "timeout" });
-    },
-  }),
+  (context) => {
+    let isPlaywrightFile = isPlaywrightPath(context.filename);
+    return {
+      ImportDeclaration(node) {
+        if (node.source.value === "@playwright/test") isPlaywrightFile = true;
+      },
+      CallExpression(node) {
+        if (!isPlaywrightFile) return;
+        if (
+          (node.callee.type === "Identifier" && node.callee.name === "setTimeout") ||
+          isWaitForTimeout(node)
+        ) {
+          context.report({ node, messageId: "timeout" });
+        }
+      },
+    };
+  },
 );

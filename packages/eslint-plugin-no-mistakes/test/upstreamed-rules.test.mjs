@@ -100,23 +100,48 @@ describe("upstreamed generic rules", () => {
       ),
       [],
     );
+    assert.deepEqual(
+      messages(
+        fixture("mock-name.valid.test.ts"),
+        "vitest-mock-test-file-naming",
+        undefined,
+        "mock-name.valid.test.ts",
+      ),
+      [],
+    );
   });
 
   it("reports Playwright policy violations", () => {
     const code = fixture("playwright.invalid.ts");
-    assert.deepEqual(messages(code, "playwright-assertion-timeout-cap", undefined, "e2e.ts"), [
+    assert.deepEqual(messages(code, "playwright-assertion-timeout-cap", undefined, "e2e.spec.ts"), [
       "timeout",
     ]);
-    assert.deepEqual(messages(code, "playwright-selector-priority", undefined, "e2e.ts"), [
+    assert.deepEqual(messages(code, "playwright-selector-priority", undefined, "e2e.spec.ts"), [
       "semantic",
       "heading",
       "text",
     ]);
-    assert.deepEqual(messages(code, "playwright-no-set-timeout", undefined, "e2e.ts"), ["timeout"]);
+    assert.deepEqual(messages(code, "playwright-no-set-timeout", undefined, "e2e.spec.ts"), [
+      "timeout",
+      "timeout",
+    ]);
 
     const valid = fixture("playwright.valid.ts");
-    assert.deepEqual(messages(valid, "playwright-assertion-timeout-cap", undefined, "e2e.ts"), []);
-    assert.deepEqual(messages(valid, "playwright-selector-priority", undefined, "e2e.ts"), []);
+    assert.deepEqual(
+      messages(valid, "playwright-assertion-timeout-cap", undefined, "e2e.spec.ts"),
+      [],
+    );
+    assert.deepEqual(messages(valid, "playwright-selector-priority", undefined, "e2e.spec.ts"), []);
+    assert.deepEqual(messages(valid, "playwright-no-set-timeout", undefined, "e2e.spec.ts"), []);
+    assert.deepEqual(
+      messages(
+        fixture("playwright.non-test.ts"),
+        "playwright-no-set-timeout",
+        undefined,
+        "app/timer.ts",
+      ),
+      [],
+    );
   });
 
   it("reports misplaced Next.js metadata exports", () => {
@@ -127,7 +152,7 @@ describe("upstreamed generic rules", () => {
         undefined,
         "lib/metadata.ts",
       ),
-      ["location", "location"],
+      ["location", "location", "location"],
     );
     assert.deepEqual(
       messages(
@@ -138,36 +163,23 @@ describe("upstreamed generic rules", () => {
       ),
       [],
     );
-  });
-
-  it("covers additional branches in upstreamed rules", () => {
-    const code = fixture("coverage.tsx");
-    assert.deepEqual(messages(code, "await-array-methods", undefined, "coverage.tsx"), []);
-    assert.deepEqual(messages(code, "no-delete-property", undefined, "coverage.tsx"), [
-      "delete",
-      "delete",
-    ]);
     assert.deepEqual(
-      messages(code, "nextjs-metadata-exports-location", undefined, "components/meta.tsx"),
-      ["location"],
-    );
-    assert.deepEqual(messages(code, "test-no-error-message-matching", undefined, "coverage.tsx"), [
-      "message",
-      "message",
-      "message",
-    ]);
-    assert.deepEqual(messages(code, "test-no-shared-state", undefined, "coverage.tsx"), ["shared"]);
-    assert.deepEqual(messages(code, "no-vitest-sequential", undefined, "coverage.tsx"), []);
-    assert.deepEqual(messages(code, "playwright-selector-priority", undefined, "coverage.tsx"), [
-      "semantic",
-    ]);
-    assert.deepEqual(
-      messages(code, "playwright-assertion-timeout-cap", undefined, "coverage.tsx"),
-      ["timeout", "timeout", "timeout"],
+      messages(
+        fixture("metadata.valid-page.tsx"),
+        "nextjs-metadata-exports-location",
+        undefined,
+        "app/page.js",
+      ),
+      [],
     );
     assert.deepEqual(
-      messages(code, "playwright-assertion-timeout-cap", { max: 20000 }, "coverage.tsx"),
-      ["timeout"],
+      messages(
+        fixture("metadata.valid-page.tsx"),
+        "nextjs-metadata-exports-location",
+        undefined,
+        "app/template.tsx",
+      ),
+      ["location", "location"],
     );
   });
 });

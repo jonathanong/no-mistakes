@@ -16,7 +16,22 @@ function isTestCall(node) {
 }
 
 function collectPatternNames(node, names = new Set()) {
-  if (node.type === "Identifier") names.add(node.name);
+  if (!node) return names;
+  if (node.type === "Identifier") {
+    names.add(node.name);
+  } else if (node.type === "ObjectPattern") {
+    for (const property of node.properties) {
+      collectPatternNames(property.value || property.argument, names);
+    }
+  } else if (node.type === "ArrayPattern") {
+    for (const element of node.elements) {
+      collectPatternNames(element, names);
+    }
+  } else if (node.type === "RestElement") {
+    collectPatternNames(node.argument, names);
+  } else if (node.type === "AssignmentPattern") {
+    collectPatternNames(node.left, names);
+  }
   return names;
 }
 
