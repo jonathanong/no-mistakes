@@ -27,6 +27,9 @@ pub(crate) fn run_all(
     let unique_exports_enabled = unique_exports_configured(&config);
     let enabled = enabled::ConfiguredChecks::from_config(&config);
     let filesystem_rules_enabled = filesystem_rules_configured(&config);
+    let playwright_fact_plan =
+        no_mistakes::playwright::rules::fact_plan(&root, config_path.as_deref(), &config)?;
+    let playwright_rules_enabled = playwright_fact_plan.is_some();
     let integration_enabled = integration_configured(&config);
     let react_enabled = react_traits::check_enabled(&root, config_path.as_deref(), false)?;
     let react_warning = None;
@@ -40,8 +43,9 @@ pub(crate) fn run_all(
         storybook_stories: enabled.storybook_stories,
         integration: integration_enabled,
         unique_exports: unique_exports_enabled,
+        playwright: playwright_fact_plan,
     });
-    if !plan_requests_facts(&plan) && !filesystem_rules_enabled {
+    if !plan_requests_facts(&plan) && !filesystem_rules_enabled && !playwright_rules_enabled {
         return Ok(empty_results([react_warning]));
     }
     let discover_start = Instant::now();

@@ -1,5 +1,7 @@
-use super::{collect_check_facts, collect_file_facts, CheckFactPlan};
+use super::{collect_check_facts, collect_file_facts, CheckFactPlan, PlaywrightFactPlan};
+use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 fn fixture_path(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -129,7 +131,7 @@ fn collect_file_facts_keeps_raw_source_for_parse_and_source_type_errors() {
     let facts = collect_file_facts(
         &root,
         &unsupported,
-        CheckFactPlan {
+        &CheckFactPlan {
             react: true,
             raw_source: true,
             source: false,
@@ -145,7 +147,7 @@ fn collect_file_facts_keeps_raw_source_for_parse_and_source_type_errors() {
     let facts = collect_file_facts(
         &root,
         &invalid,
-        CheckFactPlan {
+        &CheckFactPlan {
             react: true,
             raw_source: true,
             source: false,
@@ -164,7 +166,7 @@ fn collect_file_facts_records_unsupported_source_type() {
     let facts = collect_file_facts(
         &root,
         &file,
-        CheckFactPlan {
+        &CheckFactPlan {
             source: true,
             ..CheckFactPlan::default()
         },
@@ -194,6 +196,7 @@ fn collect_check_facts_parses_once_for_overlapping_fact_categories() {
             dynamic_imports: true,
             nextjs_caching: true,
             storybook: true,
+            playwright: None,
             source: true,
             raw_source: false,
         },
@@ -211,4 +214,38 @@ fn collect_check_facts_parses_once_for_overlapping_fact_categories() {
     assert!(file_facts.nextjs_caching.is_some());
     assert!(file_facts.dynamic_imports.is_some());
     assert!(file_facts.source.is_some());
+}
+
+#[test]
+fn collect_check_facts_parses_once_for_playwright_and_shared_facts() {
+    let root = fixture_path("");
+    let file = fixture_path("src/everything.tsx");
+    let mut test_id_attributes_by_path = HashMap::new();
+    test_id_attributes_by_path.insert(file.clone(), vec!["data-testid".to_string()]);
+
+    let facts = collect_check_facts(
+        &root,
+        vec![file.clone()],
+        CheckFactPlan {
+            react: true,
+            playwright: Some(PlaywrightFactPlan {
+                navigation_helpers: Vec::new(),
+                selector_regexes: Arc::new(
+                    crate::playwright::selectors::compile_selector_regexes_with_html_ids(
+                        &["data-testid".to_string()],
+                        &Default::default(),
+                        false,
+                    ),
+                ),
+                test_id_attributes_by_path: Arc::new(test_id_attributes_by_path),
+            }),
+            ..CheckFactPlan::default()
+        },
+    );
+
+    assert_eq!(facts.stats.files_discovered, 1);
+    assert_eq!(facts.stats.files_parsed, 1);
+    let file_facts = facts.ts.get(&file).expect("file facts are collected");
+    assert!(file_facts.react.is_some());
+    assert!(file_facts.playwright.is_some());
 }

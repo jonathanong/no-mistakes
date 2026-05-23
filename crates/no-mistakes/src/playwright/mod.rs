@@ -5,9 +5,10 @@ mod config;
 mod fsutil;
 mod matcher;
 pub mod playwright_config;
-mod playwright_tests;
+pub(crate) mod playwright_tests;
 pub mod playwright_urls;
 mod routes;
+pub mod rules;
 pub mod selectors;
 #[cfg(test)]
 mod test_support;

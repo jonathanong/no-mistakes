@@ -14,6 +14,9 @@ use anyhow::Result;
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 
+pub use crate::playwright::rules::{
+    PLAYWRIGHT_COVERAGE, PLAYWRIGHT_UNIQUE_HTML_IDS, PLAYWRIGHT_UNIQUE_TEST_IDS,
+};
 pub use agents_md_max_size::RULE_ID as AGENTS_MD_MAX_SIZE;
 pub use nextjs_no_api_routes::RULE_ID as NEXTJS_NO_API_ROUTES;
 pub use nextjs_no_caching::RULE_ID as NEXTJS_NO_CACHING;

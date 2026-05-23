@@ -9,7 +9,7 @@ use std::path::Path;
 pub(crate) fn collect_file_facts(
     root: &Path,
     path: &Path,
-    plan: CheckFactPlan,
+    plan: &CheckFactPlan,
 ) -> Option<CheckFileFacts> {
     let source = match std::fs::read_to_string(path) {
         Ok(source) => source,
@@ -112,6 +112,24 @@ pub(crate) fn collect_file_facts(
     } else {
         None
     };
+    let playwright = plan.playwright.as_ref().and_then(|playwright| {
+        let test_id_attributes = playwright.test_id_attributes_by_path.get(path)?;
+        Some(super::PlaywrightTestFacts {
+            urls:
+                crate::playwright::playwright_urls::extract_playwright_url_occurrences_from_program(
+                    program,
+                    &source,
+                    &playwright.navigation_helpers,
+                ),
+            selectors:
+                crate::playwright::selectors::extract_playwright_selector_occurrences_from_program(
+                    program,
+                    &source,
+                    &playwright.selector_regexes,
+                    test_id_attributes,
+                ),
+        })
+    });
     Some(CheckFileFacts {
         source: should_store_source(plan).then_some(source),
         imports,
@@ -122,16 +140,17 @@ pub(crate) fn collect_file_facts(
         dynamic_imports,
         nextjs_caching,
         storybook,
+        playwright,
         parse_error: None,
         parsed: true,
     })
 }
 
-fn should_store_source(plan: CheckFactPlan) -> bool {
+fn should_store_source(plan: &CheckFactPlan) -> bool {
     plan.source || plan.raw_source
 }
 
-fn requires_parse(plan: CheckFactPlan) -> bool {
+fn requires_parse(plan: &CheckFactPlan) -> bool {
     plan.imports
         || plan.symbols
         || plan.react
@@ -140,6 +159,7 @@ fn requires_parse(plan: CheckFactPlan) -> bool {
         || plan.dynamic_imports
         || plan.nextjs_caching
         || plan.storybook
+        || plan.playwright.is_some()
         || plan.source
         || !plan.raw_source
 }

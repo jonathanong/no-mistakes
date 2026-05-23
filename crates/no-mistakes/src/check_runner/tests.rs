@@ -38,6 +38,46 @@ fn run_all_keeps_filesystem_files_when_fact_collection_is_needed() {
 }
 
 #[test]
+fn run_all_includes_playwright_coverage_rules() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/nextjs-coverage/uncovered");
+
+    let results = run_all(root, None, None).unwrap();
+
+    assert!(results.has_findings());
+    assert!(results
+        .rules
+        .iter()
+        .any(|finding| finding.rule == no_mistakes::playwright::rules::PLAYWRIGHT_COVERAGE));
+}
+
+#[test]
+fn run_all_includes_playwright_unique_test_id_rules() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check-runner/playwright-unique-test-ids");
+
+    let results = run_all(root, None, None).unwrap();
+
+    assert!(results.rules.iter().any(|finding| {
+        finding.rule == no_mistakes::playwright::rules::PLAYWRIGHT_UNIQUE_TEST_IDS
+            && finding.target.as_deref() == Some("data-testid=save")
+    }));
+}
+
+#[test]
+fn run_all_includes_playwright_unique_html_id_rules() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/nextjs-html-ids/unique-html-ids");
+
+    let results = run_all(root, None, None).unwrap();
+
+    assert!(results.rules.iter().any(|finding| {
+        finding.rule == no_mistakes::playwright::rules::PLAYWRIGHT_UNIQUE_HTML_IDS
+            && finding.target.as_deref() == Some("id=save")
+    }));
+}
+
+#[test]
 fn run_codebase_check_uses_explicit_tsconfig_with_shared_facts() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/codebase-analysis/unique-exports-basic");

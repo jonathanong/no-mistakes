@@ -151,6 +151,10 @@ pub(crate) fn filesystem_rules_configured(config: &NoMistakesConfig) -> bool {
         || rule_configured(config, rules::RUST_NO_INLINE_ALLOWS)
 }
 
+pub(crate) fn playwright_rules_configured(config: &NoMistakesConfig) -> bool {
+    no_mistakes::playwright::rules::configured(config)
+}
+
 pub(crate) fn unique_exports_configured(config: &NoMistakesConfig) -> bool {
     rule_configured(config, unique_exports::RULE_ID)
 }

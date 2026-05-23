@@ -8,7 +8,7 @@ use crate::playwright::analysis::output::{
 };
 use crate::playwright::analysis::routes_index::route_index;
 use crate::playwright::analysis::selectors_index::{app_selector_targets, selector_index};
-use crate::playwright::analysis::test_file::analyze_test_file;
+use crate::playwright::analysis::test_file::{analyze_test_file, analyze_test_occurrences};
 use crate::playwright::analysis::tests_report::{build_tests_report, print_tests_text};
 use crate::playwright::analysis::types::{
     Analysis, CoverageInputs, EdgeReport, UniqueSelectorPolicy,
@@ -102,7 +102,39 @@ pub(crate) fn analyze_with_policy(
     root: &Path,
     settings: &config::Settings,
     test_policy: playwright_tests::TestPolicy,
+    unique_selector_policy: UniqueSelectorPolicy,
+) -> Result<Analysis> {
+    analyze_with_policy_and_optional_facts(
+        root,
+        settings,
+        test_policy,
+        unique_selector_policy,
+        None,
+    )
+}
+
+pub(crate) fn analyze_with_policy_and_facts(
+    root: &Path,
+    settings: &config::Settings,
+    test_policy: playwright_tests::TestPolicy,
+    unique_selector_policy: UniqueSelectorPolicy,
+    facts: &crate::codebase::check_facts::CheckFactMap,
+) -> Result<Analysis> {
+    analyze_with_policy_and_optional_facts(
+        root,
+        settings,
+        test_policy,
+        unique_selector_policy,
+        Some(facts),
+    )
+}
+
+fn analyze_with_policy_and_optional_facts(
+    root: &Path,
+    settings: &config::Settings,
+    test_policy: playwright_tests::TestPolicy,
     mut unique_selector_policy: UniqueSelectorPolicy,
+    facts: Option<&crate::codebase::check_facts::CheckFactMap>,
 ) -> Result<Analysis> {
     unique_selector_policy.configured_html_id_selector = has_configured_html_id_selector(settings);
     let route_root = root.join(&settings.frontend_root);
@@ -170,7 +202,29 @@ pub(crate) fn analyze_with_policy(
     let mut edges = test_files
         .par_iter()
         .try_fold(Vec::new, |mut edges, test_file| -> Result<_> {
-            edges.extend(analyze_test_file(test_file, &test_analysis)?);
+            let test_edges = if let Some(facts) = facts {
+                let file_facts = facts.ts.get(&test_file.path).ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "missing shared Playwright facts for {}",
+                        test_file.path.display()
+                    )
+                })?;
+                let playwright = file_facts.playwright.as_ref().ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "missing shared Playwright facts for {}",
+                        test_file.path.display()
+                    )
+                })?;
+                analyze_test_occurrences(
+                    test_file,
+                    &test_analysis,
+                    playwright.urls.clone(),
+                    playwright.selectors.clone(),
+                )
+            } else {
+                analyze_test_file(test_file, &test_analysis)?
+            };
+            edges.extend(test_edges);
             Ok(edges)
         })
         .try_reduce(Vec::new, |mut left, mut right| -> Result<_> {

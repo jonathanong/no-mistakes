@@ -14,9 +14,6 @@ pub(crate) fn analyze_test_file(
 ) -> Result<Vec<Edge>> {
     let source = std::fs::read_to_string(&test_file.path)
         .context(format!("reading test file {}", test_file.path.display()))?;
-    let rel_test_file = std::sync::Arc::new(relative_string(context.root, &test_file.path));
-    let mut edges = Vec::new();
-    let base_urls = test_file.base_urls();
     let test_id_attributes = test_file.test_id_attributes();
 
     let parsed = ast::with_program(&test_file.path, &source, |program, source| {
@@ -38,7 +35,25 @@ pub(crate) fn analyze_test_file(
         (raw_urls, playwright_selectors)
     });
     let (raw_urls, playwright_selectors) = parsed?;
+    Ok(analyze_test_occurrences(
+        test_file,
+        context,
+        raw_urls,
+        playwright_selectors,
+    ))
+}
 
+pub(crate) fn analyze_test_occurrences(
+    test_file: &DiscoveredTestFile,
+    context: &TestAnalysisContext<'_>,
+    raw_urls: Vec<crate::playwright::playwright_tests::TestOccurrence<String>>,
+    playwright_selectors: Vec<
+        crate::playwright::playwright_tests::TestOccurrence<selectors::PlaywrightSelector>,
+    >,
+) -> Vec<Edge> {
+    let rel_test_file = std::sync::Arc::new(relative_string(context.root, &test_file.path));
+    let mut edges = Vec::new();
+    let base_urls = test_file.base_urls();
     for raw_url in raw_urls {
         if !context.test_policy.allows(raw_url.status) {
             continue;
@@ -103,5 +118,5 @@ pub(crate) fn analyze_test_file(
         }
     }
 
-    Ok(edges)
+    edges
 }

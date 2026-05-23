@@ -227,5 +227,11 @@ impl NoMistakesConfig {
 }
 
 fn rule_supports_test_targets(rule_id: &str) -> bool {
-    rule_id == "test-no-unmocked-dynamic-imports"
+    matches!(
+        rule_id,
+        "test-no-unmocked-dynamic-imports"
+            | "playwright-coverage"
+            | "playwright-unique-test-ids"
+            | "playwright-unique-html-ids"
+    )
 }
