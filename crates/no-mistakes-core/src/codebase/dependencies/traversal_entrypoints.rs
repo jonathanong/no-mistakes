@@ -1,4 +1,7 @@
 fn raw_looks_like_source_file(raw: &str) -> bool {
+    if raw.contains('/') || raw.contains('\\') {
+        return false;
+    }
     Path::new(raw)
         .extension()
         .and_then(std::ffi::OsStr::to_str)

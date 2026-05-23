@@ -498,6 +498,18 @@ fn resolve_entrypoints_strips_symbol_suffix_from_module_node() {
 }
 
 #[test]
+fn resolve_entrypoints_keeps_package_subpath_with_extension_as_module_node() {
+    let root = fixture_root("graph-modules");
+    let args = parse(&["dependents", "react-dom/client.js"]);
+    let entrypoints = resolve_entrypoints(&args.files, &root, &root);
+
+    assert_eq!(
+        entrypoints[0].node,
+        graph::NodeId::Module("react-dom/client.js".to_string())
+    );
+}
+
+#[test]
 fn validate_direction_allows_symbol_with_dependents() {
     let args = parse(&["deps", "a.mts#alpha", "b.mts"]);
     let root = fixture_root("simple");
