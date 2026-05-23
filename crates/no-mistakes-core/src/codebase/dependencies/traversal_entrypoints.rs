@@ -1,13 +1,17 @@
-fn raw_looks_like_source_file(raw: &str) -> bool {
-    if raw.contains('/') || raw.contains('\\') {
-        return false;
-    }
-    Path::new(raw)
+fn raw_looks_like_source_file(raw: &str, path: &Path) -> bool {
+    let has_source_extension = Path::new(raw)
         .extension()
         .and_then(std::ffi::OsStr::to_str)
         .is_some_and(|extension| {
             crate::codebase::ts_source::TS_JS_EXTENSIONS.contains(&extension)
-        })
+        });
+    if !has_source_extension {
+        return false;
+    }
+    if !raw.contains('/') && !raw.contains('\\') {
+        return true;
+    }
+    path.parent().is_some_and(Path::exists)
 }
 
 fn package_dir_entry(

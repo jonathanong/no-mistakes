@@ -510,6 +510,18 @@ fn resolve_entrypoints_keeps_package_subpath_with_extension_as_module_node() {
 }
 
 #[test]
+fn resolve_entrypoints_treats_missing_source_path_with_existing_parent_as_file_node() {
+    let root = fixture_root("graph-modules");
+    let args = parse(&["dependents", "src/new-file.ts"]);
+    let entrypoints = resolve_entrypoints(&args.files, &root, &root);
+
+    assert_eq!(
+        entrypoints[0].node,
+        graph::NodeId::File(root.join("src/new-file.ts"))
+    );
+}
+
+#[test]
 fn validate_direction_allows_symbol_with_dependents() {
     let args = parse(&["deps", "a.mts#alpha", "b.mts"]);
     let root = fixture_root("simple");

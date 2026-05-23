@@ -85,7 +85,7 @@ fn resolve_entrypoint_node(
     if let Some(entry) = workspace.resolve_specifier(raw) {
         return NodeId::File(entry);
     }
-    if raw_looks_like_source_file(raw) {
+    if raw_looks_like_source_file(raw, path) {
         return NodeId::File(path.to_path_buf());
     }
     NodeId::Module(raw.to_string())
