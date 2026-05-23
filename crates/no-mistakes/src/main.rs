@@ -49,6 +49,7 @@ enum Command {
     /// Run configured project checks.
     Check(check::CheckArgs),
     /// Plan, explain, and visualize test impacts based on changed files.
+    #[command(alias = "test")]
     Tests(tests::TestsArgs),
 }
 

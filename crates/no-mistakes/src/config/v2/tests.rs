@@ -1,7 +1,9 @@
 use std::path::Path;
 
 use super::discover::{find_config_root, load_v2_config};
-use super::schema::{NoMistakesConfig, Project, ProjectType, RuleDef, StringOrList};
+use super::schema::{
+    NoMistakesConfig, Project, ProjectType, RuleDef, StringOrList, TestPlanPercent,
+};
 use super::view::ConfigView;
 
 fn fixture(sub: &str) -> std::path::PathBuf {
@@ -92,6 +94,16 @@ fn storybook_config_parsed() {
     ));
     assert!(cfg.tests.storybook.configs.is_some());
     assert!(cfg.tests.vitest.configs.is_some());
+}
+
+#[test]
+fn test_plan_percent_values_accept_numbers_and_percent_strings() {
+    assert_eq!(TestPlanPercent::Number(25.0).value(), Some(25.0));
+    assert_eq!(
+        TestPlanPercent::String(" 50% ".to_string()).value(),
+        Some(50.0)
+    );
+    assert_eq!(TestPlanPercent::String("half".to_string()).value(), None);
 }
 
 // ── legacy conversions ────────────────────────────────────────────────────────

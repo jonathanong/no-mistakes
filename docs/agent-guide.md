@@ -9,7 +9,7 @@ can reduce missed tests, hidden dependencies, or fragile dynamic patterns.
 | --- | --- |
 | What files does this file import? | `no-mistakes dependencies <file> --format json` |
 | What files are affected by this change? | `no-mistakes dependents <file> --format paths` |
-| What tests should run? | `no-mistakes dependents <file> --test vitest --format paths` or `no-mistakes playwright related <file>` |
+| What tests should run? | `no-mistakes test plan vitest --changed-file <file> --format paths`, `no-mistakes test plan playwright --changed-file <file> --format paths`, or the lower-level `dependents --test` / `playwright related` commands |
 | What public API does this file expose? | `no-mistakes symbols <file> --include both --format json` |
 | Is this App Router route tested? | `no-mistakes playwright check --json` |
 | Which Playwright tests assert this page/component? | `no-mistakes playwright related <file> --json` |
@@ -27,6 +27,7 @@ or the repository's agent guide:
 ```md
 Use no-mistakes for structural TS/JS questions before falling back to grep.
 Run no-mistakes dependents <changed-file> --format paths to choose focused tests.
+Prefer no-mistakes test plan <playwright|vitest> when the project has configured testPlan environments.
 Run no-mistakes playwright check --json before finishing Next.js App Router or Playwright work.
 Use no-mistakes playwright related <file> to identify Playwright tests for changed pages or selector-bearing components.
 Keep test IDs and fetch URLs static unless the project explicitly accepts that the AST tools cannot reason about them.
@@ -46,6 +47,12 @@ if [ -n "$tests" ]; then
 fi
 ```
 
+For repositories with configured test plans:
+
+```sh
+no-mistakes test plan vitest --changed-file "$changed" --format paths
+```
+
 Use `rg` after `no-mistakes dependents` when you need exact call lines inside
 the affected files.
 
@@ -53,6 +60,7 @@ the affected files.
 
 ```sh
 no-mistakes playwright check --json
+no-mistakes test plan playwright --changed-file 'web/app/users/[id]/page.tsx' --format paths
 no-mistakes playwright related 'web/app/users/[id]/page.tsx'
 no-mistakes playwright tests --json
 ```

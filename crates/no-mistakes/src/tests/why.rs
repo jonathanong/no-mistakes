@@ -112,6 +112,7 @@ fn run_live_analysis(
 ) -> Result<BTreeMap<String, Vec<WhyStep>>> {
     // Generate plan live to find all connections and warn/fallback correctly
     let plan_args = PlanArgs {
+        framework: None,
         root: root.to_path_buf(),
         config: args.config.clone(),
         tsconfig: args.tsconfig.clone(),
@@ -119,6 +120,9 @@ fn run_live_analysis(
         head: None,
         changed_file: args.changed.clone().into_iter().collect(),
         changed_files: None,
+        environment: "pre-push".to_string(),
+        limit_percent: None,
+        limit_files: None,
         format: None,
         json: true,
     };

@@ -7,7 +7,6 @@ use no_mistakes::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use no_mistakes::codebase::test_filter::TestFileFilter;
 use no_mistakes::config::v2::load_v2_config;
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
@@ -47,7 +46,28 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     let tsconfig = crate::tests::why::resolve_tsconfig(args.tsconfig.as_deref(), &root)?;
 
     // 1. Collect changed files
-    let changed_files = collect_changed_files(args, &root)?;
+    let changed_files = super::changed_files::collect_changed_files(args, &root)?;
+
+    if let Some(framework) = args.framework {
+        let forced_fallback = changed_files.iter().find_map(|file| {
+            let relative_changed = relative_path(&root, file);
+            is_global_config_path(&root, file, &relative_changed).then(|| {
+                (
+                    format!("Global configuration file changed: {}", relative_changed),
+                    file.clone(),
+                )
+            })
+        });
+        return super::configured_plan::generate_configured_plan(
+            args,
+            framework,
+            &root,
+            &config,
+            &tsconfig,
+            &changed_files,
+            forced_fallback,
+        );
+    }
 
     // 2. Check for global configuration files
     for file in &changed_files {
@@ -71,6 +91,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
             selected_tests.sort_by(|a, b| a.test_file.cmp(&b.test_file));
             return Ok(TestPlan {
                 selected_tests,
+                groups: Vec::new(),
                 warnings: Vec::new(),
                 fallback_triggered: true,
                 fallback_reason: Some(format!(
@@ -236,149 +257,11 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
 
     Ok(TestPlan {
         selected_tests,
+        groups: Vec::new(),
         warnings,
         fallback_triggered: false,
         fallback_reason: None,
     })
-}
-
-fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Vec<PathBuf>> {
-    let mut files = Vec::new();
-
-    // From changed-file arguments
-    for f in &args.changed_file {
-        let path = if f.is_absolute() {
-            f.clone()
-        } else {
-            root.join(f)
-        };
-        let resolved = path
-            .canonicalize()
-            .unwrap_or_else(|_| no_mistakes::codebase::ts_resolver::normalize_path(&path));
-        files.push(resolved);
-    }
-
-    // From changed-files file list
-    if let Some(ref path) = args.changed_files {
-        let content = fs::read_to_string(path).with_context(|| {
-            format!("Failed to read changed-files list from {}", path.display())
-        })?;
-        for line in content.lines() {
-            let line = line.trim();
-            if !line.is_empty() {
-                let p = PathBuf::from(line);
-                let path = if p.is_absolute() { p } else { root.join(p) };
-                let resolved = path
-                    .canonicalize()
-                    .unwrap_or_else(|_| no_mistakes::codebase::ts_resolver::normalize_path(&path));
-                files.push(resolved);
-            }
-        }
-    }
-
-    // From git if base or no inputs are provided
-    if args.base.is_some() || (args.changed_file.is_empty() && args.changed_files.is_none()) {
-        match get_git_changed_files(root, args.base.as_deref(), args.head.as_deref()) {
-            Ok(git_files) => {
-                for f in git_files {
-                    files.push(root.join(f));
-                }
-            }
-            Err(e) => {
-                // If explicitly requested, fail
-                if args.base.is_some() {
-                    return Err(e);
-                }
-                // Otherwise, fail silently / log warning
-                eprintln!("warning: failed to retrieve changed files from git: {}", e);
-            }
-        }
-    }
-
-    // Deduplicate and normalize
-    let mut unique = HashSet::new();
-    let mut result = Vec::new();
-    for f in files {
-        let normalized = no_mistakes::codebase::ts_resolver::normalize_path(&f);
-        if unique.insert(normalized.clone()) {
-            result.push(normalized);
-        }
-    }
-
-    Ok(result)
-}
-
-fn get_git_changed_files(
-    root: &Path,
-    base: Option<&str>,
-    head: Option<&str>,
-) -> Result<Vec<PathBuf>> {
-    let mut changed = HashSet::new();
-
-    if let Some(base_commit) = base {
-        let head_commit = head.unwrap_or("HEAD");
-        let output = run_git(
-            &[
-                "diff",
-                "--relative",
-                "--name-only",
-                &format!("{}...{}", base_commit, head_commit),
-            ],
-            root,
-        )?;
-        for line in output.lines() {
-            let trimmed = line.trim();
-            if !trimmed.is_empty() {
-                changed.insert(PathBuf::from(trimmed));
-            }
-        }
-    } else {
-        // Unstaged changes
-        if let Ok(output) = run_git(&["diff", "--relative", "--name-only"], root) {
-            for line in output.lines() {
-                let trimmed = line.trim();
-                if !trimmed.is_empty() {
-                    changed.insert(PathBuf::from(trimmed));
-                }
-            }
-        }
-        // Staged changes
-        if let Ok(output) = run_git(&["diff", "--cached", "--relative", "--name-only"], root) {
-            for line in output.lines() {
-                let trimmed = line.trim();
-                if !trimmed.is_empty() {
-                    changed.insert(PathBuf::from(trimmed));
-                }
-            }
-        }
-        // Untracked changes
-        if let Ok(output) = run_git(&["ls-files", "--others", "--exclude-standard"], root) {
-            for line in output.lines() {
-                let trimmed = line.trim();
-                if !trimmed.is_empty() {
-                    changed.insert(PathBuf::from(trimmed));
-                }
-            }
-        }
-    }
-
-    let mut result: Vec<_> = changed.into_iter().collect();
-    result.sort();
-    Ok(result)
-}
-
-fn run_git(args: &[&str], root: &Path) -> Result<String> {
-    let output = std::process::Command::new("git")
-        .args(args)
-        .current_dir(root)
-        .output()?;
-    if !output.status.success() {
-        anyhow::bail!(
-            "git command failed: {}",
-            String::from_utf8_lossy(&output.stderr)
-        );
-    }
-    Ok(String::from_utf8(output.stdout)?)
 }
 
 fn is_global_config_path(root: &Path, absolute: &Path, relative: &str) -> bool {
@@ -442,7 +325,7 @@ fn discover_all_tests(
     )
 }
 
-fn slash_node_name(node: &NodeId, root: &Path) -> String {
+pub(crate) fn slash_node_name(node: &NodeId, root: &Path) -> String {
     match node {
         NodeId::File(p) => no_mistakes::codebase::ts_source::relative_slash_path(root, p),
         NodeId::Module(specifier) => specifier.clone(),
@@ -453,7 +336,7 @@ fn slash_node_name(node: &NodeId, root: &Path) -> String {
     }
 }
 
-fn relative_path(root: &Path, absolute: &Path) -> String {
+pub(crate) fn relative_path(root: &Path, absolute: &Path) -> String {
     no_mistakes::codebase::ts_source::relative_slash_path(root, absolute)
 }
 
@@ -508,7 +391,7 @@ pub(crate) fn bfs_path_find(
     (reachable, parents)
 }
 
-fn path_confidence(edges: &[EdgeKind]) -> Confidence {
+pub(crate) fn path_confidence(edges: &[EdgeKind]) -> Confidence {
     let mut conf = Confidence::High;
     for edge in edges {
         match edge {
@@ -529,7 +412,7 @@ fn path_confidence(edges: &[EdgeKind]) -> Confidence {
     conf
 }
 
-fn impact_reason_label(edge: EdgeKind) -> &'static str {
+pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
     match edge {
         EdgeKind::Import
         | EdgeKind::TypeImport

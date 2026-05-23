@@ -1,12 +1,19 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+pub use super::test_plan::{
+    TestPlanConfig, TestPlanDependencies, TestPlanEnvironment, TestPlanFrameworkConfig,
+    TestPlanGroup, TestPlanGroupType, TestPlanLimit, TestPlanPercent, TestPlanProjectDependency,
+};
+
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct NoMistakesConfig {
     pub filesystem: FilesystemConfig,
     pub projects: BTreeMap<String, Project>,
     pub tests: Tests,
+    #[serde(rename = "testPlan", alias = "test_plan")]
+    pub test_plan: TestPlanConfig,
     pub rules: Vec<RuleDef>,
 }
 
