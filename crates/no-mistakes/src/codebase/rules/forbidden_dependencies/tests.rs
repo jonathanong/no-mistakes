@@ -225,14 +225,6 @@ fn queue_job_nodes_are_not_matched() {
 #[test]
 fn no_rule_configured_returns_empty() {
     let root = fixture("forbidden-dependencies-basic");
-    // Build a config that has no forbidden-dependencies rule at all
-    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-    // Override: use a fixture with no forbidden-dependencies config to get an empty rule list
-    let empty_root = fixture("forbidden-dependencies-passes");
-    // passes fixture HAS the rule — use a fixture without any rules
-    let no_rule_root = fixture("forbidden-dependencies-basic");
-    // Directly confirm early return: load the passes fixture which still has the rule
-    // Instead, build a config from scratch with no rules via yaml
     let raw = "rules: []";
     let cfg: crate::config::v2::NoMistakesConfig = serde_yaml::from_str(raw).unwrap();
     let findings = check(&root, &cfg, None).unwrap();
@@ -240,7 +232,6 @@ fn no_rule_configured_returns_empty() {
         findings.is_empty(),
         "should return empty when rule not configured"
     );
-    let _ = (config, empty_root, no_rule_root);
 }
 
 #[test]
@@ -280,6 +271,10 @@ fn absolute_root_path_resolves() {
         findings.len(),
         1,
         "absolute path root should produce the same finding"
+    );
+    assert_eq!(
+        findings[0].file, "entrypoints/api.mts",
+        "file should be repo-relative even when root is absolute"
     );
     let _ = config;
 }

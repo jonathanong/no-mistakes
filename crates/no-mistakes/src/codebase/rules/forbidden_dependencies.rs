@@ -109,16 +109,20 @@ fn check_application(root: &Path, opts: &Options, graph: &DepGraph) -> Result<Ve
             if !matched {
                 continue;
             }
-            let target_name = entry.node.display_name(root);
+            let target_name = entry.node.display_name(root).replace('\\', "/");
             let via: Vec<String> = entry.via.iter().map(edge_kind_str).collect();
             let kind = match &entry.node {
                 NodeId::Module(_) => "module",
                 _ => "file",
             };
             let repro = repro_command(root_str, &target_name, &entry.node, &opts.relationships);
+            let file = std::path::Path::new(root_str)
+                .strip_prefix(root)
+                .map(|rel| rel.to_string_lossy().replace('\\', "/"))
+                .unwrap_or_else(|_| root_str.clone());
             findings.push(RuleFinding {
                 rule: RULE_ID.to_string(),
-                file: root_str.clone(),
+                file,
                 line: 1,
                 message: format!(
                     "{root_str} reaches forbidden {kind} '{target_name}' via {}. \
@@ -134,17 +138,14 @@ fn check_application(root: &Path, opts: &Options, graph: &DepGraph) -> Result<Ve
 }
 
 fn resolve_root_node(root: &Path, raw: &str) -> Option<NodeId> {
-    let path = if std::path::Path::new(raw).is_absolute() {
-        std::path::PathBuf::from(raw)
+    let p = std::path::Path::new(raw);
+    let path = if p.is_absolute() {
+        p.to_path_buf()
     } else {
         root.join(raw)
     };
     let normalized = crate::codebase::ts_resolver::normalize_path(&path);
-    if normalized.exists() {
-        Some(NodeId::File(normalized))
-    } else {
-        None
-    }
+    normalized.exists().then_some(NodeId::File(normalized))
 }
 
 fn build_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
@@ -189,7 +190,10 @@ fn repro_command(
             })
             .collect::<String>()
     };
-    format!("no-mistakes dependencies '{root_str}' {target_flag}{rel_flags} --format json")
+    format!(
+        "no-mistakes dependencies '{}' {target_flag}{rel_flags} --format json",
+        root_str.replace('\'', "'\\''")
+    )
 }
 
 #[cfg(test)]
