@@ -155,6 +155,14 @@ pub(crate) fn run_shellcheck(
         .args(shell_files)
         .output();
 
+    handle_shellcheck_result(root, shell_files, result)
+}
+
+pub(crate) fn handle_shellcheck_result(
+    root: &Path,
+    shell_files: &[PathBuf],
+    result: std::io::Result<std::process::Output>,
+) -> Result<Vec<RuleFinding>> {
     match result {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             // shellcheck not installed — skip silently

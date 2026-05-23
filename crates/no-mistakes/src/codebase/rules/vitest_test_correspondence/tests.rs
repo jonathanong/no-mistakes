@@ -146,3 +146,81 @@ fn ts_tsx_test_file_candidates() {
     assert!(candidates.contains(&"src/mod/index.ts".to_string()));
     assert!(candidates.contains(&"src/mod/index.tsx".to_string()));
 }
+
+#[test]
+fn source_candidates_empty_dir_has_no_slash_prefix() {
+    // Exercises line 84: dir.is_empty() → String::new() (no path prefix).
+    let candidates = source_candidates("", "widget", ".test.ts");
+    assert!(candidates.contains(&"widget.ts".to_string()));
+    assert!(candidates.contains(&"widget.tsx".to_string()));
+    assert!(candidates.contains(&"index.ts".to_string()));
+    assert!(candidates.contains(&"index.tsx".to_string()));
+    // None should start with "/"
+    assert!(candidates.iter().all(|c| !c.starts_with('/')));
+}
+
+#[test]
+fn stem_and_dir_no_slash_returns_empty_dir() {
+    // Exercises line 78: stem has no '/' → dir is empty string, base is stem.
+    // This happens for a root-level test file like "index.test.mts".
+    let (dir, base) = stem_and_dir("index.test.mts", ".test.mts");
+    assert_eq!(dir, "");
+    assert_eq!(base, "index");
+}
+
+#[test]
+fn default_test_extensions_and_tests_dir_used_when_empty() {
+    // Exercises lines 60 and 68: empty testExtensions / testsDir → defaults.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    std::fs::create_dir_all(root.join("backend/mod")).unwrap();
+    std::fs::write(root.join("backend/mod/index.ts"), "export {};\n").unwrap();
+    std::fs::write(
+        root.join("backend/mod/index.test.ts"),
+        "test('x', () => {});\n",
+    )
+    .unwrap();
+    // Empty testExtensions and testsDir → use defaults
+    let config = config_with_rule("{scopes: [backend]}");
+    let findings = check(root, &config).unwrap();
+    assert!(
+        findings.is_empty(),
+        "test with matching source should pass with default extensions"
+    );
+}
+
+#[test]
+fn duplicate_stem_test_files_are_flagged() {
+    // Exercises lines 151-168: duplicate stem detection.
+    // Two test files with the same stem in the same dir (not in __tests__)
+    // should both be flagged.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    std::fs::create_dir_all(root.join("backend/mod")).unwrap();
+    // Source file
+    std::fs::write(root.join("backend/mod/index.ts"), "export {};\n").unwrap();
+    // Two test files with stem "index" in the same directory
+    std::fs::write(
+        root.join("backend/mod/index.test.ts"),
+        "test('a', () => {});\n",
+    )
+    .unwrap();
+    std::fs::write(
+        root.join("backend/mod/index.test.tsx"),
+        "test('b', () => {});\n",
+    )
+    .unwrap();
+    let config = config_with_rule(
+        "{scopes: [backend], testExtensions: [\".test.ts\", \".test.tsx\"], testsDir: __tests__}",
+    );
+    let findings = check(root, &config).unwrap();
+    // Both test files should be flagged for duplicate stems
+    let dup_findings: Vec<_> = findings
+        .iter()
+        .filter(|f| f.message.contains("duplicate-stem"))
+        .collect();
+    assert!(
+        !dup_findings.is_empty(),
+        "duplicate stem test files should be flagged: {findings:?}"
+    );
+}

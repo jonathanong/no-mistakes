@@ -142,3 +142,68 @@ fn check_with_files_works() {
     let findings = check_with_files(root, &config, &[path]).unwrap();
     assert_eq!(findings.len(), 1);
 }
+
+#[test]
+fn file_with_no_name_component_returns_empty() {
+    // A path with no file_name (e.g. the root itself) should return no findings.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let opts = Options {
+        scope: None,
+        banned_basenames: vec![BannedBasename {
+            name: "middleware".to_string(),
+            message: "rename it".to_string(),
+        }],
+        extensions: vec![".ts".to_string()],
+    };
+    // Pass the root dir itself — has no file_name in the sense of "middleware"
+    let findings = check_file(root, root, &opts);
+    assert!(
+        findings.is_empty(),
+        "root path (no matching stem) should produce no findings"
+    );
+}
+
+#[test]
+fn file_with_no_dot_not_flagged_for_dot_extension() {
+    // A file with no dot in its name: stem == filename, ext == ""
+    // The dot_ext would be "." which won't match any extension like ".ts"
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let path = root.join("middleware"); // no extension — split_stem_ext returns ("middleware", "")
+    std::fs::write(&path, "#!/bin/bash\n").unwrap();
+    let opts = Options {
+        scope: None,
+        banned_basenames: vec![BannedBasename {
+            name: "middleware".to_string(),
+            message: "rename it".to_string(),
+        }],
+        extensions: vec![".ts".to_string()],
+    };
+    let findings = check_file(&path, root, &opts);
+    assert!(
+        findings.is_empty(),
+        "file with no extension should not match banned ext '.ts'"
+    );
+}
+
+#[test]
+fn path_with_no_file_name_returns_empty() {
+    // On Unix, Path::new("/").file_name() returns None, exercising line 81.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let opts = Options {
+        scope: None,
+        banned_basenames: vec![BannedBasename {
+            name: "middleware".to_string(),
+            message: "rename it".to_string(),
+        }],
+        extensions: vec![".ts".to_string()],
+    };
+    // Use the filesystem root — file_name() is None for paths ending in "/"
+    let findings = check_file(std::path::Path::new("/"), root, &opts);
+    assert!(
+        findings.is_empty(),
+        "path with no file_name should return no findings"
+    );
+}

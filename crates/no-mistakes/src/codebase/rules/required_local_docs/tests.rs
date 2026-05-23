@@ -288,6 +288,96 @@ fn doc_section_check_with_files_no_config_returns_empty() {
 }
 
 #[test]
+fn check_required_doc_section_standalone_discovers_files() {
+    // Exercises check_required_doc_section() (lines 18-25) which calls discover_files.
+    // In a non-git temp dir, discover_files returns empty → no findings.
+    let tmp = tempfile::tempdir().unwrap();
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: REQUIRED_DOC_SECTION_RULE_ID.to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str("glob: \"agents/*/README.md\"\nrequiredHeading: \"## Perf\"")
+            .unwrap(),
+        ..Default::default()
+    });
+    let findings = check_required_doc_section(tmp.path(), &config).unwrap();
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn doc_section_unreadable_file_is_skipped() {
+    // Exercises Err(_) => continue (line 64): a file that matches the glob but
+    // cannot be read should be silently skipped.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    // ghost.md does NOT exist on disk, so read_to_string will fail
+    let ghost = root.join("agents/email/README.md");
+    std::fs::create_dir_all(ghost.parent().unwrap()).unwrap();
+    // Don't write the file — it will fail to read
+    let opts = DocSectionOptions {
+        glob: "agents/*/README.md".to_string(),
+        required_heading: "## Perf".to_string(),
+    };
+    let findings = scan_doc_section(root, &opts, &[ghost]).unwrap();
+    // The file matches the glob but reading fails → no finding emitted
+    assert!(
+        findings.is_empty(),
+        "unreadable file should be skipped silently"
+    );
+}
+
+#[test]
+fn scan_config_uses_defaults_when_fields_empty() {
+    // Exercises the default-fallback branches of ScanConfig::new:
+    // required_file empty → DEFAULT_REQUIRED_FILE
+    // code_extensions empty → DEFAULT_CODE_EXTENSIONS
+    // test_exclude_patterns empty → DEFAULT_TEST_EXCLUDE
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let dir = root.join("agents/email");
+    std::fs::create_dir_all(&dir).unwrap();
+    let code_file = dir.join("index.ts"); // .ts is in DEFAULT_CODE_EXTENSIONS
+    std::fs::write(&code_file, "").unwrap();
+    let files = vec![code_file];
+    // Options with empty required_file, code_extensions, test_exclude_patterns
+    let opts = Options {
+        roots: vec![std::path::PathBuf::from("agents")],
+        required_file: String::new(), // → DEFAULT_REQUIRED_FILE (README.md)
+        code_extensions: Vec::new(),  // → DEFAULT_CODE_EXTENSIONS
+        test_exclude_patterns: Vec::new(), // → DEFAULT_TEST_EXCLUDE
+    };
+    let findings = scan(root, &opts, &files);
+    // Should flag because README.md is missing
+    assert_eq!(findings.len(), 1, "missing README.md should be flagged");
+    assert!(findings[0].message.contains("README.md"));
+}
+
+#[test]
+fn scan_with_absolute_root_path() {
+    // Exercises root_rel.is_absolute() branch (line 138).
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let dir = root.join("agents/email");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("index.ts"), "").unwrap();
+    let files = vec![dir.join("index.ts")];
+    // Use absolute path for root
+    let abs_agents = root.join("agents");
+    let opts = Options {
+        roots: vec![abs_agents],
+        required_file: "README.md".to_string(),
+        code_extensions: vec!["ts".to_string()],
+        test_exclude_patterns: vec!["*.test.*".to_string()],
+    };
+    let findings = scan(root, &opts, &files);
+    assert_eq!(
+        findings.len(),
+        1,
+        "missing README.md should be flagged with absolute root"
+    );
+}
+
+#[test]
 fn doc_section_findings_sorted() {
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path();

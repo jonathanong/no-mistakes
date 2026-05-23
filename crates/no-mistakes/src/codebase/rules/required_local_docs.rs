@@ -154,23 +154,21 @@ fn scan_root<'a>(
 ) -> Vec<RuleFinding> {
     let ext_strs: Vec<&str> = cfg.ext_strs.iter().map(String::as_str).collect();
     let excl_strs: Vec<&str> = cfg.excl_strs.iter().map(String::as_str).collect();
-    let mut subdirs_with_code: HashSet<String> = HashSet::new();
-    for file in files {
-        if !file.starts_with(pkg_root) {
-            continue;
-        }
-        let rel = match file.strip_prefix(pkg_root) {
-            Ok(r) => r,
-            Err(_) => continue,
-        };
-        let comps: Vec<&str> = rel
-            .components()
-            .filter_map(|c| c.as_os_str().to_str())
-            .collect();
-        if comps.len() >= 2 && is_code_file(file, &ext_strs, &excl_strs, &cfg.excl_globs) {
-            subdirs_with_code.insert(comps[0].to_string());
-        }
-    }
+    let subdirs_with_code: HashSet<String> = files
+        .iter()
+        .filter_map(|file| {
+            let rel = file.strip_prefix(pkg_root).ok()?;
+            let comps: Vec<&str> = rel
+                .components()
+                .filter_map(|c| c.as_os_str().to_str())
+                .collect();
+            if comps.len() >= 2 && is_code_file(file, &ext_strs, &excl_strs, &cfg.excl_globs) {
+                Some(comps[0].to_string())
+            } else {
+                None
+            }
+        })
+        .collect();
     let root_rel_str = pkg_root_rel.to_string_lossy().replace('\\', "/");
     subdirs_with_code
         .into_iter()

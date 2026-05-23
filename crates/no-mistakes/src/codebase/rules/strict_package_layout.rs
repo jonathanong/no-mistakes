@@ -97,12 +97,8 @@ pub(crate) fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<RuleFi
             .collect();
         for pkg_dir in &pkg_dirs {
             for file in files {
-                if !file.starts_with(pkg_dir) {
+                let Some(rel) = file.strip_prefix(pkg_dir).ok() else {
                     continue;
-                }
-                let rel = match file.strip_prefix(pkg_dir) {
-                    Ok(r) => r,
-                    Err(_) => continue,
                 };
                 let full_path = relative_slash_path(root, file);
                 if let Some(msg) = check_relative(rel, spec, test_dir, &test_globs, &full_path) {

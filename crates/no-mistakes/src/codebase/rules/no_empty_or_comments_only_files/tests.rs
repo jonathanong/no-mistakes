@@ -149,3 +149,49 @@ fn check_with_files_works() {
     let findings = check_with_files(tmp.path(), &config, &[path]).unwrap();
     assert_eq!(findings.len(), 1);
 }
+
+#[test]
+fn default_extensions_used_when_extensions_empty() {
+    // When no extensions are configured, effective_extensions returns DEFAULT_EXTENSIONS.
+    // A .ts file with only a comment should still be flagged.
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("only_comment.ts");
+    std::fs::write(&path, "// comment only\n").unwrap();
+    let config = config_with_rule("{}"); // empty options → default extensions
+    let findings = check_with_files(tmp.path(), &config, &[path]).unwrap();
+    assert_eq!(
+        findings.len(),
+        1,
+        "default extensions should catch .ts files"
+    );
+}
+
+#[test]
+fn unknown_extension_treated_as_raw_content() {
+    // The _ branch in has_non_comment_content: an unknown extension means
+    // the raw content is used as-is (no comment stripping).
+    assert!(has_non_comment_content("some content", ".xml"));
+    assert!(!has_non_comment_content("   ", ".xml"));
+}
+
+#[test]
+fn mjs_line_comment_only_flagged() {
+    // .mjs falls into the ".ts | .mts | ..." arm (line 127)
+    assert!(!has_non_comment_content("// comment\n", ".mjs"));
+}
+
+#[test]
+fn md_html_comment_only_flagged() {
+    // .md is handled by strip_html_comments
+    assert!(!has_non_comment_content("<!-- only a comment -->\n", ".md"));
+}
+
+#[test]
+fn strip_comments_unterminated_block_comment_returns_empty() {
+    // When a block comment is not closed, the function breaks and returns
+    // whatever was accumulated before the open marker.
+    assert!(!has_non_comment_content(
+        "/* unterminated block comment",
+        ".ts"
+    ));
+}

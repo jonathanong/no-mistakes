@@ -154,3 +154,55 @@ fn empty_options_has_no_findings() {
     let findings = check(root, &config).unwrap();
     assert!(findings.is_empty());
 }
+
+#[test]
+fn required_file_exists_but_unreadable_skips_content_checks() {
+    // File is in the rel_set (passed as a tracked file) but cannot be read
+    // (non-existent on disk).  The scan should skip content checks and not panic.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    // Register a file path that doesn't actually exist on disk
+    let ghost = root.join("GHOST.md");
+    let config = config_with_rule("requiredFiles: [GHOST.md]\nrequiredHeading: \"## Title\"");
+    // Pass the ghost path so it appears in the rel_set — it "exists" per tracking
+    let findings = check_with_files(root, &config, &[ghost]).unwrap();
+    // Content checks are skipped with `continue` when read_to_string fails,
+    // so no heading-missing finding should be emitted.
+    assert!(
+        findings.is_empty(),
+        "unreadable required file should produce no content findings, got: {findings:?}"
+    );
+}
+
+#[test]
+fn required_substring_spec_for_different_file_is_skipped() {
+    // The substring spec targets "OTHER.md" but we're checking "README.md".
+    // The inner `if spec.file != *req_file { continue; }` branch must fire.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    std::fs::write(root.join("README.md"), "# Title\n").unwrap();
+    let config = config_with_rule(
+        "requiredFiles: [README.md]\nrequiredSubstrings:\n  - file: OTHER.md\n    substring: something",
+    );
+    let findings = check_with_files(root, &config, &[root.join("README.md")]).unwrap();
+    assert!(
+        findings.is_empty(),
+        "substring spec for a different file should be skipped"
+    );
+}
+
+#[test]
+fn banned_substring_in_unreadable_file_skipped() {
+    // Files listed in `files` that cannot be read should be silently skipped
+    // in the banned_substrings loop.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let ghost = root.join("ghost.md");
+    // Do NOT create ghost.md on disk — read will fail
+    let config = config_with_rule("bannedSubstrings: [\"badword\"]");
+    let findings = check_with_files(root, &config, &[ghost]).unwrap();
+    assert!(
+        findings.is_empty(),
+        "unreadable file in banned_substrings loop should be silently skipped"
+    );
+}

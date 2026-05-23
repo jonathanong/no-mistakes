@@ -1,0 +1,82 @@
+use super::*;
+
+/// Write a minimal `.no-mistakes.yml` that enables all the given rule IDs.
+fn write_config(dir: &std::path::Path, rules: &[&str]) -> std::path::PathBuf {
+    let rule_entries: String = rules
+        .iter()
+        .map(|id| format!("  - rule: {id}\n    scope: repository\n"))
+        .collect();
+    let yaml = format!("rules:\n{rule_entries}");
+    let config_path = dir.join(".no-mistakes.yml");
+    std::fs::write(&config_path, yaml).unwrap();
+    config_path
+}
+
+/// All rule IDs dispatched through run_filesystem_rules_with_files.
+const ALL_RULES: &[&str] = &[
+    AGENTS_MD_MAX_SIZE,
+    RUST_MAX_LINES_PER_FILE,
+    RUST_NO_INLINE_TESTS,
+    RUST_NO_INLINE_ALLOWS,
+    TSCONFIG_ALIAS_FOLDER_MAPPING,
+    NO_GIT_IDENTITY_MUTATION,
+    PACKAGE_JSON_REGISTRY_ONLY,
+    REQUIRE_TEST_PER_SUBDIR,
+    REQUIRE_FILES_IN_SUBDIRS,
+    STRICT_PACKAGE_LAYOUT,
+    REQUIRED_LOCAL_DOCS,
+    REQUIRED_DOC_SECTION,
+    NO_EMPTY_OR_COMMENTS_ONLY_FILES,
+    VITEST_TEST_CORRESPONDENCE,
+    FILE_EXTENSION_POLICY,
+    BANNED_RENAMED_FILES,
+    LOCKFILE_ALLOWLIST,
+    DOC_CONSISTENCY,
+    SHELLCHECK_RUNNER,
+];
+
+/// Cover all dispatch branches via `run_filesystem_rules_with_files`.
+/// Passing an empty file list means no rule actually does I/O on files —
+/// they just enter their dispatch branch and return Ok(empty).
+#[test]
+fn dispatch_with_files_covers_all_rule_branches() {
+    let tmp = tempfile::tempdir().unwrap();
+    let config_path = write_config(tmp.path(), ALL_RULES);
+    let findings = run_filesystem_rules_with_files(tmp.path(), Some(&config_path), &[]).unwrap();
+    // Empty file list → no findings; but all dispatch branches have been entered.
+    assert!(
+        findings.is_empty(),
+        "empty file list should produce no findings: {findings:?}"
+    );
+}
+
+/// Cover all dispatch branches via `run_filesystem_rules`.
+/// Each rule's own `check()` fn is called; with an empty/non-git directory
+/// discover_files returns nothing, so no findings are emitted.
+#[test]
+fn dispatch_standalone_covers_all_rule_branches() {
+    let tmp = tempfile::tempdir().unwrap();
+    let config_path = write_config(tmp.path(), ALL_RULES);
+    let findings = run_filesystem_rules(tmp.path(), Some(&config_path)).unwrap();
+    assert!(
+        findings.is_empty(),
+        "empty directory should produce no findings: {findings:?}"
+    );
+}
+
+/// Cover the false branches of the `if rule_enabled(...)` guards for
+/// `RUST_MAX_LINES_PER_FILE` and `RUST_NO_INLINE_TESTS` by running with a
+/// config that omits those two rules, exercising the skip paths.
+#[test]
+fn dispatch_with_files_skips_disabled_rules() {
+    let tmp = tempfile::tempdir().unwrap();
+    // Omit RUST_MAX_LINES_PER_FILE and RUST_NO_INLINE_TESTS from the config.
+    let rules_without_rust: Vec<&str> = ALL_RULES
+        .iter()
+        .copied()
+        .filter(|&r| r != RUST_MAX_LINES_PER_FILE && r != RUST_NO_INLINE_TESTS)
+        .collect();
+    let config_path = write_config(tmp.path(), &rules_without_rust);
+    let findings = run_filesystem_rules_with_files(tmp.path(), Some(&config_path), &[]).unwrap();
+    assert!(findings.is_empty());
+}

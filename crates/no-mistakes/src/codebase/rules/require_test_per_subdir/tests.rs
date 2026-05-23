@@ -149,3 +149,80 @@ fn default_test_glob_matches_any_extension() {
         "default glob *.test.* should match .test.ts"
     );
 }
+
+#[test]
+fn check_with_files_empty_roots_is_noop() {
+    // Exercises the opts.roots.is_empty() branch (line 46) in check_with_files.
+    let tmp = tempfile::tempdir().unwrap();
+    let config = config_with_rule("{}");
+    let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn check_standalone_with_non_empty_roots_discovers_files() {
+    // Exercises lines 30-31 of check(): non-empty roots → discover_files.
+    // In a non-git temp directory, discover_files returns empty, so no findings.
+    let tmp = tempfile::tempdir().unwrap();
+    let config = config_with_rule("roots: [agents]\ntestGlob: \"*.test.mts\"");
+    let findings = check(tmp.path(), &config).unwrap();
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn files_outside_root_are_skipped_in_first_level_subdirs() {
+    // Exercises strip_prefix error branch (line 101): file outside root is skipped.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let other_dir = tempfile::tempdir().unwrap();
+    let outside = other_dir.path().join("unrelated/file.ts");
+    std::fs::create_dir_all(outside.parent().unwrap()).unwrap();
+    std::fs::write(&outside, "").unwrap();
+    // No in-scope files → no subdirs → no findings
+    let config = config_with_rule("roots: [agents]\ntestGlob: \"*.test.mts\"");
+    let files = vec![outside];
+    let findings = check_with_files(root, &config, &files).unwrap();
+    assert!(findings.is_empty(), "outside files don't generate subdirs");
+}
+
+#[test]
+fn absolute_root_path_is_used_directly() {
+    // Exercises rule_root.is_absolute() branch (line 62) in scan().
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let abs_agents = root.join("agents");
+    let src = abs_agents.join("email/index.mts");
+    let test = abs_agents.join("email/index.test.mts");
+    std::fs::create_dir_all(src.parent().unwrap()).unwrap();
+    std::fs::write(&src, "").unwrap();
+    std::fs::write(&test, "").unwrap();
+    let yaml = format!(
+        "roots:\n  - {}\ntestGlob: \"*.test.mts\"",
+        abs_agents.display()
+    );
+    let config = config_with_rule(&yaml);
+    let files = vec![src, test];
+    let findings = check_with_files(root, &config, &files).unwrap();
+    assert!(
+        findings.is_empty(),
+        "absolute root with test file should produce no findings: {findings:?}"
+    );
+}
+
+#[test]
+fn root_dir_itself_in_file_list_is_skipped_by_first_level_subdirs() {
+    // Exercises line 105: when rel is empty (file == abs_root), components.next()
+    // returns None and the file is skipped.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let agents = root.join("agents");
+    std::fs::create_dir_all(&agents).unwrap();
+    // Pass the root dir itself in the file list — strip_prefix returns "" (empty path)
+    let config = config_with_rule("roots: [agents]\ntestGlob: \"*.test.mts\"");
+    let files = vec![agents.clone()];
+    let findings = check_with_files(root, &config, &files).unwrap();
+    assert!(
+        findings.is_empty(),
+        "root dir itself should be skipped, no subdirs found"
+    );
+}

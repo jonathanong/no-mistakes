@@ -132,16 +132,15 @@ fn check_alias(
                         f.message.contains(alias) && f.message.contains(target)
                     });
                     if !already_flagged {
-                        // Check the alias isn't valid for any mapping
+                        // Check the alias isn't valid for any mapping by looking at all known targets
+                        let all_targets =
+                            all_paths.get(alias).map(Vec::as_slice).unwrap_or(targets);
                         let valid = opts.mappings.iter().any(|m| {
                             let ap = format!("{}/", m.prefix);
                             if alias.starts_with(&ap) {
                                 let suffix = &alias[ap.len()..];
                                 let expected = format!("{}/{}/{}", opts.base_dir, m.root, suffix);
-                                targets.contains(&expected)
-                                    || all_paths
-                                        .get(alias)
-                                        .is_some_and(|ts| ts.contains(&expected))
+                                all_targets.contains(&expected)
                             } else {
                                 false
                             }

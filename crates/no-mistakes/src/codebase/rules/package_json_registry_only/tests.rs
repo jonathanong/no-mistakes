@@ -227,3 +227,105 @@ fn scopes_filter_package_json_files() {
     assert_eq!(findings.len(), 1);
     assert!(findings[0].file.contains("packages/a"));
 }
+
+#[test]
+fn check_standalone_produces_no_findings_for_empty_dir() {
+    // Exercises the check() fn (lines 43-51) via discover_files on empty dir.
+    let tmp = tempfile::tempdir().unwrap();
+    let config = config_with_options("{}");
+    let findings = check(tmp.path(), &config).unwrap();
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn invalid_json_in_package_json_is_skipped() {
+    // check_package_json returns Vec::new() on JSON parse error (line 120).
+    let tmp = tempfile::tempdir().unwrap();
+    let path = write_package_json(tmp.path(), "not json at all {{{");
+    let findings = check_package_json(&path, tmp.path());
+    assert!(
+        findings.is_empty(),
+        "invalid JSON should produce no findings"
+    );
+}
+
+#[test]
+fn absolute_scope_path_is_supported() {
+    // The scope path is absolute, so the s.clone() branch (line 102) is taken.
+    let tmp = tempfile::tempdir().unwrap();
+    let pkg_dir = tmp.path().join("a");
+    std::fs::create_dir_all(&pkg_dir).unwrap();
+    write_package_json(&pkg_dir, r#"{"dependencies": {"bad": "file:../bad"}}"#);
+    // Use the absolute path of the package dir as a scope
+    let abs_scope = pkg_dir.to_string_lossy().to_string();
+    let config = config_with_options(&format!("scopes:\n  - {abs_scope}\n"));
+    let files = vec![pkg_dir.join("package.json")];
+    let findings = check_with_files(tmp.path(), &config, &files).unwrap();
+    assert_eq!(
+        findings.len(),
+        1,
+        "absolute scope should include the package"
+    );
+}
+
+#[test]
+fn lockfile_with_invalid_yaml_is_skipped() {
+    // check_lockfile returns Vec::new() on YAML parse error (line 163).
+    let tmp = tempfile::tempdir().unwrap();
+    std::fs::write(tmp.path().join("pnpm-lock.yaml"), ": invalid: yaml: {{{").unwrap();
+    let config = config_with_options("lockfile: pnpm-lock.yaml");
+    let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
+    assert!(
+        findings.is_empty(),
+        "invalid YAML lockfile should be skipped"
+    );
+}
+
+#[test]
+fn lockfile_yaml_without_packages_key_is_skipped() {
+    // yaml.get("packages") returns None → early return (line 167).
+    let tmp = tempfile::tempdir().unwrap();
+    std::fs::write(
+        tmp.path().join("pnpm-lock.yaml"),
+        "lockfileVersion: '9.0'\n",
+    )
+    .unwrap();
+    let config = config_with_options("lockfile: pnpm-lock.yaml");
+    let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
+    assert!(
+        findings.is_empty(),
+        "lockfile without 'packages' key should produce no findings"
+    );
+}
+
+#[test]
+fn lockfile_package_without_resolution_is_skipped() {
+    // Package entry exists but has no "resolution" key → continue (line 178).
+    let tmp = tempfile::tempdir().unwrap();
+    let lockfile = "packages:\n  my-pkg@1.0.0:\n    engines:\n      node: '>=18'\n";
+    std::fs::write(tmp.path().join("pnpm-lock.yaml"), lockfile).unwrap();
+    let config = config_with_options("lockfile: pnpm-lock.yaml");
+    let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
+    assert!(
+        findings.is_empty(),
+        "package with no resolution field should not produce a finding"
+    );
+}
+
+#[test]
+fn absolute_lockfile_path_is_resolved_correctly() {
+    // The lockfile_path.is_absolute() branch (line 155).
+    let tmp = tempfile::tempdir().unwrap();
+    let lockfile = tmp.path().join("pnpm-lock.yaml");
+    let lockfile_content =
+        "packages:\n  my-pkg@1.0.0:\n    resolution:\n      integrity: sha512-abc\n";
+    std::fs::write(&lockfile, lockfile_content).unwrap();
+    // Pass the absolute path as the lockfile option
+    let abs_path = lockfile.to_string_lossy().to_string();
+    let config = config_with_options(&format!("lockfile: {abs_path}"));
+    let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
+    assert!(
+        findings.is_empty(),
+        "registry-only lockfile with absolute path should pass"
+    );
+}

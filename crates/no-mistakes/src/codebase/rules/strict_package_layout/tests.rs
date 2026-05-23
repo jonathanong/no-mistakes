@@ -301,3 +301,57 @@ packages:
     );
     assert!(config.rule_configured(RULE_ID));
 }
+
+#[test]
+fn scan_with_absolute_package_root() {
+    // Exercises spec.root.is_absolute() branch (line 85).
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let pkg = root.join("queues/email");
+    std::fs::create_dir_all(&pkg).unwrap();
+    let file = pkg.join("package.json");
+    std::fs::write(&file, "{}").unwrap();
+    // Use absolute path for spec root
+    let abs_queues = root.join("queues");
+    let opts = Options {
+        packages: vec![PackageLayoutSpec {
+            root: abs_queues,
+            source_extension: ".mts".to_string(),
+            allowed_root_files: vec!["package.json".to_string()],
+            allowed_subdirs: vec![],
+        }],
+        ..Options::default()
+    };
+    let findings = scan(root, &opts, &[file]);
+    // package.json is allowed at root level — no finding
+    assert!(
+        findings.is_empty(),
+        "allowed root file should pass: {findings:#?}"
+    );
+}
+
+#[test]
+fn check_relative_empty_components_returns_none() {
+    // Exercises the components.is_empty() guard (line 136) in check_relative.
+    // rel = Path::new("") has no components.
+    let s = spec("pkg", ".mts", &[], &[]);
+    let globs = globs();
+    let result = check_relative(Path::new(""), &s, "__tests__", &globs, "pkg/");
+    assert!(result.is_none(), "empty rel path should return None");
+}
+
+#[test]
+fn allowed_subdir_with_test_dir_non_test_file_fails() {
+    // Exercises layout_check::check_two_deep (line 70-72): allowed subdir +
+    // test dir but non-test file.
+    let s = spec("pkg", ".mts", &[], &["enqueues"]);
+    let msg = check_relative(
+        Path::new("enqueues/__tests__/helper.mts"),
+        &s,
+        "__tests__",
+        &globs(),
+        "pkg/enqueues/__tests__/helper.mts",
+    )
+    .unwrap();
+    assert!(msg.contains("must match test file patterns"), "{msg}");
+}

@@ -170,6 +170,42 @@ fn is_managed_runner_only_none() {
 }
 
 #[test]
+fn check_standalone_produces_no_findings_for_empty_dir() {
+    let tmp = tempfile::tempdir().unwrap();
+    let config = config_with_options("{}");
+    let findings = check(tmp.path(), &config).unwrap();
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn build_exclude_globset_with_patterns_works() {
+    // Exercises lines 61-63: Glob::new succeeds and builder.add is called.
+    let patterns = vec![
+        "scripts/**".to_string(),
+        ".github/workflows/*.yml".to_string(),
+    ];
+    let globset = build_exclude_globset(&patterns);
+    assert!(globset.is_match("scripts/setup.sh"));
+    assert!(globset.is_match(".github/workflows/ci.yml"));
+    assert!(!globset.is_match("src/index.ts"));
+}
+
+#[test]
+fn check_with_exclude_paths_uses_build_exclude_globset() {
+    // config option excludePaths exercises build_exclude_globset via scan()
+    let tmp = tempfile::tempdir().unwrap();
+    let script = tmp.path().join("scripts").join("setup.sh");
+    std::fs::create_dir_all(script.parent().unwrap()).unwrap();
+    std::fs::write(&script, "git config user.name Bot\n").unwrap();
+    let config = config_with_options("excludePaths: [\"scripts/**\"]");
+    let findings = check_with_files(tmp.path(), &config, &[script]).unwrap();
+    assert!(
+        findings.is_empty(),
+        "excluded path should produce no findings"
+    );
+}
+
+#[test]
 fn line_number_is_correct() {
     let findings = run_on_source("#!/bin/bash\n# comment\ngit config user.name \"Bot\"\n");
     assert_eq!(findings.len(), 1);

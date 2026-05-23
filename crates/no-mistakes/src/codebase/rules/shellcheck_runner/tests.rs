@@ -150,3 +150,164 @@ fn check_with_files_works() {
     let result = check_with_files(root, &config, &[sh]);
     assert!(result.is_ok());
 }
+
+#[test]
+fn shebang_dir_empty_string_uses_root() {
+    // Exercises line 90: empty dir_rel → root.to_path_buf().
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let script = root.join("deploy");
+    std::fs::write(&script, "#!/bin/bash\necho deploy\n").unwrap();
+    let opts = Options {
+        shebang_dirs: vec![String::new()], // empty string → root itself
+        ..Default::default()
+    };
+    let files = vec![script.clone()];
+    let candidates = collect_shell_files(root, &opts, &files);
+    assert!(
+        candidates.contains(&script),
+        "root shebang script should be included"
+    );
+}
+
+#[test]
+fn shebang_dir_skips_file_in_wrong_parent() {
+    // Exercises line 99: parent != dir → skip.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let scripts_dir = root.join("scripts");
+    let other_dir = root.join("other");
+    std::fs::create_dir_all(&scripts_dir).unwrap();
+    std::fs::create_dir_all(&other_dir).unwrap();
+    let wrong_script = other_dir.join("deploy");
+    std::fs::write(&wrong_script, "#!/bin/bash\necho deploy\n").unwrap();
+    let opts = Options {
+        shebang_dirs: vec!["scripts".to_string()],
+        ..Default::default()
+    };
+    let files = vec![wrong_script];
+    let candidates = collect_shell_files(root, &opts, &files);
+    assert!(
+        candidates.is_empty(),
+        "file in wrong parent should be skipped"
+    );
+}
+
+#[test]
+fn shebang_dir_skips_sh_files_already_collected() {
+    // Exercises line 103: .sh extension → skip in shebang_dirs loop.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let scripts_dir = root.join("scripts");
+    std::fs::create_dir_all(&scripts_dir).unwrap();
+    let sh_file = scripts_dir.join("setup.sh");
+    std::fs::write(&sh_file, "#!/bin/bash\necho hi\n").unwrap();
+    let opts = Options {
+        shebang_dirs: vec!["scripts".to_string()],
+        ..Default::default()
+    };
+    let files = vec![sh_file.clone()];
+    let candidates = collect_shell_files(root, &opts, &files);
+    // setup.sh was already added via the .sh extension pass; it should appear
+    // exactly once (dedup ensures no duplicate).
+    assert_eq!(candidates.len(), 1);
+    assert_eq!(candidates[0], sh_file);
+}
+
+#[test]
+fn has_bash_shebang_returns_false_for_nonexistent_file() {
+    // Exercises line 127: File::open fails → return false.
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("nonexistent");
+    assert!(!has_bash_shebang(&path));
+}
+
+#[test]
+fn run_shellcheck_uses_default_severity_when_empty() {
+    // Exercises line 145: opts.shellcheck.severity.is_empty() → DEFAULT_SEVERITY.
+    let tmp = tempfile::tempdir().unwrap();
+    let sh = tmp.path().join("test.sh");
+    std::fs::write(&sh, "#!/bin/bash\necho hi\n").unwrap();
+    let opts = Options {
+        shellcheck: ShellcheckOptions {
+            severity: String::new(), // empty → DEFAULT_SEVERITY
+        },
+        ..Default::default()
+    };
+    // run_shellcheck should not error — may return Ok(empty) if shellcheck not installed
+    let result = run_shellcheck(tmp.path(), &opts, &[sh]);
+    assert!(result.is_ok());
+}
+
+#[test]
+fn shebang_dir_file_with_no_parent_is_skipped() {
+    // Exercises line 96: path.parent() returns None for the filesystem root path,
+    // so the file is skipped in the shebang_dirs loop.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let opts = Options {
+        shebang_dirs: vec!["scripts".to_string()],
+        ..Default::default()
+    };
+    // Path::new("/") has no parent — parent() returns None
+    let files = vec![std::path::PathBuf::from("/")];
+    let candidates = collect_shell_files(root, &opts, &files);
+    assert!(
+        candidates.is_empty(),
+        "file with no parent should be skipped in shebang dir loop"
+    );
+}
+
+#[test]
+fn handle_shellcheck_result_not_found_returns_empty() {
+    // Exercises the NotFound arm: shellcheck binary not installed → silent Ok(empty).
+    let tmp = tempfile::tempdir().unwrap();
+    let err = std::io::Error::new(std::io::ErrorKind::NotFound, "shellcheck not found");
+    let result = handle_shellcheck_result(tmp.path(), &[], Err(err));
+    assert!(result.is_ok());
+    assert!(result.unwrap().is_empty());
+}
+
+#[test]
+fn handle_shellcheck_result_other_error_propagates() {
+    // Exercises the generic Err arm: any non-NotFound I/O error → Err.
+    let tmp = tempfile::tempdir().unwrap();
+    let err = std::io::Error::new(std::io::ErrorKind::PermissionDenied, "denied");
+    let result = handle_shellcheck_result(tmp.path(), &[], Err(err));
+    assert!(result.is_err());
+}
+
+#[test]
+fn handle_shellcheck_result_success_returns_empty() {
+    // Exercises the Ok(output) arm with exit code 0 → no findings.
+    let tmp = tempfile::tempdir().unwrap();
+    let output = std::process::Output {
+        status: std::os::unix::process::ExitStatusExt::from_raw(0),
+        stdout: Vec::new(),
+        stderr: Vec::new(),
+    };
+    let result = handle_shellcheck_result(tmp.path(), &[], Ok(output));
+    assert!(result.is_ok());
+    assert!(result.unwrap().is_empty());
+}
+
+#[test]
+fn handle_shellcheck_result_failure_emits_findings_per_file() {
+    // Exercises the Ok(output) arm with exit code 1 → one finding per shell file.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let sh1 = root.join("a.sh");
+    let sh2 = root.join("b.sh");
+    std::fs::write(&sh1, "#!/bin/bash\nfoo\n").unwrap();
+    std::fs::write(&sh2, "#!/bin/bash\nbar\n").unwrap();
+    let output = std::process::Output {
+        status: std::os::unix::process::ExitStatusExt::from_raw(1 << 8),
+        stdout: Vec::new(),
+        stderr: Vec::new(),
+    };
+    let result = handle_shellcheck_result(root, &[sh1, sh2], Ok(output));
+    let findings = result.unwrap();
+    assert_eq!(findings.len(), 2);
+    assert!(findings.iter().any(|f| f.file.contains("a.sh")));
+    assert!(findings.iter().any(|f| f.file.contains("b.sh")));
+}

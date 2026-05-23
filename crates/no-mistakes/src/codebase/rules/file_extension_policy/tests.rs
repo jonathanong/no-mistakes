@@ -143,3 +143,21 @@ fn check_with_files_works() {
     let findings = check_with_files(root, &config, &[path]).unwrap();
     assert_eq!(findings.len(), 1);
 }
+
+#[test]
+fn file_with_no_extension_has_empty_ext_and_is_not_flagged() {
+    // file_extension returns "" when there is no dot, and banned_extensions
+    // won't match "", so no finding is emitted.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    std::fs::create_dir_all(root.join("backend")).unwrap();
+    let path = root.join("backend/Makefile"); // no dot
+    std::fs::write(&path, "all:\n\techo hi\n").unwrap();
+    let allowlist = HashSet::new();
+    let scopes = vec![make_scope("backend", &[".js", ".ts"])];
+    let findings = check_file(&path, root, &allowlist, &scopes);
+    assert!(
+        findings.is_empty(),
+        "file with no extension should not match any banned extension"
+    );
+}

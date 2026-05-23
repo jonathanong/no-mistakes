@@ -166,14 +166,11 @@ fn check_lockfile(root: &Path, opts: &Options) -> Vec<RuleFinding> {
     let Some(packages) = yaml.get("packages").and_then(|p| p.as_mapping()) else {
         return Vec::new();
     };
-    let mut pkg_keys: Vec<&serde_yaml::Value> = packages.keys().collect();
-    pkg_keys.sort_by(|a, b| a.as_str().unwrap_or("").cmp(b.as_str().unwrap_or("")));
+    let mut pairs: Vec<(&serde_yaml::Value, &serde_yaml::Value)> = packages.iter().collect();
+    pairs.sort_by(|(a, _), (b, _)| a.as_str().unwrap_or("").cmp(b.as_str().unwrap_or("")));
     let mut findings = Vec::new();
-    for key in pkg_keys {
+    for (key, pkg_val) in pairs {
         let pkg_name = key.as_str().unwrap_or("");
-        let Some(pkg_val) = packages.get(key) else {
-            continue;
-        };
         let Some(resolution) = pkg_val.get("resolution") else {
             continue;
         };
