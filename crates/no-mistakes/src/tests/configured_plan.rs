@@ -27,7 +27,9 @@ pub(crate) fn generate_configured_plan(
     let all_tests = discover_framework_tests(root, config, framework, &env)?;
     let all_test_set: HashSet<PathBuf> = all_tests.iter().cloned().collect();
     let effective_limit = override_limit(env.limit.as_ref(), args);
-    let global_limit = limit_count(effective_limit.as_ref(), all_tests.len()).unwrap_or(usize::MAX);
+    let has_global_limit = effective_limit.is_some();
+    let global_limit =
+        limit_count(effective_limit.as_ref(), all_tests.len()).unwrap_or(all_tests.len());
 
     if let Some((reason, trigger_file)) = forced_fallback.as_ref() {
         return Ok(TestPlan {
@@ -98,6 +100,7 @@ pub(crate) fn generate_configured_plan(
             group_results.push(empty_group_result(
                 group.type_,
                 all_tests.len().saturating_sub(used.len()),
+                has_global_limit.then_some(0),
             ));
             continue;
         }
@@ -134,7 +137,11 @@ pub(crate) fn generate_configured_plan(
             r#type: group_type_name(group.type_).to_string(),
             selected: picked.iter().map(|test| test.test_file.clone()).collect(),
             remaining: all_tests.len().saturating_sub(used.len()),
-            limit: Some(group_limit),
+            limit: group
+                .limit
+                .is_some()
+                .then_some(group_limit)
+                .or_else(|| has_global_limit.then_some(group_limit)),
         });
     }
 
@@ -159,12 +166,16 @@ fn all_group(root: &Path, all_tests: &[PathBuf]) -> TestPlanGroupResult {
     }
 }
 
-fn empty_group_result(group: TestPlanGroupType, remaining: usize) -> TestPlanGroupResult {
+fn empty_group_result(
+    group: TestPlanGroupType,
+    remaining: usize,
+    limit: Option<usize>,
+) -> TestPlanGroupResult {
     TestPlanGroupResult {
         r#type: group_type_name(group).to_string(),
         selected: Vec::new(),
         remaining,
-        limit: Some(0),
+        limit,
     }
 }
 

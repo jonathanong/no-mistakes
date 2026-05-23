@@ -351,7 +351,9 @@ fn test_plan_playwright_uses_coverage_group() {
     assert_eq!(plan["fallback_triggered"], false);
     assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
     assert_eq!(plan["groups"][0]["type"], "direct");
+    assert!(plan["groups"][0]["limit"].is_null());
     assert_eq!(plan["groups"][1]["type"], "coverage");
+    assert!(plan["groups"][1]["limit"].is_null());
     assert_eq!(plan["groups"][1]["selected"][0], "tests/e2e/routes.spec.ts");
     assert_eq!(
         only_reason_via(&plan, "tests/e2e/routes.spec.ts"),
