@@ -56,7 +56,7 @@ pub(super) fn stale_or_blank_allow_findings(
     project_root: &Path,
     opts: &Options,
     component_keys: &HashSet<String>,
-    allow_files: &GlobMatcher,
+    _allow_files: &GlobMatcher,
     shared: &CheckFactMap,
 ) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
@@ -70,9 +70,10 @@ pub(super) fn stale_or_blank_allow_findings(
             findings.push(file_allow_finding(pattern, "must include a reason"));
             continue;
         }
+        let matcher = GlobMatcher::new(std::iter::once(pattern));
         let matched = shared.files().iter().any(|path| {
             path.starts_with(project_root)
-                && allow_files.is_match(&relative_slash_path(project_root, path))
+                && matcher.is_match(&relative_slash_path(project_root, path))
         });
         if !matched {
             findings.push(file_allow_finding(

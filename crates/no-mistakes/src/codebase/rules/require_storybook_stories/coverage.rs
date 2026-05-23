@@ -13,14 +13,10 @@ pub(super) fn reachable_story_files(
     shared: &CheckFactMap,
     stories: &GlobMatcher,
     resolver: &ImportResolver<'_>,
-    all_component_keys: &HashSet<String>,
+    _all_component_keys: &HashSet<String>,
 ) -> Result<BTreeSet<PathBuf>> {
-    let mut queue: VecDeque<PathBuf> = shared
-        .files()
-        .iter()
-        .filter(|path| path.starts_with(project_root))
-        .filter(|path| stories.is_match(&relative_slash_path(project_root, path)))
-        .map(|path| normalize_path(path))
+    let mut queue: VecDeque<PathBuf> = story_files_matching(project_root, shared, stories)
+        .into_iter()
         .collect();
     let mut seen = BTreeSet::new();
     while let Some(file) = queue.pop_front() {
@@ -44,19 +40,27 @@ pub(super) fn reachable_story_files(
                 continue;
             };
             if resolved.starts_with(project_root)
-                && (stories.is_match(&relative_slash_path(project_root, &resolved))
-                    || !file_exports_any_component(
-                        project_root,
-                        shared,
-                        &resolved,
-                        all_component_keys,
-                    ))
+                && stories.is_match(&relative_slash_path(project_root, &resolved))
             {
                 queue.push_back(resolved);
             }
         }
     }
     Ok(seen)
+}
+
+pub(super) fn story_files_matching(
+    project_root: &Path,
+    shared: &CheckFactMap,
+    stories: &GlobMatcher,
+) -> BTreeSet<PathBuf> {
+    shared
+        .files()
+        .iter()
+        .filter(|path| path.starts_with(project_root))
+        .filter(|path| stories.is_match(&relative_slash_path(project_root, path)))
+        .map(|path| normalize_path(path))
+        .collect()
 }
 
 pub(super) fn directly_covered_components(
@@ -119,27 +123,6 @@ pub(super) fn all_react_component_keys(
         }
     }
     out
-}
-
-fn file_exports_any_component(
-    project_root: &Path,
-    shared: &CheckFactMap,
-    file: &Path,
-    all_component_keys: &HashSet<String>,
-) -> bool {
-    if !file.starts_with(project_root) {
-        return false;
-    }
-    let project_file = relative_slash_path(project_root, file);
-    shared
-        .ts
-        .get(file)
-        .and_then(|facts| facts.react.as_ref())
-        .is_some_and(|react| {
-            react.components.iter().any(|component| {
-                all_component_keys.contains(&component_key(&project_file, &component.name))
-            })
-        })
 }
 
 fn resolve_component_key(

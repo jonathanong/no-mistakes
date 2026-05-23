@@ -9,7 +9,7 @@ use crate::codebase::ts_source::{
     has_disable_comment, has_disable_file_comment, relative_slash_path,
 };
 use crate::codebase::ts_symbols::ExportKind;
-use anyhow::{bail, Result};
+use anyhow::Result;
 use std::path::Path;
 
 pub(super) fn selected_components(
@@ -34,8 +34,11 @@ pub(super) fn selected_components(
             continue;
         }
         let explicit = include.is_match(&project_file);
+        if facts.parse_error.is_some() {
+            continue;
+        }
         let Some(react) = facts.react.as_ref() else {
-            bail!("{RULE_ID} requires React facts for {}", path.display());
+            continue;
         };
         if should_skip_file(facts, opts, explicit) {
             continue;

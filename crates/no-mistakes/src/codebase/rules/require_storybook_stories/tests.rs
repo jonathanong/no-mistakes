@@ -33,6 +33,12 @@ fn config_with_storybook(options: &str) -> NoMistakesConfig {
     config
 }
 
+fn config_with_project_root(root: &str, options: &str) -> NoMistakesConfig {
+    let mut config = config(options);
+    config.projects.get_mut("web").unwrap().root = Some(root.to_string());
+    config
+}
+
 #[test]
 fn direct_and_transitive_story_coverage_passes() {
     let root = fixture("covered");
@@ -113,6 +119,47 @@ include_all_react_named_exports: true
 }
 
 #[test]
+fn helper_imports_do_not_count_as_direct_story_coverage() {
+    let root = fixture("helper-import");
+    let findings = check(
+        &root,
+        &config(
+            r#"
+stories: ["stories/**/*.stories.tsx"]
+include_all_react_named_exports: true
+"#,
+        ),
+        None,
+    )
+    .unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some("components/Hidden.tsx#Hidden")
+    );
+}
+
+#[test]
+fn transitive_coverage_uses_project_relative_keys() {
+    let root = fixture("project-root");
+    let findings = check(
+        &root,
+        &config_with_project_root(
+            "web",
+            r#"
+stories: ["stories/**/*.stories.tsx"]
+include_all_react_named_exports: true
+"#,
+        ),
+        None,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
 fn component_and_file_opt_outs_use_no_mistakes_comments() {
     let root = fixture("comments");
     let findings = check(
@@ -143,6 +190,7 @@ allow_components:
   "components/Missing.tsx#Missing": ""
   "components/Gone.tsx#Gone": "no longer exists"
 allow_files:
+  "components/Card.tsx": "covered by story"
   "components/nope/**": "gone"
 "#,
         ),
@@ -155,7 +203,8 @@ allow_files:
         .any(|finding| finding.message.contains("must include a reason")));
     assert!(findings
         .iter()
-        .any(|finding| finding.message.contains("does not match")));
+        .any(|finding| finding.file == "components/nope/**"
+            && finding.message.contains("does not match")));
 }
 
 #[test]

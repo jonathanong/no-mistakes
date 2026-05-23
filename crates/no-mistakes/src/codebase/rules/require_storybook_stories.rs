@@ -14,7 +14,10 @@ mod selection;
 mod types;
 
 use config::{effective_story_patterns, resolve_tsconfig};
-use coverage::{all_react_component_keys, directly_covered_components, reachable_story_files};
+use coverage::{
+    all_react_component_keys, directly_covered_components, reachable_story_files,
+    story_files_matching,
+};
 use coverage_graph::{dynamic_or_mock_boundary_files, transitive_covered_components};
 use findings::{namespace_import_findings, stale_or_blank_allow_findings};
 use selection::{component_disabled, file_disabled, selected_components};
@@ -51,11 +54,9 @@ pub(crate) fn check_with_facts(
     shared: &CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let root = normalize_path(root);
-    let tsconfig = resolve_tsconfig(&root, tsconfig_path)?;
-    let resolver = ImportResolver::new(&tsconfig);
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        findings.extend(check_rule(&root, config, rule, shared, &resolver)?);
+        findings.extend(check_rule(&root, config, rule, shared, tsconfig_path)?);
     }
     super::sort_findings(&mut findings);
     Ok(findings)
@@ -66,7 +67,7 @@ fn check_rule(
     config: &NoMistakesConfig,
     rule: &RuleDef,
     shared: &CheckFactMap,
-    resolver: &ImportResolver<'_>,
+    tsconfig_path: Option<&Path>,
 ) -> Result<Vec<RuleFinding>> {
     if rule.projects.len() != 1 || rule.applies_to_repository() {
         bail!("{RULE_ID} requires exactly one project target");
@@ -80,6 +81,8 @@ fn check_rule(
         .map(|path| root.join(path))
         .unwrap_or_else(|| root.to_path_buf());
     let project_root = normalize_path(&project_root);
+    let tsconfig = resolve_tsconfig(&project_root, tsconfig_path)?;
+    let resolver = ImportResolver::new(&tsconfig);
     let opts: Options = rule.rule_options();
     let include = GlobMatcher::new(&opts.include);
     let exclude = GlobMatcher::new(&opts.exclude);
@@ -99,25 +102,26 @@ fn check_rule(
     )?;
     let component_keys: HashSet<String> = components.iter().map(|c| c.key.clone()).collect();
     let all_component_keys = all_react_component_keys(&project_root, shared);
-    let story_files = reachable_story_files(
+    let _story_files = reachable_story_files(
         &project_root,
         shared,
         &stories,
-        resolver,
+        &resolver,
         &all_component_keys,
     )?;
+    let direct_story_files = story_files_matching(&project_root, shared, &stories);
     let mut namespace_findings =
-        namespace_import_findings(root, &project_root, shared, &story_files, resolver);
+        namespace_import_findings(root, &project_root, shared, &direct_story_files, &resolver);
     let direct = directly_covered_components(
         &project_root,
         shared,
-        &story_files,
-        resolver,
+        &direct_story_files,
+        &resolver,
         &all_component_keys,
     );
     let covered =
         transitive_covered_components(root, &project_root, shared, &direct, &component_keys);
-    let boundary_files = dynamic_or_mock_boundary_files(shared, resolver);
+    let boundary_files = dynamic_or_mock_boundary_files(shared, &resolver);
 
     let mut findings = Vec::new();
     findings.append(&mut namespace_findings);
