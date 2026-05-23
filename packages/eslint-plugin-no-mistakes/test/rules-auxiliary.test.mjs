@@ -34,6 +34,13 @@ describe("playwright-prefer-get-by-test-id", () => {
     assert.deepEqual(values, []);
     assert.ok(elapsed < 1000, `selector parsing took ${elapsed}ms`);
   }, 5000);
+
+  it("parses CSS attribute selector flags without requiring whitespace", () => {
+    assert.deepEqual(cssSelectorValues('[data-pw="Save"i] [data-pw="Cancel" s]', ["data-pw"]), [
+      { attribute: "data-pw", operator: "=", value: "Save" },
+      { attribute: "data-pw", operator: "=", value: "Cancel" },
+    ]);
+  });
 });
 
 describe("playwright-naming-convention", () => {
