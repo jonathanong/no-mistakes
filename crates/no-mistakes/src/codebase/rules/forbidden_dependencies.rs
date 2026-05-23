@@ -126,10 +126,10 @@ pub(crate) fn check_application(
         let Some(resolved_path) = resolve_root_path(root, root_str) else {
             continue;
         };
-        let file = resolved_path
-            .strip_prefix(root)
-            .map(|rel| rel.to_string_lossy().replace('\\', "/"))
-            .unwrap_or_else(|_| resolved_path.to_string_lossy().replace('\\', "/"));
+        let file = match resolved_path.strip_prefix(root) {
+            Ok(rel) => rel.to_string_lossy().replace('\\', "/"),
+            Err(_) => resolved_path.to_string_lossy().replace('\\', "/"),
+        };
         let root_node = NodeId::File(resolved_path);
         let entries = graph.deps_of(&[root_node], None, allowed.as_ref());
         for entry in &entries {
