@@ -93,6 +93,15 @@ module.exports = rule(
       }
     }
 
+    function isNonComputedPropertyKey(node) {
+      return (
+        (node.parent.type === "MemberExpression" &&
+          node.parent.property === node &&
+          !node.parent.computed) ||
+        (node.parent.type === "Property" && node.parent.key === node && !node.parent.computed)
+      );
+    }
+
     function reportAssignment(node) {
       for (const name of collectPatternNames(node.left)) reportIfShared(node, name);
       if (node.left.type !== "MemberExpression") return;
@@ -125,6 +134,8 @@ module.exports = rule(
       },
       Identifier(node) {
         if (setupDepth === 0) return;
+        if (isNonComputedPropertyKey(node)) return;
+        if (!mutableTopLevel.has(node.name)) return;
         if (isModuleMutable(node, node.name)) setupReferencedMutables.add(node.name);
       },
       CallExpression(node) {

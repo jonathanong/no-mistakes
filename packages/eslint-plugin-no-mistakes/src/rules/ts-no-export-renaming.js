@@ -22,10 +22,18 @@ function pathPatterns(options) {
   });
 }
 
-function shouldCheckFile(filename, patterns) {
+function normalizedPaths(context) {
+  const normalized = context.filename.replace(/\\/g, "/");
+  const cwd = context.cwd?.replace(/\\/g, "/");
+  if (cwd && normalized.startsWith(`${cwd}/`)) {
+    return [normalized.slice(cwd.length + 1), normalized];
+  }
+  return [normalized];
+}
+
+function shouldCheckFile(context, patterns) {
   if (patterns.length === 0) return true;
-  const normalized = filename.replace(/\\/g, "/");
-  return patterns.some((pattern) => pattern.test(normalized));
+  return normalizedPaths(context).some((path) => patterns.some((pattern) => pattern.test(path)));
 }
 
 function isDefaultReExportAlias(node, specifier) {
@@ -57,7 +65,7 @@ module.exports = rule(
   (context) => {
     const options = context.options[0] || {};
     const patterns = pathPatterns(options);
-    if (!shouldCheckFile(context.filename, patterns)) return {};
+    if (!shouldCheckFile(context, patterns)) return {};
     return {
       ExportNamedDeclaration(node) {
         for (const specifier of node.specifiers || []) {
