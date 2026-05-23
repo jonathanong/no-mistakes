@@ -114,7 +114,7 @@ fn missing_forbidden_list_emits_config_error() {
 }
 
 #[test]
-fn invalid_glob_pattern_returns_error() {
+fn invalid_glob_pattern_emits_config_finding() {
     let root = fixture("forbidden-dependencies-basic");
     let opts = Options {
         roots: vec!["entrypoints/api.mts".to_string()],
@@ -134,8 +134,45 @@ fn invalid_glob_pattern_returns_error() {
         crate::codebase::dependencies::graph::GraphBuildPlan::imports_and_workspace(),
     )
     .unwrap();
-    let result = check_application(&root, &opts, &graph);
-    assert!(result.is_err(), "expected error for invalid glob pattern");
+    let findings = check_application(&root, &opts, &graph).unwrap();
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, ".no-mistakes.yml");
+    assert!(
+        findings[0].message.contains("invalid glob pattern"),
+        "message should mention invalid glob pattern: {}",
+        findings[0].message
+    );
+}
+
+#[test]
+fn invalid_glob_pattern_in_forbidden_files_emits_config_finding() {
+    let root = fixture("forbidden-dependencies-basic");
+    let opts = Options {
+        roots: vec!["entrypoints/api.mts".to_string()],
+        forbidden_modules: vec![],
+        forbidden_files: vec!["[invalid".to_string()],
+        relationships: vec![],
+    };
+    let tsconfig = crate::codebase::ts_resolver::TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = crate::codebase::dependencies::graph::DepGraph::build_with_plan(
+        &root,
+        &tsconfig,
+        crate::codebase::dependencies::graph::GraphBuildPlan::imports_and_workspace(),
+    )
+    .unwrap();
+    let findings = check_application(&root, &opts, &graph).unwrap();
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, ".no-mistakes.yml");
+    assert!(
+        findings[0].message.contains("invalid glob pattern"),
+        "message should mention invalid glob pattern: {}",
+        findings[0].message
+    );
 }
 
 #[test]

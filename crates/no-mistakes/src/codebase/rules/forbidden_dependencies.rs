@@ -88,14 +88,43 @@ fn check_application(root: &Path, opts: &Options, graph: &DepGraph) -> Result<Ve
             target: None,
         }]);
     }
-    let module_matcher = build_globset(&opts.forbidden_modules)?;
-    let file_matcher = build_globset(&opts.forbidden_files)?;
+    let module_matcher = match build_globset(&opts.forbidden_modules) {
+        Ok(m) => m,
+        Err(e) => {
+            return Ok(vec![RuleFinding {
+                rule: RULE_ID.to_string(),
+                file: ".no-mistakes.yml".to_string(),
+                line: 1,
+                message: format!("{RULE_ID}: invalid glob pattern in forbiddenModules: {e}"),
+                import: None,
+                target: None,
+            }]);
+        }
+    };
+    let file_matcher = match build_globset(&opts.forbidden_files) {
+        Ok(m) => m,
+        Err(e) => {
+            return Ok(vec![RuleFinding {
+                rule: RULE_ID.to_string(),
+                file: ".no-mistakes.yml".to_string(),
+                line: 1,
+                message: format!("{RULE_ID}: invalid glob pattern in forbiddenFiles: {e}"),
+                import: None,
+                target: None,
+            }]);
+        }
+    };
     let allowed = relationship_filter(&opts.relationships);
     let mut findings = Vec::new();
     for root_str in &opts.roots {
-        let Some(root_node) = resolve_root_node(root, root_str) else {
+        let Some(resolved_path) = resolve_root_path(root, root_str) else {
             continue;
         };
+        let file = resolved_path
+            .strip_prefix(root)
+            .map(|rel| rel.to_string_lossy().replace('\\', "/"))
+            .unwrap_or_else(|_| resolved_path.to_string_lossy().replace('\\', "/"));
+        let root_node = NodeId::File(resolved_path);
         let entries = graph.deps_of(&[root_node], None, allowed.as_ref());
         for entry in &entries {
             let matched = match &entry.node {
@@ -116,13 +145,9 @@ fn check_application(root: &Path, opts: &Options, graph: &DepGraph) -> Result<Ve
                 _ => "file",
             };
             let repro = repro_command(root_str, &target_name, &entry.node, &opts.relationships);
-            let file = std::path::Path::new(root_str)
-                .strip_prefix(root)
-                .map(|rel| rel.to_string_lossy().replace('\\', "/"))
-                .unwrap_or_else(|_| root_str.replace('\\', "/"));
             findings.push(RuleFinding {
                 rule: RULE_ID.to_string(),
-                file,
+                file: file.clone(),
                 line: 1,
                 message: format!(
                     "{root_str} reaches forbidden {kind} '{target_name}' via {}. \
@@ -137,7 +162,7 @@ fn check_application(root: &Path, opts: &Options, graph: &DepGraph) -> Result<Ve
     Ok(findings)
 }
 
-fn resolve_root_node(root: &Path, raw: &str) -> Option<NodeId> {
+fn resolve_root_path(root: &Path, raw: &str) -> Option<std::path::PathBuf> {
     let p = std::path::Path::new(raw);
     let path = if p.is_absolute() {
         p.to_path_buf()
@@ -145,7 +170,7 @@ fn resolve_root_node(root: &Path, raw: &str) -> Option<NodeId> {
         root.join(raw)
     };
     let normalized = crate::codebase::ts_resolver::normalize_path(&path);
-    normalized.is_file().then_some(NodeId::File(normalized))
+    normalized.is_file().then_some(normalized)
 }
 
 fn build_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
