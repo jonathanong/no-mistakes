@@ -32,6 +32,13 @@ async function asyncAlias(value: string) {
   return await original(value);
 }
 
+function outerAlias() {
+  function nested(value: string) {
+    return original(value);
+  }
+  return nested("x");
+}
+
 function original(value?: string) {
   return value;
 }

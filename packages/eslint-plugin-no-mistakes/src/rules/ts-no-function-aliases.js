@@ -91,11 +91,7 @@ function wrapperName(node) {
 
 function isNamedWrapper(node) {
   if (node.type === "FunctionDeclaration") {
-    return (
-      node.parent?.type === "Program" ||
-      node.parent?.type === "ExportNamedDeclaration" ||
-      node.parent?.type === "ExportDefaultDeclaration"
-    );
+    return true;
   }
   return Boolean(wrapperName(node));
 }
