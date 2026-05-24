@@ -1,9 +1,10 @@
 use super::{
     array_options, body_return_options, expression_statement_options, helper_expression_options,
-    import_bindings, top_level_function_bodies, Ctx,
+    import_bindings, imported_options, top_level_function_bodies, Ctx,
 };
 use crate::integration_tests::test_config::vitest::shared;
 use crate::integration_tests::test_config::vitest::Options;
+use anyhow::Result;
 use oxc_ast::ast::{BindingPattern, Declaration, ExportDefaultDeclarationKind, Program, Statement};
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -14,7 +15,7 @@ pub(super) fn exported_options(
     path: &Path,
     parent: &mut Ctx<'_, '_>,
     exported: &str,
-) -> Vec<Options> {
+) -> Result<Vec<Options>> {
     let mut local_seen = BTreeSet::new();
     let mut ctx = Ctx {
         source,
@@ -40,14 +41,14 @@ pub(super) fn exported_options(
             _ => {}
         }
     }
-    Vec::new()
+    Ok(Vec::new())
 }
 
 fn named_export_options(
     export: &oxc_ast::ast::ExportNamedDeclaration<'_>,
     exported: &str,
     ctx: &mut Ctx<'_, '_>,
-) -> Option<Vec<Options>> {
+) -> Option<Result<Vec<Options>>> {
     if let Some(declaration) = &export.declaration {
         return declaration_options(declaration, exported, ctx);
     }
@@ -55,18 +56,26 @@ fn named_export_options(
         if specifier.exported.name() != exported {
             continue;
         }
+        if let Some(source) = &export.source {
+            return Some(imported_options(
+                &super::ImportBinding {
+                    source: source.value.to_string(),
+                    imported: specifier.local.name().to_string(),
+                },
+                ctx,
+            ));
+        }
         let local = specifier.local.name().to_string();
-        return ctx
-            .bindings
-            .get(&local)
-            .copied()
-            .map(|expression| helper_expression_options(expression, ctx))
-            .or_else(|| {
-                ctx.functions
-                    .get(&local)
-                    .copied()
-                    .map(|body| body_return_options(body, ctx))
-            });
+        if let Some(expression) = ctx.bindings.get(&local).copied() {
+            return Some(helper_expression_options(expression, ctx));
+        }
+        if let Some(body) = ctx.functions.get(&local).copied() {
+            return Some(body_return_options(body, ctx));
+        }
+        if let Some(import) = ctx.imports.get(&local).cloned() {
+            return Some(imported_options(&import, ctx));
+        }
+        return None;
     }
     None
 }
@@ -75,30 +84,27 @@ fn declaration_options(
     declaration: &Declaration<'_>,
     exported: &str,
     ctx: &mut Ctx<'_, '_>,
-) -> Option<Vec<Options>> {
+) -> Option<Result<Vec<Options>>> {
     match declaration {
         Declaration::VariableDeclaration(declaration) => {
-            declaration.declarations.iter().find_map(|declarator| {
+            for declarator in &declaration.declarations {
                 if binding_name(&declarator.id) == Some(exported) {
-                    declarator
+                    return declarator
                         .init
                         .as_ref()
-                        .map(|init| helper_expression_options(init, ctx))
-                } else {
-                    None
+                        .map(|init| helper_expression_options(init, ctx));
                 }
-            })
+            }
+            None
         }
         Declaration::FunctionDeclaration(function)
             if function.id.as_ref().map(|id| id.name.as_str()) == Some(exported) =>
         {
-            Some(
-                function
-                    .body
-                    .as_ref()
-                    .map(|body| body_return_options(body, ctx))
-                    .unwrap_or_default(),
-            )
+            if let Some(body) = &function.body {
+                Some(body_return_options(body, ctx))
+            } else {
+                Some(Ok(Vec::new()))
+            }
         }
         _ => None,
     }
@@ -107,33 +113,35 @@ fn declaration_options(
 fn default_export_options(
     export: &ExportDefaultDeclarationKind<'_>,
     ctx: &mut Ctx<'_, '_>,
-) -> Vec<Options> {
+) -> Result<Vec<Options>> {
     match export {
-        ExportDefaultDeclarationKind::Identifier(identifier) => ctx
-            .bindings
-            .get(identifier.name.as_str())
-            .copied()
-            .map(|expression| helper_expression_options(expression, ctx))
-            .or_else(|| {
-                ctx.functions
-                    .get(identifier.name.as_str())
-                    .copied()
-                    .map(|body| body_return_options(body, ctx))
-            })
-            .unwrap_or_default(),
+        ExportDefaultDeclarationKind::Identifier(identifier) => {
+            let name = identifier.name.as_str();
+            if let Some(expression) = ctx.bindings.get(name).copied() {
+                helper_expression_options(expression, ctx)
+            } else if let Some(body) = ctx.functions.get(name).copied() {
+                body_return_options(body, ctx)
+            } else if let Some(import) = ctx.imports.get(name).cloned() {
+                imported_options(&import, ctx)
+            } else {
+                Ok(Vec::new())
+            }
+        }
         ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) if arrow.expression => {
             expression_statement_options(&arrow.body, ctx)
         }
         ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
             body_return_options(&arrow.body, ctx)
         }
-        ExportDefaultDeclarationKind::FunctionDeclaration(function) => function
-            .body
-            .as_ref()
-            .map(|body| body_return_options(body, ctx))
-            .unwrap_or_default(),
+        ExportDefaultDeclarationKind::FunctionDeclaration(function) => {
+            if let Some(body) = &function.body {
+                body_return_options(body, ctx)
+            } else {
+                Ok(Vec::new())
+            }
+        }
         ExportDefaultDeclarationKind::ArrayExpression(array) => array_options(array, ctx),
-        _ => Vec::new(),
+        _ => Ok(Vec::new()),
     }
 }
 

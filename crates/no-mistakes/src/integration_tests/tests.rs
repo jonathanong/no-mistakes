@@ -425,6 +425,12 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     assert!(dynamic
         .iter()
         .any(|project| project.name.as_deref() == Some("same-name-import")));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("reexported")));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("alias-default")));
 
     let recursive_path = root.join("vitest.recursive.mts");
     let recursive_source = std::fs::read_to_string(&recursive_path).unwrap();
@@ -433,6 +439,12 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
             .unwrap();
     assert_eq!(recursive.len(), 1);
     assert_eq!(recursive[0].name, None);
+
+    let invalid_path = root.join("vitest.invalid-project.mts");
+    let invalid_source = std::fs::read_to_string(&invalid_path).unwrap();
+    let invalid =
+        test_config::vitest::parse_from_path(&invalid_source, &invalid_path, &root, &root);
+    assert!(invalid.is_err());
 }
 
 #[test]

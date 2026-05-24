@@ -1,4 +1,9 @@
-import defaultProjects, { apiProjects, webProjects } from './vitest.projects-helper'
+import defaultProjects, {
+  aliasDefaultProjects,
+  apiProjects,
+  reexportedProjects,
+  webProjects,
+} from './vitest.projects-helper'
 import * as projectHelpers from './vitest.projects-helper'
 import { defineConfig } from 'vitest/config'
 
@@ -11,8 +16,6 @@ const localProjects = [
   },
 ]
 
-const dynamicInclude = ['dynamic/**/*.test.ts']
-
 const recursiveCall = () => recursiveCall()
 
 const projects = [
@@ -24,7 +27,9 @@ export default defineConfig({
     projects: [
       ...webProjects(),
       ...defaultProjects,
+      ...aliasDefaultProjects(),
       ...apiProjects,
+      ...reexportedProjects,
       ...projectHelpers.namespaceProjects(),
       ...projects,
       ...recursiveCall(),
@@ -32,7 +37,7 @@ export default defineConfig({
       {
         test: {
           name: 'composed',
-          include: dynamicInclude,
+          include: ['dynamic/**/*.test.ts'],
         },
       },
     ],

@@ -1,6 +1,7 @@
 use super::{parse_partial_options, shared, Options};
 use crate::ast;
 use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
+use anyhow::Result;
 use oxc_ast::ast::{
     ArrayExpression, ArrayExpressionElement, Expression, FunctionBody, ObjectExpression, Program,
     Statement,
@@ -36,11 +37,11 @@ pub(super) fn project_options(
     path: &Path,
     root: &Path,
     tsconfig: &TsConfig,
-) -> Vec<Options> {
+) -> Result<Vec<Options>> {
     let Some(Expression::ArrayExpression(projects)) =
         shared::property_expression(object, "projects")
     else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
     let resolver = ImportResolver::new(tsconfig);
     let mut seen = BTreeSet::new();
@@ -59,31 +60,34 @@ pub(super) fn project_options(
     array_options(projects, &mut ctx)
 }
 
-pub(super) fn array_options(projects: &ArrayExpression<'_>, ctx: &mut Ctx<'_, '_>) -> Vec<Options> {
+pub(super) fn array_options(
+    projects: &ArrayExpression<'_>,
+    ctx: &mut Ctx<'_, '_>,
+) -> Result<Vec<Options>> {
     let mut options = Vec::new();
     for element in &projects.elements {
         match element {
             ArrayExpressionElement::ObjectExpression(object) => {
-                options.extend(project_object_options(object, ctx));
+                options.push(project_object_options(object, ctx)?);
             }
             ArrayExpressionElement::SpreadElement(spread) => {
-                options.extend(expression_options(&spread.argument, ctx));
+                options.extend(expression_options(&spread.argument, ctx)?);
             }
             _ => {}
         }
     }
-    options
+    Ok(options)
 }
 
-fn project_object_options(object: &ObjectExpression<'_>, ctx: &Ctx<'_, '_>) -> Option<Options> {
+fn project_object_options(object: &ObjectExpression<'_>, ctx: &Ctx<'_, '_>) -> Result<Options> {
     let nested = shared::property_object(object, "test", &ctx.bindings).unwrap_or(object);
-    Some(parse_partial_options(nested, ctx.source))
+    parse_partial_options(nested, ctx.source)
 }
 
 pub(super) fn expression_options(
     expression: &Expression<'_>,
     ctx: &mut Ctx<'_, '_>,
-) -> Vec<Options> {
+) -> Result<Vec<Options>> {
     match expression {
         Expression::ArrayExpression(array) => array_options(array, ctx),
         Expression::Identifier(identifier) => identifier_options(identifier.name.as_str(), ctx),
@@ -91,26 +95,21 @@ pub(super) fn expression_options(
         Expression::ParenthesizedExpression(parenthesized) => {
             expression_options(&parenthesized.expression, ctx)
         }
-        _ => Vec::new(),
+        _ => Ok(Vec::new()),
     }
 }
 
-fn identifier_options(name: &str, ctx: &mut Ctx<'_, '_>) -> Vec<Options> {
+fn identifier_options(name: &str, ctx: &mut Ctx<'_, '_>) -> Result<Vec<Options>> {
     if !ctx.local_seen.insert(name.to_string()) {
-        return Vec::new();
+        return Ok(Vec::new());
     }
-    let result = ctx
-        .bindings
-        .get(name)
-        .copied()
-        .map(|expression| expression_options(expression, ctx))
-        .or_else(|| {
-            ctx.imports
-                .get(name)
-                .cloned()
-                .map(|import| imported_options(&import, ctx))
-        })
-        .unwrap_or_default();
+    let result = if let Some(expression) = ctx.bindings.get(name).copied() {
+        expression_options(expression, ctx)
+    } else if let Some(import) = ctx.imports.get(name).cloned() {
+        imported_options(&import, ctx)
+    } else {
+        Ok(Vec::new())
+    };
     ctx.local_seen.remove(name);
     result
 }
@@ -118,22 +117,27 @@ fn identifier_options(name: &str, ctx: &mut Ctx<'_, '_>) -> Vec<Options> {
 pub(super) fn helper_expression_options(
     expression: &Expression<'_>,
     ctx: &mut Ctx<'_, '_>,
-) -> Vec<Options> {
+) -> Result<Vec<Options>> {
     match expression {
         Expression::ArrowFunctionExpression(arrow) if arrow.expression => {
             expression_statement_options(&arrow.body, ctx)
         }
         Expression::ArrowFunctionExpression(arrow) => body_return_options(&arrow.body, ctx),
-        Expression::FunctionExpression(function) => function
-            .body
-            .as_ref()
-            .map(|body| body_return_options(body, ctx))
-            .unwrap_or_default(),
+        Expression::FunctionExpression(function) => {
+            if let Some(body) = &function.body {
+                body_return_options(body, ctx)
+            } else {
+                Ok(Vec::new())
+            }
+        }
         _ => expression_options(expression, ctx),
     }
 }
 
-pub(super) fn body_return_options(body: &FunctionBody<'_>, ctx: &mut Ctx<'_, '_>) -> Vec<Options> {
+pub(super) fn body_return_options(
+    body: &FunctionBody<'_>,
+    ctx: &mut Ctx<'_, '_>,
+) -> Result<Vec<Options>> {
     for statement in &body.statements {
         let Statement::ReturnStatement(return_statement) = statement else {
             continue;
@@ -142,15 +146,15 @@ pub(super) fn body_return_options(body: &FunctionBody<'_>, ctx: &mut Ctx<'_, '_>
             return expression_options(argument, ctx);
         }
     }
-    Vec::new()
+    Ok(Vec::new())
 }
 
 pub(super) fn expression_statement_options(
     body: &FunctionBody<'_>,
     ctx: &mut Ctx<'_, '_>,
-) -> Vec<Options> {
+) -> Result<Vec<Options>> {
     let Some(Statement::ExpressionStatement(statement)) = body.statements.first() else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
     expression_options(&statement.expression, ctx)
 }
@@ -158,24 +162,21 @@ pub(super) fn expression_statement_options(
 pub(in crate::integration_tests::test_config::vitest::project_arrays) fn imported_options(
     import: &ImportBinding,
     ctx: &mut Ctx<'_, '_>,
-) -> Vec<Options> {
+) -> Result<Vec<Options>> {
     let Some(path) = ctx.resolver.resolve(&import.source, ctx.path) else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
     if !ctx.seen.insert(path.clone()) {
-        return Vec::new();
+        return Ok(Vec::new());
     }
-    let result = std::fs::read_to_string(&path)
-        .ok()
-        .and_then(|source| {
-            ast::with_program(&path, &source, |program, source| {
-                exports::exported_options(program, source, &path, ctx, &import.imported)
-            })
-            .ok()
-        })
-        .unwrap_or_default();
+    let result = match std::fs::read_to_string(&path) {
+        Ok(source) => ast::with_program(&path, &source, |program, source| {
+            exports::exported_options(program, source, &path, ctx, &import.imported)
+        })??,
+        Err(_) => Vec::new(),
+    };
     ctx.seen.remove(&path);
-    result
+    Ok(result)
 }
 
 pub(super) fn top_level_function_bodies<'a>(program: &'a Program<'a>) -> FnMap<'a> {

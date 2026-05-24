@@ -1,3 +1,5 @@
+import importedDefaultProjects from './vitest.projects-source'
+
 export const webProjects = () => [
   {
     test: {
@@ -46,3 +48,5 @@ const projects = [
 
 export const sameNameProjects = () => projects
 export { defaultProjects as default }
+export { reexportedProjects } from './vitest.projects-source'
+export const aliasDefaultProjects = () => importedDefaultProjects

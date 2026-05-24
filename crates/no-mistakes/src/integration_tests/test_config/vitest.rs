@@ -50,7 +50,7 @@ fn parse_program(
         shared::property_object(root_object, "test", &bindings).unwrap_or(root_object);
     let root_options = parse_options(test_object, source)?;
     let project_options =
-        project_arrays::project_options(program, test_object, source, path, root, tsconfig);
+        project_arrays::project_options(program, test_object, source, path, root, tsconfig)?;
     let mut projects = Vec::new();
     if project_options.is_empty() {
         projects.push(to_project(config_dir, root, root_options));
@@ -105,17 +105,16 @@ pub(super) fn parse_options(object: &ObjectExpression<'_>, source: &str) -> Resu
     })
 }
 
-pub(super) fn parse_partial_options(object: &ObjectExpression<'_>, source: &str) -> Options {
-    Options {
+pub(super) fn parse_partial_options(
+    object: &ObjectExpression<'_>,
+    source: &str,
+) -> Result<Options> {
+    Ok(Options {
         name: shared::property_expression(object, "name")
             .and_then(|value| shared::optional_string(value, source)),
-        include: string_array_property(object, source, "include")
-            .ok()
-            .flatten(),
-        exclude: string_array_property(object, source, "exclude")
-            .ok()
-            .flatten(),
-    }
+        include: string_array_property(object, source, "include")?,
+        exclude: string_array_property(object, source, "exclude")?,
+    })
 }
 
 fn string_array_property(
