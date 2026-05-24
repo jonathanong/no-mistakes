@@ -2,7 +2,7 @@ use crate::react_traits::analyze::components::{is_class_component, is_component_
 use crate::react_traits::analyze::import_table::ImportTable;
 use oxc_ast::ast::{
     BindingPattern, Declaration, ExportDefaultDeclarationKind, Expression, JSXElementName,
-    JSXMemberExpression, JSXMemberExpressionObject, JSXOpeningElement, Program, Statement,
+    JSXMemberExpression, JSXMemberExpressionObject, Program, Statement,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::Span;
@@ -41,16 +41,7 @@ impl<'a> Visit<'a> for JsxChildrenVisitor<'a> {
             walk::walk_jsx_element(self, elem);
             return;
         }
-        walk::walk_jsx_element(self, elem);
-    }
-
-    fn visit_jsx_opening_element(&mut self, elem: &JSXOpeningElement<'a>) {
-        let s = elem.span;
-        if s.start < self.span.start || s.end > self.span.end {
-            walk::walk_jsx_opening_element(self, elem);
-            return;
-        }
-        let (root_name, member_suffix) = match &elem.name {
+        let (root_name, member_suffix) = match &elem.opening_element.name {
             JSXElementName::IdentifierReference(id) => {
                 let n = id.name.as_ref();
                 let root = n
@@ -86,7 +77,7 @@ impl<'a> Visit<'a> for JsxChildrenVisitor<'a> {
                     .push((self.file_path.clone(), exported_name.clone()));
             }
         }
-        walk::walk_jsx_opening_element(self, elem);
+        walk::walk_jsx_element(self, elem);
     }
 }
 

@@ -1,0 +1,5 @@
+rules:
+  - rule: no-git-identity-mutation
+    scope: repository
+    options:
+      conditionallyAllowedWorkflows: [".github/workflows/*.yml"]

@@ -1,31 +1,62 @@
 pub mod agents_md_max_size;
+pub mod banned_renamed_files;
+pub mod doc_consistency;
+pub mod file_extension_policy;
 pub mod forbidden_dependencies;
+pub mod lockfile_allowlist;
 pub mod nextjs_no_api_routes;
 pub mod nextjs_no_caching;
+pub mod no_empty_or_comments_only_files;
+pub mod no_git_identity_mutation;
+pub mod package_json_registry_only;
+pub mod require_files_in_subdirs;
 pub mod require_storybook_stories;
+pub mod require_test_per_subdir;
+pub mod required_local_docs;
 pub mod rust_max_lines_per_file;
 pub mod rust_no_inline_allows;
 pub mod rust_no_inline_tests;
 pub mod server_route_client_boundary;
+pub mod shellcheck_runner;
+pub mod strict_package_layout;
 pub mod test_no_unmocked_dynamic_imports;
+pub mod tsconfig_alias_folder_mapping;
+pub mod vitest_test_correspondence;
 
+pub mod filesystem_dispatch;
 mod run;
 
-use anyhow::Result;
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 
+pub use filesystem_dispatch::{run_filesystem_rules, run_filesystem_rules_with_files};
+pub use run::{run_check, run_check_with_facts};
+
 pub use agents_md_max_size::RULE_ID as AGENTS_MD_MAX_SIZE;
+pub use banned_renamed_files::RULE_ID as BANNED_RENAMED_FILES;
+pub use doc_consistency::RULE_ID as DOC_CONSISTENCY;
+pub use file_extension_policy::RULE_ID as FILE_EXTENSION_POLICY;
 pub use forbidden_dependencies::RULE_ID as FORBIDDEN_DEPENDENCIES;
+pub use lockfile_allowlist::RULE_ID as LOCKFILE_ALLOWLIST;
 pub use nextjs_no_api_routes::RULE_ID as NEXTJS_NO_API_ROUTES;
 pub use nextjs_no_caching::RULE_ID as NEXTJS_NO_CACHING;
+pub use no_empty_or_comments_only_files::RULE_ID as NO_EMPTY_OR_COMMENTS_ONLY_FILES;
+pub use no_git_identity_mutation::RULE_ID as NO_GIT_IDENTITY_MUTATION;
+pub use package_json_registry_only::RULE_ID as PACKAGE_JSON_REGISTRY_ONLY;
+pub use require_files_in_subdirs::RULE_ID as REQUIRE_FILES_IN_SUBDIRS;
 pub use require_storybook_stories::RULE_ID as REQUIRE_STORYBOOK_STORIES;
-pub use run::{run_check, run_check_with_facts};
+pub use require_test_per_subdir::RULE_ID as REQUIRE_TEST_PER_SUBDIR;
+pub use required_local_docs::REQUIRED_DOC_SECTION_RULE_ID as REQUIRED_DOC_SECTION;
+pub use required_local_docs::RULE_ID as REQUIRED_LOCAL_DOCS;
 pub use rust_max_lines_per_file::RULE_ID as RUST_MAX_LINES_PER_FILE;
 pub use rust_no_inline_allows::RULE_ID as RUST_NO_INLINE_ALLOWS;
 pub use rust_no_inline_tests::RULE_ID as RUST_NO_INLINE_TESTS;
 pub use server_route_client_boundary::RULE_ID as SERVER_ROUTE_CLIENT_BOUNDARY;
+pub use shellcheck_runner::RULE_ID as SHELLCHECK_RUNNER;
+pub use strict_package_layout::RULE_ID as STRICT_PACKAGE_LAYOUT;
 pub use test_no_unmocked_dynamic_imports::RULE_ID as TEST_NO_UNMOCKED_DYNAMIC_IMPORTS;
+pub use tsconfig_alias_folder_mapping::RULE_ID as TSCONFIG_ALIAS_FOLDER_MAPPING;
+pub use vitest_test_correspondence::RULE_ID as VITEST_TEST_CORRESPONDENCE;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -38,53 +69,6 @@ pub struct RuleFinding {
     pub import: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub target: Option<String>,
-}
-
-/// Run the filesystem rules using a pre-discovered file list so the
-/// caller's single `git ls-files` / walker result is reused — no second walk.
-pub fn run_filesystem_rules_with_files(
-    root: &Path,
-    config_path: Option<&Path>,
-    files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
-    let config = crate::config::v2::load_v2_config(root, config_path)?;
-    let mut findings = Vec::new();
-    if rule_enabled(&config, AGENTS_MD_MAX_SIZE) {
-        findings.extend(agents_md_max_size::check_with_files(root, &config, files)?);
-    }
-    if rule_enabled(&config, RUST_MAX_LINES_PER_FILE) {
-        let rule_findings = rust_max_lines_per_file::check_with_files(root, &config, files)?;
-        findings.extend(rule_findings);
-    }
-    if rule_enabled(&config, RUST_NO_INLINE_TESTS) {
-        let rule_findings = rust_no_inline_tests::check_with_files(root, &config, files)?;
-        findings.extend(rule_findings);
-    }
-    if rule_enabled(&config, RUST_NO_INLINE_ALLOWS) {
-        let rule_findings = rust_no_inline_allows::check_with_files(root, &config, files)?;
-        findings.extend(rule_findings);
-    }
-    Ok(findings)
-}
-
-/// Standalone entry point (used by tests / direct invocations without a
-/// pre-discovered file list). Each rule does its own discovery.
-pub fn run_filesystem_rules(root: &Path, config_path: Option<&Path>) -> Result<Vec<RuleFinding>> {
-    let config = crate::config::v2::load_v2_config(root, config_path)?;
-    let mut findings = Vec::new();
-    if rule_enabled(&config, AGENTS_MD_MAX_SIZE) {
-        findings.extend(agents_md_max_size::check(root, &config)?);
-    }
-    if rule_enabled(&config, RUST_MAX_LINES_PER_FILE) {
-        findings.extend(rust_max_lines_per_file::check(root, &config)?);
-    }
-    if rule_enabled(&config, RUST_NO_INLINE_TESTS) {
-        findings.extend(rust_no_inline_tests::check(root, &config)?);
-    }
-    if rule_enabled(&config, RUST_NO_INLINE_ALLOWS) {
-        findings.extend(rust_no_inline_allows::check(root, &config)?);
-    }
-    Ok(findings)
 }
 
 pub(crate) fn rule_enabled(config: &crate::config::v2::NoMistakesConfig, rule_id: &str) -> bool {

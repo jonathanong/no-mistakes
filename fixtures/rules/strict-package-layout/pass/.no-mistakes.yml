@@ -1,0 +1,11 @@
+rules:
+  - rule: strict-package-layout
+    scope: repository
+    options:
+      testFilePatterns: ["*.test.mts"]
+      testDirName: "__tests__"
+      packages:
+        - root: queues
+          sourceExtension: .mts
+          allowedRootFiles: [package.json, config.mts, queues.mts, enqueues.mts]
+          allowedSubdirs: [enqueues]

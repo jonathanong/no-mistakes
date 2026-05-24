@@ -51,8 +51,10 @@ fn load_tsconfig_inner(
 
     let content = std::fs::read_to_string(path).context(format!("reading {}", path.display()))?;
 
-    let v: serde_json::Value =
-        serde_json::from_str(&content).context(format!("parsing {}", path.display()))?;
+    let parsed: Option<serde_json::Value> =
+        jsonc_parser::parse_to_serde_value(&content, &jsonc_parser::ParseOptions::default())
+            .map_err(|e| anyhow::anyhow!("parsing {}: {e}", path.display()))?;
+    let v = parsed.unwrap_or(serde_json::Value::Null);
 
     let own_paths: Option<Vec<(String, Vec<String>)>> = v
         .get("compilerOptions")

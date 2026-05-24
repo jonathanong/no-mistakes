@@ -1,0 +1,7 @@
+rules:
+  - rule: shellcheck-runner
+    scope: repository
+    options:
+      shebangDirs: []
+      shellcheck:
+        severity: warning

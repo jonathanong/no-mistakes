@@ -1,0 +1,3 @@
+rules:
+  - rule: package-json-registry-only
+    scope: repository

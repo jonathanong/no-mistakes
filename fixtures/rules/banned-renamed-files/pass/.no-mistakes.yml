@@ -1,0 +1,9 @@
+rules:
+  - rule: banned-renamed-files
+    scope: repository
+    options:
+      scope: web
+      bannedBasenames:
+        - name: middleware
+          message: "rename middleware.{ts,mts,js} to proxy.ts (Next.js 16+)"
+      extensions: [".ts", ".mts", ".js"]

@@ -1,0 +1,9 @@
+rules:
+  - rule: tsconfig-alias-folder-mapping
+    scope: repository
+    options:
+      tsconfig: tsconfig.json
+      baseDir: backend
+      mappings:
+        - prefix: "@agents"
+          root: agents

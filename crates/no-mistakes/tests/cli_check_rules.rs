@@ -241,6 +241,56 @@ fn rust_max_lines_per_file_json_has_rule_id() {
     );
 }
 
+// ── no-git-identity-mutation ────────────────────────────────────────────────
+
+#[test]
+fn no_git_identity_mutation_fails_for_identity_config() {
+    let root = fixture("no-git-identity-mutation", "fail");
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    let body = format!("{findings:?}");
+
+    assert!(!findings.is_empty(), "expected findings");
+    assert!(body.contains("no-git-identity-mutation"), "{body}");
+    assert!(body.contains("setup.sh"), "{body}");
+}
+
+// ── no-empty-or-comments-only-files ─────────────────────────────────────────
+
+#[test]
+fn no_empty_or_comments_only_files_fails_for_comment_only_fixture() {
+    let root = fixture("no-empty-or-comments-only-files", "fail");
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    let body = format!("{findings:?}");
+
+    assert!(!findings.is_empty(), "expected findings");
+    assert!(body.contains("no-empty-or-comments-only-files"), "{body}");
+    assert!(body.contains("placeholder.ts"), "{body}");
+}
+
+#[test]
+fn no_empty_or_comments_only_files_cli_fails_for_comment_only_fixture() {
+    let root = fixture("no-empty-or-comments-only-files", "fail");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+
+    assert!(!out.status.success(), "expected exit 1");
+    assert!(body.contains("no-empty-or-comments-only-files"), "{body}");
+    assert!(body.contains("placeholder.ts"), "{body}");
+}
+
+// ── package-json-registry-only ──────────────────────────────────────────────
+
+#[test]
+fn package_json_registry_only_fails_for_non_registry_dependency() {
+    let root = fixture("package-json-registry-only", "fail");
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    let body = format!("{findings:?}");
+
+    assert!(!findings.is_empty(), "expected findings");
+    assert!(body.contains("package-json-registry-only"), "{body}");
+    assert!(body.contains("package.json"), "{body}");
+}
+
 // ── rust-no-inline-tests ──────────────────────────────────────────────────────
 
 #[test]

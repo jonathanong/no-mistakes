@@ -1,0 +1,9 @@
+rules:
+  - rule: file-extension-policy
+    scope: repository
+    options:
+      scopes:
+        - path: backend
+          bannedExtensions: [".js"]
+        - path: backend/services
+          bannedExtensions: [".js"]

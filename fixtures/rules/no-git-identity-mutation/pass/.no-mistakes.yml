@@ -1,0 +1,4 @@
+rules:
+  - rule: no-git-identity-mutation
+    scope: repository
+    options: {}

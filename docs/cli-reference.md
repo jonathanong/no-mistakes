@@ -234,28 +234,28 @@ The `rust-max-lines-per-file`, `rust-no-inline-tests`,
 Global Check section above and the configuration reference for available
 options.
 
-### Next.js Feature Ban Rules via `no-mistakes check`
+### Configurable Filesystem Rules via `no-mistakes check`
 
-Use zero-option project rules to disable Next.js features:
+Additional filesystem rules can be configured via `rules:` entries in
+`.no-mistakes.yml`:
 
-```yml
-projects:
-  web:
-    type: nextjs
-    root: web
-
-rules:
-  - rule: nextjs-no-api-routes
-    projects: [web]
-  - rule: nextjs-no-caching
-    projects: [web]
-```
-
-`nextjs-no-api-routes` rejects App Router `app/**/route.*` and
-`src/app/**/route.*` handlers and Pages Router `pages/api/**` and
-`src/pages/api/**` files. `nextjs-no-caching` rejects Next.js cache
-directives, `next/cache` APIs, cached `fetch` options, static cache segment
-config, and cache-related `next.config.*` settings.
+| Rule | Description |
+| --- | --- |
+| `require-test-per-subdir` | Requires at least one test file (matching a glob) in each first-level subdirectory of configured `roots`. |
+| `require-files-in-subdirs` | Requires each subdirectory under configured `roots` to contain specific files. |
+| `strict-package-layout` | Validates that packages under `roots` contain exactly the allowed set of files/directories. |
+| `required-local-docs` | Requires documentation files (e.g. `AGENTS.md`) to exist in configured directories. |
+| `required-doc-section` | Requires specific heading text in documentation files. |
+| `tsconfig-alias-folder-mapping` | Enforces alias-prefix and folder mapping consistency for configured `tsconfig.json` path aliases. |
+| `no-git-identity-mutation` | Rejects shell scripts and GitHub Actions workflows that mutate git user identity. |
+| `package-json-registry-only` | Requires all `package.json` dependencies to resolve from the npm registry (no `file:`, `link:`, or `git+` specifiers). |
+| `no-empty-or-comments-only-files` | Flags files that are empty or contain only comments. |
+| `vitest-test-correspondence` | Enforces that every test file outside `__tests__/` has a corresponding source file, and every source file has a corresponding test file. |
+| `file-extension-policy` | Enforces allowed/banned file extensions per configured scope. |
+| `banned-renamed-files` | Rejects files whose basename matches a banned pattern. |
+| `lockfile-allowlist` | Enforces that only allowed lockfile filenames (e.g. `pnpm-lock.yaml`) are present; bans disallowed ones (e.g. `yarn.lock`, `package-lock.json`). |
+| `shellcheck-runner` | Runs `shellcheck` on `.sh` files and configured shell scripts; skips silently if `shellcheck` is not installed. |
+| `doc-consistency` | Enforces that required files exist, contain required headings/substrings, and do not contain banned substrings. |
 
 ### Storybook Component Coverage via `no-mistakes check`
 
@@ -294,6 +294,14 @@ available it falls back to `**/*.stories.{ts,tsx,js,jsx}`. Test files are
 excluded from component selection by default using configured Vitest,
 Playwright, and conventional test globs.
 
+Use `// no-mistakes-disable-next-line require-storybook-stories: reason` for a
+single export or `// no-mistakes-disable-file require-storybook-stories: reason`
+for a whole file.
+
+`required_props` narrows automatic include-all selection to files that mention
+at least one configured prop. Explicit `include` globs still select matching
+component files even when those props are absent.
+
 `allow_colocated_tests: true` treats a same-directory test file as coverage for
 components in the matching source file. The accepted names are
 `<stem>.test.tsx`, `<stem>.mock.test.tsx`, `<stem>.test.ts`, and
@@ -308,13 +316,28 @@ implementation components.
 Story coverage uses AST-based runtime imports. Type-only imports such as
 `import type { Button } from "../components/Button"` do not count as coverage.
 
-Use `// no-mistakes-disable-next-line require-storybook-stories: reason` for a
-single export or `// no-mistakes-disable-file require-storybook-stories: reason`
-for a whole file.
+### Next.js Feature Ban Rules via `no-mistakes check`
 
-`required_props` narrows automatic include-all selection to files that mention
-at least one configured prop. Explicit `include` globs still select matching
-component files even when those props are absent.
+Use zero-option project rules to disable Next.js features:
+
+```yml
+projects:
+  web:
+    type: nextjs
+    root: web
+
+rules:
+  - rule: nextjs-no-api-routes
+    projects: [web]
+  - rule: nextjs-no-caching
+    projects: [web]
+```
+
+`nextjs-no-api-routes` rejects App Router `app/**/route.*` and
+`src/app/**/route.*` handlers and Pages Router `pages/api/**` and
+`src/pages/api/**` files. `nextjs-no-caching` rejects Next.js cache
+directives, `next/cache` APIs, cached `fetch` options, static cache segment
+config, and cache-related `next.config.*` settings.
 
 ### Playwright
 

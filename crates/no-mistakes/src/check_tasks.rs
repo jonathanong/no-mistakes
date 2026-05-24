@@ -9,6 +9,28 @@ use no_mistakes::react_traits;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
+const FILESYSTEM_RULE_IDS: &[&str] = &[
+    rules::AGENTS_MD_MAX_SIZE,
+    rules::BANNED_RENAMED_FILES,
+    rules::DOC_CONSISTENCY,
+    rules::FILE_EXTENSION_POLICY,
+    rules::LOCKFILE_ALLOWLIST,
+    rules::NO_EMPTY_OR_COMMENTS_ONLY_FILES,
+    rules::NO_GIT_IDENTITY_MUTATION,
+    rules::PACKAGE_JSON_REGISTRY_ONLY,
+    rules::REQUIRE_FILES_IN_SUBDIRS,
+    rules::REQUIRE_TEST_PER_SUBDIR,
+    rules::REQUIRED_DOC_SECTION,
+    rules::REQUIRED_LOCAL_DOCS,
+    rules::RUST_MAX_LINES_PER_FILE,
+    rules::RUST_NO_INLINE_ALLOWS,
+    rules::RUST_NO_INLINE_TESTS,
+    rules::SHELLCHECK_RUNNER,
+    rules::STRICT_PACKAGE_LAYOUT,
+    rules::TSCONFIG_ALIAS_FOLDER_MAPPING,
+    rules::VITEST_TEST_CORRESPONDENCE,
+];
+
 pub(crate) struct CheckTask<T> {
     pub(crate) findings: T,
     pub(crate) warning: Option<String>,
@@ -145,10 +167,9 @@ pub(crate) fn run_filesystem_rules_check(
 }
 
 pub(crate) fn filesystem_rules_configured(config: &NoMistakesConfig) -> bool {
-    rule_configured(config, rules::AGENTS_MD_MAX_SIZE)
-        || rule_configured(config, rules::RUST_MAX_LINES_PER_FILE)
-        || rule_configured(config, rules::RUST_NO_INLINE_TESTS)
-        || rule_configured(config, rules::RUST_NO_INLINE_ALLOWS)
+    FILESYSTEM_RULE_IDS
+        .iter()
+        .any(|rule_id| rule_configured(config, rule_id))
 }
 
 pub(crate) fn forbidden_dependencies_configured(config: &NoMistakesConfig) -> bool {

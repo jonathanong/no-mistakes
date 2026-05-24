@@ -541,3 +541,16 @@ fn run_check_with_facts_surfaces_invalid_tsconfig() {
         "expected tsconfig path in error, got: {error:#}"
     );
 }
+
+#[test]
+fn run_check_with_facts_returns_empty_when_no_codebase_rules_enabled() {
+    // Exercises run.rs line 48: early return when any_codebase_rule_enabled is false.
+    let tmp = tempfile::tempdir().unwrap();
+    // Default config has no rules configured → any_codebase_rule_enabled returns false.
+    let shared = crate::codebase::check_facts::CheckFactMap::default();
+    let findings = run_check_with_facts(tmp.path(), None, None, &shared).unwrap();
+    assert!(
+        findings.is_empty(),
+        "expected empty findings when no codebase rules are enabled: {findings:?}"
+    );
+}
