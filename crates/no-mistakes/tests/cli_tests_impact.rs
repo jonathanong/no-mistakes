@@ -99,6 +99,47 @@ fn tests_plan_json_outputs_impacted_tests() {
 }
 
 #[test]
+fn tests_plan_ignores_deleted_changed_files() {
+    let root = fixture("tests-impact");
+    let output = run(&[
+        "tests",
+        "plan",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "deleted.mts",
+        "--changed-file",
+        "c.mts",
+        "--json",
+    ]);
+
+    assert!(output.status.success());
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+
+    assert_eq!(plan["fallback_triggered"], false);
+    assert!(plan["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|warning| warning["type"] != "file-not-found"));
+
+    let selected = plan["selected_tests"].as_array().unwrap();
+    let mut names: Vec<&str> = selected
+        .iter()
+        .map(|test| test["test_file"].as_str().unwrap())
+        .collect();
+    names.sort_unstable();
+    assert_eq!(names, vec!["a.test.mts", "dynamic.test.mts"]);
+    assert!(selected.iter().all(|test| {
+        test["reasons"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|reason| reason["changed_file"] != "deleted.mts")
+    }));
+}
+
+#[test]
 fn tests_plan_matches_playwright_route_when_page_dependency_changes() {
     let root = fixture("playwright-impact-routing");
     let plan = plan_for(&root, "web/components/UserCard.tsx");

@@ -239,6 +239,35 @@ fn tests_plan_why_comment_and_graph_exports_return_reports() {
 }
 
 #[test]
+fn tests_plan_json_ignores_deleted_changed_files() {
+    let output = tests_plan_json_impl(
+        json!({
+            "framework": "vitest",
+            "root": fixture_root("test-plan-config"),
+            "changedFiles": ["web/app/deleted.tsx", "source.ts"],
+            "limitFiles": 1
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(plan["fallback_triggered"], false);
+    assert!(plan["fallback_reason"].is_null());
+    assert!(plan["warnings"].as_array().unwrap().is_empty());
+    assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
+    assert!(plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|test| test["reasons"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|reason| { reason["changed_file"] != "web/app/deleted.tsx" })));
+}
+
+#[test]
 fn playwright_json_exports_return_analyzer_reports() {
     let root = fixture("nextjs-coverage", "covered");
     let check = playwright_check_json_impl(json!({ "root": root }).to_string()).unwrap();

@@ -64,6 +64,13 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Vec<
     Ok(result)
 }
 
+pub(crate) fn existing_changed_files(changed_files: Vec<PathBuf>) -> Vec<PathBuf> {
+    changed_files
+        .into_iter()
+        .filter(|changed| changed.exists())
+        .collect()
+}
+
 fn get_git_changed_files(
     root: &Path,
     base: Option<&str>,
