@@ -241,3 +241,22 @@ fn source_candidates_jsx_extension() {
     assert!(candidates.contains(&"comp.js".to_string()));
     assert!(candidates.contains(&"comp.jsx".to_string()));
 }
+
+#[test]
+fn source_candidates_mjs_extension() {
+    // .test.mjs → only looks for .mjs sources, not .ts/.tsx
+    let candidates = source_candidates("src", "utils", ".test.mjs");
+    assert!(candidates.contains(&"src/utils.mjs".to_string()));
+    assert!(candidates.contains(&"src/index.mjs".to_string()));
+    assert!(!candidates.iter().any(|c| c.ends_with(".ts")));
+    assert!(!candidates.iter().any(|c| c.ends_with(".tsx")));
+}
+
+#[test]
+fn source_candidates_cjs_extension() {
+    // .test.cjs → only looks for .cjs sources
+    let candidates = source_candidates("src", "utils", ".test.cjs");
+    assert!(candidates.contains(&"src/utils.cjs".to_string()));
+    assert!(candidates.contains(&"src/index.cjs".to_string()));
+    assert!(!candidates.iter().any(|c| c.ends_with(".ts")));
+}

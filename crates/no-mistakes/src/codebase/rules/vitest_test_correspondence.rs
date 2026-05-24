@@ -87,7 +87,8 @@ pub(crate) fn source_candidates(dir: &str, stem: &str, test_ext: &str) -> Vec<St
     };
     let src_ext = test_ext.rsplit('.').next().unwrap_or("ts");
     match src_ext {
-        "mts" | "cts" => vec![
+        // Module-specific: only look for the exact extension
+        "mts" | "cts" | "mjs" | "cjs" => vec![
             format!("{p}{stem}.{src_ext}"),
             format!("{p}index.{src_ext}"),
         ],

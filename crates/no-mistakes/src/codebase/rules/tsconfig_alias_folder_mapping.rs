@@ -21,6 +21,8 @@ pub(crate) struct Options {
     pub(crate) tsconfig: PathBuf,
     pub(crate) base_dir: String,
     pub(crate) mappings: Vec<AliasMapping>,
+    /// When true, also verify that each expected target directory exists on disk.
+    pub(crate) check_exists: bool,
 }
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
@@ -58,12 +60,13 @@ fn check_tsconfig(root: &Path, opts: &Options) -> Result<Vec<RuleFinding>> {
     let all_paths: BTreeMap<String, Vec<String>> = ts_config.paths.into_iter().collect();
     let mut findings = Vec::new();
     for (alias, targets) in &all_paths {
-        findings.extend(check_alias(&tsconfig_str, alias, targets, opts, &all_paths));
+        findings.extend(check_alias(root, &tsconfig_str, alias, targets, opts, &all_paths));
     }
     Ok(findings)
 }
 
 fn check_alias(
+    root: &Path,
     tsconfig_str: &str,
     alias: &str,
     targets: &[String],
@@ -84,6 +87,15 @@ fn check_alias(
                         tsconfig_str,
                         &format!("{tsconfig_str}: {alias} must target {expected}, not {target}"),
                     ));
+                } else if opts.check_exists {
+                    let dir_path = expected.trim_end_matches("/*").trim_end_matches('*');
+                    let abs_dir = root.join(dir_path.trim_start_matches("./"));
+                    if !abs_dir.is_dir() {
+                        findings.push(make_finding(
+                            tsconfig_str,
+                            &format!("{tsconfig_str}: {alias} targets {dir_path}, which does not exist on disk"),
+                        ));
+                    }
                 }
             }
         }

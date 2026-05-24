@@ -27,12 +27,18 @@ pub fn check_required_doc_section(
 pub(crate) fn check_required_doc_section_with_files(
     root: &Path,
     config: &NoMistakesConfig,
-    files: &[PathBuf],
+    all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(REQUIRED_DOC_SECTION_RULE_ID) {
         let opts: DocSectionOptions = rule.rule_options();
-        findings.extend(scan_doc_section(root, &opts, files)?);
+        let target_roots = crate::codebase::rules::target_roots(root, config, rule);
+        let files: Vec<PathBuf> = all_files
+            .iter()
+            .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
+            .cloned()
+            .collect();
+        findings.extend(scan_doc_section(root, &opts, &files)?);
     }
     crate::codebase::rules::sort_findings(&mut findings);
     Ok(findings)
