@@ -199,7 +199,7 @@ fn sorted_warnings(mut warnings: Vec<Warning>) -> Vec<Warning> {
 fn effective_global_config_fallback(env: &TestPlanEnvironment, args: &PlanArgs) -> bool {
     args.global_config_fallback
         .or(env.global_config_fallback)
-        .unwrap_or(true)
+        .unwrap_or(false)
 }
 
 fn configured_environment(
@@ -434,17 +434,14 @@ fn project_dependency_patterns(
         TestPlanProjectDependency::All(false) => Vec::new(),
         TestPlanProjectDependency::All(true) => {
             let root = project.root.as_deref().unwrap_or(project_name);
-            let mut patterns = project_root_patterns(root);
             if project.include.is_empty() {
-                patterns
+                project_root_patterns(root)
             } else {
-                patterns.extend(
-                    project
-                        .include
-                        .iter()
-                        .map(|pattern| project_relative_pattern(root, pattern)),
-                );
-                patterns
+                project
+                    .include
+                    .iter()
+                    .map(|pattern| project_relative_pattern(root, pattern))
+                    .collect()
             }
         }
         TestPlanProjectDependency::Patterns(patterns) => {

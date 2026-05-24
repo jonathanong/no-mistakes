@@ -214,41 +214,23 @@ fn tests_plan_matches_playwright_route_when_parent_layout_changes() {
 }
 
 #[test]
-fn tests_plan_matches_all_playwright_tests_when_next_proxy_changes() {
+fn tests_plan_does_not_fallback_when_next_proxy_changes_by_default() {
     let root = fixture("playwright-impact-routing");
     let plan = plan_for(&root, "web/proxy.ts");
 
-    assert_eq!(plan["fallback_triggered"], true);
-    assert!(plan["fallback_reason"]
-        .as_str()
-        .unwrap()
-        .contains("Global configuration file changed"));
-    let selected = plan["selected_tests"].as_array().unwrap();
-    assert_eq!(selected.len(), 1);
-    assert_eq!(selected[0]["test_file"], "tests/e2e/routes.spec.ts");
-    assert_eq!(
-        only_reason_via(&plan, "tests/e2e/routes.spec.ts"),
-        vec!["global configuration"]
-    );
+    assert_eq!(plan["fallback_triggered"], false);
+    assert!(plan["fallback_reason"].is_null());
+    assert!(plan["selected_tests"].as_array().unwrap().is_empty());
 }
 
 #[test]
-fn tests_plan_matches_all_playwright_tests_for_src_app_next_project_proxy() {
+fn tests_plan_does_not_fallback_for_src_app_next_project_proxy_by_default() {
     let root = fixture("playwright-impact-routing");
     let plan = plan_for(&root, "web/src-only/proxy.ts");
 
-    assert_eq!(plan["fallback_triggered"], true);
-    assert!(plan["fallback_reason"]
-        .as_str()
-        .unwrap()
-        .contains("Global configuration file changed"));
-    let selected = plan["selected_tests"].as_array().unwrap();
-    assert_eq!(selected.len(), 1);
-    assert_eq!(selected[0]["test_file"], "tests/e2e/routes.spec.ts");
-    assert_eq!(
-        only_reason_via(&plan, "tests/e2e/routes.spec.ts"),
-        vec!["global configuration"]
-    );
+    assert_eq!(plan["fallback_triggered"], false);
+    assert!(plan["fallback_reason"].is_null());
+    assert!(plan["selected_tests"].as_array().unwrap().is_empty());
 }
 
 #[test]
@@ -305,7 +287,7 @@ fn tests_plan_md_outputs_markdown_table() {
 }
 
 #[test]
-fn tests_plan_fallback_on_package_json() {
+fn tests_plan_does_not_fallback_on_package_json_by_default() {
     let root = fixture("tests-impact");
     let output = run(&[
         "tests",
@@ -314,6 +296,30 @@ fn tests_plan_fallback_on_package_json() {
         root.to_str().unwrap(),
         "--changed-file",
         "package.json",
+        "--json",
+    ]);
+
+    assert!(output.status.success());
+    let json_str = stdout(&output);
+    let plan: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+
+    assert_eq!(plan["fallback_triggered"], false);
+    assert!(plan["fallback_reason"].is_null());
+    assert!(plan["selected_tests"].as_array().unwrap().is_empty());
+}
+
+#[test]
+fn tests_plan_can_opt_into_global_config_fallback() {
+    let root = fixture("tests-impact");
+    let output = run(&[
+        "tests",
+        "plan",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "package.json",
+        "--global-config-fallback",
+        "true",
         "--json",
     ]);
 
@@ -342,7 +348,7 @@ fn tests_plan_fallback_on_package_json() {
 }
 
 #[test]
-fn tests_plan_global_config_fallback_can_be_disabled_without_framework() {
+fn tests_plan_global_config_fallback_disabled_without_framework() {
     let root = fixture("tests-impact");
     let output = run(&[
         "tests",
