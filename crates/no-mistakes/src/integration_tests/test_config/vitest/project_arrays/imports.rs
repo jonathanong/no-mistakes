@@ -22,7 +22,9 @@ pub(super) fn import_bindings(program: &Program<'_>) -> BTreeMap<String, ImportB
                     specifier.local.name.to_string(),
                     specifier.imported.name().to_string(),
                 ),
-                ImportDeclarationSpecifier::ImportNamespaceSpecifier(_) => continue,
+                ImportDeclarationSpecifier::ImportNamespaceSpecifier(specifier) => {
+                    (specifier.local.name.to_string(), "*".to_string())
+                }
             };
             bindings.insert(
                 local,

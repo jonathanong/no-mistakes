@@ -5,6 +5,7 @@ use super::{
 use crate::integration_tests::test_config::vitest::shared;
 use crate::integration_tests::test_config::vitest::Options;
 use oxc_ast::ast::{BindingPattern, Declaration, ExportDefaultDeclarationKind, Program, Statement};
+use std::collections::BTreeSet;
 use std::path::Path;
 
 pub(super) fn exported_options(
@@ -14,6 +15,7 @@ pub(super) fn exported_options(
     parent: &mut Ctx<'_, '_>,
     exported: &str,
 ) -> Vec<Options> {
+    let mut local_seen = BTreeSet::new();
     let mut ctx = Ctx {
         source,
         bindings: shared::top_level_object_bindings(program),
@@ -23,11 +25,11 @@ pub(super) fn exported_options(
         path,
         root: parent.root,
         seen: parent.seen,
-        local_seen: parent.local_seen,
+        local_seen: &mut local_seen,
     };
     for statement in &program.body {
         match statement {
-            Statement::ExportNamedDeclaration(export) if exported != "default" => {
+            Statement::ExportNamedDeclaration(export) => {
                 if let Some(options) = named_export_options(export, exported, &mut ctx) {
                     return options;
                 }

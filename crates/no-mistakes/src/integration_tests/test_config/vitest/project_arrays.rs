@@ -8,6 +8,7 @@ use oxc_ast::ast::{
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
+mod calls;
 mod exports;
 mod imports;
 
@@ -86,29 +87,7 @@ pub(super) fn expression_options(
     match expression {
         Expression::ArrayExpression(array) => array_options(array, ctx),
         Expression::Identifier(identifier) => identifier_options(identifier.name.as_str(), ctx),
-        Expression::CallExpression(call) => {
-            let Expression::Identifier(identifier) = &call.callee else {
-                return Vec::new();
-            };
-            let name = identifier.name.as_str();
-            if let Some(expression) = ctx.bindings.get(name).copied() {
-                let options = helper_expression_options(expression, ctx);
-                if !options.is_empty() {
-                    return options;
-                }
-            }
-            if let Some(body) = ctx.functions.get(name).copied() {
-                let options = body_return_options(body, ctx);
-                if !options.is_empty() {
-                    return options;
-                }
-            }
-            ctx.imports
-                .get(name)
-                .cloned()
-                .map(|import| imported_options(&import, ctx))
-                .unwrap_or_default()
-        }
+        Expression::CallExpression(call) => calls::call_options(&call.callee, ctx),
         Expression::ParenthesizedExpression(parenthesized) => {
             expression_options(&parenthesized.expression, ctx)
         }
@@ -176,7 +155,10 @@ pub(super) fn expression_statement_options(
     expression_options(&statement.expression, ctx)
 }
 
-fn imported_options(import: &ImportBinding, ctx: &mut Ctx<'_, '_>) -> Vec<Options> {
+pub(in crate::integration_tests::test_config::vitest::project_arrays) fn imported_options(
+    import: &ImportBinding,
+    ctx: &mut Ctx<'_, '_>,
+) -> Vec<Options> {
     let Some(path) = ctx.resolver.resolve(&import.source, ctx.path) else {
         return Vec::new();
     };
