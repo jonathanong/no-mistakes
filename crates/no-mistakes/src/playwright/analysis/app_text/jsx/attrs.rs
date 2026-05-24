@@ -1,5 +1,8 @@
 use oxc_span::GetSpan;
 
+#[cfg(test)]
+mod tests;
+
 pub(crate) fn attr_exists_at_runtime(
     opening: &oxc_ast::ast::JSXOpeningElement<'_>,
     name: &str,
