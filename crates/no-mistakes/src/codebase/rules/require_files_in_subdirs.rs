@@ -2,7 +2,7 @@ use super::RuleFinding;
 use crate::codebase::ts_source::{discover_files, relative_slash_path};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use globset::Glob;
+use globset::GlobBuilder;
 use rayon::prelude::*;
 use serde::Deserialize;
 use std::collections::HashSet;
@@ -85,8 +85,7 @@ fn check_subdir(
     let rel = relative_slash_path(root, subdir);
 
     for required in &spec.required_files {
-        let candidate = subdir.join(required);
-        if !file_set.contains(&candidate) {
+        if !pattern_matches(subdir, required, files, file_set)? {
             findings.push(RuleFinding {
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
@@ -115,6 +114,29 @@ fn check_subdir(
     Ok(())
 }
 
+fn pattern_matches(
+    subdir: &Path,
+    pattern: &str,
+    files: &[PathBuf],
+    file_set: &HashSet<&PathBuf>,
+) -> Result<bool> {
+    if is_glob(pattern) {
+        let glob = GlobBuilder::new(pattern)
+            .literal_separator(true)
+            .build()?
+            .compile_matcher();
+        return Ok(files.iter().any(|f| {
+            f.strip_prefix(subdir)
+                .ok()
+                .map(|rel| relative_slash_path(Path::new(""), rel))
+                .is_some_and(|rel| glob.is_match(rel))
+        }));
+    }
+
+    let candidate = subdir.join(pattern);
+    Ok(file_set.contains(&candidate))
+}
+
 fn group_matches(
     subdir: &Path,
     group: &[String],
@@ -122,25 +144,15 @@ fn group_matches(
     file_set: &HashSet<&PathBuf>,
 ) -> Result<bool> {
     for pattern in group {
-        if pattern.contains('*') {
-            let glob = Glob::new(pattern.as_str())?.compile_matcher();
-            let matched = files.iter().any(|f| {
-                f.parent() == Some(subdir)
-                    && f.file_name()
-                        .and_then(|n| n.to_str())
-                        .is_some_and(|n| glob.is_match(n))
-            });
-            if matched {
-                return Ok(true);
-            }
-        } else {
-            let candidate = subdir.join(pattern.as_str());
-            if file_set.contains(&candidate) {
-                return Ok(true);
-            }
+        if pattern_matches(subdir, pattern, files, file_set)? {
+            return Ok(true);
         }
     }
     Ok(false)
+}
+
+fn is_glob(pattern: &str) -> bool {
+    pattern.contains('*') || pattern.contains('?') || pattern.contains('[') || pattern.contains('{')
 }
 
 fn first_level_subdirs(root: &Path, files: &[PathBuf]) -> Vec<PathBuf> {

@@ -61,6 +61,42 @@ fn fail_fixture_reports_missing_files() {
 }
 
 #[test]
+fn nested_direct_child_glob_fixture_passes() {
+    let root = fixture("nested-direct-child-pass");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let files: Vec<PathBuf> = [
+        root.join("packages/email/package.json"),
+        root.join("packages/email/enqueues/email.mts"),
+        root.join("packages/email/workers/email.mts"),
+    ]
+    .into();
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert!(
+        findings.is_empty(),
+        "nested direct-child globs should match package-relative files: {findings:?}"
+    );
+}
+
+#[test]
+fn nested_direct_child_glob_fixture_reports_missing_group() {
+    let root = fixture("nested-direct-child-fail");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let files: Vec<PathBuf> = [
+        root.join("packages/email/package.json"),
+        root.join("packages/email/enqueues/email.mts"),
+        root.join("packages/email/workers/nested/email.mts"),
+    ]
+    .into();
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1, "expected one finding, got: {findings:?}");
+    assert!(
+        findings[0].message.contains("workers/*.mts"),
+        "{}",
+        findings[0].message
+    );
+}
+
+#[test]
 fn no_op_when_packages_empty() {
     let tmp = tempfile::tempdir().unwrap();
     let config = config_with_rule("{}");

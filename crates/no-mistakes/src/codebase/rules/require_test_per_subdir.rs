@@ -18,6 +18,7 @@ pub(crate) struct Options {
     pub(crate) roots: Vec<PathBuf>,
     pub(crate) exclude_dirs: Vec<String>,
     pub(crate) test_glob: Option<String>,
+    pub(crate) direct_child: bool,
 }
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
@@ -85,12 +86,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
 
         let subdirs = first_level_subdirs(&abs_root, files, &exclude_set);
         for subdir in subdirs {
-            let has_test = files.iter().any(|f| {
-                f.starts_with(&subdir)
-                    && f.file_name()
-                        .and_then(|n| n.to_str())
-                        .is_some_and(|n| glob.is_match(n))
-            });
+            let has_test = has_matching_test(&subdir, files, &glob, opts.direct_child);
             if !has_test {
                 let rel = relative_slash_path(root, &subdir);
                 findings.push(RuleFinding {
@@ -105,6 +101,25 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
         }
     }
     Ok(findings)
+}
+
+fn has_matching_test(
+    subdir: &Path,
+    files: &[PathBuf],
+    glob: &globset::GlobMatcher,
+    direct_child: bool,
+) -> bool {
+    files.iter().any(|f| {
+        let in_scope = if direct_child {
+            f.parent() == Some(subdir)
+        } else {
+            f.starts_with(subdir)
+        };
+        in_scope
+            && f.file_name()
+                .and_then(|n| n.to_str())
+                .is_some_and(|n| glob.is_match(n))
+    })
 }
 
 fn first_level_subdirs(

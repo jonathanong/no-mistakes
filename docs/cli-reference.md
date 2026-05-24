@@ -259,6 +259,20 @@ Additional filesystem rules can be configured via `rules:` entries in
 | `shellcheck-runner` | Runs `shellcheck` on `.sh` files and configured shell scripts; skips silently if `shellcheck` is not installed. |
 | `doc-consistency` | Enforces that required files exist, contain required headings/substrings, and do not contain banned substrings. |
 
+`require-files-in-subdirs` accepts exact relative paths and relative globs in
+`requiredFiles` and `requireAnyOf`. Globs are evaluated relative to each matched
+subdirectory, so `enqueues/*.mts` requires a direct child file under that nested
+folder for every package.
+
+`require-test-per-subdir` supports `directChild: true` when the matching
+`testGlob` must be present directly inside each first-level subdirectory.
+Without `directChild`, the rule keeps the existing recursive descendant match.
+
+`vitest-test-correspondence` supports `direction: both`,
+`direction: test-to-source`, and `direction: source-to-test`. The default is
+`both`; `test-to-source` reports orphan colocated tests only, while
+`source-to-test` reports source files missing tests only.
+
 Rule findings can be suppressed with documented `no-mistakes` comments. Use
 `// no-mistakes-disable-file <rule-id>: reason` in a leading file comment to
 disable a rule for the whole file, `// no-mistakes-disable-next-line <rule-id>:
