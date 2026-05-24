@@ -270,6 +270,7 @@ rules:
       stories: ["storybook/**/*.stories.{ts,tsx,js,jsx}"]
       include: ["components/special/**/*.tsx"]
       exclude: ["components/generated/**"]
+      ignore_index_and_private_files: true
       include_all_react_named_exports: true
       include_all_react_default_exports: true
       required_props: ["data-pw"]
@@ -290,6 +291,15 @@ Playwright, and conventional test globs.
 components in the matching source file. The accepted names are
 `<stem>.test.tsx`, `<stem>.mock.test.tsx`, `<stem>.test.ts`, and
 `<stem>.mock.test.ts`.
+
+Glob matching is slash-aware: `components/ui/*.tsx` matches direct children like
+`components/ui/button.tsx`, while recursive selection requires `**`. Set
+`ignore_index_and_private_files: true` to skip selected files named `index.tsx`,
+`index.jsx`, `_*.tsx`, or `_*.jsx`, which is useful for barrel files and private
+implementation components.
+
+Story coverage uses AST-based runtime imports. Type-only imports such as
+`import type { Button } from "../components/Button"` do not count as coverage.
 
 Use `// no-mistakes-disable-next-line require-storybook-stories: reason` for a
 single export or `// no-mistakes-disable-file require-storybook-stories: reason`

@@ -324,6 +324,11 @@ fn required_prop_and_glob_helpers_match_expected_inputs() {
     assert!(matcher.is_match("components/Card.tsx"));
     assert!(!matcher.is_match("stories/Card.stories.tsx"));
 
+    let direct_child = vec!["components/ui/*.tsx".to_string()];
+    let matcher = types::GlobMatcher::new(&direct_child).unwrap();
+    assert!(matcher.is_match("components/ui/Button.tsx"));
+    assert!(!matcher.is_match("components/ui/sidebar/Context.tsx"));
+
     let invalid = vec!["[".to_string()];
     let error = types::GlobMatcher::new(&invalid).unwrap_err().to_string();
     assert!(error.contains("invalid Storybook coverage glob"));
@@ -1203,6 +1208,84 @@ include_all_react_named_exports: true
             "components/PlainTsx.tsx#PlainTsx",
             "components/SpecOnly.tsx#SpecOnly",
         ]
+    );
+}
+
+#[test]
+fn explicit_include_globs_match_direct_children_only() {
+    let root = fixture("direct-child-scope");
+    let findings = check(
+        &root,
+        &config(
+            r#"
+stories: ["stories/**/*.stories.tsx"]
+include: ["components/ui/*.tsx"]
+"#,
+        ),
+        None,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn ignore_index_and_private_files_skips_selected_source_files() {
+    let root = fixture("private-index-skip");
+    let findings = check(
+        &root,
+        &config(
+            r#"
+stories: ["stories/**/*.stories.tsx"]
+include: ["components/ui/*.tsx"]
+ignore_index_and_private_files: true
+"#,
+        ),
+        None,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn test_files_are_excluded_from_component_selection() {
+    let root = fixture("test-files-excluded");
+    let findings = check(
+        &root,
+        &config(
+            r#"
+stories: ["stories/**/*.stories.tsx"]
+include: ["components/**/*.tsx"]
+"#,
+        ),
+        None,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn type_only_story_imports_do_not_count_as_coverage() {
+    let root = fixture("type-only-story");
+    let findings = check(
+        &root,
+        &config(
+            r#"
+stories: ["stories/**/*.stories.tsx"]
+include: ["components/**/*.tsx"]
+"#,
+        ),
+        None,
+    )
+    .unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "components/Card.tsx");
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some("components/Card.tsx#Card")
     );
 }
 

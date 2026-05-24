@@ -22,6 +22,8 @@ pub(super) struct Options {
     pub(super) allow_files: BTreeMap<String, String>,
     #[serde(alias = "allow_colocated_tests")]
     pub(super) allow_colocated_tests: bool,
+    #[serde(alias = "ignore_index_and_private_files")]
+    pub(super) ignore_index_and_private_files: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -65,7 +67,7 @@ impl GlobMatcher {
         let mut added = 0usize;
         for pattern in patterns {
             let glob = GlobBuilder::new(pattern.trim_start_matches("./"))
-                .literal_separator(false)
+                .literal_separator(true)
                 .build()
                 .with_context(|| format!("invalid Storybook coverage glob `{pattern}`"))?;
             builder.add(glob);
