@@ -2,6 +2,7 @@ use super::PlanArgs;
 use anyhow::{Context, Result};
 use std::collections::HashSet;
 use std::fs;
+use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 
 pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Vec<PathBuf>> {
@@ -67,8 +68,16 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Vec<
 pub(crate) fn existing_changed_files(changed_files: Vec<PathBuf>) -> Vec<PathBuf> {
     changed_files
         .into_iter()
-        .filter(|changed| changed.exists())
+        .filter(|changed| changed_file_is_present(changed))
         .collect()
+}
+
+fn changed_file_is_present(changed: &Path) -> bool {
+    match fs::symlink_metadata(changed) {
+        Ok(_) => true,
+        Err(error) if error.kind() == ErrorKind::NotFound => false,
+        Err(_) => true,
+    }
 }
 
 fn get_git_changed_files(

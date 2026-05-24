@@ -140,6 +140,29 @@ fn tests_plan_ignores_deleted_changed_files() {
 }
 
 #[test]
+fn tests_plan_keeps_changed_broken_symlink_entries() {
+    let root = fixture("tests-impact");
+    let output = run(&[
+        "tests",
+        "plan",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "broken.test.mts",
+        "--json",
+    ]);
+
+    assert!(output.status.success());
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+
+    assert_eq!(plan["fallback_triggered"], false);
+    let selected = plan["selected_tests"].as_array().unwrap();
+    assert_eq!(selected.len(), 1);
+    assert_eq!(selected[0]["test_file"], "broken.test.mts");
+    assert_eq!(selected[0]["reasons"][0]["changed_file"], "broken.test.mts");
+}
+
+#[test]
 fn tests_plan_matches_playwright_route_when_page_dependency_changes() {
     let root = fixture("playwright-impact-routing");
     let plan = plan_for(&root, "web/components/UserCard.tsx");
