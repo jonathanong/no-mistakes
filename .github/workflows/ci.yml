@@ -14,8 +14,8 @@ env:
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
 jobs:
-  test:
-    name: Test
+  tests:
+    name: Tests with coverage
     runs-on: ubuntu-latest
 
     steps:
@@ -89,12 +89,6 @@ jobs:
 
       - name: Run Oxlint
         run: npm run lint:js
-
-      - name: Build no-mistakes check CLI
-        run: cargo build --release -p no-mistakes
-
-      - name: Run no-mistakes check
-        run: target/release/no-mistakes check
 
       - name: Run CSpell
         run: npm run lint:spell
@@ -174,6 +168,28 @@ jobs:
           files: coverage/lcov.info
           flags: javascript
           fail_ci_if_error: true
+
+  ast-analysis:
+    name: AST analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ast-analysis
+
+      - name: Build no-mistakes check CLI
+        run: cargo build --release -p no-mistakes
+
+      - name: Run no-mistakes check
+        run: target/release/no-mistakes check
 
   bench:
     name: Benchmarks
