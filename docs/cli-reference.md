@@ -294,9 +294,9 @@ components in the matching source file. The accepted names are
 
 Glob matching is slash-aware: `components/ui/*.tsx` matches direct children like
 `components/ui/button.tsx`, while recursive selection requires `**`. Set
-`ignore_index_and_private_files: true` to skip selected files named `index.tsx`
-or `_*.tsx`, which is useful for barrel files and private implementation
-components.
+`ignore_index_and_private_files: true` to skip selected files named `index.tsx`,
+`index.jsx`, `_*.tsx`, or `_*.jsx`, which is useful for barrel files and private
+implementation components.
 
 Story coverage uses AST-based runtime imports. Type-only imports such as
 `import type { Button } from "../components/Button"` do not count as coverage.
