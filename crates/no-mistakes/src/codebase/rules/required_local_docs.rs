@@ -121,7 +121,7 @@ pub(crate) fn is_code_file(
         })
 }
 
-pub(crate) fn scan<'a>(root: &Path, opts: &Options, files: &'a [PathBuf]) -> Vec<RuleFinding> {
+pub(crate) fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<RuleFinding> {
     if opts.roots.is_empty() {
         return Vec::new();
     }
