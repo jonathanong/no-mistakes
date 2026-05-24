@@ -47,6 +47,16 @@ fn reports_app_and_pages_api_routes() {
 }
 
 #[test]
+fn disable_line_comment_suppresses_route_file() {
+    let root = fixture();
+    let findings = check(&root, &config()).unwrap();
+
+    assert!(!findings
+        .iter()
+        .any(|finding| finding.file == "web/app/api/inline/route.ts"));
+}
+
+#[test]
 fn generic_runner_checks_nextjs_api_routes() {
     let root = fixture();
     let findings =

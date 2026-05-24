@@ -1,6 +1,8 @@
 use super::RuleFinding;
 use crate::codebase::dependencies::extract::is_indexable;
-use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path};
+use crate::codebase::ts_source::{
+    has_disable_file_comment, has_disable_line_comment, relative_slash_path,
+};
 use crate::config::v2::schema::NoMistakesConfig;
 use anyhow::{bail, Context, Result};
 use rayon::prelude::*;
@@ -135,7 +137,7 @@ fn finding_for_file(
     path: &Path,
     source: &str,
 ) -> Option<RuleFinding> {
-    if has_disable_file_comment(source, RULE_ID) {
+    if has_disable_file_comment(source, RULE_ID) || has_disable_line_comment(source, 1, RULE_ID) {
         return None;
     }
     if !target_roots

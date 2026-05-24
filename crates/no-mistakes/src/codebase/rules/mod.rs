@@ -27,6 +27,7 @@ pub mod filesystem_dispatch;
 mod run;
 
 use serde::Serialize;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 pub use filesystem_dispatch::{run_filesystem_rules, run_filesystem_rules_with_files};
@@ -117,6 +118,27 @@ fn target_project_root(
 pub(crate) fn sort_findings(findings: &mut Vec<RuleFinding>) {
     findings.sort();
     findings.dedup();
+}
+
+pub(crate) fn suppress_rule_findings(root: &Path, findings: &mut Vec<RuleFinding>) {
+    let mut sources: HashMap<String, Option<String>> = HashMap::new();
+    findings.retain(|finding| {
+        let source = sources
+            .entry(finding.file.clone())
+            .or_insert_with(|| std::fs::read_to_string(root.join(&finding.file)).ok());
+        !source
+            .as_deref()
+            .is_some_and(|source| finding_is_suppressed(source, finding))
+    });
+}
+
+fn finding_is_suppressed(source: &str, finding: &RuleFinding) -> bool {
+    let line = finding.line.try_into().ok();
+    crate::codebase::ts_source::has_disable_file_comment(source, &finding.rule)
+        || line.is_some_and(|line| {
+            crate::codebase::ts_source::has_disable_comment(source, line, &finding.rule)
+                || crate::codebase::ts_source::has_disable_line_comment(source, line, &finding.rule)
+        })
 }
 
 #[cfg(test)]

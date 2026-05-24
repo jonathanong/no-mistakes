@@ -516,6 +516,20 @@ fn run_filesystem_rules_executes_enabled_rust_no_inline_allows_rule() {
 }
 
 #[test]
+fn run_filesystem_rules_applies_shared_suppression() {
+    let root = fixture("rules/banned-renamed-files/fail");
+    let config = root.join(".no-mistakes.yml");
+
+    let findings = run_filesystem_rules(&root, Some(&config)).unwrap();
+    let files: Vec<_> = findings
+        .iter()
+        .map(|finding| finding.file.as_str())
+        .collect();
+
+    assert_eq!(files, vec!["web/middleware.ts"]);
+}
+
+#[test]
 fn run_filesystem_rules_with_files_executes_all_enabled_rust_rules() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check-runner/facts-and-filesystem");

@@ -83,6 +83,23 @@ pub fn has_disable_comment(source: &str, stmt_line: u32, rule_id: &str) -> bool 
         .unwrap_or(false)
 }
 
+/// Returns `true` if `stmt_line` (1-based) contains a
+/// `no-mistakes-disable-line <rule_id>` directive comment.
+///
+/// Matches:
+/// - `// no-mistakes-disable-line <rule_id>`
+/// - `// no-mistakes-disable-line <rule_id>: <reason>`
+/// - `// no-mistakes-disable-line <rule_id> <reason>`
+pub fn has_disable_line_comment(source: &str, stmt_line: u32, rule_id: &str) -> bool {
+    if stmt_line == 0 {
+        return false;
+    }
+    source
+        .lines()
+        .nth((stmt_line - 1) as usize)
+        .is_some_and(|line| line_comment_directive_matches(line, "no-mistakes-disable-line ", rule_id))
+}
+
 /// Returns `true` if a leading comment disables `rule_id` for the whole file.
 ///
 /// Matches:
@@ -137,4 +154,47 @@ pub fn has_disable_file_comment(source: &str, rule_id: &str) -> bool {
     }
 
     false
+}
+
+fn line_comment_directive_matches(line: &str, directive: &str, rule_id: &str) -> bool {
+    let Some(comment_start) = line_comment_start(line) else {
+        return false;
+    };
+    let rest = line[comment_start + 2..].trim();
+    let Some(after_directive) = rest.strip_prefix(directive) else {
+        return false;
+    };
+    rule_part_matches(after_directive.trim(), rule_id)
+}
+
+fn line_comment_start(line: &str) -> Option<usize> {
+    let mut quote = None;
+    let mut escaped = false;
+    let mut chars = line.char_indices().peekable();
+    while let Some((idx, ch)) = chars.next() {
+        if let Some(current) = quote {
+            if escaped {
+                escaped = false;
+            } else if ch == '\\' {
+                escaped = true;
+            } else if ch == current {
+                quote = None;
+            }
+            continue;
+        }
+        if matches!(ch, '\'' | '"' | '`') {
+            quote = Some(ch);
+            continue;
+        }
+        if ch == '/' && chars.peek().is_some_and(|(_, next)| *next == '/') {
+            return Some(idx);
+        }
+    }
+    None
+}
+
+fn rule_part_matches(rule_part: &str, rule_id: &str) -> bool {
+    rule_part.strip_prefix(rule_id).is_some_and(|suffix| {
+        suffix.is_empty() || suffix.starts_with(':') || suffix.starts_with(char::is_whitespace)
+    })
 }
