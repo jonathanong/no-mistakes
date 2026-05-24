@@ -202,6 +202,15 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .any(|selector| selector.value == "aria-hidden-bool-button")
     }));
     assert!(targets.iter().any(|target| {
+        target.text == "Expression string shown action"
+            && target.role.as_deref() == Some("button")
+            && !target.hidden
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "aria-hidden-expression-string-button")
+    }));
+    assert!(targets.iter().any(|target| {
         target.kind == AppTextKind::Label
             && target.text == "Wrapped email"
             && target.role.as_deref() == Some("textbox")

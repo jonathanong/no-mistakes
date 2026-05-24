@@ -24,9 +24,16 @@ pub(crate) fn aria_bool_attr(
             "false" => Some(false),
             _ => None,
         },
-        oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container) => {
-            bool_expr(&container.expression)
-        }
+        oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container) => match &container
+            .expression
+        {
+            oxc_ast::ast::JSXExpression::StringLiteral(literal) => match literal.value.as_str() {
+                "true" => Some(true),
+                "false" => Some(false),
+                _ => None,
+            },
+            expression => bool_expr(expression),
+        },
         _ => None,
     })
 }

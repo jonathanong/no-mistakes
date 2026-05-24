@@ -43,6 +43,7 @@ export function Example(props: { label: string }) {
       <button data-pw="aria-hidden-button" aria-hidden="true">Aria hidden action</button>
       <button data-pw="aria-hidden-false-button" aria-hidden="false">Aria shown action</button>
       <button data-pw="aria-hidden-bool-button" aria-hidden={true}>Bool hidden action</button>
+      <button data-pw="aria-hidden-expression-string-button" aria-hidden={"false"}>Expression string shown action</button>
       <label>Wrapped email <input data-pw="wrapped-email-input" /></label>
       <label>Fragment wrapped <><input data-pw="fragment-wrapped-input" /></></label>
       <div data-pw="container-target"><button>Container child</button></div>
