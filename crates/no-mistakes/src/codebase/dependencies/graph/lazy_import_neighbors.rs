@@ -41,6 +41,8 @@ fn import_neighbors(
         })
         .filter(|(_, kind)| allowed.is_none_or(|a| a.contains(kind)))
         .collect();
-    neighbors.sort_by_key(|(node, kind)| (node_sort_key(node), *kind as u8));
+    // ⚡ Bolt: Use `sort_by_cached_key` instead of `sort_by_key` to avoid repeatedly calling
+    // `node_sort_key` (which involves allocation and formatting) during the sort operations.
+    neighbors.sort_by_cached_key(|(node, kind)| (node_sort_key(node), *kind as u8));
     neighbors
 }

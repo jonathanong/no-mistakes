@@ -73,7 +73,9 @@ pub(crate) fn lazy_import_deps_of_with_files(
                 )
             })
             .collect();
-        expanded.sort_by_key(|(node, _)| node_sort_key(node));
+        // ⚡ Bolt: Use `sort_by_cached_key` instead of `sort_by_key` to avoid repeatedly calling
+        // `node_sort_key` (which involves allocation and formatting) during the sort operations.
+        expanded.sort_by_cached_key(|(node, _)| node_sort_key(node));
 
         let next_depth = depth + 1;
         let mut next_frontier = Vec::new();
