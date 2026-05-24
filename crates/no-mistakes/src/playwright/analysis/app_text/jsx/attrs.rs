@@ -4,47 +4,24 @@ pub(crate) fn attr_exists_at_runtime(
     opening: &oxc_ast::ast::JSXOpeningElement<'_>,
     name: &str,
 ) -> bool {
-    for item in &opening.attributes {
-        let oxc_ast::ast::JSXAttributeItem::Attribute(attribute) = item else {
-            continue;
-        };
-        if super::jsx_attribute_name(&attribute.name) != Some(name) {
-            continue;
+    find_attr(opening, name).is_some_and(|attribute| match attribute.value.as_ref() {
+        None => true,
+        Some(oxc_ast::ast::JSXAttributeValue::StringLiteral(literal)) => !literal.value.is_empty(),
+        Some(oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container)) => {
+            jsx_expression_truthy(&container.expression)
         }
-        return match attribute.value.as_ref() {
-            None => true,
-            Some(oxc_ast::ast::JSXAttributeValue::StringLiteral(literal)) => {
-                !literal.value.is_empty()
-            }
-            Some(oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container)) => {
-                jsx_expression_truthy(&container.expression)
-            }
-            _ => false,
-        };
-    }
-    false
+        _ => false,
+    })
 }
 
 pub(crate) fn bool_attr(opening: &oxc_ast::ast::JSXOpeningElement<'_>, name: &str) -> Option<bool> {
-    for item in &opening.attributes {
-        let oxc_ast::ast::JSXAttributeItem::Attribute(attribute) = item else {
-            continue;
-        };
-        if super::jsx_attribute_name(&attribute.name) != Some(name) {
-            continue;
+    find_attr(opening, name).map(|attribute| match attribute.value.as_ref() {
+        None => true,
+        Some(oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container)) => {
+            bool_expr(&container.expression).unwrap_or(false)
         }
-        return Some(match attribute.value.as_ref() {
-            None => true,
-            Some(oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container)) => {
-                matches!(
-                    &container.expression,
-                    oxc_ast::ast::JSXExpression::BooleanLiteral(literal) if literal.value
-                )
-            }
-            _ => true,
-        });
-    }
-    None
+        _ => true,
+    })
 }
 
 pub(crate) fn numeric_attr(
@@ -52,27 +29,45 @@ pub(crate) fn numeric_attr(
     name: &str,
     source: &str,
 ) -> Option<u32> {
-    for item in &opening.attributes {
-        let oxc_ast::ast::JSXAttributeItem::Attribute(attribute) = item else {
-            continue;
-        };
-        if super::jsx_attribute_name(&attribute.name) != Some(name) {
-            continue;
+    find_attr(opening, name).and_then(|attribute| numeric_attr_value(attribute, source))
+}
+
+fn find_attr<'a>(
+    opening: &'a oxc_ast::ast::JSXOpeningElement<'_>,
+    name: &str,
+) -> Option<&'a oxc_ast::ast::JSXAttribute<'a>> {
+    opening
+        .attributes
+        .iter()
+        .find_map(|item| {
+            let oxc_ast::ast::JSXAttributeItem::Attribute(attribute) = item else {
+                return None;
+            };
+            (super::jsx_attribute_name(&attribute.name) == Some(name)).then_some(attribute)
+        })
+        .map(|attribute| &**attribute)
+}
+
+fn numeric_attr_value(attribute: &oxc_ast::ast::JSXAttribute<'_>, source: &str) -> Option<u32> {
+    match attribute.value.as_ref()? {
+        oxc_ast::ast::JSXAttributeValue::StringLiteral(literal) => {
+            literal.value.parse::<u32>().ok()
         }
-        return match attribute.value.as_ref()? {
-            oxc_ast::ast::JSXAttributeValue::StringLiteral(literal) => {
-                literal.value.parse::<u32>().ok()
-            }
-            oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container) => {
-                let span = container.expression.span();
-                source
-                    .get(span.start as usize..span.end as usize)
-                    .and_then(|value| value.parse::<u32>().ok())
-            }
-            _ => None,
-        };
+        oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container) => {
+            let span = container.expression.span();
+            source
+                .get(span.start as usize..span.end as usize)
+                .and_then(|value| value.parse::<u32>().ok())
+        }
+        _ => None,
     }
-    None
+}
+
+fn bool_expr(expression: &oxc_ast::ast::JSXExpression<'_>) -> Option<bool> {
+    match expression {
+        oxc_ast::ast::JSXExpression::BooleanLiteral(literal) => Some(literal.value),
+        _ => None,
+    }
 }
 
 fn jsx_expression_truthy(expression: &oxc_ast::ast::JSXExpression<'_>) -> bool {

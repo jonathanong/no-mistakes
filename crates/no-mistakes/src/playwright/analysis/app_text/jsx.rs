@@ -79,15 +79,6 @@ pub(super) fn string_attr(
     None
 }
 
-pub(super) fn has_attr(opening: &oxc_ast::ast::JSXOpeningElement<'_>, name: &str) -> bool {
-    opening.attributes.iter().any(|item| {
-        let oxc_ast::ast::JSXAttributeItem::Attribute(attribute) = item else {
-            return false;
-        };
-        jsx_attribute_name(&attribute.name) == Some(name)
-    })
-}
-
 fn jsx_attr_string(
     value: Option<&oxc_ast::ast::JSXAttributeValue<'_>>,
     source: &str,

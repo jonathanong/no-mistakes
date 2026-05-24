@@ -37,6 +37,7 @@ export function Example(props: { label: string }) {
       <button id="html-id-button">HTML id</button>
       <button data-pw="descendant-button"><span>Descendant save</span></button>
       <button data-pw="hidden-button" hidden>Hidden action</button>
+      <button data-pw="hidden-false-button" hidden={false}>Shown action</button>
       <button data-pw="aria-hidden-button" aria-hidden="true">Aria hidden action</button>
       <div data-pw="container-target"><button>Container child</button></div>
       <input data-pw="submit-input" type="submit" value="Submit form" />

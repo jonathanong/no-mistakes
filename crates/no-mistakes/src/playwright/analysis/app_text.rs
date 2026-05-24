@@ -79,7 +79,7 @@ impl AppTextVisitor<'_> {
     }
 
     fn element_is_hidden(&self, opening: &oxc_ast::ast::JSXOpeningElement<'_>) -> bool {
-        has_attr(opening, "hidden")
+        bool_attr(opening, "hidden").unwrap_or(false)
             || self
                 .string_attr(opening, "aria-hidden")
                 .is_some_and(|value| value == "true")

@@ -18,12 +18,13 @@ pub struct TestOccurrence<T> {
 }
 
 impl<T: PartialEq> TestOccurrence<T> {
-    fn same_identity_ignoring_line(&self, other: &Self) -> bool {
+    fn same_identity(&self, other: &Self) -> bool {
         self.value == other.value
             && self.status == other.status
             && self.scope == other.scope
             && self.test_name == other.test_name
             && self.describe_path == other.describe_path
+            && self.line == other.line
     }
 }
 
@@ -31,5 +32,8 @@ pub(crate) fn dedup_occurrences_by_identity<T: Ord + PartialEq>(
     occurrences: &mut Vec<TestOccurrence<T>>,
 ) {
     occurrences.sort();
-    occurrences.dedup_by(|left, right| left.same_identity_ignoring_line(right));
+    occurrences.dedup_by(|left, right| left.same_identity(right));
 }
+
+#[cfg(test)]
+mod tests;
