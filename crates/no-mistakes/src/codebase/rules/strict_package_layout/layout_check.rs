@@ -1,6 +1,14 @@
 use globset::GlobSet;
+use std::path::Path;
 
 use super::PackageLayoutSpec;
+
+fn has_extension(filename: &str, ext: &str) -> bool {
+    Path::new(filename)
+        .extension()
+        .and_then(|e| e.to_str())
+        .is_some_and(|e| e == ext.trim_start_matches('.'))
+}
 
 pub(super) fn is_md(name: &str) -> bool {
     name.ends_with(".md")
@@ -38,7 +46,7 @@ pub(super) fn check_one_deep(
             ))
         }
     } else if spec.allowed_subdirs.iter().any(|d| d == subdir) {
-        if file.ends_with(&spec.source_extension) {
+        if has_extension(file, &spec.source_extension) {
             None
         } else {
             Some(format!(
@@ -51,6 +59,31 @@ pub(super) fn check_one_deep(
             "{path}: subdirectory {subdir}/ is not allowed (allowedSubdirs: [{}])",
             spec.allowed_subdirs.join(", ")
         ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn has_extension_exact_match() {
+        assert!(has_extension("index.ts", "ts"));
+        assert!(has_extension("index.ts", ".ts"));
+        assert!(has_extension("index.mts", "mts"));
+    }
+
+    #[test]
+    fn has_extension_no_false_positive_on_suffix() {
+        // "constants" ends with "ts" as a string but has no extension
+        assert!(!has_extension("constants", "ts"));
+        // "assets" ends with "ts" as a string but extension is absent
+        assert!(!has_extension("assets", "ts"));
+    }
+
+    #[test]
+    fn has_extension_wrong_extension() {
+        assert!(!has_extension("index.js", "ts"));
     }
 }
 

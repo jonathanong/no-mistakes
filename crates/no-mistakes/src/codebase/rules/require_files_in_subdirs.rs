@@ -104,7 +104,7 @@ fn check_subdir(
     }
 
     for group in &spec.require_any_of {
-        let any_match = group_matches(subdir, group, files)?;
+        let any_match = group_matches(subdir, group, files, file_set)?;
         if !any_match {
             let group_str = group.join(", ");
             findings.push(RuleFinding {
@@ -120,7 +120,12 @@ fn check_subdir(
     Ok(())
 }
 
-fn group_matches(subdir: &Path, group: &[String], files: &[PathBuf]) -> Result<bool> {
+fn group_matches(
+    subdir: &Path,
+    group: &[String],
+    files: &[PathBuf],
+    file_set: &HashSet<&PathBuf>,
+) -> Result<bool> {
     for pattern in group {
         if pattern.contains('*') {
             let glob = Glob::new(pattern.as_str())?.compile_matcher();
@@ -135,7 +140,7 @@ fn group_matches(subdir: &Path, group: &[String], files: &[PathBuf]) -> Result<b
             }
         } else {
             let candidate = subdir.join(pattern.as_str());
-            if files.contains(&candidate) {
+            if file_set.contains(&candidate) {
                 return Ok(true);
             }
         }

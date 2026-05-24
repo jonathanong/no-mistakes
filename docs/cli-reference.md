@@ -252,7 +252,7 @@ The following rules are configurable via `rules:` entries in `.no-mistakes.yml`:
 | `vitest-test-correspondence` | Enforces that every test file outside `__tests__/` has a corresponding source file. |
 | `file-extension-policy` | Enforces allowed/banned file extensions per configured scope. |
 | `banned-renamed-files` | Rejects files whose basename matches a banned pattern. |
-| `lockfile-allowlist` | Fails if the pnpm lockfile contains packages not on an explicit allowlist. |
+| `lockfile-allowlist` | Enforces that only allowed lockfile filenames (e.g. `pnpm-lock.yaml`) are present; bans disallowed ones (e.g. `yarn.lock`, `package-lock.json`). |
 | `shellcheck-runner` | Runs `shellcheck` on `.sh` files and configured shell scripts; skips silently if `shellcheck` is not installed. |
 | `doc-consistency` | Enforces that required files exist, contain required headings/substrings, and do not contain banned substrings. |
 
