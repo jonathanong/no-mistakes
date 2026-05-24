@@ -95,6 +95,28 @@ fn next_line_disable_and_unresolved_import_branches_are_reported() {
         },
     );
     assert_eq!(findings[0].import.as_deref(), Some("./missing.mts"));
+
+    let mut mocks = HashSet::new();
+    mocks.insert(PathBuf::from("external-lib"));
+    let mut findings = Vec::new();
+    let mut context = DynamicCheckContext {
+        root: &root,
+        file: &disabled,
+        resolver: &resolver,
+        graph: &graph,
+        mocks: &mocks,
+        dependency_cache: &dependency_cache,
+        findings: &mut findings,
+    };
+    check_dynamic_import(
+        &mut context,
+        ast::DynamicImport {
+            specifier: Some("external-lib".to_string()),
+            line: 1,
+        },
+    );
+    assert!(findings.is_empty());
+
     assert!(check(&root, &config, None)
         .unwrap()
         .iter()
