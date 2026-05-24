@@ -1145,6 +1145,65 @@ include_all_react_named_exports: true
 }
 
 #[test]
+fn colocated_tests_can_cover_selected_components() {
+    let root = fixture("colocated-tests");
+    let findings = check(
+        &root,
+        &config(
+            r#"
+stories: ["stories/**/*.stories.tsx"]
+include_all_react_named_exports: true
+allow_colocated_tests: true
+"#,
+        ),
+        None,
+    )
+    .unwrap();
+
+    assert_eq!(
+        findings
+            .iter()
+            .filter_map(|finding| finding.target.as_deref())
+            .collect::<Vec<_>>(),
+        vec![
+            "components/NestedOnly.tsx#NestedOnly",
+            "components/SpecOnly.tsx#SpecOnly",
+        ]
+    );
+}
+
+#[test]
+fn colocated_tests_do_not_cover_components_without_option() {
+    let root = fixture("colocated-tests");
+    let findings = check(
+        &root,
+        &config(
+            r#"
+stories: ["stories/**/*.stories.tsx"]
+include_all_react_named_exports: true
+"#,
+        ),
+        None,
+    )
+    .unwrap();
+
+    assert_eq!(
+        findings
+            .iter()
+            .filter_map(|finding| finding.target.as_deref())
+            .collect::<Vec<_>>(),
+        vec![
+            "components/MockTs.tsx#MockTs",
+            "components/MockTsx.tsx#MockTsx",
+            "components/NestedOnly.tsx#NestedOnly",
+            "components/PlainTs.tsx#PlainTs",
+            "components/PlainTsx.tsx#PlainTsx",
+            "components/SpecOnly.tsx#SpecOnly",
+        ]
+    );
+}
+
+#[test]
 fn same_file_siblings_are_not_implicitly_covered() {
     let root = fixture("same-file-sibling");
     let findings = check(

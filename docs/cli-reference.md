@@ -273,6 +273,7 @@ rules:
       include_all_react_named_exports: true
       include_all_react_default_exports: true
       required_props: ["data-pw"]
+      allow_colocated_tests: true
       allow_components:
         "components/actions/delete-button.tsx#DeleteButton": "Requires live mutation callbacks."
       allow_files:
@@ -284,6 +285,11 @@ and uses the configured Storybook `stories` entries; if no Storybook config is
 available it falls back to `**/*.stories.{ts,tsx,js,jsx}`. Test files are
 excluded from component selection by default using configured Vitest,
 Playwright, and conventional test globs.
+
+`allow_colocated_tests: true` treats a same-directory test file as coverage for
+components in the matching source file. The accepted names are
+`<stem>.test.tsx`, `<stem>.mock.test.tsx`, `<stem>.test.ts`, and
+`<stem>.mock.test.ts`.
 
 Use `// no-mistakes-disable-next-line require-storybook-stories: reason` for a
 single export or `// no-mistakes-disable-file require-storybook-stories: reason`
