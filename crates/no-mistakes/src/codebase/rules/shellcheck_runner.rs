@@ -39,7 +39,7 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
                 .iter()
                 .flat_map(|r| discover_files(r, skip))
                 .collect();
-            scan(root, &opts, &files)
+            scan(root, &opts, &files, &target_roots)
         })
         .collect();
     merge(all)
@@ -61,7 +61,7 @@ pub(crate) fn check_with_files(
                 .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
                 .cloned()
                 .collect();
-            scan(root, &opts, &files)
+            scan(root, &opts, &files, &target_roots)
         })
         .collect();
     merge(all)
@@ -73,15 +73,20 @@ fn merge(all: Result<Vec<Vec<RuleFinding>>>) -> Result<Vec<RuleFinding>> {
     Ok(v)
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
-    let shell_candidates = collect_shell_files(root, opts, files);
+fn scan(root: &Path, opts: &Options, files: &[PathBuf], target_roots: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+    let shell_candidates = collect_shell_files(root, opts, files, target_roots);
     if shell_candidates.is_empty() {
         return Ok(Vec::new());
     }
     run_shellcheck(root, opts, &shell_candidates)
 }
 
-pub(crate) fn collect_shell_files(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<PathBuf> {
+pub(crate) fn collect_shell_files(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    target_roots: &[PathBuf],
+) -> Vec<PathBuf> {
     let sh = |p: &Path| p.extension().and_then(|e| e.to_str()) == Some("sh");
     let mut candidates: Vec<PathBuf> = files.iter().filter(|p| sh(p)).cloned().collect();
     for dir_rel in &opts.shebang_dirs {
@@ -91,10 +96,7 @@ pub(crate) fn collect_shell_files(root: &Path, opts: &Options, files: &[PathBuf]
             root.join(dir_rel)
         };
         for path in files {
-            let Some(parent) = path.parent() else {
-                continue;
-            };
-            if parent != dir || sh(path) {
+            if !path.starts_with(&dir) || sh(path) {
                 continue;
             }
             if has_bash_shebang(path) {
@@ -104,7 +106,8 @@ pub(crate) fn collect_shell_files(root: &Path, opts: &Options, files: &[PathBuf]
     }
     for rel in &opts.shell_files {
         let abs = root.join(rel);
-        if abs.exists() {
+        let in_scope = target_roots.is_empty() || target_roots.iter().any(|r| abs.starts_with(r));
+        if abs.exists() && in_scope {
             candidates.push(abs);
         }
     }

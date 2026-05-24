@@ -101,7 +101,7 @@ fn collect_shell_files_finds_sh_files() {
     std::fs::write(&md, "# Title\n").unwrap();
     let opts = Options::default();
     let files = vec![sh.clone(), md];
-    let candidates = collect_shell_files(root, &opts, &files);
+    let candidates = collect_shell_files(root, &opts, &files, &[]);
     assert_eq!(candidates, vec![sh]);
 }
 
@@ -116,7 +116,7 @@ fn collect_shell_files_includes_explicit_shell_files() {
         ..Default::default()
     };
     let files = vec![];
-    let candidates = collect_shell_files(root, &opts, &files);
+    let candidates = collect_shell_files(root, &opts, &files, &[]);
     assert_eq!(candidates, vec![script]);
 }
 
@@ -133,7 +133,7 @@ fn collect_shell_files_detects_shebang_in_dir() {
         ..Default::default()
     };
     let files = vec![script.clone()];
-    let candidates = collect_shell_files(root, &opts, &files);
+    let candidates = collect_shell_files(root, &opts, &files, &[]);
     assert_eq!(candidates, vec![script]);
 }
 
@@ -177,7 +177,7 @@ fn shebang_dir_empty_string_uses_root() {
         ..Default::default()
     };
     let files = vec![script.clone()];
-    let candidates = collect_shell_files(root, &opts, &files);
+    let candidates = collect_shell_files(root, &opts, &files, &[]);
     assert!(
         candidates.contains(&script),
         "root shebang script should be included"
@@ -186,7 +186,7 @@ fn shebang_dir_empty_string_uses_root() {
 
 #[test]
 fn shebang_dir_skips_file_in_wrong_parent() {
-    // Exercises line 99: parent != dir → skip.
+    // File not under the shebang_dir → starts_with fails → skip.
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path();
     let scripts_dir = root.join("scripts");
@@ -200,7 +200,7 @@ fn shebang_dir_skips_file_in_wrong_parent() {
         ..Default::default()
     };
     let files = vec![wrong_script];
-    let candidates = collect_shell_files(root, &opts, &files);
+    let candidates = collect_shell_files(root, &opts, &files, &[]);
     assert!(
         candidates.is_empty(),
         "file in wrong parent should be skipped"
@@ -221,7 +221,7 @@ fn shebang_dir_skips_sh_files_already_collected() {
         ..Default::default()
     };
     let files = vec![sh_file.clone()];
-    let candidates = collect_shell_files(root, &opts, &files);
+    let candidates = collect_shell_files(root, &opts, &files, &[]);
     // setup.sh was already added via the .sh extension pass; it should appear
     // exactly once (dedup ensures no duplicate).
     assert_eq!(candidates.len(), 1);
@@ -255,21 +255,59 @@ fn run_shellcheck_uses_default_severity_when_empty() {
 
 #[test]
 fn shebang_dir_file_with_no_parent_is_skipped() {
-    // Exercises line 96: path.parent() returns None for the filesystem root path,
-    // so the file is skipped in the shebang_dirs loop.
+    // Path::new("/") is not under the shebang_dir → starts_with fails → skip.
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path();
     let opts = Options {
         shebang_dirs: vec!["scripts".to_string()],
         ..Default::default()
     };
-    // Path::new("/") has no parent — parent() returns None
     let files = vec![std::path::PathBuf::from("/")];
-    let candidates = collect_shell_files(root, &opts, &files);
+    let candidates = collect_shell_files(root, &opts, &files, &[]);
     assert!(
         candidates.is_empty(),
-        "file with no parent should be skipped in shebang dir loop"
+        "file not under shebang dir should be skipped"
     );
+}
+
+#[test]
+fn shebang_dir_includes_nested_script() {
+    // Exercises recursive shebang dir scanning: files in subdirs should be included.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let tools_dir = root.join("scripts/tools");
+    std::fs::create_dir_all(&tools_dir).unwrap();
+    let nested = tools_dir.join("deploy");
+    std::fs::write(&nested, "#!/bin/bash\necho deploy\n").unwrap();
+    let opts = Options {
+        shebang_dirs: vec!["scripts".to_string()],
+        ..Default::default()
+    };
+    let files = vec![nested.clone()];
+    let candidates = collect_shell_files(root, &opts, &files, &[]);
+    assert_eq!(candidates, vec![nested], "nested shebang script should be included");
+}
+
+#[test]
+fn collect_shell_files_respects_target_roots() {
+    // Exercises EW60V: explicit shell_files outside target_roots should be skipped.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let proj_dir = root.join("proj");
+    let other_dir = root.join("other");
+    std::fs::create_dir_all(&proj_dir).unwrap();
+    std::fs::create_dir_all(&other_dir).unwrap();
+    let inside = proj_dir.join("run.sh");
+    let outside = other_dir.join("deploy");
+    std::fs::write(&inside, "#!/bin/bash\necho hi\n").unwrap();
+    std::fs::write(&outside, "#!/bin/bash\necho deploy\n").unwrap();
+    let opts = Options {
+        shell_files: vec!["proj/run.sh".to_string(), "other/deploy".to_string()],
+        ..Default::default()
+    };
+    let target_roots = vec![proj_dir.clone()];
+    let candidates = collect_shell_files(root, &opts, &[], &target_roots);
+    assert_eq!(candidates, vec![inside], "shell_files outside target_roots should be excluded");
 }
 
 #[test]

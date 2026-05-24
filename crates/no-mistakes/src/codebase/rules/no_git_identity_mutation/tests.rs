@@ -392,3 +392,33 @@ fn is_managed_runner_only_trailing_comma_skips_empty_element() {
         "trailing comma produces empty element that should be skipped, not treated as unmanaged"
     );
 }
+
+#[test]
+fn is_managed_runner_only_multiline_list_managed() {
+    // Exercises EW60S: multi-line YAML list form strips leading "- " before matching.
+    let content = "runs-on:\n  - ubuntu-latest\n";
+    assert!(
+        is_managed_runner_only(content),
+        "multi-line YAML list with managed runner should be recognized"
+    );
+}
+
+#[test]
+fn is_managed_runner_only_multiline_list_self_hosted() {
+    let content = "runs-on:\n  - self-hosted\n";
+    assert!(
+        !is_managed_runner_only(content),
+        "multi-line YAML list with self-hosted runner should not be recognized as managed-only"
+    );
+}
+
+#[test]
+fn line_continued_git_config_is_flagged() {
+    // Exercises EW60T: shell regex now allows \<newline> line continuations.
+    let findings = run_on_source("git config \\\n  user.name \"Bot\"\n");
+    assert_eq!(
+        findings.len(),
+        1,
+        "line-continued git config user.name should be flagged"
+    );
+}

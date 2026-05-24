@@ -58,8 +58,9 @@ pub(crate) fn build_exclude_globset(patterns: &[String]) -> GlobSet {
 
 pub(crate) fn build_patterns() -> [Regex; 3] {
     [
+        // Allow line continuations (\<newline>) between `git config` and `user.`
         Regex::new(
-            r#"(?m)(^|[^a-zA-Z0-9_])git[ \t]+config[^\n]*[ \t][`"']?user\.(name|email)([^a-zA-Z0-9.-]|$)"#,
+            r#"(?m)(^|[^a-zA-Z0-9_])git[ \t]+config(?:[^\n\\]|\\\n[ \t]*)*[ \t][`"']?user\.(name|email)([^a-zA-Z0-9.-]|$)"#,
         )
         .expect("shell pattern"),
         // Array form: ['git', 'config', ..., 'user.name|email']
@@ -90,7 +91,10 @@ pub(crate) fn is_managed_runner_only(content: &str) -> bool {
         let raw = cap.get(1).map_or("", |m| m.as_str()).trim();
         let inner = raw.trim_start_matches('[').trim_end_matches(']');
         for s in inner.split(',') {
-            let r = s.trim().trim_matches(|c: char| matches!(c, '\'' | '"'));
+            let r = s
+                .trim()
+                .trim_matches(|c: char| matches!(c, '\'' | '"'))
+                .trim_start_matches("- ");
             if r.is_empty() {
                 continue;
             }
