@@ -6,6 +6,7 @@ pub mod dependencies;
 pub mod markdown_sections;
 pub mod md_links;
 pub mod playwright_coverage;
+pub mod pnpm_lock;
 pub mod rules;
 pub(crate) mod storybook;
 pub(crate) mod storybook_mdx;

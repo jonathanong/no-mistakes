@@ -144,7 +144,7 @@ pub(crate) fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<RuleFi
             } else {
                 root.join(root_rel)
             };
-            scan_pkg::scan_pkg(root, &pkg_root, root_rel, &ctx)
+            scan_pkg::scan_pkg(root, &pkg_root, &ctx)
         })
         .collect()
 }

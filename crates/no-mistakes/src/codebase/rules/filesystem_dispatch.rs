@@ -2,6 +2,8 @@ use anyhow::Result;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
+type RuleAcc = Mutex<Vec<(&'static str, Result<Vec<RuleFinding>>)>>;
+
 use super::{
     agents_md_max_size, banned_renamed_files, doc_consistency, file_extension_policy,
     lockfile_allowlist, no_empty_or_comments_only_files, no_git_identity_mutation,
@@ -28,12 +30,12 @@ pub fn run_filesystem_rules_with_files(
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
     let config = crate::config::v2::load_v2_config(root, config_path)?;
-    let acc: Mutex<Vec<Result<Vec<RuleFinding>>>> = Mutex::new(Vec::new());
+    let acc: RuleAcc = Mutex::new(Vec::new());
     rayon::scope(|s| {
         macro_rules! run {
             ($id:expr, $call:expr) => {
                 if rule_enabled(&config, $id) {
-                    s.spawn(|_| { let r = $call; acc.lock().unwrap().push(r); });
+                    s.spawn(|_| { acc.lock().unwrap().push(($id, $call)); });
                 }
             };
         }
@@ -57,8 +59,10 @@ pub fn run_filesystem_rules_with_files(
         run!(DOC_CONSISTENCY,               doc_consistency::check_with_files(root, &config, files));
         run!(SHELLCHECK_RUNNER,             shellcheck_runner::check_with_files(root, &config, files));
     });
+    let mut results = acc.into_inner().unwrap();
+    results.sort_unstable_by_key(|(id, _)| *id);
     let mut findings = Vec::new();
-    for r in acc.into_inner().unwrap() { findings.extend(r?); }
+    for (_, r) in results { findings.extend(r?); }
     super::sort_findings(&mut findings);
     Ok(findings)
 }
@@ -67,12 +71,12 @@ pub fn run_filesystem_rules_with_files(
 #[rustfmt::skip]
 pub fn run_filesystem_rules(root: &Path, config_path: Option<&Path>) -> Result<Vec<RuleFinding>> {
     let config = crate::config::v2::load_v2_config(root, config_path)?;
-    let acc: Mutex<Vec<Result<Vec<RuleFinding>>>> = Mutex::new(Vec::new());
+    let acc: RuleAcc = Mutex::new(Vec::new());
     rayon::scope(|s| {
         macro_rules! run {
             ($id:expr, $call:expr) => {
                 if rule_enabled(&config, $id) {
-                    s.spawn(|_| { let r = $call; acc.lock().unwrap().push(r); });
+                    s.spawn(|_| { acc.lock().unwrap().push(($id, $call)); });
                 }
             };
         }
@@ -96,8 +100,10 @@ pub fn run_filesystem_rules(root: &Path, config_path: Option<&Path>) -> Result<V
         run!(DOC_CONSISTENCY,                 doc_consistency::check(root, &config));
         run!(SHELLCHECK_RUNNER,               shellcheck_runner::check(root, &config));
     });
+    let mut results = acc.into_inner().unwrap();
+    results.sort_unstable_by_key(|(id, _)| *id);
     let mut findings = Vec::new();
-    for r in acc.into_inner().unwrap() { findings.extend(r?); }
+    for (_, r) in results { findings.extend(r?); }
     super::sort_findings(&mut findings);
     Ok(findings)
 }

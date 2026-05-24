@@ -13,12 +13,7 @@ pub(super) struct ScanCtx<'a> {
     pub(super) files: &'a [PathBuf],
 }
 
-pub(super) fn scan_pkg(
-    root: &Path,
-    pkg_root: &Path,
-    pkg_root_rel: &Path,
-    ctx: &ScanCtx,
-) -> Vec<RuleFinding> {
+pub(super) fn scan_pkg(root: &Path, pkg_root: &Path, ctx: &ScanCtx) -> Vec<RuleFinding> {
     let subdirs: HashSet<String> = ctx
         .files
         .iter()
@@ -35,7 +30,6 @@ pub(super) fn scan_pkg(
             }
         })
         .collect();
-    let root_rel_str = pkg_root_rel.to_string_lossy().replace('\\', "/");
     subdirs
         .into_iter()
         .filter_map(|subdir| {
@@ -48,7 +42,7 @@ pub(super) fn scan_pkg(
             let dir_rel = relative_slash_path(root, &pkg_root.join(&subdir));
             Some(RuleFinding {
                 rule: RULE_ID.to_string(),
-                file: format!("{root_rel_str}/{subdir}"),
+                file: dir_rel.clone(),
                 line: 1,
                 message: format!(
                     "{dir_rel}: code-owning directory is missing {}",
