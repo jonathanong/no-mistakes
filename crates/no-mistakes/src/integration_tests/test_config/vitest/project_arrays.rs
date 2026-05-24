@@ -1,4 +1,4 @@
-use super::{parse_options, shared, Options};
+use super::{parse_partial_options, shared, Options};
 use crate::ast;
 use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
 use oxc_ast::ast::{
@@ -76,7 +76,7 @@ pub(super) fn array_options(projects: &ArrayExpression<'_>, ctx: &mut Ctx<'_, '_
 
 fn project_object_options(object: &ObjectExpression<'_>, ctx: &Ctx<'_, '_>) -> Option<Options> {
     let nested = shared::property_object(object, "test", &ctx.bindings).unwrap_or(object);
-    parse_options(nested, ctx.source).ok()
+    Some(parse_partial_options(nested, ctx.source))
 }
 
 pub(super) fn expression_options(

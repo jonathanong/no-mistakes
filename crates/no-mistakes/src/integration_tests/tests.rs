@@ -413,6 +413,9 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     assert!(dynamic.iter().any(|project| {
         project.name.as_deref() == Some("api") && project.include == vec!["api/**/*.test.ts"]
     }));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("composed")));
 
     let recursive_path = root.join("vitest.recursive.mts");
     let recursive_source = std::fs::read_to_string(&recursive_path).unwrap();

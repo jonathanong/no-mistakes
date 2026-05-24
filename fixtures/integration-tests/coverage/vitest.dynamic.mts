@@ -10,12 +10,20 @@ const localProjects = [
   },
 ]
 
+const dynamicInclude = ['dynamic/**/*.test.ts']
+
 export default defineConfig({
   test: {
     projects: [
       ...webProjects(),
       ...apiProjects,
       ...localProjects,
+      {
+        test: {
+          name: 'composed',
+          include: dynamicInclude,
+        },
+      },
     ],
   },
 })
