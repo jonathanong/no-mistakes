@@ -70,3 +70,21 @@ fn test_h4_h5_h6_levels() {
     assert_eq!(sections[1].level, 5);
     assert_eq!(sections[2].level, 6);
 }
+
+#[test]
+fn test_heading_with_inline_code() {
+    // Inline code spans in headings emit Event::Code, not Event::Text.
+    let content = "## `Usage`\n\n## Normal\n";
+    let sections = parse_markdown_sections(content);
+    assert_eq!(sections.len(), 2);
+    assert_eq!(sections[0].heading, "Usage");
+    assert_eq!(sections[1].heading, "Normal");
+}
+
+#[test]
+fn test_heading_with_mixed_text_and_code() {
+    let content = "## Run `cargo test` first\n";
+    let sections = parse_markdown_sections(content);
+    assert_eq!(sections.len(), 1);
+    assert_eq!(sections[0].heading, "Run cargo test first");
+}

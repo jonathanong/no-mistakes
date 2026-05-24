@@ -233,6 +233,36 @@ fn check_with_exclude_paths_uses_build_exclude_globset() {
 }
 
 #[test]
+fn is_managed_runner_ubuntu_versioned() {
+    assert!(is_managed_runner("ubuntu-22.04"));
+    assert!(is_managed_runner("ubuntu-24.04"));
+    assert!(is_managed_runner("ubuntu-24.04-arm"));
+    assert!(is_managed_runner("ubuntu-slim"));
+    assert!(is_managed_runner("ubuntu-22.04-slim"));
+}
+
+#[test]
+fn is_managed_runner_macos_versioned() {
+    assert!(is_managed_runner("macos-14"));
+    assert!(is_managed_runner("macos-latest"));
+    assert!(is_managed_runner("macos-13-xlarge"));
+}
+
+#[test]
+fn is_managed_runner_windows_versioned() {
+    assert!(is_managed_runner("windows-2022"));
+    assert!(is_managed_runner("windows-2025"));
+    assert!(is_managed_runner("windows-latest"));
+}
+
+#[test]
+fn is_managed_runner_self_hosted_not_managed() {
+    assert!(!is_managed_runner("self-hosted"));
+    assert!(!is_managed_runner("arc-runner"));
+    assert!(!is_managed_runner("custom-runner"));
+}
+
+#[test]
 fn line_number_is_correct() {
     let findings = run_on_source("#!/bin/bash\n# comment\ngit config user.name \"Bot\"\n");
     assert_eq!(findings.len(), 1);

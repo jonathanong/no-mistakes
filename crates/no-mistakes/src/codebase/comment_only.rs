@@ -21,25 +21,47 @@ pub fn classify_content(content: &str, ext: &str) -> ContentKind {
     }
 
     match ext {
-        "ts" | "mts" | "cts" | "tsx" | "js" | "jsx" | "mjs" | "cjs" => classify_c_style(content),
-        "sql" => classify_sql(content),
-        "rs" | "css" => classify_c_style(content),
-        "md" => classify_markdown(content),
+        "ts" | "mts" | "cts" | "tsx" | "js" | "jsx" | "mjs" | "cjs" => {
+            kind(has_real_content_block(content, "//"))
+        }
+        "sql" => kind(has_real_content_block(content, "--")),
+        "rs" | "css" => kind(has_real_content_block(content, "//")),
+        "md" => kind(has_real_content_markdown(content)),
         _ => ContentKind::HasContent,
     }
 }
 
-/// Classify content using C-style comment stripping (`//` line and `/* */` blocks).
-fn classify_c_style(content: &str) -> ContentKind {
-    if has_real_content_c_style(content) {
+fn kind(has_content: bool) -> ContentKind {
+    if has_content {
         ContentKind::HasContent
     } else {
         ContentKind::CommentsOnly
     }
 }
 
-/// Returns `true` if there is at least one non-comment, non-whitespace line.
-fn has_real_content_c_style(content: &str) -> bool {
+/// Returns `true` if `tail` (text after a `*/`) contains real content.
+/// `line_cmt` is the line-comment prefix (`"//"` or `"--"`).
+/// Handles chained `/* … */` blocks correctly.
+pub(crate) fn block_tail_has_content<'a>(mut tail: &'a str, line_cmt: &str) -> bool {
+    loop {
+        tail = tail.trim_start();
+        if tail.is_empty() || tail.starts_with(line_cmt) {
+            return false;
+        }
+        if tail.starts_with("/*") {
+            if let Some(end) = tail.find("*/") {
+                tail = &tail[end + 2..];
+                continue;
+            }
+            return false;
+        }
+        return true;
+    }
+}
+
+/// Returns `true` if `content` has at least one non-comment, non-whitespace line.
+/// Supports C-style (`//` / `/* */`) and SQL-style (`--` / `/* */`) via `line_cmt`.
+fn has_real_content_block(content: &str, line_cmt: &str) -> bool {
     let mut in_block = false;
     for line in content.lines() {
         let trimmed = line.trim();
@@ -49,23 +71,19 @@ fn has_real_content_c_style(content: &str) -> bool {
         if in_block {
             if let Some(end) = trimmed.find("*/") {
                 in_block = false;
-                // Check if anything follows the closing */
-                let after = trimmed[end + 2..].trim();
-                if !after.is_empty() && !after.starts_with("//") {
+                if block_tail_has_content(trimmed[end + 2..].trim(), line_cmt) {
                     return true;
                 }
             }
-            // Still inside block comment — skip line
             continue;
         }
-        if trimmed.starts_with("//") {
+        if trimmed.starts_with(line_cmt) {
             continue;
         }
         if trimmed.starts_with("/*") {
             if trimmed.contains("*/") {
-                // Block comment opens and closes on the same line
-                let after_close = &trimmed[trimmed.find("*/").unwrap() + 2..].trim();
-                if !after_close.is_empty() && !after_close.starts_with("//") {
+                let after = trimmed[trimmed.find("*/").unwrap() + 2..].trim();
+                if block_tail_has_content(after, line_cmt) {
                     return true;
                 }
             } else {
@@ -78,57 +96,22 @@ fn has_real_content_c_style(content: &str) -> bool {
     false
 }
 
-/// Classify SQL content (line comments with `--`, block comments with `/* */`).
-fn classify_sql(content: &str) -> ContentKind {
-    if has_real_content_sql(content) {
-        ContentKind::HasContent
-    } else {
-        ContentKind::CommentsOnly
-    }
-}
-
-fn has_real_content_sql(content: &str) -> bool {
-    let mut in_block = false;
-    for line in content.lines() {
-        let trimmed = line.trim();
-        if trimmed.is_empty() {
-            continue;
+/// Returns `true` if `tail` (text after a `-->`) contains real markdown content.
+/// Handles chained `<!-- … -->` comments correctly.
+pub(crate) fn md_tail_has_content(mut tail: &str) -> bool {
+    loop {
+        tail = tail.trim_start();
+        if tail.is_empty() {
+            return false;
         }
-        if in_block {
-            if let Some(end) = trimmed.find("*/") {
-                in_block = false;
-                let after = trimmed[end + 2..].trim();
-                if !after.is_empty() && !after.starts_with("--") {
-                    return true;
-                }
+        if tail.starts_with("<!--") {
+            if let Some(end) = tail.find("-->") {
+                tail = &tail[end + 3..];
+                continue;
             }
-            continue;
-        }
-        if trimmed.starts_with("--") {
-            continue;
-        }
-        if trimmed.starts_with("/*") {
-            if trimmed.contains("*/") {
-                let after_close = trimmed[trimmed.find("*/").unwrap() + 2..].trim();
-                if !after_close.is_empty() && !after_close.starts_with("--") {
-                    return true;
-                }
-            } else {
-                in_block = true;
-            }
-            continue;
+            return false;
         }
         return true;
-    }
-    false
-}
-
-/// Classify markdown content (HTML comments `<!-- ... -->`).
-fn classify_markdown(content: &str) -> ContentKind {
-    if has_real_content_markdown(content) {
-        ContentKind::HasContent
-    } else {
-        ContentKind::CommentsOnly
     }
 }
 
@@ -142,8 +125,7 @@ fn has_real_content_markdown(content: &str) -> bool {
         if in_comment {
             if let Some(end) = trimmed.find("-->") {
                 in_comment = false;
-                let after = trimmed[end + 3..].trim();
-                if !after.is_empty() {
+                if md_tail_has_content(trimmed[end + 3..].trim()) {
                     return true;
                 }
             }
@@ -151,8 +133,8 @@ fn has_real_content_markdown(content: &str) -> bool {
         }
         if trimmed.starts_with("<!--") {
             if trimmed.contains("-->") {
-                let after_close = trimmed[trimmed.find("-->").unwrap() + 3..].trim();
-                if !after_close.is_empty() {
+                let after = trimmed[trimmed.find("-->").unwrap() + 3..].trim();
+                if md_tail_has_content(after) {
                     return true;
                 }
             } else {

@@ -26,7 +26,7 @@ pub fn parse_markdown_sections(content: &str) -> Vec<MarkdownSection> {
                 current = Some((level_u32, byte_offset));
                 text_buf.clear();
             }
-            Event::Text(text) if current.is_some() => {
+            Event::Text(text) | Event::Code(text) if current.is_some() => {
                 text_buf.push_str(&text);
             }
             Event::End(pulldown_cmark::TagEnd::Heading(_)) => {

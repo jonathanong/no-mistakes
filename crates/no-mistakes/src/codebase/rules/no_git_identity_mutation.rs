@@ -10,16 +10,11 @@ use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "no-git-identity-mutation";
 
-/// Runners that are considered non-self-hosted (GitHub-managed).
-const MANAGED_RUNNERS: &[&str] = &[
-    "ubuntu-latest",
-    "ubuntu-22.04",
-    "ubuntu-24.04",
-    "ubuntu-slim",
-    "ubuntu-22.04-slim",
-    "macos-latest",
-    "windows-latest",
-];
+/// Returns `true` if `v` is a GitHub-managed runner label.
+/// All GitHub-managed runners use the `ubuntu-*`, `macos-*`, or `windows-*` prefixes.
+pub(crate) fn is_managed_runner(v: &str) -> bool {
+    v.starts_with("ubuntu-") || v.starts_with("macos-") || v.starts_with("windows-")
+}
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -107,7 +102,7 @@ pub(crate) fn is_managed_runner_only(content: &str) -> bool {
         // No runs-on at all — not a workflow, don't skip
         return false;
     }
-    values.iter().all(|v| MANAGED_RUNNERS.contains(v))
+    values.iter().all(|v| is_managed_runner(v))
 }
 
 fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
