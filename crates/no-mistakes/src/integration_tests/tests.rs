@@ -446,6 +446,12 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     assert!(dynamic
         .iter()
         .any(|project| project.name.as_deref() == Some("alias-default")));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("default-call")));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("namespace-array")));
 
     let recursive_path = root.join("vitest.recursive.mts");
     let recursive_source = std::fs::read_to_string(&recursive_path).unwrap();

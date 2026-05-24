@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 mod calls;
 mod exports;
 mod imports;
+mod members;
 
 use imports::{import_bindings, ImportBinding};
 
@@ -92,6 +93,9 @@ pub(super) fn expression_options(
         Expression::ArrayExpression(array) => array_options(array, ctx),
         Expression::Identifier(identifier) => identifier_options(identifier.name.as_str(), ctx),
         Expression::CallExpression(call) => calls::call_options(&call.callee, ctx),
+        Expression::StaticMemberExpression(member) => {
+            members::namespace_member_options(member, ctx)
+        }
         Expression::ParenthesizedExpression(parenthesized) => {
             expression_options(&parenthesized.expression, ctx)
         }

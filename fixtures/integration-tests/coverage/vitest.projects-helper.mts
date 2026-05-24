@@ -28,6 +28,15 @@ export const namespaceProjects = () => [
   },
 ]
 
+export const namespaceArrayProjects = [
+  {
+    test: {
+      name: 'namespace-array',
+      include: ['namespace-array/**/*.test.ts'],
+    },
+  },
+]
+
 const defaultProjects = [
   {
     test: {

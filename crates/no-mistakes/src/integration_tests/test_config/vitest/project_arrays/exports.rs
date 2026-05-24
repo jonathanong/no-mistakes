@@ -133,6 +133,9 @@ fn default_export_options(
         ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
             body_return_options(&arrow.body, ctx)
         }
+        ExportDefaultDeclarationKind::CallExpression(call) => {
+            super::calls::call_options(&call.callee, ctx)
+        }
         ExportDefaultDeclarationKind::FunctionDeclaration(function) => {
             if let Some(body) = &function.body {
                 body_return_options(body, ctx)
