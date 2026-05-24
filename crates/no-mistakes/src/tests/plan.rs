@@ -36,6 +36,8 @@ pub(crate) fn run(args: PlanArgs) -> Result<ExitCode> {
     Ok(ExitCode::SUCCESS)
 }
 
+const _: fn(PlanArgs) -> Result<ExitCode> = run;
+
 pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     let cwd = std::env::current_dir().context("cwd must be accessible")?;
     let root = no_mistakes::cli::resolve_optional_root(Some(&args.root), &cwd);

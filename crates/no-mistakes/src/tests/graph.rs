@@ -30,6 +30,73 @@ pub(crate) fn run(args: GraphArgs) -> Result<ExitCode> {
         .with_context(|| format!("Failed to read plan from {}", args.plan.display()))?;
     let plan: TestPlan = serde_json::from_str(&content).context("Failed to parse plan JSON.")?;
 
+    let output = match args.format {
+        GraphFormat::Json => serde_json::to_string_pretty(&graph_json(&plan)?)?,
+        GraphFormat::Mermaid => graph_mermaid(&plan)?,
+    };
+
+    if let Some(ref out_path) = args.out {
+        fs::write(out_path, &output)
+            .with_context(|| format!("Failed to write graph to {}", out_path.display()))?;
+    } else {
+        println!("{}", output);
+    }
+
+    Ok(ExitCode::SUCCESS)
+}
+
+const _: fn(GraphArgs) -> Result<ExitCode> = run;
+
+pub(crate) fn graph_json(plan: &TestPlan) -> Result<GraphJson> {
+    let parts = graph_parts(plan);
+    let mut nodes_json = Vec::new();
+    for node in &parts.sorted_nodes {
+        let r#type = if parts.changed_files.contains(node) {
+            "changed"
+        } else if parts.test_files.contains(node) {
+            "test"
+        } else {
+            "intermediate"
+        };
+        nodes_json.push(GraphNodeJson {
+            name: node.clone(),
+            r#type: r#type.to_string(),
+        });
+    }
+
+    let mut edges_json = Vec::new();
+    for (from, to, via) in &parts.sorted_edges {
+        edges_json.push(GraphEdgeJson {
+            from: from.clone(),
+            to: to.clone(),
+            via: via.clone(),
+        });
+    }
+
+    Ok(GraphJson {
+        nodes: nodes_json,
+        edges: edges_json,
+    })
+}
+
+pub(crate) fn graph_mermaid(plan: &TestPlan) -> Result<String> {
+    let parts = graph_parts(plan);
+    Ok(render_mermaid(
+        &parts.sorted_nodes,
+        &parts.sorted_edges,
+        &parts.changed_files,
+        &parts.test_files,
+    ))
+}
+
+struct GraphParts {
+    sorted_nodes: Vec<String>,
+    sorted_edges: Vec<(String, String, String)>,
+    changed_files: HashSet<String>,
+    test_files: HashSet<String>,
+}
+
+fn graph_parts(plan: &TestPlan) -> GraphParts {
     // 1. Collect all active nodes and edges from the plan reasons
     let mut changed_files = HashSet::new();
     let mut test_files = HashSet::new();
@@ -63,52 +130,12 @@ pub(crate) fn run(args: GraphArgs) -> Result<ExitCode> {
 
     let mut sorted_edges: Vec<(String, String, String)> = all_edges.into_iter().collect();
     sorted_edges.sort_by(|a, b| (&a.0, &a.1, &a.2).cmp(&(&b.0, &b.1, &b.2)));
-
-    // 2. Render in the requested format
-    let output = match args.format {
-        GraphFormat::Json => {
-            let mut nodes_json = Vec::new();
-            for node in &sorted_nodes {
-                let r#type = if changed_files.contains(node) {
-                    "changed"
-                } else if test_files.contains(node) {
-                    "test"
-                } else {
-                    "intermediate"
-                };
-                nodes_json.push(GraphNodeJson {
-                    name: node.clone(),
-                    r#type: r#type.to_string(),
-                });
-            }
-
-            let mut edges_json = Vec::new();
-            for (from, to, via) in &sorted_edges {
-                edges_json.push(GraphEdgeJson {
-                    from: from.clone(),
-                    to: to.clone(),
-                    via: via.clone(),
-                });
-            }
-
-            serde_json::to_string_pretty(&GraphJson {
-                nodes: nodes_json,
-                edges: edges_json,
-            })?
-        }
-        GraphFormat::Mermaid => {
-            render_mermaid(&sorted_nodes, &sorted_edges, &changed_files, &test_files)
-        }
-    };
-
-    if let Some(ref out_path) = args.out {
-        fs::write(out_path, &output)
-            .with_context(|| format!("Failed to write graph to {}", out_path.display()))?;
-    } else {
-        println!("{}", output);
+    GraphParts {
+        sorted_nodes,
+        sorted_edges,
+        changed_files,
+        test_files,
     }
-
-    Ok(ExitCode::SUCCESS)
 }
 
 fn escape_mermaid_label(s: &str) -> String {

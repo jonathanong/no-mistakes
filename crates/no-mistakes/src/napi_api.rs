@@ -6,12 +6,18 @@ use napi::bindgen_prelude::AsyncTask;
 use napi_derive::napi;
 
 mod async_task;
+mod cli_parity;
 mod codebase;
 mod options;
 mod project;
 
 #[cfg(not(coverage))]
 use async_task::{JsonTask, VersionTask};
+pub(crate) use cli_parity::{
+    check_json_impl, fetches_json_impl, playwright_check_json_impl, playwright_edges_json_impl,
+    playwright_related_json_impl, playwright_tests_json_impl, tests_comment_markdown_impl,
+    tests_graph_json_impl, tests_graph_mermaid_impl, tests_plan_json_impl, tests_why_json_impl,
+};
 pub(crate) use codebase::{
     dependencies_json_impl, dependents_json_impl, related_json_impl, symbols_json_impl,
 };
@@ -56,6 +62,72 @@ pub fn related_json(options_json: String) -> AsyncTask<JsonTask> {
 #[cfg_attr(not(test), napi(js_name = "symbolsJson"))]
 pub fn symbols_json(options_json: String) -> AsyncTask<JsonTask> {
     AsyncTask::new(JsonTask::new(options_json, symbols_json_impl))
+}
+
+#[cfg(not(coverage))]
+#[cfg_attr(not(test), napi(js_name = "fetchesJson"))]
+pub fn fetches_json(options_json: String) -> AsyncTask<JsonTask> {
+    AsyncTask::new(JsonTask::new(options_json, fetches_json_impl))
+}
+
+#[cfg(not(coverage))]
+#[cfg_attr(not(test), napi(js_name = "checkJson"))]
+pub fn check_json(options_json: String) -> AsyncTask<JsonTask> {
+    AsyncTask::new(JsonTask::new(options_json, check_json_impl))
+}
+
+#[cfg(not(coverage))]
+#[cfg_attr(not(test), napi(js_name = "testsPlanJson"))]
+pub fn tests_plan_json(options_json: String) -> AsyncTask<JsonTask> {
+    AsyncTask::new(JsonTask::new(options_json, tests_plan_json_impl))
+}
+
+#[cfg(not(coverage))]
+#[cfg_attr(not(test), napi(js_name = "testsWhyJson"))]
+pub fn tests_why_json(options_json: String) -> AsyncTask<JsonTask> {
+    AsyncTask::new(JsonTask::new(options_json, tests_why_json_impl))
+}
+
+#[cfg(not(coverage))]
+#[cfg_attr(not(test), napi(js_name = "testsCommentMarkdown"))]
+pub fn tests_comment_markdown(options_json: String) -> AsyncTask<JsonTask> {
+    AsyncTask::new(JsonTask::new(options_json, tests_comment_markdown_impl))
+}
+
+#[cfg(not(coverage))]
+#[cfg_attr(not(test), napi(js_name = "testsGraphJson"))]
+pub fn tests_graph_json(options_json: String) -> AsyncTask<JsonTask> {
+    AsyncTask::new(JsonTask::new(options_json, tests_graph_json_impl))
+}
+
+#[cfg(not(coverage))]
+#[cfg_attr(not(test), napi(js_name = "testsGraphMermaid"))]
+pub fn tests_graph_mermaid(options_json: String) -> AsyncTask<JsonTask> {
+    AsyncTask::new(JsonTask::new(options_json, tests_graph_mermaid_impl))
+}
+
+#[cfg(not(coverage))]
+#[cfg_attr(not(test), napi(js_name = "playwrightCheckJson"))]
+pub fn playwright_check_json(options_json: String) -> AsyncTask<JsonTask> {
+    AsyncTask::new(JsonTask::new(options_json, playwright_check_json_impl))
+}
+
+#[cfg(not(coverage))]
+#[cfg_attr(not(test), napi(js_name = "playwrightEdgesJson"))]
+pub fn playwright_edges_json(options_json: String) -> AsyncTask<JsonTask> {
+    AsyncTask::new(JsonTask::new(options_json, playwright_edges_json_impl))
+}
+
+#[cfg(not(coverage))]
+#[cfg_attr(not(test), napi(js_name = "playwrightRelatedJson"))]
+pub fn playwright_related_json(options_json: String) -> AsyncTask<JsonTask> {
+    AsyncTask::new(JsonTask::new(options_json, playwright_related_json_impl))
+}
+
+#[cfg(not(coverage))]
+#[cfg_attr(not(test), napi(js_name = "playwrightTestsJson"))]
+pub fn playwright_tests_json(options_json: String) -> AsyncTask<JsonTask> {
+    AsyncTask::new(JsonTask::new(options_json, playwright_tests_json_impl))
 }
 
 #[cfg(not(coverage))]

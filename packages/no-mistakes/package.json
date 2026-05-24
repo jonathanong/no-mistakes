@@ -13,7 +13,7 @@
   },
   "files": [
     "bin/",
-    "index.d.ts",
+    "*.d.ts",
     "index.js",
     "scripts/install.js",
     "scripts/install/",

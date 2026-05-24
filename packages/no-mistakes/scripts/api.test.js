@@ -20,6 +20,27 @@ test("programmatic API proxies object options through async native addon calls",
         JSON.stringify({ command: "related", options: JSON.parse(json) }),
       symbolsJson: async (json) =>
         JSON.stringify({ command: "symbols", options: JSON.parse(json) }),
+      fetchesJson: async (json) =>
+        JSON.stringify({ command: "fetches", options: JSON.parse(json) }),
+      checkJson: async (json) => JSON.stringify({ command: "check", options: JSON.parse(json) }),
+      testsPlanJson: async (json) =>
+        JSON.stringify({ command: "testsPlan", options: JSON.parse(json) }),
+      testsWhyJson: async (json) =>
+        JSON.stringify({ command: "testsWhy", options: JSON.parse(json) }),
+      testsCommentMarkdown: async (json) =>
+        `comment:${JSON.parse(json).plan || JSON.parse(json).planJson?.selected_tests?.length}`,
+      testsGraphJson: async (json) =>
+        JSON.stringify({ command: "testsGraph", options: JSON.parse(json) }),
+      testsGraphMermaid: async (json) =>
+        `graph:${JSON.parse(json).plan || JSON.parse(json).planJson?.selected_tests?.length}`,
+      playwrightCheckJson: async (json) =>
+        JSON.stringify({ command: "playwrightCheck", options: JSON.parse(json) }),
+      playwrightEdgesJson: async (json) =>
+        JSON.stringify({ command: "playwrightEdges", options: JSON.parse(json) }),
+      playwrightRelatedJson: async (json) =>
+        JSON.stringify({ command: "playwrightRelated", options: JSON.parse(json) }),
+      playwrightTestsJson: async (json) =>
+        JSON.stringify({ command: "playwrightTests", options: JSON.parse(json) }),
       queuesJson: async (json) => JSON.stringify({ command: "queues", options: JSON.parse(json) }),
       queueEdgesJson: async (json) =>
         JSON.stringify({ command: "queueEdges", options: JSON.parse(json) }),
@@ -54,6 +75,26 @@ test("programmatic API proxies object options through async native addon calls",
     assert.equal(
       (await api.symbols({ files: ["d.mts"], include: "both" })).options.include,
       "both",
+    );
+    assert.equal((await api.fetches({ targets: ["/users"] })).command, "fetches");
+    assert.equal((await api.check({ tsconfig: "tsconfig.json" })).command, "check");
+    assert.equal((await api.testsPlan({ framework: "vitest" })).command, "testsPlan");
+    assert.equal((await api.testsWhy({ test: "source.test.ts" })).command, "testsWhy");
+    assert.equal(await api.testsComment({ plan: "plan.json" }), "comment:plan.json");
+    assert.equal(
+      (await api.testsGraph({ planJson: { selected_tests: [] } })).command,
+      "testsGraph",
+    );
+    assert.equal(await api.testsGraphMermaid({ planJson: { selected_tests: [] } }), "graph:0");
+    assert.equal((await api.playwrightCheck({ root: "." })).command, "playwrightCheck");
+    assert.equal((await api.playwrightEdges({ root: "." })).command, "playwrightEdges");
+    assert.equal(
+      (await api.playwrightRelated({ files: ["app/page.tsx"] })).command,
+      "playwrightRelated",
+    );
+    assert.equal(
+      (await api.playwrightTests({ files: ["tests/app.spec.ts"] })).command,
+      "playwrightTests",
     );
     assert.equal((await api.queues({ root: "." })).command, "queues");
     assert.equal((await api.queueEdges({ files: ["queue.ts"] })).command, "queueEdges");

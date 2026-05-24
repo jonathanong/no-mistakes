@@ -22,6 +22,50 @@ async function symbols(options) {
   return callJson(native.symbolsJson, options);
 }
 
+async function fetches(options) {
+  return callJson(native.fetchesJson, options);
+}
+
+async function check(options) {
+  return callJson(native.checkJson, options);
+}
+
+async function testsPlan(options) {
+  return callJson(native.testsPlanJson, options);
+}
+
+async function testsWhy(options) {
+  return callJson(native.testsWhyJson, options);
+}
+
+async function testsComment(options) {
+  return native.testsCommentMarkdown(JSON.stringify(options || {}));
+}
+
+async function testsGraph(options) {
+  return callJson(native.testsGraphJson, options);
+}
+
+async function testsGraphMermaid(options) {
+  return native.testsGraphMermaid(JSON.stringify(options || {}));
+}
+
+async function playwrightCheck(options) {
+  return callJson(native.playwrightCheckJson, options);
+}
+
+async function playwrightEdges(options) {
+  return callJson(native.playwrightEdgesJson, options);
+}
+
+async function playwrightRelated(options) {
+  return callJson(native.playwrightRelatedJson, options);
+}
+
+async function playwrightTests(options) {
+  return callJson(native.playwrightTestsJson, options);
+}
+
 async function queues(options) {
   return callJson(native.queuesJson, options);
 }
@@ -62,13 +106,19 @@ async function reactCheck(options) {
   return callJson(native.reactCheckJson, options);
 }
 
-function version() {
+async function version() {
   return native.version();
 }
 
 module.exports = {
+  check,
   dependencies,
   dependents,
+  fetches,
+  playwrightCheck,
+  playwrightEdges,
+  playwrightRelated,
+  playwrightTests,
   queues,
   queueCheck,
   queueEdges,
@@ -81,5 +131,10 @@ module.exports = {
   serverRouteRelated,
   serverRoutes,
   symbols,
+  testsComment,
+  testsGraph,
+  testsGraphMermaid,
+  testsPlan,
+  testsWhy,
   version,
 };
