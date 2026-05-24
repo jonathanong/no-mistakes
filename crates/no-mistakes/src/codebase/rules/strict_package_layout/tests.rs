@@ -1,3 +1,4 @@
+use super::layout_check::has_extension;
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -354,4 +355,23 @@ fn allowed_subdir_with_test_dir_non_test_file_fails() {
     )
     .unwrap();
     assert!(msg.contains("must match test file patterns"), "{msg}");
+}
+
+#[test]
+fn has_extension_exact_match() {
+    assert!(has_extension("index.ts", "ts"));
+    assert!(has_extension("index.ts", ".ts"));
+    assert!(has_extension("index.mts", "mts"));
+}
+
+#[test]
+fn has_extension_no_false_positive_on_suffix() {
+    // "constants" and "assets" end with "ts" as a string but have no extension
+    assert!(!has_extension("constants", "ts"));
+    assert!(!has_extension("assets", "ts"));
+}
+
+#[test]
+fn has_extension_wrong_extension() {
+    assert!(!has_extension("index.js", "ts"));
 }
