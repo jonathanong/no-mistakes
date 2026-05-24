@@ -1,14 +1,38 @@
 use crate::playwright::analysis::text_types::{AppTextKind, AppTextTarget, LocatorKind};
 
+pub(super) struct TextMatch<'a> {
+    exact: bool,
+    locator: &'a str,
+    locator_lower: Option<String>,
+}
+
+impl<'a> TextMatch<'a> {
+    pub(super) fn new(locator: &'a str, exact: bool) -> Self {
+        Self {
+            exact,
+            locator,
+            locator_lower: (!exact).then(|| locator.to_lowercase()),
+        }
+    }
+
+    fn matches(&self, target: &str) -> bool {
+        if self.exact {
+            return target == self.locator;
+        }
+        target
+            .to_lowercase()
+            .contains(self.locator_lower.as_deref().unwrap_or(self.locator))
+    }
+}
+
 pub(super) fn text_target_matches(
     target: &AppTextTarget,
     kind: &LocatorKind,
     role: Option<&str>,
-    text: &str,
-    exact: bool,
+    text: &TextMatch<'_>,
     include_hidden: bool,
 ) -> bool {
-    locator_text_matches(&target.text, text, exact)
+    text.matches(&target.text)
         && match kind {
             LocatorKind::Text => target.kind == AppTextKind::VisibleText,
             LocatorKind::Label => target.kind == AppTextKind::Label,
@@ -22,9 +46,5 @@ pub(super) fn text_target_matches(
         }
 }
 
-fn locator_text_matches(target: &str, locator: &str, exact: bool) -> bool {
-    if exact {
-        return target == locator;
-    }
-    target.to_lowercase().contains(&locator.to_lowercase())
-}
+#[cfg(test)]
+mod tests;

@@ -6,7 +6,7 @@ use rayon::prelude::*;
 use std::sync::Arc;
 
 mod matching;
-use matching::text_target_matches;
+use matching::{text_target_matches, TextMatch};
 #[cfg(test)]
 mod tests;
 
@@ -25,6 +25,7 @@ pub(crate) fn append_locator_text_edges(
             }
             let test_name = text_locator.test_name.map(Arc::new);
             let describe_path = Arc::new(text_locator.describe_path);
+            let text_match = TextMatch::new(&text_locator.value.text, text_locator.value.exact);
             context
                 .app_text_targets
                 .iter()
@@ -33,8 +34,7 @@ pub(crate) fn append_locator_text_edges(
                         target,
                         &text_locator.value.kind,
                         text_locator.value.role.as_deref(),
-                        &text_locator.value.text,
-                        text_locator.value.exact,
+                        &text_match,
                         text_locator.value.include_hidden,
                     )
                 })

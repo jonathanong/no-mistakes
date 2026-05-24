@@ -3,7 +3,7 @@ use crate::playwright::playwright_config;
 use crate::playwright::playwright_tests;
 use crate::playwright::selectors;
 use globset::GlobSet;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -44,7 +44,7 @@ pub(crate) struct TestAnalysisContext<'a> {
     pub(crate) selector_index: &'a SelectorIndex<'a>,
     pub(crate) app_text_targets: &'a [AppTextTarget],
     pub(crate) route_reachable_files:
-        &'a HashMap<Arc<String>, std::collections::BTreeSet<Arc<String>>>,
+        &'a BTreeMap<Arc<String>, std::collections::BTreeSet<Arc<String>>>,
     pub(crate) navigation_helpers: &'a [String],
     pub(crate) selector_regexes: &'a selectors::SelectorRegexes,
     pub(crate) test_policy: playwright_tests::TestPolicy,

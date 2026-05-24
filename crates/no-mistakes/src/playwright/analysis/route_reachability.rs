@@ -6,7 +6,7 @@ use anyhow::Result;
 use dashmap::DashMap;
 use oxc_ast::ast::{ImportOrExportKind, Statement};
 use rayon::prelude::*;
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -14,7 +14,7 @@ pub(crate) fn collect_route_reachable_files(
     root: &Path,
     settings: &config::Settings,
     routes: &[routes::Route],
-) -> Result<HashMap<Arc<String>, BTreeSet<Arc<String>>>> {
+) -> Result<BTreeMap<Arc<String>, BTreeSet<Arc<String>>>> {
     let include = build_globset(&settings.selector_include)?;
     let exclude = build_globset(&settings.selector_exclude)?;
     let include_all = settings.selector_include.is_empty();
@@ -40,7 +40,7 @@ pub(crate) fn collect_route_reachable_files(
         });
     let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
     let import_cache = DashMap::new();
-    let mut route_reachable_files = routes
+    let route_reachable_files = routes
         .par_iter()
         .map(|route| {
             Ok((
@@ -48,9 +48,8 @@ pub(crate) fn collect_route_reachable_files(
                 reachable_files(&route.file, &selector_rel_by_file, &resolver, &import_cache)?,
             ))
         })
-        .collect::<Result<Vec<_>>>()?;
-    route_reachable_files.sort_by(|(left, _), (right, _)| left.cmp(right));
-    Ok(route_reachable_files.into_iter().collect())
+        .collect::<Result<BTreeMap<_, _>>>()?;
+    Ok(route_reachable_files)
 }
 
 fn reachable_files(
