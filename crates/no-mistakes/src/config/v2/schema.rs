@@ -71,6 +71,8 @@ pub struct PlaywrightTestConfig {
     pub selectors: PlaywrightSelectors,
     pub selector_roots: Vec<String>,
     pub selector_exclude: Vec<String>,
+    pub frontend_root: Option<String>,
+    pub ignore_routes: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
