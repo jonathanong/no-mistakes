@@ -120,16 +120,19 @@ jobs:
 
       - name: Build Rust tests for coverage
         run: |
+          # shellcheck disable=SC1090
           source <(cargo llvm-cov show-env --sh)
           cargo test --workspace --all-features --lib --bins --tests --no-run
 
       - name: Run Rust tests for coverage
         run: |
+          # shellcheck disable=SC1090
           source <(cargo llvm-cov show-env --sh)
           cargo test --workspace --all-features --lib --bins --tests
 
       - name: Show Rust coverage table (debug)
         run: |
+          # shellcheck disable=SC1090
           source <(cargo llvm-cov show-env --sh)
           cargo llvm-cov report \
             --show-missing-lines 2>&1 | tail -60
@@ -138,6 +141,7 @@ jobs:
       - name: Enforce Rust coverage
         run: |
           mkdir -p target/llvm-cov
+          # shellcheck disable=SC1090
           source <(cargo llvm-cov show-env --sh)
           cargo llvm-cov report \
             --fail-under-lines 99 --fail-under-functions 99 --show-missing-lines --lcov --output-path target/llvm-cov/lcov.info
