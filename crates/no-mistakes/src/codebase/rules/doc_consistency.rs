@@ -88,7 +88,8 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
 
         // Check required heading
         if let Some(heading) = &opts.required_heading {
-            if !content.contains(heading.as_str()) {
+            let heading_text = heading.trim_start_matches('#').trim();
+            if !crate::codebase::markdown_sections::has_section(&content, heading_text) {
                 findings.push(RuleFinding {
                     rule: RULE_ID.to_string(),
                     file: req_file.clone(),

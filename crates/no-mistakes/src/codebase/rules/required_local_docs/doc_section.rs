@@ -63,7 +63,8 @@ pub(crate) fn scan_doc_section(
             Ok(c) => c,
             Err(_) => continue,
         };
-        if !content.contains(opts.required_heading.as_str()) {
+        let heading_text = opts.required_heading.trim_start_matches('#').trim();
+        if !crate::codebase::markdown_sections::has_section(&content, heading_text) {
             findings.push(RuleFinding {
                 rule: REQUIRED_DOC_SECTION_RULE_ID.to_string(),
                 file: rel.clone(),

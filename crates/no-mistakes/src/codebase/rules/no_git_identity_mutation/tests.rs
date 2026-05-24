@@ -170,6 +170,33 @@ fn is_managed_runner_only_none() {
 }
 
 #[test]
+fn is_managed_runner_only_quoted_single() {
+    assert!(is_managed_runner_only("runs-on: 'ubuntu-latest'\n"));
+}
+
+#[test]
+fn is_managed_runner_only_quoted_double() {
+    assert!(is_managed_runner_only("runs-on: \"ubuntu-latest\"\n"));
+}
+
+#[test]
+fn conditionally_allowed_workflow_skipped_if_managed_runner_is_quoted() {
+    let tmp = tempfile::tempdir().unwrap();
+    std::fs::create_dir_all(tmp.path().join(".github/workflows")).unwrap();
+    let content = "runs-on: 'ubuntu-latest'\ngit config user.name \"Bot\"\n";
+    let path = tmp.path().join(".github/workflows/ci.yml");
+    std::fs::write(&path, content).unwrap();
+    let mut cond_builder = globset::GlobSetBuilder::new();
+    cond_builder.add(globset::Glob::new(".github/workflows/*.yml").unwrap());
+    let cond_set = cond_builder.build().unwrap();
+    let findings = check_file(&path, tmp.path(), &empty_globset(), &cond_set, &patterns());
+    assert!(
+        findings.is_empty(),
+        "quoted managed runner workflow should be skipped"
+    );
+}
+
+#[test]
 fn check_standalone_produces_no_findings_for_empty_dir() {
     let tmp = tempfile::tempdir().unwrap();
     let config = config_with_options("{}");

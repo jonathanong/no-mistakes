@@ -245,16 +245,59 @@ The following rules are configurable via `rules:` entries in `.no-mistakes.yml`:
 | `strict-package-layout` | Validates that packages under `roots` contain exactly the allowed set of files/directories. |
 | `required-local-docs` | Requires documentation files (e.g. `AGENTS.md`) to exist in configured directories. |
 | `required-doc-section` | Requires specific heading text in documentation files. |
-| `tsconfig-alias-folder-mapping` | Validates that every `tsconfig.json` path alias maps to an existing directory. |
+| `tsconfig-alias-folder-mapping` | Validates that every `tsconfig.json` path alias uses the expected prefix and target path pattern. |
 | `no-git-identity-mutation` | Rejects shell scripts and GitHub Actions workflows that mutate git user identity. |
 | `package-json-registry-only` | Requires all `package.json` dependencies to resolve from the npm registry (no `file:`, `link:`, or `git+` specifiers). |
 | `no-empty-or-comments-only-files` | Flags files that are empty or contain only comments. |
-| `vitest-test-correspondence` | Enforces that every test file has a corresponding source file (and vice versa). |
+| `vitest-test-correspondence` | Enforces that every test file outside `__tests__/` has a corresponding source file. |
 | `file-extension-policy` | Enforces allowed/banned file extensions per configured scope. |
 | `banned-renamed-files` | Rejects files whose basename matches a banned pattern. |
 | `lockfile-allowlist` | Fails if the pnpm lockfile contains packages not on an explicit allowlist. |
 | `shellcheck-runner` | Runs `shellcheck` on `.sh` files and configured shell scripts; skips silently if `shellcheck` is not installed. |
 | `doc-consistency` | Enforces that required files exist, contain required headings/substrings, and do not contain banned substrings. |
+
+### Storybook Component Coverage via `no-mistakes check`
+
+`require-storybook-stories` requires selected exported React components to have
+coverage from reachable Storybook stories. Coverage counts direct story imports and
+React child components rendered by covered components. Dynamic import and mock
+targets are not required by `include_all_react_*` unless explicitly included.
+
+```yml
+projects:
+  web:
+    type: nextjs
+    root: web
+
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      stories: ["storybook/**/*.stories.{ts,tsx,js,jsx}"]
+      include: ["components/special/**/*.tsx"]
+      exclude: ["components/generated/**"]
+      include_all_react_named_exports: true
+      include_all_react_default_exports: true
+      required_props: ["data-pw"]
+      allow_components:
+        "components/actions/delete-button.tsx#DeleteButton": "Requires live mutation callbacks."
+      allow_files:
+        "components/generated/**": "Generated wrappers."
+```
+
+`stories` can be omitted. In that case the rule reads `tests.storybook.configs`
+and uses the configured Storybook `stories` entries; if no Storybook config is
+available it falls back to `**/*.stories.{ts,tsx,js,jsx}`. Test files are
+excluded from component selection by default using configured Vitest,
+Playwright, and conventional test globs.
+
+Use `// no-mistakes-disable-next-line require-storybook-stories: reason` for a
+single export or `// no-mistakes-disable-file require-storybook-stories: reason`
+for a whole file.
+
+`required_props` narrows automatic include-all selection to files that mention
+at least one configured prop. Explicit `include` globs still select matching
+component files even when those props are absent.
 
 ### Next.js Feature Ban Rules via `no-mistakes check`
 

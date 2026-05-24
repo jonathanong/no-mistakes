@@ -85,8 +85,18 @@ pub(crate) fn source_candidates(dir: &str, stem: &str, test_ext: &str) -> Vec<St
     } else {
         format!("{dir}/")
     };
-    match test_ext {
-        ".test.mts" => vec![format!("{p}{stem}.mts"), format!("{p}index.mts")],
+    let src_ext = test_ext.rsplit('.').next().unwrap_or("ts");
+    match src_ext {
+        "mts" | "cts" => vec![
+            format!("{p}{stem}.{src_ext}"),
+            format!("{p}index.{src_ext}"),
+        ],
+        "js" | "jsx" => vec![
+            format!("{p}{stem}.js"),
+            format!("{p}{stem}.jsx"),
+            format!("{p}index.js"),
+            format!("{p}index.jsx"),
+        ],
         _ => vec![
             format!("{p}{stem}.ts"),
             format!("{p}{stem}.tsx"),

@@ -98,7 +98,10 @@ pub(crate) fn is_managed_runner_only(content: &str) -> bool {
     let runs_on_re = Regex::new(r"runs-on:\s*(\S+)").expect("runs-on regex");
     let values: Vec<&str> = runs_on_re
         .captures_iter(content)
-        .filter_map(|cap| cap.get(1).map(|m| m.as_str()))
+        .filter_map(|cap| {
+            cap.get(1)
+                .map(|m| m.as_str().trim_matches(|c: char| matches!(c, '\'' | '"')))
+        })
         .collect();
     if values.is_empty() {
         // No runs-on at all — not a workflow, don't skip
