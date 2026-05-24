@@ -45,6 +45,12 @@ fn child_texts(
                 _ => {}
             },
             oxc_ast::ast::JSXChild::Element(element) if include_descendants => {
+                if element_is_hidden(&element.opening_element) {
+                    if !current.is_empty() {
+                        results.push(std::mem::take(&mut current));
+                    }
+                    continue;
+                }
                 append_descendant_segments(
                     &mut results,
                     &mut current,
@@ -71,6 +77,11 @@ fn child_texts(
     }
 
     results
+}
+
+fn element_is_hidden(opening: &oxc_ast::ast::JSXOpeningElement<'_>) -> bool {
+    super::jsx::bool_attr(opening, "hidden").unwrap_or(false)
+        || super::jsx::aria_bool_attr(opening, "aria-hidden").unwrap_or(false)
 }
 
 fn append_descendant_segments(

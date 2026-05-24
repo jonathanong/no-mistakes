@@ -78,10 +78,12 @@ fn numeric_attr_value(attribute: &oxc_ast::ast::JSXAttribute<'_>, source: &str) 
             literal.value.parse::<u32>().ok()
         }
         oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container) => {
-            let span = container.expression.span();
-            source
-                .get(span.start as usize..span.end as usize)
-                .and_then(|value| value.parse::<u32>().ok())
+            numeric_expr(&container.expression).or_else(|| {
+                let span = container.expression.span();
+                source
+                    .get(span.start as usize..span.end as usize)
+                    .and_then(|value| value.parse::<u32>().ok())
+            })
         }
         _ => None,
     }
@@ -106,6 +108,18 @@ fn bool_expr(expression: &oxc_ast::ast::JSXExpression<'_>) -> Option<bool> {
         {
             Some(false)
         }
+        oxc_ast::ast::JSXExpression::TSAsExpression(expression) => {
+            bool_expression(&expression.expression)
+        }
+        oxc_ast::ast::JSXExpression::TSSatisfiesExpression(expression) => {
+            bool_expression(&expression.expression)
+        }
+        oxc_ast::ast::JSXExpression::TSNonNullExpression(expression) => {
+            bool_expression(&expression.expression)
+        }
+        oxc_ast::ast::JSXExpression::TSTypeAssertion(expression) => {
+            bool_expression(&expression.expression)
+        }
         _ => None,
     }
 }
@@ -116,6 +130,71 @@ fn jsx_expression_attribute_present(expression: &oxc_ast::ast::JSXExpression<'_>
         oxc_ast::ast::JSXExpression::Identifier(identifier) => {
             identifier.name.as_str() != "undefined"
         }
+        oxc_ast::ast::JSXExpression::TSAsExpression(expression) => {
+            expression_attribute_present(&expression.expression)
+        }
+        oxc_ast::ast::JSXExpression::TSSatisfiesExpression(expression) => {
+            expression_attribute_present(&expression.expression)
+        }
+        oxc_ast::ast::JSXExpression::TSNonNullExpression(expression) => {
+            expression_attribute_present(&expression.expression)
+        }
+        oxc_ast::ast::JSXExpression::TSTypeAssertion(expression) => {
+            expression_attribute_present(&expression.expression)
+        }
         _ => true,
+    }
+}
+
+fn numeric_expr(expression: &oxc_ast::ast::JSXExpression<'_>) -> Option<u32> {
+    match expression {
+        oxc_ast::ast::JSXExpression::NumericLiteral(literal) if literal.value >= 0.0 => {
+            Some(literal.value as u32)
+        }
+        oxc_ast::ast::JSXExpression::TSAsExpression(expression) => {
+            numeric_expression(&expression.expression)
+        }
+        oxc_ast::ast::JSXExpression::TSSatisfiesExpression(expression) => {
+            numeric_expression(&expression.expression)
+        }
+        oxc_ast::ast::JSXExpression::TSNonNullExpression(expression) => {
+            numeric_expression(&expression.expression)
+        }
+        oxc_ast::ast::JSXExpression::TSTypeAssertion(expression) => {
+            numeric_expression(&expression.expression)
+        }
+        _ => None,
+    }
+}
+
+fn bool_expression(expression: &oxc_ast::ast::Expression<'_>) -> Option<bool> {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
+        oxc_ast::ast::Expression::BooleanLiteral(literal) => Some(literal.value),
+        oxc_ast::ast::Expression::NullLiteral(_) => Some(false),
+        oxc_ast::ast::Expression::NumericLiteral(literal) => Some(literal.value != 0.0),
+        oxc_ast::ast::Expression::StringLiteral(literal) => Some(!literal.value.is_empty()),
+        oxc_ast::ast::Expression::Identifier(identifier)
+            if identifier.name.as_str() == "undefined" =>
+        {
+            Some(false)
+        }
+        _ => None,
+    }
+}
+
+fn expression_attribute_present(expression: &oxc_ast::ast::Expression<'_>) -> bool {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
+        oxc_ast::ast::Expression::NullLiteral(_) => false,
+        oxc_ast::ast::Expression::Identifier(identifier) => identifier.name.as_str() != "undefined",
+        _ => true,
+    }
+}
+
+fn numeric_expression(expression: &oxc_ast::ast::Expression<'_>) -> Option<u32> {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
+        oxc_ast::ast::Expression::NumericLiteral(literal) if literal.value >= 0.0 => {
+            Some(literal.value as u32)
+        }
+        _ => None,
     }
 }

@@ -27,6 +27,7 @@ export function Example(props: { label: string }) {
       <button data-pw="labelled-no-id" aria-labelledby="button-label-no-id" />
       <span id="override-label">Override name</span>
       <button data-pw="labelledby-precedence" aria-labelledby="override-label">Visible should not name</button>
+      <button data-pw="dynamic-labelledby" aria-labelledby={props.label}>Dynamic visible should not name</button>
       <input id="missing-labelledby-input" data-pw="missing-labelledby-input" aria-labelledby="missing-label" />
       <label htmlFor="missing-control">Missing control</label>
       <input data-pw={"search-input"} aria-label={"Search field"} placeholder={"Search"} />
@@ -42,6 +43,7 @@ export function Example(props: { label: string }) {
       <button id="html-id-button">HTML id</button>
       <button data-pw="numeric-text-button">{42}</button>
       <button data-pw="descendant-button"><span>Descendant save</span></button>
+      <button data-pw="hidden-descendant-button"><span aria-hidden="true">Decorative hidden</span>Shown descendant</button>
       <button data-pw="combined-descendant-button"><span>Save</span> now</button>
       <button data-pw="split-descendant-button"><span>Before {props.label} After</span> done</button>
       <button data-pw="fragment-button"><>Fragment save</></button>
@@ -53,6 +55,7 @@ export function Example(props: { label: string }) {
       <button data-pw="hidden-undefined-button" hidden={undefined}>Undefined shown action</button>
       <button data-pw="hidden-zero-button" hidden={0}>Zero shown action</button>
       <button data-pw="hidden-one-button" hidden={1}>One hidden action</button>
+      <button data-pw="hidden-ts-button" hidden={true as const}>TS hidden action</button>
       <button data-pw="hidden-empty-template-button" hidden={``}>Empty template shown action</button>
       <button data-pw="hidden-template-button" hidden={`truthy`}>Template hidden action</button>
       <button data-pw="hidden-dynamic-button" hidden={props.label}>Dynamic shown action</button>
@@ -60,6 +63,7 @@ export function Example(props: { label: string }) {
       <button data-pw="aria-hidden-false-button" aria-hidden="false">Aria shown action</button>
       <button data-pw="aria-hidden-bool-button" aria-hidden={true}>Bool hidden action</button>
       <button data-pw="aria-hidden-expression-string-button" aria-hidden={"false"}>Expression string shown action</button>
+      <button data-pw="aria-hidden-ts-button" aria-hidden={false as boolean}>TS aria shown action</button>
       <label>Wrapped email <input data-pw="wrapped-email-input" /></label>
       <label>Fragment wrapped <><input data-pw="fragment-wrapped-input" /></></label>
       <div data-pw="container-target"><button>Container child</button></div>
@@ -98,6 +102,7 @@ export function Example(props: { label: string }) {
       <select data-pw="multiple-false-target" multiple={false} aria-label="Single tag" />
       <select data-pw="sized-listbox-target" size="2" aria-label="Regions" />
       <select data-pw="numeric-sized-listbox-target" size={2} aria-label="Numeric regions" />
+      <select data-pw="ts-sized-listbox-target" size={2 as const} aria-label="TS regions" />
       <textarea data-pw="textarea-target" aria-label="Message" />
       <div data-pw="split-expression">Before {props.label}</div>
       <div data-pw={42}>Numeric selector</div>

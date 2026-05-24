@@ -58,4 +58,12 @@ fn labelledby_suppresses_descendant_accessible_names() {
                 .iter()
                 .any(|selector| selector.value == "labelledby-precedence")
     }));
+    assert!(!targets.iter().any(|target| {
+        target.kind == AppTextKind::AccessibleName
+            && target.text == "Dynamic visible should not name"
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "dynamic-labelledby")
+    }));
 }

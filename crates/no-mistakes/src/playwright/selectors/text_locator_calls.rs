@@ -88,6 +88,7 @@ fn object_string_property(argument: &Argument<'_>, name: &str, source: &str) -> 
     let Argument::ObjectExpression(object) = argument else {
         return None;
     };
+    let mut value = None;
     for property in &object.properties {
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             continue;
@@ -97,16 +98,16 @@ fn object_string_property(argument: &Argument<'_>, name: &str, source: &str) -> 
         }
         match &property.value {
             Expression::StringLiteral(literal) => {
-                return normalize_locator_text(literal.value.as_str());
+                value = normalize_locator_text(literal.value.as_str());
             }
             Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
-                let value = ast::template_literal_text(template, source);
-                return normalize_locator_text(&value);
+                let text = ast::template_literal_text(template, source);
+                value = normalize_locator_text(&text);
             }
-            _ => return None,
+            _ => value = None,
         }
     }
-    None
+    value
 }
 
 enum BoolProperty {
@@ -119,6 +120,7 @@ fn object_bool_property(argument: &Argument<'_>, name: &str) -> BoolProperty {
     let Argument::ObjectExpression(object) = argument else {
         return BoolProperty::Missing;
     };
+    let mut value = BoolProperty::Missing;
     for property in &object.properties {
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             return BoolProperty::Unknown;
@@ -130,11 +132,12 @@ fn object_bool_property(argument: &Argument<'_>, name: &str) -> BoolProperty {
             continue;
         }
         if let Expression::BooleanLiteral(literal) = &property.value {
-            return BoolProperty::Value(literal.value);
+            value = BoolProperty::Value(literal.value);
+        } else {
+            value = BoolProperty::Unknown;
         }
-        return BoolProperty::Unknown;
     }
-    BoolProperty::Missing
+    value
 }
 
 fn object_has_unsupported_role_filters(argument: &Argument<'_>) -> bool {

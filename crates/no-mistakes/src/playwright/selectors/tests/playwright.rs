@@ -255,7 +255,7 @@ fn extracts_text_locator_status_and_ignores_unsupported_shapes() {
     ]);
     let locators = extract_playwright_text_locator_occurrences(&source);
 
-    assert_eq!(locators.len(), 8);
+    assert_eq!(locators.len(), 10);
     assert!(locators.contains(&(
         "role".to_string(),
         "Save".to_string(),
@@ -292,6 +292,15 @@ fn extracts_text_locator_status_and_ignores_unsupported_shapes() {
     assert!(locators.iter().any(|(_, text, _, status, _, _)| {
         text.starts_with("Ternary ") && *status == TestStatus::Conditional
     }));
+    assert!(locators
+        .iter()
+        .any(|(_, text, _, _, _, _)| text == "Last exact text"));
+    assert!(locators
+        .iter()
+        .any(|(_, text, _, _, _, _)| text == "New name"));
+    assert!(!locators
+        .iter()
+        .any(|(_, text, _, _, _, _)| text == "Old name"));
     assert!(!locators
         .iter()
         .any(|(_, text, _, _, _, _)| text == "Dynamic filter"));

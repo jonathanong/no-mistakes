@@ -33,6 +33,8 @@ enabled
 test.skip(({ browserName }) => browserName === "webkit", "annotation");
 test("annotation text", async ({ page }) => {
   await page.getByText("Annotation text").click();
+  await page.getByText("Last exact text", { exact: false, exact: true }).click();
+  await page.getByRole("button", { name: "Old name", name: "New name", includeHidden: true, includeHidden: false }).click();
 });
 
 test("unsupported text locators", async ({ page }) => {
