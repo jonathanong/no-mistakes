@@ -57,4 +57,4 @@ fi
 
 echo "Checking Rust test coverage (99% lines/functions required)..."
 cargo llvm-cov --workspace --all-features \
-  --fail-under-regions 99 --fail-under-functions 99 --show-missing-lines || exit 1
+  --fail-under-lines 99 --fail-under-functions 99 --show-missing-lines || exit 1
