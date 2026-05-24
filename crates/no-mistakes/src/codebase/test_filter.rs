@@ -112,16 +112,23 @@ fn configured_project_filters(
         return Vec::new();
     }
 
-    let Ok(projects) =
+    let needs_config_projects = policies
+        .values()
+        .any(|policy| !policy.integration_suites.is_empty() && policy.include.is_empty());
+    let projects = if needs_config_projects {
         crate::integration_tests::project_config::load_projects(root, framework, configs)
-    else {
-        return Vec::new();
+            .unwrap_or_default()
+    } else {
+        Vec::new()
     };
 
     policies
         .iter()
         .filter(|(_, policy)| !policy.integration_suites.is_empty())
-        .filter_map(|(project_name, _)| exact_project(project_name, &projects))
+        .filter_map(|(project_name, policy)| {
+            crate::integration_tests::config::configured_project(root, project_name, policy)
+                .or_else(|| exact_project(project_name, &projects).cloned())
+        })
         .filter_map(|project| {
             let include = compile_optional_globset(&project.include).ok().flatten();
             include.as_ref()?;

@@ -1,7 +1,7 @@
 use crate::ast;
 use oxc_ast::ast::{
-    Argument, AssignmentTarget, BindingPattern, ExportDefaultDeclarationKind, Expression,
-    ObjectExpression, ObjectPropertyKind, Program, Statement,
+    Argument, AssignmentTarget, BindingPattern, Declaration, ExportDefaultDeclarationKind,
+    Expression, ObjectExpression, ObjectPropertyKind, Program, Statement,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -14,7 +14,15 @@ pub(in crate::integration_tests) fn top_level_object_bindings<'a>(
 ) -> BTreeMap<String, &'a Expression<'a>> {
     let mut bindings = BTreeMap::new();
     for statement in &program.body {
-        let Statement::VariableDeclaration(declaration) = statement else {
+        let declaration = match statement {
+            Statement::VariableDeclaration(declaration) => Some(declaration),
+            Statement::ExportNamedDeclaration(export) => match export.declaration.as_ref() {
+                Some(Declaration::VariableDeclaration(declaration)) => Some(declaration),
+                _ => None,
+            },
+            _ => None,
+        };
+        let Some(declaration) = declaration else {
             continue;
         };
         for declarator in &declaration.declarations {

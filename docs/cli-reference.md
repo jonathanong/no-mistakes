@@ -129,6 +129,25 @@ example `no-mistakes --jobs 4 check ...`.
 `no-mistakes queues check` when you want a full scan for that domain without
 adding it to `.no-mistakes.yml`.
 
+Named Vitest/Playwright projects are normally read from their test runner
+configs. When a runner config builds projects dynamically, define deterministic
+project globs in `.no-mistakes.yml` and target that name from rules:
+
+```yml
+tests:
+  vitest:
+    projects:
+      web:
+        include:
+          - web/**/*.test.{ts,tsx,mts}
+        exclude:
+          - web/generated/**
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests:
+      vitest: [web]
+```
+
 ### Test Plans
 
 `no-mistakes test plan <playwright|vitest>` selects focused test files from

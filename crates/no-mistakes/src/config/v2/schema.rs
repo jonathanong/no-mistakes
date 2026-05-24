@@ -105,6 +105,8 @@ pub struct StorybookConfig {
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct TestProjectPolicy {
+    pub include: Vec<String>,
+    pub exclude: Vec<String>,
     #[serde(rename = "integration_suites")]
     pub integration_suites: BTreeMap<String, Vec<String>>,
 }

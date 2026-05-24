@@ -80,8 +80,9 @@ fn config_parsers_reject_invalid_literals() {
 
     let vitest_path = root.join("vitest.invalid.mts");
     let vitest_source = std::fs::read_to_string(&vitest_path).unwrap();
+    let tsconfig = tsconfig_without_config(&root);
     let vitest_err =
-        test_config::vitest::parse_from_path(&vitest_source, &vitest_path, &root, &root)
+        test_config::vitest::parse_from_path(&vitest_source, &vitest_path, &root, &root, &tsconfig)
             .unwrap_err();
     assert!(vitest_err
         .to_string()

@@ -1,10 +1,13 @@
 use super::shared;
 use crate::ast;
+use crate::codebase::ts_resolver::TsConfig;
 use crate::integration_tests::project_config::prefix_globs;
 use crate::integration_tests::types::ConfigProject;
 use anyhow::Result;
 use oxc_ast::ast::{ObjectExpression, Program};
 use std::path::Path;
+
+mod project_arrays;
 
 const DEFAULT_INCLUDE: &[&str] = &[
     "**/*.{test,spec}.?(c|m)[jt]s?(x)",
@@ -12,10 +15,10 @@ const DEFAULT_INCLUDE: &[&str] = &[
 ];
 
 #[derive(Default, Clone)]
-struct Options {
-    name: Option<String>,
-    include: Option<Vec<String>>,
-    exclude: Option<Vec<String>>,
+pub(super) struct Options {
+    pub(super) name: Option<String>,
+    pub(super) include: Option<Vec<String>>,
+    pub(super) exclude: Option<Vec<String>>,
 }
 
 pub(in crate::integration_tests) fn parse_from_path(
@@ -23,17 +26,20 @@ pub(in crate::integration_tests) fn parse_from_path(
     path: &Path,
     config_dir: &Path,
     root: &Path,
+    tsconfig: &TsConfig,
 ) -> Result<Vec<ConfigProject>> {
     ast::with_program(path, source, |program, source| {
-        parse_program(program, source, config_dir, root)
+        parse_program(program, source, path, config_dir, root, tsconfig)
     })?
 }
 
 fn parse_program(
     program: &Program<'_>,
     source: &str,
+    path: &Path,
     config_dir: &Path,
     root: &Path,
+    tsconfig: &TsConfig,
 ) -> Result<Vec<ConfigProject>> {
     let bindings = shared::top_level_object_bindings(program);
     let Some(root_object) = shared::default_export_object(program, &bindings) else {
@@ -42,17 +48,15 @@ fn parse_program(
     let test_object =
         shared::property_object(root_object, "test", &bindings).unwrap_or(root_object);
     let root_options = parse_options(test_object, source)?;
-    let project_objects = shared::project_objects(test_object);
+    let project_options =
+        project_arrays::project_options(program, test_object, source, path, root, tsconfig)?;
     let mut projects = Vec::new();
-    if project_objects.is_empty() {
+    if project_options.is_empty() {
         projects.push(to_project(config_dir, root, root_options));
         return Ok(projects);
     }
 
-    for project_object in project_objects {
-        let nested_test =
-            shared::property_object(project_object, "test", &bindings).unwrap_or(project_object);
-        let project_options = parse_options(nested_test, source)?;
+    for project_options in project_options {
         projects.push(to_project(
             config_dir,
             root,
@@ -91,7 +95,7 @@ fn combine(left: Option<Vec<String>>, right: Option<Vec<String>>) -> Option<Vec<
     (!values.is_empty()).then_some(values)
 }
 
-fn parse_options(object: &ObjectExpression<'_>, source: &str) -> Result<Options> {
+pub(super) fn parse_options(object: &ObjectExpression<'_>, source: &str) -> Result<Options> {
     Ok(Options {
         name: shared::property_expression(object, "name")
             .and_then(|value| shared::optional_string(value, source)),

@@ -4,7 +4,7 @@ use std::path::Path;
 
 pub(crate) mod analysis;
 mod calls;
-mod config;
+pub(crate) mod config;
 mod enforce;
 pub(crate) mod project_config;
 mod resolve;

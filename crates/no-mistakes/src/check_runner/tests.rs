@@ -181,6 +181,7 @@ fn integration_configured_covers_vitest_and_playwright_suites() {
                 "openai".to_string(),
                 vec!["openai".to_string()],
             )]),
+            ..Default::default()
         },
     );
     assert!(integration_configured(&vitest));
@@ -190,6 +191,7 @@ fn integration_configured_covers_vitest_and_playwright_suites() {
         "e2e".to_string(),
         no_mistakes::config::v2::schema::TestProjectPolicy {
             integration_suites: BTreeMap::from([("aws".to_string(), vec!["aws".to_string()])]),
+            ..Default::default()
         },
     );
     assert!(integration_configured(&playwright));

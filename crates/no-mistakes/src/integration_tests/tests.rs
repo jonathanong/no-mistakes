@@ -22,6 +22,15 @@ fn config_snippet(name: &str) -> crate::config::v2::schema::NoMistakesConfig {
     serde_yaml::from_str(&yaml).unwrap()
 }
 
+fn parse_vitest_fixture(
+    source: &str,
+    path: &Path,
+    root: &Path,
+) -> anyhow::Result<Vec<types::ConfigProject>> {
+    let tsconfig = tsconfig_without_config(root);
+    test_config::vitest::parse_from_path(source, path, root, root, &tsconfig)
+}
+
 #[test]
 fn check_reports_integration_policy_violations() {
     let findings = check(&fixture("basic"), None).unwrap();
@@ -105,6 +114,24 @@ fn invalid_empty_integration_suites_is_rejected() {
     assert!(err
         .to_string()
         .contains("tests.vitest.projects.web.integration_suites.openai"));
+}
+
+#[test]
+fn test_project_exclude_requires_include() {
+    let config: crate::config::v2::schema::NoMistakesConfig = serde_yaml::from_str(
+        r#"
+tests:
+  vitest:
+    projects:
+      web:
+        exclude: ["web/generated/**"]
+"#,
+    )
+    .unwrap();
+    let err = config::validate_config(&config).unwrap_err();
+    assert!(err
+        .to_string()
+        .contains("tests.vitest.projects.web.exclude requires include"));
 }
 
 #[test]
@@ -211,6 +238,13 @@ fn configured_suites_cover_matching_variants() {
     assert_eq!(suites.len(), 1);
     assert_eq!(suites[0].name, "root-vitest.openai");
 
+    let config = config_snippet("explicit-project-policy.yml");
+    let suites = config::configured_suites(&root, &config).unwrap();
+    assert_eq!(suites.len(), 1);
+    assert_eq!(suites[0].name, "explicit.openai");
+    assert_eq!(suites[0].include, vec!["explicit/**/*.test.ts"]);
+    assert_eq!(suites[0].exclude, vec!["explicit/**/*.mock.test.ts"]);
+
     assert!(
         project_config::load_projects(&root, types::Framework::Vitest, None)
             .unwrap()
@@ -259,6 +293,30 @@ fn configured_suites_cover_matching_variants() {
         )),
     )
     .is_err());
+    let package_root = fixture("vitest-package-tsconfig");
+    let package_projects = project_config::load_projects(
+        &package_root,
+        types::Framework::Vitest,
+        Some(&crate::config::v2::schema::StringOrList::One(
+            "packages/app/vitest.config.mts".to_string(),
+        )),
+    )
+    .unwrap();
+    assert!(package_projects.iter().any(|project| {
+        project.config.as_deref() == Some("packages/app/vitest.config.mts")
+            && project.name.as_deref() == Some("package")
+            && project.include == vec!["packages/app/package/**/*.test.ts"]
+    }));
+    let invalid_tsconfig_root = fixture("invalid-vitest-tsconfig");
+    let err = project_config::load_projects(
+        &invalid_tsconfig_root,
+        types::Framework::Vitest,
+        Some(&crate::config::v2::schema::StringOrList::One(
+            "vitest.config.mts".to_string(),
+        )),
+    )
+    .unwrap_err();
+    assert!(format!("{err:#}").contains("loading tsconfig"));
 
     let config = config_snippet("missing-config-and-project.yml");
     let err = config::configured_suites(&root, &config).unwrap_err();
@@ -346,15 +404,12 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     let root = fixture("coverage");
     let object_path = root.join("vitest.object.mts");
     let object_source = std::fs::read_to_string(&object_path).unwrap();
-    let object_projects =
-        test_config::vitest::parse_from_path(&object_source, &object_path, &root, &root).unwrap();
+    let object_projects = parse_vitest_fixture(&object_source, &object_path, &root).unwrap();
     assert_eq!(object_projects[0].name.as_deref(), Some("root-vitest"));
 
     let projects_path = root.join("vitest.projects.mts");
     let projects_source = std::fs::read_to_string(&projects_path).unwrap();
-    let projects =
-        test_config::vitest::parse_from_path(&projects_source, &projects_path, &root, &root)
-            .unwrap();
+    let projects = parse_vitest_fixture(&projects_source, &projects_path, &root).unwrap();
     assert!(projects
         .iter()
         .any(|project| project.name.as_deref() == Some("nested")));
@@ -364,21 +419,110 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
 
     let empty_path = root.join("vitest.empty.mts");
     let empty_source = std::fs::read_to_string(&empty_path).unwrap();
-    assert!(
-        test_config::vitest::parse_from_path(&empty_source, &empty_path, &root, &root)
-            .unwrap()
-            .is_empty()
-    );
+    assert!(parse_vitest_fixture(&empty_source, &empty_path, &root)
+        .unwrap()
+        .is_empty());
 
     let defaults_path = root.join("vitest.defaults.mts");
     let defaults_source = std::fs::read_to_string(&defaults_path).unwrap();
-    let defaults =
-        test_config::vitest::parse_from_path(&defaults_source, &defaults_path, &root, &root)
-            .unwrap();
+    let defaults = parse_vitest_fixture(&defaults_source, &defaults_path, &root).unwrap();
     assert!(defaults[0]
         .include
         .iter()
         .any(|glob| glob.contains("__tests__")));
+
+    let dynamic_path = root.join("vitest.dynamic.mts");
+    let dynamic_source = std::fs::read_to_string(&dynamic_path).unwrap();
+    let dynamic = parse_vitest_fixture(&dynamic_source, &dynamic_path, &root).unwrap();
+    assert!(dynamic.iter().any(|project| {
+        project.name.as_deref() == Some("web")
+            && project.include == vec!["web/**/*.test.ts"]
+            && project.exclude == vec!["web/**/*.skip.ts"]
+    }));
+    assert!(dynamic.iter().any(|project| {
+        project.name.as_deref() == Some("local") && project.include == vec!["local/**/*.test.ts"]
+    }));
+    assert!(dynamic.iter().any(|project| {
+        project.name.as_deref() == Some("api") && project.include == vec!["api/**/*.test.ts"]
+    }));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("composed")));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("default-import")));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("default-arrow")));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("namespace")));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("same-name-import")));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("reexported")));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("alias-default")));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("default-call")));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("default-function")));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("default-array")));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("local-exported")));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("local-exported-function")));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("namespace-array")));
+
+    let edge_path = root.join("vitest.edge.mts");
+    let edge_source = std::fs::read_to_string(&edge_path).unwrap();
+    let edge = parse_vitest_fixture(&edge_source, &edge_path, &root).unwrap();
+    for name in [
+        "parenthesized",
+        "function-expression",
+        "block-arrow",
+        "top-level-function",
+        "named-var",
+        "named-function",
+        "local-alias",
+        "local-function",
+        "reexported",
+        "edge-namespace",
+        "edge-namespace-call",
+        "exported-specifier",
+        "default-arrow-block",
+        "default-exported-const",
+        "default-identifier-function",
+        "default-arrow",
+    ] {
+        assert!(
+            edge.iter()
+                .any(|project| project.name.as_deref() == Some(name)),
+            "missing edge project {name}"
+        );
+    }
+
+    let recursive_path = root.join("vitest.recursive.mts");
+    let recursive_source = std::fs::read_to_string(&recursive_path).unwrap();
+    let recursive = parse_vitest_fixture(&recursive_source, &recursive_path, &root).unwrap();
+    assert_eq!(recursive.len(), 1);
+    assert_eq!(recursive[0].name, None);
+
+    let invalid_path = root.join("vitest.invalid-project.mts");
+    let invalid_source = std::fs::read_to_string(&invalid_path).unwrap();
+    let invalid = parse_vitest_fixture(&invalid_source, &invalid_path, &root);
+    assert!(invalid.is_err());
 }
 
 #[test]
