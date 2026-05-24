@@ -10,6 +10,20 @@ fn fixture() -> PathBuf {
     )
 }
 
+fn collect_reachable_findings(
+    ctx: reachable::ReachableContext<'_>,
+    test_file: &Path,
+    mocks: &HashSet<PathBuf>,
+    dependency_cache: &DashMap<PathBuf, Arc<Vec<PathBuf>>>,
+) -> Vec<RuleFinding> {
+    reachable::collect(ctx, test_file, mocks, dependency_cache)
+        .unwrap()
+        .findings
+        .into_iter()
+        .map(|entry| entry.finding)
+        .collect()
+}
+
 #[test]
 fn fixture_reports_unmocked_transitive_and_nonliteral_dynamic_imports() {
     let root = fixture();
@@ -31,8 +45,16 @@ fn fixture_reports_unmocked_transitive_and_nonliteral_dynamic_imports() {
         f.file == "tests/jest-setup-leak.test.mts"
             && f.target.as_deref() == Some("src/jest-setup-target.mts")
     }));
-    assert!(findings.iter().any(|f| {
+    assert!(!findings.iter().any(|f| {
         f.file == "src/next-dynamic-component.mts"
+            && f.target.as_deref() == Some("src/dynamic-leaf.mts")
+    }));
+    assert!(!findings.iter().any(|f| {
+        f.file == "src/next-dynamic-colocated.tsx"
+            && f.target.as_deref() == Some("src/topic-edit-tabs.tsx")
+    }));
+    assert!(findings.iter().any(|f| {
+        f.file == "src/unmocked-next-dynamic-component.mts"
             && f.target.as_deref() == Some("src/dynamic-leaf.mts")
     }));
 }
@@ -142,9 +164,7 @@ fn reachable_dependencies_respect_skips_and_disable_comments() {
         let mut config = NoMistakesConfig::default();
         config.filesystem.skip_directories = skip_directories;
         let dependency_cache = DashMap::new();
-        let mut findings = Vec::new();
-
-        reachable::check(
+        let findings = collect_reachable_findings(
             reachable::ReachableContext {
                 root: &root,
                 config: &config,
@@ -156,9 +176,7 @@ fn reachable_dependencies_respect_skips_and_disable_comments() {
             &test_file,
             &mocks,
             &dependency_cache,
-            &mut findings,
-        )
-        .unwrap();
+        );
 
         assert!(findings.is_empty(), "{case} should not report findings");
     }
@@ -245,9 +263,8 @@ fn reachable_check_shared_skips_dep_with_disable_file_comment() {
     };
     let mocks = HashSet::new();
     let dependency_cache = DashMap::new();
-    let mut findings = Vec::new();
     let config = crate::config::v2::NoMistakesConfig::default();
-    reachable::check(
+    let findings = collect_reachable_findings(
         reachable::ReachableContext {
             root: &root,
             config: &config,
@@ -259,16 +276,14 @@ fn reachable_check_shared_skips_dep_with_disable_file_comment() {
         &test_file,
         &mocks,
         &dependency_cache,
-        &mut findings,
-    )
-    .unwrap();
+    );
     assert!(findings.is_empty());
 }
 
 #[test]
 fn reachable_check_uses_shared_facts_without_disk_read() {
     // Performance regression test: when shared facts are available for a dep,
-    // reachable::check must use them instead of reading from disk.
+    // reachable source analysis must use them instead of reading from disk.
     // A nonexistent dep path proves no disk access occurred.
     let root = fixture();
     let tsconfig = TsConfig {
@@ -299,9 +314,8 @@ fn reachable_check_uses_shared_facts_without_disk_read() {
     };
     let mocks = HashSet::new();
     let dependency_cache = DashMap::new();
-    let mut findings = Vec::new();
     let config = crate::config::v2::NoMistakesConfig::default();
-    reachable::check(
+    collect_reachable_findings(
         reachable::ReachableContext {
             root: &root,
             config: &config,
@@ -313,9 +327,7 @@ fn reachable_check_uses_shared_facts_without_disk_read() {
         &test_file,
         &mocks,
         &dependency_cache,
-        &mut findings,
-    )
-    .unwrap();
+    );
     // dep was not on disk — success proves shared facts were used, not disk
     assert!(!fake_dep.exists());
 }
@@ -354,9 +366,8 @@ fn reachable_check_falls_back_to_disk_when_dep_facts_incomplete() {
     };
     let mocks = HashSet::new();
     let dependency_cache = DashMap::new();
-    let mut findings = Vec::new();
     let config = crate::config::v2::NoMistakesConfig::default();
-    reachable::check(
+    let findings = collect_reachable_findings(
         reachable::ReachableContext {
             root: &root,
             config: &config,
@@ -368,9 +379,7 @@ fn reachable_check_falls_back_to_disk_when_dep_facts_incomplete() {
         &test_file,
         &mocks,
         &dependency_cache,
-        &mut findings,
-    )
-    .unwrap();
+    );
     assert!(findings.is_empty());
 }
 

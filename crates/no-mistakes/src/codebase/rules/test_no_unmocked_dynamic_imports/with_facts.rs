@@ -14,6 +14,12 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+struct PerTestResult {
+    direct_findings: Vec<RuleFinding>,
+    reachable_findings: Vec<reachable::ReachableFinding>,
+    covered_reachable_imports: HashSet<super::checker::DynamicImportKey>,
+}
+
 pub fn check_with_facts(
     root: &Path,
     config: &NoMistakesConfig,
@@ -36,7 +42,7 @@ pub fn check_with_facts(
     let setup_data = config::precompute_setup_data(root, config)?;
 
     // Pre-populate the dependency cache for all test files in parallel so that
-    // `reachable::check` hits the cache instead of re-running BFS per test.
+    // reachable source checks hit the cache instead of re-running BFS per test.
     let dependency_cache: DashMap<PathBuf, Arc<Vec<PathBuf>>> = DashMap::new();
     test_files.par_iter().for_each(|file| {
         dependency_cache
@@ -44,7 +50,7 @@ pub fn check_with_facts(
             .or_insert_with(|| Arc::new(runtime_deps(&graph, file.clone())));
     });
 
-    let per_test: Vec<Vec<RuleFinding>> = test_files
+    let per_test: Vec<PerTestResult> = test_files
         .into_par_iter()
         .map(|file| {
             let Some(file_facts) = shared.ts.get(&file) else {
@@ -54,7 +60,11 @@ pub fn check_with_facts(
                 anyhow::bail!("missing source facts for {}", file.display());
             };
             if has_disable_file_comment(source, RULE_ID) {
-                return Ok(Vec::new());
+                return Ok(PerTestResult {
+                    direct_findings: Vec::new(),
+                    reachable_findings: Vec::new(),
+                    covered_reachable_imports: HashSet::new(),
+                });
             }
             if let Some(error) = &file_facts.parse_error {
                 anyhow::bail!("failed to parse {}: {error}", file.display());
@@ -92,7 +102,7 @@ pub fn check_with_facts(
                     }
                 }
             }
-            reachable::check(
+            let reachable = reachable::collect(
                 reachable::ReachableContext {
                     root,
                     config,
@@ -104,13 +114,31 @@ pub fn check_with_facts(
                 &file,
                 &mocks,
                 &dependency_cache,
-                &mut local_findings,
             )?;
-            Ok(local_findings)
+            Ok(PerTestResult {
+                direct_findings: local_findings,
+                reachable_findings: reachable.findings,
+                covered_reachable_imports: reachable.covered,
+            })
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let mut findings: Vec<RuleFinding> = per_test.into_iter().flatten().collect();
+    let mut covered_reachable_imports = HashSet::new();
+    for result in &per_test {
+        covered_reachable_imports.extend(result.covered_reachable_imports.iter().cloned());
+    }
+    let mut findings: Vec<RuleFinding> = per_test
+        .into_iter()
+        .flat_map(|result| {
+            result.direct_findings.into_iter().chain(
+                result
+                    .reachable_findings
+                    .into_iter()
+                    .filter(|entry| !covered_reachable_imports.contains(&entry.key))
+                    .map(|entry| entry.finding),
+            )
+        })
+        .collect();
     findings.sort_by_key(|f| (f.file.clone(), f.line, f.target.clone()));
     Ok(findings)
 }
