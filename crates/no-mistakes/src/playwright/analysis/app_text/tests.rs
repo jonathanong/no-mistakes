@@ -190,6 +190,12 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
             && target.kind == AppTextKind::AccessibleName
     }));
     assert!(targets.iter().any(|target| target.text == "Before"));
+    assert!(targets
+        .iter()
+        .any(|target| target.text == "Boolean selector" && target.selector_refs.is_empty()));
+    assert!(targets.iter().any(|target| {
+        target.text == "Dynamic template selector" && target.selector_refs.is_empty()
+    }));
 }
 
 #[test]

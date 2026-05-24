@@ -43,3 +43,16 @@ fn route_reachability_honors_selector_include() {
         .get(&Arc::new("web/app/page.tsx".to_string()))
         .is_some_and(BTreeSet::is_empty));
 }
+
+#[test]
+fn route_reachability_surfaces_import_parse_errors() {
+    let root = crate::playwright::test_support::fixture_path(&["react-traits-components"]);
+    let route = routes::Route {
+        file: root.join("bad-file/app/components/Broken.tsx"),
+        pattern: "/broken".to_string(),
+    };
+
+    let error = collect_route_reachable_files(&root, &settings(vec![]), &[route])
+        .expect_err("malformed route files should surface import parse errors");
+    assert!(error.to_string().contains("Broken.tsx"));
+}

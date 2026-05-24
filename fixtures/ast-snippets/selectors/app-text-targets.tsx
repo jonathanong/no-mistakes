@@ -55,6 +55,8 @@ export function Example(props: { label: string }) {
       <textarea data-pw="textarea-target" aria-label="Message" />
       <div data-pw="split-expression">Before {props.label}</div>
       <div data-pw={42}>Numeric selector</div>
+      <div data-pw>Boolean selector</div>
+      <div data-pw={`${props.label}`}>Dynamic template selector</div>
       <svg:path data-pw="namespaced-target">Namespaced</svg:path>
       <div>{props.label}</div>
     </>
