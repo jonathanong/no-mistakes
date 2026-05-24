@@ -98,3 +98,66 @@ fn test_unknown_ext_always_has_content() {
 fn test_unknown_ext_whitespace_is_empty() {
     assert_eq!(classify_content("   \n", "xyz"), ContentKind::Empty);
 }
+
+#[test]
+fn test_c_style_blank_line_between_comments() {
+    // Empty line between // comments hits the early continue (line 47).
+    let src = "// first\n\n// second\n";
+    assert_eq!(classify_content(src, "ts"), ContentKind::CommentsOnly);
+}
+
+#[test]
+fn test_c_style_code_after_block_close() {
+    // Code following */ on the same line while in_block triggers line 55.
+    let src = "/* start\n*/ const x = 1;\n";
+    assert_eq!(classify_content(src, "ts"), ContentKind::HasContent);
+}
+
+#[test]
+fn test_sql_blank_line_between_dash_comments() {
+    // Empty line in SQL content hits the early continue (line 95).
+    let src = "-- first\n\n-- second\n";
+    assert_eq!(classify_content(src, "sql"), ContentKind::CommentsOnly);
+}
+
+#[test]
+fn test_sql_multiline_block_comment_only() {
+    // Multi-line /* */ block exercises the in_block path (lines 97-105).
+    let src = "/*\n still in block\n*/\n";
+    assert_eq!(classify_content(src, "sql"), ContentKind::CommentsOnly);
+}
+
+#[test]
+fn test_sql_code_after_multiline_block_close() {
+    // Code after */ when in_block=true reaches return true (lines 101-102).
+    let src = "/* comment\n*/ SELECT 1;\n";
+    assert_eq!(classify_content(src, "sql"), ContentKind::HasContent);
+}
+
+#[test]
+fn test_sql_inline_block_comment_with_code() {
+    // Single-line /* ... */ with trailing code reaches return true (lines 112-114).
+    let src = "/* comment */ SELECT 1;\n";
+    assert_eq!(classify_content(src, "sql"), ContentKind::HasContent);
+}
+
+#[test]
+fn test_md_blank_line_in_comment_context() {
+    // Empty line in markdown content hits the early continue (line 140).
+    let src = "<!-- first -->\n\n<!-- second -->\n";
+    assert_eq!(classify_content(src, "md"), ContentKind::CommentsOnly);
+}
+
+#[test]
+fn test_md_content_after_close_in_multiline_comment() {
+    // Content after --> while in_comment=true reaches return true (line 147).
+    let src = "<!--\n still commenting --> real text\n";
+    assert_eq!(classify_content(src, "md"), ContentKind::HasContent);
+}
+
+#[test]
+fn test_md_content_on_same_line_after_comment_close() {
+    // Content after --> on same line as <!-- reaches return true (line 156).
+    let src = "<!-- comment --> some text\n";
+    assert_eq!(classify_content(src, "md"), ContentKind::HasContent);
+}

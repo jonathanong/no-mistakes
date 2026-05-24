@@ -59,3 +59,14 @@ fn test_no_headings_in_plain_text() {
     let sections = parse_markdown_sections(content);
     assert!(sections.is_empty());
 }
+
+#[test]
+fn test_h4_h5_h6_levels() {
+    // Exercises heading_level_to_u32 for H4, H5, H6 (lines 63-65).
+    let content = "#### H4\n##### H5\n###### H6\n";
+    let sections = parse_markdown_sections(content);
+    assert_eq!(sections.len(), 3);
+    assert_eq!(sections[0].level, 4);
+    assert_eq!(sections[1].level, 5);
+    assert_eq!(sections[2].level, 6);
+}

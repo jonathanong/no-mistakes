@@ -90,6 +90,18 @@ fn scoped_package_with_extra_slash_blocked() {
 }
 
 #[test]
+fn npm_alias_scoped_package_blocked() {
+    // npm:@scope/pkg@version — exercises lines 78-79 (scoped npm: alias path).
+    assert!(is_blocked_specifier("npm:@scope/pkg@github:owner/repo"));
+}
+
+#[test]
+fn npm_alias_scoped_package_without_version_is_safe() {
+    // npm:@scope/pkg with no version — after_at.find('@') = None → version = "" → false.
+    assert!(!is_blocked_specifier("npm:@scope/pkg"));
+}
+
+#[test]
 fn http_url_blocked() {
     assert!(is_blocked_specifier("http://example.com/pkg.tgz"));
 }

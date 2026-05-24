@@ -224,3 +224,20 @@ fn duplicate_stem_test_files_are_flagged() {
         "duplicate stem test files should be flagged: {findings:?}"
     );
 }
+
+#[test]
+fn source_candidates_js_extension() {
+    // Exercises the "js" | "jsx" branch in source_candidates (lines 95-98).
+    let candidates = source_candidates("src", "utils", ".test.js");
+    assert!(candidates.contains(&"src/utils.js".to_string()));
+    assert!(candidates.contains(&"src/utils.jsx".to_string()));
+    assert!(candidates.contains(&"src/index.js".to_string()));
+    assert!(candidates.contains(&"src/index.jsx".to_string()));
+}
+
+#[test]
+fn source_candidates_jsx_extension() {
+    let candidates = source_candidates("", "comp", ".test.jsx");
+    assert!(candidates.contains(&"comp.js".to_string()));
+    assert!(candidates.contains(&"comp.jsx".to_string()));
+}
