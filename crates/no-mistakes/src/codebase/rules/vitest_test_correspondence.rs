@@ -1,3 +1,7 @@
+mod helpers;
+pub(crate) use helpers::source_candidates;
+use helpers::{check_source_to_test, stem_and_dir};
+
 use super::RuleFinding;
 use crate::codebase::ts_source::{discover_files, relative_slash_path};
 use crate::config::v2::NoMistakesConfig;
@@ -64,42 +68,6 @@ fn merge(all: Result<Vec<Vec<RuleFinding>>>) -> Result<Vec<RuleFinding>> {
     let mut v: Vec<RuleFinding> = all?.into_iter().flatten().collect();
     super::sort_findings(&mut v);
     Ok(v)
-}
-
-fn stem_and_dir(rel: &str, test_ext: &str) -> (String, String) {
-    let stem = rel.strip_suffix(test_ext).unwrap_or(rel);
-    match stem.rfind('/') {
-        Some(i) => (stem[..i].to_string(), stem[i + 1..].to_string()),
-        None => (String::new(), stem.to_string()),
-    }
-}
-
-pub(crate) fn source_candidates(dir: &str, stem: &str, test_ext: &str) -> Vec<String> {
-    let p = if dir.is_empty() {
-        String::new()
-    } else {
-        format!("{dir}/")
-    };
-    let src_ext = test_ext.rsplit('.').next().unwrap_or("ts");
-    match src_ext {
-        // Module-specific: only look for the exact extension
-        "mts" | "cts" | "mjs" | "cjs" => vec![
-            format!("{p}{stem}.{src_ext}"),
-            format!("{p}index.{src_ext}"),
-        ],
-        "js" | "jsx" => vec![
-            format!("{p}{stem}.js"),
-            format!("{p}{stem}.jsx"),
-            format!("{p}index.js"),
-            format!("{p}index.jsx"),
-        ],
-        _ => vec![
-            format!("{p}{stem}.ts"),
-            format!("{p}{stem}.tsx"),
-            format!("{p}index.ts"),
-            format!("{p}index.tsx"),
-        ],
-    }
 }
 
 fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
@@ -189,6 +157,9 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
         }
     }
 
+    findings.extend(check_source_to_test(
+        files, root, opts, &exts, &rel_set, tdir,
+    ));
     findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
     Ok(findings)
 }

@@ -260,3 +260,17 @@ fn source_candidates_cjs_extension() {
     assert!(candidates.contains(&"src/index.cjs".to_string()));
     assert!(!candidates.iter().any(|c| c.ends_with(".ts")));
 }
+
+#[test]
+fn source_file_without_test_fails() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    std::fs::create_dir_all(root.join("backend/mod")).unwrap();
+    std::fs::write(root.join("backend/mod/index.mts"), "export {};\n").unwrap();
+    let config = config_with_rule(
+        "{scopes: [backend], testExtensions: [\".test.mts\"], testsDir: __tests__}",
+    );
+    let findings = check(root, &config).unwrap();
+    assert_eq!(findings.len(), 1);
+    assert!(findings[0].message.contains("no corresponding test file"));
+}

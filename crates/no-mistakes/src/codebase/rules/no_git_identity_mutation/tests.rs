@@ -282,3 +282,85 @@ fn unreadable_file_returns_empty() {
     );
     assert!(findings.is_empty());
 }
+
+#[test]
+fn non_script_file_not_flagged() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("README.md");
+    std::fs::write(&path, "git config user.name \"Bot\"\n").unwrap();
+    let findings = check_file(
+        &path,
+        tmp.path(),
+        &empty_globset(),
+        &empty_globset(),
+        &patterns(),
+    );
+    assert!(
+        findings.is_empty(),
+        "markdown file should not be flagged; got {findings:?}"
+    );
+}
+
+#[test]
+fn commented_line_not_flagged() {
+    let findings = run_on_source("# git config user.name \"Bot\"\n");
+    assert!(
+        findings.is_empty(),
+        "commented git config should not be flagged"
+    );
+}
+
+#[test]
+fn echo_line_not_flagged() {
+    let findings = run_on_source("echo \"git config user.name Bot\"\n");
+    assert!(
+        findings.is_empty(),
+        "echoed git config should not be flagged"
+    );
+}
+
+#[test]
+fn has_shell_shebang_bash() {
+    assert!(has_shell_shebang("#!/bin/bash\necho hi\n"));
+    assert!(has_shell_shebang("#!/bin/sh\necho hi\n"));
+    assert!(has_shell_shebang("#!/usr/bin/env bash\necho hi\n"));
+    assert!(has_shell_shebang("#!/usr/bin/env sh\necho hi\n"));
+}
+
+#[test]
+fn has_shell_shebang_none() {
+    assert!(!has_shell_shebang("echo hi\n"));
+    assert!(!has_shell_shebang(""));
+}
+
+#[test]
+fn shebang_file_without_sh_extension_flagged() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("deploy");
+    std::fs::write(&path, "#!/bin/bash\ngit config user.name \"Bot\"\n").unwrap();
+    let findings = check_file(
+        &path,
+        tmp.path(),
+        &empty_globset(),
+        &empty_globset(),
+        &patterns(),
+    );
+    assert_eq!(
+        findings.len(),
+        1,
+        "shebang file should be flagged; got {findings:?}"
+    );
+}
+
+#[test]
+fn check_respects_target_roots() {
+    let tmp = tempfile::tempdir().unwrap();
+    let script = tmp.path().join("scripts").join("setup.sh");
+    std::fs::create_dir_all(script.parent().unwrap()).unwrap();
+    std::fs::write(&script, "git config user.name Bot\n").unwrap();
+    // Config with repository scope — check() should apply target_roots
+    let config = config_with_options("{}");
+    let files = vec![script];
+    let findings = check_with_files(tmp.path(), &config, &files).unwrap();
+    assert!(!findings.is_empty(), "should find violation in script");
+}

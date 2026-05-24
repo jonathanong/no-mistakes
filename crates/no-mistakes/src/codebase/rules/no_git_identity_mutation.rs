@@ -10,8 +10,6 @@ use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "no-git-identity-mutation";
 
-/// Returns `true` if `v` is a GitHub-managed runner label.
-/// All GitHub-managed runners use the `ubuntu-*`, `macos-*`, or `windows-*` prefixes.
 pub(crate) fn is_managed_runner(v: &str) -> bool {
     v.starts_with("ubuntu-") || v.starts_with("macos-") || v.starts_with("windows-")
 }
@@ -25,17 +23,22 @@ pub(crate) struct Options {
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     let skip = &config.filesystem.skip_directories;
-    let files = discover_files(root, skip);
+    let all_files = discover_files(root, skip);
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.rule_options();
+        let target_roots = super::target_roots(root, config, rule);
+        let files: Vec<PathBuf> = all_files
+            .iter()
+            .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
+            .cloned()
+            .collect();
         findings.extend(scan(root, &opts, &files)?);
     }
     super::sort_findings(&mut findings);
     Ok(findings)
 }
 
-/// Check using a pre-discovered file list.
 pub(crate) fn check_with_files(
     root: &Path,
     config: &NoMistakesConfig,
@@ -67,10 +70,7 @@ pub(crate) fn build_exclude_globset(patterns: &[String]) -> GlobSet {
 }
 
 pub(crate) fn build_patterns() -> [Regex; 3] {
-    // Three patterns ported from filaments no-git-identity-mutation.
-    // QUOTES = [`"'] — any quote character (backtick, double-quote, single-quote)
     [
-        // Shell form: git config [opts] user.name|email
         Regex::new(
             r#"(?m)(^|[^a-zA-Z0-9_])git[ \t]+config[^\n]*[ \t][`"']?user\.(name|email)([^a-zA-Z0-9.-]|$)"#,
         )
@@ -88,8 +88,15 @@ pub(crate) fn build_patterns() -> [Regex; 3] {
     ]
 }
 
+pub(crate) fn has_shell_shebang(content: &str) -> bool {
+    let l = content.lines().next().unwrap_or("");
+    l.starts_with("#!/bin/sh")
+        || l.starts_with("#!/bin/bash")
+        || l.starts_with("#!/usr/bin/env sh")
+        || l.starts_with("#!/usr/bin/env bash")
+}
+
 pub(crate) fn is_managed_runner_only(content: &str) -> bool {
-    // Find all runs-on: values; if any is not in MANAGED_RUNNERS, not safe to skip
     let runs_on_re = Regex::new(r"runs-on:\s*(\S+)").expect("runs-on regex");
     let values: Vec<&str> = runs_on_re
         .captures_iter(content)
@@ -99,7 +106,6 @@ pub(crate) fn is_managed_runner_only(content: &str) -> bool {
         })
         .collect();
     if values.is_empty() {
-        // No runs-on at all — not a workflow, don't skip
         return false;
     }
     values.iter().all(|v| is_managed_runner(v))
@@ -135,7 +141,13 @@ pub(crate) fn check_file(
         return Vec::new();
     };
 
-    // If file matches conditionally_allowed_workflows and uses only managed runners, skip
+    let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
+    if !matches!(ext, "sh" | "bash" | "zsh" | "fish" | "yml" | "yaml")
+        && !has_shell_shebang(&content)
+    {
+        return Vec::new();
+    }
+
     if cond_set.is_match(rel_str.as_ref()) && is_managed_runner_only(&content) {
         return Vec::new();
     }
@@ -146,11 +158,26 @@ pub(crate) fn check_file(
     for pattern_re in patterns {
         for mat in pattern_re.find_iter(&content) {
             let prefix = &content[..mat.start()];
-            let newline_count = prefix.bytes().filter(|&b| b == b'\n').count();
-            // The pattern starts with (^|[^a-zA-Z0-9_]) — if the match starts at
-            // a newline character (the preceding-char branch), the actual keyword
-            // is on the following line, so bump the count by 1.
+            // When the match starts at '\n', the actual keyword is on the following
+            // line; adjust line_start accordingly before checking for comments.
             let starts_at_newline = content.as_bytes().get(mat.start()) == Some(&b'\n');
+            let line_start = if starts_at_newline {
+                mat.start() + 1
+            } else {
+                prefix.rfind('\n').map_or(0, |i| i + 1)
+            };
+            let line_text = content[line_start..]
+                .lines()
+                .next()
+                .unwrap_or("")
+                .trim_start();
+            if line_text.starts_with('#')
+                || line_text.starts_with("echo ")
+                || line_text.starts_with("printf ")
+            {
+                continue;
+            }
+            let newline_count = prefix.bytes().filter(|&b| b == b'\n').count();
             let line = newline_count + 1 + usize::from(starts_at_newline);
             findings.push(RuleFinding {
                 rule: RULE_ID.to_string(),

@@ -42,12 +42,7 @@ pub(crate) struct Options {
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     let files = discover_files(root, &config.filesystem.skip_directories);
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        findings.extend(scan(root, &rule.rule_options(), &files)?);
-    }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    check_with_files(root, config, &files)
 }
 
 pub(crate) fn check_with_files(
@@ -63,7 +58,8 @@ pub(crate) fn check_with_files(
             .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
             .cloned()
             .collect();
-        findings.extend(scan(root, &rule.rule_options(), &files)?);
+        let lockfile_root = target_roots.first().map_or(root, PathBuf::as_path);
+        findings.extend(scan(root, &rule.rule_options(), &files, lockfile_root)?);
     }
     super::sort_findings(&mut findings);
     Ok(findings)
@@ -93,7 +89,12 @@ pub(crate) fn is_blocked_specifier(spec: &str) -> bool {
     false
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+fn scan(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    lockfile_root: &Path,
+) -> Result<Vec<RuleFinding>> {
     let mut findings: Vec<RuleFinding> = files
         .par_iter()
         .filter(|p| {
@@ -112,7 +113,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
         })
         .flat_map(|path| check_package_json(path, root))
         .collect();
-    findings.extend(check_lockfile(root, opts));
+    findings.extend(check_lockfile(lockfile_root, opts));
     Ok(findings)
 }
 
@@ -151,18 +152,18 @@ fn check_package_json(path: &Path, root: &Path) -> Vec<RuleFinding> {
     findings
 }
 
-fn check_lockfile(root: &Path, opts: &Options) -> Vec<RuleFinding> {
+fn check_lockfile(lockfile_root: &Path, opts: &Options) -> Vec<RuleFinding> {
     let Some(lockfile_path) = &opts.lockfile else {
         return Vec::new();
     };
-    let lockfile_abs = root.join(lockfile_path);
+    let lockfile_abs = lockfile_root.join(lockfile_path);
     let Ok(content) = std::fs::read_to_string(&lockfile_abs) else {
         return Vec::new();
     };
     let Ok(yaml) = serde_yaml::from_str::<serde_yaml::Value>(&content) else {
         return Vec::new();
     };
-    let file = relative_slash_path(root, &lockfile_abs);
+    let file = relative_slash_path(lockfile_root, &lockfile_abs);
     let Some(packages) = yaml.get("packages").and_then(|p| p.as_mapping()) else {
         return Vec::new();
     };
