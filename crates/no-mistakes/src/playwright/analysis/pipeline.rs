@@ -112,7 +112,11 @@ pub(super) fn analyze_with_policy_and_optional_facts(
     app_selectors.sort();
     app_selectors.dedup();
     let app_text_targets = collect_app_text_targets(root, settings)?;
-    let route_reachable_files = collect_route_reachable_files(root, settings, &routes)?;
+    let route_reachable_files = if app_text_targets.is_empty() {
+        Default::default()
+    } else {
+        collect_route_reachable_files(root, settings, &routes)?
+    };
     let route_idx = route_index(root, &routes);
     let app_selector_tgts = app_selector_targets(root, &app_selectors);
     let selector_idx = selector_index(&app_selector_tgts);

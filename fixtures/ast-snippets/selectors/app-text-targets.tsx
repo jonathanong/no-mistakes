@@ -42,6 +42,7 @@ export function Example(props: { label: string }) {
       <button data-pw="aria-hidden-button" aria-hidden="true">Aria hidden action</button>
       <button data-pw="aria-hidden-bool-button" aria-hidden={true}>Bool hidden action</button>
       <label>Wrapped email <input data-pw="wrapped-email-input" /></label>
+      <label>Fragment wrapped <><input data-pw="fragment-wrapped-input" /></></label>
       <div data-pw="container-target"><button>Container child</button></div>
       <input data-pw="submit-input" type="submit" value="Submit form" />
       <div data-pw="explicit-role" role="button">Explicit role</div>

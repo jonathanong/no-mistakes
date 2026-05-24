@@ -154,7 +154,10 @@ fn route_signal_matches_test(
     test_name: &Option<Arc<String>>,
     describe_path: &Arc<Vec<String>>,
 ) -> bool {
-    if route_test_name == test_name && route_describe_path == describe_path {
+    if route_test_name.is_some()
+        && route_test_name == test_name
+        && route_describe_path == describe_path
+    {
         return true;
     }
     route_test_name.is_none()

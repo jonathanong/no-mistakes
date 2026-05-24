@@ -140,7 +140,7 @@ fn object_has_unsupported_role_filters(argument: &Argument<'_>) -> bool {
     };
     object.properties.iter().any(|property| {
         let ObjectPropertyKind::ObjectProperty(property) = property else {
-            return false;
+            return true;
         };
         matches!(
             property_key_name(&property.key),

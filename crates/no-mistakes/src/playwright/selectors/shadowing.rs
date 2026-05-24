@@ -57,7 +57,7 @@ pub(super) fn has_identifier_reassignment(source: &str, name: &str) -> bool {
         if let Some(after_equals) = rest.strip_prefix('=') {
             if !after_equals.starts_with('=')
                 && !after_equals.starts_with('>')
-                && !after_equals.starts_with('{')
+                && !looks_like_jsx_attribute_expression(before, after_equals)
             {
                 return true;
             }
@@ -68,6 +68,49 @@ pub(super) fn has_identifier_reassignment(source: &str, name: &str) -> bool {
 
 fn is_identifier_continue(ch: char) -> bool {
     ch == '_' || ch == '$' || ch.is_ascii_alphanumeric()
+}
+
+fn looks_like_jsx_attribute_expression(before: &str, after_equals: &str) -> bool {
+    if !after_equals.starts_with('{') || !has_unclosed_jsx_start(before) {
+        return false;
+    }
+    let Some(close_brace) = matching_close_brace(after_equals) else {
+        return true;
+    };
+    let rest = after_equals[close_brace + 1..].trim_start();
+    rest.is_empty()
+        || rest.starts_with('>')
+        || rest.starts_with("/>")
+        || rest.chars().next().is_some_and(is_jsx_attribute_start)
+}
+
+fn has_unclosed_jsx_start(before: &str) -> bool {
+    let Some(open_index) = before.rfind('<') else {
+        return false;
+    };
+    let tail = &before[open_index + 1..];
+    !tail.contains('>') && !tail.contains(';')
+}
+
+fn matching_close_brace(source: &str) -> Option<usize> {
+    let mut depth = 0usize;
+    for (index, ch) in source.char_indices() {
+        match ch {
+            '{' => depth += 1,
+            '}' => {
+                depth = depth.saturating_sub(1);
+                if depth == 0 {
+                    return Some(index);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+fn is_jsx_attribute_start(ch: char) -> bool {
+    ch == '_' || ch == ':' || ch.is_ascii_alphabetic()
 }
 
 pub(super) fn has_enclosing_shadow_binding(prefix: &str, binding: &Regex) -> bool {

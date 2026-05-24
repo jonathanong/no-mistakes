@@ -232,11 +232,6 @@ fn extracts_playwright_text_locators() {
             ),
             (
                 "role".to_string(),
-                "Spread role".to_string(),
-                Some("button".to_string())
-            ),
-            (
-                "role".to_string(),
                 "Template name".to_string(),
                 Some("button".to_string())
             ),

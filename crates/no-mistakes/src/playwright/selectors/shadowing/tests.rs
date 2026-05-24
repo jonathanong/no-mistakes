@@ -30,7 +30,13 @@ fn identifier_reassignment_uses_identifier_boundaries_and_assignment_operator() 
     assert!(!has_identifier_reassignment("userid = makeId();", "id"));
     assert!(!has_identifier_reassignment("id => id", "id"));
     assert!(!has_identifier_reassignment("<input id={id}", "id"));
+    assert!(!has_identifier_reassignment(
+        "<input id={id} data-pw=\"x\">",
+        "id"
+    ));
     assert!(has_identifier_reassignment("id = {};", "id"));
+    assert!(has_identifier_reassignment("id={};", "id"));
+    assert!(has_identifier_reassignment("id={foo: 1};", "id"));
 }
 
 #[test]

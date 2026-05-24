@@ -38,3 +38,19 @@ fn route_signal_fallback_requires_hook_scope() {
         &describe_path,
     ));
 }
+
+#[test]
+fn route_signal_does_not_match_unnamed_file_scope_pairs() {
+    let route_test_name = None;
+    let route_describe_path = Arc::new(vec![]);
+    let test_name = None;
+    let describe_path = Arc::new(vec![]);
+
+    assert!(!route_signal_matches_test(
+        &route_test_name,
+        &route_describe_path,
+        false,
+        &test_name,
+        &describe_path,
+    ));
+}

@@ -144,30 +144,40 @@ impl AppTextVisitor<'_> {
         inherited_hidden: bool,
     ) -> Option<ControlTextTarget> {
         for child in children {
-            let oxc_ast::ast::JSXChild::Element(element) = child else {
-                continue;
-            };
-            let tag = jsx_element_name(&element.opening_element.name);
-            let hidden = inherited_hidden || self.element_is_hidden(&element.opening_element);
-            if is_labelable(tag) {
-                return Some(ControlTextTarget {
-                    role: element_role(
-                        &element.opening_element,
-                        tag,
-                        self.source,
-                        self.scoped_static_identifier_defaults,
-                    ),
-                    hidden,
-                    selector_refs: selector_refs(
-                        &element.opening_element,
-                        self.source,
-                        self.settings,
-                        self.scoped_static_identifier_defaults,
-                    ),
-                });
-            }
-            if let Some(control) = self.nested_label_control(&element.children, hidden) {
-                return Some(control);
+            match child {
+                oxc_ast::ast::JSXChild::Element(element) => {
+                    let tag = jsx_element_name(&element.opening_element.name);
+                    let hidden =
+                        inherited_hidden || self.element_is_hidden(&element.opening_element);
+                    if is_labelable(tag) {
+                        return Some(ControlTextTarget {
+                            role: element_role(
+                                &element.opening_element,
+                                tag,
+                                self.source,
+                                self.scoped_static_identifier_defaults,
+                            ),
+                            hidden,
+                            selector_refs: selector_refs(
+                                &element.opening_element,
+                                self.source,
+                                self.settings,
+                                self.scoped_static_identifier_defaults,
+                            ),
+                        });
+                    }
+                    if let Some(control) = self.nested_label_control(&element.children, hidden) {
+                        return Some(control);
+                    }
+                }
+                oxc_ast::ast::JSXChild::Fragment(fragment) => {
+                    if let Some(control) =
+                        self.nested_label_control(&fragment.children, inherited_hidden)
+                    {
+                        return Some(control);
+                    }
+                }
+                _ => {}
             }
         }
         None
