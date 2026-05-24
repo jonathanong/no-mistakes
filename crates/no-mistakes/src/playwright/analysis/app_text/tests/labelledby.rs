@@ -66,4 +66,12 @@ fn labelledby_suppresses_descendant_accessible_names() {
                 .iter()
                 .any(|selector| selector.value == "dynamic-labelledby")
     }));
+    assert!(!targets.iter().any(|target| {
+        target.kind == AppTextKind::AccessibleName
+            && target.text == "Dynamic aria visible should not name"
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "dynamic-aria-label")
+    }));
 }

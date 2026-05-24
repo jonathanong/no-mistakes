@@ -23,10 +23,7 @@ impl<'a> Visit<'a> for AppTextVisitor<'_> {
         let visible_name_exists = accessible_texts
             .iter()
             .any(|text| normalize_locator_text(text).is_some());
-        let has_aria_label = self
-            .string_attr(&element.opening_element, "aria-label")
-            .and_then(|value| normalize_locator_text(&value))
-            .is_some();
+        let has_aria_label = self.has_aria_label_override(&element.opening_element);
         let has_aria_labelledby = self.has_accessible_name_override(&element.opening_element);
         self.push_normalized_texts(
             AppTextKind::VisibleText,
@@ -62,6 +59,13 @@ impl<'a> Visit<'a> for AppTextVisitor<'_> {
 }
 
 impl AppTextVisitor<'_> {
+    fn has_aria_label_override(&self, opening: &oxc_ast::ast::JSXOpeningElement<'_>) -> bool {
+        if let Some(value) = self.string_attr(opening, "aria-label") {
+            return normalize_locator_text(&value).is_some();
+        }
+        jsx::attr_exists_at_runtime(opening, "aria-label")
+    }
+
     fn has_accessible_name_override(&self, opening: &oxc_ast::ast::JSXOpeningElement<'_>) -> bool {
         if let Some(value) = self.string_attr(opening, "aria-labelledby") {
             return normalize_locator_text(&value).is_some();

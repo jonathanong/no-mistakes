@@ -28,6 +28,7 @@ export function Example(props: { label: string }) {
       <span id="override-label">Override name</span>
       <button data-pw="labelledby-precedence" aria-labelledby="override-label">Visible should not name</button>
       <button data-pw="dynamic-labelledby" aria-labelledby={props.label}>Dynamic visible should not name</button>
+      <button data-pw="dynamic-aria-label" aria-label={props.label}>Dynamic aria visible should not name</button>
       <input id="missing-labelledby-input" data-pw="missing-labelledby-input" aria-labelledby="missing-label" />
       <label htmlFor="missing-control">Missing control</label>
       <input data-pw={"search-input"} aria-label={"Search field"} placeholder={"Search"} />
