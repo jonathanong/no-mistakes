@@ -108,6 +108,24 @@ fn invalid_empty_integration_suites_is_rejected() {
 }
 
 #[test]
+fn test_project_exclude_requires_include() {
+    let config: crate::config::v2::schema::NoMistakesConfig = serde_yaml::from_str(
+        r#"
+tests:
+  vitest:
+    projects:
+      web:
+        exclude: ["web/generated/**"]
+"#,
+    )
+    .unwrap();
+    let err = config::validate_config(&config).unwrap_err();
+    assert!(err
+        .to_string()
+        .contains("tests.vitest.projects.web.exclude requires include"));
+}
+
+#[test]
 fn annotation_requires_one_valid_value() {
     let valid = "const f = /* no-mistakes: integration=openai */ async () => {}";
     let valid_start = valid.find("async").unwrap() as u32;
@@ -379,6 +397,19 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
         .include
         .iter()
         .any(|glob| glob.contains("__tests__")));
+
+    let dynamic_path = root.join("vitest.dynamic.mts");
+    let dynamic_source = std::fs::read_to_string(&dynamic_path).unwrap();
+    let dynamic =
+        test_config::vitest::parse_from_path(&dynamic_source, &dynamic_path, &root, &root).unwrap();
+    assert!(dynamic.iter().any(|project| {
+        project.name.as_deref() == Some("web")
+            && project.include == vec!["web/**/*.test.ts"]
+            && project.exclude == vec!["web/**/*.skip.ts"]
+    }));
+    assert!(dynamic.iter().any(|project| {
+        project.name.as_deref() == Some("local") && project.include == vec!["local/**/*.test.ts"]
+    }));
 }
 
 #[test]

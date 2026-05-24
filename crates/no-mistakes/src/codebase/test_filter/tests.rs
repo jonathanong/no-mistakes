@@ -22,6 +22,7 @@ fn configured_suite_filters_skip_when_project_config_fails_to_load() {
         "unit".to_string(),
         TestProjectPolicy {
             integration_suites: BTreeMap::from([("openai".to_string(), Vec::new())]),
+            ..Default::default()
         },
     );
 
