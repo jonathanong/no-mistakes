@@ -1,3 +1,5 @@
+import "./cycle";
+
 export function DiscussButton() {
   return (
     <form>

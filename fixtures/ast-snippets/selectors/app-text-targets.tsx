@@ -23,6 +23,7 @@ export function Example(props: { label: string }) {
       <input id="subscribe-checkbox" data-pw="subscribe-checkbox" type="checkbox" />
       <span id="plan-label">Plan label</span>
       <input id="plan-input" data-pw="plan-input" aria-labelledby="plan-label" />
+      <input id="missing-labelledby-input" data-pw="missing-labelledby-input" aria-labelledby="missing-label" />
       <label htmlFor="missing-control">Missing control</label>
       <input data-pw={"search-input"} aria-label={"Search field"} placeholder={"Search"} />
       <img alt="Company logo" />
@@ -57,7 +58,11 @@ export function Example(props: { label: string }) {
       <div data-pw={42}>Numeric selector</div>
       <div data-pw>Boolean selector</div>
       <div data-pw={`${props.label}`}>Dynamic template selector</div>
+      <div svg:path="x" data-pw="namespaced-attr">Namespaced attr</div>
+      <div data-pw=<span /> aria-label="Element attribute">Element attribute</div>
+      <select {...props} data-pw="spread-select" multiple aria-label="Spread select" />
       <svg:path data-pw="namespaced-target">Namespaced</svg:path>
+      <this.Button data-pw="this-button" title="This button">This button</this.Button>
       <div>{props.label}</div>
     </>
   );

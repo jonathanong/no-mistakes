@@ -194,6 +194,7 @@ fn extracts_playwright_text_locators() {
     let locators = extract_playwright_text_locators(
         r#"
         await page.getByRole("button", { name: "Discuss" }).click();
+        await page.getByRole("button", { ...roleOptions, name: "Spread role" }).click();
         await page.getByRole(`button`, { exact: true, [`name`]: "Ignored", name: `Template name` });
         await page.getByRole("button", { name: "Bad exact", exact: "yes" });
         await page.getByRole("button", { name: "Computed exact", exact: isExact });
@@ -203,6 +204,7 @@ fn extracts_playwright_text_locators() {
         await page.getByText("Welcome back").click();
         await page.getByText("Welcome back").click();
         await page.getByText(`Exact text`, { exact: true }).click();
+        await page.getByText("Spread exact", { ...textOptions, exact: false }).click();
         await page.getByText("Unknown exact", { exact: isExact }).click();
         await page.getByText("Loose text", "not options").click();
         await page.getByLabel(`Email`).fill("a@b.com");
@@ -222,11 +224,17 @@ fn extracts_playwright_text_locators() {
             ),
             (
                 "role".to_string(),
+                "Spread role".to_string(),
+                Some("button".to_string())
+            ),
+            (
+                "role".to_string(),
                 "Template name".to_string(),
                 Some("button".to_string())
             ),
             ("text".to_string(), "Exact text".to_string(), None),
             ("text".to_string(), "Loose text".to_string(), None),
+            ("text".to_string(), "Spread exact".to_string(), None),
             ("text".to_string(), "Welcome back".to_string(), None),
             ("label".to_string(), "Email".to_string(), None),
             ("label".to_string(), "Full name".to_string(), None),

@@ -7,6 +7,8 @@ use std::sync::Arc;
 
 mod matching;
 use matching::text_target_matches;
+#[cfg(test)]
+mod tests;
 
 pub(crate) fn append_locator_text_edges(
     edges: &mut Vec<Edge>,

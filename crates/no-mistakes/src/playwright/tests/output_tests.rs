@@ -441,6 +441,30 @@ fn build_tests_report_with_absolute_file_path_filter() {
 }
 
 #[test]
+fn build_tests_report_filters_locator_text_edges_by_file() {
+    let root = std::path::Path::new("/repo");
+    let edges = vec![Edge::LocatorText {
+        test_file: std::sync::Arc::new("tests/e2e/app.spec.ts".to_string()),
+        test_name: Some(std::sync::Arc::new("visits home".to_string())),
+        describe_path: std::sync::Arc::new(vec![]),
+        app_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
+        locator_kind: "text".to_string(),
+        role: None,
+        text: "Save".to_string(),
+        locator: "getByText(Save)".to_string(),
+        selector_refs: vec![],
+        reasons: vec!["route-signal".to_string()],
+        line: 5,
+    }];
+    let report = build_tests_report(
+        &edges,
+        &[std::path::PathBuf::from("tests/e2e/other.spec.ts")],
+        root,
+    );
+    assert!(report.tests.is_empty());
+}
+
+#[test]
 fn report_json_surfaces_project_selection_errors() {
     let root = fixture_path(&["nextjs-coverage", "covered"]);
     let error = report_json(
