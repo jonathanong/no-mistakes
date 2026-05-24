@@ -28,6 +28,9 @@ pub(super) fn selected_components(
         if test_filter.is_match(root, path) {
             continue;
         }
+        if opts.ignore_index_and_private_files && is_index_or_private_file(path) {
+            continue;
+        }
         let project_file = relative_slash_path(project_root, path);
         if exclude.is_match(&project_file) {
             continue;
@@ -77,6 +80,12 @@ fn should_skip_file(facts: &CheckFileFacts, opts: &Options, explicit: bool) -> b
     };
     has_disable_file_comment(source, RULE_ID)
         || (!explicit && !opts.required_props.is_empty() && !source_has_required_prop(source, opts))
+}
+
+fn is_index_or_private_file(path: &Path) -> bool {
+    path.file_stem()
+        .and_then(|stem| stem.to_str())
+        .is_some_and(|stem| stem == "index" || stem.starts_with('_'))
 }
 
 fn export_line(facts: &CheckFileFacts, export_name: &str) -> Option<u32> {
