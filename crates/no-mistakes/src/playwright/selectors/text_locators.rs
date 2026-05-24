@@ -18,8 +18,7 @@ pub(crate) fn extract_playwright_text_locator_occurrences_from_program(
         describe_stack: Vec::new(),
     };
     visitor.visit_program(program);
-    visitor.locators.sort();
-    visitor.locators.dedup();
+    playwright_tests::dedup_occurrences_by_identity(&mut visitor.locators);
     visitor.locators
 }
 

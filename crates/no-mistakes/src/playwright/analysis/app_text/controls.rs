@@ -1,4 +1,5 @@
 use crate::playwright::analysis::types::SelectorRef;
+use crate::playwright::selectors::scoped_defaults::ScopedStaticIdentifierDefault;
 
 #[derive(Clone)]
 pub(super) struct ControlTextTarget {
@@ -19,9 +20,13 @@ pub(super) fn is_labelable(tag: Option<&str>) -> bool {
     )
 }
 
-pub(super) fn input_type_uses_value_text(opening: &oxc_ast::ast::JSXOpeningElement<'_>) -> bool {
+pub(super) fn input_type_uses_value_text(
+    opening: &oxc_ast::ast::JSXOpeningElement<'_>,
+    source: &str,
+    scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
+) -> bool {
     matches!(
-        super::jsx::string_attr(opening, "type")
+        super::jsx::string_attr(opening, "type", source, scoped_static_identifier_defaults)
             .as_deref()
             .unwrap_or("text"),
         "button" | "reset" | "submit"

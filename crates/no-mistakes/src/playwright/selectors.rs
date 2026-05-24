@@ -5,7 +5,7 @@ mod extract_app;
 mod extract_playwright;
 mod matcher;
 mod regex_mod;
-mod scoped_defaults;
+pub(crate) mod scoped_defaults;
 mod shadowing;
 mod template;
 #[cfg(test)]

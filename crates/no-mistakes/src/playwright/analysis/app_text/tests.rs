@@ -55,6 +55,14 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .iter()
                 .any(|selector| selector.value == "named-email-input")
     }));
+    assert!(targets.iter().any(|target| {
+        target.kind == AppTextKind::Label
+            && target.text == "Identifier email"
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "identifier-email-input")
+    }));
     assert_role(&targets, "Subscribe label", "checkbox");
     assert!(targets.iter().any(|target| {
         target.kind == AppTextKind::AccessibleName
@@ -81,6 +89,20 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .selector_refs
                 .iter()
                 .any(|selector| selector.value == "save-button")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Template child"
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "template-button")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Template aria"
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "template-aria")
     }));
     assert!(targets.iter().any(|target| target.text == "String child"));
     assert!(targets.iter().any(|target| {

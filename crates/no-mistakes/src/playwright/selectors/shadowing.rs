@@ -55,7 +55,10 @@ pub(super) fn has_identifier_reassignment(source: &str, name: &str) -> bool {
             return true;
         }
         if let Some(after_equals) = rest.strip_prefix('=') {
-            if !after_equals.starts_with('=') && !after_equals.starts_with('>') {
+            if !after_equals.starts_with('=')
+                && !after_equals.starts_with('>')
+                && !after_equals.starts_with('{')
+            {
                 return true;
             }
         }

@@ -63,7 +63,10 @@ fn marks_selectors_inside_skipped_and_conditional_tests() {
             : test('ternary alternate', async ({ page }) => {
                 await page.getByTestId('ternary-alternate');
             });
-        test('active', async ({ page }) => { await page.getByTestId('active'); });
+        test('active', async ({ page }) => {
+            await page.getByTestId('active');
+            await page.getByTestId('active');
+        });
         test.skip(({ browserName }) => browserName === 'webkit', 'conditional');
         test('file scope annotation', async ({ page }) => {
             await page.getByTestId('scope-annotation');
@@ -195,7 +198,9 @@ fn extracts_playwright_text_locators() {
         await page.getByRole("button", { name: "Bad exact", exact: "yes" });
         await page.getByRole("checkbox", { name: "Subscribe", checked: true });
         await page.getByText("Welcome back").click();
+        await page.getByText("Welcome back").click();
         await page.getByText(`Exact text`, { exact: true }).click();
+        await page.getByText("Unknown exact", { exact: isExact }).click();
         await page.getByText("Loose text", "not options").click();
         await page.getByLabel(`Email`).fill("a@b.com");
         await page.getByLabel("Full name", { exact: false }).fill("Ada");
@@ -207,11 +212,6 @@ fn extracts_playwright_text_locators() {
     assert_eq!(
         locators,
         vec![
-            (
-                "role".to_string(),
-                "Bad exact".to_string(),
-                Some("button".to_string())
-            ),
             (
                 "role".to_string(),
                 "Discuss".to_string(),

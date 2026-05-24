@@ -27,11 +27,15 @@ fn simple_locator(
     kind: LocatorKind,
     method: &str,
 ) -> Option<PlaywrightTextLocator> {
-    let exact = call
+    let exact = match call
         .arguments
         .get(1)
-        .and_then(|argument| object_bool_property(argument, "exact"))
-        .unwrap_or(false);
+        .map(|argument| object_bool_property(argument, "exact"))
+    {
+        Some(BoolProperty::Unknown) => return None,
+        Some(BoolProperty::Value(exact)) => exact,
+        Some(BoolProperty::Missing) | None => false,
+    };
     text_arg(call.arguments.first()?, source).map(|text| PlaywrightTextLocator {
         kind,
         role: None,
@@ -48,7 +52,11 @@ fn role_locator(call: &CallExpression<'_>, source: &str) -> Option<PlaywrightTex
         return None;
     }
     let name = object_string_property(options, "name", source)?;
-    let exact = object_bool_property(options, "exact").unwrap_or(false);
+    let exact = match object_bool_property(options, "exact") {
+        BoolProperty::Unknown => return None,
+        BoolProperty::Value(exact) => exact,
+        BoolProperty::Missing => false,
+    };
     Some(PlaywrightTextLocator {
         kind: LocatorKind::Role,
         role: Some(role.clone()),
@@ -94,9 +102,15 @@ fn object_string_property(argument: &Argument<'_>, name: &str, source: &str) -> 
     None
 }
 
-fn object_bool_property(argument: &Argument<'_>, name: &str) -> Option<bool> {
+enum BoolProperty {
+    Missing,
+    Value(bool),
+    Unknown,
+}
+
+fn object_bool_property(argument: &Argument<'_>, name: &str) -> BoolProperty {
     let Argument::ObjectExpression(object) = argument else {
-        return None;
+        return BoolProperty::Missing;
     };
     for property in &object.properties {
         let ObjectPropertyKind::ObjectProperty(property) = property else {
@@ -106,11 +120,11 @@ fn object_bool_property(argument: &Argument<'_>, name: &str) -> Option<bool> {
             continue;
         }
         if let Expression::BooleanLiteral(literal) = &property.value {
-            return Some(literal.value);
+            return BoolProperty::Value(literal.value);
         }
-        return None;
+        return BoolProperty::Unknown;
     }
-    None
+    BoolProperty::Missing
 }
 
 fn object_has_unsupported_role_filters(argument: &Argument<'_>) -> bool {

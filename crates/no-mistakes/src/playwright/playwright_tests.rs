@@ -2,6 +2,7 @@ use crate::playwright::ast;
 use oxc_ast::ast::{Argument, CallExpression, Expression};
 
 mod occurrence;
+pub(crate) use occurrence::dedup_occurrences_by_identity;
 pub use occurrence::TestOccurrence;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]

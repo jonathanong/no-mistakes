@@ -12,7 +12,7 @@ use oxc_ast::ast::{
     CallExpression, ConditionalExpression, IfStatement, LogicalExpression, Program,
 };
 use oxc_ast_visit::{walk, Visit};
-use std::collections::{BTreeSet, HashMap};
+use std::collections::HashMap;
 
 pub(super) struct UrlVisitor<'a, 'h> {
     pub source: &'a str,
@@ -20,7 +20,7 @@ pub(super) struct UrlVisitor<'a, 'h> {
     pub static_zero_arg_paths: &'h HashMap<String, Vec<String>>,
     pub status: playwright_tests::TestStatus,
     pub annotation_status: playwright_tests::TestStatus,
-    pub urls: BTreeSet<playwright_tests::TestOccurrence<String>>,
+    pub urls: Vec<playwright_tests::TestOccurrence<String>>,
     pub current_test_name: Option<String>,
     pub describe_stack: Vec<String>,
 }
@@ -150,7 +150,7 @@ impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
 
 impl UrlVisitor<'_, '_> {
     pub fn insert(&mut self, value: String, byte_offset: u32) {
-        self.urls.insert(playwright_tests::TestOccurrence {
+        self.urls.push(playwright_tests::TestOccurrence {
             value,
             status: self.status.merge(self.annotation_status),
             test_name: self.current_test_name.clone(),
@@ -201,10 +201,11 @@ pub fn extract_playwright_url_occurrences_from_program(
         static_zero_arg_paths: &static_zero_arg_paths,
         status: playwright_tests::TestStatus::Active,
         annotation_status: playwright_tests::TestStatus::Active,
-        urls: BTreeSet::new(),
+        urls: Vec::new(),
         current_test_name: None,
         describe_stack: Vec::new(),
     };
     visitor.visit_program(program);
-    visitor.urls.into_iter().collect()
+    playwright_tests::dedup_occurrences_by_identity(&mut visitor.urls);
+    visitor.urls
 }

@@ -25,8 +25,7 @@ pub fn extract_playwright_selector_occurrences_from_program(
         describe_stack: Vec::new(),
     };
     visitor.visit_program(program);
-    visitor.selectors.sort();
-    visitor.selectors.dedup();
+    playwright_tests::dedup_occurrences_by_identity(&mut visitor.selectors);
     visitor.selectors
 }
 

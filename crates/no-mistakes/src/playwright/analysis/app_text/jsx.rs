@@ -1,55 +1,18 @@
+use super::elements::jsx_element_name;
 use crate::playwright::analysis::types::SelectorRef;
+use crate::playwright::ast;
 use crate::playwright::config::Settings;
+use crate::playwright::selectors::scoped_defaults::{
+    scoped_static_default_for_identifier, ScopedStaticIdentifierDefault,
+};
 use crate::playwright::selectors::HTML_ID_ATTRIBUTE;
-
-pub(super) fn direct_child_texts(children: &[oxc_ast::ast::JSXChild<'_>]) -> Vec<String> {
-    child_texts(children, false)
-}
-
-pub(super) fn descendant_texts(children: &[oxc_ast::ast::JSXChild<'_>]) -> Vec<String> {
-    child_texts(children, true)
-}
-
-fn child_texts(children: &[oxc_ast::ast::JSXChild<'_>], include_descendants: bool) -> Vec<String> {
-    let mut results = Vec::new();
-    let mut current = String::new();
-
-    for child in children {
-        match child {
-            oxc_ast::ast::JSXChild::Text(text) => {
-                current.push_str(text.value.as_str());
-            }
-            oxc_ast::ast::JSXChild::ExpressionContainer(container) => {
-                if let oxc_ast::ast::JSXExpression::StringLiteral(literal) = &container.expression {
-                    current.push_str(literal.value.as_str());
-                } else if !current.is_empty() {
-                    results.push(std::mem::take(&mut current));
-                }
-            }
-            oxc_ast::ast::JSXChild::Element(element) if include_descendants => {
-                if !current.is_empty() {
-                    results.push(std::mem::take(&mut current));
-                }
-                results.extend(descendant_texts(&element.children));
-            }
-            _ => {
-                if !current.is_empty() {
-                    results.push(std::mem::take(&mut current));
-                }
-            }
-        }
-    }
-
-    if !current.is_empty() {
-        results.push(current);
-    }
-
-    results
-}
+use oxc_span::GetSpan;
 
 pub(super) fn selector_refs(
     opening: &oxc_ast::ast::JSXOpeningElement<'_>,
+    source: &str,
     settings: &Settings,
+    scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
 ) -> Vec<SelectorRef> {
     let component = jsx_element_name(&opening.name)
         .and_then(|name| name.chars().next())
@@ -77,7 +40,11 @@ pub(super) fn selector_refs(
         let Some(attribute_name) = mapped else {
             continue;
         };
-        let Some(value) = jsx_attr_string(attribute.value.as_ref()) else {
+        let Some(value) = jsx_attr_string(
+            attribute.value.as_ref(),
+            source,
+            scoped_static_identifier_defaults,
+        ) else {
             continue;
         };
         refs.push(SelectorRef {
@@ -93,13 +60,19 @@ pub(super) fn selector_refs(
 pub(super) fn string_attr(
     opening: &oxc_ast::ast::JSXOpeningElement<'_>,
     name: &str,
+    source: &str,
+    scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
 ) -> Option<String> {
     for item in &opening.attributes {
         let oxc_ast::ast::JSXAttributeItem::Attribute(attribute) = item else {
             continue;
         };
         if jsx_attribute_name(&attribute.name) == Some(name) {
-            return jsx_attr_string(attribute.value.as_ref());
+            return jsx_attr_string(
+                attribute.value.as_ref(),
+                source,
+                scoped_static_identifier_defaults,
+            );
         }
     }
     None
@@ -114,13 +87,30 @@ pub(super) fn has_attr(opening: &oxc_ast::ast::JSXOpeningElement<'_>, name: &str
     })
 }
 
-fn jsx_attr_string(value: Option<&oxc_ast::ast::JSXAttributeValue<'_>>) -> Option<String> {
+fn jsx_attr_string(
+    value: Option<&oxc_ast::ast::JSXAttributeValue<'_>>,
+    source: &str,
+    scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
+) -> Option<String> {
     match value? {
         oxc_ast::ast::JSXAttributeValue::StringLiteral(literal) => Some(literal.value.to_string()),
         oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container) => {
             match &container.expression {
                 oxc_ast::ast::JSXExpression::StringLiteral(literal) => {
                     Some(literal.value.to_string())
+                }
+                oxc_ast::ast::JSXExpression::TemplateLiteral(template)
+                    if template.expressions.is_empty() =>
+                {
+                    Some(ast::template_literal_text(template, source))
+                }
+                oxc_ast::ast::JSXExpression::Identifier(identifier) => {
+                    scoped_static_default_for_identifier(
+                        identifier.name.as_str(),
+                        identifier.span(),
+                        scoped_static_identifier_defaults,
+                        source,
+                    )
                 }
                 _ => None,
             }
@@ -133,85 +123,5 @@ fn jsx_attribute_name<'a>(name: &'a oxc_ast::ast::JSXAttributeName<'a>) -> Optio
     match name {
         oxc_ast::ast::JSXAttributeName::Identifier(identifier) => Some(identifier.name.as_str()),
         _ => None,
-    }
-}
-
-pub(super) fn jsx_element_name<'a>(name: &'a oxc_ast::ast::JSXElementName<'a>) -> Option<&'a str> {
-    match name {
-        oxc_ast::ast::JSXElementName::Identifier(identifier) => Some(identifier.name.as_str()),
-        oxc_ast::ast::JSXElementName::IdentifierReference(identifier) => {
-            Some(identifier.name.as_str())
-        }
-        oxc_ast::ast::JSXElementName::MemberExpression(expression) => {
-            jsx_member_expression_root(expression)
-        }
-        _ => None,
-    }
-}
-
-pub(super) fn element_role(
-    opening: &oxc_ast::ast::JSXOpeningElement<'_>,
-    tag: Option<&str>,
-) -> Option<String> {
-    if let Some(role) = string_attr(opening, "role").and_then(|value| first_role_token(&value)) {
-        return Some(role);
-    }
-    implicit_role(opening, tag).map(str::to_string)
-}
-
-fn first_role_token(value: &str) -> Option<String> {
-    value.split_whitespace().next().map(str::to_string)
-}
-
-fn implicit_role(
-    opening: &oxc_ast::ast::JSXOpeningElement<'_>,
-    tag: Option<&str>,
-) -> Option<&'static str> {
-    match tag? {
-        "a" | "area" if has_attr(opening, "href") => Some("link"),
-        "button" => Some("button"),
-        "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => Some("heading"),
-        "img" if string_attr(opening, "alt").is_some() => Some("img"),
-        "input" => input_role(opening),
-        "select" => select_role(opening),
-        "textarea" => Some("textbox"),
-        _ => None,
-    }
-}
-
-fn input_role(opening: &oxc_ast::ast::JSXOpeningElement<'_>) -> Option<&'static str> {
-    match string_attr(opening, "type").as_deref().unwrap_or("text") {
-        "button" | "image" | "reset" | "submit" => Some("button"),
-        "checkbox" => Some("checkbox"),
-        "number" => Some("spinbutton"),
-        "radio" => Some("radio"),
-        "range" => Some("slider"),
-        "search" => Some("searchbox"),
-        "email" | "tel" | "text" | "url" => Some("textbox"),
-        _ => None,
-    }
-}
-
-fn select_role(opening: &oxc_ast::ast::JSXOpeningElement<'_>) -> Option<&'static str> {
-    if has_attr(opening, "multiple") {
-        return Some("listbox");
-    }
-    match string_attr(opening, "size").and_then(|value| value.parse::<u32>().ok()) {
-        Some(size) if size > 1 => Some("listbox"),
-        _ => Some("combobox"),
-    }
-}
-
-fn jsx_member_expression_root<'a>(
-    expression: &'a oxc_ast::ast::JSXMemberExpression<'a>,
-) -> Option<&'a str> {
-    match &expression.object {
-        oxc_ast::ast::JSXMemberExpressionObject::IdentifierReference(identifier) => {
-            Some(identifier.name.as_str())
-        }
-        oxc_ast::ast::JSXMemberExpressionObject::MemberExpression(expression) => {
-            jsx_member_expression_root(expression)
-        }
-        oxc_ast::ast::JSXMemberExpressionObject::ThisExpression(_) => None,
     }
 }

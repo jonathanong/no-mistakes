@@ -2,6 +2,17 @@ function Button(props: { testId: string; title: string; children: React.ReactNod
   return <button data-pw={props.testId} title={props.title}>{props.children}</button>;
 }
 
+function InputWithDefaults(id = "identifier-email", selector = "identifier-email-input") {
+  return (
+    <>
+      <label htmlFor={id}>Identifier email</label>
+      <input id={id} data-pw={selector} />
+      <button data-pw={`template-button`}>{`Template child`}</button>
+      <input data-pw={`template-aria`} aria-label={`Template aria`} />
+    </>
+  );
+}
+
 export function Example(props: { label: string }) {
   return (
     <>

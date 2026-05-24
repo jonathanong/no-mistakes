@@ -110,6 +110,7 @@ fn marks_urls_inside_skipped_and_conditional_tests() {
         });
         test('active', async ({ page }) => {
             await page.goto('/active');
+            await page.goto('/active');
         });
         test.skip(({ browserName }) => browserName === 'webkit', 'conditional');
         test('file scope annotation', async ({ page }) => {

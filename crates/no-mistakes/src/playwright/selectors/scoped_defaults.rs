@@ -5,7 +5,7 @@ use oxc_ast_visit::Visit;
 use oxc_span::{GetSpan, Span};
 use oxc_syntax::scope::ScopeFlags;
 
-pub(super) struct ScopedStaticIdentifierDefault {
+pub(crate) struct ScopedStaticIdentifierDefault {
     pub(super) name: String,
     pub(super) value: String,
     pub(super) scope: Span,
@@ -49,7 +49,7 @@ impl ScopedDefaultVisitor {
     }
 }
 
-pub(super) fn collect_scoped_static_identifier_defaults(
+pub(crate) fn collect_scoped_static_identifier_defaults(
     program: &oxc_ast::ast::Program<'_>,
 ) -> Vec<ScopedStaticIdentifierDefault> {
     let mut visitor = ScopedDefaultVisitor {
@@ -116,7 +116,7 @@ fn expression_string(expression: &oxc_ast::ast::Expression<'_>) -> Option<String
     }
 }
 
-pub(super) fn scoped_static_default_for_identifier(
+pub(crate) fn scoped_static_default_for_identifier(
     name: &str,
     span: Span,
     defaults: &[ScopedStaticIdentifierDefault],
