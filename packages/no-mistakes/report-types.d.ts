@@ -21,9 +21,6 @@ export interface CheckReport {
   rules: unknown[];
   integration: unknown[];
   codebase: unknown[];
-  warnings: string[];
-  timings: Array<[string, unknown]>;
-  hasFindings: boolean;
 }
 
 export interface QueueReport {

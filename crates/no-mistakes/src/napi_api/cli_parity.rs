@@ -42,9 +42,6 @@ pub(crate) fn check_json_impl(options_json: String) -> napi::Result<String> {
         "rules": results.rules,
         "integration": results.integration,
         "codebase": results.codebase,
-        "warnings": results.warnings,
-        "timings": results.timings,
-        "hasFindings": results.has_findings(),
     }))
 }
 
