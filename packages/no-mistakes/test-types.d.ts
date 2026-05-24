@@ -1,5 +1,5 @@
 export interface TestsPlanOptions {
-  framework: "vitest" | "playwright";
+  framework?: "vitest" | "playwright";
   root?: string;
   config?: string;
   tsconfig?: string;

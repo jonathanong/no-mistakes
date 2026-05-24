@@ -192,6 +192,21 @@ fn tests_plan_why_comment_and_graph_exports_return_reports() {
     assert_eq!(plan["fallback_triggered"], false);
     assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
 
+    let legacy_plan_options = json!({
+        "root": root,
+        "changedFiles": ["source.ts"],
+    })
+    .to_string();
+    let legacy_output = tests_plan_json_impl(legacy_plan_options).unwrap();
+    let legacy_plan: serde_json::Value = serde_json::from_str(&legacy_output).unwrap();
+
+    assert_eq!(legacy_plan["fallback_triggered"], false);
+    assert!(legacy_plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|test| test["test_file"] == "source.test.mts"));
+
     let comment = tests_comment_markdown_impl(json!({ "planJson": plan }).to_string()).unwrap();
     assert!(comment.contains("Selected Tests"));
 

@@ -125,7 +125,7 @@ fn build_plan_args(options: TestsPlanOptions) -> AnyhowResult<crate::tests::Plan
         Some("playwright") => Some(crate::tests::TestFramework::Playwright),
         Some("vitest") => Some(crate::tests::TestFramework::Vitest),
         Some(value) => bail!("unknown test framework: {value}"),
-        None => bail!("framework is required"),
+        None => None,
     };
 
     Ok(crate::tests::PlanArgs {
