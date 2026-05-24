@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 
 mod html_ids;
 mod labelledby;
+mod nested_label;
 mod semantics;
 
 fn settings() -> Settings {

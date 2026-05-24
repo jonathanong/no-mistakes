@@ -5,5 +5,6 @@ export default function Page() {
   import("./components/dynamic-button");
   import(`./components/template-button`);
   import(`./components/${section}`);
+  import(section);
   return <AliasButton />;
 }

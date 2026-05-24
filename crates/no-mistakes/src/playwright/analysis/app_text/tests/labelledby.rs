@@ -30,19 +30,19 @@ fn labelledby_targets_do_not_require_target_ids() {
     }));
     assert!(targets.iter().any(|target| {
         target.kind == AppTextKind::Label
-            && target.text == "Wrapped email"
+            && target.text == "Wrapped email nested"
             && target
                 .selector_refs
                 .iter()
-                .any(|selector| selector.value == "wrapped-email-input")
+                .any(|selector| selector.value == "wrapped-email-nested-input")
     }));
     assert!(targets.iter().any(|target| {
         target.kind == AppTextKind::Label
-            && target.text == "Fragment email"
+            && target.text == "Fragment email nested"
             && target
                 .selector_refs
                 .iter()
-                .any(|selector| selector.value == "fragment-email-input")
+                .any(|selector| selector.value == "fragment-email-nested-input")
     }));
 }
 

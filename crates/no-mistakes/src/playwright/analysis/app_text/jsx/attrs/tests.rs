@@ -68,7 +68,10 @@ fn jsx_attr_helpers_cover_static_dynamic_and_ts_wrapped_values() {
     assert!(snapshots["label-dynamic"].label_exists);
     assert!(!snapshots["label-null"].label_exists);
     assert!(!snapshots["label-undefined"].label_exists);
+    assert!(!snapshots["label-as-null"].label_exists);
+    assert!(snapshots["label-non-null"].label_exists);
     assert!(snapshots["label-satisfies"].label_exists);
+    assert!(snapshots["label-element"].label_exists);
 
     assert_eq!(snapshots["hidden-bare"].hidden, Some(true));
     assert_eq!(snapshots["hidden-string"].hidden, Some(true));
@@ -79,7 +82,8 @@ fn jsx_attr_helpers_cover_static_dynamic_and_ts_wrapped_values() {
     assert_eq!(snapshots["hidden-undefined"].hidden, Some(false));
     assert_eq!(snapshots["hidden-as"].hidden, Some(true));
     assert_eq!(snapshots["hidden-satisfies"].hidden, Some(false));
-    assert_eq!(snapshots["hidden-non-null"].hidden, None);
+    assert_eq!(snapshots["hidden-non-null"].hidden, Some(true));
+    assert_eq!(snapshots["hidden-non-null-dynamic"].hidden, None);
     assert_eq!(snapshots["hidden-dynamic"].hidden, None);
 
     assert_eq!(snapshots["aria-string-true"].aria_hidden, Some(true));
@@ -90,13 +94,17 @@ fn jsx_attr_helpers_cover_static_dynamic_and_ts_wrapped_values() {
     assert_eq!(snapshots["aria-expr-string-invalid"].aria_hidden, None);
     assert_eq!(snapshots["aria-as"].aria_hidden, Some(true));
     assert_eq!(snapshots["aria-satisfies"].aria_hidden, Some(false));
-    assert_eq!(snapshots["aria-non-null"].aria_hidden, None);
+    assert_eq!(snapshots["aria-non-null"].aria_hidden, Some(true));
+    assert_eq!(snapshots["aria-non-null-dynamic"].aria_hidden, None);
+    assert_eq!(snapshots["aria-element"].aria_hidden, None);
 
     assert_eq!(snapshots["size-string"].size, Some(3));
     assert_eq!(snapshots["size-number"].size, Some(4));
     assert_eq!(snapshots["size-as"].size, Some(5));
     assert_eq!(snapshots["size-satisfies"].size, Some(6));
-    assert_eq!(snapshots["size-non-null"].size, None);
+    assert_eq!(snapshots["size-non-null"].size, Some(7));
+    assert_eq!(snapshots["size-non-null-dynamic"].size, None);
     assert_eq!(snapshots["size-dynamic"].size, None);
     assert_eq!(snapshots["size-negative"].size, None);
+    assert_eq!(snapshots["size-element"].size, None);
 }

@@ -33,6 +33,7 @@ enabled
 test.skip(({ browserName }) => browserName === "webkit", "annotation");
 test("annotation text", async ({ page }) => {
   await page.getByText("Annotation text").click();
+  await page.getByText("Default exact text", { timeout: 1000 }).click();
   await page.getByText("Last exact text", { exact: false, exact: true }).click();
   await page.getByRole("button", { name: "Old name", name: "New name", includeHidden: true, includeHidden: false }).click();
   await page.getByRole("button", { 0: "zero", name: "Numeric property" }).click();
@@ -42,6 +43,7 @@ test("unsupported text locators", async ({ page }) => {
   await page.getByText(`Hello ${name}`).click();
   await page.getByRole("button", { ["name"]: "Computed" }).click();
   await page.getByRole("button", { name() { return "Method"; } }).click();
+  await page.getByRole("button", { name: "Spread", ...filters }).click();
   await page.getByRole("checkbox", { [filterName]: true, name: "Dynamic filter" }).click();
   await page.getByRole("button", { title: "Wrong property" }).click();
   await page.getByRole("button", { name: /Regex/ }).click();
