@@ -75,7 +75,9 @@ pub(crate) fn existing_changed_files(changed_files: Vec<PathBuf>) -> Vec<PathBuf
 fn changed_file_is_present(changed: &Path) -> bool {
     match fs::symlink_metadata(changed) {
         Ok(_) => true,
-        Err(error) if error.kind() == ErrorKind::NotFound => false,
+        Err(error) if matches!(error.kind(), ErrorKind::NotFound | ErrorKind::NotADirectory) => {
+            false
+        }
         Err(_) => true,
     }
 }
