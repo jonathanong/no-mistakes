@@ -90,6 +90,22 @@ fn numeric_attr_value(attribute: &oxc_ast::ast::JSXAttribute<'_>, source: &str) 
 fn bool_expr(expression: &oxc_ast::ast::JSXExpression<'_>) -> Option<bool> {
     match expression {
         oxc_ast::ast::JSXExpression::BooleanLiteral(literal) => Some(literal.value),
+        oxc_ast::ast::JSXExpression::NullLiteral(_) => Some(false),
+        oxc_ast::ast::JSXExpression::NumericLiteral(literal) => Some(literal.value != 0.0),
+        oxc_ast::ast::JSXExpression::StringLiteral(literal) => Some(!literal.value.is_empty()),
+        oxc_ast::ast::JSXExpression::TemplateLiteral(template)
+            if template.expressions.is_empty() =>
+        {
+            template
+                .quasis
+                .first()
+                .map(|quasi| !quasi.value.raw.is_empty())
+        }
+        oxc_ast::ast::JSXExpression::Identifier(identifier)
+            if identifier.name.as_str() == "undefined" =>
+        {
+            Some(false)
+        }
         _ => None,
     }
 }

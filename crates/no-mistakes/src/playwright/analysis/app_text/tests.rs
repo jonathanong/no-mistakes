@@ -166,6 +166,15 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .any(|selector| selector.value == "hidden-string-button")
     }));
     assert!(targets.iter().any(|target| {
+        target.text == "Expression hidden action"
+            && target.role.as_deref() == Some("button")
+            && target.hidden
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "hidden-expression-string-button")
+    }));
+    assert!(targets.iter().any(|target| {
         target.text == "Shown action"
             && target.role.as_deref() == Some("button")
             && !target.hidden
