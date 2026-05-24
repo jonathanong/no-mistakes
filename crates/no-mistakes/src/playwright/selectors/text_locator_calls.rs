@@ -144,7 +144,15 @@ fn object_has_unsupported_role_filters(argument: &Argument<'_>) -> bool {
         };
         matches!(
             property_key_name(&property.key),
-            Some("checked" | "selected" | "pressed" | "expanded" | "disabled" | "level")
+            Some(
+                "checked"
+                    | "selected"
+                    | "pressed"
+                    | "expanded"
+                    | "disabled"
+                    | "level"
+                    | "description"
+            )
         )
     })
 }

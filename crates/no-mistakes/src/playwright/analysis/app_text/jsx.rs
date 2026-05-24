@@ -9,7 +9,7 @@ use crate::playwright::selectors::HTML_ID_ATTRIBUTE;
 use oxc_span::GetSpan;
 
 mod attrs;
-pub(super) use attrs::{attr_exists_at_runtime, bool_attr, numeric_attr};
+pub(super) use attrs::{aria_bool_attr, attr_exists_at_runtime, bool_attr, numeric_attr};
 
 pub(super) fn selector_refs(
     opening: &oxc_ast::ast::JSXOpeningElement<'_>,

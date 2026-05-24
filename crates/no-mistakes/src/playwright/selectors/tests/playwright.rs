@@ -201,6 +201,7 @@ fn extracts_playwright_text_locators() {
         await page.getByRole("button", { name: "Bad hidden", includeHidden: includeHidden });
         await page.getByRole("button", { name: "Computed exact", exact: isExact });
         await page.getByRole("checkbox", { name: "Subscribe", checked: true });
+        await page.getByRole("button", { name: "Described", description: "Primary" });
         await page.getByRole("button");
         await page.getByRole("button", "not options");
         await page.getByText("Welcome back").click();

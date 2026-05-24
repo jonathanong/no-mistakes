@@ -69,6 +69,14 @@ impl<'a> Visit<'a> for AppTextVisitor<'_> {
                         });
                     }
                 }
+            } else if let Some(control) =
+                self.nested_label_control(&element.children, self.hidden_depth > 0)
+            {
+                for text in accessible_texts {
+                    if let Some(text) = normalize_locator_text(&text) {
+                        self.push_control_name_targets(&control, text);
+                    }
+                }
             } else {
                 for text in accessible_texts {
                     if let Some(text) = normalize_locator_text(&text) {

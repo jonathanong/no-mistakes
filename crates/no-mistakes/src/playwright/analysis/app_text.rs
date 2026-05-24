@@ -5,7 +5,7 @@ use crate::playwright::config::Settings;
 use crate::playwright::fsutil::{build_globset, relative_string};
 use crate::playwright::selectors::scoped_defaults::ScopedStaticIdentifierDefault;
 use anyhow::{Context, Result};
-use controls::{ControlTextTarget, PendingLabel};
+use controls::{is_labelable, ControlTextTarget, PendingLabel};
 use jsx::*;
 use rayon::prelude::*;
 use std::collections::HashMap;
@@ -80,9 +80,7 @@ impl AppTextVisitor<'_> {
 
     fn element_is_hidden(&self, opening: &oxc_ast::ast::JSXOpeningElement<'_>) -> bool {
         bool_attr(opening, "hidden").unwrap_or(false)
-            || self
-                .string_attr(opening, "aria-hidden")
-                .is_some_and(|value| value == "true")
+            || aria_bool_attr(opening, "aria-hidden").unwrap_or(false)
     }
 
     fn push(
@@ -136,6 +134,41 @@ impl AppTextVisitor<'_> {
                 selector_refs: control.selector_refs.clone(),
             });
         }
+    }
+
+    fn nested_label_control(
+        &self,
+        children: &[oxc_ast::ast::JSXChild<'_>],
+        inherited_hidden: bool,
+    ) -> Option<ControlTextTarget> {
+        for child in children {
+            let oxc_ast::ast::JSXChild::Element(element) = child else {
+                continue;
+            };
+            let tag = jsx_element_name(&element.opening_element.name);
+            let hidden = inherited_hidden || self.element_is_hidden(&element.opening_element);
+            if is_labelable(tag) {
+                return Some(ControlTextTarget {
+                    role: element_role(
+                        &element.opening_element,
+                        tag,
+                        self.source,
+                        self.scoped_static_identifier_defaults,
+                    ),
+                    hidden,
+                    selector_refs: selector_refs(
+                        &element.opening_element,
+                        self.source,
+                        self.settings,
+                        self.scoped_static_identifier_defaults,
+                    ),
+                });
+            }
+            if let Some(control) = self.nested_label_control(&element.children, hidden) {
+                return Some(control);
+            }
+        }
+        None
     }
 }
 

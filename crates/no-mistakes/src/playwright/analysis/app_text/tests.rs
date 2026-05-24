@@ -174,6 +174,24 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .iter()
                 .any(|selector| selector.value == "aria-hidden-button")
     }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Bool hidden action"
+            && target.role.as_deref() == Some("button")
+            && target.hidden
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "aria-hidden-bool-button")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.kind == AppTextKind::Label
+            && target.text == "Wrapped email"
+            && target.role.as_deref() == Some("textbox")
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "wrapped-email-input")
+    }));
     assert!(!targets.iter().any(|target| {
         target.text == "Descendant save"
             && target.kind == AppTextKind::VisibleText
@@ -199,6 +217,7 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
     }));
     assert_role(&targets, "Explicit role", "button");
     assert_role(&targets, "Docs", "link");
+    assert_role(&targets, "Empty docs", "link");
     assert_role(&targets, "Dynamic docs", "link");
     assert_role(&targets, "Heading", "heading");
     assert_role(&targets, "Hero image", "img");

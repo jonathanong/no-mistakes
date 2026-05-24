@@ -6,11 +6,28 @@ pub(crate) fn attr_exists_at_runtime(
 ) -> bool {
     find_attr(opening, name).is_some_and(|attribute| match attribute.value.as_ref() {
         None => true,
-        Some(oxc_ast::ast::JSXAttributeValue::StringLiteral(literal)) => !literal.value.is_empty(),
+        Some(oxc_ast::ast::JSXAttributeValue::StringLiteral(_)) => true,
         Some(oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container)) => {
             jsx_expression_truthy(&container.expression)
         }
         _ => false,
+    })
+}
+
+pub(crate) fn aria_bool_attr(
+    opening: &oxc_ast::ast::JSXOpeningElement<'_>,
+    name: &str,
+) -> Option<bool> {
+    find_attr(opening, name).and_then(|attribute| match attribute.value.as_ref()? {
+        oxc_ast::ast::JSXAttributeValue::StringLiteral(literal) => match literal.value.as_str() {
+            "true" => Some(true),
+            "false" => Some(false),
+            _ => None,
+        },
+        oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container) => {
+            bool_expr(&container.expression)
+        }
+        _ => None,
     })
 }
 

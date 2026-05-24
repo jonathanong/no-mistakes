@@ -39,10 +39,13 @@ export function Example(props: { label: string }) {
       <button data-pw="hidden-button" hidden>Hidden action</button>
       <button data-pw="hidden-false-button" hidden={false}>Shown action</button>
       <button data-pw="aria-hidden-button" aria-hidden="true">Aria hidden action</button>
+      <button data-pw="aria-hidden-bool-button" aria-hidden={true}>Bool hidden action</button>
+      <label>Wrapped email <input data-pw="wrapped-email-input" /></label>
       <div data-pw="container-target"><button>Container child</button></div>
       <input data-pw="submit-input" type="submit" value="Submit form" />
       <div data-pw="explicit-role" role="button">Explicit role</div>
       <a data-pw="link-target" href="/docs">Docs</a>
+      <a data-pw="empty-link-target" href="">Empty docs</a>
       <a data-pw="dynamic-link-target" href={props.label}>Dynamic docs</a>
       <h2 data-pw="heading-target">Heading</h2>
       <img data-pw="image-target" alt="Hero image" />

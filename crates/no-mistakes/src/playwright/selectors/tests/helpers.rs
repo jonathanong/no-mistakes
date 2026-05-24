@@ -74,16 +74,19 @@ pub(super) fn extract_playwright_text_locators(
     source: &str,
 ) -> Vec<(String, String, Option<String>)> {
     ast::with_program(Path::new("fixture.ts"), source, |program, source| {
-        extract_playwright_text_locator_occurrences_from_program(program, source)
-            .into_iter()
-            .map(|o| {
-                (
-                    o.value.kind.as_str().to_string(),
-                    o.value.text,
-                    o.value.role,
-                )
-            })
-            .collect()
+        let mut locators = Vec::new();
+        for occurrence in extract_playwright_text_locator_occurrences_from_program(program, source)
+        {
+            let locator = (
+                occurrence.value.kind.as_str().to_string(),
+                occurrence.value.text,
+                occurrence.value.role,
+            );
+            if !locators.contains(&locator) {
+                locators.push(locator);
+            }
+        }
+        locators
     })
     .expect("fixture should parse")
 }
