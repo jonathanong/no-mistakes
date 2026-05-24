@@ -5,7 +5,6 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("covers visible button text", async ({ page }) => {
-  await page.goto("/");
   await page.getByRole("button", { name: "Discuss" }).click();
   await page.getByLabel("Email").fill("reader@example.com");
   await page.getByPlaceholder("Search").fill("topic");
@@ -28,12 +27,12 @@ test.describe("nested suite", () => {
 });
 
 test.describe("late setup", () => {
-  test("uses later setup route for text locator coverage", async ({ page }) => {
-    await page.getByText("Send").click();
-  });
-
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
+  });
+
+  test("uses later setup route for text locator coverage", async ({ page }) => {
+    await page.getByText("Send").click();
   });
 });
 

@@ -3,6 +3,7 @@ use crate::playwright::config;
 use crate::playwright::fsutil::build_globset;
 use crate::playwright::routes;
 use anyhow::Result;
+use rayon::prelude::*;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -26,15 +27,18 @@ pub(crate) fn collect_route_reachable_files(
             )
         })
         .collect();
-    let mut import_cache = HashMap::new();
-    let mut output = HashMap::new();
-    for route in routes {
-        output.insert(
-            route_key(root, &route.file),
-            reachable_files(&route.file, &selector_rel_by_file, &mut import_cache),
-        );
-    }
-    Ok(output)
+    let mut route_reachable_files = routes
+        .par_iter()
+        .map(|route| {
+            let mut import_cache = HashMap::new();
+            (
+                route_key(root, &route.file),
+                reachable_files(&route.file, &selector_rel_by_file, &mut import_cache),
+            )
+        })
+        .collect::<Vec<_>>();
+    route_reachable_files.sort_by(|(left, _), (right, _)| left.cmp(right));
+    Ok(route_reachable_files.into_iter().collect())
 }
 
 fn reachable_files(

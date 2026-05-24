@@ -56,7 +56,12 @@ fn text_locators_create_approximate_related_and_coverage_edges_with_route_signal
     let analysis = analyze(&root, &settings).unwrap();
     assert_eq!(analysis.coverage.summary.covered_selectors, 4);
     assert_eq!(analysis.coverage.summary.uncovered_selectors, 2);
-    assert_locator_text_edge(&analysis, "Discuss", "discuss-in-community-button");
+    assert_locator_text_edge(
+        &analysis,
+        "web/app/components/discuss-button.tsx",
+        "Discuss",
+        "discuss-in-community-button",
+    );
     assert!(analysis.edges.edges.iter().any(|edge| {
         matches!(
             edge,
@@ -70,20 +75,38 @@ fn text_locators_create_approximate_related_and_coverage_edges_with_route_signal
                 && reasons.contains(&"adjacent-selector".to_string())
         )
     }));
+    // "Email" should cover only the input-associated selector, not the button
+    // selector; "Send" separately covers the submit input selector.
     assert!(!locator_text_edge_exists(
         &analysis,
+        "web/app/components/discuss-button.tsx",
         "Email",
         "email-button"
     ));
-    assert_locator_text_edge(&analysis, "Email", "email-input");
-    assert_locator_text_edge(&analysis, "Send", "submit-input");
+    assert_locator_text_edge(
+        &analysis,
+        "web/app/components/discuss-button.tsx",
+        "Email",
+        "email-input",
+    );
+    assert_locator_text_edge(
+        &analysis,
+        "web/app/components/discuss-button.tsx",
+        "Send",
+        "submit-input",
+    );
 
     let mut html_id_settings = settings.clone();
     html_id_settings.html_ids = true;
     let html_id_analysis = analyze(&root, &html_id_settings).unwrap();
     assert_eq!(html_id_analysis.coverage.summary.covered_selectors, 6);
     assert_eq!(html_id_analysis.coverage.summary.uncovered_selectors, 2);
-    assert_locator_text_edge(&html_id_analysis, "save", "save-button");
+    assert_locator_text_edge(
+        &html_id_analysis,
+        "web/app/components/discuss-button.tsx",
+        "save",
+        "save-button",
+    );
 
     let related = build_related_report(
         &root,
@@ -100,21 +123,31 @@ fn text_locators_create_approximate_related_and_coverage_edges_with_route_signal
     assert!(unrelated.tests.is_empty());
 }
 
-fn assert_locator_text_edge(analysis: &Analysis, text: &str, selector_value: &str) {
-    assert!(locator_text_edge_exists(analysis, text, selector_value));
+fn assert_locator_text_edge(analysis: &Analysis, app_file: &str, text: &str, selector_value: &str) {
+    assert!(locator_text_edge_exists(
+        analysis,
+        app_file,
+        text,
+        selector_value
+    ));
 }
 
-fn locator_text_edge_exists(analysis: &Analysis, text: &str, selector_value: &str) -> bool {
+fn locator_text_edge_exists(
+    analysis: &Analysis,
+    app_file: &str,
+    text: &str,
+    selector_value: &str,
+) -> bool {
     analysis.edges.edges.iter().any(|edge| {
         matches!(
             edge,
             crate::playwright::analysis::types::Edge::LocatorText {
-                app_file,
+                app_file: edge_app_file,
                 text: edge_text,
                 selector_refs,
                 reasons,
                 ..
-            } if app_file.as_ref() == "web/app/components/discuss-button.tsx"
+            } if edge_app_file.as_ref() == app_file
                 && edge_text == text
                 && selector_refs.iter().any(|selector| selector.value == selector_value)
                 && reasons.contains(&"route-signal".to_string())

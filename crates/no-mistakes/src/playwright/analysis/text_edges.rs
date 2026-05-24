@@ -1,10 +1,12 @@
 use crate::playwright::analysis::context::TestAnalysisContext;
-use crate::playwright::analysis::text_types::{
-    AppTextKind, AppTextTarget, LocatorKind, PlaywrightTextLocator,
-};
+use crate::playwright::analysis::text_types::{AppTextTarget, PlaywrightTextLocator};
 use crate::playwright::analysis::types::Edge;
 use crate::playwright::playwright_tests::TestOccurrence;
+use rayon::prelude::*;
 use std::sync::Arc;
+
+mod matching;
+use matching::text_target_matches;
 
 pub(crate) fn append_locator_text_edges(
     edges: &mut Vec<Edge>,
@@ -12,49 +14,58 @@ pub(crate) fn append_locator_text_edges(
     context: &TestAnalysisContext<'_>,
     text_locators: Vec<TestOccurrence<PlaywrightTextLocator>>,
 ) {
-    for text_locator in text_locators {
-        if !context.test_policy.allows(text_locator.status) {
-            continue;
-        }
-        let test_name = text_locator.test_name.map(Arc::new);
-        let describe_path = Arc::new(text_locator.describe_path);
-
-        for app_text in context.app_text_targets.iter().filter(|target| {
-            text_target_matches(
-                target,
-                &text_locator.value.kind,
-                text_locator.value.role.as_deref(),
-                &text_locator.value.text,
-                text_locator.value.exact,
-            )
-        }) {
-            let reasons = locator_reasons(
-                edges,
-                rel_test_file,
-                &test_name,
-                &describe_path,
-                text_locator.line,
-                app_text,
-                context,
-            );
-            if reasons.is_empty() {
-                continue;
+    let mut locator_edges = text_locators
+        .into_par_iter()
+        .flat_map_iter(|text_locator| {
+            if !context.test_policy.allows(text_locator.status) {
+                return Vec::new();
             }
-            edges.push(Edge::LocatorText {
-                test_file: rel_test_file.clone(),
-                test_name: test_name.clone(),
-                describe_path: describe_path.clone(),
-                app_file: app_text.app_file.clone(),
-                locator_kind: text_locator.value.kind.as_str().to_string(),
-                role: text_locator.value.role.clone(),
-                text: text_locator.value.text.clone(),
-                locator: text_locator.value.locator.clone(),
-                selector_refs: app_text.selector_refs.clone(),
-                reasons,
-                line: text_locator.line,
-            });
-        }
-    }
+            let test_name = text_locator.test_name.map(Arc::new);
+            let describe_path = Arc::new(text_locator.describe_path);
+            context
+                .app_text_targets
+                .iter()
+                .filter(|target| {
+                    text_target_matches(
+                        target,
+                        &text_locator.value.kind,
+                        text_locator.value.role.as_deref(),
+                        &text_locator.value.text,
+                        text_locator.value.exact,
+                    )
+                })
+                .filter_map(|app_text| {
+                    let reasons = locator_reasons(
+                        edges,
+                        rel_test_file,
+                        &test_name,
+                        &describe_path,
+                        text_locator.line,
+                        app_text,
+                        context,
+                    );
+                    if reasons.is_empty() {
+                        return None;
+                    }
+                    Some(Edge::LocatorText {
+                        test_file: rel_test_file.clone(),
+                        test_name: test_name.clone(),
+                        describe_path: describe_path.clone(),
+                        app_file: app_text.app_file.clone(),
+                        locator_kind: text_locator.value.kind.as_str().to_string(),
+                        role: text_locator.value.role.clone(),
+                        text: text_locator.value.text.clone(),
+                        locator: text_locator.value.locator.clone(),
+                        selector_refs: app_text.selector_refs.clone(),
+                        reasons,
+                        line: text_locator.line,
+                    })
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>();
+    locator_edges.sort();
+    edges.extend(locator_edges);
 }
 
 fn locator_reasons(
@@ -89,33 +100,6 @@ fn locator_reasons(
         reasons.push("adjacent-selector".to_string());
     }
     reasons
-}
-
-fn text_target_matches(
-    target: &AppTextTarget,
-    kind: &LocatorKind,
-    role: Option<&str>,
-    text: &str,
-    exact: bool,
-) -> bool {
-    locator_text_matches(&target.text, text, exact)
-        && match kind {
-            LocatorKind::Text => target.kind == AppTextKind::VisibleText,
-            LocatorKind::Label => target.kind == AppTextKind::Label,
-            LocatorKind::Placeholder => target.kind == AppTextKind::Placeholder,
-            LocatorKind::Role => {
-                target.role.as_deref() == role
-                    && (target.kind == AppTextKind::VisibleText
-                        || target.kind == AppTextKind::AccessibleName)
-            }
-        }
-}
-
-fn locator_text_matches(target: &str, locator: &str, exact: bool) -> bool {
-    if exact {
-        return target == locator;
-    }
-    target.to_lowercase().contains(&locator.to_lowercase())
 }
 
 fn has_reachable_route_signal(
