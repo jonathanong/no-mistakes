@@ -59,28 +59,34 @@ pub fn has_disable_comment(source: &str, stmt_line: u32, rule_id: &str) -> bool 
         return false;
     }
     source
+        .trim_start_matches('\u{FEFF}')
         .lines()
         .nth((stmt_line - 2) as usize)
         .map(|line| {
             let trimmed = line.trim();
-            if !trimmed.starts_with("//") {
+            let Some(rest) = leading_comment_text(trimmed) else {
                 return false;
-            }
-            let rest = trimmed
-                .strip_prefix("//")
-                .expect("line starts with //")
-                .trim();
+            };
             let Some(after_directive) = rest.strip_prefix("no-mistakes-disable-next-line ") else {
                 return false;
             };
-            let rule_part = after_directive.trim();
-            rule_part.strip_prefix(rule_id).is_some_and(|suffix| {
-                suffix.is_empty()
-                    || suffix.starts_with(':')
-                    || suffix.starts_with(char::is_whitespace)
-            })
+            rule_part_matches(after_directive.trim(), rule_id)
         })
         .unwrap_or(false)
+}
+
+/// Returns `true` if `stmt_line` (1-based) contains a
+/// `no-mistakes-disable-line <rule_id>` directive comment.
+///
+/// Matches:
+/// - `// no-mistakes-disable-line <rule_id>`
+/// - `// no-mistakes-disable-line <rule_id>: <reason>`
+/// - `// no-mistakes-disable-line <rule_id> <reason>`
+pub fn has_disable_line_comment(source: &str, stmt_line: u32, rule_id: &str) -> bool {
+    if stmt_line == 0 {
+        return false;
+    }
+    line_comment_directive_matches(source, stmt_line, "no-mistakes-disable-line ", rule_id)
 }
 
 /// Returns `true` if a leading comment disables `rule_id` for the whole file.
@@ -91,6 +97,7 @@ pub fn has_disable_comment(source: &str, stmt_line: u32, rule_id: &str) -> bool 
 /// - `// no-mistakes-disable-file <rule_id> <reason>`
 pub fn has_disable_file_comment(source: &str, rule_id: &str) -> bool {
     let mut in_block_comment = false;
+    let mut saw_hash_attribute = false;
 
     for line in source.trim_start_matches('\u{FEFF}').lines() {
         let mut rest = line.trim();
@@ -118,18 +125,19 @@ pub fn has_disable_file_comment(source: &str, rule_id: &str) -> bool {
                 continue;
             }
 
-            let Some(rest) = rest.strip_prefix("//").map(|s| s.trim()) else {
+            let comment_prefix_is_slash = rest.starts_with("//");
+            saw_hash_attribute |= hash_attribute_comment_line(rest);
+            let Some(rest) = leading_comment_text(rest) else {
                 return false;
             };
             let Some(after_directive) = rest.strip_prefix("no-mistakes-disable-file ") else {
                 break;
             };
+            if saw_hash_attribute && comment_prefix_is_slash {
+                return false;
+            }
             let rule_part = after_directive.trim();
-            if rule_part.strip_prefix(rule_id).is_some_and(|suffix| {
-                suffix.is_empty()
-                    || suffix.starts_with(':')
-                    || suffix.starts_with(char::is_whitespace)
-            }) {
+            if rule_part_matches(rule_part, rule_id) {
                 return true;
             }
             break;
@@ -137,4 +145,46 @@ pub fn has_disable_file_comment(source: &str, rule_id: &str) -> bool {
     }
 
     false
+}
+
+fn hash_attribute_comment_line(line: &str) -> bool {
+    line.starts_with("#![")
+        || line
+            .strip_prefix("#[")
+            .and_then(|rest| rest.chars().next())
+            .is_some_and(is_word_char)
+}
+
+fn line_comment_directive_matches(
+    source: &str,
+    stmt_line: u32,
+    directive: &str,
+    rule_id: &str,
+) -> bool {
+    let mut state = LineCommentScanState::default();
+    for (index, line) in source.trim_start_matches('\u{FEFF}').lines().enumerate() {
+        let line_number = (index + 1) as u32;
+        let comment = line_comment_start(line, &mut state);
+
+        if line_number != stmt_line {
+            continue;
+        }
+
+        let Some((comment_start, prefix_len)) = comment else {
+            return false;
+        };
+        let rest = line[comment_start + prefix_len..].trim();
+        let Some(after_directive) = rest.strip_prefix(directive) else {
+            return false;
+        };
+        return rule_part_matches(after_directive.trim(), rule_id);
+    }
+
+    false
+}
+
+fn rule_part_matches(rule_part: &str, rule_id: &str) -> bool {
+    rule_part.strip_prefix(rule_id).is_some_and(|suffix| {
+        suffix.is_empty() || suffix.starts_with(':') || suffix.starts_with(char::is_whitespace)
+    })
 }

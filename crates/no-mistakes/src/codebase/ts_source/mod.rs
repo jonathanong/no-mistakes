@@ -9,7 +9,11 @@ pub mod jsx;
 
 include!("discovery.rs");
 include!("disable_comments.rs");
+include!("comment_parser.rs");
+include!("comment_parser_modes.rs");
 include!("syntax_helpers.rs");
 
+#[cfg(test)]
+mod comment_parser_tests;
 #[cfg(test)]
 mod tests;

@@ -13,8 +13,8 @@ use super::{
     vitest_test_correspondence,
 };
 use super::{
-    rule_enabled, RuleFinding, AGENTS_MD_MAX_SIZE, BANNED_RENAMED_FILES, DOC_CONSISTENCY,
-    FILE_EXTENSION_POLICY, LOCKFILE_ALLOWLIST, NO_EMPTY_OR_COMMENTS_ONLY_FILES,
+    rule_enabled, suppress_rule_findings, RuleFinding, AGENTS_MD_MAX_SIZE, BANNED_RENAMED_FILES,
+    DOC_CONSISTENCY, FILE_EXTENSION_POLICY, LOCKFILE_ALLOWLIST, NO_EMPTY_OR_COMMENTS_ONLY_FILES,
     NO_GIT_IDENTITY_MUTATION, PACKAGE_JSON_REGISTRY_ONLY, REQUIRED_DOC_SECTION,
     REQUIRED_LOCAL_DOCS, REQUIRE_FILES_IN_SUBDIRS, REQUIRE_TEST_PER_SUBDIR,
     RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS, SHELLCHECK_RUNNER,
@@ -63,6 +63,7 @@ pub fn run_filesystem_rules_with_files(
     results.sort_unstable_by_key(|(id, _)| *id);
     let mut findings = Vec::new();
     for (_, r) in results { findings.extend(r?); }
+    suppress_rule_findings(root, &mut findings);
     super::sort_findings(&mut findings);
     Ok(findings)
 }
@@ -104,6 +105,7 @@ pub fn run_filesystem_rules(root: &Path, config_path: Option<&Path>) -> Result<V
     results.sort_unstable_by_key(|(id, _)| *id);
     let mut findings = Vec::new();
     for (_, r) in results { findings.extend(r?); }
+    suppress_rule_findings(root, &mut findings);
     super::sort_findings(&mut findings);
     Ok(findings)
 }

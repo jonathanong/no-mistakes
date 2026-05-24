@@ -259,6 +259,12 @@ Additional filesystem rules can be configured via `rules:` entries in
 | `shellcheck-runner` | Runs `shellcheck` on `.sh` files and configured shell scripts; skips silently if `shellcheck` is not installed. |
 | `doc-consistency` | Enforces that required files exist, contain required headings/substrings, and do not contain banned substrings. |
 
+Rule findings can be suppressed with documented `no-mistakes` comments. Use
+`// no-mistakes-disable-file <rule-id>: reason` in a leading file comment to
+disable a rule for the whole file, `// no-mistakes-disable-next-line <rule-id>:
+reason` before a finding line, or `// no-mistakes-disable-line <rule-id>:
+reason` on the finding line. Suppressions use `no-mistakes`, not `guardrails`.
+
 ### Storybook Component Coverage via `no-mistakes check`
 
 `require-storybook-stories` requires selected exported React components to have

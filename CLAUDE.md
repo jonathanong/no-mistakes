@@ -49,6 +49,7 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - When finding an error, always create a regression test
 - Continuously add test fixtures to `fixtures/**` for cases you find
 - Test fixtures live under `fixtures/<category>/<name>/` at the repo root. Do NOT create fixtures inline in test code (no `fs::create_dir_all` / `fs::write` to build a fixture during a test run). Save the files to `fixtures/*` and reference them via the per-crate / per-package fixture helper.
+- Rule suppression must work consistently for every `no-mistakes` rule. Use `no-mistakes` suppression directives, never `guardrails`, and support top-of-file opt-outs (`no-mistakes-disable-file`) plus line-specific opt-outs (`no-mistakes-disable-line` and `no-mistakes-disable-next-line`) where findings have line numbers.
 - All shared Rust code belongs in `no-mistakes`. Crates must not depend on one another directly. If two crates need the same helper, lift it into `no-mistakes` first.
 - When adding or changing a CLI-facing capability, update the Rust library entrypoint,
   N-API binding, JS exports/types, and fixture-backed tests in the same change.
