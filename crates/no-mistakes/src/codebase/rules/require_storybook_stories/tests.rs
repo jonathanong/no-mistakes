@@ -1138,6 +1138,9 @@ include_all_react_named_exports: true
 
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].file, "components/Missing.tsx");
+    assert!(findings[0]
+        .message
+        .contains("add an accepted colocated test"));
     assert_eq!(
         findings[0].target.as_deref(),
         Some("components/Missing.tsx#Missing")
