@@ -1,15 +1,16 @@
 mod doc_section;
+mod scan_pkg;
 
 pub(crate) use doc_section::check_required_doc_section_with_files;
 pub use doc_section::{check_required_doc_section, DocSectionOptions};
 
 use super::RuleFinding;
-use crate::codebase::ts_source::{discover_files, relative_slash_path};
+use crate::codebase::ts_source::discover_files;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
+use rayon::prelude::*;
 use serde::Deserialize;
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "required-local-docs";
@@ -29,42 +30,27 @@ pub(crate) struct Options {
     pub(crate) test_exclude_patterns: Vec<String>,
 }
 
-struct ScanConfig {
-    required_file: String,
-    ext_strs: Vec<String>,
-    excl_strs: Vec<String>,
-    excl_globs: GlobSet,
-}
-
-impl ScanConfig {
-    fn new(opts: &Options) -> Self {
-        let required_file = if opts.required_file.is_empty() {
-            DEFAULT_REQUIRED_FILE.to_string()
-        } else {
-            opts.required_file.clone()
-        };
-        let ext_strs: Vec<String> = if opts.code_extensions.is_empty() {
-            DEFAULT_CODE_EXTENSIONS
-                .iter()
-                .map(|s| s.to_string())
-                .collect()
-        } else {
-            opts.code_extensions.clone()
-        };
-        let excl_strs: Vec<String> = if opts.test_exclude_patterns.is_empty() {
-            DEFAULT_TEST_EXCLUDE.iter().map(|s| s.to_string()).collect()
-        } else {
-            opts.test_exclude_patterns.clone()
-        };
-        let excl_refs: Vec<&str> = excl_strs.iter().map(String::as_str).collect();
-        let excl_globs = build_exclude_globs(&excl_refs);
-        Self {
-            required_file,
-            ext_strs,
-            excl_strs,
-            excl_globs,
-        }
-    }
+fn make_scan_config(opts: &Options) -> (String, Vec<String>, Vec<String>, GlobSet) {
+    let req = if opts.required_file.is_empty() {
+        DEFAULT_REQUIRED_FILE.to_string()
+    } else {
+        opts.required_file.clone()
+    };
+    let ext = if opts.code_extensions.is_empty() {
+        DEFAULT_CODE_EXTENSIONS
+            .iter()
+            .map(|&s| s.to_string())
+            .collect()
+    } else {
+        opts.code_extensions.clone()
+    };
+    let excl: Vec<String> = if opts.test_exclude_patterns.is_empty() {
+        DEFAULT_TEST_EXCLUDE.iter().map(|s| s.to_string()).collect()
+    } else {
+        opts.test_exclude_patterns.clone()
+    };
+    let globs = build_exclude_globs(&excl.iter().map(String::as_str).collect::<Vec<_>>());
+    (req, ext, excl, globs)
 }
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
@@ -77,17 +63,20 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.rule_options();
-        let target_roots = super::target_roots(root, config, rule);
-        let files: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
-            .cloned()
-            .collect();
-        findings.extend(scan(root, &opts, &files));
-    }
+    let mut findings: Vec<RuleFinding> = config
+        .rule_applications(RULE_ID)
+        .into_par_iter()
+        .flat_map(|rule| {
+            let opts: Options = rule.rule_options();
+            let target_roots = super::target_roots(root, config, rule);
+            let files: Vec<PathBuf> = all_files
+                .iter()
+                .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
+                .cloned()
+                .collect();
+            scan(root, &opts, &files)
+        })
+        .collect();
     super::sort_findings(&mut findings);
     Ok(findings)
 }
@@ -132,69 +121,30 @@ pub(crate) fn is_code_file(
         })
 }
 
-pub(crate) fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<RuleFinding> {
+pub(crate) fn scan<'a>(root: &Path, opts: &Options, files: &'a [PathBuf]) -> Vec<RuleFinding> {
     if opts.roots.is_empty() {
         return Vec::new();
     }
-    let cfg = ScanConfig::new(opts);
-    let file_set: HashSet<&PathBuf> = files.iter().collect();
-    let mut findings = Vec::new();
-    for root_rel in &opts.roots {
-        let pkg_root = if root_rel.is_absolute() {
-            root_rel.clone()
-        } else {
-            root.join(root_rel)
-        };
-        findings.extend(scan_root(root, &pkg_root, root_rel, &cfg, &file_set, files));
-    }
-    findings
-}
-
-fn scan_root<'a>(
-    root: &Path,
-    pkg_root: &Path,
-    pkg_root_rel: &Path,
-    cfg: &ScanConfig,
-    file_set: &HashSet<&'a PathBuf>,
-    files: &'a [PathBuf],
-) -> Vec<RuleFinding> {
-    let ext_strs: Vec<&str> = cfg.ext_strs.iter().map(String::as_str).collect();
-    let excl_strs: Vec<&str> = cfg.excl_strs.iter().map(String::as_str).collect();
-    let subdirs_with_code: HashSet<String> = files
-        .iter()
-        .filter_map(|file| {
-            let rel = file.strip_prefix(pkg_root).ok()?;
-            let comps: Vec<&str> = rel
-                .components()
-                .filter_map(|c| c.as_os_str().to_str())
-                .collect();
-            if comps.len() >= 2 && is_code_file(file, &ext_strs, &excl_strs, &cfg.excl_globs) {
-                Some(comps[0].to_string())
+    let (req_file, ext_s, excl_s, globs) = make_scan_config(opts);
+    let ext: Vec<&str> = ext_s.iter().map(String::as_str).collect();
+    let excl: Vec<&str> = excl_s.iter().map(String::as_str).collect();
+    let ctx = scan_pkg::ScanCtx {
+        req_file,
+        ext,
+        excl,
+        globs,
+        file_set: files.iter().collect(),
+        files,
+    };
+    opts.roots
+        .par_iter()
+        .flat_map(|root_rel| {
+            let pkg_root = if root_rel.is_absolute() {
+                root_rel.clone()
             } else {
-                None
-            }
-        })
-        .collect();
-    let root_rel_str = pkg_root_rel.to_string_lossy().replace('\\', "/");
-    subdirs_with_code
-        .into_iter()
-        .filter_map(|subdir| {
-            let doc_path = pkg_root.join(&subdir).join(&cfg.required_file);
-            if file_set.contains(&doc_path) {
-                return None;
-            }
-            let dir_rel = relative_slash_path(root, &pkg_root.join(&subdir));
-            Some(RuleFinding {
-                rule: RULE_ID.to_string(),
-                file: format!("{root_rel_str}/{subdir}"),
-                line: 1,
-                message: format!(
-                    "{dir_rel}: code-owning directory is missing {}",
-                    cfg.required_file
-                ),
-                import: None,
-                target: None,
-            })
+                root.join(root_rel)
+            };
+            scan_pkg::scan_pkg(root, &pkg_root, root_rel, &ctx)
         })
         .collect()
 }

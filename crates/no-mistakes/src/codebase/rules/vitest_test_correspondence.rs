@@ -2,6 +2,7 @@ use super::RuleFinding;
 use crate::codebase::ts_source::{discover_files, relative_slash_path};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
+use rayon::prelude::*;
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -21,18 +22,20 @@ pub(crate) struct Options {
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     let skip = &config.filesystem.skip_directories;
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.rule_options();
-        let target_roots = super::target_roots(root, config, rule);
-        let files: Vec<PathBuf> = target_roots
-            .iter()
-            .flat_map(|r| discover_files(r, skip))
-            .collect();
-        findings.extend(scan(root, &opts, &files)?);
-    }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    let all: Result<Vec<Vec<RuleFinding>>> = config
+        .rule_applications(RULE_ID)
+        .into_par_iter()
+        .map(|rule| -> Result<Vec<RuleFinding>> {
+            let opts: Options = rule.rule_options();
+            let target_roots = super::target_roots(root, config, rule);
+            let files: Vec<PathBuf> = target_roots
+                .iter()
+                .flat_map(|r| discover_files(r, skip))
+                .collect();
+            scan(root, &opts, &files)
+        })
+        .collect();
+    merge(all)
 }
 
 pub(crate) fn check_with_files(
@@ -40,35 +43,27 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.rule_options();
-        let target_roots = super::target_roots(root, config, rule);
-        let files: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
-            .cloned()
-            .collect();
-        findings.extend(scan(root, &opts, &files)?);
-    }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    let all: Result<Vec<Vec<RuleFinding>>> = config
+        .rule_applications(RULE_ID)
+        .into_par_iter()
+        .map(|rule| -> Result<Vec<RuleFinding>> {
+            let opts: Options = rule.rule_options();
+            let target_roots = super::target_roots(root, config, rule);
+            let files: Vec<PathBuf> = all_files
+                .iter()
+                .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
+                .cloned()
+                .collect();
+            scan(root, &opts, &files)
+        })
+        .collect();
+    merge(all)
 }
 
-fn test_extensions(opts: &Options) -> Vec<&str> {
-    if opts.test_extensions.is_empty() {
-        DEFAULT_TEST_EXTENSIONS.to_vec()
-    } else {
-        opts.test_extensions.iter().map(String::as_str).collect()
-    }
-}
-
-fn tests_dir(opts: &Options) -> &str {
-    if opts.tests_dir.is_empty() {
-        DEFAULT_TESTS_DIR
-    } else {
-        &opts.tests_dir
-    }
+fn merge(all: Result<Vec<Vec<RuleFinding>>>) -> Result<Vec<RuleFinding>> {
+    let mut v: Vec<RuleFinding> = all?.into_iter().flatten().collect();
+    super::sort_findings(&mut v);
+    Ok(v)
 }
 
 fn stem_and_dir(rel: &str, test_ext: &str) -> (String, String) {
@@ -108,8 +103,16 @@ pub(crate) fn source_candidates(dir: &str, stem: &str, test_ext: &str) -> Vec<St
 }
 
 fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
-    let exts = test_extensions(opts);
-    let tdir = tests_dir(opts);
+    let exts: Vec<&str> = if opts.test_extensions.is_empty() {
+        DEFAULT_TEST_EXTENSIONS.to_vec()
+    } else {
+        opts.test_extensions.iter().map(String::as_str).collect()
+    };
+    let tdir: &str = if opts.tests_dir.is_empty() {
+        DEFAULT_TESTS_DIR
+    } else {
+        &opts.tests_dir
+    };
     let sep = format!("/{tdir}/");
     let pre = format!("{tdir}/");
 

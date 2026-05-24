@@ -5,6 +5,7 @@ use crate::codebase::ts_source::{discover_files, relative_slash_path};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
+use rayon::prelude::*;
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -42,17 +43,20 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.rule_options();
-        let target_roots = super::target_roots(root, config, rule);
-        let files: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
-            .cloned()
-            .collect();
-        findings.extend(scan(root, &opts, &files));
-    }
+    let mut findings: Vec<RuleFinding> = config
+        .rule_applications(RULE_ID)
+        .into_par_iter()
+        .flat_map(|rule| {
+            let opts: Options = rule.rule_options();
+            let target_roots = super::target_roots(root, config, rule);
+            let files: Vec<PathBuf> = all_files
+                .iter()
+                .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
+                .cloned()
+                .collect();
+            scan(root, &opts, &files)
+        })
+        .collect();
     super::sort_findings(&mut findings);
     Ok(findings)
 }

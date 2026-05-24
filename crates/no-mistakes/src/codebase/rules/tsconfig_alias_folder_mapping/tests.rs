@@ -229,6 +229,22 @@ fn check_exists_false_does_not_check_directories() {
 }
 
 #[test]
+fn empty_base_dir_no_leading_slash_on_correct_mapping() {
+    // When baseDir is empty, expected paths must NOT start with '/'
+    let tmp = tempfile::tempdir().unwrap();
+    let tsconfig = r#"{"compilerOptions": {"paths": {"@agents/email": ["agents/email"]}}}"#;
+    std::fs::write(tmp.path().join("tsconfig.json"), tsconfig).unwrap();
+    let config = config_from_yaml(
+        "tsconfig: tsconfig.json\nmappings:\n  - prefix: \"@agents\"\n    root: agents\n",
+    );
+    let findings = check(tmp.path(), &config).unwrap();
+    assert!(
+        findings.is_empty(),
+        "empty baseDir with correct mapping should produce no findings: {findings:?}"
+    );
+}
+
+#[test]
 fn two_mappings_same_root_valid_alias_not_flagged_by_direction_two() {
     // Exercises lines 139-141 and 158: two mappings share the same root folder.
     // @a/sub → backend/shared/sub is correct for the @a mapping. Direction-2 for

@@ -2,6 +2,7 @@ use super::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
+use rayon::prelude::*;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -25,15 +26,28 @@ pub(crate) struct Options {
     pub(crate) check_exists: bool,
 }
 
+fn build_path(parts: &[&str]) -> String {
+    parts
+        .iter()
+        .filter(|&&s| !s.is_empty())
+        .copied()
+        .collect::<Vec<_>>()
+        .join("/")
+}
+
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.rule_options();
-        if opts.tsconfig.as_os_str().is_empty() || opts.mappings.is_empty() {
-            continue;
-        }
-        findings.extend(check_tsconfig(root, &opts)?);
-    }
+    let all: Result<Vec<Vec<RuleFinding>>> = config
+        .rule_applications(RULE_ID)
+        .into_par_iter()
+        .map(|rule| -> Result<Vec<RuleFinding>> {
+            let opts: Options = rule.rule_options();
+            if opts.tsconfig.as_os_str().is_empty() || opts.mappings.is_empty() {
+                return Ok(vec![]);
+            }
+            check_tsconfig(root, &opts)
+        })
+        .collect();
+    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
     super::sort_findings(&mut findings);
     Ok(findings)
 }
@@ -87,7 +101,7 @@ fn check_alias(
         let alias_prefix = format!("{}/", mapping.prefix);
         if alias.starts_with(&alias_prefix) {
             let suffix = &alias[alias_prefix.len()..];
-            let expected = format!("{}/{}/{}", opts.base_dir, mapping.root, suffix);
+            let expected = build_path(&[&opts.base_dir, &mapping.root, suffix]);
             for target in targets {
                 if target != &expected {
                     findings.push(make_finding(
@@ -110,7 +124,7 @@ fn check_alias(
 
     // Check target → alias direction
     for mapping in &opts.mappings {
-        let target_prefix = format!("{}/{}/", opts.base_dir, mapping.root);
+        let target_prefix = format!("{}/", build_path(&[&opts.base_dir, &mapping.root]));
         let required_alias_prefix = format!("{}/", mapping.prefix);
         for target in targets {
             if target.starts_with(&target_prefix) {
@@ -128,7 +142,7 @@ fn check_alias(
                             let ap = format!("{}/", m.prefix);
                             if alias.starts_with(&ap) {
                                 let suffix = &alias[ap.len()..];
-                                let expected = format!("{}/{}/{}", opts.base_dir, m.root, suffix);
+                                let expected = build_path(&[&opts.base_dir, &m.root, suffix]);
                                 all_targets.contains(&expected)
                             } else {
                                 false
