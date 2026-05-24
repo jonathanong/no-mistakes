@@ -55,6 +55,92 @@ fn fail_fixture_has_findings() {
 }
 
 #[test]
+fn test_to_source_direction_fixture_ignores_untested_sources() {
+    let root = fixture_root("test-to-source-pass");
+    let config_path = root.join(".no-mistakes.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let files = vec![
+        root.join("backend/modules/format/index.mts"),
+        root.join("backend/modules/format/index.test.mts"),
+        root.join("backend/modules/untested/index.mts"),
+    ];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert!(
+        findings.is_empty(),
+        "test-to-source mode should ignore source files without tests: {findings:?}"
+    );
+}
+
+#[test]
+fn test_to_source_direction_fixture_reports_orphan_tests() {
+    let root = fixture_root("test-to-source-fail");
+    let config_path = root.join(".no-mistakes.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let files = vec![root.join("backend/modules/orphan/index.test.mts")];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1, "expected one finding, got: {findings:?}");
+    assert!(
+        findings[0].message.contains("no corresponding source file"),
+        "{}",
+        findings[0].message
+    );
+}
+
+#[test]
+fn source_to_test_direction_fixture_ignores_orphan_tests() {
+    let root = fixture_root("source-to-test-pass");
+    let config_path = root.join(".no-mistakes.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let files = vec![root.join("backend/modules/orphan/index.test.mts")];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert!(
+        findings.is_empty(),
+        "source-to-test mode should ignore tests without sources: {findings:?}"
+    );
+}
+
+#[test]
+fn source_to_test_direction_fixture_reports_untested_sources() {
+    let root = fixture_root("source-to-test-fail");
+    let config_path = root.join(".no-mistakes.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let files = vec![root.join("backend/modules/untested/index.mts")];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1, "expected one finding, got: {findings:?}");
+    assert!(
+        findings[0].message.contains("no corresponding test file"),
+        "{}",
+        findings[0].message
+    );
+}
+
+#[test]
+fn test_to_source_direction_ignores_duplicate_test_stems() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    std::fs::create_dir_all(root.join("backend/mod")).unwrap();
+    std::fs::write(root.join("backend/mod/index.ts"), "export {};\n").unwrap();
+    std::fs::write(
+        root.join("backend/mod/index.test.ts"),
+        "test('a', () => {});\n",
+    )
+    .unwrap();
+    std::fs::write(
+        root.join("backend/mod/index.test.tsx"),
+        "test('b', () => {});\n",
+    )
+    .unwrap();
+    let config = config_with_rule(
+        "{scopes: [backend], testExtensions: [\".test.ts\", \".test.tsx\"], testsDir: __tests__, direction: test-to-source}",
+    );
+    let findings = check(root, &config).unwrap();
+    assert!(
+        findings.is_empty(),
+        "test-to-source mode reports orphan tests only: {findings:?}"
+    );
+}
+
+#[test]
 fn tsx_source_with_ts_test_extension_fixture_has_findings() {
     let root = fixture_root("tsx-source-missing-test");
     let config_path = root.join(".no-mistakes.yml");

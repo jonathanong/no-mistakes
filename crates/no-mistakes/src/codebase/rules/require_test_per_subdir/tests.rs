@@ -61,6 +61,41 @@ fn nested_test_dir_fixture_has_no_findings() {
 }
 
 #[test]
+fn direct_child_fixture_rejects_nested_descendant_test() {
+    let root = fixture("direct-child-fail");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let files: Vec<PathBuf> = [
+        root.join("agents/email/index.mts"),
+        root.join("agents/email/nested/index.test.mts"),
+    ]
+    .into();
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1, "expected one finding, got: {findings:?}");
+    assert!(
+        findings[0].message.contains("agents/email"),
+        "{}",
+        findings[0].message
+    );
+}
+
+#[test]
+fn direct_child_fixture_accepts_direct_test() {
+    let root = fixture("direct-child-pass");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let files: Vec<PathBuf> = [
+        root.join("agents/email/index.mts"),
+        root.join("agents/email/index.test.mts"),
+        root.join("agents/email/nested/extra.test.mts"),
+    ]
+    .into();
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert!(
+        findings.is_empty(),
+        "direct child test should satisfy directChild mode: {findings:?}"
+    );
+}
+
+#[test]
 fn fail_fixture_reports_missing_test() {
     let root = fixture("fail");
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
