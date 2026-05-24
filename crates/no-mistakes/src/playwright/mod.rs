@@ -18,7 +18,7 @@ mod tests;
 mod url;
 
 use anyhow::{Context, Result};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub use analysis::cli_run::run;
 pub use cli::PlaywrightArgs;
@@ -49,12 +49,10 @@ pub(crate) fn report_json(
     options: PlaywrightReportOptions,
 ) -> Result<String> {
     let root = fsutil::absolutize(&options.root).context("failed to resolve root")?;
-    let settings = config::load_settings(
-        &root,
-        options.config.as_deref(),
-        &options.playwright_config,
-        options.project,
-    )?;
+    let config_path = options.config.as_deref();
+    let configs = &options.playwright_config;
+    let project = options.project.clone();
+    let settings = report_settings(&root, config_path, configs, project)?;
     let analysis = analysis::pipeline::analyze_with_policy(
         &root,
         &settings,
@@ -92,6 +90,15 @@ pub(crate) fn report_json(
             to_pretty_json(&report)
         }
     }
+}
+
+fn report_settings(
+    root: &Path,
+    config_path: Option<&std::path::Path>,
+    playwright_configs: &[PathBuf],
+    project: Option<String>,
+) -> Result<config::Settings> {
+    config::load_settings(root, config_path, playwright_configs, project)
 }
 
 fn require_files(files: &[PathBuf]) -> Result<()> {
