@@ -39,8 +39,7 @@ pub(crate) fn append_locator_text_edges(
             let locator_scope = LocatorTestScope {
                 test_name: &test_name,
                 describe_path: &describe_path,
-                is_hook: text_locator.scope
-                    == crate::playwright::playwright_tests::TestOccurrenceScope::Hook,
+                is_hook: text_locator.scope.is_hook(),
             };
             let text_match = TextMatch::new(&text_locator.value.text, text_locator.value.exact);
             app_text_index

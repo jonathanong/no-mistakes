@@ -1,5 +1,6 @@
 use crate::playwright::analysis::app_collect::collect_app_selector_occurrences;
 use crate::playwright::analysis::cli_run::run;
+use crate::playwright::analysis::context;
 use crate::playwright::analysis::context::{
     DiscoveredTestFile, TestAnalysisContext, TestProjectContext,
 };
@@ -7,7 +8,7 @@ use crate::playwright::analysis::output::{
     build_related_report, print_edges_text, print_related_text,
 };
 use crate::playwright::analysis::pipeline::{analyze_with_policy, analyze_with_policy_and_facts};
-use crate::playwright::analysis::test_file::analyze_test_file;
+use crate::playwright::analysis::test_file::{analyze_test_file, analyze_test_occurrences};
 use crate::playwright::analysis::types::{Analysis, UniqueSelectorPolicy};
 use crate::playwright::cli::{Command, PlaywrightArgs as Cli};
 use crate::playwright::config::Settings;
@@ -358,6 +359,93 @@ fn analyze_test_file_with_selector_targets_extracts_edges() {
         !selector_edges.is_empty(),
         "expected selector edges when app_selector_targets is non-empty"
     );
+}
+
+#[test]
+fn analyze_test_occurrences_skips_non_test_route_inputs() {
+    let root = fixture_path(&["nextjs-selectors", "selector-covered"]);
+    let test_file = DiscoveredTestFile {
+        path: root.join("tests/e2e/app.spec.ts"),
+        contexts: vec![],
+    };
+    let route_index = context::RouteIndex {
+        root: vec![context::RouteTarget {
+            route_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
+            pattern: std::sync::Arc::new("/".to_string()),
+            segments: Vec::new(),
+        }],
+        ..Default::default()
+    };
+    let app_selector = selectors::AppSelector {
+        file: root.join("web/app/page.tsx"),
+        attribute: "data-testid".to_string(),
+        value: selectors::AppSelectorValue::Exact("save".to_string()),
+    };
+    let app_selector_targets = vec![context::AppSelectorTarget {
+        selector: &app_selector,
+        app_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
+        value: "save".to_string(),
+    }];
+    let selector_regexes =
+        selectors::compile_selector_regexes(&["data-testid".to_string()], &BTreeMap::new());
+    let selector_index = context::SelectorIndex::default();
+    let reachable = BTreeMap::new();
+    let context = TestAnalysisContext {
+        root: &root,
+        route_index: &route_index,
+        app_selector_targets: &app_selector_targets,
+        selector_index: &selector_index,
+        app_text_targets: &[],
+        route_reachable_files: &reachable,
+        navigation_helpers: &[],
+        selector_regexes: &selector_regexes,
+        test_policy: playwright_tests::TestPolicy {
+            assert_conditional_tests: true,
+            allow_skipped_tests: false,
+        },
+    };
+    let occurrence = |value, status, scope| playwright_tests::TestOccurrence {
+        value,
+        status,
+        scope,
+        test_name: None,
+        describe_path: Vec::new(),
+        line: 1,
+    };
+    let raw_urls = vec![
+        occurrence(
+            "/".to_string(),
+            playwright_tests::TestStatus::Conditional,
+            playwright_tests::TestOccurrenceScope::Test,
+        ),
+        occurrence(
+            "/".to_string(),
+            playwright_tests::TestStatus::Active,
+            playwright_tests::TestOccurrenceScope::TeardownHook,
+        ),
+        occurrence(
+            "mailto:test@example.com".to_string(),
+            playwright_tests::TestStatus::Active,
+            playwright_tests::TestOccurrenceScope::Test,
+        ),
+    ];
+    let playwright_selectors = vec![playwright_tests::TestOccurrence {
+        value: selectors::PlaywrightSelector::for_test(
+            "data-testid",
+            "save",
+            selectors::SelectorMatcher::Exact("save".to_string()),
+        ),
+        status: playwright_tests::TestStatus::Skipped,
+        scope: playwright_tests::TestOccurrenceScope::Test,
+        test_name: None,
+        describe_path: Vec::new(),
+        line: 1,
+    }];
+
+    let edges =
+        analyze_test_occurrences(&test_file, &context, raw_urls, playwright_selectors, vec![]);
+
+    assert!(edges.is_empty());
 }
 
 #[test]

@@ -4,7 +4,14 @@ use super::TestStatus;
 pub enum TestOccurrenceScope {
     File,
     Hook,
+    TeardownHook,
     Test,
+}
+
+impl TestOccurrenceScope {
+    pub(crate) fn is_hook(self) -> bool {
+        matches!(self, Self::Hook | Self::TeardownHook)
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]

@@ -127,14 +127,18 @@ impl<'a, 'h> UrlVisitor<'a, 'h> {
     }
 
     pub(super) fn visit_hook_callback_call(&mut self, call: &CallExpression<'a>) -> bool {
-        let Some(callback_index) = playwright_tests::hook_callback_index(call) else {
+        let Some((callback_index, hook_kind)) = playwright_tests::hook_callback(call) else {
             return false;
+        };
+        let scope = match hook_kind {
+            playwright_tests::HookKind::Setup => playwright_tests::TestOccurrenceScope::Hook,
+            playwright_tests::HookKind::Teardown => {
+                playwright_tests::TestOccurrenceScope::TeardownHook
+            }
         };
         for (index, argument) in call.arguments.iter().enumerate() {
             if index == callback_index {
-                self.with_scope(playwright_tests::TestOccurrenceScope::Hook, |visitor| {
-                    visitor.visit_argument(argument)
-                });
+                self.with_scope(scope, |visitor| visitor.visit_argument(argument));
             } else {
                 self.visit_argument(argument);
             }

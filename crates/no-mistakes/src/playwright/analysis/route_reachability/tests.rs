@@ -96,6 +96,13 @@ fn route_reachability_includes_app_router_wrappers() {
     assert!(files.contains(&Arc::new(
         "web/app/components/layout-button.tsx".to_string()
     )));
+    assert!(files.contains(&Arc::new(
+        "web/app/components/template-button.tsx".to_string()
+    )));
+    assert!(!files.contains(&Arc::new("web/app/components/error-button.tsx".to_string())));
+    assert!(!files.contains(&Arc::new(
+        "web/app/components/not-found-button.tsx".to_string()
+    )));
 }
 
 #[test]

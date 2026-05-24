@@ -70,6 +70,9 @@ pub(crate) fn analyze_test_occurrences(
         if !context.test_policy.allows(raw_url.status) {
             continue;
         }
+        if raw_url.scope == crate::playwright::playwright_tests::TestOccurrenceScope::TeardownHook {
+            continue;
+        }
         let Some(url) = normalize_url(&raw_url.value, &base_urls) else {
             continue;
         };

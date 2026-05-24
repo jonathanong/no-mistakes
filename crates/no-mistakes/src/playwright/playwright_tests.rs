@@ -1,7 +1,10 @@
 use crate::playwright::ast;
 use oxc_ast::ast::{Argument, CallExpression, Expression};
 
+mod hook;
 mod occurrence;
+pub use hook::hook_callback_index;
+pub(crate) use hook::{hook_callback, HookKind};
 pub(crate) use occurrence::dedup_occurrences_by_identity;
 pub use occurrence::{TestOccurrence, TestOccurrenceScope};
 
@@ -48,15 +51,6 @@ impl TestPolicy {
 
 pub fn callback_argument_index(call: &CallExpression<'_>) -> Option<usize> {
     call.arguments.iter().rposition(argument_is_function)
-}
-
-pub fn hook_callback_index(call: &CallExpression<'_>) -> Option<usize> {
-    let path = ast::expression_path(&call.callee)?;
-    let is_hook = matches!(path.first().map(String::as_str), Some("test"))
-        && path
-            .iter()
-            .any(|part| matches!(part.as_str(), "beforeEach" | "beforeAll"));
-    is_hook.then(|| callback_argument_index(call)).flatten()
 }
 
 pub fn test_callback_status(call: &CallExpression<'_>) -> Option<TestStatus> {

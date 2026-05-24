@@ -97,10 +97,16 @@ fn reachable_files(
 fn route_entry_files(root: &Path, settings: &config::Settings, route_file: &Path) -> Vec<PathBuf> {
     let frontend_root = root.join(&settings.frontend_root);
     let mut files = vec![route_file.to_path_buf()];
-    files.extend(crate::fetch::import_routes::collect_layout_chain_files(
-        route_file,
-        &frontend_root,
-    ));
+    files.extend(
+        crate::fetch::import_routes::collect_layout_chain_files(route_file, &frontend_root)
+            .into_iter()
+            .filter(|file| {
+                matches!(
+                    file.file_stem().and_then(|stem| stem.to_str()),
+                    Some("layout" | "template")
+                )
+            }),
+    );
     files
 }
 

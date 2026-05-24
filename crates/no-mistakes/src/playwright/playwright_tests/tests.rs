@@ -4,7 +4,7 @@ use oxc_ast_visit::{walk, Visit};
 use std::path::Path;
 
 #[test]
-fn hook_callback_index_only_matches_setup_hooks() {
+fn hook_callback_index_matches_setup_and_teardown_hooks() {
     let source = r#"
         test.beforeEach(async ({ page }) => {});
         test.beforeAll(async ({ page }) => {});
@@ -25,8 +25,8 @@ fn hook_callback_index_only_matches_setup_hooks() {
         vec![
             ("test.beforeEach".to_string(), true),
             ("test.beforeAll".to_string(), true),
-            ("test.afterEach".to_string(), false),
-            ("test.afterAll".to_string(), false),
+            ("test.afterEach".to_string(), true),
+            ("test.afterAll".to_string(), true),
         ]
     );
 }
