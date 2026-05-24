@@ -3,6 +3,7 @@ use crate::playwright::config;
 use crate::playwright::fsutil::build_globset;
 use crate::playwright::routes;
 use anyhow::Result;
+use dashmap::DashMap;
 use oxc_ast::ast::{ImportOrExportKind, Statement};
 use rayon::prelude::*;
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -38,18 +39,13 @@ pub(crate) fn collect_route_reachable_files(
             base_url: None,
         });
     let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
+    let import_cache = DashMap::new();
     let mut route_reachable_files = routes
         .par_iter()
         .map(|route| {
-            let mut import_cache = HashMap::new();
             Ok((
                 route_key(root, &route.file),
-                reachable_files(
-                    &route.file,
-                    &selector_rel_by_file,
-                    &resolver,
-                    &mut import_cache,
-                )?,
+                reachable_files(&route.file, &selector_rel_by_file, &resolver, &import_cache)?,
             ))
         })
         .collect::<Result<Vec<_>>>()?;
@@ -61,7 +57,7 @@ fn reachable_files(
     route_file: &Path,
     selector_rel_by_file: &HashMap<std::path::PathBuf, Arc<String>>,
     resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
-    import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
+    import_cache: &DashMap<PathBuf, Arc<Vec<PathBuf>>>,
 ) -> Result<BTreeSet<Arc<String>>> {
     let mut reachable = BTreeSet::new();
     let mut stack = vec![crate::codebase::ts_resolver::normalize_path(route_file)];
@@ -76,7 +72,7 @@ fn reachable_files(
         let imports = collect_route_imports(&file, resolver, import_cache)?;
         stack.extend(
             imports
-                .into_iter()
+                .iter()
                 .map(|file| crate::codebase::ts_resolver::normalize_path(&file)),
         );
     }
@@ -86,17 +82,18 @@ fn reachable_files(
 fn collect_route_imports(
     path: &Path,
     resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
-    import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
-) -> Result<Vec<PathBuf>> {
+    import_cache: &DashMap<PathBuf, Arc<Vec<PathBuf>>>,
+) -> Result<Arc<Vec<PathBuf>>> {
     let abs_path = path.canonicalize()?;
     if let Some(cached_imports) = import_cache.get(&abs_path) {
-        return Ok(cached_imports.clone());
+        return Ok(cached_imports.value().clone());
     }
 
     let source = std::fs::read_to_string(&abs_path)?;
     let imports = crate::ast::with_program(&abs_path, &source, |program, _source| {
         collect_route_imports_from_program(&abs_path, program, resolver)
     })?;
+    let imports = Arc::new(imports);
     import_cache.insert(abs_path, imports.clone());
     Ok(imports)
 }

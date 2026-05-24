@@ -39,7 +39,11 @@ impl<'a> Visit<'a> for AppTextVisitor<'_> {
         if let Some(id) = self.string_attr(&element.opening_element, "id") {
             self.texts_by_id.insert(id, descendant_texts.clone());
         }
-        let visible_texts = direct_child_texts(&element.children, self.source);
+        let visible_texts = if role.is_some() {
+            descendant_texts.clone()
+        } else {
+            direct_child_texts(&element.children, self.source)
+        };
         let accessible_texts = if role.is_some() || tag == Some("label") {
             descendant_texts
         } else {

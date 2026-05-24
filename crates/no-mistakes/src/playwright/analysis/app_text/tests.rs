@@ -192,7 +192,7 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .iter()
                 .any(|selector| selector.value == "wrapped-email-input")
     }));
-    assert!(!targets.iter().any(|target| {
+    assert!(targets.iter().any(|target| {
         target.text == "Descendant save"
             && target.kind == AppTextKind::VisibleText
             && target

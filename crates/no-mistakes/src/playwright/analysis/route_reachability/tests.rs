@@ -1,5 +1,6 @@
 use super::*;
 use crate::playwright::config::Settings;
+use dashmap::DashMap;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
@@ -63,6 +64,33 @@ fn route_reachability_resolves_tsconfig_alias_imports() {
         .is_some_and(|files| files.contains(&Arc::new(
             "web/app/components/discuss-button.tsx".to_string()
         ))));
+}
+
+#[test]
+fn route_import_collection_uses_shared_cache_entries() {
+    let root = crate::playwright::test_support::fixture_path(&[
+        "nextjs-selectors",
+        "selector-text-locator",
+    ]);
+    let route_file = root.join("web/app/page.tsx");
+    let cached_import = root.join("web/app/components/cached.tsx");
+    let tsconfig = crate::codebase::ts_resolver::TsConfig {
+        dir: root.clone(),
+        paths: Vec::new(),
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
+    let import_cache = DashMap::new();
+    import_cache.insert(
+        route_file.canonicalize().unwrap(),
+        Arc::new(vec![cached_import.clone()]),
+    );
+
+    let imports =
+        collect_route_imports(&route_file, &resolver, &import_cache).expect("imports collect");
+
+    assert_eq!(imports.as_ref(), &vec![cached_import]);
 }
 
 #[test]
