@@ -32,6 +32,8 @@ pub enum TestPlanProjectDependency {
 #[serde(rename_all = "camelCase", default)]
 pub struct TestPlanEnvironment {
     pub all: bool,
+    #[serde(alias = "global_config_fallback")]
+    pub global_config_fallback: Option<bool>,
     pub limit: Option<TestPlanLimit>,
     pub groups: Vec<TestPlanGroup>,
     pub include: Vec<String>,

@@ -10,6 +10,7 @@ export interface TestsPlanOptions {
   environment?: string;
   limitPercent?: number;
   limitFiles?: number;
+  globalConfigFallback?: boolean;
 }
 
 export interface TestPlan {

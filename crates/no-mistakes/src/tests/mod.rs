@@ -133,6 +133,10 @@ pub(crate) struct PlanArgs {
     #[arg(long = "limit-files")]
     pub(crate) limit_files: Option<usize>,
 
+    /// Override whether global config changes trigger full-suite fallback.
+    #[arg(long = "global-config-fallback")]
+    pub(crate) global_config_fallback: Option<bool>,
+
     /// Output format.
     #[arg(long, value_enum, conflicts_with = "json")]
     pub(crate) format: Option<PlanFormat>,

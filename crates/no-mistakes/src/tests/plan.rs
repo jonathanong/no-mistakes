@@ -53,15 +53,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     );
 
     if let Some(framework) = args.framework {
-        let forced_fallback = changed_files.iter().find_map(|file| {
-            let relative_changed = relative_path(&root, file);
-            is_global_config_path(&root, file, &relative_changed).then(|| {
-                (
-                    format!("Global configuration file changed: {}", relative_changed),
-                    file.clone(),
-                )
-            })
-        });
+        let forced_fallback = global_config_trigger(&root, &changed_files);
         return super::configured_plan::generate_configured_plan(
             args,
             framework,
@@ -74,9 +66,9 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     }
 
     // 2. Check for global configuration files
-    for file in &changed_files {
-        let relative_changed = relative_path(&root, file);
-        if is_global_config_path(&root, file, &relative_changed) {
+    if global_config_fallback(args) {
+        if let Some((reason, trigger_file)) = global_config_trigger(&root, &changed_files) {
+            let relative_changed = relative_path(&root, &trigger_file);
             // Trigger fallback
             let all_test_files = discover_all_tests(&root, &config)?;
             let mut selected_tests = Vec::new();
@@ -98,10 +90,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                 groups: Vec::new(),
                 warnings: Vec::new(),
                 fallback_triggered: true,
-                fallback_reason: Some(format!(
-                    "Global configuration file changed: {}",
-                    relative_changed
-                )),
+                fallback_reason: Some(reason),
             });
         }
     }
@@ -253,6 +242,25 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
         warnings,
         fallback_triggered: false,
         fallback_reason: None,
+    })
+}
+
+fn global_config_fallback(args: &PlanArgs) -> bool {
+    args.global_config_fallback.unwrap_or(true)
+}
+
+pub(crate) fn global_config_trigger(
+    root: &Path,
+    changed_files: &[PathBuf],
+) -> Option<(String, PathBuf)> {
+    changed_files.iter().find_map(|file| {
+        let relative_changed = relative_path(root, file);
+        is_global_config_path(root, file, &relative_changed).then(|| {
+            (
+                format!("Global configuration file changed: {}", relative_changed),
+                file.clone(),
+            )
+        })
     })
 }
 

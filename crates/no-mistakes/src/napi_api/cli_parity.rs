@@ -155,6 +155,7 @@ fn build_plan_args(options: TestsPlanOptions) -> AnyhowResult<crate::tests::Plan
             .unwrap_or_else(|| "pre-push".to_string()),
         limit_percent: options.limit_percent,
         limit_files: options.limit_files,
+        global_config_fallback: options.global_config_fallback,
         format: Some(crate::tests::PlanFormat::Json),
         json: true,
     })

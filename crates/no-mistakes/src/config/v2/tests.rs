@@ -106,6 +106,15 @@ fn test_plan_percent_values_accept_numbers_and_percent_strings() {
     assert_eq!(TestPlanPercent::String("half".to_string()).value(), None);
 }
 
+#[test]
+fn test_plan_global_config_fallback_parsed() {
+    let cfg = load_v2_config(&fixture("test-plan-global-config-fallback"), None).unwrap();
+    let environments = &cfg.test_plan.vitest.environments;
+
+    assert_eq!(environments["camel"].global_config_fallback, Some(false));
+    assert_eq!(environments["snake"].global_config_fallback, Some(true));
+}
+
 // ── legacy conversions ────────────────────────────────────────────────────────
 
 #[test]

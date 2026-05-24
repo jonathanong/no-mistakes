@@ -31,22 +31,24 @@ pub(crate) fn generate_configured_plan(
     let global_limit =
         limit_count(effective_limit.as_ref(), all_tests.len()).unwrap_or(all_tests.len());
 
-    if let Some((reason, trigger_file)) = forced_fallback.as_ref() {
-        return Ok(TestPlan {
-            selected_tests: selected_from_paths(
-                root,
-                &all_tests,
-                "global configuration",
-                Some(trigger_file),
-            ),
-            groups: vec![TestPlanGroupResult {
-                r#type: "global".to_string(),
-                ..all_group(root, &all_tests)
-            }],
-            warnings: Vec::new(),
-            fallback_triggered: true,
-            fallback_reason: Some(reason.clone()),
-        });
+    if effective_global_config_fallback(&env, args) {
+        if let Some((reason, trigger_file)) = forced_fallback.as_ref() {
+            return Ok(TestPlan {
+                selected_tests: selected_from_paths(
+                    root,
+                    &all_tests,
+                    "global configuration",
+                    Some(trigger_file),
+                ),
+                groups: vec![TestPlanGroupResult {
+                    r#type: "global".to_string(),
+                    ..all_group(root, &all_tests)
+                }],
+                warnings: Vec::new(),
+                fallback_triggered: true,
+                fallback_reason: Some(reason.clone()),
+            });
+        }
     }
 
     if env.all {
@@ -192,6 +194,12 @@ fn sorted_selected_tests(selected_map: BTreeMap<PathBuf, SelectedTest>) -> Vec<S
 fn sorted_warnings(mut warnings: Vec<Warning>) -> Vec<Warning> {
     warnings.sort_by(|a, b| (&a.file, &a.message).cmp(&(&b.file, &b.message)));
     warnings
+}
+
+fn effective_global_config_fallback(env: &TestPlanEnvironment, args: &PlanArgs) -> bool {
+    args.global_config_fallback
+        .or(env.global_config_fallback)
+        .unwrap_or(true)
 }
 
 fn configured_environment(
