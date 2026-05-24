@@ -42,10 +42,13 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
     let targets =
         extract_app_text_targets(root, &path, &source, &settings()).expect("fixture parses");
 
-    assert!(targets.iter().any(|target| {
+    assert!(!targets.iter().any(|target| {
         target.kind == AppTextKind::Label
             && target.text == "Email address"
-            && target.selector_refs[0].value == "email-label"
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "email-label")
     }));
     assert!(targets.iter().any(|target| {
         target.kind == AppTextKind::Label
@@ -79,6 +82,9 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
         target.kind == AppTextKind::Placeholder
             && target.text == "Search"
             && target.selector_refs[0].value == "search-input"
+    }));
+    assert!(!targets.iter().any(|target| {
+        target.kind == AppTextKind::Placeholder && target.text == "Decorative placeholder"
     }));
     assert!(targets.iter().any(|target| {
         target.kind == AppTextKind::AccessibleName && target.text == "Company logo"
@@ -332,6 +338,7 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .any(|selector| selector.value == "submit-input")
     }));
     assert_role(&targets, "Explicit role", "button");
+    assert_role(&targets, "Fallback role", "button");
     assert_role(&targets, "Docs", "link");
     assert_role(&targets, "Empty docs", "link");
     assert_role(&targets, "Dynamic docs", "link");

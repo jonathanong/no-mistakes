@@ -28,9 +28,13 @@ impl AppTextVisitor<'_> {
     pub(super) fn collect_placeholder_target(
         &mut self,
         opening: &oxc_ast::ast::JSXOpeningElement<'_>,
+        tag: Option<&str>,
         role: Option<String>,
         refs: &[SelectorRef],
     ) {
+        if !matches!(tag, Some("input" | "textarea")) {
+            return;
+        }
         if let Some(text) = self
             .string_attr(opening, "placeholder")
             .and_then(|value| normalize_locator_text(&value))

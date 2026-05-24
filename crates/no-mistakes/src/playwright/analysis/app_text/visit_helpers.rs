@@ -94,9 +94,7 @@ impl AppTextVisitor<'_> {
         &mut self,
         element: &oxc_ast::ast::JSXElement<'_>,
         tag: Option<&str>,
-        role: Option<String>,
         accessible_texts: &[String],
-        refs: &[SelectorRef],
     ) {
         if tag != Some("label") {
             return;
@@ -111,8 +109,6 @@ impl AppTextVisitor<'_> {
             self.nested_label_control(&element.children, self.hidden_depth > 0)
         {
             self.push_wrapped_label_targets(&control, accessible_texts);
-        } else {
-            self.push_normalized_texts(AppTextKind::Label, role, accessible_texts, refs);
         }
     }
 

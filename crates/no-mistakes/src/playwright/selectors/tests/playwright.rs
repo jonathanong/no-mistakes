@@ -230,13 +230,7 @@ fn extracts_playwright_text_locators() {
                 "Hidden role".to_string(),
                 Some("button".to_string())
             ),
-            (
-                "role".to_string(),
-                "Template name".to_string(),
-                Some("button".to_string())
-            ),
             ("text".to_string(), "Exact text".to_string(), None),
-            ("text".to_string(), "Spread exact".to_string(), None),
             ("text".to_string(), "Welcome back".to_string(), None),
             ("label".to_string(), "Email".to_string(), None),
             ("label".to_string(), "Full name".to_string(), None),

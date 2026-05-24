@@ -121,9 +121,12 @@ fn object_bool_property(argument: &Argument<'_>, name: &str) -> BoolProperty {
     };
     for property in &object.properties {
         let ObjectPropertyKind::ObjectProperty(property) = property else {
-            continue;
+            return BoolProperty::Unknown;
         };
         if property.computed || property.method || property_key_name(&property.key) != Some(name) {
+            if property.computed || property.method {
+                return BoolProperty::Unknown;
+            }
             continue;
         }
         if let Expression::BooleanLiteral(literal) = &property.value {

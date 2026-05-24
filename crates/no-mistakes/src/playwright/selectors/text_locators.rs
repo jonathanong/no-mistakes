@@ -5,6 +5,9 @@ use crate::playwright::playwright_tests;
 use oxc_ast::ast::CallExpression;
 use oxc_ast_visit::Visit;
 
+#[cfg(test)]
+mod tests;
+
 pub(crate) fn extract_playwright_text_locator_occurrences_from_program(
     program: &oxc_ast::ast::Program<'_>,
     source: &str,
@@ -15,6 +18,7 @@ pub(crate) fn extract_playwright_text_locator_occurrences_from_program(
         annotation_status: playwright_tests::TestStatus::Active,
         locators: Vec::new(),
         current_test_name: None,
+        current_scope: playwright_tests::TestOccurrenceScope::File,
         describe_stack: Vec::new(),
     };
     visitor.visit_program(program);
@@ -28,6 +32,7 @@ struct PlaywrightTextLocatorVisitor<'a> {
     annotation_status: playwright_tests::TestStatus,
     locators: Vec<playwright_tests::TestOccurrence<PlaywrightTextLocator>>,
     current_test_name: Option<String>,
+    current_scope: playwright_tests::TestOccurrenceScope,
     describe_stack: Vec<String>,
 }
 
@@ -37,7 +42,7 @@ impl<'a> Visit<'a> for PlaywrightTextLocatorVisitor<'_> {
             self.locators.push(playwright_tests::TestOccurrence {
                 value: locator,
                 status: self.status.merge(self.annotation_status),
-                scope: playwright_tests::TestOccurrenceScope::Test,
+                scope: self.current_scope,
                 test_name: self.current_test_name.clone(),
                 describe_path: self.describe_stack.clone(),
                 line: byte_offset_to_line(self.source, call.span.start as usize),
@@ -58,6 +63,10 @@ impl<'a> Visit<'a> for PlaywrightTextLocatorVisitor<'_> {
                     self.visit_argument(argument);
                 }
             }
+            return;
+        }
+        if let Some(callback_index) = playwright_tests::hook_callback_index(call) {
+            self.visit_hook_callback(call, callback_index);
             return;
         }
         oxc_ast_visit::walk::walk_call_expression(self, call);
@@ -110,11 +119,21 @@ impl PlaywrightTextLocatorVisitor<'_> {
         }
         let test_name = playwright_tests::test_callback_identity(call);
         let previous_test_name = self.current_test_name.clone();
+        let previous_scope = self.current_scope;
         if test_name.is_some() {
             self.current_test_name = test_name;
+            self.current_scope = playwright_tests::TestOccurrenceScope::Test;
         }
         self.visit_callback_arguments(call, callback_index, callback_status);
         self.current_test_name = previous_test_name;
+        self.current_scope = previous_scope;
+    }
+
+    fn visit_hook_callback(&mut self, call: &CallExpression<'_>, callback_index: usize) {
+        let previous_scope = self.current_scope;
+        self.current_scope = playwright_tests::TestOccurrenceScope::Hook;
+        self.visit_argument(&call.arguments[callback_index]);
+        self.current_scope = previous_scope;
     }
 
     fn visit_callback_arguments(

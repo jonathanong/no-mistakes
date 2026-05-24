@@ -10,6 +10,12 @@ use matching::{text_target_matches, TextMatch};
 #[cfg(test)]
 mod tests;
 
+struct LocatorTestScope<'a> {
+    test_name: &'a Option<Arc<String>>,
+    describe_path: &'a Arc<Vec<String>>,
+    is_hook: bool,
+}
+
 pub(crate) fn append_locator_text_edges(
     edges: &mut Vec<Edge>,
     rel_test_file: &Arc<String>,
@@ -25,6 +31,12 @@ pub(crate) fn append_locator_text_edges(
             }
             let test_name = text_locator.test_name.map(Arc::new);
             let describe_path = Arc::new(text_locator.describe_path);
+            let locator_scope = LocatorTestScope {
+                test_name: &test_name,
+                describe_path: &describe_path,
+                is_hook: text_locator.scope
+                    == crate::playwright::playwright_tests::TestOccurrenceScope::Hook,
+            };
             let text_match = TextMatch::new(&text_locator.value.text, text_locator.value.exact);
             context
                 .app_text_targets
@@ -42,8 +54,7 @@ pub(crate) fn append_locator_text_edges(
                     let reasons = locator_reasons(
                         existing_edges,
                         rel_test_file,
-                        &test_name,
-                        &describe_path,
+                        &locator_scope,
                         text_locator.line,
                         app_text,
                         context,
@@ -75,29 +86,20 @@ pub(crate) fn append_locator_text_edges(
 fn locator_reasons(
     edges: &[Edge],
     rel_test_file: &Arc<String>,
-    test_name: &Option<Arc<String>>,
-    describe_path: &Arc<Vec<String>>,
+    locator_scope: &LocatorTestScope<'_>,
     line: u32,
     app_text: &AppTextTarget,
     context: &TestAnalysisContext<'_>,
 ) -> Vec<String> {
     let mut reasons = Vec::new();
-    if has_reachable_route_signal(
-        edges,
-        rel_test_file,
-        test_name,
-        describe_path,
-        line,
-        app_text,
-        context,
-    ) {
+    if has_reachable_route_signal(edges, rel_test_file, locator_scope, line, app_text, context) {
         reasons.push("route-signal".to_string());
     }
     if has_adjacent_selector_signal(
         edges,
         rel_test_file,
-        test_name,
-        describe_path,
+        locator_scope.test_name,
+        locator_scope.describe_path,
         line,
         app_text,
     ) {
@@ -109,8 +111,7 @@ fn locator_reasons(
 fn has_reachable_route_signal(
     edges: &[Edge],
     rel_test_file: &Arc<String>,
-    test_name: &Option<Arc<String>>,
-    describe_path: &Arc<Vec<String>>,
+    locator_scope: &LocatorTestScope<'_>,
     line: u32,
     app_text: &AppTextTarget,
     context: &TestAnalysisContext<'_>,
@@ -133,8 +134,9 @@ fn has_reachable_route_signal(
                 route_test_name,
                 route_describe_path,
                 *route_is_hook,
-                test_name,
-                describe_path,
+                locator_scope.test_name,
+                locator_scope.describe_path,
+                locator_scope.is_hook,
             )
             || (route_test_name.is_some() && *route_line > line)
         {
@@ -153,6 +155,7 @@ fn route_signal_matches_test(
     route_is_hook: bool,
     test_name: &Option<Arc<String>>,
     describe_path: &Arc<Vec<String>>,
+    locator_is_hook: bool,
 ) -> bool {
     if route_test_name.is_some()
         && route_test_name == test_name
@@ -162,7 +165,7 @@ fn route_signal_matches_test(
     }
     route_test_name.is_none()
         && route_is_hook
-        && test_name.is_some()
+        && (test_name.is_some() || locator_is_hook)
         && describe_path_starts_with(describe_path, route_describe_path)
 }
 

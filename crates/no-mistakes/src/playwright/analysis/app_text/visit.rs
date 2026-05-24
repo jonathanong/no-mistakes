@@ -32,10 +32,10 @@ impl<'a> Visit<'a> for AppTextVisitor<'_> {
             &accessible_texts,
             &refs,
         );
-        self.collect_label_targets(element, tag, role.clone(), &accessible_texts, &refs);
+        self.collect_label_targets(element, tag, &accessible_texts);
         self.collect_accessible_attr_targets(&element.opening_element, role.clone(), &refs);
         self.collect_labelledby_targets(&element.opening_element);
-        self.collect_placeholder_target(&element.opening_element, role.clone(), &refs);
+        self.collect_placeholder_target(&element.opening_element, tag, role.clone(), &refs);
         self.collect_input_value_target(&element.opening_element, tag, role, &refs);
 
         walk::walk_jsx_element(self, element);

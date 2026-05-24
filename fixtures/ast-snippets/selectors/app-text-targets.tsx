@@ -26,6 +26,7 @@ export function Example(props: { label: string }) {
       <input id="missing-labelledby-input" data-pw="missing-labelledby-input" aria-labelledby="missing-label" />
       <label htmlFor="missing-control">Missing control</label>
       <input data-pw={"search-input"} aria-label={"Search field"} placeholder={"Search"} />
+      <div data-pw="decorative-placeholder" placeholder="Decorative placeholder">Decorative placeholder</div>
       <img alt="Company logo" />
       <Button testId="save-button" title="Save changes">Save</Button>
       <div data-pw={props.label}>Dynamic selector</div>
@@ -57,6 +58,7 @@ export function Example(props: { label: string }) {
       <div data-pw="container-target"><button>Container child</button></div>
       <input data-pw="submit-input" type="submit" value="Submit form" />
       <div data-pw="explicit-role" role="button">Explicit role</div>
+      <div data-pw="fallback-role" role="unknown button">Fallback role</div>
       <a data-pw="link-target" href="/docs">Docs</a>
       <a data-pw="empty-link-target" href="">Empty docs</a>
       <a data-pw="dynamic-link-target" href={props.label}>Dynamic docs</a>
