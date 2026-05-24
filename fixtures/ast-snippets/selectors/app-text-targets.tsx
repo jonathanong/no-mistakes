@@ -82,7 +82,7 @@ export function Example(props: { label: string }) {
       <div data-pw>Boolean selector</div>
       <div data-pw={`${props.label}`}>Dynamic template selector</div>
       <div svg:path="x" data-pw="namespaced-attr">Namespaced attr</div>
-      <div data-pw=<span /> aria-label="Element attribute">Element attribute</div>
+      <div data-pw={<span />} aria-label="Element attribute">Element attribute</div>
       <select {...props} data-pw="spread-select" multiple aria-label="Spread select" />
       <svg:path data-pw="namespaced-target">Namespaced</svg:path>
       <this.Button data-pw="this-button" title="This button">This button</this.Button>
