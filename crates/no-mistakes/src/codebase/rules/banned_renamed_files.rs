@@ -72,7 +72,9 @@ pub(crate) fn check_file(path: &Path, root: &Path, opts: &Options) -> Vec<RuleFi
     let rel = relative_slash_path(root, path);
 
     if let Some(scope) = &opts.scope {
-        if !rel.starts_with(scope.as_str()) {
+        let scope = scope.trim_end_matches('/');
+        let in_scope = rel == scope || rel.starts_with(&format!("{scope}/"));
+        if !in_scope {
             return Vec::new();
         }
     }

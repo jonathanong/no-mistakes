@@ -90,7 +90,9 @@ pub(crate) fn check_file(
 
     let mut findings = Vec::new();
     for scope in scopes {
-        if !rel.starts_with(scope.path.as_str()) {
+        let scope_path = scope.path.trim_end_matches('/');
+        let in_scope = rel == scope_path || rel.starts_with(&format!("{scope_path}/"));
+        if !in_scope {
             continue;
         }
         if scope

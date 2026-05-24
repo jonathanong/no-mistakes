@@ -67,8 +67,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
         let subdirs = first_level_subdirs(&abs_root, files, &exclude_set);
         for subdir in subdirs {
             let has_test = files.iter().any(|f| {
-                let parent = f.parent();
-                parent == Some(&subdir)
+                f.starts_with(&subdir)
                     && f.file_name()
                         .and_then(|n| n.to_str())
                         .is_some_and(|n| glob.is_match(n))

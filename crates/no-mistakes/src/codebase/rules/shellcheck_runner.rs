@@ -72,7 +72,6 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
 
 pub(crate) fn collect_shell_files(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<PathBuf> {
     let mut candidates: Vec<PathBuf> = Vec::new();
-
     for path in files {
         if path
             .extension()
@@ -109,7 +108,6 @@ pub(crate) fn collect_shell_files(root: &Path, opts: &Options, files: &[PathBuf]
             candidates.push(abs);
         }
     }
-
     candidates.sort();
     candidates.dedup();
     candidates
@@ -135,11 +133,10 @@ pub(crate) fn run_shellcheck(
     opts: &Options,
     shell_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let sev = &opts.shellcheck.severity;
-    let severity = if sev.is_empty() {
+    let severity = if opts.shellcheck.severity.is_empty() {
         DEFAULT_SEVERITY
     } else {
-        sev
+        opts.shellcheck.severity.as_str()
     };
     let result = Command::new("shellcheck")
         .args(["-f", "gcc", "-S", severity])
@@ -161,8 +158,7 @@ pub(crate) fn handle_shellcheck_result(
                 return Ok(Vec::new());
             }
             let stdout = String::from_utf8_lossy(&output.stdout);
-            let affected = parse_affected_files(&stdout, shell_files);
-            let mut findings: Vec<RuleFinding> = affected
+            let mut findings: Vec<RuleFinding> = parse_affected_files(&stdout, shell_files)
                 .iter()
                 .map(|path| {
                     let rel = relative_slash_path(root, path);
@@ -184,11 +180,14 @@ pub(crate) fn handle_shellcheck_result(
     }
 }
 
+static GCC_RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+
 pub(crate) fn parse_affected_files(stdout: &str, shell_files: &[PathBuf]) -> Vec<PathBuf> {
+    let re = GCC_RE.get_or_init(|| regex::Regex::new(r"^(.+):\d+:\d+: [a-z]+: ").unwrap());
     let shell_set: std::collections::HashSet<&PathBuf> = shell_files.iter().collect();
     let mut v: Vec<PathBuf> = stdout
         .lines()
-        .filter_map(|l| l.find(':').map(|i| PathBuf::from(&l[..i])))
+        .filter_map(|l| re.captures(l)?.get(1).map(|m| PathBuf::from(m.as_str())))
         .filter(|p| shell_set.contains(p))
         .collect();
     v.sort();

@@ -118,7 +118,12 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
         .iter()
         .filter_map(|p| {
             let rel = relative_slash_path(root, p);
-            if !opts.scopes.is_empty() && !opts.scopes.iter().any(|s| rel.starts_with(s.as_str())) {
+            if !opts.scopes.is_empty()
+                && !opts
+                    .scopes
+                    .iter()
+                    .any(|s| rel == *s || rel.starts_with(&format!("{s}/")))
+            {
                 return None;
             }
             exts.iter().find(|&&e| rel.ends_with(e)).map(|&e| (rel, e))
