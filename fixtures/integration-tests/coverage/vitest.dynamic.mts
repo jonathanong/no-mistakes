@@ -7,6 +7,7 @@ import defaultProjects, {
 import defaultArrowProjects from './vitest.projects-default-arrow'
 import defaultCallProjects from './vitest.projects-default-call'
 import defaultFunctionProjects from './vitest.projects-default-function'
+import edgeProjects from './vitest.projects-edge-default-array'
 import * as projectHelpers from './vitest.projects-helper'
 import { defineConfig } from 'vitest/config'
 
@@ -33,6 +34,7 @@ export default defineConfig({
       ...defaultArrowProjects(),
       ...defaultCallProjects,
       ...defaultFunctionProjects(),
+      ...edgeProjects,
       ...aliasDefaultProjects(),
       ...apiProjects,
       ...reexportedProjects,

@@ -2,6 +2,7 @@ use super::{parse_partial_options, shared, Options};
 use crate::ast;
 use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
 use anyhow::Result;
+use oxc_ast::ast::Statement::ExpressionStatement;
 use oxc_ast::ast::{
     ArrayExpression, ArrayExpressionElement, Expression, FunctionBody, ObjectExpression, Program,
     Statement,
@@ -125,13 +126,10 @@ pub(super) fn helper_expression_options(
             expression_statement_options(&arrow.body, ctx)
         }
         Expression::ArrowFunctionExpression(arrow) => body_return_options(&arrow.body, ctx),
-        Expression::FunctionExpression(function) => {
-            if let Some(body) = &function.body {
-                body_return_options(body, ctx)
-            } else {
-                Ok(Vec::new())
-            }
-        }
+        Expression::FunctionExpression(function) => function
+            .body
+            .as_deref()
+            .map_or_else(|| Ok(Vec::new()), |body| body_return_options(body, ctx)),
         _ => expression_options(expression, ctx),
     }
 }
@@ -144,20 +142,20 @@ pub(super) fn body_return_options(
         let Statement::ReturnStatement(return_statement) = statement else {
             continue;
         };
-        if let Some(argument) = &return_statement.argument {
-            return expression_options(argument, ctx);
-        }
+        let Some(argument) = &return_statement.argument else {
+            continue;
+        };
+        return expression_options(argument, ctx);
     }
     Ok(Vec::new())
 }
 
+#[rustfmt::skip]
 pub(super) fn expression_statement_options(
     body: &FunctionBody<'_>,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<Vec<Options>> {
-    let Some(Statement::ExpressionStatement(statement)) = body.statements.first() else {
-        return Ok(Vec::new());
-    };
+    let statement = match &body.statements[0] { ExpressionStatement(statement) => statement, _ => unreachable!() };
     expression_options(&statement.expression, ctx)
 }
 
@@ -172,11 +170,11 @@ pub(in crate::integration_tests::test_config::vitest::project_arrays) fn importe
         return Ok(Vec::new());
     }
     let result = match std::fs::read_to_string(&path) {
+        Err(_) => Ok(Vec::new()),
         Ok(source) => ast::with_program(&path, &source, |program, source| {
             exports::exported_options(program, source, &path, ctx, &import.imported)
         })
         .and_then(|options| options),
-        Err(_) => Ok(Vec::new()),
     };
     ctx.seen.remove(&path);
     result

@@ -1,0 +1,9 @@
+tests:
+  vitest:
+    configs: missing.vitest.config.mts
+    projects:
+      explicit:
+        include: ["explicit/**/*.test.ts"]
+        exclude: ["explicit/**/*.mock.test.ts"]
+        integration_suites:
+          openai: [openai]

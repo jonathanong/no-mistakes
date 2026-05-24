@@ -101,11 +101,12 @@ fn declaration_options(
         Declaration::FunctionDeclaration(function)
             if function.id.as_ref().map(|id| id.name.as_str()) == Some(exported) =>
         {
-            if let Some(body) = &function.body {
-                Some(body_return_options(body, ctx))
-            } else {
-                Some(Ok(Vec::new()))
-            }
+            Some(
+                function
+                    .body
+                    .as_deref()
+                    .map_or_else(|| Ok(Vec::new()), |body| body_return_options(body, ctx)),
+            )
         }
         _ => None,
     }
@@ -152,11 +153,7 @@ fn default_function_options(
     body: Option<&FunctionBody<'_>>,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<Vec<Options>> {
-    if let Some(body) = body {
-        body_return_options(body, ctx)
-    } else {
-        Ok(Vec::new())
-    }
+    body.map_or_else(|| Ok(Vec::new()), |body| body_return_options(body, ctx))
 }
 
 fn binding_name<'a>(binding: &'a BindingPattern<'a>) -> Option<&'a str> {

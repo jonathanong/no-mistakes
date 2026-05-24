@@ -238,6 +238,13 @@ fn configured_suites_cover_matching_variants() {
     assert_eq!(suites.len(), 1);
     assert_eq!(suites[0].name, "root-vitest.openai");
 
+    let config = config_snippet("explicit-project-policy.yml");
+    let suites = config::configured_suites(&root, &config).unwrap();
+    assert_eq!(suites.len(), 1);
+    assert_eq!(suites[0].name, "explicit.openai");
+    assert_eq!(suites[0].include, vec!["explicit/**/*.test.ts"]);
+    assert_eq!(suites[0].exclude, vec!["explicit/**/*.mock.test.ts"]);
+
     assert!(
         project_config::load_projects(&root, types::Framework::Vitest, None)
             .unwrap()
@@ -457,7 +464,36 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
         .any(|project| project.name.as_deref() == Some("default-function")));
     assert!(dynamic
         .iter()
+        .any(|project| project.name.as_deref() == Some("default-array")));
+    assert!(dynamic
+        .iter()
         .any(|project| project.name.as_deref() == Some("namespace-array")));
+
+    let edge_path = root.join("vitest.edge.mts");
+    let edge_source = std::fs::read_to_string(&edge_path).unwrap();
+    let edge = parse_vitest_fixture(&edge_source, &edge_path, &root).unwrap();
+    for name in [
+        "parenthesized",
+        "function-expression",
+        "block-arrow",
+        "top-level-function",
+        "named-var",
+        "named-function",
+        "local-alias",
+        "local-function",
+        "reexported",
+        "edge-namespace",
+        "edge-namespace-call",
+        "default-arrow-block",
+        "default-identifier-function",
+        "default-arrow",
+    ] {
+        assert!(
+            edge.iter()
+                .any(|project| project.name.as_deref() == Some(name)),
+            "missing edge project {name}"
+        );
+    }
 
     let recursive_path = root.join("vitest.recursive.mts");
     let recursive_source = std::fs::read_to_string(&recursive_path).unwrap();
