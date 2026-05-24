@@ -95,9 +95,11 @@ fn load_target_projects(
             load_projects(root, framework, configs)?
                 .into_iter()
                 .filter(|project| {
-                    unresolved_names
-                        .iter()
-                        .any(|name| test_project_matches(project, name))
+                    project
+                        .name
+                        .as_deref()
+                        .is_some_and(|name| unresolved_names.contains(name))
+                        || (project.name.is_none() && unresolved_names.contains("default"))
                 }),
         );
     }
