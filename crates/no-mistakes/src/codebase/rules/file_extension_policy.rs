@@ -80,8 +80,6 @@ pub(crate) fn check_file(
 
     let ext = file_extension(&rel);
 
-    let mut reported: HashSet<&str> = HashSet::new();
-    let mut findings = Vec::new();
     for scope in scopes {
         let scope_path = scope.path.trim_end_matches('/');
         let in_scope = scope_path.is_empty()
@@ -95,19 +93,18 @@ pub(crate) fn check_file(
             .banned_extensions
             .iter()
             .any(|banned| banned.as_str() == ext)
-            && reported.insert(ext)
         {
-            findings.push(RuleFinding {
+            return vec![RuleFinding {
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
                 line: 1,
                 message: format!("{rel}: file uses {ext} extension — align with scope policy"),
                 import: None,
                 target: None,
-            });
+            }];
         }
     }
-    findings
+    Vec::new()
 }
 
 fn file_extension(rel: &str) -> &str {

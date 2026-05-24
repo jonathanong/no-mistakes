@@ -241,6 +241,19 @@ fn rust_max_lines_per_file_json_has_rule_id() {
     );
 }
 
+// ── no-git-identity-mutation ────────────────────────────────────────────────
+
+#[test]
+fn no_git_identity_mutation_fails_for_identity_config() {
+    let root = fixture("no-git-identity-mutation", "fail");
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    let body = format!("{findings:?}");
+
+    assert!(!findings.is_empty(), "expected findings");
+    assert!(body.contains("no-git-identity-mutation"), "{body}");
+    assert!(body.contains("setup.sh"), "{body}");
+}
+
 // ── rust-no-inline-tests ──────────────────────────────────────────────────────
 
 #[test]

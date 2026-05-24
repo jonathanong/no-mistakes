@@ -1,0 +1,9 @@
+projects:
+  app:
+    root: app
+rules:
+  - rule: require-test-per-subdir
+    projects: [app]
+    options:
+      roots: [app/agents]
+      testGlob: "*.test.mts"

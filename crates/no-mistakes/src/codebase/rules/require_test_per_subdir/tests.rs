@@ -39,6 +39,28 @@ fn pass_fixture_no_findings() {
 }
 
 #[test]
+fn project_scoped_fixture_ignores_files_outside_target_roots() {
+    let root = fixture("project-scoped-pass");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let findings = check(&root, &config).unwrap();
+    assert!(
+        findings.is_empty(),
+        "project-scoped rule should ignore outside files, got: {findings:?}"
+    );
+}
+
+#[test]
+fn nested_test_dir_fixture_has_no_findings() {
+    let root = fixture("nested-pass");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let findings = check(&root, &config).unwrap();
+    assert!(
+        findings.is_empty(),
+        "nested test directory should satisfy the subdir requirement: {findings:?}"
+    );
+}
+
+#[test]
 fn fail_fixture_reports_missing_test() {
     let root = fixture("fail");
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();

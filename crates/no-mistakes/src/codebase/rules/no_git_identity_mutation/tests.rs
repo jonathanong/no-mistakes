@@ -180,6 +180,28 @@ fn is_managed_runner_only_quoted_double() {
 }
 
 #[test]
+fn is_managed_runner_only_bracketed_list() {
+    assert!(is_managed_runner_only(
+        "runs-on: [ubuntu-latest, windows-latest]\n"
+    ));
+}
+
+#[test]
+fn is_managed_runner_only_bracketed_list_with_self_hosted() {
+    assert!(!is_managed_runner_only(
+        "runs-on: [ubuntu-latest, self-hosted]\n"
+    ));
+}
+
+#[test]
+fn parse_runs_on_values_trims_comments_quotes_and_empty_parts() {
+    assert_eq!(
+        parse_runs_on_values("[\"ubuntu-latest\", '', 'windows-latest'] # hosted"),
+        vec!["ubuntu-latest".to_string(), "windows-latest".to_string()]
+    );
+}
+
+#[test]
 fn conditionally_allowed_workflow_skipped_if_managed_runner_is_quoted() {
     let tmp = tempfile::tempdir().unwrap();
     std::fs::create_dir_all(tmp.path().join(".github/workflows")).unwrap();

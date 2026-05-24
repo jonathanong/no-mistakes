@@ -2,8 +2,8 @@
 pub struct PnpmLockPackage {
     /// The package key as written in pnpm-lock.yaml, e.g. `"lodash@4.17.21"`.
     pub key: String,
-    /// How the package is resolved: `"tarball"`, `"directory"`, `"git"`,
-    /// `"integrity"`, or `""` (empty) when there is no resolution information.
+    /// How the package is resolved: `"repo"`, `"directory"`, `"tarball"`,
+    /// `"commit"`, `"integrity"`, or `""` when there is no resolution information.
     pub resolution_kind: String,
 }
 

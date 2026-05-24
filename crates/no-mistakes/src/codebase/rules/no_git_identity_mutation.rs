@@ -85,26 +85,35 @@ pub(crate) fn has_shell_shebang(content: &str) -> bool {
 }
 
 pub(crate) fn is_managed_runner_only(content: &str) -> bool {
-    let re = Regex::new(r"runs-on:\s*(.+)").expect("runs-on regex");
-    let mut found = false;
-    for cap in re.captures_iter(content) {
-        let raw = cap.get(1).map_or("", |m| m.as_str()).trim();
-        let inner = raw.trim_start_matches('[').trim_end_matches(']');
-        for s in inner.split(',') {
-            let r = s
-                .trim()
-                .trim_matches(|c: char| matches!(c, '\'' | '"'))
-                .trim_start_matches("- ");
-            if r.is_empty() {
-                continue;
-            }
-            if !is_managed_runner(r) {
-                return false;
-            }
-            found = true;
-        }
+    let runs_on_re = Regex::new(r"(?m)^\s*runs-on:\s*(.+?)\s*$").expect("runs-on regex");
+    let values: Vec<String> = runs_on_re
+        .captures_iter(content)
+        .filter_map(|cap| cap.get(1).map(|m| m.as_str()))
+        .flat_map(parse_runs_on_values)
+        .collect();
+    if values.is_empty() {
+        return false;
     }
-    found
+    values.iter().all(|runner| is_managed_runner(runner))
+}
+
+fn parse_runs_on_values(raw: &str) -> Vec<String> {
+    let value = raw
+        .split_once('#')
+        .map_or(raw, |(before_comment, _)| before_comment)
+        .trim()
+        .trim_matches(|c| matches!(c, '[' | ']'));
+    value
+        .split(',')
+        .map(|part| {
+            part.trim()
+                .trim_start_matches("- ")
+                .trim()
+                .trim_matches(|c| matches!(c, '\'' | '"'))
+        })
+        .filter(|part| !part.is_empty())
+        .map(ToOwned::to_owned)
+        .collect()
 }
 
 fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
@@ -128,7 +137,7 @@ pub(crate) fn check_file(
 ) -> Vec<RuleFinding> {
     let rel_str = relative_slash_path(root, path);
 
-    if exclude_set.is_match(&rel_str) {
+    if exclude_set.is_match(rel_str.as_str()) {
         return Vec::new();
     }
 
@@ -143,7 +152,7 @@ pub(crate) fn check_file(
         return Vec::new();
     }
 
-    if cond_set.is_match(&rel_str) && is_managed_runner_only(&content) {
+    if cond_set.is_match(rel_str.as_str()) && is_managed_runner_only(&content) {
         return Vec::new();
     }
 

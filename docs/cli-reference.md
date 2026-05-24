@@ -245,7 +245,7 @@ The following rules are configurable via `rules:` entries in `.no-mistakes.yml`:
 | `strict-package-layout` | Validates that packages under `roots` contain exactly the allowed set of files/directories. |
 | `required-local-docs` | Requires documentation files (e.g. `AGENTS.md`) to exist in configured directories. |
 | `required-doc-section` | Requires specific heading text in documentation files. |
-| `tsconfig-alias-folder-mapping` | Validates that every `tsconfig.json` path alias uses the expected prefix and target path pattern. |
+| `tsconfig-alias-folder-mapping` | Enforces alias-prefix and folder mapping consistency for configured `tsconfig.json` path aliases. |
 | `no-git-identity-mutation` | Rejects shell scripts and GitHub Actions workflows that mutate git user identity. |
 | `package-json-registry-only` | Requires all `package.json` dependencies to resolve from the npm registry (no `file:`, `link:`, or `git+` specifiers). |
 | `no-empty-or-comments-only-files` | Flags files that are empty or contain only comments. |

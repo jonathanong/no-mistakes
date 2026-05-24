@@ -55,6 +55,33 @@ fn fail_fixture_has_findings() {
     );
 }
 
+#[test]
+fn overlap_fixture_reports_one_finding() {
+    let root = fixture_root("overlap");
+    let config_path = root.join(".no-mistakes.yml");
+    let findings = check(
+        &root,
+        &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1, "expected one finding, got: {findings:?}");
+}
+
+#[test]
+fn prefix_fixture_has_no_findings() {
+    let root = fixture_root("prefix-pass");
+    let config_path = root.join(".no-mistakes.yml");
+    let findings = check(
+        &root,
+        &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
+    )
+    .unwrap();
+    assert!(
+        findings.is_empty(),
+        "backend scope should not match backend2: {findings:?}"
+    );
+}
+
 fn make_scope(path: &str, exts: &[&str]) -> ScopeSpec {
     ScopeSpec {
         path: path.to_string(),
