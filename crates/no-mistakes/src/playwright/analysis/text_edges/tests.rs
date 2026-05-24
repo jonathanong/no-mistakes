@@ -1,6 +1,9 @@
 use super::*;
+use crate::playwright::analysis::context::{RouteIndex, SelectorIndex, TestAnalysisContext};
 use crate::playwright::analysis::text_types::AppTextKind;
 use crate::playwright::analysis::types::SelectorRef;
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
 
 #[test]
 fn route_signal_matches_exact_test_scope() {
@@ -122,5 +125,75 @@ fn adjacent_selector_signal_only_uses_preceding_selectors() {
         &describe_path,
         15,
         &app_text,
+    ));
+}
+
+#[test]
+fn hook_route_signal_must_precede_locator_line() {
+    let test_file = Arc::new("tests/app.spec.ts".to_string());
+    let route_file = Arc::new("web/app/page.tsx".to_string());
+    let app_file = Arc::new("web/app/page.tsx".to_string());
+    let app_text = AppTextTarget {
+        file: "web/app/page.tsx".into(),
+        app_file: app_file.clone(),
+        kind: AppTextKind::AccessibleName,
+        role: Some("button".to_string()),
+        text: "Save".to_string(),
+        hidden: false,
+        selector_refs: vec![SelectorRef {
+            attribute: "data-pw".to_string(),
+            value: "save-button".to_string(),
+        }],
+    };
+    let mut reachable = BTreeMap::new();
+    reachable.insert(route_file.clone(), BTreeSet::from([app_file.clone()]));
+    let route_index = RouteIndex::default();
+    let selector_index = SelectorIndex::default();
+    let selector_regexes =
+        crate::playwright::selectors::compile_selector_regexes(&[], &Default::default());
+    let context = TestAnalysisContext {
+        root: Path::new("/repo"),
+        route_index: &route_index,
+        app_selector_targets: &[],
+        selector_index: &selector_index,
+        app_text_targets: &[],
+        route_reachable_files: &reachable,
+        navigation_helpers: &[],
+        selector_regexes: &selector_regexes,
+        test_policy: crate::playwright::playwright_tests::TestPolicy::default(),
+    };
+    let locator_test_name = Some(Arc::new("uses text locator".to_string()));
+    let locator_describe_path = Arc::new(vec!["suite".to_string()]);
+    let scope = LocatorTestScope {
+        test_name: &locator_test_name,
+        describe_path: &locator_describe_path,
+        is_hook: false,
+    };
+    let hook_route = |line| Edge::Route {
+        test_file: test_file.clone(),
+        test_name: None,
+        describe_path: Arc::new(vec!["suite".to_string()]),
+        route_file: route_file.clone(),
+        route: Arc::new("/".to_string()),
+        url: Arc::new("/".to_string()),
+        hook: true,
+        line,
+    };
+
+    assert!(has_reachable_route_signal(
+        &[hook_route(10)],
+        &test_file,
+        &scope,
+        15,
+        &app_text,
+        &context,
+    ));
+    assert!(!has_reachable_route_signal(
+        &[hook_route(16)],
+        &test_file,
+        &scope,
+        15,
+        &app_text,
+        &context,
     ));
 }

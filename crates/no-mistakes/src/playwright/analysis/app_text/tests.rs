@@ -163,6 +163,15 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .any(|selector| selector.value == "combined-descendant-button")
     }));
     assert!(targets.iter().any(|target| {
+        target.text == "After done"
+            && target.role.as_deref() == Some("button")
+            && target.kind == AppTextKind::AccessibleName
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "split-descendant-button")
+    }));
+    assert!(targets.iter().any(|target| {
         target.text == "Hidden action"
             && target.role.as_deref() == Some("button")
             && target.hidden
@@ -382,6 +391,8 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .any(|selector| selector.value == "custom-action")
     }));
     assert_role(&targets, "Docs", "link");
+    assert_role(&targets, "Expression docs", "link");
+    assert_role(&targets, "Template docs", "link");
     assert_role(&targets, "Empty docs", "link");
     assert_role(&targets, "Dynamic docs", "link");
     assert_role(&targets, "Heading", "heading");

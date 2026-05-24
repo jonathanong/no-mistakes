@@ -138,7 +138,7 @@ fn has_reachable_route_signal(
                 locator_scope.describe_path,
                 locator_scope.is_hook,
             )
-            || (route_test_name.is_some() && *route_line > line)
+            || *route_line > line
         {
             return false;
         }

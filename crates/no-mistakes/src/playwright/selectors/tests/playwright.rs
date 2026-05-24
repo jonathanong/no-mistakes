@@ -197,6 +197,7 @@ fn extracts_playwright_text_locators() {
         await page.getByRole("button", { ...roleOptions, name: "Spread role" }).click();
         await page.getByRole(`button`, { exact: true, [`name`]: "Ignored", name: `Template name` });
         await page.getByRole("button", { name: "Hidden role", includeHidden: true });
+        await page.getByRole("button", { "name": "String key role", "exact": true, "includeHidden": false });
         await page.getByRole("button", { name: "Bad exact", exact: "yes" });
         await page.getByRole("button", { name: "Bad hidden", includeHidden: includeHidden });
         await page.getByRole("button", { name: "Computed exact", exact: isExact });
@@ -208,6 +209,7 @@ fn extracts_playwright_text_locators() {
         await page.getByText("Welcome back").click();
         await page.getByText(`Exact text`, { exact: true }).click();
         await page.getByText("Spread exact", { ...textOptions, exact: false }).click();
+        await page.getByText("Method exact", { exact() { return true; } }).click();
         await page.getByText("Unknown exact", { exact: isExact }).click();
         await page.getByText("Loose text", "not options").click();
         await page.getByLabel(`Email`).fill("a@b.com");
@@ -228,6 +230,11 @@ fn extracts_playwright_text_locators() {
             (
                 "role".to_string(),
                 "Hidden role".to_string(),
+                Some("button".to_string())
+            ),
+            (
+                "role".to_string(),
+                "String key role".to_string(),
                 Some("button".to_string())
             ),
             ("text".to_string(), "Exact text".to_string(), None),

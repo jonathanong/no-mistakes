@@ -25,6 +25,13 @@ fn extracts_click_href_selector() {
 }
 
 #[test]
+fn extracts_click_href_from_static_helper_and_ignores_empty_clicks() {
+    let src = fixture_source(&["ast-snippets", "playwright-urls", "click-helper.ts"]);
+    let urls = extract_playwright_urls(&src);
+    assert_eq!(urls, vec!["/helper-click"]);
+}
+
+#[test]
 fn extracts_double_quoted_goto_and_backtick_single_quoted_href() {
     let src = fixture_source(&["ast-snippets", "playwright-urls", "quoted-goto-click.ts"]);
     let urls = extract_playwright_urls(&src);

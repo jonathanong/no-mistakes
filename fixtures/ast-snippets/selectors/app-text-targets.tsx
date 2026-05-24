@@ -38,6 +38,7 @@ export function Example(props: { label: string }) {
       <button id="html-id-button">HTML id</button>
       <button data-pw="descendant-button"><span>Descendant save</span></button>
       <button data-pw="combined-descendant-button"><span>Save</span> now</button>
+      <button data-pw="split-descendant-button"><span>Before {props.label} After</span> done</button>
       <button data-pw="fragment-button"><>Fragment save</></button>
       <button data-pw="hidden-button" hidden>Hidden action</button>
       <button data-pw="hidden-string-button" hidden="false">String hidden action</button>
@@ -68,6 +69,8 @@ export function Example(props: { label: string }) {
       <span id="action-second">Second</span>
       <div id="custom-action" data-pw="custom-action" role="button" aria-labelledby="action-first action-second" />
       <a data-pw="link-target" href="/docs">Docs</a>
+      <a data-pw="expression-link-target" href={"/expression-docs"}>Expression docs</a>
+      <a data-pw="template-link-target" href={`/template-docs`}>Template docs</a>
       <a data-pw="empty-link-target" href="">Empty docs</a>
       <a data-pw="dynamic-link-target" href={props.label}>Dynamic docs</a>
       <h2 data-pw="heading-target">Heading</h2>
