@@ -122,10 +122,9 @@ pub(crate) fn check_file(
     cond_set: &GlobSet,
     patterns: &[Regex; 3],
 ) -> Vec<RuleFinding> {
-    let rel = path.strip_prefix(root).unwrap_or(path);
-    let rel_str = rel.to_string_lossy();
+    let rel_str = relative_slash_path(root, path);
 
-    if exclude_set.is_match(rel_str.as_ref()) {
+    if exclude_set.is_match(&rel_str) {
         return Vec::new();
     }
 
@@ -140,7 +139,7 @@ pub(crate) fn check_file(
         return Vec::new();
     }
 
-    if cond_set.is_match(rel_str.as_ref()) && is_managed_runner_only(&content) {
+    if cond_set.is_match(&rel_str) && is_managed_runner_only(&content) {
         return Vec::new();
     }
 

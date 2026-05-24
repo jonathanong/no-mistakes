@@ -30,7 +30,11 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
             if opts.roots.is_empty() {
                 return Ok(vec![]);
             }
-            let files = discover_files(root, skip);
+            let target_roots = super::target_roots(root, config, &rule);
+            let files: Vec<PathBuf> = target_roots
+                .iter()
+                .flat_map(|r| discover_files(r, skip))
+                .collect();
             scan(root, &opts, &files)
         })
         .collect();

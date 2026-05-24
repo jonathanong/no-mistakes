@@ -161,7 +161,7 @@ fn check_with_files_empty_roots_is_noop() {
 
 #[test]
 fn check_standalone_with_non_empty_roots_discovers_files() {
-    // Exercises lines 30-31 of check(): non-empty roots → discover_files.
+    // Exercises check(): non-empty roots → target_roots + discover_files.
     // In a non-git temp directory, discover_files returns empty, so no findings.
     let tmp = tempfile::tempdir().unwrap();
     let config = config_with_rule("roots: [agents]\ntestGlob: \"*.test.mts\"");
