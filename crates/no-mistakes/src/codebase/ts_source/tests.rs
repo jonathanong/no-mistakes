@@ -152,6 +152,18 @@ fn disable_line_allows_url_before_comment() {
 }
 
 #[test]
+fn disable_line_ignores_block_comment_text() {
+    let source = "const x = 1; /* // no-mistakes-disable-line my-rule */";
+    assert!(!has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
+fn disable_line_detected_after_block_comment() {
+    let source = "const x = 1; /* block */ // no-mistakes-disable-line my-rule";
+    assert!(has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
 fn disable_line_rejects_zero_line() {
     let source = "some code here // no-mistakes-disable-line my-rule";
     assert!(!has_disable_line_comment(source, 0, "my-rule"));

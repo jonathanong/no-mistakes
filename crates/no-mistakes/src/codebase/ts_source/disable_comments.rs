@@ -170,8 +170,16 @@ fn line_comment_directive_matches(line: &str, directive: &str, rule_id: &str) ->
 fn line_comment_start(line: &str) -> Option<usize> {
     let mut quote = None;
     let mut escaped = false;
+    let mut in_block_comment = false;
     let mut chars = line.char_indices().peekable();
     while let Some((idx, ch)) = chars.next() {
+        if in_block_comment {
+            if ch == '*' && chars.peek().is_some_and(|(_, next)| *next == '/') {
+                chars.next();
+                in_block_comment = false;
+            }
+            continue;
+        }
         if let Some(current) = quote {
             if escaped {
                 escaped = false;
@@ -184,6 +192,11 @@ fn line_comment_start(line: &str) -> Option<usize> {
         }
         if matches!(ch, '\'' | '"' | '`') {
             quote = Some(ch);
+            continue;
+        }
+        if ch == '/' && chars.peek().is_some_and(|(_, next)| *next == '*') {
+            chars.next();
+            in_block_comment = true;
             continue;
         }
         if ch == '/' && chars.peek().is_some_and(|(_, next)| *next == '/') {
