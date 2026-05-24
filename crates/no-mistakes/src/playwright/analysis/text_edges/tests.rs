@@ -275,6 +275,7 @@ fn app_text_index_filters_exact_and_fuzzy_candidates_by_kind_role() {
         text_target(AppTextKind::AccessibleName, "Save", Some("button"), false),
         text_target(AppTextKind::AccessibleName, "Save", Some("link"), false),
         text_target(AppTextKind::VisibleText, "Save now", None, false),
+        text_target(AppTextKind::Label, "Email", Some("textbox"), false),
     ];
     let index = AppTextIndex::new(&targets);
     let exact = PlaywrightTextLocator {
@@ -293,8 +294,27 @@ fn app_text_index_filters_exact_and_fuzzy_candidates_by_kind_role() {
         exact: false,
         include_hidden: false,
     };
+    let label = PlaywrightTextLocator {
+        kind: crate::playwright::analysis::text_types::LocatorKind::Label,
+        role: None,
+        text: "Email".to_string(),
+        locator: "getByLabel(Email)".to_string(),
+        exact: true,
+        include_hidden: false,
+    };
+    let role_without_name = PlaywrightTextLocator {
+        kind: crate::playwright::analysis::text_types::LocatorKind::Role,
+        role: None,
+        text: "Save".to_string(),
+        locator: "getByRole(roleExpression, name: Save)".to_string(),
+        exact: true,
+        include_hidden: false,
+    };
 
     assert_eq!(index.candidates(&exact).len(), 1);
     assert_eq!(index.candidates(&fuzzy).len(), 1);
     assert_eq!(index.candidates(&fuzzy)[0].text, "Save now");
+    assert_eq!(index.candidates(&label).len(), 1);
+    assert_eq!(index.candidates(&label)[0].text, "Email");
+    assert!(index.candidates(&role_without_name).is_empty());
 }

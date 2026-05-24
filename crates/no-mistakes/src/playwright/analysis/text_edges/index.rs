@@ -68,9 +68,14 @@ struct AppTextKindRoleKey {
 
 impl AppTextKindRoleKey {
     fn from_target(target: &AppTextTarget) -> Self {
+        let role = if target.kind == AppTextKind::AccessibleName {
+            target.role.clone()
+        } else {
+            None
+        };
         Self {
             kind: target.kind.clone(),
-            role: target.role.clone(),
+            role,
         }
     }
 
