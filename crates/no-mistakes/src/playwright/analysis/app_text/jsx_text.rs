@@ -31,6 +31,9 @@ fn child_texts(
                 oxc_ast::ast::JSXExpression::StringLiteral(literal) => {
                     current.push_str(literal.value.as_str());
                 }
+                oxc_ast::ast::JSXExpression::NumericLiteral(literal) => {
+                    current.push_str(&literal.value.to_string());
+                }
                 oxc_ast::ast::JSXExpression::TemplateLiteral(template)
                     if template.expressions.is_empty() =>
                 {

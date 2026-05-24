@@ -53,7 +53,9 @@ pub fn callback_argument_index(call: &CallExpression<'_>) -> Option<usize> {
 pub fn hook_callback_index(call: &CallExpression<'_>) -> Option<usize> {
     let path = ast::expression_path(&call.callee)?;
     let is_hook = matches!(path.first().map(String::as_str), Some("test"))
-        && path.iter().any(|part| part.as_str() == "beforeEach");
+        && path
+            .iter()
+            .any(|part| matches!(part.as_str(), "beforeEach" | "beforeAll"));
     is_hook.then(|| callback_argument_index(call)).flatten()
 }
 

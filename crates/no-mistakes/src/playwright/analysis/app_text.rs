@@ -135,17 +135,26 @@ impl AppTextVisitor<'_> {
     }
 
     fn push_control_name_targets(&mut self, control: &ControlTextTarget, text: String) {
-        for kind in [AppTextKind::Label, AppTextKind::AccessibleName] {
+        if control.labelable {
             self.targets.push(AppTextTarget {
                 file: self.path.to_path_buf(),
                 app_file: Arc::new(relative_string(self.root, self.path)),
-                kind,
+                kind: AppTextKind::Label,
                 role: control.role.clone(),
                 text: text.clone(),
                 hidden: control.hidden,
                 selector_refs: control.selector_refs.clone(),
             });
         }
+        self.targets.push(AppTextTarget {
+            file: self.path.to_path_buf(),
+            app_file: Arc::new(relative_string(self.root, self.path)),
+            kind: AppTextKind::AccessibleName,
+            role: control.role.clone(),
+            text,
+            hidden: control.hidden,
+            selector_refs: control.selector_refs.clone(),
+        });
     }
 
     fn nested_label_control(
@@ -168,6 +177,7 @@ impl AppTextVisitor<'_> {
                                 self.scoped_static_identifier_defaults,
                             ),
                             hidden,
+                            labelable: true,
                             selector_refs: selector_refs(
                                 &element.opening_element,
                                 self.source,

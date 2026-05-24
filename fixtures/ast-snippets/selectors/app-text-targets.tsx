@@ -36,6 +36,7 @@ export function Example(props: { label: string }) {
       <UI.Button testId="member-button" title="Member save">Member</UI.Button>
       <Design.UI.Button testId="nested-member-button" title="Nested member">Nested</Design.UI.Button>
       <button id="html-id-button">HTML id</button>
+      <button data-pw="numeric-text-button">{42}</button>
       <button data-pw="descendant-button"><span>Descendant save</span></button>
       <button data-pw="combined-descendant-button"><span>Save</span> now</button>
       <button data-pw="split-descendant-button"><span>Before {props.label} After</span> done</button>
@@ -65,6 +66,8 @@ export function Example(props: { label: string }) {
       <div data-pw="deletion-role" role="deletion">Deleted text</div>
       <div data-pw="insertion-role" role="insertion">Inserted text</div>
       <button data-pw="aria-label-precedence" aria-label="Close">Visible close text</button>
+      <button data-pw="title-only-button" title="Only title" />
+      <div data-pw="aria-label-div" role="button" aria-label="Div action" />
       <span id="action-first">First</span>
       <span id="action-second">Second</span>
       <div id="custom-action" data-pw="custom-action" role="button" aria-labelledby="action-first action-second" />

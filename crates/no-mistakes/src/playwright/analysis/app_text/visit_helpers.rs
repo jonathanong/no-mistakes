@@ -34,7 +34,8 @@ impl AppTextVisitor<'_> {
         role: Option<String>,
         refs: &[SelectorRef],
     ) {
-        if !is_labelable(tag) && role.is_none() {
+        let labelable = is_labelable(tag);
+        if !labelable && role.is_none() {
             return;
         }
         if let Some(id) = self.string_attr(opening, "id") {
@@ -43,6 +44,7 @@ impl AppTextVisitor<'_> {
                 ControlTextTarget {
                     role,
                     hidden: self.hidden_depth > 0,
+                    labelable,
                     selector_refs: refs.to_vec(),
                 },
             );

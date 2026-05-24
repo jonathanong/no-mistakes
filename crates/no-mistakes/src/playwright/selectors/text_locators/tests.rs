@@ -21,6 +21,11 @@ fn text_locators_preserve_hook_scope() {
             && occurrence.test_name.is_none()
     }));
     assert!(occurrences.iter().any(|occurrence| {
+        occurrence.value.text == "Suite setup text"
+            && occurrence.scope == playwright_tests::TestOccurrenceScope::Hook
+            && occurrence.test_name.is_none()
+    }));
+    assert!(occurrences.iter().any(|occurrence| {
         occurrence.value.text == "Test text"
             && occurrence.scope == playwright_tests::TestOccurrenceScope::Test
             && occurrence.test_name.as_deref() == Some("uses setup")

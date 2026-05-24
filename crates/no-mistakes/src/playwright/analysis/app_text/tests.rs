@@ -2,6 +2,8 @@ use super::*;
 use crate::playwright::analysis::text_types::normalize_locator_text;
 use std::collections::BTreeMap;
 
+mod html_ids;
+
 fn settings() -> Settings {
     Settings {
         frontend_root: "web/app".to_string(),
@@ -96,6 +98,14 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .iter()
                 .any(|selector| selector.value == "save-button")
     }));
+    assert!(!targets.iter().any(|target| {
+        target.text == "Save changes"
+            && target.kind == AppTextKind::AccessibleName
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "save-button")
+    }));
     assert!(targets.iter().any(|target| {
         target.text == "Template child"
             && target
@@ -143,6 +153,15 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
         target.text == "HTML id"
             && target.role.as_deref() == Some("button")
             && target.kind == AppTextKind::VisibleText
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "42"
+            && target.role.as_deref() == Some("button")
+            && target.kind == AppTextKind::AccessibleName
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "numeric-text-button")
     }));
     assert!(targets.iter().any(|target| {
         target.text == "Descendant save"
@@ -376,9 +395,41 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .iter()
                 .any(|selector| selector.value == "aria-label-precedence")
     }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Close"
+            && target.kind == AppTextKind::Label
+            && target.role.as_deref() == Some("button")
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "aria-label-precedence")
+    }));
     assert!(!targets.iter().any(|target| {
         target.text == "Visible close text"
             && target.kind == AppTextKind::AccessibleName
+            && target.role.as_deref() == Some("button")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Only title"
+            && target.kind == AppTextKind::AccessibleName
+            && target.role.as_deref() == Some("button")
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "title-only-button")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Div action"
+            && target.kind == AppTextKind::AccessibleName
+            && target.role.as_deref() == Some("button")
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "aria-label-div")
+    }));
+    assert!(!targets.iter().any(|target| {
+        target.text == "Div action"
+            && target.kind == AppTextKind::Label
             && target.role.as_deref() == Some("button")
     }));
     assert!(targets.iter().any(|target| {
@@ -389,6 +440,11 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .selector_refs
                 .iter()
                 .any(|selector| selector.value == "custom-action")
+    }));
+    assert!(!targets.iter().any(|target| {
+        target.text == "First Second"
+            && target.kind == AppTextKind::Label
+            && target.role.as_deref() == Some("button")
     }));
     assert_role(&targets, "Docs", "link");
     assert_role(&targets, "Expression docs", "link");
@@ -441,27 +497,6 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
 #[test]
 fn normalize_locator_text_rejects_blank_text() {
     assert_eq!(normalize_locator_text(" \n\t "), None);
-}
-
-#[test]
-fn extracts_html_id_refs_when_enabled() {
-    let path = crate::playwright::test_support::fixture_path(&[
-        "ast-snippets",
-        "selectors",
-        "app-text-targets.tsx",
-    ]);
-    let root = path.parent().unwrap();
-    let source = std::fs::read_to_string(&path).expect("fixture should read");
-    let targets = extract_app_text_targets(root, &path, &source, &settings_with_html_ids())
-        .expect("fixture parses");
-
-    assert!(targets.iter().any(|target| {
-        target.text == "HTML id"
-            && target
-                .selector_refs
-                .iter()
-                .any(|selector| selector.attribute == "id" && selector.value == "html-id-button")
-    }));
 }
 
 fn assert_role(targets: &[AppTextTarget], text: &str, role: &str) {
