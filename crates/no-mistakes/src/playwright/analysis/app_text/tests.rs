@@ -147,6 +147,24 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .iter()
                 .any(|selector| selector.value == "descendant-button")
     }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Hidden action"
+            && target.role.as_deref() == Some("button")
+            && target.hidden
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "hidden-button")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Aria hidden action"
+            && target.role.as_deref() == Some("button")
+            && target.hidden
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "aria-hidden-button")
+    }));
     assert!(!targets.iter().any(|target| {
         target.text == "Descendant save"
             && target.kind == AppTextKind::VisibleText

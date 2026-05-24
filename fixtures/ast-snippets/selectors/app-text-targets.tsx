@@ -36,6 +36,8 @@ export function Example(props: { label: string }) {
       <Design.UI.Button testId="nested-member-button" title="Nested member">Nested</Design.UI.Button>
       <button id="html-id-button">HTML id</button>
       <button data-pw="descendant-button"><span>Descendant save</span></button>
+      <button data-pw="hidden-button" hidden>Hidden action</button>
+      <button data-pw="aria-hidden-button" aria-hidden="true">Aria hidden action</button>
       <div data-pw="container-target"><button>Container child</button></div>
       <input data-pw="submit-input" type="submit" value="Submit form" />
       <div data-pw="explicit-role" role="button">Explicit role</div>

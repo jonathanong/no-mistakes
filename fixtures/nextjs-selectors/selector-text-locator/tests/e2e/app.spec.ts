@@ -18,6 +18,10 @@ test("covers visible text through adjacent selector", async ({ page }) => {
 
 test("uses setup route for text locator coverage", async ({ page }) => {
   await page.getByRole("button", { name: "save" }).click();
+  await page.getByRole("button", { name: "Hidden action" }).click();
+  await page
+    .getByRole("button", { name: "Aria hidden action", includeHidden: true })
+    .click();
 });
 
 test.describe("nested suite", () => {

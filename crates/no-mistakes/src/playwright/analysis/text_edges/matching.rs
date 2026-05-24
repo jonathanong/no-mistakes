@@ -6,6 +6,7 @@ pub(super) fn text_target_matches(
     role: Option<&str>,
     text: &str,
     exact: bool,
+    include_hidden: bool,
 ) -> bool {
     locator_text_matches(&target.text, text, exact)
         && match kind {
@@ -14,6 +15,7 @@ pub(super) fn text_target_matches(
             LocatorKind::Placeholder => target.kind == AppTextKind::Placeholder,
             LocatorKind::Role => {
                 target.role.as_deref() == role
+                    && (include_hidden || !target.hidden)
                     && (target.kind == AppTextKind::VisibleText
                         || target.kind == AppTextKind::AccessibleName)
             }

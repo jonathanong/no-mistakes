@@ -42,6 +42,7 @@ fn simple_locator(
         locator: format!("{method}({text})"),
         text,
         exact,
+        include_hidden: false,
     })
 }
 
@@ -57,12 +58,18 @@ fn role_locator(call: &CallExpression<'_>, source: &str) -> Option<PlaywrightTex
         BoolProperty::Value(exact) => exact,
         BoolProperty::Missing => false,
     };
+    let include_hidden = match object_bool_property(options, "includeHidden") {
+        BoolProperty::Unknown => return None,
+        BoolProperty::Value(include_hidden) => include_hidden,
+        BoolProperty::Missing => false,
+    };
     Some(PlaywrightTextLocator {
         kind: LocatorKind::Role,
         role: Some(role.clone()),
         locator: format!("getByRole({role}, name: {name})"),
         text: name,
         exact,
+        include_hidden,
     })
 }
 

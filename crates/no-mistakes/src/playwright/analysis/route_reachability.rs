@@ -3,6 +3,7 @@ use crate::playwright::config;
 use crate::playwright::fsutil::build_globset;
 use crate::playwright::routes;
 use anyhow::Result;
+use oxc_ast::ast::{ImportOrExportKind, Statement};
 use rayon::prelude::*;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -27,13 +28,28 @@ pub(crate) fn collect_route_reachable_files(
             )
         })
         .collect();
+    let tsconfig = crate::codebase::ts_resolver::find_tsconfig(root)
+        .map(|path| crate::codebase::ts_resolver::load_tsconfig(&path))
+        .transpose()?
+        .unwrap_or_else(|| crate::codebase::ts_resolver::TsConfig {
+            dir: root.to_path_buf(),
+            paths: Vec::new(),
+            paths_dir: root.to_path_buf(),
+            base_url: None,
+        });
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
     let mut route_reachable_files = routes
         .par_iter()
         .map(|route| {
             let mut import_cache = HashMap::new();
             Ok((
                 route_key(root, &route.file),
-                reachable_files(&route.file, &selector_rel_by_file, &mut import_cache)?,
+                reachable_files(
+                    &route.file,
+                    &selector_rel_by_file,
+                    &resolver,
+                    &mut import_cache,
+                )?,
             ))
         })
         .collect::<Result<Vec<_>>>()?;
@@ -44,6 +60,7 @@ pub(crate) fn collect_route_reachable_files(
 fn reachable_files(
     route_file: &Path,
     selector_rel_by_file: &HashMap<std::path::PathBuf, Arc<String>>,
+    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
     import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
 ) -> Result<BTreeSet<Arc<String>>> {
     let mut reachable = BTreeSet::new();
@@ -56,7 +73,7 @@ fn reachable_files(
         if let Some(rel) = selector_rel_by_file.get(&file) {
             reachable.insert(rel.clone());
         }
-        let imports = crate::imports::collect_imports(&file, import_cache)?;
+        let imports = collect_route_imports(&file, resolver, import_cache)?;
         stack.extend(
             imports
                 .into_iter()
@@ -64,6 +81,63 @@ fn reachable_files(
         );
     }
     Ok(reachable)
+}
+
+fn collect_route_imports(
+    path: &Path,
+    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
+    import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
+) -> Result<Vec<PathBuf>> {
+    let abs_path = path.canonicalize()?;
+    if let Some(cached_imports) = import_cache.get(&abs_path) {
+        return Ok(cached_imports.clone());
+    }
+
+    let source = std::fs::read_to_string(&abs_path)?;
+    let imports = crate::ast::with_program(&abs_path, &source, |program, _source| {
+        collect_route_imports_from_program(&abs_path, program, resolver)
+    })?;
+    import_cache.insert(abs_path, imports.clone());
+    Ok(imports)
+}
+
+fn collect_route_imports_from_program<'a>(
+    abs_path: &Path,
+    program: &oxc_ast::ast::Program<'a>,
+    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
+) -> Vec<PathBuf> {
+    let mut imports = Vec::new();
+    for stmt in &program.body {
+        match stmt {
+            Statement::ImportDeclaration(import)
+                if crate::fetch::import_shape::is_runtime_import(import) =>
+            {
+                if let Some(resolved) = resolver.resolve(import.source.value.as_str(), abs_path) {
+                    imports.push(resolved);
+                }
+            }
+            Statement::ExportNamedDeclaration(export) => {
+                if !crate::fetch::import_shape::is_runtime_export(export) {
+                    continue;
+                }
+                if let Some(source) = &export.source {
+                    if let Some(resolved) = resolver.resolve(source.value.as_str(), abs_path) {
+                        imports.push(resolved);
+                    }
+                }
+            }
+            Statement::ExportAllDeclaration(export) => {
+                if export.export_kind == ImportOrExportKind::Type {
+                    continue;
+                }
+                if let Some(resolved) = resolver.resolve(export.source.value.as_str(), abs_path) {
+                    imports.push(resolved);
+                }
+            }
+            _ => {}
+        }
+    }
+    imports
 }
 
 fn route_key(root: &Path, file: &Path) -> Arc<String> {

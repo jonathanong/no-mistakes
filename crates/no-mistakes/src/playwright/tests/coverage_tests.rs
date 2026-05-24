@@ -254,6 +254,7 @@ fn route_edges_mark_routes_covered() {
         route_file: std::sync::Arc::new("web/app/users/[id]/page.tsx".to_string()),
         route: std::sync::Arc::new("/users/:id".to_string()),
         url: std::sync::Arc::new("/users/42".to_string()),
+        hook: false,
         line: 1,
     }];
     let settings = default_settings(vec!["data-testid".to_string()]);

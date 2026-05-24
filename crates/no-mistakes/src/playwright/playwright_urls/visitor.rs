@@ -6,13 +6,14 @@ use super::literals::{
     argument_candidate_literals, argument_literals, direct_url_pattern_literals,
     extract_href_from_selector,
 };
-use crate::codebase::ts_source::byte_offset_to_line;
 use crate::playwright::{ast, playwright_tests};
 use oxc_ast::ast::{
     CallExpression, ConditionalExpression, IfStatement, LogicalExpression, Program,
 };
 use oxc_ast_visit::{walk, Visit};
 use std::collections::HashMap;
+
+mod context;
 
 pub(super) struct UrlVisitor<'a, 'h> {
     pub source: &'a str,
@@ -22,6 +23,7 @@ pub(super) struct UrlVisitor<'a, 'h> {
     pub annotation_status: playwright_tests::TestStatus,
     pub urls: Vec<playwright_tests::TestOccurrence<String>>,
     pub current_test_name: Option<String>,
+    pub current_scope: playwright_tests::TestOccurrenceScope,
     pub describe_stack: Vec<String>,
 }
 
@@ -89,8 +91,10 @@ impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
             } else {
                 let test_name = playwright_tests::test_callback_identity(call);
                 let previous_test_name = self.current_test_name.clone();
+                let previous_scope = self.current_scope;
                 if test_name.is_some() {
                     self.current_test_name = test_name;
+                    self.current_scope = playwright_tests::TestOccurrenceScope::Test;
                 }
                 for (index, argument) in call.arguments.iter().enumerate() {
                     if index == callback_index {
@@ -103,8 +107,21 @@ impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
                     }
                 }
                 self.current_test_name = previous_test_name;
+                self.current_scope = previous_scope;
             }
         } else {
+            if let Some(callback_index) = playwright_tests::hook_callback_index(call) {
+                for (index, argument) in call.arguments.iter().enumerate() {
+                    if index == callback_index {
+                        self.with_scope(playwright_tests::TestOccurrenceScope::Hook, |visitor| {
+                            visitor.visit_argument(argument)
+                        });
+                    } else {
+                        self.visit_argument(argument);
+                    }
+                }
+                return;
+            }
             let callback_index = playwright_tests::callback_argument_index(call);
             if playwright_tests::annotation_status_for_call(call).is_some() {
                 self.apply_annotation_call(call);
@@ -148,44 +165,6 @@ impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
     }
 }
 
-impl UrlVisitor<'_, '_> {
-    pub fn insert(&mut self, value: String, byte_offset: u32) {
-        self.urls.push(playwright_tests::TestOccurrence {
-            value,
-            status: self.status.merge(self.annotation_status),
-            test_name: self.current_test_name.clone(),
-            describe_path: self.describe_stack.clone(),
-            line: byte_offset_to_line(self.source, byte_offset as usize),
-        });
-    }
-
-    pub fn with_status(
-        &mut self,
-        status: playwright_tests::TestStatus,
-        visit: impl FnOnce(&mut Self),
-    ) {
-        let previous = self.status;
-        self.status = previous.merge(status);
-        visit(self);
-        self.status = previous;
-    }
-
-    pub fn with_annotation_scope(&mut self, visit: impl FnOnce(&mut Self)) {
-        let previous = self.annotation_status;
-        self.annotation_status = playwright_tests::TestStatus::Active;
-        visit(self);
-        self.annotation_status = previous;
-    }
-
-    pub fn apply_annotation_call(&mut self, call: &CallExpression<'_>) {
-        let status = playwright_tests::annotation_status_for_call(call)
-            .expect("only annotation calls are applied");
-        let status = playwright_tests::merge_annotation_status(self.status, status);
-        self.annotation_status =
-            playwright_tests::merge_annotation_status(self.annotation_status, status);
-    }
-}
-
 pub fn extract_playwright_url_occurrences_from_program(
     program: &Program<'_>,
     source: &str,
@@ -203,6 +182,7 @@ pub fn extract_playwright_url_occurrences_from_program(
         annotation_status: playwright_tests::TestStatus::Active,
         urls: Vec::new(),
         current_test_name: None,
+        current_scope: playwright_tests::TestOccurrenceScope::File,
         describe_stack: Vec::new(),
     };
     visitor.visit_program(program);

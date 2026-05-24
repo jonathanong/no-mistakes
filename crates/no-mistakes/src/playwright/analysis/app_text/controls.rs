@@ -4,6 +4,7 @@ use crate::playwright::selectors::scoped_defaults::ScopedStaticIdentifierDefault
 #[derive(Clone)]
 pub(super) struct ControlTextTarget {
     pub(super) role: Option<String>,
+    pub(super) hidden: bool,
     pub(super) selector_refs: Vec<SelectorRef>,
 }
 

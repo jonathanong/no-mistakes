@@ -196,7 +196,9 @@ fn extracts_playwright_text_locators() {
         await page.getByRole("button", { name: "Discuss" }).click();
         await page.getByRole("button", { ...roleOptions, name: "Spread role" }).click();
         await page.getByRole(`button`, { exact: true, [`name`]: "Ignored", name: `Template name` });
+        await page.getByRole("button", { name: "Hidden role", includeHidden: true });
         await page.getByRole("button", { name: "Bad exact", exact: "yes" });
+        await page.getByRole("button", { name: "Bad hidden", includeHidden: includeHidden });
         await page.getByRole("button", { name: "Computed exact", exact: isExact });
         await page.getByRole("checkbox", { name: "Subscribe", checked: true });
         await page.getByRole("button");
@@ -220,6 +222,11 @@ fn extracts_playwright_text_locators() {
             (
                 "role".to_string(),
                 "Discuss".to_string(),
+                Some("button".to_string())
+            ),
+            (
+                "role".to_string(),
+                "Hidden role".to_string(),
                 Some("button".to_string())
             ),
             (

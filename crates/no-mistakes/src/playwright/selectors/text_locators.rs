@@ -37,6 +37,7 @@ impl<'a> Visit<'a> for PlaywrightTextLocatorVisitor<'_> {
             self.locators.push(playwright_tests::TestOccurrence {
                 value: locator,
                 status: self.status.merge(self.annotation_status),
+                scope: playwright_tests::TestOccurrenceScope::Test,
                 test_name: self.current_test_name.clone(),
                 describe_path: self.describe_stack.clone(),
                 line: byte_offset_to_line(self.source, call.span.start as usize),

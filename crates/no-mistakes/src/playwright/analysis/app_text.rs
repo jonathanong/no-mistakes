@@ -61,6 +61,7 @@ struct AppTextVisitor<'a> {
     controls_by_id: HashMap<String, ControlTextTarget>,
     pending_labels: Vec<PendingLabel>,
     texts_by_id: HashMap<String, Vec<String>>,
+    hidden_depth: usize,
 }
 
 impl AppTextVisitor<'_> {
@@ -77,6 +78,13 @@ impl AppTextVisitor<'_> {
         )
     }
 
+    fn element_is_hidden(&self, opening: &oxc_ast::ast::JSXOpeningElement<'_>) -> bool {
+        has_attr(opening, "hidden")
+            || self
+                .string_attr(opening, "aria-hidden")
+                .is_some_and(|value| value == "true")
+    }
+
     fn push(
         &mut self,
         kind: AppTextKind,
@@ -90,6 +98,7 @@ impl AppTextVisitor<'_> {
             kind,
             role,
             text,
+            hidden: self.hidden_depth > 0,
             selector_refs: selector_refs.to_vec(),
         });
     }
@@ -123,6 +132,7 @@ impl AppTextVisitor<'_> {
                 kind,
                 role: control.role.clone(),
                 text: text.clone(),
+                hidden: control.hidden,
                 selector_refs: control.selector_refs.clone(),
             });
         }

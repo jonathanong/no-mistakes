@@ -34,6 +34,7 @@ pub(crate) fn append_locator_text_edges(
                         text_locator.value.role.as_deref(),
                         &text_locator.value.text,
                         text_locator.value.exact,
+                        text_locator.value.include_hidden,
                     )
                 })
                 .filter_map(|app_text| {
@@ -119,6 +120,7 @@ fn has_reachable_route_signal(
             test_name: route_test_name,
             describe_path: route_describe_path,
             route_file,
+            hook: route_is_hook,
             line: route_line,
             ..
         } = edge
@@ -129,6 +131,7 @@ fn has_reachable_route_signal(
             || !route_signal_matches_test(
                 route_test_name,
                 route_describe_path,
+                *route_is_hook,
                 test_name,
                 describe_path,
             )
@@ -146,6 +149,7 @@ fn has_reachable_route_signal(
 fn route_signal_matches_test(
     route_test_name: &Option<Arc<String>>,
     route_describe_path: &Arc<Vec<String>>,
+    route_is_hook: bool,
     test_name: &Option<Arc<String>>,
     describe_path: &Arc<Vec<String>>,
 ) -> bool {
@@ -153,6 +157,7 @@ fn route_signal_matches_test(
         return true;
     }
     route_test_name.is_none()
+        && route_is_hook
         && test_name.is_some()
         && describe_path_starts_with(describe_path, route_describe_path)
 }

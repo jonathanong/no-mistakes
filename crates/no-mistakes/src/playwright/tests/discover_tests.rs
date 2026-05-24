@@ -277,6 +277,7 @@ fn related_report_matches_route_and_selector_edges() {
             route_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
             route: std::sync::Arc::new("/".to_string()),
             url: std::sync::Arc::new("/".to_string()),
+            hook: false,
             line: 1,
         },
         Edge::Selector {

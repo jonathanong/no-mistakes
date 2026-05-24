@@ -118,6 +118,7 @@ pub(crate) enum Edge {
         route_file: Arc<String>,
         route: Arc<String>,
         url: Arc<String>,
+        hook: bool,
         line: u32,
     },
     #[serde(rename_all = "camelCase")]

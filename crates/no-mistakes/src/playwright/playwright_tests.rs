@@ -3,7 +3,7 @@ use oxc_ast::ast::{Argument, CallExpression, Expression};
 
 mod occurrence;
 pub(crate) use occurrence::dedup_occurrences_by_identity;
-pub use occurrence::TestOccurrence;
+pub use occurrence::{TestOccurrence, TestOccurrenceScope};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub enum TestStatus {
@@ -48,6 +48,18 @@ impl TestPolicy {
 
 pub fn callback_argument_index(call: &CallExpression<'_>) -> Option<usize> {
     call.arguments.iter().rposition(argument_is_function)
+}
+
+pub fn hook_callback_index(call: &CallExpression<'_>) -> Option<usize> {
+    let path = ast::expression_path(&call.callee)?;
+    let is_hook = matches!(path.first().map(String::as_str), Some("test"))
+        && path.iter().any(|part| {
+            matches!(
+                part.as_str(),
+                "beforeEach" | "beforeAll" | "afterEach" | "afterAll"
+            )
+        });
+    is_hook.then(|| callback_argument_index(call)).flatten()
 }
 
 pub fn test_callback_status(call: &CallExpression<'_>) -> Option<TestStatus> {

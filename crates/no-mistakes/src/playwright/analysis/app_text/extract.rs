@@ -26,6 +26,7 @@ pub(super) fn extract_app_text_targets(
             controls_by_id: HashMap::new(),
             pending_labels: Vec::new(),
             texts_by_id: HashMap::new(),
+            hidden_depth: 0,
         };
         visitor.visit_program(program);
         visitor.finish();

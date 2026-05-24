@@ -17,6 +17,10 @@ impl<'a> Visit<'a> for AppTextVisitor<'_> {
             self.source,
             self.scoped_static_identifier_defaults,
         );
+        let element_hidden = self.element_is_hidden(&element.opening_element);
+        if element_hidden {
+            self.hidden_depth += 1;
+        }
 
         if is_labelable(tag) {
             if let Some(id) = self.string_attr(&element.opening_element, "id") {
@@ -24,6 +28,7 @@ impl<'a> Visit<'a> for AppTextVisitor<'_> {
                     id,
                     ControlTextTarget {
                         role: role.clone(),
+                        hidden: self.hidden_depth > 0,
                         selector_refs: refs.clone(),
                     },
                 );
@@ -123,5 +128,8 @@ impl<'a> Visit<'a> for AppTextVisitor<'_> {
         }
 
         walk::walk_jsx_element(self, element);
+        if element_hidden {
+            self.hidden_depth -= 1;
+        }
     }
 }

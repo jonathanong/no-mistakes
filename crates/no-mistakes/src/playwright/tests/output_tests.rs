@@ -77,6 +77,7 @@ fn text_printers_cover_routes_and_selectors() {
                 route_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
                 route: std::sync::Arc::new("/".to_string()),
                 url: std::sync::Arc::new("/".to_string()),
+                hook: false,
                 line: 1,
             },
             Edge::Selector {
@@ -169,6 +170,7 @@ fn related_report_includes_fetch_apis() {
             route_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
             route: std::sync::Arc::new("/".to_string()),
             url: std::sync::Arc::new("/".to_string()),
+            hook: false,
             line: 1,
         },
         Edge::Fetch {
@@ -258,6 +260,7 @@ fn edge_report_json_schema_is_stable_with_arc_fields() {
                 route_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
                 route: std::sync::Arc::new("/".to_string()),
                 url: std::sync::Arc::new("/api/health".to_string()),
+                hook: false,
                 line: 1,
             },
             Edge::Selector {
@@ -350,6 +353,7 @@ fn build_tests_report_produces_entries_with_routes_and_fetch_apis() {
             route_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
             route: std::sync::Arc::new("/".to_string()),
             url: std::sync::Arc::new("/".to_string()),
+            hook: false,
             line: 1,
         },
         Edge::Fetch {
@@ -431,6 +435,7 @@ fn build_tests_report_with_absolute_file_path_filter() {
         route_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
         route: std::sync::Arc::new("/".to_string()),
         url: std::sync::Arc::new("/".to_string()),
+        hook: false,
         line: 1,
     }];
     // Pass an absolute path as the file filter — exercises the absolute branch in input_file()

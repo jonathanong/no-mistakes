@@ -10,6 +10,30 @@ fn route_signal_matches_exact_test_scope() {
     assert!(route_signal_matches_test(
         &route_test_name,
         &route_describe_path,
+        false,
+        &test_name,
+        &describe_path,
+    ));
+}
+
+#[test]
+fn route_signal_fallback_requires_hook_scope() {
+    let route_test_name = None;
+    let route_describe_path = Arc::new(vec!["suite".to_string()]);
+    let test_name = Some(Arc::new("visits home".to_string()));
+    let describe_path = Arc::new(vec!["suite".to_string()]);
+
+    assert!(!route_signal_matches_test(
+        &route_test_name,
+        &route_describe_path,
+        false,
+        &test_name,
+        &describe_path,
+    ));
+    assert!(route_signal_matches_test(
+        &route_test_name,
+        &route_describe_path,
+        true,
         &test_name,
         &describe_path,
     ));

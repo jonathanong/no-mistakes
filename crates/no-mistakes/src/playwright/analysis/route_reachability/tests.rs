@@ -45,6 +45,27 @@ fn route_reachability_honors_selector_include() {
 }
 
 #[test]
+fn route_reachability_resolves_tsconfig_alias_imports() {
+    let root = crate::playwright::test_support::fixture_path(&[
+        "nextjs-selectors",
+        "selector-text-locator",
+    ]);
+    let route = routes::Route {
+        file: root.join("web/app/page.tsx"),
+        pattern: "/".to_string(),
+    };
+
+    let reachable =
+        collect_route_reachable_files(&root, &settings(vec![]), &[route]).expect("collects");
+
+    assert!(reachable
+        .get(&Arc::new("web/app/page.tsx".to_string()))
+        .is_some_and(|files| files.contains(&Arc::new(
+            "web/app/components/discuss-button.tsx".to_string()
+        ))));
+}
+
+#[test]
 fn route_reachability_surfaces_import_parse_errors() {
     let root = crate::playwright::test_support::fixture_path(&["react-traits-components"]);
     let route = routes::Route {

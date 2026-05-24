@@ -103,6 +103,8 @@ pub(crate) fn analyze_test_occurrences(
                 route_file: route.route_file.clone(),
                 route: route.pattern.clone(),
                 url: url_arc.clone(),
+                hook: raw_url.scope
+                    == crate::playwright::playwright_tests::TestOccurrenceScope::Hook,
                 line: raw_url.line,
             });
         }
