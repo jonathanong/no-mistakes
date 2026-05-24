@@ -79,7 +79,10 @@ fn load_config_projects(
             Ok(parsed.into_projects(root, raw))
         }
         Framework::Vitest => {
-            let parsed = test_config::vitest::parse_from_path(source, path, config_dir, root)?;
+            let tsconfig = resolve_tsconfig(config_dir)
+                .unwrap_or_else(|_| super::tsconfig_without_config(root));
+            let parsed =
+                test_config::vitest::parse_from_path(source, path, config_dir, root, &tsconfig)?;
             Ok(parsed
                 .into_iter()
                 .map(|mut project| {

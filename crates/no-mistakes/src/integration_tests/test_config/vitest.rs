@@ -26,11 +26,10 @@ pub(in crate::integration_tests) fn parse_from_path(
     path: &Path,
     config_dir: &Path,
     root: &Path,
+    tsconfig: &TsConfig,
 ) -> Result<Vec<ConfigProject>> {
     ast::with_program(path, source, |program, source| {
-        let tsconfig = crate::integration_tests::project_config::resolve_tsconfig(root)
-            .unwrap_or_else(|_| crate::integration_tests::tsconfig_without_config(root));
-        parse_program(program, source, path, config_dir, root, &tsconfig)
+        parse_program(program, source, path, config_dir, root, tsconfig)
     })?
 }
 

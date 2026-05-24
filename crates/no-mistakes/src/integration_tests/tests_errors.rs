@@ -34,16 +34,28 @@ fn config_parsers_report_syntax_errors() {
 
     let vitest_path = root.join("vitest.syntax-error.mts");
     let vitest_source = std::fs::read_to_string(&vitest_path).unwrap();
-    assert!(
-        test_config::vitest::parse_from_path(&vitest_source, &vitest_path, &root, &root).is_err()
-    );
+    let tsconfig = tsconfig_without_config(&root);
+    assert!(test_config::vitest::parse_from_path(
+        &vitest_source,
+        &vitest_path,
+        &root,
+        &root,
+        &tsconfig
+    )
+    .is_err());
 
     let root = fixture("coverage");
     let empty_path = root.join("vitest.empty-array-invalid.mts");
     let empty_source = std::fs::read_to_string(&empty_path).unwrap();
-    assert!(
-        test_config::vitest::parse_from_path(&empty_source, &empty_path, &root, &root).is_err()
-    );
+    let tsconfig = tsconfig_without_config(&root);
+    assert!(test_config::vitest::parse_from_path(
+        &empty_source,
+        &empty_path,
+        &root,
+        &root,
+        &tsconfig
+    )
+    .is_err());
 }
 
 #[test]
