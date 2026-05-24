@@ -19,6 +19,8 @@ mod jsx;
 mod jsx_text;
 mod roles;
 mod visit;
+mod visit_attrs;
+mod visit_helpers;
 use elements::*;
 use extract::extract_app_text_targets;
 use jsx_text::*;
