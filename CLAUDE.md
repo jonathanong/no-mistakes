@@ -34,6 +34,7 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - 100% test coverage
 - Test fixture-based — can't be perfect, but add more tests to improve coverage
 - Heuristics — can't be perfect, but we'll try our best
+- All CLIs must also be available through the N-API API for node.js
 
 ## Context Management
 
