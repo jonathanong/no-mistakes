@@ -49,7 +49,13 @@ pub(crate) fn check_with_files(
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.rule_options();
-        findings.extend(scan(root, &opts, all_files)?);
+        let target_roots = super::target_roots(root, config, rule);
+        let files: Vec<PathBuf> = all_files
+            .iter()
+            .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
+            .cloned()
+            .collect();
+        findings.extend(scan(root, &opts, &files)?);
     }
     super::sort_findings(&mut findings);
     Ok(findings)

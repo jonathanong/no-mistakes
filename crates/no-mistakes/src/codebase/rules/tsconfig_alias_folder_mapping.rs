@@ -47,49 +47,19 @@ pub(crate) fn check_with_files(
 
 fn check_tsconfig(root: &Path, opts: &Options) -> Result<Vec<RuleFinding>> {
     let tsconfig_path = root.join(&opts.tsconfig);
-    let content = match std::fs::read_to_string(&tsconfig_path) {
+    let ts_config = match crate::codebase::ts_resolver::load_tsconfig(&tsconfig_path) {
         Ok(c) => c,
         Err(_) => return Ok(Vec::new()),
     };
-    let json: serde_json::Value = serde_json::from_str(&content)?;
-    let paths = match json
-        .get("compilerOptions")
-        .and_then(|co| co.get("paths"))
-        .and_then(|p| p.as_object())
-    {
-        Some(p) => p.clone(),
-        None => return Ok(Vec::new()),
-    };
-
-    // Build a sorted map for deterministic output
-    let sorted_paths: BTreeMap<String, Vec<String>> = paths
-        .into_iter()
-        .map(|(k, v)| {
-            let targets = v
-                .as_array()
-                .map(|arr| {
-                    arr.iter()
-                        .filter_map(|s| s.as_str().map(str::to_owned))
-                        .collect()
-                })
-                .unwrap_or_default();
-            (k, targets)
-        })
-        .collect();
-
-    let tsconfig_str = relative_slash_path(root, &tsconfig_path);
-    let mut findings = Vec::new();
-
-    for (alias, targets) in &sorted_paths {
-        findings.extend(check_alias(
-            &tsconfig_str,
-            alias,
-            targets,
-            opts,
-            &sorted_paths,
-        ));
+    if ts_config.paths.is_empty() {
+        return Ok(Vec::new());
     }
-
+    let tsconfig_str = relative_slash_path(root, &tsconfig_path);
+    let all_paths: BTreeMap<String, Vec<String>> = ts_config.paths.into_iter().collect();
+    let mut findings = Vec::new();
+    for (alias, targets) in &all_paths {
+        findings.extend(check_alias(&tsconfig_str, alias, targets, opts, &all_paths));
+    }
     Ok(findings)
 }
 

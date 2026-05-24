@@ -57,30 +57,36 @@ pub(crate) fn check_with_files(
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        findings.extend(scan(root, &rule.rule_options(), all_files)?);
+        let target_roots = super::target_roots(root, config, rule);
+        let files: Vec<PathBuf> = all_files
+            .iter()
+            .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
+            .cloned()
+            .collect();
+        findings.extend(scan(root, &rule.rule_options(), &files)?);
     }
     super::sort_findings(&mut findings);
     Ok(findings)
 }
 
-/// Returns true if the specifier is not an allowed npm registry / workspace specifier.
 pub(crate) fn is_blocked_specifier(spec: &str) -> bool {
     if spec.starts_with("workspace:") || spec.starts_with("catalog:") {
         return false;
     }
     if let Some(rest) = spec.strip_prefix("npm:") {
-        // npm:pkg@version — recursively check the version after the last @
+        if let Some(after_at) = rest.strip_prefix('@') {
+            let version = after_at.find('@').map_or("", |i| &after_at[i + 1..]);
+            return !version.is_empty() && is_blocked_specifier(version);
+        }
         let version = rest.rfind('@').map_or(rest, |i| &rest[i + 1..]);
         return is_blocked_specifier(version);
     }
     if BLOCKED_PREFIXES.iter().any(|p| spec.starts_with(p)) {
         return true;
     }
-    // GitHub shorthands: owner/repo (no leading @)
     if !spec.starts_with('@') && spec.contains('/') {
         return true;
     }
-    // Scoped shorthands: @scope/pkg/extra
     if spec.starts_with('@') && spec.splitn(3, '/').count() > 2 {
         return true;
     }
@@ -88,8 +94,7 @@ pub(crate) fn is_blocked_specifier(spec: &str) -> bool {
 }
 
 fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
-    let lockfile_findings = check_lockfile(root, opts);
-    let package_findings: Vec<RuleFinding> = files
+    let mut findings: Vec<RuleFinding> = files
         .par_iter()
         .filter(|p| {
             p.file_name()
@@ -107,8 +112,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
         })
         .flat_map(|path| check_package_json(path, root))
         .collect();
-    let mut findings = package_findings;
-    findings.extend(lockfile_findings);
+    findings.extend(check_lockfile(root, opts));
     Ok(findings)
 }
 
@@ -151,11 +155,7 @@ fn check_lockfile(root: &Path, opts: &Options) -> Vec<RuleFinding> {
     let Some(lockfile_path) = &opts.lockfile else {
         return Vec::new();
     };
-    let lockfile_abs = if lockfile_path.is_absolute() {
-        lockfile_path.clone()
-    } else {
-        root.join(lockfile_path)
-    };
+    let lockfile_abs = root.join(lockfile_path);
     let Ok(content) = std::fs::read_to_string(&lockfile_abs) else {
         return Vec::new();
     };
