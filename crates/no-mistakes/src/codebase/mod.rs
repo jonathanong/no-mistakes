@@ -1,5 +1,6 @@
 pub mod check_facts;
 pub mod ci_workflows;
+pub mod comment_only;
 pub mod config;
 pub mod dependencies;
 pub mod md_links;

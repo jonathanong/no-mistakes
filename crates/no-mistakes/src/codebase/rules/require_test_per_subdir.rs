@@ -28,7 +28,7 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
             continue;
         }
         let files = discover_files(root, skip);
-        findings.extend(check_with_files(root, config, &files)?);
+        findings.extend(scan(root, &opts, &files)?);
     }
     super::sort_findings(&mut findings);
     Ok(findings)

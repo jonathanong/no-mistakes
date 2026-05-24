@@ -292,22 +292,70 @@ fn handle_shellcheck_result_success_returns_empty() {
 }
 
 #[test]
-fn handle_shellcheck_result_failure_emits_findings_per_file() {
-    // Exercises the Ok(output) arm with exit code 1 → one finding per shell file.
+fn handle_shellcheck_result_reports_only_affected_files() {
+    // Only files mentioned in gcc-format stdout get findings; clean files are skipped.
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path();
     let sh1 = root.join("a.sh");
     let sh2 = root.join("b.sh");
     std::fs::write(&sh1, "#!/bin/bash\nfoo\n").unwrap();
     std::fs::write(&sh2, "#!/bin/bash\nbar\n").unwrap();
+    let gcc_line = format!("{}:2:1: warning: blah [SC2006]\n", sh1.display());
     let output = std::process::Output {
         status: std::os::unix::process::ExitStatusExt::from_raw(1 << 8),
-        stdout: Vec::new(),
+        stdout: gcc_line.into_bytes(),
         stderr: Vec::new(),
     };
-    let result = handle_shellcheck_result(root, &[sh1, sh2], Ok(output));
+    let result = handle_shellcheck_result(root, &[sh1.clone(), sh2], Ok(output));
     let findings = result.unwrap();
-    assert_eq!(findings.len(), 2);
-    assert!(findings.iter().any(|f| f.file.contains("a.sh")));
-    assert!(findings.iter().any(|f| f.file.contains("b.sh")));
+    assert_eq!(
+        findings.len(),
+        1,
+        "only the flagged file should get a finding"
+    );
+    assert!(findings[0].file.contains("a.sh"));
+}
+
+#[test]
+fn parse_affected_files_empty_stdout_returns_empty() {
+    let files: Vec<std::path::PathBuf> = vec![];
+    assert!(parse_affected_files("", &files).is_empty());
+}
+
+#[test]
+fn parse_affected_files_line_without_colon_skipped() {
+    let tmp = tempfile::tempdir().unwrap();
+    let sh = tmp.path().join("a.sh");
+    std::fs::write(&sh, "#!/bin/bash\n").unwrap();
+    let stdout = "no colon here\n";
+    let result = parse_affected_files(stdout, std::slice::from_ref(&sh));
+    assert!(result.is_empty());
+}
+
+#[test]
+fn parse_affected_files_unknown_file_skipped() {
+    let tmp = tempfile::tempdir().unwrap();
+    let sh = tmp.path().join("known.sh");
+    std::fs::write(&sh, "#!/bin/bash\n").unwrap();
+    let stdout = format!(
+        "{}:1:1: warning: blah [SC2086]\n/tmp/unknown.sh:1:1: warning: blah [SC2086]\n",
+        sh.display()
+    );
+    let result = parse_affected_files(&stdout, std::slice::from_ref(&sh));
+    assert_eq!(result, vec![sh]);
+}
+
+#[test]
+fn parse_affected_files_deduplicates() {
+    let tmp = tempfile::tempdir().unwrap();
+    let sh = tmp.path().join("a.sh");
+    std::fs::write(&sh, "#!/bin/bash\n").unwrap();
+    let stdout = format!(
+        "{}:1:1: warning: blah [SC2086]\n{}:2:1: warning: blah2 [SC2087]\n",
+        sh.display(),
+        sh.display()
+    );
+    let result = parse_affected_files(&stdout, std::slice::from_ref(&sh));
+    assert_eq!(result.len(), 1);
+    assert_eq!(result[0], sh);
 }

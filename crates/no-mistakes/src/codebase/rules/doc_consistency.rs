@@ -121,14 +121,14 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
         }
     }
 
-    // Check banned substrings across all tracked files
-    for banned in &opts.banned_substrings {
-        for path in files {
-            let Ok(content) = std::fs::read_to_string(path) else {
-                continue;
-            };
+    // Check banned substrings across all tracked files (read each file once)
+    for path in files {
+        let Ok(content) = std::fs::read_to_string(path) else {
+            continue;
+        };
+        let rel = relative_slash_path(root, path);
+        for banned in &opts.banned_substrings {
             if content.contains(banned.as_str()) {
-                let rel = relative_slash_path(root, path);
                 findings.push(RuleFinding {
                     rule: RULE_ID.to_string(),
                     file: rel.clone(),

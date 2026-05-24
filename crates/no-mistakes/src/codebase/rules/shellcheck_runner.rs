@@ -73,7 +73,6 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
 pub(crate) fn collect_shell_files(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<PathBuf> {
     let mut candidates: Vec<PathBuf> = Vec::new();
 
-    // All .sh files from the tracked file list
     for path in files {
         if path
             .extension()
@@ -83,8 +82,6 @@ pub(crate) fn collect_shell_files(root: &Path, opts: &Options, files: &[PathBuf]
             candidates.push(path.clone());
         }
     }
-
-    // Files in shebang_dirs with bash/sh shebang (direct children only)
     for dir_rel in &opts.shebang_dirs {
         let dir = if dir_rel.is_empty() {
             root.to_path_buf()
@@ -98,7 +95,6 @@ pub(crate) fn collect_shell_files(root: &Path, opts: &Options, files: &[PathBuf]
             if parent != dir {
                 continue;
             }
-            // Skip .sh files already added
             if path.extension().and_then(|e| e.to_str()) == Some("sh") {
                 continue;
             }
@@ -107,8 +103,6 @@ pub(crate) fn collect_shell_files(root: &Path, opts: &Options, files: &[PathBuf]
             }
         }
     }
-
-    // Explicit shell_files
     for rel in &opts.shell_files {
         let abs = root.join(rel);
         if abs.exists() {
@@ -141,20 +135,16 @@ pub(crate) fn run_shellcheck(
     opts: &Options,
     shell_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let severity = if opts.shellcheck.severity.is_empty() {
+    let sev = &opts.shellcheck.severity;
+    let severity = if sev.is_empty() {
         DEFAULT_SEVERITY
     } else {
-        &opts.shellcheck.severity
+        sev
     };
-
     let result = Command::new("shellcheck")
-        .arg("-s")
-        .arg("bash")
-        .arg("-S")
-        .arg(severity)
+        .args(["-f", "gcc", "-S", severity])
         .args(shell_files)
         .output();
-
     handle_shellcheck_result(root, shell_files, result)
 }
 
@@ -164,17 +154,15 @@ pub(crate) fn handle_shellcheck_result(
     result: std::io::Result<std::process::Output>,
 ) -> Result<Vec<RuleFinding>> {
     match result {
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            // shellcheck not installed — skip silently
-            Ok(Vec::new())
-        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(Vec::new()),
         Err(e) => Err(anyhow::anyhow!("failed to run shellcheck: {e}")),
         Ok(output) => {
             if output.status.success() {
                 return Ok(Vec::new());
             }
-            // shellcheck exit code 1 = issues found; emit one finding per file
-            let mut findings: Vec<RuleFinding> = shell_files
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let affected = parse_affected_files(&stdout, shell_files);
+            let mut findings: Vec<RuleFinding> = affected
                 .iter()
                 .map(|path| {
                     let rel = relative_slash_path(root, path);
@@ -194,6 +182,18 @@ pub(crate) fn handle_shellcheck_result(
             Ok(findings)
         }
     }
+}
+
+pub(crate) fn parse_affected_files(stdout: &str, shell_files: &[PathBuf]) -> Vec<PathBuf> {
+    let shell_set: std::collections::HashSet<&PathBuf> = shell_files.iter().collect();
+    let mut v: Vec<PathBuf> = stdout
+        .lines()
+        .filter_map(|l| l.find(':').map(|i| PathBuf::from(&l[..i])))
+        .filter(|p| shell_set.contains(p))
+        .collect();
+    v.sort();
+    v.dedup();
+    v
 }
 
 #[cfg(test)]

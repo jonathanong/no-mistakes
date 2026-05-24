@@ -234,6 +234,28 @@ The `rust-max-lines-per-file`, `rust-no-inline-tests`,
 Global Check section above and the configuration reference for available
 options.
 
+### Configurable Filesystem Rules via `no-mistakes check`
+
+The following rules are configurable via `rules:` entries in `.no-mistakes.yml`:
+
+| Rule | Description |
+| --- | --- |
+| `require-test-per-subdir` | Requires at least one test file (matching a glob) in each first-level subdirectory of configured `roots`. |
+| `require-files-in-subdirs` | Requires each subdirectory under configured `roots` to contain specific files. |
+| `strict-package-layout` | Validates that packages under `roots` contain exactly the allowed set of files/directories. |
+| `required-local-docs` | Requires documentation files (e.g. `AGENTS.md`) to exist in configured directories. |
+| `required-doc-section` | Requires specific heading text in documentation files. |
+| `tsconfig-alias-folder-mapping` | Validates that every `tsconfig.json` path alias maps to an existing directory. |
+| `no-git-identity-mutation` | Rejects shell scripts and GitHub Actions workflows that mutate git user identity. |
+| `package-json-registry-only` | Requires all `package.json` dependencies to resolve from the npm registry (no `file:`, `link:`, or `git+` specifiers). |
+| `no-empty-or-comments-only-files` | Flags files that are empty or contain only comments. |
+| `vitest-test-correspondence` | Enforces that every test file has a corresponding source file (and vice versa). |
+| `file-extension-policy` | Enforces allowed/banned file extensions per configured scope. |
+| `banned-renamed-files` | Rejects files whose basename matches a banned pattern. |
+| `lockfile-allowlist` | Fails if the pnpm lockfile contains packages not on an explicit allowlist. |
+| `shellcheck-runner` | Runs `shellcheck` on `.sh` files and configured shell scripts; skips silently if `shellcheck` is not installed. |
+| `doc-consistency` | Enforces that required files exist, contain required headings/substrings, and do not contain banned substrings. |
+
 ### Next.js Feature Ban Rules via `no-mistakes check`
 
 Use zero-option project rules to disable Next.js features:

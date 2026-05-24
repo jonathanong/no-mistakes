@@ -104,22 +104,38 @@ fn js_real_content_passes() {
 
 #[test]
 fn sql_dash_comment_only() {
-    assert!(!has_non_comment_content("-- drop table\n", ".sql"));
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("query.sql");
+    std::fs::write(&path, "-- drop table\n").unwrap();
+    let findings = check_file(&path, tmp.path());
+    assert_eq!(findings.len(), 1);
+    assert!(findings[0].message.contains("only comments"));
 }
 
 #[test]
 fn sql_real_content_passes() {
-    assert!(has_non_comment_content("SELECT 1;\n", ".sql"));
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("query.sql");
+    std::fs::write(&path, "SELECT 1;\n").unwrap();
+    assert!(check_file(&path, tmp.path()).is_empty());
 }
 
 #[test]
 fn html_comment_only() {
-    assert!(!has_non_comment_content("<!-- todo -->\n", ".md"));
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("doc.md");
+    std::fs::write(&path, "<!-- todo -->\n").unwrap();
+    let findings = check_file(&path, tmp.path());
+    assert_eq!(findings.len(), 1);
+    assert!(findings[0].message.contains("only comments"));
 }
 
 #[test]
 fn html_real_content_passes() {
-    assert!(has_non_comment_content("# Title\n<!-- note -->\n", ".md"));
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("doc.md");
+    std::fs::write(&path, "# Title\n<!-- note -->\n").unwrap();
+    assert!(check_file(&path, tmp.path()).is_empty());
 }
 
 #[test]
@@ -168,30 +184,46 @@ fn default_extensions_used_when_extensions_empty() {
 
 #[test]
 fn unknown_extension_treated_as_raw_content() {
-    // The _ branch in has_non_comment_content: an unknown extension means
-    // the raw content is used as-is (no comment stripping).
-    assert!(has_non_comment_content("some content", ".xml"));
-    assert!(!has_non_comment_content("   ", ".xml"));
+    let tmp = tempfile::tempdir().unwrap();
+    let content_path = tmp.path().join("data.xml");
+    std::fs::write(&content_path, "some content").unwrap();
+    assert!(
+        check_file(&content_path, tmp.path()).is_empty(),
+        "unknown ext should pass"
+    );
+    let empty_path = tmp.path().join("empty.xml");
+    std::fs::write(&empty_path, "   ").unwrap();
+    let findings = check_file(&empty_path, tmp.path());
+    assert_eq!(findings.len(), 1);
+    assert!(findings[0].message.contains("empty"));
 }
 
 #[test]
 fn mjs_line_comment_only_flagged() {
-    // .mjs falls into the ".ts | .mts | ..." arm (line 127)
-    assert!(!has_non_comment_content("// comment\n", ".mjs"));
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("a.mjs");
+    std::fs::write(&path, "// comment\n").unwrap();
+    let findings = check_file(&path, tmp.path());
+    assert_eq!(findings.len(), 1);
+    assert!(findings[0].message.contains("only comments"));
 }
 
 #[test]
 fn md_html_comment_only_flagged() {
-    // .md is handled by strip_html_comments
-    assert!(!has_non_comment_content("<!-- only a comment -->\n", ".md"));
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("doc.md");
+    std::fs::write(&path, "<!-- only a comment -->\n").unwrap();
+    let findings = check_file(&path, tmp.path());
+    assert_eq!(findings.len(), 1);
+    assert!(findings[0].message.contains("only comments"));
 }
 
 #[test]
-fn strip_comments_unterminated_block_comment_returns_empty() {
-    // When a block comment is not closed, the function breaks and returns
-    // whatever was accumulated before the open marker.
-    assert!(!has_non_comment_content(
-        "/* unterminated block comment",
-        ".ts"
-    ));
+fn unterminated_block_comment_is_comments_only() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("a.ts");
+    std::fs::write(&path, "/* unterminated block comment").unwrap();
+    let findings = check_file(&path, tmp.path());
+    assert_eq!(findings.len(), 1);
+    assert!(findings[0].message.contains("only comments"));
 }
