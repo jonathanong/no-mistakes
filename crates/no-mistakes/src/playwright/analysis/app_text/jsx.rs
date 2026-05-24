@@ -1,4 +1,4 @@
-use super::elements::jsx_element_name;
+use super::elements::is_component_jsx_element_name;
 use crate::playwright::analysis::types::SelectorRef;
 use crate::playwright::ast;
 use crate::playwright::config::Settings;
@@ -8,15 +8,16 @@ use crate::playwright::selectors::scoped_defaults::{
 use crate::playwright::selectors::HTML_ID_ATTRIBUTE;
 use oxc_span::GetSpan;
 
+mod attrs;
+pub(super) use attrs::{attr_exists_at_runtime, bool_attr, numeric_attr};
+
 pub(super) fn selector_refs(
     opening: &oxc_ast::ast::JSXOpeningElement<'_>,
     source: &str,
     settings: &Settings,
     scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
 ) -> Vec<SelectorRef> {
-    let component = jsx_element_name(&opening.name)
-        .and_then(|name| name.chars().next())
-        .is_some_and(|ch| !ch.is_ascii_lowercase());
+    let component = is_component_jsx_element_name(&opening.name);
     let mut refs = Vec::new();
     for item in &opening.attributes {
         let oxc_ast::ast::JSXAttributeItem::Attribute(attribute) = item else {

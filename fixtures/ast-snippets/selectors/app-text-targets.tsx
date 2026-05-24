@@ -54,7 +54,9 @@ export function Example(props: { label: string }) {
       <input data-pw="password-target" type="password" aria-label="Secret" />
       <select data-pw="select-target" aria-label="Country" />
       <select data-pw="listbox-target" multiple aria-label="Tags" />
+      <select data-pw="multiple-false-target" multiple={false} aria-label="Single tag" />
       <select data-pw="sized-listbox-target" size="2" aria-label="Regions" />
+      <select data-pw="numeric-sized-listbox-target" size={2} aria-label="Numeric regions" />
       <textarea data-pw="textarea-target" aria-label="Message" />
       <div data-pw="split-expression">Before {props.label}</div>
       <div data-pw={42}>Numeric selector</div>
@@ -65,6 +67,9 @@ export function Example(props: { label: string }) {
       <select {...props} data-pw="spread-select" multiple aria-label="Spread select" />
       <svg:path data-pw="namespaced-target">Namespaced</svg:path>
       <this.Button data-pw="this-button" title="This button">This button</this.Button>
+      <foo.Button testId="lower-member-button" title="Lower member">Lower member</foo.Button>
+      <a data-pw="undefined-link-target" href={undefined}>Undefined link</a>
+      <a data-pw="null-link-target" href={null}>Null link</a>
       <div>{props.label}</div>
     </>
   );

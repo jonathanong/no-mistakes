@@ -16,6 +16,7 @@ pub(crate) fn append_locator_text_edges(
     context: &TestAnalysisContext<'_>,
     text_locators: Vec<TestOccurrence<PlaywrightTextLocator>>,
 ) {
+    let existing_edges = edges.as_slice();
     let mut locator_edges = text_locators
         .into_par_iter()
         .flat_map_iter(|text_locator| {
@@ -39,7 +40,7 @@ pub(crate) fn append_locator_text_edges(
                 })
                 .filter_map(|app_text| {
                     let reasons = locator_reasons(
-                        edges,
+                        existing_edges,
                         rel_test_file,
                         &test_name,
                         &describe_path,

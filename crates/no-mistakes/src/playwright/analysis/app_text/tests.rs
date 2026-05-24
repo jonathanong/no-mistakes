@@ -200,7 +200,9 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
     assert_role(&targets, "Count", "spinbutton");
     assert_role(&targets, "Country", "combobox");
     assert_role(&targets, "Tags", "listbox");
+    assert_role(&targets, "Single tag", "combobox");
     assert_role(&targets, "Regions", "listbox");
+    assert_role(&targets, "Numeric regions", "listbox");
     assert_role(&targets, "Message", "textbox");
     assert!(targets.iter().any(|target| {
         target.text == "Hidden token"
@@ -214,6 +216,19 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
     assert!(targets.iter().any(|target| {
         target.text == "Dynamic template selector" && target.selector_refs.is_empty()
     }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Lower member"
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "lower-member-button")
+    }));
+    assert!(!targets
+        .iter()
+        .any(|target| target.text == "Undefined link" && target.role.as_deref() == Some("link")));
+    assert!(!targets
+        .iter()
+        .any(|target| target.text == "Null link" && target.role.as_deref() == Some("link")));
 }
 
 #[test]

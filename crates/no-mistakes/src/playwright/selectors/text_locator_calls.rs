@@ -27,14 +27,14 @@ fn simple_locator(
     kind: LocatorKind,
     method: &str,
 ) -> Option<PlaywrightTextLocator> {
-    let exact = match call
-        .arguments
-        .get(1)
-        .map(|argument| object_bool_property(argument, "exact"))
-    {
-        Some(BoolProperty::Unknown) => return None,
-        Some(BoolProperty::Value(exact)) => exact,
-        Some(BoolProperty::Missing) | None => false,
+    let exact = match call.arguments.get(1) {
+        Some(argument) if !matches!(argument, Argument::ObjectExpression(_)) => return None,
+        Some(argument) => match object_bool_property(argument, "exact") {
+            BoolProperty::Unknown => return None,
+            BoolProperty::Value(exact) => exact,
+            BoolProperty::Missing => false,
+        },
+        None => false,
     };
     text_arg(call.arguments.first()?, source).map(|text| PlaywrightTextLocator {
         kind,

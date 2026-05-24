@@ -26,7 +26,7 @@ fn implicit_role(
     scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
 ) -> Option<&'static str> {
     match tag? {
-        "a" | "area" if super::jsx::has_attr(opening, "href") => Some("link"),
+        "a" | "area" if super::jsx::attr_exists_at_runtime(opening, "href") => Some("link"),
         "button" => Some("button"),
         "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => Some("heading"),
         "img"
@@ -72,12 +72,13 @@ fn select_role(
     source: &str,
     scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
 ) -> Option<&'static str> {
-    if super::jsx::has_attr(opening, "multiple") {
+    if super::jsx::bool_attr(opening, "multiple").unwrap_or(false) {
         return Some("listbox");
     }
-    match super::jsx::string_attr(opening, "size", source, scoped_static_identifier_defaults)
-        .and_then(|value| value.parse::<u32>().ok())
-    {
+    match super::jsx::numeric_attr(opening, "size", source).or_else(|| {
+        super::jsx::string_attr(opening, "size", source, scoped_static_identifier_defaults)
+            .and_then(|value| value.parse::<u32>().ok())
+    }) {
         Some(size) if size > 1 => Some("listbox"),
         _ => Some("combobox"),
     }
