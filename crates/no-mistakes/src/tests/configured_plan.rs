@@ -1,5 +1,5 @@
 use super::configured_plan_candidates::{
-    group_candidates, merge_selected, missing_file_warnings, selected_from_paths, stable_take,
+    group_candidates, merge_selected, selected_from_paths, stable_take,
 };
 use super::plan::relative_path;
 use super::{PlanArgs, SelectedTest, TestFramework, TestPlan, TestPlanGroupResult, Warning};
@@ -43,7 +43,7 @@ pub(crate) fn generate_configured_plan(
                 r#type: "global".to_string(),
                 ..all_group(root, &all_tests)
             }],
-            warnings: missing_file_warnings(root, changed_files),
+            warnings: Vec::new(),
             fallback_triggered: true,
             fallback_reason: Some(reason.clone()),
         });
@@ -53,7 +53,7 @@ pub(crate) fn generate_configured_plan(
         return Ok(TestPlan {
             selected_tests: selected_from_paths(root, &all_tests, "all", changed_files.first()),
             groups: vec![all_group(root, &all_tests)],
-            warnings: missing_file_warnings(root, changed_files),
+            warnings: Vec::new(),
             fallback_triggered: true,
             fallback_reason: Some(format!(
                 "{} test plan environment `{}` runs all tests",
@@ -77,7 +77,7 @@ pub(crate) fn generate_configured_plan(
                 r#type: "dependencies".to_string(),
                 ..all_group(root, &all_tests)
             }],
-            warnings: missing_file_warnings(root, changed_files),
+            warnings: Vec::new(),
             fallback_triggered: true,
             fallback_reason: Some(reason),
         });
@@ -88,7 +88,7 @@ pub(crate) fn generate_configured_plan(
     let mut used = HashSet::new();
     let mut group_results = Vec::new();
     let mut remaining_global = global_limit;
-    let mut warnings = missing_file_warnings(root, changed_files);
+    let mut warnings: Vec<Warning> = Vec::new();
     let mut warnings_seen: HashSet<(String, String)> = warnings
         .iter()
         .map(|warning| (warning.r#type.clone(), warning.file.clone()))

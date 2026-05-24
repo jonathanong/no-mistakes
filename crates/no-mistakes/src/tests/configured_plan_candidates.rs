@@ -182,21 +182,6 @@ pub(super) fn selected_from_paths(
         .collect()
 }
 
-pub(super) fn missing_file_warnings(root: &Path, changed_files: &[PathBuf]) -> Vec<Warning> {
-    changed_files
-        .iter()
-        .filter(|changed| !changed.exists())
-        .map(|changed| {
-            let rel = relative_path(root, changed);
-            Warning {
-                r#type: "file-not-found".to_string(),
-                message: format!("Changed file not found on disk: {}", rel),
-                file: rel,
-            }
-        })
-        .collect()
-}
-
 pub(super) fn merge_selected(existing: &mut SelectedTest, next: &SelectedTest) {
     if next.confidence > existing.confidence {
         existing.confidence = next.confidence;

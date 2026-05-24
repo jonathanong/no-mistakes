@@ -214,6 +214,8 @@ testPlan:
 
 Groups are mutually exclusive in declaration order. `coverage` is Playwright
 only; Vitest supports `direct`, `dependencies`, and deterministic `sample`.
+Deleted or otherwise missing changed-file paths are ignored before fallback,
+dependency, and graph selection.
 `dependencies.projects.<name>: true` runs the full selected framework when a
 file under that configured project root/include set changes. Explicit project
 dependency globs are relative to that project's root unless they already include

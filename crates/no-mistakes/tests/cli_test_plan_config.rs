@@ -117,6 +117,38 @@ fn test_plan_vitest_project_dependency_triggers_all_tests() {
 }
 
 #[test]
+fn test_plan_vitest_ignores_deleted_project_dependency_paths() {
+    let root = fixture("test-plan-config");
+    let output = run(&[
+        "test",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "web/app/deleted.tsx",
+        "--changed-file",
+        "source.ts",
+        "--json",
+    ]);
+
+    assert!(output.status.success());
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(plan["fallback_triggered"], false);
+    assert!(plan["fallback_reason"].is_null());
+    assert!(plan["warnings"].as_array().unwrap().is_empty());
+    assert!(plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|test| test["reasons"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|reason| { reason["changed_file"] != "web/app/deleted.tsx" })));
+}
+
+#[test]
 fn test_plan_vitest_project_dependency_patterns_are_project_relative() {
     let root = fixture("test-plan-config");
     let output = run(&[

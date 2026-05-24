@@ -48,7 +48,9 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     let tsconfig = crate::tests::why::resolve_tsconfig(args.tsconfig.as_deref(), &root)?;
 
     // 1. Collect changed files
-    let changed_files = super::changed_files::collect_changed_files(args, &root)?;
+    let changed_files = super::changed_files::existing_changed_files(
+        super::changed_files::collect_changed_files(args, &root)?,
+    );
 
     if let Some(framework) = args.framework {
         let forced_fallback = changed_files.iter().find_map(|file| {
@@ -115,18 +117,6 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     // 4. Trace each changed file
     for changed in &changed_files {
         let rel_changed = relative_path(&root, changed);
-
-        // If it does not exist, add a warning
-        if !changed.exists() {
-            let warn = Warning {
-                r#type: "file-not-found".to_string(),
-                message: format!("Changed file not found on disk: {}", rel_changed),
-                file: rel_changed.clone(),
-            };
-            if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
-                warnings.push(warn);
-            }
-        }
 
         // If the changed file is a test file itself, select it directly
         if test_filter.is_match(&root, changed) {
