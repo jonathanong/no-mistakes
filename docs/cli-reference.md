@@ -236,7 +236,8 @@ options.
 
 ### Configurable Filesystem Rules via `no-mistakes check`
 
-The following rules are configurable via `rules:` entries in `.no-mistakes.yml`:
+Additional filesystem rules can be configured via `rules:` entries in
+`.no-mistakes.yml`:
 
 | Rule | Description |
 | --- | --- |

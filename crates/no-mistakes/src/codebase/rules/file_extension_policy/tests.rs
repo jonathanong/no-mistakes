@@ -130,6 +130,18 @@ fn declaration_file_skipped() {
 }
 
 #[test]
+fn declaration_file_variants_fixture_has_no_findings() {
+    let root = fixture_root("declarations-pass");
+    let config_path = root.join(".no-mistakes.yml");
+    let findings = check(
+        &root,
+        &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn allowlisted_path_skipped() {
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path();

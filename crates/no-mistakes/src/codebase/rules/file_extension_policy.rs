@@ -74,7 +74,7 @@ pub(crate) fn check_file(
     }
 
     // Skip TypeScript declaration files
-    if rel.ends_with(".d.ts") {
+    if is_typescript_declaration_file(&rel) {
         return Vec::new();
     }
 
@@ -112,6 +112,10 @@ fn file_extension(rel: &str) -> &str {
         Some(i) => &rel[i..],
         None => "",
     }
+}
+
+fn is_typescript_declaration_file(rel: &str) -> bool {
+    rel.ends_with(".d.ts") || rel.ends_with(".d.mts") || rel.ends_with(".d.cts")
 }
 
 #[cfg(test)]
