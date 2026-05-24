@@ -8,11 +8,11 @@ use regex::Regex;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
-pub const RULE_ID: &str = "no-git-identity-mutation";
+mod runner;
 
-pub(crate) fn is_managed_runner(v: &str) -> bool {
-    v.starts_with("ubuntu-") || v.starts_with("macos-") || v.starts_with("windows-")
-}
+use runner::is_managed_runner_only;
+
+pub const RULE_ID: &str = "no-git-identity-mutation";
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -60,17 +60,17 @@ pub(crate) fn build_patterns() -> [Regex; 3] {
     [
         // Allow line continuations (\<newline>) between `git config` and `user.`
         Regex::new(
-            r#"(?m)(^|[^a-zA-Z0-9_])git[ \t]+config(?:[^\n\\]|\\\n[ \t]*)*[ \t][`"']?user\.(name|email)([^a-zA-Z0-9.-]|$)"#,
+            r#"(?m)(^|[^a-zA-Z0-9_])git[ \t]+config(?:[^\n\\]|\\\n[ \t]*)*[ \t][`"']?user\.(name|email)[`"']?(?:[ \t]|\\\n[ \t]*)+[^#\s\\|&;<>]"#,
         )
         .expect("shell pattern"),
-        // Array form: ['git', 'config', ..., 'user.name|email']
+        // Array form: ['git', 'config', ..., 'user.name|email', 'value']
         Regex::new(
-            r#"(?ms)[`"']git[`"'].{0,500}?[`"']config[`"']\s*,\s*(?:[`"']--[a-zA-Z0-9-]+[`"']\s*,\s*)*[`"']user\.(name|email)[`"']"#,
+            r#"(?ms)[`"']git[`"'].{0,500}?[`"']config[`"']\s*,\s*(?:[`"']--[a-zA-Z0-9-]+[`"']\s*,\s*)*[`"']user\.(name|email)[`"']\s*,\s*[^,\]\)]"#,
         )
         .expect("array pattern"),
-        // Helper form: git('config', ..., 'user.name|email')
+        // Helper form: git('config', ..., 'user.name|email', 'value')
         Regex::new(
-            r#"(?m)(^|[^a-zA-Z0-9_])git\s*\(\s*[`"']config[`"']\s*,\s*(?:[`"']--[a-zA-Z0-9-]+[`"']\s*,\s*)*[`"']user\.(name|email)[`"']"#,
+            r#"(?m)(^|[^a-zA-Z0-9_])git\s*\(\s*[`"']config[`"']\s*,\s*(?:[`"']--[a-zA-Z0-9-]+[`"']\s*,\s*)*[`"']user\.(name|email)[`"']\s*,\s*[^,\]\)]"#,
         )
         .expect("helper pattern"),
     ]
@@ -82,58 +82,6 @@ pub(crate) fn has_shell_shebang(content: &str) -> bool {
         || l.starts_with("#!/bin/bash")
         || l.starts_with("#!/usr/bin/env sh")
         || l.starts_with("#!/usr/bin/env bash")
-}
-
-pub(crate) fn is_managed_runner_only(content: &str) -> bool {
-    let runs_on_re = Regex::new(r"(?m)^\s*runs-on:\s*(.+?)\s*$").expect("runs-on regex");
-    let empty_runs_on_re = Regex::new(r"(?m)^\s*runs-on:\s*$").expect("empty runs-on regex");
-    let mut values = Vec::new();
-    let mut in_runs_on_list = false;
-    for line in content.lines() {
-        if let Some(cap) = runs_on_re.captures(line) {
-            values.extend(parse_runs_on_values(cap.get(1).map_or("", |m| m.as_str())));
-            in_runs_on_list = false;
-            continue;
-        }
-        if empty_runs_on_re.is_match(line) {
-            in_runs_on_list = true;
-            continue;
-        }
-        if in_runs_on_list {
-            let trimmed = line.trim();
-            if trimmed.is_empty() || trimmed.starts_with('#') {
-                continue;
-            }
-            if let Some(item) = trimmed.strip_prefix("- ") {
-                values.extend(parse_runs_on_values(item));
-                continue;
-            }
-            in_runs_on_list = false;
-        }
-    }
-    if values.is_empty() {
-        return false;
-    }
-    values.iter().all(|runner| is_managed_runner(runner))
-}
-
-fn parse_runs_on_values(raw: &str) -> Vec<String> {
-    let value = raw
-        .split_once('#')
-        .map_or(raw, |(before_comment, _)| before_comment)
-        .trim()
-        .trim_matches(|c| matches!(c, '[' | ']'));
-    value
-        .split(',')
-        .map(|part| {
-            part.trim()
-                .trim_start_matches("- ")
-                .trim()
-                .trim_matches(|c| matches!(c, '\'' | '"'))
-        })
-        .filter(|part| !part.is_empty())
-        .map(ToOwned::to_owned)
-        .collect()
 }
 
 fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
@@ -181,6 +129,18 @@ pub(crate) fn check_file(
 
     for pattern_re in patterns {
         for mat in pattern_re.find_iter(&content) {
+            if is_read_only_config_match(mat.as_str()) {
+                continue;
+            }
+            if mat
+                .as_str()
+                .chars()
+                .last()
+                .is_some_and(|c| c.is_ascii_digit())
+                && content[mat.end()..].starts_with('>')
+            {
+                continue;
+            }
             let prefix = &content[..mat.start()];
             // When the match starts at '\n', the actual keyword is on the following
             // line; adjust line_start accordingly before checking for comments.
@@ -218,6 +178,18 @@ pub(crate) fn check_file(
     }
 
     findings
+}
+
+fn is_read_only_config_match(matched: &str) -> bool {
+    matched
+        .split(|c: char| c.is_whitespace() || matches!(c, ',' | '(' | ')' | '[' | ']'))
+        .any(|token| {
+            let token = token.trim_matches(|c| matches!(c, '\'' | '"' | '`'));
+            matches!(
+                token,
+                "--get" | "--get-all" | "--get-regexp" | "--get-urlmatch"
+            )
+        })
 }
 
 #[cfg(test)]

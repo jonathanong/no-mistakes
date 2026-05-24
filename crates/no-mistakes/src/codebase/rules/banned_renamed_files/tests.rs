@@ -53,6 +53,20 @@ fn fail_fixture_has_findings() {
 }
 
 #[test]
+fn root_scope_fixture_has_findings() {
+    let root = fixture_root("root-scope-fail");
+    let config_path = root.join(".no-mistakes.yml");
+    let findings = check(
+        &root,
+        &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "web/middleware.ts");
+    assert!(findings[0].message.contains("rename middleware"));
+}
+
+#[test]
 fn prefix_fixture_has_no_findings() {
     let root = fixture_root("prefix-pass");
     let config_path = root.join(".no-mistakes.yml");

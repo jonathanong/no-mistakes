@@ -80,10 +80,12 @@ pub(crate) fn check_file(path: &Path, root: &Path, opts: &Options) -> Vec<RuleFi
     let rel = relative_slash_path(root, path);
 
     if let Some(scope) = &opts.scope {
-        let scope = scope.trim_end_matches('/');
-        let in_scope = rel == scope || rel.starts_with(&format!("{scope}/"));
-        if !in_scope {
-            return Vec::new();
+        let scope = normalize_scope(scope);
+        if !scope.is_empty() {
+            let in_scope = rel == scope || rel.starts_with(&format!("{scope}/"));
+            if !in_scope {
+                return Vec::new();
+            }
         }
     }
 
@@ -112,6 +114,15 @@ pub(crate) fn check_file(path: &Path, root: &Path, opts: &Options) -> Vec<RuleFi
         }
     }
     findings
+}
+
+fn normalize_scope(scope: &str) -> &str {
+    let scope = scope.trim().trim_end_matches('/');
+    if scope == "." {
+        ""
+    } else {
+        scope.strip_prefix("./").unwrap_or(scope)
+    }
 }
 
 fn split_stem_ext(filename: &str) -> (&str, &str) {

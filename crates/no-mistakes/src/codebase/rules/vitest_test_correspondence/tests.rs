@@ -55,6 +55,20 @@ fn fail_fixture_has_findings() {
 }
 
 #[test]
+fn tsx_source_with_ts_test_extension_fixture_has_findings() {
+    let root = fixture_root("tsx-source-missing-test");
+    let config_path = root.join(".no-mistakes.yml");
+    let findings = check(
+        &root,
+        &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "backend/components/widget.tsx");
+    assert!(findings[0].message.contains("no corresponding test file"));
+}
+
+#[test]
 fn test_file_with_corresponding_source_passes() {
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path();

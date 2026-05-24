@@ -1,3 +1,4 @@
+use super::runner::{is_managed_runner, is_managed_runner_only, parse_runs_on_values};
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -69,6 +70,27 @@ fn fail_fixture_produces_findings() {
 }
 
 #[test]
+fn readonly_config_lookup_fixture_produces_no_findings() {
+    let root = fixture("readonly-pass");
+    let config = config_with_options("{}");
+    let files = vec![root.join("setup.sh")];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
+fn managed_runner_mapping_fixture_produces_no_findings() {
+    let root = fixture("mapping-managed-pass");
+    let config_path = root.join(".no-mistakes.yml");
+    let findings = check(
+        &root,
+        &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn shell_form_flagged() {
     let findings = run_on_source("git config user.name \"Bot\"\n");
     assert_eq!(findings.len(), 1);
@@ -88,15 +110,43 @@ fn git_config_email_flagged() {
 }
 
 #[test]
+fn read_only_shell_forms_not_flagged() {
+    let findings = run_on_source(
+        "git config user.name\n\
+         git config --get user.email || echo missing\n\
+         git config user.email 2>/dev/null\n",
+    );
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn array_form_flagged() {
     let findings = run_on_source("exec('git', 'config', 'user.name', 'Bot')\n");
     assert_eq!(findings.len(), 1);
 }
 
 #[test]
+fn read_only_array_form_not_flagged() {
+    let findings = run_on_source(
+        "exec('git', 'config', 'user.name')\n\
+         exec('git', 'config', '--get', 'user.email', 'fallback')\n",
+    );
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn helper_form_flagged() {
     let findings = run_on_source("git('config', 'user.name', 'Bot')\n");
     assert_eq!(findings.len(), 1);
+}
+
+#[test]
+fn read_only_helper_form_not_flagged() {
+    let findings = run_on_source(
+        "git('config', 'user.email')\n\
+         git('config', '--get', 'user.email', 'fallback')\n",
+    );
+    assert!(findings.is_empty());
 }
 
 #[test]
@@ -453,8 +503,26 @@ fn is_managed_runner_only_multiline_list_skips_blank_and_comment_lines() {
 }
 
 #[test]
+fn is_managed_runner_only_mapping_labels_managed() {
+    let content = "runs-on:\n  group: hosted\n  labels: ubuntu-latest\n";
+    assert!(
+        is_managed_runner_only(content),
+        "mapping labels with a managed runner should be recognized"
+    );
+}
+
+#[test]
+fn is_managed_runner_only_mapping_labels_self_hosted() {
+    let content = "runs-on:\n  group: hosted\n  labels: self-hosted\n";
+    assert!(
+        !is_managed_runner_only(content),
+        "mapping labels with self-hosted should not be recognized as managed-only"
+    );
+}
+
+#[test]
 fn is_managed_runner_only_multiline_non_list_stops_collection() {
-    let content = "runs-on:\n  group: ubuntu-runners\n  - ubuntu-latest\n";
+    let content = "runs-on:\n  name: ubuntu-runners\n  - ubuntu-latest\n";
     assert!(
         !is_managed_runner_only(content),
         "non-list YAML values should not be treated as managed runner entries"

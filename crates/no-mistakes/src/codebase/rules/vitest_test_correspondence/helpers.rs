@@ -19,7 +19,7 @@ pub(crate) fn source_candidates(dir: &str, stem: &str, test_ext: &str) -> Vec<St
     } else {
         format!("{dir}/")
     };
-    let src_ext = test_ext.rsplit('.').next().unwrap_or("ts");
+    let src_ext = source_extension_family(test_ext);
     match src_ext {
         // Module-specific: only look for the exact extension
         "mts" | "cts" | "mjs" | "cjs" => vec![
@@ -41,6 +41,21 @@ pub(crate) fn source_candidates(dir: &str, stem: &str, test_ext: &str) -> Vec<St
     }
 }
 
+fn source_extension_family(test_ext: &str) -> &str {
+    test_ext.rsplit('.').next().unwrap_or("ts")
+}
+
+fn source_extensions_for_test_ext(test_ext: &str) -> Vec<&'static str> {
+    match source_extension_family(test_ext) {
+        "mts" => vec!["mts"],
+        "cts" => vec!["cts"],
+        "mjs" => vec!["mjs"],
+        "cjs" => vec!["cjs"],
+        "js" | "jsx" => vec!["js", "jsx"],
+        _ => vec!["ts", "tsx"],
+    }
+}
+
 pub(super) fn check_source_to_test(
     files: &[PathBuf],
     root: &Path,
@@ -51,7 +66,10 @@ pub(super) fn check_source_to_test(
 ) -> Vec<RuleFinding> {
     let sep = format!("/{tdir}/");
     let pre = format!("{tdir}/");
-    let src_exts: HashSet<&str> = exts.iter().filter_map(|e| e.rsplit('.').next()).collect();
+    let src_exts: HashSet<&str> = exts
+        .iter()
+        .flat_map(|e| source_extensions_for_test_ext(e))
+        .collect();
 
     let mut findings: Vec<RuleFinding> = files
         .par_iter()

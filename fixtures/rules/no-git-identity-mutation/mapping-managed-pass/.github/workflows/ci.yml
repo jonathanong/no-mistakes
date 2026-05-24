@@ -1,0 +1,5 @@
+runs-on:
+  group: hosted
+  labels: ubuntu-latest
+steps:
+  - run: git config user.name "Bot"
