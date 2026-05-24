@@ -42,7 +42,7 @@ fn kind(has_content: bool) -> ContentKind {
 /// Returns `true` if `tail` (text after a `*/`) contains real content.
 /// `line_cmt` is the line-comment prefix (`"//"` or `"--"`).
 /// Handles chained `/* … */` blocks correctly.
-pub(crate) fn block_tail_has_content<'a>(mut tail: &'a str, line_cmt: &str) -> bool {
+pub(crate) fn block_tail_has_content(mut tail: &str, line_cmt: &str) -> bool {
     loop {
         tail = tail.trim_start();
         if tail.is_empty() || tail.starts_with(line_cmt) {
