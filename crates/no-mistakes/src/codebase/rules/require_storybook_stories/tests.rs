@@ -1138,9 +1138,71 @@ include_all_react_named_exports: true
 
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].file, "components/Missing.tsx");
+    assert!(findings[0]
+        .message
+        .contains("add an accepted colocated test"));
     assert_eq!(
         findings[0].target.as_deref(),
         Some("components/Missing.tsx#Missing")
+    );
+}
+
+#[test]
+fn colocated_tests_can_cover_selected_components() {
+    let root = fixture("colocated-tests");
+    let findings = check(
+        &root,
+        &config(
+            r#"
+stories: ["stories/**/*.stories.tsx"]
+include_all_react_named_exports: true
+allow_colocated_tests: true
+"#,
+        ),
+        None,
+    )
+    .unwrap();
+
+    assert_eq!(
+        findings
+            .iter()
+            .filter_map(|finding| finding.target.as_deref())
+            .collect::<Vec<_>>(),
+        vec![
+            "components/NestedOnly.tsx#NestedOnly",
+            "components/SpecOnly.tsx#SpecOnly",
+        ]
+    );
+}
+
+#[test]
+fn colocated_tests_do_not_cover_components_without_option() {
+    let root = fixture("colocated-tests");
+    let findings = check(
+        &root,
+        &config(
+            r#"
+stories: ["stories/**/*.stories.tsx"]
+include_all_react_named_exports: true
+"#,
+        ),
+        None,
+    )
+    .unwrap();
+
+    assert_eq!(
+        findings
+            .iter()
+            .filter_map(|finding| finding.target.as_deref())
+            .collect::<Vec<_>>(),
+        vec![
+            "components/MockTs.tsx#MockTs",
+            "components/MockTsx.tsx#MockTsx",
+            "components/NestedOnly.tsx#NestedOnly",
+            "components/PlainTs.tsx#PlainTs",
+            "components/PlainTsx.tsx#PlainTsx",
+            "components/SpecOnly.tsx#SpecOnly",
+        ]
     );
 }
 

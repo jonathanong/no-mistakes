@@ -20,6 +20,8 @@ pub(super) struct Options {
     pub(super) allow_components: BTreeMap<String, String>,
     #[serde(alias = "allow_files")]
     pub(super) allow_files: BTreeMap<String, String>,
+    #[serde(alias = "allow_colocated_tests")]
+    pub(super) allow_colocated_tests: bool,
 }
 
 #[derive(Debug, Clone)]

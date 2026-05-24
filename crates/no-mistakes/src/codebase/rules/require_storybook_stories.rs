@@ -6,6 +6,7 @@ use anyhow::{bail, Result};
 use std::collections::HashSet;
 use std::path::Path;
 
+mod colocated_tests;
 mod config;
 mod coverage;
 mod coverage_graph;
@@ -13,6 +14,7 @@ mod findings;
 mod selection;
 mod types;
 
+use colocated_tests::covered_components as colocated_test_covered_components;
 use config::{effective_story_patterns, resolve_tsconfig};
 use coverage::{all_react_component_keys, directly_covered_components, reachable_story_files};
 use coverage_graph::{dynamic_or_mock_boundary_files, transitive_covered_components};
@@ -117,6 +119,11 @@ fn check_rule(
     );
     let covered =
         transitive_covered_components(root, &project_root, shared, &direct, &component_keys);
+    let test_covered = if opts.allow_colocated_tests {
+        colocated_test_covered_components(shared, &components)
+    } else {
+        Default::default()
+    };
     let boundary_files = dynamic_or_mock_boundary_files(&project_root, shared, &resolver);
 
     let mut findings = Vec::new();
@@ -131,7 +138,7 @@ fn check_rule(
     ));
 
     for component in components {
-        if covered.contains(&component.key) {
+        if covered.contains(&component.key) || test_covered.contains(&component.key) {
             continue;
         }
         if !component.explicit
@@ -152,7 +159,7 @@ fn check_rule(
             file: component.repo_file,
             line: component.line,
             message: format!(
-                "React component `{}` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, render it through a covered parent component, exclude it from `{RULE_ID}`, or add a documented no-mistakes disable comment.",
+                "React component `{}` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `{RULE_ID}`, or add a documented no-mistakes disable comment.",
                 component.export_name
             ),
             import: None,
