@@ -90,8 +90,11 @@ jobs:
       - name: Run Oxlint
         run: npm run lint:js
 
+      - name: Build no-mistakes check CLI
+        run: cargo build --release -p no-mistakes
+
       - name: Run no-mistakes check
-        run: cargo run -p no-mistakes --release --quiet -- check
+        run: target/release/no-mistakes check
 
       - name: Run CSpell
         run: npm run lint:spell
@@ -112,16 +115,38 @@ jobs:
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
 
+      - name: Clean Rust coverage artifacts
+        run: |
+          # shellcheck disable=SC1090
+          source <(cargo llvm-cov show-env --sh)
+          cargo llvm-cov clean --workspace
+
+      - name: Build Rust tests for coverage
+        run: |
+          # shellcheck disable=SC1090
+          source <(cargo llvm-cov show-env --sh)
+          cargo test --workspace --all-features --lib --bins --tests --no-run
+
+      - name: Run Rust tests for coverage
+        run: |
+          # shellcheck disable=SC1090
+          source <(cargo llvm-cov show-env --sh)
+          cargo test --workspace --all-features --lib --bins --tests
+
       - name: Show Rust coverage table (debug)
         run: |
-          cargo llvm-cov --workspace --all-features \
+          # shellcheck disable=SC1090
+          source <(cargo llvm-cov show-env --sh)
+          cargo llvm-cov report \
             --show-missing-lines 2>&1 | tail -60
         continue-on-error: true
 
       - name: Enforce Rust coverage
         run: |
           mkdir -p target/llvm-cov
-          cargo llvm-cov --workspace --all-features \
+          # shellcheck disable=SC1090
+          source <(cargo llvm-cov show-env --sh)
+          cargo llvm-cov report \
             --fail-under-lines 99 --fail-under-functions 99 --show-missing-lines --lcov --output-path target/llvm-cov/lcov.info
 
       - name: Install cargo-crap
@@ -166,11 +191,17 @@ jobs:
         with:
           key: bench
 
-      - name: Run benchmarks
-        run: |
-          cargo bench -p no-mistakes --bench graph_related -- --noplot
-          cargo bench -p no-mistakes --bench dependencies_large_repo -- --noplot
-          cargo bench -p no-mistakes --bench check -- --noplot
+      - name: Build benchmarks
+        run: cargo bench -p no-mistakes --benches --no-run
+
+      - name: Run graph related benchmark
+        run: cargo bench -p no-mistakes --bench graph_related -- --noplot
+
+      - name: Run large repo dependencies benchmark
+        run: cargo bench -p no-mistakes --bench dependencies_large_repo -- --noplot
+
+      - name: Run check benchmark
+        run: cargo bench -p no-mistakes --bench check -- --noplot
 
       - name: Build release CLI for timing smoke
         run: cargo build --release -p no-mistakes
