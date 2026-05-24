@@ -63,6 +63,7 @@ fn playwright_to_v2(source: &str, path: &Path) -> Result<NoMistakesConfig> {
         },
         selector_roots,
         selector_exclude: fc.selector_exclude,
+        ..Default::default()
     };
     Ok(cfg)
 }

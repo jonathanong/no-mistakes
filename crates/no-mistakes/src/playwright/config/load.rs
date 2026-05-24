@@ -124,7 +124,11 @@ fn settings_from_v2(
 ) -> Result<Settings> {
     let view = ConfigView::new(config);
     let playwright = &config.tests.playwright;
-    let frontend_root = view.nextjs_root().to_string();
+    let frontend_root = playwright
+        .frontend_root
+        .as_deref()
+        .unwrap_or_else(|| view.nextjs_root())
+        .to_string();
     let playwright_configs = playwright_configs_from_v2(root, &view, cli_playwright_configs)?;
     let selector_attributes = if view.test_id_attributes().is_empty() {
         default_selector_attributes()
@@ -136,13 +140,17 @@ fn settings_from_v2(
     } else {
         view.selector_roots().to_vec()
     };
+    let ignore_routes = playwright
+        .ignore_routes
+        .clone()
+        .unwrap_or(legacy_overlay.ignore_routes);
     Ok(Settings {
         frontend_root,
         playwright_configs,
         project: cli_project,
         test_include: legacy_overlay.test_include,
         test_exclude: legacy_overlay.test_exclude,
-        ignore_routes: legacy_overlay.ignore_routes,
+        ignore_routes,
         navigation_helpers: legacy_overlay.navigation_helpers,
         selector_attributes,
         component_selector_attributes: playwright.selectors.component_test_ids.clone(),

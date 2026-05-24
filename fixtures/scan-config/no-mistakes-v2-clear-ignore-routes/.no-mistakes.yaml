@@ -1,0 +1,6 @@
+ignoreRoutes:
+  - /legacy-route
+tests:
+  playwright:
+    configs: playwright.v2.config.ts
+    ignoreRoutes: []

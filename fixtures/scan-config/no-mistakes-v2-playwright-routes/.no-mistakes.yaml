@@ -1,0 +1,6 @@
+tests:
+  playwright:
+    frontendRoot: pw-app
+    ignoreRoutes:
+      - /admin/**
+      - /api/**

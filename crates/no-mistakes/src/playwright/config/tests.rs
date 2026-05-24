@@ -161,6 +161,29 @@ fn no_mistakes_without_playwright_settings_falls_back_to_legacy_playwright_confi
 }
 
 #[test]
+fn v2_playwright_ignore_routes_empty_clears_legacy() {
+    let root = fixture_path(&["scan-config", "no-mistakes-v2-clear-ignore-routes"]);
+    let settings = load_settings(&root, None, &[], None).unwrap();
+    assert!(
+        settings.ignore_routes.is_empty(),
+        "explicit empty ignoreRoutes should clear legacy overlay"
+    );
+}
+
+#[test]
+fn v2_playwright_frontend_root_and_ignore_routes() {
+    let root = fixture_path(&["scan-config", "no-mistakes-v2-playwright-routes"]);
+    let settings = load_settings(&root, None, &[], None).unwrap();
+    assert_eq!(settings.frontend_root, "pw-app");
+    assert_eq!(settings.ignore_routes, vec!["/admin/**", "/api/**"]);
+    assert_eq!(settings.selector_roots, vec!["pw-app"]);
+    assert_eq!(
+        settings.playwright_configs,
+        vec![root.join("playwright.config.ts")]
+    );
+}
+
+#[test]
 fn test_one_or_many_values() {
     let one = OneOrMany::One("a".to_string());
     assert_eq!(one.values(), vec!["a"]);
