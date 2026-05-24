@@ -197,6 +197,7 @@ fn has_adjacent_selector_signal(
             && app_file == &app_text.app_file
             && selector_test_name == test_name
             && selector_describe_path == describe_path
-            && selector_line.abs_diff(line) <= 5
+            && *selector_line <= line
+            && line - *selector_line <= 5
     })
 }

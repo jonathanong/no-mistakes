@@ -68,9 +68,6 @@ fn route_reachability_resolves_tsconfig_alias_imports() {
         .get(&Arc::new("web/app/page.tsx".to_string()))
         .expect("route should have reachable files");
     assert!(files.contains(&Arc::new(
-        "web/app/components/layout-button.tsx".to_string()
-    )));
-    assert!(files.contains(&Arc::new(
         "web/app/components/reexported-button.tsx".to_string()
     )));
     assert!(files.contains(&Arc::new(
@@ -78,6 +75,26 @@ fn route_reachability_resolves_tsconfig_alias_imports() {
     )));
     assert!(!files.contains(&Arc::new(
         "web/app/components/type-only-button.tsx".to_string()
+    )));
+}
+
+#[test]
+fn route_reachability_includes_app_router_wrappers() {
+    let root =
+        crate::playwright::test_support::fixture_path(&["nextjs-selectors", "route-wrappers"]);
+    let route = routes::Route {
+        file: root.join("web/app/page.tsx"),
+        pattern: "/".to_string(),
+    };
+
+    let reachable =
+        collect_route_reachable_files(&root, &settings(vec![]), &[route]).expect("collects");
+
+    let files = reachable
+        .get(&Arc::new("web/app/page.tsx".to_string()))
+        .expect("route should have reachable files");
+    assert!(files.contains(&Arc::new(
+        "web/app/components/layout-button.tsx".to_string()
     )));
 }
 
