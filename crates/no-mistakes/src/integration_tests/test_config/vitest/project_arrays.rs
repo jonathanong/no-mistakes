@@ -174,11 +174,12 @@ pub(in crate::integration_tests::test_config::vitest::project_arrays) fn importe
     let result = match std::fs::read_to_string(&path) {
         Ok(source) => ast::with_program(&path, &source, |program, source| {
             exports::exported_options(program, source, &path, ctx, &import.imported)
-        })??,
-        Err(_) => Vec::new(),
+        })
+        .and_then(|options| options),
+        Err(_) => Ok(Vec::new()),
     };
     ctx.seen.remove(&path);
-    Ok(result)
+    result
 }
 
 pub(super) fn top_level_function_bodies<'a>(program: &'a Program<'a>) -> FnMap<'a> {

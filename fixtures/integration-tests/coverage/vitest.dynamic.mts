@@ -4,7 +4,9 @@ import defaultProjects, {
   reexportedProjects,
   webProjects,
 } from './vitest.projects-helper'
+import defaultArrowProjects from './vitest.projects-default-arrow'
 import defaultCallProjects from './vitest.projects-default-call'
+import defaultFunctionProjects from './vitest.projects-default-function'
 import * as projectHelpers from './vitest.projects-helper'
 import { defineConfig } from 'vitest/config'
 
@@ -28,7 +30,9 @@ export default defineConfig({
     projects: [
       ...webProjects(),
       ...defaultProjects,
+      ...defaultArrowProjects(),
       ...defaultCallProjects,
+      ...defaultFunctionProjects(),
       ...aliasDefaultProjects(),
       ...apiProjects,
       ...reexportedProjects,

@@ -5,7 +5,9 @@ use super::{
 use crate::integration_tests::test_config::vitest::shared;
 use crate::integration_tests::test_config::vitest::Options;
 use anyhow::Result;
-use oxc_ast::ast::{BindingPattern, Declaration, ExportDefaultDeclarationKind, Program, Statement};
+use oxc_ast::ast::{
+    BindingPattern, Declaration, ExportDefaultDeclarationKind, FunctionBody, Program, Statement,
+};
 use std::collections::BTreeSet;
 use std::path::Path;
 
@@ -115,16 +117,7 @@ fn default_export_options(
 ) -> Result<Vec<Options>> {
     match export {
         ExportDefaultDeclarationKind::Identifier(identifier) => {
-            let name = identifier.name.as_str();
-            if let Some(expression) = ctx.bindings.get(name).copied() {
-                helper_expression_options(expression, ctx)
-            } else if let Some(body) = ctx.functions.get(name).copied() {
-                body_return_options(body, ctx)
-            } else if let Some(import) = ctx.imports.get(name).cloned() {
-                imported_options(&import, ctx)
-            } else {
-                Ok(Vec::new())
-            }
+            default_identifier_options(identifier.name.as_str(), ctx)
         }
         ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) if arrow.expression => {
             expression_statement_options(&arrow.body, ctx)
@@ -136,14 +129,33 @@ fn default_export_options(
             super::calls::call_options(&call.callee, ctx)
         }
         ExportDefaultDeclarationKind::FunctionDeclaration(function) => {
-            if let Some(body) = &function.body {
-                body_return_options(body, ctx)
-            } else {
-                Ok(Vec::new())
-            }
+            default_function_options(function.body.as_deref(), ctx)
         }
         ExportDefaultDeclarationKind::ArrayExpression(array) => array_options(array, ctx),
         _ => Ok(Vec::new()),
+    }
+}
+
+fn default_identifier_options(name: &str, ctx: &mut Ctx<'_, '_>) -> Result<Vec<Options>> {
+    if let Some(expression) = ctx.bindings.get(name).copied() {
+        helper_expression_options(expression, ctx)
+    } else if let Some(body) = ctx.functions.get(name).copied() {
+        body_return_options(body, ctx)
+    } else if let Some(import) = ctx.imports.get(name).cloned() {
+        imported_options(&import, ctx)
+    } else {
+        Ok(Vec::new())
+    }
+}
+
+fn default_function_options(
+    body: Option<&FunctionBody<'_>>,
+    ctx: &mut Ctx<'_, '_>,
+) -> Result<Vec<Options>> {
+    if let Some(body) = body {
+        body_return_options(body, ctx)
+    } else {
+        Ok(Vec::new())
     }
 }
 

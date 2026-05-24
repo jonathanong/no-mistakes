@@ -436,6 +436,9 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
         .any(|project| project.name.as_deref() == Some("default-import")));
     assert!(dynamic
         .iter()
+        .any(|project| project.name.as_deref() == Some("default-arrow")));
+    assert!(dynamic
+        .iter()
         .any(|project| project.name.as_deref() == Some("namespace")));
     assert!(dynamic
         .iter()
@@ -449,6 +452,9 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     assert!(dynamic
         .iter()
         .any(|project| project.name.as_deref() == Some("default-call")));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("default-function")));
     assert!(dynamic
         .iter()
         .any(|project| project.name.as_deref() == Some("namespace-array")));
