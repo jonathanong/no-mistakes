@@ -31,7 +31,7 @@ pub fn check_with_facts(
         files.clone(),
         &ts_facts,
     );
-    let manual_mocks = manual_mocks::discover(root, &config.filesystem.skip_directories);
+    let manual_mocks = manual_mocks::discover_from_files(root, &files);
     let test_files = matching_test_files(root, &files, config)?;
     let setup_data = config::precompute_setup_data(root, config)?;
 

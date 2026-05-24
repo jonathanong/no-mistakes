@@ -91,7 +91,7 @@ jobs:
         run: npm run lint:js
 
       - name: Run no-mistakes check
-        run: cargo run -p no-mistakes --quiet -- check
+        run: cargo run -p no-mistakes --release --quiet -- check
 
       - name: Run CSpell
         run: npm run lint:spell
@@ -170,6 +170,7 @@ jobs:
         run: |
           cargo bench -p no-mistakes --bench graph_related -- --noplot
           cargo bench -p no-mistakes --bench dependencies_large_repo -- --noplot
+          cargo bench -p no-mistakes --bench check -- --noplot
 
       - name: Build release CLI for timing smoke
         run: cargo build --release -p no-mistakes
