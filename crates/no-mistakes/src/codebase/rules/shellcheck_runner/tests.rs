@@ -285,7 +285,11 @@ fn shebang_dir_includes_nested_script() {
     };
     let files = vec![nested.clone()];
     let candidates = collect_shell_files(root, &opts, &files, &[]);
-    assert_eq!(candidates, vec![nested], "nested shebang script should be included");
+    assert_eq!(
+        candidates,
+        vec![nested],
+        "nested shebang script should be included"
+    );
 }
 
 #[test]
@@ -307,7 +311,11 @@ fn collect_shell_files_respects_target_roots() {
     };
     let target_roots = vec![proj_dir.clone()];
     let candidates = collect_shell_files(root, &opts, &[], &target_roots);
-    assert_eq!(candidates, vec![inside], "shell_files outside target_roots should be excluded");
+    assert_eq!(
+        candidates,
+        vec![inside],
+        "shell_files outside target_roots should be excluded"
+    );
 }
 
 #[test]

@@ -73,7 +73,12 @@ fn merge(all: Result<Vec<Vec<RuleFinding>>>) -> Result<Vec<RuleFinding>> {
     Ok(v)
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf], target_roots: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+fn scan(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    target_roots: &[PathBuf],
+) -> Result<Vec<RuleFinding>> {
     let shell_candidates = collect_shell_files(root, opts, files, target_roots);
     if shell_candidates.is_empty() {
         return Ok(Vec::new());
