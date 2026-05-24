@@ -89,6 +89,9 @@ pub(super) fn check_source_to_test(
             {
                 return None;
             }
+            if is_declaration_file(&rel) {
+                return None;
+            }
 
             // Only process source extensions derived from test extensions
             let ext = path.extension().and_then(|e| e.to_str())?;
@@ -130,4 +133,8 @@ pub(super) fn check_source_to_test(
         .collect();
     findings.sort_by(|a, b| a.file.cmp(&b.file));
     findings
+}
+
+fn is_declaration_file(rel: &str) -> bool {
+    rel.ends_with(".d.ts") || rel.ends_with(".d.mts") || rel.ends_with(".d.cts")
 }

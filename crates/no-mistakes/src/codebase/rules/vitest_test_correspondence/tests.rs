@@ -69,6 +69,18 @@ fn tsx_source_with_ts_test_extension_fixture_has_findings() {
 }
 
 #[test]
+fn declaration_files_fixture_has_no_findings() {
+    let root = fixture_root("declarations-pass");
+    let config_path = root.join(".no-mistakes.yml");
+    let findings = check(
+        &root,
+        &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn test_file_with_corresponding_source_passes() {
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path();

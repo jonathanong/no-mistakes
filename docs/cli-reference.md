@@ -249,7 +249,7 @@ The following rules are configurable via `rules:` entries in `.no-mistakes.yml`:
 | `no-git-identity-mutation` | Rejects shell scripts and GitHub Actions workflows that mutate git user identity. |
 | `package-json-registry-only` | Requires all `package.json` dependencies to resolve from the npm registry (no `file:`, `link:`, or `git+` specifiers). |
 | `no-empty-or-comments-only-files` | Flags files that are empty or contain only comments. |
-| `vitest-test-correspondence` | Enforces that every test file outside `__tests__/` has a corresponding source file. |
+| `vitest-test-correspondence` | Enforces that every test file outside `__tests__/` has a corresponding source file, and every source file has a corresponding test file. |
 | `file-extension-policy` | Enforces allowed/banned file extensions per configured scope. |
 | `banned-renamed-files` | Rejects files whose basename matches a banned pattern. |
 | `lockfile-allowlist` | Enforces that only allowed lockfile filenames (e.g. `pnpm-lock.yaml`) are present; bans disallowed ones (e.g. `yarn.lock`, `package-lock.json`). |
