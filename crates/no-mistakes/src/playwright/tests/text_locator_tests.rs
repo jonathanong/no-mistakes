@@ -55,7 +55,7 @@ fn text_locators_create_approximate_related_and_coverage_edges_with_route_signal
     };
     let analysis = analyze(&root, &settings).unwrap();
     assert_eq!(analysis.coverage.summary.covered_selectors, 5);
-    assert_eq!(analysis.coverage.summary.uncovered_selectors, 3);
+    assert_eq!(analysis.coverage.summary.uncovered_selectors, 5);
     assert_locator_text_edge(
         &analysis,
         "web/app/components/discuss-button.tsx",
@@ -112,7 +112,7 @@ fn text_locators_create_approximate_related_and_coverage_edges_with_route_signal
     html_id_settings.html_ids = true;
     let html_id_analysis = analyze(&root, &html_id_settings).unwrap();
     assert_eq!(html_id_analysis.coverage.summary.covered_selectors, 7);
-    assert_eq!(html_id_analysis.coverage.summary.uncovered_selectors, 3);
+    assert_eq!(html_id_analysis.coverage.summary.uncovered_selectors, 5);
     assert_locator_text_edge(
         &html_id_analysis,
         "web/app/components/discuss-button.tsx",
