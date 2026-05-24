@@ -72,7 +72,9 @@ fn object_string_property(argument: &Argument<'_>, name: &str, source: &str) -> 
             continue;
         }
         match &property.value {
-            Expression::StringLiteral(literal) => return normalize_locator_text(&literal.value),
+            Expression::StringLiteral(literal) => {
+                return normalize_locator_text(literal.value.as_str());
+            }
             Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
                 let value = ast::template_literal_text(template, source);
                 return normalize_locator_text(&value);

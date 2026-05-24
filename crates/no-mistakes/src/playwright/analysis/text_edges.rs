@@ -20,7 +20,12 @@ pub(crate) fn append_locator_text_edges(
         let describe_path = Arc::new(text_locator.describe_path);
 
         for app_text in context.app_text_targets.iter().filter(|target| {
-            text_target_matches(target, &text_locator.value.kind, &text_locator.value.text)
+            text_target_matches(
+                target,
+                &text_locator.value.kind,
+                text_locator.value.role.as_deref(),
+                &text_locator.value.text,
+            )
         }) {
             let reasons = locator_reasons(
                 edges,
@@ -85,17 +90,21 @@ fn locator_reasons(
     reasons
 }
 
-fn text_target_matches(target: &AppTextTarget, kind: &LocatorKind, text: &str) -> bool {
+fn text_target_matches(
+    target: &AppTextTarget,
+    kind: &LocatorKind,
+    role: Option<&str>,
+    text: &str,
+) -> bool {
     target.text == text
         && match kind {
             LocatorKind::Text => target.kind == AppTextKind::VisibleText,
-            LocatorKind::Label => {
-                target.kind == AppTextKind::Label || target.kind == AppTextKind::AccessibleName
-            }
+            LocatorKind::Label => target.kind == AppTextKind::Label,
             LocatorKind::Placeholder => target.kind == AppTextKind::Placeholder,
             LocatorKind::Role => {
-                target.kind == AppTextKind::VisibleText
-                    || target.kind == AppTextKind::AccessibleName
+                target.role.as_deref() == role
+                    && (target.kind == AppTextKind::VisibleText
+                        || target.kind == AppTextKind::AccessibleName)
             }
         }
 }
@@ -131,7 +140,7 @@ fn has_reachable_route_signal(
             return false;
         };
         if test_file != rel_test_file
-            || !same_test(
+            || !route_signal_matches_test(
                 route_test_name,
                 route_describe_path,
                 test_name,
@@ -146,6 +155,16 @@ fn has_reachable_route_signal(
             .get(route_file)
             .is_some_and(|files| files.contains(&app_text.app_file))
     })
+}
+
+fn route_signal_matches_test(
+    route_test_name: &Option<Arc<String>>,
+    route_describe_path: &Arc<Vec<String>>,
+    test_name: &Option<Arc<String>>,
+    describe_path: &Arc<Vec<String>>,
+) -> bool {
+    route_describe_path == describe_path
+        && (route_test_name == test_name || (route_test_name.is_none() && test_name.is_some()))
 }
 
 fn has_adjacent_selector_signal(

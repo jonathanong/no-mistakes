@@ -252,7 +252,7 @@ fn text_locators_create_approximate_related_and_coverage_edges_with_route_signal
     };
     let analysis = analyze(&root, &settings).unwrap();
     assert_eq!(analysis.coverage.summary.covered_selectors, 3);
-    assert_eq!(analysis.coverage.summary.uncovered_selectors, 1);
+    assert_eq!(analysis.coverage.summary.uncovered_selectors, 2);
     assert!(analysis.edges.edges.iter().any(|edge| {
         matches!(
             edge,
@@ -276,7 +276,43 @@ fn text_locators_create_approximate_related_and_coverage_edges_with_route_signal
                 ..
             } if app_file.as_ref() == "web/app/components/discuss-button.tsx"
                 && text == "Discuss"
-                && reasons == &vec!["adjacent-selector".to_string()]
+                && reasons.contains(&"adjacent-selector".to_string())
+        )
+    }));
+    assert!(!analysis.edges.edges.iter().any(|edge| {
+        matches!(
+            edge,
+            crate::playwright::analysis::types::Edge::LocatorText {
+                app_file,
+                text,
+                selector_refs,
+                ..
+            } if app_file.as_ref() == "web/app/components/discuss-button.tsx"
+                && text == "Email"
+                && selector_refs.iter().any(|selector| selector.value == "email-button")
+        )
+    }));
+
+    let mut html_id_settings = settings.clone();
+    html_id_settings.html_ids = true;
+    let html_id_analysis = analyze(&root, &html_id_settings).unwrap();
+    assert_eq!(html_id_analysis.coverage.summary.covered_selectors, 4);
+    assert_eq!(html_id_analysis.coverage.summary.uncovered_selectors, 2);
+    assert!(html_id_analysis.edges.edges.iter().any(|edge| {
+        matches!(
+            edge,
+            crate::playwright::analysis::types::Edge::LocatorText {
+                app_file,
+                text,
+                selector_refs,
+                reasons,
+                ..
+            } if app_file.as_ref() == "web/app/components/discuss-button.tsx"
+                && text == "Save"
+                && selector_refs.iter().any(|selector| {
+                    selector.attribute == "id" && selector.value == "save-button"
+                })
+                && reasons == &vec!["route-signal".to_string()]
         )
     }));
 

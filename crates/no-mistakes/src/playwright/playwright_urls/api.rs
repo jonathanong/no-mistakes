@@ -41,8 +41,12 @@ pub fn extract_playwright_url_literals_from_program(
     source: &str,
     navigation_helpers: &[String],
 ) -> Vec<String> {
-    extract_playwright_url_occurrences_from_program(program, source, navigation_helpers)
-        .into_iter()
-        .map(|occurrence| occurrence.value)
-        .collect()
+    let mut urls: Vec<_> =
+        extract_playwright_url_occurrences_from_program(program, source, navigation_helpers)
+            .into_iter()
+            .map(|occurrence| occurrence.value)
+            .collect();
+    urls.sort();
+    urls.dedup();
+    urls
 }

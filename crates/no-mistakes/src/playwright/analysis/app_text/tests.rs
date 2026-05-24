@@ -23,6 +23,13 @@ fn settings() -> Settings {
     }
 }
 
+fn settings_with_html_ids() -> Settings {
+    Settings {
+        html_ids: true,
+        ..settings()
+    }
+}
+
 #[test]
 fn extracts_app_text_targets_from_fixture_jsx_shapes() {
     let path = crate::playwright::test_support::fixture_path(&[
@@ -59,9 +66,84 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .any(|selector| selector.value == "save-button")
     }));
     assert!(targets.iter().any(|target| target.text == "String child"));
+    assert!(targets.iter().any(|target| {
+        target.text == "Hello World"
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "joined-text")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Again"
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "joined-text")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Member"
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "member-button")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Nested"
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "nested-member-button")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "HTML id"
+            && target.role.as_deref() == Some("button")
+            && target.kind == AppTextKind::VisibleText
+    }));
+    assert_role(&targets, "Explicit role", "button");
+    assert_role(&targets, "Docs", "link");
+    assert_role(&targets, "Heading", "heading");
+    assert_role(&targets, "Hero image", "img");
+    assert_role(&targets, "Subscribe", "checkbox");
+    assert_role(&targets, "Pick one", "radio");
+    assert_role(&targets, "Volume", "slider");
+    assert_role(&targets, "Country", "combobox");
+    assert_role(&targets, "Message", "textbox");
+    assert!(targets.iter().any(|target| {
+        target.text == "Hidden token"
+            && target.role.is_none()
+            && target.kind == AppTextKind::AccessibleName
+    }));
+    assert!(targets.iter().any(|target| target.text == "Before"));
 }
 
 #[test]
 fn normalize_locator_text_rejects_blank_text() {
     assert_eq!(normalize_locator_text(" \n\t "), None);
+}
+
+#[test]
+fn extracts_html_id_refs_when_enabled() {
+    let path = crate::playwright::test_support::fixture_path(&[
+        "ast-snippets",
+        "selectors",
+        "app-text-targets.tsx",
+    ]);
+    let root = path.parent().unwrap();
+    let source = std::fs::read_to_string(&path).expect("fixture should read");
+    let targets = extract_app_text_targets(root, &path, &source, &settings_with_html_ids())
+        .expect("fixture parses");
+
+    assert!(targets.iter().any(|target| {
+        target.text == "HTML id"
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.attribute == "id" && selector.value == "html-id-button")
+    }));
+}
+
+fn assert_role(targets: &[AppTextTarget], text: &str, role: &str) {
+    assert!(targets
+        .iter()
+        .any(|target| target.text == text && target.role.as_deref() == Some(role)));
 }

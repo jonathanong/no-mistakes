@@ -1,5 +1,9 @@
 import { test } from "@playwright/test";
 
+test.beforeEach(async ({ page }) => {
+  await page.goto("/");
+});
+
 test("covers visible button text", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Discuss" }).click();
@@ -10,6 +14,10 @@ test("covers visible button text", async ({ page }) => {
 test("covers visible text through adjacent selector", async ({ page }) => {
   await page.locator('[data-pw="discuss-in-community-button"]').click();
   await page.getByText("Discuss").click();
+});
+
+test("uses setup route for text locator coverage", async ({ page }) => {
+  await page.getByRole("button", { name: "Save" }).click();
 });
 
 test.skip("skipped text locator stays policy gated", async ({ page }) => {

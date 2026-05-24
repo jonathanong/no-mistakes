@@ -15,6 +15,7 @@ pub(crate) struct AppTextTarget {
     pub(crate) file: PathBuf,
     pub(crate) app_file: Arc<String>,
     pub(crate) kind: AppTextKind,
+    pub(crate) role: Option<String>,
     pub(crate) text: String,
     pub(crate) selector_refs: Vec<SelectorRef>,
 }
