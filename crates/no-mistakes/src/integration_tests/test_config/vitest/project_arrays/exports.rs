@@ -24,7 +24,6 @@ pub(super) fn exported_options(
         imports: import_bindings(program),
         resolver: parent.resolver,
         path,
-        root: parent.root,
         seen: parent.seen,
         local_seen: &mut local_seen,
     };

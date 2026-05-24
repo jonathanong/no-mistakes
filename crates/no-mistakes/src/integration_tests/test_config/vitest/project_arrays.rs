@@ -26,7 +26,6 @@ pub(super) struct Ctx<'a, 'r> {
     imports: BTreeMap<String, ImportBinding>,
     resolver: &'r ImportResolver<'r>,
     path: &'r Path,
-    root: &'r Path,
     seen: &'r mut BTreeSet<PathBuf>,
     local_seen: &'r mut BTreeSet<String>,
 }
@@ -36,7 +35,7 @@ pub(super) fn project_options(
     object: &ObjectExpression<'_>,
     source: &str,
     path: &Path,
-    root: &Path,
+    _root: &Path,
     tsconfig: &TsConfig,
 ) -> Result<Vec<Options>> {
     let Some(Expression::ArrayExpression(projects)) =
@@ -54,7 +53,6 @@ pub(super) fn project_options(
         imports: import_bindings(program),
         resolver: &resolver,
         path,
-        root,
         seen: &mut seen,
         local_seen: &mut local_seen,
     };
