@@ -1,4 +1,4 @@
-use super::checker::{check_dynamic_import, DynamicCheckContext};
+use super::checker::{evaluate_dynamic_import, DynamicCheckContext, DynamicImportKey};
 use super::{ast, runtime_deps, RULE_ID};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::DepGraph;
@@ -17,17 +17,30 @@ pub(super) struct CachedFileFacts {
     pub(super) dynamic_imports: Vec<ast::DynamicImport>,
 }
 
-pub(super) fn check(
+pub(super) struct ReachableFinding {
+    pub(super) key: DynamicImportKey,
+    pub(super) finding: RuleFinding,
+}
+
+pub(super) struct ReachableResult {
+    pub(super) findings: Vec<ReachableFinding>,
+    pub(super) covered: HashSet<DynamicImportKey>,
+}
+
+pub(super) fn collect(
     ctx: ReachableContext<'_>,
     test_file: &Path,
     mocks: &HashSet<PathBuf>,
     dependency_cache: &DashMap<PathBuf, Arc<Vec<PathBuf>>>,
-    findings: &mut Vec<RuleFinding>,
-) -> Result<()> {
+) -> Result<ReachableResult> {
     let test_reachable = dependency_cache
         .entry(test_file.to_path_buf())
         .or_insert_with(|| Arc::new(runtime_deps(ctx.graph, test_file.to_path_buf())))
         .clone();
+    let mut result = ReachableResult {
+        findings: Vec::new(),
+        covered: HashSet::new(),
+    };
     for file in test_reachable.iter() {
         if !crate::codebase::dependencies::extract::is_indexable(file)
             || is_under_skipped_dir(ctx.root, ctx.config, file)
@@ -46,18 +59,22 @@ pub(super) fn check(
                     if has_disable_file_comment(source, RULE_ID) {
                         continue;
                     }
-                    let mut check_context = DynamicCheckContext {
+                    let mut local_findings = Vec::new();
+                    let check_context = DynamicCheckContext {
                         root: ctx.root,
                         file,
                         resolver: ctx.resolver,
                         graph: ctx.graph,
                         mocks,
                         dependency_cache,
-                        findings,
+                        findings: &mut local_findings,
                     };
                     for import in &facts.dynamic_imports {
                         if !has_disable_comment(source, import.line as u32, RULE_ID) {
-                            check_dynamic_import(&mut check_context, import.clone());
+                            collect_outcome(
+                                &mut result,
+                                evaluate_dynamic_import(&check_context, import.clone()),
+                            );
                         }
                     }
                     continue;
@@ -68,23 +85,43 @@ pub(super) fn check(
         if has_disable_file_comment(&cached.source, RULE_ID) {
             continue;
         }
-        let mut check_context = DynamicCheckContext {
+        let mut local_findings = Vec::new();
+        let check_context = DynamicCheckContext {
             root: ctx.root,
             file,
             resolver: ctx.resolver,
             graph: ctx.graph,
             mocks,
             dependency_cache,
-            findings,
+            findings: &mut local_findings,
         };
         for import in &cached.dynamic_imports {
             if has_disable_comment(&cached.source, import.line as u32, RULE_ID) {
                 continue;
             }
-            check_dynamic_import(&mut check_context, import.clone());
+            collect_outcome(
+                &mut result,
+                evaluate_dynamic_import(&check_context, import.clone()),
+            );
         }
     }
-    Ok(())
+    Ok(result)
+}
+
+fn collect_outcome(result: &mut ReachableResult, outcome: super::checker::DynamicImportOutcome) {
+    if outcome.covered {
+        result.covered.insert(outcome.key);
+        return;
+    }
+    result.findings.extend(
+        outcome
+            .findings
+            .into_iter()
+            .map(|finding| ReachableFinding {
+                key: outcome.key.clone(),
+                finding,
+            }),
+    );
 }
 
 pub(super) struct ReachableContext<'a> {

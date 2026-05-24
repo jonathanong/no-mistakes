@@ -52,6 +52,8 @@ pub(super) fn check_inner(
     let setup_data = config::precompute_setup_data(root, config)?;
     let test_files = matching_test_files(root, files, config)?;
     let setup_mock_map = precompute_setup_mock_map(root, &test_files, &setup_data, &resolver)?;
+    let mut reachable_findings = Vec::new();
+    let mut covered_reachable_imports = HashSet::new();
 
     for file in test_files {
         let source = std::fs::read_to_string(&file)
@@ -82,7 +84,7 @@ pub(super) fn check_inner(
             }
             check_dynamic_import(&mut check_context, import);
         }
-        reachable::check(
+        let reachable = reachable::collect(
             reachable::ReachableContext {
                 root,
                 config,
@@ -94,10 +96,17 @@ pub(super) fn check_inner(
             &file,
             &mocks,
             &dependency_cache,
-            &mut findings,
         )?;
+        reachable_findings.extend(reachable.findings);
+        covered_reachable_imports.extend(reachable.covered);
     }
 
+    findings.extend(
+        reachable_findings
+            .into_iter()
+            .filter(|entry| !covered_reachable_imports.contains(&entry.key))
+            .map(|entry| entry.finding),
+    );
     findings.sort_by_key(|f| (f.file.clone(), f.line, f.target.clone()));
     Ok(findings)
 }
