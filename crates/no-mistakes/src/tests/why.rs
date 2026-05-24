@@ -14,14 +14,16 @@ pub struct WhyStep {
     pub via: Option<String>,
 }
 
+type WhyStepsByChangedFile = BTreeMap<String, Vec<WhyStep>>;
+
 pub(crate) fn run(args: WhyArgs) -> Result<ExitCode> {
-    let test_rel = test_relative_path(&args)?;
-    let path_steps = why_steps(&args)?;
+    let context = why_context(&args)?;
+    let path_steps = why_steps_with_context(&args, &context)?;
 
     if path_steps.is_empty() {
         println!(
             "No path found connecting changed files to test target `{}`.",
-            test_rel
+            context.test_rel
         );
         return Ok(ExitCode::SUCCESS);
     }
@@ -29,7 +31,7 @@ pub(crate) fn run(args: WhyArgs) -> Result<ExitCode> {
     match args.format {
         WhyFormat::Text => {
             for (changed_file, steps) in &path_steps {
-                println!("Path from `{}` to `{}`:", changed_file, test_rel);
+                println!("Path from `{}` to `{}`:", changed_file, context.test_rel);
                 let chain: Vec<String> = steps
                     .iter()
                     .map(|step| {
@@ -53,36 +55,43 @@ pub(crate) fn run(args: WhyArgs) -> Result<ExitCode> {
 
 const _: fn(WhyArgs) -> Result<ExitCode> = run;
 
-pub(crate) fn why_steps(args: &WhyArgs) -> Result<BTreeMap<String, Vec<WhyStep>>> {
+pub(crate) fn why_steps(args: &WhyArgs) -> Result<WhyStepsByChangedFile> {
+    let context = why_context(args)?;
+    why_steps_with_context(args, &context)
+}
+
+const _: fn(&WhyArgs) -> Result<WhyStepsByChangedFile> = why_steps;
+
+struct WhyContext {
+    root: std::path::PathBuf,
+    test_rel: String,
+}
+
+fn why_context(args: &WhyArgs) -> Result<WhyContext> {
     let cwd = std::env::current_dir().context("cwd must be accessible")?;
     let root = no_mistakes::cli::resolve_optional_root(Some(&args.root), &cwd);
     let root = no_mistakes::codebase::ts_resolver::normalize_path(&root);
-
     let test_rel = relative_path_str(&root, &args.test);
+    Ok(WhyContext { root, test_rel })
+}
 
+fn why_steps_with_context(args: &WhyArgs, context: &WhyContext) -> Result<WhyStepsByChangedFile> {
     // 1. If plan JSON is provided, read from it
     let path_steps = if let Some(ref plan_path) = args.plan {
         read_from_plan(
             plan_path,
-            &test_rel,
+            &context.test_rel,
             args.changed
                 .as_ref()
-                .map(|p| relative_path_str(&root, p))
+                .map(|p| relative_path_str(&context.root, p))
                 .as_deref(),
         )?
     } else {
         // 2. Otherwise run live analysis
-        run_live_analysis(args, &root, &test_rel)?
+        run_live_analysis(args, &context.root, &context.test_rel)?
     };
 
     Ok(path_steps)
-}
-
-pub(crate) fn test_relative_path(args: &WhyArgs) -> Result<String> {
-    let cwd = std::env::current_dir().context("cwd must be accessible")?;
-    let root = no_mistakes::cli::resolve_optional_root(Some(&args.root), &cwd);
-    let root = no_mistakes::codebase::ts_resolver::normalize_path(&root);
-    Ok(relative_path_str(&root, &args.test))
 }
 
 fn read_from_plan(

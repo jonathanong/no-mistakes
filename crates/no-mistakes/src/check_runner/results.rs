@@ -37,7 +37,7 @@ impl CheckResults {
     }
 }
 
-fn observe_cli_side_channels(results: &CheckResults) {
+pub(super) fn observe_cli_side_channels(results: &CheckResults) {
     let _ = (&results.warnings, &results.timings, results.has_findings());
 }
 

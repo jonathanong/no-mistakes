@@ -210,6 +210,12 @@ fn tests_plan_why_comment_and_graph_exports_return_reports() {
     let comment = tests_comment_markdown_impl(json!({ "planJson": plan }).to_string()).unwrap();
     assert!(comment.contains("Selected Tests"));
 
+    let plan_path = PathBuf::from(&root).join("plan.json");
+    let path_comment =
+        tests_comment_markdown_impl(json!({ "plan": plan_path.display().to_string() }).to_string())
+            .unwrap();
+    assert!(path_comment.contains("source.test.mts"));
+
     let graph = tests_graph_json_impl(json!({ "planJson": output }).to_string()).unwrap();
     let graph: serde_json::Value = serde_json::from_str(&graph).unwrap();
     assert!(!graph["nodes"].as_array().unwrap().is_empty());
@@ -264,6 +270,12 @@ fn playwright_json_exports_return_analyzer_reports() {
     let tests = playwright_tests_json_impl(json!({ "root": root }).to_string()).unwrap();
     let tests: serde_json::Value = serde_json::from_str(&tests).unwrap();
     assert!(!tests["tests"].as_array().unwrap().is_empty());
+
+    let root = fixture("nextjs-coverage", "covered");
+    let error = playwright_related_json_impl(json!({ "root": root }).to_string()).unwrap_err();
+    assert!(error
+        .reason
+        .contains("files must contain at least one file"));
 }
 
 #[test]
@@ -407,6 +419,17 @@ fn invalid_options_return_napi_errors() {
     assert!(error
         .reason
         .contains("files or roots must contain at least one entry"));
+
+    let error =
+        tests_plan_json_impl(json!({ "framework": "unknown", "changedFiles": [] }).to_string())
+            .unwrap_err();
+    assert!(error.reason.contains("unknown test framework"));
+
+    let error = tests_why_json_impl(json!({}).to_string()).unwrap_err();
+    assert!(error.reason.contains("test is required"));
+
+    let error = tests_comment_markdown_impl(json!({}).to_string()).unwrap_err();
+    assert!(error.reason.contains("plan or planJson is required"));
 }
 
 #[test]
