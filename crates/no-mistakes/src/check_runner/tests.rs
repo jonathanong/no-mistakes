@@ -13,9 +13,8 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 #[test]
-fn observe_cli_side_channels_covers_cli_only_fields() {
+fn empty_results_records_cli_side_channels() {
     let results = results::empty_results([Some("warning".to_string())]);
-    results::observe_cli_side_channels(&results);
     assert!(!results.warnings.is_empty());
     assert!(!results.timings.is_empty());
     assert!(!results.has_findings());

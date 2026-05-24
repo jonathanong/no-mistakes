@@ -37,12 +37,6 @@ impl CheckResults {
     }
 }
 
-pub(super) fn observe_cli_side_channels(results: &CheckResults) {
-    let _ = (&results.warnings, &results.timings, results.has_findings());
-}
-
-const _: fn(&CheckResults) = observe_cli_side_channels;
-
 pub(crate) fn complete_domain_checks(results: DomainResults) -> Result<CompletedDomainChecks> {
     let (react, queues, rules, integration, codebase, filesystem_rules) = results;
     Ok(CompletedDomainChecks {

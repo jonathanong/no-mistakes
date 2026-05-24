@@ -314,10 +314,12 @@ related report:
 ```js
 const { playwrightRelated } = require("no-mistakes");
 
-const report = await playwrightRelated({
-  root: process.cwd(),
-  files: ["web/app/users/[id]/page.tsx"],
-});
+(async () => {
+  const report = await playwrightRelated({
+    root: process.cwd(),
+    files: ["web/app/users/[id]/page.tsx"],
+  });
+})();
 ```
 
 `related({ tests: ["playwright"] })` remains the generic dependency-graph test

@@ -375,6 +375,21 @@ fn report_json_surfaces_project_selection_errors() {
 }
 
 #[test]
+fn report_json_related_requires_files_before_settings() {
+    let root = fixture_path(&["nextjs-coverage", "covered"]);
+    let error = report_json(
+        PlaywrightReportKind::Related,
+        PlaywrightReportOptions {
+            project: Some("missing-project".to_string()),
+            ..report_options(root)
+        },
+    )
+    .unwrap_err();
+
+    assert_eq!(error.to_string(), "files must contain at least one file");
+}
+
+#[test]
 fn report_json_accepts_project_selection_before_analysis() {
     let root = fixture_path(&["integration-tests", "basic"]);
     let error = report_json(

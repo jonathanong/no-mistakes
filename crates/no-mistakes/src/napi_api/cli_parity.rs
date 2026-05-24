@@ -36,12 +36,22 @@ pub(crate) fn check_json_impl(options_json: String) -> napi::Result<String> {
         options.tsconfig.map(PathBuf::from),
     )
     .map_err(to_napi_error)?;
+    let _has_findings = results.has_findings();
+    let crate::check_runner::CheckResults {
+        react,
+        queues,
+        rules,
+        integration,
+        codebase,
+        warnings: _warnings,
+        timings: _timings,
+    } = results;
     to_pretty_json(&json!({
-        "react": results.react,
-        "queues": results.queues,
-        "rules": results.rules,
-        "integration": results.integration,
-        "codebase": results.codebase,
+        "react": react,
+        "queues": queues,
+        "rules": rules,
+        "integration": integration,
+        "codebase": codebase,
     }))
 }
 

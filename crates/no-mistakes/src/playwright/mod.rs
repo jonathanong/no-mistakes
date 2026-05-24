@@ -49,6 +49,9 @@ pub(crate) fn report_json(
     options: PlaywrightReportOptions,
 ) -> Result<String> {
     let root = fsutil::absolutize(&options.root).context("failed to resolve root")?;
+    if matches!(kind, PlaywrightReportKind::Related) {
+        require_files(&options.files)?;
+    }
     let config_path = options.config.as_deref();
     let configs = &options.playwright_config;
     let project = options.project.clone();
@@ -73,7 +76,6 @@ pub(crate) fn report_json(
         PlaywrightReportKind::Check => to_pretty_json(&analysis.coverage),
         PlaywrightReportKind::Edges => to_pretty_json(&analysis.edges),
         PlaywrightReportKind::Related => {
-            require_files(&options.files)?;
             let related = analysis::output::build_related_report(
                 &root,
                 &analysis.edges.edges,
