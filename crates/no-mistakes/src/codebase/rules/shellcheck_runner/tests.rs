@@ -5,6 +5,20 @@ use crate::config::v2::{
 };
 use std::path::Path;
 
+fn make_exit_status(code: i32) -> std::process::ExitStatus {
+    #[cfg(unix)]
+    {
+        std::os::unix::process::ExitStatusExt::from_raw(code << 8)
+    }
+    #[cfg(not(unix))]
+    {
+        std::process::Command::new("cmd")
+            .args(["/C", &format!("exit {}", code)])
+            .status()
+            .unwrap()
+    }
+}
+
 fn config_with_rule(yaml: &str) -> NoMistakesConfig {
     let mut config = NoMistakesConfig::default();
     config.rules.push(RuleDef {
@@ -282,7 +296,7 @@ fn handle_shellcheck_result_success_returns_empty() {
     // Exercises the Ok(output) arm with exit code 0 → no findings.
     let tmp = tempfile::tempdir().unwrap();
     let output = std::process::Output {
-        status: std::os::unix::process::ExitStatusExt::from_raw(0),
+        status: make_exit_status(0),
         stdout: Vec::new(),
         stderr: Vec::new(),
     };
@@ -302,7 +316,7 @@ fn handle_shellcheck_result_reports_only_affected_files() {
     std::fs::write(&sh2, "#!/bin/bash\nbar\n").unwrap();
     let gcc_line = format!("{}:2:1: warning: blah [SC2006]\n", sh1.display());
     let output = std::process::Output {
-        status: std::os::unix::process::ExitStatusExt::from_raw(1 << 8),
+        status: make_exit_status(1),
         stdout: gcc_line.into_bytes(),
         stderr: Vec::new(),
     };

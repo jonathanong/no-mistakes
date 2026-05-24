@@ -35,7 +35,7 @@ pub fn run_filesystem_rules_with_files(
         macro_rules! run {
             ($id:expr, $call:expr) => {
                 if rule_enabled(&config, $id) {
-                    s.spawn(|_| { acc.lock().unwrap().push(($id, $call)); });
+                    s.spawn(|_| { let res = $call; acc.lock().unwrap().push(($id, res)); });
                 }
             };
         }
@@ -76,7 +76,7 @@ pub fn run_filesystem_rules(root: &Path, config_path: Option<&Path>) -> Result<V
         macro_rules! run {
             ($id:expr, $call:expr) => {
                 if rule_enabled(&config, $id) {
-                    s.spawn(|_| { acc.lock().unwrap().push(($id, $call)); });
+                    s.spawn(|_| { let res = $call; acc.lock().unwrap().push(($id, res)); });
                 }
             };
         }

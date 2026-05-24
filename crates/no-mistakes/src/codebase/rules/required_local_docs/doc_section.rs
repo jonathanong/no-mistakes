@@ -3,6 +3,7 @@ use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use globset::{GlobBuilder, GlobSetBuilder};
+use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
@@ -29,17 +30,21 @@ pub(crate) fn check_required_doc_section_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(REQUIRED_DOC_SECTION_RULE_ID) {
-        let opts: DocSectionOptions = rule.rule_options();
-        let target_roots = crate::codebase::rules::target_roots(root, config, rule);
-        let files: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
-            .cloned()
-            .collect();
-        findings.extend(scan_doc_section(root, &opts, &files)?);
-    }
+    let all: Result<Vec<Vec<RuleFinding>>> = config
+        .rule_applications(REQUIRED_DOC_SECTION_RULE_ID)
+        .into_par_iter()
+        .map(|rule| -> Result<Vec<RuleFinding>> {
+            let opts: DocSectionOptions = rule.rule_options();
+            let target_roots = crate::codebase::rules::target_roots(root, config, rule);
+            let files: Vec<PathBuf> = all_files
+                .iter()
+                .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
+                .cloned()
+                .collect();
+            scan_doc_section(root, &opts, &files)
+        })
+        .collect();
+    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
     crate::codebase::rules::sort_findings(&mut findings);
     Ok(findings)
 }

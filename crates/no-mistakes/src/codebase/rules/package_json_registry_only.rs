@@ -50,17 +50,20 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let target_roots = super::target_roots(root, config, rule);
-        let files: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
-            .cloned()
-            .collect();
-        let lockfile_root = target_roots.first().map_or(root, PathBuf::as_path);
-        findings.extend(scan(root, &rule.rule_options(), &files, lockfile_root)?);
-    }
+    let mut findings: Vec<RuleFinding> = config
+        .rule_applications(RULE_ID)
+        .into_par_iter()
+        .flat_map(|rule| {
+            let opts: Options = rule.rule_options();
+            let target_roots = super::target_roots(root, config, rule);
+            let files: Vec<PathBuf> = all_files
+                .iter()
+                .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
+                .cloned()
+                .collect();
+            scan(root, &opts, &files, &target_roots)
+        })
+        .collect();
     super::sort_findings(&mut findings);
     Ok(findings)
 }
@@ -74,27 +77,19 @@ pub(crate) fn is_blocked_specifier(spec: &str) -> bool {
             let version = after_at.find('@').map_or("", |i| &after_at[i + 1..]);
             return !version.is_empty() && is_blocked_specifier(version);
         }
-        let version = rest.rfind('@').map_or(rest, |i| &rest[i + 1..]);
-        return is_blocked_specifier(version);
+        return is_blocked_specifier(rest.rfind('@').map_or(rest, |i| &rest[i + 1..]));
     }
-    if BLOCKED_PREFIXES.iter().any(|p| spec.starts_with(p)) {
-        return true;
-    }
-    if !spec.starts_with('@') && spec.contains('/') {
-        return true;
-    }
-    if spec.starts_with('@') && spec.splitn(3, '/').count() > 2 {
-        return true;
-    }
-    false
+    BLOCKED_PREFIXES.iter().any(|p| spec.starts_with(p))
+        || (!spec.starts_with('@') && spec.contains('/'))
+        || (spec.starts_with('@') && spec.splitn(3, '/').count() > 2)
 }
 
 fn scan(
     root: &Path,
     opts: &Options,
     files: &[PathBuf],
-    lockfile_root: &Path,
-) -> Result<Vec<RuleFinding>> {
+    target_roots: &[PathBuf],
+) -> Vec<RuleFinding> {
     let mut findings: Vec<RuleFinding> = files
         .par_iter()
         .filter(|p| {
@@ -113,8 +108,10 @@ fn scan(
         })
         .flat_map(|path| check_package_json(path, root))
         .collect();
-    findings.extend(check_lockfile(lockfile_root, opts));
-    Ok(findings)
+    for lockfile_root in target_roots {
+        findings.extend(check_lockfile(root, lockfile_root, opts));
+    }
+    findings
 }
 
 fn check_package_json(path: &Path, root: &Path) -> Vec<RuleFinding> {
@@ -152,7 +149,7 @@ fn check_package_json(path: &Path, root: &Path) -> Vec<RuleFinding> {
     findings
 }
 
-fn check_lockfile(lockfile_root: &Path, opts: &Options) -> Vec<RuleFinding> {
+fn check_lockfile(root: &Path, lockfile_root: &Path, opts: &Options) -> Vec<RuleFinding> {
     let Some(lockfile_path) = &opts.lockfile else {
         return Vec::new();
     };
@@ -163,7 +160,7 @@ fn check_lockfile(lockfile_root: &Path, opts: &Options) -> Vec<RuleFinding> {
     let Ok(yaml) = serde_yaml::from_str::<serde_yaml::Value>(&content) else {
         return Vec::new();
     };
-    let file = relative_slash_path(lockfile_root, &lockfile_abs);
+    let file = relative_slash_path(root, &lockfile_abs);
     let Some(packages) = yaml.get("packages").and_then(|p| p.as_mapping()) else {
         return Vec::new();
     };

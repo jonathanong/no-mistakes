@@ -22,21 +22,8 @@ pub(crate) struct Options {
 }
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
-    let skip = &config.filesystem.skip_directories;
-    let all_files = discover_files(root, skip);
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.rule_options();
-        let target_roots = super::target_roots(root, config, rule);
-        let files: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
-            .cloned()
-            .collect();
-        findings.extend(scan(root, &opts, &files)?);
-    }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    let files = discover_files(root, &config.filesystem.skip_directories);
+    check_with_files(root, config, &files)
 }
 
 pub(crate) fn check_with_files(
@@ -97,18 +84,23 @@ pub(crate) fn has_shell_shebang(content: &str) -> bool {
 }
 
 pub(crate) fn is_managed_runner_only(content: &str) -> bool {
-    let runs_on_re = Regex::new(r"runs-on:\s*(\S+)").expect("runs-on regex");
-    let values: Vec<&str> = runs_on_re
-        .captures_iter(content)
-        .filter_map(|cap| {
-            cap.get(1)
-                .map(|m| m.as_str().trim_matches(|c: char| matches!(c, '\'' | '"')))
-        })
-        .collect();
-    if values.is_empty() {
-        return false;
+    let re = Regex::new(r"runs-on:\s*(.+)").expect("runs-on regex");
+    let mut found = false;
+    for cap in re.captures_iter(content) {
+        let raw = cap.get(1).map_or("", |m| m.as_str()).trim();
+        let inner = raw.trim_start_matches('[').trim_end_matches(']');
+        for s in inner.split(',') {
+            let r = s.trim().trim_matches(|c: char| matches!(c, '\'' | '"'));
+            if r.is_empty() {
+                continue;
+            }
+            if !is_managed_runner(r) {
+                return false;
+            }
+            found = true;
+        }
     }
-    values.iter().all(|v| is_managed_runner(v))
+    found
 }
 
 fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {

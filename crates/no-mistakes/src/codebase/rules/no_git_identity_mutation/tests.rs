@@ -364,3 +364,21 @@ fn check_respects_target_roots() {
     let findings = check_with_files(tmp.path(), &config, &files).unwrap();
     assert!(!findings.is_empty(), "should find violation in script");
 }
+
+#[test]
+fn is_managed_runner_only_inline_list_all_managed() {
+    let content = "runs-on: [ubuntu-latest, windows-latest]\n";
+    assert!(
+        is_managed_runner_only(content),
+        "bracket list of managed runners should be recognized"
+    );
+}
+
+#[test]
+fn is_managed_runner_only_inline_list_mixed() {
+    let content = "runs-on: [ubuntu-latest, self-hosted]\n";
+    assert!(
+        !is_managed_runner_only(content),
+        "bracket list with self-hosted should not be recognized as managed-only"
+    );
+}

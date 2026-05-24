@@ -1,7 +1,7 @@
 use super::{is_code_file, RuleFinding, RULE_ID};
 use crate::codebase::ts_source::relative_slash_path;
 use globset::GlobSet;
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
 
 pub(super) struct ScanCtx<'a> {
@@ -14,7 +14,7 @@ pub(super) struct ScanCtx<'a> {
 }
 
 pub(super) fn scan_pkg(root: &Path, pkg_root: &Path, ctx: &ScanCtx) -> Vec<RuleFinding> {
-    let subdirs: HashSet<String> = ctx
+    let subdirs: BTreeSet<String> = ctx
         .files
         .iter()
         .filter_map(|file| {

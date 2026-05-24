@@ -141,7 +141,7 @@ fn alias_with_correct_prefix_but_wrong_target_is_flagged_once() {
     let config = config_from_yaml(agents_config());
     let findings = check(tmp.path(), &config).unwrap();
     // Should produce exactly one finding (not duplicated by direction-2 check)
-    assert!(!findings.is_empty(), "expected at least one finding");
+    assert_eq!(findings.len(), 1, "expected exactly one finding");
 }
 
 #[test]
@@ -178,7 +178,7 @@ fn two_mappings_already_flagged_skip_prevents_duplicate() {
     let findings = check(tmp.path(), &config).unwrap();
     // Direction-1 fires (wrong target for @agents); direction-2 also fires for
     // @workers but already_flagged = true so we get exactly one finding.
-    assert!(!findings.is_empty(), "expected at least one finding");
+    assert_eq!(findings.len(), 1, "expected exactly one finding");
 }
 
 #[test]

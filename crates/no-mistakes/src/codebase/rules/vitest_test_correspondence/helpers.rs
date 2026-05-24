@@ -1,6 +1,7 @@
 use super::{Options, RULE_ID};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
+use rayon::prelude::*;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
@@ -52,62 +53,63 @@ pub(super) fn check_source_to_test(
     let pre = format!("{tdir}/");
     let src_exts: HashSet<&str> = exts.iter().filter_map(|e| e.rsplit('.').next()).collect();
 
-    let mut findings = Vec::new();
+    let mut findings: Vec<RuleFinding> = files
+        .par_iter()
+        .filter_map(|path| {
+            let rel = relative_slash_path(root, path);
 
-    for path in files {
-        let rel = relative_slash_path(root, path);
+            if !opts.scopes.is_empty()
+                && !opts
+                    .scopes
+                    .iter()
+                    .any(|s| rel == *s || rel.starts_with(&format!("{s}/")))
+            {
+                return None;
+            }
 
-        if !opts.scopes.is_empty()
-            && !opts
-                .scopes
-                .iter()
-                .any(|s| rel == *s || rel.starts_with(&format!("{s}/")))
-        {
-            continue;
-        }
+            if exts.iter().any(|&e| rel.ends_with(e)) || rel.contains(&sep) || rel.starts_with(&pre)
+            {
+                return None;
+            }
 
-        if exts.iter().any(|&e| rel.ends_with(e)) || rel.contains(&sep) || rel.starts_with(&pre) {
-            continue;
-        }
+            // Only process source extensions derived from test extensions
+            let ext = path.extension().and_then(|e| e.to_str())?;
+            if !src_exts.contains(ext) {
+                return None;
+            }
 
-        // Only process source extensions derived from test extensions
-        let ext = match path.extension().and_then(|e| e.to_str()) {
-            Some(e) => e,
-            None => continue,
-        };
-        if !src_exts.contains(ext) {
-            continue;
-        }
+            let dot_ext = format!(".{ext}");
+            let (dir, base) = stem_and_dir(&rel, &dot_ext);
+            let p = if dir.is_empty() {
+                String::new()
+            } else {
+                format!("{dir}/")
+            };
+            let tdir_p = if dir.is_empty() {
+                format!("{tdir}/")
+            } else {
+                format!("{dir}/{tdir}/")
+            };
 
-        let dot_ext = format!(".{ext}");
-        let (dir, base) = stem_and_dir(&rel, &dot_ext);
-        let p = if dir.is_empty() {
-            String::new()
-        } else {
-            format!("{dir}/")
-        };
-        let tdir_p = if dir.is_empty() {
-            format!("{tdir}/")
-        } else {
-            format!("{dir}/{tdir}/")
-        };
-
-        let found = exts.iter().any(|&test_ext| {
-            rel_set.contains(&format!("{p}{base}{test_ext}"))
-                || rel_set.contains(&format!("{tdir_p}{base}{test_ext}"))
-        });
-
-        if !found {
-            findings.push(RuleFinding {
-                rule: RULE_ID.to_string(),
-                file: rel.clone(),
-                line: 1,
-                message: format!("{rel}: no corresponding test file found"),
-                import: None,
-                target: None,
+            let found = exts.iter().any(|&test_ext| {
+                rel_set.contains(&format!("{p}{base}{test_ext}"))
+                    || rel_set.contains(&format!("{tdir_p}{base}{test_ext}"))
             });
-        }
-    }
 
+            if found {
+                None
+            } else {
+                Some(RuleFinding {
+                    rule: RULE_ID.to_string(),
+                    file: rel.clone(),
+                    line: 1,
+                    message: format!("{rel}: no corresponding test file found"),
+                    import: None,
+                    target: None,
+                })
+            }
+        })
+        .collect();
+    findings.sort_by(|a, b| a.file.cmp(&b.file));
     findings
 }
