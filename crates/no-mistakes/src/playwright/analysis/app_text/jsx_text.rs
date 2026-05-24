@@ -47,6 +47,12 @@ fn child_texts(
                 }
                 results.extend(descendant_texts(&element.children, source));
             }
+            oxc_ast::ast::JSXChild::Fragment(fragment) if include_descendants => {
+                if !current.is_empty() {
+                    results.push(std::mem::take(&mut current));
+                }
+                results.extend(descendant_texts(&fragment.children, source));
+            }
             _ => {
                 if !current.is_empty() {
                     results.push(std::mem::take(&mut current));

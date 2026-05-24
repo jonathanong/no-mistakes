@@ -36,6 +36,7 @@ export function Example(props: { label: string }) {
       <Design.UI.Button testId="nested-member-button" title="Nested member">Nested</Design.UI.Button>
       <button id="html-id-button">HTML id</button>
       <button data-pw="descendant-button"><span>Descendant save</span></button>
+      <button data-pw="fragment-button"><>Fragment save</></button>
       <button data-pw="hidden-button" hidden>Hidden action</button>
       <button data-pw="hidden-false-button" hidden={false}>Shown action</button>
       <button data-pw="aria-hidden-button" aria-hidden="true">Aria hidden action</button>
@@ -74,6 +75,7 @@ export function Example(props: { label: string }) {
       <foo.Button testId="lower-member-button" title="Lower member">Lower member</foo.Button>
       <a data-pw="undefined-link-target" href={undefined}>Undefined link</a>
       <a data-pw="null-link-target" href={null}>Null link</a>
+      <a data-pw="zero-link-target" href={0}>Zero link</a>
       <div>{props.label}</div>
     </>
   );

@@ -200,6 +200,14 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .iter()
                 .any(|selector| selector.value == "descendant-button")
     }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Fragment save"
+            && target.kind == AppTextKind::VisibleText
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "fragment-button")
+    }));
     assert!(!targets.iter().any(|target| {
         target.text == "Container child"
             && target
@@ -257,6 +265,9 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
     assert!(!targets
         .iter()
         .any(|target| target.text == "Null link" && target.role.as_deref() == Some("link")));
+    assert!(!targets
+        .iter()
+        .any(|target| target.text == "Zero link" && target.role.as_deref() == Some("link")));
 }
 
 #[test]

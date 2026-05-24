@@ -32,12 +32,12 @@ pub(crate) fn aria_bool_attr(
 }
 
 pub(crate) fn bool_attr(opening: &oxc_ast::ast::JSXOpeningElement<'_>, name: &str) -> Option<bool> {
-    find_attr(opening, name).map(|attribute| match attribute.value.as_ref() {
-        None => true,
+    find_attr(opening, name).and_then(|attribute| match attribute.value.as_ref() {
+        None => Some(true),
         Some(oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container)) => {
-            bool_expr(&container.expression).unwrap_or(false)
+            bool_expr(&container.expression)
         }
-        _ => true,
+        _ => Some(true),
     })
 }
 
@@ -91,6 +91,7 @@ fn jsx_expression_truthy(expression: &oxc_ast::ast::JSXExpression<'_>) -> bool {
     match expression {
         oxc_ast::ast::JSXExpression::NullLiteral(_) => false,
         oxc_ast::ast::JSXExpression::BooleanLiteral(literal) => literal.value,
+        oxc_ast::ast::JSXExpression::NumericLiteral(literal) => literal.value != 0.0,
         oxc_ast::ast::JSXExpression::Identifier(identifier) => {
             identifier.name.as_str() != "undefined"
         }
