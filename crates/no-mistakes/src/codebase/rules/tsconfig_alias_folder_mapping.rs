@@ -60,7 +60,14 @@ fn check_tsconfig(root: &Path, opts: &Options) -> Result<Vec<RuleFinding>> {
     let all_paths: BTreeMap<String, Vec<String>> = ts_config.paths.into_iter().collect();
     let mut findings = Vec::new();
     for (alias, targets) in &all_paths {
-        findings.extend(check_alias(root, &tsconfig_str, alias, targets, opts, &all_paths));
+        findings.extend(check_alias(
+            root,
+            &tsconfig_str,
+            alias,
+            targets,
+            opts,
+            &all_paths,
+        ));
     }
     Ok(findings)
 }

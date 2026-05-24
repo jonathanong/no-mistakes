@@ -184,15 +184,16 @@ fn two_mappings_already_flagged_skip_prevents_duplicate() {
 #[test]
 fn check_exists_flags_missing_directory() {
     let tmp = tempfile::tempdir().unwrap();
-    let tsconfig =
-        r#"{"compilerOptions": {"paths": {"@agents/email": ["backend/agents/email"]}}}"#;
+    let tsconfig = r#"{"compilerOptions": {"paths": {"@agents/email": ["backend/agents/email"]}}}"#;
     std::fs::write(tmp.path().join("tsconfig.json"), tsconfig).unwrap();
     let config = config_from_yaml(
         "tsconfig: tsconfig.json\nbaseDir: backend\ncheckExists: true\nmappings:\n  - prefix: \"@agents\"\n    root: agents\n",
     );
     let findings = check(tmp.path(), &config).unwrap();
     assert!(
-        findings.iter().any(|f| f.message.contains("does not exist")),
+        findings
+            .iter()
+            .any(|f| f.message.contains("does not exist")),
         "expected finding for missing directory: {findings:?}"
     );
 }
@@ -201,8 +202,7 @@ fn check_exists_flags_missing_directory() {
 fn check_exists_passes_when_directory_present() {
     let tmp = tempfile::tempdir().unwrap();
     std::fs::create_dir_all(tmp.path().join("backend/agents/email")).unwrap();
-    let tsconfig =
-        r#"{"compilerOptions": {"paths": {"@agents/email": ["backend/agents/email"]}}}"#;
+    let tsconfig = r#"{"compilerOptions": {"paths": {"@agents/email": ["backend/agents/email"]}}}"#;
     std::fs::write(tmp.path().join("tsconfig.json"), tsconfig).unwrap();
     let config = config_from_yaml(
         "tsconfig: tsconfig.json\nbaseDir: backend\ncheckExists: true\nmappings:\n  - prefix: \"@agents\"\n    root: agents\n",
@@ -218,8 +218,7 @@ fn check_exists_passes_when_directory_present() {
 fn check_exists_false_does_not_check_directories() {
     let tmp = tempfile::tempdir().unwrap();
     // No directory created — but checkExists: false (default), so no finding
-    let tsconfig =
-        r#"{"compilerOptions": {"paths": {"@agents/email": ["backend/agents/email"]}}}"#;
+    let tsconfig = r#"{"compilerOptions": {"paths": {"@agents/email": ["backend/agents/email"]}}}"#;
     std::fs::write(tmp.path().join("tsconfig.json"), tsconfig).unwrap();
     let config = config_from_yaml(agents_config()); // default checkExists: false
     let findings = check(tmp.path(), &config).unwrap();
