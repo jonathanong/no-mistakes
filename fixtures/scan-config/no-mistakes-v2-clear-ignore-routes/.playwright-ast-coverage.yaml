@@ -1,0 +1,7 @@
+frontendRoot: legacy-app
+playwrightConfig: playwright.legacy.config.ts
+selectorAttributes:
+  - data-legacy
+selectorRoots:
+  - legacy-components
+

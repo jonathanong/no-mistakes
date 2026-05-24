@@ -1,6 +1,5 @@
 tests:
   playwright:
-    configs: playwright.config.ts
     frontendRoot: pw-app
     ignoreRoutes:
       - /admin/**

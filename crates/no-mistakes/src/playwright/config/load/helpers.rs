@@ -78,7 +78,7 @@ fn is_v2_playwright_configured(playwright: &PlaywrightTestConfig) -> bool {
         || !playwright.selector_roots.is_empty()
         || !playwright.selector_exclude.is_empty()
         || playwright.frontend_root.is_some()
-        || !playwright.ignore_routes.is_empty()
+        || playwright.ignore_routes.is_some()
 }
 
 pub(super) fn is_legacy_playwright_configured(config: &FileConfig) -> bool {

@@ -140,11 +140,10 @@ fn settings_from_v2(
     } else {
         view.selector_roots().to_vec()
     };
-    let ignore_routes = if !playwright.ignore_routes.is_empty() {
-        playwright.ignore_routes.clone()
-    } else {
-        legacy_overlay.ignore_routes
-    };
+    let ignore_routes = playwright
+        .ignore_routes
+        .clone()
+        .unwrap_or(legacy_overlay.ignore_routes);
     Ok(Settings {
         frontend_root,
         playwright_configs,
