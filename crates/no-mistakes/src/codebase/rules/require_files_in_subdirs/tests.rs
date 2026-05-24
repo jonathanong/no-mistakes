@@ -269,6 +269,29 @@ fn spec_root_itself_in_file_list_is_skipped_by_first_level_subdirs() {
 }
 
 #[test]
+fn files_in_root_but_outside_spec_subroot_skip_strip_prefix() {
+    // Exercises line 151: strip_prefix(abs_root) fails for files that are inside the
+    // top-level root (passing target_roots) but outside the spec's sub-root.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    // This file is under root but NOT under root/queues — strip_prefix(root/queues) fails.
+    let outside_spec = root.join("other-dir/file.ts");
+    std::fs::create_dir_all(outside_spec.parent().unwrap()).unwrap();
+    std::fs::write(&outside_spec, "").unwrap();
+    let pkg = root.join("queues/email/package.json");
+    std::fs::create_dir_all(pkg.parent().unwrap()).unwrap();
+    std::fs::write(&pkg, "{}").unwrap();
+    let yaml = "packages:\n  - root: queues\n    requiredFiles: [package.json]";
+    let config = config_with_rule(yaml);
+    let files = vec![outside_spec, pkg];
+    let findings = check_with_files(root, &config, &files).unwrap();
+    assert!(
+        findings.is_empty(),
+        "email subdir has package.json; outside-spec file is skipped"
+    );
+}
+
+#[test]
 fn glob_pattern_not_matched_falls_through_to_next_group_entry() {
     // Exercises line 130 (closing `}` of `if matched { return Ok(true); }`):
     // the glob is checked but does NOT match any file, so `matched = false`

@@ -80,3 +80,57 @@ packages:
     assert_eq!(packages.len(), 1);
     assert_eq!(packages[0].resolution_kind, "commit");
 }
+
+#[test]
+fn test_integrity_only_resolution() {
+    // Exercises line 52: `return "integrity".to_string()` and its closing brace (53).
+    let content = r#"
+packages:
+  normal-pkg@1.0.0:
+    resolution: {integrity: sha512-xyz}
+"#;
+    let packages = parse_pnpm_lock(content);
+    assert_eq!(packages.len(), 1);
+    assert_eq!(packages[0].resolution_kind, "integrity");
+}
+
+#[test]
+fn test_resolution_with_unknown_key_returns_empty() {
+    // Exercises line 55: `String::new()` when resolution has no recognized keys.
+    let content = r#"
+packages:
+  exotic@1.0.0:
+    resolution: {checksum: abc123}
+"#;
+    let packages = parse_pnpm_lock(content);
+    assert_eq!(packages.len(), 1);
+    assert_eq!(packages[0].resolution_kind, "");
+}
+
+#[test]
+fn test_numeric_package_key() {
+    // Exercises yaml_value_to_string line 61: Number branch.
+    // YAML treats bare integers as numbers when used as mapping keys.
+    let content = "packages:\n  1234:\n    resolution: {integrity: sha512-num}\n";
+    let packages = parse_pnpm_lock(content);
+    assert_eq!(packages.len(), 1);
+    assert_eq!(packages[0].key, "1234");
+}
+
+#[test]
+fn test_bool_package_key() {
+    // Exercises yaml_value_to_string line 62: Bool branch.
+    let content = "packages:\n  true:\n    resolution: {integrity: sha512-bool}\n";
+    let packages = parse_pnpm_lock(content);
+    assert_eq!(packages.len(), 1);
+    assert_eq!(packages[0].key, "true");
+}
+
+#[test]
+fn test_null_package_key() {
+    // Exercises yaml_value_to_string line 63: `_ => String::new()` for Null.
+    let content = "packages:\n  ~:\n    resolution: {integrity: sha512-null}\n";
+    let packages = parse_pnpm_lock(content);
+    assert_eq!(packages.len(), 1);
+    assert_eq!(packages[0].key, "");
+}

@@ -274,3 +274,53 @@ fn source_file_without_test_fails() {
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("no corresponding test file"));
 }
+
+#[test]
+fn non_source_extension_file_ignored_in_inverse_check() {
+    // Exercises helpers.rs line 78: `return None` when file extension is not in
+    // src_exts derived from test extensions.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    std::fs::create_dir_all(root.join("backend/mod")).unwrap();
+    // .json file — not a source extension for .test.mts tests (src_ext = "mts")
+    std::fs::write(root.join("backend/mod/config.json"), "{}").unwrap();
+    // valid .mts source with its test
+    std::fs::write(root.join("backend/mod/index.mts"), "export {};\n").unwrap();
+    std::fs::write(
+        root.join("backend/mod/index.test.mts"),
+        "test('x', () => {});\n",
+    )
+    .unwrap();
+    let config = config_with_rule(
+        "{scopes: [backend], testExtensions: [\".test.mts\"], testsDir: __tests__}",
+    );
+    let files = vec![
+        root.join("backend/mod/config.json"),
+        root.join("backend/mod/index.mts"),
+        root.join("backend/mod/index.test.mts"),
+    ];
+    let findings = check_with_files(root, &config, &files).unwrap();
+    assert!(
+        findings.is_empty(),
+        "json file should be ignored in inverse check; everything else passes"
+    );
+}
+
+#[test]
+fn root_level_source_file_without_test_fails() {
+    // Exercises helpers.rs lines 84 and 89: dir.is_empty() branches in
+    // check_source_to_test when a source file is at the root level (no sub-directory).
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    // Root-level source file — relative path has no '/', so dir="" in stem_and_dir.
+    std::fs::write(root.join("root-module.ts"), "export {};\n").unwrap();
+    let config = config_with_rule("{testExtensions: [\".test.ts\"], testsDir: __tests__}");
+    let files = vec![root.join("root-module.ts")];
+    let findings = check_with_files(root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1);
+    assert!(
+        findings[0].message.contains("no corresponding test file"),
+        "root-level source without test should fail: {}",
+        findings[0].message
+    );
+}

@@ -382,3 +382,13 @@ fn is_managed_runner_only_inline_list_mixed() {
         "bracket list with self-hosted should not be recognized as managed-only"
     );
 }
+
+#[test]
+fn is_managed_runner_only_trailing_comma_skips_empty_element() {
+    // Exercises line 95: `continue` when a split segment is empty (e.g. trailing comma).
+    let content = "runs-on: [ubuntu-latest,]\n";
+    assert!(
+        is_managed_runner_only(content),
+        "trailing comma produces empty element that should be skipped, not treated as unmanaged"
+    );
+}

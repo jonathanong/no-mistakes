@@ -186,6 +186,25 @@ fn files_outside_root_are_skipped_in_first_level_subdirs() {
 }
 
 #[test]
+fn files_in_root_but_outside_spec_subroot_skip_strip_prefix() {
+    // Exercises line 115: strip_prefix(abs_root) fails for files that pass the
+    // target_roots filter (under root) but are not under the spec's sub-root (agents/).
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    // File is under root but NOT under root/agents — strip_prefix(agents/) fails.
+    let outside_agents = root.join("other-dir/file.mts");
+    std::fs::create_dir_all(outside_agents.parent().unwrap()).unwrap();
+    std::fs::write(&outside_agents, "").unwrap();
+    let config = config_with_rule("roots: [agents]\ntestGlob: \"*.test.mts\"");
+    let files = vec![outside_agents];
+    let findings = check_with_files(root, &config, &files).unwrap();
+    assert!(
+        findings.is_empty(),
+        "files outside the spec subroot should not generate subdirs or findings"
+    );
+}
+
+#[test]
 fn absolute_root_path_is_used_directly() {
     // Exercises rule_root.is_absolute() branch (line 62) in scan().
     let tmp = tempfile::tempdir().unwrap();
