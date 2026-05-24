@@ -147,32 +147,34 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
             }
         }
 
-        // Duplicate stem detection
-        for (dir, stems) in &dir_stems {
-            let mut seen = HashSet::new();
-            let dups: HashSet<&str> = stems
-                .iter()
-                .filter(|s| !seen.insert(s.as_str()))
-                .map(String::as_str)
-                .collect();
-            for dup in dups {
-                for (rel, test_ext) in &test_files {
-                    let (fdir, fbase) = stem_and_dir(rel, test_ext);
-                    if !rel.contains(sep.as_str())
-                        && !rel.starts_with(pre.as_str())
-                        && fdir == *dir
-                        && fbase == dup
-                    {
-                        findings.push(RuleFinding {
-                            rule: RULE_ID.to_string(),
-                            file: rel.clone(),
-                            line: 1,
-                            message: format!(
-                                "{rel}: duplicate-stem test files must live under {tdir}/"
-                            ),
-                            import: None,
-                            target: None,
-                        });
+        if opts.direction == Direction::Both {
+            // Duplicate stem detection
+            for (dir, stems) in &dir_stems {
+                let mut seen = HashSet::new();
+                let dups: HashSet<&str> = stems
+                    .iter()
+                    .filter(|s| !seen.insert(s.as_str()))
+                    .map(String::as_str)
+                    .collect();
+                for dup in dups {
+                    for (rel, test_ext) in &test_files {
+                        let (fdir, fbase) = stem_and_dir(rel, test_ext);
+                        if !rel.contains(sep.as_str())
+                            && !rel.starts_with(pre.as_str())
+                            && fdir == *dir
+                            && fbase == dup
+                        {
+                            findings.push(RuleFinding {
+                                rule: RULE_ID.to_string(),
+                                file: rel.clone(),
+                                line: 1,
+                                message: format!(
+                                    "{rel}: duplicate-stem test files must live under {tdir}/"
+                                ),
+                                import: None,
+                                target: None,
+                            });
+                        }
                     }
                 }
             }

@@ -152,7 +152,7 @@ fn group_matches(
 }
 
 fn is_glob(pattern: &str) -> bool {
-    pattern.contains('*') || pattern.contains('?') || pattern.contains('[') || pattern.contains('{')
+    pattern.contains('*') || pattern.contains('?')
 }
 
 fn first_level_subdirs(root: &Path, files: &[PathBuf]) -> Vec<PathBuf> {

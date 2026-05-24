@@ -97,6 +97,22 @@ fn nested_direct_child_glob_fixture_reports_missing_group() {
 }
 
 #[test]
+fn bracketed_required_file_is_treated_as_literal_path() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let route = root.join("routes/users/pages/[id].tsx");
+    std::fs::create_dir_all(route.parent().unwrap()).unwrap();
+    std::fs::write(&route, "export {};\n").unwrap();
+    let yaml = "packages:\n  - root: routes\n    requiredFiles: [\"pages/[id].tsx\"]";
+    let config = config_with_rule(yaml);
+    let findings = check_with_files(root, &config, &[route]).unwrap();
+    assert!(
+        findings.is_empty(),
+        "bracketed route filename should be matched as an exact path: {findings:?}"
+    );
+}
+
+#[test]
 fn no_op_when_packages_empty() {
     let tmp = tempfile::tempdir().unwrap();
     let config = config_with_rule("{}");

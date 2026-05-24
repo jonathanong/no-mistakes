@@ -115,6 +115,32 @@ fn source_to_test_direction_fixture_reports_untested_sources() {
 }
 
 #[test]
+fn test_to_source_direction_ignores_duplicate_test_stems() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    std::fs::create_dir_all(root.join("backend/mod")).unwrap();
+    std::fs::write(root.join("backend/mod/index.ts"), "export {};\n").unwrap();
+    std::fs::write(
+        root.join("backend/mod/index.test.ts"),
+        "test('a', () => {});\n",
+    )
+    .unwrap();
+    std::fs::write(
+        root.join("backend/mod/index.test.tsx"),
+        "test('b', () => {});\n",
+    )
+    .unwrap();
+    let config = config_with_rule(
+        "{scopes: [backend], testExtensions: [\".test.ts\", \".test.tsx\"], testsDir: __tests__, direction: test-to-source}",
+    );
+    let findings = check(root, &config).unwrap();
+    assert!(
+        findings.is_empty(),
+        "test-to-source mode reports orphan tests only: {findings:?}"
+    );
+}
+
+#[test]
 fn tsx_source_with_ts_test_extension_fixture_has_findings() {
     let root = fixture_root("tsx-source-missing-test");
     let config_path = root.join(".no-mistakes.yml");
