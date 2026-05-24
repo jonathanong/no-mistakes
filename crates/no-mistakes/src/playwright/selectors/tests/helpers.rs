@@ -57,15 +57,19 @@ pub(super) fn extract_playwright_selector_occurrences(
 ) -> Vec<(String, TestStatus)> {
     let regexes = compile_selector_regexes(selector_attributes, &BTreeMap::new());
     ast::with_program(Path::new("fixture.ts"), source, |program, source| {
-        extract_playwright_selector_occurrences_from_program(
+        let mut selectors = Vec::new();
+        for occurrence in extract_playwright_selector_occurrences_from_program(
             program,
             source,
             &regexes,
             test_id_attributes,
-        )
-        .into_iter()
-        .map(|o| (o.value.selector, o.status))
-        .collect()
+        ) {
+            let selector = (occurrence.value.selector, occurrence.status);
+            if !selectors.contains(&selector) {
+                selectors.push(selector);
+            }
+        }
+        selectors
     })
     .expect("fixture should parse")
 }

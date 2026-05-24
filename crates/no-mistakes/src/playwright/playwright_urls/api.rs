@@ -29,10 +29,14 @@ pub fn extract_playwright_url_occurrences(
     source: &str,
 ) -> Vec<(String, playwright_tests::TestStatus)> {
     ast::with_program(Path::new("fixture.ts"), source, |program, source| {
-        extract_playwright_url_occurrences_from_program(program, source, &[])
-            .into_iter()
-            .map(|occurrence| (occurrence.value, occurrence.status))
-            .collect()
+        let mut occurrences = Vec::new();
+        for occurrence in extract_playwright_url_occurrences_from_program(program, source, &[]) {
+            let value = (occurrence.value, occurrence.status);
+            if !occurrences.contains(&value) {
+                occurrences.push(value);
+            }
+        }
+        occurrences
     })
     .expect("fixture should parse")
 }
