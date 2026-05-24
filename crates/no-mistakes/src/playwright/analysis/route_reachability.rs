@@ -31,12 +31,12 @@ pub(crate) fn collect_route_reachable_files(
         .par_iter()
         .map(|route| {
             let mut import_cache = HashMap::new();
-            (
+            Ok((
                 route_key(root, &route.file),
-                reachable_files(&route.file, &selector_rel_by_file, &mut import_cache),
-            )
+                reachable_files(&route.file, &selector_rel_by_file, &mut import_cache)?,
+            ))
         })
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<_>>>()?;
     route_reachable_files.sort_by(|(left, _), (right, _)| left.cmp(right));
     Ok(route_reachable_files.into_iter().collect())
 }
@@ -45,7 +45,7 @@ fn reachable_files(
     route_file: &Path,
     selector_rel_by_file: &HashMap<std::path::PathBuf, Arc<String>>,
     import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
-) -> BTreeSet<Arc<String>> {
+) -> Result<BTreeSet<Arc<String>>> {
     let mut reachable = BTreeSet::new();
     let mut stack = vec![crate::codebase::ts_resolver::normalize_path(route_file)];
     let mut seen = HashSet::new();
@@ -56,15 +56,14 @@ fn reachable_files(
         if let Some(rel) = selector_rel_by_file.get(&file) {
             reachable.insert(rel.clone());
         }
-        if let Ok(imports) = crate::imports::collect_imports(&file, import_cache) {
-            stack.extend(
-                imports
-                    .into_iter()
-                    .map(|file| crate::codebase::ts_resolver::normalize_path(&file)),
-            );
-        }
+        let imports = crate::imports::collect_imports(&file, import_cache)?;
+        stack.extend(
+            imports
+                .into_iter()
+                .map(|file| crate::codebase::ts_resolver::normalize_path(&file)),
+        );
     }
-    reachable
+    Ok(reachable)
 }
 
 fn route_key(root: &Path, file: &Path) -> Arc<String> {
