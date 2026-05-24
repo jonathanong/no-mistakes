@@ -30,15 +30,6 @@ fn run_check(bin: &Path, root: &Path) -> usize {
     output.stdout.len()
 }
 
-pub fn bench_check_large_graph_monorepo(c: &mut Criterion) {
-    let bin = no_mistakes_bin();
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/large-graph-monorepo");
-    c.bench_function("check_large_graph_monorepo", |b| {
-        b.iter(|| black_box(run_check(black_box(&bin), black_box(&root))))
-    });
-}
-
 pub fn bench_check_no_mistakes_repo(c: &mut Criterion) {
     let bin = no_mistakes_bin();
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../");
@@ -47,9 +38,5 @@ pub fn bench_check_no_mistakes_repo(c: &mut Criterion) {
     });
 }
 
-criterion_group!(
-    benches,
-    bench_check_large_graph_monorepo,
-    bench_check_no_mistakes_repo
-);
+criterion_group!(benches, bench_check_no_mistakes_repo);
 criterion_main!(benches);
