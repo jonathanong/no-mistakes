@@ -59,6 +59,7 @@ pub fn has_disable_comment(source: &str, stmt_line: u32, rule_id: &str) -> bool 
         return false;
     }
     source
+        .trim_start_matches('\u{FEFF}')
         .lines()
         .nth((stmt_line - 2) as usize)
         .map(|line| {
@@ -96,6 +97,7 @@ pub fn has_disable_line_comment(source: &str, stmt_line: u32, rule_id: &str) -> 
 /// - `// no-mistakes-disable-file <rule_id> <reason>`
 pub fn has_disable_file_comment(source: &str, rule_id: &str) -> bool {
     let mut in_block_comment = false;
+    let mut saw_hash_attribute = false;
 
     for line in source.trim_start_matches('\u{FEFF}').lines() {
         let mut rest = line.trim();
@@ -123,12 +125,17 @@ pub fn has_disable_file_comment(source: &str, rule_id: &str) -> bool {
                 continue;
             }
 
+            let comment_prefix_is_slash = rest.starts_with("//");
+            saw_hash_attribute |= hash_attribute_comment_line(rest);
             let Some(rest) = leading_comment_text(rest) else {
                 return false;
             };
             let Some(after_directive) = rest.strip_prefix("no-mistakes-disable-file ") else {
                 break;
             };
+            if saw_hash_attribute && comment_prefix_is_slash {
+                return false;
+            }
             let rule_part = after_directive.trim();
             if rule_part_matches(rule_part, rule_id) {
                 return true;
@@ -140,17 +147,24 @@ pub fn has_disable_file_comment(source: &str, rule_id: &str) -> bool {
     false
 }
 
+fn hash_attribute_comment_line(line: &str) -> bool {
+    line.starts_with("#![")
+        || line
+            .strip_prefix("#[")
+            .and_then(|rest| rest.chars().next())
+            .is_some_and(is_word_char)
+}
+
 fn line_comment_directive_matches(
     source: &str,
     stmt_line: u32,
     directive: &str,
     rule_id: &str,
 ) -> bool {
-    let mut in_block_comment = false;
-    for (index, line) in source.lines().enumerate() {
+    let mut state = LineCommentScanState::default();
+    for (index, line) in source.trim_start_matches('\u{FEFF}').lines().enumerate() {
         let line_number = (index + 1) as u32;
-        let (comment, next_in_block_comment) = line_comment_start(line, in_block_comment);
-        in_block_comment = next_in_block_comment;
+        let comment = line_comment_start(line, &mut state);
 
         if line_number != stmt_line {
             continue;

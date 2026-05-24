@@ -140,8 +140,38 @@ fn disable_line_detected_on_same_hash_comment_line() {
 }
 
 #[test]
+fn disable_line_detected_after_shell_length_expansion() {
+    let source = "echo ${#arr[@]} # no-mistakes-disable-line my-rule";
+    assert!(has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
+fn disable_line_detected_after_shell_operator_hash_comment() {
+    let source = "echo ok;# no-mistakes-disable-line my-rule";
+    assert!(has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
 fn disable_line_detected_on_same_sql_comment_line() {
     let source = "select 1 -- no-mistakes-disable-line my-rule";
+    assert!(has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
+fn disable_line_detected_on_compact_sql_comment_line() {
+    let source = "select 1-- no-mistakes-disable-line my-rule";
+    assert!(has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
+fn disable_line_detected_after_js_decrement() {
+    let source = "i--; // no-mistakes-disable-line my-rule";
+    assert!(has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
+fn disable_line_detected_after_private_field() {
+    let source = "this.#count++; // no-mistakes-disable-line my-rule";
     assert!(has_disable_line_comment(source, 1, "my-rule"));
 }
 
@@ -182,8 +212,44 @@ fn disable_line_allows_url_before_comment() {
 }
 
 #[test]
+fn disable_line_allows_unquoted_url_before_hash_comment() {
+    let source = "curl http://example.com # no-mistakes-disable-line my-rule";
+    assert!(has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
+fn disable_line_allows_unquoted_url_with_double_slash_path() {
+    let source = "curl http://example.com/a//b # no-mistakes-disable-line my-rule";
+    assert!(has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
+fn disable_line_detected_after_colon_context_comment() {
+    let source = "case 1: // no-mistakes-disable-line my-rule";
+    assert!(has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
 fn disable_line_detected_after_regex_literal() {
     let source = r"const re = /a\/\/b/; // no-mistakes-disable-line my-rule";
+    assert!(has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
+fn disable_line_detected_after_return_regex_literal() {
+    let source = r"return /a\/\/b/.test(x); // no-mistakes-disable-line my-rule";
+    assert!(has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
+fn disable_line_detected_after_arrow_regex_literal() {
+    let source = r"const f = () => /a\/\/b/.test(x); // no-mistakes-disable-line my-rule";
+    assert!(has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
+fn disable_line_detected_after_new_regex_literal() {
+    let source = r"const re = new /a\/\/b/; // no-mistakes-disable-line my-rule";
     assert!(has_disable_line_comment(source, 1, "my-rule"));
 }
 
