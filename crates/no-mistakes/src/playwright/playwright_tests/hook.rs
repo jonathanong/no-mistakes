@@ -8,10 +8,6 @@ pub(crate) enum HookKind {
     Teardown,
 }
 
-pub fn hook_callback_index(call: &CallExpression<'_>) -> Option<usize> {
-    hook_callback(call).map(|(index, _)| index)
-}
-
 pub(crate) fn hook_callback(call: &CallExpression<'_>) -> Option<(usize, HookKind)> {
     let path = ast::expression_path(&call.callee)?;
     if !matches!(path.first().map(String::as_str), Some("test")) {

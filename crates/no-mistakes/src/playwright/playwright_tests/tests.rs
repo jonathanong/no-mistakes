@@ -41,7 +41,7 @@ impl<'a> Visit<'a> for HookVisitor {
         if let Some(path) = crate::playwright::ast::expression_path(&call.callee) {
             if path.first().map(String::as_str) == Some("test") {
                 self.hooks
-                    .push((path.join("."), hook_callback_index(call).is_some()));
+                    .push((path.join("."), hook_callback(call).is_some()));
             }
         }
         walk::walk_call_expression(self, call);

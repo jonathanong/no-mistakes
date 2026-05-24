@@ -3,7 +3,6 @@ use oxc_ast::ast::{Argument, CallExpression, Expression};
 
 mod hook;
 mod occurrence;
-pub use hook::hook_callback_index;
 pub(crate) use hook::{hook_callback, HookKind};
 pub(crate) use occurrence::dedup_occurrences_by_identity;
 pub use occurrence::{TestOccurrence, TestOccurrenceScope};

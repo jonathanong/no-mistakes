@@ -255,7 +255,7 @@ fn extracts_text_locator_status_and_ignores_unsupported_shapes() {
     ]);
     let locators = extract_playwright_text_locator_occurrences(&source);
 
-    assert_eq!(locators.len(), 10);
+    assert_eq!(locators.len(), 11);
     assert!(locators.contains(&(
         "role".to_string(),
         "Save".to_string(),
@@ -298,6 +298,9 @@ fn extracts_text_locator_status_and_ignores_unsupported_shapes() {
     assert!(locators
         .iter()
         .any(|(_, text, _, _, _, _)| text == "New name"));
+    assert!(locators
+        .iter()
+        .any(|(_, text, _, _, _, _)| text == "Numeric property"));
     assert!(!locators
         .iter()
         .any(|(_, text, _, _, _, _)| text == "Old name"));

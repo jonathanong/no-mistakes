@@ -9,8 +9,8 @@ pub enum TestOccurrenceScope {
 }
 
 impl TestOccurrenceScope {
-    pub(crate) fn is_hook(self) -> bool {
-        matches!(self, Self::Hook | Self::TeardownHook)
+    pub(crate) fn is_runnable(self) -> bool {
+        matches!(self, Self::Hook | Self::Test)
     }
 }
 

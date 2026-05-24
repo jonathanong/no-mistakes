@@ -30,4 +30,14 @@ fn text_locators_preserve_hook_scope() {
             && occurrence.scope == playwright_tests::TestOccurrenceScope::Test
             && occurrence.test_name.as_deref() == Some("uses setup")
     }));
+    assert!(occurrences.iter().any(|occurrence| {
+        occurrence.value.text == "Teardown text"
+            && occurrence.scope == playwright_tests::TestOccurrenceScope::TeardownHook
+            && occurrence.test_name.is_none()
+    }));
+    assert!(occurrences.iter().any(|occurrence| {
+        occurrence.value.text == "Dynamic test text"
+            && occurrence.scope == playwright_tests::TestOccurrenceScope::Test
+            && occurrence.test_name.is_none()
+    }));
 }

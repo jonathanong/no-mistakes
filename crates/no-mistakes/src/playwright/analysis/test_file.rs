@@ -118,6 +118,11 @@ pub(crate) fn analyze_test_occurrences(
             if !context.test_policy.allows(playwright_selector.status) {
                 continue;
             }
+            if playwright_selector.scope
+                == crate::playwright::playwright_tests::TestOccurrenceScope::TeardownHook
+            {
+                continue;
+            }
 
             let test_name_arc = playwright_selector.test_name.map(std::sync::Arc::new);
             let describe_path_arc = std::sync::Arc::new(playwright_selector.describe_path);

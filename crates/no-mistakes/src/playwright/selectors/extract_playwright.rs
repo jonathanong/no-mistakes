@@ -85,10 +85,8 @@ impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightSelectorVisitor<'a, '_> {
                 let test_name = playwright_tests::test_callback_identity(call);
                 let previous_test_name = self.current_test_name.clone();
                 let previous_scope = self.current_scope;
-                if test_name.is_some() {
-                    self.current_test_name = test_name;
-                    self.current_scope = playwright_tests::TestOccurrenceScope::Test;
-                }
+                self.current_test_name = test_name;
+                self.current_scope = playwright_tests::TestOccurrenceScope::Test;
                 for (index, argument) in call.arguments.iter().enumerate() {
                     if index == callback_index {
                         self.with_status(callback_status, |visitor| {
@@ -113,9 +111,16 @@ impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightSelectorVisitor<'a, '_> {
                 }
                 return;
             }
-            if let Some(callback_index) = playwright_tests::hook_callback_index(call) {
+            if let Some((callback_index, hook_kind)) = playwright_tests::hook_callback(call) {
                 let previous_scope = self.current_scope;
-                self.current_scope = playwright_tests::TestOccurrenceScope::Hook;
+                self.current_scope = match hook_kind {
+                    playwright_tests::HookKind::Setup => {
+                        playwright_tests::TestOccurrenceScope::Hook
+                    }
+                    playwright_tests::HookKind::Teardown => {
+                        playwright_tests::TestOccurrenceScope::TeardownHook
+                    }
+                };
                 self.visit_argument(&call.arguments[callback_index]);
                 self.current_scope = previous_scope;
                 return;

@@ -429,18 +429,31 @@ fn analyze_test_occurrences_skips_non_test_route_inputs() {
             playwright_tests::TestOccurrenceScope::Test,
         ),
     ];
-    let playwright_selectors = vec![playwright_tests::TestOccurrence {
-        value: selectors::PlaywrightSelector::for_test(
+    let playwright_selector = || {
+        selectors::PlaywrightSelector::for_test(
             "data-testid",
             "save",
             selectors::SelectorMatcher::Exact("save".to_string()),
-        ),
-        status: playwright_tests::TestStatus::Skipped,
-        scope: playwright_tests::TestOccurrenceScope::Test,
-        test_name: None,
-        describe_path: Vec::new(),
-        line: 1,
-    }];
+        )
+    };
+    let playwright_selectors = vec![
+        playwright_tests::TestOccurrence {
+            value: playwright_selector(),
+            status: playwright_tests::TestStatus::Skipped,
+            scope: playwright_tests::TestOccurrenceScope::Test,
+            test_name: None,
+            describe_path: Vec::new(),
+            line: 1,
+        },
+        playwright_tests::TestOccurrence {
+            value: playwright_selector(),
+            status: playwright_tests::TestStatus::Active,
+            scope: playwright_tests::TestOccurrenceScope::TeardownHook,
+            test_name: None,
+            describe_path: Vec::new(),
+            line: 1,
+        },
+    ];
 
     let edges =
         analyze_test_occurrences(&test_file, &context, raw_urls, playwright_selectors, vec![]);

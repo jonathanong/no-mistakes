@@ -65,8 +65,8 @@ impl<'a> Visit<'a> for PlaywrightTextLocatorVisitor<'_> {
             }
             return;
         }
-        if let Some(callback_index) = playwright_tests::hook_callback_index(call) {
-            self.visit_hook_callback(call, callback_index);
+        if let Some((callback_index, hook_kind)) = playwright_tests::hook_callback(call) {
+            self.visit_hook_callback(call, callback_index, hook_kind);
             return;
         }
         oxc_ast_visit::walk::walk_call_expression(self, call);
@@ -120,18 +120,26 @@ impl PlaywrightTextLocatorVisitor<'_> {
         let test_name = playwright_tests::test_callback_identity(call);
         let previous_test_name = self.current_test_name.clone();
         let previous_scope = self.current_scope;
-        if test_name.is_some() {
-            self.current_test_name = test_name;
-            self.current_scope = playwright_tests::TestOccurrenceScope::Test;
-        }
+        self.current_test_name = test_name;
+        self.current_scope = playwright_tests::TestOccurrenceScope::Test;
         self.visit_callback_arguments(call, callback_index, callback_status);
         self.current_test_name = previous_test_name;
         self.current_scope = previous_scope;
     }
 
-    fn visit_hook_callback(&mut self, call: &CallExpression<'_>, callback_index: usize) {
+    fn visit_hook_callback(
+        &mut self,
+        call: &CallExpression<'_>,
+        callback_index: usize,
+        hook_kind: playwright_tests::HookKind,
+    ) {
         let previous_scope = self.current_scope;
-        self.current_scope = playwright_tests::TestOccurrenceScope::Hook;
+        self.current_scope = match hook_kind {
+            playwright_tests::HookKind::Setup => playwright_tests::TestOccurrenceScope::Hook,
+            playwright_tests::HookKind::Teardown => {
+                playwright_tests::TestOccurrenceScope::TeardownHook
+            }
+        };
         self.visit_argument(&call.arguments[callback_index]);
         self.current_scope = previous_scope;
     }

@@ -1,12 +1,14 @@
 use std::sync::Arc;
 
+use crate::playwright::playwright_tests::TestOccurrenceScope;
+
 pub(super) fn route_signal_matches_test(
     route_test_name: &Option<Arc<String>>,
     route_describe_path: &Arc<Vec<String>>,
     route_is_hook: bool,
     test_name: &Option<Arc<String>>,
     describe_path: &Arc<Vec<String>>,
-    locator_is_hook: bool,
+    locator_scope: TestOccurrenceScope,
 ) -> bool {
     let exact_test_scope = route_test_name.is_some()
         && route_test_name == test_name
@@ -14,10 +16,11 @@ pub(super) fn route_signal_matches_test(
     let unnamed_test_scope = route_test_name.is_none()
         && test_name.is_none()
         && !route_is_hook
-        && !locator_is_hook
+        && locator_scope == TestOccurrenceScope::Test
         && route_describe_path == describe_path;
     let hook_scope = route_test_name.is_none()
         && route_is_hook
+        && locator_scope.is_runnable()
         && describe_path_starts_with(describe_path, route_describe_path);
     exact_test_scope || unnamed_test_scope || hook_scope
 }

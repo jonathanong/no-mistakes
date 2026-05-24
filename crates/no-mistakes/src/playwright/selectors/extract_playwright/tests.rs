@@ -43,4 +43,14 @@ fn selector_occurrences_preserve_file_test_and_hook_scope() {
             && occurrence.scope == playwright_tests::TestOccurrenceScope::Test
             && occurrence.test_name.as_deref() == Some("active")
     }));
+    assert!(occurrences.iter().any(|occurrence| {
+        occurrence.value.selector == "getByTestId(teardown)"
+            && occurrence.scope == playwright_tests::TestOccurrenceScope::TeardownHook
+            && occurrence.test_name.is_none()
+    }));
+    assert!(occurrences.iter().any(|occurrence| {
+        occurrence.value.selector == "getByTestId(dynamic-test)"
+            && occurrence.scope == playwright_tests::TestOccurrenceScope::Test
+            && occurrence.test_name.is_none()
+    }));
 }

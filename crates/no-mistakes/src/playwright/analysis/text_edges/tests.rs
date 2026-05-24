@@ -2,6 +2,7 @@ use super::*;
 use crate::playwright::analysis::context::{RouteIndex, SelectorIndex, TestAnalysisContext};
 use crate::playwright::analysis::text_types::AppTextKind;
 use crate::playwright::analysis::types::SelectorRef;
+use crate::playwright::playwright_tests::TestOccurrenceScope;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
@@ -33,7 +34,7 @@ fn route_signal_matches_exact_test_scope() {
         false,
         &test_name,
         &describe_path,
-        false,
+        TestOccurrenceScope::Test,
     ));
 }
 
@@ -50,7 +51,7 @@ fn route_signal_fallback_requires_hook_scope() {
         false,
         &test_name,
         &describe_path,
-        false,
+        TestOccurrenceScope::Test,
     ));
     assert!(route_signal_matches_test(
         &route_test_name,
@@ -58,7 +59,7 @@ fn route_signal_fallback_requires_hook_scope() {
         true,
         &test_name,
         &describe_path,
-        false,
+        TestOccurrenceScope::Test,
     ));
 }
 
@@ -69,13 +70,21 @@ fn route_signal_matches_unnamed_file_scope_pairs() {
     let test_name = None;
     let describe_path = Arc::new(vec![]);
 
+    assert!(!route_signal_matches_test(
+        &route_test_name,
+        &route_describe_path,
+        false,
+        &test_name,
+        &describe_path,
+        TestOccurrenceScope::File,
+    ));
     assert!(route_signal_matches_test(
         &route_test_name,
         &route_describe_path,
         false,
         &test_name,
         &describe_path,
-        false,
+        TestOccurrenceScope::Test,
     ));
 }
 
@@ -92,7 +101,7 @@ fn route_signal_matches_unnamed_describe_scope_pairs() {
         false,
         &test_name,
         &describe_path,
-        false,
+        TestOccurrenceScope::Test,
     ));
 }
 
@@ -109,7 +118,7 @@ fn hook_route_signal_matches_hook_locator_without_test_name() {
         true,
         &test_name,
         &describe_path,
-        true,
+        TestOccurrenceScope::Hook,
     ));
 }
 
@@ -126,7 +135,15 @@ fn hook_route_signal_matches_unnamed_test_callbacks() {
         true,
         &test_name,
         &describe_path,
-        false,
+        TestOccurrenceScope::Test,
+    ));
+    assert!(!route_signal_matches_test(
+        &route_test_name,
+        &route_describe_path,
+        true,
+        &test_name,
+        &describe_path,
+        TestOccurrenceScope::File,
     ));
 }
 
@@ -255,7 +272,7 @@ fn hook_route_signal_ignores_declaration_line_order() {
     let scope = LocatorTestScope {
         test_name: &locator_test_name,
         describe_path: &locator_describe_path,
-        is_hook: false,
+        scope: TestOccurrenceScope::Test,
     };
     let hook_route = |line| Edge::Route {
         test_file: test_file.clone(),
@@ -284,6 +301,76 @@ fn hook_route_signal_ignores_declaration_line_order() {
         &app_text,
         &context,
     ));
+}
+
+#[test]
+fn teardown_text_locators_do_not_create_text_edges() {
+    let test_file = Arc::new("tests/app.spec.ts".to_string());
+    let app_file = Arc::new("web/app/page.tsx".to_string());
+    let app_text = AppTextTarget {
+        file: "web/app/page.tsx".into(),
+        app_file: app_file.clone(),
+        kind: AppTextKind::VisibleText,
+        role: None,
+        text: "Cleanup text".to_string(),
+        hidden: false,
+        selector_refs: vec![SelectorRef {
+            attribute: "data-pw".to_string(),
+            value: "cleanup".to_string(),
+        }],
+    };
+    let route_index = RouteIndex::default();
+    let selector_index = SelectorIndex::default();
+    let reachable = BTreeMap::new();
+    let selector_regexes =
+        crate::playwright::selectors::compile_selector_regexes(&[], &Default::default());
+    let context = TestAnalysisContext {
+        root: Path::new("/repo"),
+        route_index: &route_index,
+        app_selector_targets: &[],
+        selector_index: &selector_index,
+        app_text_targets: std::slice::from_ref(&app_text),
+        route_reachable_files: &reachable,
+        navigation_helpers: &[],
+        selector_regexes: &selector_regexes,
+        test_policy: crate::playwright::playwright_tests::TestPolicy::default(),
+    };
+    let mut edges = vec![Edge::Selector {
+        test_file: test_file.clone(),
+        test_name: None,
+        describe_path: Arc::new(vec![]),
+        app_file,
+        attribute: "data-pw".to_string(),
+        value: "cleanup".to_string(),
+        selector: "[data-pw=\"cleanup\"]".to_string(),
+        line: 1,
+    }];
+    let locator = crate::playwright::analysis::text_types::PlaywrightTextLocator {
+        kind: crate::playwright::analysis::text_types::LocatorKind::Text,
+        role: None,
+        text: "Cleanup text".to_string(),
+        locator: "getByText(Cleanup text)".to_string(),
+        exact: true,
+        include_hidden: false,
+    };
+
+    append_locator_text_edges(
+        &mut edges,
+        &test_file,
+        &context,
+        vec![crate::playwright::playwright_tests::TestOccurrence {
+            value: locator,
+            status: crate::playwright::playwright_tests::TestStatus::Active,
+            scope: TestOccurrenceScope::TeardownHook,
+            test_name: None,
+            describe_path: Vec::new(),
+            line: 2,
+        }],
+    );
+
+    assert!(!edges
+        .iter()
+        .any(|edge| matches!(edge, Edge::LocatorText { .. })));
 }
 
 #[test]

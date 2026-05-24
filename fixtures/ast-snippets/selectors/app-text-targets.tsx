@@ -21,6 +21,8 @@ export function Example(props: { label: string }) {
       <input id="named-email" data-pw="named-email-input" />
       <label htmlFor="subscribe-checkbox">Subscribe label</label>
       <input id="subscribe-checkbox" data-pw="subscribe-checkbox" type="checkbox" />
+      <label>Wrapped email <span><input data-pw="wrapped-email-input" /></span></label>
+      <label><><input data-pw="fragment-email-input" /></>Fragment email</label>
       <span id="plan-label">Plan label</span>
       <input id="plan-input" data-pw="plan-input" aria-labelledby="plan-label" />
       <span id="button-label-no-id">No id label</span>

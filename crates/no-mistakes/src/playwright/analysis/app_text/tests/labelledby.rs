@@ -28,6 +28,22 @@ fn labelledby_targets_do_not_require_target_ids() {
                 .iter()
                 .any(|selector| selector.value == "labelled-no-id")
     }));
+    assert!(targets.iter().any(|target| {
+        target.kind == AppTextKind::Label
+            && target.text == "Wrapped email"
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "wrapped-email-input")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.kind == AppTextKind::Label
+            && target.text == "Fragment email"
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "fragment-email-input")
+    }));
 }
 
 #[test]

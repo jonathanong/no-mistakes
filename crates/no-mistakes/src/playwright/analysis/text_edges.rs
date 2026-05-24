@@ -1,7 +1,7 @@
 use crate::playwright::analysis::context::TestAnalysisContext;
 use crate::playwright::analysis::text_types::{AppTextTarget, PlaywrightTextLocator};
 use crate::playwright::analysis::types::Edge;
-use crate::playwright::playwright_tests::TestOccurrence;
+use crate::playwright::playwright_tests::{TestOccurrence, TestOccurrenceScope};
 use rayon::prelude::*;
 use std::sync::Arc;
 
@@ -17,7 +17,7 @@ mod tests;
 struct LocatorTestScope<'a> {
     test_name: &'a Option<Arc<String>>,
     describe_path: &'a Arc<Vec<String>>,
-    is_hook: bool,
+    scope: TestOccurrenceScope,
 }
 
 pub(crate) fn append_locator_text_edges(
@@ -34,12 +34,15 @@ pub(crate) fn append_locator_text_edges(
             if !context.test_policy.allows(text_locator.status) {
                 return Vec::new();
             }
+            if text_locator.scope == TestOccurrenceScope::TeardownHook {
+                return Vec::new();
+            }
             let test_name = text_locator.test_name.map(Arc::new);
             let describe_path = Arc::new(text_locator.describe_path);
             let locator_scope = LocatorTestScope {
                 test_name: &test_name,
                 describe_path: &describe_path,
-                is_hook: text_locator.scope.is_hook(),
+                scope: text_locator.scope,
             };
             let text_match = TextMatch::new(&text_locator.value.text, text_locator.value.exact);
             app_text_index
@@ -140,7 +143,7 @@ fn has_reachable_route_signal(
                 *route_is_hook,
                 locator_scope.test_name,
                 locator_scope.describe_path,
-                locator_scope.is_hook,
+                locator_scope.scope,
             )
             || (!*route_is_hook && *route_line > line)
         {
