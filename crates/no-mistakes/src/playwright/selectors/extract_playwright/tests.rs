@@ -1,31 +1,31 @@
 use super::*;
 use crate::playwright::ast;
-use std::path::Path;
 
 #[test]
 fn selector_occurrences_preserve_file_test_and_hook_scope() {
-    let source = r#"
-        await page.getByTestId("file-scope");
-        test.beforeEach(async ({ page }) => {
-            await page.getByTestId("setup");
-        });
-        test("active", async ({ page }) => {
-            await page.getByTestId("inside-test");
-        });
-    "#;
+    let source = crate::playwright::test_support::fixture_source(&[
+        "ast-snippets",
+        "selectors",
+        "extract-playwright",
+        "scope.ts",
+    ]);
     let regexes = crate::playwright::selectors::compile_selector_regexes(
         &["data-testid".to_string()],
         &Default::default(),
     );
 
-    let occurrences = ast::with_program(Path::new("fixture.ts"), source, |program, source| {
-        extract_playwright_selector_occurrences_from_program(
-            program,
-            source,
-            &regexes,
-            &["data-testid".to_string()],
-        )
-    })
+    let occurrences = ast::with_program(
+        std::path::Path::new("scope.ts"),
+        &source,
+        |program, source| {
+            extract_playwright_selector_occurrences_from_program(
+                program,
+                source,
+                &regexes,
+                &["data-testid".to_string()],
+            )
+        },
+    )
     .expect("fixture should parse");
 
     assert!(occurrences.iter().any(|occurrence| {

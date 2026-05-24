@@ -115,7 +115,12 @@ impl AppTextVisitor<'_> {
                     let tag = jsx_element_name(&element.opening_element.name);
                     let hidden =
                         inherited_hidden || self.element_is_hidden(&element.opening_element);
-                    if is_labelable(tag) {
+                    if is_labelable(
+                        &element.opening_element,
+                        tag,
+                        self.source,
+                        self.scoped_static_identifier_defaults,
+                    ) {
                         return Some(ControlTextTarget {
                             role: element_role(
                                 &element.opening_element,

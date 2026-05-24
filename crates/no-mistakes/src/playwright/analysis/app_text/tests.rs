@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 
 mod html_ids;
 mod labelledby;
+mod semantics;
 
 fn settings() -> Settings {
     Settings {
@@ -490,9 +491,6 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
     assert!(!targets
         .iter()
         .any(|target| target.text == "Null link" && target.role.as_deref() == Some("link")));
-    assert!(!targets
-        .iter()
-        .any(|target| target.text == "Zero link" && target.role.as_deref() == Some("link")));
 }
 
 #[test]

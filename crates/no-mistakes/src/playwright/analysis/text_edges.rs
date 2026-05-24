@@ -140,7 +140,7 @@ fn has_reachable_route_signal(
                 locator_scope.describe_path,
                 locator_scope.is_hook,
             )
-            || *route_line > line
+            || (!*route_is_hook && *route_line > line)
         {
             return false;
         }
@@ -159,6 +159,9 @@ fn has_adjacent_selector_signal(
     line: u32,
     app_text: &AppTextTarget,
 ) -> bool {
+    if test_name.is_none() && describe_path.is_empty() {
+        return false;
+    }
     edges.iter().any(|edge| {
         let Edge::Selector {
             test_file,

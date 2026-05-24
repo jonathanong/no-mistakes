@@ -16,7 +16,18 @@ pub(super) struct PendingLabel {
     pub(super) target_control: Option<ControlTextTarget>,
 }
 
-pub(super) fn is_labelable(tag: Option<&str>) -> bool {
+pub(super) fn is_labelable(
+    opening: &oxc_ast::ast::JSXOpeningElement<'_>,
+    tag: Option<&str>,
+    source: &str,
+    scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
+) -> bool {
+    if tag == Some("input")
+        && input_type(opening, source, scoped_static_identifier_defaults)
+            .eq_ignore_ascii_case("hidden")
+    {
+        return false;
+    }
     matches!(
         tag,
         Some("button" | "input" | "meter" | "output" | "progress" | "select" | "textarea")
@@ -28,10 +39,17 @@ pub(super) fn input_type_uses_value_text(
     source: &str,
     scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
 ) -> bool {
-    let input_type =
-        super::jsx::string_attr(opening, "type", source, scoped_static_identifier_defaults)
-            .unwrap_or_else(|| "text".to_string());
+    let input_type = input_type(opening, source, scoped_static_identifier_defaults);
     ["button", "reset", "submit"]
         .iter()
         .any(|candidate| input_type.eq_ignore_ascii_case(candidate))
+}
+
+pub(super) fn input_type(
+    opening: &oxc_ast::ast::JSXOpeningElement<'_>,
+    source: &str,
+    scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
+) -> String {
+    super::jsx::string_attr(opening, "type", source, scoped_static_identifier_defaults)
+        .unwrap_or_else(|| "text".to_string())
 }

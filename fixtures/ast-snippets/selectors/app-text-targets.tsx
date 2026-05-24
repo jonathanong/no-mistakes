@@ -71,6 +71,7 @@ export function Example(props: { label: string }) {
       <div data-pw="insertion-role" role="insertion">Inserted text</div>
       <button data-pw="aria-label-precedence" aria-label="Close">Visible close text</button>
       <button data-pw="title-only-button" title="Only title" />
+      <button data-pw="button-alt" alt="Ignored alt" />
       <div data-pw="aria-label-div" role="button" aria-label="Div action" />
       <span id="action-first">First</span>
       <span id="action-second">Second</span>
@@ -82,12 +83,15 @@ export function Example(props: { label: string }) {
       <a data-pw="dynamic-link-target" href={props.label}>Dynamic docs</a>
       <h2 data-pw="heading-target">Heading</h2>
       <img data-pw="image-target" alt="Hero image" />
+      <input data-pw="image-input" type="image" alt="Image submit" />
       <input data-pw="checkbox-target" type="checkbox" aria-label="Subscribe" />
       <input data-pw="radio-target" type="radio" aria-label="Pick one" />
       <input data-pw="range-target" type="range" aria-label="Volume" />
       <input data-pw="searchbox-target" type="search" aria-label="Search site" />
       <input data-pw="number-target" type="number" aria-label="Count" />
       <input data-pw="hidden-target" type="hidden" aria-label="Hidden token" />
+      <label htmlFor="hidden-labelled-input">Hidden label</label>
+      <input id="hidden-labelled-input" data-pw="hidden-labelled-input" type="hidden" />
       <input data-pw="password-target" type="password" aria-label="Secret" />
       <select data-pw="select-target" aria-label="Country" />
       <select data-pw="listbox-target" multiple aria-label="Tags" />

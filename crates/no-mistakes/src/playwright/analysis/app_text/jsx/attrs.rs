@@ -8,7 +8,7 @@ pub(crate) fn attr_exists_at_runtime(
         None => true,
         Some(oxc_ast::ast::JSXAttributeValue::StringLiteral(_)) => true,
         Some(oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container)) => {
-            jsx_expression_truthy(&container.expression)
+            jsx_expression_attribute_present(&container.expression)
         }
         _ => false,
     })
@@ -110,11 +110,9 @@ fn bool_expr(expression: &oxc_ast::ast::JSXExpression<'_>) -> Option<bool> {
     }
 }
 
-fn jsx_expression_truthy(expression: &oxc_ast::ast::JSXExpression<'_>) -> bool {
+fn jsx_expression_attribute_present(expression: &oxc_ast::ast::JSXExpression<'_>) -> bool {
     match expression {
         oxc_ast::ast::JSXExpression::NullLiteral(_) => false,
-        oxc_ast::ast::JSXExpression::BooleanLiteral(literal) => literal.value,
-        oxc_ast::ast::JSXExpression::NumericLiteral(literal) => literal.value != 0.0,
         oxc_ast::ast::JSXExpression::Identifier(identifier) => {
             identifier.name.as_str() != "undefined"
         }

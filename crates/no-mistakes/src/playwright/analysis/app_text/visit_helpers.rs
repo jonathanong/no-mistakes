@@ -34,7 +34,12 @@ impl AppTextVisitor<'_> {
         role: Option<String>,
         refs: &[SelectorRef],
     ) {
-        let labelable = is_labelable(tag);
+        let labelable = is_labelable(
+            opening,
+            tag,
+            self.source,
+            self.scoped_static_identifier_defaults,
+        );
         if !labelable && role.is_none() {
             return;
         }
@@ -149,7 +154,12 @@ impl AppTextVisitor<'_> {
         let target_control = target_control_id.is_none().then(|| ControlTextTarget {
             role,
             hidden: self.hidden_depth > 0,
-            labelable: is_labelable(tag),
+            labelable: is_labelable(
+                opening,
+                tag,
+                self.source,
+                self.scoped_static_identifier_defaults,
+            ),
             selector_refs: refs.to_vec(),
         });
         self.pending_labels.push(PendingLabel {
@@ -180,6 +190,12 @@ impl AppTextVisitor<'_> {
             .string_attr(opening, "value")
             .and_then(|value| normalize_locator_text(&value))
         {
+            self.push(
+                AppTextKind::AccessibleName,
+                role.clone(),
+                text.clone(),
+                refs,
+            );
             self.push(AppTextKind::VisibleText, role, text, refs);
         }
     }

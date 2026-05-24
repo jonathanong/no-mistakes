@@ -1,4 +1,5 @@
 use super::*;
+use crate::playwright::analysis::app_text::controls::input_type;
 
 impl AppTextVisitor<'_> {
     pub(super) fn collect_accessible_attr_targets(
@@ -26,12 +27,24 @@ impl AppTextVisitor<'_> {
                 text.clone(),
                 refs,
             );
-            if is_labelable(tag) {
+            if is_labelable(
+                opening,
+                tag,
+                self.source,
+                self.scoped_static_identifier_defaults,
+            ) {
                 self.push(AppTextKind::Label, role.clone(), text, refs);
             }
             return;
         }
-        if let Some(text) = alt {
+        if let Some(text) = alt.filter(|_| {
+            alt_supports_accessible_name(
+                opening,
+                tag,
+                self.source,
+                self.scoped_static_identifier_defaults,
+            )
+        }) {
             self.push(AppTextKind::AccessibleName, role.clone(), text, refs);
         } else if !visible_name_exists {
             if let Some(text) = title {
@@ -57,4 +70,16 @@ impl AppTextVisitor<'_> {
             self.push(AppTextKind::Placeholder, role, text, refs);
         }
     }
+}
+
+fn alt_supports_accessible_name(
+    opening: &oxc_ast::ast::JSXOpeningElement<'_>,
+    tag: Option<&str>,
+    source: &str,
+    scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
+) -> bool {
+    matches!(tag, Some("img" | "area"))
+        || (tag == Some("input")
+            && input_type(opening, source, scoped_static_identifier_defaults)
+                .eq_ignore_ascii_case("image"))
 }

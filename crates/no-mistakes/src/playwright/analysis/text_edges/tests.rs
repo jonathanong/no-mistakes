@@ -146,7 +146,46 @@ fn adjacent_selector_signal_only_uses_preceding_selectors() {
 }
 
 #[test]
-fn hook_route_signal_must_precede_locator_line() {
+fn adjacent_selector_signal_rejects_file_scope_pairs() {
+    let test_file = Arc::new("tests/app.spec.ts".to_string());
+    let test_name = None;
+    let describe_path = Arc::new(vec![]);
+    let app_file = Arc::new("web/app/page.tsx".to_string());
+    let app_text = AppTextTarget {
+        file: "web/app/page.tsx".into(),
+        app_file: app_file.clone(),
+        kind: AppTextKind::AccessibleName,
+        role: Some("button".to_string()),
+        text: "Save".to_string(),
+        hidden: false,
+        selector_refs: vec![SelectorRef {
+            attribute: "data-pw".to_string(),
+            value: "save-button".to_string(),
+        }],
+    };
+    let selector = Edge::Selector {
+        test_file: test_file.clone(),
+        test_name: None,
+        describe_path: describe_path.clone(),
+        app_file,
+        attribute: "data-pw".to_string(),
+        value: "save-button".to_string(),
+        selector: "[data-pw=\"save-button\"]".to_string(),
+        line: 10,
+    };
+
+    assert!(!has_adjacent_selector_signal(
+        &[selector],
+        &test_file,
+        &test_name,
+        &describe_path,
+        15,
+        &app_text,
+    ));
+}
+
+#[test]
+fn hook_route_signal_ignores_declaration_line_order() {
     let test_file = Arc::new("tests/app.spec.ts".to_string());
     let route_file = Arc::new("web/app/page.tsx".to_string());
     let app_file = Arc::new("web/app/page.tsx".to_string());
@@ -205,7 +244,7 @@ fn hook_route_signal_must_precede_locator_line() {
         &app_text,
         &context,
     ));
-    assert!(!has_reachable_route_signal(
+    assert!(has_reachable_route_signal(
         &[hook_route(16)],
         &test_file,
         &scope,
