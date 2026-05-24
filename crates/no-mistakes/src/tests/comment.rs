@@ -23,6 +23,8 @@ pub(crate) fn run(args: CommentArgs) -> Result<ExitCode> {
     Ok(ExitCode::SUCCESS)
 }
 
+const _: fn(CommentArgs) -> Result<ExitCode> = run;
+
 fn escape_md_table_cell(s: &str) -> String {
     s.replace('|', "\\|").replace('\n', "<br>")
 }

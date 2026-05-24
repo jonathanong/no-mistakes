@@ -1,0 +1,19 @@
+{
+  "selected_tests": [
+    {
+      "test_file": "source.test.mts",
+      "confidence": "high",
+      "reasons": [
+        {
+          "changed_file": "source.ts",
+          "path": ["source.ts", "source.test.mts"],
+          "via": ["test dependency"]
+        }
+      ]
+    }
+  ],
+  "groups": [],
+  "warnings": [],
+  "fallback_triggered": false,
+  "fallback_reason": null
+}

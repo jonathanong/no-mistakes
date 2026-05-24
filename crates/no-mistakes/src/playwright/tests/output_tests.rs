@@ -6,7 +6,24 @@ use crate::playwright::analysis::types::{
     CoverageFetch, CoverageReport, CoverageRoute, CoverageSelector, DuplicateSelector, Edge,
     EdgeReport, Summary, TestEntry, TestsReport,
 };
+use crate::playwright::test_support::fixture_path;
+use crate::playwright::{report_json, PlaywrightReportKind, PlaywrightReportOptions};
 use std::path::PathBuf;
+
+fn report_options(root: PathBuf) -> PlaywrightReportOptions {
+    PlaywrightReportOptions {
+        root,
+        config: None,
+        playwright_config: Vec::new(),
+        project: None,
+        files: Vec::new(),
+        assert_conditional_tests: false,
+        allow_skipped_tests: false,
+        assert_unique_test_ids: false,
+        assert_unique_html_ids: false,
+        assert_unique_selectors: false,
+    }
+}
 
 #[test]
 fn text_printers_cover_routes_and_selectors() {
@@ -340,4 +357,57 @@ fn build_tests_report_with_absolute_file_path_filter() {
     let report = build_tests_report(&edges, &[abs_filter], root);
     assert_eq!(report.tests.len(), 1);
     assert_eq!(report.tests[0].name.as_deref(), Some("visits home"));
+}
+
+#[test]
+fn report_json_surfaces_project_selection_errors() {
+    let root = fixture_path(&["nextjs-coverage", "covered"]);
+    let error = report_json(
+        PlaywrightReportKind::Check,
+        PlaywrightReportOptions {
+            project: Some("missing-project".to_string()),
+            ..report_options(root)
+        },
+    )
+    .unwrap_err();
+
+    assert!(error.to_string().contains("missing-project"));
+}
+
+#[test]
+fn report_json_related_requires_files_before_settings() {
+    let root = fixture_path(&["nextjs-coverage", "covered"]);
+    let error = report_json(
+        PlaywrightReportKind::Related,
+        PlaywrightReportOptions {
+            project: Some("missing-project".to_string()),
+            ..report_options(root)
+        },
+    )
+    .unwrap_err();
+
+    assert_eq!(error.to_string(), "files must contain at least one file");
+}
+
+#[test]
+fn report_json_accepts_project_selection_before_analysis() {
+    let root = fixture_path(&["integration-tests", "basic"]);
+    let error = report_json(
+        PlaywrightReportKind::Check,
+        PlaywrightReportOptions {
+            project: Some("pw-unit".to_string()),
+            ..report_options(root)
+        },
+    )
+    .unwrap_err();
+
+    assert!(error.to_string().contains("no Next.js page routes found"));
+}
+
+#[test]
+fn report_json_surfaces_analysis_errors() {
+    let root = fixture_path(&["ast-snippets", "main", "invalid-test-source"]);
+    let error = report_json(PlaywrightReportKind::Check, report_options(root)).unwrap_err();
+
+    assert!(error.to_string().contains("no Next.js page routes found"));
 }

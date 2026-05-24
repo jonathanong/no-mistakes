@@ -233,3 +233,5 @@ pub(crate) fn run(args: TestsArgs) -> Result<ExitCode> {
         TestsCommand::Graph(sub_args) => graph::run(sub_args),
     }
 }
+
+const _: fn(TestsArgs) -> Result<ExitCode> = run;

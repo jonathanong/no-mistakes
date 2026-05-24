@@ -13,6 +13,14 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 #[test]
+fn empty_results_records_cli_side_channels() {
+    let results = results::empty_results([Some("warning".to_string())]);
+    assert!(!results.warnings.is_empty());
+    assert!(!results.timings.is_empty());
+    assert!(!results.has_findings());
+}
+
+#[test]
 fn run_all_keeps_filesystem_files_when_fact_collection_is_needed() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check-runner/facts-and-filesystem");

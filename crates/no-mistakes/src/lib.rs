@@ -1,8 +1,15 @@
+extern crate self as no_mistakes;
+
 pub mod ast;
+mod check_discovery;
+mod check_parallel;
+mod check_runner;
+mod check_tasks;
 pub mod cli;
 pub mod codebase;
 pub mod config;
 pub mod fetch;
+mod fetches;
 pub mod import_shape;
 pub mod imports;
 pub mod integration_tests;
@@ -12,3 +19,4 @@ pub mod queue;
 pub mod react_traits;
 pub mod routes;
 pub mod server_routes;
+mod tests;

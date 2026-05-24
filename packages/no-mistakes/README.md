@@ -17,7 +17,11 @@ Programmatic Node usage loads the same Rust analysis through N-API:
 const {
   dependencies,
   dependents,
+  check,
+  fetches,
+  playwrightRelated,
   symbols,
+  testsPlan,
   queueEdges,
   queueRelated,
   queueCheck,
@@ -43,6 +47,19 @@ const {
     root: process.cwd(),
     files: ["src/utils.mts"],
     include: "both",
+  });
+  const plan = await testsPlan({
+    root: process.cwd(),
+    framework: "vitest",
+    changedFiles: ["src/utils.mts"],
+  });
+  const projectCheck = await check({
+    root: process.cwd(),
+    tsconfig: "tsconfig.json",
+  });
+  const coveredByPlaywright = await playwrightRelated({
+    root: process.cwd(),
+    files: ["web/app/users/page.tsx"],
   });
 
   const queueHops = await queueRelated({

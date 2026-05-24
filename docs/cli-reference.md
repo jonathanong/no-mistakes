@@ -5,6 +5,13 @@ All commands are local and deterministic. Use `--format json` for tooling,
 agent needs to explain cost. `--json` is a shorthand for JSON on commands that
 support it.
 
+The npm package also exposes async N-API wrappers for the structured command
+surfaces: `dependencies`, `dependents`, `related`, `symbols`, `fetches`,
+`check`, `testsPlan`, `testsWhy`, `testsComment`, `testsGraph`,
+`testsGraphMermaid`, `playwrightCheck`, `playwrightEdges`,
+`playwrightRelated`, `playwrightTests`, queue helpers, server-route helpers,
+React helpers, and `version`.
+
 ## `no-mistakes`
 
 Unified entry point for codebase graph and check commands.
@@ -319,6 +326,23 @@ no-mistakes playwright related 'web/app/users/[id]/page.tsx'
 no-mistakes playwright edges --json
 no-mistakes playwright tests tests/e2e/users.spec.ts --json
 ```
+
+In Node.js, use the dedicated async wrapper for Playwright's analyzer-specific
+related report:
+
+```js
+const { playwrightRelated } = require("no-mistakes");
+
+(async () => {
+  const report = await playwrightRelated({
+    root: process.cwd(),
+    files: ["web/app/users/[id]/page.tsx"],
+  });
+})();
+```
+
+`related({ tests: ["playwright"] })` remains the generic dependency-graph test
+filter; it is not a substitute for `no-mistakes playwright related`.
 
 Supported analyzer config files: `.no-mistakes.yaml`, `.no-mistakes.yml`,
 `.no-mistakes.json`, `.no-mistakes.jsonc`, and legacy

@@ -147,6 +147,138 @@ fn symbols_json_returns_structured_results() {
 }
 
 #[test]
+fn fetches_json_returns_structured_report() {
+    let options = json!({ "root": fixture("nextjs-fetches", "next-app") }).to_string();
+    let output = fetches_json_impl(options).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert!(value["summary"]["totalRoutes"].as_u64().unwrap() > 0);
+    assert!(value["routes"].as_array().unwrap().iter().any(|route| {
+        route["apiCalls"]
+            .as_array()
+            .is_some_and(|calls| !calls.is_empty())
+    }));
+}
+
+#[test]
+fn check_json_returns_global_check_report() {
+    let options = json!({
+        "root": fixture_root("unique-exports-basic"),
+        "config": ".no-mistakes.yml",
+        "tsconfig": "tsconfig.json"
+    })
+    .to_string();
+    let output = check_json_impl(options).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert!(value["codebase"].as_array().unwrap().iter().any(|finding| {
+        finding["rule"] == "unique-exports" && finding["exportName"] == "shared"
+    }));
+}
+
+#[test]
+fn tests_plan_why_comment_and_graph_exports_return_reports() {
+    let root = fixture_root("test-plan-config");
+    let plan_options = json!({
+        "framework": "vitest",
+        "root": root,
+        "changedFiles": ["source.ts"],
+        "limitFiles": 1
+    })
+    .to_string();
+    let output = tests_plan_json_impl(plan_options).unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(plan["fallback_triggered"], false);
+    assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
+
+    let legacy_plan_options = json!({
+        "root": root,
+        "changedFiles": ["source.ts"],
+    })
+    .to_string();
+    let legacy_output = tests_plan_json_impl(legacy_plan_options).unwrap();
+    let legacy_plan: serde_json::Value = serde_json::from_str(&legacy_output).unwrap();
+
+    assert_eq!(legacy_plan["fallback_triggered"], false);
+    assert!(legacy_plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|test| test["test_file"] == "source.test.mts"));
+
+    let comment = tests_comment_markdown_impl(json!({ "planJson": plan }).to_string()).unwrap();
+    assert!(comment.contains("Selected Tests"));
+
+    let plan_path = PathBuf::from(&root).join("plan.json");
+    let path_comment =
+        tests_comment_markdown_impl(json!({ "plan": plan_path.display().to_string() }).to_string())
+            .unwrap();
+    assert!(path_comment.contains("source.test.mts"));
+
+    let graph = tests_graph_json_impl(json!({ "planJson": output }).to_string()).unwrap();
+    let graph: serde_json::Value = serde_json::from_str(&graph).unwrap();
+    assert!(!graph["nodes"].as_array().unwrap().is_empty());
+
+    let mermaid = tests_graph_mermaid_impl(
+        json!({ "planJson": serde_json::from_str::<serde_json::Value>(&output).unwrap() })
+            .to_string(),
+    )
+    .unwrap();
+    assert!(mermaid.starts_with("graph TD"));
+
+    let why_options = json!({
+        "root": fixture_root("test-plan-config"),
+        "test": "source.test.mts",
+        "changed": "source.ts"
+    })
+    .to_string();
+    let why = tests_why_json_impl(why_options).unwrap();
+    let why: serde_json::Value = serde_json::from_str(&why).unwrap();
+    assert!(!why["source.ts"].as_array().unwrap().is_empty());
+}
+
+#[test]
+fn playwright_json_exports_return_analyzer_reports() {
+    let root = fixture("nextjs-coverage", "covered");
+    let check = playwright_check_json_impl(json!({ "root": root }).to_string()).unwrap();
+    let check: serde_json::Value = serde_json::from_str(&check).unwrap();
+    assert!(check["summary"]["totalRoutes"].as_u64().unwrap() > 0);
+
+    let root = fixture("nextjs-coverage", "covered");
+    let edges = playwright_edges_json_impl(json!({ "root": root }).to_string()).unwrap();
+    let edges: serde_json::Value = serde_json::from_str(&edges).unwrap();
+    assert!(!edges["edges"].as_array().unwrap().is_empty());
+
+    let root = fixture("nextjs-coverage", "covered");
+    let related = playwright_related_json_impl(
+        json!({
+            "root": root,
+            "files": ["web/app/settings/page.tsx"]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let related: serde_json::Value = serde_json::from_str(&related).unwrap();
+    assert!(related["tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|test| test == "tests/e2e/settings.spec.ts"));
+
+    let root = fixture("nextjs-coverage", "covered");
+    let tests = playwright_tests_json_impl(json!({ "root": root }).to_string()).unwrap();
+    let tests: serde_json::Value = serde_json::from_str(&tests).unwrap();
+    assert!(!tests["tests"].as_array().unwrap().is_empty());
+
+    let root = fixture("nextjs-coverage", "covered");
+    let error = playwright_related_json_impl(json!({ "root": root }).to_string()).unwrap_err();
+    assert!(error
+        .reason
+        .contains("files must contain at least one file"));
+}
+
+#[test]
 fn queues_json_returns_project_report() {
     let options = json!({ "root": fixture_root("queue-dashboard/good") }).to_string();
     let output = queues_json_impl(options).unwrap();
@@ -287,6 +419,17 @@ fn invalid_options_return_napi_errors() {
     assert!(error
         .reason
         .contains("files or roots must contain at least one entry"));
+
+    let error =
+        tests_plan_json_impl(json!({ "framework": "unknown", "changedFiles": [] }).to_string())
+            .unwrap_err();
+    assert!(error.reason.contains("unknown test framework"));
+
+    let error = tests_why_json_impl(json!({}).to_string()).unwrap_err();
+    assert!(error.reason.contains("test is required"));
+
+    let error = tests_comment_markdown_impl(json!({}).to_string()).unwrap_err();
+    assert!(error.reason.contains("plan or planJson is required"));
 }
 
 #[test]

@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::{bail, Result as AnyhowResult};
 use serde::Deserialize;
+use serde_json::Value;
 
 use crate::codebase::dependencies::RelationshipArg;
 use crate::codebase::symbols::{ExportKindArg, Include};
@@ -19,6 +20,63 @@ pub(crate) struct ProjectOptions {
     pub(crate) depth: Option<usize>,
     pub(crate) assert_no_fetch: bool,
     pub(crate) direction: Option<String>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct FetchesOptions {
+    pub(crate) root: Option<String>,
+    pub(crate) config: Option<String>,
+    pub(crate) targets: Vec<String>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct TestsPlanOptions {
+    pub(crate) framework: Option<String>,
+    pub(crate) root: Option<String>,
+    pub(crate) config: Option<String>,
+    pub(crate) tsconfig: Option<String>,
+    pub(crate) base: Option<String>,
+    pub(crate) head: Option<String>,
+    pub(crate) changed_files: Vec<String>,
+    pub(crate) changed_files_file: Option<String>,
+    pub(crate) environment: Option<String>,
+    pub(crate) limit_percent: Option<f64>,
+    pub(crate) limit_files: Option<usize>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct TestsWhyOptions {
+    pub(crate) root: Option<String>,
+    pub(crate) config: Option<String>,
+    pub(crate) tsconfig: Option<String>,
+    pub(crate) test: Option<String>,
+    pub(crate) changed: Option<String>,
+    pub(crate) plan: Option<String>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct TestsPlanDocumentOptions {
+    pub(crate) plan: Option<String>,
+    pub(crate) plan_json: Option<Value>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct PlaywrightOptions {
+    pub(crate) root: Option<String>,
+    pub(crate) config: Option<String>,
+    pub(crate) playwright_config: Vec<String>,
+    pub(crate) project: Option<String>,
+    pub(crate) files: Vec<String>,
+    pub(crate) assert_conditional_tests: bool,
+    pub(crate) allow_skipped_tests: bool,
+    pub(crate) assert_unique_test_ids: bool,
+    pub(crate) assert_unique_html_ids: bool,
+    pub(crate) assert_unique_selectors: bool,
 }
 
 #[derive(Debug, Default, Deserialize)]
