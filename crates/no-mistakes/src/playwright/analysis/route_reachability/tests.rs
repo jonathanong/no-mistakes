@@ -64,6 +64,18 @@ fn route_reachability_resolves_tsconfig_alias_imports() {
         .is_some_and(|files| files.contains(&Arc::new(
             "web/app/components/discuss-button.tsx".to_string()
         ))));
+    let files = reachable
+        .get(&Arc::new("web/app/page.tsx".to_string()))
+        .expect("route should have reachable files");
+    assert!(files.contains(&Arc::new(
+        "web/app/components/reexported-button.tsx".to_string()
+    )));
+    assert!(files.contains(&Arc::new(
+        "web/app/components/export-all-button.tsx".to_string()
+    )));
+    assert!(!files.contains(&Arc::new(
+        "web/app/components/type-only-button.tsx".to_string()
+    )));
 }
 
 #[test]

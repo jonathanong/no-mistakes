@@ -38,8 +38,10 @@ export function Example(props: { label: string }) {
       <button data-pw="descendant-button"><span>Descendant save</span></button>
       <button data-pw="fragment-button"><>Fragment save</></button>
       <button data-pw="hidden-button" hidden>Hidden action</button>
+      <button data-pw="hidden-string-button" hidden="false">String hidden action</button>
       <button data-pw="hidden-false-button" hidden={false}>Shown action</button>
       <button data-pw="aria-hidden-button" aria-hidden="true">Aria hidden action</button>
+      <button data-pw="aria-hidden-false-button" aria-hidden="false">Aria shown action</button>
       <button data-pw="aria-hidden-bool-button" aria-hidden={true}>Bool hidden action</button>
       <label>Wrapped email <input data-pw="wrapped-email-input" /></label>
       <label>Fragment wrapped <><input data-pw="fragment-wrapped-input" /></></label>

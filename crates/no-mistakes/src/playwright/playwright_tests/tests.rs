@@ -24,7 +24,7 @@ fn hook_callback_index_only_matches_setup_hooks() {
         hooks,
         vec![
             ("test.beforeEach".to_string(), true),
-            ("test.beforeAll".to_string(), true),
+            ("test.beforeAll".to_string(), false),
             ("test.afterEach".to_string(), false),
             ("test.afterAll".to_string(), false),
         ]

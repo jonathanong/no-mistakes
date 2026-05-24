@@ -157,6 +157,15 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .any(|selector| selector.value == "hidden-button")
     }));
     assert!(targets.iter().any(|target| {
+        target.text == "String hidden action"
+            && target.role.as_deref() == Some("button")
+            && target.hidden
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "hidden-string-button")
+    }));
+    assert!(targets.iter().any(|target| {
         target.text == "Shown action"
             && target.role.as_deref() == Some("button")
             && !target.hidden
@@ -173,6 +182,15 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .selector_refs
                 .iter()
                 .any(|selector| selector.value == "aria-hidden-button")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Aria shown action"
+            && target.role.as_deref() == Some("button")
+            && !target.hidden
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "aria-hidden-false-button")
     }));
     assert!(targets.iter().any(|target| {
         target.text == "Bool hidden action"
