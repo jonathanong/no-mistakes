@@ -65,6 +65,18 @@ fn detected_on_preceding_line() {
 }
 
 #[test]
+fn detected_on_preceding_hash_comment_line() {
+    let source = "# no-mistakes-disable-next-line my-rule\nsome code here";
+    assert!(has_disable_comment(source, 2, "my-rule"));
+}
+
+#[test]
+fn detected_on_preceding_sql_comment_line() {
+    let source = "-- no-mistakes-disable-next-line my-rule\nsome code here";
+    assert!(has_disable_comment(source, 2, "my-rule"));
+}
+
+#[test]
 fn not_triggered_on_line_1() {
     let source = "some code here";
     assert!(!has_disable_comment(source, 1, "my-rule"));
@@ -122,6 +134,18 @@ fn disable_line_detected_on_same_line() {
 }
 
 #[test]
+fn disable_line_detected_on_same_hash_comment_line() {
+    let source = "shellcheck issue # no-mistakes-disable-line my-rule";
+    assert!(has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
+fn disable_line_detected_on_same_sql_comment_line() {
+    let source = "select 1 -- no-mistakes-disable-line my-rule";
+    assert!(has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
 fn disable_line_matches_with_reason() {
     let source = "some code here // no-mistakes-disable-line my-rule: intentional";
     assert!(has_disable_line_comment(source, 1, "my-rule"));
@@ -158,15 +182,39 @@ fn disable_line_allows_url_before_comment() {
 }
 
 #[test]
+fn disable_line_detected_after_regex_literal() {
+    let source = r"const re = /a\/\/b/; // no-mistakes-disable-line my-rule";
+    assert!(has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
+fn disable_line_detected_after_regex_character_class() {
+    let source = r"const re = /[//]/; // no-mistakes-disable-line my-rule";
+    assert!(has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
 fn disable_line_ignores_block_comment_text() {
     let source = "const x = 1; /* // no-mistakes-disable-line my-rule */";
     assert!(!has_disable_line_comment(source, 1, "my-rule"));
 }
 
 #[test]
+fn disable_line_ignores_multiline_block_comment_text() {
+    let source = "/* start\ncode // no-mistakes-disable-line my-rule\n*/";
+    assert!(!has_disable_line_comment(source, 2, "my-rule"));
+}
+
+#[test]
 fn disable_line_detected_after_block_comment() {
     let source = "const x = 1; /* block */ // no-mistakes-disable-line my-rule";
     assert!(has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
+fn disable_line_detected_after_multiline_block_comment() {
+    let source = "/* start\n*/ const x = 1; // no-mistakes-disable-line my-rule";
+    assert!(has_disable_line_comment(source, 2, "my-rule"));
 }
 
 #[test]
@@ -180,6 +228,18 @@ fn disable_line_rejects_zero_line() {
 #[test]
 fn file_disable_detected_in_leading_comment() {
     let source = "// no-mistakes-disable-file my-rule: intentional\nexport const x = 1";
+    assert!(has_disable_file_comment(source, "my-rule"));
+}
+
+#[test]
+fn file_disable_detected_in_leading_hash_comment() {
+    let source = "# no-mistakes-disable-file my-rule: intentional\nset -e";
+    assert!(has_disable_file_comment(source, "my-rule"));
+}
+
+#[test]
+fn file_disable_detected_in_leading_sql_comment() {
+    let source = "-- no-mistakes-disable-file my-rule: intentional\nselect 1";
     assert!(has_disable_file_comment(source, "my-rule"));
 }
 

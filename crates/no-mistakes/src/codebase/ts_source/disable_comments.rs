@@ -63,22 +63,13 @@ pub fn has_disable_comment(source: &str, stmt_line: u32, rule_id: &str) -> bool 
         .nth((stmt_line - 2) as usize)
         .map(|line| {
             let trimmed = line.trim();
-            if !trimmed.starts_with("//") {
+            let Some(rest) = leading_comment_text(trimmed) else {
                 return false;
-            }
-            let rest = trimmed
-                .strip_prefix("//")
-                .expect("line starts with //")
-                .trim();
+            };
             let Some(after_directive) = rest.strip_prefix("no-mistakes-disable-next-line ") else {
                 return false;
             };
-            let rule_part = after_directive.trim();
-            rule_part.strip_prefix(rule_id).is_some_and(|suffix| {
-                suffix.is_empty()
-                    || suffix.starts_with(':')
-                    || suffix.starts_with(char::is_whitespace)
-            })
+            rule_part_matches(after_directive.trim(), rule_id)
         })
         .unwrap_or(false)
 }
@@ -94,10 +85,7 @@ pub fn has_disable_line_comment(source: &str, stmt_line: u32, rule_id: &str) -> 
     if stmt_line == 0 {
         return false;
     }
-    source
-        .lines()
-        .nth((stmt_line - 1) as usize)
-        .is_some_and(|line| line_comment_directive_matches(line, "no-mistakes-disable-line ", rule_id))
+    line_comment_directive_matches(source, stmt_line, "no-mistakes-disable-line ", rule_id)
 }
 
 /// Returns `true` if a leading comment disables `rule_id` for the whole file.
@@ -135,18 +123,14 @@ pub fn has_disable_file_comment(source: &str, rule_id: &str) -> bool {
                 continue;
             }
 
-            let Some(rest) = rest.strip_prefix("//").map(|s| s.trim()) else {
+            let Some(rest) = leading_comment_text(rest) else {
                 return false;
             };
             let Some(after_directive) = rest.strip_prefix("no-mistakes-disable-file ") else {
                 break;
             };
             let rule_part = after_directive.trim();
-            if rule_part.strip_prefix(rule_id).is_some_and(|suffix| {
-                suffix.is_empty()
-                    || suffix.starts_with(':')
-                    || suffix.starts_with(char::is_whitespace)
-            }) {
+            if rule_part_matches(rule_part, rule_id) {
                 return true;
             }
             break;
@@ -156,54 +140,33 @@ pub fn has_disable_file_comment(source: &str, rule_id: &str) -> bool {
     false
 }
 
-fn line_comment_directive_matches(line: &str, directive: &str, rule_id: &str) -> bool {
-    let Some(comment_start) = line_comment_start(line) else {
-        return false;
-    };
-    let rest = line[comment_start + 2..].trim();
-    let Some(after_directive) = rest.strip_prefix(directive) else {
-        return false;
-    };
-    rule_part_matches(after_directive.trim(), rule_id)
-}
-
-fn line_comment_start(line: &str) -> Option<usize> {
-    let mut quote = None;
-    let mut escaped = false;
+fn line_comment_directive_matches(
+    source: &str,
+    stmt_line: u32,
+    directive: &str,
+    rule_id: &str,
+) -> bool {
     let mut in_block_comment = false;
-    let mut chars = line.char_indices().peekable();
-    while let Some((idx, ch)) = chars.next() {
-        if in_block_comment {
-            if ch == '*' && chars.peek().is_some_and(|(_, next)| *next == '/') {
-                chars.next();
-                in_block_comment = false;
-            }
+    for (index, line) in source.lines().enumerate() {
+        let line_number = (index + 1) as u32;
+        let (comment, next_in_block_comment) = line_comment_start(line, in_block_comment);
+        in_block_comment = next_in_block_comment;
+
+        if line_number != stmt_line {
             continue;
         }
-        if let Some(current) = quote {
-            if escaped {
-                escaped = false;
-            } else if ch == '\\' {
-                escaped = true;
-            } else if ch == current {
-                quote = None;
-            }
-            continue;
-        }
-        if matches!(ch, '\'' | '"' | '`') {
-            quote = Some(ch);
-            continue;
-        }
-        if ch == '/' && chars.peek().is_some_and(|(_, next)| *next == '*') {
-            chars.next();
-            in_block_comment = true;
-            continue;
-        }
-        if ch == '/' && chars.peek().is_some_and(|(_, next)| *next == '/') {
-            return Some(idx);
-        }
+
+        let Some((comment_start, prefix_len)) = comment else {
+            return false;
+        };
+        let rest = line[comment_start + prefix_len..].trim();
+        let Some(after_directive) = rest.strip_prefix(directive) else {
+            return false;
+        };
+        return rule_part_matches(after_directive.trim(), rule_id);
     }
-    None
+
+    false
 }
 
 fn rule_part_matches(rule_part: &str, rule_id: &str) -> bool {
