@@ -104,18 +104,6 @@ pub(super) fn parse_options(object: &ObjectExpression<'_>, source: &str) -> Resu
     })
 }
 
-pub(super) fn parse_partial_options(
-    object: &ObjectExpression<'_>,
-    source: &str,
-) -> Result<Options> {
-    Ok(Options {
-        name: shared::property_expression(object, "name")
-            .and_then(|value| shared::optional_string(value, source)),
-        include: string_array_property(object, source, "include")?,
-        exclude: string_array_property(object, source, "exclude")?,
-    })
-}
-
 fn string_array_property(
     object: &ObjectExpression<'_>,
     source: &str,

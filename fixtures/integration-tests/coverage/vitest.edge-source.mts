@@ -30,6 +30,15 @@ export const namedVarProjects = [
   },
 ]
 
+export const exportedSpecifierProjects = [
+  {
+    test: {
+      name: 'exported-specifier',
+      include: ['exported-specifier/**/*.test.ts'],
+    },
+  },
+]
+
 export function namedFunctionProjects() {
   return [
     {
@@ -71,5 +80,7 @@ export const { destructuredProjects } = {
   ],
 }
 export { localAliasProjects, localFunctionProjects, importedNamedProjects, cycleProjects }
+export { exportedSpecifierProjects as exportedSpecifierAliasProjects }
 export { reexportedProjects as sourcedReexportProjects } from './vitest.projects-source'
+export * from './vitest.projects-source'
 export { missingLocalProjects }

@@ -36,6 +36,18 @@ pub(super) fn exported_options(
                     return options;
                 }
             }
+            Statement::ExportAllDeclaration(export) if exported != "default" => {
+                let options = imported_options(
+                    &super::ImportBinding {
+                        source: export.source.value.to_string(),
+                        imported: exported.to_string(),
+                    },
+                    &mut ctx,
+                )?;
+                if !options.is_empty() {
+                    return Ok(options);
+                }
+            }
             Statement::ExportDefaultDeclaration(export) if exported == "default" => {
                 return default_export_options(&export.declaration, &mut ctx);
             }

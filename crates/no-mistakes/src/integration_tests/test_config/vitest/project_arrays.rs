@@ -1,4 +1,4 @@
-use super::{parse_partial_options, shared, Options};
+use super::{parse_options, shared, Options};
 use crate::ast;
 use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
 use anyhow::Result;
@@ -81,7 +81,7 @@ pub(super) fn array_options(
 
 fn project_object_options(object: &ObjectExpression<'_>, ctx: &Ctx<'_, '_>) -> Result<Options> {
     let nested = shared::property_object(object, "test", &ctx.bindings).unwrap_or(object);
-    parse_partial_options(nested, ctx.source)
+    parse_options(nested, ctx.source)
 }
 
 pub(super) fn expression_options(
@@ -185,9 +185,17 @@ pub(super) fn top_level_function_bodies<'a>(program: &'a Program<'a>) -> FnMap<'
         .body
         .iter()
         .filter_map(|statement| {
-            let Statement::FunctionDeclaration(function) = statement else {
-                return None;
+            let function = match statement {
+                Statement::FunctionDeclaration(function) => Some(function),
+                Statement::ExportNamedDeclaration(export) => match export.declaration.as_ref() {
+                    Some(oxc_ast::ast::Declaration::FunctionDeclaration(function)) => {
+                        Some(function)
+                    }
+                    _ => None,
+                },
+                _ => None,
             };
+            let function = function?;
             Some((
                 function.id.as_ref()?.name.to_string(),
                 function.body.as_ref()?.as_ref(),

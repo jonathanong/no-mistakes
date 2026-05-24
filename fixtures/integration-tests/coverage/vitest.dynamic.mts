@@ -20,6 +20,26 @@ const localProjects = [
   },
 ]
 
+export const localExportedProjects = [
+  {
+    test: {
+      name: 'local-exported',
+      include: ['local-exported/**/*.test.ts'],
+    },
+  },
+]
+
+export function localExportedFunctionProjects() {
+  return [
+    {
+      test: {
+        name: 'local-exported-function',
+        include: ['local-exported-function/**/*.test.ts'],
+      },
+    },
+  ]
+}
+
 const recursiveCall = () => recursiveCall()
 
 const projects = [
@@ -41,6 +61,8 @@ export default defineConfig({
       ...projectHelpers.namespaceProjects(),
       ...projectHelpers.namespaceArrayProjects,
       ...projects,
+      ...localExportedProjects,
+      ...localExportedFunctionProjects(),
       ...recursiveCall(),
       ...localProjects,
       {

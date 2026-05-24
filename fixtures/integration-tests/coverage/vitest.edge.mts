@@ -1,4 +1,5 @@
 import defaultArrowBlockProjects from './vitest.edge-default-arrow-block'
+import defaultExportedConstProjects from './vitest.edge-default-exported-const'
 import defaultIdentifierFunctionProjects from './vitest.edge-default-identifier-function'
 import defaultIdentifierImportedProjects from './vitest.edge-default-identifier-import'
 import literalDefaultProjects from './vitest.edge-default-literal'
@@ -8,12 +9,14 @@ import defaultObjectProjects from './vitest.projects-source'
 import {
   cycleProjects,
   destructuredProjects,
+  exportedSpecifierAliasProjects,
   importedNamedProjects,
   localAliasProjects,
   localFunctionProjects,
   missingLocalProjects,
   namedFunctionProjects,
   namedVarProjects,
+  reexportedProjects,
   sourcedReexportProjects,
   noMatchingDeclaration,
 } from './vitest.edge-source'
@@ -106,11 +109,13 @@ export default defineConfig({
       ...sourcedReexportProjects,
       ...cycleProjects,
       ...destructuredProjects,
+      ...exportedSpecifierAliasProjects,
       ...badProjects,
       ...missingLocalProjects,
       ...noMatchingDeclaration,
       ...missingFileProjects,
       ...packageProjects,
+      ...reexportedProjects,
       ...edge.namespaceProjects,
       ...edge.namespaceCallProjects(),
       ...edge.missingNamespaceProjects,
@@ -123,6 +128,7 @@ export default defineConfig({
       ...({}).namespaceProjects,
       ...({}).namespaceProjects(),
       ...defaultArrowBlockProjects(),
+      ...defaultExportedConstProjects,
       ...defaultIdentifierFunctionProjects(),
       ...defaultIdentifierImportedProjects(),
       ...literalDefaultProjects,

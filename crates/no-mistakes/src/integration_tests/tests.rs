@@ -467,6 +467,12 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
         .any(|project| project.name.as_deref() == Some("default-array")));
     assert!(dynamic
         .iter()
+        .any(|project| project.name.as_deref() == Some("local-exported")));
+    assert!(dynamic
+        .iter()
+        .any(|project| project.name.as_deref() == Some("local-exported-function")));
+    assert!(dynamic
+        .iter()
         .any(|project| project.name.as_deref() == Some("namespace-array")));
 
     let edge_path = root.join("vitest.edge.mts");
@@ -484,7 +490,9 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
         "reexported",
         "edge-namespace",
         "edge-namespace-call",
+        "exported-specifier",
         "default-arrow-block",
+        "default-exported-const",
         "default-identifier-function",
         "default-arrow",
     ] {
