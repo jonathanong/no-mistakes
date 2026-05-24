@@ -45,7 +45,14 @@ pub(crate) fn collect_route_reachable_files(
         .map(|route| {
             Ok((
                 route_key(root, &route.file),
-                reachable_files(&route.file, &selector_rel_by_file, &resolver, &import_cache)?,
+                reachable_files(
+                    root,
+                    settings,
+                    &route.file,
+                    &selector_rel_by_file,
+                    &resolver,
+                    &import_cache,
+                )?,
             ))
         })
         .collect::<Result<BTreeMap<_, _>>>()?;
@@ -53,13 +60,18 @@ pub(crate) fn collect_route_reachable_files(
 }
 
 fn reachable_files(
+    root: &Path,
+    settings: &config::Settings,
     route_file: &Path,
     selector_rel_by_file: &HashMap<std::path::PathBuf, Arc<String>>,
     resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
     import_cache: &DashMap<PathBuf, Arc<Vec<PathBuf>>>,
 ) -> Result<BTreeSet<Arc<String>>> {
     let mut reachable = BTreeSet::new();
-    let mut stack = vec![crate::codebase::ts_resolver::normalize_path(route_file)];
+    let mut stack = route_entry_files(root, settings, route_file)
+        .into_iter()
+        .map(|file| crate::codebase::ts_resolver::normalize_path(&file))
+        .collect::<Vec<_>>();
     let mut seen = HashSet::new();
     while let Some(file) = stack.pop() {
         if !seen.insert(file.clone()) {
@@ -76,6 +88,16 @@ fn reachable_files(
         );
     }
     Ok(reachable)
+}
+
+fn route_entry_files(root: &Path, settings: &config::Settings, route_file: &Path) -> Vec<PathBuf> {
+    let frontend_root = root.join(&settings.frontend_root);
+    let mut files = vec![route_file.to_path_buf()];
+    files.extend(crate::fetch::import_routes::collect_layout_chain_files(
+        route_file,
+        &frontend_root,
+    ));
+    files
 }
 
 fn collect_route_imports(

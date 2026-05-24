@@ -68,6 +68,9 @@ fn route_reachability_resolves_tsconfig_alias_imports() {
         .get(&Arc::new("web/app/page.tsx".to_string()))
         .expect("route should have reachable files");
     assert!(files.contains(&Arc::new(
+        "web/app/components/layout-button.tsx".to_string()
+    )));
+    assert!(files.contains(&Arc::new(
         "web/app/components/reexported-button.tsx".to_string()
     )));
     assert!(files.contains(&Arc::new(

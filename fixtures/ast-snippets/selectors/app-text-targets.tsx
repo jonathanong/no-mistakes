@@ -37,6 +37,7 @@ export function Example(props: { label: string }) {
       <Design.UI.Button testId="nested-member-button" title="Nested member">Nested</Design.UI.Button>
       <button id="html-id-button">HTML id</button>
       <button data-pw="descendant-button"><span>Descendant save</span></button>
+      <button data-pw="combined-descendant-button"><span>Save</span> now</button>
       <button data-pw="fragment-button"><>Fragment save</></button>
       <button data-pw="hidden-button" hidden>Hidden action</button>
       <button data-pw="hidden-string-button" hidden="false">String hidden action</button>

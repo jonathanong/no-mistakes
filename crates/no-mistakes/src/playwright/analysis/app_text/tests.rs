@@ -154,6 +154,15 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .any(|selector| selector.value == "descendant-button")
     }));
     assert!(targets.iter().any(|target| {
+        target.text == "Save now"
+            && target.role.as_deref() == Some("button")
+            && target.kind == AppTextKind::AccessibleName
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "combined-descendant-button")
+    }));
+    assert!(targets.iter().any(|target| {
         target.text == "Hidden action"
             && target.role.as_deref() == Some("button")
             && target.hidden

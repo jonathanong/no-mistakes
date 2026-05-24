@@ -42,16 +42,18 @@ fn child_texts(
                 _ => {}
             },
             oxc_ast::ast::JSXChild::Element(element) if include_descendants => {
-                if !current.is_empty() {
-                    results.push(std::mem::take(&mut current));
-                }
-                results.extend(descendant_texts(&element.children, source));
+                append_descendant_segments(
+                    &mut results,
+                    &mut current,
+                    descendant_texts(&element.children, source),
+                );
             }
             oxc_ast::ast::JSXChild::Fragment(fragment) if include_descendants => {
-                if !current.is_empty() {
-                    results.push(std::mem::take(&mut current));
-                }
-                results.extend(descendant_texts(&fragment.children, source));
+                append_descendant_segments(
+                    &mut results,
+                    &mut current,
+                    descendant_texts(&fragment.children, source),
+                );
             }
             _ => {
                 if !current.is_empty() {
@@ -66,4 +68,17 @@ fn child_texts(
     }
 
     results
+}
+
+fn append_descendant_segments(
+    results: &mut Vec<String>,
+    current: &mut String,
+    segments: Vec<String>,
+) {
+    for (index, segment) in segments.into_iter().enumerate() {
+        if index > 0 && !current.is_empty() {
+            results.push(std::mem::take(current));
+        }
+        current.push_str(&segment);
+    }
 }
