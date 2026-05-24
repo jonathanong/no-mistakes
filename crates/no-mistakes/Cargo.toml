@@ -54,3 +54,7 @@ harness = false
 [[bench]]
 name = "graph_related"
 harness = false
+
+[[bench]]
+name = "check"
+harness = false

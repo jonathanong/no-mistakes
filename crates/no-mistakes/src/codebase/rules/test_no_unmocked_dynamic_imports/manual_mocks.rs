@@ -5,11 +5,15 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 pub fn discover(root: &Path, skip_directories: &[String]) -> HashSet<PathBuf> {
-    discover_files(root, skip_directories)
-        .into_iter()
+    discover_from_files(root, &discover_files(root, skip_directories))
+}
+
+pub fn discover_from_files(root: &Path, files: &[PathBuf]) -> HashSet<PathBuf> {
+    files
+        .iter()
         .filter(|path| is_indexable(path))
         .filter(|path| path.components().any(|c| c.as_os_str() == "__mocks__"))
-        .flat_map(|path| mocked_targets(root, &path))
+        .flat_map(|path| mocked_targets(root, path))
         .collect()
 }
 
