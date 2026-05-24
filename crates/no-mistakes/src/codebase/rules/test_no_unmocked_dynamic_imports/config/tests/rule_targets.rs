@@ -104,6 +104,33 @@ fn vitest_rule_target_uses_configured_project_globs_without_loading_config() {
 }
 
 #[test]
+fn vitest_rule_target_configured_project_overrides_loaded_duplicate() {
+    let root = root_fixture("integration-tests/basic");
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.projects.insert(
+        "unit".to_string(),
+        TestProjectPolicy {
+            include: vec!["web/**/*.test.ts".to_string()],
+            ..Default::default()
+        },
+    );
+    config.rules.push(RuleDef {
+        rule: super::super::super::RULE_ID.to_string(),
+        tests: RuleTestTargets {
+            vitest: vec!["unit".to_string(), "openai".to_string()],
+            ..Default::default()
+        },
+        ..Default::default()
+    });
+
+    let filter = test_filter(&root, &config).unwrap();
+
+    assert!(filter.is_match("web/app.test.ts"));
+    assert!(filter.is_match("integration/openai.test.mts"));
+    assert!(!filter.is_match("backend/unit.test.mts"));
+}
+
+#[test]
 fn playwright_rule_target_uses_exact_project_globs() {
     let root = root_fixture("integration-tests/basic");
     let mut config = NoMistakesConfig::default();

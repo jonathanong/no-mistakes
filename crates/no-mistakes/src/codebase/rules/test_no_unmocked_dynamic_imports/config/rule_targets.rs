@@ -3,7 +3,7 @@ use crate::config::v2::NoMistakesConfig;
 use crate::integration_tests::project_config::load_projects;
 use crate::integration_tests::types::{ConfigProject, Framework};
 use anyhow::Result;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 pub(super) fn rule_test_project_globs(
@@ -87,7 +87,19 @@ fn load_target_projects(
         }
     }
     if !unresolved.is_empty() {
-        projects.extend(load_projects(root, framework, configs)?);
+        let unresolved_names = unresolved
+            .iter()
+            .map(|name| name.as_str())
+            .collect::<BTreeSet<_>>();
+        projects.extend(
+            load_projects(root, framework, configs)?
+                .into_iter()
+                .filter(|project| {
+                    unresolved_names
+                        .iter()
+                        .any(|name| test_project_matches(project, name))
+                }),
+        );
     }
     Ok(projects)
 }

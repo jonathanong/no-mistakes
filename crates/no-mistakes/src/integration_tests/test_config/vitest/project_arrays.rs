@@ -25,6 +25,7 @@ pub(super) struct Ctx<'a, 'r> {
     path: &'r Path,
     root: &'r Path,
     seen: &'r mut BTreeSet<PathBuf>,
+    local_seen: &'r mut BTreeSet<String>,
 }
 
 pub(super) fn project_options(
@@ -42,6 +43,7 @@ pub(super) fn project_options(
     };
     let resolver = ImportResolver::new(tsconfig);
     let mut seen = BTreeSet::new();
+    let mut local_seen = BTreeSet::new();
     let mut ctx = Ctx {
         source,
         bindings: shared::top_level_object_bindings(program),
@@ -51,6 +53,7 @@ pub(super) fn project_options(
         path,
         root,
         seen: &mut seen,
+        local_seen: &mut local_seen,
     };
     array_options(projects, &mut ctx)
 }
@@ -82,18 +85,7 @@ pub(super) fn expression_options(
 ) -> Vec<Options> {
     match expression {
         Expression::ArrayExpression(array) => array_options(array, ctx),
-        Expression::Identifier(identifier) => ctx
-            .bindings
-            .get(identifier.name.as_str())
-            .copied()
-            .map(|expression| expression_options(expression, ctx))
-            .or_else(|| {
-                ctx.imports
-                    .get(identifier.name.as_str())
-                    .cloned()
-                    .map(|import| imported_options(&import, ctx))
-            })
-            .unwrap_or_default(),
+        Expression::Identifier(identifier) => identifier_options(identifier.name.as_str(), ctx),
         Expression::CallExpression(call) => {
             let Expression::Identifier(identifier) = &call.callee else {
                 return Vec::new();
@@ -122,6 +114,26 @@ pub(super) fn expression_options(
         }
         _ => Vec::new(),
     }
+}
+
+fn identifier_options(name: &str, ctx: &mut Ctx<'_, '_>) -> Vec<Options> {
+    if !ctx.local_seen.insert(name.to_string()) {
+        return Vec::new();
+    }
+    let result = ctx
+        .bindings
+        .get(name)
+        .copied()
+        .map(|expression| expression_options(expression, ctx))
+        .or_else(|| {
+            ctx.imports
+                .get(name)
+                .cloned()
+                .map(|import| imported_options(&import, ctx))
+        })
+        .unwrap_or_default();
+    ctx.local_seen.remove(name);
+    result
 }
 
 pub(super) fn helper_expression_options(

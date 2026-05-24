@@ -23,6 +23,7 @@ pub(super) fn exported_options(
         path,
         root: parent.root,
         seen: parent.seen,
+        local_seen: parent.local_seen,
     };
     for statement in &program.body {
         match statement {

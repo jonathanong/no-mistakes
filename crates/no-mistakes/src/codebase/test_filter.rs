@@ -116,12 +116,8 @@ fn configured_project_filters(
         .values()
         .any(|policy| !policy.integration_suites.is_empty() && policy.include.is_empty());
     let projects = if needs_config_projects {
-        let Ok(projects) =
-            crate::integration_tests::project_config::load_projects(root, framework, configs)
-        else {
-            return Vec::new();
-        };
-        projects
+        crate::integration_tests::project_config::load_projects(root, framework, configs)
+            .unwrap_or_default()
     } else {
         Vec::new()
     };
