@@ -34,7 +34,7 @@ impl AppTextVisitor<'_> {
         role: Option<String>,
         refs: &[SelectorRef],
     ) {
-        if !is_labelable(tag) {
+        if !is_labelable(tag) && role.is_none() {
             return;
         }
         if let Some(id) = self.string_attr(opening, "id") {
@@ -116,7 +116,7 @@ impl AppTextVisitor<'_> {
         for text in texts {
             if let Some(text) = normalize_locator_text(text) {
                 self.pending_labels.push(PendingLabel {
-                    control_id: control_id.clone(),
+                    control_ids: vec![control_id.clone()],
                     text,
                     target_control_id: None,
                 });
@@ -140,13 +140,11 @@ impl AppTextVisitor<'_> {
             return;
         };
         let target_control_id = self.string_attr(opening, "id");
-        for control_id in labelledby.split_whitespace() {
-            self.pending_labels.push(PendingLabel {
-                control_id: control_id.to_string(),
-                text: String::new(),
-                target_control_id: target_control_id.clone(),
-            });
-        }
+        self.pending_labels.push(PendingLabel {
+            control_ids: labelledby.split_whitespace().map(str::to_string).collect(),
+            text: String::new(),
+            target_control_id,
+        });
     }
 
     pub(super) fn collect_input_value_target(

@@ -40,8 +40,7 @@ pub(super) fn text_target_matches(
             LocatorKind::Role => {
                 target.role.as_deref() == role
                     && (include_hidden || !target.hidden)
-                    && (target.kind == AppTextKind::VisibleText
-                        || target.kind == AppTextKind::AccessibleName)
+                    && target.kind == AppTextKind::AccessibleName
             }
         }
 }

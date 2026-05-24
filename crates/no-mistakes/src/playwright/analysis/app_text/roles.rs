@@ -41,6 +41,7 @@ fn valid_concrete_role(role: &str) -> bool {
             | "complementary"
             | "contentinfo"
             | "definition"
+            | "deletion"
             | "dialog"
             | "directory"
             | "document"
@@ -54,6 +55,7 @@ fn valid_concrete_role(role: &str) -> bool {
             | "group"
             | "heading"
             | "img"
+            | "insertion"
             | "link"
             | "list"
             | "listbox"
@@ -141,10 +143,10 @@ fn input_role(
     source: &str,
     scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
 ) -> Option<&'static str> {
-    match super::jsx::string_attr(opening, "type", source, scoped_static_identifier_defaults)
-        .as_deref()
-        .unwrap_or("text")
-    {
+    let input_type =
+        super::jsx::string_attr(opening, "type", source, scoped_static_identifier_defaults)
+            .unwrap_or_else(|| "text".to_string());
+    match input_type.to_ascii_lowercase().as_str() {
         "button" | "image" | "reset" | "submit" => Some("button"),
         "checkbox" => Some("checkbox"),
         "number" => Some("spinbutton"),

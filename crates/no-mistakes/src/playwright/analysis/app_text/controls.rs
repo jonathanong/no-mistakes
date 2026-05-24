@@ -9,7 +9,7 @@ pub(super) struct ControlTextTarget {
 }
 
 pub(super) struct PendingLabel {
-    pub(super) control_id: String,
+    pub(super) control_ids: Vec<String>,
     pub(super) text: String,
     pub(super) target_control_id: Option<String>,
 }
@@ -26,10 +26,10 @@ pub(super) fn input_type_uses_value_text(
     source: &str,
     scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
 ) -> bool {
-    matches!(
+    let input_type =
         super::jsx::string_attr(opening, "type", source, scoped_static_identifier_defaults)
-            .as_deref()
-            .unwrap_or("text"),
-        "button" | "reset" | "submit"
-    )
+            .unwrap_or_else(|| "text".to_string());
+    ["button", "reset", "submit"]
+        .iter()
+        .any(|candidate| input_type.eq_ignore_ascii_case(candidate))
 }

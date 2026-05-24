@@ -39,13 +39,13 @@ impl<'a, 'h> UrlVisitor<'a, 'h> {
     }
 
     fn collect_click_url(&mut self, call: &CallExpression<'a>) {
-        let selector = call.arguments.first().and_then(|arg| {
-            argument_literals(arg, self.source, self.static_zero_arg_paths)
-                .into_iter()
-                .next()
-        });
-        if let Some(url) = selector.as_deref().and_then(extract_href_from_selector) {
-            self.insert(url, call.span.start);
+        let Some(argument) = call.arguments.first() else {
+            return;
+        };
+        for selector in argument_literals(argument, self.source, self.static_zero_arg_paths) {
+            if let Some(url) = extract_href_from_selector(&selector) {
+                self.insert(url, call.span.start);
+            }
         }
     }
 

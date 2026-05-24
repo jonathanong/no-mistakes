@@ -337,8 +337,41 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .iter()
                 .any(|selector| selector.value == "submit-input")
     }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Case submit form"
+            && target.role.as_deref() == Some("button")
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "submit-case-input")
+    }));
     assert_role(&targets, "Explicit role", "button");
     assert_role(&targets, "Fallback role", "button");
+    assert_role(&targets, "Deleted text", "deletion");
+    assert_role(&targets, "Inserted text", "insertion");
+    assert!(targets.iter().any(|target| {
+        target.text == "Close"
+            && target.kind == AppTextKind::AccessibleName
+            && target.role.as_deref() == Some("button")
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "aria-label-precedence")
+    }));
+    assert!(!targets.iter().any(|target| {
+        target.text == "Visible close text"
+            && target.kind == AppTextKind::AccessibleName
+            && target.role.as_deref() == Some("button")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "First Second"
+            && target.kind == AppTextKind::AccessibleName
+            && target.role.as_deref() == Some("button")
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "custom-action")
+    }));
     assert_role(&targets, "Docs", "link");
     assert_role(&targets, "Empty docs", "link");
     assert_role(&targets, "Dynamic docs", "link");

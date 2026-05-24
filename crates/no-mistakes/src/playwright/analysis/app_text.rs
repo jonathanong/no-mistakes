@@ -106,12 +106,22 @@ impl AppTextVisitor<'_> {
     fn finish(&mut self) {
         for label in std::mem::take(&mut self.pending_labels) {
             let (control_id, texts) = if let Some(target_control_id) = &label.target_control_id {
-                let Some(texts) = self.texts_by_id.get(&label.control_id) else {
+                let texts = label
+                    .control_ids
+                    .iter()
+                    .filter_map(|control_id| self.texts_by_id.get(control_id))
+                    .flatten()
+                    .cloned()
+                    .collect::<Vec<_>>();
+                if texts.is_empty() {
+                    continue;
+                }
+                (target_control_id, vec![texts.join(" ")])
+            } else {
+                let Some(control_id) = label.control_ids.first() else {
                     continue;
                 };
-                (target_control_id, texts.clone())
-            } else {
-                (&label.control_id, vec![label.text])
+                (control_id, vec![label.text])
             };
             let Some(control) = self.controls_by_id.get(control_id).cloned() else {
                 continue;

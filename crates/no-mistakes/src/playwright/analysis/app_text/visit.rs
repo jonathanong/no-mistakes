@@ -20,18 +20,24 @@ impl<'a> Visit<'a> for AppTextVisitor<'_> {
         let visible_texts = self.visible_texts(element, role.as_deref(), &descendant_texts);
         let accessible_texts =
             self.accessible_texts(tag, role.as_deref(), &descendant_texts, &visible_texts);
+        let has_aria_label = self
+            .string_attr(&element.opening_element, "aria-label")
+            .and_then(|value| normalize_locator_text(&value))
+            .is_some();
         self.push_normalized_texts(
             AppTextKind::VisibleText,
             role.clone(),
             &visible_texts,
             &refs,
         );
-        self.push_normalized_texts(
-            AppTextKind::AccessibleName,
-            role.clone(),
-            &accessible_texts,
-            &refs,
-        );
+        if !has_aria_label {
+            self.push_normalized_texts(
+                AppTextKind::AccessibleName,
+                role.clone(),
+                &accessible_texts,
+                &refs,
+            );
+        }
         self.collect_label_targets(element, tag, &accessible_texts);
         self.collect_accessible_attr_targets(&element.opening_element, role.clone(), &refs);
         self.collect_labelledby_targets(&element.opening_element);

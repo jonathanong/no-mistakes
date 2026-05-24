@@ -64,3 +64,11 @@ fn enclosing_shadow_binding_requires_an_open_block() {
         &binding
     ));
 }
+
+#[test]
+fn jsx_start_detection_rejects_comparison_operators() {
+    assert!(has_unclosed_jsx_start("<input id={"));
+    assert!(has_unclosed_jsx_start("</"));
+    assert!(!has_unclosed_jsx_start("if (count <="));
+    assert!(!has_unclosed_jsx_start("value <<"));
+}

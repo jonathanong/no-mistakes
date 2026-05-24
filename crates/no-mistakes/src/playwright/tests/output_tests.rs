@@ -312,6 +312,8 @@ fn edge_report_json_schema_is_stable_with_arc_fields() {
     assert_eq!(route["routeFile"], "web/app/page.tsx");
     assert_eq!(route["route"], "/");
     assert_eq!(route["url"], "/api/health");
+    assert_eq!(route["hook"], false);
+    assert_eq!(route["line"], 1);
     assert!(!route.as_object().unwrap().contains_key("testName"));
     assert!(!route.as_object().unwrap().contains_key("describePath"));
 
@@ -321,6 +323,7 @@ fn edge_report_json_schema_is_stable_with_arc_fields() {
     assert_eq!(selector["testName"], "visits home");
     assert_eq!(selector["describePath"], serde_json::json!(["Suite"]));
     assert_eq!(selector["appFile"], "web/app/page.tsx");
+    assert_eq!(selector["line"], 1);
 
     let fetch = &edges[2];
     assert_eq!(fetch["kind"], "fetch");
@@ -340,6 +343,7 @@ fn edge_report_json_schema_is_stable_with_arc_fields() {
     assert_eq!(locator_text["role"], "button");
     assert_eq!(locator_text["text"], "Save");
     assert_eq!(locator_text["reasons"], serde_json::json!(["route-signal"]));
+    assert_eq!(locator_text["line"], 4);
 }
 
 #[test]

@@ -57,8 +57,15 @@ export function Example(props: { label: string }) {
       <label>Fragment wrapped <><input data-pw="fragment-wrapped-input" /></></label>
       <div data-pw="container-target"><button>Container child</button></div>
       <input data-pw="submit-input" type="submit" value="Submit form" />
+      <input data-pw="submit-case-input" type="Submit" value="Case submit form" />
       <div data-pw="explicit-role" role="button">Explicit role</div>
       <div data-pw="fallback-role" role="unknown button">Fallback role</div>
+      <div data-pw="deletion-role" role="deletion">Deleted text</div>
+      <div data-pw="insertion-role" role="insertion">Inserted text</div>
+      <button data-pw="aria-label-precedence" aria-label="Close">Visible close text</button>
+      <span id="action-first">First</span>
+      <span id="action-second">Second</span>
+      <div id="custom-action" data-pw="custom-action" role="button" aria-labelledby="action-first action-second" />
       <a data-pw="link-target" href="/docs">Docs</a>
       <a data-pw="empty-link-target" href="">Empty docs</a>
       <a data-pw="dynamic-link-target" href={props.label}>Dynamic docs</a>

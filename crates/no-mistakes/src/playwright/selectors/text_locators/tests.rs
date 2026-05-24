@@ -4,16 +4,13 @@ use std::path::Path;
 
 #[test]
 fn text_locators_preserve_hook_scope() {
-    let source = r#"
-        test.beforeEach(async ({ page }) => {
-            await page.getByText("Setup text").click();
-        });
-        test("uses setup", async ({ page }) => {
-            await page.getByText("Test text").click();
-        });
-    "#;
+    let source = crate::playwright::test_support::fixture_source(&[
+        "ast-snippets",
+        "selectors",
+        "playwright-text-locator-scope.ts",
+    ]);
 
-    let occurrences = ast::with_program(Path::new("fixture.ts"), source, |program, source| {
+    let occurrences = ast::with_program(Path::new("fixture.ts"), &source, |program, source| {
         extract_playwright_text_locator_occurrences_from_program(program, source)
     })
     .expect("fixture should parse");

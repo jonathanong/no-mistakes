@@ -27,12 +27,12 @@ fn text_match_handles_exact_and_case_insensitive_substrings() {
 
 #[test]
 fn role_matching_respects_hidden_targets() {
-    let visible = target(AppTextKind::VisibleText, "Save", false);
+    let accessible = target(AppTextKind::AccessibleName, "Save", false);
     let hidden = target(AppTextKind::AccessibleName, "Save", true);
     let text = TextMatch::new("Save", true);
 
     assert!(text_target_matches(
-        &visible,
+        &accessible,
         &LocatorKind::Role,
         Some("button"),
         &text,
@@ -51,5 +51,19 @@ fn role_matching_respects_hidden_targets() {
         Some("button"),
         &text,
         true
+    ));
+}
+
+#[test]
+fn role_matching_ignores_visible_text_names() {
+    let visible = target(AppTextKind::VisibleText, "Save", false);
+    let text = TextMatch::new("Save", true);
+
+    assert!(!text_target_matches(
+        &visible,
+        &LocatorKind::Role,
+        Some("button"),
+        &text,
+        false
     ));
 }

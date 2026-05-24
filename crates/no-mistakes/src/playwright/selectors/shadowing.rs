@@ -89,6 +89,12 @@ fn has_unclosed_jsx_start(before: &str) -> bool {
         return false;
     };
     let tail = &before[open_index + 1..];
+    let Some(first) = tail.chars().next() else {
+        return false;
+    };
+    if !(first == '/' || first == '_' || first.is_ascii_alphabetic()) {
+        return false;
+    }
     !tail.contains('>') && !tail.contains(';')
 }
 
