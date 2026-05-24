@@ -146,6 +146,12 @@ fn disable_line_not_matched_when_in_string_literal() {
 }
 
 #[test]
+fn disable_line_handles_escaped_quotes_before_comment() {
+    let source = "const s = \"escaped \\\" quote\"; // no-mistakes-disable-line my-rule";
+    assert!(has_disable_line_comment(source, 1, "my-rule"));
+}
+
+#[test]
 fn disable_line_allows_url_before_comment() {
     let source = "const url = \"https://example.com\"; // no-mistakes-disable-line my-rule";
     assert!(has_disable_line_comment(source, 1, "my-rule"));
