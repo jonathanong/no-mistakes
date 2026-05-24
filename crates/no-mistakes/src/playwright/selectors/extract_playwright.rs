@@ -4,6 +4,7 @@ use super::call_shapes::{
 };
 use super::css::{extract_css_attribute_selectors, extract_css_id_selectors};
 use super::types::{PlaywrightSelector, SelectorRegexes};
+use crate::codebase::ts_source::byte_offset_to_line;
 use crate::playwright::playwright_tests;
 use oxc_ast_visit::Visit;
 
@@ -47,17 +48,19 @@ impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightSelectorVisitor<'a, '_> {
                 call,
                 self.source,
                 self.test_id_attributes,
-                &mut |selector| self.insert(selector),
+                &mut |selector| self.insert(selector, call.span.start),
             );
         } else if let Some(argument_mode) = selector_argument_mode(&call.callee) {
             for selector in selector_argument_literals(call, self.source, argument_mode) {
                 extract_css_attribute_selectors(
                     &selector,
                     &self.regexes.playwright_attributes,
-                    &mut |selector| self.insert(selector),
+                    &mut |selector| self.insert(selector, call.span.start),
                 );
                 if self.regexes.html_ids {
-                    extract_css_id_selectors(&selector, &mut |selector| self.insert(selector));
+                    extract_css_id_selectors(&selector, &mut |selector| {
+                        self.insert(selector, call.span.start)
+                    });
                 }
             }
         }
@@ -143,12 +146,13 @@ impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightSelectorVisitor<'a, '_> {
 }
 
 impl PlaywrightSelectorVisitor<'_, '_> {
-    fn insert(&mut self, value: PlaywrightSelector) {
+    fn insert(&mut self, value: PlaywrightSelector, byte_offset: u32) {
         self.selectors.push(playwright_tests::TestOccurrence {
             value,
             status: self.status.merge(self.annotation_status),
             test_name: self.current_test_name.clone(),
             describe_path: self.describe_stack.clone(),
+            line: byte_offset_to_line(self.source, byte_offset as usize),
         });
     }
 

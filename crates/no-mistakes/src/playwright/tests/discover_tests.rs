@@ -277,6 +277,7 @@ fn related_report_matches_route_and_selector_edges() {
             route_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
             route: std::sync::Arc::new("/".to_string()),
             url: std::sync::Arc::new("/".to_string()),
+            line: 1,
         },
         Edge::Selector {
             test_file: std::sync::Arc::new("tests/e2e/selector.spec.ts".to_string()),
@@ -286,6 +287,7 @@ fn related_report_matches_route_and_selector_edges() {
             attribute: "data-testid".to_string(),
             value: "save".to_string(),
             selector: "getByTestId(save)".to_string(),
+            line: 1,
         },
     ];
     let report = build_related_report(

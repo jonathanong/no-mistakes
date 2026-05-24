@@ -1,4 +1,5 @@
-use crate::playwright::analysis::types::{Edge, TestEntry, TestsReport};
+use crate::playwright::analysis::tests_report_types::{TestEntry, TestsReport};
+use crate::playwright::analysis::types::Edge;
 use crate::playwright::fsutil::relative_string;
 use crate::playwright::selectors;
 use std::collections::{BTreeMap, BTreeSet};
@@ -7,6 +8,7 @@ use std::sync::Arc;
 
 type TestKey = (Arc<String>, Option<Arc<String>>, Arc<Vec<String>>);
 type TestBuckets = (
+    BTreeSet<String>,
     BTreeSet<String>,
     BTreeSet<String>,
     BTreeSet<String>,
@@ -70,13 +72,34 @@ pub(crate) fn build_tests_report(edges: &[Edge], files: &[PathBuf], root: &Path)
                     .3
                     .insert(format!("{method} {path}"));
             }
+            Edge::LocatorText {
+                test_file,
+                test_name,
+                describe_path,
+                locator_kind,
+                text,
+                ..
+            } => {
+                if !filter_files.is_empty() && !filter_files.contains(test_file.as_str()) {
+                    continue;
+                }
+                let key: TestKey = (test_file.clone(), test_name.clone(), describe_path.clone());
+                by_test
+                    .entry(key)
+                    .or_default()
+                    .4
+                    .insert(format!("{locator_kind}: {text}"));
+            }
         }
     }
 
     let tests = by_test
         .into_iter()
         .map(
-            |((file, name, describe_path), (test_ids, html_ids, routes, fetch_apis))| TestEntry {
+            |(
+                (file, name, describe_path),
+                (test_ids, html_ids, routes, fetch_apis, locator_texts),
+            )| TestEntry {
                 file: Arc::unwrap_or_clone(file),
                 name: name.map(Arc::unwrap_or_clone),
                 describe_path: Arc::unwrap_or_clone(describe_path),
@@ -84,6 +107,7 @@ pub(crate) fn build_tests_report(edges: &[Edge], files: &[PathBuf], root: &Path)
                 html_ids: html_ids.into_iter().collect(),
                 routes: routes.into_iter().collect(),
                 fetch_apis: fetch_apis.into_iter().collect(),
+                locator_texts: locator_texts.into_iter().collect(),
             },
         )
         .collect();
@@ -114,6 +138,9 @@ pub(crate) fn print_tests_text(report: &TestsReport) {
         }
         for html_id in &entry.html_ids {
             println!("  html-id: {html_id}");
+        }
+        for locator_text in &entry.locator_texts {
+            println!("  locator-text: {locator_text}");
         }
     }
 }

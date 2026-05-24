@@ -1,5 +1,6 @@
 use crate::playwright::analysis::context::{DiscoveredTestFile, TestAnalysisContext};
 use crate::playwright::analysis::routes_index::route_specificity;
+use crate::playwright::analysis::text_edges::append_locator_text_edges;
 use crate::playwright::analysis::types::Edge;
 use crate::playwright::fsutil::relative_string;
 use crate::playwright::matcher;
@@ -32,14 +33,20 @@ pub(crate) fn analyze_test_file(
                 &test_id_attributes,
             )
         };
-        (raw_urls, playwright_selectors)
+        let text_locators = if context.app_text_targets.is_empty() {
+            Vec::new()
+        } else {
+            selectors::extract_playwright_text_locator_occurrences_from_program(program, source)
+        };
+        (raw_urls, playwright_selectors, text_locators)
     });
-    let (raw_urls, playwright_selectors) = parsed?;
+    let (raw_urls, playwright_selectors, text_locators) = parsed?;
     Ok(analyze_test_occurrences(
         test_file,
         context,
         raw_urls,
         playwright_selectors,
+        text_locators,
     ))
 }
 
@@ -49,6 +56,11 @@ pub(crate) fn analyze_test_occurrences(
     raw_urls: Vec<crate::playwright::playwright_tests::TestOccurrence<String>>,
     playwright_selectors: Vec<
         crate::playwright::playwright_tests::TestOccurrence<selectors::PlaywrightSelector>,
+    >,
+    text_locators: Vec<
+        crate::playwright::playwright_tests::TestOccurrence<
+            crate::playwright::analysis::text_types::PlaywrightTextLocator,
+        >,
     >,
 ) -> Vec<Edge> {
     let rel_test_file = std::sync::Arc::new(relative_string(context.root, &test_file.path));
@@ -91,6 +103,7 @@ pub(crate) fn analyze_test_occurrences(
                 route_file: route.route_file.clone(),
                 route: route.pattern.clone(),
                 url: url_arc.clone(),
+                line: raw_url.line,
             });
         }
     }
@@ -113,10 +126,13 @@ pub(crate) fn analyze_test_occurrences(
                     attribute: app_selector.selector.attribute.clone(),
                     value: app_selector.value.clone(),
                     selector: playwright_selector.value.selector.clone(),
+                    line: playwright_selector.line,
                 });
             }
         }
     }
+
+    append_locator_text_edges(&mut edges, &rel_test_file, context, text_locators);
 
     edges
 }

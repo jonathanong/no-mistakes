@@ -2,10 +2,19 @@ use crate::playwright::ast;
 use crate::playwright::playwright_tests::TestStatus;
 use crate::playwright::selectors::{
     compile_selector_regexes, extract_playwright_selector_occurrences_from_program,
-    PlaywrightSelector, SelectorRegexes,
+    extract_playwright_text_locator_occurrences_from_program, PlaywrightSelector, SelectorRegexes,
 };
 use std::collections::BTreeMap;
 use std::path::Path;
+
+pub(super) type TextLocatorOccurrence = (
+    String,
+    String,
+    Option<String>,
+    TestStatus,
+    Option<String>,
+    Vec<String>,
+);
 
 pub(super) fn extract_playwright_selectors(
     source: &str,
@@ -57,6 +66,45 @@ pub(super) fn extract_playwright_selector_occurrences(
         .into_iter()
         .map(|o| (o.value.selector, o.status))
         .collect()
+    })
+    .expect("fixture should parse")
+}
+
+pub(super) fn extract_playwright_text_locators(
+    source: &str,
+) -> Vec<(String, String, Option<String>)> {
+    ast::with_program(Path::new("fixture.ts"), source, |program, source| {
+        extract_playwright_text_locator_occurrences_from_program(program, source)
+            .into_iter()
+            .map(|o| {
+                (
+                    o.value.kind.as_str().to_string(),
+                    o.value.text,
+                    o.value.role,
+                )
+            })
+            .collect()
+    })
+    .expect("fixture should parse")
+}
+
+pub(super) fn extract_playwright_text_locator_occurrences(
+    source: &str,
+) -> Vec<TextLocatorOccurrence> {
+    ast::with_program(Path::new("fixture.ts"), source, |program, source| {
+        extract_playwright_text_locator_occurrences_from_program(program, source)
+            .into_iter()
+            .map(|o| {
+                (
+                    o.value.kind.as_str().to_string(),
+                    o.value.text,
+                    o.value.role,
+                    o.status,
+                    o.test_name,
+                    o.describe_path,
+                )
+            })
+            .collect()
     })
     .expect("fixture should parse")
 }

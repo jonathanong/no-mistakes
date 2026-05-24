@@ -1,6 +1,7 @@
 use super::helpers::{
     extract_playwright_selector_occurrences, extract_playwright_selectors,
-    extract_playwright_selectors_with_regexes,
+    extract_playwright_selectors_with_regexes, extract_playwright_text_locator_occurrences,
+    extract_playwright_text_locators,
 };
 use crate::playwright::playwright_tests::TestStatus;
 use crate::playwright::selectors::compile_selector_regexes_with_html_ids;
@@ -183,4 +184,79 @@ fn extracts_html_ids_playwright_selectors() {
             ("id".to_string(), r#"[id="save"]"#.to_string()),
         ])
     );
+}
+
+#[test]
+fn extracts_playwright_text_locators() {
+    let locators = extract_playwright_text_locators(
+        r#"
+        await page.getByRole("button", { name: "Discuss" }).click();
+        await page.getByText("Welcome back").click();
+        await page.getByLabel(`Email`).fill("a@b.com");
+        await page.getByPlaceholder("Search").fill("x");
+        await page.getByText(dynamic);
+        await page.getByRole("button", { name: /Save/ });
+        "#,
+    );
+    assert_eq!(
+        locators,
+        vec![
+            (
+                "role".to_string(),
+                "Discuss".to_string(),
+                Some("button".to_string())
+            ),
+            ("text".to_string(), "Welcome back".to_string(), None),
+            ("label".to_string(), "Email".to_string(), None),
+            ("placeholder".to_string(), "Search".to_string(), None),
+        ]
+    );
+}
+
+#[test]
+fn extracts_text_locator_status_and_ignores_unsupported_shapes() {
+    let source = crate::playwright::test_support::fixture_source(&[
+        "ast-snippets",
+        "selectors",
+        "playwright-text-locators-branches.ts",
+    ]);
+    let locators = extract_playwright_text_locator_occurrences(&source);
+
+    assert_eq!(locators.len(), 8);
+    assert!(locators.contains(&(
+        "role".to_string(),
+        "Save".to_string(),
+        Some("button".to_string()),
+        TestStatus::Active,
+        Some("active role".to_string()),
+        vec!["settings".to_string()]
+    )));
+    assert!(locators.contains(&(
+        "text".to_string(),
+        "Skip me".to_string(),
+        None,
+        TestStatus::Skipped,
+        Some("skipped text".to_string()),
+        vec![]
+    )));
+    assert!(locators.contains(&(
+        "text".to_string(),
+        "Annotation text".to_string(),
+        None,
+        TestStatus::Conditional,
+        Some("annotation text".to_string()),
+        vec![]
+    )));
+    assert!(locators.iter().any(|(_, text, _, status, _, _)| {
+        text == "Conditional label" && *status == TestStatus::Conditional
+    }));
+    assert!(locators.iter().any(|(_, text, _, status, _, _)| {
+        text == "Conditional placeholder" && *status == TestStatus::Conditional
+    }));
+    assert!(locators.iter().any(|(_, text, _, status, _, _)| {
+        text == "Logical text" && *status == TestStatus::Conditional
+    }));
+    assert!(locators.iter().any(|(_, text, _, status, _, _)| {
+        text.starts_with("Ternary ") && *status == TestStatus::Conditional
+    }));
 }

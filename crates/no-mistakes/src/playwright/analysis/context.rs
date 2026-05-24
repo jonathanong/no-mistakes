@@ -1,3 +1,4 @@
+use crate::playwright::analysis::text_types::AppTextTarget;
 use crate::playwright::playwright_config;
 use crate::playwright::playwright_tests;
 use crate::playwright::selectors;
@@ -41,6 +42,9 @@ pub(crate) struct TestAnalysisContext<'a> {
     pub(crate) route_index: &'a RouteIndex,
     pub(crate) app_selector_targets: &'a [AppSelectorTarget<'a>],
     pub(crate) selector_index: &'a SelectorIndex<'a>,
+    pub(crate) app_text_targets: &'a [AppTextTarget],
+    pub(crate) route_reachable_files:
+        &'a HashMap<Arc<String>, std::collections::BTreeSet<Arc<String>>>,
     pub(crate) navigation_helpers: &'a [String],
     pub(crate) selector_regexes: &'a selectors::SelectorRegexes,
     pub(crate) test_policy: playwright_tests::TestPolicy,

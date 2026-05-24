@@ -1,0 +1,17 @@
+import { test } from "@playwright/test";
+
+test("covers visible button text", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Discuss" }).click();
+  await page.getByLabel("Email").fill("reader@example.com");
+  await page.getByPlaceholder("Search").fill("topic");
+});
+
+test("covers visible text through adjacent selector", async ({ page }) => {
+  await page.locator('[data-pw="discuss-in-community-button"]').click();
+  await page.getByText("Discuss").click();
+});
+
+test.skip("skipped text locator stays policy gated", async ({ page }) => {
+  await page.getByText("Discuss").click();
+});

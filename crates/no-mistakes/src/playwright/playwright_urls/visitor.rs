@@ -6,6 +6,7 @@ use super::literals::{
     argument_candidate_literals, argument_literals, direct_url_pattern_literals,
     extract_href_from_selector,
 };
+use crate::codebase::ts_source::byte_offset_to_line;
 use crate::playwright::{ast, playwright_tests};
 use oxc_ast::ast::{
     CallExpression, ConditionalExpression, IfStatement, LogicalExpression, Program,
@@ -32,7 +33,7 @@ impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
             if let Some(argument) = call.arguments.first() {
                 for url in argument_literals(argument, self.source, self.static_zero_arg_paths) {
                     if is_candidate_url(&url) {
-                        self.insert(url);
+                        self.insert(url, call.span.start);
                     }
                 }
             }
@@ -43,7 +44,7 @@ impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
                     .next()
             }) {
                 if let Some(url) = extract_href_from_selector(&selector) {
-                    self.insert(url);
+                    self.insert(url, call.span.start);
                 }
             }
         } else if (callee_is_member_named(&call.callee, "toHaveURL") && !callee_has_not(&callee))
@@ -55,7 +56,7 @@ impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
                 self.source,
                 self.static_zero_arg_paths,
             ) {
-                self.insert(url);
+                self.insert(url, call.span.start);
             }
         } else if callee_matches_navigation_helper(&callee, self.navigation_helpers) {
             for argument in &call.arguments {
@@ -63,7 +64,7 @@ impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
                     argument_candidate_literals(argument, self.source, self.static_zero_arg_paths);
                 if !urls.is_empty() {
                     for url in urls {
-                        self.insert(url);
+                        self.insert(url, call.span.start);
                     }
                     break;
                 }
@@ -148,12 +149,13 @@ impl<'a> Visit<'a> for UrlVisitor<'a, '_> {
 }
 
 impl UrlVisitor<'_, '_> {
-    pub fn insert(&mut self, value: String) {
+    pub fn insert(&mut self, value: String, byte_offset: u32) {
         self.urls.insert(playwright_tests::TestOccurrence {
             value,
             status: self.status.merge(self.annotation_status),
             test_name: self.current_test_name.clone(),
             describe_path: self.describe_stack.clone(),
+            line: byte_offset_to_line(self.source, byte_offset as usize),
         });
     }
 

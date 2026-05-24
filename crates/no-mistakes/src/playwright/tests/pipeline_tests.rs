@@ -218,6 +218,84 @@ fn run_check_returns_success_for_fully_covered_project() {
 }
 
 #[test]
+fn text_locators_create_approximate_related_and_coverage_edges_with_route_signal() {
+    let root = fixture_path(&["nextjs-selectors", "selector-text-locator"]);
+    let cli = Cli {
+        root: root.clone(),
+        config: None,
+        playwright_config: vec![],
+        project: None,
+        json: true,
+        assert_conditional_tests: false,
+        allow_skipped_tests: false,
+        assert_unique_test_ids: false,
+        assert_unique_html_ids: false,
+        assert_unique_selectors: false,
+        command: Command::Check,
+    };
+    assert_eq!(run(cli).unwrap(), ExitCode::from(1));
+
+    let settings = Settings {
+        frontend_root: "web/app".to_string(),
+        playwright_configs: vec![],
+        project: None,
+        test_include: vec![],
+        test_exclude: vec![],
+        ignore_routes: vec![],
+        navigation_helpers: vec![],
+        selector_attributes: vec!["data-testid".to_string(), "data-pw".to_string()],
+        component_selector_attributes: BTreeMap::new(),
+        html_ids: false,
+        selector_roots: vec!["web/app".to_string()],
+        selector_include: vec![],
+        selector_exclude: vec![],
+    };
+    let analysis = analyze(&root, &settings).unwrap();
+    assert_eq!(analysis.coverage.summary.covered_selectors, 3);
+    assert_eq!(analysis.coverage.summary.uncovered_selectors, 1);
+    assert!(analysis.edges.edges.iter().any(|edge| {
+        matches!(
+            edge,
+            crate::playwright::analysis::types::Edge::LocatorText {
+                app_file,
+                text,
+                reasons,
+                ..
+            } if app_file.as_ref() == "web/app/components/discuss-button.tsx"
+                && text == "Discuss"
+                && reasons == &vec!["route-signal".to_string()]
+        )
+    }));
+    assert!(analysis.edges.edges.iter().any(|edge| {
+        matches!(
+            edge,
+            crate::playwright::analysis::types::Edge::LocatorText {
+                app_file,
+                text,
+                reasons,
+                ..
+            } if app_file.as_ref() == "web/app/components/discuss-button.tsx"
+                && text == "Discuss"
+                && reasons == &vec!["adjacent-selector".to_string()]
+        )
+    }));
+
+    let related = build_related_report(
+        &root,
+        &analysis.edges.edges,
+        &[PathBuf::from("web/app/components/discuss-button.tsx")],
+    );
+    assert_eq!(related.tests, vec!["tests/e2e/app.spec.ts"]);
+
+    let unrelated = build_related_report(
+        &root,
+        &analysis.edges.edges,
+        &[PathBuf::from("web/app/components/unreachable-discuss.tsx")],
+    );
+    assert!(unrelated.tests.is_empty());
+}
+
+#[test]
 fn run_check_fails_for_uncovered_selectors_without_uncovered_routes() {
     let root = fixture_path(&["nextjs-selectors", "selector-uncovered"]);
     let cli = Cli {
@@ -381,6 +459,8 @@ fn analyze_test_file_returns_error_for_missing_file() {
         route_index: &route_index,
         app_selector_targets: &[],
         selector_index: &selector_index,
+        app_text_targets: &[],
+        route_reachable_files: &Default::default(),
         navigation_helpers: &[],
         selector_regexes: &selector_regexes,
         test_policy: TestPolicy::default(),
@@ -410,6 +490,8 @@ fn analyze_test_file_returns_error_for_parse_failure() {
         route_index: &route_index,
         app_selector_targets: &[],
         selector_index: &selector_index,
+        app_text_targets: &[],
+        route_reachable_files: &Default::default(),
         navigation_helpers: &[],
         selector_regexes: &selector_regexes,
         test_policy: TestPolicy::default(),

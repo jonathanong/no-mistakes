@@ -4,6 +4,7 @@ use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts;
 use crate::codebase::storybook::StorybookFileFacts;
 use crate::codebase::ts_symbols::FileSymbols;
 use crate::integration_tests::types::FileAnalysis as IntegrationFileAnalysis;
+use crate::playwright::analysis::text_types::PlaywrightTextLocator;
 use crate::playwright::playwright_tests::TestOccurrence;
 use crate::playwright::selectors::{PlaywrightSelector, SelectorRegexes};
 use crate::queue::extract::FileFacts as QueueFileFacts;
@@ -70,6 +71,7 @@ pub(crate) struct CheckFileFacts {
 pub(crate) struct PlaywrightTestFacts {
     pub(crate) urls: Vec<TestOccurrence<String>>,
     pub(crate) selectors: Vec<TestOccurrence<PlaywrightSelector>>,
+    pub(crate) text_locators: Vec<TestOccurrence<PlaywrightTextLocator>>,
 }
 
 impl CheckFactMap {

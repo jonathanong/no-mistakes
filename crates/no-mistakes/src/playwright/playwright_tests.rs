@@ -1,19 +1,14 @@
 use crate::playwright::ast;
 use oxc_ast::ast::{Argument, CallExpression, Expression};
 
+mod occurrence;
+pub use occurrence::TestOccurrence;
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub enum TestStatus {
     Active,
     Conditional,
     Skipped,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub struct TestOccurrence<T> {
-    pub value: T,
-    pub status: TestStatus,
-    pub test_name: Option<String>,
-    pub describe_path: Vec<String>,
 }
 
 #[derive(Clone, Copy, Debug, Default)]

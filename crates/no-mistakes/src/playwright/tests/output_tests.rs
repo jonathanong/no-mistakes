@@ -2,9 +2,10 @@ use crate::playwright::analysis::output::{
     build_related_report, print_coverage_text, print_edges_text,
 };
 use crate::playwright::analysis::tests_report::{build_tests_report, print_tests_text};
+use crate::playwright::analysis::tests_report_types::{TestEntry, TestsReport};
 use crate::playwright::analysis::types::{
     CoverageFetch, CoverageReport, CoverageRoute, CoverageSelector, DuplicateSelector, Edge,
-    EdgeReport, Summary, TestEntry, TestsReport,
+    EdgeReport, Summary,
 };
 use crate::playwright::test_support::fixture_path;
 use crate::playwright::{report_json, PlaywrightReportKind, PlaywrightReportOptions};
@@ -76,6 +77,7 @@ fn text_printers_cover_routes_and_selectors() {
                 route_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
                 route: std::sync::Arc::new("/".to_string()),
                 url: std::sync::Arc::new("/".to_string()),
+                line: 1,
             },
             Edge::Selector {
                 test_file: std::sync::Arc::new("tests/e2e/app.spec.ts".to_string()),
@@ -85,6 +87,7 @@ fn text_printers_cover_routes_and_selectors() {
                 attribute: "data-testid".to_string(),
                 value: "save".to_string(),
                 selector: "getByTestId(save)".to_string(),
+                line: 1,
             },
         ],
     };
@@ -150,6 +153,7 @@ fn related_report_includes_fetch_apis() {
             route_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
             route: std::sync::Arc::new("/".to_string()),
             url: std::sync::Arc::new("/".to_string()),
+            line: 1,
         },
         Edge::Fetch {
             test_file: std::sync::Arc::new("tests/e2e/app.spec.ts".to_string()),
@@ -179,6 +183,7 @@ fn print_tests_text_covers_html_ids() {
             html_ids: vec!["main-nav".to_string()],
             routes: vec![],
             fetch_apis: vec![],
+            locator_texts: vec![],
         }],
     };
     print_tests_text(&report);
@@ -196,6 +201,7 @@ fn print_tests_text_with_describe_path_and_unnamed_entry() {
                 html_ids: vec![],
                 routes: vec!["/".to_string()],
                 fetch_apis: vec!["GET /api/data".to_string()],
+                locator_texts: vec![],
             },
             TestEntry {
                 file: "tests/e2e/app.spec.ts".to_string(),
@@ -205,6 +211,7 @@ fn print_tests_text_with_describe_path_and_unnamed_entry() {
                 html_ids: vec![],
                 routes: vec![],
                 fetch_apis: vec![],
+                locator_texts: vec![],
             },
         ],
     };
@@ -222,6 +229,7 @@ fn edge_report_json_schema_is_stable_with_arc_fields() {
                 route_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
                 route: std::sync::Arc::new("/".to_string()),
                 url: std::sync::Arc::new("/api/health".to_string()),
+                line: 1,
             },
             Edge::Selector {
                 test_file: std::sync::Arc::new("tests/e2e/app.spec.ts".to_string()),
@@ -231,6 +239,7 @@ fn edge_report_json_schema_is_stable_with_arc_fields() {
                 attribute: "data-testid".to_string(),
                 value: "save".to_string(),
                 selector: "getByTestId(save)".to_string(),
+                line: 1,
             },
             Edge::Fetch {
                 test_file: std::sync::Arc::new("tests/e2e/app.spec.ts".to_string()),
@@ -289,6 +298,7 @@ fn build_tests_report_produces_entries_with_routes_and_fetch_apis() {
             route_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
             route: std::sync::Arc::new("/".to_string()),
             url: std::sync::Arc::new("/".to_string()),
+            line: 1,
         },
         Edge::Fetch {
             test_file: std::sync::Arc::new("tests/e2e/app.spec.ts".to_string()),
@@ -324,6 +334,7 @@ fn build_tests_report_groups_selector_edges_by_attribute() {
             attribute: "id".to_string(),
             value: "main-nav".to_string(),
             selector: "#main-nav".to_string(),
+            line: 1,
         },
         Edge::Selector {
             test_file: std::sync::Arc::new("tests/e2e/app.spec.ts".to_string()),
@@ -333,6 +344,7 @@ fn build_tests_report_groups_selector_edges_by_attribute() {
             attribute: "data-testid".to_string(),
             value: "save".to_string(),
             selector: "getByTestId(save)".to_string(),
+            line: 1,
         },
     ];
     let report = build_tests_report(&edges, &[], root);
@@ -351,6 +363,7 @@ fn build_tests_report_with_absolute_file_path_filter() {
         route_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
         route: std::sync::Arc::new("/".to_string()),
         url: std::sync::Arc::new("/".to_string()),
+        line: 1,
     }];
     // Pass an absolute path as the file filter — exercises the absolute branch in input_file()
     let abs_filter = std::path::PathBuf::from("/repo/tests/e2e/app.spec.ts");
