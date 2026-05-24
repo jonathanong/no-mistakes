@@ -40,6 +40,16 @@ test_plan:
           - type: sample
             limit:
               files: 1
+      ciGlobal:
+        globalConfigFallback: true
+        limit:
+          files: 1
+        groups:
+          - type: direct
+          - type: dependencies
+          - type: sample
+            limit:
+              files: 1
       all:
         all: true
       coverageOnly:

@@ -177,7 +177,7 @@ no-mistakes test plan playwright --environment pre-push --json
 | `--environment <NAME>` | Test plan environment. Defaults to `pre-push`; `prePush` and `pre_push` config keys are equivalent. |
 | `--limit-percent <N>` | Override the environment limit percentage. |
 | `--limit-files <N>` | Override the environment file cap. |
-| `--global-config-fallback <true|false>` | Override whether global config changes select the full framework suite. Defaults to `true`. |
+| `--global-config-fallback <true|false>` | Opt into or out of selecting the full framework suite when global config changes. Defaults to `false`. |
 | `--format <FORMAT>` | `json`, `paths`, `markdown`, or `md`. |
 | `--json` | Shorthand for `--format json`. |
 
@@ -194,7 +194,6 @@ testPlan:
           - proxy.ts
     environments:
       prePush:
-        globalConfigFallback: false
         limit:
           percent: 5
           files: 100
@@ -206,6 +205,8 @@ testPlan:
             limit:
               percent: 1
               files: 100
+      ci:
+        globalConfigFallback: true
   vitest:
     environments:
       prePush:
@@ -218,13 +219,14 @@ Groups are mutually exclusive in declaration order. `coverage` is Playwright
 only; Vitest supports `direct`, `dependencies`, and deterministic `sample`.
 Deleted or otherwise missing changed-file paths are ignored before fallback,
 dependency, and graph selection.
-`globalConfigFallback: false` lets local environments avoid full-suite fallback
-when repository-level config files such as `.no-mistakes.yml` change; CI
-environments should leave it unset or set it to `true`.
+Global config fallback is disabled unless `globalConfigFallback: true` or
+`--global-config-fallback true` opts in. Use it only for CI environments that
+intentionally run the full framework suite when repository-level config files
+such as `.no-mistakes.yml` change.
 `dependencies.projects.<name>: true` runs the full selected framework when a
-file under that configured project root/include set changes. Explicit project
-dependency globs are relative to that project's root unless they already include
-the root prefix.
+file under that configured project root changes. If that project has `include`,
+those include globs narrow the trigger set. Explicit project dependency globs
+are relative to that project's root unless they already include the root prefix.
 
 ### Filesystem Rules via `no-mistakes check`
 

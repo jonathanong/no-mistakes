@@ -246,7 +246,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
 }
 
 fn global_config_fallback(args: &PlanArgs) -> bool {
-    args.global_config_fallback.unwrap_or(true)
+    args.global_config_fallback.unwrap_or(false)
 }
 
 pub(crate) fn global_config_trigger(

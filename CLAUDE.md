@@ -26,6 +26,9 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
   rendering results.
 - No hardcoded domain conventions — route roots, HTTP prefixes, queue factories,
   workers, and similar project-specific locations must come from configuration.
+- Full-suite, repository-wide, and global fallback behavior must be explicit
+  opt-in. Do not add default-on global behavior or infer project conventions
+  when a scoped configuration knob can make the behavior intentional.
 - Rules to keep the AST parsable (e.g. no indirection, no dynamism)
 - Reduce Agent token usage
 - Allow custom error messages for agents
