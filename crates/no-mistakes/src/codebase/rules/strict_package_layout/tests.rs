@@ -207,6 +207,20 @@ fn deeply_nested_always_fails() {
     assert!(msg.contains("nested subdirectories"), "{msg}");
 }
 
+#[test]
+fn scan_derives_package_dirs_from_file_list_without_dir_metadata() {
+    let root = Path::new("/workspace");
+    let files = vec![root.join("packages/email/src/index.mts")];
+    let opts = Options {
+        test_file_patterns: Vec::new(),
+        test_dir_name: String::new(),
+        packages: vec![spec("packages", ".mts", &[], &[])],
+    };
+    let findings = scan(root, &opts, &files);
+    assert_eq!(findings.len(), 1);
+    assert!(findings[0].file.contains("packages/email/src/index.mts"));
+}
+
 // ── fixture-based integration tests ─────────────────────────────────────────
 
 #[test]

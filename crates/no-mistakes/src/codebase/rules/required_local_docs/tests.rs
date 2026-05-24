@@ -35,6 +35,7 @@ fn default_excl_globs() -> GlobSet {
 fn code_file_with_matching_extension_passes() {
     let globs = default_excl_globs();
     assert!(is_code_file(
+        Path::new(""),
         Path::new("agents/email/index.mts"),
         DEFAULT_CODE_EXTENSIONS,
         DEFAULT_TEST_EXCLUDE,
@@ -46,6 +47,7 @@ fn code_file_with_matching_extension_passes() {
 fn non_code_extension_fails() {
     let globs = default_excl_globs();
     assert!(!is_code_file(
+        Path::new(""),
         Path::new("agents/email/style.css"),
         DEFAULT_CODE_EXTENSIONS,
         DEFAULT_TEST_EXCLUDE,
@@ -57,6 +59,7 @@ fn non_code_extension_fails() {
 fn test_file_by_name_pattern_excluded() {
     let globs = default_excl_globs();
     assert!(!is_code_file(
+        Path::new(""),
         Path::new("agents/email/index.test.mts"),
         DEFAULT_CODE_EXTENSIONS,
         DEFAULT_TEST_EXCLUDE,
@@ -68,6 +71,7 @@ fn test_file_by_name_pattern_excluded() {
 fn test_dir_component_excluded() {
     let globs = default_excl_globs();
     assert!(!is_code_file(
+        Path::new(""),
         Path::new("agents/email/__tests__/index.mts"),
         DEFAULT_CODE_EXTENSIONS,
         DEFAULT_TEST_EXCLUDE,
@@ -79,9 +83,22 @@ fn test_dir_component_excluded() {
 fn spec_file_excluded() {
     let globs = default_excl_globs();
     assert!(!is_code_file(
+        Path::new(""),
         Path::new("agents/email/foo.spec.ts"),
         DEFAULT_CODE_EXTENSIONS,
         DEFAULT_TEST_EXCLUDE,
+        &globs
+    ));
+}
+
+#[test]
+fn path_exclude_pattern_excluded() {
+    let globs = build_exclude_globs(&["agents/generated/**"]);
+    assert!(!is_code_file(
+        Path::new(""),
+        Path::new("agents/generated/index.mts"),
+        DEFAULT_CODE_EXTENSIONS,
+        &[],
         &globs
     ));
 }

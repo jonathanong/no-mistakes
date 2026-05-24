@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 pub(super) struct ScanCtx<'a> {
     pub(super) req_file: String,
     pub(super) ext: Vec<&'a str>,
-    pub(super) excl: Vec<&'a str>,
+    pub(super) excl_literals: Vec<&'a str>,
     pub(super) globs: GlobSet,
     pub(super) file_set: HashSet<&'a PathBuf>,
     pub(super) files: &'a [PathBuf],
@@ -23,7 +23,9 @@ pub(super) fn scan_pkg(root: &Path, pkg_root: &Path, ctx: &ScanCtx) -> Vec<RuleF
                 .components()
                 .filter_map(|c| c.as_os_str().to_str())
                 .collect();
-            if comps.len() >= 2 && is_code_file(file, &ctx.ext, &ctx.excl, &ctx.globs) {
+            if comps.len() >= 2
+                && is_code_file(root, file, &ctx.ext, &ctx.excl_literals, &ctx.globs)
+            {
                 Some(comps[0].to_string())
             } else {
                 None

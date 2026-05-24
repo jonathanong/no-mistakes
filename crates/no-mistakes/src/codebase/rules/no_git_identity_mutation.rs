@@ -86,11 +86,31 @@ pub(crate) fn has_shell_shebang(content: &str) -> bool {
 
 pub(crate) fn is_managed_runner_only(content: &str) -> bool {
     let runs_on_re = Regex::new(r"(?m)^\s*runs-on:\s*(.+?)\s*$").expect("runs-on regex");
-    let values: Vec<String> = runs_on_re
-        .captures_iter(content)
-        .filter_map(|cap| cap.get(1).map(|m| m.as_str()))
-        .flat_map(parse_runs_on_values)
-        .collect();
+    let empty_runs_on_re = Regex::new(r"(?m)^\s*runs-on:\s*$").expect("empty runs-on regex");
+    let mut values = Vec::new();
+    let mut in_runs_on_list = false;
+    for line in content.lines() {
+        if let Some(cap) = runs_on_re.captures(line) {
+            values.extend(parse_runs_on_values(cap.get(1).map_or("", |m| m.as_str())));
+            in_runs_on_list = false;
+            continue;
+        }
+        if empty_runs_on_re.is_match(line) {
+            in_runs_on_list = true;
+            continue;
+        }
+        if in_runs_on_list {
+            let trimmed = line.trim();
+            if trimmed.is_empty() || trimmed.starts_with('#') {
+                continue;
+            }
+            if let Some(item) = trimmed.strip_prefix("- ") {
+                values.extend(parse_runs_on_values(item));
+                continue;
+            }
+            in_runs_on_list = false;
+        }
+    }
     if values.is_empty() {
         return false;
     }

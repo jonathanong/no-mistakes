@@ -103,7 +103,6 @@ pub(crate) fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<RuleFi
             .filter_map(|rel| rel.components().next())
             .filter_map(|c| c.as_os_str().to_str())
             .map(|d| spec_root.join(d))
-            .filter(|d| d.is_dir())
             .collect();
         for pkg_dir in &pkg_dirs {
             for file in files {

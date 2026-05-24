@@ -23,16 +23,20 @@ pub(crate) struct Options {
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     let skip = &config.filesystem.skip_directories;
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.rule_options();
-        let target_roots = super::target_roots(root, config, rule);
-        let files: Vec<PathBuf> = target_roots
-            .iter()
-            .flat_map(|r| discover_files(r, skip))
-            .collect();
-        findings.extend(scan(root, &opts, &files)?);
-    }
+    let per_rule: Result<Vec<Vec<RuleFinding>>> = config
+        .rule_applications(RULE_ID)
+        .into_par_iter()
+        .map(|rule| {
+            let opts: Options = rule.rule_options();
+            let target_roots = super::target_roots(root, config, rule);
+            let files: Vec<PathBuf> = target_roots
+                .iter()
+                .flat_map(|r| discover_files(r, skip))
+                .collect();
+            scan(root, &opts, &files)
+        })
+        .collect();
+    let mut findings: Vec<RuleFinding> = per_rule?.into_iter().flatten().collect();
     super::sort_findings(&mut findings);
     Ok(findings)
 }
@@ -42,17 +46,21 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.rule_options();
-        let target_roots = super::target_roots(root, config, rule);
-        let files: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
-            .cloned()
-            .collect();
-        findings.extend(scan(root, &opts, &files)?);
-    }
+    let per_rule: Result<Vec<Vec<RuleFinding>>> = config
+        .rule_applications(RULE_ID)
+        .into_par_iter()
+        .map(|rule| {
+            let opts: Options = rule.rule_options();
+            let target_roots = super::target_roots(root, config, rule);
+            let files: Vec<PathBuf> = all_files
+                .iter()
+                .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
+                .cloned()
+                .collect();
+            scan(root, &opts, &files)
+        })
+        .collect();
+    let mut findings: Vec<RuleFinding> = per_rule?.into_iter().flatten().collect();
     super::sort_findings(&mut findings);
     Ok(findings)
 }

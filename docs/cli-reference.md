@@ -276,9 +276,11 @@ rules:
       stories: ["storybook/**/*.stories.{ts,tsx,js,jsx}"]
       include: ["components/special/**/*.tsx"]
       exclude: ["components/generated/**"]
+      ignore_index_and_private_files: true
       include_all_react_named_exports: true
       include_all_react_default_exports: true
       required_props: ["data-pw"]
+      allow_colocated_tests: true
       allow_components:
         "components/actions/delete-button.tsx#DeleteButton": "Requires live mutation callbacks."
       allow_files:
@@ -298,6 +300,20 @@ for a whole file.
 `required_props` narrows automatic include-all selection to files that mention
 at least one configured prop. Explicit `include` globs still select matching
 component files even when those props are absent.
+
+`allow_colocated_tests: true` treats a same-directory test file as coverage for
+components in the matching source file. The accepted names are
+`<stem>.test.tsx`, `<stem>.mock.test.tsx`, `<stem>.test.ts`, and
+`<stem>.mock.test.ts`.
+
+Glob matching is slash-aware: `components/ui/*.tsx` matches direct children like
+`components/ui/button.tsx`, while recursive selection requires `**`. Set
+`ignore_index_and_private_files: true` to skip selected files named `index.tsx`,
+`index.jsx`, `_*.tsx`, or `_*.jsx`, which is useful for barrel files and private
+implementation components.
+
+Story coverage uses AST-based runtime imports. Type-only imports such as
+`import type { Button } from "../components/Button"` do not count as coverage.
 
 ### Next.js Feature Ban Rules via `no-mistakes check`
 
@@ -321,66 +337,6 @@ rules:
 `src/pages/api/**` files. `nextjs-no-caching` rejects Next.js cache
 directives, `next/cache` APIs, cached `fetch` options, static cache segment
 config, and cache-related `next.config.*` settings.
-
-### Storybook Component Coverage via `no-mistakes check`
-
-`require-storybook-stories` requires selected exported React components to have
-coverage from reachable Storybook stories. Coverage counts direct story imports and
-React child components rendered by covered components. Dynamic import and mock
-targets are not required by `include_all_react_*` unless explicitly included.
-
-```yml
-projects:
-  web:
-    type: nextjs
-    root: web
-
-rules:
-  - rule: require-storybook-stories
-    projects: [web]
-    options:
-      stories: ["storybook/**/*.stories.{ts,tsx,js,jsx}"]
-      include: ["components/special/**/*.tsx"]
-      exclude: ["components/generated/**"]
-      ignore_index_and_private_files: true
-      include_all_react_named_exports: true
-      include_all_react_default_exports: true
-      required_props: ["data-pw"]
-      allow_colocated_tests: true
-      allow_components:
-        "components/actions/delete-button.tsx#DeleteButton": "Requires live mutation callbacks."
-      allow_files:
-        "components/generated/**": "Generated wrappers."
-```
-
-`stories` can be omitted. In that case the rule reads `tests.storybook.configs`
-and uses the configured Storybook `stories` entries; if no Storybook config is
-available it falls back to `**/*.stories.{ts,tsx,js,jsx}`. Test files are
-excluded from component selection by default using configured Vitest,
-Playwright, and conventional test globs.
-
-`allow_colocated_tests: true` treats a same-directory test file as coverage for
-components in the matching source file. The accepted names are
-`<stem>.test.tsx`, `<stem>.mock.test.tsx`, `<stem>.test.ts`, and
-`<stem>.mock.test.ts`.
-
-Glob matching is slash-aware: `components/ui/*.tsx` matches direct children like
-`components/ui/button.tsx`, while recursive selection requires `**`. Set
-`ignore_index_and_private_files: true` to skip selected files named `index.tsx`,
-`index.jsx`, `_*.tsx`, or `_*.jsx`, which is useful for barrel files and private
-implementation components.
-
-Story coverage uses AST-based runtime imports. Type-only imports such as
-`import type { Button } from "../components/Button"` do not count as coverage.
-
-Use `// no-mistakes-disable-next-line require-storybook-stories: reason` for a
-single export or `// no-mistakes-disable-file require-storybook-stories: reason`
-for a whole file.
-
-`required_props` narrows automatic include-all selection to files that mention
-at least one configured prop. Explicit `include` globs still select matching
-component files even when those props are absent.
-
 
 ### Playwright
 

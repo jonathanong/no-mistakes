@@ -435,6 +435,33 @@ fn is_managed_runner_only_multiline_list_self_hosted() {
 }
 
 #[test]
+fn is_managed_runner_only_multiline_list_later_self_hosted() {
+    let content = "runs-on:\n  - ubuntu-latest\n  - self-hosted\n";
+    assert!(
+        !is_managed_runner_only(content),
+        "multi-line YAML list must inspect every runner entry"
+    );
+}
+
+#[test]
+fn is_managed_runner_only_multiline_list_skips_blank_and_comment_lines() {
+    let content = "runs-on:\n\n  # hosted runners\n  - ubuntu-latest\n";
+    assert!(
+        is_managed_runner_only(content),
+        "blank and comment lines inside runs-on lists should be ignored"
+    );
+}
+
+#[test]
+fn is_managed_runner_only_multiline_non_list_stops_collection() {
+    let content = "runs-on:\n  group: ubuntu-runners\n  - ubuntu-latest\n";
+    assert!(
+        !is_managed_runner_only(content),
+        "non-list YAML values should not be treated as managed runner entries"
+    );
+}
+
+#[test]
 fn line_continued_git_config_is_flagged() {
     // Exercises EW60T: shell regex now allows \<newline> line continuations.
     let findings = run_on_source("git config \\\n  user.name \"Bot\"\n");

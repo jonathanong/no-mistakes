@@ -55,6 +55,22 @@ fn fail_fixture_has_findings() {
 }
 
 #[test]
+fn sort_fixture_findings_are_sorted() {
+    let root = fixture("sort");
+    let config_path = root.join(".no-mistakes.yml");
+    let findings = check(
+        &root,
+        &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
+    )
+    .unwrap();
+    let files: Vec<_> = findings
+        .iter()
+        .map(|finding| finding.file.as_str())
+        .collect();
+    assert_eq!(files, vec!["a.ts", "b.ts"]);
+}
+
+#[test]
 fn empty_file_detected() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("empty.ts");

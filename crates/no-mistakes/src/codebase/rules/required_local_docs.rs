@@ -5,7 +5,7 @@ pub(crate) use doc_section::check_required_doc_section_with_files;
 pub use doc_section::{check_required_doc_section, DocSectionOptions};
 
 use super::RuleFinding;
-use crate::codebase::ts_source::discover_files;
+use crate::codebase::ts_source::{discover_files, relative_slash_path};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
@@ -92,9 +92,10 @@ pub(crate) fn build_exclude_globs(patterns: &[&str]) -> GlobSet {
 }
 
 pub(crate) fn is_code_file(
+    root: &Path,
     file: &Path,
     extensions: &[&str],
-    excl_strs: &[&str],
+    excl_literals: &[&str],
     excl_globs: &GlobSet,
 ) -> bool {
     let ext_ok = file
@@ -105,19 +106,15 @@ pub(crate) fn is_code_file(
         return false;
     }
     let name = file.file_name().and_then(|n| n.to_str()).unwrap_or("");
-    if excl_globs.is_match(name) {
+    let rel = relative_slash_path(root, file);
+    if excl_globs.is_match(rel.as_str()) || excl_globs.is_match(name) {
         return false;
     }
-    let literals: Vec<&str> = excl_strs
-        .iter()
-        .copied()
-        .filter(|p| !p.contains('*') && !p.contains('?'))
-        .collect();
-    literals.is_empty()
+    excl_literals.is_empty()
         || !file.components().any(|c| {
             c.as_os_str()
                 .to_str()
-                .is_some_and(|s| literals.contains(&s))
+                .is_some_and(|s| excl_literals.contains(&s))
         })
 }
 
@@ -128,10 +125,15 @@ pub(crate) fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<RuleFi
     let (req_file, ext_s, excl_s, globs) = make_scan_config(opts);
     let ext: Vec<&str> = ext_s.iter().map(String::as_str).collect();
     let excl: Vec<&str> = excl_s.iter().map(String::as_str).collect();
+    let excl_literals: Vec<&str> = excl
+        .iter()
+        .copied()
+        .filter(|p| !p.contains('*') && !p.contains('?'))
+        .collect();
     let ctx = scan_pkg::ScanCtx {
         req_file,
         ext,
-        excl,
+        excl_literals,
         globs,
         file_set: files.iter().collect(),
         files,

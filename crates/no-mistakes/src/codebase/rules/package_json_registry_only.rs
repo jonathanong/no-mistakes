@@ -108,9 +108,13 @@ fn scan(
         })
         .flat_map(|path| check_package_json(path, root))
         .collect();
-    for lockfile_root in target_roots {
-        findings.extend(check_lockfile(root, lockfile_root, opts));
-    }
+    findings.extend(
+        target_roots
+            .par_iter()
+            .flat_map(|lockfile_root| check_lockfile(root, lockfile_root, opts))
+            .collect::<Vec<_>>(),
+    );
+    findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
     findings
 }
 
