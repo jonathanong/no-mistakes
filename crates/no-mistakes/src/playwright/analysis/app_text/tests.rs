@@ -47,6 +47,23 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
             && target.text == "Email address"
             && target.selector_refs[0].value == "email-label"
     }));
+    assert!(targets.iter().any(|target| {
+        target.kind == AppTextKind::Label
+            && target.text == "Named email"
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "named-email-input")
+    }));
+    assert_role(&targets, "Subscribe label", "checkbox");
+    assert!(targets.iter().any(|target| {
+        target.kind == AppTextKind::AccessibleName
+            && target.text == "Plan label"
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "plan-input")
+    }));
     assert!(targets
         .iter()
         .any(|target| target.kind == AppTextKind::AccessibleName && target.text == "Search field"));
@@ -99,14 +116,51 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
             && target.role.as_deref() == Some("button")
             && target.kind == AppTextKind::VisibleText
     }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Descendant save"
+            && target.role.as_deref() == Some("button")
+            && target.kind == AppTextKind::AccessibleName
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "descendant-button")
+    }));
+    assert!(!targets.iter().any(|target| {
+        target.text == "Descendant save"
+            && target.kind == AppTextKind::VisibleText
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "descendant-button")
+    }));
+    assert!(!targets.iter().any(|target| {
+        target.text == "Container child"
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "container-target")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Submit form"
+            && target.role.as_deref() == Some("button")
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "submit-input")
+    }));
     assert_role(&targets, "Explicit role", "button");
     assert_role(&targets, "Docs", "link");
+    assert_role(&targets, "Dynamic docs", "link");
     assert_role(&targets, "Heading", "heading");
     assert_role(&targets, "Hero image", "img");
     assert_role(&targets, "Subscribe", "checkbox");
     assert_role(&targets, "Pick one", "radio");
     assert_role(&targets, "Volume", "slider");
+    assert_role(&targets, "Search site", "searchbox");
+    assert_role(&targets, "Count", "spinbutton");
     assert_role(&targets, "Country", "combobox");
+    assert_role(&targets, "Tags", "listbox");
+    assert_role(&targets, "Regions", "listbox");
     assert_role(&targets, "Message", "textbox");
     assert!(targets.iter().any(|target| {
         target.text == "Hidden token"

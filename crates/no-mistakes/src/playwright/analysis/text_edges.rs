@@ -25,6 +25,7 @@ pub(crate) fn append_locator_text_edges(
                 &text_locator.value.kind,
                 text_locator.value.role.as_deref(),
                 &text_locator.value.text,
+                text_locator.value.exact,
             )
         }) {
             let reasons = locator_reasons(
@@ -95,8 +96,9 @@ fn text_target_matches(
     kind: &LocatorKind,
     role: Option<&str>,
     text: &str,
+    exact: bool,
 ) -> bool {
-    target.text == text
+    locator_text_matches(&target.text, text, exact)
         && match kind {
             LocatorKind::Text => target.kind == AppTextKind::VisibleText,
             LocatorKind::Label => target.kind == AppTextKind::Label,
@@ -109,13 +111,11 @@ fn text_target_matches(
         }
 }
 
-fn same_test(
-    edge_test_name: &Option<Arc<String>>,
-    edge_describe_path: &Arc<Vec<String>>,
-    test_name: &Option<Arc<String>>,
-    describe_path: &Arc<Vec<String>>,
-) -> bool {
-    edge_test_name == test_name && edge_describe_path == describe_path
+fn locator_text_matches(target: &str, locator: &str, exact: bool) -> bool {
+    if exact {
+        return target == locator;
+    }
+    target.to_lowercase().contains(&locator.to_lowercase())
 }
 
 fn has_reachable_route_signal(
@@ -146,7 +146,7 @@ fn has_reachable_route_signal(
                 test_name,
                 describe_path,
             )
-            || *route_line > line
+            || (route_test_name.is_some() && *route_line > line)
         {
             return false;
         }
@@ -163,8 +163,16 @@ fn route_signal_matches_test(
     test_name: &Option<Arc<String>>,
     describe_path: &Arc<Vec<String>>,
 ) -> bool {
-    route_describe_path == describe_path
-        && (route_test_name == test_name || (route_test_name.is_none() && test_name.is_some()))
+    if route_test_name == test_name && route_describe_path == describe_path {
+        return true;
+    }
+    route_test_name.is_none()
+        && test_name.is_some()
+        && describe_path_starts_with(describe_path, route_describe_path)
+}
+
+fn describe_path_starts_with(path: &[String], prefix: &[String]) -> bool {
+    path.len() >= prefix.len() && path.iter().zip(prefix).all(|(left, right)| left == right)
 }
 
 fn has_adjacent_selector_signal(
@@ -189,12 +197,8 @@ fn has_adjacent_selector_signal(
         };
         test_file == rel_test_file
             && app_file == &app_text.app_file
-            && same_test(
-                selector_test_name,
-                selector_describe_path,
-                test_name,
-                describe_path,
-            )
+            && selector_test_name == test_name
+            && selector_describe_path == describe_path
             && selector_line.abs_diff(line) <= 5
     })
 }

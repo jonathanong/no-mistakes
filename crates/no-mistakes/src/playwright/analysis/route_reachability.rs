@@ -1,8 +1,8 @@
 use crate::playwright::analysis::app_collect::collect_selector_source_files;
 use crate::playwright::config;
+use crate::playwright::fsutil::build_globset;
 use crate::playwright::routes;
 use anyhow::Result;
-use globset::GlobSet;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -12,9 +12,11 @@ pub(crate) fn collect_route_reachable_files(
     settings: &config::Settings,
     routes: &[routes::Route],
 ) -> Result<HashMap<Arc<String>, BTreeSet<Arc<String>>>> {
-    let include = GlobSet::empty();
-    let exclude = crate::playwright::fsutil::build_globset(&settings.selector_exclude)?;
-    let selector_files = collect_selector_source_files(root, settings, &include, &exclude, true);
+    let include = build_globset(&settings.selector_include)?;
+    let exclude = build_globset(&settings.selector_exclude)?;
+    let include_all = settings.selector_include.is_empty();
+    let selector_files =
+        collect_selector_source_files(root, settings, &include, &exclude, include_all);
     let selector_rel_by_file: HashMap<_, _> = selector_files
         .iter()
         .map(|file| {
@@ -64,3 +66,6 @@ fn reachable_files(
 fn route_key(root: &Path, file: &Path) -> Arc<String> {
     Arc::new(crate::playwright::fsutil::relative_string(root, file))
 }
+
+#[cfg(test)]
+mod tests;

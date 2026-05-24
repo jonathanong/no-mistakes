@@ -5,7 +5,7 @@ use crate::playwright::analysis::tests_report::{build_tests_report, print_tests_
 use crate::playwright::analysis::tests_report_types::{TestEntry, TestsReport};
 use crate::playwright::analysis::types::{
     CoverageFetch, CoverageReport, CoverageRoute, CoverageSelector, DuplicateSelector, Edge,
-    EdgeReport, Summary,
+    EdgeReport, SelectorRef, Summary,
 };
 use crate::playwright::test_support::fixture_path;
 use crate::playwright::{report_json, PlaywrightReportKind, PlaywrightReportOptions};
@@ -89,6 +89,22 @@ fn text_printers_cover_routes_and_selectors() {
                 selector: "getByTestId(save)".to_string(),
                 line: 1,
             },
+            Edge::LocatorText {
+                test_file: std::sync::Arc::new("tests/e2e/app.spec.ts".to_string()),
+                test_name: None,
+                describe_path: std::sync::Arc::new(vec![]),
+                app_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
+                locator_kind: "role".to_string(),
+                role: Some("button".to_string()),
+                text: "Save".to_string(),
+                locator: "getByRole(button, name: Save)".to_string(),
+                selector_refs: vec![SelectorRef {
+                    attribute: "data-testid".to_string(),
+                    value: "save".to_string(),
+                }],
+                reasons: vec!["route-signal".to_string()],
+                line: 2,
+            },
         ],
     };
     print_edges_text(&edges);
@@ -166,6 +182,19 @@ fn related_report_includes_fetch_apis() {
             side: "server".to_string(),
             cached: false,
         },
+        Edge::LocatorText {
+            test_file: std::sync::Arc::new("tests/e2e/app.spec.ts".to_string()),
+            test_name: None,
+            describe_path: std::sync::Arc::new(vec![]),
+            app_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
+            locator_kind: "text".to_string(),
+            role: None,
+            text: "Save".to_string(),
+            locator: "getByText(Save)".to_string(),
+            selector_refs: vec![],
+            reasons: vec!["route-signal".to_string()],
+            line: 3,
+        },
     ];
     let related = build_related_report(root, &edges, &[PathBuf::from("/repo/web/app/page.tsx")]);
     assert!(related.tests.contains(&"tests/e2e/app.spec.ts".to_string()));
@@ -201,7 +230,7 @@ fn print_tests_text_with_describe_path_and_unnamed_entry() {
                 html_ids: vec![],
                 routes: vec!["/".to_string()],
                 fetch_apis: vec!["GET /api/data".to_string()],
-                locator_texts: vec![],
+                locator_texts: vec!["role: Save".to_string()],
             },
             TestEntry {
                 file: "tests/e2e/app.spec.ts".to_string(),
@@ -252,6 +281,22 @@ fn edge_report_json_schema_is_stable_with_arc_fields() {
                 side: "server".to_string(),
                 cached: false,
             },
+            Edge::LocatorText {
+                test_file: std::sync::Arc::new("tests/e2e/app.spec.ts".to_string()),
+                test_name: Some(std::sync::Arc::new("loads home".to_string())),
+                describe_path: std::sync::Arc::new(vec![]),
+                app_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
+                locator_kind: "role".to_string(),
+                role: Some("button".to_string()),
+                text: "Save".to_string(),
+                locator: "getByRole(button, name: Save)".to_string(),
+                selector_refs: vec![SelectorRef {
+                    attribute: "data-testid".to_string(),
+                    value: "save".to_string(),
+                }],
+                reasons: vec!["route-signal".to_string()],
+                line: 4,
+            },
         ],
     };
 
@@ -285,6 +330,13 @@ fn edge_report_json_schema_is_stable_with_arc_fields() {
     assert_eq!(fetch["path"], "/api/health");
     assert_eq!(fetch["side"], "server");
     assert!(fetch["cached"].as_bool().is_some_and(|cached| !cached));
+
+    let locator_text = &edges[3];
+    assert_eq!(locator_text["kind"], "locatorText");
+    assert_eq!(locator_text["locatorKind"], "role");
+    assert_eq!(locator_text["role"], "button");
+    assert_eq!(locator_text["text"], "Save");
+    assert_eq!(locator_text["reasons"], serde_json::json!(["route-signal"]));
 }
 
 #[test]
@@ -311,6 +363,19 @@ fn build_tests_report_produces_entries_with_routes_and_fetch_apis() {
             side: "server".to_string(),
             cached: false,
         },
+        Edge::LocatorText {
+            test_file: std::sync::Arc::new("tests/e2e/app.spec.ts".to_string()),
+            test_name: Some(std::sync::Arc::new("visits home".to_string())),
+            describe_path: std::sync::Arc::new(vec!["Suite".to_string()]),
+            app_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
+            locator_kind: "text".to_string(),
+            role: None,
+            text: "Save".to_string(),
+            locator: "getByText(Save)".to_string(),
+            selector_refs: vec![],
+            reasons: vec!["route-signal".to_string()],
+            line: 5,
+        },
     ];
     let report = build_tests_report(&edges, &[], root);
     assert_eq!(report.tests.len(), 1);
@@ -320,6 +385,9 @@ fn build_tests_report_produces_entries_with_routes_and_fetch_apis() {
     assert!(report.tests[0]
         .fetch_apis
         .contains(&"GET /api/health".to_string()));
+    assert!(report.tests[0]
+        .locator_texts
+        .contains(&"text: Save".to_string()));
 }
 
 #[test]

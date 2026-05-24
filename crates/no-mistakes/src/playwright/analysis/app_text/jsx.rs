@@ -3,6 +3,14 @@ use crate::playwright::config::Settings;
 use crate::playwright::selectors::HTML_ID_ATTRIBUTE;
 
 pub(super) fn direct_child_texts(children: &[oxc_ast::ast::JSXChild<'_>]) -> Vec<String> {
+    child_texts(children, false)
+}
+
+pub(super) fn descendant_texts(children: &[oxc_ast::ast::JSXChild<'_>]) -> Vec<String> {
+    child_texts(children, true)
+}
+
+fn child_texts(children: &[oxc_ast::ast::JSXChild<'_>], include_descendants: bool) -> Vec<String> {
     let mut results = Vec::new();
     let mut current = String::new();
 
@@ -17,6 +25,12 @@ pub(super) fn direct_child_texts(children: &[oxc_ast::ast::JSXChild<'_>]) -> Vec
                 } else if !current.is_empty() {
                     results.push(std::mem::take(&mut current));
                 }
+            }
+            oxc_ast::ast::JSXChild::Element(element) if include_descendants => {
+                if !current.is_empty() {
+                    results.push(std::mem::take(&mut current));
+                }
+                results.extend(descendant_texts(&element.children));
             }
             _ => {
                 if !current.is_empty() {
@@ -91,6 +105,15 @@ pub(super) fn string_attr(
     None
 }
 
+pub(super) fn has_attr(opening: &oxc_ast::ast::JSXOpeningElement<'_>, name: &str) -> bool {
+    opening.attributes.iter().any(|item| {
+        let oxc_ast::ast::JSXAttributeItem::Attribute(attribute) = item else {
+            return false;
+        };
+        jsx_attribute_name(&attribute.name) == Some(name)
+    })
+}
+
 fn jsx_attr_string(value: Option<&oxc_ast::ast::JSXAttributeValue<'_>>) -> Option<String> {
     match value? {
         oxc_ast::ast::JSXAttributeValue::StringLiteral(literal) => Some(literal.value.to_string()),
@@ -145,12 +168,12 @@ fn implicit_role(
     tag: Option<&str>,
 ) -> Option<&'static str> {
     match tag? {
-        "a" | "area" if string_attr(opening, "href").is_some() => Some("link"),
+        "a" | "area" if has_attr(opening, "href") => Some("link"),
         "button" => Some("button"),
         "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => Some("heading"),
         "img" if string_attr(opening, "alt").is_some() => Some("img"),
         "input" => input_role(opening),
-        "select" => Some("combobox"),
+        "select" => select_role(opening),
         "textarea" => Some("textbox"),
         _ => None,
     }
@@ -160,10 +183,22 @@ fn input_role(opening: &oxc_ast::ast::JSXOpeningElement<'_>) -> Option<&'static 
     match string_attr(opening, "type").as_deref().unwrap_or("text") {
         "button" | "image" | "reset" | "submit" => Some("button"),
         "checkbox" => Some("checkbox"),
+        "number" => Some("spinbutton"),
         "radio" => Some("radio"),
         "range" => Some("slider"),
-        "search" | "email" | "tel" | "text" | "url" => Some("textbox"),
+        "search" => Some("searchbox"),
+        "email" | "tel" | "text" | "url" => Some("textbox"),
         _ => None,
+    }
+}
+
+fn select_role(opening: &oxc_ast::ast::JSXOpeningElement<'_>) -> Option<&'static str> {
+    if has_attr(opening, "multiple") {
+        return Some("listbox");
+    }
+    match string_attr(opening, "size").and_then(|value| value.parse::<u32>().ok()) {
+        Some(size) if size > 1 => Some("listbox"),
+        _ => Some("combobox"),
     }
 }
 

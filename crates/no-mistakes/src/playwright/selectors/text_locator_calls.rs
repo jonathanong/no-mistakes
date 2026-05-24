@@ -27,25 +27,34 @@ fn simple_locator(
     kind: LocatorKind,
     method: &str,
 ) -> Option<PlaywrightTextLocator> {
+    let exact = call
+        .arguments
+        .get(1)
+        .and_then(|argument| object_bool_property(argument, "exact"))
+        .unwrap_or(false);
     text_arg(call.arguments.first()?, source).map(|text| PlaywrightTextLocator {
         kind,
         role: None,
         locator: format!("{method}({text})"),
         text,
+        exact,
     })
 }
 
 fn role_locator(call: &CallExpression<'_>, source: &str) -> Option<PlaywrightTextLocator> {
     let role = text_arg(call.arguments.first()?, source)?;
-    let name = call
-        .arguments
-        .get(1)
-        .and_then(|argument| object_string_property(argument, "name", source))?;
+    let options = call.arguments.get(1)?;
+    if object_has_unsupported_role_filters(options) {
+        return None;
+    }
+    let name = object_string_property(options, "name", source)?;
+    let exact = object_bool_property(options, "exact").unwrap_or(false);
     Some(PlaywrightTextLocator {
         kind: LocatorKind::Role,
         role: Some(role.clone()),
         locator: format!("getByRole({role}, name: {name})"),
         text: name,
+        exact,
     })
 }
 
@@ -83,6 +92,40 @@ fn object_string_property(argument: &Argument<'_>, name: &str, source: &str) -> 
         }
     }
     None
+}
+
+fn object_bool_property(argument: &Argument<'_>, name: &str) -> Option<bool> {
+    let Argument::ObjectExpression(object) = argument else {
+        return None;
+    };
+    for property in &object.properties {
+        let ObjectPropertyKind::ObjectProperty(property) = property else {
+            continue;
+        };
+        if property.computed || property.method || property_key_name(&property.key) != Some(name) {
+            continue;
+        }
+        if let Expression::BooleanLiteral(literal) = &property.value {
+            return Some(literal.value);
+        }
+        return None;
+    }
+    None
+}
+
+fn object_has_unsupported_role_filters(argument: &Argument<'_>) -> bool {
+    let Argument::ObjectExpression(object) = argument else {
+        return false;
+    };
+    object.properties.iter().any(|property| {
+        let ObjectPropertyKind::ObjectProperty(property) = property else {
+            return false;
+        };
+        matches!(
+            property_key_name(&property.key),
+            Some("checked" | "selected" | "pressed" | "expanded" | "disabled" | "level")
+        )
+    })
 }
 
 fn property_key_name<'a>(key: &'a PropertyKey<'a>) -> Option<&'a str> {

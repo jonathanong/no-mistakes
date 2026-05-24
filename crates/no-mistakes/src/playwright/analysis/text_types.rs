@@ -45,6 +45,7 @@ pub(crate) struct PlaywrightTextLocator {
     pub(crate) role: Option<String>,
     pub(crate) text: String,
     pub(crate) locator: String,
+    pub(crate) exact: bool,
 }
 
 pub(crate) fn normalize_locator_text(value: &str) -> Option<String> {
