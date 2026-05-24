@@ -41,6 +41,13 @@ export function Example(props: { label: string }) {
       <button data-pw="hidden-string-button" hidden="false">String hidden action</button>
       <button data-pw="hidden-expression-string-button" hidden={"false"}>Expression hidden action</button>
       <button data-pw="hidden-false-button" hidden={false}>Shown action</button>
+      <button data-pw="hidden-null-button" hidden={null}>Null shown action</button>
+      <button data-pw="hidden-undefined-button" hidden={undefined}>Undefined shown action</button>
+      <button data-pw="hidden-zero-button" hidden={0}>Zero shown action</button>
+      <button data-pw="hidden-one-button" hidden={1}>One hidden action</button>
+      <button data-pw="hidden-empty-template-button" hidden={``}>Empty template shown action</button>
+      <button data-pw="hidden-template-button" hidden={`truthy`}>Template hidden action</button>
+      <button data-pw="hidden-dynamic-button" hidden={props.label}>Dynamic shown action</button>
       <button data-pw="aria-hidden-button" aria-hidden="true">Aria hidden action</button>
       <button data-pw="aria-hidden-false-button" aria-hidden="false">Aria shown action</button>
       <button data-pw="aria-hidden-bool-button" aria-hidden={true}>Bool hidden action</button>

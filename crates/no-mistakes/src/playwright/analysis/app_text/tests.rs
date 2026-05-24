@@ -184,6 +184,69 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
                 .any(|selector| selector.value == "hidden-false-button")
     }));
     assert!(targets.iter().any(|target| {
+        target.text == "Null shown action"
+            && target.role.as_deref() == Some("button")
+            && !target.hidden
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "hidden-null-button")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Undefined shown action"
+            && target.role.as_deref() == Some("button")
+            && !target.hidden
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "hidden-undefined-button")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Zero shown action"
+            && target.role.as_deref() == Some("button")
+            && !target.hidden
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "hidden-zero-button")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "One hidden action"
+            && target.role.as_deref() == Some("button")
+            && target.hidden
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "hidden-one-button")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Empty template shown action"
+            && target.role.as_deref() == Some("button")
+            && !target.hidden
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "hidden-empty-template-button")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Template hidden action"
+            && target.role.as_deref() == Some("button")
+            && target.hidden
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "hidden-template-button")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Dynamic shown action"
+            && target.role.as_deref() == Some("button")
+            && !target.hidden
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "hidden-dynamic-button")
+    }));
+    assert!(targets.iter().any(|target| {
         target.text == "Aria hidden action"
             && target.role.as_deref() == Some("button")
             && target.hidden
