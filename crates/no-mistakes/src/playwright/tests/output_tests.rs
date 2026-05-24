@@ -375,6 +375,21 @@ fn report_json_surfaces_project_selection_errors() {
 }
 
 #[test]
+fn report_json_accepts_project_selection_before_analysis() {
+    let root = fixture_path(&["integration-tests", "basic"]);
+    let error = report_json(
+        PlaywrightReportKind::Check,
+        PlaywrightReportOptions {
+            project: Some("pw-unit".to_string()),
+            ..report_options(root)
+        },
+    )
+    .unwrap_err();
+
+    assert!(error.to_string().contains("no Next.js page routes found"));
+}
+
+#[test]
 fn report_json_surfaces_analysis_errors() {
     let root = fixture_path(&["ast-snippets", "main", "invalid-test-source"]);
     let error = report_json(PlaywrightReportKind::Check, report_options(root)).unwrap_err();
