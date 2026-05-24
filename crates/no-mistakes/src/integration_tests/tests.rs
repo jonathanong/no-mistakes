@@ -307,6 +307,16 @@ fn configured_suites_cover_matching_variants() {
             && project.name.as_deref() == Some("package")
             && project.include == vec!["packages/app/package/**/*.test.ts"]
     }));
+    let invalid_tsconfig_root = fixture("invalid-vitest-tsconfig");
+    let err = project_config::load_projects(
+        &invalid_tsconfig_root,
+        types::Framework::Vitest,
+        Some(&crate::config::v2::schema::StringOrList::One(
+            "vitest.config.mts".to_string(),
+        )),
+    )
+    .unwrap_err();
+    assert!(format!("{err:#}").contains("loading tsconfig"));
 
     let config = config_snippet("missing-config-and-project.yml");
     let err = config::configured_suites(&root, &config).unwrap_err();

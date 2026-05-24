@@ -155,7 +155,7 @@ pub(super) fn expression_statement_options(
     body: &FunctionBody<'_>,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<Vec<Options>> {
-    let statement = match &body.statements[0] { ExpressionStatement(statement) => statement, _ => unreachable!() };
+    let Some(ExpressionStatement(statement)) = body.statements.first() else { return Ok(Vec::new()) };
     expression_options(&statement.expression, ctx)
 }
 
