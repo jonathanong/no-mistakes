@@ -1,0 +1,7 @@
+testPlan:
+  vitest:
+    environments:
+      camel:
+        globalConfigFallback: false
+      snake:
+        global_config_fallback: true

@@ -30,6 +30,16 @@ test_plan:
           - type: sample
             limit:
               files: 1
+      localNoGlobal:
+        globalConfigFallback: false
+        limit:
+          files: 1
+        groups:
+          - type: direct
+          - type: dependencies
+          - type: sample
+            limit:
+              files: 1
       all:
         all: true
       coverageOnly:

@@ -78,7 +78,10 @@ test("programmatic API proxies object options through async native addon calls",
     );
     assert.equal((await api.fetches({ targets: ["/users"] })).command, "fetches");
     assert.equal((await api.check({ tsconfig: "tsconfig.json" })).command, "check");
-    assert.equal((await api.testsPlan({ framework: "vitest" })).command, "testsPlan");
+    assert.deepEqual(
+      (await api.testsPlan({ framework: "vitest", globalConfigFallback: false })).options,
+      { framework: "vitest", globalConfigFallback: false },
+    );
     assert.equal((await api.testsWhy({ test: "source.test.ts" })).command, "testsWhy");
     assert.equal(await api.testsComment({ plan: "plan.json" }), "comment:plan.json");
     assert.equal(

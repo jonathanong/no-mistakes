@@ -149,6 +149,97 @@ fn test_plan_vitest_ignores_deleted_project_dependency_paths() {
 }
 
 #[test]
+fn test_plan_vitest_global_config_change_fallbacks_by_default() {
+    let root = fixture("test-plan-config");
+    let output = run(&[
+        "test",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        ".no-mistakes.yml",
+        "--json",
+    ]);
+
+    assert!(output.status.success());
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(plan["fallback_triggered"], true);
+    assert!(plan["fallback_reason"]
+        .as_str()
+        .unwrap()
+        .contains("Global configuration file changed: .no-mistakes.yml"));
+    assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 2);
+    assert_eq!(plan["groups"][0]["type"], "global");
+}
+
+#[test]
+fn test_plan_vitest_environment_can_disable_global_config_fallback() {
+    let root = fixture("test-plan-config");
+    let output = run(&[
+        "test",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        ".no-mistakes.yml",
+        "--environment",
+        "local-no-global",
+        "--json",
+    ]);
+
+    assert!(output.status.success());
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(plan["fallback_triggered"], false);
+    assert!(plan["fallback_reason"].is_null());
+    assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
+    assert_eq!(plan["selected_tests"][0]["reasons"][0]["via"][0], "sample");
+}
+
+#[test]
+fn test_plan_vitest_global_config_fallback_cli_override_wins() {
+    let root = fixture("test-plan-config");
+    let disabled_output = run(&[
+        "test",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        ".no-mistakes.yml",
+        "--global-config-fallback",
+        "false",
+        "--json",
+    ]);
+
+    assert!(disabled_output.status.success());
+    let disabled: serde_json::Value = serde_json::from_str(&stdout(&disabled_output)).unwrap();
+    assert_eq!(disabled["fallback_triggered"], false);
+    assert_eq!(disabled["selected_tests"].as_array().unwrap().len(), 1);
+
+    let enabled_output = run(&[
+        "test",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        ".no-mistakes.yml",
+        "--environment",
+        "local-no-global",
+        "--global-config-fallback",
+        "true",
+        "--json",
+    ]);
+
+    assert!(enabled_output.status.success());
+    let enabled: serde_json::Value = serde_json::from_str(&stdout(&enabled_output)).unwrap();
+    assert_eq!(enabled["fallback_triggered"], true);
+    assert_eq!(enabled["selected_tests"].as_array().unwrap().len(), 2);
+}
+
+#[test]
 fn test_plan_vitest_project_dependency_patterns_are_project_relative() {
     let root = fixture("test-plan-config");
     let output = run(&[

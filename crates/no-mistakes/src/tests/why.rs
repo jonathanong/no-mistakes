@@ -148,6 +148,7 @@ fn run_live_analysis(
         environment: "pre-push".to_string(),
         limit_percent: None,
         limit_files: None,
+        global_config_fallback: None,
         format: None,
         json: true,
     };

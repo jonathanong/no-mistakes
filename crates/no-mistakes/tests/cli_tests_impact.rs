@@ -342,6 +342,29 @@ fn tests_plan_fallback_on_package_json() {
 }
 
 #[test]
+fn tests_plan_global_config_fallback_can_be_disabled_without_framework() {
+    let root = fixture("tests-impact");
+    let output = run(&[
+        "tests",
+        "plan",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        ".no-mistakes.yml",
+        "--global-config-fallback",
+        "false",
+        "--json",
+    ]);
+
+    assert!(output.status.success());
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+
+    assert_eq!(plan["fallback_triggered"], false);
+    assert!(plan["fallback_reason"].is_null());
+    assert!(plan["selected_tests"].as_array().unwrap().is_empty());
+}
+
+#[test]
 fn tests_why_displays_dependency_path() {
     let root = fixture("tests-impact");
     let output = run(&[

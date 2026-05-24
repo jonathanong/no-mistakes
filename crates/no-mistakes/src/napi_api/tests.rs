@@ -192,6 +192,26 @@ fn tests_plan_why_comment_and_graph_exports_return_reports() {
     assert_eq!(plan["fallback_triggered"], false);
     assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
 
+    let no_global_fallback_options = json!({
+        "framework": "vitest",
+        "root": root,
+        "changedFiles": [".no-mistakes.yml"],
+        "globalConfigFallback": false
+    })
+    .to_string();
+    let no_global_fallback_output = tests_plan_json_impl(no_global_fallback_options).unwrap();
+    let no_global_fallback: serde_json::Value =
+        serde_json::from_str(&no_global_fallback_output).unwrap();
+
+    assert_eq!(no_global_fallback["fallback_triggered"], false);
+    assert_eq!(
+        no_global_fallback["selected_tests"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+
     let legacy_plan_options = json!({
         "root": root,
         "changedFiles": ["source.ts"],
