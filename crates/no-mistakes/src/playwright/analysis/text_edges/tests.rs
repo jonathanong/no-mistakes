@@ -5,6 +5,21 @@ use crate::playwright::analysis::types::SelectorRef;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
+fn text_target(kind: AppTextKind, text: &str, role: Option<&str>, hidden: bool) -> AppTextTarget {
+    AppTextTarget {
+        file: "web/app/page.tsx".into(),
+        app_file: Arc::new("web/app/page.tsx".to_string()),
+        kind,
+        role: role.map(str::to_string),
+        text: text.to_string(),
+        hidden,
+        selector_refs: vec![SelectorRef {
+            attribute: "data-pw".to_string(),
+            value: "save-button".to_string(),
+        }],
+    }
+}
+
 #[test]
 fn route_signal_matches_exact_test_scope() {
     let route_test_name = Some(Arc::new("visits home".to_string()));
@@ -252,4 +267,34 @@ fn hook_route_signal_ignores_declaration_line_order() {
         &app_text,
         &context,
     ));
+}
+
+#[test]
+fn app_text_index_filters_exact_and_fuzzy_candidates_by_kind_role() {
+    let targets = vec![
+        text_target(AppTextKind::AccessibleName, "Save", Some("button"), false),
+        text_target(AppTextKind::AccessibleName, "Save", Some("link"), false),
+        text_target(AppTextKind::VisibleText, "Save now", None, false),
+    ];
+    let index = AppTextIndex::new(&targets);
+    let exact = PlaywrightTextLocator {
+        kind: crate::playwright::analysis::text_types::LocatorKind::Role,
+        role: Some("button".to_string()),
+        text: "Save".to_string(),
+        locator: "getByRole(button, name: Save)".to_string(),
+        exact: true,
+        include_hidden: false,
+    };
+    let fuzzy = PlaywrightTextLocator {
+        kind: crate::playwright::analysis::text_types::LocatorKind::Text,
+        role: None,
+        text: "save".to_string(),
+        locator: "getByText(save)".to_string(),
+        exact: false,
+        include_hidden: false,
+    };
+
+    assert_eq!(index.candidates(&exact).len(), 1);
+    assert_eq!(index.candidates(&fuzzy).len(), 1);
+    assert_eq!(index.candidates(&fuzzy)[0].text, "Save now");
 }

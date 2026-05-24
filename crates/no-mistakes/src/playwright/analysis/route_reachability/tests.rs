@@ -117,6 +117,9 @@ fn route_reachability_uses_frontend_tsconfig_and_script_imports() {
     assert!(files.contains(&Arc::new(
         "web/app/components/dynamic-button.tsx".to_string()
     )));
+    assert!(files.contains(&Arc::new(
+        "web/app/components/template-button.tsx".to_string()
+    )));
 }
 
 #[test]

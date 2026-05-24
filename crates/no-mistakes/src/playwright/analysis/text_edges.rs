@@ -5,6 +5,8 @@ use crate::playwright::playwright_tests::TestOccurrence;
 use rayon::prelude::*;
 use std::sync::Arc;
 
+mod index;
+use index::AppTextIndex;
 mod matching;
 use matching::{text_target_matches, TextMatch};
 mod route_scope;
@@ -25,6 +27,7 @@ pub(crate) fn append_locator_text_edges(
     text_locators: Vec<TestOccurrence<PlaywrightTextLocator>>,
 ) {
     let existing_edges = edges.as_slice();
+    let app_text_index = AppTextIndex::new(context.app_text_targets);
     let mut locator_edges = text_locators
         .into_par_iter()
         .flat_map_iter(|text_locator| {
@@ -40,9 +43,9 @@ pub(crate) fn append_locator_text_edges(
                     == crate::playwright::playwright_tests::TestOccurrenceScope::Hook,
             };
             let text_match = TextMatch::new(&text_locator.value.text, text_locator.value.exact);
-            context
-                .app_text_targets
-                .iter()
+            app_text_index
+                .candidates(&text_locator.value)
+                .into_iter()
                 .filter(|target| {
                     text_target_matches(
                         target,
