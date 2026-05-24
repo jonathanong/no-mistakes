@@ -13,6 +13,7 @@ pub(super) struct PendingLabel {
     pub(super) control_ids: Vec<String>,
     pub(super) text: String,
     pub(super) target_control_id: Option<String>,
+    pub(super) target_control: Option<ControlTextTarget>,
 }
 
 pub(super) fn is_labelable(tag: Option<&str>) -> bool {

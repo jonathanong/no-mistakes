@@ -10,6 +10,8 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod dynamic_imports;
+
 pub(crate) fn collect_route_reachable_files(
     root: &Path,
     settings: &config::Settings,
@@ -29,7 +31,9 @@ pub(crate) fn collect_route_reachable_files(
             )
         })
         .collect();
-    let tsconfig = crate::codebase::ts_resolver::find_tsconfig(root)
+    let frontend_root = root.join(&settings.frontend_root);
+    let tsconfig = crate::codebase::ts_resolver::find_tsconfig(&frontend_root)
+        .or_else(|| crate::codebase::ts_resolver::find_tsconfig(root))
         .map(|path| crate::codebase::ts_resolver::load_tsconfig(&path))
         .transpose()?
         .unwrap_or_else(|| crate::codebase::ts_resolver::TsConfig {
@@ -109,6 +113,11 @@ fn collect_route_imports(
     if let Some(cached_imports) = import_cache.get(&abs_path) {
         return Ok(cached_imports.value().clone());
     }
+    if !is_script_path(&abs_path) {
+        let imports = Arc::new(Vec::new());
+        import_cache.insert(abs_path, imports.clone());
+        return Ok(imports);
+    }
 
     let source = std::fs::read_to_string(&abs_path)?;
     let imports = crate::ast::with_program(&abs_path, &source, |program, _source| {
@@ -155,11 +164,19 @@ fn collect_route_imports_from_program<'a>(
             _ => {}
         }
     }
+    imports.extend(dynamic_imports::collect(abs_path, program, resolver));
     imports
 }
 
 fn route_key(root: &Path, file: &Path) -> Arc<String> {
     Arc::new(crate::playwright::fsutil::relative_string(root, file))
+}
+
+fn is_script_path(path: &Path) -> bool {
+    matches!(
+        path.extension().and_then(|extension| extension.to_str()),
+        Some("js" | "jsx" | "ts" | "tsx" | "mjs" | "mts" | "cjs" | "cts")
+    )
 }
 
 #[cfg(test)]

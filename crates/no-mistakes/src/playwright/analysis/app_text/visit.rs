@@ -27,13 +27,17 @@ impl<'a> Visit<'a> for AppTextVisitor<'_> {
             .string_attr(&element.opening_element, "aria-label")
             .and_then(|value| normalize_locator_text(&value))
             .is_some();
+        let has_aria_labelledby = self
+            .string_attr(&element.opening_element, "aria-labelledby")
+            .and_then(|value| normalize_locator_text(&value))
+            .is_some();
         self.push_normalized_texts(
             AppTextKind::VisibleText,
             role.clone(),
             &visible_texts,
             &refs,
         );
-        if !has_aria_label {
+        if !has_aria_label && !has_aria_labelledby {
             self.push_normalized_texts(
                 AppTextKind::AccessibleName,
                 role.clone(),
@@ -49,7 +53,7 @@ impl<'a> Visit<'a> for AppTextVisitor<'_> {
             &refs,
             visible_name_exists,
         );
-        self.collect_labelledby_targets(&element.opening_element);
+        self.collect_labelledby_targets(&element.opening_element, tag, role.clone(), &refs);
         self.collect_placeholder_target(&element.opening_element, tag, role.clone(), &refs);
         self.collect_input_value_target(&element.opening_element, tag, role, &refs);
 

@@ -39,6 +39,7 @@ test("unsupported text locators", async ({ page }) => {
   await page.getByText(`Hello ${name}`).click();
   await page.getByRole("button", { ["name"]: "Computed" }).click();
   await page.getByRole("button", { name() { return "Method"; } }).click();
+  await page.getByRole("checkbox", { [filterName]: true, name: "Dynamic filter" }).click();
   await page.getByRole("button", { title: "Wrong property" }).click();
   await page.getByRole("button", { name: /Regex/ }).click();
   await page.getByRole(name, { name: "Dynamic role" }).click();

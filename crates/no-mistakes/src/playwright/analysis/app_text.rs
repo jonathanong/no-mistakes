@@ -15,6 +15,7 @@ use std::sync::Arc;
 mod controls;
 mod elements;
 mod extract;
+mod finish;
 mod jsx;
 mod jsx_text;
 mod roles;
@@ -100,60 +101,6 @@ impl AppTextVisitor<'_> {
             text,
             hidden: self.hidden_depth > 0,
             selector_refs: selector_refs.to_vec(),
-        });
-    }
-
-    fn finish(&mut self) {
-        for label in std::mem::take(&mut self.pending_labels) {
-            let (control_id, texts) = if let Some(target_control_id) = &label.target_control_id {
-                let texts = label
-                    .control_ids
-                    .iter()
-                    .filter_map(|control_id| self.texts_by_id.get(control_id))
-                    .flatten()
-                    .cloned()
-                    .collect::<Vec<_>>();
-                if texts.is_empty() {
-                    continue;
-                }
-                (target_control_id, vec![texts.join(" ")])
-            } else {
-                let Some(control_id) = label.control_ids.first() else {
-                    continue;
-                };
-                (control_id, vec![label.text])
-            };
-            let Some(control) = self.controls_by_id.get(control_id).cloned() else {
-                continue;
-            };
-            for text in texts {
-                if let Some(text) = normalize_locator_text(&text) {
-                    self.push_control_name_targets(&control, text);
-                }
-            }
-        }
-    }
-
-    fn push_control_name_targets(&mut self, control: &ControlTextTarget, text: String) {
-        if control.labelable {
-            self.targets.push(AppTextTarget {
-                file: self.path.to_path_buf(),
-                app_file: Arc::new(relative_string(self.root, self.path)),
-                kind: AppTextKind::Label,
-                role: control.role.clone(),
-                text: text.clone(),
-                hidden: control.hidden,
-                selector_refs: control.selector_refs.clone(),
-            });
-        }
-        self.targets.push(AppTextTarget {
-            file: self.path.to_path_buf(),
-            app_file: Arc::new(relative_string(self.root, self.path)),
-            kind: AppTextKind::AccessibleName,
-            role: control.role.clone(),
-            text,
-            hidden: control.hidden,
-            selector_refs: control.selector_refs.clone(),
         });
     }
 

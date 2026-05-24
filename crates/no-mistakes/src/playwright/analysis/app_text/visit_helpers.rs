@@ -121,6 +121,7 @@ impl AppTextVisitor<'_> {
                     control_ids: vec![control_id.clone()],
                     text,
                     target_control_id: None,
+                    target_control: None,
                 });
             }
         }
@@ -137,15 +138,25 @@ impl AppTextVisitor<'_> {
     pub(super) fn collect_labelledby_targets(
         &mut self,
         opening: &oxc_ast::ast::JSXOpeningElement<'_>,
+        tag: Option<&str>,
+        role: Option<String>,
+        refs: &[SelectorRef],
     ) {
         let Some(labelledby) = self.string_attr(opening, "aria-labelledby") else {
             return;
         };
         let target_control_id = self.string_attr(opening, "id");
+        let target_control = target_control_id.is_none().then(|| ControlTextTarget {
+            role,
+            hidden: self.hidden_depth > 0,
+            labelable: is_labelable(tag),
+            selector_refs: refs.to_vec(),
+        });
         self.pending_labels.push(PendingLabel {
             control_ids: labelledby.split_whitespace().map(str::to_string).collect(),
             text: String::new(),
             target_control_id,
+            target_control,
         });
     }
 

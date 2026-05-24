@@ -292,4 +292,7 @@ fn extracts_text_locator_status_and_ignores_unsupported_shapes() {
     assert!(locators.iter().any(|(_, text, _, status, _, _)| {
         text.starts_with("Ternary ") && *status == TestStatus::Conditional
     }));
+    assert!(!locators
+        .iter()
+        .any(|(_, text, _, _, _, _)| text == "Dynamic filter"));
 }

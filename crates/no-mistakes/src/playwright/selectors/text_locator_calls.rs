@@ -145,6 +145,9 @@ fn object_has_unsupported_role_filters(argument: &Argument<'_>) -> bool {
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             return true;
         };
+        if property.computed || property.method {
+            return true;
+        }
         matches!(
             property_key_name(&property.key),
             Some(

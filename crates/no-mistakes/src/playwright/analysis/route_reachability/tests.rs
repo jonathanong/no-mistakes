@@ -99,6 +99,27 @@ fn route_reachability_includes_app_router_wrappers() {
 }
 
 #[test]
+fn route_reachability_uses_frontend_tsconfig_and_script_imports() {
+    let root =
+        crate::playwright::test_support::fixture_path(&["nextjs-selectors", "frontend-tsconfig"]);
+    let route = routes::Route {
+        file: root.join("web/app/page.tsx"),
+        pattern: "/".to_string(),
+    };
+
+    let reachable =
+        collect_route_reachable_files(&root, &settings(vec![]), &[route]).expect("collects");
+
+    let files = reachable
+        .get(&Arc::new("web/app/page.tsx".to_string()))
+        .expect("route should have reachable files");
+    assert!(files.contains(&Arc::new("web/app/components/alias-button.tsx".to_string())));
+    assert!(files.contains(&Arc::new(
+        "web/app/components/dynamic-button.tsx".to_string()
+    )));
+}
+
+#[test]
 fn route_import_collection_uses_shared_cache_entries() {
     let root = crate::playwright::test_support::fixture_path(&[
         "nextjs-selectors",

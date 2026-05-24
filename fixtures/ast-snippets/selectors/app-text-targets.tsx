@@ -23,6 +23,10 @@ export function Example(props: { label: string }) {
       <input id="subscribe-checkbox" data-pw="subscribe-checkbox" type="checkbox" />
       <span id="plan-label">Plan label</span>
       <input id="plan-input" data-pw="plan-input" aria-labelledby="plan-label" />
+      <span id="button-label-no-id">No id label</span>
+      <button data-pw="labelled-no-id" aria-labelledby="button-label-no-id" />
+      <span id="override-label">Override name</span>
+      <button data-pw="labelledby-precedence" aria-labelledby="override-label">Visible should not name</button>
       <input id="missing-labelledby-input" data-pw="missing-labelledby-input" aria-labelledby="missing-label" />
       <label htmlFor="missing-control">Missing control</label>
       <input data-pw={"search-input"} aria-label={"Search field"} placeholder={"Search"} />

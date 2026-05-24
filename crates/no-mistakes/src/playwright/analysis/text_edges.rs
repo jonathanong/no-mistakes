@@ -7,6 +7,8 @@ use std::sync::Arc;
 
 mod matching;
 use matching::{text_target_matches, TextMatch};
+mod route_scope;
+use route_scope::route_signal_matches_test;
 #[cfg(test)]
 mod tests;
 
@@ -147,30 +149,6 @@ fn has_reachable_route_signal(
             .get(route_file)
             .is_some_and(|files| files.contains(&app_text.app_file))
     })
-}
-
-fn route_signal_matches_test(
-    route_test_name: &Option<Arc<String>>,
-    route_describe_path: &Arc<Vec<String>>,
-    route_is_hook: bool,
-    test_name: &Option<Arc<String>>,
-    describe_path: &Arc<Vec<String>>,
-    locator_is_hook: bool,
-) -> bool {
-    if route_test_name.is_some()
-        && route_test_name == test_name
-        && route_describe_path == describe_path
-    {
-        return true;
-    }
-    route_test_name.is_none()
-        && route_is_hook
-        && (test_name.is_some() || locator_is_hook)
-        && describe_path_starts_with(describe_path, route_describe_path)
-}
-
-fn describe_path_starts_with(path: &[String], prefix: &[String]) -> bool {
-    path.len() >= prefix.len() && path.iter().zip(prefix).all(|(left, right)| left == right)
 }
 
 fn has_adjacent_selector_signal(

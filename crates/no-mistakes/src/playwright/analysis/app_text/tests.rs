@@ -3,6 +3,7 @@ use crate::playwright::analysis::text_types::normalize_locator_text;
 use std::collections::BTreeMap;
 
 mod html_ids;
+mod labelledby;
 
 fn settings() -> Settings {
     Settings {
