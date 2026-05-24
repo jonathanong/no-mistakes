@@ -116,7 +116,10 @@ jobs:
         uses: taiki-e/install-action@cargo-llvm-cov
 
       - name: Clean Rust coverage artifacts
-        run: cargo llvm-cov clean --workspace
+        run: |
+          # shellcheck disable=SC1090
+          source <(cargo llvm-cov show-env --sh)
+          cargo llvm-cov clean --workspace
 
       - name: Build Rust tests for coverage
         run: |
