@@ -73,7 +73,7 @@ fn reachable_files(
         stack.extend(
             imports
                 .iter()
-                .map(|file| crate::codebase::ts_resolver::normalize_path(&file)),
+                .map(|file| crate::codebase::ts_resolver::normalize_path(file)),
         );
     }
     Ok(reachable)
