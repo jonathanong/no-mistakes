@@ -7,3 +7,12 @@ export const webProjects = () => [
     },
   },
 ]
+
+export const apiProjects = [
+  {
+    test: {
+      name: 'api',
+      include: ['api/**/*.test.ts'],
+    },
+  },
+]

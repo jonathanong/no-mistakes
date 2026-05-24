@@ -87,6 +87,12 @@ pub(super) fn expression_options(
             .get(identifier.name.as_str())
             .copied()
             .map(|expression| expression_options(expression, ctx))
+            .or_else(|| {
+                ctx.imports
+                    .get(identifier.name.as_str())
+                    .cloned()
+                    .map(|import| imported_options(&import, ctx))
+            })
             .unwrap_or_default(),
         Expression::CallExpression(call) => {
             let Expression::Identifier(identifier) = &call.callee else {

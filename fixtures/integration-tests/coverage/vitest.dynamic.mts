@@ -1,4 +1,4 @@
-import { webProjects } from './vitest.projects-helper'
+import { apiProjects, webProjects } from './vitest.projects-helper'
 import { defineConfig } from 'vitest/config'
 
 const localProjects = [
@@ -14,6 +14,7 @@ export default defineConfig({
   test: {
     projects: [
       ...webProjects(),
+      ...apiProjects,
       ...localProjects,
     ],
   },

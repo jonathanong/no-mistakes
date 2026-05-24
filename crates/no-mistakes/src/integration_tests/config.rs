@@ -13,12 +13,19 @@ pub(super) fn validate_config(config: &NoMistakesConfig) -> Result<()> {
     ] {
         for (project, policy) in projects {
             if policy.include.is_empty() && !policy.exclude.is_empty() {
-                anyhow::bail!("tests.{framework}.projects.{project}.exclude requires include");
+                anyhow::bail!(
+                    "tests.{}.projects.{}.exclude requires include",
+                    framework,
+                    project
+                );
             }
             for (suite, integrations) in &policy.integration_suites {
                 if integrations.is_empty() {
                     anyhow::bail!(
-                        "tests.{framework}.projects.{project}.integration_suites.{suite} must contain at least one integration"
+                        "tests.{}.projects.{}.integration_suites.{} must contain at least one integration",
+                        framework,
+                        project,
+                        suite
                     );
                 }
             }
