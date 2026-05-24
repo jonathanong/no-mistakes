@@ -1,5 +1,6 @@
 use anyhow::Result;
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 
 use super::{
     agents_md_max_size, banned_renamed_files, doc_consistency, file_extension_policy,
@@ -19,150 +20,85 @@ use super::{
 };
 
 /// Run filesystem rules using a pre-discovered file list so the caller's single
-/// `git ls-files` result is reused — no second walk.
+/// `git ls-files` result is reused — no second walk. Rules run in parallel.
+#[rustfmt::skip]
 pub fn run_filesystem_rules_with_files(
     root: &Path,
     config_path: Option<&Path>,
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
     let config = crate::config::v2::load_v2_config(root, config_path)?;
+    let acc: Mutex<Vec<Result<Vec<RuleFinding>>>> = Mutex::new(Vec::new());
+    rayon::scope(|s| {
+        macro_rules! run {
+            ($id:expr, $call:expr) => {
+                if rule_enabled(&config, $id) {
+                    s.spawn(|_| { let r = $call; acc.lock().unwrap().push(r); });
+                }
+            };
+        }
+        run!(AGENTS_MD_MAX_SIZE,            agents_md_max_size::check_with_files(root, &config, files));
+        run!(RUST_MAX_LINES_PER_FILE,       rust_max_lines_per_file::check_with_files(root, &config, files));
+        run!(RUST_NO_INLINE_TESTS,          rust_no_inline_tests::check_with_files(root, &config, files));
+        run!(RUST_NO_INLINE_ALLOWS,         rust_no_inline_allows::check_with_files(root, &config, files));
+        run!(TSCONFIG_ALIAS_FOLDER_MAPPING, tsconfig_alias_folder_mapping::check_with_files(root, &config, files));
+        run!(NO_GIT_IDENTITY_MUTATION,      no_git_identity_mutation::check_with_files(root, &config, files));
+        run!(PACKAGE_JSON_REGISTRY_ONLY,    package_json_registry_only::check_with_files(root, &config, files));
+        run!(REQUIRE_TEST_PER_SUBDIR,       require_test_per_subdir::check_with_files(root, &config, files));
+        run!(REQUIRE_FILES_IN_SUBDIRS,      require_files_in_subdirs::check_with_files(root, &config, files));
+        run!(STRICT_PACKAGE_LAYOUT,         strict_package_layout::check_with_files(root, &config, files));
+        run!(REQUIRED_LOCAL_DOCS,           required_local_docs::check_with_files(root, &config, files));
+        run!(REQUIRED_DOC_SECTION,          required_local_docs::check_required_doc_section_with_files(root, &config, files));
+        run!(NO_EMPTY_OR_COMMENTS_ONLY_FILES, no_empty_or_comments_only_files::check_with_files(root, &config, files));
+        run!(VITEST_TEST_CORRESPONDENCE,    vitest_test_correspondence::check_with_files(root, &config, files));
+        run!(FILE_EXTENSION_POLICY,         file_extension_policy::check_with_files(root, &config, files));
+        run!(BANNED_RENAMED_FILES,          banned_renamed_files::check_with_files(root, &config, files));
+        run!(LOCKFILE_ALLOWLIST,            lockfile_allowlist::check_with_files(root, &config, files));
+        run!(DOC_CONSISTENCY,               doc_consistency::check_with_files(root, &config, files));
+        run!(SHELLCHECK_RUNNER,             shellcheck_runner::check_with_files(root, &config, files));
+    });
     let mut findings = Vec::new();
-    if rule_enabled(&config, AGENTS_MD_MAX_SIZE) {
-        findings.extend(agents_md_max_size::check_with_files(root, &config, files)?);
-    }
-    if rule_enabled(&config, RUST_MAX_LINES_PER_FILE) {
-        let r = rust_max_lines_per_file::check_with_files(root, &config, files)?;
-        findings.extend(r);
-    }
-    if rule_enabled(&config, RUST_NO_INLINE_TESTS) {
-        let r = rust_no_inline_tests::check_with_files(root, &config, files)?;
-        findings.extend(r);
-    }
-    if rule_enabled(&config, RUST_NO_INLINE_ALLOWS) {
-        let r = rust_no_inline_allows::check_with_files(root, &config, files)?;
-        findings.extend(r);
-    }
-    if rule_enabled(&config, TSCONFIG_ALIAS_FOLDER_MAPPING) {
-        let r = tsconfig_alias_folder_mapping::check_with_files(root, &config, files)?;
-        findings.extend(r);
-    }
-    if rule_enabled(&config, NO_GIT_IDENTITY_MUTATION) {
-        let r = no_git_identity_mutation::check_with_files(root, &config, files)?;
-        findings.extend(r);
-    }
-    if rule_enabled(&config, PACKAGE_JSON_REGISTRY_ONLY) {
-        let r = package_json_registry_only::check_with_files(root, &config, files)?;
-        findings.extend(r);
-    }
-    if rule_enabled(&config, REQUIRE_TEST_PER_SUBDIR) {
-        let r = require_test_per_subdir::check_with_files(root, &config, files)?;
-        findings.extend(r);
-    }
-    if rule_enabled(&config, REQUIRE_FILES_IN_SUBDIRS) {
-        let r = require_files_in_subdirs::check_with_files(root, &config, files)?;
-        findings.extend(r);
-    }
-    if rule_enabled(&config, STRICT_PACKAGE_LAYOUT) {
-        let r = strict_package_layout::check_with_files(root, &config, files)?;
-        findings.extend(r);
-    }
-    if rule_enabled(&config, REQUIRED_LOCAL_DOCS) {
-        findings.extend(required_local_docs::check_with_files(root, &config, files)?);
-    }
-    if rule_enabled(&config, REQUIRED_DOC_SECTION) {
-        let r = required_local_docs::check_required_doc_section_with_files(root, &config, files)?;
-        findings.extend(r);
-    }
-    if rule_enabled(&config, NO_EMPTY_OR_COMMENTS_ONLY_FILES) {
-        let r = no_empty_or_comments_only_files::check_with_files(root, &config, files)?;
-        findings.extend(r);
-    }
-    if rule_enabled(&config, VITEST_TEST_CORRESPONDENCE) {
-        let r = vitest_test_correspondence::check_with_files(root, &config, files)?;
-        findings.extend(r);
-    }
-    if rule_enabled(&config, FILE_EXTENSION_POLICY) {
-        let r = file_extension_policy::check_with_files(root, &config, files)?;
-        findings.extend(r);
-    }
-    if rule_enabled(&config, BANNED_RENAMED_FILES) {
-        let r = banned_renamed_files::check_with_files(root, &config, files)?;
-        findings.extend(r);
-    }
-    if rule_enabled(&config, LOCKFILE_ALLOWLIST) {
-        findings.extend(lockfile_allowlist::check_with_files(root, &config, files)?);
-    }
-    if rule_enabled(&config, DOC_CONSISTENCY) {
-        findings.extend(doc_consistency::check_with_files(root, &config, files)?);
-    }
-    if rule_enabled(&config, SHELLCHECK_RUNNER) {
-        findings.extend(shellcheck_runner::check_with_files(root, &config, files)?);
-    }
+    for r in acc.into_inner().unwrap() { findings.extend(r?); }
+    super::sort_findings(&mut findings);
     Ok(findings)
 }
 
-/// Standalone entry point — each rule does its own discovery.
+/// Standalone entry point — each rule does its own discovery. Rules run in parallel.
+#[rustfmt::skip]
 pub fn run_filesystem_rules(root: &Path, config_path: Option<&Path>) -> Result<Vec<RuleFinding>> {
     let config = crate::config::v2::load_v2_config(root, config_path)?;
+    let acc: Mutex<Vec<Result<Vec<RuleFinding>>>> = Mutex::new(Vec::new());
+    rayon::scope(|s| {
+        macro_rules! run {
+            ($id:expr, $call:expr) => {
+                if rule_enabled(&config, $id) {
+                    s.spawn(|_| { let r = $call; acc.lock().unwrap().push(r); });
+                }
+            };
+        }
+        run!(AGENTS_MD_MAX_SIZE,              agents_md_max_size::check(root, &config));
+        run!(RUST_MAX_LINES_PER_FILE,         rust_max_lines_per_file::check(root, &config));
+        run!(RUST_NO_INLINE_TESTS,            rust_no_inline_tests::check(root, &config));
+        run!(RUST_NO_INLINE_ALLOWS,           rust_no_inline_allows::check(root, &config));
+        run!(TSCONFIG_ALIAS_FOLDER_MAPPING,   tsconfig_alias_folder_mapping::check(root, &config));
+        run!(NO_GIT_IDENTITY_MUTATION,        no_git_identity_mutation::check(root, &config));
+        run!(PACKAGE_JSON_REGISTRY_ONLY,      package_json_registry_only::check(root, &config));
+        run!(REQUIRE_TEST_PER_SUBDIR,         require_test_per_subdir::check(root, &config));
+        run!(REQUIRE_FILES_IN_SUBDIRS,        require_files_in_subdirs::check(root, &config));
+        run!(STRICT_PACKAGE_LAYOUT,           strict_package_layout::check(root, &config));
+        run!(REQUIRED_LOCAL_DOCS,             required_local_docs::check(root, &config));
+        run!(REQUIRED_DOC_SECTION,            required_local_docs::check_required_doc_section(root, &config));
+        run!(NO_EMPTY_OR_COMMENTS_ONLY_FILES, no_empty_or_comments_only_files::check(root, &config));
+        run!(VITEST_TEST_CORRESPONDENCE,      vitest_test_correspondence::check(root, &config));
+        run!(FILE_EXTENSION_POLICY,           file_extension_policy::check(root, &config));
+        run!(BANNED_RENAMED_FILES,            banned_renamed_files::check(root, &config));
+        run!(LOCKFILE_ALLOWLIST,              lockfile_allowlist::check(root, &config));
+        run!(DOC_CONSISTENCY,                 doc_consistency::check(root, &config));
+        run!(SHELLCHECK_RUNNER,               shellcheck_runner::check(root, &config));
+    });
     let mut findings = Vec::new();
-    if rule_enabled(&config, AGENTS_MD_MAX_SIZE) {
-        findings.extend(agents_md_max_size::check(root, &config)?);
-    }
-    if rule_enabled(&config, RUST_MAX_LINES_PER_FILE) {
-        findings.extend(rust_max_lines_per_file::check(root, &config)?);
-    }
-    if rule_enabled(&config, RUST_NO_INLINE_TESTS) {
-        findings.extend(rust_no_inline_tests::check(root, &config)?);
-    }
-    if rule_enabled(&config, RUST_NO_INLINE_ALLOWS) {
-        findings.extend(rust_no_inline_allows::check(root, &config)?);
-    }
-    if rule_enabled(&config, TSCONFIG_ALIAS_FOLDER_MAPPING) {
-        findings.extend(tsconfig_alias_folder_mapping::check(root, &config)?);
-    }
-    if rule_enabled(&config, NO_GIT_IDENTITY_MUTATION) {
-        findings.extend(no_git_identity_mutation::check(root, &config)?);
-    }
-    if rule_enabled(&config, PACKAGE_JSON_REGISTRY_ONLY) {
-        findings.extend(package_json_registry_only::check(root, &config)?);
-    }
-    if rule_enabled(&config, REQUIRE_TEST_PER_SUBDIR) {
-        findings.extend(require_test_per_subdir::check(root, &config)?);
-    }
-    if rule_enabled(&config, REQUIRE_FILES_IN_SUBDIRS) {
-        findings.extend(require_files_in_subdirs::check(root, &config)?);
-    }
-    if rule_enabled(&config, STRICT_PACKAGE_LAYOUT) {
-        findings.extend(strict_package_layout::check(root, &config)?);
-    }
-    if rule_enabled(&config, REQUIRED_LOCAL_DOCS) {
-        findings.extend(required_local_docs::check(root, &config)?);
-    }
-    if rule_enabled(&config, REQUIRED_DOC_SECTION) {
-        let r = required_local_docs::check_required_doc_section(root, &config)?;
-        findings.extend(r);
-    }
-    if rule_enabled(&config, NO_EMPTY_OR_COMMENTS_ONLY_FILES) {
-        findings.extend(no_empty_or_comments_only_files::check(root, &config)?);
-    }
-    if rule_enabled(&config, VITEST_TEST_CORRESPONDENCE) {
-        findings.extend(vitest_test_correspondence::check(root, &config)?);
-    }
-    if rule_enabled(&config, FILE_EXTENSION_POLICY) {
-        findings.extend(file_extension_policy::check(root, &config)?);
-    }
-    if rule_enabled(&config, BANNED_RENAMED_FILES) {
-        findings.extend(banned_renamed_files::check(root, &config)?);
-    }
-    if rule_enabled(&config, LOCKFILE_ALLOWLIST) {
-        findings.extend(lockfile_allowlist::check(root, &config)?);
-    }
-    if rule_enabled(&config, DOC_CONSISTENCY) {
-        findings.extend(doc_consistency::check(root, &config)?);
-    }
-    if rule_enabled(&config, SHELLCHECK_RUNNER) {
-        findings.extend(shellcheck_runner::check(root, &config)?);
-    }
+    for r in acc.into_inner().unwrap() { findings.extend(r?); }
+    super::sort_findings(&mut findings);
     Ok(findings)
 }
 
