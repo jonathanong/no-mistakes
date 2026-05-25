@@ -153,7 +153,7 @@ jobs:
 
       - name: Upload Rust coverage to Codecov
         if: ${{ env.CODECOV_TOKEN != '' }}
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v6.0.1
         with:
           token: ${{ env.CODECOV_TOKEN }}
           files: target/llvm-cov/lcov.info
@@ -162,7 +162,7 @@ jobs:
 
       - name: Upload JavaScript coverage to Codecov
         if: ${{ env.CODECOV_TOKEN != '' }}
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v6.0.1
         with:
           token: ${{ env.CODECOV_TOKEN }}
           files: coverage/lcov.info
