@@ -74,6 +74,13 @@ pub(crate) struct DuplicateSelector {
     pub(crate) file: String,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct SelectorRef {
+    pub(crate) attribute: String,
+    pub(crate) value: String,
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct CoverageReport {
@@ -111,6 +118,8 @@ pub(crate) enum Edge {
         route_file: Arc<String>,
         route: Arc<String>,
         url: Arc<String>,
+        hook: bool,
+        line: u32,
     },
     #[serde(rename_all = "camelCase")]
     Selector {
@@ -123,6 +132,24 @@ pub(crate) enum Edge {
         attribute: String,
         value: String,
         selector: String,
+        line: u32,
+    },
+    #[serde(rename_all = "camelCase")]
+    LocatorText {
+        test_file: Arc<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        test_name: Option<Arc<String>>,
+        #[serde(skip_serializing_if = "is_arc_empty", default)]
+        describe_path: Arc<Vec<String>>,
+        app_file: Arc<String>,
+        locator_kind: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        role: Option<String>,
+        text: String,
+        locator: String,
+        selector_refs: Vec<SelectorRef>,
+        reasons: Vec<String>,
+        line: u32,
     },
 }
 
@@ -141,26 +168,6 @@ pub(crate) struct EdgeReport {
 #[derive(Serialize)]
 pub(crate) struct RelatedReport {
     pub(crate) tests: Vec<String>,
-    pub(crate) fetch_apis: Vec<String>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct TestsReport {
-    pub(crate) tests: Vec<TestEntry>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct TestEntry {
-    pub(crate) file: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) name: Option<String>,
-    #[serde(skip_serializing_if = "Vec::is_empty", default)]
-    pub(crate) describe_path: Vec<String>,
-    pub(crate) test_ids: Vec<String>,
-    pub(crate) html_ids: Vec<String>,
-    pub(crate) routes: Vec<String>,
     pub(crate) fetch_apis: Vec<String>,
 }
 

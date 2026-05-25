@@ -5,11 +5,13 @@ mod extract_app;
 mod extract_playwright;
 mod matcher;
 mod regex_mod;
-mod scoped_defaults;
+pub(crate) mod scoped_defaults;
 mod shadowing;
 mod template;
 #[cfg(test)]
 mod tests;
+mod text_locator_calls;
+mod text_locators;
 mod types;
 
 pub use extract_app::extract_app_selectors_with_regexes;
@@ -17,6 +19,7 @@ pub use extract_app::{collect_app_selectors, extract_app_selectors};
 pub use extract_playwright::extract_playwright_selector_occurrences_from_program;
 pub use regex_mod::compile_selector_regexes;
 pub use regex_mod::compile_selector_regexes_with_html_ids;
+pub(crate) use text_locators::extract_playwright_text_locator_occurrences_from_program;
 pub(crate) use types::{AppSelector, AppSelectorValue, PlaywrightSelector, SelectorRegexes};
 pub use types::{SelectorMatcher, TemplatePattern};
 

@@ -1,6 +1,7 @@
 use super::helpers::{
     extract_playwright_selector_occurrences, extract_playwright_selectors,
-    extract_playwright_selectors_with_regexes,
+    extract_playwright_selectors_with_regexes, extract_playwright_text_locator_occurrences,
+    extract_playwright_text_locators,
 };
 use crate::playwright::playwright_tests::TestStatus;
 use crate::playwright::selectors::compile_selector_regexes_with_html_ids;
@@ -62,7 +63,10 @@ fn marks_selectors_inside_skipped_and_conditional_tests() {
             : test('ternary alternate', async ({ page }) => {
                 await page.getByTestId('ternary-alternate');
             });
-        test('active', async ({ page }) => { await page.getByTestId('active'); });
+        test('active', async ({ page }) => {
+            await page.getByTestId('active');
+            await page.getByTestId('active');
+        });
         test.skip(({ browserName }) => browserName === 'webkit', 'conditional');
         test('file scope annotation', async ({ page }) => {
             await page.getByTestId('scope-annotation');
@@ -183,4 +187,139 @@ fn extracts_html_ids_playwright_selectors() {
             ("id".to_string(), r#"[id="save"]"#.to_string()),
         ])
     );
+}
+
+#[test]
+fn extracts_playwright_text_locators() {
+    let locators = extract_playwright_text_locators(
+        r#"
+        await page.getByRole("button", { name: "Discuss" }).click();
+        await page.getByRole("button", { ...roleOptions, name: "Spread role" }).click();
+        await page.getByRole(`button`, { exact: true, [`name`]: "Ignored", name: `Template name` });
+        await page.getByRole("button", { name: "Hidden role", includeHidden: true });
+        await page.getByRole("button", { "name": "String key role", "exact": true, "includeHidden": false });
+        await page.getByRole("button", { name: "Bad exact", exact: "yes" });
+        await page.getByRole("button", { name: "Bad hidden", includeHidden: includeHidden });
+        await page.getByRole("button", { name: "Computed exact", exact: isExact });
+        await page.getByRole("checkbox", { name: "Subscribe", checked: true });
+        await page.getByRole("button", { name: "Described", description: "Primary" });
+        await page.getByRole("button");
+        await page.getByRole("button", "not options");
+        await page.getByText("Welcome back").click();
+        await page.getByText("Welcome back").click();
+        await page.getByText(`Exact text`, { exact: true }).click();
+        await page.getByText("Spread exact", { ...textOptions, exact: false }).click();
+        await page.getByText("Method exact", { exact() { return true; } }).click();
+        await page.getByText("Unknown exact", { exact: isExact }).click();
+        await page.getByText("Loose text", "not options").click();
+        await page.getByLabel(`Email`).fill("a@b.com");
+        await page.getByLabel("Full name", { exact: false }).fill("Ada");
+        await page.getByPlaceholder("Search").fill("x");
+        await page.getByText(dynamic);
+        await page.getByRole("button", { name: /Save/ });
+        "#,
+    );
+    assert_eq!(
+        locators,
+        vec![
+            (
+                "role".to_string(),
+                "Discuss".to_string(),
+                Some("button".to_string())
+            ),
+            (
+                "role".to_string(),
+                "Hidden role".to_string(),
+                Some("button".to_string())
+            ),
+            (
+                "role".to_string(),
+                "String key role".to_string(),
+                Some("button".to_string())
+            ),
+            ("text".to_string(), "Exact text".to_string(), None),
+            ("text".to_string(), "Welcome back".to_string(), None),
+            ("label".to_string(), "Email".to_string(), None),
+            ("label".to_string(), "Full name".to_string(), None),
+            ("placeholder".to_string(), "Search".to_string(), None),
+        ]
+    );
+}
+
+#[test]
+fn extracts_text_locator_status_and_ignores_unsupported_shapes() {
+    let source = crate::playwright::test_support::fixture_source(&[
+        "ast-snippets",
+        "selectors",
+        "playwright-text-locators-branches.ts",
+    ]);
+    let locators = extract_playwright_text_locator_occurrences(&source);
+
+    assert_eq!(locators.len(), 16);
+    assert!(locators.contains(&(
+        "role".to_string(),
+        "Save".to_string(),
+        Some("button".to_string()),
+        TestStatus::Active,
+        Some("active role".to_string()),
+        vec!["settings".to_string()]
+    )));
+    assert!(locators.contains(&(
+        "text".to_string(),
+        "Skip me".to_string(),
+        None,
+        TestStatus::Skipped,
+        Some("skipped text".to_string()),
+        vec![]
+    )));
+    assert!(locators.contains(&(
+        "text".to_string(),
+        "Annotation text".to_string(),
+        None,
+        TestStatus::Conditional,
+        Some("annotation text".to_string()),
+        vec![]
+    )));
+    assert!(locators.iter().any(|(_, text, _, status, _, _)| {
+        text == "Conditional label" && *status == TestStatus::Conditional
+    }));
+    assert!(locators.iter().any(|(_, text, _, status, _, _)| {
+        text == "Conditional placeholder" && *status == TestStatus::Conditional
+    }));
+    assert!(locators.iter().any(|(_, text, _, status, _, _)| {
+        text == "Logical text" && *status == TestStatus::Conditional
+    }));
+    assert!(locators.iter().any(|(_, text, _, status, _, _)| {
+        text.starts_with("Ternary ") && *status == TestStatus::Conditional
+    }));
+    assert!(locators
+        .iter()
+        .any(|(_, text, _, _, _, _)| text == "Last exact text"));
+    assert!(locators
+        .iter()
+        .any(|(_, text, _, _, _, _)| text == "Default exact text"));
+    assert!(locators
+        .iter()
+        .any(|(_, text, _, _, _, _)| text == "TS exact text"));
+    assert!(locators
+        .iter()
+        .any(|(_, text, _, _, _, _)| text == "TS template text"));
+    assert!(locators
+        .iter()
+        .any(|(_, text, _, _, _, _)| text == "TS role name"));
+    assert!(locators
+        .iter()
+        .any(|(_, text, _, _, _, _)| text == "TS template role"));
+    assert!(locators
+        .iter()
+        .any(|(_, text, _, _, _, _)| text == "New name"));
+    assert!(locators
+        .iter()
+        .any(|(_, text, _, _, _, _)| text == "Numeric property"));
+    assert!(!locators
+        .iter()
+        .any(|(_, text, _, _, _, _)| text == "Old name"));
+    assert!(!locators
+        .iter()
+        .any(|(_, text, _, _, _, _)| text == "Dynamic filter"));
 }

@@ -1,4 +1,4 @@
-mod analysis;
+pub(crate) mod analysis;
 mod ast;
 mod cli;
 mod config;

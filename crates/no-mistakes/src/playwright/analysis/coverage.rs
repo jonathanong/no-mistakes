@@ -1,15 +1,16 @@
+use crate::playwright::analysis::coverage_edges::seed_coverage_from_edges;
 use crate::playwright::analysis::duplicates::build_duplicate_selectors;
 use crate::playwright::analysis::fetch::{seed_fetch_coverage, FetchCoverageEntry};
 use crate::playwright::analysis::types::{
     CoverageFetch, CoverageInputs, CoverageLinks, CoverageReport, CoverageRoute, CoverageSelector,
-    Edge, SelectorCoverageKey, Summary, TestRef,
+    SelectorCoverageKey, Summary, TestRef,
 };
 use crate::playwright::fsutil::relative_string;
 use crate::playwright::url::is_ignored;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
-type RouteCoverageEntry<'a> = BTreeMap<
+pub(super) type RouteCoverageEntry<'a> = BTreeMap<
     &'a str,
     (
         BTreeSet<Arc<String>>,
@@ -17,7 +18,8 @@ type RouteCoverageEntry<'a> = BTreeMap<
         BTreeSet<TestRef>,
     ),
 >;
-type SelectorCoverageEntry = BTreeMap<SelectorCoverageKey, (CoverageLinks, BTreeSet<TestRef>)>;
+pub(super) type SelectorCoverageEntry =
+    BTreeMap<SelectorCoverageKey, (CoverageLinks, BTreeSet<TestRef>)>;
 
 pub(crate) fn build_coverage(inputs: CoverageInputs<'_>) -> CoverageReport {
     let root = inputs.root;
@@ -34,71 +36,7 @@ pub(crate) fn build_coverage(inputs: CoverageInputs<'_>) -> CoverageReport {
     let mut by_selector: SelectorCoverageEntry = BTreeMap::new();
     let mut by_fetch: FetchCoverageEntry = seed_fetch_coverage(fetch_index);
 
-    for edge in edges {
-        match edge {
-            Edge::Route {
-                test_file,
-                test_name,
-                describe_path,
-                route,
-                url,
-                ..
-            } => {
-                let entry = by_route.entry(route.as_str()).or_insert_with(|| {
-                    (Default::default(), Default::default(), Default::default())
-                });
-                entry.0.insert(test_file.clone());
-                entry.1.insert(url.clone());
-                entry.2.insert(TestRef {
-                    file: test_file.clone(),
-                    name: test_name.clone(),
-                    describe_path: describe_path.clone(),
-                });
-            }
-            Edge::Selector {
-                test_file,
-                test_name,
-                describe_path,
-                app_file,
-                attribute,
-                value,
-                selector,
-            } => {
-                let key = (app_file.clone(), attribute.clone(), value.clone());
-                let entry = by_selector.entry(key).or_insert_with(|| {
-                    ((Default::default(), Default::default()), Default::default())
-                });
-                entry.0 .0.insert(test_file.clone());
-                entry.0 .1.insert(selector.clone());
-                entry.1.insert(TestRef {
-                    file: test_file.clone(),
-                    name: test_name.clone(),
-                    describe_path: describe_path.clone(),
-                });
-            }
-            Edge::Fetch {
-                test_file,
-                test_name,
-                describe_path,
-                route_file,
-                method,
-                path,
-                ..
-            } => {
-                let key = (method.clone(), path.clone());
-                let entry = by_fetch.entry(key).or_insert_with(|| {
-                    (Default::default(), Default::default(), Default::default())
-                });
-                entry.0.insert(test_file.clone());
-                entry.1.insert(TestRef {
-                    file: test_file.clone(),
-                    name: test_name.clone(),
-                    describe_path: describe_path.clone(),
-                });
-                entry.2.insert(route_file.clone());
-            }
-        }
-    }
+    seed_coverage_from_edges(edges, &mut by_route, &mut by_selector, &mut by_fetch);
 
     let mut coverage_routes: Vec<CoverageRoute> = Vec::new();
     for route in routes {

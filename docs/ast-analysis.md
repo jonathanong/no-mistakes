@@ -78,7 +78,12 @@ tests are tracked with policy flags described in the [CLI reference](cli-referen
 Selector coverage collects configured JSX attributes such as `data-testid`,
 `data-pw`, mapped component props, and optionally HTML `id` values. Tests cover
 them through `getByTestId(...)`, CSS attribute selectors, and CSS ID selectors
-when HTML IDs are enabled.
+when HTML IDs are enabled. Tests can also create approximate text coverage
+edges with static `getByRole(..., { name })`, `getByText(...)`,
+`getByLabel(...)`, and `getByPlaceholder(...)` locators when a preceding URL
+signal reaches the component file or a nearby exact selector already points at
+the same file. These edges are reported separately from exact selector edges
+because visible text and accessible names are not unique.
 
 Unsupported dynamic app selectors, such as `data-testid={id}`, are reported but
 do not count as covered. Static templates such as `` user-${id} `` are fuzzy and

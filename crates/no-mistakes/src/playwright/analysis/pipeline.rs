@@ -1,8 +1,13 @@
 use crate::playwright::analysis::app_collect::collect_app_selector_occurrences;
+use crate::playwright::analysis::app_text::collect_app_text_targets;
 use crate::playwright::analysis::context::TestAnalysisContext;
 use crate::playwright::analysis::coverage::build_coverage;
 use crate::playwright::analysis::discover::discover_test_files;
 use crate::playwright::analysis::fetch::{collect_fetches_for_routes, expand_fetch_edges};
+pub(crate) use crate::playwright::analysis::pipeline_selectors::{
+    analyze_selectors_with_policy, analyze_selectors_with_policy_and_facts,
+};
+use crate::playwright::analysis::route_reachability::collect_route_reachable_files;
 use crate::playwright::analysis::routes_index::route_index;
 use crate::playwright::analysis::selectors_index::{app_selector_targets, selector_index};
 use crate::playwright::analysis::test_file::{analyze_test_file, analyze_test_occurrences};
@@ -33,22 +38,6 @@ pub(crate) fn analyze_with_policy(
     )
 }
 
-pub(crate) fn analyze_selectors_with_policy(
-    root: &Path,
-    settings: &config::Settings,
-    test_policy: playwright_tests::TestPolicy,
-    unique_selector_policy: UniqueSelectorPolicy,
-) -> Result<Analysis> {
-    analyze_with_policy_and_optional_facts(
-        root,
-        settings,
-        test_policy,
-        unique_selector_policy,
-        false,
-        None,
-    )
-}
-
 pub(crate) fn analyze_with_policy_and_facts(
     root: &Path,
     settings: &config::Settings,
@@ -66,24 +55,7 @@ pub(crate) fn analyze_with_policy_and_facts(
     )
 }
 
-pub(crate) fn analyze_selectors_with_policy_and_facts(
-    root: &Path,
-    settings: &config::Settings,
-    test_policy: playwright_tests::TestPolicy,
-    unique_selector_policy: UniqueSelectorPolicy,
-    facts: &crate::codebase::check_facts::CheckFactMap,
-) -> Result<Analysis> {
-    analyze_with_policy_and_optional_facts(
-        root,
-        settings,
-        test_policy,
-        unique_selector_policy,
-        false,
-        Some(facts),
-    )
-}
-
-fn analyze_with_policy_and_optional_facts(
+pub(super) fn analyze_with_policy_and_optional_facts(
     root: &Path,
     settings: &config::Settings,
     test_policy: playwright_tests::TestPolicy,
@@ -139,6 +111,12 @@ fn analyze_with_policy_and_optional_facts(
         .collect();
     app_selectors.sort();
     app_selectors.dedup();
+    let app_text_targets = collect_app_text_targets(root, settings)?;
+    let route_reachable_files = if app_text_targets.is_empty() {
+        Default::default()
+    } else {
+        collect_route_reachable_files(root, settings, &routes)?
+    };
     let route_idx = route_index(root, &routes);
     let app_selector_tgts = app_selector_targets(root, &app_selectors);
     let selector_idx = selector_index(&app_selector_tgts);
@@ -147,6 +125,8 @@ fn analyze_with_policy_and_optional_facts(
         route_index: &route_idx,
         app_selector_targets: &app_selector_tgts,
         selector_index: &selector_idx,
+        app_text_targets: &app_text_targets,
+        route_reachable_files: &route_reachable_files,
         navigation_helpers: &settings.navigation_helpers,
         selector_regexes: &selector_regexes,
         test_policy,
@@ -166,6 +146,7 @@ fn analyze_with_policy_and_optional_facts(
                         &test_analysis,
                         playwright.urls.clone(),
                         playwright.selectors.clone(),
+                        playwright.text_locators.clone(),
                     ),
                     None => analyze_test_file(test_file, &test_analysis)?,
                 }

@@ -83,6 +83,14 @@ pub(crate) fn print_edges_text(report: &EdgeReport) {
                 path,
                 ..
             } => println!("{test_file} -> {method} {path} (via {route})"),
+            Edge::LocatorText {
+                test_file,
+                app_file,
+                locator_kind,
+                text,
+                locator,
+                ..
+            } => println!("{test_file} -> {app_file} ({locator_kind}: {text}, {locator})"),
         }
     }
 }
@@ -124,6 +132,13 @@ pub(crate) fn build_related_report(
             } if related_files.contains(route_file.as_ref()) => {
                 tests.insert(test_file.to_string());
                 fetch_apis.insert(format!("{method} {path}"));
+            }
+            Edge::LocatorText {
+                test_file,
+                app_file,
+                ..
+            } if related_files.contains(app_file.as_ref()) => {
+                tests.insert(test_file.to_string());
             }
             _ => {}
         }

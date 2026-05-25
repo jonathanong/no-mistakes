@@ -4,6 +4,7 @@ use super::call_shapes::{
 };
 use super::css::{extract_css_attribute_selectors, extract_css_id_selectors};
 use super::types::{PlaywrightSelector, SelectorRegexes};
+use crate::codebase::ts_source::byte_offset_to_line;
 use crate::playwright::playwright_tests;
 use oxc_ast_visit::Visit;
 
@@ -21,11 +22,11 @@ pub fn extract_playwright_selector_occurrences_from_program(
         annotation_status: playwright_tests::TestStatus::Active,
         selectors: Vec::new(),
         current_test_name: None,
+        current_scope: playwright_tests::TestOccurrenceScope::File,
         describe_stack: Vec::new(),
     };
     visitor.visit_program(program);
-    visitor.selectors.sort();
-    visitor.selectors.dedup();
+    playwright_tests::dedup_occurrences_by_identity(&mut visitor.selectors);
     visitor.selectors
 }
 
@@ -37,6 +38,7 @@ struct PlaywrightSelectorVisitor<'a, 'r> {
     annotation_status: playwright_tests::TestStatus,
     selectors: Vec<playwright_tests::TestOccurrence<PlaywrightSelector>>,
     current_test_name: Option<String>,
+    current_scope: playwright_tests::TestOccurrenceScope,
     describe_stack: Vec<String>,
 }
 
@@ -47,17 +49,19 @@ impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightSelectorVisitor<'a, '_> {
                 call,
                 self.source,
                 self.test_id_attributes,
-                &mut |selector| self.insert(selector),
+                &mut |selector| self.insert(selector, call.span.start),
             );
         } else if let Some(argument_mode) = selector_argument_mode(&call.callee) {
             for selector in selector_argument_literals(call, self.source, argument_mode) {
                 extract_css_attribute_selectors(
                     &selector,
                     &self.regexes.playwright_attributes,
-                    &mut |selector| self.insert(selector),
+                    &mut |selector| self.insert(selector, call.span.start),
                 );
                 if self.regexes.html_ids {
-                    extract_css_id_selectors(&selector, &mut |selector| self.insert(selector));
+                    extract_css_id_selectors(&selector, &mut |selector| {
+                        self.insert(selector, call.span.start)
+                    });
                 }
             }
         }
@@ -80,9 +84,9 @@ impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightSelectorVisitor<'a, '_> {
             } else {
                 let test_name = playwright_tests::test_callback_identity(call);
                 let previous_test_name = self.current_test_name.clone();
-                if test_name.is_some() {
-                    self.current_test_name = test_name;
-                }
+                let previous_scope = self.current_scope;
+                self.current_test_name = test_name;
+                self.current_scope = playwright_tests::TestOccurrenceScope::Test;
                 for (index, argument) in call.arguments.iter().enumerate() {
                     if index == callback_index {
                         self.with_status(callback_status, |visitor| {
@@ -94,6 +98,7 @@ impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightSelectorVisitor<'a, '_> {
                     }
                 }
                 self.current_test_name = previous_test_name;
+                self.current_scope = previous_scope;
             }
         } else {
             let callback_index = playwright_tests::callback_argument_index(call);
@@ -104,6 +109,20 @@ impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightSelectorVisitor<'a, '_> {
                         self.visit_argument(argument);
                     }
                 }
+                return;
+            }
+            if let Some((callback_index, hook_kind)) = playwright_tests::hook_callback(call) {
+                let previous_scope = self.current_scope;
+                self.current_scope = match hook_kind {
+                    playwright_tests::HookKind::Setup => {
+                        playwright_tests::TestOccurrenceScope::Hook
+                    }
+                    playwright_tests::HookKind::Teardown => {
+                        playwright_tests::TestOccurrenceScope::TeardownHook
+                    }
+                };
+                self.visit_argument(&call.arguments[callback_index]);
+                self.current_scope = previous_scope;
                 return;
             }
             oxc_ast_visit::walk::walk_call_expression(self, call);
@@ -143,12 +162,14 @@ impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightSelectorVisitor<'a, '_> {
 }
 
 impl PlaywrightSelectorVisitor<'_, '_> {
-    fn insert(&mut self, value: PlaywrightSelector) {
+    fn insert(&mut self, value: PlaywrightSelector, byte_offset: u32) {
         self.selectors.push(playwright_tests::TestOccurrence {
             value,
             status: self.status.merge(self.annotation_status),
+            scope: self.current_scope,
             test_name: self.current_test_name.clone(),
             describe_path: self.describe_stack.clone(),
+            line: byte_offset_to_line(self.source, byte_offset as usize),
         });
     }
 
@@ -174,3 +195,6 @@ impl PlaywrightSelectorVisitor<'_, '_> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

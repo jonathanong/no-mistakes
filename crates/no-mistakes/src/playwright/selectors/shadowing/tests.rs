@@ -29,6 +29,14 @@ fn identifier_reassignment_uses_identifier_boundaries_and_assignment_operator() 
     ));
     assert!(!has_identifier_reassignment("userid = makeId();", "id"));
     assert!(!has_identifier_reassignment("id => id", "id"));
+    assert!(!has_identifier_reassignment("<input id={id}", "id"));
+    assert!(!has_identifier_reassignment(
+        "<input id={id} data-pw=\"x\">",
+        "id"
+    ));
+    assert!(has_identifier_reassignment("id = {};", "id"));
+    assert!(has_identifier_reassignment("id={};", "id"));
+    assert!(has_identifier_reassignment("id={foo: 1};", "id"));
 }
 
 #[test]
@@ -55,4 +63,12 @@ fn enclosing_shadow_binding_requires_an_open_block() {
         "function Inner(dataPw) { return dataPw; } return <a data-pw={",
         &binding
     ));
+}
+
+#[test]
+fn jsx_start_detection_rejects_comparison_operators() {
+    assert!(has_unclosed_jsx_start("<input id={"));
+    assert!(has_unclosed_jsx_start("</"));
+    assert!(!has_unclosed_jsx_start("if (count <="));
+    assert!(!has_unclosed_jsx_start("value <<"));
 }

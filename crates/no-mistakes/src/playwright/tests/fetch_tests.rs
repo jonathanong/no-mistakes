@@ -45,6 +45,7 @@ fn expand_skips_non_route_edges() {
         attribute: "data-testid".to_string(),
         value: "save".to_string(),
         selector: "getByTestId(save)".to_string(),
+        line: 1,
     };
     let fetch_edge = Edge::Fetch {
         test_file: std::sync::Arc::new("tests/app.spec.ts".to_string()),
@@ -76,6 +77,8 @@ fn expand_skips_routes_not_in_fetch_index() {
         route_file: std::sync::Arc::new("web/app/missing/page.tsx".to_string()),
         route: std::sync::Arc::new("/missing".to_string()),
         url: std::sync::Arc::new("/missing".to_string()),
+        hook: false,
+        line: 1,
     };
     let index = FetchIndex::new();
     let result = expand_fetch_edges(&[route_edge], &index);
@@ -91,6 +94,8 @@ fn expand_skips_dynamic_and_unsupported_fetches() {
         route_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
         route: std::sync::Arc::new("/".to_string()),
         url: std::sync::Arc::new("/".to_string()),
+        hook: false,
+        line: 1,
     };
     let dynamic = FetchOccurrence {
         dynamic: true,
@@ -117,6 +122,8 @@ fn expand_produces_client_side_fetch_edge() {
         route_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
         route: std::sync::Arc::new("/".to_string()),
         url: std::sync::Arc::new("/".to_string()),
+        hook: false,
+        line: 1,
     };
     let client_fetch = FetchOccurrence {
         method: "POST".to_string(),

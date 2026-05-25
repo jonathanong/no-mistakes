@@ -132,6 +132,11 @@ pub(crate) fn collect_file_facts(
                     &playwright.selector_regexes,
                     test_id_attributes,
                 ),
+            text_locators:
+                crate::playwright::selectors::extract_playwright_text_locator_occurrences_from_program(
+                    program,
+                    &source,
+                ),
         })
     });
     Some(CheckFileFacts {

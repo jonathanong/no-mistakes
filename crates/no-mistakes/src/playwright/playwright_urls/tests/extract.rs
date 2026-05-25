@@ -1,7 +1,10 @@
+use crate::playwright::playwright_tests::TestOccurrenceScope;
 use crate::playwright::playwright_urls::api::{
     extract_playwright_url_literals_with_helpers, extract_playwright_urls,
 };
+use crate::playwright::playwright_urls::visitor::extract_playwright_url_occurrences_from_program;
 use crate::playwright::test_support::fixture_source;
+use std::path::Path;
 
 #[test]
 fn callee_checks_handle_non_member_expressions() {
@@ -18,10 +21,48 @@ fn extracts_page_goto_url() {
 }
 
 #[test]
+fn classifies_after_hook_urls_as_teardown_hooks() {
+    let src = r#"
+        test.afterEach({ timeout: 1000 }, async ({ page }) => {
+            await page.goto("/cleanup");
+        });
+    "#;
+    let urls =
+        crate::playwright::ast::with_program(Path::new("fixture.ts"), src, |program, source| {
+            extract_playwright_url_occurrences_from_program(program, source, &[])
+        })
+        .expect("fixture parses");
+
+    assert_eq!(urls.len(), 1);
+    assert_eq!(urls[0].scope, TestOccurrenceScope::TeardownHook);
+}
+
+#[test]
+fn dynamic_title_test_urls_are_scoped_to_tests() {
+    let src = fixture_source(&["ast-snippets", "playwright-urls", "dynamic-title-scope.ts"]);
+    let urls =
+        crate::playwright::ast::with_program(Path::new("fixture.ts"), &src, |program, source| {
+            extract_playwright_url_occurrences_from_program(program, source, &[])
+        })
+        .expect("fixture parses");
+
+    assert_eq!(urls.len(), 1);
+    assert_eq!(urls[0].scope, TestOccurrenceScope::Test);
+    assert_eq!(urls[0].test_name, None);
+}
+
+#[test]
 fn extracts_click_href_selector() {
     let src = fixture_source(&["ast-snippets", "playwright-urls", "click-href.ts"]);
     let urls = extract_playwright_urls(&src);
     assert_eq!(urls, vec!["/dashboard"]);
+}
+
+#[test]
+fn extracts_click_href_from_static_helper_and_ignores_empty_clicks() {
+    let src = fixture_source(&["ast-snippets", "playwright-urls", "click-helper.ts"]);
+    let urls = extract_playwright_urls(&src);
+    assert_eq!(urls, vec!["/helper-click"]);
 }
 
 #[test]
