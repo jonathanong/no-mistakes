@@ -446,3 +446,22 @@ fn parse_affected_files_deduplicates() {
     assert_eq!(result.len(), 1);
     assert_eq!(result[0], sh);
 }
+
+#[test]
+fn run_shellcheck_rejects_invalid_severity() {
+    let tmp = tempfile::tempdir().unwrap();
+    let sh = tmp.path().join("test.sh");
+    std::fs::write(&sh, "#!/bin/bash\necho hi\n").unwrap();
+    let opts = Options {
+        shellcheck: ShellcheckOptions {
+            severity: "invalid_value".to_string(),
+        },
+        ..Default::default()
+    };
+    let result = run_shellcheck(tmp.path(), &opts, &[sh]);
+    assert!(result.is_err());
+    assert_eq!(
+        result.unwrap_err().to_string(),
+        "invalid shellcheck severity: invalid_value"
+    );
+}

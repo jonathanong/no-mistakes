@@ -103,6 +103,11 @@ pub(crate) fn run_shellcheck(
     } else {
         &opts.shellcheck.severity
     };
+
+    if !["error", "warning", "info", "style"].contains(&sev) {
+        return Err(anyhow::anyhow!("invalid shellcheck severity: {}", sev));
+    }
+
     let result = Command::new("shellcheck")
         .args(["-f", "gcc", "-S", sev])
         .args(shell_files)
