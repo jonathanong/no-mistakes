@@ -41,6 +41,8 @@ pub(crate) fn check_required_doc_section_with_files(
                 .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
                 .cloned()
                 .collect();
+            let files =
+                crate::codebase::rules::path_filter::filter_rule_files(root, config, rule, &files)?;
             scan_doc_section(root, &opts, &files)
         })
         .collect();

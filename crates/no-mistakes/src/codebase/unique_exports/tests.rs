@@ -101,6 +101,42 @@ fn analyze_project_with_facts_applies_options_per_rule_application() {
 }
 
 #[test]
+fn top_level_rule_exclude_filters_unique_exports_input_files() {
+    let findings = findings("unique-exports-path-filters");
+
+    assert!(findings
+        .iter()
+        .any(|finding| finding.export_name == "shared"));
+    assert!(!findings
+        .iter()
+        .any(|finding| finding.export_name == "Variants"));
+}
+
+#[test]
+fn analyze_project_with_facts_applies_project_and_rule_path_filters() {
+    let root = fixture("unique-exports-path-filters");
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        files,
+        crate::codebase::check_facts::CheckFactPlan {
+            symbols: true,
+            source: true,
+            ..Default::default()
+        },
+    );
+
+    let findings = analyze_project_with_facts(&root, None, None, &facts).unwrap();
+
+    assert!(findings
+        .iter()
+        .any(|finding| finding.export_name == "shared"));
+    assert!(!findings
+        .iter()
+        .any(|finding| finding.export_name == "Variants"));
+}
+
+#[test]
 fn analyze_project_with_facts_surfaces_per_application_errors() {
     let root = fixture("unique-exports-per-application-options");
     let facts = crate::codebase::check_facts::CheckFactMap {

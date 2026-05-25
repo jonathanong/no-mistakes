@@ -34,6 +34,7 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
                     && !super::rust_max_lines_per_file::is_test_file(root, p)
             })
             .collect();
+        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
         findings.extend(scan(root, &opts, &files)?);
     }
     super::sort_findings(&mut findings);
@@ -63,6 +64,7 @@ pub(crate) fn check_with_files(
             })
             .cloned()
             .collect();
+        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
         findings.extend(scan(root, &opts, &files)?);
     }
     super::sort_findings(&mut findings);

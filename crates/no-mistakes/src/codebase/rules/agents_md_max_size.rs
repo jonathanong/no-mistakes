@@ -35,6 +35,7 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
             .iter()
             .flat_map(|r| discover_with_basenames(r, skip, &filenames))
             .collect();
+        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
         findings.extend(scan(root, &opts, &files)?);
     }
     super::sort_findings(&mut findings);
@@ -63,6 +64,7 @@ pub(crate) fn check_with_files(
             })
             .cloned()
             .collect();
+        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
         findings.extend(scan(root, &opts, &files)?);
     }
     super::sort_findings(&mut findings);

@@ -116,6 +116,7 @@ where
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.rule_options();
         let exclude_matcher = ExcludeMatcher::new(&opts.excludes);
+        let filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
         let Some(route_globset) = route_globset_for_rule(config, rule) else {
             continue;
         };
@@ -124,7 +125,8 @@ where
             .filter_map(|item| {
                 let path = path_for(item);
                 (route_globset.is_match(relative_path(root, path))
-                    && !exclude_matcher.is_match(root, path))
+                    && !exclude_matcher.is_match(root, path)
+                    && filter.is_match(path))
                 .then(|| {
                     ast::has_server_like_route_call(path, source_for(item))
                         .then(|| path.parent().map(Path::to_path_buf))
@@ -142,6 +144,7 @@ where
                 .filter(|item| {
                     let path = path_for(item);
                     !exclude_matcher.is_match(root, path)
+                        && filter.is_match(path)
                         && path.ancestors().any(|dir| route_dirs.contains(dir))
                 })
                 .flat_map(|item| {

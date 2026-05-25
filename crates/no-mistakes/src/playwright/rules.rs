@@ -12,11 +12,13 @@ use crate::playwright::playwright_config;
 use crate::playwright::playwright_tests;
 use crate::playwright::rule_findings::findings_from_report;
 use anyhow::Result;
+use filter::filter_rule_findings;
 use selection::rule_selections;
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
 
+mod filter;
 mod selection;
 
 pub const PLAYWRIGHT_COVERAGE: &str = "playwright-coverage";
@@ -51,12 +53,13 @@ pub fn check(
         } else {
             analyze_selectors_with_policy(root, &settings, test_policy, unique_policy)
         }?;
-        findings.extend(findings_from_report(
+        let report_findings = findings_from_report(
             &analysis.coverage,
             selection.coverage,
             selection.unique_test_ids,
             selection.unique_html_ids,
-        ));
+        );
+        findings.extend(filter_rule_findings(root, config, report_findings)?);
     }
     findings.sort();
     findings.dedup();
@@ -142,12 +145,13 @@ pub(crate) fn check_with_facts(
                 facts,
             )
         }?;
-        findings.extend(findings_from_report(
+        let report_findings = findings_from_report(
             &analysis.coverage,
             selection.coverage,
             selection.unique_test_ids,
             selection.unique_html_ids,
-        ));
+        );
+        findings.extend(filter_rule_findings(root, config, report_findings)?);
     }
     findings.sort();
     findings.dedup();

@@ -155,6 +155,24 @@ rules:
       vitest: [web]
 ```
 
+Configured `rules:` entries can be narrowed with top-level path filters. These
+filters are available for every `no-mistakes check` rule application, including
+filesystem rules, Playwright rule IDs, and `unique-exports`:
+
+```yml
+rules:
+  - rule: unique-exports
+    projects: [web]
+    exclude:
+      - "**/*.stories.tsx"
+```
+
+`include` and `exclude` are evaluated as slash-separated globs. Empty `include`
+means all files in the targeted project or repository scope, and `exclude`
+always wins. For project-targeted rules, filters can match either repository-
+relative paths such as `web/src/Button.tsx` or project-relative paths such as
+`src/Button.tsx`.
+
 ### Test Plans
 
 `no-mistakes test plan <playwright|vitest>` selects focused test files from

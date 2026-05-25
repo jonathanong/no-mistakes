@@ -203,6 +203,20 @@ fn lockfile_non_registry_resolution_flagged() {
 }
 
 #[test]
+fn lockfile_path_filters_are_honored() {
+    let tmp = tempfile::tempdir().unwrap();
+    let lockfile_content =
+        "packages:\n  my-pkg@1.0.0:\n    resolution:\n      tarball: https://example.com/pkg.tgz\n";
+    std::fs::write(tmp.path().join("pnpm-lock.yaml"), lockfile_content).unwrap();
+    let mut config = config_with_options("lockfile: pnpm-lock.yaml");
+    config.rules[0].exclude = vec!["pnpm-lock.yaml".to_string()];
+
+    let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn lockfile_registry_integrity_allowed() {
     let tmp = tempfile::tempdir().unwrap();
     let lockfile_content =

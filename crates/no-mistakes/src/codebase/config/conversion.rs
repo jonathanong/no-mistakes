@@ -13,6 +13,7 @@ pub(super) fn config_from_v2(v2: NoMistakesConfig) -> Config {
                     type_: project.type_,
                     root: project.root,
                     include: project.include,
+                    exclude: project.exclude,
                     rules: Vec::new(),
                 },
             )
@@ -43,6 +44,8 @@ pub(super) fn config_from_v2(v2: NoMistakesConfig) -> Config {
             rule: def.rule.clone(),
             projects: valid_projects.clone(),
             repository: applies_to_repository,
+            include: def.include.clone(),
+            exclude: def.exclude.clone(),
             options: def.options.clone(),
         });
         let entry = rules.entry(def.rule.clone()).or_insert_with(|| RuleConfig {

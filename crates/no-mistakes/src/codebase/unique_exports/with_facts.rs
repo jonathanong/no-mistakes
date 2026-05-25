@@ -26,6 +26,7 @@ pub fn analyze_project_with_facts(
             let options = application.rule_options();
             let application_findings = analyze_project_roots_with_facts(
                 root,
+                Some((&config, application)),
                 tsconfig_path,
                 shared,
                 project_roots,
@@ -44,6 +45,7 @@ pub fn analyze_project_with_facts(
         .collect::<Vec<_>>();
     analyze_project_roots_with_facts(
         root,
+        None,
         tsconfig_path,
         shared,
         project_roots,
@@ -53,6 +55,10 @@ pub fn analyze_project_with_facts(
 
 fn analyze_project_roots_with_facts(
     root: &Path,
+    application_filter: Option<(
+        &crate::codebase::config::Config,
+        &crate::codebase::config::RuleApplicationConfig,
+    )>,
     tsconfig_path: Option<&Path>,
     shared: &CheckFactMap,
     project_roots: Vec<std::path::PathBuf>,
@@ -71,6 +77,9 @@ fn analyze_project_roots_with_facts(
         })
         .cloned()
         .collect::<Vec<_>>();
+    if let Some((config, application)) = application_filter {
+        analysis_files = filter_application_files(root, config, application, analysis_files)?;
+    }
     analysis_files.sort();
     analysis_files.dedup();
     let analysis_files = filter_source_files(&analysis_files);
@@ -101,6 +110,81 @@ fn analyze_project_roots_with_facts(
         workspace,
     )
 }
+
+fn filter_application_files(
+    root: &Path,
+    config: &crate::codebase::config::Config,
+    application: &crate::codebase::config::RuleApplicationConfig,
+    files: Vec<std::path::PathBuf>,
+) -> Result<Vec<std::path::PathBuf>> {
+    use crate::codebase::rules::path_filter::GlobMatcher;
+
+    let include = GlobMatcher::new(&application.include, "unique-exports rule include")?;
+    let exclude = GlobMatcher::new(&application.exclude, "unique-exports rule exclude")?;
+    let projects = application
+        .projects
+        .iter()
+        .filter_map(|project_name| {
+            let project = config.projects.get(project_name)?;
+            let project_root = project
+                .effective_root(root)
+                .unwrap_or_else(|| root.to_path_buf());
+            let project_root = normalize_path(&project_root);
+            let project_include =
+                GlobMatcher::new(&project.include, "unique-exports project include").ok()?;
+            let project_exclude =
+                GlobMatcher::new(&project.exclude, "unique-exports project exclude").ok()?;
+            Some(ApplicationProjectFilter {
+                root: project_root,
+                include: project_include,
+                exclude: project_exclude,
+            })
+        })
+        .collect::<Vec<_>>();
+    Ok(files
+        .into_iter()
+        .filter(|path| {
+            let repo_rel = relative(root, path);
+            let rule_match =
+                (include.is_empty() || include.is_match(&repo_rel)) && !exclude.is_match(&repo_rel);
+            if application.repository && rule_match {
+                return true;
+            }
+            projects.iter().any(|project| {
+                if !path.starts_with(&project.root) {
+                    return false;
+                }
+                let project_rel = relative(&project.root, path);
+                (project.include.is_empty()
+                    || project.include.is_match(&repo_rel)
+                    || project.include.is_match(&project_rel))
+                    && !project.exclude.is_match(&repo_rel)
+                    && !project.exclude.is_match(&project_rel)
+                    && (include.is_empty()
+                        || include.is_match(&repo_rel)
+                        || include.is_match(&project_rel))
+                    && !exclude.is_match(&repo_rel)
+                    && !exclude.is_match(&project_rel)
+            })
+        })
+        .collect())
+}
+
+struct ApplicationProjectFilter {
+    root: std::path::PathBuf,
+    include: crate::codebase::rules::path_filter::GlobMatcher,
+    exclude: crate::codebase::rules::path_filter::GlobMatcher,
+}
+
+fn relative(root: &Path, path: &Path) -> String {
+    path.strip_prefix(root)
+        .unwrap_or(path)
+        .to_string_lossy()
+        .replace('\\', "/")
+}
+
+#[cfg(test)]
+mod tests;
 
 fn shared_symbol_files(
     workspace_files: &[std::path::PathBuf],

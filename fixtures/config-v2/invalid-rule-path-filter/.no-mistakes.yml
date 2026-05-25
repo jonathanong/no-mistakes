@@ -1,0 +1,5 @@
+rules:
+  - rule: unique-exports
+    scope: repository
+    exclude:
+      - "["

@@ -1,4 +1,5 @@
 use anyhow::Result;
+use globset::GlobBuilder;
 use std::path::{Path, PathBuf};
 
 use super::legacy;
@@ -70,10 +71,26 @@ fn parse_v2_config(source: &str, path: &Path) -> Result<NoMistakesConfig> {
 }
 
 fn validate_v2_config(config: &NoMistakesConfig) -> Result<()> {
+    for (name, project) in &config.projects {
+        validate_globs(&project.include, &format!("projects.{name}.include"))?;
+        validate_globs(&project.exclude, &format!("projects.{name}.exclude"))?;
+    }
     for (index, rule) in config.rules.iter().enumerate() {
         if rule.rule.trim().is_empty() {
             anyhow::bail!("rules[{index}].rule is required");
         }
+        validate_globs(&rule.include, &format!("rules[{index}].include"))?;
+        validate_globs(&rule.exclude, &format!("rules[{index}].exclude"))?;
+    }
+    Ok(())
+}
+
+fn validate_globs(patterns: &[String], key: &str) -> Result<()> {
+    for pattern in patterns {
+        GlobBuilder::new(pattern.trim_start_matches("./"))
+            .literal_separator(false)
+            .build()
+            .map_err(|err| anyhow::anyhow!("{key} contains invalid glob `{pattern}`: {err}"))?;
     }
     Ok(())
 }

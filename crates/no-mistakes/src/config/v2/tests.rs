@@ -179,6 +179,26 @@ fn rule_def_enabled_defaults_to_true() {
 }
 
 #[test]
+fn project_and_rule_path_filters_parse() {
+    let cfg = load_v2_config(&fixture("rule-path-filters"), None).unwrap();
+    let project = &cfg.projects["web"];
+
+    assert_eq!(project.include, vec!["src/**"]);
+    assert_eq!(project.exclude, vec!["**/*.stories.tsx"]);
+    assert_eq!(cfg.rules[0].include, vec!["**/*.ts"]);
+    assert_eq!(cfg.rules[0].exclude, vec!["generated/**"]);
+}
+
+#[test]
+fn invalid_rule_path_filter_errors() {
+    let err = load_v2_config(&fixture("invalid-rule-path-filter"), None)
+        .err()
+        .unwrap();
+
+    assert!(err.to_string().contains("rules[0].exclude"));
+}
+
+#[test]
 fn v2_rule_applications_require_rule_id() {
     let err = load_v2_config(&fixture("missing-rule-id"), None)
         .err()

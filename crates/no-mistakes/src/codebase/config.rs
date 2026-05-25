@@ -12,8 +12,11 @@ mod conversion;
 mod discovery;
 #[path = "config/project.rs"]
 mod project;
+#[path = "config/rule_application.rs"]
+mod rule_application;
 
 pub use project::{infer_nextjs_root, ProjectConfig};
+pub use rule_application::RuleApplicationConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -60,24 +63,6 @@ pub struct RuleConfig {
     pub enabled: bool,
     #[serde(flatten, default)]
     pub options: serde_yaml::Value,
-}
-
-#[derive(Debug, Clone, Deserialize, Default, PartialEq)]
-pub struct RuleApplicationConfig {
-    #[serde(default)]
-    pub rule: String,
-    #[serde(default)]
-    pub projects: Vec<String>,
-    #[serde(default)]
-    pub repository: bool,
-    #[serde(default)]
-    pub options: serde_yaml::Value,
-}
-
-impl RuleApplicationConfig {
-    pub fn rule_options<T: for<'de> Deserialize<'de> + Default>(&self) -> T {
-        serde_yaml::from_value(self.options.clone()).unwrap_or_default()
-    }
 }
 
 fn default_true() -> bool {

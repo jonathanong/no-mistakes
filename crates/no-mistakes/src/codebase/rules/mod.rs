@@ -24,6 +24,7 @@ pub mod tsconfig_alias_folder_mapping;
 pub mod vitest_test_correspondence;
 
 pub mod filesystem_dispatch;
+pub(crate) mod path_filter;
 mod run;
 
 use serde::Serialize;
