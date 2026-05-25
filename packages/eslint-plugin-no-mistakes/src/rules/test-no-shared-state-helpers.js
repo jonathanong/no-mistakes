@@ -152,12 +152,13 @@ function firstNamedCallbackArgument(args) {
   return args[0]?.type === "Identifier" ? args[0] : undefined;
 }
 
-function createCleanupTracker() {
+function createCleanupTracker(options = {}) {
   const pathsBySuite = new Map();
   const suiteStack = [];
   let activeSuiteKey;
   let replaySuiteKey;
   let nextSuiteId = 0;
+  const onceAllowed = Boolean(options.allowBeforeAllAssignments);
 
   function currentSuiteKey() {
     return replaySuiteKey ?? suiteStack.join("/");
@@ -175,7 +176,7 @@ function createCleanupTracker() {
 
   return {
     beginSetup(kind, suiteKey = currentSuiteKey()) {
-      activeSuiteKey = kind === "per-test" ? suiteKey : undefined;
+      activeSuiteKey = kind === "per-test" || onceAllowed ? suiteKey : undefined;
     },
     clearReplaySuite() {
       replaySuiteKey = undefined;
@@ -194,8 +195,7 @@ function createCleanupTracker() {
     remember(path) {
       if (!path || activeSuiteKey === undefined) return;
       const paths = pathsBySuite.get(activeSuiteKey) ?? new Set();
-      paths.add(path);
-      pathsBySuite.set(activeSuiteKey, paths);
+      pathsBySuite.set(activeSuiteKey, paths.add(path));
     },
     setReplaySuite(suiteKey) {
       replaySuiteKey = suiteKey;

@@ -436,3 +436,60 @@ fn root_level_source_file_without_test_fails() {
         findings[0].message
     );
 }
+
+#[test]
+fn stem_suffix_strip_pass_fixture_has_no_findings() {
+    let root = fixture_root("stem-suffix-pass");
+    let config_path = root.join(".no-mistakes.yml");
+    let findings = check(
+        &root,
+        &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
+    )
+    .unwrap();
+    assert!(
+        findings.is_empty(),
+        "mock.test file with stripped suffix should pass: {findings:?}"
+    );
+}
+
+#[test]
+fn stem_suffix_strip_test_to_source_resolves_mock() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    std::fs::create_dir_all(root.join("backend/mod")).unwrap();
+    std::fs::write(root.join("backend/mod/page.tsx"), "export {};\n").unwrap();
+    std::fs::write(
+        root.join("backend/mod/page.mock.test.tsx"),
+        "test('m', () => {});\n",
+    )
+    .unwrap();
+    let config = config_with_rule(
+        "{scopes: [backend], testExtensions: [\".test.tsx\"], testsDir: __tests__, stemSuffixesToStrip: [\".mock\"]}",
+    );
+    let findings = check(root, &config).unwrap();
+    assert!(
+        findings.is_empty(),
+        "page.mock.test.tsx should resolve to page.tsx: {findings:?}"
+    );
+}
+
+#[test]
+fn stem_suffix_strip_source_to_test_finds_suffixed_test() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    std::fs::create_dir_all(root.join("backend/mod")).unwrap();
+    std::fs::write(root.join("backend/mod/page.tsx"), "export {};\n").unwrap();
+    std::fs::write(
+        root.join("backend/mod/page.mock.test.tsx"),
+        "test('m', () => {});\n",
+    )
+    .unwrap();
+    let config = config_with_rule(
+        "{scopes: [backend], testExtensions: [\".test.tsx\"], testsDir: __tests__, direction: source-to-test, stemSuffixesToStrip: [\".mock\"]}",
+    );
+    let findings = check(root, &config).unwrap();
+    assert!(
+        findings.is_empty(),
+        "page.tsx should find page.mock.test.tsx as corresponding test: {findings:?}"
+    );
+}

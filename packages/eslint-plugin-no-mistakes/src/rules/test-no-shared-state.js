@@ -31,7 +31,7 @@ module.exports = rule(
   {
     type: "problem",
     docs: { description: "disallow mutable module-scope test state", recommended: false },
-    schema: [],
+    schema: [{ type: "object", properties: { allowBeforeAllAssignments: { type: "boolean" } } }],
     messages: {
       shared:
         "Shared mutable module-scope state between tests: use local variables inside each test instead.",
@@ -41,7 +41,8 @@ module.exports = rule(
     const mutableTopLevel = new Set();
     const pendingNamedCallbacks = [];
     const pendingNamedSetupCallbacks = [];
-    const cleanupTracker = createCleanupTracker();
+    const ruleOptions = context.options?.[0] ?? {};
+    const cleanupTracker = createCleanupTracker(ruleOptions);
     const viMockTracker = createViMockTracker(context, mutableTopLevel);
     const registryReports = createRegistryReports(
       context,

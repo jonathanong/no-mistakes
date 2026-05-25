@@ -23,6 +23,7 @@ pub(crate) struct Options {
     pub(crate) test_extensions: Vec<String>,
     pub(crate) tests_dir: String,
     pub(crate) direction: Direction,
+    pub(crate) stem_suffixes_to_strip: Vec<String>,
 }
 
 #[derive(Clone, Copy, Deserialize, Default, PartialEq, Eq)]
@@ -134,9 +135,15 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
             }
             let (dir, base) = stem_and_dir(rel, test_ext);
             dir_stems.entry(dir.clone()).or_default().push(base.clone());
-            let found = source_candidates(&dir, &base, test_ext)
-                .iter()
-                .any(|c| rel_set.contains(c.as_str()));
+            let mut candidates = source_candidates(&dir, &base, test_ext);
+            for suffix in &opts.stem_suffixes_to_strip {
+                if let Some(stripped) = base.strip_suffix(suffix.as_str()) {
+                    if !stripped.is_empty() {
+                        candidates.extend(source_candidates(&dir, stripped, test_ext));
+                    }
+                }
+            }
+            let found = candidates.iter().any(|c| rel_set.contains(c.as_str()));
             if !found {
                 findings.push(RuleFinding {
                     rule: RULE_ID.to_string(),

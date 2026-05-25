@@ -121,5 +121,23 @@ describe("upstreamed generic cleanup registry scoping", () => {
       ),
       ["shared", "shared"],
     );
+    assert.deepEqual(
+      messages(
+        fixture("shared-state-once-hook-allowed.valid.test.ts"),
+        "test-no-shared-state",
+        { allowBeforeAllAssignments: true },
+        "shared-state-once-hook-allowed.valid.test.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("shared-state-once-hook-allowed.valid.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "shared-state-once-hook-allowed.valid.test.ts",
+      ),
+      ["shared"],
+    );
   });
 });
