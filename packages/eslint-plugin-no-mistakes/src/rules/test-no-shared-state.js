@@ -1,10 +1,31 @@
 "use strict";
 
 const { rule } = require("../helpers");
-/* prettier-ignore */
-const { createRegistryReports, createViMockTracker, isInsideUncalledNestedFunction, isModuleMutable, isResetAssignment, walkSharedMutations } = require("./test-no-shared-state-analysis");
-/* prettier-ignore */
-const { calleeName, collectPatternNames, createCleanupTracker, firstNamedCallbackArgument, isFunctionNode, isMutableInitializer, isTestCall, mutatingCallPropertyName, mutatingCallTarget, mutationPath, mutationRootName, namedCallbackArgument, setupCallbackKind } = require("./test-no-shared-state-helpers");
+
+const {
+  createRegistryReports,
+  createViMockTracker,
+  isInsideUncalledNestedFunction,
+  isModuleMutable,
+  isResetAssignment,
+  walkSharedMutations,
+} = require("./test-no-shared-state-analysis");
+
+const {
+  calleeName,
+  collectPatternNames,
+  createCleanupTracker,
+  firstNamedCallbackArgument,
+  isFunctionNode,
+  isMutableInitializer,
+  isTestCall,
+  mutatingCallPropertyName,
+  mutatingCallTarget,
+  mutationPath,
+  mutationRootName,
+  namedCallbackArgument,
+  setupCallbackKind,
+} = require("./test-no-shared-state-helpers");
 
 module.exports = rule(
   {

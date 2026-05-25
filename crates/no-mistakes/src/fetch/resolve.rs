@@ -52,3 +52,6 @@ pub fn is_client_route_file(path: &Path) -> anyhow::Result<bool> {
             .any(|directive| directive.directive == "use client")
     })
 }
+
+#[cfg(test)]
+mod tests;
