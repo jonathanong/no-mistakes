@@ -105,6 +105,19 @@ describe("helpers", () => {
       expect(isFetchCall(node, context)).toBe(true);
     });
 
+    it("returns true when scope.set exists but does not shadow fetch", () => {
+      const node = { callee: { type: "Identifier", name: "fetch" } };
+      const context = {
+        sourceCode: {
+          getScope: () => ({
+            set: new Map(),
+            upper: null,
+          }),
+        },
+      };
+      expect(isFetchCall(node, context)).toBe(true);
+    });
+
     it("returns false if fetch is shadowed by a local variable", () => {
       const node = { callee: { type: "Identifier", name: "fetch" } };
       const context = {
@@ -116,6 +129,19 @@ describe("helpers", () => {
                 defs: [{ type: "Variable" }],
               },
             ],
+            upper: null,
+          }),
+        },
+      };
+      expect(isFetchCall(node, context)).toBe(false);
+    });
+
+    it("returns false if scope.set.get finds a local variable binding", () => {
+      const node = { callee: { type: "Identifier", name: "fetch" } };
+      const context = {
+        sourceCode: {
+          getScope: () => ({
+            set: new Map([["fetch", { defs: [{ type: "Variable" }] }]]),
             upper: null,
           }),
         },

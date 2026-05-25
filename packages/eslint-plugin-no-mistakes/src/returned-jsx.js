@@ -17,7 +17,9 @@ function collectReturnBranches(node, branches) {
     return;
   }
   if (node.type === "ReturnStatement") {
-    branches.push(...jsxBranches(node.argument));
+    for (const branch of jsxBranches(node.argument)) {
+      branches.push(branch);
+    }
     return;
   }
   if (node.type === "ClassDeclaration" || node.type === "ClassExpression") {
@@ -101,10 +103,9 @@ function childNodes(node) {
       continue;
     }
     if (Array.isArray(value)) {
-      for (let i = 0; i < value.length; i++) {
-        const item = value[i];
-        if (isAstNode(item)) {
-          children.push(item);
+      for (const child of value) {
+        if (isAstNode(child)) {
+          children.push(child);
         }
       }
     } else if (isAstNode(value)) {

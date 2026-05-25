@@ -26,14 +26,21 @@ function isInsideUncalledNestedFunction(node, testDepth, setupDepth) {
 function isModuleMutable({ context, mutableTopLevel, node, name }) {
   let scope = context.sourceCode.getScope(node);
   while (scope) {
-    const variable = scope.set?.get(name);
-    if (variable) {
-      return (
-        mutableTopLevel.has(variable.name) &&
-        (variable.scope.type === "module" || variable.scope.block.type === "Program")
-      );
+    const get = scope.set?.get;
+    const variable = typeof get === "function" ? get.call(scope.set, name) : null;
+    const resolvedVariable =
+      variable ||
+      (typeof get !== "function" ? scope.variables?.find((item) => item.name === name) : null);
+
+    if (!resolvedVariable) {
+      scope = scope.upper;
+      continue;
     }
-    scope = scope.upper;
+
+    return (
+      mutableTopLevel.has(resolvedVariable.name) &&
+      (resolvedVariable.scope.type === "module" || resolvedVariable.scope.block.type === "Program")
+    );
   }
   return false;
 }
@@ -97,7 +104,7 @@ function createViMockTracker(context, mutableTopLevel) {
   };
 }
 
-function createRegistryReports({ context, mutableTopLevel, cleanupTracker, isCaptured }) {
+function createRegistryReports(context, mutableTopLevel, cleanupTracker, isCaptured) {
   const pending = [];
 
   return {

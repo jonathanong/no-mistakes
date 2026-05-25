@@ -73,26 +73,16 @@ function collectExportedComponents(program, opts) {
       collectNamedExport(statement, definitions, namedExports, defaultExports, components, opts);
     }
     if (statement.type === "ExportDefaultDeclaration") {
-      collectDefaultExport(statement, { definitions, defaultExports, components, opts });
+      collectDefaultExport(statement, definitions, defaultExports, components, opts);
     }
   }
 
-  pushExportedDefinitions({
-    names: namedExports,
-    definitions,
-    components,
-    enabled: opts.exportTypes.has("named"),
-  });
-  pushExportedDefinitions({
-    names: defaultExports,
-    definitions,
-    components,
-    enabled: opts.exportTypes.has("default"),
-  });
+  pushExportedDefinitions(namedExports, definitions, components, opts.exportTypes.has("named"));
+  pushExportedDefinitions(defaultExports, definitions, components, opts.exportTypes.has("default"));
   return uniqueComponents(components);
 }
 
-function pushExportedDefinitions({ names, definitions, components, enabled }) {
+function pushExportedDefinitions(names, definitions, components, enabled) {
   if (!enabled) {
     return;
   }
@@ -163,7 +153,7 @@ function collectNamedExport(
   }
 }
 
-function collectDefaultExport(statement, { definitions, defaultExports, components, opts }) {
+function collectDefaultExport(statement, definitions, defaultExports, components, opts) {
   if (!opts.exportTypes.has("default")) {
     return;
   }
