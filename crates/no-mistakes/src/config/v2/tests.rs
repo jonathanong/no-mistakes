@@ -2,7 +2,7 @@ use std::path::Path;
 
 use super::discover::{find_config_root, load_v2_config};
 use super::schema::{
-    NoMistakesConfig, Project, ProjectType, RuleDef, StringOrList, TestPlanPercent,
+    NoMistakesConfig, Project, ProjectType, RewriteRule, RuleDef, StringOrList, TestPlanPercent,
 };
 use super::view::ConfigView;
 
@@ -85,6 +85,30 @@ fn multi_project_config_parsed() {
     assert_eq!(pw.selectors.test_ids, vec!["data-testid", "data-pw"]);
     assert_eq!(pw.selectors.component_test_ids["dataPw"], "data-pw");
     assert_eq!(pw.selector_roots, vec!["web/app", "web/components"]);
+}
+
+#[test]
+fn nextjs_rewrites_parsed() {
+    let cfg = load_v2_config(&fixture("nextjs-rewrites"), None).unwrap();
+    let web = &cfg.projects["web"];
+    assert_eq!(web.type_, Some(ProjectType::Nextjs));
+    assert_eq!(web.rewrites.len(), 2);
+    assert_eq!(
+        web.rewrites[0],
+        RewriteRule {
+            source: "/posts/:slug*".to_string(),
+            destination: "/content/posts/:slug*".to_string(),
+        }
+    );
+    assert_eq!(
+        web.rewrites[1],
+        RewriteRule {
+            source: "/reviews/:slug*".to_string(),
+            destination: "/content/reviews/:slug*".to_string(),
+        }
+    );
+    let view = ConfigView::new(&cfg);
+    assert_eq!(view.nextjs_rewrites().len(), 2);
 }
 
 #[test]

@@ -3,7 +3,7 @@ mod ast;
 mod cli;
 mod config;
 mod fsutil;
-mod matcher;
+pub(crate) mod matcher;
 pub mod playwright_config;
 pub(crate) mod playwright_tests;
 pub mod playwright_urls;

@@ -37,6 +37,13 @@ pub struct Project {
     pub exclude: Vec<String>,
     pub routes: Vec<String>,
     pub queues: QueueConfig,
+    pub rewrites: Vec<RewriteRule>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+pub struct RewriteRule {
+    pub source: String,
+    pub destination: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]

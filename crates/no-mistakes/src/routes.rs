@@ -83,5 +83,7 @@ pub fn path_to_route_pattern(relative: &Path) -> String {
     }
 }
 
+pub mod rewrites;
+
 #[cfg(test)]
 mod tests;

@@ -144,6 +144,7 @@ fn settings_from_v2(
         .ignore_routes
         .clone()
         .unwrap_or(legacy_overlay.ignore_routes);
+    let rewrites = view.nextjs_rewrites().to_vec();
     Ok(Settings {
         frontend_root,
         playwright_configs,
@@ -151,6 +152,7 @@ fn settings_from_v2(
         test_include: legacy_overlay.test_include,
         test_exclude: legacy_overlay.test_exclude,
         ignore_routes,
+        rewrites,
         navigation_helpers: legacy_overlay.navigation_helpers,
         selector_attributes,
         component_selector_attributes: playwright.selectors.component_test_ids.clone(),
@@ -182,6 +184,7 @@ fn settings_from_legacy_file_config(
         test_include: file_config.test_include,
         test_exclude: file_config.test_exclude,
         ignore_routes: file_config.ignore_routes,
+        rewrites: Vec::new(),
         navigation_helpers: file_config.navigation_helpers,
         selector_attributes: file_config
             .selector_attributes

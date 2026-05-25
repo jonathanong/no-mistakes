@@ -1,0 +1,9 @@
+projects:
+  web:
+    type: nextjs
+    root: app
+    rewrites:
+      - source: "/posts/:slug*"
+        destination: "/content/posts/:slug*"
+      - source: "/reviews/:slug*"
+        destination: "/content/reviews/:slug*"
