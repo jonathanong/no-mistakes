@@ -77,12 +77,22 @@ function collectExportedComponents(program, opts) {
     }
   }
 
-  pushExportedDefinitions(namedExports, definitions, components, opts.exportTypes.has("named"));
-  pushExportedDefinitions(defaultExports, definitions, components, opts.exportTypes.has("default"));
+  pushExportedDefinitions({
+    names: namedExports,
+    definitions,
+    components,
+    enabled: opts.exportTypes.has("named"),
+  });
+  pushExportedDefinitions({
+    names: defaultExports,
+    definitions,
+    components,
+    enabled: opts.exportTypes.has("default"),
+  });
   return uniqueComponents(components);
 }
 
-function pushExportedDefinitions(names, definitions, components, enabled) {
+function pushExportedDefinitions({ names, definitions, components, enabled }) {
   if (!enabled) {
     return;
   }
