@@ -1,6 +1,7 @@
+use super::dynamic_values::DynamicIdentifierValues;
+use super::jsx_resolve::app_selector_values;
 use super::scoped_defaults::{
-    app_selector_value, collect_scoped_static_identifier_defaults, jsx_attribute_name,
-    ScopedStaticIdentifierDefault,
+    collect_scoped_static_identifier_defaults, ScopedStaticIdentifierDefault,
 };
 use super::types::{AppSelector, SelectorRegexes};
 use super::HTML_ID_ATTRIBUTE;
@@ -61,6 +62,8 @@ pub fn extract_app_selectors_with_regexes(
 ) -> anyhow::Result<Vec<AppSelector>> {
     ast::with_program(path, source, |program, source| {
         let scoped_static_identifier_defaults = collect_scoped_static_identifier_defaults(program);
+        let dynamic_identifier_values =
+            super::dynamic_values::collect_dynamic_identifier_values_with_file(program, source, path);
         let mut visitor = AppSelectorVisitor {
             path,
             source,
@@ -68,6 +71,8 @@ pub fn extract_app_selectors_with_regexes(
             component_attributes: &regexes.component_attributes,
             html_ids: regexes.html_ids,
             scoped_static_identifier_defaults: &scoped_static_identifier_defaults,
+            dynamic_identifier_values: &dynamic_identifier_values,
+            program,
             selectors: Vec::new(),
         };
         visitor.visit_program(program);
@@ -82,6 +87,8 @@ struct AppSelectorVisitor<'a, 'r> {
     component_attributes: &'r BTreeMap<String, String>,
     html_ids: bool,
     scoped_static_identifier_defaults: &'r [ScopedStaticIdentifierDefault],
+    dynamic_identifier_values: &'r [DynamicIdentifierValues],
+    program: &'a oxc_ast::ast::Program<'a>,
     selectors: Vec<AppSelector>,
 }
 
@@ -95,18 +102,22 @@ impl<'a> oxc_ast_visit::Visit<'a> for AppSelectorVisitor<'a, '_> {
             let Some(name) = jsx_attribute_name(&attribute.name) else {
                 continue;
             };
-            let Some(mapped_attribute) = self.mapped_attribute(name, component) else {
+            let Some(mapped_attribute) = self.mapped_attribute(name, component).map(str::to_string)
+            else {
                 continue;
             };
 
-            if let Some(value) = app_selector_value(
+            for value in app_selector_values(
                 attribute.value.as_ref(),
                 self.source,
+                self.path,
                 self.scoped_static_identifier_defaults,
+                self.dynamic_identifier_values,
+                self.program,
             ) {
                 self.selectors.push(AppSelector {
                     file: PathBuf::from(self.path),
-                    attribute: mapped_attribute.to_string(),
+                    attribute: mapped_attribute.clone(),
                     value,
                 });
             }
@@ -146,5 +157,14 @@ pub(super) fn is_component_jsx_element_name(name: &oxc_ast::ast::JSXElementName<
         oxc_ast::ast::JSXElementName::MemberExpression(_) => true,
         oxc_ast::ast::JSXElementName::NamespacedName(_)
         | oxc_ast::ast::JSXElementName::ThisExpression(_) => false,
+    }
+}
+
+pub(super) fn jsx_attribute_name<'a>(
+    name: &'a oxc_ast::ast::JSXAttributeName<'a>,
+) -> Option<&'a str> {
+    match name {
+        oxc_ast::ast::JSXAttributeName::Identifier(identifier) => Some(identifier.name.as_str()),
+        _ => None,
     }
 }

@@ -1,4 +1,5 @@
 use crate::playwright::selectors::{extract_app_selectors, AppSelector};
+use crate::playwright::test_support::fixture_path;
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -108,5 +109,89 @@ fn extracts_static_identifier_default_jsx_selectors() {
             "{shadowed}",
             "{value}",
         ]
+    );
+}
+
+#[test]
+fn resolves_ternary_initializer() {
+    let source =
+        crate::playwright::test_support::fixture_source(&["ast-snippets", "selectors", "dynamic-ternary.tsx"]);
+    let selectors =
+        extract_app_selectors(Path::new("app/page.tsx"), &source, &attrs(), &BTreeMap::new())
+            .unwrap();
+    let mut values: Vec<String> = selectors.iter().map(AppSelector::display_value).collect();
+    values.sort();
+    values.dedup();
+    assert_eq!(
+        values,
+        vec!["inline-a", "inline-b", "option-a", "option-b"]
+    );
+}
+
+#[test]
+fn resolves_if_else_assignment() {
+    let source = crate::playwright::test_support::fixture_source(&[
+        "ast-snippets",
+        "selectors",
+        "dynamic-conditional.tsx",
+    ]);
+    let selectors =
+        extract_app_selectors(Path::new("app/page.tsx"), &source, &attrs(), &BTreeMap::new())
+            .unwrap();
+    let mut values: Vec<String> = selectors.iter().map(AppSelector::display_value).collect();
+    values.sort();
+    values.dedup();
+    assert_eq!(values, vec!["branch-a", "branch-b"]);
+}
+
+#[test]
+fn resolves_object_map() {
+    let source = crate::playwright::test_support::fixture_source(&[
+        "ast-snippets",
+        "selectors",
+        "dynamic-object-map.tsx",
+    ]);
+    let selectors =
+        extract_app_selectors(Path::new("app/page.tsx"), &source, &attrs(), &BTreeMap::new())
+            .unwrap();
+    let mut values: Vec<String> = selectors.iter().map(AppSelector::display_value).collect();
+    values.sort();
+    values.dedup();
+    assert_eq!(values, vec!["val-a", "val-b", "val-c"]);
+}
+
+#[test]
+fn resolves_function_return() {
+    let source = crate::playwright::test_support::fixture_source(&[
+        "ast-snippets",
+        "selectors",
+        "dynamic-function-return.tsx",
+    ]);
+    let selectors =
+        extract_app_selectors(Path::new("app/page.tsx"), &source, &attrs(), &BTreeMap::new())
+            .unwrap();
+    let mut values: Vec<String> = selectors.iter().map(AppSelector::display_value).collect();
+    values.sort();
+    values.dedup();
+    assert_eq!(values, vec!["fn-a", "fn-b"]);
+}
+
+#[test]
+fn resolves_cross_file_imports() {
+    let page_path = fixture_path(&[
+        "ast-snippets",
+        "selectors",
+        "dynamic-cross-file",
+        "page.tsx",
+    ]);
+    let source = std::fs::read_to_string(&page_path).unwrap();
+    let selectors =
+        extract_app_selectors(&page_path, &source, &attrs(), &BTreeMap::new()).unwrap();
+    let mut values: Vec<String> = selectors.iter().map(AppSelector::display_value).collect();
+    values.sort();
+    values.dedup();
+    assert_eq!(
+        values,
+        vec!["imported-const", "imported-fn-val", "imported-obj-a", "imported-obj-b"]
     );
 }

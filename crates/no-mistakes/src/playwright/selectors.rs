@@ -1,8 +1,10 @@
 mod call_shapes;
 mod code_only_text;
 mod css;
+mod dynamic_values;
 mod extract_app;
 mod extract_playwright;
+mod jsx_resolve;
 mod matcher;
 mod regex_mod;
 pub(crate) mod scoped_defaults;
