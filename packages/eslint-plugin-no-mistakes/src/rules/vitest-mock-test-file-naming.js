@@ -97,33 +97,11 @@ module.exports = rule(
   },
   (context) => {
     let usesMocking = false;
-    const mockVars = new Set();
     function isMockChainCall(node) {
       if (node.callee.type !== "MemberExpression") return false;
-      if (!MOCK_CHAIN_METHODS.has(propertyName(node.callee.property))) return false;
-      const obj = node.callee.object;
-      if (obj.type === "Identifier") return mockVars.has(obj.name);
-      return obj.type === "CallExpression" && (isMockingCall(obj, context) || isMockChainCall(obj));
+      return MOCK_CHAIN_METHODS.has(propertyName(node.callee.property));
     }
     return {
-      VariableDeclarator(node) {
-        if (
-          node.id.type === "Identifier" &&
-          node.init?.type === "CallExpression" &&
-          isMockingCall(node.init, context)
-        ) {
-          mockVars.add(node.id.name);
-        }
-      },
-      AssignmentExpression(node) {
-        if (
-          node.left.type === "Identifier" &&
-          node.right.type === "CallExpression" &&
-          isMockingCall(node.right, context)
-        ) {
-          mockVars.add(node.left.name);
-        }
-      },
       CallExpression(node) {
         if (isMockingCall(node, context) || isMockChainCall(node)) usesMocking = true;
       },

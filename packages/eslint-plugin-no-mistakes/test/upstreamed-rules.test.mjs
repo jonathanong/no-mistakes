@@ -180,6 +180,26 @@ describe("upstreamed generic rules", () => {
       [],
       "chain method in .mock.test file should pass",
     );
+    assert.deepEqual(
+      messages(
+        fixture("mock-name.chain-only.invalid.test.ts"),
+        "vitest-mock-test-file-naming",
+        undefined,
+        "mock-name.chain-only.invalid.test.ts",
+      ),
+      ["needsMock"],
+      "chain-only (no vi.fn) should require .mock.test filename",
+    );
+    assert.deepEqual(
+      messages(
+        fixture("mock-name.chain-only.valid.mock.test.ts"),
+        "vitest-mock-test-file-naming",
+        undefined,
+        "mock-name.chain-only.valid.mock.test.ts",
+      ),
+      [],
+      "chain-only in .mock.test file should pass",
+    );
   });
 
   it("reports Playwright policy violations", () => {

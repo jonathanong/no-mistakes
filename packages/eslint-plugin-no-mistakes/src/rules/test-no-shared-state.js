@@ -167,7 +167,7 @@ module.exports = rule(
         if (isTestCall(node)) {
           testDepth += 1;
           const callback = namedCallbackArgument(node.arguments);
-          if (callback) {
+          if (callback && !setupCallbackKind(node)) {
             pendingNamedCallbacks.push({
               declaration: resolveFunctionCallback(node, callback),
               suiteKey: cleanupTracker.currentSuiteKey(),
