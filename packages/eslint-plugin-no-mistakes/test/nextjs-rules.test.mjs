@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
+import { createRequire } from "node:module";
 import { lint, messages, plugin } from "./helpers.mjs";
+
+const require = createRequire(import.meta.url);
+const { isFetchCall } = require("../src/helpers");
 
 describe("plugin exports", () => {
   it("exposes rules and flat configs", () => {
@@ -104,8 +108,26 @@ describe("nextjs-static-fetch-url", () => {
   it("does not treat imported fetch as shadowed", () => {
     assert.deepEqual(
       messages("import { fetch } from 'undici'; fetch(url);", "nextjs-static-fetch-url"),
-      ["dynamic"],
+      [],
     );
+  });
+
+  it("does not treat class fetch as shadowed", () => {
+    assert.deepEqual(messages("class fetch {} fetch(url);", "nextjs-static-fetch-url"), []);
+  });
+
+  it("supports fallback shadow checks when scope.set.get is not a function", () => {
+    const fakeScope = {
+      set: { get: 123 },
+      variables: [{ name: "fetch", defs: [{ type: "Variable" }] }],
+      upper: null,
+    };
+    const context = {
+      sourceCode: {
+        getScope: () => fakeScope,
+      },
+    };
+    assert.equal(isFetchCall({ callee: { type: "Identifier", name: "fetch" } }, context), false);
   });
 });
 

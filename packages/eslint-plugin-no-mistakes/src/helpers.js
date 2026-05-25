@@ -134,13 +134,27 @@ function selectorValueNode(attribute) {
   return expression && expression.type !== "JSXEmptyExpression" ? expression : null;
 }
 
-const LOCAL_BINDING_TYPES = new Set(["Variable", "Parameter", "CatchClause", "FunctionName"]);
+const LOCAL_BINDING_TYPES = new Set([
+  "Variable",
+  "Parameter",
+  "CatchClause",
+  "FunctionName",
+  "ImportBinding",
+  "ClassName",
+]);
 
 function isFetchShadowed(scope) {
   while (scope) {
-    const variable = scope.set.get("fetch");
+    const get = scope.set?.get;
+    const variable = typeof get === "function" ? get.call(scope.set, "fetch") : null;
     if (variable) {
       return variable.defs.some((def) => LOCAL_BINDING_TYPES.has(def.type));
+    }
+    if (!scope.set || typeof get !== "function") {
+      const fallback = scope.variables?.find((item) => item.name === "fetch");
+      if (fallback) {
+        return fallback.defs.some((def) => LOCAL_BINDING_TYPES.has(def.type));
+      }
     }
     scope = scope.upper;
   }

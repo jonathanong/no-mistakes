@@ -97,9 +97,8 @@ impl<'a, 'h> UrlVisitor<'a, 'h> {
         }
 
         let test_name = playwright_tests::test_callback_identity(call);
-        let previous_test_name = std::mem::take(&mut self.current_test_name);
+        let previous_test_name = std::mem::replace(&mut self.current_test_name, test_name);
         let previous_scope = self.current_scope;
-        self.current_test_name = test_name;
         self.current_scope = playwright_tests::TestOccurrenceScope::Test;
         self.visit_callback_arguments(call, callback_index, callback_status);
         self.current_test_name = previous_test_name;
