@@ -1,6 +1,4 @@
 use super::shadowing::identifier_may_be_shadowed_or_reassigned;
-use super::types::{AppSelectorValue, TemplatePattern};
-use crate::playwright::ast;
 use oxc_ast_visit::Visit;
 use oxc_span::{GetSpan, Span};
 use oxc_syntax::scope::ScopeFlags;
@@ -134,64 +132,4 @@ pub(crate) fn scoped_static_default_for_identifier(
         })
         .min_by_key(|default| default.scope.end - default.scope.start)
         .map(|default| default.value.clone())
-}
-
-pub(super) fn jsx_attribute_name<'a>(
-    name: &'a oxc_ast::ast::JSXAttributeName<'a>,
-) -> Option<&'a str> {
-    match name {
-        oxc_ast::ast::JSXAttributeName::Identifier(identifier) => Some(identifier.name.as_str()),
-        _ => None,
-    }
-}
-
-pub(super) fn app_selector_value(
-    value: Option<&oxc_ast::ast::JSXAttributeValue<'_>>,
-    source: &str,
-    scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
-) -> Option<AppSelectorValue> {
-    match value? {
-        oxc_ast::ast::JSXAttributeValue::StringLiteral(literal) => {
-            Some(AppSelectorValue::Exact(literal.value.to_string()))
-        }
-        oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container) => jsx_expression_value(
-            &container.expression,
-            source,
-            scoped_static_identifier_defaults,
-        ),
-        _ => None,
-    }
-}
-
-pub(super) fn jsx_expression_value(
-    expression: &oxc_ast::ast::JSXExpression<'_>,
-    source: &str,
-    scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
-) -> Option<AppSelectorValue> {
-    match expression {
-        oxc_ast::ast::JSXExpression::StringLiteral(literal) => {
-            Some(AppSelectorValue::Exact(literal.value.to_string()))
-        }
-        oxc_ast::ast::JSXExpression::TemplateLiteral(template) => {
-            let raw = ast::template_literal_text(template, source);
-            Some(
-                TemplatePattern::new(&raw)
-                    .map(AppSelectorValue::Template)
-                    .unwrap_or_else(|| AppSelectorValue::Unsupported(raw)),
-            )
-        }
-        oxc_ast::ast::JSXExpression::Identifier(identifier) => Some(
-            scoped_static_default_for_identifier(
-                identifier.name.as_str(),
-                identifier.span(),
-                scoped_static_identifier_defaults,
-                source,
-            )
-            .map(AppSelectorValue::Exact)
-            .unwrap_or_else(|| AppSelectorValue::Unsupported(identifier.name.to_string())),
-        ),
-        _ => Some(AppSelectorValue::Unsupported(
-            ast::span_text(source, expression.span()).trim().to_string(),
-        )),
-    }
 }
