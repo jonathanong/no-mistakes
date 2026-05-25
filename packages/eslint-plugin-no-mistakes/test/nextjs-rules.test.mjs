@@ -105,14 +105,14 @@ describe("nextjs-static-fetch-url", () => {
     );
   });
 
-  it("does not treat imported fetch as shadowed", () => {
+  it("treats imported fetch as shadowed", () => {
     assert.deepEqual(
       messages("import { fetch } from 'undici'; fetch(url);", "nextjs-static-fetch-url"),
       [],
     );
   });
 
-  it("does not treat class fetch as shadowed", () => {
+  it("treats class fetch as shadowed", () => {
     assert.deepEqual(messages("class fetch {} fetch(url);", "nextjs-static-fetch-url"), []);
   });
 

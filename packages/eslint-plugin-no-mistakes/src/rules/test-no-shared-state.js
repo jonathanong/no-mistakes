@@ -91,7 +91,9 @@ module.exports = rule(
         const get = scope.set?.get;
         const resolvedVariable =
           (typeof get === "function" ? get.call(scope.set, callback.name) : null) ||
-          (!scope.set ? scope.variables?.find((item) => item.name === callback.name) : null);
+          (typeof get !== "function"
+            ? scope.variables?.find((item) => item.name === callback.name)
+            : null);
 
         if (!resolvedVariable) {
           scope = scope.upper;
