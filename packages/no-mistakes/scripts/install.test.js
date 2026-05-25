@@ -110,7 +110,12 @@ test("formats release asset names", () => {
     "no-mistakes-v1.2.3-x86_64-pc-windows-msvc.exe",
   );
   assert.equal(
-    core.assetName({ binName: "no-mistakes-napi", version: "1.2.3", target: "x86_64-pc-windows-msvc", assetExtension: ".node" }),
+    core.assetName({
+      binName: "no-mistakes-napi",
+      version: "1.2.3",
+      target: "x86_64-pc-windows-msvc",
+      assetExtension: ".node",
+    }),
     "no-mistakes-napi-v1.2.3-x86_64-pc-windows-msvc.node",
   );
 });
