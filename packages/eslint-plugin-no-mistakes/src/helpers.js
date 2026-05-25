@@ -138,7 +138,7 @@ const LOCAL_BINDING_TYPES = new Set(["Variable", "Parameter", "CatchClause", "Fu
 
 function isFetchShadowed(scope) {
   while (scope) {
-    const variable = scope.variables.find((v) => v.name === "fetch");
+    const variable = scope.set.get("fetch");
     if (variable) {
       return variable.defs.some((def) => LOCAL_BINDING_TYPES.has(def.type));
     }
