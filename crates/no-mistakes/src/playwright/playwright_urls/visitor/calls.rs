@@ -99,10 +99,8 @@ impl<'a, 'h> UrlVisitor<'a, 'h> {
         let test_name = playwright_tests::test_callback_identity(call);
         let previous_test_name = self.current_test_name.clone();
         let previous_scope = self.current_scope;
-        if test_name.is_some() {
-            self.current_test_name = test_name;
-            self.current_scope = playwright_tests::TestOccurrenceScope::Test;
-        }
+        self.current_test_name = test_name;
+        self.current_scope = playwright_tests::TestOccurrenceScope::Test;
         self.visit_callback_arguments(call, callback_index, callback_status);
         self.current_test_name = previous_test_name;
         self.current_scope = previous_scope;
