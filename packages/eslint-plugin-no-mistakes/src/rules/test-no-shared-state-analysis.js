@@ -97,7 +97,7 @@ function createViMockTracker(context, mutableTopLevel) {
   };
 }
 
-function createRegistryReports(context, mutableTopLevel, cleanupTracker, isCaptured) {
+function createRegistryReports({ context, mutableTopLevel, cleanupTracker, isCaptured }) {
   const pending = [];
 
   return {

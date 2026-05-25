@@ -41,12 +41,12 @@ module.exports = rule(
     const pendingNamedSetupCallbacks = [];
     const cleanupTracker = createCleanupTracker();
     const viMockTracker = createViMockTracker(context, mutableTopLevel);
-    const registryReports = createRegistryReports(
+    const registryReports = createRegistryReports({
       context,
       mutableTopLevel,
       cleanupTracker,
-      (name) => viMockTracker.isCaptured(name),
-    );
+      isCaptured: viMockTracker.isCaptured,
+    });
     let testDepth = 0;
     let setupDepth = 0;
 
