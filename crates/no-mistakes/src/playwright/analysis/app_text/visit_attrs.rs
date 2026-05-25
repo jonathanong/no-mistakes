@@ -13,6 +13,9 @@ impl AppTextVisitor<'_> {
         let aria_label = self
             .string_attr(opening, "aria-label")
             .and_then(|value| normalize_locator_text(&value));
+        if jsx::attr_exists_at_runtime(opening, "aria-labelledby") {
+            return;
+        }
         let alt = self
             .string_attr(opening, "alt")
             .and_then(|value| normalize_locator_text(&value));
@@ -35,6 +38,9 @@ impl AppTextVisitor<'_> {
             ) {
                 self.push(AppTextKind::Label, role.clone(), text, refs);
             }
+            return;
+        }
+        if jsx::attr_exists_at_runtime(opening, "aria-label") {
             return;
         }
         if let Some(text) = alt.filter(|_| {

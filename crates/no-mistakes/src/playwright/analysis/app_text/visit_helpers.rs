@@ -186,16 +186,20 @@ impl AppTextVisitor<'_> {
         {
             return;
         }
+        let has_accessible_name_override = jsx::attr_exists_at_runtime(opening, "aria-label")
+            || jsx::attr_exists_at_runtime(opening, "aria-labelledby");
         if let Some(text) = self
             .string_attr(opening, "value")
             .and_then(|value| normalize_locator_text(&value))
         {
-            self.push(
-                AppTextKind::AccessibleName,
-                role.clone(),
-                text.clone(),
-                refs,
-            );
+            if !has_accessible_name_override {
+                self.push(
+                    AppTextKind::AccessibleName,
+                    role.clone(),
+                    text.clone(),
+                    refs,
+                );
+            }
             self.push(AppTextKind::VisibleText, role, text, refs);
         }
     }

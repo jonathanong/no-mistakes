@@ -34,8 +34,10 @@ test.skip(({ browserName }) => browserName === "webkit", "annotation");
 test("annotation text", async ({ page }) => {
   await page.getByText("Annotation text").click();
   await page.getByText("Default exact text", { timeout: 1000 }).click();
+  await page.getByText("TS exact text" as const, { exact: true as const }).click();
   await page.getByText("Last exact text", { exact: false, exact: true }).click();
   await page.getByRole("button", { name: "Old name", name: "New name", includeHidden: true, includeHidden: false }).click();
+  await page.getByRole("button" as const, { name: "TS role name" as const, includeHidden: false as boolean }).click();
   await page.getByRole("button", { 0: "zero", name: "Numeric property" }).click();
 });
 

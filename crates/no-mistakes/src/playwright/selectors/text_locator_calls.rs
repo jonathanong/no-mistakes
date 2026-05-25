@@ -74,14 +74,20 @@ fn role_locator(call: &CallExpression<'_>, source: &str) -> Option<PlaywrightTex
 }
 
 fn text_arg(argument: &Argument<'_>, source: &str) -> Option<String> {
-    let value = match argument {
-        Argument::StringLiteral(literal) => literal.value.to_string(),
-        Argument::TemplateLiteral(template) if template.expressions.is_empty() => {
-            ast::template_literal_text(template, source)
-        }
-        _ => return None,
-    };
+    let value = argument_string(argument, source)?;
     normalize_locator_text(&value)
+}
+
+fn argument_string(argument: &Argument<'_>, source: &str) -> Option<String> {
+    match argument {
+        Argument::StringLiteral(literal) => Some(literal.value.to_string()),
+        Argument::TemplateLiteral(template) if template.expressions.is_empty() => {
+            Some(ast::template_literal_text(template, source))
+        }
+        _ => argument
+            .as_expression()
+            .and_then(|expression| expression_string(expression, source)),
+    }
 }
 
 fn object_string_property(argument: &Argument<'_>, name: &str, source: &str) -> Option<String> {
@@ -101,13 +107,32 @@ fn object_string_property(argument: &Argument<'_>, name: &str, source: &str) -> 
                 value = normalize_locator_text(literal.value.as_str());
             }
             Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
-                let text = ast::template_literal_text(template, source);
-                value = normalize_locator_text(&text);
+                value = normalize_locator_text(&ast::template_literal_text(template, source));
             }
-            _ => value = None,
+            expression => {
+                value = expression_string(expression, source)
+                    .and_then(|text| normalize_locator_text(&text));
+            }
         }
     }
     value
+}
+
+fn expression_string(expression: &Expression<'_>, source: &str) -> Option<String> {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
+        Expression::StringLiteral(literal) => Some(literal.value.to_string()),
+        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
+            Some(ast::template_literal_text(template, source))
+        }
+        _ => None,
+    }
+}
+
+fn expression_bool(expression: &Expression<'_>) -> Option<bool> {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
+        Expression::BooleanLiteral(literal) => Some(literal.value),
+        _ => None,
+    }
 }
 
 enum BoolProperty {
@@ -131,8 +156,8 @@ fn object_bool_property(argument: &Argument<'_>, name: &str) -> BoolProperty {
             }
             continue;
         }
-        if let Expression::BooleanLiteral(literal) = &property.value {
-            value = BoolProperty::Value(literal.value);
+        if let Some(bool_value) = expression_bool(&property.value) {
+            value = BoolProperty::Value(bool_value);
         } else {
             value = BoolProperty::Unknown;
         }

@@ -104,8 +104,33 @@ fn jsx_attr_string(
                         source,
                     )
                 }
+                oxc_ast::ast::JSXExpression::TSAsExpression(expression) => {
+                    jsx_expression_string(&expression.expression, source)
+                }
+                oxc_ast::ast::JSXExpression::TSSatisfiesExpression(expression) => {
+                    jsx_expression_string(&expression.expression, source)
+                }
+                oxc_ast::ast::JSXExpression::TSNonNullExpression(expression) => {
+                    jsx_expression_string(&expression.expression, source)
+                }
+                oxc_ast::ast::JSXExpression::TSTypeAssertion(expression) => {
+                    jsx_expression_string(&expression.expression, source)
+                }
                 _ => None,
             }
+        }
+        _ => None,
+    }
+}
+
+fn jsx_expression_string(
+    expression: &oxc_ast::ast::Expression<'_>,
+    source: &str,
+) -> Option<String> {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
+        oxc_ast::ast::Expression::StringLiteral(literal) => Some(literal.value.to_string()),
+        oxc_ast::ast::Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
+            Some(ast::template_literal_text(template, source))
         }
         _ => None,
     }

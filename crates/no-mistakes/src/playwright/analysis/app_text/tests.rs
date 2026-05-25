@@ -2,6 +2,7 @@ use super::*;
 use crate::playwright::analysis::text_types::normalize_locator_text;
 use std::collections::BTreeMap;
 
+mod aria_precedence;
 mod html_ids;
 mod labelledby;
 mod nested_label;

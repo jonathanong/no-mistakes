@@ -19,6 +19,8 @@ export function Example(props: { label: string }) {
       <label data-pw="email-label"> Email address </label>
       <label htmlFor="named-email">Named email</label>
       <input id="named-email" data-pw="named-email-input" />
+      <label htmlFor={"ts-email" as const}>TS email</label>
+      <input id="ts-email" data-pw="ts-email-input" />
       <label htmlFor="subscribe-checkbox">Subscribe label</label>
       <input id="subscribe-checkbox" data-pw="subscribe-checkbox" type="checkbox" />
       <label>Wrapped email nested <span><input data-pw="wrapped-email-nested-input" /></span></label>
@@ -71,12 +73,16 @@ export function Example(props: { label: string }) {
       <label>Fragment wrapped <><input data-pw="fragment-wrapped-input" /></></label>
       <div data-pw="container-target"><button>Container child</button></div>
       <input data-pw="submit-input" type="submit" value="Submit form" />
+      <input data-pw="submit-aria-input" type="submit" value="Submit ignored" aria-label="Submit aria" />
       <input data-pw="submit-case-input" type="Submit" value="Case submit form" />
       <div data-pw="explicit-role" role="button">Explicit role</div>
       <div data-pw="fallback-role" role="unknown button">Fallback role</div>
       <div data-pw="deletion-role" role="deletion">Deleted text</div>
       <div data-pw="insertion-role" role="insertion">Inserted text</div>
       <button data-pw="aria-label-precedence" aria-label="Close">Visible close text</button>
+      <button data-pw="aria-labelledby-precedence" aria-label="Ignored label" aria-labelledby="action-first" title="Ignored title" />
+      <button data-pw="empty-aria-label-title" aria-label="" title="Ignored empty label title" />
+      <button data-pw="aria-label-ts" aria-label={"Wrapped close" as const} />
       <button data-pw="title-only-button" title="Only title" />
       <button data-pw="button-alt" alt="Ignored alt" />
       <div data-pw="aria-label-div" role="button" aria-label="Div action" />
