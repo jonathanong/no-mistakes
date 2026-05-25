@@ -80,7 +80,7 @@ fn resolve_format(json: bool, format: Option<Format>, stdout_is_terminal: bool) 
 }
 
 fn sort_node_entries(entries: &mut [graph::NodeEntry], root: &Path) {
-    entries.sort_by_key(|entry| (entry.depth, entry.node.display_name(root)));
+    entries.sort_by_cached_key(|entry| (entry.depth, entry.node.display_name(root)));
 }
 
 fn merge_node_entries(
