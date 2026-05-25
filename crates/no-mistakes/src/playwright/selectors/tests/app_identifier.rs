@@ -274,7 +274,7 @@ fn inline_ternary_with_no_string_leaves_produces_unsupported() {
     .unwrap();
     let values: Vec<String> = selectors.iter().map(AppSelector::display_value).collect();
     assert_eq!(values.len(), 1);
-    assert!(values[0].contains("cond ? a : b") || values[0].contains("a") || !values[0].is_empty());
+    assert_eq!(values[0], "{cond ? a : b}");
 }
 
 // ── jsx_resolve: inline LogicalExpression with string leaves ─────────────────
@@ -316,5 +316,5 @@ fn inline_logical_with_no_string_leaves_produces_unsupported() {
     .unwrap();
     let values: Vec<String> = selectors.iter().map(AppSelector::display_value).collect();
     assert_eq!(values.len(), 1);
-    assert!(!values[0].is_empty());
+    assert_eq!(values[0], "{a || b}");
 }
