@@ -45,7 +45,7 @@ module.exports = rule(
       context,
       mutableTopLevel,
       cleanupTracker,
-      isCaptured: (name) => viMockTracker.isCaptured(name),
+      isCaptured: viMockTracker.isCaptured,
     });
     let testDepth = 0;
     let setupDepth = 0;
