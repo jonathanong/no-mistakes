@@ -224,3 +224,13 @@ fn chained_member_call_not_promise_all() {
     assert_eq!(fetches.len(), 1);
     assert!(!fetches[0].in_promise_all);
 }
+
+#[test]
+fn named_function_expression_clears_pending_var_name() {
+    let fetches = parse_and_visit(
+        "const outer = function inner() { (() => fetch('/api/data'))(); };",
+        "test.ts",
+    );
+    assert_eq!(fetches.len(), 1);
+    assert_eq!(fetches[0].function_name, Some("inner".to_string()));
+}

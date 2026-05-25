@@ -49,17 +49,14 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
                 self.mark_identifier_shadowed_in_var_scope(id.name.as_ref());
             }
         }
-        let name = function
-            .id
-            .as_ref()
-            .map(|id| id.name.to_string())
-            .or_else(|| {
-                if matches!(function.r#type, FunctionType::FunctionExpression) {
-                    self.pending_var_name.take()
-                } else {
-                    None
-                }
-            });
+        let name = if let Some(id) = function.id.as_ref() {
+            self.pending_var_name = None;
+            Some(id.name.to_string())
+        } else if matches!(function.r#type, FunctionType::FunctionExpression) {
+            self.pending_var_name.take()
+        } else {
+            None
+        };
         self.function_name_stack.push(name);
         self.enter_fetch_scope(true);
         walk::walk_function(self, function, flags);
