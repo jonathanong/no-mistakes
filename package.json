@@ -30,11 +30,11 @@
     "@emnapi/core": "^1.10.0",
     "@emnapi/runtime": "^1.10.0",
     "@vitest/coverage-v8": "^4.1.6",
-    "cspell": "^9.8.0",
-    "eslint": "^10.3.0",
+    "cspell": "^10.0.0",
+    "eslint": "^10.4.0",
     "husky": "^9.1.7",
-    "oxfmt": "^0.49.0",
-    "oxlint": "^1.64.0",
+    "oxfmt": "^0.50.0",
+    "oxlint": "^1.65.0",
     "vitest": "^4.1.6"
   },
   "engines": {
