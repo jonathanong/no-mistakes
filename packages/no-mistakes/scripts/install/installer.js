@@ -54,43 +54,9 @@ async function install(binName, repository, options = {}) {
 
   const asset = assetName({ binName, version, target, assetExtension: options.assetExtension });
   const baseUrl = options.baseUrl || releaseBaseUrl(repository, version, options.envVar);
-
-  let url;
-  try {
-    url = new URL(baseUrl);
-  } catch {
-    throw new Error(`Invalid base URL: ${baseUrl}`);
-  }
-  const baseUrlInput = String(baseUrl);
-  const baseUrlString = url.href.replace(/\/$/, "");
-
-  if (url.username || url.password) {
-    throw new Error(`Untrusted base URL: ${baseUrl}`);
-  }
-
-  if (url.protocol === "file:") {
-    if (
-      !baseUrlInput.startsWith("file://") ||
-      url.pathname.startsWith("//") ||
-      (url.hostname !== "" && url.hostname !== "localhost")
-    ) {
-      throw new Error(`Untrusted base URL: ${baseUrl}`);
-    }
-  } else if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
-    if (url.protocol !== "http:" && url.protocol !== "https:") {
-      throw new Error(`Untrusted base URL: ${baseUrl}`);
-    }
-  } else {
-    if (url.protocol !== "https:") {
-      throw new Error(`Untrusted base URL: ${baseUrl}`);
-    }
-    if (url.hostname !== "github.com") {
-      throw new Error(`Untrusted base URL: ${baseUrl}`);
-    }
-    if (!url.pathname.startsWith(`/${repository}/`)) {
-      throw new Error(`Untrusted GitHub repository in base URL: ${baseUrl}`);
-    }
-  }
+  validateReleaseBaseUrl(baseUrl, repository, { enforcePath: true });
+  const validateReleaseDownloadUrl = (url) =>
+    validateReleaseBaseUrl(url, repository, { enforcePath: false });
 
   const temp = `${destination}.tmp-${process.pid}`;
 
@@ -98,11 +64,11 @@ async function install(binName, repository, options = {}) {
 
   try {
     console.log(`Downloading ${binName} v${version} for ${target}...`);
-    await download(`${baseUrlString}/${asset}`, temp);
+    await download(`${baseUrl}/${asset}`, temp, 0, validateReleaseDownloadUrl);
 
     let checksumText;
     try {
-      checksumText = await fetchText(`${baseUrlString}/${asset}.sha256`);
+      checksumText = await fetchText(`${baseUrl}/${asset}.sha256`, validateReleaseDownloadUrl);
     } catch (e) {
       throw new Error(`Failed to fetch checksum for ${asset}: ${e.message}`);
     }
@@ -120,6 +86,68 @@ async function install(binName, repository, options = {}) {
   } catch (error) {
     await rm(temp, { force: true });
     throw new Error(`Failed to install ${binName}: ${error.message}`);
+  }
+}
+
+function validateReleaseBaseUrl(baseUrl, repository, options = {}) {
+  const enforcePath = options.enforcePath ?? true;
+  const allowedPublicHost = "github.com";
+  const allowedRedirectHostSuffixes = ["githubusercontent.com"];
+  const allowedLocalHosts = ["127.0.0.1", "example.test"];
+  const publicPathPrefix = `/${repository.toLowerCase()}/releases/download`;
+
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(baseUrl);
+  } catch {
+    throw new Error(`Invalid release base URL: ${baseUrl}. It must be a valid absolute URL.`);
+  }
+
+  if (parsedUrl.protocol === "file:") {
+    if (parsedUrl.hostname) {
+      throw new Error(
+        `Invalid release base URL: ${baseUrl}. File URLs must not include a host. Use file:///path/to/asset instead.`,
+      );
+    }
+    return;
+  }
+
+  const hostname = parsedUrl.hostname.toLowerCase();
+  const isLocalHost = allowedLocalHosts.includes(hostname);
+  if (isLocalHost) {
+    if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+      throw new Error(`Invalid release base URL: ${baseUrl}. Expected http: or https: protocol.`);
+    }
+  } else if (parsedUrl.protocol !== "https:") {
+    throw new Error(`Invalid release base URL: ${baseUrl}. Expected https: protocol.`);
+  }
+
+  if (enforcePath && hostname !== allowedPublicHost && !isLocalHost) {
+    throw new Error(
+      `Invalid release base URL: ${baseUrl}. When enforcePath is enabled, expected base URL host ${allowedPublicHost} unless host is a local testing host.`,
+    );
+  }
+
+  const isAllowedHost =
+    hostname === allowedPublicHost ||
+    allowedLocalHosts.includes(hostname) ||
+    allowedRedirectHostSuffixes.some(
+      (suffix) => hostname === suffix || hostname.endsWith(`.${suffix}`),
+    );
+  if (!isAllowedHost) {
+    throw new Error(
+      `Invalid release base URL: ${baseUrl}. Allowed hosts are: ${[allowedPublicHost, ...allowedLocalHosts, ...allowedRedirectHostSuffixes.map((suffix) => `*.${suffix}`)].join(", ")}.`,
+    );
+  }
+
+  if (
+    enforcePath &&
+    !isLocalHost &&
+    !parsedUrl.pathname.toLowerCase().startsWith(`${publicPathPrefix}/`)
+  ) {
+    throw new Error(
+      `Invalid release base URL: ${baseUrl}. For github.com, expected base URL prefix ${publicPathPrefix}.`,
+    );
   }
 }
 
@@ -159,4 +187,5 @@ module.exports = {
   isPlaceholder,
   sha256,
   unsupportedPlatformMessage,
+  validateReleaseBaseUrl,
 };
