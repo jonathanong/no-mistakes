@@ -56,7 +56,7 @@ module.exports = rule(
         testDepth > 0 &&
         setupDepth === 0 &&
         !viMockTracker.isCaptured(name) &&
-        isModuleMutable(context, mutableTopLevel, node, name)
+        isModuleMutable({ context, mutableTopLevel, node, name })
       ) {
         context.report({ node, messageId: "shared" });
       }
@@ -73,7 +73,7 @@ module.exports = rule(
         name &&
         setupDepth > 0 &&
         mutableTopLevel.has(name) &&
-        isModuleMutable(context, mutableTopLevel, node, name)
+        isModuleMutable({ context, mutableTopLevel, node, name })
       ) {
         cleanupTracker.remember(path);
       }
