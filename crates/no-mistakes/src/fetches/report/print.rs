@@ -1,4 +1,6 @@
-use crate::fetches::report::types::{CacheKind, FetchOccurrence, FetchSide, FinalReport};
+use crate::fetches::report::types::{
+    CacheKind, FetchOccurrence, FetchSide, FinalReport, SourceType,
+};
 
 pub(crate) fn cache_kind_name(cache_kind: &CacheKind) -> &'static str {
     match cache_kind {
@@ -44,6 +46,18 @@ pub(crate) fn print_markdown_report(report: &FinalReport) {
     println!("- Server API Calls: {}", report.summary.server_api_calls);
     println!("- RSC API Calls: {}", report.summary.rsc_api_calls);
     println!("- Client API Calls: {}", report.summary.client_api_calls);
+    println!(
+        "- Conditional API Calls: {}",
+        report.summary.conditional_api_calls
+    );
+    println!(
+        "- Parallel API Calls: {}",
+        report.summary.parallel_api_calls
+    );
+    println!(
+        "- Error-Handled API Calls: {}",
+        report.summary.error_handled_api_calls
+    );
     println!();
 
     println!("## Routes");
@@ -52,14 +66,16 @@ pub(crate) fn print_markdown_report(report: &FinalReport) {
         if route.api_calls.is_empty() {
             println!("(no fetches found)");
         } else {
-            println!("| Method | Path | Side | File | Line | RSC | Dynamic | Cache |");
-            println!("| --- | --- | --- | --- | --- | --- | --- | --- |");
+            println!("| Method | Path | Side | File | Line | RSC | Dynamic | Cache | Function | Cond | P.all | ErrHandled | Source |");
+            println!(
+                "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"
+            );
             let mut unique_fetches = route.api_calls.clone();
             unique_fetches.sort();
             unique_fetches.dedup();
             for fetch in &unique_fetches {
                 println!(
-                    "| {} | `{}` | {} | {} | {} | {} | {} | {} |",
+                    "| {} | `{}` | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",
                     fetch.method,
                     fetch.path,
                     if matches!(fetch.side, FetchSide::Client) {
@@ -71,7 +87,12 @@ pub(crate) fn print_markdown_report(report: &FinalReport) {
                     fetch.line,
                     if fetch.rsc { "yes" } else { "no" },
                     if fetch.dynamic { "✅" } else { "❌" },
-                    fetch_cache_label(fetch)
+                    fetch_cache_label(fetch),
+                    fetch.function_name.as_deref().unwrap_or("-"),
+                    if fetch.conditional { "yes" } else { "no" },
+                    if fetch.in_promise_all { "yes" } else { "no" },
+                    if fetch.error_handled { "yes" } else { "no" },
+                    source_type_label(&fetch.source_type),
                 );
             }
         }
@@ -104,5 +125,17 @@ pub(crate) fn print_markdown_report(report: &FinalReport) {
             );
         }
         println!();
+    }
+}
+
+pub(crate) fn source_type_label(source_type: &SourceType) -> &'static str {
+    match source_type {
+        SourceType::Page => "page",
+        SourceType::Layout => "layout",
+        SourceType::Loading => "loading",
+        SourceType::Error => "error",
+        SourceType::Template => "template",
+        SourceType::Route => "route",
+        SourceType::Module => "module",
     }
 }

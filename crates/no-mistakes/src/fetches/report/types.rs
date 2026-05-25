@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-pub(crate) use no_mistakes::fetch::types::{CacheKind, FetchOccurrence, FetchSide};
+pub(crate) use no_mistakes::fetch::types::{CacheKind, FetchOccurrence, FetchSide, SourceType};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -32,6 +32,9 @@ pub(crate) struct Summary {
     pub(crate) client_api_calls: usize,
     pub(crate) server_api_calls: usize,
     pub(crate) rsc_api_calls: usize,
+    pub(crate) conditional_api_calls: usize,
+    pub(crate) parallel_api_calls: usize,
+    pub(crate) error_handled_api_calls: usize,
 }
 
 #[derive(Serialize)]

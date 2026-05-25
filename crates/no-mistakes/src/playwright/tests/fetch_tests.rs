@@ -1,4 +1,4 @@
-use crate::fetch::types::{CacheKind, FetchOccurrence, FetchSide};
+use crate::fetch::types::{CacheKind, FetchOccurrence, FetchSide, SourceType};
 use crate::playwright::analysis::fetch::{collect_fetches_for_routes, expand_fetch_edges};
 use crate::playwright::analysis::types::{Edge, FetchIndex};
 use crate::playwright::test_support::fixture_path;
@@ -18,6 +18,11 @@ fn server_fetch(path: &str) -> FetchOccurrence {
         cached_function: None,
         dynamic: false,
         unsupported: false,
+        function_name: None,
+        conditional: false,
+        in_promise_all: false,
+        error_handled: false,
+        source_type: SourceType::Page,
     }
 }
 
@@ -138,6 +143,11 @@ fn expand_produces_client_side_fetch_edge() {
         cached_function: None,
         dynamic: false,
         unsupported: false,
+        function_name: None,
+        conditional: false,
+        in_promise_all: false,
+        error_handled: false,
+        source_type: SourceType::Page,
     };
     let mut index = FetchIndex::new();
     index.insert("web/app/page.tsx".to_string(), vec![client_fetch]);

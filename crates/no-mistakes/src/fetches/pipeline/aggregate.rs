@@ -19,6 +19,9 @@ pub(crate) fn build_final_report(reports: Vec<RouteReport>) -> FinalReport {
     let mut client_api_calls = 0usize;
     let mut server_api_calls = 0usize;
     let mut rsc_api_calls = 0usize;
+    let mut conditional_api_calls = 0usize;
+    let mut parallel_api_calls = 0usize;
+    let mut error_handled_api_calls = 0usize;
     let mut unsupported = Vec::new();
 
     for route in &reports {
@@ -64,6 +67,15 @@ pub(crate) fn build_final_report(reports: Vec<RouteReport>) -> FinalReport {
             if api_call.rsc {
                 rsc_api_calls += 1;
             }
+            if api_call.conditional {
+                conditional_api_calls += 1;
+            }
+            if api_call.in_promise_all {
+                parallel_api_calls += 1;
+            }
+            if api_call.error_handled {
+                error_handled_api_calls += 1;
+            }
         }
     }
 
@@ -102,6 +114,9 @@ pub(crate) fn build_final_report(reports: Vec<RouteReport>) -> FinalReport {
             client_api_calls,
             server_api_calls,
             rsc_api_calls,
+            conditional_api_calls,
+            parallel_api_calls,
+            error_handled_api_calls,
         },
         routes: reports,
         duplicates,

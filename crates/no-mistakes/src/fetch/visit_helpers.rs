@@ -1,7 +1,7 @@
 use crate::fetch::cache_opts::{
     cache_wrapper_name, extract_fetch_cache_options, infer_cached_wrapper_name,
 };
-use crate::fetch::types::{CacheKind, FetchOccurrence, FetchSide};
+use crate::fetch::types::{CacheKind, FetchOccurrence, FetchSide, SourceType};
 use crate::fetch::url_extract::extract_url_from_argument;
 use crate::fetch::visitor::FetchVisitor;
 use oxc_ast::ast::{Argument, CallExpression, Expression};
@@ -78,6 +78,11 @@ pub fn try_extract_fetch<'a>(
         cached_function: visitor.cached_function.clone(),
         dynamic: is_dynamic,
         unsupported: is_unsupported,
+        function_name: visitor.current_function_name(),
+        conditional: visitor.conditional_depth > 0,
+        in_promise_all: visitor.promise_all_depth > 0,
+        error_handled: visitor.try_depth > 0,
+        source_type: SourceType::from_file_stem(&visitor.file),
     })
 }
 

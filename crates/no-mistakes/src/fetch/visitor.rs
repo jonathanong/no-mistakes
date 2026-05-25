@@ -1,92 +1,9 @@
 use crate::fetch::cache_opts::cache_wrapper_name;
-use crate::fetch::types::{CacheKind, FetchOccurrence};
 use crate::fetch::visit_helpers::{enter_cache_wrapper, leave_cache_wrapper, try_extract_fetch};
-use oxc_ast::ast::{CallExpression, FunctionType, ImportDeclarationSpecifier};
+use oxc_ast::ast::{CallExpression, Expression, FunctionType, ImportDeclarationSpecifier};
 use oxc_ast_visit::{walk, Visit};
-use oxc_span::Span;
-use std::collections::HashSet;
 
-pub struct FetchVisitor<'a> {
-    pub source: &'a str,
-    pub file: String,
-    pub fetches: Vec<FetchOccurrence>,
-    pub is_client: bool,
-    pub is_route_handler: bool,
-    pub cached_function: Option<String>,
-    pub cached_kind: Option<CacheKind>,
-    pub fetch_scope_stack: Vec<FetchScope>,
-    pub in_var_declaration: bool,
-    pub component_span: Option<Span>,
-}
-
-#[derive(Default)]
-pub struct FetchScope {
-    pub shadowed_identifiers: HashSet<String>,
-    pub tracks_var_bindings: bool,
-}
-
-impl<'a> FetchVisitor<'a> {
-    pub fn new(source: &'a str, file: &str, is_client: bool, is_route_handler: bool) -> Self {
-        Self {
-            source,
-            file: file.to_string(),
-            fetches: Vec::new(),
-            is_client,
-            is_route_handler,
-            cached_function: None,
-            cached_kind: None,
-            fetch_scope_stack: vec![FetchScope {
-                shadowed_identifiers: HashSet::new(),
-                tracks_var_bindings: true,
-            }],
-            in_var_declaration: false,
-            component_span: None,
-        }
-    }
-
-    pub fn enter_fetch_scope(&mut self, tracks_var_bindings: bool) {
-        self.fetch_scope_stack.push(FetchScope {
-            shadowed_identifiers: HashSet::new(),
-            tracks_var_bindings,
-        });
-    }
-
-    pub fn leave_fetch_scope(&mut self) {
-        self.fetch_scope_stack.pop();
-    }
-
-    pub fn mark_fetch_shadowed(&mut self) {
-        if let Some(scope) = self.fetch_scope_stack.last_mut() {
-            scope.shadowed_identifiers.insert("fetch".to_string());
-        }
-    }
-
-    #[inline(never)]
-    pub fn mark_identifier_shadowed_in_var_scope(&mut self, name: &str) {
-        for scope in self.fetch_scope_stack.iter_mut().rev() {
-            if scope.tracks_var_bindings {
-                scope.shadowed_identifiers.insert(name.to_string());
-                return;
-            }
-        }
-
-        if let Some(scope) = self.fetch_scope_stack.last_mut() {
-            scope.shadowed_identifiers.insert(name.to_string());
-        }
-    }
-
-    pub fn mark_identifier_shadowed(&mut self, name: &str) {
-        if let Some(scope) = self.fetch_scope_stack.last_mut() {
-            scope.shadowed_identifiers.insert(name.to_string());
-        }
-    }
-
-    pub fn is_fetch_shadowed(&self) -> bool {
-        self.fetch_scope_stack
-            .iter()
-            .any(|scope| scope.shadowed_identifiers.contains("fetch"))
-    }
-}
+pub use crate::fetch::visitor_state::{FetchScope, FetchVisitor};
 
 impl<'a> Visit<'a> for FetchVisitor<'a> {
     fn visit_binding_identifier(&mut self, ident: &oxc_ast::ast::BindingIdentifier<'a>) {
@@ -127,24 +44,92 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
     ) {
         let is_function_declaration = matches!(function.r#type, FunctionType::FunctionDeclaration);
         let is_ts_declare_function = matches!(function.r#type, FunctionType::TSDeclareFunction);
-        let declares_var_binding = is_function_declaration || is_ts_declare_function;
-        if declares_var_binding {
+        if is_function_declaration || is_ts_declare_function {
             if let Some(id) = function.id.as_ref() {
                 self.mark_identifier_shadowed_in_var_scope(id.name.as_ref());
             }
         }
+        let name = if let Some(id) = function.id.as_ref() {
+            self.pending_var_name = None;
+            Some(id.name.to_string())
+        } else if matches!(function.r#type, FunctionType::FunctionExpression) {
+            self.pending_var_name.take()
+        } else {
+            None
+        };
+        self.function_name_stack.push(name);
         self.enter_fetch_scope(true);
         walk::walk_function(self, function, flags);
         self.leave_fetch_scope();
+        self.function_name_stack.pop();
     }
 
     fn visit_arrow_function_expression(
         &mut self,
         arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
     ) {
+        let name = self.pending_var_name.take();
+        self.function_name_stack.push(name);
         self.enter_fetch_scope(false);
         walk::walk_arrow_function_expression(self, arrow);
         self.leave_fetch_scope();
+        self.function_name_stack.pop();
+    }
+
+    fn visit_variable_declarator(&mut self, decl: &oxc_ast::ast::VariableDeclarator<'a>) {
+        if let oxc_ast::ast::BindingPattern::BindingIdentifier(id) = &decl.id {
+            if decl.init.as_ref().is_some_and(|init| {
+                matches!(
+                    init,
+                    Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_)
+                )
+            }) {
+                self.pending_var_name = Some(id.name.to_string());
+            }
+        }
+        walk::walk_variable_declarator(self, decl);
+        self.pending_var_name = None;
+    }
+
+    fn visit_if_statement(&mut self, statement: &oxc_ast::ast::IfStatement<'a>) {
+        self.visit_expression(&statement.test);
+        self.conditional_depth += 1;
+        self.visit_statement(&statement.consequent);
+        if let Some(alternate) = &statement.alternate {
+            self.visit_statement(alternate);
+        }
+        self.conditional_depth -= 1;
+    }
+
+    fn visit_conditional_expression(&mut self, expr: &oxc_ast::ast::ConditionalExpression<'a>) {
+        self.visit_expression(&expr.test);
+        self.conditional_depth += 1;
+        self.visit_expression(&expr.consequent);
+        self.visit_expression(&expr.alternate);
+        self.conditional_depth -= 1;
+    }
+
+    fn visit_logical_expression(&mut self, expr: &oxc_ast::ast::LogicalExpression<'a>) {
+        self.visit_expression(&expr.left);
+        self.conditional_depth += 1;
+        self.visit_expression(&expr.right);
+        self.conditional_depth -= 1;
+    }
+
+    fn visit_try_statement(&mut self, stmt: &oxc_ast::ast::TryStatement<'a>) {
+        if stmt.handler.is_some() {
+            self.try_depth += 1;
+            self.visit_block_statement(&stmt.block);
+            self.try_depth -= 1;
+        } else {
+            self.visit_block_statement(&stmt.block);
+        }
+        if let Some(handler) = &stmt.handler {
+            self.visit_catch_clause(handler);
+        }
+        if let Some(finalizer) = &stmt.finalizer {
+            self.visit_block_statement(finalizer);
+        }
     }
 
     fn visit_catch_clause(&mut self, catch_clause: &oxc_ast::ast::CatchClause<'a>) {
@@ -167,6 +152,13 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
     }
 
     fn visit_call_expression(&mut self, expr: &CallExpression<'a>) {
+        if is_promise_all_call(expr) {
+            self.promise_all_depth += 1;
+            walk::walk_call_expression(self, expr);
+            self.promise_all_depth -= 1;
+            return;
+        }
+
         if cache_wrapper_name(expr).is_some() {
             let (prev_fn, prev_kind) = enter_cache_wrapper(expr, self);
             walk::walk_call_expression(self, expr);
@@ -186,6 +178,18 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
         }
         walk::walk_call_expression(self, expr);
     }
+}
+
+fn is_promise_all_call(expr: &CallExpression<'_>) -> bool {
+    if let Expression::StaticMemberExpression(member) = &expr.callee {
+        if let Expression::Identifier(obj) = &member.object {
+            if obj.name.as_ref() == "Promise" {
+                let method = member.property.name.as_ref();
+                return method == "all" || method == "allSettled";
+            }
+        }
+    }
+    false
 }
 
 #[cfg(test)]

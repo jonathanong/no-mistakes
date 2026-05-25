@@ -1,7 +1,7 @@
 use crate::fetches::report::print::{cache_kind_name, fetch_cache_label};
 use crate::fetches::report::types::{
     ApiCallOccurrence, CacheKind, DuplicateApiCall, FetchOccurrence, FetchSide, FinalReport,
-    RouteReport, Summary, UnsupportedApiCall,
+    RouteReport, SourceType, Summary, UnsupportedApiCall,
 };
 
 #[test]
@@ -36,6 +36,11 @@ fn test_fetch_cache_label_includes_cached_function() {
         cached_function: Some("cache".to_string()),
         dynamic: false,
         unsupported: false,
+        function_name: None,
+        conditional: false,
+        in_promise_all: false,
+        error_handled: false,
+        source_type: SourceType::Page,
     };
     assert_eq!(fetch_cache_label(&fetch), "react-cache (cache)");
 }
@@ -55,6 +60,11 @@ fn test_fetch_cache_label_without_cached_function() {
         cached_function: None,
         dynamic: false,
         unsupported: false,
+        function_name: None,
+        conditional: false,
+        in_promise_all: false,
+        error_handled: false,
+        source_type: SourceType::Page,
     };
     assert_eq!(fetch_cache_label(&fetch), "fetch-cache");
 }
@@ -74,6 +84,11 @@ fn test_fetch_cache_label_with_next_revalidate_kind() {
         cached_function: None,
         dynamic: false,
         unsupported: false,
+        function_name: None,
+        conditional: false,
+        in_promise_all: false,
+        error_handled: false,
+        source_type: SourceType::Page,
     };
     assert_eq!(fetch_cache_label(&fetch), "fetch-next-revalidate");
 }
@@ -93,6 +108,11 @@ fn test_fetch_cache_label_with_next_tags_kind() {
         cached_function: None,
         dynamic: false,
         unsupported: false,
+        function_name: None,
+        conditional: false,
+        in_promise_all: false,
+        error_handled: false,
+        source_type: SourceType::Page,
     };
     assert_eq!(fetch_cache_label(&fetch), "fetch-next-tags");
 }
@@ -115,6 +135,11 @@ fn test_route_report_api_calls_uses_camel_case() {
             cached_function: None,
             dynamic: false,
             unsupported: false,
+            function_name: None,
+            conditional: false,
+            in_promise_all: false,
+            error_handled: false,
+            source_type: SourceType::Page,
         }],
     };
     let serialized = serde_json::to_string(&report).unwrap();
@@ -138,6 +163,9 @@ fn test_print_markdown_report_is_rendered() {
             client_api_calls: 0,
             server_api_calls: 1,
             rsc_api_calls: 1,
+            conditional_api_calls: 0,
+            parallel_api_calls: 0,
+            error_handled_api_calls: 0,
         },
         routes: vec![RouteReport {
             route: "/".to_string(),
@@ -155,6 +183,11 @@ fn test_print_markdown_report_is_rendered() {
                 cached_function: None,
                 dynamic: false,
                 unsupported: false,
+                function_name: None,
+                conditional: false,
+                in_promise_all: false,
+                error_handled: false,
+                source_type: SourceType::Page,
             }],
         }],
         duplicates: vec![DuplicateApiCall {
@@ -183,4 +216,16 @@ fn test_print_markdown_report_is_rendered() {
     };
 
     print_markdown_report(&report);
+}
+
+#[test]
+fn test_source_type_label_covers_all_variants() {
+    use crate::fetches::report::print::source_type_label;
+    assert_eq!(source_type_label(&SourceType::Page), "page");
+    assert_eq!(source_type_label(&SourceType::Layout), "layout");
+    assert_eq!(source_type_label(&SourceType::Loading), "loading");
+    assert_eq!(source_type_label(&SourceType::Error), "error");
+    assert_eq!(source_type_label(&SourceType::Template), "template");
+    assert_eq!(source_type_label(&SourceType::Route), "route");
+    assert_eq!(source_type_label(&SourceType::Module), "module");
 }
