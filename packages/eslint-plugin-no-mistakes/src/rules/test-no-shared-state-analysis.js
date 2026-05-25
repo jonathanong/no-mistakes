@@ -26,7 +26,7 @@ function isInsideUncalledNestedFunction(node, testDepth, setupDepth) {
 function isModuleMutable(context, mutableTopLevel, node, name) {
   let scope = context.sourceCode.getScope(node);
   while (scope) {
-    const variable = scope.variables.find((candidate) => candidate.name === name);
+    const variable = scope.set?.get(name);
     if (variable) {
       return (
         mutableTopLevel.has(variable.name) &&
