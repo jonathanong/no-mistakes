@@ -1,4 +1,3 @@
-use super::super::*;
 use super::parse_and_collect;
 use crate::playwright::ast;
 use crate::playwright::test_support::fixture_path;
