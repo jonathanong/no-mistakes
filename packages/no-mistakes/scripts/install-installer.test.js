@@ -179,6 +179,32 @@ test("installs Windows assets without chmod", async () => {
   }
 });
 
+test("rejects untrusted base URLs for arbitrary file download mitigation", async () => {
+  const root = await mkdtemp(join(tmpdir(), "no-mistakes-untrusted-"));
+  const vendorDir = join(root, "vendor");
+  const target = "x86_64-unknown-linux-gnu";
+
+  await mkdir(vendorDir, { recursive: true });
+
+  try {
+    await assert.rejects(
+      () => install({ baseUrl: "https://evil.com/releases", target, vendorDir, version }),
+      /Untrusted base URL/,
+    );
+    await assert.rejects(
+      () =>
+        install({ baseUrl: "https://github.com/evil/repo/releases", target, vendorDir, version }),
+      /Untrusted GitHub repository/,
+    );
+    await assert.rejects(
+      () => install({ baseUrl: "not-a-url", target, vendorDir, version }),
+      /Invalid base URL/,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("rejects checksum mismatches and cleans temporary files", async () => {
   const root = await mkdtemp(join(tmpdir(), "no-mistakes-bad-checksum-"));
   const vendorDir = join(root, "vendor");

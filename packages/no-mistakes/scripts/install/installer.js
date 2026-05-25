@@ -54,6 +54,23 @@ async function install(binName, repository, options = {}) {
 
   const asset = assetName({ binName, version, target, assetExtension: options.assetExtension });
   const baseUrl = options.baseUrl || releaseBaseUrl(repository, version, options.envVar);
+
+  let url;
+  try {
+    url = new URL(baseUrl);
+  } catch {
+    throw new Error(`Invalid base URL: ${baseUrl}`);
+  }
+
+  if (url.protocol !== "file:" && url.hostname !== "localhost" && url.hostname !== "127.0.0.1") {
+    if (url.hostname !== "github.com") {
+      throw new Error(`Untrusted base URL: ${baseUrl}`);
+    }
+    if (!url.pathname.startsWith(`/${repository}/`)) {
+      throw new Error(`Untrusted GitHub repository in base URL: ${baseUrl}`);
+    }
+  }
+
   const temp = `${destination}.tmp-${process.pid}`;
 
   await mkdir(vendorDir, { recursive: true });
