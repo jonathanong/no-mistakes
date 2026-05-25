@@ -4,6 +4,7 @@ use crate::playwright::ast;
 use std::path::Path;
 
 pub(super) mod coverage;
+pub(super) mod extra_coverage;
 
 pub(super) fn parse_and_collect(source: &str) -> Vec<DynamicIdentifierValues> {
     ast::with_program(Path::new("fixture.tsx"), source, |program, src| {
