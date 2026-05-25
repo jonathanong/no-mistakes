@@ -33,7 +33,8 @@ pub fn extract_playwright_url_occurrences(
         let mut seen = BTreeSet::new();
         for occurrence in extract_playwright_url_occurrences_from_program(program, source, &[]) {
             let value = (occurrence.value, occurrence.status);
-            if seen.insert(value.clone()) {
+            if !seen.contains(&value) {
+                seen.insert(value.clone());
                 occurrences.push(value);
             }
         }
