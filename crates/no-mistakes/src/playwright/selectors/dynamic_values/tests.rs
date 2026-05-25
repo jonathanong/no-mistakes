@@ -10,11 +10,6 @@ fn parse_and_collect(source: &str) -> Vec<DynamicIdentifierValues> {
     .unwrap()
 }
 
-fn resolve(source: &str, name: &str, span: oxc_span::Span) -> Vec<String> {
-    let collected = parse_and_collect(source);
-    resolve_dynamic_identifier(name, span, &collected)
-}
-
 #[test]
 fn collect_string_leaves_string_literal() {
     let source = r#"const x = 'hello';"#;
