@@ -124,6 +124,20 @@ test("formats release asset names", () => {
   );
 });
 
+test("assetName validates positional and object-call inputs", () => {
+  assert.throws(() => core.assetName("no-mistakes", "1.2.3", 1), TypeError);
+  assert.throws(() => core.assetName("no-mistakes", 1, "x86_64-unknown-linux-gnu"), TypeError);
+  assert.throws(
+    () =>
+      core.assetName({
+        binName: "no-mistakes",
+        version: "1.2.3",
+        target: 1,
+      }),
+    TypeError,
+  );
+});
+
 test("formats release base URLs", () => {
   const previous = process.env.NO_MISTAKES_RELEASE_BASE_URL;
   try {
