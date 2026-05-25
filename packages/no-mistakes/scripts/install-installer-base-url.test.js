@@ -1,3 +1,5 @@
+const { createHash } = require("node:crypto");
+const { createServer } = require("node:http");
 const assert = require("node:assert/strict");
 const { mkdir, mkdtemp, rm } = require("node:fs/promises");
 const { join } = require("node:path");
@@ -6,6 +8,7 @@ const core = require("./install/index");
 
 const repositoryName = "jonathanong/no-mistakes";
 const version = "9.8.7";
+const binName = "no-mistakes";
 
 function install(options) {
   return core.install("no-mistakes", repositoryName, {
@@ -13,6 +16,10 @@ function install(options) {
     envVar: "NO_MISTAKES_RELEASE_BASE_URL",
     ...options,
   });
+}
+
+function assetName(target) {
+  return core.assetName(binName, version, target);
 }
 
 test("rejects malformed release base URLs", async () => {
@@ -33,6 +40,52 @@ test("rejects malformed release base URLs", async () => {
       /Invalid release base URL: https:\/\/.*/,
     );
   } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("normalizes trailing slash in base URLs", async () => {
+  const root = await mkdtemp(join(tmpdir(), "no-mistakes-base-url-trailing-slash-"));
+  const vendorDir = join(root, "vendor");
+  await mkdir(vendorDir, { recursive: true });
+
+  const target = "x86_64-unknown-linux-gnu";
+  const asset = assetName(target);
+  const content = Buffer.from("binary");
+  const checksum = createHash("sha256").update(content).digest("hex");
+  let sawDoubleSlash = false;
+
+  const server = createServer((request, response) => {
+    if (request.url.includes("//")) {
+      sawDoubleSlash = true;
+    }
+    if (request.url === `/${asset}`) {
+      response.writeHead(200);
+      response.end(content);
+      return;
+    }
+    if (request.url === `/${asset}.sha256`) {
+      response.writeHead(200);
+      response.end(`${checksum}  ${asset}\n`);
+      return;
+    }
+    response.writeHead(404);
+    response.end("not found");
+  });
+
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+
+  try {
+    await install({
+      baseUrl: `http://127.0.0.1:${address.port}/`,
+      target,
+      vendorDir,
+      version,
+    });
+    assert.equal(sawDoubleSlash, false);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
     await rm(root, { recursive: true, force: true });
   }
 });
@@ -134,10 +187,17 @@ test("allows file URLs without host", () => {
   });
 });
 
+test("rejects non-canonical file URLs", () => {
+  assert.throws(
+    () => core.validateReleaseBaseUrl("file:/tmp/no-mistakes", repositoryName),
+    /canonical 'file:\//,
+  );
+});
+
 test("rejects file URLs with hosts", () => {
   assert.throws(
     () => core.validateReleaseBaseUrl("file://attacker/share/no-mistakes", repositoryName),
-    /File URLs must not include a host/,
+    /canonical 'file:\//,
   );
 });
 

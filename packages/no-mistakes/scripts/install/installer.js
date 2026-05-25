@@ -53,7 +53,9 @@ async function install(binName, repository, options = {}) {
   }
 
   const asset = assetName({ binName, version, target, assetExtension: options.assetExtension });
-  const baseUrl = options.baseUrl || releaseBaseUrl(repository, version, options.envVar);
+  const baseUrl = normalizeBaseUrl(
+    options.baseUrl || releaseBaseUrl(repository, version, options.envVar),
+  );
   validateReleaseBaseUrl(baseUrl, repository, { enforcePath: true });
   const validateReleaseDownloadUrl = (url) =>
     validateReleaseBaseUrl(url, repository, { enforcePath: false });
@@ -89,6 +91,14 @@ async function install(binName, repository, options = {}) {
   }
 }
 
+function normalizeBaseUrl(baseUrl) {
+  const url = String(baseUrl);
+  if (url.endsWith("://")) {
+    return url;
+  }
+  return url.replace(/\/+$/, "");
+}
+
 function validateReleaseBaseUrl(baseUrl, repository, options = {}) {
   const enforcePath = options.enforcePath ?? true;
   const allowedPublicHost = "github.com";
@@ -104,12 +114,20 @@ function validateReleaseBaseUrl(baseUrl, repository, options = {}) {
   }
 
   if (parsedUrl.protocol === "file:") {
-    if (parsedUrl.hostname || parsedUrl.pathname.startsWith("//")) {
+    if (
+      parsedUrl.username ||
+      parsedUrl.password ||
+      parsedUrl.pathname.startsWith("//") ||
+      !String(baseUrl).toLowerCase().startsWith("file:///")
+    ) {
       throw new Error(
-        `Untrusted base URL: ${baseUrl}. File URLs must not include a host. Use file:///path/to/asset instead.`,
+        `Untrusted base URL: ${baseUrl}. File URLs must use canonical 'file:///path/to/asset' form and must not include credentials.`,
       );
     }
     return;
+  }
+  if (parsedUrl.username || parsedUrl.password) {
+    throw new Error(`Untrusted base URL: ${baseUrl}. Credentials are not allowed in URLs.`);
   }
 
   const hostname = parsedUrl.hostname.toLowerCase();

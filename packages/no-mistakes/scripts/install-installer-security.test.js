@@ -72,7 +72,7 @@ test("rejects untrusted base URLs for arbitrary file download mitigation", async
           vendorDir,
           version,
         }),
-      /Untrusted GitHub repository/,
+      /Credentials are not allowed/,
     );
     await assert.rejects(
       () =>
