@@ -101,7 +101,12 @@ function childNodes(node) {
       continue;
     }
     if (Array.isArray(value)) {
-      children.push(...value.filter(isAstNode));
+      for (let i = 0; i < value.length; i++) {
+        const item = value[i];
+        if (isAstNode(item)) {
+          children.push(item);
+        }
+      }
     } else if (isAstNode(value)) {
       children.push(value);
     }
