@@ -66,10 +66,8 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
     unique_selector_policy.configured_html_id_selector = has_configured_html_id_selector(settings);
     let route_root = root.join(&settings.frontend_root);
     let mut routes = routes::collect_routes(&route_root);
-    if !settings.rewrites.is_empty() {
-        let virtual_routes = crate::routes::rewrites::expand_rewrites(&settings.rewrites, &routes);
-        routes.extend(virtual_routes);
-    }
+    let virtual_routes = crate::routes::rewrites::expand_rewrites(&settings.rewrites, &routes);
+    routes.extend(virtual_routes);
     if require_routes && routes.is_empty() {
         let route_display = route_root.strip_prefix(root).unwrap_or(&route_root);
         anyhow::bail!(

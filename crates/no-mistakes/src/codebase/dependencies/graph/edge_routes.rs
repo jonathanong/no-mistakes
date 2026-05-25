@@ -68,15 +68,13 @@ fn collect_route_edges(
     }
     all_defs.sort();
     all_defs.dedup();
-    if !config_options.rewrites.is_empty() {
-        let virtual_defs = crate::routes::rewrites::expand_rewrites_as_tuples(
-            &config_options.rewrites,
-            &all_defs,
-        );
-        all_defs.extend(virtual_defs);
-        all_defs.sort();
-        all_defs.dedup();
-    }
+    let virtual_defs = crate::routes::rewrites::expand_rewrites_as_tuples(
+        &config_options.rewrites,
+        &all_defs,
+    );
+    all_defs.extend(virtual_defs);
+    all_defs.sort();
+    all_defs.dedup();
     if all_defs.is_empty() {
         return vec![];
     }
