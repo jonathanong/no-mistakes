@@ -52,7 +52,7 @@ async function install(binName, repository, options = {}) {
     return destination;
   }
 
-  const asset = assetName(binName, version, target, options.assetExtension);
+  const asset = assetName({ binName, version, target, assetExtension: options.assetExtension });
   const baseUrl = options.baseUrl || releaseBaseUrl(repository, version, options.envVar);
   const temp = `${destination}.tmp-${process.pid}`;
 
