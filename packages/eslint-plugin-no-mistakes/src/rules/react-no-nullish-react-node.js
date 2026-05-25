@@ -11,7 +11,7 @@ function isIdentifier(node) {
   return node && node.type === "Identifier";
 }
 
-function definePattern({ pattern, props, defineBinding, defineReactNode }) {
+function definePattern({ pattern, props, defineBinding, defineReactNode } = {}) {
   if (!isObjectPattern(pattern)) return;
   for (const property of pattern.properties || []) {
     if (property.type !== "Property") continue;
