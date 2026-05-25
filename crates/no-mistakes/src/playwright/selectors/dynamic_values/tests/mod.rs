@@ -1,7 +1,4 @@
-use super::collect::{
-    call_identifier_name, collect_assignments_from_stmt, collect_object_string_values,
-    collect_returns_from_statements, extract_computed_member_object_name,
-};
+use super::collect::collect_object_string_values;
 use super::*;
 use crate::playwright::ast;
 use std::path::Path;
