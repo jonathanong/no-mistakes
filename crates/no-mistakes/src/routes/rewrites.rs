@@ -133,4 +133,6 @@ pub fn expand_rewrites_as_tuples(
 }
 
 #[cfg(test)]
+mod integration_tests;
+#[cfg(test)]
 mod tests;

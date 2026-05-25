@@ -113,6 +113,24 @@ fn contained_dest_double_star_rejects_route_star() {
 }
 
 #[test]
+fn contained_dest_double_star_vs_literal() {
+    assert!(!destination_contained_by_route(&["**"], &["content"]));
+}
+
+#[test]
+fn contained_dest_star_vs_literal() {
+    assert!(!destination_contained_by_route(&["*"], &["content"]));
+}
+
+#[test]
+fn contained_dest_wildcard_not_last_rejected() {
+    assert!(!destination_contained_by_route(
+        &["**", "extra"],
+        &["content"]
+    ));
+}
+
+#[test]
 fn contained_shorter_dest_rejected() {
     assert!(!destination_contained_by_route(
         &["content"],

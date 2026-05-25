@@ -1,7 +1,7 @@
 pub(crate) mod analysis;
 mod ast;
 mod cli;
-mod config;
+pub(crate) mod config;
 mod fsutil;
 pub(crate) mod matcher;
 pub mod playwright_config;

@@ -55,7 +55,7 @@ pub(crate) fn analyze_with_policy_and_facts(
     )
 }
 
-pub(super) fn analyze_with_policy_and_optional_facts(
+pub(crate) fn analyze_with_policy_and_optional_facts(
     root: &Path,
     settings: &config::Settings,
     test_policy: playwright_tests::TestPolicy,
