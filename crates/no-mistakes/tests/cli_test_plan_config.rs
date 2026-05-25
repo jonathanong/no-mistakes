@@ -1,28 +1,6 @@
-use std::path::PathBuf;
-use std::process::{Command, Output};
+mod common;
 
-fn bin() -> PathBuf {
-    PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
-}
-
-fn fixture(name: &str) -> PathBuf {
-    no_mistakes::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis")
-            .join(name),
-    )
-}
-
-fn run(args: &[&str]) -> Output {
-    Command::new(bin())
-        .args(args)
-        .output()
-        .expect("no-mistakes should run")
-}
-
-fn stdout(output: &Output) -> String {
-    String::from_utf8(output.stdout.clone()).expect("stdout should be utf8")
-}
+use common::{fixture, run, stdout};
 
 fn only_reason_via(plan: &serde_json::Value, test_file: &str) -> Vec<String> {
     let selected = plan["selected_tests"].as_array().unwrap();
@@ -113,7 +91,8 @@ fn test_plan_vitest_project_dependency_triggers_all_tests() {
         .unwrap()
         .contains("web project dependency changed"));
     assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 2);
-    assert!(plan["groups"][0]["limit"].is_null());
+    assert_eq!(plan["groups"][0]["limit"], 2);
+    assert_eq!(plan["groups"][0]["remaining"], 0);
 }
 
 #[test]
@@ -193,8 +172,10 @@ fn test_plan_vitest_environment_can_enable_global_config_fallback() {
         .as_str()
         .unwrap()
         .contains("Global configuration file changed: .no-mistakes.yml"));
-    assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 2);
+    assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
     assert_eq!(plan["groups"][0]["type"], "global");
+    assert_eq!(plan["groups"][0]["limit"], 1);
+    assert_eq!(plan["groups"][0]["remaining"], 1);
 }
 
 #[test]
@@ -236,7 +217,7 @@ fn test_plan_vitest_global_config_fallback_cli_override_wins() {
     assert!(enabled_output.status.success());
     let enabled: serde_json::Value = serde_json::from_str(&stdout(&enabled_output)).unwrap();
     assert_eq!(enabled["fallback_triggered"], true);
-    assert_eq!(enabled["selected_tests"].as_array().unwrap().len(), 2);
+    assert_eq!(enabled["selected_tests"].as_array().unwrap().len(), 1);
 
     let env_enabled_cli_disabled_output = run(&[
         "test",

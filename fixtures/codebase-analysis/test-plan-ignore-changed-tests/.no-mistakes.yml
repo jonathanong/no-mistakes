@@ -1,0 +1,26 @@
+projects:
+  cloudflare-worker:
+    type: cloudflare-workers
+    root: cloudflare-worker
+  github-actions:
+    type: tests
+    root: .github
+tests:
+  playwright: {}
+test_plan:
+  playwright:
+    dependencies:
+      ignoreChangedTests:
+        - vitest
+      projects:
+        cloudflare-worker: true
+        github-actions: true
+    environments:
+      prePush:
+        limit:
+          files: 1
+        groups:
+          - type: direct
+          - type: coverage
+          - type: dependencies
+rules: []
