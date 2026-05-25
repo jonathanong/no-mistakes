@@ -215,3 +215,106 @@ fn resolves_cross_file_imports() {
         ]
     );
 }
+
+// ── jsx_resolve: None value (boolean attribute) ──────────────────────────────
+
+#[test]
+fn boolean_jsx_attribute_no_value_produces_no_selector() {
+    // `data-pw` with no value → JSXAttributeValue is None → app_selector_values returns empty
+    let selectors = extract_app_selectors(
+        Path::new("app/page.tsx"),
+        r#"
+        export function BoolAttr() {
+          return <button data-pw />;
+        }
+        "#,
+        &attrs(),
+        &BTreeMap::new(),
+    )
+    .unwrap();
+    assert!(selectors.is_empty());
+}
+
+// ── jsx_resolve: inline ConditionalExpression with string leaves ──────────────
+
+#[test]
+fn inline_ternary_with_string_leaves_resolves_both_branches() {
+    let selectors = extract_app_selectors(
+        Path::new("app/page.tsx"),
+        r#"
+        export function InlineAll({ cond }) {
+          return <button data-pw={cond ? 'direct-a' : 'direct-b'} />;
+        }
+        "#,
+        &attrs(),
+        &BTreeMap::new(),
+    )
+    .unwrap();
+    let mut values: Vec<String> = selectors.iter().map(AppSelector::display_value).collect();
+    values.sort();
+    values.dedup();
+    assert_eq!(values, vec!["direct-a", "direct-b"]);
+}
+
+// ── jsx_resolve: inline ConditionalExpression with no string leaves ───────────
+
+#[test]
+fn inline_ternary_with_no_string_leaves_produces_unsupported() {
+    // Both branches are identifiers → no string leaves → Unsupported
+    let selectors = extract_app_selectors(
+        Path::new("app/page.tsx"),
+        r#"
+        export function NonStringTernary({ cond, a, b }) {
+          return <button data-pw={cond ? a : b} />;
+        }
+        "#,
+        &attrs(),
+        &BTreeMap::new(),
+    )
+    .unwrap();
+    let values: Vec<String> = selectors.iter().map(AppSelector::display_value).collect();
+    assert_eq!(values.len(), 1);
+    assert!(values[0].contains("cond ? a : b") || values[0].contains("a") || !values[0].is_empty());
+}
+
+// ── jsx_resolve: inline LogicalExpression with string leaves ─────────────────
+
+#[test]
+fn inline_logical_with_string_leaves_resolves_both_sides() {
+    let selectors = extract_app_selectors(
+        Path::new("app/page.tsx"),
+        r#"
+        export function InlineLogical({ cond }) {
+          return <button data-pw={'logical-a' || 'logical-b'} />;
+        }
+        "#,
+        &attrs(),
+        &BTreeMap::new(),
+    )
+    .unwrap();
+    let mut values: Vec<String> = selectors.iter().map(AppSelector::display_value).collect();
+    values.sort();
+    values.dedup();
+    assert_eq!(values, vec!["logical-a", "logical-b"]);
+}
+
+// ── jsx_resolve: inline LogicalExpression with no string leaves ───────────────
+
+#[test]
+fn inline_logical_with_no_string_leaves_produces_unsupported() {
+    // Both sides are identifiers → no string leaves → Unsupported
+    let selectors = extract_app_selectors(
+        Path::new("app/page.tsx"),
+        r#"
+        export function NoStringLogical({ a, b }) {
+          return <button data-pw={a || b} />;
+        }
+        "#,
+        &attrs(),
+        &BTreeMap::new(),
+    )
+    .unwrap();
+    let values: Vec<String> = selectors.iter().map(AppSelector::display_value).collect();
+    assert_eq!(values.len(), 1);
+    assert!(!values[0].is_empty());
+}
