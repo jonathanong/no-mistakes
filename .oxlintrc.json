@@ -16,12 +16,6 @@
       "rules": {
         "no-unused-vars": "off"
       }
-    },
-    {
-      "files": ["packages/no-mistakes/scripts/install-installer.test.js"],
-      "rules": {
-        "max-lines": "off"
-      }
     }
   ],
   "ignorePatterns": [
