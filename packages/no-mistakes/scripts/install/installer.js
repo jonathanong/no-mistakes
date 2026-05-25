@@ -104,9 +104,9 @@ function validateReleaseBaseUrl(baseUrl, repository, options = {}) {
   }
 
   if (parsedUrl.protocol === "file:") {
-    if (parsedUrl.hostname) {
+    if (parsedUrl.hostname || parsedUrl.pathname.startsWith("//")) {
       throw new Error(
-        `Invalid release base URL: ${baseUrl}. File URLs must not include a host. Use file:///path/to/asset instead.`,
+        `Untrusted base URL: ${baseUrl}. File URLs must not include a host. Use file:///path/to/asset instead.`,
       );
     }
     return;
@@ -116,15 +116,15 @@ function validateReleaseBaseUrl(baseUrl, repository, options = {}) {
   const isLocalHost = allowedLocalHosts.includes(hostname);
   if (isLocalHost) {
     if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
-      throw new Error(`Invalid release base URL: ${baseUrl}. Expected http: or https: protocol.`);
+      throw new Error(`Untrusted base URL: ${baseUrl}. Expected http: or https: protocol.`);
     }
   } else if (parsedUrl.protocol !== "https:") {
-    throw new Error(`Invalid release base URL: ${baseUrl}. Expected https: protocol.`);
+    throw new Error(`Untrusted base URL: ${baseUrl}. Expected https: protocol.`);
   }
 
   if (enforcePath && hostname !== allowedPublicHost && !isLocalHost) {
     throw new Error(
-      `Invalid release base URL: ${baseUrl}. When enforcePath is enabled, expected base URL host ${allowedPublicHost} unless host is a local testing host.`,
+      `Untrusted base URL: ${baseUrl}. When enforcePath is enabled, expected base URL host ${allowedPublicHost} unless host is a local testing host.`,
     );
   }
 
@@ -136,7 +136,7 @@ function validateReleaseBaseUrl(baseUrl, repository, options = {}) {
     );
   if (!isAllowedHost) {
     throw new Error(
-      `Invalid release base URL: ${baseUrl}. Allowed hosts are: ${[allowedPublicHost, ...allowedLocalHosts, ...allowedRedirectHostSuffixes.map((suffix) => `*.${suffix}`)].join(", ")}.`,
+      `Untrusted base URL: ${baseUrl}. Allowed hosts are: ${[allowedPublicHost, ...allowedLocalHosts, ...allowedRedirectHostSuffixes.map((suffix) => `*.${suffix}`)].join(", ")}.`,
     );
   }
 
@@ -146,7 +146,7 @@ function validateReleaseBaseUrl(baseUrl, repository, options = {}) {
     !parsedUrl.pathname.toLowerCase().startsWith(`${publicPathPrefix}/`)
   ) {
     throw new Error(
-      `Invalid release base URL: ${baseUrl}. For github.com, expected base URL prefix ${publicPathPrefix}.`,
+      `Untrusted GitHub repository in base URL: ${baseUrl}. For github.com, expected base URL prefix ${publicPathPrefix}.`,
     );
   }
 }
