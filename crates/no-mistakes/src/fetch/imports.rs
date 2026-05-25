@@ -133,3 +133,51 @@ pub fn collect_imports_from_program<'a>(
     import_cache.insert(abs_path.to_path_buf(), imports.clone());
     imports
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ast;
+    use std::collections::HashSet;
+    use std::fs;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_collect_runtime_imports_from_program() {
+        let dir = tempdir().unwrap();
+        let main_path = dir.path().join("main.ts");
+        let util_path = dir.path().join("util.ts");
+        let type_path = dir.path().join("types.ts");
+        let unused_path = dir.path().join("unused.ts");
+
+        // Set up test files
+        fs::write(
+            &main_path,
+            "
+            import { usedVar } from './util';
+            import type { SomeType } from './types';
+            import { unusedVar } from './unused';
+            console.log(usedVar);
+            ",
+        )
+        .unwrap();
+        fs::write(&util_path, "export const usedVar = 1;").unwrap();
+        fs::write(&type_path, "export type SomeType = string;").unwrap();
+        fs::write(&unused_path, "export const unusedVar = 2;").unwrap();
+
+        let source = fs::read_to_string(&main_path).unwrap();
+        let mut referenced_identifiers = HashSet::new();
+        referenced_identifiers.insert("usedVar".to_string());
+
+        let imports = ast::with_program(&main_path, &source, |program, _| {
+            collect_runtime_imports_from_program(&main_path, program, &referenced_identifiers)
+        })
+        .unwrap();
+
+        assert_eq!(imports.len(), 1);
+
+        let resolved_util_path = util_path.canonicalize().unwrap_or(util_path);
+        let first_import = imports[0].canonicalize().unwrap_or(imports[0].clone());
+        assert_eq!(first_import, resolved_util_path);
+    }
+}
