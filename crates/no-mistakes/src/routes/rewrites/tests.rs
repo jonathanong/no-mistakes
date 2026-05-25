@@ -34,6 +34,19 @@ fn normalize_literal_only() {
 }
 
 #[test]
+fn normalize_trailing_slash_stripped() {
+    assert_eq!(normalize_nextjs_pattern("/posts/:slug*/"), "/posts/**");
+}
+
+#[test]
+fn normalize_non_terminal_wildcard_kept_as_param() {
+    assert_eq!(
+        normalize_nextjs_pattern("/docs/:path*/edit"),
+        "/docs/:path*/edit"
+    );
+}
+
+#[test]
 fn contained_literal_matches_param() {
     assert!(destination_contained_by_route(
         &["content", "posts"],

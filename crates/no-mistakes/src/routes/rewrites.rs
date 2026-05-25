@@ -4,18 +4,23 @@ use crate::playwright::matcher;
 use std::path::PathBuf;
 
 pub fn normalize_nextjs_pattern(pattern: &str) -> String {
-    let raw = pattern.strip_prefix('/').unwrap_or(pattern);
+    let raw = pattern
+        .strip_prefix('/')
+        .unwrap_or(pattern)
+        .trim_end_matches('/');
     if raw.is_empty() {
         return "/".to_string();
     }
-    let segments: Vec<&str> = raw.split('/').collect();
+    let segments: Vec<&str> = raw.split('/').filter(|s| !s.is_empty()).collect();
+    let last = segments.len().saturating_sub(1);
     let normalized: Vec<String> = segments
         .iter()
-        .map(|seg| {
+        .enumerate()
+        .map(|(i, seg)| {
             if let Some(stripped) = seg.strip_prefix(':') {
-                if stripped.ends_with('*') {
+                if stripped.ends_with('*') && i == last {
                     "**".to_string()
-                } else if stripped.ends_with('+') {
+                } else if stripped.ends_with('+') && i == last {
                     "*".to_string()
                 } else {
                     seg.to_string()
