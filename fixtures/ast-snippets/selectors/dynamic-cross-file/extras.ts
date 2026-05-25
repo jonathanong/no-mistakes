@@ -11,6 +11,17 @@ export function fnWithExprConsequent(x: unknown) {
   return 'expr-base-val';
 }
 
+export function fnBareReturn(x: unknown) {
+  if (x) return 'bare-return-val';
+  return 'fallback-val';
+}
+
+export function fnBlockBody() {
+  {
+    return 'block-body-val';
+  }
+}
+
 export let uninitializedLet: string;
 
 export const [firstArr] = ['arr-val'];

@@ -336,3 +336,104 @@ fn cross_file_default_import_specifier_returns_empty_for_no_default_export() {
     .unwrap();
     assert!(values.is_empty());
 }
+
+#[test]
+fn collect_string_leaves_ts_type_assertion() {
+    let source = r#"const x = <string>'hello';"#;
+    ast::with_program(Path::new("fixture.ts"), source, |program, _| {
+        for stmt in &program.body {
+            if let oxc_ast::ast::Statement::VariableDeclaration(decl) = stmt {
+                for d in &decl.declarations {
+                    if let Some(init) = d.init.as_ref() {
+                        let leaves = super::super::collect::collect_string_leaves(init);
+                        assert_eq!(leaves, vec!["hello"]);
+                    }
+                }
+            }
+        }
+    })
+    .unwrap();
+}
+
+#[test]
+fn collect_object_string_values_non_string_property_value() {
+    let source = r#"const x = { a: 'val-a', b: 42 };"#;
+    ast::with_program(Path::new("fixture.tsx"), source, |program, _| {
+        for stmt in &program.body {
+            if let oxc_ast::ast::Statement::VariableDeclaration(decl) = stmt {
+                for d in &decl.declarations {
+                    if let Some(init) = d.init.as_ref() {
+                        let values = super::super::collect::collect_object_string_values(init);
+                        assert_eq!(values, vec!["val-a"]);
+                    }
+                }
+            }
+        }
+    })
+    .unwrap();
+}
+
+#[test]
+fn collect_returns_from_statements_skips_variable_declarations() {
+    let source = r#"
+function fn5() {
+  const tmp = 1;
+  return 'result';
+}
+"#;
+    ast::with_program(Path::new("fixture.tsx"), source, |program, _| {
+        for stmt in &program.body {
+            if let oxc_ast::ast::Statement::FunctionDeclaration(f) = stmt {
+                if let Some(body) = &f.body {
+                    let mut values = Vec::new();
+                    collect_returns_from_statements(&body.statements, &mut values);
+                    assert_eq!(values, vec!["result"]);
+                }
+            }
+        }
+    })
+    .unwrap();
+}
+
+#[test]
+fn collect_returns_from_stmt_skips_expression_statement_consequent() {
+    let source = r#"
+function fn6(c) {
+  if (c) void 0;
+  return 'val';
+}
+"#;
+    ast::with_program(Path::new("fixture.tsx"), source, |program, _| {
+        for stmt in &program.body {
+            if let oxc_ast::ast::Statement::FunctionDeclaration(f) = stmt {
+                if let Some(body) = &f.body {
+                    let mut values = Vec::new();
+                    collect_returns_from_statements(&body.statements, &mut values);
+                    assert_eq!(values, vec!["val"]);
+                }
+            }
+        }
+    })
+    .unwrap();
+}
+
+#[test]
+fn collect_assignments_non_assign_operator() {
+    let source = r#"function f() { x += 'val'; }"#;
+    ast::with_program(Path::new("fixture.tsx"), source, |program, _| {
+        for stmt in &program.body {
+            if let oxc_ast::ast::Statement::FunctionDeclaration(f) = stmt {
+                if let Some(body) = &f.body {
+                    for s in &body.statements {
+                        let mut collected: Vec<(String, String)> = Vec::new();
+                        collect_assignments_from_stmt(s, &mut |name, value| {
+                            collected.push((name.to_string(), value.to_string()));
+                        });
+                        assert!(collected.is_empty());
+                    }
+                }
+            }
+        }
+    })
+    .unwrap();
+}

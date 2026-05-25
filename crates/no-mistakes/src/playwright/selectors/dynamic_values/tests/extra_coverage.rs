@@ -99,6 +99,24 @@ fn visitor_collect_from_statements_with_no_scope_returns_empty() {
 }
 
 #[test]
+fn cross_file_default_obj_computed_skips_computed_properties() {
+    let values = resolve_from_extras("DefaultObjComputed");
+    assert_eq!(values, vec!["static-val"]);
+}
+
+#[test]
+fn cross_file_fn_with_bare_return_in_if_consequent() {
+    let values = resolve_from_extras("fnBareReturn");
+    assert!(values.contains(&"bare-return-val".to_string()));
+}
+
+#[test]
+fn cross_file_fn_with_block_statement_body() {
+    let values = resolve_from_extras("fnBlockBody");
+    assert_eq!(values, vec!["block-body-val"]);
+}
+
+#[test]
 fn visitor_else_branch_adds_new_variable_to_all_names() {
     let source = r#"
 function Page() {
