@@ -126,6 +126,20 @@ describe("nextjs-static-fetch-url", () => {
     };
     assert.equal(isFetchCall({ callee: { type: "Identifier", name: "fetch" } }, context), false);
   });
+
+  it("supports fallback shadow checks when scope.set.get is not a function", () => {
+    const fakeScope = {
+      set: { get: 123 },
+      variables: [{ name: "fetch", defs: [{ type: "Variable" }] }],
+      upper: null,
+    };
+    const context = {
+      sourceCode: {
+        getScope: () => fakeScope,
+      },
+    };
+    assert.equal(isFetchCall({ callee: { type: "Identifier", name: "fetch" } }, context), false);
+  });
 });
 
 describe("recommended config", () => {
