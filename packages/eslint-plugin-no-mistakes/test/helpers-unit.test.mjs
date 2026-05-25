@@ -1,11 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
-  DEFAULT_NAMING_PATTERN,
   attributeName,
   callMethodName,
   canonicalAttribute,
   cssSelectorValues,
-  INTERACTIVE_ELEMENTS,
   isFetchCall,
   isSelectorAttribute,
   isSelectorCall,
