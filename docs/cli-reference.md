@@ -445,7 +445,9 @@ settings, the legacy file is used.
 
 ### Fetches
 
-Maps Next.js App Router route files to static `fetch()` calls.
+Maps Next.js App Router route files to static `fetch()` calls with rich
+per-call metadata for identifying duplicate, unnecessary, or unoptimized
+data-fetching patterns.
 
 ```sh
 no-mistakes fetches [--root <ROOT>] [--config <CONFIG>] [--format <FORMAT>] [--json] [TARGETS]...
@@ -459,3 +461,23 @@ or layout files. Formats are `json`, `yml`, `paths`, `md`, and `human`; `md` and
 no-mistakes fetches --root web --format json
 no-mistakes fetches --root web /users app/shared/api.ts
 ```
+
+Each detected fetch includes the following metadata:
+
+| Field | Description |
+| --- | --- |
+| `path` | Static URL path of the fetch call. |
+| `method` | HTTP method (`GET`, `POST`, etc.). |
+| `file` | Source file containing the fetch. |
+| `line` | Line number. |
+| `side` | `server` or `client`. |
+| `rsc` | Whether the fetch runs in a React Server Component. |
+| `cached` | Whether the result is cached. |
+| `cacheKind` | Cache strategy (`react-cache`, `fetch-cache`, etc.). |
+| `cachedFunction` | Name of the cache wrapper function, if any. |
+| `dynamic` | Whether the URL contains dynamic expressions. |
+| `functionName` | Nearest named enclosing function (e.g. `"getUsers"`, `"Page"`). |
+| `conditional` | Whether the fetch is inside an `if`, ternary, `&&`, `\|\|`, or `??` branch. |
+| `inPromiseAll` | Whether the fetch is inside `Promise.all` or `Promise.allSettled`. |
+| `errorHandled` | Whether the fetch is inside a `try` block with a `catch` handler. |
+| `sourceType` | File role: `page`, `layout`, `loading`, `error`, `template`, `route`, or `module`. |

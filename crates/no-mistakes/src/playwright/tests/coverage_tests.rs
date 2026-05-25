@@ -1,4 +1,4 @@
-use crate::fetch::types::{CacheKind, FetchOccurrence, FetchSide};
+use crate::fetch::types::{CacheKind, FetchOccurrence, FetchSide, SourceType};
 use crate::playwright::analysis::coverage::build_coverage as build_coverage_report;
 use crate::playwright::analysis::types::CoverageInputs;
 use crate::playwright::analysis::types::{Edge, FetchIndex, UniqueSelectorPolicy};
@@ -293,6 +293,11 @@ fn seed_fetch_coverage_skips_dynamic_and_unsupported() {
                 cached_function: None,
                 dynamic: true,
                 unsupported: false,
+                function_name: None,
+                conditional: false,
+                in_promise_all: false,
+                error_handled: false,
+                source_type: SourceType::Page,
             },
             FetchOccurrence {
                 method: "GET".to_string(),
@@ -307,6 +312,11 @@ fn seed_fetch_coverage_skips_dynamic_and_unsupported() {
                 cached_function: None,
                 dynamic: false,
                 unsupported: false,
+                function_name: None,
+                conditional: false,
+                in_promise_all: false,
+                error_handled: false,
+                source_type: SourceType::Page,
             },
         ],
     );
@@ -380,5 +390,10 @@ fn fetch_occurrence(method: &str, path: &str, dynamic: bool, unsupported: bool) 
         cached_function: None,
         dynamic,
         unsupported,
+        function_name: None,
+        conditional: false,
+        in_promise_all: false,
+        error_handled: false,
+        source_type: SourceType::Page,
     }
 }
