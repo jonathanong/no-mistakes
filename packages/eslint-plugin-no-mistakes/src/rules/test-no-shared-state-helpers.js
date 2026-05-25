@@ -29,7 +29,7 @@ function setupCallbackKind(node) {
   if (PER_TEST_CALLEES.has(name)) return "per-test";
   if (name === "beforeAll") return "before-once";
   if (name === "afterAll") return "once";
-  if (node.callee.type !== "MemberExpression") return null;
+  if (node.callee.type !== "MemberExpression" || !TEST_CALLEES.has(name)) return null;
   if (PER_TEST_CALLEES.has(node.callee.property.name)) return "per-test";
   if (node.callee.property.name === "beforeAll") return "before-once";
   return node.callee.property.name === "afterAll" ? "once" : null;
