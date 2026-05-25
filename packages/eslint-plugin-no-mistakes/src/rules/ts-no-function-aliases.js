@@ -39,6 +39,10 @@ function identifierName(node) {
   return node && node.type === "Identifier" ? node.name : null;
 }
 
+function directCalleeName(call) {
+  return identifierName(unwrapExpression(call.callee));
+}
+
 function isSameArgumentList(params, args) {
   if (params.length !== args.length) return false;
   return params.every((param, index) => {
@@ -55,16 +59,17 @@ function isSameArgumentList(params, args) {
 }
 
 function isSelfCall(node, call) {
-  if (call.callee.type !== "Identifier") return false;
+  const callee = directCalleeName(call);
+  if (!callee) return false;
   const wrapper = variableWrapperName(node);
-  if (wrapper) return wrapper === call.callee.name;
-  if (node.id && node.id.name === call.callee.name) return true;
+  if (wrapper) return wrapper === callee;
+  if (node.id && node.id.name === callee) return true;
   const parent = node.parent;
   return (
     parent &&
     parent.type === "VariableDeclarator" &&
     parent.id.type === "Identifier" &&
-    parent.id.name === call.callee.name
+    parent.id.name === callee
   );
 }
 
@@ -100,6 +105,7 @@ function reportIfAlias(node, context) {
   if (!isNamedWrapper(node)) return;
   const call = onlyCallExpression(node.body);
   if (!call || call.type !== "CallExpression") return;
+  if (!directCalleeName(call)) return;
   if (isSelfCall(node, call)) return;
   if (isSameArgumentList(node.params || [], call.arguments)) {
     context.report({ node, messageId: "alias" });
