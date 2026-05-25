@@ -9,8 +9,9 @@ const { fileURLToPath } = require("node:url");
 
 const DOWNLOAD_TIMEOUT_MS = 30_000;
 
-function download(url, destination, redirects = 0) {
-  if (url.startsWith("file://")) {
+function download(url, destination, redirects = 0, validateUrl = () => {}) {
+  validateUrl(url);
+  if (isFileUrl(url)) {
     return copyFile(fileURLToPath(url), destination);
   }
 
@@ -20,6 +21,9 @@ function download(url, destination, redirects = 0) {
       await pipeline(response, createWriteStream(destination));
     },
     redirects,
+    { http, https },
+    DOWNLOAD_TIMEOUT_MS,
+    validateUrl,
   );
 }
 
@@ -29,8 +33,15 @@ function request(
   redirects = 0,
   clients = { http, https },
   timeoutMs = DOWNLOAD_TIMEOUT_MS,
+  validateUrl = () => {},
 ) {
   return new Promise((resolve, reject) => {
+    try {
+      validateUrl(url);
+    } catch (error) {
+      reject(error);
+      return;
+    }
     const client = url.startsWith("http://") ? clients.http : clients.https;
     const req = client.get(url, (response) => {
       if (isRedirectStatus(response.statusCode)) {
@@ -49,6 +60,7 @@ function request(
           redirects + 1,
           clients,
           timeoutMs,
+          validateUrl,
         ).then(resolve, reject);
         return;
       }
@@ -73,23 +85,40 @@ function isRedirectStatus(statusCode) {
   return [301, 302, 303, 307, 308].includes(statusCode);
 }
 
-async function fetchText(url) {
-  if (url.startsWith("file://")) {
+async function fetchText(url, validateUrl = () => {}) {
+  validateUrl(url);
+
+  if (isFileUrl(url)) {
     return readFile(fileURLToPath(url), "utf8");
   }
   const chunks = [];
   let totalLength = 0;
   const MAX_LENGTH = 1024 * 1024;
-  await request(url, async (response) => {
-    for await (const chunk of response) {
-      totalLength += chunk.length;
-      if (totalLength > MAX_LENGTH) {
-        throw new Error(`Response exceeded maximum size of ${MAX_LENGTH} bytes`);
+  await request(
+    url,
+    async (response) => {
+      for await (const chunk of response) {
+        totalLength += chunk.length;
+        if (totalLength > MAX_LENGTH) {
+          throw new Error(`Response exceeded maximum size of ${MAX_LENGTH} bytes`);
+        }
+        chunks.push(chunk);
       }
-      chunks.push(chunk);
-    }
-  });
+    },
+    0,
+    { http, https },
+    DOWNLOAD_TIMEOUT_MS,
+    validateUrl,
+  );
   return Buffer.concat(chunks).toString("utf8");
+}
+
+function isFileUrl(url) {
+  try {
+    return new URL(url).protocol === "file:";
+  } catch {
+    return false;
+  }
 }
 
 module.exports = {

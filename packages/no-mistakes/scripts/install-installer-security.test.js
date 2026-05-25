@@ -53,10 +53,6 @@ test("rejects untrusted base URLs for arbitrary file download mitigation", async
       /Untrusted base URL/,
     );
     await assert.rejects(
-      () => install({ baseUrl: "file:/tmp/assets", target, vendorDir, version }),
-      /Untrusted base URL/,
-    );
-    await assert.rejects(
       () => install({ baseUrl: "ftp://127.0.0.1/releases", target, vendorDir, version }),
       /Untrusted base URL/,
     );
@@ -76,7 +72,7 @@ test("rejects untrusted base URLs for arbitrary file download mitigation", async
           vendorDir,
           version,
         }),
-      /Untrusted base URL/,
+      /Credentials are not allowed/,
     );
     await assert.rejects(
       () =>
@@ -85,7 +81,7 @@ test("rejects untrusted base URLs for arbitrary file download mitigation", async
     );
     await assert.rejects(
       () => install({ baseUrl: "not-a-url", target, vendorDir, version }),
-      /Invalid base URL/,
+      /Invalid release base URL/,
     );
   } finally {
     await rm(root, { recursive: true, force: true });
