@@ -460,8 +460,12 @@ fn run_shellcheck_rejects_invalid_severity() {
     };
     let result = run_shellcheck(tmp.path(), &opts, &[sh]);
     assert!(result.is_err());
-    assert_eq!(
-        result.unwrap_err().to_string(),
-        "invalid shellcheck severity: invalid_value"
+    let error = result.unwrap_err().to_string();
+    assert!(error.contains("invalid shellcheck severity"));
+    assert!(
+        error.contains(r#"invalid shellcheck severity: "invalid_value"."#)
+            && error.contains("error, warning, info, style"),
+        "{}",
+        error
     );
 }
