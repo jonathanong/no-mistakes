@@ -100,7 +100,7 @@ module.exports = rule(
     function resolveFunctionCallback(node, callback) {
       let scope = context.sourceCode.getScope(node);
       while (scope) {
-        const variable = scope.variables.find((candidate) => candidate.name === callback.name);
+        const variable = scope.set.get(callback.name);
         const declaration = variable?.defs[0]?.node;
         if (declaration?.type === "FunctionDeclaration") return declaration;
         if (declaration?.type === "VariableDeclarator" && isFunctionNode(declaration.init)) {
