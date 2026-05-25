@@ -461,7 +461,10 @@ fn stem_suffix_strip_test_to_source_resolves_mock() {
         &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
     )
     .unwrap();
-    assert!(findings.is_empty(), "page.mock.test.tsx should resolve to page.tsx: {findings:?}");
+    assert!(
+        findings.is_empty(),
+        "page.mock.test.tsx should resolve to page.tsx: {findings:?}"
+    );
 }
 
 #[test]
@@ -473,7 +476,10 @@ fn stem_suffix_strip_source_to_test_finds_suffixed_test() {
         &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
     )
     .unwrap();
-    assert!(findings.is_empty(), "page.tsx should find page.mock.test.tsx: {findings:?}");
+    assert!(
+        findings.is_empty(),
+        "page.tsx should find page.mock.test.tsx: {findings:?}"
+    );
 }
 
 #[test]
@@ -485,7 +491,10 @@ fn stem_suffix_not_matching_base_does_not_crash() {
         &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
     )
     .unwrap();
-    assert!(findings.is_empty(), "non-matching suffix should not affect normal case: {findings:?}");
+    assert!(
+        findings.is_empty(),
+        "non-matching suffix should not affect normal case: {findings:?}"
+    );
 }
 
 #[test]
@@ -497,5 +506,8 @@ fn stem_suffix_source_to_test_in_tests_dir() {
         &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
     )
     .unwrap();
-    assert!(findings.is_empty(), "page.tsx should find __tests__/page.mock.test.tsx: {findings:?}");
+    assert!(
+        findings.is_empty(),
+        "page.tsx should find __tests__/page.mock.test.tsx: {findings:?}"
+    );
 }
