@@ -23,7 +23,7 @@ function isInsideUncalledNestedFunction(node, testDepth, setupDepth) {
   return false;
 }
 
-function isModuleMutable(context, mutableTopLevel, node, name) {
+function isModuleMutable({ context, mutableTopLevel, node, name }) {
   let scope = context.sourceCode.getScope(node);
   while (scope) {
     const variable = scope.set?.get(name);
@@ -112,7 +112,7 @@ function createRegistryReports({ context, mutableTopLevel, cleanupTracker, isCap
         testDepth > 0 &&
         setupDepth === 0 &&
         !isCaptured(name) &&
-        isModuleMutable(context, mutableTopLevel, node, name)
+        isModuleMutable({ context, mutableTopLevel, node, name })
       ) {
         pending.push({ node, path, suiteKey: cleanupTracker.currentSuiteKey() });
       }
