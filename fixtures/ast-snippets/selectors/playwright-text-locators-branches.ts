@@ -35,9 +35,11 @@ test("annotation text", async ({ page }) => {
   await page.getByText("Annotation text").click();
   await page.getByText("Default exact text", { timeout: 1000 }).click();
   await page.getByText("TS exact text" as const, { exact: true as const }).click();
+  await page.getByText(`TS template text` as const, { exact: false as boolean }).click();
   await page.getByText("Last exact text", { exact: false, exact: true }).click();
   await page.getByRole("button", { name: "Old name", name: "New name", includeHidden: true, includeHidden: false }).click();
   await page.getByRole("button" as const, { name: "TS role name" as const, includeHidden: false as boolean }).click();
+  await page.getByRole("button", { name: `TS template role` as const }).click();
   await page.getByRole("button", { 0: "zero", name: "Numeric property" }).click();
 });
 
@@ -50,4 +52,5 @@ test("unsupported text locators", async ({ page }) => {
   await page.getByRole("button", { title: "Wrong property" }).click();
   await page.getByRole("button", { name: /Regex/ }).click();
   await page.getByRole(name, { name: "Dynamic role" }).click();
+  await page.getByText(label as string).click();
 });

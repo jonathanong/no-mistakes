@@ -8,6 +8,7 @@ export function JsxAttrsBranches(props: { label?: string }) {
       <button data-case="label-undefined" aria-label={undefined} />
       <button data-case="label-as-null" aria-label={null as string | null} />
       <button data-case="label-non-null" aria-label={props.label!} />
+      <button data-case="label-satisfies-null" aria-label={null satisfies string | null} />
       <button data-case="label-satisfies" aria-label={props.label satisfies string | undefined} />
       <button data-case="label-element" aria-label={<span />} />
       <button data-case="hidden-bare" hidden />
@@ -20,6 +21,10 @@ export function JsxAttrsBranches(props: { label?: string }) {
       <button data-case="hidden-as" hidden={true as boolean} />
       <button data-case="hidden-satisfies" hidden={false satisfies boolean} />
       <button data-case="hidden-non-null" hidden={true!} />
+      <button data-case="hidden-null-wrapped" hidden={null as boolean | null} />
+      <button data-case="hidden-zero-wrapped" hidden={0 satisfies number} />
+      <button data-case="hidden-string-wrapped" hidden={"shown"!} />
+      <button data-case="hidden-undefined-wrapped" hidden={undefined as boolean | undefined} />
       <button data-case="hidden-non-null-dynamic" hidden={value!} />
       <button data-case="hidden-dynamic" hidden={props.label} />
       <div data-case="aria-string-true" aria-hidden="true" />
@@ -38,6 +43,7 @@ export function JsxAttrsBranches(props: { label?: string }) {
       <select data-case="size-as" size={5 as const} />
       <select data-case="size-satisfies" size={6 satisfies number} />
       <select data-case="size-non-null" size={7!} />
+      <select data-case="size-dynamic-wrapped" size={props.label as string} />
       <select data-case="size-non-null-dynamic" size={value!} />
       <select data-case="size-dynamic" size={props.label} />
       <select data-case="size-negative" size={-1} />

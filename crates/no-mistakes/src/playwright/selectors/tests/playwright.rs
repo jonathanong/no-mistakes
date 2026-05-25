@@ -255,7 +255,7 @@ fn extracts_text_locator_status_and_ignores_unsupported_shapes() {
     ]);
     let locators = extract_playwright_text_locator_occurrences(&source);
 
-    assert_eq!(locators.len(), 14);
+    assert_eq!(locators.len(), 16);
     assert!(locators.contains(&(
         "role".to_string(),
         "Save".to_string(),
@@ -303,7 +303,13 @@ fn extracts_text_locator_status_and_ignores_unsupported_shapes() {
         .any(|(_, text, _, _, _, _)| text == "TS exact text"));
     assert!(locators
         .iter()
+        .any(|(_, text, _, _, _, _)| text == "TS template text"));
+    assert!(locators
+        .iter()
         .any(|(_, text, _, _, _, _)| text == "TS role name"));
+    assert!(locators
+        .iter()
+        .any(|(_, text, _, _, _, _)| text == "TS template role"));
     assert!(locators
         .iter()
         .any(|(_, text, _, _, _, _)| text == "New name"));

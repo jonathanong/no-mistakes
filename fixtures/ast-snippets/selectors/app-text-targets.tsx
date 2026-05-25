@@ -83,6 +83,9 @@ export function Example(props: { label: string }) {
       <button data-pw="aria-labelledby-precedence" aria-label="Ignored label" aria-labelledby="action-first" title="Ignored title" />
       <button data-pw="empty-aria-label-title" aria-label="" title="Ignored empty label title" />
       <button data-pw="aria-label-ts" aria-label={"Wrapped close" as const} />
+      <button data-pw="aria-label-satisfies" aria-label={"Satisfies close" satisfies string} />
+      <button data-pw="aria-label-non-null" aria-label={"Non-null close"!} />
+      <button data-pw="aria-label-template-ts" aria-label={`Template close` as const} />
       <button data-pw="title-only-button" title="Only title" />
       <button data-pw="button-alt" alt="Ignored alt" />
       <div data-pw="aria-label-div" role="button" aria-label="Div action" />

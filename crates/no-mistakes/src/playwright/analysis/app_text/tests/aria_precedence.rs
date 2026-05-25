@@ -43,6 +43,24 @@ fn jsx_attr_strings_unwrap_ts_wrappers() {
         AppTextKind::AccessibleName,
         "aria-label-ts"
     ));
+    assert!(has_target(
+        &targets,
+        "Satisfies close",
+        AppTextKind::AccessibleName,
+        "aria-label-satisfies"
+    ));
+    assert!(has_target(
+        &targets,
+        "Non-null close",
+        AppTextKind::AccessibleName,
+        "aria-label-non-null"
+    ));
+    assert!(has_target(
+        &targets,
+        "Template close",
+        AppTextKind::AccessibleName,
+        "aria-label-template-ts"
+    ));
 }
 
 #[test]
@@ -89,6 +107,12 @@ fn submit_value_accessible_name_yields_to_aria_name() {
         &targets,
         "Submit ignored",
         AppTextKind::AccessibleName,
+        "submit-aria-input"
+    ));
+    assert!(has_target(
+        &targets,
+        "Submit ignored",
+        AppTextKind::VisibleText,
         "submit-aria-input"
     ));
 }
