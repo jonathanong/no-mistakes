@@ -54,17 +54,55 @@ async function install(binName, repository, options = {}) {
 
   const asset = assetName({ binName, version, target, assetExtension: options.assetExtension });
   const baseUrl = options.baseUrl || releaseBaseUrl(repository, version, options.envVar);
+
+  let url;
+  try {
+    url = new URL(baseUrl);
+  } catch {
+    throw new Error(`Invalid base URL: ${baseUrl}`);
+  }
+  const baseUrlInput = String(baseUrl);
+  const baseUrlString = url.href.replace(/\/$/, "");
+
+  if (url.username || url.password) {
+    throw new Error(`Untrusted base URL: ${baseUrl}`);
+  }
+
+  if (url.protocol === "file:") {
+    if (
+      !baseUrlInput.startsWith("file://") ||
+      url.pathname.startsWith("//") ||
+      (url.hostname !== "" && url.hostname !== "localhost")
+    ) {
+      throw new Error(`Untrusted base URL: ${baseUrl}`);
+    }
+  } else if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      throw new Error(`Untrusted base URL: ${baseUrl}`);
+    }
+  } else {
+    if (url.protocol !== "https:") {
+      throw new Error(`Untrusted base URL: ${baseUrl}`);
+    }
+    if (url.hostname !== "github.com") {
+      throw new Error(`Untrusted base URL: ${baseUrl}`);
+    }
+    if (!url.pathname.startsWith(`/${repository}/`)) {
+      throw new Error(`Untrusted GitHub repository in base URL: ${baseUrl}`);
+    }
+  }
+
   const temp = `${destination}.tmp-${process.pid}`;
 
   await mkdir(vendorDir, { recursive: true });
 
   try {
     console.log(`Downloading ${binName} v${version} for ${target}...`);
-    await download(`${baseUrl}/${asset}`, temp);
+    await download(`${baseUrlString}/${asset}`, temp);
 
     let checksumText;
     try {
-      checksumText = await fetchText(`${baseUrl}/${asset}.sha256`);
+      checksumText = await fetchText(`${baseUrlString}/${asset}.sha256`);
     } catch (e) {
       throw new Error(`Failed to fetch checksum for ${asset}: ${e.message}`);
     }
