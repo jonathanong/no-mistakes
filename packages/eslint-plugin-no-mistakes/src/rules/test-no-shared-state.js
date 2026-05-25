@@ -41,12 +41,12 @@ module.exports = rule(
     const pendingNamedSetupCallbacks = [];
     const cleanupTracker = createCleanupTracker();
     const viMockTracker = createViMockTracker(context, mutableTopLevel);
-    const registryReports = createRegistryReports({
+    const registryReports = createRegistryReports(
       context,
       mutableTopLevel,
       cleanupTracker,
-      isCaptured: viMockTracker.isCaptured,
-    });
+      (name) => viMockTracker.isCaptured(name),
+    );
     let testDepth = 0;
     let setupDepth = 0;
 
@@ -100,12 +100,13 @@ module.exports = rule(
     function resolveFunctionCallback(node, callback) {
       let scope = context.sourceCode.getScope(node);
       while (scope) {
-        const variable = scope.set?.get(callback.name);
+        const variable = scope.variables.find((candidate) => candidate.name === callback.name);
         const declaration = variable?.defs[0]?.node;
         if (declaration?.type === "FunctionDeclaration") return declaration;
-        if (declaration?.type === "VariableDeclarator" && isFunctionNode(declaration.init))
+        if (declaration?.type === "VariableDeclarator" && isFunctionNode(declaration.init)) {
           return declaration.init;
-        scope = variable ? null : scope.upper;
+        }
+        scope = scope.upper;
       }
       return null;
     }

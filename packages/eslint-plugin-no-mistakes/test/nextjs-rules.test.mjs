@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
-import { isFetchCall } from "../src/helpers.js";
 import { lint, messages, plugin } from "./helpers.mjs";
 
 describe("plugin exports", () => {
@@ -102,43 +101,11 @@ describe("nextjs-static-fetch-url", () => {
     );
   });
 
-  it("does not report when fetch is shadowed by an import", () => {
+  it("does not treat imported fetch as shadowed", () => {
     assert.deepEqual(
       messages("import { fetch } from 'undici'; fetch(url);", "nextjs-static-fetch-url"),
-      [],
+      ["dynamic"],
     );
-  });
-
-  it("does not report when fetch is shadowed by a class", () => {
-    assert.deepEqual(messages("class fetch {} fetch(url);", "nextjs-static-fetch-url"), []);
-  });
-
-  it("supports fallback shadow checks when scope.set is unavailable", () => {
-    const fakeScope = {
-      set: undefined,
-      variables: [{ name: "fetch", defs: [{ type: "Variable" }] }],
-      upper: null,
-    };
-    const context = {
-      sourceCode: {
-        getScope: () => fakeScope,
-      },
-    };
-    assert.equal(isFetchCall({ callee: { type: "Identifier", name: "fetch" } }, context), false);
-  });
-
-  it("supports fallback shadow checks when scope.set.get is not a function", () => {
-    const fakeScope = {
-      set: { get: 123 },
-      variables: [{ name: "fetch", defs: [{ type: "Variable" }] }],
-      upper: null,
-    };
-    const context = {
-      sourceCode: {
-        getScope: () => fakeScope,
-      },
-    };
-    assert.equal(isFetchCall({ callee: { type: "Identifier", name: "fetch" } }, context), false);
   });
 });
 

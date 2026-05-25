@@ -26,7 +26,7 @@ function isInsideUncalledNestedFunction(node, testDepth, setupDepth) {
 function isModuleMutable({ context, mutableTopLevel, node, name }) {
   let scope = context.sourceCode.getScope(node);
   while (scope) {
-    const variable = scope.set?.get(name);
+    const variable = scope.variables.find((candidate) => candidate.name === name);
     if (variable) {
       return (
         mutableTopLevel.has(variable.name) &&
@@ -97,7 +97,7 @@ function createViMockTracker(context, mutableTopLevel) {
   };
 }
 
-function createRegistryReports({ context, mutableTopLevel, cleanupTracker, isCaptured }) {
+function createRegistryReports(context, mutableTopLevel, cleanupTracker, isCaptured) {
   const pending = [];
 
   return {

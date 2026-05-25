@@ -11,7 +11,7 @@ function isIdentifier(node) {
   return node && node.type === "Identifier";
 }
 
-function definePattern({ pattern, props, defineBinding, defineReactNode } = {}) {
+function definePattern(pattern, props, defineBinding, defineReactNode) {
   if (!isObjectPattern(pattern)) return;
   for (const property of pattern.properties || []) {
     if (property.type !== "Property") continue;
@@ -127,12 +127,7 @@ module.exports = rule(
         if (isReactNodeType(type)) defineReactNode(target.name);
         defineObjectType(target.name, type);
       } else if (isObjectPattern(target)) {
-        definePattern({
-          pattern: target,
-          props: propsForType(type),
-          defineBinding,
-          defineReactNode,
-        });
+        definePattern(target, propsForType(type), defineBinding, defineReactNode);
       }
     }
 
@@ -145,12 +140,12 @@ module.exports = rule(
         defineObjectType(node.id.name, type, scope);
       } else if (isObjectPattern(node.id)) {
         const initType = isIdentifier(node.init) ? objectProps(node.init.name) : null;
-        definePattern({
-          pattern: node.id,
-          props: propsForType(type) || initType,
-          defineBinding: (name) => defineBinding(name, scope),
-          defineReactNode: (name) => defineReactNode(name, scope),
-        });
+        definePattern(
+          node.id,
+          propsForType(type) || initType,
+          (name) => defineBinding(name, scope),
+          (name) => defineReactNode(name, scope),
+        );
       }
     }
 

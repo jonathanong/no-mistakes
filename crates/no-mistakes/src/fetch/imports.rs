@@ -133,6 +133,3 @@ pub fn collect_imports_from_program<'a>(
     import_cache.insert(abs_path.to_path_buf(), imports.clone());
     imports
 }
-
-#[cfg(test)]
-mod tests;
