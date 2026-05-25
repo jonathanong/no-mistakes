@@ -110,6 +110,10 @@ test("formats release asset names", () => {
     "no-mistakes-v1.2.3-x86_64-pc-windows-msvc.exe",
   );
   assert.equal(
+    core.assetName("no-mistakes", "1.2.3", "x86_64-unknown-linux-gnu"),
+    "no-mistakes-v1.2.3-x86_64-unknown-linux-gnu",
+  );
+  assert.equal(
     core.assetName({
       binName: "no-mistakes-napi",
       version: "1.2.3",

@@ -2,7 +2,16 @@
 
 const { basename } = require("node:path");
 
-function assetName({ binName, version, target, assetExtension }) {
+function assetName(binNameOrOptions, version, target, assetExtension) {
+  let binName = binNameOrOptions;
+  if (typeof binNameOrOptions === "object" && binNameOrOptions !== null && !Array.isArray(binNameOrOptions)) {
+    ({ binName, version, target, assetExtension } = binNameOrOptions);
+  }
+
+  if (typeof binName !== "string" || !version || !target) {
+    throw new TypeError("assetName requires (binName, version, target) or an equivalent options object.");
+  }
+
   const ext = assetExtension ?? (target.endsWith("windows-msvc") ? ".exe" : "");
   return `${binName}-v${version}-${target}${ext}`;
 }
