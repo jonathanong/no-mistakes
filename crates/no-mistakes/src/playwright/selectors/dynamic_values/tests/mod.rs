@@ -217,6 +217,27 @@ function Page() {
 }
 
 #[test]
+fn resolve_dynamic_identifier_initializer_plus_if_else() {
+    let source = r#"
+function Page() {
+  let dataPw = 'init-val';
+  if (cond) {
+    dataPw = 'branch-a';
+  } else {
+    dataPw = 'branch-b';
+  }
+  return dataPw;
+}
+"#;
+    let collected = parse_and_collect(source);
+    let entries: Vec<_> = collected.iter().filter(|e| e.name == "dataPw").collect();
+    let mut values: Vec<String> = entries.iter().flat_map(|e| e.values.clone()).collect();
+    values.sort();
+    values.dedup();
+    assert_eq!(values, vec!["branch-a", "branch-b", "init-val"]);
+}
+
+#[test]
 fn collect_string_leaves_ts_as_expression() {
     let source = r#"const x = 'hello' as string;"#;
     ast::with_program(Path::new("fixture.tsx"), source, |program, _| {

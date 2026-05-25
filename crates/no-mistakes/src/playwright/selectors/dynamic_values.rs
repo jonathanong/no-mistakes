@@ -22,12 +22,22 @@ pub(super) fn resolve_dynamic_identifier(
     span: Span,
     dynamic_values: &[DynamicIdentifierValues],
 ) -> Vec<String> {
-    dynamic_values
+    let candidates: Vec<_> = dynamic_values
         .iter()
         .filter(|dv| dv.name == name && dv.scope.start <= span.start && span.end <= dv.scope.end)
-        .min_by_key(|dv| dv.scope.end - dv.scope.start)
-        .map(|dv| dv.values.clone())
-        .unwrap_or_default()
+        .collect();
+    let Some(min_size) = candidates
+        .iter()
+        .map(|dv| dv.scope.end - dv.scope.start)
+        .min()
+    else {
+        return vec![];
+    };
+    candidates
+        .into_iter()
+        .filter(|dv| dv.scope.end - dv.scope.start == min_size)
+        .flat_map(|dv| dv.values.iter().cloned())
+        .collect()
 }
 
 #[cfg_attr(not(test), allow(dead_code))]
