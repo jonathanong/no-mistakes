@@ -64,9 +64,14 @@ async function install(binName, repository, options = {}) {
   const baseUrlInput = String(baseUrl);
   const baseUrlString = url.href.replace(/\/$/, "");
 
+  if (url.username || url.password) {
+    throw new Error(`Untrusted base URL: ${baseUrl}`);
+  }
+
   if (url.protocol === "file:") {
     if (
       !baseUrlInput.startsWith("file://") ||
+      url.pathname.startsWith("//") ||
       (url.hostname !== "" && url.hostname !== "localhost")
     ) {
       throw new Error(`Untrusted base URL: ${baseUrl}`);

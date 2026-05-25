@@ -65,6 +65,20 @@ test("rejects untrusted base URLs for arbitrary file download mitigation", async
       /Untrusted base URL/,
     );
     await assert.rejects(
+      () => install({ baseUrl: "file:////server/share/releases", target, vendorDir, version }),
+      /Untrusted base URL/,
+    );
+    await assert.rejects(
+      () =>
+        install({
+          baseUrl: "https://token@github.com/jonathanong/no-mistakes/releases",
+          target,
+          vendorDir,
+          version,
+        }),
+      /Untrusted base URL/,
+    );
+    await assert.rejects(
       () =>
         install({ baseUrl: "https://github.com/evil/repo/releases", target, vendorDir, version }),
       /Untrusted GitHub repository/,
