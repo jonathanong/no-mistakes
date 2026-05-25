@@ -73,7 +73,7 @@ function collectExportedComponents(program, opts) {
       collectNamedExport(statement, definitions, namedExports, defaultExports, components, opts);
     }
     if (statement.type === "ExportDefaultDeclaration") {
-      collectDefaultExport(statement, definitions, defaultExports, components, opts);
+      collectDefaultExport(statement, { definitions, defaultExports, components, opts });
     }
   }
 
@@ -163,7 +163,7 @@ function collectNamedExport(
   }
 }
 
-function collectDefaultExport(statement, definitions, defaultExports, components, opts) {
+function collectDefaultExport(statement, { definitions, defaultExports, components, opts }) {
   if (!opts.exportTypes.has("default")) {
     return;
   }
