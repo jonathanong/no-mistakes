@@ -10,6 +10,7 @@ use std::process::Command;
 pub const RULE_ID: &str = "shellcheck-runner";
 
 const DEFAULT_SEVERITY: &str = "warning";
+const VALID_SEVERITIES: [&str; 4] = ["error", "warning", "info", "style"];
 
 mod candidates;
 use candidates::filtered_shell_files;
@@ -103,6 +104,14 @@ pub(crate) fn run_shellcheck(
     } else {
         &opts.shellcheck.severity
     };
+
+    if !VALID_SEVERITIES.contains(&sev) {
+        return Err(anyhow::anyhow!(
+            "invalid shellcheck severity: \"{}\". Expected one of: error, warning, info, style",
+            sev
+        ));
+    }
+
     let result = Command::new("shellcheck")
         .args(["-f", "gcc", "-S", sev])
         .args(shell_files)
