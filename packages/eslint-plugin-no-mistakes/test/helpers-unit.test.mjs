@@ -244,7 +244,7 @@ describe("helpers", () => {
   });
   describe("cssSelectorValues", () => {
     it("extracts values from CSS attribute selectors", () => {
-      const source = '[data-testid="foo"] [data-pw=\'bar\'] [data-testid=baz]';
+      const source = "[data-testid=\"foo\"] [data-pw='bar'] [data-testid=baz]";
       const attrs = ["data-testid", "data-pw"];
       expect(cssSelectorValues(source, attrs)).toEqual([
         { attribute: "data-testid", operator: "=", value: "foo" },
