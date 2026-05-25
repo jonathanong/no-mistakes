@@ -17,7 +17,7 @@ const binName = "no-mistakes";
 const repository = "jonathanong/no-mistakes";
 
 function assetName(version, target) {
-  return core.assetName(binName, version, target);
+  return core.assetName({ binName, version, target });
 }
 
 function releaseBaseUrl(version) {
@@ -110,7 +110,7 @@ test("formats release asset names", () => {
     "no-mistakes-v1.2.3-x86_64-pc-windows-msvc.exe",
   );
   assert.equal(
-    core.assetName("no-mistakes-napi", "1.2.3", "x86_64-pc-windows-msvc", ".node"),
+    core.assetName({ binName: "no-mistakes-napi", version: "1.2.3", target: "x86_64-pc-windows-msvc", assetExtension: ".node" }),
     "no-mistakes-napi-v1.2.3-x86_64-pc-windows-msvc.node",
   );
 });

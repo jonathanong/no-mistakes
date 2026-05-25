@@ -2,7 +2,7 @@
 
 const { basename } = require("node:path");
 
-function assetName(binName, version, target, assetExtension) {
+function assetName({ binName, version, target, assetExtension }) {
   const ext = assetExtension ?? (target.endsWith("windows-msvc") ? ".exe" : "");
   return `${binName}-v${version}-${target}${ext}`;
 }
