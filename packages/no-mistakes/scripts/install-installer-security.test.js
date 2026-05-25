@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { mkdir, mkdtemp, rm, writeFile } = require("node:fs/promises");
+const { access, mkdir, mkdtemp, readdir, rm, writeFile } = require("node:fs/promises");
 const { join } = require("node:path");
 const { tmpdir } = require("node:os");
 const { pathToFileURL } = require("node:url");
@@ -49,6 +49,14 @@ test("rejects untrusted base URLs for arbitrary file download mitigation", async
       /Untrusted base URL/,
     );
     await assert.rejects(
+      () => install({ baseUrl: "file:/tmp/assets", target, vendorDir, version }),
+      /Untrusted base URL/,
+    );
+    await assert.rejects(
+      () => install({ baseUrl: "ftp://127.0.0.1/releases", target, vendorDir, version }),
+      /Untrusted base URL/,
+    );
+    await assert.rejects(
       () => install({ baseUrl: "file://remote-share/releases", target, vendorDir, version }),
       /Untrusted base URL/,
     );
@@ -72,6 +80,8 @@ test("rejects checksum mismatches and cleans temporary files", async () => {
   const target = "x86_64-unknown-linux-gnu";
   const asset = assetName(version, target);
   const content = Buffer.from("#!/bin/sh\nexit 0\n");
+  const destination = join(vendorDir, binName);
+  const temp = `${destination}.tmp-${process.pid}`;
 
   await mkdir(join(root, "assets"));
   await writeFile(join(root, "assets", asset), content);
@@ -81,6 +91,12 @@ test("rejects checksum mismatches and cleans temporary files", async () => {
     await assert.rejects(
       () => install({ baseUrl: assetBaseUrl(root), target, vendorDir, version }),
       /Checksum mismatch/,
+    );
+    await assert.rejects(() => access(temp), { code: "ENOENT" });
+    const vendorContents = await readdir(vendorDir);
+    assert.equal(
+      vendorContents.some((entry) => entry.endsWith(`.tmp-${process.pid}`)),
+      false,
     );
   } finally {
     await rm(root, { recursive: true, force: true });

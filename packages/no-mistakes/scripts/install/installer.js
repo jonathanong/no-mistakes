@@ -63,10 +63,14 @@ async function install(binName, repository, options = {}) {
   }
 
   if (url.protocol === "file:") {
-    if (url.hostname !== "" && url.hostname !== "localhost") {
+    if (!baseUrl.startsWith("file://") || (url.hostname !== "" && url.hostname !== "localhost")) {
       throw new Error(`Untrusted base URL: ${baseUrl}`);
     }
-  } else if (url.hostname !== "localhost" && url.hostname !== "127.0.0.1") {
+  } else if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      throw new Error(`Untrusted base URL: ${baseUrl}`);
+    }
+  } else {
     if (url.protocol !== "https:") {
       throw new Error(`Untrusted base URL: ${baseUrl}`);
     }
