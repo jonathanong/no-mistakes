@@ -197,3 +197,30 @@ fn combined_dimensions() {
     assert!(fetches[0].in_promise_all);
     assert!(fetches[0].error_handled);
 }
+
+#[test]
+fn conditional_from_if_else() {
+    let fetches = parse_and_visit(
+        "if (true) { fetch('/api/then'); } else { fetch('/api/else'); }",
+        "test.ts",
+    );
+    assert_eq!(fetches.len(), 2);
+    assert!(fetches.iter().all(|f| f.conditional));
+}
+
+#[test]
+fn non_promise_static_member_call_not_promise_all() {
+    let fetches = parse_and_visit(
+        "Other.all([fetch('/api/data')]); fetch('/api/plain');",
+        "test.ts",
+    );
+    assert_eq!(fetches.len(), 2);
+    assert!(!fetches.iter().any(|f| f.in_promise_all));
+}
+
+#[test]
+fn chained_member_call_not_promise_all() {
+    let fetches = parse_and_visit("foo().all([fetch('/api/data')]);", "test.ts");
+    assert_eq!(fetches.len(), 1);
+    assert!(!fetches[0].in_promise_all);
+}

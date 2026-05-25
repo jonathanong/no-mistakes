@@ -217,3 +217,15 @@ fn test_print_markdown_report_is_rendered() {
 
     print_markdown_report(&report);
 }
+
+#[test]
+fn test_source_type_label_covers_all_variants() {
+    use crate::fetches::report::print::source_type_label;
+    assert_eq!(source_type_label(&SourceType::Page), "page");
+    assert_eq!(source_type_label(&SourceType::Layout), "layout");
+    assert_eq!(source_type_label(&SourceType::Loading), "loading");
+    assert_eq!(source_type_label(&SourceType::Error), "error");
+    assert_eq!(source_type_label(&SourceType::Template), "template");
+    assert_eq!(source_type_label(&SourceType::Route), "route");
+    assert_eq!(source_type_label(&SourceType::Module), "module");
+}

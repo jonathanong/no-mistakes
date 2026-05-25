@@ -128,7 +128,7 @@ pub(crate) fn print_markdown_report(report: &FinalReport) {
     }
 }
 
-fn source_type_label(source_type: &SourceType) -> &'static str {
+pub(crate) fn source_type_label(source_type: &SourceType) -> &'static str {
     match source_type {
         SourceType::Page => "page",
         SourceType::Layout => "layout",
