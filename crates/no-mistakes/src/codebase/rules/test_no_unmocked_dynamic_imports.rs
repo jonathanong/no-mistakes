@@ -107,7 +107,7 @@ pub(super) fn check_inner(
             .filter(|entry| !covered_reachable_imports.contains(&entry.key))
             .map(|entry| entry.finding),
     );
-    findings.sort_by_key(|f| (f.file.clone(), f.line, f.target.clone()));
+    findings.sort_by(|a, b| (&a.file, a.line, &a.target).cmp(&(&b.file, b.line, &b.target)));
     Ok(findings)
 }
 

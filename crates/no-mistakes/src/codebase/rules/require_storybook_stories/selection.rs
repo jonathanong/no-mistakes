@@ -69,7 +69,8 @@ pub(super) fn selected_components(
             });
         }
     }
-    components.sort_by_key(|c| (c.project_file.clone(), c.export_name.clone()));
+    components
+        .sort_by(|a, b| (&a.project_file, &a.export_name).cmp(&(&b.project_file, &b.export_name)));
     components.dedup_by_key(|c| c.key.clone());
     components
 }
