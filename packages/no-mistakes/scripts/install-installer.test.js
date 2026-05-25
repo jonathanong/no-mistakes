@@ -11,7 +11,7 @@ const { platformTarget, unsupportedPlatformMessage } = core;
 const repository = "jonathanong/no-mistakes";
 
 function assetName(version, target) {
-  return core.assetName(binName, version, target);
+  return core.assetName({ binName, version, target });
 }
 
 function install(options) {
