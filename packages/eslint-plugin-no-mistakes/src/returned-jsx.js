@@ -17,7 +17,9 @@ function collectReturnBranches(node, branches) {
     return;
   }
   if (node.type === "ReturnStatement") {
-    branches.push(...jsxBranches(node.argument));
+    for (const branch of jsxBranches(node.argument)) {
+      branches.push(branch);
+    }
     return;
   }
   if (node.type === "ClassDeclaration" || node.type === "ClassExpression") {

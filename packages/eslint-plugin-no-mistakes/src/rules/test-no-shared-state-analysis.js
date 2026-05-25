@@ -26,14 +26,20 @@ function isInsideUncalledNestedFunction(node, testDepth, setupDepth) {
 function isModuleMutable({ context, mutableTopLevel, node, name }) {
   let scope = context.sourceCode.getScope(node);
   while (scope) {
-    const variable = scope.variables.find((candidate) => candidate.name === name);
-    if (variable) {
-      return (
-        mutableTopLevel.has(variable.name) &&
-        (variable.scope.type === "module" || variable.scope.block.type === "Program")
-      );
+    const get = scope.set?.get;
+    const variable = typeof get === "function" ? get.call(scope.set, name) : null;
+    const resolvedVariable =
+      variable || (!scope.set ? scope.variables?.find((item) => item.name === name) : null);
+
+    if (!resolvedVariable) {
+      scope = scope.upper;
+      continue;
     }
-    scope = scope.upper;
+
+    return (
+      mutableTopLevel.has(resolvedVariable.name) &&
+      (resolvedVariable.scope.type === "module" || resolvedVariable.scope.block.type === "Program")
+    );
   }
   return false;
 }

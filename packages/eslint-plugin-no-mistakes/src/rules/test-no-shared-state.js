@@ -100,13 +100,23 @@ module.exports = rule(
     function resolveFunctionCallback(node, callback) {
       let scope = context.sourceCode.getScope(node);
       while (scope) {
-        const variable = scope.variables.find((candidate) => candidate.name === callback.name);
-        const declaration = variable?.defs[0]?.node;
+        const get = scope.set?.get;
+        const variable = typeof get === "function" ? get.call(scope.set, callback.name) : null;
+        const resolvedVariable =
+          variable ||
+          (!scope.set ? scope.variables?.find((item) => item.name === callback.name) : null);
+
+        if (!resolvedVariable) {
+          scope = scope.upper;
+          continue;
+        }
+
+        const declaration = resolvedVariable.defs[0]?.node;
         if (declaration?.type === "FunctionDeclaration") return declaration;
         if (declaration?.type === "VariableDeclarator" && isFunctionNode(declaration.init)) {
           return declaration.init;
         }
-        scope = scope.upper;
+        return null;
       }
       return null;
     }

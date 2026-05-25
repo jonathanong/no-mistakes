@@ -25,7 +25,11 @@ function propertyName(node, computed = false) {
 function isGlobalSetTimeout(node, context) {
   let scope = context.sourceCode.getScope(node);
   while (scope) {
-    const variable = scope.variables.find((candidate) => candidate.name === "setTimeout");
+    const get = scope.set?.get;
+    const variable =
+      typeof get === "function"
+        ? get.call(scope.set, "setTimeout")
+        : scope.variables.find((candidate) => candidate.name === "setTimeout");
     if (variable) return variable.defs.length === 0;
     scope = scope.upper;
   }
