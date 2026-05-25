@@ -1,11 +1,11 @@
 pub(super) mod collect;
 pub(super) mod cross_file;
-mod visitor;
 #[cfg(test)]
 mod tests;
+mod visitor;
 
-pub use collect::collect_string_leaves;
 pub(super) use collect::collect_function_return_strings;
+pub use collect::collect_string_leaves;
 
 use oxc_ast::ast::Program;
 use oxc_ast_visit::Visit;
@@ -24,11 +24,7 @@ pub(super) fn resolve_dynamic_identifier(
 ) -> Vec<String> {
     dynamic_values
         .iter()
-        .filter(|dv| {
-            dv.name == name
-                && dv.scope.start <= span.start
-                && span.end <= dv.scope.end
-        })
+        .filter(|dv| dv.name == name && dv.scope.start <= span.start && span.end <= dv.scope.end)
         .min_by_key(|dv| dv.scope.end - dv.scope.start)
         .map(|dv| dv.values.clone())
         .unwrap_or_default()
@@ -69,14 +65,12 @@ fn collect_dynamic_identifier_values_for_file(
                 if !ret_vals.is_empty() {
                     new_values.extend(ret_vals);
                 } else if let Some(f) = file {
-                    new_values
-                        .extend(cross_file::resolve_imported_values(fn_name, program, f));
+                    new_values.extend(cross_file::resolve_imported_values(fn_name, program, f));
                 }
             } else if let Some(obj_name) = value.strip_prefix("__obj__") {
                 had_sentinel = true;
                 if let Some(f) = file {
-                    new_values
-                        .extend(cross_file::resolve_imported_values(obj_name, program, f));
+                    new_values.extend(cross_file::resolve_imported_values(obj_name, program, f));
                 }
             } else {
                 new_values.push(value.clone());

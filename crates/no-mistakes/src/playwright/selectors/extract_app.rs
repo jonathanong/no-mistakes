@@ -63,7 +63,9 @@ pub fn extract_app_selectors_with_regexes(
     ast::with_program(path, source, |program, source| {
         let scoped_static_identifier_defaults = collect_scoped_static_identifier_defaults(program);
         let dynamic_identifier_values =
-            super::dynamic_values::collect_dynamic_identifier_values_with_file(program, source, path);
+            super::dynamic_values::collect_dynamic_identifier_values_with_file(
+                program, source, path,
+            );
         let mut visitor = AppSelectorVisitor {
             path,
             source,

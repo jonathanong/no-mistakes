@@ -56,8 +56,7 @@ pub fn collect_function_return_strings(fn_name: &str, program: &Program<'_>) -> 
         let function = match stmt {
             Statement::FunctionDeclaration(f) => f,
             Statement::ExportNamedDeclaration(export) => {
-                if let Some(oxc_ast::ast::Declaration::FunctionDeclaration(f)) =
-                    &export.declaration
+                if let Some(oxc_ast::ast::Declaration::FunctionDeclaration(f)) = &export.declaration
                 {
                     f
                 } else {
@@ -75,10 +74,7 @@ pub fn collect_function_return_strings(fn_name: &str, program: &Program<'_>) -> 
     values
 }
 
-pub fn collect_returns_from_statements(
-    statements: &[Statement<'_>],
-    values: &mut Vec<String>,
-) {
+pub fn collect_returns_from_statements(statements: &[Statement<'_>], values: &mut Vec<String>) {
     for stmt in statements {
         match stmt {
             Statement::ReturnStatement(ret) => {
@@ -114,7 +110,9 @@ fn collect_returns_from_stmt(stmt: &Statement<'_>, values: &mut Vec<String>) {
     }
 }
 
-pub(super) fn binding_identifier_name(pattern: &oxc_ast::ast::BindingPattern<'_>) -> Option<String> {
+pub(super) fn binding_identifier_name(
+    pattern: &oxc_ast::ast::BindingPattern<'_>,
+) -> Option<String> {
     match pattern {
         oxc_ast::ast::BindingPattern::BindingIdentifier(id) => Some(id.name.to_string()),
         _ => None,

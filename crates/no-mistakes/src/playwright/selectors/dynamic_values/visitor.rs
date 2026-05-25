@@ -15,7 +15,10 @@ pub(super) struct DynamicValuesVisitor {
 
 impl DynamicValuesVisitor {
     pub(super) fn new() -> Self {
-        Self { collected: Vec::new(), scope_stack: Vec::new() }
+        Self {
+            collected: Vec::new(),
+            scope_stack: Vec::new(),
+        }
     }
 
     fn current_scope(&self) -> Option<Span> {
@@ -100,11 +103,7 @@ impl DynamicValuesVisitor {
         }
     }
 
-    fn collect_from_if_statement(
-        &mut self,
-        if_stmt: &oxc_ast::ast::IfStatement<'_>,
-        scope: Span,
-    ) {
+    fn collect_from_if_statement(&mut self, if_stmt: &oxc_ast::ast::IfStatement<'_>, scope: Span) {
         let mut all_names: Vec<String> = Vec::new();
         let mut by_name: std::collections::HashMap<String, Vec<String>> =
             std::collections::HashMap::new();
@@ -113,7 +112,10 @@ impl DynamicValuesVisitor {
             if !all_names.iter().any(|s| s == name) {
                 all_names.push(name.to_string());
             }
-            by_name.entry(name.to_string()).or_default().push(value.to_string());
+            by_name
+                .entry(name.to_string())
+                .or_default()
+                .push(value.to_string());
         });
 
         if let Some(alt) = &if_stmt.alternate {
@@ -121,7 +123,10 @@ impl DynamicValuesVisitor {
                 if !all_names.iter().any(|s| s == name) {
                     all_names.push(name.to_string());
                 }
-                by_name.entry(name.to_string()).or_default().push(value.to_string());
+                by_name
+                    .entry(name.to_string())
+                    .or_default()
+                    .push(value.to_string());
             });
         }
 
@@ -143,7 +148,10 @@ impl DynamicValuesVisitor {
                     if !all_names.iter().any(|s| s == name) {
                         all_names.push(name.to_string());
                     }
-                    by_name.entry(name.to_string()).or_default().push(value.to_string());
+                    by_name
+                        .entry(name.to_string())
+                        .or_default()
+                        .push(value.to_string());
                 });
             }
         }
@@ -156,7 +164,11 @@ impl DynamicValuesVisitor {
     }
 
     fn push(&mut self, name: String, values: Vec<String>, scope: Span) {
-        self.collected.push(DynamicIdentifierValues { name, values, scope });
+        self.collected.push(DynamicIdentifierValues {
+            name,
+            values,
+            scope,
+        });
     }
 }
 

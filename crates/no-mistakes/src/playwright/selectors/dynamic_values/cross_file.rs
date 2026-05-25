@@ -30,10 +30,7 @@ pub(crate) fn resolve_imported_values(
     .unwrap_or_default()
 }
 
-fn find_import_info(
-    local_name: &str,
-    program: &Program<'_>,
-) -> Option<(String, String, bool)> {
+fn find_import_info(local_name: &str, program: &Program<'_>) -> Option<(String, String, bool)> {
     for stmt in &program.body {
         let Statement::ImportDeclaration(import) = stmt else {
             continue;

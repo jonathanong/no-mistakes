@@ -163,7 +163,10 @@ function Page() {
     let collected = parse_and_collect(source);
     assert!(!collected.is_empty());
     // Find the span of `dataPw` usage inside the function body
-    let entry = collected.iter().find(|e| e.name == "dataPw").expect("dataPw entry");
+    let entry = collected
+        .iter()
+        .find(|e| e.name == "dataPw")
+        .expect("dataPw entry");
     let mut values = entry.values.clone();
     values.sort();
     assert_eq!(values, vec!["option-a", "option-b"]);
@@ -186,7 +189,10 @@ function Outer() {
     // There should be two entries for x, one in each scope
     assert_eq!(entries.len(), 2);
     // Tightest scope has smaller span
-    let smallest = entries.iter().min_by_key(|e| e.scope.end - e.scope.start).unwrap();
+    let smallest = entries
+        .iter()
+        .min_by_key(|e| e.scope.end - e.scope.start)
+        .unwrap();
     let mut values = smallest.values.clone();
     values.sort();
     assert_eq!(values, vec!["inner-a", "inner-b"]);
@@ -206,7 +212,10 @@ function Page() {
 }
 "#;
     let collected = parse_and_collect(source);
-    let entry = collected.iter().find(|e| e.name == "dataPw").expect("dataPw entry");
+    let entry = collected
+        .iter()
+        .find(|e| e.name == "dataPw")
+        .expect("dataPw entry");
     let mut values = entry.values.clone();
     values.sort();
     assert_eq!(values, vec!["branch-a", "branch-b"]);

@@ -20,16 +20,14 @@ pub(super) fn app_selector_values(
         oxc_ast::ast::JSXAttributeValue::StringLiteral(literal) => {
             vec![AppSelectorValue::Exact(literal.value.to_string())]
         }
-        oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container) => {
-            jsx_expression_values(
-                &container.expression,
-                source,
-                file,
-                scoped_static_identifier_defaults,
-                dynamic_identifier_values,
-                program,
-            )
-        }
+        oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container) => jsx_expression_values(
+            &container.expression,
+            source,
+            file,
+            scoped_static_identifier_defaults,
+            dynamic_identifier_values,
+            program,
+        ),
         _ => vec![],
     }
 }
@@ -52,17 +50,15 @@ pub(super) fn jsx_expression_values(
                 .map(AppSelectorValue::Template)
                 .unwrap_or_else(|| AppSelectorValue::Unsupported(raw))]
         }
-        oxc_ast::ast::JSXExpression::Identifier(identifier) => {
-            resolve_identifier(
-                identifier.name.as_str(),
-                identifier.span(),
-                source,
-                file,
-                scoped_static_identifier_defaults,
-                dynamic_identifier_values,
-                program,
-            )
-        }
+        oxc_ast::ast::JSXExpression::Identifier(identifier) => resolve_identifier(
+            identifier.name.as_str(),
+            identifier.span(),
+            source,
+            file,
+            scoped_static_identifier_defaults,
+            dynamic_identifier_values,
+            program,
+        ),
         oxc_ast::ast::JSXExpression::ConditionalExpression(cond) => {
             let mut leaves = dynamic_values::collect_string_leaves(&cond.consequent);
             leaves.extend(dynamic_values::collect_string_leaves(&cond.alternate));
