@@ -5,7 +5,12 @@ use crate::playwright::test_support::fixture_path;
 use std::path::Path;
 
 fn page_extras_path() -> std::path::PathBuf {
-    fixture_path(&["ast-snippets", "selectors", "dynamic-cross-file", "page-extras.tsx"])
+    fixture_path(&[
+        "ast-snippets",
+        "selectors",
+        "dynamic-cross-file",
+        "page-extras.tsx",
+    ])
 }
 
 fn resolve_from_extras(local_name: &str) -> Vec<String> {
@@ -77,11 +82,7 @@ fn cross_file_array_destructured_export_returns_empty() {
 fn cross_file_unresolvable_relative_import_returns_empty() {
     let source = r#"import { x } from './definitely-does-not-exist-xyz';"#;
     let values = ast::with_program(Path::new("fixture.tsx"), source, |program, _| {
-        super::super::cross_file::resolve_imported_values(
-            "x",
-            program,
-            Path::new("fixture.tsx"),
-        )
+        super::super::cross_file::resolve_imported_values("x", program, Path::new("fixture.tsx"))
     })
     .unwrap();
     assert!(values.is_empty());
