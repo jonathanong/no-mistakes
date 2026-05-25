@@ -67,7 +67,9 @@ pub(crate) fn print_markdown_report(report: &FinalReport) {
             println!("(no fetches found)");
         } else {
             println!("| Method | Path | Side | File | Line | RSC | Dynamic | Cache | Function | Cond | P.all | ErrHandled | Source |");
-            println!("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |");
+            println!(
+                "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"
+            );
             let mut unique_fetches = route.api_calls.clone();
             unique_fetches.sort();
             unique_fetches.dedup();

@@ -4,8 +4,8 @@ use oxc_ast_visit::Visit;
 
 fn parse_and_visit(source: &str, file: &str) -> Vec<no_mistakes::fetch::types::FetchOccurrence> {
     let allocator = oxc_allocator::Allocator::default();
-    let source_type = oxc_span::SourceType::from_path(std::path::Path::new(file))
-        .unwrap_or_default();
+    let source_type =
+        oxc_span::SourceType::from_path(std::path::Path::new(file)).unwrap_or_default();
     let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
     let mut visitor = FetchVisitor::new(source, file, false, false);
     visitor.visit_program(&parsed.program);
@@ -14,10 +14,7 @@ fn parse_and_visit(source: &str, file: &str) -> Vec<no_mistakes::fetch::types::F
 
 #[test]
 fn function_name_from_named_function() {
-    let fetches = parse_and_visit(
-        "function getData() { fetch('/api/data'); }",
-        "test.ts",
-    );
+    let fetches = parse_and_visit("function getData() { fetch('/api/data'); }", "test.ts");
     assert_eq!(fetches.len(), 1);
     assert_eq!(fetches[0].function_name, Some("getData".to_string()));
 }
@@ -74,10 +71,7 @@ fn conditional_from_if_statement() {
 
 #[test]
 fn conditional_from_ternary() {
-    let fetches = parse_and_visit(
-        "true ? fetch('/api/a') : fetch('/api/b');",
-        "test.ts",
-    );
+    let fetches = parse_and_visit("true ? fetch('/api/a') : fetch('/api/b');", "test.ts");
     assert_eq!(fetches.len(), 2);
     assert!(fetches[0].conditional);
     assert!(fetches[1].conditional);
@@ -85,30 +79,21 @@ fn conditional_from_ternary() {
 
 #[test]
 fn conditional_from_logical_and() {
-    let fetches = parse_and_visit(
-        "true && fetch('/api/right');",
-        "test.ts",
-    );
+    let fetches = parse_and_visit("true && fetch('/api/right');", "test.ts");
     assert_eq!(fetches.len(), 1);
     assert!(fetches[0].conditional);
 }
 
 #[test]
 fn conditional_from_logical_or() {
-    let fetches = parse_and_visit(
-        "false || fetch('/api/right');",
-        "test.ts",
-    );
+    let fetches = parse_and_visit("false || fetch('/api/right');", "test.ts");
     assert_eq!(fetches.len(), 1);
     assert!(fetches[0].conditional);
 }
 
 #[test]
 fn not_conditional_in_if_test() {
-    let fetches = parse_and_visit(
-        "if (fetch('/api/test')) { }",
-        "test.ts",
-    );
+    let fetches = parse_and_visit("if (fetch('/api/test')) { }", "test.ts");
     assert_eq!(fetches.len(), 1);
     assert!(!fetches[0].conditional);
 }
@@ -130,10 +115,7 @@ fn in_promise_all() {
 
 #[test]
 fn in_promise_all_settled() {
-    let fetches = parse_and_visit(
-        "Promise.allSettled([fetch('/api/a')]);",
-        "test.ts",
-    );
+    let fetches = parse_and_visit("Promise.allSettled([fetch('/api/a')]);", "test.ts");
     assert_eq!(fetches.len(), 1);
     assert!(fetches[0].in_promise_all);
 }
@@ -153,10 +135,7 @@ fn error_handled_try_catch() {
 
 #[test]
 fn not_error_handled_try_finally() {
-    let fetches = parse_and_visit(
-        "try { fetch('/api/data'); } finally {}",
-        "test.ts",
-    );
+    let fetches = parse_and_visit("try { fetch('/api/data'); } finally {}", "test.ts");
     assert_eq!(fetches.len(), 1);
     assert!(!fetches[0].error_handled);
 }

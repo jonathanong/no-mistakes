@@ -84,8 +84,7 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
             if decl.init.as_ref().is_some_and(|init| {
                 matches!(
                     init,
-                    Expression::ArrowFunctionExpression(_)
-                        | Expression::FunctionExpression(_)
+                    Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_)
                 )
             }) {
                 self.pending_var_name = Some(id.name.to_string());
@@ -105,10 +104,7 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
         self.conditional_depth -= 1;
     }
 
-    fn visit_conditional_expression(
-        &mut self,
-        expr: &oxc_ast::ast::ConditionalExpression<'a>,
-    ) {
+    fn visit_conditional_expression(&mut self, expr: &oxc_ast::ast::ConditionalExpression<'a>) {
         self.visit_expression(&expr.test);
         self.conditional_depth += 1;
         self.visit_expression(&expr.consequent);
@@ -116,10 +112,7 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
         self.conditional_depth -= 1;
     }
 
-    fn visit_logical_expression(
-        &mut self,
-        expr: &oxc_ast::ast::LogicalExpression<'a>,
-    ) {
+    fn visit_logical_expression(&mut self, expr: &oxc_ast::ast::LogicalExpression<'a>) {
         self.visit_expression(&expr.left);
         self.conditional_depth += 1;
         self.visit_expression(&expr.right);
