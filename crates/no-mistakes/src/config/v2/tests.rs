@@ -6,6 +6,8 @@ use super::schema::{
 };
 use super::view::ConfigView;
 
+mod test_plan_parse;
+
 fn fixture(sub: &str) -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()

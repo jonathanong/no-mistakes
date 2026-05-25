@@ -192,6 +192,23 @@ fn tests_plan_why_comment_and_graph_exports_return_reports() {
     assert_eq!(plan["fallback_triggered"], false);
     assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
 
+    let fallback_limit_options = json!({
+        "framework": "vitest",
+        "root": root,
+        "changedFiles": ["web/app/page.tsx"],
+        "limitFiles": 1
+    })
+    .to_string();
+    let fallback_limit_output = tests_plan_json_impl(fallback_limit_options).unwrap();
+    let fallback_limit: serde_json::Value = serde_json::from_str(&fallback_limit_output).unwrap();
+
+    assert_eq!(fallback_limit["fallback_triggered"], true);
+    assert_eq!(
+        fallback_limit["selected_tests"].as_array().unwrap().len(),
+        1
+    );
+    assert_eq!(fallback_limit["groups"][0]["limit"], 1);
+
     let no_global_fallback_options = json!({
         "framework": "vitest",
         "root": root,

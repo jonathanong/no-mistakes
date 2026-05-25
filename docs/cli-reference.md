@@ -187,6 +187,8 @@ Config is read from `testPlan` (`test_plan` is also accepted):
 testPlan:
   playwright:
     dependencies:
+      ignoreChangedTests:
+        - vitest
       projects:
         cloudflare-worker: true
         web:
@@ -223,10 +225,15 @@ Global config fallback is disabled unless `globalConfigFallback: true` or
 `--global-config-fallback true` opts in. Use it only for CI environments that
 intentionally run the full framework suite when repository-level config files
 such as `.no-mistakes.yml` change.
-`dependencies.projects.<name>: true` runs the full selected framework when a
-file under that configured project root changes. If that project has `include`,
+Fallbacks use all selected framework tests as candidates, then still honor
+configured environment limits and `--limit-percent` / `--limit-files`
+overrides. `dependencies.projects.<name>: true` triggers that fallback when a
+file under the configured project root changes. If that project has `include`,
 those include globs narrow the trigger set. Explicit project dependency globs
 are relative to that project's root unless they already include the root prefix.
+Use `dependencies.ignoreChangedTests` to prevent changed test files for another
+runner, such as Vitest files under `__tests__` or `*.test.*`, from triggering a
+project dependency fallback.
 
 ### Filesystem Rules via `no-mistakes check`
 

@@ -18,7 +18,16 @@ pub struct TestPlanFrameworkConfig {
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct TestPlanDependencies {
+    #[serde(alias = "ignore_changed_tests")]
+    pub ignore_changed_tests: Vec<TestPlanIgnoredChangedTestsFramework>,
     pub projects: BTreeMap<String, TestPlanProjectDependency>,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum TestPlanIgnoredChangedTestsFramework {
+    Playwright,
+    Vitest,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]

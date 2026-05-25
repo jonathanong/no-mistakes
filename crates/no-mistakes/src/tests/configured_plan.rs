@@ -1,6 +1,4 @@
-use super::configured_plan_candidates::{
-    group_candidates, merge_selected, selected_from_paths, stable_take,
-};
+use super::configured_plan_candidates::{group_candidates, merge_selected, stable_take};
 use super::plan::relative_path;
 use super::{PlanArgs, SelectedTest, TestFramework, TestPlan, TestPlanGroupResult, Warning};
 use anyhow::Result;
@@ -9,10 +7,13 @@ use no_mistakes::codebase::dependencies::graph::DepGraph;
 use no_mistakes::codebase::test_filter::TestFileFilter;
 use no_mistakes::config::v2::schema::{
     NoMistakesConfig, Project, TestPlanEnvironment, TestPlanGroup, TestPlanGroupType,
-    TestPlanLimit, TestPlanProjectDependency,
+    TestPlanIgnoredChangedTestsFramework, TestPlanLimit, TestPlanProjectDependency,
 };
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
+
+mod fallback;
+use fallback::{fallback_plan, FallbackRequest};
 
 pub(crate) fn generate_configured_plan(
     args: &PlanArgs,
@@ -33,56 +34,55 @@ pub(crate) fn generate_configured_plan(
 
     if effective_global_config_fallback(&env, args) {
         if let Some((reason, trigger_file)) = forced_fallback.as_ref() {
-            return Ok(TestPlan {
-                selected_tests: selected_from_paths(
-                    root,
-                    &all_tests,
-                    "global configuration",
-                    Some(trigger_file),
-                ),
-                groups: vec![TestPlanGroupResult {
-                    r#type: "global".to_string(),
-                    ..all_group(root, &all_tests)
-                }],
-                warnings: Vec::new(),
-                fallback_triggered: true,
-                fallback_reason: Some(reason.clone()),
-            });
+            return Ok(fallback_plan(
+                root,
+                &all_tests,
+                FallbackRequest {
+                    group_type: "global",
+                    via: "global configuration",
+                    changed_file: Some(trigger_file),
+                    limit: global_limit,
+                    has_limit: has_global_limit,
+                    reason: reason.clone(),
+                },
+            ));
         }
     }
 
     if env.all {
-        return Ok(TestPlan {
-            selected_tests: selected_from_paths(root, &all_tests, "all", changed_files.first()),
-            groups: vec![all_group(root, &all_tests)],
-            warnings: Vec::new(),
-            fallback_triggered: true,
-            fallback_reason: Some(format!(
-                "{} test plan environment `{}` runs all tests",
-                framework_name(framework),
-                args.environment
-            )),
-        });
+        return Ok(fallback_plan(
+            root,
+            &all_tests,
+            FallbackRequest {
+                group_type: "all",
+                via: "all",
+                changed_file: changed_files.first(),
+                limit: global_limit,
+                has_limit: has_global_limit,
+                reason: format!(
+                    "{} test plan environment `{}` runs all tests",
+                    framework_name(framework),
+                    args.environment
+                ),
+            },
+        ));
     }
 
     if let Some((reason, trigger_file)) =
         dependency_trigger(root, config, framework, changed_files)?
     {
-        return Ok(TestPlan {
-            selected_tests: selected_from_paths(
-                root,
-                &all_tests,
-                "dependency configuration",
-                Some(&trigger_file),
-            ),
-            groups: vec![TestPlanGroupResult {
-                r#type: "dependencies".to_string(),
-                ..all_group(root, &all_tests)
-            }],
-            warnings: Vec::new(),
-            fallback_triggered: true,
-            fallback_reason: Some(reason),
-        });
+        return Ok(fallback_plan(
+            root,
+            &all_tests,
+            FallbackRequest {
+                group_type: "dependencies",
+                via: "dependency configuration",
+                changed_file: Some(&trigger_file),
+                limit: global_limit,
+                has_limit: has_global_limit,
+                reason,
+            },
+        ));
     }
 
     let graph = DepGraph::build(root, tsconfig)?;
@@ -154,18 +154,6 @@ pub(crate) fn generate_configured_plan(
         fallback_triggered: false,
         fallback_reason: None,
     })
-}
-
-fn all_group(root: &Path, all_tests: &[PathBuf]) -> TestPlanGroupResult {
-    TestPlanGroupResult {
-        r#type: "all".to_string(),
-        selected: all_tests
-            .iter()
-            .map(|test| relative_path(root, test))
-            .collect(),
-        remaining: 0,
-        limit: None,
-    }
 }
 
 fn empty_group_result(
@@ -353,29 +341,32 @@ fn fallback_playwright_tests(root: &Path, config: &NoMistakesConfig) -> Vec<Path
         .into_iter()
         .filter(|path| {
             let rel = relative_path(root, path);
-            filter.is_match(root, path)
-                && (rel.contains("/tests/e2e/")
-                    || rel.starts_with("tests/e2e/")
-                    || rel.contains("/playwright/")
-                    || rel.starts_with("playwright/")
-                    || rel.starts_with("specs/"))
+            filter.is_match(root, path) && framework_test_match(TestFramework::Playwright, &rel)
         })
         .collect()
 }
 
 fn framework_test_match(framework: TestFramework, rel: &str) -> bool {
     match framework {
-        TestFramework::Playwright => unreachable!("playwright tests are discovered separately"),
-        TestFramework::Vitest => {
-            let name = rel.rsplit('/').next().unwrap_or(rel);
-            (rel.split('/').any(|component| component == "__tests__")
-                || name.contains(".test.")
-                || name.contains(".spec."))
-                && !rel.split('/').any(|component| component == "playwright")
-                && !has_path_segment_pair(rel, "tests", "e2e")
-                && !rel.starts_with("specs/")
+        TestFramework::Playwright => {
+            rel.contains("/tests/e2e/")
+                || rel.starts_with("tests/e2e/")
+                || rel.contains("/playwright/")
+                || rel.starts_with("playwright/")
+                || rel.starts_with("specs/")
         }
+        TestFramework::Vitest => is_vitest_test_path(rel),
     }
+}
+
+fn is_vitest_test_path(rel: &str) -> bool {
+    let name = rel.rsplit('/').next().unwrap_or(rel);
+    (rel.split('/').any(|component| component == "__tests__")
+        || name.contains(".test.")
+        || name.contains(".spec."))
+        && !rel.split('/').any(|component| component == "playwright")
+        && !has_path_segment_pair(rel, "tests", "e2e")
+        && !rel.starts_with("specs/")
 }
 
 fn has_path_segment_pair(path: &str, first: &str, second: &str) -> bool {
@@ -414,6 +405,9 @@ fn dependency_trigger(
         let globset = compile_globset(&patterns)?;
         for changed in changed_files {
             let rel = relative_path(root, changed);
+            if ignored_changed_test(&rel, &plan.dependencies.ignore_changed_tests) {
+                continue;
+            }
             if globset.as_ref().is_some_and(|set| set.is_match(&rel)) {
                 return Ok(Some((
                     format!("{} project dependency changed: {}", project_name, rel),
@@ -423,6 +417,15 @@ fn dependency_trigger(
         }
     }
     Ok(None)
+}
+
+fn ignored_changed_test(rel: &str, ignored: &[TestPlanIgnoredChangedTestsFramework]) -> bool {
+    ignored.iter().any(|framework| match framework {
+        TestPlanIgnoredChangedTestsFramework::Playwright => {
+            framework_test_match(TestFramework::Playwright, rel)
+        }
+        TestPlanIgnoredChangedTestsFramework::Vitest => is_vitest_test_path(rel),
+    })
 }
 
 fn project_dependency_patterns(
