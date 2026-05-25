@@ -91,6 +91,7 @@ fn has_configured_html_id_via_component_attributes() {
         test_include: vec![],
         test_exclude: vec![],
         ignore_routes: vec![],
+        rewrites: vec![],
         navigation_helpers: vec![],
         selector_attributes: vec![],
         component_selector_attributes: std::collections::BTreeMap::from([(
@@ -113,6 +114,7 @@ fn default_settings(selector_attributes: Vec<String>) -> Settings {
         test_include: vec![],
         test_exclude: vec![],
         ignore_routes: vec![],
+        rewrites: vec![],
         navigation_helpers: vec![],
         selector_attributes,
         component_selector_attributes: BTreeMap::new(),

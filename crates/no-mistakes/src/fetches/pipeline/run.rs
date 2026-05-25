@@ -32,7 +32,12 @@ pub(crate) fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalRep
         );
     }
     let stems = ["page", "route"];
-    let all_routes = routes::collect_routes(&frontend_root, &stems);
+    let mut all_routes = routes::collect_routes(&frontend_root, &stems);
+    if let Ok(v2) = no_mistakes::config::v2::load_v2_config(&root, cli.config.as_deref()) {
+        let view = no_mistakes::config::v2::ConfigView::new(&v2);
+        let virtual_routes = routes::rewrites::expand_rewrites(view.nextjs_rewrites(), &all_routes);
+        all_routes.extend(virtual_routes);
+    }
 
     let mut cache = Cache {
         files: HashMap::new(),

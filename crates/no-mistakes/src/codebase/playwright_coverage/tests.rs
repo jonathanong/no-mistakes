@@ -263,6 +263,34 @@ fn configured_frontend_root_uses_valid_route_options() {
     assert_eq!(frontend_root, root.join("packages/web/app"));
 }
 
+#[test]
+fn report_includes_virtual_routes_from_rewrites() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/nextjs-rewrites/basic"),
+    );
+    let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let frontend_root = root.join("app");
+    let report = collect_report_with_frontend_root(
+        &root,
+        &frontend_root,
+        vec!["tests/e2e/**/*.ts".to_string()],
+        &all_files,
+    )
+    .unwrap();
+    let patterns: Vec<&str> = report.routes.iter().map(|r| r.route.as_str()).collect();
+    assert!(patterns.contains(&"/posts/**"), "missing virtual /posts/**");
+    assert!(
+        patterns.contains(&"/reviews/**"),
+        "missing virtual /reviews/**"
+    );
+    let posts = report
+        .routes
+        .iter()
+        .find(|r| r.route == "/posts/**")
+        .unwrap();
+    assert!(posts.covered);
+}
+
 fn sample_report(uncovered: bool) -> CoverageReport {
     CoverageReport {
         summary: CoverageSummary {

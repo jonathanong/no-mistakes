@@ -13,6 +13,7 @@ pub struct Settings {
     pub test_include: Vec<String>,
     pub test_exclude: Vec<String>,
     pub ignore_routes: Vec<String>,
+    pub rewrites: Vec<crate::config::v2::schema::RewriteRule>,
     pub navigation_helpers: Vec<String>,
     pub selector_attributes: Vec<String>,
     pub component_selector_attributes: BTreeMap<String, String>,

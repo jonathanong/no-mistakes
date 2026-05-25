@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use super::schema::{NoMistakesConfig, Project, ProjectType, RuleDef};
+use super::schema::{NoMistakesConfig, Project, ProjectType, RewriteRule, RuleDef};
 
 /// A read-only lens over a [`NoMistakesConfig`] that surfaces the effective
 /// settings for a specific tool or domain without mutating the underlying
@@ -49,6 +49,16 @@ impl<'a> ConfigView<'a> {
         routes.sort();
         routes.dedup();
         routes
+    }
+
+    /// Rewrites configured on the first `nextjs` project.
+    pub fn nextjs_rewrites(&self) -> &[RewriteRule] {
+        self.config
+            .projects
+            .values()
+            .find(|p| p.type_ == Some(ProjectType::Nextjs))
+            .map(|p| p.rewrites.as_slice())
+            .unwrap_or(&[])
     }
 
     /// The first `nextjs` project's root path (or `"app"` if none configured).

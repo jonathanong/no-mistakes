@@ -50,6 +50,7 @@ struct GraphConfigOptions {
     http_call: crate::codebase::config::HttpCallOptions,
     project_route_globset: Option<GlobSet>,
     test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
+    rewrites: Vec<crate::config::v2::schema::RewriteRule>,
 }
 
 fn graph_config_options(root: &Path) -> Option<GraphConfigOptions> {
@@ -63,6 +64,10 @@ fn graph_config_options(root: &Path) -> Option<GraphConfigOptions> {
     let test_filter = v2_config
         .as_ref()
         .map(|config| crate::codebase::test_filter::TestFileFilter::new(root, config));
+    let rewrites = v2_config
+        .as_ref()
+        .map(|c| ConfigView::new(c).nextjs_rewrites().to_vec())
+        .unwrap_or_default();
     Some(GraphConfigOptions {
         route: config.rule_options("route-consistency"),
         queue: config.rule_options("queue-dashboard-reachability"),
@@ -70,6 +75,7 @@ fn graph_config_options(root: &Path) -> Option<GraphConfigOptions> {
         http_call: config.rule_options("http-call-static-paths"),
         project_route_globset,
         test_filter,
+        rewrites,
     })
 }
 

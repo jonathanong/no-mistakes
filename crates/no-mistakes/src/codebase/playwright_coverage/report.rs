@@ -4,7 +4,13 @@ fn collect_report_with_frontend_root(
     test_globs: Vec<String>,
     all_files: &[PathBuf],
 ) -> Result<CoverageReport> {
-    let routes = defs_frontend::collect_frontend_routes_from_files(frontend_root, all_files);
+    let mut routes = defs_frontend::collect_frontend_routes_from_files(frontend_root, all_files);
+    if let Ok(v2) = crate::config::v2::load_v2_config(root, None) {
+        let view = crate::config::v2::ConfigView::new(&v2);
+        let virtual_routes =
+            crate::routes::rewrites::expand_rewrites_as_tuples(view.nextjs_rewrites(), &routes);
+        routes.extend(virtual_routes);
+    }
     let visits: Vec<(String, String)> = collect_playwright_visits(root, &test_globs, all_files)?
         .into_iter()
         .map(|visit| (visit.url, relative_string(root, &visit.file)))
