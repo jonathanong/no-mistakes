@@ -317,3 +317,75 @@ fn empty_project_rule_target_matches_everything_under_project_root() {
 
     assert!(filter.is_match("src/not-a-test.ts"));
 }
+
+#[test]
+fn project_rule_target_prefixes_default_include_and_exclude_with_root() {
+    let mut config = NoMistakesConfig::default();
+    config.projects.insert(
+        "tests".to_string(),
+        Project {
+            root: Some("tests".to_string()),
+            exclude: vec!["bad.test.mts".to_string()],
+            ..Default::default()
+        },
+    );
+    config.rules.push(RuleDef {
+        rule: super::super::super::RULE_ID.to_string(),
+        projects: vec!["tests".to_string()],
+        ..Default::default()
+    });
+
+    let filter = test_filter(Path::new("."), &config).unwrap();
+
+    assert!(filter.is_match("tests/good.test.mts"));
+    assert!(!filter.is_match("tests/bad.test.mts"));
+    assert!(!filter.is_match("src/good.test.mts"));
+}
+
+#[test]
+fn project_rule_target_keeps_root_exclude_unprefixed() {
+    let mut config = NoMistakesConfig::default();
+    config.projects.insert(
+        "tests".to_string(),
+        Project {
+            root: Some(".".to_string()),
+            exclude: vec!["src/generated.test.mts".to_string()],
+            ..Default::default()
+        },
+    );
+    config.rules.push(RuleDef {
+        rule: super::super::super::RULE_ID.to_string(),
+        projects: vec!["tests".to_string()],
+        ..Default::default()
+    });
+
+    let filter = test_filter(Path::new("."), &config).unwrap();
+
+    assert!(filter.is_match("src/good.test.mts"));
+    assert!(!filter.is_match("src/generated.test.mts"));
+}
+
+#[test]
+fn project_rule_target_prefixes_rule_filters_with_project_root() {
+    let mut config = NoMistakesConfig::default();
+    config.projects.insert(
+        "tests".to_string(),
+        Project {
+            root: Some("tests".to_string()),
+            ..Default::default()
+        },
+    );
+    config.rules.push(RuleDef {
+        rule: super::super::super::RULE_ID.to_string(),
+        projects: vec!["tests".to_string()],
+        include: vec!["good.test.mts".to_string()],
+        exclude: vec!["generated.test.mts".to_string()],
+        ..Default::default()
+    });
+
+    let filter = test_filter(Path::new("."), &config).unwrap();
+
+    assert!(filter.is_match("tests/good.test.mts"));
+    assert!(!filter.is_match("tests/generated.test.mts"));
+    assert!(!filter.is_match("tests/other.test.mts"));
+}

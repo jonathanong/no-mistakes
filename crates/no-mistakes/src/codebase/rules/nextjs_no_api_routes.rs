@@ -105,13 +105,17 @@ where
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let target_roots = super::target_roots(root, config, rule);
+        let filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
         findings.extend(
             items
                 .par_iter()
                 .filter_map(|item| {
                     let path = path_for(item);
                     let source = source_for(item);
-                    finding_for_file(root, &target_roots, path, source)
+                    filter
+                        .is_match(path)
+                        .then(|| finding_for_file(root, &target_roots, path, source))
+                        .flatten()
                 })
                 .collect::<Vec<_>>(),
         );

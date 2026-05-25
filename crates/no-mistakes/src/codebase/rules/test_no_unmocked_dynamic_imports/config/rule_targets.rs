@@ -6,6 +6,9 @@ use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
+mod path_patterns;
+use path_patterns::{append_project_globs, append_rule_globs};
+
 pub(super) fn rule_test_project_globs(
     root: &Path,
     config: &NoMistakesConfig,
@@ -36,6 +39,7 @@ pub(super) fn rule_test_project_globs(
         &playwright_project_names,
     )?;
     for rule in rules {
+        append_rule_globs(config, rule, &mut includes, &mut excludes);
         for project_name in &rule.tests.vitest {
             append_test_project_globs(
                 Framework::Vitest,
@@ -55,7 +59,7 @@ pub(super) fn rule_test_project_globs(
             )?;
         }
         for project_name in &rule.projects {
-            append_project_includes(config, project_name, &mut includes);
+            append_project_globs(config, rule, project_name, &mut includes, &mut excludes);
         }
     }
     includes.sort();
@@ -134,31 +138,4 @@ fn append_test_project_globs(
 fn test_project_matches(project: &ConfigProject, project_name: &str) -> bool {
     project.name.as_deref() == Some(project_name)
         || (project.name.is_none() && project_name == "default")
-}
-
-fn append_project_includes(
-    config: &NoMistakesConfig,
-    project_name: &str,
-    includes: &mut Vec<String>,
-) {
-    let Some(project) = config.projects.get(project_name) else {
-        return;
-    };
-    let root = project.root.as_deref().unwrap_or(".").trim_matches('/');
-    let project_includes = if project.include.is_empty() {
-        vec!["**".to_string()]
-    } else {
-        project.include.clone()
-    };
-    for include in project_includes {
-        if root.is_empty() || root == "." {
-            includes.push(include);
-        } else {
-            includes.push(format!(
-                "{}/{}",
-                root.trim_start_matches("./"),
-                include.trim_start_matches("./")
-            ));
-        }
-    }
 }

@@ -83,6 +83,7 @@ fn check_rule(
     let tsconfig = resolve_tsconfig(&project_root, tsconfig_path)?;
     let resolver = ImportResolver::new(&tsconfig);
     let opts: Options = rule.rule_options();
+    let rule_filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
     let include = GlobMatcher::new(&opts.include)?;
     let exclude = GlobMatcher::new(&opts.exclude)?;
     let story_patterns = effective_story_patterns(root, &project_root, config, &opts);
@@ -98,7 +99,10 @@ fn check_rule(
         &include,
         &exclude,
         &test_filter,
-    );
+    )
+    .into_iter()
+    .filter(|component| rule_filter.is_match(&component.file))
+    .collect::<Vec<_>>();
     let component_keys: HashSet<String> = components.iter().map(|c| c.key.clone()).collect();
     let all_component_keys = all_react_component_keys(&project_root, shared);
     let story_files = reachable_story_files(
@@ -167,6 +171,7 @@ fn check_rule(
         });
     }
 
+    findings.retain(|finding| rule_filter.is_match(&root.join(&finding.file)));
     Ok(findings)
 }
 

@@ -1,0 +1,8 @@
+projects:
+  web:
+    root: src
+rules:
+  - rule: unique-exports
+    projects: [web]
+    exclude:
+      - "**/*.stories.tsx"

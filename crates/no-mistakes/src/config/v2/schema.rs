@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 mod rule_targets;
+mod string_or_list;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
@@ -33,6 +34,7 @@ pub struct Project {
     pub type_: Option<ProjectType>,
     pub root: Option<String>,
     pub include: Vec<String>,
+    pub exclude: Vec<String>,
     pub routes: Vec<String>,
     pub queues: QueueConfig,
 }
@@ -119,15 +121,6 @@ pub enum StringOrList {
     Many(Vec<String>),
 }
 
-impl StringOrList {
-    pub fn values(&self) -> Vec<String> {
-        match self {
-            Self::One(s) => vec![s.clone()],
-            Self::Many(v) => v.clone(),
-        }
-    }
-}
-
 /// A configured rule application.
 ///
 /// Unlike ESLint-style rule maps, no-mistakes rules are reusable applications:
@@ -144,6 +137,8 @@ pub struct RuleDef {
     pub projects: Vec<String>,
     pub tests: RuleTestTargets,
     pub scope: Option<RuleScope>,
+    pub include: Vec<String>,
+    pub exclude: Vec<String>,
     #[serde(default = "empty_options")]
     pub options: serde_yaml::Value,
 }
@@ -158,6 +153,8 @@ impl Default for RuleDef {
             projects: Vec::new(),
             tests: RuleTestTargets::default(),
             scope: None,
+            include: Vec::new(),
+            exclude: Vec::new(),
             options: empty_options(),
         }
     }

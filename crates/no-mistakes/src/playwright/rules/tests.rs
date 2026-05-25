@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::rules::RuleFinding;
 use crate::config::v2::schema::{RuleDef, RuleScope, RuleTestTargets, StringOrList};
 use crate::playwright::test_support::fixture_path;
 use std::fs;
@@ -240,5 +241,71 @@ fn fact_plan_merges_test_id_attributes_for_shared_target_files() {
     assert_eq!(
         attributes,
         &vec!["data-a".to_string(), "data-b".to_string()]
+    );
+}
+
+#[test]
+fn filter_rule_findings_applies_path_filters_per_playwright_rule() {
+    let root = std::path::Path::new("/repo");
+    let config = NoMistakesConfig {
+        rules: vec![
+            RuleDef {
+                rule: PLAYWRIGHT_UNIQUE_TEST_IDS.to_string(),
+                scope: Some(RuleScope::Repository),
+                exclude: vec!["tests/generated/**".to_string()],
+                ..RuleDef::default()
+            },
+            RuleDef {
+                rule: PLAYWRIGHT_UNIQUE_HTML_IDS.to_string(),
+                scope: Some(RuleScope::Repository),
+                include: vec!["tests/pages/**".to_string()],
+                ..RuleDef::default()
+            },
+        ],
+        ..NoMistakesConfig::default()
+    };
+    let findings = vec![
+        RuleFinding {
+            rule: PLAYWRIGHT_UNIQUE_TEST_IDS.to_string(),
+            file: "tests/login.spec.ts".to_string(),
+            line: 1,
+            message: "duplicate test id".to_string(),
+            import: None,
+            target: None,
+        },
+        RuleFinding {
+            rule: PLAYWRIGHT_UNIQUE_TEST_IDS.to_string(),
+            file: "tests/generated/login.spec.ts".to_string(),
+            line: 1,
+            message: "duplicate test id".to_string(),
+            import: None,
+            target: None,
+        },
+        RuleFinding {
+            rule: PLAYWRIGHT_UNIQUE_HTML_IDS.to_string(),
+            file: "tests/pages/home.spec.ts".to_string(),
+            line: 1,
+            message: "duplicate html id".to_string(),
+            import: None,
+            target: None,
+        },
+        RuleFinding {
+            rule: PLAYWRIGHT_UNIQUE_HTML_IDS.to_string(),
+            file: "tests/components/button.spec.ts".to_string(),
+            line: 1,
+            message: "duplicate html id".to_string(),
+            import: None,
+            target: None,
+        },
+    ];
+
+    let filtered = filter::filter_rule_findings(root, &config, findings).unwrap();
+
+    assert_eq!(
+        filtered
+            .iter()
+            .map(|finding| finding.file.as_str())
+            .collect::<Vec<_>>(),
+        vec!["tests/pages/home.spec.ts", "tests/login.spec.ts"]
     );
 }

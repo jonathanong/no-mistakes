@@ -44,7 +44,18 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
             if opts.tsconfig.as_os_str().is_empty() || opts.mappings.is_empty() {
                 return Ok(vec![]);
             }
-            check_tsconfig(root, &opts)
+            let mut filtered = Vec::new();
+            for finding in check_tsconfig(root, &opts)? {
+                if super::path_filter::rule_matches_file(
+                    root,
+                    config,
+                    rule,
+                    &root.join(&finding.file),
+                )? {
+                    filtered.push(finding);
+                }
+            }
+            Ok(filtered)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();

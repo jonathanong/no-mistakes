@@ -11,6 +11,7 @@ pub struct ProjectConfig {
     pub type_: Option<ProjectType>,
     pub root: Option<String>,
     pub include: Vec<String>,
+    pub exclude: Vec<String>,
     pub rules: Vec<String>,
 }
 

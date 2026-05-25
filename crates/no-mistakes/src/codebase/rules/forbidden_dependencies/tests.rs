@@ -1,5 +1,5 @@
 use super::*;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -7,6 +7,18 @@ fn fixture(name: &str) -> PathBuf {
             .join("../../fixtures/codebase-analysis")
             .join(name),
     )
+}
+
+fn check_application(root: &Path, opts: &Options, graph: &DepGraph) -> Result<Vec<RuleFinding>> {
+    let config = NoMistakesConfig {
+        rules: vec![crate::config::v2::schema::RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(crate::config::v2::schema::RuleScope::Repository),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    check_rule_application(root, &config, &config.rules[0], opts, graph)
 }
 
 #[test]

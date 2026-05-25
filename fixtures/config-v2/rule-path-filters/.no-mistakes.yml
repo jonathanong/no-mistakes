@@ -1,0 +1,14 @@
+projects:
+  web:
+    root: web
+    include:
+      - src/**
+    exclude:
+      - "**/*.stories.tsx"
+rules:
+  - rule: unique-exports
+    projects: [web]
+    include:
+      - "**/*.ts"
+    exclude:
+      - generated/**

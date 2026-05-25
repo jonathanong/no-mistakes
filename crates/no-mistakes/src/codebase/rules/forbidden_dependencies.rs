@@ -36,8 +36,8 @@ pub fn check(
     let tsconfig = resolve_tsconfig(root, tsconfig_path)?;
     let graph = DepGraph::build_with_plan(root, &tsconfig, plan)?;
     let mut findings = Vec::new();
-    for opts in &opts_list {
-        findings.extend(check_application(root, opts, &graph)?);
+    for (rule, opts) in applications.iter().zip(opts_list.iter()) {
+        findings.extend(check_rule_application(root, config, rule, opts, &graph)?);
     }
     super::sort_findings(&mut findings);
     Ok(findings)
@@ -74,8 +74,10 @@ fn union_allowed_set(opts_list: &[Options]) -> Option<HashSet<EdgeKind>> {
     }
 }
 
-pub(crate) fn check_application(
+fn check_rule_application(
     root: &Path,
+    config: &NoMistakesConfig,
+    rule: &crate::config::v2::schema::RuleDef,
     opts: &Options,
     graph: &DepGraph,
 ) -> Result<Vec<RuleFinding>> {
@@ -121,11 +123,15 @@ pub(crate) fn check_application(
         }
     };
     let allowed = relationship_filter(&opts.relationships);
+    let source_filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
     let mut findings = Vec::new();
     for root_str in &opts.roots {
         let Some(resolved_path) = resolve_root_path(root, root_str) else {
             continue;
         };
+        if !source_filter.is_match(&resolved_path) {
+            continue;
+        }
         let file = resolved_path
             .strip_prefix(root)
             .unwrap_or(&resolved_path)

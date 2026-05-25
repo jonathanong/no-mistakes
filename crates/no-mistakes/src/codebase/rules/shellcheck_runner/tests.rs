@@ -1,3 +1,4 @@
+use super::candidates::{collect_shell_files, filtered_shell_files, has_bash_shebang};
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -316,6 +317,32 @@ fn collect_shell_files_respects_target_roots() {
         vec![inside],
         "shell_files outside target_roots should be excluded"
     );
+}
+
+#[test]
+fn explicit_shell_files_respect_rule_path_filters() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    let included = root.join("scripts/run.sh");
+    let excluded = root.join("scripts/generated.sh");
+    std::fs::create_dir_all(root.join("scripts")).unwrap();
+    std::fs::write(&included, "#!/bin/bash\necho hi\n").unwrap();
+    std::fs::write(&excluded, "#!/bin/bash\necho generated\n").unwrap();
+    let opts = Options {
+        shell_files: vec![
+            "scripts/run.sh".to_string(),
+            "scripts/generated.sh".to_string(),
+        ],
+        ..Default::default()
+    };
+    let mut config = config_with_rule("{shellcheck: {severity: warning}}");
+    config.rules[0].exclude = vec!["scripts/generated.sh".to_string()];
+    let rule_filter =
+        super::super::path_filter::RulePathFilter::new(root, &config, &config.rules[0]).unwrap();
+
+    let candidates = filtered_shell_files(root, &opts, &[], &[], &rule_filter);
+
+    assert_eq!(candidates, vec![included]);
 }
 
 #[test]

@@ -63,10 +63,10 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings: Vec<RuleFinding> = config
+    let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
-        .flat_map(|rule| {
+        .map(|rule| -> Result<Vec<RuleFinding>> {
             let opts: Options = rule.rule_options();
             let target_roots = super::target_roots(root, config, rule);
             let files: Vec<PathBuf> = all_files
@@ -74,9 +74,11 @@ pub(crate) fn check_with_files(
                 .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
                 .cloned()
                 .collect();
-            scan(root, &opts, &files)
+            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+            Ok(scan(root, &opts, &files))
         })
         .collect();
+    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
     super::sort_findings(&mut findings);
     Ok(findings)
 }
