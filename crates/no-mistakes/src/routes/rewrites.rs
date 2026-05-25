@@ -4,9 +4,11 @@ use crate::playwright::matcher;
 use std::path::PathBuf;
 
 pub fn normalize_nextjs_pattern(pattern: &str) -> String {
-    let raw = pattern
+    let without_query = pattern.split('?').next().unwrap_or(pattern);
+    let without_fragment = without_query.split('#').next().unwrap_or(without_query);
+    let raw = without_fragment
         .strip_prefix('/')
-        .unwrap_or(pattern)
+        .unwrap_or(without_fragment)
         .trim_end_matches('/');
     if raw.is_empty() {
         return "/".to_string();

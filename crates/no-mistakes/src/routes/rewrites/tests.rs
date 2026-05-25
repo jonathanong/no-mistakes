@@ -34,6 +34,16 @@ fn normalize_literal_only() {
 }
 
 #[test]
+fn normalize_strips_query_and_fragment() {
+    assert_eq!(
+        normalize_nextjs_pattern("/posts/:slug?foo=1"),
+        "/posts/:slug"
+    );
+    assert_eq!(normalize_nextjs_pattern("/posts/:slug#top"), "/posts/:slug");
+    assert_eq!(normalize_nextjs_pattern("/posts/:slug*?q=1"), "/posts/**");
+}
+
+#[test]
 fn normalize_trailing_slash_stripped() {
     assert_eq!(normalize_nextjs_pattern("/posts/:slug*/"), "/posts/**");
 }
