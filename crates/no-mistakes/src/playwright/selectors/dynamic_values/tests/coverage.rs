@@ -67,9 +67,7 @@ fn call_identifier_name_non_identifier_returns_none() {
         for stmt in &program.body {
             if let oxc_ast::ast::Statement::VariableDeclaration(decl) = stmt {
                 for d in &decl.declarations {
-                    if let Some(oxc_ast::ast::Expression::CallExpression(call)) =
-                        d.init.as_ref()
-                    {
+                    if let Some(oxc_ast::ast::Expression::CallExpression(call)) = d.init.as_ref() {
                         let result = call_identifier_name(&call.callee);
                         assert!(result.is_none());
                     }
