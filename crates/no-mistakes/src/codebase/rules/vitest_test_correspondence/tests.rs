@@ -493,3 +493,56 @@ fn stem_suffix_strip_source_to_test_finds_suffixed_test() {
         "page.tsx should find page.mock.test.tsx as corresponding test: {findings:?}"
     );
 }
+
+#[test]
+fn stem_suffix_not_matching_base_does_not_crash() {
+    // Exercises the strip_suffix None branch: suffix ".generated" doesn't match
+    // base "page" so strip_suffix returns None and no extra candidates are added.
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    std::fs::create_dir_all(root.join("backend/mod")).unwrap();
+    std::fs::write(root.join("backend/mod/page.tsx"), "export {};\n").unwrap();
+    std::fs::write(
+        root.join("backend/mod/page.test.tsx"),
+        "test('m', () => {});\n",
+    )
+    .unwrap();
+    let config = config_with_rule(
+        "{scopes: [backend], testExtensions: [\".test.tsx\"], testsDir: __tests__, stemSuffixesToStrip: [\".generated\"]}",
+    );
+    let findings = check(root, &config).unwrap();
+    assert!(
+        findings.is_empty(),
+        "non-matching suffix should not affect a normal passing case: {findings:?}"
+    );
+}
+
+#[test]
+fn stem_suffix_source_to_test_in_tests_dir() {
+    // Exercises helpers.rs the tdir_p branch: the suffixed test lives in __tests__/
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    std::fs::create_dir_all(root.join("backend/mod/__tests__")).unwrap();
+    std::fs::write(root.join("backend/mod/page.tsx"), "export {};\n").unwrap();
+    std::fs::write(
+        root.join("backend/mod/__tests__/page.mock.test.tsx"),
+        "test('m', () => {});\n",
+    )
+    .unwrap();
+    let config = config_with_rule(
+        "{scopes: [backend], testExtensions: [\".test.tsx\"], testsDir: __tests__, direction: source-to-test, stemSuffixesToStrip: [\".mock\"]}",
+    );
+    let findings = check_with_files(
+        root,
+        &config,
+        &[
+            root.join("backend/mod/page.tsx"),
+            root.join("backend/mod/__tests__/page.mock.test.tsx"),
+        ],
+    )
+    .unwrap();
+    assert!(
+        findings.is_empty(),
+        "page.tsx should find __tests__/page.mock.test.tsx: {findings:?}"
+    );
+}

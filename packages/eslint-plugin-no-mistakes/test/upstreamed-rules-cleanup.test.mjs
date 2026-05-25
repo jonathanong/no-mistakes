@@ -139,5 +139,15 @@ describe("upstreamed generic cleanup registry scoping", () => {
       ),
       ["shared"],
     );
+    assert.deepEqual(
+      messages(
+        fixture("shared-state-test-beforeall.valid.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "shared-state-test-beforeall.valid.test.ts",
+      ),
+      [],
+      "test.beforeAll member-access form should not flag assignments",
+    );
   });
 });

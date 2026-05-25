@@ -2,6 +2,7 @@
 
 const TEST_CALLEES = new Set(["it", "test", "describe"]);
 const SETUP_CALLEES = new Set(["beforeEach", "afterEach", "beforeAll", "afterAll"]);
+const PER_TEST_CALLEES = new Set(["beforeEach", "afterEach"]);
 const MUTATING_METHODS = new Set(
   "add clear copyWithin delete fill pop push reverse set shift sort splice unshift".split(" "),
 );
@@ -25,11 +26,10 @@ function isTestCall(node) {
 
 function setupCallbackKind(node) {
   const name = calleeName(node.callee);
-  return name === "beforeEach" || name === "afterEach"
-    ? "per-test"
-    : name === "beforeAll" || name === "afterAll"
-      ? "once"
-      : null;
+  if (SETUP_CALLEES.has(name)) return PER_TEST_CALLEES.has(name) ? "per-test" : "once";
+  if (node.callee.type !== "MemberExpression") return null;
+  const p = node.callee.property.name;
+  return PER_TEST_CALLEES.has(p) ? "per-test" : SETUP_CALLEES.has(p) ? "once" : null;
 }
 
 function isSetupCall(node) {
