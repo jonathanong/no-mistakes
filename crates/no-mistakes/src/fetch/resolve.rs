@@ -52,3 +52,39 @@ pub fn is_client_route_file(path: &Path) -> anyhow::Result<bool> {
             .any(|directive| directive.directive == "use client")
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+
+    #[test]
+    fn test_is_client_route_file_non_existent() {
+        let path = Path::new("this_file_does_not_exist.ts");
+        assert!(!is_client_route_file(path).unwrap());
+    }
+
+    #[test]
+    fn test_is_client_route_file_with_use_client_double_quotes() {
+        let mut file = tempfile::Builder::new().suffix(".tsx").tempfile().unwrap();
+        writeln!(file, "\"use client\";\n\nexport default function Page() {{}}").unwrap();
+
+        assert!(is_client_route_file(file.path()).unwrap());
+    }
+
+    #[test]
+    fn test_is_client_route_file_without_use_client() {
+        let mut file = tempfile::Builder::new().suffix(".tsx").tempfile().unwrap();
+        writeln!(file, "export default function Page() {{}}").unwrap();
+
+        assert!(!is_client_route_file(file.path()).unwrap());
+    }
+
+    #[test]
+    fn test_is_client_route_file_with_use_client_single_quotes() {
+        let mut file = tempfile::Builder::new().suffix(".tsx").tempfile().unwrap();
+        writeln!(file, "'use client';\n\nexport default function Page() {{}}").unwrap();
+
+        assert!(is_client_route_file(file.path()).unwrap());
+    }
+}
