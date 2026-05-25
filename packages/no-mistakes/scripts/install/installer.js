@@ -61,9 +61,14 @@ async function install(binName, repository, options = {}) {
   } catch {
     throw new Error(`Invalid base URL: ${baseUrl}`);
   }
+  const baseUrlInput = String(baseUrl);
+  const baseUrlString = url.href.replace(/\/$/, "");
 
   if (url.protocol === "file:") {
-    if (!baseUrl.startsWith("file://") || (url.hostname !== "" && url.hostname !== "localhost")) {
+    if (
+      !baseUrlInput.startsWith("file://") ||
+      (url.hostname !== "" && url.hostname !== "localhost")
+    ) {
       throw new Error(`Untrusted base URL: ${baseUrl}`);
     }
   } else if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
@@ -88,11 +93,11 @@ async function install(binName, repository, options = {}) {
 
   try {
     console.log(`Downloading ${binName} v${version} for ${target}...`);
-    await download(`${baseUrl}/${asset}`, temp);
+    await download(`${baseUrlString}/${asset}`, temp);
 
     let checksumText;
     try {
-      checksumText = await fetchText(`${baseUrl}/${asset}.sha256`);
+      checksumText = await fetchText(`${baseUrlString}/${asset}.sha256`);
     } catch (e) {
       throw new Error(`Failed to fetch checksum for ${asset}: ${e.message}`);
     }

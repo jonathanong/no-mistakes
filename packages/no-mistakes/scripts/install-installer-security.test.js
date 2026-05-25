@@ -23,6 +23,10 @@ function assetBaseUrl(root) {
   return pathToFileURL(join(root, "assets")).toString();
 }
 
+function assetBaseUrlObject(root) {
+  return pathToFileURL(join(root, "assets"));
+}
+
 const binName = "no-mistakes";
 const version = "9.8.7";
 
@@ -115,6 +119,25 @@ test("wraps checksum download failures", async () => {
   try {
     await assert.rejects(
       () => install({ baseUrl: assetBaseUrl(root), target, vendorDir, version }),
+      /Failed to fetch checksum/,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("accepts URL object base URLs", async () => {
+  const root = await mkdtemp(join(tmpdir(), "no-mistakes-url-object-"));
+  const vendorDir = join(root, "vendor");
+  const target = "x86_64-unknown-linux-gnu";
+  const asset = assetName(version, target);
+
+  await mkdir(join(root, "assets"));
+  await writeFile(join(root, "assets", asset), "binary");
+
+  try {
+    await assert.rejects(
+      () => install({ baseUrl: assetBaseUrlObject(root), target, vendorDir, version }),
       /Failed to fetch checksum/,
     );
   } finally {
