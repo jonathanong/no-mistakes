@@ -54,6 +54,15 @@ async function install(binName, repository, options = {}) {
 
   const asset = assetName(binName, version, target, options.assetExtension);
   const baseUrl = options.baseUrl || releaseBaseUrl(repository, version, options.envVar);
+
+  const parsedUrl = new URL(baseUrl);
+  const allowedHosts = ["github.com", "127.0.0.1", "example.test"];
+  if (parsedUrl.protocol !== "file:" && !allowedHosts.includes(parsedUrl.hostname)) {
+    throw new Error(
+      `Invalid release base URL: ${baseUrl}. Allowed hosts are: ${allowedHosts.join(", ")}`,
+    );
+  }
+
   const temp = `${destination}.tmp-${process.pid}`;
 
   await mkdir(vendorDir, { recursive: true });
