@@ -18,16 +18,17 @@ pub(super) fn fallback_plan(
     all_tests: &[PathBuf],
     request: FallbackRequest<'_>,
 ) -> TestPlan {
+    let effective_limit = request.limit.min(all_tests.len());
     let selected_tests = stable_take(
         selected_from_paths(root, all_tests, request.via, request.changed_file),
-        request.limit.min(all_tests.len()),
+        effective_limit,
     );
     let group = fallback_group(
         root,
         request.group_type,
         all_tests,
         &selected_tests,
-        request.has_limit.then_some(request.limit),
+        request.has_limit.then_some(effective_limit),
     );
     TestPlan {
         selected_tests,

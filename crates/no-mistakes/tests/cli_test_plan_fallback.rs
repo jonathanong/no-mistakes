@@ -33,6 +33,30 @@ fn test_plan_vitest_project_dependency_fallback_honors_file_limit() {
 }
 
 #[test]
+fn test_plan_vitest_project_dependency_fallback_clamps_reported_limit() {
+    let root = fixture("test-plan-config");
+    let output = run(&[
+        "test",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "web/app/page.tsx",
+        "--limit-files",
+        "10",
+        "--json",
+    ]);
+
+    assert!(output.status.success());
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(plan["fallback_triggered"], true);
+    assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 2);
+    assert_eq!(plan["groups"][0]["limit"], 2);
+    assert_eq!(plan["groups"][0]["remaining"], 0);
+}
+
+#[test]
 fn test_plan_vitest_project_dependency_fallback_honors_percent_limit() {
     let root = fixture("test-plan-config");
     let output = run(&[
