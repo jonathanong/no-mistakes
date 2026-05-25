@@ -67,8 +67,7 @@ pub(super) fn analyze_with_policy_and_optional_facts(
     let route_root = root.join(&settings.frontend_root);
     let mut routes = routes::collect_routes(&route_root);
     if !settings.rewrites.is_empty() {
-        let virtual_routes =
-            crate::routes::rewrites::expand_rewrites(&settings.rewrites, &routes);
+        let virtual_routes = crate::routes::rewrites::expand_rewrites(&settings.rewrites, &routes);
         routes.extend(virtual_routes);
     }
     if require_routes && routes.is_empty() {

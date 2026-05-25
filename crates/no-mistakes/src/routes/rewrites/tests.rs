@@ -30,10 +30,7 @@ fn normalize_root() {
 
 #[test]
 fn normalize_literal_only() {
-    assert_eq!(
-        normalize_nextjs_pattern("/about/team"),
-        "/about/team"
-    );
+    assert_eq!(normalize_nextjs_pattern("/about/team"), "/about/team");
 }
 
 #[test]
@@ -46,26 +43,17 @@ fn contained_literal_matches_param() {
 
 #[test]
 fn contained_param_matches_param() {
-    assert!(destination_contained_by_route(
-        &[":slug"],
-        &[":id"]
-    ));
+    assert!(destination_contained_by_route(&[":slug"], &[":id"]));
 }
 
 #[test]
 fn contained_param_does_not_match_literal() {
-    assert!(!destination_contained_by_route(
-        &[":slug"],
-        &["posts"]
-    ));
+    assert!(!destination_contained_by_route(&[":slug"], &["posts"]));
 }
 
 #[test]
 fn contained_literal_must_equal() {
-    assert!(!destination_contained_by_route(
-        &["posts"],
-        &["reviews"]
-    ));
+    assert!(!destination_contained_by_route(&["posts"], &["reviews"]));
 }
 
 #[test]

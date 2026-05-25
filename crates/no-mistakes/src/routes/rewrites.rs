@@ -1,6 +1,6 @@
+use super::Route;
 use crate::config::v2::schema::RewriteRule;
 use crate::playwright::matcher;
-use super::Route;
 use std::path::PathBuf;
 
 pub fn normalize_nextjs_pattern(pattern: &str) -> String {
@@ -80,10 +80,7 @@ pub fn destination_contained_by_route(dest: &[&str], route: &[&str]) -> bool {
     di == dest.len()
 }
 
-pub fn expand_rewrites(
-    rewrites: &[RewriteRule],
-    real_routes: &[Route],
-) -> Vec<Route> {
+pub fn expand_rewrites(rewrites: &[RewriteRule], real_routes: &[Route]) -> Vec<Route> {
     let mut virtual_routes = Vec::new();
     let route_segments: Vec<Vec<String>> = real_routes
         .iter()
@@ -103,8 +100,7 @@ pub fn expand_rewrites(
         }
         let dest_segs = matcher::pattern_segments(&norm_dest);
         for (i, real) in real_routes.iter().enumerate() {
-            let route_segs: Vec<&str> =
-                route_segments[i].iter().map(String::as_str).collect();
+            let route_segs: Vec<&str> = route_segments[i].iter().map(String::as_str).collect();
             if destination_contained_by_route(&dest_segs, &route_segs) {
                 virtual_routes.push(Route {
                     file: real.file.clone(),
@@ -114,9 +110,7 @@ pub fn expand_rewrites(
         }
     }
 
-    virtual_routes.sort_by(|a, b| {
-        a.pattern.cmp(&b.pattern).then_with(|| a.file.cmp(&b.file))
-    });
+    virtual_routes.sort_by(|a, b| a.pattern.cmp(&b.pattern).then_with(|| a.file.cmp(&b.file)));
     virtual_routes.dedup_by(|a, b| a.pattern == b.pattern && a.file == b.file);
     virtual_routes
 }

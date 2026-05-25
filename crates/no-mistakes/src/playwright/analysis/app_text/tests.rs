@@ -96,64 +96,19 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
     assert!(targets.iter().any(|target| {
         target.kind == AppTextKind::AccessibleName && target.text == "Company logo"
     }));
-    assert!(targets.iter().any(|target| {
-        target.text == "Save"
-            && target
-                .selector_refs
-                .iter()
-                .any(|selector| selector.value == "save-button")
+    assert!(has_selector(&targets, "Save", "save-button"));
+    assert!(!targets.iter().any(|t| {
+        t.text == "Save changes"
+            && t.kind == AppTextKind::AccessibleName
+            && t.selector_refs.iter().any(|s| s.value == "save-button")
     }));
-    assert!(!targets.iter().any(|target| {
-        target.text == "Save changes"
-            && target.kind == AppTextKind::AccessibleName
-            && target
-                .selector_refs
-                .iter()
-                .any(|selector| selector.value == "save-button")
-    }));
-    assert!(targets.iter().any(|target| {
-        target.text == "Template child"
-            && target
-                .selector_refs
-                .iter()
-                .any(|selector| selector.value == "template-button")
-    }));
-    assert!(targets.iter().any(|target| {
-        target.text == "Template aria"
-            && target
-                .selector_refs
-                .iter()
-                .any(|selector| selector.value == "template-aria")
-    }));
+    assert!(has_selector(&targets, "Template child", "template-button"));
+    assert!(has_selector(&targets, "Template aria", "template-aria"));
     assert!(targets.iter().any(|target| target.text == "String child"));
-    assert!(targets.iter().any(|target| {
-        target.text == "Hello World"
-            && target
-                .selector_refs
-                .iter()
-                .any(|selector| selector.value == "joined-text")
-    }));
-    assert!(targets.iter().any(|target| {
-        target.text == "Again"
-            && target
-                .selector_refs
-                .iter()
-                .any(|selector| selector.value == "joined-text")
-    }));
-    assert!(targets.iter().any(|target| {
-        target.text == "Member"
-            && target
-                .selector_refs
-                .iter()
-                .any(|selector| selector.value == "member-button")
-    }));
-    assert!(targets.iter().any(|target| {
-        target.text == "Nested"
-            && target
-                .selector_refs
-                .iter()
-                .any(|selector| selector.value == "nested-member-button")
-    }));
+    assert!(has_selector(&targets, "Hello World", "joined-text"));
+    assert!(has_selector(&targets, "Again", "joined-text"));
+    assert!(has_selector(&targets, "Member", "member-button"));
+    assert!(has_selector(&targets, "Nested", "nested-member-button"));
     assert!(targets.iter().any(|target| {
         target.text == "HTML id"
             && target.role.as_deref() == Some("button")
@@ -475,25 +430,15 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
             && target.kind == AppTextKind::AccessibleName
     }));
     assert!(targets.iter().any(|target| target.text == "Before"));
-    assert!(targets
-        .iter()
-        .any(|target| target.text == "Boolean selector" && target.selector_refs.is_empty()));
-    assert!(targets.iter().any(|target| {
-        target.text == "Dynamic template selector" && target.selector_refs.is_empty()
-    }));
-    assert!(targets.iter().any(|target| {
-        target.text == "Lower member"
-            && target
-                .selector_refs
-                .iter()
-                .any(|selector| selector.value == "lower-member-button")
-    }));
-    assert!(!targets
-        .iter()
-        .any(|target| target.text == "Undefined link" && target.role.as_deref() == Some("link")));
-    assert!(!targets
-        .iter()
-        .any(|target| target.text == "Null link" && target.role.as_deref() == Some("link")));
+    assert!(has_no_selectors(&targets, "Boolean selector"));
+    assert!(has_no_selectors(&targets, "Dynamic template selector"));
+    assert!(has_selector(
+        &targets,
+        "Lower member",
+        "lower-member-button"
+    ));
+    assert!(!has_link_role(&targets, "Undefined link"));
+    assert!(!has_link_role(&targets, "Null link"));
 }
 
 #[test]
@@ -501,8 +446,26 @@ fn normalize_locator_text_rejects_blank_text() {
     assert_eq!(normalize_locator_text(" \n\t "), None);
 }
 
+fn has_no_selectors(targets: &[AppTextTarget], text: &str) -> bool {
+    targets
+        .iter()
+        .any(|t| t.text == text && t.selector_refs.is_empty())
+}
+
+fn has_selector(targets: &[AppTextTarget], text: &str, sel: &str) -> bool {
+    targets
+        .iter()
+        .any(|t| t.text == text && t.selector_refs.iter().any(|s| s.value == sel))
+}
+
+fn has_link_role(targets: &[AppTextTarget], text: &str) -> bool {
+    targets
+        .iter()
+        .any(|t| t.text == text && t.role.as_deref() == Some("link"))
+}
+
 fn assert_role(targets: &[AppTextTarget], text: &str, role: &str) {
     assert!(targets
         .iter()
-        .any(|target| target.text == text && target.role.as_deref() == Some(role)));
+        .any(|t| t.text == text && t.role.as_deref() == Some(role)));
 }
