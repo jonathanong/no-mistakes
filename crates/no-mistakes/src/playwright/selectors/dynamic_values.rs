@@ -6,8 +6,6 @@ mod tests;
 
 pub use collect::collect_string_leaves;
 pub(super) use collect::collect_function_return_strings;
-#[cfg(test)]
-pub(super) use collect::collect_object_string_values;
 
 use oxc_ast::ast::Program;
 use oxc_ast_visit::Visit;
