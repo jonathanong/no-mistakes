@@ -10,6 +10,8 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+include!("plan_extra_inputs.rs");
+
 pub(crate) fn run(args: PlanArgs) -> Result<ExitCode> {
     let plan = generate_plan(&args)?;
 
@@ -48,9 +50,9 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     let tsconfig = crate::tests::why::resolve_tsconfig(args.tsconfig.as_deref(), &root)?;
 
     // 1. Collect changed files
-    let changed_files = super::changed_files::existing_changed_files(
-        super::changed_files::collect_changed_files(args, &root)?,
-    );
+    let collected = super::changed_files::collect_changed_files(args, &root)?;
+    let changed_files = super::changed_files::existing_changed_files(&collected);
+    let deleted_files = &collected.deleted;
 
     if let Some(framework) = args.framework {
         let forced_fallback = global_config_trigger(&root, &changed_files);
@@ -227,6 +229,26 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
             }
         }
     }
+
+    // 5. Trace deleted files (phantom node lookup in reverse map)
+    trace_deleted_files(
+        deleted_files,
+        &graph,
+        &test_filter,
+        &root,
+        &mut selected_map,
+        &mut warnings,
+        &mut warnings_seen,
+    );
+
+    // 6. Trace entrypoints (file#export)
+    trace_entrypoints(
+        &args.entrypoints,
+        &graph,
+        &test_filter,
+        &root,
+        &mut selected_map,
+    );
 
     let mut selected_tests: Vec<SelectedTest> = selected_map.into_values().collect();
     for test in &mut selected_tests {

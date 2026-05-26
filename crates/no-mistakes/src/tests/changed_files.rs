@@ -1,23 +1,22 @@
+use super::diff_parser::{DiffFile, DiffFileStatus};
 use super::PlanArgs;
 use anyhow::{Context, Result};
 use std::collections::HashSet;
 use std::fs;
-use std::io::ErrorKind;
+use std::io::Read;
 use std::path::{Path, PathBuf};
 
-pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Vec<PathBuf>> {
+pub(crate) struct ChangedFiles {
+    pub files: Vec<PathBuf>,
+    pub deleted: Vec<PathBuf>,
+}
+
+pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<ChangedFiles> {
     let mut files = Vec::new();
+    let mut deleted = Vec::new();
 
     for f in &args.changed_file {
-        let path = if f.is_absolute() {
-            f.clone()
-        } else {
-            root.join(f)
-        };
-        let resolved = path
-            .canonicalize()
-            .unwrap_or_else(|_| no_mistakes::codebase::ts_resolver::normalize_path(&path));
-        files.push(resolved);
+        files.push(resolve_path(f, root));
     }
 
     if let Some(ref path) = args.changed_files {
@@ -27,31 +26,19 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Vec<
         for line in content.lines() {
             let line = line.trim();
             if !line.is_empty() {
-                let p = PathBuf::from(line);
-                let path = if p.is_absolute() { p } else { root.join(p) };
-                let resolved = path
-                    .canonicalize()
-                    .unwrap_or_else(|_| no_mistakes::codebase::ts_resolver::normalize_path(&path));
-                files.push(resolved);
+                files.push(resolve_path(&PathBuf::from(line), root));
             }
         }
     }
 
-    if args.base.is_some() || (args.changed_file.is_empty() && args.changed_files.is_none()) {
-        match get_git_changed_files(root, args.base.as_deref(), args.head.as_deref()) {
-            Ok(git_files) => {
-                for f in git_files {
-                    files.push(root.join(f));
-                }
-            }
-            Err(e) => {
-                if args.base.is_some() {
-                    return Err(e);
-                }
-                eprintln!("warning: failed to retrieve changed files from git: {}", e);
-            }
+    if let Some(ref base) = args.base {
+        let git_files = get_git_changed_files(root, base, args.head.as_deref())?;
+        for f in git_files {
+            files.push(root.join(f));
         }
     }
+
+    collect_diff_files(args, root, &mut files, &mut deleted)?;
 
     let mut unique = HashSet::new();
     let mut result = Vec::new();
@@ -62,67 +49,148 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Vec<
         }
     }
 
-    Ok(result)
+    let mut unique_deleted = HashSet::new();
+    let mut deleted_result = Vec::new();
+    for f in deleted {
+        let normalized = no_mistakes::codebase::ts_resolver::normalize_path(&f);
+        if unique_deleted.insert(normalized.clone()) {
+            deleted_result.push(normalized);
+        }
+    }
+
+    Ok(ChangedFiles {
+        files: result,
+        deleted: deleted_result,
+    })
 }
 
-pub(crate) fn existing_changed_files(changed_files: Vec<PathBuf>) -> Vec<PathBuf> {
-    changed_files
-        .into_iter()
-        .filter(|changed| changed_file_is_present(changed))
+fn collect_diff_files(
+    args: &PlanArgs,
+    root: &Path,
+    files: &mut Vec<PathBuf>,
+    deleted: &mut Vec<PathBuf>,
+) -> Result<()> {
+    let diff_content = read_diff_content(args, root)?;
+    let Some(content) = diff_content else {
+        return Ok(());
+    };
+
+    let diff_files = super::diff_parser::parse_unified_diff(&content);
+    apply_diff_files(&diff_files, root, files, deleted);
+    Ok(())
+}
+
+fn read_diff_content(args: &PlanArgs, root: &Path) -> Result<Option<String>> {
+    if let Some(ref diff_path) = args.diff {
+        let content = fs::read_to_string(diff_path)
+            .with_context(|| format!("Failed to read diff file from {}", diff_path.display()))?;
+        return Ok(Some(content));
+    }
+
+    if args.diff_stdin {
+        let mut content = String::new();
+        std::io::stdin()
+            .read_to_string(&mut content)
+            .context("Failed to read diff from stdin")?;
+        return Ok(Some(content));
+    }
+
+    if let Some(ref cmd) = args.diff_command {
+        let content = super::diff_parser::run_diff_command(cmd, root)?;
+        return Ok(Some(content));
+    }
+
+    if let Some(ref content) = args.diff_content {
+        return Ok(Some(content.clone()));
+    }
+
+    Ok(None)
+}
+
+fn apply_diff_files(
+    diff_files: &[DiffFile],
+    root: &Path,
+    files: &mut Vec<PathBuf>,
+    deleted: &mut Vec<PathBuf>,
+) {
+    for df in diff_files {
+        let path = if df.path.is_absolute() {
+            df.path.clone()
+        } else {
+            root.join(&df.path)
+        };
+        files.push(path.clone());
+
+        if df.status == DiffFileStatus::Deleted {
+            deleted.push(path);
+        }
+
+        if df.status == DiffFileStatus::Renamed {
+            if let Some(ref old) = df.old_path {
+                let old_abs = if old.is_absolute() {
+                    old.clone()
+                } else {
+                    root.join(old)
+                };
+                files.push(old_abs.clone());
+                deleted.push(old_abs);
+            }
+        }
+    }
+}
+
+fn resolve_path(path: &Path, root: &Path) -> PathBuf {
+    let abs = if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        root.join(path)
+    };
+    abs.canonicalize()
+        .unwrap_or_else(|_| no_mistakes::codebase::ts_resolver::normalize_path(&abs))
+}
+
+pub(crate) fn existing_changed_files(changed: &ChangedFiles) -> Vec<PathBuf> {
+    changed
+        .files
+        .iter()
+        .filter(|f| file_is_present(f))
+        .cloned()
         .collect()
 }
 
-fn changed_file_is_present(changed: &Path) -> bool {
-    match fs::symlink_metadata(changed) {
+fn file_is_present(path: &Path) -> bool {
+    match fs::symlink_metadata(path) {
         Ok(_) => true,
-        Err(error) if matches!(error.kind(), ErrorKind::NotFound | ErrorKind::NotADirectory) => {
+        Err(error)
+            if matches!(
+                error.kind(),
+                std::io::ErrorKind::NotFound | std::io::ErrorKind::NotADirectory
+            ) =>
+        {
             false
         }
         Err(_) => true,
     }
 }
 
-fn get_git_changed_files(
-    root: &Path,
-    base: Option<&str>,
-    head: Option<&str>,
-) -> Result<Vec<PathBuf>> {
+fn get_git_changed_files(root: &Path, base: &str, head: Option<&str>) -> Result<Vec<PathBuf>> {
+    let head_commit = head.unwrap_or("HEAD");
+    let output = run_git(
+        &[
+            "diff",
+            "--relative",
+            "--name-only",
+            &format!("{}...{}", base, head_commit),
+        ],
+        root,
+    )?;
     let mut changed = HashSet::new();
-
-    if let Some(base_commit) = base {
-        let head_commit = head.unwrap_or("HEAD");
-        let output = run_git(
-            &[
-                "diff",
-                "--relative",
-                "--name-only",
-                &format!("{}...{}", base_commit, head_commit),
-            ],
-            root,
-        )?;
-        for line in output.lines() {
-            let trimmed = line.trim();
-            if !trimmed.is_empty() {
-                changed.insert(PathBuf::from(trimmed));
-            }
-        }
-    } else {
-        for args in [
-            &["diff", "--relative", "--name-only"][..],
-            &["diff", "--cached", "--relative", "--name-only"][..],
-            &["ls-files", "--others", "--exclude-standard"][..],
-        ] {
-            if let Ok(output) = run_git(args, root) {
-                for line in output.lines() {
-                    let trimmed = line.trim();
-                    if !trimmed.is_empty() {
-                        changed.insert(PathBuf::from(trimmed));
-                    }
-                }
-            }
+    for line in output.lines() {
+        let trimmed = line.trim();
+        if !trimmed.is_empty() {
+            changed.insert(PathBuf::from(trimmed));
         }
     }
-
     let mut result: Vec<_> = changed.into_iter().collect();
     result.sort();
     Ok(result)

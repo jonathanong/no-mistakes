@@ -1,0 +1,7 @@
+diff --git a/deleted-route.mts b/deleted-route.mts
+deleted file mode 100644
+index abc1234..0000000
+--- a/deleted-route.mts
++++ /dev/null
+@@ -1 +0,0 @@
+-export const x = 42;
