@@ -20,8 +20,9 @@ fn selector_dep_edge_maps_selector_edge_to_dep_graph_edge() {
     };
 
     let result = selector_dep_edge(&root, &edge).unwrap();
-    assert_eq!(result.0, NodeId::File(p("/root/web/components/nav.tsx")));
-    assert_eq!(result.1, NodeId::File(p("/root/tests/e2e/nav.spec.ts")));
+    // test_file → app_file (mirrors TestOf direction so dependents_of(app_file) returns tests)
+    assert_eq!(result.0, NodeId::File(p("/root/tests/e2e/nav.spec.ts")));
+    assert_eq!(result.1, NodeId::File(p("/root/web/components/nav.tsx")));
     assert_eq!(result.2, EdgeKind::Selector);
 }
 
@@ -51,8 +52,9 @@ fn selector_dep_edge_maps_locator_text_edge_to_dep_graph_edge() {
     };
 
     let result = selector_dep_edge(&root, &edge).unwrap();
-    assert_eq!(result.0, NodeId::File(p("/root/web/components/button.tsx")));
-    assert_eq!(result.1, NodeId::File(p("/root/tests/e2e/button.spec.ts")));
+    // test_file → app_file (mirrors TestOf direction so dependents_of(app_file) returns tests)
+    assert_eq!(result.0, NodeId::File(p("/root/tests/e2e/button.spec.ts")));
+    assert_eq!(result.1, NodeId::File(p("/root/web/components/button.tsx")));
     assert_eq!(result.2, EdgeKind::Selector);
 }
 
@@ -83,6 +85,33 @@ fn collect_playwright_selector_edges_returns_empty_without_playwright_config() {
     let edges = collect_playwright_selector_edges(&root, &all_files);
     // No playwright config → error → empty vec (graceful fallback).
     assert!(edges.is_empty());
+}
+
+#[test]
+fn collect_playwright_selector_edges_returns_edges_for_route_group_fixture() {
+    // The playwright-coverage-route-group fixture has data-pw attributes and
+    // getByTestId calls; selector edges should connect components to their tests.
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/playwright-coverage-route-group/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let edges = collect_playwright_selector_edges(&root, &all_files);
+    assert!(
+        !edges.is_empty(),
+        "expected selector edges from playwright-coverage-route-group fixture"
+    );
+    // search-bar.tsx is only reachable via selector edges (not imported anywhere).
+    let search_bar = root.join("web/components/search-bar.tsx");
+    let search_spec = root.join("tests/e2e/search-bar.spec.ts");
+    let has_edge = edges.iter().any(|(from, to, kind)| {
+        from == &NodeId::File(search_spec.clone())
+            && to == &NodeId::File(search_bar.clone())
+            && *kind == EdgeKind::Selector
+    });
+    assert!(
+        has_edge,
+        "expected selector edge from search-bar.spec.ts → search-bar.tsx"
+    );
 }
 
 #[test]

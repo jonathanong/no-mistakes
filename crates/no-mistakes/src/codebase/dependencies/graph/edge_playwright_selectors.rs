@@ -4,12 +4,12 @@
 /// playwright analysis pipeline emits we produce a graph edge:
 ///
 /// ```text
-/// NodeId::File(app_file)  →  NodeId::File(test_file)   EdgeKind::Selector
+/// NodeId::File(test_file)  →  NodeId::File(app_file)   EdgeKind::Selector
 /// ```
 ///
-/// This lets the test-plan coverage group select a test when the changed file
-/// contains a `data-pw` selector that the test uses via `getByTestId(...)`,
-/// even with no URL-navigation path.
+/// The direction mirrors `EdgeKind::TestOf` (test depends on source) so that
+/// `dependents_of(app_file)` returns tests that cover it via selector-based
+/// paths, even with no URL-navigation route connecting them.
 pub(super) fn collect_playwright_selector_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edge> {
     let Ok(analysis) = run_playwright_selector_analysis(root, all_files) else {
         return vec![];
@@ -37,9 +37,12 @@ fn selector_dep_edge(root: &Path, edge: &crate::playwright::analysis::types::Edg
         } => (app_file.as_str(), test_file.as_str()),
         _ => return None,
     };
+    // Edge direction: test_file → app_file, mirroring how TestOf edges work
+    // (test depends on source).  The reverse map then gives "dependents of
+    // app_file" → test files that cover it via selector-based paths.
     Some((
-        NodeId::File(root.join(app_file_rel)),
         NodeId::File(root.join(test_file_rel)),
+        NodeId::File(root.join(app_file_rel)),
         EdgeKind::Selector,
     ))
 }
@@ -54,7 +57,9 @@ fn run_playwright_selector_analysis(
         allow_skipped_tests: false,
     };
     let unique_policy = crate::playwright::analysis::types::UniqueSelectorPolicy::default();
-    crate::playwright::analysis::pipeline::analyze_with_policy(
+    // Use the selectors-only pipeline: does not require Next.js routes to exist,
+    // so selector edges work for components that have no direct route coverage.
+    crate::playwright::analysis::pipeline_selectors::analyze_selectors_with_policy(
         root,
         &settings,
         test_policy,
