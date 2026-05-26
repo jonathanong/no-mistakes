@@ -40,6 +40,7 @@ impl ConfiguredChecks {
 pub(crate) struct EnabledChecks {
     pub(crate) react: bool,
     pub(crate) queue: bool,
+    pub(crate) queue_factory_names: Vec<String>,
     pub(crate) dynamic_import_rules: bool,
     pub(crate) boundary_rules: bool,
     pub(crate) nextjs_api_routes: bool,
@@ -55,6 +56,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         symbols: enabled.unique_exports || enabled.storybook_stories,
         react: enabled.react || enabled.storybook_stories,
         queue: enabled.queue,
+        queue_factory_names: enabled.queue_factory_names,
         integration: enabled.integration,
         dynamic_imports: enabled.dynamic_import_rules || enabled.storybook_stories,
         nextjs_caching: enabled.nextjs_caching,

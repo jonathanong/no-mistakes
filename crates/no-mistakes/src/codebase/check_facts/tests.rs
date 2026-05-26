@@ -198,6 +198,7 @@ fn collect_check_facts_parses_once_for_overlapping_fact_categories() {
             symbols: true,
             react: true,
             queue: true,
+            queue_factory_names: vec![],
             integration: true,
             dynamic_imports: true,
             nextjs_caching: true,

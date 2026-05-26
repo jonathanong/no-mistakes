@@ -39,6 +39,7 @@ pub(crate) fn run_all(
     let plan = fact_plan(enabled::EnabledChecks {
         react: react_enabled,
         queue: queues_enabled,
+        queue_factory_names: config.queues.factories.clone(),
         dynamic_import_rules: enabled.dynamic_import_rules,
         boundary_rules: enabled.boundary_rules,
         nextjs_api_routes: enabled.nextjs_api_routes,

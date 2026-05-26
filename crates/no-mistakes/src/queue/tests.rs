@@ -448,3 +448,24 @@ fn custom_factory_from_v2_config_detected_as_queue_definition() {
         report.edges
     );
 }
+
+#[test]
+fn custom_factory_respected_in_check_mode_shared_facts() {
+    use crate::codebase::check_facts::{collect_file_facts, CheckFactPlan};
+
+    let root = fixture("custom-factory");
+    let queue_file = root.join("queues/notifications.ts");
+    let plan = CheckFactPlan {
+        queue: true,
+        queue_factory_names: vec!["createQueue".to_string()],
+        ..Default::default()
+    };
+    let facts = collect_file_facts(&root, &queue_file, &plan, None)
+        .expect("should collect facts for queue file");
+    let queue_facts = facts.queue.expect("queue facts should be present");
+    assert_eq!(
+        queue_facts.queue_exports.get("notificationsQueue"),
+        Some(&"notifications".to_string()),
+        "check-mode should detect factory-created queue bindings when factory names are configured"
+    );
+}

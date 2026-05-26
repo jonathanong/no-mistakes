@@ -17,10 +17,6 @@ pub(crate) fn extract_file_with_factories(
     })
 }
 
-pub(crate) fn extract_program(path: &Path, source: &str, program: &Program<'_>) -> FileFacts {
-    extract_program_with_factories(path, source, program, &[])
-}
-
 pub(crate) fn extract_program_with_factories(
     path: &Path,
     source: &str,
