@@ -1,12 +1,11 @@
 fn collect_playwright_route_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edge> {
     let frontend_root = playwright_frontend_root(root);
-    let Ok(report) = crate::codebase::playwright_coverage::collect_report_with_frontend_root_pub(
+    let report = crate::codebase::playwright_coverage::collect_report_with_frontend_root_pub(
         root,
         &frontend_root,
         all_files,
-    ) else {
-        return vec![];
-    };
+    )
+    .unwrap_or_default();
 
     let all_file_set: HashSet<PathBuf> = all_files.iter().cloned().collect();
     let mut edges = Vec::new();
@@ -33,7 +32,7 @@ fn collect_playwright_route_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edg
 }
 
 fn playwright_frontend_root(root: &Path) -> PathBuf {
-    // Try v2 config first (projects.*.root for nextjs type).
+    // Try v2 config first (projects.*.root for nextjs type + "/app").
     if let Ok(v2) = crate::config::v2::load_v2_config(root, None) {
         let view = crate::config::v2::ConfigView::new(&v2);
         let nextjs_root = view.nextjs_root();
@@ -41,11 +40,6 @@ fn playwright_frontend_root(root: &Path) -> PathBuf {
             let candidate = root.join(nextjs_root).join("app");
             if candidate.is_dir() {
                 return candidate;
-            }
-            // Some projects use <root>/app directly as the v2 frontend_root config.
-            let candidate2 = root.join(nextjs_root);
-            if candidate2.is_dir() {
-                return candidate2;
             }
         }
     }

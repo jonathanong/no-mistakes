@@ -1,4 +1,6 @@
-use crate::config::v2::schema::{NoMistakesConfig, TestPlanIgnoredChangedTestsFramework};
+use crate::config::v2::schema::{
+    NoMistakesConfig, TestPlanFrameworkConfig, TestPlanIgnoredChangedTestsFramework,
+};
 
 #[test]
 fn test_plan_deprecated_dependencies_key_still_parsed() {
@@ -72,4 +74,20 @@ test_plan:
     // New key does not set the deprecated flag.
     assert!(!cfg.test_plan.playwright.deprecated_dependencies_key);
     assert!(!cfg.test_plan.vitest.deprecated_dependencies_key);
+}
+
+#[test]
+fn test_plan_framework_config_dependencies_alias_returns_full_suite_triggers() {
+    // The `.dependencies()` method is a backward-compat alias for
+    // `.full_suite_triggers` used by older call-sites.
+    let cfg = TestPlanFrameworkConfig::default();
+    // The alias must return the same reference as full_suite_triggers.
+    assert_eq!(
+        cfg.dependencies().ignore_changed_tests,
+        cfg.full_suite_triggers.ignore_changed_tests
+    );
+    assert_eq!(
+        cfg.dependencies().projects.len(),
+        cfg.full_suite_triggers.projects.len()
+    );
 }
