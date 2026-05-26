@@ -15,8 +15,9 @@ fn fixture(sub: &str) -> std::path::PathBuf {
         .unwrap()
         .parent()
         .unwrap()
-        .join("fixtures/config-v2")
+        .join("test-cases/config-v2")
         .join(sub)
+        .join("fixture")
 }
 
 // ── discovery ─────────────────────────────────────────────────────────────────

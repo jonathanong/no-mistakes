@@ -26,7 +26,7 @@ fn root_manual_mock_maps_unresolved_module_specifier() {
 fn discover_respects_skip_directories() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+            .join("../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports/fixture"),
     );
     let skipped = root.join("skipped").join("ignored.mts");
     let mocks = discover(&root, &["skipped".to_string()]);

@@ -225,7 +225,7 @@ jobs:
       - name: Run large graph timing smoke
         run: |
           target/release/no-mistakes dependencies \
-            --root fixtures/codebase-analysis/large-graph-monorepo \
+            --root test-cases/codebase-analysis/large-graph-monorepo/fixture \
             --relationship all \
             --timings \
             --format json \

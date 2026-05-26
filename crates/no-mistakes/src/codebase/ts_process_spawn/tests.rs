@@ -19,7 +19,7 @@ fn make_root(files: &[&str]) -> TempDir {
 
 fn fixture_source(name: &str) -> (PathBuf, String) {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/ast-snippets/ts-process-spawn/project")
+        .join("../../test-cases/ast-snippets/ts-process-spawn/fixture/project")
         .join(name);
     let source = fs::read_to_string(&path).expect("fixture source must be readable");
     (path, source)
@@ -28,7 +28,7 @@ fn fixture_source(name: &str) -> (PathBuf, String) {
 #[test]
 fn helper_branches_visit_present_optional_values() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/ast-snippets/ts-process-spawn/project");
+        .join("../../test-cases/ast-snippets/ts-process-spawn/fixture/project");
     let (config_path, source) = fixture_source("configs/spawn-all.tsx");
     let allocator = Allocator::default();
     let program = Parser::new(&allocator, &source, SourceType::tsx())
@@ -299,7 +299,7 @@ fn absolute_cwd_resolves_spawn_entry() {
 fn fixture_spawn_walker_covers_statement_expression_and_resolution_shapes() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/ast-snippets/ts-process-spawn/project"),
+            .join("../../test-cases/ast-snippets/ts-process-spawn/fixture/project"),
     );
     let config_path = root.join("configs/spawn-all.tsx");
     let source = std::fs::read_to_string(&config_path).expect("spawn fixture must be readable");

@@ -67,3 +67,21 @@ fn test_collect_routes_empty() {
     let routes = collect_routes(dir.path(), &["page"]);
     assert!(routes.is_empty());
 }
+
+#[test]
+fn dot_directories_are_excluded_from_route_scanning() {
+    // Use the fixture root (which contains both app/ and .next/) as frontend_root.
+    // Without the fix, the scanner would enter .next/ and pick up phantom routes.
+    let fixture_root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/nextjs-routes/skip-dot-next/fixture");
+    let routes = collect_routes(&fixture_root, &["page", "route"]);
+    let patterns: Vec<&str> = routes.iter().map(|r| r.pattern.as_str()).collect();
+    assert!(
+        !patterns.iter().any(|p| p.contains(".next")),
+        "should not find routes inside .next/, got: {patterns:?}"
+    );
+    assert!(
+        patterns.iter().any(|p| p.contains("about")),
+        "should find /app/about route, got: {patterns:?}"
+    );
+}

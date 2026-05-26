@@ -9,7 +9,7 @@ use std::path::Path;
 
 fn fixture(path: &str) -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/rules/no-git-identity-mutation")
+        .join("../../test-cases/rules/no-git-identity-mutation/fixture")
         .join(path)
 }
 

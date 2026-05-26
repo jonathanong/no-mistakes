@@ -1,4 +1,4 @@
-use crate::queue::extract::{extract_file, FileFacts};
+use crate::queue::extract::{extract_file_with_factories, FileFacts};
 use crate::queue::graph_build::build_report;
 use crate::queue::graph_model::{build_filter, InternalProducer, InternalWorker, ProjectReport};
 use crate::queue::resolver::{load_tsconfig, resolve_import};
@@ -23,6 +23,7 @@ pub fn analyze_project(
     let root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
     let tsconfig = load_tsconfig(&root, tsconfig_path)?;
     let filter = build_filter(filters)?;
+    let factory_names = load_factory_names(&root);
     let files = discover_source_files(&root)
         .into_iter()
         .filter(|path| {
@@ -34,7 +35,7 @@ pub fn analyze_project(
     let facts = files
         .par_iter()
         .filter_map(|path| {
-            extract_file(path, &root)
+            extract_file_with_factories(path, &factory_names)
                 .ok()
                 .map(|facts| (path.clone(), facts))
         })
@@ -44,6 +45,12 @@ pub fn analyze_project(
     let producers = resolve_producers(&root, &facts, &queue_defs, &tsconfig);
     let workers = resolve_workers(&root, &facts, &queue_defs, &tsconfig);
     Ok(build_report(&root, producers, workers, &facts))
+}
+
+fn load_factory_names(root: &Path) -> Vec<String> {
+    crate::config::v2::load_v2_config(root, None)
+        .map(|config| config.queues.factories)
+        .unwrap_or_default()
 }
 
 pub fn analyze_project_with_facts(

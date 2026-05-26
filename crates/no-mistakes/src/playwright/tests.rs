@@ -6,5 +6,6 @@ mod fetch_tests;
 mod fsutil_tests;
 mod output_tests;
 mod pipeline_tests;
+mod test_support_tests;
 mod text_locator_tests;
 mod url_tests;

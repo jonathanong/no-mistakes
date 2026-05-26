@@ -3,8 +3,9 @@ use super::*;
 fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis")
-            .join(name),
+            .join("../../test-cases/codebase-analysis")
+            .join(name)
+            .join("fixture"),
     )
 }
 
@@ -266,7 +267,8 @@ fn configured_frontend_root_uses_valid_route_options() {
 #[test]
 fn report_includes_virtual_routes_from_rewrites() {
     let root = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/nextjs-rewrites/basic"),
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/nextjs-rewrites/basic/fixture"),
     );
     let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
     let frontend_root = root.join("app");

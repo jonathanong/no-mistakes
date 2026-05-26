@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 fn fixture_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/react-traits-analyze/import-table")
+        .join("../../test-cases/react-traits-analyze/import-table/fixture")
 }
 
 fn load_fixture(name: &str) -> (PathBuf, String) {

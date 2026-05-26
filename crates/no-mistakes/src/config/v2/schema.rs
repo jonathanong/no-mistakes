@@ -21,10 +21,17 @@ pub use tests_config::{
 pub struct NoMistakesConfig {
     pub filesystem: FilesystemConfig,
     pub projects: BTreeMap<String, Project>,
+    pub queues: QueuesTopLevelConfig,
     pub tests: Tests,
     #[serde(rename = "testPlan", alias = "test_plan")]
     pub test_plan: TestPlanConfig,
     pub rules: Vec<RuleDef>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct QueuesTopLevelConfig {
+    pub factories: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

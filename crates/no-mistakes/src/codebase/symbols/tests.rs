@@ -3,7 +3,7 @@ use super::*;
 fn fixture_root() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis/symbols-output"),
+            .join("../../test-cases/codebase-analysis/symbols-output/fixture"),
     )
 }
 

@@ -147,6 +147,7 @@ fn guardrails_to_v2(source: &str, path: &Path) -> Result<NoMistakesConfig> {
     Ok(NoMistakesConfig {
         filesystem: gc.filesystem,
         projects,
+        queues: Default::default(),
         tests: Tests::default(),
         test_plan: Default::default(),
         rules,

@@ -69,9 +69,10 @@ fn absolute_path_components_skip_root_prefix() {
 #[test]
 fn collect_frontend_routes_finds_pages() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis")
+        .join("../../test-cases/codebase-analysis")
         .join("routes")
         .join("good")
+        .join("fixture")
         .join("web")
         .join("app");
     let routes = collect_frontend_routes(&root);

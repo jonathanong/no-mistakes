@@ -10,7 +10,7 @@ use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/rules/require-storybook-stories")
+        .join("../../test-cases/rules/require-storybook-stories/fixture")
         .join(name)
 }
 

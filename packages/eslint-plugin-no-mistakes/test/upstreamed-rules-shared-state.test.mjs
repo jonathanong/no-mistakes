@@ -6,7 +6,7 @@ import { __dirname, messages } from "./helpers.mjs";
 
 function fixture(name) {
   return readFileSync(
-    resolve(__dirname, "../../../fixtures/eslint-plugin/upstreamed-generic", name),
+    resolve(__dirname, "../../../test-cases/eslint-plugin/upstreamed-generic/fixture", name),
     "utf8",
   );
 }

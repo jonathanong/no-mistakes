@@ -10,8 +10,9 @@ mod shared_facts_disable;
 fn fixture(name: &str) -> PathBuf {
     normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis")
-            .join(name),
+            .join("../../test-cases/codebase-analysis")
+            .join(name)
+            .join("fixture"),
     )
 }
 
@@ -236,7 +237,7 @@ fn collect_source_files_from_facts_reports_missing_fact_shapes() {
 #[test]
 fn root_is_normalized_before_analysis() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/unique-exports-basic/.");
+        .join("../../test-cases/codebase-analysis/unique-exports-basic/fixture/.");
 
     let findings = analyze_project(&root, None, None).unwrap();
 

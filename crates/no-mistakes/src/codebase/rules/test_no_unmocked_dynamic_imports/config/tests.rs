@@ -118,7 +118,7 @@ fn project_include_restricts_default_test_globs() {
 fn project_include_does_not_widen_to_config_test_globs() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+            .join("../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports/fixture"),
     );
     let mut config = NoMistakesConfig::default();
     config.projects.insert(
@@ -169,7 +169,7 @@ fn scoped_glob_leaves_root_project_includes_unprefixed() {
 fn setup_files_resolves_config_relative_existing_files() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+            .join("../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports/fixture"),
     );
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
     let files = setup_files(&root, &config).unwrap();
@@ -188,7 +188,7 @@ fn setup_files_resolves_config_relative_existing_files() {
 fn setup_files_for_test_uses_default_globs_when_config_has_no_matcher() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+            .join("../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports/fixture"),
     );
     let mut config = NoMistakesConfig::default();
     config.tests.jest.configs = Some(crate::config::v2::schema::StringOrList::One(
@@ -204,7 +204,7 @@ fn setup_files_for_test_uses_default_globs_when_config_has_no_matcher() {
 fn setup_files_resolves_jest_root_dir_entries() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+            .join("../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports/fixture"),
     );
     let mut config = NoMistakesConfig::default();
     config.tests.jest.configs = Some(crate::config::v2::schema::StringOrList::One(
@@ -220,7 +220,7 @@ fn setup_files_resolves_jest_root_dir_entries() {
 fn setup_files_resolves_jest_root_dir_from_config_directory() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+            .join("../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports/fixture"),
     );
     let mut config = NoMistakesConfig::default();
     config.tests.jest.configs = Some(crate::config::v2::schema::StringOrList::One(
@@ -271,7 +271,7 @@ fn matcher_patterns_are_normalized_to_repo_relative_paths() {
 fn explicit_config_files_skip_default_discovery() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+            .join("../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports/fixture"),
     );
     let mut config = NoMistakesConfig::default();
     config.tests.vitest.configs = Some(crate::config::v2::schema::StringOrList::One(
@@ -286,7 +286,7 @@ fn explicit_config_files_skip_default_discovery() {
 fn invalid_config_globs_do_not_block_default_discovery() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+            .join("../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports/fixture"),
     );
     let mut config = NoMistakesConfig::default();
     config.tests.jest.configs = Some(crate::config::v2::schema::StringOrList::One(
@@ -302,7 +302,7 @@ fn invalid_config_globs_do_not_block_default_discovery() {
 fn default_config_discovery_normalizes_existing_files() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+            .join("../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports/fixture"),
     );
     let files = config_files(&root, &NoMistakesConfig::default());
     assert!(files
@@ -320,7 +320,7 @@ fn default_config_discovery_normalizes_existing_files() {
 fn default_config_discovery_reads_vitest_commonjs_setup_files() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/integration-tests/vitest-cjs-config"),
+            .join("../../test-cases/integration-tests/vitest-cjs-config/fixture"),
     );
 
     let files = config_files(&root, &NoMistakesConfig::default());
@@ -336,7 +336,7 @@ fn default_config_discovery_reads_vitest_commonjs_setup_files() {
 fn configured_config_globs_expand_existing_files() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+            .join("../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports/fixture"),
     );
     let mut config = NoMistakesConfig::default();
     config.tests.jest.configs = Some(crate::config::v2::schema::StringOrList::One(
@@ -415,7 +415,7 @@ fn property_string_parser_handles_single_and_malformed_strings() {
 fn jest_test_regex_does_not_fall_back_to_default_globs() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+            .join("../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports/fixture"),
     );
     let mut config = NoMistakesConfig::default();
     config.tests.jest.configs = Some(crate::config::v2::schema::StringOrList::One(
@@ -442,7 +442,7 @@ fn vitest_config_without_include_uses_default_globs() {
 fn test_filter_matches_jest_regex_includes() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+            .join("../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports/fixture"),
     );
     let mut config = NoMistakesConfig::default();
     config.tests.jest.configs = Some(crate::config::v2::schema::StringOrList::One(

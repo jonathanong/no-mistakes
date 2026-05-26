@@ -2,7 +2,7 @@ use super::*;
 
 fn queue_fixture_source(name: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/ast-snippets/ts-queues")
+        .join("../../test-cases/ast-snippets/ts-queues/fixture")
         .join(name);
     std::fs::read_to_string(path).expect("queue fixture source must be readable")
 }
@@ -234,7 +234,7 @@ fn fixture_queue_usage_extracts_queue_names() {
     // fixtures/queue-usage/queues.mts imports createQueue from a local file
     // and defines three queues: autotagger, email-notifications, image-processing.
     let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/queue-usage/queues.mts");
+        .join("../../test-cases/codebase-analysis/queue-usage/fixture/queues.mts");
     let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
 
     // The factory specifier is the relative path to glide-mq-factory.mts
@@ -256,7 +256,7 @@ fn fixture_queue_usage_extracts_queue_names() {
 #[test]
 fn bfs_reachable_visits_fixture_queue_files() {
     let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/queue-dashboard/good");
+        .join("../../test-cases/codebase-analysis/queue-dashboard/good/fixture");
     let tsconfig = ts_resolver::TsConfig {
         dir: fixture.clone(),
         paths: vec![
@@ -279,8 +279,8 @@ fn bfs_reachable_visits_fixture_queue_files() {
 
 #[test]
 fn bfs_reachable_handles_cycles_and_missing_imports() {
-    let fixture =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/ast-snippets/ts-queues");
+    let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/ast-snippets/ts-queues/fixture");
     let tsconfig = ts_resolver::TsConfig {
         dir: fixture.clone(),
         paths: vec![],
@@ -295,8 +295,8 @@ fn bfs_reachable_handles_cycles_and_missing_imports() {
 
 #[test]
 fn bfs_reachable_handles_unreadable_start_file() {
-    let fixture =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/ast-snippets/ts-queues");
+    let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/ast-snippets/ts-queues/fixture");
     let tsconfig = ts_resolver::TsConfig {
         dir: fixture.clone(),
         paths: vec![],

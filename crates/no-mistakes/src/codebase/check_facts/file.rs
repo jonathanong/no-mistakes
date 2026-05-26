@@ -80,8 +80,11 @@ pub(crate) fn collect_file_facts(
         None
     };
     let queue = if plan.queue {
-        Some(crate::queue::extract::extract_program(
-            path, &source, program,
+        Some(crate::queue::extract::extract_program_with_factories(
+            path,
+            &source,
+            program,
+            &plan.queue_factory_names,
         ))
     } else {
         None

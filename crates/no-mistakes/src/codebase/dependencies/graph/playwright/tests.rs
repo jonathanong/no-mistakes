@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 fn fixture_source(name: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/ast-snippets/playwright-urls")
+        .join("../../test-cases/ast-snippets/playwright-urls/fixture")
         .join(name);
     std::fs::read_to_string(path).expect("playwright URL fixture must be readable")
 }

@@ -235,7 +235,7 @@ fn tsx_extracts_imports() {
 #[test]
 fn fixture_mixed_type_import_file() {
     let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/mixed-type-import/importer.mts");
+        .join("../../test-cases/codebase-analysis/mixed-type-import/fixture/importer.mts");
     let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
     let imports = ts_extractor().extract(&source).unwrap();
     assert_eq!(kinds(&imports), vec![ImportKind::Type, ImportKind::Static]);
@@ -245,7 +245,7 @@ fn fixture_mixed_type_import_file() {
 #[test]
 fn fixture_function_expression_import_tracks_named_scope() {
     let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/import-facts/function-expression.mts");
+        .join("../../test-cases/codebase-analysis/import-facts/fixture/function-expression.mts");
     let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
     let allocator = Allocator::default();
     let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
@@ -261,7 +261,7 @@ fn fixture_function_expression_import_tracks_named_scope() {
 #[test]
 fn fixture_function_expression_falls_back_to_inner_name() {
     let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/import-facts/destructured-function-expression.mts");
+        .join("../../test-cases/codebase-analysis/import-facts/fixture/destructured-function-expression.mts");
     let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
     let allocator = Allocator::default();
     let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
@@ -277,8 +277,9 @@ fn fixture_function_expression_falls_back_to_inner_name() {
 
 #[test]
 fn local_string_named_export_is_not_marked_as_exported_function() {
-    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/import-facts/local-string-named-export.mts");
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/codebase-analysis/import-facts/fixture/local-string-named-export.mts",
+    );
     let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
     let allocator = Allocator::default();
     let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
@@ -290,8 +291,9 @@ fn local_string_named_export_is_not_marked_as_exported_function() {
 
 #[test]
 fn exported_functions_are_sorted() {
-    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/import-facts/exported-functions-order.mts");
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/codebase-analysis/import-facts/fixture/exported-functions-order.mts",
+    );
     let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
     let allocator = Allocator::default();
     let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
@@ -304,7 +306,7 @@ fn exported_functions_are_sorted() {
 #[test]
 fn function_expression_declarator_binding_pattern_is_visited() {
     let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-        "../../fixtures/codebase-analysis/import-facts/function-expression-binding-pattern.mts",
+        "../../test-cases/codebase-analysis/import-facts/fixture/function-expression-binding-pattern.mts",
     );
     let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
     let allocator = Allocator::default();
@@ -319,8 +321,9 @@ fn function_expression_declarator_binding_pattern_is_visited() {
 
 #[test]
 fn fixture_object_function_properties_track_static_scopes() {
-    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/import-facts/object-function-property.mts");
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/codebase-analysis/import-facts/fixture/object-function-property.mts",
+    );
     let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
     let allocator = Allocator::default();
     let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
@@ -338,7 +341,7 @@ fn fixture_object_function_properties_track_static_scopes() {
 #[test]
 fn fixture_object_arrow_properties_track_static_scopes() {
     let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/import-facts/object-function-arrow-property.mts");
+        .join("../../test-cases/codebase-analysis/import-facts/fixture/object-function-arrow-property.mts");
     let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
     let allocator = Allocator::default();
     let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
@@ -352,7 +355,7 @@ fn fixture_object_arrow_properties_track_static_scopes() {
 #[test]
 fn fixture_computed_function_keys_are_visited_outside_scopes() {
     let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/import-facts/computed-function-keys.mts");
+        .join("../../test-cases/codebase-analysis/import-facts/fixture/computed-function-keys.mts");
     let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
     let allocator = Allocator::default();
     let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
@@ -377,8 +380,9 @@ fn fixture_computed_function_keys_are_visited_outside_scopes() {
 
 #[test]
 fn fixture_anonymous_function_expression_keeps_import_unscoped() {
-    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/import-facts/anonymous-function-expression.mts");
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/codebase-analysis/import-facts/fixture/anonymous-function-expression.mts",
+    );
     let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
     let allocator = Allocator::default();
     let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();

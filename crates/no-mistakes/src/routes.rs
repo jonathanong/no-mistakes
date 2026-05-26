@@ -16,6 +16,9 @@ pub fn collect_routes(frontend_root: &Path, stems: &[&str]) -> Vec<Route> {
     let mut routes = Vec::new();
     for entry in WalkDir::new(frontend_root)
         .into_iter()
+        .filter_entry(|e| {
+            !(e.file_type().is_dir() && e.file_name().to_str().is_some_and(|n| n.starts_with('.')))
+        })
         .filter_map(|entry| entry.ok())
     {
         let path = entry.path();

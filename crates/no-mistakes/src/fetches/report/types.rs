@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 pub(crate) use no_mistakes::fetch::types::{CacheKind, FetchOccurrence, FetchSide, SourceType};
 
@@ -61,18 +61,4 @@ pub(crate) struct UnsupportedApiCall {
     pub(crate) line: usize,
     pub(crate) reason: String,
     pub(crate) raw_path: String,
-}
-
-#[derive(Default, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub(crate) struct RootConfig {
-    #[serde(flatten)]
-    pub(crate) legacy: FileConfig,
-    pub(crate) next_to_fetch: Option<FileConfig>,
-}
-
-#[derive(Default, Deserialize, Clone)]
-#[serde(rename_all = "camelCase", default)]
-pub(crate) struct FileConfig {
-    pub(crate) frontend_root: Option<String>,
 }

@@ -5,11 +5,19 @@ use crate::config::v2::schema::{
 use std::path::{Path, PathBuf};
 
 fn root_fixture(path: &str) -> PathBuf {
-    crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures")
-            .join(path),
-    )
+    let mut parts = path.splitn(3, '/');
+    let category = parts.next().unwrap_or(path);
+    let sub = parts.next().unwrap_or("");
+    let rest = parts.next().unwrap_or("");
+    let mut p = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases")
+        .join(category)
+        .join(sub)
+        .join("fixture");
+    if !rest.is_empty() {
+        p = p.join(rest);
+    }
+    crate::codebase::ts_resolver::normalize_path(&p)
 }
 
 #[test]

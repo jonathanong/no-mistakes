@@ -20,7 +20,7 @@ fn config_with_rule(yaml: &str) -> NoMistakesConfig {
 fn fixture_root(subpath: &str) -> std::path::PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/rules/file-extension-policy")
+            .join("../../test-cases/rules/file-extension-policy/fixture")
             .join(subpath),
     )
 }

@@ -8,12 +8,12 @@ rules:
     scope: repository
     options:
       excludes:
-        - fixtures/
+        - test-cases/
   - rule: rust-no-inline-allows
     scope: repository
     options:
       excludes:
-        - fixtures/
+        - test-cases/
   - rule: agents-md-max-size
     scope: repository
     options:

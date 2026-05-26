@@ -3,7 +3,7 @@ use crate::config::v2::schema::{Project, ProjectType, RuleDef, RuleScope};
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/rules/server-route-client-boundary")
+        .join("../../test-cases/rules/server-route-client-boundary/fixture")
         .join(name)
 }
 

@@ -8,17 +8,19 @@ fn bin() -> PathBuf {
 fn fixture(name: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis")
-            .join(name),
+            .join("../../test-cases/codebase-analysis")
+            .join(name)
+            .join("fixture"),
     )
 }
 
 fn react_fixture(category: &str, name: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures")
+            .join("../../test-cases")
             .join(category)
-            .join(name),
+            .join(name)
+            .join("fixture"),
     )
 }
 
@@ -113,16 +115,18 @@ fn help_lists_scoped_subcommands() {
 fn queue_fixture(name: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/queue-ast-hop")
-            .join(name),
+            .join("../../test-cases/queue-ast-hop")
+            .join(name)
+            .join("fixture"),
     )
 }
 
 fn server_fixture(name: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/server-ast-routes")
-            .join(name),
+            .join("../../test-cases/server-ast-routes")
+            .join(name)
+            .join("fixture"),
     )
 }
 
@@ -496,7 +500,7 @@ fn server_relative_root_is_resolved() {
         .args([
             "server",
             "--root",
-            "fixtures/server-ast-routes/express",
+            "test-cases/server-ast-routes/express/fixture",
             "routes",
         ])
         .output()
@@ -514,7 +518,12 @@ fn queues_relative_root_is_resolved() {
                 .canonicalize()
                 .unwrap(),
         )
-        .args(["queues", "--root", "fixtures/queue-ast-hop/basic", "edges"])
+        .args([
+            "queues",
+            "--root",
+            "test-cases/queue-ast-hop/basic/fixture",
+            "edges",
+        ])
         .output()
         .expect("no-mistakes should run");
 

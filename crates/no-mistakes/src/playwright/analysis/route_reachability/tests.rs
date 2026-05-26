@@ -159,9 +159,10 @@ fn route_import_collection_uses_shared_cache_entries() {
 
 #[test]
 fn route_reachability_surfaces_import_parse_errors() {
-    let root = crate::playwright::test_support::fixture_path(&["react-traits-components"]);
+    let root =
+        crate::playwright::test_support::fixture_path(&["react-traits-components", "bad-file"]);
     let route = routes::Route {
-        file: root.join("bad-file/app/components/Broken.tsx"),
+        file: root.join("app/components/Broken.tsx"),
         pattern: "/broken".to_string(),
     };
 

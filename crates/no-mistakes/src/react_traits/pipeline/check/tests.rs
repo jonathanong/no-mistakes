@@ -7,14 +7,14 @@ fn nonexistent_config() -> std::path::PathBuf {
 fn assert_no_fetch_root() -> std::path::PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/react-traits-config/assert-no-fetch"),
+            .join("../../test-cases/react-traits-config/assert-no-fetch/fixture"),
     )
 }
 
 #[test]
 fn run_check_with_facts_skips_when_assert_no_fetch_is_disabled() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/react-traits-components/nested");
+        .join("../../test-cases/react-traits-components/nested/fixture");
     let facts = crate::codebase::check_facts::CheckFactMap::default();
 
     let findings = run_check_with_facts(
@@ -46,7 +46,7 @@ fn check_enabled_returns_true_when_assert_no_fetch_is_enabled() {
 fn check_enabled_returns_false_when_assert_no_fetch_is_disabled() {
     // Fixture with no assert_no_fetch config
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/react-traits-components/nested");
+        .join("../../test-cases/react-traits-components/nested/fixture");
     assert!(!check_enabled(&root, None, false).unwrap());
 }
 

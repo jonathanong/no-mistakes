@@ -5,8 +5,9 @@ use std::path::PathBuf;
 fn v2_config_fixture(name: &str) -> NoMistakesConfig {
     let yaml = std::fs::read_to_string(
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/config-v2")
+            .join("../../test-cases/config-v2")
             .join(name)
+            .join("fixture")
             .join(".no-mistakes.yml"),
     )
     .unwrap();
@@ -33,7 +34,7 @@ rules:
 #[test]
 fn augment_from_gitignore_adds_plain_directory_names_once() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/ast-snippets/config/gitignore-project");
+        .join("../../test-cases/ast-snippets/config/fixture/gitignore-project");
     let mut config = Config {
         filesystem: FilesystemConfig {
             skip_directories: vec!["dist".to_string()],
@@ -63,8 +64,8 @@ fn augment_from_gitignore_ignores_missing_file() {
 
 #[test]
 fn load_codebase_config_uses_explicit_config_path() {
-    let root =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/config-v2/disabled-rule");
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/config-v2/disabled-rule/fixture");
     let config_path = root.join(".no-mistakes.yml");
 
     let config = load_codebase_config_with_path(&root, Some(&config_path)).unwrap();
@@ -87,7 +88,7 @@ fn load_codebase_config_defaults_when_no_config_exists() {
 #[test]
 fn load_config_with_explicit_config_uses_config_parent_gitignore() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/config-v2/explicit-config-parent");
+        .join("../../test-cases/config-v2/explicit-config-parent/fixture");
     let nested = root.join("nested");
 
     let config = load_config_with_path(&nested, Some(Path::new("../.no-mistakes.yml"))).unwrap();
@@ -98,7 +99,7 @@ fn load_config_with_explicit_config_uses_config_parent_gitignore() {
 #[test]
 fn load_codebase_config_finds_parent_guardrails_config() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/codebase-intel");
+        .join("../../test-cases/codebase-analysis/codebase-intel/fixture");
     let nested = root.join("packages/api/src");
 
     let config = load_codebase_config_with_path(&nested, None).unwrap();
@@ -111,7 +112,7 @@ fn load_codebase_config_finds_parent_guardrails_config() {
 #[test]
 fn load_codebase_config_finds_parent_no_mistakes_config() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/unique-exports-config-disabled");
+        .join("../../test-cases/codebase-analysis/unique-exports-config-disabled/fixture");
     let nested = root.join("src/nested");
 
     let config = load_codebase_config_with_path(&nested, None).unwrap();
@@ -200,8 +201,8 @@ fn v2_untargeted_enabled_rules_are_not_converted_to_global_codebase_rules() {
 
 #[test]
 fn load_codebase_config_rejects_duplicate_parent_configs() {
-    let root =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/config-v2/duplicate-stems");
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/config-v2/duplicate-stems/fixture");
 
     let error = load_codebase_config_with_path(&root, None).unwrap_err();
 
@@ -234,7 +235,7 @@ projects:
 #[test]
 fn project_roots_for_rule_infers_nextjs_root() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/config-v2/nextjs-inferred-root");
+        .join("../../test-cases/config-v2/nextjs-inferred-root/fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
 
     let mut config = load_codebase_config_with_path(&root, None).unwrap();
@@ -256,7 +257,7 @@ fn project_roots_for_rule_infers_nextjs_root() {
 #[test]
 fn project_config_effective_root_infers_nextjs_root() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/config-v2/nextjs-inferred-root");
+        .join("../../test-cases/config-v2/nextjs-inferred-root/fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let project = project::ProjectConfig {
         type_: Some(crate::config::v2::schema::ProjectType::Nextjs),

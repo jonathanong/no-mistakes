@@ -23,6 +23,7 @@ pub struct CheckFactPlan {
     pub symbols: bool,
     pub react: bool,
     pub queue: bool,
+    pub queue_factory_names: Vec<String>,
     pub integration: bool,
     pub dynamic_imports: bool,
     pub nextjs_caching: bool,

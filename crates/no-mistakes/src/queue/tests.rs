@@ -1,5 +1,5 @@
 use super::*;
-use crate::queue::extract::extract_file;
+use crate::queue::extract::extract_file_with_factories;
 use crate::queue::extract_helpers::quoted_prefix;
 use crate::queue::extract_model::FileFacts;
 use crate::queue::graph_model::{diagnostics, ProjectReport};
@@ -11,8 +11,9 @@ use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/queue-ast-hop")
+        .join("../../test-cases/queue-ast-hop")
         .join(name)
+        .join("fixture")
 }
 
 #[test]
@@ -276,7 +277,7 @@ fn diagnostics_include_parser_warnings_from_facts() {
 #[test]
 fn extract_file_records_import_forms_without_queue_semantics() {
     let root = fixture("syntax");
-    let facts = extract_file(&root.join("imports.ts"), &root).unwrap();
+    let facts = extract_file_with_factories(&root.join("imports.ts"), &[]).unwrap();
     assert!(facts
         .imports
         .iter()
@@ -408,4 +409,63 @@ fn shared_facts_filter_excludes_non_matching_files() {
     assert!(report.check.is_empty());
     // worker.ts itself is still present in the workers list.
     assert!(!report.workers.is_empty());
+}
+
+#[test]
+fn custom_factory_extraction_detects_queue_export() {
+    let root = fixture("custom-factory");
+    let queue_file = root.join("queues/notifications.ts");
+    let factory_names = vec!["createQueue".to_string()];
+    let facts = extract_file_with_factories(&queue_file, &factory_names).unwrap();
+    assert_eq!(
+        facts.queue_exports.get("notificationsQueue"),
+        Some(&"notifications".to_string()),
+        "should detect notificationsQueue as a queue binding"
+    );
+}
+
+#[test]
+fn custom_factory_send_notification_has_producer_sites() {
+    let root = fixture("custom-factory");
+    let send_file = root.join("producers/send-notification.ts");
+    let facts = extract_file_with_factories(&send_file, &[]).unwrap();
+    assert!(
+        !facts.producers.is_empty(),
+        "should detect notificationsQueue.add() as producer"
+    );
+    assert_eq!(facts.producers[0].binding, "notificationsQueue");
+}
+
+#[test]
+fn custom_factory_from_v2_config_detected_as_queue_definition() {
+    let root = fixture("custom-factory");
+    let report = analyze_project(&root, None, &[]).unwrap();
+    assert!(
+        report.edges.iter().any(|edge| {
+            edge.from.contains("send-notification") && edge.to.contains("notifications")
+        }),
+        "producer should connect to notifications queue, edges: {:?}",
+        report.edges
+    );
+}
+
+#[test]
+fn custom_factory_respected_in_check_mode_shared_facts() {
+    use crate::codebase::check_facts::{collect_file_facts, CheckFactPlan};
+
+    let root = fixture("custom-factory");
+    let queue_file = root.join("queues/notifications.ts");
+    let plan = CheckFactPlan {
+        queue: true,
+        queue_factory_names: vec!["createQueue".to_string()],
+        ..Default::default()
+    };
+    let facts = collect_file_facts(&root, &queue_file, &plan, None)
+        .expect("should collect facts for queue file");
+    let queue_facts = facts.queue.expect("queue facts should be present");
+    assert_eq!(
+        queue_facts.queue_exports.get("notificationsQueue"),
+        Some(&"notifications".to_string()),
+        "check-mode should detect factory-created queue bindings when factory names are configured"
+    );
 }

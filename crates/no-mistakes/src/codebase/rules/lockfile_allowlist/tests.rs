@@ -19,7 +19,7 @@ fn config_with_rule(yaml: &str) -> NoMistakesConfig {
 fn fixture_root(subpath: &str) -> std::path::PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/rules/lockfile-allowlist")
+            .join("../../test-cases/rules/lockfile-allowlist/fixture")
             .join(subpath),
     )
 }

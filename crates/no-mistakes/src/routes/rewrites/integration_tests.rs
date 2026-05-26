@@ -8,7 +8,8 @@ use std::path::PathBuf;
 
 fn fixture() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/nextjs-rewrites/basic"),
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/nextjs-rewrites/basic/fixture"),
     )
 }
 

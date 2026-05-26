@@ -86,7 +86,7 @@ fn try_resolve_appends_supported_extension() {
 fn resolve_entry_covers_exports_and_extension_fallback_returns() {
     let dir = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis/workspaces-entries/pkg"),
+            .join("../../test-cases/codebase-analysis/workspaces-entries/fixture/pkg"),
     );
 
     assert_eq!(
@@ -129,7 +129,7 @@ fn resolve_entry_covers_exports_and_extension_fallback_returns() {
 fn fixture_load_covers_entry_resolution_branches() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis/workspaces-entries"),
+            .join("../../test-cases/codebase-analysis/workspaces-entries/fixture"),
     );
 
     let map = load(&root).unwrap();

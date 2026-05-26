@@ -17,7 +17,7 @@ fn config_with_rule(yaml: &str) -> NoMistakesConfig {
 
 fn fixture(path: &str) -> PathBuf {
     std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/rules/require-files-in-subdirs")
+        .join("../../test-cases/rules/require-files-in-subdirs/fixture")
         .join(path)
 }
 
