@@ -14,12 +14,13 @@ pub(super) fn collect_playwright_selector_edges(root: &Path, all_files: &[PathBu
     let Ok(analysis) = run_playwright_selector_analysis(root, all_files) else {
         return vec![];
     };
-    analysis
-        .edges
-        .edges
-        .iter()
-        .filter_map(|pw_edge| selector_dep_edge(root, pw_edge))
-        .collect()
+    let mut edges = Vec::new();
+    for pw_edge in &analysis.edges.edges {
+        if let Some(edge) = selector_dep_edge(root, pw_edge) {
+            edges.push(edge);
+        }
+    }
+    edges
 }
 
 fn selector_dep_edge(root: &Path, edge: &crate::playwright::analysis::types::Edge) -> Option<Edge> {

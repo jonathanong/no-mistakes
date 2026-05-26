@@ -82,7 +82,26 @@ fn collect_playwright_selector_edges_returns_empty_without_playwright_config() {
     let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
     let edges = collect_playwright_selector_edges(&root, &all_files);
     // No playwright config → error → empty vec (graceful fallback).
-    let _ = edges; // may be empty or not, just must not panic
+    assert!(edges.is_empty());
+}
+
+#[test]
+fn collect_playwright_selector_edges_returns_edges_for_fixture_with_selectors() {
+    // Use the nextjs-selectors/selector-covered fixture which has data-testid
+    // attributes in app files and getByTestId calls in its spec file.
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/nextjs-selectors/selector-covered/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let edges = collect_playwright_selector_edges(&root, &all_files);
+    assert!(
+        !edges.is_empty(),
+        "expected selector edges from nextjs-selectors/selector-covered fixture"
+    );
+    assert!(
+        edges.iter().all(|(_, _, kind)| *kind == EdgeKind::Selector),
+        "all edges produced must have EdgeKind::Selector"
+    );
 }
 
 #[test]

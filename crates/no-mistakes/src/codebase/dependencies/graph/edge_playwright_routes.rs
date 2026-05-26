@@ -32,16 +32,20 @@ fn collect_playwright_route_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edg
 }
 
 fn playwright_frontend_root(root: &Path) -> PathBuf {
-    // Try v2 config first (projects.*.root for nextjs type + "/app").
-    if let Ok(v2) = crate::config::v2::load_v2_config(root, None) {
-        let view = crate::config::v2::ConfigView::new(&v2);
-        let nextjs_root = view.nextjs_root();
-        if !nextjs_root.is_empty() {
-            let candidate = root.join(nextjs_root).join("app");
-            if candidate.is_dir() {
-                return candidate;
+    // Try v2 config first: use <nextjs_root>/app as the frontend root.
+    let v2_candidate = crate::config::v2::load_v2_config(root, None)
+        .ok()
+        .and_then(|v2| {
+            let view = crate::config::v2::ConfigView::new(&v2);
+            let nextjs_root = view.nextjs_root();
+            if nextjs_root.is_empty() {
+                return None;
             }
-        }
+            let candidate = root.join(nextjs_root).join("app");
+            candidate.is_dir().then_some(candidate)
+        });
+    if let Some(candidate) = v2_candidate {
+        return candidate;
     }
     // Fall back to old guardrails config.
     let config = crate::codebase::config::load_config(root).ok();

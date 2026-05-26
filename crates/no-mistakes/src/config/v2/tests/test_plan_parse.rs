@@ -77,6 +77,41 @@ test_plan:
 }
 
 #[test]
+fn test_plan_full_suite_triggers_wins_when_both_keys_present() {
+    // When both fullSuiteTriggers and the deprecated dependencies key are
+    // present, fullSuiteTriggers takes precedence and deprecated flag is false.
+    let cfg: NoMistakesConfig = serde_yaml::from_str(
+        r#"
+test_plan:
+  playwright:
+    fullSuiteTriggers:
+      projects:
+        web: true
+    dependencies:
+      projects:
+        other: true
+"#,
+    )
+    .unwrap();
+
+    // fullSuiteTriggers wins — "web" project present, "other" is ignored.
+    assert!(cfg
+        .test_plan
+        .playwright
+        .full_suite_triggers
+        .projects
+        .contains_key("web"));
+    assert!(!cfg
+        .test_plan
+        .playwright
+        .full_suite_triggers
+        .projects
+        .contains_key("other"));
+    // fullSuiteTriggers was present so deprecated flag must be false.
+    assert!(!cfg.test_plan.playwright.deprecated_dependencies_key);
+}
+
+#[test]
 fn test_plan_framework_config_dependencies_alias_returns_full_suite_triggers() {
     // The `.dependencies()` method is a backward-compat alias for
     // `.full_suite_triggers` used by older call-sites.

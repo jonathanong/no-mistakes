@@ -84,6 +84,11 @@ fn playwright_layout_edges_use_discovered_file_set() {
         playwright_frontend_root(&fixture("simple")),
         fixture("simple").join("web/app")
     );
+    // v2 config with nextjs project root → should resolve to <root>/web/app.
+    assert_eq!(
+        playwright_frontend_root(&fixture("playwright-coverage-route-group")),
+        fixture("playwright-coverage-route-group").join("web/app")
+    );
 }
 
 #[test]
