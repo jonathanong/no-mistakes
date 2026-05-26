@@ -7,7 +7,7 @@ use crate::fetches::pipeline::route_analysis::{check_route_matches, collect_rout
 use crate::fetches::pipeline::target::{resolve_target_file, TargetSpec};
 use crate::fetches::report::types::{FinalReport, RouteReport};
 use anyhow::Result;
-use no_mistakes::{config, routes};
+use no_mistakes::routes;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
@@ -16,21 +16,10 @@ pub(crate) fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalRep
     if !root.is_dir() {
         anyhow::bail!("root directory does not exist: {}", root.display());
     }
-    let stems = [".no-mistakes", ".next-to-fetch"];
-    let root_config: crate::fetches::report::types::RootConfig =
-        config::load_config(&root, cli.config.as_deref(), &stems)?;
-    let file_config = root_config.next_to_fetch.unwrap_or(root_config.legacy);
 
-    let v2 = no_mistakes::config::v2::load_v2_config(&root, cli.config.as_deref()).ok();
-    let frontend_root_name = if let Some(ref v2) = v2 {
-        let view = no_mistakes::config::v2::ConfigView::new(v2);
-        view.nextjs_root().to_string()
-    } else {
-        file_config
-            .frontend_root
-            .unwrap_or_else(|| "app".to_string())
-    };
-    let frontend_root = root.join(&frontend_root_name);
+    let v2 = no_mistakes::config::v2::load_v2_config(&root, cli.config.as_deref())?;
+    let view = no_mistakes::config::v2::ConfigView::new(&v2);
+    let frontend_root = root.join(view.nextjs_root());
     if !frontend_root.is_dir() {
         anyhow::bail!(
             "frontend root directory does not exist: {}",
@@ -39,11 +28,8 @@ pub(crate) fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalRep
     }
     let stems = ["page", "route"];
     let mut all_routes = routes::collect_routes(&frontend_root, &stems);
-    if let Some(ref v2) = v2 {
-        let view = no_mistakes::config::v2::ConfigView::new(v2);
-        let virtual_routes = routes::rewrites::expand_rewrites(view.nextjs_rewrites(), &all_routes);
-        all_routes.extend(virtual_routes);
-    }
+    let virtual_routes = routes::rewrites::expand_rewrites(view.nextjs_rewrites(), &all_routes);
+    all_routes.extend(virtual_routes);
 
     let mut cache = Cache {
         files: HashMap::new(),
