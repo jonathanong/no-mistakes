@@ -79,6 +79,9 @@ pub enum EdgeKind {
     AssetImport,
     /// React component render relationship: parent component file → rendered child component file.
     ReactRender,
+    /// Playwright selector coverage: component file with `data-pw` attribute → test file that
+    /// calls `getByTestId` with the matching selector value.
+    Selector,
 }
 
 /// A single node in the traversal result.
@@ -97,7 +100,10 @@ type EdgeMap = HashMap<NodeId, Vec<(NodeId, EdgeKind)>>;
 // An edge in both directions: (from, to, kind).
 type Edge = (NodeId, NodeId, EdgeKind);
 
-type ParsedImports<'a> = Vec<(&'a PathBuf, &'a crate::codebase::ts_source::facts::TsFileFacts)>;
+type ParsedImports<'a> = Vec<(
+    &'a PathBuf,
+    &'a crate::codebase::ts_source::facts::TsFileFacts,
+)>;
 
 /// Selects which edge producers run while building a dependency graph.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -111,6 +117,8 @@ pub struct GraphBuildPlan {
     pub routes: bool,
     pub queues: bool,
     pub playwright_routes: bool,
+    /// Build `EdgeKind::Selector` edges from playwright analysis.
+    pub playwright_selectors: bool,
     pub http: bool,
     pub process: bool,
     pub assets: bool,
@@ -129,6 +137,7 @@ impl GraphBuildPlan {
             routes: true,
             queues: true,
             playwright_routes: true,
+            playwright_selectors: true,
             http: true,
             process: true,
             assets: true,
@@ -164,6 +173,7 @@ impl GraphBuildPlan {
                 || allowed.contains(&EdgeKind::QueueWorker),
             playwright_routes: allowed.contains(&EdgeKind::RouteTest)
                 || allowed.contains(&EdgeKind::Layout),
+            playwright_selectors: allowed.contains(&EdgeKind::Selector),
             http: allowed.contains(&EdgeKind::HttpCall),
             process: allowed.contains(&EdgeKind::ProcessSpawn),
             assets: allowed.contains(&EdgeKind::AssetImport),

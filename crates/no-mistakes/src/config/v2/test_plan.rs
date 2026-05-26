@@ -8,11 +8,51 @@ pub struct TestPlanConfig {
     pub vitest: TestPlanFrameworkConfig,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+/// Raw deserialization target that accepts both `fullSuiteTriggers` (current)
+/// and the deprecated `dependencies` key.
+#[derive(Debug, Clone, Deserialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
+struct TestPlanFrameworkConfigRaw {
+    /// Current name.
+    full_suite_triggers: Option<TestPlanDependencies>,
+    /// Deprecated alias – still accepted but emits a warning at load time.
+    dependencies: Option<TestPlanDependencies>,
+    environments: BTreeMap<String, TestPlanEnvironment>,
+}
+
+#[derive(Debug, Clone, Serialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct TestPlanFrameworkConfig {
-    pub dependencies: TestPlanDependencies,
+    pub full_suite_triggers: TestPlanDependencies,
+    /// Set to `true` when the config file used the deprecated `dependencies` key.
+    #[serde(skip)]
+    pub deprecated_dependencies_key: bool,
     pub environments: BTreeMap<String, TestPlanEnvironment>,
+}
+
+impl<'de> Deserialize<'de> for TestPlanFrameworkConfig {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let raw = TestPlanFrameworkConfigRaw::deserialize(deserializer)?;
+        let (full_suite_triggers, deprecated) = match (raw.full_suite_triggers, raw.dependencies) {
+            (Some(fst), _) => (fst, false),
+            (None, Some(deps)) => (deps, true),
+            (None, None) => (TestPlanDependencies::default(), false),
+        };
+        Ok(TestPlanFrameworkConfig {
+            full_suite_triggers,
+            deprecated_dependencies_key: deprecated,
+            environments: raw.environments,
+        })
+    }
+}
+
+/// Backward-compatible alias so existing call-sites that read `.dependencies`
+/// still compile. Prefer `.full_suite_triggers` in new code.
+impl TestPlanFrameworkConfig {
+    #[inline]
+    pub fn dependencies(&self) -> &TestPlanDependencies {
+        &self.full_suite_triggers
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

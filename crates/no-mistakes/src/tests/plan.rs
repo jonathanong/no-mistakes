@@ -424,6 +424,7 @@ pub(crate) fn path_confidence(edges: &[EdgeKind]) -> Confidence {
             | EdgeKind::RouteRef
             | EdgeKind::Layout
             | EdgeKind::RouteTest
+            | EdgeKind::Selector
             | EdgeKind::AssetImport
             | EdgeKind::ReactRender
             | EdgeKind::PackageDependency => return Confidence::Low,
@@ -452,5 +453,6 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
         EdgeKind::ProcessSpawn => "process",
         EdgeKind::AssetImport => "asset",
         EdgeKind::ReactRender => "react-render",
+        EdgeKind::Selector => "selector",
     }
 }

@@ -67,7 +67,24 @@ fn detect_and_parse(source: &str, path: &Path) -> Result<NoMistakesConfig> {
 fn parse_v2_config(source: &str, path: &Path) -> Result<NoMistakesConfig> {
     let config = parse_config::<NoMistakesConfig>(source, path)?;
     validate_v2_config(&config)?;
+    emit_v2_deprecation_warnings(&config, path);
     Ok(config)
+}
+
+fn emit_v2_deprecation_warnings(config: &NoMistakesConfig, path: &Path) {
+    let path_display = path.display();
+    if config.test_plan.playwright.deprecated_dependencies_key {
+        eprintln!(
+            "warning: {path_display}: `test_plan.playwright.dependencies` is deprecated; \
+             rename it to `test_plan.playwright.fullSuiteTriggers`"
+        );
+    }
+    if config.test_plan.vitest.deprecated_dependencies_key {
+        eprintln!(
+            "warning: {path_display}: `test_plan.vitest.dependencies` is deprecated; \
+             rename it to `test_plan.vitest.fullSuiteTriggers`"
+        );
+    }
 }
 
 fn validate_v2_config(config: &NoMistakesConfig) -> Result<()> {

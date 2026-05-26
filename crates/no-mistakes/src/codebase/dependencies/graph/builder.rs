@@ -72,8 +72,7 @@ impl DepGraph {
         };
 
         let workspace = if plan.imports || plan.workspace || plan.package {
-            crate::codebase::workspaces::load_from_files(root, &graph_files.all)
-                .unwrap_or_default()
+            crate::codebase::workspaces::load_from_files(root, &graph_files.all).unwrap_or_default()
         } else {
             Default::default()
         };
@@ -143,6 +142,11 @@ impl DepGraph {
             merge_edges(&mut forward, &mut reverse, playwright_edges);
         }
 
+        if plan.playwright_selectors {
+            let selector_edges = collect_playwright_selector_edges(root, &graph_files.all);
+            merge_edges(&mut forward, &mut reverse, selector_edges);
+        }
+
         // HTTP and process collectors consume shared TS facts in this path.
         // Keep the file-content fallback empty so graph builds do not add a
         // second source read pass.
@@ -203,5 +207,4 @@ impl DepGraph {
         let graph_files = GraphFiles::from_files(files);
         Self::build_with_plan_files_and_facts(root, tsconfig, plan, &graph_files, Some(facts))
     }
-
 }

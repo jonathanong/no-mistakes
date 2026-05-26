@@ -70,6 +70,7 @@ fn resolve_format(json: bool, format: Option<Format>, stdout_is_terminal: bool) 
     }
 }
 
+#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) fn collect_report_from_files(
     root: &Path,
     frontend_root: Option<&Path>,
