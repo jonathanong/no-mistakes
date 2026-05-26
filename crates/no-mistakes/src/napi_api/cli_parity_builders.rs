@@ -57,6 +57,9 @@ pub(crate) fn build_why_args(
 pub(crate) fn build_impact_args(
     options: TestsImpactOptions,
 ) -> AnyhowResult<crate::tests::ImpactArgs> {
+    if options.entrypoints.is_empty() {
+        bail!("entrypoints is required and must not be empty");
+    }
     Ok(crate::tests::ImpactArgs {
         entrypoints: options.entrypoints,
         root: options

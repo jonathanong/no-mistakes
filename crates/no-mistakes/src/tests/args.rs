@@ -56,15 +56,15 @@ pub(crate) struct PlanArgs {
     pub(crate) changed_files: Option<PathBuf>,
 
     /// Path to a unified diff file.
-    #[arg(long)]
+    #[arg(long, conflicts_with_all = ["diff_stdin", "diff_command"])]
     pub(crate) diff: Option<PathBuf>,
 
     /// Read unified diff from stdin.
-    #[arg(long, default_value_t = false)]
+    #[arg(long, default_value_t = false, conflicts_with_all = ["diff", "diff_command"])]
     pub(crate) diff_stdin: bool,
 
     /// Run a command and parse its stdout as a unified diff.
-    #[arg(long = "diff-command")]
+    #[arg(long = "diff-command", conflicts_with_all = ["diff", "diff_stdin"])]
     pub(crate) diff_command: Option<String>,
 
     /// file#export entrypoints to trace (union of all). Can be repeated.
