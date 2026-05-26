@@ -11,13 +11,26 @@
 /// `dependents_of(app_file)` returns tests that cover it via selector-based
 /// paths, even with no URL-navigation route connecting them.
 pub(super) fn collect_playwright_selector_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edge> {
-    let Ok(analysis) = run_playwright_selector_analysis(root, all_files) else {
+    let Ok(analysis) = run_playwright_selector_analysis(root) else {
         return vec![];
     };
+    // Use the graph's pre-discovered file set to filter: only emit edges whose
+    // both endpoints are files the dep-graph already knows about.  This avoids
+    // introducing nodes outside the graph's file set and avoids a second
+    // filesystem walk on top of the one the dep-graph builder already did.
+    let file_set: std::collections::HashSet<PathBuf> = all_files.iter().cloned().collect();
     let mut edges = Vec::new();
     for pw_edge in &analysis.edges.edges {
         if let Some(edge) = selector_dep_edge(root, pw_edge) {
-            edges.push(edge);
+            let NodeId::File(ref from_path) = edge.0 else {
+                continue;
+            };
+            let NodeId::File(ref to_path) = edge.1 else {
+                continue;
+            };
+            if file_set.contains(from_path) && file_set.contains(to_path) {
+                edges.push(edge);
+            }
         }
     }
     edges
@@ -49,7 +62,6 @@ fn selector_dep_edge(root: &Path, edge: &crate::playwright::analysis::types::Edg
 
 fn run_playwright_selector_analysis(
     root: &Path,
-    _all_files: &[PathBuf],
 ) -> anyhow::Result<crate::playwright::analysis::types::Analysis> {
     let settings = crate::playwright::config::load_settings(root, None, &[], None)?;
     let test_policy = crate::playwright::playwright_tests::TestPolicy {

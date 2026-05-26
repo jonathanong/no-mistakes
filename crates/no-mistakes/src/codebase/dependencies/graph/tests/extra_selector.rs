@@ -134,6 +134,21 @@ fn collect_playwright_selector_edges_returns_edges_for_fixture_with_selectors() 
 }
 
 #[test]
+fn collect_playwright_selector_edges_filters_to_all_files_set() {
+    // Passing an empty all_files set should produce no edges even when the
+    // analysis finds matches, because the file-set filter drops them.
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/playwright-coverage-route-group/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    // Pass an empty file list — all candidate edge endpoints are outside the set.
+    let edges = collect_playwright_selector_edges(&root, &[]);
+    assert!(
+        edges.is_empty(),
+        "edges outside all_files set must be filtered out, got: {edges:?}"
+    );
+}
+
+#[test]
 fn graph_build_plan_playwright_selectors_enabled_in_all() {
     let plan = GraphBuildPlan::all();
     assert!(plan.playwright_selectors);
