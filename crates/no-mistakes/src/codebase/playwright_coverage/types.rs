@@ -48,7 +48,7 @@ impl ExitStatus {
     }
 }
 
-#[derive(Debug, Clone, Default, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CoverageReport {
     pub summary: CoverageSummary,
@@ -62,17 +62,6 @@ pub struct CoverageSummary {
     pub covered: usize,
     pub uncovered: usize,
     pub coverage_percent: f64,
-}
-
-impl Default for CoverageSummary {
-    fn default() -> Self {
-        Self {
-            total: 0,
-            covered: 0,
-            uncovered: 0,
-            coverage_percent: 100.0,
-        }
-    }
 }
 
 #[derive(Debug, Clone, Serialize)]
