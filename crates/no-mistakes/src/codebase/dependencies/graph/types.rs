@@ -79,9 +79,10 @@ pub enum EdgeKind {
     AssetImport,
     /// React component render relationship: parent component file → rendered child component file.
     ReactRender,
-    /// Playwright selector coverage: test file → component file with `data-pw` attribute that
-    /// the test calls via `getByTestId`.  Direction mirrors `TestOf` so that
-    /// `dependents_of(component)` returns tests that cover it via selector paths.
+    /// Playwright selector coverage: test file → app/component file matched by
+    /// selector analysis (e.g. `data-pw` / `data-testid` attributes, locator
+    /// text).  Direction mirrors `TestOf` so that `dependents_of(component)`
+    /// returns tests that cover it via selector-based paths.
     Selector,
 }
 

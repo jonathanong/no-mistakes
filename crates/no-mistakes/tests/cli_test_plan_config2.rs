@@ -137,9 +137,9 @@ fn test_plan_playwright_coverage_selector_edges() {
 }
 
 #[test]
-fn test_plan_vitest_full_suite_triggers_key_works() {
-    // The new `fullSuiteTriggers` key should behave identically to the old
-    // `dependencies` key.
+fn test_plan_vitest_deprecated_dependencies_key_still_triggers() {
+    // The fixture uses the deprecated `dependencies` key; backward compat
+    // should preserve the trigger behaviour identical to `fullSuiteTriggers`.
     let root = fixture("test-plan-config");
     let output = run(&[
         "test",
