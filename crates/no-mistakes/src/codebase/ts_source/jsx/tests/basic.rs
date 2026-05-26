@@ -13,7 +13,7 @@ fn parse<'a>(allocator: &'a Allocator, source: &'a str) -> oxc::ast::ast::Progra
 
 fn fixture_source(name: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/ast-snippets/ts-source")
+        .join("../../test-cases/ast-snippets/ts-source/fixture")
         .join(name);
     std::fs::read_to_string(path).expect("fixture source must be readable")
 }

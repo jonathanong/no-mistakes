@@ -80,7 +80,8 @@ fn invalid_project_config_falls_back_to_default_test_matching() {
 }
 
 fn fixture_root() -> std::path::PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/codebase-analysis/test-filter")
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/test-filter/fixture")
 }
 
 fn load_config_fixture(root: &Path, name: &str) -> NoMistakesConfig {

@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/react-traits-analyze/components")
+        .join("../../test-cases/react-traits-analyze/components/fixture")
         .join(name)
 }
 

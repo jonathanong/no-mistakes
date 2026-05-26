@@ -1,6 +1,6 @@
 #[test]
 fn build_graph_over_fixture_corpus_exercises_all_edge_producers() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/codebase-analysis");
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/codebase-analysis");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let tsconfig = TsConfig {
         dir: root.clone(),
@@ -468,9 +468,9 @@ fn graph_private_helpers_cover_noop_branches() {
 #[test]
 fn test_edges_source_finds_test_file() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis")
+        .join("../../test-cases/codebase-analysis")
         .join("test-framework")
-        .join("src");
+        .join("fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let tsconfig = TsConfig {
         dir: root.clone(),
@@ -480,8 +480,8 @@ fn test_edges_source_finds_test_file() {
     };
     let graph = build_graph(&root, &tsconfig);
 
-    let index_mts = root.join("index.mts");
-    let index_test = root.join("index.test.mts");
+    let index_mts = root.join("src/index.mts");
+    let index_test = root.join("src/index.test.mts");
     let testof_filter: HashSet<EdgeKind> = [EdgeKind::TestOf].into();
 
     // dependents_of (reverse walk): test file is a dependent of its source.
@@ -512,8 +512,9 @@ fn test_edges_source_finds_test_file() {
 #[test]
 fn md_edges_added_for_codebase_intel_fixture() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis")
-        .join("codebase-intel");
+        .join("../../test-cases/codebase-analysis")
+        .join("codebase-intel")
+        .join("fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let tsconfig = TsConfig {
         dir: root.clone(),

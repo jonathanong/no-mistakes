@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 fn fixture_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/react-traits-analyze/import-table")
+        .join("../../test-cases/react-traits-analyze/import-table/fixture")
 }
 
 fn build_table_from_fixture(fixture_name: &str) -> super::ImportTable {

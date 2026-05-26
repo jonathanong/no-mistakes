@@ -4,9 +4,10 @@ use std::path::PathBuf;
 
 fn fixture(category: &str, name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures")
+        .join("../../test-cases")
         .join(category)
         .join(name)
+        .join("fixture")
 }
 
 fn check(fixture_path: &std::path::Path) -> usize {

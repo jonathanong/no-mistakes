@@ -8,8 +8,9 @@ fn bin() -> PathBuf {
 fn fixture(category: &str, scenario: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/rules")
+            .join("../../test-cases/rules")
             .join(category)
+            .join("fixture")
             .join(scenario),
     )
 }
@@ -17,8 +18,9 @@ fn fixture(category: &str, scenario: &str) -> PathBuf {
 fn codebase_fixture(scenario: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis")
-            .join(scenario),
+            .join("../../test-cases/codebase-analysis")
+            .join(scenario)
+            .join("fixture"),
     )
 }
 

@@ -7,7 +7,7 @@ use std::path::Path;
 
 fn fixture(path: &str) -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/rules/tsconfig-alias-folder-mapping")
+        .join("../../test-cases/rules/tsconfig-alias-folder-mapping/fixture")
         .join(path)
 }
 

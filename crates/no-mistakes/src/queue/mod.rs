@@ -2,6 +2,7 @@ pub(crate) mod extract;
 mod extract_helpers;
 mod extract_model;
 mod extract_record;
+mod extract_visitor;
 mod graph;
 mod graph_build;
 mod graph_model;

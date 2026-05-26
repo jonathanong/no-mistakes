@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 fn fixture_source(name: &str) -> (PathBuf, String) {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/react-traits-analyze/context")
+        .join("../../test-cases/react-traits-analyze/context/fixture")
         .join(name)
         .join("test.tsx");
     let source = std::fs::read_to_string(&path).expect("fixture must be readable");

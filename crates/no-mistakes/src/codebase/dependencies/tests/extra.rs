@@ -119,7 +119,7 @@ fn file_filters_exclude_module_nodes_without_target_module_filter() {
 
 fn node_entries_fixture(name: &str) -> Vec<graph::NodeEntry> {
     let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/node-entries")
+        .join("../../test-cases/codebase-analysis/node-entries/fixture")
         .join(name);
     let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
     let values: Vec<serde_json::Value> = serde_json::from_str(&source).unwrap();
@@ -158,8 +158,9 @@ fn node_entry_from_json(value: serde_json::Value) -> graph::NodeEntry {
 #[test]
 fn deps_direction_rejects_symbol_entrypoints() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis")
-        .join("simple");
+        .join("../../test-cases/codebase-analysis")
+        .join("simple")
+        .join("fixture");
     let args = TraverseArgs {
         files: vec![PathBuf::from("a.mts#a")],
         root: Some(root),
@@ -193,14 +194,16 @@ impl std::io::Write for FailingWriter {
 
 fn simple_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis")
+        .join("../../test-cases/codebase-analysis")
         .join("simple")
+        .join("fixture")
 }
 
 fn symbol_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis")
+        .join("../../test-cases/codebase-analysis")
         .join("symbol-export")
+        .join("fixture")
 }
 
 fn traverse_args(root: PathBuf, files: Vec<PathBuf>) -> TraverseArgs {
@@ -280,8 +283,9 @@ fn run_dependents_covers_mixed_symbol_and_plain_entrypoints() {
 #[test]
 fn dependents_treats_module_symbol_entrypoints_as_module_roots() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis")
-        .join("graph-modules");
+        .join("../../test-cases/codebase-analysis")
+        .join("graph-modules")
+        .join("fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let mut args = traverse_args(root.clone(), vec![PathBuf::from("@react/client#handler")]);
     args.relationships = vec![RelationshipArg::Import];
@@ -295,4 +299,40 @@ fn dependents_treats_module_symbol_entrypoints_as_module_roots() {
         .entries
         .iter()
         .any(|entry| entry.node.as_file() == Some(root.join("src/entry.mts").as_path())));
+}
+
+#[test]
+fn dependents_finds_tsconfig_alias_importers() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis")
+        .join("dependents-tsconfig-alias")
+        .join("fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let mut args = traverse_args(root.clone(), vec![PathBuf::from("components/button.tsx")]);
+    args.relationships = vec![RelationshipArg::Import];
+    let cwd = std::env::current_dir().unwrap();
+    let mut timings = crate::codebase::timing::PhaseTimings::start();
+
+    let result =
+        collect_and_filter_entries(&args, Direction::Dependents, &cwd, &mut timings).unwrap();
+
+    let files: Vec<_> = result
+        .entries
+        .iter()
+        .filter_map(|e| e.node.as_file().map(|p| p.to_path_buf()))
+        .collect();
+    assert!(
+        files.iter().any(|f| f == &root.join("pages/home.tsx")),
+        "should find pages/home.tsx (imports via @/ alias), got: {files:?}"
+    );
+    assert!(
+        files.iter().any(|f| f == &root.join("pages/settings.tsx")),
+        "should find pages/settings.tsx (imports via @/ alias)"
+    );
+    assert!(
+        files
+            .iter()
+            .any(|f| f == &root.join("tests/button.test.tsx")),
+        "should find tests/button.test.tsx (direct relative import)"
+    );
 }

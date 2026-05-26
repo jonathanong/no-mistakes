@@ -2,7 +2,7 @@ use super::*;
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/ast-snippets/ts-source/facts")
+        .join("../../test-cases/ast-snippets/ts-source/fixture/facts")
         .join(name)
 }
 

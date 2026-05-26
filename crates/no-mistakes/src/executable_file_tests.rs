@@ -28,9 +28,12 @@ impl Drop for PermissionsGuard {
 }
 
 fn proxy_fixture(name: &str) -> PathBuf {
+    let (sub, file) = name.split_once('/').expect("proxy fixture path must be sub/file");
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/no-mistakes-proxy")
-        .join(name)
+        .join("../../test-cases/no-mistakes-proxy")
+        .join(sub)
+        .join("fixture")
+        .join(file)
 }
 
 #[test]

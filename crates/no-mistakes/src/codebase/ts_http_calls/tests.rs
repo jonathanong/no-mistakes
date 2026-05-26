@@ -5,7 +5,7 @@ const API_PREFIXES: &[&str] = &["/api/", "/infra/", "/sitemaps/"];
 
 fn fixture_source(name: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/ast-snippets/ts-http-calls")
+        .join("../../test-cases/ast-snippets/ts-http-calls/fixture")
         .join(name);
     std::fs::read_to_string(path).expect("HTTP call fixture source must be readable")
 }

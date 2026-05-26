@@ -19,7 +19,7 @@ fn config_with_rule(yaml: &str) -> NoMistakesConfig {
 fn fixture(path: &str) -> std::path::PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/rules/no-empty-or-comments-only-files")
+            .join("../../test-cases/rules/no-empty-or-comments-only-files/fixture")
             .join(path),
     )
 }

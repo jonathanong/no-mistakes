@@ -6,7 +6,7 @@ use std::collections::HashMap;
 fn fixture() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis/test-no-unmocked-dynamic-imports"),
+            .join("../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports/fixture"),
     )
 }
 

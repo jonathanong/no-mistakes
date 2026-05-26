@@ -4,8 +4,9 @@ use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/nextjs-fetches")
+        .join("../../test-cases/nextjs-fetches")
         .join(name)
+        .join("fixture")
 }
 
 fn cli(root: PathBuf) -> crate::fetches::cli::Cli {

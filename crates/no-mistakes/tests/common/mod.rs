@@ -8,8 +8,9 @@ fn bin() -> PathBuf {
 pub fn fixture(name: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis")
-            .join(name),
+            .join("../../test-cases/codebase-analysis")
+            .join(name)
+            .join("fixture"),
     )
 }
 

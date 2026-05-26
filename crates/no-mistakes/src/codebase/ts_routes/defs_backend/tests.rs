@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 fn route_fixture_source(name: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/ast-snippets/ts-routes")
+        .join("../../test-cases/ast-snippets/ts-routes/fixture")
         .join(name);
     std::fs::read_to_string(path).expect("route fixture source must be readable")
 }
@@ -134,8 +134,9 @@ fn fixture_routes_backend_extracts_nested_router_pattern() {
     // fixtures/routes-backend mirrors the generic backend route pattern:
     //   import app from '../../app.mts'
     //   app.route('/api/v1/users/:idOrSlug').get(...).patch(...).delete(...)
-    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/routes-backend/backend/api/v1/users/user.mts");
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/codebase-analysis/routes-backend/fixture/backend/api/v1/users/user.mts",
+    );
     let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
     let routes = extract_backend_routes(&source, "app");
     assert_eq!(routes.len(), 3, "expected 3 routes (get, patch, delete)");
@@ -166,9 +167,9 @@ fn fixture_backend_walker_covers_statement_shadowing_and_route_shapes() {
 
 #[test]
 fn collect_backend_routes_helpers_filter_files_and_directories() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/ast-snippets");
-    let source = root.join("ts-routes/backend-walk-all.ts");
-    let unmatched = root.join("server-routes/default-function.ts");
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/ast-snippets");
+    let source = root.join("ts-routes/fixture/backend-walk-all.ts");
+    let unmatched = root.join("server-routes/fixture/default-function.ts");
     let outside = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml");
     let mut builder = globset::GlobSetBuilder::new();
     builder.add(globset::Glob::new("ts-routes/**/*.ts").unwrap());

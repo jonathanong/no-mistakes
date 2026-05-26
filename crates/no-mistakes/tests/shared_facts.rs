@@ -6,14 +6,16 @@ use std::path::PathBuf;
 
 fn codebase_fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis")
+        .join("../../test-cases/codebase-analysis")
         .join(name)
+        .join("fixture")
 }
 
 fn queue_fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/queue-ast-hop")
+        .join("../../test-cases/queue-ast-hop")
         .join(name)
+        .join("fixture")
 }
 
 #[test]

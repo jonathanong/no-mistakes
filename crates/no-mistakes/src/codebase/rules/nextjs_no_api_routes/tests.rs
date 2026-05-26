@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 fn fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/no-nextjs-api-routes")
+        .join("../../test-cases/codebase-analysis/no-nextjs-api-routes/fixture")
 }
 
 fn config() -> NoMistakesConfig {

@@ -76,8 +76,9 @@ fn get_entries_supports_symbol_dependents() {
 #[test]
 fn deps_fixture_simple_json_output() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis")
-        .join("simple");
+        .join("../../test-cases/codebase-analysis")
+        .join("simple")
+        .join("fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
 
     let tsconfig = crate::codebase::ts_resolver::TsConfig {
@@ -105,8 +106,9 @@ fn deps_fixture_simple_json_output() {
 #[test]
 fn deps_fixture_format_output() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis")
-        .join("format-output");
+        .join("../../test-cases/codebase-analysis")
+        .join("format-output")
+        .join("fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let tsconfig = crate::codebase::ts_resolver::TsConfig {
         dir: root.clone(),
@@ -135,8 +137,9 @@ fn deps_fixture_format_output() {
 #[test]
 fn deps_test_framework_vitest_filter() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis")
-        .join("test-framework");
+        .join("../../test-cases/codebase-analysis")
+        .join("test-framework")
+        .join("fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let tsconfig = crate::codebase::ts_resolver::TsConfig {
         dir: root.clone(),
@@ -169,8 +172,9 @@ fn filter_fixture_excludes_test_files() {
     // fixtures/filter/src/main.mts imports both utils.mts and utils.test.mts.
     // With a glob filter of "**/*.test.mts", only test files should appear.
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis")
-        .join("filter");
+        .join("../../test-cases/codebase-analysis")
+        .join("filter")
+        .join("fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let tsconfig = crate::codebase::ts_resolver::TsConfig {
         dir: root.clone(),
@@ -211,8 +215,9 @@ fn symbol_export_fixture_alpha_dependents() {
     // uses-alpha.mts and reexport.mts both import alpha.
     // uses-beta.mts imports beta. uses-all.mts imports all three.
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis")
-        .join("symbol-export");
+        .join("../../test-cases/codebase-analysis")
+        .join("symbol-export")
+        .join("fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let tsconfig = crate::codebase::ts_resolver::TsConfig {
         dir: root.clone(),
@@ -247,8 +252,9 @@ fn symbol_export_fixture_alpha_dependents() {
 #[test]
 fn folder_suffix_fixture() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis")
-        .join("folder-suffix");
+        .join("../../test-cases/codebase-analysis")
+        .join("folder-suffix")
+        .join("fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let tsconfig = crate::codebase::ts_resolver::TsConfig {
         dir: root.clone(),

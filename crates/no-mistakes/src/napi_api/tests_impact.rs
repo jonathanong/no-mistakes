@@ -22,7 +22,7 @@ fn tests_plan_json_with_diff_content() {
     let root = fixture_root("tests-impact-diff");
     let diff = std::fs::read_to_string(
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis/tests-impact-diff/sample.diff"),
+            .join("../../test-cases/codebase-analysis/tests-impact-diff/fixture/sample.diff"),
     )
     .unwrap();
     let options = json!({

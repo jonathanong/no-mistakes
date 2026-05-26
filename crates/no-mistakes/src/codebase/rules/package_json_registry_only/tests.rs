@@ -7,7 +7,7 @@ use std::path::Path;
 
 fn fixture(path: &str) -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/rules/package-json-registry-only")
+        .join("../../test-cases/rules/package-json-registry-only/fixture")
         .join(path)
 }
 

@@ -14,8 +14,9 @@ use super::*;
 fn fixture_root(name: &str) -> String {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/codebase-analysis")
-            .join(name),
+            .join("../../test-cases/codebase-analysis")
+            .join(name)
+            .join("fixture"),
     )
     .display()
     .to_string()
@@ -24,9 +25,10 @@ fn fixture_root(name: &str) -> String {
 fn fixture(category: &str, name: &str) -> String {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures")
+            .join("../../test-cases")
             .join(category)
-            .join(name),
+            .join(name)
+            .join("fixture"),
     )
     .display()
     .to_string()
@@ -427,7 +429,7 @@ fn server_route_json_returns_reports_edges_and_related() {
 fn react_json_functions_return_reports() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/react-traits-analyze/multi-component"),
+            .join("../../test-cases/react-traits-analyze/multi-component/fixture"),
     );
     let options = json!({
         "root": root,
@@ -444,7 +446,7 @@ fn react_json_functions_return_reports() {
 
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/react-traits-config/assert-no-fetch"),
+            .join("../../test-cases/react-traits-config/assert-no-fetch/fixture"),
     );
     let options = json!({ "root": root, "assertNoFetch": true }).to_string();
     let output = react_check_json_impl(options).unwrap();

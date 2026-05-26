@@ -5,7 +5,10 @@ import { describe, it } from "vitest";
 import { __dirname, messages } from "./helpers.mjs";
 
 function ruleFixture(rule, name) {
-  return readFileSync(resolve(__dirname, "../../../fixtures/eslint-plugin", rule, name), "utf8");
+  return readFileSync(
+    resolve(__dirname, "../../../test-cases/eslint-plugin", rule, "fixture", name),
+    "utf8",
+  );
 }
 
 describe("ts-no-export-renaming", () => {

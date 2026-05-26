@@ -35,8 +35,9 @@ fn mk_entry(path: &str, depth: usize) -> NodeEntry {
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis")
+        .join("../../test-cases/codebase-analysis")
         .join(name)
+        .join("fixture")
 }
 
 fn build_graph(root: &Path, tsconfig: &TsConfig) -> DepGraph {
@@ -313,8 +314,9 @@ fn dep_graph_dependents_of() {
 #[test]
 fn build_graph_from_fixture() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis")
-        .join("simple");
+        .join("../../test-cases/codebase-analysis")
+        .join("simple")
+        .join("fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let tsconfig = TsConfig {
         dir: root.clone(),
@@ -345,8 +347,9 @@ fn build_graph_from_fixture() {
 #[test]
 fn build_graph_aliased_fixture() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis")
-        .join("aliased");
+        .join("../../test-cases/codebase-analysis")
+        .join("aliased")
+        .join("fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let tsconfig_path = root.join("tsconfig.json");
     let tsconfig = crate::codebase::ts_resolver::load_tsconfig(&tsconfig_path).unwrap();
@@ -363,8 +366,9 @@ fn build_graph_aliased_fixture() {
 #[test]
 fn ci_edges_include_workspace_member_bins() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis")
-        .join("cargo-workspace-ci");
+        .join("../../test-cases/codebase-analysis")
+        .join("cargo-workspace-ci")
+        .join("fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let tsconfig = TsConfig {
         dir: root.clone(),

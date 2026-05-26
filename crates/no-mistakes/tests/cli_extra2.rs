@@ -6,12 +6,16 @@ fn bin() -> PathBuf {
 }
 
 fn fixture(category: &str, name: &str) -> PathBuf {
-    no_mistakes::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures")
-            .join(category)
-            .join(name),
-    )
+    let (sub, rest) = name.split_once('/').unwrap_or((name, ""));
+    let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases")
+        .join(category)
+        .join(sub)
+        .join("fixture");
+    if !rest.is_empty() {
+        path = path.join(rest);
+    }
+    no_mistakes::codebase::ts_resolver::normalize_path(&path)
 }
 
 fn run(args: &[&str]) -> Output {
@@ -233,7 +237,7 @@ fn symbols_with_relative_root_resolves_against_cwd() {
         .parent()
         .unwrap()
         .to_path_buf();
-    let output = run_in(&cwd, &["symbols", "--root", "simple", "a.mts", "--json"]);
+    let output = run_in(&cwd, &["symbols", "--root", "fixture", "a.mts", "--json"]);
     assert!(output.status.success());
     let json: serde_json::Value =
         serde_json::from_str(&stdout(&output)).expect("valid json from symbols");

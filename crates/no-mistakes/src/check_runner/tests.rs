@@ -23,7 +23,7 @@ fn empty_results_records_cli_side_channels() {
 #[test]
 fn run_all_keeps_filesystem_files_when_fact_collection_is_needed() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/check-runner/facts-and-filesystem");
+        .join("../../test-cases/check-runner/facts-and-filesystem/fixture");
     let config = root.join(".no-mistakes.yml");
 
     let results = run_all(root, Some(config), None).unwrap();
@@ -47,8 +47,8 @@ fn run_all_keeps_filesystem_files_when_fact_collection_is_needed() {
 
 #[test]
 fn run_all_includes_playwright_coverage_rules() {
-    let root =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/nextjs-coverage/uncovered");
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/nextjs-coverage/uncovered/fixture");
 
     let results = run_all(root, None, None).unwrap();
 
@@ -62,7 +62,7 @@ fn run_all_includes_playwright_coverage_rules() {
 #[test]
 fn run_all_includes_playwright_unique_test_id_rules() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/check-runner/playwright-unique-test-ids");
+        .join("../../test-cases/check-runner/playwright-unique-test-ids/fixture");
 
     let results = run_all(root, None, None).unwrap();
 
@@ -75,7 +75,7 @@ fn run_all_includes_playwright_unique_test_id_rules() {
 #[test]
 fn run_all_includes_playwright_unique_html_id_rules() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/nextjs-html-ids/unique-html-ids");
+        .join("../../test-cases/nextjs-html-ids/unique-html-ids/fixture");
 
     let results = run_all(root, None, None).unwrap();
 
@@ -88,7 +88,7 @@ fn run_all_includes_playwright_unique_html_id_rules() {
 #[test]
 fn run_codebase_check_uses_explicit_tsconfig_with_shared_facts() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/unique-exports-basic");
+        .join("../../test-cases/codebase-analysis/unique-exports-basic/fixture");
     let config = root.join(".no-mistakes.yml");
     let files = no_mistakes::codebase::ts_source::discover_files(&root, &[]);
     let facts = no_mistakes::codebase::check_facts::collect_check_facts(
@@ -116,7 +116,7 @@ fn run_codebase_check_uses_explicit_tsconfig_with_shared_facts() {
 #[test]
 fn run_codebase_check_propagates_unique_exports_errors() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/unique-exports-basic");
+        .join("../../test-cases/codebase-analysis/unique-exports-basic/fixture");
     let facts = no_mistakes::codebase::check_facts::CheckFactMap::default();
 
     let error = crate::check_tasks::run_codebase_check(
@@ -135,7 +135,7 @@ fn run_codebase_check_propagates_unique_exports_errors() {
 #[test]
 fn run_all_surfaces_react_enabled_config_errors() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/check-runner/react-config-error");
+        .join("../../test-cases/check-runner/react-config-error/fixture");
     let config = root.join(".no-mistakes.yml");
 
     let err = run_all(root, Some(config), None)
@@ -148,7 +148,7 @@ fn run_all_surfaces_react_enabled_config_errors() {
 #[test]
 fn run_all_propagates_integration_check_error() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/integration-tests/missing-config");
+        .join("../../test-cases/integration-tests/missing-config/fixture");
     let config = root.join(".no-mistakes.yml");
 
     let err = run_all(root, Some(config), None)
@@ -164,7 +164,7 @@ fn run_all_propagates_integration_check_error() {
 #[test]
 fn run_all_skips_discovery_for_forbidden_deps_only() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/forbidden-dependencies-basic");
+        .join("../../test-cases/codebase-analysis/forbidden-dependencies-basic/fixture");
     let config = root.join(".no-mistakes.yml");
     let results = run_all(root, Some(config), None).unwrap();
     assert!(

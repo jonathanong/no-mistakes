@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 fn route_fixture_source(name: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/ast-snippets/ts-routes")
+        .join("../../test-cases/ast-snippets/ts-routes/fixture")
         .join(name);
     std::fs::read_to_string(path).expect("route fixture source must be readable")
 }

@@ -12,7 +12,7 @@
   },
   "overrides": [
     {
-      "files": ["fixtures/eslint-snippets/**"],
+      "files": ["test-cases/eslint-snippets/fixture/**"],
       "rules": {
         "no-unused-vars": "off"
       }

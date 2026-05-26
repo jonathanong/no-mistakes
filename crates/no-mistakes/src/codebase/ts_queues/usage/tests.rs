@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 fn queue_fixture_source(name: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/ast-snippets/ts-queues")
+        .join("../../test-cases/ast-snippets/ts-queues/fixture")
         .join(name);
     std::fs::read_to_string(path).expect("queue fixture source must be readable")
 }

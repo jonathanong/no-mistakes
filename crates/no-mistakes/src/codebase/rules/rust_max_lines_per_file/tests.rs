@@ -231,7 +231,7 @@ fn check_with_files_normalizes_relative_roots() {
 #[test]
 fn check_with_files_uses_options_per_rule_application() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/rules/multiple-rule-applications");
+        .join("../../test-cases/rules/multiple-rule-applications/fixture");
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
     let all_files = vec![root.join("api/lib.rs"), root.join("worker/lib.rs")];
 

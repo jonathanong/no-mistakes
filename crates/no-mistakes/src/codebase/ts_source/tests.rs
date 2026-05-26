@@ -51,9 +51,19 @@ fn write(dir: &Path, path: &str, content: &str) {
 }
 
 fn fixture(path: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures")
-        .join(path)
+    let mut parts = path.splitn(3, '/');
+    let category = parts.next().unwrap_or(path);
+    let sub = parts.next().unwrap_or("");
+    let rest = parts.next().unwrap_or("");
+    let mut p = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases")
+        .join(category)
+        .join(sub)
+        .join("fixture");
+    if !rest.is_empty() {
+        p = p.join(rest);
+    }
+    p
 }
 
 // ── has_disable_comment ──────────────────────────────────────────────────

@@ -7,8 +7,9 @@ mod extra;
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/server-ast-routes")
+        .join("../../test-cases/server-ast-routes")
         .join(name)
+        .join("fixture")
 }
 
 #[test]

@@ -174,3 +174,13 @@ fn test_cli_target_missing_reports_unmatched_error() {
         .code(2)
         .stderr(predicates::str::contains("Error: targets not found"));
 }
+
+#[test]
+fn v2_config_nextjs_project_root_used_for_route_scanning() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/nextjs-fetches/v2-project-root/fixture");
+
+    let mut cmd = fetches_cmd();
+    cmd.arg("--root").arg(&root);
+    cmd.assert().success();
+}

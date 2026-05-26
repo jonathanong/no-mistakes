@@ -2,11 +2,19 @@ use super::*;
 use crate::config::v2::schema::{Project, ProjectType, RuleDef, RuleScope};
 
 fn fixture(path: &str) -> std::path::PathBuf {
-    crate::codebase::ts_resolver::normalize_path(
-        &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures")
-            .join(path),
-    )
+    let mut parts = path.splitn(3, '/');
+    let category = parts.next().unwrap_or(path);
+    let sub = parts.next().unwrap_or("");
+    let rest = parts.next().unwrap_or("");
+    let mut p = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases")
+        .join(category)
+        .join(sub)
+        .join("fixture");
+    if !rest.is_empty() {
+        p = p.join(rest);
+    }
+    crate::codebase::ts_resolver::normalize_path(&p)
 }
 
 #[test]
@@ -532,7 +540,7 @@ fn run_filesystem_rules_applies_shared_suppression() {
 #[test]
 fn run_filesystem_rules_with_files_executes_all_enabled_rust_rules() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/check-runner/facts-and-filesystem");
+        .join("../../test-cases/check-runner/facts-and-filesystem/fixture");
     let config = root.join(".no-mistakes.yml");
     let files = vec![root.join("src/lib.rs")];
 

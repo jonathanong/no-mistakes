@@ -8,25 +8,28 @@ fn bin() -> PathBuf {
 fn queue_fixture(name: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/queue-ast-hop")
-            .join(name),
+            .join("../../test-cases/queue-ast-hop")
+            .join(name)
+            .join("fixture"),
     )
 }
 
 fn server_fixture(name: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/server-ast-routes")
-            .join(name),
+            .join("../../test-cases/server-ast-routes")
+            .join(name)
+            .join("fixture"),
     )
 }
 
 fn react_fixture(category: &str, name: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures")
+            .join("../../test-cases")
             .join(category)
-            .join(name),
+            .join(name)
+            .join("fixture"),
     )
 }
 

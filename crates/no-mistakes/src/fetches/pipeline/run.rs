@@ -21,9 +21,15 @@ pub(crate) fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalRep
         config::load_config(&root, cli.config.as_deref(), &stems)?;
     let file_config = root_config.next_to_fetch.unwrap_or(root_config.legacy);
 
-    let frontend_root_name = file_config
-        .frontend_root
-        .unwrap_or_else(|| "app".to_string());
+    let v2 = no_mistakes::config::v2::load_v2_config(&root, cli.config.as_deref()).ok();
+    let frontend_root_name = if let Some(ref v2) = v2 {
+        let view = no_mistakes::config::v2::ConfigView::new(v2);
+        view.nextjs_root().to_string()
+    } else {
+        file_config
+            .frontend_root
+            .unwrap_or_else(|| "app".to_string())
+    };
     let frontend_root = root.join(&frontend_root_name);
     if !frontend_root.is_dir() {
         anyhow::bail!(
@@ -33,8 +39,8 @@ pub(crate) fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalRep
     }
     let stems = ["page", "route"];
     let mut all_routes = routes::collect_routes(&frontend_root, &stems);
-    if let Ok(v2) = no_mistakes::config::v2::load_v2_config(&root, cli.config.as_deref()) {
-        let view = no_mistakes::config::v2::ConfigView::new(&v2);
+    if let Some(ref v2) = v2 {
+        let view = no_mistakes::config::v2::ConfigView::new(v2);
         let virtual_routes = routes::rewrites::expand_rewrites(view.nextjs_rewrites(), &all_routes);
         all_routes.extend(virtual_routes);
     }

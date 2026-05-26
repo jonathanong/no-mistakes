@@ -9,7 +9,7 @@ ignorePaths:
   - "coverage/**"
   - "node_modules/**"
   - "packages/*/vendor/**"
-  - "fixtures/**"
+  - "test-cases/**"
   - "crates/**/target/**"
 words:
   - arm64

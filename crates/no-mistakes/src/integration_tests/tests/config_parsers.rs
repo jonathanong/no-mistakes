@@ -5,8 +5,9 @@ use std::path::PathBuf;
 fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/integration-tests")
-            .join(name),
+            .join("../../test-cases/integration-tests")
+            .join(name)
+            .join("fixture"),
     )
 }
 

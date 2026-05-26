@@ -14,7 +14,7 @@ const ROOTS: &[&str] = &[
 
 fn fixture_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/large-graph-monorepo")
+        .join("../../test-cases/codebase-analysis/large-graph-monorepo/fixture")
 }
 
 fn no_mistakes_bin() -> PathBuf {

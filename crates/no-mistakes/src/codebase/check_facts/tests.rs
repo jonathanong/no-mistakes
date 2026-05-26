@@ -8,13 +8,13 @@ use std::sync::Arc;
 
 fn fixture_path(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/shared-facts")
+        .join("../../test-cases/codebase-analysis/shared-facts/fixture")
         .join(name)
 }
 
 fn ast_fixture_path(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/ast-snippets/ts-source/facts")
+        .join("../../test-cases/ast-snippets/ts-source/fixture/facts")
         .join(name)
 }
 

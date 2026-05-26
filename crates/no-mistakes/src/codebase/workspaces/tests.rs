@@ -549,7 +549,7 @@ fn fixture_workspace_conditional_exports() {
     // fixtures/workspace-conditional-exports/shared/session-token/package.json uses
     // the conditional exports object form: { ".": { "types", "import", "default" } }
     let pkg_json = std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
-        "../../fixtures/codebase-analysis/workspace-conditional-exports/shared/session-token/package.json",
+        "../../test-cases/codebase-analysis/workspace-conditional-exports/fixture/shared/session-token/package.json",
     ))
     .unwrap();
     let pkg: serde_json::Value = serde_json::from_str(&pkg_json).unwrap();

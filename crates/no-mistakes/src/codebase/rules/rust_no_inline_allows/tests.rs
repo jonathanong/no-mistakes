@@ -18,7 +18,7 @@ fn config_with_rule(yaml: &str) -> NoMistakesConfig {
 
 fn fixture(path: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/rules/rust-no-inline-allows")
+        .join("../../test-cases/rules/rust-no-inline-allows/fixture")
         .join(path)
 }
 

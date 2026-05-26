@@ -4,8 +4,9 @@ use std::collections::HashMap;
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/react-traits-components")
+        .join("../../test-cases/react-traits-components")
         .join(name)
+        .join("fixture")
 }
 
 #[test]

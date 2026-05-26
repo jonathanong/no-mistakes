@@ -18,7 +18,7 @@ fn config_with_rule(yaml: &str) -> NoMistakesConfig {
 
 fn fixture(path: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/rules/rust-no-inline-tests")
+        .join("../../test-cases/rules/rust-no-inline-tests/fixture")
         .join(path)
 }
 
@@ -95,7 +95,7 @@ fn matches_cfg_test_use() {
 #[test]
 fn matches_cfg_test_impl_item() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/rules/rust-no-inline-tests/fail-associated");
+        .join("../../test-cases/rules/rust-no-inline-tests/fixture/fail-associated");
     let findings = check_file(&root.join("lib.rs"), &root);
     assert_eq!(findings.len(), 3);
     assert_eq!(findings[0].line, 4);

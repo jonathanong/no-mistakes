@@ -6,9 +6,10 @@ use tempfile::tempdir;
 
 fn fixture(category: &str, name: &str, file: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures")
+        .join("../../test-cases")
         .join(category)
         .join(name)
+        .join("fixture")
         .join(file)
 }
 

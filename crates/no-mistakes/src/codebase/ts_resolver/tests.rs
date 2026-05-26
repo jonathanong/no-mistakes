@@ -18,7 +18,7 @@ fn make_tsconfig(dir: &Path, paths_json: &str) -> TsConfig {
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/codebase-analysis/ts-resolver")
+        .join("../../test-cases/codebase-analysis/ts-resolver/fixture")
         .join(name)
 }
 
