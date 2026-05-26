@@ -55,7 +55,9 @@ pub enum Direction {
     Dependents,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, clap::ValueEnum, serde::Deserialize, serde::Serialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, clap::ValueEnum, serde::Deserialize, serde::Serialize,
+)]
 #[clap(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum RelationshipArg {
@@ -118,6 +120,9 @@ pub(crate) fn relationship_filter(
                 set.insert(EdgeKind::TestOf);
                 set.insert(EdgeKind::RouteTest);
                 set.insert(EdgeKind::Layout);
+                // Selector edges connect test files to the app components they
+                // cover via data-pw attributes; include them in test traversals.
+                set.insert(EdgeKind::Selector);
             }
             RelationshipArg::Route => {
                 set.insert(EdgeKind::RouteRef);
