@@ -436,3 +436,78 @@ fn root_level_source_file_without_test_fails() {
         findings[0].message
     );
 }
+
+#[test]
+fn stem_suffix_strip_pass_fixture_has_no_findings() {
+    let root = fixture_root("stem-suffix-pass");
+    let config_path = root.join(".no-mistakes.yml");
+    let findings = check(
+        &root,
+        &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
+    )
+    .unwrap();
+    assert!(
+        findings.is_empty(),
+        "mock.test file with stripped suffix should pass: {findings:?}"
+    );
+}
+
+#[test]
+fn stem_suffix_strip_test_to_source_resolves_mock() {
+    let root = fixture_root("stem-suffix-mock-test-to-source");
+    let config_path = root.join(".no-mistakes.yml");
+    let findings = check(
+        &root,
+        &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
+    )
+    .unwrap();
+    assert!(
+        findings.is_empty(),
+        "page.mock.test.tsx should resolve to page.tsx: {findings:?}"
+    );
+}
+
+#[test]
+fn stem_suffix_strip_source_to_test_finds_suffixed_test() {
+    let root = fixture_root("stem-suffix-mock-source-to-test");
+    let config_path = root.join(".no-mistakes.yml");
+    let findings = check(
+        &root,
+        &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
+    )
+    .unwrap();
+    assert!(
+        findings.is_empty(),
+        "page.tsx should find page.mock.test.tsx: {findings:?}"
+    );
+}
+
+#[test]
+fn stem_suffix_not_matching_base_does_not_crash() {
+    let root = fixture_root("stem-suffix-no-match");
+    let config_path = root.join(".no-mistakes.yml");
+    let findings = check(
+        &root,
+        &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
+    )
+    .unwrap();
+    assert!(
+        findings.is_empty(),
+        "non-matching suffix should not affect normal case: {findings:?}"
+    );
+}
+
+#[test]
+fn stem_suffix_source_to_test_in_tests_dir() {
+    let root = fixture_root("stem-suffix-tests-dir");
+    let config_path = root.join(".no-mistakes.yml");
+    let findings = check(
+        &root,
+        &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
+    )
+    .unwrap();
+    assert!(
+        findings.is_empty(),
+        "page.tsx should find __tests__/page.mock.test.tsx: {findings:?}"
+    );
+}

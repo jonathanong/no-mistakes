@@ -19,6 +19,20 @@ const MOCK_METHODS = new Set([
   "setSystemTime",
 ]);
 
+const MOCK_CHAIN_METHODS = new Set([
+  "mockImplementation",
+  "mockImplementationOnce",
+  "mockReturnValue",
+  "mockReturnValueOnce",
+  "mockResolvedValue",
+  "mockResolvedValueOnce",
+  "mockRejectedValue",
+  "mockRejectedValueOnce",
+  "mockReset",
+  "mockRestore",
+  "mockClear",
+]);
+
 function isTestFile(filename) {
   return TEST_FILE_PATTERN.test(filename.replace(/\\/g, "/"));
 }
@@ -83,9 +97,13 @@ module.exports = rule(
   },
   (context) => {
     let usesMocking = false;
+    function isMockChainCall(node) {
+      if (node.callee.type !== "MemberExpression") return false;
+      return MOCK_CHAIN_METHODS.has(propertyName(node.callee.property));
+    }
     return {
       CallExpression(node) {
-        if (isMockingCall(node, context)) usesMocking = true;
+        if (isMockingCall(node, context) || isMockChainCall(node)) usesMocking = true;
       },
       "Program:exit"(node) {
         if (!isTestFile(context.filename)) return;

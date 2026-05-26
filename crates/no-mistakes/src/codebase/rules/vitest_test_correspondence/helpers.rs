@@ -113,8 +113,15 @@ pub(super) fn check_source_to_test(
             };
 
             let found = exts.iter().any(|&test_ext| {
-                rel_set.contains(&format!("{p}{base}{test_ext}"))
+                if rel_set.contains(&format!("{p}{base}{test_ext}"))
                     || rel_set.contains(&format!("{tdir_p}{base}{test_ext}"))
+                {
+                    return true;
+                }
+                opts.stem_suffixes_to_strip.iter().any(|suffix| {
+                    rel_set.contains(&format!("{p}{base}{suffix}{test_ext}"))
+                        || rel_set.contains(&format!("{tdir_p}{base}{suffix}{test_ext}"))
+                })
             });
 
             if found {

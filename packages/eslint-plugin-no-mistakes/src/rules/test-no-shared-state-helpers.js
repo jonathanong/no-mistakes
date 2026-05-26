@@ -2,6 +2,7 @@
 
 const TEST_CALLEES = new Set(["it", "test", "describe"]);
 const SETUP_CALLEES = new Set(["beforeEach", "afterEach", "beforeAll", "afterAll"]);
+const PER_TEST_CALLEES = new Set(["beforeEach", "afterEach"]);
 const MUTATING_METHODS = new Set(
   "add clear copyWithin delete fill pop push reverse set shift sort splice unshift".split(" "),
 );
@@ -25,15 +26,13 @@ function isTestCall(node) {
 
 function setupCallbackKind(node) {
   const name = calleeName(node.callee);
-  return name === "beforeEach" || name === "afterEach"
-    ? "per-test"
-    : name === "beforeAll" || name === "afterAll"
-      ? "once"
-      : null;
-}
-
-function isSetupCall(node) {
-  return SETUP_CALLEES.has(calleeName(node.callee));
+  if (PER_TEST_CALLEES.has(name)) return "per-test";
+  if (name === "beforeAll") return "before-once";
+  if (name === "afterAll") return "once";
+  if (node.callee.type !== "MemberExpression" || !TEST_CALLEES.has(name)) return null;
+  if (PER_TEST_CALLEES.has(node.callee.property.name)) return "per-test";
+  if (node.callee.property.name === "beforeAll") return "before-once";
+  return node.callee.property.name === "afterAll" ? "once" : null;
 }
 
 function collectPatternNames(node, names = new Set()) {
@@ -101,7 +100,8 @@ function isInlineTestCallback(node) {
 }
 
 function isInlineSetupCallback(node) {
-  return node.parent?.type === "CallExpression" && isSetupCall(node.parent);
+  const p = node.parent;
+  return p?.type === "CallExpression" && SETUP_CALLEES.has(calleeName(p.callee));
 }
 
 function isCalledFunction(node) {
@@ -152,12 +152,13 @@ function firstNamedCallbackArgument(args) {
   return args[0]?.type === "Identifier" ? args[0] : undefined;
 }
 
-function createCleanupTracker() {
+function createCleanupTracker(options = {}) {
   const pathsBySuite = new Map();
   const suiteStack = [];
-  let activeSuiteKey;
-  let replaySuiteKey;
+  let activeSuiteKey, replaySuiteKey;
   let nextSuiteId = 0;
+  const ao = options.allowBeforeAllAssignments;
+  const sKinds = new Set(ao ? ["per-test", "before-once"] : ["per-test"]);
 
   function currentSuiteKey() {
     return replaySuiteKey ?? suiteStack.join("/");
@@ -175,7 +176,7 @@ function createCleanupTracker() {
 
   return {
     beginSetup(kind, suiteKey = currentSuiteKey()) {
-      activeSuiteKey = kind === "per-test" ? suiteKey : undefined;
+      activeSuiteKey = sKinds.has(kind) ? suiteKey : undefined;
     },
     clearReplaySuite() {
       replaySuiteKey = undefined;
@@ -194,8 +195,7 @@ function createCleanupTracker() {
     remember(path) {
       if (!path || activeSuiteKey === undefined) return;
       const paths = pathsBySuite.get(activeSuiteKey) ?? new Set();
-      paths.add(path);
-      pathsBySuite.set(activeSuiteKey, paths);
+      pathsBySuite.set(activeSuiteKey, paths.add(path));
     },
     setReplaySuite(suiteKey) {
       replaySuiteKey = suiteKey;
@@ -214,7 +214,6 @@ module.exports = {
   isInlineTestCallback,
   isMutableInitializer,
   calleeName,
-  isSetupCall,
   isTestCall,
   mutatingCallPropertyName,
   mutatingCallTarget,
