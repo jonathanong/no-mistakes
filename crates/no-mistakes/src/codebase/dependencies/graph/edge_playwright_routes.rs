@@ -1,12 +1,10 @@
 fn collect_playwright_route_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edge> {
     let frontend_root = playwright_frontend_root(root);
-    let Ok(report) = crate::codebase::playwright_coverage::collect_report_with_frontend_root_pub(
+    let report = crate::codebase::playwright_coverage::collect_report_with_frontend_root_pub(
         root,
         &frontend_root,
         all_files,
-    ) else {
-        return vec![];
-    };
+    );
 
     let all_file_set: HashSet<PathBuf> = all_files.iter().cloned().collect();
     let mut edges = Vec::new();

@@ -374,4 +374,5 @@ fn edge_kind_str_all_variants() {
     assert_eq!(edge_kind_str(EdgeKind::ProcessSpawn), "process");
     assert_eq!(edge_kind_str(EdgeKind::AssetImport), "asset");
     assert_eq!(edge_kind_str(EdgeKind::ReactRender), "react-render");
+    assert_eq!(edge_kind_str(EdgeKind::Selector), "selector");
 }
