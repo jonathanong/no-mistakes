@@ -21,10 +21,18 @@ fn http_and_process_relationships_map_to_edge_kinds() {
 fn import_only_detection_requires_nonempty_all_import_relationships() {
     assert!(!relationships_are_import_only(&[]));
     assert!(relationships_are_import_only(&[RelationshipArg::Import]));
-    assert!(relationships_are_import_only(&[RelationshipArg::ImportStatic]));
-    assert!(relationships_are_import_only(&[RelationshipArg::ImportDynamic]));
-    assert!(relationships_are_import_only(&[RelationshipArg::ImportType]));
-    assert!(relationships_are_import_only(&[RelationshipArg::ImportRequire]));
+    assert!(relationships_are_import_only(&[
+        RelationshipArg::ImportStatic
+    ]));
+    assert!(relationships_are_import_only(&[
+        RelationshipArg::ImportDynamic
+    ]));
+    assert!(relationships_are_import_only(&[
+        RelationshipArg::ImportType
+    ]));
+    assert!(relationships_are_import_only(&[
+        RelationshipArg::ImportRequire
+    ]));
     assert!(relationships_are_import_only(&[
         RelationshipArg::ImportStatic,
         RelationshipArg::ImportDynamic,
@@ -97,7 +105,10 @@ fn target_module_filter_keeps_only_matching_module_nodes() {
     let filtered = apply_target_module_filters(entries, &["@react/*".to_string()]).unwrap();
 
     assert_eq!(filtered.len(), 1);
-    assert_eq!(filtered[0].node, NodeId::Module("@react/client".to_string()));
+    assert_eq!(
+        filtered[0].node,
+        NodeId::Module("@react/client".to_string())
+    );
 }
 
 #[test]
