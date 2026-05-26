@@ -16,7 +16,8 @@ use async_task::{JsonTask, VersionTask};
 pub(crate) use cli_parity::{
     check_json_impl, fetches_json_impl, playwright_check_json_impl, playwright_edges_json_impl,
     playwright_related_json_impl, playwright_tests_json_impl, tests_comment_markdown_impl,
-    tests_graph_json_impl, tests_graph_mermaid_impl, tests_plan_json_impl, tests_why_json_impl,
+    tests_graph_json_impl, tests_graph_mermaid_impl, tests_impact_json_impl, tests_plan_json_impl,
+    tests_why_json_impl,
 };
 pub(crate) use codebase::{
     dependencies_json_impl, dependents_json_impl, related_json_impl, symbols_json_impl,
@@ -104,6 +105,12 @@ pub fn tests_graph_json(options_json: String) -> AsyncTask<JsonTask> {
 #[cfg_attr(not(test), napi(js_name = "testsGraphMermaid"))]
 pub fn tests_graph_mermaid(options_json: String) -> AsyncTask<JsonTask> {
     AsyncTask::new(JsonTask::new(options_json, tests_graph_mermaid_impl))
+}
+
+#[cfg(not(coverage))]
+#[cfg_attr(not(test), napi(js_name = "testsImpactJson"))]
+pub fn tests_impact_json(options_json: String) -> AsyncTask<JsonTask> {
+    AsyncTask::new(JsonTask::new(options_json, tests_impact_json_impl))
 }
 
 #[cfg(not(coverage))]

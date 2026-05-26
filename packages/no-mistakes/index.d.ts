@@ -14,6 +14,7 @@ import type {
   SymbolsResult,
   TestGraph,
   TestPlan,
+  TestsImpactOptions,
   TestsPlanDocumentOptions,
   TestsPlanOptions,
   TestsWhyOptions,
@@ -30,6 +31,7 @@ export function symbols(options: SymbolsOptions): Promise<SymbolsResult>;
 export function fetches(options?: FetchesOptions): Promise<unknown>;
 export function check(options?: ProjectOptions): Promise<CheckReport>;
 export function testsPlan(options: TestsPlanOptions): Promise<TestPlan>;
+export function testsImpact(options: TestsImpactOptions): Promise<TestPlan>;
 export function testsWhy(options: TestsWhyOptions): Promise<Record<string, WhyStep[]>>;
 export function testsComment(options: TestsPlanDocumentOptions): Promise<string>;
 export function testsGraph(options: TestsPlanDocumentOptions): Promise<TestGraph>;

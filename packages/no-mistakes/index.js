@@ -34,6 +34,10 @@ async function testsPlan(options) {
   return callJson(native.testsPlanJson, options);
 }
 
+async function testsImpact(options) {
+  return callJson(native.testsImpactJson, options);
+}
+
 async function testsWhy(options) {
   return callJson(native.testsWhyJson, options);
 }
@@ -134,6 +138,7 @@ module.exports = {
   testsComment,
   testsGraph,
   testsGraphMermaid,
+  testsImpact,
   testsPlan,
   testsWhy,
   version,

@@ -173,7 +173,7 @@ struct Entrypoint {
     symbol: Option<String>,
 }
 
-fn parse_entrypoint(s: &str) -> (PathBuf, Option<String>) {
+pub fn parse_entrypoint(s: &str) -> (PathBuf, Option<String>) {
     match s.split_once('#') {
         Some((file, symbol)) => (PathBuf::from(file), Some(symbol.to_string())),
         None => (PathBuf::from(s), None),

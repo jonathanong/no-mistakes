@@ -560,3 +560,5 @@ fn option_parsers_cover_all_supported_values() {
         vec!["file.ts".to_string()]
     );
 }
+
+include!("tests_impact.rs");

@@ -7,10 +7,22 @@ export interface TestsPlanOptions {
   head?: string;
   changedFiles?: string[];
   changedFilesFile?: string;
+  /** Inline unified diff content to extract changed files from. */
+  diff?: string;
+  /** file#export entrypoints to trace impact from (union of all). */
+  entrypoints?: string[];
   environment?: string;
   limitPercent?: number;
   limitFiles?: number;
   globalConfigFallback?: boolean;
+}
+
+export interface TestsImpactOptions {
+  root?: string;
+  config?: string;
+  tsconfig?: string;
+  /** file#export entrypoints to trace impact from. */
+  entrypoints: string[];
 }
 
 export interface TestPlan {
