@@ -42,7 +42,11 @@ fn coverage_findings(report: &CoverageReport) -> Vec<RuleFinding> {
             target: Some(route.route.clone()),
         });
     }
-    for selector in report.selectors.iter().filter(|selector| !selector.covered) {
+    for selector in report
+        .selectors
+        .iter()
+        .filter(|selector| !selector.covered && !selector.unsupported_dynamic)
+    {
         findings.push(RuleFinding {
             rule: PLAYWRIGHT_COVERAGE.to_string(),
             file: selector.file.clone(),

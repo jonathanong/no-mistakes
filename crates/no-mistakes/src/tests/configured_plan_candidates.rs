@@ -80,9 +80,12 @@ fn graph_candidates(
             let NodeId::File(test_path) = &test_node else {
                 continue;
             };
-            let is_coverage = edge_path
-                .iter()
-                .any(|edge| matches!(edge, EdgeKind::RouteTest | EdgeKind::Layout));
+            let is_coverage = edge_path.iter().any(|edge| {
+                matches!(
+                    edge,
+                    EdgeKind::RouteTest | EdgeKind::Layout | EdgeKind::Selector
+                )
+            });
             if (group == TestPlanGroupType::Coverage) != is_coverage {
                 continue;
             }

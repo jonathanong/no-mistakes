@@ -308,6 +308,9 @@ fn test_maps_to_test_of_and_route_test() {
     assert!(set.contains(&EdgeKind::TestOf));
     assert!(set.contains(&EdgeKind::RouteTest));
     assert!(set.contains(&EdgeKind::Layout));
+    // Selector edges connect test files to components via data-pw; include
+    // them so --relationship test covers selector-based impacted tests too.
+    assert!(set.contains(&EdgeKind::Selector));
 }
 
 #[test]
@@ -430,7 +433,10 @@ fn resolve_entrypoints_infers_workspace_package_directory_entry() {
         entrypoints[0].node,
         graph::NodeId::File(root.join("packages/local/src/index.mts"))
     );
-    assert_eq!(entrypoints[0].file, root.join("packages/local/src/index.mts"));
+    assert_eq!(
+        entrypoints[0].file,
+        root.join("packages/local/src/index.mts")
+    );
 }
 
 #[test]
@@ -465,10 +471,7 @@ fn resolve_entrypoints_keeps_directory_without_entry_as_file_node() {
     let args = parse(&["deps", "empty"]);
     let entrypoints = resolve_entrypoints(&args.files, &root, &root);
 
-    assert_eq!(
-        entrypoints[0].node,
-        graph::NodeId::File(root.join("empty"))
-    );
+    assert_eq!(entrypoints[0].node, graph::NodeId::File(root.join("empty")));
     assert_eq!(entrypoints[0].file, root.join("empty"));
 }
 
@@ -482,7 +485,10 @@ fn resolve_entrypoints_accepts_workspace_package_specifier() {
         entrypoints[0].node,
         graph::NodeId::File(root.join("packages/local/src/index.mts"))
     );
-    assert_eq!(entrypoints[0].file, root.join("packages/local/src/index.mts"));
+    assert_eq!(
+        entrypoints[0].file,
+        root.join("packages/local/src/index.mts")
+    );
 }
 
 #[test]
@@ -542,8 +548,10 @@ fn entrypoint_package_helpers_cover_relative_scoped_and_invalid_roots() {
     ));
 
     assert!(!root_dependency_names(&fixture_root("simple")).contains("lodash"));
-    assert!(!root_dependency_names(&fixture_root("unique-exports-malformed-package"))
-        .contains("lodash"));
+    assert!(
+        !root_dependency_names(&fixture_root("unique-exports-malformed-package"))
+            .contains("lodash")
+    );
 }
 
 #[test]

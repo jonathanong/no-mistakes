@@ -60,6 +60,19 @@ impl OneOrMany {
 
 pub(super) fn parse_legacy_playwright_config(source: &str, path: &Path) -> Result<FileConfig> {
     let root_config: RootConfig = parse_config(source, path)?;
+    if root_config.playwright_ast_coverage.is_some() {
+        let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
+        // Only warn when the key appears inside a v2 config; the dedicated
+        // .playwright-ast-coverage.* files are expected to use this shape.
+        let is_v2_file = stem.starts_with(".no-mistakes");
+        if is_v2_file {
+            eprintln!(
+                "warning: {}: `playwrightAstCoverage` is a legacy holdover; \
+                 move its settings to `tests.playwright` in the v2 schema",
+                path.display()
+            );
+        }
+    }
     Ok(root_config
         .playwright_ast_coverage
         .unwrap_or(root_config.legacy))

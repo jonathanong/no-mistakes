@@ -1,11 +1,11 @@
 fn collect_playwright_route_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edge> {
-    let Ok(report) =
-        crate::codebase::playwright_coverage::collect_report_from_files(root, None, &[], all_files)
-    else {
-        return vec![];
-    };
-
     let frontend_root = playwright_frontend_root(root);
+    let report = crate::codebase::playwright_coverage::collect_report_with_frontend_root_pub(
+        root,
+        &frontend_root,
+        all_files,
+    );
+
     let all_file_set: HashSet<PathBuf> = all_files.iter().cloned().collect();
     let mut edges = Vec::new();
     for route in report.routes {
@@ -17,11 +17,9 @@ fn collect_playwright_route_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edg
                 EdgeKind::RouteTest,
             ));
         }
-        for layout_file in collect_layout_chain_files_from_file_set(
-            &page_file,
-            &frontend_root,
-            &all_file_set,
-        ) {
+        for layout_file in
+            collect_layout_chain_files_from_file_set(&page_file, &frontend_root, &all_file_set)
+        {
             edges.push((
                 NodeId::File(page_file.clone()),
                 NodeId::File(layout_file),
@@ -33,6 +31,20 @@ fn collect_playwright_route_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edg
 }
 
 fn playwright_frontend_root(root: &Path) -> PathBuf {
+    // Try v2 config first: use <nextjs_root>/app as the frontend root.
+    let v2_candidate = crate::config::v2::load_v2_config(root, None)
+        .ok()
+        .and_then(|v2| {
+            let view = crate::config::v2::ConfigView::new(&v2);
+            // nextjs_root() defaults to "app" when no nextjs project is configured,
+            // so it is never empty; is_dir() handles the directory-not-found case.
+            let candidate = root.join(view.nextjs_root()).join("app");
+            candidate.is_dir().then_some(candidate)
+        });
+    if let Some(candidate) = v2_candidate {
+        return candidate;
+    }
+    // Fall back to old guardrails config.
     let config = crate::codebase::config::load_config(root).ok();
     match crate::codebase::playwright_coverage::resolve_frontend_root(None, root, config.as_ref()) {
         Ok(frontend_root) => frontend_root,

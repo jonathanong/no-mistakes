@@ -397,7 +397,7 @@ fn dependency_trigger(
         TestFramework::Playwright => &config.test_plan.playwright,
         TestFramework::Vitest => &config.test_plan.vitest,
     };
-    for (project_name, trigger) in &plan.dependencies.projects {
+    for (project_name, trigger) in &plan.full_suite_triggers.projects {
         let Some(project) = config.projects.get(project_name) else {
             continue;
         };
@@ -405,7 +405,7 @@ fn dependency_trigger(
         let globset = compile_globset(&patterns)?;
         for changed in changed_files {
             let rel = relative_path(root, changed);
-            if ignored_changed_test(&rel, &plan.dependencies.ignore_changed_tests) {
+            if ignored_changed_test(&rel, &plan.full_suite_triggers.ignore_changed_tests) {
                 continue;
             }
             if globset.as_ref().is_some_and(|set| set.is_match(&rel)) {

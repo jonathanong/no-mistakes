@@ -107,6 +107,59 @@ fn findings_from_report_filters_disabled_duplicate_rules() {
 }
 
 #[test]
+fn findings_from_report_skips_unsupported_dynamic_selectors() {
+    // Selectors with unsupported_dynamic: true (fully-dynamic expressions like
+    // `data-pw={id}`) must NOT produce playwright-coverage findings.
+    let report = CoverageReport {
+        summary: Summary {
+            total_routes: 0,
+            covered_routes: 0,
+            uncovered_routes: 0,
+            total_selectors: 2,
+            covered_selectors: 0,
+            uncovered_selectors: 2,
+            duplicate_selectors: 0,
+            total_fetch_apis: 0,
+            covered_fetch_apis: 0,
+            uncovered_fetch_apis: 0,
+        },
+        routes: vec![],
+        selectors: vec![
+            CoverageSelector {
+                attribute: "data-pw".to_string(),
+                value: "~dynamic~".to_string(),
+                file: "web/app/page.tsx".to_string(),
+                covered: false,
+                unsupported_dynamic: true,
+                tests: vec![],
+                tests_detail: vec![],
+                selectors: vec![],
+            },
+            CoverageSelector {
+                attribute: "data-pw".to_string(),
+                value: "static-btn".to_string(),
+                file: "web/app/page.tsx".to_string(),
+                covered: false,
+                unsupported_dynamic: false,
+                tests: vec![],
+                tests_detail: vec![],
+                selectors: vec![],
+            },
+        ],
+        duplicate_selectors: vec![],
+        fetch_apis: vec![],
+    };
+
+    let findings = findings_from_report(&report, true, false, false);
+    assert_eq!(
+        findings.len(),
+        1,
+        "only the static selector should produce a finding"
+    );
+    assert_eq!(findings[0].target.as_deref(), Some("data-pw=static-btn"));
+}
+
+#[test]
 fn findings_from_report_maps_id_duplicates_to_test_ids_when_html_rule_is_disabled() {
     let report = CoverageReport {
         summary: Summary {
