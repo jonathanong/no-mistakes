@@ -18,18 +18,17 @@ pub(super) fn collect_playwright_selector_edges(root: &Path, all_files: &[PathBu
     // both endpoints are files the dep-graph already knows about.  This avoids
     // introducing nodes outside the graph's file set and avoids a second
     // filesystem walk on top of the one the dep-graph builder already did.
-    let file_set: std::collections::HashSet<PathBuf> = all_files.iter().cloned().collect();
+    let file_set: std::collections::HashSet<&Path> =
+        all_files.iter().map(PathBuf::as_path).collect();
     let mut edges = Vec::new();
     for pw_edge in &analysis.edges.edges {
-        if let Some(edge) = selector_dep_edge(root, pw_edge) {
-            let NodeId::File(ref from_path) = edge.0 else {
-                continue;
-            };
-            let NodeId::File(ref to_path) = edge.1 else {
-                continue;
-            };
-            if file_set.contains(from_path) && file_set.contains(to_path) {
-                edges.push(edge);
+        if let Some((from, to, kind)) = selector_dep_edge(root, pw_edge) {
+            // selector_dep_edge always produces File nodes; both must be in the
+            // graph's file set so we don't introduce phantom nodes.
+            if from.as_file().is_some_and(|p| file_set.contains(p))
+                && to.as_file().is_some_and(|p| file_set.contains(p))
+            {
+                edges.push((from, to, kind));
             }
         }
     }

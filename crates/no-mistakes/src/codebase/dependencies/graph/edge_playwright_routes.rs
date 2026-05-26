@@ -36,11 +36,9 @@ fn playwright_frontend_root(root: &Path) -> PathBuf {
         .ok()
         .and_then(|v2| {
             let view = crate::config::v2::ConfigView::new(&v2);
-            let nextjs_root = view.nextjs_root();
-            if nextjs_root.is_empty() {
-                return None;
-            }
-            let candidate = root.join(nextjs_root).join("app");
+            // nextjs_root() defaults to "app" when no nextjs project is configured,
+            // so it is never empty; is_dir() handles the directory-not-found case.
+            let candidate = root.join(view.nextjs_root()).join("app");
             candidate.is_dir().then_some(candidate)
         });
     if let Some(candidate) = v2_candidate {

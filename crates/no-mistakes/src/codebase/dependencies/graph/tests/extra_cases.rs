@@ -89,9 +89,8 @@ fn playwright_layout_edges_use_discovered_file_set() {
         playwright_frontend_root(&fixture("playwright-coverage-route-group")),
         fixture("playwright-coverage-route-group").join("web/app")
     );
-    // v2 config with no nextjs project (empty nextjs_root) → falls through to
-    // guardrails fallback, which for a fixture without web/app returns the
-    // default web/app path.
+    // v2 config with no nextjs project → nextjs_root() returns default "app",
+    // candidate <root>/app/app doesn't exist → falls through to guardrails fallback.
     let no_nextjs = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/graph-project-route-config/fixture");
     let no_nextjs = crate::codebase::ts_resolver::normalize_path(&no_nextjs);

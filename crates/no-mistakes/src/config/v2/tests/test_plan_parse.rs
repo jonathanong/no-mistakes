@@ -126,3 +126,16 @@ fn test_plan_framework_config_dependencies_alias_returns_full_suite_triggers() {
         cfg.full_suite_triggers.projects.len()
     );
 }
+
+#[test]
+fn test_plan_framework_config_deserializes_from_json() {
+    // Exercise the JSON deserializer monomorphization of TestPlanFrameworkConfig.
+    let json = serde_json::json!({
+        "fullSuiteTriggers": {
+            "projects": { "web": true }
+        }
+    });
+    let cfg: TestPlanFrameworkConfig = serde_json::from_value(json).unwrap();
+    assert!(cfg.full_suite_triggers.projects.contains_key("web"));
+    assert!(!cfg.deprecated_dependencies_key);
+}
