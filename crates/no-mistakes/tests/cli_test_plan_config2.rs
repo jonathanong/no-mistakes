@@ -338,7 +338,16 @@ fn run_rename_plan(fixture_name: &str) -> serde_json::Value {
         "stderr: {}",
         String::from_utf8_lossy(&output.stderr)
     );
-    serde_json::from_str(&stdout(&output)).unwrap()
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    // Coverage hints must surface the at-risk spec via the per-edge
+    // mechanism, not via a fallback that pulls the whole suite. Without
+    // this assertion, a future regression that throws everything into
+    // fallback would still pass the rename tests.
+    assert_eq!(
+        plan["fallback_triggered"], false,
+        "rename hint must not trigger a full-suite fallback: {plan:#}"
+    );
+    plan
 }
 
 fn assert_rename_surfaces(plan: &serde_json::Value, test_file: &str, expected_via: &str) {
