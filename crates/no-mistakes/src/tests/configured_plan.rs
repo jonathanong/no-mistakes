@@ -92,7 +92,7 @@ pub(crate) fn generate_configured_plan(
     }
 
     let graph = DepGraph::build(root, tsconfig)?;
-    let coverage_hints = build_coverage_hints(config, framework, diff_files, &all_tests);
+    let coverage_hints = build_coverage_hints(root, config, framework, diff_files, &all_tests);
     let mut selected_map: BTreeMap<PathBuf, SelectedTest> = BTreeMap::new();
     let mut used = HashSet::new();
     let mut group_results = Vec::new();

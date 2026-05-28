@@ -222,6 +222,15 @@ pub(super) struct DependentDomains {
     pub http: bool,
 }
 
+/// Playwright configuration needed to make the route reverse index
+/// agree with what the normal `analyze_test_occurrences` would index:
+/// the `navigation_helpers` allow `navigateTo(page, "/x")` and other
+/// configured wrappers to register as URL occurrences.
+#[derive(Default)]
+pub(super) struct RouteDependentConfig {
+    pub navigation_helpers: Vec<String>,
+}
+
 #[derive(Default)]
 struct PerTestExtraction {
     routes: Vec<String>,
@@ -243,13 +252,14 @@ pub(super) struct StringDomainDependents {
 pub(super) fn build_dependents(
     all_tests: &[PathBuf],
     domains: DependentDomains,
+    route_config: &RouteDependentConfig,
 ) -> StringDomainDependents {
     if !domains.routes && !domains.queues && !domains.http {
         return StringDomainDependents::default();
     }
     let per_test: Vec<(PathBuf, PerTestExtraction)> = all_tests
         .par_iter()
-        .map(|path| (path.clone(), extract_for_test(path, &domains)))
+        .map(|path| (path.clone(), extract_for_test(path, &domains, route_config)))
         .collect();
     let mut routes: Vec<(PathBuf, Vec<String>)> = Vec::with_capacity(per_test.len());
     let mut queues: Vec<(PathBuf, Vec<String>)> = Vec::with_capacity(per_test.len());
@@ -272,7 +282,11 @@ pub(super) fn build_dependents(
     }
 }
 
-fn extract_for_test(path: &Path, domains: &DependentDomains) -> PerTestExtraction {
+fn extract_for_test(
+    path: &Path,
+    domains: &DependentDomains,
+    route_config: &RouteDependentConfig,
+) -> PerTestExtraction {
     let Ok(source) = std::fs::read_to_string(path) else {
         return PerTestExtraction::default();
     };
@@ -286,22 +300,19 @@ fn extract_for_test(path: &Path, domains: &DependentDomains) -> PerTestExtractio
             // Use the occurrence variant so we can mirror what
             // `analyze_test_occurrences` does: drop URLs whose enclosing
             // `test.skip(...)` / `TeardownHook` would have been filtered
-            // out of `Edge::Route`.
+            // out of `Edge::Route`. Pass through the project's configured
+            // navigation helpers so `navigateTo(page, "/x")` (and similar
+            // wrappers) participate in the reverse index — the normal
+            // analyzer already does this.
             let policy = TestPolicy::default();
             let mut urls: Vec<String> =
                 no_mistakes::playwright::playwright_urls::extract_playwright_url_occurrences_from_program(
-                    program, source, &[],
+                    program, source, &route_config.navigation_helpers,
                 )
                 .into_iter()
                 .filter(|occ| policy.allows(occ.status))
                 .filter(|occ| occ.scope != TestOccurrenceScope::TeardownHook)
-                .filter_map(|occ| {
-                    if occ.value.starts_with('/') {
-                        Some(occ.value)
-                    } else {
-                        None
-                    }
-                })
+                .filter_map(|occ| normalize_route_url(&occ.value))
                 .collect();
             urls.sort();
             urls.dedup();
@@ -343,6 +354,22 @@ fn extract_for_test(path: &Path, domains: &DependentDomains) -> PerTestExtractio
         out
     })
     .unwrap_or_default()
+}
+
+/// Map a Playwright-test URL (possibly an absolute `http(s)://host/path`)
+/// to the rooted form (`/path`) the diff scanner records on the source
+/// side. Anything that does not resolve to a `/`-rooted reference is
+/// dropped — matching is exact-string in v1, so an unanchored URL would
+/// never line up with a removed route literal.
+fn normalize_route_url(raw: &str) -> Option<String> {
+    if raw.starts_with('/') {
+        return Some(raw.to_string());
+    }
+    let scheme_stripped = raw
+        .strip_prefix("http://")
+        .or_else(|| raw.strip_prefix("https://"))?;
+    let slash = scheme_stripped.find('/')?;
+    Some(scheme_stripped[slash..].to_string())
 }
 
 fn merge_string_dependents(per_test: Vec<(PathBuf, Vec<String>)>) -> HashMap<String, Vec<PathBuf>> {

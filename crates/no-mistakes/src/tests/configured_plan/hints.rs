@@ -2,7 +2,7 @@ use super::super::configured_plan_candidates::CoverageHints;
 use super::super::diff_parser::DiffFile;
 use super::hints_domains::{
     build_dependents, removed_http_paths_per_file, removed_queue_jobs_per_file,
-    removed_route_paths_per_file, DependentDomains,
+    removed_route_paths_per_file, DependentDomains, RouteDependentConfig,
 };
 use super::TestFramework;
 use no_mistakes::config::v2::schema::NoMistakesConfig;
@@ -34,6 +34,7 @@ struct SelectorSettings {
 /// empty `CoverageHints` for non-playwright frameworks or when no removed
 /// identifier was detected across any of those domains.
 pub(super) fn build_coverage_hints(
+    root: &std::path::Path,
     config: &NoMistakesConfig,
     framework: TestFramework,
     diff_files: &[DiffFile],
@@ -68,6 +69,20 @@ pub(super) fn build_coverage_hints(
     } else {
         build_selector_dependents(all_tests, &settings)
     };
+    // Pull the project's playwright navigation helpers so the dependent
+    // extractor for the route domain registers `navigateTo(page, "/x")`
+    // style wrappers the same way `analyze_test_occurrences` would. Falls
+    // back to an empty list if the settings cannot be loaded.
+    let route_config = if removed_route_paths.is_empty() {
+        RouteDependentConfig::default()
+    } else {
+        match no_mistakes::playwright::config::load_settings(root, None, &[], None) {
+            Ok(settings) => RouteDependentConfig {
+                navigation_helpers: settings.navigation_helpers,
+            },
+            Err(_) => RouteDependentConfig::default(),
+        }
+    };
     let domain_dependents = build_dependents(
         all_tests,
         DependentDomains {
@@ -75,6 +90,7 @@ pub(super) fn build_coverage_hints(
             queues: !removed_queue_jobs.is_empty(),
             http: !removed_http_paths.is_empty(),
         },
+        &route_config,
     );
 
     CoverageHints {
