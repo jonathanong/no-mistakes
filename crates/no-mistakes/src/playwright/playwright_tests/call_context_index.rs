@@ -17,7 +17,7 @@ use std::collections::HashMap;
 /// extract their own call data via simpler walkers and then look up each
 /// call's line here to apply the same `TestPolicy` and `TeardownHook` filter
 /// the selector / route reverse indexes already use.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct CallContext {
     pub status: TestStatus,
     pub scope: TestOccurrenceScope,
@@ -187,3 +187,7 @@ fn scope_rank(scope: TestOccurrenceScope) -> u8 {
         TestOccurrenceScope::TeardownHook => 3,
     }
 }
+
+#[cfg(test)]
+#[path = "call_context_index/tests.rs"]
+mod tests;

@@ -406,12 +406,43 @@ fn test_plan_playwright_route_rename_targets_old_url_tests() {
 }
 
 #[test]
+fn test_plan_playwright_route_param_pattern_matches_concrete_reference() {
+    // Diff removes a parametric route `/users/:id` while a spec still
+    // navigates to a concrete reference `/users/123`. The pattern-aware
+    // lookup (matcher::matches) must pull the spec into the coverage group.
+    let plan = run_rename_plan("playwright-route-param-rename");
+    assert_rename_surfaces(&plan, "tests/e2e/user-profile.spec.ts", "route");
+}
+
+#[test]
 fn test_plan_playwright_queue_rename_targets_old_job_tests() {
     // Diff renames an emailQueue.add('old') -> emailQueue.add('new') in
     // source while a spec still enqueues the old job name. The spec must
     // surface in the coverage group with `via: ["queue"]`.
     let plan = run_rename_plan("playwright-queue-rename");
     assert_rename_surfaces(&plan, "tests/e2e/email.spec.ts", "queue");
+}
+
+#[test]
+fn test_plan_playwright_queue_rename_scoped_by_binding() {
+    // Two specs share the same job name ("sync") via different queue
+    // bindings — emailQueue.add vs billingQueue.add. A diff renaming
+    // `emailQueue.add("sync")` must surface only the emailQueue spec and
+    // leave the billingQueue spec alone. Without binding scope both would
+    // collide on the bare `("job", "sync")` tuple.
+    let plan = run_rename_plan("playwright-queue-binding-scope");
+    assert_rename_surfaces(&plan, "tests/e2e/email.spec.ts", "queue");
+    let selected: Vec<&str> = plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v["test_file"].as_str().unwrap())
+        .collect();
+    assert!(
+        !selected.contains(&"tests/e2e/billing.spec.ts"),
+        "billing.spec.ts uses billingQueue.add(\"sync\") and must not be flagged when the diff only touches emailQueue: {:?}",
+        selected
+    );
 }
 
 #[test]
