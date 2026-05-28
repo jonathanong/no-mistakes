@@ -415,6 +415,52 @@ fn test_plan_playwright_route_param_pattern_matches_concrete_reference() {
 }
 
 #[test]
+fn test_plan_playwright_queue_factory_rename_targets_factory_constructors() {
+    // Diff renames `new Queue("emails")` -> `new Queue("emails-v2")` in
+    // source. A spec that still constructs `new Queue("emails")` directly
+    // must surface in the coverage group. This exercises the dependent-side
+    // factory regex scan added to extract_for_test's queue branch.
+    let plan = run_rename_plan("playwright-queue-factory-rename");
+    assert_rename_surfaces(&plan, "tests/e2e/email.spec.ts", "queue");
+}
+
+#[test]
+fn test_plan_playwright_queue_addbulk_to_add_refactor_is_quiet() {
+    // Diff refactors `addBulk([{ name: 'greet' }])` -> `add('greet', ...)`.
+    // The job name `greet` still exists on the `+` side, so the diff scanner
+    // must NOT register it as a removed job — the email.spec.ts that
+    // enqueues `greet` should not be flagged.
+    let root = fixture("playwright-queue-addbulk-to-add");
+    let diff_path = root.join("rename.diff");
+    let output = run(&[
+        "test",
+        "plan",
+        "playwright",
+        "--root",
+        root.to_str().unwrap(),
+        "--diff",
+        diff_path.to_str().unwrap(),
+        "--environment",
+        "prePush",
+        "--json",
+    ]);
+    assert!(output.status.success());
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(plan["fallback_triggered"], false);
+    let selected: Vec<&str> = plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v["test_file"].as_str().unwrap())
+        .collect();
+    assert!(
+        !selected.contains(&"tests/e2e/email.spec.ts"),
+        "email.spec.ts must not be flagged when addBulk->add refactor preserves the job name: {:?}",
+        selected
+    );
+}
+
+#[test]
 fn test_plan_playwright_queue_rename_targets_old_job_tests() {
     // Diff renames an emailQueue.add('old') -> emailQueue.add('new') in
     // source while a spec still enqueues the old job name. The spec must

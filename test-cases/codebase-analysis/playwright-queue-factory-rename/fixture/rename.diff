@@ -1,0 +1,12 @@
+diff --git a/src/queues.ts b/src/queues.ts
+index aaaaaaa..bbbbbbb 100644
+--- a/src/queues.ts
++++ b/src/queues.ts
+@@ -1,6 +1,6 @@
+ import { Queue } from "./queue-impl";
+
+ // Application factory: constructs the email queue by name. The diff
+ // renames the queue passed to `new Queue("emails")`; specs that still
+ // reference the old queue name through their own `new Queue(...)` factory
+-export const emailQueue = new Queue("emails");
++export const emailQueue = new Queue("emails-v2");

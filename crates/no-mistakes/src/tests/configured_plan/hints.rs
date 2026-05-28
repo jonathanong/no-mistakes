@@ -206,35 +206,57 @@ fn truly_removed_for_file(
     if df.removed_lines.is_empty() {
         return None;
     }
-    let removed_with_ctx: Vec<String> = df
+    // Selector attribute values typically live on a single JSX line, so the
+    // primary scan stays on `-` only. The context-augmented pass catches
+    // formatter-wrapped attributes (`<Foo\n  data-pw="x"\n/>`) that span
+    // multiple lines, and the context-only set guards against attributes
+    // present purely on unchanged context lines.
+    let removed = no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
+        re,
+        &df.removed_lines,
+    );
+    let removed_with_ctx_lines: Vec<String> = df
         .removed_lines
         .iter()
         .chain(df.context_lines.iter())
         .cloned()
         .collect();
-    let removed = no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
-        re,
-        &removed_with_ctx,
-    );
-    if removed.is_empty() {
+    let removed_with_ctx: Vec<(String, String)> =
+        no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
+            re,
+            &removed_with_ctx_lines,
+        );
+    let context_only: HashSet<(String, String)> =
+        no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
+            re,
+            &df.context_lines,
+        )
+        .into_iter()
+        .collect();
+    if removed.is_empty() && removed_with_ctx.is_empty() {
         return None;
     }
-    let added_with_ctx: Vec<String> = df
-        .added_lines
-        .iter()
-        .chain(df.context_lines.iter())
-        .cloned()
-        .collect();
     let added: HashSet<(String, String)> =
         no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
             re,
-            &added_with_ctx,
+            &df.added_lines,
         )
         .into_iter()
         .collect();
     let mut truly_removed: Vec<(String, String)> = Vec::new();
     let mut seen: HashSet<(String, String)> = HashSet::new();
     for pair in removed {
+        if added.contains(&pair) {
+            continue;
+        }
+        if seen.insert(pair.clone()) {
+            truly_removed.push(pair);
+        }
+    }
+    for pair in removed_with_ctx {
+        if context_only.contains(&pair) {
+            continue;
+        }
         if added.contains(&pair) {
             continue;
         }

@@ -50,23 +50,8 @@ const HTTP_LITERAL_PATTERN: &str = concat!(
     r#"(?:<[^>]+>)?\s*\(\s*['"`](?P<value>/[^'"`{}$\s]*)['"`]"#,
 );
 
-const QUEUE_JOB_PATTERN: &str = concat!(
-    // Capture the binding identifier of a `.add(...)` call (`emailQueue` in
-    // `emailQueue.add("sync")`) so the diff side can scope job hints by the
-    // calling binding. Other queue-defining shapes don't carry a relevant
-    // binding — they *define* the queue.
-    r#"(?:(?P<add_binding>\w+)?\s*\.add\s*\(\s*['"`](?P<add>[^'"`{}$\s]+)['"`]|"#,
-    r#"\bnew\s+Worker\s*\(\s*['"`](?P<worker>[^'"`{}$\s]+)['"`]|"#,
-    r#"\bcreateQueue\s*\(\s*['"`](?P<create>[^'"`{}$\s]+)['"`]|"#,
-    r#"\bnew\s+Queue\s*\(\s*['"`](?P<queue>[^'"`{}$\s]+)['"`])"#,
-);
-
-// Separate regex applied only when a hunk contains `.addBulk(`. Captures
-// every `name: "X"` inside the joined hunk text so multi-entry addBulk
-// calls do not lose later entries. There can be false positives if an
-// unrelated object literal in the same hunk has a `name:` key whose value
-// matches a real removed job name; in practice that overlap is rare.
-const QUEUE_ADDBULK_NAME_PATTERN: &str = r#"\bname\s*:\s*['"`](?P<name>[^'"`{}$\s]+)['"`]"#;
+mod queue_scan;
+use queue_scan::{scan_addbulk_names_kinded, scan_queue_add_calls, scan_queue_defining_shapes};
 
 pub(super) fn removed_route_paths_per_file(
     diff_files: &[DiffFile],
@@ -96,104 +81,6 @@ pub(super) fn removed_queue_jobs_per_file(
 pub(super) const QUEUE_KIND_JOB: &str = "job";
 pub(super) const QUEUE_KIND_QUEUE: &str = "queue";
 
-fn scan_queue_add_calls(diff_files: &[DiffFile]) -> BTreeMap<PathBuf, Vec<QueueIdent>> {
-    let mut out: BTreeMap<PathBuf, Vec<QueueIdent>> = BTreeMap::new();
-    let Ok(re) = regex::Regex::new(QUEUE_JOB_PATTERN) else {
-        return out;
-    };
-    let per_file: Vec<(PathBuf, Vec<QueueIdent>)> = diff_files
-        .par_iter()
-        .filter_map(|df| truly_removed_add_calls(&re, df))
-        .collect();
-    for (path, values) in per_file {
-        out.entry(path).or_default().extend(values);
-    }
-    for values in out.values_mut() {
-        values.sort();
-        values.dedup();
-    }
-    out
-}
-
-fn truly_removed_add_calls(re: &regex::Regex, df: &DiffFile) -> Option<(PathBuf, Vec<QueueIdent>)> {
-    if df.removed_lines.is_empty() {
-        return None;
-    }
-    let removed_joined = join_with_context(&df.removed_lines, &df.context_lines);
-    let added_joined = join_with_context(&df.added_lines, &df.context_lines);
-    let removed = scan_add_calls(re, &removed_joined);
-    if removed.is_empty() {
-        return None;
-    }
-    let added: HashSet<(Option<String>, String)> =
-        scan_add_calls(re, &added_joined).into_iter().collect();
-    let mut truly_removed: Vec<QueueIdent> = Vec::new();
-    let mut seen: HashSet<(Option<String>, String)> = HashSet::new();
-    for (binding, job) in removed {
-        let key = (binding.clone(), job.clone());
-        if added.contains(&key) {
-            continue;
-        }
-        if seen.insert(key) {
-            truly_removed.push((binding, QUEUE_KIND_JOB.to_string(), job));
-        }
-    }
-    (!truly_removed.is_empty()).then(|| (df.path.clone(), truly_removed))
-}
-
-fn scan_add_calls(re: &regex::Regex, joined: &str) -> Vec<(Option<String>, String)> {
-    let mut out: Vec<(Option<String>, String)> = Vec::new();
-    for caps in re.captures_iter(joined) {
-        if let Some(job) = caps.name("add") {
-            let binding = caps
-                .name("add_binding")
-                .map(|m| m.as_str().to_string())
-                .filter(|s| !s.is_empty());
-            out.push((binding, job.as_str().to_string()));
-        }
-    }
-    out
-}
-
-fn scan_addbulk_names_kinded(diff_files: &[DiffFile]) -> BTreeMap<PathBuf, Vec<QueueIdent>> {
-    // addBulk entries don't reliably carry a binding through the regex hop
-    // (the `[{ name: ... }]` literal is separated from `binding.addBulk(...)`
-    // by arbitrary content), so the binding is recorded as None. The
-    // dependent side similarly keys addBulk-discovered jobs under `None` so
-    // they continue to line up.
-    scan_addbulk_names(diff_files)
-        .into_iter()
-        .map(|(path, names)| {
-            (
-                path,
-                names
-                    .into_iter()
-                    .map(|n| (None, QUEUE_KIND_JOB.to_string(), n))
-                    .collect(),
-            )
-        })
-        .collect()
-}
-
-fn scan_queue_defining_shapes(diff_files: &[DiffFile]) -> BTreeMap<PathBuf, Vec<QueueIdent>> {
-    scan_string_domain(
-        diff_files,
-        QUEUE_JOB_PATTERN,
-        &["worker", "create", "queue"],
-    )
-    .into_iter()
-    .map(|(path, names)| {
-        (
-            path,
-            names
-                .into_iter()
-                .map(|n| (None, QUEUE_KIND_QUEUE.to_string(), n))
-                .collect(),
-        )
-    })
-    .collect()
-}
-
 fn merge_kinded_per_file_maps(
     maps: Vec<BTreeMap<PathBuf, Vec<QueueIdent>>>,
 ) -> BTreeMap<PathBuf, Vec<QueueIdent>> {
@@ -208,70 +95,6 @@ fn merge_kinded_per_file_maps(
         values.dedup();
     }
     out
-}
-
-fn scan_addbulk_names(diff_files: &[DiffFile]) -> BTreeMap<PathBuf, Vec<String>> {
-    let mut out: BTreeMap<PathBuf, Vec<String>> = BTreeMap::new();
-    let Ok(name_re) = regex::Regex::new(QUEUE_ADDBULK_NAME_PATTERN) else {
-        return out;
-    };
-    let per_file: Vec<(PathBuf, Vec<String>)> = diff_files
-        .par_iter()
-        .filter_map(|df| addbulk_names_for_file(&name_re, df))
-        .collect();
-    for (path, names) in per_file {
-        out.entry(path).or_default().extend(names);
-    }
-    for values in out.values_mut() {
-        values.sort();
-        values.dedup();
-    }
-    out
-}
-
-fn addbulk_names_for_file(name_re: &regex::Regex, df: &DiffFile) -> Option<(PathBuf, Vec<String>)> {
-    if df.removed_lines.is_empty() {
-        return None;
-    }
-    // Scan removed ∪ context so a `name:` entry inside an addBulk call still
-    // registers when only its line is on the `-` side.
-    let removed_joined = join_with_context(&df.removed_lines, &df.context_lines);
-    if !removed_joined.contains(".addBulk") {
-        return None;
-    }
-    let added_joined = join_with_context(&df.added_lines, &df.context_lines);
-    let mut added_names: HashSet<String> = HashSet::new();
-    if added_joined.contains(".addBulk") {
-        for caps in name_re.captures_iter(&added_joined) {
-            if let Some(m) = caps.name("name") {
-                added_names.insert(m.as_str().to_string());
-            }
-        }
-    }
-    // Also subtract job names that surface as `.add('x', ...)` on the `+`
-    // side: refactoring `addBulk([{ name: 'x' }])` into `add('x', payload)`
-    // should not register `x` as a removed job.
-    if let Ok(add_re) = regex::Regex::new(r#"\.add\s*\(\s*['"`](?P<add>[^'"`{}$\s]+)['"`]"#) {
-        for caps in add_re.captures_iter(&added_joined) {
-            if let Some(m) = caps.name("add") {
-                added_names.insert(m.as_str().to_string());
-            }
-        }
-    }
-    let mut names: Vec<String> = Vec::new();
-    let mut seen: HashSet<String> = HashSet::new();
-    for caps in name_re.captures_iter(&removed_joined) {
-        if let Some(m) = caps.name("name") {
-            let value = m.as_str().to_string();
-            if added_names.contains(&value) {
-                continue;
-            }
-            if seen.insert(value.clone()) {
-                names.push(value);
-            }
-        }
-    }
-    (!names.is_empty()).then(|| (df.path.clone(), names))
 }
 
 fn join_with_context(lines: &[String], context_lines: &[String]) -> String {
@@ -317,24 +140,39 @@ fn truly_removed_strings(
     if df.removed_lines.is_empty() {
         return None;
     }
-    // Scan removed ∪ context for matches: a multi-line statement like
-    // `router.push(\n  "/old"\n);` can place the literal on a `-` line while
-    // the call's opening token is on a context line. Including context lets
-    // the regex span the gap.
-    let removed = scan_lines_with_context(re, capture_names, &df.removed_lines, &df.context_lines);
-    if removed.is_empty() {
-        return None;
-    }
-    // Mirror the "presence" scan over added ∪ context, so values that show
-    // up unchanged on context lines (or are re-introduced on the `+` side)
-    // are subtracted as still-present.
-    let added: HashSet<String> =
-        scan_lines_with_context(re, capture_names, &df.added_lines, &df.context_lines)
-            .into_iter()
-            .collect();
+    // Two passes: the single-line scan over `-` lines alone catches the
+    // common case without picking up values that only appear on context.
+    // The "removed ∪ context" scan catches multi-line statements like
+    // `router.push(\n  "/old"\n);` where the literal sits on a `-` line
+    // but the surrounding call shape lives on context — those wouldn't
+    // match against `-` alone since the regex needs the call token to be
+    // present. Anything that surfaces only through the context-augmented
+    // pass is verified to NOT also appear in a context-only scan, so a
+    // value that's purely on an unchanged context line (e.g. inside a
+    // comment block) doesn't get falsely reported as removed.
+    let removed_only = scan_lines(re, capture_names, &df.removed_lines);
+    let context_only: HashSet<String> = scan_lines(re, capture_names, &df.context_lines)
+        .into_iter()
+        .collect();
+    let removed_with_ctx =
+        scan_lines_joined(re, capture_names, &df.removed_lines, &df.context_lines);
+    let added: HashSet<String> = scan_lines(re, capture_names, &df.added_lines)
+        .into_iter()
+        .collect();
     let mut truly_removed: Vec<String> = Vec::new();
     let mut seen: HashSet<String> = HashSet::new();
-    for value in removed {
+    for value in removed_only {
+        if added.contains(&value) {
+            continue;
+        }
+        if seen.insert(value.clone()) {
+            truly_removed.push(value);
+        }
+    }
+    for value in removed_with_ctx {
+        if context_only.contains(&value) {
+            continue;
+        }
         if added.contains(&value) {
             continue;
         }
@@ -348,15 +186,28 @@ fn truly_removed_strings(
     Some((df.path.clone(), truly_removed))
 }
 
-fn scan_lines_with_context(
+fn scan_lines(re: &regex::Regex, capture_names: &[&str], lines: &[String]) -> Vec<String> {
+    let joined = lines.join("\n");
+    let mut out: Vec<String> = Vec::new();
+    for caps in re.captures_iter(&joined) {
+        for name in capture_names {
+            if let Some(m) = caps.name(name) {
+                let value = m.as_str();
+                if !value.is_empty() {
+                    out.push(value.to_string());
+                }
+            }
+        }
+    }
+    out
+}
+
+fn scan_lines_joined(
     re: &regex::Regex,
     capture_names: &[&str],
     lines: &[String],
     context_lines: &[String],
 ) -> Vec<String> {
-    // Join the hunk's lines so formatter-wrapped statements like
-    // `router.push(\n  "/x"\n)` or `addBulk([{\n  name: "x"\n}])` still
-    // match — `\s*` in the patterns spans the inserted newline.
     let joined = lines
         .iter()
         .chain(context_lines.iter())

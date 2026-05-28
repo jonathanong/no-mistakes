@@ -1,0 +1,19 @@
+tests:
+  playwright:
+    selectors:
+      testIds:
+        - data-pw
+      htmlIds: false
+
+test_plan:
+  playwright:
+    fullSuiteTriggers:
+      projects: {}
+    environments:
+      prePush:
+        groups:
+          - type: direct
+          - type: coverage
+          - type: dependencies
+
+rules: []

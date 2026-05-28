@@ -118,6 +118,23 @@ fn annotation_call_demotes_following_calls() {
 }
 
 #[test]
+fn annotation_call_visits_non_callback_args() {
+    // `test.skip(condition, reason)` annotations carry non-callback
+    // arguments (boolean conditions, string messages) that still need to
+    // be visited so any nested calls inside them get recorded.
+    let source = "import { test } from '@playwright/test';\n\
+                  test('case', () => {\n  \
+                    test.skip(shouldSkip(), describe('why'));\n\
+                  });\n";
+    let index = parse_index(source);
+    // `shouldSkip()` is on line 3 and visited as a non-callback arg of
+    // the annotation. The scope stays Test (the surrounding test() body);
+    // the call gets recorded — exactly what coverage cares about here.
+    let ctx = ctx_at(&index, 3);
+    assert_eq!(ctx.scope, TestOccurrenceScope::Test);
+}
+
+#[test]
 fn if_else_alternate_branch_visited() {
     // The alternate branch of an if/else should also be visited under the
     // demoted Conditional status.
