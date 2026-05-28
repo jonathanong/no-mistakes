@@ -33,8 +33,10 @@ struct SelectorSettings {
 /// playwright selector, route, queue, and HTTP-call domains; returns an
 /// empty `CoverageHints` for non-playwright frameworks or when no removed
 /// identifier was detected across any of those domains.
+#[allow(clippy::too_many_arguments)]
 pub(super) fn build_coverage_hints(
     root: &std::path::Path,
+    cli_config: Option<&std::path::Path>,
     config: &NoMistakesConfig,
     framework: TestFramework,
     diff_files: &[DiffFile],
@@ -71,12 +73,15 @@ pub(super) fn build_coverage_hints(
     };
     // Pull the project's playwright navigation helpers so the dependent
     // extractor for the route domain registers `navigateTo(page, "/x")`
-    // style wrappers the same way `analyze_test_occurrences` would. Falls
-    // back to an empty list if the settings cannot be loaded.
+    // style wrappers the same way `analyze_test_occurrences` would. The
+    // CLI's `--config` flag flows in via `cli_config` so an explicit
+    // override path is honored — defaulting to discovery would otherwise
+    // silently miss helpers configured outside the auto-detected file.
+    // Falls back to an empty list if the settings cannot be loaded.
     let route_config = if removed_route_paths.is_empty() {
         RouteDependentConfig::default()
     } else {
-        match no_mistakes::playwright::config::load_settings(root, None, &[], None) {
+        match no_mistakes::playwright::load_settings(root, cli_config, &[], None) {
             Ok(settings) => RouteDependentConfig {
                 navigation_helpers: settings.navigation_helpers,
             },
