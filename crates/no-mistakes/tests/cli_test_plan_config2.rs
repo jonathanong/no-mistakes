@@ -203,6 +203,7 @@ fn test_plan_playwright_coverage_layout_file_directly() {
     ]);
     assert!(output.status.success());
     let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(plan["fallback_triggered"], false);
     let via = via_labels(&plan, "tests/e2e/feed.spec.ts");
     assert!(
         via.iter().any(|v| v == "layout"),
@@ -234,6 +235,7 @@ fn test_plan_playwright_coverage_navigate_to_helper() {
     ]);
     assert!(output.status.success());
     let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(plan["fallback_triggered"], false);
     let via = via_labels(&plan, "tests/e2e/feed-nav.spec.ts");
     assert!(
         via.iter().any(|v| v == "layout"),
