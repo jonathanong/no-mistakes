@@ -81,10 +81,35 @@ pub(super) fn build_coverage_hints(
     let route_config = if removed_route_paths.is_empty() {
         RouteDependentConfig::default()
     } else {
-        match no_mistakes::playwright::load_settings(root, cli_config, &[], None) {
-            Ok(settings) => RouteDependentConfig {
-                navigation_helpers: settings.navigation_helpers,
-            },
+        match crate::playwright::config::load_settings(root, cli_config, &[], None) {
+            Ok(settings) => {
+                let base_urls = crate::playwright::playwright_config::load_many(
+                    root,
+                    &settings.playwright_configs,
+                    settings.project.as_deref(),
+                )
+                .map(|pw| {
+                    // Trim the trailing slash before dedup so
+                    // `http://localhost:3000` and `http://localhost:3000/`
+                    // collapse to one entry — the downstream
+                    // `normalize_url` already trims for matching, so the
+                    // two are equivalent.
+                    let mut urls: Vec<String> = pw
+                        .projects
+                        .iter()
+                        .filter_map(|project| project.base_url.as_ref())
+                        .map(|url| url.trim_end_matches('/').to_string())
+                        .collect();
+                    urls.sort();
+                    urls.dedup();
+                    urls
+                })
+                .unwrap_or_default();
+                RouteDependentConfig {
+                    navigation_helpers: settings.navigation_helpers,
+                    base_urls,
+                }
+            }
             Err(_) => RouteDependentConfig::default(),
         }
     };
@@ -187,24 +212,65 @@ fn truly_removed_for_file(
     if df.removed_lines.is_empty() {
         return None;
     }
+    // Selector attribute values typically live on a single JSX line, so the
+    // primary scan stays on `-` only. The context-augmented pass catches
+    // formatter-wrapped attributes (`<Foo\n  data-pw="x"\n/>`) that span
+    // multiple lines, and the context-only set guards against attributes
+    // present purely on unchanged context lines.
     let removed = no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
         re,
         &df.removed_lines,
     );
-    if removed.is_empty() {
+    let removed_with_ctx_lines = df.removed_with_context_in_order();
+    let removed_with_ctx: Vec<(String, String)> =
+        no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
+            re,
+            &removed_with_ctx_lines,
+        );
+    let context_only: HashSet<(String, String)> =
+        no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
+            re,
+            &df.context_lines,
+        )
+        .into_iter()
+        .collect();
+    if removed.is_empty() && removed_with_ctx.is_empty() {
         return None;
     }
-    let added: HashSet<(String, String)> =
+    // Same two-set split as `truly_removed_strings`: the `-`-only pass
+    // subtracts only `+`-line matches (so an attribute mentioned in a
+    // comment context line is still a real removal); the multi-line pass
+    // subtracts the symmetric added∪context.
+    let added_only: HashSet<(String, String)> =
         no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
             re,
             &df.added_lines,
         )
         .into_iter()
         .collect();
+    let added_with_ctx_lines = df.added_with_context_in_order();
+    let added_with_ctx: HashSet<(String, String)> =
+        no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
+            re,
+            &added_with_ctx_lines,
+        )
+        .into_iter()
+        .collect();
     let mut truly_removed: Vec<(String, String)> = Vec::new();
     let mut seen: HashSet<(String, String)> = HashSet::new();
     for pair in removed {
-        if added.contains(&pair) {
+        if added_only.contains(&pair) {
+            continue;
+        }
+        if seen.insert(pair.clone()) {
+            truly_removed.push(pair);
+        }
+    }
+    for pair in removed_with_ctx {
+        if context_only.contains(&pair) {
+            continue;
+        }
+        if added_with_ctx.contains(&pair) {
             continue;
         }
         if seen.insert(pair.clone()) {

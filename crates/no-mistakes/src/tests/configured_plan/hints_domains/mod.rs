@@ -14,10 +14,31 @@
 
 use super::super::diff_parser::DiffFile;
 use no_mistakes::ast::with_program;
-use no_mistakes::playwright::playwright_tests::{TestOccurrenceScope, TestPolicy};
+use no_mistakes::codebase::ts_source::byte_offset_to_line;
+use no_mistakes::playwright::playwright_tests::{
+    build_call_context_index, CallContext, TestOccurrenceScope, TestPolicy, TestStatus,
+};
 use rayon::prelude::*;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
+
+/// `(binding, kind, name)` triple identifying a removed (or test-dependent)
+/// queue identifier. `binding` is `Some` only for `.add(...)` jobs, where it
+/// scopes the job to a specific queue instance (`emailQueue` vs
+/// `billingQueue`). Worker and factory shapes don't carry a binding.
+type QueueIdent = (Option<String>, String, String);
+
+const QUEUE_FACTORY_PATTERN: &str = concat!(
+    r#"(?:\bcreateQueue\s*\(\s*['"`](?P<create>[^'"`{}$\s]+)['"`]|"#,
+    r#"\bnew\s+Queue\s*\(\s*['"`](?P<queue>[^'"`{}$\s]+)['"`])"#,
+);
+
+fn factory_regex() -> Option<&'static regex::Regex> {
+    static FACTORY_REGEX: std::sync::OnceLock<Option<regex::Regex>> = std::sync::OnceLock::new();
+    FACTORY_REGEX
+        .get_or_init(|| regex::Regex::new(QUEUE_FACTORY_PATTERN).ok())
+        .as_ref()
+}
 
 // Route literals: navigation helpers and JSX route attributes only.
 // Verb calls (`app.get`, `client.get`, …) are owned by the HTTP arm so a
@@ -41,19 +62,8 @@ const HTTP_LITERAL_PATTERN: &str = concat!(
     r#"(?:<[^>]+>)?\s*\(\s*['"`](?P<value>/[^'"`{}$\s]*)['"`]"#,
 );
 
-const QUEUE_JOB_PATTERN: &str = concat!(
-    r#"(?:\.add\s*\(\s*['"`](?P<add>[^'"`{}$\s]+)['"`]|"#,
-    r#"\bnew\s+Worker\s*\(\s*['"`](?P<worker>[^'"`{}$\s]+)['"`]|"#,
-    r#"\bcreateQueue\s*\(\s*['"`](?P<create>[^'"`{}$\s]+)['"`]|"#,
-    r#"\bnew\s+Queue\s*\(\s*['"`](?P<queue>[^'"`{}$\s]+)['"`])"#,
-);
-
-// Separate regex applied only when a hunk contains `.addBulk(`. Captures
-// every `name: "X"` inside the joined hunk text so multi-entry addBulk
-// calls do not lose later entries. There can be false positives if an
-// unrelated object literal in the same hunk has a `name:` key whose value
-// matches a real removed job name; in practice that overlap is rare.
-const QUEUE_ADDBULK_NAME_PATTERN: &str = r#"\bname\s*:\s*['"`](?P<name>[^'"`{}$\s]+)['"`]"#;
+mod queue_scan;
+use queue_scan::{scan_addbulk_names_kinded, scan_queue_add_calls, scan_queue_defining_shapes};
 
 pub(super) fn removed_route_paths_per_file(
     diff_files: &[DiffFile],
@@ -69,50 +79,24 @@ pub(super) fn removed_http_paths_per_file(
 
 pub(super) fn removed_queue_jobs_per_file(
     diff_files: &[DiffFile],
-) -> BTreeMap<PathBuf, Vec<(String, String)>> {
-    // Split into the two queue identifier kinds so a job rename does not
-    // accidentally line up with a same-named worker/queue, and vice
-    // versa. (See the corresponding CoverageHints field doc.)
-    let jobs = tag_kind(
-        scan_string_domain(diff_files, QUEUE_JOB_PATTERN, &["add"]),
-        QUEUE_KIND_JOB,
-    );
-    let bulk = tag_kind(scan_addbulk_names(diff_files), QUEUE_KIND_JOB);
-    let queues = tag_kind(
-        scan_string_domain(
-            diff_files,
-            QUEUE_JOB_PATTERN,
-            &["worker", "create", "queue"],
-        ),
-        QUEUE_KIND_QUEUE,
-    );
+) -> BTreeMap<PathBuf, Vec<QueueIdent>> {
+    // Two queue identifier kinds:
+    //   - JOB pairs carry the binding of the `.add(...)` call (so two queues
+    //     that happen to share a job name don't get conflated).
+    //   - QUEUE entries (worker / factory) carry no binding.
+    let jobs = scan_queue_add_calls(diff_files);
+    let bulk = scan_addbulk_names_kinded(diff_files);
+    let queues = scan_queue_defining_shapes(diff_files);
     merge_kinded_per_file_maps(vec![jobs, bulk, queues])
 }
 
 pub(super) const QUEUE_KIND_JOB: &str = "job";
 pub(super) const QUEUE_KIND_QUEUE: &str = "queue";
 
-fn tag_kind(
-    raw: BTreeMap<PathBuf, Vec<String>>,
-    kind: &str,
-) -> BTreeMap<PathBuf, Vec<(String, String)>> {
-    raw.into_iter()
-        .map(|(path, values)| {
-            (
-                path,
-                values
-                    .into_iter()
-                    .map(|v| (kind.to_string(), v))
-                    .collect::<Vec<_>>(),
-            )
-        })
-        .collect()
-}
-
 fn merge_kinded_per_file_maps(
-    maps: Vec<BTreeMap<PathBuf, Vec<(String, String)>>>,
-) -> BTreeMap<PathBuf, Vec<(String, String)>> {
-    let mut out: BTreeMap<PathBuf, Vec<(String, String)>> = BTreeMap::new();
+    maps: Vec<BTreeMap<PathBuf, Vec<QueueIdent>>>,
+) -> BTreeMap<PathBuf, Vec<QueueIdent>> {
+    let mut out: BTreeMap<PathBuf, Vec<QueueIdent>> = BTreeMap::new();
     for map in maps {
         for (path, values) in map {
             out.entry(path).or_default().extend(values);
@@ -123,58 +107,6 @@ fn merge_kinded_per_file_maps(
         values.dedup();
     }
     out
-}
-
-fn scan_addbulk_names(diff_files: &[DiffFile]) -> BTreeMap<PathBuf, Vec<String>> {
-    let mut out: BTreeMap<PathBuf, Vec<String>> = BTreeMap::new();
-    let Ok(name_re) = regex::Regex::new(QUEUE_ADDBULK_NAME_PATTERN) else {
-        return out;
-    };
-    let per_file: Vec<(PathBuf, Vec<String>)> = diff_files
-        .par_iter()
-        .filter_map(|df| addbulk_names_for_file(&name_re, df))
-        .collect();
-    for (path, names) in per_file {
-        out.entry(path).or_default().extend(names);
-    }
-    for values in out.values_mut() {
-        values.sort();
-        values.dedup();
-    }
-    out
-}
-
-fn addbulk_names_for_file(name_re: &regex::Regex, df: &DiffFile) -> Option<(PathBuf, Vec<String>)> {
-    if df.removed_lines.is_empty() {
-        return None;
-    }
-    let removed_joined = df.removed_lines.join("\n");
-    if !removed_joined.contains(".addBulk") {
-        return None;
-    }
-    let added_joined = df.added_lines.join("\n");
-    let added_names: HashSet<String> = if added_joined.contains(".addBulk") {
-        name_re
-            .captures_iter(&added_joined)
-            .filter_map(|c| c.name("name").map(|m| m.as_str().to_string()))
-            .collect()
-    } else {
-        HashSet::new()
-    };
-    let mut names: Vec<String> = Vec::new();
-    let mut seen: HashSet<String> = HashSet::new();
-    for caps in name_re.captures_iter(&removed_joined) {
-        if let Some(m) = caps.name("name") {
-            let value = m.as_str().to_string();
-            if added_names.contains(&value) {
-                continue;
-            }
-            if seen.insert(value.clone()) {
-                names.push(value);
-            }
-        }
-    }
-    (!names.is_empty()).then(|| (df.path.clone(), names))
 }
 
 fn scan_string_domain(
@@ -211,17 +143,52 @@ fn truly_removed_strings(
     if df.removed_lines.is_empty() {
         return None;
     }
-    let removed = scan_lines(re, capture_names, &df.removed_lines);
-    if removed.is_empty() {
-        return None;
-    }
-    let added: HashSet<String> = scan_lines(re, capture_names, &df.added_lines)
+    // Two passes: the single-line scan over `-` lines alone catches the
+    // common case without picking up values that only appear on context.
+    // The "removed ∪ context" scan over the hunk's source order catches
+    // multi-line statements like `router.push(\n  "/old"\n);` where the
+    // literal sits on a `-` line but the surrounding call shape lives on
+    // context — preserving the relative order is what lets the regex see
+    // the call token *before* the literal. Anything that surfaces only
+    // through the context-augmented pass is verified to NOT also appear in
+    // a context-only scan, so a value that lives purely on an unchanged
+    // context line (e.g. inside a comment block) doesn't get falsely
+    // reported as removed.
+    let removed_only = scan_lines(re, capture_names, &df.removed_lines);
+    let context_only: HashSet<String> = scan_lines(re, capture_names, &df.context_lines)
         .into_iter()
         .collect();
+    let removed_with_ctx = scan_lines(re, capture_names, &df.removed_with_context_in_order());
+    // Two different "still-present" sets:
+    //   - For the `-`-only pass, only `+` lines count as still-present. A
+    //     value matched on a `-` line but ALSO sitting on an unchanged
+    //     context line is real removal — the diff actually changed it (the
+    //     pure-context occurrence is, e.g., a comment).
+    //   - For the multi-line pass, the symmetric scan over added∪context
+    //     suppresses values whose span on the post-diff side is still
+    //     reachable through context.
+    let added_only: HashSet<String> = scan_lines(re, capture_names, &df.added_lines)
+        .into_iter()
+        .collect();
+    let added_with_ctx: HashSet<String> =
+        scan_lines(re, capture_names, &df.added_with_context_in_order())
+            .into_iter()
+            .collect();
     let mut truly_removed: Vec<String> = Vec::new();
     let mut seen: HashSet<String> = HashSet::new();
-    for value in removed {
-        if added.contains(&value) {
+    for value in removed_only {
+        if added_only.contains(&value) {
+            continue;
+        }
+        if seen.insert(value.clone()) {
+            truly_removed.push(value);
+        }
+    }
+    for value in removed_with_ctx {
+        if context_only.contains(&value) {
+            continue;
+        }
+        if added_with_ctx.contains(&value) {
             continue;
         }
         if seen.insert(value.clone()) {
@@ -235,10 +202,6 @@ fn truly_removed_strings(
 }
 
 fn scan_lines(re: &regex::Regex, capture_names: &[&str], lines: &[String]) -> Vec<String> {
-    // Join the hunk's lines so formatter-wrapped statements like
-    // `router.push(\n  "/x"\n)` or `addBulk([{\n  name: "x"\n}])` still
-    // match — `\s*` in the patterns spans the inserted newline. This is the
-    // entire reason the matcher is line-oblivious.
     let joined = lines.join("\n");
     let mut out: Vec<String> = Vec::new();
     for caps in re.captures_iter(&joined) {
@@ -267,23 +230,28 @@ pub(super) struct DependentDomains {
 /// Playwright configuration needed to make the route reverse index
 /// agree with what the normal `analyze_test_occurrences` would index:
 /// the `navigation_helpers` allow `navigateTo(page, "/x")` and other
-/// configured wrappers to register as URL occurrences.
+/// configured wrappers to register as URL occurrences. `base_urls`
+/// carries the project's playwright `baseURL` settings so absolute
+/// test URLs (`page.goto('https://app.example.com/dashboard')`) can be
+/// stripped to the rooted form (`/dashboard`) the diff-side scanner
+/// records.
 #[derive(Default)]
 pub(super) struct RouteDependentConfig {
     pub navigation_helpers: Vec<String>,
+    pub base_urls: Vec<String>,
 }
 
 #[derive(Default)]
 struct PerTestExtraction {
     routes: Vec<String>,
-    queues: Vec<(String, String)>,
+    queues: Vec<QueueIdent>,
     http: Vec<String>,
 }
 
 #[derive(Default)]
 pub(super) struct StringDomainDependents {
     pub routes: HashMap<String, Vec<PathBuf>>,
-    pub queues: HashMap<(String, String), Vec<PathBuf>>,
+    pub queues: HashMap<QueueIdent, Vec<PathBuf>>,
     pub http: HashMap<String, Vec<PathBuf>>,
 }
 
@@ -304,7 +272,7 @@ pub(super) fn build_dependents(
         .map(|path| (path.clone(), extract_for_test(path, &domains, route_config)))
         .collect();
     let mut routes: Vec<(PathBuf, Vec<String>)> = Vec::with_capacity(per_test.len());
-    let mut queues: Vec<(PathBuf, Vec<(String, String)>)> = Vec::with_capacity(per_test.len());
+    let mut queues: Vec<(PathBuf, Vec<QueueIdent>)> = Vec::with_capacity(per_test.len());
     let mut http: Vec<(PathBuf, Vec<String>)> = Vec::with_capacity(per_test.len());
     for (path, ext) in per_test {
         if domains.routes {
@@ -354,26 +322,67 @@ fn extract_for_test(
                 .into_iter()
                 .filter(|occ| policy.allows(occ.status))
                 .filter(|occ| occ.scope != TestOccurrenceScope::TeardownHook)
-                .filter_map(|occ| normalize_route_url(&occ.value))
+                .filter_map(|occ| normalize_route_url(&occ.value, &route_config.base_urls))
                 .collect();
             urls.sort();
             urls.dedup();
             out.routes = urls;
         }
+        // Both HTTP and queue branches reuse the same per-call line→context
+        // map so a single AST walk picks up the same `TestPolicy` and
+        // `TeardownHook` filter the selector and route reverse indexes apply
+        // — keeping spec-internal calls in `test.skip(...)` / teardown out of
+        // the dependent set without parsing the program twice per test file.
+        let needs_context = domains.queues || domains.http;
+        let context_index = if needs_context {
+            build_call_context_index(program, source)
+        } else {
+            HashMap::new()
+        };
+        let policy = TestPolicy::default();
         if domains.queues {
             let usage =
                 no_mistakes::codebase::ts_queues::usage::extract_queue_usage_from_program(
                     program, source,
                 );
-            let mut pairs: Vec<(String, String)> = Vec::new();
+            let mut pairs: Vec<QueueIdent> = Vec::new();
             for enqueue in &usage.enqueue_calls {
+                if !line_allowed(&context_index, enqueue.line, policy) {
+                    continue;
+                }
                 if let Some(job) = enqueue.job.as_ref() {
-                    pairs.push((QUEUE_KIND_JOB.to_string(), job.clone()));
+                    let binding = if enqueue.binding.is_empty() {
+                        None
+                    } else {
+                        Some(enqueue.binding.clone())
+                    };
+                    pairs.push((binding, QUEUE_KIND_JOB.to_string(), job.clone()));
                 }
             }
             for worker in &usage.worker_declarations {
+                if !line_allowed(&context_index, worker.line, policy) {
+                    continue;
+                }
                 if let Some(name) = worker.queue_name.as_ref() {
-                    pairs.push((QUEUE_KIND_QUEUE.to_string(), name.clone()));
+                    pairs.push((None, QUEUE_KIND_QUEUE.to_string(), name.clone()));
+                }
+            }
+            // Factories: `createQueue('x')` and `new Queue('x')` are not part
+            // of `extract_queue_usage_from_program`'s output today, so a
+            // targeted regex picks them up directly from the test source and
+            // shares the same line→context filter as the AST-derived calls.
+            // The regex is static, so cache it across the per-test parallel
+            // pass instead of recompiling per file.
+            if let Some(factory_re) = factory_regex() {
+                for caps in factory_re.captures_iter(source) {
+                    let Some(full) = caps.get(0) else { continue };
+                    let line = byte_offset_to_line(source, full.start());
+                    if !line_allowed(&context_index, line, policy) {
+                        continue;
+                    }
+                    if let Some(m) = caps.name("create").or_else(|| caps.name("queue")) {
+                        pairs.push((None, QUEUE_KIND_QUEUE.to_string(), m.as_str().to_string()));
+                    }
                 }
             }
             pairs.sort();
@@ -388,7 +397,11 @@ fn extract_for_test(
                 no_mistakes::codebase::ts_http_calls::extract_http_calls_from_program(
                     program, source, &[""],
                 );
-            let mut paths: Vec<String> = calls.into_iter().map(|c| c.path).collect();
+            let mut paths: Vec<String> = calls
+                .into_iter()
+                .filter(|c| line_allowed(&context_index, c.line, policy))
+                .map(|c| c.path)
+                .collect();
             paths.sort();
             paths.dedup();
             out.http = paths;
@@ -399,17 +412,14 @@ fn extract_for_test(
 }
 
 /// Map a Playwright-test URL to the rooted form (`/path`) the diff scanner
-/// records on the source side. Only rooted references are kept — absolute
-/// `http(s)://host/path` URLs are dropped because we have no `baseURL` to
-/// distinguish a same-origin app navigation from an unrelated external
-/// site that happens to share the same path. (See Shepherd Journal for the
-/// follow-up to wire in `Settings.frontend_root`-derived base URLs.)
-fn normalize_route_url(raw: &str) -> Option<String> {
-    if raw.starts_with('/') {
-        Some(raw.to_string())
-    } else {
-        None
-    }
+/// records on the source side. Rooted references pass through unchanged; an
+/// absolute `http(s)://host/path` URL is only kept when `host` matches one
+/// of the project's playwright `baseURL` entries, so an unrelated external
+/// site that happens to share the same path does not get conflated with the
+/// app's own routes. Delegates to the existing playwright analyzer helper
+/// so the two normalizations cannot drift.
+fn normalize_route_url(raw: &str, base_urls: &[String]) -> Option<String> {
+    no_mistakes::playwright::url::normalize_url(raw, base_urls)
 }
 
 fn merge_string_dependents(per_test: Vec<(PathBuf, Vec<String>)>) -> HashMap<String, Vec<PathBuf>> {
@@ -427,9 +437,9 @@ fn merge_string_dependents(per_test: Vec<(PathBuf, Vec<String>)>) -> HashMap<Str
 }
 
 fn merge_tuple_dependents(
-    per_test: Vec<(PathBuf, Vec<(String, String)>)>,
-) -> HashMap<(String, String), Vec<PathBuf>> {
-    let mut out: HashMap<(String, String), Vec<PathBuf>> = HashMap::new();
+    per_test: Vec<(PathBuf, Vec<QueueIdent>)>,
+) -> HashMap<QueueIdent, Vec<PathBuf>> {
+    let mut out: HashMap<QueueIdent, Vec<PathBuf>> = HashMap::new();
     for (test, values) in per_test {
         for value in values {
             out.entry(value).or_default().push(test.clone());
@@ -440,4 +450,11 @@ fn merge_tuple_dependents(
         tests.dedup();
     }
     out
+}
+
+fn line_allowed(context_index: &HashMap<u32, CallContext>, line: u32, policy: TestPolicy) -> bool {
+    let ctx = context_index.get(&line).copied();
+    let status = ctx.map(|c| c.status).unwrap_or(TestStatus::Active);
+    let scope = ctx.map(|c| c.scope).unwrap_or(TestOccurrenceScope::File);
+    policy.allows(status) && scope != TestOccurrenceScope::TeardownHook
 }

@@ -20,3 +20,4 @@ pub mod react_traits;
 pub mod routes;
 pub mod server_routes;
 mod tests;
+pub use tests::{run as tests_run, TestsArgs};

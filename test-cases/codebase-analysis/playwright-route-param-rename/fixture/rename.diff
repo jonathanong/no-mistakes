@@ -1,0 +1,15 @@
+diff --git a/web/components/user-link.tsx b/web/components/user-link.tsx
+index aaaaaaa..bbbbbbb 100644
+--- a/web/components/user-link.tsx
++++ b/web/components/user-link.tsx
+@@ -1,9 +1,9 @@
+ import { useRouter } from "next/navigation";
+
+ export function UserLink({ id }: { id: string }) {
+   const router = useRouter();
+   const onClick = () => {
+-    router.push(`/users/:id`);
++    router.push(`/v2/users/${id}`);
+   };
+   return <button onClick={onClick}>Go</button>;
+ }

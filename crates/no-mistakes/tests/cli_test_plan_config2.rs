@@ -406,12 +406,89 @@ fn test_plan_playwright_route_rename_targets_old_url_tests() {
 }
 
 #[test]
+fn test_plan_playwright_route_param_pattern_matches_concrete_reference() {
+    // Diff removes a parametric route `/users/:id` while a spec still
+    // navigates to a concrete reference `/users/123`. The pattern-aware
+    // lookup (matcher::matches) must pull the spec into the coverage group.
+    let plan = run_rename_plan("playwright-route-param-rename");
+    assert_rename_surfaces(&plan, "tests/e2e/user-profile.spec.ts", "route");
+}
+
+#[test]
+fn test_plan_playwright_queue_factory_rename_targets_factory_constructors() {
+    // Diff renames `new Queue("emails")` -> `new Queue("emails-v2")` in
+    // source. A spec that still constructs `new Queue("emails")` directly
+    // must surface in the coverage group. This exercises the dependent-side
+    // factory regex scan added to extract_for_test's queue branch.
+    let plan = run_rename_plan("playwright-queue-factory-rename");
+    assert_rename_surfaces(&plan, "tests/e2e/email.spec.ts", "queue");
+}
+
+#[test]
+fn test_plan_playwright_queue_addbulk_to_add_refactor_is_quiet() {
+    // Diff refactors `addBulk([{ name: 'greet' }])` -> `add('greet', ...)`.
+    // The job name `greet` still exists on the `+` side, so the diff scanner
+    // must NOT register it as a removed job — the email.spec.ts that
+    // enqueues `greet` should not be flagged.
+    let root = fixture("playwright-queue-addbulk-to-add");
+    let diff_path = root.join("rename.diff");
+    let output = run(&[
+        "test",
+        "plan",
+        "playwright",
+        "--root",
+        root.to_str().unwrap(),
+        "--diff",
+        diff_path.to_str().unwrap(),
+        "--environment",
+        "prePush",
+        "--json",
+    ]);
+    assert!(output.status.success());
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(plan["fallback_triggered"], false);
+    let selected: Vec<&str> = plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v["test_file"].as_str().unwrap())
+        .collect();
+    assert!(
+        !selected.contains(&"tests/e2e/email.spec.ts"),
+        "email.spec.ts must not be flagged when addBulk->add refactor preserves the job name: {:?}",
+        selected
+    );
+}
+
+#[test]
 fn test_plan_playwright_queue_rename_targets_old_job_tests() {
     // Diff renames an emailQueue.add('old') -> emailQueue.add('new') in
     // source while a spec still enqueues the old job name. The spec must
     // surface in the coverage group with `via: ["queue"]`.
     let plan = run_rename_plan("playwright-queue-rename");
     assert_rename_surfaces(&plan, "tests/e2e/email.spec.ts", "queue");
+}
+
+#[test]
+fn test_plan_playwright_queue_rename_scoped_by_binding() {
+    // Two specs share the same job name ("sync") via different queue
+    // bindings — emailQueue.add vs billingQueue.add. A diff renaming
+    // `emailQueue.add("sync")` must surface only the emailQueue spec and
+    // leave the billingQueue spec alone. Without binding scope both would
+    // collide on the bare `("job", "sync")` tuple.
+    let plan = run_rename_plan("playwright-queue-binding-scope");
+    assert_rename_surfaces(&plan, "tests/e2e/email.spec.ts", "queue");
+    let selected: Vec<&str> = plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v["test_file"].as_str().unwrap())
+        .collect();
+    assert!(
+        !selected.contains(&"tests/e2e/billing.spec.ts"),
+        "billing.spec.ts uses billingQueue.add(\"sync\") and must not be flagged when the diff only touches emailQueue: {:?}",
+        selected
+    );
 }
 
 #[test]

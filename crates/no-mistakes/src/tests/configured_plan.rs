@@ -92,6 +92,7 @@ pub(crate) fn generate_configured_plan(
     }
 
     let graph = DepGraph::build(root, tsconfig)?;
+    let test_filter = TestFileFilter::new(root, config);
     let coverage_hints = build_coverage_hints(
         root,
         args.config.as_deref(),
@@ -130,6 +131,7 @@ pub(crate) fn generate_configured_plan(
             &graph,
             &all_tests,
             &all_test_set,
+            &test_filter,
             &used,
             &coverage_hints,
             &mut warnings,

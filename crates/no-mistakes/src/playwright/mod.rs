@@ -2,7 +2,6 @@ pub(crate) mod analysis;
 mod ast;
 mod cli;
 pub(crate) mod config;
-pub use config::{load_settings, Settings};
 mod fsutil;
 pub(crate) mod matcher;
 pub mod playwright_config;
@@ -16,7 +15,7 @@ pub mod selectors;
 mod test_support;
 #[cfg(test)]
 mod tests;
-mod url;
+pub(crate) mod url;
 
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
