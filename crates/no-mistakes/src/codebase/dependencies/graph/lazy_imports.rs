@@ -47,7 +47,8 @@ pub(crate) fn lazy_import_deps_of_with_files(
     let mut result_idx: HashMap<NodeId, usize> = HashMap::new();
 
     for root in roots {
-        if visited.insert(root.clone()) {
+        if !visited.contains(root) {
+            visited.insert(root.clone());
             frontier.push(root.clone());
         }
     }
@@ -149,7 +150,8 @@ fn bfs(
     let mut result_idx: HashMap<NodeId, usize> = HashMap::new();
 
     for s in starts {
-        if visited.insert(s.clone()) {
+        if !visited.contains(s) {
+            visited.insert(s.clone());
             queue.push_back((s.clone(), 0));
         }
     }
