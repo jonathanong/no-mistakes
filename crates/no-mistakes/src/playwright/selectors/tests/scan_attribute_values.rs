@@ -74,6 +74,17 @@ fn reusing_compiled_regex_matches_one_shot_scan() {
 }
 
 #[test]
+fn skips_empty_attribute_value() {
+    let lines = vec!["<x data-pw=\"\"/>".to_string()];
+    let got = scan_selector_attribute_values(&attrs(), &lines);
+    assert!(
+        got.is_empty(),
+        "empty attribute value must be skipped, got: {:?}",
+        got
+    );
+}
+
+#[test]
 fn compile_returns_none_for_empty_attributes() {
     use crate::playwright::selectors::compile_selector_attribute_value_regex;
     let empty: Vec<String> = Vec::new();

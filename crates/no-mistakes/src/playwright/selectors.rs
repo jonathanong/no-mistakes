@@ -74,15 +74,17 @@ pub fn scan_selector_attribute_values_with_regex(
     let mut out: Vec<(String, String)> = Vec::new();
     for line in lines {
         for caps in re.captures_iter(line) {
-            let attr = caps.name("attr").map(|m| m.as_str().to_string());
+            // The pattern guarantees the `attr` group and exactly one of the
+            // `dq`/`sq` value groups are populated on every match, so direct
+            // indexing is safe and keeps a single, fully-covered path.
+            let attr = &caps["attr"];
             let value = caps
                 .name("dq")
                 .or_else(|| caps.name("sq"))
-                .map(|m| m.as_str().to_string());
-            if let (Some(a), Some(v)) = (attr, value) {
-                if !v.is_empty() {
-                    out.push((a, v));
-                }
+                .map(|m| m.as_str())
+                .unwrap_or("");
+            if !value.is_empty() {
+                out.push((attr.to_string(), value.to_string()));
             }
         }
     }
