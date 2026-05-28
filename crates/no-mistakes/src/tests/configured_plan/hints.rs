@@ -89,10 +89,16 @@ pub(super) fn build_coverage_hints(
                     settings.project.as_deref(),
                 )
                 .map(|pw| {
+                    // Trim the trailing slash before dedup so
+                    // `http://localhost:3000` and `http://localhost:3000/`
+                    // collapse to one entry — the downstream
+                    // `normalize_url` already trims for matching, so the
+                    // two are equivalent.
                     let mut urls: Vec<String> = pw
                         .projects
                         .iter()
-                        .filter_map(|project| project.base_url.clone())
+                        .filter_map(|project| project.base_url.as_ref())
+                        .map(|url| url.trim_end_matches('/').to_string())
                         .collect();
                     urls.sort();
                     urls.dedup();
@@ -231,8 +237,19 @@ fn truly_removed_for_file(
     if removed.is_empty() && removed_with_ctx.is_empty() {
         return None;
     }
+    // Same two-set split as `truly_removed_strings`: the `-`-only pass
+    // subtracts only `+`-line matches (so an attribute mentioned in a
+    // comment context line is still a real removal); the multi-line pass
+    // subtracts the symmetric added∪context.
+    let added_only: HashSet<(String, String)> =
+        no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
+            re,
+            &df.added_lines,
+        )
+        .into_iter()
+        .collect();
     let added_with_ctx_lines = df.added_with_context_in_order();
-    let added: HashSet<(String, String)> =
+    let added_with_ctx: HashSet<(String, String)> =
         no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
             re,
             &added_with_ctx_lines,
@@ -242,7 +259,7 @@ fn truly_removed_for_file(
     let mut truly_removed: Vec<(String, String)> = Vec::new();
     let mut seen: HashSet<(String, String)> = HashSet::new();
     for pair in removed {
-        if added.contains(&pair) {
+        if added_only.contains(&pair) {
             continue;
         }
         if seen.insert(pair.clone()) {
@@ -253,7 +270,7 @@ fn truly_removed_for_file(
         if context_only.contains(&pair) {
             continue;
         }
-        if added.contains(&pair) {
+        if added_with_ctx.contains(&pair) {
             continue;
         }
         if seen.insert(pair.clone()) {

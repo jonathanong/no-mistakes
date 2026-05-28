@@ -28,6 +28,18 @@ use std::path::{Path, PathBuf};
 /// `billingQueue`). Worker and factory shapes don't carry a binding.
 type QueueIdent = (Option<String>, String, String);
 
+const QUEUE_FACTORY_PATTERN: &str = concat!(
+    r#"(?:\bcreateQueue\s*\(\s*['"`](?P<create>[^'"`{}$\s]+)['"`]|"#,
+    r#"\bnew\s+Queue\s*\(\s*['"`](?P<queue>[^'"`{}$\s]+)['"`])"#,
+);
+
+fn factory_regex() -> Option<&'static regex::Regex> {
+    static FACTORY_REGEX: std::sync::OnceLock<Option<regex::Regex>> = std::sync::OnceLock::new();
+    FACTORY_REGEX
+        .get_or_init(|| regex::Regex::new(QUEUE_FACTORY_PATTERN).ok())
+        .as_ref()
+}
+
 // Route literals: navigation helpers and JSX route attributes only.
 // Verb calls (`app.get`, `client.get`, …) are owned by the HTTP arm so a
 // removed `client.get('/dashboard')` is not double-counted as a route
@@ -359,9 +371,9 @@ fn extract_for_test(
             // of `extract_queue_usage_from_program`'s output today, so a
             // targeted regex picks them up directly from the test source and
             // shares the same line→context filter as the AST-derived calls.
-            if let Ok(factory_re) = regex::Regex::new(
-                r#"(?:\bcreateQueue\s*\(\s*['"`](?P<create>[^'"`{}$\s]+)['"`]|\bnew\s+Queue\s*\(\s*['"`](?P<queue>[^'"`{}$\s]+)['"`])"#,
-            ) {
+            // The regex is static, so cache it across the per-test parallel
+            // pass instead of recompiling per file.
+            if let Some(factory_re) = factory_regex() {
                 for caps in factory_re.captures_iter(source) {
                     let Some(full) = caps.get(0) else { continue };
                     let line = byte_offset_to_line(source, full.start());
