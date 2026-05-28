@@ -2,7 +2,7 @@ use clap::{Args, Subcommand, ValueEnum};
 use std::path::PathBuf;
 
 #[derive(Args, Debug)]
-pub(crate) struct TestsArgs {
+pub struct TestsArgs {
     #[command(subcommand)]
     pub(crate) command: TestsCommand,
 }

@@ -81,7 +81,7 @@ pub(super) fn build_coverage_hints(
     let route_config = if removed_route_paths.is_empty() {
         RouteDependentConfig::default()
     } else {
-        match no_mistakes::playwright::load_settings(root, cli_config, &[], None) {
+        match crate::playwright::config::load_settings(root, cli_config, &[], None) {
             Ok(settings) => RouteDependentConfig {
                 navigation_helpers: settings.navigation_helpers,
             },

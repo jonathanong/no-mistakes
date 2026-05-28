@@ -7,7 +7,6 @@ mod fetches;
 mod queues;
 mod react;
 mod server;
-mod tests;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -15,6 +14,7 @@ use no_mistakes::cli::{init_rayon_threads, JobsArg};
 use no_mistakes::codebase::dependencies::{self, Direction, TraverseArgs};
 use no_mistakes::codebase::symbols::{self, SymbolsArgs};
 use no_mistakes::playwright;
+use no_mistakes::tests::{self, TestsArgs};
 use std::process::ExitCode;
 
 #[derive(Parser)]
@@ -50,7 +50,7 @@ enum Command {
     Check(check::CheckArgs),
     /// Plan, explain, and visualize test impacts based on changed files.
     #[command(alias = "test")]
-    Tests(tests::TestsArgs),
+    Tests(TestsArgs),
 }
 
 fn main() -> ExitCode {

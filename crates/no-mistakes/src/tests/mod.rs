@@ -13,6 +13,7 @@ pub(crate) mod impact;
 pub(crate) mod plan;
 pub(crate) mod why;
 
+pub use args::TestsArgs;
 pub(crate) use args::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -72,7 +73,7 @@ pub struct Warning {
     pub file: String,
 }
 
-pub(crate) fn run(args: TestsArgs) -> Result<ExitCode> {
+pub fn run(args: TestsArgs) -> Result<ExitCode> {
     match args.command {
         TestsCommand::Plan(sub_args) => plan::run(sub_args),
         TestsCommand::Impact(sub_args) => impact::run(sub_args),

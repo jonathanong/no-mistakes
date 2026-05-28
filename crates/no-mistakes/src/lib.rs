@@ -19,4 +19,4 @@ pub mod queue;
 pub mod react_traits;
 pub mod routes;
 pub mod server_routes;
-mod tests;
+pub mod tests;
