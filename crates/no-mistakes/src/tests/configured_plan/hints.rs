@@ -63,44 +63,59 @@ fn removed_selectors_per_file(
     else {
         return out;
     };
-    for df in diff_files {
-        if df.removed_lines.is_empty() {
-            continue;
-        }
-        let removed = no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
-            &re,
-            &df.removed_lines,
-        );
-        if removed.is_empty() {
-            continue;
-        }
-        let added: HashSet<(String, String)> =
-            no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
-                &re,
-                &df.added_lines,
-            )
-            .into_iter()
-            .collect();
-        let mut truly_removed: Vec<(String, String)> = Vec::new();
-        let mut seen: HashSet<(String, String)> = HashSet::new();
-        for pair in removed {
-            if added.contains(&pair) {
-                continue;
-            }
-            if seen.insert(pair.clone()) {
-                truly_removed.push(pair);
-            }
-        }
-        if truly_removed.is_empty() {
-            continue;
-        }
-        // `collect_changed_files` already absolutizes and normalizes each
-        // `DiffFile::path`, so it can be used directly as the map key.
-        out.entry(df.path.clone())
-            .or_default()
-            .extend(truly_removed);
+    let per_file: Vec<(PathBuf, Vec<(String, String)>)> = diff_files
+        .par_iter()
+        .filter_map(|df| truly_removed_for_file(&re, df))
+        .collect();
+    // `collect_changed_files` already absolutizes and normalizes each
+    // `DiffFile::path`, so it is used directly as the map key. Sorting via
+    // BTreeMap and sorting/dedup of the merged pair list keep the output
+    // deterministic across parallel runs.
+    for (key, pairs) in per_file {
+        out.entry(key).or_default().extend(pairs);
+    }
+    for pairs in out.values_mut() {
+        pairs.sort();
+        pairs.dedup();
     }
     out
+}
+
+fn truly_removed_for_file(
+    re: &regex::Regex,
+    df: &DiffFile,
+) -> Option<(PathBuf, Vec<(String, String)>)> {
+    if df.removed_lines.is_empty() {
+        return None;
+    }
+    let removed = no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
+        re,
+        &df.removed_lines,
+    );
+    if removed.is_empty() {
+        return None;
+    }
+    let added: HashSet<(String, String)> =
+        no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
+            re,
+            &df.added_lines,
+        )
+        .into_iter()
+        .collect();
+    let mut truly_removed: Vec<(String, String)> = Vec::new();
+    let mut seen: HashSet<(String, String)> = HashSet::new();
+    for pair in removed {
+        if added.contains(&pair) {
+            continue;
+        }
+        if seen.insert(pair.clone()) {
+            truly_removed.push(pair);
+        }
+    }
+    if truly_removed.is_empty() {
+        return None;
+    }
+    Some((df.path.clone(), truly_removed))
 }
 
 fn build_selector_dependents(
