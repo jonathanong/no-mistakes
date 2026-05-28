@@ -1,0 +1,11 @@
+diff --git a/src/email-producer.ts b/src/email-producer.ts
+index aaaaaaa..bbbbbbb 100644
+--- a/src/email-producer.ts
++++ b/src/email-producer.ts
+@@ -1,5 +1,5 @@
+ import { emailQueue } from "./queues";
+
+ export async function enqueueWelcome(userId: string) {
+-  await emailQueue.add("send-welcome", { userId });
++  await emailQueue.add("send-welcome-email", { userId });
+ }

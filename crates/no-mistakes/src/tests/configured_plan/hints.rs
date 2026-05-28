@@ -1,5 +1,9 @@
 use super::super::configured_plan_candidates::CoverageHints;
 use super::super::diff_parser::DiffFile;
+use super::hints_domains::{
+    build_dependents, removed_http_paths_per_file, removed_queue_jobs_per_file,
+    removed_route_paths_per_file, DependentDomains, RouteDependentConfig,
+};
 use super::TestFramework;
 use no_mistakes::config::v2::schema::NoMistakesConfig;
 use no_mistakes::playwright::playwright_tests::{TestOccurrenceScope, TestPolicy};
@@ -25,10 +29,14 @@ struct SelectorSettings {
 }
 
 /// Build the per-run coverage hints used by `graph_candidates` to surface
-/// tests at risk when a unified diff removes an identifier. Currently
-/// limited to playwright selector renames; returns an empty `CoverageHints`
-/// for other frameworks or when no removed selectors are detected.
+/// tests at risk when a unified diff removes an identifier. Covers the
+/// playwright selector, route, queue, and HTTP-call domains; returns an
+/// empty `CoverageHints` for non-playwright frameworks or when no removed
+/// identifier was detected across any of those domains.
+#[allow(clippy::too_many_arguments)]
 pub(super) fn build_coverage_hints(
+    root: &std::path::Path,
+    cli_config: Option<&std::path::Path>,
     config: &NoMistakesConfig,
     framework: TestFramework,
     diff_files: &[DiffFile],
@@ -43,15 +51,62 @@ pub(super) fn build_coverage_hints(
     }
 
     let removed_selectors = removed_selectors_per_file(diff_files, &settings.diff_attributes);
-    if removed_selectors.is_empty() {
+    let removed_route_paths = removed_route_paths_per_file(diff_files);
+    let removed_queue_jobs = removed_queue_jobs_per_file(diff_files);
+    let removed_http_paths = removed_http_paths_per_file(diff_files);
+
+    let any_removed = !removed_selectors.is_empty()
+        || !removed_route_paths.is_empty()
+        || !removed_queue_jobs.is_empty()
+        || !removed_http_paths.is_empty();
+    if !any_removed {
         return CoverageHints::default();
     }
 
-    let selector_dependents = build_selector_dependents(all_tests, &settings);
+    // Selector parsing has its own per-test pass (it needs a different
+    // SelectorRegexes config); the other three domains share a single
+    // parallel pass over `all_tests`, parsing each file at most once.
+    let selector_dependents = if removed_selectors.is_empty() {
+        HashMap::new()
+    } else {
+        build_selector_dependents(all_tests, &settings)
+    };
+    // Pull the project's playwright navigation helpers so the dependent
+    // extractor for the route domain registers `navigateTo(page, "/x")`
+    // style wrappers the same way `analyze_test_occurrences` would. The
+    // CLI's `--config` flag flows in via `cli_config` so an explicit
+    // override path is honored — defaulting to discovery would otherwise
+    // silently miss helpers configured outside the auto-detected file.
+    // Falls back to an empty list if the settings cannot be loaded.
+    let route_config = if removed_route_paths.is_empty() {
+        RouteDependentConfig::default()
+    } else {
+        match no_mistakes::playwright::load_settings(root, cli_config, &[], None) {
+            Ok(settings) => RouteDependentConfig {
+                navigation_helpers: settings.navigation_helpers,
+            },
+            Err(_) => RouteDependentConfig::default(),
+        }
+    };
+    let domain_dependents = build_dependents(
+        all_tests,
+        DependentDomains {
+            routes: !removed_route_paths.is_empty(),
+            queues: !removed_queue_jobs.is_empty(),
+            http: !removed_http_paths.is_empty(),
+        },
+        &route_config,
+    );
 
     CoverageHints {
         removed_selectors,
         selector_dependents,
+        removed_route_paths,
+        route_path_dependents: domain_dependents.routes,
+        removed_queue_jobs,
+        queue_job_dependents: domain_dependents.queues,
+        removed_http_paths,
+        http_path_dependents: domain_dependents.http,
     }
 }
 

@@ -318,6 +318,112 @@ fn test_plan_playwright_selector_rename_targets_old_value_tests() {
     );
 }
 
+fn run_rename_plan(fixture_name: &str) -> serde_json::Value {
+    let root = fixture(fixture_name);
+    let diff_path = root.join("rename.diff");
+    let output = run(&[
+        "test",
+        "plan",
+        "playwright",
+        "--root",
+        root.to_str().unwrap(),
+        "--diff",
+        diff_path.to_str().unwrap(),
+        "--environment",
+        "prePush",
+        "--json",
+    ]);
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    // Coverage hints must surface the at-risk spec via the per-edge
+    // mechanism, not via a fallback that pulls the whole suite. Without
+    // this assertion, a future regression that throws everything into
+    // fallback would still pass the rename tests.
+    assert_eq!(
+        plan["fallback_triggered"], false,
+        "rename hint must not trigger a full-suite fallback: {plan:#}"
+    );
+    plan
+}
+
+fn assert_rename_surfaces(plan: &serde_json::Value, test_file: &str, expected_via: &str) {
+    let selected: Vec<&str> = plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v["test_file"].as_str().unwrap())
+        .collect();
+    assert!(
+        selected.contains(&test_file),
+        "expected {test_file} to be flagged, got: {:?}",
+        selected
+    );
+    let entry = plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|v| v["test_file"].as_str() == Some(test_file))
+        .unwrap();
+    let via: Vec<&str> = entry["reasons"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .flat_map(|r| r["via"].as_array().unwrap())
+        .map(|v| v.as_str().unwrap())
+        .collect();
+    assert!(
+        via.contains(&expected_via),
+        "expected {test_file} reason to include `{expected_via}`, got: {:?}",
+        via
+    );
+    let coverage_group = plan["groups"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|g| g["type"] == "coverage")
+        .unwrap();
+    assert!(
+        coverage_group["selected"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|v| v.as_str() == Some(test_file)),
+        "expected {test_file} in coverage group"
+    );
+}
+
+#[test]
+fn test_plan_playwright_route_rename_targets_old_url_tests() {
+    // Diff renames a router.push('/old') -> router.push('/new') in source
+    // while a spec still navigates to '/old' via page.goto. The spec must
+    // surface in the coverage group with `via: ["route"]`.
+    let plan = run_rename_plan("playwright-route-rename");
+    assert_rename_surfaces(&plan, "tests/e2e/dashboard.spec.ts", "route");
+}
+
+#[test]
+fn test_plan_playwright_queue_rename_targets_old_job_tests() {
+    // Diff renames an emailQueue.add('old') -> emailQueue.add('new') in
+    // source while a spec still enqueues the old job name. The spec must
+    // surface in the coverage group with `via: ["queue"]`.
+    let plan = run_rename_plan("playwright-queue-rename");
+    assert_rename_surfaces(&plan, "tests/e2e/email.spec.ts", "queue");
+}
+
+#[test]
+fn test_plan_playwright_http_rename_targets_old_path_tests() {
+    // Diff renames a client.get('/api/old') -> client.get('/api/new') in
+    // backend source while a spec still calls the old path via
+    // request.get. The spec must surface in the coverage group with
+    // `via: ["http"]`.
+    let plan = run_rename_plan("playwright-http-rename");
+    assert_rename_surfaces(&plan, "tests/e2e/users.spec.ts", "http");
+}
+
 #[test]
 fn test_plan_vitest_deprecated_dependencies_key_still_triggers() {
     // The fixture uses the deprecated `dependencies` key; backward compat
