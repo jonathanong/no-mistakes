@@ -63,13 +63,14 @@ fn effective_selector_settings(config: &NoMistakesConfig) -> SelectorSettings {
         .filter(|s| !s.is_empty())
         .cloned()
         .collect();
-    // Match Playwright's own default `testIdAttribute` (`data-testid`) when
-    // the project has not declared its own list. Defaulting to both
-    // `data-testid` and `data-pw` would mis-attribute every `getByTestId`
-    // call to both attributes, producing false positives when a diff
-    // removes only one of them.
+    // Match the project's own selector-attribute default (data-testid AND
+    // data-pw — see playwright::config::DEFAULT_SELECTOR_ATTRIBUTES) so a
+    // diff that removes `data-pw="old"` populates the hint set even when
+    // the v2 config leaves `tests.playwright.selectors.testIds` unset.
+    // This trades a slightly broader `getByTestId(...)` mapping for
+    // consistency with how the rest of the analyzer tracks selectors.
     if test_id_attributes.is_empty() {
-        test_id_attributes.push("data-testid".to_string());
+        test_id_attributes.extend(["data-testid", "data-pw"].iter().map(|a| a.to_string()));
     }
     test_id_attributes.sort();
     test_id_attributes.dedup();
