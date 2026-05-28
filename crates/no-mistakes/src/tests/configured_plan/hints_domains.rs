@@ -130,45 +130,51 @@ fn scan_addbulk_names(diff_files: &[DiffFile]) -> BTreeMap<PathBuf, Vec<String>>
     let Ok(name_re) = regex::Regex::new(QUEUE_ADDBULK_NAME_PATTERN) else {
         return out;
     };
-    for df in diff_files {
-        if df.removed_lines.is_empty() {
-            continue;
-        }
-        let removed_joined = df.removed_lines.join("\n");
-        if !removed_joined.contains(".addBulk") {
-            continue;
-        }
-        let added_joined = df.added_lines.join("\n");
-        let added_names: HashSet<String> = if added_joined.contains(".addBulk") {
-            name_re
-                .captures_iter(&added_joined)
-                .filter_map(|c| c.name("name").map(|m| m.as_str().to_string()))
-                .collect()
-        } else {
-            HashSet::new()
-        };
-        let mut names: Vec<String> = Vec::new();
-        let mut seen: HashSet<String> = HashSet::new();
-        for caps in name_re.captures_iter(&removed_joined) {
-            if let Some(m) = caps.name("name") {
-                let value = m.as_str().to_string();
-                if added_names.contains(&value) {
-                    continue;
-                }
-                if seen.insert(value.clone()) {
-                    names.push(value);
-                }
-            }
-        }
-        if !names.is_empty() {
-            out.entry(df.path.clone()).or_default().extend(names);
-        }
+    let per_file: Vec<(PathBuf, Vec<String>)> = diff_files
+        .par_iter()
+        .filter_map(|df| addbulk_names_for_file(&name_re, df))
+        .collect();
+    for (path, names) in per_file {
+        out.entry(path).or_default().extend(names);
     }
     for values in out.values_mut() {
         values.sort();
         values.dedup();
     }
     out
+}
+
+fn addbulk_names_for_file(name_re: &regex::Regex, df: &DiffFile) -> Option<(PathBuf, Vec<String>)> {
+    if df.removed_lines.is_empty() {
+        return None;
+    }
+    let removed_joined = df.removed_lines.join("\n");
+    if !removed_joined.contains(".addBulk") {
+        return None;
+    }
+    let added_joined = df.added_lines.join("\n");
+    let added_names: HashSet<String> = if added_joined.contains(".addBulk") {
+        name_re
+            .captures_iter(&added_joined)
+            .filter_map(|c| c.name("name").map(|m| m.as_str().to_string()))
+            .collect()
+    } else {
+        HashSet::new()
+    };
+    let mut names: Vec<String> = Vec::new();
+    let mut seen: HashSet<String> = HashSet::new();
+    for caps in name_re.captures_iter(&removed_joined) {
+        if let Some(m) = caps.name("name") {
+            let value = m.as_str().to_string();
+            if added_names.contains(&value) {
+                continue;
+            }
+            if seen.insert(value.clone()) {
+                names.push(value);
+            }
+        }
+    }
+    (!names.is_empty()).then(|| (df.path.clone(), names))
 }
 
 fn scan_string_domain(
