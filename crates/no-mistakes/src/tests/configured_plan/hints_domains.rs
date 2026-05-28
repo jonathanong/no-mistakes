@@ -19,24 +19,25 @@ use rayon::prelude::*;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-// Route literals: navigation helpers, route-method calls, and JSX route
-// attributes. `fetch` is deliberately left out here — it lives in the
-// HTTP domain — to avoid double-attributing the same removed call as
-// both a removed route and a removed HTTP path. The `href=`/`to=` arm
-// covers `<Link href="/old">`, `<a href="/old">`, and the React Router
-// `to=` shape, which the dependency graph records as `RouteRef`s.
+// Route literals: navigation helpers and JSX route attributes only.
+// Verb calls (`app.get`, `client.get`, …) are owned by the HTTP arm so a
+// removed `client.get('/dashboard')` is not double-counted as a route
+// rename. The `href=`/`to=` arm covers `<Link href="/old">`,
+// `<a href="/old">`, and the React Router `to=` shape, which the
+// dependency graph records as `RouteRef`s.
 const ROUTE_LITERAL_PATTERN: &str = concat!(
-    r#"(?:(?:\b(?:redirect|push|replace|prefetch|navigate|goto)|"#,
-    r#"\.(?:get|post|put|patch|delete|head|options|all|use))"#,
+    r#"(?:\b(?:redirect|push|replace|prefetch|navigate|goto)"#,
     r#"(?:<[^>]+>)?\s*\(\s*['"`](?P<value>/[^'"`{}$\s]*)['"`]"#,
     r#"|\b(?:href|to)\s*=\s*['"`](?P<jsx>/[^'"`{}$\s]*)['"`])"#,
 );
 
 // HTTP call literals. The optional `<...>` allows typed clients like
 // `client.get<User>("/api/users")` to match the same way the AST
-// extractor sees them.
+// extractor sees them. `route` covers the chained backend shape
+// `app.route('/api/x').get(handler)` — the dependency graph treats those
+// the same way `app.get` would, so the rename hint follows suit.
 const HTTP_LITERAL_PATTERN: &str = concat!(
-    r#"(?:\bfetch|\.\s*(?:get|post|put|patch|delete|head|options))"#,
+    r#"(?:\bfetch|\.\s*(?:get|post|put|patch|delete|head|options|route))"#,
     r#"(?:<[^>]+>)?\s*\(\s*['"`](?P<value>/[^'"`{}$\s]*)['"`]"#,
 );
 
