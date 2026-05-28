@@ -1,0 +1,15 @@
+diff --git a/web/components/nav.tsx b/web/components/nav.tsx
+index aaaaaaa..bbbbbbb 100644
+--- a/web/components/nav.tsx
++++ b/web/components/nav.tsx
+@@ -1,9 +1,9 @@
+ import { useRouter } from "next/navigation";
+
+ export function Nav() {
+   const router = useRouter();
+   const onClick = () => {
+-    router.push("/dashboard");
++    router.push("/v2/dashboard");
+   };
+   return <button onClick={onClick}>Go</button>;
+ }

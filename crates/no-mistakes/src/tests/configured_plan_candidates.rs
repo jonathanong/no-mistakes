@@ -6,8 +6,8 @@ use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 
 /// Extra coverage signals derived from a unified diff that the BFS over the
-/// dep graph cannot recover on its own. Currently carries identifiers that
-/// the diff removed (e.g. `data-pw` selector values) along with a reverse
+/// dep graph cannot recover on its own. Carries identifiers that the diff
+/// removed across every identifier-keyed edge kind, paired with a reverse
 /// index from each identifier to the test files that still reference it.
 ///
 /// Empty when no diff body is available, which is the case for
@@ -16,11 +16,28 @@ use std::path::{Path, PathBuf};
 pub(super) struct CoverageHints {
     pub removed_selectors: BTreeMap<PathBuf, Vec<(String, String)>>,
     pub selector_dependents: HashMap<(String, String), Vec<PathBuf>>,
+    /// Per-file removed route path strings (e.g. `/account/settings`).
+    pub removed_route_paths: BTreeMap<PathBuf, Vec<String>>,
+    /// Reverse index: route path string → tests still navigating to it.
+    pub route_path_dependents: HashMap<String, Vec<PathBuf>>,
+    /// Per-file removed queue/job identifiers from `.add(...)`, `addBulk`,
+    /// `new Worker(...)`, and queue factory calls.
+    pub removed_queue_jobs: BTreeMap<PathBuf, Vec<String>>,
+    /// Reverse index: queue/job identifier string → files that still
+    /// reference it via enqueue/worker/factory call shapes.
+    pub queue_job_dependents: HashMap<String, Vec<PathBuf>>,
+    /// Per-file removed HTTP call paths (e.g. `/api/users`).
+    pub removed_http_paths: BTreeMap<PathBuf, Vec<String>>,
+    /// Reverse index: HTTP call path → files that still call it.
+    pub http_path_dependents: HashMap<String, Vec<PathBuf>>,
 }
 
 impl CoverageHints {
     fn is_empty(&self) -> bool {
         self.removed_selectors.is_empty()
+            && self.removed_route_paths.is_empty()
+            && self.removed_queue_jobs.is_empty()
+            && self.removed_http_paths.is_empty()
     }
 }
 
@@ -141,64 +158,132 @@ fn graph_candidates(
         }
     }
     if group == TestPlanGroupType::Coverage && !hints.is_empty() {
-        append_removed_selector_candidates(root, all_test_set, used, hints, &mut selected);
+        append_removed_id_candidates(
+            root,
+            all_test_set,
+            used,
+            &hints.removed_selectors,
+            &hints.selector_dependents,
+            EdgeKind::Selector,
+            &mut selected,
+        );
+        append_removed_id_candidates(
+            root,
+            all_test_set,
+            used,
+            &hints.removed_route_paths,
+            &hints.route_path_dependents,
+            EdgeKind::RouteTest,
+            &mut selected,
+        );
+        append_removed_id_candidates(
+            root,
+            all_test_set,
+            used,
+            &hints.removed_queue_jobs,
+            &hints.queue_job_dependents,
+            EdgeKind::QueueEnqueue,
+            &mut selected,
+        );
+        append_removed_id_candidates(
+            root,
+            all_test_set,
+            used,
+            &hints.removed_http_paths,
+            &hints.http_path_dependents,
+            EdgeKind::HttpCall,
+            &mut selected,
+        );
     }
     selected.into_values().collect()
 }
 
-fn append_removed_selector_candidates(
+#[allow(clippy::too_many_arguments)]
+fn append_removed_id_candidates<K: std::hash::Hash + Eq + Clone>(
     root: &Path,
     all_test_set: &HashSet<PathBuf>,
     used: &HashSet<String>,
-    hints: &CoverageHints,
+    removed: &BTreeMap<PathBuf, Vec<K>>,
+    dependents: &HashMap<K, Vec<PathBuf>>,
+    edge: EdgeKind,
     selected: &mut BTreeMap<String, SelectedTest>,
 ) {
-    let confidence = path_confidence(&[EdgeKind::Selector]);
+    let confidence = path_confidence(&[edge]);
+    let via_label = impact_reason_label(edge).to_string();
     // Iterate the hint map directly so deleted source files (which are
     // filtered out of `changed_files` because they no longer exist on disk)
-    // still contribute their removed identifiers to the coverage hints.
-    for (changed_path, removed) in &hints.removed_selectors {
+    // still contribute their removed identifiers.
+    for (changed_path, ids) in removed {
         let rel_changed = relative_path(root, changed_path);
         let mut tests_for_changed: HashSet<PathBuf> = HashSet::new();
-        for pair in removed {
-            let Some(tests) = hints.selector_dependents.get(pair) else {
+        for id in ids {
+            let Some(tests) = dependents.get(id) else {
                 continue;
             };
-            for test in tests {
-                if test == changed_path {
-                    continue;
-                }
-                if !all_test_set.contains(test) {
-                    continue;
-                }
-                tests_for_changed.insert(test.clone());
-            }
+            collect_dependent_tests(tests, changed_path, all_test_set, &mut tests_for_changed);
         }
-        let mut sorted: Vec<PathBuf> = tests_for_changed.into_iter().collect();
-        sorted.sort();
-        for test_path in sorted {
-            let rel_test = relative_path(root, &test_path);
-            if used.contains(&rel_test) {
-                continue;
-            }
-            let reason = ImpactReason {
-                changed_file: rel_changed.clone(),
-                path: vec![rel_changed.clone(), rel_test.clone()],
-                via: vec!["selector".to_string()],
-            };
-            let entry = selected
-                .entry(rel_test.clone())
-                .or_insert_with(|| SelectedTest {
-                    test_file: rel_test,
-                    confidence,
-                    reasons: Vec::new(),
-                });
-            if confidence > entry.confidence {
-                entry.confidence = confidence;
-            }
-            if !entry.reasons.contains(&reason) {
-                entry.reasons.push(reason);
-            }
+        emit_hint_reasons(
+            root,
+            used,
+            &rel_changed,
+            tests_for_changed,
+            confidence,
+            &via_label,
+            selected,
+        );
+    }
+}
+
+fn collect_dependent_tests(
+    tests: &[PathBuf],
+    changed_path: &Path,
+    all_test_set: &HashSet<PathBuf>,
+    out: &mut HashSet<PathBuf>,
+) {
+    for test in tests {
+        if test == changed_path {
+            continue;
+        }
+        if !all_test_set.contains(test) {
+            continue;
+        }
+        out.insert(test.clone());
+    }
+}
+
+fn emit_hint_reasons(
+    root: &Path,
+    used: &HashSet<String>,
+    rel_changed: &str,
+    tests_for_changed: HashSet<PathBuf>,
+    confidence: Confidence,
+    via_label: &str,
+    selected: &mut BTreeMap<String, SelectedTest>,
+) {
+    let mut sorted: Vec<PathBuf> = tests_for_changed.into_iter().collect();
+    sorted.sort();
+    for test_path in sorted {
+        let rel_test = relative_path(root, &test_path);
+        if used.contains(&rel_test) {
+            continue;
+        }
+        let reason = ImpactReason {
+            changed_file: rel_changed.to_string(),
+            path: vec![rel_changed.to_string(), rel_test.clone()],
+            via: vec![via_label.to_string()],
+        };
+        let entry = selected
+            .entry(rel_test.clone())
+            .or_insert_with(|| SelectedTest {
+                test_file: rel_test,
+                confidence,
+                reasons: Vec::new(),
+            });
+        if confidence > entry.confidence {
+            entry.confidence = confidence;
+        }
+        if !entry.reasons.contains(&reason) {
+            entry.reasons.push(reason);
         }
     }
 }

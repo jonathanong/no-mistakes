@@ -15,6 +15,7 @@ use std::path::{Path, PathBuf};
 
 mod fallback;
 mod hints;
+mod hints_domains;
 use fallback::{fallback_plan, FallbackRequest};
 use hints::build_coverage_hints;
 
