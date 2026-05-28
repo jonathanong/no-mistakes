@@ -117,15 +117,18 @@ fn truly_removed_strings(
 }
 
 fn scan_lines(re: &regex::Regex, capture_names: &[&str], lines: &[String]) -> Vec<String> {
+    // Join the hunk's lines so formatter-wrapped statements like
+    // `router.push(\n  "/x"\n)` or `addBulk([{\n  name: "x"\n}])` still
+    // match — `\s*` in the patterns spans the inserted newline. This is the
+    // entire reason the matcher is line-oblivious.
+    let joined = lines.join("\n");
     let mut out: Vec<String> = Vec::new();
-    for line in lines {
-        for caps in re.captures_iter(line) {
-            for name in capture_names {
-                if let Some(m) = caps.name(name) {
-                    let value = m.as_str();
-                    if !value.is_empty() {
-                        out.push(value.to_string());
-                    }
+    for caps in re.captures_iter(&joined) {
+        for name in capture_names {
+            if let Some(m) = caps.name(name) {
+                let value = m.as_str();
+                if !value.is_empty() {
+                    out.push(value.to_string());
                 }
             }
         }
@@ -133,79 +136,118 @@ fn scan_lines(re: &regex::Regex, capture_names: &[&str], lines: &[String]) -> Ve
     out
 }
 
-pub(super) fn build_route_path_dependents(all_tests: &[PathBuf]) -> HashMap<String, Vec<PathBuf>> {
-    let per_test: Vec<(PathBuf, Vec<String>)> = all_tests
-        .par_iter()
-        .map(|path| (path.clone(), extract_test_urls(path)))
-        .collect();
-    merge_string_dependents(per_test)
+/// Per-domain "do we need to compute this reverse index?" flags. Set only
+/// the domains whose corresponding `removed_*` map was non-empty so the
+/// per-test pass skips unused extraction work.
+#[derive(Clone, Copy, Default)]
+pub(super) struct DependentDomains {
+    pub routes: bool,
+    pub queues: bool,
+    pub http: bool,
 }
 
-fn extract_test_urls(path: &Path) -> Vec<String> {
+#[derive(Default)]
+struct PerTestExtraction {
+    routes: Vec<String>,
+    queues: Vec<String>,
+    http: Vec<String>,
+}
+
+#[derive(Default)]
+pub(super) struct StringDomainDependents {
+    pub routes: HashMap<String, Vec<PathBuf>>,
+    pub queues: HashMap<String, Vec<PathBuf>>,
+    pub http: HashMap<String, Vec<PathBuf>>,
+}
+
+/// Run a single parallel pass over `all_tests`, parsing each file at most
+/// once and extracting facts for every domain whose flag is set in
+/// `domains`. Returns the merged reverse indexes. Domains with their flag
+/// off come back empty.
+pub(super) fn build_dependents(
+    all_tests: &[PathBuf],
+    domains: DependentDomains,
+) -> StringDomainDependents {
+    if !domains.routes && !domains.queues && !domains.http {
+        return StringDomainDependents::default();
+    }
+    let per_test: Vec<(PathBuf, PerTestExtraction)> = all_tests
+        .par_iter()
+        .map(|path| (path.clone(), extract_for_test(path, &domains)))
+        .collect();
+    let mut routes: Vec<(PathBuf, Vec<String>)> = Vec::with_capacity(per_test.len());
+    let mut queues: Vec<(PathBuf, Vec<String>)> = Vec::with_capacity(per_test.len());
+    let mut http: Vec<(PathBuf, Vec<String>)> = Vec::with_capacity(per_test.len());
+    for (path, ext) in per_test {
+        if domains.routes {
+            routes.push((path.clone(), ext.routes));
+        }
+        if domains.queues {
+            queues.push((path.clone(), ext.queues));
+        }
+        if domains.http {
+            http.push((path, ext.http));
+        }
+    }
+    StringDomainDependents {
+        routes: merge_string_dependents(routes),
+        queues: merge_string_dependents(queues),
+        http: merge_string_dependents(http),
+    }
+}
+
+fn extract_for_test(path: &Path, domains: &DependentDomains) -> PerTestExtraction {
     let Ok(source) = std::fs::read_to_string(path) else {
-        return Vec::new();
+        return PerTestExtraction::default();
     };
+    // Parse each test file at most once; route/queue/http extraction all
+    // operate on the same `Program`, so any combination of enabled domains
+    // pays exactly one parse per file. Parse failures are swallowed
+    // (best-effort augmentation).
     with_program(path, &source, |program, source| {
-        no_mistakes::playwright::playwright_urls::extract_playwright_url_literals_from_program(
-            program,
-            source,
-            &[],
-        )
+        let mut out = PerTestExtraction::default();
+        if domains.routes {
+            out.routes =
+                no_mistakes::playwright::playwright_urls::extract_playwright_url_literals_from_program(
+                    program, source, &[],
+                );
+        }
+        if domains.queues {
+            let usage =
+                no_mistakes::codebase::ts_queues::usage::extract_queue_usage_from_program(
+                    program, source,
+                );
+            let mut names: Vec<String> = Vec::new();
+            for enqueue in &usage.enqueue_calls {
+                if let Some(job) = enqueue.job.as_ref() {
+                    names.push(job.clone());
+                }
+            }
+            for worker in &usage.worker_declarations {
+                if let Some(name) = worker.queue_name.as_ref() {
+                    names.push(name.clone());
+                }
+            }
+            names.sort();
+            names.dedup();
+            out.queues = names;
+        }
+        if domains.http {
+            // No backend-prefix filter: a test's `fetch('/api/foo')` should
+            // match a backend that removed that exact path even when the
+            // project has not declared backend prefixes via config.
+            let calls =
+                no_mistakes::codebase::ts_http_calls::extract_http_calls_from_program(
+                    program, source, &[""],
+                );
+            let mut paths: Vec<String> = calls.into_iter().map(|c| c.path).collect();
+            paths.sort();
+            paths.dedup();
+            out.http = paths;
+        }
+        out
     })
     .unwrap_or_default()
-}
-
-pub(super) fn build_queue_job_dependents(all_tests: &[PathBuf]) -> HashMap<String, Vec<PathBuf>> {
-    let per_test: Vec<(PathBuf, Vec<String>)> = all_tests
-        .par_iter()
-        .map(|path| (path.clone(), extract_queue_job_names(path)))
-        .collect();
-    merge_string_dependents(per_test)
-}
-
-fn extract_queue_job_names(path: &Path) -> Vec<String> {
-    // The queue extractor lives in the lib's `codebase` module; reach it
-    // through the public re-export so the bin can drive it.
-    let Ok(source) = std::fs::read_to_string(path) else {
-        return Vec::new();
-    };
-    let usage = no_mistakes::codebase::ts_queues::usage::extract_queue_usage(&source);
-    let mut out: Vec<String> = Vec::new();
-    for enqueue in &usage.enqueue_calls {
-        if let Some(job) = enqueue.job.as_ref() {
-            out.push(job.clone());
-        }
-    }
-    for worker in &usage.worker_declarations {
-        if let Some(name) = worker.queue_name.as_ref() {
-            out.push(name.clone());
-        }
-    }
-    out.sort();
-    out.dedup();
-    out
-}
-
-pub(super) fn build_http_path_dependents(all_tests: &[PathBuf]) -> HashMap<String, Vec<PathBuf>> {
-    let per_test: Vec<(PathBuf, Vec<String>)> = all_tests
-        .par_iter()
-        .map(|path| (path.clone(), extract_http_call_paths(path)))
-        .collect();
-    merge_string_dependents(per_test)
-}
-
-fn extract_http_call_paths(path: &Path) -> Vec<String> {
-    let Ok(source) = std::fs::read_to_string(path) else {
-        return Vec::new();
-    };
-    // No backend-prefix filter: a test's `fetch('/api/foo')` should match a
-    // backend that removed that exact path even if the project has not
-    // declared backend prefixes for the static-paths config knob.
-    let calls = no_mistakes::codebase::ts_http_calls::extract_http_calls(&source, &[""]);
-    let mut out: Vec<String> = calls.into_iter().map(|c| c.path).collect();
-    out.sort();
-    out.dedup();
-    out
 }
 
 fn merge_string_dependents(per_test: Vec<(PathBuf, Vec<String>)>) -> HashMap<String, Vec<PathBuf>> {

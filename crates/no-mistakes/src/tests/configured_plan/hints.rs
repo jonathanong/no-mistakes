@@ -1,8 +1,8 @@
 use super::super::configured_plan_candidates::CoverageHints;
 use super::super::diff_parser::DiffFile;
 use super::hints_domains::{
-    build_http_path_dependents, build_queue_job_dependents, build_route_path_dependents,
-    removed_http_paths_per_file, removed_queue_jobs_per_file, removed_route_paths_per_file,
+    build_dependents, removed_http_paths_per_file, removed_queue_jobs_per_file,
+    removed_route_paths_per_file, DependentDomains,
 };
 use super::TestFramework;
 use no_mistakes::config::v2::schema::NoMistakesConfig;
@@ -59,39 +59,32 @@ pub(super) fn build_coverage_hints(
         return CoverageHints::default();
     }
 
-    // Each reverse-index builder skips work when its corresponding removal
-    // set is empty, so the per-test parse cost is paid only for domains
-    // that actually have a candidate to match against.
+    // Selector parsing has its own per-test pass (it needs a different
+    // SelectorRegexes config); the other three domains share a single
+    // parallel pass over `all_tests`, parsing each file at most once.
     let selector_dependents = if removed_selectors.is_empty() {
         HashMap::new()
     } else {
         build_selector_dependents(all_tests, &settings)
     };
-    let route_path_dependents = if removed_route_paths.is_empty() {
-        HashMap::new()
-    } else {
-        build_route_path_dependents(all_tests)
-    };
-    let queue_job_dependents = if removed_queue_jobs.is_empty() {
-        HashMap::new()
-    } else {
-        build_queue_job_dependents(all_tests)
-    };
-    let http_path_dependents = if removed_http_paths.is_empty() {
-        HashMap::new()
-    } else {
-        build_http_path_dependents(all_tests)
-    };
+    let domain_dependents = build_dependents(
+        all_tests,
+        DependentDomains {
+            routes: !removed_route_paths.is_empty(),
+            queues: !removed_queue_jobs.is_empty(),
+            http: !removed_http_paths.is_empty(),
+        },
+    );
 
     CoverageHints {
         removed_selectors,
         selector_dependents,
         removed_route_paths,
-        route_path_dependents,
+        route_path_dependents: domain_dependents.routes,
         removed_queue_jobs,
-        queue_job_dependents,
+        queue_job_dependents: domain_dependents.queues,
         removed_http_paths,
-        http_path_dependents,
+        http_path_dependents: domain_dependents.http,
     }
 }
 
