@@ -1,4 +1,5 @@
 use super::configured_plan_candidates::{group_candidates, merge_selected, stable_take};
+use super::diff_parser::DiffFile;
 use super::plan::relative_path;
 use super::{PlanArgs, SelectedTest, TestFramework, TestPlan, TestPlanGroupResult, Warning};
 use anyhow::Result;
@@ -13,8 +14,11 @@ use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 
 mod fallback;
+mod hints;
 use fallback::{fallback_plan, FallbackRequest};
+use hints::build_coverage_hints;
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn generate_configured_plan(
     args: &PlanArgs,
     framework: TestFramework,
@@ -22,6 +26,7 @@ pub(crate) fn generate_configured_plan(
     config: &NoMistakesConfig,
     tsconfig: &no_mistakes::codebase::dependencies::TsConfig,
     changed_files: &[PathBuf],
+    diff_files: &[DiffFile],
     forced_fallback: Option<(String, PathBuf)>,
 ) -> Result<TestPlan> {
     let env = configured_environment(args, framework, config)?;
@@ -86,6 +91,7 @@ pub(crate) fn generate_configured_plan(
     }
 
     let graph = DepGraph::build(root, tsconfig)?;
+    let coverage_hints = build_coverage_hints(root, config, framework, diff_files, &all_tests);
     let mut selected_map: BTreeMap<PathBuf, SelectedTest> = BTreeMap::new();
     let mut used = HashSet::new();
     let mut group_results = Vec::new();
@@ -117,6 +123,7 @@ pub(crate) fn generate_configured_plan(
             &all_tests,
             &all_test_set,
             &used,
+            &coverage_hints,
             &mut warnings,
             &mut warnings_seen,
         );

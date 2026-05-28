@@ -29,6 +29,44 @@ pub(crate) const HTML_ID_ATTRIBUTE: &str = "id";
 
 const SOURCE_EXTS: &[&str] = &["ts", "tsx", "js", "jsx", "mts", "cts", "mjs", "cjs"];
 
+/// Best-effort scan of a sequence of source lines for occurrences of any
+/// attribute in `attributes` set to a static string literal, e.g.
+/// `data-pw="search-bar"`. Used to recover identifiers that have been removed
+/// in a unified diff hunk where we no longer have the original AST. Skips
+/// values that look dynamic (containing `{` or `$`).
+pub fn scan_selector_attribute_values(
+    attributes: &[String],
+    lines: &[String],
+) -> Vec<(String, String)> {
+    if attributes.is_empty() || lines.is_empty() {
+        return Vec::new();
+    }
+    let escaped: Vec<String> = attributes.iter().map(|a| regex::escape(a)).collect();
+    let pattern = format!(
+        r#"(?P<attr>{})\s*=\s*(?:"(?P<dq>[^"{{}}$]*)"|'(?P<sq>[^'{{}}$]*)')"#,
+        escaped.join("|")
+    );
+    let Ok(re) = regex::Regex::new(&pattern) else {
+        return Vec::new();
+    };
+    let mut out: Vec<(String, String)> = Vec::new();
+    for line in lines {
+        for caps in re.captures_iter(line) {
+            let attr = caps.name("attr").map(|m| m.as_str().to_string());
+            let value = caps
+                .name("dq")
+                .or_else(|| caps.name("sq"))
+                .map(|m| m.as_str().to_string());
+            if let (Some(a), Some(v)) = (attr, value) {
+                if !v.is_empty() {
+                    out.push((a, v));
+                }
+            }
+        }
+    }
+    out
+}
+
 pub fn is_source_file(path: &std::path::Path) -> bool {
     path.extension()
         .and_then(|extension| extension.to_str())

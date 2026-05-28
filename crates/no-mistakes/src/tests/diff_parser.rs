@@ -14,6 +14,8 @@ pub(crate) struct DiffFile {
     pub path: PathBuf,
     pub status: DiffFileStatus,
     pub old_path: Option<PathBuf>,
+    pub removed_lines: Vec<String>,
+    pub added_lines: Vec<String>,
 }
 
 pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
@@ -29,6 +31,9 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
         let mut rename_to: Option<PathBuf> = None;
         let mut minus_path: Option<&str> = None;
         let mut plus_path: Option<&str> = None;
+        let mut removed_lines: Vec<String> = Vec::new();
+        let mut added_lines: Vec<String> = Vec::new();
+        let mut in_hunk = false;
 
         while let Some(&next) = lines.peek() {
             if next.starts_with("diff --git ") {
@@ -43,6 +48,14 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
                 minus_path = Some(rest);
             } else if let Some(rest) = next.strip_prefix("+++ ") {
                 plus_path = Some(rest);
+            } else if next.starts_with("@@") {
+                in_hunk = true;
+            } else if in_hunk {
+                if let Some(rest) = next.strip_prefix('-') {
+                    removed_lines.push(rest.to_string());
+                } else if let Some(rest) = next.strip_prefix('+') {
+                    added_lines.push(rest.to_string());
+                }
             }
         }
 
@@ -51,6 +64,8 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
                 path: to,
                 status: DiffFileStatus::Renamed,
                 old_path: Some(from),
+                removed_lines,
+                added_lines,
             });
             continue;
         }
@@ -70,6 +85,8 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
             path,
             status,
             old_path: None,
+            removed_lines,
+            added_lines,
         });
     }
 
@@ -85,10 +102,19 @@ fn parse_diff_header(line: &str) -> (Option<PathBuf>, PathBuf) {
     (Some(PathBuf::from(a_part)), PathBuf::from(b_part))
 }
 
-fn dedup_diff_files(mut files: Vec<DiffFile>) -> Vec<DiffFile> {
-    let mut seen = std::collections::HashSet::new();
-    files.retain(|f| seen.insert(f.path.clone()));
-    files
+fn dedup_diff_files(files: Vec<DiffFile>) -> Vec<DiffFile> {
+    let mut index: std::collections::HashMap<PathBuf, usize> = std::collections::HashMap::new();
+    let mut out: Vec<DiffFile> = Vec::new();
+    for f in files {
+        if let Some(&i) = index.get(&f.path) {
+            out[i].removed_lines.extend(f.removed_lines);
+            out[i].added_lines.extend(f.added_lines);
+        } else {
+            index.insert(f.path.clone(), out.len());
+            out.push(f);
+        }
+    }
+    out
 }
 
 pub(crate) fn run_diff_command(command: &str, root: &Path) -> Result<String> {
@@ -123,6 +149,74 @@ index abc..def 100644
         assert_eq!(files.len(), 1);
         assert_eq!(files[0].path, PathBuf::from("src/main.rs"));
         assert_eq!(files[0].status, DiffFileStatus::Modified);
+        assert_eq!(files[0].removed_lines, Vec::<String>::new());
+        assert_eq!(files[0].added_lines, vec!["// new line".to_string()]);
+    }
+
+    #[test]
+    fn parse_captures_rename_pair_in_hunk_body() {
+        let diff = "\
+diff --git a/web/components/search-bar.tsx b/web/components/search-bar.tsx
+--- a/web/components/search-bar.tsx
++++ b/web/components/search-bar.tsx
+@@ -1,3 +1,3 @@
+ export function SearchBar() {
+-  return <form data-pw=\"search-bar\" />;
++  return <form data-pw=\"renamed-search-bar\" />;
+ }
+";
+        let files = parse_unified_diff(diff);
+        assert_eq!(files.len(), 1);
+        assert_eq!(
+            files[0].removed_lines,
+            vec!["  return <form data-pw=\"search-bar\" />;".to_string()]
+        );
+        assert_eq!(
+            files[0].added_lines,
+            vec!["  return <form data-pw=\"renamed-search-bar\" />;".to_string()]
+        );
+    }
+
+    #[test]
+    fn parse_ignores_minus_plus_headers_in_hunk_capture() {
+        let diff = "\
+diff --git a/a.ts b/a.ts
+--- a/a.ts
++++ b/a.ts
+@@ -1 +1 @@
+-old line
++new line
+";
+        let files = parse_unified_diff(diff);
+        assert_eq!(files[0].removed_lines, vec!["old line".to_string()]);
+        assert_eq!(files[0].added_lines, vec!["new line".to_string()]);
+    }
+
+    #[test]
+    fn parse_multi_hunk_accumulates() {
+        let diff = "\
+diff --git a/a.ts b/a.ts
+--- a/a.ts
++++ b/a.ts
+@@ -1,3 +1,3 @@
+ ctx
+-rm1
++add1
+@@ -10,3 +10,3 @@
+ ctx
+-rm2
++add2
+";
+        let files = parse_unified_diff(diff);
+        assert_eq!(files.len(), 1);
+        assert_eq!(
+            files[0].removed_lines,
+            vec!["rm1".to_string(), "rm2".to_string()]
+        );
+        assert_eq!(
+            files[0].added_lines,
+            vec!["add1".to_string(), "add2".to_string()]
+        );
     }
 
     #[test]
@@ -228,6 +322,14 @@ diff --git a/x.ts b/x.ts
 ";
         let files = parse_unified_diff(diff);
         assert_eq!(files.len(), 1);
+        assert_eq!(
+            files[0].removed_lines,
+            vec!["old".to_string(), "old2".to_string()]
+        );
+        assert_eq!(
+            files[0].added_lines,
+            vec!["new".to_string(), "new2".to_string()]
+        );
     }
 
     #[test]

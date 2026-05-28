@@ -9,11 +9,16 @@ use std::path::{Path, PathBuf};
 pub(crate) struct ChangedFiles {
     pub files: Vec<PathBuf>,
     pub deleted: Vec<PathBuf>,
+    /// Per-file hunk bodies parsed from the provided unified diff (if any).
+    /// Each entry's `path` is the same absolute path that appears in `files`,
+    /// so consumers can join on it. Empty when no `--diff*` flag was used.
+    pub diff_files: Vec<DiffFile>,
 }
 
 pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<ChangedFiles> {
     let mut files = Vec::new();
     let mut deleted = Vec::new();
+    let mut diff_files: Vec<DiffFile> = Vec::new();
 
     for f in &args.changed_file {
         files.push(resolve_path(f, root));
@@ -38,7 +43,7 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
         }
     }
 
-    collect_diff_files(args, root, &mut files, &mut deleted)?;
+    collect_diff_files(args, root, &mut files, &mut deleted, &mut diff_files)?;
 
     let mut unique = HashSet::new();
     let mut result = Vec::new();
@@ -58,9 +63,23 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
         }
     }
 
+    let diff_files = diff_files
+        .into_iter()
+        .map(|mut df| {
+            let absolute = if df.path.is_absolute() {
+                df.path.clone()
+            } else {
+                root.join(&df.path)
+            };
+            df.path = no_mistakes::codebase::ts_resolver::normalize_path(&absolute);
+            df
+        })
+        .collect();
+
     Ok(ChangedFiles {
         files: result,
         deleted: deleted_result,
+        diff_files,
     })
 }
 
@@ -69,6 +88,7 @@ fn collect_diff_files(
     root: &Path,
     files: &mut Vec<PathBuf>,
     deleted: &mut Vec<PathBuf>,
+    diff_files_out: &mut Vec<DiffFile>,
 ) -> Result<()> {
     let diff_content = read_diff_content(args, root)?;
     let Some(content) = diff_content else {
@@ -77,6 +97,7 @@ fn collect_diff_files(
 
     let diff_files = super::diff_parser::parse_unified_diff(&content);
     apply_diff_files(&diff_files, root, files, deleted);
+    diff_files_out.extend(diff_files);
     Ok(())
 }
 

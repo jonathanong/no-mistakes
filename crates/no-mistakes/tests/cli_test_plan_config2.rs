@@ -248,6 +248,77 @@ fn test_plan_playwright_coverage_navigate_to_helper() {
 }
 
 #[test]
+fn test_plan_playwright_selector_rename_targets_old_value_tests() {
+    // Regression: when a diff renames `data-pw` from value A -> B in source,
+    // tests that still query A via `getByTestId("A")` must be surfaced in the
+    // plan via selector coverage. The fixture is post-rename (source has B);
+    // the diff body carries the rename (-A, +B).
+    let root = fixture("playwright-selector-rename");
+    let diff_path = root.join("rename.diff");
+    let output = run(&[
+        "test",
+        "plan",
+        "playwright",
+        "--root",
+        root.to_str().unwrap(),
+        "--diff",
+        diff_path.to_str().unwrap(),
+        "--environment",
+        "prePush",
+        "--json",
+    ]);
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let selected: Vec<&str> = plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v["test_file"].as_str().unwrap())
+        .collect();
+    assert!(
+        selected.contains(&"tests/e2e/search-bar.spec.ts"),
+        "expected search-bar.spec.ts to be flagged via the removed selector, got: {:?}",
+        selected
+    );
+    let entry = plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|v| v["test_file"].as_str() == Some("tests/e2e/search-bar.spec.ts"))
+        .unwrap();
+    let via: Vec<&str> = entry["reasons"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .flat_map(|r| r["via"].as_array().unwrap())
+        .map(|v| v.as_str().unwrap())
+        .collect();
+    assert!(
+        via.contains(&"selector"),
+        "expected search-bar.spec.ts reason to include `selector`, got: {:?}",
+        via
+    );
+    let coverage_group = plan["groups"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|g| g["type"] == "coverage")
+        .unwrap();
+    assert!(
+        coverage_group["selected"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|v| v.as_str() == Some("tests/e2e/search-bar.spec.ts")),
+        "expected search-bar.spec.ts in coverage group"
+    );
+}
+
+#[test]
 fn test_plan_vitest_deprecated_dependencies_key_still_triggers() {
     // The fixture uses the deprecated `dependencies` key; backward compat
     // should preserve the trigger behaviour identical to `fullSuiteTriggers`.

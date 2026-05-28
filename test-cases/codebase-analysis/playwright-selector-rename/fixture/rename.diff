@@ -1,0 +1,16 @@
+diff --git a/web/components/search-bar.tsx b/web/components/search-bar.tsx
+index aaaaaaa..bbbbbbb 100644
+--- a/web/components/search-bar.tsx
++++ b/web/components/search-bar.tsx
+@@ -1,10 +1,10 @@
+ export function SearchBar() {
+   return (
+-    <form data-pw="search-bar">
++    <form data-pw="renamed-search-bar">
+       <input data-pw="search-input" type="search" />
+       <button data-pw="search-submit" type="submit">
+         Search
+       </button>
+     </form>
+   );
+ }

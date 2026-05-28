@@ -63,6 +63,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
             &config,
             &tsconfig,
             &changed_files,
+            &collected.diff_files,
             forced_fallback,
         );
     }
