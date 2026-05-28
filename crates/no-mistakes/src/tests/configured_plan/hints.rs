@@ -29,9 +29,10 @@ struct SelectorSettings {
 }
 
 /// Build the per-run coverage hints used by `graph_candidates` to surface
-/// tests at risk when a unified diff removes an identifier. Currently
-/// limited to playwright selector renames; returns an empty `CoverageHints`
-/// for other frameworks or when no removed selectors are detected.
+/// tests at risk when a unified diff removes an identifier. Covers the
+/// playwright selector, route, queue, and HTTP-call domains; returns an
+/// empty `CoverageHints` for non-playwright frameworks or when no removed
+/// identifier was detected across any of those domains.
 pub(super) fn build_coverage_hints(
     config: &NoMistakesConfig,
     framework: TestFramework,

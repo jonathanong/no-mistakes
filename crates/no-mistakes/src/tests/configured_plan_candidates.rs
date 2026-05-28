@@ -20,11 +20,16 @@ pub(super) struct CoverageHints {
     pub removed_route_paths: BTreeMap<PathBuf, Vec<String>>,
     /// Reverse index: route path string → tests still navigating to it.
     pub route_path_dependents: HashMap<String, Vec<PathBuf>>,
-    /// Per-file removed queue/job identifiers from `.add(...)`, `addBulk`,
-    /// `new Worker(...)`, and queue factory calls.
+    /// Per-file removed queue/job identifiers — captured from `.add(...)`,
+    /// `addBulk([{ name: ... }, ...])`, `new Worker(...)`, `createQueue(...)`,
+    /// and `new Queue(...)` shapes in the diff `-` side.
     pub removed_queue_jobs: BTreeMap<PathBuf, Vec<String>>,
-    /// Reverse index: queue/job identifier string → files that still
-    /// reference it via enqueue/worker/factory call shapes.
+    /// Reverse index: identifier string → files that still reference it via
+    /// `.add(...)`/`.addBulk(...)` enqueues or `new Worker(...)`
+    /// declarations. The diff side also records `createQueue(...)` /
+    /// `new Queue(...)` removals; their dependent-side mapping is the
+    /// matching `new Worker(...)` queue name (factory references are not
+    /// indexed on the test side — see the Shepherd Journal).
     pub queue_job_dependents: HashMap<String, Vec<PathBuf>>,
     /// Per-file removed HTTP call paths (e.g. `/api/users`).
     pub removed_http_paths: BTreeMap<PathBuf, Vec<String>>,
