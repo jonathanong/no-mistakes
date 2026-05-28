@@ -46,6 +46,17 @@ fn skips_unconfigured_attributes() {
 }
 
 #[test]
+fn does_not_match_attribute_inside_other_attribute() {
+    let attrs = vec!["id".to_string()];
+    let lines = vec!["<div data-id=\"submit\">".to_string()];
+    let got = scan_selector_attribute_values(&attrs, &lines);
+    assert!(
+        got.is_empty(),
+        "`id` inside `data-id` must not match the configured attribute `id`; got: {got:?}"
+    );
+}
+
+#[test]
 fn empty_inputs_return_empty() {
     let empty_attrs: Vec<String> = Vec::new();
     let lines = vec!["data-pw=\"x\"".to_string()];

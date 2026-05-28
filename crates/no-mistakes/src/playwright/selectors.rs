@@ -33,13 +33,17 @@ const SOURCE_EXTS: &[&str] = &["ts", "tsx", "js", "jsx", "mts", "cts", "mjs", "c
 /// Compile the regex used by [`scan_selector_attribute_values_with_regex`]
 /// from a set of selector attribute names. Returns `None` when `attributes`
 /// is empty or the resulting pattern is invalid.
+///
+/// The pattern is anchored so the attribute name must be preceded by
+/// start-of-line or a non-attribute character, which prevents
+/// e.g. `<div data-id="x">` from matching the configured attribute `id`.
 pub fn compile_selector_attribute_value_regex(attributes: &[String]) -> Option<regex::Regex> {
     if attributes.is_empty() {
         return None;
     }
     let escaped: Vec<String> = attributes.iter().map(|a| regex::escape(a)).collect();
     let pattern = format!(
-        r#"(?P<attr>{})\s*=\s*(?:"(?P<dq>[^"{{}}$]*)"|'(?P<sq>[^'{{}}$]*)')"#,
+        r#"(?:^|[^A-Za-z0-9_\-])(?P<attr>{})\s*=\s*(?:"(?P<dq>[^"{{}}$]*)"|'(?P<sq>[^'{{}}$]*)')"#,
         escaped.join("|")
     );
     regex::Regex::new(&pattern).ok()

@@ -6,6 +6,20 @@ use rayon::prelude::*;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::PathBuf;
 
+/// Fully-resolved selector configuration used to drive both the diff-side
+/// scan and the test-side reverse-index extraction. Keeping the three
+/// pieces together makes their mismatch potential explicit: the diff scan
+/// can match any attribute the project tracks (incl. `componentTestIds`
+/// values and the HTML `id` attribute when enabled), but the test side
+/// must use the narrower configuration the playwright analyzer uses so
+/// `page.getByTestId(...)` is not misread as querying an app-only
+/// attribute.
+struct SelectorSettings {
+    diff_attributes: Vec<String>,
+    test_id_attributes: Vec<String>,
+    html_ids: bool,
+}
+
 /// Build the per-run coverage hints used by `graph_candidates` to surface
 /// tests at risk when a unified diff removes an identifier. Currently
 /// limited to playwright selector renames; returns an empty `CoverageHints`
@@ -19,17 +33,17 @@ pub(super) fn build_coverage_hints(
     if framework != TestFramework::Playwright {
         return CoverageHints::default();
     }
-    let attributes = effective_selector_attributes(config);
-    if attributes.is_empty() {
+    let settings = effective_selector_settings(config);
+    if settings.diff_attributes.is_empty() {
         return CoverageHints::default();
     }
 
-    let removed_selectors = removed_selectors_per_file(diff_files, &attributes);
+    let removed_selectors = removed_selectors_per_file(diff_files, &settings.diff_attributes);
     if removed_selectors.is_empty() {
         return CoverageHints::default();
     }
 
-    let selector_dependents = build_selector_dependents(all_tests, &attributes);
+    let selector_dependents = build_selector_dependents(all_tests, &settings);
 
     CoverageHints {
         removed_selectors,
@@ -37,30 +51,39 @@ pub(super) fn build_coverage_hints(
     }
 }
 
-fn effective_selector_attributes(config: &NoMistakesConfig) -> Vec<String> {
+fn effective_selector_settings(config: &NoMistakesConfig) -> SelectorSettings {
     let selectors = &config.tests.playwright.selectors;
-    let mut attributes: Vec<String> = selectors
+    let mut test_id_attributes: Vec<String> = selectors
         .test_ids
         .iter()
         .filter(|s| !s.is_empty())
         .cloned()
         .collect();
-    if attributes.is_empty() {
-        attributes.extend(["data-testid", "data-pw"].iter().map(|a| a.to_string()));
+    if test_id_attributes.is_empty() {
+        test_id_attributes.extend(["data-testid", "data-pw"].iter().map(|a| a.to_string()));
     }
-    // `componentTestIds` maps a JSX prop name (e.g. `dataPw`) to the HTML
-    // attribute it lowers to (e.g. `data-pw`); the latter is what shows up on
-    // a `-` line in a diff, so add it (the prop name lives in JSX, not the
-    // rendered HTML, so do not include it here).
+    test_id_attributes.sort();
+    test_id_attributes.dedup();
+
+    // The diff-side scan covers everything the project tracks: the test-id
+    // attributes above, plus the HTML attributes that `componentTestIds`
+    // lowers to (the values, not the JSX prop names, since the diff sees
+    // the rendered attribute) and the HTML `id` attribute when enabled.
+    let mut diff_attributes = test_id_attributes.clone();
     for attribute in selectors.component_test_ids.values() {
-        attributes.push(attribute.clone());
+        diff_attributes.push(attribute.clone());
     }
     if selectors.html_ids {
-        attributes.push("id".to_string());
+        diff_attributes.push("id".to_string());
     }
-    attributes.sort();
-    attributes.dedup();
-    attributes
+    diff_attributes.sort();
+    diff_attributes.dedup();
+
+    SelectorSettings {
+        diff_attributes,
+        test_id_attributes,
+        html_ids: selectors.html_ids,
+    }
 }
 
 fn removed_selectors_per_file(
@@ -130,18 +153,25 @@ fn truly_removed_for_file(
 
 fn build_selector_dependents(
     all_tests: &[PathBuf],
-    attributes: &[String],
+    settings: &SelectorSettings,
 ) -> HashMap<(String, String), Vec<PathBuf>> {
-    let regexes = no_mistakes::playwright::selectors::compile_selector_regexes(
-        attributes,
+    // Compile regexes with the project's real `html_ids` setting so the
+    // CSS `#id` shorthand (e.g. `page.locator('#search-bar')`) is picked
+    // up when the project tracks the HTML id attribute. Use the configured
+    // test-id attribute list for the extraction; passing the broader
+    // `diff_attributes` would mis-attribute `getByTestId(...)` calls to
+    // app-only attributes.
+    let regexes = no_mistakes::playwright::selectors::compile_selector_regexes_with_html_ids(
+        &settings.test_id_attributes,
         &std::collections::BTreeMap::new(),
+        settings.html_ids,
     );
     let per_test: Vec<(PathBuf, Vec<(String, String)>)> = all_tests
         .par_iter()
         .map(|path| {
             (
                 path.clone(),
-                extract_test_selector_pairs(path, attributes, &regexes),
+                extract_test_selector_pairs(path, &settings.test_id_attributes, &regexes),
             )
         })
         .collect();
@@ -160,7 +190,7 @@ fn build_selector_dependents(
 
 fn extract_test_selector_pairs(
     path: &std::path::Path,
-    attributes: &[String],
+    test_id_attributes: &[String],
     regexes: &no_mistakes::playwright::selectors::SelectorRegexes,
 ) -> Vec<(String, String)> {
     let Ok(source) = std::fs::read_to_string(path) else {
@@ -172,7 +202,10 @@ fn extract_test_selector_pairs(
     // analysis, and the playwright analyzer will surface the parse error.
     let occurrences = match no_mistakes::ast::with_program(path, &source, |program, source| {
         no_mistakes::playwright::selectors::extract_playwright_selector_occurrences_from_program(
-            program, source, regexes, attributes,
+            program,
+            source,
+            regexes,
+            test_id_attributes,
         )
     }) {
         Ok(occurrences) => occurrences,
