@@ -2,21 +2,25 @@ use super::super::configured_plan_candidates::CoverageHints;
 use super::super::diff_parser::DiffFile;
 use super::TestFramework;
 use no_mistakes::config::v2::schema::NoMistakesConfig;
+use no_mistakes::playwright::playwright_tests::{TestOccurrenceScope, TestPolicy};
 use rayon::prelude::*;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::PathBuf;
 
 /// Fully-resolved selector configuration used to drive both the diff-side
-/// scan and the test-side reverse-index extraction. Keeping the three
-/// pieces together makes their mismatch potential explicit: the diff scan
-/// can match any attribute the project tracks (incl. `componentTestIds`
-/// values and the HTML `id` attribute when enabled), but the test side
-/// must use the narrower configuration the playwright analyzer uses so
-/// `page.getByTestId(...)` is not misread as querying an app-only
-/// attribute.
+/// scan and the test-side reverse-index extraction. Keeping the pieces
+/// together makes their mismatch potential explicit: the diff scan can
+/// match any attribute the project tracks (incl. `componentTestIds` values
+/// and the HTML `id` attribute when enabled), but the test-side extractor
+/// must use the narrower `testIds` configuration for the `getByTestId`
+/// mapping so app-only attributes are not back-attributed onto test-ID
+/// calls. `component_test_ids` is still threaded through to the test-side
+/// CSS regex compilation so `page.locator('[data-qa=...]')` can be picked
+/// up when `componentTestIds` configures `data-qa`.
 struct SelectorSettings {
     diff_attributes: Vec<String>,
     test_id_attributes: Vec<String>,
+    component_test_ids: std::collections::BTreeMap<String, String>,
     html_ids: bool,
 }
 
@@ -59,8 +63,13 @@ fn effective_selector_settings(config: &NoMistakesConfig) -> SelectorSettings {
         .filter(|s| !s.is_empty())
         .cloned()
         .collect();
+    // Match Playwright's own default `testIdAttribute` (`data-testid`) when
+    // the project has not declared its own list. Defaulting to both
+    // `data-testid` and `data-pw` would mis-attribute every `getByTestId`
+    // call to both attributes, producing false positives when a diff
+    // removes only one of them.
     if test_id_attributes.is_empty() {
-        test_id_attributes.extend(["data-testid", "data-pw"].iter().map(|a| a.to_string()));
+        test_id_attributes.push("data-testid".to_string());
     }
     test_id_attributes.sort();
     test_id_attributes.dedup();
@@ -82,6 +91,7 @@ fn effective_selector_settings(config: &NoMistakesConfig) -> SelectorSettings {
     SelectorSettings {
         diff_attributes,
         test_id_attributes,
+        component_test_ids: selectors.component_test_ids.clone(),
         html_ids: selectors.html_ids,
     }
 }
@@ -155,15 +165,15 @@ fn build_selector_dependents(
     all_tests: &[PathBuf],
     settings: &SelectorSettings,
 ) -> HashMap<(String, String), Vec<PathBuf>> {
-    // Compile regexes with the project's real `html_ids` setting so the
-    // CSS `#id` shorthand (e.g. `page.locator('#search-bar')`) is picked
-    // up when the project tracks the HTML id attribute. Use the configured
-    // test-id attribute list for the extraction; passing the broader
-    // `diff_attributes` would mis-attribute `getByTestId(...)` calls to
-    // app-only attributes.
+    // Compile regexes with the project's real `html_ids` setting and its
+    // `componentTestIds` map so the CSS `#id` shorthand and component-prop
+    // CSS attribute selectors (e.g. `page.locator('[data-qa="x"]')`) are
+    // picked up. Use the configured test-id attribute list for the
+    // `getByTestId` mapping; passing the broader `diff_attributes` would
+    // mis-attribute `getByTestId(...)` calls to app-only attributes.
     let regexes = no_mistakes::playwright::selectors::compile_selector_regexes_with_html_ids(
         &settings.test_id_attributes,
-        &std::collections::BTreeMap::new(),
+        &settings.component_test_ids,
         settings.html_ids,
     );
     let per_test: Vec<(PathBuf, Vec<(String, String)>)> = all_tests
@@ -211,8 +221,19 @@ fn extract_test_selector_pairs(
         Ok(occurrences) => occurrences,
         Err(_) => return Vec::new(),
     };
+    // Mirror the policy/scope filtering that `analyze_test_occurrences`
+    // applies before producing `Edge::Selector`, so a `test.skip(...)` body
+    // or a teardown-hook locator does not surface a hint that the normal
+    // analyzer would drop.
+    let policy = TestPolicy::default();
     let mut pairs: Vec<(String, String)> = Vec::new();
     for occ in occurrences {
+        if !policy.allows(occ.status) {
+            continue;
+        }
+        if occ.scope == TestOccurrenceScope::TeardownHook {
+            continue;
+        }
         if let Some(value) = occ.value.exact_value() {
             pairs.push((occ.value.attribute.clone(), value.to_string()));
         }
