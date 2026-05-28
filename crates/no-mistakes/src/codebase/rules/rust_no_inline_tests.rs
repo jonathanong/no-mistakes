@@ -109,6 +109,10 @@ pub(crate) fn check_file(path: &Path, root: &Path) -> Vec<RuleFinding> {
     if has_disable_file_comment(&content, RULE_ID) {
         return Vec::new();
     }
+    // Optimization: avoid expensive AST parsing if the file doesn't contain cfg and test
+    if !content.contains("cfg") || !content.contains("test") {
+        return Vec::new();
+    }
     let Ok(parsed) = syn::parse_file(&content) else {
         return Vec::new();
     };
