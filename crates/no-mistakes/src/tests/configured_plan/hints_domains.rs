@@ -19,14 +19,17 @@ use rayon::prelude::*;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-// Route literals: navigation helpers and route-method calls. `fetch` is
-// deliberately left out here — it lives in the HTTP domain — to avoid
-// double-attributing the same removed call as both a removed route and a
-// removed HTTP path.
+// Route literals: navigation helpers, route-method calls, and JSX route
+// attributes. `fetch` is deliberately left out here — it lives in the
+// HTTP domain — to avoid double-attributing the same removed call as
+// both a removed route and a removed HTTP path. The `href=`/`to=` arm
+// covers `<Link href="/old">`, `<a href="/old">`, and the React Router
+// `to=` shape, which the dependency graph records as `RouteRef`s.
 const ROUTE_LITERAL_PATTERN: &str = concat!(
-    r#"(?:\b(?:redirect|push|replace|prefetch|navigate|goto)|"#,
+    r#"(?:(?:\b(?:redirect|push|replace|prefetch|navigate|goto)|"#,
     r#"\.(?:get|post|put|patch|delete|head|options|all|use))"#,
     r#"(?:<[^>]+>)?\s*\(\s*['"`](?P<value>/[^'"`{}$\s]*)['"`]"#,
+    r#"|\b(?:href|to)\s*=\s*['"`](?P<jsx>/[^'"`{}$\s]*)['"`])"#,
 );
 
 // HTTP call literals. The optional `<...>` allows typed clients like
@@ -54,7 +57,7 @@ const QUEUE_ADDBULK_NAME_PATTERN: &str = r#"\bname\s*:\s*['"`](?P<name>[^'"`{}$\
 pub(super) fn removed_route_paths_per_file(
     diff_files: &[DiffFile],
 ) -> BTreeMap<PathBuf, Vec<String>> {
-    scan_string_domain(diff_files, ROUTE_LITERAL_PATTERN, &["value"])
+    scan_string_domain(diff_files, ROUTE_LITERAL_PATTERN, &["value", "jsx"])
 }
 
 pub(super) fn removed_http_paths_per_file(
