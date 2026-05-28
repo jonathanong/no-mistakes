@@ -20,17 +20,18 @@ pub(super) struct CoverageHints {
     pub removed_route_paths: BTreeMap<PathBuf, Vec<String>>,
     /// Reverse index: route path string → tests still navigating to it.
     pub route_path_dependents: HashMap<String, Vec<PathBuf>>,
-    /// Per-file removed queue/job identifiers — captured from `.add(...)`,
-    /// `addBulk([{ name: ... }, ...])`, `new Worker(...)`, `createQueue(...)`,
-    /// and `new Queue(...)` shapes in the diff `-` side.
-    pub removed_queue_jobs: BTreeMap<PathBuf, Vec<String>>,
-    /// Reverse index: identifier string → files that still reference it via
-    /// `.add(...)`/`.addBulk(...)` enqueues or `new Worker(...)`
-    /// declarations. The diff side also records `createQueue(...)` /
-    /// `new Queue(...)` removals; their dependent-side mapping is the
-    /// matching `new Worker(...)` queue name (factory references are not
-    /// indexed on the test side — see the Shepherd Journal).
-    pub queue_job_dependents: HashMap<String, Vec<PathBuf>>,
+    /// Per-file removed queue identifiers tagged with their `kind`:
+    /// `("job", name)` for `.add(...)` and `addBulk([{ name: ... }, ...])`
+    /// removals, `("queue", name)` for `new Worker(...)`, `createQueue(...)`,
+    /// and `new Queue(...)` removals. Tagging keeps job-name renames from
+    /// matching unrelated queue-name dependents (and vice versa).
+    pub removed_queue_jobs: BTreeMap<PathBuf, Vec<(String, String)>>,
+    /// Reverse index keyed on `(kind, name)` — `("job", ...)` maps to
+    /// files that still enqueue that job via `.add(...)`/`.addBulk(...)`;
+    /// `("queue", ...)` maps to files that still declare `new Worker(...)`
+    /// against that queue. Factory references (`createQueue` / `new Queue`)
+    /// are not indexed on the test side — see the Shepherd Journal.
+    pub queue_job_dependents: HashMap<(String, String), Vec<PathBuf>>,
     /// Per-file removed HTTP call paths (e.g. `/api/users`).
     pub removed_http_paths: BTreeMap<PathBuf, Vec<String>>,
     /// Reverse index: HTTP call path → files that still call it.
@@ -219,6 +220,13 @@ fn append_removed_id_candidates<K: std::hash::Hash + Eq + Clone>(
     // filtered out of `changed_files` because they no longer exist on disk)
     // still contribute their removed identifiers.
     for (changed_path, ids) in removed {
+        // Skip hints sourced from a test file itself. A test that edits its
+        // own `page.goto('/old')` -> `page.goto('/new')` would otherwise
+        // surface every OTHER spec that still uses `/old`, even though no
+        // app/source identifier was removed.
+        if all_test_set.contains(changed_path) {
+            continue;
+        }
         let rel_changed = relative_path(root, changed_path);
         let mut tests_for_changed: HashSet<PathBuf> = HashSet::new();
         for id in ids {

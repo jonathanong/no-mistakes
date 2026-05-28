@@ -65,28 +65,60 @@ pub(super) fn removed_http_paths_per_file(
 
 pub(super) fn removed_queue_jobs_per_file(
     diff_files: &[DiffFile],
-) -> BTreeMap<PathBuf, Vec<String>> {
-    let primary = scan_string_domain(
-        diff_files,
-        QUEUE_JOB_PATTERN,
-        &["add", "worker", "create", "queue"],
+) -> BTreeMap<PathBuf, Vec<(String, String)>> {
+    // Split into the two queue identifier kinds so a job rename does not
+    // accidentally line up with a same-named worker/queue, and vice
+    // versa. (See the corresponding CoverageHints field doc.)
+    let jobs = tag_kind(
+        scan_string_domain(diff_files, QUEUE_JOB_PATTERN, &["add"]),
+        QUEUE_KIND_JOB,
     );
-    let addbulk = scan_addbulk_names(diff_files);
-    merge_per_file_maps(primary, addbulk)
+    let bulk = tag_kind(scan_addbulk_names(diff_files), QUEUE_KIND_JOB);
+    let queues = tag_kind(
+        scan_string_domain(
+            diff_files,
+            QUEUE_JOB_PATTERN,
+            &["worker", "create", "queue"],
+        ),
+        QUEUE_KIND_QUEUE,
+    );
+    merge_kinded_per_file_maps(vec![jobs, bulk, queues])
 }
 
-fn merge_per_file_maps(
-    mut base: BTreeMap<PathBuf, Vec<String>>,
-    addition: BTreeMap<PathBuf, Vec<String>>,
-) -> BTreeMap<PathBuf, Vec<String>> {
-    for (path, values) in addition {
-        base.entry(path).or_default().extend(values);
+pub(super) const QUEUE_KIND_JOB: &str = "job";
+pub(super) const QUEUE_KIND_QUEUE: &str = "queue";
+
+fn tag_kind(
+    raw: BTreeMap<PathBuf, Vec<String>>,
+    kind: &str,
+) -> BTreeMap<PathBuf, Vec<(String, String)>> {
+    raw.into_iter()
+        .map(|(path, values)| {
+            (
+                path,
+                values
+                    .into_iter()
+                    .map(|v| (kind.to_string(), v))
+                    .collect::<Vec<_>>(),
+            )
+        })
+        .collect()
+}
+
+fn merge_kinded_per_file_maps(
+    maps: Vec<BTreeMap<PathBuf, Vec<(String, String)>>>,
+) -> BTreeMap<PathBuf, Vec<(String, String)>> {
+    let mut out: BTreeMap<PathBuf, Vec<(String, String)>> = BTreeMap::new();
+    for map in maps {
+        for (path, values) in map {
+            out.entry(path).or_default().extend(values);
+        }
     }
-    for values in base.values_mut() {
+    for values in out.values_mut() {
         values.sort();
         values.dedup();
     }
-    base
+    out
 }
 
 fn scan_addbulk_names(diff_files: &[DiffFile]) -> BTreeMap<PathBuf, Vec<String>> {
@@ -234,14 +266,14 @@ pub(super) struct RouteDependentConfig {
 #[derive(Default)]
 struct PerTestExtraction {
     routes: Vec<String>,
-    queues: Vec<String>,
+    queues: Vec<(String, String)>,
     http: Vec<String>,
 }
 
 #[derive(Default)]
 pub(super) struct StringDomainDependents {
     pub routes: HashMap<String, Vec<PathBuf>>,
-    pub queues: HashMap<String, Vec<PathBuf>>,
+    pub queues: HashMap<(String, String), Vec<PathBuf>>,
     pub http: HashMap<String, Vec<PathBuf>>,
 }
 
@@ -262,7 +294,7 @@ pub(super) fn build_dependents(
         .map(|path| (path.clone(), extract_for_test(path, &domains, route_config)))
         .collect();
     let mut routes: Vec<(PathBuf, Vec<String>)> = Vec::with_capacity(per_test.len());
-    let mut queues: Vec<(PathBuf, Vec<String>)> = Vec::with_capacity(per_test.len());
+    let mut queues: Vec<(PathBuf, Vec<(String, String)>)> = Vec::with_capacity(per_test.len());
     let mut http: Vec<(PathBuf, Vec<String>)> = Vec::with_capacity(per_test.len());
     for (path, ext) in per_test {
         if domains.routes {
@@ -277,7 +309,7 @@ pub(super) fn build_dependents(
     }
     StringDomainDependents {
         routes: merge_string_dependents(routes),
-        queues: merge_string_dependents(queues),
+        queues: merge_tuple_dependents(queues),
         http: merge_string_dependents(http),
     }
 }
@@ -323,20 +355,20 @@ fn extract_for_test(
                 no_mistakes::codebase::ts_queues::usage::extract_queue_usage_from_program(
                     program, source,
                 );
-            let mut names: Vec<String> = Vec::new();
+            let mut pairs: Vec<(String, String)> = Vec::new();
             for enqueue in &usage.enqueue_calls {
                 if let Some(job) = enqueue.job.as_ref() {
-                    names.push(job.clone());
+                    pairs.push((QUEUE_KIND_JOB.to_string(), job.clone()));
                 }
             }
             for worker in &usage.worker_declarations {
                 if let Some(name) = worker.queue_name.as_ref() {
-                    names.push(name.clone());
+                    pairs.push((QUEUE_KIND_QUEUE.to_string(), name.clone()));
                 }
             }
-            names.sort();
-            names.dedup();
-            out.queues = names;
+            pairs.sort();
+            pairs.dedup();
+            out.queues = pairs;
         }
         if domains.http {
             // No backend-prefix filter: a test's `fetch('/api/foo')` should
@@ -356,24 +388,38 @@ fn extract_for_test(
     .unwrap_or_default()
 }
 
-/// Map a Playwright-test URL (possibly an absolute `http(s)://host/path`)
-/// to the rooted form (`/path`) the diff scanner records on the source
-/// side. Anything that does not resolve to a `/`-rooted reference is
-/// dropped — matching is exact-string in v1, so an unanchored URL would
-/// never line up with a removed route literal.
+/// Map a Playwright-test URL to the rooted form (`/path`) the diff scanner
+/// records on the source side. Only rooted references are kept — absolute
+/// `http(s)://host/path` URLs are dropped because we have no `baseURL` to
+/// distinguish a same-origin app navigation from an unrelated external
+/// site that happens to share the same path. (See Shepherd Journal for the
+/// follow-up to wire in `Settings.frontend_root`-derived base URLs.)
 fn normalize_route_url(raw: &str) -> Option<String> {
     if raw.starts_with('/') {
-        return Some(raw.to_string());
+        Some(raw.to_string())
+    } else {
+        None
     }
-    let scheme_stripped = raw
-        .strip_prefix("http://")
-        .or_else(|| raw.strip_prefix("https://"))?;
-    let slash = scheme_stripped.find('/')?;
-    Some(scheme_stripped[slash..].to_string())
 }
 
 fn merge_string_dependents(per_test: Vec<(PathBuf, Vec<String>)>) -> HashMap<String, Vec<PathBuf>> {
     let mut out: HashMap<String, Vec<PathBuf>> = HashMap::new();
+    for (test, values) in per_test {
+        for value in values {
+            out.entry(value).or_default().push(test.clone());
+        }
+    }
+    for tests in out.values_mut() {
+        tests.sort();
+        tests.dedup();
+    }
+    out
+}
+
+fn merge_tuple_dependents(
+    per_test: Vec<(PathBuf, Vec<(String, String)>)>,
+) -> HashMap<(String, String), Vec<PathBuf>> {
+    let mut out: HashMap<(String, String), Vec<PathBuf>> = HashMap::new();
     for (test, values) in per_test {
         for value in values {
             out.entry(value).or_default().push(test.clone());
