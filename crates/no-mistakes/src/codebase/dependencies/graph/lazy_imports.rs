@@ -4,7 +4,8 @@ fn push_unvisited_symbol_pair(
     queue: &mut VecDeque<(PathBuf, String)>,
     pair: (PathBuf, String),
 ) {
-    if visited_pairs.insert(pair.clone()) {
+    if !visited_pairs.contains(&pair) {
+        visited_pairs.insert(pair.clone());
         queue.push_back(pair);
     }
 }
@@ -46,8 +47,10 @@ pub(crate) fn lazy_import_deps_of_with_files(
     let mut result_idx: HashMap<NodeId, usize> = HashMap::new();
 
     for root in roots {
-        visited.insert(root.clone());
-        frontier.push(root.clone());
+        if !visited.contains(root) {
+            visited.insert(root.clone());
+            frontier.push(root.clone());
+        }
     }
 
     let mut depth = 0;
@@ -147,8 +150,10 @@ fn bfs(
     let mut result_idx: HashMap<NodeId, usize> = HashMap::new();
 
     for s in starts {
-        visited.insert(s.clone());
-        queue.push_back((s.clone(), 0));
+        if !visited.contains(s) {
+            visited.insert(s.clone());
+            queue.push_back((s.clone(), 0));
+        }
     }
 
     while let Some((node, depth)) = queue.pop_front() {
