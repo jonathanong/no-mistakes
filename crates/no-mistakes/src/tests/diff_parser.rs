@@ -16,6 +16,11 @@ pub(crate) struct DiffFile {
     pub old_path: Option<PathBuf>,
     pub removed_lines: Vec<String>,
     pub added_lines: Vec<String>,
+    /// Hunk context lines (those that begin with a space inside a `@@` body).
+    /// Used by the diff-aware coverage hint scanners so a multi-line call like
+    /// `router.push(\n  "/old"\n);` matches when the literal is on a `-` line
+    /// but the `router.push(` token is only on context.
+    pub context_lines: Vec<String>,
 }
 
 pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
@@ -33,6 +38,7 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
         let mut plus_path: Option<&str> = None;
         let mut removed_lines: Vec<String> = Vec::new();
         let mut added_lines: Vec<String> = Vec::new();
+        let mut context_lines: Vec<String> = Vec::new();
         let mut in_hunk = false;
 
         while let Some(&next) = lines.peek() {
@@ -50,6 +56,8 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
                     removed_lines.push(rest.to_string());
                 } else if let Some(rest) = next.strip_prefix('+') {
                     added_lines.push(rest.to_string());
+                } else if let Some(rest) = next.strip_prefix(' ') {
+                    context_lines.push(rest.to_string());
                 } else if next.starts_with("@@") {
                     // a follow-up hunk header: stay in_hunk
                 }
@@ -75,6 +83,7 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
                 old_path: Some(from),
                 removed_lines,
                 added_lines,
+                context_lines,
             });
             continue;
         }
@@ -96,6 +105,7 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
             old_path: None,
             removed_lines,
             added_lines,
+            context_lines,
         });
     }
 
@@ -118,6 +128,7 @@ fn dedup_diff_files(files: Vec<DiffFile>) -> Vec<DiffFile> {
         if let Some(&i) = index.get(&f.path) {
             out[i].removed_lines.extend(f.removed_lines);
             out[i].added_lines.extend(f.added_lines);
+            out[i].context_lines.extend(f.context_lines);
         } else {
             index.insert(f.path.clone(), out.len());
             out.push(f);

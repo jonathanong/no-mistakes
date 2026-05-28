@@ -82,9 +82,28 @@ pub(super) fn build_coverage_hints(
         RouteDependentConfig::default()
     } else {
         match crate::playwright::config::load_settings(root, cli_config, &[], None) {
-            Ok(settings) => RouteDependentConfig {
-                navigation_helpers: settings.navigation_helpers,
-            },
+            Ok(settings) => {
+                let base_urls = crate::playwright::playwright_config::load_many(
+                    root,
+                    &settings.playwright_configs,
+                    settings.project.as_deref(),
+                )
+                .map(|pw| {
+                    let mut urls: Vec<String> = pw
+                        .projects
+                        .iter()
+                        .filter_map(|project| project.base_url.clone())
+                        .collect();
+                    urls.sort();
+                    urls.dedup();
+                    urls
+                })
+                .unwrap_or_default();
+                RouteDependentConfig {
+                    navigation_helpers: settings.navigation_helpers,
+                    base_urls,
+                }
+            }
             Err(_) => RouteDependentConfig::default(),
         }
     };
@@ -187,17 +206,29 @@ fn truly_removed_for_file(
     if df.removed_lines.is_empty() {
         return None;
     }
+    let removed_with_ctx: Vec<String> = df
+        .removed_lines
+        .iter()
+        .chain(df.context_lines.iter())
+        .cloned()
+        .collect();
     let removed = no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
         re,
-        &df.removed_lines,
+        &removed_with_ctx,
     );
     if removed.is_empty() {
         return None;
     }
+    let added_with_ctx: Vec<String> = df
+        .added_lines
+        .iter()
+        .chain(df.context_lines.iter())
+        .cloned()
+        .collect();
     let added: HashSet<(String, String)> =
         no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
             re,
-            &df.added_lines,
+            &added_with_ctx,
         )
         .into_iter()
         .collect();

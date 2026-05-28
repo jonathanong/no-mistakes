@@ -1,8 +1,10 @@
 use crate::playwright::ast;
 use oxc_ast::ast::{Argument, CallExpression, Expression};
 
+mod call_context_index;
 mod hook;
 mod occurrence;
+pub(crate) use call_context_index::{build_call_context_index, CallContext};
 pub(crate) use hook::{hook_callback, HookKind};
 pub(crate) use occurrence::dedup_occurrences_by_identity;
 pub use occurrence::{TestOccurrence, TestOccurrenceScope};

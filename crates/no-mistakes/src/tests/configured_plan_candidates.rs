@@ -1,9 +1,16 @@
 use super::plan::{impact_reason_label, path_confidence, relative_path, slash_node_name};
 use super::{Confidence, ImpactReason, SelectedTest, Warning};
 use no_mistakes::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
+use no_mistakes::codebase::test_filter::TestFileFilter;
 use no_mistakes::config::v2::schema::TestPlanGroupType;
+use no_mistakes::playwright::matcher;
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
+
+/// `(binding, kind, name)` triple shared with the hint pipeline. Re-exported
+/// here so the public field types stay readable instead of expanding to the
+/// full 3-tuple.
+pub(super) type QueueIdent = (Option<String>, String, String);
 
 /// Extra coverage signals derived from a unified diff that the BFS over the
 /// dep graph cannot recover on its own. Carries identifiers that the diff
@@ -20,18 +27,22 @@ pub(super) struct CoverageHints {
     pub removed_route_paths: BTreeMap<PathBuf, Vec<String>>,
     /// Reverse index: route path string → tests still navigating to it.
     pub route_path_dependents: HashMap<String, Vec<PathBuf>>,
-    /// Per-file removed queue identifiers tagged with their `kind`:
-    /// `("job", name)` for `.add(...)` and `addBulk([{ name: ... }, ...])`
-    /// removals, `("queue", name)` for `new Worker(...)`, `createQueue(...)`,
-    /// and `new Queue(...)` removals. Tagging keeps job-name renames from
-    /// matching unrelated queue-name dependents (and vice versa).
-    pub removed_queue_jobs: BTreeMap<PathBuf, Vec<(String, String)>>,
-    /// Reverse index keyed on `(kind, name)` — `("job", ...)` maps to
-    /// files that still enqueue that job via `.add(...)`/`.addBulk(...)`;
-    /// `("queue", ...)` maps to files that still declare `new Worker(...)`
-    /// against that queue. Factory references (`createQueue` / `new Queue`)
-    /// are not indexed on the test side — see the Shepherd Journal.
-    pub queue_job_dependents: HashMap<(String, String), Vec<PathBuf>>,
+    /// Per-file removed queue identifiers tagged with `(binding, kind, name)`:
+    /// `(Some("emailQueue"), "job", "sync")` for `emailQueue.add("sync")`
+    /// and `addBulk([{ name: "sync" }, ...])` removals, and
+    /// `(None, "queue", name)` for `new Worker(...)`, `createQueue(...)`,
+    /// and `new Queue(...)` removals (these don't carry a relevant binding
+    /// — they *define* the queue). The binding scope keeps two queues that
+    /// happen to share a job name (`emailQueue.add("sync")` vs
+    /// `billingQueue.add("sync")`) from matching each other's dependents.
+    pub removed_queue_jobs: BTreeMap<PathBuf, Vec<QueueIdent>>,
+    /// Reverse index keyed on `(binding, kind, name)` matching the value
+    /// shape above. `(Some("emailQueue"), "job", ...)` maps to files that
+    /// still enqueue that job via `emailQueue.add(...)`/`.addBulk(...)`;
+    /// `(None, "queue", ...)` maps to files that declare a worker or
+    /// factory for that queue name (`new Worker(...)`, `createQueue(...)`,
+    /// `new Queue(...)`).
+    pub queue_job_dependents: HashMap<QueueIdent, Vec<PathBuf>>,
     /// Per-file removed HTTP call paths (e.g. `/api/users`).
     pub removed_http_paths: BTreeMap<PathBuf, Vec<String>>,
     /// Reverse index: HTTP call path → files that still call it.
@@ -55,6 +66,7 @@ pub(super) fn group_candidates(
     graph: &DepGraph,
     all_tests: &[PathBuf],
     all_test_set: &HashSet<PathBuf>,
+    test_filter: &TestFileFilter,
     used: &HashSet<String>,
     hints: &CoverageHints,
     warnings: &mut Vec<Warning>,
@@ -68,6 +80,7 @@ pub(super) fn group_candidates(
             changed_files,
             graph,
             all_test_set,
+            test_filter,
             used,
             hints,
             warnings,
@@ -108,6 +121,7 @@ fn graph_candidates(
     changed_files: &[PathBuf],
     graph: &DepGraph,
     all_test_set: &HashSet<PathBuf>,
+    test_filter: &TestFileFilter,
     used: &HashSet<String>,
     hints: &CoverageHints,
     warnings: &mut Vec<Warning>,
@@ -167,24 +181,26 @@ fn graph_candidates(
         append_removed_id_candidates(
             root,
             all_test_set,
+            test_filter,
             used,
             &hints.removed_selectors,
             &hints.selector_dependents,
             EdgeKind::Selector,
             &mut selected,
         );
-        append_removed_id_candidates(
+        append_route_hint_candidates(
             root,
             all_test_set,
+            test_filter,
             used,
             &hints.removed_route_paths,
             &hints.route_path_dependents,
-            EdgeKind::RouteTest,
             &mut selected,
         );
         append_removed_id_candidates(
             root,
             all_test_set,
+            test_filter,
             used,
             &hints.removed_queue_jobs,
             &hints.queue_job_dependents,
@@ -194,6 +210,7 @@ fn graph_candidates(
         append_removed_id_candidates(
             root,
             all_test_set,
+            test_filter,
             used,
             &hints.removed_http_paths,
             &hints.http_path_dependents,
@@ -208,6 +225,7 @@ fn graph_candidates(
 fn append_removed_id_candidates<K: std::hash::Hash + Eq + Clone>(
     root: &Path,
     all_test_set: &HashSet<PathBuf>,
+    test_filter: &TestFileFilter,
     used: &HashSet<String>,
     removed: &BTreeMap<PathBuf, Vec<K>>,
     dependents: &HashMap<K, Vec<PathBuf>>,
@@ -220,11 +238,7 @@ fn append_removed_id_candidates<K: std::hash::Hash + Eq + Clone>(
     // filtered out of `changed_files` because they no longer exist on disk)
     // still contribute their removed identifiers.
     for (changed_path, ids) in removed {
-        // Skip hints sourced from a test file itself. A test that edits its
-        // own `page.goto('/old')` -> `page.goto('/new')` would otherwise
-        // surface every OTHER spec that still uses `/old`, even though no
-        // app/source identifier was removed.
-        if all_test_set.contains(changed_path) {
+        if changed_path_is_test(changed_path, all_test_set, test_filter, root) {
             continue;
         }
         let rel_changed = relative_path(root, changed_path);
@@ -245,6 +259,91 @@ fn append_removed_id_candidates<K: std::hash::Hash + Eq + Clone>(
             selected,
         );
     }
+}
+
+/// Route-specific variant that uses `matcher::matches` to line up parametric
+/// source patterns (`/users/:id`) with concrete test references
+/// (`/users/123`). All other edge kinds key on exact-string identifiers and
+/// stay on the cheaper `HashMap::get` path in `append_removed_id_candidates`.
+fn append_route_hint_candidates(
+    root: &Path,
+    all_test_set: &HashSet<PathBuf>,
+    test_filter: &TestFileFilter,
+    used: &HashSet<String>,
+    removed: &BTreeMap<PathBuf, Vec<String>>,
+    dependents: &HashMap<String, Vec<PathBuf>>,
+    selected: &mut BTreeMap<String, SelectedTest>,
+) {
+    let confidence = path_confidence(&[EdgeKind::RouteTest]);
+    let via_label = impact_reason_label(EdgeKind::RouteTest).to_string();
+    for (changed_path, patterns) in removed {
+        if changed_path_is_test(changed_path, all_test_set, test_filter, root) {
+            continue;
+        }
+        let rel_changed = relative_path(root, changed_path);
+        let mut tests_for_changed: HashSet<PathBuf> = HashSet::new();
+        for pattern in patterns {
+            // Exact-string lookup first — common case and cheap.
+            if let Some(tests) = dependents.get(pattern) {
+                collect_dependent_tests(tests, changed_path, all_test_set, &mut tests_for_changed);
+            }
+            // Then pattern-aware: a `/users/:id` removal should also catch
+            // tests that navigate to a concrete reference like `/users/123`.
+            // Only walk the reverse index when the source pattern contains a
+            // parametric segment, to keep the iteration cost bounded for
+            // plain literals.
+            if has_pattern_segment(pattern) {
+                for (reference, tests) in dependents {
+                    if reference == pattern {
+                        continue;
+                    }
+                    if matcher::matches(reference, pattern) {
+                        collect_dependent_tests(
+                            tests,
+                            changed_path,
+                            all_test_set,
+                            &mut tests_for_changed,
+                        );
+                    }
+                }
+            }
+        }
+        emit_hint_reasons(
+            root,
+            used,
+            &rel_changed,
+            tests_for_changed,
+            confidence,
+            &via_label,
+            selected,
+        );
+    }
+}
+
+fn has_pattern_segment(pattern: &str) -> bool {
+    pattern
+        .split('/')
+        .any(|segment| segment.starts_with(':') || segment == "*" || segment == "**")
+}
+
+fn changed_path_is_test(
+    changed_path: &Path,
+    all_test_set: &HashSet<PathBuf>,
+    test_filter: &TestFileFilter,
+    root: &Path,
+) -> bool {
+    // Skip hints sourced from a test file itself. A test that edits its own
+    // `page.goto('/old')` -> `page.goto('/new')` would otherwise surface every
+    // OTHER spec that still uses `/old`, even though no app/source identifier
+    // was removed. `all_test_set` only contains currently-discovered tests,
+    // so a *deleted* spec is missed here; fall back to the project's test
+    // glob filter (which understands both configured suites and the default
+    // `__tests__`/`*.test.*`/`*.spec.*` shape) so removed identifiers in a
+    // deleted spec do not get treated as a source removal.
+    if all_test_set.contains(changed_path) {
+        return true;
+    }
+    test_filter.is_match(root, changed_path)
 }
 
 fn collect_dependent_tests(
