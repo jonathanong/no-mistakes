@@ -141,39 +141,31 @@ fn graph_candidates(
         }
     }
     if group == TestPlanGroupType::Coverage && !hints.is_empty() {
-        append_removed_selector_candidates(
-            root,
-            changed_files,
-            all_test_set,
-            used,
-            hints,
-            &mut selected,
-        );
+        append_removed_selector_candidates(root, all_test_set, used, hints, &mut selected);
     }
     selected.into_values().collect()
 }
 
 fn append_removed_selector_candidates(
     root: &Path,
-    changed_files: &[PathBuf],
     all_test_set: &HashSet<PathBuf>,
     used: &HashSet<String>,
     hints: &CoverageHints,
     selected: &mut BTreeMap<String, SelectedTest>,
 ) {
     let confidence = path_confidence(&[EdgeKind::Selector]);
-    for changed in changed_files {
-        let Some(removed) = hints.removed_selectors.get(changed) else {
-            continue;
-        };
-        let rel_changed = relative_path(root, changed);
+    // Iterate the hint map directly so deleted source files (which are
+    // filtered out of `changed_files` because they no longer exist on disk)
+    // still contribute their removed identifiers to the coverage hints.
+    for (changed_path, removed) in &hints.removed_selectors {
+        let rel_changed = relative_path(root, changed_path);
         let mut tests_for_changed: HashSet<PathBuf> = HashSet::new();
         for pair in removed {
             let Some(tests) = hints.selector_dependents.get(pair) else {
                 continue;
             };
             for test in tests {
-                if test == changed {
+                if test == changed_path {
                     continue;
                 }
                 if !all_test_set.contains(test) {

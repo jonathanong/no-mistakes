@@ -38,19 +38,29 @@ pub(super) fn build_coverage_hints(
 }
 
 fn effective_selector_attributes(config: &NoMistakesConfig) -> Vec<String> {
-    let configured: Vec<String> = config
-        .tests
-        .playwright
-        .selectors
+    let selectors = &config.tests.playwright.selectors;
+    let mut attributes: Vec<String> = selectors
         .test_ids
         .iter()
         .filter(|s| !s.is_empty())
         .cloned()
         .collect();
-    if !configured.is_empty() {
-        return configured;
+    if attributes.is_empty() {
+        attributes.extend(["data-testid", "data-pw"].iter().map(|a| a.to_string()));
     }
-    vec!["data-testid".to_string(), "data-pw".to_string()]
+    // `componentTestIds` maps a JSX prop name (e.g. `dataPw`) to the HTML
+    // attribute it lowers to (e.g. `data-pw`); the latter is what shows up on
+    // a `-` line in a diff, so add it (the prop name lives in JSX, not the
+    // rendered HTML, so do not include it here).
+    for attribute in selectors.component_test_ids.values() {
+        attributes.push(attribute.clone());
+    }
+    if selectors.html_ids {
+        attributes.push("id".to_string());
+    }
+    attributes.sort();
+    attributes.dedup();
+    attributes
 }
 
 fn removed_selectors_per_file(
@@ -122,24 +132,17 @@ fn build_selector_dependents(
     all_tests: &[PathBuf],
     attributes: &[String],
 ) -> HashMap<(String, String), Vec<PathBuf>> {
+    let regexes = no_mistakes::playwright::selectors::compile_selector_regexes(
+        attributes,
+        &std::collections::BTreeMap::new(),
+    );
     let per_test: Vec<(PathBuf, Vec<(String, String)>)> = all_tests
         .par_iter()
         .map(|path| {
-            let Ok(source) = std::fs::read_to_string(path) else {
-                return (path.clone(), Vec::new());
-            };
-            let selectors = no_mistakes::playwright::selectors::extract_playwright_selectors(
-                &source, attributes, attributes,
-            );
-            let mut pairs: Vec<(String, String)> = Vec::new();
-            for sel in selectors {
-                if let Some(value) = sel.exact_value() {
-                    pairs.push((sel.attribute.clone(), value.to_string()));
-                }
-            }
-            pairs.sort();
-            pairs.dedup();
-            (path.clone(), pairs)
+            (
+                path.clone(),
+                extract_test_selector_pairs(path, attributes, &regexes),
+            )
         })
         .collect();
     let mut out: HashMap<(String, String), Vec<PathBuf>> = HashMap::new();
@@ -153,4 +156,35 @@ fn build_selector_dependents(
         tests.dedup();
     }
     out
+}
+
+fn extract_test_selector_pairs(
+    path: &std::path::Path,
+    attributes: &[String],
+    regexes: &no_mistakes::playwright::selectors::SelectorRegexes,
+) -> Vec<(String, String)> {
+    let Ok(source) = std::fs::read_to_string(path) else {
+        return Vec::new();
+    };
+    // Use the real file path so `SourceType::from_path` picks up `.tsx`/`.jsx`
+    // and JSX-bearing specs parse cleanly. Treat parse failures as a quiet
+    // skip — the goal here is best-effort augmentation, not authoritative
+    // analysis, and the playwright analyzer will surface the parse error.
+    let occurrences = match no_mistakes::ast::with_program(path, &source, |program, source| {
+        no_mistakes::playwright::selectors::extract_playwright_selector_occurrences_from_program(
+            program, source, regexes, attributes,
+        )
+    }) {
+        Ok(occurrences) => occurrences,
+        Err(_) => return Vec::new(),
+    };
+    let mut pairs: Vec<(String, String)> = Vec::new();
+    for occ in occurrences {
+        if let Some(value) = occ.value.exact_value() {
+            pairs.push((occ.value.attribute.clone(), value.to_string()));
+        }
+    }
+    pairs.sort();
+    pairs.dedup();
+    pairs
 }
