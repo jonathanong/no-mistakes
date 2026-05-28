@@ -5,7 +5,7 @@ pub(crate) mod config;
 mod fsutil;
 pub(crate) mod matcher;
 pub mod playwright_config;
-pub(crate) mod playwright_tests;
+pub mod playwright_tests;
 pub mod playwright_urls;
 mod routes;
 mod rule_findings;

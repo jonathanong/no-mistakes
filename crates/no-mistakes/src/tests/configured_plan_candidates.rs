@@ -5,6 +5,25 @@ use no_mistakes::config::v2::schema::TestPlanGroupType;
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 
+/// Extra coverage signals derived from a unified diff that the BFS over the
+/// dep graph cannot recover on its own. Currently carries identifiers that
+/// the diff removed (e.g. `data-pw` selector values) along with a reverse
+/// index from each identifier to the test files that still reference it.
+///
+/// Empty when no diff body is available, which is the case for
+/// `--changed-file`-only invocations.
+#[derive(Default)]
+pub(super) struct CoverageHints {
+    pub removed_selectors: BTreeMap<PathBuf, Vec<(String, String)>>,
+    pub selector_dependents: HashMap<(String, String), Vec<PathBuf>>,
+}
+
+impl CoverageHints {
+    fn is_empty(&self) -> bool {
+        self.removed_selectors.is_empty()
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 pub(super) fn group_candidates(
     group: TestPlanGroupType,
@@ -14,6 +33,7 @@ pub(super) fn group_candidates(
     all_tests: &[PathBuf],
     all_test_set: &HashSet<PathBuf>,
     used: &HashSet<String>,
+    hints: &CoverageHints,
     warnings: &mut Vec<Warning>,
     warnings_seen: &mut HashSet<(String, String)>,
 ) -> Vec<SelectedTest> {
@@ -26,6 +46,7 @@ pub(super) fn group_candidates(
             graph,
             all_test_set,
             used,
+            hints,
             warnings,
             warnings_seen,
         ),
@@ -65,6 +86,7 @@ fn graph_candidates(
     graph: &DepGraph,
     all_test_set: &HashSet<PathBuf>,
     used: &HashSet<String>,
+    hints: &CoverageHints,
     warnings: &mut Vec<Warning>,
     warnings_seen: &mut HashSet<(String, String)>,
 ) -> Vec<SelectedTest> {
@@ -118,7 +140,67 @@ fn graph_candidates(
             }
         }
     }
+    if group == TestPlanGroupType::Coverage && !hints.is_empty() {
+        append_removed_selector_candidates(root, all_test_set, used, hints, &mut selected);
+    }
     selected.into_values().collect()
+}
+
+fn append_removed_selector_candidates(
+    root: &Path,
+    all_test_set: &HashSet<PathBuf>,
+    used: &HashSet<String>,
+    hints: &CoverageHints,
+    selected: &mut BTreeMap<String, SelectedTest>,
+) {
+    let confidence = path_confidence(&[EdgeKind::Selector]);
+    // Iterate the hint map directly so deleted source files (which are
+    // filtered out of `changed_files` because they no longer exist on disk)
+    // still contribute their removed identifiers to the coverage hints.
+    for (changed_path, removed) in &hints.removed_selectors {
+        let rel_changed = relative_path(root, changed_path);
+        let mut tests_for_changed: HashSet<PathBuf> = HashSet::new();
+        for pair in removed {
+            let Some(tests) = hints.selector_dependents.get(pair) else {
+                continue;
+            };
+            for test in tests {
+                if test == changed_path {
+                    continue;
+                }
+                if !all_test_set.contains(test) {
+                    continue;
+                }
+                tests_for_changed.insert(test.clone());
+            }
+        }
+        let mut sorted: Vec<PathBuf> = tests_for_changed.into_iter().collect();
+        sorted.sort();
+        for test_path in sorted {
+            let rel_test = relative_path(root, &test_path);
+            if used.contains(&rel_test) {
+                continue;
+            }
+            let reason = ImpactReason {
+                changed_file: rel_changed.clone(),
+                path: vec![rel_changed.clone(), rel_test.clone()],
+                via: vec!["selector".to_string()],
+            };
+            let entry = selected
+                .entry(rel_test.clone())
+                .or_insert_with(|| SelectedTest {
+                    test_file: rel_test,
+                    confidence,
+                    reasons: Vec::new(),
+                });
+            if confidence > entry.confidence {
+                entry.confidence = confidence;
+            }
+            if !entry.reasons.contains(&reason) {
+                entry.reasons.push(reason);
+            }
+        }
+    }
 }
 
 fn sample_candidates(
