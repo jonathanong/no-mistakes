@@ -19,4 +19,5 @@ pub mod queue;
 pub mod react_traits;
 pub mod routes;
 pub mod server_routes;
-pub mod tests;
+mod tests;
+pub use tests::{run as tests_run, TestsArgs};
