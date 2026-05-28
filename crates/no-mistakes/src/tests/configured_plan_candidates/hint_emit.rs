@@ -46,14 +46,11 @@ pub(super) fn append_removed_id_candidates<K: std::hash::Hash + Eq + Clone>(
     }
 }
 
-/// Queue-specific variant of [`append_removed_id_candidates`] that, when the
-/// removed identifier is a `(None, "queue", name)` worker/factory entry, also
-/// looks up the dependent index under the same name keyed by any binding —
-/// so a diff that removes `new Queue('emails')` still matches a spec
-/// enqueuing via `emailQueue.add(...)` even when the binding identifier was
-/// scrubbed by the diff scanner. Job entries (`(Some(binding), "job", name)`)
-/// still require exact binding+job match to avoid conflating two queues that
-/// happen to share a job name.
+/// Queue-specific wrapper that forwards to the generic exact-key lookup with
+/// the `EdgeKind::QueueEnqueue` confidence/via-label. Kept as a dedicated
+/// entry point so the call sites under the dependents/queue branches read
+/// the same as the route/HTTP variants without inlining `EdgeKind` choices
+/// at each call site.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn append_queue_hint_candidates(
     root: &Path,

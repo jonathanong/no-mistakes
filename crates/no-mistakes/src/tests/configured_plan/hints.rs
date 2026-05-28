@@ -215,12 +215,7 @@ fn truly_removed_for_file(
         re,
         &df.removed_lines,
     );
-    let removed_with_ctx_lines: Vec<String> = df
-        .removed_lines
-        .iter()
-        .chain(df.context_lines.iter())
-        .cloned()
-        .collect();
+    let removed_with_ctx_lines = df.removed_with_context_in_order();
     let removed_with_ctx: Vec<(String, String)> =
         no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
             re,
@@ -236,10 +231,11 @@ fn truly_removed_for_file(
     if removed.is_empty() && removed_with_ctx.is_empty() {
         return None;
     }
+    let added_with_ctx_lines = df.added_with_context_in_order();
     let added: HashSet<(String, String)> =
         no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
             re,
-            &df.added_lines,
+            &added_with_ctx_lines,
         )
         .into_iter()
         .collect();

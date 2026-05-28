@@ -97,15 +97,6 @@ fn merge_kinded_per_file_maps(
     out
 }
 
-fn join_with_context(lines: &[String], context_lines: &[String]) -> String {
-    lines
-        .iter()
-        .chain(context_lines.iter())
-        .cloned()
-        .collect::<Vec<String>>()
-        .join("\n")
-}
-
 fn scan_string_domain(
     diff_files: &[DiffFile],
     pattern: &str,
@@ -142,27 +133,39 @@ fn truly_removed_strings(
     }
     // Two passes: the single-line scan over `-` lines alone catches the
     // common case without picking up values that only appear on context.
-    // The "removed ∪ context" scan catches multi-line statements like
-    // `router.push(\n  "/old"\n);` where the literal sits on a `-` line
-    // but the surrounding call shape lives on context — those wouldn't
-    // match against `-` alone since the regex needs the call token to be
-    // present. Anything that surfaces only through the context-augmented
-    // pass is verified to NOT also appear in a context-only scan, so a
-    // value that's purely on an unchanged context line (e.g. inside a
-    // comment block) doesn't get falsely reported as removed.
+    // The "removed ∪ context" scan over the hunk's source order catches
+    // multi-line statements like `router.push(\n  "/old"\n);` where the
+    // literal sits on a `-` line but the surrounding call shape lives on
+    // context — preserving the relative order is what lets the regex see
+    // the call token *before* the literal. Anything that surfaces only
+    // through the context-augmented pass is verified to NOT also appear in
+    // a context-only scan, so a value that lives purely on an unchanged
+    // context line (e.g. inside a comment block) doesn't get falsely
+    // reported as removed.
     let removed_only = scan_lines(re, capture_names, &df.removed_lines);
     let context_only: HashSet<String> = scan_lines(re, capture_names, &df.context_lines)
         .into_iter()
         .collect();
-    let removed_with_ctx =
-        scan_lines_joined(re, capture_names, &df.removed_lines, &df.context_lines);
-    let added: HashSet<String> = scan_lines(re, capture_names, &df.added_lines)
+    let removed_with_ctx = scan_lines(re, capture_names, &df.removed_with_context_in_order());
+    // Two different "still-present" sets:
+    //   - For the `-`-only pass, only `+` lines count as still-present. A
+    //     value matched on a `-` line but ALSO sitting on an unchanged
+    //     context line is real removal — the diff actually changed it (the
+    //     pure-context occurrence is, e.g., a comment).
+    //   - For the multi-line pass, the symmetric scan over added∪context
+    //     suppresses values whose span on the post-diff side is still
+    //     reachable through context.
+    let added_only: HashSet<String> = scan_lines(re, capture_names, &df.added_lines)
         .into_iter()
         .collect();
+    let added_with_ctx: HashSet<String> =
+        scan_lines(re, capture_names, &df.added_with_context_in_order())
+            .into_iter()
+            .collect();
     let mut truly_removed: Vec<String> = Vec::new();
     let mut seen: HashSet<String> = HashSet::new();
     for value in removed_only {
-        if added.contains(&value) {
+        if added_only.contains(&value) {
             continue;
         }
         if seen.insert(value.clone()) {
@@ -173,7 +176,7 @@ fn truly_removed_strings(
         if context_only.contains(&value) {
             continue;
         }
-        if added.contains(&value) {
+        if added_with_ctx.contains(&value) {
             continue;
         }
         if seen.insert(value.clone()) {
@@ -188,32 +191,6 @@ fn truly_removed_strings(
 
 fn scan_lines(re: &regex::Regex, capture_names: &[&str], lines: &[String]) -> Vec<String> {
     let joined = lines.join("\n");
-    let mut out: Vec<String> = Vec::new();
-    for caps in re.captures_iter(&joined) {
-        for name in capture_names {
-            if let Some(m) = caps.name(name) {
-                let value = m.as_str();
-                if !value.is_empty() {
-                    out.push(value.to_string());
-                }
-            }
-        }
-    }
-    out
-}
-
-fn scan_lines_joined(
-    re: &regex::Regex,
-    capture_names: &[&str],
-    lines: &[String],
-    context_lines: &[String],
-) -> Vec<String> {
-    let joined = lines
-        .iter()
-        .chain(context_lines.iter())
-        .cloned()
-        .collect::<Vec<String>>()
-        .join("\n");
     let mut out: Vec<String> = Vec::new();
     for caps in re.captures_iter(&joined) {
         for name in capture_names {
@@ -427,26 +404,10 @@ fn extract_for_test(
 /// absolute `http(s)://host/path` URL is only kept when `host` matches one
 /// of the project's playwright `baseURL` entries, so an unrelated external
 /// site that happens to share the same path does not get conflated with the
-/// app's own routes.
+/// app's own routes. Delegates to the existing playwright analyzer helper
+/// so the two normalizations cannot drift.
 fn normalize_route_url(raw: &str, base_urls: &[String]) -> Option<String> {
-    if raw.starts_with("//") {
-        return None;
-    }
-    if raw.starts_with('/') {
-        return Some(raw.to_string());
-    }
-    for base_url in base_urls {
-        let base = base_url.trim_end_matches('/');
-        if let Some(rest) = raw.strip_prefix(base) {
-            if rest.is_empty() {
-                return Some("/".to_string());
-            }
-            if rest.starts_with('/') {
-                return Some(rest.to_string());
-            }
-        }
-    }
-    None
+    no_mistakes::playwright::url::normalize_url(raw, base_urls)
 }
 
 fn merge_string_dependents(per_test: Vec<(PathBuf, Vec<String>)>) -> HashMap<String, Vec<PathBuf>> {

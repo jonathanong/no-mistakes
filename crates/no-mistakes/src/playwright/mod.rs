@@ -15,7 +15,7 @@ pub mod selectors;
 mod test_support;
 #[cfg(test)]
 mod tests;
-mod url;
+pub(crate) mod url;
 
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};

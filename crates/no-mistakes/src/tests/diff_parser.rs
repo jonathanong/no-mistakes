@@ -9,6 +9,13 @@ pub(crate) enum DiffFileStatus {
     Renamed,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum HunkLineKind {
+    Removed,
+    Added,
+    Context,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct DiffFile {
     pub path: PathBuf,
@@ -21,6 +28,37 @@ pub(crate) struct DiffFile {
     /// `router.push(\n  "/old"\n);` matches when the literal is on a `-` line
     /// but the `router.push(` token is only on context.
     pub context_lines: Vec<String>,
+    /// All hunk lines in source order, tagged by kind. Preserves the relative
+    /// position of `-`, `+`, and ` ` lines so multi-line regex scans can see
+    /// the literal in the same surrounding shape it had in the file (e.g. a
+    /// `router.push(` on a context line *before* a removed `"/old"`), which
+    /// the per-kind vectors above can't reconstruct on their own.
+    pub hunk_lines: Vec<(HunkLineKind, String)>,
+}
+
+impl DiffFile {
+    /// Iterate hunk lines that survive in the post-diff state plus the
+    /// removed lines, preserving source order. Used by the multi-line scan
+    /// so a removed literal can match against the surrounding call shape
+    /// that lives on context lines around it.
+    pub fn removed_with_context_in_order(&self) -> Vec<String> {
+        self.hunk_lines
+            .iter()
+            .filter(|(kind, _)| matches!(kind, HunkLineKind::Removed | HunkLineKind::Context))
+            .map(|(_, text)| text.clone())
+            .collect()
+    }
+
+    /// Symmetric view used to check whether a value extracted from the
+    /// "removed ∪ context" buffer still appears on the post-diff side
+    /// (added ∪ context, in source order).
+    pub fn added_with_context_in_order(&self) -> Vec<String> {
+        self.hunk_lines
+            .iter()
+            .filter(|(kind, _)| matches!(kind, HunkLineKind::Added | HunkLineKind::Context))
+            .map(|(_, text)| text.clone())
+            .collect()
+    }
 }
 
 pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
@@ -39,6 +77,7 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
         let mut removed_lines: Vec<String> = Vec::new();
         let mut added_lines: Vec<String> = Vec::new();
         let mut context_lines: Vec<String> = Vec::new();
+        let mut hunk_lines: Vec<(HunkLineKind, String)> = Vec::new();
         let mut in_hunk = false;
 
         while let Some(&next) = lines.peek() {
@@ -54,10 +93,13 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
             if in_hunk {
                 if let Some(rest) = next.strip_prefix('-') {
                     removed_lines.push(rest.to_string());
+                    hunk_lines.push((HunkLineKind::Removed, rest.to_string()));
                 } else if let Some(rest) = next.strip_prefix('+') {
                     added_lines.push(rest.to_string());
+                    hunk_lines.push((HunkLineKind::Added, rest.to_string()));
                 } else if let Some(rest) = next.strip_prefix(' ') {
                     context_lines.push(rest.to_string());
+                    hunk_lines.push((HunkLineKind::Context, rest.to_string()));
                 } else if next.starts_with("@@") {
                     // a follow-up hunk header: stay in_hunk
                 }
@@ -84,6 +126,7 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
                 removed_lines,
                 added_lines,
                 context_lines,
+                hunk_lines,
             });
             continue;
         }
@@ -106,6 +149,7 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
             removed_lines,
             added_lines,
             context_lines,
+            hunk_lines,
         });
     }
 
@@ -129,6 +173,7 @@ fn dedup_diff_files(files: Vec<DiffFile>) -> Vec<DiffFile> {
             out[i].removed_lines.extend(f.removed_lines);
             out[i].added_lines.extend(f.added_lines);
             out[i].context_lines.extend(f.context_lines);
+            out[i].hunk_lines.extend(f.hunk_lines);
         } else {
             index.insert(f.path.clone(), out.len());
             out.push(f);

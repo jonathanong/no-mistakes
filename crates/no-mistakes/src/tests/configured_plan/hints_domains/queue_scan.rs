@@ -5,7 +5,7 @@
 //! without false-flagging values that live purely on unchanged context.
 
 use super::super::super::diff_parser::DiffFile;
-use super::{join_with_context, scan_string_domain, QueueIdent, QUEUE_KIND_JOB, QUEUE_KIND_QUEUE};
+use super::{scan_string_domain, QueueIdent, QUEUE_KIND_JOB, QUEUE_KIND_QUEUE};
 use rayon::prelude::*;
 use std::collections::{BTreeMap, HashSet};
 use std::path::PathBuf;
@@ -61,16 +61,20 @@ fn truly_removed_add_calls(re: &regex::Regex, df: &DiffFile) -> Option<(PathBuf,
         scan_add_calls(re, &df.context_lines.join("\n"))
             .into_iter()
             .collect();
-    let removed_with_ctx =
-        scan_add_calls(re, &join_with_context(&df.removed_lines, &df.context_lines));
-    let added: HashSet<(Option<String>, String)> = scan_add_calls(re, &df.added_lines.join("\n"))
-        .into_iter()
-        .collect();
+    let removed_with_ctx = scan_add_calls(re, &df.removed_with_context_in_order().join("\n"));
+    let added_only: HashSet<(Option<String>, String)> =
+        scan_add_calls(re, &df.added_lines.join("\n"))
+            .into_iter()
+            .collect();
+    let added_with_ctx: HashSet<(Option<String>, String)> =
+        scan_add_calls(re, &df.added_with_context_in_order().join("\n"))
+            .into_iter()
+            .collect();
     let mut truly_removed: Vec<QueueIdent> = Vec::new();
     let mut seen: HashSet<(Option<String>, String)> = HashSet::new();
     for (binding, job) in removed_only {
         let key = (binding.clone(), job.clone());
-        if added.contains(&key) {
+        if added_only.contains(&key) {
             continue;
         }
         if seen.insert(key) {
@@ -82,7 +86,7 @@ fn truly_removed_add_calls(re: &regex::Regex, df: &DiffFile) -> Option<(PathBuf,
         if context_only.contains(&key) {
             continue;
         }
-        if added.contains(&key) {
+        if added_with_ctx.contains(&key) {
             continue;
         }
         if seen.insert(key) {
@@ -173,16 +177,18 @@ fn addbulk_names_for_file(name_re: &regex::Regex, df: &DiffFile) -> Option<(Path
         return None;
     }
     // The addBulk shape is inherently multi-line, so the primary scan runs
-    // over the joined removed ∪ context buffer. To avoid the trap where a
-    // `name: "x"` literal that only exists on an unchanged context line
-    // gets reported as removed, names matched in context-only get
-    // subtracted alongside the usual `+`-side subtraction.
-    let removed_joined = join_with_context(&df.removed_lines, &df.context_lines);
+    // over the joined removed ∪ context buffer in source order — the
+    // `{ name: ... }` payload often sits on a removed line while the
+    // surrounding `addBulk([` token lives on context. To avoid the trap
+    // where a `name: "x"` literal that only exists on an unchanged
+    // context line gets reported as removed, names matched in
+    // context-only get subtracted alongside the usual `+`-side subtraction.
+    let removed_joined = df.removed_with_context_in_order().join("\n");
     if !removed_joined.contains(".addBulk") {
         return None;
     }
     let context_joined = df.context_lines.join("\n");
-    let added_joined = df.added_lines.join("\n");
+    let added_joined = df.added_with_context_in_order().join("\n");
     let context_only: HashSet<String> = name_re
         .captures_iter(&context_joined)
         .filter_map(|c| c.name("name").map(|m| m.as_str().to_string()))

@@ -5,7 +5,7 @@ use super::{
 };
 use crate::codebase::ts_source::byte_offset_to_line;
 use oxc_ast::ast::{
-    CallExpression, ConditionalExpression, IfStatement, LogicalExpression, Program,
+    CallExpression, ConditionalExpression, IfStatement, LogicalExpression, NewExpression, Program,
 };
 use oxc_ast_visit::{walk, Visit};
 use std::collections::HashMap;
@@ -136,6 +136,18 @@ impl<'a> Visit<'a> for CallContextVisitor<'a> {
         self.with_status(status, |visitor| {
             visitor.visit_expression(&expression.right)
         });
+    }
+
+    fn visit_new_expression(&mut self, expression: &NewExpression<'a>) {
+        // Constructor calls like `new Worker('queue', ...)` and
+        // `new Queue('emails')` aren't `CallExpression`s, but the dependent-
+        // side queue scan keys hints by the line of those `new` calls. Record
+        // their line so a worker declared inside `test.skip(...)` or an
+        // `afterEach` block doesn't slip past the `TestPolicy` /
+        // `TeardownHook` filter.
+        let line = byte_offset_to_line(self.source, expression.span.start as usize);
+        self.record(line);
+        walk::walk_new_expression(self, expression);
     }
 }
 
