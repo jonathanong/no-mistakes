@@ -4,7 +4,6 @@ fn push_unvisited_symbol_pair(
     queue: &mut VecDeque<(PathBuf, String)>,
     pair: (PathBuf, String),
 ) {
-    // ⚡ Bolt: Check `contains` before `insert(clone())` to avoid unnecessary allocations when the item exists
     if !visited_pairs.contains(&pair) {
         visited_pairs.insert(pair.clone());
         queue.push_back(pair);
@@ -48,9 +47,7 @@ pub(crate) fn lazy_import_deps_of_with_files(
     let mut result_idx: HashMap<NodeId, usize> = HashMap::new();
 
     for root in roots {
-        // ⚡ Bolt: Check `contains` before `insert(clone())` to avoid unnecessary allocations
-        if !visited.contains(root) {
-            visited.insert(root.clone());
+        if visited.insert(root.clone()) {
             frontier.push(root.clone());
         }
     }
@@ -86,9 +83,7 @@ pub(crate) fn lazy_import_deps_of_with_files(
         let mut next_frontier = Vec::new();
         for (_node, neighbors) in expanded {
             for (neighbor, kind) in neighbors {
-                // ⚡ Bolt: Check `contains` before `insert(clone())` to avoid unnecessary allocations
-                if !visited.contains(&neighbor) {
-                    visited.insert(neighbor.clone());
+                if visited.insert(neighbor.clone()) {
                     let idx = result.len();
                     result.push(NodeEntry {
                         node: neighbor.clone(),
@@ -154,9 +149,7 @@ fn bfs(
     let mut result_idx: HashMap<NodeId, usize> = HashMap::new();
 
     for s in starts {
-        // ⚡ Bolt: Check `contains` before `insert(clone())` to avoid unnecessary allocations
-        if !visited.contains(s) {
-            visited.insert(s.clone());
+        if visited.insert(s.clone()) {
             queue.push_back((s.clone(), 0));
         }
     }
@@ -174,9 +167,7 @@ fn bfs(
                     continue;
                 }
 
-                // ⚡ Bolt: Check `contains` before `insert(clone())` to avoid unnecessary allocations
-                if !visited.contains(neighbor) {
-                    visited.insert(neighbor.clone());
+                if visited.insert(neighbor.clone()) {
                     let next_depth = depth + 1;
                     let idx = result.len();
                     result.push(NodeEntry {
