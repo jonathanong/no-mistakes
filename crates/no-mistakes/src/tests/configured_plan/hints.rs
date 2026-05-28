@@ -4,14 +4,13 @@ use super::TestFramework;
 use no_mistakes::config::v2::schema::NoMistakesConfig;
 use rayon::prelude::*;
 use std::collections::{BTreeMap, HashMap, HashSet};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 /// Build the per-run coverage hints used by `graph_candidates` to surface
 /// tests at risk when a unified diff removes an identifier. Currently
 /// limited to playwright selector renames; returns an empty `CoverageHints`
 /// for other frameworks or when no removed selectors are detected.
 pub(super) fn build_coverage_hints(
-    root: &Path,
     config: &NoMistakesConfig,
     framework: TestFramework,
     diff_files: &[DiffFile],
@@ -25,7 +24,7 @@ pub(super) fn build_coverage_hints(
         return CoverageHints::default();
     }
 
-    let removed_selectors = removed_selectors_per_file(root, diff_files, &attributes);
+    let removed_selectors = removed_selectors_per_file(diff_files, &attributes);
     if removed_selectors.is_empty() {
         return CoverageHints::default();
     }
@@ -55,25 +54,29 @@ fn effective_selector_attributes(config: &NoMistakesConfig) -> Vec<String> {
 }
 
 fn removed_selectors_per_file(
-    root: &Path,
     diff_files: &[DiffFile],
     attributes: &[String],
 ) -> BTreeMap<PathBuf, Vec<(String, String)>> {
     let mut out: BTreeMap<PathBuf, Vec<(String, String)>> = BTreeMap::new();
+    let Some(re) =
+        no_mistakes::playwright::selectors::compile_selector_attribute_value_regex(attributes)
+    else {
+        return out;
+    };
     for df in diff_files {
         if df.removed_lines.is_empty() {
             continue;
         }
-        let removed = no_mistakes::playwright::selectors::scan_selector_attribute_values(
-            attributes,
+        let removed = no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
+            &re,
             &df.removed_lines,
         );
         if removed.is_empty() {
             continue;
         }
         let added: HashSet<(String, String)> =
-            no_mistakes::playwright::selectors::scan_selector_attribute_values(
-                attributes,
+            no_mistakes::playwright::selectors::scan_selector_attribute_values_with_regex(
+                &re,
                 &df.added_lines,
             )
             .into_iter()
@@ -91,13 +94,11 @@ fn removed_selectors_per_file(
         if truly_removed.is_empty() {
             continue;
         }
-        let absolute = if df.path.is_absolute() {
-            df.path.clone()
-        } else {
-            root.join(&df.path)
-        };
-        let key = no_mistakes::codebase::ts_resolver::normalize_path(&absolute);
-        out.entry(key).or_default().extend(truly_removed);
+        // `collect_changed_files` already absolutizes and normalizes each
+        // `DiffFile::path`, so it can be used directly as the map key.
+        out.entry(df.path.clone())
+            .or_default()
+            .extend(truly_removed);
     }
     out
 }
@@ -106,7 +107,6 @@ fn build_selector_dependents(
     all_tests: &[PathBuf],
     attributes: &[String],
 ) -> HashMap<(String, String), Vec<PathBuf>> {
-    let test_id_attributes: Vec<String> = attributes.to_vec();
     let per_test: Vec<(PathBuf, Vec<(String, String)>)> = all_tests
         .par_iter()
         .map(|path| {
@@ -114,9 +114,7 @@ fn build_selector_dependents(
                 return (path.clone(), Vec::new());
             };
             let selectors = no_mistakes::playwright::selectors::extract_playwright_selectors(
-                &source,
-                attributes,
-                &test_id_attributes,
+                &source, attributes, attributes,
             );
             let mut pairs: Vec<(String, String)> = Vec::new();
             for sel in selectors {

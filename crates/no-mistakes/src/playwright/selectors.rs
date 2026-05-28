@@ -29,26 +29,47 @@ pub(crate) const HTML_ID_ATTRIBUTE: &str = "id";
 
 const SOURCE_EXTS: &[&str] = &["ts", "tsx", "js", "jsx", "mts", "cts", "mjs", "cjs"];
 
-/// Best-effort scan of a sequence of source lines for occurrences of any
-/// attribute in `attributes` set to a static string literal, e.g.
-/// `data-pw="search-bar"`. Used to recover identifiers that have been removed
-/// in a unified diff hunk where we no longer have the original AST. Skips
-/// values that look dynamic (containing `{` or `$`).
-pub fn scan_selector_attribute_values(
-    attributes: &[String],
-    lines: &[String],
-) -> Vec<(String, String)> {
-    if attributes.is_empty() || lines.is_empty() {
-        return Vec::new();
+/// Compile the regex used by [`scan_selector_attribute_values_with_regex`]
+/// from a set of selector attribute names. Returns `None` when `attributes`
+/// is empty or the resulting pattern is invalid.
+pub fn compile_selector_attribute_value_regex(attributes: &[String]) -> Option<regex::Regex> {
+    if attributes.is_empty() {
+        return None;
     }
     let escaped: Vec<String> = attributes.iter().map(|a| regex::escape(a)).collect();
     let pattern = format!(
         r#"(?P<attr>{})\s*=\s*(?:"(?P<dq>[^"{{}}$]*)"|'(?P<sq>[^'{{}}$]*)')"#,
         escaped.join("|")
     );
-    let Ok(re) = regex::Regex::new(&pattern) else {
+    regex::Regex::new(&pattern).ok()
+}
+
+/// Best-effort scan of a sequence of source lines for occurrences of any
+/// attribute in `attributes` set to a static string literal, e.g.
+/// `data-pw="search-bar"`. Used to recover identifiers that have been removed
+/// in a unified diff hunk where we no longer have the original AST. Skips
+/// values that look dynamic (containing `{` or `$`).
+///
+/// Callers that scan many sequences of lines should compile the regex once
+/// with [`compile_selector_attribute_value_regex`] and reuse it via
+/// [`scan_selector_attribute_values_with_regex`].
+pub fn scan_selector_attribute_values(
+    attributes: &[String],
+    lines: &[String],
+) -> Vec<(String, String)> {
+    let Some(re) = compile_selector_attribute_value_regex(attributes) else {
         return Vec::new();
     };
+    scan_selector_attribute_values_with_regex(&re, lines)
+}
+
+/// Variant of [`scan_selector_attribute_values`] that accepts a precompiled
+/// regex from [`compile_selector_attribute_value_regex`], so repeated calls
+/// across many files (e.g. per-file diff hunk scans) do not recompile.
+pub fn scan_selector_attribute_values_with_regex(
+    re: &regex::Regex,
+    lines: &[String],
+) -> Vec<(String, String)> {
     let mut out: Vec<(String, String)> = Vec::new();
     for line in lines {
         for caps in re.captures_iter(line) {

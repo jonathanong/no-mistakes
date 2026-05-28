@@ -53,3 +53,29 @@ fn empty_inputs_return_empty() {
     let lines: Vec<String> = Vec::new();
     assert!(scan_selector_attribute_values(&attrs(), &lines).is_empty());
 }
+
+#[test]
+fn reusing_compiled_regex_matches_one_shot_scan() {
+    use crate::playwright::selectors::{
+        compile_selector_attribute_value_regex, scan_selector_attribute_values_with_regex,
+    };
+    let attributes = attrs();
+    let re = compile_selector_attribute_value_regex(&attributes).expect("regex compiles");
+    let removed_lines = vec!["  <form data-pw=\"search-bar\">".to_string()];
+    let added_lines = vec!["  <form data-pw=\"renamed-search-bar\">".to_string()];
+    assert_eq!(
+        scan_selector_attribute_values_with_regex(&re, &removed_lines),
+        scan_selector_attribute_values(&attributes, &removed_lines),
+    );
+    assert_eq!(
+        scan_selector_attribute_values_with_regex(&re, &added_lines),
+        scan_selector_attribute_values(&attributes, &added_lines),
+    );
+}
+
+#[test]
+fn compile_returns_none_for_empty_attributes() {
+    use crate::playwright::selectors::compile_selector_attribute_value_regex;
+    let empty: Vec<String> = Vec::new();
+    assert!(compile_selector_attribute_value_regex(&empty).is_none());
+}
