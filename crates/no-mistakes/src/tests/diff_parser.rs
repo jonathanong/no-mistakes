@@ -40,6 +40,21 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
                 break;
             }
             let next = lines.next().unwrap();
+            // Once inside a hunk, payload lines whose body happens to start
+            // with `--- ` or `+++ ` (e.g. an actual `--- foo` line in the
+            // file content) must NOT be re-classified as path headers, or
+            // we'd overwrite the captured paths and drop the line from
+            // removed/added accumulation.
+            if in_hunk {
+                if let Some(rest) = next.strip_prefix('-') {
+                    removed_lines.push(rest.to_string());
+                } else if let Some(rest) = next.strip_prefix('+') {
+                    added_lines.push(rest.to_string());
+                } else if next.starts_with("@@") {
+                    // a follow-up hunk header: stay in_hunk
+                }
+                continue;
+            }
             if let Some(rest) = next.strip_prefix("rename from ") {
                 rename_from = Some(PathBuf::from(rest));
             } else if let Some(rest) = next.strip_prefix("rename to ") {
@@ -50,12 +65,6 @@ pub(crate) fn parse_unified_diff(diff_text: &str) -> Vec<DiffFile> {
                 plus_path = Some(rest);
             } else if next.starts_with("@@") {
                 in_hunk = true;
-            } else if in_hunk {
-                if let Some(rest) = next.strip_prefix('-') {
-                    removed_lines.push(rest.to_string());
-                } else if let Some(rest) = next.strip_prefix('+') {
-                    added_lines.push(rest.to_string());
-                }
             }
         }
 
@@ -174,6 +183,35 @@ diff --git a/web/components/search-bar.tsx b/web/components/search-bar.tsx
         assert_eq!(
             files[0].added_lines,
             vec!["  return <form data-pw=\"renamed-search-bar\" />;".to_string()]
+        );
+    }
+
+    #[test]
+    fn parse_keeps_hunk_payload_lines_starting_with_dashes() {
+        // Payload lines whose body begins with `--- ` or `+++ ` must be
+        // captured as removed/added content, not misclassified as a new
+        // path header overwriting the diff header we already parsed.
+        let diff = "\
+diff --git a/changelog.md b/changelog.md
+--- a/changelog.md
++++ b/changelog.md
+@@ -1,4 +1,4 @@
+ # Changelog
+-- old bullet
++- new bullet
+-- divider removed
+++ divider added
+";
+        let files = parse_unified_diff(diff);
+        assert_eq!(files.len(), 1);
+        assert_eq!(files[0].path, PathBuf::from("changelog.md"));
+        assert_eq!(
+            files[0].removed_lines,
+            vec!["- old bullet".to_string(), "- divider removed".to_string()]
+        );
+        assert_eq!(
+            files[0].added_lines,
+            vec!["- new bullet".to_string(), "+ divider added".to_string()]
         );
     }
 
