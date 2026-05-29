@@ -64,6 +64,8 @@ pub struct RewriteRule {
 pub enum ProjectType {
     Server,
     Nextjs,
+    Remix,
+    Vitejs,
     Library,
     Tests,
     Rust,

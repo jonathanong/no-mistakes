@@ -67,14 +67,14 @@ impl RulePathFilter {
         let root = crate::codebase::ts_resolver::normalize_path(root);
         let include = GlobMatcher::new(&rule.include, &format!("rule `{}` include", rule.rule))?;
         let exclude = GlobMatcher::new(&rule.exclude, &format!("rule `{}` exclude", rule.rule))?;
-        let mut inferred_nextjs_root = None;
+        let mut inferred_roots = crate::codebase::config::InferredRoots::default();
         let mut projects = Vec::new();
         for project_name in &rule.projects {
             let Some(project) = config.projects.get(project_name) else {
                 continue;
             };
             let Some(project_root) =
-                super::target_project_root(&root, project, &mut inferred_nextjs_root)
+                super::target_project_root(&root, project, &mut inferred_roots)
             else {
                 continue;
             };

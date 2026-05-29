@@ -15,7 +15,9 @@ mod project;
 #[path = "config/rule_application.rs"]
 mod rule_application;
 
-pub use project::{infer_nextjs_root, ProjectConfig};
+pub use project::{
+    infer_nextjs_root, infer_remix_root, infer_vitejs_root, InferredRoots, ProjectConfig,
+};
 pub use rule_application::RuleApplicationConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]

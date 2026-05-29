@@ -255,6 +255,111 @@ fn project_roots_for_rule_infers_nextjs_root() {
 }
 
 #[test]
+fn project_roots_for_rule_infers_remix_root() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/config-v2/remix-inferred-root/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+
+    let mut config = load_codebase_config_with_path(&root, None).unwrap();
+    config.projects.insert(
+        "marketing".to_string(),
+        project::ProjectConfig {
+            type_: Some(crate::config::v2::schema::ProjectType::Remix),
+            rules: vec!["unique-exports".to_string()],
+            ..Default::default()
+        },
+    );
+
+    assert_eq!(
+        config.project_roots_for_rule(&root, "unique-exports"),
+        vec![root.join("web")]
+    );
+}
+
+#[test]
+fn project_config_effective_root_infers_remix_root() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/config-v2/remix-inferred-root/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let project = project::ProjectConfig {
+        type_: Some(crate::config::v2::schema::ProjectType::Remix),
+        ..Default::default()
+    };
+
+    assert_eq!(project.effective_root(&root), Some(root.join("web")));
+}
+
+#[test]
+fn project_roots_for_rule_infers_remix_vite_root() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/config-v2/remix-vite-inferred-root/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+
+    let mut config = load_codebase_config_with_path(&root, None).unwrap();
+    config.projects.insert(
+        "marketing".to_string(),
+        project::ProjectConfig {
+            type_: Some(crate::config::v2::schema::ProjectType::Remix),
+            rules: vec!["unique-exports".to_string()],
+            ..Default::default()
+        },
+    );
+
+    assert_eq!(
+        config.project_roots_for_rule(&root, "unique-exports"),
+        vec![root.join("web")]
+    );
+}
+
+#[test]
+fn project_config_effective_root_infers_remix_vite_root() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/config-v2/remix-vite-inferred-root/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let project = project::ProjectConfig {
+        type_: Some(crate::config::v2::schema::ProjectType::Remix),
+        ..Default::default()
+    };
+
+    assert_eq!(project.effective_root(&root), Some(root.join("web")));
+}
+
+#[test]
+fn project_roots_for_rule_infers_vitejs_root() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/config-v2/vitejs-inferred-root/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+
+    let mut config = load_codebase_config_with_path(&root, None).unwrap();
+    config.projects.insert(
+        "marketing".to_string(),
+        project::ProjectConfig {
+            type_: Some(crate::config::v2::schema::ProjectType::Vitejs),
+            rules: vec!["unique-exports".to_string()],
+            ..Default::default()
+        },
+    );
+
+    assert_eq!(
+        config.project_roots_for_rule(&root, "unique-exports"),
+        vec![root.join("web")]
+    );
+}
+
+#[test]
+fn project_config_effective_root_infers_vitejs_root() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/config-v2/vitejs-inferred-root/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let project = project::ProjectConfig {
+        type_: Some(crate::config::v2::schema::ProjectType::Vitejs),
+        ..Default::default()
+    };
+
+    assert_eq!(project.effective_root(&root), Some(root.join("web")));
+}
+
+#[test]
 fn project_config_effective_root_infers_nextjs_root() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/config-v2/nextjs-inferred-root/fixture");
@@ -275,6 +380,56 @@ fn project_roots_for_rule_falls_back_when_nextjs_root_is_not_inferred() {
         "web".to_string(),
         project::ProjectConfig {
             type_: Some(crate::config::v2::schema::ProjectType::Nextjs),
+            rules: vec!["unique-exports".to_string()],
+            ..Default::default()
+        },
+    );
+
+    assert_eq!(
+        project::roots_for_rule(
+            &projects,
+            &HashMap::new(),
+            &HashSet::new(),
+            root,
+            "unique-exports"
+        ),
+        vec![PathBuf::from("/repo")]
+    );
+}
+
+#[test]
+fn project_roots_for_rule_falls_back_when_remix_root_is_not_inferred() {
+    let root = Path::new("/repo");
+    let mut projects = HashMap::new();
+    projects.insert(
+        "web".to_string(),
+        project::ProjectConfig {
+            type_: Some(crate::config::v2::schema::ProjectType::Remix),
+            rules: vec!["unique-exports".to_string()],
+            ..Default::default()
+        },
+    );
+
+    assert_eq!(
+        project::roots_for_rule(
+            &projects,
+            &HashMap::new(),
+            &HashSet::new(),
+            root,
+            "unique-exports"
+        ),
+        vec![PathBuf::from("/repo")]
+    );
+}
+
+#[test]
+fn project_roots_for_rule_falls_back_when_vitejs_root_is_not_inferred() {
+    let root = Path::new("/repo");
+    let mut projects = HashMap::new();
+    projects.insert(
+        "web".to_string(),
+        project::ProjectConfig {
+            type_: Some(crate::config::v2::schema::ProjectType::Vitejs),
             rules: vec!["unique-exports".to_string()],
             ..Default::default()
         },
