@@ -1,0 +1,8 @@
+projects:
+  web:
+    type: vitejs
+
+rules:
+  - rule: unique-exports
+    projects:
+      - web

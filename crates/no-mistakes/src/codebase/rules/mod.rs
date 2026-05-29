@@ -86,12 +86,12 @@ pub(crate) fn target_roots(
     if rule.applies_to_repository() {
         roots.push(root.to_path_buf());
     }
-    let mut inferred_nextjs_root = None;
+    let mut inferred_roots = crate::codebase::config::InferredRoots::default();
     for project_name in &rule.projects {
         let Some(project) = config.projects.get(project_name) else {
             continue;
         };
-        if let Some(project_root) = target_project_root(root, project, &mut inferred_nextjs_root) {
+        if let Some(project_root) = target_project_root(root, project, &mut inferred_roots) {
             roots.push(project_root);
         }
     }
@@ -103,14 +103,27 @@ pub(crate) fn target_roots(
 fn target_project_root(
     root: &Path,
     project: &crate::config::v2::schema::Project,
-    inferred_nextjs_root: &mut Option<Option<PathBuf>>,
+    inferred_roots: &mut crate::codebase::config::InferredRoots,
 ) -> Option<PathBuf> {
     if let Some(project_root) = project.root.as_deref() {
         return Some(root.join(project_root));
     }
     if project.type_ == Some(crate::config::v2::schema::ProjectType::Nextjs) {
-        return inferred_nextjs_root
+        return inferred_roots
+            .nextjs
             .get_or_insert_with(|| crate::codebase::config::infer_nextjs_root(root))
+            .clone();
+    }
+    if project.type_ == Some(crate::config::v2::schema::ProjectType::Remix) {
+        return inferred_roots
+            .remix
+            .get_or_insert_with(|| crate::codebase::config::infer_remix_root(root))
+            .clone();
+    }
+    if project.type_ == Some(crate::config::v2::schema::ProjectType::Vitejs) {
+        return inferred_roots
+            .vitejs
+            .get_or_insert_with(|| crate::codebase::config::infer_vitejs_root(root))
             .clone();
     }
     Some(root.to_path_buf())
@@ -167,5 +180,7 @@ fn finding_is_suppressed(source: &str, finding: &RuleFinding) -> bool {
 
 #[cfg(test)]
 mod suppression_tests;
+#[cfg(test)]
+mod target_roots_tests;
 #[cfg(test)]
 mod tests;

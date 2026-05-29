@@ -39,6 +39,36 @@ fn discover_check_files_includes_inferred_nextjs_project_files() {
 }
 
 #[test]
+fn discover_check_files_includes_inferred_remix_project_files() {
+    let root = fixture("config-v2/remix-inferred-root");
+    let config = load_config(&root);
+
+    let files = discover_check_files(&root, &config, &[], true);
+
+    assert!(files.iter().any(|path| path.ends_with("web/app/page.tsx")));
+}
+
+#[test]
+fn discover_check_files_includes_inferred_remix_vite_project_files() {
+    let root = fixture("config-v2/remix-vite-inferred-root");
+    let config = load_config(&root);
+
+    let files = discover_check_files(&root, &config, &[], true);
+
+    assert!(files.iter().any(|path| path.ends_with("web/app/page.tsx")));
+}
+
+#[test]
+fn discover_check_files_includes_inferred_vitejs_project_files() {
+    let root = fixture("config-v2/vitejs-inferred-root");
+    let config = load_config(&root);
+
+    let files = discover_check_files(&root, &config, &[], true);
+
+    assert!(files.iter().any(|path| path.ends_with("web/app/page.tsx")));
+}
+
+#[test]
 fn discover_check_files_does_not_rescan_repository_root() {
     let root = fixture("check-discovery/repository-root-only");
     let config = load_config(&root);

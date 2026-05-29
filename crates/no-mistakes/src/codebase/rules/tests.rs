@@ -1,5 +1,5 @@
 use super::*;
-use crate::config::v2::schema::{Project, ProjectType, RuleDef, RuleScope};
+use crate::config::v2::schema::{RuleDef, RuleScope};
 
 fn fixture(path: &str) -> std::path::PathBuf {
     let mut parts = path.splitn(3, '/');
@@ -42,59 +42,6 @@ fn rule_enabled_accepts_project_rule_without_top_level_options() {
         ..Default::default()
     });
     assert!(rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS));
-}
-
-#[test]
-fn target_roots_ignore_unknown_projects() {
-    let config = crate::config::v2::NoMistakesConfig::default();
-    let rule = RuleDef {
-        rule: RUST_MAX_LINES_PER_FILE.to_string(),
-        projects: vec!["missing".to_string()],
-        ..Default::default()
-    };
-
-    let roots = target_roots(std::path::Path::new("/repo"), &config, &rule);
-
-    assert!(roots.is_empty());
-}
-
-#[test]
-fn target_roots_use_workspace_root_for_project_without_root() {
-    let mut config = crate::config::v2::NoMistakesConfig::default();
-    config
-        .projects
-        .insert("backend".to_string(), Project::default());
-    let rule = RuleDef {
-        rule: RUST_MAX_LINES_PER_FILE.to_string(),
-        projects: vec!["backend".to_string()],
-        ..Default::default()
-    };
-
-    let roots = target_roots(std::path::Path::new("/repo"), &config, &rule);
-
-    assert_eq!(roots, vec![std::path::PathBuf::from("/repo")]);
-}
-
-#[test]
-fn target_roots_infer_nextjs_project_root() {
-    let root = fixture("config-v2/nextjs-inferred-root");
-    let mut config = crate::config::v2::NoMistakesConfig::default();
-    config.projects.insert(
-        "web".to_string(),
-        Project {
-            type_: Some(ProjectType::Nextjs),
-            ..Default::default()
-        },
-    );
-    let rule = RuleDef {
-        rule: RUST_MAX_LINES_PER_FILE.to_string(),
-        projects: vec!["web".to_string()],
-        ..Default::default()
-    };
-
-    let roots = target_roots(&root, &config, &rule);
-
-    assert_eq!(roots, vec![root.join("web")]);
 }
 
 #[test]
