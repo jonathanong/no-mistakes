@@ -1,4 +1,6 @@
-use super::super::{import_bindings, shared, top_level_function_bodies, Ctx, ImportBinding, Options};
+use super::super::{
+    import_bindings, shared, top_level_function_bodies, Ctx, ImportBinding, Options,
+};
 use super::expression_object_options;
 use crate::ast;
 use crate::codebase::ts_source::unwrap_ts_wrappers;

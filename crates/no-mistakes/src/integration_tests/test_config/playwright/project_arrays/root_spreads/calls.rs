@@ -1,4 +1,7 @@
-use super::{import_bindings, objects, project_options, shared, top_level_function_bodies, Ctx, ImportBinding, Options};
+use super::{
+    import_bindings, objects, project_options, shared, top_level_function_bodies, Ctx,
+    ImportBinding, Options,
+};
 use crate::ast;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use anyhow::Result;

@@ -182,8 +182,13 @@ fn exported_project_options(
             return imported_project_options(&import, path, parent, scope);
         }
         for source in star_barrel_sources(program) {
-            let b = ImportBinding { source: source.to_string(), imported: exported.to_string() };
-            if let Some(r) = imported_project_options(&b, path, parent, scope)? { return Ok(Some(r)); }
+            let b = ImportBinding {
+                source: source.to_string(),
+                imported: exported.to_string(),
+            };
+            if let Some(r) = imported_project_options(&b, path, parent, scope)? {
+                return Ok(Some(r));
+            }
         }
         return Ok(None);
     };

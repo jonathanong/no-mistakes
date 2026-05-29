@@ -164,7 +164,9 @@ fn exported_member_options(
             let Statement::ExportAllDeclaration(export) = statement else {
                 continue;
             };
-            if export.export_kind.is_type() || export.exported.as_ref().map(|n| n.name()) != Some(exported.into()) {
+            if export.export_kind.is_type()
+                || export.exported.as_ref().map(|n| n.name()) != Some(exported.into())
+            {
                 continue;
             }
             let binding = ImportBinding {
@@ -196,4 +198,3 @@ fn exported_member_options(
     };
     expression_options(expression, &mut ctx)
 }
-
