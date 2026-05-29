@@ -1,6 +1,7 @@
-use super::{parse_options, shared, Options};
+use super::{shared, Options};
 use crate::ast;
 use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
+use crate::codebase::ts_source::unwrap_ts_wrappers;
 use anyhow::Result;
 use oxc_ast::ast::Statement::ExpressionStatement;
 use oxc_ast::ast::{
@@ -12,10 +13,16 @@ use std::path::{Path, PathBuf};
 
 mod calls;
 mod exports;
+mod function_returns;
 mod imports;
 mod members;
+mod objects;
+mod root_options;
+mod root_spreads;
 
+use function_returns::body_return_options;
 use imports::{import_bindings, ImportBinding};
+pub(super) use root_options::root_options;
 
 type ExprMap<'a> = BTreeMap<String, &'a Expression<'a>>;
 type FnMap<'a> = BTreeMap<String, &'a FunctionBody<'a>>;
@@ -29,6 +36,7 @@ pub(super) struct Ctx<'a, 'r> {
     path: &'r Path,
     seen: &'r mut BTreeSet<PathBuf>,
     local_seen: &'r mut BTreeSet<String>,
+    object_seen: &'r mut BTreeSet<String>,
 }
 
 pub(super) fn project_options(
@@ -39,14 +47,10 @@ pub(super) fn project_options(
     _root: &Path,
     tsconfig: &TsConfig,
 ) -> Result<Vec<Options>> {
-    let Some(Expression::ArrayExpression(projects)) =
-        shared::property_expression(object, "projects")
-    else {
-        return Ok(Vec::new());
-    };
     let resolver = ImportResolver::new(tsconfig);
     let mut seen = BTreeSet::new();
     let mut local_seen = BTreeSet::new();
+    let mut object_seen = BTreeSet::new();
     let mut ctx = Ctx {
         source,
         bindings: shared::top_level_object_bindings(program),
@@ -56,8 +60,9 @@ pub(super) fn project_options(
         path,
         seen: &mut seen,
         local_seen: &mut local_seen,
+        object_seen: &mut object_seen,
     };
-    array_options(projects, &mut ctx)
+    root_spreads::project_options(object, &mut ctx).map(|options| options.unwrap_or_default())
 }
 
 pub(super) fn array_options(
@@ -67,36 +72,37 @@ pub(super) fn array_options(
     let mut options = Vec::new();
     for element in &projects.elements {
         match element {
-            ArrayExpressionElement::ObjectExpression(object) => {
-                options.push(project_object_options(object, ctx)?);
-            }
             ArrayExpressionElement::SpreadElement(spread) => {
                 options.extend(expression_options(&spread.argument, ctx)?);
             }
-            _ => {}
+            _ => {
+                if let Some(expression) = element.as_expression() {
+                    if !shared::is_array_expression_reference(expression, &ctx.bindings) {
+                        if let Some(option) = objects::expression_object_options(expression, ctx)? {
+                            options.push(option);
+                        }
+                    }
+                }
+            }
         }
     }
     Ok(options)
-}
-
-fn project_object_options(object: &ObjectExpression<'_>, ctx: &Ctx<'_, '_>) -> Result<Options> {
-    let nested = shared::property_object(object, "test", &ctx.bindings).unwrap_or(object);
-    parse_options(nested, ctx.source)
 }
 
 pub(super) fn expression_options(
     expression: &Expression<'_>,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<Vec<Options>> {
-    match expression {
+    match unwrap_ts_wrappers(expression) {
         Expression::ArrayExpression(array) => array_options(array, ctx),
+        Expression::ObjectExpression(object) => Ok(vec![objects::project_options(object, ctx)?]),
         Expression::Identifier(identifier) => identifier_options(identifier.name.as_str(), ctx),
-        Expression::CallExpression(call) => calls::call_options(&call.callee, ctx),
+        Expression::CallExpression(call) if call.arguments.is_empty() => {
+            calls::call_options(&call.callee, ctx)
+        }
+        Expression::CallExpression(_) => Ok(Vec::new()),
         Expression::StaticMemberExpression(member) => {
             members::namespace_member_options(member, ctx)
-        }
-        Expression::ParenthesizedExpression(parenthesized) => {
-            expression_options(&parenthesized.expression, ctx)
         }
         _ => Ok(Vec::new()),
     }
@@ -121,33 +127,18 @@ pub(super) fn helper_expression_options(
     expression: &Expression<'_>,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<Vec<Options>> {
+    let expression = unwrap_ts_wrappers(expression);
     match expression {
         Expression::ArrowFunctionExpression(arrow) if arrow.expression => {
             expression_statement_options(&arrow.body, ctx)
         }
         Expression::ArrowFunctionExpression(arrow) => body_return_options(&arrow.body, ctx),
-        Expression::FunctionExpression(function) => function
-            .body
-            .as_deref()
-            .map_or_else(|| Ok(Vec::new()), |body| body_return_options(body, ctx)),
+        Expression::FunctionExpression(function) => match function.body.as_deref() {
+            Some(body) => body_return_options(body, ctx),
+            None => Ok(Vec::new()),
+        },
         _ => expression_options(expression, ctx),
     }
-}
-
-pub(super) fn body_return_options(
-    body: &FunctionBody<'_>,
-    ctx: &mut Ctx<'_, '_>,
-) -> Result<Vec<Options>> {
-    for statement in &body.statements {
-        let Statement::ReturnStatement(return_statement) = statement else {
-            continue;
-        };
-        let Some(argument) = &return_statement.argument else {
-            continue;
-        };
-        return expression_options(argument, ctx);
-    }
-    Ok(Vec::new())
 }
 
 #[rustfmt::skip]

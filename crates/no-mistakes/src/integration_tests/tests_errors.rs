@@ -31,7 +31,10 @@ fn config_parsers_report_syntax_errors() {
 
     let pw_path = root.join("playwright.syntax-error.ts");
     let pw_source = std::fs::read_to_string(&pw_path).unwrap();
-    assert!(test_config::playwright::parse_from_path(&pw_source, &pw_path, &root).is_err());
+    let tsconfig = tsconfig_without_config(&root);
+    assert!(
+        test_config::playwright::parse_from_path(&pw_source, &pw_path, &root, &tsconfig).is_err()
+    );
 
     let vitest_path = root.join("vitest.syntax-error.mts");
     let vitest_source = std::fs::read_to_string(&vitest_path).unwrap();

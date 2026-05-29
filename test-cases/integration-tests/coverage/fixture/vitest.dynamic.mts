@@ -2,9 +2,11 @@ import defaultProjects, {
   aliasDefaultProjects,
   apiProjects,
   reexportedProjects,
+  toolingProjects,
   webProjects,
 } from './vitest.projects-helper'
 import defaultArrowProjects from './vitest.projects-default-arrow'
+import defaultCallArgProjects from './vitest.projects-default-call-arg'
 import defaultCallProjects from './vitest.projects-default-call'
 import defaultFunctionProjects from './vitest.projects-default-function'
 import edgeProjects from './vitest.projects-edge-default-array'
@@ -52,6 +54,7 @@ export default defineConfig({
       ...webProjects(),
       ...defaultProjects,
       ...defaultArrowProjects(),
+      ...defaultCallArgProjects,
       ...defaultCallProjects,
       ...defaultFunctionProjects(),
       ...edgeProjects,
@@ -60,6 +63,7 @@ export default defineConfig({
       ...reexportedProjects,
       ...projectHelpers.namespaceProjects(),
       ...projectHelpers.namespaceArrayProjects,
+      ...toolingProjects,
       ...projects,
       ...localExportedProjects,
       ...localExportedFunctionProjects(),

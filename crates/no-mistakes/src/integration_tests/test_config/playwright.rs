@@ -1,10 +1,13 @@
 use super::shared;
 use crate::ast;
+use crate::codebase::ts_resolver::TsConfig;
 use crate::integration_tests::project_config::prefix_globs;
 use crate::integration_tests::types::ConfigProject;
 use anyhow::Result;
-use oxc_ast::ast::{ObjectExpression, Program};
+use oxc_ast::ast::Program;
 use std::path::{Path, PathBuf};
+
+mod project_arrays;
 
 const DEFAULT_TEST_MATCH: &[&str] = &[
     "**/*.spec.ts",
@@ -49,9 +52,10 @@ pub(in crate::integration_tests) fn parse_from_path(
     source: &str,
     path: &Path,
     config_dir: &Path,
+    tsconfig: &TsConfig,
 ) -> Result<ParsedPlaywrightConfig> {
     ast::with_program(path, source, |program, source| {
-        parse_program(program, source, config_dir)
+        parse_program(program, source, path, config_dir, tsconfig)
     })?
 }
 
@@ -79,23 +83,26 @@ impl ParsedPlaywrightConfig {
 fn parse_program(
     program: &Program<'_>,
     source: &str,
+    path: &Path,
     config_dir: &Path,
+    tsconfig: &TsConfig,
 ) -> Result<ParsedPlaywrightConfig> {
     let bindings = shared::top_level_object_bindings(program);
     let Some(root_object) = shared::default_export_object(program, &bindings) else {
         return Ok(single_project(config_dir, &Options::default(), None));
     };
-    let root_options = parse_options(root_object, source)?;
-    let project_objects = shared::project_objects(root_object);
-    if project_objects.is_empty() {
+    let root_options = project_arrays::root_options(program, root_object, source, path, tsconfig)?;
+    let project_options =
+        project_arrays::project_options(program, root_object, source, path, tsconfig)?;
+    if project_options.is_empty() {
         return Ok(single_project(config_dir, &root_options, None));
     }
     let mut projects = Vec::new();
-    for project_object in project_objects {
+    for project_options in project_options {
         projects.push(merge_project(
             config_dir,
             &root_options,
-            Some(parse_options(project_object, source)?),
+            Some(project_options),
         ));
     }
     Ok(ParsedPlaywrightConfig { projects })
@@ -139,42 +146,6 @@ fn merge_project(config_dir: &Path, root: &Options, project: Option<Options>) ->
             .unwrap_or_else(default_test_match),
         test_ignore: combine(root.test_ignore.clone(), project.test_ignore),
     }
-}
-
-fn parse_options(object: &ObjectExpression<'_>, source: &str) -> Result<Options> {
-    Ok(Options {
-        name: shared::property_expression(object, "name")
-            .and_then(|value| shared::optional_string(value, source)),
-        test_dir: string_property(object, source, "testDir")?,
-        test_match: string_array_property(object, source, "testMatch")?,
-        test_ignore: string_array_property(object, source, "testIgnore")?,
-    })
-}
-
-fn string_property(
-    object: &ObjectExpression<'_>,
-    source: &str,
-    name: &str,
-) -> Result<Option<String>> {
-    shared::property_expression(object, name)
-        .map(|value| shared::required_string(value, source, name))
-        .transpose()
-}
-
-fn string_array_property(
-    object: &ObjectExpression<'_>,
-    source: &str,
-    name: &str,
-) -> Result<Option<Vec<String>>> {
-    shared::property_expression(object, name)
-        .map(|value| {
-            let values = shared::inferred_string_or_array(value, source, name)?;
-            if values.is_empty() && name != "testIgnore" {
-                anyhow::bail!("expected string literal or string array for {name}");
-            }
-            Ok(values)
-        })
-        .transpose()
 }
 
 fn default_test_match() -> Vec<String> {

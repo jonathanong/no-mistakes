@@ -10,6 +10,7 @@ export default (wrapped)
 export type OnlyType = string
 
 const object = {
+  ...extraObject,
   ['computed']: 'skip',
   method() {},
   name: (`literal`),

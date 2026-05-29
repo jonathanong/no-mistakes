@@ -4,7 +4,7 @@ use crate::codebase::ts_resolver::TsConfig;
 use crate::integration_tests::project_config::prefix_globs;
 use crate::integration_tests::types::ConfigProject;
 use anyhow::Result;
-use oxc_ast::ast::{ObjectExpression, Program};
+use oxc_ast::ast::Program;
 use std::path::Path;
 
 mod project_arrays;
@@ -17,6 +17,7 @@ const DEFAULT_INCLUDE: &[&str] = &[
 #[derive(Default, Clone)]
 pub(super) struct Options {
     pub(super) name: Option<String>,
+    pub(super) root: Option<String>,
     pub(super) include: Option<Vec<String>>,
     pub(super) exclude: Option<Vec<String>>,
 }
@@ -45,11 +46,9 @@ fn parse_program(
     let Some(root_object) = shared::default_export_object(program, &bindings) else {
         return Ok(Vec::new());
     };
-    let test_object =
-        shared::property_object(root_object, "test", &bindings).unwrap_or(root_object);
-    let root_options = parse_options(test_object, source)?;
+    let root_options = project_arrays::root_options(program, root_object, source, path, tsconfig)?;
     let project_options =
-        project_arrays::project_options(program, test_object, source, path, root, tsconfig)?;
+        project_arrays::project_options(program, root_object, source, path, root, tsconfig)?;
     let mut projects = Vec::new();
     if project_options.is_empty() {
         projects.push(to_project(config_dir, root, root_options));
@@ -73,17 +72,30 @@ fn to_project(config_dir: &Path, root: &Path, options: Options) -> ConfigProject
             .map(|glob| glob.to_string())
             .collect()
     });
+    let config_dir = options
+        .root
+        .as_deref()
+        .map(|project_root| {
+            let project_root = Path::new(project_root);
+            if project_root.is_absolute() {
+                project_root.to_path_buf()
+            } else {
+                config_dir.join(project_root)
+            }
+        })
+        .unwrap_or_else(|| config_dir.to_path_buf());
     ConfigProject {
         config: None,
         name: options.name,
-        include: prefix_globs(root, config_dir, &include),
-        exclude: prefix_globs(root, config_dir, &options.exclude.unwrap_or_default()),
+        include: prefix_globs(root, &config_dir, &include),
+        exclude: prefix_globs(root, &config_dir, &options.exclude.unwrap_or_default()),
     }
 }
 
 fn merge_options(root: &Options, project: Options) -> Options {
     Options {
         name: project.name.or_else(|| root.name.clone()),
+        root: project.root.or_else(|| root.root.clone()),
         include: project.include.or_else(|| root.include.clone()),
         exclude: combine(root.exclude.clone(), project.exclude),
     }
@@ -93,29 +105,4 @@ fn combine(left: Option<Vec<String>>, right: Option<Vec<String>>) -> Option<Vec<
     let mut values = left.unwrap_or_default();
     values.extend(right.unwrap_or_default());
     (!values.is_empty()).then_some(values)
-}
-
-pub(super) fn parse_options(object: &ObjectExpression<'_>, source: &str) -> Result<Options> {
-    Ok(Options {
-        name: shared::property_expression(object, "name")
-            .and_then(|value| shared::optional_string(value, source)),
-        include: string_array_property(object, source, "include")?,
-        exclude: string_array_property(object, source, "exclude")?,
-    })
-}
-
-fn string_array_property(
-    object: &ObjectExpression<'_>,
-    source: &str,
-    name: &str,
-) -> Result<Option<Vec<String>>> {
-    shared::property_expression(object, name)
-        .map(|value| {
-            let values = shared::inferred_string_or_array(value, source, name)?;
-            if values.is_empty() && name != "exclude" {
-                anyhow::bail!("expected string literal or string array for {name}");
-            }
-            Ok(values)
-        })
-        .transpose()
 }

@@ -7,6 +7,15 @@ export const reexportedProjects = [
   },
 ]
 
+export const typedReexportProjects = [
+  {
+    test: {
+      name: 'typed-reexport-runtime',
+      include: ['typed-reexport-runtime/**/*.test.ts'],
+    },
+  },
+]
+
 const aliasDefaultProjects = [
   {
     test: {

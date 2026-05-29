@@ -50,6 +50,18 @@ export function namedFunctionProjects() {
   ]
 }
 
+export function overloadedProjects(): unknown[]
+export function overloadedProjects() {
+  return [
+    {
+      test: {
+        name: 'overloaded-function',
+        include: ['overloaded-function/**/*.test.ts'],
+      },
+    },
+  ]
+}
+
 export const namespaceProjects = [
   {
     test: {
@@ -68,6 +80,11 @@ export const namespaceCallProjects = () => [
   },
 ]
 
+export const namespaceTestOptions = {
+  include: ['namespace-test-options-spread/**/*.test.ts'],
+  exclude: ['namespace-test-options-spread/**/*.skip.ts'],
+}
+
 export const unrelatedProjects = []
 export const { destructuredProjects } = {
   destructuredProjects: [
@@ -79,8 +96,23 @@ export const { destructuredProjects } = {
     },
   ],
 }
+
+const computedKey = 'computedProjects'
+export const { [computedKey]: computedDestructuredProjects } = {
+  computedProjects: [
+    {
+      test: {
+        name: 'computed-destructured',
+        include: ['computed-destructured/**/*.test.ts'],
+      },
+    },
+  ],
+}
+
 export { localAliasProjects, localFunctionProjects, importedNamedProjects, cycleProjects }
 export { exportedSpecifierProjects as exportedSpecifierAliasProjects }
+export type { typedReexportProjects } from './vitest.edge-types'
+export { typedReexportProjects } from './vitest.projects-source'
 export { reexportedProjects as sourcedReexportProjects } from './vitest.projects-source'
 export * from './vitest.projects-source'
 export { missingLocalProjects }

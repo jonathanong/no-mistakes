@@ -1,12 +1,14 @@
-use crate::ast;
-use oxc_ast::ast::{
-    Argument, AssignmentTarget, BindingPattern, Declaration, ExportDefaultDeclarationKind,
-    Expression, ObjectExpression, ObjectPropertyKind, Program, Statement,
-};
+use crate::codebase::ts_source::unwrap_ts_wrappers;
+use oxc_ast::ast::{BindingPattern, Declaration, Expression, FunctionBody, Program, Statement};
 use std::collections::{BTreeMap, BTreeSet};
+
+mod objects;
 
 pub(in crate::integration_tests) use super::shared_literals::{
     inferred_string_or_array, optional_string, property_key_name, required_string,
+};
+pub(in crate::integration_tests) use objects::{
+    default_export_object, expression_config_object, property_expression_deep,
 };
 
 pub(in crate::integration_tests) fn top_level_object_bindings<'a>(
@@ -37,171 +39,72 @@ pub(in crate::integration_tests) fn top_level_object_bindings<'a>(
     bindings
 }
 
-pub(in crate::integration_tests) fn default_export_object<'a>(
-    program: &'a Program<'a>,
-    bindings: &BTreeMap<String, &'a Expression<'a>>,
-) -> Option<&'a ObjectExpression<'a>> {
-    for statement in &program.body {
-        if let Statement::ExportDefaultDeclaration(export) = statement {
-            return export_config_object(&export.declaration, bindings);
-        }
-        if let Some(object) = commonjs_config_object(statement, bindings) {
-            return Some(object);
+pub(in crate::integration_tests) fn function_body_bindings<'a>(
+    body: &'a FunctionBody<'a>,
+) -> BTreeMap<String, &'a Expression<'a>> {
+    let mut bindings = BTreeMap::new();
+    for statement in &body.statements {
+        let Statement::VariableDeclaration(declaration) = statement else {
+            continue;
+        };
+        for declarator in &declaration.declarations {
+            let (Some(name), Some(init)) =
+                (binding_identifier_name(&declarator.id), &declarator.init)
+            else {
+                continue;
+            };
+            bindings.insert(name.to_string(), init);
         }
     }
-    None
+    bindings
 }
 
-fn export_config_object<'a>(
-    export: &'a ExportDefaultDeclarationKind<'a>,
-    bindings: &BTreeMap<String, &'a Expression<'a>>,
-) -> Option<&'a ObjectExpression<'a>> {
-    match export {
-        ExportDefaultDeclarationKind::ObjectExpression(object) => Some(object),
-        ExportDefaultDeclarationKind::CallExpression(call) => {
-            call.arguments.first().and_then(|arg| {
-                let mut seen = BTreeSet::new();
-                argument_config_object(arg, bindings, &mut seen)
-            })
-        }
-        ExportDefaultDeclarationKind::Identifier(identifier) => {
-            let mut seen = BTreeSet::new();
-            identifier_config_object(identifier.name.as_str(), bindings, &mut seen)
-        }
-        ExportDefaultDeclarationKind::ParenthesizedExpression(parenthesized) => {
-            let mut seen = BTreeSet::new();
-            expression_config_object(&parenthesized.expression, bindings, &mut seen)
-        }
-        _ => None,
+pub(in crate::integration_tests) fn is_array_expression_reference(
+    expression: &Expression<'_>,
+    bindings: &BTreeMap<String, &Expression<'_>>,
+) -> bool {
+    if matches!(
+        unwrap_ts_wrappers(expression),
+        Expression::ArrayExpression(_)
+    ) {
+        return true;
     }
-}
-
-fn commonjs_config_object<'a>(
-    statement: &'a Statement<'a>,
-    bindings: &BTreeMap<String, &'a Expression<'a>>,
-) -> Option<&'a ObjectExpression<'a>> {
-    let Statement::ExpressionStatement(statement) = statement else {
-        return None;
+    let Expression::Identifier(identifier) = unwrap_ts_wrappers(expression) else {
+        return false;
     };
-    let Expression::AssignmentExpression(assignment) = &statement.expression else {
-        return None;
-    };
-    if assignment_target_path(&assignment.left)
-        .as_deref()
-        .is_none_or(|parts| parts != ["module", "exports"])
-    {
-        return None;
-    }
-    let mut seen = BTreeSet::new();
-    expression_config_object(&assignment.right, bindings, &mut seen)
+    bindings
+        .get(identifier.name.as_str())
+        .is_some_and(|binding| {
+            matches!(unwrap_ts_wrappers(binding), Expression::ArrayExpression(_))
+        })
 }
 
-fn assignment_target_path(target: &AssignmentTarget<'_>) -> Option<Vec<String>> {
-    match target {
-        AssignmentTarget::StaticMemberExpression(member) => {
-            let mut parts = ast::expression_path(&member.object)?;
-            parts.push(member.property.name.to_string());
-            Some(parts)
-        }
-        _ => None,
-    }
-}
-
-fn argument_config_object<'a>(
-    argument: &'a Argument<'a>,
+pub(in crate::integration_tests) fn expression_value<'a>(
+    expression: &'a Expression<'a>,
     bindings: &BTreeMap<String, &'a Expression<'a>>,
-    seen: &mut BTreeSet<String>,
-) -> Option<&'a ObjectExpression<'a>> {
-    match argument {
-        Argument::ObjectExpression(object) => Some(object),
-        Argument::Identifier(identifier) => {
-            identifier_config_object(identifier.name.as_str(), bindings, seen)
-        }
-        Argument::ParenthesizedExpression(parenthesized) => {
-            expression_config_object(&parenthesized.expression, bindings, seen)
-        }
-        _ => None,
-    }
-}
-
-pub(in crate::integration_tests) fn property_object<'a>(
-    object: &'a ObjectExpression<'a>,
-    name: &str,
-    bindings: &BTreeMap<String, &'a Expression<'a>>,
-) -> Option<&'a ObjectExpression<'a>> {
-    let expression = property_expression(object, name)?;
+) -> &'a Expression<'a> {
     let mut seen = BTreeSet::new();
-    expression_config_object(expression, bindings, &mut seen)
+    expression_value_inner(expression, bindings, &mut seen)
 }
 
-fn expression_config_object<'a>(
+fn expression_value_inner<'a>(
     expression: &'a Expression<'a>,
     bindings: &BTreeMap<String, &'a Expression<'a>>,
     seen: &mut BTreeSet<String>,
-) -> Option<&'a ObjectExpression<'a>> {
-    match expression {
-        Expression::ObjectExpression(object) => Some(object),
-        Expression::Identifier(identifier) => {
-            identifier_config_object(identifier.name.as_str(), bindings, seen)
-        }
-        Expression::CallExpression(call) => call
-            .arguments
-            .first()
-            .and_then(|argument| argument_config_object(argument, bindings, seen)),
-        Expression::ParenthesizedExpression(parenthesized) => {
-            expression_config_object(&parenthesized.expression, bindings, seen)
-        }
-        _ => None,
-    }
-}
-
-fn identifier_config_object<'a>(
-    name: &str,
-    bindings: &BTreeMap<String, &'a Expression<'a>>,
-    seen: &mut BTreeSet<String>,
-) -> Option<&'a ObjectExpression<'a>> {
-    if !seen.insert(name.to_string()) {
-        return None;
-    }
-    let object = bindings
-        .get(name)
-        .and_then(|expression| expression_config_object(expression, bindings, seen));
-    seen.remove(name);
-    object
-}
-
-pub(in crate::integration_tests) fn property_expression<'a>(
-    object: &'a ObjectExpression<'a>,
-    name: &str,
-) -> Option<&'a Expression<'a>> {
-    for property in &object.properties {
-        let ObjectPropertyKind::ObjectProperty(property) = property else {
-            continue;
-        };
-        if property.computed || property.method {
-            continue;
-        }
-        if property_key_name(&property.key).as_deref() == Some(name) {
-            return Some(&property.value);
-        }
-    }
-    None
-}
-
-pub(in crate::integration_tests) fn project_objects<'a>(
-    root: &'a ObjectExpression<'a>,
-) -> Vec<&'a ObjectExpression<'a>> {
-    let Some(Expression::ArrayExpression(projects)) = property_expression(root, "projects") else {
-        return Vec::new();
+) -> &'a Expression<'a> {
+    let Expression::Identifier(identifier) = unwrap_ts_wrappers(expression) else {
+        return expression;
     };
-    projects
-        .elements
-        .iter()
-        .filter_map(|element| match element {
-            oxc_ast::ast::ArrayExpressionElement::ObjectExpression(object) => Some(object.as_ref()),
-            _ => None,
-        })
-        .collect()
+    if !seen.insert(identifier.name.to_string()) {
+        return expression;
+    }
+    let resolved = bindings
+        .get(identifier.name.as_str())
+        .map_or(expression, |value| {
+            expression_value_inner(value, bindings, seen)
+        });
+    seen.remove(identifier.name.as_str());
+    resolved
 }
 
 fn binding_identifier_name<'a>(binding: &'a BindingPattern<'a>) -> Option<&'a str> {
