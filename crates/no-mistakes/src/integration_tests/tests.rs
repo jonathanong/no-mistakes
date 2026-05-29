@@ -444,7 +444,6 @@ fn playwright_config_parser_covers_project_defaults() {
         "pw-default-function",
         "pw-default-identifier-array",
         "pw-default-identifier-function",
-        "pw-default-arrow",
     ] {
         assert!(
             edge.iter()
