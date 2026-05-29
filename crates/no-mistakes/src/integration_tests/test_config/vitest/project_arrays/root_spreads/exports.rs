@@ -52,7 +52,9 @@ pub(in crate::integration_tests::test_config::vitest::project_arrays) fn importe
     None
 }
 
-pub(in crate::integration_tests::test_config::vitest::project_arrays) fn named_export_object<'a>(
+pub(in crate::integration_tests::test_config::vitest::project_arrays) fn named_export_object<
+    'a,
+>(
     program: &'a Program<'a>,
     exported: &str,
     bindings: &super::super::ExprMap<'a>,
@@ -97,4 +99,19 @@ pub(in crate::integration_tests::test_config::vitest::project_arrays) fn named_e
         }
     }
     None
+}
+
+pub(in crate::integration_tests::test_config::vitest::project_arrays) fn star_barrel_sources<
+    'a,
+>(
+    program: &'a Program<'a>,
+) -> impl Iterator<Item = &'a str> {
+    program.body.iter().filter_map(|s| match s {
+        Statement::ExportAllDeclaration(e)
+            if !e.export_kind.is_type() && e.exported.is_none() =>
+        {
+            Some(e.source.value.as_str())
+        }
+        _ => None,
+    })
 }

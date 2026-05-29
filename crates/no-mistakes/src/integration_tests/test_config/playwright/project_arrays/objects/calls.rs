@@ -1,9 +1,11 @@
-use super::super::{shared, Ctx, Options};
+use super::super::{import_bindings, shared, top_level_function_bodies, Ctx, ImportBinding, Options};
 use super::expression_object_options;
+use crate::ast;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use anyhow::Result;
 use oxc_ast::ast::{Expression, FunctionBody, Statement};
 use std::collections::BTreeSet;
+use std::path::Path;
 
 pub(super) fn call_object_options(
     callee: &Expression<'_>,
@@ -21,10 +23,52 @@ pub(super) fn call_object_options(
         helper_object_options(expression, ctx)
     } else if let Some(body) = ctx.functions.get(name).copied() {
         body_return_object_options(body, ctx)
+    } else if let Some(import) = ctx.imports.get(name).cloned() {
+        imported_object_options(&import, ctx.path, ctx)
     } else {
         Ok(None)
     };
     ctx.local_seen.remove(&key);
+    result
+}
+
+fn imported_object_options(
+    import: &ImportBinding,
+    base_path: &Path,
+    ctx: &mut Ctx<'_, '_>,
+) -> Result<Option<Options>> {
+    let Some(path) = ctx.resolver.resolve(&import.source, base_path) else {
+        return Ok(None);
+    };
+    if !ctx.seen.insert(path.clone()) {
+        return Ok(None);
+    }
+    let result = match std::fs::read_to_string(&path) {
+        Err(_) => Ok(None),
+        Ok(source) => ast::with_program(&path, &source, |program, source| {
+            let bindings = shared::top_level_object_bindings(program);
+            let functions = top_level_function_bodies(program);
+            let Some(body) = functions.get(import.imported.as_str()).copied() else {
+                return Ok(None);
+            };
+            let mut local_seen = BTreeSet::new();
+            let mut object_seen = BTreeSet::new();
+            let mut scoped = Ctx {
+                source,
+                bindings,
+                functions,
+                imports: import_bindings(program),
+                resolver: ctx.resolver,
+                path: &path,
+                seen: ctx.seen,
+                local_seen: &mut local_seen,
+                object_seen: &mut object_seen,
+            };
+            body_return_object_options(body, &mut scoped)
+        })
+        .and_then(|options| options),
+    };
+    ctx.seen.remove(&path);
     result
 }
 

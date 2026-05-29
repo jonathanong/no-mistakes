@@ -6,7 +6,7 @@ use crate::ast;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::integration_tests::test_config::playwright::Options;
 use anyhow::Result;
-use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind, Program};
+use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind, Program, Statement};
 use std::collections::BTreeSet;
 use std::path::Path;
 
@@ -86,6 +86,28 @@ fn imported_member_options(
     imported_member_options_from(import, member, ctx.path, ctx)
 }
 
+fn imported_options_from_base(
+    import: &ImportBinding,
+    base_path: &Path,
+    ctx: &mut Ctx<'_, '_>,
+) -> Result<Vec<Options>> {
+    let Some(path) = ctx.resolver.resolve(&import.source, base_path) else {
+        return Ok(Vec::new());
+    };
+    if !ctx.seen.insert(path.clone()) {
+        return Ok(Vec::new());
+    }
+    let result = match std::fs::read_to_string(&path) {
+        Err(_) => Ok(Vec::new()),
+        Ok(source) => ast::with_program(&path, &source, |program, source| {
+            super::exports::exported_options(program, source, &path, ctx, &import.imported)
+        })
+        .and_then(|options| options),
+    };
+    ctx.seen.remove(&path);
+    result
+}
+
 fn imported_member_options_from(
     import: &ImportBinding,
     member: &str,
@@ -138,6 +160,22 @@ fn exported_member_options(
         if let Some(import) = root_spreads::imported_reexport(program, exported) {
             return imported_member_options_from(&import, member, path, parent);
         }
+        for statement in &program.body {
+            let Statement::ExportAllDeclaration(export) = statement else {
+                continue;
+            };
+            if export.export_kind.is_type() || export.exported.as_ref().map(|n| n.name()) != Some(exported.into()) {
+                continue;
+            }
+            let binding = ImportBinding {
+                source: export.source.value.to_string(),
+                imported: member.to_string(),
+            };
+            let options = imported_options_from_base(&binding, path, parent)?;
+            if !options.is_empty() {
+                return Ok(options);
+            }
+        }
         return Ok(Vec::new());
     };
     let Some(expression) = shared::property_expression_deep(object, member, &bindings) else {
@@ -158,3 +196,4 @@ fn exported_member_options(
     };
     expression_options(expression, &mut ctx)
 }
+

@@ -72,6 +72,9 @@ fn exported_member_project_options(
         if let Some(import) = sourced_reexport(program, exported) {
             return imported_member_project_options(&import, member, path, parent);
         }
+        if let Some(import) = super::imported_reexport(program, exported) {
+            return imported_member_project_options(&import, member, path, parent);
+        }
         return Ok(None);
     };
     let Some(expression) = shared::property_expression_deep(object, member, &bindings) else {

@@ -148,6 +148,21 @@ fn exported_project_options(
         if let Some(import) = imported_reexport(program, exported) {
             return imported_project_options(&import, path, parent);
         }
+        for statement in &program.body {
+            let oxc_ast::ast::Statement::ExportAllDeclaration(export) = statement else {
+                continue;
+            };
+            if export.export_kind.is_type() || export.exported.is_some() {
+                continue;
+            }
+            let binding = ImportBinding {
+                source: export.source.value.to_string(),
+                imported: exported.to_string(),
+            };
+            if let Some(result) = imported_project_options(&binding, path, parent)? {
+                return Ok(Some(result));
+            }
+        }
         return Ok(None);
     };
     let mut local_seen = BTreeSet::new();

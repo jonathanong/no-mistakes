@@ -12,7 +12,7 @@ mod calls;
 mod exports;
 mod members;
 pub(in crate::integration_tests::test_config::vitest::project_arrays) use exports::{
-    imported_reexport, named_export_object, sourced_reexport,
+    imported_reexport, named_export_object, sourced_reexport, star_barrel_sources,
 };
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Scope {
@@ -180,6 +180,10 @@ fn exported_project_options(
         }
         if let Some(import) = imported_reexport(program, exported) {
             return imported_project_options(&import, path, parent, scope);
+        }
+        for source in star_barrel_sources(program) {
+            let b = ImportBinding { source: source.to_string(), imported: exported.to_string() };
+            if let Some(r) = imported_project_options(&b, path, parent, scope)? { return Ok(Some(r)); }
         }
         return Ok(None);
     };
