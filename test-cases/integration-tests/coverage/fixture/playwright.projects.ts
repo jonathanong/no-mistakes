@@ -2,6 +2,9 @@ import { defineConfig } from '@playwright/test'
 import {
   factoryPlaywrightProjects,
   importedPlaywrightProjects,
+  importedSpreadProjects,
+  selfImportedSpreadProjects,
+  wrappedPlaywrightProjects,
 } from './playwright.projects-helper'
 
 export default defineConfig(({
@@ -10,7 +13,10 @@ export default defineConfig(({
   testIgnore: '**/root-ignore.ts',
   projects: [
     ...importedPlaywrightProjects,
+    ...importedSpreadProjects,
+    ...selfImportedSpreadProjects,
     ...factoryPlaywrightProjects(),
+    ...wrappedPlaywrightProjects,
     {
       name: `absolute`,
       testDir: '/tmp/no-mistakes-absolute-tests',

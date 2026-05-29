@@ -13,10 +13,18 @@ pub(super) fn import_bindings(program: &Program<'_>) -> BTreeMap<String, ImportB
         let Statement::ImportDeclaration(import) = statement else {
             continue;
         };
+        if import.import_kind.is_type() {
+            continue;
+        }
         for specifier in import.specifiers.iter().flatten() {
             let (local, imported) = match specifier {
                 ImportDeclarationSpecifier::ImportDefaultSpecifier(specifier) => {
                     (specifier.local.name.to_string(), "default".to_string())
+                }
+                ImportDeclarationSpecifier::ImportSpecifier(specifier)
+                    if specifier.import_kind.is_type() =>
+                {
+                    continue;
                 }
                 ImportDeclarationSpecifier::ImportSpecifier(specifier) => (
                     specifier.local.name.to_string(),

@@ -4,8 +4,7 @@ use crate::codebase::ts_resolver::TsConfig;
 use crate::integration_tests::project_config::prefix_globs;
 use crate::integration_tests::types::ConfigProject;
 use anyhow::Result;
-use oxc_ast::ast::{Expression, ObjectExpression, Program};
-use std::collections::BTreeMap;
+use oxc_ast::ast::Program;
 use std::path::{Path, PathBuf};
 
 mod project_arrays;
@@ -92,7 +91,7 @@ fn parse_program(
     let Some(root_object) = shared::default_export_object(program, &bindings) else {
         return Ok(single_project(config_dir, &Options::default(), None));
     };
-    let root_options = parse_options_with_bindings(root_object, source, &bindings)?;
+    let root_options = project_arrays::root_options(program, root_object, source, path, tsconfig)?;
     let project_options =
         project_arrays::project_options(program, root_object, source, path, tsconfig)?;
     if project_options.is_empty() {
@@ -147,48 +146,6 @@ fn merge_project(config_dir: &Path, root: &Options, project: Option<Options>) ->
             .unwrap_or_else(default_test_match),
         test_ignore: combine(root.test_ignore.clone(), project.test_ignore),
     }
-}
-
-fn parse_options_with_bindings(
-    object: &ObjectExpression<'_>,
-    source: &str,
-    bindings: &BTreeMap<String, &Expression<'_>>,
-) -> Result<Options> {
-    Ok(Options {
-        name: shared::property_expression_deep(object, "name", bindings)
-            .and_then(|value| shared::optional_string(value, source)),
-        test_dir: string_property(object, source, bindings, "testDir")?,
-        test_match: string_array_property(object, source, bindings, "testMatch")?,
-        test_ignore: string_array_property(object, source, bindings, "testIgnore")?,
-    })
-}
-
-fn string_property(
-    object: &ObjectExpression<'_>,
-    source: &str,
-    bindings: &BTreeMap<String, &Expression<'_>>,
-    name: &str,
-) -> Result<Option<String>> {
-    shared::property_expression_deep(object, name, bindings)
-        .map(|value| shared::required_string(value, source, name))
-        .transpose()
-}
-
-fn string_array_property(
-    object: &ObjectExpression<'_>,
-    source: &str,
-    bindings: &BTreeMap<String, &Expression<'_>>,
-    name: &str,
-) -> Result<Option<Vec<String>>> {
-    shared::property_expression_deep(object, name, bindings)
-        .map(|value| {
-            let values = shared::inferred_string_or_array(value, source, name)?;
-            if values.is_empty() && name != "testIgnore" {
-                anyhow::bail!("expected string literal or string array for {name}");
-            }
-            Ok(values)
-        })
-        .transpose()
 }
 
 fn default_test_match() -> Vec<String> {

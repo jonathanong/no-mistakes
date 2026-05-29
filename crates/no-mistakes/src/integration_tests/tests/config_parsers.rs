@@ -104,59 +104,78 @@ fn shared_config_helpers_cover_ast_edge_shapes() {
 
         let object = test_config::shared::default_export_object(program, &bindings).unwrap();
         assert_eq!(
-            test_config::shared::property_expression(object, "name")
+            test_config::shared::property_expression_deep(object, "name", &bindings)
                 .and_then(|expr| test_config::shared::optional_string(expr, source))
                 .as_deref(),
             Some("nested")
         );
 
-        let fixture_object = test_config::shared::property_object(object, "missing", &bindings);
-        assert!(fixture_object.is_none());
+        let missing_object = test_config::shared::property_expression_deep(
+            object, "missing", &bindings,
+        )
+        .and_then(|expression| {
+            let mut seen = std::collections::BTreeSet::new();
+            test_config::shared::expression_config_object(expression, &bindings, &mut seen)
+        });
+        assert!(missing_object.is_none());
         let oxc_ast::ast::Expression::ObjectExpression(object) = bindings.get("object").unwrap()
         else {
             panic!("expected object binding");
         };
         assert_eq!(
-            test_config::shared::property_expression(object, "name")
+            test_config::shared::property_expression_deep(object, "name", &bindings)
                 .map(|expr| test_config::shared::required_string(expr, source, "name").unwrap())
                 .as_deref(),
             Some("literal")
         );
-        assert!(test_config::shared::property_expression(object, "computed").is_none());
-        assert!(test_config::shared::property_expression(object, "quoted").is_some());
+        assert!(
+            test_config::shared::property_expression_deep(object, "computed", &bindings).is_none()
+        );
+        assert!(
+            test_config::shared::property_expression_deep(object, "quoted", &bindings).is_some()
+        );
 
-        let list = test_config::shared::property_expression(object, "list").unwrap();
+        let list =
+            test_config::shared::property_expression_deep(object, "list", &bindings).unwrap();
         assert_eq!(
             required_string_or_array(list, source, "list").unwrap(),
             vec!["one".to_string(), "two".to_string()]
         );
-        let name = test_config::shared::property_expression(object, "name").unwrap();
+        let name =
+            test_config::shared::property_expression_deep(object, "name", &bindings).unwrap();
         assert_eq!(
             required_string_or_array(name, source, "name").unwrap(),
             vec!["literal".to_string()]
         );
-        let wrapped_list = test_config::shared::property_expression(object, "wrappedList").unwrap();
+        let wrapped_list =
+            test_config::shared::property_expression_deep(object, "wrappedList", &bindings)
+                .unwrap();
         assert_eq!(
             required_string_or_array(wrapped_list, source, "wrappedList").unwrap(),
             vec!["three".to_string()]
         );
-        let non_array = test_config::shared::property_expression(object, "nonArray").unwrap();
+        let non_array =
+            test_config::shared::property_expression_deep(object, "nonArray", &bindings).unwrap();
         assert!(required_string_or_array(non_array, source, "nonArray").is_err());
-        let bad_list = test_config::shared::property_expression(object, "badList").unwrap();
+        let bad_list =
+            test_config::shared::property_expression_deep(object, "badList", &bindings).unwrap();
         assert!(required_string_or_array(bad_list, source, "badList").is_err());
-        let empty_list = test_config::shared::property_expression(object, "emptyList").unwrap();
+        let empty_list =
+            test_config::shared::property_expression_deep(object, "emptyList", &bindings).unwrap();
         assert!(required_string_or_array(empty_list, source, "emptyList").is_err());
         assert!(
             test_config::shared::inferred_string_or_array(non_array, source, "nonArray").is_err()
         );
-        let spread_list = test_config::shared::property_expression(object, "spreadList").unwrap();
+        let spread_list =
+            test_config::shared::property_expression_deep(object, "spreadList", &bindings).unwrap();
         assert_eq!(
             test_config::shared::inferred_string_or_array(spread_list, source, "spreadList")
                 .unwrap(),
             vec!["one".to_string(), "two".to_string()]
         );
         let wrapped_spread_list =
-            test_config::shared::property_expression(object, "wrappedSpreadList").unwrap();
+            test_config::shared::property_expression_deep(object, "wrappedSpreadList", &bindings)
+                .unwrap();
         assert_eq!(
             test_config::shared::inferred_string_or_array(
                 wrapped_spread_list,
@@ -178,8 +197,17 @@ fn shared_config_helpers_cover_ast_edge_shapes() {
         else {
             panic!("expected object binding");
         };
-        assert!(test_config::shared::property_expression(object, "quoted").is_some());
-        assert!(test_config::shared::property_object(object, "cyclic", &bindings).is_none());
+        assert!(
+            test_config::shared::property_expression_deep(object, "quoted", &bindings).is_some()
+        );
+        let cyclic_object = test_config::shared::property_expression_deep(
+            object, "cyclic", &bindings,
+        )
+        .and_then(|expression| {
+            let mut seen = std::collections::BTreeSet::new();
+            test_config::shared::expression_config_object(expression, &bindings, &mut seen)
+        });
+        assert!(cyclic_object.is_none());
     })
     .unwrap();
 
