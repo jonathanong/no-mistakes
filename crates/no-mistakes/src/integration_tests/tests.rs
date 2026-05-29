@@ -1442,6 +1442,316 @@ fn playwright_config_parser_covers_project_defaults() {
         &root,
     )
     .unwrap();
+
+    // object-call-missing-pkg: covers resolver failure in objects/calls.rs imported_object_options
+    let object_call_missing_pkg_path = root.join("playwright.object-call-missing-pkg.ts");
+    let object_call_missing_pkg_source =
+        std::fs::read_to_string(&object_call_missing_pkg_path).unwrap();
+    parse_playwright_fixture(
+        &object_call_missing_pkg_source,
+        &object_call_missing_pkg_path,
+        &root,
+    )
+    .unwrap();
+
+    // object-call-cycle: covers cycle detection in objects/calls.rs imported_object_options
+    let object_call_cycle_path = root.join("playwright.object-call-cycle.ts");
+    let object_call_cycle_source = std::fs::read_to_string(&object_call_cycle_path).unwrap();
+    parse_playwright_fixture(&object_call_cycle_source, &object_call_cycle_path, &root).unwrap();
+
+    // root-call-missing-pkg: covers resolver failure in root_spreads/calls.rs imported_project_options
+    let root_call_missing_pkg_path = root.join("playwright.root-call-missing-pkg.ts");
+    let root_call_missing_pkg_source =
+        std::fs::read_to_string(&root_call_missing_pkg_path).unwrap();
+    parse_playwright_fixture(
+        &root_call_missing_pkg_source,
+        &root_call_missing_pkg_path,
+        &root,
+    )
+    .unwrap();
+
+    // root-call-cycle: covers cycle detection in root_spreads/calls.rs imported_project_options
+    let root_call_cycle_path = root.join("playwright.root-call-cycle.ts");
+    let root_call_cycle_source = std::fs::read_to_string(&root_call_cycle_path).unwrap();
+    parse_playwright_fixture(&root_call_cycle_source, &root_call_cycle_path, &root).unwrap();
+
+    // projects-single-object: covers ObjectExpression arm in expression_options (project_arrays.rs)
+    let projects_single_object_path = root.join("playwright.projects-single-object.ts");
+    let projects_single_object_source =
+        std::fs::read_to_string(&projects_single_object_path).unwrap();
+    parse_playwright_fixture(
+        &projects_single_object_source,
+        &projects_single_object_path,
+        &root,
+    )
+    .unwrap();
+
+    // projects-default-import-object: covers ObjectExpression in default_export_options (exports.rs)
+    let projects_default_import_object_path =
+        root.join("playwright.projects-default-import-object.ts");
+    let projects_default_import_object_source =
+        std::fs::read_to_string(&projects_default_import_object_path).unwrap();
+    parse_playwright_fixture(
+        &projects_default_import_object_source,
+        &projects_default_import_object_path,
+        &root,
+    )
+    .unwrap();
+
+    // object-call-destructure-body: covers function_body_bindings continue path (shared.rs)
+    let object_call_destructure_body_path = root.join("playwright.object-call-destructure-body.ts");
+    let object_call_destructure_body_source =
+        std::fs::read_to_string(&object_call_destructure_body_path).unwrap();
+    let object_call_destructure_body = parse_playwright_fixture(
+        &object_call_destructure_body_source,
+        &object_call_destructure_body_path,
+        &root,
+    )
+    .unwrap()
+    .into_projects(&root, "playwright.object-call-destructure-body.ts");
+    assert!(object_call_destructure_body
+        .iter()
+        .any(|project| { project.name.as_deref() == Some("pw-object-call-destructure-body") }));
+
+    // object-star-export: covers ambiguous star export in objects/exports.rs (line 112)
+    let object_star_export_path = root.join("playwright.object-star-export.ts");
+    let object_star_export_source = std::fs::read_to_string(&object_star_export_path).unwrap();
+    parse_playwright_fixture(&object_star_export_source, &object_star_export_path, &root).unwrap();
+
+    // object-member-missing-source: covers resolver failure in objects/members.rs
+    let object_member_missing_source_path = root.join("playwright.object-member-missing-source.ts");
+    let object_member_missing_source_source =
+        std::fs::read_to_string(&object_member_missing_source_path).unwrap();
+    parse_playwright_fixture(
+        &object_member_missing_source_source,
+        &object_member_missing_source_path,
+        &root,
+    )
+    .unwrap();
+
+    // root-spread-named-member: covers named import spread member path in root_spreads/members.rs
+    let root_spread_named_member_path = root.join("playwright.root-spread-named-member.ts");
+    let root_spread_named_member_source =
+        std::fs::read_to_string(&root_spread_named_member_path).unwrap();
+    let root_spread_named_member = parse_playwright_fixture(
+        &root_spread_named_member_source,
+        &root_spread_named_member_path,
+        &root,
+    )
+    .unwrap()
+    .into_projects(&root, "playwright.root-spread-named-member.ts");
+    assert!(root_spread_named_member
+        .iter()
+        .any(|project| { project.name.as_deref() == Some("pw-root-spread-named-member") }));
+
+    // root-spread-member-missing: covers resolver failure in root_spreads/members.rs
+    let root_spread_member_missing_path = root.join("playwright.root-spread-member-missing.ts");
+    let root_spread_member_missing_source =
+        std::fs::read_to_string(&root_spread_member_missing_path).unwrap();
+    parse_playwright_fixture(
+        &root_spread_member_missing_source,
+        &root_spread_member_missing_path,
+        &root,
+    )
+    .unwrap();
+
+    // root-call-self-recurse: covers local_seen cycle detection in root_spreads/calls.rs (line 22)
+    let root_call_self_recurse_path = root.join("playwright.root-call-self-recurse.ts");
+    let root_call_self_recurse_source =
+        std::fs::read_to_string(&root_call_self_recurse_path).unwrap();
+    parse_playwright_fixture(
+        &root_call_self_recurse_source,
+        &root_call_self_recurse_path,
+        &root,
+    )
+    .unwrap();
+
+    // root-spread-star-import: covers star barrel path in root_spreads.rs (line 164)
+    let root_spread_star_import_path = root.join("playwright.root-spread-star-import.ts");
+    let root_spread_star_import_source =
+        std::fs::read_to_string(&root_spread_star_import_path).unwrap();
+    let root_spread_star_import = parse_playwright_fixture(
+        &root_spread_star_import_source,
+        &root_spread_star_import_path,
+        &root,
+    )
+    .unwrap()
+    .into_projects(&root, "playwright.root-spread-star-import.ts");
+    assert!(root_spread_star_import
+        .iter()
+        .any(|project| { project.name.as_deref() == Some("pw-root-spread-star-barrel") }));
+
+    // projects-star-import: covers imported_options_lookup success in exports.rs (line 107)
+    let projects_star_import_path = root.join("playwright.projects-star-import.ts");
+    let projects_star_import_source = std::fs::read_to_string(&projects_star_import_path).unwrap();
+    let projects_star_import = parse_playwright_fixture(
+        &projects_star_import_source,
+        &projects_star_import_path,
+        &root,
+    )
+    .unwrap()
+    .into_projects(&root, "playwright.projects-star-import.ts");
+    assert!(projects_star_import
+        .iter()
+        .any(|project| { project.name.as_deref() == Some("pw-projects-star-barrel") }));
+
+    // projects-star-missing-import: covers resolver failure in imported_options_lookup (line 101)
+    let projects_star_missing_import_path = root.join("playwright.projects-star-missing-import.ts");
+    let projects_star_missing_import_source =
+        std::fs::read_to_string(&projects_star_missing_import_path).unwrap();
+    parse_playwright_fixture(
+        &projects_star_missing_import_source,
+        &projects_star_missing_import_path,
+        &root,
+    )
+    .unwrap();
+
+    // object-member-alias-import: covers imported_options_from_base resolver failure in members.rs
+    let object_member_alias_import_path = root.join("playwright.object-member-alias-import.ts");
+    let object_member_alias_import_source =
+        std::fs::read_to_string(&object_member_alias_import_path).unwrap();
+    parse_playwright_fixture(
+        &object_member_alias_import_source,
+        &object_member_alias_import_path,
+        &root,
+    )
+    .unwrap();
+
+    // member-spread-named: covers imported_spread_member_options found=options path (line 70)
+    let member_spread_named_path = root.join("playwright.member-spread-named.ts");
+    let member_spread_named_source = std::fs::read_to_string(&member_spread_named_path).unwrap();
+    let member_spread_named = parse_playwright_fixture(
+        &member_spread_named_source,
+        &member_spread_named_path,
+        &root,
+    )
+    .unwrap()
+    .into_projects(&root, "playwright.member-spread-named.ts");
+    assert!(member_spread_named
+        .iter()
+        .any(|project| { project.name.as_deref() == Some("pw-member-spread-named") }));
+
+    // member-spread-missing-source: covers imported_member_options_from resolver failure (line 118)
+    let member_spread_missing_source_path = root.join("playwright.member-spread-missing-source.ts");
+    let member_spread_missing_source_source =
+        std::fs::read_to_string(&member_spread_missing_source_path).unwrap();
+    parse_playwright_fixture(
+        &member_spread_missing_source_source,
+        &member_spread_missing_source_path,
+        &root,
+    )
+    .unwrap();
+
+    // projects-star-cycle: covers cycle detection in imported_options_lookup (line 104)
+    let projects_star_cycle_path = root.join("playwright.projects-star-cycle.ts");
+    let projects_star_cycle_source = std::fs::read_to_string(&projects_star_cycle_path).unwrap();
+    parse_playwright_fixture(
+        &projects_star_cycle_source,
+        &projects_star_cycle_path,
+        &root,
+    )
+    .unwrap();
+
+    // projects-star-cycle2: covers cycle detection without named export in imported_options_lookup (line 104)
+    let projects_star_cycle2_path = root.join("playwright.projects-star-cycle2.ts");
+    let projects_star_cycle2_source = std::fs::read_to_string(&projects_star_cycle2_path).unwrap();
+    parse_playwright_fixture(
+        &projects_star_cycle2_source,
+        &projects_star_cycle2_path,
+        &root,
+    )
+    .unwrap();
+
+    // projects-star-unreadable: covers file read error in exports.rs imported_options_lookup (line 107)
+    let projects_star_unreadable_path = root.join("playwright.projects-star-unreadable.ts");
+    let projects_star_unreadable_source =
+        std::fs::read_to_string(&projects_star_unreadable_path).unwrap();
+    parse_playwright_fixture(
+        &projects_star_unreadable_source,
+        &projects_star_unreadable_path,
+        &root,
+    )
+    .unwrap();
+
+    // object-testignore-invalid: covers '?' error branch in testIgnore merge_property (objects.rs:102)
+    let object_testignore_invalid_path = root.join("playwright.object-testignore-invalid.ts");
+    let object_testignore_invalid_source =
+        std::fs::read_to_string(&object_testignore_invalid_path).unwrap();
+    assert!(parse_playwright_fixture(
+        &object_testignore_invalid_source,
+        &object_testignore_invalid_path,
+        &root,
+    )
+    .is_err());
+
+    // member-namespace-star-missing: covers resolver failure in members.rs imported_options_from_base (line 95)
+    let member_namespace_star_missing_path =
+        root.join("playwright.member-namespace-star-missing.ts");
+    let member_namespace_star_missing_source =
+        std::fs::read_to_string(&member_namespace_star_missing_path).unwrap();
+    parse_playwright_fixture(
+        &member_namespace_star_missing_source,
+        &member_namespace_star_missing_path,
+        &root,
+    )
+    .unwrap();
+
+    // member-namespace-star-unreadable: covers file read error in members.rs imported_options_from_base (line 101)
+    let member_namespace_star_unreadable_path =
+        root.join("playwright.member-namespace-star-unreadable.ts");
+    let member_namespace_star_unreadable_source =
+        std::fs::read_to_string(&member_namespace_star_unreadable_path).unwrap();
+    parse_playwright_fixture(
+        &member_namespace_star_unreadable_source,
+        &member_namespace_star_unreadable_path,
+        &root,
+    )
+    .unwrap();
+
+    // root-call-unreadable: covers file read error in root_spreads/calls.rs imported_project_options (line 49)
+    let root_call_unreadable_path = root.join("playwright.root-call-unreadable.ts");
+    let root_call_unreadable_source = std::fs::read_to_string(&root_call_unreadable_path).unwrap();
+    parse_playwright_fixture(
+        &root_call_unreadable_source,
+        &root_call_unreadable_path,
+        &root,
+    )
+    .unwrap();
+
+    // root-spread-member-unreadable: covers file read error in root_spreads/members.rs (line 46)
+    let root_spread_member_unreadable_path =
+        root.join("playwright.root-spread-member-unreadable.ts");
+    let root_spread_member_unreadable_source =
+        std::fs::read_to_string(&root_spread_member_unreadable_path).unwrap();
+    parse_playwright_fixture(
+        &root_spread_member_unreadable_source,
+        &root_spread_member_unreadable_path,
+        &root,
+    )
+    .unwrap();
+
+    // object-member-unreadable: covers file read error in objects/members.rs (line 60)
+    let object_member_unreadable_path = root.join("playwright.object-member-unreadable.ts");
+    let object_member_unreadable_source =
+        std::fs::read_to_string(&object_member_unreadable_path).unwrap();
+    parse_playwright_fixture(
+        &object_member_unreadable_source,
+        &object_member_unreadable_path,
+        &root,
+    )
+    .unwrap();
+
+    // member-spread-member-unreadable: covers file read error in members.rs imported_member_options_from (line 124)
+    let member_spread_member_unreadable_path =
+        root.join("playwright.member-spread-member-unreadable.ts");
+    let member_spread_member_unreadable_source =
+        std::fs::read_to_string(&member_spread_member_unreadable_path).unwrap();
+    parse_playwright_fixture(
+        &member_spread_member_unreadable_source,
+        &member_spread_member_unreadable_path,
+        &root,
+    )
+    .unwrap();
 }
 
 #[test]
@@ -2655,6 +2965,423 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     parse_vitest_fixture(
         &root_spread_call_with_arg_source,
         &root_spread_call_with_arg_path,
+        &root,
+    )
+    .unwrap();
+
+    // object-call-missing-pkg: covers resolver failure in objects/calls.rs imported_object_options
+    let object_call_missing_pkg_path = root.join("vitest.object-call-missing-pkg.mts");
+    let object_call_missing_pkg_source =
+        std::fs::read_to_string(&object_call_missing_pkg_path).unwrap();
+    parse_vitest_fixture(
+        &object_call_missing_pkg_source,
+        &object_call_missing_pkg_path,
+        &root,
+    )
+    .unwrap();
+
+    // object-call-cycle: covers cycle detection in objects/calls.rs imported_object_options
+    let object_call_cycle_path = root.join("vitest.object-call-cycle.mts");
+    let object_call_cycle_source = std::fs::read_to_string(&object_call_cycle_path).unwrap();
+    parse_vitest_fixture(&object_call_cycle_source, &object_call_cycle_path, &root).unwrap();
+
+    // root-call-missing-pkg: covers resolver failure in root_spreads/calls.rs imported_project_options
+    let root_call_missing_pkg_path = root.join("vitest.root-call-missing-pkg.mts");
+    let root_call_missing_pkg_source =
+        std::fs::read_to_string(&root_call_missing_pkg_path).unwrap();
+    parse_vitest_fixture(
+        &root_call_missing_pkg_source,
+        &root_call_missing_pkg_path,
+        &root,
+    )
+    .unwrap();
+
+    // root-call-cycle: covers cycle detection in root_spreads/calls.rs imported_project_options
+    let root_call_cycle_path = root.join("vitest.root-call-cycle.mts");
+    let root_call_cycle_source = std::fs::read_to_string(&root_call_cycle_path).unwrap();
+    parse_vitest_fixture(&root_call_cycle_source, &root_call_cycle_path, &root).unwrap();
+
+    // projects-single-object: covers ObjectExpression arm in expression_options (project_arrays.rs)
+    let projects_single_object_path = root.join("vitest.projects-single-object.mts");
+    let projects_single_object_source =
+        std::fs::read_to_string(&projects_single_object_path).unwrap();
+    parse_vitest_fixture(
+        &projects_single_object_source,
+        &projects_single_object_path,
+        &root,
+    )
+    .unwrap();
+
+    // projects-default-import-array: covers ArrayExpression in default_export_options (exports.rs)
+    let projects_default_import_array_path = root.join("vitest.projects-default-import-array.mts");
+    let projects_default_import_array_source =
+        std::fs::read_to_string(&projects_default_import_array_path).unwrap();
+    parse_vitest_fixture(
+        &projects_default_import_array_source,
+        &projects_default_import_array_path,
+        &root,
+    )
+    .unwrap();
+
+    // projects-default-import-object: covers ObjectExpression in default_export_options (exports.rs)
+    let projects_default_import_object_path =
+        root.join("vitest.projects-default-import-object.mts");
+    let projects_default_import_object_source =
+        std::fs::read_to_string(&projects_default_import_object_path).unwrap();
+    parse_vitest_fixture(
+        &projects_default_import_object_source,
+        &projects_default_import_object_path,
+        &root,
+    )
+    .unwrap();
+
+    // object-call-destructure-body: covers function_body_bindings continue path (shared.rs)
+    let object_call_destructure_body_path = root.join("vitest.object-call-destructure-body.mts");
+    let object_call_destructure_body_source =
+        std::fs::read_to_string(&object_call_destructure_body_path).unwrap();
+    let object_call_destructure_body = parse_vitest_fixture(
+        &object_call_destructure_body_source,
+        &object_call_destructure_body_path,
+        &root,
+    )
+    .unwrap();
+    assert!(object_call_destructure_body
+        .iter()
+        .any(|project| { project.name.as_deref() == Some("vitest-object-call-destructure-body") }));
+
+    // object-star-export: covers type/alias star skipped and ambiguous star in objects/exports.rs
+    let object_star_export_path = root.join("vitest.object-star-export.mts");
+    let object_star_export_source = std::fs::read_to_string(&object_star_export_path).unwrap();
+    parse_vitest_fixture(&object_star_export_source, &object_star_export_path, &root).unwrap();
+
+    // object-member-missing-source: covers resolver failure in objects/members.rs
+    let object_member_missing_source_path = root.join("vitest.object-member-missing-source.mts");
+    let object_member_missing_source_source =
+        std::fs::read_to_string(&object_member_missing_source_path).unwrap();
+    parse_vitest_fixture(
+        &object_member_missing_source_source,
+        &object_member_missing_source_path,
+        &root,
+    )
+    .unwrap();
+
+    // absolute-root: covers absolute path branch in vitest.rs to_project()
+    let absolute_root_path = root.join("vitest.absolute-root.mts");
+    let absolute_root_source = std::fs::read_to_string(&absolute_root_path).unwrap();
+    let absolute_root =
+        parse_vitest_fixture(&absolute_root_source, &absolute_root_path, &root).unwrap();
+    assert!(absolute_root
+        .iter()
+        .any(|p| p.name.as_deref() == Some("vitest-absolute-root")));
+
+    // test-value-non-object: covers found = None branch when test: is not object/spread
+    let test_value_non_object_path = root.join("vitest.test-value-non-object.mts");
+    let test_value_non_object_source =
+        std::fs::read_to_string(&test_value_non_object_path).unwrap();
+    parse_vitest_fixture(
+        &test_value_non_object_source,
+        &test_value_non_object_path,
+        &root,
+    )
+    .unwrap();
+
+    // root-spread-object-cycle: covers object_seen cycle detection in spread_project_options
+    let root_spread_object_cycle_path = root.join("vitest.root-spread-object-cycle.mts");
+    let root_spread_object_cycle_source =
+        std::fs::read_to_string(&root_spread_object_cycle_path).unwrap();
+    parse_vitest_fixture(
+        &root_spread_object_cycle_source,
+        &root_spread_object_cycle_path,
+        &root,
+    )
+    .unwrap();
+
+    // root-imports-cycle: covers cycle detection in root_spreads/imports.rs imported_project_options
+    let root_imports_cycle_path = root.join("vitest.root-imports-cycle.mts");
+    let root_imports_cycle_source = std::fs::read_to_string(&root_imports_cycle_path).unwrap();
+    parse_vitest_fixture(&root_imports_cycle_source, &root_imports_cycle_path, &root).unwrap();
+
+    // root-spread-star-import: covers star barrel resolution in root_spreads/imports.rs
+    let root_spread_star_import_path = root.join("vitest.root-spread-star-import.mts");
+    let root_spread_star_import_source =
+        std::fs::read_to_string(&root_spread_star_import_path).unwrap();
+    let root_spread_star_import = parse_vitest_fixture(
+        &root_spread_star_import_source,
+        &root_spread_star_import_path,
+        &root,
+    )
+    .unwrap();
+    assert!(root_spread_star_import
+        .iter()
+        .any(|project| { project.name.as_deref() == Some("vitest-root-spread-star-barrel") }));
+
+    // export-destructure-edge: covers destructured_expression edge cases in exports/declarations.rs
+    let export_destructure_edge_path = root.join("vitest.export-destructure-edge.mts");
+    let export_destructure_edge_source =
+        std::fs::read_to_string(&export_destructure_edge_path).unwrap();
+    parse_vitest_fixture(
+        &export_destructure_edge_source,
+        &export_destructure_edge_path,
+        &root,
+    )
+    .unwrap();
+
+    // root-spread-named-member: covers named import spread member path in root_spreads/members.rs
+    let root_spread_named_member_path = root.join("vitest.root-spread-named-member.mts");
+    let root_spread_named_member_source =
+        std::fs::read_to_string(&root_spread_named_member_path).unwrap();
+    let root_spread_named_member = parse_vitest_fixture(
+        &root_spread_named_member_source,
+        &root_spread_named_member_path,
+        &root,
+    )
+    .unwrap();
+    assert!(root_spread_named_member
+        .iter()
+        .any(|project| { project.name.as_deref() == Some("vitest-root-spread-named-member") }));
+
+    // root-spread-member-missing: covers resolver failure in root_spreads/members.rs
+    let root_spread_member_missing_path = root.join("vitest.root-spread-member-missing.mts");
+    let root_spread_member_missing_source =
+        std::fs::read_to_string(&root_spread_member_missing_path).unwrap();
+    parse_vitest_fixture(
+        &root_spread_member_missing_source,
+        &root_spread_member_missing_path,
+        &root,
+    )
+    .unwrap();
+
+    // root-call-self-recurse: covers local_seen cycle detection in root_spreads/calls.rs (line 23)
+    let root_call_self_recurse_path = root.join("vitest.root-call-self-recurse.mts");
+    let root_call_self_recurse_source =
+        std::fs::read_to_string(&root_call_self_recurse_path).unwrap();
+    parse_vitest_fixture(
+        &root_call_self_recurse_source,
+        &root_call_self_recurse_path,
+        &root,
+    )
+    .unwrap();
+
+    // projects-star-import: covers imported_options_lookup (resolver fail + success) in exports.rs
+    let projects_star_import_path = root.join("vitest.projects-star-import.mts");
+    let projects_star_import_source = std::fs::read_to_string(&projects_star_import_path).unwrap();
+    let projects_star_import = parse_vitest_fixture(
+        &projects_star_import_source,
+        &projects_star_import_path,
+        &root,
+    )
+    .unwrap();
+    assert!(projects_star_import
+        .iter()
+        .any(|project| { project.name.as_deref() == Some("vitest-projects-star-barrel") }));
+
+    // project-unknown-prop: covers _ => {} arm in merge_property in objects.rs
+    let project_unknown_prop_path = root.join("vitest.project-unknown-prop.mts");
+    let project_unknown_prop_source = std::fs::read_to_string(&project_unknown_prop_path).unwrap();
+    let project_unknown_prop = parse_vitest_fixture(
+        &project_unknown_prop_source,
+        &project_unknown_prop_path,
+        &root,
+    )
+    .unwrap();
+    assert!(project_unknown_prop
+        .iter()
+        .any(|project| { project.name.as_deref() == Some("vitest-unknown-prop") }));
+
+    // object-member-alias-import: covers imported_options_from_base resolver failure in members.rs
+    let object_member_alias_import_path = root.join("vitest.object-member-alias-import.mts");
+    let object_member_alias_import_source =
+        std::fs::read_to_string(&object_member_alias_import_path).unwrap();
+    parse_vitest_fixture(
+        &object_member_alias_import_source,
+        &object_member_alias_import_path,
+        &root,
+    )
+    .unwrap();
+
+    // object-member-no-property: covers property_expression_deep None in members.rs (line 184)
+    let object_member_no_property_path = root.join("vitest.object-member-no-property.mts");
+    let object_member_no_property_source =
+        std::fs::read_to_string(&object_member_no_property_path).unwrap();
+    parse_vitest_fixture(
+        &object_member_no_property_source,
+        &object_member_no_property_path,
+        &root,
+    )
+    .unwrap();
+
+    // member-spread-named: covers imported_spread_member_options found=options path (line 70)
+    let member_spread_named_path = root.join("vitest.member-spread-named.mts");
+    let member_spread_named_source = std::fs::read_to_string(&member_spread_named_path).unwrap();
+    let member_spread_named = parse_vitest_fixture(
+        &member_spread_named_source,
+        &member_spread_named_path,
+        &root,
+    )
+    .unwrap();
+    assert!(member_spread_named
+        .iter()
+        .any(|project| { project.name.as_deref() == Some("vitest-member-spread-named") }));
+
+    // member-spread-missing-source: covers imported_member_options_from resolver failure (line 117)
+    let member_spread_missing_source_path = root.join("vitest.member-spread-missing-source.mts");
+    let member_spread_missing_source_source =
+        std::fs::read_to_string(&member_spread_missing_source_path).unwrap();
+    parse_vitest_fixture(
+        &member_spread_missing_source_source,
+        &member_spread_missing_source_path,
+        &root,
+    )
+    .unwrap();
+
+    // projects-star-ambiguous: covers ambiguity return in imported_options_lookup (line 118)
+    let projects_star_ambiguous_path = root.join("vitest.projects-star-ambiguous.mts");
+    let projects_star_ambiguous_source =
+        std::fs::read_to_string(&projects_star_ambiguous_path).unwrap();
+    parse_vitest_fixture(
+        &projects_star_ambiguous_source,
+        &projects_star_ambiguous_path,
+        &root,
+    )
+    .unwrap();
+
+    // projects-star-cycle: covers cycle detection in exports.rs imported_options_lookup (line 103)
+    let projects_star_cycle_path = root.join("vitest.projects-star-cycle.mts");
+    let projects_star_cycle_source = std::fs::read_to_string(&projects_star_cycle_path).unwrap();
+    parse_vitest_fixture(
+        &projects_star_cycle_source,
+        &projects_star_cycle_path,
+        &root,
+    )
+    .unwrap();
+
+    // projects-star-unreadable: covers file read error in exports.rs imported_options_lookup (line 106)
+    let projects_star_unreadable_path = root.join("vitest.projects-star-unreadable.mts");
+    let projects_star_unreadable_source =
+        std::fs::read_to_string(&projects_star_unreadable_path).unwrap();
+    parse_vitest_fixture(
+        &projects_star_unreadable_source,
+        &projects_star_unreadable_path,
+        &root,
+    )
+    .unwrap();
+
+    // cjs-non-module-exports: covers CJS non-module.exports assignment (exports.rs lines 72, 118)
+    let cjs_non_module_exports_path = root.join("vitest.cjs-non-module-exports.mts");
+    let cjs_non_module_exports_source =
+        std::fs::read_to_string(&cjs_non_module_exports_path).unwrap();
+    parse_vitest_fixture(
+        &cjs_non_module_exports_source,
+        &cjs_non_module_exports_path,
+        &root,
+    )
+    .unwrap();
+
+    // export-destructure-named: covers nested ObjectPattern and missing key (declarations.rs lines 107, 114)
+    let export_destructure_named_path = root.join("vitest.export-destructure-named.mts");
+    let export_destructure_named_source =
+        std::fs::read_to_string(&export_destructure_named_path).unwrap();
+    parse_vitest_fixture(
+        &export_destructure_named_source,
+        &export_destructure_named_path,
+        &root,
+    )
+    .unwrap();
+
+    // project-exclude: covers exclude in project test object (objects.rs line 82 Ok branch)
+    let project_exclude_path = root.join("vitest.project-exclude.mts");
+    let project_exclude_source = std::fs::read_to_string(&project_exclude_path).unwrap();
+    let project_exclude =
+        parse_vitest_fixture(&project_exclude_source, &project_exclude_path, &root).unwrap();
+    assert!(project_exclude
+        .iter()
+        .any(|p| p.name.as_deref() == Some("vitest-project-exclude")));
+
+    // project-exclude-invalid: covers '?' error branch in exclude merge_property (objects.rs:82)
+    let project_exclude_invalid_path = root.join("vitest.project-exclude-invalid.mts");
+    let project_exclude_invalid_source =
+        std::fs::read_to_string(&project_exclude_invalid_path).unwrap();
+    assert!(parse_vitest_fixture(
+        &project_exclude_invalid_source,
+        &project_exclude_invalid_path,
+        &root,
+    )
+    .is_err());
+
+    // member-namespace-star-missing: covers resolver failure in members.rs imported_options_from_base (line 87)
+    let member_namespace_star_missing_path = root.join("vitest.member-namespace-star-missing.mts");
+    let member_namespace_star_missing_source =
+        std::fs::read_to_string(&member_namespace_star_missing_path).unwrap();
+    parse_vitest_fixture(
+        &member_namespace_star_missing_source,
+        &member_namespace_star_missing_path,
+        &root,
+    )
+    .unwrap();
+
+    // member-namespace-star-unreadable: covers file read error in members.rs imported_options_from_base (line 93)
+    let member_namespace_star_unreadable_path =
+        root.join("vitest.member-namespace-star-unreadable.mts");
+    let member_namespace_star_unreadable_source =
+        std::fs::read_to_string(&member_namespace_star_unreadable_path).unwrap();
+    parse_vitest_fixture(
+        &member_namespace_star_unreadable_source,
+        &member_namespace_star_unreadable_path,
+        &root,
+    )
+    .unwrap();
+
+    // member-no-property-direct: covers no-property return in members.rs exported_member_options (line 184)
+    let member_no_property_direct_path = root.join("vitest.member-no-property-direct.mts");
+    let member_no_property_direct_source =
+        std::fs::read_to_string(&member_no_property_direct_path).unwrap();
+    parse_vitest_fixture(
+        &member_no_property_direct_source,
+        &member_no_property_direct_path,
+        &root,
+    )
+    .unwrap();
+
+    // root-call-unreadable: covers file read error in root_spreads/calls.rs imported_project_options (line 51)
+    let root_call_unreadable_path = root.join("vitest.root-call-unreadable.mts");
+    let root_call_unreadable_source = std::fs::read_to_string(&root_call_unreadable_path).unwrap();
+    parse_vitest_fixture(
+        &root_call_unreadable_source,
+        &root_call_unreadable_path,
+        &root,
+    )
+    .unwrap();
+
+    // root-spread-member-unreadable: covers file read error in root_spreads/members.rs (line 48)
+    let root_spread_member_unreadable_path = root.join("vitest.root-spread-member-unreadable.mts");
+    let root_spread_member_unreadable_source =
+        std::fs::read_to_string(&root_spread_member_unreadable_path).unwrap();
+    parse_vitest_fixture(
+        &root_spread_member_unreadable_source,
+        &root_spread_member_unreadable_path,
+        &root,
+    )
+    .unwrap();
+
+    // object-member-unreadable: covers file read error in objects/members.rs (line 60)
+    let object_member_unreadable_path = root.join("vitest.object-member-unreadable.mts");
+    let object_member_unreadable_source =
+        std::fs::read_to_string(&object_member_unreadable_path).unwrap();
+    parse_vitest_fixture(
+        &object_member_unreadable_source,
+        &object_member_unreadable_path,
+        &root,
+    )
+    .unwrap();
+
+    // member-spread-member-unreadable: covers file read error in members.rs imported_member_options_from (line 124)
+    let member_spread_member_unreadable_path =
+        root.join("vitest.member-spread-member-unreadable.mts");
+    let member_spread_member_unreadable_source =
+        std::fs::read_to_string(&member_spread_member_unreadable_path).unwrap();
+    parse_vitest_fixture(
+        &member_spread_member_unreadable_source,
+        &member_spread_member_unreadable_path,
         &root,
     )
     .unwrap();
