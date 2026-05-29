@@ -36,7 +36,6 @@ pub(super) fn project_options(
     object: &ObjectExpression<'_>,
     source: &str,
     path: &Path,
-    _root: &Path,
     tsconfig: &TsConfig,
 ) -> Result<Vec<Options>> {
     let Some(Expression::ArrayExpression(projects)) =
@@ -80,8 +79,7 @@ pub(super) fn array_options(
 }
 
 fn project_object_options(object: &ObjectExpression<'_>, ctx: &Ctx<'_, '_>) -> Result<Options> {
-    let nested = shared::property_object(object, "test", &ctx.bindings).unwrap_or(object);
-    parse_options_with_bindings(nested, ctx.source, &ctx.bindings)
+    parse_options_with_bindings(object, ctx.source, &ctx.bindings)
 }
 
 pub(super) fn expression_options(
@@ -161,7 +159,7 @@ pub(super) fn expression_statement_options(
     expression_options(&statement.expression, ctx)
 }
 
-pub(in crate::integration_tests::test_config::vitest::project_arrays) fn imported_options(
+pub(in crate::integration_tests::test_config::playwright::project_arrays) fn imported_options(
     import: &ImportBinding,
     ctx: &mut Ctx<'_, '_>,
 ) -> Result<Vec<Options>> {

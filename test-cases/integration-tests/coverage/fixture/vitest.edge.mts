@@ -22,6 +22,7 @@ import {
 } from './vitest.edge-source'
 import { badProjects } from './vitest.edge-bad'
 import { missingFileProjects } from './vitest.missing-file'
+import { unreadableProjects } from './vitest.unreadable'
 import { packageProjects } from 'missing-package'
 import { defineConfig } from 'vitest/config'
 
@@ -114,6 +115,7 @@ export default defineConfig({
       ...missingLocalProjects,
       ...noMatchingDeclaration,
       ...missingFileProjects,
+      ...unreadableProjects,
       ...packageProjects,
       ...reexportedProjects,
       ...edge.namespaceProjects,

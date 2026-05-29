@@ -1,10 +1,16 @@
 import { defineConfig } from '@playwright/test'
+import {
+  factoryPlaywrightProjects,
+  importedPlaywrightProjects,
+} from './playwright.projects-helper'
 
 export default defineConfig(({
   name: 'root',
   testDir: './root',
   testIgnore: '**/root-ignore.ts',
   projects: [
+    ...importedPlaywrightProjects,
+    ...factoryPlaywrightProjects(),
     {
       name: `absolute`,
       testDir: '/tmp/no-mistakes-absolute-tests',

@@ -37,6 +37,21 @@ export const namespaceArrayProjects = [
   },
 ]
 
+const sharedToolingTest = {
+  include: ['spread-object/**/*.test.ts'],
+  exclude: ['spread-object/**/*.skip.ts'],
+}
+
+export const toolingProjects = [
+  {
+    extends: true,
+    test: {
+      ...sharedToolingTest,
+      name: 'spread-object',
+    },
+  },
+]
+
 const defaultProjects = [
   {
     test: {

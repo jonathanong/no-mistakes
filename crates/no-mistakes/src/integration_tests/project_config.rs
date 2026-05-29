@@ -75,7 +75,9 @@ fn load_config_projects(
 ) -> Result<Vec<ConfigProject>> {
     match framework {
         Framework::Playwright => {
-            let parsed = test_config::playwright::parse_from_path(source, path, config_dir)?;
+            let tsconfig = resolve_tsconfig(config_dir)?;
+            let parsed =
+                test_config::playwright::parse_from_path(source, path, config_dir, &tsconfig)?;
             Ok(parsed.into_projects(root, raw))
         }
         Framework::Vitest => {

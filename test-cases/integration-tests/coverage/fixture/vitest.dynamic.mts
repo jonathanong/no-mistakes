@@ -2,6 +2,7 @@ import defaultProjects, {
   aliasDefaultProjects,
   apiProjects,
   reexportedProjects,
+  toolingProjects,
   webProjects,
 } from './vitest.projects-helper'
 import defaultArrowProjects from './vitest.projects-default-arrow'
@@ -60,6 +61,7 @@ export default defineConfig({
       ...reexportedProjects,
       ...projectHelpers.namespaceProjects(),
       ...projectHelpers.namespaceArrayProjects,
+      ...toolingProjects,
       ...projects,
       ...localExportedProjects,
       ...localExportedFunctionProjects(),

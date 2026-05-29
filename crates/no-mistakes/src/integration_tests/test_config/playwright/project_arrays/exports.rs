@@ -2,8 +2,8 @@ use super::{
     array_options, body_return_options, expression_statement_options, helper_expression_options,
     import_bindings, imported_options, top_level_function_bodies, Ctx,
 };
-use crate::integration_tests::test_config::vitest::shared;
-use crate::integration_tests::test_config::vitest::Options;
+use crate::integration_tests::test_config::playwright::Options;
+use crate::integration_tests::test_config::shared;
 use anyhow::Result;
 use oxc_ast::ast::{
     BindingPattern, Declaration, ExportDefaultDeclarationKind, FunctionBody, Program, Statement,

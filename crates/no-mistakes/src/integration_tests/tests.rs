@@ -32,6 +32,15 @@ fn parse_vitest_fixture(
     test_config::vitest::parse_from_path(source, path, root, root, &tsconfig)
 }
 
+fn parse_playwright_fixture(
+    source: &str,
+    path: &Path,
+    config_dir: &Path,
+) -> anyhow::Result<test_config::playwright::ParsedPlaywrightConfig> {
+    let tsconfig = tsconfig_without_config(config_dir);
+    test_config::playwright::parse_from_path(source, path, config_dir, &tsconfig)
+}
+
 #[test]
 fn check_reports_integration_policy_violations() {
     let findings = check(&fixture("basic"), None).unwrap();
@@ -375,7 +384,7 @@ fn playwright_config_parser_covers_project_defaults() {
     let root = fixture("coverage");
     let path = root.join("playwright.projects.ts");
     let source = std::fs::read_to_string(&path).unwrap();
-    let parsed = test_config::playwright::parse_from_path(&source, &path, &root).unwrap();
+    let parsed = parse_playwright_fixture(&source, &path, &root).unwrap();
     let projects = parsed.into_projects(&root, "playwright.projects.ts");
 
     assert!(projects.iter().any(|project| {
@@ -389,15 +398,60 @@ fn playwright_config_parser_covers_project_defaults() {
                 .iter()
                 .any(|glob| glob.ends_with("root-ignore.ts"))
     }));
+    assert!(projects.iter().any(|project| {
+        project.name.as_deref() == Some("imported")
+            && project.include == vec!["imported/**/*.imported.spec.ts"]
+            && project
+                .exclude
+                .iter()
+                .any(|glob| glob.ends_with("imported/**/*.skip.ts"))
+    }));
+    assert!(projects.iter().any(|project| {
+        project.name.as_deref() == Some("factory")
+            && project.include == vec!["factory/**/*.factory.spec.ts"]
+    }));
 
     let empty_path = root.join("playwright.empty.ts");
     let empty = std::fs::read_to_string(&empty_path).unwrap();
-    let parsed = test_config::playwright::parse_from_path(&empty, &empty_path, &root).unwrap();
+    let parsed = parse_playwright_fixture(&empty, &empty_path, &root).unwrap();
     assert_eq!(parsed.into_projects(&root, "playwright.empty.ts").len(), 1);
 
-    let parsed =
-        test_config::playwright::parse_from_path(&empty, &empty_path, "relative".as_ref()).unwrap();
+    let parsed = parse_playwright_fixture(&empty, &empty_path, "relative".as_ref()).unwrap();
     assert!(parsed.into_projects(&root, "relative.ts")[0].include[0].starts_with("relative/"));
+
+    let edge_path = root.join("playwright.edge.ts");
+    let edge_source = std::fs::read_to_string(&edge_path).unwrap();
+    let edge = parse_playwright_fixture(&edge_source, &edge_path, &root)
+        .unwrap()
+        .into_projects(&root, "playwright.edge.ts");
+    for name in [
+        "pw-parenthesized",
+        "pw-function-expression",
+        "pw-block-arrow",
+        "pw-top-level-function",
+        "pw-named-var",
+        "pw-named-function",
+        "pw-local-alias",
+        "pw-local-function",
+        "pw-reexported",
+        "pw-namespace",
+        "pw-namespace-call",
+        "pw-default-array",
+        "pw-default-arrow",
+        "pw-default-arrow-block",
+        "pw-default-call",
+        "pw-default-exported-const",
+        "pw-default-function",
+        "pw-default-identifier-array",
+        "pw-default-identifier-function",
+        "pw-default-arrow",
+    ] {
+        assert!(
+            edge.iter()
+                .any(|project| project.name.as_deref() == Some(name)),
+            "missing Playwright edge project {name}"
+        );
+    }
 }
 
 #[test]
@@ -485,6 +539,11 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     assert!(dynamic
         .iter()
         .any(|project| project.name.as_deref() == Some("namespace-array")));
+    assert!(dynamic.iter().any(|project| {
+        project.name.as_deref() == Some("spread-object")
+            && project.include == vec!["spread-object/**/*.test.ts"]
+            && project.exclude == vec!["spread-object/**/*.skip.ts"]
+    }));
 
     let edge_path = root.join("vitest.edge.mts");
     let edge_source = std::fs::read_to_string(&edge_path).unwrap();

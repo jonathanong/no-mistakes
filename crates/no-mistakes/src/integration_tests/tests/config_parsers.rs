@@ -58,12 +58,14 @@ fn parenthesized_expression<'a>(expression: &'a Expression<'a>) -> &'a Expressio
 #[test]
 fn config_parsers_reject_invalid_literals() {
     let root = fixture("coverage");
+    let tsconfig = tsconfig_without_config(&root);
     let pw_path = root.join("playwright.invalid.ts");
     let pw_source = std::fs::read_to_string(&pw_path).unwrap();
-    let pw_err = match test_config::playwright::parse_from_path(&pw_source, &pw_path, &root) {
-        Ok(_) => panic!("expected invalid Playwright config to fail"),
-        Err(err) => err,
-    };
+    let pw_err =
+        match test_config::playwright::parse_from_path(&pw_source, &pw_path, &root, &tsconfig) {
+            Ok(_) => panic!("expected invalid Playwright config to fail"),
+            Err(err) => err,
+        };
     assert!(pw_err.to_string().contains("expected string literal"));
     let empty_match_path = root.join("playwright.empty-match-invalid.ts");
     let empty_match_source = std::fs::read_to_string(&empty_match_path).unwrap();
@@ -71,6 +73,7 @@ fn config_parsers_reject_invalid_literals() {
         &empty_match_source,
         &empty_match_path,
         &root,
+        &tsconfig,
     ) {
         Ok(_) => panic!("expected empty testMatch to fail"),
         Err(error) => error,
@@ -81,7 +84,6 @@ fn config_parsers_reject_invalid_literals() {
 
     let vitest_path = root.join("vitest.invalid.mts");
     let vitest_source = std::fs::read_to_string(&vitest_path).unwrap();
-    let tsconfig = tsconfig_without_config(&root);
     let vitest_err =
         test_config::vitest::parse_from_path(&vitest_source, &vitest_path, &root, &root, &tsconfig)
             .unwrap_err();
@@ -122,7 +124,6 @@ fn shared_config_helpers_cover_ast_edge_shapes() {
         );
         assert!(test_config::shared::property_expression(object, "computed").is_none());
         assert!(test_config::shared::property_expression(object, "quoted").is_some());
-        assert_eq!(test_config::shared::project_objects(object).len(), 1);
 
         let list = test_config::shared::property_expression(object, "list").unwrap();
         assert_eq!(

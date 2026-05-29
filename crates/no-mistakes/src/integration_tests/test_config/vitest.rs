@@ -4,7 +4,8 @@ use crate::codebase::ts_resolver::TsConfig;
 use crate::integration_tests::project_config::prefix_globs;
 use crate::integration_tests::types::ConfigProject;
 use anyhow::Result;
-use oxc_ast::ast::{ObjectExpression, Program};
+use oxc_ast::ast::{Expression, ObjectExpression, Program};
+use std::collections::BTreeMap;
 use std::path::Path;
 
 mod project_arrays;
@@ -47,7 +48,7 @@ fn parse_program(
     };
     let test_object =
         shared::property_object(root_object, "test", &bindings).unwrap_or(root_object);
-    let root_options = parse_options(test_object, source)?;
+    let root_options = parse_options_with_bindings(test_object, source, &bindings)?;
     let project_options =
         project_arrays::project_options(program, test_object, source, path, root, tsconfig)?;
     let mut projects = Vec::new();
@@ -95,21 +96,26 @@ fn combine(left: Option<Vec<String>>, right: Option<Vec<String>>) -> Option<Vec<
     (!values.is_empty()).then_some(values)
 }
 
-pub(super) fn parse_options(object: &ObjectExpression<'_>, source: &str) -> Result<Options> {
+pub(super) fn parse_options_with_bindings(
+    object: &ObjectExpression<'_>,
+    source: &str,
+    bindings: &BTreeMap<String, &Expression<'_>>,
+) -> Result<Options> {
     Ok(Options {
-        name: shared::property_expression(object, "name")
+        name: shared::property_expression_deep(object, "name", bindings)
             .and_then(|value| shared::optional_string(value, source)),
-        include: string_array_property(object, source, "include")?,
-        exclude: string_array_property(object, source, "exclude")?,
+        include: string_array_property(object, source, bindings, "include")?,
+        exclude: string_array_property(object, source, bindings, "exclude")?,
     })
 }
 
 fn string_array_property(
     object: &ObjectExpression<'_>,
     source: &str,
+    bindings: &BTreeMap<String, &Expression<'_>>,
     name: &str,
 ) -> Result<Option<Vec<String>>> {
-    shared::property_expression(object, name)
+    shared::property_expression_deep(object, name, bindings)
         .map(|value| {
             let values = shared::inferred_string_or_array(value, source, name)?;
             if values.is_empty() && name != "exclude" {
