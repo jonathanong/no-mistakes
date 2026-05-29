@@ -1384,6 +1384,64 @@ fn playwright_config_parser_covers_project_defaults() {
         &root,
     )
     .unwrap();
+
+    // object-call-import-non-fn: covers "function not found" branch in objects/calls.rs
+    // helper exports a const (not a function), so functions.get() returns None
+    let object_call_import_non_fn_path = root.join("playwright.object-call-import-non-fn.ts");
+    let object_call_import_non_fn_source =
+        std::fs::read_to_string(&object_call_import_non_fn_path).unwrap();
+    let object_call_import_non_fn = parse_playwright_fixture(
+        &object_call_import_non_fn_source,
+        &object_call_import_non_fn_path,
+        &root,
+    )
+    .unwrap()
+    .into_projects(&root, "playwright.object-call-import-non-fn.ts");
+    assert!(!object_call_import_non_fn
+        .iter()
+        .any(|p| p.name.as_deref() == Some("pw-object-call-import-non-fn")));
+
+    // root-call-import-non-fn: covers "function not found" branch in root_spreads/calls.rs
+    // helper exports a const (not a function), so functions.get() returns None
+    let root_call_import_non_fn_path = root.join("playwright.root-call-import-non-fn.ts");
+    let root_call_import_non_fn_source =
+        std::fs::read_to_string(&root_call_import_non_fn_path).unwrap();
+    parse_playwright_fixture(
+        &root_call_import_non_fn_source,
+        &root_call_import_non_fn_path,
+        &root,
+    )
+    .unwrap();
+
+    // root-star-barrel-typed: covers export_kind.is_type() || exported.is_some() continue in root_spreads.rs
+    // barrel has export type * (skipped) and export * (used) from the same source
+    let root_star_barrel_typed_import_path =
+        root.join("playwright.root-star-barrel-typed-import.ts");
+    let root_star_barrel_typed_import_source =
+        std::fs::read_to_string(&root_star_barrel_typed_import_path).unwrap();
+    let root_star_barrel_typed_import = parse_playwright_fixture(
+        &root_star_barrel_typed_import_source,
+        &root_star_barrel_typed_import_path,
+        &root,
+    )
+    .unwrap()
+    .into_projects(&root, "playwright.root-star-barrel-typed-import.ts");
+    assert!(root_star_barrel_typed_import.iter().any(|project| {
+        project.name.as_deref() == Some("pw-root-star-barrel")
+            && project.include == vec!["pw-root-star-barrel/**/*.spec.ts"]
+    }));
+
+    // root-spread-call-with-arg: covers _ => Ok(None) arm in spread_project_options
+    // call has arguments so it falls through to the wildcard arm
+    let root_spread_call_with_arg_path = root.join("playwright.root-spread-call-with-arg.ts");
+    let root_spread_call_with_arg_source =
+        std::fs::read_to_string(&root_spread_call_with_arg_path).unwrap();
+    parse_playwright_fixture(
+        &root_spread_call_with_arg_source,
+        &root_spread_call_with_arg_path,
+        &root,
+    )
+    .unwrap();
 }
 
 #[test]
@@ -2558,6 +2616,45 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     parse_vitest_fixture(
         &object_member_missing_import_source,
         &object_member_missing_import_path,
+        &root,
+    )
+    .unwrap();
+
+    // object-call-import-non-fn: covers "function not found" branch in objects/calls.rs
+    // helper exports a const (not a function), so functions.get() returns None
+    let object_call_import_non_fn_path = root.join("vitest.object-call-import-non-fn.mts");
+    let object_call_import_non_fn_source =
+        std::fs::read_to_string(&object_call_import_non_fn_path).unwrap();
+    let object_call_import_non_fn = parse_vitest_fixture(
+        &object_call_import_non_fn_source,
+        &object_call_import_non_fn_path,
+        &root,
+    )
+    .unwrap();
+    assert!(!object_call_import_non_fn
+        .iter()
+        .any(|p| p.name.as_deref() == Some("vitest-object-call-import-non-fn")));
+
+    // root-call-import-non-fn: covers "function not found" branch in root_spreads/calls.rs
+    // helper exports a const (not a function), so functions.get() returns None
+    let root_call_import_non_fn_path = root.join("vitest.root-call-import-non-fn.mts");
+    let root_call_import_non_fn_source =
+        std::fs::read_to_string(&root_call_import_non_fn_path).unwrap();
+    parse_vitest_fixture(
+        &root_call_import_non_fn_source,
+        &root_call_import_non_fn_path,
+        &root,
+    )
+    .unwrap();
+
+    // root-spread-call-with-arg: covers _ => Ok(None) arm in spread_project_options
+    // call has arguments so it falls through to the wildcard arm
+    let root_spread_call_with_arg_path = root.join("vitest.root-spread-call-with-arg.mts");
+    let root_spread_call_with_arg_source =
+        std::fs::read_to_string(&root_spread_call_with_arg_path).unwrap();
+    parse_vitest_fixture(
+        &root_spread_call_with_arg_source,
+        &root_spread_call_with_arg_path,
         &root,
     )
     .unwrap();
