@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::ts_source::facts::TsFileFacts;
 
 #[test]
 fn queue_edges_use_precomputed_shared_facts() {
@@ -101,4 +102,50 @@ fn processor_job_names_fallback_reads_symbols_from_disk() {
     let names = extract_processor_job_names(&processors, None).unwrap();
 
     assert_eq!(names, vec!["sendWelcomeEmail".to_string()]);
+}
+
+#[test]
+fn queue_edges_skip_files_missing_shared_queue_facts() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("codebase-intel"));
+    let tsconfig =
+        crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
+    let config_options = graph_config_options(&root);
+    let emails = root.join("packages/api/src/emails.mts");
+    let processors = root.join("packages/api/src/processors.mts");
+    let mut forward = EdgeMap::new();
+    let mut reverse = EdgeMap::new();
+    let facts = TsFactMap::new();
+
+    add_queue_edges(
+        &root,
+        &resolver,
+        std::slice::from_ref(&emails),
+        Some(&facts),
+        config_options.as_ref(),
+        &mut forward,
+        &mut reverse,
+    );
+    assert!(forward.is_empty());
+
+    let mut facts = TsFactMap::new();
+    facts.insert(
+        emails.clone(),
+        TsFileFacts {
+            queue_create_line: Some(1),
+            queue_name: Some("emails".to_string()),
+            ..Default::default()
+        },
+    );
+    facts.insert(processors.clone(), TsFileFacts::default());
+    add_queue_edges(
+        &root,
+        &resolver,
+        &[emails, processors],
+        Some(&facts),
+        config_options.as_ref(),
+        &mut forward,
+        &mut reverse,
+    );
+    assert!(forward.is_empty());
 }
