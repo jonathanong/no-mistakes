@@ -1,4 +1,3 @@
-use super::*;
 use crate::server_routes::types::Framework;
 use std::path::PathBuf;
 
@@ -6,6 +5,13 @@ fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/ast-snippets/server-routes/fixture")
         .join(name)
+}
+
+fn extract_file(path: &std::path::Path) -> anyhow::Result<crate::server_routes::model::FileFacts> {
+    let source = std::fs::read_to_string(path)?;
+    crate::ast::with_program(path, &source, |program, _| {
+        super::extract_program(path, &source, program)
+    })
 }
 
 #[test]

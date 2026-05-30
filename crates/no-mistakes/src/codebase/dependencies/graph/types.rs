@@ -193,6 +193,7 @@ impl GraphBuildPlan {
             backend_routes: self.routes || self.http,
             queue_usage: self.queues,
             queue_factory: self.queues,
+            queue_project: self.queues,
             http_calls: self.http,
             process_spawns: self.process,
             ..TsFactPlan::default()
@@ -216,5 +217,6 @@ fn effective_ts_fact_plan(
     fact_plan.symbols &= queue_configured;
     fact_plan.queue_usage &= queue_configured;
     fact_plan.queue_factory &= queue_configured;
+    fact_plan.queue_project &= queue_configured;
     fact_plan
 }

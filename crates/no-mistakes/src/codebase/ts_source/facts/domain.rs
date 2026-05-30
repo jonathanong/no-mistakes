@@ -18,6 +18,7 @@ pub struct TsFactContext {
     pub queue_factory_specifier: Option<String>,
     pub queue_factory_function: Option<String>,
     pub queue_factory_glob: Option<GlobSet>,
+    pub queue_project_factory_names: Vec<String>,
     pub http_prefixes: Vec<String>,
 }
 
@@ -80,6 +81,7 @@ impl Default for TsFactContext {
             queue_factory_specifier: None,
             queue_factory_function: None,
             queue_factory_glob: None,
+            queue_project_factory_names: Vec::new(),
             http_prefixes: Vec::new(),
         }
     }
@@ -92,8 +94,10 @@ pub(crate) struct DomainFacts {
     pub queue_usage: Option<QueueUsage>,
     pub queue_create_line: Option<u32>,
     pub queue_name: Option<String>,
+    pub queue_project: Option<crate::queue::extract::FileFacts>,
     pub http_calls: Vec<HttpCall>,
     pub process_spawns: Vec<SpawnEdge>,
+    pub server_routes: Option<crate::server_routes::model::FileFacts>,
 }
 
 pub(crate) fn collect_domain_facts<'a>(
@@ -130,6 +134,14 @@ pub(crate) fn collect_domain_facts<'a>(
         .queue_usage
         .then(|| extract_queue_usage_from_program(program, source));
     let (queue_create_line, queue_name) = queue_factory_facts(program, path, source, plan, context);
+    let queue_project = plan.queue_project.then(|| {
+        crate::queue::extract::extract_program_with_factories(
+            path,
+            source,
+            program,
+            &context.queue_project_factory_names,
+        )
+    });
     let http_prefixes: Vec<&str> = context.http_prefixes.iter().map(String::as_str).collect();
     let http_calls = if plan.http_calls {
         extract_http_calls_from_program(program, source, &http_prefixes)
@@ -141,14 +153,19 @@ pub(crate) fn collect_domain_facts<'a>(
     } else {
         Vec::new()
     };
+    let server_routes = plan
+        .server_routes
+        .then(|| crate::server_routes::extract::extract_program(path, source, program));
     DomainFacts {
         route_refs,
         backend_routes,
         queue_usage,
         queue_create_line,
         queue_name,
+        queue_project,
         http_calls,
         process_spawns,
+        server_routes,
     }
 }
 
