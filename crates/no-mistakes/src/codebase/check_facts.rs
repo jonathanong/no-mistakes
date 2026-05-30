@@ -1,4 +1,4 @@
-use crate::codebase::dependencies::extract::{is_indexable, ExtractedImport};
+use crate::codebase::dependencies::extract::is_indexable;
 use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts;
 use crate::codebase::storybook::StorybookFileFacts;
@@ -8,7 +8,6 @@ use crate::integration_tests::types::FileAnalysis as IntegrationFileAnalysis;
 use crate::playwright::analysis::text_types::PlaywrightTextLocator;
 use crate::playwright::playwright_tests::TestOccurrence;
 use crate::playwright::selectors::{PlaywrightSelector, SelectorRegexes};
-use crate::queue::extract::FileFacts as QueueFileFacts;
 use crate::react_traits::analyze::file::FileAnalysis as ReactFileAnalysis;
 use rayon::prelude::*;
 use std::collections::HashMap;
@@ -58,10 +57,8 @@ pub struct CheckFactStats {
 pub(crate) struct CheckFileFacts {
     pub ts: TsFileFacts,
     pub source: Option<String>,
-    pub imports: Vec<ExtractedImport>,
     pub symbols: Option<FileSymbols>,
     pub react: Option<ReactFileAnalysis>,
-    pub queue: Option<QueueFileFacts>,
     pub integration: Option<IntegrationFileAnalysis>,
     pub dynamic_imports: Option<TestFacts>,
     pub nextjs_caching: Option<Vec<NextjsCachingFinding>>,

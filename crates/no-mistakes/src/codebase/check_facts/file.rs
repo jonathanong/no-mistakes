@@ -157,10 +157,8 @@ pub(crate) fn collect_file_facts(
     Some(CheckFileFacts {
         ts,
         source: should_store_source(plan).then_some(source),
-        imports,
         symbols,
         react,
-        queue,
         integration,
         dynamic_imports,
         nextjs_caching,

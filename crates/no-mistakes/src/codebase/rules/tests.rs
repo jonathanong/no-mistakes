@@ -155,11 +155,14 @@ fn dynamic_import_test_facts(
     source: &str,
 ) -> crate::codebase::check_facts::CheckFileFacts {
     crate::codebase::check_facts::CheckFileFacts {
+        ts: crate::codebase::ts_source::facts::TsFileFacts {
+            imports: crate::codebase::dependencies::extract::ImportExtractor::for_typescript()
+                .unwrap()
+                .extract(source)
+                .unwrap(),
+            ..Default::default()
+        },
         source: Some(source.to_string()),
-        imports: crate::codebase::dependencies::extract::ImportExtractor::for_typescript()
-            .unwrap()
-            .extract(source)
-            .unwrap(),
         dynamic_imports: Some(
             test_no_unmocked_dynamic_imports::ast::extract(path, source).unwrap(),
         ),
@@ -330,7 +333,7 @@ test('bad', async () => {\n\
 })\n";
     let setup_source = std::fs::read_to_string(&setup).unwrap();
     let mut shared = crate::codebase::check_facts::CheckFactMap {
-        files: vec![test.clone(), setup.clone(), unreadable],
+        files: vec![test.clone(), setup.clone(), unreadable.clone()],
         ..Default::default()
     };
     shared
@@ -339,6 +342,15 @@ test('bad', async () => {\n\
     shared.ts.insert(
         setup.clone(),
         dynamic_import_test_facts(&setup, &setup_source),
+    );
+    shared.ts.insert(
+        unreadable.clone(),
+        crate::codebase::check_facts::CheckFileFacts {
+            source: Some(String::new()),
+            dynamic_imports: Some(Default::default()),
+            parsed: true,
+            ..Default::default()
+        },
     );
     let findings = run_check_with_facts(&root, None, None, &shared).unwrap();
     assert!(findings.is_empty());

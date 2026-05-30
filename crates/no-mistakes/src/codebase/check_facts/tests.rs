@@ -55,7 +55,7 @@ fn collect_check_facts_skips_non_indexable_files_with_minimal_plan() {
     assert_eq!(facts.stats.parse_errors, 0);
     assert_eq!(facts.ts.len(), 1);
     let file_facts = facts.ts.get(&file).expect("indexable file is parsed");
-    assert!(file_facts.imports.is_empty());
+    assert!(file_facts.ts.imports.is_empty());
     assert!(file_facts.symbols.is_none());
     assert!(file_facts.source.is_none());
 }
@@ -83,7 +83,7 @@ fn collect_check_facts_records_parse_error_details() {
     assert!(!parse_error.is_empty());
     let file_facts = facts.ts.get(&file).expect("file facts are retained");
     assert!(file_facts.source.is_some());
-    assert!(file_facts.imports.is_empty());
+    assert!(file_facts.ts.imports.is_empty());
     assert!(file_facts.symbols.is_none());
 }
 
@@ -212,10 +212,10 @@ fn collect_check_facts_parses_once_for_overlapping_fact_categories() {
     assert_eq!(facts.stats.files_parsed, 1);
     assert_eq!(facts.stats.parse_errors, 0);
     let file_facts = facts.ts.get(&file).expect("file facts are collected");
-    assert!(!file_facts.imports.is_empty());
+    assert!(!file_facts.ts.imports.is_empty());
     assert!(file_facts.symbols.is_some());
     assert!(file_facts.react.is_some());
-    assert!(file_facts.queue.is_some());
+    assert!(file_facts.ts.queue_project.is_some());
     assert!(file_facts.integration.is_some());
     assert!(file_facts.nextjs_caching.is_some());
     assert!(file_facts.dynamic_imports.is_some());

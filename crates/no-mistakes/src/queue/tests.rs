@@ -1,5 +1,4 @@
 use super::*;
-use crate::queue::extract::extract_file_with_factories;
 use crate::queue::extract_helpers::quoted_prefix;
 use crate::queue::extract_model::FileFacts;
 use crate::queue::graph_model::{diagnostics, ProjectReport};
@@ -14,6 +13,16 @@ fn fixture(name: &str) -> PathBuf {
         .join("../../test-cases/queue-ast-hop")
         .join(name)
         .join("fixture")
+}
+
+fn extract_file_with_factories(
+    path: &std::path::Path,
+    factory_names: &[String],
+) -> anyhow::Result<FileFacts> {
+    let source = std::fs::read_to_string(path)?;
+    crate::ast::with_program(path, &source, |program, _| {
+        crate::queue::extract::extract_program_with_factories(path, &source, program, factory_names)
+    })
 }
 
 #[test]
@@ -462,7 +471,10 @@ fn custom_factory_respected_in_check_mode_shared_facts() {
     };
     let facts = collect_file_facts(&root, &queue_file, &plan, None)
         .expect("should collect facts for queue file");
-    let queue_facts = facts.queue.expect("queue facts should be present");
+    let queue_facts = facts
+        .ts
+        .queue_project
+        .expect("queue facts should be present");
     assert_eq!(
         queue_facts.queue_exports.get("notificationsQueue"),
         Some(&"notifications".to_string()),
