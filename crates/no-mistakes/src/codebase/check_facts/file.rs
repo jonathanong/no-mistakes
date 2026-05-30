@@ -1,5 +1,6 @@
 use super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use crate::codebase::dependencies::extract::extract_imports_from_program;
+use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::codebase::ts_symbols::extract_symbols_from_program;
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
@@ -142,7 +143,19 @@ pub(crate) fn collect_file_facts(
                 ),
         })
     });
+    let ts = TsFileFacts {
+        source: should_store_source(plan).then_some(source.clone()),
+        imports: imports.clone(),
+        symbols: symbols.clone(),
+        queue_project: queue.clone(),
+        react_components: react
+            .as_ref()
+            .map(|analysis| analysis.components.clone())
+            .unwrap_or_default(),
+        ..Default::default()
+    };
     Some(CheckFileFacts {
+        ts,
         source: should_store_source(plan).then_some(source),
         imports,
         symbols,

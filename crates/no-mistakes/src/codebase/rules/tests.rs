@@ -316,10 +316,10 @@ test('bad', async () => {\n\
 }
 
 #[test]
-fn run_check_with_facts_propagates_reachable_dep_disk_error() {
-    // Coverage for with_facts.rs: reachable::check error branch.
-    // unreadable.mts is a directory; putting it in shared.files but not shared.ts
-    // causes reachable::check to fall back to disk and fail.
+fn run_check_with_facts_uses_shared_graph_without_reachable_dep_disk_fallback() {
+    // unreadable.mts is a directory. Shared-fact graph construction must not
+    // fall back to reading it from disk when dependency facts are already
+    // supplied for the importing test/setup files.
     let root = dynamic_import_fixture();
     let test = root.join("tests/bad.test.mts");
     let setup = root.join("tests/setup-vitest.mts");
@@ -340,8 +340,8 @@ test('bad', async () => {\n\
         setup.clone(),
         dynamic_import_test_facts(&setup, &setup_source),
     );
-    let error = run_check_with_facts(&root, None, None, &shared).unwrap_err();
-    assert!(error.to_string().contains("failed to read dependency file"));
+    let findings = run_check_with_facts(&root, None, None, &shared).unwrap();
+    assert!(findings.is_empty());
 }
 
 #[test]

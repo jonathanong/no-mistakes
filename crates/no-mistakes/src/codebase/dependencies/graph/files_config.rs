@@ -122,6 +122,9 @@ fn ts_fact_context_from_options(
         context.queue_factory_specifier = Some(options.queue.factory_specifier.clone());
         context.queue_factory_function = Some(options.queue.factory_function.clone());
         context.queue_factory_glob = compile_graph_glob(&options.queue.queue_pattern);
+        context.queue_project_factory_names = crate::config::v2::load_v2_config(root, None)
+            .map(|config| config.queues.factories)
+            .unwrap_or_default();
     }
     context
 }

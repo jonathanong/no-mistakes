@@ -7,8 +7,6 @@ fn add_queue_edges(
     forward: &mut EdgeMap,
     reverse: &mut EdgeMap,
 ) {
-    use crate::codebase::ts_queues::factory::{find_create_queue_line, find_queue_name};
-    use crate::codebase::ts_queues::usage::extract_queue_usage;
     use globset::GlobBuilder;
 
     let Some(config_options) = config_options else {
@@ -46,20 +44,12 @@ fn add_queue_edges(
         if !gs.is_match(rel) {
             continue;
         }
-        let (create_line, queue_name) = facts
+        let Some((create_line, queue_name)) = facts
             .and_then(|facts| facts.get(path))
             .map(|file_facts| (file_facts.queue_create_line, file_facts.queue_name.clone()))
-            .unwrap_or_else(|| {
-                let source = std::fs::read_to_string(path).unwrap_or_default();
-                (
-                    find_create_queue_line(
-                        &source,
-                        &opts.factory_specifier,
-                        &opts.factory_function,
-                    ),
-                    find_queue_name(&source, &opts.factory_specifier, &opts.factory_function),
-                )
-            });
+        else {
+            continue;
+        };
         if create_line.is_none() {
             continue;
         }
@@ -86,17 +76,11 @@ fn add_queue_edges(
     let queue_def_paths: HashSet<PathBuf> = def_to_queue_name.keys().cloned().collect();
 
     for path in files {
-        let fallback_usage;
-        let usage = match facts
+        let Some(usage) = facts
             .and_then(|facts| facts.get(path))
             .and_then(|file_facts| file_facts.queue_usage.as_ref())
-        {
-            Some(usage) => usage,
-            None => {
-                let source = std::fs::read_to_string(path).unwrap_or_default();
-                fallback_usage = extract_queue_usage(&source);
-                &fallback_usage
-            }
+        else {
+            continue;
         };
 
         // Resolve which imports come from queue-def files.

@@ -26,10 +26,18 @@ pub(super) const VERBS: &[&str] = &[
 pub(crate) fn extract_file(path: &Path) -> anyhow::Result<FileFacts> {
     let source = std::fs::read_to_string(path)?;
     ast::with_program(path, &source, |program, _| {
-        let mut visitor = ServerRouteVisitor::new(path, &source);
-        visitor.visit_program(program);
-        visitor.facts
+        extract_program(path, &source, program)
     })
+}
+
+pub(crate) fn extract_program(
+    path: &Path,
+    source: &str,
+    program: &oxc_ast::ast::Program<'_>,
+) -> FileFacts {
+    let mut visitor = ServerRouteVisitor::new(path, source);
+    visitor.visit_program(program);
+    visitor.facts
 }
 
 pub(super) struct ServerRouteVisitor<'a> {

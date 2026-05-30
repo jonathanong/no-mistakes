@@ -108,9 +108,24 @@ fn route_collectors_cover_configured_prefixes_and_scan_globs() {
     let admin_route = root.join("backend/api/admin.mts");
     let fake_route = root.join("src/fake-backend.mts");
     let config_options = graph_config_options(&root);
+    let fact_plan = effective_ts_fact_plan(
+        GraphBuildPlan {
+            routes: true,
+            ..GraphBuildPlan::default()
+        },
+        config_options.as_ref(),
+    );
+    let fact_context = ts_fact_context_for_plan(
+        &root,
+        GraphBuildPlan {
+            routes: true,
+            ..GraphBuildPlan::default()
+        },
+    );
+    let facts = collect_ts_facts_with_context(&all_files, fact_plan, &fact_context);
 
     let route_edges =
-        collect_route_edges(&root, &tsconfig, &all_files, None, config_options.as_ref());
+        collect_route_edges(&root, &tsconfig, &all_files, Some(&facts), config_options.as_ref());
     assert!(route_edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::RouteRef
             && from.as_file() == Some(client.as_path())
@@ -208,9 +223,17 @@ fn project_route_globs_drive_graph_route_edges_without_guardrails() {
     );
     assert!(fact_plan.route_refs);
     assert!(!fact_plan.backend_routes);
+    let fact_context = ts_fact_context_for_plan(
+        &root,
+        GraphBuildPlan {
+            routes: true,
+            ..GraphBuildPlan::default()
+        },
+    );
+    let facts = collect_ts_facts_with_context(&all_files, fact_plan, &fact_context);
 
     let route_edges =
-        collect_route_edges(&root, &tsconfig, &all_files, None, Some(&config_options));
+        collect_route_edges(&root, &tsconfig, &all_files, Some(&facts), Some(&config_options));
     assert!(route_edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::RouteRef
             && from.as_file() == Some(client.as_path())
@@ -230,7 +253,7 @@ fn project_route_globs_drive_graph_route_edges_without_guardrails() {
         &root,
         &tsconfig,
         &all_files,
-        None,
+        Some(&facts),
         Some(&invalid_legacy_options),
     );
     assert!(invalid_legacy_route_edges.iter().any(|(from, to, kind)| {

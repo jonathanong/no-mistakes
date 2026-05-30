@@ -1,6 +1,6 @@
-mod extract;
+pub(crate) mod extract;
 mod graph;
-mod model;
+pub(crate) mod model;
 mod mounts;
 mod normalize;
 mod related;

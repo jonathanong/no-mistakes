@@ -1,6 +1,5 @@
 use crate::codebase::ts_resolver::{find_tsconfig, load_tsconfig, ImportResolver, TsConfig};
 use crate::config::v2::{load_v2_config, ConfigView};
-use crate::server_routes::extract::extract_file;
 use crate::server_routes::model::{FileFacts, ProjectReport, RouteSite};
 use crate::server_routes::mounts::{prefixes_for, resolve_mounts_with_resolver};
 use crate::server_routes::normalize::{join_paths, normalize_route};
@@ -8,7 +7,6 @@ use crate::server_routes::source::{discover_source_files, relative_string};
 use crate::server_routes::types::{Diagnostic, Edge, EdgeKind, ServerRoute, Severity, Summary};
 use anyhow::Context;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
-use rayon::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
@@ -58,7 +56,7 @@ pub fn analyze_project(
         }
     }
 
-    let facts = collect_file_facts(&files);
+    let facts = collect_file_facts(&files, &root);
     Ok(build_report(&root, &facts, &tsconfig))
 }
 
@@ -68,7 +66,7 @@ pub(crate) fn route_defs_from_files(
     tsconfig: &TsConfig,
 ) -> Vec<(PathBuf, String)> {
     let root = root.canonicalize().unwrap_or(root.to_path_buf());
-    let facts = collect_file_facts(files);
+    let facts = collect_file_facts(files, &root);
     build_report(&root, &facts, tsconfig)
         .routes
         .into_iter()
@@ -76,14 +74,18 @@ pub(crate) fn route_defs_from_files(
         .collect()
 }
 
-fn collect_file_facts(files: &[PathBuf]) -> HashMap<PathBuf, FileFacts> {
-    files
-        .par_iter()
-        .filter_map(|path| {
-            extract_file(path)
-                .ok()
-                .map(|file_facts| (path.clone(), file_facts))
-        })
+fn collect_file_facts(files: &[PathBuf], root: &Path) -> HashMap<PathBuf, FileFacts> {
+    let facts = crate::codebase::ts_source::facts::collect_ts_facts_with_context(
+        files,
+        crate::codebase::ts_source::facts::TsFactPlan {
+            server_routes: true,
+            ..Default::default()
+        },
+        &crate::codebase::ts_source::facts::TsFactContext::new(root),
+    );
+    facts
+        .into_iter()
+        .filter_map(|(path, facts)| facts.server_routes.map(|routes| (path, routes)))
         .collect()
 }
 

@@ -1,10 +1,9 @@
-use crate::queue::extract::{extract_file_with_factories, FileFacts};
+use crate::queue::extract::FileFacts;
 use crate::queue::graph_build::build_report;
 use crate::queue::graph_model::{build_filter, InternalProducer, InternalWorker, ProjectReport};
 use crate::queue::resolver::{load_tsconfig, resolve_import};
 use crate::queue::source::discover_source_files;
 use crate::queue::types::QueueKey;
-use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -32,19 +31,44 @@ pub fn analyze_project(
                 .is_none_or(|f| f.is_match(path.strip_prefix(&root).unwrap_or(path)))
         })
         .collect::<Vec<_>>();
-    let facts = files
-        .par_iter()
-        .filter_map(|path| {
-            extract_file_with_factories(path, &factory_names)
-                .ok()
-                .map(|facts| (path.clone(), facts))
-        })
-        .collect::<HashMap<_, _>>();
+    let mut context = crate::codebase::ts_source::facts::TsFactContext::new(&root);
+    context.queue_project_factory_names = factory_names;
+    let ts_facts = crate::codebase::ts_source::facts::collect_ts_facts_with_context(
+        &files,
+        crate::codebase::ts_source::facts::TsFactPlan {
+            queue_project: true,
+            ..Default::default()
+        },
+        &context,
+    );
+    let facts = queue_project_facts_from_ts(&ts_facts, filter.as_ref(), &root);
 
     let queue_defs = queue_definitions(&facts);
     let producers = resolve_producers(&root, &facts, &queue_defs, &tsconfig);
     let workers = resolve_workers(&root, &facts, &queue_defs, &tsconfig);
     Ok(build_report(&root, producers, workers, &facts))
+}
+
+fn queue_project_facts_from_ts(
+    ts_facts: &crate::codebase::ts_source::facts::TsFactMap,
+    filter: Option<&globset::GlobSet>,
+    root: &Path,
+) -> HashMap<PathBuf, FileFacts> {
+    ts_facts
+        .iter()
+        .filter_map(|(path, facts)| {
+            if let Some(filter) = filter {
+                let rel = path.strip_prefix(root).unwrap_or(path);
+                if !filter.is_match(rel) {
+                    return None;
+                }
+            }
+            facts
+                .queue_project
+                .as_ref()
+                .map(|queue| (path.clone(), queue.clone()))
+        })
+        .collect()
 }
 
 fn load_factory_names(root: &Path) -> Vec<String> {
@@ -63,18 +87,8 @@ pub fn analyze_project_with_facts(
     let root = root.as_path();
     let tsconfig = load_tsconfig(root, tsconfig_path)?;
     let filter = build_filter(filters)?;
-    let mut facts = HashMap::new();
-    for (path, file_facts) in &shared.ts {
-        if let Some(filter) = &filter {
-            let rel = path.strip_prefix(root).unwrap_or(path);
-            if !filter.is_match(rel) {
-                continue;
-            }
-        }
-        if let Some(queue) = &file_facts.queue {
-            facts.insert(path.clone(), queue.clone());
-        }
-    }
+    let ts_facts = shared.ts_facts();
+    let facts = queue_project_facts_from_ts(&ts_facts, filter.as_ref(), root);
     let queue_defs = queue_definitions(&facts);
     let producers = resolve_producers(root, &facts, &queue_defs, &tsconfig);
     let workers = resolve_workers(root, &facts, &queue_defs, &tsconfig);

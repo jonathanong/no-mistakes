@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn queue_edges_cover_disk_fallback_without_precomputed_facts() {
+fn queue_edges_use_precomputed_shared_facts() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("codebase-intel"));
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
@@ -13,12 +13,27 @@ fn queue_edges_cover_disk_fallback_without_precomputed_facts() {
     let send_email = root.join("packages/api/src/send-email.mts");
     let emails = root.join("packages/api/src/emails.mts");
     let processors = root.join("packages/api/src/processors.mts");
+    let fact_plan = effective_ts_fact_plan(
+        GraphBuildPlan {
+            queues: true,
+            ..GraphBuildPlan::default()
+        },
+        config_options.as_ref(),
+    );
+    let fact_context = ts_fact_context_for_plan(
+        &root,
+        GraphBuildPlan {
+            queues: true,
+            ..GraphBuildPlan::default()
+        },
+    );
+    let facts = collect_ts_facts_with_context(graph_files.indexable(), fact_plan, &fact_context);
 
     add_queue_edges(
         &root,
         &resolver,
         graph_files.indexable(),
-        None,
+        Some(&facts),
         config_options.as_ref(),
         &mut forward,
         &mut reverse,
