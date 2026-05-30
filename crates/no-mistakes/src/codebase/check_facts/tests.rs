@@ -104,6 +104,7 @@ fn collect_check_facts_reads_raw_source_without_parsing() {
     assert_eq!(facts.stats.files_parsed, 0);
     assert_eq!(facts.stats.parse_errors, 0);
     assert!(file_facts.source.is_some());
+    assert!(file_facts.ts.source.is_some());
     assert!(file_facts.parse_error.is_none());
 }
 
@@ -144,6 +145,7 @@ fn collect_file_facts_keeps_raw_source_for_parse_and_source_type_errors() {
     )
     .expect("unsupported source type fact is recorded");
     assert!(facts.source.is_some());
+    assert!(facts.ts.source.is_some());
     assert!(facts.parse_error.is_some());
 
     let root = fixture_path("");
@@ -161,6 +163,7 @@ fn collect_file_facts_keeps_raw_source_for_parse_and_source_type_errors() {
     )
     .expect("parse error fact is recorded");
     assert!(facts.source.is_some());
+    assert!(facts.ts.source.is_some());
     assert!(facts.parse_error.is_some());
 }
 
