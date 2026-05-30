@@ -93,3 +93,12 @@ fn processor_export_kind_accepts_runtime_exports_only() {
     assert!(!is_processor_export_kind(&ExportKind::Interface));
     assert!(!is_processor_export_kind(&ExportKind::Default));
 }
+
+#[test]
+fn processor_job_names_fallback_reads_symbols_from_disk() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("codebase-intel"));
+    let processors = root.join("packages/api/src/processors.mts");
+    let names = extract_processor_job_names(&processors, None).unwrap();
+
+    assert_eq!(names, vec!["sendWelcomeEmail".to_string()]);
+}
