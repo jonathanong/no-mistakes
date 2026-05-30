@@ -51,6 +51,7 @@ struct GraphConfigOptions {
     project_route_globset: Option<GlobSet>,
     test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
     rewrites: Vec<crate::config::v2::schema::RewriteRule>,
+    queue_project_factory_names: Vec<String>,
 }
 
 fn graph_config_options(root: &Path) -> Option<GraphConfigOptions> {
@@ -76,6 +77,7 @@ fn graph_config_options(root: &Path) -> Option<GraphConfigOptions> {
         project_route_globset,
         test_filter,
         rewrites,
+        queue_project_factory_names: v2_config.as_ref().map(|c| c.queues.factories.clone()).unwrap_or_default(),
     })
 }
 
@@ -87,9 +89,7 @@ fn graph_config_options_for_plan(root: &Path, plan: GraphBuildPlan) -> Option<Gr
     }
 }
 
-fn graph_plan_needs_config(plan: GraphBuildPlan) -> bool {
-    plan.routes || plan.queues || plan.http
-}
+fn graph_plan_needs_config(plan: GraphBuildPlan) -> bool { plan.routes || plan.queues || plan.http }
 
 fn ts_fact_context_from_options(
     root: &Path,
@@ -122,9 +122,7 @@ fn ts_fact_context_from_options(
         context.queue_factory_specifier = Some(options.queue.factory_specifier.clone());
         context.queue_factory_function = Some(options.queue.factory_function.clone());
         context.queue_factory_glob = compile_graph_glob(&options.queue.queue_pattern);
-        context.queue_project_factory_names = crate::config::v2::load_v2_config(root, None)
-            .map(|config| config.queues.factories)
-            .unwrap_or_default();
+        context.queue_project_factory_names = options.queue_project_factory_names.clone();
     }
     context
 }

@@ -41,7 +41,7 @@ pub fn analyze_project(
         },
         &context,
     );
-    let facts = queue_project_facts_from_ts(&ts_facts, filter.as_ref(), &root);
+    let facts = queue_project_facts_from_ts(ts_facts, filter.as_ref(), &root);
 
     let queue_defs = queue_definitions(&facts);
     let producers = resolve_producers(&root, &facts, &queue_defs, &tsconfig);
@@ -50,23 +50,20 @@ pub fn analyze_project(
 }
 
 fn queue_project_facts_from_ts(
-    ts_facts: &crate::codebase::ts_source::facts::TsFactMap,
+    ts_facts: crate::codebase::ts_source::facts::TsFactMap,
     filter: Option<&globset::GlobSet>,
     root: &Path,
 ) -> HashMap<PathBuf, FileFacts> {
     ts_facts
-        .iter()
-        .filter_map(|(path, facts)| {
+        .into_iter()
+        .filter_map(|(path, mut facts)| {
             if let Some(filter) = filter {
-                let rel = path.strip_prefix(root).unwrap_or(path);
+                let rel = path.strip_prefix(root).unwrap_or(&path);
                 if !filter.is_match(rel) {
                     return None;
                 }
             }
-            facts
-                .queue_project
-                .as_ref()
-                .map(|queue| (path.clone(), queue.clone()))
+            facts.queue_project.take().map(|queue| (path, queue))
         })
         .collect()
 }
@@ -88,7 +85,7 @@ pub fn analyze_project_with_facts(
     let tsconfig = load_tsconfig(root, tsconfig_path)?;
     let filter = build_filter(filters)?;
     let ts_facts = shared.ts_facts();
-    let facts = queue_project_facts_from_ts(&ts_facts, filter.as_ref(), root);
+    let facts = queue_project_facts_from_ts(ts_facts, filter.as_ref(), root);
     let queue_defs = queue_definitions(&facts);
     let producers = resolve_producers(root, &facts, &queue_defs, &tsconfig);
     let workers = resolve_workers(root, &facts, &queue_defs, &tsconfig);

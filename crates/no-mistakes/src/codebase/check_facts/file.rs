@@ -145,9 +145,9 @@ pub(crate) fn collect_file_facts(
     });
     let ts = TsFileFacts {
         source: should_store_source(plan).then_some(source.clone()),
-        imports: imports.clone(),
+        imports,
         symbols: symbols.clone(),
-        queue_project: queue.clone(),
+        queue_project: queue,
         react_components: react
             .as_ref()
             .map(|analysis| analysis.components.clone())
