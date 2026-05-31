@@ -221,9 +221,8 @@ fn review_found_doc_regressions_stay_fixed() {
     let readme = read_root("README.md");
     assert!(readme.contains("<playwright\\|vitest>"));
 
-    let legacy = read_root("docs/configuration/legacy.md");
-    assert!(legacy.contains(".guardrailsrc.{yaml,yml,json,jsonc}"));
-    assert!(!legacy.contains("legacy guardrails config files"));
+    let configuration = read_root("docs/configuration/README.md");
+    assert!(!configuration.contains("legacy.md"));
 
     let node_api = read_root("docs/node-api.md");
     assert!(node_api.contains("(async () => {"));

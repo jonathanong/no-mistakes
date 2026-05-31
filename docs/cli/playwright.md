@@ -12,4 +12,4 @@ Analyze Playwright route, selector, fetch, and assertion coverage.
 Shared options: `--root`, `--config`, repeatable `--playwright-config`,
 `--project`, `--json`, `--assert-conditional-tests`,
 `--allow-skipped-tests`, `--assert-unique-test-ids`,
-`--assert-unique-html-ids`, and deprecated `--assert-unique-selectors`.
+and `--assert-unique-html-ids`.

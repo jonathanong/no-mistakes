@@ -24,4 +24,3 @@ rules:
 - [Rules](rules.md)
 - [Test plan](test-plan.md)
 - [Filesystem](filesystem.md)
-- [Legacy config migration](legacy.md)
