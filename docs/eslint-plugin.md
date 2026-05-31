@@ -52,7 +52,7 @@ Rules not listed here have no options.
 | `playwright-naming-convention` | `{ selectorAttributes?: string[], pattern?: string }`, default kebab-case pattern. |
 | `playwright-no-empty` | `{ selectorAttributes?: string[] }`. |
 | `playwright-prefer-get-by-test-id` | `{ selectorAttributes?: string[] }`. |
-| `playwright-require-exported-component-attribute` | `{ attributes?: string[], componentNamePattern?: string, components?: string[], ignoreComponents?: string[], wrappers?: string[], allowSpreadAttributes?: boolean, exportTypes?: ("named" | "default")[], checkAnonymousDefault?: boolean }`. |
+| `playwright-require-exported-component-attribute` | `{ attributes?: string[], componentNamePattern?: string, components?: string[], ignoreComponents?: string[], wrappers?: string[], allowSpreadAttributes?: boolean, exportTypes?: ("named" \| "default")[], checkAnonymousDefault?: boolean }`. |
 | `playwright-require-interactive-test-id` | `{ selectorAttributes?: string[] }`. |
 | `playwright-unique` | `{ selectorAttributes?: string[] }`. |
 | `nextjs-no-manual-script-tags` | `{ allowInlineScriptIds?: string[], allowInlineScriptIdPatterns?: string[] }`. |

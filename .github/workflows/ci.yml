@@ -94,7 +94,7 @@ jobs:
         run: npm run lint:spell
 
       - name: Run Lychee
-        uses: lycheeverse/lychee-action@v2
+        uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411
         with:
           args: >-
             --no-progress

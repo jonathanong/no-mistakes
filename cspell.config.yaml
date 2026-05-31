@@ -18,6 +18,7 @@ words:
   - codecov
   - emnapi
   - glibc
+  - guardrailsrc
   - jsonc
   - linecount
   - markdown

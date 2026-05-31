@@ -7,7 +7,10 @@ Legacy config stems are still read for compatibility:
 - `.playwright-ast-coverage.*`
 - `.react-traits.*`
 - `.next-to-fetch.*`
-- legacy guardrails config files
+- `.guardrailsrc.{yaml,yml,json,jsonc}` discovered by walking upward from the
+  requested root
+- `guardrailsrc.{yaml,yml,json,jsonc}` only when passed explicitly through
+  `--config`
 
 When migrating, move per-tool settings into `tests`, `projects`, `testPlan`,
 and `rules`. Prefer `testPlan.<framework>.fullSuiteTriggers` over the

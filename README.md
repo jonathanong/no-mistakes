@@ -15,7 +15,7 @@ that need small, reliable answers they can feed into follow-up edits and tests.
 | What can this change affect? | `no-mistakes dependents <file> --format paths` |
 | Who uses this export? | `no-mistakes dependents <file>#Symbol --format json` |
 | What does this module export/import? | `no-mistakes symbols <file> --include both --format json` |
-| Which tests should run? | `no-mistakes tests plan <playwright|vitest> --format json` |
+| Which tests should run? | `no-mistakes tests plan <playwright\|vitest> --format json` |
 | Why was a test selected? | `no-mistakes tests why <test> --plan plan.json` |
 | Which Playwright tests cover this page? | `no-mistakes playwright related <file> --json` |
 | Which queue/server files are connected? | `no-mistakes queues related <file> --json`; `no-mistakes server related <file> --json` |

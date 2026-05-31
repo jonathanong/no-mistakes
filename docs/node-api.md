@@ -7,19 +7,23 @@ queries without subprocess overhead.
 ```js
 const { analyzeProject, dependents, symbols, testsPlan } = require("no-mistakes");
 
-const impact = await dependents({
-  root: process.cwd(),
-  files: ["src/api.mts#handler"],
-  tests: ["vitest"],
-});
+(async () => {
+  const impact = await dependents({
+    root: process.cwd(),
+    files: ["src/api.mts#handler"],
+    tests: ["vitest"],
+  });
 
-const report = await analyzeProject({
-  root: process.cwd(),
-  reports: [
-    { type: "symbols", files: ["src/api.mts"], include: "both" },
-    { type: "check" },
-  ],
-});
+  const report = await analyzeProject({
+    root: process.cwd(),
+    reports: [
+      { type: "symbols", files: ["src/api.mts"], include: "both" },
+      { type: "check" },
+    ],
+  });
+
+  console.log({ impact, report });
+})();
 ```
 
 ## CLI Mapping
@@ -37,10 +41,10 @@ const report = await analyzeProject({
 | `tests why` | `testsWhy(options)` |
 | `tests comment` | `testsComment(options)` |
 | `tests graph` | `testsGraph(options)` or `testsGraphMermaid(options)` |
-| `playwright check|edges|related|tests` | `playwrightCheck`, `playwrightEdges`, `playwrightRelated`, `playwrightTests` |
-| `queues edges|related|check` | `queueEdges`, `queueRelated`, `queueCheck` |
-| `server routes|edges|related` | `serverRouteList`, `serverRouteEdges`, `serverRouteRelated` |
-| `react analyze|check` | `reactAnalyze`, `reactCheck` |
+| `playwright check\|edges\|related\|tests` | `playwrightCheck`, `playwrightEdges`, `playwrightRelated`, `playwrightTests` |
+| `queues edges\|related\|check` | `queueEdges`, `queueRelated`, `queueCheck` |
+| `server routes\|edges\|related` | `serverRouteList`, `serverRouteEdges`, `serverRouteRelated` |
+| `react analyze\|check` | `reactAnalyze`, `reactCheck` |
 
 ## Agent Defaults
 

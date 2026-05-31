@@ -12,8 +12,12 @@ fn read(path: &Path) -> String {
 
 fn joined_docs(dir: &Path) -> String {
     let mut body = String::new();
-    for entry in std::fs::read_dir(dir).unwrap() {
-        let path = entry.unwrap().path();
+    let mut paths = std::fs::read_dir(dir)
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .collect::<Vec<_>>();
+    paths.sort();
+    for path in paths {
         if path.extension().and_then(|ext| ext.to_str()) == Some("md") {
             body.push_str(&read(&path));
             body.push('\n');
@@ -207,4 +211,42 @@ fn rule_docs_use_supported_option_examples() {
             assert!(!body.contains(needle), "{file} still contains `{needle}`");
         }
     }
+}
+
+#[test]
+fn review_found_doc_regressions_stay_fixed() {
+    let root = repo_root();
+    let read_root = |path: &str| read(&root.join(path));
+
+    let readme = read_root("README.md");
+    assert!(readme.contains("<playwright\\|vitest>"));
+
+    let legacy = read_root("docs/configuration/legacy.md");
+    assert!(legacy.contains(".guardrailsrc.{yaml,yml,json,jsonc}"));
+    assert!(!legacy.contains("legacy guardrails config files"));
+
+    let node_api = read_root("docs/node-api.md");
+    assert!(node_api.contains("(async () => {"));
+    assert!(node_api.contains("playwright check\\|edges\\|related\\|tests"));
+    assert!(node_api.contains("queues edges\\|related\\|check"));
+    assert!(node_api.contains("server routes\\|edges\\|related"));
+    assert!(node_api.contains("react analyze\\|check"));
+
+    let eslint_plugin = read_root("docs/eslint-plugin.md");
+    assert!(eslint_plugin.contains(r#""named" \| "default""#));
+
+    for rule_doc in [
+        "docs/rules/forbidden-dependencies.md",
+        "docs/rules/no-empty-or-comments-only-files.md",
+    ] {
+        let body = read_root(rule_doc);
+        assert!(body.contains("Compliant example:"), "{rule_doc}");
+        assert!(body.contains("Suppression caveat:"), "{rule_doc}");
+    }
+
+    let limits = read_root("skills/no-mistakes/references/limits-and-fallbacks.md");
+    assert!(limits.contains(r#"spawn("scripts/seed.mts", [])"#));
+    assert!(limits.contains("spawn(scriptName, [])"));
+    assert!(limits.contains(r#"page.locator('[data-testid="submit"]').click()"#));
+    assert!(limits.contains(r#"page.locator(`[data-testid="${id}"]`).click()"#));
 }

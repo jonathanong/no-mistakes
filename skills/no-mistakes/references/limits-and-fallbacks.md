@@ -83,6 +83,8 @@ Static literals produce graph edges:
 router.push("/settings");
 await fetch("/api/users");
 await queue.add("sendWelcome", payload);
+spawn("scripts/seed.mts", []);
+page.locator('[data-testid="submit"]').click();
 ```
 
 Dynamic values are skipped or reported as unsupported:
@@ -91,10 +93,13 @@ Dynamic values are skipped or reported as unsupported:
 router.push(`/users/${id}`);
 await fetch(`/api/${resource}`);
 await queue.add(jobName, payload);
+spawn(scriptName, []);
+page.locator(`[data-testid="${id}"]`).click();
 ```
 
 Use `rg` for dynamic call-site discovery and prefer static literals when the
 relationship should be visible to agents.
 
 Text-based Playwright selector edges are approximate. Prefer exact configured
-test ID attributes for strong route/component coverage.
+test ID attributes and literal locator values for strong route/component
+coverage.
