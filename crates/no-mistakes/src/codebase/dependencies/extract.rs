@@ -107,12 +107,20 @@ fn binding_identifier_name<'a>(pattern: &'a oxc::ast::ast::BindingPattern<'a>) -
     }
 }
 
-fn simple_callee_name<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
+fn simple_callee_name(expr: &Expression<'_>) -> Option<String> {
     match expr {
-        Expression::Identifier(ident) => Some(ident.name.as_str()),
+        Expression::Identifier(ident) => Some(ident.name.to_string()),
         Expression::ParenthesizedExpression(parenthesized) => {
             simple_callee_name(&parenthesized.expression)
         }
+        Expression::StaticMemberExpression(member) => match &member.object {
+            Expression::Identifier(object) => Some(format!(
+                "{}.{}",
+                object.name.as_str(),
+                member.property.name.as_str()
+            )),
+            _ => None,
+        },
         _ => None,
     }
 }

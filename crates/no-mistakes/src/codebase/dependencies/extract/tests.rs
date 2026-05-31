@@ -270,6 +270,23 @@ fn fixture_function_expression_import_tracks_named_scope() {
 }
 
 #[test]
+fn static_member_call_records_namespace_member_name() {
+    let allocator = Allocator::default();
+    let ret = Parser::new(
+        &allocator,
+        "function run() { dates.parseDate(); }",
+        SourceType::ts(),
+    )
+    .parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+
+    assert_eq!(facts.function_calls.len(), 1);
+    assert_eq!(facts.function_calls[0].caller.as_deref(), Some("run"));
+    assert_eq!(facts.function_calls[0].callee, "dates.parseDate");
+}
+
+#[test]
 fn fixture_function_expression_falls_back_to_inner_name() {
     let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/import-facts/fixture/destructured-function-expression.mts");

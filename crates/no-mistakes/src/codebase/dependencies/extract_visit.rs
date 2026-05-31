@@ -187,7 +187,7 @@ impl<'a> Visit<'a> for ImportCollector {
         } else if let Some(callee) = simple_callee_name(&call.callee) {
             self.function_calls.push(FunctionCall {
                 caller: self.current_function(),
-                callee: callee.to_string(),
+                callee,
             });
         } else {
             let caller = self.current_function();

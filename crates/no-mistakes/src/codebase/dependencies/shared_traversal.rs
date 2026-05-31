@@ -43,8 +43,13 @@ pub(crate) fn collect_and_filter_entries_shared(
     cwd_early: &Path,
     shared: &mut SharedTraversalContext,
 ) -> Result<TraversalResult> {
-    let entrypoints =
-        resolve_entrypoints_with_files(&args.files, &shared.root, cwd_early, &shared.graph_files);
+    let entrypoints = resolve_entrypoints_with_files(
+        &args.files,
+        &shared.root,
+        cwd_early,
+        &shared.graph_files,
+        args.symbols,
+    );
 
     validate_direction(&direction, &entrypoints)?;
 

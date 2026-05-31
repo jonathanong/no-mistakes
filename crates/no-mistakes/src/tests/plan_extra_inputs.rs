@@ -163,17 +163,18 @@ pub(crate) fn trace_entrypoints(
             });
 
         if test_filter.is_match(root, &normalized) {
+            let rel_test = relative_path(root, &normalized);
             let entry = selected_map
-                .entry(normalized)
+                .entry(normalized.clone())
                 .or_insert_with(|| SelectedTest {
-                    test_file: rel_changed.clone(),
+                    test_file: rel_test,
                     confidence: Confidence::High,
                     targets: Vec::new(),
                     reasons: Vec::new(),
                 });
             let reason = ImpactReason {
                 changed_file: rel_changed,
-                path: vec![entry.test_file.clone()],
+                path: vec![slash_node_name(&start_node, root)],
                 via: vec!["self".to_string()],
             };
             if !entry.reasons.contains(&reason) {

@@ -17,6 +17,44 @@ fn collect_symbol_edges(
 
         for export in &symbols.exports {
             if export.name == "*" {
+                if let ExportKind::ReExport { source, imported } = &export.kind {
+                    if imported == "*" {
+                        if let Some(target) = resolver.resolve(source, path) {
+                            if let Some(target_symbols) =
+                                facts.get(&target).and_then(|facts| facts.symbols.as_ref())
+                            {
+                                for target_export in &target_symbols.exports {
+                                    if target_export.name == "*" {
+                                        continue;
+                                    }
+                                    let reexported_symbol = export_symbol_name(target_export);
+                                    if reexported_symbol == "default" {
+                                        continue;
+                                    }
+                                    edges.push((
+                                        NodeId::File(path.clone()),
+                                        NodeId::Symbol {
+                                            file: path.clone(),
+                                            symbol: reexported_symbol.clone(),
+                                        },
+                                        symbol_edge_kind(export.is_type_only),
+                                    ));
+                                    edges.push((
+                                        NodeId::Symbol {
+                                            file: path.clone(),
+                                            symbol: reexported_symbol.clone(),
+                                        },
+                                        NodeId::Symbol {
+                                            file: target.clone(),
+                                            symbol: reexported_symbol,
+                                        },
+                                        symbol_edge_kind(export.is_type_only),
+                                    ));
+                                }
+                            }
+                        }
+                    }
+                }
                 continue;
             }
             let export_symbol = export_symbol_name(export);
@@ -52,22 +90,25 @@ fn collect_symbol_edges(
         }
 
         let imported_symbols = imported_symbol_map(path, symbols, resolver);
+        let namespace_imports = namespace_import_map(path, symbols, resolver);
         for export in &symbols.exports {
             if matches!(export.kind, ExportKind::ReExport { .. }) || export.name == "*" {
                 continue;
             }
             let local_symbol = export_local_name(export);
-            if let Some((target, imported, is_type_only)) = imported_symbols.get(&local_symbol) {
+            if let Some((target, imported, is_type_only)) =
+                resolve_imported_callee(&local_symbol, &imported_symbols, &namespace_imports)
+            {
                 edges.push((
                     NodeId::Symbol {
                         file: path.clone(),
                         symbol: export_symbol_name(export),
                     },
                     NodeId::Symbol {
-                        file: target.clone(),
-                        symbol: imported.clone(),
+                        file: target,
+                        symbol: imported,
                     },
-                    symbol_edge_kind(*is_type_only),
+                    symbol_edge_kind(is_type_only),
                 ));
             }
         }
@@ -88,8 +129,11 @@ fn collect_symbol_edges(
                         continue;
                     };
                     for callee in callees {
-                        if let Some((target, imported, is_type_only)) =
-                            imported_symbols.get(callee)
+                        if let Some((target, imported, is_type_only)) = resolve_imported_callee(
+                            callee,
+                            &imported_symbols,
+                            &namespace_imports,
+                        )
                         {
                             edges.push((
                                 NodeId::Symbol {
@@ -97,10 +141,10 @@ fn collect_symbol_edges(
                                     symbol: caller_export.clone(),
                                 },
                                 NodeId::Symbol {
-                                    file: target.clone(),
-                                    symbol: imported.clone(),
+                                    file: target,
+                                    symbol: imported,
                                 },
-                                symbol_edge_kind(*is_type_only),
+                                symbol_edge_kind(is_type_only),
                             ));
                         } else if calls_by_caller.contains_key(callee) {
                             queue.push_back(callee.clone());

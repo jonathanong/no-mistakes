@@ -30,6 +30,36 @@ fn imported_symbol_map(
     map
 }
 
+fn namespace_import_map(
+    path: &Path,
+    symbols: &crate::codebase::ts_symbols::FileSymbols,
+    resolver: &ImportResolver<'_>,
+) -> HashMap<String, (PathBuf, bool)> {
+    let mut map = HashMap::new();
+    for import in &symbols.imports {
+        if import.imported != "*" {
+            continue;
+        }
+        if let Some(target) = resolver.resolve(&import.source, path) {
+            map.insert(import.local.clone(), (target, import.is_type_only));
+        }
+    }
+    map
+}
+
+fn resolve_imported_callee(
+    callee: &str,
+    imported_symbols: &HashMap<String, (PathBuf, String, bool)>,
+    namespace_imports: &HashMap<String, (PathBuf, bool)>,
+) -> Option<(PathBuf, String, bool)> {
+    if let Some((target, imported, is_type_only)) = imported_symbols.get(callee) {
+        return Some((target.clone(), imported.clone(), *is_type_only));
+    }
+    let (namespace, member) = callee.split_once('.')?;
+    let (target, is_type_only) = namespace_imports.get(namespace)?;
+    Some((target.clone(), member.to_string(), *is_type_only))
+}
+
 fn local_call_graph(
     calls: &[crate::codebase::dependencies::extract::FunctionCall],
 ) -> HashMap<String, Vec<String>> {
