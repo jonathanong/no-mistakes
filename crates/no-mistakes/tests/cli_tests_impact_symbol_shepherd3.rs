@@ -130,6 +130,44 @@ fn dependencies_symbols_do_not_attach_side_effect_imports_to_type_exports() {
 }
 
 #[test]
+fn dependencies_symbols_treat_local_type_specifier_exports_as_type_only() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "local-type-specifier-export.mts#Public",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-type",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "source.mts#SourceShape\n");
+}
+
+#[test]
+fn dependencies_symbols_keep_specifier_type_later_exports_scoped() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "specifier-type-later-export.mts#Public",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-type",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "source.mts\n");
+}
+
+#[test]
 fn dependencies_symbols_scope_later_exported_computed_class_keys() {
     let root = fixture("symbol-export");
     let output = run(&[
@@ -303,6 +341,25 @@ fn dependencies_symbols_do_not_emit_owner_bridges_for_relationship_filters() {
 
     assert!(output.status.success());
     assert_eq!(stdout(&output), "dynamic-chunk.mts\n");
+}
+
+#[test]
+fn dependencies_symbols_preserve_class_types_through_type_star_reexports() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "type-star-class-barrel.mts#Api",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-type",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "type-star-class-source.mts#Api\n");
 }
 
 #[test]

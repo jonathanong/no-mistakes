@@ -211,6 +211,19 @@ export type * from './types.mts';
 }
 
 #[test]
+fn local_type_specifier_exports_are_type_only() {
+    let s = syms(
+        r#"
+type Public = string;
+interface Shape {}
+export { Public, Shape };
+"#,
+    );
+    assert_eq!(s.exports.len(), 2);
+    assert!(s.exports.iter().all(|export| export.is_type_only));
+}
+
+#[test]
 fn export_renamed_reexport() {
     let s = syms("export { foo as bar } from './foo.mts';");
     assert_eq!(s.exports[0].name, "bar");

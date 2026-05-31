@@ -93,12 +93,13 @@ pub fn extract_imports_from_program<'a>(program: &Program<'a>) -> Vec<ExtractedI
 
 pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFacts {
     let mut collector = ImportCollector::default();
+    let local_type_names = local_type_declaration_names(program);
     collector
         .exported_functions
-        .extend(later_named_value_exports(program));
+        .extend(later_named_value_exports(program, &local_type_names));
     collector
         .later_exported_type_names
-        .extend(later_named_type_exports(program));
+        .extend(later_named_type_exports(program, &local_type_names));
     collector.visit_program(program);
     let callable_scopes = collector.callable_scopes;
     let exported_type_scopes = collector.exported_type_scopes;
@@ -118,7 +119,10 @@ pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFac
     }
 }
 
-fn later_named_value_exports<'a>(program: &Program<'a>) -> Vec<String> {
+fn later_named_value_exports<'a>(
+    program: &Program<'a>,
+    local_type_names: &HashSet<String>,
+) -> Vec<String> {
     let mut exports = Vec::new();
     for statement in &program.body {
         let Statement::ExportNamedDeclaration(export) = statement else {
@@ -132,6 +136,9 @@ fn later_named_value_exports<'a>(program: &Program<'a>) -> Vec<String> {
                 continue;
             }
             if let Some(name) = module_export_name_name(&specifier.local) {
+                if local_type_names.contains(name) {
+                    continue;
+                }
                 exports.push(name.to_string());
             }
         }
@@ -139,22 +146,43 @@ fn later_named_value_exports<'a>(program: &Program<'a>) -> Vec<String> {
     exports
 }
 
-fn later_named_type_exports<'a>(program: &Program<'a>) -> Vec<String> {
+fn later_named_type_exports<'a>(
+    program: &Program<'a>,
+    local_type_names: &HashSet<String>,
+) -> Vec<String> {
     let mut exports = Vec::new();
     for statement in &program.body {
         let Statement::ExportNamedDeclaration(export) = statement else {
             continue;
         };
-        if export.source.is_some() || !export.export_kind.is_type() {
+        if export.source.is_some() {
             continue;
         }
         for specifier in &export.specifiers {
             if let Some(name) = module_export_name_name(&specifier.local) {
+                if !export.export_kind.is_type()
+                    && !specifier.export_kind.is_type()
+                    && !local_type_names.contains(name)
+                {
+                    continue;
+                }
                 exports.push(name.to_string());
             }
         }
     }
     exports
+}
+
+fn local_type_declaration_names<'a>(program: &Program<'a>) -> HashSet<String> {
+    program
+        .body
+        .iter()
+        .filter_map(|stmt| match stmt {
+            Statement::TSTypeAliasDeclaration(decl) => Some(decl.id.name.as_str().to_string()),
+            Statement::TSInterfaceDeclaration(decl) => Some(decl.id.name.as_str().to_string()),
+            _ => None,
+        })
+        .collect()
 }
 
 include!("extract_visit.rs");

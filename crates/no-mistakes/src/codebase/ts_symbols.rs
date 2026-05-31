@@ -8,6 +8,7 @@ use oxc::ast::ast::{
 };
 use oxc::parser::Parser;
 use oxc::span::SourceType;
+use std::collections::HashSet;
 include!("ts_symbols/types.rs");
 include!("ts_symbols/imports.rs");
 include!("ts_symbols/export_named.rs");

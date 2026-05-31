@@ -100,7 +100,7 @@ fn collect_concrete_star_reexport(
     reexport_kind: StarReexportKind,
     candidates: &mut Vec<StarReexportCandidate>,
 ) {
-    if reexport_kind.export_is_type_only && !target_export.is_type_only {
+    if reexport_kind.export_is_type_only && !export_has_type_namespace(target_export) {
         return;
     }
     let reexported_symbol = export_symbol_name(target_export);
@@ -119,6 +119,10 @@ fn collect_concrete_star_reexport(
         export_key,
         kind,
     });
+}
+
+fn export_has_type_namespace(export: &crate::codebase::ts_symbols::Export) -> bool {
+    export.is_type_only || matches!(export.kind, ExportKind::Class | ExportKind::Enum)
 }
 
 fn collect_nested_star_reexport(

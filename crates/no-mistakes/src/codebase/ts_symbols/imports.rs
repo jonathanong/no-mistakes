@@ -1,8 +1,13 @@
-fn process_statement(stmt: &Statement, source: &str, out: &mut FileSymbols) {
+fn process_statement(
+    stmt: &Statement,
+    source: &str,
+    local_type_names: &HashSet<String>,
+    out: &mut FileSymbols,
+) {
     match stmt {
         Statement::ImportDeclaration(import) => process_import_declaration(import, source, out),
         Statement::ExportNamedDeclaration(export) => {
-            process_export_named_declaration(export, source, out)
+            process_export_named_declaration(export, source, local_type_names, out)
         }
         Statement::ExportDefaultDeclaration(export) => {
             process_export_default_declaration(export, source, out)

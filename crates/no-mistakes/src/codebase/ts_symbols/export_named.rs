@@ -1,6 +1,7 @@
 fn process_export_named_declaration(
     export: &ExportNamedDeclaration<'_>,
     source: &str,
+    local_type_names: &HashSet<String>,
     out: &mut FileSymbols,
 ) {
     let line = byte_offset_to_line(source, export.span.start as usize);
@@ -100,7 +101,9 @@ fn process_export_named_declaration(
             local: (local != spec.exported.name().as_str()).then_some(local),
             kind: ExportKind::Const,
             line,
-            is_type_only: export_is_type || spec.export_kind.is_type(),
+            is_type_only: export_is_type
+                || spec.export_kind.is_type()
+                || local_type_names.contains(spec.local.name().as_str()),
         });
     }
 }
