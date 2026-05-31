@@ -1,57 +1,33 @@
 # Documentation
 
-`no-mistakes` is a set of local, deterministic AST tools for codebase
-intelligence. The tools are designed for human maintainers and AI agents that
-need reliable answers about imports, exported APIs, test impact, routes,
-selectors, fetch calls, queue hops, server routes, and React component traits.
+`no-mistakes` provides local, deterministic AST tools for codebase
+intelligence. The docs are organized around agent tasks: choose a command,
+request structured output, understand config, and keep source code analyzable.
 
-## What To Use
+## Start Here
 
-| Goal | Command |
+| Goal | Doc |
 | --- | --- |
-| Files imported by a file | `no-mistakes dependencies <file>` |
-| Files affected by a change | `no-mistakes dependents <file>` or `no-mistakes related <file>` |
-| Files importing a named export | `no-mistakes dependents <file>#Symbol` |
-| Exports/imports of a TS/JS module | `no-mistakes symbols <file>` |
-| React component traits | `no-mistakes react analyze <glob>` |
-| Queue producer/worker hops | `no-mistakes queues edges` |
-| Server route graph | `no-mistakes server routes` |
-| Global project checks | `no-mistakes check` |
-| Playwright route/selector coverage | `no-mistakes playwright check` |
-| Tests related to a page/component | `no-mistakes playwright related <file>` |
-| Playwright assertions grouped by test | `no-mistakes playwright tests` |
-| Next.js routes to fetch calls | `no-mistakes fetches` |
-| File-local linting | `eslint-plugin-no-mistakes` |
+| Pick the right CLI command | [CLI commands](cli/README.md) |
+| Call the async Node API | [Node/N-API guide](node-api.md) |
+| Configure projects, tests, selectors, and rules | [Configuration](configuration/README.md) |
+| Configure repository checks | [no-mistakes rules](rules/README.md) |
+| Keep file-local code analyzable | [ESLint rules](eslint-rules/README.md) |
+| Understand static-analysis limits | [AST analysis behavior](ast-analysis.md) |
+| Use the tool as an AI agent | [Agent guide](agent-guide.md) |
 
-## Documentation Map
+## Reference
 
-- [CLI reference](cli-reference.md) lists commands, flags, output formats, and
-  common examples for every binary.
-- [Architecture](architecture.md) codifies the single-pass, in-memory,
-  graph-based, parallel execution model.
-- [Graph edges](graph-edges.md) lists every dependency graph edge kind with
-  fixture-backed proof.
-- [AST analysis behavior](ast-analysis.md) describes what static code forms are
-  recognized and where heuristics intentionally stop.
-- [Agent guide](agent-guide.md) gives command-selection and pre-finish workflows
-  for AI agents.
-- [ESLint and Oxlint plugins](eslint-plugin.md) documents lint rules that keep
-  source code analyzable by the CLIs.
-
-## Design Constraints
-
-- Local filesystem input only: no services, databases, or persistent caches.
-  In-memory per-run memoization is allowed to avoid duplicate reads and AST work.
-- Deterministic AST extraction plus explicit heuristics.
-- Prefer static, literal code forms so agents and CI can reason about behavior.
-- JSON and path outputs are intended for automation; human and Markdown outputs
-  are intended for review.
-- When a rule is file-local, prefer an ESLint/Oxlint rule. When a rule needs a
-  project graph, use a CLI check.
+- [Architecture](architecture.md) describes the one-pass, in-memory, graph-based
+  execution model.
+- [Graph edges](graph-edges.md) lists dependency edge kinds with fixture-backed
+  examples, counterexamples, relationship filters, and caveats.
+- [Test planning](test-plan.md) explains configured test selection in more
+  depth.
+- [Legacy CLI reference](cli-reference.md) and [legacy ESLint reference](eslint-plugin.md)
+  remain compatibility landing pages that point to the split docs.
 
 ## Validation
-
-Run link checks with lychee:
 
 ```sh
 lychee --no-progress --exclude-path '^fixtures/' README.md 'docs/**/*.md' 'skills/**/*.md' 'packages/*/README.md' 'crates/*/README.md' CLAUDE.md

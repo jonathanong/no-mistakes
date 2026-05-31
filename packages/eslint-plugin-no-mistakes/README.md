@@ -7,4 +7,4 @@ static enough for `no-mistakes` analyzers and AI agents.
 npm install --save-dev eslint-plugin-no-mistakes
 ```
 
-See [docs/eslint-plugin.md](../../docs/eslint-plugin.md).
+See the [ESLint rule index](../../docs/eslint-rules/README.md).

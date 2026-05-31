@@ -74,3 +74,27 @@ Exception: Markdown files, CI YAML workflows, and process spawn configs particip
 ## Namespace imports and symbol queries
 
 `import * as ns from '...'` matches ALL no-mistakes symbols in a `no-mistakes dependents <file>#SYMBOL` query. If you need to verify a specific symbol is actually used (not just the namespace), search the callers manually with `rg`.
+
+## Route, HTTP, queue, process, and selector dynamics
+
+Static literals produce graph edges:
+
+```ts
+router.push("/settings");
+await fetch("/api/users");
+await queue.add("sendWelcome", payload);
+```
+
+Dynamic values are skipped or reported as unsupported:
+
+```ts
+router.push(`/users/${id}`);
+await fetch(`/api/${resource}`);
+await queue.add(jobName, payload);
+```
+
+Use `rg` for dynamic call-site discovery and prefer static literals when the
+relationship should be visible to agents.
+
+Text-based Playwright selector edges are approximate. Prefer exact configured
+test ID attributes for strong route/component coverage.

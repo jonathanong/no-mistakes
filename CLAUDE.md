@@ -53,6 +53,23 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - All shared Rust code belongs in `no-mistakes`. Crates must not depend on one another directly. If two crates need the same helper, lift it into `no-mistakes` first.
 - When adding or changing a CLI-facing capability, update the Rust library entrypoint,
   N-API binding, JS exports/types, and fixture-backed tests in the same change.
+- When adding or changing a CLI command, update `docs/cli/*`, the Node API docs
+  when there is programmatic parity, and the `skills/no-mistakes` references.
+- When adding or changing a `no-mistakes check` rule, update `docs/rules/*`
+  with a clear example, counterexample, fix guidance, and any suppression caveats.
+- When adding or changing an ESLint/Oxlint rule, update
+  `docs/eslint-rules/*` with a clear example, counterexample, and fix guidance.
+- When adding a graph edge kind or relationship filter, update
+  `docs/graph-edges.md` with direction, filter mapping, examples, and caveats.
+
+## Agent Best Practices
+
+- Prefer `--format json` for parseable answers and `--format paths` for command
+  substitution. Avoid parsing human output.
+- Pass `--root` and package-local `--tsconfig` explicitly in monorepos.
+- Use the async Node/N-API API, especially `analyzeProject()`, for repeated
+  in-process queries instead of repeated shell commands.
+- Use `rg` for exact call lines after graph commands identify the relevant files.
 
 ## Coverage
 

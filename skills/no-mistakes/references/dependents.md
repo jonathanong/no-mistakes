@@ -95,7 +95,7 @@ src/other.mts
 ## Notes
 
 - Static imports/re-exports, type-only imports/references, string-literal dynamic `import()`, and string-literal `require()` are tracked under `--relationship import`
-- Route/queue edges are only active when `.guardrailsrc.yml` defines the relevant config
+- Route/queue edges are only active when `.no-mistakes.yml` defines the relevant config
 - `http` edges connect static HTTP client paths, including non-interpolated template literals, to backend route-definition files
 - `process` edges connect `spawn`/`exec`/Playwright `webServer` entries to their entry files
 - Patterns ending in `/` in `--filter` collapse results to that folder level

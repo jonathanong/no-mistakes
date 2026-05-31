@@ -97,6 +97,6 @@ src/main.mts
 - Bare npm specifiers (`express`, `@scope/pkg`) are terminal module nodes
 - `package.json` dependency declarations are reported as `package` edges
 - Static imports/re-exports, type-only imports/references, string-literal dynamic `import()`, and string-literal `require()` are tracked under `--relationship import`
-- Route/queue edges are only active when `.guardrailsrc.yml` defines the relevant config
+- Route/queue edges are only active when `.no-mistakes.yml` defines the relevant config
 - Patterns ending in `/` in `--filter` collapse results to that folder level
 - `#SYMBOL` syntax is NOT supported for `no-mistakes dependencies` (only for `no-mistakes dependents`)

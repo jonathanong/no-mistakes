@@ -73,7 +73,8 @@ await navigateTo(page, "/settings");
 
 Absolute URLs count only when they match a literal Playwright `baseURL`.
 Negative `.not.toHaveURL(...)` assertions are ignored. Conditional and skipped
-tests are tracked with policy flags described in the [CLI reference](cli-reference.md).
+tests are tracked with policy flags described in the
+[Playwright CLI docs](cli/playwright.md).
 
 Selector coverage collects configured JSX attributes such as `data-testid`,
 `data-pw`, mapped component props, and optionally HTML `id` values. Tests cover
@@ -152,4 +153,4 @@ The ESLint/Oxlint plugins enforce code shapes the AST tools can understand:
   static, prevents confusing TS export/function indirection, and bans `??` on
   explicitly typed ReactNode values.
 
-See [ESLint and Oxlint plugins](eslint-plugin.md).
+See [ESLint rules](eslint-rules/README.md).
