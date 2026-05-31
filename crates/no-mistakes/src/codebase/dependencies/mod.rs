@@ -20,6 +20,7 @@ include!("args_relationships.rs");
 include!("traversal_entrypoints.rs");
 include!("traversal.rs");
 include!("symbol_resolution.rs");
+include!("shared_traversal.rs");
 include!("output_args.rs");
 
 #[cfg(test)]
@@ -49,6 +50,13 @@ pub fn run_json(args: TraverseArgs, direction: Direction) -> Result<String> {
     let root_strs: Vec<String> = args.files.iter().map(|f| f.display().to_string()).collect();
     let mut out = Vec::new();
     write_output_results(Format::Json, &root_strs, &result, &mut out)?;
+    String::from_utf8(out).context("dependency JSON output must be UTF-8")
+}
+
+pub(crate) fn result_json(args: &TraverseArgs, result: &TraversalResult) -> Result<String> {
+    let root_strs: Vec<String> = args.files.iter().map(|f| f.display().to_string()).collect();
+    let mut out = Vec::new();
+    write_output_results(Format::Json, &root_strs, result, &mut out)?;
     String::from_utf8(out).context("dependency JSON output must be UTF-8")
 }
 

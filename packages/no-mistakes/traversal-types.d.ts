@@ -1,3 +1,5 @@
+import type { PlaywrightOptions, PlaywrightRelatedOptions } from "./report-types";
+
 export type Relationship =
   | "import"
   | "import-static"
@@ -106,8 +108,53 @@ export interface ProjectOptions {
   direction?: "deps" | "dependents" | "both";
 }
 
+type BatchedProjectOptions = Omit<ProjectOptions, "root" | "tsconfig" | "config">;
+type BatchedQueueRelatedOptions = BatchedProjectOptions & { files: string[] };
+type BatchedServerRouteRelatedOptions = BatchedProjectOptions &
+  ({ files: string[] } | { roots: string[] });
+
 export interface FetchesOptions {
   root?: string;
   config?: string;
   targets?: string[];
+}
+
+export type AnalyzeProjectReportRequest =
+  | ({ type: "dependencies" | "dependents" | "related"; id?: string } & Omit<
+      TraverseOptions,
+      "root" | "tsconfig"
+    >)
+  | ({ type: "symbols"; id?: string } & SymbolsOptions)
+  | ({ type: "queues" | "queueEdges" | "queueCheck"; id?: string } & BatchedProjectOptions)
+  | ({ type: "queueRelated"; id?: string } & BatchedQueueRelatedOptions)
+  | ({
+      type: "serverRoutes" | "serverRouteList" | "serverRouteEdges";
+      id?: string;
+    } & BatchedProjectOptions)
+  | ({ type: "serverRouteRelated"; id?: string } & BatchedServerRouteRelatedOptions)
+  | ({ type: "reactAnalyze" | "reactCheck"; id?: string } & Pick<
+      ProjectOptions,
+      "targets" | "depth" | "assertNoFetch"
+    >)
+  | ({
+      type: "playwrightCheck" | "playwrightEdges" | "playwrightTests";
+      id?: string;
+    } & Omit<PlaywrightOptions, "root" | "config">)
+  | ({ type: "playwrightRelated"; id?: string } & Omit<PlaywrightRelatedOptions, "root" | "config">)
+  | { type: "check"; id?: string };
+
+export interface AnalyzeProjectOptions {
+  root?: string;
+  tsconfig?: string;
+  config?: string;
+  filters?: string[];
+  reports: AnalyzeProjectReportRequest[];
+}
+
+export interface AnalyzeProjectResult {
+  reports: Array<{
+    id?: string;
+    type: AnalyzeProjectReportRequest["type"];
+    result: unknown;
+  }>;
 }
