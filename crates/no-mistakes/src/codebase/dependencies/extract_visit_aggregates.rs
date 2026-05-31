@@ -129,6 +129,18 @@ fn visit_export_default_declaration_with_scope<'a>(
     }
 }
 
+fn visit_exported_enum_declaration<'a>(
+    collector: &mut ImportCollector,
+    declaration: &TSEnumDeclaration<'a>,
+) {
+    let scope = declaration.id.name.to_string();
+    collector.push_function_scope(Some(scope.clone()));
+    collector.exported_functions.insert(scope.clone());
+    collector.exported_type_scopes.insert(scope);
+    walk::walk_ts_enum_declaration(collector, declaration);
+    collector.pop_function_scope(true);
+}
+
 fn record_class_member_calls(collector: &mut ImportCollector, class_name: &str, class: &Class<'_>) {
     for element in &class.body.body {
         if let ClassElement::MethodDefinition(method) = element {

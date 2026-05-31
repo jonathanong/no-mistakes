@@ -142,102 +142,105 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
         }
 
         // Otherwise, run BFS path finder in reverse direction
-        let start_node = NodeId::File(changed.clone());
-        let (reachable_tests, path_parents) =
-            bfs_path_find(&graph, &start_node, &test_filter, &root);
+        let start_nodes = changed_start_nodes(&graph, changed, args.include_symbols);
 
-        for (test_node, edge_path) in reachable_tests {
-            let test_path = match &test_node {
-                NodeId::File(p) => p.clone(),
-                _ => continue,
-            };
-            let rel_test = relative_path(&root, &test_path);
+        for start_node in start_nodes {
+            let (reachable_tests, path_parents) =
+                bfs_path_find(&graph, &start_node, &test_filter, &root);
 
-            // Compute confidence of the path
-            let path_conf = path_confidence(&edge_path);
+            for (test_node, edge_path) in reachable_tests {
+                let test_path = match &test_node {
+                    NodeId::File(p) => p.clone(),
+                    _ => continue,
+                };
+                let rel_test = relative_path(&root, &test_path);
 
-            // Reconstruct path node chain and collect warnings in a single pass
-            let mut node_chain = Vec::new();
-            let mut curr = test_node.clone();
-            node_chain.push(slash_node_name(&curr, &root));
+                // Compute confidence of the path
+                let path_conf = path_confidence(&edge_path);
 
-            while let Some((parent, kind)) = path_parents.get(&curr) {
-                node_chain.push(slash_node_name(parent, &root));
+                // Reconstruct path node chain and collect warnings in a single pass
+                let mut node_chain = Vec::new();
+                let mut curr = test_node.clone();
+                node_chain.push(slash_node_name(&curr, &root));
 
-                match kind {
-                    EdgeKind::DynamicImport => {
-                        let warn = Warning {
-                            r#type: "dynamic-import".to_string(),
-                            message: format!(
-                                "Dynamic import in `{}` might not be fully resolved.",
-                                slash_node_name(&curr, &root)
-                            ),
-                            file: slash_node_name(&curr, &root),
-                        };
-                        if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
-                            warnings.push(warn);
+                while let Some((parent, kind)) = path_parents.get(&curr) {
+                    node_chain.push(slash_node_name(parent, &root));
+
+                    match kind {
+                        EdgeKind::DynamicImport => {
+                            let warn = Warning {
+                                r#type: "dynamic-import".to_string(),
+                                message: format!(
+                                    "Dynamic import in `{}` might not be fully resolved.",
+                                    slash_node_name(&curr, &root)
+                                ),
+                                file: slash_node_name(&curr, &root),
+                            };
+                            if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+                                warnings.push(warn);
+                            }
                         }
-                    }
-                    EdgeKind::HttpCall => {
-                        let warn = Warning {
-                            r#type: "http-call".to_string(),
-                            message: format!(
-                                "Dynamic HTTP call in `{}` to backend `{}`.",
-                                slash_node_name(&curr, &root),
-                                slash_node_name(parent, &root)
-                            ),
-                            file: slash_node_name(&curr, &root),
-                        };
-                        if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
-                            warnings.push(warn);
+                        EdgeKind::HttpCall => {
+                            let warn = Warning {
+                                r#type: "http-call".to_string(),
+                                message: format!(
+                                    "Dynamic HTTP call in `{}` to backend `{}`.",
+                                    slash_node_name(&curr, &root),
+                                    slash_node_name(parent, &root)
+                                ),
+                                file: slash_node_name(&curr, &root),
+                            };
+                            if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+                                warnings.push(warn);
+                            }
                         }
-                    }
-                    EdgeKind::ProcessSpawn => {
-                        let warn = Warning {
-                            r#type: "process-spawn".to_string(),
-                            message: format!(
-                                "Process spawned in `{}`.",
-                                slash_node_name(&curr, &root)
-                            ),
-                            file: slash_node_name(&curr, &root),
-                        };
-                        if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
-                            warnings.push(warn);
+                        EdgeKind::ProcessSpawn => {
+                            let warn = Warning {
+                                r#type: "process-spawn".to_string(),
+                                message: format!(
+                                    "Process spawned in `{}`.",
+                                    slash_node_name(&curr, &root)
+                                ),
+                                file: slash_node_name(&curr, &root),
+                            };
+                            if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+                                warnings.push(warn);
+                            }
                         }
+                        _ => {}
                     }
-                    _ => {}
+                    curr = parent.clone();
                 }
-                curr = parent.clone();
-            }
-            node_chain.reverse();
+                node_chain.reverse();
 
-            let via_strings: Vec<String> = edge_path
-                .iter()
-                .map(|k| impact_reason_label(*k).to_string())
-                .collect();
+                let via_strings: Vec<String> = edge_path
+                    .iter()
+                    .map(|k| impact_reason_label(*k).to_string())
+                    .collect();
 
-            let reason = ImpactReason {
-                changed_file: rel_changed.clone(),
-                path: node_chain,
-                via: via_strings,
-            };
+                let reason = ImpactReason {
+                    changed_file: rel_changed.clone(),
+                    path: node_chain,
+                    via: via_strings,
+                };
 
-            let entry = selected_map
-                .entry(test_path)
-                .or_insert_with(|| SelectedTest {
-                    test_file: rel_test.clone(),
-                    confidence: path_conf,
-                    targets: Vec::new(),
-                    reasons: Vec::new(),
-                });
+                let entry = selected_map
+                    .entry(test_path)
+                    .or_insert_with(|| SelectedTest {
+                        test_file: rel_test.clone(),
+                        confidence: path_conf,
+                        targets: Vec::new(),
+                        reasons: Vec::new(),
+                    });
 
-            // Update confidence to the highest among paths
-            if path_conf > entry.confidence {
-                entry.confidence = path_conf;
-            }
+                // Update confidence to the highest among paths
+                if path_conf > entry.confidence {
+                    entry.confidence = path_conf;
+                }
 
-            if !entry.reasons.contains(&reason) {
-                entry.reasons.push(reason);
+                if !entry.reasons.contains(&reason) {
+                    entry.reasons.push(reason);
+                }
             }
         }
     }
@@ -378,6 +381,22 @@ pub(crate) fn slash_node_name(node: &NodeId, root: &Path) -> String {
 
 pub(crate) fn relative_path(root: &Path, absolute: &Path) -> String {
     no_mistakes::codebase::ts_source::relative_slash_path(root, absolute)
+}
+
+fn changed_start_nodes(graph: &DepGraph, changed: &Path, include_symbols: bool) -> Vec<NodeId> {
+    let file_node = NodeId::File(changed.to_path_buf());
+    let mut starts = vec![file_node.clone()];
+    if include_symbols {
+        if let Some(neighbors) = graph.dependencies_of_node(&file_node) {
+            starts.extend(neighbors.iter().filter_map(|(node, _)| match node {
+                NodeId::Symbol { file, .. } if file == changed => Some(node.clone()),
+                _ => None,
+            }));
+        }
+    }
+    starts.sort();
+    starts.dedup();
+    starts
 }
 
 /// Custom BFS path finder in the reverse (dependents) direction.

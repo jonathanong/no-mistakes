@@ -6,9 +6,10 @@ use oxc::ast::ast::{
     ExportNamedDeclaration, ExportSpecifier, Expression, FormalParameters, IdentifierReference,
     ImportDeclaration, ImportDeclarationSpecifier, ImportExpression, JSXOpeningElement,
     MethodDefinition, ModuleExportName, ObjectExpression, ObjectProperty, ObjectPropertyKind,
-    Program, Statement, StaticMemberExpression, TSImportType, TSInterfaceDeclaration,
-    TSQualifiedName, TSTypeAliasDeclaration, TSTypeName, TSTypeParameterDeclaration,
-    TSTypeReference, VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
+    Program, Statement, StaticMemberExpression, TSEnumDeclaration, TSImportType,
+    TSInterfaceDeclaration, TSQualifiedName, TSTypeAliasDeclaration, TSTypeName,
+    TSTypeParameterDeclaration, TSTypeReference, VariableDeclaration, VariableDeclarationKind,
+    VariableDeclarator,
 };
 use oxc::ast_visit::{walk, Visit};
 use oxc::parser::Parser;

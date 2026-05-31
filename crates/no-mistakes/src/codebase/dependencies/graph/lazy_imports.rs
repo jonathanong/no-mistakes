@@ -40,6 +40,7 @@ pub(crate) fn lazy_import_deps_of_with_files(
             frontier.push(root.clone());
         }
     }
+    let root_nodes: HashSet<NodeId> = roots.iter().cloned().collect();
 
     let mut depth = 0;
     while !frontier.is_empty() {
@@ -70,8 +71,11 @@ pub(crate) fn lazy_import_deps_of_with_files(
 
         let next_depth = depth + 1;
         let mut next_frontier = Vec::new();
-        for (_node, neighbors) in expanded {
+        for (node, neighbors) in expanded {
             for (neighbor, kind) in neighbors {
+                if is_symbol_owner_bridge(&node, &neighbor) && !root_nodes.contains(&node) {
+                    continue;
+                }
                 if visited.insert(neighbor.clone()) {
                     let idx = result.len();
                     result.push(NodeEntry {
@@ -143,6 +147,7 @@ fn bfs(
             queue.push_back((s.clone(), 0));
         }
     }
+    let root_nodes: HashSet<NodeId> = starts.iter().cloned().collect();
 
     while let Some((node, depth)) = queue.pop_front() {
         if let Some(max) = max_depth {
@@ -153,6 +158,9 @@ fn bfs(
 
         if let Some(neighbors) = edges.get(&node) {
             for (neighbor, kind) in neighbors {
+                if is_symbol_owner_bridge(&node, neighbor) && !root_nodes.contains(&node) {
+                    continue;
+                }
                 if !edge_allowed(&node, neighbor, *kind, allowed) {
                     continue;
                 }
@@ -180,10 +188,7 @@ fn bfs(
 }
 
 fn should_expand_node(from: &NodeId, to: &NodeId) -> bool {
-    !matches!(
-        (from, to),
-        (NodeId::Symbol { file: from_file, .. }, NodeId::File(to_file)) if from_file != to_file
-    )
+    !is_symbol_owner_bridge(from, to)
 }
 
 fn edge_allowed(

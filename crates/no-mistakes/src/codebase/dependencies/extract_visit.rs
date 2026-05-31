@@ -111,6 +111,14 @@ impl<'a> Visit<'a> for ImportCollector {
         }
     }
 
+    fn visit_ts_enum_declaration(&mut self, declaration: &TSEnumDeclaration<'a>) {
+        if self.export_depth > 0 && self.function_stack.is_empty() {
+            visit_exported_enum_declaration(self, declaration);
+        } else {
+            walk::walk_ts_enum_declaration(self, declaration);
+        }
+    }
+
     fn visit_import_declaration(&mut self, import: &ImportDeclaration<'a>) {
         let kind = import_declaration_kind(import);
         self.push(import.source.value.as_str(), kind);

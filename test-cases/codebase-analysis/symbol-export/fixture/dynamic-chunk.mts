@@ -1,1 +1,3 @@
-export const value = 1;
+import { alpha } from "./source.mts";
+
+export const value = alpha();
