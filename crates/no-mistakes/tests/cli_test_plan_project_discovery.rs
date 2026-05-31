@@ -142,3 +142,75 @@ fn test_plan_playwright_uses_project_match_and_targets() {
         serde_json::json!(["playwright", "test"])
     );
 }
+
+#[test]
+fn test_plan_vitest_keeps_duplicate_project_targets_from_distinct_configs() {
+    let root = fixture("test-plan-multi-vitest-configs");
+    let output = run(&[
+        "test",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "src/shared.test.ts",
+        "--json",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let selected = plan["selected_tests"].as_array().unwrap();
+    assert_eq!(selected.len(), 1);
+    assert_eq!(selected[0]["test_file"], "src/shared.test.ts");
+    let mut configs: Vec<&str> = selected[0]["targets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|target| target["config"].as_str().unwrap())
+        .collect();
+    configs.sort_unstable();
+    assert_eq!(configs, vec!["vitest.browser.mts", "vitest.node.mts"]);
+    assert!(selected[0]["targets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|target| target["project"] == "shared"));
+}
+
+#[test]
+fn test_plan_playwright_top_level_config_name_does_not_emit_project_arg() {
+    let root = fixture("test-plan-playwright-root-name");
+    let output = run(&[
+        "test",
+        "plan",
+        "playwright",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        ".no-mistakes.yml",
+        "--environment",
+        "all",
+        "--json",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let selected = plan["selected_tests"].as_array().unwrap();
+    assert_eq!(selected.len(), 1);
+    assert_eq!(selected[0]["test_file"], "e2e/root-name.spec.ts");
+    let target = selected[0]["targets"].as_array().unwrap().first().unwrap();
+    assert!(target["project"].is_null());
+    assert!(!target["runner_args"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|arg| arg == "--project"));
+}

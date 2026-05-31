@@ -80,8 +80,8 @@ fn to_project(config_dir: &Path, root: &Path, options: Options) -> ConfigProject
         .unwrap_or_else(|| config_dir.to_path_buf());
     ConfigProject {
         config: None,
-        name: options.name.clone(),
-        target_project: options.name,
+        policy_name: options.name.clone(),
+        runner_project_arg: options.name,
         include: prefix_globs(root, &config_dir, &include),
         exclude: prefix_globs(root, &config_dir, &options.exclude.unwrap_or_default()),
     }

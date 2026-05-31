@@ -98,8 +98,8 @@ pub(crate) struct FileAnalysis {
 #[derive(Debug, Clone)]
 pub(crate) struct ConfigProject {
     pub(crate) config: Option<String>,
-    pub(crate) name: Option<String>,
-    pub(crate) target_project: Option<String>,
+    pub(crate) policy_name: Option<String>,
+    pub(crate) runner_project_arg: Option<String>,
     pub(crate) include: Vec<String>,
     pub(crate) exclude: Vec<String>,
 }

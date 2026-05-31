@@ -104,7 +104,7 @@ fn discover_from_projects(
             matched_targets.insert(targets::target_for(
                 runner,
                 project.config.as_deref(),
-                project.target_project.as_deref(),
+                project.runner_project_arg.as_deref(),
                 &rel,
             ));
         }

@@ -100,10 +100,10 @@ fn load_target_projects(
                 .into_iter()
                 .filter(|project| {
                     project
-                        .name
+                        .policy_name
                         .as_deref()
                         .is_some_and(|name| unresolved_names.contains(name))
-                        || (project.name.is_none() && unresolved_names.contains("default"))
+                        || (project.policy_name.is_none() && unresolved_names.contains("default"))
                 }),
         );
     }
@@ -136,6 +136,6 @@ fn append_test_project_globs(
 }
 
 fn test_project_matches(project: &ConfigProject, project_name: &str) -> bool {
-    project.name.as_deref() == Some(project_name)
-        || (project.name.is_none() && project_name == "default")
+    project.policy_name.as_deref() == Some(project_name)
+        || (project.policy_name.is_none() && project_name == "default")
 }

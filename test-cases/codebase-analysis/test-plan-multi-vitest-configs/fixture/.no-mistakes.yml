@@ -1,0 +1,15 @@
+tests:
+  vitest:
+    configs:
+      - vitest.node.mts
+      - vitest.browser.mts
+    projects:
+      shared:
+        include:
+          - src/shared.test.ts
+test_plan:
+  vitest:
+    environments:
+      all:
+        all: true
+rules: []

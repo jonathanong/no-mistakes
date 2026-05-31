@@ -44,7 +44,7 @@ fn apply_explicit_policy_projects(
     for (name, policy) in policies {
         let matching_configs = projects
             .iter()
-            .filter(|candidate| candidate.name.as_deref() == Some(name))
+            .filter(|candidate| candidate.policy_name.as_deref() == Some(name))
             .map(|candidate| candidate.config.clone())
             .collect::<Vec<_>>();
         let configs = if matching_configs.is_empty() {
@@ -57,7 +57,7 @@ fn apply_explicit_policy_projects(
             .filter_map(|config| configured_project(root, name, policy, config))
             .collect::<Vec<_>>();
         if !configured_projects.is_empty() {
-            projects.retain(|candidate| candidate.name.as_deref() != Some(name));
+            projects.retain(|candidate| candidate.policy_name.as_deref() != Some(name));
             projects.extend(configured_projects);
         }
     }
@@ -100,8 +100,8 @@ fn configured_project(
     }
     Some(ConfigProject {
         config,
-        name: Some(project_name.to_string()),
-        target_project: Some(project_name.to_string()),
+        policy_name: Some(project_name.to_string()),
+        runner_project_arg: Some(project_name.to_string()),
         include: prefix_globs(root, root, &policy.include),
         exclude: prefix_globs(root, root, &policy.exclude),
     })

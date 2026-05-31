@@ -1,0 +1,9 @@
+tests:
+  playwright:
+    configs: playwright.config.ts
+test_plan:
+  playwright:
+    environments:
+      all:
+        all: true
+rules: []

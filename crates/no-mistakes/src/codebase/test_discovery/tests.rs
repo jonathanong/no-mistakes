@@ -17,8 +17,8 @@ fn vitest_project_discovery_without_playwright_projects_keeps_matching_tests() {
     let config = NoMistakesConfig::default();
     let projects = vec![ConfigProject {
         config: Some("vitest.config.mts".to_string()),
-        name: Some("all-specs".to_string()),
-        target_project: Some("all-specs".to_string()),
+        policy_name: Some("all-specs".to_string()),
+        runner_project_arg: Some("all-specs".to_string()),
         include: vec!["src/utils.mts".to_string()],
         exclude: Vec::new(),
     }];
@@ -46,8 +46,8 @@ fn vitest_explicit_project_matches_playwright_owned_file() {
     );
     let projects = vec![ConfigProject {
         config: Some("vitest.config.mts".to_string()),
-        name: Some("browser".to_string()),
-        target_project: Some("browser".to_string()),
+        policy_name: Some("browser".to_string()),
+        runner_project_arg: Some("browser".to_string()),
         include: vec!["src/utils.mts".to_string()],
         exclude: Vec::new(),
     }];
@@ -68,8 +68,8 @@ fn target_metadata_uses_executable_project_name_only() {
     let config = NoMistakesConfig::default();
     let projects = vec![ConfigProject {
         config: Some("playwright.config.ts".to_string()),
-        name: Some("top-level-config-name".to_string()),
-        target_project: None,
+        policy_name: Some("top-level-config-name".to_string()),
+        runner_project_arg: None,
         include: vec!["src/utils.mts".to_string()],
         exclude: Vec::new(),
     }];
@@ -108,7 +108,7 @@ fn policy_only_project_inherits_single_explicit_runner_config() {
 
     let project = projects
         .iter()
-        .find(|project| project.name.as_deref() == Some("dynamic"))
+        .find(|project| project.policy_name.as_deref() == Some("dynamic"))
         .unwrap();
     assert_eq!(
         project.config.as_deref(),
@@ -137,7 +137,7 @@ fn policy_only_project_does_not_guess_from_multiple_explicit_configs() {
 
     let project = projects
         .iter()
-        .find(|project| project.name.as_deref() == Some("dynamic"))
+        .find(|project| project.policy_name.as_deref() == Some("dynamic"))
         .unwrap();
     assert_eq!(project.config, None);
 }
@@ -204,4 +204,44 @@ fn vitest_fallback_skips_playwright_policy_tests() {
         .collect();
     assert!(rel_tests.contains(&"src/fallback.test.mts".to_string()));
     assert!(!rel_tests.contains(&"e2e/home.spec.ts".to_string()));
+}
+
+#[test]
+fn playwright_policy_exclude_prevents_generic_fallback() {
+    let root = fixture_root("test-discovery-policy-fallback");
+    let mut config = NoMistakesConfig::default();
+    config.tests.playwright.projects.insert(
+        "chromium".to_string(),
+        TestProjectPolicy {
+            include: vec!["e2e/**/*.spec.ts".to_string()],
+            exclude: vec!["e2e/flaky.spec.ts".to_string()],
+            ..Default::default()
+        },
+    );
+
+    let discovered = discover_tests(&root, &config, TestRunner::Playwright).unwrap();
+
+    let rel_tests: Vec<String> = discovered
+        .tests
+        .iter()
+        .map(|path| crate::codebase::ts_source::relative_slash_path(&root, path))
+        .collect();
+    assert!(rel_tests.contains(&"e2e/home.spec.ts".to_string()));
+    assert!(!rel_tests.contains(&"e2e/flaky.spec.ts".to_string()));
+}
+
+#[test]
+fn playwright_fallback_skips_helpers_in_e2e_directories() {
+    let root = fixture_root("test-discovery-policy-fallback");
+    let config = NoMistakesConfig::default();
+
+    let discovered = discover_tests(&root, &config, TestRunner::Playwright).unwrap();
+
+    let rel_tests: Vec<String> = discovered
+        .tests
+        .iter()
+        .map(|path| crate::codebase::ts_source::relative_slash_path(&root, path))
+        .collect();
+    assert!(rel_tests.contains(&"tests/e2e/home.spec.ts".to_string()));
+    assert!(!rel_tests.contains(&"tests/e2e/helpers.ts".to_string()));
 }
