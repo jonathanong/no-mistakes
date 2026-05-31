@@ -1,0 +1,15 @@
+rules:
+  - rule: rust-max-lines-per-file
+    scope: repository
+    exclude:
+      - src/invalid.rs
+    options:
+      srcMax: 1
+  - rule: rust-no-inline-tests
+    scope: repository
+    exclude:
+      - src/invalid.rs
+  - rule: rust-no-inline-allows
+    scope: repository
+    exclude:
+      - src/invalid.rs

@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::rules::{path_filter, rust_max_lines_per_file, sort_findings, target_roots};
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
@@ -14,6 +15,31 @@ fn config_with_rule(yaml: &str) -> NoMistakesConfig {
         ..Default::default()
     });
     config
+}
+
+fn check_with_files(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+) -> anyhow::Result<Vec<RuleFinding>> {
+    let mut findings = Vec::new();
+    for rule in config.rule_applications(RULE_ID) {
+        let opts = rule.rule_options();
+        let roots = normalize_roots(&opts, root, &target_roots(root, config, rule));
+        let files: Vec<PathBuf> = all_files
+            .iter()
+            .filter(|path| {
+                roots.iter().any(|rule_root| path.starts_with(rule_root))
+                    && !is_excluded(root, path, &opts.excludes)
+                    && !rust_max_lines_per_file::is_test_file(root, path)
+            })
+            .cloned()
+            .collect();
+        let files = path_filter::filter_rule_files(root, config, rule, &files)?;
+        findings.extend(scan(root, &files)?);
+    }
+    sort_findings(&mut findings);
+    Ok(findings)
 }
 
 fn fixture(path: &str) -> PathBuf {

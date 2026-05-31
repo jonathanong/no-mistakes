@@ -1,6 +1,6 @@
 use super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
-use crate::codebase::dependencies::extract::extract_imports_from_program;
-use crate::codebase::ts_source::facts::TsFileFacts;
+use crate::codebase::dependencies::extract::extract_import_facts_from_program;
+use crate::codebase::ts_source::facts::{self, TsFileFacts};
 use crate::codebase::ts_symbols::extract_symbols_from_program;
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
@@ -61,33 +61,36 @@ pub(crate) fn collect_file_facts(
             .first()
             .map(|error| format!("{error:?}"))
             .unwrap_or("parser panicked without diagnostic details".to_string());
-        let stored_source = should_store_source(plan).then_some(source);
+        let stored_source = should_store_source(plan).then_some(source.clone());
+        let ts = super::file_parse_error::ts_facts(plan, stored_source.clone(), &parsed.program);
         return Some(CheckFileFacts {
-            ts: ts_source(stored_source.clone()),
+            ts,
             source: stored_source,
             parse_error: Some(parse_error),
+            parsed: true,
             ..CheckFileFacts::default()
         });
     }
     let program = &parsed.program;
-    let imports = if plan.imports {
-        extract_imports_from_program(program)
+    let needs_import_facts = plan.imports || plan.graph.imports || plan.graph.function_calls;
+    let import_facts = if needs_import_facts {
+        extract_import_facts_from_program(program)
     } else {
-        Vec::new()
+        Default::default()
     };
-    let symbols = if plan.symbols {
+    let symbols = if plan.symbols || plan.graph.symbols {
         Some(extract_symbols_from_program(program, &source))
     } else {
         None
     };
-    let react = if plan.react {
+    let react = if plan.react || plan.graph.react {
         Some(crate::react_traits::analyze::file::analyze_program(
             path, root, &source, program,
         ))
     } else {
         None
     };
-    let queue = if plan.queue {
+    let queue = if plan.queue || plan.graph.queue_project {
         Some(crate::queue::extract::extract_program_with_factories(
             path,
             &source,
@@ -115,39 +118,35 @@ pub(crate) fn collect_file_facts(
     let storybook = plan
         .storybook
         .then(|| crate::codebase::storybook::extract_program(&source, program));
-    let playwright = playwright.and_then(|playwright| {
-        let test_id_attributes = playwright.test_id_attributes_by_path.get(path)?;
-        Some(super::PlaywrightTestFacts {
-            urls:
-                crate::playwright::playwright_urls::extract_playwright_url_occurrences_from_program(
-                    program,
-                    &source,
-                    &playwright.navigation_helpers,
-                ),
-            selectors:
-                crate::playwright::selectors::extract_playwright_selector_occurrences_from_program(
-                    program,
-                    &source,
-                    &playwright.selector_regexes,
-                    test_id_attributes,
-                ),
-            text_locators:
-                crate::playwright::selectors::extract_playwright_text_locator_occurrences_from_program(
-                    program,
-                    &source,
-                ),
-        })
-    });
+    let domain = if plan.graph.has_domain_facts() {
+        facts::domain::collect_domain_facts(program, path, &source, plan.graph, &plan.graph_context)
+    } else {
+        facts::domain::DomainFacts::default()
+    };
+    let queue_project = queue.or(domain.queue_project);
+    let playwright =
+        super::file_playwright::collect_playwright_facts(path, program, &source, playwright);
     let ts = TsFileFacts {
         source: should_store_source(plan).then_some(source.clone()),
-        imports,
+        imports: import_facts.imports,
+        function_calls: import_facts.function_calls,
+        exported_functions: import_facts.exported_functions,
+        unknown_callers: import_facts.unknown_callers,
+        has_unknown_top_level_call: import_facts.has_unknown_top_level_call,
         symbols: symbols.clone(),
-        queue_project: queue,
+        route_refs: domain.route_refs,
+        backend_routes: domain.backend_routes,
+        queue_usage: domain.queue_usage,
+        queue_create_line: domain.queue_create_line,
+        queue_name: domain.queue_name,
+        queue_project,
+        http_calls: domain.http_calls,
+        process_spawns: domain.process_spawns,
+        server_routes: domain.server_routes,
         react_components: react
             .as_ref()
             .map(|analysis| analysis.components.clone())
             .unwrap_or_default(),
-        ..Default::default()
     };
     Some(CheckFileFacts {
         ts,
@@ -188,6 +187,7 @@ fn requires_parse(
         || plan.dynamic_imports
         || plan.nextjs_caching
         || plan.storybook
+        || !plan.graph.is_empty()
         || playwright.is_some_and(|plan| plan.test_id_attributes_by_path.contains_key(path))
         || plan.source
         || (!plan.raw_source && playwright.is_none())

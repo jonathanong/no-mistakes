@@ -4,6 +4,7 @@ use super::extract::{is_indexable, ExtractedImport, ImportKind};
 use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
 use crate::codebase::ts_source::facts::{
     collect_ts_facts, collect_ts_facts_with_context, TsFactContext, TsFactMap, TsFactPlan,
+    TsFileFacts,
 };
 use crate::codebase::ts_symbols::ExportKind;
 use crate::config::v2::{load_v2_config, ConfigView};
@@ -14,8 +15,26 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 
 include!("types.rs");
+include!("graph_files.rs");
 include!("files_config.rs");
 include!("edge_maps.rs");
+
+pub(crate) trait TsFactLookup: Sync {
+    fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts>;
+}
+
+impl TsFactLookup for TsFactMap {
+    fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
+        self.get(path)
+    }
+}
+
+impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
+    fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
+        self.ts.get(path).map(|facts| &facts.ts)
+    }
+}
+
 include!("builder.rs");
 include!("methods_lazy.rs");
 include!("lazy_imports.rs");

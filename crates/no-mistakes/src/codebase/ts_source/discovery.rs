@@ -46,7 +46,7 @@ fn walk_non_ignored_files(
     preserved_roots: &[PathBuf],
 ) -> Vec<PathBuf> {
     let entry_extra_skip = extra_skip.clone();
-    let file_extra_skip = extra_skip.clone();
+    let file_extra_skip: HashSet<&str> = extra_skip.iter().map(String::as_str).collect();
     let preserved_roots = preserved_roots.to_vec();
     let filter_preserved_roots = preserved_roots.clone();
     WalkBuilder::new(root)
@@ -69,10 +69,9 @@ fn walk_non_ignored_files(
         .filter(|e| e.file_type().is_some_and(|ft| ft.is_file()))
         .map(|e| normalize_discovery_path(e.path()))
         .filter(|path| {
-            let skip: HashSet<&str> = file_extra_skip.iter().map(String::as_str).collect();
-            !is_under_skipped_dir(root, path, &skip)
+            !is_under_skipped_dir(root, path, &file_extra_skip)
                 || preserved_roots.iter().any(|root| {
-                    path.starts_with(root) && !is_under_skipped_dir(root, path, &skip)
+                    path.starts_with(root) && !is_under_skipped_dir(root, path, &file_extra_skip)
                 })
         })
         .collect()

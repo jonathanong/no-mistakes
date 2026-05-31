@@ -108,6 +108,31 @@ fn standalone_filesystem_rules_preserve_option_roots_without_leaking() {
     );
 }
 
+#[test]
+fn combined_rust_rules_emit_all_configured_findings() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/filesystem-dispatch/rust-combined/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let config = root.join(".no-mistakes.yml");
+
+    let findings = run_filesystem_rules(&root, Some(&config)).unwrap();
+    let rules: Vec<&str> = findings
+        .iter()
+        .map(|finding| finding.rule.as_str())
+        .collect();
+
+    assert_eq!(
+        rules,
+        vec![
+            RUST_MAX_LINES_PER_FILE,
+            RUST_NO_INLINE_ALLOWS,
+            RUST_NO_INLINE_TESTS,
+        ],
+        "{findings:#?}"
+    );
+    assert!(findings.iter().all(|finding| finding.file == "src/lib.rs"));
+}
+
 /// Cover the false branches of the `if rule_enabled(...)` guards for
 /// `RUST_MAX_LINES_PER_FILE` and `RUST_NO_INLINE_TESTS` by running with a
 /// config that omits those two rules, exercising the skip paths.

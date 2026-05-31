@@ -10,8 +10,8 @@ use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "rust-max-lines-per-file";
 
-const DEFAULT_SRC_MAX: usize = 200;
-const DEFAULT_TEST_MAX: usize = 500;
+pub(crate) const DEFAULT_SRC_MAX: usize = 200;
+pub(crate) const DEFAULT_TEST_MAX: usize = 500;
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -33,36 +33,6 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
             .iter()
             .flat_map(|r| discover_with_extensions(r, skip, &["rs"]))
             .filter(|p| !is_excluded(root, p, &opts.excludes))
-            .collect();
-        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        findings.extend(scan(root, &opts, &files)?);
-    }
-    super::sort_findings(&mut findings);
-    Ok(findings)
-}
-
-/// Check using a pre-discovered file list to avoid a second filesystem walk.
-pub(crate) fn check_with_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let opts = rule.rule_options();
-        let target_roots = super::target_roots(root, config, rule);
-        let roots = normalize_roots(&opts, root, &target_roots);
-        let skip = super::skip_dir_set(config);
-        let files: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|p| {
-                super::file_allowed_by_roots_and_skip(root, &skip, p, &roots)
-                    && p.extension()
-                        .and_then(|e| e.to_str())
-                        .is_some_and(|e| e == "rs")
-                    && !is_excluded(root, p, &opts.excludes)
-            })
-            .cloned()
             .collect();
         let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
         findings.extend(scan(root, &opts, &files)?);
@@ -115,10 +85,19 @@ fn check_file(path: &Path, root: &Path, limit: usize) -> Option<RuleFinding> {
     let Ok(content) = std::fs::read_to_string(path) else {
         return None;
     };
-    if has_disable_file_comment(&content, RULE_ID) {
+    check_source(path, root, &content, limit)
+}
+
+pub(crate) fn check_source(
+    path: &Path,
+    root: &Path,
+    content: &str,
+    limit: usize,
+) -> Option<RuleFinding> {
+    if has_disable_file_comment(content, RULE_ID) {
         return None;
     }
-    let code_lines = count_code_lines(&content);
+    let code_lines = count_code_lines(content);
     if code_lines <= limit {
         return None;
     }

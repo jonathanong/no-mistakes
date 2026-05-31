@@ -105,6 +105,7 @@ type Edge = (NodeId, NodeId, EdgeKind);
 type ParsedImports<'a> = Vec<(
     &'a PathBuf,
     &'a crate::codebase::ts_source::facts::TsFileFacts,
+    HashSet<String>,
 )>;
 
 /// Selects which edge producers run while building a dependency graph.

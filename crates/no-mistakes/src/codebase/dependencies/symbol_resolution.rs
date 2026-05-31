@@ -40,7 +40,7 @@ fn build_dependents_graph(
             ctx.tsconfig,
             ctx.build_plan,
             ctx.graph_files,
-            Some(facts),
+            Some(facts as &dyn graph::TsFactLookup),
         ),
         None => graph::DepGraph::build_with_plan_and_files(
             ctx.root,

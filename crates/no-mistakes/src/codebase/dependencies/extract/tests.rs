@@ -28,6 +28,17 @@ fn extracts_default_import() {
 }
 
 #[test]
+fn extract_imports_from_program_wraps_full_import_fact_extraction() {
+    let allocator = oxc_allocator::Allocator::default();
+    let source = "import foo from './foo.mts';";
+    let parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
+
+    let imports = extract_imports_from_program(&parsed.program);
+
+    assert_eq!(specs(&imports), vec!["./foo.mts"]);
+}
+
+#[test]
 fn extracts_named_import() {
     let imports = ts_extractor()
         .extract("import { bar } from './bar.mts';")

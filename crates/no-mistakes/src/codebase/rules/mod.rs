@@ -16,6 +16,7 @@ pub mod required_local_docs;
 pub mod rust_max_lines_per_file;
 pub mod rust_no_inline_allows;
 pub mod rust_no_inline_tests;
+pub mod rust_rules_combined;
 pub mod server_route_client_boundary;
 pub mod shellcheck_runner;
 pub mod strict_package_layout;

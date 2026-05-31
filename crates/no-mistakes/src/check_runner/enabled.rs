@@ -67,6 +67,8 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
             || enabled.nextjs_caching
             || enabled.unique_exports
             || enabled.storybook_stories,
+        graph: Default::default(),
+        graph_context: Default::default(),
     }
 }
 
@@ -81,6 +83,7 @@ pub(crate) fn plan_requests_facts(plan: &CheckFactPlan) -> bool {
         || plan.storybook
         || plan.raw_source
         || plan.source
+        || !plan.graph.is_empty()
 }
 
 pub(crate) fn integration_configured(config: &no_mistakes::config::v2::NoMistakesConfig) -> bool {

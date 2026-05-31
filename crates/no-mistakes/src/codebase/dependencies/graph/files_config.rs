@@ -1,45 +1,17 @@
-pub(crate) struct GraphFiles {
-    all: Vec<PathBuf>,
-    indexable: Vec<PathBuf>,
-    visible: HashSet<PathBuf>,
-}
-
-impl GraphFiles {
-    pub(crate) fn discover(root: &Path) -> Self {
-        let all = crate::codebase::ts_source::discover_files(root, &[]);
-        Self::from_files(all)
-    }
-
-    pub(crate) fn from_files(all: Vec<PathBuf>) -> Self {
-        let visible = all.iter().cloned().collect();
-        let indexable = all.iter().filter(|p| is_indexable(p)).cloned().collect();
-        Self {
-            all,
-            indexable,
-            visible,
-        }
-    }
-
-    fn is_visible(&self, path: &Path) -> bool {
-        self.visible.contains(path)
-    }
-
-    pub(crate) fn indexable(&self) -> &[PathBuf] {
-        &self.indexable
-    }
-
-    pub(crate) fn all(&self) -> &[PathBuf] {
-        &self.all
-    }
-
-    pub(crate) fn visible(&self) -> &HashSet<PathBuf> {
-        &self.visible
-    }
-}
-
 pub(crate) fn ts_fact_context_for_plan(root: &Path, plan: GraphBuildPlan) -> TsFactContext {
     let options = graph_config_options_for_plan(root, plan);
     ts_fact_context_from_options(root, plan, options.as_ref())
+}
+
+pub fn ts_fact_plan_and_context_for_plan(
+    root: &Path,
+    plan: GraphBuildPlan,
+) -> (TsFactPlan, TsFactContext) {
+    let options = graph_config_options_for_plan(root, plan);
+    (
+        effective_ts_fact_plan(plan, options.as_ref()),
+        ts_fact_context_from_options(root, plan, options.as_ref()),
+    )
 }
 
 #[derive(Clone)]

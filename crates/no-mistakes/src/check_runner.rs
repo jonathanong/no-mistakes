@@ -5,7 +5,7 @@ use crate::check_tasks::{
 };
 use anyhow::{Context, Result};
 use enabled::{fact_plan, integration_configured, plan_requests_facts};
-use no_mistakes::codebase::check_facts::collect_check_facts_with_playwright;
+use no_mistakes::codebase::check_facts::collect_check_facts_with_graph_files_and_playwright;
 use no_mistakes::config::v2::load_v2_config;
 use no_mistakes::react_traits;
 use std::path::PathBuf;
@@ -30,13 +30,18 @@ pub(crate) fn run_all(
     let filesystem_rules_enabled = filesystem_rules_configured(&config);
     let forbidden_deps_enabled = forbidden_dependencies_configured(&config);
     let playwright_rules_enabled = no_mistakes::playwright::rules::configured(&config);
+    let forbidden_graph_plan = if forbidden_deps_enabled {
+        no_mistakes::codebase::rules::forbidden_dependencies::graph_plan(&config)
+    } else {
+        None
+    };
     let playwright_fact_plan =
         no_mistakes::playwright::rules::fact_plan(&root, config_path.as_deref(), &config)
             .context("failed to prepare Playwright shared facts")?;
     let integration_enabled = integration_configured(&config);
     let react_enabled = react_traits::check_enabled(&root, config_path.as_deref(), false)?;
     let react_warning = None;
-    let plan = fact_plan(enabled::EnabledChecks {
+    let mut plan = fact_plan(enabled::EnabledChecks {
         react: react_enabled,
         queue: queues_enabled,
         queue_factory_names: config.queues.factories.clone(),
@@ -48,6 +53,14 @@ pub(crate) fn run_all(
         integration: integration_enabled,
         unique_exports: unique_exports_enabled,
     });
+    if let Some(graph_plan) = forbidden_graph_plan {
+        let (fact_plan, fact_context) =
+            no_mistakes::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan(
+                &root, graph_plan,
+            );
+        plan.graph = fact_plan;
+        plan.graph_context = fact_context;
+    }
     let needs_shared_facts = plan_requests_facts(&plan) || playwright_fact_plan.is_some();
     if !needs_shared_facts
         && !filesystem_rules_enabled
@@ -73,7 +86,23 @@ pub(crate) fn run_all(
         } else {
             Vec::new()
         };
-        let f = collect_check_facts_with_playwright(&root, discovered, plan, playwright_fact_plan);
+        let graph_files = if forbidden_graph_plan.is_some() {
+            crate::check_discovery::discover_check_files(
+                &root,
+                &config,
+                &[],
+                unique_exports_enabled,
+            )
+        } else {
+            Vec::new()
+        };
+        let f = collect_check_facts_with_graph_files_and_playwright(
+            &root,
+            discovered,
+            graph_files,
+            plan,
+            playwright_fact_plan,
+        );
         (fs, f)
     } else {
         (discovered, Default::default())

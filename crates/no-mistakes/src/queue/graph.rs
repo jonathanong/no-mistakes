@@ -7,6 +7,11 @@ use crate::queue::types::QueueKey;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+mod fact_sources;
+use fact_sources::{
+    load_factory_names, queue_project_facts_from_shared, queue_project_facts_from_ts,
+};
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum RelatedDirection {
     Deps,
@@ -49,31 +54,6 @@ pub fn analyze_project(
     Ok(build_report(&root, producers, workers, &facts))
 }
 
-fn queue_project_facts_from_ts(
-    ts_facts: crate::codebase::ts_source::facts::TsFactMap,
-    filter: Option<&globset::GlobSet>,
-    root: &Path,
-) -> HashMap<PathBuf, FileFacts> {
-    ts_facts
-        .into_iter()
-        .filter_map(|(path, mut facts)| {
-            if let Some(filter) = filter {
-                let rel = path.strip_prefix(root).unwrap_or(&path);
-                if !filter.is_match(rel) {
-                    return None;
-                }
-            }
-            facts.queue_project.take().map(|queue| (path, queue))
-        })
-        .collect()
-}
-
-fn load_factory_names(root: &Path) -> Vec<String> {
-    crate::config::v2::load_v2_config(root, None)
-        .map(|config| config.queues.factories)
-        .unwrap_or_default()
-}
-
 pub fn analyze_project_with_facts(
     root: &Path,
     tsconfig_path: Option<&Path>,
@@ -84,8 +64,7 @@ pub fn analyze_project_with_facts(
     let root = root.as_path();
     let tsconfig = load_tsconfig(root, tsconfig_path)?;
     let filter = build_filter(filters)?;
-    let ts_facts = shared.ts_facts();
-    let facts = queue_project_facts_from_ts(ts_facts, filter.as_ref(), root);
+    let facts = queue_project_facts_from_shared(shared, filter.as_ref(), root);
     let queue_defs = queue_definitions(&facts);
     let producers = resolve_producers(root, &facts, &queue_defs, &tsconfig);
     let workers = resolve_workers(root, &facts, &queue_defs, &tsconfig);

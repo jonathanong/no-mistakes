@@ -8,9 +8,8 @@ use super::{
     agents_md_max_size, banned_renamed_files, doc_consistency, file_extension_policy,
     lockfile_allowlist, no_empty_or_comments_only_files, no_git_identity_mutation,
     package_json_registry_only, require_files_in_subdirs, require_test_per_subdir,
-    required_local_docs, rust_max_lines_per_file, rust_no_inline_allows, rust_no_inline_tests,
-    shellcheck_runner, strict_package_layout, tsconfig_alias_folder_mapping,
-    vitest_test_correspondence,
+    required_local_docs, rust_rules_combined, shellcheck_runner, strict_package_layout,
+    tsconfig_alias_folder_mapping, vitest_test_correspondence,
 };
 
 mod preserved;
@@ -27,9 +26,6 @@ macro_rules! filesystem_rules {
     ($macro:ident) => {
         $macro! {
             AGENTS_MD_MAX_SIZE => agents_md_max_size::check_with_files,
-            RUST_MAX_LINES_PER_FILE => rust_max_lines_per_file::check_with_files,
-            RUST_NO_INLINE_TESTS => rust_no_inline_tests::check_with_files,
-            RUST_NO_INLINE_ALLOWS => rust_no_inline_allows::check_with_files,
             TSCONFIG_ALIAS_FOLDER_MAPPING => tsconfig_alias_folder_mapping::check_with_files,
             NO_GIT_IDENTITY_MUTATION => no_git_identity_mutation::check_with_files,
             PACKAGE_JSON_REGISTRY_ONLY => package_json_registry_only::check_with_files,
@@ -51,7 +47,12 @@ macro_rules! filesystem_rules {
 
 macro_rules! define_filesystem_rule_ids {
     ($($id:expr => $call:path),* $(,)?) => {
-        const FILESYSTEM_RULE_IDS: &[&str] = &[$($id),*];
+        const FILESYSTEM_RULE_IDS: &[&str] = &[
+            $($id,)*
+            RUST_MAX_LINES_PER_FILE,
+            RUST_NO_INLINE_TESTS,
+            RUST_NO_INLINE_ALLOWS,
+        ];
     };
 }
 
@@ -106,6 +107,12 @@ fn run_filesystem_rules_with_config(
                         });
                     }
                 )*
+                if rust_rules_enabled(config) {
+                    s.spawn(|_| {
+                        let res = rust_rules_combined::check_with_files(root, config, files);
+                        acc.lock().unwrap().push(("rust-rules-combined", res));
+                    });
+                }
             });
         };
     }
@@ -119,6 +126,12 @@ fn run_filesystem_rules_with_config(
     suppress_rule_findings(root, &mut findings);
     super::sort_findings(&mut findings);
     Ok(findings)
+}
+
+fn rust_rules_enabled(config: &crate::config::v2::NoMistakesConfig) -> bool {
+    rule_enabled(config, RUST_MAX_LINES_PER_FILE)
+        || rule_enabled(config, RUST_NO_INLINE_TESTS)
+        || rule_enabled(config, RUST_NO_INLINE_ALLOWS)
 }
 
 #[cfg(test)]

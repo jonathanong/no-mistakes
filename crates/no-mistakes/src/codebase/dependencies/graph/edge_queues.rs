@@ -2,7 +2,7 @@ fn add_queue_edges(
     root: &Path,
     resolver: &ImportResolver<'_>,
     files: &[PathBuf],
-    facts: Option<&TsFactMap>,
+    facts: Option<&dyn TsFactLookup>,
     config_options: Option<&GraphConfigOptions>,
     forward: &mut EdgeMap,
     reverse: &mut EdgeMap,
@@ -45,7 +45,7 @@ fn add_queue_edges(
             continue;
         }
         let Some((create_line, queue_name)) = facts
-            .and_then(|facts| facts.get(path))
+            .and_then(|facts| facts.get_ts_facts(path))
             .map(|file_facts| (file_facts.queue_create_line, file_facts.queue_name.clone()))
         else {
             continue;
@@ -77,7 +77,7 @@ fn add_queue_edges(
 
     for path in files {
         let Some(usage) = facts
-            .and_then(|facts| facts.get(path))
+            .and_then(|facts| facts.get_ts_facts(path))
             .and_then(|file_facts| file_facts.queue_usage.as_ref())
         else {
             continue;

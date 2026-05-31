@@ -42,7 +42,7 @@ fn collect_backend_routes_from_graph_inputs(
     all_files: &[PathBuf],
     register_object: &str,
     pattern_globset: &GlobSet,
-    facts: Option<&TsFactMap>,
+    facts: Option<&dyn TsFactLookup>,
     test_filter: Option<&crate::codebase::test_filter::TestFileFilter>,
 ) -> Vec<(PathBuf, String)> {
     let route_files: Vec<PathBuf> = all_files
@@ -58,7 +58,7 @@ fn collect_backend_routes_from_graph_inputs(
     if let Some(facts) = facts {
         return route_files
             .par_iter()
-            .filter_map(|path| facts.get(path).map(|file_facts| (path, file_facts)))
+            .filter_map(|path| facts.get_ts_facts(path).map(|file_facts| (path, file_facts)))
             .flat_map(|(path, file_facts)| {
                 file_facts
                     .backend_routes

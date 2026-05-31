@@ -40,6 +40,97 @@ fn basic_forbidden_module_fails() {
 }
 
 #[test]
+fn shared_facts_path_matches_standalone_check() {
+    let root = fixture("forbidden-dependencies-basic");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let graph_plan = graph_plan(&config).expect("fixture config enables forbidden dependencies");
+    let (fact_plan, fact_context) =
+        crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan(&root, graph_plan);
+    let files =
+        crate::codebase::ts_source::discover_files(&root, &config.filesystem.skip_directories);
+    let shared = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        files,
+        crate::codebase::check_facts::CheckFactPlan {
+            graph: fact_plan,
+            graph_context: fact_context,
+            ..Default::default()
+        },
+    );
+
+    let standalone = check(&root, &config, None).unwrap();
+    let with_facts = check_with_facts(&root, &config, None, &shared).unwrap();
+
+    assert_eq!(with_facts, standalone);
+}
+
+#[test]
+fn shared_facts_path_rejects_missing_graph_facts() {
+    let root = fixture("forbidden-dependencies-basic");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let shared = crate::codebase::check_facts::CheckFactMap::default();
+
+    let error = check_with_facts(&root, &config, None, &shared).unwrap_err();
+
+    assert!(
+        format!("{error:#}").contains("missing graph facts"),
+        "expected missing graph facts error, got: {error:#}"
+    );
+}
+
+#[test]
+fn shared_facts_path_falls_back_when_graph_plan_needs_no_ts_facts() {
+    let root = fixture("forbidden-dependencies-package-only");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let shared = crate::codebase::check_facts::CheckFactMap::default();
+
+    let findings = check_with_facts(&root, &config, None, &shared).unwrap();
+
+    assert!(
+        findings.iter().any(|f| f.rule == RULE_ID),
+        "expected package-only forbidden dependency finding, got: {findings:?}"
+    );
+}
+
+#[test]
+fn shared_facts_path_falls_back_for_parse_errors() {
+    let root = fixture("forbidden-dependencies-parse-error");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let graph_plan = graph_plan(&config).expect("fixture config enables forbidden dependencies");
+    let (fact_plan, fact_context) =
+        crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan(&root, graph_plan);
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let shared = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        files,
+        crate::codebase::check_facts::CheckFactPlan {
+            graph: fact_plan,
+            graph_context: fact_context,
+            ..Default::default()
+        },
+    );
+
+    assert!(shared.stats.parse_errors > 0);
+    let findings = check_with_facts(&root, &config, None, &shared).unwrap();
+
+    assert!(
+        findings.iter().any(|f| f.rule == RULE_ID),
+        "expected parse-error fallback to preserve forbidden dependency finding, got: {findings:?}"
+    );
+}
+
+#[test]
+fn graph_plan_and_shared_facts_empty_when_rule_is_not_configured() {
+    let root = fixture("forbidden-dependencies-basic");
+    let config = NoMistakesConfig::default();
+    let shared = crate::codebase::check_facts::CheckFactMap::default();
+
+    assert!(graph_plan(&config).is_none());
+    let findings = check_with_facts(&root, &config, None, &shared).unwrap();
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn passes_fixture_has_no_findings() {
     let root = fixture("forbidden-dependencies-passes");
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
@@ -298,6 +389,37 @@ fn queue_job_nodes_are_not_matched() {
     };
     let findings = check_application(&root, &opts, &graph).unwrap();
     assert!(findings.is_empty(), "QueueJob nodes should not be matched");
+}
+
+#[test]
+fn source_filter_excludes_matching_forbidden_root() {
+    let root = fixture("forbidden-dependencies-basic");
+    let config = NoMistakesConfig {
+        rules: vec![crate::config::v2::schema::RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(crate::config::v2::schema::RuleScope::Repository),
+            exclude: vec!["entrypoints/api.mts".to_string()],
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let opts = Options {
+        roots: vec!["entrypoints/api.mts".to_string()],
+        forbidden_modules: vec!["sharp".to_string()],
+        forbidden_files: vec![],
+        relationships: vec![],
+    };
+    let tsconfig = resolve_tsconfig(&root, None).unwrap();
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &tsconfig,
+        crate::codebase::dependencies::graph::GraphBuildPlan::imports_and_workspace(),
+    )
+    .unwrap();
+
+    let findings = check_rule_application(&root, &config, &config.rules[0], &opts, &graph).unwrap();
+
+    assert!(findings.is_empty());
 }
 
 #[test]

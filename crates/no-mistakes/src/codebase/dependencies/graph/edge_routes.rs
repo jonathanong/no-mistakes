@@ -2,7 +2,7 @@ fn collect_route_edges(
     root: &Path,
     tsconfig: &TsConfig,
     all_files: &[PathBuf],
-    facts: Option<&TsFactMap>,
+    facts: Option<&dyn TsFactLookup>,
     config_options: Option<&GraphConfigOptions>,
 ) -> Vec<Edge> {
     use crate::codebase::ts_routes::{defs_frontend, matcher};
@@ -146,7 +146,7 @@ fn collect_route_edges(
                         }
                     }
                 };
-            if let Some(file_facts) = facts.and_then(|facts| facts.get(&path)) {
+            if let Some(file_facts) = facts.and_then(|facts| facts.get_ts_facts(&path)) {
                 push_edges_for_refs(&file_facts.route_refs);
             }
             edges
