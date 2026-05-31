@@ -85,6 +85,64 @@ fn report_options_forward_relative_top_level_tsconfig_from_root() {
 }
 
 #[test]
+fn report_options_keep_per_report_tsconfig_override() {
+    let options = parse_options::<AnalyzeProjectOptions>(
+        &json!({
+            "root": fixture_root("simple"),
+            "tsconfig": "tsconfig.json",
+            "reports": [{
+                "type": "symbols",
+                "files": ["a.mts"],
+                "tsconfig": "custom.json"
+            }]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let symbols: Value =
+        serde_json::from_str(&options::symbols_options(&options.reports[0], &options).unwrap())
+            .unwrap();
+    assert_eq!(symbols["tsconfig"], "custom.json");
+}
+
+#[test]
+fn report_options_forward_absolute_top_level_tsconfig() {
+    let absolute = PathBuf::from(fixture_root("forbidden-dependencies-passes"))
+        .join("tsconfig.json")
+        .display()
+        .to_string();
+    let options = parse_options::<AnalyzeProjectOptions>(
+        &json!({
+            "root": fixture_root("simple"),
+            "tsconfig": absolute,
+            "reports": [{ "type": "symbols", "files": ["a.mts"] }]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let symbols: Value =
+        serde_json::from_str(&options::symbols_options(&options.reports[0], &options).unwrap())
+            .unwrap();
+    assert_eq!(symbols["tsconfig"], absolute);
+}
+
+#[test]
+fn report_options_keep_relative_top_level_tsconfig_without_root() {
+    let options = parse_options::<AnalyzeProjectOptions>(
+        &json!({
+            "tsconfig": "tsconfig.json",
+            "reports": [{ "type": "symbols", "files": ["a.mts"] }]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let symbols: Value =
+        serde_json::from_str(&options::symbols_options(&options.reports[0], &options).unwrap())
+            .unwrap();
+    assert_eq!(symbols["tsconfig"], "tsconfig.json");
+}
+
+#[test]
 fn report_options_allow_missing_top_level_root() {
     let options = parse_options::<AnalyzeProjectOptions>(
         &json!({
