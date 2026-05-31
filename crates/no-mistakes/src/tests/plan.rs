@@ -100,7 +100,15 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     }
 
     // 3. Build graph and test filter
-    let graph = DepGraph::build(root.as_path(), &tsconfig)?;
+    let graph = if args.include_symbols {
+        no_mistakes::codebase::dependencies::graph::DepGraph::build_with_plan(
+            root.as_path(),
+            &tsconfig,
+            no_mistakes::codebase::dependencies::graph::GraphBuildPlan::all().with_symbols(true),
+        )?
+    } else {
+        DepGraph::build(root.as_path(), &tsconfig)?
+    };
     let test_filter = TestFileFilter::new(root.as_path(), &config);
 
     let mut selected_map: HashMap<PathBuf, SelectedTest> = HashMap::new();
@@ -134,102 +142,105 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
         }
 
         // Otherwise, run BFS path finder in reverse direction
-        let start_node = NodeId::File(changed.clone());
-        let (reachable_tests, path_parents) =
-            bfs_path_find(&graph, &start_node, &test_filter, &root);
+        let start_nodes = changed_start_nodes(&graph, changed, args.include_symbols);
 
-        for (test_node, edge_path) in reachable_tests {
-            let test_path = match &test_node {
-                NodeId::File(p) => p.clone(),
-                _ => continue,
-            };
-            let rel_test = relative_path(&root, &test_path);
+        for start_node in start_nodes {
+            let (reachable_tests, path_parents) =
+                bfs_path_find(&graph, &start_node, &test_filter, &root);
 
-            // Compute confidence of the path
-            let path_conf = path_confidence(&edge_path);
+            for (test_node, edge_path) in reachable_tests {
+                let test_path = match &test_node {
+                    NodeId::File(p) => p.clone(),
+                    _ => continue,
+                };
+                let rel_test = relative_path(&root, &test_path);
 
-            // Reconstruct path node chain and collect warnings in a single pass
-            let mut node_chain = Vec::new();
-            let mut curr = test_node.clone();
-            node_chain.push(slash_node_name(&curr, &root));
+                // Compute confidence of the path
+                let path_conf = path_confidence(&edge_path);
 
-            while let Some((parent, kind)) = path_parents.get(&curr) {
-                node_chain.push(slash_node_name(parent, &root));
+                // Reconstruct path node chain and collect warnings in a single pass
+                let mut node_chain = Vec::new();
+                let mut curr = test_node.clone();
+                node_chain.push(slash_node_name(&curr, &root));
 
-                match kind {
-                    EdgeKind::DynamicImport => {
-                        let warn = Warning {
-                            r#type: "dynamic-import".to_string(),
-                            message: format!(
-                                "Dynamic import in `{}` might not be fully resolved.",
-                                slash_node_name(&curr, &root)
-                            ),
-                            file: slash_node_name(&curr, &root),
-                        };
-                        if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
-                            warnings.push(warn);
+                while let Some((parent, kind)) = path_parents.get(&curr) {
+                    node_chain.push(slash_node_name(parent, &root));
+
+                    match kind {
+                        EdgeKind::DynamicImport => {
+                            let warn = Warning {
+                                r#type: "dynamic-import".to_string(),
+                                message: format!(
+                                    "Dynamic import in `{}` might not be fully resolved.",
+                                    slash_node_name(&curr, &root)
+                                ),
+                                file: slash_node_name(&curr, &root),
+                            };
+                            if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+                                warnings.push(warn);
+                            }
                         }
-                    }
-                    EdgeKind::HttpCall => {
-                        let warn = Warning {
-                            r#type: "http-call".to_string(),
-                            message: format!(
-                                "Dynamic HTTP call in `{}` to backend `{}`.",
-                                slash_node_name(&curr, &root),
-                                slash_node_name(parent, &root)
-                            ),
-                            file: slash_node_name(&curr, &root),
-                        };
-                        if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
-                            warnings.push(warn);
+                        EdgeKind::HttpCall => {
+                            let warn = Warning {
+                                r#type: "http-call".to_string(),
+                                message: format!(
+                                    "Dynamic HTTP call in `{}` to backend `{}`.",
+                                    slash_node_name(&curr, &root),
+                                    slash_node_name(parent, &root)
+                                ),
+                                file: slash_node_name(&curr, &root),
+                            };
+                            if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+                                warnings.push(warn);
+                            }
                         }
-                    }
-                    EdgeKind::ProcessSpawn => {
-                        let warn = Warning {
-                            r#type: "process-spawn".to_string(),
-                            message: format!(
-                                "Process spawned in `{}`.",
-                                slash_node_name(&curr, &root)
-                            ),
-                            file: slash_node_name(&curr, &root),
-                        };
-                        if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
-                            warnings.push(warn);
+                        EdgeKind::ProcessSpawn => {
+                            let warn = Warning {
+                                r#type: "process-spawn".to_string(),
+                                message: format!(
+                                    "Process spawned in `{}`.",
+                                    slash_node_name(&curr, &root)
+                                ),
+                                file: slash_node_name(&curr, &root),
+                            };
+                            if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+                                warnings.push(warn);
+                            }
                         }
+                        _ => {}
                     }
-                    _ => {}
+                    curr = parent.clone();
                 }
-                curr = parent.clone();
-            }
-            node_chain.reverse();
+                node_chain.reverse();
 
-            let via_strings: Vec<String> = edge_path
-                .iter()
-                .map(|k| impact_reason_label(*k).to_string())
-                .collect();
+                let via_strings: Vec<String> = edge_path
+                    .iter()
+                    .map(|k| impact_reason_label(*k).to_string())
+                    .collect();
 
-            let reason = ImpactReason {
-                changed_file: rel_changed.clone(),
-                path: node_chain,
-                via: via_strings,
-            };
+                let reason = ImpactReason {
+                    changed_file: rel_changed.clone(),
+                    path: node_chain,
+                    via: via_strings,
+                };
 
-            let entry = selected_map
-                .entry(test_path)
-                .or_insert_with(|| SelectedTest {
-                    test_file: rel_test.clone(),
-                    confidence: path_conf,
-                    targets: Vec::new(),
-                    reasons: Vec::new(),
-                });
+                let entry = selected_map
+                    .entry(test_path)
+                    .or_insert_with(|| SelectedTest {
+                        test_file: rel_test.clone(),
+                        confidence: path_conf,
+                        targets: Vec::new(),
+                        reasons: Vec::new(),
+                    });
 
-            // Update confidence to the highest among paths
-            if path_conf > entry.confidence {
-                entry.confidence = path_conf;
-            }
+                // Update confidence to the highest among paths
+                if path_conf > entry.confidence {
+                    entry.confidence = path_conf;
+                }
 
-            if !entry.reasons.contains(&reason) {
-                entry.reasons.push(reason);
+                if !entry.reasons.contains(&reason) {
+                    entry.reasons.push(reason);
+                }
             }
         }
     }
@@ -248,11 +259,13 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     // 6. Trace entrypoints (file#export)
     trace_entrypoints(
         &args.entrypoints,
+        &args.entrypoint_symbols,
         &graph,
         &test_filter,
         &root,
         &mut selected_map,
-    );
+        args.include_symbols,
+    )?;
 
     let mut selected_tests: Vec<SelectedTest> = selected_map.into_values().collect();
     for test in &mut selected_tests {
@@ -354,6 +367,10 @@ fn discover_all_tests(
 pub(crate) fn slash_node_name(node: &NodeId, root: &Path) -> String {
     match node {
         NodeId::File(p) => no_mistakes::codebase::ts_source::relative_slash_path(root, p),
+        NodeId::Symbol { file, symbol } => {
+            let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, file);
+            format!("{}#{}", rel, symbol)
+        }
         NodeId::Module(specifier) => specifier.clone(),
         NodeId::QueueJob { queue_file, job } => {
             let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, queue_file);
@@ -364,6 +381,39 @@ pub(crate) fn slash_node_name(node: &NodeId, root: &Path) -> String {
 
 pub(crate) fn relative_path(root: &Path, absolute: &Path) -> String {
     no_mistakes::codebase::ts_source::relative_slash_path(root, absolute)
+}
+
+fn changed_start_nodes(graph: &DepGraph, changed: &Path, include_symbols: bool) -> Vec<NodeId> {
+    symbol_aware_start_nodes(graph, changed, None, include_symbols)
+}
+
+pub(crate) fn symbol_aware_start_nodes(
+    graph: &DepGraph,
+    file: &Path,
+    symbol: Option<&String>,
+    include_symbols: bool,
+) -> Vec<NodeId> {
+    if let Some(symbol) = symbol.filter(|_| include_symbols) {
+        return vec![NodeId::Symbol {
+            file: file.to_path_buf(),
+            symbol: symbol.clone(),
+        }];
+    }
+    let file_node = NodeId::File(file.to_path_buf());
+    let mut starts = vec![file_node.clone()];
+    if include_symbols {
+        if let Some(neighbors) = graph.dependencies_of_node(&file_node) {
+            starts.extend(neighbors.iter().filter_map(|(node, _)| match node {
+                NodeId::Symbol {
+                    file: symbol_file, ..
+                } if symbol_file == file => Some(node.clone()),
+                _ => None,
+            }));
+        }
+    }
+    starts.sort();
+    starts.dedup();
+    starts
 }
 
 /// Custom BFS path finder in the reverse (dependents) direction.
@@ -381,6 +431,7 @@ pub(crate) fn bfs_path_find(
     let mut queue = VecDeque::new();
     let mut parents: HashMap<NodeId, (NodeId, EdgeKind)> = HashMap::new();
     let mut visited = HashSet::new();
+    let mut owner_widened_files = HashSet::new();
     let mut reachable = Vec::new();
 
     queue.push_back(start.clone());
@@ -405,7 +456,35 @@ pub(crate) fn bfs_path_find(
         // Get dependents
         if let Some(neighbors) = graph.dependents_of_node(&current) {
             for (neighbor, kind) in neighbors {
+                if owner_widened_files.contains(&current)
+                    && !owner_widened_neighbor_allowed(
+                        root,
+                        test_filter,
+                        graph,
+                        neighbor,
+                        neighbors,
+                    )
+                {
+                    continue;
+                }
+                if let (NodeId::Symbol { file, .. }, NodeId::File(neighbor_file)) =
+                    (&current, neighbor)
+                {
+                    if current == *start
+                        && file == neighbor_file
+                        && !test_filter.is_match(root, neighbor_file)
+                    {
+                        continue;
+                    }
+                }
                 if !visited.contains(neighbor) {
+                    if let (NodeId::Symbol { file, .. }, NodeId::File(neighbor_file)) =
+                        (&current, neighbor)
+                    {
+                        if file == neighbor_file {
+                            owner_widened_files.insert(neighbor.clone());
+                        }
+                    }
                     visited.insert(neighbor.clone());
                     parents.insert(neighbor.clone(), (current.clone(), *kind));
                     queue.push_back(neighbor.clone());

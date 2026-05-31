@@ -1,10 +1,15 @@
 use anyhow::Result;
 use oxc::allocator::Allocator;
 use oxc::ast::ast::{
-    Argument, CallExpression, ExportAllDeclaration, ExportDefaultDeclaration,
-    ExportDefaultDeclarationKind, ExportNamedDeclaration, ExportSpecifier, Expression,
-    ImportDeclaration, ImportDeclarationSpecifier, ImportExpression, MethodDefinition,
-    ModuleExportName, ObjectProperty, Program, TSImportType, VariableDeclarator,
+    Argument, BindingPattern, BlockStatement, CallExpression, CatchClause, Class, ClassElement,
+    ExportAllDeclaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind,
+    ExportNamedDeclaration, ExportSpecifier, Expression, FormalParameters, IdentifierReference,
+    ImportDeclaration, ImportDeclarationSpecifier, ImportExpression, JSXOpeningElement,
+    MethodDefinition, ModuleExportName, ObjectExpression, ObjectProperty, ObjectPropertyKind,
+    Program, Statement, StaticMemberExpression, TSEnumDeclaration, TSImportType,
+    TSInterfaceDeclaration, TSQualifiedName, TSTypeAliasDeclaration, TSTypeName, TSTypeParameter,
+    TSTypeParameterDeclaration, TSTypeReference, VariableDeclaration, VariableDeclarationKind,
+    VariableDeclarator,
 };
 use oxc::ast_visit::{walk, Visit};
 use oxc::parser::Parser;
@@ -31,6 +36,7 @@ pub struct ExtractedImport {
     pub specifier: String,
     pub kind: ImportKind,
     pub function_scope: Option<String>,
+    pub side_effect_only: bool,
 }
 
 /// A statically visible function call in a file.
@@ -38,12 +44,15 @@ pub struct ExtractedImport {
 pub struct FunctionCall {
     pub caller: Option<String>,
     pub callee: String,
+    pub static_arg: Option<String>,
+    pub static_cwd: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ImportFacts {
     pub imports: Vec<ExtractedImport>,
     pub function_calls: Vec<FunctionCall>,
+    pub symbol_references: Vec<FunctionCall>,
     pub exported_functions: Vec<String>,
     pub unknown_callers: Vec<Option<String>>,
     pub has_unknown_top_level_call: bool,
@@ -84,99 +93,110 @@ pub fn extract_imports_from_program<'a>(program: &Program<'a>) -> Vec<ExtractedI
 
 pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFacts {
     let mut collector = ImportCollector::default();
+    let local_type_names = local_type_declaration_names(program);
+    collector
+        .exported_functions
+        .extend(later_named_value_exports(program, &local_type_names));
+    collector
+        .later_exported_type_names
+        .extend(later_named_type_exports(program, &local_type_names));
     collector.visit_program(program);
-    let mut exported_functions: Vec<_> = collector.exported_functions.into_iter().collect();
+    let callable_scopes = collector.callable_scopes;
+    let exported_type_scopes = collector.exported_type_scopes;
+    let mut exported_functions: Vec<_> = collector
+        .exported_functions
+        .into_iter()
+        .filter(|scope| callable_scopes.contains(scope) || exported_type_scopes.contains(scope))
+        .collect();
     exported_functions.sort();
     ImportFacts {
         imports: collector.imports,
         function_calls: collector.function_calls,
+        symbol_references: collector.symbol_references,
         exported_functions,
         unknown_callers: collector.unknown_callers,
         has_unknown_top_level_call: collector.has_unknown_top_level_call,
     }
 }
 
-include!("extract_visit.rs");
-
-fn binding_identifier_name<'a>(pattern: &'a oxc::ast::ast::BindingPattern<'a>) -> Option<&'a str> {
-    match pattern {
-        oxc::ast::ast::BindingPattern::BindingIdentifier(identifier) => {
-            Some(identifier.name.as_str())
+fn later_named_value_exports<'a>(
+    program: &Program<'a>,
+    local_type_names: &HashSet<String>,
+) -> Vec<String> {
+    let mut exports = Vec::new();
+    for statement in &program.body {
+        let Statement::ExportNamedDeclaration(export) = statement else {
+            continue;
+        };
+        if export.source.is_some() || export.export_kind.is_type() {
+            continue;
         }
-        _ => None,
-    }
-}
-
-fn simple_callee_name<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
-    match expr {
-        Expression::Identifier(ident) => Some(ident.name.as_str()),
-        Expression::ParenthesizedExpression(parenthesized) => {
-            simple_callee_name(&parenthesized.expression)
+        for specifier in &export.specifiers {
+            if specifier.export_kind.is_type() {
+                continue;
+            }
+            if let Some(name) = module_export_name_name(&specifier.local) {
+                if local_type_names.contains(name) {
+                    continue;
+                }
+                exports.push(name.to_string());
+            }
         }
-        _ => None,
     }
+    exports
 }
 
-fn import_declaration_kind(import: &ImportDeclaration<'_>) -> ImportKind {
-    if import.import_kind.is_type()
-        || all_named_specifiers_are_type(import.specifiers.as_deref().map(|v| &**v))
-    {
-        ImportKind::Type
-    } else {
-        ImportKind::Static
+fn later_named_type_exports<'a>(
+    program: &Program<'a>,
+    local_type_names: &HashSet<String>,
+) -> Vec<String> {
+    let mut exports = Vec::new();
+    for statement in &program.body {
+        let Statement::ExportNamedDeclaration(export) = statement else {
+            continue;
+        };
+        if export.source.is_some() {
+            continue;
+        }
+        for specifier in &export.specifiers {
+            if let Some(name) = module_export_name_name(&specifier.local) {
+                if !export.export_kind.is_type()
+                    && !specifier.export_kind.is_type()
+                    && !local_type_names.contains(name)
+                {
+                    continue;
+                }
+                exports.push(name.to_string());
+            }
+        }
     }
+    exports
 }
 
-fn export_named_declaration_kind(export: &ExportNamedDeclaration<'_>) -> ImportKind {
-    if export.export_kind.is_type() || all_export_specifiers_are_type(&export.specifiers) {
-        ImportKind::Type
-    } else {
-        ImportKind::Static
-    }
-}
-
-fn all_named_specifiers_are_type(specifiers: Option<&[ImportDeclarationSpecifier<'_>]>) -> bool {
-    let Some(specifiers) = specifiers else {
-        return false;
-    };
-    !specifiers.is_empty()
-        && specifiers.iter().all(|spec| {
-            matches!(
-                spec,
-                ImportDeclarationSpecifier::ImportSpecifier(s) if s.import_kind.is_type()
-            )
+fn local_type_declaration_names<'a>(program: &Program<'a>) -> HashSet<String> {
+    program
+        .body
+        .iter()
+        .filter_map(|stmt| match stmt {
+            Statement::TSTypeAliasDeclaration(decl) => Some(decl.id.name.as_str().to_string()),
+            Statement::TSInterfaceDeclaration(decl) => Some(decl.id.name.as_str().to_string()),
+            _ => None,
         })
+        .collect()
 }
 
-fn all_export_specifiers_are_type(specifiers: &[ExportSpecifier<'_>]) -> bool {
-    !specifiers.is_empty() && specifiers.iter().all(|s| s.export_kind.is_type())
-}
-
-fn module_export_name_name<'a>(name: &'a ModuleExportName<'a>) -> Option<&'a str> {
-    if let ModuleExportName::IdentifierReference(identifier) = name {
-        Some(identifier.name.as_str())
-    } else {
-        None
-    }
-}
-
-fn is_require_callee(expr: &Expression<'_>) -> bool {
-    matches!(expr, Expression::Identifier(ident) if ident.name == "require")
-}
-
-fn string_literal_expr<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
-    match expr {
-        Expression::StringLiteral(s) => Some(s.value.as_str()),
-        _ => None,
-    }
-}
-
-fn string_literal_argument<'a>(arg: &'a Argument<'a>) -> Option<&'a str> {
-    match arg {
-        Argument::StringLiteral(s) => Some(s.value.as_str()),
-        _ => None,
-    }
-}
+include!("extract_visit.rs");
+include!("extract_collector_methods.rs");
+include!("extract_visit_aggregates.rs");
+include!("extract_visit_object_references.rs");
+include!("extract_visit_helpers.rs");
+include!("extract_default_helpers.rs");
+include!("extract_object_scope_helpers.rs");
+include!("extract_type_scope_helpers.rs");
+include!("extract_visit_hoist.rs");
+include!("extract_visit_types.rs");
+include!("extract_binding_helpers.rs");
+include!("extract_syntax_helpers.rs");
 
 /// Returns `true` for `.tsx` / `.jsx` files (which need the TSX grammar).
 pub fn is_tsx_file(path: &Path) -> bool {
@@ -194,5 +214,9 @@ pub fn is_indexable(path: &Path) -> bool {
     )
 }
 
+#[cfg(test)]
+mod coverage_tests;
+#[cfg(test)]
+mod extra_tests;
 #[cfg(test)]
 mod tests;

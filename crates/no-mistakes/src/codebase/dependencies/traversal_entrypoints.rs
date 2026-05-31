@@ -1,3 +1,87 @@
+fn resolve_entrypoints_with_files(
+    raw_entrypoints: &[PathBuf],
+    symbol_entrypoints: &[Option<String>],
+    structured_entrypoints: &[bool],
+    root: &Path,
+    cwd: &Path,
+    graph_files: &graph::GraphFiles,
+    include_symbols: bool,
+) -> Vec<Entrypoint> {
+    let workspace =
+        crate::codebase::workspaces::load_from_files(root, graph_files.all()).unwrap_or_default();
+    let root_dependencies = root_dependency_names(root);
+    raw_entrypoints
+        .iter()
+        .enumerate()
+        .map(|(index, raw)| {
+            let raw_str = raw.to_string_lossy();
+            let structured_symbol = symbol_entrypoints.get(index).cloned().flatten();
+            let structured_entrypoint = structured_entrypoints.get(index).copied().unwrap_or(false);
+            let (raw_file, parsed_symbol) = if structured_entrypoint {
+                (raw.clone(), None)
+            } else {
+                parse_entrypoint(&raw_str)
+            };
+            let symbol = structured_symbol.or(parsed_symbol);
+            let raw_for_node = raw_file.to_string_lossy().to_string();
+            let file = if raw_file.is_absolute() {
+                raw_file
+            } else {
+                let from_root = root.join(&raw_file);
+                if from_root.exists() {
+                    from_root
+                } else {
+                    cwd.join(&raw_file)
+                }
+            };
+            let normalized = crate::codebase::ts_resolver::normalize_path(&file);
+            let mut node =
+                resolve_entrypoint_node(&raw_for_node, &normalized, &workspace, &root_dependencies);
+            let file = match &node {
+                NodeId::File(path) | NodeId::Symbol { file: path, .. } => path.clone(),
+                _ => normalized,
+            };
+            if include_symbols {
+                if let (NodeId::File(file), Some(symbol)) = (&node, &symbol) {
+                    node = NodeId::Symbol {
+                        file: file.clone(),
+                        symbol: symbol.clone(),
+                    };
+                }
+            }
+            Entrypoint { file, node, symbol }
+        })
+        .collect()
+}
+
+fn resolve_entrypoint_node(
+    raw: &str,
+    path: &Path,
+    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    root_dependencies: &std::collections::HashSet<String>,
+) -> NodeId {
+    if path.is_dir() {
+        if let Some(entry) = package_dir_entry(path, workspace) {
+            return NodeId::File(entry);
+        }
+    }
+    if workspace.resolve_specifier(raw).is_none()
+        && raw_package_name(raw).is_some_and(|name| root_dependencies.contains(&name))
+    {
+        return NodeId::Module(raw.to_string());
+    }
+    if path.exists() || raw.starts_with('.') || Path::new(raw).is_absolute() {
+        return NodeId::File(path.to_path_buf());
+    }
+    if let Some(entry) = workspace.resolve_specifier(raw) {
+        return NodeId::File(entry);
+    }
+    if raw_looks_like_source_file(raw, path, root_dependencies) {
+        return NodeId::File(path.to_path_buf());
+    }
+    NodeId::Module(raw.to_string())
+}
+
 fn raw_looks_like_source_file(
     raw: &str,
     path: &Path,

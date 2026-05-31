@@ -15,6 +15,14 @@ fn dedup_occurrences_preserves_distinct_lines() {
     );
 }
 
+#[test]
+fn occurrence_scope_runnable_only_for_hooks_and_tests() {
+    assert!(!std::hint::black_box(TestOccurrenceScope::File).is_runnable());
+    assert!(std::hint::black_box(TestOccurrenceScope::Hook).is_runnable());
+    assert!(!std::hint::black_box(TestOccurrenceScope::TeardownHook).is_runnable());
+    assert!(std::hint::black_box(TestOccurrenceScope::Test).is_runnable());
+}
+
 fn occurrence(line: u32) -> TestOccurrence<&'static str> {
     TestOccurrence {
         value: "selector",

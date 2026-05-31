@@ -46,6 +46,17 @@ fn module_entry(specifier: &str, depth: usize, via: Vec<EdgeKind>) -> NodeEntry 
     }
 }
 
+fn symbol_entry(file: &str, symbol: &str, depth: usize, via: Vec<EdgeKind>) -> NodeEntry {
+    NodeEntry {
+        node: NodeId::Symbol {
+            file: p(file),
+            symbol: symbol.to_string(),
+        },
+        depth,
+        via,
+    }
+}
+
 // ── write_json ──────────────────────────────────────────────────────────
 
 #[test]
@@ -123,6 +134,27 @@ fn json_module_node() {
     );
 }
 
+#[test]
+fn json_symbol_node() {
+    let root = p("/root");
+    let entries = vec![symbol_entry(
+        "/root/src/a.mts",
+        "alpha",
+        1,
+        vec![EdgeKind::Import],
+    )];
+    let v = json_value(&["src/root.mts".to_string()], &entries, &root);
+    assert_eq!(
+        v,
+        serde_json::json!({
+            "roots": ["src/root.mts"],
+            "files": [
+                {"file": "src/a.mts", "symbol": "alpha", "depth": 1, "via": ["import"]},
+            ],
+        })
+    );
+}
+
 // ── write_paths ─────────────────────────────────────────────────────────
 
 #[test]
@@ -161,6 +193,16 @@ fn paths_module_rendered_as_specifier() {
     write_paths(&entries, &root, &mut buf).unwrap();
     let s = String::from_utf8(buf).unwrap();
     assert_eq!(s, "@react/client\n");
+}
+
+#[test]
+fn paths_symbol_rendered_as_file_hash_symbol() {
+    let root = p("/root");
+    let entries = vec![symbol_entry("/root/src/a.mts", "alpha", 1, vec![])];
+    let mut buf = Vec::new();
+    write_paths(&entries, &root, &mut buf).unwrap();
+    let s = String::from_utf8(buf).unwrap();
+    assert_eq!(s, "src/a.mts#alpha\n");
 }
 
 // ── write_human ─────────────────────────────────────────────────────────

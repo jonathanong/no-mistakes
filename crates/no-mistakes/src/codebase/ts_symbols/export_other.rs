@@ -21,6 +21,7 @@ fn process_export_default_declaration(
     };
     out.exports.push(Export {
         name,
+        local: is_type_only.then(|| "default".to_string()),
         kind: ExportKind::Default,
         line,
         is_type_only,
@@ -40,6 +41,7 @@ fn process_export_all_declaration(
             .as_ref()
             .map(|name| name.name().to_string())
             .unwrap_or_else(|| "*".to_string()),
+        local: None,
         kind: ExportKind::ReExport {
             source: source_str,
             imported: "*".to_string(),
@@ -59,6 +61,7 @@ fn push_export_if_named(
     if let Some(name) = name {
         out.exports.push(Export {
             name: name.to_string(),
+            local: None,
             kind,
             line,
             is_type_only,
@@ -81,6 +84,7 @@ fn collect_binding_names(
         BindingPattern::BindingIdentifier(id) => {
             out.exports.push(Export {
                 name: id.name.as_str().to_string(),
+                local: None,
                 kind,
                 line,
                 is_type_only,
@@ -101,4 +105,3 @@ fn collect_binding_names(
         }
     }
 }
-

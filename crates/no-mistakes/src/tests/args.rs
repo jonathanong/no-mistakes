@@ -67,9 +67,17 @@ pub(crate) struct PlanArgs {
     #[arg(long = "diff-command", conflicts_with_all = ["diff", "diff_stdin"])]
     pub(crate) diff_command: Option<String>,
 
-    /// file#export entrypoints to trace (union of all). Can be repeated.
+    /// file#export entrypoints to trace (union of all). Symbol suffixes require --symbols.
     #[arg(long = "entrypoint")]
     pub(crate) entrypoints: Vec<String>,
+
+    /// Structured entrypoint symbols paired with entrypoints (programmatic API only).
+    #[arg(skip)]
+    pub(crate) entrypoint_symbols: Vec<Option<String>>,
+
+    /// Include exported symbol nodes for entrypoint traversal.
+    #[arg(long = "symbols", default_value_t = false)]
+    pub(crate) include_symbols: bool,
 
     /// Inline diff content (programmatic API only).
     #[arg(skip)]
@@ -102,9 +110,17 @@ pub(crate) struct PlanArgs {
 
 #[derive(Args, Debug, Clone)]
 pub(crate) struct ImpactArgs {
-    /// file#export entrypoints (positional, repeatable).
+    /// file#export entrypoints (positional, repeatable). Symbol suffixes require --symbols.
     #[arg(required = true)]
     pub(crate) entrypoints: Vec<String>,
+
+    /// Structured entrypoint symbols paired with entrypoints (programmatic API only).
+    #[arg(skip)]
+    pub(crate) entrypoint_symbols: Vec<Option<String>>,
+
+    /// Include exported symbol nodes for entrypoint traversal.
+    #[arg(long = "symbols", default_value_t = false)]
+    pub(crate) include_symbols: bool,
 
     /// Project root directory.
     #[arg(long, default_value = ".")]

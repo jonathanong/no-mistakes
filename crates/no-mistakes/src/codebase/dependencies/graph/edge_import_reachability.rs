@@ -19,6 +19,7 @@ fn import_is_reachable(
         || has_reachable_unknown_call(facts, reachable)
         || reachable.contains(scope)
         || facts.exported_functions.iter().any(|name| name == scope)
+        || (import.kind == ImportKind::Type && exported_symbol_scope(facts, scope))
 }
 
 fn has_reachable_unknown_call(
@@ -34,6 +35,15 @@ fn has_reachable_unknown_call(
                     .iter()
                     .any(|function| function == caller)
         }
+    })
+}
+
+fn exported_symbol_scope(facts: &crate::codebase::ts_source::facts::TsFileFacts, scope: &str) -> bool {
+    facts.symbols.as_ref().is_some_and(|symbols| {
+        symbols
+            .exports
+            .iter()
+            .any(|export| export.local.as_deref().unwrap_or(export.name.as_str()) == scope)
     })
 }
 

@@ -20,7 +20,10 @@ pub enum ExportKind {
 /// A top-level exported symbol.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Export {
+    /// The public exported name.
     pub name: String,
+    /// The local binding that backs this export, when it differs from `name`.
+    pub local: Option<String>,
     pub kind: ExportKind,
     pub line: u32,
     pub is_type_only: bool,
@@ -69,8 +72,21 @@ pub fn extract_symbols(source: &str, is_tsx: bool) -> Result<FileSymbols> {
 
 pub fn extract_symbols_from_program(program: &Program<'_>, source: &str) -> FileSymbols {
     let mut symbols = FileSymbols::default();
+    let local_type_names = local_type_declaration_names(program);
     for stmt in &program.body {
-        process_statement(stmt, source, &mut symbols);
+        process_statement(stmt, source, &local_type_names, &mut symbols);
     }
     symbols
+}
+
+fn local_type_declaration_names(program: &Program<'_>) -> HashSet<String> {
+    program
+        .body
+        .iter()
+        .filter_map(|stmt| match stmt {
+            Statement::TSTypeAliasDeclaration(decl) => Some(decl.id.name.as_str().to_string()),
+            Statement::TSInterfaceDeclaration(decl) => Some(decl.id.name.as_str().to_string()),
+            _ => None,
+        })
+        .collect()
 }

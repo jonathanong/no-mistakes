@@ -75,7 +75,7 @@ impl DepGraph {
             Vec::new()
         };
 
-        let workspace = if plan.imports || plan.workspace || plan.package {
+        let workspace = if plan.imports || plan.workspace || plan.package || plan.symbols {
             crate::codebase::workspaces::load_from_files(root, &graph_files.all).unwrap_or_default()
         } else {
             Default::default()
@@ -100,8 +100,20 @@ impl DepGraph {
         }
 
         if plan.assets {
-            let asset_edges = collect_asset_edges(&parsed_imports, &resolver, graph_files);
-            merge_edges(&mut forward, &mut reverse, asset_edges);
+            merge_edges(&mut forward, &mut reverse, collect_asset_edges(&parsed_imports, &resolver, graph_files));
+        }
+
+        if plan.symbols {
+            let symbol_edges = collect_symbol_edges(
+                root,
+                files,
+                &graph_files.all,
+                facts.expect("TS symbol facts are collected when symbol edges are requested"),
+                &resolver,
+                &workspace,
+                config_options.as_ref(),
+            );
+            merge_edges(&mut forward, &mut reverse, symbol_edges);
         }
 
         if plan.tests {
@@ -161,14 +173,12 @@ impl DepGraph {
         // Keep the file-content fallback empty so graph builds do not add a
         // second source read pass.
         if plan.http || plan.process {
-            let file_contents: Vec<(PathBuf, String)> = Vec::new();
-
             if plan.http {
                 let http_call_edges = collect_http_call_edges(
                     root,
                     tsconfig,
                     facts,
-                    &file_contents,
+                    &[],
                     graph_files.indexable(),
                     &graph_files.all,
                     config_options.as_ref(),
@@ -180,7 +190,7 @@ impl DepGraph {
                 let spawn_edges = collect_process_spawn_edges(
                     root,
                     facts,
-                    &file_contents,
+                    &[],
                     graph_files.indexable(),
                 );
                 merge_edges(&mut forward, &mut reverse, spawn_edges);

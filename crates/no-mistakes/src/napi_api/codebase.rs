@@ -40,7 +40,9 @@ pub(crate) fn build_traverse_args(options: TraverseOptions) -> AnyhowResult<Trav
     }
 
     Ok(TraverseArgs {
-        files: strings_to_paths(options.files),
+        files: entrypoint_files(&options.files),
+        file_entrypoints_are_structured: entrypoint_structured(&options.files),
+        file_symbols: entrypoint_symbols(options.files),
         root: options.root.map(PathBuf::from),
         tsconfig: options.tsconfig.map(PathBuf::from),
         depth: options.depth,
@@ -54,6 +56,7 @@ pub(crate) fn build_traverse_args(options: TraverseOptions) -> AnyhowResult<Trav
             .iter()
             .map(|value| parse_relationship(value))
             .collect::<AnyhowResult<Vec<_>>>()?,
+        include_symbols: options.include_symbols,
         timings: false,
     })
 }
@@ -81,4 +84,23 @@ fn build_symbols_args(options: SymbolOptions) -> AnyhowResult<SymbolsArgs> {
 
 fn strings_to_paths(values: Vec<String>) -> Vec<PathBuf> {
     values.into_iter().map(PathBuf::from).collect()
+}
+
+fn entrypoint_files(values: &[super::options::EntrypointOption]) -> Vec<PathBuf> {
+    values
+        .iter()
+        .cloned()
+        .map(|value| PathBuf::from(value.into_parts().0))
+        .collect()
+}
+
+fn entrypoint_symbols(values: Vec<super::options::EntrypointOption>) -> Vec<Option<String>> {
+    values
+        .into_iter()
+        .map(|value| value.into_parts().1)
+        .collect()
+}
+
+fn entrypoint_structured(values: &[super::options::EntrypointOption]) -> Vec<bool> {
+    values.iter().map(|value| value.is_structured()).collect()
 }

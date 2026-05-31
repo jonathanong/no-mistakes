@@ -42,7 +42,8 @@ pub(crate) struct TestsPlanOptions {
     pub(crate) changed_files: Vec<String>,
     pub(crate) changed_files_file: Option<String>,
     pub(crate) diff: Option<String>,
-    pub(crate) entrypoints: Vec<String>,
+    pub(crate) entrypoints: Vec<EntrypointOption>,
+    pub(crate) include_symbols: bool,
     pub(crate) environment: Option<String>,
     pub(crate) limit_percent: Option<f64>,
     pub(crate) limit_files: Option<usize>,
@@ -55,7 +56,8 @@ pub(crate) struct TestsImpactOptions {
     pub(crate) root: Option<String>,
     pub(crate) config: Option<String>,
     pub(crate) tsconfig: Option<String>,
-    pub(crate) entrypoints: Vec<String>,
+    pub(crate) entrypoints: Vec<EntrypointOption>,
+    pub(crate) include_symbols: bool,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -93,7 +95,7 @@ pub(crate) struct PlaywrightOptions {
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct TraverseOptions {
-    pub(crate) files: Vec<String>,
+    pub(crate) files: Vec<EntrypointOption>,
     pub(crate) root: Option<String>,
     pub(crate) tsconfig: Option<String>,
     pub(crate) depth: Option<usize>,
@@ -101,6 +103,7 @@ pub(crate) struct TraverseOptions {
     pub(crate) target_modules: Vec<String>,
     pub(crate) tests: Vec<String>,
     pub(crate) relationships: Vec<String>,
+    pub(crate) include_symbols: bool,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -112,6 +115,8 @@ pub(crate) struct SymbolOptions {
     pub(crate) kinds: Vec<String>,
     pub(crate) include: Option<String>,
 }
+
+include!("options_entrypoint.rs");
 
 pub(crate) fn parse_options<T: for<'de> Deserialize<'de>>(options_json: &str) -> napi::Result<T> {
     serde_json::from_str(options_json)

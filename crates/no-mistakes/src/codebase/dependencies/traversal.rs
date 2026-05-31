@@ -4,6 +4,7 @@ struct TraversalCtx<'a> {
     graph_files: &'a graph::GraphFiles,
     build_plan: graph::GraphBuildPlan,
     allowed: Option<&'a std::collections::HashSet<EdgeKind>>,
+    symbols: bool,
 }
 
 fn resolve_tsconfig(args: &TraverseArgs, root: &Path) -> Result<TsConfig> {
@@ -34,78 +35,13 @@ fn resolve_root(args: &TraverseArgs, cwd: &Path) -> PathBuf {
     }
 }
 
-fn resolve_entrypoints_with_files(
-    raw_entrypoints: &[PathBuf],
-    root: &Path,
-    cwd: &Path,
-    graph_files: &graph::GraphFiles,
-) -> Vec<Entrypoint> {
-    let workspace =
-        crate::codebase::workspaces::load_from_files(root, graph_files.all()).unwrap_or_default();
-    let root_dependencies = root_dependency_names(root);
-    raw_entrypoints
-        .iter()
-        .map(|raw| {
-            let raw_str = raw.to_string_lossy();
-            let (raw_file, symbol) = parse_entrypoint(&raw_str);
-            let raw_for_node = raw_file.to_string_lossy().to_string();
-            let file = if raw_file.is_absolute() {
-                raw_file
-            } else {
-                let from_root = root.join(&raw_file);
-                if from_root.exists() {
-                    from_root
-                } else {
-                    cwd.join(&raw_file)
-                }
-            };
-            let normalized = crate::codebase::ts_resolver::normalize_path(&file);
-            let node =
-                resolve_entrypoint_node(&raw_for_node, &normalized, &workspace, &root_dependencies);
-            let file = match &node {
-                NodeId::File(path) => path.clone(),
-                _ => normalized,
-            };
-            Entrypoint { file, node, symbol }
-        })
-        .collect()
-}
-
-fn resolve_entrypoint_node(
-    raw: &str,
-    path: &Path,
-    workspace: &crate::codebase::workspaces::WorkspaceMap,
-    root_dependencies: &std::collections::HashSet<String>,
-) -> NodeId {
-    if path.is_dir() {
-        if let Some(entry) = package_dir_entry(path, workspace) {
-            return NodeId::File(entry);
-        }
-    }
-    if workspace.resolve_specifier(raw).is_none()
-        && raw_package_name(raw).is_some_and(|name| root_dependencies.contains(&name))
-    {
-        return NodeId::Module(raw.to_string());
-    }
-    if path.exists() || raw.starts_with('.') || Path::new(raw).is_absolute() {
-        return NodeId::File(path.to_path_buf());
-    }
-    if let Some(entry) = workspace.resolve_specifier(raw) {
-        return NodeId::File(entry);
-    }
-    if raw_looks_like_source_file(raw, path, root_dependencies) {
-        return NodeId::File(path.to_path_buf());
-    }
-    NodeId::Module(raw.to_string())
-}
-
 fn validate_direction(direction: &Direction, entrypoints: &[Entrypoint]) -> Result<()> {
     if matches!(direction, Direction::Deps) {
         for ep in entrypoints {
-            if ep.symbol.is_some() {
+            if ep.symbol.is_some() && !matches!(ep.node, NodeId::Symbol { .. }) {
                 bail!(
                     "#symbol targeting (e.g. `file.mts#exportName`) is only supported \
-                     in the `dependents` direction. For `dependencies`, use a plain file path."
+                     in the `dependents` direction unless --symbols is enabled."
                 );
             }
         }
@@ -153,6 +89,17 @@ fn dependents_entries(
     ctx: &TraversalCtx<'_>,
 ) -> Vec<graph::NodeEntry> {
     let any_symbol = entrypoints.iter().any(|e| e.symbol.is_some());
+    if ctx.symbols {
+        let graph = graph::DepGraph::build_with_plan_and_files(
+            ctx.root,
+            ctx.tsconfig,
+            ctx.build_plan,
+            ctx.graph_files,
+        );
+        let roots = roots_with_existing_queue_jobs(roots, entrypoints, &graph);
+        let roots = roots_with_exported_symbol_roots(&roots, &graph);
+        return graph.dependents_of_symbol_nodes(&roots, depth, ctx.allowed);
+    }
     let symbol_facts = any_symbol.then(|| {
         let mut fact_plan = ctx.build_plan.ts_fact_plan();
         fact_plan.imports = true;

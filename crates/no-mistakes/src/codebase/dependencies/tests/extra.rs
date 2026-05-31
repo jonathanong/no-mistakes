@@ -83,6 +83,29 @@ fn merge_node_entries_keeps_min_depth_and_dedupes_edge_kinds() {
 }
 
 #[test]
+fn symbol_roots_keep_matching_queue_job_roots() {
+    let queue_file = PathBuf::from("/repo/src/queues.ts");
+    let symbol_root = NodeId::Symbol {
+        file: queue_file.clone(),
+        symbol: "sendWelcome".to_string(),
+    };
+    let queue_job = NodeId::QueueJob {
+        queue_file: queue_file.clone(),
+        job: "sendWelcome".to_string(),
+    };
+    let entrypoints = vec![Entrypoint {
+        file: queue_file,
+        node: symbol_root.clone(),
+        symbol: Some("sendWelcome".to_string()),
+    }];
+
+    let roots =
+        roots_with_existing_queue_jobs_by(&[symbol_root], &entrypoints, |node| node == &queue_job);
+
+    assert!(roots.contains(&queue_job));
+}
+
+#[test]
 fn target_module_filter_keeps_only_matching_module_nodes() {
     let entries = vec![
         graph::NodeEntry {
@@ -174,6 +197,8 @@ fn deps_direction_rejects_symbol_entrypoints() {
         .join("fixture");
     let args = TraverseArgs {
         files: vec![PathBuf::from("a.mts#a")],
+        file_symbols: Vec::new(),
+        file_entrypoints_are_structured: Vec::new(),
         root: Some(root),
         tsconfig: None,
         depth: None,
@@ -181,6 +206,7 @@ fn deps_direction_rejects_symbol_entrypoints() {
         target_modules: Vec::new(),
         tests: Vec::new(),
         relationships: Vec::new(),
+        include_symbols: false,
         format: Some(Format::Json),
         json: false,
         timings: false,
@@ -220,6 +246,8 @@ fn symbol_root() -> PathBuf {
 fn traverse_args(root: PathBuf, files: Vec<PathBuf>) -> TraverseArgs {
     TraverseArgs {
         files,
+        file_symbols: Vec::new(),
+        file_entrypoints_are_structured: Vec::new(),
         root: Some(root),
         tsconfig: None,
         depth: Some(3),
@@ -227,6 +255,7 @@ fn traverse_args(root: PathBuf, files: Vec<PathBuf>) -> TraverseArgs {
         target_modules: Vec::new(),
         tests: Vec::new(),
         relationships: Vec::new(),
+        include_symbols: false,
         format: Some(Format::Json),
         json: false,
         timings: false,
@@ -289,6 +318,69 @@ fn run_dependents_covers_mixed_symbol_and_plain_entrypoints() {
     args.format = Some(Format::Human);
 
     run(args, Direction::Dependents).unwrap();
+}
+
+#[test]
+fn shared_traversal_rebuilds_without_symbols_for_plain_reports() {
+    let root = symbol_root();
+    let tsconfig = resolve_tsconfig(&traverse_args(root.clone(), Vec::new()), &root).unwrap();
+    let graph_files = graph::GraphFiles::discover(&root);
+    let cwd = std::env::current_dir().unwrap();
+    let mut shared = SharedTraversalContext::new(root.clone(), tsconfig, graph_files);
+    shared.include_plan(graph::GraphBuildPlan::all().with_symbols(true));
+
+    let mut deps = traverse_args(root.clone(), vec![PathBuf::from("source.mts")]);
+    deps.relationships = vec![RelationshipArg::Import];
+    collect_and_filter_entries_shared(&deps, Direction::Deps, &cwd, &mut shared).unwrap();
+
+    let mut dependents = traverse_args(root, vec![PathBuf::from("source.mts")]);
+    dependents.relationships = vec![RelationshipArg::Import];
+    collect_and_filter_entries_shared(&dependents, Direction::Dependents, &cwd, &mut shared)
+        .unwrap();
+
+    assert_eq!(shared.graph_builds, 0);
+}
+
+#[test]
+fn shared_traversal_symbol_dependents_use_symbol_free_import_graph_when_preplanned() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis")
+        .join("tests-impact-symbol")
+        .join("fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let tsconfig = resolve_tsconfig(&traverse_args(root.clone(), Vec::new()), &root).unwrap();
+    let graph_files = graph::GraphFiles::discover(&root);
+    let cwd = std::env::current_dir().unwrap();
+    let mut shared = SharedTraversalContext::new(root.clone(), tsconfig, graph_files);
+    shared.include_plan(graph::GraphBuildPlan::all().with_symbols(true));
+
+    let mut args = traverse_args(root.clone(), vec![PathBuf::from("utils.mts#parseDate")]);
+    args.relationships = vec![RelationshipArg::Import];
+    let result =
+        collect_and_filter_entries_shared(&args, Direction::Dependents, &cwd, &mut shared)
+            .unwrap();
+
+    assert_eq!(shared.graph_builds, 0);
+    assert_eq!(result.root, root);
+}
+
+#[test]
+fn traversal_queue_root_helpers_cover_missing_deps_and_module_entrypoints() {
+    let file = PathBuf::from("/repo/src/queue.ts");
+    let roots = vec![
+        NodeId::File(file.clone()),
+        NodeId::Module("queue-package".to_string()),
+    ];
+    let expanded = roots_with_exported_symbol_roots_by(&roots, |_| None);
+    assert_eq!(expanded, roots);
+
+    let entrypoints = vec![Entrypoint {
+        file,
+        node: NodeId::Module("queue-package".to_string()),
+        symbol: Some("send".to_string()),
+    }];
+    let queue_roots = roots_with_existing_queue_jobs_by(&expanded, &entrypoints, |_| true);
+    assert_eq!(queue_roots, expanded);
 }
 
 #[test]

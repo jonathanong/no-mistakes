@@ -9,6 +9,7 @@ pub enum TestOccurrenceScope {
 }
 
 impl TestOccurrenceScope {
+    #[cfg_attr(test, inline(never))]
     pub(crate) fn is_runnable(self) -> bool {
         matches!(self, Self::Hook | Self::Test)
     }

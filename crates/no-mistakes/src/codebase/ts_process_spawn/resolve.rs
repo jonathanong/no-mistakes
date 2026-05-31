@@ -1,4 +1,4 @@
-fn resolve_entry_file_from_shell(
+pub(crate) fn resolve_entry_file_from_shell(
     cmd: &str,
     cwd: Option<&str>,
     file_path: &Path,
@@ -24,7 +24,7 @@ fn resolve_entry_file_from_shell(
 }
 
 /// Resolve a file path token against `cwd ?? config_dir ?? root`.
-fn resolve_entry_file(
+pub(crate) fn resolve_entry_file(
     token: &str,
     cwd: Option<&str>,
     file_path: &Path,
@@ -65,4 +65,3 @@ fn looks_like_file_path(token: &str) -> bool {
     let is_url = token.starts_with("http");
     has_file_shape && !is_flag && !is_url
 }
-

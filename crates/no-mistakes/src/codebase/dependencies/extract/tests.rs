@@ -270,6 +270,157 @@ fn fixture_function_expression_import_tracks_named_scope() {
 }
 
 #[test]
+fn static_member_call_records_namespace_member_name() {
+    let allocator = Allocator::default();
+    let ret = Parser::new(
+        &allocator,
+        "function run() { dates.parseDate(); }",
+        SourceType::ts(),
+    )
+    .parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+
+    assert!(facts
+        .function_calls
+        .iter()
+        .any(|call| { call.caller.as_deref() == Some("run") && call.callee == "dates.parseDate" }));
+}
+
+#[test]
+fn exported_declarations_record_identifier_and_type_references() {
+    let allocator = Allocator::default();
+    let ret = Parser::new(
+        &allocator,
+        "import { alpha } from './source.mts';\nimport type { SourceShape } from './source.mts';\nexport const alias: SourceShape = alpha;\nexport type AliasShape = SourceShape;",
+        SourceType::ts(),
+    )
+    .parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+
+    assert!(facts
+        .symbol_references
+        .iter()
+        .any(|call| { call.caller.as_deref() == Some("alias") && call.callee == "alpha" }));
+    assert!(facts
+        .symbol_references
+        .iter()
+        .any(|call| { call.caller.as_deref() == Some("alias") && call.callee == "SourceShape" }));
+    assert!(facts.symbol_references.iter().any(|call| {
+        call.caller.as_deref() == Some("AliasShape") && call.callee == "SourceShape"
+    }));
+}
+
+#[test]
+fn function_parameters_shadow_imported_symbol_references() {
+    let allocator = Allocator::default();
+    let ret = Parser::new(
+        &allocator,
+        "import { alpha, beta, gamma, rest } from './source.mts';
+         export function run({ alpha }: { alpha: number }, [beta]: number[], gamma = 1, ...rest: number[]) {
+           return alpha + beta + gamma + rest.length;
+         }",
+        SourceType::ts(),
+    )
+    .parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+    let callees: Vec<_> = facts
+        .symbol_references
+        .iter()
+        .filter(|call| call.caller.as_deref() == Some("run"))
+        .map(|call| call.callee.as_str())
+        .collect();
+
+    assert!(!callees.contains(&"alpha"));
+    assert!(!callees.contains(&"beta"));
+    assert!(!callees.contains(&"gamma"));
+    assert!(!callees.contains(&"rest"));
+}
+
+#[test]
+fn fixture_assignment_pattern_shadows_imported_calls() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/codebase-analysis/import-facts/fixture/assignment-pattern-shadow.mts",
+    );
+    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
+    let allocator = Allocator::default();
+    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+    let calls: Vec<_> = facts
+        .function_calls
+        .iter()
+        .filter(|call| call.caller.as_deref() == Some("run") && call.callee == "loaded")
+        .collect();
+
+    assert!(calls.is_empty());
+    assert!(!facts
+        .symbol_references
+        .iter()
+        .any(|call| call.caller.as_deref() == Some("run") && call.callee == "loaded"));
+}
+
+#[test]
+fn fixture_anonymous_variable_function_records_anonymous_scope() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/codebase-analysis/import-facts/fixture/anonymous-variable-function.mts",
+    );
+    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
+    let allocator = Allocator::default();
+    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+
+    assert_eq!(facts.imports.len(), 1);
+    assert_eq!(
+        facts.imports[0].function_scope.as_deref(),
+        Some("<anonymous:1>")
+    );
+}
+
+#[test]
+fn fixture_catch_parameter_shadows_only_catch_block_references() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/import-facts/fixture/catch-shadow.mts");
+    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
+    let allocator = Allocator::default();
+    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+    let calls: Vec<_> = facts
+        .function_calls
+        .iter()
+        .filter(|call| call.caller.as_deref() == Some("run") && call.callee == "loaded")
+        .collect();
+
+    assert_eq!(calls.len(), 3);
+}
+
+#[test]
+fn fixture_var_binding_shadows_outside_block_references() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/import-facts/fixture/var-shadow.mts");
+    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
+    let allocator = Allocator::default();
+    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+    let calls: Vec<_> = facts
+        .function_calls
+        .iter()
+        .filter(|call| call.caller.as_deref() == Some("run") && call.callee == "loaded")
+        .collect();
+
+    assert_eq!(calls.len(), 1);
+    assert!(!facts
+        .symbol_references
+        .iter()
+        .any(|call| call.caller.as_deref() == Some("run") && call.callee == "loaded"));
+}
+
+#[test]
 fn fixture_function_expression_falls_back_to_inner_name() {
     let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/import-facts/fixture/destructured-function-expression.mts");
@@ -346,7 +497,7 @@ fn fixture_object_function_properties_track_static_scopes() {
         .map(|import| import.function_scope.as_deref())
         .collect();
 
-    assert_eq!(scopes, vec![Some("load"), Some("fallback")]);
+    assert_eq!(scopes, vec![Some("loaders/load"), Some("loaders/fallback")]);
 }
 
 #[test]
@@ -360,11 +511,14 @@ fn fixture_object_arrow_properties_track_static_scopes() {
     let facts = extract_import_facts_from_program(&ret.program);
 
     assert_eq!(facts.imports.len(), 1);
-    assert_eq!(facts.imports[0].function_scope.as_deref(), Some("lazy"));
+    assert_eq!(
+        facts.imports[0].function_scope.as_deref(),
+        Some("loaders/lazy")
+    );
 }
 
 #[test]
-fn fixture_computed_function_keys_are_visited_outside_scopes() {
+fn fixture_computed_function_keys_are_visited_under_parent_scope() {
     let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/import-facts/fixture/computed-function-keys.mts");
     let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
@@ -381,16 +535,16 @@ fn fixture_computed_function_keys_are_visited_outside_scopes() {
     assert_eq!(
         imports,
         vec![
-            ("./key.mts", None),
-            ("./loaded.mts", None),
+            ("./key.mts", Some("loaders")),
+            ("./loaded.mts", Some("loaders")),
             ("./method-key.mts", None),
-            ("./loaded.mts", None)
+            ("./loaded.mts", Some("Loader"))
         ]
     );
 }
 
 #[test]
-fn fixture_anonymous_function_expression_keeps_import_unscoped() {
+fn fixture_anonymous_function_expression_records_anonymous_scope() {
     let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
         "../../test-cases/codebase-analysis/import-facts/fixture/anonymous-function-expression.mts",
     );
@@ -401,7 +555,10 @@ fn fixture_anonymous_function_expression_keeps_import_unscoped() {
     let facts = extract_import_facts_from_program(&ret.program);
 
     assert_eq!(facts.imports.len(), 1);
-    assert_eq!(facts.imports[0].function_scope, None);
+    assert_eq!(
+        facts.imports[0].function_scope.as_deref(),
+        Some("<anonymous:1>")
+    );
 }
 
 // ── is_indexable / is_tsx_file ──────────────────────────────────────

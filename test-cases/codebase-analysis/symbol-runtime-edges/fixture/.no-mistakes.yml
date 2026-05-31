@@ -1,0 +1,12 @@
+rules:
+- rule: http-route-static-paths
+  scope: repository
+  options:
+    backendPattern: routes/**/*.mts
+    registerObject: httpApp
+- rule: http-call-static-paths
+  scope: repository
+  options:
+    backendPrefixes:
+    - "/api/"
+

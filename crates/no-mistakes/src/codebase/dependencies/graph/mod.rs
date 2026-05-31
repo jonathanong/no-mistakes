@@ -1,4 +1,4 @@
-use super::extract::{is_indexable, ExtractedImport, ImportKind};
+use super::extract::{is_indexable, ExtractedImport, FunctionCall, ImportKind};
 use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
 use crate::codebase::ts_source::facts::{
     collect_ts_facts, collect_ts_facts_with_context, TsFactContext, TsFactMap, TsFactPlan,
@@ -13,6 +13,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 
 include!("types.rs");
+include!("build_plan.rs");
 include!("graph_files.rs");
 include!("files_config.rs");
 include!("edge_maps.rs");
@@ -36,10 +37,26 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
 include!("builder.rs");
 include!("methods_lazy.rs");
 include!("lazy_imports.rs");
+include!("lazy_imports_owner_bridge.rs");
+include!("lazy_import_symbols.rs");
 include!("lazy_import_neighbors.rs");
 include!("sort.rs");
 include!("edge_import_reachability.rs");
 include!("edge_imports.rs");
+include!("edge_symbols.rs");
+include!("edge_symbols_call_graph.rs");
+include!("edge_symbols_http.rs");
+include!("edge_symbols_runtime.rs");
+include!("edge_symbols_exports.rs");
+include!("edge_symbols_star_candidates.rs");
+include!("edge_symbols_star_reexports.rs");
+include!("edge_symbols_star_shadow_keys.rs");
+include!("edge_symbols_helpers.rs");
+include!("edge_symbols_reexport_namespaces.rs");
+include!("edge_symbols_local_scopes.rs");
+include!("edge_symbols_targets.rs");
+include!("edge_symbols_fallbacks.rs");
+include!("edge_symbols_scoped_imports.rs");
 include!("edge_package_manifest.rs");
 include!("edge_tests_md.rs");
 include!("edge_ci.rs");

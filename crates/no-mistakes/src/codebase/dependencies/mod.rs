@@ -19,6 +19,7 @@ include!("args_relationships.rs");
 
 include!("traversal_entrypoints.rs");
 include!("traversal.rs");
+include!("traversal_queue_roots.rs");
 include!("symbol_resolution.rs");
 include!("shared_traversal.rs");
 include!("output_args.rs");
@@ -47,21 +48,21 @@ pub fn run_json(args: TraverseArgs, direction: Direction) -> Result<String> {
     let cwd_early = std::env::current_dir().context("reading current directory")?;
     let mut timings = crate::codebase::timing::PhaseTimings::start();
     let result = collect_and_filter_entries(&args, direction, &cwd_early, &mut timings)?;
-    let root_strs: Vec<String> = args.files.iter().map(|f| f.display().to_string()).collect();
+    let root_strs = output_root_strings(&args);
     let mut out = Vec::new();
     write_output_results(Format::Json, &root_strs, &result, &mut out)?;
     String::from_utf8(out).context("dependency JSON output must be UTF-8")
 }
 
 pub(crate) fn result_json(args: &TraverseArgs, result: &TraversalResult) -> Result<String> {
-    let root_strs: Vec<String> = args.files.iter().map(|f| f.display().to_string()).collect();
+    let root_strs = output_root_strings(args);
     let mut out = Vec::new();
     write_output_results(Format::Json, &root_strs, result, &mut out)?;
     String::from_utf8(out).context("dependency JSON output must be UTF-8")
 }
 
 fn output_results(args: &TraverseArgs, result: &TraversalResult) -> Result<()> {
-    let root_strs: Vec<String> = args.files.iter().map(|f| f.display().to_string()).collect();
+    let root_strs = output_root_strings(args);
 
     let stdout = io::stdout();
     let stdout_is_terminal = stdout.is_terminal();
@@ -69,6 +70,20 @@ fn output_results(args: &TraverseArgs, result: &TraversalResult) -> Result<()> {
 
     let format = resolve_format(args.json, args.format, stdout_is_terminal);
     write_output_results(format, &root_strs, result, &mut out)
+}
+
+fn output_root_strings(args: &TraverseArgs) -> Vec<String> {
+    args.files
+        .iter()
+        .enumerate()
+        .map(|(index, file)| {
+            let file = file.display().to_string();
+            match args.file_symbols.get(index).and_then(Option::as_deref) {
+                Some(symbol) => format!("{file}#{symbol}"),
+                None => file,
+            }
+        })
+        .collect()
 }
 
 fn write_output_results(
@@ -96,7 +111,15 @@ pub(crate) fn collect_and_filter_entries(
 
     let tsconfig = resolve_tsconfig(args, &root)?;
     let graph_files = graph::GraphFiles::discover(&root);
-    let entrypoints = resolve_entrypoints_with_files(&args.files, &root, cwd_early, &graph_files);
+    let entrypoints = resolve_entrypoints_with_files(
+        &args.files,
+        &args.file_symbols,
+        &args.file_entrypoints_are_structured,
+        &root,
+        cwd_early,
+        &graph_files,
+        args.include_symbols,
+    );
 
     timings.mark("search");
 
@@ -104,16 +127,18 @@ pub(crate) fn collect_and_filter_entries(
     validate_direction(&direction, &entrypoints)?;
 
     let allowed = relationship_filter(&args.relationships);
-    let build_plan = graph::GraphBuildPlan::from_allowed(allowed.as_ref());
+    let build_plan =
+        graph::GraphBuildPlan::from_allowed(allowed.as_ref()).with_symbols(args.include_symbols);
     let ctx = TraversalCtx {
         root: &root,
         tsconfig: &tsconfig,
         graph_files: &graph_files,
         build_plan,
         allowed: allowed.as_ref(),
+        symbols: args.include_symbols,
     };
     let roots: Vec<NodeId> = entrypoints.iter().map(|e| e.node.clone()).collect();
-    let import_only = relationships_are_import_only(&args.relationships);
+    let import_only = !args.include_symbols && relationships_are_import_only(&args.relationships);
 
     timings.mark("ingest");
 

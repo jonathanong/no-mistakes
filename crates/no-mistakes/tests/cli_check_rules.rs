@@ -84,6 +84,40 @@ fn server_route_client_boundary_fails_for_client_in_route_folder() {
     );
 }
 
+#[test]
+fn require_test_per_subdir_fails_for_missing_test() {
+    let root = fixture("require-test-per-subdir", "fail");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+
+    assert!(!out.status.success(), "expected exit 1");
+    assert!(body.contains("require-test-per-subdir"), "{body}");
+    assert!(body.contains("agents/email"), "{body}");
+}
+
+#[test]
+fn require_storybook_stories_respects_no_mistakes_comments() {
+    let root = fixture("require-storybook-stories", "comments");
+    let out = check(
+        &root,
+        r#"
+version: 2
+projects:
+  web:
+    type: nextjs
+    root: "."
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      stories: ["stories/**/*.stories.tsx"]
+      include_all_react_named_exports: true
+"#,
+    );
+
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
 // ── Next.js feature ban rules ────────────────────────────────────────────────
 
 #[test]

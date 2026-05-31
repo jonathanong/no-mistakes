@@ -8,6 +8,8 @@ pub(crate) fn build_plan_args(
         None => None,
     };
 
+    let (entrypoints, entrypoint_symbols) = entrypoint_parts(options.entrypoints);
+
     Ok(crate::tests::PlanArgs {
         framework,
         root: options
@@ -23,7 +25,9 @@ pub(crate) fn build_plan_args(
         diff: None,
         diff_stdin: false,
         diff_command: None,
-        entrypoints: options.entrypoints,
+        entrypoints,
+        entrypoint_symbols,
+        include_symbols: options.include_symbols,
         diff_content: options.diff,
         environment: options
             .environment
@@ -60,8 +64,12 @@ pub(crate) fn build_impact_args(
     if options.entrypoints.is_empty() {
         bail!("entrypoints is required and must not be empty");
     }
+    let (entrypoints, entrypoint_symbols) = entrypoint_parts(options.entrypoints);
+
     Ok(crate::tests::ImpactArgs {
-        entrypoints: options.entrypoints,
+        entrypoints,
+        entrypoint_symbols,
+        include_symbols: options.include_symbols,
         root: options
             .root
             .map(PathBuf::from)
@@ -75,4 +83,22 @@ pub(crate) fn build_impact_args(
 
 fn strings_to_paths(values: Vec<String>) -> Vec<PathBuf> {
     values.into_iter().map(PathBuf::from).collect()
+}
+
+fn entrypoint_parts(
+    values: Vec<super::options::EntrypointOption>,
+) -> (Vec<String>, Vec<Option<String>>) {
+    let mut entrypoints = Vec::new();
+    let mut symbols = Vec::new();
+    values.into_iter().for_each(|entrypoint| match entrypoint {
+        super::options::EntrypointOption::Path(path) => {
+            entrypoints.push(path);
+            symbols.push(None);
+        }
+        super::options::EntrypointOption::Symbol(option) => {
+            entrypoints.push(option.file);
+            symbols.push(Some(option.symbol.unwrap_or_default()));
+        }
+    });
+    (entrypoints, symbols)
 }

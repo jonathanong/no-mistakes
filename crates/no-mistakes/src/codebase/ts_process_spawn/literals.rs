@@ -39,7 +39,7 @@ fn literal_string(expr: &Expression) -> Option<String> {
 }
 
 /// Extract `cwd` from the opts object at `args[opts_index]`.
-fn extract_cwd_from_opts(args: &[Argument], opts_index: usize) -> Option<String> {
+pub(crate) fn extract_cwd_from_opts(args: &[Argument], opts_index: usize) -> Option<String> {
     let obj = match args
         .get(opts_index)?
         .as_expression()
