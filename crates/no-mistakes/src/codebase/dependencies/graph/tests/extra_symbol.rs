@@ -407,7 +407,7 @@ fn symbol_bfs_skips_only_the_current_symbol_owner_file() {
 }
 
 #[test]
-fn symbol_bfs_does_not_widen_reached_symbols_to_owner_files() {
+fn symbol_bfs_widens_reached_symbols_to_owner_files() {
     let source = p("/repo/src/source.mts");
     let owner = p("/repo/src/owner.mts");
     let unrelated_consumer = p("/repo/src/unrelated-consumer.mts");
@@ -437,8 +437,8 @@ fn symbol_bfs_does_not_widen_reached_symbols_to_owner_files() {
     let nodes: Vec<_> = result.into_iter().map(|entry| entry.node).collect();
 
     assert!(nodes.contains(&owner_symbol));
-    assert!(!nodes.contains(&NodeId::File(owner)));
-    assert!(!nodes.contains(&NodeId::File(unrelated_consumer)));
+    assert!(nodes.contains(&NodeId::File(owner)));
+    assert!(nodes.contains(&NodeId::File(unrelated_consumer)));
 }
 
 // ── add_test_edges ───────────────────────────────────────────────────────

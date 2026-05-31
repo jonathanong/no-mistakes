@@ -4,7 +4,7 @@ struct StarExportKey {
     namespace: StarExportNamespace,
 }
 
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 enum StarExportNamespace {
     Type,
     Value,

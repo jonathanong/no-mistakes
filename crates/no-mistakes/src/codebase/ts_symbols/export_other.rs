@@ -21,7 +21,7 @@ fn process_export_default_declaration(
     };
     out.exports.push(Export {
         name,
-        local: None,
+        local: is_type_only.then(|| "default".to_string()),
         kind: ExportKind::Default,
         line,
         is_type_only,

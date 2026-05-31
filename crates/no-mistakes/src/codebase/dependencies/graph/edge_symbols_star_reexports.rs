@@ -9,7 +9,7 @@ fn collect_star_reexport_edges(
         let ExportKind::ReExport { source, imported } = &export.kind else {
             continue;
         };
-        if imported != "*" {
+        if imported != "*" || export.name != "*" {
             continue;
         }
         let target = resolve_star_source(inputs, inputs.path, source, export.is_type_only);
@@ -45,7 +45,7 @@ struct StarReexportKind {
     source_kind: EdgeKind,
 }
 
-type StarReexportVisitKey = (PathBuf, StarReexportKind);
+type StarReexportVisitKey = (PathBuf, StarReexportKind, Vec<(String, StarExportNamespace)>);
 
 fn collect_star_reexport_target(
     inputs: &ExportEdgeInputs<'_>,
@@ -55,7 +55,12 @@ fn collect_star_reexport_target(
     candidates: &mut Vec<StarReexportCandidate>,
     visited: &mut HashSet<StarReexportVisitKey>,
 ) {
-    if !visited.insert((target.to_path_buf(), kind)) {
+    let mut shadow_key: Vec<_> = shadowed_exports
+        .iter()
+        .map(|key| (key.name.clone(), key.namespace.clone()))
+        .collect();
+    shadow_key.sort();
+    if !visited.insert((target.to_path_buf(), kind, shadow_key)) {
         return;
     }
     let Some(target_symbols) = inputs

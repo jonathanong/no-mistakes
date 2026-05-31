@@ -326,3 +326,176 @@ fn dependencies_symbols_expand_runtime_file_edges_from_exported_symbol() {
     assert!(out.contains("routes/users.mts\n"), "{out}");
     assert!(out.contains("worker.mts\n"), "{out}");
 }
+
+#[test]
+fn dependencies_symbols_do_not_expand_unrelated_runtime_file_edges() {
+    let root = fixture("symbol-runtime-edges");
+    let output = run(&[
+        "dependencies",
+        "client.mts#formatRuntimeEdges",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "http",
+        "--relationship",
+        "process",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "");
+}
+
+#[test]
+fn dependencies_symbols_expand_member_process_runtime_edges() {
+    let root = fixture("symbol-runtime-edges");
+    let output = run(&[
+        "dependencies",
+        "client.mts#runMemberRuntimeEdge",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "process",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert!(stdout(&output).contains("worker.mts\n"));
+}
+
+#[test]
+fn dependencies_symbols_skip_scopes_without_runtime_calls_in_runtime_files() {
+    let root = fixture("symbol-runtime-edges");
+    let output = run(&[
+        "dependencies",
+        "client.mts#unrelatedRuntimeCall",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "http",
+        "--relationship",
+        "process",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "");
+}
+
+#[test]
+fn dependencies_symbols_ignore_unrelated_runtime_method_names() {
+    let root = fixture("symbol-runtime-edges");
+    let output = run(&[
+        "dependencies",
+        "client.mts#unrelatedRuntimeMethods",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "http",
+        "--relationship",
+        "process",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "");
+}
+
+#[test]
+fn dependents_symbols_continue_through_intermediate_owner_files() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependents",
+        "source.mts#alpha",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert!(
+        stdout(&output).contains("intermediate-owner-side-effect.test.mts\n"),
+        "{}",
+        stdout(&output)
+    );
+}
+
+#[test]
+fn dependents_symbols_do_not_expand_namespace_reexports_as_star_barrels() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependents",
+        "source.mts#alpha",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert!(!stdout(&output).contains("namespace-star-barrel.mts#alpha\n"));
+}
+
+#[test]
+fn dependents_symbols_handle_duplicate_star_reexport_sources() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependents",
+        "source.mts#alpha",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert!(stdout(&output).contains("star-duplicate-barrel.mts#alpha\n"));
+}
+
+#[test]
+fn dependents_symbols_ignore_string_named_star_exports() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependents",
+        "source.mts#alpha",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert!(!stdout(&output).contains("star-string-name-barrel.mts#alpha\n"));
+}
+
+#[test]
+fn dependencies_symbols_default_interface_uses_default_scope() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "default-interface.mts#default",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-type",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "source.mts#SourceShape\n");
+}

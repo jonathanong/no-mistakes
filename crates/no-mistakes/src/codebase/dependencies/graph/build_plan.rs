@@ -103,7 +103,7 @@ impl GraphBuildPlan {
     pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
         TsFactPlan {
             imports: self.imports || self.workspace || self.assets,
-            function_calls: self.imports || self.workspace || self.assets,
+            function_calls: self.imports || self.workspace || self.assets || self.symbols,
             symbols: self.symbols || self.queues,
             react: self.react,
             route_refs: self.routes,

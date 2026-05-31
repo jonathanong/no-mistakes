@@ -63,14 +63,8 @@ fn collect_symbol_edges(
         let local_scopes = local_scope_names(&calls_by_caller, &refs_by_caller, &scoped_imports);
         exported_values.sort();
         exported_values.dedup();
-        collect_symbol_owner_file_edges(
-            path,
-            &exported_values,
-            &caller_to_export,
-            !file_facts.http_calls.is_empty(),
-            !file_facts.process_spawns.is_empty(),
-            &mut edges,
-        );
+        let has_http_calls = !file_facts.http_calls.is_empty();
+        let has_process_spawns = !file_facts.process_spawns.is_empty();
         for exported_value in exported_values {
             let caller_exports = caller_to_export
                 .get(&exported_value)
@@ -83,6 +77,15 @@ fn collect_symbol_edges(
             let mut queue = VecDeque::from([exported_value]);
             while let Some(caller) = queue.pop_front() {
                 if visited.insert(caller.clone()) {
+                    collect_symbol_runtime_owner_file_edges(
+                        path,
+                        &caller_exports,
+                        &caller,
+                        &calls_by_caller,
+                        has_http_calls,
+                        has_process_spawns,
+                        &mut edges,
+                    );
                     if let Some(imports) = scoped_imports.get(&caller) {
                         for (target, kind) in imports {
                             for caller_export in &caller_exports {
@@ -142,40 +145,6 @@ fn collect_symbol_edges(
         }
     }
     edges
-}
-
-fn collect_symbol_owner_file_edges(
-    path: &Path,
-    exported_values: &[String],
-    caller_to_export: &HashMap<String, Vec<String>>,
-    has_http_calls: bool,
-    has_process_spawns: bool,
-    edges: &mut Vec<Edge>,
-) {
-    if !has_http_calls && !has_process_spawns {
-        return;
-    }
-    for exported_value in exported_values {
-        let Some(caller_exports) = caller_to_export.get(exported_value) else {
-            continue;
-        };
-        for caller_export in caller_exports {
-            let from = NodeId::Symbol {
-                file: path.to_path_buf(),
-                symbol: caller_export.clone(),
-            };
-            if has_http_calls {
-                edges.push((from.clone(), NodeId::File(path.to_path_buf()), EdgeKind::HttpCall));
-            }
-            if has_process_spawns {
-                edges.push((
-                    from.clone(),
-                    NodeId::File(path.to_path_buf()),
-                    EdgeKind::ProcessSpawn,
-                ));
-            }
-        }
-    }
 }
 
 fn namespace_import_member_reference_exists(

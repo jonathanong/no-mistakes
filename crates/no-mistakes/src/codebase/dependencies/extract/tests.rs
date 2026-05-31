@@ -518,7 +518,7 @@ fn fixture_object_arrow_properties_track_static_scopes() {
 }
 
 #[test]
-fn fixture_computed_function_keys_are_visited_outside_scopes() {
+fn fixture_computed_function_keys_are_visited_under_parent_scope() {
     let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/import-facts/fixture/computed-function-keys.mts");
     let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
@@ -535,7 +535,7 @@ fn fixture_computed_function_keys_are_visited_outside_scopes() {
     assert_eq!(
         imports,
         vec![
-            ("./key.mts", None),
+            ("./key.mts", Some("loaders")),
             ("./loaded.mts", Some("loaders")),
             ("./method-key.mts", None),
             ("./loaded.mts", Some("Loader"))
