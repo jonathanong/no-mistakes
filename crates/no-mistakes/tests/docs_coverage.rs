@@ -191,6 +191,11 @@ fn rule_docs_use_supported_option_examples() {
             ["uniqueAcrossTypesAndValues:"].as_slice(),
             ["strict:"].as_slice(),
         ),
+        (
+            "package-json-registry-only.md",
+            ["scopes:", "lockfile:"].as_slice(),
+            ["registry:"].as_slice(),
+        ),
     ];
 
     for (file, required, forbidden) in cases {

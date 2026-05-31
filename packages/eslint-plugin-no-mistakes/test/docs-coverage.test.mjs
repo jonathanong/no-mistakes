@@ -19,4 +19,27 @@ describe("docs coverage", () => {
       assert.match(body, /Fix:/, `${file} needs fix guidance`);
     }
   });
+
+  it("documents presets and public rule options", () => {
+    const repo = resolve(__dirname, "../../..");
+    const index = readFileSync(resolve(repo, "docs/eslint-rules/README.md"), "utf8");
+    const pluginDoc = readFileSync(resolve(repo, "docs/eslint-plugin.md"), "utf8");
+
+    for (const preset of Object.keys(plugin.configs).sort()) {
+      assert.ok(index.includes(`configs.${preset}`), `missing configs.${preset} in rule index`);
+      assert.ok(pluginDoc.includes(`configs.${preset}`), `missing configs.${preset} in plugin doc`);
+    }
+
+    for (const optionName of [
+      "selectorAttributes",
+      "canonicalAttribute",
+      "allowInlineScriptIds",
+      "allowInlineScriptIdPatterns",
+      "includePathPatterns",
+      "allowDefaultReExports",
+      "allowBeforeAllAssignments",
+    ]) {
+      assert.ok(pluginDoc.includes(optionName), `missing option ${optionName}`);
+    }
+  });
 });

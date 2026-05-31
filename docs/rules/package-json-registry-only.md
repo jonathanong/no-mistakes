@@ -7,9 +7,12 @@ rules:
   - rule: package-json-registry-only
     scope: repository
     options:
-      registry: "https://registry.npmjs.org/"
+      scopes: [packages]
+      lockfile: pnpm-lock.yaml
 ```
 
-Counterexample: package metadata pointing at an unapproved registry.
+Counterexample: `package.json` using `file:`, `link:`, `git+https:`, or direct
+tarball-style dependency specifiers.
 
-Fix: update package metadata or the policy.
+Fix: use npm registry versions, `workspace:`, `catalog:`, or supported
+`npm:` aliases; keep lockfile package entries registry-backed.

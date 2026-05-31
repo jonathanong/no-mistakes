@@ -6,6 +6,23 @@ Playwright code static enough for AST analysis.
 Use the plugin for file-local rules. Use [`no-mistakes check`](../cli/check.md)
 when a rule needs repository graph or configuration context.
 
+## Presets
+
+The plugin exports two ESLint flat-config presets:
+
+| Preset | Use when |
+| --- | --- |
+| `configs.recommended` | You want the default static-safety rules with low configuration. |
+| `configs.strict` | You want every recommended rule plus stricter Playwright, React, test, and Next.js checks. |
+
+```js
+const noMistakes = require("eslint-plugin-no-mistakes");
+
+module.exports = [noMistakes.configs.strict];
+```
+
+See [ESLint and Oxlint plugin](../eslint-plugin.md) for option schemas.
+
 ## Rule Index
 
 | Rule | Purpose |
