@@ -59,8 +59,14 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
     let mut warnings = Vec::new();
     let mut warnings_seen = HashSet::new();
 
-    for raw in &args.entrypoints {
-        let (raw_file, symbol) = parse_entrypoint(raw);
+    for (index, raw) in args.entrypoints.iter().enumerate() {
+        let structured_symbol = args.entrypoint_symbols.get(index).cloned().flatten();
+        let (raw_file, parsed_symbol) = if structured_symbol.is_some() {
+            (PathBuf::from(raw), None)
+        } else {
+            parse_entrypoint(raw)
+        };
+        let symbol = structured_symbol.or(parsed_symbol);
         if symbol.is_some() && !args.include_symbols {
             anyhow::bail!(
                 "Entrypoint `{}` uses `#symbol`; pass --symbols to enable symbol traversal.",

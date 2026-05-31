@@ -1,11 +1,5 @@
 #[derive(clap::Parser)]
 pub struct TraverseArgs {
-    /// Files to start from. Supports `FILE#SYMBOL` for symbol-level dependents queries
-    /// and `QUEUE_FILE#JOB_NAME` for queue-job dependents queries.
-    /// Can be relative to --root or absolute.
-    #[arg(required = true, value_name = "FILE")]
-    pub files: Vec<PathBuf>,
-
     /// Programmatic API symbol entrypoints parallel to `files`.
     #[arg(skip)]
     pub file_symbols: Vec<Option<String>>,
@@ -54,9 +48,15 @@ pub struct TraverseArgs {
 
     /// Include exported symbol nodes in graph traversal and output.
     #[arg(long = "symbols", default_value_t = false)]
-    pub symbols: bool,
+    pub include_symbols: bool,
 
     /// Emit phase timings to stderr.
     #[arg(long, default_value_t = false)]
     pub timings: bool,
+
+    /// Files to start from. Supports `FILE#SYMBOL` for symbol-level dependents queries
+    /// and `QUEUE_FILE#JOB_NAME` for queue-job dependents queries.
+    /// Can be relative to --root or absolute.
+    #[arg(required = true, value_name = "FILE")]
+    pub files: Vec<PathBuf>,
 }

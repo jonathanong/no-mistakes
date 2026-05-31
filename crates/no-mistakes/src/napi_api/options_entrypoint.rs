@@ -15,12 +15,4 @@ impl EntrypointOption {
             Self::Symbol { file, symbol } => (file, symbol.filter(|symbol| !symbol.is_empty())),
         }
     }
-
-    pub(crate) fn into_cli_string(self) -> String {
-        let (file, symbol) = self.into_parts();
-        match symbol {
-            Some(symbol) => format!("{file}#{symbol}"),
-            None => file,
-        }
-    }
 }

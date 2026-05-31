@@ -129,15 +129,21 @@ fn add_deleted_transitive(
 
 pub(crate) fn trace_entrypoints(
     entrypoints: &[String],
+    entrypoint_symbols: &[Option<String>],
     graph: &DepGraph,
     test_filter: &TestFileFilter,
     root: &Path,
     selected_map: &mut HashMap<PathBuf, SelectedTest>,
     include_symbols: bool,
 ) -> Result<()> {
-    for raw in entrypoints {
-        let (raw_file, symbol) =
-            no_mistakes::codebase::dependencies::parse_entrypoint(raw);
+    for (index, raw) in entrypoints.iter().enumerate() {
+        let structured_symbol = entrypoint_symbols.get(index).cloned().flatten();
+        let (raw_file, parsed_symbol) = if structured_symbol.is_some() {
+            (PathBuf::from(raw), None)
+        } else {
+            no_mistakes::codebase::dependencies::parse_entrypoint(raw)
+        };
+        let symbol = structured_symbol.or(parsed_symbol);
         if symbol.is_some() && !include_symbols {
             anyhow::bail!(
                 "Entrypoint `{raw}` uses `#symbol`; pass --symbols to enable symbol traversal."

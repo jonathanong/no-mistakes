@@ -61,18 +61,18 @@ pub(crate) fn collect_and_filter_entries_shared(
         &shared.root,
         cwd_early,
         &shared.graph_files,
-        args.symbols,
+        args.include_symbols,
     );
 
     validate_direction(&direction, &entrypoints)?;
 
     let allowed = relationship_filter(&args.relationships);
     let roots: Vec<NodeId> = entrypoints.iter().map(|e| e.node.clone()).collect();
-    let import_only = !args.symbols && relationships_are_import_only(&args.relationships);
+    let import_only = !args.include_symbols && relationships_are_import_only(&args.relationships);
     let any_symbol = entrypoints
         .iter()
         .any(|entrypoint| entrypoint.symbol.is_some());
-    let symbol_index = if matches!(direction, Direction::Dependents) && any_symbol && !args.symbols
+    let symbol_index = if matches!(direction, Direction::Dependents) && any_symbol && !args.include_symbols
     {
         Some(graph::SymbolIndex::build_from_files(
             &shared.tsconfig,
@@ -91,11 +91,11 @@ pub(crate) fn collect_and_filter_entries_shared(
             &shared.graph_files,
             allowed.as_ref(),
         ),
-        Direction::Deps if shared.build_plan.symbols && !args.symbols => shared
+        Direction::Deps if shared.build_plan.symbols && !args.include_symbols => shared
             .request_graph_without_symbols(allowed.as_ref())
             .deps_of(&roots, args.depth, allowed.as_ref()),
         Direction::Deps => shared.graph().deps_of(&roots, args.depth, allowed.as_ref()),
-        Direction::Dependents if args.symbols => {
+        Direction::Dependents if args.include_symbols => {
             let graph = shared.graph();
             let roots = roots_with_existing_queue_jobs(&roots, &entrypoints, graph);
             let roots = roots_with_exported_symbol_roots(&roots, graph);
@@ -124,7 +124,7 @@ pub(crate) fn collect_and_filter_entries_shared(
                 .as_ref()
                 .expect("symbol index is built for symbol dependents"),
         ),
-        Direction::Dependents if shared.build_plan.symbols && !args.symbols => shared
+        Direction::Dependents if shared.build_plan.symbols && !args.include_symbols => shared
             .request_graph_without_symbols(allowed.as_ref())
             .dependents_of(&roots, args.depth, allowed.as_ref()),
         Direction::Dependents => shared.graph().dependents_of(&roots, args.depth, allowed.as_ref()),

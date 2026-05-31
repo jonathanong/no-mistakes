@@ -256,6 +256,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     // 6. Trace entrypoints (file#export)
     trace_entrypoints(
         &args.entrypoints,
+        &args.entrypoint_symbols,
         &graph,
         &test_filter,
         &root,

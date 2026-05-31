@@ -55,7 +55,7 @@ pub(crate) fn build_traverse_args(options: TraverseOptions) -> AnyhowResult<Trav
             .iter()
             .map(|value| parse_relationship(value))
             .collect::<AnyhowResult<Vec<_>>>()?,
-        symbols: options.include_symbols,
+        include_symbols: options.include_symbols,
         timings: false,
     })
 }

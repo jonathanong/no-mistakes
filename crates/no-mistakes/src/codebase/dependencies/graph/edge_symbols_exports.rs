@@ -118,10 +118,11 @@ fn collect_direct_reexport_edge(
         file: inputs.path.to_path_buf(),
         symbol: export_symbol.to_string(),
     };
-    if imported == "*" {
-        return;
-    }
     if let Some(target) = inputs.resolver.resolve(source, inputs.path) {
+        if imported == "*" {
+            edges.push((from, NodeId::File(target), symbol_edge_kind(export.is_type_only)));
+            return;
+        }
         if !is_indexable(&target) {
             edges.push((from, NodeId::File(target), EdgeKind::AssetImport));
             return;
@@ -138,6 +139,10 @@ fn collect_direct_reexport_edge(
             kind,
         ));
     } else if let Some(target) = inputs.workspace.resolve_specifier_from(source, inputs.path) {
+        if imported == "*" {
+            edges.push((from, NodeId::File(target), EdgeKind::WorkspaceImport));
+            return;
+        }
         edges.push((
             from,
             NodeId::Symbol {

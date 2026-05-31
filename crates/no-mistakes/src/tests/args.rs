@@ -71,6 +71,10 @@ pub(crate) struct PlanArgs {
     #[arg(long = "entrypoint")]
     pub(crate) entrypoints: Vec<String>,
 
+    /// Structured entrypoint symbols paired with entrypoints (programmatic API only).
+    #[arg(skip)]
+    pub(crate) entrypoint_symbols: Vec<Option<String>>,
+
     /// Include exported symbol nodes for entrypoint traversal.
     #[arg(long = "symbols", default_value_t = false)]
     pub(crate) include_symbols: bool,
@@ -109,6 +113,10 @@ pub(crate) struct ImpactArgs {
     /// file#export entrypoints (positional, repeatable). Symbol suffixes require --symbols.
     #[arg(required = true)]
     pub(crate) entrypoints: Vec<String>,
+
+    /// Structured entrypoint symbols paired with entrypoints (programmatic API only).
+    #[arg(skip)]
+    pub(crate) entrypoint_symbols: Vec<Option<String>>,
 
     /// Include exported symbol nodes for entrypoint traversal.
     #[arg(long = "symbols", default_value_t = false)]

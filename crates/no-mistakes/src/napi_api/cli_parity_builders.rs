@@ -8,6 +8,8 @@ pub(crate) fn build_plan_args(
         None => None,
     };
 
+    let (entrypoints, entrypoint_symbols) = entrypoint_parts(options.entrypoints);
+
     Ok(crate::tests::PlanArgs {
         framework,
         root: options
@@ -23,11 +25,8 @@ pub(crate) fn build_plan_args(
         diff: None,
         diff_stdin: false,
         diff_command: None,
-        entrypoints: options
-            .entrypoints
-            .into_iter()
-            .map(|entrypoint| entrypoint.into_cli_string())
-            .collect(),
+        entrypoints,
+        entrypoint_symbols,
         include_symbols: options.include_symbols,
         diff_content: options.diff,
         environment: options
@@ -65,12 +64,11 @@ pub(crate) fn build_impact_args(
     if options.entrypoints.is_empty() {
         bail!("entrypoints is required and must not be empty");
     }
+    let (entrypoints, entrypoint_symbols) = entrypoint_parts(options.entrypoints);
+
     Ok(crate::tests::ImpactArgs {
-        entrypoints: options
-            .entrypoints
-            .into_iter()
-            .map(|entrypoint| entrypoint.into_cli_string())
-            .collect(),
+        entrypoints,
+        entrypoint_symbols,
         include_symbols: options.include_symbols,
         root: options
             .root
@@ -85,4 +83,13 @@ pub(crate) fn build_impact_args(
 
 fn strings_to_paths(values: Vec<String>) -> Vec<PathBuf> {
     values.into_iter().map(PathBuf::from).collect()
+}
+
+fn entrypoint_parts(
+    values: Vec<super::options::EntrypointOption>,
+) -> (Vec<String>, Vec<Option<String>>) {
+    values
+        .into_iter()
+        .map(|entrypoint| entrypoint.into_parts())
+        .unzip()
 }

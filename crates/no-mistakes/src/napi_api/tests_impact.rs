@@ -109,21 +109,21 @@ fn tests_plan_json_without_input_returns_empty() {
 }
 
 #[test]
-fn entrypoint_option_without_symbol_renders_file_only() {
+fn entrypoint_option_without_symbol_parts_as_file_only() {
     assert_eq!(
         super::options::EntrypointOption::Symbol {
             file: "src/a.mts".to_string(),
             symbol: None,
         }
-        .into_cli_string(),
-        "src/a.mts"
+        .into_parts(),
+        ("src/a.mts".to_string(), None)
     );
     assert_eq!(
         super::options::EntrypointOption::Symbol {
             file: "src/a.mts".to_string(),
             symbol: Some(String::new()),
         }
-        .into_cli_string(),
-        "src/a.mts"
+        .into_parts(),
+        ("src/a.mts".to_string(), None)
     );
 }

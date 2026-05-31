@@ -156,7 +156,7 @@ fn prepare_shared_traversal(
                 crate::codebase::dependencies::graph::GraphBuildPlan::from_allowed(
                     allowed.as_ref(),
                 )
-                .with_symbols(args.symbols),
+                .with_symbols(args.include_symbols),
             );
         }
     }

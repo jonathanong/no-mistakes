@@ -46,7 +46,7 @@ fn run_surfaces_tsconfig_errors() {
         format: Some(Format::Json),
         json: false,
         relationships: Vec::new(),
-        symbols: false,
+        include_symbols: false,
         timings: false,
     };
 

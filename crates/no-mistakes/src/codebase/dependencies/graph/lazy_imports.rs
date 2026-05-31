@@ -166,7 +166,9 @@ fn bfs(
                         via: vec![*kind],
                     });
                     result_idx.insert(neighbor.clone(), idx);
-                    queue.push_back((neighbor.clone(), next_depth));
+                    if should_expand_node(&node, neighbor) {
+                        queue.push_back((neighbor.clone(), next_depth));
+                    }
                 } else if let Some(&idx) = result_idx.get(neighbor) {
                     add_via_kind(&mut result[idx], *kind);
                 }
@@ -175,6 +177,13 @@ fn bfs(
     }
 
     result
+}
+
+fn should_expand_node(from: &NodeId, to: &NodeId) -> bool {
+    !matches!(
+        (from, to),
+        (NodeId::Symbol { file: from_file, .. }, NodeId::File(to_file)) if from_file != to_file
+    )
 }
 
 fn edge_allowed(

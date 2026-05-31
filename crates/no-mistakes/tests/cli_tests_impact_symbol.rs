@@ -188,7 +188,7 @@ fn dependencies_symbols_handles_local_alias_barrel_and_helper_calls() {
         ("star-barrel.mts#alpha", "source.mts#alpha\n"),
         (
             "namespace-barrel-consumer.mts#value",
-            "namespace-barrel.mts#source\nsource.mts#alpha\n",
+            "namespace-barrel.mts#source\nsource.mts#alpha\nsource.mts\n",
         ),
         ("alias-reference.mts#alias", "source.mts#alpha\n"),
         ("type-reference.mts#AliasShape", "source.mts#SourceShape\n"),

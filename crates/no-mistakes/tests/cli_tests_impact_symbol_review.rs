@@ -359,6 +359,23 @@ fn dependencies_symbols_link_namespace_reexports_to_source_symbols() {
 }
 
 #[test]
+fn dependencies_symbols_link_namespace_reexport_symbol_to_source_file() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "namespace-barrel.mts#source",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert!(stdout(&output).contains("source.mts\n"));
+}
+
+#[test]
 fn dependencies_symbols_preserve_asset_kind_for_direct_reexports() {
     let root = fixture("symbol-export");
     let output = run(&[
