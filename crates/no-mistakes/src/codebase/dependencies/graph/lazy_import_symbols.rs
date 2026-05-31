@@ -19,13 +19,6 @@ fn bfs_skipping_initial_symbol_owner_files(
     let mut queue: VecDeque<(NodeId, usize)> = VecDeque::new();
     let mut result: Vec<NodeEntry> = Vec::new();
     let mut result_idx: HashMap<NodeId, usize> = HashMap::new();
-    let initial_symbol_owners: HashSet<PathBuf> = starts
-        .iter()
-        .filter_map(|node| match node {
-            NodeId::Symbol { file, .. } => Some(file.clone()),
-            _ => None,
-        })
-        .collect();
 
     for s in starts {
         if !visited.contains(s) {
@@ -44,8 +37,12 @@ fn bfs_skipping_initial_symbol_owner_files(
         if let Some(neighbors) = edges.get(&node) {
             for (neighbor, kind) in neighbors {
                 if depth == 0 {
-                    if let NodeId::File(file) = neighbor {
-                        if initial_symbol_owners.contains(file) {
+                    if let (
+                        NodeId::Symbol { file: owner, .. },
+                        NodeId::File(neighbor_file),
+                    ) = (&node, neighbor)
+                    {
+                        if neighbor_file == owner {
                             continue;
                         }
                     }

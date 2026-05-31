@@ -14,6 +14,7 @@ fn process_export_named_declaration(
             let name = spec.exported.name().to_string();
             out.exports.push(Export {
                 name,
+                local: None,
                 kind: ExportKind::ReExport {
                     source: source_str.clone(),
                     imported,
@@ -61,6 +62,7 @@ fn process_export_named_declaration(
             Declaration::TSTypeAliasDeclaration(ta) => {
                 out.exports.push(Export {
                     name: ta.id.name.as_str().to_string(),
+                    local: None,
                     kind: ExportKind::TypeAlias,
                     line,
                     is_type_only: true,
@@ -69,6 +71,7 @@ fn process_export_named_declaration(
             Declaration::TSInterfaceDeclaration(iface) => {
                 out.exports.push(Export {
                     name: iface.id.name.as_str().to_string(),
+                    local: None,
                     kind: ExportKind::Interface,
                     line,
                     is_type_only: true,
@@ -77,6 +80,7 @@ fn process_export_named_declaration(
             Declaration::TSEnumDeclaration(en) => {
                 out.exports.push(Export {
                     name: en.id.name.as_str().to_string(),
+                    local: None,
                     kind: ExportKind::Enum,
                     line,
                     is_type_only: false,
@@ -90,8 +94,10 @@ fn process_export_named_declaration(
     // Specifier exports without source: `export { a, b }` (local re-bindings)
     for spec in &export.specifiers {
         let name = spec.exported.name().to_string();
+        let local = spec.local.name().to_string();
         out.exports.push(Export {
             name,
+            local: (local != spec.exported.name().as_str()).then_some(local),
             kind: ExportKind::Const,
             line,
             is_type_only: export_is_type || spec.export_kind.is_type(),

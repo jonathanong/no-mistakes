@@ -478,6 +478,7 @@ fn coverage_helpers_handle_unresolved_and_reexport_edges() {
                     symbols: Some(FileSymbols {
                         exports: vec![Export {
                             name: "Card".to_string(),
+                            local: None,
                             kind: ExportKind::Function,
                             line: 1,
                             is_type_only: false,
@@ -494,6 +495,7 @@ fn coverage_helpers_handle_unresolved_and_reexport_edges() {
                         exports: vec![
                             Export {
                                 name: "TypeOnly".to_string(),
+                                local: None,
                                 kind: ExportKind::ReExport {
                                     source: "./Card".to_string(),
                                     imported: "Card".to_string(),
@@ -503,6 +505,7 @@ fn coverage_helpers_handle_unresolved_and_reexport_edges() {
                             },
                             Export {
                                 name: "Other".to_string(),
+                                local: None,
                                 kind: ExportKind::ReExport {
                                     source: "./Card".to_string(),
                                     imported: "Card".to_string(),
@@ -512,6 +515,7 @@ fn coverage_helpers_handle_unresolved_and_reexport_edges() {
                             },
                             Export {
                                 name: "CardAlias".to_string(),
+                                local: None,
                                 kind: ExportKind::ReExport {
                                     source: "./Card".to_string(),
                                     imported: "Card".to_string(),
@@ -521,6 +525,7 @@ fn coverage_helpers_handle_unresolved_and_reexport_edges() {
                             },
                             Export {
                                 name: "*".to_string(),
+                                local: None,
                                 kind: ExportKind::ReExport {
                                     source: "./Card".to_string(),
                                     imported: "*".to_string(),
@@ -540,6 +545,7 @@ fn coverage_helpers_handle_unresolved_and_reexport_edges() {
                     symbols: Some(FileSymbols {
                         exports: vec![Export {
                             name: "Cycle".to_string(),
+                            local: None,
                             kind: ExportKind::ReExport {
                                 source: "./cycle".to_string(),
                                 imported: "Cycle".to_string(),
@@ -603,6 +609,7 @@ fn coverage_helpers_handle_unresolved_and_reexport_edges() {
                     symbols: Some(FileSymbols {
                         exports: vec![Export {
                             name: "Cycle".to_string(),
+                            local: None,
                             kind: ExportKind::ReExport {
                                 source: "./cycle".to_string(),
                                 imported: "Cycle".to_string(),
@@ -701,6 +708,7 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
                     symbols: Some(FileSymbols {
                         exports: vec![Export {
                             name: "NoSource".to_string(),
+                            local: None,
                             kind: ExportKind::Function,
                             line: 3,
                             is_type_only: false,
@@ -725,6 +733,7 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
                     symbols: Some(FileSymbols {
                         exports: vec![Export {
                             name: "Included".to_string(),
+                            local: None,
                             kind: ExportKind::Function,
                             line: 1,
                             is_type_only: false,

@@ -12,7 +12,7 @@ fn collect_symbol_edges(
             continue;
         };
 
-        let mut exported_values = HashSet::new();
+        let mut exported_values = Vec::new();
         let mut caller_to_export = HashMap::new();
 
         for export in &symbols.exports {
@@ -20,8 +20,9 @@ fn collect_symbol_edges(
                 continue;
             }
             let export_symbol = export_symbol_name(export);
-            exported_values.insert(export.name.clone());
-            caller_to_export.insert(export.name.clone(), export_symbol.clone());
+            let local_symbol = export_local_name(export);
+            exported_values.push(local_symbol.clone());
+            caller_to_export.insert(local_symbol.clone(), export_symbol.clone());
             edges.push((
                 NodeId::File(path.clone()),
                 NodeId::Symbol {
@@ -51,22 +52,16 @@ fn collect_symbol_edges(
         }
 
         let imported_symbols = imported_symbol_map(path, symbols, resolver);
-        for call in &file_facts.function_calls {
-            let Some(caller) = &call.caller else {
-                continue;
-            };
-            if !exported_values.contains(caller) {
+        for export in &symbols.exports {
+            if matches!(export.kind, ExportKind::ReExport { .. }) || export.name == "*" {
                 continue;
             }
-            if let Some((target, imported, is_type_only)) = imported_symbols.get(&call.callee) {
-                let caller_export = caller_to_export
-                    .get(caller)
-                    .expect("exported caller should have a symbol name")
-                    .clone();
+            let local_symbol = export_local_name(export);
+            if let Some((target, imported, is_type_only)) = imported_symbols.get(&local_symbol) {
                 edges.push((
                     NodeId::Symbol {
                         file: path.clone(),
-                        symbol: caller_export,
+                        symbol: export_symbol_name(export),
                     },
                     NodeId::Symbol {
                         file: target.clone(),
@@ -74,6 +69,42 @@ fn collect_symbol_edges(
                     },
                     symbol_edge_kind(*is_type_only),
                 ));
+            }
+        }
+
+        let calls_by_caller = local_call_graph(&file_facts.function_calls);
+        exported_values.sort();
+        exported_values.dedup();
+        for exported_value in exported_values {
+            let Some(caller_export) = caller_to_export.get(&exported_value) else {
+                continue;
+            };
+            let mut visited = HashSet::new();
+            let mut queue = VecDeque::from([exported_value]);
+            while let Some(caller) = queue.pop_front() {
+                if !visited.insert(caller.clone()) {
+                    continue;
+                }
+                let Some(callees) = calls_by_caller.get(&caller) else {
+                    continue;
+                };
+                for callee in callees {
+                    if let Some((target, imported, is_type_only)) = imported_symbols.get(callee) {
+                        edges.push((
+                            NodeId::Symbol {
+                                file: path.clone(),
+                                symbol: caller_export.clone(),
+                            },
+                            NodeId::Symbol {
+                                file: target.clone(),
+                                symbol: imported.clone(),
+                            },
+                            symbol_edge_kind(*is_type_only),
+                        ));
+                    } else if calls_by_caller.contains_key(callee) {
+                        queue.push_back(callee.clone());
+                    }
+                }
             }
         }
     }

@@ -103,6 +103,7 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
         exports: vec![
             Export {
                 name: "*".to_string(),
+                local: None,
                 kind: ExportKind::ReExport {
                     source: "./source.mts".to_string(),
                     imported: "*".to_string(),
@@ -112,6 +113,7 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
             },
             Export {
                 name: "Star".to_string(),
+                local: None,
                 kind: ExportKind::ReExport {
                     source: "./source.mts".to_string(),
                     imported: "*".to_string(),
@@ -121,6 +123,7 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
             },
             Export {
                 name: "Alias".to_string(),
+                local: None,
                 kind: ExportKind::ReExport {
                     source: "./source.mts".to_string(),
                     imported: "SourceType".to_string(),
@@ -130,6 +133,7 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
             },
             Export {
                 name: "run".to_string(),
+                local: None,
                 kind: ExportKind::Function,
                 line: 4,
                 is_type_only: false,
@@ -260,6 +264,37 @@ fn symbol_bfs_skips_initial_owner_and_honors_limits() {
     let file_start = NodeId::File(owner);
     let empty = bfs_skipping_initial_symbol_owner_files(&[file_start], &edges, Some(0), None);
     assert!(empty.is_empty());
+}
+
+#[test]
+fn symbol_bfs_skips_only_the_current_symbol_owner_file() {
+    let owner_a = p("/repo/src/a.mts");
+    let owner_b = p("/repo/src/b.mts");
+    let symbol_a = NodeId::Symbol {
+        file: owner_a.clone(),
+        symbol: "alpha".to_string(),
+    };
+    let symbol_b = NodeId::Symbol {
+        file: owner_b.clone(),
+        symbol: "beta".to_string(),
+    };
+    let mut edges = EdgeMap::new();
+    edges.insert(
+        symbol_a.clone(),
+        vec![
+            (NodeId::File(owner_a.clone()), EdgeKind::Import),
+            (NodeId::File(owner_b.clone()), EdgeKind::Import),
+        ],
+    );
+    edges.insert(
+        symbol_b.clone(),
+        vec![(NodeId::File(owner_b.clone()), EdgeKind::Import)],
+    );
+
+    let result = bfs_skipping_initial_symbol_owner_files(&[symbol_a, symbol_b], &edges, None, None);
+    let nodes: Vec<_> = result.into_iter().map(|entry| entry.node).collect();
+    assert!(!nodes.contains(&NodeId::File(owner_a)));
+    assert!(nodes.contains(&NodeId::File(owner_b)));
 }
 
 // ── add_test_edges ───────────────────────────────────────────────────────

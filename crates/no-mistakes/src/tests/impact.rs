@@ -87,10 +87,11 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
             );
 
         if test_filter.is_match(&root, &normalized) {
+            let rel_test = relative_path(&root, &normalized);
             let entry = selected_map
                 .entry(normalized.clone())
                 .or_insert_with(|| SelectedTest {
-                    test_file: rel_changed.clone(),
+                    test_file: rel_test,
                     confidence: Confidence::High,
                     targets: Vec::new(),
                     reasons: Vec::new(),

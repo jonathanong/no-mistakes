@@ -272,6 +272,12 @@ export { local as publicLocal };
     for expected in ["a", "renamed", "first", "second", "publicLocal"] {
         assert!(names.contains(&expected), "missing export {expected}");
     }
+    let public_local = s
+        .exports
+        .iter()
+        .find(|export| export.name == "publicLocal")
+        .unwrap();
+    assert_eq!(public_local.local.as_deref(), Some("local"));
 }
 
 #[test]

@@ -6,6 +6,10 @@ fn export_symbol_name(export: &crate::codebase::ts_symbols::Export) -> String {
     }
 }
 
+fn export_local_name(export: &crate::codebase::ts_symbols::Export) -> String {
+    export.local.clone().unwrap_or_else(|| export.name.clone())
+}
+
 fn imported_symbol_map(
     path: &Path,
     symbols: &crate::codebase::ts_symbols::FileSymbols,
@@ -24,6 +28,25 @@ fn imported_symbol_map(
         }
     }
     map
+}
+
+fn local_call_graph(
+    calls: &[crate::codebase::dependencies::extract::FunctionCall],
+) -> HashMap<String, Vec<String>> {
+    let mut graph: HashMap<String, Vec<String>> = HashMap::new();
+    for call in calls {
+        if let Some(caller) = &call.caller {
+            graph
+                .entry(caller.clone())
+                .or_default()
+                .push(call.callee.clone());
+        }
+    }
+    for callees in graph.values_mut() {
+        callees.sort();
+        callees.dedup();
+    }
+    graph
 }
 
 fn symbol_edge_kind(is_type_only: bool) -> EdgeKind {

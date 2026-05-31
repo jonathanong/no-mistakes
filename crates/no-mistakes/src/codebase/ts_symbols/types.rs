@@ -20,7 +20,10 @@ pub enum ExportKind {
 /// A top-level exported symbol.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Export {
+    /// The public exported name.
     pub name: String,
+    /// The local binding that backs this export, when it differs from `name`.
+    pub local: Option<String>,
     pub kind: ExportKind,
     pub line: u32,
     pub is_type_only: bool,

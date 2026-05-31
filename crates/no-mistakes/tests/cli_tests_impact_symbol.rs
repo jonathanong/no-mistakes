@@ -174,6 +174,59 @@ fn dependencies_symbols_handles_default_and_variable_exports() {
 }
 
 #[test]
+fn dependencies_symbols_handles_local_alias_barrel_and_helper_calls() {
+    let root = fixture("symbol-export");
+    for (entrypoint, expected) in [
+        ("aliased-local.mts#publicLocal", "source.mts#alpha\n"),
+        ("local-barrel.mts#alpha", "source.mts#alpha\n"),
+        ("helper-chain.mts#run", "source.mts#alpha\n"),
+    ] {
+        let output = run(&[
+            "dependencies",
+            entrypoint,
+            "--root",
+            root.to_str().unwrap(),
+            "--symbols",
+            "--format",
+            "paths",
+        ]);
+        assert!(
+            output.status.success(),
+            "stderr: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(stdout(&output), expected, "{entrypoint}");
+    }
+}
+
+#[test]
+fn test_impact_symbol_test_entrypoint_keeps_runnable_test_path_plain() {
+    let root = fixture("tests-impact-symbol");
+    let output = run(&[
+        "tests",
+        "impact",
+        "other.test.mts#helper",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--json",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let selected = &plan["selected_tests"][0];
+    assert_eq!(selected["test_file"], "other.test.mts");
+    assert_eq!(
+        selected["reasons"][0]["changed_file"],
+        "other.test.mts#helper"
+    );
+}
+
+#[test]
 fn test_impact_multiple_entrypoints_union() {
     let root = fixture("tests-impact-symbol");
     let output = run(&[
