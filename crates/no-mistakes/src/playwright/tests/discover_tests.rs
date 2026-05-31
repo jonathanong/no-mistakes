@@ -108,6 +108,7 @@ fn discover_test_files_walks_shared_project_test_dir_once() {
         name: None,
         projects: vec![
             playwright_config::TestProject {
+                name: None,
                 config_dir: root.clone(),
                 test_dir: "tests".to_string(),
                 test_match: vec!["**/*.spec.ts".to_string()],
@@ -116,6 +117,7 @@ fn discover_test_files_walks_shared_project_test_dir_once() {
                 test_id_attribute: "data-testid".to_string(),
             },
             playwright_config::TestProject {
+                name: None,
                 config_dir: root.clone(),
                 test_dir: "tests".to_string(),
                 test_match: vec!["**/*.spec.ts".to_string()],
@@ -153,6 +155,7 @@ fn discover_test_files_applies_yaml_exclude_before_project_matching() {
     let playwright = playwright_config::PlaywrightConfig {
         name: None,
         projects: vec![playwright_config::TestProject {
+            name: None,
             config_dir: root.clone(),
             test_dir: "tests".to_string(),
             test_match: vec!["**/*.spec.ts".to_string()],
@@ -188,6 +191,7 @@ fn discover_test_files_rejects_invalid_configured_globs() {
     let playwright = playwright_config::PlaywrightConfig {
         name: None,
         projects: vec![playwright_config::TestProject {
+            name: None,
             config_dir: root.clone(),
             test_dir: "tests".to_string(),
             test_match: vec!["**/*.spec.ts".to_string()],
@@ -213,6 +217,7 @@ fn discover_test_files_rejects_invalid_configured_globs() {
     let invalid_project = playwright_config::PlaywrightConfig {
         name: None,
         projects: vec![playwright_config::TestProject {
+            name: None,
             config_dir: root.clone(),
             test_dir: "tests".to_string(),
             test_match: vec!["[".to_string()],
@@ -246,6 +251,7 @@ fn build_project_discovery_rejects_invalid_project_globs() {
     let invalid_match = playwright_config::PlaywrightConfig {
         name: None,
         projects: vec![playwright_config::TestProject {
+            name: None,
             config_dir: root.clone(),
             test_dir: "tests".to_string(),
             test_match: vec!["[".to_string()],
@@ -259,6 +265,7 @@ fn build_project_discovery_rejects_invalid_project_globs() {
     let invalid_ignore = playwright_config::PlaywrightConfig {
         name: None,
         projects: vec![playwright_config::TestProject {
+            name: None,
             config_dir: root.clone(),
             test_dir: "tests".to_string(),
             test_match: vec!["**/*.spec.ts".to_string()],

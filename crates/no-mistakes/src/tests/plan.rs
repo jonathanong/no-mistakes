@@ -80,6 +80,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                 selected_tests.push(SelectedTest {
                     test_file: rel_test.clone(),
                     confidence: Confidence::High,
+                    targets: Vec::new(),
                     reasons: vec![ImpactReason {
                         changed_file: relative_changed.clone(),
                         path: vec![relative_changed.clone(), rel_test],
@@ -117,6 +118,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                 .or_insert_with(|| SelectedTest {
                     test_file: rel_changed.clone(),
                     confidence: Confidence::High,
+                    targets: Vec::new(),
                     reasons: Vec::new(),
                 });
             entry.confidence = Confidence::High;
@@ -217,6 +219,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                 .or_insert_with(|| SelectedTest {
                     test_file: rel_test.clone(),
                     confidence: path_conf,
+                    targets: Vec::new(),
                     reasons: Vec::new(),
                 });
 

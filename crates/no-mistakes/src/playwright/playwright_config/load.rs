@@ -70,6 +70,7 @@ fn default_config(root: &Path) -> PlaywrightConfig {
     PlaywrightConfig {
         name: None,
         projects: vec![TestProject {
+            name: None,
             config_dir: root.to_path_buf(),
             test_dir: ".".to_string(),
             test_match: default_test_match(),

@@ -61,7 +61,9 @@ fn graph_config_options_for_plan(root: &Path, plan: GraphBuildPlan) -> Option<Gr
     }
 }
 
-fn graph_plan_needs_config(plan: GraphBuildPlan) -> bool { plan.routes || plan.queues || plan.http }
+fn graph_plan_needs_config(plan: GraphBuildPlan) -> bool {
+    plan.routes || plan.queues || plan.http || plan.tests
+}
 
 fn ts_fact_context_from_options(
     root: &Path,

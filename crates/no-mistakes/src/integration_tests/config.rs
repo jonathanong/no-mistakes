@@ -114,6 +114,7 @@ pub(crate) fn configured_project(
     Some(ConfigProject {
         config: None,
         name: Some(project_name.to_string()),
+        target_project: Some(project_name.to_string()),
         include: prefix_globs(root, root, &policy.include),
         exclude: prefix_globs(root, root, &policy.exclude),
     })

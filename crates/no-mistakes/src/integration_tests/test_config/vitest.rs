@@ -9,9 +9,8 @@ use std::path::Path;
 
 mod project_arrays;
 
-const DEFAULT_INCLUDE: &[&str] = &[
-    "**/*.{test,spec}.?(c|m)[jt]s?(x)",
-    "**/__tests__/**/*.?(c|m)[jt]s?(x)",
+const DEFAULT_EXTENSIONS: &[&str] = &[
+    "js", "jsx", "ts", "tsx", "mjs", "mjsx", "mts", "mtsx", "cjs", "cjsx", "cts", "ctsx",
 ];
 
 #[derive(Default, Clone)]
@@ -66,12 +65,7 @@ fn parse_program(
 }
 
 fn to_project(config_dir: &Path, root: &Path, options: Options) -> ConfigProject {
-    let include = options.include.unwrap_or_else(|| {
-        DEFAULT_INCLUDE
-            .iter()
-            .map(|glob| glob.to_string())
-            .collect()
-    });
+    let include = options.include.unwrap_or_else(default_include);
     let config_dir = options
         .root
         .as_deref()
@@ -86,7 +80,8 @@ fn to_project(config_dir: &Path, root: &Path, options: Options) -> ConfigProject
         .unwrap_or_else(|| config_dir.to_path_buf());
     ConfigProject {
         config: None,
-        name: options.name,
+        name: options.name.clone(),
+        target_project: options.name,
         include: prefix_globs(root, &config_dir, &include),
         exclude: prefix_globs(root, &config_dir, &options.exclude.unwrap_or_default()),
     }
@@ -105,4 +100,14 @@ fn combine(left: Option<Vec<String>>, right: Option<Vec<String>>) -> Option<Vec<
     let mut values = left.unwrap_or_default();
     values.extend(right.unwrap_or_default());
     (!values.is_empty()).then_some(values)
+}
+
+fn default_include() -> Vec<String> {
+    let mut include = Vec::with_capacity(DEFAULT_EXTENSIONS.len() * 3);
+    for ext in DEFAULT_EXTENSIONS {
+        include.push(format!("**/*.test.{ext}"));
+        include.push(format!("**/*.spec.{ext}"));
+        include.push(format!("**/__tests__/**/*.{ext}"));
+    }
+    include
 }

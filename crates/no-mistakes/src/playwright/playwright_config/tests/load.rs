@@ -103,6 +103,7 @@ fn load_surfaces_config_parse_errors() {
 #[test]
 fn test_dir_resolves_absolute_relative_and_relative_config_dir() {
     let absolute = TestProject {
+        name: None,
         config_dir: PathBuf::from("/repo"),
         test_dir: "/tmp/tests".to_string(),
         test_match: vec![],
@@ -116,6 +117,7 @@ fn test_dir_resolves_absolute_relative_and_relative_config_dir() {
     );
 
     let absolute_config_relative_test_dir = TestProject {
+        name: None,
         config_dir: PathBuf::from("/repo"),
         test_dir: "tests".to_string(),
         test_match: vec![],
@@ -129,6 +131,7 @@ fn test_dir_resolves_absolute_relative_and_relative_config_dir() {
     );
 
     let relative_config = TestProject {
+        name: None,
         config_dir: PathBuf::from("config"),
         test_dir: "tests".to_string(),
         test_match: vec![],

@@ -1,4 +1,5 @@
 use anyhow::Result;
+use no_mistakes::codebase::test_discovery::TestExecutionTarget;
 use serde::{Deserialize, Serialize};
 use std::process::ExitCode;
 
@@ -31,6 +32,8 @@ pub struct SelectedTest {
     pub test_file: String,
     pub confidence: Confidence,
     pub reasons: Vec<ImpactReason>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub targets: Vec<TestExecutionTarget>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
