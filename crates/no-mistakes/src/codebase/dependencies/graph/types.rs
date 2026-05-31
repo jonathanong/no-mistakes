@@ -1,7 +1,7 @@
 pub use crate::codebase::ts_source::SKIP_DIRS;
 
 /// A node in the dependency graph: a source file, external module, or virtual queue-job node.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum NodeId {
     /// A source file on disk.
     File(PathBuf),
@@ -40,7 +40,7 @@ impl NodeId {
 }
 
 /// The kind of dependency edge connecting two nodes.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum EdgeKind {
     /// Regular TS/JS static import.

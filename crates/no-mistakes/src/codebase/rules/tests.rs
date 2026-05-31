@@ -326,14 +326,13 @@ fn run_check_with_facts_uses_shared_graph_without_reachable_dep_disk_fallback() 
     let root = dynamic_import_fixture();
     let test = root.join("tests/bad.test.mts");
     let setup = root.join("tests/setup-vitest.mts");
-    let unreadable = root.join("src/unreadable.mts");
     let source = "import '@lib/unreadable.mts'\n\
 test('bad', async () => {\n\
   await import('@lib/setup-target.mts')\n\
 })\n";
     let setup_source = std::fs::read_to_string(&setup).unwrap();
     let mut shared = crate::codebase::check_facts::CheckFactMap {
-        files: vec![test.clone(), setup.clone(), unreadable.clone()],
+        files: vec![test.clone(), setup.clone()],
         ..Default::default()
     };
     shared
@@ -342,15 +341,6 @@ test('bad', async () => {\n\
     shared.ts.insert(
         setup.clone(),
         dynamic_import_test_facts(&setup, &setup_source),
-    );
-    shared.ts.insert(
-        unreadable.clone(),
-        crate::codebase::check_facts::CheckFileFacts {
-            source: Some(String::new()),
-            dynamic_imports: Some(Default::default()),
-            parsed: true,
-            ..Default::default()
-        },
     );
     let findings = run_check_with_facts(&root, None, None, &shared).unwrap();
     assert!(findings.is_empty());

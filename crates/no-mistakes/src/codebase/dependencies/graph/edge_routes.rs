@@ -86,7 +86,8 @@ fn collect_route_edges(
             .or_default()
             .push(file.clone());
     }
-    let all_patterns: Vec<String> = pattern_to_files.keys().cloned().collect();
+    let mut all_patterns: Vec<String> = pattern_to_files.keys().cloned().collect();
+    all_patterns.sort();
 
     let backend_prefixes = route_backend_prefixes(config_options);
     let backend_exact = opts.backend_exact_paths.clone();
@@ -119,7 +120,7 @@ fn collect_route_edges(
         .cloned()
         .collect();
 
-    scan_files
+    let mut edges: Vec<_> = scan_files
         .into_par_iter()
         .flat_map_iter(|path| {
             let mut edges = Vec::new();
@@ -150,5 +151,8 @@ fn collect_route_edges(
             }
             edges
         })
-        .collect()
+        .collect();
+    edges.sort();
+    edges.dedup();
+    edges
 }
