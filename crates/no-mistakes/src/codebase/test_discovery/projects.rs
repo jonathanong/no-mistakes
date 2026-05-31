@@ -38,7 +38,11 @@ fn apply_explicit_policy_projects(
     projects: &mut Vec<ConfigProject>,
 ) {
     for (name, policy) in policies {
-        if let Some(project) = configured_project(root, name, policy) {
+        let config = projects
+            .iter()
+            .find(|candidate| candidate.name.as_deref() == Some(name))
+            .and_then(|candidate| candidate.config.clone());
+        if let Some(project) = configured_project(root, name, policy, config) {
             projects.retain(|candidate| candidate.name.as_deref() != Some(name));
             projects.push(project);
         }
@@ -65,12 +69,13 @@ fn configured_project(
     root: &Path,
     project_name: &str,
     policy: &TestProjectPolicy,
+    config: Option<String>,
 ) -> Option<ConfigProject> {
     if policy.include.is_empty() {
         return None;
     }
     Some(ConfigProject {
-        config: None,
+        config,
         name: Some(project_name.to_string()),
         include: prefix_globs(root, root, &policy.include),
         exclude: prefix_globs(root, root, &policy.exclude),

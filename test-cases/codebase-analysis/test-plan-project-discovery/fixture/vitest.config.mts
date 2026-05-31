@@ -6,7 +6,7 @@ export default defineConfig({
       {
         test: {
           name: 'stories',
-          include: ['web/storybook/**/*.stories.tsx'],
+          include: ['web/storybook/**/*.stories.tsx', 'web/storybook/**/*.test.tsx'],
           exclude: ['web/storybook/skip/**'],
         },
       },

@@ -5,6 +5,7 @@ tests:
       stories:
         include:
           - web/storybook/**/*.stories.tsx
+          - web/storybook/**/*.test.tsx
         exclude:
           - web/storybook/skip/**
   playwright:

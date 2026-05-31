@@ -36,8 +36,13 @@ fn test_plan_vitest_uses_project_includes_and_targets() {
         .iter()
         .find(|target| target["project"] == "browser")
         .unwrap();
+    let stories_target = targets
+        .iter()
+        .find(|target| target["project"] == "stories")
+        .unwrap();
     assert_eq!(browser_target["runner"], "vitest");
     assert_eq!(browser_target["config"], "vitest.config.mts");
+    assert_eq!(stories_target["config"], "vitest.config.mts");
     assert_eq!(
         browser_target["runner_args"]
             .as_array()
