@@ -494,11 +494,20 @@ fn invalid_options_return_napi_errors() {
             .unwrap_err();
     assert!(error.reason.contains("unknown test framework"));
 
+    let error = tests_impact_json_impl(json!({ "entrypoints": [] }).to_string()).unwrap_err();
+    assert!(error
+        .reason
+        .contains("entrypoints is required and must not be empty"));
+
     let error = tests_why_json_impl(json!({}).to_string()).unwrap_err();
     assert!(error.reason.contains("test is required"));
 
     let error = tests_comment_markdown_impl(json!({}).to_string()).unwrap_err();
     assert!(error.reason.contains("plan or planJson is required"));
+
+    let error = tests_comment_markdown_impl(json!({ "plan": "does-not-exist.json" }).to_string())
+        .unwrap_err();
+    assert!(error.reason.contains("Failed to read plan"));
 }
 
 #[test]

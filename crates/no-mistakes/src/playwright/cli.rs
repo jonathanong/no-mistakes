@@ -45,13 +45,6 @@ pub struct PlaywrightArgs {
     )]
     pub assert_unique_html_ids: bool,
 
-    #[arg(
-        long,
-        global = true,
-        help = "Deprecated: use --assert-unique-test-ids and --assert-unique-html-ids"
-    )]
-    pub assert_unique_selectors: bool,
-
     #[command(subcommand)]
     pub command: Command,
 }

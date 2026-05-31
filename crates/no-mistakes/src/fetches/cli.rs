@@ -39,7 +39,7 @@ pub(crate) type Cli = FetchesArgs;
 
 fn parse_cli_args() -> FetchesArgs {
     if cfg!(test) {
-        if let Ok(raw_args) = std::env::var("NEXT_TO_FETCH_TEST_ARGS") {
+        if let Ok(raw_args) = std::env::var("FETCHES_TEST_ARGS") {
             return FetchesArgs::parse_from(raw_args.split('\u{1f}'));
         }
     }

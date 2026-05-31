@@ -1,6 +1,0 @@
-rules:
-  systems-strict-file-structure:
-    allowedRootFiles:
-      - index.mts
-    allowedSubdirs:
-      - workers

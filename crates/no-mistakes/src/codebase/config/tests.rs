@@ -97,7 +97,7 @@ fn load_config_with_explicit_config_uses_config_parent_gitignore() {
 }
 
 #[test]
-fn load_codebase_config_finds_parent_guardrails_config() {
+fn load_codebase_config_finds_parent_no_mistakes_route_config() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/codebase-intel/fixture");
     let nested = root.join("packages/api/src");

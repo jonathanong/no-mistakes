@@ -3,11 +3,11 @@ projects:
     type: nextjs
     root: web
 
-navigationHelpers:
-  - navigateTo
-
 tests:
   playwright:
+    frontendRoot: web/app
+    navigationHelpers:
+      - navigateTo
     selectors:
       testIds:
         - data-pw

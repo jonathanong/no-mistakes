@@ -8,7 +8,7 @@ pub fn run_check(
     targets: &[String],
     assert_no_fetch: bool,
 ) -> Result<Vec<Violation>> {
-    let stems = [".no-mistakes", ".react-traits"];
+    let stems = [".no-mistakes"];
     let root_config: RootConfig = crate::config::load_config(root, config_path, &stems)?;
     let file_config = root_config.into_file_config();
     let effective_no_fetch = assert_no_fetch || file_config.assert_no_fetch.unwrap_or(false);
@@ -27,7 +27,7 @@ pub fn run_check_with_facts(
     assert_no_fetch: bool,
     shared: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<Violation>> {
-    let stems = [".no-mistakes", ".react-traits"];
+    let stems = [".no-mistakes"];
     let root_config: RootConfig = crate::config::load_config(root, config_path, &stems)?;
     let file_config = root_config.into_file_config();
     let effective_no_fetch = assert_no_fetch || file_config.assert_no_fetch.unwrap_or(false);
@@ -70,7 +70,7 @@ pub fn check_enabled(
     config_path: Option<&Path>,
     assert_no_fetch: bool,
 ) -> Result<bool> {
-    let stems = [".no-mistakes", ".react-traits"];
+    let stems = [".no-mistakes"];
     let root_config: RootConfig = crate::config::load_config(root, config_path, &stems)?;
     let file_config = root_config.into_file_config();
     Ok(assert_no_fetch || file_config.assert_no_fetch.unwrap_or(false))

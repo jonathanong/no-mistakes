@@ -22,7 +22,6 @@ fn run_check_errors_on_empty_app() {
         allow_skipped_tests: false,
         assert_unique_test_ids: false,
         assert_unique_html_ids: false,
-        assert_unique_selectors: false,
         command: Command::Check,
     };
     let err = run(cli).expect_err("empty app should error");
@@ -41,7 +40,6 @@ fn run_errors_on_invalid_root() {
         allow_skipped_tests: false,
         assert_unique_test_ids: false,
         assert_unique_html_ids: false,
-        assert_unique_selectors: false,
         command: Command::Check,
     };
     assert!(run(cli).is_err());
@@ -60,7 +58,6 @@ fn run_errors_on_empty_routes() {
         allow_skipped_tests: false,
         assert_unique_test_ids: false,
         assert_unique_html_ids: false,
-        assert_unique_selectors: false,
         command: Command::Check,
     };
     assert!(run(cli).is_err());
@@ -79,7 +76,6 @@ fn run_errors_on_missing_playwright_config() {
         allow_skipped_tests: false,
         assert_unique_test_ids: false,
         assert_unique_html_ids: false,
-        assert_unique_selectors: false,
         command: Command::Check,
     };
     assert!(run(cli).is_err());

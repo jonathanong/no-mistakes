@@ -43,14 +43,6 @@ fn explicit_config_path_overrides_discovery() {
 }
 
 #[test]
-fn explicit_legacy_guardrails_path_parsed() {
-    let dir = fixture("legacy-guardrails");
-    let explicit = dir.join(".guardrailsrc.yml");
-    let cfg = load_v2_config(&dir, Some(&explicit)).unwrap();
-    assert!(cfg.projects.contains_key("backend"));
-}
-
-#[test]
 fn explicit_nonexistent_config_errors() {
     let dir = fixture("basic");
     let err = load_v2_config(&dir, Some(Path::new("nonexistent.yml")))
@@ -141,46 +133,6 @@ fn test_plan_global_config_fallback_parsed() {
 
     assert_eq!(environments["camel"].global_config_fallback, Some(false));
     assert_eq!(environments["snake"].global_config_fallback, Some(true));
-}
-
-// ── legacy conversions ────────────────────────────────────────────────────────
-
-#[test]
-fn legacy_playwright_converted() {
-    let cfg = load_v2_config(&fixture("legacy-playwright"), None).unwrap();
-    assert_eq!(cfg.projects["web"].type_, Some(ProjectType::Nextjs));
-    assert_eq!(cfg.projects["web"].root.as_deref(), Some("web/app"));
-    let pw = &cfg.tests.playwright;
-    assert!(matches!(&pw.configs, Some(StringOrList::One(s)) if s == "playwright.config.mts"));
-    assert!(pw.selectors.test_ids.contains(&"data-pw".to_string()));
-    assert_eq!(pw.selectors.component_test_ids["dataPw"], "data-pw");
-    assert_eq!(pw.selector_roots, vec!["web/app", "web/components"]);
-}
-
-#[test]
-fn legacy_guardrails_converted() {
-    let cfg = load_v2_config(&fixture("legacy-guardrails"), None).unwrap();
-    assert_eq!(cfg.projects["backend"].root.as_deref(), Some("backend"));
-    assert_eq!(
-        cfg.filesystem.skip_directories,
-        vec![".next", "node_modules"]
-    );
-    assert!(cfg.rule_configured("http-route-static-paths"));
-}
-
-#[test]
-fn legacy_react_traits_converted() {
-    let cfg = load_v2_config(&fixture("legacy-react-traits"), None).unwrap();
-    assert!(cfg.projects.contains_key("web"));
-    assert_eq!(cfg.projects["web"].type_, Some(ProjectType::Nextjs));
-    assert_eq!(cfg.projects["web"].root.as_deref(), Some("src/app"));
-}
-
-#[test]
-fn legacy_next_to_fetch_converted() {
-    let cfg = load_v2_config(&fixture("legacy-next-to-fetch"), None).unwrap();
-    assert!(cfg.projects.contains_key("web"));
-    assert_eq!(cfg.projects["web"].root.as_deref(), Some("app"));
 }
 
 // ── schema ────────────────────────────────────────────────────────────────────
@@ -282,69 +234,6 @@ fn rule_application_options_return_all_effective_applications() {
     );
 }
 
-// ── detect_and_parse explicit tool paths ──────────────────────────────────────
-
-#[test]
-fn explicit_playwright_config_path_dispatched() {
-    let dir = fixture("legacy-playwright");
-    let explicit = dir.join(".playwright-ast-coverage.yaml");
-    let cfg = load_v2_config(&dir, Some(&explicit)).unwrap();
-    assert_eq!(cfg.projects["web"].type_, Some(ProjectType::Nextjs));
-}
-
-#[test]
-fn explicit_react_traits_config_path_dispatched() {
-    let dir = fixture("legacy-react-traits");
-    let explicit = dir.join(".react-traits.yaml");
-    let cfg = load_v2_config(&dir, Some(&explicit)).unwrap();
-    assert_eq!(cfg.projects["web"].root.as_deref(), Some("src/app"));
-}
-
-#[test]
-fn explicit_next_to_fetch_config_path_dispatched() {
-    let dir = fixture("legacy-next-to-fetch");
-    let explicit = dir.join(".next-to-fetch.yaml");
-    let cfg = load_v2_config(&dir, Some(&explicit)).unwrap();
-    assert_eq!(cfg.projects["web"].root.as_deref(), Some("app"));
-}
-
-// ── legacy defaults ───────────────────────────────────────────────────────────
-
-#[test]
-fn legacy_playwright_minimal_uses_defaults() {
-    let cfg = load_v2_config(&fixture("legacy-playwright-minimal"), None).unwrap();
-    assert_eq!(cfg.projects["web"].root.as_deref(), Some("app"));
-    let pw = &cfg.tests.playwright;
-    assert!(pw.selectors.test_ids.contains(&"data-testid".to_string()));
-    assert!(pw.selectors.test_ids.contains(&"data-pw".to_string()));
-    assert_eq!(pw.selector_roots, vec!["app"]);
-}
-
-#[test]
-fn legacy_simple_no_frontend_root_returns_empty_projects() {
-    let cfg = load_v2_config(&fixture("legacy-react-traits-minimal"), None).unwrap();
-    assert!(cfg.projects.is_empty());
-}
-
-#[test]
-fn legacy_guardrails_disabled_rule_converted() {
-    let cfg = load_v2_config(&fixture("legacy-guardrails-disabled"), None).unwrap();
-    let view = ConfigView::new(&cfg);
-    let rules = view.enabled_rules_for("backend");
-    assert!(rules.iter().any(|(id, _)| *id == "active-rule"));
-    assert!(!rules.iter().any(|(id, _)| *id == "disabled-rule"));
-}
-
-#[test]
-fn legacy_guardrails_project_rule_without_top_level_options_converted() {
-    let cfg = load_v2_config(&fixture("legacy-guardrails-project-rule-only"), None).unwrap();
-    assert!(cfg.rule_configured("unique-exports"));
-    assert!(cfg
-        .rule_applications("unique-exports")
-        .iter()
-        .any(|rule| rule.projects == vec!["app"]));
-}
-
 #[test]
 fn config_view_rule_applications_are_project_scoped() {
     let cfg = load_v2_config(&fixture("project-unknown-rule"), None).unwrap();
@@ -356,47 +245,11 @@ fn config_view_rule_applications_are_project_scoped() {
 
 // ── parse error propagation ───────────────────────────────────────────────────
 
-#[test]
-fn malformed_playwright_config_errors() {
-    let dir = fixture("legacy-playwright-malformed");
-    let explicit = dir.join(".playwright-ast-coverage.yaml");
-    let err = load_v2_config(&dir, Some(&explicit)).err().unwrap();
-    assert!(!err.to_string().is_empty());
-}
-
-#[test]
-fn malformed_guardrails_config_errors() {
-    let err = load_v2_config(&fixture("legacy-guardrails-malformed"), None)
-        .err()
-        .unwrap();
-    assert!(!err.to_string().is_empty());
-}
-
-#[test]
-fn malformed_react_traits_config_errors() {
-    let err = load_v2_config(&fixture("legacy-react-traits-malformed"), None)
-        .err()
-        .unwrap();
-    assert!(!err.to_string().is_empty());
-}
-
 // ── find_config_root ──────────────────────────────────────────────────────────
 
 #[test]
 fn find_config_root_v2_stem_returns_root() {
     let dir = fixture("basic");
-    assert_eq!(find_config_root(&dir), dir);
-}
-
-#[test]
-fn find_config_root_tool_stem_returns_root() {
-    let dir = fixture("legacy-playwright");
-    assert_eq!(find_config_root(&dir), dir);
-}
-
-#[test]
-fn find_config_root_guardrails_returns_containing_dir() {
-    let dir = fixture("legacy-guardrails");
     assert_eq!(find_config_root(&dir), dir);
 }
 

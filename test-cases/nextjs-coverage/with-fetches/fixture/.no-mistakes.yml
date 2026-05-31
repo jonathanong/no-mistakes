@@ -1,0 +1,5 @@
+tests:
+  playwright:
+    frontendRoot: app
+    testInclude:
+      - tests/**/*.ts

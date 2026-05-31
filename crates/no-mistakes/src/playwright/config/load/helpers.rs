@@ -1,7 +1,6 @@
-use super::{FileConfig, OneOrMany, RootConfig};
 use crate::config::v2::schema::{NoMistakesConfig, PlaywrightTestConfig};
 use crate::config::v2::ConfigView;
-use crate::config::{parse_config, resolve, CONFIG_EXTENSIONS};
+use crate::config::{resolve, CONFIG_EXTENSIONS};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
@@ -28,56 +27,6 @@ pub(super) fn playwright_configs_from_v2(
     find_default_playwright_configs(root)
 }
 
-pub(super) fn playwright_configs_from_legacy(
-    root: &Path,
-    file_config: &FileConfig,
-    cli_playwright_configs: &[PathBuf],
-) -> Result<Vec<PathBuf>> {
-    if !cli_playwright_configs.is_empty() {
-        return Ok(cli_playwright_configs
-            .iter()
-            .map(|path| resolve(root, path))
-            .collect());
-    }
-    if let Some(paths) = file_config.playwright_config.as_ref() {
-        return Ok(paths
-            .values()
-            .iter()
-            .map(|path| resolve(root, Path::new(path)))
-            .collect());
-    }
-    find_default_playwright_configs(root)
-}
-
-impl OneOrMany {
-    pub(in crate::playwright::config) fn values(&self) -> Vec<String> {
-        match self {
-            OneOrMany::One(value) => vec![value.clone()],
-            OneOrMany::Many(values) => values.clone(),
-        }
-    }
-}
-
-pub(super) fn parse_legacy_playwright_config(source: &str, path: &Path) -> Result<FileConfig> {
-    let root_config: RootConfig = parse_config(source, path)?;
-    if root_config.playwright_ast_coverage.is_some() {
-        let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
-        // Only warn when the key appears inside a v2 config; the dedicated
-        // .playwright-ast-coverage.* files are expected to use this shape.
-        let is_v2_file = stem.starts_with(".no-mistakes");
-        if is_v2_file {
-            eprintln!(
-                "warning: {}: `playwrightAstCoverage` is a legacy holdover; \
-                 move its settings to `tests.playwright` in the v2 schema",
-                path.display()
-            );
-        }
-    }
-    Ok(root_config
-        .playwright_ast_coverage
-        .unwrap_or(root_config.legacy))
-}
-
 pub(super) fn has_v2_playwright_settings(config: &NoMistakesConfig) -> bool {
     is_v2_playwright_configured(&config.tests.playwright)
 }
@@ -85,28 +34,17 @@ pub(super) fn has_v2_playwright_settings(config: &NoMistakesConfig) -> bool {
 fn is_v2_playwright_configured(playwright: &PlaywrightTestConfig) -> bool {
     playwright.configs.is_some()
         || !playwright.projects.is_empty()
+        || !playwright.test_include.is_empty()
+        || !playwright.test_exclude.is_empty()
         || playwright.selectors.html_ids
         || !playwright.selectors.test_ids.is_empty()
         || !playwright.selectors.component_test_ids.is_empty()
         || !playwright.selector_roots.is_empty()
+        || !playwright.selector_include.is_empty()
         || !playwright.selector_exclude.is_empty()
+        || !playwright.navigation_helpers.is_empty()
         || playwright.frontend_root.is_some()
         || playwright.ignore_routes.is_some()
-}
-
-pub(super) fn is_legacy_playwright_configured(config: &FileConfig) -> bool {
-    config.frontend_root.is_some()
-        || config.playwright_config.is_some()
-        || !config.test_include.is_empty()
-        || !config.test_exclude.is_empty()
-        || !config.ignore_routes.is_empty()
-        || !config.navigation_helpers.is_empty()
-        || config.selector_attributes.is_some()
-        || !config.component_selector_attributes.is_empty()
-        || config.html_ids
-        || config.selector_roots.is_some()
-        || !config.selector_include.is_empty()
-        || !config.selector_exclude.is_empty()
 }
 
 pub(super) fn find_by_stems(root: &Path, stems: &[&str]) -> Result<Option<(PathBuf, String)>> {

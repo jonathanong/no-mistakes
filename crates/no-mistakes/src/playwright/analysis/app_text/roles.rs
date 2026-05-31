@@ -174,3 +174,6 @@ fn select_role(
         _ => Some("combobox"),
     }
 }
+
+#[cfg(test)]
+mod tests;

@@ -1,0 +1,7 @@
+tests:
+  playwright:
+    frontendRoot: web/app
+    selectors:
+      testIds: []
+      componentTestIds:
+        dataPw: data-pw

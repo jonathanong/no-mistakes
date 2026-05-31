@@ -78,23 +78,28 @@ pub struct Violation {
 #[derive(Default, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub(crate) struct RootConfig {
-    #[serde(flatten)]
-    pub(crate) legacy: FileConfig,
+    pub(crate) frontend_root: Option<String>,
+    pub(crate) assert_no_fetch: Option<bool>,
     pub(crate) react_traits: Option<FileConfig>,
 }
 
 impl RootConfig {
     pub(crate) fn into_file_config(self) -> FileConfig {
-        let mut file_config = self.legacy;
-        if let Some(overrides) = self.react_traits {
-            if overrides.frontend_root.is_some() {
-                file_config.frontend_root = overrides.frontend_root;
+        let mut config = FileConfig {
+            frontend_root: self.frontend_root,
+            assert_no_fetch: self.assert_no_fetch,
+        };
+
+        if let Some(react_traits) = self.react_traits {
+            if react_traits.frontend_root.is_some() {
+                config.frontend_root = react_traits.frontend_root;
             }
-            if overrides.assert_no_fetch.is_some() {
-                file_config.assert_no_fetch = overrides.assert_no_fetch;
+            if react_traits.assert_no_fetch.is_some() {
+                config.assert_no_fetch = react_traits.assert_no_fetch;
             }
         }
-        file_config
+
+        config
     }
 }
 

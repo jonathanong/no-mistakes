@@ -2,59 +2,71 @@ use super::types::{FileConfig, RootConfig};
 
 #[test]
 fn into_file_config_no_react_traits_section() {
-    let root = RootConfig {
-        legacy: FileConfig {
-            frontend_root: Some("app".into()),
-            assert_no_fetch: None,
-        },
-        react_traits: None,
-    };
+    let root = RootConfig::default();
     let fc = root.into_file_config();
-    assert_eq!(fc.frontend_root.as_deref(), Some("app"));
+    assert!(fc.frontend_root.is_none());
     assert!(fc.assert_no_fetch.is_none());
 }
 
 #[test]
-fn into_file_config_partial_override_only_assert_no_fetch() {
+fn into_file_config_top_level_fields() {
     let root = RootConfig {
-        legacy: FileConfig {
-            frontend_root: Some("app".into()),
-            assert_no_fetch: None,
-        },
-        react_traits: Some(FileConfig {
-            frontend_root: None,
-            assert_no_fetch: Some(true),
-        }),
+        frontend_root: Some("components".into()),
+        assert_no_fetch: Some(true),
+        react_traits: None,
     };
     let fc = root.into_file_config();
-    assert_eq!(fc.frontend_root.as_deref(), Some("app"));
+    assert_eq!(fc.frontend_root.as_deref(), Some("components"));
     assert_eq!(fc.assert_no_fetch, Some(true));
 }
 
 #[test]
-fn into_file_config_partial_override_only_frontend_root() {
+fn into_file_config_react_traits_section_assert_no_fetch() {
     let root = RootConfig {
-        legacy: FileConfig {
+        react_traits: Some(FileConfig {
             frontend_root: None,
-            assert_no_fetch: Some(false),
-        },
+            assert_no_fetch: Some(true),
+        }),
+        ..Default::default()
+    };
+    let fc = root.into_file_config();
+    assert!(fc.frontend_root.is_none());
+    assert_eq!(fc.assert_no_fetch, Some(true));
+}
+
+#[test]
+fn into_file_config_react_traits_section_frontend_root() {
+    let root = RootConfig {
         react_traits: Some(FileConfig {
             frontend_root: Some("src/app".into()),
             assert_no_fetch: None,
         }),
+        ..Default::default()
     };
     let fc = root.into_file_config();
     assert_eq!(fc.frontend_root.as_deref(), Some("src/app"));
-    assert_eq!(fc.assert_no_fetch, Some(false));
+    assert!(fc.assert_no_fetch.is_none());
 }
 
 #[test]
 fn into_file_config_full_override() {
     let root = RootConfig {
-        legacy: FileConfig {
-            frontend_root: Some("app".into()),
-            assert_no_fetch: None,
-        },
+        react_traits: Some(FileConfig {
+            frontend_root: Some("src/app".into()),
+            assert_no_fetch: Some(true),
+        }),
+        ..Default::default()
+    };
+    let fc = root.into_file_config();
+    assert_eq!(fc.frontend_root.as_deref(), Some("src/app"));
+    assert_eq!(fc.assert_no_fetch, Some(true));
+}
+
+#[test]
+fn into_file_config_react_traits_section_overrides_top_level_fields() {
+    let root = RootConfig {
+        frontend_root: Some("components".into()),
+        assert_no_fetch: Some(false),
         react_traits: Some(FileConfig {
             frontend_root: Some("src/app".into()),
             assert_no_fetch: Some(true),

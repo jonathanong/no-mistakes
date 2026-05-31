@@ -88,7 +88,6 @@ pub(crate) struct PlaywrightOptions {
     pub(crate) allow_skipped_tests: bool,
     pub(crate) assert_unique_test_ids: bool,
     pub(crate) assert_unique_html_ids: bool,
-    pub(crate) assert_unique_selectors: bool,
 }
 
 #[derive(Debug, Default, Deserialize)]

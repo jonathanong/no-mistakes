@@ -1,0 +1,9 @@
+rules:
+- rule: route-consistency
+  scope: repository
+  options:
+    frontendRoot: packages/web/app
+    backendPrefixes:
+    - "/api/"
+    scanPatterns:
+    - packages/web/src/**/*.ts

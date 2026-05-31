@@ -1,3 +1,5 @@
-playwrightConfig:
-  - playwright.config.ts
-  - playwright.other.config.ts
+tests:
+  playwright:
+    configs:
+      - playwright.config.ts
+      - playwright.other.config.ts

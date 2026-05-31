@@ -1,0 +1,5 @@
+rules:
+- rule: max-file-size
+  scope: repository
+  options:
+    maxLines: 10

@@ -1,0 +1,11 @@
+rules:
+- rule: openai-test-naming
+  scope: repository
+  options:
+    importPatterns:
+    - "^@services/openai-"
+    - "^openai$"
+    safeImportPaths:
+    - "/rate-limit$"
+    safeOpenaiSdkImports:
+    - RateLimitError

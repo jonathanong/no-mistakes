@@ -149,7 +149,6 @@ fn analyze_discovers_tests_and_builds_reports() {
         allow_skipped_tests: false,
         assert_unique_test_ids: false,
         assert_unique_html_ids: false,
-        assert_unique_selectors: false,
         command: Command::Check,
     };
     assert_eq!(run(cli.clone()).unwrap(), ExitCode::from(1));
@@ -177,7 +176,7 @@ fn analyze_discovers_tests_and_builds_reports() {
     assert_eq!(run(cli_related_json).unwrap(), ExitCode::SUCCESS);
 
     let mut cli_unique = cli.clone();
-    cli_unique.assert_unique_selectors = true;
+    cli_unique.assert_unique_test_ids = true;
     cli_unique.assert_unique_html_ids = true;
     assert_eq!(run(cli_unique).unwrap(), ExitCode::from(1));
 
@@ -214,7 +213,6 @@ fn run_check_returns_success_for_fully_covered_project() {
         allow_skipped_tests: false,
         assert_unique_test_ids: false,
         assert_unique_html_ids: false,
-        assert_unique_selectors: false,
         command: Command::Check,
     };
 
@@ -234,7 +232,6 @@ fn run_check_fails_for_uncovered_selectors_without_uncovered_routes() {
         allow_skipped_tests: false,
         assert_unique_test_ids: false,
         assert_unique_html_ids: false,
-        assert_unique_selectors: false,
         command: Command::Check,
     };
 
@@ -254,7 +251,6 @@ fn run_check_fails_for_duplicate_selectors_without_uncovered_coverage() {
         allow_skipped_tests: false,
         assert_unique_test_ids: true,
         assert_unique_html_ids: false,
-        assert_unique_selectors: false,
         command: Command::Check,
     };
 
@@ -274,7 +270,6 @@ fn run_check_surfaces_settings_load_errors() {
         allow_skipped_tests: false,
         assert_unique_test_ids: false,
         assert_unique_html_ids: false,
-        assert_unique_selectors: false,
         command: Command::Check,
     };
 

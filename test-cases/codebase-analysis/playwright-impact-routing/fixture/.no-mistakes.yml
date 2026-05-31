@@ -1,0 +1,8 @@
+rules:
+- rule: route-consistency
+  scope: repository
+  options:
+    frontendRoot: web/app
+tests:
+  playwright:
+    frontendRoot: web/app

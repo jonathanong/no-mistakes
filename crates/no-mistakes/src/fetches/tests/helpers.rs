@@ -45,7 +45,7 @@ pub(crate) struct RunArgsEnvGuard {
 
 impl Drop for RunArgsEnvGuard {
     fn drop(&mut self) {
-        const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
+        const ENV_VAR: &str = "FETCHES_TEST_ARGS";
         match self.previous.clone() {
             Some(previous) => std::env::set_var(ENV_VAR, previous),
             None => std::env::remove_var(ENV_VAR),
@@ -55,7 +55,7 @@ impl Drop for RunArgsEnvGuard {
 
 impl RunArgsEnvGuard {
     pub(crate) fn release(mut self) -> std::sync::MutexGuard<'static, ()> {
-        const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
+        const ENV_VAR: &str = "FETCHES_TEST_ARGS";
         match self.previous.take() {
             Some(previous) => std::env::set_var(ENV_VAR, previous),
             None => std::env::remove_var(ENV_VAR),
@@ -71,7 +71,7 @@ pub(crate) fn with_run_args_env(
     existing: Option<String>,
 ) -> RunArgsEnvGuard {
     let _guard = RUN_ARGS_MUTEX.lock().unwrap_or_else(|err| err.into_inner());
-    const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
+    const ENV_VAR: &str = "FETCHES_TEST_ARGS";
     let previous: Option<std::ffi::OsString> = match existing {
         Some(existing) => {
             std::env::set_var(ENV_VAR, &existing);

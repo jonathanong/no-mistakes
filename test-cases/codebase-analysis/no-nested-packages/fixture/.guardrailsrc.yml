@@ -1,4 +1,0 @@
-rules:
-  no-nested-packages:
-    workspaceRoots:
-      - package.json

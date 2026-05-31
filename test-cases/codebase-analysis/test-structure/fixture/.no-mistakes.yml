@@ -1,0 +1,15 @@
+rules:
+- rule: test-structure
+  scope: repository
+  options:
+    mockingMethods:
+    - mock
+    - spyOn
+    - fn
+    - clearAllMocks
+    - restoreAllMocks
+    mockImplementationMethods:
+    - mockResolvedValue
+    - mockRejectedValue
+    - mockReturnValue
+    - mockImplementation

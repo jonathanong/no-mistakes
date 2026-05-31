@@ -1,0 +1,4 @@
+tests:
+  playwright:
+    frontendRoot: web/app
+    testExclude: ['tests/skip/**']

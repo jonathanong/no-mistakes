@@ -5,6 +5,7 @@ projects:
 
 tests:
   playwright:
+    frontendRoot: web/app
     selectors:
       testIds:
         - data-pw

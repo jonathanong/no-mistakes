@@ -1,0 +1,6 @@
+rules:
+- rule: no-nested-packages
+  scope: repository
+  options:
+    workspaceRoots:
+    - package.json

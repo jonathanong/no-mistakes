@@ -1,0 +1,8 @@
+rules:
+- rule: psql-test-files-location
+  scope: repository
+  options:
+    guardedDirectories:
+    - backend/data-stores/psql/migrations/
+    - backend/data-stores/psql/idempotents/
+    - backend/data-stores/psql/views/

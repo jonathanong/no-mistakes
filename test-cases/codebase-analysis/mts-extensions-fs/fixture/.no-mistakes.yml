@@ -1,0 +1,11 @@
+rules:
+- rule: mts-extensions
+  scope: repository
+  options:
+    disallowedExtensions:
+    - ".js"
+    - ".ts"
+    - ".mjs"
+    - ".cjs"
+    - ".cts"
+    allowedNonMtsFiles: []

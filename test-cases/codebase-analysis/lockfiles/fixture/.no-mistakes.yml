@@ -1,0 +1,11 @@
+rules:
+- rule: package-manager-lockfiles
+  scope: repository
+  options:
+    lockfileNames:
+    - package-lock.json
+    - yarn.lock
+    - pnpm-lock.yaml
+    - bun.lockb
+    allowedLockfilePaths:
+    - package-lock.json

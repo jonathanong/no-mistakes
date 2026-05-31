@@ -1,0 +1,4 @@
+tests:
+  playwright:
+    frontendRoot: web/app
+    configs: missing.playwright.config.ts

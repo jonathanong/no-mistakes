@@ -135,7 +135,6 @@ fn playwright_json(
         allow_skipped_tests: options.allow_skipped_tests,
         assert_unique_test_ids: options.assert_unique_test_ids,
         assert_unique_html_ids: options.assert_unique_html_ids,
-        assert_unique_selectors: options.assert_unique_selectors,
     };
     crate::playwright::report_json(kind, report_options).map_err(to_napi_error)
 }

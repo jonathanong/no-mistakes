@@ -8,7 +8,6 @@ export interface PlaywrightOptions {
   allowSkippedTests?: boolean;
   assertUniqueTestIds?: boolean;
   assertUniqueHtmlIds?: boolean;
-  assertUniqueSelectors?: boolean;
 }
 
 export interface PlaywrightRelatedOptions extends PlaywrightOptions {

@@ -1,0 +1,8 @@
+rules:
+- rule: disallow-uuid-functions
+  scope: repository
+  options:
+    bannedFunctions:
+    - uuid_generate_v1
+    - uuid_generate_v4
+    - uuid_generate_v5

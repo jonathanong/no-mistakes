@@ -1,7 +1,6 @@
 use super::*;
 use crate::playwright::test_support::fixture_path;
 use load::helpers::is_playwright_config_name;
-use load::OneOrMany;
 
 #[test]
 fn missing_default_config_uses_defaults() {
@@ -37,15 +36,22 @@ fn explicit_generic_v2_config_uses_playwright_settings() {
 }
 
 #[test]
-fn explicit_generic_legacy_config_uses_legacy_settings() {
-    let root = fixture_path(&["scan-config", "explicit-legacy-config"]);
-    let settings = load_settings(&root, Some(Path::new("configs/ci.yaml")), &[], None).unwrap();
-    assert_eq!(settings.frontend_root, "explicit-legacy-app");
-    assert_eq!(settings.selector_attributes, vec!["data-legacy-explicit"]);
+fn explicit_v2_config_without_playwright_settings_uses_defaults() {
+    let root = fixture_path(&["scan-config", "explicit-v2-config"]);
+    let settings = load_settings(
+        &root,
+        Some(Path::new("configs/no-playwright.yaml")),
+        &[PathBuf::from("playwright.cli.config.ts")],
+        Some("web".to_string()),
+    )
+    .unwrap();
+    assert_eq!(settings.frontend_root, "app");
     assert_eq!(
         settings.playwright_configs,
-        vec![root.join("playwright.explicit-legacy.config.ts")]
+        vec![root.join("playwright.cli.config.ts")]
     );
+    assert_eq!(settings.project, Some("web".to_string()));
+    assert_eq!(settings.selector_attributes, vec!["data-testid", "data-pw"]);
 }
 
 #[test]
@@ -77,7 +83,7 @@ fn v2_without_config_paths_finds_default_playwright_config() {
 }
 
 #[test]
-fn legacy_cli_playwright_configs_override_file_settings() {
+fn cli_playwright_configs_override_file_settings() {
     let root = fixture_path(&["scan-config", "full"]);
     let settings = load_settings(
         &root,
@@ -130,7 +136,7 @@ fn no_mistakes_config_has_priority_and_supports_nesting() {
 }
 
 #[test]
-fn no_mistakes_v2_config_wins_over_legacy_playwright_config() {
+fn no_mistakes_v2_config_loads_playwright_settings() {
     let root = fixture_path(&["scan-config", "no-mistakes-v2-priority"]);
     let settings = load_settings(&root, None, &[], None).unwrap();
     assert_eq!(settings.frontend_root, "v2-app");
@@ -148,25 +154,12 @@ fn no_mistakes_v2_config_wins_over_legacy_playwright_config() {
 }
 
 #[test]
-fn no_mistakes_without_playwright_settings_falls_back_to_legacy_playwright_config() {
-    let root = fixture_path(&["scan-config", "no-mistakes-fallback-legacy"]);
-    let settings = load_settings(&root, None, &[], None).unwrap();
-    assert_eq!(settings.frontend_root, "legacy-app");
-    assert_eq!(settings.selector_attributes, vec!["data-legacy"]);
-    assert_eq!(settings.selector_roots, vec!["legacy-components"]);
-    assert_eq!(
-        settings.playwright_configs,
-        vec![root.join("playwright.legacy.config.ts")]
-    );
-}
-
-#[test]
-fn v2_playwright_ignore_routes_empty_clears_legacy() {
+fn v2_playwright_ignore_routes_empty_is_preserved() {
     let root = fixture_path(&["scan-config", "no-mistakes-v2-clear-ignore-routes"]);
     let settings = load_settings(&root, None, &[], None).unwrap();
     assert!(
         settings.ignore_routes.is_empty(),
-        "explicit empty ignoreRoutes should clear legacy overlay"
+        "explicit empty ignoreRoutes should be preserved"
     );
 }
 
@@ -181,14 +174,6 @@ fn v2_playwright_frontend_root_and_ignore_routes() {
         settings.playwright_configs,
         vec![root.join("playwright.config.ts")]
     );
-}
-
-#[test]
-fn test_one_or_many_values() {
-    let one = OneOrMany::One("a".to_string());
-    assert_eq!(one.values(), vec!["a"]);
-    let many = OneOrMany::Many(vec!["a".to_string(), "b".to_string()]);
-    assert_eq!(many.values(), vec!["a", "b"]);
 }
 
 #[test]

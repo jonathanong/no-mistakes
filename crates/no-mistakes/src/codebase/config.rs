@@ -88,7 +88,7 @@ pub struct Config {
 
 impl Config {
     pub fn from_yaml(yaml: &str) -> Result<Self> {
-        serde_yaml::from_str(yaml).context("failed to parse .guardrailsrc.yml")
+        serde_yaml::from_str(yaml).context("failed to parse .no-mistakes.yml")
     }
 
     pub fn rule_options<T: for<'de> Deserialize<'de> + Default>(&self, rule_id: &str) -> T {

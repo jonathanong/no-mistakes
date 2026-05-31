@@ -22,7 +22,6 @@ fn report_options(root: PathBuf) -> PlaywrightReportOptions {
         allow_skipped_tests: false,
         assert_unique_test_ids: false,
         assert_unique_html_ids: false,
-        assert_unique_selectors: false,
     }
 }
 

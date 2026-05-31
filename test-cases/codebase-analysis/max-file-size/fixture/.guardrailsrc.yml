@@ -1,3 +1,0 @@
-rules:
-  max-file-size:
-    maxLines: 10

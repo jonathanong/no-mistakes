@@ -1,0 +1,8 @@
+rules:
+- rule: tool-conventions
+  scope: repository
+  options:
+    booleanDiscriminatorNames:
+    - success
+    - found
+    - created

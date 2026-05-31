@@ -1,0 +1,7 @@
+rules:
+- rule: systems-worker-required-options
+  scope: repository
+  options:
+    requiredOptions:
+    - lockDuration
+    - stalledInterval

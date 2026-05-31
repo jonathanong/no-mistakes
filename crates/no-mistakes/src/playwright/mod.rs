@@ -41,7 +41,6 @@ pub(crate) struct PlaywrightReportOptions {
     pub(crate) allow_skipped_tests: bool,
     pub(crate) assert_unique_test_ids: bool,
     pub(crate) assert_unique_html_ids: bool,
-    pub(crate) assert_unique_selectors: bool,
 }
 
 pub(crate) fn report_json(
@@ -64,10 +63,9 @@ pub(crate) fn report_json(
             allow_skipped_tests: options.allow_skipped_tests,
         },
         analysis::types::UniqueSelectorPolicy {
-            test_ids: options.assert_unique_test_ids || options.assert_unique_selectors,
-            html_ids: options.assert_unique_html_ids
-                || (options.assert_unique_selectors && settings.html_ids),
-            aggregate: options.assert_unique_selectors,
+            test_ids: options.assert_unique_test_ids,
+            html_ids: options.assert_unique_html_ids,
+            aggregate: false,
             configured_html_id_selector: false,
         },
     )?;

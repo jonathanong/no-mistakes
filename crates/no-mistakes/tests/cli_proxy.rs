@@ -22,13 +22,7 @@ fn unknown_commands_are_rejected_without_external_proxy() {
 
 #[test]
 fn old_standalone_command_names_are_not_accepted_as_subcommands() {
-    for command in [
-        "next-to-fetch",
-        "playwright-ast-coverage",
-        "queue-ast-hop",
-        "react-traits",
-        "server-ast-routes",
-    ] {
+    for command in ["queue-ast-hop", "react-traits", "server-ast-routes"] {
         let output = Command::new(bin())
             .arg(command)
             .output()

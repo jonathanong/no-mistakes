@@ -1,0 +1,9 @@
+tests:
+  playwright:
+    frontendRoot: web/app
+    testInclude:
+    - tests/**/*.ts
+    selectors:
+      testIds:
+      - data-testid
+      - data-pw

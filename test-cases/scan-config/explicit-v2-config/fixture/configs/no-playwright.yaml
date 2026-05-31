@@ -1,0 +1,4 @@
+projects:
+  web:
+    type: nextjs
+    root: explicit-app

@@ -33,7 +33,6 @@ fn text_locators_create_approximate_related_and_coverage_edges_with_route_signal
         allow_skipped_tests: false,
         assert_unique_test_ids: false,
         assert_unique_html_ids: false,
-        assert_unique_selectors: false,
         command: Command::Check,
     };
     assert_eq!(run(cli).unwrap(), ExitCode::from(1));

@@ -1,0 +1,12 @@
+tests:
+  playwright:
+    frontendRoot: app
+    testInclude:
+    - tests/**/*.spec.ts
+    navigationHelpers:
+    - navigateTo
+    selectorRoots:
+    - app
+    selectors:
+      testIds:
+      - data-pw

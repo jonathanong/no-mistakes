@@ -1,0 +1,8 @@
+rules:
+- rule: systems-strict-file-structure
+  scope: repository
+  options:
+    allowedRootFiles:
+    - index.mts
+    allowedSubdirs:
+    - workers
