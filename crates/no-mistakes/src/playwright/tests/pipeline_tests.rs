@@ -178,7 +178,6 @@ fn analyze_discovers_tests_and_builds_reports() {
     let mut cli_unique = cli.clone();
     cli_unique.assert_unique_test_ids = true;
     cli_unique.assert_unique_html_ids = true;
-    cli_unique.assert_unique_html_ids = true;
     assert_eq!(run(cli_unique).unwrap(), ExitCode::from(1));
 
     print_edges_text(&analysis.edges);

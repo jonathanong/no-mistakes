@@ -80,17 +80,7 @@ fn validate_globs(patterns: &[String], key: &str) -> Result<()> {
 }
 
 /// Return the directory that contains the effective config for `root`.
-///
-/// Mirrors the discovery order in [`load_v2_config`] without reading file
-/// contents. Falls back to `root` when nothing is found.
 pub fn find_config_root(root: &Path) -> PathBuf {
-    for stem in V2_STEMS {
-        for ext in CONFIG_EXTENSIONS {
-            if root.join(format!("{stem}.{ext}")).exists() {
-                return root.to_path_buf();
-            }
-        }
-    }
     root.to_path_buf()
 }
 
