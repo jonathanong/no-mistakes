@@ -282,3 +282,20 @@ fn dependencies_symbols_skip_value_exports_under_type_star() {
     assert!(output.status.success());
     assert!(!stdout(&output).contains("type-star-value-source.mts#Foo\n"));
 }
+
+#[test]
+fn dependencies_symbols_scope_inline_arrow_callback_parameters() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "inline-arrow-shadow.mts#api",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "");
+}

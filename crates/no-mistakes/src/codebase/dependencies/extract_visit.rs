@@ -57,6 +57,17 @@ impl<'a> Visit<'a> for ImportCollector {
         self.pop_function_scope(true);
     }
 
+    fn visit_arrow_function_expression(
+        &mut self,
+        arrow: &oxc::ast::ast::ArrowFunctionExpression<'a>,
+    ) {
+        self.push_anonymous_function_scope();
+        self.add_type_parameter_names(arrow.type_parameters.as_deref());
+        self.add_formal_parameters(&arrow.params);
+        walk::walk_arrow_function_expression(self, arrow);
+        self.pop_function_scope(true);
+    }
+
     fn visit_method_definition(&mut self, method: &MethodDefinition<'a>) {
         visit_method_definition_with_scope(self, method);
     }
