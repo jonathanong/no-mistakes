@@ -2,7 +2,9 @@ fn visit_ts_type_alias_declaration_with_scope<'a>(
     collector: &mut ImportCollector,
     declaration: &TSTypeAliasDeclaration<'a>,
 ) {
-    if collector.export_depth > 0 && collector.function_stack.is_empty() {
+    if collector.function_stack.is_empty()
+        && collector.is_exported_top_level_type_name(declaration.id.name.as_str())
+    {
         visit_exported_type_alias_declaration(collector, declaration);
     } else if collector.function_stack.is_empty() {
         collector.add_type_binding_name(declaration.id.name.as_str());
@@ -19,7 +21,9 @@ fn visit_ts_interface_declaration_with_scope<'a>(
     collector: &mut ImportCollector,
     declaration: &TSInterfaceDeclaration<'a>,
 ) {
-    if collector.export_depth > 0 && collector.function_stack.is_empty() {
+    if collector.function_stack.is_empty()
+        && collector.is_exported_top_level_type_name(declaration.id.name.as_str())
+    {
         visit_exported_interface_declaration(collector, declaration);
     } else if collector.function_stack.is_empty() {
         collector.add_type_binding_name(declaration.id.name.as_str());

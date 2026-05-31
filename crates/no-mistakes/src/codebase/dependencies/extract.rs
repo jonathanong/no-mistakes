@@ -95,6 +95,9 @@ pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFac
     collector
         .exported_functions
         .extend(later_named_value_exports(program));
+    collector
+        .later_exported_type_names
+        .extend(later_named_type_exports(program));
     collector.visit_program(program);
     let callable_scopes = collector.callable_scopes;
     let exported_type_scopes = collector.exported_type_scopes;
@@ -127,6 +130,24 @@ fn later_named_value_exports<'a>(program: &Program<'a>) -> Vec<String> {
             if specifier.export_kind.is_type() {
                 continue;
             }
+            if let Some(name) = module_export_name_name(&specifier.local) {
+                exports.push(name.to_string());
+            }
+        }
+    }
+    exports
+}
+
+fn later_named_type_exports<'a>(program: &Program<'a>) -> Vec<String> {
+    let mut exports = Vec::new();
+    for statement in &program.body {
+        let Statement::ExportNamedDeclaration(export) = statement else {
+            continue;
+        };
+        if export.source.is_some() || !export.export_kind.is_type() {
+            continue;
+        }
+        for specifier in &export.specifiers {
             if let Some(name) = module_export_name_name(&specifier.local) {
                 exports.push(name.to_string());
             }

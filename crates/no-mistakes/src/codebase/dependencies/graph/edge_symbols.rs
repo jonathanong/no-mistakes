@@ -74,6 +74,13 @@ fn collect_symbol_edges(
         } else {
             http_route_defs.as_slice()
         };
+        collect_top_level_imported_edges(
+            path,
+            &caller_to_export,
+            &file_facts.function_calls,
+            &imported_symbols,
+            &mut edges,
+        );
         for exported_value in exported_values {
             let caller_exports = caller_to_export
                 .get(&exported_value)

@@ -104,18 +104,16 @@ fn symbol_http_targets(
 
 fn is_http_callee(callee: &str) -> bool {
     const METHODS: &[&str] = &["delete", "get", "head", "options", "patch", "post", "put"];
-    const OWNERS: &[&str] = &["axios", "globalThis", "http", "https", "self", "window"];
     callee == "fetch"
         || dotted_callee_parts(callee)
-            .is_some_and(|(owner, method)| OWNERS.contains(&owner) && METHODS.contains(&method))
+            .is_some_and(|(_, method)| METHODS.contains(&method))
 }
 
 fn is_process_spawn_callee(callee: &str) -> bool {
     const FUNCTIONS: &[&str] = &["exec", "execFile", "fork", "spawn"];
-    const OWNERS: &[&str] = &["child_process", "cp", "process"];
     FUNCTIONS.contains(&callee)
         || dotted_callee_parts(callee)
-            .is_some_and(|(owner, method)| OWNERS.contains(&owner) && FUNCTIONS.contains(&method))
+            .is_some_and(|(_, method)| FUNCTIONS.contains(&method))
 }
 
 fn dotted_callee_parts(callee: &str) -> Option<(&str, &str)> {

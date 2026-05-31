@@ -46,3 +46,39 @@ fn fallback_namespace_symbols(
     nodes.dedup();
     nodes
 }
+
+fn collect_top_level_imported_edges(
+    path: &Path,
+    caller_to_export: &HashMap<String, Vec<String>>,
+    calls: &[crate::codebase::dependencies::extract::FunctionCall],
+    imported_symbols: &HashMap<String, ImportedSymbolTarget>,
+    edges: &mut Vec<Edge>,
+) {
+    let exports = exported_symbol_names(caller_to_export);
+    if exports.is_empty() {
+        return;
+    }
+    for imported in fallback_imported_symbols(false, calls, &[], imported_symbols) {
+        let (target, kind) = target_node(imported);
+        for export in &exports {
+            edges.push((
+                NodeId::Symbol {
+                    file: path.to_path_buf(),
+                    symbol: export.clone(),
+                },
+                target.clone(),
+                kind,
+            ));
+        }
+    }
+}
+
+fn exported_symbol_names(caller_to_export: &HashMap<String, Vec<String>>) -> Vec<String> {
+    let mut exports: Vec<_> = caller_to_export
+        .values()
+        .flat_map(|exports| exports.iter().cloned())
+        .collect();
+    exports.sort();
+    exports.dedup();
+    exports
+}

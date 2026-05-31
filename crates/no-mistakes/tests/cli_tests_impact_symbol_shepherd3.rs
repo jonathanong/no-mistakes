@@ -306,3 +306,79 @@ fn dependencies_symbols_match_process_edges_to_symbol_call_paths() {
     assert!(output.status.success());
     assert_eq!(stdout(&output), "worker.mts\n");
 }
+
+#[test]
+fn dependencies_symbols_scope_later_exported_import_types() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "later-export-import-type.mts#Public",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-type",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "source.mts\n");
+}
+
+#[test]
+fn dependencies_symbols_attach_top_level_import_calls_to_exports() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "top-level-import-call.mts#api",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-static",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "top-level-setup.mts#init\n");
+}
+
+#[test]
+fn dependencies_symbols_accept_custom_http_clients() {
+    let root = fixture("symbol-runtime-edges");
+    let output = run(&[
+        "dependencies",
+        "client.mts#runCustomHttpClient",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "http",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "routes/admin.mts\n");
+}
+
+#[test]
+fn dependencies_symbols_accept_member_spawn_calls() {
+    let root = fixture("symbol-runtime-edges");
+    let output = run(&[
+        "dependencies",
+        "client.mts#runMemberSpawnRuntimeEdge",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "process",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "member-worker.mts\n");
+}

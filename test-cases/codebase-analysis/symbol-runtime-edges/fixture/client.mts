@@ -14,8 +14,22 @@ export function runOtherRoute() {
   fetch("/api/admin");
 }
 
+const api = {
+  get(path: string) {
+    return path;
+  },
+};
+
+export function runCustomHttpClient() {
+  api.get("/api/admin");
+}
+
 export function runMemberRuntimeEdge() {
   cp.exec("node worker.mts");
+}
+
+export function runMemberSpawnRuntimeEdge() {
+  runner.spawn("member-worker.mts");
 }
 
 export function formatRuntimeEdges() {
@@ -33,6 +47,9 @@ const cache = {
 };
 
 const runner = {
+  spawn(path: string) {
+    return path;
+  },
   exec() {
     return "not a process spawn";
   },

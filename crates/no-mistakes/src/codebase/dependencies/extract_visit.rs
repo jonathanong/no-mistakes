@@ -20,6 +20,7 @@ struct ImportCollector {
     imported_bindings: HashSet<String>,
     suppress_imports: bool,
     collect_suppressed_runtime_imports: bool,
+    later_exported_type_names: HashSet<String>,
 }
 
 impl<'a> Visit<'a> for ImportCollector {
