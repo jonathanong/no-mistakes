@@ -63,11 +63,12 @@ pub(crate) fn fallback_runner_match(runner: TestRunner, rel: &str) -> bool {
                 && !rel.starts_with("specs/")
         }
         TestRunner::Playwright => {
-            rel.contains("/tests/e2e/")
-                || rel.starts_with("tests/e2e/")
-                || rel.contains("/playwright/")
-                || rel.starts_with("playwright/")
-                || rel.starts_with("specs/")
+            fallback_test_path(rel)
+                && (rel.contains("/tests/e2e/")
+                    || rel.starts_with("tests/e2e/")
+                    || rel.contains("/playwright/")
+                    || rel.starts_with("playwright/")
+                    || rel.starts_with("specs/"))
         }
     }
 }
