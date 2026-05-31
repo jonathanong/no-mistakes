@@ -67,6 +67,18 @@ fn graph_private_helpers_cover_noop_branches() {
 }
 
 #[test]
+fn symbol_node_file_helpers_render_paths() {
+    let root = p("/repo");
+    let symbol = NodeId::Symbol {
+        file: p("/repo/src/current.mts"),
+        symbol: "alpha".to_string(),
+    };
+
+    assert_eq!(symbol.as_file(), Some(p("/repo/src/current.mts").as_path()));
+    assert_eq!(symbol.display_name(&root), "src/current.mts#alpha");
+}
+
+#[test]
 fn symbol_edge_collection_covers_filtered_and_type_branches() {
     use crate::codebase::dependencies::extract::FunctionCall;
     use crate::codebase::ts_source::facts::{TsFactMap, TsFileFacts};
@@ -244,6 +256,10 @@ fn symbol_bfs_skips_initial_owner_and_honors_limits() {
         None,
     );
     assert!(limited.is_empty());
+
+    let file_start = NodeId::File(owner);
+    let empty = bfs_skipping_initial_symbol_owner_files(&[file_start], &edges, Some(0), None);
+    assert!(empty.is_empty());
 }
 
 // ── add_test_edges ───────────────────────────────────────────────────────

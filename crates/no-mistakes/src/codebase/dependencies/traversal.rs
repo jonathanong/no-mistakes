@@ -64,8 +64,7 @@ fn resolve_entrypoints_with_files(
             let mut node =
                 resolve_entrypoint_node(&raw_for_node, &normalized, &workspace, &root_dependencies);
             let file = match &node {
-                NodeId::File(path) => path.clone(),
-                NodeId::Symbol { file, .. } => file.clone(),
+                NodeId::File(path) | NodeId::Symbol { file: path, .. } => path.clone(),
                 _ => normalized,
             };
             if include_symbols {
