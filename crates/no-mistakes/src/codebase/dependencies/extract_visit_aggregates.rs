@@ -93,14 +93,15 @@ fn visit_export_default_declaration_with_scope<'a>(
         }
     }
     collector.export_depth += 1;
-    if let ExportDefaultDeclarationKind::FunctionDeclaration(function) = &export.declaration {
-        if function.id.is_none() {
-            walk_default_function(collector, function);
-            collector.export_depth -= 1;
-            return;
-        }
-    }
     match &export.declaration {
+        ExportDefaultDeclarationKind::FunctionDeclaration(function) => {
+            let scope = function
+                .id
+                .as_ref()
+                .map_or("default", |id| id.name.as_str());
+            walk_default_function_with_scope(collector, function, scope);
+            collector.export_depth -= 1;
+        }
         ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
             collector.push_function_scope(Some("default".to_string()));
             collector.exported_functions.insert("default".to_string());
@@ -112,7 +113,7 @@ fn visit_export_default_declaration_with_scope<'a>(
             collector.export_depth -= 1;
         }
         ExportDefaultDeclarationKind::FunctionExpression(function) => {
-            walk_default_function(collector, function);
+            walk_default_function_with_scope(collector, function, "default");
             collector.export_depth -= 1;
         }
         ExportDefaultDeclarationKind::ClassDeclaration(class) => {

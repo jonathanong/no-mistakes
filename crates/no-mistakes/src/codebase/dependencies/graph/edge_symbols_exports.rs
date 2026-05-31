@@ -12,9 +12,9 @@ fn collect_export_edges(
     caller_to_export: &mut HashMap<String, Vec<String>>,
     edges: &mut Vec<Edge>,
 ) {
+    collect_star_reexport_edges(&inputs, edges);
     for export in &inputs.symbols.exports {
         if export.name == "*" {
-            collect_star_reexport_edges(&inputs, export, edges);
             continue;
         }
         let export_symbol = export_symbol_name(export);

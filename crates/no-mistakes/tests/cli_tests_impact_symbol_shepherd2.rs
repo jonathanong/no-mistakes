@@ -154,3 +154,131 @@ fn dependencies_symbols_visit_star_reexports_by_type_and_value_kind() {
     assert!(output.status.success());
     assert!(stdout(&output).contains("star-dual-source.mts#Dual\n"));
 }
+
+#[test]
+fn dependencies_symbols_scope_named_default_functions_by_export_local() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "default-named-function.mts#default",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "source.mts#alpha\n");
+}
+
+#[test]
+fn dependencies_symbols_attribute_computed_object_keys_to_alias() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "computed-object-key-alias.mts#api",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "source.mts#alpha\n");
+}
+
+#[test]
+fn dependencies_symbols_resolve_bare_namespace_references() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "bare-namespace-return.mts#getSource",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "source.mts\n");
+}
+
+#[test]
+fn dependencies_symbols_record_jsx_member_components() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "jsx-member-view.tsx#View",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert!(stdout(&output).contains("jsx-member-ui.tsx#Button\n"));
+}
+
+#[test]
+fn dependencies_symbols_visit_exported_generic_constraints() {
+    let root = fixture("symbol-export");
+    for entrypoint in [
+        "generic-constraint.mts#Box",
+        "generic-constraint.mts#HasValue",
+    ] {
+        let output = run(&[
+            "dependencies",
+            entrypoint,
+            "--root",
+            root.to_str().unwrap(),
+            "--symbols",
+            "--relationship",
+            "import-type",
+            "--format",
+            "paths",
+        ]);
+
+        assert!(output.status.success());
+        assert_eq!(stdout(&output), "source.mts#SourceShape\n", "{entrypoint}");
+    }
+}
+
+#[test]
+fn dependents_symbols_skip_ambiguous_star_reexports() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependents",
+        "star-ambiguous-a.mts#alpha",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert!(!stdout(&output).contains("star-ambiguous-consumer.mts#value\n"));
+}
+
+#[test]
+fn dependencies_symbols_skip_value_exports_under_type_star() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "type-star-value-consumer.mts#Use",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-type",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert!(!stdout(&output).contains("type-star-value-source.mts#Foo\n"));
+}

@@ -68,6 +68,7 @@ fn visit_type_alias_declaration_with_scope_name<'a>(
 ) {
     collector.push_function_scope(Some(name));
     collector.add_type_parameter_names(declaration.type_parameters.as_deref());
+    visit_type_parameter_constraints(collector, declaration.type_parameters.as_deref());
     let saved_suppress_imports = collector.suppress_imports;
     collector.suppress_imports = suppress_imports;
     collector.visit_ts_type(&declaration.type_annotation);
@@ -82,6 +83,7 @@ fn visit_type_alias_declaration_file_fallback<'a>(
     push_top_level_type_scope(collector);
     collector.add_type_binding_name(declaration.id.name.as_str());
     collector.add_type_parameter_names(declaration.type_parameters.as_deref());
+    visit_type_parameter_constraints(collector, declaration.type_parameters.as_deref());
     collector.visit_ts_type(&declaration.type_annotation);
     pop_top_level_type_scope(collector);
 }
@@ -103,6 +105,7 @@ fn visit_interface_declaration_with_scope_name<'a>(
 ) {
     collector.push_function_scope(Some(name));
     collector.add_type_parameter_names(declaration.type_parameters.as_deref());
+    visit_type_parameter_constraints(collector, declaration.type_parameters.as_deref());
     let saved_suppress_imports = collector.suppress_imports;
     collector.suppress_imports = suppress_imports;
     collector.visit_ts_interface_heritages(&declaration.extends);
@@ -118,9 +121,20 @@ fn visit_interface_declaration_file_fallback<'a>(
     push_top_level_type_scope(collector);
     collector.add_type_binding_name(declaration.id.name.as_str());
     collector.add_type_parameter_names(declaration.type_parameters.as_deref());
+    visit_type_parameter_constraints(collector, declaration.type_parameters.as_deref());
     collector.visit_ts_interface_heritages(&declaration.extends);
     collector.visit_ts_interface_body(&declaration.body);
     pop_top_level_type_scope(collector);
+}
+
+fn visit_type_parameter_constraints<'a>(
+    collector: &mut ImportCollector,
+    params: Option<&TSTypeParameterDeclaration<'a>>,
+) {
+    let Some(params) = params else { return };
+    for parameter in &params.params {
+        collector.visit_ts_type_parameter(parameter);
+    }
 }
 
 fn push_top_level_type_scope(collector: &mut ImportCollector) {

@@ -1,31 +1,42 @@
 fn collect_star_reexport_edges(
     inputs: &ExportEdgeInputs<'_>,
-    export: &crate::codebase::ts_symbols::Export,
     edges: &mut Vec<Edge>,
 ) {
-    let ExportKind::ReExport { source, imported } = &export.kind else {
-        return;
-    };
-    if imported != "*" {
-        return;
-    }
-    let target = resolve_star_source(inputs, inputs.path, source, export.is_type_only);
-    let Some((target, source_kind)) = target else {
-        return;
-    };
     let shadowed_exports = explicit_export_keys(inputs.symbols);
     let mut visited = HashSet::new();
-    collect_star_reexport_target(
-        inputs,
-        &target,
-        &shadowed_exports,
-        StarReexportKind {
-            export_is_type_only: export.is_type_only,
-            source_kind,
-        },
-        edges,
-        &mut visited,
-    );
+    let mut candidates = Vec::new();
+    for export in &inputs.symbols.exports {
+        let ExportKind::ReExport { source, imported } = &export.kind else {
+            continue;
+        };
+        if imported != "*" {
+            continue;
+        }
+        let target = resolve_star_source(inputs, inputs.path, source, export.is_type_only);
+        let Some((target, source_kind)) = target else {
+            continue;
+        };
+        collect_star_reexport_target(
+            inputs,
+            &target,
+            &shadowed_exports,
+            StarReexportKind {
+                export_is_type_only: export.is_type_only,
+                source_kind,
+            },
+            &mut candidates,
+            &mut visited,
+        );
+    }
+    let mut export_counts: HashMap<StarExportKey, usize> = HashMap::new();
+    for candidate in &candidates {
+        *export_counts.entry(candidate.export_key.clone()).or_default() += 1;
+    }
+    for candidate in candidates {
+        if export_counts.get(&candidate.export_key) == Some(&1) {
+            push_star_reexport_candidate_edges(inputs, candidate, edges);
+        }
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -41,7 +52,7 @@ fn collect_star_reexport_target(
     target: &Path,
     shadowed_exports: &HashSet<StarExportKey>,
     kind: StarReexportKind,
-    edges: &mut Vec<Edge>,
+    candidates: &mut Vec<StarReexportCandidate>,
     visited: &mut HashSet<StarReexportVisitKey>,
 ) {
     if !visited.insert((target.to_path_buf(), kind)) {
@@ -62,30 +73,31 @@ fn collect_star_reexport_target(
                 target_export,
                 shadowed_exports,
                 kind,
-                edges,
+                candidates,
                 visited,
             );
         } else {
             collect_concrete_star_reexport(
-                inputs,
                 target,
                 target_export,
                 shadowed_exports,
                 kind,
-                edges,
+                candidates,
             );
         }
     }
 }
 
 fn collect_concrete_star_reexport(
-    inputs: &ExportEdgeInputs<'_>,
     target: &Path,
     target_export: &crate::codebase::ts_symbols::Export,
     shadowed_exports: &HashSet<StarExportKey>,
     reexport_kind: StarReexportKind,
-    edges: &mut Vec<Edge>,
+    candidates: &mut Vec<StarReexportCandidate>,
 ) {
+    if reexport_kind.export_is_type_only && !target_export.is_type_only {
+        return;
+    }
     let reexported_symbol = export_symbol_name(target_export);
     let export_key = star_export_key(target_export, reexport_kind.export_is_type_only);
     if reexported_symbol == "default" || shadowed_exports.contains(&export_key) {
@@ -96,25 +108,12 @@ fn collect_concrete_star_reexport(
     } else {
         reexport_kind.source_kind
     };
-    edges.push((
-        NodeId::File(inputs.path.to_path_buf()),
-        NodeId::Symbol {
-            file: inputs.path.to_path_buf(),
-            symbol: reexported_symbol.clone(),
-        },
+    candidates.push(StarReexportCandidate {
+        target: target.to_path_buf(),
+        symbol: reexported_symbol,
+        export_key,
         kind,
-    ));
-    edges.push((
-        NodeId::Symbol {
-            file: inputs.path.to_path_buf(),
-            symbol: reexported_symbol.clone(),
-        },
-        NodeId::Symbol {
-            file: target.to_path_buf(),
-            symbol: reexported_symbol,
-        },
-        kind,
-    ));
+    });
 }
 
 fn collect_nested_star_reexport(
@@ -123,7 +122,7 @@ fn collect_nested_star_reexport(
     export: &crate::codebase::ts_symbols::Export,
     shadowed_exports: &HashSet<StarExportKey>,
     reexport_kind: StarReexportKind,
-    edges: &mut Vec<Edge>,
+    candidates: &mut Vec<StarReexportCandidate>,
     visited: &mut HashSet<StarReexportVisitKey>,
 ) {
     let ExportKind::ReExport { source, imported } = &export.kind else {
@@ -151,7 +150,7 @@ fn collect_nested_star_reexport(
         &nested,
         &nested_shadowed_exports,
         kind,
-        edges,
+        candidates,
         visited,
     );
 }

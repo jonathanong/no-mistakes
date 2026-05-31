@@ -20,18 +20,26 @@ fn walk_object_property_value_with_parent_scope<'a>(
     parent: &str,
     property: &ObjectProperty<'a>,
 ) {
-    walk::walk_property_key(collector, &property.key);
-    collector.push_function_scope(Some(parent.to_string()));
     match &property.value {
         Expression::FunctionExpression(function) => {
+            walk::walk_property_key(collector, &property.key);
+            collector.push_function_scope(Some(parent.to_string()));
             walk_function_property_value(collector, &property.key, function);
+            collector.pop_function_scope(true);
         }
         Expression::ArrowFunctionExpression(arrow) => {
+            walk::walk_property_key(collector, &property.key);
+            collector.push_function_scope(Some(parent.to_string()));
             walk_arrow_property_value(collector, &property.key, arrow);
+            collector.pop_function_scope(true);
         }
-        _ => collector.visit_expression(&property.value),
+        _ => {
+            collector.push_function_scope(Some(parent.to_string()));
+            walk::walk_property_key(collector, &property.key);
+            collector.visit_expression(&property.value);
+            collector.pop_function_scope(true);
+        }
     }
-    collector.pop_function_scope(true);
 }
 
 fn walk_function_property_value<'a>(

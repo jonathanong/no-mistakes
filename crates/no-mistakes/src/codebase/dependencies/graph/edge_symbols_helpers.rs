@@ -116,6 +116,9 @@ fn resolve_imported_callee(
     if let Some(target) = imported_symbols.get(callee) {
         return Some(target_node(target));
     }
+    if let Some(target) = namespace_imports.get(callee) {
+        return Some(namespace_file_node(target));
+    }
     let (namespace, member) = callee.split_once('.')?;
     if let Some(target) = namespace_imports.get(namespace) {
         return Some(namespace_target_node(target, member));

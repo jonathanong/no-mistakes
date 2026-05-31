@@ -197,9 +197,9 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_jsx_opening_element(&mut self, opening: &JSXOpeningElement<'a>) {
-        if let Some(name) = crate::codebase::ts_source::jsx::jsx_identifier_name(opening) {
+        if let Some(name) = jsx_element_reference_name(&opening.name) {
             if name.chars().next().is_some_and(char::is_uppercase) {
-                self.push_value_symbol_reference(name.to_string());
+                self.push_value_symbol_reference(name);
             }
         }
         walk::walk_jsx_opening_element(self, opening);

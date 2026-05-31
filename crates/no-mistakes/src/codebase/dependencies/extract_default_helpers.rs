@@ -32,13 +32,14 @@ fn parenthesized_expression_creates_own_scope(expression: &Expression<'_>) -> bo
     }
 }
 
-fn walk_default_function<'a>(
+fn walk_default_function_with_scope<'a>(
     collector: &mut ImportCollector,
     function: &oxc::ast::ast::Function<'a>,
+    scope: &str,
 ) {
-    collector.push_function_scope(Some("default".to_string()));
-    collector.exported_functions.insert("default".to_string());
-    collector.callable_scopes.insert("default".to_string());
+    collector.push_function_scope(Some(scope.to_string()));
+    collector.exported_functions.insert(scope.to_string());
+    collector.callable_scopes.insert(scope.to_string());
     collector.add_type_parameter_names(function.type_parameters.as_deref());
     collector.add_formal_parameters(&function.params);
     walk::walk_function(

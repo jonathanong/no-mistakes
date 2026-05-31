@@ -374,31 +374,7 @@ fn symbol_edge_helpers_cover_unreachable_export_and_barrel_fallback_paths() {
         workspace: &workspace,
     };
     let mut edges = Vec::new();
-    collect_star_reexport_edges(
-        &inputs,
-        &Export {
-            name: "plain".to_string(),
-            local: None,
-            kind: ExportKind::Function,
-            line: 1,
-            is_type_only: false,
-        },
-        &mut edges,
-    );
-    collect_star_reexport_edges(
-        &inputs,
-        &Export {
-            name: "*".to_string(),
-            local: None,
-            kind: ExportKind::ReExport {
-                source: "./target.mts".to_string(),
-                imported: "named".to_string(),
-            },
-            line: 2,
-            is_type_only: false,
-        },
-        &mut edges,
-    );
+    collect_star_reexport_edges(&inputs, &mut edges);
     assert!(edges.is_empty());
 
     let mut imported = HashMap::new();

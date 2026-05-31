@@ -89,7 +89,15 @@ fn collect_symbol_edges(
                             }
                         }
                     }
-                    for symbol_ref in refs_by_caller.get(&caller).into_iter().flatten() {
+                    let symbol_refs = refs_by_caller.get(&caller);
+                    for symbol_ref in symbol_refs.into_iter().flatten() {
+                        if namespace_import_member_reference_exists(
+                            symbol_ref,
+                            symbol_refs,
+                            &namespace_imports,
+                        ) {
+                            continue;
+                        }
                         if let Some((target, kind)) = resolve_imported_callee(
                             symbol_ref,
                             &imported_symbols,
@@ -126,4 +134,16 @@ fn collect_symbol_edges(
         }
     }
     edges
+}
+
+fn namespace_import_member_reference_exists(
+    symbol_ref: &str,
+    symbol_refs: Option<&Vec<String>>,
+    namespace_imports: &HashMap<String, ImportedSymbolTarget>,
+) -> bool {
+    namespace_imports.contains_key(symbol_ref)
+        && symbol_refs.is_some_and(|refs| {
+            let prefix = format!("{symbol_ref}.");
+            refs.iter().any(|candidate| candidate.starts_with(&prefix))
+        })
 }
