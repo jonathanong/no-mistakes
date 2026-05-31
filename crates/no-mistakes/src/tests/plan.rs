@@ -431,6 +431,7 @@ pub(crate) fn bfs_path_find(
     let mut queue = VecDeque::new();
     let mut parents: HashMap<NodeId, (NodeId, EdgeKind)> = HashMap::new();
     let mut visited = HashSet::new();
+    let mut owner_widened_files = HashSet::new();
     let mut reachable = Vec::new();
 
     queue.push_back(start.clone());
@@ -455,14 +456,29 @@ pub(crate) fn bfs_path_find(
         // Get dependents
         if let Some(neighbors) = graph.dependents_of_node(&current) {
             for (neighbor, kind) in neighbors {
+                if owner_widened_files.contains(&current)
+                    && !matches!(neighbor, NodeId::File(p) if test_filter.is_match(root, p))
+                {
+                    continue;
+                }
                 if let (NodeId::Symbol { file, .. }, NodeId::File(neighbor_file)) =
                     (&current, neighbor)
                 {
-                    if file == neighbor_file && !test_filter.is_match(root, neighbor_file) {
+                    if current == *start
+                        && file == neighbor_file
+                        && !test_filter.is_match(root, neighbor_file)
+                    {
                         continue;
                     }
                 }
                 if !visited.contains(neighbor) {
+                    if let (NodeId::Symbol { file, .. }, NodeId::File(neighbor_file)) =
+                        (&current, neighbor)
+                    {
+                        if file == neighbor_file {
+                            owner_widened_files.insert(neighbor.clone());
+                        }
+                    }
                     visited.insert(neighbor.clone());
                     parents.insert(neighbor.clone(), (current.clone(), *kind));
                     queue.push_back(neighbor.clone());

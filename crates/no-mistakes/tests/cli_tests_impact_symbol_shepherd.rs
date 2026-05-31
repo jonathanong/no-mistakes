@@ -77,6 +77,112 @@ fn dependencies_symbols_record_exported_class_computed_keys() {
 }
 
 #[test]
+fn dependencies_symbols_star_reexports_respect_explicit_exports() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependents",
+        "source.mts#alpha",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert!(!stdout(&output).contains("star-shadow-consumer.mts#value\n"));
+}
+
+#[test]
+fn dependencies_symbols_file_roots_expand_dynamic_edges_with_filter() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "dynamic-loader.mts",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-dynamic",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let out = stdout(&output);
+    assert!(out.contains("dynamic-chunk.mts\n"), "{out}");
+}
+
+#[test]
+fn dependencies_symbols_follow_local_type_alias_chains() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "local-type-chain.mts#Public",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-type",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "source.mts#SourceShape\n");
+}
+
+#[test]
+fn tests_plan_symbols_reaches_tests_through_intermediate_file_edges() {
+    let root = fixture("tests-impact-symbol");
+    let output = run(&[
+        "tests",
+        "plan",
+        "--changed-file",
+        "alpha-source.mts",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--json",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let test_files: Vec<&str> = plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|t| t["test_file"].as_str().unwrap())
+        .collect();
+    assert!(test_files.contains(&"alpha-side-effect.test.mts"));
+}
+
+#[test]
+fn dependencies_symbols_traverse_transitive_data_aliases() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "transitive-data-alias.mts#api",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "source.mts#alpha\n");
+}
+
+#[test]
 fn dependencies_symbols_expand_dynamic_import_file_targets() {
     let root = fixture("symbol-export");
     let output = run(&[
@@ -123,7 +229,10 @@ fn tests_plan_symbols_changed_file_seeds_exported_symbols() {
         .iter()
         .map(|t| t["test_file"].as_str().unwrap())
         .collect();
-    assert_eq!(test_files, vec!["alpha-consumer.test.mts"]);
+    assert_eq!(
+        test_files,
+        vec!["alpha-consumer.test.mts", "alpha-side-effect.test.mts"]
+    );
 }
 
 #[test]
@@ -152,7 +261,10 @@ fn tests_plan_symbols_entrypoint_file_seeds_exported_symbols() {
         .iter()
         .map(|t| t["test_file"].as_str().unwrap())
         .collect();
-    assert_eq!(test_files, vec!["alpha-consumer.test.mts"]);
+    assert_eq!(
+        test_files,
+        vec!["alpha-consumer.test.mts", "alpha-side-effect.test.mts"]
+    );
 }
 
 #[test]

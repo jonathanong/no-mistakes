@@ -108,7 +108,7 @@ fn collect_symbol_edges(
                                     kind,
                                 ));
                             }
-                        } else if caller == root_scope && !root_is_callable {
+                        } else if !root_is_callable {
                             if let Some(scope) =
                                 resolve_local_scope(&caller, symbol_ref, &local_scopes)
                             {

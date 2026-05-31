@@ -163,7 +163,7 @@ fn bfs(
                     continue;
                 }
                 let owner_bridge_allowed =
-                    symbol_owner_bridge_allowed(&node, neighbor, allowed, &root_nodes, &dynamic_import_files);
+                    symbol_owner_bridge_allowed(&node, neighbor, &root_nodes, &dynamic_import_files);
                 if is_symbol_owner_bridge(&node, neighbor) && !owner_bridge_allowed {
                     continue;
                 }

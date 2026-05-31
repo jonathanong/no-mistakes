@@ -1,13 +1,42 @@
 impl ImportCollector {
     fn push_type_symbol_reference(&mut self, name: String) {
         let binding = name.split_once('.').map_or(name.as_str(), |(binding, _)| binding);
-        if self.type_binding_shadows(binding) || self.type_parameter_shadows(binding) {
+        if self.type_parameter_shadows(binding) {
             return;
         }
+        let name = if self.type_binding_shadows(binding) {
+            let Some(name) = self.scoped_type_binding_reference(&name, binding) else {
+                return;
+            };
+            name
+        } else {
+            name
+        };
         self.symbol_references.push(FunctionCall {
             caller: self.current_function(),
             callee: name,
         });
+    }
+
+    fn scoped_type_binding_reference(&self, name: &str, binding: &str) -> Option<String> {
+        let Some(current) = self.current_function() else {
+            return Some(name.to_string());
+        };
+        let nested = format!("{current}/{binding}");
+        if self.known_function_scopes.contains(&nested) {
+            return Some(
+                name.strip_prefix(binding)
+                    .map_or(nested.clone(), |suffix| format!("{nested}{suffix}")),
+            );
+        }
+        if self
+            .type_local_stack
+            .last()
+            .is_some_and(|scope| scope.contains(binding))
+        {
+            return None;
+        }
+        Some(name.to_string())
     }
 
     fn add_type_parameter_names(&mut self, params: Option<&TSTypeParameterDeclaration<'_>>) {
@@ -28,15 +57,15 @@ impl ImportCollector {
         }
     }
 
-    fn type_binding_shadows(&self, name: &str) -> bool {
-        self.type_local_stack
+    fn type_parameter_shadows(&self, name: &str) -> bool {
+        self.type_parameter_stack
             .iter()
             .rev()
             .any(|scope| scope.contains(name))
     }
 
-    fn type_parameter_shadows(&self, name: &str) -> bool {
-        self.type_parameter_stack
+    fn type_binding_shadows(&self, name: &str) -> bool {
+        self.type_local_stack
             .iter()
             .rev()
             .any(|scope| scope.contains(name))

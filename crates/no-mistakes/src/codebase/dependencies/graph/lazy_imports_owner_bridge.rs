@@ -16,21 +16,12 @@ fn edge_allowed(
 fn symbol_owner_bridge_allowed(
     from: &NodeId,
     to: &NodeId,
-    allowed: Option<&HashSet<EdgeKind>>,
     root_nodes: &HashSet<NodeId>,
     dynamic_import_files: &HashSet<NodeId>,
 ) -> bool {
     is_symbol_owner_bridge(from, to)
         && !dynamic_import_files.contains(from)
         && root_nodes.contains(from)
-        && allowed.is_none_or(symbol_relationship_filter_allows_owner_bridge)
-}
-
-fn symbol_relationship_filter_allows_owner_bridge(allowed: &HashSet<EdgeKind>) -> bool {
-    allowed.contains(&EdgeKind::Import)
-        || allowed.contains(&EdgeKind::TypeImport)
-        || allowed.contains(&EdgeKind::WorkspaceImport)
-        || allowed.contains(&EdgeKind::AssetImport)
 }
 
 fn is_symbol_owner_bridge(from: &NodeId, to: &NodeId) -> bool {
