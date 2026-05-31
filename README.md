@@ -1,52 +1,67 @@
 # no-mistakes
 
-Deterministic AST-based codebase intelligence for humans and AI agents.
+Deterministic AST-based codebase intelligence for AI agents.
 
-This repository contains a Rust CLI, npm packages, ESLint/Oxlint plugins, and
-Codex skills for answering structural questions about TypeScript, JavaScript,
-React, Next.js, Playwright, queue, and server-route code without running the
-application or calling an AI model.
+`no-mistakes` answers structural questions about TypeScript, JavaScript,
+React, Next.js, Playwright, queue, server-route, and Rust repository code
+without running the application or calling an AI model. It is built for agents
+that need small, reliable answers they can feed into follow-up edits and tests.
 
-## Start Here
+## Agent Workflows
 
-The canonical documentation lives in [docs/](docs/README.md):
-
-- [Documentation index](docs/README.md)
-- [CLI reference](docs/cli-reference.md)
-- [AST analysis behavior](docs/ast-analysis.md)
-- [Agent guide](docs/agent-guide.md)
-- [ESLint and Oxlint plugins](docs/eslint-plugin.md)
-
-## Tools
-
-| Tool | Purpose |
+| Agent question | Use |
 | --- | --- |
-| `no-mistakes` | Unified codebase graph, symbols, Playwright coverage, fetch, React, queue, server-route, and check commands. |
-| `eslint-plugin-no-mistakes` | Keep Playwright test IDs, fetch calls, exports, function wrappers, and ReactNode fallbacks statically analyzable. |
+| What does this file import? | `no-mistakes dependencies <file> --format json` |
+| What can this change affect? | `no-mistakes dependents <file> --format paths` |
+| Who uses this export? | `no-mistakes dependents <file>#Symbol --format json` |
+| What does this module export/import? | `no-mistakes symbols <file> --include both --format json` |
+| Which tests should run? | `no-mistakes tests plan <playwright\|vitest> --format json` |
+| Why was a test selected? | `no-mistakes tests why <test> --plan plan.json` |
+| Which Playwright tests cover this page? | `no-mistakes playwright related <file> --json` |
+| Which queue/server files are connected? | `no-mistakes queues related <file> --json`; `no-mistakes server related <file> --json` |
+| Are configured repository rules passing? | `no-mistakes check --format json` |
+
+Use `--format json` when an agent will parse the answer, `--format paths` when
+the output feeds another shell command, and `--timings` when explaining analysis
+cost. For repeated in-process queries, prefer the async Node API so one agent
+workflow can avoid subprocess overhead.
 
 ## Install
-
-Use the published packages where available:
 
 ```sh
 npm install --save-dev no-mistakes eslint-plugin-no-mistakes
 ```
 
-Or install the Rust binary directly:
-
-```sh
-cargo install no-mistakes
-```
-
-For local development from a clone, run workspace binaries with Cargo:
+Local development from this repository:
 
 ```sh
 cargo run -p no-mistakes -- dependents src/utils.mts --format paths
 ```
 
-## Link Lint
+## Documentation
 
-Documentation links are linted with [lychee](https://github.com/lycheeverse/lychee):
+- [Documentation index](docs/README.md)
+- [CLI commands](docs/cli/README.md)
+- [Node/N-API guide](docs/node-api.md)
+- [Configuration](docs/configuration/README.md)
+- [Graph edge types](docs/graph-edges.md)
+- [no-mistakes rules](docs/rules/README.md)
+- [ESLint rules](docs/eslint-rules/README.md)
+- [Agent guide](docs/agent-guide.md)
+- [AST analysis behavior](docs/ast-analysis.md)
+
+## Design Constraints
+
+- Local and deterministic: no services, databases, remote AI calls, or
+  persistent filesystem caches.
+- One pass per invocation: discover files once, parse TS/JS once for requested
+  facts, and reuse shared fact maps across checks.
+- Programmatic parity: stable CLI capabilities also expose async N-API
+  functions for Node callers.
+- Explicit configuration: route roots, queue factories, test projects, and
+  global fallback behavior are opt-in configuration, not inferred conventions.
+
+## Link Lint
 
 ```sh
 lychee --no-progress --exclude-path '^fixtures/' README.md 'docs/**/*.md' 'skills/**/*.md' 'packages/*/README.md' 'crates/*/README.md' CLAUDE.md

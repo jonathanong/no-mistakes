@@ -87,5 +87,6 @@ npx no-mistakes rust-no-inline-tests crates/*/src
 npx no-mistakes rust-max-lines-per-file crates/*/src crates/*/tests
 ```
 
-See the full documentation in [docs/](../../docs/README.md) and the
-[CLI reference](../../docs/cli-reference.md).
+See the full documentation in [docs/](../../docs/README.md), the
+[CLI command index](../../docs/cli/README.md), and the
+[Node/N-API guide](../../docs/node-api.md).

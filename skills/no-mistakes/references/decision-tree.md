@@ -39,7 +39,7 @@ What are you trying to find?
 ├─ Which routes or queue jobs reach a file
 │   └─ no-mistakes dependents <file> --relationship route
 │   └─ no-mistakes dependents <file> --relationship queue
-│   (requires .guardrailsrc.yml with the relevant rule configured)
+│   (requires .no-mistakes.yml with the relevant project/rule config)
 │
 └─ Which CI workflows invoke a binary
     └─ no-mistakes dependents src/bin/mybinary.rs --relationship ci
@@ -49,11 +49,15 @@ What are you trying to find?
 
 | Flag value | What edges it follows |
 |---|---|
-| `import` | Static TS/JS imports and `import type` |
+| `import` | Static TS/JS imports, `import type`, string-literal dynamic `import()`, and string-literal `require()` |
+| `import-static` | Static TS/JS value imports only |
+| `import-type` | Type-only imports only |
+| `import-dynamic` | String-literal dynamic `import()` only |
+| `import-require` | String-literal CommonJS `require()` only |
 | `workspace` | Cross-package npm workspace imports |
 | `package` | `package.json` dependency declarations to workspace entries or external module nodes |
-| `test` | `foo.mts` ↔ `foo.test.mts` test correspondence |
-| `route` | Route reference → route definition |
+| `test` | source/test correspondence, Playwright route tests, Next layouts, and selector coverage |
+| `route` | route refs, Playwright route tests, and Next layouts |
 | `queue` | Queue enqueue/worker relationship → virtual queue job |
 | `md` | Markdown link → linked source file |
 | `ci` | CI workflow YAML → binary entry point |
@@ -100,3 +104,8 @@ In a monorepo with per-package tsconfigs and no root `tsconfig.json`, auto-disco
 
 **When no-mistakes dependents returns fewer results than expected:**
 Check if the import uses a bare external specifier, a non-literal dynamic `import()` / `require()`, or an alias that requires a specific package `tsconfig`. See `limits-and-fallbacks.md` for workarounds.
+
+**Graph edge caveats:**
+See `docs/graph-edges.md` for every edge kind. Dynamic route paths, fetch URLs,
+queue names, process commands, and selector values are not guessed. Text-based
+selector coverage is approximate; exact configured test ID edges are stronger.

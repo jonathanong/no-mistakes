@@ -27,6 +27,7 @@ traits a component has.
 | What server routes exist? | `no-mistakes server routes` |
 | Which server route files are related? | `no-mistakes server related <file>` |
 | Run configured project checks in parallel | `no-mistakes check` |
+| What edge kinds are supported? | Read `docs/graph-edges.md` or `references/decision-tree.md` |
 | Plain text, comments, log messages, exact call lines | `rg` |
 
 ## Quick Workflow
@@ -49,6 +50,9 @@ no-mistakes server routes --format json
 Prefer `--format json` for agent parsing and `--format paths` for command
 substitution. Use `--timings` on graph, queue, and server commands when you need
 to explain cost.
+
+For repeated programmatic queries, prefer the async Node API documented in
+`docs/node-api.md` instead of shelling out multiple times.
 
 ## Graph Options
 
@@ -77,6 +81,9 @@ member usage.
 - `references/symbols.md`: full `symbols` reference.
 - `references/monorepo-resolution.md`: tsconfig paths and workspace packages.
 - `references/limits-and-fallbacks.md`: unsupported forms and `rg` fallbacks.
+- Repository docs: `docs/cli/README.md`, `docs/graph-edges.md`,
+  `docs/rules/README.md`, `docs/eslint-rules/README.md`, and
+  `docs/configuration/README.md`.
 
 ## Hard Limits
 
@@ -88,3 +95,5 @@ member usage.
 - Graph tools answer file/symbol relationships, not exact call locations.
 - Dynamic queue names, route paths, fetch URLs, and selectors should be made
   static when agent-readable analysis is required.
+- Selector text edges are approximate; exact configured test ID selector edges
+  are stronger evidence.

@@ -93,6 +93,20 @@ jobs:
       - name: Run CSpell
         run: npm run lint:spell
 
+      - name: Run Lychee
+        uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411
+        with:
+          args: >-
+            --no-progress
+            --exclude-path ^fixtures/
+            README.md
+            docs/**/*.md
+            skills/**/*.md
+            packages/*/README.md
+            crates/*/README.md
+            CLAUDE.md
+          fail: true
+
       - name: Build JavaScript packages
         run: npm run build:js
 

@@ -13,8 +13,9 @@ Find every file that transitively imports the given file or named export.
 ```
 no-mistakes dependents <FILE[#SYMBOL]>... [--root <PATH>] [--tsconfig <FILE>] [--depth <N>]
            [--filter <GLOB>]... [--test <FRAMEWORK>]...
+           [--target-module <GLOB>]...
            [--relationship <KIND>]...
-           [--format <FORMAT>] [--json] [-j <N>]
+           [--format <FORMAT>] [--json] [--timings] [-j <N>]
 ```
 
 ## How to invoke
@@ -50,10 +51,12 @@ no-mistakes dependents src/utils.mts --root /path/to/project --tsconfig backend/
 | `--tsconfig <FILE>` | auto-detected | Path to tsconfig.json |
 | `--depth <N>` | unlimited | Max traversal depth |
 | `--filter <GLOB>` | none | Include only matching files (repeatable, OR) |
+| `--target-module <GLOB>` | none | Include only matching external module nodes (repeatable, OR) |
 | `--test <FRAMEWORK>` | none | Expand to well-known test globs: `vitest`, `playwright`, `cargo` (repeatable) |
 | `--relationship <KIND>` | all | Follow only edges of this kind (repeatable, OR). Values: `import`, `import-static`, `import-dynamic`, `import-type`, `import-require`, `workspace`, `package`, `test`, `route`, `queue`, `md`, `ci`, `http`, `process`, `asset`, `react`, `all` |
 | `--format <FORMAT>` | human (TTY) / json (pipe) | Output format: `json`, `md`, `yml`, `paths`, `human` |
 | `--json` | false | Shorthand for `--format json` |
+| `--timings` | false | Emit phase timings on stderr |
 | `-j / --jobs <N>` | all cores | Worker threads. `0` or omitted = all cores. Honors `RAYON_NUM_THREADS`. |
 
 Discovery is git-aware: tracked files plus untracked non-ignored files are considered, and `.gitignore`d files are skipped. Relationship filters also gate graph construction so unrelated edge producers are not run. Invalid relationship values fail at argument parsing.
@@ -95,7 +98,7 @@ src/other.mts
 ## Notes
 
 - Static imports/re-exports, type-only imports/references, string-literal dynamic `import()`, and string-literal `require()` are tracked under `--relationship import`
-- Route/queue edges are only active when `.guardrailsrc.yml` defines the relevant config
+- Route/queue edges are only active when `.no-mistakes.yml` defines the relevant config
 - `http` edges connect static HTTP client paths, including non-interpolated template literals, to backend route-definition files
 - `process` edges connect `spawn`/`exec`/Playwright `webServer` entries to their entry files
 - Patterns ending in `/` in `--filter` collapse results to that folder level
