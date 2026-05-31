@@ -34,6 +34,7 @@ pub(in crate::integration_tests) struct ParsedPlaywrightConfig {
 
 pub(in crate::integration_tests) struct PlaywrightProject {
     name: Option<String>,
+    target_project: Option<String>,
     config_dir: PathBuf,
     test_dir: String,
     test_match: Vec<String>,
@@ -72,6 +73,7 @@ impl ParsedPlaywrightConfig {
                 ConfigProject {
                     config: Some(config.to_string()),
                     name: project.name,
+                    target_project: project.target_project,
                     include: prefix_globs(root, &test_dir, &project.test_match),
                     exclude: prefix_globs(root, &test_dir, &project.test_ignore),
                 }
@@ -133,8 +135,10 @@ impl PlaywrightProject {
 
 fn merge_project(config_dir: &Path, root: &Options, project: Option<Options>) -> PlaywrightProject {
     let project = project.unwrap_or_default();
+    let target_project = project.name.clone();
     PlaywrightProject {
         name: project.name.or_else(|| root.name.clone()),
+        target_project,
         config_dir: config_dir.to_path_buf(),
         test_dir: project
             .test_dir

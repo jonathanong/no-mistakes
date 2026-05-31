@@ -115,6 +115,19 @@ fn test_plan_playwright_uses_project_match_and_targets() {
         .map(|test| test["test_file"].as_str().unwrap())
         .collect();
     assert_eq!(test_files, vec!["e2e/[locale].pw.ts", "e2e/home.pw.ts"]);
+    let locale_test = selected
+        .iter()
+        .find(|test| test["test_file"] == "e2e/[locale].pw.ts")
+        .unwrap();
+    let locale_target = locale_test["targets"].as_array().unwrap().first().unwrap();
+    assert_eq!(
+        locale_target["runner_args"]
+            .as_array()
+            .unwrap()
+            .last()
+            .unwrap(),
+        "e2e/\\[locale\\]\\.pw\\.ts"
+    );
     let home_test = selected
         .iter()
         .find(|test| test["test_file"] == "e2e/home.pw.ts")

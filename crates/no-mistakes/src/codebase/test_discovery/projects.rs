@@ -7,6 +7,9 @@ use std::path::Path;
 
 use super::types::TestRunner;
 
+#[cfg(test)]
+mod tests;
+
 pub(super) fn runner_projects(
     root: &Path,
     config: &NoMistakesConfig,
@@ -39,14 +42,23 @@ fn apply_explicit_policy_projects(
     projects: &mut Vec<ConfigProject>,
 ) {
     for (name, policy) in policies {
-        let config = projects
+        let matching_configs = projects
             .iter()
-            .find(|candidate| candidate.name.as_deref() == Some(name))
-            .and_then(|candidate| candidate.config.clone())
-            .or_else(|| single_config(configs));
-        if let Some(project) = configured_project(root, name, policy, config) {
+            .filter(|candidate| candidate.name.as_deref() == Some(name))
+            .map(|candidate| candidate.config.clone())
+            .collect::<Vec<_>>();
+        let configs = if matching_configs.is_empty() {
+            vec![single_config(configs)]
+        } else {
+            matching_configs
+        };
+        let configured_projects = configs
+            .into_iter()
+            .filter_map(|config| configured_project(root, name, policy, config))
+            .collect::<Vec<_>>();
+        if !configured_projects.is_empty() {
             projects.retain(|candidate| candidate.name.as_deref() != Some(name));
-            projects.push(project);
+            projects.extend(configured_projects);
         }
     }
 }
@@ -89,6 +101,7 @@ fn configured_project(
     Some(ConfigProject {
         config,
         name: Some(project_name.to_string()),
+        target_project: Some(project_name.to_string()),
         include: prefix_globs(root, root, &policy.include),
         exclude: prefix_globs(root, root, &policy.exclude),
     })

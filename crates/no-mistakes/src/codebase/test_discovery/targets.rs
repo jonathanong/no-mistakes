@@ -2,6 +2,9 @@ use serde::{Deserialize, Serialize};
 
 use super::types::TestRunner;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TestExecutionTarget {
     pub runner: String,
@@ -28,7 +31,7 @@ pub(super) fn target_for(
         runner_args.push("--project".to_string());
         runner_args.push(project.to_string());
     }
-    runner_args.push(test_file.to_string());
+    runner_args.push(test_file_arg(runner, test_file));
 
     TestExecutionTarget {
         runner: runner.as_str().to_string(),
@@ -40,4 +43,25 @@ pub(super) fn target_for(
         },
         runner_args,
     }
+}
+
+fn test_file_arg(runner: TestRunner, test_file: &str) -> String {
+    match runner {
+        TestRunner::Playwright => regex_escape(test_file),
+        TestRunner::Vitest => test_file.to_string(),
+    }
+}
+
+fn regex_escape(value: &str) -> String {
+    let mut escaped = String::with_capacity(value.len());
+    for ch in value.chars() {
+        if matches!(
+            ch,
+            '\\' | '.' | '+' | '*' | '?' | '(' | ')' | '|' | '[' | ']' | '{' | '}' | '^' | '$'
+        ) {
+            escaped.push('\\');
+        }
+        escaped.push(ch);
+    }
+    escaped
 }
