@@ -6,9 +6,9 @@ use oxc::ast::ast::{
     ExportNamedDeclaration, ExportSpecifier, Expression, FormalParameters, IdentifierReference,
     ImportDeclaration, ImportDeclarationSpecifier, ImportExpression, JSXOpeningElement,
     MethodDefinition, ModuleExportName, ObjectExpression, ObjectProperty, ObjectPropertyKind,
-    Program, StaticMemberExpression, TSImportType, TSInterfaceDeclaration, TSQualifiedName,
-    TSTypeAliasDeclaration, TSTypeName, TSTypeParameterDeclaration, TSTypeReference,
-    VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
+    Program, Statement, StaticMemberExpression, TSImportType, TSInterfaceDeclaration,
+    TSQualifiedName, TSTypeAliasDeclaration, TSTypeName, TSTypeParameterDeclaration,
+    TSTypeReference, VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
 };
 use oxc::ast_visit::{walk, Visit};
 use oxc::parser::Parser;
@@ -49,6 +49,7 @@ pub struct ImportFacts {
     pub imports: Vec<ExtractedImport>,
     pub function_calls: Vec<FunctionCall>,
     pub symbol_references: Vec<FunctionCall>,
+    pub local_type_declarations: HashSet<String>,
     pub exported_functions: Vec<String>,
     pub unknown_callers: Vec<Option<String>>,
     pub has_unknown_top_level_call: bool,
@@ -92,6 +93,7 @@ pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFac
     collector.visit_program(program);
     let callable_scopes = collector.callable_scopes;
     let exported_type_scopes = collector.exported_type_scopes;
+    let local_type_declarations = collector.local_type_declarations;
     let mut exported_functions: Vec<_> = collector
         .exported_functions
         .into_iter()
@@ -102,6 +104,7 @@ pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFac
         imports: collector.imports,
         function_calls: collector.function_calls,
         symbol_references: collector.symbol_references,
+        local_type_declarations,
         exported_functions,
         unknown_callers: collector.unknown_callers,
         has_unknown_top_level_call: collector.has_unknown_top_level_call,

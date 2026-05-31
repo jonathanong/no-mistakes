@@ -11,6 +11,7 @@ struct ImportCollector {
     exported_functions: HashSet<String>,
     exported_type_scopes: HashSet<String>,
     callable_scopes: HashSet<String>,
+    local_type_declarations: HashSet<String>,
     export_depth: usize,
     has_unknown_top_level_call: bool,
     anonymous_scope_count: usize,
@@ -19,6 +20,19 @@ struct ImportCollector {
 }
 
 impl<'a> Visit<'a> for ImportCollector {
+    fn visit_statement(&mut self, statement: &Statement<'a>) {
+        match statement {
+            Statement::TSTypeAliasDeclaration(declaration) => {
+                self.add_type_binding_name(declaration.id.name.as_str());
+            }
+            Statement::TSInterfaceDeclaration(declaration) => {
+                self.add_type_binding_name(declaration.id.name.as_str());
+            }
+            _ => {}
+        }
+        walk::walk_statement(self, statement);
+    }
+
     fn visit_function(
         &mut self,
         function: &oxc::ast::ast::Function<'a>,
@@ -80,7 +94,9 @@ impl<'a> Visit<'a> for ImportCollector {
         if self.export_depth > 0 && self.function_stack.is_empty() {
             visit_exported_type_alias_declaration(self, declaration);
         } else {
-            walk::walk_ts_type_alias_declaration(self, declaration);
+            self.add_type_binding_name(declaration.id.name.as_str());
+            self.add_type_parameter_names(declaration.type_parameters.as_deref());
+            self.visit_ts_type(&declaration.type_annotation);
         }
     }
 
@@ -88,7 +104,10 @@ impl<'a> Visit<'a> for ImportCollector {
         if self.export_depth > 0 && self.function_stack.is_empty() {
             visit_exported_interface_declaration(self, declaration);
         } else {
-            walk::walk_ts_interface_declaration(self, declaration);
+            self.add_type_binding_name(declaration.id.name.as_str());
+            self.add_type_parameter_names(declaration.type_parameters.as_deref());
+            self.visit_ts_interface_heritages(&declaration.extends);
+            self.visit_ts_interface_body(&declaration.body);
         }
     }
 

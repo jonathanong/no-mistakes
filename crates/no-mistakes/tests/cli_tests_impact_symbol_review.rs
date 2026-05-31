@@ -237,6 +237,30 @@ fn dependencies_symbols_type_parameters_shadow_imported_types() {
 }
 
 #[test]
+fn dependencies_symbols_local_type_declarations_shadow_imported_types() {
+    let root = fixture("symbol-export");
+    for entrypoint in [
+        "local-type-alias-shadow.mts#aliasRun",
+        "local-type-alias-shadow.mts#interfaceRun",
+    ] {
+        let output = run(&[
+            "dependencies",
+            entrypoint,
+            "--root",
+            root.to_str().unwrap(),
+            "--symbols",
+            "--relationship",
+            "import-type",
+            "--format",
+            "paths",
+        ]);
+
+        assert!(output.status.success());
+        assert_eq!(stdout(&output), "", "{entrypoint}");
+    }
+}
+
+#[test]
 fn dependencies_symbols_do_not_follow_default_function_helper_references() {
     let root = fixture("symbol-export");
     let output = run(&[
@@ -293,6 +317,23 @@ fn dependencies_symbols_record_exported_class_heritage() {
     let output = run(&[
         "dependencies",
         "exported-class-heritage.mts#Derived",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "source.mts#alpha\n");
+}
+
+#[test]
+fn dependencies_symbols_named_default_class_uses_class_scope() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "default-named-class.mts#default",
         "--root",
         root.to_str().unwrap(),
         "--symbols",

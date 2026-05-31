@@ -110,10 +110,14 @@ fn visit_export_default_declaration_with_scope<'a>(
             collector.export_depth -= 1;
         }
         ExportDefaultDeclarationKind::ClassDeclaration(class) => {
-            record_class_member_calls(collector, "default", class);
-            collector.push_function_scope(Some("default".to_string()));
-            collector.exported_functions.insert("default".to_string());
-            collector.callable_scopes.insert("default".to_string());
+            let scope = class
+                .id
+                .as_ref()
+                .map_or_else(|| "default".to_string(), |id| id.name.to_string());
+            record_class_member_calls(collector, &scope, class);
+            collector.push_function_scope(Some(scope.clone()));
+            collector.exported_functions.insert(scope.clone());
+            collector.callable_scopes.insert(scope);
             walk::walk_class(collector, class);
             collector.pop_function_scope(true);
             collector.export_depth -= 1;

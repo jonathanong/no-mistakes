@@ -74,6 +74,16 @@ impl ImportCollector {
         scope.insert(name.to_string());
     }
 
+    fn add_type_binding_name(&mut self, name: &str) {
+        self.local_type_declarations.insert(name.to_string());
+        if self.type_local_stack.is_empty() {
+            self.type_local_stack.push(HashSet::new());
+        }
+        if let Some(scope) = self.type_local_stack.last_mut() {
+            scope.insert(name.to_string());
+        }
+    }
+
     fn local_binding_shadows(&self, name: &str) -> bool {
         self.local_stack
             .iter()
@@ -82,6 +92,9 @@ impl ImportCollector {
     }
 
     fn type_binding_shadows(&self, name: &str) -> bool {
+        if self.local_type_declarations.contains(name) {
+            return true;
+        }
         self.type_local_stack
             .iter()
             .rev()
