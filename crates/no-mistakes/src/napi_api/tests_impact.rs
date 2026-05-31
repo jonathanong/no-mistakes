@@ -133,7 +133,7 @@ fn entrypoint_option_rejects_unknown_symbol_fields() {
     let root = fixture_root("tests-impact-symbol");
     let options = json!({
         "root": root,
-        "symbols": true,
+        "includeSymbols": true,
         "entrypoints": [{ "file": "utils.mts", "symbl": "parseDate" }]
     })
     .to_string();

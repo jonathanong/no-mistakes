@@ -3,10 +3,15 @@ fn visit_method_definition_with_scope<'a>(
     method: &MethodDefinition<'a>,
 ) {
     let name = crate::codebase::ts_source::static_property_key_name(&method.key);
-    let saved_function_stack = std::mem::take(&mut collector.function_stack);
+    let keep_class_scope = collector.current_function().is_some_and(|scope| {
+        collector.class_scopes.contains(&scope) && collector.exported_functions.contains(&scope)
+    });
+    let saved_function_stack = (!keep_class_scope).then(|| std::mem::take(&mut collector.function_stack));
     walk::walk_decorators(collector, &method.decorators);
     walk::walk_property_key(collector, &method.key);
-    collector.function_stack = saved_function_stack;
+    if let Some(saved_function_stack) = saved_function_stack {
+        collector.function_stack = saved_function_stack;
+    }
     let pushed = name.is_some();
     collector.push_function_scope(name.map(str::to_string));
     if let Some(scope) = collector.current_function() {
@@ -69,6 +74,7 @@ fn visit_class_with_scope<'a>(collector: &mut ImportCollector, class: &Class<'a>
                 collector.exported_functions.insert(name.to_string());
             }
             collector.callable_scopes.insert(name.to_string());
+            collector.class_scopes.insert(name.to_string());
             walk::walk_class(collector, class);
             collector.pop_function_scope(true);
             return;
@@ -118,6 +124,9 @@ fn visit_export_default_declaration_with_scope<'a>(
             collector.push_function_scope(Some(scope.clone()));
             collector.exported_functions.insert(scope.clone());
             collector.callable_scopes.insert(scope);
+            if let Some(scope) = collector.current_function() {
+                collector.class_scopes.insert(scope);
+            }
             walk::walk_class(collector, class);
             collector.pop_function_scope(true);
             collector.export_depth -= 1;

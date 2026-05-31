@@ -12,6 +12,7 @@ struct ImportCollector {
     exported_functions: HashSet<String>,
     exported_type_scopes: HashSet<String>,
     callable_scopes: HashSet<String>,
+    class_scopes: HashSet<String>,
     export_depth: usize,
     has_unknown_top_level_call: bool,
     anonymous_scope_count: usize,

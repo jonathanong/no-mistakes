@@ -60,6 +60,23 @@ fn dependencies_symbols_record_exported_enum_initializers() {
 }
 
 #[test]
+fn dependencies_symbols_record_exported_class_computed_keys() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "exported-class-computed-key.mts#Client",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "source.mts#alpha\n");
+}
+
+#[test]
 fn dependencies_symbols_expand_dynamic_import_file_targets() {
     let root = fixture("symbol-export");
     let output = run(&[
