@@ -114,6 +114,8 @@ include!("extract_collector_methods.rs");
 include!("extract_visit_aggregates.rs");
 include!("extract_visit_object_references.rs");
 include!("extract_visit_helpers.rs");
+include!("extract_default_helpers.rs");
+include!("extract_object_scope_helpers.rs");
 include!("extract_type_scope_helpers.rs");
 include!("extract_visit_hoist.rs");
 include!("extract_visit_types.rs");

@@ -13,7 +13,7 @@ fn collect_star_reexport_edges(
     let Some((target, source_kind)) = target else {
         return;
     };
-    let shadowed_exports = explicit_export_names(inputs.symbols);
+    let shadowed_exports = explicit_export_keys(inputs.symbols);
     let mut visited = HashSet::new();
     collect_star_reexport_target(
         inputs,
@@ -37,7 +37,7 @@ struct StarReexportKind {
 fn collect_star_reexport_target(
     inputs: &ExportEdgeInputs<'_>,
     target: &Path,
-    shadowed_exports: &HashSet<String>,
+    shadowed_exports: &HashSet<StarExportKey>,
     kind: StarReexportKind,
     edges: &mut Vec<Edge>,
     visited: &mut HashSet<PathBuf>,
@@ -80,12 +80,13 @@ fn collect_concrete_star_reexport(
     inputs: &ExportEdgeInputs<'_>,
     target: &Path,
     target_export: &crate::codebase::ts_symbols::Export,
-    shadowed_exports: &HashSet<String>,
+    shadowed_exports: &HashSet<StarExportKey>,
     reexport_kind: StarReexportKind,
     edges: &mut Vec<Edge>,
 ) {
     let reexported_symbol = export_symbol_name(target_export);
-    if reexported_symbol == "default" || shadowed_exports.contains(&reexported_symbol) {
+    let export_key = star_export_key(target_export, reexport_kind.export_is_type_only);
+    if reexported_symbol == "default" || shadowed_exports.contains(&export_key) {
         return;
     }
     let kind = if target_export.is_type_only || reexport_kind.export_is_type_only {
@@ -118,7 +119,7 @@ fn collect_nested_star_reexport(
     inputs: &ExportEdgeInputs<'_>,
     target: &Path,
     export: &crate::codebase::ts_symbols::Export,
-    shadowed_exports: &HashSet<String>,
+    shadowed_exports: &HashSet<StarExportKey>,
     reexport_kind: StarReexportKind,
     edges: &mut Vec<Edge>,
     visited: &mut HashSet<PathBuf>,
@@ -142,10 +143,11 @@ fn collect_nested_star_reexport(
         export_is_type_only: reexport_kind.export_is_type_only || export.is_type_only,
         source_kind,
     };
+    let nested_shadowed_exports = shadowed_with_explicit_exports(shadowed_exports, inputs, target);
     collect_star_reexport_target(
         inputs,
         &nested,
-        shadowed_exports,
+        &nested_shadowed_exports,
         kind,
         edges,
         visited,
@@ -168,11 +170,18 @@ fn resolve_star_source(
     }
 }
 
-fn explicit_export_names(symbols: &crate::codebase::ts_symbols::FileSymbols) -> HashSet<String> {
-    symbols
-        .exports
-        .iter()
-        .filter(|export| export.name != "*")
-        .map(export_symbol_name)
-        .collect()
+fn shadowed_with_explicit_exports(
+    shadowed_exports: &HashSet<StarExportKey>,
+    inputs: &ExportEdgeInputs<'_>,
+    target: &Path,
+) -> HashSet<StarExportKey> {
+    let mut shadowed_exports = shadowed_exports.clone();
+    if let Some(symbols) = inputs
+        .facts
+        .get_ts_facts(target)
+        .and_then(|facts| facts.symbols.as_ref())
+    {
+        shadowed_exports.extend(explicit_export_keys(symbols));
+    }
+    shadowed_exports
 }

@@ -23,3 +23,10 @@ fn namespace_target_node(target: &ImportedSymbolTarget, member: &str) -> (NodeId
         ImportedSymbolTarget::Node { node, kind } => (node.clone(), *kind),
     }
 }
+
+fn namespace_file_node(target: &ImportedSymbolTarget) -> (NodeId, EdgeKind) {
+    match target {
+        ImportedSymbolTarget::Symbol { file, kind, .. } => (NodeId::File(file.clone()), *kind),
+        ImportedSymbolTarget::Node { node, kind } => (node.clone(), *kind),
+    }
+}

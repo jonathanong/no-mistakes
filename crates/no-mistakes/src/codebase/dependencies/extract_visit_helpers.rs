@@ -127,8 +127,10 @@ fn visit_variable_declarator_with_scope<'a>(
             } else {
                 if let Some(name) = name.as_deref() {
                     record_object_value_references(collector, name, object);
+                    walk_object_values_with_parent_scope(collector, name, object);
+                } else {
+                    walk::walk_variable_declarator(collector, declarator);
                 }
-                walk::walk_variable_declarator(collector, declarator);
             }
         }
         _ if name.is_some()

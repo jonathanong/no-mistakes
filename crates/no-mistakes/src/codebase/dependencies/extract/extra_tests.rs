@@ -27,16 +27,17 @@ fn inline_function_like_members_record_parameters_and_type_parameters() {
     assert_eq!(
         scopes,
         vec![
-            Some("method"),
-            Some("expression"),
-            Some("arrow"),
+            Some("handlers/method"),
+            Some("handlers/expression"),
+            Some("handlers/arrow"),
             Some("default")
         ]
     );
     assert!(facts
         .symbol_references
         .iter()
-        .any(|call| call.caller.as_deref() == Some("method") && call.callee == "SourceShape"));
+        .any(|call| call.caller.as_deref() == Some("handlers/method")
+            && call.callee == "SourceShape"));
 }
 
 #[test]

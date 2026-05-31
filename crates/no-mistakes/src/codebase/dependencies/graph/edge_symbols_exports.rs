@@ -103,14 +103,20 @@ fn collect_export_reference_edges(
             continue;
         }
         let local_symbol = export_local_name(export);
-        if let Some((target, kind)) = resolve_imported_callee(
+        let resolved = namespace_imports
+            .get(&local_symbol)
+            .map(namespace_file_node)
+            .or_else(|| {
+                resolve_imported_callee(
             &local_symbol,
             imported_symbols,
             namespace_imports,
             inputs.facts,
             inputs.resolver,
             inputs.workspace,
-        ) {
+                )
+            });
+        if let Some((target, kind)) = resolved {
             edges.push((
                 NodeId::Symbol {
                     file: inputs.path.to_path_buf(),

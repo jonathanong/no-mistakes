@@ -497,7 +497,7 @@ fn fixture_object_function_properties_track_static_scopes() {
         .map(|import| import.function_scope.as_deref())
         .collect();
 
-    assert_eq!(scopes, vec![Some("load"), Some("fallback")]);
+    assert_eq!(scopes, vec![Some("loaders/load"), Some("loaders/fallback")]);
 }
 
 #[test]
@@ -511,7 +511,10 @@ fn fixture_object_arrow_properties_track_static_scopes() {
     let facts = extract_import_facts_from_program(&ret.program);
 
     assert_eq!(facts.imports.len(), 1);
-    assert_eq!(facts.imports[0].function_scope.as_deref(), Some("lazy"));
+    assert_eq!(
+        facts.imports[0].function_scope.as_deref(),
+        Some("loaders/lazy")
+    );
 }
 
 #[test]
@@ -533,7 +536,7 @@ fn fixture_computed_function_keys_are_visited_outside_scopes() {
         imports,
         vec![
             ("./key.mts", None),
-            ("./loaded.mts", None),
+            ("./loaded.mts", Some("loaders")),
             ("./method-key.mts", None),
             ("./loaded.mts", Some("Loader"))
         ]

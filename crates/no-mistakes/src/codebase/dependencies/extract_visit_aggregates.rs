@@ -132,7 +132,7 @@ fn visit_export_default_declaration_with_scope<'a>(
             collector.export_depth -= 1;
         }
         _ => {
-            walk::walk_export_default_declaration(collector, export);
+            walk_default_expression(collector, export);
             collector.export_depth -= 1;
         }
     }
@@ -191,18 +191,4 @@ fn record_member_call(collector: &mut ImportCollector, parent: &str, name: Optio
             callee: name.to_string(),
         });
     }
-}
-
-fn walk_default_function<'a>(collector: &mut ImportCollector, function: &oxc::ast::ast::Function<'a>) {
-    collector.push_function_scope(Some("default".to_string()));
-    collector.exported_functions.insert("default".to_string());
-    collector.callable_scopes.insert("default".to_string());
-    collector.add_type_parameter_names(function.type_parameters.as_deref());
-    collector.add_formal_parameters(&function.params);
-    walk::walk_function(
-        collector,
-        function,
-        oxc_syntax::scope::ScopeFlags::empty(),
-    );
-    collector.pop_function_scope(true);
 }
