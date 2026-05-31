@@ -267,7 +267,7 @@ fn configured_suites_cover_matching_variants() {
             .iter()
             .any(
                 |project| project.config.as_deref() == Some("vitest.config.cts")
-                    && project.name.as_deref() == Some("unit")
+                    && project.policy_name.as_deref() == Some("unit")
             )
     );
     assert!(
@@ -314,7 +314,7 @@ fn configured_suites_cover_matching_variants() {
     .unwrap();
     assert!(package_projects.iter().any(|project| {
         project.config.as_deref() == Some("packages/app/vitest.config.mts")
-            && project.name.as_deref() == Some("package")
+            && project.policy_name.as_deref() == Some("package")
             && project.include == vec!["packages/app/package/**/*.test.ts"]
     }));
     let invalid_tsconfig_root = fixture("invalid-vitest-tsconfig");
@@ -398,18 +398,18 @@ fn playwright_config_parser_covers_project_defaults() {
     let projects = parsed.into_projects(&root, "playwright.projects.ts");
 
     assert!(projects.iter().any(|project| {
-        project.name.as_deref() == Some("absolute")
+        project.policy_name.as_deref() == Some("absolute")
             && project.include == vec!["/tmp/no-mistakes-absolute-tests/**/*.spec.ts"]
     }));
     assert!(projects.iter().any(|project| {
-        project.name.as_deref() == Some("inherits")
+        project.policy_name.as_deref() == Some("inherits")
             && project
                 .exclude
                 .iter()
                 .any(|glob| glob.ends_with("root-ignore.ts"))
     }));
     assert!(projects.iter().any(|project| {
-        project.name.as_deref() == Some("imported")
+        project.policy_name.as_deref() == Some("imported")
             && project.include == vec!["imported/**/*.imported.spec.ts"]
             && project
                 .exclude
@@ -417,7 +417,7 @@ fn playwright_config_parser_covers_project_defaults() {
                 .any(|glob| glob.ends_with("imported/**/*.skip.ts"))
     }));
     assert!(projects.iter().any(|project| {
-        project.name.as_deref() == Some("imported-spread")
+        project.policy_name.as_deref() == Some("imported-spread")
             && project.include == vec!["imported-spread/**/*.imported-spread.spec.ts"]
             && project
                 .exclude
@@ -425,7 +425,7 @@ fn playwright_config_parser_covers_project_defaults() {
                 .any(|glob| glob.ends_with("imported-spread/**/*.imported-spread.skip.ts"))
     }));
     assert!(projects.iter().any(|project| {
-        project.name.as_deref() == Some("nested-imported-local-spread")
+        project.policy_name.as_deref() == Some("nested-imported-local-spread")
             && project.include == vec!["imported-spread/**/*.imported-spread.spec.ts"]
             && project
                 .exclude
@@ -433,52 +433,52 @@ fn playwright_config_parser_covers_project_defaults() {
                 .any(|glob| glob.ends_with("imported-spread/**/*.imported-spread.skip.ts"))
     }));
     assert!(projects.iter().any(|project| {
-        project.name.as_deref() == Some("default-imported-spread")
+        project.policy_name.as_deref() == Some("default-imported-spread")
             && project.include
                 == vec!["default-imported-spread/**/*.default-imported-spread.spec.ts"]
     }));
     assert!(projects.iter().any(|project| {
-        project.name.as_deref() == Some("reexported-spread")
+        project.policy_name.as_deref() == Some("reexported-spread")
             && project.include == vec!["reexported-spread/**/*.reexported-spread.spec.ts"]
     }));
     assert!(projects.iter().any(|project| {
-        project.name.as_deref() == Some("star-reexported-spread")
+        project.policy_name.as_deref() == Some("star-reexported-spread")
             && project.include == vec!["reexported-spread/**/*.reexported-spread.spec.ts"]
     }));
     assert!(projects.iter().any(|project| {
-        project.name.as_deref() == Some("type-star-spread")
+        project.policy_name.as_deref() == Some("type-star-spread")
             && project.include == vec!["type-star-spread/**/*.spec.ts"]
     }));
     assert!(projects.iter().any(|project| {
-        project.name.as_deref() == Some("constant-spread")
+        project.policy_name.as_deref() == Some("constant-spread")
             && project.include == vec!["constant-spread/**/*.constant-spread.spec.ts"]
     }));
     assert!(!projects.iter().any(|project| {
-        project.name.as_deref() == Some("ambiguous-object-spread")
+        project.policy_name.as_deref() == Some("ambiguous-object-spread")
             && project
                 .include
                 .iter()
                 .any(|glob| glob.contains("ambiguous-object-spread"))
     }));
     assert!(projects.iter().any(|project| {
-        project.name.as_deref() == Some("nested-reexported-spread")
+        project.policy_name.as_deref() == Some("nested-reexported-spread")
             && project.include
                 == vec!["nested-reexported-spread/**/*.nested-reexported-spread.spec.ts"]
     }));
     assert!(projects.iter().any(|project| {
-        project.name.as_deref() == Some("namespace-spread")
+        project.policy_name.as_deref() == Some("namespace-spread")
             && project.include == vec!["namespace-spread/**/*.namespace-spread.spec.ts"]
     }));
     assert!(projects.iter().any(|project| {
-        project.name.as_deref() == Some("local-alias-spread")
+        project.policy_name.as_deref() == Some("local-alias-spread")
             && project.include == vec!["local-alias-spread/**/*.local-alias-spread.spec.ts"]
     }));
     assert!(!projects.iter().any(|project| {
-        project.name.as_deref() == Some("call-spread-ignored")
+        project.policy_name.as_deref() == Some("call-spread-ignored")
             && project.include == vec!["call-spread-ignored/**/*.spec.ts"]
     }));
     assert!(projects.iter().any(|project| {
-        project.name.as_deref() == Some("trailing-imported-spread")
+        project.policy_name.as_deref() == Some("trailing-imported-spread")
             && project.include
                 == vec!["trailing-imported-spread/**/*.trailing-imported-spread.spec.ts"]
             && project.exclude.iter().any(|glob| {
@@ -487,16 +487,16 @@ fn playwright_config_parser_covers_project_defaults() {
     }));
     assert!(projects
         .iter()
-        .any(|project| { project.name.as_deref() == Some("defensive-spreads") }));
+        .any(|project| { project.policy_name.as_deref() == Some("defensive-spreads") }));
     assert!(!projects
         .iter()
-        .any(|project| project.name.as_deref() == Some("nested-array-should-not-flatten")));
+        .any(|project| project.policy_name.as_deref() == Some("nested-array-should-not-flatten")));
     assert!(projects.iter().any(|project| {
-        project.name.as_deref() == Some("factory")
+        project.policy_name.as_deref() == Some("factory")
             && project.include == vec!["factory/**/*.factory.spec.ts"]
     }));
     assert!(projects.iter().any(|project| {
-        project.name.as_deref() == Some("wrapped")
+        project.policy_name.as_deref() == Some("wrapped")
             && project.include == vec!["root/wrapped/**/*.spec.ts"]
     }));
 
@@ -562,25 +562,25 @@ fn playwright_config_parser_covers_project_defaults() {
     ] {
         assert!(
             edge.iter()
-                .any(|project| project.name.as_deref() == Some(name)),
+                .any(|project| project.policy_name.as_deref() == Some(name)),
             "missing Playwright edge project {name}"
         );
     }
     assert!(!edge
         .iter()
-        .any(|project| project.name.as_deref() == Some("pw-namespace-star")));
+        .any(|project| project.policy_name.as_deref() == Some("pw-namespace-star")));
     assert!(!edge
         .iter()
-        .any(|project| project.name.as_deref() == Some("pw-ambiguous-star-a")));
+        .any(|project| project.policy_name.as_deref() == Some("pw-ambiguous-star-a")));
     assert!(!edge
         .iter()
-        .any(|project| project.name.as_deref() == Some("pw-ambiguous-star-b")));
+        .any(|project| project.policy_name.as_deref() == Some("pw-ambiguous-star-b")));
     assert!(!edge
         .iter()
-        .any(|project| project.name.as_deref() == Some("pw-non-spread-call-array")));
+        .any(|project| project.policy_name.as_deref() == Some("pw-non-spread-call-array")));
     assert!(!edge
         .iter()
-        .any(|project| project.name.as_deref() == Some("pw-non-spread-imported-array")));
+        .any(|project| project.policy_name.as_deref() == Some("pw-non-spread-imported-array")));
 
     let identifier_path = root.join("playwright.identifier-projects.ts");
     let identifier_source = std::fs::read_to_string(&identifier_path).unwrap();
@@ -589,7 +589,7 @@ fn playwright_config_parser_covers_project_defaults() {
         .into_projects(&root, "playwright.identifier-projects.ts");
     assert!(identifier
         .iter()
-        .any(|project| project.name.as_deref() == Some("imported")));
+        .any(|project| project.policy_name.as_deref() == Some("imported")));
 
     let root_spread_path = root.join("playwright.root-spread.ts");
     let root_spread_source = std::fs::read_to_string(&root_spread_path).unwrap();
@@ -598,7 +598,7 @@ fn playwright_config_parser_covers_project_defaults() {
         .into_projects(&root, "playwright.root-spread.ts");
     assert!(root_spread
         .iter()
-        .any(|project| project.name.as_deref() == Some("root-spread")));
+        .any(|project| project.policy_name.as_deref() == Some("root-spread")));
 
     let root_namespace_path = root.join("playwright.root-namespace-spread.ts");
     let root_namespace_source = std::fs::read_to_string(&root_namespace_path).unwrap();
@@ -608,7 +608,7 @@ fn playwright_config_parser_covers_project_defaults() {
             .into_projects(&root, "playwright.root-namespace-spread.ts");
     assert!(root_namespace
         .iter()
-        .any(|project| project.name.as_deref() == Some("root-namespace-spread")));
+        .any(|project| project.policy_name.as_deref() == Some("root-namespace-spread")));
     crate::ast::with_program(
         &root_namespace_path,
         &root_namespace_source,
@@ -634,7 +634,7 @@ fn playwright_config_parser_covers_project_defaults() {
             .into_projects(&root, "playwright.root-define-config-spread.ts");
     assert!(root_define_config
         .iter()
-        .any(|project| project.name.as_deref() == Some("root-define-config-spread")));
+        .any(|project| project.policy_name.as_deref() == Some("root-define-config-spread")));
 
     let root_sourced_reexport_path = root.join("playwright.root-sourced-reexport.ts");
     let root_sourced_reexport_source =
@@ -648,7 +648,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .into_projects(&root, "playwright.root-sourced-reexport.ts");
     assert!(root_sourced_reexport
         .iter()
-        .any(|project| project.name.as_deref() == Some("root-sourced-reexport")));
+        .any(|project| project.policy_name.as_deref() == Some("root-sourced-reexport")));
 
     let root_sourced_reexport_nested_path = root.join("playwright.root-sourced-reexport-nested.ts");
     let root_sourced_reexport_nested_source =
@@ -661,7 +661,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.root-sourced-reexport-nested.ts");
     assert!(root_sourced_reexport_nested.iter().any(|project| {
-        project.name.as_deref() == Some("pw-root-sourced-reexport-nested")
+        project.policy_name.as_deref() == Some("pw-root-sourced-reexport-nested")
             && project.include == vec!["pw-root-sourced-reexport-nested/**/*.spec.ts"]
     }));
 
@@ -676,7 +676,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.root-default-reexport.ts");
     assert!(root_default_reexport.iter().any(|project| {
-        project.name.as_deref() == Some("pw-root-default-reexport")
+        project.policy_name.as_deref() == Some("pw-root-default-reexport")
             && project.include == vec!["pw-root-default-reexport/**/*.spec.ts"]
     }));
 
@@ -687,7 +687,7 @@ fn playwright_config_parser_covers_project_defaults() {
             .unwrap()
             .into_projects(&root, "playwright.root-call-spread.ts");
     assert!(root_call_spread.iter().any(|project| {
-        project.name.as_deref() == Some("pw-root-call-spread")
+        project.policy_name.as_deref() == Some("pw-root-call-spread")
             && project.include == vec!["pw-root-call-spread/**/*.spec.ts"]
     }));
 
@@ -702,7 +702,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.root-named-member-spread.ts");
     assert!(root_named_member_spread.iter().any(|project| {
-        project.name.as_deref() == Some("pw-root-named-member-spread")
+        project.policy_name.as_deref() == Some("pw-root-named-member-spread")
             && project.include == vec!["pw-root-named-member-spread/**/*.spec.ts"]
     }));
     let root_local_member_spread_path = root.join("playwright.root-local-member-spread.ts");
@@ -716,7 +716,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.root-local-member-spread.ts");
     assert!(root_local_member_spread.iter().any(|project| {
-        project.name.as_deref() == Some("pw-root-local-member-spread")
+        project.policy_name.as_deref() == Some("pw-root-local-member-spread")
             && project.include == vec!["pw-root-local-member-spread/**/*.spec.ts"]
     }));
 
@@ -731,7 +731,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.root-imported-spread-member.ts");
     assert!(root_imported_spread_member.iter().any(|project| {
-        project.name.as_deref() == Some("pw-root-imported-spread-member")
+        project.policy_name.as_deref() == Some("pw-root-imported-spread-member")
             && project.include == vec!["pw-root-imported-spread-member/**/*.spec.ts"]
     }));
 
@@ -746,7 +746,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.root-import-then-export.ts");
     assert!(root_import_then_export.iter().any(|project| {
-        project.name.as_deref() == Some("pw-root-import-then-export")
+        project.policy_name.as_deref() == Some("pw-root-import-then-export")
             && project.include == vec!["pw-root-import-then-export/**/*.spec.ts"]
     }));
 
@@ -758,7 +758,7 @@ fn playwright_config_parser_covers_project_defaults() {
             .into_projects(&root, "playwright.function-local-projects.ts");
     assert!(function_local
         .iter()
-        .any(|project| project.name.as_deref() == Some("pw-function-local-projects")));
+        .any(|project| project.policy_name.as_deref() == Some("pw-function-local-projects")));
 
     let named_member_path = root.join("playwright.named-member-projects.ts");
     let named_member_source = std::fs::read_to_string(&named_member_path).unwrap();
@@ -767,7 +767,7 @@ fn playwright_config_parser_covers_project_defaults() {
         .into_projects(&root, "playwright.named-member-projects.ts");
     assert!(named_member
         .iter()
-        .any(|project| project.name.as_deref() == Some("pw-named-member-projects")));
+        .any(|project| project.policy_name.as_deref() == Some("pw-named-member-projects")));
 
     let named_member_reexport_path = root.join("playwright.named-member-reexport.ts");
     let named_member_reexport_source =
@@ -781,7 +781,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .into_projects(&root, "playwright.named-member-reexport.ts");
     assert!(named_member_reexport
         .iter()
-        .any(|project| project.name.as_deref() == Some("pw-named-member-projects")));
+        .any(|project| project.policy_name.as_deref() == Some("pw-named-member-projects")));
 
     let imported_spread_member_map_path = root.join("playwright.imported-spread-member-map.ts");
     let imported_spread_member_map_source =
@@ -794,7 +794,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.imported-spread-member-map.ts");
     assert!(imported_spread_member_map.iter().any(|project| {
-        project.name.as_deref() == Some("pw-imported-spread-member-map")
+        project.policy_name.as_deref() == Some("pw-imported-spread-member-map")
             && project.include == vec!["pw-imported-spread-member-map/**/*.spec.ts"]
     }));
 
@@ -809,7 +809,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.member-default-reexport.ts");
     assert!(member_default_reexport.iter().any(|project| {
-        project.name.as_deref() == Some("pw-member-default-reexport")
+        project.policy_name.as_deref() == Some("pw-member-default-reexport")
             && project.include == vec!["pw-member-default-reexport/**/*.spec.ts"]
     }));
 
@@ -824,7 +824,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.member-import-then-export.ts");
     assert!(member_import_then_export.iter().any(|project| {
-        project.name.as_deref() == Some("pw-member-import-then-export")
+        project.policy_name.as_deref() == Some("pw-member-import-then-export")
             && project.include == vec!["pw-member-import-then-export/**/*.spec.ts"]
     }));
 
@@ -838,7 +838,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.member-nested-barrel.ts");
     assert!(member_nested_barrel.iter().any(|project| {
-        project.name.as_deref() == Some("pw-member-nested-barrel")
+        project.policy_name.as_deref() == Some("pw-member-nested-barrel")
             && project.include == vec!["pw-member-nested-barrel/**/*.spec.ts"]
     }));
 
@@ -853,7 +853,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.object-default-reexport.ts");
     assert!(object_default_reexport.iter().any(|project| {
-        project.name.as_deref() == Some("pw-object-default-reexport")
+        project.policy_name.as_deref() == Some("pw-object-default-reexport")
             && project.include == vec!["pw-object-default-reexport/**/*.spec.ts"]
     }));
 
@@ -868,7 +868,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.object-import-then-export.ts");
     assert!(object_import_then_export.iter().any(|project| {
-        project.name.as_deref() == Some("pw-object-import-then-export")
+        project.policy_name.as_deref() == Some("pw-object-import-then-export")
             && project.include == vec!["pw-object-import-then-export/**/*.spec.ts"]
     }));
 
@@ -879,7 +879,7 @@ fn playwright_config_parser_covers_project_defaults() {
             .unwrap()
             .into_projects(&root, "playwright.object-call-local.ts");
     assert!(object_call_local.iter().any(|project| {
-        project.name.as_deref() == Some("pw-object-call-local")
+        project.policy_name.as_deref() == Some("pw-object-call-local")
             && project.include == vec!["pw-object-call-local/**/*.spec.ts"]
     }));
 
@@ -894,7 +894,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.object-named-member-spread.ts");
     assert!(object_named_member_spread.iter().any(|project| {
-        project.name.as_deref() == Some("pw-object-named-member-spread")
+        project.policy_name.as_deref() == Some("pw-object-named-member-spread")
             && project.include == vec!["pw-object-named-member-spread/**/*.spec.ts"]
     }));
 
@@ -910,7 +910,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.object-namespace-member-spread.ts");
     assert!(object_namespace_member_spread.iter().any(|project| {
-        project.name.as_deref() == Some("pw-object-namespace-member-spread")
+        project.policy_name.as_deref() == Some("pw-object-namespace-member-spread")
             && project.include == vec!["pw-object-namespace-member-spread/**/*.spec.ts"]
     }));
 
@@ -925,7 +925,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.object-sourced-member-spread.ts");
     assert!(object_sourced_member_spread.iter().any(|project| {
-        project.name.as_deref() == Some("pw-object-sourced-member-spread")
+        project.policy_name.as_deref() == Some("pw-object-sourced-member-spread")
             && project.include == vec!["pw-object-sourced-member-spread/**/*.spec.ts"]
     }));
 
@@ -940,7 +940,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.object-import-member-spread.ts");
     assert!(object_import_member_spread.iter().any(|project| {
-        project.name.as_deref() == Some("pw-object-import-member-spread")
+        project.policy_name.as_deref() == Some("pw-object-import-member-spread")
             && project.include == vec!["pw-object-import-member-spread/**/*.spec.ts"]
     }));
 
@@ -962,7 +962,7 @@ fn playwright_config_parser_covers_project_defaults() {
             .into_projects(&root, "playwright.destructured-bound-projects.ts");
     assert!(destructured_bound
         .iter()
-        .any(|project| project.name.as_deref() == Some("pw-destructured-bound-projects")));
+        .any(|project| project.policy_name.as_deref() == Some("pw-destructured-bound-projects")));
 
     let destructured_spread_export_path = root.join("playwright.destructured-spread-export.ts");
     let destructured_spread_export_source =
@@ -975,7 +975,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.destructured-spread-export.ts");
     assert!(destructured_spread_export.iter().any(|project| {
-        project.name.as_deref() == Some("pw-destructured-spread-export")
+        project.policy_name.as_deref() == Some("pw-destructured-spread-export")
             && project.include == vec!["pw-destructured-spread-export/**/*.spec.ts"]
     }));
 
@@ -990,7 +990,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.imported-nested-spread.ts");
     assert!(imported_nested_spread.iter().any(|project| {
-        project.name.as_deref() == Some("pw-imported-nested-spread")
+        project.policy_name.as_deref() == Some("pw-imported-nested-spread")
             && project.include == vec!["pw-imported-nested-spread/**/*.spec.ts"]
             && project.exclude == vec!["pw-imported-nested-spread/**/*.skip.ts"]
     }));
@@ -1005,7 +1005,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.local-member-spread.ts");
     assert!(local_member_spread.iter().any(|project| {
-        project.name.as_deref() == Some("pw-local-member-spread")
+        project.policy_name.as_deref() == Some("pw-local-member-spread")
             && project.include == vec!["pw-local-member-spread/**/*.spec.ts"]
             && project.exclude == vec!["pw-local-member-spread/**/*.skip.ts"]
     }));
@@ -1017,7 +1017,7 @@ fn playwright_config_parser_covers_project_defaults() {
         .into_projects(&root, "playwright.empty-star.ts");
     assert!(!empty_star
         .iter()
-        .any(|project| project.name.as_deref() == Some("pw-empty-star-runtime")));
+        .any(|project| project.policy_name.as_deref() == Some("pw-empty-star-runtime")));
 
     let root_spread_empty_path = root.join("playwright.root-spread-empty.ts");
     let root_spread_empty_source = std::fs::read_to_string(&root_spread_empty_path).unwrap();
@@ -1027,7 +1027,7 @@ fn playwright_config_parser_covers_project_defaults() {
             .into_projects(&root, "playwright.root-spread-empty.ts");
     assert!(root_spread_empty
         .iter()
-        .any(|project| project.name.as_deref() == Some("ignored-specifier-config")));
+        .any(|project| project.policy_name.as_deref() == Some("ignored-specifier-config")));
 
     let root_spread_defensive_path = root.join("playwright.root-spread-defensive.ts");
     let root_spread_defensive_source =
@@ -1059,7 +1059,7 @@ fn playwright_config_parser_covers_project_defaults() {
         .unwrap()
         .into_projects(&root, "playwright.root-imported-config.ts");
     assert!(root_imported.iter().any(|project| {
-        project.name.as_deref() == Some("root-imported-config")
+        project.policy_name.as_deref() == Some("root-imported-config")
             && project.include == vec!["root-imported-defaults/**/*.shared.spec.ts"]
     }));
 
@@ -1070,12 +1070,12 @@ fn playwright_config_parser_covers_project_defaults() {
             .unwrap()
             .into_projects(&root, "playwright.root-spread-order.ts");
     assert!(root_spread_order.iter().any(|project| {
-        project.name.as_deref() == Some("root-spread-order-shared")
+        project.policy_name.as_deref() == Some("root-spread-order-shared")
             && project.include == vec!["root-spread-order/**/*.shared.spec.ts"]
     }));
     assert!(!root_spread_order
         .iter()
-        .any(|project| project.name.as_deref() == Some("root-spread-order-local")));
+        .any(|project| project.policy_name.as_deref() == Some("root-spread-order-local")));
 
     let root_named_imported_path = root.join("playwright.root-named-imported-config.ts");
     let root_named_imported_source = std::fs::read_to_string(&root_named_imported_path).unwrap();
@@ -1088,7 +1088,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .into_projects(&root, "playwright.root-named-imported-config.ts");
     assert!(root_named_imported
         .iter()
-        .any(|project| project.name.as_deref() == Some("root-named-imported-config")));
+        .any(|project| project.policy_name.as_deref() == Some("root-named-imported-config")));
 
     let root_alias_imported_path = root.join("playwright.root-local-alias-imported-config.ts");
     let root_alias_imported_source = std::fs::read_to_string(&root_alias_imported_path).unwrap();
@@ -1100,7 +1100,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.root-local-alias-imported-config.ts");
     assert!(root_alias_imported.iter().any(|project| {
-        project.name.as_deref() == Some("root-local-alias-imported-config")
+        project.policy_name.as_deref() == Some("root-local-alias-imported-config")
             && project.include == vec!["root-local-alias-imported-config/**/*.spec.ts"]
     }));
 
@@ -1120,7 +1120,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .into_projects(&root, "playwright.root-call-spread-local.ts");
     assert!(root_call_spread_local
         .iter()
-        .any(|project| { project.name.as_deref() == Some("pw-root-call-local") }));
+        .any(|project| { project.policy_name.as_deref() == Some("pw-root-call-local") }));
 
     let root_member_import_then_export_path =
         root.join("playwright.root-member-import-then-export.ts");
@@ -1133,9 +1133,9 @@ fn playwright_config_parser_covers_project_defaults() {
     )
     .unwrap()
     .into_projects(&root, "playwright.root-member-import-then-export.ts");
-    assert!(root_member_import_then_export
-        .iter()
-        .any(|project| { project.name.as_deref() == Some("pw-root-member-import-then-export") }));
+    assert!(root_member_import_then_export.iter().any(|project| {
+        project.policy_name.as_deref() == Some("pw-root-member-import-then-export")
+    }));
 
     let object_call_import_path = root.join("playwright.object-call-import.ts");
     let object_call_import_source = std::fs::read_to_string(&object_call_import_path).unwrap();
@@ -1144,7 +1144,7 @@ fn playwright_config_parser_covers_project_defaults() {
             .unwrap()
             .into_projects(&root, "playwright.object-call-import.ts");
     assert!(object_call_import.iter().any(|project| {
-        project.name.as_deref() == Some("pw-object-call-import")
+        project.policy_name.as_deref() == Some("pw-object-call-import")
             && project.include == vec!["pw-object-call-import/**/*.spec.ts"]
     }));
 
@@ -1155,7 +1155,7 @@ fn playwright_config_parser_covers_project_defaults() {
             .unwrap()
             .into_projects(&root, "playwright.root-call-import.ts");
     assert!(root_call_import.iter().any(|project| {
-        project.name.as_deref() == Some("pw-root-call-import")
+        project.policy_name.as_deref() == Some("pw-root-call-import")
             && project.include == vec!["pw-root-call-import/**/*.spec.ts"]
     }));
 
@@ -1170,7 +1170,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.member-namespace-star.ts");
     assert!(member_namespace_star.iter().any(|project| {
-        project.name.as_deref() == Some("pw-member-namespace-star")
+        project.policy_name.as_deref() == Some("pw-member-namespace-star")
             && project.include == vec!["pw-member-namespace-star/**/*.spec.ts"]
     }));
 
@@ -1185,7 +1185,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.root-star-barrel-import.ts");
     assert!(root_star_barrel_import.iter().any(|project| {
-        project.name.as_deref() == Some("pw-root-star-barrel")
+        project.policy_name.as_deref() == Some("pw-root-star-barrel")
             && project.include == vec!["pw-root-star-barrel/**/*.spec.ts"]
     }));
 
@@ -1201,7 +1201,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.root-member-default-import.ts");
     assert!(root_member_default_import.iter().any(|project| {
-        project.name.as_deref() == Some("pw-root-member-default-import")
+        project.policy_name.as_deref() == Some("pw-root-member-default-import")
             && project.include == vec!["pw-root-member-default-import/**/*.spec.ts"]
     }));
 
@@ -1216,7 +1216,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.root-member-sourced.ts");
     assert!(root_member_sourced.iter().any(|project| {
-        project.name.as_deref() == Some("pw-root-member-sourced")
+        project.policy_name.as_deref() == Some("pw-root-member-sourced")
             && project.include == vec!["pw-root-member-sourced/**/*.spec.ts"]
     }));
 
@@ -1266,7 +1266,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.root-spread-member-namespace.ts");
     assert!(root_spread_member_namespace.iter().any(|project| {
-        project.name.as_deref() == Some("pw-root-spread-member-namespace")
+        project.policy_name.as_deref() == Some("pw-root-spread-member-namespace")
             && project.include == vec!["pw-root-spread-member-namespace/**/*.spec.ts"]
     }));
 
@@ -1293,7 +1293,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.member-spread-namespace.ts");
     assert!(member_spread_namespace.iter().any(|project| {
-        project.name.as_deref() == Some("pw-member-spread-namespace")
+        project.policy_name.as_deref() == Some("pw-member-spread-namespace")
             && project.include == vec!["pw-member-spread-namespace/**/*.spec.ts"]
     }));
 
@@ -1309,7 +1309,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.member-namespace-alias.ts");
     assert!(member_namespace_alias.iter().any(|project| {
-        project.name.as_deref() == Some("pw-member-namespace-alias")
+        project.policy_name.as_deref() == Some("pw-member-namespace-alias")
             && project.include == vec!["pw-member-namespace-alias/**/*.spec.ts"]
     }));
 
@@ -1336,7 +1336,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.object-member-default-import.ts");
     assert!(object_member_default_import.iter().any(|project| {
-        project.name.as_deref() == Some("pw-object-member-default-import")
+        project.policy_name.as_deref() == Some("pw-object-member-default-import")
             && project.include == vec!["pw-object-member-default-import/**/*.spec.ts"]
     }));
 
@@ -1399,7 +1399,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .into_projects(&root, "playwright.object-call-import-non-fn.ts");
     assert!(!object_call_import_non_fn
         .iter()
-        .any(|p| p.name.as_deref() == Some("pw-object-call-import-non-fn")));
+        .any(|p| p.policy_name.as_deref() == Some("pw-object-call-import-non-fn")));
 
     // root-call-import-non-fn: covers "function not found" branch in root_spreads/calls.rs
     // helper exports a const (not a function), so functions.get() returns None
@@ -1427,7 +1427,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .unwrap()
     .into_projects(&root, "playwright.root-star-barrel-typed-import.ts");
     assert!(root_star_barrel_typed_import.iter().any(|project| {
-        project.name.as_deref() == Some("pw-root-star-barrel")
+        project.policy_name.as_deref() == Some("pw-root-star-barrel")
             && project.include == vec!["pw-root-star-barrel/**/*.spec.ts"]
     }));
 
@@ -1509,9 +1509,9 @@ fn playwright_config_parser_covers_project_defaults() {
     )
     .unwrap()
     .into_projects(&root, "playwright.object-call-destructure-body.ts");
-    assert!(object_call_destructure_body
-        .iter()
-        .any(|project| { project.name.as_deref() == Some("pw-object-call-destructure-body") }));
+    assert!(object_call_destructure_body.iter().any(|project| {
+        project.policy_name.as_deref() == Some("pw-object-call-destructure-body")
+    }));
 
     // object-star-export: covers ambiguous star export in objects/exports.rs (line 112)
     let object_star_export_path = root.join("playwright.object-star-export.ts");
@@ -1542,7 +1542,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .into_projects(&root, "playwright.root-spread-named-member.ts");
     assert!(root_spread_named_member
         .iter()
-        .any(|project| { project.name.as_deref() == Some("pw-root-spread-named-member") }));
+        .any(|project| { project.policy_name.as_deref() == Some("pw-root-spread-named-member") }));
 
     // root-spread-member-missing: covers resolver failure in root_spreads/members.rs
     let root_spread_member_missing_path = root.join("playwright.root-spread-member-missing.ts");
@@ -1579,7 +1579,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .into_projects(&root, "playwright.root-spread-star-import.ts");
     assert!(root_spread_star_import
         .iter()
-        .any(|project| { project.name.as_deref() == Some("pw-root-spread-star-barrel") }));
+        .any(|project| { project.policy_name.as_deref() == Some("pw-root-spread-star-barrel") }));
 
     // projects-star-import: covers imported_options_lookup success in exports.rs (line 107)
     let projects_star_import_path = root.join("playwright.projects-star-import.ts");
@@ -1593,7 +1593,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .into_projects(&root, "playwright.projects-star-import.ts");
     assert!(projects_star_import
         .iter()
-        .any(|project| { project.name.as_deref() == Some("pw-projects-star-barrel") }));
+        .any(|project| { project.policy_name.as_deref() == Some("pw-projects-star-barrel") }));
 
     // projects-star-missing-import: covers resolver failure in imported_options_lookup (line 101)
     let projects_star_missing_import_path = root.join("playwright.projects-star-missing-import.ts");
@@ -1629,7 +1629,7 @@ fn playwright_config_parser_covers_project_defaults() {
     .into_projects(&root, "playwright.member-spread-named.ts");
     assert!(member_spread_named
         .iter()
-        .any(|project| { project.name.as_deref() == Some("pw-member-spread-named") }));
+        .any(|project| { project.policy_name.as_deref() == Some("pw-member-spread-named") }));
 
     // member-spread-missing-source: covers imported_member_options_from resolver failure (line 118)
     let member_spread_missing_source_path = root.join("playwright.member-spread-missing-source.ts");
@@ -1760,17 +1760,20 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     let object_path = root.join("vitest.object.mts");
     let object_source = std::fs::read_to_string(&object_path).unwrap();
     let object_projects = parse_vitest_fixture(&object_source, &object_path, &root).unwrap();
-    assert_eq!(object_projects[0].name.as_deref(), Some("root-vitest"));
+    assert_eq!(
+        object_projects[0].policy_name.as_deref(),
+        Some("root-vitest")
+    );
 
     let projects_path = root.join("vitest.projects.mts");
     let projects_source = std::fs::read_to_string(&projects_path).unwrap();
     let projects = parse_vitest_fixture(&projects_source, &projects_path, &root).unwrap();
     assert!(projects
         .iter()
-        .any(|project| project.name.as_deref() == Some("nested")));
+        .any(|project| project.policy_name.as_deref() == Some("nested")));
     assert!(projects
         .iter()
-        .any(|project| project.name.as_deref() == Some("root")));
+        .any(|project| project.policy_name.as_deref() == Some("root")));
 
     let empty_path = root.join("vitest.empty.mts");
     let empty_source = std::fs::read_to_string(&empty_path).unwrap();
@@ -1790,60 +1793,61 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     let dynamic_source = std::fs::read_to_string(&dynamic_path).unwrap();
     let dynamic = parse_vitest_fixture(&dynamic_source, &dynamic_path, &root).unwrap();
     assert!(dynamic.iter().any(|project| {
-        project.name.as_deref() == Some("web")
+        project.policy_name.as_deref() == Some("web")
             && project.include == vec!["web/**/*.test.ts"]
             && project.exclude == vec!["web/**/*.skip.ts"]
     }));
     assert!(dynamic.iter().any(|project| {
-        project.name.as_deref() == Some("local") && project.include == vec!["local/**/*.test.ts"]
+        project.policy_name.as_deref() == Some("local")
+            && project.include == vec!["local/**/*.test.ts"]
     }));
     assert!(dynamic.iter().any(|project| {
-        project.name.as_deref() == Some("api") && project.include == vec!["api/**/*.test.ts"]
+        project.policy_name.as_deref() == Some("api") && project.include == vec!["api/**/*.test.ts"]
     }));
     assert!(dynamic
         .iter()
-        .any(|project| project.name.as_deref() == Some("composed")));
+        .any(|project| project.policy_name.as_deref() == Some("composed")));
     assert!(dynamic
         .iter()
-        .any(|project| project.name.as_deref() == Some("default-import")));
+        .any(|project| project.policy_name.as_deref() == Some("default-import")));
     assert!(dynamic
         .iter()
-        .any(|project| project.name.as_deref() == Some("default-arrow")));
+        .any(|project| project.policy_name.as_deref() == Some("default-arrow")));
     assert!(dynamic
         .iter()
-        .any(|project| project.name.as_deref() == Some("namespace")));
+        .any(|project| project.policy_name.as_deref() == Some("namespace")));
     assert!(dynamic
         .iter()
-        .any(|project| project.name.as_deref() == Some("same-name-import")));
+        .any(|project| project.policy_name.as_deref() == Some("same-name-import")));
     assert!(dynamic
         .iter()
-        .any(|project| project.name.as_deref() == Some("reexported")));
+        .any(|project| project.policy_name.as_deref() == Some("reexported")));
     assert!(dynamic
         .iter()
-        .any(|project| project.name.as_deref() == Some("alias-default")));
+        .any(|project| project.policy_name.as_deref() == Some("alias-default")));
     assert!(dynamic
         .iter()
-        .any(|project| project.name.as_deref() == Some("default-call")));
+        .any(|project| project.policy_name.as_deref() == Some("default-call")));
     assert!(!dynamic
         .iter()
-        .any(|project| project.name.as_deref() == Some("default-call-arg")));
+        .any(|project| project.policy_name.as_deref() == Some("default-call-arg")));
     assert!(dynamic
         .iter()
-        .any(|project| project.name.as_deref() == Some("default-function")));
+        .any(|project| project.policy_name.as_deref() == Some("default-function")));
     assert!(dynamic
         .iter()
-        .any(|project| project.name.as_deref() == Some("default-array")));
+        .any(|project| project.policy_name.as_deref() == Some("default-array")));
     assert!(dynamic
         .iter()
-        .any(|project| project.name.as_deref() == Some("local-exported")));
+        .any(|project| project.policy_name.as_deref() == Some("local-exported")));
     assert!(dynamic
         .iter()
-        .any(|project| project.name.as_deref() == Some("local-exported-function")));
+        .any(|project| project.policy_name.as_deref() == Some("local-exported-function")));
     assert!(dynamic
         .iter()
-        .any(|project| project.name.as_deref() == Some("namespace-array")));
+        .any(|project| project.policy_name.as_deref() == Some("namespace-array")));
     assert!(dynamic.iter().any(|project| {
-        project.name.as_deref() == Some("spread-object")
+        project.policy_name.as_deref() == Some("spread-object")
             && project.include == vec!["spread-object/**/*.test.ts"]
             && project.exclude == vec!["spread-object/**/*.skip.ts"]
     }));
@@ -1857,7 +1861,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(imported_test_spread.iter().any(|project| {
-        project.name.as_deref() == Some("imported-test-spread")
+        project.policy_name.as_deref() == Some("imported-test-spread")
             && project.include == vec!["imported-test-spread/**/*.test.ts"]
     }));
 
@@ -1866,7 +1870,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     let commonjs_projects =
         parse_vitest_fixture(&commonjs_projects_source, &commonjs_projects_path, &root).unwrap();
     assert!(commonjs_projects.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-commonjs-default-projects")
+        project.policy_name.as_deref() == Some("vitest-commonjs-default-projects")
             && project.include == vec!["vitest-commonjs-default-projects/**/*.test.ts"]
     }));
 
@@ -1875,7 +1879,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     let function_local =
         parse_vitest_fixture(&function_local_source, &function_local_path, &root).unwrap();
     assert!(function_local.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-function-local-projects")
+        project.policy_name.as_deref() == Some("vitest-function-local-projects")
             && project.include == vec!["vitest-function-local-projects/**/*.test.ts"]
     }));
 
@@ -1884,12 +1888,12 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     let root_spread_order =
         parse_vitest_fixture(&root_spread_order_source, &root_spread_order_path, &root).unwrap();
     assert!(root_spread_order.iter().any(|project| {
-        project.name.as_deref() == Some("root-spread-order-shared")
+        project.policy_name.as_deref() == Some("root-spread-order-shared")
             && project.include == vec!["root-spread-order/**/*.test.ts"]
     }));
     assert!(!root_spread_order
         .iter()
-        .any(|project| project.name.as_deref() == Some("root-spread-order-local")));
+        .any(|project| project.policy_name.as_deref() == Some("root-spread-order-local")));
 
     let root_spread_override_path = root.join("vitest.root-spread-overrides-test.mts");
     let root_spread_override_source = std::fs::read_to_string(&root_spread_override_path).unwrap();
@@ -1900,12 +1904,12 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(root_spread_override.iter().any(|project| {
-        project.name.as_deref() == Some("root-spread-overrides-test")
+        project.policy_name.as_deref() == Some("root-spread-overrides-test")
             && project.include == vec!["root-spread-overrides-test/**/*.test.ts"]
     }));
     assert!(!root_spread_override
         .iter()
-        .any(|project| project.name.as_deref() == Some("root-spread-overrides-local")));
+        .any(|project| project.policy_name.as_deref() == Some("root-spread-overrides-local")));
 
     let root_test_override_clears_path = root.join("vitest.root-test-override-clears.mts");
     let root_test_override_clears_source =
@@ -1918,14 +1922,14 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     .unwrap();
     assert!(!root_test_override_clears
         .iter()
-        .any(|project| project.name.as_deref() == Some("vitest-stale-root-spread-project")));
+        .any(|project| project.policy_name.as_deref() == Some("vitest-stale-root-spread-project")));
 
     let root_namespace_path = root.join("vitest.root-namespace-spread.mts");
     let root_namespace_source = std::fs::read_to_string(&root_namespace_path).unwrap();
     let root_namespace =
         parse_vitest_fixture(&root_namespace_source, &root_namespace_path, &root).unwrap();
     assert!(root_namespace.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-namespace-spread")
+        project.policy_name.as_deref() == Some("vitest-root-namespace-spread")
             && project.include == vec!["vitest-root-namespace-spread/**/*.test.ts"]
     }));
 
@@ -1934,7 +1938,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     let test_namespace =
         parse_vitest_fixture(&test_namespace_source, &test_namespace_path, &root).unwrap();
     assert!(test_namespace.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-test-namespace-spread")
+        project.policy_name.as_deref() == Some("vitest-test-namespace-spread")
             && project.include == vec!["vitest-test-namespace-spread/**/*.test.ts"]
     }));
 
@@ -1943,7 +1947,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     let root_define_config =
         parse_vitest_fixture(&root_define_config_source, &root_define_config_path, &root).unwrap();
     assert!(root_define_config.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-define-config-spread")
+        project.policy_name.as_deref() == Some("vitest-root-define-config-spread")
             && project.include == vec!["vitest-root-define-config-spread/**/*.test.ts"]
     }));
 
@@ -1957,7 +1961,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(root_sourced_reexport.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-sourced-reexport")
+        project.policy_name.as_deref() == Some("vitest-root-sourced-reexport")
             && project.include == vec!["vitest-root-sourced-reexport/**/*.test.ts"]
     }));
 
@@ -1971,7 +1975,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(root_sourced_reexport_nested.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-sourced-reexport-nested")
+        project.policy_name.as_deref() == Some("vitest-root-sourced-reexport-nested")
             && project.include == vec!["vitest-root-sourced-reexport-nested/**/*.test.ts"]
     }));
 
@@ -1985,7 +1989,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(root_default_reexport.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-default-reexport")
+        project.policy_name.as_deref() == Some("vitest-root-default-reexport")
             && project.include == vec!["vitest-root-default-reexport/**/*.test.ts"]
     }));
 
@@ -1998,12 +2002,12 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(root_spread_options.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-spread-options")
+        project.policy_name.as_deref() == Some("vitest-root-spread-options")
             && project.include == vec!["vitest-root-spread-options/**/*.test.ts"]
             && project.exclude == vec!["vitest-root-spread-options/**/*.skip.ts"]
     }));
     assert!(!root_spread_options.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-spread-options")
+        project.policy_name.as_deref() == Some("vitest-root-spread-options")
             && project
                 .include
                 .contains(&"vitest-root-spread-options-stale/**/*.test.ts".to_string())
@@ -2014,7 +2018,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     let root_call_spread =
         parse_vitest_fixture(&root_call_spread_source, &root_call_spread_path, &root).unwrap();
     assert!(root_call_spread.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-call-spread")
+        project.policy_name.as_deref() == Some("vitest-root-call-spread")
             && project.include == vec!["vitest-root-call-spread/**/*.test.ts"]
     }));
     let test_call_spread_path = root.join("vitest.test-call-spread.mts");
@@ -2022,7 +2026,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     let test_call_spread =
         parse_vitest_fixture(&test_call_spread_source, &test_call_spread_path, &root).unwrap();
     assert!(test_call_spread.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-test-call-spread")
+        project.policy_name.as_deref() == Some("vitest-test-call-spread")
             && project.include == vec!["vitest-test-call-spread/**/*.test.ts"]
     }));
 
@@ -2036,7 +2040,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(root_named_member_spread.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-named-member-spread")
+        project.policy_name.as_deref() == Some("vitest-root-named-member-spread")
             && project.include == vec!["vitest-root-named-member-spread/**/*.test.ts"]
     }));
 
@@ -2050,7 +2054,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(root_local_member_spread.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-local-member-spread")
+        project.policy_name.as_deref() == Some("vitest-root-local-member-spread")
             && project.include == vec!["vitest-root-local-member-spread/**/*.test.ts"]
     }));
 
@@ -2064,7 +2068,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(root_imported_spread_member.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-imported-spread-member")
+        project.policy_name.as_deref() == Some("vitest-root-imported-spread-member")
             && project.include == vec!["vitest-root-imported-spread-member/**/*.test.ts"]
     }));
 
@@ -2078,7 +2082,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(root_import_then_export.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-import-then-export")
+        project.policy_name.as_deref() == Some("vitest-root-import-then-export")
             && project.include == vec!["vitest-root-import-then-export/**/*.test.ts"]
     }));
 
@@ -2092,7 +2096,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(test_named_member_spread.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-test-named-member-spread")
+        project.policy_name.as_deref() == Some("vitest-test-named-member-spread")
             && project.include == vec!["vitest-test-named-member-spread/**/*.test.ts"]
     }));
 
@@ -2106,7 +2110,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(test_local_member_spread.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-test-local-member-spread")
+        project.policy_name.as_deref() == Some("vitest-test-local-member-spread")
             && project.include == vec!["vitest-test-local-member-spread/**/*.test.ts"]
     }));
 
@@ -2119,7 +2123,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(member_nested_barrel.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-member-nested-barrel")
+        project.policy_name.as_deref() == Some("vitest-member-nested-barrel")
             && project.include == vec!["vitest-member-nested-barrel/**/*.test.ts"]
     }));
 
@@ -2133,7 +2137,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(member_default_reexport.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-member-default-reexport")
+        project.policy_name.as_deref() == Some("vitest-member-default-reexport")
             && project.include == vec!["vitest-member-default-reexport/**/*.test.ts"]
     }));
 
@@ -2147,7 +2151,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(member_import_then_export.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-member-import-then-export")
+        project.policy_name.as_deref() == Some("vitest-member-import-then-export")
             && project.include == vec!["vitest-member-import-then-export/**/*.test.ts"]
     }));
 
@@ -2161,7 +2165,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(object_default_reexport.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-object-default-reexport")
+        project.policy_name.as_deref() == Some("vitest-object-default-reexport")
             && project.include == vec!["vitest-object-default-reexport/**/*.test.ts"]
     }));
 
@@ -2174,7 +2178,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(object_nested_barrel.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-object-nested-barrel")
+        project.policy_name.as_deref() == Some("vitest-object-nested-barrel")
             && project.include == vec!["vitest-object-nested-barrel/**/*.test.ts"]
     }));
 
@@ -2188,7 +2192,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(object_import_then_export.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-object-import-then-export")
+        project.policy_name.as_deref() == Some("vitest-object-import-then-export")
             && project.include == vec!["vitest-object-import-then-export/**/*.test.ts"]
     }));
 
@@ -2197,7 +2201,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     let object_call_local =
         parse_vitest_fixture(&object_call_local_source, &object_call_local_path, &root).unwrap();
     assert!(object_call_local.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-object-call-local")
+        project.policy_name.as_deref() == Some("vitest-object-call-local")
             && project.include == vec!["vitest-object-call-local/**/*.test.ts"]
     }));
 
@@ -2211,7 +2215,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(object_named_member_spread.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-object-named-member-spread")
+        project.policy_name.as_deref() == Some("vitest-object-named-member-spread")
             && project.include == vec!["packages/vitest-object-named-member-spread/**/*.test.ts"]
     }));
 
@@ -2225,7 +2229,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(object_sourced_member_spread.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-object-sourced-member-spread")
+        project.policy_name.as_deref() == Some("vitest-object-sourced-member-spread")
             && project.include == vec!["vitest-object-sourced-member-spread/**/*.test.ts"]
     }));
 
@@ -2239,7 +2243,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(object_import_member_spread.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-object-import-member-spread")
+        project.policy_name.as_deref() == Some("vitest-object-import-member-spread")
             && project.include == vec!["vitest-object-import-member-spread/**/*.test.ts"]
     }));
 
@@ -2263,12 +2267,12 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(test_sourced_reexport.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-test-sourced-reexport")
+        project.policy_name.as_deref() == Some("vitest-test-sourced-reexport")
             && project.include == vec!["vitest-test-sourced-reexport/**/*.test.ts"]
     }));
-    assert!(!test_sourced_reexport
-        .iter()
-        .any(|project| { project.name.as_deref() == Some("vitest-nested-test-sourced-reexport") }));
+    assert!(!test_sourced_reexport.iter().any(|project| {
+        project.policy_name.as_deref() == Some("vitest-nested-test-sourced-reexport")
+    }));
 
     let imported_test_object_path = root.join("vitest.imported-test-object.mts");
     let imported_test_object_source = std::fs::read_to_string(&imported_test_object_path).unwrap();
@@ -2279,7 +2283,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(imported_test_object.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-imported-test-object")
+        project.policy_name.as_deref() == Some("vitest-imported-test-object")
             && project.include == vec!["vitest-imported-test-object/**/*.test.ts"]
     }));
 
@@ -2293,7 +2297,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(imported_project_test_block.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-imported-project-test-block")
+        project.policy_name.as_deref() == Some("vitest-imported-project-test-block")
             && project.include == vec!["vitest-imported-project-test-block/**/*.test.ts"]
             && project.exclude == vec!["vitest-imported-project-test-block/**/*.skip.ts"]
     }));
@@ -2308,19 +2312,19 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(root_top_level_projects.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-test-projects")
+        project.policy_name.as_deref() == Some("vitest-root-test-projects")
             && project.include == vec!["vitest-root-test-projects/**/*.test.ts"]
     }));
     assert!(!root_top_level_projects
         .iter()
-        .any(|project| project.name.as_deref() == Some("vitest-root-top-level-projects")));
+        .any(|project| project.policy_name.as_deref() == Some("vitest-root-top-level-projects")));
 
     let root_imported_path = root.join("vitest.root-imported-config.mts");
     let root_imported_source = std::fs::read_to_string(&root_imported_path).unwrap();
     let root_imported =
         parse_vitest_fixture(&root_imported_source, &root_imported_path, &root).unwrap();
     assert!(root_imported.iter().any(|project| {
-        project.name.as_deref() == Some("root-imported-test-projects")
+        project.policy_name.as_deref() == Some("root-imported-test-projects")
             && project.include == vec!["root-imported-test-projects/**/*.test.ts"]
     }));
 
@@ -2333,7 +2337,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(root_alias_imported.iter().any(|project| {
-        project.name.as_deref() == Some("root-alias-imported-test-projects")
+        project.policy_name.as_deref() == Some("root-alias-imported-test-projects")
             && project.include == vec!["root-alias-imported-test-projects/**/*.test.ts"]
     }));
 
@@ -2347,7 +2351,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(named_imported_test_spread.iter().any(|project| {
-        project.name.as_deref() == Some("named-imported-test-spread")
+        project.policy_name.as_deref() == Some("named-imported-test-spread")
             && project.include == vec!["named-imported-test-spread/**/*.test.ts"]
     }));
 
@@ -2356,7 +2360,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     let named_member =
         parse_vitest_fixture(&named_member_source, &named_member_path, &root).unwrap();
     assert!(named_member.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-named-member-projects")
+        project.policy_name.as_deref() == Some("vitest-named-member-projects")
             && project.include == vec!["vitest-named-member-projects/**/*.test.ts"]
     }));
 
@@ -2370,7 +2374,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(named_member_reexport.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-named-member-projects")
+        project.policy_name.as_deref() == Some("vitest-named-member-projects")
             && project.include == vec!["vitest-named-member-projects/**/*.test.ts"]
     }));
 
@@ -2384,7 +2388,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(imported_spread_member_map.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-imported-spread-member-map")
+        project.policy_name.as_deref() == Some("vitest-imported-spread-member-map")
             && project.include == vec!["vitest-imported-spread-member-map/**/*.test.ts"]
     }));
 
@@ -2393,7 +2397,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     let destructured_bound =
         parse_vitest_fixture(&destructured_bound_source, &destructured_bound_path, &root).unwrap();
     assert!(destructured_bound.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-destructured-bound-projects")
+        project.policy_name.as_deref() == Some("vitest-destructured-bound-projects")
             && project.include == vec!["vitest-destructured-bound-projects/**/*.test.ts"]
     }));
 
@@ -2407,7 +2411,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(destructured_spread_export.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-destructured-spread-export")
+        project.policy_name.as_deref() == Some("vitest-destructured-spread-export")
             && project.include == vec!["vitest-destructured-spread-export/**/*.test.ts"]
     }));
 
@@ -2416,14 +2420,14 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     let empty_star = parse_vitest_fixture(&empty_star_source, &empty_star_path, &root).unwrap();
     assert!(!empty_star
         .iter()
-        .any(|project| project.name.as_deref() == Some("vitest-empty-star-runtime")));
+        .any(|project| project.policy_name.as_deref() == Some("vitest-empty-star-runtime")));
 
     let root_spread_empty_path = root.join("vitest.root-spread-empty.mts");
     let root_spread_empty_source = std::fs::read_to_string(&root_spread_empty_path).unwrap();
     let root_spread_empty =
         parse_vitest_fixture(&root_spread_empty_source, &root_spread_empty_path, &root).unwrap();
     assert!(root_spread_empty.iter().any(|project| {
-        project.name.as_deref() == Some("ignored-specifier-config")
+        project.policy_name.as_deref() == Some("ignored-specifier-config")
             && project.include == vec!["ignored-specifier-config/**/*.test.ts"]
     }));
 
@@ -2442,13 +2446,13 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     let identifier = parse_vitest_fixture(&identifier_source, &identifier_path, &root).unwrap();
     assert!(identifier
         .iter()
-        .any(|project| project.name.as_deref() == Some("reexported")));
+        .any(|project| project.policy_name.as_deref() == Some("reexported")));
     assert!(identifier
         .iter()
-        .any(|project| project.name.as_deref() == Some("local-identifier-projects")));
+        .any(|project| project.policy_name.as_deref() == Some("local-identifier-projects")));
     assert!(identifier
         .iter()
-        .any(|project| project.name.as_deref() == Some("default-object")));
+        .any(|project| project.policy_name.as_deref() == Some("default-object")));
 
     let edge_path = root.join("vitest.edge.mts");
     let edge_source = std::fs::read_to_string(&edge_path).unwrap();
@@ -2498,37 +2502,37 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     ] {
         assert!(
             edge.iter()
-                .any(|project| project.name.as_deref() == Some(name)),
+                .any(|project| project.policy_name.as_deref() == Some(name)),
             "missing edge project {name}"
         );
     }
     assert!(edge.iter().any(|project| {
-        project.name.as_deref() == Some("imported-nested-test-spread")
+        project.policy_name.as_deref() == Some("imported-nested-test-spread")
             && project.include == vec!["imported-nested-test-spread/**/*.test.ts"]
             && project.exclude == vec!["imported-nested-test-spread/**/*.skip.ts"]
     }));
     assert!(edge.iter().any(|project| {
-        project.name.as_deref() == Some("project-test-spread-override")
+        project.policy_name.as_deref() == Some("project-test-spread-override")
             && project.include == vec!["project-test-spread-override/**/*.test.ts"]
     }));
     assert!(edge.iter().any(|project| {
-        project.name.as_deref() == Some("project-constant-spread")
+        project.policy_name.as_deref() == Some("project-constant-spread")
             && project.include == vec!["project-constant-spread/**/*.test.ts"]
     }));
     assert!(edge.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-project-root")
+        project.policy_name.as_deref() == Some("vitest-project-root")
             && project.include == vec!["packages/app/**/*.test.ts"]
             && project.exclude == vec!["packages/app/ignored/**/*.test.ts"]
     }));
     assert!(!edge
         .iter()
-        .any(|project| project.name.as_deref() == Some("project-test-spread-local")));
+        .any(|project| project.policy_name.as_deref() == Some("project-test-spread-local")));
     assert!(edge.iter().any(|project| {
-        project.name.as_deref() == Some("nested-local-spread")
+        project.policy_name.as_deref() == Some("nested-local-spread")
             && project.include == vec!["nested-local-spread/**/*.test.ts"]
     }));
     assert!(edge.iter().any(|project| {
-        project.name.as_deref() == Some("namespace-test-options-spread")
+        project.policy_name.as_deref() == Some("namespace-test-options-spread")
             && project.include == vec!["namespace-test-options-spread/**/*.test.ts"]
             && project.exclude == vec!["namespace-test-options-spread/**/*.skip.ts"]
     }));
@@ -2544,7 +2548,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(project_object_sourced_reexport.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-project-object-sourced-reexport")
+        project.policy_name.as_deref() == Some("vitest-project-object-sourced-reexport")
             && project.include == vec!["vitest-project-object-sourced-reexport/**/*.test.ts"]
     }));
 
@@ -2558,7 +2562,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(project_object_star_reexport.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-project-object-star-reexport")
+        project.policy_name.as_deref() == Some("vitest-project-object-star-reexport")
             && project.include == vec!["vitest-project-object-star-reexport/**/*.test.ts"]
     }));
 
@@ -2571,26 +2575,26 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(local_member_spread.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-local-member-spread")
+        project.policy_name.as_deref() == Some("vitest-local-member-spread")
             && project.include == vec!["vitest-local-member-spread/**/*.test.ts"]
             && project.exclude == vec!["vitest-local-member-spread/**/*.skip.ts"]
     }));
 
     assert!(!edge
         .iter()
-        .any(|project| project.name.as_deref() == Some("nested-array-should-not-flatten")));
+        .any(|project| project.policy_name.as_deref() == Some("nested-array-should-not-flatten")));
     assert!(!edge
         .iter()
-        .any(|project| project.name.as_deref() == Some("vitest-ambiguous-star-a")));
+        .any(|project| project.policy_name.as_deref() == Some("vitest-ambiguous-star-a")));
     assert!(!edge
         .iter()
-        .any(|project| project.name.as_deref() == Some("vitest-ambiguous-star-b")));
+        .any(|project| project.policy_name.as_deref() == Some("vitest-ambiguous-star-b")));
     assert!(!edge
         .iter()
-        .any(|project| project.name.as_deref() == Some("vitest-non-spread-call-array")));
+        .any(|project| project.policy_name.as_deref() == Some("vitest-non-spread-call-array")));
     assert!(!edge
         .iter()
-        .any(|project| project.name.as_deref() == Some("vitest-non-spread-imported-array")));
+        .any(|project| project.policy_name.as_deref() == Some("vitest-non-spread-imported-array")));
 
     let project_test_override_clears_path = root.join("vitest.project-test-override-clears.mts");
     let project_test_override_clears_source =
@@ -2601,11 +2605,11 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
         &root,
     )
     .unwrap();
-    assert!(project_test_override_clears
-        .iter()
-        .any(|project| project.name.as_deref() == Some("vitest-project-test-override-clears")));
+    assert!(project_test_override_clears.iter().any(
+        |project| project.policy_name.as_deref() == Some("vitest-project-test-override-clears")
+    ));
     assert!(!project_test_override_clears.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-project-test-override-clears")
+        project.policy_name.as_deref() == Some("vitest-project-test-override-clears")
             && project
                 .include
                 .contains(&"vitest-project-test-override-clears-stale/**/*.test.ts".to_string())
@@ -2615,14 +2619,14 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     let recursive_source = std::fs::read_to_string(&recursive_path).unwrap();
     let recursive = parse_vitest_fixture(&recursive_source, &recursive_path, &root).unwrap();
     assert_eq!(recursive.len(), 1);
-    assert_eq!(recursive[0].name, None);
+    assert_eq!(recursive[0].policy_name, None);
 
     let spread_test_path = root.join("vitest.spread-test-options.mts");
     let spread_test_source = std::fs::read_to_string(&spread_test_path).unwrap();
     let spread_test = parse_vitest_fixture(&spread_test_source, &spread_test_path, &root).unwrap();
     assert!(spread_test
         .iter()
-        .any(|project| project.name.as_deref() == Some("spread-test-options")));
+        .any(|project| project.policy_name.as_deref() == Some("spread-test-options")));
 
     let invalid_path = root.join("vitest.invalid-project.mts");
     let invalid_source = std::fs::read_to_string(&invalid_path).unwrap();
@@ -2640,7 +2644,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     .unwrap();
     assert!(root_call_spread_local
         .iter()
-        .any(|project| { project.name.as_deref() == Some("vitest-root-call-local") }));
+        .any(|project| { project.policy_name.as_deref() == Some("vitest-root-call-local") }));
 
     let root_member_import_then_export_path =
         root.join("vitest.root-member-import-then-export.mts");
@@ -2653,7 +2657,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(root_member_import_then_export.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-member-import-then-export")
+        project.policy_name.as_deref() == Some("vitest-root-member-import-then-export")
     }));
 
     let object_call_import_path = root.join("vitest.object-call-import.mts");
@@ -2661,7 +2665,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     let object_call_import =
         parse_vitest_fixture(&object_call_import_source, &object_call_import_path, &root).unwrap();
     assert!(object_call_import.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-object-call-import")
+        project.policy_name.as_deref() == Some("vitest-object-call-import")
             && project.include == vec!["vitest-object-call-import/**/*.test.ts"]
     }));
 
@@ -2670,7 +2674,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     let root_call_import =
         parse_vitest_fixture(&root_call_import_source, &root_call_import_path, &root).unwrap();
     assert!(root_call_import.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-call-import")
+        project.policy_name.as_deref() == Some("vitest-root-call-import")
             && project.include == vec!["vitest-root-call-import/**/*.test.ts"]
     }));
 
@@ -2684,7 +2688,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(member_namespace_star.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-member-namespace-star")
+        project.policy_name.as_deref() == Some("vitest-member-namespace-star")
             && project.include == vec!["vitest-member-namespace-star/**/*.test.ts"]
     }));
 
@@ -2698,7 +2702,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(root_star_barrel_import.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-star-barrel")
+        project.policy_name.as_deref() == Some("vitest-root-star-barrel")
             && project.include == vec!["vitest-root-star-barrel/**/*.test.ts"]
     }));
 
@@ -2713,7 +2717,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(root_member_default_import.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-member-default-import")
+        project.policy_name.as_deref() == Some("vitest-root-member-default-import")
             && project.include == vec!["vitest-root-member-default-import/**/*.test.ts"]
     }));
 
@@ -2727,7 +2731,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(root_member_sourced.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-member-sourced")
+        project.policy_name.as_deref() == Some("vitest-root-member-sourced")
             && project.include == vec!["vitest-root-member-sourced/**/*.test.ts"]
     }));
 
@@ -2753,7 +2757,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(root_member_local_identifier.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-member-local-identifier")
+        project.policy_name.as_deref() == Some("vitest-root-member-local-identifier")
             && project.include == vec!["vitest-root-member-local-identifier/**/*.test.ts"]
     }));
 
@@ -2790,7 +2794,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(root_spread_member_namespace.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-root-spread-member-namespace")
+        project.policy_name.as_deref() == Some("vitest-root-spread-member-namespace")
             && project.include == vec!["vitest-root-spread-member-namespace/**/*.test.ts"]
     }));
 
@@ -2826,7 +2830,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(member_local_direct.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-member-local-direct")
+        project.policy_name.as_deref() == Some("vitest-member-local-direct")
             && project.include == vec!["vitest-member-local-direct/**/*.test.ts"]
     }));
 
@@ -2841,7 +2845,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(member_spread_namespace.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-member-spread-namespace")
+        project.policy_name.as_deref() == Some("vitest-member-spread-namespace")
             && project.include == vec!["vitest-member-spread-namespace/**/*.test.ts"]
     }));
 
@@ -2856,7 +2860,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     )
     .unwrap();
     assert!(member_namespace_alias.iter().any(|project| {
-        project.name.as_deref() == Some("vitest-member-namespace-star")
+        project.policy_name.as_deref() == Some("vitest-member-namespace-star")
             && project.include == vec!["vitest-member-namespace-star/**/*.test.ts"]
     }));
 
@@ -2881,9 +2885,9 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
         &root,
     )
     .unwrap();
-    assert!(object_member_default_import
-        .iter()
-        .any(|project| { project.name.as_deref() == Some("vitest-object-member-default-import") }));
+    assert!(object_member_default_import.iter().any(|project| {
+        project.policy_name.as_deref() == Some("vitest-object-member-default-import")
+    }));
 
     // object-member-star-barrel: covers Ok(None) fallback in objects/members.rs exported_member_options
     let object_member_star_barrel_path = root.join("vitest.object-member-star-barrel.mts");
@@ -2943,7 +2947,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     .unwrap();
     assert!(!object_call_import_non_fn
         .iter()
-        .any(|p| p.name.as_deref() == Some("vitest-object-call-import-non-fn")));
+        .any(|p| p.policy_name.as_deref() == Some("vitest-object-call-import-non-fn")));
 
     // root-call-import-non-fn: covers "function not found" branch in root_spreads/calls.rs
     // helper exports a const (not a function), so functions.get() returns None
@@ -3045,9 +3049,9 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
         &root,
     )
     .unwrap();
-    assert!(object_call_destructure_body
-        .iter()
-        .any(|project| { project.name.as_deref() == Some("vitest-object-call-destructure-body") }));
+    assert!(object_call_destructure_body.iter().any(|project| {
+        project.policy_name.as_deref() == Some("vitest-object-call-destructure-body")
+    }));
 
     // object-star-export: covers type/alias star skipped and ambiguous star in objects/exports.rs
     let object_star_export_path = root.join("vitest.object-star-export.mts");
@@ -3072,7 +3076,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
         parse_vitest_fixture(&absolute_root_source, &absolute_root_path, &root).unwrap();
     assert!(absolute_root
         .iter()
-        .any(|p| p.name.as_deref() == Some("vitest-absolute-root")));
+        .any(|p| p.policy_name.as_deref() == Some("vitest-absolute-root")));
 
     // test-value-non-object: covers found = None branch when test: is not object/spread
     let test_value_non_object_path = root.join("vitest.test-value-non-object.mts");
@@ -3111,9 +3115,9 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
         &root,
     )
     .unwrap();
-    assert!(root_spread_star_import
-        .iter()
-        .any(|project| { project.name.as_deref() == Some("vitest-root-spread-star-barrel") }));
+    assert!(root_spread_star_import.iter().any(|project| {
+        project.policy_name.as_deref() == Some("vitest-root-spread-star-barrel")
+    }));
 
     // export-destructure-edge: covers destructured_expression edge cases in exports/declarations.rs
     let export_destructure_edge_path = root.join("vitest.export-destructure-edge.mts");
@@ -3136,9 +3140,9 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
         &root,
     )
     .unwrap();
-    assert!(root_spread_named_member
-        .iter()
-        .any(|project| { project.name.as_deref() == Some("vitest-root-spread-named-member") }));
+    assert!(root_spread_named_member.iter().any(|project| {
+        project.policy_name.as_deref() == Some("vitest-root-spread-named-member")
+    }));
 
     // root-spread-member-missing: covers resolver failure in root_spreads/members.rs
     let root_spread_member_missing_path = root.join("vitest.root-spread-member-missing.mts");
@@ -3173,7 +3177,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     .unwrap();
     assert!(projects_star_import
         .iter()
-        .any(|project| { project.name.as_deref() == Some("vitest-projects-star-barrel") }));
+        .any(|project| { project.policy_name.as_deref() == Some("vitest-projects-star-barrel") }));
 
     // project-unknown-prop: covers _ => {} arm in merge_property in objects.rs
     let project_unknown_prop_path = root.join("vitest.project-unknown-prop.mts");
@@ -3186,7 +3190,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     .unwrap();
     assert!(project_unknown_prop
         .iter()
-        .any(|project| { project.name.as_deref() == Some("vitest-unknown-prop") }));
+        .any(|project| { project.policy_name.as_deref() == Some("vitest-unknown-prop") }));
 
     // object-member-alias-import: covers imported_options_from_base resolver failure in members.rs
     let object_member_alias_import_path = root.join("vitest.object-member-alias-import.mts");
@@ -3221,7 +3225,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
     .unwrap();
     assert!(member_spread_named
         .iter()
-        .any(|project| { project.name.as_deref() == Some("vitest-member-spread-named") }));
+        .any(|project| { project.policy_name.as_deref() == Some("vitest-member-spread-named") }));
 
     // member-spread-missing-source: covers imported_member_options_from resolver failure (line 117)
     let member_spread_missing_source_path = root.join("vitest.member-spread-missing-source.mts");
@@ -3295,7 +3299,7 @@ fn vitest_config_parser_covers_root_and_nested_projects() {
         parse_vitest_fixture(&project_exclude_source, &project_exclude_path, &root).unwrap();
     assert!(project_exclude
         .iter()
-        .any(|p| p.name.as_deref() == Some("vitest-project-exclude")));
+        .any(|p| p.policy_name.as_deref() == Some("vitest-project-exclude")));
 
     // project-exclude-invalid: covers '?' error branch in exclude merge_property (objects.rs:82)
     let project_exclude_invalid_path = root.join("vitest.project-exclude-invalid.mts");

@@ -1,10 +1,10 @@
 use super::*;
 
-fn config_project(config: &str, name: &str, include: &str) -> ConfigProject {
+fn config_project(config: &str, policy_name: &str, include: &str) -> ConfigProject {
     ConfigProject {
         config: Some(config.to_string()),
-        name: Some(name.to_string()),
-        target_project: Some(name.to_string()),
+        policy_name: Some(policy_name.to_string()),
+        runner_project_arg: Some(policy_name.to_string()),
         include: vec![include.to_string()],
         exclude: Vec::new(),
     }
@@ -33,7 +33,7 @@ fn explicit_policy_replaces_each_matching_config_project() {
 
     let shared = projects
         .iter()
-        .filter(|project| project.name.as_deref() == Some("shared"))
+        .filter(|project| project.policy_name.as_deref() == Some("shared"))
         .collect::<Vec<_>>();
     assert_eq!(shared.len(), 2);
     assert!(shared

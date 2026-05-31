@@ -177,7 +177,8 @@ relative paths such as `web/src/Button.tsx` or project-relative paths such as
 
 `no-mistakes test plan <playwright|vitest>` selects focused test files from
 changed files and configured priority groups. `tests plan` remains available as
-the compatibility spelling.
+the compatibility spelling. See [Test Discovery](test-discovery.md) for
+configured project ownership and runner fallback invariants.
 
 ```sh
 no-mistakes test plan vitest --changed-file src/user.ts --format paths

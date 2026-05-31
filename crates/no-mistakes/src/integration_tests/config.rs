@@ -113,8 +113,8 @@ pub(crate) fn configured_project(
     }
     Some(ConfigProject {
         config: None,
-        name: Some(project_name.to_string()),
-        target_project: Some(project_name.to_string()),
+        policy_name: Some(project_name.to_string()),
+        runner_project_arg: Some(project_name.to_string()),
         include: prefix_globs(root, root, &policy.include),
         exclude: prefix_globs(root, root, &policy.exclude),
     })
@@ -137,7 +137,7 @@ fn exact_project<'a>(
 ) -> Result<&'a ConfigProject> {
     let matches = projects
         .iter()
-        .filter(|project| project.name.as_deref() == Some(project_name))
+        .filter(|project| project.policy_name.as_deref() == Some(project_name))
         .collect::<Vec<_>>();
     match matches.as_slice() {
         [project] => Ok(*project),
