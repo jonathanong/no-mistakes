@@ -14,7 +14,7 @@
 fn collect_http_call_edges(
     root: &Path,
     tsconfig: &TsConfig,
-    facts: Option<&TsFactMap>,
+    facts: Option<&dyn TsFactLookup>,
     files: &[(PathBuf, String)],
     graph_files: &[PathBuf],
     all_files: &[PathBuf],
@@ -62,7 +62,7 @@ fn collect_http_call_edges(
             .par_iter()
             .filter_map(|caller| {
                 facts
-                    .get(caller)
+                    .get_ts_facts(caller)
                     .map(|file_facts| (caller.as_path(), file_facts.http_calls.as_slice()))
             })
             .flat_map_iter(|(caller, calls)| http_edges_for_calls(caller, calls, &route_defs))
@@ -143,7 +143,7 @@ fn http_edges_for_calls(
 /// resolved; dynamic expressions are silently skipped.
 fn collect_process_spawn_edges(
     root: &Path,
-    facts: Option<&TsFactMap>,
+    facts: Option<&dyn TsFactLookup>,
     files: &[(PathBuf, String)],
     graph_files: &[PathBuf],
 ) -> Vec<Edge> {
@@ -152,7 +152,7 @@ fn collect_process_spawn_edges(
     if let Some(facts) = facts {
         return graph_files
             .par_iter()
-            .filter_map(|path| facts.get(path))
+            .filter_map(|path| facts.get_ts_facts(path))
             .flat_map_iter(|file_facts| {
                 file_facts.process_spawns.iter().map(|e| {
                     (

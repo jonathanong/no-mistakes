@@ -1,11 +1,14 @@
 fn collect_parsed_imports_from_facts<'a>(
     files: &'a [PathBuf],
-    facts: &'a TsFactMap,
+    facts: &'a dyn TsFactLookup,
 ) -> ParsedImports<'a> {
     files
         .par_iter()
         .filter_map(|path| {
-            facts.get(path).map(|file_facts| (path, file_facts))
+            facts.get_ts_facts(path).map(|file_facts| {
+                let reachable = reachable_function_scopes(file_facts);
+                (path, file_facts, reachable)
+            })
         })
         .collect()
 }
@@ -18,12 +21,11 @@ fn collect_import_edges(
 ) -> Vec<Edge> {
     parsed_imports
         .par_iter()
-        .flat_map_iter(|(path, facts)| {
-            let reachable = reachable_function_scopes(facts);
+        .flat_map_iter(|(path, facts, reachable)| {
             facts
                 .imports
                 .iter()
-                .filter(|imp| import_is_reachable(imp, facts, &reachable))
+                .filter(|imp| import_is_reachable(imp, facts, reachable))
                 .filter_map(|imp| {
                     let kind = edge_kind_for_import(imp);
                     if let Some(target) = resolver.resolve(&imp.specifier, path) {
@@ -50,12 +52,11 @@ fn collect_asset_edges(
 ) -> Vec<Edge> {
     parsed_imports
         .par_iter()
-        .flat_map_iter(|(path, facts)| {
-            let reachable = reachable_function_scopes(facts);
+        .flat_map_iter(|(path, facts, reachable)| {
             facts
                 .imports
                 .iter()
-                .filter(|imp| import_is_reachable(imp, facts, &reachable))
+                .filter(|imp| import_is_reachable(imp, facts, reachable))
                 .filter(|imp| imp.specifier.starts_with('.') || imp.specifier.starts_with('/'))
                 .filter_map(|imp| {
                     resolver.resolve(&imp.specifier, path).and_then(|target| {
@@ -86,12 +87,11 @@ fn collect_workspace_edges(
 
     parsed_imports
         .par_iter()
-        .flat_map_iter(|(path, facts)| {
-            let reachable = reachable_function_scopes(facts);
+        .flat_map_iter(|(path, facts, reachable)| {
             facts
                 .imports
                 .iter()
-                .filter(|imp| import_is_reachable(imp, facts, &reachable))
+                .filter(|imp| import_is_reachable(imp, facts, reachable))
                 .filter_map(|imp| {
                     let spec = &imp.specifier;
                     if spec.starts_with('.') {

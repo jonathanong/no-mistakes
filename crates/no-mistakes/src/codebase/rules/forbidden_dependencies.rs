@@ -9,6 +9,8 @@ use std::collections::HashSet;
 use std::path::Path;
 
 mod helpers;
+mod shared;
+pub(crate) use shared::check_with_facts;
 
 pub const RULE_ID: &str = "forbidden-dependencies";
 
@@ -41,6 +43,16 @@ pub fn check(
     }
     super::sort_findings(&mut findings);
     Ok(findings)
+}
+
+pub fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
+    let applications = config.rule_applications(RULE_ID);
+    if applications.is_empty() {
+        return None;
+    }
+    let opts_list: Vec<Options> = applications.iter().map(|r| r.rule_options()).collect();
+    let union_allowed = union_allowed_set(&opts_list);
+    Some(GraphBuildPlan::from_allowed(union_allowed.as_ref()))
 }
 
 pub(crate) fn resolve_tsconfig(root: &Path, tsconfig_path: Option<&Path>) -> Result<TsConfig> {

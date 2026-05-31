@@ -16,7 +16,7 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-mod domain;
+pub(crate) mod domain;
 pub use domain::TsFactContext;
 
 #[derive(Debug, Clone, Copy, Default)]

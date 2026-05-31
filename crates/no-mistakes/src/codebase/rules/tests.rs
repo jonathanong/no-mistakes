@@ -141,7 +141,20 @@ fn run_check_executes_forbidden_dependencies_rule() {
 #[test]
 fn run_check_with_facts_executes_forbidden_dependencies_rule() {
     let root = fixture("codebase-analysis/forbidden-dependencies-basic");
-    let shared = crate::codebase::check_facts::CheckFactMap::default();
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let graph_plan = crate::codebase::rules::forbidden_dependencies::graph_plan(&config)
+        .expect("forbidden dependencies config requests graph facts");
+    let (graph, graph_context) =
+        crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan(&root, graph_plan);
+    let shared = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        crate::codebase::ts_source::discover_files(&root, &[]),
+        crate::codebase::check_facts::CheckFactPlan {
+            graph,
+            graph_context,
+            ..Default::default()
+        },
+    );
     let findings = run_check_with_facts(&root, None, None, &shared).unwrap();
     assert!(findings.iter().any(|f| f.rule == FORBIDDEN_DEPENDENCIES));
 }

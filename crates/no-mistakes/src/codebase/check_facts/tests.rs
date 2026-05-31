@@ -88,6 +88,35 @@ fn collect_check_facts_records_parse_error_details() {
 }
 
 #[test]
+fn collect_check_facts_imports_include_reachability_metadata() {
+    let root = fixture_path("");
+    let file = fixture_path("src/everything.tsx");
+    let facts = collect_check_facts(
+        &root,
+        vec![file.clone()],
+        CheckFactPlan {
+            imports: true,
+            ..CheckFactPlan::default()
+        },
+    );
+    let file_facts = facts.ts.get(&file).expect("file facts are retained");
+
+    assert!(file_facts
+        .ts
+        .imports
+        .iter()
+        .any(|import| import.specifier == "./widget"));
+    assert!(
+        file_facts
+            .ts
+            .function_calls
+            .iter()
+            .any(|call| call.callee == "Widget"),
+        "shared import facts should include call metadata for graph reachability"
+    );
+}
+
+#[test]
 fn collect_check_facts_reads_raw_source_without_parsing() {
     let root = fixture_path("");
     let file = fixture_path("src/invalid.ts");
@@ -208,6 +237,7 @@ fn collect_check_facts_parses_once_for_overlapping_fact_categories() {
             storybook: true,
             source: true,
             raw_source: false,
+            ..CheckFactPlan::default()
         },
     );
 

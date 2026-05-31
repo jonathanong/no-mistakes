@@ -41,37 +41,6 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
     Ok(findings)
 }
 
-/// Check using a pre-discovered file list to avoid a second filesystem walk.
-pub(crate) fn check_with_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let opts = rule.rule_options();
-        let target_roots = super::target_roots(root, config, rule);
-        let roots = normalize_roots(&opts, root, &target_roots);
-        let skip = super::skip_dir_set(config);
-        let files: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|p| {
-                super::file_allowed_by_roots_and_skip(root, &skip, p, &roots)
-                    && p.extension()
-                        .and_then(|e| e.to_str())
-                        .is_some_and(|e| e == "rs")
-                    && !is_excluded(root, p, &opts.excludes)
-                    && !super::rust_max_lines_per_file::is_test_file(root, p)
-            })
-            .cloned()
-            .collect();
-        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        findings.extend(scan(root, &opts, &files)?);
-    }
-    super::sort_findings(&mut findings);
-    Ok(findings)
-}
-
 fn normalize_roots(opts: &Options, root: &Path, target_roots: &[PathBuf]) -> Vec<PathBuf> {
     opts.roots
         .as_deref()
@@ -117,8 +86,16 @@ pub(crate) fn check_file(path: &Path, root: &Path) -> Vec<RuleFinding> {
     let Ok(parsed) = syn::parse_file(&content) else {
         return Vec::new();
     };
+    findings_from_parsed(path, root, &parsed)
+}
+
+pub(crate) fn findings_from_parsed(
+    path: &Path,
+    root: &Path,
+    parsed: &syn::File,
+) -> Vec<RuleFinding> {
     let file = relative_slash_path(root, path);
-    ast::cfg_test_lines(&parsed)
+    ast::cfg_test_lines(parsed)
         .into_iter()
         .map(|line| RuleFinding {
             rule: RULE_ID.to_string(),

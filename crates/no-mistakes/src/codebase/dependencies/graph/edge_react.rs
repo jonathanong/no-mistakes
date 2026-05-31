@@ -1,6 +1,6 @@
 fn collect_react_render_edges(
     root: &Path,
-    facts: Option<&TsFactMap>,
+    facts: Option<&dyn TsFactLookup>,
     files: &[PathBuf],
 ) -> Vec<Edge> {
     let Some(facts) = facts else {
@@ -10,7 +10,7 @@ fn collect_react_render_edges(
 
     files
         .par_iter()
-        .filter_map(|path| facts.get(path).map(|file_facts| (path, file_facts)))
+        .filter_map(|path| facts.get_ts_facts(path).map(|file_facts| (path, file_facts)))
         .flat_map_iter(|(path, file_facts)| {
             file_facts
                 .react_components

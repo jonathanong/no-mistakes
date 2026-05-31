@@ -169,7 +169,7 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         imports: imports_items,
         ..Default::default()
     };
-    let imports = vec![(&imports_path, &imports_facts)];
+    let imports = vec![(&imports_path, &imports_facts, Default::default())];
     let edges = collect_workspace_edges(&imports, &resolver, &workspace, &graph_files);
     assert_eq!(edges.len(), 1);
     let hidden_workspace_path = root.join("packages/api/src/users.mts");
@@ -182,7 +182,11 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         imports: hidden_workspace_items,
         ..Default::default()
     };
-    let hidden_workspace_import = vec![(&hidden_workspace_path, &hidden_workspace_facts)];
+    let hidden_workspace_import = vec![(
+        &hidden_workspace_path,
+        &hidden_workspace_facts,
+        Default::default(),
+    )];
     assert!(collect_workspace_edges(
         &hidden_workspace_import,
         &resolver,
@@ -219,8 +223,11 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         imports: hidden_imports_items,
         ..Default::default()
     };
-    let hidden_imports = vec![(&hidden_imports_path, &hidden_imports_facts)];
-    assert!(collect_import_edges(&hidden_imports, &resolver, &Default::default(), &graph_files).is_empty());
+    let hidden_imports = vec![(&hidden_imports_path, &hidden_imports_facts, Default::default())];
+    assert!(
+        collect_import_edges(&hidden_imports, &resolver, &Default::default(), &graph_files)
+            .is_empty()
+    );
     assert_eq!(package_name_from_spec("@scope/pkg/path"), "@scope/pkg");
     assert_eq!(package_name_from_spec("@scope"), "@scope");
 }

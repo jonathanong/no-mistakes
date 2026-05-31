@@ -90,7 +90,12 @@ pub fn run_check_with_facts(
         )?);
     }
     if rule_enabled(&config, FORBIDDEN_DEPENDENCIES) {
-        findings.extend(forbidden_dependencies::check(root, &config, tsconfig_path)?);
+        findings.extend(forbidden_dependencies::check_with_facts(
+            root,
+            &config,
+            tsconfig_path,
+            shared,
+        )?);
     }
     suppress_rule_findings(root, &mut findings);
     sort_findings(&mut findings);

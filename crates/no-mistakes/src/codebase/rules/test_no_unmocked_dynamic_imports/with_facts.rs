@@ -29,13 +29,12 @@ pub fn check_with_facts(
     let files = shared.files().to_vec();
     let tsconfig = resolve_tsconfig(root, tsconfig_path)?;
     let resolver = ImportResolver::new(&tsconfig);
-    let ts_facts = shared.ts_facts();
-    let graph = DepGraph::build_with_plan_file_list_and_facts(
+    let graph = DepGraph::build_with_plan_file_list_and_check_facts(
         root,
         &tsconfig,
         GraphBuildPlan::imports_and_workspace(),
         files.clone(),
-        &ts_facts,
+        shared,
     );
     let manual_mocks = manual_mocks::discover_from_files(root, &files);
     let test_files = matching_test_files(root, &files, config)?;

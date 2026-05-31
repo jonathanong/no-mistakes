@@ -15,6 +15,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 mod file;
+mod file_playwright;
 pub(crate) use file::collect_file_facts;
 
 #[derive(Clone, Default)]
@@ -30,6 +31,8 @@ pub struct CheckFactPlan {
     pub storybook: bool,
     pub source: bool,
     pub raw_source: bool,
+    pub graph: crate::codebase::ts_source::facts::TsFactPlan,
+    pub graph_context: crate::codebase::ts_source::facts::TsFactContext,
 }
 
 #[derive(Clone)]
@@ -77,14 +80,6 @@ pub(crate) struct PlaywrightTestFacts {
 impl CheckFactMap {
     pub fn files(&self) -> &[PathBuf] {
         &self.files
-    }
-
-    pub(crate) fn ts_facts(&self) -> crate::codebase::ts_source::facts::TsFactMap {
-        let mut ts_facts = crate::codebase::ts_source::facts::TsFactMap::new();
-        for (path, facts) in &self.ts {
-            ts_facts.insert(path.clone(), facts.ts.clone());
-        }
-        ts_facts
     }
 }
 

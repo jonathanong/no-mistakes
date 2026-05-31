@@ -1,11 +1,11 @@
 fn extract_processor_job_names(
     processors_file: &Path,
-    facts: Option<&TsFactMap>,
+    facts: Option<&dyn TsFactLookup>,
 ) -> Option<Vec<String>> {
     use crate::codebase::ts_symbols::extract_symbols;
 
     if let Some(symbols) = facts
-        .and_then(|facts| facts.get(processors_file))
+        .and_then(|facts| facts.get_ts_facts(processors_file))
         .and_then(|file_facts| file_facts.symbols.as_ref())
     {
         return Some(

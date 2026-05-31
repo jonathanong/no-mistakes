@@ -35,7 +35,7 @@ impl DepGraph {
         tsconfig: &TsConfig,
         plan: GraphBuildPlan,
         graph_files: &GraphFiles,
-        facts: Option<&TsFactMap>,
+        facts: Option<&dyn TsFactLookup>,
     ) -> Self {
         let config_options = graph_config_options_for_plan(root, plan);
         let resolver = ImportResolver::new(tsconfig).with_visible(graph_files.visible());
@@ -50,7 +50,11 @@ impl DepGraph {
         } else {
             None
         };
-        let facts = owned_facts.as_ref().or(facts);
+        let facts: Option<&dyn TsFactLookup> = facts.or_else(|| {
+            owned_facts
+                .as_ref()
+                .map(|facts| facts as &dyn TsFactLookup)
+        });
 
         let mut forward: EdgeMap = HashMap::new();
         let mut reverse: EdgeMap = HashMap::new();
@@ -197,14 +201,20 @@ impl DepGraph {
         }
     }
 
-    pub(crate) fn build_with_plan_file_list_and_facts(
+    pub(crate) fn build_with_plan_file_list_and_check_facts(
         root: &Path,
         tsconfig: &TsConfig,
         plan: GraphBuildPlan,
         files: Vec<PathBuf>,
-        facts: &TsFactMap,
+        facts: &crate::codebase::check_facts::CheckFactMap,
     ) -> Self {
         let graph_files = GraphFiles::from_files(files);
-        Self::build_with_plan_files_and_facts(root, tsconfig, plan, &graph_files, Some(facts))
+        Self::build_with_plan_files_and_facts(
+            root,
+            tsconfig,
+            plan,
+            &graph_files,
+            Some(facts as &dyn TsFactLookup),
+        )
     }
 }
