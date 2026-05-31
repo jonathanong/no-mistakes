@@ -57,7 +57,7 @@ What are you trying to find?
 | `workspace` | Cross-package npm workspace imports |
 | `package` | `package.json` dependency declarations to workspace entries or external module nodes |
 | `test` | source/test correspondence, Playwright route tests, Next layouts, and selector coverage |
-| `route` | route refs, Playwright route tests, Next layouts, and selector coverage |
+| `route` | route refs, Playwright route tests, and Next layouts |
 | `queue` | Queue enqueue/worker relationship → virtual queue job |
 | `md` | Markdown link → linked source file |
 | `ci` | CI workflow YAML → binary entry point |
