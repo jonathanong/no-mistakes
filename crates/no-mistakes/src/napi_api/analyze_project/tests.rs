@@ -119,6 +119,23 @@ fn graph_report_requires_shared_context() {
 }
 
 #[test]
+fn graph_reports_reject_per_report_scope_overrides() {
+    let error = analyze_project_json_impl(
+        json!({
+            "root": fixture_root("simple"),
+            "reports": [{
+                "type": "dependencies",
+                "root": fixture_root("simple"),
+                "files": ["a.mts"]
+            }]
+        })
+        .to_string(),
+    )
+    .unwrap_err();
+    assert!(error.reason.contains("per-report root/tsconfig"));
+}
+
+#[test]
 fn shared_graph_context_builds_once_for_multiple_graph_reports() {
     let options = parse_options::<AnalyzeProjectOptions>(
         &json!({

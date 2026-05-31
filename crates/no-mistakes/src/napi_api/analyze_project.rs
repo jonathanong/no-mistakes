@@ -5,6 +5,8 @@ use super::codebase::build_traverse_args;
 use super::options::{parse_options, to_napi_error};
 use crate::codebase::dependencies::{Direction, SharedTraversalContext, TraverseArgs};
 
+type ReportRunner = fn(String) -> napi::Result<String>;
+
 mod options;
 mod types;
 
@@ -32,71 +34,7 @@ fn analyze_project(options: AnalyzeProjectOptions) -> AnyhowResult<AnalyzeProjec
     let mut reports = Vec::with_capacity(options.reports.len());
 
     for request in &options.reports {
-        let result = match request.report_type.as_str() {
-            "dependencies" => graph_report(request, &options, Direction::Deps, shared.as_mut())?,
-            "dependents" | "related" => {
-                graph_report(request, &options, Direction::Dependents, shared.as_mut())?
-            }
-            "symbols" => call_report(
-                symbols_options(request, &options)?,
-                super::symbols_json_impl,
-            )?,
-            "queues" => call_report(project_options(request, &options)?, super::queues_json_impl)?,
-            "queueEdges" => call_report(
-                project_options(request, &options)?,
-                super::queue_edges_json_impl,
-            )?,
-            "queueRelated" => call_report(
-                project_options(request, &options)?,
-                super::queue_related_json_impl,
-            )?,
-            "queueCheck" => call_report(
-                project_options(request, &options)?,
-                super::queue_check_json_impl,
-            )?,
-            "serverRoutes" => call_report(
-                project_options(request, &options)?,
-                super::server_routes_json_impl,
-            )?,
-            "serverRouteList" => call_report(
-                project_options(request, &options)?,
-                super::server_route_list_json_impl,
-            )?,
-            "serverRouteEdges" => call_report(
-                project_options(request, &options)?,
-                super::server_route_edges_json_impl,
-            )?,
-            "serverRouteRelated" => call_report(
-                project_options(request, &options)?,
-                super::server_route_related_json_impl,
-            )?,
-            "reactAnalyze" => call_report(
-                project_options(request, &options)?,
-                super::react_analyze_json_impl,
-            )?,
-            "reactCheck" => call_report(
-                project_options(request, &options)?,
-                super::react_check_json_impl,
-            )?,
-            "playwrightCheck" => call_report(
-                playwright_options(request, &options)?,
-                super::playwright_check_json_impl,
-            )?,
-            "playwrightEdges" => call_report(
-                playwright_options(request, &options)?,
-                super::playwright_edges_json_impl,
-            )?,
-            "playwrightRelated" => call_report(
-                playwright_options(request, &options)?,
-                super::playwright_related_json_impl,
-            )?,
-            "playwrightTests" => call_report(
-                playwright_options(request, &options)?,
-                super::playwright_tests_json_impl,
-            )?,
-            "check" => call_report(project_options(request, &options)?, super::check_json_impl)?,
-            value => bail!("unknown analyzeProject report type: {value}"),
-        };
+        let result = run_report(request, &options, shared.as_mut())?;
         reports.push(AnalyzeReportResult {
             id: request.id.clone(),
             report_type: request.report_type.clone(),
@@ -105,6 +43,71 @@ fn analyze_project(options: AnalyzeProjectOptions) -> AnyhowResult<AnalyzeProjec
     }
 
     Ok(AnalyzeProjectResult { reports })
+}
+
+fn run_report(
+    request: &AnalyzeReportRequest,
+    options: &AnalyzeProjectOptions,
+    shared: Option<&mut SharedTraversalContext>,
+) -> AnyhowResult<Value> {
+    if let Some(direction) = graph_direction(&request.report_type) {
+        return graph_report(request, options, direction, shared);
+    }
+    if let Some(run) = symbols_runner(&request.report_type) {
+        return call_report(symbols_options(request, options)?, run);
+    }
+    if let Some(run) = playwright_runner(&request.report_type) {
+        return call_report(playwright_options(request, options)?, run);
+    }
+    if let Some(run) = project_runner(&request.report_type) {
+        return call_report(project_options(request, options)?, run);
+    }
+    bail!(
+        "unknown analyzeProject report type: {}",
+        request.report_type
+    )
+}
+
+fn graph_direction(report_type: &str) -> Option<Direction> {
+    match report_type {
+        "dependencies" => Some(Direction::Deps),
+        "dependents" | "related" => Some(Direction::Dependents),
+        _ => None,
+    }
+}
+
+fn symbols_runner(report_type: &str) -> Option<ReportRunner> {
+    match report_type {
+        "symbols" => Some(super::symbols_json_impl),
+        _ => None,
+    }
+}
+
+fn playwright_runner(report_type: &str) -> Option<ReportRunner> {
+    match report_type {
+        "playwrightCheck" => Some(super::playwright_check_json_impl),
+        "playwrightEdges" => Some(super::playwright_edges_json_impl),
+        "playwrightRelated" => Some(super::playwright_related_json_impl),
+        "playwrightTests" => Some(super::playwright_tests_json_impl),
+        _ => None,
+    }
+}
+
+fn project_runner(report_type: &str) -> Option<ReportRunner> {
+    match report_type {
+        "queues" => Some(super::queues_json_impl),
+        "queueEdges" => Some(super::queue_edges_json_impl),
+        "queueRelated" => Some(super::queue_related_json_impl),
+        "queueCheck" => Some(super::queue_check_json_impl),
+        "serverRoutes" => Some(super::server_routes_json_impl),
+        "serverRouteList" => Some(super::server_route_list_json_impl),
+        "serverRouteEdges" => Some(super::server_route_edges_json_impl),
+        "serverRouteRelated" => Some(super::server_route_related_json_impl),
+        "reactAnalyze" => Some(super::react_analyze_json_impl),
+        "reactCheck" => Some(super::react_check_json_impl),
+        "check" => Some(super::check_json_impl),
+        _ => None,
+    }
 }
 
 fn graph_report(
@@ -164,7 +167,17 @@ fn traverse_args(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,
 ) -> AnyhowResult<TraverseArgs> {
+    reject_graph_scope_overrides(request)?;
     build_traverse_args(options::traverse_options(request, options)?)
+}
+
+fn reject_graph_scope_overrides(request: &AnalyzeReportRequest) -> AnyhowResult<()> {
+    if request.options.contains_key("root") || request.options.contains_key("tsconfig") {
+        bail!(
+            "graph reports in analyzeProject must use top-level root and tsconfig; per-report root/tsconfig overrides are not supported"
+        );
+    }
+    Ok(())
 }
 
 fn call_report(
