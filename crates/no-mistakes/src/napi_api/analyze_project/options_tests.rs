@@ -55,6 +55,12 @@ fn report_options_merge_top_level_defaults() {
 
     let traverse = options::traverse_options(&options.reports[3], &options).unwrap();
     assert_eq!(traverse.filters, vec!["src/**"]);
+
+    let inherited_symbols = serde_json::from_str::<Value>(
+        &options::symbols_options(&options.reports[3], &options).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(inherited_symbols["root"], fixture_root("simple"));
 }
 
 #[test]
@@ -75,6 +81,19 @@ fn resolve_helpers_handle_defaults_and_explicit_paths() {
     let explicit = options::resolve_tsconfig(&ts_root, Some("tsconfig.json")).unwrap();
     assert_eq!(
         crate::codebase::ts_resolver::normalize_path(&explicit.dir),
+        crate::codebase::ts_resolver::normalize_path(&ts_root)
+    );
+
+    let found = options::resolve_tsconfig(&ts_root, None).unwrap();
+    assert_eq!(
+        crate::codebase::ts_resolver::normalize_path(&found.dir),
+        crate::codebase::ts_resolver::normalize_path(&ts_root)
+    );
+
+    let absolute_path = ts_root.join("tsconfig.json");
+    let absolute = options::resolve_tsconfig(&ts_root, absolute_path.to_str()).unwrap();
+    assert_eq!(
+        crate::codebase::ts_resolver::normalize_path(&absolute.dir),
         crate::codebase::ts_resolver::normalize_path(&ts_root)
     );
 }
