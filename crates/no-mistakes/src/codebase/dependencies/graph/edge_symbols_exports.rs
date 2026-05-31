@@ -111,14 +111,21 @@ fn collect_direct_reexport_edge(
     let ExportKind::ReExport { source, imported } = &export.kind else {
         return;
     };
-    if imported == "*" {
+    if imported == "*" && export_symbol == "*" {
         return;
     }
     let from = NodeId::Symbol {
         file: inputs.path.to_path_buf(),
         symbol: export_symbol.to_string(),
     };
+    if imported == "*" {
+        return;
+    }
     if let Some(target) = inputs.resolver.resolve(source, inputs.path) {
+        if !is_indexable(&target) {
+            edges.push((from, NodeId::File(target), EdgeKind::AssetImport));
+            return;
+        }
         let kind = symbol_edge_kind(
             export.is_type_only || target_export_is_type(&target, imported, inputs.facts),
         );

@@ -19,8 +19,8 @@ fn exported_local_is_callable(
     symbols.exports.iter().any(|export| {
         export_local_name(export) == local
             && (matches!(export.kind, ExportKind::Function | ExportKind::Class)
-                || matches!(export.kind, ExportKind::Default)
-                    && exported_functions.iter().any(|name| name == local))
+                || (exported_functions.iter().any(|name| name == local)
+                    && !matches!(export.kind, ExportKind::TypeAlias | ExportKind::Interface)))
     })
 }
 

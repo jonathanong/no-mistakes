@@ -3,10 +3,15 @@ fn visit_method_definition_with_scope<'a>(
     method: &MethodDefinition<'a>,
 ) {
     let name = crate::codebase::ts_source::static_property_key_name(&method.key);
+    let saved_function_stack = std::mem::take(&mut collector.function_stack);
     walk::walk_decorators(collector, &method.decorators);
     walk::walk_property_key(collector, &method.key);
+    collector.function_stack = saved_function_stack;
     let pushed = name.is_some();
     collector.push_function_scope(name.map(str::to_string));
+    if let Some(scope) = collector.current_function() {
+        collector.callable_scopes.insert(scope);
+    }
     collector.add_type_parameter_names(method.value.type_parameters.as_deref());
     collector.add_formal_parameters(&method.value.params);
     walk::walk_function(
@@ -27,6 +32,9 @@ fn visit_object_property_with_scope<'a>(
             walk::walk_property_key(collector, &property.key);
             let pushed = name.is_some();
             collector.push_function_scope(name.map(str::to_string));
+            if let Some(scope) = collector.current_function() {
+                collector.callable_scopes.insert(scope);
+            }
             collector.add_type_parameter_names(function.type_parameters.as_deref());
             collector.add_formal_parameters(&function.params);
             walk::walk_function(
@@ -40,6 +48,9 @@ fn visit_object_property_with_scope<'a>(
             walk::walk_property_key(collector, &property.key);
             let pushed = name.is_some();
             collector.push_function_scope(name.map(str::to_string));
+            if let Some(scope) = collector.current_function() {
+                collector.callable_scopes.insert(scope);
+            }
             collector.add_type_parameter_names(arrow.type_parameters.as_deref());
             collector.add_formal_parameters(&arrow.params);
             walk::walk_arrow_function_expression(collector, arrow);
@@ -53,6 +64,14 @@ fn visit_class_with_scope<'a>(collector: &mut ImportCollector, class: &Class<'a>
     if collector.current_function().is_none() {
         if let Some(name) = class.id.as_ref().map(|id| id.name.as_str()) {
             record_class_member_calls(collector, name, class);
+            collector.push_function_scope(Some(name.to_string()));
+            if collector.export_depth > 0 {
+                collector.exported_functions.insert(name.to_string());
+            }
+            collector.callable_scopes.insert(name.to_string());
+            walk::walk_class(collector, class);
+            collector.pop_function_scope(true);
+            return;
         }
     }
     walk::walk_class(collector, class);
@@ -63,7 +82,9 @@ fn visit_export_default_declaration_with_scope<'a>(
     export: &ExportDefaultDeclaration<'a>,
 ) {
     if let ExportDefaultDeclarationKind::Identifier(identifier) = &export.declaration {
-        collector.exported_functions.insert(identifier.name.to_string());
+        if collector.callable_scopes.contains(identifier.name.as_str()) {
+            collector.exported_functions.insert(identifier.name.to_string());
+        }
     }
     collector.export_depth += 1;
     if let ExportDefaultDeclarationKind::FunctionDeclaration(function) = &export.declaration {
@@ -76,6 +97,8 @@ fn visit_export_default_declaration_with_scope<'a>(
     match &export.declaration {
         ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
             collector.push_function_scope(Some("default".to_string()));
+            collector.exported_functions.insert("default".to_string());
+            collector.callable_scopes.insert("default".to_string());
             collector.add_type_parameter_names(arrow.type_parameters.as_deref());
             collector.add_formal_parameters(&arrow.params);
             walk::walk_arrow_function_expression(collector, arrow);
@@ -84,6 +107,15 @@ fn visit_export_default_declaration_with_scope<'a>(
         }
         ExportDefaultDeclarationKind::FunctionExpression(function) => {
             walk_default_function(collector, function);
+            collector.export_depth -= 1;
+        }
+        ExportDefaultDeclarationKind::ClassDeclaration(class) => {
+            record_class_member_calls(collector, "default", class);
+            collector.push_function_scope(Some("default".to_string()));
+            collector.exported_functions.insert("default".to_string());
+            collector.callable_scopes.insert("default".to_string());
+            walk::walk_class(collector, class);
+            collector.pop_function_scope(true);
             collector.export_depth -= 1;
         }
         _ => {
@@ -138,6 +170,8 @@ fn record_member_call(collector: &mut ImportCollector, parent: &str, name: Optio
 
 fn walk_default_function<'a>(collector: &mut ImportCollector, function: &oxc::ast::ast::Function<'a>) {
     collector.push_function_scope(Some("default".to_string()));
+    collector.exported_functions.insert("default".to_string());
+    collector.callable_scopes.insert("default".to_string());
     collector.add_type_parameter_names(function.type_parameters.as_deref());
     collector.add_formal_parameters(&function.params);
     walk::walk_function(

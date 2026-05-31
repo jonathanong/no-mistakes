@@ -97,8 +97,14 @@ pub(crate) fn collect_and_filter_entries(
 
     let tsconfig = resolve_tsconfig(args, &root)?;
     let graph_files = graph::GraphFiles::discover(&root);
-    let entrypoints =
-        resolve_entrypoints_with_files(&args.files, &root, cwd_early, &graph_files, args.symbols);
+    let entrypoints = resolve_entrypoints_with_files(
+        &args.files,
+        &args.file_symbols,
+        &root,
+        cwd_early,
+        &graph_files,
+        args.symbols,
+    );
 
     timings.mark("search");
 

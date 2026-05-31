@@ -9,13 +9,18 @@ pub(crate) enum EntrypointOption {
 }
 
 impl EntrypointOption {
-    pub(crate) fn into_cli_string(self) -> String {
+    pub(crate) fn into_parts(self) -> (String, Option<String>) {
         match self {
-            Self::Path(path) => path,
-            Self::Symbol { file, symbol } => match symbol {
-                Some(symbol) if !symbol.is_empty() => format!("{file}#{symbol}"),
-                _ => file,
-            },
+            Self::Path(path) => (path, None),
+            Self::Symbol { file, symbol } => (file, symbol.filter(|symbol| !symbol.is_empty())),
+        }
+    }
+
+    pub(crate) fn into_cli_string(self) -> String {
+        let (file, symbol) = self.into_parts();
+        match symbol {
+            Some(symbol) => format!("{file}#{symbol}"),
+            None => file,
         }
     }
 }

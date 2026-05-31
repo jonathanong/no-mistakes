@@ -197,6 +197,7 @@ fn deps_direction_rejects_symbol_entrypoints() {
         .join("fixture");
     let args = TraverseArgs {
         files: vec![PathBuf::from("a.mts#a")],
+        file_symbols: Vec::new(),
         root: Some(root),
         tsconfig: None,
         depth: None,
@@ -244,6 +245,7 @@ fn symbol_root() -> PathBuf {
 fn traverse_args(root: PathBuf, files: Vec<PathBuf>) -> TraverseArgs {
     TraverseArgs {
         files,
+        file_symbols: Vec::new(),
         root: Some(root),
         tsconfig: None,
         depth: Some(3),

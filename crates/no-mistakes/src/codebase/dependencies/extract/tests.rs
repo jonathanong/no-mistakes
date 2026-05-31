@@ -356,6 +356,10 @@ fn fixture_assignment_pattern_shadows_imported_calls() {
         .collect();
 
     assert!(calls.is_empty());
+    assert!(!facts
+        .symbol_references
+        .iter()
+        .any(|call| call.caller.as_deref() == Some("run") && call.callee == "loaded"));
 }
 
 #[test]
@@ -409,7 +413,11 @@ fn fixture_var_binding_shadows_outside_block_references() {
         .filter(|call| call.caller.as_deref() == Some("run") && call.callee == "loaded")
         .collect();
 
-    assert!(calls.is_empty());
+    assert_eq!(calls.len(), 1);
+    assert!(!facts
+        .symbol_references
+        .iter()
+        .any(|call| call.caller.as_deref() == Some("run") && call.callee == "loaded"));
 }
 
 #[test]
@@ -527,7 +535,7 @@ fn fixture_computed_function_keys_are_visited_outside_scopes() {
             ("./key.mts", None),
             ("./loaded.mts", None),
             ("./method-key.mts", None),
-            ("./loaded.mts", None)
+            ("./loaded.mts", Some("Loader"))
         ]
     );
 }

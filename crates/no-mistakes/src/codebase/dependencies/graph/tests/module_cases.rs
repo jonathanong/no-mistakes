@@ -269,6 +269,30 @@ fn import_fact_kinds_map_to_edge_kinds() {
 }
 
 #[test]
+fn type_imports_in_exported_symbol_scopes_are_reachable() {
+    let import = ExtractedImport {
+        specifier: "./target.mts".to_string(),
+        kind: ImportKind::Type,
+        function_scope: Some("PublicShape".to_string()),
+    };
+    let facts = crate::codebase::ts_source::facts::TsFileFacts {
+        symbols: Some(crate::codebase::ts_symbols::FileSymbols {
+            exports: vec![crate::codebase::ts_symbols::Export {
+                name: "PublicShape".to_string(),
+                local: None,
+                kind: crate::codebase::ts_symbols::ExportKind::TypeAlias,
+                line: 1,
+                is_type_only: true,
+            }],
+            imports: vec![],
+        }),
+        ..Default::default()
+    };
+
+    assert!(import_is_reachable(&import, &facts, &HashSet::new()));
+}
+
+#[test]
 fn unknown_call_reachability_treats_none_as_conservative() {
     let facts = crate::codebase::ts_source::facts::TsFileFacts {
         unknown_callers: vec![None],

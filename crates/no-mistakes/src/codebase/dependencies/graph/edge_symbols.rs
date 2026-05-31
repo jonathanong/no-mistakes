@@ -31,13 +31,17 @@ fn collect_symbol_edges(
         for imported in fallback_imported_symbols(
             symbols.exports.is_empty(),
             &file_facts.function_calls,
+            &file_facts.symbol_references,
             &imported_symbols,
         ) {
             let (node, kind) = target_node(imported);
             edges.push((NodeId::File(path.clone()), node, kind));
         }
-        for (node, kind) in fallback_namespace_symbols(&file_facts.function_calls, &namespace_imports)
-        {
+        for (node, kind) in fallback_namespace_symbols(
+            &file_facts.function_calls,
+            &file_facts.symbol_references,
+            &namespace_imports,
+        ) {
             edges.push((NodeId::File(path.clone()), node, kind));
         }
         collect_export_reference_edges(

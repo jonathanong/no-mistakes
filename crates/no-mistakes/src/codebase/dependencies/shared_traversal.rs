@@ -57,6 +57,7 @@ pub(crate) fn collect_and_filter_entries_shared(
 ) -> Result<TraversalResult> {
     let entrypoints = resolve_entrypoints_with_files(
         &args.files,
+        &args.file_symbols,
         &shared.root,
         cwd_early,
         &shared.graph_files,
@@ -97,6 +98,7 @@ pub(crate) fn collect_and_filter_entries_shared(
         Direction::Dependents if args.symbols => {
             let graph = shared.graph();
             let roots = roots_with_existing_queue_jobs(&roots, &entrypoints, graph);
+            let roots = roots_with_exported_symbol_roots(&roots, graph);
             graph.dependents_of_symbol_nodes(&roots, args.depth, allowed.as_ref())
         }
         Direction::Dependents if any_symbol && shared.build_plan.symbols => {

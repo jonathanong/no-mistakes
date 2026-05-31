@@ -309,6 +309,33 @@ fn analyze_project_shared_dependents_uses_symbol_graph_when_included() {
 }
 
 #[test]
+fn analyze_project_shared_symbol_dependents_expands_file_roots() {
+    let output = analyze_project_json_impl(
+        json!({
+            "root": fixture_root("symbol-export"),
+            "reports": [{
+                "type": "dependents",
+                "id": "users",
+                "includeSymbols": true,
+                "relationships": ["import"],
+                "files": ["file-root-source.mts"]
+            }]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let value: Value = serde_json::from_str(&output).unwrap();
+    let files = value["reports"][0]["result"]["files"].as_array().unwrap();
+
+    assert!(files
+        .iter()
+        .any(|file| file["path"] == "file-root-consumer.mts"));
+    assert!(files
+        .iter()
+        .any(|file| file["file"] == "file-root-consumer.mts" && file["symbol"] == "value"));
+}
+
+#[test]
 fn tests_impact_api_requires_entrypoints() {
     let error = crate::napi_api::cli_parity::build_impact_args(
         crate::napi_api::options::TestsImpactOptions {

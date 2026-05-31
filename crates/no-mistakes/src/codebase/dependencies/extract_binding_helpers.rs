@@ -48,11 +48,18 @@ fn push_variable_function_scope<'a>(
 ) {
     if exported_top_level_binding(collector, name.as_ref()) {
         collector.push_function_scope(name);
+        if let Some(scope) = collector.current_function() {
+            collector.exported_functions.insert(scope.clone());
+            collector.callable_scopes.insert(scope);
+        }
         walk::walk_binding_pattern(collector, &declarator.id);
         walk_variable_type_annotation(collector, declarator);
     } else if name.is_some() {
         walk::walk_binding_pattern(collector, &declarator.id);
         collector.push_function_scope(name);
+        if let Some(scope) = collector.current_function() {
+            collector.callable_scopes.insert(scope);
+        }
     } else {
         walk::walk_binding_pattern(collector, &declarator.id);
         collector.push_anonymous_function_scope();
@@ -74,7 +81,7 @@ impl ImportCollector {
     fn should_record_call(&self, callee: &str) -> bool {
         let binding = callee.split_once('.').map_or(callee, |(binding, _)| binding);
         if self.local_binding_shadows(binding) {
-            !self.imported_bindings.contains(binding) && self.has_local_function_scope(binding)
+            self.has_local_function_scope(binding)
         } else {
             true
         }

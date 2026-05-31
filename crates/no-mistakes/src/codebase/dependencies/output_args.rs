@@ -6,6 +6,10 @@ pub struct TraverseArgs {
     #[arg(required = true, value_name = "FILE")]
     pub files: Vec<PathBuf>,
 
+    /// Programmatic API symbol entrypoints parallel to `files`.
+    #[arg(skip)]
+    pub file_symbols: Vec<Option<String>>,
+
     /// Project root directory (default: current working directory).
     #[arg(long, value_name = "PATH")]
     pub root: Option<PathBuf>,

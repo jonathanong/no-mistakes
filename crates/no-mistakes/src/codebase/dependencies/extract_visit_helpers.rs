@@ -3,15 +3,24 @@ impl ImportCollector {
         self.function_stack.last().cloned()
     }
 
-    fn push_symbol_reference(&mut self, name: String) {
-        let Some(caller) = self.current_function() else {
-            return;
-        };
+    fn push_value_symbol_reference(&mut self, name: String) {
+        let caller = self.current_function();
         if self.callee_shadows_import(&name) {
             return;
         }
         self.symbol_references.push(FunctionCall {
-            caller: Some(caller),
+            caller,
+            callee: name,
+        });
+    }
+
+    fn push_type_symbol_reference(&mut self, name: String) {
+        let binding = name.split_once('.').map_or(name.as_str(), |(binding, _)| binding);
+        if self.type_binding_shadows(binding) {
+            return;
+        }
+        self.symbol_references.push(FunctionCall {
+            caller: self.current_function(),
             callee: name,
         });
     }
@@ -27,11 +36,13 @@ impl ImportCollector {
 
     fn add_type_parameter_names(&mut self, params: Option<&TSTypeParameterDeclaration<'_>>) {
         let Some(params) = params else { return };
-        let Some(scope) = self.local_stack.last_mut() else {
-            return;
-        };
         for param in &params.params {
-            scope.insert(param.name.name.to_string());
+            if let Some(scope) = self.type_local_stack.last_mut() {
+                scope.insert(param.name.name.to_string());
+            }
+            if let Some(scope) = self.local_stack.last_mut() {
+                scope.insert(param.name.name.to_string());
+            }
         }
     }
 
@@ -65,6 +76,13 @@ impl ImportCollector {
 
     fn local_binding_shadows(&self, name: &str) -> bool {
         self.local_stack
+            .iter()
+            .rev()
+            .any(|scope| scope.contains(name))
+    }
+
+    fn type_binding_shadows(&self, name: &str) -> bool {
+        self.type_local_stack
             .iter()
             .rev()
             .any(|scope| scope.contains(name))
@@ -125,7 +143,11 @@ fn visit_variable_declarator_with_scope<'a>(
             if let Some(name) = name.as_deref() {
                 record_object_member_calls(collector, name, object);
             }
-            walk::walk_variable_declarator(collector, declarator);
+            if collector.export_depth > 0 {
+                visit_exported_variable_declarator_reference(collector, declarator, name);
+            } else {
+                walk::walk_variable_declarator(collector, declarator);
+            }
         }
         _ if name.is_some()
             && collector.function_stack.is_empty()
@@ -176,26 +198,4 @@ fn visit_catch_clause_with_scope<'a>(collector: &mut ImportCollector, clause: &C
     }
     walk::walk_catch_clause(collector, clause);
     collector.pop_lexical_scope(pushed);
-}
-
-fn visit_exported_type_alias_declaration<'a>(
-    collector: &mut ImportCollector,
-    declaration: &TSTypeAliasDeclaration<'a>,
-) {
-    let pushed = true;
-    collector.push_function_scope(Some(declaration.id.name.to_string()));
-    collector.add_type_parameter_names(declaration.type_parameters.as_deref());
-    walk::walk_ts_type_alias_declaration(collector, declaration);
-    collector.pop_function_scope(pushed);
-}
-
-fn visit_exported_interface_declaration<'a>(
-    collector: &mut ImportCollector,
-    declaration: &TSInterfaceDeclaration<'a>,
-) {
-    let pushed = true;
-    collector.push_function_scope(Some(declaration.id.name.to_string()));
-    collector.add_type_parameter_names(declaration.type_parameters.as_deref());
-    walk::walk_ts_interface_declaration(collector, declaration);
-    collector.pop_function_scope(pushed);
 }

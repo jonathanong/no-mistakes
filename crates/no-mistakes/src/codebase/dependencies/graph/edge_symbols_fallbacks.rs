@@ -1,6 +1,7 @@
 fn fallback_imported_symbols<'a>(
     include_all: bool,
     calls: &[crate::codebase::dependencies::extract::FunctionCall],
+    refs: &[crate::codebase::dependencies::extract::FunctionCall],
     imported_symbols: &'a HashMap<String, ImportedSymbolTarget>,
 ) -> Vec<&'a ImportedSymbolTarget> {
     let mut imports = Vec::new();
@@ -10,7 +11,7 @@ fn fallback_imported_symbols<'a>(
         imports.dedup_by_key(|target| target_node(target));
         return imports;
     }
-    for call in calls {
+    for call in calls.iter().chain(refs) {
         if call.caller.is_some() {
             continue;
         }
@@ -25,10 +26,11 @@ fn fallback_imported_symbols<'a>(
 
 fn fallback_namespace_symbols(
     calls: &[crate::codebase::dependencies::extract::FunctionCall],
+    refs: &[crate::codebase::dependencies::extract::FunctionCall],
     namespace_imports: &HashMap<String, ImportedSymbolTarget>,
 ) -> Vec<(NodeId, EdgeKind)> {
     let mut nodes = Vec::new();
-    for call in calls {
+    for call in calls.iter().chain(refs) {
         if call.caller.is_some() {
             continue;
         }

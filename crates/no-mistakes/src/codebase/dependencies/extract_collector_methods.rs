@@ -23,6 +23,7 @@ impl ImportCollector {
             self.function_stack.push(scope);
             self.function_scope_stack.push(self.local_stack.len());
             self.local_stack.push(HashSet::new());
+            self.type_local_stack.push(HashSet::new());
         }
     }
 
@@ -34,9 +35,16 @@ impl ImportCollector {
             .last()
             .map(|parent| format!("{parent}/{name}"))
             .unwrap_or(name);
+        if let Some(parent) = self.function_stack.last() {
+            self.function_calls.push(FunctionCall {
+                caller: Some(parent.clone()),
+                callee: scope.clone(),
+            });
+        }
         self.function_stack.push(scope);
         self.function_scope_stack.push(self.local_stack.len());
         self.local_stack.push(HashSet::new());
+        self.type_local_stack.push(HashSet::new());
     }
 
     fn pop_function_scope(&mut self, pushed: bool) {
@@ -44,12 +52,14 @@ impl ImportCollector {
             self.function_stack.pop();
             self.function_scope_stack.pop();
             self.local_stack.pop();
+            self.type_local_stack.pop();
         }
     }
 
     fn push_lexical_scope(&mut self) -> bool {
         if self.current_function().is_some() {
             self.local_stack.push(HashSet::new());
+            self.type_local_stack.push(HashSet::new());
             true
         } else {
             false
@@ -59,6 +69,7 @@ impl ImportCollector {
     fn pop_lexical_scope(&mut self, pushed: bool) {
         if pushed {
             self.local_stack.pop();
+            self.type_local_stack.pop();
         }
     }
 }

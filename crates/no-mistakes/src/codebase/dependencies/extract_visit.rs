@@ -6,8 +6,11 @@ struct ImportCollector {
     unknown_callers: Vec<Option<String>>,
     function_stack: Vec<String>,
     local_stack: Vec<HashSet<String>>,
+    type_local_stack: Vec<HashSet<String>>,
     function_scope_stack: Vec<usize>,
     exported_functions: HashSet<String>,
+    exported_type_scopes: HashSet<String>,
+    callable_scopes: HashSet<String>,
     export_depth: usize,
     has_unknown_top_level_call: bool,
     anonymous_scope_count: usize,
@@ -29,6 +32,12 @@ impl<'a> Visit<'a> for ImportCollector {
         }
         if name.is_some() {
             self.push_function_scope(name);
+            if let Some(scope) = self.current_function() {
+                self.callable_scopes.insert(scope.clone());
+                if self.export_depth > 0 && self.function_stack.len() == 1 {
+                    self.exported_functions.insert(scope.clone());
+                }
+            }
         } else {
             self.push_anonymous_function_scope();
         }
@@ -158,20 +167,20 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_identifier_reference(&mut self, identifier: &IdentifierReference<'a>) {
-        self.push_symbol_reference(identifier.name.to_string());
+        self.push_value_symbol_reference(identifier.name.to_string());
         walk::walk_identifier_reference(self, identifier);
     }
 
     fn visit_static_member_expression(&mut self, member: &StaticMemberExpression<'a>) {
         if let Some(name) = simple_static_member_name(member) {
-            self.push_symbol_reference(name);
+            self.push_value_symbol_reference(name);
         }
         walk::walk_static_member_expression(self, member);
     }
 
     fn visit_ts_type_reference(&mut self, reference: &TSTypeReference<'a>) {
         if let Some(name) = type_reference_name(reference) {
-            self.push_symbol_reference(name);
+            self.push_type_symbol_reference(name);
         }
         walk::walk_ts_type_reference(self, reference);
     }
@@ -179,7 +188,7 @@ impl<'a> Visit<'a> for ImportCollector {
     fn visit_jsx_opening_element(&mut self, opening: &JSXOpeningElement<'a>) {
         if let Some(name) = crate::codebase::ts_source::jsx::jsx_identifier_name(opening) {
             if name.chars().next().is_some_and(char::is_uppercase) {
-                self.push_symbol_reference(name.to_string());
+                self.push_value_symbol_reference(name.to_string());
             }
         }
         walk::walk_jsx_opening_element(self, opening);
