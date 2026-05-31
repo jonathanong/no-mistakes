@@ -27,8 +27,12 @@ pub fn is_skipped_dir(name: &str) -> bool {
 pub fn walk_files(root: &Path, extra_skip: &[String]) -> Vec<PathBuf> {
     let extra_skip: HashSet<String> = extra_skip.iter().cloned().collect();
 
-    let mut files = walk_non_ignored_files(root, &extra_skip);
+    let mut files = walk_non_ignored_files(root, &extra_skip, &[]);
     files.extend(walk_github_workflow_files(root, &extra_skip));
+    sort_dedup(files)
+}
+
+fn sort_dedup(mut files: Vec<PathBuf>) -> Vec<PathBuf> {
     if !files.is_empty() {
         files.sort();
         files.dedup();
@@ -36,14 +40,27 @@ pub fn walk_files(root: &Path, extra_skip: &[String]) -> Vec<PathBuf> {
     files
 }
 
-fn walk_non_ignored_files(root: &Path, extra_skip: &HashSet<String>) -> Vec<PathBuf> {
-    let extra_skip = extra_skip.clone();
+fn walk_non_ignored_files(
+    root: &Path,
+    extra_skip: &HashSet<String>,
+    preserved_roots: &[PathBuf],
+) -> Vec<PathBuf> {
+    let entry_extra_skip = extra_skip.clone();
+    let file_extra_skip = extra_skip.clone();
+    let preserved_roots = preserved_roots.to_vec();
+    let filter_preserved_roots = preserved_roots.clone();
     WalkBuilder::new(root)
         .hidden(true)
         .filter_entry(move |e| {
+            let path = normalize_discovery_path(e.path());
             let name = e.file_name().to_str().unwrap_or("");
-            if e.depth() > 0 && e.file_type().is_some_and(|ft| ft.is_dir()) {
-                return !SKIP_DIRS.contains(&name) && !extra_skip.contains(name);
+            if e.depth() > 0
+                && e.file_type().is_some_and(|ft| ft.is_dir())
+                && (SKIP_DIRS.contains(&name) || entry_extra_skip.contains(name))
+            {
+                return filter_preserved_roots
+                    .iter()
+                    .any(|root| root.starts_with(&path));
             }
             true
         })
@@ -51,6 +68,13 @@ fn walk_non_ignored_files(root: &Path, extra_skip: &HashSet<String>) -> Vec<Path
         .filter_map(|e| e.ok())
         .filter(|e| e.file_type().is_some_and(|ft| ft.is_file()))
         .map(|e| normalize_discovery_path(e.path()))
+        .filter(|path| {
+            let skip: HashSet<&str> = file_extra_skip.iter().map(String::as_str).collect();
+            !is_under_skipped_dir(root, path, &skip)
+                || preserved_roots.iter().any(|root| {
+                    path.starts_with(root) && !is_under_skipped_dir(root, path, &skip)
+                })
+        })
         .collect()
 }
 

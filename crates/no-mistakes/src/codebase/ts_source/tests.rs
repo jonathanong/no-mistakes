@@ -12,6 +12,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::TempDir;
 
+mod discovery_preserve;
+
 fn git_init(dir: &Path) {
     let output = Command::new("git")
         .args(["init", "-q", "--initial-branch=main"])

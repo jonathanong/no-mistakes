@@ -48,7 +48,14 @@ fn standalone_filesystem_rules_share_one_discovered_file_list() {
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let config = root.join(".no-mistakes.yml");
 
-    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let loaded = crate::config::v2::load_v2_config(&root, Some(&config)).unwrap();
+    let preserved_roots =
+        preserved::filesystem_rule_target_roots(&root, &loaded, FILESYSTEM_RULE_IDS);
+    let files = crate::codebase::ts_source::discover_files_preserving_roots(
+        &root,
+        &loaded.filesystem.skip_directories,
+        &preserved_roots,
+    );
     let expected = run_filesystem_rules_with_files(&root, Some(&config), &files).unwrap();
     let findings = run_filesystem_rules(&root, Some(&config)).unwrap();
 
@@ -64,6 +71,40 @@ fn standalone_filesystem_rules_share_one_discovered_file_list() {
     assert_eq!(
         findings, expected,
         "standalone dispatch should match one shared pre-discovered file list"
+    );
+}
+
+#[test]
+fn standalone_filesystem_rules_preserve_project_roots_under_skipped_dirs() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/filesystem-dispatch/project-under-skipped-dir/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let config = root.join(".no-mistakes.yml");
+
+    let findings = run_filesystem_rules(&root, Some(&config)).unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].rule, RUST_NO_INLINE_TESTS);
+    assert_eq!(findings[0].file, "fixtures/app/src/lib.rs");
+}
+
+#[test]
+fn standalone_filesystem_rules_preserve_option_roots_without_leaking() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/filesystem-dispatch/option-root-under-skipped-dir/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let config = root.join(".no-mistakes.yml");
+
+    let findings = run_filesystem_rules(&root, Some(&config)).unwrap();
+
+    let pairs: Vec<(&str, &str)> = findings
+        .iter()
+        .map(|finding| (finding.rule.as_str(), finding.file.as_str()))
+        .collect();
+    assert_eq!(
+        pairs,
+        vec![(RUST_NO_INLINE_TESTS, "fixtures/app/src/lib.rs")],
+        "{findings:#?}"
     );
 }
 

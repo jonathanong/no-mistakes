@@ -12,6 +12,8 @@ use super::{
     shellcheck_runner, strict_package_layout, tsconfig_alias_folder_mapping,
     vitest_test_correspondence,
 };
+
+mod preserved;
 use super::{
     rule_enabled, suppress_rule_findings, RuleFinding, AGENTS_MD_MAX_SIZE, BANNED_RENAMED_FILES,
     DOC_CONSISTENCY, FILE_EXTENSION_POLICY, LOCKFILE_ALLOWLIST, NO_EMPTY_OR_COMMENTS_ONLY_FILES,
@@ -76,8 +78,13 @@ pub fn run_filesystem_rules(root: &Path, config_path: Option<&Path>) -> Result<V
     {
         return Ok(Vec::new());
     }
-    let files =
-        crate::codebase::ts_source::discover_files(root, &config.filesystem.skip_directories);
+    let preserved_roots =
+        preserved::filesystem_rule_target_roots(root, &config, FILESYSTEM_RULE_IDS);
+    let files = crate::codebase::ts_source::discover_files_preserving_roots(
+        root,
+        &config.filesystem.skip_directories,
+        &preserved_roots,
+    );
     run_filesystem_rules_with_config(root, &config, &files)
 }
 
@@ -93,7 +100,8 @@ fn run_filesystem_rules_with_config(
                 $(
                     if rule_enabled(config, $id) {
                         s.spawn(|_| {
-                            let res = $call(root, config, files);
+                            let rule_files = preserved::filesystem_rule_files(root, config, $id, files);
+                            let res = $call(root, config, &rule_files);
                             acc.lock().unwrap().push(($id, res));
                         });
                     }

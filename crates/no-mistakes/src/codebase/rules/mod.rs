@@ -28,7 +28,7 @@ pub(crate) mod path_filter;
 mod run;
 
 use serde::Serialize;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 pub use filesystem_dispatch::{run_filesystem_rules, run_filesystem_rules_with_files};
@@ -98,6 +98,33 @@ pub(crate) fn target_roots(
     roots.sort();
     roots.dedup();
     roots
+}
+
+pub(crate) fn file_allowed_by_roots_and_skip(
+    root: &Path,
+    skip: &HashSet<&str>,
+    path: &Path,
+    roots: &[PathBuf],
+) -> bool {
+    if !roots.iter().any(|rule_root| path.starts_with(rule_root)) {
+        return false;
+    }
+    if !crate::codebase::ts_source::is_under_skipped_dir(root, path, skip) {
+        return true;
+    }
+    roots.iter().any(|rule_root| {
+        path.starts_with(rule_root)
+            && !crate::codebase::ts_source::is_under_skipped_dir(rule_root, path, skip)
+    })
+}
+
+pub(crate) fn skip_dir_set(config: &crate::config::v2::NoMistakesConfig) -> HashSet<&str> {
+    config
+        .filesystem
+        .skip_directories
+        .iter()
+        .map(String::as_str)
+        .collect()
 }
 
 fn target_project_root(

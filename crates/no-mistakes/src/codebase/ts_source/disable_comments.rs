@@ -7,7 +7,7 @@ fn normalize_discovery_path(path: &Path) -> PathBuf {
     }
 }
 
-fn is_under_skipped_dir(root: &Path, path: &Path, extra_skip: &HashSet<&str>) -> bool {
+pub(crate) fn is_under_skipped_dir(root: &Path, path: &Path, extra_skip: &HashSet<&str>) -> bool {
     path.strip_prefix(root).ok().is_some_and(|rel| {
         rel.components().any(|component| {
             component

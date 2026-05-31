@@ -8,6 +8,7 @@ pub mod facts;
 pub mod jsx;
 
 include!("discovery.rs");
+include!("discovery_preserve.rs");
 include!("disable_comments.rs");
 include!("comment_parser.rs");
 include!("comment_parser_modes.rs");
