@@ -108,3 +108,90 @@ fn tests_plan_symbols_changed_file_seeds_exported_symbols() {
         .collect();
     assert_eq!(test_files, vec!["alpha-consumer.test.mts"]);
 }
+
+#[test]
+fn dependencies_symbols_keep_type_shadows_scoped_to_declaring_function() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "type-shadow-scope.mts#PublicShape",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-type",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "source.mts#SourceShape\n");
+}
+
+#[test]
+fn dependencies_symbols_type_parameters_do_not_shadow_values() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "type-parameter-value-call.mts#run",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "source.mts#alpha\n");
+}
+
+#[test]
+fn dependencies_symbols_hoisted_local_functions_shadow_imports() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "hoisted-local-function.mts#run",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "");
+}
+
+#[test]
+fn dependents_symbols_follow_nested_star_reexports() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependents",
+        "source.mts#alpha",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert!(stdout(&output).contains("nested-star-consumer.mts#value\n"));
+}
+
+#[test]
+fn dependencies_symbols_preserve_references_inside_object_aliases() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "object-alias-spread.mts#api",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "source.mts#alpha\n");
+}

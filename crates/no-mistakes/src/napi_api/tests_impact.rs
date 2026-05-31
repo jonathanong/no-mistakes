@@ -111,19 +111,31 @@ fn tests_plan_json_without_input_returns_empty() {
 #[test]
 fn entrypoint_option_without_symbol_parts_as_file_only() {
     assert_eq!(
-        super::options::EntrypointOption::Symbol {
+        super::options::EntrypointOption::Symbol(super::options::EntrypointSymbolOption {
             file: "src/a.mts".to_string(),
             symbol: None,
-        }
+        })
         .into_parts(),
         ("src/a.mts".to_string(), None)
     );
     assert_eq!(
-        super::options::EntrypointOption::Symbol {
+        super::options::EntrypointOption::Symbol(super::options::EntrypointSymbolOption {
             file: "src/a.mts".to_string(),
             symbol: Some(String::new()),
-        }
+        })
         .into_parts(),
         ("src/a.mts".to_string(), None)
     );
+}
+
+#[test]
+fn entrypoint_option_rejects_unknown_symbol_fields() {
+    let root = fixture_root("tests-impact-symbol");
+    let options = json!({
+        "root": root,
+        "symbols": true,
+        "entrypoints": [{ "file": "utils.mts", "symbl": "parseDate" }]
+    })
+    .to_string();
+    tests_plan_json_impl(options).unwrap_err();
 }

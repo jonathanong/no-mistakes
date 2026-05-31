@@ -7,11 +7,11 @@ struct ImportCollector {
     function_stack: Vec<String>,
     local_stack: Vec<HashSet<String>>,
     type_local_stack: Vec<HashSet<String>>,
+    type_parameter_stack: Vec<HashSet<String>>,
     function_scope_stack: Vec<usize>,
     exported_functions: HashSet<String>,
     exported_type_scopes: HashSet<String>,
     callable_scopes: HashSet<String>,
-    local_type_declarations: HashSet<String>,
     export_depth: usize,
     has_unknown_top_level_call: bool,
     anonymous_scope_count: usize,
@@ -21,15 +21,7 @@ struct ImportCollector {
 
 impl<'a> Visit<'a> for ImportCollector {
     fn visit_statement(&mut self, statement: &Statement<'a>) {
-        match statement {
-            Statement::TSTypeAliasDeclaration(declaration) => {
-                self.add_type_binding_name(declaration.id.name.as_str());
-            }
-            Statement::TSInterfaceDeclaration(declaration) => {
-                self.add_type_binding_name(declaration.id.name.as_str());
-            }
-            _ => {}
-        }
+        record_statement_type_binding(self, statement);
         walk::walk_statement(self, statement);
     }
 
@@ -57,6 +49,7 @@ impl<'a> Visit<'a> for ImportCollector {
         }
         self.add_type_parameter_names(function.type_parameters.as_deref());
         self.add_formal_parameters(&function.params);
+        predeclare_function_body(self, function);
         walk::walk_function(self, function, flags);
         self.pop_function_scope(true);
     }
@@ -206,10 +199,11 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_ts_type_reference(&mut self, reference: &TSTypeReference<'a>) {
-        if let Some(name) = type_reference_name(reference) {
-            self.push_type_symbol_reference(name);
-        }
-        walk::walk_ts_type_reference(self, reference);
+        visit_ts_type_reference_without_name_walk(self, reference);
+    }
+
+    fn visit_ts_type_parameter(&mut self, parameter: &TSTypeParameter<'a>) {
+        visit_ts_type_parameter_without_name_walk(self, parameter);
     }
 
     fn visit_jsx_opening_element(&mut self, opening: &JSXOpeningElement<'a>) {

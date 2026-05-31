@@ -131,7 +131,6 @@ pub(crate) fn collect_file_facts(
         imports: import_facts.imports,
         function_calls: import_facts.function_calls,
         symbol_references: import_facts.symbol_references,
-        local_type_declarations: Default::default(),
         exported_functions: import_facts.exported_functions,
         unknown_callers: import_facts.unknown_callers,
         has_unknown_top_level_call: import_facts.has_unknown_top_level_call,

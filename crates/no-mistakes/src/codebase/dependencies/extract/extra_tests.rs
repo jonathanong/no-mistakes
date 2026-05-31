@@ -40,6 +40,21 @@ fn inline_function_like_members_record_parameters_and_type_parameters() {
 }
 
 #[test]
+fn generic_type_parameters_shadow_imported_type_references() {
+    let allocator = Allocator::default();
+    let ret = Parser::new(
+        &allocator,
+        "import type { SourceShape } from './source.mts';\nexport type Box<SourceShape> = SourceShape;",
+        SourceType::ts(),
+    )
+    .parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+
+    assert_eq!(facts.symbol_references, Vec::<FunctionCall>::new());
+}
+
+#[test]
 fn collector_defensive_scope_helpers_are_noops_without_active_scope() {
     let allocator = Allocator::default();
     let ret = Parser::new(

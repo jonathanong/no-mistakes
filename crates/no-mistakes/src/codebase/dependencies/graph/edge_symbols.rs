@@ -90,12 +90,6 @@ fn collect_symbol_edges(
                         }
                     }
                     for symbol_ref in refs_by_caller.get(&caller).into_iter().flatten() {
-                        let binding = symbol_ref
-                            .split_once('.')
-                            .map_or(symbol_ref.as_str(), |(binding, _)| binding);
-                        if file_facts.local_type_declarations.contains(binding) {
-                            continue;
-                        }
                         if let Some((target, kind)) = resolve_imported_callee(
                             symbol_ref,
                             &imported_symbols,

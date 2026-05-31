@@ -24,6 +24,7 @@ impl ImportCollector {
             self.function_scope_stack.push(self.local_stack.len());
             self.local_stack.push(HashSet::new());
             self.type_local_stack.push(HashSet::new());
+            self.type_parameter_stack.push(HashSet::new());
         }
     }
 
@@ -45,6 +46,7 @@ impl ImportCollector {
         self.function_scope_stack.push(self.local_stack.len());
         self.local_stack.push(HashSet::new());
         self.type_local_stack.push(HashSet::new());
+        self.type_parameter_stack.push(HashSet::new());
     }
 
     fn pop_function_scope(&mut self, pushed: bool) {
@@ -53,6 +55,7 @@ impl ImportCollector {
             self.function_scope_stack.pop();
             self.local_stack.pop();
             self.type_local_stack.pop();
+            self.type_parameter_stack.pop();
         }
     }
 
@@ -60,6 +63,7 @@ impl ImportCollector {
         if self.current_function().is_some() {
             self.local_stack.push(HashSet::new());
             self.type_local_stack.push(HashSet::new());
+            self.type_parameter_stack.push(HashSet::new());
             true
         } else {
             false
@@ -70,6 +74,7 @@ impl ImportCollector {
         if pushed {
             self.local_stack.pop();
             self.type_local_stack.pop();
+            self.type_parameter_stack.pop();
         }
     }
 }

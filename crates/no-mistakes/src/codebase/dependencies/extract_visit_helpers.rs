@@ -14,35 +14,12 @@ impl ImportCollector {
         });
     }
 
-    fn push_type_symbol_reference(&mut self, name: String) {
-        let binding = name.split_once('.').map_or(name.as_str(), |(binding, _)| binding);
-        if self.type_binding_shadows(binding) {
-            return;
-        }
-        self.symbol_references.push(FunctionCall {
-            caller: self.current_function(),
-            callee: name,
-        });
-    }
-
     fn add_formal_parameters(&mut self, params: &FormalParameters<'_>) {
         for param in &params.items {
             self.add_binding_names(&param.pattern);
         }
         if let Some(rest) = &params.rest {
             self.add_binding_names(&rest.rest.argument);
-        }
-    }
-
-    fn add_type_parameter_names(&mut self, params: Option<&TSTypeParameterDeclaration<'_>>) {
-        let Some(params) = params else { return };
-        for param in &params.params {
-            if let Some(scope) = self.type_local_stack.last_mut() {
-                scope.insert(param.name.name.to_string());
-            }
-            if let Some(scope) = self.local_stack.last_mut() {
-                scope.insert(param.name.name.to_string());
-            }
         }
     }
 
@@ -75,7 +52,6 @@ impl ImportCollector {
     }
 
     fn add_type_binding_name(&mut self, name: &str) {
-        self.local_type_declarations.insert(name.to_string());
         if self.type_local_stack.is_empty() {
             self.type_local_stack.push(HashSet::new());
         }
@@ -86,16 +62,6 @@ impl ImportCollector {
 
     fn local_binding_shadows(&self, name: &str) -> bool {
         self.local_stack
-            .iter()
-            .rev()
-            .any(|scope| scope.contains(name))
-    }
-
-    fn type_binding_shadows(&self, name: &str) -> bool {
-        if self.local_type_declarations.contains(name) {
-            return true;
-        }
-        self.type_local_stack
             .iter()
             .rev()
             .any(|scope| scope.contains(name))
@@ -159,6 +125,9 @@ fn visit_variable_declarator_with_scope<'a>(
             if collector.export_depth > 0 {
                 visit_exported_variable_declarator_reference(collector, declarator, name);
             } else {
+                if let Some(name) = name.as_deref() {
+                    record_object_value_references(collector, name, object);
+                }
                 walk::walk_variable_declarator(collector, declarator);
             }
         }
@@ -200,6 +169,7 @@ fn visit_block_statement_with_scope<'a>(
     block: &BlockStatement<'a>,
 ) {
     let pushed = collector.push_lexical_scope();
+    predeclare_function_declarations(collector, &block.body);
     walk::walk_block_statement(collector, block);
     collector.pop_lexical_scope(pushed);
 }

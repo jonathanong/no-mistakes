@@ -7,7 +7,7 @@ fn visit_exported_type_alias_declaration<'a>(
     collector.exported_type_scopes.insert(name.clone());
     collector.push_function_scope(Some(name));
     collector.add_type_parameter_names(declaration.type_parameters.as_deref());
-    walk::walk_ts_type_alias_declaration(collector, declaration);
+    collector.visit_ts_type(&declaration.type_annotation);
     collector.pop_function_scope(pushed);
 }
 
@@ -20,6 +20,7 @@ fn visit_exported_interface_declaration<'a>(
     collector.exported_type_scopes.insert(name.clone());
     collector.push_function_scope(Some(name));
     collector.add_type_parameter_names(declaration.type_parameters.as_deref());
-    walk::walk_ts_interface_declaration(collector, declaration);
+    collector.visit_ts_interface_heritages(&declaration.extends);
+    collector.visit_ts_interface_body(&declaration.body);
     collector.pop_function_scope(pushed);
 }

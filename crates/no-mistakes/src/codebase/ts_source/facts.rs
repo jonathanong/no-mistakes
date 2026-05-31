@@ -13,7 +13,7 @@ use oxc_allocator::Allocator;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 use rayon::prelude::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 pub(crate) mod domain;
@@ -112,7 +112,6 @@ pub struct TsFileFacts {
     pub imports: Vec<ExtractedImport>,
     pub function_calls: Vec<FunctionCall>,
     pub symbol_references: Vec<FunctionCall>,
-    pub local_type_declarations: HashSet<String>,
     pub exported_functions: Vec<String>,
     pub unknown_callers: Vec<Option<String>>,
     pub has_unknown_top_level_call: bool,
@@ -191,7 +190,6 @@ fn collect_file_facts(
         imports: import_facts.imports,
         function_calls: import_facts.function_calls,
         symbol_references: import_facts.symbol_references,
-        local_type_declarations: import_facts.local_type_declarations,
         exported_functions: import_facts.exported_functions,
         unknown_callers: import_facts.unknown_callers,
         has_unknown_top_level_call: import_facts.has_unknown_top_level_call,

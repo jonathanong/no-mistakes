@@ -44,6 +44,7 @@ include!("edge_import_reachability.rs");
 include!("edge_imports.rs");
 include!("edge_symbols.rs");
 include!("edge_symbols_exports.rs");
+include!("edge_symbols_star_reexports.rs");
 include!("edge_symbols_helpers.rs");
 include!("edge_symbols_local_scopes.rs");
 include!("edge_symbols_targets.rs");

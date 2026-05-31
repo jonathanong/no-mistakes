@@ -7,7 +7,7 @@ use oxc::ast::ast::{
     ImportDeclaration, ImportDeclarationSpecifier, ImportExpression, JSXOpeningElement,
     MethodDefinition, ModuleExportName, ObjectExpression, ObjectProperty, ObjectPropertyKind,
     Program, Statement, StaticMemberExpression, TSEnumDeclaration, TSImportType,
-    TSInterfaceDeclaration, TSQualifiedName, TSTypeAliasDeclaration, TSTypeName,
+    TSInterfaceDeclaration, TSQualifiedName, TSTypeAliasDeclaration, TSTypeName, TSTypeParameter,
     TSTypeParameterDeclaration, TSTypeReference, VariableDeclaration, VariableDeclarationKind,
     VariableDeclarator,
 };
@@ -50,7 +50,6 @@ pub struct ImportFacts {
     pub imports: Vec<ExtractedImport>,
     pub function_calls: Vec<FunctionCall>,
     pub symbol_references: Vec<FunctionCall>,
-    pub local_type_declarations: HashSet<String>,
     pub exported_functions: Vec<String>,
     pub unknown_callers: Vec<Option<String>>,
     pub has_unknown_top_level_call: bool,
@@ -94,7 +93,6 @@ pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFac
     collector.visit_program(program);
     let callable_scopes = collector.callable_scopes;
     let exported_type_scopes = collector.exported_type_scopes;
-    let local_type_declarations = collector.local_type_declarations;
     let mut exported_functions: Vec<_> = collector
         .exported_functions
         .into_iter()
@@ -105,7 +103,6 @@ pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFac
         imports: collector.imports,
         function_calls: collector.function_calls,
         symbol_references: collector.symbol_references,
-        local_type_declarations,
         exported_functions,
         unknown_callers: collector.unknown_callers,
         has_unknown_top_level_call: collector.has_unknown_top_level_call,
@@ -115,7 +112,10 @@ pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFac
 include!("extract_visit.rs");
 include!("extract_collector_methods.rs");
 include!("extract_visit_aggregates.rs");
+include!("extract_visit_object_references.rs");
 include!("extract_visit_helpers.rs");
+include!("extract_type_scope_helpers.rs");
+include!("extract_visit_hoist.rs");
 include!("extract_visit_types.rs");
 include!("extract_binding_helpers.rs");
 include!("extract_syntax_helpers.rs");
