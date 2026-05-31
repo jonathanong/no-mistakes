@@ -12,6 +12,7 @@ pub struct TestFileFilter {
 
 #[derive(Clone)]
 struct TestSuiteFilter {
+    runner: crate::codebase::test_discovery::TestRunner,
     filter: crate::codebase::test_discovery::ProjectTestFilter,
 }
 
@@ -25,7 +26,7 @@ impl TestFileFilter {
                 .ok(),
             suites: crate::codebase::test_discovery::project_filters(root, config)
                 .into_iter()
-                .map(|filter| TestSuiteFilter { filter })
+                .map(|(runner, filter)| TestSuiteFilter { runner, filter })
                 .collect(),
         }
     }
@@ -56,7 +57,8 @@ impl TestFileFilter {
                 continue;
             }
             if suite.matches_exclude(rel_path) {
-                excluded_by_matching_suite = true;
+                excluded_by_matching_suite =
+                    excluded_by_matching_suite || suite.fallback_matches_runner(rel_path);
             } else {
                 return Some(true);
             }
@@ -72,6 +74,10 @@ impl TestSuiteFilter {
 
     fn matches_exclude(&self, rel_path: &str) -> bool {
         self.filter.excludes(rel_path)
+    }
+
+    fn fallback_matches_runner(&self, rel_path: &str) -> bool {
+        crate::codebase::test_discovery::fallback_runner_match(self.runner, rel_path)
     }
 }
 

@@ -81,7 +81,10 @@ fn test_plan_vitest_project_excludes_are_applied() {
         .iter()
         .map(|test| test["test_file"].as_str().unwrap())
         .collect();
-    assert_eq!(selected, vec!["web/storybook/button.stories.tsx"]);
+    assert_eq!(
+        selected,
+        vec!["e2e/home.pw.ts", "web/storybook/button.stories.tsx"]
+    );
 }
 
 #[test]

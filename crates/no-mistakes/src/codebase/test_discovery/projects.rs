@@ -15,7 +15,7 @@ pub(super) fn runner_projects(
     let (configs, policies) = runner_config(config, runner);
     let mut projects =
         crate::integration_tests::project_config::load_projects(root, runner.framework(), configs)?;
-    apply_explicit_policy_projects(root, policies, &mut projects);
+    apply_explicit_policy_projects(root, configs, policies, &mut projects);
     Ok(projects)
 }
 
@@ -28,12 +28,13 @@ pub(super) fn runner_projects_lossy(
     let mut projects =
         crate::integration_tests::project_config::load_projects(root, runner.framework(), configs)
             .unwrap_or_default();
-    apply_explicit_policy_projects(root, policies, &mut projects);
+    apply_explicit_policy_projects(root, configs, policies, &mut projects);
     projects
 }
 
 fn apply_explicit_policy_projects(
     root: &Path,
+    configs: Option<&StringOrList>,
     policies: &BTreeMap<String, TestProjectPolicy>,
     projects: &mut Vec<ConfigProject>,
 ) {
@@ -41,11 +42,22 @@ fn apply_explicit_policy_projects(
         let config = projects
             .iter()
             .find(|candidate| candidate.name.as_deref() == Some(name))
-            .and_then(|candidate| candidate.config.clone());
+            .and_then(|candidate| candidate.config.clone())
+            .or_else(|| single_config(configs));
         if let Some(project) = configured_project(root, name, policy, config) {
             projects.retain(|candidate| candidate.name.as_deref() != Some(name));
             projects.push(project);
         }
+    }
+}
+
+fn single_config(configs: Option<&StringOrList>) -> Option<String> {
+    let configs = configs?;
+    let values = configs.values();
+    if values.len() == 1 {
+        values.into_iter().next()
+    } else {
+        None
     }
 }
 

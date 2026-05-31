@@ -54,7 +54,7 @@ pub fn fallback_test_path(rel_path: &str) -> bool {
             .is_some_and(|name| name.contains(".test.") || name.contains(".spec."))
 }
 
-pub(super) fn fallback_runner_match(runner: TestRunner, rel: &str) -> bool {
+pub(crate) fn fallback_runner_match(runner: TestRunner, rel: &str) -> bool {
     match runner {
         TestRunner::Vitest => {
             fallback_test_path(rel)

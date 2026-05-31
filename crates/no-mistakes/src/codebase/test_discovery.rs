@@ -12,6 +12,7 @@ use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
+pub(crate) use filters::fallback_runner_match;
 pub use filters::{fallback_test_path, ProjectTestFilter};
 pub use targets::TestExecutionTarget;
 pub use types::{DiscoveredTests, TestRunner};
@@ -45,14 +46,18 @@ pub fn discovered_test_globs(
     ))
 }
 
-pub fn project_filters(root: &Path, config: &NoMistakesConfig) -> Vec<ProjectTestFilter> {
+pub fn project_filters(
+    root: &Path,
+    config: &NoMistakesConfig,
+) -> Vec<(TestRunner, ProjectTestFilter)> {
     let mut filters = Vec::new();
     for runner in [TestRunner::Vitest, TestRunner::Playwright] {
         let projects = projects::runner_projects_lossy(root, config, runner);
         filters.extend(
             projects
                 .into_iter()
-                .filter_map(ProjectTestFilter::from_project),
+                .filter_map(ProjectTestFilter::from_project)
+                .map(|filter| (runner, filter)),
         );
     }
     filters
@@ -94,12 +99,7 @@ fn discover_from_projects(
         .iter()
         .map(|project| Ok((project, ProjectTestFilter::from_project_ref(project)?)))
         .collect::<Result<Vec<_>>>()?;
-    let runner_reserved_tests = runner_reserved_tests(root, config, runner, &files);
-
     for path in files {
-        if runner_reserved_tests.contains(&path) {
-            continue;
-        }
         let rel = crate::codebase::ts_source::relative_slash_path(root, &path);
         let mut matched_targets = BTreeSet::new();
         for (project, filter) in &compiled {
@@ -123,35 +123,6 @@ fn discover_from_projects(
     }
 
     Ok(to_discovered(tests, targets_by_path, false))
-}
-
-fn runner_reserved_tests(
-    root: &Path,
-    config: &NoMistakesConfig,
-    runner: TestRunner,
-    files: &[PathBuf],
-) -> BTreeSet<PathBuf> {
-    if runner != TestRunner::Vitest {
-        return BTreeSet::new();
-    }
-    let playwright_projects = projects::runner_projects_lossy(root, config, TestRunner::Playwright);
-    if playwright_projects.is_empty() {
-        return BTreeSet::new();
-    }
-    let playwright_filters = playwright_projects
-        .into_iter()
-        .filter_map(ProjectTestFilter::from_project)
-        .collect::<Vec<_>>();
-    files
-        .iter()
-        .filter(|path| {
-            let rel = crate::codebase::ts_source::relative_slash_path(root, path);
-            playwright_filters
-                .iter()
-                .any(|filter| filter.is_match(&rel))
-        })
-        .cloned()
-        .collect()
 }
 
 fn discover_with_fallback(
