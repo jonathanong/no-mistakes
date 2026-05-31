@@ -1,0 +1,26 @@
+tests:
+  vitest: {}
+test_plan:
+  vitest:
+    environments:
+      first:
+        limit:
+          files: 2
+        groups:
+          - type: direct
+          - type: sample
+      sampled:
+        limit:
+          files: 2
+        groups:
+          - type: direct
+          - type: sample
+            sampleWhenLimited: true
+      sampledSnake:
+        limit:
+          files: 2
+        groups:
+          - type: direct
+          - type: sample
+            sample_when_limited: true
+rules: []

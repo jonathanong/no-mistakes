@@ -95,6 +95,8 @@ pub struct TestPlanGroup {
     #[serde(rename = "type")]
     pub type_: TestPlanGroupType,
     pub limit: Option<TestPlanLimit>,
+    #[serde(alias = "sample_when_limited")]
+    pub sample_when_limited: bool,
 }
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, Default, PartialEq, Eq)]

@@ -225,6 +225,7 @@ testPlan:
             limit:
               percent: 1
               files: 100
+            sampleWhenLimited: true
       ci:
         globalConfigFallback: true
   vitest:
@@ -236,7 +237,11 @@ testPlan:
 ```
 
 Groups are mutually exclusive in declaration order. `coverage` is Playwright
-only; Vitest supports `direct`, `dependencies`, and deterministic `sample`.
+only; Vitest supports `direct`, `dependencies`, and `sample`. Limited groups
+take the first candidates in deterministic group order by default. Set
+`sampleWhenLimited: true` on a group, usually a final broad `sample` group, to
+use deterministic sampling when that group's candidates exceed the remaining
+limit.
 Deleted or otherwise missing changed-file paths are ignored before fallback,
 dependency, and graph selection.
 Global config fallback is disabled unless `globalConfigFallback: true` or

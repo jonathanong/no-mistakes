@@ -1,4 +1,6 @@
-use super::configured_plan_candidates::{group_candidates, merge_selected, stable_take};
+use super::configured_plan_candidates::{
+    first_take, group_candidates, merge_selected, stable_take,
+};
 use super::diff_parser::DiffFile;
 use super::plan::relative_path;
 use super::{PlanArgs, SelectedTest, TestFramework, TestPlan, TestPlanGroupResult, Warning};
@@ -143,7 +145,8 @@ pub(crate) fn generate_configured_plan(
             .and_then(|limit| limit_count(Some(limit), all_tests.len()))
             .unwrap_or(remaining_global)
             .min(remaining_global);
-        let picked = stable_take(candidates, group_limit);
+        let picked =
+            select_limited_group_candidates(candidates, group_limit, group.sample_when_limited);
         for test in &picked {
             used.insert(test.test_file.clone());
             selected_map
@@ -201,6 +204,20 @@ fn sorted_warnings(mut warnings: Vec<Warning>) -> Vec<Warning> {
     warnings
 }
 
+fn select_limited_group_candidates(
+    candidates: Vec<SelectedTest>,
+    limit: usize,
+    sample_when_limited: bool,
+) -> Vec<SelectedTest> {
+    if limit == 0 {
+        Vec::new()
+    } else if sample_when_limited && candidates.len() > limit {
+        stable_take(candidates, limit)
+    } else {
+        first_take(candidates, limit)
+    }
+}
+
 fn effective_global_config_fallback(env: &TestPlanEnvironment, args: &PlanArgs) -> bool {
     args.global_config_fallback
         .or(env.global_config_fallback)
@@ -247,16 +264,19 @@ fn default_groups(framework: TestFramework) -> Vec<TestPlanGroup> {
     let mut groups = vec![TestPlanGroup {
         type_: TestPlanGroupType::Direct,
         limit: None,
+        sample_when_limited: false,
     }];
     if framework == TestFramework::Playwright {
         groups.push(TestPlanGroup {
             type_: TestPlanGroupType::Coverage,
             limit: None,
+            sample_when_limited: false,
         });
     }
     groups.push(TestPlanGroup {
         type_: TestPlanGroupType::Dependencies,
         limit: None,
+        sample_when_limited: false,
     });
     groups
 }
