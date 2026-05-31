@@ -149,6 +149,7 @@ fn run_live_analysis(
         diff_stdin: false,
         diff_command: None,
         entrypoints: Vec::new(),
+        include_symbols: false,
         diff_content: None,
         environment: "pre-push".to_string(),
         limit_percent: None,

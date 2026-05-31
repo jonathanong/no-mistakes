@@ -39,6 +39,7 @@ fn resolve_entrypoints_with_files(
     root: &Path,
     cwd: &Path,
     graph_files: &graph::GraphFiles,
+    include_symbols: bool,
 ) -> Vec<Entrypoint> {
     let workspace =
         crate::codebase::workspaces::load_from_files(root, graph_files.all()).unwrap_or_default();
@@ -60,12 +61,21 @@ fn resolve_entrypoints_with_files(
                 }
             };
             let normalized = crate::codebase::ts_resolver::normalize_path(&file);
-            let node =
+            let mut node =
                 resolve_entrypoint_node(&raw_for_node, &normalized, &workspace, &root_dependencies);
             let file = match &node {
                 NodeId::File(path) => path.clone(),
+                NodeId::Symbol { file, .. } => file.clone(),
                 _ => normalized,
             };
+            if include_symbols {
+                if let (NodeId::File(file), Some(symbol)) = (&node, &symbol) {
+                    node = NodeId::Symbol {
+                        file: file.clone(),
+                        symbol: symbol.clone(),
+                    };
+                }
+            }
             Entrypoint { file, node, symbol }
         })
         .collect()
@@ -102,10 +112,10 @@ fn resolve_entrypoint_node(
 fn validate_direction(direction: &Direction, entrypoints: &[Entrypoint]) -> Result<()> {
     if matches!(direction, Direction::Deps) {
         for ep in entrypoints {
-            if ep.symbol.is_some() {
+            if ep.symbol.is_some() && !matches!(ep.node, NodeId::Symbol { .. }) {
                 bail!(
                     "#symbol targeting (e.g. `file.mts#exportName`) is only supported \
-                     in the `dependents` direction. For `dependencies`, use a plain file path."
+                     in the `dependents` direction unless --symbols is enabled."
                 );
             }
         }
@@ -153,6 +163,15 @@ fn dependents_entries(
     ctx: &TraversalCtx<'_>,
 ) -> Vec<graph::NodeEntry> {
     let any_symbol = entrypoints.iter().any(|e| e.symbol.is_some());
+    if ctx.build_plan.symbols {
+        return graph::DepGraph::build_with_plan_and_files(
+            ctx.root,
+            ctx.tsconfig,
+            ctx.build_plan,
+            ctx.graph_files,
+        )
+        .dependents_of_symbol_nodes(roots, depth, ctx.allowed);
+    }
     let symbol_facts = any_symbol.then(|| {
         let mut fact_plan = ctx.build_plan.ts_fact_plan();
         fact_plan.imports = true;

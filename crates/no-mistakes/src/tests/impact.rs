@@ -44,7 +44,15 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
 
     let config = load_v2_config(&root, args.config.as_deref())?;
     let tsconfig = crate::tests::why::resolve_tsconfig(args.tsconfig.as_deref(), &root)?;
-    let graph = DepGraph::build(root.as_path(), &tsconfig)?;
+    let graph = if args.include_symbols {
+        no_mistakes::codebase::dependencies::graph::DepGraph::build_with_plan(
+            root.as_path(),
+            &tsconfig,
+            no_mistakes::codebase::dependencies::graph::GraphBuildPlan::all().with_symbols(true),
+        )?
+    } else {
+        DepGraph::build(root.as_path(), &tsconfig)?
+    };
     let test_filter = TestFileFilter::new(root.as_path(), &config);
 
     let mut selected_map: HashMap<PathBuf, SelectedTest> = HashMap::new();
@@ -52,15 +60,31 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
     let mut warnings_seen = HashSet::new();
 
     for raw in &args.entrypoints {
-        let (raw_file, _symbol) = parse_entrypoint(raw);
+        let (raw_file, symbol) = parse_entrypoint(raw);
         let file = if raw_file.is_absolute() {
             raw_file
         } else {
             root.join(&raw_file)
         };
         let normalized = no_mistakes::codebase::ts_resolver::normalize_path(&file);
-        let start_node = NodeId::File(normalized.clone());
-        let rel_changed = relative_path(&root, &normalized);
+        let start_node = if args.include_symbols {
+            symbol.as_ref().map_or_else(
+                || NodeId::File(normalized.clone()),
+                |symbol| NodeId::Symbol {
+                    file: normalized.clone(),
+                    symbol: symbol.clone(),
+                },
+            )
+        } else {
+            NodeId::File(normalized.clone())
+        };
+        let rel_changed = symbol
+            .as_ref()
+            .filter(|_| args.include_symbols)
+            .map_or_else(
+                || relative_path(&root, &normalized),
+                |symbol| format!("{}#{}", relative_path(&root, &normalized), symbol),
+            );
 
         if test_filter.is_match(&root, &normalized) {
             let entry = selected_map

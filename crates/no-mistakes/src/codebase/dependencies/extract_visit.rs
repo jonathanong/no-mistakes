@@ -110,6 +110,15 @@ impl<'a> Visit<'a> for ImportCollector {
                 walk::walk_function(self, function, oxc_syntax::scope::ScopeFlags::empty());
                 self.pop_function_scope(pushed);
             }
+            _ if self.export_depth > 0 && name.is_some() && self.function_stack.is_empty() => {
+                walk::walk_binding_pattern(self, &declarator.id);
+                let pushed = name.is_some();
+                self.push_function_scope(name);
+                if let Some(init) = &declarator.init {
+                    self.visit_expression(init);
+                }
+                self.pop_function_scope(pushed);
+            }
             _ => walk::walk_variable_declarator(self, declarator),
         }
     }

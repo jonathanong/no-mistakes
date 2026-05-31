@@ -1,3 +1,5 @@
+import type { SymbolEntrypoint } from "./traversal-types";
+
 export interface TestsPlanOptions {
   framework?: "vitest" | "playwright";
   root?: string;
@@ -10,7 +12,8 @@ export interface TestsPlanOptions {
   /** Inline unified diff content to extract changed files from. */
   diff?: string;
   /** file#export entrypoints to trace impact from (union of all). */
-  entrypoints?: string[];
+  entrypoints?: Array<string | SymbolEntrypoint>;
+  includeSymbols?: boolean;
   environment?: string;
   limitPercent?: number;
   limitFiles?: number;
@@ -22,7 +25,8 @@ export interface TestsImpactOptions {
   config?: string;
   tsconfig?: string;
   /** file#export entrypoints to trace impact from. */
-  entrypoints: string[];
+  entrypoints: Array<string | SymbolEntrypoint>;
+  includeSymbols?: boolean;
 }
 
 export interface TestPlan {

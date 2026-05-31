@@ -48,6 +48,10 @@ pub struct TraverseArgs {
     #[arg(long = "relationship", value_enum, value_name = "KIND")]
     pub relationships: Vec<RelationshipArg>,
 
+    /// Include exported symbol nodes in graph traversal and output.
+    #[arg(long = "symbols", default_value_t = false)]
+    pub symbols: bool,
+
     /// Emit phase timings to stderr.
     #[arg(long, default_value_t = false)]
     pub timings: bool,

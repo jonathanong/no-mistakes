@@ -23,7 +23,12 @@ pub(crate) fn build_plan_args(
         diff: None,
         diff_stdin: false,
         diff_command: None,
-        entrypoints: options.entrypoints,
+        entrypoints: options
+            .entrypoints
+            .into_iter()
+            .map(|entrypoint| entrypoint.into_cli_string())
+            .collect(),
+        include_symbols: options.include_symbols,
         diff_content: options.diff,
         environment: options
             .environment
@@ -61,7 +66,12 @@ pub(crate) fn build_impact_args(
         bail!("entrypoints is required and must not be empty");
     }
     Ok(crate::tests::ImpactArgs {
-        entrypoints: options.entrypoints,
+        entrypoints: options
+            .entrypoints
+            .into_iter()
+            .map(|entrypoint| entrypoint.into_cli_string())
+            .collect(),
+        include_symbols: options.include_symbols,
         root: options
             .root
             .map(PathBuf::from)

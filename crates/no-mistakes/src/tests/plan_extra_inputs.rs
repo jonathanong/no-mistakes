@@ -133,9 +133,10 @@ pub(crate) fn trace_entrypoints(
     test_filter: &TestFileFilter,
     root: &Path,
     selected_map: &mut HashMap<PathBuf, SelectedTest>,
+    include_symbols: bool,
 ) {
     for raw in entrypoints {
-        let (raw_file, _symbol) =
+        let (raw_file, symbol) =
             no_mistakes::codebase::dependencies::parse_entrypoint(raw);
         let file = if raw_file.is_absolute() {
             raw_file
@@ -143,8 +144,23 @@ pub(crate) fn trace_entrypoints(
             root.join(&raw_file)
         };
         let normalized = no_mistakes::codebase::ts_resolver::normalize_path(&file);
-        let start_node = NodeId::File(normalized.clone());
-        let rel_changed = relative_path(root, &normalized);
+        let start_node = if include_symbols {
+            symbol.as_ref().map_or_else(
+                || NodeId::File(normalized.clone()),
+                |symbol| NodeId::Symbol {
+                    file: normalized.clone(),
+                    symbol: symbol.clone(),
+                },
+            )
+        } else {
+            NodeId::File(normalized.clone())
+        };
+        let rel_changed = symbol
+            .as_ref()
+            .filter(|_| include_symbols)
+            .map_or_else(|| relative_path(root, &normalized), |symbol| {
+                format!("{}#{}", relative_path(root, &normalized), symbol)
+            });
 
         if test_filter.is_match(root, &normalized) {
             let entry = selected_map

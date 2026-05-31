@@ -5,6 +5,8 @@ pub use crate::codebase::ts_source::SKIP_DIRS;
 pub enum NodeId {
     /// A source file on disk.
     File(PathBuf),
+    /// An exported symbol in a source file.
+    Symbol { file: PathBuf, symbol: String },
     /// A bare external module specifier that is not resolved to a local file.
     Module(String),
     /// A virtual job node representing one (queue, jobName) pair.
@@ -16,6 +18,7 @@ impl NodeId {
     pub fn as_file(&self) -> Option<&Path> {
         match self {
             NodeId::File(p) => Some(p.as_path()),
+            NodeId::Symbol { file, .. } => Some(file.as_path()),
             NodeId::Module(_) => None,
             NodeId::QueueJob { .. } => None,
         }
@@ -27,6 +30,10 @@ impl NodeId {
             NodeId::File(p) => {
                 let rel = p.strip_prefix(root).unwrap_or(p);
                 rel.display().to_string()
+            }
+            NodeId::Symbol { file, symbol } => {
+                let rel = file.strip_prefix(root).unwrap_or(file);
+                format!("{}#{}", rel.display(), symbol)
             }
             NodeId::Module(specifier) => specifier.clone(),
             NodeId::QueueJob { queue_file, job } => {
@@ -126,6 +133,7 @@ pub struct GraphBuildPlan {
     pub process: bool,
     pub assets: bool,
     pub react: bool,
+    pub symbols: bool,
 }
 
 impl GraphBuildPlan {
@@ -145,6 +153,7 @@ impl GraphBuildPlan {
             process: true,
             assets: true,
             react: true,
+            symbols: false,
         }
     }
 
@@ -181,6 +190,7 @@ impl GraphBuildPlan {
             process: allowed.contains(&EdgeKind::ProcessSpawn),
             assets: allowed.contains(&EdgeKind::AssetImport),
             react: allowed.contains(&EdgeKind::ReactRender),
+            symbols: false,
         }
     }
 
@@ -199,14 +209,20 @@ impl GraphBuildPlan {
         self.process |= other.process;
         self.assets |= other.assets;
         self.react |= other.react;
+        self.symbols |= other.symbols;
+    }
+
+    pub fn with_symbols(mut self, symbols: bool) -> Self {
+        self.symbols = symbols;
+        self
     }
 
     pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
         TsFactPlan {
             imports: self.imports || self.workspace || self.assets,
             function_calls: self.imports || self.workspace || self.assets,
+            symbols: self.symbols || self.queues,
             react: self.react,
-            symbols: self.queues,
             route_refs: self.routes,
             backend_routes: self.routes || self.http,
             queue_usage: self.queues,
@@ -232,7 +248,7 @@ fn effective_ts_fact_plan(
     fact_plan.route_refs &= route_refs_configured;
     fact_plan.backend_routes &= route_backend_configured || http_configured;
     fact_plan.http_calls &= http_configured;
-    fact_plan.symbols &= queue_configured;
+    fact_plan.symbols = plan.symbols || (fact_plan.symbols && queue_configured);
     fact_plan.queue_usage &= queue_configured;
     fact_plan.queue_factory &= queue_configured;
     fact_plan.queue_project &= queue_configured;

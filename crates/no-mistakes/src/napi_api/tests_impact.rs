@@ -18,6 +18,44 @@ fn tests_impact_json_returns_plan_for_file_entrypoint() {
 }
 
 #[test]
+fn tests_impact_json_accepts_structured_symbol_entrypoint() {
+    let root = fixture_root("tests-impact-symbol");
+    let options = json!({
+        "root": root,
+        "includeSymbols": true,
+        "entrypoints": [{ "file": "utils.mts", "symbol": "parseDate" }]
+    })
+    .to_string();
+    let output = tests_impact_json_impl(options).unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let selected = plan["selected_tests"].as_array().unwrap();
+    assert_eq!(selected.len(), 1);
+    assert_eq!(selected[0]["test_file"], "other.test.mts");
+    assert_eq!(
+        selected[0]["reasons"][0]["changed_file"],
+        "utils.mts#parseDate"
+    );
+}
+
+#[test]
+fn dependents_json_accepts_structured_symbol_file() {
+    let root = fixture_root("tests-impact-symbol");
+    let options = json!({
+        "root": root,
+        "includeSymbols": true,
+        "files": [{ "file": "utils.mts", "symbol": "parseDate" }]
+    })
+    .to_string();
+    let output = dependents_json_impl(options).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let files = value["files"].as_array().unwrap();
+    assert!(files
+        .iter()
+        .any(|file| file["file"] == "other.mts" && file["symbol"] == "parse"));
+    assert!(!files.iter().any(|file| file["path"] == "service.test.mts"));
+}
+
+#[test]
 fn tests_plan_json_with_diff_content() {
     let root = fixture_root("tests-impact-diff");
     let diff = std::fs::read_to_string(
@@ -64,4 +102,24 @@ fn tests_plan_json_without_input_returns_empty() {
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
     let selected = plan["selected_tests"].as_array().unwrap();
     assert!(selected.is_empty());
+}
+
+#[test]
+fn entrypoint_option_without_symbol_renders_file_only() {
+    assert_eq!(
+        super::options::EntrypointOption::Symbol {
+            file: "src/a.mts".to_string(),
+            symbol: None,
+        }
+        .into_cli_string(),
+        "src/a.mts"
+    );
+    assert_eq!(
+        super::options::EntrypointOption::Symbol {
+            file: "src/a.mts".to_string(),
+            symbol: Some(String::new()),
+        }
+        .into_cli_string(),
+        "src/a.mts"
+    );
 }

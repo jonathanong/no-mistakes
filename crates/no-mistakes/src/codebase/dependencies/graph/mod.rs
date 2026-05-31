@@ -36,10 +36,13 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
 include!("builder.rs");
 include!("methods_lazy.rs");
 include!("lazy_imports.rs");
+include!("lazy_import_symbols.rs");
 include!("lazy_import_neighbors.rs");
 include!("sort.rs");
 include!("edge_import_reachability.rs");
 include!("edge_imports.rs");
+include!("edge_symbols.rs");
+include!("edge_symbols_helpers.rs");
 include!("edge_package_manifest.rs");
 include!("edge_tests_md.rs");
 include!("edge_ci.rs");

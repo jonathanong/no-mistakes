@@ -40,7 +40,7 @@ pub(crate) fn build_traverse_args(options: TraverseOptions) -> AnyhowResult<Trav
     }
 
     Ok(TraverseArgs {
-        files: strings_to_paths(options.files),
+        files: entrypoints_to_paths(options.files),
         root: options.root.map(PathBuf::from),
         tsconfig: options.tsconfig.map(PathBuf::from),
         depth: options.depth,
@@ -54,6 +54,7 @@ pub(crate) fn build_traverse_args(options: TraverseOptions) -> AnyhowResult<Trav
             .iter()
             .map(|value| parse_relationship(value))
             .collect::<AnyhowResult<Vec<_>>>()?,
+        symbols: options.include_symbols,
         timings: false,
     })
 }
@@ -81,4 +82,11 @@ fn build_symbols_args(options: SymbolOptions) -> AnyhowResult<SymbolsArgs> {
 
 fn strings_to_paths(values: Vec<String>) -> Vec<PathBuf> {
     values.into_iter().map(PathBuf::from).collect()
+}
+
+fn entrypoints_to_paths(values: Vec<super::options::EntrypointOption>) -> Vec<PathBuf> {
+    values
+        .into_iter()
+        .map(|value| PathBuf::from(value.into_cli_string()))
+        .collect()
 }

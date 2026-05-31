@@ -59,6 +59,121 @@ fn test_impact_file_only_finds_tests() {
 }
 
 #[test]
+fn test_impact_symbol_opt_in_limits_to_symbol_consumers() {
+    let root = fixture("tests-impact-symbol");
+    let output = run(&[
+        "tests",
+        "impact",
+        "utils.mts#parseDate",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--json",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let test_files: Vec<&str> = plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|t| t["test_file"].as_str().unwrap())
+        .collect();
+    assert_eq!(test_files, vec!["other.test.mts"]);
+    assert_eq!(
+        plan["selected_tests"][0]["reasons"][0]["changed_file"],
+        "utils.mts#parseDate"
+    );
+}
+
+#[test]
+fn dependents_symbols_outputs_symbol_nodes_when_opted_in() {
+    let root = fixture("tests-impact-symbol");
+    let output = run(&[
+        "dependents",
+        "utils.mts#parseDate",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--json",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let value: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let files = value["files"].as_array().unwrap();
+    assert!(files
+        .iter()
+        .any(|file| file["file"] == "other.mts" && file["symbol"] == "parse"));
+    assert!(files.iter().any(|file| file["path"] == "other.test.mts"));
+    assert!(!files.iter().any(|file| file["path"] == "service.test.mts"));
+}
+
+#[test]
+fn dependencies_symbols_paths_render_file_hash_symbol() {
+    let root = fixture("tests-impact-symbol");
+    let output = run(&[
+        "dependencies",
+        "other.mts#parse",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(stdout(&output), "utils.mts#parseDate\n");
+}
+
+#[test]
+fn dependencies_symbols_handles_default_and_variable_exports() {
+    let root = fixture("symbol-export");
+    let default_output = run(&[
+        "dependencies",
+        "default-consumer.mts#run",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+    assert!(
+        default_output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&default_output.stderr)
+    );
+    assert_eq!(stdout(&default_output), "default-source.mts#default\n");
+
+    let variable_output = run(&[
+        "dependencies",
+        "uses-alpha-variable.mts#value",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+    assert!(
+        variable_output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&variable_output.stderr)
+    );
+    assert_eq!(stdout(&variable_output), "source.mts#alpha\n");
+}
+
+#[test]
 fn test_impact_multiple_entrypoints_union() {
     let root = fixture("tests-impact-symbol");
     let output = run(&[

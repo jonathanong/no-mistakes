@@ -1,15 +1,3 @@
-
-fn push_unvisited_symbol_pair(
-    visited_pairs: &mut HashSet<(PathBuf, String)>,
-    queue: &mut VecDeque<(PathBuf, String)>,
-    pair: (PathBuf, String),
-) {
-    if !visited_pairs.contains(&pair) {
-        visited_pairs.insert(pair.clone());
-        queue.push_back(pair);
-    }
-}
-
 /// Demand-driven import traversal used by `dependencies --relationship import`.
 /// It parses only roots and files reached through static import edges.
 pub fn lazy_import_deps_of(

@@ -104,6 +104,12 @@ impl DepGraph {
             merge_edges(&mut forward, &mut reverse, asset_edges);
         }
 
+        if plan.symbols {
+            let facts = facts.expect("TS symbol facts are collected when symbol edges are requested");
+            let symbol_edges = collect_symbol_edges(files, facts, &resolver);
+            merge_edges(&mut forward, &mut reverse, symbol_edges);
+        }
+
         if plan.tests {
             let test_edges = collect_test_edges(
                 root,

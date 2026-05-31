@@ -66,6 +66,186 @@ fn graph_private_helpers_cover_noop_branches() {
     assert!(reverse.is_empty());
 }
 
+#[test]
+fn symbol_edge_collection_covers_filtered_and_type_branches() {
+    use crate::codebase::dependencies::extract::FunctionCall;
+    use crate::codebase::ts_source::facts::{TsFactMap, TsFileFacts};
+    use crate::codebase::ts_symbols::{Export, FileSymbols, NamedImport};
+
+    let current = p("/repo/src/current.mts");
+    let no_symbols = p("/repo/src/no-symbols.mts");
+    let target = p("/repo/src/source.mts");
+    let mut visible = HashSet::new();
+    visible.insert(current.clone());
+    visible.insert(no_symbols.clone());
+    visible.insert(target.clone());
+    let tsconfig = TsConfig {
+        dir: p("/repo"),
+        paths: vec![],
+        paths_dir: p("/repo"),
+        base_url: None,
+    };
+    let resolver = ImportResolver::new(&tsconfig).with_visible(&visible);
+
+    let symbols = FileSymbols {
+        exports: vec![
+            Export {
+                name: "*".to_string(),
+                kind: ExportKind::ReExport {
+                    source: "./source.mts".to_string(),
+                    imported: "*".to_string(),
+                },
+                line: 1,
+                is_type_only: false,
+            },
+            Export {
+                name: "Star".to_string(),
+                kind: ExportKind::ReExport {
+                    source: "./source.mts".to_string(),
+                    imported: "*".to_string(),
+                },
+                line: 2,
+                is_type_only: false,
+            },
+            Export {
+                name: "Alias".to_string(),
+                kind: ExportKind::ReExport {
+                    source: "./source.mts".to_string(),
+                    imported: "SourceType".to_string(),
+                },
+                line: 3,
+                is_type_only: true,
+            },
+            Export {
+                name: "run".to_string(),
+                kind: ExportKind::Function,
+                line: 4,
+                is_type_only: false,
+            },
+        ],
+        imports: vec![
+            NamedImport {
+                source: "./source.mts".to_string(),
+                imported: "*".to_string(),
+                local: "all".to_string(),
+                line: 4,
+                is_type_only: false,
+            },
+            NamedImport {
+                source: "./source.mts".to_string(),
+                imported: "used".to_string(),
+                local: "used".to_string(),
+                line: 5,
+                is_type_only: false,
+            },
+        ],
+    };
+    let mut facts = TsFactMap::new();
+    facts.insert(no_symbols.clone(), TsFileFacts::default());
+    facts.insert(
+        current.clone(),
+        TsFileFacts {
+            symbols: Some(symbols),
+            function_calls: vec![
+                FunctionCall {
+                    caller: None,
+                    callee: "used".to_string(),
+                },
+                FunctionCall {
+                    caller: Some("helper".to_string()),
+                    callee: "used".to_string(),
+                },
+                FunctionCall {
+                    caller: Some("run".to_string()),
+                    callee: "missing".to_string(),
+                },
+                FunctionCall {
+                    caller: Some("run".to_string()),
+                    callee: "used".to_string(),
+                },
+            ],
+            ..TsFileFacts::default()
+        },
+    );
+
+    let edges = collect_symbol_edges(
+        &[p("/repo/src/missing.mts"), no_symbols, current.clone()],
+        &facts,
+        &resolver,
+    );
+
+    assert!(edges.contains(&(
+        NodeId::File(current.clone()),
+        NodeId::Symbol {
+            file: current.clone(),
+            symbol: "Alias".to_string(),
+        },
+        EdgeKind::TypeImport
+    )));
+    assert!(edges.contains(&(
+        NodeId::Symbol {
+            file: current.clone(),
+            symbol: "Alias".to_string(),
+        },
+        NodeId::Symbol {
+            file: target.clone(),
+            symbol: "SourceType".to_string(),
+        },
+        EdgeKind::TypeImport
+    )));
+    assert!(edges.contains(&(
+        NodeId::Symbol {
+            file: current,
+            symbol: "run".to_string(),
+        },
+        NodeId::Symbol {
+            file: target,
+            symbol: "used".to_string(),
+        },
+        EdgeKind::Import
+    )));
+}
+
+#[test]
+fn symbol_bfs_skips_initial_owner_and_honors_limits() {
+    let owner = p("/repo/src/owner.mts");
+    let dep = p("/repo/src/dep.mts");
+    let symbol = NodeId::Symbol {
+        file: owner.clone(),
+        symbol: "alpha".to_string(),
+    };
+    let mut edges = EdgeMap::new();
+    edges.insert(
+        symbol.clone(),
+        vec![
+            (NodeId::File(owner.clone()), EdgeKind::Import),
+            (NodeId::File(dep.clone()), EdgeKind::Require),
+        ],
+    );
+
+    let import_only: HashSet<_> = [EdgeKind::Import].into();
+    let filtered = bfs_skipping_initial_symbol_owner_files(
+        std::slice::from_ref(&symbol),
+        &edges,
+        None,
+        Some(&import_only),
+    );
+    assert!(filtered.is_empty());
+
+    let unfiltered =
+        bfs_skipping_initial_symbol_owner_files(std::slice::from_ref(&symbol), &edges, None, None);
+    assert_eq!(unfiltered.len(), 1);
+    assert_eq!(unfiltered[0].node, NodeId::File(dep));
+
+    let limited = bfs_skipping_initial_symbol_owner_files(
+        std::slice::from_ref(&symbol),
+        &edges,
+        Some(0),
+        None,
+    );
+    assert!(limited.is_empty());
+}
+
 // ── add_test_edges ───────────────────────────────────────────────────────
 
 #[test]

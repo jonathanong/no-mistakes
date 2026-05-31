@@ -71,6 +71,10 @@ pub(crate) struct PlanArgs {
     #[arg(long = "entrypoint")]
     pub(crate) entrypoints: Vec<String>,
 
+    /// Include exported symbol nodes for entrypoint traversal.
+    #[arg(long = "symbols", default_value_t = false)]
+    pub(crate) include_symbols: bool,
+
     /// Inline diff content (programmatic API only).
     #[arg(skip)]
     pub(crate) diff_content: Option<String>,
@@ -105,6 +109,10 @@ pub(crate) struct ImpactArgs {
     /// file#export entrypoints (positional, repeatable).
     #[arg(required = true)]
     pub(crate) entrypoints: Vec<String>,
+
+    /// Include exported symbol nodes for entrypoint traversal.
+    #[arg(long = "symbols", default_value_t = false)]
+    pub(crate) include_symbols: bool,
 
     /// Project root directory.
     #[arg(long, default_value = ".")]

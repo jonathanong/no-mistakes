@@ -96,7 +96,8 @@ pub(crate) fn collect_and_filter_entries(
 
     let tsconfig = resolve_tsconfig(args, &root)?;
     let graph_files = graph::GraphFiles::discover(&root);
-    let entrypoints = resolve_entrypoints_with_files(&args.files, &root, cwd_early, &graph_files);
+    let entrypoints =
+        resolve_entrypoints_with_files(&args.files, &root, cwd_early, &graph_files, args.symbols);
 
     timings.mark("search");
 
@@ -104,7 +105,8 @@ pub(crate) fn collect_and_filter_entries(
     validate_direction(&direction, &entrypoints)?;
 
     let allowed = relationship_filter(&args.relationships);
-    let build_plan = graph::GraphBuildPlan::from_allowed(allowed.as_ref());
+    let build_plan =
+        graph::GraphBuildPlan::from_allowed(allowed.as_ref()).with_symbols(args.symbols);
     let ctx = TraversalCtx {
         root: &root,
         tsconfig: &tsconfig,
@@ -113,7 +115,7 @@ pub(crate) fn collect_and_filter_entries(
         allowed: allowed.as_ref(),
     };
     let roots: Vec<NodeId> = entrypoints.iter().map(|e| e.node.clone()).collect();
-    let import_only = relationships_are_import_only(&args.relationships);
+    let import_only = !args.symbols && relationships_are_import_only(&args.relationships);
 
     timings.mark("ingest");
 

@@ -20,7 +20,7 @@ export type Relationship =
   | "all";
 
 export interface TraverseOptions {
-  files: string[];
+  files: Array<string | SymbolEntrypoint>;
   root?: string;
   tsconfig?: string;
   depth?: number;
@@ -28,15 +28,23 @@ export interface TraverseOptions {
   targetModules?: string[];
   tests?: string[];
   relationships?: Relationship[];
+  includeSymbols?: boolean;
 }
 
 export interface DependencyFile {
   path?: string;
+  file?: string;
+  symbol?: string;
   queueFile?: string;
   job?: string;
   module?: string;
   depth: number;
   via?: string[];
+}
+
+export interface SymbolEntrypoint {
+  file: string;
+  symbol?: string;
 }
 
 export interface DependencyResult {

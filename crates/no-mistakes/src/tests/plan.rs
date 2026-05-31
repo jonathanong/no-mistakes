@@ -100,7 +100,15 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     }
 
     // 3. Build graph and test filter
-    let graph = DepGraph::build(root.as_path(), &tsconfig)?;
+    let graph = if args.include_symbols {
+        no_mistakes::codebase::dependencies::graph::DepGraph::build_with_plan(
+            root.as_path(),
+            &tsconfig,
+            no_mistakes::codebase::dependencies::graph::GraphBuildPlan::all().with_symbols(true),
+        )?
+    } else {
+        DepGraph::build(root.as_path(), &tsconfig)?
+    };
     let test_filter = TestFileFilter::new(root.as_path(), &config);
 
     let mut selected_map: HashMap<PathBuf, SelectedTest> = HashMap::new();
@@ -252,6 +260,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
         &test_filter,
         &root,
         &mut selected_map,
+        args.include_symbols,
     );
 
     let mut selected_tests: Vec<SelectedTest> = selected_map.into_values().collect();
@@ -354,6 +363,10 @@ fn discover_all_tests(
 pub(crate) fn slash_node_name(node: &NodeId, root: &Path) -> String {
     match node {
         NodeId::File(p) => no_mistakes::codebase::ts_source::relative_slash_path(root, p),
+        NodeId::Symbol { file, symbol } => {
+            let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, file);
+            format!("{}#{}", rel, symbol)
+        }
         NodeId::Module(specifier) => specifier.clone(),
         NodeId::QueueJob { queue_file, job } => {
             let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, queue_file);
@@ -405,6 +418,15 @@ pub(crate) fn bfs_path_find(
         // Get dependents
         if let Some(neighbors) = graph.dependents_of_node(&current) {
             for (neighbor, kind) in neighbors {
+                if current == *start {
+                    if let (NodeId::Symbol { file, .. }, NodeId::File(neighbor_file)) =
+                        (start, neighbor)
+                    {
+                        if file == neighbor_file {
+                            continue;
+                        }
+                    }
+                }
                 if !visited.contains(neighbor) {
                     visited.insert(neighbor.clone());
                     parents.insert(neighbor.clone(), (current.clone(), *kind));
