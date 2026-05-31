@@ -167,27 +167,32 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
                     caller: None,
                     callee: "used".to_string(),
                     static_arg: None,
+                    static_cwd: None,
                 },
                 FunctionCall {
                     caller: Some("helper".to_string()),
                     callee: "used".to_string(),
                     static_arg: None,
+                    static_cwd: None,
                 },
                 FunctionCall {
                     caller: Some("run".to_string()),
                     callee: "missing".to_string(),
                     static_arg: None,
+                    static_cwd: None,
                 },
                 FunctionCall {
                     caller: Some("run".to_string()),
                     callee: "used".to_string(),
                     static_arg: None,
+                    static_cwd: None,
                 },
             ],
             symbol_references: vec![FunctionCall {
                 caller: Some("run".to_string()),
                 callee: "used".to_string(),
                 static_arg: None,
+                static_cwd: None,
             }],
             ..TsFileFacts::default()
         },

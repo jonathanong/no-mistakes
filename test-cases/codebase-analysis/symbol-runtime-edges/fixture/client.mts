@@ -32,6 +32,10 @@ export function runMemberSpawnRuntimeEdge() {
   runner.spawn("member-worker.mts");
 }
 
+export function runCwdSpawnRuntimeEdge() {
+  cp.spawn("cwd-worker.mts", [], { cwd: "scripts" });
+}
+
 export function runMissingSpawnRuntimeEdge() {
   runner.spawn("missing-worker.mts");
 }

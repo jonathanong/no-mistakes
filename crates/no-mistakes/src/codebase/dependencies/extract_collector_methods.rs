@@ -60,6 +60,7 @@ impl ImportCollector {
                 caller: Some(parent.clone()),
                 callee: scope.clone(),
                 static_arg: None,
+                static_cwd: None,
             });
         }
         self.function_stack.push(scope);

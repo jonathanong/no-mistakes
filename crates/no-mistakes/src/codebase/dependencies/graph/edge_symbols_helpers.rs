@@ -10,6 +10,15 @@ fn export_local_name(export: &crate::codebase::ts_symbols::Export) -> String {
     export.local.clone().unwrap_or_else(|| export.name.clone())
 }
 
+fn value_export_symbol_names(symbols: &crate::codebase::ts_symbols::FileSymbols) -> HashSet<String> {
+    symbols
+        .exports
+        .iter()
+        .filter(|export| !export.is_type_only)
+        .map(export_symbol_name)
+        .collect()
+}
+
 #[derive(Clone)]
 enum ImportedSymbolTarget {
     Symbol {

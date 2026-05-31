@@ -234,6 +234,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
             caller: Some("api".to_string()),
             callee: "fetch".to_string(),
             static_arg: None,
+            static_cwd: None,
         }],
         &[(source.clone(), "/api/:id".to_string())],
     )

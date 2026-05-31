@@ -69,6 +69,7 @@ fn collect_symbol_edges(
         let local_scopes = local_scope_names(&calls_by_caller, &refs_by_caller, &scoped_imports);
         exported_values.sort();
         exported_values.dedup();
+        let value_exports = value_export_symbol_names(symbols);
         let scoped_http_route_defs = if file_facts.http_calls.is_empty() {
             &[][..]
         } else {
@@ -79,6 +80,7 @@ fn collect_symbol_edges(
             &caller_to_export,
             &file_facts.function_calls,
             &imported_symbols,
+            &value_exports,
             &mut edges,
         );
         for exported_value in exported_values {
@@ -87,18 +89,7 @@ fn collect_symbol_edges(
                 .expect("exported value should have a symbol name")
                 .clone();
             if let Some(imports) = scoped_imports.get("") {
-                for export_symbol in &caller_exports {
-                    for (target, kind) in imports {
-                        edges.push((
-                            NodeId::Symbol {
-                                file: path.clone(),
-                                symbol: export_symbol.clone(),
-                            },
-                            target.clone(),
-                            *kind,
-                        ));
-                    }
-                }
+                collect_file_scope_import_edges(path, &caller_exports, &value_exports, imports, &mut edges);
             }
             let mut visited = HashSet::new();
             let root_scope = exported_value.clone();

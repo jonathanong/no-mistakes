@@ -58,10 +58,18 @@ fn symbol_process_targets(
         };
         let resolved = if call.callee.ends_with("exec") || call.callee == "exec" {
             crate::codebase::ts_process_spawn::resolve_entry_file_from_shell(
-                static_arg, None, path, root,
+                static_arg,
+                call.static_cwd.as_deref(),
+                path,
+                root,
             )
         } else {
-            crate::codebase::ts_process_spawn::resolve_entry_file(static_arg, None, path, root)
+            crate::codebase::ts_process_spawn::resolve_entry_file(
+                static_arg,
+                call.static_cwd.as_deref(),
+                path,
+                root,
+            )
         };
         if let Some(resolved) = resolved {
             for spawn in process_spawns {

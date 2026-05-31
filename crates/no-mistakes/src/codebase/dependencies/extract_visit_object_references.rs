@@ -13,6 +13,7 @@ fn record_object_value_references(
                 caller: Some(object_name.to_string()),
                 callee,
                 static_arg: None,
+                static_cwd: None,
             });
         }
     }

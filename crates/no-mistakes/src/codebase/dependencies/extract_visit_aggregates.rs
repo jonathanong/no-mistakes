@@ -190,6 +190,7 @@ fn record_member_call(collector: &mut ImportCollector, parent: &str, name: Optio
             caller: Some(parent.to_string()),
             callee: name.to_string(),
             static_arg: None,
+            static_cwd: None,
         });
     }
 }

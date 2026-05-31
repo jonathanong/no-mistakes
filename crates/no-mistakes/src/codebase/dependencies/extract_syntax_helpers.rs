@@ -138,3 +138,13 @@ fn static_path_argument(arg: &Argument<'_>) -> Option<String> {
         _ => None,
     }
 }
+
+fn static_process_cwd_arg(callee: &str, args: &[Argument<'_>]) -> Option<String> {
+    let method = callee.rsplit('.').next().unwrap_or(callee);
+    let opts_index = match method {
+        "exec" => 1,
+        "execFile" | "fork" | "spawn" => 2,
+        _ => return None,
+    };
+    crate::codebase::ts_process_spawn::extract_cwd_from_opts(args, opts_index)
+}

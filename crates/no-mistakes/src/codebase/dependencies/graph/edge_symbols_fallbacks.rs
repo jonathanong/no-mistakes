@@ -52,9 +52,11 @@ fn collect_top_level_imported_edges(
     caller_to_export: &HashMap<String, Vec<String>>,
     calls: &[crate::codebase::dependencies::extract::FunctionCall],
     imported_symbols: &HashMap<String, ImportedSymbolTarget>,
+    value_exports: &HashSet<String>,
     edges: &mut Vec<Edge>,
 ) {
-    let exports = exported_symbol_names(caller_to_export);
+    let mut exports = exported_symbol_names(caller_to_export);
+    exports.retain(|export| value_exports.contains(export));
     if exports.is_empty() {
         return;
     }
@@ -68,6 +70,30 @@ fn collect_top_level_imported_edges(
                 },
                 target.clone(),
                 kind,
+            ));
+        }
+    }
+}
+
+fn collect_file_scope_import_edges(
+    path: &Path,
+    caller_exports: &[String],
+    value_exports: &HashSet<String>,
+    imports: &[(NodeId, EdgeKind)],
+    edges: &mut Vec<Edge>,
+) {
+    for export_symbol in caller_exports {
+        if !value_exports.contains(export_symbol) {
+            continue;
+        }
+        for (target, kind) in imports {
+            edges.push((
+                NodeId::Symbol {
+                    file: path.to_path_buf(),
+                    symbol: export_symbol.clone(),
+                },
+                target.clone(),
+                *kind,
             ));
         }
     }

@@ -16,6 +16,7 @@ impl ImportCollector {
             caller: self.current_function(),
             callee: name,
             static_arg: None,
+            static_cwd: None,
         });
     }
 

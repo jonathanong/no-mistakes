@@ -178,6 +178,7 @@ impl<'a> Visit<'a> for ImportCollector {
             if self.should_record_call(&callee) {
                 self.function_calls.push(FunctionCall {
                     caller: self.current_function(),
+                    static_cwd: static_process_cwd_arg(&callee, &call.arguments),
                     callee,
                     static_arg: call.arguments.first().and_then(static_path_argument),
                 });

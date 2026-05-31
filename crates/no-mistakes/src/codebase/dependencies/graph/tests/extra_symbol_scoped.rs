@@ -70,26 +70,31 @@ fn symbol_fallback_imports_keep_only_top_level_uses_when_exports_exist() {
             caller: None,
             callee: "alpha".to_string(),
             static_arg: None,
+            static_cwd: None,
         },
         FunctionCall {
             caller: None,
             callee: "beta".to_string(),
             static_arg: None,
+            static_cwd: None,
         },
         FunctionCall {
             caller: None,
             callee: "alpha".to_string(),
             static_arg: None,
+            static_cwd: None,
         },
         FunctionCall {
             caller: None,
             callee: "missing".to_string(),
             static_arg: None,
+            static_cwd: None,
         },
         FunctionCall {
             caller: Some("run".to_string()),
             callee: "beta".to_string(),
             static_arg: None,
+            static_cwd: None,
         },
     ];
 

@@ -45,6 +45,7 @@ pub struct FunctionCall {
     pub caller: Option<String>,
     pub callee: String,
     pub static_arg: Option<String>,
+    pub static_cwd: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]

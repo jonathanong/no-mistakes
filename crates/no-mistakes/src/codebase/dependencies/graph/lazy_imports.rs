@@ -173,13 +173,15 @@ fn bfs(
 
                 if visited.insert(neighbor.clone()) {
                     let next_depth = depth + 1;
-                    let idx = result.len();
-                    result.push(NodeEntry {
-                        node: neighbor.clone(),
-                        depth: next_depth,
-                        via: vec![*kind],
-                    });
-                    result_idx.insert(neighbor.clone(), idx);
+                    if should_emit_node(&node, neighbor, *kind, allowed, owner_bridge_allowed) {
+                        let idx = result.len();
+                        result.push(NodeEntry {
+                            node: neighbor.clone(),
+                            depth: next_depth,
+                            via: vec![*kind],
+                        });
+                        result_idx.insert(neighbor.clone(), idx);
+                    }
                     if *kind == EdgeKind::DynamicImport && matches!(neighbor, NodeId::File(_)) {
                         dynamic_import_files.insert(neighbor.clone());
                     }

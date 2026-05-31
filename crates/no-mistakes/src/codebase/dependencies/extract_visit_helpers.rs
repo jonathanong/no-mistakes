@@ -12,6 +12,7 @@ impl ImportCollector {
             caller,
             callee: name,
             static_arg: None,
+            static_cwd: None,
         });
     }
 

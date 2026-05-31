@@ -45,6 +45,37 @@ pub(crate) fn trace_deleted_files(
     }
 }
 
+fn owner_widened_neighbor_allowed(
+    root: &Path,
+    test_filter: &TestFileFilter,
+    graph: &DepGraph,
+    neighbor: &NodeId,
+    neighbors: &[(NodeId, EdgeKind)],
+) -> bool {
+    let NodeId::File(path) = neighbor else {
+        return false;
+    };
+    test_filter.is_match(root, path)
+        || (!has_symbol_neighbor_for_file(path, neighbors) && !file_has_owned_symbol(graph, path))
+}
+
+fn has_symbol_neighbor_for_file(path: &Path, neighbors: &[(NodeId, EdgeKind)]) -> bool {
+    neighbors.iter().any(
+        |(candidate, _)| matches!(candidate, NodeId::Symbol { file, .. } if file.as_path() == path),
+    )
+}
+
+fn file_has_owned_symbol(graph: &DepGraph, path: &Path) -> bool {
+    let file = path.to_path_buf();
+    graph
+        .dependencies_of_node(&NodeId::File(file.clone()))
+        .is_some_and(|deps| {
+            deps.iter().any(|(candidate, _)| {
+                matches!(candidate, NodeId::Symbol { file: symbol_file, .. } if *symbol_file == file)
+            })
+        })
+}
+
 fn add_deleted_direct(
     neighbor_path: &Path,
     rel_deleted: &str,

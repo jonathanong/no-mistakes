@@ -457,7 +457,13 @@ pub(crate) fn bfs_path_find(
         if let Some(neighbors) = graph.dependents_of_node(&current) {
             for (neighbor, kind) in neighbors {
                 if owner_widened_files.contains(&current)
-                    && !matches!(neighbor, NodeId::File(p) if test_filter.is_match(root, p))
+                    && !owner_widened_neighbor_allowed(
+                        root,
+                        test_filter,
+                        graph,
+                        neighbor,
+                        neighbors,
+                    )
                 {
                     continue;
                 }

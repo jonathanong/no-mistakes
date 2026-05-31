@@ -113,6 +113,23 @@ fn dependencies_symbols_attach_top_level_side_effect_imports_to_exports() {
 }
 
 #[test]
+fn dependencies_symbols_do_not_attach_side_effect_imports_to_type_exports() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "type-only-side-effect.mts#Public",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "");
+}
+
+#[test]
 fn dependencies_symbols_scope_later_exported_computed_class_keys() {
     let root = fixture("symbol-export");
     let output = run(&[
@@ -270,6 +287,25 @@ fn dependencies_symbols_scope_later_exported_dynamic_imports() {
 }
 
 #[test]
+fn dependencies_symbols_do_not_emit_owner_bridges_for_relationship_filters() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "dynamic-loader.mts",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-dynamic",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "dynamic-chunk.mts\n");
+}
+
+#[test]
 fn dependencies_symbols_scope_later_exported_enum_initializers() {
     let root = fixture("symbol-export");
     let output = run(&[
@@ -381,6 +417,25 @@ fn dependencies_symbols_accept_member_spawn_calls() {
 
     assert!(output.status.success());
     assert_eq!(stdout(&output), "member-worker.mts\n");
+}
+
+#[test]
+fn dependencies_symbols_match_process_edges_with_cwd() {
+    let root = fixture("symbol-runtime-edges");
+    let output = run(&[
+        "dependencies",
+        "client.mts#runCwdSpawnRuntimeEdge",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "process",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "scripts/cwd-worker.mts\n");
 }
 
 #[test]

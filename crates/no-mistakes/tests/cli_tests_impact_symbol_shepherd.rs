@@ -163,6 +163,7 @@ fn tests_plan_symbols_reaches_tests_through_intermediate_file_edges() {
         .map(|t| t["test_file"].as_str().unwrap())
         .collect();
     assert!(test_files.contains(&"alpha-side-effect.test.mts"));
+    assert!(test_files.contains(&"alpha-barrel.test.mts"));
 }
 
 #[test]
@@ -231,7 +232,11 @@ fn tests_plan_symbols_changed_file_seeds_exported_symbols() {
         .collect();
     assert_eq!(
         test_files,
-        vec!["alpha-consumer.test.mts", "alpha-side-effect.test.mts"]
+        vec![
+            "alpha-barrel.test.mts",
+            "alpha-consumer.test.mts",
+            "alpha-side-effect.test.mts"
+        ]
     );
 }
 
@@ -263,7 +268,11 @@ fn tests_plan_symbols_entrypoint_file_seeds_exported_symbols() {
         .collect();
     assert_eq!(
         test_files,
-        vec!["alpha-consumer.test.mts", "alpha-side-effect.test.mts"]
+        vec![
+            "alpha-barrel.test.mts",
+            "alpha-consumer.test.mts",
+            "alpha-side-effect.test.mts"
+        ]
     );
 }
 

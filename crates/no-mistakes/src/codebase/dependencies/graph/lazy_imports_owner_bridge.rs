@@ -13,6 +13,17 @@ fn edge_allowed(
         || (is_symbol_owner_bridge(from, to) && owner_bridge_allowed)
 }
 
+fn should_emit_node(
+    from: &NodeId,
+    to: &NodeId,
+    kind: EdgeKind,
+    allowed: Option<&HashSet<EdgeKind>>,
+    owner_bridge_allowed: bool,
+) -> bool {
+    allowed.is_none_or(|a| a.contains(&kind))
+        || !(is_symbol_owner_bridge(from, to) && owner_bridge_allowed)
+}
+
 fn symbol_owner_bridge_allowed(
     from: &NodeId,
     to: &NodeId,
