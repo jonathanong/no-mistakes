@@ -209,7 +209,9 @@ fn select_limited_group_candidates(
     limit: usize,
     sample_when_limited: bool,
 ) -> Vec<SelectedTest> {
-    if sample_when_limited && candidates.len() > limit {
+    if limit == 0 {
+        Vec::new()
+    } else if sample_when_limited && candidates.len() > limit {
         stable_take(candidates, limit)
     } else {
         first_take(candidates, limit)
