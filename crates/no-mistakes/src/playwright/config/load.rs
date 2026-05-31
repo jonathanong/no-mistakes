@@ -71,9 +71,8 @@ fn settings_from_v2(
     let playwright = &config.tests.playwright;
     let frontend_root = playwright
         .frontend_root
-        .as_deref()
-        .unwrap_or_else(|| view.nextjs_root())
-        .to_string();
+        .clone()
+        .unwrap_or_else(|| default_frontend_root(root, view.nextjs_root()));
     let playwright_configs = playwright_configs_from_v2(root, &view, cli_playwright_configs)?;
     let selector_attributes = if view.test_id_attributes().is_empty() {
         default_selector_attributes()
@@ -103,6 +102,15 @@ fn settings_from_v2(
         selector_include: playwright.selector_include.clone(),
         selector_exclude: playwright.selector_exclude.clone(),
     })
+}
+
+fn default_frontend_root(root: &Path, nextjs_root: &str) -> String {
+    let app_root = Path::new(nextjs_root).join("app");
+    if root.join(&app_root).is_dir() {
+        app_root.to_string_lossy().into_owned()
+    } else {
+        nextjs_root.to_string()
+    }
 }
 
 fn settings_from_defaults(

@@ -83,6 +83,44 @@ fn playwright_layout_edges_use_discovered_file_set() {
 }
 
 #[test]
+fn playwright_route_edges_use_app_root_and_filter_graph_files() {
+    let root =
+        crate::codebase::ts_resolver::normalize_path(&fixture("playwright-route-edges-v2"));
+    let test_file = root.join("tests/e2e/home.spec.ts");
+    let page = root.join("web/app/page.tsx");
+    let bad_app_file = root.join("web/app/bad.tsx");
+    let config = root.join("playwright.config.mts");
+
+    let edges = collect_playwright_route_edges(
+        &root,
+        &[
+            test_file.clone(),
+            page.clone(),
+            bad_app_file,
+            config,
+            root.join(".no-mistakes.yml"),
+        ],
+    );
+    assert!(
+        edges.contains(&(
+            NodeId::File(test_file.clone()),
+            NodeId::File(page.clone()),
+            EdgeKind::RouteTest
+        )),
+        "expected route edge, got {edges:?}"
+    );
+
+    let filtered_edges =
+        collect_playwright_route_edges(&root, &[test_file, root.join(".no-mistakes.yml")]);
+    assert!(
+        !filtered_edges.iter().any(|(_, target, kind)| {
+            target == &NodeId::File(page.clone()) && *kind == EdgeKind::RouteTest
+        }),
+        "route edges should not introduce files outside the graph file set"
+    );
+}
+
+#[test]
 fn lazy_import_deps_walks_only_reachable_import_graph() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("lazy-import"));
     let entry = root.join("src/a.mts");
