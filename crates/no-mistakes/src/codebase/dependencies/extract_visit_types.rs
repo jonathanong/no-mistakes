@@ -7,7 +7,7 @@ fn visit_ts_type_alias_declaration_with_scope<'a>(
     } else if collector.function_stack.is_empty() {
         collector.add_type_binding_name(declaration.id.name.as_str());
         visit_type_alias_declaration_with_scope(collector, declaration, true);
-        collector.visit_ts_type(&declaration.type_annotation);
+        visit_type_alias_declaration_file_fallback(collector, declaration);
     } else {
         collector.add_type_binding_name(declaration.id.name.as_str());
         collector.add_type_parameter_names(declaration.type_parameters.as_deref());
@@ -24,8 +24,7 @@ fn visit_ts_interface_declaration_with_scope<'a>(
     } else if collector.function_stack.is_empty() {
         collector.add_type_binding_name(declaration.id.name.as_str());
         visit_interface_declaration_with_scope(collector, declaration, true);
-        collector.visit_ts_interface_heritages(&declaration.extends);
-        collector.visit_ts_interface_body(&declaration.body);
+        visit_interface_declaration_file_fallback(collector, declaration);
     } else {
         collector.add_type_binding_name(declaration.id.name.as_str());
         collector.add_type_parameter_names(declaration.type_parameters.as_deref());
@@ -76,6 +75,17 @@ fn visit_type_alias_declaration_with_scope_name<'a>(
     collector.pop_function_scope(true);
 }
 
+fn visit_type_alias_declaration_file_fallback<'a>(
+    collector: &mut ImportCollector,
+    declaration: &TSTypeAliasDeclaration<'a>,
+) {
+    push_top_level_type_scope(collector);
+    collector.add_type_binding_name(declaration.id.name.as_str());
+    collector.add_type_parameter_names(declaration.type_parameters.as_deref());
+    collector.visit_ts_type(&declaration.type_annotation);
+    pop_top_level_type_scope(collector);
+}
+
 fn visit_interface_declaration_with_scope<'a>(
     collector: &mut ImportCollector,
     declaration: &TSInterfaceDeclaration<'a>,
@@ -99,4 +109,26 @@ fn visit_interface_declaration_with_scope_name<'a>(
     collector.visit_ts_interface_body(&declaration.body);
     collector.suppress_imports = saved_suppress_imports;
     collector.pop_function_scope(true);
+}
+
+fn visit_interface_declaration_file_fallback<'a>(
+    collector: &mut ImportCollector,
+    declaration: &TSInterfaceDeclaration<'a>,
+) {
+    push_top_level_type_scope(collector);
+    collector.add_type_binding_name(declaration.id.name.as_str());
+    collector.add_type_parameter_names(declaration.type_parameters.as_deref());
+    collector.visit_ts_interface_heritages(&declaration.extends);
+    collector.visit_ts_interface_body(&declaration.body);
+    pop_top_level_type_scope(collector);
+}
+
+fn push_top_level_type_scope(collector: &mut ImportCollector) {
+    collector.type_local_stack.push(HashSet::new());
+    collector.type_parameter_stack.push(HashSet::new());
+}
+
+fn pop_top_level_type_scope(collector: &mut ImportCollector) {
+    collector.type_local_stack.pop();
+    collector.type_parameter_stack.pop();
 }

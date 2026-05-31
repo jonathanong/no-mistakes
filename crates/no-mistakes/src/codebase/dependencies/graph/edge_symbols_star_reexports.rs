@@ -28,11 +28,13 @@ fn collect_star_reexport_edges(
     );
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 struct StarReexportKind {
     export_is_type_only: bool,
     source_kind: EdgeKind,
 }
+
+type StarReexportVisitKey = (PathBuf, StarReexportKind);
 
 fn collect_star_reexport_target(
     inputs: &ExportEdgeInputs<'_>,
@@ -40,9 +42,9 @@ fn collect_star_reexport_target(
     shadowed_exports: &HashSet<StarExportKey>,
     kind: StarReexportKind,
     edges: &mut Vec<Edge>,
-    visited: &mut HashSet<PathBuf>,
+    visited: &mut HashSet<StarReexportVisitKey>,
 ) {
-    if !visited.insert(target.to_path_buf()) {
+    if !visited.insert((target.to_path_buf(), kind)) {
         return;
     }
     let Some(target_symbols) = inputs
@@ -122,7 +124,7 @@ fn collect_nested_star_reexport(
     shadowed_exports: &HashSet<StarExportKey>,
     reexport_kind: StarReexportKind,
     edges: &mut Vec<Edge>,
-    visited: &mut HashSet<PathBuf>,
+    visited: &mut HashSet<StarReexportVisitKey>,
 ) {
     let ExportKind::ReExport { source, imported } = &export.kind else {
         return;

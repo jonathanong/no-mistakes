@@ -20,6 +20,13 @@ impl ImportCollector {
 
     fn scoped_type_binding_reference(&self, name: &str, binding: &str) -> Option<String> {
         let Some(current) = self.current_function() else {
+            if self
+                .type_local_stack
+                .last()
+                .is_some_and(|scope| scope.contains(binding))
+            {
+                return None;
+            }
             return Some(name.to_string());
         };
         let nested = format!("{current}/{binding}");

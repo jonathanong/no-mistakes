@@ -111,3 +111,46 @@ fn dependencies_symbols_scope_top_level_object_methods_by_object() {
     assert!(output.status.success());
     assert_eq!(stdout(&output), "source.mts#alpha\n");
 }
+
+#[test]
+fn dependencies_symbols_type_declaration_scopes_shadow_imports() {
+    let root = fixture("symbol-export");
+    for entrypoint in [
+        "scoped-type-declarations.mts#aliasRun",
+        "scoped-type-declarations.mts#interfaceRun",
+    ] {
+        let output = run(&[
+            "dependencies",
+            entrypoint,
+            "--root",
+            root.to_str().unwrap(),
+            "--symbols",
+            "--relationship",
+            "import-type",
+            "--format",
+            "paths",
+        ]);
+
+        assert!(output.status.success());
+        assert_eq!(stdout(&output), "", "{entrypoint}");
+    }
+}
+
+#[test]
+fn dependencies_symbols_visit_star_reexports_by_type_and_value_kind() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "star-dual-consumer.mts#value",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-static",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert!(stdout(&output).contains("star-dual-source.mts#Dual\n"));
+}
