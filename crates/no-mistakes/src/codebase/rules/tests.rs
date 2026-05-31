@@ -141,6 +141,7 @@ fn run_check_executes_forbidden_dependencies_rule() {
 #[test]
 fn run_check_with_facts_executes_forbidden_dependencies_rule() {
     let root = fixture("codebase-analysis/forbidden-dependencies-basic");
+    let tsconfig = root.join("tsconfig.json");
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
     let graph_plan = crate::codebase::rules::forbidden_dependencies::graph_plan(&config)
         .expect("forbidden dependencies config requests graph facts");
@@ -155,7 +156,7 @@ fn run_check_with_facts_executes_forbidden_dependencies_rule() {
             ..Default::default()
         },
     );
-    let findings = run_check_with_facts(&root, None, None, &shared).unwrap();
+    let findings = run_check_with_facts(&root, None, Some(&tsconfig), &shared).unwrap();
     assert!(findings.iter().any(|f| f.rule == FORBIDDEN_DEPENDENCIES));
 }
 
