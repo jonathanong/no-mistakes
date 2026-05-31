@@ -28,10 +28,8 @@ fn bfs_skipping_initial_symbol_owner_files(
     }
 
     while let Some((node, depth)) = queue.pop_front() {
-        if let Some(max) = max_depth {
-            if depth >= max {
-                continue;
-            }
+        if max_depth.is_some_and(|max| depth >= max) {
+            continue;
         }
 
         if let Some(neighbors) = edges.get(&node) {
