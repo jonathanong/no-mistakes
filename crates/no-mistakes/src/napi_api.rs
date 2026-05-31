@@ -5,6 +5,7 @@ use napi::bindgen_prelude::AsyncTask;
 #[cfg(all(not(test), not(coverage)))]
 use napi_derive::napi;
 
+mod analyze_project;
 mod async_task;
 mod cli_parity;
 mod codebase;
@@ -57,6 +58,15 @@ pub fn dependents_json(options_json: String) -> AsyncTask<JsonTask> {
 #[cfg_attr(not(test), napi(js_name = "relatedJson"))]
 pub fn related_json(options_json: String) -> AsyncTask<JsonTask> {
     AsyncTask::new(JsonTask::new(options_json, related_json_impl))
+}
+
+#[cfg(not(coverage))]
+#[cfg_attr(not(test), napi(js_name = "analyzeProjectJson"))]
+pub fn analyze_project_json(options_json: String) -> AsyncTask<JsonTask> {
+    AsyncTask::new(JsonTask::new(
+        options_json,
+        analyze_project::analyze_project_json_impl,
+    ))
 }
 
 #[cfg(not(coverage))]

@@ -18,6 +18,8 @@ test("programmatic API proxies object options through async native addon calls",
         JSON.stringify({ command: "dependents", options: JSON.parse(json) }),
       relatedJson: async (json) =>
         JSON.stringify({ command: "related", options: JSON.parse(json) }),
+      analyzeProjectJson: async (json) =>
+        JSON.stringify({ command: "analyzeProject", options: JSON.parse(json) }),
       symbolsJson: async (json) =>
         JSON.stringify({ command: "symbols", options: JSON.parse(json) }),
       fetchesJson: async (json) =>
@@ -72,6 +74,10 @@ test("programmatic API proxies object options through async native addon calls",
     });
     assert.equal((await api.dependents({ files: ["b.mts"] })).command, "dependents");
     assert.equal((await api.related({ files: ["c.mts"] })).command, "related");
+    assert.equal(
+      (await api.analyzeProject({ reports: [{ type: "dependencies", files: ["a.mts"] }] })).command,
+      "analyzeProject",
+    );
     assert.equal(
       (await api.symbols({ files: ["d.mts"], include: "both" })).options.include,
       "both",

@@ -1,3 +1,5 @@
+import type { PlaywrightOptions } from "./report-types";
+
 export type Relationship =
   | "import"
   | "import-static"
@@ -110,4 +112,44 @@ export interface FetchesOptions {
   root?: string;
   config?: string;
   targets?: string[];
+}
+
+export type AnalyzeProjectReportRequest =
+  | ({ type: "dependencies" | "dependents" | "related"; id?: string } & Omit<
+      TraverseOptions,
+      "root" | "tsconfig"
+    >)
+  | ({ type: "symbols"; id?: string } & Omit<SymbolsOptions, "root" | "tsconfig">)
+  | ({ type: "queues" | "queueEdges" | "queueRelated" | "queueCheck"; id?: string } & Omit<
+      ProjectOptions,
+      "root" | "tsconfig" | "config"
+    >)
+  | ({
+      type: "serverRoutes" | "serverRouteList" | "serverRouteEdges" | "serverRouteRelated";
+      id?: string;
+    } & Omit<ProjectOptions, "root" | "tsconfig" | "config">)
+  | ({ type: "reactAnalyze" | "reactCheck"; id?: string } & Pick<
+      ProjectOptions,
+      "targets" | "depth" | "assertNoFetch"
+    >)
+  | ({
+      type: "playwrightCheck" | "playwrightEdges" | "playwrightRelated" | "playwrightTests";
+      id?: string;
+    } & Omit<PlaywrightOptions, "root" | "config">)
+  | { type: "check"; id?: string };
+
+export interface AnalyzeProjectOptions {
+  root?: string;
+  tsconfig?: string;
+  config?: string;
+  filters?: string[];
+  reports: AnalyzeProjectReportRequest[];
+}
+
+export interface AnalyzeProjectResult {
+  reports: Array<{
+    id?: string;
+    type: AnalyzeProjectReportRequest["type"];
+    result: unknown;
+  }>;
 }

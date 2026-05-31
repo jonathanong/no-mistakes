@@ -183,6 +183,23 @@ impl GraphBuildPlan {
         }
     }
 
+    pub(crate) fn include(&mut self, other: Self) {
+        self.imports |= other.imports;
+        self.workspace |= other.workspace;
+        self.package |= other.package;
+        self.tests |= other.tests;
+        self.markdown |= other.markdown;
+        self.ci |= other.ci;
+        self.routes |= other.routes;
+        self.queues |= other.queues;
+        self.playwright_routes |= other.playwright_routes;
+        self.playwright_selectors |= other.playwright_selectors;
+        self.http |= other.http;
+        self.process |= other.process;
+        self.assets |= other.assets;
+        self.react |= other.react;
+    }
+
     pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
         TsFactPlan {
             imports: self.imports || self.workspace || self.assets,

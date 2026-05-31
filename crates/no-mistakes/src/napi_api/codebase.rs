@@ -34,7 +34,7 @@ fn traverse_json(options_json: String, direction: Direction) -> napi::Result<Str
     crate::codebase::dependencies::run_json(args, direction).map_err(to_napi_error)
 }
 
-fn build_traverse_args(options: TraverseOptions) -> AnyhowResult<TraverseArgs> {
+pub(crate) fn build_traverse_args(options: TraverseOptions) -> AnyhowResult<TraverseArgs> {
     if options.files.is_empty() {
         bail!("files must contain at least one file");
     }

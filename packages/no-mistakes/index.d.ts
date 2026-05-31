@@ -1,5 +1,7 @@
 import type {
   CheckReport,
+  AnalyzeProjectOptions,
+  AnalyzeProjectResult,
   DependencyResult,
   FetchesOptions,
   GraphEdge,
@@ -27,6 +29,7 @@ export * from "./types";
 export function dependencies(options: TraverseOptions): Promise<DependencyResult>;
 export function dependents(options: TraverseOptions): Promise<DependencyResult>;
 export function related(options: TraverseOptions): Promise<DependencyResult>;
+export function analyzeProject(options: AnalyzeProjectOptions): Promise<AnalyzeProjectResult>;
 export function symbols(options: SymbolsOptions): Promise<SymbolsResult>;
 export function fetches(options?: FetchesOptions): Promise<unknown>;
 export function check(options?: ProjectOptions): Promise<CheckReport>;

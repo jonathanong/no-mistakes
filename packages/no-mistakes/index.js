@@ -18,6 +18,10 @@ async function related(options) {
   return callJson(native.relatedJson, options);
 }
 
+async function analyzeProject(options) {
+  return callJson(native.analyzeProjectJson, options);
+}
+
 async function symbols(options) {
   return callJson(native.symbolsJson, options);
 }
@@ -115,6 +119,7 @@ async function version() {
 }
 
 module.exports = {
+  analyzeProject,
   check,
   dependencies,
   dependents,
