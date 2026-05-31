@@ -299,3 +299,30 @@ fn dependencies_symbols_scope_inline_arrow_callback_parameters() {
     assert!(output.status.success());
     assert_eq!(stdout(&output), "");
 }
+
+#[test]
+fn dependencies_symbols_expand_runtime_file_edges_from_exported_symbol() {
+    let root = fixture("symbol-runtime-edges");
+    let output = run(&[
+        "dependencies",
+        "client.mts#runRuntimeEdges",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "http",
+        "--relationship",
+        "process",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let out = stdout(&output);
+    assert!(out.contains("routes/users.mts\n"), "{out}");
+    assert!(out.contains("worker.mts\n"), "{out}");
+}
