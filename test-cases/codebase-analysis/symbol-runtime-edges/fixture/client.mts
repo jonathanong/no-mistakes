@@ -32,6 +32,10 @@ export function runMemberSpawnRuntimeEdge() {
   runner.spawn("member-worker.mts");
 }
 
+export function runMissingSpawnRuntimeEdge() {
+  runner.spawn("missing-worker.mts");
+}
+
 export function formatRuntimeEdges() {
   return "no runtime edges";
 }

@@ -382,3 +382,22 @@ fn dependencies_symbols_accept_member_spawn_calls() {
     assert!(output.status.success());
     assert_eq!(stdout(&output), "member-worker.mts\n");
 }
+
+#[test]
+fn dependencies_symbols_ignore_unresolved_member_spawn_calls() {
+    let root = fixture("symbol-runtime-edges");
+    let output = run(&[
+        "dependencies",
+        "client.mts#runMissingSpawnRuntimeEdge",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "process",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "");
+}
