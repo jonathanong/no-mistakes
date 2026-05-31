@@ -3,6 +3,9 @@ mod projects;
 mod targets;
 mod types;
 
+#[cfg(test)]
+mod tests;
+
 use crate::config::v2::schema::NoMistakesConfig;
 use crate::integration_tests::types::ConfigProject;
 use anyhow::Result;

@@ -4,6 +4,9 @@ use globset::{Glob, GlobSet, GlobSetBuilder};
 
 use super::types::TestRunner;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Clone)]
 pub struct ProjectTestFilter {
     include: GlobSet,
@@ -71,9 +74,7 @@ pub(super) fn fallback_runner_match(runner: TestRunner, rel: &str) -> bool {
 
 fn has_path_segment_pair(path: &str, first: &str, second: &str) -> bool {
     let mut segments = path.split('/');
-    let Some(mut previous) = segments.next() else {
-        return false;
-    };
+    let mut previous = segments.next().unwrap_or("");
     for current in segments {
         if previous == first && current == second {
             return true;
