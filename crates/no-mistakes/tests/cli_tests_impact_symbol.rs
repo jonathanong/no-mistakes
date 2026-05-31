@@ -83,7 +83,8 @@ fn test_impact_symbol_opt_in_limits_to_symbol_consumers() {
         .iter()
         .map(|t| t["test_file"].as_str().unwrap())
         .collect();
-    assert_eq!(test_files, vec!["other.test.mts"]);
+    assert_eq!(test_files, vec!["helper-export.test.mts", "other.test.mts"]);
+    assert!(!test_files.contains(&"unrelated-consumer.test.mts"));
     assert_eq!(
         plan["selected_tests"][0]["reasons"][0]["changed_file"],
         "utils.mts#parseDate"
@@ -114,6 +115,9 @@ fn dependents_symbols_outputs_symbol_nodes_when_opted_in() {
         .any(|file| file["file"] == "other.mts" && file["symbol"] == "parse"));
     assert!(files.iter().any(|file| file["path"] == "other.test.mts"));
     assert!(!files.iter().any(|file| file["path"] == "service.test.mts"));
+    assert!(!files
+        .iter()
+        .any(|file| file["path"] == "unrelated-consumer.mts"));
 }
 
 #[test]
@@ -182,6 +186,18 @@ fn dependencies_symbols_handles_local_alias_barrel_and_helper_calls() {
         ("helper-chain.mts#run", "source.mts#alpha\n"),
         ("namespace-consumer.mts#value", "source.mts#alpha\n"),
         ("star-barrel.mts#alpha", "source.mts#alpha\n"),
+        (
+            "namespace-barrel-consumer.mts#value",
+            "namespace-barrel.mts#source\nsource.mts#alpha\n",
+        ),
+        ("alias-reference.mts#alias", "source.mts#alpha\n"),
+        ("type-reference.mts#AliasShape", "source.mts#SourceShape\n"),
+        ("multi-alias.mts#publicOne", "source.mts#alpha\n"),
+        ("multi-alias.mts#publicTwo", "source.mts#alpha\n"),
+        (
+            "default-anonymous-consumer.mts#default",
+            "source.mts#alpha\n",
+        ),
     ] {
         let output = run(&[
             "dependencies",
@@ -199,6 +215,163 @@ fn dependencies_symbols_handles_local_alias_barrel_and_helper_calls() {
         );
         assert_eq!(stdout(&output), expected, "{entrypoint}");
     }
+}
+
+#[test]
+fn dependencies_symbols_type_filters_star_reexported_types() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "star-barrel.mts#SourceShape",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-type",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(stdout(&output), "source.mts#SourceShape\n");
+}
+
+#[test]
+fn dependencies_symbols_type_filters_exported_interfaces() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "interface-reference.mts#Derived",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-type",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(stdout(&output), "source.mts#SourceShape\n");
+}
+
+#[test]
+fn dependents_symbols_keep_file_fallback_for_exporting_importers() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependents",
+        "source.mts#alpha",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(stdout(&output).contains("exporting-top-level-consumer.mts\n"));
+}
+
+#[test]
+fn dependencies_symbols_ignores_shadowed_import_references() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "shadowed-import.mts#run",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(stdout(&output), "");
+}
+
+#[test]
+fn dependencies_symbols_can_target_external_module_imports() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "external-schema.mts#schema",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--target-module",
+        "zod",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(stdout(&output), "zod\n");
+}
+
+#[test]
+fn dependencies_symbols_include_scoped_dynamic_imports() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "dynamic-loader.mts#load",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-dynamic",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(stdout(&output).contains("dynamic-chunk.mts\n"));
+}
+
+#[test]
+fn dependencies_symbols_include_asset_imports_as_files() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "asset-consumer.mts#get",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "asset",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert_eq!(stdout(&output), "data.json\n");
 }
 
 #[test]

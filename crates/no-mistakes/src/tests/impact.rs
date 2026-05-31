@@ -61,6 +61,12 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
 
     for raw in &args.entrypoints {
         let (raw_file, symbol) = parse_entrypoint(raw);
+        if symbol.is_some() && !args.include_symbols {
+            anyhow::bail!(
+                "Entrypoint `{}` uses `#symbol`; pass --symbols to enable symbol traversal.",
+                raw
+            );
+        }
         let file = if raw_file.is_absolute() {
             raw_file
         } else {

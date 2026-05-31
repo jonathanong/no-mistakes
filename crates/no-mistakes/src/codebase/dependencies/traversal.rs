@@ -4,6 +4,7 @@ struct TraversalCtx<'a> {
     graph_files: &'a graph::GraphFiles,
     build_plan: graph::GraphBuildPlan,
     allowed: Option<&'a std::collections::HashSet<EdgeKind>>,
+    symbols: bool,
 }
 
 fn resolve_tsconfig(args: &TraverseArgs, root: &Path) -> Result<TsConfig> {
@@ -162,14 +163,16 @@ fn dependents_entries(
     ctx: &TraversalCtx<'_>,
 ) -> Vec<graph::NodeEntry> {
     let any_symbol = entrypoints.iter().any(|e| e.symbol.is_some());
-    if ctx.build_plan.symbols {
-        return graph::DepGraph::build_with_plan_and_files(
+    if ctx.symbols {
+        let graph = graph::DepGraph::build_with_plan_and_files(
             ctx.root,
             ctx.tsconfig,
             ctx.build_plan,
             ctx.graph_files,
-        )
-        .dependents_of_symbol_nodes(roots, depth, ctx.allowed);
+        );
+        let roots = roots_with_existing_queue_jobs(roots, entrypoints, &graph);
+        let roots = roots_with_exported_symbol_roots(&roots, &graph);
+        return graph.dependents_of_symbol_nodes(&roots, depth, ctx.allowed);
     }
     let symbol_facts = any_symbol.then(|| {
         let mut fact_plan = ctx.build_plan.ts_fact_plan();

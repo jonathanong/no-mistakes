@@ -33,7 +33,7 @@ impl DepGraph {
 
     /// Reverse traversal for symbol roots. The graph includes file -> symbol
     /// bridge edges so file-level roots can expose exported symbols, but a
-    /// symbol root must not immediately widen back to its owning file.
+    /// symbol root must not widen back to any symbol's owning file.
     pub fn dependents_of_symbol_nodes(
         &self,
         roots: &[NodeId],
@@ -41,7 +41,7 @@ impl DepGraph {
         allowed: Option<&HashSet<EdgeKind>>,
     ) -> Vec<NodeEntry> {
         let roots = normalize_nodes(roots);
-        bfs_skipping_initial_symbol_owner_files(&roots, &self.reverse, max_depth, allowed)
+        bfs_skipping_symbol_owner_files(&roots, &self.reverse, max_depth, allowed)
     }
 
     /// Find all files that import `symbol` from `file`, transitively.
@@ -91,6 +91,10 @@ impl DepGraph {
 
     pub fn root(&self) -> &Path {
         &self.root
+    }
+
+    pub(crate) fn has_reverse_node(&self, node: &NodeId) -> bool {
+        self.reverse.contains_key(node)
     }
 
     pub fn all_files(&self) -> impl Iterator<Item = &NodeId> {

@@ -29,12 +29,14 @@ fn tests_impact_json_accepts_structured_symbol_entrypoint() {
     let output = tests_impact_json_impl(options).unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
     let selected = plan["selected_tests"].as_array().unwrap();
-    assert_eq!(selected.len(), 1);
-    assert_eq!(selected[0]["test_file"], "other.test.mts");
-    assert_eq!(
-        selected[0]["reasons"][0]["changed_file"],
-        "utils.mts#parseDate"
-    );
+    let test_files: Vec<&str> = selected
+        .iter()
+        .map(|test| test["test_file"].as_str().unwrap())
+        .collect();
+    assert_eq!(test_files, vec!["helper-export.test.mts", "other.test.mts"]);
+    assert!(selected
+        .iter()
+        .all(|test| test["reasons"][0]["changed_file"] == "utils.mts#parseDate"));
 }
 
 #[test]
@@ -52,7 +54,9 @@ fn dependents_json_accepts_structured_symbol_file() {
     assert!(files
         .iter()
         .any(|file| file["file"] == "other.mts" && file["symbol"] == "parse"));
-    assert!(!files.iter().any(|file| file["path"] == "service.test.mts"));
+    assert!(!files
+        .iter()
+        .any(|file| file["path"] == "service.test.mts"));
 }
 
 #[test]

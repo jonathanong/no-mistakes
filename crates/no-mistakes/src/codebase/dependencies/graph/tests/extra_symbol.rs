@@ -180,6 +180,10 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
                     callee: "used".to_string(),
                 },
             ],
+            symbol_references: vec![FunctionCall {
+                caller: Some("run".to_string()),
+                callee: "used".to_string(),
+            }],
             ..TsFileFacts::default()
         },
     );
@@ -188,6 +192,7 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
         &[p("/repo/src/missing.mts"), no_symbols, current.clone()],
         &facts,
         &resolver,
+        &Default::default(),
     );
 
     assert!(edges.contains(&(
@@ -223,6 +228,110 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
 }
 
 #[test]
+fn symbol_import_target_helpers_cover_node_kinds() {
+    use crate::codebase::dependencies::extract::{ExtractedImport, ImportKind};
+
+    let current = p("/repo/src/current.mts");
+    let source = p("/repo/src/source.mts");
+    let asset = p("/repo/src/data.json");
+    let mut visible = HashSet::new();
+    visible.insert(current.clone());
+    visible.insert(source.clone());
+    visible.insert(asset.clone());
+    let tsconfig = TsConfig {
+        dir: p("/repo"),
+        paths: vec![],
+        paths_dir: p("/repo"),
+        base_url: None,
+    };
+    let resolver = ImportResolver::new(&tsconfig).with_visible(&visible);
+    let workspace = crate::codebase::workspaces::WorkspaceMap::default();
+
+    assert_eq!(
+        import_target(
+            "./source.mts",
+            ImportKind::Static,
+            &current,
+            &resolver,
+            &workspace
+        ),
+        Some((NodeId::File(source.clone()), EdgeKind::Import))
+    );
+    assert_eq!(
+        import_target(
+            "./source.mts",
+            ImportKind::Type,
+            &current,
+            &resolver,
+            &workspace
+        ),
+        Some((NodeId::File(source.clone()), EdgeKind::TypeImport))
+    );
+    assert_eq!(
+        import_target(
+            "./source.mts",
+            ImportKind::Require,
+            &current,
+            &resolver,
+            &workspace
+        ),
+        Some((NodeId::File(source), EdgeKind::Require))
+    );
+    assert_eq!(
+        import_target(
+            "./data.json",
+            ImportKind::Static,
+            &current,
+            &resolver,
+            &workspace
+        ),
+        Some((NodeId::File(asset), EdgeKind::AssetImport))
+    );
+    assert_eq!(
+        import_target("zod", ImportKind::Dynamic, &current, &resolver, &workspace),
+        Some((NodeId::Module("zod".to_string()), EdgeKind::DynamicImport))
+    );
+    assert_eq!(
+        import_target(
+            "./missing.mts",
+            ImportKind::Static,
+            &current,
+            &resolver,
+            &workspace
+        ),
+        None
+    );
+
+    let scoped = scoped_import_map(
+        &[
+            ExtractedImport {
+                specifier: "./source.mts".to_string(),
+                kind: ImportKind::Static,
+                function_scope: Some("run".to_string()),
+            },
+            ExtractedImport {
+                specifier: "./missing.mts".to_string(),
+                kind: ImportKind::Static,
+                function_scope: Some("run".to_string()),
+            },
+            ExtractedImport {
+                specifier: "react".to_string(),
+                kind: ImportKind::Type,
+                function_scope: None,
+            },
+        ],
+        &current,
+        &resolver,
+        &workspace,
+    );
+
+    assert_eq!(
+        scoped.get("run"),
+        Some(&vec![(NodeId::File(p("/repo/src/source.mts")), EdgeKind::Import)])
+    );
+}
+
+#[test]
 fn symbol_bfs_skips_initial_owner_and_honors_limits() {
     let owner = p("/repo/src/owner.mts");
     let dep = p("/repo/src/dep.mts");
@@ -240,7 +349,7 @@ fn symbol_bfs_skips_initial_owner_and_honors_limits() {
     );
 
     let import_only: HashSet<_> = [EdgeKind::Import].into();
-    let filtered = bfs_skipping_initial_symbol_owner_files(
+    let filtered = bfs_skipping_symbol_owner_files(
         std::slice::from_ref(&symbol),
         &edges,
         None,
@@ -249,11 +358,11 @@ fn symbol_bfs_skips_initial_owner_and_honors_limits() {
     assert!(filtered.is_empty());
 
     let unfiltered =
-        bfs_skipping_initial_symbol_owner_files(std::slice::from_ref(&symbol), &edges, None, None);
+        bfs_skipping_symbol_owner_files(std::slice::from_ref(&symbol), &edges, None, None);
     assert_eq!(unfiltered.len(), 1);
     assert_eq!(unfiltered[0].node, NodeId::File(dep));
 
-    let limited = bfs_skipping_initial_symbol_owner_files(
+    let limited = bfs_skipping_symbol_owner_files(
         std::slice::from_ref(&symbol),
         &edges,
         Some(0),
@@ -262,7 +371,7 @@ fn symbol_bfs_skips_initial_owner_and_honors_limits() {
     assert!(limited.is_empty());
 
     let file_start = NodeId::File(owner);
-    let empty = bfs_skipping_initial_symbol_owner_files(&[file_start], &edges, Some(0), None);
+    let empty = bfs_skipping_symbol_owner_files(&[file_start], &edges, Some(0), None);
     assert!(empty.is_empty());
 }
 
@@ -291,10 +400,45 @@ fn symbol_bfs_skips_only_the_current_symbol_owner_file() {
         vec![(NodeId::File(owner_b.clone()), EdgeKind::Import)],
     );
 
-    let result = bfs_skipping_initial_symbol_owner_files(&[symbol_a, symbol_b], &edges, None, None);
+    let result = bfs_skipping_symbol_owner_files(&[symbol_a, symbol_b], &edges, None, None);
     let nodes: Vec<_> = result.into_iter().map(|entry| entry.node).collect();
     assert!(!nodes.contains(&NodeId::File(owner_a)));
     assert!(nodes.contains(&NodeId::File(owner_b)));
+}
+
+#[test]
+fn symbol_bfs_does_not_widen_reached_symbols_to_owner_files() {
+    let source = p("/repo/src/source.mts");
+    let owner = p("/repo/src/owner.mts");
+    let unrelated_consumer = p("/repo/src/unrelated-consumer.mts");
+    let source_symbol = NodeId::Symbol {
+        file: source,
+        symbol: "alpha".to_string(),
+    };
+    let owner_symbol = NodeId::Symbol {
+        file: owner.clone(),
+        symbol: "usesAlpha".to_string(),
+    };
+    let mut edges = EdgeMap::new();
+    edges.insert(
+        source_symbol.clone(),
+        vec![(owner_symbol.clone(), EdgeKind::Import)],
+    );
+    edges.insert(
+        owner_symbol.clone(),
+        vec![(NodeId::File(owner.clone()), EdgeKind::Import)],
+    );
+    edges.insert(
+        NodeId::File(owner.clone()),
+        vec![(NodeId::File(unrelated_consumer.clone()), EdgeKind::Import)],
+    );
+
+    let result = bfs_skipping_symbol_owner_files(&[source_symbol], &edges, None, None);
+    let nodes: Vec<_> = result.into_iter().map(|entry| entry.node).collect();
+
+    assert!(nodes.contains(&owner_symbol));
+    assert!(!nodes.contains(&NodeId::File(owner)));
+    assert!(!nodes.contains(&NodeId::File(unrelated_consumer)));
 }
 
 // ── add_test_edges ───────────────────────────────────────────────────────

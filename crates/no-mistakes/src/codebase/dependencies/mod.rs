@@ -19,6 +19,7 @@ include!("args_relationships.rs");
 
 include!("traversal_entrypoints.rs");
 include!("traversal.rs");
+include!("traversal_queue_roots.rs");
 include!("symbol_resolution.rs");
 include!("shared_traversal.rs");
 include!("output_args.rs");
@@ -113,6 +114,7 @@ pub(crate) fn collect_and_filter_entries(
         graph_files: &graph_files,
         build_plan,
         allowed: allowed.as_ref(),
+        symbols: args.symbols,
     };
     let roots: Vec<NodeId> = entrypoints.iter().map(|e| e.node.clone()).collect();
     let import_only = !args.symbols && relationships_are_import_only(&args.relationships);

@@ -134,10 +134,15 @@ pub(crate) fn trace_entrypoints(
     root: &Path,
     selected_map: &mut HashMap<PathBuf, SelectedTest>,
     include_symbols: bool,
-) {
+) -> Result<()> {
     for raw in entrypoints {
         let (raw_file, symbol) =
             no_mistakes::codebase::dependencies::parse_entrypoint(raw);
+        if symbol.is_some() && !include_symbols {
+            anyhow::bail!(
+                "Entrypoint `{raw}` uses `#symbol`; pass --symbols to enable symbol traversal."
+            );
+        }
         let file = if raw_file.is_absolute() {
             raw_file
         } else {
@@ -226,4 +231,5 @@ pub(crate) fn trace_entrypoints(
             }
         }
     }
+    Ok(())
 }

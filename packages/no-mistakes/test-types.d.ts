@@ -11,8 +11,9 @@ export interface TestsPlanOptions {
   changedFilesFile?: string;
   /** Inline unified diff content to extract changed files from. */
   diff?: string;
-  /** file#export entrypoints to trace impact from (union of all). */
+  /** Entrypoints to trace impact from: strings may use file#export, or pass { file, symbol }. */
   entrypoints?: Array<string | SymbolEntrypoint>;
+  /** Enables symbol fields in entrypoints and symbol-node traversal. */
   includeSymbols?: boolean;
   environment?: string;
   limitPercent?: number;
@@ -24,8 +25,9 @@ export interface TestsImpactOptions {
   root?: string;
   config?: string;
   tsconfig?: string;
-  /** file#export entrypoints to trace impact from. */
+  /** Entrypoints to trace impact from: strings may use file#export, or pass { file, symbol }. */
   entrypoints: Array<string | SymbolEntrypoint>;
+  /** Enables symbol fields in entrypoints and symbol-node traversal. */
   includeSymbols?: boolean;
 }
 

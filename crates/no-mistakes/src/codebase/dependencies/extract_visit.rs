@@ -2,47 +2,17 @@
 struct ImportCollector {
     imports: Vec<ExtractedImport>,
     function_calls: Vec<FunctionCall>,
+    symbol_references: Vec<FunctionCall>,
     unknown_callers: Vec<Option<String>>,
     function_stack: Vec<String>,
+    local_stack: Vec<HashSet<String>>,
+    function_scope_stack: Vec<usize>,
     exported_functions: HashSet<String>,
     export_depth: usize,
     has_unknown_top_level_call: bool,
-}
-
-impl ImportCollector {
-    fn push(&mut self, specifier: &str, kind: ImportKind) {
-        if !specifier.is_empty() {
-            self.imports.push(ExtractedImport {
-                specifier: specifier.to_string(),
-                kind,
-                function_scope: self.function_stack.last().cloned(),
-            });
-        }
-    }
-
-    fn push_function_scope(&mut self, name: Option<String>) {
-        if let Some(name) = name {
-            let scope = self
-                .function_stack
-                .last()
-                .map(|parent| format!("{parent}/{name}"))
-                .unwrap_or(name);
-            if self.export_depth > 0 && self.function_stack.is_empty() {
-                self.exported_functions.insert(scope.clone());
-            }
-            self.function_stack.push(scope);
-        }
-    }
-
-    fn pop_function_scope(&mut self, pushed: bool) {
-        if pushed {
-            self.function_stack.pop();
-        }
-    }
-
-    fn current_function(&self) -> Option<String> {
-        self.function_stack.last().cloned()
-    }
+    anonymous_scope_count: usize,
+    known_function_scopes: HashSet<String>,
+    imported_bindings: HashSet<String>,
 }
 
 impl<'a> Visit<'a> for ImportCollector {
@@ -52,80 +22,71 @@ impl<'a> Visit<'a> for ImportCollector {
         flags: oxc_syntax::scope::ScopeFlags,
     ) {
         let name = function_name(function);
-        let pushed = name.is_some();
-        self.push_function_scope(name);
+        if self.current_function().is_some() {
+            if let Some(name) = &name {
+                self.add_binding_name(name);
+            }
+        }
+        if name.is_some() {
+            self.push_function_scope(name);
+        } else {
+            self.push_anonymous_function_scope();
+        }
+        self.add_type_parameter_names(function.type_parameters.as_deref());
+        self.add_formal_parameters(&function.params);
         walk::walk_function(self, function, flags);
-        self.pop_function_scope(pushed);
+        self.pop_function_scope(true);
     }
 
     fn visit_method_definition(&mut self, method: &MethodDefinition<'a>) {
-        let name = crate::codebase::ts_source::static_property_key_name(&method.key);
-        walk::walk_decorators(self, &method.decorators);
-        walk::walk_property_key(self, &method.key);
-        let pushed = name.is_some();
-        self.push_function_scope(name.map(str::to_string));
-        walk::walk_function(self, &method.value, oxc_syntax::scope::ScopeFlags::empty());
-        self.pop_function_scope(pushed);
+        visit_method_definition_with_scope(self, method);
     }
 
     fn visit_object_property(&mut self, property: &ObjectProperty<'a>) {
-        let name = crate::codebase::ts_source::static_property_key_name(&property.key);
-        match &property.value {
-            Expression::FunctionExpression(function) => {
-                walk::walk_property_key(self, &property.key);
-                let pushed = name.is_some();
-                self.push_function_scope(name.map(str::to_string));
-                walk::walk_function(self, function, oxc_syntax::scope::ScopeFlags::empty());
-                self.pop_function_scope(pushed);
-            }
-            Expression::ArrowFunctionExpression(arrow) => {
-                walk::walk_property_key(self, &property.key);
-                let pushed = name.is_some();
-                self.push_function_scope(name.map(str::to_string));
-                walk::walk_arrow_function_expression(self, arrow);
-                self.pop_function_scope(pushed);
-            }
-            _ => walk::walk_object_property(self, property),
-        }
+        visit_object_property_with_scope(self, property);
     }
 
     fn visit_variable_declarator(&mut self, declarator: &VariableDeclarator<'a>) {
-        let name = binding_identifier_name(&declarator.id).map(str::to_string);
-        match declarator.init.as_ref() {
-            Some(Expression::ArrowFunctionExpression(arrow)) => {
-                walk::walk_binding_pattern(self, &declarator.id);
-                let pushed = name.is_some();
-                self.push_function_scope(name);
-                walk::walk_arrow_function_expression(self, arrow);
-                self.pop_function_scope(pushed);
-            }
-            Some(Expression::FunctionExpression(function)) => {
-                walk::walk_binding_pattern(self, &declarator.id);
-                let scope_name = match name {
-                    Some(name) => Some(name),
-                    None => function_name(function),
-                };
-                let pushed = scope_name.is_some();
-                self.push_function_scope(scope_name);
-                walk::walk_function(self, function, oxc_syntax::scope::ScopeFlags::empty());
-                self.pop_function_scope(pushed);
-            }
-            _ if self.export_depth > 0 && name.is_some() && self.function_stack.is_empty() => {
-                walk::walk_binding_pattern(self, &declarator.id);
-                let pushed = name.is_some();
-                self.push_function_scope(name);
-                if let Some(init) = &declarator.init {
-                    self.visit_expression(init);
-                }
-                self.pop_function_scope(pushed);
-            }
-            _ => walk::walk_variable_declarator(self, declarator),
+        visit_variable_declarator_with_scope(self, declarator);
+    }
+
+    fn visit_class(&mut self, class: &Class<'a>) {
+        visit_class_with_scope(self, class);
+    }
+
+    fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {
+        visit_variable_declaration_with_bindings(self, declaration);
+        walk::walk_variable_declaration(self, declaration);
+    }
+
+    fn visit_block_statement(&mut self, block: &BlockStatement<'a>) {
+        visit_block_statement_with_scope(self, block);
+    }
+
+    fn visit_catch_clause(&mut self, clause: &CatchClause<'a>) {
+        visit_catch_clause_with_scope(self, clause);
+    }
+
+    fn visit_ts_type_alias_declaration(&mut self, declaration: &TSTypeAliasDeclaration<'a>) {
+        if self.export_depth > 0 && self.function_stack.is_empty() {
+            visit_exported_type_alias_declaration(self, declaration);
+        } else {
+            walk::walk_ts_type_alias_declaration(self, declaration);
+        }
+    }
+
+    fn visit_ts_interface_declaration(&mut self, declaration: &TSInterfaceDeclaration<'a>) {
+        if self.export_depth > 0 && self.function_stack.is_empty() {
+            visit_exported_interface_declaration(self, declaration);
+        } else {
+            walk::walk_ts_interface_declaration(self, declaration);
         }
     }
 
     fn visit_import_declaration(&mut self, import: &ImportDeclaration<'a>) {
         let kind = import_declaration_kind(import);
         self.push(import.source.value.as_str(), kind);
+        self.record_imported_bindings(import);
     }
 
     fn visit_export_named_declaration(&mut self, export: &ExportNamedDeclaration<'a>) {
@@ -157,12 +118,7 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_export_default_declaration(&mut self, export: &ExportDefaultDeclaration<'a>) {
-        if let ExportDefaultDeclarationKind::Identifier(identifier) = &export.declaration {
-            self.exported_functions.insert(identifier.name.to_string());
-        }
-        self.export_depth += 1;
-        walk::walk_export_default_declaration(self, export);
-        self.export_depth -= 1;
+        visit_export_default_declaration_with_scope(self, export);
     }
 
     fn visit_import_expression(&mut self, import: &ImportExpression<'a>) {
@@ -185,10 +141,12 @@ impl<'a> Visit<'a> for ImportCollector {
                 }
             }
         } else if let Some(callee) = simple_callee_name(&call.callee) {
-            self.function_calls.push(FunctionCall {
-                caller: self.current_function(),
-                callee,
-            });
+            if self.should_record_call(&callee) {
+                self.function_calls.push(FunctionCall {
+                    caller: self.current_function(),
+                    callee,
+                });
+            }
         } else {
             let caller = self.current_function();
             if caller.is_none() {
@@ -198,9 +156,32 @@ impl<'a> Visit<'a> for ImportCollector {
         }
         walk::walk_call_expression(self, call);
     }
-}
 
-fn function_name(function: &oxc::ast::ast::Function<'_>) -> Option<String> {
-    let id = function.id.as_ref()?;
-    Some(id.name.to_string())
+    fn visit_identifier_reference(&mut self, identifier: &IdentifierReference<'a>) {
+        self.push_symbol_reference(identifier.name.to_string());
+        walk::walk_identifier_reference(self, identifier);
+    }
+
+    fn visit_static_member_expression(&mut self, member: &StaticMemberExpression<'a>) {
+        if let Some(name) = simple_static_member_name(member) {
+            self.push_symbol_reference(name);
+        }
+        walk::walk_static_member_expression(self, member);
+    }
+
+    fn visit_ts_type_reference(&mut self, reference: &TSTypeReference<'a>) {
+        if let Some(name) = type_reference_name(reference) {
+            self.push_symbol_reference(name);
+        }
+        walk::walk_ts_type_reference(self, reference);
+    }
+
+    fn visit_jsx_opening_element(&mut self, opening: &JSXOpeningElement<'a>) {
+        if let Some(name) = crate::codebase::ts_source::jsx::jsx_identifier_name(opening) {
+            if name.chars().next().is_some_and(char::is_uppercase) {
+                self.push_symbol_reference(name.to_string());
+            }
+        }
+        walk::walk_jsx_opening_element(self, opening);
+    }
 }

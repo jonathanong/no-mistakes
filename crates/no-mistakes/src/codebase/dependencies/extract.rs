@@ -1,10 +1,14 @@
 use anyhow::Result;
 use oxc::allocator::Allocator;
 use oxc::ast::ast::{
-    Argument, CallExpression, ExportAllDeclaration, ExportDefaultDeclaration,
-    ExportDefaultDeclarationKind, ExportNamedDeclaration, ExportSpecifier, Expression,
-    ImportDeclaration, ImportDeclarationSpecifier, ImportExpression, MethodDefinition,
-    ModuleExportName, ObjectProperty, Program, TSImportType, VariableDeclarator,
+    Argument, BindingPattern, BlockStatement, CallExpression, CatchClause, Class, ClassElement,
+    ExportAllDeclaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind,
+    ExportNamedDeclaration, ExportSpecifier, Expression, FormalParameters, IdentifierReference,
+    ImportDeclaration, ImportDeclarationSpecifier, ImportExpression, JSXOpeningElement,
+    MethodDefinition, ModuleExportName, ObjectExpression, ObjectProperty, ObjectPropertyKind,
+    Program, StaticMemberExpression, TSImportType, TSInterfaceDeclaration, TSQualifiedName,
+    TSTypeAliasDeclaration, TSTypeName, TSTypeParameterDeclaration, TSTypeReference,
+    VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
 };
 use oxc::ast_visit::{walk, Visit};
 use oxc::parser::Parser;
@@ -44,6 +48,7 @@ pub struct FunctionCall {
 pub struct ImportFacts {
     pub imports: Vec<ExtractedImport>,
     pub function_calls: Vec<FunctionCall>,
+    pub symbol_references: Vec<FunctionCall>,
     pub exported_functions: Vec<String>,
     pub unknown_callers: Vec<Option<String>>,
     pub has_unknown_top_level_call: bool,
@@ -90,6 +95,7 @@ pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFac
     ImportFacts {
         imports: collector.imports,
         function_calls: collector.function_calls,
+        symbol_references: collector.symbol_references,
         exported_functions,
         unknown_callers: collector.unknown_callers,
         has_unknown_top_level_call: collector.has_unknown_top_level_call,
@@ -97,6 +103,10 @@ pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFac
 }
 
 include!("extract_visit.rs");
+include!("extract_collector_methods.rs");
+include!("extract_visit_aggregates.rs");
+include!("extract_visit_helpers.rs");
+include!("extract_binding_helpers.rs");
 
 fn binding_identifier_name<'a>(pattern: &'a oxc::ast::ast::BindingPattern<'a>) -> Option<&'a str> {
     match pattern {
@@ -113,16 +123,37 @@ fn simple_callee_name(expr: &Expression<'_>) -> Option<String> {
         Expression::ParenthesizedExpression(parenthesized) => {
             simple_callee_name(&parenthesized.expression)
         }
-        Expression::StaticMemberExpression(member) => match &member.object {
-            Expression::Identifier(object) => Some(format!(
-                "{}.{}",
-                object.name.as_str(),
-                member.property.name.as_str()
-            )),
-            _ => None,
-        },
+        Expression::StaticMemberExpression(member) => simple_static_member_name(member),
         _ => None,
     }
+}
+
+fn simple_static_member_name(member: &StaticMemberExpression<'_>) -> Option<String> {
+    match &member.object {
+        Expression::Identifier(object) => Some(format!(
+            "{}.{}",
+            object.name.as_str(),
+            member.property.name.as_str()
+        )),
+        _ => None,
+    }
+}
+
+fn type_reference_name(reference: &TSTypeReference<'_>) -> Option<String> {
+    ts_type_name_name(&reference.type_name)
+}
+
+fn ts_type_name_name(name: &TSTypeName<'_>) -> Option<String> {
+    match name {
+        TSTypeName::IdentifierReference(identifier) => Some(identifier.name.to_string()),
+        TSTypeName::QualifiedName(qualified) => ts_qualified_name_name(qualified),
+        TSTypeName::ThisExpression(_) => None,
+    }
+}
+
+fn ts_qualified_name_name(name: &TSQualifiedName<'_>) -> Option<String> {
+    let left = ts_type_name_name(&name.left)?;
+    Some(format!("{}.{}", left, name.right.name.as_str()))
 }
 
 fn import_declaration_kind(import: &ImportDeclaration<'_>) -> ImportKind {
@@ -202,5 +233,7 @@ pub fn is_indexable(path: &Path) -> bool {
     )
 }
 
+#[cfg(test)]
+mod extra_tests;
 #[cfg(test)]
 mod tests;

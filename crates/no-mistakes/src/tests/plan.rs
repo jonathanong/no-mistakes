@@ -261,7 +261,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
         &root,
         &mut selected_map,
         args.include_symbols,
-    );
+    )?;
 
     let mut selected_tests: Vec<SelectedTest> = selected_map.into_values().collect();
     for test in &mut selected_tests {
@@ -418,13 +418,11 @@ pub(crate) fn bfs_path_find(
         // Get dependents
         if let Some(neighbors) = graph.dependents_of_node(&current) {
             for (neighbor, kind) in neighbors {
-                if current == *start {
-                    if let (NodeId::Symbol { file, .. }, NodeId::File(neighbor_file)) =
-                        (start, neighbor)
-                    {
-                        if file == neighbor_file {
-                            continue;
-                        }
+                if let (NodeId::Symbol { file, .. }, NodeId::File(neighbor_file)) =
+                    (&current, neighbor)
+                {
+                    if file == neighbor_file && !test_filter.is_match(root, neighbor_file) {
+                        continue;
                     }
                 }
                 if !visited.contains(neighbor) {

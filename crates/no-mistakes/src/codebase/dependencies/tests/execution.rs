@@ -20,6 +20,7 @@ fn get_entries_supports_import_only_dependencies() {
         graph_files: &graph_files,
         build_plan: graph::GraphBuildPlan::all(),
         allowed: None,
+        symbols: false,
     };
 
     let entries = get_entries(Direction::Deps, &roots, &entrypoints, None, true, &ctx);
@@ -58,6 +59,7 @@ fn get_entries_supports_symbol_dependents() {
         graph_files: &graph_files,
         build_plan: graph::GraphBuildPlan::all(),
         allowed: None,
+        symbols: false,
     };
 
     let entries = get_entries(

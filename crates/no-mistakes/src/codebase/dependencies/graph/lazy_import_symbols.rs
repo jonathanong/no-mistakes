@@ -9,7 +9,7 @@ fn push_unvisited_symbol_pair(
     }
 }
 
-fn bfs_skipping_initial_symbol_owner_files(
+fn bfs_skipping_symbol_owner_files(
     starts: &[NodeId],
     edges: &EdgeMap,
     max_depth: Option<usize>,
@@ -34,15 +34,11 @@ fn bfs_skipping_initial_symbol_owner_files(
 
         if let Some(neighbors) = edges.get(&node) {
             for (neighbor, kind) in neighbors {
-                if depth == 0 {
-                    if let (
-                        NodeId::Symbol { file: owner, .. },
-                        NodeId::File(neighbor_file),
-                    ) = (&node, neighbor)
-                    {
-                        if neighbor_file == owner {
-                            continue;
-                        }
+                if let (NodeId::Symbol { file: owner, .. }, NodeId::File(neighbor_file)) =
+                    (&node, neighbor)
+                {
+                    if neighbor_file == owner {
+                        continue;
                     }
                 }
                 if !allowed.is_none_or(|a| a.contains(kind)) {

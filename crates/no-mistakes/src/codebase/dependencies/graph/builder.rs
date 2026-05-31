@@ -75,7 +75,7 @@ impl DepGraph {
             Vec::new()
         };
 
-        let workspace = if plan.imports || plan.workspace || plan.package {
+        let workspace = if plan.imports || plan.workspace || plan.package || plan.symbols {
             crate::codebase::workspaces::load_from_files(root, &graph_files.all).unwrap_or_default()
         } else {
             Default::default()
@@ -106,7 +106,7 @@ impl DepGraph {
 
         if plan.symbols {
             let facts = facts.expect("TS symbol facts are collected when symbol edges are requested");
-            let symbol_edges = collect_symbol_edges(files, facts, &resolver);
+            let symbol_edges = collect_symbol_edges(files, facts, &resolver, &workspace);
             merge_edges(&mut forward, &mut reverse, symbol_edges);
         }
 

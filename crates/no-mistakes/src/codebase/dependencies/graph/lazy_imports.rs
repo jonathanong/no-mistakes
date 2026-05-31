@@ -153,7 +153,7 @@ fn bfs(
 
         if let Some(neighbors) = edges.get(&node) {
             for (neighbor, kind) in neighbors {
-                if !allowed.is_none_or(|a| a.contains(kind)) {
+                if !edge_allowed(&node, neighbor, *kind, allowed) {
                     continue;
                 }
 
@@ -175,4 +175,21 @@ fn bfs(
     }
 
     result
+}
+
+fn edge_allowed(
+    from: &NodeId,
+    to: &NodeId,
+    kind: EdgeKind,
+    allowed: Option<&HashSet<EdgeKind>>,
+) -> bool {
+    allowed.is_none_or(|a| a.contains(&kind)) || is_symbol_owner_bridge(from, to)
+}
+
+fn is_symbol_owner_bridge(from: &NodeId, to: &NodeId) -> bool {
+    match (from, to) {
+        (NodeId::File(file), NodeId::Symbol { file: symbol_file, .. })
+        | (NodeId::Symbol { file: symbol_file, .. }, NodeId::File(file)) => file == symbol_file,
+        _ => false,
+    }
 }
