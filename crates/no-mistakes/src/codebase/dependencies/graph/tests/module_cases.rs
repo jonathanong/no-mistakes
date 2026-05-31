@@ -257,6 +257,7 @@ fn import_fact_kinds_map_to_edge_kinds() {
         specifier: "dep".to_string(),
         kind: ImportKind::Static,
         function_scope: None,
+        side_effect_only: false,
     };
 
     assert_eq!(edge_kind_for_import(&import), EdgeKind::Import);
@@ -274,6 +275,7 @@ fn type_imports_in_exported_symbol_scopes_are_reachable() {
         specifier: "./target.mts".to_string(),
         kind: ImportKind::Type,
         function_scope: Some("PublicShape".to_string()),
+        side_effect_only: false,
     };
     let facts = crate::codebase::ts_source::facts::TsFileFacts {
         symbols: Some(crate::codebase::ts_symbols::FileSymbols {

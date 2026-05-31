@@ -166,33 +166,41 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
                 FunctionCall {
                     caller: None,
                     callee: "used".to_string(),
+                    static_arg: None,
                 },
                 FunctionCall {
                     caller: Some("helper".to_string()),
                     callee: "used".to_string(),
+                    static_arg: None,
                 },
                 FunctionCall {
                     caller: Some("run".to_string()),
                     callee: "missing".to_string(),
+                    static_arg: None,
                 },
                 FunctionCall {
                     caller: Some("run".to_string()),
                     callee: "used".to_string(),
+                    static_arg: None,
                 },
             ],
             symbol_references: vec![FunctionCall {
                 caller: Some("run".to_string()),
                 callee: "used".to_string(),
+                static_arg: None,
             }],
             ..TsFileFacts::default()
         },
     );
 
     let edges = collect_symbol_edges(
+        Path::new("/repo"),
         &[p("/repo/src/missing.mts"), no_symbols, current.clone()],
+        std::slice::from_ref(&current),
         &facts,
         &resolver,
         &Default::default(),
+        None,
     );
 
     assert!(edges.contains(&(
@@ -308,16 +316,19 @@ fn symbol_import_target_helpers_cover_node_kinds() {
                 specifier: "./source.mts".to_string(),
                 kind: ImportKind::Static,
                 function_scope: Some("run".to_string()),
+        side_effect_only: false,
             },
             ExtractedImport {
                 specifier: "./missing.mts".to_string(),
                 kind: ImportKind::Static,
                 function_scope: Some("run".to_string()),
+        side_effect_only: false,
             },
             ExtractedImport {
                 specifier: "react".to_string(),
                 kind: ImportKind::Type,
                 function_scope: None,
+        side_effect_only: false,
             },
         ],
         &current,

@@ -58,6 +58,7 @@ pub(crate) fn collect_and_filter_entries_shared(
     let entrypoints = resolve_entrypoints_with_files(
         &args.files,
         &args.file_symbols,
+        &args.file_entrypoints_are_structured,
         &shared.root,
         cwd_early,
         &shared.graph_files,

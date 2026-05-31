@@ -1,5 +1,9 @@
 impl ImportCollector {
     fn push(&mut self, specifier: &str, kind: ImportKind) {
+        self.push_with_side_effect(specifier, kind, false);
+    }
+
+    fn push_with_side_effect(&mut self, specifier: &str, kind: ImportKind, side_effect_only: bool) {
         if self.suppress_imports
             && !(self.collect_suppressed_runtime_imports
                 && matches!(kind, ImportKind::Dynamic | ImportKind::Require))
@@ -11,6 +15,7 @@ impl ImportCollector {
                 specifier: specifier.to_string(),
                 kind,
                 function_scope: self.function_stack.last().cloned(),
+                side_effect_only,
             });
         }
     }
@@ -46,6 +51,7 @@ impl ImportCollector {
             self.function_calls.push(FunctionCall {
                 caller: Some(parent.clone()),
                 callee: scope.clone(),
+                static_arg: None,
             });
         }
         self.function_stack.push(scope);

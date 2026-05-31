@@ -2,21 +2,21 @@ fn collect_symbol_runtime_owner_file_edges(
     path: &Path,
     caller_exports: &[String],
     caller: &str,
-    calls_by_caller: &HashMap<String, Vec<String>>,
-    has_http_calls: bool,
+    calls_by_caller: &HashMap<String, Vec<FunctionCall>>,
+    http_route_defs: &[(PathBuf, String)],
     has_process_spawns: bool,
     edges: &mut Vec<Edge>,
 ) {
-    if !has_http_calls && !has_process_spawns {
+    if http_route_defs.is_empty() && !has_process_spawns {
         return;
     }
     let Some(calls) = calls_by_caller.get(caller) else {
         return;
     };
-    let caller_has_http_call = has_http_calls && calls.iter().any(|callee| is_http_callee(callee));
     let caller_has_process_spawn =
-        has_process_spawns && calls.iter().any(|callee| is_process_spawn_callee(callee));
-    if !caller_has_http_call && !caller_has_process_spawn {
+        has_process_spawns && calls.iter().any(|call| is_process_spawn_callee(&call.callee));
+    let http_targets = symbol_http_targets(path, calls, http_route_defs);
+    if http_targets.is_empty() && !caller_has_process_spawn {
         return;
     }
     for caller_export in caller_exports {
@@ -24,8 +24,8 @@ fn collect_symbol_runtime_owner_file_edges(
             file: path.to_path_buf(),
             symbol: caller_export.clone(),
         };
-        if caller_has_http_call {
-            edges.push((from.clone(), NodeId::File(path.to_path_buf()), EdgeKind::HttpCall));
+        for target in &http_targets {
+            edges.push((from.clone(), NodeId::File(target.clone()), EdgeKind::HttpCall));
         }
         if caller_has_process_spawn {
             edges.push((
@@ -35,6 +35,32 @@ fn collect_symbol_runtime_owner_file_edges(
             ));
         }
     }
+}
+
+fn symbol_http_targets(
+    path: &Path,
+    calls: &[FunctionCall],
+    route_defs: &[(PathBuf, String)],
+) -> Vec<PathBuf> {
+    use crate::codebase::ts_routes::matcher;
+
+    let mut targets = Vec::new();
+    for call in calls {
+        if !is_http_callee(&call.callee) {
+            continue;
+        }
+        let Some(static_arg) = call.static_arg.as_deref() else {
+            continue;
+        };
+        for (def_file, def_pattern) in route_defs {
+            if def_file != path && matcher::matches(static_arg, def_pattern) {
+                targets.push(def_file.clone());
+            }
+        }
+    }
+    targets.sort();
+    targets.dedup();
+    targets
 }
 
 fn is_http_callee(callee: &str) -> bool {

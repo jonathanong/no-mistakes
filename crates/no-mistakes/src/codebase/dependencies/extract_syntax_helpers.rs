@@ -128,3 +128,13 @@ fn string_literal_argument<'a>(arg: &'a Argument<'a>) -> Option<&'a str> {
         _ => None,
     }
 }
+
+fn static_path_argument(arg: &Argument<'_>) -> Option<String> {
+    match arg {
+        Argument::StringLiteral(s) => Some(s.value.as_str().to_string()),
+        Argument::TemplateLiteral(tl) if tl.expressions.is_empty() => {
+            Some(crate::codebase::ts_routes::refs::normalize_template(tl))
+        }
+        _ => None,
+    }
+}

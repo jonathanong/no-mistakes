@@ -16,6 +16,32 @@ fn binding_names(pattern: &BindingPattern<'_>) -> Vec<String> {
     }
 }
 
+fn visit_binding_defaults_for_name<'a>(
+    collector: &mut ImportCollector,
+    pattern: &BindingPattern<'a>,
+    name: &str,
+) {
+    match pattern {
+        BindingPattern::AssignmentPattern(assignment) => {
+            if binding_names(&assignment.left).iter().any(|binding| binding == name) {
+                collector.visit_expression(&assignment.right);
+            }
+            visit_binding_defaults_for_name(collector, &assignment.left, name);
+        }
+        BindingPattern::ObjectPattern(object) => {
+            for property in &object.properties {
+                visit_binding_defaults_for_name(collector, &property.value, name);
+            }
+        }
+        BindingPattern::ArrayPattern(array) => {
+            for element in array.elements.iter().flatten() {
+                visit_binding_defaults_for_name(collector, element, name);
+            }
+        }
+        BindingPattern::BindingIdentifier(_) => {}
+    }
+}
+
 fn function_name(function: &oxc::ast::ast::Function<'_>) -> Option<String> {
     let id = function.id.as_ref()?;
     Some(id.name.to_string())
@@ -85,12 +111,13 @@ fn visit_variable_declarator_references_for_bindings<'a>(
         return false;
     }
     for name in names {
-        collector.push_function_scope(Some(name));
+        collector.push_function_scope(Some(name.clone()));
         let saved_suppress_imports = collector.suppress_imports;
         collector.suppress_imports = true;
         if let Some(init) = &declarator.init {
             collector.visit_expression(init);
         }
+        visit_binding_defaults_for_name(collector, &declarator.id, &name);
         walk_variable_type_annotation(collector, declarator);
         collector.suppress_imports = saved_suppress_imports;
         collector.pop_function_scope(true);

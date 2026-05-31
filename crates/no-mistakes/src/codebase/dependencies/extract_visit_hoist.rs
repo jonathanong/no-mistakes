@@ -15,6 +15,11 @@ fn predeclare_function_declarations<'a>(
         if let Statement::FunctionDeclaration(function) = statement {
             if let Some(name) = function_name(function) {
                 collector.add_binding_name(&name);
+                let scope = collector
+                    .current_function()
+                    .map(|parent| format!("{parent}/{name}"))
+                    .unwrap_or(name);
+                collector.known_function_scopes.insert(scope);
             }
         }
     }

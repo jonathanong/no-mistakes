@@ -88,8 +88,17 @@ fn strings_to_paths(values: Vec<String>) -> Vec<PathBuf> {
 fn entrypoint_parts(
     values: Vec<super::options::EntrypointOption>,
 ) -> (Vec<String>, Vec<Option<String>>) {
-    values
-        .into_iter()
-        .map(|entrypoint| entrypoint.into_parts())
-        .unzip()
+    let mut entrypoints = Vec::new();
+    let mut symbols = Vec::new();
+    values.into_iter().for_each(|entrypoint| match entrypoint {
+        super::options::EntrypointOption::Path(path) => {
+            entrypoints.push(path);
+            symbols.push(None);
+        }
+        super::options::EntrypointOption::Symbol(option) => {
+            entrypoints.push(option.file);
+            symbols.push(Some(option.symbol.unwrap_or_default()));
+        }
+    });
+    (entrypoints, symbols)
 }

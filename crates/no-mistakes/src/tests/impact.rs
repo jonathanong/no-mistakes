@@ -63,12 +63,15 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
 
     for (index, raw) in args.entrypoints.iter().enumerate() {
         let structured_symbol = args.entrypoint_symbols.get(index).cloned().flatten();
-        let (raw_file, parsed_symbol) = if structured_symbol.is_some() {
+        let structured_entrypoint = structured_symbol.is_some();
+        let (raw_file, parsed_symbol) = if structured_entrypoint {
             (PathBuf::from(raw), None)
         } else {
             parse_entrypoint(raw)
         };
-        let symbol = structured_symbol.or(parsed_symbol);
+        let symbol = structured_symbol
+            .filter(|symbol| !symbol.is_empty())
+            .or(parsed_symbol);
         if symbol.is_some() && !args.include_symbols {
             anyhow::bail!(
                 "Entrypoint `{}` uses `#symbol`; pass --symbols to enable symbol traversal.",

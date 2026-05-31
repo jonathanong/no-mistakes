@@ -41,6 +41,7 @@ pub(crate) fn build_traverse_args(options: TraverseOptions) -> AnyhowResult<Trav
 
     Ok(TraverseArgs {
         files: entrypoint_files(&options.files),
+        file_entrypoints_are_structured: entrypoint_structured(&options.files),
         file_symbols: entrypoint_symbols(options.files),
         root: options.root.map(PathBuf::from),
         tsconfig: options.tsconfig.map(PathBuf::from),
@@ -98,4 +99,8 @@ fn entrypoint_symbols(values: Vec<super::options::EntrypointOption>) -> Vec<Opti
         .into_iter()
         .map(|value| value.into_parts().1)
         .collect()
+}
+
+fn entrypoint_structured(values: &[super::options::EntrypointOption]) -> Vec<bool> {
+    values.iter().map(|value| value.is_structured()).collect()
 }

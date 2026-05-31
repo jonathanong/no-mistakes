@@ -36,6 +36,7 @@ pub struct ExtractedImport {
     pub specifier: String,
     pub kind: ImportKind,
     pub function_scope: Option<String>,
+    pub side_effect_only: bool,
 }
 
 /// A statically visible function call in a file.
@@ -43,6 +44,7 @@ pub struct ExtractedImport {
 pub struct FunctionCall {
     pub caller: Option<String>,
     pub callee: String,
+    pub static_arg: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -90,6 +92,9 @@ pub fn extract_imports_from_program<'a>(program: &Program<'a>) -> Vec<ExtractedI
 
 pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFacts {
     let mut collector = ImportCollector::default();
+    collector
+        .exported_functions
+        .extend(later_named_value_exports(program));
     collector.visit_program(program);
     let callable_scopes = collector.callable_scopes;
     let exported_type_scopes = collector.exported_type_scopes;
@@ -107,6 +112,27 @@ pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFac
         unknown_callers: collector.unknown_callers,
         has_unknown_top_level_call: collector.has_unknown_top_level_call,
     }
+}
+
+fn later_named_value_exports<'a>(program: &Program<'a>) -> Vec<String> {
+    let mut exports = Vec::new();
+    for statement in &program.body {
+        let Statement::ExportNamedDeclaration(export) = statement else {
+            continue;
+        };
+        if export.source.is_some() || export.export_kind.is_type() {
+            continue;
+        }
+        for specifier in &export.specifiers {
+            if specifier.export_kind.is_type() {
+                continue;
+            }
+            if let Some(name) = module_export_name_name(&specifier.local) {
+                exports.push(name.to_string());
+            }
+        }
+    }
+    exports
 }
 
 include!("extract_visit.rs");

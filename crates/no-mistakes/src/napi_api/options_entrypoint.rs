@@ -22,4 +22,8 @@ impl EntrypointOption {
             ),
         }
     }
+
+    pub(crate) fn is_structured(&self) -> bool {
+        matches!(self, Self::Symbol(_))
+    }
 }

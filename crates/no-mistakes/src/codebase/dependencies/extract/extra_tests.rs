@@ -68,10 +68,7 @@ fn fixture_default_function_expression_uses_expression_scope() {
 
     assert_eq!(facts.imports.len(), 1);
     assert_eq!(facts.imports[0].specifier, "./loaded.mts");
-    assert_eq!(
-        facts.imports[0].function_scope.as_deref(),
-        Some("<anonymous:1>")
-    );
+    assert_eq!(facts.imports[0].function_scope.as_deref(), Some("default"));
 }
 
 #[test]
@@ -107,6 +104,72 @@ fn fixture_local_enum_uses_default_walk() {
     assert_eq!(facts.symbol_references.len(), 1);
     assert_eq!(facts.symbol_references[0].caller, None);
     assert_eq!(facts.symbol_references[0].callee, "alpha");
+}
+
+#[test]
+fn destructuring_array_defaults_are_scoped_to_each_binding() {
+    let allocator = Allocator::default();
+    let ret = Parser::new(
+        &allocator,
+        "import { alpha } from './source.mts';\nconst list = [];\nexport const [api = alpha] = list;",
+        SourceType::ts(),
+    )
+    .parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+
+    assert!(facts
+        .symbol_references
+        .iter()
+        .any(|call| call.caller.as_deref() == Some("api") && call.callee == "alpha"));
+}
+
+#[test]
+fn default_expression_helpers_cover_parenthesized_forms_and_static_args() {
+    let allocator = Allocator::default();
+    let ret = Parser::new(
+        &allocator,
+        "import { alpha } from './source.mts';
+         export default ((function() { alpha(); }));
+         export const template = () => fetch(`/api/users/42`);",
+        SourceType::ts(),
+    )
+    .parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+
+    assert!(facts
+        .function_calls
+        .iter()
+        .any(|call| call.caller.as_deref() == Some("default") && call.callee == "alpha"));
+    assert!(facts.function_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("template")
+            && call.callee == "fetch"
+            && call.static_arg.as_deref() == Some("/api/users/42")
+    }));
+    let ret = Parser::new(
+        &allocator,
+        "import { alpha } from './source.mts';\nexport default (({ run() { alpha(); } }));",
+        SourceType::ts(),
+    )
+    .parse();
+    let facts = extract_import_facts_from_program(&ret.program);
+    assert!(facts
+        .function_calls
+        .iter()
+        .any(|call| call.caller.as_deref() == Some("default") && call.callee == "run"));
+
+    let ret = Parser::new(
+        &allocator,
+        "import { alpha } from './source.mts';\nexport default function() { alpha(); }",
+        SourceType::ts(),
+    )
+    .parse();
+    let facts = extract_import_facts_from_program(&ret.program);
+    assert!(facts
+        .function_calls
+        .iter()
+        .any(|call| call.caller.as_deref() == Some("default") && call.callee == "alpha"));
 }
 
 #[test]

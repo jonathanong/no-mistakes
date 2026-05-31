@@ -100,6 +100,7 @@ pub(crate) fn collect_and_filter_entries(
     let entrypoints = resolve_entrypoints_with_files(
         &args.files,
         &args.file_symbols,
+        &args.file_entrypoints_are_structured,
         &root,
         cwd_early,
         &graph_files,

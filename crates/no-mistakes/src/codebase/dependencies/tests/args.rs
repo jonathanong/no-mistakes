@@ -28,7 +28,7 @@ fn fixture_root(name: &str) -> PathBuf {
 
 fn resolve_entrypoints(raw_entrypoints: &[PathBuf], root: &Path, cwd: &Path) -> Vec<Entrypoint> {
     let graph_files = graph::GraphFiles::discover(root);
-    resolve_entrypoints_with_files(raw_entrypoints, &[], root, cwd, &graph_files, false)
+    resolve_entrypoints_with_files(raw_entrypoints, &[], &[], root, cwd, &graph_files, false)
 }
 
 #[test]
@@ -37,6 +37,7 @@ fn run_surfaces_tsconfig_errors() {
     let args = TraverseArgs {
         files: vec![PathBuf::from("src/utils.mts")],
         file_symbols: Vec::new(),
+        file_entrypoints_are_structured: Vec::new(),
         root: Some(root.clone()),
         tsconfig: Some(root.join("tsconfig-invalid.json")),
         depth: None,

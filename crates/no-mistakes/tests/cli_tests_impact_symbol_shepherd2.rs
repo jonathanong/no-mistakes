@@ -499,3 +499,39 @@ fn dependencies_symbols_default_interface_uses_default_scope() {
     assert!(output.status.success());
     assert_eq!(stdout(&output), "source.mts#SourceShape\n");
 }
+
+#[test]
+fn dependencies_symbols_keep_value_edges_for_dual_direct_reexports() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "dual-direct-barrel.mts#Foo",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-static",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert!(stdout(&output).contains("dual-direct-source.mts#Foo\n"));
+}
+
+#[test]
+fn dependencies_symbols_follow_local_namespace_export_members() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "namespace-local-member-consumer.mts#value",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert!(stdout(&output).contains("namespace-direct-source.mts#alpha\n"));
+}

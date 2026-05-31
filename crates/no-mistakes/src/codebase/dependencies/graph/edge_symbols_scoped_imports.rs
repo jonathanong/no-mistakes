@@ -4,9 +4,14 @@ fn scoped_import_map(
     resolver: &ImportResolver<'_>,
     workspace: &crate::codebase::workspaces::WorkspaceMap,
 ) -> HashMap<String, Vec<(NodeId, EdgeKind)>> {
+    const TOP_LEVEL_SIDE_EFFECT_SCOPE: &str = "";
     let mut map: HashMap<String, Vec<(NodeId, EdgeKind)>> = HashMap::new();
     for import in imports {
-        let Some(scope) = &import.function_scope else {
+        let scope = if let Some(scope) = &import.function_scope {
+            scope.as_str()
+        } else if import.side_effect_only {
+            TOP_LEVEL_SIDE_EFFECT_SCOPE
+        } else {
             continue;
         };
         let Some((node, kind)) =
@@ -14,7 +19,7 @@ fn scoped_import_map(
         else {
             continue;
         };
-        map.entry(scope.clone()).or_default().push((node, kind));
+        map.entry(scope.to_string()).or_default().push((node, kind));
     }
     for imports in map.values_mut() {
         imports.sort();

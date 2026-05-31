@@ -1,10 +1,14 @@
 fn collect_symbol_edges(
+    root: &Path,
     files: &[PathBuf],
+    all_files: &[PathBuf],
     facts: &dyn TsFactLookup,
     resolver: &ImportResolver<'_>,
     workspace: &crate::codebase::workspaces::WorkspaceMap,
+    config_options: Option<&GraphConfigOptions>,
 ) -> Vec<Edge> {
     let mut edges = Vec::new();
+    let http_route_defs = collect_symbol_http_route_defs(root, all_files, facts, config_options);
     for path in files {
         let Some(file_facts) = facts.get_ts_facts(path) else {
             continue;
@@ -58,18 +62,38 @@ fn collect_symbol_edges(
         );
 
         let calls_by_caller = local_call_graph(&file_facts.function_calls);
+        let call_records_by_caller = local_call_records(&file_facts.function_calls);
         let refs_by_caller = local_call_graph(&file_facts.symbol_references);
+        let ordered_refs_by_caller = local_ordered_call_graph(&file_facts.symbol_references);
         let scoped_imports = scoped_import_map(&file_facts.imports, path, resolver, workspace);
         let local_scopes = local_scope_names(&calls_by_caller, &refs_by_caller, &scoped_imports);
         exported_values.sort();
         exported_values.dedup();
-        let has_http_calls = !file_facts.http_calls.is_empty();
+        let scoped_http_route_defs = if file_facts.http_calls.is_empty() {
+            &[][..]
+        } else {
+            http_route_defs.as_slice()
+        };
         let has_process_spawns = !file_facts.process_spawns.is_empty();
         for exported_value in exported_values {
             let caller_exports = caller_to_export
                 .get(&exported_value)
                 .expect("exported value should have a symbol name")
                 .clone();
+            if let Some(imports) = scoped_imports.get("") {
+                for export_symbol in &caller_exports {
+                    for (target, kind) in imports {
+                        edges.push((
+                            NodeId::Symbol {
+                                file: path.clone(),
+                                symbol: export_symbol.clone(),
+                            },
+                            target.clone(),
+                            *kind,
+                        ));
+                    }
+                }
+            }
             let mut visited = HashSet::new();
             let root_scope = exported_value.clone();
             let root_is_callable =
@@ -81,8 +105,8 @@ fn collect_symbol_edges(
                         path,
                         &caller_exports,
                         &caller,
-                        &calls_by_caller,
-                        has_http_calls,
+                        &call_records_by_caller,
+                        scoped_http_route_defs,
                         has_process_spawns,
                         &mut edges,
                     );
@@ -101,10 +125,11 @@ fn collect_symbol_edges(
                         }
                     }
                     let symbol_refs = refs_by_caller.get(&caller);
+                    let ordered_symbol_refs = ordered_refs_by_caller.get(&caller);
                     for symbol_ref in symbol_refs.into_iter().flatten() {
                         if namespace_import_member_reference_exists(
                             symbol_ref,
-                            symbol_refs,
+                            ordered_symbol_refs,
                             &namespace_imports,
                         ) {
                             continue;
@@ -127,11 +152,14 @@ fn collect_symbol_edges(
                                     kind,
                                 ));
                             }
-                        } else if !root_is_callable {
+                        } else {
                             if let Some(scope) =
                                 resolve_local_scope(&caller, symbol_ref, &local_scopes)
                             {
-                                queue.push_back(scope);
+                                let scope_is_callable = calls_by_caller.contains_key(&scope);
+                                if !root_is_callable || !scope_is_callable {
+                                    queue.push_back(scope);
+                                }
                             }
                         }
                     }
@@ -155,6 +183,13 @@ fn namespace_import_member_reference_exists(
     namespace_imports.contains_key(symbol_ref)
         && symbol_refs.is_some_and(|refs| {
             let prefix = format!("{symbol_ref}.");
-            refs.iter().any(|candidate| candidate.starts_with(&prefix))
+            let bare_index = refs.iter().position(|candidate| candidate == symbol_ref);
+            let member_index = refs
+                .iter()
+                .position(|candidate| candidate.starts_with(&prefix));
+            match (bare_index, member_index) {
+                (Some(bare_index), Some(member_index)) => member_index < bare_index,
+                _ => false,
+            }
         })
 }

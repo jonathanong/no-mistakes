@@ -55,12 +55,12 @@ fn collect_direct_reexport_edge(
         symbol: export_symbol.to_string(),
     };
     if let Some(target) = inputs.resolver.resolve(source, inputs.path) {
-        if imported == "*" {
-            edges.push((from, NodeId::File(target), symbol_edge_kind(export.is_type_only)));
-            return;
-        }
         if !is_indexable(&target) {
             edges.push((from, NodeId::File(target), EdgeKind::AssetImport));
+            return;
+        }
+        if imported == "*" {
+            edges.push((from, NodeId::File(target), symbol_edge_kind(export.is_type_only)));
             return;
         }
         let kind = symbol_edge_kind(

@@ -24,5 +24,6 @@ include!("core.rs");
 include!("extra_cases.rs");
 include!("extra_selector.rs");
 include!("extra_symbol_scoped.rs");
+include!("extra_symbol_defensive.rs");
 include!("extra_symbol_helpers.rs");
 include!("extra_symbol.rs");

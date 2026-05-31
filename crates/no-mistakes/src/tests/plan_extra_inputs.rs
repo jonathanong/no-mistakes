@@ -138,12 +138,15 @@ pub(crate) fn trace_entrypoints(
 ) -> Result<()> {
     for (index, raw) in entrypoints.iter().enumerate() {
         let structured_symbol = entrypoint_symbols.get(index).cloned().flatten();
-        let (raw_file, parsed_symbol) = if structured_symbol.is_some() {
+        let structured_entrypoint = structured_symbol.is_some();
+        let (raw_file, parsed_symbol) = if structured_entrypoint {
             (PathBuf::from(raw), None)
         } else {
             no_mistakes::codebase::dependencies::parse_entrypoint(raw)
         };
-        let symbol = structured_symbol.or(parsed_symbol);
+        let symbol = structured_symbol
+            .filter(|symbol| !symbol.is_empty())
+            .or(parsed_symbol);
         if symbol.is_some() && !include_symbols {
             anyhow::bail!(
                 "Entrypoint `{raw}` uses `#symbol`; pass --symbols to enable symbol traversal."

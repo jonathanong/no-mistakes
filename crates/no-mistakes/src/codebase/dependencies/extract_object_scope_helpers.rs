@@ -9,7 +9,9 @@ fn walk_object_values_with_parent_scope<'a>(
                 walk_object_property_value_with_parent_scope(collector, parent, property);
             }
             ObjectPropertyKind::SpreadProperty(spread) => {
+                collector.push_function_scope(Some(parent.to_string()));
                 collector.visit_expression(&spread.argument);
+                collector.pop_function_scope(true);
             }
         }
     }

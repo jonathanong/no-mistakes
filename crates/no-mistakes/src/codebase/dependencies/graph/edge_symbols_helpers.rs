@@ -135,35 +135,25 @@ fn resolve_imported_callee(
 }
 
 fn target_export_is_type(target: &Path, symbol: &str, facts: &dyn TsFactLookup) -> bool {
-    facts
+    let Some(symbols) = facts
         .get_ts_facts(target)
         .and_then(|facts| facts.symbols.as_ref())
-        .and_then(|symbols| {
-            symbols
-                .exports
-                .iter()
-                .find(|export| export_symbol_name(export) == symbol)
-        })
-        .is_some_and(|export| export.is_type_only)
-}
-
-fn local_call_graph(
-    calls: &[crate::codebase::dependencies::extract::FunctionCall],
-) -> HashMap<String, Vec<String>> {
-    let mut graph: HashMap<String, Vec<String>> = HashMap::new();
-    for call in calls {
-        if let Some(caller) = &call.caller {
-            graph
-                .entry(caller.clone())
-                .or_default()
-                .push(call.callee.clone());
+    else {
+        return false;
+    };
+    let mut has_type = false;
+    let mut has_value = false;
+    for export in &symbols.exports {
+        if export_symbol_name(export) != symbol {
+            continue;
+        }
+        if export.is_type_only {
+            has_type = true;
+        } else {
+            has_value = true;
         }
     }
-    for callees in graph.values_mut() {
-        callees.sort();
-        callees.dedup();
-    }
-    graph
+    has_type && !has_value
 }
 
 fn symbol_edge_kind(is_type_only: bool) -> EdgeKind {

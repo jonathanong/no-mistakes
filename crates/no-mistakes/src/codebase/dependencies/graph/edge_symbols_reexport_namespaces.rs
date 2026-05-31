@@ -48,6 +48,12 @@ impl ReexportNamespaceResolver<'_, '_> {
                 imported: reexported,
             } = &export.kind
             else {
+                let local = export_local_name(export);
+                let namespace_imports =
+                    namespace_import_map(barrel, barrel_symbols, self.resolver, self.workspace);
+                if let Some(target) = namespace_imports.get(&local) {
+                    return Some(namespace_target_node(target, self.member));
+                }
                 continue;
             };
             let (target, source_kind) = if let Some(target) = self.resolver.resolve(source, barrel) {

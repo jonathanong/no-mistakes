@@ -15,6 +15,7 @@ impl ImportCollector {
         self.symbol_references.push(FunctionCall {
             caller: self.current_function(),
             callee: name,
+            static_arg: None,
         });
     }
 

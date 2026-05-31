@@ -115,7 +115,8 @@ impl<'a> Visit<'a> for ImportCollector {
 
     fn visit_import_declaration(&mut self, import: &ImportDeclaration<'a>) {
         let kind = import_declaration_kind(import);
-        self.push(import.source.value.as_str(), kind);
+        let side_effect_only = import.specifiers.as_ref().is_none_or(|specifiers| specifiers.is_empty());
+        self.push_with_side_effect(import.source.value.as_str(), kind, side_effect_only);
         self.record_imported_bindings(import);
     }
 
@@ -175,6 +176,7 @@ impl<'a> Visit<'a> for ImportCollector {
                 self.function_calls.push(FunctionCall {
                     caller: self.current_function(),
                     callee,
+                    static_arg: call.arguments.first().and_then(static_path_argument),
                 });
             }
         } else {

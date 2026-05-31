@@ -293,10 +293,13 @@ fn star_reexport_edges_skip_invalid_default_and_unresolved_targets() {
     );
 
     let edges = collect_symbol_edges(
+        Path::new("/repo"),
         std::slice::from_ref(&current),
+        &[current.clone(), target.clone()],
         &facts,
         &resolver,
         &Default::default(),
+        None,
     );
 
     assert!(edges.contains(&(

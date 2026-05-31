@@ -11,6 +11,7 @@ impl ImportCollector {
         self.symbol_references.push(FunctionCall {
             caller,
             callee: name,
+            static_arg: None,
         });
     }
 
@@ -132,6 +133,13 @@ fn visit_variable_declarator_with_scope<'a>(
                     walk::walk_variable_declarator(collector, declarator);
                 }
             }
+        }
+        Some(Expression::ClassExpression(class)) if name.is_some() && collector.function_stack.is_empty() => {
+            if let Some(name) = name.as_deref() {
+                record_class_member_calls(collector, name, class);
+            }
+            visit_exported_variable_declarator_reference(collector, declarator, name);
+            walk::walk_variable_declarator(collector, declarator);
         }
         _ if name.is_some()
             && collector.function_stack.is_empty()

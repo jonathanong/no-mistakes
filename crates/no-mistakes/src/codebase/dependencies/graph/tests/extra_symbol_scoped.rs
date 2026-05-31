@@ -35,6 +35,7 @@ fn scoped_import_targets_preserve_workspace_edges() {
             specifier: "@fixture/core".to_string(),
             kind: ImportKind::Dynamic,
             function_scope: Some("run".to_string()),
+        side_effect_only: false,
         }],
         &current,
         &resolver,
@@ -68,22 +69,27 @@ fn symbol_fallback_imports_keep_only_top_level_uses_when_exports_exist() {
         FunctionCall {
             caller: None,
             callee: "alpha".to_string(),
+            static_arg: None,
         },
         FunctionCall {
             caller: None,
             callee: "beta".to_string(),
+            static_arg: None,
         },
         FunctionCall {
             caller: None,
             callee: "alpha".to_string(),
+            static_arg: None,
         },
         FunctionCall {
             caller: None,
             callee: "missing".to_string(),
+            static_arg: None,
         },
         FunctionCall {
             caller: Some("run".to_string()),
             callee: "beta".to_string(),
+            static_arg: None,
         },
     ];
 

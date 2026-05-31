@@ -12,6 +12,7 @@ fn record_object_value_references(
             collector.symbol_references.push(FunctionCall {
                 caller: Some(object_name.to_string()),
                 callee,
+                static_arg: None,
             });
         }
     }

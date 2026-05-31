@@ -1,4 +1,4 @@
-use super::extract::{is_indexable, ExtractedImport, ImportKind};
+use super::extract::{is_indexable, ExtractedImport, FunctionCall, ImportKind};
 use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
 use crate::codebase::ts_source::facts::{
     collect_ts_facts, collect_ts_facts_with_context, TsFactContext, TsFactMap, TsFactPlan,
@@ -44,6 +44,8 @@ include!("sort.rs");
 include!("edge_import_reachability.rs");
 include!("edge_imports.rs");
 include!("edge_symbols.rs");
+include!("edge_symbols_call_graph.rs");
+include!("edge_symbols_http.rs");
 include!("edge_symbols_runtime.rs");
 include!("edge_symbols_exports.rs");
 include!("edge_symbols_star_candidates.rs");

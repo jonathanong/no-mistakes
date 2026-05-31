@@ -1,6 +1,7 @@
 fn resolve_entrypoints_with_files(
     raw_entrypoints: &[PathBuf],
     symbol_entrypoints: &[Option<String>],
+    structured_entrypoints: &[bool],
     root: &Path,
     cwd: &Path,
     graph_files: &graph::GraphFiles,
@@ -15,7 +16,8 @@ fn resolve_entrypoints_with_files(
         .map(|(index, raw)| {
             let raw_str = raw.to_string_lossy();
             let structured_symbol = symbol_entrypoints.get(index).cloned().flatten();
-            let (raw_file, parsed_symbol) = if structured_symbol.is_some() {
+            let structured_entrypoint = structured_entrypoints.get(index).copied().unwrap_or(false);
+            let (raw_file, parsed_symbol) = if structured_entrypoint {
                 (raw.clone(), None)
             } else {
                 parse_entrypoint(&raw_str)
