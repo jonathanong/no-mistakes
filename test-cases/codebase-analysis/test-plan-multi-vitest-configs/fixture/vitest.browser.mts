@@ -6,6 +6,8 @@ export default defineConfig({
       {
         test: {
           name: 'shared',
+          // Intentionally different from src/shared.test.ts. The no-mistakes
+          // policy fixture replaces this include while preserving the config.
           include: ['src/browser-only.test.ts'],
         },
       },
