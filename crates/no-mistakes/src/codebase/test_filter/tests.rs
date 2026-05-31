@@ -73,6 +73,13 @@ fn configured_suite_filters_use_explicit_globs_without_loading_project_config() 
 fn playwright_project_excludes_do_not_suppress_vitest_fallback_tests() {
     let root = fixture_root();
     let mut config = NoMistakesConfig::default();
+    config.tests.vitest.projects.insert(
+        "unit".to_string(),
+        TestProjectPolicy {
+            include: vec!["unit/**/*.spec.ts".to_string()],
+            ..Default::default()
+        },
+    );
     config.tests.playwright.projects.insert(
         "chromium".to_string(),
         TestProjectPolicy {
@@ -85,6 +92,25 @@ fn playwright_project_excludes_do_not_suppress_vitest_fallback_tests() {
     let filter = TestFileFilter::new(&root, &config);
 
     assert!(filter.is_match_rel("unit/foo.spec.ts"));
+}
+
+#[test]
+fn configured_project_exclude_blocks_generic_fallback_outside_runner_heuristic() {
+    let root = fixture_root();
+    let mut config = NoMistakesConfig::default();
+    config.tests.playwright.projects.insert(
+        "chromium".to_string(),
+        TestProjectPolicy {
+            include: vec!["e2e/**/*.spec.ts".to_string()],
+            exclude: vec!["e2e/flaky.spec.ts".to_string()],
+            ..Default::default()
+        },
+    );
+
+    let filter = TestFileFilter::new(&root, &config);
+
+    assert!(filter.is_match_rel("e2e/home.spec.ts"));
+    assert!(!filter.is_match_rel("e2e/flaky.spec.ts"));
 }
 
 #[test]
