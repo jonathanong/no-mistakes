@@ -45,6 +45,7 @@ fn facts(entries: Vec<(PathBuf, Vec<ComponentFacts>)>) -> CheckFactMap {
             })
             .collect::<HashMap<_, _>>(),
         stats: Default::default(),
+        ..Default::default()
     }
 }
 

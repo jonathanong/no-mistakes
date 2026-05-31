@@ -46,6 +46,7 @@ pub struct PlaywrightFactPlan {
 pub struct CheckFactMap {
     pub(crate) files: Vec<PathBuf>,
     pub(crate) ts: HashMap<PathBuf, CheckFileFacts>,
+    pub(crate) graph_plan: crate::codebase::ts_source::facts::TsFactPlan,
     pub stats: CheckFactStats,
 }
 
@@ -80,6 +81,10 @@ pub(crate) struct PlaywrightTestFacts {
 impl CheckFactMap {
     pub fn files(&self) -> &[PathBuf] {
         &self.files
+    }
+
+    pub(crate) fn graph_plan(&self) -> crate::codebase::ts_source::facts::TsFactPlan {
+        self.graph_plan
     }
 }
 
@@ -118,6 +123,7 @@ pub fn collect_check_facts_with_playwright(
     CheckFactMap {
         files,
         ts,
+        graph_plan: plan.graph,
         stats: CheckFactStats {
             files_parsed,
             parse_errors,

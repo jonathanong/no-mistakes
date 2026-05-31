@@ -65,6 +65,20 @@ fn shared_facts_path_matches_standalone_check() {
 }
 
 #[test]
+fn shared_facts_path_rejects_missing_graph_facts() {
+    let root = fixture("forbidden-dependencies-basic");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let shared = crate::codebase::check_facts::CheckFactMap::default();
+
+    let error = check_with_facts(&root, &config, None, &shared).unwrap_err();
+
+    assert!(
+        format!("{error:#}").contains("missing graph facts"),
+        "expected missing graph facts error, got: {error:#}"
+    );
+}
+
+#[test]
 fn graph_plan_and_shared_facts_empty_when_rule_is_not_configured() {
     let root = fixture("forbidden-dependencies-basic");
     let config = NoMistakesConfig::default();

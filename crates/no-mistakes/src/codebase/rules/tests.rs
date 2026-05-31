@@ -160,6 +160,19 @@ fn run_check_with_facts_executes_forbidden_dependencies_rule() {
     assert!(findings.iter().any(|f| f.rule == FORBIDDEN_DEPENDENCIES));
 }
 
+#[test]
+fn run_check_with_facts_reports_missing_forbidden_dependency_graph_facts() {
+    let root = fixture("codebase-analysis/forbidden-dependencies-basic");
+    let shared = crate::codebase::check_facts::CheckFactMap::default();
+
+    let error = run_check_with_facts(&root, None, None, &shared).unwrap_err();
+
+    assert!(
+        format!("{error:#}").contains("missing graph facts"),
+        "expected missing graph facts error, got: {error:#}"
+    );
+}
+
 fn dynamic_import_fixture() -> std::path::PathBuf {
     fixture("codebase-analysis/test-no-unmocked-dynamic-imports")
 }

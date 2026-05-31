@@ -19,7 +19,7 @@ use std::path::{Path, PathBuf};
 pub(crate) mod domain;
 pub use domain::TsFactContext;
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct TsFactPlan {
     pub imports: bool,
     pub function_calls: bool,
@@ -80,6 +80,22 @@ impl TsFactPlan {
             || self.http_calls
             || self.process_spawns
             || self.server_routes
+    }
+
+    pub fn covers(self, required: Self) -> bool {
+        (!required.imports || self.imports)
+            && (!required.function_calls || self.function_calls)
+            && (!required.symbols || self.symbols)
+            && (!required.source || self.source)
+            && (!required.route_refs || self.route_refs)
+            && (!required.backend_routes || self.backend_routes)
+            && (!required.queue_usage || self.queue_usage)
+            && (!required.queue_factory || self.queue_factory)
+            && (!required.queue_project || self.queue_project)
+            && (!required.http_calls || self.http_calls)
+            && (!required.process_spawns || self.process_spawns)
+            && (!required.server_routes || self.server_routes)
+            && (!required.react || self.react)
     }
 }
 

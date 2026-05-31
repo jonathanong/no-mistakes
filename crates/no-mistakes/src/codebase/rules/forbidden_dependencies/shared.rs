@@ -2,7 +2,7 @@ use super::{check_rule_application, resolve_tsconfig, union_allowed_set, Options
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
-use anyhow::Result;
+use anyhow::{bail, Result};
 use std::path::Path;
 
 pub(crate) fn check_with_facts(
@@ -19,6 +19,13 @@ pub(crate) fn check_with_facts(
     let union_allowed = union_allowed_set(&opts_list);
     let plan = GraphBuildPlan::from_allowed(union_allowed.as_ref());
     let tsconfig = resolve_tsconfig(root, tsconfig_path)?;
+    let (required_graph_plan, _) =
+        crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan(root, plan);
+    if !shared.graph_plan().covers(required_graph_plan) {
+        bail!(
+            "shared check facts are missing graph facts required by {RULE_ID}; collect facts with forbidden_dependencies::graph_plan before calling run_check_with_facts"
+        );
+    }
     let graph = DepGraph::build_with_plan_file_list_and_check_facts(
         root,
         &tsconfig,
