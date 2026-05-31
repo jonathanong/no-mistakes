@@ -186,6 +186,8 @@ pub fn is_indexable(path: &Path) -> bool {
 }
 
 #[cfg(test)]
+mod coverage_tests;
+#[cfg(test)]
 mod extra_tests;
 #[cfg(test)]
 mod tests;
