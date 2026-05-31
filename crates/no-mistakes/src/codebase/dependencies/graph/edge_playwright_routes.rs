@@ -4,7 +4,9 @@ fn collect_playwright_route_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edg
         return Vec::new();
     };
     let frontend_root = root.join(&settings.frontend_root);
-    let routes = crate::routes::collect_routes(&frontend_root, &["page"]);
+    let mut routes = crate::routes::collect_routes(&frontend_root, &["page"]);
+    let virtual_routes = crate::routes::rewrites::expand_rewrites(&settings.rewrites, &routes);
+    routes.extend(virtual_routes);
     if routes.is_empty() {
         return Vec::new();
     }

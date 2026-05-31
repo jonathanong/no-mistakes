@@ -1,5 +1,5 @@
 import { test } from "@playwright/test";
 
 test("loads home", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/landing");
 });

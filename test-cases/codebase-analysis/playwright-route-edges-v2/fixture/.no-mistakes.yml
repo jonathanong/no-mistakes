@@ -2,6 +2,9 @@ projects:
   web:
     type: nextjs
     root: web
+    rewrites:
+      - source: "/landing"
+        destination: "/"
 tests:
   playwright:
     configs: playwright.config.mts
