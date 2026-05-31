@@ -36,7 +36,10 @@ fn report_options_merge_top_level_defaults() {
         serde_json::from_str(&options::symbols_options(&options.reports[0], &options).unwrap())
             .unwrap();
     assert_eq!(symbols["root"], "override");
-    assert_eq!(symbols["tsconfig"], "tsconfig.json");
+    assert_eq!(
+        symbols["tsconfig"],
+        format!("{}/tsconfig.json", fixture_root("simple"))
+    );
     assert!(symbols.get("filters").is_none());
     assert!(symbols.get("config").is_none());
 
@@ -61,6 +64,24 @@ fn report_options_merge_top_level_defaults() {
     )
     .unwrap();
     assert_eq!(inherited_symbols["root"], fixture_root("simple"));
+}
+
+#[test]
+fn report_options_forward_relative_top_level_tsconfig_from_root() {
+    let root = fixture_root("forbidden-dependencies-passes");
+    let options = parse_options::<AnalyzeProjectOptions>(
+        &json!({
+            "root": root,
+            "tsconfig": "tsconfig.json",
+            "reports": [{ "type": "symbols", "files": ["src/index.mts"] }]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let symbols: Value =
+        serde_json::from_str(&options::symbols_options(&options.reports[0], &options).unwrap())
+            .unwrap();
+    assert_eq!(symbols["tsconfig"], format!("{root}/tsconfig.json"));
 }
 
 #[test]

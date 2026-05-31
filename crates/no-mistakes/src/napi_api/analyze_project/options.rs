@@ -12,7 +12,7 @@ pub(super) fn symbols_options(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,
 ) -> AnyhowResult<String> {
-    let value = merged_options(request, options, true, false, false);
+    let value = merged_options(request, options, true, false, false)?;
     let _: SymbolOptions = serde_json::from_value(value.clone())?;
     Ok(serde_json::to_string(&value)?)
 }
@@ -21,7 +21,7 @@ pub(super) fn project_options(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,
 ) -> AnyhowResult<String> {
-    let value = merged_options(request, options, true, true, true);
+    let value = merged_options(request, options, true, true, true)?;
     let project_options: ProjectOptions = serde_json::from_value(value.clone())?;
     let _ = project_roots(&project_options);
     Ok(serde_json::to_string(&value)?)
@@ -31,7 +31,7 @@ pub(super) fn playwright_options(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,
 ) -> AnyhowResult<String> {
-    let value = merged_options(request, options, false, false, true);
+    let value = merged_options(request, options, false, false, true)?;
     let _: PlaywrightOptions = serde_json::from_value(value.clone())?;
     Ok(serde_json::to_string(&value)?)
 }
@@ -40,7 +40,7 @@ pub(super) fn traverse_options(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,
 ) -> AnyhowResult<TraverseOptions> {
-    let value = merged_options(request, options, true, true, false);
+    let value = merged_options(request, options, true, true, false)?;
     Ok(serde_json::from_value(value)?)
 }
 
@@ -50,7 +50,7 @@ fn merged_options(
     include_tsconfig: bool,
     include_filters: bool,
     include_config: bool,
-) -> Value {
+) -> AnyhowResult<Value> {
     let mut map = request.options.clone();
     if let Some(root) = &options.root {
         map.entry("root".to_string())
@@ -58,8 +58,12 @@ fn merged_options(
     }
     if include_tsconfig {
         if let Some(tsconfig) = &options.tsconfig {
-            map.entry("tsconfig".to_string())
-                .or_insert_with(|| Value::String(tsconfig.clone()));
+            if !map.contains_key("tsconfig") {
+                map.insert(
+                    "tsconfig".to_string(),
+                    Value::String(forwarded_tsconfig(options, tsconfig)?),
+                );
+            }
         }
     }
     if include_config {
@@ -72,7 +76,18 @@ fn merged_options(
         map.entry("filters".to_string())
             .or_insert_with(|| json!(options.filters));
     }
-    Value::Object(map)
+    Ok(Value::Object(map))
+}
+
+fn forwarded_tsconfig(options: &AnalyzeProjectOptions, tsconfig: &str) -> AnyhowResult<String> {
+    let path = PathBuf::from(tsconfig);
+    if path.is_absolute() {
+        return Ok(path.display().to_string());
+    }
+    let Some(root) = &options.root else {
+        return Ok(tsconfig.to_string());
+    };
+    Ok(resolve_root(Some(root))?.join(path).display().to_string())
 }
 
 pub(super) fn resolve_root(root: Option<&str>) -> AnyhowResult<PathBuf> {

@@ -50,6 +50,7 @@ pub(crate) fn collect_and_filter_entries_shared(
 
     let allowed = relationship_filter(&args.relationships);
     let roots: Vec<NodeId> = entrypoints.iter().map(|e| e.node.clone()).collect();
+    let import_only = relationships_are_import_only(&args.relationships);
     let any_symbol = entrypoints
         .iter()
         .any(|entrypoint| entrypoint.symbol.is_some());
@@ -63,6 +64,14 @@ pub(crate) fn collect_and_filter_entries_shared(
     };
     let root = shared.root.clone();
     let entries = match direction {
+        Direction::Deps if import_only => graph::lazy_import_deps_of_with_files(
+            &roots,
+            &shared.root,
+            &shared.tsconfig,
+            args.depth,
+            &shared.graph_files,
+            allowed.as_ref(),
+        ),
         Direction::Deps => shared.graph().deps_of(&roots, args.depth, allowed.as_ref()),
         Direction::Dependents if any_symbol => resolve_symbol_dependents(
             &root,

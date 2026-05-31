@@ -175,6 +175,34 @@ fn shared_graph_context_builds_once_for_multiple_graph_reports() {
 }
 
 #[test]
+fn shared_graph_context_keeps_import_only_dependencies_lazy() {
+    let options = parse_options::<AnalyzeProjectOptions>(
+        &json!({
+            "root": fixture_root("simple"),
+            "reports": [
+                { "type": "dependencies", "files": ["a.mts"], "relationships": ["import"] }
+            ]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let mut shared = prepare_shared_traversal(&options).unwrap().unwrap();
+    let result = graph_report(
+        &options.reports[0],
+        &options,
+        Direction::Deps,
+        Some(&mut shared),
+    )
+    .unwrap();
+    assert_eq!(shared.graph_builds, 0);
+    assert!(result["files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|file| { file["path"] == "b.mts" }));
+}
+
+#[test]
 fn shared_graph_context_supports_symbol_dependents() {
     let options = parse_options::<AnalyzeProjectOptions>(
         &json!({
