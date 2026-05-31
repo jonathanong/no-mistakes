@@ -446,6 +446,27 @@ fn serialized_edge_kinds_are_documented() {
         EdgeKind::ReactRender,
         EdgeKind::Selector,
     ] {
+        match kind {
+            EdgeKind::Import => {}
+            EdgeKind::TypeImport => {}
+            EdgeKind::DynamicImport => {}
+            EdgeKind::Require => {}
+            EdgeKind::TestOf => {}
+            EdgeKind::RouteRef => {}
+            EdgeKind::QueueEnqueue => {}
+            EdgeKind::QueueWorker => {}
+            EdgeKind::RouteTest => {}
+            EdgeKind::Layout => {}
+            EdgeKind::MarkdownLink => {}
+            EdgeKind::WorkspaceImport => {}
+            EdgeKind::PackageDependency => {}
+            EdgeKind::CiInvocation => {}
+            EdgeKind::HttpCall => {}
+            EdgeKind::ProcessSpawn => {}
+            EdgeKind::AssetImport => {}
+            EdgeKind::ReactRender => {}
+            EdgeKind::Selector => {}
+        }
         let serialized = edge_kind_str(kind);
         assert!(
             docs.contains(&format!("`{serialized}`")),
