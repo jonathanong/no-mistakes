@@ -16,6 +16,12 @@ export default defineConfig({
           include: ['web/storybook/button.stories.tsx'],
         },
       },
+      {
+        test: {
+          name: 'all-specs',
+          include: ['e2e/home.pw.ts'],
+        },
+      },
     ],
   },
 })
