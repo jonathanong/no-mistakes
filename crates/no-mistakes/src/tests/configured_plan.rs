@@ -19,6 +19,8 @@ use std::path::{Path, PathBuf};
 mod fallback;
 mod hints;
 mod hints_domains;
+#[cfg(test)]
+mod tests;
 use fallback::{fallback_plan, FallbackRequest};
 use hints::build_coverage_hints;
 
@@ -392,8 +394,12 @@ fn dependency_trigger(
         TestFramework::Playwright => &config.test_plan.playwright,
         TestFramework::Vitest => &config.test_plan.vitest,
     };
-    let ignored_sets =
-        ignored_changed_test_sets(root, config, &plan.full_suite_triggers.ignore_changed_tests)?;
+    let ignored_sets = ignored_changed_test_sets(
+        root,
+        config,
+        &plan.full_suite_triggers.ignore_changed_tests,
+        changed_files,
+    )?;
     for (project_name, trigger) in &plan.full_suite_triggers.projects {
         let Some(project) = config.projects.get(project_name) else {
             continue;
@@ -420,6 +426,7 @@ fn ignored_changed_test_sets(
     root: &Path,
     config: &NoMistakesConfig,
     ignored: &[TestPlanIgnoredChangedTestsFramework],
+    changed_files: &[PathBuf],
 ) -> Result<Vec<HashSet<PathBuf>>> {
     let mut sets = Vec::new();
     for framework in ignored {
@@ -427,12 +434,19 @@ fn ignored_changed_test_sets(
             TestPlanIgnoredChangedTestsFramework::Playwright => TestRunner::Playwright,
             TestPlanIgnoredChangedTestsFramework::Vitest => TestRunner::Vitest,
         };
-        sets.push(
-            no_mistakes::codebase::test_discovery::discover_tests(root, config, runner)?
-                .tests
-                .into_iter()
+        let set = match no_mistakes::codebase::test_discovery::discover_tests(root, config, runner)
+        {
+            Ok(discovered) => discovered.tests.into_iter().collect(),
+            Err(_) => changed_files
+                .iter()
+                .filter(|path| {
+                    let rel = relative_path(root, path);
+                    no_mistakes::codebase::test_discovery::fallback_runner_match(runner, &rel)
+                })
+                .cloned()
                 .collect(),
-        );
+        };
+        sets.push(set);
     }
     Ok(sets)
 }

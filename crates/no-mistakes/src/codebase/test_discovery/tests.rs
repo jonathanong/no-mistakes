@@ -113,3 +113,50 @@ fn policy_only_project_does_not_guess_from_multiple_explicit_configs() {
         .unwrap();
     assert_eq!(project.config, None);
 }
+
+#[test]
+fn policy_only_project_discovery_preserves_fallback_tests_outside_policy() {
+    let root = fixture_root("test-discovery-policy-fallback");
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.projects.insert(
+        "policy".to_string(),
+        TestProjectPolicy {
+            include: vec!["src/policy.test.mts".to_string()],
+            integration_suites: BTreeMap::from([("openai".to_string(), Vec::new())]),
+            ..Default::default()
+        },
+    );
+
+    let discovered = discover_tests(&root, &config, TestRunner::Vitest).unwrap();
+
+    let rel_tests: Vec<String> = discovered
+        .tests
+        .iter()
+        .map(|path| crate::codebase::ts_source::relative_slash_path(&root, path))
+        .collect();
+    assert!(rel_tests.contains(&"src/policy.test.mts".to_string()));
+    assert!(rel_tests.contains(&"src/fallback.test.mts".to_string()));
+}
+
+#[test]
+fn vitest_fallback_skips_playwright_policy_tests() {
+    let root = fixture_root("test-discovery-policy-fallback");
+    let mut config = NoMistakesConfig::default();
+    config.tests.playwright.projects.insert(
+        "chromium".to_string(),
+        TestProjectPolicy {
+            include: vec!["e2e/**/*.spec.ts".to_string()],
+            ..Default::default()
+        },
+    );
+
+    let discovered = discover_tests(&root, &config, TestRunner::Vitest).unwrap();
+
+    let rel_tests: Vec<String> = discovered
+        .tests
+        .iter()
+        .map(|path| crate::codebase::ts_source::relative_slash_path(&root, path))
+        .collect();
+    assert!(rel_tests.contains(&"src/fallback.test.mts".to_string()));
+    assert!(!rel_tests.contains(&"e2e/home.spec.ts".to_string()));
+}
