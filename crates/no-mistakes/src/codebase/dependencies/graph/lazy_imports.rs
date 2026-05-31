@@ -140,6 +140,7 @@ fn bfs(
     let mut queue: VecDeque<(NodeId, usize)> = VecDeque::new();
     let mut result: Vec<NodeEntry> = Vec::new();
     let mut result_idx: HashMap<NodeId, usize> = HashMap::new();
+    let mut dynamic_import_files: HashSet<NodeId> = HashSet::new();
 
     for s in starts {
         if !visited.contains(s) {
@@ -158,10 +159,15 @@ fn bfs(
 
         if let Some(neighbors) = edges.get(&node) {
             for (neighbor, kind) in neighbors {
-                if is_symbol_owner_bridge(&node, neighbor) && !root_nodes.contains(&node) {
+                if dynamic_import_files.contains(&node) && matches!(neighbor, NodeId::Symbol { .. }) {
                     continue;
                 }
-                if !edge_allowed(&node, neighbor, *kind, allowed) {
+                let owner_bridge_allowed =
+                    symbol_owner_bridge_allowed(&node, neighbor, allowed, &root_nodes, &dynamic_import_files);
+                if is_symbol_owner_bridge(&node, neighbor) && !owner_bridge_allowed {
+                    continue;
+                }
+                if !edge_allowed(&node, neighbor, *kind, allowed, owner_bridge_allowed) {
                     continue;
                 }
 
@@ -174,7 +180,10 @@ fn bfs(
                         via: vec![*kind],
                     });
                     result_idx.insert(neighbor.clone(), idx);
-                    if should_expand_node(&node, neighbor) {
+                    if *kind == EdgeKind::DynamicImport && matches!(neighbor, NodeId::File(_)) {
+                        dynamic_import_files.insert(neighbor.clone());
+                    }
+                    if should_expand_node(&node, neighbor, owner_bridge_allowed) {
                         queue.push_back((neighbor.clone(), next_depth));
                     }
                 } else if let Some(&idx) = result_idx.get(neighbor) {
@@ -185,25 +194,4 @@ fn bfs(
     }
 
     result
-}
-
-fn should_expand_node(from: &NodeId, to: &NodeId) -> bool {
-    !is_symbol_owner_bridge(from, to)
-}
-
-fn edge_allowed(
-    from: &NodeId,
-    to: &NodeId,
-    kind: EdgeKind,
-    allowed: Option<&HashSet<EdgeKind>>,
-) -> bool {
-    allowed.is_none_or(|a| a.contains(&kind)) || is_symbol_owner_bridge(from, to)
-}
-
-fn is_symbol_owner_bridge(from: &NodeId, to: &NodeId) -> bool {
-    match (from, to) {
-        (NodeId::File(file), NodeId::Symbol { file: symbol_file, .. })
-        | (NodeId::Symbol { file: symbol_file, .. }, NodeId::File(file)) => file == symbol_file,
-        _ => false,
-    }
 }

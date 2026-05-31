@@ -133,16 +133,15 @@ fn visit_variable_declarator_with_scope<'a>(
         }
         _ if name.is_some()
             && collector.function_stack.is_empty()
-            && collector.export_depth > 0
             && declarator.init.is_some() =>
         {
             visit_exported_variable_declarator_reference(collector, declarator, name);
+            walk::walk_variable_declarator(collector, declarator);
         }
-        _ if name.is_some()
-            && collector.function_stack.is_empty()
-            && declarator.init.as_ref().is_some_and(is_simple_symbol_reference) =>
+        _ if collector.function_stack.is_empty() && declarator.init.is_some() =>
         {
-            visit_exported_variable_declarator_reference(collector, declarator, name);
+            visit_variable_declarator_references_for_bindings(collector, declarator);
+            walk::walk_variable_declarator(collector, declarator);
         }
         _ => walk::walk_variable_declarator(collector, declarator),
     }

@@ -21,13 +21,6 @@ fn function_name(function: &oxc::ast::ast::Function<'_>) -> Option<String> {
     Some(id.name.to_string())
 }
 
-fn is_simple_symbol_reference(expr: &Expression<'_>) -> bool {
-    matches!(
-        expr,
-        Expression::Identifier(_) | Expression::StaticMemberExpression(_)
-    )
-}
-
 fn exported_top_level_binding(collector: &ImportCollector, name: Option<&String>) -> bool {
     name.is_some() && collector.function_stack.is_empty() && collector.export_depth > 0
 }
@@ -73,8 +66,33 @@ fn visit_exported_variable_declarator_reference<'a>(
 ) {
     let pushed = name.is_some();
     collector.push_function_scope(name);
+    let saved_suppress_imports = collector.suppress_imports;
+    collector.suppress_imports = true;
     walk::walk_variable_declarator(collector, declarator);
+    collector.suppress_imports = saved_suppress_imports;
     collector.pop_function_scope(pushed);
+}
+
+fn visit_variable_declarator_references_for_bindings<'a>(
+    collector: &mut ImportCollector,
+    declarator: &VariableDeclarator<'a>,
+) -> bool {
+    let names = binding_names(&declarator.id);
+    if names.is_empty() {
+        return false;
+    }
+    for name in names {
+        collector.push_function_scope(Some(name));
+        let saved_suppress_imports = collector.suppress_imports;
+        collector.suppress_imports = true;
+        if let Some(init) = &declarator.init {
+            collector.visit_expression(init);
+        }
+        walk_variable_type_annotation(collector, declarator);
+        collector.suppress_imports = saved_suppress_imports;
+        collector.pop_function_scope(true);
+    }
+    true
 }
 
 impl ImportCollector {

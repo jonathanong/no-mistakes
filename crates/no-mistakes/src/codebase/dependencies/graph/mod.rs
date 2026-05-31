@@ -37,6 +37,7 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
 include!("builder.rs");
 include!("methods_lazy.rs");
 include!("lazy_imports.rs");
+include!("lazy_imports_owner_bridge.rs");
 include!("lazy_import_symbols.rs");
 include!("lazy_import_neighbors.rs");
 include!("sort.rs");

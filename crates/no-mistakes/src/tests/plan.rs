@@ -384,12 +384,29 @@ pub(crate) fn relative_path(root: &Path, absolute: &Path) -> String {
 }
 
 fn changed_start_nodes(graph: &DepGraph, changed: &Path, include_symbols: bool) -> Vec<NodeId> {
-    let file_node = NodeId::File(changed.to_path_buf());
+    symbol_aware_start_nodes(graph, changed, None, include_symbols)
+}
+
+pub(crate) fn symbol_aware_start_nodes(
+    graph: &DepGraph,
+    file: &Path,
+    symbol: Option<&String>,
+    include_symbols: bool,
+) -> Vec<NodeId> {
+    if let Some(symbol) = symbol.filter(|_| include_symbols) {
+        return vec![NodeId::Symbol {
+            file: file.to_path_buf(),
+            symbol: symbol.clone(),
+        }];
+    }
+    let file_node = NodeId::File(file.to_path_buf());
     let mut starts = vec![file_node.clone()];
     if include_symbols {
         if let Some(neighbors) = graph.dependencies_of_node(&file_node) {
             starts.extend(neighbors.iter().filter_map(|(node, _)| match node {
-                NodeId::Symbol { file, .. } if file == changed => Some(node.clone()),
+                NodeId::Symbol {
+                    file: symbol_file, ..
+                } if symbol_file == file => Some(node.clone()),
                 _ => None,
             }));
         }

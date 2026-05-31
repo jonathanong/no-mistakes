@@ -17,6 +17,7 @@ struct ImportCollector {
     anonymous_scope_count: usize,
     known_function_scopes: HashSet<String>,
     imported_bindings: HashSet<String>,
+    suppress_imports: bool,
 }
 
 impl<'a> Visit<'a> for ImportCollector {
@@ -84,24 +85,11 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_ts_type_alias_declaration(&mut self, declaration: &TSTypeAliasDeclaration<'a>) {
-        if self.export_depth > 0 && self.function_stack.is_empty() {
-            visit_exported_type_alias_declaration(self, declaration);
-        } else {
-            self.add_type_binding_name(declaration.id.name.as_str());
-            self.add_type_parameter_names(declaration.type_parameters.as_deref());
-            self.visit_ts_type(&declaration.type_annotation);
-        }
+        visit_ts_type_alias_declaration_with_scope(self, declaration);
     }
 
     fn visit_ts_interface_declaration(&mut self, declaration: &TSInterfaceDeclaration<'a>) {
-        if self.export_depth > 0 && self.function_stack.is_empty() {
-            visit_exported_interface_declaration(self, declaration);
-        } else {
-            self.add_type_binding_name(declaration.id.name.as_str());
-            self.add_type_parameter_names(declaration.type_parameters.as_deref());
-            self.visit_ts_interface_heritages(&declaration.extends);
-            self.visit_ts_interface_body(&declaration.body);
-        }
+        visit_ts_interface_declaration_with_scope(self, declaration);
     }
 
     fn visit_ts_enum_declaration(&mut self, declaration: &TSEnumDeclaration<'a>) {

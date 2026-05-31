@@ -1,5 +1,7 @@
 use crate::tests::comment::render_markdown_plan;
-use crate::tests::plan::{bfs_path_find, path_confidence, relative_path, slash_node_name};
+use crate::tests::plan::{
+    bfs_path_find, path_confidence, relative_path, slash_node_name, symbol_aware_start_nodes,
+};
 use crate::tests::{
     Confidence, ImpactArgs, ImpactReason, PlanFormat, SelectedTest, TestPlan, Warning,
 };
@@ -79,17 +81,8 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
             root.join(&raw_file)
         };
         let normalized = no_mistakes::codebase::ts_resolver::normalize_path(&file);
-        let start_node = if args.include_symbols {
-            symbol.as_ref().map_or_else(
-                || NodeId::File(normalized.clone()),
-                |symbol| NodeId::Symbol {
-                    file: normalized.clone(),
-                    symbol: symbol.clone(),
-                },
-            )
-        } else {
-            NodeId::File(normalized.clone())
-        };
+        let start_nodes =
+            symbol_aware_start_nodes(&graph, &normalized, symbol.as_ref(), args.include_symbols);
         let rel_changed = symbol
             .as_ref()
             .filter(|_| args.include_symbols)
@@ -120,60 +113,62 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
             continue;
         }
 
-        let (reachable_tests, path_parents) =
-            bfs_path_find(&graph, &start_node, &test_filter, &root);
+        for start_node in start_nodes {
+            let (reachable_tests, path_parents) =
+                bfs_path_find(&graph, &start_node, &test_filter, &root);
 
-        for (test_node, edge_path) in reachable_tests {
-            let test_path = match &test_node {
-                NodeId::File(p) => p.clone(),
-                _ => continue,
-            };
-            let rel_test = relative_path(&root, &test_path);
-            let path_conf = path_confidence(&edge_path);
+            for (test_node, edge_path) in reachable_tests {
+                let test_path = match &test_node {
+                    NodeId::File(p) => p.clone(),
+                    _ => continue,
+                };
+                let rel_test = relative_path(&root, &test_path);
+                let path_conf = path_confidence(&edge_path);
 
-            let mut node_chain = Vec::new();
-            let mut curr = test_node.clone();
-            node_chain.push(slash_node_name(&curr, &root));
+                let mut node_chain = Vec::new();
+                let mut curr = test_node.clone();
+                node_chain.push(slash_node_name(&curr, &root));
 
-            while let Some((parent, kind)) = path_parents.get(&curr) {
-                node_chain.push(slash_node_name(parent, &root));
-                push_warning(
-                    &root,
-                    &curr,
-                    parent,
-                    *kind,
-                    &mut warnings,
-                    &mut warnings_seen,
-                );
-                curr = parent.clone();
-            }
-            node_chain.reverse();
+                while let Some((parent, kind)) = path_parents.get(&curr) {
+                    node_chain.push(slash_node_name(parent, &root));
+                    push_warning(
+                        &root,
+                        &curr,
+                        parent,
+                        *kind,
+                        &mut warnings,
+                        &mut warnings_seen,
+                    );
+                    curr = parent.clone();
+                }
+                node_chain.reverse();
 
-            let via_strings: Vec<String> = edge_path
-                .iter()
-                .map(|k| crate::tests::plan::impact_reason_label(*k).to_string())
-                .collect();
+                let via_strings: Vec<String> = edge_path
+                    .iter()
+                    .map(|k| crate::tests::plan::impact_reason_label(*k).to_string())
+                    .collect();
 
-            let reason = ImpactReason {
-                changed_file: rel_changed.clone(),
-                path: node_chain,
-                via: via_strings,
-            };
+                let reason = ImpactReason {
+                    changed_file: rel_changed.clone(),
+                    path: node_chain,
+                    via: via_strings,
+                };
 
-            let entry = selected_map
-                .entry(test_path)
-                .or_insert_with(|| SelectedTest {
-                    test_file: rel_test,
-                    confidence: path_conf,
-                    targets: Vec::new(),
-                    reasons: Vec::new(),
-                });
+                let entry = selected_map
+                    .entry(test_path)
+                    .or_insert_with(|| SelectedTest {
+                        test_file: rel_test,
+                        confidence: path_conf,
+                        targets: Vec::new(),
+                        reasons: Vec::new(),
+                    });
 
-            if path_conf > entry.confidence {
-                entry.confidence = path_conf;
-            }
-            if !entry.reasons.contains(&reason) {
-                entry.reasons.push(reason);
+                if path_conf > entry.confidence {
+                    entry.confidence = path_conf;
+                }
+                if !entry.reasons.contains(&reason) {
+                    entry.reasons.push(reason);
+                }
             }
         }
     }

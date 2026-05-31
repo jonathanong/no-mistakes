@@ -1,5 +1,8 @@
 impl ImportCollector {
     fn push(&mut self, specifier: &str, kind: ImportKind) {
+        if self.suppress_imports {
+            return;
+        }
         if !specifier.is_empty() {
             self.imports.push(ExtractedImport {
                 specifier: specifier.to_string(),
