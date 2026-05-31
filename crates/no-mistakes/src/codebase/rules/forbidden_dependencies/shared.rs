@@ -21,7 +21,7 @@ pub(crate) fn check_with_facts(
     let tsconfig = resolve_tsconfig(root, tsconfig_path)?;
     let (required_graph_plan, _) =
         crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan(root, plan);
-    if required_graph_plan.is_empty() && shared.files().is_empty() {
+    if required_graph_plan.is_empty() && shared.graph_files().is_empty() {
         return super::check(root, config, tsconfig_path);
     }
     if shared.stats.parse_errors > 0 {
@@ -36,7 +36,7 @@ pub(crate) fn check_with_facts(
         root,
         &tsconfig,
         plan,
-        shared.files().to_vec(),
+        shared.graph_files().to_vec(),
         shared,
     );
     let mut findings = Vec::new();

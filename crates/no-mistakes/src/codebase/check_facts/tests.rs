@@ -1,6 +1,6 @@
 use super::{
-    collect_check_facts, collect_check_facts_with_playwright, collect_file_facts, CheckFactPlan,
-    PlaywrightFactPlan,
+    collect_check_facts, collect_check_facts_with_graph_files_and_playwright,
+    collect_check_facts_with_playwright, collect_file_facts, CheckFactPlan, PlaywrightFactPlan,
 };
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -287,6 +287,36 @@ fn collect_check_facts_parses_once_for_playwright_and_shared_facts() {
     let file_facts = facts.ts.get(&file).expect("file facts are collected");
     assert!(file_facts.react.is_some());
     assert!(file_facts.playwright.is_some());
+}
+
+#[test]
+fn collect_check_facts_keeps_graph_files_out_of_shared_file_scope() {
+    let root = fixture_path("");
+    let scoped = fixture_path("src/everything.tsx");
+    let graph_only = fixture_path("src/widget.tsx");
+    let facts = collect_check_facts_with_graph_files_and_playwright(
+        &root,
+        vec![scoped.clone()],
+        vec![graph_only.clone()],
+        CheckFactPlan {
+            imports: true,
+            queue: true,
+            integration: true,
+            graph: crate::codebase::ts_source::facts::TsFactPlan::imports(),
+            ..CheckFactPlan::default()
+        },
+        None,
+    );
+
+    assert_eq!(facts.files(), std::slice::from_ref(&scoped));
+    assert_eq!(facts.graph_files(), std::slice::from_ref(&graph_only));
+    assert!(facts.ts.contains_key(&scoped));
+    assert!(facts.ts.contains_key(&graph_only));
+    let graph_only_facts = facts.ts.get(&graph_only).expect("graph-only facts");
+    assert!(!graph_only_facts.ts.imports.is_empty());
+    assert!(graph_only_facts.ts.queue_project.is_none());
+    assert!(graph_only_facts.integration.is_none());
+    assert_eq!(facts.stats.files_discovered, 2);
 }
 
 #[test]

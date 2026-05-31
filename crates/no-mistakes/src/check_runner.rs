@@ -5,10 +5,9 @@ use crate::check_tasks::{
 };
 use anyhow::{Context, Result};
 use enabled::{fact_plan, integration_configured, plan_requests_facts};
-use no_mistakes::codebase::check_facts::collect_check_facts_with_playwright;
+use no_mistakes::codebase::check_facts::collect_check_facts_with_graph_files_and_playwright;
 use no_mistakes::config::v2::load_v2_config;
 use no_mistakes::react_traits;
-use std::collections::BTreeSet;
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -87,19 +86,23 @@ pub(crate) fn run_all(
         } else {
             Vec::new()
         };
-        let fact_files = if forbidden_graph_plan.is_some() {
-            let mut files: BTreeSet<PathBuf> = discovered.iter().cloned().collect();
-            files.extend(crate::check_discovery::discover_check_files(
+        let graph_files = if forbidden_graph_plan.is_some() {
+            crate::check_discovery::discover_check_files(
                 &root,
                 &config,
                 &[],
                 unique_exports_enabled,
-            ));
-            files.into_iter().collect()
+            )
         } else {
-            discovered
+            Vec::new()
         };
-        let f = collect_check_facts_with_playwright(&root, fact_files, plan, playwright_fact_plan);
+        let f = collect_check_facts_with_graph_files_and_playwright(
+            &root,
+            discovered,
+            graph_files,
+            plan,
+            playwright_fact_plan,
+        );
         (fs, f)
     } else {
         (discovered, Default::default())
