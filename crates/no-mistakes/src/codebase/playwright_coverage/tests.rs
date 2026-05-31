@@ -386,6 +386,14 @@ fn path_and_glob_helpers_cover_relative_absolute_default_and_invalid_glob() {
         .iter()
         .any(|glob| glob.contains("spec")));
 
+    let project_root = fixture("test-plan-project-discovery");
+    let discovered_globs = test_globs_or_default(&project_root, &[]);
+    assert!(discovered_globs.contains(&"e2e/\\[locale\\].pw.ts".to_string()));
+    let bracket_test = project_root.join("e2e/[locale].pw.ts");
+    let visits = collect_playwright_visits(&project_root, &discovered_globs, &[bracket_test])
+        .expect("escaped literal discovered paths should compile as globs");
+    assert_eq!(visits.len(), 1);
+
     let err = build_globset(&["[".to_string()]).unwrap_err();
     assert!(format!("{err:#}").contains("invalid glob"));
 }

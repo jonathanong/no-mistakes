@@ -166,14 +166,10 @@ fn test_filters(root: &Path, framework: &str) -> Vec<String> {
     };
     if let Some(runner) = runner {
         if let Ok(config) = crate::config::v2::load_v2_config(root, None) {
-            if let Ok(discovered) =
-                crate::codebase::test_discovery::discover_tests(root, &config, runner)
+            if let Ok(Some(filters)) =
+                crate::codebase::test_discovery::discovered_test_globs(root, &config, runner)
             {
-                return discovered
-                    .tests
-                    .iter()
-                    .map(|path| crate::codebase::ts_source::relative_slash_path(root, path))
-                    .collect();
+                return filters;
             }
         }
     }

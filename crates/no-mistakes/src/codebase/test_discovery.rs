@@ -22,6 +22,26 @@ pub fn discover_tests(
     discover_from_projects(root, config, runner, projects)
 }
 
+pub fn discovered_test_globs(
+    root: &Path,
+    config: &NoMistakesConfig,
+    runner: TestRunner,
+) -> Result<Option<Vec<String>>> {
+    let discovered = discover_tests(root, config, runner)?;
+    if discovered.tests.is_empty() {
+        return Ok(None);
+    }
+    Ok(Some(
+        discovered
+            .tests
+            .iter()
+            .map(|path| {
+                literal_path_glob(&crate::codebase::ts_source::relative_slash_path(root, path))
+            })
+            .collect(),
+    ))
+}
+
 pub fn project_filters(root: &Path, config: &NoMistakesConfig) -> Vec<ProjectTestFilter> {
     let mut filters = Vec::new();
     for runner in [TestRunner::Vitest, TestRunner::Playwright] {
@@ -33,6 +53,17 @@ pub fn project_filters(root: &Path, config: &NoMistakesConfig) -> Vec<ProjectTes
         );
     }
     filters
+}
+
+pub fn literal_path_glob(path: &str) -> String {
+    let mut escaped = String::with_capacity(path.len());
+    for ch in path.chars() {
+        if matches!(ch, '*' | '?' | '[' | ']' | '{' | '}' | '\\') {
+            escaped.push('\\');
+        }
+        escaped.push(ch);
+    }
+    escaped
 }
 
 fn discover_from_projects(

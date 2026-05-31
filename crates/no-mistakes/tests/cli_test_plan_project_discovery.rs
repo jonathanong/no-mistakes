@@ -102,9 +102,16 @@ fn test_plan_playwright_uses_project_match_and_targets() {
     );
     let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
     let selected = plan["selected_tests"].as_array().unwrap();
-    assert_eq!(selected.len(), 1);
-    assert_eq!(selected[0]["test_file"], "e2e/home.pw.ts");
-    let targets = selected[0]["targets"].as_array().unwrap();
+    let test_files: Vec<&str> = selected
+        .iter()
+        .map(|test| test["test_file"].as_str().unwrap())
+        .collect();
+    assert_eq!(test_files, vec!["e2e/[locale].pw.ts", "e2e/home.pw.ts"]);
+    let home_test = selected
+        .iter()
+        .find(|test| test["test_file"] == "e2e/home.pw.ts")
+        .unwrap();
+    let targets = home_test["targets"].as_array().unwrap();
     assert_eq!(targets.len(), 1);
     assert_eq!(targets[0]["runner"], "playwright");
     assert_eq!(targets[0]["config"], "playwright.config.ts");

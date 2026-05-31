@@ -171,6 +171,16 @@ fn vitest_globs_include_test_mts() {
 }
 
 #[test]
+fn project_discovery_test_filters_escape_literal_paths_and_fallback_when_empty() {
+    let root = fixture_root("test-plan-project-discovery");
+    let globs = test_filters(&root, "playwright");
+    assert!(globs.contains(&"e2e/\\[locale\\].pw.ts".to_string()));
+
+    let fallback = test_filters(Path::new("/repo"), "vitest");
+    assert!(fallback.contains(&"**/*.test.ts".to_string()));
+}
+
+#[test]
 fn playwright_globs_include_e2e() {
     let globs = test_globs("playwright");
     assert!(globs.contains(&"**/tests/e2e/**/*.mts".to_string()));
