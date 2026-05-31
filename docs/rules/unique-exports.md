@@ -7,7 +7,7 @@ rules:
   - rule: unique-exports
     projects: [web]
     options:
-      strict: true
+      uniqueAcrossTypesAndValues: true
 ```
 
 Counterexample: two files in the same checked scope both export `Button`.

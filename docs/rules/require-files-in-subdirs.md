@@ -7,8 +7,11 @@ rules:
   - rule: require-files-in-subdirs
     scope: repository
     options:
-      roots: [packages]
-      files: [README.md, package.json]
+      packages:
+        - root: packages
+          requiredFiles: [README.md, package.json]
+          requireAnyOf:
+            - [src/index.ts, src/index.mts]
 ```
 
 Counterexample: `packages/api/` without a `README.md`.

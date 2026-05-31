@@ -7,8 +7,13 @@ rules:
   - rule: strict-package-layout
     scope: repository
     options:
-      roots: [packages]
-      requiredFiles: [package.json, README.md]
+      testFilePatterns: ["*.test.ts", "*.spec.ts"]
+      testDirName: "__tests__"
+      packages:
+        - root: packages
+          sourceExtension: .ts
+          allowedRootFiles: [package.json, README.md, index.ts]
+          allowedSubdirs: [src, __tests__]
 ```
 
 Counterexample: a package missing required files or containing banned paths.

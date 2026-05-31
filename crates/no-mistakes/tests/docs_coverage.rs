@@ -145,3 +145,61 @@ fn graph_edge_kinds_are_documented() {
     assert!(body.contains("Examples And Counterexamples"));
     assert!(body.contains("Intentional Limits"));
 }
+
+#[test]
+fn rule_docs_use_supported_option_examples() {
+    let root = repo_root();
+    let cases = [
+        (
+            "require-files-in-subdirs.md",
+            ["packages:", "requiredFiles:", "requireAnyOf:"].as_slice(),
+            ["roots:", "files:"].as_slice(),
+        ),
+        (
+            "strict-package-layout.md",
+            [
+                "packages:",
+                "sourceExtension:",
+                "allowedRootFiles:",
+                "allowedSubdirs:",
+            ]
+            .as_slice(),
+            ["roots:", "requiredFiles:"].as_slice(),
+        ),
+        (
+            "banned-renamed-files.md",
+            ["bannedBasenames:", "name:", "message:", "extensions:"].as_slice(),
+            ["banned:", "from:", "to:"].as_slice(),
+        ),
+        (
+            "file-extension-policy.md",
+            ["allowlist:", "scopes:", "bannedExtensions:"].as_slice(),
+            ["allowed:"].as_slice(),
+        ),
+        (
+            "require-storybook-stories.md",
+            ["stories:", "includeAllReactNamedExports:"].as_slice(),
+            [].as_slice(),
+        ),
+        (
+            "tsconfig-alias-folder-mapping.md",
+            ["tsconfig:", "mappings:", "prefix:", "root:"].as_slice(),
+            [].as_slice(),
+        ),
+        (
+            "unique-exports.md",
+            ["uniqueAcrossTypesAndValues:"].as_slice(),
+            ["strict:"].as_slice(),
+        ),
+    ];
+
+    for (file, required, forbidden) in cases {
+        let body = read(&root.join("docs/rules").join(file));
+        for needle in required {
+            assert!(body.contains(needle), "{file} missing `{needle}`");
+        }
+        for needle in forbidden {
+            assert!(!body.contains(needle), "{file} still contains `{needle}`");
+        }
+    }
+}

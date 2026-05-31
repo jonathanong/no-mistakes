@@ -6,9 +6,11 @@ Enforces allowed or banned file extensions under configured scopes.
 rules:
   - rule: file-extension-policy
     scope: repository
-    include: ["src/**"]
     options:
-      allowed: [ts, tsx, mts]
+      allowlist: ["src/generated/client.js"]
+      scopes:
+        - path: src
+          bannedExtensions: [".js", ".jsx"]
 ```
 
 Counterexample: adding `src/helper.js` where only TypeScript is allowed.

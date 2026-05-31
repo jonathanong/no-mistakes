@@ -13,6 +13,7 @@ ignorePaths:
   - "crates/**/target/**"
 words:
   - arm64
+  - Basenames
   - codebase
   - codecov
   - emnapi

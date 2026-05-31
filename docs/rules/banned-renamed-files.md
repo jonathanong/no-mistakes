@@ -7,9 +7,11 @@ rules:
   - rule: banned-renamed-files
     scope: repository
     options:
-      banned:
-        - from: middleware.ts
-          to: proxy.ts
+      scope: web
+      bannedBasenames:
+        - name: middleware
+          message: "rename middleware.{ts,mts,js} to proxy.ts"
+      extensions: [".ts", ".mts", ".js"]
 ```
 
 Counterexample: keeping both old and new filenames during a migration.
