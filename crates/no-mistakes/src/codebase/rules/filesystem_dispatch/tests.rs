@@ -64,6 +64,32 @@ fn dispatch_standalone_covers_all_rule_branches() {
     );
 }
 
+#[test]
+fn standalone_filesystem_rules_share_one_discovered_file_list() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/check-runner/facts-and-filesystem/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let config = root.join(".no-mistakes.yml");
+
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let expected = run_filesystem_rules_with_files(&root, Some(&config), &files).unwrap();
+    let findings = run_filesystem_rules(&root, Some(&config)).unwrap();
+
+    let rules: Vec<&str> = findings
+        .iter()
+        .map(|finding| finding.rule.as_str())
+        .collect();
+    assert_eq!(
+        rules,
+        vec![RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_TESTS],
+        "expected both enabled filesystem rules to run with deterministic output: {findings:#?}"
+    );
+    assert_eq!(
+        findings, expected,
+        "standalone dispatch should match one shared pre-discovered file list"
+    );
+}
+
 /// Cover the false branches of the `if rule_enabled(...)` guards for
 /// `RUST_MAX_LINES_PER_FILE` and `RUST_NO_INLINE_TESTS` by running with a
 /// config that omits those two rules, exercising the skip paths.
