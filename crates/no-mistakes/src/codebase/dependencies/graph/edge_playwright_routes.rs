@@ -53,33 +53,31 @@ fn collect_playwright_route_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edg
             continue;
         };
         for edge in test_edges {
-            if let crate::playwright::analysis::types::Edge::Route {
+            let crate::playwright::analysis::types::Edge::Route {
                 test_file,
                 route_file,
                 ..
-            } = edge
+            } = edge else {
+                continue;
+            };
+            let test_file = root.join(test_file.as_str());
+            let page_file = root.join(route_file.as_str());
+            if !all_file_set.contains(&test_file) || !all_file_set.contains(&page_file) {
+                continue;
+            }
+            edges.push((
+                NodeId::File(test_file),
+                NodeId::File(page_file.clone()),
+                EdgeKind::RouteTest,
+            ));
+            for layout_file in
+                collect_layout_chain_files_from_file_set(&page_file, &frontend_root, &all_file_set)
             {
-                let test_file = root.join(test_file.as_str());
-                let page_file = root.join(route_file.as_str());
-                if !all_file_set.contains(&test_file) || !all_file_set.contains(&page_file) {
-                    continue;
-                }
                 edges.push((
-                    NodeId::File(test_file),
                     NodeId::File(page_file.clone()),
-                    EdgeKind::RouteTest,
+                    NodeId::File(layout_file),
+                    EdgeKind::Layout,
                 ));
-                for layout_file in collect_layout_chain_files_from_file_set(
-                    &page_file,
-                    &frontend_root,
-                    &all_file_set,
-                ) {
-                    edges.push((
-                        NodeId::File(page_file.clone()),
-                        NodeId::File(layout_file),
-                        EdgeKind::Layout,
-                    ));
-                }
             }
         }
     }

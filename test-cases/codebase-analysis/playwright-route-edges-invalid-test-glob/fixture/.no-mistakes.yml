@@ -1,0 +1,6 @@
+tests:
+  playwright:
+    frontendRoot: web/app
+    configs: playwright.config.mts
+    testInclude:
+      - "["

@@ -87,7 +87,9 @@ fn playwright_route_edges_use_app_root_and_filter_graph_files() {
     let root =
         crate::codebase::ts_resolver::normalize_path(&fixture("playwright-route-edges-v2"));
     let test_file = root.join("tests/e2e/home.spec.ts");
+    let invalid_test_file = root.join("tests/e2e/invalid.spec.ts");
     let page = root.join("web/app/page.tsx");
+    let layout = root.join("web/app/layout.tsx");
     let bad_app_file = root.join("web/app/bad.tsx");
     let config = root.join("playwright.config.mts");
 
@@ -95,7 +97,9 @@ fn playwright_route_edges_use_app_root_and_filter_graph_files() {
         &root,
         &[
             test_file.clone(),
+            invalid_test_file,
             page.clone(),
+            layout.clone(),
             bad_app_file,
             config,
             root.join(".no-mistakes.yml"),
@@ -109,6 +113,7 @@ fn playwright_route_edges_use_app_root_and_filter_graph_files() {
         )),
         "expected route edge, got {edges:?}"
     );
+    assert!(edges.contains(&(NodeId::File(page.clone()), NodeId::File(layout), EdgeKind::Layout)));
 
     let filtered_edges =
         collect_playwright_route_edges(&root, &[test_file, root.join(".no-mistakes.yml")]);
@@ -118,6 +123,21 @@ fn playwright_route_edges_use_app_root_and_filter_graph_files() {
         }),
         "route edges should not introduce files outside the graph file set"
     );
+}
+
+#[test]
+fn playwright_route_edges_cover_defensive_config_errors() {
+    for name in [
+        "playwright-route-edges-invalid-settings",
+        "playwright-route-edges-invalid-config",
+        "playwright-route-edges-invalid-test-glob",
+    ] {
+        let root = crate::codebase::ts_resolver::normalize_path(&fixture(name));
+        assert!(
+            collect_playwright_route_edges(&root, &[root.join("web/app/page.tsx")]).is_empty(),
+            "{name} should not produce route edges"
+        );
+    }
 }
 
 #[test]
