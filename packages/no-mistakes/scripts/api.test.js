@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 
 const packageRoot = join(__dirname, "..");
@@ -130,4 +131,21 @@ test("programmatic API proxies object options through async native addon calls",
       delete require.extensions[".node"];
     }
   }
+});
+
+test("analyzeProject declarations mirror report-specific runtime requirements", () => {
+  const declarations = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
+  assert.match(declarations, /type: "symbols"; id\?: string } & SymbolsOptions/);
+  assert.match(
+    declarations,
+    /type BatchedQueueRelatedOptions = BatchedProjectOptions & \{ files: string\[\] \}/,
+  );
+  assert.match(
+    declarations,
+    /type BatchedServerRouteRelatedOptions = BatchedProjectOptions &\n  \(\{ files: string\[\] \} \| \{ roots: string\[\] \}\)/,
+  );
+  assert.match(
+    declarations,
+    /type: "playwrightRelated"; id\?: string } & Omit<PlaywrightRelatedOptions,/,
+  );
 });

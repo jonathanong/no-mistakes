@@ -1,4 +1,4 @@
-import type { PlaywrightOptions } from "./report-types";
+import type { PlaywrightOptions, PlaywrightRelatedOptions } from "./report-types";
 
 export type Relationship =
   | "import"
@@ -108,6 +108,11 @@ export interface ProjectOptions {
   direction?: "deps" | "dependents" | "both";
 }
 
+type BatchedProjectOptions = Omit<ProjectOptions, "root" | "tsconfig" | "config">;
+type BatchedQueueRelatedOptions = BatchedProjectOptions & { files: string[] };
+type BatchedServerRouteRelatedOptions = BatchedProjectOptions &
+  ({ files: string[] } | { roots: string[] });
+
 export interface FetchesOptions {
   root?: string;
   config?: string;
@@ -119,23 +124,23 @@ export type AnalyzeProjectReportRequest =
       TraverseOptions,
       "root" | "tsconfig"
     >)
-  | ({ type: "symbols"; id?: string } & Omit<SymbolsOptions, "root" | "tsconfig">)
-  | ({ type: "queues" | "queueEdges" | "queueRelated" | "queueCheck"; id?: string } & Omit<
-      ProjectOptions,
-      "root" | "tsconfig" | "config"
-    >)
+  | ({ type: "symbols"; id?: string } & SymbolsOptions)
+  | ({ type: "queues" | "queueEdges" | "queueCheck"; id?: string } & BatchedProjectOptions)
+  | ({ type: "queueRelated"; id?: string } & BatchedQueueRelatedOptions)
   | ({
-      type: "serverRoutes" | "serverRouteList" | "serverRouteEdges" | "serverRouteRelated";
+      type: "serverRoutes" | "serverRouteList" | "serverRouteEdges";
       id?: string;
-    } & Omit<ProjectOptions, "root" | "tsconfig" | "config">)
+    } & BatchedProjectOptions)
+  | ({ type: "serverRouteRelated"; id?: string } & BatchedServerRouteRelatedOptions)
   | ({ type: "reactAnalyze" | "reactCheck"; id?: string } & Pick<
       ProjectOptions,
       "targets" | "depth" | "assertNoFetch"
     >)
   | ({
-      type: "playwrightCheck" | "playwrightEdges" | "playwrightRelated" | "playwrightTests";
+      type: "playwrightCheck" | "playwrightEdges" | "playwrightTests";
       id?: string;
     } & Omit<PlaywrightOptions, "root" | "config">)
+  | ({ type: "playwrightRelated"; id?: string } & Omit<PlaywrightRelatedOptions, "root" | "config">)
   | { type: "check"; id?: string };
 
 export interface AnalyzeProjectOptions {
