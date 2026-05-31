@@ -1,13 +1,13 @@
-use crate::codebase::dependencies::extract::{is_indexable, ExtractedImport};
+use crate::codebase::dependencies::extract::is_indexable;
 use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts;
 use crate::codebase::storybook::StorybookFileFacts;
+use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::codebase::ts_symbols::FileSymbols;
 use crate::integration_tests::types::FileAnalysis as IntegrationFileAnalysis;
 use crate::playwright::analysis::text_types::PlaywrightTextLocator;
 use crate::playwright::playwright_tests::TestOccurrence;
 use crate::playwright::selectors::{PlaywrightSelector, SelectorRegexes};
-use crate::queue::extract::FileFacts as QueueFileFacts;
 use crate::react_traits::analyze::file::FileAnalysis as ReactFileAnalysis;
 use rayon::prelude::*;
 use std::collections::HashMap;
@@ -55,11 +55,10 @@ pub struct CheckFactStats {
 
 #[derive(Default)]
 pub(crate) struct CheckFileFacts {
+    pub ts: TsFileFacts,
     pub source: Option<String>,
-    pub imports: Vec<ExtractedImport>,
     pub symbols: Option<FileSymbols>,
     pub react: Option<ReactFileAnalysis>,
-    pub queue: Option<QueueFileFacts>,
     pub integration: Option<IntegrationFileAnalysis>,
     pub dynamic_imports: Option<TestFacts>,
     pub nextjs_caching: Option<Vec<NextjsCachingFinding>>,
@@ -83,15 +82,7 @@ impl CheckFactMap {
     pub(crate) fn ts_facts(&self) -> crate::codebase::ts_source::facts::TsFactMap {
         let mut ts_facts = crate::codebase::ts_source::facts::TsFactMap::new();
         for (path, facts) in &self.ts {
-            ts_facts.insert(
-                path.clone(),
-                crate::codebase::ts_source::facts::TsFileFacts {
-                    source: facts.source.clone(),
-                    imports: facts.imports.clone(),
-                    symbols: facts.symbols.clone(),
-                    ..Default::default()
-                },
-            );
+            ts_facts.insert(path.clone(), facts.ts.clone());
         }
         ts_facts
     }

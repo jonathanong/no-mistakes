@@ -5,7 +5,7 @@ fn collect_route_edges(
     facts: Option<&TsFactMap>,
     config_options: Option<&GraphConfigOptions>,
 ) -> Vec<Edge> {
-    use crate::codebase::ts_routes::{defs_frontend, matcher, refs};
+    use crate::codebase::ts_routes::{defs_frontend, matcher};
     use globset::{GlobBuilder, GlobSetBuilder};
 
     let Some(config_options) = config_options else {
@@ -86,7 +86,8 @@ fn collect_route_edges(
             .or_default()
             .push(file.clone());
     }
-    let all_patterns: Vec<String> = pattern_to_files.keys().cloned().collect();
+    let mut all_patterns: Vec<String> = pattern_to_files.keys().cloned().collect();
+    all_patterns.sort();
 
     let backend_prefixes = route_backend_prefixes(config_options);
     let backend_exact = opts.backend_exact_paths.clone();
@@ -119,14 +120,9 @@ fn collect_route_edges(
         .cloned()
         .collect();
 
-    scan_files
+    let mut edges: Vec<_> = scan_files
         .into_par_iter()
         .flat_map_iter(|path| {
-            let rel = path
-                .strip_prefix(root)
-                .expect("route scan files are rooted under the graph root")
-                .to_path_buf();
-            let rel_str = rel.to_string_lossy().into_owned();
             let mut edges = Vec::new();
             let mut push_edges_for_refs =
                 |route_refs: &[crate::codebase::ts_routes::refs::RouteRef]| {
@@ -152,12 +148,11 @@ fn collect_route_edges(
                 };
             if let Some(file_facts) = facts.and_then(|facts| facts.get(&path)) {
                 push_edges_for_refs(&file_facts.route_refs);
-            } else {
-                let source = std::fs::read_to_string(&path).unwrap_or_default();
-                let route_refs = refs::extract_route_refs(&source, &rel_str);
-                push_edges_for_refs(&route_refs);
             }
             edges
         })
-        .collect()
+        .collect();
+    edges.sort();
+    edges.dedup();
+    edges
 }

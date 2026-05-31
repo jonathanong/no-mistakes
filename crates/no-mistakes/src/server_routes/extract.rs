@@ -6,7 +6,6 @@ mod literals;
 mod records;
 mod shape;
 
-use crate::ast;
 use crate::server_routes::model::FileFacts;
 use oxc_ast::ast::{
     CallExpression, ExportDefaultDeclarationKind, Expression, ImportDeclarationSpecifier,
@@ -23,13 +22,14 @@ pub(super) const VERBS: &[&str] = &[
     "get", "post", "put", "patch", "delete", "del", "head", "options", "all",
 ];
 
-pub(crate) fn extract_file(path: &Path) -> anyhow::Result<FileFacts> {
-    let source = std::fs::read_to_string(path)?;
-    ast::with_program(path, &source, |program, _| {
-        let mut visitor = ServerRouteVisitor::new(path, &source);
-        visitor.visit_program(program);
-        visitor.facts
-    })
+pub(crate) fn extract_program(
+    path: &Path,
+    source: &str,
+    program: &oxc_ast::ast::Program<'_>,
+) -> FileFacts {
+    let mut visitor = ServerRouteVisitor::new(path, source);
+    visitor.visit_program(program);
+    visitor.facts
 }
 
 pub(super) struct ServerRouteVisitor<'a> {

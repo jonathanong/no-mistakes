@@ -6,7 +6,9 @@ use crate::codebase::ts_process_spawn::SpawnEdge;
 use crate::codebase::ts_queues::usage::QueueUsage;
 use crate::codebase::ts_routes::refs::RouteRef;
 use crate::codebase::ts_symbols::{extract_symbols_from_program, FileSymbols};
+use crate::queue::extract::FileFacts as QueueProjectFacts;
 use crate::react_traits::report::types::ComponentFacts;
+use crate::server_routes::model::FileFacts as ServerRouteFileFacts;
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
@@ -27,8 +29,10 @@ pub struct TsFactPlan {
     pub backend_routes: bool,
     pub queue_usage: bool,
     pub queue_factory: bool,
+    pub queue_project: bool,
     pub http_calls: bool,
     pub process_spawns: bool,
+    pub server_routes: bool,
     pub react: bool,
 }
 
@@ -60,8 +64,10 @@ impl TsFactPlan {
             && !self.backend_routes
             && !self.queue_usage
             && !self.queue_factory
+            && !self.queue_project
             && !self.http_calls
             && !self.process_spawns
+            && !self.server_routes
             && !self.react
     }
 
@@ -70,8 +76,10 @@ impl TsFactPlan {
             || self.backend_routes
             || self.queue_usage
             || self.queue_factory
+            || self.queue_project
             || self.http_calls
             || self.process_spawns
+            || self.server_routes
     }
 }
 
@@ -96,8 +104,10 @@ pub struct TsFileFacts {
     pub queue_usage: Option<QueueUsage>,
     pub queue_create_line: Option<u32>,
     pub queue_name: Option<String>,
+    pub(crate) queue_project: Option<QueueProjectFacts>,
     pub http_calls: Vec<HttpCall>,
     pub process_spawns: Vec<SpawnEdge>,
+    pub(crate) server_routes: Option<ServerRouteFileFacts>,
     pub react_components: Vec<ComponentFacts>,
 }
 
@@ -171,8 +181,10 @@ fn collect_file_facts(
         queue_usage: domain.queue_usage,
         queue_create_line: domain.queue_create_line,
         queue_name: domain.queue_name,
+        queue_project: domain.queue_project,
         http_calls: domain.http_calls,
         process_spawns: domain.process_spawns,
+        server_routes: domain.server_routes,
         react_components,
     })
 }
