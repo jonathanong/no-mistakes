@@ -48,7 +48,8 @@ fn function_name(function: &oxc::ast::ast::Function<'_>) -> Option<String> {
 }
 
 fn exported_top_level_binding(collector: &ImportCollector, name: Option<&String>) -> bool {
-    name.is_some() && collector.function_stack.is_empty() && collector.export_depth > 0
+    name.is_some_and(|name| collector.is_exported_top_level_name(name))
+        && collector.function_stack.is_empty()
 }
 
 fn walk_variable_type_annotation<'a>(
@@ -95,7 +96,9 @@ fn visit_exported_variable_declarator_reference<'a>(
     let saved_suppress_imports = collector.suppress_imports;
     let saved_collect_runtime = collector.collect_suppressed_runtime_imports;
     collector.suppress_imports = true;
-    collector.collect_suppressed_runtime_imports = collector.export_depth > 0;
+    collector.collect_suppressed_runtime_imports = collector
+        .current_function()
+        .is_some_and(|scope| collector.is_exported_top_level_name(&scope));
     walk::walk_variable_declarator(collector, declarator);
     collector.suppress_imports = saved_suppress_imports;
     collector.collect_suppressed_runtime_imports = saved_collect_runtime;

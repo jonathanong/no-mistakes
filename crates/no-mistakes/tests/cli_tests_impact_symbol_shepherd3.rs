@@ -249,3 +249,60 @@ fn dependencies_symbols_preserve_bare_namespace_refs_with_member_refs() {
     assert!(output.status.success());
     assert_eq!(stdout(&output), "source.mts\nsource.mts#alpha\n");
 }
+
+#[test]
+fn dependencies_symbols_scope_later_exported_dynamic_imports() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "later-export-dynamic-import.mts#lazy",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-dynamic",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "source.mts\n");
+}
+
+#[test]
+fn dependencies_symbols_scope_later_exported_enum_initializers() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "later-export-enum-initializer.mts#E",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-static",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "source.mts#alpha\n");
+}
+
+#[test]
+fn dependencies_symbols_match_process_edges_to_symbol_call_paths() {
+    let root = fixture("symbol-runtime-edges");
+    let output = run(&[
+        "dependencies",
+        "client.mts#runRuntimeEdges",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "process",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "worker.mts\n");
+}

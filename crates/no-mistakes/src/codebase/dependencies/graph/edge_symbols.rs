@@ -74,7 +74,6 @@ fn collect_symbol_edges(
         } else {
             http_route_defs.as_slice()
         };
-        let has_process_spawns = !file_facts.process_spawns.is_empty();
         for exported_value in exported_values {
             let caller_exports = caller_to_export
                 .get(&exported_value)
@@ -102,12 +101,15 @@ fn collect_symbol_edges(
             while let Some(caller) = queue.pop_front() {
                 if visited.insert(caller.clone()) {
                     collect_symbol_runtime_owner_file_edges(
-                        path,
-                        &caller_exports,
-                        &caller,
-                        &call_records_by_caller,
-                        scoped_http_route_defs,
-                        has_process_spawns,
+                        SymbolRuntimeEdgeInputs {
+                            root,
+                            path,
+                            caller_exports: &caller_exports,
+                            caller: &caller,
+                            calls_by_caller: &call_records_by_caller,
+                            http_route_defs: scoped_http_route_defs,
+                            process_spawns: &file_facts.process_spawns,
+                        },
                         &mut edges,
                     );
                     if let Some(imports) = scoped_imports.get(&caller) {

@@ -106,7 +106,9 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_ts_enum_declaration(&mut self, declaration: &TSEnumDeclaration<'a>) {
-        if self.export_depth > 0 && self.function_stack.is_empty() {
+        if self.function_stack.is_empty()
+            && self.is_exported_top_level_name(declaration.id.name.as_str())
+        {
             visit_exported_enum_declaration(self, declaration);
         } else {
             walk::walk_ts_enum_declaration(self, declaration);

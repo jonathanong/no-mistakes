@@ -1,40 +1,79 @@
+struct SymbolRuntimeEdgeInputs<'a> {
+    root: &'a Path,
+    path: &'a Path,
+    caller_exports: &'a [String],
+    caller: &'a str,
+    calls_by_caller: &'a HashMap<String, Vec<FunctionCall>>,
+    http_route_defs: &'a [(PathBuf, String)],
+    process_spawns: &'a [crate::codebase::ts_process_spawn::SpawnEdge],
+}
+
 fn collect_symbol_runtime_owner_file_edges(
-    path: &Path,
-    caller_exports: &[String],
-    caller: &str,
-    calls_by_caller: &HashMap<String, Vec<FunctionCall>>,
-    http_route_defs: &[(PathBuf, String)],
-    has_process_spawns: bool,
+    inputs: SymbolRuntimeEdgeInputs<'_>,
     edges: &mut Vec<Edge>,
 ) {
-    if http_route_defs.is_empty() && !has_process_spawns {
+    if inputs.http_route_defs.is_empty() && inputs.process_spawns.is_empty() {
         return;
     }
-    let Some(calls) = calls_by_caller.get(caller) else {
+    let Some(calls) = inputs.calls_by_caller.get(inputs.caller) else {
         return;
     };
-    let caller_has_process_spawn =
-        has_process_spawns && calls.iter().any(|call| is_process_spawn_callee(&call.callee));
-    let http_targets = symbol_http_targets(path, calls, http_route_defs);
-    if http_targets.is_empty() && !caller_has_process_spawn {
+    let process_targets =
+        symbol_process_targets(inputs.root, inputs.path, calls, inputs.process_spawns);
+    let http_targets = symbol_http_targets(inputs.path, calls, inputs.http_route_defs);
+    if http_targets.is_empty() && process_targets.is_empty() {
         return;
     }
-    for caller_export in caller_exports {
+    for caller_export in inputs.caller_exports {
         let from = NodeId::Symbol {
-            file: path.to_path_buf(),
+            file: inputs.path.to_path_buf(),
             symbol: caller_export.clone(),
         };
         for target in &http_targets {
             edges.push((from.clone(), NodeId::File(target.clone()), EdgeKind::HttpCall));
         }
-        if caller_has_process_spawn {
+        for target in &process_targets {
             edges.push((
                 from.clone(),
-                NodeId::File(path.to_path_buf()),
+                NodeId::File(target.clone()),
                 EdgeKind::ProcessSpawn,
             ));
         }
     }
+}
+
+fn symbol_process_targets(
+    root: &Path,
+    path: &Path,
+    calls: &[FunctionCall],
+    process_spawns: &[crate::codebase::ts_process_spawn::SpawnEdge],
+) -> Vec<PathBuf> {
+    let mut targets = Vec::new();
+    for call in calls {
+        if !is_process_spawn_callee(&call.callee) {
+            continue;
+        }
+        let Some(static_arg) = call.static_arg.as_deref() else {
+            continue;
+        };
+        let resolved = if call.callee.ends_with("exec") || call.callee == "exec" {
+            crate::codebase::ts_process_spawn::resolve_entry_file_from_shell(
+                static_arg, None, path, root,
+            )
+        } else {
+            crate::codebase::ts_process_spawn::resolve_entry_file(static_arg, None, path, root)
+        };
+        if let Some(resolved) = resolved {
+            for spawn in process_spawns {
+                if spawn.entry == resolved {
+                    targets.push(spawn.entry.clone());
+                }
+            }
+        }
+    }
+    targets.sort();
+    targets.dedup();
+    targets
 }
 
 fn symbol_http_targets(

@@ -6,6 +6,10 @@ export function runRuntimeEdges() {
   exec("node worker.mts");
 }
 
+export function runLintRuntimeEdge() {
+  exec("node lint-worker.mts");
+}
+
 export function runOtherRoute() {
   fetch("/api/admin");
 }

@@ -19,6 +19,7 @@ fn dependencies_json_preserves_hash_in_structured_entrypoint_file() {
         .unwrap()
         .iter()
         .any(|file| file["file"] == "source.mts" && file["symbol"] == "alpha"));
+    assert_eq!(value["roots"], json!(["hash#entry.mts#run"]));
 }
 
 #[test]

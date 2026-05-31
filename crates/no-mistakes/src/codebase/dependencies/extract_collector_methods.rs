@@ -3,6 +3,10 @@ impl ImportCollector {
         self.push_with_side_effect(specifier, kind, false);
     }
 
+    fn is_exported_top_level_name(&self, name: &str) -> bool {
+        self.export_depth > 0 || self.exported_functions.contains(name)
+    }
+
     fn push_with_side_effect(&mut self, specifier: &str, kind: ImportKind, side_effect_only: bool) {
         if self.suppress_imports
             && !(self.collect_suppressed_runtime_imports
