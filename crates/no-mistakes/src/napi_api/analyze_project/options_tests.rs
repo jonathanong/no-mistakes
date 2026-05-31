@@ -64,6 +64,21 @@ fn report_options_merge_top_level_defaults() {
 }
 
 #[test]
+fn report_options_allow_missing_top_level_root() {
+    let options = parse_options::<AnalyzeProjectOptions>(
+        &json!({
+            "reports": [{ "type": "symbols", "files": ["a.mts"] }]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let symbols: Value =
+        serde_json::from_str(&options::symbols_options(&options.reports[0], &options).unwrap())
+            .unwrap();
+    assert!(symbols.get("root").is_none());
+}
+
+#[test]
 fn resolve_helpers_handle_defaults_and_explicit_paths() {
     let cwd = std::env::current_dir().unwrap();
     let default_root = options::resolve_root(None).unwrap();
