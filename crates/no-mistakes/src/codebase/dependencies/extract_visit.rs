@@ -19,6 +19,7 @@ struct ImportCollector {
     known_function_scopes: HashSet<String>,
     imported_bindings: HashSet<String>,
     suppress_imports: bool,
+    collect_suppressed_runtime_imports: bool,
 }
 
 impl<'a> Visit<'a> for ImportCollector {

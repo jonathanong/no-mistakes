@@ -128,42 +128,7 @@ fn resolve_imported_callee(
     else {
         return None;
     };
-    let barrel_symbols = facts.get_ts_facts(barrel)?.symbols.as_ref()?;
-    for export in &barrel_symbols.exports {
-        if export.name != *imported {
-            continue;
-        }
-        let ExportKind::ReExport {
-            source,
-            imported: reexported,
-        } = &export.kind
-        else {
-            continue;
-        };
-        if reexported != "*" {
-            continue;
-        }
-        let (target, source_kind) = if let Some(target) = resolver.resolve(source, barrel) {
-            (target, *kind)
-        } else {
-            (
-                workspace.resolve_specifier_from(source, barrel)?,
-                EdgeKind::WorkspaceImport,
-            )
-        };
-        return Some((
-            NodeId::Symbol {
-                file: target,
-                symbol: member.to_string(),
-            },
-            if *kind == EdgeKind::TypeImport || export.is_type_only {
-                EdgeKind::TypeImport
-            } else {
-                source_kind
-            },
-        ));
-    }
-    None
+    resolve_reexported_namespace_member(barrel, imported, member, *kind, facts, resolver, workspace)
 }
 
 fn target_export_is_type(target: &Path, symbol: &str, facts: &dyn TsFactLookup) -> bool {

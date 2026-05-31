@@ -425,3 +425,75 @@ fn dependencies_symbols_preserve_references_inside_object_aliases() {
     assert!(output.status.success());
     assert_eq!(stdout(&output), "source.mts#alpha\n");
 }
+
+#[test]
+fn dependencies_symbols_follow_direct_reexported_namespaces() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "namespace-direct-consumer.mts#value",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert!(stdout(&output).contains("namespace-direct-source.mts#alpha\n"));
+}
+
+#[test]
+fn dependencies_symbols_keep_dynamic_imports_in_exported_initializers() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "exported-dynamic-initializer.mts#chunk",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-dynamic",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "dynamic-chunk.mts\n");
+}
+
+#[test]
+fn dependencies_symbols_keep_require_imports_in_exported_initializers() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "exported-require-initializer.mts#loaded",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--relationship",
+        "import-require",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "dynamic-chunk.mts\n");
+}
+
+#[test]
+fn dependencies_symbols_treat_aliased_callable_exports_as_call_roots() {
+    let root = fixture("symbol-export");
+    let output = run(&[
+        "dependencies",
+        "aliased-callable-reference.mts#api",
+        "--root",
+        root.to_str().unwrap(),
+        "--symbols",
+        "--format",
+        "paths",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(stdout(&output), "");
+}

@@ -17,14 +17,14 @@ fn exported_local_is_callable(
     local: &str,
 ) -> bool {
     symbols.exports.iter().any(|export| {
-        export_local_name(export) == local
-            && matches!(export.kind, ExportKind::Function | ExportKind::Class)
-            || export.name == local
+        let local_name = export_local_name(export);
+        (local_name == local && matches!(export.kind, ExportKind::Function | ExportKind::Class))
+            || (local_name == local
                 && exported_functions.iter().any(|name| name == local)
                 && matches!(
                     export.kind,
                     ExportKind::Const | ExportKind::Let | ExportKind::Var | ExportKind::Default
-                )
+                ))
     })
 }
 

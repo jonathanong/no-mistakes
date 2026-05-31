@@ -1,6 +1,9 @@
 impl ImportCollector {
     fn push(&mut self, specifier: &str, kind: ImportKind) {
-        if self.suppress_imports {
+        if self.suppress_imports
+            && !(self.collect_suppressed_runtime_imports
+                && matches!(kind, ImportKind::Dynamic | ImportKind::Require))
+        {
             return;
         }
         if !specifier.is_empty() {

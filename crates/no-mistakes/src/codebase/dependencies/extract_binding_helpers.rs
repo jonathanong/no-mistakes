@@ -67,9 +67,12 @@ fn visit_exported_variable_declarator_reference<'a>(
     let pushed = name.is_some();
     collector.push_function_scope(name);
     let saved_suppress_imports = collector.suppress_imports;
+    let saved_collect_runtime = collector.collect_suppressed_runtime_imports;
     collector.suppress_imports = true;
+    collector.collect_suppressed_runtime_imports = collector.export_depth > 0;
     walk::walk_variable_declarator(collector, declarator);
     collector.suppress_imports = saved_suppress_imports;
+    collector.collect_suppressed_runtime_imports = saved_collect_runtime;
     collector.pop_function_scope(pushed);
 }
 
