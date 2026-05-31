@@ -63,20 +63,24 @@ fn discover_from_projects(
 
     for path in files {
         let rel = crate::codebase::ts_source::relative_slash_path(root, &path);
+        let mut matched_targets = BTreeSet::new();
         for (project, filter) in &compiled {
             if !filter.is_match(&rel) {
                 continue;
             }
+            matched_targets.insert(targets::target_for(
+                runner,
+                project.config.as_deref(),
+                project.name.as_deref(),
+                &rel,
+            ));
+        }
+        if !matched_targets.is_empty() {
             tests.insert(path.clone());
             targets_by_path
-                .entry(path.clone())
+                .entry(path)
                 .or_default()
-                .insert(targets::target_for(
-                    runner,
-                    project.config.as_deref(),
-                    project.name.as_deref(),
-                    &rel,
-                ));
+                .extend(matched_targets);
         }
     }
 

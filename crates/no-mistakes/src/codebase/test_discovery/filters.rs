@@ -70,10 +70,17 @@ pub(super) fn fallback_runner_match(runner: TestRunner, rel: &str) -> bool {
 }
 
 fn has_path_segment_pair(path: &str, first: &str, second: &str) -> bool {
-    let segments = path.split('/').collect::<Vec<_>>();
-    segments
-        .windows(2)
-        .any(|pair| pair[0] == first && pair[1] == second)
+    let mut segments = path.split('/');
+    let Some(mut previous) = segments.next() else {
+        return false;
+    };
+    for current in segments {
+        if previous == first && current == second {
+            return true;
+        }
+        previous = current;
+    }
+    false
 }
 
 fn compile_globset(patterns: &[String]) -> Result<GlobSet> {
