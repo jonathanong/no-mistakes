@@ -146,6 +146,9 @@ fn test_plan_playwright_uses_project_match_and_targets() {
 #[test]
 fn test_plan_vitest_keeps_duplicate_project_targets_from_distinct_configs() {
     let root = fixture("test-plan-multi-vitest-configs");
+    // The shared test is selected by explicit policy replacement, not by the
+    // original per-config include globs. Keep those includes intentionally
+    // different so both matching configs must survive replacement.
     let output = run(&[
         "test",
         "plan",

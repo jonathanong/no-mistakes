@@ -418,3 +418,59 @@ fn edge_kind_str_all_variants() {
     assert_eq!(edge_kind_str(EdgeKind::ReactRender), "react-render");
     assert_eq!(edge_kind_str(EdgeKind::Selector), "selector");
 }
+
+#[test]
+fn serialized_edge_kinds_are_documented() {
+    let docs = std::fs::read_to_string(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../docs/graph-edges.md"),
+    )
+    .unwrap();
+    for kind in [
+        EdgeKind::Import,
+        EdgeKind::TypeImport,
+        EdgeKind::DynamicImport,
+        EdgeKind::Require,
+        EdgeKind::TestOf,
+        EdgeKind::RouteRef,
+        EdgeKind::QueueEnqueue,
+        EdgeKind::QueueWorker,
+        EdgeKind::RouteTest,
+        EdgeKind::Layout,
+        EdgeKind::MarkdownLink,
+        EdgeKind::WorkspaceImport,
+        EdgeKind::PackageDependency,
+        EdgeKind::CiInvocation,
+        EdgeKind::HttpCall,
+        EdgeKind::ProcessSpawn,
+        EdgeKind::AssetImport,
+        EdgeKind::ReactRender,
+        EdgeKind::Selector,
+    ] {
+        match kind {
+            EdgeKind::Import => {}
+            EdgeKind::TypeImport => {}
+            EdgeKind::DynamicImport => {}
+            EdgeKind::Require => {}
+            EdgeKind::TestOf => {}
+            EdgeKind::RouteRef => {}
+            EdgeKind::QueueEnqueue => {}
+            EdgeKind::QueueWorker => {}
+            EdgeKind::RouteTest => {}
+            EdgeKind::Layout => {}
+            EdgeKind::MarkdownLink => {}
+            EdgeKind::WorkspaceImport => {}
+            EdgeKind::PackageDependency => {}
+            EdgeKind::CiInvocation => {}
+            EdgeKind::HttpCall => {}
+            EdgeKind::ProcessSpawn => {}
+            EdgeKind::AssetImport => {}
+            EdgeKind::ReactRender => {}
+            EdgeKind::Selector => {}
+        }
+        let serialized = edge_kind_str(kind);
+        assert!(
+            docs.contains(&format!("`{serialized}`")),
+            "docs/graph-edges.md must document `{serialized}`"
+        );
+    }
+}
