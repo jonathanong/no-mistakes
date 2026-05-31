@@ -95,7 +95,7 @@ fn load_config_projects(
     }
 }
 
-pub(super) fn prefix_globs(root: &Path, base: &Path, patterns: &[String]) -> Vec<String> {
+pub(crate) fn prefix_globs(root: &Path, base: &Path, patterns: &[String]) -> Vec<String> {
     let rel = relative_slash_path(root, base);
     if rel.is_empty() || rel == "." {
         return patterns.to_vec();

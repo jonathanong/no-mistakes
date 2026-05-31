@@ -379,10 +379,10 @@ fn path_and_glob_helpers_cover_relative_absolute_default_and_invalid_glob() {
     );
 
     assert_eq!(
-        test_globs_or_default(&["custom/**/*.ts".to_string()]),
+        test_globs_or_default(Path::new("/repo"), &["custom/**/*.ts".to_string()]),
         vec!["custom/**/*.ts"]
     );
-    assert!(test_globs_or_default(&[])
+    assert!(test_globs_or_default(Path::new("/repo"), &[])
         .iter()
         .any(|glob| glob.contains("spec")));
 

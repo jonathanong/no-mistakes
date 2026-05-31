@@ -6,6 +6,7 @@ pub struct PlaywrightConfig {
 }
 
 pub struct TestProject {
+    pub name: Option<String>,
     pub config_dir: PathBuf,
     pub test_dir: String,
     pub test_match: Vec<String>,

@@ -193,6 +193,7 @@ fn tests_plan_why_comment_and_graph_exports_return_reports() {
 
     assert_eq!(plan["fallback_triggered"], false);
     assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
+    assert_eq!(plan["selected_tests"][0]["targets"][0]["runner"], "vitest");
 
     let fallback_limit_options = json!({
         "framework": "vitest",

@@ -29,6 +29,7 @@ pub(super) fn merge_project(
     let project = project.unwrap_or_default();
 
     TestProject {
+        name: project.name.or_else(|| root.name.clone()),
         config_dir: config_dir.to_path_buf(),
         test_dir: project
             .test_dir

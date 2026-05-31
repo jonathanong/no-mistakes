@@ -101,7 +101,13 @@ impl DepGraph {
         }
 
         if plan.tests {
-            let test_edges = collect_test_edges(files);
+            let test_edges = collect_test_edges(
+                root,
+                files,
+                config_options
+                    .as_ref()
+                    .and_then(|options| options.test_filter.as_ref()),
+            );
             merge_edges(&mut forward, &mut reverse, test_edges);
         }
 

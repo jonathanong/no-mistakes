@@ -143,7 +143,7 @@ fn apply_filters(
     // Build combined filter from --filter and --test globs.
     let mut all_filters = args.filters.clone();
     for framework in &args.tests {
-        all_filters.extend(test_globs(framework));
+        all_filters.extend(test_filters(root, framework));
     }
     let filter = graph::build_filter(&all_filters)?;
     let entries = graph::apply_filter(entries, filter.as_ref(), root);
@@ -156,6 +156,28 @@ fn apply_filters(
         entries
     };
     apply_target_module_filters(entries, &args.target_modules)
+}
+
+fn test_filters(root: &Path, framework: &str) -> Vec<String> {
+    let runner = match framework {
+        "vitest" => Some(crate::codebase::test_discovery::TestRunner::Vitest),
+        "playwright" => Some(crate::codebase::test_discovery::TestRunner::Playwright),
+        _ => None,
+    };
+    if let Some(runner) = runner {
+        if let Ok(config) = crate::config::v2::load_v2_config(root, None) {
+            if let Ok(discovered) =
+                crate::codebase::test_discovery::discover_tests(root, &config, runner)
+            {
+                return discovered
+                    .tests
+                    .iter()
+                    .map(|path| crate::codebase::ts_source::relative_slash_path(root, path))
+                    .collect();
+            }
+        }
+    }
+    test_globs(framework)
 }
 
 fn apply_target_module_filters(

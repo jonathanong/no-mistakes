@@ -62,6 +62,7 @@ fn add_deleted_direct(
         .or_insert_with(|| SelectedTest {
             test_file: rel_test,
             confidence: Confidence::High,
+            targets: Vec::new(),
             reasons: Vec::new(),
         });
     if !entry.reasons.contains(&reason) {
@@ -114,6 +115,7 @@ fn add_deleted_transitive(
             .or_insert_with(|| SelectedTest {
                 test_file: rel_test,
                 confidence: path_conf,
+                targets: Vec::new(),
                 reasons: Vec::new(),
             });
         if path_conf > entry.confidence {
@@ -150,6 +152,7 @@ pub(crate) fn trace_entrypoints(
                 .or_insert_with(|| SelectedTest {
                     test_file: rel_changed.clone(),
                     confidence: Confidence::High,
+                    targets: Vec::new(),
                     reasons: Vec::new(),
                 });
             let reason = ImpactReason {
@@ -195,6 +198,7 @@ pub(crate) fn trace_entrypoints(
                 .or_insert_with(|| SelectedTest {
                     test_file: rel_test,
                     confidence: path_conf,
+                    targets: Vec::new(),
                     reasons: Vec::new(),
                 });
             if path_conf > entry.confidence {

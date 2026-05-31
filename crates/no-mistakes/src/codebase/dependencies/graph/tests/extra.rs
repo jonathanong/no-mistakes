@@ -400,8 +400,10 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
         &graph_files,
     )
     .is_empty());
-    assert!(collect_test_edges(&[PathBuf::from("/")]).is_empty());
-    assert!(collect_test_edges(&[PathBuf::from("no-parent.ts")]).is_empty());
+    assert!(collect_test_edges(Path::new("."), &[PathBuf::from("/")], None).is_empty());
+    assert!(
+        collect_test_edges(Path::new("."), &[PathBuf::from("no-parent.ts")], None).is_empty()
+    );
     assert!(collect_md_edges(&[PathBuf::from("/")], &graph_files).is_empty());
     assert!(collect_md_edges(&[PathBuf::from("README.md")], &graph_files).is_empty());
 

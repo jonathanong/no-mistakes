@@ -108,6 +108,7 @@ fn direct_candidates(
             (!used.contains(&rel)).then(|| SelectedTest {
                 test_file: rel.clone(),
                 confidence: Confidence::High,
+                targets: Vec::new(),
                 reasons: vec![ImpactReason {
                     changed_file: rel.clone(),
                     path: vec![rel],
@@ -170,6 +171,7 @@ fn graph_candidates(
                 .or_insert_with(|| SelectedTest {
                     test_file: rel_test,
                     confidence: path_confidence(&edge_path),
+                    targets: Vec::new(),
                     reasons: Vec::new(),
                 });
             let confidence = path_confidence(&edge_path);
@@ -236,6 +238,7 @@ fn sample_candidates(
             (!used.contains(&rel)).then(|| SelectedTest {
                 test_file: rel.clone(),
                 confidence: Confidence::Low,
+                targets: Vec::new(),
                 reasons: vec![ImpactReason {
                     changed_file: "*sample*".to_string(),
                     path: vec![rel],
@@ -283,6 +286,7 @@ pub(super) fn selected_from_paths(
             SelectedTest {
                 test_file: rel.clone(),
                 confidence: Confidence::High,
+                targets: Vec::new(),
                 reasons: vec![ImpactReason {
                     changed_file: changed.clone(),
                     path: vec![changed.clone(), rel],
@@ -302,6 +306,12 @@ pub(super) fn merge_selected(existing: &mut SelectedTest, next: &SelectedTest) {
             existing.reasons.push(reason.clone());
         }
     }
+    for target in &next.targets {
+        if !existing.targets.contains(target) {
+            existing.targets.push(target.clone());
+        }
+    }
+    existing.targets.sort();
 }
 
 fn reason_from_path(

@@ -200,6 +200,7 @@ fn emit_hint_reasons(
             .or_insert_with(|| SelectedTest {
                 test_file: rel_test,
                 confidence,
+                targets: Vec::new(),
                 reasons: Vec::new(),
             });
         if confidence > entry.confidence {

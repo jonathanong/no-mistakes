@@ -7,6 +7,7 @@ use super::{PlanArgs, SelectedTest, TestFramework, TestPlan, TestPlanGroupResult
 use anyhow::Result;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use no_mistakes::codebase::dependencies::graph::DepGraph;
+use no_mistakes::codebase::test_discovery::{DiscoveredTests, TestRunner};
 use no_mistakes::codebase::test_filter::TestFileFilter;
 use no_mistakes::config::v2::schema::{
     NoMistakesConfig, Project, TestPlanEnvironment, TestPlanGroup, TestPlanGroupType,
@@ -33,7 +34,8 @@ pub(crate) fn generate_configured_plan(
     forced_fallback: Option<(String, PathBuf)>,
 ) -> Result<TestPlan> {
     let env = configured_environment(args, framework, config)?;
-    let all_tests = discover_framework_tests(root, config, framework, &env)?;
+    let discovered_tests = discover_framework_tests(root, config, framework, &env)?;
+    let all_tests = discovered_tests.tests.clone();
     let all_test_set: HashSet<PathBuf> = all_tests.iter().cloned().collect();
     let effective_limit = override_limit(env.limit.as_ref(), args);
     let has_global_limit = effective_limit.is_some();
@@ -42,7 +44,7 @@ pub(crate) fn generate_configured_plan(
 
     if effective_global_config_fallback(&env, args) {
         if let Some((reason, trigger_file)) = forced_fallback.as_ref() {
-            return Ok(fallback_plan(
+            let mut plan = fallback_plan(
                 root,
                 &all_tests,
                 FallbackRequest {
@@ -53,12 +55,14 @@ pub(crate) fn generate_configured_plan(
                     has_limit: has_global_limit,
                     reason: reason.clone(),
                 },
-            ));
+            );
+            attach_targets(&mut plan, root, &discovered_tests);
+            return Ok(plan);
         }
     }
 
     if env.all {
-        return Ok(fallback_plan(
+        let mut plan = fallback_plan(
             root,
             &all_tests,
             FallbackRequest {
@@ -73,13 +77,15 @@ pub(crate) fn generate_configured_plan(
                     args.environment
                 ),
             },
-        ));
+        );
+        attach_targets(&mut plan, root, &discovered_tests);
+        return Ok(plan);
     }
 
     if let Some((reason, trigger_file)) =
         dependency_trigger(root, config, framework, changed_files)?
     {
-        return Ok(fallback_plan(
+        let mut plan = fallback_plan(
             root,
             &all_tests,
             FallbackRequest {
@@ -90,7 +96,9 @@ pub(crate) fn generate_configured_plan(
                 has_limit: has_global_limit,
                 reason,
             },
-        ));
+        );
+        attach_targets(&mut plan, root, &discovered_tests);
+        return Ok(plan);
     }
 
     let graph = DepGraph::build(root, tsconfig)?;
@@ -167,13 +175,15 @@ pub(crate) fn generate_configured_plan(
         });
     }
 
-    Ok(TestPlan {
+    let mut plan = TestPlan {
         selected_tests: sorted_selected_tests(selected_map),
         groups: group_results,
         warnings: sorted_warnings(warnings),
         fallback_triggered: false,
         fallback_reason: None,
-    })
+    };
+    attach_targets(&mut plan, root, &discovered_tests);
+    Ok(plan)
 }
 
 fn empty_group_result(
@@ -327,90 +337,38 @@ fn discover_framework_tests(
     config: &NoMistakesConfig,
     framework: TestFramework,
     env: &TestPlanEnvironment,
-) -> Result<Vec<PathBuf>> {
-    if framework == TestFramework::Playwright {
-        return discover_playwright_tests(root, config, env);
-    }
-
-    let playwright_tests: HashSet<PathBuf> = discover_playwright_tests(root, config, env)?
-        .into_iter()
-        .collect();
+) -> Result<DiscoveredTests> {
+    let runner = test_runner(framework);
+    let mut discovered =
+        no_mistakes::codebase::test_discovery::discover_tests(root, config, runner)?;
     let include = compile_globset(&env.include)?;
     let exclude = compile_globset(&env.exclude)?;
-    let filter = TestFileFilter::new(root, config);
-    let mut tests: Vec<PathBuf> =
-        no_mistakes::codebase::ts_source::discover_files(root, &config.filesystem.skip_directories)
-            .into_iter()
-            .filter(|path| {
-                let rel = relative_path(root, path);
-                framework_test_match(framework, &rel)
-                    && filter.is_match(root, path)
-                    && !playwright_tests.contains(path)
-                    && include.as_ref().is_none_or(|set| set.is_match(&rel))
-                    && exclude.as_ref().is_none_or(|set| !set.is_match(&rel))
-            })
-            .collect();
-    tests.sort();
-    Ok(tests)
-}
-
-fn discover_playwright_tests(
-    root: &Path,
-    config: &NoMistakesConfig,
-    env: &TestPlanEnvironment,
-) -> Result<Vec<PathBuf>> {
-    let include = compile_globset(&env.include)?;
-    let exclude = compile_globset(&env.exclude)?;
-    let mut tests = fallback_playwright_tests(root, config);
-    tests.retain(|path| {
+    discovered.tests.retain(|path| {
         let rel = relative_path(root, path);
         include.as_ref().is_none_or(|set| set.is_match(&rel))
             && exclude.as_ref().is_none_or(|set| !set.is_match(&rel))
     });
-    tests.sort();
-    tests.dedup();
-    Ok(tests)
+    let allowed: HashSet<PathBuf> = discovered.tests.iter().cloned().collect();
+    discovered
+        .targets_by_path
+        .retain(|path, _| allowed.contains(path));
+    Ok(discovered)
 }
 
-fn fallback_playwright_tests(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
-    let filter = TestFileFilter::new(root, config);
-    no_mistakes::codebase::ts_source::discover_files(root, &config.filesystem.skip_directories)
-        .into_iter()
-        .filter(|path| {
-            let rel = relative_path(root, path);
-            filter.is_match(root, path) && framework_test_match(TestFramework::Playwright, &rel)
-        })
-        .collect()
-}
-
-fn framework_test_match(framework: TestFramework, rel: &str) -> bool {
+fn test_runner(framework: TestFramework) -> TestRunner {
     match framework {
-        TestFramework::Playwright => {
-            rel.contains("/tests/e2e/")
-                || rel.starts_with("tests/e2e/")
-                || rel.contains("/playwright/")
-                || rel.starts_with("playwright/")
-                || rel.starts_with("specs/")
-        }
-        TestFramework::Vitest => is_vitest_test_path(rel),
+        TestFramework::Playwright => TestRunner::Playwright,
+        TestFramework::Vitest => TestRunner::Vitest,
     }
 }
 
-fn is_vitest_test_path(rel: &str) -> bool {
-    let name = rel.rsplit('/').next().unwrap_or(rel);
-    (rel.split('/').any(|component| component == "__tests__")
-        || name.contains(".test.")
-        || name.contains(".spec."))
-        && !rel.split('/').any(|component| component == "playwright")
-        && !has_path_segment_pair(rel, "tests", "e2e")
-        && !rel.starts_with("specs/")
-}
-
-fn has_path_segment_pair(path: &str, first: &str, second: &str) -> bool {
-    let segments = path.split('/').collect::<Vec<_>>();
-    segments
-        .windows(2)
-        .any(|pair| pair[0] == first && pair[1] == second)
+fn attach_targets(plan: &mut TestPlan, root: &Path, discovered: &DiscoveredTests) {
+    for test in &mut plan.selected_tests {
+        let path = root.join(&test.test_file);
+        if let Some(targets) = discovered.targets_by_path.get(&path) {
+            test.targets = targets.clone();
+        }
+    }
 }
 
 fn compile_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
@@ -434,6 +392,8 @@ fn dependency_trigger(
         TestFramework::Playwright => &config.test_plan.playwright,
         TestFramework::Vitest => &config.test_plan.vitest,
     };
+    let ignored_sets =
+        ignored_changed_test_sets(root, config, &plan.full_suite_triggers.ignore_changed_tests)?;
     for (project_name, trigger) in &plan.full_suite_triggers.projects {
         let Some(project) = config.projects.get(project_name) else {
             continue;
@@ -442,7 +402,7 @@ fn dependency_trigger(
         let globset = compile_globset(&patterns)?;
         for changed in changed_files {
             let rel = relative_path(root, changed);
-            if ignored_changed_test(&rel, &plan.full_suite_triggers.ignore_changed_tests) {
+            if ignored_sets.iter().any(|set| set.contains(changed)) {
                 continue;
             }
             if globset.as_ref().is_some_and(|set| set.is_match(&rel)) {
@@ -456,13 +416,25 @@ fn dependency_trigger(
     Ok(None)
 }
 
-fn ignored_changed_test(rel: &str, ignored: &[TestPlanIgnoredChangedTestsFramework]) -> bool {
-    ignored.iter().any(|framework| match framework {
-        TestPlanIgnoredChangedTestsFramework::Playwright => {
-            framework_test_match(TestFramework::Playwright, rel)
-        }
-        TestPlanIgnoredChangedTestsFramework::Vitest => is_vitest_test_path(rel),
-    })
+fn ignored_changed_test_sets(
+    root: &Path,
+    config: &NoMistakesConfig,
+    ignored: &[TestPlanIgnoredChangedTestsFramework],
+) -> Result<Vec<HashSet<PathBuf>>> {
+    let mut sets = Vec::new();
+    for framework in ignored {
+        let runner = match framework {
+            TestPlanIgnoredChangedTestsFramework::Playwright => TestRunner::Playwright,
+            TestPlanIgnoredChangedTestsFramework::Vitest => TestRunner::Vitest,
+        };
+        sets.push(
+            no_mistakes::codebase::test_discovery::discover_tests(root, config, runner)?
+                .tests
+                .into_iter()
+                .collect(),
+        );
+    }
+    Ok(sets)
 }
 
 fn project_dependency_patterns(

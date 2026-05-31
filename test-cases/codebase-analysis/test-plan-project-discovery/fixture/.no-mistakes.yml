@@ -1,0 +1,21 @@
+tests:
+  vitest:
+    configs: vitest.config.mts
+    projects:
+      stories:
+        include:
+          - web/storybook/**/*.stories.tsx
+        exclude:
+          - web/storybook/skip/**
+  playwright:
+    configs: playwright.config.ts
+test_plan:
+  vitest:
+    environments:
+      all:
+        all: true
+  playwright:
+    environments:
+      all:
+        all: true
+rules: []

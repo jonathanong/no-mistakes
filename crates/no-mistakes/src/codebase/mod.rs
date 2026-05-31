@@ -11,6 +11,7 @@ pub mod rules;
 pub(crate) mod storybook;
 pub(crate) mod storybook_mdx;
 pub mod symbols;
+pub mod test_discovery;
 pub mod test_filter;
 pub mod timing;
 pub mod ts_http_calls;

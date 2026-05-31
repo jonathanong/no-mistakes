@@ -1,4 +1,8 @@
-fn collect_test_edges(files: &[PathBuf]) -> Vec<Edge> {
+fn collect_test_edges(
+    root: &Path,
+    files: &[PathBuf],
+    test_filter: Option<&crate::codebase::test_filter::TestFileFilter>,
+) -> Vec<Edge> {
     let file_set: HashSet<&PathBuf> = files.iter().collect();
 
     let test_exts = ["mts", "ts", "tsx", "mjs", "js", "jsx"];
@@ -6,6 +10,7 @@ fn collect_test_edges(files: &[PathBuf]) -> Vec<Edge> {
 
     files
         .par_iter()
+        .filter(|path| test_filter.is_none_or(|filter| filter.is_match(root, path)))
         .flat_map_iter(|path| {
             let mut edges = Vec::new();
             let stem = match path.file_stem().and_then(|s| s.to_str()) {

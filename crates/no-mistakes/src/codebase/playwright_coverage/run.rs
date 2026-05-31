@@ -28,7 +28,7 @@ pub fn run(args: CoverageArgs) -> Result<ExitStatus> {
     let report = collect_report_with_frontend_root(
         &root,
         &frontend_root,
-        test_globs_or_default(&args.test_globs),
+        test_globs_or_default(&root, &args.test_globs),
         &all_files,
     )?;
     timings.mark("parse+analysis");
@@ -82,7 +82,7 @@ pub(crate) fn collect_report_from_files(
     collect_report_with_frontend_root(
         root,
         &frontend_root,
-        test_globs_or_default(test_globs),
+        test_globs_or_default(root, test_globs),
         all_files,
     )
 }

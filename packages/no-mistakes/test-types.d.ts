@@ -37,6 +37,15 @@ export interface SelectedTest {
   test_file: string;
   confidence: "low" | "medium" | "high";
   reasons: ImpactReason[];
+  targets?: TestExecutionTarget[];
+}
+
+export interface TestExecutionTarget {
+  runner: "vitest" | "playwright";
+  config?: string | null;
+  project?: string | null;
+  base_command: string[];
+  runner_args: string[];
 }
 
 export interface ImpactReason {

@@ -68,6 +68,7 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
                 .or_insert_with(|| SelectedTest {
                     test_file: rel_changed.clone(),
                     confidence: Confidence::High,
+                    targets: Vec::new(),
                     reasons: Vec::new(),
                 });
             entry.confidence = Confidence::High;
@@ -127,6 +128,7 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
                 .or_insert_with(|| SelectedTest {
                     test_file: rel_test,
                     confidence: path_conf,
+                    targets: Vec::new(),
                     reasons: Vec::new(),
                 });
 

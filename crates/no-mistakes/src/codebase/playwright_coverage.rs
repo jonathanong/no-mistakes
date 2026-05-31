@@ -29,7 +29,7 @@ pub(crate) fn collect_report_with_frontend_root_pub(
     collect_report_with_frontend_root(
         root,
         frontend_root,
-        crate::codebase::dependencies::test_globs("playwright"),
+        test_globs_or_default(root, &[]),
         all_files,
     )
     .expect("collect_report_with_frontend_root failed with valid globs")

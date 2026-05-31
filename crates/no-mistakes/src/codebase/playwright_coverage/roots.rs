@@ -53,9 +53,27 @@ fn validate_frontend_root(frontend_root: PathBuf) -> Result<PathBuf> {
     }
 }
 
-fn test_globs_or_default(globs: &[String]) -> Vec<String> {
+fn test_globs_or_default(root: &Path, globs: &[String]) -> Vec<String> {
     if globs.is_empty() {
-        crate::codebase::dependencies::test_globs("playwright")
+        crate::config::v2::load_v2_config(root, None)
+            .ok()
+            .and_then(|config| {
+                crate::codebase::test_discovery::discover_tests(
+                    root,
+                    &config,
+                    crate::codebase::test_discovery::TestRunner::Playwright,
+                )
+                .ok()
+            })
+            .map(|discovered| {
+                discovered
+                    .tests
+                    .iter()
+                    .map(|path| crate::codebase::ts_source::relative_slash_path(root, path))
+                    .collect()
+            })
+            .filter(|globs: &Vec<String>| !globs.is_empty())
+            .unwrap_or_else(|| crate::codebase::dependencies::test_globs("playwright"))
     } else {
         globs.to_vec()
     }
