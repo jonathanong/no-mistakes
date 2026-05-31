@@ -37,6 +37,8 @@ describe("docs coverage", () => {
       "allowInlineScriptIdPatterns",
       "includePathPatterns",
       "allowDefaultReExports",
+      "allowDefaultedProps",
+      "allowStaticTemplates",
       "allowBeforeAllAssignments",
     ]) {
       assert.ok(pluginDoc.includes(optionName), `missing option ${optionName}`);

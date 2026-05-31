@@ -48,7 +48,7 @@ Rules not listed here have no options.
 | `playwright-assertion-timeout-cap` | `{ max?: number }`, default `10000`. |
 | `playwright-consistent-attribute` | `{ selectorAttributes?: string[], canonicalAttribute?: string }`, defaults `["data-testid", "data-pw"]` and `"data-pw"`. |
 | `playwright-defaults` | `{ selectorAttributes?: string[] }`. |
-| `playwright-literals` | `{ selectorAttributes?: string[], allowStaticTemplates?: boolean }`. |
+| `playwright-literals` | `{ selectorAttributes?: string[], allowDefaultedProps?: boolean, allowStaticTemplates?: boolean }`; `allowDefaultedProps` defaults to `true`, `allowStaticTemplates` defaults to `false`. |
 | `playwright-naming-convention` | `{ selectorAttributes?: string[], pattern?: string }`, default kebab-case pattern. |
 | `playwright-no-empty` | `{ selectorAttributes?: string[] }`. |
 | `playwright-prefer-get-by-test-id` | `{ selectorAttributes?: string[] }`. |
