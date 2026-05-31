@@ -21,6 +21,12 @@ pub(crate) fn check_with_facts(
     let tsconfig = resolve_tsconfig(root, tsconfig_path)?;
     let (required_graph_plan, _) =
         crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan(root, plan);
+    if required_graph_plan.is_empty() && shared.files().is_empty() {
+        return super::check(root, config, tsconfig_path);
+    }
+    if shared.stats.parse_errors > 0 {
+        return super::check(root, config, tsconfig_path);
+    }
     if !shared.graph_plan().covers(required_graph_plan) {
         bail!(
             "shared check facts are missing graph facts required by {RULE_ID}; collect facts with forbidden_dependencies::graph_plan before calling run_check_with_facts"

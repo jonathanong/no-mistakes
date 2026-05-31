@@ -79,6 +79,47 @@ fn shared_facts_path_rejects_missing_graph_facts() {
 }
 
 #[test]
+fn shared_facts_path_falls_back_when_graph_plan_needs_no_ts_facts() {
+    let root = fixture("forbidden-dependencies-package-only");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let shared = crate::codebase::check_facts::CheckFactMap::default();
+
+    let findings = check_with_facts(&root, &config, None, &shared).unwrap();
+
+    assert!(
+        findings.iter().any(|f| f.rule == RULE_ID),
+        "expected package-only forbidden dependency finding, got: {findings:?}"
+    );
+}
+
+#[test]
+fn shared_facts_path_falls_back_for_parse_errors() {
+    let root = fixture("forbidden-dependencies-parse-error");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let graph_plan = graph_plan(&config).expect("fixture config enables forbidden dependencies");
+    let (fact_plan, fact_context) =
+        crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan(&root, graph_plan);
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let shared = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        files,
+        crate::codebase::check_facts::CheckFactPlan {
+            graph: fact_plan,
+            graph_context: fact_context,
+            ..Default::default()
+        },
+    );
+
+    assert!(shared.stats.parse_errors > 0);
+    let findings = check_with_facts(&root, &config, None, &shared).unwrap();
+
+    assert!(
+        findings.iter().any(|f| f.rule == RULE_ID),
+        "expected parse-error fallback to preserve forbidden dependency finding, got: {findings:?}"
+    );
+}
+
+#[test]
 fn graph_plan_and_shared_facts_empty_when_rule_is_not_configured() {
     let root = fixture("forbidden-dependencies-basic");
     let config = NoMistakesConfig::default();

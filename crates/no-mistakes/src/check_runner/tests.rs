@@ -177,6 +177,22 @@ fn run_all_skips_discovery_for_forbidden_deps_only() {
 }
 
 #[test]
+fn run_all_keeps_forbidden_graph_files_outside_filesystem_skips() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/check-runner/forbidden-deps-ignores-filesystem-skip/fixture");
+    let config = root.join(".no-mistakes.yml");
+    let results = run_all(root, Some(config), None).unwrap();
+
+    assert!(
+        results
+            .rules
+            .iter()
+            .any(|f| f.rule == no_mistakes::codebase::rules::FORBIDDEN_DEPENDENCIES),
+        "expected forbidden-dependencies finding for file under filesystem skip"
+    );
+}
+
+#[test]
 fn integration_configured_covers_vitest_and_playwright_suites() {
     let empty = no_mistakes::config::v2::NoMistakesConfig::default();
     assert!(!integration_configured(&empty));

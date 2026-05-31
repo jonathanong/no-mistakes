@@ -61,11 +61,13 @@ pub(crate) fn collect_file_facts(
             .first()
             .map(|error| format!("{error:?}"))
             .unwrap_or("parser panicked without diagnostic details".to_string());
-        let stored_source = should_store_source(plan).then_some(source);
+        let stored_source = should_store_source(plan).then_some(source.clone());
+        let ts = super::file_parse_error::ts_facts(plan, stored_source.clone(), &parsed.program);
         return Some(CheckFileFacts {
-            ts: ts_source(stored_source.clone()),
+            ts,
             source: stored_source,
             parse_error: Some(parse_error),
+            parsed: true,
             ..CheckFileFacts::default()
         });
     }

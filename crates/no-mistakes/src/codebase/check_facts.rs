@@ -15,6 +15,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 mod file;
+mod file_parse_error;
 mod file_playwright;
 pub(crate) use file::collect_file_facts;
 
