@@ -1,5 +1,0 @@
-projects:
-  app:
-    rootPath: src
-    rules:
-      - unique-exports

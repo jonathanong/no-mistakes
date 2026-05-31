@@ -12,7 +12,7 @@ pub fn run_analyze(
     targets: &[String],
     depth: Option<usize>,
 ) -> Result<Vec<ComponentFacts>> {
-    let stems = [".no-mistakes", ".react-traits"];
+    let stems = [".no-mistakes"];
     let root_config: RootConfig = crate::config::load_config(root, config_path, &stems)?;
     let file_config = root_config.into_file_config();
     run_analyze_inner(root, &file_config, targets, depth)

@@ -1,0 +1,47 @@
+filesystem:
+  skipDirectories:
+  - ".next"
+  - build
+  - ".turbo"
+  - fixtures
+  - __fixtures__
+  skipFilePatterns:
+  - "^guardrails/fixtures/"
+rust:
+  root: rust/crates/core
+  maxLines: 200
+projects:
+  backend:
+    root: backend
+  web:
+    root: web
+rules:
+- rule: mts-extensions
+  projects:
+  - backend
+  - web
+  options:
+    disallowedExtensions:
+    - ".js"
+    - ".mjs"
+    - ".cjs"
+    - ".ts"
+    - ".cts"
+- rule: max-file-size
+  scope: repository
+  options:
+    maxLines: 200
+- rule: max-test-size
+  scope: repository
+  options:
+    maxLines: 500
+- rule: no-empty-files
+  scope: repository
+  options:
+    checkedExtensions:
+    - ".sql"
+    - ".mts"
+    - ".ts"
+    - ".tsx"
+    - ".css"
+    - ".rs"

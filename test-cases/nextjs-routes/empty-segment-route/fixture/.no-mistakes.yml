@@ -1,0 +1,7 @@
+tests:
+  playwright:
+    frontendRoot: web/app
+    testInclude:
+    - tests/e2e/**/*.ts
+    selectors:
+      testIds: []

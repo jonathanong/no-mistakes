@@ -9,9 +9,6 @@ pub(super) fn find_codebase_config_path(start: &Path) -> Result<Option<PathBuf>>
         if let Some(path) = find_config_for_stem(&current, ".no-mistakes")? {
             return Ok(Some(path));
         }
-        if let Some(path) = find_config_for_stem(&current, ".guardrailsrc")? {
-            return Ok(Some(path));
-        }
         if !current.pop() {
             return Ok(None);
         }

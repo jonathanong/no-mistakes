@@ -1,5 +1,3 @@
-pub(crate) mod playwright;
-
 use super::extract::{is_indexable, ExtractedImport, ImportKind};
 use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
 use crate::codebase::ts_source::facts::{

@@ -45,7 +45,7 @@ fn test_is_route_handler_file_variants() {
 
 #[test]
 fn test_collect_layout_chain_files_includes_parent_chain() {
-    let app = fixture("next-to-fetch-routes", "layout-chain").join("app");
+    let app = fixture("fetch-route-targets", "layout-chain").join("app");
     let page = app.join("dashboard/page.tsx");
 
     let chain = collect_layout_chain_files(&page, &app);
@@ -63,19 +63,19 @@ fn test_is_client_route_file_missing_file() {
 
 #[test]
 fn test_is_client_route_file_with_use_client_directive() {
-    let file = fixture("next-to-fetch-routes", "use-client").join("client.ts");
+    let file = fixture("fetch-route-targets", "use-client").join("client.ts");
     assert!(is_client_route_file(&file).unwrap());
 }
 
 #[test]
 fn test_is_client_route_file_without_use_client_directive() {
-    let file = fixture("next-to-fetch-routes", "no-use-client").join("server.ts");
+    let file = fixture("fetch-route-targets", "no-use-client").join("server.ts");
     assert!(!is_client_route_file(&file).unwrap());
 }
 
 #[test]
 fn test_resolve_target_file_errors() {
-    let root = fixture("next-to-fetch-routes", "simple-file");
+    let root = fixture("fetch-route-targets", "simple-file");
 
     let empty = resolve_target_file(&root, "   ");
     assert!(empty.is_err());
@@ -88,7 +88,7 @@ fn test_resolve_target_file_errors() {
     assert_eq!(resolved, absolute);
 
     // layout-chain has an "app" subdirectory — passing a directory should fail
-    let layout_root = fixture("next-to-fetch-routes", "layout-chain");
+    let layout_root = fixture("fetch-route-targets", "layout-chain");
     let not_file = resolve_target_file(&layout_root, "app");
     assert!(not_file.is_err());
     let err = not_file.unwrap_err();
@@ -97,8 +97,8 @@ fn test_resolve_target_file_errors() {
 
 #[test]
 fn test_route_reaches_target_short_circuit() {
-    let route = fixture("next-to-fetch-routes", "simple-file").join("route.ts");
-    let target = fixture("next-to-fetch-routes", "route-reaches").join("target.ts");
+    let route = fixture("fetch-route-targets", "simple-file").join("route.ts");
+    let target = fixture("fetch-route-targets", "route-reaches").join("target.ts");
 
     let mut cache = HashMap::new();
     let mut visited = std::collections::HashSet::new();
@@ -114,7 +114,7 @@ fn test_route_reaches_target_short_circuit() {
 
 #[test]
 fn test_route_reaches_target_matches_direct() {
-    let route = fixture("next-to-fetch-routes", "simple-file").join("route.ts");
+    let route = fixture("fetch-route-targets", "simple-file").join("route.ts");
     let mut cache = HashMap::new();
     let mut visited = std::collections::HashSet::new();
     let route_abs = route.canonicalize().unwrap();
@@ -124,7 +124,7 @@ fn test_route_reaches_target_matches_direct() {
 
 #[test]
 fn test_route_reaches_target_via_import() {
-    let base = fixture("next-to-fetch-routes", "route-reaches");
+    let base = fixture("fetch-route-targets", "route-reaches");
     let route = base.join("route.ts");
     let target = base.join("target.ts");
 
@@ -142,7 +142,7 @@ fn test_route_reaches_target_via_import() {
 #[test]
 fn test_route_reaches_target_nonexistent_source_returns_false() {
     // When path doesn't exist, returns Ok(false) instead of aborting with an error.
-    let base = fixture("next-to-fetch-routes", "route-reaches");
+    let base = fixture("fetch-route-targets", "route-reaches");
     let nonexistent = base.join("ghost.ts");
     let target = base.join("target.ts");
 
@@ -154,7 +154,7 @@ fn test_route_reaches_target_nonexistent_source_returns_false() {
 
 #[test]
 fn test_route_reaches_target_canonicalize_non_not_found_error() {
-    let base = fixture("next-to-fetch-routes", "simple-file");
+    let base = fixture("fetch-route-targets", "simple-file");
     let too_long = "x".repeat(10_000);
     let invalid_source = base.join(too_long);
     let target = base.join("route.ts");
@@ -168,7 +168,7 @@ fn test_route_reaches_target_canonicalize_non_not_found_error() {
 #[test]
 fn test_route_reaches_target_nonexistent_target_uses_fallback() {
     // When target doesn't exist, canonicalize() fails and unwrap_or_else fallback is used.
-    let route = fixture("next-to-fetch-routes", "simple-file").join("route.ts");
+    let route = fixture("fetch-route-targets", "simple-file").join("route.ts");
     let nonexistent_target = route.parent().unwrap().join("does-not-exist.ts");
     let mut cache = HashMap::new();
     let mut visited = std::collections::HashSet::new();
@@ -184,7 +184,7 @@ fn test_is_client_route_file_unreadable_returns_error() {
     use std::os::unix::fs::PermissionsExt;
     let dir = tempdir().unwrap();
     let file = dir.path().join("unreadable.ts");
-    let fixture_src = fixture("next-to-fetch-routes", "no-use-client").join("server.ts");
+    let fixture_src = fixture("fetch-route-targets", "no-use-client").join("server.ts");
     fs::copy(&fixture_src, &file).unwrap();
     let mut perms = file.metadata().unwrap().permissions();
     perms.set_mode(0o000);
@@ -198,8 +198,8 @@ fn test_is_client_route_file_unreadable_returns_error() {
 fn test_route_reaches_target_collect_imports_parse_error() {
     // A file with a parse error causes collect_imports to fail,
     // exercising the `?` error branch in routes.rs.
-    let route = fixture("next-to-fetch-routes", "route-parse-error").join("route.ts");
-    let target = fixture("next-to-fetch-routes", "route-reaches").join("target.ts");
+    let route = fixture("fetch-route-targets", "route-parse-error").join("route.ts");
+    let target = fixture("fetch-route-targets", "route-reaches").join("target.ts");
 
     let mut cache = HashMap::new();
     let mut visited = std::collections::HashSet::new();
@@ -214,10 +214,10 @@ fn test_route_reaches_target_collect_imports_parse_error() {
 
 #[test]
 fn test_route_reaches_target_with_unmatched_import_chain() {
-    let base = fixture("next-to-fetch-routes", "unmatched-chain");
+    let base = fixture("fetch-route-targets", "unmatched-chain");
     let route = base.join("route.ts");
     // target.ts is in a different fixture dir, so the chain route→middle→leaf never reaches it.
-    let target = fixture("next-to-fetch-routes", "route-reaches").join("target.ts");
+    let target = fixture("fetch-route-targets", "route-reaches").join("target.ts");
 
     let mut cache = HashMap::new();
     let mut visited = std::collections::HashSet::new();

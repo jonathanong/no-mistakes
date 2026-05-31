@@ -1,0 +1,5 @@
+tests:
+  playwright:
+    frontendRoot: web/app
+    selectors:
+      htmlIds: true

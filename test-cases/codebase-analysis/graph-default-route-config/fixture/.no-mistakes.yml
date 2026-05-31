@@ -1,0 +1,13 @@
+rules:
+- rule: route-consistency
+  scope: repository
+  options:
+    backendPattern: backend/api/**/*.mts
+    backendRegisterObject: app
+    backendPrefixes:
+    - "/api/"
+- rule: http-call-static-paths
+  scope: repository
+  options:
+    backendPrefixes:
+    - "/api/"

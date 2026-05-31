@@ -113,23 +113,6 @@ fn wrapper_help_exposes_parity_flags() {
 }
 
 #[test]
-fn playwright_deprecated_unique_selectors_flag_warns_on_stderr() {
-    let root = fixture("nextjs-coverage", "covered").join("web");
-    let root_arg = root.to_string_lossy();
-    let output = run(&[
-        "playwright",
-        "--root",
-        root_arg.as_ref(),
-        "--assert-unique-selectors",
-        "check",
-    ]);
-
-    assert!(stderr(&output).contains(
-        "warning: --assert-unique-selectors is deprecated; use --assert-unique-test-ids and --assert-unique-html-ids instead."
-    ));
-}
-
-#[test]
 fn dependencies_cli_covers_symbol_error_test_glob_and_timing_paths() {
     let root = fixture("codebase-analysis", "simple");
 

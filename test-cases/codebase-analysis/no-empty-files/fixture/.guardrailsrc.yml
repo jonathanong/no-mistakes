@@ -1,9 +1,0 @@
-rules:
-  no-empty-files:
-    checkedExtensions:
-      - .mts
-      - .sql
-    commentCheckedExtensions:
-      - .mts
-      - .sql
-    allowedFiles: []

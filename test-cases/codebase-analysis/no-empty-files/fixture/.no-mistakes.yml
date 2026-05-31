@@ -1,0 +1,11 @@
+rules:
+- rule: no-empty-files
+  scope: repository
+  options:
+    checkedExtensions:
+    - ".mts"
+    - ".sql"
+    commentCheckedExtensions:
+    - ".mts"
+    - ".sql"
+    allowedFiles: []

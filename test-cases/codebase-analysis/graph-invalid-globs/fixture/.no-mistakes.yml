@@ -1,0 +1,20 @@
+rules:
+- rule: route-consistency
+  scope: repository
+  options:
+    backendPattern: "["
+    backendRegisterObject: app
+    frontendRoot: app
+    scanPatterns:
+    - "["
+- rule: queue-dashboard-reachability
+  scope: repository
+  options:
+    queuePattern: "["
+    factorySpecifier: "@factory/pkg"
+    factoryFunction: createQueue
+- rule: http-route-static-paths
+  scope: repository
+  options:
+    backendPattern: "["
+    registerObject: app

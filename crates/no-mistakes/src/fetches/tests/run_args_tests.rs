@@ -13,8 +13,8 @@ fn fixture(category: &str, name: &str) -> PathBuf {
 
 #[test]
 fn test_run_without_test_argv_uses_real_cli_args() {
-    const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
-    let previous = "next-to-fetch\x1f--json";
+    const ENV_VAR: &str = "FETCHES_TEST_ARGS";
+    let previous = "fetches\x1f--json";
 
     {
         let _run_args = with_run_args_env(Some(previous.to_string()), None);
@@ -25,8 +25,8 @@ fn test_run_without_test_argv_uses_real_cli_args() {
 
 #[test]
 fn test_with_run_args_unset_restores_existing_value() {
-    const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
-    let previous = "next-to-fetch\x1f--json";
+    const ENV_VAR: &str = "FETCHES_TEST_ARGS";
+    let previous = "fetches\x1f--json";
 
     {
         let run_args = with_run_args_env(None, Some(previous.to_string()));
@@ -47,9 +47,9 @@ fn test_run_without_test_argv_uses_real_cli_args_from_absence() {
 
 #[test]
 fn test_with_run_args_restores_existing_value() {
-    const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
-    let previous = "next-to-fetch\x1f--json";
-    let args = "next-to-fetch\x1f--root\x1f.";
+    const ENV_VAR: &str = "FETCHES_TEST_ARGS";
+    let previous = "fetches\x1f--json";
+    let args = "fetches\x1f--root\x1f.";
 
     {
         let run_args = with_run_args_env(Some(args.to_string()), Some(previous.to_string()));
@@ -61,14 +61,11 @@ fn test_with_run_args_restores_existing_value() {
 
 #[test]
 fn test_with_run_args_restores_unset_value() {
-    const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
+    const ENV_VAR: &str = "FETCHES_TEST_ARGS";
     {
         let run_args = with_run_args_env(None, None);
-        std::env::set_var(ENV_VAR, "next-to-fetch\x1f--root\x1f.");
-        assert_eq!(
-            std::env::var(ENV_VAR).unwrap(),
-            "next-to-fetch\x1f--root\x1f."
-        );
+        std::env::set_var(ENV_VAR, "fetches\x1f--root\x1f.");
+        assert_eq!(std::env::var(ENV_VAR).unwrap(), "fetches\x1f--root\x1f.");
         let _guard = run_args.release();
         assert!(std::env::var_os(ENV_VAR).is_none());
     }
@@ -76,11 +73,11 @@ fn test_with_run_args_restores_unset_value() {
 
 #[test]
 fn test_with_run_args_env_restores_previous_on_drop() {
-    let previous = "next-to-fetch\x1f--json";
+    let previous = "fetches\x1f--json";
 
     {
         let _run_args = with_run_args_env(
-            Some("next-to-fetch\x1f--root\x1f.".to_string()),
+            Some("fetches\x1f--root\x1f.".to_string()),
             Some(previous.to_string()),
         );
     }
@@ -88,9 +85,9 @@ fn test_with_run_args_env_restores_previous_on_drop() {
 
 #[test]
 fn test_with_run_args_env_macro_path() {
-    const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
-    let next = "next-to-fetch\x1f--root\x1f.";
-    let previous = "next-to-fetch\x1f--json";
+    const ENV_VAR: &str = "FETCHES_TEST_ARGS";
+    let next = "fetches\x1f--root\x1f.";
+    let previous = "fetches\x1f--json";
 
     let run_args = with_run_args_env(Some(next.to_string()), Some(previous.to_string()));
     assert_eq!(std::env::var(ENV_VAR).unwrap(), next);
@@ -100,12 +97,12 @@ fn test_with_run_args_env_macro_path() {
 
 #[test]
 fn test_with_run_args_state_resumes_panic() {
-    const ENV_VAR: &str = "NEXT_TO_FETCH_TEST_ARGS";
-    let previous = "next-to-fetch\x1f--json";
+    const ENV_VAR: &str = "FETCHES_TEST_ARGS";
+    let previous = "fetches\x1f--json";
 
     let panic_result = {
         let run_args = with_run_args_env(
-            Some("next-to-fetch\x1f--root\x1f.".to_string()),
+            Some("fetches\x1f--root\x1f.".to_string()),
             Some(previous.to_string()),
         );
         let panic_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
@@ -127,7 +124,7 @@ fn test_run_and_main_are_exercised_with_test_argv() {
 
     {
         let next_value = format!(
-            "next-to-fetch\x1f--root\x1f{}\x1f--json",
+            "fetches\x1f--root\x1f{}\x1f--json",
             root.path().to_string_lossy()
         );
         let _run_args = with_run_args_env(Some(next_value.to_string()), None);
@@ -138,7 +135,7 @@ fn test_run_and_main_are_exercised_with_test_argv() {
 #[test]
 fn test_run_cli_markdown_path_with_test_argv() {
     let root = fixture("nextjs-fetches", "next-app");
-    let next_value = format!("next-to-fetch\x1f--root\x1f{}", root.to_string_lossy());
+    let next_value = format!("fetches\x1f--root\x1f{}", root.to_string_lossy());
     let _run_args = with_run_args_env(Some(next_value), None);
 
     assert!(crate::fetches::cli::run_cli().is_ok());
@@ -147,7 +144,7 @@ fn test_run_cli_markdown_path_with_test_argv() {
 #[test]
 fn test_run_cli_error_path_with_test_argv() {
     let missing = fixture("nextjs-fetches", "missing-root");
-    let next_value = format!("next-to-fetch\x1f--root\x1f{}", missing.to_string_lossy());
+    let next_value = format!("fetches\x1f--root\x1f{}", missing.to_string_lossy());
     let _run_args = with_run_args_env(Some(next_value), None);
 
     assert!(crate::fetches::cli::run_cli().is_err());

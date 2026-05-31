@@ -1,0 +1,9 @@
+rules:
+- rule: no-sql-in-backend-tests
+  scope: repository
+  options:
+    psqlModule: "@data-stores/psql"
+    sqlCalls:
+    - read
+    - write
+    - query

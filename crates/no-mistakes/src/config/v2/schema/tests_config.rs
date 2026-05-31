@@ -18,8 +18,12 @@ pub struct PlaywrightTestConfig {
     pub configs: Option<StringOrList>,
     pub projects: BTreeMap<String, TestProjectPolicy>,
     pub selectors: PlaywrightSelectors,
+    pub test_include: Vec<String>,
+    pub test_exclude: Vec<String>,
     pub selector_roots: Vec<String>,
+    pub selector_include: Vec<String>,
     pub selector_exclude: Vec<String>,
+    pub navigation_helpers: Vec<String>,
     pub frontend_root: Option<String>,
     pub ignore_routes: Option<Vec<String>>,
 }

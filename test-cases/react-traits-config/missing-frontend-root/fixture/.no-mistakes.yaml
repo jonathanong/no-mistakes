@@ -1,1 +1,2 @@
-frontendRoot: nonexistent-dir
+reactTraits:
+  frontendRoot: nonexistent-dir

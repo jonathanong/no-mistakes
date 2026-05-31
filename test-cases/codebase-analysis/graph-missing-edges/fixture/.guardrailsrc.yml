@@ -1,5 +1,0 @@
-rules:
-  route-consistency:
-    frontendRoot: "packages/web/app"
-    backendPrefixes: ["/api/"]
-    scanPatterns: ["packages/web/src/**/*.ts"]

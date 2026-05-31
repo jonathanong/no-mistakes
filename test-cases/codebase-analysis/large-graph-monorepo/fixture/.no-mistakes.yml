@@ -1,0 +1,24 @@
+rules:
+- rule: route-consistency
+  scope: repository
+  options:
+    backendPattern: apps/api/src/routes/**/*.mts
+    backendRegisterObject: app
+    backendPrefixes:
+    - "/api/v1/"
+    frontendRoot: apps/web/app
+    scanPatterns:
+    - apps/web/src/**/*.tsx
+    - apps/web/app/**/*.tsx
+    - apps/api/src/**/*.mts
+- rule: queue-dashboard-reachability
+  scope: repository
+  options:
+    entrypoint: apps/api/src/entrypoints/public-api.mts
+    queuePattern: apps/api/src/queues/*.mts
+    factorySpecifier: "@fixture/queue-factory"
+    factoryFunction: createQueue
+    tsconfig: tsconfig.json
+tests:
+  playwright:
+    frontendRoot: apps/web/app

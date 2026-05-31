@@ -1,0 +1,7 @@
+tests:
+  playwright:
+    frontendRoot: web/app
+    selectors:
+      testIds:
+      - data-test
+      - data-test-id

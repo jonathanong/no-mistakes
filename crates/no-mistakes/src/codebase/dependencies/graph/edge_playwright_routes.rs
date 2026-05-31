@@ -1,55 +1,49 @@
 fn collect_playwright_route_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edge> {
-    let frontend_root = playwright_frontend_root(root);
-    let report = crate::codebase::playwright_coverage::collect_report_with_frontend_root_pub(
-        root,
-        &frontend_root,
-        all_files,
-    );
-
     let all_file_set: HashSet<PathBuf> = all_files.iter().cloned().collect();
+    let Ok(settings) = crate::playwright::config::load_settings(root, None, &[], None) else {
+        return Vec::new();
+    };
+    let frontend_root = root.join(&settings.frontend_root);
+    let Ok(analysis) = crate::playwright::analysis::pipeline::analyze_with_policy(
+        root,
+        &settings,
+        crate::playwright::playwright_tests::TestPolicy {
+            assert_conditional_tests: false,
+            allow_skipped_tests: false,
+        },
+        crate::playwright::analysis::types::UniqueSelectorPolicy::default(),
+    ) else {
+        return Vec::new();
+    };
+
     let mut edges = Vec::new();
-    for route in report.routes {
-        let page_file = root.join(&route.file);
-        for test in route.tests {
+    for edge in analysis.edges.edges {
+        if let crate::playwright::analysis::types::Edge::Route {
+            test_file,
+            route_file,
+            ..
+        } = edge
+        {
+            let page_file = root.join(route_file.as_str());
             edges.push((
-                NodeId::File(root.join(test.file)),
+                NodeId::File(root.join(test_file.as_str())),
                 NodeId::File(page_file.clone()),
                 EdgeKind::RouteTest,
             ));
-        }
-        for layout_file in
-            collect_layout_chain_files_from_file_set(&page_file, &frontend_root, &all_file_set)
-        {
-            edges.push((
-                NodeId::File(page_file.clone()),
-                NodeId::File(layout_file),
-                EdgeKind::Layout,
-            ));
+            for layout_file in
+                collect_layout_chain_files_from_file_set(&page_file, &frontend_root, &all_file_set)
+            {
+                edges.push((
+                    NodeId::File(page_file.clone()),
+                    NodeId::File(layout_file),
+                    EdgeKind::Layout,
+                ));
+            }
         }
     }
+    edges.sort();
+    edges.dedup();
     edges
-}
-
-fn playwright_frontend_root(root: &Path) -> PathBuf {
-    // Try v2 config first: use <nextjs_root>/app as the frontend root.
-    let v2_candidate = crate::config::v2::load_v2_config(root, None)
-        .ok()
-        .and_then(|v2| {
-            let view = crate::config::v2::ConfigView::new(&v2);
-            // nextjs_root() defaults to "app" when no nextjs project is configured,
-            // so it is never empty; is_dir() handles the directory-not-found case.
-            let candidate = root.join(view.nextjs_root()).join("app");
-            candidate.is_dir().then_some(candidate)
-        });
-    if let Some(candidate) = v2_candidate {
-        return candidate;
-    }
-    // Fall back to old guardrails config.
-    let config = crate::codebase::config::load_config(root).ok();
-    match crate::codebase::playwright_coverage::resolve_frontend_root(None, root, config.as_ref()) {
-        Ok(frontend_root) => frontend_root,
-        Err(_) => root.join("web/app"),
-    }
 }
 
 fn collect_layout_chain_files_from_file_set(

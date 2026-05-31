@@ -12,12 +12,6 @@ use anyhow::{Context, Result};
 use std::process::ExitCode;
 
 pub fn run(cli: PlaywrightArgs) -> Result<ExitCode> {
-    if cli.assert_unique_selectors {
-        eprintln!(
-            "warning: --assert-unique-selectors is deprecated; use --assert-unique-test-ids and --assert-unique-html-ids instead."
-        );
-    }
-
     let root = absolutize(&cli.root).context("failed to resolve --root")?;
     let settings = config::load_settings(
         &root,
@@ -33,10 +27,9 @@ pub fn run(cli: PlaywrightArgs) -> Result<ExitCode> {
             allow_skipped_tests: cli.allow_skipped_tests,
         },
         UniqueSelectorPolicy {
-            test_ids: cli.assert_unique_test_ids || cli.assert_unique_selectors,
-            html_ids: cli.assert_unique_html_ids
-                || (cli.assert_unique_selectors && settings.html_ids),
-            aggregate: cli.assert_unique_selectors,
+            test_ids: cli.assert_unique_test_ids,
+            html_ids: cli.assert_unique_html_ids,
+            aggregate: false,
             configured_html_id_selector: false,
         },
     )?;

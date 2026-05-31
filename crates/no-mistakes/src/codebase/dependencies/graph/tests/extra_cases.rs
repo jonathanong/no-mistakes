@@ -80,23 +80,6 @@ fn playwright_layout_edges_use_discovered_file_set() {
             root.join("web/app/layout.tsx")
         ]
     );
-    assert_eq!(
-        playwright_frontend_root(&fixture("simple")),
-        fixture("simple").join("web/app")
-    );
-    // v2 config with nextjs project root → should resolve to <root>/web/app.
-    assert_eq!(
-        playwright_frontend_root(&fixture("playwright-coverage-route-group")),
-        fixture("playwright-coverage-route-group").join("web/app")
-    );
-    // v2 config with no nextjs project → nextjs_root() returns default "app",
-    // candidate <root>/app/app doesn't exist → falls through to guardrails fallback.
-    let no_nextjs = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/codebase-analysis/graph-project-route-config/fixture");
-    let no_nextjs = crate::codebase::ts_resolver::normalize_path(&no_nextjs);
-    let result = playwright_frontend_root(&no_nextjs);
-    // Result is whatever the fallback resolves to — we just exercise the path.
-    let _ = result;
 }
 
 #[test]

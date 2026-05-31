@@ -1,1 +1,3 @@
-frontendRoot: no-mistakes-app
+tests:
+  playwright:
+    frontendRoot: no-mistakes-app

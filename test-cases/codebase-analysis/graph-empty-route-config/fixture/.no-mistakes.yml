@@ -1,0 +1,12 @@
+rules:
+- rule: route-consistency
+  scope: repository
+  options:
+    backendPattern: ''
+    backendRegisterObject: ''
+    frontendRoot: ''
+- rule: queue-dashboard-reachability
+  scope: repository
+  options:
+    queuePattern: ''
+    factorySpecifier: ''

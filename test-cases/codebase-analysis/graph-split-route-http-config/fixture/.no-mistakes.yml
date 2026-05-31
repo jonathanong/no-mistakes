@@ -1,0 +1,20 @@
+rules:
+- rule: route-consistency
+  scope: repository
+  options:
+    backendPattern: routes/**/*.mts
+    backendRegisterObject: routeApp
+    backendPrefixes:
+    - "/route/"
+    scanPatterns:
+    - src/**/*.ts
+- rule: http-route-static-paths
+  scope: repository
+  options:
+    backendPattern: http/**/*.mts
+    registerObject: httpApp
+- rule: http-call-static-paths
+  scope: repository
+  options:
+    backendPrefixes:
+    - "/http/"

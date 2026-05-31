@@ -1,0 +1,5 @@
+rules:
+- rule: max-test-size
+  scope: repository
+  options:
+    maxLines: 10

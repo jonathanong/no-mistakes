@@ -1,5 +1,0 @@
-projects:
-  test-correspondence:
-    rootPath: .
-    rules:
-      - test-correspondence

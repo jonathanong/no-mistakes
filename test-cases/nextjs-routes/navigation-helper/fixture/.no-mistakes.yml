@@ -1,0 +1,9 @@
+tests:
+  playwright:
+    frontendRoot: web/app
+    testInclude:
+    - tests/**/*.spec.ts
+    navigationHelpers:
+    - navigateTo
+    selectors:
+      testIds: []
