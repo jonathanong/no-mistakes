@@ -1,0 +1,18 @@
+filesystem:
+  skipDirectories:
+    - fixtures
+rules:
+  - rule: rust-no-inline-tests
+    scope: repository
+    options:
+      roots:
+        - fixtures/app
+  - rule: rust-no-inline-tests
+    scope: repository
+  - rule: require-test-per-subdir
+    scope: repository
+    options:
+      roots:
+        - fixtures/app
+  - rule: no-empty-or-comments-only-files
+    scope: repository

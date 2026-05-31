@@ -54,10 +54,11 @@ pub(crate) fn check_with_files(
         let filenames = filenames_from_opts(&opts);
         let target_roots = super::target_roots(root, config, rule);
         let roots = roots_from_opts(&opts, root, &target_roots);
+        let skip = super::skip_dir_set(config);
         let files: Vec<PathBuf> = all_files
             .iter()
             .filter(|p| {
-                roots.iter().any(|r| p.starts_with(r))
+                super::file_allowed_by_roots_and_skip(root, &skip, p, &roots)
                     && p.file_name()
                         .and_then(|n| n.to_str())
                         .is_some_and(|n| filenames.contains(&n))

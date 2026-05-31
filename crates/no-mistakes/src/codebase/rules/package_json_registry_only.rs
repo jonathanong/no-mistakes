@@ -24,12 +24,8 @@ const BLOCKED_PREFIXES: &[&str] = &[
     "patch:",
 ];
 
-const DEP_FIELDS: &[&str] = &[
-    "dependencies",
-    "devDependencies",
-    "peerDependencies",
-    "optionalDependencies",
-];
+#[rustfmt::skip]
+const DEP_FIELDS: &[&str] = &["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
 
 const BLOCKED_RESOLUTION_KEYS: &[&str] = &["tarball", "repo", "commit", "directory"];
 
@@ -57,9 +53,10 @@ pub(crate) fn check_with_files(
             let opts: Options = rule.rule_options();
             let target_roots = super::target_roots(root, config, rule);
             let rule_filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
+            let skip = super::skip_dir_set(config);
             let files: Vec<PathBuf> = all_files
                 .iter()
-                .filter(|p| target_roots.iter().any(|r| p.starts_with(r)))
+                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;

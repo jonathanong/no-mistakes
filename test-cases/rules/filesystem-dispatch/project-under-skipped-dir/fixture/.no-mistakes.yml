@@ -1,0 +1,9 @@
+filesystem:
+  skipDirectories:
+    - fixtures
+projects:
+  app:
+    root: fixtures/app
+rules:
+  - rule: rust-no-inline-tests
+    projects: [app]
