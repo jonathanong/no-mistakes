@@ -253,6 +253,11 @@ pub(super) fn stable_take(mut candidates: Vec<SelectedTest>, limit: usize) -> Ve
     candidates
 }
 
+pub(super) fn first_take(mut candidates: Vec<SelectedTest>, limit: usize) -> Vec<SelectedTest> {
+    candidates.truncate(limit);
+    candidates
+}
+
 fn stable_test_key(path: &str) -> (u64, &str) {
     let mut hash = 14_695_981_039_346_656_037_u64;
     for byte in path.bytes() {

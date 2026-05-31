@@ -1,4 +1,4 @@
-use crate::tests::configured_plan_candidates::{selected_from_paths, stable_take};
+use crate::tests::configured_plan_candidates::{first_take, selected_from_paths};
 use crate::tests::plan::relative_path;
 use crate::tests::{SelectedTest, TestPlan, TestPlanGroupResult};
 use std::collections::HashSet;
@@ -19,7 +19,7 @@ pub(super) fn fallback_plan(
     request: FallbackRequest<'_>,
 ) -> TestPlan {
     let effective_limit = request.limit.min(all_tests.len());
-    let selected_tests = stable_take(
+    let selected_tests = first_take(
         selected_from_paths(root, all_tests, request.via, request.changed_file),
         effective_limit,
     );

@@ -139,3 +139,26 @@ fn test_plan_framework_config_deserializes_from_json() {
     assert!(cfg.full_suite_triggers.projects.contains_key("web"));
     assert!(!cfg.deprecated_dependencies_key);
 }
+
+#[test]
+fn test_plan_group_sample_when_limited_parsed() {
+    let cfg: NoMistakesConfig = serde_yaml::from_str(
+        r#"
+test_plan:
+  vitest:
+    environments:
+      camel:
+        groups:
+          - type: sample
+            sampleWhenLimited: true
+      snake:
+        groups:
+          - type: sample
+            sample_when_limited: true
+"#,
+    )
+    .unwrap();
+
+    assert!(cfg.test_plan.vitest.environments["camel"].groups[0].sample_when_limited);
+    assert!(cfg.test_plan.vitest.environments["snake"].groups[0].sample_when_limited);
+}
