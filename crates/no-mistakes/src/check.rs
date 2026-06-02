@@ -47,7 +47,7 @@ pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
         eprintln!("{warning}");
     }
 
-    let any_violations = results.has_findings();
+    let has_failures = has_failures(&results);
     let format = if args.json { Format::Json } else { args.format };
     match format {
         Format::Json => print_check_json(&results),
@@ -61,7 +61,7 @@ pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
         print_timings(&results.timings);
     }
 
-    Ok(if any_violations {
+    Ok(if has_failures {
         ExitCode::from(1)
     } else {
         ExitCode::SUCCESS
@@ -77,7 +77,7 @@ fn print_timings(timings: &[(&str, Duration)]) {
 fn print_check_json(results: &check_runner::CheckResults) {
     println!(
         "{}",
-        serde_json::to_string_pretty(&json_value(results))
+        serde_json::to_string_pretty(&check_runner::json_value(results))
             .expect("serialization of Rust structs never fails")
     );
 }
@@ -85,7 +85,7 @@ fn print_check_json(results: &check_runner::CheckResults) {
 fn print_check_yml(results: &check_runner::CheckResults) {
     println!(
         "{}",
-        serde_yaml::to_string(&json_value(results))
+        serde_yaml::to_string(&check_runner::json_value(results))
             .expect("serialization of Rust structs never fails")
     );
 }
@@ -182,12 +182,11 @@ fn print_codebase_human(findings: &[UniqueExportFinding]) {
     }
 }
 
-fn json_value(results: &check_runner::CheckResults) -> serde_json::Value {
-    serde_json::json!({
-        "react": results.react,
-        "queues": results.queues,
-        "rules": results.rules,
-        "integration": results.integration,
-        "codebase": results.codebase,
-    })
+fn has_failures(results: &check_runner::CheckResults) -> bool {
+    !results.react.is_empty()
+        || !results.queues.is_empty()
+        || !results.rules.is_empty()
+        || !results.integration.is_empty()
+        || !results.codebase.is_empty()
+        || !results.warnings.is_empty()
 }

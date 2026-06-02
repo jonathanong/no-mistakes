@@ -1,13 +1,11 @@
 use std::path::PathBuf;
 
-use anyhow::{bail, Context, Result as AnyhowResult};
-use serde_json::json;
-
 use super::options::{
     parse_options, resolve_project_root, to_napi_error, FetchesOptions, PlaywrightOptions,
     ProjectOptions, TestsImpactOptions, TestsPlanDocumentOptions, TestsPlanOptions,
     TestsWhyOptions,
 };
+use anyhow::{bail, Context, Result as AnyhowResult};
 
 include!("cli_parity_builders.rs");
 
@@ -39,23 +37,7 @@ pub(crate) fn check_json_impl(options_json: String) -> napi::Result<String> {
         options.tsconfig.map(PathBuf::from),
     )
     .map_err(to_napi_error)?;
-    let _has_findings = results.has_findings();
-    let crate::check_runner::CheckResults {
-        react,
-        queues,
-        rules,
-        integration,
-        codebase,
-        warnings: _warnings,
-        timings: _timings,
-    } = results;
-    to_pretty_json(&json!({
-        "react": react,
-        "queues": queues,
-        "rules": rules,
-        "integration": integration,
-        "codebase": codebase,
-    }))
+    to_pretty_json(&crate::check_runner::json_value(&results))
 }
 
 pub(crate) fn tests_plan_json_impl(options_json: String) -> napi::Result<String> {

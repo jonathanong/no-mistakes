@@ -20,6 +20,7 @@ export interface CheckReport {
   rules: unknown[];
   integration: unknown[];
   codebase: unknown[];
+  warnings: string[];
 }
 
 export interface QueueReport {

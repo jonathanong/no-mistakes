@@ -27,16 +27,6 @@ pub(crate) struct CompletedDomainChecks {
     pub(crate) filesystem_rules: CheckTask<Vec<RuleFinding>>,
 }
 
-impl CheckResults {
-    pub(crate) fn has_findings(&self) -> bool {
-        !self.react.is_empty()
-            || !self.queues.is_empty()
-            || !self.rules.is_empty()
-            || !self.integration.is_empty()
-            || !self.codebase.is_empty()
-    }
-}
-
 pub(crate) fn complete_domain_checks(results: DomainResults) -> Result<CompletedDomainChecks> {
     let (react, queues, rules, integration, codebase, filesystem_rules) = results;
     Ok(CompletedDomainChecks {
@@ -69,4 +59,25 @@ pub(crate) fn empty_results(warnings: [Option<String>; 1]) -> CheckResults {
             ("filesystem_rules", Duration::ZERO),
         ],
     }
+}
+
+pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
+    let CheckResults {
+        react,
+        queues,
+        rules,
+        integration,
+        codebase,
+        warnings,
+        timings,
+    } = results;
+    let _ = timings;
+    serde_json::json!({
+        "react": react,
+        "queues": queues,
+        "rules": rules,
+        "integration": integration,
+        "codebase": codebase,
+        "warnings": warnings,
+    })
 }
