@@ -163,22 +163,6 @@ fn fetches_json_returns_structured_report() {
 }
 
 #[test]
-fn check_json_returns_global_check_report() {
-    let options = json!({
-        "root": fixture_root("unique-exports-basic"),
-        "config": ".no-mistakes.yml",
-        "tsconfig": "tsconfig.json"
-    })
-    .to_string();
-    let output = check_json_impl(options).unwrap();
-    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
-
-    assert!(value["codebase"].as_array().unwrap().iter().any(|finding| {
-        finding["rule"] == "unique-exports" && finding["exportName"] == "shared"
-    }));
-}
-
-#[test]
 fn tests_plan_why_comment_and_graph_exports_return_reports() {
     let root = fixture_root("test-plan-config");
     let plan_options = json!({
@@ -575,5 +559,6 @@ fn option_parsers_cover_all_supported_values() {
 
 include!("tests_impact.rs");
 
+mod check;
 mod tests_entrypoints;
 mod tests_sample_when_limited;

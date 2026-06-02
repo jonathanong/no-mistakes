@@ -1,0 +1,9 @@
+tests:
+  vitest:
+    configs: vitest.config.mts
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    scope: repository
+    tests:
+      vitest: [web]
+    message: Dynamic imports in tests must be mocked

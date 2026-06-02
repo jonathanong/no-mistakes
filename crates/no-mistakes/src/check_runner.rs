@@ -14,8 +14,8 @@ use std::time::Instant;
 mod enabled;
 mod results;
 
-pub(crate) use results::CheckResults;
 use results::{complete_domain_checks, empty_results};
+pub(crate) use results::{json_value, CheckResults};
 
 pub(crate) fn run_all(
     root: PathBuf,

@@ -16,4 +16,7 @@ Key options: `--root`, `--config`, `--tsconfig`, `--format`, `--json`, and
 Rules must be explicitly configured. See [no-mistakes rules](../rules/README.md)
 and [configuration](../configuration/README.md).
 
+If a configured check cannot run, `check` prints a warning to stderr, includes it
+in structured output as `warnings`, and exits nonzero.
+
 Node API: `check(options)`.

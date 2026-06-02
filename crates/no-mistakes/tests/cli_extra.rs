@@ -309,7 +309,7 @@ fn global_check_warns_when_enabled_react_scan_fails() {
         "human",
     ]);
 
-    assert!(output.status.success());
+    assert_eq!(output.status.code(), Some(1));
     assert!(stderr(&output).contains("warning: react check skipped:"));
 }
 
@@ -324,7 +324,7 @@ fn global_check_warns_when_react_shared_facts_check_errors() {
         "human",
     ]);
 
-    assert!(output.status.success());
+    assert_eq!(output.status.code(), Some(1));
     assert!(stderr(&output).contains("warning: react check skipped:"));
 }
 

@@ -17,7 +17,11 @@ fn empty_results_records_cli_side_channels() {
     let results = results::empty_results([Some("warning".to_string())]);
     assert!(!results.warnings.is_empty());
     assert!(!results.timings.is_empty());
-    assert!(!results.has_findings());
+    assert!(results.react.is_empty());
+    assert!(results.queues.is_empty());
+    assert!(results.rules.is_empty());
+    assert!(results.integration.is_empty());
+    assert!(results.codebase.is_empty());
 }
 
 #[test]
@@ -28,7 +32,7 @@ fn run_all_keeps_filesystem_files_when_fact_collection_is_needed() {
 
     let results = run_all(root, Some(config), None).unwrap();
 
-    assert!(results.has_findings());
+    assert!(!results.rules.is_empty());
     assert!(results
         .rules
         .iter()
@@ -52,7 +56,7 @@ fn run_all_includes_playwright_coverage_rules() {
 
     let results = run_all(root, None, None).unwrap();
 
-    assert!(results.has_findings());
+    assert!(!results.rules.is_empty());
     assert!(results
         .rules
         .iter()

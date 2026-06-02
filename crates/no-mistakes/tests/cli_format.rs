@@ -360,8 +360,30 @@ fn global_check_warns_when_rules_shared_facts_check_errors() {
     let root = codebase_fixture("test-no-unmocked-dynamic-imports-invalid");
     let output = run(&["check", "--root", root.to_str().unwrap()]);
 
-    assert!(output.status.success());
+    assert_eq!(output.status.code(), Some(1));
     assert!(stderr(&output).contains("warning: rules check skipped:"));
+}
+
+#[test]
+fn global_check_json_fails_and_reports_warning_for_unknown_vitest_project() {
+    let root = codebase_fixture("test-no-unmocked-dynamic-imports-unknown-vitest-project");
+    let output = run(&[
+        "check",
+        "--root",
+        root.to_str().unwrap(),
+        "--format",
+        "json",
+    ]);
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(stderr(&output).contains("warning: rules check skipped:"));
+    let json: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert!(json["warnings"].as_array().unwrap().iter().any(|warning| {
+        warning
+            .as_str()
+            .is_some_and(|warning| warning.contains("unknown vitest project web"))
+    }));
+    assert_eq!(json["rules"].as_array().map(Vec::len), Some(0));
 }
 
 #[test]
