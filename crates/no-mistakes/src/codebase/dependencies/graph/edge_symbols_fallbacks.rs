@@ -7,7 +7,9 @@ fn fallback_imported_symbols<'a>(
     let mut imports = Vec::new();
     if include_all {
         imports.extend(imported_symbols.values());
-        imports.sort_by_key(|target| target_node(target));
+        // ⚡ Bolt: Use `sort_by_cached_key` instead of `sort_by_key` to avoid repeatedly calling
+        // `target_node` (which involves matching and cloning) during the sort operations.
+        imports.sort_by_cached_key(|target| target_node(target));
         imports.dedup_by_key(|target| target_node(target));
         return imports;
     }
@@ -19,7 +21,9 @@ fn fallback_imported_symbols<'a>(
             imports.push(target);
         }
     }
-    imports.sort_by_key(|target| target_node(target));
+    // ⚡ Bolt: Use `sort_by_cached_key` instead of `sort_by_key` to avoid repeatedly calling
+    // `target_node` (which involves matching and cloning) during the sort operations.
+    imports.sort_by_cached_key(|target| target_node(target));
     imports.dedup_by_key(|target| target_node(target));
     imports
 }
