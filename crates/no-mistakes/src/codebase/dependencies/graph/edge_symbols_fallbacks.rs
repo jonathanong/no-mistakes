@@ -6,10 +6,17 @@ fn fallback_imported_symbols<'a>(
 ) -> Vec<&'a ImportedSymbolTarget> {
     let mut imports = Vec::new();
     if include_all {
-        imports.extend(imported_symbols.values());
-        imports.sort_by_key(|target| target_node(target));
-        imports.dedup_by_key(|target| target_node(target));
-        return imports;
+        // ⚡ Bolt: Cache the `target_node` key once per element so it runs exactly once each.
+        // `sort_by_cached_key` caches keys for the sort, but `dedup_by_key` would recompute
+        // them; pairing keys with targets up front avoids the redundant matching and `NodeId`
+        // clones during dedup.
+        let mut cached: Vec<_> = imported_symbols
+            .values()
+            .map(|target| (target_node(target), target))
+            .collect();
+        cached.sort_by(|a, b| a.0.cmp(&b.0));
+        cached.dedup_by(|a, b| a.0 == b.0);
+        return cached.into_iter().map(|(_, target)| target).collect();
     }
     for call in calls.iter().chain(refs) {
         if call.caller.is_some() {
@@ -19,9 +26,15 @@ fn fallback_imported_symbols<'a>(
             imports.push(target);
         }
     }
-    imports.sort_by_key(|target| target_node(target));
-    imports.dedup_by_key(|target| target_node(target));
-    imports
+    // ⚡ Bolt: Cache the `target_node` key once per element so it runs exactly once each,
+    // avoiding the redundant calls `dedup_by_key` would make after the sort.
+    let mut cached: Vec<_> = imports
+        .into_iter()
+        .map(|target| (target_node(target), target))
+        .collect();
+    cached.sort_by(|a, b| a.0.cmp(&b.0));
+    cached.dedup_by(|a, b| a.0 == b.0);
+    cached.into_iter().map(|(_, target)| target).collect()
 }
 
 fn fallback_namespace_symbols(
