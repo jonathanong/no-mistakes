@@ -59,7 +59,26 @@ pub(crate) fn analyze_lockfile_changes(
             .replace('\\', "/");
 
         let new_content = if let Some(head) = args.head.as_deref() {
-            git_show_file(&git_root, head, &git_rel).unwrap_or_default()
+            match git_show_file(&git_root, head, &git_rel) {
+                Some(content) => content,
+                None => {
+                    let rel = crate::tests::plan::relative_path(root, file);
+                    if !git_ref_exists(&git_root, head) {
+                        warnings.push(Warning {
+                            r#type: "lockfile-no-baseline".to_string(),
+                            message: format!(
+                                "Could not read `{}` at head ref `{}`; falling back to full test suite",
+                                rel, head
+                            ),
+                            file: rel,
+                        });
+                        fallback_triggered = true;
+                        continue;
+                    }
+                    // Valid head ref but file deleted at head — treat new content as empty
+                    String::new()
+                }
+            }
         } else if is_diff_only_mode(args) {
             // In diff-only mode (--diff/--diff-stdin/etc.) without --head, the working tree
             // may still be at the base. Reading from disk would compare base-vs-base and miss

@@ -523,3 +523,6 @@ fn tests_plan_newly_added_lockfile_traces_packages() {
         "should find utils.test.mts via lodash (newly added): {selected:?}"
     );
 }
+
+// Test for invalid-head-ref behavior moved to cli_tests_plan_lockfile2.rs to
+// keep this file under the 500-line test limit.

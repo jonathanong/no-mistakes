@@ -165,3 +165,44 @@ fn tests_plan_workspace_package_bump_traces_consumers() {
         "should trace workspace package lib to utils.test.ts: {selected:?}"
     );
 }
+
+// Covers analyze_lockfile_changes invalid-head path: when --head is a non-existent ref,
+// git_ref_exists returns false and a lockfile-no-baseline warning is emitted rather
+// than treating the new lockfile content as empty (which would falsely remove all packages).
+#[test]
+fn tests_plan_invalid_head_ref_warns_and_falls_back() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
+    setup_git_repo_with_file(root, "pnpm-lock.yaml", lock);
+    let output = Command::new(bin())
+        .args([
+            "tests",
+            "plan",
+            "--root",
+            root.to_str().unwrap(),
+            "--changed-file",
+            "pnpm-lock.yaml",
+            "--base",
+            "HEAD",
+            "--head",
+            "nonexistent-head-xyz",
+            "--global-config-fallback=true",
+            "--json",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(output.status.success());
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert!(
+        plan["fallback_triggered"].as_bool().unwrap(),
+        "invalid head should trigger fallback: {plan:?}"
+    );
+    let warnings = plan["warnings"].as_array().unwrap();
+    assert!(
+        warnings
+            .iter()
+            .any(|w| w["type"].as_str().unwrap_or("") == "lockfile-no-baseline"),
+        "expected lockfile-no-baseline warning: {plan:?}"
+    );
+}
