@@ -14,7 +14,12 @@ pub fn parse(content: &str) -> Vec<ResolvedPackage> {
             let arr = entry.as_array()?;
             let specifier = arr.first().and_then(|v| v.as_str()).unwrap_or("");
             let version = specifier.rsplit_once('@').map(|(_, v)| v).unwrap_or("");
-            let info = arr.get(2);
+            // Real bun.lock: ["pkg@ver", url, peer-deps, {integrity, resolved}] (4 elements)
+            // Simplified:    ["pkg@ver", {}, {integrity, resolved}] (3 elements)
+            // Scan from the end for the first object that carries integrity or resolved.
+            let info = arr.iter().rev().find(|v| {
+                v.is_object() && (v.get("integrity").is_some() || v.get("resolved").is_some())
+            });
             let integrity = info
                 .and_then(|v| v.get("integrity"))
                 .and_then(|v| v.as_str())

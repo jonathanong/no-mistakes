@@ -219,3 +219,89 @@ fn tests_plan_lockfile_no_git_repo_emits_warning() {
         "expected lockfile-no-baseline warning: {plan:?}"
     );
 }
+
+// Covers the transitive-dep fallback: a changed package that is not directly imported
+// by any codebase file (no reverse edge in the dep graph) triggers a full-suite fallback.
+#[test]
+fn tests_plan_transitive_dep_triggers_fallback() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+
+    // Only lodash is a direct dep (imported in code). debug is transitive (not imported).
+    let old_lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n  debug@4.3.0:\n    resolution: {integrity: sha512-dbg-old}\n";
+    let new_lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n  debug@4.3.1:\n    resolution: {integrity: sha512-dbg-new}\n";
+
+    std::fs::create_dir(root.join("src")).unwrap();
+    std::fs::write(
+        root.join("package.json"),
+        r#"{"name":"t","dependencies":{"lodash":"^4.17.0"}}"#,
+    )
+    .unwrap();
+    std::fs::write(
+        root.join("src/utils.mts"),
+        "import { pick } from \"lodash\";\nexport const utils = { pick };\n",
+    )
+    .unwrap();
+    std::fs::write(
+        root.join("src/utils.test.mts"),
+        "import { utils } from \"./utils.mts\";\n",
+    )
+    .unwrap();
+    std::fs::write(root.join("pnpm-lock.yaml"), old_lock).unwrap();
+
+    Command::new("git")
+        .args(["init", "-b", "main"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["config", "user.email", "test@test.com"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["config", "user.name", "Test"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["commit", "-m", "initial"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+
+    // Only debug changed (lodash unchanged) → debug is transitive → fallback
+    std::fs::write(root.join("pnpm-lock.yaml"), new_lock).unwrap();
+
+    let output = Command::new(bin())
+        .args([
+            "tests",
+            "plan",
+            "--root",
+            root.to_str().unwrap(),
+            "--changed-file",
+            "pnpm-lock.yaml",
+            "--base",
+            "HEAD",
+            "--global-config-fallback=true",
+            "--json",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert!(
+        plan["fallback_triggered"].as_bool().unwrap(),
+        "transitive dep change should trigger fallback: {plan:?}"
+    );
+}

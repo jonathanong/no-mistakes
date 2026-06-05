@@ -288,8 +288,19 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     }
 
     // 4b. Trace lockfile package dependency changes
+    let mut untraceable_lockfile_files: Vec<String> = Vec::new();
     for (pkg_name, lockfile_rel) in &lockfile_changed_packages {
         let start_node = NodeId::Module(pkg_name.clone());
+
+        // If nothing in the codebase directly imports this package, it is a transitive
+        // dependency. We cannot trace impact through the module graph in that case.
+        if !graph.has_reverse_node(&start_node) {
+            if !untraceable_lockfile_files.contains(lockfile_rel) {
+                untraceable_lockfile_files.push(lockfile_rel.clone());
+            }
+            continue;
+        }
+
         let (reachable_tests, path_parents) =
             bfs_path_find(&graph, &start_node, &test_filter, &root);
 
@@ -338,6 +349,40 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                 entry.reasons.push(reason);
             }
         }
+    }
+
+    // 4c. Fallback for untraceable transitive lockfile packages
+    if global_config_fallback(args) && !untraceable_lockfile_files.is_empty() {
+        let file = untraceable_lockfile_files[0].clone();
+        let msg = format!(
+            "`{}` changed a transitive dependency; falling back to full test suite",
+            file
+        );
+        let all_test_files = discover_all_tests(&root, &config)?;
+        let mut selected_tests: Vec<SelectedTest> = all_test_files
+            .into_iter()
+            .map(|test| {
+                let rel_test = relative_path(&root, &test);
+                SelectedTest {
+                    test_file: rel_test.clone(),
+                    confidence: Confidence::High,
+                    targets: Vec::new(),
+                    reasons: vec![ImpactReason {
+                        changed_file: file.clone(),
+                        path: vec![file.clone(), rel_test],
+                        via: vec!["transitive dependency".to_string()],
+                    }],
+                }
+            })
+            .collect();
+        selected_tests.sort_by(|a, b| a.test_file.cmp(&b.test_file));
+        return Ok(TestPlan {
+            selected_tests,
+            groups: Vec::new(),
+            warnings: Vec::new(),
+            fallback_triggered: true,
+            fallback_reason: Some(msg),
+        });
     }
 
     // Merge lockfile analysis warnings

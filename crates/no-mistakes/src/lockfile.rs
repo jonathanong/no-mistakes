@@ -57,6 +57,10 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
     let root = no_mistakes::codebase::ts_resolver::normalize_path(&root);
     let root = root.canonicalize().unwrap_or(root);
 
+    // Use the git repository root for `git show` so subdirectory --root values
+    // produce repo-relative paths (e.g. `packages/api/pnpm-lock.yaml` not `pnpm-lock.yaml`).
+    let git_root = find_git_root(&root).unwrap_or_else(|| root.clone());
+
     let lockfile_paths = if let Some(lf) = args.lockfile {
         vec![root.join(lf)]
     } else {
@@ -71,18 +75,22 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
             continue;
         };
         let rel = lf_path
-            .strip_prefix(&root)
+            .strip_prefix(&git_root)
             .unwrap_or(lf_path)
             .to_string_lossy()
             .replace('\\', "/");
 
         let head = args.head.as_deref().unwrap_or("HEAD");
         let new_content = if args.head.is_some() {
-            git_show_file(&root, head, &rel).unwrap_or_default()
+            let Some(content) = git_show_file(&git_root, head, &rel) else {
+                eprintln!("warning: could not retrieve {} at ref {}", rel, head);
+                continue;
+            };
+            content
         } else {
             std::fs::read_to_string(lf_path).unwrap_or_default()
         };
-        let Some(old_content) = git_show_file(&root, &args.base, &rel) else {
+        let Some(old_content) = git_show_file(&git_root, &args.base, &rel) else {
             eprintln!("warning: could not retrieve {} at {}", rel, args.base);
             continue;
         };
@@ -131,6 +139,20 @@ fn detect_lockfiles_in_root(root: &Path) -> Vec<PathBuf> {
         .map(|name| root.join(name))
         .filter(|p| p.exists())
         .collect()
+}
+
+fn find_git_root(dir: &Path) -> Option<PathBuf> {
+    let output = std::process::Command::new("git")
+        .args(["rev-parse", "--show-toplevel"])
+        .current_dir(dir)
+        .output()
+        .ok()?;
+    if output.status.success() {
+        let s = String::from_utf8(output.stdout).ok()?;
+        Some(PathBuf::from(s.trim()))
+    } else {
+        None
+    }
 }
 
 fn git_show_file(root: &Path, git_ref: &str, rel_path: &str) -> Option<String> {

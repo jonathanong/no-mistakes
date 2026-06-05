@@ -111,3 +111,42 @@ fn strip_jsonc_block_comment_preserves_newlines() {
     let pkgs = parse(content);
     assert!(pkgs.is_empty());
 }
+
+#[test]
+fn parse_real_bun_lock_four_element_tuple() {
+    // Real bun.lock format: ["spec", registry_url, peer_deps, {integrity, resolved}]
+    // The integrity object is at index 3, not index 2.
+    let content = r#"{
+      "lockfileVersion": 0,
+      "packages": {
+        "is-fullwidth-code-point": [
+          "is-fullwidth-code-point@3.0.0",
+          "",
+          {},
+          { "integrity": "sha512-zqk+299z" }
+        ]
+      }
+    }"#;
+    let pkgs = parse(content);
+    assert_eq!(pkgs.len(), 1);
+    assert_eq!(pkgs[0].name, "is-fullwidth-code-point");
+    assert_eq!(pkgs[0].version, "3.0.0");
+    assert_eq!(pkgs[0].fingerprint, "sha512-zqk+299z");
+}
+
+#[test]
+fn parse_four_element_no_integrity_falls_back_to_resolved() {
+    let content = r#"{
+      "lockfileVersion": 0,
+      "packages": {
+        "my-pkg": [
+          "my-pkg@1.0.0",
+          "",
+          {},
+          { "resolved": "https://example.com/my-pkg.tgz" }
+        ]
+      }
+    }"#;
+    let pkgs = parse(content);
+    assert_eq!(pkgs[0].fingerprint, "https://example.com/my-pkg.tgz");
+}
