@@ -99,7 +99,10 @@ fn diff_all_changed_names() {
 
 #[test]
 fn detect_manager_known() {
-    assert_eq!(detect_manager("package-lock.json"), Some(PackageManager::Npm));
+    assert_eq!(
+        detect_manager("package-lock.json"),
+        Some(PackageManager::Npm)
+    );
     assert_eq!(
         detect_manager("npm-shrinkwrap.json"),
         Some(PackageManager::Npm)

@@ -30,10 +30,7 @@ fn parse_berry(content: &str) -> Vec<ResolvedPackage> {
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
-        let checksum = value
-            .get("checksum")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
+        let checksum = value.get("checksum").and_then(|v| v.as_str()).unwrap_or("");
         let resolution = value
             .get("resolution")
             .and_then(|v| v.as_str())

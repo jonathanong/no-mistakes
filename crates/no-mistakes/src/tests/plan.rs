@@ -69,11 +69,8 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     }
 
     // 2a. Analyze lockfile changes targeted
-    let lockfile_analysis = super::lockfile_changes::analyze_lockfile_changes(
-        args,
-        &root,
-        &collected.files,
-    );
+    let lockfile_analysis =
+        super::lockfile_changes::analyze_lockfile_changes(args, &root, &collected.files);
     let lockfile_changed_packages: Vec<(String, String)> = lockfile_analysis
         .diff_by_lockfile
         .iter()
@@ -402,10 +399,7 @@ pub(crate) fn global_config_trigger(
 fn is_global_config_path(root: &Path, absolute: &Path, relative: &str) -> bool {
     if matches!(
         relative,
-        "package.json"
-            | "tsconfig.json"
-            | ".no-mistakes.yml"
-            | ".no-mistakes.yaml"
+        "package.json" | "tsconfig.json" | ".no-mistakes.yml" | ".no-mistakes.yaml"
     ) {
         return true;
     }

@@ -97,7 +97,12 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
 
     if args.format == "paths" {
         for o in &outputs {
-            for pkg in o.added.iter().chain(o.removed.iter()).chain(o.changed.iter()) {
+            for pkg in o
+                .added
+                .iter()
+                .chain(o.removed.iter())
+                .chain(o.changed.iter())
+            {
                 println!("{}", pkg);
             }
         }
@@ -109,7 +114,12 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
 }
 
 fn detect_lockfiles_in_root(root: &Path) -> Vec<PathBuf> {
-    let candidates = ["pnpm-lock.yaml", "package-lock.json", "yarn.lock", "bun.lock"];
+    let candidates = [
+        "pnpm-lock.yaml",
+        "package-lock.json",
+        "yarn.lock",
+        "bun.lock",
+    ];
     candidates
         .iter()
         .map(|name| root.join(name))

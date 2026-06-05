@@ -37,15 +37,8 @@ fn parse_v2(root: &serde_json::Value) -> Vec<ResolvedPackage> {
                 .get("integrity")
                 .and_then(|v| v.as_str())
                 .unwrap_or("");
-            let resolved = value
-                .get("resolved")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
-            let kind = if value
-                .get("link")
-                .and_then(|v| v.as_bool())
-                .unwrap_or(false)
-            {
+            let resolved = value.get("resolved").and_then(|v| v.as_str()).unwrap_or("");
+            let kind = if value.get("link").and_then(|v| v.as_bool()).unwrap_or(false) {
                 ResolutionKind::Workspace
             } else if resolved.is_empty() {
                 ResolutionKind::Directory
@@ -86,10 +79,7 @@ fn collect_v1_deps(deps: &serde_json::Map<String, serde_json::Value>) -> Vec<Res
             .get("integrity")
             .and_then(|v| v.as_str())
             .unwrap_or("");
-        let resolved = value
-            .get("resolved")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
+        let resolved = value.get("resolved").and_then(|v| v.as_str()).unwrap_or("");
         let fingerprint = if integrity.is_empty() {
             resolved.to_string()
         } else {

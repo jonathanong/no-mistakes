@@ -241,7 +241,10 @@ fn lockfile_diff_paths_format() {
 
     assert!(output.status.success());
     let out = stdout(&output);
-    assert!(out.contains("lodash"), "paths format should list lodash: {out}");
+    assert!(
+        out.contains("lodash"),
+        "paths format should list lodash: {out}"
+    );
 }
 
 #[test]
@@ -284,7 +287,11 @@ fn tests_plan_with_lockfile_base_finds_impacted_tests() {
     let new_lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-new}\n";
 
     std::fs::create_dir(root.join("src")).unwrap();
-    std::fs::write(root.join("package.json"), r#"{"name":"t","dependencies":{"lodash":"^4.17.0"}}"#).unwrap();
+    std::fs::write(
+        root.join("package.json"),
+        r#"{"name":"t","dependencies":{"lodash":"^4.17.0"}}"#,
+    )
+    .unwrap();
     std::fs::write(
         root.join("src/utils.mts"),
         "import { pick } from \"lodash\";\nexport const utils = { pick };\n",

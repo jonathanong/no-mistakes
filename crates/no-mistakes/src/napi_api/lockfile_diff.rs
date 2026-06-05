@@ -28,11 +28,16 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
     let lf_paths: Vec<PathBuf> = if let Some(lf) = options.lockfile {
         vec![root.join(lf)]
     } else {
-        ["pnpm-lock.yaml", "package-lock.json", "yarn.lock", "bun.lock"]
-            .iter()
-            .map(|n| root.join(n))
-            .filter(|p| p.exists())
-            .collect()
+        [
+            "pnpm-lock.yaml",
+            "package-lock.json",
+            "yarn.lock",
+            "bun.lock",
+        ]
+        .iter()
+        .map(|n| root.join(n))
+        .filter(|p| p.exists())
+        .collect()
     };
 
     let mut entries = Vec::new();
@@ -61,8 +66,7 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
         });
     }
 
-    serde_json::to_string_pretty(&entries)
-        .map_err(|e| napi::Error::from_reason(e.to_string()))
+    serde_json::to_string_pretty(&entries).map_err(|e| napi::Error::from_reason(e.to_string()))
 }
 
 fn git_show_file(root: &Path, git_ref: &str, rel_path: &str) -> Option<String> {

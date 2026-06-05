@@ -21,10 +21,10 @@ pub(crate) use cli_parity::{
     tests_graph_json_impl, tests_graph_mermaid_impl, tests_impact_json_impl, tests_plan_json_impl,
     tests_why_json_impl,
 };
-pub(crate) use lockfile_diff::lockfile_diff_json_impl;
 pub(crate) use codebase::{
     dependencies_json_impl, dependents_json_impl, related_json_impl, symbols_json_impl,
 };
+pub(crate) use lockfile_diff::lockfile_diff_json_impl;
 pub(crate) use project::{
     queue_check_json_impl, queue_edges_json_impl, queue_related_json_impl, queues_json_impl,
     react_analyze_json_impl, react_check_json_impl, server_route_edges_json_impl,

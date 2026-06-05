@@ -12,10 +12,7 @@ pub fn parse(content: &str) -> Vec<ResolvedPackage> {
         .filter_map(|(name, entry)| {
             let arr = entry.as_array()?;
             let specifier = arr.first().and_then(|v| v.as_str()).unwrap_or("");
-            let version = specifier
-                .rsplit_once('@')
-                .map(|(_, v)| v)
-                .unwrap_or("");
+            let version = specifier.rsplit_once('@').map(|(_, v)| v).unwrap_or("");
             let info = arr.get(2);
             let integrity = info
                 .and_then(|v| v.get("integrity"))
