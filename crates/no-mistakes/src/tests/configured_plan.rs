@@ -9,20 +9,24 @@ use globset::{Glob, GlobSet, GlobSetBuilder};
 use no_mistakes::codebase::dependencies::graph::DepGraph;
 use no_mistakes::codebase::test_discovery::{DiscoveredTests, TestRunner};
 use no_mistakes::codebase::test_filter::TestFileFilter;
+use no_mistakes::codebase::workspaces::WorkspaceMap;
 use no_mistakes::config::v2::schema::{
-    NoMistakesConfig, Project, TestPlanEnvironment, TestPlanGroup, TestPlanGroupType,
-    TestPlanIgnoredChangedTestsFramework, TestPlanLimit, TestPlanProjectDependency,
+    NoMistakesConfig, TestPlanEnvironment, TestPlanGroup, TestPlanGroupType, TestPlanLimit,
 };
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 
+mod dep_triggers;
 mod fallback;
 mod hints;
 mod hints_domains;
+mod lockfile_seeds;
 #[cfg(test)]
 mod tests;
+use dep_triggers::dependency_trigger;
 use fallback::{fallback_plan, FallbackRequest};
 use hints::build_coverage_hints;
+use lockfile_seeds::{apply_lockfile_seeds, lockfile_seed_candidates};
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn generate_configured_plan(
@@ -33,6 +37,8 @@ pub(crate) fn generate_configured_plan(
     tsconfig: &no_mistakes::codebase::dependencies::TsConfig,
     changed_files: &[PathBuf],
     diff_files: &[DiffFile],
+    lockfile_changed_packages: &[(String, String)], // (pkg_name, lockfile_rel)
+    workspace_map: &WorkspaceMap,
     forced_fallback: Option<(String, PathBuf)>,
     unconditional_fallback: bool,
 ) -> Result<TestPlan> {
@@ -123,6 +129,22 @@ pub(crate) fn generate_configured_plan(
         .iter()
         .map(|warning| (warning.r#type.clone(), warning.file.clone()))
         .collect();
+    // §lockfile: pre-compute seeds before the group loop so they can be injected during
+    // the dependencies group turn — before later groups (e.g. sample) consume the budget.
+    let lockfile_seed_result = if lockfile_changed_packages.is_empty() {
+        None
+    } else {
+        Some(lockfile_seed_candidates(
+            root,
+            lockfile_changed_packages,
+            workspace_map,
+            &graph,
+            &all_test_set,
+            &HashSet::new(), // filter against `used` during injection, not pre-compute
+        ))
+    };
+    let mut lockfile_seeds_injected = false;
+
     let groups = configured_groups(&env, framework);
 
     for group in &groups {
@@ -137,7 +159,7 @@ pub(crate) fn generate_configured_plan(
         if framework == TestFramework::Vitest && group.type_ == TestPlanGroupType::Coverage {
             anyhow::bail!("vitest test plans do not support the coverage group");
         }
-        let candidates = group_candidates(
+        let mut candidates = group_candidates(
             group.type_,
             root,
             changed_files,
@@ -150,6 +172,20 @@ pub(crate) fn generate_configured_plan(
             &mut warnings,
             &mut warnings_seen,
         );
+        // Inject lockfile-seeded candidates during the dependencies group turn so they
+        // compete for budget before later groups (e.g. sample) can consume it.
+        if group.type_ == TestPlanGroupType::Dependencies {
+            if let Some(ref seed_result) = lockfile_seed_result {
+                lockfile_seeds_injected = true;
+                let in_candidates: HashSet<String> =
+                    candidates.iter().map(|c| c.test_file.clone()).collect();
+                for seed in &seed_result.candidates {
+                    if !used.contains(&seed.test_file) && !in_candidates.contains(&seed.test_file) {
+                        candidates.push(seed.clone());
+                    }
+                }
+            }
+        }
         let group_limit = group
             .limit
             .as_ref()
@@ -176,6 +212,52 @@ pub(crate) fn generate_configured_plan(
                 .then_some(group_limit)
                 .or_else(|| has_global_limit.then_some(group_limit)),
         });
+    }
+
+    if let Some(seed_result) = lockfile_seed_result {
+        if lockfile_seeds_injected {
+            // Seeds were merged during the dependencies group turn.
+            // Only handle the untraceable-dep fallback here.
+            if !seed_result.untraceable_lockfiles.is_empty()
+                && effective_global_config_fallback(&env, args)
+            {
+                let lf = &seed_result.untraceable_lockfiles[0];
+                let msg = format!(
+                    "`{}` changed a transitive dependency; falling back to full test suite",
+                    lf
+                );
+                let mut plan = fallback_plan(
+                    root,
+                    &all_tests,
+                    FallbackRequest {
+                        group_type: "dependencies",
+                        via: "transitive dependency",
+                        changed_file: None,
+                        limit: global_limit,
+                        has_limit: has_global_limit,
+                        reason: msg,
+                    },
+                );
+                attach_targets(&mut plan, root, &discovered_tests);
+                return Ok(plan);
+            }
+        } else {
+            // Custom config without a dependencies group: fall back to post-loop injection.
+            if let Some(fallback) = apply_lockfile_seeds(
+                root,
+                seed_result,
+                effective_global_config_fallback(&env, args),
+                &all_tests,
+                global_limit,
+                has_global_limit,
+                &mut selected_map,
+                &mut used,
+                &mut group_results,
+                &discovered_tests,
+            )? {
+                return Ok(fallback);
+            }
+        }
     }
 
     let mut plan = TestPlan {
@@ -374,7 +456,7 @@ fn attach_targets(plan: &mut TestPlan, root: &Path, discovered: &DiscoveredTests
     }
 }
 
-fn compile_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
+pub(super) fn compile_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
     if patterns.is_empty() {
         return Ok(None);
     }
@@ -383,127 +465,4 @@ fn compile_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
         builder.add(Glob::new(pattern)?);
     }
     Ok(Some(builder.build()?))
-}
-
-fn dependency_trigger(
-    root: &Path,
-    config: &NoMistakesConfig,
-    framework: TestFramework,
-    changed_files: &[PathBuf],
-) -> Result<Option<(String, PathBuf)>> {
-    let plan = match framework {
-        TestFramework::Playwright => &config.test_plan.playwright,
-        TestFramework::Vitest => &config.test_plan.vitest,
-    };
-    let ignored_sets = ignored_changed_test_sets(
-        root,
-        config,
-        &plan.full_suite_triggers.ignore_changed_tests,
-        changed_files,
-    )?;
-    for (project_name, trigger) in &plan.full_suite_triggers.projects {
-        let Some(project) = config.projects.get(project_name) else {
-            continue;
-        };
-        let patterns = project_dependency_patterns(project_name, project, trigger);
-        let globset = compile_globset(&patterns)?;
-        for changed in changed_files {
-            let rel = relative_path(root, changed);
-            if ignored_sets.iter().any(|set| set.contains(changed)) {
-                continue;
-            }
-            if globset.as_ref().is_some_and(|set| set.is_match(&rel)) {
-                return Ok(Some((
-                    format!("{} project dependency changed: {}", project_name, rel),
-                    changed.clone(),
-                )));
-            }
-        }
-    }
-    Ok(None)
-}
-
-fn ignored_changed_test_sets(
-    root: &Path,
-    config: &NoMistakesConfig,
-    ignored: &[TestPlanIgnoredChangedTestsFramework],
-    changed_files: &[PathBuf],
-) -> Result<Vec<HashSet<PathBuf>>> {
-    let mut sets = Vec::new();
-    for framework in ignored {
-        let runner = match framework {
-            TestPlanIgnoredChangedTestsFramework::Playwright => TestRunner::Playwright,
-            TestPlanIgnoredChangedTestsFramework::Vitest => TestRunner::Vitest,
-        };
-        let set = match no_mistakes::codebase::test_discovery::discover_tests(root, config, runner)
-        {
-            Ok(discovered) => discovered.tests.into_iter().collect(),
-            Err(_) => changed_files
-                .iter()
-                .filter(|path| {
-                    let rel = relative_path(root, path);
-                    no_mistakes::codebase::test_discovery::fallback_runner_match(runner, &rel)
-                })
-                .cloned()
-                .collect(),
-        };
-        sets.push(set);
-    }
-    Ok(sets)
-}
-
-fn project_dependency_patterns(
-    project_name: &str,
-    project: &Project,
-    trigger: &TestPlanProjectDependency,
-) -> Vec<String> {
-    match trigger {
-        TestPlanProjectDependency::All(false) => Vec::new(),
-        TestPlanProjectDependency::All(true) => {
-            let root = project.root.as_deref().unwrap_or(project_name);
-            if project.include.is_empty() {
-                project_root_patterns(root)
-            } else {
-                project
-                    .include
-                    .iter()
-                    .map(|pattern| project_relative_pattern(root, pattern))
-                    .collect()
-            }
-        }
-        TestPlanProjectDependency::Patterns(patterns) => {
-            let root = project.root.as_deref().unwrap_or(project_name);
-            patterns
-                .iter()
-                .map(|pattern| project_relative_pattern(root, pattern))
-                .collect()
-        }
-    }
-}
-
-fn project_root_patterns(project_root: &str) -> Vec<String> {
-    let root = normalize_project_glob_part(project_root);
-    if root.is_empty() || root == "." {
-        vec!["**".to_string()]
-    } else {
-        vec![format!("{root}/**")]
-    }
-}
-
-fn project_relative_pattern(project_root: &str, pattern: &str) -> String {
-    let root = normalize_project_glob_part(project_root);
-    let pattern = normalize_project_glob_part(pattern);
-    if root.is_empty() || root == "." || pattern.starts_with(&format!("{root}/")) {
-        pattern
-    } else {
-        format!("{root}/{pattern}")
-    }
-}
-
-fn normalize_project_glob_part(raw: &str) -> String {
-    let mut part = raw.trim().trim_matches('/').to_string();
-    while let Some(rest) = part.strip_prefix("./") {
-        part = rest.to_string();
-    }
-    part
 }

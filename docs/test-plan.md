@@ -44,6 +44,7 @@ no-mistakes test impact "src/utils.mts#formatDate" "src/service.mts"
 ```
 
 Equivalent to:
+
 ```bash
 no-mistakes test plan --entrypoint "src/utils.mts#formatDate" --entrypoint "src/service.mts"
 ```
@@ -59,6 +60,7 @@ no-mistakes test plan --diff-command "git diff main" --format md     # markdown 
 ## Deleted File Handling
 
 When a diff indicates a file was deleted, the tool:
+
 1. Adds the deleted file as a phantom node in the dependency graph
 2. Finds all files that reference the deleted file (broken imports)
 3. Traces from those files to find affected tests
@@ -86,12 +88,27 @@ const plan = await testsImpact({
 
 When a lockfile (`pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, `bun.lock`) appears
 in the changed file list, `tests plan` performs targeted package-level analysis instead of
-falling back to the full test suite:
+falling back to the full test suite. This applies to both plain plans and framework
+(Playwright / Vitest) configured plans.
 
 1. Parse the old lockfile version (from `--base` git ref) and the new working-tree version.
 2. Diff the two to find added, removed, and changed package names.
 3. Trace from each changed package name (`NodeId::Module`) through `PackageDependency` and
-   import edges in the dependency graph to reach affected test files.
+   import edges in the dependency graph to reach affected test files. For workspace packages
+   the graph records a `NodeId::File(entry)` instead; the workspace map is consulted as a
+   fallback when no `Module` node is present.
+
+For framework (Playwright/Vitest) plans the BFS-found tests are injected into the
+`dependencies` group, exactly mirroring the non-framework path.
+
+Full-suite fallback fires only for:
+
+- **Unparsable lockfiles**: diff-only mode without `--head`, binary lockfiles (`bun.lockb`).
+  These are unconditional (do not require `--global-config-fallback`).
+- **Genuinely untraceable deps**: tooling packages (`typescript`, `eslint`, etc.) that have
+  no import-graph path to any test file. These fall back only when
+  `--global-config-fallback=true` is set (or `globalConfigFallback: true` in the
+  environment config).
 
 This requires `--base` (or another mechanism to supply the old lockfile content).
 Without `--base`, a `lockfile-no-baseline` warning is emitted and `--global-config-fallback=true`
@@ -100,11 +117,17 @@ triggers a full suite run.
 Binary lockfiles (`bun.lockb`) cannot be parsed and always trigger a warning + fallback.
 
 ```bash
-# Targeted: only tests affected by lodash version bump run
+# Targeted: only tests affected by lodash version bump run (plain plan)
 no-mistakes test plan --changed-file pnpm-lock.yaml --base main
+
+# Targeted: same behavior for Playwright framework plan
+no-mistakes test plan playwright --changed-file pnpm-lock.yaml --base main
 
 # Full suite fallback (no baseline supplied)
 no-mistakes test plan --changed-file pnpm-lock.yaml --global-config-fallback=true
+
+# Tooling dep bump → fallback only when flag is set
+no-mistakes test plan playwright --changed-file pnpm-lock.yaml --base main --global-config-fallback=true
 ```
 
 ## Breaking Change: Implicit Git Removed

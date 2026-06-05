@@ -394,7 +394,7 @@ fn push_edge_warning(
 }
 
 #[allow(clippy::type_complexity)]
-fn bfs_path_find_set(
+pub(super) fn bfs_path_find_set(
     graph: &DepGraph,
     start: &NodeId,
     test_files: &HashSet<PathBuf>,
