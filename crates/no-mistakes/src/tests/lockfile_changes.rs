@@ -1,5 +1,5 @@
 use super::{PlanArgs, Warning};
-use no_mistakes::codebase::lockfile::{self, LockfileDiff, PackageManager};
+use no_mistakes::codebase::lockfile::{self, LockfileDiff};
 use std::path::{Path, PathBuf};
 
 pub(crate) struct LockfileAnalysis {
@@ -16,6 +16,8 @@ pub(crate) fn analyze_lockfile_changes(
     let mut diff_by_lockfile = Vec::new();
     let mut warnings = Vec::new();
     let mut fallback_triggered = false;
+
+    let git_root = find_git_root(root).unwrap_or_else(|| root.to_path_buf());
 
     for file in all_files {
         let basename = file.file_name().and_then(|n| n.to_str()).unwrap_or("");
@@ -38,17 +40,41 @@ pub(crate) fn analyze_lockfile_changes(
             continue;
         };
 
-        let new_content = std::fs::read_to_string(file).unwrap_or_default();
+        let git_rel = file
+            .strip_prefix(&git_root)
+            .unwrap_or(file.as_path())
+            .to_string_lossy()
+            .replace('\\', "/");
+
+        let new_content = if let Some(head) = args.head.as_deref() {
+            git_show_file(&git_root, head, &git_rel).unwrap_or_default()
+        } else {
+            std::fs::read_to_string(file).unwrap_or_default()
+        };
         let new_packages = lockfile::parse_lockfile(manager, &new_content);
 
-        match get_old_lockfile_content(args, root, file, manager) {
-            Some(old) => {
-                let old_packages = lockfile::parse_lockfile(manager, &old);
-                let lf_diff = lockfile::diff(&old_packages, &new_packages);
-                if !lf_diff.is_empty() {
-                    diff_by_lockfile.push((file.clone(), lf_diff));
+        match args.base.as_deref() {
+            Some(base) => match git_show_file(&git_root, base, &git_rel) {
+                Some(old) => {
+                    let old_packages = lockfile::parse_lockfile(manager, &old);
+                    let lf_diff = lockfile::diff(&old_packages, &new_packages);
+                    if !lf_diff.is_empty() {
+                        diff_by_lockfile.push((file.clone(), lf_diff));
+                    }
                 }
-            }
+                None => {
+                    let rel = crate::tests::plan::relative_path(root, file);
+                    warnings.push(Warning {
+                        r#type: "lockfile-no-baseline".to_string(),
+                        message: format!(
+                            "Could not determine old content of `{}`; falling back to full test suite. Provide `--base` to enable targeted lockfile analysis.",
+                            rel
+                        ),
+                        file: rel,
+                    });
+                    fallback_triggered = true;
+                }
+            },
             None => {
                 let rel = crate::tests::plan::relative_path(root, file);
                 warnings.push(Warning {
@@ -71,15 +97,18 @@ pub(crate) fn analyze_lockfile_changes(
     }
 }
 
-fn get_old_lockfile_content(
-    args: &PlanArgs,
-    root: &Path,
-    lockfile_path: &Path,
-    _manager: PackageManager,
-) -> Option<String> {
-    let base = args.base.as_deref()?;
-    let rel = crate::tests::plan::relative_path(root, lockfile_path);
-    git_show_file(root, base, &rel)
+fn find_git_root(dir: &Path) -> Option<PathBuf> {
+    let output = std::process::Command::new("git")
+        .args(["rev-parse", "--show-toplevel"])
+        .current_dir(dir)
+        .output()
+        .ok()?;
+    if output.status.success() {
+        let s = String::from_utf8(output.stdout).ok()?;
+        Some(PathBuf::from(s.trim()))
+    } else {
+        None
+    }
 }
 
 pub(crate) fn git_show_file(root: &Path, git_ref: &str, rel_path: &str) -> Option<String> {

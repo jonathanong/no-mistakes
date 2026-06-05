@@ -26,6 +26,8 @@ pub fn parse(content: &str) -> Vec<ResolvedPackage> {
 fn split_name_version(key: &str) -> (&str, &str) {
     // Strip pnpm peer-dep suffix like `(yaml@2.9.0)` before splitting.
     let base = key.split_once('(').map_or(key, |(b, _)| b);
+    // Strip pnpm v5/v6 leading slash (e.g. `/lodash@4.17.21` → `lodash@4.17.21`).
+    let base = base.trim_start_matches('/');
     let start = usize::from(base.starts_with('@'));
     if let Some(pos) = base[start..].rfind('@') {
         (&base[..start + pos], &base[start + pos + 1..])

@@ -74,3 +74,40 @@ fn parse_empty_specifier_version() {
     let pkgs = parse(content);
     assert_eq!(pkgs[0].version, "");
 }
+
+#[test]
+fn parse_jsonc_line_comment() {
+    let content = "{\n  // lockfileVersion comment\n  \"packages\": {\n    \"pkg\": [\"pkg@1.0.0\", {}, {\"integrity\": \"sha512-x\"}]\n  }\n}";
+    let pkgs = parse(content);
+    assert_eq!(pkgs.len(), 1);
+    assert_eq!(pkgs[0].name, "pkg");
+}
+
+#[test]
+fn parse_jsonc_block_comment() {
+    let content = "{\n  /* a block comment */\n  \"packages\": {\n    \"pkg\": [\"pkg@2.0.0\", {}, {\"integrity\": \"sha512-y\"}]\n  }\n}";
+    let pkgs = parse(content);
+    assert_eq!(pkgs[0].version, "2.0.0");
+}
+
+#[test]
+fn parse_jsonc_trailing_comma() {
+    let content = "{\n  \"packages\": {\n    \"pkg\": [\"pkg@3.0.0\", {}, {\"integrity\": \"sha512-z\"}],\n  }\n}";
+    let pkgs = parse(content);
+    assert_eq!(pkgs[0].version, "3.0.0");
+}
+
+#[test]
+fn strip_jsonc_preserves_slash_in_string() {
+    let content = r#"{"packages": {"pkg": ["https://example.com/pkg@1.0.0", {}, {"integrity": "sha512-x"}]}}"#;
+    let pkgs = parse(content);
+    assert_eq!(pkgs[0].version, "1.0.0");
+}
+
+#[test]
+fn strip_jsonc_block_comment_preserves_newlines() {
+    // Block comment spanning multiple lines — newlines preserved so line numbers stay intact.
+    let content = "{\n  /*\n   multi-line\n   comment\n  */\n  \"packages\": {}\n}";
+    let pkgs = parse(content);
+    assert!(pkgs.is_empty());
+}

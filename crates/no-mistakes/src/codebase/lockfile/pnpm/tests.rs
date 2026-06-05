@@ -152,3 +152,19 @@ fn resolution_info_unknown_keys() {
     assert_eq!(pkgs[0].kind, ResolutionKind::Other);
     assert_eq!(pkgs[0].fingerprint, "");
 }
+
+#[test]
+fn split_v5_leading_slash() {
+    // pnpm v5/v6 lockfiles use /lodash@4.17.21 with a leading slash
+    let (name, ver) = split_name_version("/lodash@4.17.21");
+    assert_eq!(name, "lodash");
+    assert_eq!(ver, "4.17.21");
+}
+
+#[test]
+fn split_v5_scoped_leading_slash() {
+    // pnpm v5/v6 scoped package: /@scope/pkg@1.0.0
+    let (name, ver) = split_name_version("/@scope/pkg@1.0.0");
+    assert_eq!(name, "@scope/pkg");
+    assert_eq!(ver, "1.0.0");
+}
