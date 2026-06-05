@@ -214,3 +214,58 @@ fn lockfile_diff_json_impl_head_option_reads_from_git() {
         "expected lodash changed between v1 and v2: {changed:?}"
     );
 }
+
+#[test]
+fn lockfile_diff_json_impl_missing_base_returns_err() {
+    let dir = tempfile::tempdir().unwrap();
+    let options = format!(
+        r#"{{"root": "{}"}}"#,
+        dir.path().to_str().unwrap().replace('\\', "/")
+    );
+    let result = lockfile_diff_json_impl(options);
+    assert!(result.is_err(), "missing base should be an error");
+    let err = result.unwrap_err();
+    assert!(
+        err.reason.contains("base"),
+        "error should mention base: {}",
+        err.reason
+    );
+}
+
+#[test]
+fn lockfile_diff_json_impl_empty_base_returns_err() {
+    let dir = tempfile::tempdir().unwrap();
+    let options = format!(
+        r#"{{"root": "{}", "base": ""}}"#,
+        dir.path().to_str().unwrap().replace('\\', "/")
+    );
+    let result = lockfile_diff_json_impl(options);
+    assert!(result.is_err(), "empty base should be an error");
+}
+
+#[test]
+fn lockfile_diff_json_impl_invalid_head_returns_err() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+
+    let lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
+    std::fs::write(root.join("pnpm-lock.yaml"), lock).unwrap();
+    setup_git_repo(root);
+    std::process::Command::new("git")
+        .args(["add", "pnpm-lock.yaml"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::process::Command::new("git")
+        .args(["commit", "-m", "initial"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+
+    let options = format!(
+        r#"{{"root": "{}", "base": "HEAD", "head": "nonexistent-ref-xyz"}}"#,
+        root.to_str().unwrap().replace('\\', "/")
+    );
+    let result = lockfile_diff_json_impl(options);
+    assert!(result.is_err(), "invalid head ref should be an error");
+}

@@ -48,6 +48,21 @@ pub(crate) fn analyze_lockfile_changes(
 
         let new_content = if let Some(head) = args.head.as_deref() {
             git_show_file(&git_root, head, &git_rel).unwrap_or_default()
+        } else if is_diff_only_mode(args) {
+            // In diff-only mode (--diff/--diff-stdin/etc.) without --head, the working tree
+            // may still be at the base. Reading from disk would compare base-vs-base and miss
+            // the lockfile change; fall back instead of producing a bogus empty diff.
+            let rel = crate::tests::plan::relative_path(root, file);
+            warnings.push(Warning {
+                r#type: "lockfile-no-baseline".to_string(),
+                message: format!(
+                    "Could not determine new content of `{}` in diff-only mode; falling back to full test suite. Provide `--head` to enable targeted lockfile analysis.",
+                    rel
+                ),
+                file: rel,
+            });
+            fallback_triggered = true;
+            continue;
         } else {
             std::fs::read_to_string(file).unwrap_or_default()
         };
@@ -95,6 +110,14 @@ pub(crate) fn analyze_lockfile_changes(
         warnings,
         fallback_triggered,
     }
+}
+
+fn is_diff_only_mode(args: &PlanArgs) -> bool {
+    args.head.is_none()
+        && (args.diff.is_some()
+            || args.diff_stdin
+            || args.diff_command.is_some()
+            || args.diff_content.is_some())
 }
 
 fn find_git_root(dir: &Path) -> Option<PathBuf> {

@@ -63,6 +63,10 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
 
     let lockfile_paths = if let Some(lf) = args.lockfile {
         vec![root.join(lf)]
+    } else if let Some(head) = args.head.as_deref() {
+        // When --head is supplied, detect from the head commit so we find lockfiles
+        // added or removed between base and head that don't exist on disk.
+        detect_lockfiles_from_head(&git_root, head, &root)
     } else {
         detect_lockfiles_in_root(&root)
     };
@@ -124,6 +128,33 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
     }
 
     Ok(ExitCode::SUCCESS)
+}
+
+fn detect_lockfiles_from_head(git_root: &Path, head: &str, root: &Path) -> Vec<PathBuf> {
+    let candidates = [
+        "pnpm-lock.yaml",
+        "package-lock.json",
+        "npm-shrinkwrap.json",
+        "yarn.lock",
+        "bun.lock",
+    ];
+    let prefix = root
+        .strip_prefix(git_root)
+        .unwrap_or(std::path::Path::new(""))
+        .to_string_lossy()
+        .replace('\\', "/");
+    candidates
+        .iter()
+        .filter(|name| {
+            let rel = if prefix.is_empty() {
+                name.to_string()
+            } else {
+                format!("{}/{}", prefix, name)
+            };
+            git_show_file(git_root, head, &rel).is_some()
+        })
+        .map(|name| root.join(name))
+        .collect()
 }
 
 fn detect_lockfiles_in_root(root: &Path) -> Vec<PathBuf> {

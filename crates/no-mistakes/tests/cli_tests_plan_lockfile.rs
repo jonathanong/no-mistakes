@@ -305,3 +305,47 @@ fn tests_plan_transitive_dep_triggers_fallback() {
         "transitive dep change should trigger fallback: {plan:?}"
     );
 }
+
+// Covers is_diff_only_mode: when --diff is used without --head in a git repo with
+// --base provided, the working tree may still be at the base. Should emit warning.
+#[test]
+fn tests_plan_diff_only_mode_without_head_emits_warning() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let lock_content = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
+    // A minimal diff that mentions pnpm-lock.yaml as changed
+    let diff_content = "diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml\nindex 0000000..0000001 100644\n--- a/pnpm-lock.yaml\n+++ b/pnpm-lock.yaml\n@@ -1 +1 @@\n-old\n+new\n";
+    setup_git_repo_with_file(root, "pnpm-lock.yaml", lock_content);
+    let diff_path = root.join("change.diff");
+    std::fs::write(&diff_path, diff_content).unwrap();
+    // Run with --diff (diff-only mode) and --base but no --head.
+    // is_diff_only_mode detects this and falls back instead of reading stale disk content.
+    let output = Command::new(bin())
+        .args([
+            "tests",
+            "plan",
+            "--root",
+            root.to_str().unwrap(),
+            "--diff",
+            diff_path.to_str().unwrap(),
+            "--base",
+            "HEAD",
+            "--global-config-fallback=true",
+            "--json",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let warnings = plan["warnings"].as_array().unwrap();
+    assert!(
+        warnings
+            .iter()
+            .any(|w| w["type"].as_str().unwrap_or("") == "lockfile-no-baseline"),
+        "expected lockfile-no-baseline warning in diff-only mode: {plan:?}"
+    );
+}

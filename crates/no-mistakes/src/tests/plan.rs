@@ -127,7 +127,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
             return Ok(TestPlan {
                 selected_tests,
                 groups: Vec::new(),
-                warnings: Vec::new(),
+                warnings: lockfile_analysis.warnings,
                 fallback_triggered: true,
                 fallback_reason: Some(reason),
             });
@@ -303,6 +303,16 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
 
         let (reachable_tests, path_parents) =
             bfs_path_find(&graph, &start_node, &test_filter, &root);
+
+        // Package is referenced (e.g. by package.json) but no test file is reachable.
+        // Likely a tooling dep (typescript, jest, eslint) whose version bump affects
+        // how tests run but has no import-graph path to any test file.
+        if reachable_tests.is_empty() {
+            if !untraceable_lockfile_files.contains(lockfile_rel) {
+                untraceable_lockfile_files.push(lockfile_rel.clone());
+            }
+            continue;
+        }
 
         for (test_node, edge_path) in reachable_tests {
             let test_path = match &test_node {

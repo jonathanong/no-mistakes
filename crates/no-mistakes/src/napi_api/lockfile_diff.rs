@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct LockfileDiffOptions {
     pub root: Option<String>,
-    pub base: String,
+    pub base: Option<String>,
     pub head: Option<String>,
     pub lockfile: Option<String>,
 }
@@ -23,6 +23,11 @@ struct LockfileDiffEntry {
 
 pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<String> {
     let options = parse_options::<LockfileDiffOptions>(&options_json)?;
+    let base = options.base.filter(|s| !s.is_empty()).ok_or_else(|| {
+        napi::Error::from_reason(
+            "`base` is required; pass a git ref such as `\"HEAD\"` or `\"main\"`",
+        )
+    })?;
     let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
 
     let lf_paths: Vec<PathBuf> = if let Some(lf) = options.lockfile {
@@ -54,14 +59,19 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
             .to_string_lossy()
             .replace('\\', "/");
         let new_content = if let Some(head) = options.head.as_deref() {
-            git_show_file(&root, head, &rel).unwrap_or_default()
+            git_show_file(&root, head, &rel).ok_or_else(|| {
+                napi::Error::from_reason(format!(
+                    "Could not retrieve `{}` at ref `{}`; ensure the head ref exists in the git history",
+                    rel, head
+                ))
+            })?
         } else {
             std::fs::read_to_string(lf_path).unwrap_or_default()
         };
-        let Some(old_content) = git_show_file(&root, &options.base, &rel) else {
+        let Some(old_content) = git_show_file(&root, &base, &rel) else {
             return Err(napi::Error::from_reason(format!(
                 "Could not retrieve `{}` at ref `{}`; ensure the base ref exists in the git history",
-                rel, options.base
+                rel, base
             )));
         };
         let old_pkgs = lockfile::parse_lockfile(manager, &old_content);
