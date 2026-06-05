@@ -14,24 +14,32 @@ pub fn parse(content: &str) -> Vec<ResolvedPackage> {
             let arr = entry.as_array()?;
             let specifier = arr.first().and_then(|v| v.as_str()).unwrap_or("");
             let version = specifier.rsplit_once('@').map(|(_, v)| v).unwrap_or("");
-            // Real bun.lock: ["pkg@ver", url, peer-deps, {integrity, resolved}] (4 elements)
+            // Real bun.lock: ["pkg@ver", url, peer-deps, "sha512-..."] (4 elements)
             // Simplified:    ["pkg@ver", {}, {integrity, resolved}] (3 elements)
-            // Scan from the end for the first object that carries integrity or resolved.
-            let info = arr.iter().rev().find(|v| {
-                v.is_object() && (v.get("integrity").is_some() || v.get("resolved").is_some())
-            });
-            let integrity = info
-                .and_then(|v| v.get("integrity"))
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
-            let resolved = info
-                .and_then(|v| v.get("resolved"))
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
-            let fingerprint = if integrity.is_empty() {
-                resolved.to_string()
+            // Try bare SRI integrity string first (real format), then fall back to object.
+            let sri = arr
+                .iter()
+                .rev()
+                .find_map(|v| v.as_str().filter(|s| s.starts_with("sha")));
+            let fingerprint = if let Some(h) = sri {
+                h.to_string()
             } else {
-                integrity.to_string()
+                let info = arr.iter().rev().find(|v| {
+                    v.is_object() && (v.get("integrity").is_some() || v.get("resolved").is_some())
+                });
+                let integrity = info
+                    .and_then(|v| v.get("integrity"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("");
+                let resolved = info
+                    .and_then(|v| v.get("resolved"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("");
+                if integrity.is_empty() {
+                    resolved.to_string()
+                } else {
+                    integrity.to_string()
+                }
             };
             Some(ResolvedPackage {
                 name: name.clone(),

@@ -153,6 +153,19 @@ fn strip_jsonc_lone_slash_passes_through() {
 }
 
 #[test]
+fn parse_real_bun_lock_bare_sri_integrity() {
+    // Real bun.lock stores integrity as a bare string at the last position, not in an object.
+    let content = r#"{
+      "lockfileVersion": 0,
+      "packages": {
+        "react": ["react@18.2.0", "https://registry.npmjs.org/react/-/react-18.2.0.tgz", {}, "sha512-real"]
+      }
+    }"#;
+    let pkgs = parse(content);
+    assert_eq!(pkgs[0].fingerprint, "sha512-real");
+}
+
+#[test]
 fn parse_four_element_no_integrity_falls_back_to_resolved() {
     let content = r#"{
       "lockfileVersion": 0,

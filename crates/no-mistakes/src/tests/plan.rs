@@ -65,15 +65,30 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                     .warnings
                     .first()
                     .map(|w| (w.message.clone(), root.join(&w.file)))
+            } else if let Some((lf_path, _)) = lockfile_analysis.diff_by_lockfile.first() {
+                // Framework plan BFS starts from file nodes; lockfile package nodes
+                // (NodeId::Module) are not wired into the configured-plan group
+                // traversal, so a lockfile-only dependency bump selects no tests.
+                // Fall back to the full suite so no impacted tests are missed.
+                let rel = relative_path(&root, lf_path);
+                Some((
+                    format!(
+                        "`{}` has dependency changes; framework plans run the full suite for lockfile changes",
+                        rel
+                    ),
+                    lf_path.clone(),
+                ))
             } else {
                 None
             }
         });
-        // diff-only and binary-lockfile fallbacks are unconditional — honor them
-        // regardless of --global-config-fallback so framework plans don't silently
-        // run against an unanalyzable lockfile change.
-        let unconditional_fallback =
-            lockfile_analysis.diff_only_fallback || lockfile_analysis.binary_lockfile_fallback;
+        // Unconditional fallbacks must bypass --global-config-fallback:
+        // - diff-only / binary-lockfile: lockfile unreadable, zero tests would be wrong
+        // - parseable lockfile diff in a framework plan: NodeId::Module seeds are not
+        //   wired into the configured-plan group traversal, so we fall back conservatively
+        let unconditional_fallback = lockfile_analysis.diff_only_fallback
+            || lockfile_analysis.binary_lockfile_fallback
+            || !lockfile_analysis.diff_by_lockfile.is_empty();
         return super::configured_plan::generate_configured_plan(
             args,
             framework,
