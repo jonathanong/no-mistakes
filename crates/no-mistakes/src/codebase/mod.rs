@@ -3,6 +3,7 @@ pub mod ci_workflows;
 pub mod comment_only;
 pub mod config;
 pub mod dependencies;
+pub mod lockfile;
 pub mod markdown_sections;
 pub mod md_links;
 pub mod pnpm_lock;

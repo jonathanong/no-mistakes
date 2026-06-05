@@ -11,6 +11,7 @@ pub(crate) mod configured_plan_candidates;
 pub(crate) mod diff_parser;
 pub(crate) mod graph;
 pub(crate) mod impact;
+pub(crate) mod lockfile_changes;
 pub(crate) mod plan;
 pub(crate) mod why;
 

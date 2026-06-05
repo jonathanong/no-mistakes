@@ -82,6 +82,31 @@ const plan = await testsImpact({
 });
 ```
 
+## Lockfile Change Handling
+
+When a lockfile (`pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, `bun.lock`) appears
+in the changed file list, `tests plan` performs targeted package-level analysis instead of
+falling back to the full test suite:
+
+1. Parse the old lockfile version (from `--base` git ref) and the new working-tree version.
+2. Diff the two to find added, removed, and changed package names.
+3. Trace from each changed package name (`NodeId::Module`) through `PackageDependency` and
+   import edges in the dependency graph to reach affected test files.
+
+This requires `--base` (or another mechanism to supply the old lockfile content).
+Without `--base`, a `lockfile-no-baseline` warning is emitted and `--global-config-fallback=true`
+triggers a full suite run.
+
+Binary lockfiles (`bun.lockb`) cannot be parsed and always trigger a warning + fallback.
+
+```bash
+# Targeted: only tests affected by lodash version bump run
+no-mistakes tests plan --changed-file pnpm-lock.yaml --base main
+
+# Full suite fallback (no baseline supplied)
+no-mistakes tests plan --changed-file pnpm-lock.yaml --global-config-fallback=true
+```
+
 ## Breaking Change: Implicit Git Removed
 
 Previously, running `no-mistakes test plan` with no input arguments would implicitly run

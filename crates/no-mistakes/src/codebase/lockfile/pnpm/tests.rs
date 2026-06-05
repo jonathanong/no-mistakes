@@ -1,0 +1,154 @@
+use super::*;
+
+const SAMPLE: &str = r#"
+lockfileVersion: '9.0'
+
+packages:
+  lodash@4.17.21:
+    resolution: {integrity: sha512-abc123}
+
+  '@scope/pkg@1.0.0':
+    resolution: {integrity: sha512-scoped}
+
+  github.com/org/repo:
+    resolution: {repo: 'https://github.com/org/repo', commit: abc123}
+
+  some-tarball@1.0.0:
+    resolution: {tarball: 'https://example.com/pkg.tgz'}
+
+  local-pkg@1.0.0:
+    resolution: {directory: '../local-pkg'}
+
+  commit-only@1.0.0:
+    resolution: {commit: deadbeef}
+
+  no-resolution@1.0.0: {}
+"#;
+
+#[test]
+fn parse_basic_packages() {
+    let pkgs = parse(SAMPLE);
+    let find = |name: &str| pkgs.iter().find(|p| p.name == name);
+
+    let lodash = find("lodash").unwrap();
+    assert_eq!(lodash.version, "4.17.21");
+    assert_eq!(lodash.fingerprint, "sha512-abc123");
+    assert_eq!(lodash.kind, ResolutionKind::Registry);
+
+    let scoped = find("@scope/pkg").unwrap();
+    assert_eq!(scoped.version, "1.0.0");
+    assert_eq!(scoped.kind, ResolutionKind::Registry);
+}
+
+#[test]
+fn parse_git_resolution() {
+    let pkgs = parse(SAMPLE);
+    let git = pkgs
+        .iter()
+        .find(|p| p.name == "github.com/org/repo")
+        .unwrap();
+    assert_eq!(git.fingerprint, "abc123");
+    assert_eq!(git.kind, ResolutionKind::Git);
+}
+
+#[test]
+fn parse_tarball_resolution() {
+    let pkgs = parse(SAMPLE);
+    let tb = pkgs.iter().find(|p| p.name == "some-tarball").unwrap();
+    assert_eq!(tb.fingerprint, "https://example.com/pkg.tgz");
+    assert_eq!(tb.kind, ResolutionKind::Tarball);
+}
+
+#[test]
+fn parse_directory_resolution() {
+    let pkgs = parse(SAMPLE);
+    let dir = pkgs.iter().find(|p| p.name == "local-pkg").unwrap();
+    assert_eq!(dir.fingerprint, "../local-pkg");
+    assert_eq!(dir.kind, ResolutionKind::Directory);
+}
+
+#[test]
+fn parse_commit_only() {
+    let pkgs = parse(SAMPLE);
+    let c = pkgs.iter().find(|p| p.name == "commit-only").unwrap();
+    assert_eq!(c.fingerprint, "deadbeef");
+    assert_eq!(c.kind, ResolutionKind::Git);
+}
+
+#[test]
+fn parse_no_resolution() {
+    let pkgs = parse(SAMPLE);
+    let nr = pkgs.iter().find(|p| p.name == "no-resolution").unwrap();
+    assert_eq!(nr.fingerprint, "");
+    assert_eq!(nr.kind, ResolutionKind::Other);
+}
+
+#[test]
+fn parse_empty_content() {
+    assert!(parse("").is_empty());
+}
+
+#[test]
+fn parse_no_packages_section() {
+    assert!(parse("lockfileVersion: '9.0'\n").is_empty());
+}
+
+#[test]
+fn parse_invalid_yaml() {
+    assert!(parse("{ invalid: yaml: [[[").is_empty());
+}
+
+#[test]
+fn split_scoped_package() {
+    let (name, ver) = split_name_version("@scope/pkg@1.2.3");
+    assert_eq!(name, "@scope/pkg");
+    assert_eq!(ver, "1.2.3");
+}
+
+#[test]
+fn split_regular_package() {
+    let (name, ver) = split_name_version("lodash@4.17.21");
+    assert_eq!(name, "lodash");
+    assert_eq!(ver, "4.17.21");
+}
+
+#[test]
+fn split_no_version() {
+    let (name, ver) = split_name_version("github.com/org/repo");
+    assert_eq!(name, "github.com/org/repo");
+    assert_eq!(ver, "");
+}
+
+#[test]
+fn yaml_key_number() {
+    let val = serde_yaml::Value::Number(serde_yaml::Number::from(42));
+    assert_eq!(yaml_key_to_string(&val), "42");
+}
+
+#[test]
+fn yaml_key_bool() {
+    let val = serde_yaml::Value::Bool(true);
+    assert_eq!(yaml_key_to_string(&val), "true");
+}
+
+#[test]
+fn yaml_key_null() {
+    let val = serde_yaml::Value::Null;
+    assert_eq!(yaml_key_to_string(&val), "");
+}
+
+#[test]
+fn resolution_info_no_resolution_field() {
+    let val = serde_yaml::Value::Null;
+    let (fp, kind) = resolution_info(&val);
+    assert_eq!(fp, "");
+    assert_eq!(kind, ResolutionKind::Other);
+}
+
+#[test]
+fn resolution_info_unknown_keys() {
+    let content = "packages:\n  exotic@1.0.0:\n    resolution: {checksum: abc123}\n";
+    let pkgs = parse(content);
+    assert_eq!(pkgs[0].kind, ResolutionKind::Other);
+    assert_eq!(pkgs[0].fingerprint, "");
+}

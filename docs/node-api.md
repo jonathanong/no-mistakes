@@ -45,6 +45,7 @@ const { analyzeProject, dependents, symbols, testsPlan } = require("no-mistakes"
 | `queues edges\|related\|check` | `queueEdges`, `queueRelated`, `queueCheck` |
 | `server routes\|edges\|related` | `serverRouteList`, `serverRouteEdges`, `serverRouteRelated` |
 | `react analyze\|check` | `reactAnalyze`, `reactCheck` |
+| `lockfile diff` | `lockfileDiff(options)` |
 
 `check(options)` returns the same structured check report as CLI JSON,
 including `warnings: string[]` for configured checks that could not run.

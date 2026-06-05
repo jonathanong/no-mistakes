@@ -4,6 +4,7 @@ mod check_parallel;
 mod check_runner;
 mod check_tasks;
 mod fetches;
+mod lockfile;
 mod queues;
 mod react;
 mod server;
@@ -51,6 +52,8 @@ enum Command {
     /// Plan, explain, and visualize test impacts based on changed files.
     #[command(alias = "test")]
     Tests(TestsArgs),
+    /// Analyze lockfile changes (diff packages).
+    Lockfile(lockfile::LockfileArgs),
 }
 
 fn main() -> ExitCode {
@@ -86,5 +89,6 @@ fn run() -> Result<ExitCode> {
         Command::Server(args) => server::run(args),
         Command::Check(args) => check::run(args),
         Command::Tests(args) => tests_run(args),
+        Command::Lockfile(args) => lockfile::run(args),
     }
 }

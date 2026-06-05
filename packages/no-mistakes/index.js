@@ -114,6 +114,10 @@ async function reactCheck(options) {
   return callJson(native.reactCheckJson, options);
 }
 
+async function lockfileDiff(options) {
+  return callJson(native.lockfileDiffJson, options);
+}
+
 async function version() {
   return native.version();
 }
@@ -124,6 +128,7 @@ module.exports = {
   dependencies,
   dependents,
   fetches,
+  lockfileDiff,
   playwrightCheck,
   playwrightEdges,
   playwrightRelated,

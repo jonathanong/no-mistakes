@@ -1,0 +1,76 @@
+use super::*;
+
+const SAMPLE: &str = r#"{
+  "lockfileVersion": 0,
+  "packages": {
+    "lodash": ["lodash@4.17.21", {}, {
+      "integrity": "sha512-abc123",
+      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz"
+    }],
+    "@scope/pkg": ["@scope/pkg@2.0.0", {}, {
+      "integrity": "sha512-scoped"
+    }],
+    "no-info": ["no-info@1.0.0", {}]
+  }
+}"#;
+
+#[test]
+fn parse_basic() {
+    let pkgs = parse(SAMPLE);
+    let lodash = pkgs.iter().find(|p| p.name == "lodash").unwrap();
+    assert_eq!(lodash.version, "4.17.21");
+    assert_eq!(lodash.fingerprint, "sha512-abc123");
+    assert_eq!(lodash.kind, ResolutionKind::Registry);
+}
+
+#[test]
+fn parse_scoped() {
+    let pkgs = parse(SAMPLE);
+    let scoped = pkgs.iter().find(|p| p.name == "@scope/pkg").unwrap();
+    assert_eq!(scoped.version, "2.0.0");
+    assert_eq!(scoped.fingerprint, "sha512-scoped");
+}
+
+#[test]
+fn parse_no_info() {
+    let pkgs = parse(SAMPLE);
+    let ni = pkgs.iter().find(|p| p.name == "no-info").unwrap();
+    assert_eq!(ni.fingerprint, "");
+}
+
+#[test]
+fn parse_invalid_json() {
+    assert!(parse("{ invalid").is_empty());
+}
+
+#[test]
+fn parse_no_packages() {
+    assert!(parse("{}").is_empty());
+}
+
+#[test]
+fn parse_non_array_entry_skipped() {
+    let content = r#"{"packages": {"pkg": "not-an-array"}}"#;
+    let pkgs = parse(content);
+    assert!(pkgs.is_empty());
+}
+
+#[test]
+fn parse_uses_resolved_when_no_integrity() {
+    let content = r#"{
+      "packages": {
+        "pkg": ["pkg@1.0.0", {}, {
+          "resolved": "https://example.com/pkg.tgz"
+        }]
+      }
+    }"#;
+    let pkgs = parse(content);
+    assert_eq!(pkgs[0].fingerprint, "https://example.com/pkg.tgz");
+}
+
+#[test]
+fn parse_empty_specifier_version() {
+    let content = r#"{"packages": {"pkg": ["pkg", {}, {"integrity": "sha512-x"}]}}"#;
+    let pkgs = parse(content);
+    assert_eq!(pkgs[0].version, "");
+}

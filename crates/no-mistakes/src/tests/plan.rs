@@ -68,11 +68,40 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
         );
     }
 
-    // 2. Check for global configuration files
+    // 2a. Analyze lockfile changes targeted
+    let lockfile_analysis = super::lockfile_changes::analyze_lockfile_changes(
+        args,
+        &root,
+        &collected.files,
+    );
+    let lockfile_changed_packages: Vec<(String, String)> = lockfile_analysis
+        .diff_by_lockfile
+        .iter()
+        .flat_map(|(lockfile_path, lf_diff)| {
+            let rel = relative_path(&root, lockfile_path);
+            lf_diff
+                .all_changed_names()
+                .map(|name| (name.to_string(), rel.clone()))
+                .collect::<Vec<_>>()
+        })
+        .collect();
+
+    // 2b. Check for global configuration files (binary lockfiles or other global triggers)
+    let has_binary_lockfile_fallback =
+        global_config_fallback(args) && lockfile_analysis.fallback_triggered;
+
     if global_config_fallback(args) {
-        if let Some((reason, trigger_file)) = global_config_trigger(&root, &changed_files) {
+        let global_trigger = global_config_trigger(&root, &changed_files);
+        let fallback_reason = if has_binary_lockfile_fallback && global_trigger.is_none() {
+            lockfile_analysis
+                .warnings
+                .first()
+                .map(|w| (w.message.clone(), root.join(&w.file)))
+        } else {
+            global_trigger
+        };
+        if let Some((reason, trigger_file)) = fallback_reason {
             let relative_changed = relative_path(&root, &trigger_file);
-            // Trigger fallback
             let all_test_files = discover_all_tests(&root, &config)?;
             let mut selected_tests = Vec::new();
             for test in all_test_files {
@@ -117,6 +146,13 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
 
     // 4. Trace each changed file
     for changed in &changed_files {
+        let basename = changed.file_name().and_then(|n| n.to_str()).unwrap_or("");
+        if no_mistakes::codebase::lockfile::detect_manager(basename).is_some()
+            || no_mistakes::codebase::lockfile::is_binary_lockfile(basename)
+        {
+            continue;
+        }
+
         let rel_changed = relative_path(&root, changed);
 
         // If the changed file is a test file itself, select it directly
@@ -245,6 +281,66 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
         }
     }
 
+    // 4b. Trace lockfile package dependency changes
+    for (pkg_name, lockfile_rel) in &lockfile_changed_packages {
+        let start_node = NodeId::Module(pkg_name.clone());
+        let (reachable_tests, path_parents) =
+            bfs_path_find(&graph, &start_node, &test_filter, &root);
+
+        for (test_node, edge_path) in reachable_tests {
+            let test_path = match &test_node {
+                NodeId::File(p) => p.clone(),
+                _ => continue,
+            };
+            let rel_test = relative_path(&root, &test_path);
+            let path_conf = path_confidence(&edge_path);
+
+            let mut node_chain = Vec::new();
+            let mut curr = test_node.clone();
+            node_chain.push(slash_node_name(&curr, &root));
+            while let Some((parent, _)) = path_parents.get(&curr) {
+                node_chain.push(slash_node_name(parent, &root));
+                curr = parent.clone();
+            }
+            node_chain.reverse();
+
+            let via_strings: Vec<String> = edge_path
+                .iter()
+                .map(|k| impact_reason_label(*k).to_string())
+                .collect();
+
+            let reason = ImpactReason {
+                changed_file: lockfile_rel.clone(),
+                path: node_chain,
+                via: via_strings,
+            };
+
+            let entry = selected_map
+                .entry(test_path)
+                .or_insert_with(|| SelectedTest {
+                    test_file: rel_test.clone(),
+                    confidence: path_conf,
+                    targets: Vec::new(),
+                    reasons: Vec::new(),
+                });
+
+            if path_conf > entry.confidence {
+                entry.confidence = path_conf;
+            }
+
+            if !entry.reasons.contains(&reason) {
+                entry.reasons.push(reason);
+            }
+        }
+    }
+
+    // Merge lockfile analysis warnings
+    for warn in lockfile_analysis.warnings {
+        if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+            warnings.push(warn);
+        }
+    }
+
     // 5. Trace deleted files (phantom node lookup in reverse map)
     trace_deleted_files(
         deleted_files,
@@ -307,9 +403,6 @@ fn is_global_config_path(root: &Path, absolute: &Path, relative: &str) -> bool {
     if matches!(
         relative,
         "package.json"
-            | "pnpm-lock.yaml"
-            | "package-lock.json"
-            | "yarn.lock"
             | "tsconfig.json"
             | ".no-mistakes.yml"
             | ".no-mistakes.yaml"

@@ -96,3 +96,18 @@ export interface TestGraph {
   nodes: Array<{ name: string; type: "changed" | "test" | "intermediate" }>;
   edges: Array<{ from: string; to: string; via: string }>;
 }
+
+export interface LockfileDiffOptions {
+  root?: string;
+  base: string;
+  head?: string;
+  lockfile?: string;
+}
+
+export interface LockfileDiffEntry {
+  lockfile: string;
+  manager: "npm" | "pnpm" | "yarn" | "bun";
+  added: string[];
+  removed: string[];
+  changed: string[];
+}
