@@ -302,10 +302,101 @@ fn lockfile_diff_json_impl_invalid_head_returns_err() {
         .output()
         .unwrap();
 
+    // When --lockfile is explicit and head is invalid, git_show_file fails → error.
+    // Without --lockfile, detect_lockfiles_from_head silently returns empty (matches CLI behavior).
+    let options = format!(
+        r#"{{"root": "{}", "base": "HEAD", "head": "nonexistent-ref-xyz", "lockfile": "pnpm-lock.yaml"}}"#,
+        root.to_str().unwrap().replace('\\', "/")
+    );
+    let result = lockfile_diff_json_impl(options);
+    assert!(
+        result.is_err(),
+        "invalid head ref should be an error when lockfile is explicit"
+    );
+}
+
+#[test]
+fn lockfile_diff_json_impl_head_autodetect_new_lockfile() {
+    // When head adds a new lockfile not present on disk, detect_lockfiles_from_head finds it
+    // and base is treated as empty → all packages reported as added.
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let lock_v1 = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
+    let lock_v2 = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-new}\n";
+    setup_git_repo(root);
+    std::process::Command::new("git")
+        .args(["commit", "--allow-empty", "-m", "empty"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::fs::write(root.join("pnpm-lock.yaml"), lock_v1).unwrap();
+    std::process::Command::new("git")
+        .args(["add", "pnpm-lock.yaml"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::process::Command::new("git")
+        .args(["commit", "-m", "add lockfile"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::fs::write(root.join("pnpm-lock.yaml"), lock_v2).unwrap();
+    std::process::Command::new("git")
+        .args(["add", "pnpm-lock.yaml"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::process::Command::new("git")
+        .args(["commit", "-m", "v2"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    // base = HEAD~2 (no lockfile), head = HEAD (v2) → lodash should appear as added
+    let options = format!(
+        r#"{{"root": "{}", "base": "HEAD~2", "head": "HEAD"}}"#,
+        root.to_str().unwrap().replace('\\', "/")
+    );
+    let result = lockfile_diff_json_impl(options).unwrap();
+    let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
+    assert_eq!(
+        entries.len(),
+        1,
+        "should detect new lockfile via head: {entries:?}"
+    );
+    let added = entries[0]["added"].as_array().unwrap();
+    assert!(
+        added.iter().any(|v| v == "lodash"),
+        "lodash should be added when lockfile is new: {added:?}"
+    );
+}
+
+#[test]
+fn lockfile_diff_json_impl_invalid_head_no_lockfile_returns_empty() {
+    // Without explicit lockfile, invalid head → detect_lockfiles_from_head returns empty
+    // → empty result (not an error), matching CLI behavior.
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
+    std::fs::write(root.join("pnpm-lock.yaml"), lock).unwrap();
+    setup_git_repo(root);
+    std::process::Command::new("git")
+        .args(["add", "pnpm-lock.yaml"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::process::Command::new("git")
+        .args(["commit", "-m", "initial"])
+        .current_dir(root)
+        .output()
+        .unwrap();
     let options = format!(
         r#"{{"root": "{}", "base": "HEAD", "head": "nonexistent-ref-xyz"}}"#,
         root.to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options);
-    assert!(result.is_err(), "invalid head ref should be an error");
+    let result = lockfile_diff_json_impl(options).unwrap();
+    let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
+    assert!(
+        entries.is_empty(),
+        "invalid head without explicit lockfile returns empty"
+    );
 }

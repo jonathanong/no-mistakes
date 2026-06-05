@@ -127,6 +127,77 @@ fn lockfile_diff_subdirectory_root_uses_git_relative_path() {
     );
 }
 
+// Covers the "newly added lockfile" path in run_diff: when --head introduces a lockfile
+// that did not exist at base, treat base as empty so all packages are reported as added.
+#[test]
+fn lockfile_diff_newly_added_lockfile_reports_added_packages() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let lock_v1 = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
+
+    // Initial commit with NO lockfile
+    Command::new("git")
+        .args(["init", "-b", "main"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["config", "user.email", "test@test.com"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["config", "user.name", "Test"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["commit", "--allow-empty", "-m", "empty"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+
+    // Second commit adds the lockfile
+    std::fs::write(root.join("pnpm-lock.yaml"), lock_v1).unwrap();
+    Command::new("git")
+        .args(["add", "pnpm-lock.yaml"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["commit", "-m", "add-lock"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+
+    let output = Command::new(bin())
+        .args([
+            "lockfile",
+            "diff",
+            "--root",
+            root.to_str().unwrap(),
+            "--base",
+            "HEAD~1",
+            "--head",
+            "HEAD",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let arr: Vec<serde_json::Value> = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(arr.len(), 1, "should detect newly added lockfile: {arr:?}");
+    let added = arr[0]["added"].as_array().unwrap();
+    assert!(
+        added.iter().any(|v| v == "lodash"),
+        "lodash should be reported as added: {added:?}"
+    );
+}
+
 // Covers detect_lockfiles_from_head: when --head is provided without --lockfile,
 // auto-detection reads candidate names from the head commit, not from disk.
 // This matters when the checkout is still at base and the head adds a new lockfile.

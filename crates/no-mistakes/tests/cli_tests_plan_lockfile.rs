@@ -349,3 +349,93 @@ fn tests_plan_diff_only_mode_without_head_emits_warning() {
         "expected lockfile-no-baseline warning in diff-only mode: {plan:?}"
     );
 }
+
+// Covers the newly-added-lockfile path in analyze_lockfile_changes: when a lockfile is
+// first introduced on a branch (base doesn't have it), treat the base as empty so all
+// packages in the new content are considered added and can be traced to tests.
+#[test]
+fn tests_plan_newly_added_lockfile_traces_packages() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-new}\n";
+
+    std::fs::create_dir(root.join("src")).unwrap();
+    std::fs::write(
+        root.join("package.json"),
+        r#"{"name":"t","dependencies":{"lodash":"^4.17.0"}}"#,
+    )
+    .unwrap();
+    std::fs::write(
+        root.join("src/utils.mts"),
+        "import { pick } from \"lodash\";\nexport const utils = { pick };\n",
+    )
+    .unwrap();
+    std::fs::write(
+        root.join("src/utils.test.mts"),
+        "import { utils } from \"./utils.mts\";\n",
+    )
+    .unwrap();
+
+    // Init git repo WITHOUT the lockfile
+    Command::new("git")
+        .args(["init", "-b", "main"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["config", "user.email", "test@test.com"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["config", "user.name", "Test"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["add", "package.json", "src/"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["commit", "-m", "initial-no-lock"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+
+    // Now add the lockfile (not yet committed) — this is the "newly added" scenario
+    std::fs::write(root.join("pnpm-lock.yaml"), lock).unwrap();
+
+    let output = Command::new(bin())
+        .args([
+            "tests",
+            "plan",
+            "--root",
+            root.to_str().unwrap(),
+            "--changed-file",
+            "pnpm-lock.yaml",
+            "--base",
+            "HEAD",
+            "--json",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert!(
+        !plan["fallback_triggered"].as_bool().unwrap(),
+        "should not trigger fallback for newly added lockfile: {plan:?}"
+    );
+    let selected = plan["selected_tests"].as_array().unwrap();
+    assert!(
+        selected
+            .iter()
+            .any(|t| t["test_file"].as_str().unwrap().contains("utils.test")),
+        "should find utils.test.mts via lodash (newly added): {selected:?}"
+    );
+}

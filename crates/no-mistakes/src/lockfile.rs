@@ -94,9 +94,19 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
         } else {
             std::fs::read_to_string(lf_path).unwrap_or_default()
         };
-        let Some(old_content) = git_show_file(&git_root, &args.base, &rel) else {
-            eprintln!("warning: could not retrieve {} at {}", rel, args.base);
-            continue;
+        // When --head is supplied, the file was detected from the head commit and may not exist
+        // at base (newly added lockfile) — treat a missing base file as empty baseline.
+        // Without --head (disk-based), a missing base means an invalid ref; warn and skip.
+        let old_content = if args.head.is_some() {
+            git_show_file(&git_root, &args.base, &rel).unwrap_or_default()
+        } else {
+            match git_show_file(&git_root, &args.base, &rel) {
+                Some(content) => content,
+                None => {
+                    eprintln!("warning: could not retrieve {} at {}", rel, args.base);
+                    continue;
+                }
+            }
         };
 
         let old_pkgs = lockfile::parse_lockfile(manager, &old_content);

@@ -35,6 +35,10 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
 
     let lf_paths: Vec<PathBuf> = if let Some(lf) = options.lockfile {
         vec![root.join(lf)]
+    } else if let Some(head) = options.head.as_deref() {
+        // Detect from head commit so newly added lockfiles are found even when
+        // the working tree is still at a different commit.
+        detect_lockfiles_from_head(&git_root, head, &root)
     } else {
         [
             "pnpm-lock.yaml",
@@ -71,11 +75,18 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
         } else {
             std::fs::read_to_string(lf_path).unwrap_or_default()
         };
-        let Some(old_content) = git_show_file(&git_root, &base, &rel) else {
-            return Err(napi::Error::from_reason(format!(
-                "Could not retrieve `{}` at ref `{}`; ensure the base ref exists in the git history",
-                rel, base
-            )));
+        // When head is supplied, the file was detected from the head commit and may not exist
+        // at base (newly added lockfile) — treat missing base as empty baseline.
+        // Without head (disk-based), a missing base file means an invalid ref; return an error.
+        let old_content = if options.head.is_some() {
+            git_show_file(&git_root, &base, &rel).unwrap_or_default()
+        } else {
+            git_show_file(&git_root, &base, &rel).ok_or_else(|| {
+                napi::Error::from_reason(format!(
+                    "Could not retrieve `{}` at ref `{}`; ensure the base ref exists in the git history",
+                    rel, base
+                ))
+            })?
         };
         let old_pkgs = lockfile::parse_lockfile(manager, &old_content);
         let new_pkgs = lockfile::parse_lockfile(manager, &new_content);
@@ -90,6 +101,33 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
     }
 
     serde_json::to_string_pretty(&entries).map_err(|e| napi::Error::from_reason(e.to_string()))
+}
+
+fn detect_lockfiles_from_head(git_root: &Path, head: &str, root: &Path) -> Vec<PathBuf> {
+    let candidates = [
+        "pnpm-lock.yaml",
+        "package-lock.json",
+        "npm-shrinkwrap.json",
+        "yarn.lock",
+        "bun.lock",
+    ];
+    let root_rel = root
+        .strip_prefix(git_root)
+        .unwrap_or(std::path::Path::new(""))
+        .to_string_lossy()
+        .replace('\\', "/");
+    candidates
+        .iter()
+        .filter(|name| {
+            let rel = if root_rel.is_empty() {
+                name.to_string()
+            } else {
+                format!("{}/{}", root_rel, name)
+            };
+            git_show_file(git_root, head, &rel).is_some()
+        })
+        .map(|name| root.join(name))
+        .collect()
 }
 
 fn find_git_root(dir: &Path) -> Option<PathBuf> {

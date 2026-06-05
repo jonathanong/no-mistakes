@@ -78,16 +78,13 @@ pub(crate) fn analyze_lockfile_changes(
                     }
                 }
                 None => {
-                    let rel = crate::tests::plan::relative_path(root, file);
-                    warnings.push(Warning {
-                        r#type: "lockfile-no-baseline".to_string(),
-                        message: format!(
-                            "Could not determine old content of `{}`; falling back to full test suite. Provide `--base` to enable targeted lockfile analysis.",
-                            rel
-                        ),
-                        file: rel,
-                    });
-                    fallback_triggered = true;
+                    // File didn't exist at base (newly added lockfile) — treat baseline as empty
+                    // so all packages in the new content are seen as added.
+                    let old_packages = lockfile::parse_lockfile(manager, "");
+                    let lf_diff = lockfile::diff(&old_packages, &new_packages);
+                    if !lf_diff.is_empty() {
+                        diff_by_lockfile.push((file.clone(), lf_diff));
+                    }
                 }
             },
             None => {
