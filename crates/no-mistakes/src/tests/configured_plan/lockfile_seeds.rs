@@ -2,12 +2,15 @@
 // This mirrors plan.rs §4b (non-framework path) but produces SelectedTest items
 // that the caller can merge into the dependencies group.
 
-use super::super::configured_plan_candidates::bfs_path_find_set;
+use super::super::configured_plan_candidates::{bfs_path_find_set, merge_selected};
 use super::super::plan::{impact_reason_label, path_confidence, relative_path, slash_node_name};
-use super::super::{ImpactReason, SelectedTest};
+use super::super::{ImpactReason, SelectedTest, TestPlan, TestPlanGroupResult};
+use super::fallback::{fallback_plan, FallbackRequest};
+use anyhow::Result;
 use no_mistakes::codebase::dependencies::graph::{DepGraph, NodeId};
+use no_mistakes::codebase::test_discovery::DiscoveredTests;
 use no_mistakes::codebase::workspaces::WorkspaceMap;
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 
 pub(super) struct LockfileSeedResult {
@@ -112,4 +115,83 @@ pub(super) fn lockfile_seed_candidates(
         candidates: candidates_map.into_values().collect(),
         untraceable_lockfiles,
     }
+}
+
+/// Merge lockfile-seeded candidates into `selected_map` and `group_results`, or return
+/// a full-suite fallback plan when `global_config_fallback` is set and there are
+/// genuinely untraceable tooling deps.
+///
+/// Returns `Ok(Some(plan))` if the caller should return that plan (fallback triggered),
+/// or `Ok(None)` if candidates were merged successfully and the caller should continue.
+#[allow(clippy::too_many_arguments)]
+pub(super) fn apply_lockfile_seeds(
+    root: &Path,
+    seed_result: LockfileSeedResult,
+    global_config_fallback: bool,
+    all_tests: &[PathBuf],
+    global_limit: usize,
+    has_global_limit: bool,
+    selected_map: &mut BTreeMap<PathBuf, SelectedTest>,
+    used: &mut HashSet<String>,
+    group_results: &mut Vec<TestPlanGroupResult>,
+    discovered_tests: &DiscoveredTests,
+) -> Result<Option<TestPlan>> {
+    // Genuinely untraceable tooling deps (typescript, eslint, etc.) that have no
+    // import-graph path to any test file — only fall back when the caller opted in.
+    if !seed_result.untraceable_lockfiles.is_empty() && global_config_fallback {
+        let lf = &seed_result.untraceable_lockfiles[0];
+        let msg = format!(
+            "`{}` changed a transitive dependency; falling back to full test suite",
+            lf
+        );
+        let mut plan = fallback_plan(
+            root,
+            all_tests,
+            FallbackRequest {
+                group_type: "dependencies",
+                via: "transitive dependency",
+                changed_file: None,
+                limit: global_limit,
+                has_limit: has_global_limit,
+                reason: msg,
+            },
+        );
+        super::attach_targets(&mut plan, root, discovered_tests);
+        return Ok(Some(plan));
+    }
+    // Merge traceable seeds into selected_map and the dependencies group result.
+    for test in &seed_result.candidates {
+        used.insert(test.test_file.clone());
+        selected_map
+            .entry(root.join(&test.test_file))
+            .and_modify(|entry| merge_selected(entry, test))
+            .or_insert_with(|| test.clone());
+    }
+    if !seed_result.candidates.is_empty() {
+        // Append to existing dependencies group or push a new one. The group is at a
+        // known position in default_groups, but be defensive with find+modify.
+        let dep_names: Vec<String> = seed_result
+            .candidates
+            .iter()
+            .map(|t| t.test_file.clone())
+            .collect();
+        if let Some(dep_group) = group_results
+            .iter_mut()
+            .find(|g| g.r#type == "dependencies")
+        {
+            for name in dep_names {
+                if !dep_group.selected.contains(&name) {
+                    dep_group.selected.push(name);
+                }
+            }
+        } else {
+            group_results.push(TestPlanGroupResult {
+                r#type: "dependencies".to_string(),
+                selected: dep_names,
+                remaining: all_tests.len().saturating_sub(used.len()),
+                limit: None,
+            });
+        }
+    }
+    Ok(None)
 }

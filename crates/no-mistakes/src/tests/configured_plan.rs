@@ -25,7 +25,7 @@ mod lockfile_seeds;
 mod tests;
 use fallback::{fallback_plan, FallbackRequest};
 use hints::build_coverage_hints;
-use lockfile_seeds::lockfile_seed_candidates;
+use lockfile_seeds::{apply_lockfile_seeds, lockfile_seed_candidates};
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn generate_configured_plan(
@@ -195,65 +195,19 @@ pub(crate) fn generate_configured_plan(
             &all_test_set,
             &used,
         );
-        // Genuinely untraceable tooling deps (typescript, eslint, etc.) that have no
-        // import-graph path to any test file — only fall back when the caller opted in.
-        if !seed_result.untraceable_lockfiles.is_empty()
-            && effective_global_config_fallback(&env, args)
-        {
-            let lf = &seed_result.untraceable_lockfiles[0];
-            let msg = format!(
-                "`{}` changed a transitive dependency; falling back to full test suite",
-                lf
-            );
-            let mut plan = fallback_plan(
-                root,
-                &all_tests,
-                FallbackRequest {
-                    group_type: "dependencies",
-                    via: "transitive dependency",
-                    changed_file: None,
-                    limit: global_limit,
-                    has_limit: has_global_limit,
-                    reason: msg,
-                },
-            );
-            attach_targets(&mut plan, root, &discovered_tests);
-            return Ok(plan);
-        }
-        // Merge traceable seeds into selected_map and the dependencies group result.
-        for test in &seed_result.candidates {
-            used.insert(test.test_file.clone());
-            selected_map
-                .entry(root.join(&test.test_file))
-                .and_modify(|entry| merge_selected(entry, test))
-                .or_insert_with(|| test.clone());
-        }
-        if !seed_result.candidates.is_empty() {
-            // Append the newly selected tests to the dependencies group result if one
-            // already exists, otherwise push a fresh one. The group is at a known
-            // position (last by default_groups), but be defensive with find+modify.
-            let dep_names: Vec<String> = seed_result
-                .candidates
-                .iter()
-                .map(|t| t.test_file.clone())
-                .collect();
-            if let Some(dep_group) = group_results
-                .iter_mut()
-                .find(|g| g.r#type == "dependencies")
-            {
-                for name in dep_names {
-                    if !dep_group.selected.contains(&name) {
-                        dep_group.selected.push(name);
-                    }
-                }
-            } else {
-                group_results.push(TestPlanGroupResult {
-                    r#type: "dependencies".to_string(),
-                    selected: dep_names,
-                    remaining: all_tests.len().saturating_sub(used.len()),
-                    limit: None,
-                });
-            }
+        if let Some(fallback) = apply_lockfile_seeds(
+            root,
+            seed_result,
+            effective_global_config_fallback(&env, args),
+            &all_tests,
+            global_limit,
+            has_global_limit,
+            &mut selected_map,
+            &mut used,
+            &mut group_results,
+            &discovered_tests,
+        )? {
+            return Ok(fallback);
         }
     }
 
