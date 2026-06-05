@@ -86,40 +86,26 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
 
         let head = args.head.as_deref().unwrap_or("HEAD");
         let new_content = if args.head.is_some() {
-            match git_show_file(&git_root, head, &rel) {
-                Some(content) => content,
-                None => {
-                    if !git_ref_exists(&git_root, head) {
-                        eprintln!("warning: could not retrieve {} at ref {}", rel, head);
-                        continue;
-                    }
-                    // Ref is valid but file deleted at head — report all packages as removed
-                    String::new()
-                }
-            }
+            let Some(c) = git_content_or_empty(&git_root, head, &rel) else {
+                eprintln!("warning: could not retrieve {} at ref {}", rel, head);
+                continue;
+            };
+            c
         } else {
             std::fs::read_to_string(lf_path).unwrap_or_default()
         };
         let old_content = if args.head.is_some() {
-            match git_show_file(&git_root, &args.base, &rel) {
-                Some(content) => content,
-                None => {
-                    if !git_ref_exists(&git_root, &args.base) {
-                        eprintln!("warning: could not retrieve {} at ref {}", rel, args.base);
-                        continue;
-                    }
-                    // Valid base ref but file not at base — newly added at head
-                    String::new()
-                }
-            }
+            let Some(c) = git_content_or_empty(&git_root, &args.base, &rel) else {
+                eprintln!("warning: could not retrieve {} at ref {}", rel, args.base);
+                continue;
+            };
+            c
         } else {
-            match git_show_file(&git_root, &args.base, &rel) {
-                Some(content) => content,
-                None => {
-                    eprintln!("warning: could not retrieve {} at {}", rel, args.base);
-                    continue;
-                }
-            }
+            let Some(c) = git_show_file(&git_root, &args.base, &rel) else {
+                eprintln!("warning: could not retrieve {} at {}", rel, args.base);
+                continue;
+            };
+            c
         };
 
         let old_pkgs = lockfile::parse_lockfile(manager, &old_content);
@@ -153,20 +139,21 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
     Ok(ExitCode::SUCCESS)
 }
 
+const LOCKFILE_NAMES: &[&str] = &[
+    "pnpm-lock.yaml",
+    "package-lock.json",
+    "npm-shrinkwrap.json",
+    "yarn.lock",
+    "bun.lock",
+];
+
 fn detect_lockfiles_from_head(git_root: &Path, head: &str, root: &Path) -> Vec<PathBuf> {
-    let candidates = [
-        "pnpm-lock.yaml",
-        "package-lock.json",
-        "npm-shrinkwrap.json",
-        "yarn.lock",
-        "bun.lock",
-    ];
     let prefix = root
         .strip_prefix(git_root)
         .unwrap_or(std::path::Path::new(""))
         .to_string_lossy()
         .replace('\\', "/");
-    candidates
+    LOCKFILE_NAMES
         .iter()
         .filter(|name| {
             let rel = if prefix.is_empty() {
@@ -181,14 +168,7 @@ fn detect_lockfiles_from_head(git_root: &Path, head: &str, root: &Path) -> Vec<P
 }
 
 fn detect_lockfiles_in_root(root: &Path) -> Vec<PathBuf> {
-    let candidates = [
-        "pnpm-lock.yaml",
-        "package-lock.json",
-        "npm-shrinkwrap.json",
-        "yarn.lock",
-        "bun.lock",
-    ];
-    candidates
+    LOCKFILE_NAMES
         .iter()
         .map(|name| root.join(name))
         .filter(|p| p.exists())
@@ -216,6 +196,14 @@ fn git_ref_exists(root: &Path, git_ref: &str) -> bool {
         .output()
         .map(|o| o.status.success())
         .unwrap_or(false)
+}
+
+fn git_content_or_empty(git_root: &Path, git_ref: &str, rel: &str) -> Option<String> {
+    match git_show_file(git_root, git_ref, rel) {
+        Some(c) => Some(c),
+        None if git_ref_exists(git_root, git_ref) => Some(String::new()),
+        None => None,
+    }
 }
 
 fn git_show_file(root: &Path, git_ref: &str, rel_path: &str) -> Option<String> {
