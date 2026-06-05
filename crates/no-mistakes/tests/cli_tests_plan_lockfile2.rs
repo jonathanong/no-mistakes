@@ -5,8 +5,26 @@ fn bin() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
 }
 
-fn setup_git_repo_with_file(root: &std::path::Path, filename: &str, content: &str) {
-    std::fs::write(root.join(filename), content).unwrap();
+fn fixture_dir(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/tests-plan-lockfile")
+        .join(name)
+}
+
+fn copy_dir_all(src: &std::path::Path, dst: &std::path::Path) {
+    std::fs::create_dir_all(dst).unwrap();
+    for entry in std::fs::read_dir(src).unwrap() {
+        let entry = entry.unwrap();
+        let ty = entry.file_type().unwrap();
+        if ty.is_dir() {
+            copy_dir_all(&entry.path(), &dst.join(entry.file_name()));
+        } else {
+            std::fs::copy(entry.path(), dst.join(entry.file_name())).unwrap();
+        }
+    }
+}
+
+fn setup_git_repo(root: &std::path::Path) {
     Command::new("git")
         .args(["init", "-b", "main"])
         .current_dir(root)
@@ -20,7 +38,7 @@ fn setup_git_repo_with_file(root: &std::path::Path, filename: &str, content: &st
             .unwrap();
     }
     Command::new("git")
-        .args(["add", filename])
+        .args(["add", "-A"])
         .current_dir(root)
         .output()
         .unwrap();
@@ -43,10 +61,7 @@ fn stdout(output: &Output) -> String {
 fn tests_plan_binary_lockfile_fallback_is_unconditional() {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
-    std::fs::create_dir(root.join("src")).unwrap();
-    // bun.lockb is a binary lockfile — write any bytes as a stand-in
-    std::fs::write(root.join("bun.lockb"), b"binarydata").unwrap();
-    std::fs::write(root.join("src/utils.test.ts"), "export {};\n").unwrap();
+    copy_dir_all(&fixture_dir("binary-lockfile-fallback"), root);
     let output = Command::new(bin())
         .args([
             "tests",
@@ -88,50 +103,16 @@ fn tests_plan_workspace_package_bump_traces_consumers() {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
 
-    std::fs::write(
-        root.join("pnpm-workspace.yaml"),
-        "packages:\n  - packages/*\n",
-    )
-    .unwrap();
+    // Copy and commit the initial workspace layout (includes the "before" lockfile)
+    copy_dir_all(&fixture_dir("workspace-package-bump/initial"), root);
+    setup_git_repo(root);
 
-    // Workspace package: lib
-    std::fs::create_dir_all(root.join("packages/lib/src")).unwrap();
-    std::fs::write(
-        root.join("packages/lib/package.json"),
-        r#"{"name":"lib","main":"src/index.ts"}"#,
+    // Replace the lockfile with the "after" version on disk (uncommitted)
+    std::fs::copy(
+        fixture_dir("workspace-package-bump/after-pnpm-lock.yaml"),
+        root.join("pnpm-lock.yaml"),
     )
     .unwrap();
-    std::fs::write(
-        root.join("packages/lib/src/index.ts"),
-        "export const foo = 1;\n",
-    )
-    .unwrap();
-
-    // Workspace package: app (consumer of lib)
-    std::fs::create_dir_all(root.join("packages/app/src")).unwrap();
-    std::fs::write(
-        root.join("packages/app/package.json"),
-        r#"{"name":"app","dependencies":{"lib":"workspace:*"}}"#,
-    )
-    .unwrap();
-    std::fs::write(
-        root.join("packages/app/src/utils.ts"),
-        "import { foo } from 'lib';\nexport { foo };\n",
-    )
-    .unwrap();
-    std::fs::write(
-        root.join("packages/app/src/utils.test.ts"),
-        "import { foo } from './utils.ts';\n",
-    )
-    .unwrap();
-
-    // Commit old lockfile at base
-    let old_lock = "lockfileVersion: '9.0'\n\npackages:\n  lib@1.0.0:\n    resolution: {directory: packages/lib, type: directory}\n";
-    setup_git_repo_with_file(root, "pnpm-lock.yaml", old_lock);
-
-    // Bump lib version on disk
-    let new_lock = "lockfileVersion: '9.0'\n\npackages:\n  lib@1.1.0:\n    resolution: {directory: packages/lib, type: directory}\n";
-    std::fs::write(root.join("pnpm-lock.yaml"), new_lock).unwrap();
 
     let output = Command::new(bin())
         .args([
@@ -173,8 +154,8 @@ fn tests_plan_workspace_package_bump_traces_consumers() {
 fn tests_plan_invalid_head_ref_warns_and_falls_back() {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
-    let lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
-    setup_git_repo_with_file(root, "pnpm-lock.yaml", lock);
+    copy_dir_all(&fixture_dir("invalid-head-ref"), root);
+    setup_git_repo(root);
     let output = Command::new(bin())
         .args([
             "tests",
