@@ -401,6 +401,65 @@ fn lockfile_diff_head_autodetect_from_commit() {
     );
 }
 
+// Covers the no-head newly-added-lockfile path: when --base is a valid ref but the
+// lockfile did not exist at that ref, treat the old content as empty so all packages
+// in the current working-tree lockfile are reported as added.
+#[test]
+fn lockfile_diff_no_head_newly_added_lockfile_reports_added() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    // Initial commit with NO lockfile
+    Command::new("git")
+        .args(["init", "-b", "main"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    for (k, v) in [("user.email", "test@test.com"), ("user.name", "Test")] {
+        Command::new("git")
+            .args(["config", k, v])
+            .current_dir(root)
+            .output()
+            .unwrap();
+    }
+    Command::new("git")
+        .args(["commit", "--allow-empty", "-m", "empty"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    // Write lockfile to disk only (not yet committed)
+    let lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
+    std::fs::write(root.join("pnpm-lock.yaml"), lock).unwrap();
+    let output = Command::new(bin())
+        .args([
+            "lockfile",
+            "diff",
+            "--root",
+            root.to_str().unwrap(),
+            "--base",
+            "HEAD",
+            "--lockfile",
+            "pnpm-lock.yaml",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let arr: Vec<serde_json::Value> = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(
+        arr.len(),
+        1,
+        "should detect newly added lockfile in working tree: {arr:?}"
+    );
+    let added = arr[0]["added"].as_array().unwrap();
+    assert!(
+        added.iter().any(|v| v == "lodash"),
+        "lodash should be reported as added: {added:?}"
+    );
+}
+
 // Covers the explicit binary lockfile path in run_diff: when --lockfile explicitly
 // names a binary lockfile (bun.lockb), detect_manager returns None and the command
 // should emit a warning to stderr rather than silently producing an empty result.

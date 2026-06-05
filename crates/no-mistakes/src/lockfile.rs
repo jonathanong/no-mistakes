@@ -97,18 +97,9 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
         } else {
             std::fs::read_to_string(lf_path).unwrap_or_default()
         };
-        let old_content = if args.head.is_some() {
-            let Some(c) = git_content_or_empty(&git_root, &args.base, &rel) else {
-                eprintln!("warning: could not retrieve {} at ref {}", rel, args.base);
-                continue;
-            };
-            c
-        } else {
-            let Some(c) = git_show_file(&git_root, &args.base, &rel) else {
-                eprintln!("warning: could not retrieve {} at {}", rel, args.base);
-                continue;
-            };
-            c
+        let Some(old_content) = git_content_or_empty(&git_root, &args.base, &rel) else {
+            eprintln!("warning: could not retrieve {} at ref {}", rel, args.base);
+            continue;
         };
 
         let old_pkgs = lockfile::parse_lockfile(manager, &old_content);

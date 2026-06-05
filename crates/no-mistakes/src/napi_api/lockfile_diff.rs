@@ -58,6 +58,12 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
     for lf_path in &lf_paths {
         let basename = lf_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
         let Some(manager) = lockfile::detect_manager(basename) else {
+            if lockfile::is_binary_lockfile(basename) {
+                return Err(napi::Error::from_reason(format!(
+                    "`{}` is a binary lockfile and cannot be parsed for dependency changes",
+                    basename
+                )));
+            }
             continue;
         };
         let rel = lf_path
@@ -97,12 +103,19 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
                 }
             }
         } else {
-            git_show_file(&git_root, &base, &rel).ok_or_else(|| {
-                napi::Error::from_reason(format!(
-                    "Could not retrieve `{}` at ref `{}`; ensure the base ref exists in the git history",
-                    rel, base
-                ))
-            })?
+            match git_show_file(&git_root, &base, &rel) {
+                Some(c) => c,
+                None => {
+                    if !git_ref_exists(&git_root, &base) {
+                        return Err(napi::Error::from_reason(format!(
+                            "Could not retrieve `{}` at ref `{}`; ensure the base ref exists in the git history",
+                            rel, base
+                        )));
+                    }
+                    // Valid base ref but file not at base — newly added lockfile; report all as added
+                    String::new()
+                }
+            }
         };
         let old_pkgs = lockfile::parse_lockfile(manager, &old_content);
         let new_pkgs = lockfile::parse_lockfile(manager, &new_content);
