@@ -76,6 +76,9 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
     for lf_path in &lockfile_paths {
         let basename = lf_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
         let Some(manager) = lockfile::detect_manager(basename) else {
+            if lockfile::is_binary_lockfile(basename) {
+                eprintln!("warning: `{basename}` is a binary lockfile and cannot be parsed for dependency changes");
+            }
             continue;
         };
         let rel = lf_path

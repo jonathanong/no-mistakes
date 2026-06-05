@@ -11,6 +11,10 @@ pub(crate) struct LockfileAnalysis {
     /// --global-config-fallback=false because a lockfile change was detected but
     /// its new content is unreadable, so zero selected tests would be incorrect.
     pub diff_only_fallback: bool,
+    /// True when a binary lockfile (e.g. bun.lockb) triggered the fallback.
+    /// Binary lockfiles cannot be parsed, so zero selected tests would be
+    /// incorrect; this fallback must not be gated by --global-config-fallback.
+    pub binary_lockfile_fallback: bool,
 }
 
 pub(crate) fn analyze_lockfile_changes(
@@ -22,6 +26,7 @@ pub(crate) fn analyze_lockfile_changes(
     let mut warnings = Vec::new();
     let mut fallback_triggered = false;
     let mut diff_only_fallback = false;
+    let mut binary_lockfile_fallback = false;
 
     let git_root = find_git_root(root).unwrap_or_else(|| root.to_path_buf());
 
@@ -39,6 +44,7 @@ pub(crate) fn analyze_lockfile_changes(
                 file: rel,
             });
             fallback_triggered = true;
+            binary_lockfile_fallback = true;
             continue;
         }
 
@@ -128,6 +134,7 @@ pub(crate) fn analyze_lockfile_changes(
         warnings,
         fallback_triggered,
         diff_only_fallback,
+        binary_lockfile_fallback,
     }
 }
 

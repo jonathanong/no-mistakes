@@ -94,13 +94,15 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
 
     // 2b. Determine fallback trigger.
     //
-    // Diff-only mode fallback (--diff without --head) is always honored: a lockfile change
-    // was detected in the diff but its new content is unreadable, so zero selected tests
-    // would be incorrect and the fallback must not be suppressed by --global-config-fallback.
+    // Diff-only mode fallback (--diff without --head) and binary-lockfile fallback
+    // are always honored: in both cases a lockfile change was detected but cannot
+    // be parsed, so zero selected tests would be incorrect, and the fallback must
+    // not be suppressed by --global-config-fallback.
     //
     // Other lockfile fallbacks (no --base, invalid ref) and global-config triggers
     // (package.json, tsconfig, etc.) respect the --global-config-fallback flag.
     let fallback_reason = if lockfile_analysis.diff_only_fallback
+        || lockfile_analysis.binary_lockfile_fallback
         || (global_config_fallback(args) && lockfile_analysis.fallback_triggered)
     {
         lockfile_analysis
@@ -150,6 +152,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     } else {
         DepGraph::build(root.as_path(), &tsconfig)?
     };
+    let workspace_map = no_mistakes::codebase::workspaces::load(&root).unwrap_or_default();
     let test_filter = TestFileFilter::new(root.as_path(), &config);
 
     let mut selected_map: HashMap<PathBuf, SelectedTest> = HashMap::new();
@@ -296,16 +299,23 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     // 4b. Trace lockfile package dependency changes
     let mut untraceable_lockfile_files: Vec<String> = Vec::new();
     for (pkg_name, lockfile_rel) in &lockfile_changed_packages {
-        let start_node = NodeId::Module(pkg_name.clone());
-
-        // If nothing in the codebase directly imports this package, it is a transitive
-        // dependency. We cannot trace impact through the module graph in that case.
-        if !graph.has_reverse_node(&start_node) {
-            if !untraceable_lockfile_files.contains(lockfile_rel) {
-                untraceable_lockfile_files.push(lockfile_rel.clone());
+        // For external packages the graph has Module(name) nodes created from import edges.
+        // For workspace packages the graph records File(entry) targets instead
+        // (collect_workspace_manifest_edges resolves the specifier to a file). Try the
+        // module node first; fall back to the workspace entry when the module is absent.
+        let start_node = {
+            let module_node = NodeId::Module(pkg_name.clone());
+            if graph.has_reverse_node(&module_node) {
+                module_node
+            } else if let Some(entry) = workspace_map.resolve_package(pkg_name) {
+                NodeId::File(entry.clone())
+            } else {
+                if !untraceable_lockfile_files.contains(lockfile_rel) {
+                    untraceable_lockfile_files.push(lockfile_rel.clone());
+                }
+                continue;
             }
-            continue;
-        }
+        };
 
         let (reachable_tests, path_parents) =
             bfs_path_find(&graph, &start_node, &test_filter, &root);

@@ -400,3 +400,36 @@ fn lockfile_diff_head_autodetect_from_commit() {
         "should detect lodash changed: {changed:?}"
     );
 }
+
+// Covers the explicit binary lockfile path in run_diff: when --lockfile explicitly
+// names a binary lockfile (bun.lockb), detect_manager returns None and the command
+// should emit a warning to stderr rather than silently producing an empty result.
+#[test]
+fn lockfile_diff_explicit_binary_lockfile_warns() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    // Write a minimal bun.lockb stand-in so the path exists
+    std::fs::write(root.join("bun.lockb"), b"binarydata").unwrap();
+    setup_git_repo_with_file(root, "bun.lockb", "binarydata");
+    let output = Command::new(bin())
+        .args([
+            "lockfile",
+            "diff",
+            "--root",
+            root.to_str().unwrap(),
+            "--base",
+            "HEAD",
+            "--lockfile",
+            "bun.lockb",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(output.status.success(), "should exit 0");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("binary lockfile"),
+        "should warn about binary lockfile: {stderr}"
+    );
+    let arr: Vec<serde_json::Value> = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(arr.len(), 0, "binary lockfile produces empty diff: {arr:?}");
+}
