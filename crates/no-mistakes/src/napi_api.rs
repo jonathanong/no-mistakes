@@ -9,6 +9,7 @@ mod analyze_project;
 mod async_task;
 mod cli_parity;
 mod codebase;
+mod lockfile_diff;
 mod options;
 mod project;
 
@@ -23,6 +24,7 @@ pub(crate) use cli_parity::{
 pub(crate) use codebase::{
     dependencies_json_impl, dependents_json_impl, related_json_impl, symbols_json_impl,
 };
+pub(crate) use lockfile_diff::lockfile_diff_json_impl;
 pub(crate) use project::{
     queue_check_json_impl, queue_edges_json_impl, queue_related_json_impl, queues_json_impl,
     react_analyze_json_impl, react_check_json_impl, server_route_edges_json_impl,
@@ -205,4 +207,10 @@ pub fn react_analyze_json(options_json: String) -> AsyncTask<JsonTask> {
 #[cfg_attr(not(test), napi(js_name = "reactCheckJson"))]
 pub fn react_check_json(options_json: String) -> AsyncTask<JsonTask> {
     AsyncTask::new(JsonTask::new(options_json, react_check_json_impl))
+}
+
+#[cfg(not(coverage))]
+#[cfg_attr(not(test), napi(js_name = "lockfileDiffJson"))]
+pub fn lockfile_diff_json(options_json: String) -> AsyncTask<JsonTask> {
+    AsyncTask::new(JsonTask::new(options_json, lockfile_diff_json_impl))
 }

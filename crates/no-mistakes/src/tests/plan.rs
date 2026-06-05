@@ -54,9 +54,42 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     let changed_files = super::changed_files::existing_changed_files(&collected);
     let deleted_files = &collected.deleted;
 
+    // 2a. Analyze lockfile changes targeted
+    let lockfile_analysis =
+        super::lockfile_changes::analyze_lockfile_changes(args, &root, &collected.files);
+
     if let Some(framework) = args.framework {
-        let forced_fallback = global_config_trigger(&root, &changed_files);
-        return super::configured_plan::generate_configured_plan(
+        let forced_fallback = global_config_trigger(&root, &changed_files).or_else(|| {
+            if lockfile_analysis.fallback_triggered {
+                lockfile_analysis
+                    .warnings
+                    .first()
+                    .map(|w| (w.message.clone(), root.join(&w.file)))
+            } else if let Some((lf_path, _)) = lockfile_analysis.diff_by_lockfile.first() {
+                // Framework plan BFS starts from file nodes; lockfile package nodes
+                // (NodeId::Module) are not wired into the configured-plan group
+                // traversal, so a lockfile-only dependency bump selects no tests.
+                // Fall back to the full suite so no impacted tests are missed.
+                let rel = relative_path(&root, lf_path);
+                Some((
+                    format!(
+                        "`{}` has dependency changes; framework plans run the full suite for lockfile changes",
+                        rel
+                    ),
+                    lf_path.clone(),
+                ))
+            } else {
+                None
+            }
+        });
+        // Unconditional fallbacks must bypass --global-config-fallback:
+        // - diff-only / binary-lockfile: lockfile unreadable, zero tests would be wrong
+        // - parseable lockfile diff in a framework plan: NodeId::Module seeds are not
+        //   wired into the configured-plan group traversal, so we fall back conservatively
+        let unconditional_fallback = lockfile_analysis.diff_only_fallback
+            || lockfile_analysis.binary_lockfile_fallback
+            || !lockfile_analysis.diff_by_lockfile.is_empty();
+        let mut plan = super::configured_plan::generate_configured_plan(
             args,
             framework,
             &root,
@@ -65,38 +98,71 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
             &changed_files,
             &collected.diff_files,
             forced_fallback,
-        );
+            unconditional_fallback,
+        )?;
+        plan.warnings.extend(lockfile_analysis.warnings);
+        return Ok(plan);
     }
+    let lockfile_changed_packages: Vec<(String, String)> = lockfile_analysis
+        .diff_by_lockfile
+        .iter()
+        .flat_map(|(lockfile_path, lf_diff)| {
+            let rel = relative_path(&root, lockfile_path);
+            lf_diff
+                .all_changed_names()
+                .map(|name| (name.to_string(), rel.clone()))
+                .collect::<Vec<_>>()
+        })
+        .collect();
 
-    // 2. Check for global configuration files
-    if global_config_fallback(args) {
-        if let Some((reason, trigger_file)) = global_config_trigger(&root, &changed_files) {
-            let relative_changed = relative_path(&root, &trigger_file);
-            // Trigger fallback
-            let all_test_files = discover_all_tests(&root, &config)?;
-            let mut selected_tests = Vec::new();
-            for test in all_test_files {
-                let rel_test = relative_path(&root, &test);
-                selected_tests.push(SelectedTest {
-                    test_file: rel_test.clone(),
-                    confidence: Confidence::High,
-                    targets: Vec::new(),
-                    reasons: vec![ImpactReason {
-                        changed_file: relative_changed.clone(),
-                        path: vec![relative_changed.clone(), rel_test],
-                        via: vec!["global configuration".to_string()],
-                    }],
-                });
-            }
-            selected_tests.sort_by(|a, b| a.test_file.cmp(&b.test_file));
-            return Ok(TestPlan {
-                selected_tests,
-                groups: Vec::new(),
-                warnings: Vec::new(),
-                fallback_triggered: true,
-                fallback_reason: Some(reason),
+    // 2b. Determine fallback trigger.
+    //
+    // Diff-only mode fallback (--diff without --head) and binary-lockfile fallback
+    // are always honored: in both cases a lockfile change was detected but cannot
+    // be parsed, so zero selected tests would be incorrect, and the fallback must
+    // not be suppressed by --global-config-fallback.
+    //
+    // Other lockfile fallbacks (no --base, invalid ref) and global-config triggers
+    // (package.json, tsconfig, etc.) respect the --global-config-fallback flag.
+    let fallback_reason = if lockfile_analysis.diff_only_fallback
+        || lockfile_analysis.binary_lockfile_fallback
+        || (global_config_fallback(args) && lockfile_analysis.fallback_triggered)
+    {
+        lockfile_analysis
+            .warnings
+            .first()
+            .map(|w| (w.message.clone(), root.join(&w.file)))
+    } else if global_config_fallback(args) {
+        global_config_trigger(&root, &changed_files)
+    } else {
+        None
+    };
+
+    if let Some((reason, trigger_file)) = fallback_reason {
+        let relative_changed = relative_path(&root, &trigger_file);
+        let all_test_files = discover_all_tests(&root, &config)?;
+        let mut selected_tests = Vec::new();
+        for test in all_test_files {
+            let rel_test = relative_path(&root, &test);
+            selected_tests.push(SelectedTest {
+                test_file: rel_test.clone(),
+                confidence: Confidence::High,
+                targets: Vec::new(),
+                reasons: vec![ImpactReason {
+                    changed_file: relative_changed.clone(),
+                    path: vec![relative_changed.clone(), rel_test],
+                    via: vec!["global configuration".to_string()],
+                }],
             });
         }
+        selected_tests.sort_by(|a, b| a.test_file.cmp(&b.test_file));
+        return Ok(TestPlan {
+            selected_tests,
+            groups: Vec::new(),
+            warnings: lockfile_analysis.warnings,
+            fallback_triggered: true,
+            fallback_reason: Some(reason),
+        });
     }
 
     // 3. Build graph and test filter
@@ -109,6 +175,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     } else {
         DepGraph::build(root.as_path(), &tsconfig)?
     };
+    let workspace_map = no_mistakes::codebase::workspaces::load(&root).unwrap_or_default();
     let test_filter = TestFileFilter::new(root.as_path(), &config);
 
     let mut selected_map: HashMap<PathBuf, SelectedTest> = HashMap::new();
@@ -117,6 +184,13 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
 
     // 4. Trace each changed file
     for changed in &changed_files {
+        let basename = changed.file_name().and_then(|n| n.to_str()).unwrap_or("");
+        if no_mistakes::codebase::lockfile::detect_manager(basename).is_some()
+            || no_mistakes::codebase::lockfile::is_binary_lockfile(basename)
+        {
+            continue;
+        }
+
         let rel_changed = relative_path(&root, changed);
 
         // If the changed file is a test file itself, select it directly
@@ -245,6 +319,128 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
         }
     }
 
+    // 4b. Trace lockfile package dependency changes
+    let mut untraceable_lockfile_files: Vec<String> = Vec::new();
+    for (pkg_name, lockfile_rel) in &lockfile_changed_packages {
+        // For external packages the graph has Module(name) nodes created from import edges.
+        // For workspace packages the graph records File(entry) targets instead
+        // (collect_workspace_manifest_edges resolves the specifier to a file). Try the
+        // module node first; fall back to the workspace entry when the module is absent.
+        let start_node = {
+            let module_node = NodeId::Module(pkg_name.clone());
+            if graph.has_reverse_node(&module_node) {
+                module_node
+            } else if let Some(entry) = workspace_map.resolve_package(pkg_name) {
+                NodeId::File(entry.clone())
+            } else {
+                if !untraceable_lockfile_files.contains(lockfile_rel) {
+                    untraceable_lockfile_files.push(lockfile_rel.clone());
+                }
+                continue;
+            }
+        };
+
+        let (reachable_tests, path_parents) =
+            bfs_path_find(&graph, &start_node, &test_filter, &root);
+
+        // Package is referenced (e.g. by package.json) but no test file is reachable.
+        // Likely a tooling dep (typescript, jest, eslint) whose version bump affects
+        // how tests run but has no import-graph path to any test file.
+        if reachable_tests.is_empty() {
+            if !untraceable_lockfile_files.contains(lockfile_rel) {
+                untraceable_lockfile_files.push(lockfile_rel.clone());
+            }
+            continue;
+        }
+
+        for (test_node, edge_path) in reachable_tests {
+            let test_path = match &test_node {
+                NodeId::File(p) => p.clone(),
+                _ => continue,
+            };
+            let rel_test = relative_path(&root, &test_path);
+            let path_conf = path_confidence(&edge_path);
+
+            let mut node_chain = Vec::new();
+            let mut curr = test_node.clone();
+            node_chain.push(slash_node_name(&curr, &root));
+            while let Some((parent, _)) = path_parents.get(&curr) {
+                node_chain.push(slash_node_name(parent, &root));
+                curr = parent.clone();
+            }
+            node_chain.reverse();
+
+            let via_strings: Vec<String> = edge_path
+                .iter()
+                .map(|k| impact_reason_label(*k).to_string())
+                .collect();
+
+            let reason = ImpactReason {
+                changed_file: lockfile_rel.clone(),
+                path: node_chain,
+                via: via_strings,
+            };
+
+            let entry = selected_map
+                .entry(test_path)
+                .or_insert_with(|| SelectedTest {
+                    test_file: rel_test.clone(),
+                    confidence: path_conf,
+                    targets: Vec::new(),
+                    reasons: Vec::new(),
+                });
+
+            if path_conf > entry.confidence {
+                entry.confidence = path_conf;
+            }
+
+            if !entry.reasons.contains(&reason) {
+                entry.reasons.push(reason);
+            }
+        }
+    }
+
+    // 4c. Fallback for untraceable transitive lockfile packages
+    if global_config_fallback(args) && !untraceable_lockfile_files.is_empty() {
+        let file = untraceable_lockfile_files[0].clone();
+        let msg = format!(
+            "`{}` changed a transitive dependency; falling back to full test suite",
+            file
+        );
+        let all_test_files = discover_all_tests(&root, &config)?;
+        let mut selected_tests: Vec<SelectedTest> = all_test_files
+            .into_iter()
+            .map(|test| {
+                let rel_test = relative_path(&root, &test);
+                SelectedTest {
+                    test_file: rel_test.clone(),
+                    confidence: Confidence::High,
+                    targets: Vec::new(),
+                    reasons: vec![ImpactReason {
+                        changed_file: file.clone(),
+                        path: vec![file.clone(), rel_test],
+                        via: vec!["transitive dependency".to_string()],
+                    }],
+                }
+            })
+            .collect();
+        selected_tests.sort_by(|a, b| a.test_file.cmp(&b.test_file));
+        return Ok(TestPlan {
+            selected_tests,
+            groups: Vec::new(),
+            warnings: Vec::new(),
+            fallback_triggered: true,
+            fallback_reason: Some(msg),
+        });
+    }
+
+    // Merge lockfile analysis warnings
+    for warn in lockfile_analysis.warnings {
+        if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+            warnings.push(warn);
+        }
+    }
+
     // 5. Trace deleted files (phantom node lookup in reverse map)
     trace_deleted_files(
         deleted_files,
@@ -306,13 +502,7 @@ pub(crate) fn global_config_trigger(
 fn is_global_config_path(root: &Path, absolute: &Path, relative: &str) -> bool {
     if matches!(
         relative,
-        "package.json"
-            | "pnpm-lock.yaml"
-            | "package-lock.json"
-            | "yarn.lock"
-            | "tsconfig.json"
-            | ".no-mistakes.yml"
-            | ".no-mistakes.yaml"
+        "package.json" | "tsconfig.json" | ".no-mistakes.yml" | ".no-mistakes.yaml"
     ) {
         return true;
     }
@@ -364,178 +554,4 @@ fn discover_all_tests(
     )
 }
 
-pub(crate) fn slash_node_name(node: &NodeId, root: &Path) -> String {
-    match node {
-        NodeId::File(p) => no_mistakes::codebase::ts_source::relative_slash_path(root, p),
-        NodeId::Symbol { file, symbol } => {
-            let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, file);
-            format!("{}#{}", rel, symbol)
-        }
-        NodeId::Module(specifier) => specifier.clone(),
-        NodeId::QueueJob { queue_file, job } => {
-            let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, queue_file);
-            format!("{}#{}", rel, job)
-        }
-    }
-}
-
-pub(crate) fn relative_path(root: &Path, absolute: &Path) -> String {
-    no_mistakes::codebase::ts_source::relative_slash_path(root, absolute)
-}
-
-fn changed_start_nodes(graph: &DepGraph, changed: &Path, include_symbols: bool) -> Vec<NodeId> {
-    symbol_aware_start_nodes(graph, changed, None, include_symbols)
-}
-
-pub(crate) fn symbol_aware_start_nodes(
-    graph: &DepGraph,
-    file: &Path,
-    symbol: Option<&String>,
-    include_symbols: bool,
-) -> Vec<NodeId> {
-    if let Some(symbol) = symbol.filter(|_| include_symbols) {
-        return vec![NodeId::Symbol {
-            file: file.to_path_buf(),
-            symbol: symbol.clone(),
-        }];
-    }
-    let file_node = NodeId::File(file.to_path_buf());
-    let mut starts = vec![file_node.clone()];
-    if include_symbols {
-        if let Some(neighbors) = graph.dependencies_of_node(&file_node) {
-            starts.extend(neighbors.iter().filter_map(|(node, _)| match node {
-                NodeId::Symbol {
-                    file: symbol_file, ..
-                } if symbol_file == file => Some(node.clone()),
-                _ => None,
-            }));
-        }
-    }
-    starts.sort();
-    starts.dedup();
-    starts
-}
-
-/// Custom BFS path finder in the reverse (dependents) direction.
-/// Returns reachable test nodes, and a map of node -> (parent, edge_kind) for shortest paths.
-#[allow(clippy::type_complexity)]
-pub(crate) fn bfs_path_find(
-    graph: &DepGraph,
-    start: &NodeId,
-    test_filter: &TestFileFilter,
-    root: &Path,
-) -> (
-    Vec<(NodeId, Vec<EdgeKind>)>,
-    HashMap<NodeId, (NodeId, EdgeKind)>,
-) {
-    let mut queue = VecDeque::new();
-    let mut parents: HashMap<NodeId, (NodeId, EdgeKind)> = HashMap::new();
-    let mut visited = HashSet::new();
-    let mut owner_widened_files = HashSet::new();
-    let mut reachable = Vec::new();
-
-    queue.push_back(start.clone());
-    visited.insert(start.clone());
-
-    while let Some(current) = queue.pop_front() {
-        // Check if current is a test file
-        if let NodeId::File(p) = &current {
-            if current != *start && test_filter.is_match(root, p) {
-                // Reconstruct the path of edges to current
-                let mut edge_path = Vec::new();
-                let mut curr_node = current.clone();
-                while let Some((parent, kind)) = parents.get(&curr_node) {
-                    edge_path.push(*kind);
-                    curr_node = parent.clone();
-                }
-                edge_path.reverse();
-                reachable.push((current.clone(), edge_path));
-            }
-        }
-
-        // Get dependents
-        if let Some(neighbors) = graph.dependents_of_node(&current) {
-            for (neighbor, kind) in neighbors {
-                if owner_widened_files.contains(&current)
-                    && !owner_widened_neighbor_allowed(
-                        root,
-                        test_filter,
-                        graph,
-                        neighbor,
-                        neighbors,
-                    )
-                {
-                    continue;
-                }
-                if let (NodeId::Symbol { file, .. }, NodeId::File(neighbor_file)) =
-                    (&current, neighbor)
-                {
-                    if current == *start
-                        && file == neighbor_file
-                        && !test_filter.is_match(root, neighbor_file)
-                    {
-                        continue;
-                    }
-                }
-                if !visited.contains(neighbor) {
-                    if let (NodeId::Symbol { file, .. }, NodeId::File(neighbor_file)) =
-                        (&current, neighbor)
-                    {
-                        if file == neighbor_file {
-                            owner_widened_files.insert(neighbor.clone());
-                        }
-                    }
-                    visited.insert(neighbor.clone());
-                    parents.insert(neighbor.clone(), (current.clone(), *kind));
-                    queue.push_back(neighbor.clone());
-                }
-            }
-        }
-    }
-
-    (reachable, parents)
-}
-
-pub(crate) fn path_confidence(edges: &[EdgeKind]) -> Confidence {
-    let mut conf = Confidence::High;
-    for edge in edges {
-        match edge {
-            EdgeKind::HttpCall
-            | EdgeKind::ProcessSpawn
-            | EdgeKind::QueueEnqueue
-            | EdgeKind::QueueWorker
-            | EdgeKind::RouteRef
-            | EdgeKind::Layout
-            | EdgeKind::RouteTest
-            | EdgeKind::Selector
-            | EdgeKind::AssetImport
-            | EdgeKind::ReactRender
-            | EdgeKind::PackageDependency => return Confidence::Low,
-            EdgeKind::DynamicImport => conf = Confidence::Medium,
-            _ => {}
-        }
-    }
-    conf
-}
-
-pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
-    match edge {
-        EdgeKind::Import
-        | EdgeKind::TypeImport
-        | EdgeKind::DynamicImport
-        | EdgeKind::Require
-        | EdgeKind::WorkspaceImport => "dependency",
-        EdgeKind::PackageDependency => "package-json dependency",
-        EdgeKind::RouteRef | EdgeKind::RouteTest => "route",
-        EdgeKind::Layout => "layout",
-        EdgeKind::TestOf => "test",
-        EdgeKind::QueueEnqueue | EdgeKind::QueueWorker => "queue",
-        EdgeKind::MarkdownLink => "md",
-        EdgeKind::CiInvocation => "ci",
-        EdgeKind::HttpCall => "http",
-        EdgeKind::ProcessSpawn => "process",
-        EdgeKind::AssetImport => "asset",
-        EdgeKind::ReactRender => "react-render",
-        EdgeKind::Selector => "selector",
-    }
-}
+include!("plan_bfs.rs");

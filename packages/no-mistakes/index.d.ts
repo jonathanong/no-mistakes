@@ -5,6 +5,8 @@ import type {
   DependencyResult,
   FetchesOptions,
   GraphEdge,
+  LockfileDiffEntry,
+  LockfileDiffOptions,
   PlaywrightOptions,
   PlaywrightRelatedOptions,
   ProjectOptions,
@@ -53,4 +55,5 @@ export function serverRouteEdges(options?: ProjectOptions): Promise<GraphEdge[]>
 export function serverRouteRelated(options: ProjectOptions): Promise<GraphEdge[]>;
 export function reactAnalyze(options?: ProjectOptions): Promise<ReactComponentFacts[]>;
 export function reactCheck(options?: ProjectOptions): Promise<ReactViolation[]>;
+export function lockfileDiff(options: LockfileDiffOptions): Promise<LockfileDiffEntry[]>;
 export function version(): Promise<string>;

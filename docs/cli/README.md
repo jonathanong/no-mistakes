@@ -20,6 +20,7 @@ analysis.
 | [`symbols`](symbols.md) | Named exports and imports in TS/JS files. |
 | [`fetches`](fetches.md) | Next.js routes mapped to static fetch API calls. |
 | [`check`](check.md) | Configured project-wide checks. |
+| [`lockfile`](lockfile.md) | Show which packages changed between two lockfile versions. |
 | [`tests`](tests.md) | Test plan, impact, explanation, comments, and graphs. |
 | [`playwright`](playwright.md) | Playwright route, selector, and assertion coverage. |
 | [`react`](react.md) | React component trait analysis and fetch checks. |

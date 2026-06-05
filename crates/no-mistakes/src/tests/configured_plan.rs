@@ -34,6 +34,7 @@ pub(crate) fn generate_configured_plan(
     changed_files: &[PathBuf],
     diff_files: &[DiffFile],
     forced_fallback: Option<(String, PathBuf)>,
+    unconditional_fallback: bool,
 ) -> Result<TestPlan> {
     let env = configured_environment(args, framework, config)?;
     let discovered_tests = discover_framework_tests(root, config, framework, &env)?;
@@ -44,7 +45,7 @@ pub(crate) fn generate_configured_plan(
     let global_limit =
         limit_count(effective_limit.as_ref(), all_tests.len()).unwrap_or(all_tests.len());
 
-    if effective_global_config_fallback(&env, args) {
+    if unconditional_fallback || effective_global_config_fallback(&env, args) {
         if let Some((reason, trigger_file)) = forced_fallback.as_ref() {
             let mut plan = fallback_plan(
                 root,

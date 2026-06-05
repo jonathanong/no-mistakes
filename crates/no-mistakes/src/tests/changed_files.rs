@@ -36,10 +36,21 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
         }
     }
 
+    // Track whether the caller supplied explicit file args so that a git-diff
+    // failure is non-fatal: the explicit list is still valid input for lockfile
+    // analysis, which will emit its own warning about the missing baseline.
+    let has_explicit_files = !args.changed_file.is_empty() || args.changed_files.is_some();
     if let Some(ref base) = args.base {
-        let git_files = get_git_changed_files(root, base, args.head.as_deref())?;
-        for f in git_files {
-            files.push(root.join(f));
+        match get_git_changed_files(root, base, args.head.as_deref()) {
+            Ok(git_files) => {
+                for f in git_files {
+                    files.push(root.join(f));
+                }
+            }
+            Err(e) if has_explicit_files => {
+                eprintln!("warning: git diff failed ({e}); using explicit --changed-file list");
+            }
+            Err(e) => return Err(e),
         }
     }
 

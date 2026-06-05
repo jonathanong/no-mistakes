@@ -1,0 +1,22 @@
+lockfileVersion: '9.0'
+
+packages:
+  lodash@4.17.21:
+    resolution: {integrity: sha512-abc123}
+
+  '@scope/pkg@1.0.0':
+    resolution: {integrity: sha512-scoped}
+
+  github.com/org/repo:
+    resolution: {repo: 'https://github.com/org/repo', commit: abc123}
+
+  some-tarball@1.0.0:
+    resolution: {tarball: 'https://example.com/pkg.tgz'}
+
+  local-pkg@1.0.0:
+    resolution: {directory: '../local-pkg'}
+
+  commit-only@1.0.0:
+    resolution: {commit: deadbeef}
+
+  no-resolution@1.0.0: {}

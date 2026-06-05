@@ -21,6 +21,7 @@ words:
   - guardrailsrc
   - jsonc
   - linecount
+  - lockfiles
   - markdown
   - nextjs
   - Ong
