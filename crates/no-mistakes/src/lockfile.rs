@@ -74,7 +74,7 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
             .strip_prefix(&root)
             .unwrap_or(lf_path)
             .to_string_lossy()
-            .to_string();
+            .replace('\\', "/");
 
         let new_content = std::fs::read_to_string(lf_path).unwrap_or_default();
         let Some(old_content) = git_show_file(&root, &args.base, &rel) else {
@@ -117,6 +117,7 @@ fn detect_lockfiles_in_root(root: &Path) -> Vec<PathBuf> {
     let candidates = [
         "pnpm-lock.yaml",
         "package-lock.json",
+        "npm-shrinkwrap.json",
         "yarn.lock",
         "bun.lock",
     ];

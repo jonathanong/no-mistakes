@@ -31,6 +31,7 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
         [
             "pnpm-lock.yaml",
             "package-lock.json",
+            "npm-shrinkwrap.json",
             "yarn.lock",
             "bun.lock",
         ]
@@ -51,7 +52,7 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
             .strip_prefix(&root)
             .unwrap_or(lf_path)
             .to_string_lossy()
-            .to_string();
+            .replace('\\', "/");
         let new_content = std::fs::read_to_string(lf_path).unwrap_or_default();
         let old_content = git_show_file(&root, &options.base, &rel).unwrap_or_default();
         let old_pkgs = lockfile::parse_lockfile(manager, &old_content);
