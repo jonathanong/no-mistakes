@@ -402,6 +402,74 @@ fn lockfile_diff_json_impl_invalid_head_no_lockfile_returns_empty() {
 }
 
 #[test]
+fn lockfile_diff_json_impl_unknown_lockfile_name_skipped() {
+    // When an explicit lockfile path has a name not recognized by detect_manager,
+    // the entry is skipped → empty result (no error).
+    let dir = tempfile::tempdir().unwrap();
+    let options = format!(
+        r#"{{"root": "{}", "base": "HEAD", "lockfile": "custom-lock.txt"}}"#,
+        dir.path().to_str().unwrap().replace('\\', "/")
+    );
+    let result = lockfile_diff_json_impl(options).unwrap();
+    let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
+    assert!(
+        entries.is_empty(),
+        "unknown lockfile name should be skipped: {entries:?}"
+    );
+}
+
+#[test]
+fn lockfile_diff_json_impl_head_with_subdirectory_root() {
+    // When root is a git subdirectory and head is set, detect_lockfiles_from_head
+    // builds a repo-relative path (e.g. packages/api/pnpm-lock.yaml) for git show.
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let sub = root.join("packages").join("api");
+    std::fs::create_dir_all(&sub).unwrap();
+    let v1 = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
+    let v2 = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-new}\n";
+    std::fs::write(sub.join("pnpm-lock.yaml"), v1).unwrap();
+    setup_git_repo(root);
+    std::process::Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::process::Command::new("git")
+        .args(["commit", "-m", "v1"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::fs::write(sub.join("pnpm-lock.yaml"), v2).unwrap();
+    std::process::Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::process::Command::new("git")
+        .args(["commit", "-m", "v2"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    let options = format!(
+        r#"{{"root": "{}", "base": "HEAD~1", "head": "HEAD"}}"#,
+        sub.to_str().unwrap().replace('\\', "/")
+    );
+    let result = lockfile_diff_json_impl(options).unwrap();
+    let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
+    assert_eq!(
+        entries.len(),
+        1,
+        "should find diff in subdirectory with head: {entries:?}"
+    );
+    let changed = entries[0]["changed"].as_array().unwrap();
+    assert!(
+        changed.iter().any(|v| v == "lodash"),
+        "should detect lodash changed: {changed:?}"
+    );
+}
+
+#[test]
 fn lockfile_diff_json_impl_deleted_lockfile_at_head_reports_removed() {
     // When head is valid but the lockfile was deleted, new content is empty
     // and all previously locked packages should be reported as removed.

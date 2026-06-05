@@ -246,6 +246,78 @@ fn lockfile_diff_deleted_lockfile_at_head_reports_removed_packages() {
     );
 }
 
+// Covers detect_lockfiles_from_head with a non-empty prefix: when --root is a git
+// subdirectory and --head is provided, the prefix is prepended to each candidate
+// name for the git show probe (e.g. packages/api/pnpm-lock.yaml).
+#[test]
+fn lockfile_diff_subdirectory_root_with_head_uses_prefixed_path() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let sub = root.join("packages").join("api");
+    std::fs::create_dir_all(&sub).unwrap();
+    let old = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
+    let new = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-new}\n";
+    std::fs::write(sub.join("pnpm-lock.yaml"), old).unwrap();
+    Command::new("git")
+        .args(["init", "-b", "main"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    for (k, v) in [("user.email", "test@test.com"), ("user.name", "Test")] {
+        Command::new("git")
+            .args(["config", k, v])
+            .current_dir(root)
+            .output()
+            .unwrap();
+    }
+    Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["commit", "-m", "initial"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::fs::write(sub.join("pnpm-lock.yaml"), new).unwrap();
+    Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["commit", "-m", "v2"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    let output = Command::new(bin())
+        .args([
+            "lockfile",
+            "diff",
+            "--root",
+            sub.to_str().unwrap(),
+            "--base",
+            "HEAD~1",
+            "--head",
+            "HEAD",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let arr: Vec<serde_json::Value> = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(arr.len(), 1, "should find diff in subdirectory: {arr:?}");
+    let changed = arr[0]["changed"].as_array().unwrap();
+    assert!(
+        changed.iter().any(|v| v == "lodash"),
+        "should detect lodash changed: {changed:?}"
+    );
+}
+
 // Covers detect_lockfiles_from_head: when --head is provided without --lockfile,
 // auto-detection reads candidate names from the head commit, not from disk.
 // This matters when the checkout is still at base and the head adds a new lockfile.

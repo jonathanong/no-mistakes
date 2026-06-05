@@ -135,6 +135,24 @@ fn parse_real_bun_lock_four_element_tuple() {
 }
 
 #[test]
+fn strip_jsonc_string_with_escape() {
+    // A backslash-escape inside a JSON string (e.g. \") must pass through intact
+    // and must not confuse the state machine into ending the string early.
+    let input = r#"{"key": "a\"b"}"#; // literally: {"key": "a\"b"}
+    let out = strip_jsonc(input);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+    assert_eq!(v["key"], "a\"b");
+}
+
+#[test]
+fn strip_jsonc_lone_slash_passes_through() {
+    // A "/" followed by something other than "/" or "*" passes through unchanged.
+    // Uses " / " so the slash is not the last byte (which would skip the inner check).
+    let out = strip_jsonc("{} / {}");
+    assert!(out.contains('/'), "lone slash should be preserved: {out:?}");
+}
+
+#[test]
 fn parse_four_element_no_integrity_falls_back_to_resolved() {
     let content = r#"{
       "lockfileVersion": 0,
