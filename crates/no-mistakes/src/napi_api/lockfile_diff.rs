@@ -53,8 +53,17 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
             .unwrap_or(lf_path)
             .to_string_lossy()
             .replace('\\', "/");
-        let new_content = std::fs::read_to_string(lf_path).unwrap_or_default();
-        let old_content = git_show_file(&root, &options.base, &rel).unwrap_or_default();
+        let new_content = if let Some(head) = options.head.as_deref() {
+            git_show_file(&root, head, &rel).unwrap_or_default()
+        } else {
+            std::fs::read_to_string(lf_path).unwrap_or_default()
+        };
+        let Some(old_content) = git_show_file(&root, &options.base, &rel) else {
+            return Err(napi::Error::from_reason(format!(
+                "Could not retrieve `{}` at ref `{}`; ensure the base ref exists in the git history",
+                rel, options.base
+            )));
+        };
         let old_pkgs = lockfile::parse_lockfile(manager, &old_content);
         let new_pkgs = lockfile::parse_lockfile(manager, &new_content);
         let diff = lockfile::diff(&old_pkgs, &new_pkgs);

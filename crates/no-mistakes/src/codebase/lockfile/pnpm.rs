@@ -24,11 +24,13 @@ pub fn parse(content: &str) -> Vec<ResolvedPackage> {
 }
 
 fn split_name_version(key: &str) -> (&str, &str) {
-    let start = usize::from(key.starts_with('@'));
-    if let Some(pos) = key[start..].rfind('@') {
-        (&key[..start + pos], &key[start + pos + 1..])
+    // Strip pnpm peer-dep suffix like `(yaml@2.9.0)` before splitting.
+    let base = key.split_once('(').map_or(key, |(b, _)| b);
+    let start = usize::from(base.starts_with('@'));
+    if let Some(pos) = base[start..].rfind('@') {
+        (&base[..start + pos], &base[start + pos + 1..])
     } else {
-        (key, "")
+        (base, "")
     }
 }
 

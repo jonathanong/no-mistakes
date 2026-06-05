@@ -76,7 +76,12 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
             .to_string_lossy()
             .replace('\\', "/");
 
-        let new_content = std::fs::read_to_string(lf_path).unwrap_or_default();
+        let head = args.head.as_deref().unwrap_or("HEAD");
+        let new_content = if args.head.is_some() {
+            git_show_file(&root, head, &rel).unwrap_or_default()
+        } else {
+            std::fs::read_to_string(lf_path).unwrap_or_default()
+        };
         let Some(old_content) = git_show_file(&root, &args.base, &rel) else {
             eprintln!("warning: could not retrieve {} at {}", rel, args.base);
             continue;

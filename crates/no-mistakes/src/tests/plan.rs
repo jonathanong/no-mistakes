@@ -54,8 +54,21 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     let changed_files = super::changed_files::existing_changed_files(&collected);
     let deleted_files = &collected.deleted;
 
+    // 2a. Analyze lockfile changes targeted
+    let lockfile_analysis =
+        super::lockfile_changes::analyze_lockfile_changes(args, &root, &collected.files);
+
     if let Some(framework) = args.framework {
-        let forced_fallback = global_config_trigger(&root, &changed_files);
+        let forced_fallback = global_config_trigger(&root, &changed_files).or_else(|| {
+            if lockfile_analysis.fallback_triggered {
+                lockfile_analysis
+                    .warnings
+                    .first()
+                    .map(|w| (w.message.clone(), root.join(&w.file)))
+            } else {
+                None
+            }
+        });
         return super::configured_plan::generate_configured_plan(
             args,
             framework,
@@ -67,10 +80,6 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
             forced_fallback,
         );
     }
-
-    // 2a. Analyze lockfile changes targeted
-    let lockfile_analysis =
-        super::lockfile_changes::analyze_lockfile_changes(args, &root, &collected.files);
     let lockfile_changed_packages: Vec<(String, String)> = lockfile_analysis
         .diff_by_lockfile
         .iter()
