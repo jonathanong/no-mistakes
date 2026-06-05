@@ -69,6 +69,11 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                 None
             }
         });
+        // diff-only and binary-lockfile fallbacks are unconditional — honor them
+        // regardless of --global-config-fallback so framework plans don't silently
+        // run against an unanalyzable lockfile change.
+        let unconditional_fallback =
+            lockfile_analysis.diff_only_fallback || lockfile_analysis.binary_lockfile_fallback;
         return super::configured_plan::generate_configured_plan(
             args,
             framework,
@@ -78,6 +83,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
             &changed_files,
             &collected.diff_files,
             forced_fallback,
+            unconditional_fallback,
         );
     }
     let lockfile_changed_packages: Vec<(String, String)> = lockfile_analysis

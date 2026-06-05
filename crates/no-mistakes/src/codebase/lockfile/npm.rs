@@ -32,8 +32,16 @@ fn parse_v2(root: &serde_json::Value) -> Vec<ResolvedPackage> {
                     .last()
                     .unwrap_or(key.as_str())
                     .to_string()
+            } else if let Some((_, after)) = key.split_once("/node_modules/") {
+                // Nested workspace install (e.g., "packages/app/node_modules/foo").
+                // The import specifier is the part after the last /node_modules/ segment.
+                after
+                    .split("/node_modules/")
+                    .last()
+                    .unwrap_or(after)
+                    .to_string()
             } else {
-                // Workspace path (e.g., "packages/lib") — use the declared package name
+                // Workspace package root (e.g., "packages/lib") — use the declared package name
                 value
                     .get("name")
                     .and_then(|v| v.as_str())

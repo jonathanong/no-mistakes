@@ -136,6 +136,19 @@ fn parse_v2_alias_uses_key_name_not_name_field() {
 }
 
 #[test]
+fn parse_v2_nested_workspace_node_modules() {
+    // packages/app/node_modules/react must yield name "react" not the raw key path
+    let lock = fixture("v2.json");
+    let pkgs = parse(&lock);
+    let react = pkgs.iter().find(|p| p.name == "react");
+    assert!(
+        react.is_some(),
+        "nested workspace node_modules entry should use bare package name 'react': {pkgs:?}"
+    );
+    assert_eq!(react.unwrap().version, "18.2.0");
+}
+
+#[test]
 fn parse_v1_no_integrity_uses_resolved() {
     let lock = r#"{
       "lockfileVersion": 1,
