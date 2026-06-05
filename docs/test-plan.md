@@ -103,7 +103,7 @@ For framework (Playwright/Vitest) plans the BFS-found tests are injected into th
 
 Full-suite fallback fires only for:
 
-- **Unparseable lockfiles**: diff-only mode without `--head`, binary lockfiles (`bun.lockb`).
+- **Unparsable lockfiles**: diff-only mode without `--head`, binary lockfiles (`bun.lockb`).
   These are unconditional (do not require `--global-config-fallback`).
 - **Genuinely untraceable deps**: tooling packages (`typescript`, `eslint`, etc.) that have
   no import-graph path to any test file. These fall back only when
