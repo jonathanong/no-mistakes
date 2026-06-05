@@ -59,36 +59,38 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
         super::lockfile_changes::analyze_lockfile_changes(args, &root, &collected.files);
 
     if let Some(framework) = args.framework {
+        // Compute lockfile changed packages for BFS tracing in framework plans — same
+        // structure as the non-framework §4b path below. Parseable lockfile diffs no
+        // longer force an unconditional full-suite fallback; we wire the packages into
+        // the configured-plan dependencies group instead.
+        let lockfile_changed_packages: Vec<(String, String)> = lockfile_analysis
+            .diff_by_lockfile
+            .iter()
+            .flat_map(|(lf_path, lf_diff)| {
+                let rel = relative_path(&root, lf_path);
+                lf_diff
+                    .all_changed_names()
+                    .map(|name| (name.to_string(), rel.clone()))
+                    .collect::<Vec<_>>()
+            })
+            .collect();
+        let workspace_map = no_mistakes::codebase::workspaces::load(&root).unwrap_or_default();
+        // fallback_triggered means binary / invalid-ref / diff-only — no parseable diff available
         let forced_fallback = global_config_trigger(&root, &changed_files).or_else(|| {
             if lockfile_analysis.fallback_triggered {
                 lockfile_analysis
                     .warnings
                     .first()
                     .map(|w| (w.message.clone(), root.join(&w.file)))
-            } else if let Some((lf_path, _)) = lockfile_analysis.diff_by_lockfile.first() {
-                // Framework plan BFS starts from file nodes; lockfile package nodes
-                // (NodeId::Module) are not wired into the configured-plan group
-                // traversal, so a lockfile-only dependency bump selects no tests.
-                // Fall back to the full suite so no impacted tests are missed.
-                let rel = relative_path(&root, lf_path);
-                Some((
-                    format!(
-                        "`{}` has dependency changes; framework plans run the full suite for lockfile changes",
-                        rel
-                    ),
-                    lf_path.clone(),
-                ))
             } else {
                 None
             }
         });
         // Unconditional fallbacks must bypass --global-config-fallback:
         // - diff-only / binary-lockfile: lockfile unreadable, zero tests would be wrong
-        // - parseable lockfile diff in a framework plan: NodeId::Module seeds are not
-        //   wired into the configured-plan group traversal, so we fall back conservatively
-        let unconditional_fallback = lockfile_analysis.diff_only_fallback
-            || lockfile_analysis.binary_lockfile_fallback
-            || !lockfile_analysis.diff_by_lockfile.is_empty();
+        // Parseable lockfile diffs are handled via BFS seeding (not forced fallback).
+        let unconditional_fallback =
+            lockfile_analysis.diff_only_fallback || lockfile_analysis.binary_lockfile_fallback;
         let mut plan = super::configured_plan::generate_configured_plan(
             args,
             framework,
@@ -97,6 +99,8 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
             &tsconfig,
             &changed_files,
             &collected.diff_files,
+            &lockfile_changed_packages,
+            &workspace_map,
             forced_fallback,
             unconditional_fallback,
         )?;

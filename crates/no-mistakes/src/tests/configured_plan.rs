@@ -9,6 +9,7 @@ use globset::{Glob, GlobSet, GlobSetBuilder};
 use no_mistakes::codebase::dependencies::graph::DepGraph;
 use no_mistakes::codebase::test_discovery::{DiscoveredTests, TestRunner};
 use no_mistakes::codebase::test_filter::TestFileFilter;
+use no_mistakes::codebase::workspaces::WorkspaceMap;
 use no_mistakes::config::v2::schema::{
     NoMistakesConfig, Project, TestPlanEnvironment, TestPlanGroup, TestPlanGroupType,
     TestPlanIgnoredChangedTestsFramework, TestPlanLimit, TestPlanProjectDependency,
@@ -19,10 +20,12 @@ use std::path::{Path, PathBuf};
 mod fallback;
 mod hints;
 mod hints_domains;
+mod lockfile_seeds;
 #[cfg(test)]
 mod tests;
 use fallback::{fallback_plan, FallbackRequest};
 use hints::build_coverage_hints;
+use lockfile_seeds::lockfile_seed_candidates;
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn generate_configured_plan(
@@ -33,6 +36,8 @@ pub(crate) fn generate_configured_plan(
     tsconfig: &no_mistakes::codebase::dependencies::TsConfig,
     changed_files: &[PathBuf],
     diff_files: &[DiffFile],
+    lockfile_changed_packages: &[(String, String)], // (pkg_name, lockfile_rel)
+    workspace_map: &WorkspaceMap,
     forced_fallback: Option<(String, PathBuf)>,
     unconditional_fallback: bool,
 ) -> Result<TestPlan> {
@@ -176,6 +181,80 @@ pub(crate) fn generate_configured_plan(
                 .then_some(group_limit)
                 .or_else(|| has_global_limit.then_some(group_limit)),
         });
+    }
+
+    // §lockfile: seed the dependencies group with BFS from lockfile-changed packages.
+    // Mirrors plan.rs §4b. We run this after the group loop so the `used` set already
+    // contains direct/coverage picks, preventing duplicates in the dependencies group.
+    if !lockfile_changed_packages.is_empty() {
+        let seed_result = lockfile_seed_candidates(
+            root,
+            lockfile_changed_packages,
+            workspace_map,
+            &graph,
+            &all_test_set,
+            &used,
+        );
+        // Genuinely untraceable tooling deps (typescript, eslint, etc.) that have no
+        // import-graph path to any test file — only fall back when the caller opted in.
+        if !seed_result.untraceable_lockfiles.is_empty()
+            && effective_global_config_fallback(&env, args)
+        {
+            let lf = &seed_result.untraceable_lockfiles[0];
+            let msg = format!(
+                "`{}` changed a transitive dependency; falling back to full test suite",
+                lf
+            );
+            let mut plan = fallback_plan(
+                root,
+                &all_tests,
+                FallbackRequest {
+                    group_type: "dependencies",
+                    via: "transitive dependency",
+                    changed_file: None,
+                    limit: global_limit,
+                    has_limit: has_global_limit,
+                    reason: msg,
+                },
+            );
+            attach_targets(&mut plan, root, &discovered_tests);
+            return Ok(plan);
+        }
+        // Merge traceable seeds into selected_map and the dependencies group result.
+        for test in &seed_result.candidates {
+            used.insert(test.test_file.clone());
+            selected_map
+                .entry(root.join(&test.test_file))
+                .and_modify(|entry| merge_selected(entry, test))
+                .or_insert_with(|| test.clone());
+        }
+        if !seed_result.candidates.is_empty() {
+            // Append the newly selected tests to the dependencies group result if one
+            // already exists, otherwise push a fresh one. The group is at a known
+            // position (last by default_groups), but be defensive with find+modify.
+            let dep_names: Vec<String> = seed_result
+                .candidates
+                .iter()
+                .map(|t| t.test_file.clone())
+                .collect();
+            if let Some(dep_group) = group_results
+                .iter_mut()
+                .find(|g| g.r#type == "dependencies")
+            {
+                for name in dep_names {
+                    if !dep_group.selected.contains(&name) {
+                        dep_group.selected.push(name);
+                    }
+                }
+            } else {
+                group_results.push(TestPlanGroupResult {
+                    r#type: "dependencies".to_string(),
+                    selected: dep_names,
+                    remaining: all_tests.len().saturating_sub(used.len()),
+                    limit: None,
+                });
+            }
+        }
     }
 
     let mut plan = TestPlan {
