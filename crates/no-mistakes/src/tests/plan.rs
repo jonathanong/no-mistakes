@@ -89,7 +89,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
         let unconditional_fallback = lockfile_analysis.diff_only_fallback
             || lockfile_analysis.binary_lockfile_fallback
             || !lockfile_analysis.diff_by_lockfile.is_empty();
-        return super::configured_plan::generate_configured_plan(
+        let mut plan = super::configured_plan::generate_configured_plan(
             args,
             framework,
             &root,
@@ -99,7 +99,9 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
             &collected.diff_files,
             forced_fallback,
             unconditional_fallback,
-        );
+        )?;
+        plan.warnings.extend(lockfile_analysis.warnings);
+        return Ok(plan);
     }
     let lockfile_changed_packages: Vec<(String, String)> = lockfile_analysis
         .diff_by_lockfile

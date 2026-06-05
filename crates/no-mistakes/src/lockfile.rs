@@ -66,6 +66,13 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
     } else if let Some(head) = args.head.as_deref() {
         // When --head is supplied, detect from the head commit so we find lockfiles
         // added or removed between base and head that don't exist on disk.
+        if !git_ref_exists(&git_root, head) {
+            eprintln!(
+                "warning: head ref `{}` does not exist; no lockfiles detected",
+                head
+            );
+            return Ok(ExitCode::SUCCESS);
+        }
         detect_lockfiles_from_head(&git_root, head, &root)
     } else {
         detect_lockfiles_in_root(&root)

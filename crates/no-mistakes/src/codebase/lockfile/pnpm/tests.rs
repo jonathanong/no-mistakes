@@ -162,3 +162,27 @@ fn split_v5_scoped_leading_slash() {
     assert_eq!(name, "@scope/pkg");
     assert_eq!(ver, "1.0.0");
 }
+
+#[test]
+fn split_v5_slash_separated_unscoped() {
+    // pnpm v5 slash-only format: /lodash/4.17.21 (no @ separator)
+    let (name, ver) = split_name_version("/lodash/4.17.21");
+    assert_eq!(name, "lodash");
+    assert_eq!(ver, "4.17.21");
+}
+
+#[test]
+fn split_v5_slash_separated_scoped() {
+    // pnpm v5 scoped slash format: /@scope/pkg/1.0.0
+    let (name, ver) = split_name_version("/@scope/pkg/1.0.0");
+    assert_eq!(name, "@scope/pkg");
+    assert_eq!(ver, "1.0.0");
+}
+
+#[test]
+fn split_v5_slash_separated_strips_peer_suffix() {
+    // pnpm v5 peer dep suffix uses `_`: /lodash/4.17.21_react@18
+    let (name, ver) = split_name_version("/lodash/4.17.21_react@18");
+    assert_eq!(name, "lodash");
+    assert_eq!(ver, "4.17.21");
+}
