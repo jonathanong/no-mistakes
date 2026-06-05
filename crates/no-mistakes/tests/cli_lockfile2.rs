@@ -198,6 +198,54 @@ fn lockfile_diff_newly_added_lockfile_reports_added_packages() {
     );
 }
 
+// Covers the "deleted lockfile at head" path: when --head is a valid ref but the
+// lockfile was removed in that commit, treat new content as empty so all packages
+// previously in the lockfile are reported as removed.
+#[test]
+fn lockfile_diff_deleted_lockfile_at_head_reports_removed_packages() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let lock_v1 = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
+    setup_git_repo_with_file(root, "pnpm-lock.yaml", lock_v1);
+    Command::new("git")
+        .args(["rm", "pnpm-lock.yaml"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["commit", "-m", "remove-lock"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    let output = Command::new(bin())
+        .args([
+            "lockfile",
+            "diff",
+            "--root",
+            root.to_str().unwrap(),
+            "--base",
+            "HEAD~1",
+            "--head",
+            "HEAD",
+            "--lockfile",
+            "pnpm-lock.yaml",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let arr: Vec<serde_json::Value> = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(arr.len(), 1, "should detect deleted lockfile: {arr:?}");
+    let removed = arr[0]["removed"].as_array().unwrap();
+    assert!(
+        removed.iter().any(|v| v == "lodash"),
+        "lodash should be reported as removed: {removed:?}"
+    );
+}
+
 // Covers detect_lockfiles_from_head: when --head is provided without --lockfile,
 // auto-detection reads candidate names from the head commit, not from disk.
 // This matters when the checkout is still at base and the head adds a new lockfile.

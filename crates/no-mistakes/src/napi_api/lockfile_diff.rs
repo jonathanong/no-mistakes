@@ -66,12 +66,19 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
             .to_string_lossy()
             .replace('\\', "/");
         let new_content = if let Some(head) = options.head.as_deref() {
-            git_show_file(&git_root, head, &rel).ok_or_else(|| {
-                napi::Error::from_reason(format!(
-                    "Could not retrieve `{}` at ref `{}`; ensure the head ref exists in the git history",
-                    rel, head
-                ))
-            })?
+            match git_show_file(&git_root, head, &rel) {
+                Some(content) => content,
+                None => {
+                    if !git_ref_exists(&git_root, head) {
+                        return Err(napi::Error::from_reason(format!(
+                            "Could not retrieve `{}` at ref `{}`; ensure the head ref exists in the git history",
+                            rel, head
+                        )));
+                    }
+                    // Ref is valid but file deleted at head — report all packages as removed
+                    String::new()
+                }
+            }
         } else {
             std::fs::read_to_string(lf_path).unwrap_or_default()
         };
@@ -142,6 +149,15 @@ fn find_git_root(dir: &Path) -> Option<PathBuf> {
     } else {
         None
     }
+}
+
+fn git_ref_exists(root: &Path, git_ref: &str) -> bool {
+    std::process::Command::new("git")
+        .args(["rev-parse", "--verify", git_ref])
+        .current_dir(root)
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
 }
 
 fn git_show_file(root: &Path, git_ref: &str, rel_path: &str) -> Option<String> {

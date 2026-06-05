@@ -124,6 +124,18 @@ fn parse_no_dependencies_v1() {
 }
 
 #[test]
+fn parse_v2_alias_uses_key_name_not_name_field() {
+    // An alias entry (key "node_modules/lodash-alias", name field "lodash") should
+    // produce name "lodash-alias" — the alias is what package.json and imports use.
+    let lock = fixture("v2.json");
+    let pkgs = parse(&lock);
+    assert!(
+        pkgs.iter().any(|p| p.name == "lodash-alias"),
+        "alias entry should use key name 'lodash-alias': {pkgs:?}"
+    );
+}
+
+#[test]
 fn parse_v1_no_integrity_uses_resolved() {
     let lock = r#"{
       "lockfileVersion": 1,

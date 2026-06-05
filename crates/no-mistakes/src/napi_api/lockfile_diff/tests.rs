@@ -400,3 +400,50 @@ fn lockfile_diff_json_impl_invalid_head_no_lockfile_returns_empty() {
         "invalid head without explicit lockfile returns empty"
     );
 }
+
+#[test]
+fn lockfile_diff_json_impl_deleted_lockfile_at_head_reports_removed() {
+    // When head is valid but the lockfile was deleted, new content is empty
+    // and all previously locked packages should be reported as removed.
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
+    std::fs::write(root.join("pnpm-lock.yaml"), lock).unwrap();
+    setup_git_repo(root);
+    std::process::Command::new("git")
+        .args(["add", "pnpm-lock.yaml"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::process::Command::new("git")
+        .args(["commit", "-m", "initial"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::process::Command::new("git")
+        .args(["rm", "pnpm-lock.yaml"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::process::Command::new("git")
+        .args(["commit", "-m", "delete-lock"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    let options = format!(
+        r#"{{"root": "{}", "base": "HEAD~1", "head": "HEAD", "lockfile": "pnpm-lock.yaml"}}"#,
+        root.to_str().unwrap().replace('\\', "/")
+    );
+    let result = lockfile_diff_json_impl(options).unwrap();
+    let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
+    assert_eq!(
+        entries.len(),
+        1,
+        "should detect deleted lockfile: {entries:?}"
+    );
+    let removed = entries[0]["removed"].as_array().unwrap();
+    assert!(
+        removed.iter().any(|v| v == "lodash"),
+        "lodash should be reported as removed: {removed:?}"
+    );
+}

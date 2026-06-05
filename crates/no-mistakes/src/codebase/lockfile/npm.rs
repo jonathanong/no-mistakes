@@ -23,12 +23,20 @@ fn parse_v2(root: &serde_json::Value) -> Vec<ResolvedPackage> {
         .iter()
         .filter(|(k, _)| !k.is_empty())
         .map(|(key, value)| {
-            let name = if let Some(n) = value.get("name").and_then(|v| v.as_str()) {
-                n.to_string()
-            } else {
+            let name = if key.starts_with("node_modules/") {
+                // Use the import name from the key, not the name field.
+                // The name field may differ for aliases (e.g., key "node_modules/foo",
+                // name "lodash" for "foo": "npm:lodash@4") — imports use the alias.
                 key.trim_start_matches("node_modules/")
                     .split("/node_modules/")
                     .last()
+                    .unwrap_or(key.as_str())
+                    .to_string()
+            } else {
+                // Workspace path (e.g., "packages/lib") — use the declared package name
+                value
+                    .get("name")
+                    .and_then(|v| v.as_str())
                     .unwrap_or(key.as_str())
                     .to_string()
             };
