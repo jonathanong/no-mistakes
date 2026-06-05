@@ -6,7 +6,7 @@ pub mod yarn;
 #[cfg(test)]
 mod tests;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ResolutionKind {
     Registry,
     Workspace,
@@ -79,19 +79,19 @@ pub fn parse_lockfile(manager: PackageManager, content: &str) -> Vec<ResolvedPac
 pub fn diff(old: &[ResolvedPackage], new: &[ResolvedPackage]) -> LockfileDiff {
     use std::collections::{HashMap, HashSet};
 
-    let mut old_map: HashMap<&str, HashSet<(&str, &str)>> = HashMap::new();
+    let mut old_map: HashMap<&str, HashSet<(&str, &str, &ResolutionKind)>> = HashMap::new();
     for p in old {
         old_map
             .entry(&p.name)
             .or_default()
-            .insert((&p.version, &p.fingerprint));
+            .insert((&p.version, &p.fingerprint, &p.kind));
     }
-    let mut new_map: HashMap<&str, HashSet<(&str, &str)>> = HashMap::new();
+    let mut new_map: HashMap<&str, HashSet<(&str, &str, &ResolutionKind)>> = HashMap::new();
     for p in new {
         new_map
             .entry(&p.name)
             .or_default()
-            .insert((&p.version, &p.fingerprint));
+            .insert((&p.version, &p.fingerprint, &p.kind));
     }
 
     let mut added = Vec::new();

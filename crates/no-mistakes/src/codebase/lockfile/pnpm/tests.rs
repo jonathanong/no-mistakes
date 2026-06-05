@@ -1,33 +1,17 @@
 use super::*;
+use std::path::PathBuf;
 
-const SAMPLE: &str = r#"
-lockfileVersion: '9.0'
-
-packages:
-  lodash@4.17.21:
-    resolution: {integrity: sha512-abc123}
-
-  '@scope/pkg@1.0.0':
-    resolution: {integrity: sha512-scoped}
-
-  github.com/org/repo:
-    resolution: {repo: 'https://github.com/org/repo', commit: abc123}
-
-  some-tarball@1.0.0:
-    resolution: {tarball: 'https://example.com/pkg.tgz'}
-
-  local-pkg@1.0.0:
-    resolution: {directory: '../local-pkg'}
-
-  commit-only@1.0.0:
-    resolution: {commit: deadbeef}
-
-  no-resolution@1.0.0: {}
-"#;
+fn fixture(name: &str) -> String {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/lockfile/pnpm")
+        .join(name);
+    std::fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("failed to read {}: {}", path.display(), e))
+}
 
 #[test]
 fn parse_basic_packages() {
-    let pkgs = parse(SAMPLE);
+    let pkgs = parse(&fixture("sample.yaml"));
     let find = |name: &str| pkgs.iter().find(|p| p.name == name);
 
     let lodash = find("lodash").unwrap();
@@ -42,7 +26,7 @@ fn parse_basic_packages() {
 
 #[test]
 fn parse_git_resolution() {
-    let pkgs = parse(SAMPLE);
+    let pkgs = parse(&fixture("sample.yaml"));
     let git = pkgs
         .iter()
         .find(|p| p.name == "github.com/org/repo")
@@ -53,7 +37,7 @@ fn parse_git_resolution() {
 
 #[test]
 fn parse_tarball_resolution() {
-    let pkgs = parse(SAMPLE);
+    let pkgs = parse(&fixture("sample.yaml"));
     let tb = pkgs.iter().find(|p| p.name == "some-tarball").unwrap();
     assert_eq!(tb.fingerprint, "https://example.com/pkg.tgz");
     assert_eq!(tb.kind, ResolutionKind::Tarball);
@@ -61,7 +45,7 @@ fn parse_tarball_resolution() {
 
 #[test]
 fn parse_directory_resolution() {
-    let pkgs = parse(SAMPLE);
+    let pkgs = parse(&fixture("sample.yaml"));
     let dir = pkgs.iter().find(|p| p.name == "local-pkg").unwrap();
     assert_eq!(dir.fingerprint, "../local-pkg");
     assert_eq!(dir.kind, ResolutionKind::Directory);
@@ -69,7 +53,7 @@ fn parse_directory_resolution() {
 
 #[test]
 fn parse_commit_only() {
-    let pkgs = parse(SAMPLE);
+    let pkgs = parse(&fixture("sample.yaml"));
     let c = pkgs.iter().find(|p| p.name == "commit-only").unwrap();
     assert_eq!(c.fingerprint, "deadbeef");
     assert_eq!(c.kind, ResolutionKind::Git);
@@ -77,7 +61,7 @@ fn parse_commit_only() {
 
 #[test]
 fn parse_no_resolution() {
-    let pkgs = parse(SAMPLE);
+    let pkgs = parse(&fixture("sample.yaml"));
     let nr = pkgs.iter().find(|p| p.name == "no-resolution").unwrap();
     assert_eq!(nr.fingerprint, "");
     assert_eq!(nr.kind, ResolutionKind::Other);

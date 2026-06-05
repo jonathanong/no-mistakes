@@ -1,0 +1,17 @@
+{
+  "lockfileVersion": 1,
+  "dependencies": {
+    "lodash": {
+      "version": "4.17.21",
+      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz",
+      "integrity": "sha512-abc123",
+      "dependencies": {
+        "nested-dep": {
+          "version": "1.0.0",
+          "resolved": "https://registry.npmjs.org/nested-dep/-/nested-dep-1.0.0.tgz",
+          "integrity": "sha512-nested"
+        }
+      }
+    }
+  }
+}

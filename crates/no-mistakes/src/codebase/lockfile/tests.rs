@@ -1,4 +1,14 @@
 use super::*;
+use std::path::PathBuf;
+
+fn fixture(dir: &str, name: &str) -> String {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/lockfile")
+        .join(dir)
+        .join(name);
+    std::fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("failed to read {}: {}", path.display(), e))
+}
 
 #[test]
 fn diff_empty_both() {
@@ -67,6 +77,25 @@ fn diff_unchanged() {
 }
 
 #[test]
+fn diff_changed_resolution_kind() {
+    // registry→git flip with same version/fingerprint must be detected as a change
+    let old = vec![ResolvedPackage {
+        name: "pkg".to_string(),
+        version: "1.0.0".to_string(),
+        fingerprint: "sha512-abc".to_string(),
+        kind: ResolutionKind::Registry,
+    }];
+    let new = vec![ResolvedPackage {
+        name: "pkg".to_string(),
+        version: "1.0.0".to_string(),
+        fingerprint: "sha512-abc".to_string(),
+        kind: ResolutionKind::Git,
+    }];
+    let result = diff(&old, &new);
+    assert_eq!(result.changed, vec!["pkg"]);
+}
+
+#[test]
 fn diff_sorted_output() {
     let old = vec![
         ResolvedPackage {
@@ -128,17 +157,16 @@ fn is_binary_lockfile_only_bun_lockb() {
 
 #[test]
 fn parse_lockfile_npm() {
-    let content = r#"{"lockfileVersion":2,"packages":{"node_modules/lodash":{"version":"4.17.21","resolved":"https://registry.npmjs.org/lodash","integrity":"sha512-abc"}}}"#;
-    let pkgs = parse_lockfile(PackageManager::Npm, content);
+    let content = fixture("npm", "v2.json");
+    let pkgs = parse_lockfile(PackageManager::Npm, &content);
     assert!(!pkgs.is_empty());
     assert!(pkgs.iter().any(|p| p.name == "lodash"));
 }
 
 #[test]
 fn parse_lockfile_yarn() {
-    // Classic yarn v1 format
-    let content = "# yarn lockfile v1\n\nlodash@^4.17.0:\n  version \"4.17.21\"\n  resolved \"https://registry.yarnpkg.com/lodash.tgz\"\n  integrity sha512-abc\n";
-    let pkgs = parse_lockfile(PackageManager::Yarn, content);
+    let content = fixture("yarn", "classic.lock");
+    let pkgs = parse_lockfile(PackageManager::Yarn, &content);
     assert!(!pkgs.is_empty());
     assert!(pkgs.iter().any(|p| p.name == "lodash"));
 }

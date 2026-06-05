@@ -23,11 +23,15 @@ fn parse_v2(root: &serde_json::Value) -> Vec<ResolvedPackage> {
         .iter()
         .filter(|(k, _)| !k.is_empty())
         .map(|(key, value)| {
-            let name = key
-                .trim_start_matches("node_modules/")
-                .split("/node_modules/")
-                .last()
-                .unwrap_or(key.as_str());
+            let name = if let Some(n) = value.get("name").and_then(|v| v.as_str()) {
+                n.to_string()
+            } else {
+                key.trim_start_matches("node_modules/")
+                    .split("/node_modules/")
+                    .last()
+                    .unwrap_or(key.as_str())
+                    .to_string()
+            };
             let version = value
                 .get("version")
                 .and_then(|v| v.as_str())
@@ -51,7 +55,7 @@ fn parse_v2(root: &serde_json::Value) -> Vec<ResolvedPackage> {
                 integrity.to_string()
             };
             ResolvedPackage {
-                name: name.to_string(),
+                name,
                 version,
                 fingerprint,
                 kind,

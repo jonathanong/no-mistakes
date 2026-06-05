@@ -1,39 +1,17 @@
 use super::*;
+use std::path::PathBuf;
 
-const CLASSIC: &str = r#"# yarn lockfile v1
-
-lodash@^4.17.0, lodash@^4.17.21:
-  version "4.17.21"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz"
-  integrity sha512-abc123
-
-"@scope/pkg@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@scope/pkg/-/@scope/pkg-1.0.0.tgz"
-  integrity sha512-scoped
-"#;
-
-const BERRY: &str = r#"__metadata:
-  version: 6
-
-lodash@npm:^4.17.0:
-  version: 4.17.21
-  resolution: "lodash@npm:4.17.21"
-  checksum: abc123
-  languageName: node
-  linkType: hard
-
-"@scope/pkg@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@scope/pkg@npm:1.0.0"
-  checksum: scoped456
-  languageName: node
-  linkType: hard
-"#;
+fn fixture(name: &str) -> String {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/lockfile/yarn")
+        .join(name);
+    std::fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("failed to read {}: {}", path.display(), e))
+}
 
 #[test]
 fn parse_classic_basic() {
-    let pkgs = parse(CLASSIC);
+    let pkgs = parse(&fixture("classic.lock"));
     let lodash = pkgs.iter().find(|p| p.name == "lodash").unwrap();
     assert_eq!(lodash.version, "4.17.21");
     assert_eq!(lodash.fingerprint, "sha512-abc123");
@@ -42,14 +20,14 @@ fn parse_classic_basic() {
 
 #[test]
 fn parse_classic_scoped() {
-    let pkgs = parse(CLASSIC);
+    let pkgs = parse(&fixture("classic.lock"));
     let scoped = pkgs.iter().find(|p| p.name == "@scope/pkg").unwrap();
     assert_eq!(scoped.version, "1.0.0");
 }
 
 #[test]
 fn parse_classic_multiple_specifiers() {
-    let pkgs = parse(CLASSIC);
+    let pkgs = parse(&fixture("classic.lock"));
     let lodash_entries: Vec<_> = pkgs.iter().filter(|p| p.name == "lodash").collect();
     assert_eq!(
         lodash_entries.len(),
@@ -60,7 +38,7 @@ fn parse_classic_multiple_specifiers() {
 
 #[test]
 fn parse_berry_basic() {
-    let pkgs = parse(BERRY);
+    let pkgs = parse(&fixture("berry.lock"));
     let lodash = pkgs.iter().find(|p| p.name == "lodash").unwrap();
     assert_eq!(lodash.version, "4.17.21");
     assert_eq!(lodash.fingerprint, "abc123");
@@ -68,13 +46,13 @@ fn parse_berry_basic() {
 
 #[test]
 fn parse_berry_skips_metadata() {
-    let pkgs = parse(BERRY);
+    let pkgs = parse(&fixture("berry.lock"));
     assert!(pkgs.iter().all(|p| p.name != "__metadata"));
 }
 
 #[test]
 fn parse_berry_scoped() {
-    let pkgs = parse(BERRY);
+    let pkgs = parse(&fixture("berry.lock"));
     let scoped = pkgs.iter().find(|p| p.name == "@scope/pkg").unwrap();
     assert_eq!(scoped.version, "1.0.0");
     assert_eq!(scoped.fingerprint, "scoped456");

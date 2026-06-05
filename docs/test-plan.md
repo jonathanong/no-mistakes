@@ -101,10 +101,10 @@ Binary lockfiles (`bun.lockb`) cannot be parsed and always trigger a warning + f
 
 ```bash
 # Targeted: only tests affected by lodash version bump run
-no-mistakes tests plan --changed-file pnpm-lock.yaml --base main
+no-mistakes test plan --changed-file pnpm-lock.yaml --base main
 
 # Full suite fallback (no baseline supplied)
-no-mistakes tests plan --changed-file pnpm-lock.yaml --global-config-fallback=true
+no-mistakes test plan --changed-file pnpm-lock.yaml --global-config-fallback=true
 ```
 
 ## Breaking Change: Implicit Git Removed

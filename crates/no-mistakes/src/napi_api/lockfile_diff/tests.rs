@@ -216,6 +216,46 @@ fn lockfile_diff_json_impl_head_option_reads_from_git() {
 }
 
 #[test]
+fn lockfile_diff_json_impl_subdirectory_root_uses_git_relative_path() {
+    // When root is a subdirectory of the git repo, git show must use a repo-relative path.
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let sub = root.join("packages").join("api");
+    std::fs::create_dir_all(&sub).unwrap();
+    let old_lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
+    let new_lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-new}\n";
+    std::fs::write(sub.join("pnpm-lock.yaml"), old_lock).unwrap();
+    setup_git_repo(root);
+    std::process::Command::new("git")
+        .args(["add", "-A"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::process::Command::new("git")
+        .args(["commit", "-m", "initial"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::fs::write(sub.join("pnpm-lock.yaml"), new_lock).unwrap();
+    let options = format!(
+        r#"{{"root": "{}", "base": "HEAD"}}"#,
+        sub.to_str().unwrap().replace('\\', "/")
+    );
+    let result = lockfile_diff_json_impl(options).unwrap();
+    let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
+    assert_eq!(
+        entries.len(),
+        1,
+        "should find diff in subdirectory: {entries:?}"
+    );
+    let changed = entries[0]["changed"].as_array().unwrap();
+    assert!(
+        changed.iter().any(|v| v == "lodash"),
+        "should detect lodash changed: {changed:?}"
+    );
+}
+
+#[test]
 fn lockfile_diff_json_impl_missing_base_returns_err() {
     let dir = tempfile::tempdir().unwrap();
     let options = format!(
