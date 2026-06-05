@@ -129,6 +129,22 @@ pub(crate) fn generate_configured_plan(
         .iter()
         .map(|warning| (warning.r#type.clone(), warning.file.clone()))
         .collect();
+    // §lockfile: pre-compute seeds before the group loop so they can be injected during
+    // the dependencies group turn — before later groups (e.g. sample) consume the budget.
+    let lockfile_seed_result = if lockfile_changed_packages.is_empty() {
+        None
+    } else {
+        Some(lockfile_seed_candidates(
+            root,
+            lockfile_changed_packages,
+            workspace_map,
+            &graph,
+            &all_test_set,
+            &HashSet::new(), // filter against `used` during injection, not pre-compute
+        ))
+    };
+    let mut lockfile_seeds_injected = false;
+
     let groups = configured_groups(&env, framework);
 
     for group in &groups {
@@ -143,7 +159,7 @@ pub(crate) fn generate_configured_plan(
         if framework == TestFramework::Vitest && group.type_ == TestPlanGroupType::Coverage {
             anyhow::bail!("vitest test plans do not support the coverage group");
         }
-        let candidates = group_candidates(
+        let mut candidates = group_candidates(
             group.type_,
             root,
             changed_files,
@@ -156,6 +172,20 @@ pub(crate) fn generate_configured_plan(
             &mut warnings,
             &mut warnings_seen,
         );
+        // Inject lockfile-seeded candidates during the dependencies group turn so they
+        // compete for budget before later groups (e.g. sample) can consume it.
+        if group.type_ == TestPlanGroupType::Dependencies {
+            if let Some(ref seed_result) = lockfile_seed_result {
+                lockfile_seeds_injected = true;
+                let in_candidates: HashSet<String> =
+                    candidates.iter().map(|c| c.test_file.clone()).collect();
+                for seed in &seed_result.candidates {
+                    if !used.contains(&seed.test_file) && !in_candidates.contains(&seed.test_file) {
+                        candidates.push(seed.clone());
+                    }
+                }
+            }
+        }
         let group_limit = group
             .limit
             .as_ref()
@@ -184,31 +214,49 @@ pub(crate) fn generate_configured_plan(
         });
     }
 
-    // §lockfile: seed the dependencies group with BFS from lockfile-changed packages.
-    // Mirrors plan.rs §4b. We run this after the group loop so the `used` set already
-    // contains direct/coverage picks, preventing duplicates in the dependencies group.
-    if !lockfile_changed_packages.is_empty() {
-        let seed_result = lockfile_seed_candidates(
-            root,
-            lockfile_changed_packages,
-            workspace_map,
-            &graph,
-            &all_test_set,
-            &used,
-        );
-        if let Some(fallback) = apply_lockfile_seeds(
-            root,
-            seed_result,
-            effective_global_config_fallback(&env, args),
-            &all_tests,
-            global_limit,
-            has_global_limit,
-            &mut selected_map,
-            &mut used,
-            &mut group_results,
-            &discovered_tests,
-        )? {
-            return Ok(fallback);
+    if let Some(seed_result) = lockfile_seed_result {
+        if lockfile_seeds_injected {
+            // Seeds were merged during the dependencies group turn.
+            // Only handle the untraceable-dep fallback here.
+            if !seed_result.untraceable_lockfiles.is_empty()
+                && effective_global_config_fallback(&env, args)
+            {
+                let lf = &seed_result.untraceable_lockfiles[0];
+                let msg = format!(
+                    "`{}` changed a transitive dependency; falling back to full test suite",
+                    lf
+                );
+                let mut plan = fallback_plan(
+                    root,
+                    &all_tests,
+                    FallbackRequest {
+                        group_type: "dependencies",
+                        via: "transitive dependency",
+                        changed_file: None,
+                        limit: global_limit,
+                        has_limit: has_global_limit,
+                        reason: msg,
+                    },
+                );
+                attach_targets(&mut plan, root, &discovered_tests);
+                return Ok(plan);
+            }
+        } else {
+            // Custom config without a dependencies group: fall back to post-loop injection.
+            if let Some(fallback) = apply_lockfile_seeds(
+                root,
+                seed_result,
+                effective_global_config_fallback(&env, args),
+                &all_tests,
+                global_limit,
+                has_global_limit,
+                &mut selected_map,
+                &mut used,
+                &mut group_results,
+                &discovered_tests,
+            )? {
+                return Ok(fallback);
+            }
         }
     }
 
