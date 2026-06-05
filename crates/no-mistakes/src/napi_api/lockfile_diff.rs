@@ -206,3 +206,5 @@ fn manager_name(m: PackageManager) -> &'static str {
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests2;

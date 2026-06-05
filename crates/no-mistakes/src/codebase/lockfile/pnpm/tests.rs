@@ -186,3 +186,27 @@ fn split_v5_slash_separated_strips_peer_suffix() {
     assert_eq!(name, "lodash");
     assert_eq!(ver, "4.17.21");
 }
+
+#[test]
+fn split_scoped_no_slash() {
+    // Bare scope key with no package name: @scope (unlikely but defensive)
+    let (name, ver) = split_name_version("@scope");
+    assert_eq!(name, "@scope");
+    assert_eq!(ver, "");
+}
+
+#[test]
+fn split_v5_scoped_with_peer_suffix() {
+    // pnpm v5 scoped format with peer dep suffix: /@scope/pkg/1.0.0_react@18
+    let (name, ver) = split_name_version("/@scope/pkg/1.0.0_react@18");
+    assert_eq!(name, "@scope/pkg");
+    assert_eq!(ver, "1.0.0");
+}
+
+#[test]
+fn split_scoped_no_version() {
+    // Scoped key with no version and no extra slash: @scope/pkg
+    let (name, ver) = split_name_version("@scope/pkg");
+    assert_eq!(name, "@scope/pkg");
+    assert_eq!(ver, "");
+}

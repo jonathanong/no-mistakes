@@ -492,3 +492,39 @@ fn lockfile_diff_explicit_binary_lockfile_warns() {
     let arr: Vec<serde_json::Value> = serde_json::from_str(&stdout(&output)).unwrap();
     assert_eq!(arr.len(), 0, "binary lockfile produces empty diff: {arr:?}");
 }
+
+// Covers lockfile.rs lines 70-74: when --head is invalid and no explicit --lockfile
+// is given, the outer git_ref_exists check fires before detect_lockfiles_from_head,
+// emits a warning, and returns success with empty output.
+#[test]
+fn lockfile_diff_invalid_head_without_explicit_lockfile_warns_and_succeeds() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let content = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
+    setup_git_repo_with_file(root, "pnpm-lock.yaml", content);
+    let output = Command::new(bin())
+        .args([
+            "lockfile",
+            "diff",
+            "--root",
+            root.to_str().unwrap(),
+            "--base",
+            "HEAD",
+            "--head",
+            "nonexistent-ref-xyz",
+            // no --lockfile: triggers the outer git_ref_exists check
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("does not exist"),
+        "should warn about invalid head ref: {stderr}"
+    );
+    // Early return before JSON output — stdout is empty, not `[]`
+    assert!(
+        stdout(&output).trim().is_empty(),
+        "should produce no output when returning early"
+    );
+}
