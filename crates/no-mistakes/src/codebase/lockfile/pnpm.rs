@@ -52,7 +52,18 @@ fn resolution_info(value: &serde_yaml::Value) -> (String, ResolutionKind) {
         return (dir.to_string(), ResolutionKind::Directory);
     }
     if let Some(tarball) = resolution.get("tarball").and_then(|v| v.as_str()) {
-        return (tarball.to_string(), ResolutionKind::Tarball);
+        // Prefer integrity over tarball URL so integrity-only changes at the same URL
+        // are detected as a fingerprint change.
+        let integrity = resolution
+            .get("integrity")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+        let fp = if integrity.is_empty() {
+            tarball.to_string()
+        } else {
+            integrity.to_string()
+        };
+        return (fp, ResolutionKind::Tarball);
     }
     if let Some(commit) = resolution.get("commit").and_then(|v| v.as_str()) {
         return (commit.to_string(), ResolutionKind::Git);

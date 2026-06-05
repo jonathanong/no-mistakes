@@ -6,6 +6,11 @@ pub(crate) struct LockfileAnalysis {
     pub diff_by_lockfile: Vec<(PathBuf, LockfileDiff)>,
     pub warnings: Vec<Warning>,
     pub fallback_triggered: bool,
+    /// True when diff-only mode triggered the fallback (--diff without --head).
+    /// This kind of fallback is unconditional — it must not be suppressed by
+    /// --global-config-fallback=false because a lockfile change was detected but
+    /// its new content is unreadable, so zero selected tests would be incorrect.
+    pub diff_only_fallback: bool,
 }
 
 pub(crate) fn analyze_lockfile_changes(
@@ -16,6 +21,7 @@ pub(crate) fn analyze_lockfile_changes(
     let mut diff_by_lockfile = Vec::new();
     let mut warnings = Vec::new();
     let mut fallback_triggered = false;
+    let mut diff_only_fallback = false;
 
     let git_root = find_git_root(root).unwrap_or_else(|| root.to_path_buf());
 
@@ -62,6 +68,7 @@ pub(crate) fn analyze_lockfile_changes(
                 file: rel,
             });
             fallback_triggered = true;
+            diff_only_fallback = true;
             continue;
         } else {
             std::fs::read_to_string(file).unwrap_or_default()
@@ -78,12 +85,26 @@ pub(crate) fn analyze_lockfile_changes(
                     }
                 }
                 None => {
-                    // File didn't exist at base (newly added lockfile) — treat baseline as empty
-                    // so all packages in the new content are seen as added.
-                    let old_packages = lockfile::parse_lockfile(manager, "");
-                    let lf_diff = lockfile::diff(&old_packages, &new_packages);
-                    if !lf_diff.is_empty() {
-                        diff_by_lockfile.push((file.clone(), lf_diff));
+                    if !git_ref_exists(&git_root, base) {
+                        // Invalid base ref — cannot determine what changed
+                        let rel = crate::tests::plan::relative_path(root, file);
+                        warnings.push(Warning {
+                            r#type: "lockfile-no-baseline".to_string(),
+                            message: format!(
+                                "Could not read `{}` at base ref `{}`; falling back to full test suite",
+                                rel, base
+                            ),
+                            file: rel,
+                        });
+                        fallback_triggered = true;
+                    } else {
+                        // Valid base ref but file not at base — newly added lockfile;
+                        // treat baseline as empty so all packages are seen as added.
+                        let old_packages = lockfile::parse_lockfile(manager, "");
+                        let lf_diff = lockfile::diff(&old_packages, &new_packages);
+                        if !lf_diff.is_empty() {
+                            diff_by_lockfile.push((file.clone(), lf_diff));
+                        }
                     }
                 }
             },
@@ -106,6 +127,7 @@ pub(crate) fn analyze_lockfile_changes(
         diff_by_lockfile,
         warnings,
         fallback_triggered,
+        diff_only_fallback,
     }
 }
 
@@ -129,6 +151,15 @@ fn find_git_root(dir: &Path) -> Option<PathBuf> {
     } else {
         None
     }
+}
+
+fn git_ref_exists(root: &Path, git_ref: &str) -> bool {
+    std::process::Command::new("git")
+        .args(["rev-parse", "--verify", git_ref])
+        .current_dir(root)
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
 }
 
 pub(crate) fn git_show_file(root: &Path, git_ref: &str, rel_path: &str) -> Option<String> {

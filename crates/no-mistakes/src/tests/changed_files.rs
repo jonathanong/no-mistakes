@@ -37,9 +37,17 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
     }
 
     if let Some(ref base) = args.base {
-        let git_files = get_git_changed_files(root, base, args.head.as_deref())?;
-        for f in git_files {
-            files.push(root.join(f));
+        match get_git_changed_files(root, base, args.head.as_deref()) {
+            Ok(git_files) => {
+                for f in git_files {
+                    files.push(root.join(f));
+                }
+            }
+            // When explicit --changed-file args were provided the base ref is
+            // still forwarded to lockfile analysis; a git-diff failure here is
+            // non-fatal so that analysis can report the appropriate warning.
+            Err(_) if !files.is_empty() => {}
+            Err(e) => return Err(e),
         }
     }
 

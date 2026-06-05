@@ -138,6 +138,16 @@ fn resolution_info_unknown_keys() {
 }
 
 #[test]
+fn parse_tarball_with_integrity_prefers_integrity() {
+    // When both tarball and integrity are present, integrity is the fingerprint
+    // so that a content change at the same URL is detected.
+    let content = "packages:\n  some-pkg@1.0.0:\n    resolution: {tarball: 'https://example.com/pkg.tgz', integrity: sha512-newhash}\n";
+    let pkgs = parse(content);
+    assert_eq!(pkgs[0].fingerprint, "sha512-newhash");
+    assert_eq!(pkgs[0].kind, ResolutionKind::Tarball);
+}
+
+#[test]
 fn split_v5_leading_slash() {
     // pnpm v5/v6 lockfiles use /lodash@4.17.21 with a leading slash
     let (name, ver) = split_name_version("/lodash@4.17.21");

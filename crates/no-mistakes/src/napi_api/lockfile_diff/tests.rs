@@ -402,6 +402,36 @@ fn lockfile_diff_json_impl_invalid_head_no_lockfile_returns_empty() {
 }
 
 #[test]
+fn lockfile_diff_json_impl_invalid_base_with_head_returns_err() {
+    // When head is valid but base ref is invalid, git_show_file fails for old_content.
+    // git_ref_exists returns false for the invalid base → error is returned.
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
+    std::fs::write(root.join("pnpm-lock.yaml"), lock).unwrap();
+    setup_git_repo(root);
+    std::process::Command::new("git")
+        .args(["add", "pnpm-lock.yaml"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::process::Command::new("git")
+        .args(["commit", "-m", "initial"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    let options = format!(
+        r#"{{"root": "{}", "base": "nonexistent-base-xyz", "head": "HEAD", "lockfile": "pnpm-lock.yaml"}}"#,
+        root.to_str().unwrap().replace('\\', "/")
+    );
+    let result = lockfile_diff_json_impl(options);
+    assert!(
+        result.is_err(),
+        "invalid base with head should return an error"
+    );
+}
+
+#[test]
 fn lockfile_diff_json_impl_unknown_lockfile_name_skipped() {
     // When an explicit lockfile path has a name not recognized by detect_manager,
     // the entry is skipped → empty result (no error).

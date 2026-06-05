@@ -220,6 +220,44 @@ fn tests_plan_lockfile_no_git_repo_emits_warning() {
     );
 }
 
+// Covers analyze_lockfile_changes when base ref is invalid: git_ref_exists returns false
+// and a lockfile-no-baseline warning is emitted with fallback_triggered=true.
+#[test]
+fn tests_plan_invalid_base_ref_falls_back_with_warning() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
+    setup_git_repo_with_file(root, "pnpm-lock.yaml", lock);
+    let output = Command::new(bin())
+        .args([
+            "tests",
+            "plan",
+            "--root",
+            root.to_str().unwrap(),
+            "--changed-file",
+            "pnpm-lock.yaml",
+            "--base",
+            "nonexistent-base-xyz",
+            "--global-config-fallback=true",
+            "--json",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(output.status.success());
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert!(
+        plan["fallback_triggered"].as_bool().unwrap(),
+        "invalid base should trigger fallback: {plan:?}"
+    );
+    let warnings = plan["warnings"].as_array().unwrap();
+    assert!(
+        warnings
+            .iter()
+            .any(|w| w["type"].as_str().unwrap_or("") == "lockfile-no-baseline"),
+        "expected lockfile-no-baseline warning: {plan:?}"
+    );
+}
+
 // Covers the transitive-dep fallback: a changed package that is not directly imported
 // by any codebase file (no reverse edge in the dep graph) triggers a full-suite fallback.
 #[test]
@@ -347,6 +385,52 @@ fn tests_plan_diff_only_mode_without_head_emits_warning() {
             .iter()
             .any(|w| w["type"].as_str().unwrap_or("") == "lockfile-no-baseline"),
         "expected lockfile-no-baseline warning in diff-only mode: {plan:?}"
+    );
+}
+
+// Covers the fix for plan.rs: lockfile fallback is always honored regardless of
+// --global-config-fallback. Without the fix, a diff-only patch containing only a
+// lockfile change returns zero selected tests when the flag is unset (default).
+#[test]
+fn tests_plan_diff_only_mode_without_global_fallback_flag_falls_back() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let lock_content = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
+    let diff_content = "diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml\nindex 0000000..0000001 100644\n--- a/pnpm-lock.yaml\n+++ b/pnpm-lock.yaml\n@@ -1 +1 @@\n-old\n+new\n";
+    setup_git_repo_with_file(root, "pnpm-lock.yaml", lock_content);
+    let diff_path = root.join("change.diff");
+    std::fs::write(&diff_path, diff_content).unwrap();
+    // No --global-config-fallback flag (default is false)
+    let output = Command::new(bin())
+        .args([
+            "tests",
+            "plan",
+            "--root",
+            root.to_str().unwrap(),
+            "--diff",
+            diff_path.to_str().unwrap(),
+            "--base",
+            "HEAD",
+            "--json",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert!(
+        plan["fallback_triggered"].as_bool().unwrap(),
+        "lockfile fallback should trigger even without --global-config-fallback: {plan:?}"
+    );
+    let warnings = plan["warnings"].as_array().unwrap();
+    assert!(
+        warnings
+            .iter()
+            .any(|w| w["type"].as_str().unwrap_or("") == "lockfile-no-baseline"),
+        "expected lockfile-no-baseline warning: {plan:?}"
     );
 }
 

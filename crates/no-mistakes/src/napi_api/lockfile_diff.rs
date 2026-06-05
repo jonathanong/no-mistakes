@@ -82,11 +82,20 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
         } else {
             std::fs::read_to_string(lf_path).unwrap_or_default()
         };
-        // When head is supplied, the file was detected from the head commit and may not exist
-        // at base (newly added lockfile) — treat missing base as empty baseline.
-        // Without head (disk-based), a missing base file means an invalid ref; return an error.
         let old_content = if options.head.is_some() {
-            git_show_file(&git_root, &base, &rel).unwrap_or_default()
+            match git_show_file(&git_root, &base, &rel) {
+                Some(content) => content,
+                None => {
+                    if !git_ref_exists(&git_root, &base) {
+                        return Err(napi::Error::from_reason(format!(
+                            "Could not retrieve `{}` at ref `{}`; ensure the base ref exists in the git history",
+                            rel, base
+                        )));
+                    }
+                    // Valid base ref but file not at base — newly added at head
+                    String::new()
+                }
+            }
         } else {
             git_show_file(&git_root, &base, &rel).ok_or_else(|| {
                 napi::Error::from_reason(format!(

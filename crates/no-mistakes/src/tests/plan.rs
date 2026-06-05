@@ -92,46 +92,52 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
         })
         .collect();
 
-    // 2b. Check for global configuration files (binary lockfiles or other global triggers)
-    let has_binary_lockfile_fallback =
-        global_config_fallback(args) && lockfile_analysis.fallback_triggered;
+    // 2b. Determine fallback trigger.
+    //
+    // Diff-only mode fallback (--diff without --head) is always honored: a lockfile change
+    // was detected in the diff but its new content is unreadable, so zero selected tests
+    // would be incorrect and the fallback must not be suppressed by --global-config-fallback.
+    //
+    // Other lockfile fallbacks (no --base, invalid ref) and global-config triggers
+    // (package.json, tsconfig, etc.) respect the --global-config-fallback flag.
+    let fallback_reason = if lockfile_analysis.diff_only_fallback
+        || (global_config_fallback(args) && lockfile_analysis.fallback_triggered)
+    {
+        lockfile_analysis
+            .warnings
+            .first()
+            .map(|w| (w.message.clone(), root.join(&w.file)))
+    } else if global_config_fallback(args) {
+        global_config_trigger(&root, &changed_files)
+    } else {
+        None
+    };
 
-    if global_config_fallback(args) {
-        let global_trigger = global_config_trigger(&root, &changed_files);
-        let fallback_reason = if has_binary_lockfile_fallback && global_trigger.is_none() {
-            lockfile_analysis
-                .warnings
-                .first()
-                .map(|w| (w.message.clone(), root.join(&w.file)))
-        } else {
-            global_trigger
-        };
-        if let Some((reason, trigger_file)) = fallback_reason {
-            let relative_changed = relative_path(&root, &trigger_file);
-            let all_test_files = discover_all_tests(&root, &config)?;
-            let mut selected_tests = Vec::new();
-            for test in all_test_files {
-                let rel_test = relative_path(&root, &test);
-                selected_tests.push(SelectedTest {
-                    test_file: rel_test.clone(),
-                    confidence: Confidence::High,
-                    targets: Vec::new(),
-                    reasons: vec![ImpactReason {
-                        changed_file: relative_changed.clone(),
-                        path: vec![relative_changed.clone(), rel_test],
-                        via: vec!["global configuration".to_string()],
-                    }],
-                });
-            }
-            selected_tests.sort_by(|a, b| a.test_file.cmp(&b.test_file));
-            return Ok(TestPlan {
-                selected_tests,
-                groups: Vec::new(),
-                warnings: lockfile_analysis.warnings,
-                fallback_triggered: true,
-                fallback_reason: Some(reason),
+    if let Some((reason, trigger_file)) = fallback_reason {
+        let relative_changed = relative_path(&root, &trigger_file);
+        let all_test_files = discover_all_tests(&root, &config)?;
+        let mut selected_tests = Vec::new();
+        for test in all_test_files {
+            let rel_test = relative_path(&root, &test);
+            selected_tests.push(SelectedTest {
+                test_file: rel_test.clone(),
+                confidence: Confidence::High,
+                targets: Vec::new(),
+                reasons: vec![ImpactReason {
+                    changed_file: relative_changed.clone(),
+                    path: vec![relative_changed.clone(), rel_test],
+                    via: vec!["global configuration".to_string()],
+                }],
             });
         }
+        selected_tests.sort_by(|a, b| a.test_file.cmp(&b.test_file));
+        return Ok(TestPlan {
+            selected_tests,
+            groups: Vec::new(),
+            warnings: lockfile_analysis.warnings,
+            fallback_triggered: true,
+            fallback_reason: Some(reason),
+        });
     }
 
     // 3. Build graph and test filter

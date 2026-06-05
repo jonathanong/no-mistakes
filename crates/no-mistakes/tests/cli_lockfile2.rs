@@ -198,6 +198,34 @@ fn lockfile_diff_newly_added_lockfile_reports_added_packages() {
     );
 }
 
+// Covers the base-ref validation in run_diff: when --base is an invalid ref and --head is
+// provided, the command warns and skips rather than treating the lockfile as newly added.
+#[test]
+fn lockfile_diff_invalid_base_with_head_warns_and_skips() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let lock_content = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
+    setup_git_repo_with_file(root, "pnpm-lock.yaml", lock_content);
+    let output = Command::new(bin())
+        .args([
+            "lockfile",
+            "diff",
+            "--root",
+            root.to_str().unwrap(),
+            "--base",
+            "nonexistent-base-xyz",
+            "--head",
+            "HEAD",
+            "--lockfile",
+            "pnpm-lock.yaml",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(output.status.success());
+    let arr: Vec<serde_json::Value> = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(arr.len(), 0, "invalid base ref should be skipped: {arr:?}");
+}
+
 // Covers the "deleted lockfile at head" path: when --head is a valid ref but the
 // lockfile was removed in that commit, treat new content as empty so all packages
 // previously in the lockfile are reported as removed.

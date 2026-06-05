@@ -100,11 +100,18 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
         } else {
             std::fs::read_to_string(lf_path).unwrap_or_default()
         };
-        // When --head is supplied, the file was detected from the head commit and may not exist
-        // at base (newly added lockfile) — treat a missing base file as empty baseline.
-        // Without --head (disk-based), a missing base means an invalid ref; warn and skip.
         let old_content = if args.head.is_some() {
-            git_show_file(&git_root, &args.base, &rel).unwrap_or_default()
+            match git_show_file(&git_root, &args.base, &rel) {
+                Some(content) => content,
+                None => {
+                    if !git_ref_exists(&git_root, &args.base) {
+                        eprintln!("warning: could not retrieve {} at ref {}", rel, args.base);
+                        continue;
+                    }
+                    // Valid base ref but file not at base — newly added at head
+                    String::new()
+                }
+            }
         } else {
             match git_show_file(&git_root, &args.base, &rel) {
                 Some(content) => content,
