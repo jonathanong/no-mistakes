@@ -1,8 +1,34 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 fn bin() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
+}
+
+fn setup_git_repo_with_file(root: &Path, filename: &str, content: &str) {
+    std::fs::write(root.join(filename), content).unwrap();
+    Command::new("git")
+        .args(["init", "-b", "main"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    for (k, v) in [("user.email", "test@test.com"), ("user.name", "Test")] {
+        Command::new("git")
+            .args(["config", k, v])
+            .current_dir(root)
+            .output()
+            .unwrap();
+    }
+    Command::new("git")
+        .args(["add", filename])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["commit", "-m", "initial"])
+        .current_dir(root)
+        .output()
+        .unwrap();
 }
 
 fn fixture(name: &str) -> PathBuf {
@@ -364,4 +390,149 @@ fn tests_plan_with_lockfile_base_finds_impacted_tests() {
             .any(|t| t["test_file"].as_str().unwrap().contains("utils.test")),
         "should find utils.test.mts via lodash change: {selected:?}"
     );
+}
+
+// Covers detect_lockfiles_in_root (auto-detection without --lockfile) and yarn manager_name.
+#[test]
+fn lockfile_diff_auto_detect_yarn_lock() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let content = "# yarn lockfile v1\n\nlodash@^4.0.0:\n  version \"4.17.21\"\n  resolved \"https://r.yarn/lodash.tgz\"\n  integrity sha512-x\n";
+    setup_git_repo_with_file(root, "yarn.lock", content);
+    let output = Command::new(bin())
+        .args([
+            "lockfile",
+            "diff",
+            "--root",
+            root.to_str().unwrap(),
+            "--base",
+            "HEAD",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(output.status.success());
+    let arr: Vec<serde_json::Value> = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(arr.len(), 1, "should auto-detect yarn.lock");
+    assert_eq!(arr[0]["manager"], "yarn");
+}
+
+// Covers the --head branch where new content is read via git show <head>:.
+#[test]
+fn lockfile_diff_head_reads_from_git() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let v1 = "lockfileVersion: '9.0'\n\npackages:\n  react@18.2.0:\n    resolution: {integrity: sha512-v1}\n";
+    let v2 = "lockfileVersion: '9.0'\n\npackages:\n  react@18.3.0:\n    resolution: {integrity: sha512-v2}\n";
+    setup_git_repo_with_file(root, "pnpm-lock.yaml", v1);
+    std::fs::write(root.join("pnpm-lock.yaml"), v2).unwrap();
+    Command::new("git")
+        .args(["add", "pnpm-lock.yaml"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["commit", "-m", "v2"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    let output = Command::new(bin())
+        .args([
+            "lockfile",
+            "diff",
+            "--root",
+            root.to_str().unwrap(),
+            "--base",
+            "HEAD~1",
+            "--head",
+            "HEAD",
+            "--lockfile",
+            "pnpm-lock.yaml",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(output.status.success());
+    let arr: Vec<serde_json::Value> = serde_json::from_str(&stdout(&output)).unwrap();
+    let changed = arr[0]["changed"].as_array().unwrap();
+    assert!(
+        changed.iter().any(|v| v == "react"),
+        "react should be changed: {changed:?}"
+    );
+}
+
+// Covers the continue branch when detect_manager returns None for an unknown filename.
+#[test]
+fn lockfile_diff_unrecognized_lockfile_skipped() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let output = Command::new(bin())
+        .args([
+            "lockfile",
+            "diff",
+            "--root",
+            root.to_str().unwrap(),
+            "--base",
+            "HEAD",
+            "--lockfile",
+            "custom-lock.txt",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(output.status.success());
+    let arr: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(
+        arr.as_array().unwrap().len(),
+        0,
+        "unrecognized lockfile skipped"
+    );
+}
+
+// Covers npm manager_name.
+#[test]
+fn lockfile_diff_npm_manager() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let content = r#"{"lockfileVersion":2,"packages":{"node_modules/axios":{"version":"1.6.0","resolved":"https://r.npm/axios","integrity":"sha512-x"}}}"#;
+    setup_git_repo_with_file(root, "package-lock.json", content);
+    let output = Command::new(bin())
+        .args([
+            "lockfile",
+            "diff",
+            "--root",
+            root.to_str().unwrap(),
+            "--base",
+            "HEAD",
+            "--lockfile",
+            "package-lock.json",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(output.status.success());
+    let arr: Vec<serde_json::Value> = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(arr[0]["manager"], "npm");
+}
+
+// Covers bun manager_name.
+#[test]
+fn lockfile_diff_bun_manager() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let content =
+        r#"{"lockfileVersion":0,"packages":{"axios":["axios@1.6.0",{},{"integrity":"sha512-x"}]}}"#;
+    setup_git_repo_with_file(root, "bun.lock", content);
+    let output = Command::new(bin())
+        .args([
+            "lockfile",
+            "diff",
+            "--root",
+            root.to_str().unwrap(),
+            "--base",
+            "HEAD",
+            "--lockfile",
+            "bun.lock",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(output.status.success());
+    let arr: Vec<serde_json::Value> = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(arr[0]["manager"], "bun");
 }

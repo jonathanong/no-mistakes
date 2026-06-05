@@ -141,3 +141,45 @@ fn parse_berry_invalid_yaml() {
     let pkgs = parse(content);
     assert!(pkgs.is_empty());
 }
+
+#[test]
+fn parse_berry_root_not_mapping() {
+    // Valid YAML list, but contains "__metadata:" so berry path is taken;
+    // root.as_mapping() returns None → returns empty
+    let content = "- __metadata:\n    version: 6\n";
+    assert!(parse(content).is_empty());
+}
+
+#[test]
+fn parse_berry_non_string_key_skipped() {
+    // Numeric YAML key (parses as Number, not String) → _ => continue
+    let content = "__metadata:\n  version: 6\n\n123:\n  version: 1.0.0\n  checksum: abc\n";
+    // Should parse without panic and skip the numeric-keyed entry
+    let pkgs = parse(content);
+    // Only __metadata (skipped) and numeric key (skipped) — so empty
+    assert!(pkgs.is_empty());
+}
+
+#[test]
+fn extract_yarn_name_scoped_no_version_specifier() {
+    // @scope/pkg with no @ after scope → falls through to first.to_string()
+    let result = extract_yarn_name("@scope/bare");
+    assert_eq!(result, "@scope/bare");
+}
+
+#[test]
+fn parse_classic_mid_loop_no_integrity() {
+    // Two packages; first has only resolved (no integrity).
+    // When parser hits second package header, it flushes first via mid-loop path.
+    let content = "# yarn lockfile v1\n\npkg1@^1.0.0:\n  version \"1.0.0\"\n  resolved \"https://example.com/pkg1.tgz\"\n\npkg2@^2.0.0:\n  version \"2.0.0\"\n  resolved \"https://example.com/pkg2.tgz\"\n  integrity sha512-abc\n";
+    let pkgs = parse(content);
+    let p1 = pkgs.iter().find(|p| p.name == "pkg1").unwrap();
+    assert_eq!(p1.fingerprint, "https://example.com/pkg1.tgz");
+}
+
+#[test]
+fn extract_classic_name_scoped_no_version_specifier() {
+    // @scope/pkg with no @ after scope in classic header
+    let result = extract_classic_name("@scope/bare");
+    assert_eq!(result, "@scope/bare");
+}

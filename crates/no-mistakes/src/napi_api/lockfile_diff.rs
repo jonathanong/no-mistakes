@@ -100,3 +100,6 @@ fn manager_name(m: PackageManager) -> &'static str {
         PackageManager::Bun => "bun",
     }
 }
+
+#[cfg(test)]
+mod tests;
