@@ -159,35 +159,49 @@ pub(super) fn apply_lockfile_seeds(
         super::attach_targets(&mut plan, root, discovered_tests);
         return Ok(Some(plan));
     }
-    // Merge traceable seeds into selected_map and the dependencies group result.
-    for test in &seed_result.candidates {
-        used.insert(test.test_file.clone());
-        selected_map
-            .entry(root.join(&test.test_file))
-            .and_modify(|entry| merge_selected(entry, test))
-            .or_insert_with(|| test.clone());
+    // Compute how many seeds can be added, respecting global and group limits.
+    let mut max_to_add = if has_global_limit {
+        global_limit.saturating_sub(used.len())
+    } else {
+        usize::MAX
+    };
+    if let Some(dep_group) = group_results.iter().find(|g| g.r#type == "dependencies") {
+        if let Some(limit_val) = dep_group.limit {
+            let remaining_group = limit_val.saturating_sub(dep_group.selected.len());
+            max_to_add = max_to_add.min(remaining_group);
+        }
     }
-    if !seed_result.candidates.is_empty() {
+    // Merge traceable seeds into selected_map and the dependencies group result.
+    let mut added: Vec<String> = Vec::new();
+    for test in &seed_result.candidates {
+        if added.len() >= max_to_add {
+            break;
+        }
+        if used.insert(test.test_file.clone()) {
+            selected_map
+                .entry(root.join(&test.test_file))
+                .and_modify(|entry| merge_selected(entry, test))
+                .or_insert_with(|| test.clone());
+            added.push(test.test_file.clone());
+        }
+    }
+    if !added.is_empty() {
         // Append to existing dependencies group or push a new one. The group is at a
         // known position in default_groups, but be defensive with find+modify.
-        let dep_names: Vec<String> = seed_result
-            .candidates
-            .iter()
-            .map(|t| t.test_file.clone())
-            .collect();
         if let Some(dep_group) = group_results
             .iter_mut()
             .find(|g| g.r#type == "dependencies")
         {
-            for name in dep_names {
+            for name in added {
                 if !dep_group.selected.contains(&name) {
                     dep_group.selected.push(name);
                 }
             }
+            dep_group.remaining = all_tests.len().saturating_sub(used.len());
         } else {
             group_results.push(TestPlanGroupResult {
                 r#type: "dependencies".to_string(),
-                selected: dep_names,
+                selected: added,
                 remaining: all_tests.len().saturating_sub(used.len()),
                 limit: None,
             });
