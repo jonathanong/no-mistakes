@@ -371,9 +371,9 @@ fn lockfile_diff_json_impl_head_autodetect_new_lockfile() {
 }
 
 #[test]
-fn lockfile_diff_json_impl_invalid_head_no_lockfile_returns_empty() {
-    // Without explicit lockfile, invalid head → detect_lockfiles_from_head returns empty
-    // → empty result (not an error), matching CLI behavior.
+fn lockfile_diff_json_impl_invalid_head_no_lockfile_returns_err() {
+    // Without explicit lockfile, an invalid head ref is rejected before autodetection
+    // rather than silently returning an empty result.
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
     let lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
@@ -393,11 +393,11 @@ fn lockfile_diff_json_impl_invalid_head_no_lockfile_returns_empty() {
         r#"{{"root": "{}", "base": "HEAD", "head": "nonexistent-ref-xyz"}}"#,
         root.to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options).unwrap();
-    let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
+    let result = lockfile_diff_json_impl(options);
+    assert!(result.is_err(), "invalid head ref should return an error");
     assert!(
-        entries.is_empty(),
-        "invalid head without explicit lockfile returns empty"
+        result.unwrap_err().reason.contains("does not exist"),
+        "error should mention ref does not exist"
     );
 }
 

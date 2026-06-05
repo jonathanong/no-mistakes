@@ -39,6 +39,26 @@ fn lockfile_diff_json_impl_binary_lockfile_explicit_returns_err() {
 }
 
 #[test]
+fn lockfile_diff_json_impl_invalid_head_without_explicit_lockfile_returns_err() {
+    // Covers the git_ref_exists guard added before detect_lockfiles_from_head:
+    // when `head` is present but not a valid ref and no explicit lockfile is
+    // supplied, the function must return an error rather than silently returning [].
+    let dir = tempfile::tempdir().unwrap();
+    let options = format!(
+        r#"{{"root": "{}", "base": "HEAD", "head": "nonexistent-ref-xyz"}}"#,
+        dir.path().to_str().unwrap().replace('\\', "/")
+    );
+    let result = lockfile_diff_json_impl(options);
+    assert!(result.is_err(), "invalid head ref should return an error");
+    let err = result.unwrap_err();
+    assert!(
+        err.reason.contains("does not exist"),
+        "error should mention 'does not exist': {}",
+        err.reason
+    );
+}
+
+#[test]
 fn lockfile_diff_json_impl_newly_added_no_head_reports_all_added() {
     // Covers lines 114-116 (no-head branch): valid base ref but file absent at
     // base → old_content treated as empty → all packages reported as added.

@@ -166,6 +166,38 @@ fn parse_real_bun_lock_bare_sri_integrity() {
 }
 
 #[test]
+fn parse_nested_package_key_uses_specifier_name() {
+    // Nested bun.lock keys like "@react-three/postprocessing/maath" contain a
+    // slash beyond the scoped package boundary. The package name comes from the
+    // specifier tuple element, not the key.
+    let content = r#"{
+      "lockfileVersion": 0,
+      "packages": {
+        "@react-three/postprocessing/maath": ["maath@0.6.0", {}, {"integrity": "sha512-x"}]
+      }
+    }"#;
+    let pkgs = parse(content);
+    assert_eq!(pkgs.len(), 1);
+    assert_eq!(pkgs[0].name, "maath");
+    assert_eq!(pkgs[0].version, "0.6.0");
+}
+
+#[test]
+fn parse_url_specifier_falls_back_to_key_name() {
+    // When the specifier is a bare URL (no "pkg@" prefix) the derived name
+    // would contain "://" — fall back to the map key in that case.
+    let content = r#"{
+      "lockfileVersion": 0,
+      "packages": {
+        "my-pkg": ["https://example.com/my-pkg.tgz", {}, {"integrity": "sha512-y"}]
+      }
+    }"#;
+    let pkgs = parse(content);
+    assert_eq!(pkgs.len(), 1);
+    assert_eq!(pkgs[0].name, "my-pkg");
+}
+
+#[test]
 fn parse_four_element_no_integrity_falls_back_to_resolved() {
     let content = r#"{
       "lockfileVersion": 0,

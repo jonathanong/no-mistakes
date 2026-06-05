@@ -41,8 +41,17 @@ pub fn parse(content: &str) -> Vec<ResolvedPackage> {
                     integrity.to_string()
                 }
             };
+            // Derive name from specifier (e.g. "maath@0.6.0" → "maath") rather than
+            // the raw map key, which for nested entries like "@react-three/postprocessing/maath"
+            // does not match the actual package name.  Fall back to the key for URL
+            // specifiers (no clean pkg@ver structure) so the key is authoritative there.
+            let pkg_name = specifier
+                .rsplit_once('@')
+                .map(|(n, _)| n)
+                .filter(|n| !n.contains("://"))
+                .unwrap_or(name.as_str());
             Some(ResolvedPackage {
-                name: name.clone(),
+                name: pkg_name.to_string(),
                 version: version.to_string(),
                 fingerprint,
                 kind: ResolutionKind::Registry,

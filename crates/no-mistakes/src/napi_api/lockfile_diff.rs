@@ -36,6 +36,12 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
     let lf_paths: Vec<PathBuf> = if let Some(lf) = options.lockfile {
         vec![root.join(lf)]
     } else if let Some(head) = options.head.as_deref() {
+        if !git_ref_exists(&git_root, head) {
+            return Err(napi::Error::from_reason(format!(
+                "head ref `{}` does not exist; ensure it exists in the git history",
+                head
+            )));
+        }
         // Detect from head commit so newly added lockfiles are found even when
         // the working tree is still at a different commit.
         detect_lockfiles_from_head(&git_root, head, &root)
