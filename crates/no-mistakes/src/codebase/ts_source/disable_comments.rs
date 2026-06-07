@@ -20,7 +20,8 @@ pub(crate) fn is_under_skipped_dir(root: &Path, path: &Path, extra_skip: &HashSe
 
 fn git_ls_files(root: &Path) -> Option<Vec<String>> {
     let mut cmd = Command::new("git");
-    cmd.arg("-C").arg(root).arg("ls-files");
+    cmd.current_dir(root);
+    cmd.arg("ls-files");
     cmd.env_remove("GIT_DIR")
         .env_remove("GIT_COMMON_DIR")
         .env_remove("GIT_WORK_TREE")
