@@ -1,7 +1,7 @@
-use crate::playwright::playwright_tests::TestOccurrenceScope;
+use crate::playwright::playwright_tests::{TestOccurrenceScope, TestStatus};
 use crate::playwright::playwright_urls::api::{
     extract_playwright_url_literals_from_program, extract_playwright_url_literals_with_helpers,
-    extract_playwright_urls,
+    extract_playwright_url_occurrences, extract_playwright_urls,
 };
 use crate::playwright::playwright_urls::visitor::extract_playwright_url_occurrences_from_program;
 use crate::playwright::test_support::fixture_source;
@@ -218,6 +218,31 @@ fn to_have_url_uses_first_url_literal_argument() {
     let src = fixture_source(&["ast-snippets", "playwright-urls", "to-have-url-label.ts"]);
     let urls = extract_playwright_url_literals_with_helpers(&src, &[]);
     assert_eq!(urls, vec!["/settings"]);
+}
+
+#[test]
+fn extracts_occurrences_with_status_and_deduplicates() {
+    let src = r#"
+        test('active test', async ({ page }) => {
+            await page.goto('/first');
+            await page.goto('/second');
+            await page.goto('/first'); // duplicate active
+        });
+        test.skip('skipped test', async ({ page }) => {
+            await page.goto('/first'); // duplicate skipped
+            await page.goto('/third');
+        });
+    "#;
+    let occurrences = extract_playwright_url_occurrences(src);
+    assert_eq!(
+        occurrences,
+        vec![
+            ("/first".to_string(), TestStatus::Active),
+            ("/first".to_string(), TestStatus::Skipped),
+            ("/second".to_string(), TestStatus::Active),
+            ("/third".to_string(), TestStatus::Skipped),
+        ]
+    );
 }
 
 #[test]
