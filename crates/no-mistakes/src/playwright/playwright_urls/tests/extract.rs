@@ -1,6 +1,7 @@
 use crate::playwright::playwright_tests::TestOccurrenceScope;
 use crate::playwright::playwright_urls::api::{
-    extract_playwright_url_literals_with_helpers, extract_playwright_urls,
+    extract_playwright_url_literals_from_program, extract_playwright_url_literals_with_helpers,
+    extract_playwright_urls,
 };
 use crate::playwright::playwright_urls::visitor::extract_playwright_url_occurrences_from_program;
 use crate::playwright::test_support::fixture_source;
@@ -84,6 +85,28 @@ fn ignores_external_urls() {
     let src = fixture_source(&["ast-snippets", "playwright-urls", "external-urls.ts"]);
     let urls = extract_playwright_urls(&src);
     assert!(urls.is_empty());
+}
+
+#[test]
+fn extracts_playwright_url_literals_from_program_test() {
+    let src = r#"
+        await page.goto("/c");
+        await page.goto("/a");
+        await page.goto("/b");
+        await page.goto("/a"); // duplicate
+        await navigateTo("/d");
+    "#;
+    let urls =
+        crate::playwright::ast::with_program(Path::new("fixture.ts"), src, |program, source| {
+            extract_playwright_url_literals_from_program(
+                program,
+                source,
+                &["navigateTo".to_string()],
+            )
+        })
+        .expect("fixture parses");
+
+    assert_eq!(urls, vec!["/a", "/b", "/c", "/d"]);
 }
 
 #[test]
