@@ -110,6 +110,21 @@ fn extracts_playwright_url_literals_from_program_test() {
 }
 
 #[test]
+fn test_extract_playwright_url_literals_with_helpers_basic() {
+    let src = "await page.goto('/login');";
+    let urls = extract_playwright_url_literals_with_helpers(src, &[]);
+    assert_eq!(urls, vec!["/login"]);
+}
+
+#[test]
+fn test_extract_playwright_url_literals_with_helpers_with_helpers() {
+    let src = "await customNavigate('/dashboard'); await page.goto('/settings');";
+    let helpers = vec!["customNavigate".to_string()];
+    let urls = extract_playwright_url_literals_with_helpers(src, &helpers);
+    assert_eq!(urls, vec!["/dashboard", "/settings"]);
+}
+
+#[test]
 fn ignores_non_href_selectors() {
     let src = fixture_source(&["ast-snippets", "playwright-urls", "non-href-click.ts"]);
     let urls = extract_playwright_urls(&src);
