@@ -2,14 +2,17 @@
 
 ## When to use
 
-Use `tests plan` when the project has a `testPlan:` block configured in
-`.no-mistakes.yml`. It is the high-level replacement for `dependents --test` —
-it respects per-environment test groups, coverage percentages, and global
-fallback triggers.
+Use `tests plan` for all test selection — it is the preferred replacement for
+`dependents --test` in all repos, with or without a `testPlan:` block in
+`.no-mistakes.yml`. Without a config block it uses default direct + dependencies
+groups; with a config block it adds custom environments, limits, coverage groups
+(Playwright only), and global-config triggers. It also handles diff/deleted-file
+and lockfile cases that `dependents --test` misses.
 
-Use `tests why` when you need to explain or debug a selection. Use
-`tests impact` when the exact set of changed files is already known and
-`testPlan` isn't needed.
+Use `tests why` when you need to explain which dependency path connects a
+changed file to a selected test. Use `tests impact` when you have a fixed set
+of changed files and only need impacted test paths with no environment or group
+config applied.
 
 ## `tests plan`
 
@@ -46,7 +49,7 @@ Node API: `testsPlan(options)`.
 
 ## `tests why`
 
-Explain the dependency path from a changed file to a selected or skipped test.
+Explain the dependency path from a changed file to a selected test.
 
 ```sh
 no-mistakes tests why tests/users.test.mts --plan plan.json
