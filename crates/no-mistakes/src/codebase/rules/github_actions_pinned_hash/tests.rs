@@ -247,3 +247,87 @@ fn reusable_workflow_uses_field_checked() {
     let findings = run_on_workflow("    uses: my-org/my-repo/.github/workflows/build.yml@main\n");
     assert_eq!(findings.len(), 1);
 }
+
+#[test]
+fn check_entry_point_uses_discovery() {
+    // smoke-test the public `check()` entry point; uses the pass fixture
+    // which enables the rule and has only pinned actions
+    let root = fixture("pass");
+    let config = config_with_options("{}");
+    let findings = super::check(&root, &config).unwrap();
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
+fn non_yaml_extension_not_checked() {
+    // A file with a non-yml/yaml extension in .github/workflows/ must be skipped
+    let tmp = tempfile::tempdir().unwrap();
+    let wf_dir = tmp.path().join(".github/workflows");
+    std::fs::create_dir_all(&wf_dir).unwrap();
+    let path = wf_dir.join("ci.sh");
+    std::fs::write(&path, "uses: actions/checkout@v6.0.2\n").unwrap();
+    let (uses_re, sha_re, version_re) = build_patterns();
+    let exclude_set = build_exclude_globset(&[]);
+    let findings = check_file(
+        &path,
+        tmp.path(),
+        &exclude_set,
+        &uses_re,
+        &sha_re,
+        &version_re,
+    );
+    assert!(
+        findings.is_empty(),
+        "non-yaml extension should not be checked"
+    );
+}
+
+#[test]
+fn composite_action_yaml_extension_checked() {
+    // .github/actions/**/action.yaml (note: .yaml not .yml) must be checked
+    let tmp = tempfile::tempdir().unwrap();
+    let action_dir = tmp.path().join(".github/actions/my-action");
+    std::fs::create_dir_all(&action_dir).unwrap();
+    let path = action_dir.join("action.yaml");
+    std::fs::write(&path, "      - uses: actions/checkout@v6.0.2\n").unwrap();
+    let (uses_re, sha_re, version_re) = build_patterns();
+    let exclude_set = build_exclude_globset(&[]);
+    let findings = check_file(
+        &path,
+        tmp.path(),
+        &exclude_set,
+        &uses_re,
+        &sha_re,
+        &version_re,
+    );
+    assert_eq!(findings.len(), 1, "composite action.yaml must be checked");
+}
+
+#[test]
+fn unreadable_file_produces_no_findings() {
+    // check_file must return empty when the path does not exist
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join(".github/workflows/missing.yml");
+    let (uses_re, sha_re, version_re) = build_patterns();
+    let exclude_set = build_exclude_globset(&[]);
+    let findings = check_file(
+        &path,
+        tmp.path(),
+        &exclude_set,
+        &uses_re,
+        &sha_re,
+        &version_re,
+    );
+    assert!(
+        findings.is_empty(),
+        "missing file should produce no findings"
+    );
+}
+
+#[test]
+fn uses_line_not_matching_regex_skipped() {
+    // A line containing "uses:" but not as a YAML step key must not produce findings.
+    // The regex requires `^\s*-?\s*uses:\s+<value>`, so bare `uses:` with nothing after is skipped.
+    let findings = run_on_workflow("      # uses: some comment reference\n");
+    assert!(findings.is_empty(), "{findings:?}");
+}
