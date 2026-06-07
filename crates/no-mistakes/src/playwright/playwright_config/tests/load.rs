@@ -60,6 +60,28 @@ fn validate_config_names_errors_on_duplicate_names() {
 }
 
 #[test]
+fn load_many_without_project_filter_combines_configs() {
+    let dir = fixture_path(&["scan-config", "multi-playwright-config"]);
+    let config = dir.join("playwright.config.mts");
+    let storybook = dir.join("playwright.storybook.config.mts");
+
+    // Using `None` as the filter should combine all projects and clear the top-level name
+    let result = load_many(&dir, &[config, storybook], None).unwrap();
+    assert_eq!(result.name, None);
+    assert_eq!(result.projects.len(), 2);
+}
+
+#[test]
+fn load_many_with_single_config_without_filter_succeeds() {
+    let dir = fixture_path(&["scan-config", "multi-playwright-config"]);
+    let config = dir.join("playwright.config.mts");
+
+    let result = load_many(&dir, &[config], None).unwrap();
+    assert_eq!(result.name, None);
+    assert_eq!(result.projects.len(), 1);
+}
+
+#[test]
 fn load_many_with_matching_project_filter_selects_named_config() {
     let dir = fixture_path(&["scan-config", "multi-playwright-config"]);
     let config = dir.join("playwright.config.mts");
