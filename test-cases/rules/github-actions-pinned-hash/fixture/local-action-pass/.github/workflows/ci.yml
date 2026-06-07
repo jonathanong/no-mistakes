@@ -1,0 +1,8 @@
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Local action references are exempt from hash-pinning
+      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/build

@@ -1,4 +1,5 @@
 pub mod agents_md_max_size;
+pub mod github_actions_pinned_hash;
 pub mod banned_renamed_files;
 pub mod doc_consistency;
 pub mod file_extension_policy;
@@ -37,6 +38,7 @@ pub use run::{run_check, run_check_with_facts};
 
 pub use agents_md_max_size::RULE_ID as AGENTS_MD_MAX_SIZE;
 pub use banned_renamed_files::RULE_ID as BANNED_RENAMED_FILES;
+pub use github_actions_pinned_hash::RULE_ID as GITHUB_ACTIONS_PINNED_HASH;
 pub use doc_consistency::RULE_ID as DOC_CONSISTENCY;
 pub use file_extension_policy::RULE_ID as FILE_EXTENSION_POLICY;
 pub use forbidden_dependencies::RULE_ID as FORBIDDEN_DEPENDENCIES;
@@ -206,9 +208,6 @@ fn finding_is_suppressed(source: &str, finding: &RuleFinding) -> bool {
         })
 }
 
-#[cfg(test)]
-mod suppression_tests;
-#[cfg(test)]
-mod target_roots_tests;
-#[cfg(test)]
-mod tests;
+#[cfg(test)] mod suppression_tests;
+#[cfg(test)] mod target_roots_tests;
+#[cfg(test)] mod tests;
