@@ -10,6 +10,7 @@ const RETRYABLE_NETWORK_CODES = new Set([
   "EAI_AGAIN",
   "ENETUNREACH",
   "EPIPE",
+  "ERR_STREAM_PREMATURE_CLOSE",
 ]);
 
 class HttpError extends Error {

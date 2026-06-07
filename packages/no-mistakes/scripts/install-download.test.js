@@ -406,6 +406,9 @@ test("HttpError and classification helpers", () => {
   const e = new Error("net");
   e.code = "ECONNRESET";
   assert.equal(isRetryableError(e), true);
+  const premature = new Error("Premature close");
+  premature.code = "ERR_STREAM_PREMATURE_CLOSE";
+  assert.equal(isRetryableError(premature), true);
   const tagged = new Error("explicit");
   tagged.retryable = true;
   assert.equal(isRetryableError(tagged), true);
