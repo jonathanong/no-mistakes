@@ -36,8 +36,8 @@ Key flags:
 - `--entrypoint <FILE>` — treat a file as the root regardless of changes.
 - `--environment <NAME>` — pick an env group from `testPlan.environments`.
 - `--limit-percent <N>` / `--limit-files <N>` — override `testPlan` limits.
-- `--global-config-fallback` — run the full suite when no targeted tests are
-  found instead of returning nothing.
+- `--global-config-fallback true|false` — run the full suite when no targeted
+  tests are found instead of returning nothing.
 - `--format paths|json` — `paths` for shell substitution, `json` for agents.
 
 Node API: `testsPlan(options)`.
@@ -97,13 +97,24 @@ testPlan:
         globalConfigFallback: false
       pull-request:
         groups:
-          - type: coverage
+          - type: direct
+          - type: sample
         limit:
           files: 50
+  playwright:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: coverage
+        limit:
+          percent: 30
 ```
 
 `fullSuiteTriggers` and `environments` are nested under the framework key
 (`vitest` or `playwright`). Environment names default to `pre-push`.
 
-Group types: `direct`, `dependencies`, `coverage`, `sample`.
+Group types: `direct`, `dependencies`, `sample` — for `vitest`;
+`direct`, `dependencies`, `coverage`, `sample` — for `playwright`.
+(`coverage` is a Playwright-only group type; vitest does not support it.)
 Consult `docs/configuration/test-plan.md` for the full schema.

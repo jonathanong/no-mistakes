@@ -4,8 +4,9 @@
 
 Use `playwright check` before finishing any Next.js App Router or Playwright
 work — it validates that configured routes and selectors are covered by tests.
-It is already run by `no-mistakes check`; call it directly for a faster, focused
-result during iteration.
+It is run by `no-mistakes check` only when Playwright is configured in
+`.no-mistakes.yml`; call it directly when you need the gate regardless of global
+config.
 
 Use `playwright related` to find Playwright tests that cover a changed page,
 route, or selector-bearing component.
@@ -35,7 +36,9 @@ All `playwright` subcommands accept:
 
 ## `playwright check`
 
-Fail on uncovered routes, uncovered configured selectors, or duplicates.
+Fail on uncovered routes or uncovered configured selectors. Duplicate selector
+failures require `--assert-unique-test-ids` or `--assert-unique-html-ids` to be
+set (they are not checked by default).
 
 ```sh
 no-mistakes playwright check --json
