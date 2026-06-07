@@ -15,7 +15,11 @@ pub fn load(root: &Path, config_path: &Path) -> Result<PlaywrightConfig> {
     }
 
     let source = std::fs::read_to_string(config_path)?;
-    parse_from_path(&source, config_path, config_path.parent().unwrap_or(root))
+    let mut parent = config_path.parent().unwrap_or(root);
+    if parent.as_os_str().is_empty() {
+        parent = root;
+    }
+    parse_from_path(&source, config_path, parent)
 }
 
 pub fn load_many(

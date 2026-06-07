@@ -60,28 +60,6 @@ fn validate_config_names_errors_on_duplicate_names() {
 }
 
 #[test]
-fn load_many_without_project_filter_combines_configs() {
-    let dir = fixture_path(&["scan-config", "multi-playwright-config"]);
-    let config = dir.join("playwright.config.mts");
-    let storybook = dir.join("playwright.storybook.config.mts");
-
-    // Using `None` as the filter should combine all projects and clear the top-level name
-    let result = load_many(&dir, &[config, storybook], None).unwrap();
-    assert_eq!(result.name, None);
-    assert_eq!(result.projects.len(), 2);
-}
-
-#[test]
-fn load_many_with_single_config_without_filter_succeeds() {
-    let dir = fixture_path(&["scan-config", "multi-playwright-config"]);
-    let config = dir.join("playwright.config.mts");
-
-    let result = load_many(&dir, &[config], None).unwrap();
-    assert_eq!(result.name, None);
-    assert_eq!(result.projects.len(), 1);
-}
-
-#[test]
 fn load_many_with_matching_project_filter_selects_named_config() {
     let dir = fixture_path(&["scan-config", "multi-playwright-config"]);
     let config = dir.join("playwright.config.mts");
@@ -131,7 +109,7 @@ fn test_dir_resolves_absolute_relative_and_relative_config_dir() {
         test_match: vec![],
         test_ignore: vec![],
         base_url: None,
-        test_id_attribute: Some("data-testid".to_string()),
+        test_id_attribute: "data-testid".to_string(),
     };
     assert_eq!(
         absolute.test_dir(Path::new("/repo")),
@@ -145,7 +123,7 @@ fn test_dir_resolves_absolute_relative_and_relative_config_dir() {
         test_match: vec![],
         test_ignore: vec![],
         base_url: None,
-        test_id_attribute: Some("data-testid".to_string()),
+        test_id_attribute: "data-testid".to_string(),
     };
     assert_eq!(
         absolute_config_relative_test_dir.test_dir(Path::new("/repo")),
@@ -159,7 +137,7 @@ fn test_dir_resolves_absolute_relative_and_relative_config_dir() {
         test_match: vec![],
         test_ignore: vec![],
         base_url: None,
-        test_id_attribute: Some("data-testid".to_string()),
+        test_id_attribute: "data-testid".to_string(),
     };
     assert_eq!(
         relative_config.test_dir(Path::new("/repo")),
@@ -169,19 +147,10 @@ fn test_dir_resolves_absolute_relative_and_relative_config_dir() {
 
 #[test]
 fn load_bare_config_path_uses_root() {
-    let dir = tempfile::tempdir().unwrap();
-
-    // We want to test that a config path without a parent still works.
-    // However, since `load` requires reading the file, and we don't want to change
-    // the global CWD, we mock this by copying the internal implementation logic
-    // of `load` to test that `parse_from_path` handles the root correctly when
-    // `config_path.parent()` is empty.
-    // Wait, let's just use parse_from_path directly to test it.
-    use crate::playwright::playwright_config::parse::parse_from_path;
-
-    let source = "export default { testDir: 'tests' };";
-    let config_path = Path::new("playwright.config.ts");
-
-    let parsed = parse_from_path(source, config_path, dir.path()).unwrap();
-    assert_eq!(parsed.projects[0].test_dir, "tests");
+    let dir = fixture_path(&["ast-snippets", "playwright_config", "load-existing"]);
+    let cd = std::env::current_dir().unwrap();
+    std::env::set_current_dir(&dir).unwrap();
+    let parsed = load(&dir, Path::new("playwright.config.ts")).unwrap();
+    std::env::set_current_dir(cd).unwrap();
+    assert_eq!(parsed.projects[0].test_dir, "./tests");
 }
