@@ -114,7 +114,7 @@ pub(crate) fn run_shellcheck(
     }
 
     let result = Command::new("shellcheck")
-        .args(["-f", "gcc", "-S", sev])
+        .args(["-f", "gcc", "-S", sev, "--"])
         .args(shell_files)
         .output();
     handle_shellcheck_result(root, shell_files, result)
