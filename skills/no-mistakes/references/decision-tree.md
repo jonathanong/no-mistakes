@@ -26,15 +26,39 @@ What are you trying to find?
 │
 ├─ Queue producer/worker hops
 │   └─ no-mistakes queues edges [file] [--depth N]
+│   └─ no-mistakes queues related <file> [--direction deps|dependents|both]
 │   └─ no-mistakes queues check
 │
 ├─ Server route extraction / related files
 │   └─ no-mistakes server routes
-│   └─ no-mistakes server related <file>
+│   └─ no-mistakes server related <file> [--direction deps|dependents|both]
+│   └─ no-mistakes server edges [file] [--depth N]
 │
-├─ Tests to run after changing a file
-│   └─ no-mistakes dependents <file> --test vitest --relationship test
-│   or no-mistakes dependents <file> --test playwright --relationship test
+├─ Tests to run after changing a file (preferred)
+│   └─ no-mistakes tests plan vitest --changed-file <file> --format paths
+│   └─ no-mistakes tests plan playwright --changed-file <file> --format paths
+│
+├─ Tests to run after changing a file (lower-level fallback)
+│   └─ no-mistakes dependents <file> --test vitest --format paths
+│   or no-mistakes dependents <file> --test playwright --format paths
+│
+├─ Explain why a test was selected
+│   └─ no-mistakes tests why <test> --plan plan.json
+│
+├─ Playwright route/selector coverage gate
+│   └─ no-mistakes playwright check --json
+│
+├─ Playwright tests covering a page/component
+│   └─ no-mistakes playwright related <file> --json
+│
+├─ What a Playwright test asserts (routes, selectors, fetches)
+│   └─ no-mistakes playwright tests <test-file> --json
+│
+├─ API calls made by a Next.js App Router route
+│   └─ no-mistakes fetches <route-or-file> --format json
+│
+├─ Which packages changed between two lockfile refs
+│   └─ no-mistakes lockfile diff --base <ref> --format json
 │
 ├─ Which routes or queue jobs reach a file
 │   └─ no-mistakes dependents <file> --relationship route

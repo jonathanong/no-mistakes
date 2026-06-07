@@ -1,6 +1,6 @@
 ---
 name: no-mistakes
-description: Answer structural TS/JS and app-graph questions deterministically. Use for imports, dependents, named exports/imports, test impact, React traits, queue producer/worker hops, server routes, and global no-mistakes checks.
+description: Answer structural TS/JS and app-graph questions deterministically. Use for imports, dependents, named exports/imports, test impact, test planning, Playwright coverage, React traits, queue/server graphs, fetches, lockfile diffs, and global no-mistakes checks.
 allowed-tools: Bash(no-mistakes:*) Bash(rg:*) Read Glob
 ---
 
@@ -8,8 +8,8 @@ allowed-tools: Bash(no-mistakes:*) Bash(rg:*) Read Glob
 
 Use `no-mistakes` before `rg` when the question is structural: what a TS/JS file
 imports, who imports it, what it exports, which tests are related, whether a
-queue job is connected, which server route owns an endpoint, or what React
-traits a component has.
+queue job is connected, which server route owns an endpoint, what a Next.js
+route fetches, or what React traits a component has.
 
 ## Command Selection
 
@@ -18,14 +18,22 @@ traits a component has.
 | What does this file transitively import? | `no-mistakes dependencies <file>` |
 | Which files are affected by touching this file? | `no-mistakes dependents <file>` |
 | Which files import this named export? | `no-mistakes dependents <file>#SYMBOL` |
-| Which tests should rerun? | `no-mistakes dependents <file> --test vitest --format paths` |
+| Which tests should rerun? | `no-mistakes tests plan vitest --changed-file <file> --format paths` |
+| Which tests should rerun? (lower-level fallback) | `no-mistakes dependents <file> --test vitest --format paths` |
+| Why was this test selected? | `no-mistakes tests why <test> --plan plan.json` |
 | What does this module export/import? | `no-mistakes symbols <file> --include both` |
 | What React traits does this component have? | `no-mistakes react analyze <glob>` |
 | Does this component tree call fetch? | `no-mistakes react check <glob> --assert-no-fetch` |
+| Are all App Router routes/selectors covered by Playwright? | `no-mistakes playwright check` |
+| Which Playwright tests cover this page/component? | `no-mistakes playwright related <file>` |
+| What does this Playwright test assert? | `no-mistakes playwright tests <test-file>` |
+| Which API calls does this Next.js route make? | `no-mistakes fetches <route-or-file>` |
+| Which packages changed between two lockfile refs? | `no-mistakes lockfile diff --base <ref>` |
 | Which queue producer/worker files are connected? | `no-mistakes queues related <file>` |
 | Are queue producers/workers unmatched? | `no-mistakes queues check` |
 | What server routes exist? | `no-mistakes server routes` |
 | Which server route files are related? | `no-mistakes server related <file>` |
+| Raw queue/server edges for debugging | `no-mistakes queues edges [file]` / `no-mistakes server edges [file]` |
 | Run configured project checks in parallel | `no-mistakes check` |
 | What edge kinds are supported? | Read `docs/graph-edges.md` or `references/decision-tree.md` |
 | Plain text, comments, log messages, exact call lines | `rg` |
@@ -36,11 +44,25 @@ traits a component has.
 # Machine-readable graph query
 no-mistakes dependents src/utils.mts --root /path/to/project --format json
 
-# Shell-friendly affected test list
-no-mistakes dependents src/utils.mts --test vitest --format paths
+# Test selection (preferred over dependents --test)
+no-mistakes tests plan vitest --changed-file src/utils.mts --format paths
+no-mistakes tests plan playwright --changed-file web/app/users/page.tsx --format paths
+
+# Explain why a test was selected
+no-mistakes tests why tests/users.test.mts --plan plan.json
 
 # Public API and imports
 no-mistakes symbols src/api.mts --include both --format json
+
+# Playwright coverage gate before finishing Next.js / Playwright work
+no-mistakes playwright check --json
+no-mistakes playwright related web/app/users/page.tsx --json
+
+# Page-to-API coupling
+no-mistakes fetches web/app/users/page.tsx --format json
+
+# Lockfile diff (integrates with tests plan)
+no-mistakes lockfile diff --base origin/main --format json
 
 # Queue and server graph checks
 no-mistakes queues check --format json
@@ -48,11 +70,14 @@ no-mistakes server routes --format json
 ```
 
 Prefer `--format json` for agent parsing and `--format paths` for command
-substitution. Use `--timings` on graph, queue, and server commands when you need
-to explain cost.
+substitution. `--timings` writes phase timings to stderr on graph, queue, and
+server commands.
 
-For repeated programmatic queries, prefer the async Node API documented in
-`docs/node-api.md` instead of shelling out multiple times.
+For repeated graph/symbol/playwright/project queries in the same process,
+prefer `analyzeProject({reports:[…]})` from the async Node API documented in
+`docs/node-api.md` — it shares a single graph build across all requested
+reports. Note: `analyzeProject` does not support `testsPlan`, `fetches`, or
+`lockfileDiff`; call those dedicated Node API functions directly.
 
 ## Graph Options
 
@@ -60,12 +85,13 @@ For repeated programmatic queries, prefer the async Node API documented in
 
 - `--root <PATH>` for the project root.
 - `--tsconfig <FILE>` for path aliases; pass this explicitly in monorepos.
-- `--depth <N>` or `--max-depth <N>` to limit traversal.
+- `--depth <N>` to limit traversal depth.
 - `--filter <GLOB>` to include only matching files; repeatable.
-- `--target-module <GLOB>` to include only matching external module nodes.
+- `--target-module <GLOB>` to include only matching external module nodes (useful with `--relationship package`).
 - `--test vitest|playwright|cargo` to filter to test files.
 - `--relationship import|import-static|import-dynamic|import-type|import-require|workspace|package|test|route|queue|md|ci|http|process|asset|react|all`.
-- `--format json|md|yml|paths|human`, `--json`, `--timings`, and `--jobs`.
+- `--direction deps|dependents|both` for `queues related` and `server related`.
+- `--format json|md|yml|paths|human`, `--json`, `--timings` (stderr), and `--jobs`.
 
 `FILE#SYMBOL` works only for `dependents`/`related`, not `dependencies`.
 Namespace imports match all symbols; use `rg` on returned files to confirm exact
@@ -79,11 +105,13 @@ member usage.
 - `references/dependents.md`: full `dependents`/`related` reference and
   `FILE#SYMBOL` behavior.
 - `references/symbols.md`: full `symbols` reference.
+- `references/tests.md`: full `tests plan/why` reference and `testPlan` config.
+- `references/playwright.md`: full `playwright` command reference.
 - `references/monorepo-resolution.md`: tsconfig paths and workspace packages.
 - `references/limits-and-fallbacks.md`: unsupported forms and `rg` fallbacks.
-- Repository docs: `docs/cli/README.md`, `docs/graph-edges.md`,
-  `docs/rules/README.md`, `docs/eslint-rules/README.md`, and
-  `docs/configuration/README.md`.
+- Repository docs: `docs/agent-guide.md`, `docs/cli/README.md`,
+  `docs/graph-edges.md`, `docs/rules/README.md`, `docs/eslint-rules/README.md`,
+  and `docs/configuration/README.md`.
 
 ## Hard Limits
 
@@ -97,3 +125,7 @@ member usage.
   static when agent-readable analysis is required.
 - Selector text edges are approximate; exact configured test ID selector edges
   are stronger evidence.
+- Non-TS/JS files are not walked for import edges; use `rg` for Go, Rust, CSS, JSON.
+- `tests plan` works without `testPlan` in `.no-mistakes.yml` (uses default
+  direct + dependencies groups). Configure `testPlan` to add environments,
+  custom limits, coverage groups (Playwright only), and global-config triggers.

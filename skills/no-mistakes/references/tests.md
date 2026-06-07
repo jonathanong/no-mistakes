@@ -1,0 +1,125 @@
+# `tests` command reference
+
+## When to use
+
+Use `tests plan` for all test selection — it is the preferred replacement for
+`dependents --test` in all repos, with or without a `testPlan:` block in
+`.no-mistakes.yml`. Without a config block it uses default direct + dependencies
+groups; with a config block it adds custom environments, limits, coverage groups
+(Playwright only), and global-config triggers. It also handles diff/deleted-file
+and lockfile cases that `dependents --test` misses.
+
+Use `tests why` when you need to explain which dependency path connects a
+changed file to a selected test. Use `tests impact` when you have a fixed set
+of changed files and only need impacted test paths with no environment or group
+config applied.
+
+## `tests plan`
+
+Select tests to run from changed files, diffs, and configured environments.
+
+```sh
+# Changed-file selection (preferred)
+no-mistakes tests plan vitest --changed-file src/utils.mts --format paths
+no-mistakes tests plan playwright --changed-file web/app/users/page.tsx --format paths
+
+# Diff-based (from git)
+no-mistakes tests plan vitest --base origin/main --format json
+
+# Named environment (from .no-mistakes.yml testPlan)
+no-mistakes tests plan vitest --environment prePush --changed-file src/api.mts --format paths
+```
+
+Key flags:
+- `--changed-file <FILE>` — explicit changed file path; repeatable.
+- `--changed-files <FILE>` — path to a file containing one changed path per line.
+- `--base <REF>` / `--head <REF>` — compute changed files from a git diff.
+- `--diff <FILE>` / `--diff-stdin` / `--diff-command <CMD>` — supply a diff
+  directly.
+- `--entrypoint <FILE>` — treat a file as the root regardless of changes.
+- `--environment <NAME>` — pick an env group from `testPlan.environments`.
+- `--limit-percent <N>` / `--limit-files <N>` — override `testPlan` limits.
+- `--global-config-fallback true|false` — run the full suite when a global
+  config file changes (package.json, tsconfig.json, etc.) or when a lockfile
+  diff cannot be parsed; does not trigger for ordinary source files that happen
+  to have no test dependents.
+- `--format paths|json` — `paths` for shell substitution, `json` for agents.
+
+Node API: `testsPlan(options)`.
+
+## `tests why`
+
+Explain the dependency path from a changed file to a selected test.
+
+```sh
+no-mistakes tests why tests/users.test.mts --plan plan.json
+no-mistakes tests why tests/users.test.mts --changed src/api.mts --format json
+```
+
+Key flags:
+- `--plan <FILE>` — path to a previously generated `tests plan` JSON file.
+- `--changed <FILE>` — changed file to compute the path from (without a prior plan).
+- `--format text|json`.
+
+Node API: `testsWhy(options)`.
+
+## `tests impact`
+
+Impacted tests for specific changed files (no `testPlan` config required).
+
+```sh
+no-mistakes tests impact src/utils.mts --format paths
+```
+
+Node API: `testsImpact(options)`.
+
+## `tests comment`
+
+Render a plan JSON as a Markdown PR comment.
+
+```sh
+no-mistakes tests comment plan.json
+no-mistakes tests comment plan.json --out comment.md
+```
+
+Node API: `testsComment(options)`.
+
+## `testPlan` configuration
+
+In `.no-mistakes.yml`:
+
+```yaml
+testPlan:
+  vitest:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies
+        limit:
+          percent: 20
+          files: 30
+        globalConfigFallback: false
+      pull-request:
+        groups:
+          - type: direct
+          - type: sample
+        limit:
+          files: 50
+  playwright:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: coverage
+        limit:
+          percent: 30
+```
+
+`fullSuiteTriggers` and `environments` are nested under the framework key
+(`vitest` or `playwright`). Environment names default to `pre-push`.
+
+Group types: `direct`, `dependencies`, `sample` — for `vitest`;
+`direct`, `dependencies`, `coverage`, `sample` — for `playwright`.
+(`coverage` is a Playwright-only group type; vitest does not support it.)
+Consult `docs/configuration/test-plan.md` for the full schema.

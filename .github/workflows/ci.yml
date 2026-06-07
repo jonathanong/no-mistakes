@@ -167,6 +167,7 @@ jobs:
 
       - name: Upload Rust coverage to Codecov
         if: ${{ env.CODECOV_TOKEN != '' }}
+        continue-on-error: true
         uses: codecov/codecov-action@v6.0.1
         with:
           token: ${{ env.CODECOV_TOKEN }}
@@ -176,6 +177,7 @@ jobs:
 
       - name: Upload JavaScript coverage to Codecov
         if: ${{ env.CODECOV_TOKEN != '' }}
+        continue-on-error: true
         uses: codecov/codecov-action@v6.0.1
         with:
           token: ${{ env.CODECOV_TOKEN }}
