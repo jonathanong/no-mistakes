@@ -122,6 +122,8 @@ jobs:
 
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@56545b37b57562edd73171cb6c62cc509db4c34e # v2.81.7
+        with:
+          tool: cargo-llvm-cov
 
       - name: Clean Rust coverage artifacts
         run: |
