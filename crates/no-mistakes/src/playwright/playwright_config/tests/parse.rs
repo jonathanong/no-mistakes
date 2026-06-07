@@ -3,6 +3,14 @@ use crate::playwright::test_support::fixture_source;
 use std::path::Path;
 
 #[test]
+fn parse_returns_default_when_no_default_export() {
+    let source = "const x = 1;";
+    let parsed = parse(source, Path::new("/repo")).unwrap();
+    assert_eq!(parsed.projects.len(), 1);
+    assert_eq!(parsed.projects[0].test_dir, ".");
+}
+
+#[test]
 fn parses_test_dir_and_match() {
     let source = fixture_source(&["ast-snippets", "playwright_config", "test-dir-and-match.ts"]);
     let parsed = parse(&source, Path::new("/repo")).unwrap();
