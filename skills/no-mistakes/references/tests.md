@@ -36,8 +36,10 @@ Key flags:
 - `--entrypoint <FILE>` — treat a file as the root regardless of changes.
 - `--environment <NAME>` — pick an env group from `testPlan.environments`.
 - `--limit-percent <N>` / `--limit-files <N>` — override `testPlan` limits.
-- `--global-config-fallback true|false` — run the full suite when no targeted
-  tests are found instead of returning nothing.
+- `--global-config-fallback true|false` — run the full suite when a global
+  config file changes (package.json, tsconfig.json, etc.) or when a lockfile
+  diff cannot be parsed; does not trigger for ordinary source files that happen
+  to have no test dependents.
 - `--format paths|json` — `paths` for shell substitution, `json` for agents.
 
 Node API: `testsPlan(options)`.

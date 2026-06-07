@@ -18,8 +18,8 @@ route fetches, or what React traits a component has.
 | What does this file transitively import? | `no-mistakes dependencies <file>` |
 | Which files are affected by touching this file? | `no-mistakes dependents <file>` |
 | Which files import this named export? | `no-mistakes dependents <file>#SYMBOL` |
-| Which tests should rerun? (with `testPlan` config) | `no-mistakes tests plan vitest --changed-file <file> --format paths` |
-| Which tests should rerun? (without `testPlan` config) | `no-mistakes dependents <file> --test vitest --format paths` |
+| Which tests should rerun? | `no-mistakes tests plan vitest --changed-file <file> --format paths` |
+| Which tests should rerun? (lower-level fallback) | `no-mistakes dependents <file> --test vitest --format paths` |
 | Why was this test selected? | `no-mistakes tests why <test> --plan plan.json` |
 | What does this module export/import? | `no-mistakes symbols <file> --include both` |
 | What React traits does this component have? | `no-mistakes react analyze <glob>` |
@@ -44,7 +44,7 @@ route fetches, or what React traits a component has.
 # Machine-readable graph query
 no-mistakes dependents src/utils.mts --root /path/to/project --format json
 
-# Test selection (preferred when testPlan is configured)
+# Test selection (preferred over dependents --test)
 no-mistakes tests plan vitest --changed-file src/utils.mts --format paths
 no-mistakes tests plan playwright --changed-file web/app/users/page.tsx --format paths
 
@@ -124,5 +124,6 @@ member usage.
 - Selector text edges are approximate; exact configured test ID selector edges
   are stronger evidence.
 - Non-TS/JS files are not walked for import edges; use `rg` for Go, Rust, CSS, JSON.
-- `tests plan` requires `testPlan` to be configured in `.no-mistakes.yml`; fall
-  back to `dependents --test` when it is not.
+- `tests plan` works without `testPlan` in `.no-mistakes.yml` (uses default
+  direct + dependencies groups). Configure `testPlan` to add environments,
+  custom limits, coverage groups (Playwright only), and global-config triggers.

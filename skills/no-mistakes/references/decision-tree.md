@@ -34,11 +34,11 @@ What are you trying to find?
 │   └─ no-mistakes server related <file> [--direction deps|dependents|both]
 │   └─ no-mistakes server edges [file] [--depth N]
 │
-├─ Tests to run after changing a file (with testPlan config)
+├─ Tests to run after changing a file (preferred)
 │   └─ no-mistakes tests plan vitest --changed-file <file> --format paths
 │   └─ no-mistakes tests plan playwright --changed-file <file> --format paths
 │
-├─ Tests to run after changing a file (without testPlan config)
+├─ Tests to run after changing a file (lower-level fallback)
 │   └─ no-mistakes dependents <file> --test vitest --relationship test
 │   or no-mistakes dependents <file> --test playwright --relationship test
 │
