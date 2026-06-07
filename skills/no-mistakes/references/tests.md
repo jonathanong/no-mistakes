@@ -28,7 +28,8 @@ no-mistakes tests plan vitest --environment prePush --changed-file src/api.mts -
 ```
 
 Key flags:
-- `--changed-file <FILE>` / `--changed-files <FILE>…` — explicit changed files.
+- `--changed-file <FILE>` — explicit changed file path; repeatable.
+- `--changed-files <FILE>` — path to a file containing one changed path per line.
 - `--base <REF>` / `--head <REF>` — compute changed files from a git diff.
 - `--diff <FILE>` / `--diff-stdin` / `--diff-command <CMD>` — supply a diff
   directly.
@@ -83,25 +84,26 @@ Node API: `testsComment(options)`.
 In `.no-mistakes.yml`:
 
 ```yaml
-test_plan:
-  fullSuiteTriggers:
-    vitest:
-      - package.json
-      - pnpm-lock.yaml
-  environments:
-    prePush:
-      - name: direct
-        type: direct
-      - name: dependencies
-        type: dependencies
+testPlan:
+  vitest:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies
         limit:
           percent: 20
-    pullRequest:
-      - name: coverage
-        type: coverage
+          files: 30
+        globalConfigFallback: false
+      pull-request:
+        groups:
+          - type: coverage
         limit:
           files: 50
 ```
 
-Types: `direct`, `dependencies`, `coverage`, `sample`.
+`fullSuiteTriggers` and `environments` are nested under the framework key
+(`vitest` or `playwright`). Environment names default to `pre-push`.
+
+Group types: `direct`, `dependencies`, `coverage`, `sample`.
 Consult `docs/configuration/test-plan.md` for the full schema.

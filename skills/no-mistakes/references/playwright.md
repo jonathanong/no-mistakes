@@ -18,14 +18,17 @@ asserted, fetches made) before editing it or its coverage expectations.
 All `playwright` subcommands accept:
 
 - `--playwright-config <FILE>` — path to a Playwright config (repeatable for
-  multiple projects).
-- `--project <NAME>` — filter to a specific Playwright project.
+  multiple configs).
+- `--project <NAME>` — filter by top-level no-mistakes Playwright config name
+  (not Playwright's inner `projects` array).
 - `--root <PATH>` — project root.
 - `--config <FILE>` — path to `.no-mistakes.yml`.
-- `--json` / `--format json|human` — output format.
-- `--assert-conditional-tests` — fail on `test.skip` / `test.fixme` without
-  issue references.
-- `--allow-skipped-tests` — don't fail on skipped tests.
+- `--json` — emit JSON output.
+- `--assert-conditional-tests` — require coverage from active (non-conditional)
+  tests only; conditional tests (`test.skip`/`test.fixme`) do not satisfy
+  coverage when this flag is set.
+- `--allow-skipped-tests` — let skipped tests count as coverage (default:
+  skipped tests are ignored).
 - `--assert-unique-test-ids` — fail on duplicate `data-testid` / `data-pw`
   selectors.
 - `--assert-unique-html-ids` — fail on duplicate HTML `id` attributes.
@@ -65,11 +68,11 @@ Node API: `playwrightTests(options)`.
 ## `playwright edges`
 
 Raw test-to-route and test-to-selector edges (useful for debugging missing
-coverage or building external tooling).
+coverage or building external tooling). No positional file argument —
+use `playwright tests <test-file>` to inspect a single test's assertions.
 
 ```sh
 no-mistakes playwright edges --json
-no-mistakes playwright edges playwright/tests/users.spec.ts --json
 ```
 
 Node API: `playwrightEdges(options)`.
