@@ -1,4 +1,6 @@
 rules:
+  - rule: github-actions-pinned-hash
+    scope: repository
   - rule: rust-max-lines-per-file
     scope: repository
     options:

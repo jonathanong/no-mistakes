@@ -1,0 +1,15 @@
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # FAIL: tag ref, no SHA, no comment
+      - uses: actions/checkout@v6.0.2
+      # FAIL: branch ref
+      - uses: dtolnay/rust-toolchain@stable
+      # FAIL: SHA but missing version comment
+      - uses: actions/setup-node@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      # FAIL: SHA but bad comment (branch name, not version)
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # main
+      # PASS: correctly pinned with version comment
+      - uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1

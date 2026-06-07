@@ -25,6 +25,7 @@ rules:
 | [`banned-renamed-files`](banned-renamed-files.md) | Ban legacy filenames that should be renamed. |
 | [`doc-consistency`](doc-consistency.md) | Require files, headings, substrings, and banned-substring checks. |
 | [`file-extension-policy`](file-extension-policy.md) | Enforce allowed or banned extensions in configured scopes. |
+| [`github-actions-pinned-hash`](github-actions-pinned-hash.md) | Require every `uses:` step to be pinned to a commit SHA with a version comment. |
 | [`forbidden-dependencies`](forbidden-dependencies.md) | Prevent configured files/modules from depending on forbidden targets. |
 | [`lockfile-allowlist`](lockfile-allowlist.md) | Allow only configured package lock files. |
 | [`nextjs-no-api-routes`](nextjs-no-api-routes.md) | Ban Next.js API route files. |

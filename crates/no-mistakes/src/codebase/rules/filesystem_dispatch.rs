@@ -6,10 +6,10 @@ type RuleAcc = Mutex<Vec<(&'static str, Result<Vec<RuleFinding>>)>>;
 
 use super::{
     agents_md_max_size, banned_renamed_files, doc_consistency, file_extension_policy,
-    lockfile_allowlist, no_empty_or_comments_only_files, no_git_identity_mutation,
-    package_json_registry_only, require_files_in_subdirs, require_test_per_subdir,
-    required_local_docs, rust_rules_combined, shellcheck_runner, strict_package_layout,
-    tsconfig_alias_folder_mapping, vitest_test_correspondence,
+    github_actions_pinned_hash, lockfile_allowlist, no_empty_or_comments_only_files,
+    no_git_identity_mutation, package_json_registry_only, require_files_in_subdirs,
+    require_test_per_subdir, required_local_docs, rust_rules_combined, shellcheck_runner,
+    strict_package_layout, tsconfig_alias_folder_mapping, vitest_test_correspondence,
 };
 
 mod preserved;
@@ -21,11 +21,13 @@ use super::{
     RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS, SHELLCHECK_RUNNER,
     STRICT_PACKAGE_LAYOUT, TSCONFIG_ALIAS_FOLDER_MAPPING, VITEST_TEST_CORRESPONDENCE,
 };
+const GITHUB_ACTIONS_PINNED_HASH: &str = github_actions_pinned_hash::RULE_ID;
 
 macro_rules! filesystem_rules {
     ($macro:ident) => {
         $macro! {
             AGENTS_MD_MAX_SIZE => agents_md_max_size::check_with_files,
+            GITHUB_ACTIONS_PINNED_HASH => github_actions_pinned_hash::check_with_files,
             TSCONFIG_ALIAS_FOLDER_MAPPING => tsconfig_alias_folder_mapping::check_with_files,
             NO_GIT_IDENTITY_MUTATION => no_git_identity_mutation::check_with_files,
             PACKAGE_JSON_REGISTRY_ONLY => package_json_registry_only::check_with_files,

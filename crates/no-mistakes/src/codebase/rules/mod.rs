@@ -3,6 +3,7 @@ pub mod banned_renamed_files;
 pub mod doc_consistency;
 pub mod file_extension_policy;
 pub mod forbidden_dependencies;
+pub mod github_actions_pinned_hash;
 pub mod lockfile_allowlist;
 pub mod nextjs_no_api_routes;
 pub mod nextjs_no_caching;
