@@ -56,9 +56,9 @@ pub(crate) fn build_exclude_globset(patterns: &[String]) -> GlobSet {
 pub(crate) fn build_patterns() -> (Regex, Regex, Regex) {
     (
         Regex::new(r"^\s*-?\s*uses:\s+(\S+)(.*)$").expect("uses pattern"),
-        Regex::new(r"^[0-9a-f]{40}$").expect("sha pattern"),
-        // Allow `# v1`, `# v1.2`, `# v1.2.3`, `# 1.87.0`, etc.
-        Regex::new(r"^#\s*v?\d+(?:\.\d+)*(?:[-+][\w.-]+)?\s*$").expect("version comment pattern"),
+        Regex::new(r"^[0-9a-fA-F]{40}$").expect("sha pattern"),
+        // Allow `# v1`, `# v1.2`, `# v1.2.3`, `# 1.87.0`, `# v1.0.0-beta+build.1`
+        Regex::new(r"^#\s*v?\d+(?:\.\d+)*(?:[-+][\w.+-]+)?\s*$").expect("version comment pattern"),
     )
 }
 
@@ -113,7 +113,12 @@ pub(crate) fn check_file(
         let Some(caps) = uses_re.captures(line) else {
             continue;
         };
-        let uses_value = caps.get(1).map_or("", |m| m.as_str());
+        let raw = caps.get(1).map_or("", |m| m.as_str());
+        let uses_value = raw
+            .strip_prefix('"')
+            .and_then(|s| s.strip_suffix('"'))
+            .or_else(|| raw.strip_prefix('\'').and_then(|s| s.strip_suffix('\'')))
+            .unwrap_or(raw);
         let trailing = caps.get(2).map_or("", |m| m.as_str()).trim();
 
         if uses_value.starts_with("./")

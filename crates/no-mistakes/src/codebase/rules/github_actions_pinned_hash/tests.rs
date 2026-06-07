@@ -80,6 +80,45 @@ fn correctly_pinned_passes() {
 }
 
 #[test]
+fn double_quoted_uses_passes() {
+    let findings = run_on_workflow(
+        "      - uses: \"actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd\" # v6.0.2\n",
+    );
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn single_quoted_uses_passes() {
+    let findings = run_on_workflow(
+        "      - uses: 'actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd' # v6.0.2\n",
+    );
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn double_quoted_tag_ref_flagged() {
+    let findings = run_on_workflow("      - uses: \"actions/checkout@v6.0.2\" # v6.0.2\n");
+    assert_eq!(findings.len(), 1);
+    assert!(findings[0].message.contains("not a 40-char commit SHA"));
+}
+
+#[test]
+fn build_metadata_version_comment_passes() {
+    let findings = run_on_workflow(
+        "      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v1.0.0-beta+build.1\n",
+    );
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn uppercase_sha_passes() {
+    let findings = run_on_workflow(
+        "      - uses: actions/checkout@DE0FAC2E4500DABE0009E67214FF5F5447CE83DD # v6.0.2\n",
+    );
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
 fn tag_ref_flagged() {
     let findings = run_on_workflow("      - uses: actions/checkout@v6.0.2\n");
     assert_eq!(findings.len(), 1);
