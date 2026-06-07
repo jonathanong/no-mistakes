@@ -30,17 +30,21 @@ fn run_on_workflow(content: &str) -> Vec<RuleFinding> {
     std::fs::write(&path, content).unwrap();
     let (uses_re, sha_re, version_re) = build_patterns();
     let exclude_set = build_exclude_globset(&[]);
-    check_file(&path, tmp.path(), &exclude_set, &uses_re, &sha_re, &version_re)
+    check_file(
+        &path,
+        tmp.path(),
+        &exclude_set,
+        &uses_re,
+        &sha_re,
+        &version_re,
+    )
 }
 
 #[test]
 fn pass_fixture_produces_no_findings() {
     let root = fixture("pass");
     let config = config_with_options("{}");
-    let files = vec![root
-        .join(".github")
-        .join("workflows")
-        .join("ci.yml")];
+    let files = vec![root.join(".github").join("workflows").join("ci.yml")];
     let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 }
@@ -49,16 +53,11 @@ fn pass_fixture_produces_no_findings() {
 fn fail_fixture_produces_findings() {
     let root = fixture("fail");
     let config = config_with_options("{}");
-    let files = vec![root
-        .join(".github")
-        .join("workflows")
-        .join("ci.yml")];
+    let files = vec![root.join(".github").join("workflows").join("ci.yml")];
     let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(!findings.is_empty(), "expected findings");
     assert!(
-        findings
-            .iter()
-            .all(|f| f.rule == RULE_ID),
+        findings.iter().all(|f| f.rule == RULE_ID),
         "all findings should have correct rule id"
     );
 }
@@ -67,10 +66,7 @@ fn fail_fixture_produces_findings() {
 fn local_action_pass_fixture_produces_no_findings() {
     let root = fixture("local-action-pass");
     let config = config_with_options("{}");
-    let files = vec![root
-        .join(".github")
-        .join("workflows")
-        .join("ci.yml")];
+    let files = vec![root.join(".github").join("workflows").join("ci.yml")];
     let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 }
@@ -157,15 +153,21 @@ fn docker_ref_exempt() {
 fn non_workflow_yaml_not_checked() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("config.yml");
-    std::fs::write(
-        &path,
-        "      - uses: actions/checkout@v6.0.2\n",
-    )
-    .unwrap();
+    std::fs::write(&path, "      - uses: actions/checkout@v6.0.2\n").unwrap();
     let (uses_re, sha_re, version_re) = build_patterns();
     let exclude_set = build_exclude_globset(&[]);
-    let findings = check_file(&path, tmp.path(), &exclude_set, &uses_re, &sha_re, &version_re);
-    assert!(findings.is_empty(), "non-workflow yaml should not be checked");
+    let findings = check_file(
+        &path,
+        tmp.path(),
+        &exclude_set,
+        &uses_re,
+        &sha_re,
+        &version_re,
+    );
+    assert!(
+        findings.is_empty(),
+        "non-workflow yaml should not be checked"
+    );
 }
 
 #[test]
@@ -181,12 +183,12 @@ fn short_sha_flagged() {
 fn exclude_path_option_skips_file() {
     let root = fixture("fail");
     let config = config_with_options("excludePaths: ['.github/workflows/ci.yml']");
-    let files = vec![root
-        .join(".github")
-        .join("workflows")
-        .join("ci.yml")];
+    let files = vec![root.join(".github").join("workflows").join("ci.yml")];
     let findings = check_with_files(&root, &config, &files).unwrap();
-    assert!(findings.is_empty(), "excluded path should produce no findings");
+    assert!(
+        findings.is_empty(),
+        "excluded path should produce no findings"
+    );
 }
 
 #[test]

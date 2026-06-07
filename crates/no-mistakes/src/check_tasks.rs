@@ -11,7 +11,7 @@ use std::time::{Duration, Instant};
 
 const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::AGENTS_MD_MAX_SIZE,
-    rules::GITHUB_ACTIONS_PINNED_HASH,
+    rules::github_actions_pinned_hash::RULE_ID,
     rules::BANNED_RENAMED_FILES,
     rules::DOC_CONSISTENCY,
     rules::FILE_EXTENSION_POLICY,

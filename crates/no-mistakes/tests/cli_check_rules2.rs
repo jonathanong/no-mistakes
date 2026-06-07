@@ -37,8 +37,7 @@ fn stdout(o: &Output) -> String {
 #[test]
 fn github_actions_pinned_hash_fails_for_tag_ref() {
     let root = fixture("github-actions-pinned-hash", "fail");
-    let findings =
-        no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
     let body = format!("{findings:?}");
 
     assert!(!findings.is_empty(), "expected findings");
@@ -49,8 +48,7 @@ fn github_actions_pinned_hash_fails_for_tag_ref() {
 #[test]
 fn github_actions_pinned_hash_passes_for_pinned_workflows() {
     let root = fixture("github-actions-pinned-hash", "pass");
-    let findings =
-        no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 }
 
@@ -68,7 +66,6 @@ fn github_actions_pinned_hash_cli_fails_for_tag_ref() {
 #[test]
 fn github_actions_pinned_hash_passes_for_local_actions() {
     let root = fixture("github-actions-pinned-hash", "local-action-pass");
-    let findings =
-        no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 }
