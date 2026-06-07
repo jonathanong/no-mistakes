@@ -88,6 +88,7 @@ Playwright coverage is driven by `tests.playwright` in `.no-mistakes.yml`:
 tests:
   playwright:
     configs: playwright.config.mts
+    frontendRoot: web/app    # required for route discovery in Next.js App Router
     selectors:
       testIds:
         - data-pw
@@ -100,4 +101,6 @@ tests:
       - '**/*.stories.tsx'
 ```
 
+`frontendRoot` sets the root directory for App Router route discovery;
+`selectorRoots` sets the directories scanned for test ID selectors.
 Consult `docs/configuration/tests.md` for the full schema.

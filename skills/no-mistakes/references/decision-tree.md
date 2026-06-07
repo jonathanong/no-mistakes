@@ -39,8 +39,8 @@ What are you trying to find?
 │   └─ no-mistakes tests plan playwright --changed-file <file> --format paths
 │
 ├─ Tests to run after changing a file (lower-level fallback)
-│   └─ no-mistakes dependents <file> --test vitest --relationship test
-│   or no-mistakes dependents <file> --test playwright --relationship test
+│   └─ no-mistakes dependents <file> --test vitest --format paths
+│   or no-mistakes dependents <file> --test playwright --format paths
 │
 ├─ Explain why a test was selected
 │   └─ no-mistakes tests why <test> --plan plan.json

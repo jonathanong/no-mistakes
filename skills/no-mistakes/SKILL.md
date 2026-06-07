@@ -73,9 +73,11 @@ Prefer `--format json` for agent parsing and `--format paths` for command
 substitution. `--timings` writes phase timings to stderr on graph, queue, and
 server commands.
 
-For repeated in-process queries, prefer `analyzeProject({reports:[…]})` from
-the async Node API documented in `docs/node-api.md` — it shares a single graph
-build across all requested reports.
+For repeated graph/symbol/playwright/project queries in the same process,
+prefer `analyzeProject({reports:[…]})` from the async Node API documented in
+`docs/node-api.md` — it shares a single graph build across all requested
+reports. Note: `analyzeProject` does not support `testsPlan`, `fetches`, or
+`lockfileDiff`; call those dedicated Node API functions directly.
 
 ## Graph Options
 
