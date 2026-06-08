@@ -125,6 +125,25 @@ test("treats malformed urls as non-file URLs", async () => {
   await assert.rejects(() => download("%", "noop.txt"), /ERR_INVALID_URL|Invalid URL/);
 });
 
+test("isFileUrl handles objects that cannot be stringified", async () => {
+  // Pass an object that throws when converted to a string or parsed by new URL()
+  // to exercise the try-catch block inside isFileUrl.
+  const badUrl = {
+    toString() {
+      throw new Error("Cannot convert to string");
+    },
+  };
+
+  // fetchText uses isFileUrl internally.
+  // isFileUrl will catch the error when URL tries to parse badUrl and return false.
+  // Then fetchText will proceed to call request(), which uses url.startsWith,
+  // causing a TypeError.
+  await assert.rejects(
+    () => fetchText(badUrl, () => {}, { maxAttempts: 1, baseDelayMs: 1 }),
+    /url\.startsWith is not a function/
+  );
+});
+
 test("fetchText limits response size", async () => {
   const server = createServer((_request, response) => {
     response.writeHead(200);
