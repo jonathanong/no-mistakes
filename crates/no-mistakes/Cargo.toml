@@ -58,3 +58,7 @@ harness = false
 [[bench]]
 name = "check"
 harness = false
+
+[[bench]]
+name = "bench_playwright_load"
+harness = false

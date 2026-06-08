@@ -3,6 +3,7 @@ use super::merge::DEFAULT_TEST_ID_ATTRIBUTE;
 use super::parse::parse_from_path;
 use super::types::{PlaywrightConfig, TestProject};
 use anyhow::Result;
+use rayon::prelude::*;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -30,11 +31,13 @@ pub fn load_many(
         return Ok(default_config(root));
     }
 
-    let mut configs = Vec::new();
-    for config_path in config_paths {
-        let config = load(root, config_path)?;
-        configs.push((config_path, config));
-    }
+    let configs: Vec<(&PathBuf, PlaywrightConfig)> = config_paths
+        .par_iter()
+        .map(|config_path| {
+            let config = load(root, config_path)?;
+            Ok((config_path, config))
+        })
+        .collect::<Result<Vec<_>>>()?;
 
     validate_config_names(&configs, config_name_filter)?;
     match config_name_filter {
