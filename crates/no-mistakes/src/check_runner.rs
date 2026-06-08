@@ -138,12 +138,12 @@ pub(crate) fn run_all(
     let filesystem_rules = completed.filesystem_rules;
     let warnings = [
         react_warning,
-        react.warning.clone(),
-        queues.warning.clone(),
-        rules.warning.clone(),
-        integration.warning.clone(),
-        codebase.warning.clone(),
-        filesystem_rules.warning.clone(),
+        react.warning,
+        queues.warning,
+        rules.warning,
+        integration.warning,
+        codebase.warning,
+        filesystem_rules.warning,
     ]
     .into_iter()
     .flatten()
