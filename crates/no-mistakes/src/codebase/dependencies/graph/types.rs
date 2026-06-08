@@ -93,6 +93,32 @@ pub enum EdgeKind {
     Selector,
 }
 
+impl EdgeKind {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            EdgeKind::Import => "import",
+            EdgeKind::TypeImport => "type-import",
+            EdgeKind::DynamicImport => "dynamic-import",
+            EdgeKind::Require => "require",
+            EdgeKind::TestOf => "test",
+            EdgeKind::RouteRef => "route",
+            EdgeKind::QueueEnqueue => "queue-enqueue",
+            EdgeKind::QueueWorker => "queue-worker",
+            EdgeKind::RouteTest => "route-test",
+            EdgeKind::Layout => "layout",
+            EdgeKind::MarkdownLink => "md",
+            EdgeKind::WorkspaceImport => "workspace",
+            EdgeKind::PackageDependency => "package",
+            EdgeKind::CiInvocation => "ci",
+            EdgeKind::HttpCall => "http",
+            EdgeKind::ProcessSpawn => "process",
+            EdgeKind::AssetImport => "asset",
+            EdgeKind::ReactRender => "react-render",
+            EdgeKind::Selector => "selector",
+        }
+    }
+}
+
 /// A single node in the traversal result.
 #[derive(Debug, Clone, PartialEq)]
 pub struct NodeEntry {
