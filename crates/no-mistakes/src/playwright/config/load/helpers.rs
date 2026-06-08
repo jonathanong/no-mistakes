@@ -92,12 +92,6 @@ pub(super) fn find_default_playwright_configs(root: &Path) -> Result<Vec<PathBuf
             continue;
         }
 
-        if let Ok(ft) = entry.file_type() {
-            if !ft.is_file() && !ft.is_symlink() {
-                continue;
-            }
-        }
-
         let path = entry.path();
         if !path.is_file() {
             continue;
