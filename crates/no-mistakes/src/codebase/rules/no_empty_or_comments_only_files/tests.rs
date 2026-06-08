@@ -94,7 +94,7 @@ fn whitespace_only_file_detected() {
 fn js_line_comment_only() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("a.ts");
-    std::fs::write(&path, "// TODO: implement later\n").unwrap();
+    std::fs::write(&path, "// comment\n").unwrap();
     let findings = check_file(&path, tmp.path());
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("only comments"));
@@ -140,7 +140,7 @@ fn sql_real_content_passes() {
 fn html_comment_only() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("doc.md");
-    std::fs::write(&path, "<!-- todo -->\n").unwrap();
+    std::fs::write(&path, "<!-- comment -->\n").unwrap();
     let findings = check_file(&path, tmp.path());
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("only comments"));
