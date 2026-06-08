@@ -169,19 +169,16 @@ fn test_dir_resolves_absolute_relative_and_relative_config_dir() {
 
 #[test]
 fn load_bare_config_path_uses_root() {
-    let dir = tempfile::tempdir().unwrap();
-
     // We want to test that a config path without a parent still works.
-    // However, since `load` requires reading the file, and we don't want to change
-    // the global CWD, we mock this by copying the internal implementation logic
-    // of `load` to test that `parse_from_path` handles the root correctly when
-    // `config_path.parent()` is empty.
-    // Wait, let's just use parse_from_path directly to test it.
+    // We mock this by copying the internal implementation logic of `load`
+    // to test that `parse_from_path` handles the root correctly when
+    // `config_path.parent()` is empty, without mutating global process state.
+
     use crate::playwright::playwright_config::parse::parse_from_path;
 
     let source = "export default { testDir: 'tests' };";
     let config_path = Path::new("playwright.config.ts");
 
-    let parsed = parse_from_path(source, config_path, dir.path()).unwrap();
+    let parsed = parse_from_path(source, config_path, Path::new("/repo")).unwrap();
     assert_eq!(parsed.projects[0].test_dir, "tests");
 }
