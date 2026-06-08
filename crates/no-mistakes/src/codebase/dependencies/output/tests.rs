@@ -1,3 +1,4 @@
+use crate::codebase::dependencies::graph::EdgeKind;
 use super::*;
 use std::path::{Path, PathBuf};
 
