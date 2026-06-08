@@ -105,21 +105,21 @@ fn run_filesystem_rules_with_config(
                         s.spawn(|_| {
                             let rule_files = preserved::filesystem_rule_files(root, config, $id, files);
                             let res = $call(root, config, &rule_files);
-                            acc.lock().unwrap().push(($id, res));
+                            acc.lock().expect("Failed to lock rule accumulator mutex").push(($id, res));
                         });
                     }
                 )*
                 if rust_rules_enabled(config) {
                     s.spawn(|_| {
                         let res = rust_rules_combined::check_with_files(root, config, files);
-                        acc.lock().unwrap().push(("rust-rules-combined", res));
+                        acc.lock().expect("Failed to lock rule accumulator mutex").push(("rust-rules-combined", res));
                     });
                 }
             });
         };
     }
     filesystem_rules!(run_rules);
-    let mut results = acc.into_inner().unwrap();
+    let mut results = acc.into_inner().expect("Failed to consume rule accumulator mutex");
     results.sort_unstable_by_key(|(id, _)| *id);
     let mut findings = Vec::new();
     for (_, r) in results {
