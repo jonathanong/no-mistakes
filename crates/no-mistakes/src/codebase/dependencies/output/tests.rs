@@ -1,5 +1,5 @@
-use crate::codebase::dependencies::graph::EdgeKind;
 use super::*;
+use crate::codebase::dependencies::EdgeKind;
 use std::path::{Path, PathBuf};
 
 fn json_value(roots: &[String], entries: &[NodeEntry], root: &Path) -> serde_json::Value {
