@@ -95,7 +95,6 @@ test("rejects checksum mismatches and cleans temporary files", async () => {
   const asset = assetName(version, target);
   const content = Buffer.from("#!/bin/sh\nexit 0\n");
   const destination = join(vendorDir, binName);
-  const temp = `${destination}.tmp-${process.pid}`;
 
   await mkdir(join(root, "assets"));
   await writeFile(join(root, "assets", asset), content);
@@ -106,10 +105,9 @@ test("rejects checksum mismatches and cleans temporary files", async () => {
       () => install({ baseUrl: assetBaseUrl(root), target, vendorDir, version }),
       /Checksum mismatch/,
     );
-    await assert.rejects(() => access(temp), { code: "ENOENT" });
     const vendorContents = await readdir(vendorDir);
     assert.equal(
-      vendorContents.some((entry) => entry.endsWith(`.tmp-${process.pid}`)),
+      vendorContents.some((entry) => entry.includes(".tmp-")),
       false,
     );
   } finally {
