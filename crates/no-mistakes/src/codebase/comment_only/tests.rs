@@ -60,7 +60,7 @@ fn test_sql_has_content() {
 
 #[test]
 fn test_rs_comments_only() {
-    let src = "// TODO: implement\n/* placeholder */\n";
+    let src = "// comment\n/* placeholder */\n";
     assert_eq!(classify_content(src, "rs"), ContentKind::CommentsOnly);
 }
 
@@ -72,7 +72,7 @@ fn test_css_has_content() {
 
 #[test]
 fn test_md_html_comment_only() {
-    let src = "<!-- TODO: write docs -->\n";
+    let src = "<!-- comment -->\n";
     assert_eq!(classify_content(src, "md"), ContentKind::CommentsOnly);
 }
 
