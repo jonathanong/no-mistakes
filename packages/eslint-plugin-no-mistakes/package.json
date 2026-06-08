@@ -22,8 +22,8 @@
   },
   "devDependencies": {
     "@typescript-eslint/parser": "^8.60.0",
-    "@vitest/coverage-v8": "^4.1.7",
-    "eslint": "^10.4.0",
+    "@vitest/coverage-v8": "^4.1.8",
+    "eslint": "^10.4.1",
     "oxlint": "^1.67.0",
     "vitest": "^4.1.6"
   },
