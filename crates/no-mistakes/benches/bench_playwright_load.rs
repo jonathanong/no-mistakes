@@ -2,7 +2,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use no_mistakes::playwright::playwright_config::load_many;
 use std::fs;
 use std::hint::black_box;
-use std::path::PathBuf;
+
 use tempfile::TempDir;
 
 fn bench_load_many(c: &mut Criterion) {
