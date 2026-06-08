@@ -18,7 +18,8 @@ pub fn extract_binary_names(run: &str) -> Vec<String> {
     static TARGET_BIN: OnceLock<Regex> = OnceLock::new();
 
     let target_bin_re = TARGET_BIN.get_or_init(|| {
-        Regex::new(r"(?:\./)?target/(?:[\w.-]+/)*(?:debug|release)/([\w-]+)").unwrap()
+        Regex::new(r"(?:\./)?target/(?:[\w.-]+/)*(?:debug|release)/([\w-]+)")
+            .expect("Failed to compile target binary regex pattern")
     });
 
     let mut names: Vec<String> = extract_cargo_targets(run)
