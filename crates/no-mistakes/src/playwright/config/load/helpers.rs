@@ -120,10 +120,8 @@ pub(in crate::playwright::config) fn is_playwright_config_name(
         return false;
     }
 
-    let extension = match name.rfind('.') {
-        Some(pos) => &name[pos + 1..],
-        None => return false,
-    };
+    let pos = name.rfind('.').unwrap();
+    let extension = &name[pos + 1..];
 
     PLAYWRIGHT_CONFIG_EXTENSIONS.contains(&extension)
 }
