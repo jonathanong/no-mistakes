@@ -86,8 +86,20 @@ pub(super) fn find_default_playwright_configs(root: &Path) -> Result<Vec<PathBuf
     let mut configs = Vec::new();
     for entry in std::fs::read_dir(root)? {
         let entry = entry?;
+        let file_name = entry.file_name();
+
+        if !is_playwright_config_name(&file_name) {
+            continue;
+        }
+
+        if let Ok(ft) = entry.file_type() {
+            if !ft.is_file() && !ft.is_symlink() {
+                continue;
+            }
+        }
+
         let path = entry.path();
-        if !path.is_file() || !is_playwright_config_name(&path) {
+        if !path.is_file() {
             continue;
         }
         configs.push(path);
@@ -96,19 +108,24 @@ pub(super) fn find_default_playwright_configs(root: &Path) -> Result<Vec<PathBuf
     Ok(configs)
 }
 
-pub(in crate::playwright::config) fn is_playwright_config_name(path: &Path) -> bool {
-    let name = match path.file_name().and_then(|name| name.to_str()) {
+pub(in crate::playwright::config) fn is_playwright_config_name(
+    file_name_os: &std::ffi::OsStr,
+) -> bool {
+    let name = match file_name_os.to_str() {
         Some(name) => name,
         None => return false,
     };
-    let extension = match path.extension().and_then(|extension| extension.to_str()) {
-        Some(extension) => extension,
+
+    if !name.starts_with("playwright") || !name.contains(".config.") {
+        return false;
+    }
+
+    let extension = match name.rfind('.') {
+        Some(pos) => &name[pos + 1..],
         None => return false,
     };
 
-    name.starts_with("playwright")
-        && name.contains(".config.")
-        && PLAYWRIGHT_CONFIG_EXTENSIONS.contains(&extension)
+    PLAYWRIGHT_CONFIG_EXTENSIONS.contains(&extension)
 }
 
 pub(super) fn default_selector_attributes() -> Vec<String> {

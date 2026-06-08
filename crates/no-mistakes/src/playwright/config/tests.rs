@@ -178,15 +178,19 @@ fn v2_playwright_frontend_root_and_ignore_routes() {
 
 #[test]
 fn test_is_playwright_config_name_edge_cases() {
-    assert!(!is_playwright_config_name(Path::new("")));
-    assert!(!is_playwright_config_name(Path::new(
+    assert!(!is_playwright_config_name(std::ffi::OsStr::new("")));
+    assert!(!is_playwright_config_name(std::ffi::OsStr::new(
         "playwright.config.txt"
     )));
-    assert!(!is_playwright_config_name(Path::new(
+    assert!(!is_playwright_config_name(std::ffi::OsStr::new(
         "notplaywright.config.ts"
     )));
-    assert!(!is_playwright_config_name(Path::new("playwright.config")));
-    assert!(!is_playwright_config_name(Path::new("playwrightconfig")));
+    assert!(!is_playwright_config_name(std::ffi::OsStr::new(
+        "playwright.config"
+    )));
+    assert!(!is_playwright_config_name(std::ffi::OsStr::new(
+        "playwrightconfig"
+    )));
 }
 
 #[test]
