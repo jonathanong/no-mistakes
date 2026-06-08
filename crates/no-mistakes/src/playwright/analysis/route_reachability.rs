@@ -77,19 +77,39 @@ fn reachable_files(
         .map(|file| crate::codebase::ts_resolver::normalize_path(&file))
         .collect::<Vec<_>>();
     let mut seen = HashSet::new();
-    while let Some(file) = stack.pop() {
-        if !seen.insert(file.clone()) {
-            continue;
+
+    while !stack.is_empty() {
+        let frontier: Vec<_> = stack
+            .into_iter()
+            .filter(|file| seen.insert(file.clone()))
+            .collect();
+
+        stack = Vec::new();
+
+        if frontier.is_empty() {
+            break;
         }
-        if let Some(rel) = selector_rel_by_file.get(&file) {
-            reachable.insert(rel.clone());
+
+        for file in &frontier {
+            if let Some(rel) = selector_rel_by_file.get(file) {
+                reachable.insert(rel.clone());
+            }
         }
-        let imports = collect_route_imports(&file, resolver, import_cache)?;
-        stack.extend(
-            imports
-                .iter()
-                .map(|file| crate::codebase::ts_resolver::normalize_path(file)),
-        );
+
+        let imports_results: Result<Vec<_>> = frontier
+            .par_iter()
+            .map(|file| collect_route_imports(file, resolver, import_cache))
+            .collect();
+
+        let all_imports = imports_results?;
+
+        for imports in all_imports {
+            stack.extend(
+                imports
+                    .iter()
+                    .map(|file| crate::codebase::ts_resolver::normalize_path(file)),
+            );
+        }
     }
     Ok(reachable)
 }
