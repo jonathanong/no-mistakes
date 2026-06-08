@@ -45,12 +45,7 @@ pub(super) fn repro_command(
     } else {
         relationships
             .iter()
-            .map(|r| {
-                format!(
-                    " --relationship {}",
-                    r.as_str()
-                )
-            })
+            .map(|r| format!(" --relationship {}", r.as_str()))
             .collect::<String>()
     };
     format!(
