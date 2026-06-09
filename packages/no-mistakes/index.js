@@ -114,6 +114,10 @@ async function reactCheck(options) {
   return callJson(native.reactCheckJson, options);
 }
 
+async function reactUsages(options) {
+  return callJson(native.reactUsagesJson, options);
+}
+
 async function lockfileDiff(options) {
   return callJson(native.lockfileDiffJson, options);
 }
@@ -139,6 +143,7 @@ module.exports = {
   queueRelated,
   reactAnalyze,
   reactCheck,
+  reactUsages,
   related,
   serverRouteEdges,
   serverRouteList,

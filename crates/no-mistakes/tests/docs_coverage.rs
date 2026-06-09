@@ -48,6 +48,7 @@ fn cli_leaf_commands_have_docs() {
         "playwright-tests",
         "react-analyze",
         "react-check",
+        "react-usages",
         "queues-edges",
         "queues-related",
         "queues-check",

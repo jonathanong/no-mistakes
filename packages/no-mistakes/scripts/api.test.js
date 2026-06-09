@@ -63,6 +63,8 @@ test("programmatic API proxies object options through async native addon calls",
         JSON.stringify({ command: "reactAnalyze", options: JSON.parse(json) }),
       reactCheckJson: async (json) =>
         JSON.stringify({ command: "reactCheck", options: JSON.parse(json) }),
+      reactUsagesJson: async (json) =>
+        JSON.stringify({ command: "reactUsages", options: JSON.parse(json) }),
       version: async () => "1.2.3",
     };
   };
@@ -122,6 +124,7 @@ test("programmatic API proxies object options through async native addon calls",
     );
     assert.equal((await api.reactAnalyze({ targets: ["*.tsx"] })).command, "reactAnalyze");
     assert.equal((await api.reactCheck({ assertNoFetch: true })).command, "reactCheck");
+    assert.equal((await api.reactUsages({ target: "a.tsx#Button" })).command, "reactUsages");
     assert.equal(await api.version(), "1.2.3");
   } finally {
     delete require.cache[require.resolve(indexPath)];

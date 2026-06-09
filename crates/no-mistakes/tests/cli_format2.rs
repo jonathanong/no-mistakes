@@ -360,3 +360,91 @@ fn react_check_paths_format_outputs_paths_on_violation() {
     assert_eq!(output.status.code(), Some(1));
     assert!(!stdout(&output).is_empty());
 }
+
+fn react_usages(root: &std::path::Path, format: &str) -> Output {
+    run(&[
+        "react",
+        "--root",
+        root.to_str().unwrap(),
+        "--format",
+        format,
+        "usages",
+        "app/components/button.tsx#Button",
+    ])
+}
+
+#[test]
+fn react_usages_yml_format_outputs_yaml() {
+    let root = react_fixture("react-traits-usages", "basic");
+    let output = react_usages(&root, "yml");
+    assert!(output.status.success());
+    assert!(stdout(&output).contains("callsites:"));
+}
+
+#[test]
+fn react_usages_md_format_outputs_markdown() {
+    let root = react_fixture("react-traits-usages", "basic");
+    let output = react_usages(&root, "md");
+    assert!(output.status.success());
+    assert!(stdout(&output).contains("# React usages"));
+}
+
+#[test]
+fn react_usages_human_format_outputs_tree() {
+    let root = react_fixture("react-traits-usages", "basic");
+    let output = react_usages(&root, "human");
+    assert!(output.status.success());
+    assert!(stdout(&output).contains("callsites:"));
+}
+
+#[test]
+fn react_usages_paths_format_lists_callsite_and_section_files() {
+    let root = react_fixture("react-traits-usages", "basic");
+    let output = react_usages(&root, "paths");
+    assert!(output.status.success());
+    let out = stdout(&output);
+    assert!(out.contains("app/pages/home.tsx"));
+    assert!(out.contains("app/components/button.stories.tsx"));
+}
+
+#[test]
+fn react_usages_human_no_symbol_and_omitted_sections() {
+    // No `#Symbol` (exercises the symbol-less label) and `--include props`
+    // (stories/tests sections omitted).
+    let root = react_fixture("react-traits-usages", "basic");
+    let output = run(&[
+        "react",
+        "--root",
+        root.to_str().unwrap(),
+        "--format",
+        "human",
+        "usages",
+        "app/components/button.tsx",
+        "--include",
+        "props",
+    ]);
+    assert!(output.status.success());
+    let out = stdout(&output);
+    assert!(out.contains("propTypes:"));
+    assert!(!out.contains("stories:"));
+}
+
+#[test]
+fn react_usages_md_omitted_sections() {
+    let root = react_fixture("react-traits-usages", "basic");
+    let output = run(&[
+        "react",
+        "--root",
+        root.to_str().unwrap(),
+        "--format",
+        "md",
+        "usages",
+        "app/components/button.tsx",
+        "--include",
+        "tests",
+    ]);
+    assert!(output.status.success());
+    let out = stdout(&output);
+    assert!(out.contains("## Tests"));
+    assert!(!out.contains("## Stories"));
+}

@@ -20,6 +20,10 @@ pub(crate) struct ProjectOptions {
     pub(crate) depth: Option<usize>,
     pub(crate) assert_no_fetch: bool,
     pub(crate) direction: Option<String>,
+    /// `react usages` target component (`path` or `path#Symbol`).
+    pub(crate) target: Option<String>,
+    /// `react usages` `--include` spec (comma-separated `stories,tests,props`).
+    pub(crate) include: Option<String>,
 }
 
 #[derive(Debug, Default, Deserialize)]

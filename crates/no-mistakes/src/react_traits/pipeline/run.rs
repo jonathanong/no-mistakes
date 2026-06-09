@@ -18,13 +18,17 @@ pub fn run_analyze(
     run_analyze_inner(root, &file_config, targets, depth)
 }
 
-#[inline(never)]
-pub(crate) fn run_analyze_inner(
+/// Discover the candidate React source files for an analysis run.
+///
+/// Expands `targets` (defaulting to all TS/JS extensions) from `root` first, and
+/// only falls back to the configured `frontend_root` when the root yields no
+/// matches. Shared by `run_analyze` and `run_usages` so both scan the same
+/// universe.
+pub(crate) fn discover_react_files(
     root: &Path,
     file_config: &FileConfig,
     targets: &[String],
-    _depth: Option<usize>,
-) -> Result<Vec<ComponentFacts>> {
+) -> Result<Vec<PathBuf>> {
     let frontend_root = root.join(file_config.frontend_root.as_deref().unwrap_or("app"));
     let default_targets;
     let targets = if targets.is_empty() {
@@ -41,14 +45,23 @@ pub(crate) fn run_analyze_inner(
     // Expand globs from root first; only fall back to frontend_root when root yields no matches.
     // Skip the frontend_root.exists() gate entirely when patterns match at root level.
     let from_root = expand_globs(root, targets)?;
-    let files = if !from_root.is_empty() {
-        from_root
-    } else {
-        if !frontend_root.exists() {
-            anyhow::bail!("frontend root not found: {}", frontend_root.display());
-        }
-        expand_globs(&frontend_root, targets)?
-    };
+    if !from_root.is_empty() {
+        return Ok(from_root);
+    }
+    if !frontend_root.exists() {
+        anyhow::bail!("frontend root not found: {}", frontend_root.display());
+    }
+    expand_globs(&frontend_root, targets)
+}
+
+#[inline(never)]
+pub(crate) fn run_analyze_inner(
+    root: &Path,
+    file_config: &FileConfig,
+    targets: &[String],
+    _depth: Option<usize>,
+) -> Result<Vec<ComponentFacts>> {
+    let files = discover_react_files(root, file_config, targets)?;
 
     let mut file_cache: HashMap<PathBuf, Vec<ComponentFacts>> = HashMap::new();
     let analyses = files

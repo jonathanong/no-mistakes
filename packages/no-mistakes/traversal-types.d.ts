@@ -114,6 +114,10 @@ export interface ProjectOptions {
   depth?: number;
   assertNoFetch?: boolean;
   direction?: "deps" | "dependents" | "both";
+  /** `reactUsages` target component (`path` or `path#Symbol`). */
+  target?: string;
+  /** `reactUsages` `--include` spec: comma-separated `stories,tests,props`. */
+  include?: string;
 }
 
 type BatchedProjectOptions = Omit<ProjectOptions, "root" | "tsconfig" | "config">;

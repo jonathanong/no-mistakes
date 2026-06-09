@@ -24,6 +24,7 @@ route fetches, or what React traits a component has.
 | What does this module export/import? | `no-mistakes symbols <file> --include both` |
 | What React traits does this component have? | `no-mistakes react analyze <glob>` |
 | Does this component tree call fetch? | `no-mistakes react check <glob> --assert-no-fetch` |
+| Which callsites render this component, and with what props? | `no-mistakes react usages <file>#SYMBOL` |
 | Are all App Router routes/selectors covered by Playwright? | `no-mistakes playwright check` |
 | Which Playwright tests cover this page/component? | `no-mistakes playwright related <file>` |
 | What does this Playwright test assert? | `no-mistakes playwright tests <test-file>` |

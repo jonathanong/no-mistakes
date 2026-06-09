@@ -44,7 +44,7 @@ const { analyzeProject, dependents, symbols, testsPlan } = require("no-mistakes"
 | `playwright check\|edges\|related\|tests` | `playwrightCheck`, `playwrightEdges`, `playwrightRelated`, `playwrightTests` |
 | `queues edges\|related\|check` | `queueEdges`, `queueRelated`, `queueCheck` |
 | `server routes\|edges\|related` | `serverRouteList`, `serverRouteEdges`, `serverRouteRelated` |
-| `react analyze\|check` | `reactAnalyze`, `reactCheck` |
+| `react analyze\|check\|usages` | `reactAnalyze`, `reactCheck`, `reactUsages` |
 | `lockfile diff` | `lockfileDiff(options)` |
 
 `check(options)` returns the same structured check report as CLI JSON,

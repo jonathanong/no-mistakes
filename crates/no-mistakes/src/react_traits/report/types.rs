@@ -46,6 +46,45 @@ pub struct ComponentRef {
     pub file: String,
 }
 
+/// The component a `react usages` query was run against.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UsagesTarget {
+    pub file: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub symbol: Option<String>,
+}
+
+/// A single JSX render site of the target component.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Callsite {
+    pub file: String,
+    pub line: usize,
+    /// The exported name rendered at this site (the target symbol, or `default`).
+    pub component: String,
+    /// Named props passed at this callsite, in source order.
+    pub props: Vec<String>,
+    /// True when the callsite spreads props (`{...rest}`), so `props` may be partial.
+    pub has_spread: bool,
+}
+
+/// Structural impact map for a component: where it is rendered, which stories and
+/// tests import it, and the prop type names it exports. Optional sections are
+/// `None` when not requested via `--include`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UsagesReport {
+    pub target: UsagesTarget,
+    pub callsites: Vec<Callsite>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stories: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tests: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub prop_types: Option<Vec<String>>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum Environment {

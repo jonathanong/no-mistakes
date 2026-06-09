@@ -41,6 +41,17 @@ pub(crate) enum ReactCommand {
         #[arg(long)]
         assert_no_fetch: bool,
     },
+    /// Find JSX callsites, props, stories/tests, and prop types for a component.
+    Usages {
+        #[arg(help = "Target component: path/to/component.tsx or path/to/component.tsx#Symbol")]
+        target: String,
+        /// Glob patterns limiting which files are scanned for callsites.
+        #[arg(long)]
+        scan: Vec<String>,
+        /// Sections to include: comma-separated subset of stories,tests,props (default: all).
+        #[arg(long)]
+        include: Option<String>,
+    },
 }
 
 pub(crate) fn run(args: ReactArgs) -> Result<ExitCode> {
@@ -120,5 +131,51 @@ pub(crate) fn run(args: ReactArgs) -> Result<ExitCode> {
             }
             Ok(ExitCode::from(1))
         }
+        ReactCommand::Usages {
+            target,
+            scan,
+            include,
+        } => {
+            let include = react_traits::UsagesInclude::parse(include.as_deref())?;
+            let report =
+                react_traits::run_usages(&root, config.as_deref(), target, scan, &include)?;
+            match effective_format {
+                Format::Json => {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&report)
+                            .expect("serialization of Rust structs never fails")
+                    );
+                }
+                Format::Yml => {
+                    println!(
+                        "{}",
+                        serde_yaml::to_string(&report)
+                            .expect("serialization of Rust structs never fails")
+                    );
+                }
+                Format::Md => react_traits::print_usages_md(&report),
+                Format::Paths => {
+                    for path in usages_paths(&report) {
+                        println!("{path}");
+                    }
+                }
+                Format::Human => react_traits::print_usages(&report),
+            }
+            Ok(ExitCode::SUCCESS)
+        }
     }
+}
+
+/// Deduplicated, sorted union of callsite and importer file paths for
+/// `--format paths` command substitution.
+fn usages_paths(report: &react_traits::UsagesReport) -> Vec<String> {
+    let mut paths: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+    for callsite in &report.callsites {
+        paths.insert(callsite.file.clone());
+    }
+    for files in [&report.stories, &report.tests].into_iter().flatten() {
+        paths.extend(files.iter().cloned());
+    }
+    paths.into_iter().collect()
 }

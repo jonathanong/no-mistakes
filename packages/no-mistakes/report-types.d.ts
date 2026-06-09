@@ -138,3 +138,22 @@ export interface ReactViolation {
   rule: string;
   detail?: string;
 }
+
+export interface ReactCallsite {
+  file: string;
+  line: number;
+  component: string;
+  props: string[];
+  hasSpread: boolean;
+}
+
+export interface ReactUsagesReport {
+  target: { file: string; symbol?: string };
+  callsites: ReactCallsite[];
+  /** Story files importing the target. Omitted when `props`/`tests`-only `include`. */
+  stories?: string[];
+  /** Test files importing the target. */
+  tests?: string[];
+  /** Exported prop type/interface names declared in the target file. */
+  propTypes?: string[];
+}
