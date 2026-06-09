@@ -122,4 +122,5 @@ testPlan:
 Group types: `direct`, `dependencies`, `sample` — for `vitest`;
 `direct`, `dependencies`, `coverage`, `sample` — for `playwright`.
 (`coverage` is a Playwright-only group type; vitest does not support it.)
-Consult `docs/configuration/test-plan.md` for the full schema.
+Consult https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/test-plan.md
+for the full schema.

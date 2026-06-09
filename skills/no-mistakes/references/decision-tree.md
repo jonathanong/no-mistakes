@@ -130,6 +130,7 @@ In a monorepo with per-package tsconfigs and no root `tsconfig.json`, auto-disco
 Check if the import uses a bare external specifier, a non-literal dynamic `import()` / `require()`, or an alias that requires a specific package `tsconfig`. See `limits-and-fallbacks.md` for workarounds.
 
 **Graph edge caveats:**
-See `docs/graph-edges.md` for every edge kind. Dynamic route paths, fetch URLs,
+See https://github.com/jonathanong/no-mistakes/blob/main/docs/graph-edges.md for
+every edge kind. Dynamic route paths, fetch URLs,
 queue names, process commands, and selector values are not guessed. Text-based
 selector coverage is approximate; exact configured test ID edges are stronger.
