@@ -74,10 +74,16 @@ fn parses_projects_with_inheritance() {
         parsed.projects[0].base_url.as_deref(),
         Some("http://localhost:3000")
     );
-    assert_eq!(parsed.projects[0].test_id_attribute, "data-pw");
+    assert_eq!(
+        parsed.projects[0].test_id_attribute.as_deref(),
+        Some("data-pw")
+    );
     assert_eq!(parsed.projects[1].test_dir, "./e2e");
     assert_eq!(parsed.projects[1].test_match, vec!["**/*.pw.ts"]);
-    assert_eq!(parsed.projects[1].test_id_attribute, "data-test");
+    assert_eq!(
+        parsed.projects[1].test_id_attribute.as_deref(),
+        Some("data-test")
+    );
     assert_eq!(parsed.test_id_attributes(), vec!["data-pw", "data-test"]);
 }
 
@@ -90,7 +96,10 @@ fn parses_top_level_base_url_and_string_ignore() {
         Some("http://localhost:5173")
     );
     assert_eq!(parsed.projects[0].test_ignore, vec!["**/skip/**"]);
-    assert_eq!(parsed.projects[0].test_id_attribute, "data-test-id");
+    assert_eq!(
+        parsed.projects[0].test_id_attribute.as_deref(),
+        Some("data-test-id")
+    );
 }
 
 #[test]
@@ -103,7 +112,10 @@ fn parses_default_export_identifier() {
         parsed.projects[0].base_url.as_deref(),
         Some("http://localhost:4100")
     );
-    assert_eq!(parsed.projects[0].test_id_attribute, "data-identifier");
+    assert_eq!(
+        parsed.projects[0].test_id_attribute.as_deref(),
+        Some("data-identifier")
+    );
 }
 
 #[test]

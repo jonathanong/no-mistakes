@@ -19,6 +19,7 @@ fn settings() -> Settings {
         rewrites: vec![],
         navigation_helpers: vec![],
         selector_attributes: vec!["data-pw".to_string()],
+        test_id_attribute_override: None,
         component_selector_attributes: BTreeMap::from([(
             "testId".to_string(),
             "data-pw".to_string(),

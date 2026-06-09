@@ -1,5 +1,4 @@
 use super::merge::default_test_match;
-use super::merge::DEFAULT_TEST_ID_ATTRIBUTE;
 use super::parse::parse_from_path;
 use super::types::{PlaywrightConfig, TestProject};
 use anyhow::Result;
@@ -76,7 +75,9 @@ fn default_config(root: &Path) -> PlaywrightConfig {
             test_match: default_test_match(),
             test_ignore: Vec::new(),
             base_url: None,
-            test_id_attribute: DEFAULT_TEST_ID_ATTRIBUTE.to_string(),
+            // Synthesized fallback config: the attribute was not read from a real
+            // Playwright config, so leave it `None` to defer to `selectors.testIds`.
+            test_id_attribute: None,
         }],
     }
 }

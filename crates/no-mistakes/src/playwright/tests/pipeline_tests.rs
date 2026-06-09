@@ -53,6 +53,7 @@ fn analyze_with_facts_falls_back_when_shared_facts_are_missing() {
         rewrites: vec![],
         navigation_helpers: vec![],
         selector_attributes: vec!["data-testid".to_string()],
+        test_id_attribute_override: None,
         component_selector_attributes: BTreeMap::new(),
         html_ids: false,
         selector_roots: vec!["web/app".to_string()],
@@ -86,6 +87,7 @@ fn analyze_with_facts_falls_back_when_file_facts_do_not_include_playwright() {
         rewrites: vec![],
         navigation_helpers: vec![],
         selector_attributes: vec!["data-testid".to_string()],
+        test_id_attribute_override: None,
         component_selector_attributes: BTreeMap::new(),
         html_ids: false,
         selector_roots: vec!["web/app".to_string()],
@@ -127,6 +129,7 @@ fn analyze_discovers_tests_and_builds_reports() {
         rewrites: vec![],
         navigation_helpers: vec![],
         selector_attributes: vec!["data-testid".to_string()],
+        test_id_attribute_override: None,
         component_selector_attributes: BTreeMap::new(),
         html_ids: false,
         selector_roots: vec!["web/app".to_string()],
@@ -291,6 +294,7 @@ fn analyze_surfaces_parser_errors() {
         rewrites: vec![],
         navigation_helpers: vec![],
         selector_attributes: vec![],
+        test_id_attribute_override: None,
         component_selector_attributes: BTreeMap::new(),
         html_ids: false,
         selector_roots: vec!["web/app".to_string()],
@@ -312,6 +316,7 @@ fn analyze_surfaces_parser_errors() {
         rewrites: vec![],
         navigation_helpers: vec![],
         selector_attributes: vec!["data-testid".to_string()],
+        test_id_attribute_override: None,
         component_selector_attributes: BTreeMap::new(),
         html_ids: false,
         selector_roots: vec!["web/app".to_string()],
@@ -343,6 +348,7 @@ fn analyze_test_file_with_selector_targets_extracts_edges() {
         rewrites: vec![],
         navigation_helpers: vec![],
         selector_attributes: vec!["data-testid".to_string()],
+        test_id_attribute_override: None,
         component_selector_attributes: BTreeMap::new(),
         html_ids: false,
         selector_roots: vec!["web/app".to_string()],
@@ -472,7 +478,7 @@ fn analyze_test_file_returns_error_for_missing_file() {
         path: PathBuf::from("/nonexistent/test.spec.ts"),
         contexts: vec![TestProjectContext {
             base_url: None,
-            test_id_attribute: "data-testid".to_string(),
+            test_id_attributes: vec!["data-testid".to_string()],
         }],
     };
     let route_index = RouteIndex::default();
@@ -503,7 +509,7 @@ fn analyze_test_file_returns_error_for_parse_failure() {
         path: root.join("app/components/Broken.tsx"),
         contexts: vec![TestProjectContext {
             base_url: None,
-            test_id_attribute: "data-testid".to_string(),
+            test_id_attributes: vec!["data-testid".to_string()],
         }],
     };
     let route_index = RouteIndex::default();

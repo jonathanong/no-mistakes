@@ -35,6 +35,7 @@ fn pipeline_expands_rewrites_into_route_edges() {
         ],
         navigation_helpers: vec![],
         selector_attributes: vec![],
+        test_id_attribute_override: None,
         component_selector_attributes: BTreeMap::new(),
         html_ids: false,
         selector_roots: vec![],

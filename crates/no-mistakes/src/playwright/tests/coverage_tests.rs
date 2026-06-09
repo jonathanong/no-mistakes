@@ -94,6 +94,7 @@ fn has_configured_html_id_via_component_attributes() {
         rewrites: vec![],
         navigation_helpers: vec![],
         selector_attributes: vec![],
+        test_id_attribute_override: None,
         component_selector_attributes: std::collections::BTreeMap::from([(
             "ButtonId".to_string(),
             HTML_ID_ATTRIBUTE.to_string(),
@@ -117,6 +118,7 @@ fn default_settings(selector_attributes: Vec<String>) -> Settings {
         rewrites: vec![],
         navigation_helpers: vec![],
         selector_attributes,
+        test_id_attribute_override: None,
         component_selector_attributes: BTreeMap::new(),
         html_ids: false,
         selector_roots: vec!["web/app".to_string()],

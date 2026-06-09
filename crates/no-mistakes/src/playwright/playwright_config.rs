@@ -9,5 +9,6 @@ mod types;
 mod tests;
 
 pub use load::load_many;
+pub use merge::DEFAULT_TEST_ID_ATTRIBUTE;
 pub use parse::parse;
 pub use types::{PlaywrightConfig, TestProject};

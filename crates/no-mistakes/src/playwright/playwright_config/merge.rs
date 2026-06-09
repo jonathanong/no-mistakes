@@ -41,10 +41,13 @@ pub(super) fn merge_project(
             .unwrap_or_else(default_test_match),
         test_ignore: combine(root.test_ignore.clone(), project.test_ignore),
         base_url: project.base_url.or_else(|| root.base_url.clone()),
+        // Kept as `Option`: `None` means the attribute was not statically
+        // readable from the config, which lets coverage fall back to the
+        // configured `selectors.testIds`. `DEFAULT_TEST_ID_ATTRIBUTE` is only
+        // applied at the final resolution step (see `analysis::context`).
         test_id_attribute: project
             .test_id_attribute
-            .or_else(|| root.test_id_attribute.clone())
-            .unwrap_or_else(|| DEFAULT_TEST_ID_ATTRIBUTE.to_string()),
+            .or_else(|| root.test_id_attribute.clone()),
     }
 }
 

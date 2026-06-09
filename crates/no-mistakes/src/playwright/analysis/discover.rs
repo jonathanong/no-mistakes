@@ -13,7 +13,7 @@ pub(crate) fn discover_test_files(
     settings: &Settings,
     playwright: &playwright_config::PlaywrightConfig,
 ) -> Result<Vec<DiscoveredTestFile>> {
-    let project_discovery = build_project_discovery(root, playwright)?;
+    let project_discovery = build_project_discovery(root, settings, playwright)?;
     let all_contexts = test_project_contexts(&project_discovery);
     if !settings.test_include.is_empty() {
         let include = build_globset(&settings.test_include)?;
@@ -83,12 +83,18 @@ pub(crate) fn discover_test_files(
 
 pub(crate) fn build_project_discovery(
     root: &Path,
+    settings: &Settings,
     playwright: &playwright_config::PlaywrightConfig,
 ) -> Result<Vec<TestProjectDiscovery>> {
     let mut discovery = Vec::new();
+    let override_attribute = settings.test_id_attribute_override.as_deref();
     for project in &playwright.projects {
         discovery.push(TestProjectDiscovery {
-            context: TestProjectContext::from_project(project),
+            context: TestProjectContext::from_project(
+                project,
+                override_attribute,
+                &settings.selector_attributes,
+            ),
             test_dir: project.test_dir(root),
             include: build_globset(&project.test_match)?,
             ignore: build_globset(&project.test_ignore)?,

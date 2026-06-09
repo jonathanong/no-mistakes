@@ -11,7 +11,10 @@ fn resolves_identifier_backed_use_object() {
         parsed.projects[0].base_url.as_deref(),
         Some("http://localhost:6200")
     );
-    assert_eq!(parsed.projects[0].test_id_attribute, "data-shared");
+    assert_eq!(
+        parsed.projects[0].test_id_attribute.as_deref(),
+        Some("data-shared")
+    );
 }
 
 #[test]
@@ -58,7 +61,10 @@ fn ignores_non_literal_optional_playwright_values() {
     let parsed = parse(&source, Path::new("/repo")).unwrap();
     assert_eq!(parsed.projects[0].test_dir, "./tests");
     assert_eq!(parsed.projects[0].base_url, None);
-    assert_eq!(parsed.projects[0].test_id_attribute, "data-testid");
+    // A non-literal `testIdAttribute` cannot be read statically, so it is left
+    // `None` (deferring to the configured `selectors.testIds` fallback) rather
+    // than collapsing to the `data-testid` default at parse time.
+    assert_eq!(parsed.projects[0].test_id_attribute, None);
 }
 
 #[test]
@@ -66,6 +72,19 @@ fn parse_accepts_spaced_property_and_escaped_string() {
     let source = fixture_source(&["ast-snippets", "playwright_config", "spaced-property.ts"]);
     let parsed = parse(&source, Path::new("/repo")).unwrap();
     assert_eq!(parsed.projects[0].test_dir, r#"tests\e2e"#);
+}
+
+#[test]
+fn unwraps_nested_wrapper_call_config_object() {
+    // `defineConfig(createPlaywrightConfig({ ... }))` — the inner literal is
+    // recovered through the wrapper call. Options the helper adds internally
+    // (e.g. testIdAttribute) stay unreadable, so it remains `None`.
+    let source = fixture_source(&["ast-snippets", "playwright_config", "wrapper-call.ts"]);
+    let parsed = parse(&source, Path::new("/repo")).unwrap();
+    assert_eq!(parsed.projects.len(), 1);
+    assert_eq!(parsed.projects[0].test_dir, "./wrapped-tests");
+    assert_eq!(parsed.projects[0].test_match, vec!["**/*.wrapped.ts"]);
+    assert_eq!(parsed.projects[0].test_id_attribute, None);
 }
 
 #[test]
@@ -144,5 +163,8 @@ fn parser_handles_ast_edge_shapes() {
         parsed.projects[0].base_url.as_deref(),
         Some("http://localhost:3000")
     );
-    assert_eq!(parsed.projects[0].test_id_attribute, "data-test");
+    assert_eq!(
+        parsed.projects[0].test_id_attribute.as_deref(),
+        Some("data-test")
+    );
 }

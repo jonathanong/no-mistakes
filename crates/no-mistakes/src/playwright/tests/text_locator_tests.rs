@@ -47,6 +47,7 @@ fn text_locators_create_approximate_related_and_coverage_edges_with_route_signal
         rewrites: vec![],
         navigation_helpers: vec![],
         selector_attributes: vec!["data-testid".to_string(), "data-pw".to_string()],
+        test_id_attribute_override: None,
         component_selector_attributes: BTreeMap::new(),
         html_ids: false,
         selector_roots: vec!["web/app".to_string()],

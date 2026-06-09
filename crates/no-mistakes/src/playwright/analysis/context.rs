@@ -7,6 +7,9 @@ use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+#[cfg(test)]
+mod tests;
+
 pub(crate) struct RouteTarget {
     pub(crate) route_file: Arc<String>,
     pub(crate) pattern: Arc<String>,
@@ -22,7 +25,11 @@ pub(crate) struct AppSelectorTarget<'a> {
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub(crate) struct TestProjectContext {
     pub(crate) base_url: Option<String>,
-    pub(crate) test_id_attribute: String,
+    /// The attribute(s) that `getByTestId(...)` resolves to for this project's
+    /// tests. Usually one, but the `selectors.testIds` fallback (used when the
+    /// Playwright config's `testIdAttribute` is not statically readable) can
+    /// contribute several.
+    pub(crate) test_id_attributes: Vec<String>,
 }
 
 pub(crate) struct DiscoveredTestFile {
@@ -65,12 +72,49 @@ pub(crate) struct SelectorIndex<'a> {
 }
 
 impl TestProjectContext {
-    pub(crate) fn from_project(project: &playwright_config::TestProject) -> Self {
+    /// Build a context for `project`, resolving the effective `getByTestId`
+    /// attribute(s) with this precedence:
+    ///
+    /// 1. `override_attribute` — the explicit `tests.playwright.testIdAttribute`.
+    /// 2. The project's statically-read `testIdAttribute`.
+    /// 3. `configured_test_ids` — the declared `tests.playwright.selectors.testIds`
+    ///    (used when the Playwright config's attribute is not statically readable,
+    ///    e.g. it is set inside a helper function).
+    /// 4. The built-in `data-testid` default.
+    pub(crate) fn from_project(
+        project: &playwright_config::TestProject,
+        override_attribute: Option<&str>,
+        configured_test_ids: &[String],
+    ) -> Self {
         Self {
             base_url: project.base_url.clone(),
-            test_id_attribute: project.test_id_attribute.clone(),
+            test_id_attributes: resolve_test_id_attributes(
+                project.test_id_attribute.as_deref(),
+                override_attribute,
+                configured_test_ids,
+            ),
         }
     }
+}
+
+fn resolve_test_id_attributes(
+    project_attribute: Option<&str>,
+    override_attribute: Option<&str>,
+    configured_test_ids: &[String],
+) -> Vec<String> {
+    if let Some(attribute) = override_attribute {
+        return vec![attribute.to_string()];
+    }
+    if let Some(attribute) = project_attribute {
+        return vec![attribute.to_string()];
+    }
+    if !configured_test_ids.is_empty() {
+        let mut attributes = configured_test_ids.to_vec();
+        attributes.sort();
+        attributes.dedup();
+        return attributes;
+    }
+    vec![playwright_config::DEFAULT_TEST_ID_ATTRIBUTE.to_string()]
 }
 
 impl DiscoveredTestFile {
@@ -89,7 +133,7 @@ impl DiscoveredTestFile {
         let mut attributes: Vec<String> = self
             .contexts
             .iter()
-            .map(|context| context.test_id_attribute.clone())
+            .flat_map(|context| context.test_id_attributes.iter().cloned())
             .collect();
         attributes.sort();
         attributes.dedup();

@@ -18,6 +18,12 @@ pub struct PlaywrightTestConfig {
     pub configs: Option<StringOrList>,
     pub projects: BTreeMap<String, TestProjectPolicy>,
     pub selectors: PlaywrightSelectors,
+    /// Explicit `getByTestId(...)` attribute. Set this when the Playwright
+    /// config's `testIdAttribute` is not statically readable (for example it is
+    /// assigned inside a config helper function), so selector coverage can match
+    /// `getByTestId` assertions against the right attribute. Serialized as
+    /// `testIdAttribute`.
+    pub test_id_attribute: Option<String>,
     pub test_include: Vec<String>,
     pub test_exclude: Vec<String>,
     pub selector_roots: Vec<String>,
