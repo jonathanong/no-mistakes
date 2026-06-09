@@ -74,6 +74,9 @@ impl ParsedPlaywrightConfig {
                     config: Some(config.to_string()),
                     policy_name: project.policy_name,
                     runner_project_arg: project.runner_project_arg,
+                    scope: Some(crate::codebase::ts_source::relative_slash_path(
+                        root, &test_dir,
+                    )),
                     include: prefix_globs(root, &test_dir, &project.test_match),
                     exclude: prefix_globs(root, &test_dir, &project.test_ignore),
                 }

@@ -115,6 +115,7 @@ pub(crate) fn configured_project(
         config: None,
         policy_name: Some(project_name.to_string()),
         runner_project_arg: Some(project_name.to_string()),
+        scope: None,
         include: prefix_globs(root, root, &policy.include),
         exclude: prefix_globs(root, root, &policy.exclude),
     })

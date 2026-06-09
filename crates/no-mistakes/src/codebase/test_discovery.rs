@@ -1,4 +1,5 @@
 mod filters;
+mod ownership;
 mod projects;
 mod targets;
 mod types;
@@ -14,6 +15,7 @@ use std::path::{Path, PathBuf};
 
 pub(crate) use filters::fallback_runner_match;
 pub use filters::{fallback_test_path, ProjectTestFilter};
+use ownership::owning_projects;
 pub use targets::TestExecutionTarget;
 pub use types::{DiscoveredTests, TestRunner};
 
@@ -92,7 +94,7 @@ fn discover_from_projects(
     let mut project_scoped_paths = BTreeSet::new();
     for path in &files {
         let rel = crate::codebase::ts_source::relative_slash_path(root, path);
-        let mut matched_targets = BTreeSet::new();
+        let mut matched: Vec<&ConfigProject> = Vec::new();
         for (project, filter) in &compiled {
             if !filter.includes(&rel) {
                 continue;
@@ -101,13 +103,19 @@ fn discover_from_projects(
             if filter.excludes(&rel) {
                 continue;
             }
-            matched_targets.insert(targets::target_for(
-                runner,
-                project.config.as_deref(),
-                project.runner_project_arg.as_deref(),
-                &rel,
-            ));
+            matched.push(project);
         }
+        let matched_targets: BTreeSet<TestExecutionTarget> = owning_projects(&matched)
+            .into_iter()
+            .map(|project| {
+                targets::target_for(
+                    runner,
+                    project.config.as_deref(),
+                    project.runner_project_arg.as_deref(),
+                    &rel,
+                )
+            })
+            .collect();
         if !matched_targets.is_empty() {
             tests.insert(path.clone());
             targets_by_path

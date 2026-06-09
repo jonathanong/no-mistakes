@@ -1,0 +1,11 @@
+tests:
+  playwright:
+    configs:
+      - playwright.config.mts
+      - playwright.credentialed.config.mts
+test_plan:
+  playwright:
+    environments:
+      all:
+        all: true
+rules: []

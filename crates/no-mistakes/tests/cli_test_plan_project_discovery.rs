@@ -217,3 +217,54 @@ fn test_plan_playwright_top_level_config_name_does_not_emit_project_arg() {
         .iter()
         .any(|arg| arg == "--project"));
 }
+
+#[test]
+fn test_plan_playwright_nested_configs_scope_targets_to_owning_config() {
+    // Two configs share the `chromium` project name; the credentialed config's
+    // testDir is nested inside the standard config's broad testDir. A spec under
+    // the credentialed testDir must produce exactly one target for the
+    // credentialed config (not a duplicate for the standard config), and the
+    // standard spec must map to the standard config.
+    let root = fixture("test-plan-playwright-nested-configs");
+    let output = run(&[
+        "test",
+        "plan",
+        "playwright",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        ".no-mistakes.yml",
+        "--environment",
+        "all",
+        "--json",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let selected = plan["selected_tests"].as_array().unwrap();
+
+    let credentialed = selected
+        .iter()
+        .find(|test| test["test_file"] == "playwright/credentialed/chat.spec.mts")
+        .unwrap();
+    let credentialed_targets = credentialed["targets"].as_array().unwrap();
+    assert_eq!(credentialed_targets.len(), 1);
+    assert_eq!(
+        credentialed_targets[0]["config"],
+        "playwright.credentialed.config.mts"
+    );
+    assert_eq!(credentialed_targets[0]["project"], "chromium");
+
+    let home = selected
+        .iter()
+        .find(|test| test["test_file"] == "playwright/home.spec.mts")
+        .unwrap();
+    let home_targets = home["targets"].as_array().unwrap();
+    assert_eq!(home_targets.len(), 1);
+    assert_eq!(home_targets[0]["config"], "playwright.config.mts");
+    assert_eq!(home_targets[0]["project"], "chromium");
+}
