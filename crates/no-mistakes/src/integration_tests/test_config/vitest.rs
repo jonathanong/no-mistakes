@@ -82,6 +82,10 @@ fn to_project(config_dir: &Path, root: &Path, options: Options) -> ConfigProject
         config: None,
         policy_name: options.name.clone(),
         runner_project_arg: options.name,
+        scope: Some(crate::codebase::ts_source::relative_slash_path(
+            root,
+            &config_dir,
+        )),
         include: prefix_globs(root, &config_dir, &include),
         exclude: prefix_globs(root, &config_dir, &options.exclude.unwrap_or_default()),
     }

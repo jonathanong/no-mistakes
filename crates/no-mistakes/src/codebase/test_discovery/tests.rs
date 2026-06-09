@@ -19,6 +19,7 @@ fn vitest_project_discovery_without_playwright_projects_keeps_matching_tests() {
         config: Some("vitest.config.mts".to_string()),
         policy_name: Some("all-specs".to_string()),
         runner_project_arg: Some("all-specs".to_string()),
+        scope: None,
         include: vec!["src/utils.mts".to_string()],
         exclude: Vec::new(),
     }];
@@ -48,6 +49,7 @@ fn vitest_explicit_project_matches_playwright_owned_file() {
         config: Some("vitest.config.mts".to_string()),
         policy_name: Some("browser".to_string()),
         runner_project_arg: Some("browser".to_string()),
+        scope: None,
         include: vec!["src/utils.mts".to_string()],
         exclude: Vec::new(),
     }];
@@ -70,6 +72,7 @@ fn target_metadata_uses_executable_project_name_only() {
         config: Some("playwright.config.ts".to_string()),
         policy_name: Some("top-level-config-name".to_string()),
         runner_project_arg: None,
+        scope: None,
         include: vec!["src/utils.mts".to_string()],
         exclude: Vec::new(),
     }];

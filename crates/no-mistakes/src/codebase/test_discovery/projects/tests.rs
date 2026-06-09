@@ -5,6 +5,7 @@ fn config_project(config: &str, policy_name: &str, include: &str) -> ConfigProje
         config: Some(config.to_string()),
         policy_name: Some(policy_name.to_string()),
         runner_project_arg: Some(policy_name.to_string()),
+        scope: None,
         include: vec![include.to_string()],
         exclude: Vec::new(),
     }
