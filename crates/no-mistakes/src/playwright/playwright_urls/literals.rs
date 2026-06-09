@@ -3,7 +3,7 @@ use super::normalize::normalize_url_pattern;
 use super::regex_sample::regex_path_sample;
 use super::statics::static_zero_arg_path_call;
 use crate::playwright::ast;
-use oxc_ast::ast::{Argument, CallExpression};
+use oxc_ast::ast::{Argument, BinaryExpression, CallExpression};
 use oxc_ast_visit::{walk, Visit};
 use std::collections::HashMap;
 
@@ -55,6 +55,20 @@ impl<'a> Visit<'a> for LiteralVisitor<'a> {
         self.literals
             .push(ast::template_literal_text(template, self.source));
     }
+
+    fn visit_binary_expression(&mut self, binary: &BinaryExpression<'a>) {
+        // Fold `'/users/' + userId` into `/users/${userId}` so an unresolved tail still
+        // matches a dynamic route segment. Only when the fold yields a candidate path;
+        // otherwise fall back to the default walk so unrelated `+` expressions (and any
+        // string literals nested within them) keep their existing extraction behavior.
+        if let Some(folded) = ast::binary_concat_path_text(binary, self.source) {
+            if is_candidate_url(&folded) {
+                self.literals.push(folded);
+                return;
+            }
+        }
+        walk::walk_binary_expression(self, binary);
+    }
 }
 
 pub fn candidate_literals(
@@ -105,6 +119,12 @@ pub fn argument_literals(
     match argument {
         Argument::StringLiteral(literal) => vec![literal.value.to_string()],
         Argument::TemplateLiteral(template) => vec![ast::template_literal_text(template, source)],
+        Argument::BinaryExpression(binary) => {
+            // `page.goto('/users/' + id)` folds to `/users/${id}` (#391).
+            ast::binary_concat_path_text(binary, source)
+                .into_iter()
+                .collect()
+        }
         Argument::CallExpression(call) => static_zero_arg_path_call(call, static_zero_arg_paths),
         _ => Vec::new(),
     }

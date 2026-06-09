@@ -78,6 +78,12 @@ use `playwright tests <test-file>` to inspect a single test's assertions.
 no-mistakes playwright edges --json
 ```
 
+A navigated path whose interpolation is unresolvable at analysis time — a
+template literal like `` `/user/${userId}` `` or a string concatenation like
+`'/user/' + id` — is treated as a wildcard matching one dynamic route segment, so
+it still produces a route edge to the `[param]` page (but never to a sibling
+literal route such as `/user/settings`).
+
 Node API: `playwrightEdges(options)`.
 
 ## Selector configuration

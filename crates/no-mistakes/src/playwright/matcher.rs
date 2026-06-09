@@ -39,6 +39,9 @@ pub fn matches_segments<S: AsRef<str>>(reference: &[&str], defined_pattern: &[S]
     for (index, def_seg) in defined_pattern.iter().enumerate() {
         let def_seg = def_seg.as_ref();
         let is_last = index + 1 == defined_pattern.len();
+        // Catch-all (`**`) and trailing wildcard (`*`) accept any non-empty reference
+        // segments, including unresolved interpolations like `${slug}` — each interpolation
+        // counts as one concrete segment occupying the wildcard tail.
         if def_seg == "**" && is_last {
             return reference[index..].iter().all(|segment| !segment.is_empty());
         }
@@ -71,10 +74,24 @@ fn segment_matches(reference: &str, defined_pattern: &str) -> bool {
     if reference.is_empty() {
         return false;
     }
+    // An unresolved template interpolation (e.g. `${userId}`) stands in for "any single
+    // value", so it matches a dynamic route segment (`:param`/`*`) but never a concrete
+    // literal. Keeping this explicit guards the behavior if interpolation handling ever
+    // changes shape; do not fold it into the literal-equality branch below.
+    if segment_is_interpolation(reference) {
+        return defined_pattern.starts_with(':') || defined_pattern == "*";
+    }
     if defined_pattern.starts_with(':') || defined_pattern == "*" {
         return true;
     }
     reference == defined_pattern
+}
+
+/// An unresolved navigation segment that still contains a template interpolation
+/// (`${...}`) — for example `${userId}` from `` `/users/${userId}` `` or the synthesized
+/// tail of `'/users/' + userId`.
+fn segment_is_interpolation(segment: &str) -> bool {
+    segment.contains("${")
 }
 
 #[cfg(test)]

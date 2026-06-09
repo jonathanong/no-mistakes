@@ -210,3 +210,52 @@ fn bare_builtin_callees_are_ignored() {
     let urls = extract_playwright_urls(&src);
     assert!(urls.is_empty());
 }
+
+#[test]
+fn folds_string_concatenation_into_interpolated_path() {
+    // `'/users/' + id` becomes `/users/${id}`, which route matching treats as a dynamic
+    // segment (#391). Nested `+`, parentheses, and template operands all fold.
+    let goto = extract_playwright_urls("await page.goto('/users/' + id);");
+    assert_eq!(goto, vec!["/users/${id}"]);
+
+    let nested = extract_playwright_urls("await page.goto('/users/' + (id) + `/posts/${postId}`);");
+    assert_eq!(nested, vec!["/users/${id}/posts/${postId}"]);
+
+    let helper = extract_playwright_url_literals_with_helpers(
+        "await navigateTo(page, '/user/' + targetUsername);",
+        &["navigateTo".to_string()],
+    );
+    assert_eq!(helper, vec!["/user/${targetUsername}"]);
+}
+
+#[test]
+fn static_only_concatenation_folds_to_concrete_path() {
+    let urls = extract_playwright_urls("await page.goto('/users/' + '42');");
+    assert_eq!(urls, vec!["/users/42"]);
+}
+
+#[test]
+fn non_path_binary_expressions_extract_nothing_in_goto_path() {
+    // The direct `goto` path folds the `+` chain; a non-candidate fold or a non-`+` binary
+    // yields no URL (and never did — no regression).
+    assert!(extract_playwright_urls("await page.goto(host + '/api/v1/users');").is_empty());
+    assert!(extract_playwright_urls("await page.goto(offset * count);").is_empty());
+}
+
+#[test]
+fn navigation_helper_binary_falls_back_to_default_extraction() {
+    // The navigation-helper (visitor) path falls back to the default walk when the fold is
+    // not a candidate path, so a nested URL literal is still extracted.
+    let fallback = extract_playwright_url_literals_with_helpers(
+        "await navigateTo(page, host + '/api/v1/users');",
+        &["navigateTo".to_string()],
+    );
+    assert_eq!(fallback, vec!["/api/v1/users"]);
+
+    // A non-`+` binary expression folds to nothing and extracts no URL.
+    let arithmetic = extract_playwright_url_literals_with_helpers(
+        "await navigateTo(page, offset * count);",
+        &["navigateTo".to_string()],
+    );
+    assert!(arithmetic.is_empty());
+}
