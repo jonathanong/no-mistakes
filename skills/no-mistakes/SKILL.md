@@ -35,7 +35,7 @@ route fetches, or what React traits a component has.
 | Which server route files are related? | `no-mistakes server related <file>` |
 | Raw queue/server edges for debugging | `no-mistakes queues edges [file]` / `no-mistakes server edges [file]` |
 | Run configured project checks in parallel | `no-mistakes check` |
-| What edge kinds are supported? | Read `docs/graph-edges.md` or `references/decision-tree.md` |
+| What edge kinds are supported? | Read `references/decision-tree.md` or https://github.com/jonathanong/no-mistakes/blob/main/docs/graph-edges.md |
 | Plain text, comments, log messages, exact call lines | `rg` |
 
 ## Quick Workflow
@@ -74,8 +74,9 @@ substitution. `--timings` writes phase timings to stderr on graph, queue, and
 server commands.
 
 For repeated graph/symbol/playwright/project queries in the same process,
-prefer `analyzeProject({reports:[…]})` from the async Node API documented in
-`docs/node-api.md` — it shares a single graph build across all requested
+prefer `analyzeProject({reports:[…]})` from the async Node API documented at
+https://github.com/jonathanong/no-mistakes/blob/main/docs/node-api.md — it
+shares a single graph build across all requested
 reports. Note: `analyzeProject` does not support `testsPlan`, `fetches`, or
 `lockfileDiff`; call those dedicated Node API functions directly.
 
@@ -109,9 +110,9 @@ member usage.
 - `references/playwright.md`: full `playwright` command reference.
 - `references/monorepo-resolution.md`: tsconfig paths and workspace packages.
 - `references/limits-and-fallbacks.md`: unsupported forms and `rg` fallbacks.
-- Repository docs: `docs/agent-guide.md`, `docs/cli/README.md`,
-  `docs/graph-edges.md`, `docs/rules/README.md`, `docs/eslint-rules/README.md`,
-  and `docs/configuration/README.md`.
+- Upstream repository docs (not vendored with this skill): the `docs/` tree at
+  https://github.com/jonathanong/no-mistakes/tree/main/docs — see the agent-guide,
+  cli, graph-edges, rules, eslint-rules, and configuration pages there.
 
 ## Hard Limits
 

@@ -103,4 +103,5 @@ tests:
 
 `frontendRoot` sets the root directory for App Router route discovery;
 `selectorRoots` sets the directories scanned for test ID selectors.
-Consult `docs/configuration/tests.md` for the full schema.
+Consult https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/tests.md
+for the full schema.
