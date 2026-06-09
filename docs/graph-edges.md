@@ -21,7 +21,7 @@ serialized in JSON/YAML/text output through the `via` field.
 | `http` | `HttpCall` | `http` | static HTTP caller -> matching backend or Next route-handler file | [`codebase-intel/packages/web/src/api-client.tsx`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/web/src/api-client.tsx), [`graph-missing-edges/packages/web/src/client.ts`](../test-cases/codebase-analysis/graph-missing-edges/fixture/packages/web/src/client.ts) |
 | `queue-enqueue` | `QueueEnqueue` | `queue` | producer file -> virtual queue job node | [`codebase-intel/packages/api/src/send-email.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/send-email.mts) |
 | `queue-worker` | `QueueWorker` | `queue` | virtual queue job node -> worker/processor file | [`codebase-intel/packages/api/src/worker.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/worker.mts) |
-| `route-test` | `RouteTest` | `test`, `route` | Playwright test file -> Next.js page file | [`codebase-intel/tests/e2e/users.spec.ts`](../test-cases/codebase-analysis/codebase-intel/fixture/tests/e2e/users.spec.ts) |
+| `route-test` | `RouteTest` | `test`, `route` | Playwright test file -> Next.js page file; navigated paths with unresolved interpolations match dynamic route segments | [`codebase-intel/tests/e2e/users.spec.ts`](../test-cases/codebase-analysis/codebase-intel/fixture/tests/e2e/users.spec.ts), [`playwright-interpolated-routes`](../test-cases/codebase-analysis/playwright-interpolated-routes) |
 | `selector` | `Selector` | `test` | Playwright test file -> app/component file matched by selector analysis | `data-testid`, `data-pw`, configured component props, text/role/label/placeholder locators |
 | `layout` | `Layout` | `test`, `route` | Next.js page file -> inherited layout/template/error/loading/not-found file | [`playwright-impact-routing`](../test-cases/codebase-analysis/playwright-impact-routing) |
 | `react-render` | `ReactRender` | `react` | React component file -> rendered child component file | [`graph-missing-edges/packages/web/app/components/Parent.tsx`](../test-cases/codebase-analysis/graph-missing-edges/fixture/packages/web/app/components/Parent.tsx) |
@@ -98,11 +98,24 @@ await queue.add(jobName, payload);
 new Worker(prefix + queueName, processor);
 ```
 
+Playwright navigation paths are an exception. An unresolved interpolation in a
+navigated path stands in for "any single value", so it is treated as a wildcard
+matching one dynamic route segment and still produces a `route-test` edge:
+
+```ts
+await page.goto(`/user/${userId}`);     // -> app/(user)/user/[idOrUsername]/page.tsx
+await navigateTo(page, "/user/" + id);  // string concatenation folds the same way
+```
+
+The interpolation matches a dynamic segment (`[param]`, `[...slug]`) only — it is
+not assumed to equal a concrete literal route such as `/user/settings`.
+
 ## Intentional Limits
 
-- Dynamic `import(...)`, `require(...)`, HTTP paths, route references, queue
-  names, and process commands are not guessed. Only static literals and
-  supported expression-free shapes produce edges.
+- Dynamic `import(...)`, `require(...)`, HTTP paths, `route` references (e.g.
+  `router.push`), queue names, and process commands are not guessed. Only static
+  literals and supported expression-free shapes produce edges. (Playwright
+  `route-test` navigation is the documented exception above.)
 - Selector text edges are approximate. Exact selector edges from configured test
   ID attributes are stronger than role/text/label/placeholder matching.
 - `ci` is intentionally narrow: it covers the current workflow-to-Rust-bin

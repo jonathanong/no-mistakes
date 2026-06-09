@@ -1,0 +1,6 @@
+tests:
+  playwright:
+    configs: playwright.config.mts
+    frontendRoot: web/app
+    navigationHelpers:
+      - navigateTo

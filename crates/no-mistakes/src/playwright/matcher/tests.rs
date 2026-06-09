@@ -56,3 +56,26 @@ fn trailing_slash_stripped() {
 fn root_slash_preserved() {
     assert!(matches("/", "/"));
 }
+
+#[test]
+fn interpolation_matches_dynamic_segment() {
+    // `/user/${targetUsername}` navigates to the `[idOrUsername]` dynamic route.
+    assert!(matches("/user/${targetUsername}", "/user/:idOrUsername"));
+    assert!(matches(
+        "/users/${id}/posts/${postId}",
+        "/users/:id/posts/:postId"
+    ));
+}
+
+#[test]
+fn interpolation_matches_wildcard_tail_segments() {
+    assert!(matches("/docs/${slug}", "/docs/*"));
+    assert!(matches("/shop/${a}/${b}", "/shop/**"));
+}
+
+#[test]
+fn interpolation_does_not_match_concrete_literal() {
+    // An unresolved value is not assumed to equal a specific literal segment, so a
+    // sibling literal route is not selected by an interpolated navigation.
+    assert!(!matches("/user/${tab}", "/user/settings"));
+}

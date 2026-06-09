@@ -45,6 +45,11 @@ Key flags:
   to have no test dependents.
 - `--format paths|json` — `paths` for shell substitution, `json` for agents.
 
+For Playwright, a changed Next.js page selects specs that navigate to it — including
+specs whose navigation path interpolates an unresolvable value (e.g.
+`` `/user/${userId}` `` or `'/user/' + id`), which matches the page's dynamic
+`[param]` segment.
+
 Node API: `testsPlan(options)`.
 
 ## `tests why`

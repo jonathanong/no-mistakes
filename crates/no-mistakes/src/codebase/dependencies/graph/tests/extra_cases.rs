@@ -126,6 +126,44 @@ fn playwright_route_edges_use_app_root_and_filter_graph_files() {
 }
 
 #[test]
+fn playwright_route_edges_match_unresolved_interpolations_to_dynamic_segment() {
+    // #391: template-literal, string-concatenation, and goto navigations whose final
+    // segment is an unresolved interpolation must edge to the dynamic `[idOrUsername]`
+    // page, but never to the sibling literal `/user/settings` page.
+    let root =
+        crate::codebase::ts_resolver::normalize_path(&fixture("playwright-interpolated-routes"));
+    let test_file = root.join("tests/e2e/users.spec.ts");
+    let dynamic_page = root.join("web/app/(user)/user/[idOrUsername]/page.tsx");
+    let literal_page = root.join("web/app/user/settings/page.tsx");
+
+    let edges = collect_playwright_route_edges(
+        &root,
+        &[
+            test_file.clone(),
+            dynamic_page.clone(),
+            literal_page.clone(),
+            root.join("playwright.config.mts"),
+            root.join(".no-mistakes.yml"),
+        ],
+    );
+
+    assert!(
+        edges.contains(&(
+            NodeId::File(test_file.clone()),
+            NodeId::File(dynamic_page),
+            EdgeKind::RouteTest
+        )),
+        "expected route edge to the dynamic page, got {edges:?}"
+    );
+    assert!(
+        !edges.iter().any(|(_, target, kind)| {
+            target == &NodeId::File(literal_page.clone()) && *kind == EdgeKind::RouteTest
+        }),
+        "interpolated navigation must not select the sibling literal route, got {edges:?}"
+    );
+}
+
+#[test]
 fn playwright_route_edges_cover_defensive_config_errors() {
     for name in [
         "playwright-route-edges-invalid-settings",
