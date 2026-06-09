@@ -115,6 +115,16 @@ fn argument_config_object<'a>(
         Argument::ParenthesizedExpression(parenthesized) => {
             expression_config_object(&parenthesized.expression, bindings, seen)
         }
+        // Unwrap nested wrapper calls such as
+        // `defineConfig(createPlaywrightConfig({ ... }))`, where the inner helper
+        // receives the config object literal as its first argument. Options added
+        // inside the helper body are still invisible to static parsing (which is
+        // why `tests.playwright.testIdAttribute` exists), but the literal that is
+        // passed through is recovered.
+        Argument::CallExpression(call) => call
+            .arguments
+            .first()
+            .and_then(|argument| argument_config_object(argument, bindings, seen)),
         _ => None,
     }
 }

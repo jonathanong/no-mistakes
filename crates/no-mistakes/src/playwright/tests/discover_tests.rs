@@ -9,6 +9,26 @@ use crate::playwright::test_support::fixture_path;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+fn empty_settings() -> Settings {
+    Settings {
+        frontend_root: "web/app".to_string(),
+        playwright_configs: vec![],
+        project: None,
+        test_include: vec![],
+        test_exclude: vec![],
+        ignore_routes: vec![],
+        rewrites: vec![],
+        navigation_helpers: vec![],
+        selector_attributes: vec![],
+        test_id_attribute_override: None,
+        component_selector_attributes: BTreeMap::new(),
+        html_ids: false,
+        selector_roots: vec!["web/app".to_string()],
+        selector_include: vec![],
+        selector_exclude: vec![],
+    }
+}
+
 #[test]
 fn run_check_errors_on_empty_app() {
     let root = fixture_path(&["scan-config", "missing-default"]);
@@ -94,6 +114,7 @@ fn discover_test_files_walks_shared_project_test_dir_once() {
         rewrites: vec![],
         navigation_helpers: vec![],
         selector_attributes: vec![],
+        test_id_attribute_override: None,
         component_selector_attributes: BTreeMap::new(),
         html_ids: false,
         selector_roots: vec!["web/app".to_string()],
@@ -110,7 +131,7 @@ fn discover_test_files_walks_shared_project_test_dir_once() {
                 test_match: vec!["**/*.spec.ts".to_string()],
                 test_ignore: vec![],
                 base_url: Some("http://localhost:3000".to_string()),
-                test_id_attribute: "data-testid".to_string(),
+                test_id_attribute: Some("data-testid".to_string()),
             },
             playwright_config::TestProject {
                 name: None,
@@ -119,7 +140,7 @@ fn discover_test_files_walks_shared_project_test_dir_once() {
                 test_match: vec!["**/*.spec.ts".to_string()],
                 test_ignore: vec![],
                 base_url: Some("http://localhost:4000".to_string()),
-                test_id_attribute: "data-pw".to_string(),
+                test_id_attribute: Some("data-pw".to_string()),
             },
         ],
     };
@@ -142,6 +163,7 @@ fn discover_test_files_applies_yaml_exclude_before_project_matching() {
         rewrites: vec![],
         navigation_helpers: vec![],
         selector_attributes: vec![],
+        test_id_attribute_override: None,
         component_selector_attributes: BTreeMap::new(),
         html_ids: false,
         selector_roots: vec!["web/app".to_string()],
@@ -157,7 +179,7 @@ fn discover_test_files_applies_yaml_exclude_before_project_matching() {
             test_match: vec!["**/*.spec.ts".to_string()],
             test_ignore: vec![],
             base_url: None,
-            test_id_attribute: "data-testid".to_string(),
+            test_id_attribute: Some("data-testid".to_string()),
         }],
     };
 
@@ -178,6 +200,7 @@ fn discover_test_files_rejects_invalid_configured_globs() {
         rewrites: vec![],
         navigation_helpers: vec![],
         selector_attributes: vec![],
+        test_id_attribute_override: None,
         component_selector_attributes: BTreeMap::new(),
         html_ids: false,
         selector_roots: vec!["web/app".to_string()],
@@ -193,7 +216,7 @@ fn discover_test_files_rejects_invalid_configured_globs() {
             test_match: vec!["**/*.spec.ts".to_string()],
             test_ignore: vec![],
             base_url: None,
-            test_id_attribute: "data-testid".to_string(),
+            test_id_attribute: Some("data-testid".to_string()),
         }],
     };
 
@@ -219,7 +242,7 @@ fn discover_test_files_rejects_invalid_configured_globs() {
             test_match: vec!["[".to_string()],
             test_ignore: vec![],
             base_url: None,
-            test_id_attribute: "data-testid".to_string(),
+            test_id_attribute: Some("data-testid".to_string()),
         }],
     };
     let settings = Settings {
@@ -232,6 +255,7 @@ fn discover_test_files_rejects_invalid_configured_globs() {
         rewrites: vec![],
         navigation_helpers: vec![],
         selector_attributes: vec![],
+        test_id_attribute_override: None,
         component_selector_attributes: BTreeMap::new(),
         html_ids: false,
         selector_roots: vec!["web/app".to_string()],
@@ -253,10 +277,10 @@ fn build_project_discovery_rejects_invalid_project_globs() {
             test_match: vec!["[".to_string()],
             test_ignore: vec![],
             base_url: None,
-            test_id_attribute: "data-testid".to_string(),
+            test_id_attribute: Some("data-testid".to_string()),
         }],
     };
-    assert!(build_project_discovery(&root, &invalid_match).is_err());
+    assert!(build_project_discovery(&root, &empty_settings(), &invalid_match).is_err());
 
     let invalid_ignore = playwright_config::PlaywrightConfig {
         name: None,
@@ -267,10 +291,10 @@ fn build_project_discovery_rejects_invalid_project_globs() {
             test_match: vec!["**/*.spec.ts".to_string()],
             test_ignore: vec!["[".to_string()],
             base_url: None,
-            test_id_attribute: "data-testid".to_string(),
+            test_id_attribute: Some("data-testid".to_string()),
         }],
     };
-    assert!(build_project_discovery(&root, &invalid_ignore).is_err());
+    assert!(build_project_discovery(&root, &empty_settings(), &invalid_ignore).is_err());
 }
 
 #[test]

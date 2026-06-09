@@ -12,7 +12,11 @@ pub struct TestProject {
     pub test_match: Vec<String>,
     pub test_ignore: Vec<String>,
     pub base_url: Option<String>,
-    pub test_id_attribute: String,
+    /// The `testIdAttribute` resolved from the Playwright config's `use` block,
+    /// or `None` when it could not be read statically (e.g. the config is built
+    /// by a helper function). `None` is the signal for callers to fall back to
+    /// the configured `tests.playwright.selectors.testIds`.
+    pub test_id_attribute: Option<String>,
 }
 
 #[derive(Default)]
@@ -30,7 +34,7 @@ impl PlaywrightConfig {
         let mut attributes: Vec<String> = self
             .projects
             .iter()
-            .map(|project| project.test_id_attribute.clone())
+            .filter_map(|project| project.test_id_attribute.clone())
             .collect();
         attributes.sort();
         attributes.dedup();

@@ -109,7 +109,7 @@ fn test_dir_resolves_absolute_relative_and_relative_config_dir() {
         test_match: vec![],
         test_ignore: vec![],
         base_url: None,
-        test_id_attribute: "data-testid".to_string(),
+        test_id_attribute: Some("data-testid".to_string()),
     };
     assert_eq!(
         absolute.test_dir(Path::new("/repo")),
@@ -123,7 +123,7 @@ fn test_dir_resolves_absolute_relative_and_relative_config_dir() {
         test_match: vec![],
         test_ignore: vec![],
         base_url: None,
-        test_id_attribute: "data-testid".to_string(),
+        test_id_attribute: Some("data-testid".to_string()),
     };
     assert_eq!(
         absolute_config_relative_test_dir.test_dir(Path::new("/repo")),
@@ -137,7 +137,7 @@ fn test_dir_resolves_absolute_relative_and_relative_config_dir() {
         test_match: vec![],
         test_ignore: vec![],
         base_url: None,
-        test_id_attribute: "data-testid".to_string(),
+        test_id_attribute: Some("data-testid".to_string()),
     };
     assert_eq!(
         relative_config.test_dir(Path::new("/repo")),

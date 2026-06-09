@@ -95,6 +95,7 @@ tests:
   playwright:
     configs: playwright.config.mts
     frontendRoot: web/app    # required for route discovery in Next.js App Router
+    testIdAttribute: data-pw # the attribute getByTestId(...) resolves to
     selectors:
       testIds:
         - data-pw
@@ -109,5 +110,12 @@ tests:
 
 `frontendRoot` sets the root directory for App Router route discovery;
 `selectorRoots` sets the directories scanned for test ID selectors.
+
+`testIdAttribute` sets the attribute that `page.getByTestId(...)` resolves to.
+Set it when your Playwright config builds its options through a helper (e.g.
+`defineConfig(createPlaywrightConfig({ ... }))`), so `testIdAttribute` is not
+statically readable; otherwise coverage falls back to `selectors.testIds`. Without
+either, `getByTestId`-based assertions against a non-`data-testid` attribute are
+reported as uncovered.
 Consult https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/tests.md
 for the full schema.

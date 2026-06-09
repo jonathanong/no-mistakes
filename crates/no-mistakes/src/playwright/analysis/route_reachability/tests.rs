@@ -15,6 +15,7 @@ fn settings(selector_include: Vec<String>) -> Settings {
         rewrites: vec![],
         navigation_helpers: vec![],
         selector_attributes: vec!["data-pw".to_string()],
+        test_id_attribute_override: None,
         component_selector_attributes: BTreeMap::new(),
         html_ids: false,
         selector_roots: vec!["web/app".to_string()],

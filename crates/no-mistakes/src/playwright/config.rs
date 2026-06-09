@@ -16,6 +16,11 @@ pub struct Settings {
     pub rewrites: Vec<crate::config::v2::schema::RewriteRule>,
     pub navigation_helpers: Vec<String>,
     pub selector_attributes: Vec<String>,
+    /// Explicit override for the `getByTestId(...)` attribute, from
+    /// `tests.playwright.testIdAttribute`. Use this when the Playwright config's
+    /// `testIdAttribute` cannot be read statically (e.g. it is set inside a
+    /// helper function).
+    pub test_id_attribute_override: Option<String>,
     pub component_selector_attributes: BTreeMap<String, String>,
     pub html_ids: bool,
     pub selector_roots: Vec<String>,

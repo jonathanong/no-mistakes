@@ -66,6 +66,61 @@ fn check_reports_coverage_without_shared_facts() {
         .any(|finding| finding.rule == PLAYWRIGHT_COVERAGE));
 }
 
+// Regression tests for #343: `getByTestId(...)` resolution when the Playwright
+// config's `testIdAttribute` is hidden in a helper or differs from the configured
+// `selectors.testIds`.
+
+#[test]
+fn helper_wrapped_config_falls_back_to_configured_test_ids() {
+    // The Playwright config is `defineConfig(createPlaywrightConfig({...}))`, so
+    // `testIdAttribute: 'data-pw'` (set inside the helper) is not readable. The
+    // fallback resolves `getByTestId('save')` against the configured testIds
+    // (data-pw), so `data-pw="save"` is covered and there are no findings.
+    let root = fixture_path(&["nextjs-coverage", "helper-config-testid"]);
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+
+    let findings = check(&root, None, &config).unwrap();
+
+    assert!(
+        findings.is_empty(),
+        "expected the data-pw selector to be covered via the testIds fallback, got {findings:?}"
+    );
+}
+
+#[test]
+fn readable_test_id_attribute_wins_over_configured_test_ids() {
+    // The config statically sets `testIdAttribute: 'data-qa'`, which beats the
+    // `selectors.testIds` (data-pw) fallback. `getByTestId('save')` therefore
+    // resolves to data-qa and does NOT cover `data-pw="save"`.
+    let root = fixture_path(&["nextjs-coverage", "readable-testid-mismatch"]);
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+
+    let findings = check(&root, None, &config).unwrap();
+
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains(r#"[data-pw="save"]"#)),
+        "expected the data-pw selector to be uncovered, got {findings:?}"
+    );
+}
+
+#[test]
+fn explicit_test_id_attribute_override_beats_readable_config() {
+    // The fixture's `.no-mistakes.yml` sets `tests.playwright.testIdAttribute:
+    // data-pw`, which overrides even the statically-read `data-qa`, restoring
+    // coverage of `data-pw="save"`.
+    let root = fixture_path(&["nextjs-coverage", "override-testid-attribute"]);
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+
+    let findings = check(&root, None, &config).unwrap();
+
+    assert!(
+        findings.is_empty(),
+        "expected the testIdAttribute override to cover the selector, got {findings:?}"
+    );
+}
+
 #[test]
 fn check_with_facts_returns_empty_when_disabled() {
     let root = fixture_path(&["nextjs-coverage", "covered"]);
