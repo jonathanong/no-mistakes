@@ -105,6 +105,7 @@ fn project_runner(report_type: &str) -> Option<ReportRunner> {
         "serverRouteRelated" => Some(super::server_route_related_json_impl),
         "reactAnalyze" => Some(super::react_analyze_json_impl),
         "reactCheck" => Some(super::react_check_json_impl),
+        "reactUsages" => Some(super::react_usages_json_impl),
         "check" => Some(super::check_json_impl),
         _ => None,
     }

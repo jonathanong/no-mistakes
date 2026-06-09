@@ -12,6 +12,7 @@ import type {
   ProjectOptions,
   QueueReport,
   ReactComponentFacts,
+  ReactUsagesReport,
   ReactViolation,
   ServerRoutesReport,
   SymbolsOptions,
@@ -55,5 +56,8 @@ export function serverRouteEdges(options?: ProjectOptions): Promise<GraphEdge[]>
 export function serverRouteRelated(options: ProjectOptions): Promise<GraphEdge[]>;
 export function reactAnalyze(options?: ProjectOptions): Promise<ReactComponentFacts[]>;
 export function reactCheck(options?: ProjectOptions): Promise<ReactViolation[]>;
+export function reactUsages(
+  options: ProjectOptions & { target: string },
+): Promise<ReactUsagesReport>;
 export function lockfileDiff(options: LockfileDiffOptions): Promise<LockfileDiffEntry[]>;
 export function version(): Promise<string>;

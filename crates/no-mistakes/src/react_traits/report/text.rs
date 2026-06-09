@@ -1,4 +1,4 @@
-use crate::react_traits::report::types::{ComponentFacts, Violation};
+use crate::react_traits::report::types::{ComponentFacts, UsagesReport, Violation};
 
 pub fn print_results(results: &[ComponentFacts], depth: usize) {
     for facts in results {
@@ -72,5 +72,72 @@ pub fn print_violations_md(violations: &[Violation]) {
             "- `{}` `{}`: {}",
             violation.file, violation.component, violation.rule
         );
+    }
+}
+
+fn target_label(report: &UsagesReport) -> String {
+    match &report.target.symbol {
+        Some(symbol) => format!("{}#{}", report.target.file, symbol),
+        None => report.target.file.clone(),
+    }
+}
+
+fn callsite_props(callsite: &crate::react_traits::report::types::Callsite) -> String {
+    let mut parts = callsite.props.clone();
+    if callsite.has_spread {
+        parts.push("...".to_string());
+    }
+    parts.join(", ")
+}
+
+pub fn print_usages(report: &UsagesReport) {
+    println!("{}", target_label(report));
+    println!("  callsites:");
+    for callsite in &report.callsites {
+        println!(
+            "    {}:{} <{}> [{}]",
+            callsite.file,
+            callsite.line,
+            callsite.component,
+            callsite_props(callsite)
+        );
+    }
+    print_usages_section("stories", report.stories.as_deref());
+    print_usages_section("tests", report.tests.as_deref());
+    print_usages_section("propTypes", report.prop_types.as_deref());
+}
+
+fn print_usages_section(label: &str, items: Option<&[String]>) {
+    if let Some(items) = items {
+        println!("  {label}:");
+        for item in items {
+            println!("    {item}");
+        }
+    }
+}
+
+pub fn print_usages_md(report: &UsagesReport) {
+    println!("# React usages: `{}`", target_label(report));
+    println!("## Callsites");
+    for callsite in &report.callsites {
+        println!(
+            "- `{}:{}` `<{}>` ({})",
+            callsite.file,
+            callsite.line,
+            callsite.component,
+            callsite_props(callsite)
+        );
+    }
+    print_usages_md_section("Stories", report.stories.as_deref());
+    print_usages_md_section("Tests", report.tests.as_deref());
+    print_usages_md_section("Prop types", report.prop_types.as_deref());
+}
+
+fn print_usages_md_section(label: &str, items: Option<&[String]>) {
+    if let Some(items) = items {
+        println!("## {label}");
+        for item in items {
+            println!("- `{item}`");
+        }
     }
 }

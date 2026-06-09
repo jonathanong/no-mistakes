@@ -135,6 +135,27 @@ pub(crate) fn react_analyze_json_impl(options_json: String) -> napi::Result<Stri
         .map_err(|error| napi::Error::from_reason(error.to_string()))
 }
 
+pub(crate) fn react_usages_json_impl(options_json: String) -> napi::Result<String> {
+    let options = parse_options::<ProjectOptions>(&options_json)?;
+    let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
+    let config = options.config.as_deref().map(PathBuf::from);
+    let target = options.target.ok_or_else(|| {
+        napi::Error::from_reason("target is required for react usages".to_string())
+    })?;
+    let include = crate::react_traits::UsagesInclude::parse(options.include.as_deref())
+        .map_err(to_napi_error)?;
+    let report = crate::react_traits::run_usages(
+        &root,
+        config.as_deref(),
+        &target,
+        &options.targets,
+        &include,
+    )
+    .map_err(to_napi_error)?;
+    serde_json::to_string_pretty(&report)
+        .map_err(|error| napi::Error::from_reason(error.to_string()))
+}
+
 pub(crate) fn react_check_json_impl(options_json: String) -> napi::Result<String> {
     let options = parse_options::<ProjectOptions>(&options_json)?;
     let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
