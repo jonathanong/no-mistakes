@@ -143,6 +143,43 @@ fn extracts_html_ids_when_enabled() {
 }
 
 #[test]
+fn extracts_app_selectors_with_regexes_directly() {
+    let mut regexes_map = BTreeMap::new();
+    regexes_map.insert("dataPw".to_string(), "data-pw".to_string());
+    let regexes = compile_selector_regexes(&["data-testid".to_string()], &regexes_map);
+
+    let app_selectors = extract_app_selectors_with_regexes(
+        Path::new("app/component.tsx"),
+        r#"
+        export function Component({ id }) {
+            return <>
+                <button data-testid="submit-btn" />
+                <CustomComponent dataPw="cancel-btn" />
+                <button id="ignored-btn" />
+                <div data-testid={`dynamic-${id}`} />
+            </>;
+        }
+        "#,
+        &regexes,
+    )
+    .unwrap();
+
+    let values: BTreeSet<(String, String)> = app_selectors
+        .iter()
+        .map(|s| (s.attribute.clone(), s.display_value()))
+        .collect();
+
+    assert_eq!(
+        values,
+        BTreeSet::from([
+            ("data-testid".to_string(), "submit-btn".to_string()),
+            ("data-pw".to_string(), "cancel-btn".to_string()),
+            ("data-testid".to_string(), "dynamic-${id}".to_string()),
+        ])
+    );
+}
+
+#[test]
 fn exact_and_operator_matchers_cover_static_values() {
     let app = AppSelector {
         file: PathBuf::from("app/page.tsx"),
