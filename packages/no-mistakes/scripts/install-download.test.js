@@ -316,6 +316,26 @@ test("withRetry passes through on success without delay", async () => {
   assert.equal(delayCalled, false);
 });
 
+test("withRetry throws non-retryable error immediately", async () => {
+  let calls = 0;
+  await assert.rejects(
+    () =>
+      withRetry(
+        async () => {
+          calls += 1;
+          throw new Error("fatal unretryable error");
+        },
+        {
+          maxAttempts: 3,
+          baseDelayMs: 1,
+          delay: () => Promise.resolve(),
+        },
+      ),
+    /fatal unretryable error/,
+  );
+  assert.equal(calls, 1);
+});
+
 test("withRetry maxAttempts:1 disables retry", async () => {
   let calls = 0;
   await assert.rejects(
