@@ -4,34 +4,10 @@ const { rule } = require("../helpers");
 
 const TEST_FILE_PATTERN = /\.(?:test|spec)\.[cm]?[jt]sx?$/;
 const MOCK_TEST_FILE_PATTERN = /\.mock\.test\.[cm]?[jt]sx?$/;
-const MOCK_METHODS = new Set([
-  "fn",
-  "mock",
-  "doMock",
-  "unmock",
-  "doUnmock",
-  "spyOn",
-  "clearAllMocks",
-  "resetAllMocks",
-  "restoreAllMocks",
-  "stubEnv",
-  "stubGlobal",
-  "setSystemTime",
-]);
-
-const MOCK_CHAIN_METHODS = new Set([
-  "mockImplementation",
-  "mockImplementationOnce",
-  "mockReturnValue",
-  "mockReturnValueOnce",
-  "mockResolvedValue",
-  "mockResolvedValueOnce",
-  "mockRejectedValue",
-  "mockRejectedValueOnce",
-  "mockReset",
-  "mockRestore",
-  "mockClear",
-]);
+// Only module-level mocking requires a `.mock.test` filename. `vi.fn()`,
+// `vi.spyOn`, env stubs, and `.mock*()` chain helpers are test doubles, not
+// module mocks (issue #388).
+const MOCK_METHODS = new Set(["mock", "doMock", "unmock", "doUnmock"]);
 
 function isTestFile(filename) {
   return TEST_FILE_PATTERN.test(filename.replace(/\\/g, "/"));
@@ -88,22 +64,23 @@ function isMockingCall(node, context) {
 module.exports = rule(
   {
     type: "problem",
-    docs: { description: "require .mock.test filenames for mock-heavy tests", recommended: false },
+    docs: {
+      description: "require .mock.test filenames for module-mocking tests",
+      recommended: false,
+    },
     schema: [],
     messages: {
-      needsMock: "Tests using mocking APIs must use a .mock.test.<ext> filename.",
-      unnecessaryMock: "Tests without mocking APIs must not use a .mock.test.<ext> filename.",
+      needsMock:
+        "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+      unnecessaryMock:
+        "Tests without module mocking (vi.mock/vi.doMock) must not use a .mock.test.<ext> filename.",
     },
   },
   (context) => {
     let usesMocking = false;
-    function isMockChainCall(node) {
-      if (node.callee.type !== "MemberExpression") return false;
-      return MOCK_CHAIN_METHODS.has(propertyName(node.callee.property));
-    }
     return {
       CallExpression(node) {
-        if (isMockingCall(node, context) || isMockChainCall(node)) usesMocking = true;
+        if (isMockingCall(node, context)) usesMocking = true;
       },
       "Program:exit"(node) {
         if (!isTestFile(context.filename)) return;

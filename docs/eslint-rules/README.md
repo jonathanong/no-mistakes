@@ -55,4 +55,4 @@ See [ESLint and Oxlint plugin](../eslint-plugin.md) for option schemas.
 | [`test-no-shared-state`](test-no-shared-state.md) | Disallow mutable module-scope test state. |
 | [`ts-no-export-renaming`](ts-no-export-renaming.md) | Disallow value export renaming. |
 | [`ts-no-function-aliases`](ts-no-function-aliases.md) | Disallow function wrappers that only alias another function. |
-| [`vitest-mock-test-file-naming`](vitest-mock-test-file-naming.md) | Require `.mock.test` filenames for mock-heavy tests. |
+| [`vitest-mock-test-file-naming`](vitest-mock-test-file-naming.md) | Require `.mock.test` filenames for module-mocking tests. |
