@@ -2,9 +2,12 @@ use super::RuleFinding;
 use crate::codebase::ts_source::{discover_files, relative_slash_path};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
+use matching::{compile_basenames, matches, CompiledBasename};
 use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
+
+mod matching;
 
 pub const RULE_ID: &str = "banned-renamed-files";
 
@@ -13,6 +16,12 @@ pub const RULE_ID: &str = "banned-renamed-files";
 pub(crate) struct BannedBasename {
     pub(crate) name: String,
     pub(crate) message: String,
+    /// Match `<name>` followed by one or more extension segments (e.g.
+    /// `webpack.config.prod.js`), with the final extension still in `extensions`.
+    pub(crate) match_compound_extensions: bool,
+    /// Regex matched against the file basename. Authoritative when set: the
+    /// `extensions` filter is not applied to entries with a `pattern`.
+    pub(crate) pattern: Option<String>,
 }
 
 #[derive(Deserialize, Default)]
@@ -71,15 +80,21 @@ pub(crate) fn check_with_files(
 }
 
 fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+    let compiled = compile_basenames(opts)?;
     let mut findings: Vec<RuleFinding> = files
         .par_iter()
-        .flat_map(|path| check_file(path, root, opts))
+        .flat_map(|path| check_file(path, root, opts, &compiled))
         .collect();
     findings.sort_by(|a, b| a.file.cmp(&b.file));
     Ok(findings)
 }
 
-pub(crate) fn check_file(path: &Path, root: &Path, opts: &Options) -> Vec<RuleFinding> {
+pub(crate) fn check_file(
+    path: &Path,
+    root: &Path,
+    opts: &Options,
+    compiled: &[CompiledBasename],
+) -> Vec<RuleFinding> {
     let rel = relative_slash_path(root, path);
 
     if let Some(scope) = &opts.scope {
@@ -96,27 +111,18 @@ pub(crate) fn check_file(path: &Path, root: &Path, opts: &Options) -> Vec<RuleFi
         return Vec::new();
     };
 
-    // Split into stem and extension
-    let (stem, ext) = split_stem_ext(file_name);
-
-    let mut findings = Vec::new();
-    for banned in &opts.banned_basenames {
-        if stem != banned.name.as_str() {
-            continue;
-        }
-        let dot_ext = format!(".{ext}");
-        if opts.extensions.iter().any(|e| e.as_str() == dot_ext) {
-            findings.push(RuleFinding {
-                rule: RULE_ID.to_string(),
-                file: rel.clone(),
-                line: 1,
-                message: banned.message.clone(),
-                import: None,
-                target: None,
-            });
-        }
-    }
-    findings
+    compiled
+        .iter()
+        .filter(|banned| matches(file_name, banned, &opts.extensions))
+        .map(|banned| RuleFinding {
+            rule: RULE_ID.to_string(),
+            file: rel.clone(),
+            line: 1,
+            message: banned.def.message.clone(),
+            import: None,
+            target: None,
+        })
+        .collect()
 }
 
 fn normalize_scope(scope: &str) -> &str {
@@ -125,13 +131,6 @@ fn normalize_scope(scope: &str) -> &str {
         ""
     } else {
         scope.strip_prefix("./").unwrap_or(scope)
-    }
-}
-
-fn split_stem_ext(filename: &str) -> (&str, &str) {
-    match filename.rfind('.') {
-        Some(i) if i > 0 => (&filename[..i], &filename[i + 1..]),
-        _ => (filename, ""),
     }
 }
 

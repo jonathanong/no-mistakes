@@ -1,0 +1,11 @@
+rules:
+  - rule: banned-renamed-files
+    scope: repository
+    options:
+      scope: web
+      bannedBasenames:
+        # `pattern` is authoritative: it matches the basename and ignores `extensions`,
+        # so every jest.config.* variant is caught regardless of suffix.
+        - name: jest.config
+          message: "remove jest.config.* — tests run under vitest"
+          pattern: "^jest\\.config\\..+"
