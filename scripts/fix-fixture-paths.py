@@ -56,8 +56,7 @@ def main():
 
     # ── tests/ files ──────────────────────────────────────────────────────────
 
-    # tests/cli.rs: fixture(name), react_fixture(category, name),
-    #               queue_fixture(name), server_fixture(name)
+    # tests/cli.rs
     cli = crates / "tests/cli.rs"
     fix_file(cli, [
         (
@@ -116,7 +115,7 @@ def main():
         ),
     ])
 
-    # tests/cli_extra.rs: fixture(category, name)
+    # tests/cli_extra.rs
     cle = crates / "tests/cli_extra.rs"
     fix_file(cle, [
         (
@@ -125,7 +124,7 @@ def main():
         ),
     ])
 
-    # tests/cli_extra2.rs: fixture(category, name) with potential sub-path in name
+    # tests/cli_extra2.rs with potential sub-path in name
     # Change to split-once approach to handle "ts-process-spawn/project"
     cle2 = crates / "tests/cli_extra2.rs"
     content = cle2.read_text()
@@ -156,7 +155,7 @@ fn fixture(category: &str, name: &str) -> PathBuf {
         cle2.write_text(content)
         print(f"Fixed: {cle2.relative_to(WORKTREE)}")
 
-    # tests/shared_facts.rs: codebase_fixture(name), queue_fixture(name)
+    # tests/shared_facts.rs
     sf = crates / "tests/shared_facts.rs"
     fix_file(sf, [
         (
@@ -169,7 +168,7 @@ fn fixture(category: &str, name: &str) -> PathBuf {
         ),
     ])
 
-    # tests/common/mod.rs: pub fn fixture(name)
+    # tests/common/mod.rs
     cm = crates / "tests/common/mod.rs"
     fix_file(cm, [
         (
@@ -178,7 +177,7 @@ fn fixture(category: &str, name: &str) -> PathBuf {
         ),
     ])
 
-    # tests/cli_codebase_acceptance/common.rs: pub fn fixture(name)
+    # tests/cli_codebase_acceptance/common.rs
     cca = crates / "tests/cli_codebase_acceptance/common.rs"
     fix_file(cca, [
         (
@@ -187,7 +186,7 @@ fn fixture(category: &str, name: &str) -> PathBuf {
         ),
     ])
 
-    # tests/cli_unique_exports.rs: fn fixture(name)
+    # tests/cli_unique_exports.rs
     cue = crates / "tests/cli_unique_exports.rs"
     fix_file(cue, [
         (
@@ -196,7 +195,7 @@ fn fixture(category: &str, name: &str) -> PathBuf {
         ),
     ])
 
-    # tests/cli_check_rules.rs: fixture(category, scenario) and codebase_fixture(scenario)
+    # tests/cli_check_rules.rs
     # fixture: rules/{category}/fixture/{scenario}
     # codebase_fixture: codebase-analysis/{scenario}/fixture
     ccr = crates / "tests/cli_check_rules.rs"
@@ -211,7 +210,7 @@ fn fixture(category: &str, name: &str) -> PathBuf {
         ),
     ])
 
-    # tests/cli_tests_impact.rs: fn fixture(name)
+    # tests/cli_tests_impact.rs
     cti = crates / "tests/cli_tests_impact.rs"
     fix_file(cti, [
         (
@@ -222,7 +221,7 @@ fn fixture(category: &str, name: &str) -> PathBuf {
 
     # ── src/ files ────────────────────────────────────────────────────────────
 
-    # src/integration_tests/tests/*.rs — fn fixture(name)
+    # src/integration_tests/tests/*.rs
     for p in [
         "src/integration_tests/tests/config_parsers.rs",
         "src/integration_tests/tests.rs",
@@ -236,7 +235,7 @@ fn fixture(category: &str, name: &str) -> PathBuf {
             ),
         ])
 
-    # src/config/v2/tests.rs — fn fixture(sub)
+    # src/config/v2/tests.rs
     cv2 = crates / "src/config/v2/tests.rs"
     fix_file(cv2, [
         (
@@ -365,7 +364,7 @@ fn fixture(category: &str, name: &str) -> PathBuf {
     dgc = crates / "src/codebase/dependencies/graph/tests/core.rs"
     content = dgc.read_text()
     # These are all PathBuf ending with .join("../../test-cases/codebase-analysis").join(name) forms
-    # The function is fn fixture(name: &str) -> PathBuf
+    # The function is a fixture helper
     fixed = content.replace(
         '.join("../../test-cases/codebase-analysis")\n        .join(name)\n}',
         '.join("../../test-cases/codebase-analysis")\n        .join(name)\n        .join("fixture")\n}',
