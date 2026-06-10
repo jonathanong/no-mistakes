@@ -14,7 +14,7 @@ fn test_compile_selector_regexes() {
 
     assert_eq!(regexes.app_attributes, attributes);
     assert_eq!(regexes.component_attributes, component_attributes);
-    assert_eq!(regexes.html_ids, false);
+    assert!(!regexes.html_ids);
 
     let mut expected_playwright_attributes = vec![
         "data-cy".to_string(),
@@ -54,7 +54,7 @@ fn test_compile_selector_regexes_with_html_ids() {
 
     let regexes = compile_selector_regexes_with_html_ids(&attributes, &component_attributes, true);
 
-    assert_eq!(regexes.html_ids, true);
+    assert!(regexes.html_ids);
 
     let mut expected_playwright_attributes = vec![
         "data-testid".to_string(),
