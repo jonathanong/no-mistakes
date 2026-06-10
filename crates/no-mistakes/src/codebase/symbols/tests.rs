@@ -309,6 +309,37 @@ fn paths_format_includes_imports_with_local_name() {
 }
 
 #[test]
+fn paths_writer_emits_path_lines() {
+    let entry = FileEntry {
+        rel_path: PathBuf::from("src/test.mts"),
+        exports: vec![ResolvedExport {
+            name: "go".to_string(),
+            kind: ExportKind::Function,
+            line: 5,
+            resolved: None,
+        }],
+        imports: vec![ResolvedImport {
+            source: "lib".to_string(),
+            imported: "util".to_string(),
+            local: "util".to_string(),
+            line: 10,
+            is_type_only: false,
+            resolved: None,
+        }],
+    };
+    let mut out = Vec::new();
+
+    output::write_paths(&[entry], &mut out).unwrap();
+
+    let out = String::from_utf8(out).unwrap();
+    let lines: Vec<&str> = out.lines().collect();
+
+    assert_eq!(lines.len(), 2);
+    assert!(lines.contains(&"src/test.mts:5:go"));
+    assert!(lines.contains(&"src/test.mts:10:util"));
+}
+
+#[test]
 fn import_with_unresolvable_source_omits_resolved() {
     let mut args = fixture_args(vec!["src/unresolved-import.mts"], Format::Json);
     args.include = Include::Both;
