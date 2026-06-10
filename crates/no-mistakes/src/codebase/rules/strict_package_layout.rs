@@ -143,9 +143,7 @@ pub(crate) fn check_relative(
     if components.is_empty() {
         return None;
     }
-    let Some(&file_name) = components.last() else {
-        return None;
-    };
+    let &file_name = components.last()?;
     match components.len() {
         1 => layout_check::check_root_file(file_name, spec, test_globs, full_path),
         2 => layout_check::check_one_deep(
