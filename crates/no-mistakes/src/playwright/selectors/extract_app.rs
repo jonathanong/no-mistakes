@@ -11,6 +11,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
+use rayon::prelude::*;
 use std::collections::BTreeSet;
 use walkdir::WalkDir;
 pub fn collect_app_selectors(
@@ -21,24 +22,31 @@ pub fn collect_app_selectors(
     use super::is_source_file;
     let component_attributes = BTreeMap::new();
     if frontend_root.exists() {
-        let mut selectors = BTreeSet::new();
-        for entry in WalkDir::new(frontend_root)
+        let entries: Vec<_> = WalkDir::new(frontend_root)
             .into_iter()
             .filter_entry(|entry| !is_skipped_dir(entry.path()))
             .filter_map(|entry| entry.ok())
-        {
-            let path = entry.path();
-            if !path.is_file() || !is_source_file(path) {
-                continue;
-            }
-            let source = std::fs::read_to_string(path)?;
-            selectors.extend(extract_app_selectors(
-                path,
-                &source,
-                attributes,
-                &component_attributes,
-            )?);
-        }
+            .collect();
+
+        let selectors: BTreeSet<AppSelector> = entries
+            .into_par_iter()
+            .filter_map(|entry| {
+                let path = entry.path();
+                if !path.is_file() || !is_source_file(path) {
+                    return None;
+                }
+                Some(
+                    std::fs::read_to_string(path)
+                        .map_err(|e| e.into())
+                        .and_then(|source| {
+                            extract_app_selectors(path, &source, attributes, &component_attributes)
+                        }),
+                )
+            })
+            .collect::<Result<Vec<_>>>()?
+            .into_iter()
+            .flatten()
+            .collect();
         Ok(selectors.into_iter().collect())
     } else {
         Ok(Vec::new())
