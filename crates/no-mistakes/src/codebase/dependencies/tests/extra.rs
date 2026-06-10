@@ -439,3 +439,24 @@ fn dependents_finds_tsconfig_alias_importers() {
         "should find tests/button.test.tsx (direct relative import)"
     );
 }
+
+#[test]
+fn relationship_arg_as_str_all_variants() {
+    assert_eq!(RelationshipArg::Import.as_str(), "import");
+    assert_eq!(RelationshipArg::ImportStatic.as_str(), "import-static");
+    assert_eq!(RelationshipArg::ImportDynamic.as_str(), "import-dynamic");
+    assert_eq!(RelationshipArg::ImportType.as_str(), "import-type");
+    assert_eq!(RelationshipArg::ImportRequire.as_str(), "import-require");
+    assert_eq!(RelationshipArg::Workspace.as_str(), "workspace");
+    assert_eq!(RelationshipArg::Package.as_str(), "package");
+    assert_eq!(RelationshipArg::Test.as_str(), "test");
+    assert_eq!(RelationshipArg::Route.as_str(), "route");
+    assert_eq!(RelationshipArg::Queue.as_str(), "queue");
+    assert_eq!(RelationshipArg::Md.as_str(), "md");
+    assert_eq!(RelationshipArg::Ci.as_str(), "ci");
+    assert_eq!(RelationshipArg::Http.as_str(), "http");
+    assert_eq!(RelationshipArg::Process.as_str(), "process");
+    assert_eq!(RelationshipArg::Asset.as_str(), "asset");
+    assert_eq!(RelationshipArg::React.as_str(), "react");
+    assert_eq!(RelationshipArg::All.as_str(), "all");
+}
