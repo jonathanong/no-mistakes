@@ -127,40 +127,49 @@ fn playwright_route_edges_use_app_root_and_filter_graph_files() {
 
 #[test]
 fn playwright_route_edges_match_unresolved_interpolations_to_dynamic_segment() {
-    // #391: template-literal, string-concatenation, and goto navigations whose final
-    // segment is an unresolved interpolation must edge to the dynamic `[idOrUsername]`
-    // page, but never to the sibling literal `/user/settings` page.
+    // #391/#397: every navigation form whose final segment is an unresolved interpolation must
+    // edge to the dynamic `[idOrUsername]` page, but never to the sibling literal
+    // `/user/settings` page. Each form lives in its own spec file so a single form's failure is
+    // caught — a combined spec would let one passing navigation mask the others. The `let`
+    // cases (including the reassigned-in-`beforeAll` shape from #397) are the regression: an
+    // unresolved `let` initialized to "" must not collapse the path to a non-matching `/user/`.
     let root =
         crate::codebase::ts_resolver::normalize_path(&fixture("playwright-interpolated-routes"));
-    let test_file = root.join("tests/e2e/users.spec.ts");
     let dynamic_page = root.join("web/app/(user)/user/[idOrUsername]/page.tsx");
     let literal_page = root.join("web/app/user/settings/page.tsx");
+    let spec_files = [
+        "tests/e2e/let-template.spec.ts",
+        "tests/e2e/let-concat.spec.ts",
+        "tests/e2e/let-reassigned.spec.ts",
+        "tests/e2e/const-goto.spec.ts",
+    ]
+    .map(|spec| root.join(spec));
 
-    let edges = collect_playwright_route_edges(
-        &root,
-        &[
-            test_file.clone(),
-            dynamic_page.clone(),
-            literal_page.clone(),
-            root.join("playwright.config.mts"),
-            root.join(".no-mistakes.yml"),
-        ],
-    );
+    let mut all_files = vec![
+        dynamic_page.clone(),
+        literal_page.clone(),
+        root.join("playwright.config.mts"),
+        root.join(".no-mistakes.yml"),
+    ];
+    all_files.extend(spec_files.iter().cloned());
 
-    assert!(
-        edges.contains(&(
-            NodeId::File(test_file.clone()),
-            NodeId::File(dynamic_page),
-            EdgeKind::RouteTest
-        )),
-        "expected route edge to the dynamic page, got {edges:?}"
-    );
-    assert!(
-        !edges.iter().any(|(_, target, kind)| {
-            target == &NodeId::File(literal_page.clone()) && *kind == EdgeKind::RouteTest
-        }),
-        "interpolated navigation must not select the sibling literal route, got {edges:?}"
-    );
+    let edges = collect_playwright_route_edges(&root, &all_files);
+
+    let dynamic_node = NodeId::File(dynamic_page);
+    let literal_node = NodeId::File(literal_page);
+    for spec in &spec_files {
+        let spec_node = NodeId::File(spec.clone());
+        assert!(
+            edges.contains(&(spec_node.clone(), dynamic_node.clone(), EdgeKind::RouteTest)),
+            "expected route edge from {} to the dynamic page, got {edges:?}",
+            spec.display()
+        );
+        assert!(
+            !edges.contains(&(spec_node, literal_node.clone(), EdgeKind::RouteTest)),
+            "interpolated navigation in {} must not select the sibling literal route, got {edges:?}",
+            spec.display()
+        );
+    }
 }
 
 #[test]
