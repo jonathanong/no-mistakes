@@ -144,3 +144,6 @@ pub fn argument_candidate_literals(
         ),
     }
 }
+
+#[cfg(test)]
+mod tests;
