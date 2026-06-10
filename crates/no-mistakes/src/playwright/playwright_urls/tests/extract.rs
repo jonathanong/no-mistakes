@@ -1,11 +1,31 @@
 use crate::playwright::playwright_tests::{TestOccurrenceScope, TestStatus};
 use crate::playwright::playwright_urls::api::{
-    extract_playwright_url_literals_from_program, extract_playwright_url_literals_with_helpers,
-    extract_playwright_url_occurrences, extract_playwright_urls,
+    extract_playwright_url_literals_from_path, extract_playwright_url_literals_from_program,
+    extract_playwright_url_literals_with_helpers, extract_playwright_url_occurrences,
+    extract_playwright_urls,
 };
 use crate::playwright::playwright_urls::visitor::extract_playwright_url_occurrences_from_program;
 use crate::playwright::test_support::fixture_source;
 use std::path::Path;
+
+#[test]
+fn extract_playwright_url_literals_from_path_extracts_urls_successfully() {
+    let src = "await page.goto('/dashboard'); navigateTo('/profile');";
+    let urls = extract_playwright_url_literals_from_path(
+        Path::new("fixture.ts"),
+        src,
+        &["navigateTo".to_string()],
+    )
+    .unwrap();
+    assert_eq!(urls, vec!["/dashboard", "/profile"]);
+}
+
+#[test]
+fn extract_playwright_url_literals_from_path_returns_err_on_parse_failure() {
+    let src = "await page.goto('/dashboard'; // syntax error";
+    let result = extract_playwright_url_literals_from_path(Path::new("fixture.ts"), src, &[]);
+    assert!(result.is_err());
+}
 
 #[test]
 fn callee_checks_handle_non_member_expressions() {
