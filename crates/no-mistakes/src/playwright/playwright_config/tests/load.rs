@@ -169,16 +169,11 @@ fn test_dir_resolves_absolute_relative_and_relative_config_dir() {
 
 #[test]
 fn load_bare_config_path_uses_root() {
-    // We want to test that a config path without a parent still works.
-    // We mock this by copying the internal implementation logic of `load`
-    // to test that `parse_from_path` handles the root correctly when
-    // `config_path.parent()` is empty, without mutating global process state.
-
-    use crate::playwright::playwright_config::parse::parse_from_path;
-
-    let source = "export default { testDir: 'tests' };";
-    let config_path = Path::new("playwright.config.ts");
-
-    let parsed = parse_from_path(source, config_path, Path::new("/repo")).unwrap();
+    // Exercises the bare-path resolution branch in `load` (lines 12-17):
+    // passing just a filename (no parent component) should resolve against
+    // `root` so the file is found and the parent is set correctly.
+    let dir = fixture_path(&["ast-snippets", "playwright_config", "bare-config-path"]);
+    let bare = Path::new("playwright.config.ts");
+    let parsed = load(&dir, bare).unwrap();
     assert_eq!(parsed.projects[0].test_dir, "tests");
 }

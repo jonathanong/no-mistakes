@@ -7,6 +7,18 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 pub fn load(root: &Path, config_path: &Path) -> Result<PlaywrightConfig> {
+    // Resolve a bare config path (one with no parent directory component, like
+    // "playwright.config.ts") against `root` so that filesystem operations use
+    // an absolute path independent of the process working directory.
+    let resolved;
+    let config_path = match config_path.parent() {
+        Some(p) if !p.as_os_str().is_empty() => config_path,
+        _ => {
+            resolved = root.join(config_path);
+            &resolved
+        }
+    };
+
     if !config_path.exists() {
         anyhow::bail!(
             "Playwright config does not exist: {}",
@@ -15,10 +27,7 @@ pub fn load(root: &Path, config_path: &Path) -> Result<PlaywrightConfig> {
     }
 
     let source = std::fs::read_to_string(config_path)?;
-    let mut parent = config_path.parent().unwrap_or(root);
-    if parent.as_os_str().is_empty() {
-        parent = root;
-    }
+    let parent = config_path.parent().unwrap_or(root);
     parse_from_path(&source, config_path, parent)
 }
 
