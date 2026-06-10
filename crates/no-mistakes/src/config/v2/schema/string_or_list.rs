@@ -8,3 +8,6 @@ impl StringOrList {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;
