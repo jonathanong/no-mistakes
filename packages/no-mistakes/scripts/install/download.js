@@ -60,8 +60,26 @@ function request(
           reject(new Error(`Redirect missing Location header while downloading ${url}`));
           return;
         }
+
+        let redirectedUrl;
+        try {
+          redirectedUrl = new URL(response.headers.location, url);
+        } catch {
+          reject(
+            new Error(
+              `Invalid redirect Location header while downloading ${url}: ${response.headers.location}`,
+            ),
+          );
+          return;
+        }
+
+        if (redirectedUrl.protocol !== "http:" && redirectedUrl.protocol !== "https:") {
+          reject(new Error(`Unsupported redirect protocol: ${redirectedUrl.protocol}`));
+          return;
+        }
+
         request(
-          new URL(response.headers.location, url).toString(),
+          redirectedUrl.toString(),
           handleResponse,
           redirects + 1,
           clients,

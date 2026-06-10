@@ -480,6 +480,54 @@ test("computeBackoffMs respects cap and jitter", () => {
   );
 });
 
+test("rejects non-http/https redirect URLs (e.g. ftp:)", async () => {
+  const server = createServer((request, response) => {
+    if (request.url === "/redirect") {
+      response.writeHead(302, { location: "ftp://example.com/file" });
+      response.end();
+      return;
+    }
+    response.writeHead(200);
+    response.end("ok");
+  });
+
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+
+  try {
+    await assert.rejects(
+      () => fetchText(`http://127.0.0.1:${address.port}/redirect`),
+      /Unsupported redirect protocol/,
+    );
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("rejects invalid redirect Location headers", async () => {
+  const server = createServer((request, response) => {
+    if (request.url === "/redirect") {
+      response.writeHead(302, { location: "http://[invalid-url" });
+      response.end();
+      return;
+    }
+    response.writeHead(200);
+    response.end("ok");
+  });
+
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+
+  try {
+    await assert.rejects(
+      () => fetchText(`http://127.0.0.1:${address.port}/redirect`),
+      /Invalid redirect Location header/,
+    );
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test("validates redirected URLs before following", async () => {
   const server = createServer((request, response) => {
     if (request.url === "/redirect") {
