@@ -157,7 +157,9 @@ fn make_finding(root: &Path, path: &Path) -> RuleFinding {
 static GCC_RE: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
 
 pub(crate) fn parse_affected_files(stdout: &str, shell_files: &[PathBuf]) -> Vec<PathBuf> {
-    let re = GCC_RE.get_or_init(|| regex::Regex::new(r"^(.+):\d+:\d+: [a-z]+: ").unwrap());
+    let re = GCC_RE.get_or_init(|| {
+        regex::Regex::new(r"^(.+):\d+:\d+: [a-z]+: ").expect("failed to compile GCC_RE regex")
+    });
     let shell_set: std::collections::HashSet<&PathBuf> = shell_files.iter().collect();
     let mut v: Vec<PathBuf> = stdout
         .lines()
