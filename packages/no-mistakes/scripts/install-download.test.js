@@ -126,21 +126,27 @@ test("treats malformed urls as non-file URLs", async () => {
 });
 
 test("isFileUrl handles objects that cannot be stringified", async () => {
-  // Pass an object that throws when converted to a string or parsed by new URL()
-  // to exercise the try-catch block inside isFileUrl.
+  // Pass an object that throws when converted to a string or parsed as a URL
+  // to exercise the try-catch block inside isFileUrl.  isFileUrl catches the
+  // parse error and returns false, then fetchText proceeds into request() where
+  // a stateful validateUrl sentinel confirms that path was reached.
   const badUrl = {
     toString() {
       throw new Error("Cannot convert to string");
     },
   };
 
-  // fetchText uses isFileUrl internally.
-  // isFileUrl will catch the error when URL tries to parse badUrl and return false.
-  // Then fetchText will proceed to call request(), which uses url.startsWith,
-  // causing a TypeError.
+  let calls = 0;
+  const validateUrl = () => {
+    calls++;
+    if (calls === 2) {
+      throw new Error("reached request");
+    }
+  };
+
   await assert.rejects(
-    () => fetchText(badUrl, () => {}, { maxAttempts: 1, baseDelayMs: 1 }),
-    /url\.startsWith is not a function/
+    () => fetchText(badUrl, validateUrl, { maxAttempts: 1, baseDelayMs: 1 }),
+    /reached request/,
   );
 });
 
