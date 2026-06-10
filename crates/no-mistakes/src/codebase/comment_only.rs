@@ -81,8 +81,8 @@ fn has_real_content_block(content: &str, line_cmt: &str) -> bool {
             continue;
         }
         if trimmed.starts_with("/*") {
-            if trimmed.contains("*/") {
-                let after = trimmed[trimmed.find("*/").unwrap() + 2..].trim();
+            if let Some(end) = trimmed.find("*/") {
+                let after = trimmed[end + 2..].trim();
                 if block_tail_has_content(after, line_cmt) {
                     return true;
                 }
@@ -132,8 +132,8 @@ fn has_real_content_markdown(content: &str) -> bool {
             continue;
         }
         if trimmed.starts_with("<!--") {
-            if trimmed.contains("-->") {
-                let after = trimmed[trimmed.find("-->").unwrap() + 3..].trim();
+            if let Some(end) = trimmed.find("-->") {
+                let after = trimmed[end + 3..].trim();
                 if md_tail_has_content(after) {
                     return true;
                 }
