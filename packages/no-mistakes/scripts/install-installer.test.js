@@ -132,6 +132,25 @@ test("installs only the requested platform binary and verifies checksum", async 
   }
 });
 
+test("wraps checksum download failures", async () => {
+  const root = await mkdtemp(join(tmpdir(), "no-mistakes-missing-checksum-"));
+  const vendorDir = join(root, "vendor");
+  const target = "x86_64-unknown-linux-gnu";
+  const asset = assetName(version, target);
+
+  await mkdir(join(root, "assets"));
+  await writeFile(join(root, "assets", asset), "binary");
+
+  try {
+    await assert.rejects(
+      () => install({ baseUrl: assetBaseUrl(root), target, vendorDir, version }),
+      /Failed to fetch checksum/,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("installs with default target and release base environment", async () => {
   const previous = process.env.NO_MISTAKES_RELEASE_BASE_URL;
   const root = await mkdtemp(join(tmpdir(), "no-mistakes-env-install-"));
