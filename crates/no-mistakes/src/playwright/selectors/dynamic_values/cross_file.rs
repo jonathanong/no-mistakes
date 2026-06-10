@@ -31,29 +31,33 @@ pub(crate) fn resolve_imported_values(
 }
 
 fn find_import_info(local_name: &str, program: &Program<'_>) -> Option<(String, String, bool)> {
-    for stmt in &program.body {
+    program.body.iter().find_map(|stmt| {
         let Statement::ImportDeclaration(import) = stmt else {
-            continue;
+            return None;
         };
-        let source_str = import.source.value.to_string();
-        for specifier in import.specifiers.iter().flatten() {
-            match specifier {
-                ImportDeclarationSpecifier::ImportSpecifier(named) => {
-                    if named.local.name == local_name {
-                        let exported = named.imported.name().to_string();
-                        return Some((source_str, exported, false));
-                    }
+
+        import
+            .specifiers
+            .as_ref()?
+            .iter()
+            .find_map(|specifier| match specifier {
+                ImportDeclarationSpecifier::ImportSpecifier(named)
+                    if named.local.name == local_name =>
+                {
+                    Some((
+                        import.source.value.to_string(),
+                        named.imported.name().to_string(),
+                        false,
+                    ))
                 }
-                ImportDeclarationSpecifier::ImportDefaultSpecifier(default) => {
-                    if default.local.name == local_name {
-                        return Some((source_str, "default".to_string(), true));
-                    }
+                ImportDeclarationSpecifier::ImportDefaultSpecifier(default)
+                    if default.local.name == local_name =>
+                {
+                    Some((import.source.value.to_string(), "default".to_string(), true))
                 }
-                ImportDeclarationSpecifier::ImportNamespaceSpecifier(_) => {}
-            }
-        }
-    }
-    None
+                _ => None,
+            })
+    })
 }
 
 fn collect_exported_values(
