@@ -105,10 +105,11 @@ fn run_codebase_check_uses_explicit_tsconfig_with_shared_facts() {
         },
     );
 
+    let tsconfig = root.join("tsconfig.json");
     let results = crate::check_tasks::run_codebase_check(
-        root.clone(),
-        Some(config),
-        Some(root.join("tsconfig.json")),
+        &root,
+        Some(config.as_path()),
+        Some(tsconfig.as_path()),
         true,
         &facts,
     )
@@ -123,9 +124,10 @@ fn run_codebase_check_propagates_unique_exports_errors() {
         .join("../../test-cases/codebase-analysis/unique-exports-basic/fixture");
     let facts = no_mistakes::codebase::check_facts::CheckFactMap::default();
 
+    let missing_config = root.join("missing.no-mistakes.yml");
     let error = crate::check_tasks::run_codebase_check(
-        root.clone(),
-        Some(root.join("missing.no-mistakes.yml")),
+        &root,
+        Some(missing_config.as_path()),
         None,
         true,
         &facts,

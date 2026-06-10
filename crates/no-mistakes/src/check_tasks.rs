@@ -39,14 +39,14 @@ pub(crate) struct CheckTask<T> {
 }
 
 pub(crate) fn run_react_check(
-    root: PathBuf,
-    config: Option<PathBuf>,
+    root: &std::path::Path,
+    config: Option<&std::path::Path>,
     enabled: bool,
     facts: &CheckFactMap,
 ) -> Result<CheckTask<Vec<react_traits::Violation>>> {
     let start = Instant::now();
     let (findings, warning) = if enabled {
-        match react_traits::run_check_with_facts(&root, config.as_deref(), &[], false, facts) {
+        match react_traits::run_check_with_facts(root, config, &[], false, facts) {
             Ok(findings) => (findings, None),
             Err(err) => (
                 Vec::new(),
@@ -64,15 +64,14 @@ pub(crate) fn run_react_check(
 }
 
 pub(crate) fn run_queue_check(
-    root: PathBuf,
-    tsconfig: Option<PathBuf>,
+    root: &std::path::Path,
+    tsconfig: Option<&std::path::Path>,
     enabled: bool,
     facts: &CheckFactMap,
 ) -> Result<CheckTask<Vec<CheckFinding>>> {
     let start = Instant::now();
     let findings = if enabled {
-        no_mistakes::queue::analyze_project_with_facts(&root, tsconfig.as_deref(), &[], facts)?
-            .check
+        no_mistakes::queue::analyze_project_with_facts(root, tsconfig, &[], facts)?.check
     } else {
         Vec::new()
     };
@@ -84,20 +83,19 @@ pub(crate) fn run_queue_check(
 }
 
 pub(crate) fn run_rules_check(
-    root: PathBuf,
-    config: Option<PathBuf>,
-    tsconfig: Option<PathBuf>,
+    root: &std::path::Path,
+    config: Option<&std::path::Path>,
+    tsconfig: Option<&std::path::Path>,
     facts: &CheckFactMap,
 ) -> Result<CheckTask<Vec<RuleFinding>>> {
     let start = Instant::now();
-    let (findings, warning) =
-        match rules::run_check_with_facts(&root, config.as_deref(), tsconfig.as_deref(), facts) {
-            Ok(findings) => (findings, None),
-            Err(err) => (
-                Vec::new(),
-                Some(format!("warning: rules check skipped: {err:#}")),
-            ),
-        };
+    let (findings, warning) = match rules::run_check_with_facts(root, config, tsconfig, facts) {
+        Ok(findings) => (findings, None),
+        Err(err) => (
+            Vec::new(),
+            Some(format!("warning: rules check skipped: {err:#}")),
+        ),
+    };
     Ok(CheckTask {
         findings,
         warning,
@@ -106,12 +104,12 @@ pub(crate) fn run_rules_check(
 }
 
 pub(crate) fn run_integration_check(
-    root: PathBuf,
-    config: Option<PathBuf>,
+    root: &std::path::Path,
+    config: Option<&std::path::Path>,
     facts: &CheckFactMap,
 ) -> Result<CheckTask<Vec<IntegrationFinding>>> {
     let start = Instant::now();
-    let findings = integration_tests::check_with_facts(&root, config.as_deref(), facts)?;
+    let findings = integration_tests::check_with_facts(root, config, facts)?;
     Ok(CheckTask {
         findings,
         warning: None,
@@ -120,17 +118,15 @@ pub(crate) fn run_integration_check(
 }
 
 pub(crate) fn run_codebase_check(
-    root: PathBuf,
-    config: Option<PathBuf>,
-    tsconfig: Option<PathBuf>,
+    root: &std::path::Path,
+    config: Option<&std::path::Path>,
+    tsconfig: Option<&std::path::Path>,
     enabled: bool,
     facts: &CheckFactMap,
 ) -> Result<CheckTask<Vec<UniqueExportFinding>>> {
     let start = Instant::now();
     let findings = if enabled {
-        let config_path = config.as_deref();
-        let tsconfig_path = tsconfig.as_deref();
-        unique_exports::analyze_project_with_facts(&root, config_path, tsconfig_path, facts)?
+        unique_exports::analyze_project_with_facts(root, config, tsconfig, facts)?
     } else {
         Vec::new()
     };
@@ -149,14 +145,14 @@ pub(crate) fn queues_configured(config: &NoMistakesConfig) -> bool {
 }
 
 pub(crate) fn run_filesystem_rules_check(
-    root: PathBuf,
-    config: Option<PathBuf>,
+    root: &std::path::Path,
+    config: Option<&std::path::Path>,
     enabled: bool,
-    files: Vec<PathBuf>,
+    files: &[PathBuf],
 ) -> Result<CheckTask<Vec<RuleFinding>>> {
     let start = Instant::now();
     let findings = if enabled {
-        rules::run_filesystem_rules_with_files(&root, config.as_deref(), &files)?
+        rules::run_filesystem_rules_with_files(root, config, files)?
     } else {
         Vec::new()
     };

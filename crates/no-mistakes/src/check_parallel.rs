@@ -45,60 +45,41 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
     let ((react, queues), (rules, (integration, (codebase, filesystem_rules)))) = rayon::join(
         || {
             rayon::join(
-                {
-                    let root = root.to_path_buf();
-                    let config = config_path.clone();
-                    move || run_react_check(root, config, react_enabled, facts)
-                },
-                {
-                    let root = root.to_path_buf();
-                    let tsconfig = tsconfig_path.clone();
-                    move || run_queue_check(root, tsconfig, queues_enabled, facts)
-                },
+                || run_react_check(root, config_path.as_deref(), react_enabled, facts),
+                || run_queue_check(root, tsconfig_path.as_deref(), queues_enabled, facts),
             )
         },
         || {
             rayon::join(
-                {
-                    let root = root.to_path_buf();
-                    let config = config_path.clone();
-                    let tsconfig = tsconfig_path.clone();
-                    move || run_rules_check(root, config, tsconfig, facts)
+                || {
+                    run_rules_check(
+                        root,
+                        config_path.as_deref(),
+                        tsconfig_path.as_deref(),
+                        facts,
+                    )
                 },
                 || {
                     rayon::join(
-                        {
-                            let root = root.to_path_buf();
-                            let config = config_path.clone();
-                            move || run_integration_check(root, config, facts)
-                        },
+                        || run_integration_check(root, config_path.as_deref(), facts),
                         || {
                             rayon::join(
-                                {
-                                    let root = root.to_path_buf();
-                                    let config = config_path.clone();
-                                    let tsconfig = tsconfig_path.clone();
-                                    move || {
-                                        run_codebase_check(
-                                            root,
-                                            config,
-                                            tsconfig,
-                                            unique_exports_enabled,
-                                            facts,
-                                        )
-                                    }
+                                || {
+                                    run_codebase_check(
+                                        root,
+                                        config_path.as_deref(),
+                                        tsconfig_path.as_deref(),
+                                        unique_exports_enabled,
+                                        facts,
+                                    )
                                 },
-                                {
-                                    let root = root.to_path_buf();
-                                    let config = config_path.clone();
-                                    move || {
-                                        run_filesystem_rules_check(
-                                            root,
-                                            config,
-                                            filesystem_rules_enabled,
-                                            discovered_files,
-                                        )
-                                    }
+                                || {
+                                    run_filesystem_rules_check(
+                                        root,
+                                        config_path.as_deref(),
+                                        filesystem_rules_enabled,
+                                        &discovered_files,
+                                    )
                                 },
                             )
                         },
