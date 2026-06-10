@@ -1,6 +1,6 @@
 "use strict";
 
-const { createHash } = require("node:crypto");
+const { createHash, randomBytes } = require("node:crypto");
 const { closeSync, createReadStream, existsSync, openSync, readSync } = require("node:fs");
 const { chmod, mkdir, rename, rm } = require("node:fs/promises");
 const { join } = require("node:path");
@@ -60,7 +60,7 @@ async function install(binName, repository, options = {}) {
   const validateReleaseDownloadUrl = (url) =>
     validateReleaseBaseUrl(url, repository, { enforcePath: false });
 
-  const temp = `${destination}.tmp-${process.pid}`;
+  const temp = `${destination}.tmp-${randomBytes(8).toString("hex")}`;
 
   await mkdir(vendorDir, { recursive: true });
 
