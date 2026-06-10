@@ -1,29 +1,5 @@
 use serde::Serialize;
 
-fn edge_kind_str(k: EdgeKind) -> &'static str {
-    match k {
-        EdgeKind::Import => "import",
-        EdgeKind::TypeImport => "type-import",
-        EdgeKind::DynamicImport => "dynamic-import",
-        EdgeKind::Require => "require",
-        EdgeKind::TestOf => "test",
-        EdgeKind::RouteRef => "route",
-        EdgeKind::QueueEnqueue => "queue-enqueue",
-        EdgeKind::QueueWorker => "queue-worker",
-        EdgeKind::RouteTest => "route-test",
-        EdgeKind::Layout => "layout",
-        EdgeKind::MarkdownLink => "md",
-        EdgeKind::WorkspaceImport => "workspace",
-        EdgeKind::PackageDependency => "package",
-        EdgeKind::CiInvocation => "ci",
-        EdgeKind::HttpCall => "http",
-        EdgeKind::ProcessSpawn => "process",
-        EdgeKind::AssetImport => "asset",
-        EdgeKind::ReactRender => "react-render",
-        EdgeKind::Selector => "selector",
-    }
-}
-
 #[derive(Serialize)]
 #[serde(untagged)]
 enum OutputNode {
@@ -80,7 +56,7 @@ fn build_output(roots: &[String], entries: &[NodeEntry], root_dir: &Path) -> Out
         files: entries
             .iter()
             .map(|entry| {
-                let via: Vec<&'static str> = entry.via.iter().map(|k| edge_kind_str(*k)).collect();
+                let via: Vec<&'static str> = entry.via.iter().map(|k| k.as_str()).collect();
                 match &entry.node {
                     NodeId::File(path) => {
                         let rel = path.strip_prefix(root_dir).unwrap_or(path);

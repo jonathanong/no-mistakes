@@ -80,6 +80,30 @@ pub enum RelationshipArg {
     All,
 }
 
+impl RelationshipArg {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            RelationshipArg::Import => "import",
+            RelationshipArg::ImportStatic => "import-static",
+            RelationshipArg::ImportDynamic => "import-dynamic",
+            RelationshipArg::ImportType => "import-type",
+            RelationshipArg::ImportRequire => "import-require",
+            RelationshipArg::Workspace => "workspace",
+            RelationshipArg::Package => "package",
+            RelationshipArg::Test => "test",
+            RelationshipArg::Route => "route",
+            RelationshipArg::Queue => "queue",
+            RelationshipArg::Md => "md",
+            RelationshipArg::Ci => "ci",
+            RelationshipArg::Http => "http",
+            RelationshipArg::Process => "process",
+            RelationshipArg::Asset => "asset",
+            RelationshipArg::React => "react",
+            RelationshipArg::All => "all",
+        }
+    }
+}
+
 /// Convert `--relationship` values into a `HashSet<EdgeKind>` filter.
 /// Returns `None` when "all" is present or the list is empty (= no filter).
 #[inline(never)]

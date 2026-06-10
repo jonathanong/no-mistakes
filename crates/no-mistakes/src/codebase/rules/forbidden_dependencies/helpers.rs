@@ -27,11 +27,7 @@ pub(super) fn build_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
 }
 
 pub(super) fn edge_kind_str(k: &EdgeKind) -> String {
-    serde_json::to_value(k)
-        .unwrap()
-        .as_str()
-        .unwrap()
-        .to_string()
+    k.as_str().to_string()
 }
 
 pub(super) fn repro_command(
@@ -49,12 +45,7 @@ pub(super) fn repro_command(
     } else {
         relationships
             .iter()
-            .map(|r| {
-                format!(
-                    " --relationship {}",
-                    serde_json::to_value(r).unwrap().as_str().unwrap()
-                )
-            })
+            .map(|r| format!(" --relationship {}", r.as_str()))
             .collect::<String>()
     };
     format!(

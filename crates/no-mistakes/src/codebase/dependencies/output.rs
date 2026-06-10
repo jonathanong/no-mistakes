@@ -1,4 +1,4 @@
-use super::graph::{EdgeKind, NodeEntry, NodeId};
+use super::graph::{NodeEntry, NodeId};
 use anyhow::Result;
 use std::io::Write;
 use std::path::Path;

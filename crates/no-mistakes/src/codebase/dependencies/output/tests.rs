@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::dependencies::EdgeKind;
 use std::path::{Path, PathBuf};
 
 fn json_value(roots: &[String], entries: &[NodeEntry], root: &Path) -> serde_json::Value {
@@ -398,25 +399,25 @@ fn yml_via_included_when_present() {
 
 #[test]
 fn edge_kind_str_all_variants() {
-    assert_eq!(edge_kind_str(EdgeKind::Import), "import");
-    assert_eq!(edge_kind_str(EdgeKind::TypeImport), "type-import");
-    assert_eq!(edge_kind_str(EdgeKind::DynamicImport), "dynamic-import");
-    assert_eq!(edge_kind_str(EdgeKind::Require), "require");
-    assert_eq!(edge_kind_str(EdgeKind::TestOf), "test");
-    assert_eq!(edge_kind_str(EdgeKind::RouteRef), "route");
-    assert_eq!(edge_kind_str(EdgeKind::QueueEnqueue), "queue-enqueue");
-    assert_eq!(edge_kind_str(EdgeKind::QueueWorker), "queue-worker");
-    assert_eq!(edge_kind_str(EdgeKind::RouteTest), "route-test");
-    assert_eq!(edge_kind_str(EdgeKind::Layout), "layout");
-    assert_eq!(edge_kind_str(EdgeKind::MarkdownLink), "md");
-    assert_eq!(edge_kind_str(EdgeKind::WorkspaceImport), "workspace");
-    assert_eq!(edge_kind_str(EdgeKind::PackageDependency), "package");
-    assert_eq!(edge_kind_str(EdgeKind::CiInvocation), "ci");
-    assert_eq!(edge_kind_str(EdgeKind::HttpCall), "http");
-    assert_eq!(edge_kind_str(EdgeKind::ProcessSpawn), "process");
-    assert_eq!(edge_kind_str(EdgeKind::AssetImport), "asset");
-    assert_eq!(edge_kind_str(EdgeKind::ReactRender), "react-render");
-    assert_eq!(edge_kind_str(EdgeKind::Selector), "selector");
+    assert_eq!(EdgeKind::Import.as_str(), "import");
+    assert_eq!(EdgeKind::TypeImport.as_str(), "type-import");
+    assert_eq!(EdgeKind::DynamicImport.as_str(), "dynamic-import");
+    assert_eq!(EdgeKind::Require.as_str(), "require");
+    assert_eq!(EdgeKind::TestOf.as_str(), "test");
+    assert_eq!(EdgeKind::RouteRef.as_str(), "route");
+    assert_eq!(EdgeKind::QueueEnqueue.as_str(), "queue-enqueue");
+    assert_eq!(EdgeKind::QueueWorker.as_str(), "queue-worker");
+    assert_eq!(EdgeKind::RouteTest.as_str(), "route-test");
+    assert_eq!(EdgeKind::Layout.as_str(), "layout");
+    assert_eq!(EdgeKind::MarkdownLink.as_str(), "md");
+    assert_eq!(EdgeKind::WorkspaceImport.as_str(), "workspace");
+    assert_eq!(EdgeKind::PackageDependency.as_str(), "package");
+    assert_eq!(EdgeKind::CiInvocation.as_str(), "ci");
+    assert_eq!(EdgeKind::HttpCall.as_str(), "http");
+    assert_eq!(EdgeKind::ProcessSpawn.as_str(), "process");
+    assert_eq!(EdgeKind::AssetImport.as_str(), "asset");
+    assert_eq!(EdgeKind::ReactRender.as_str(), "react-render");
+    assert_eq!(EdgeKind::Selector.as_str(), "selector");
 }
 
 #[test]
@@ -467,7 +468,7 @@ fn serialized_edge_kinds_are_documented() {
             EdgeKind::ReactRender => {}
             EdgeKind::Selector => {}
         }
-        let serialized = edge_kind_str(kind);
+        let serialized = kind.as_str();
         assert!(
             docs.contains(&format!("`{serialized}`")),
             "docs/graph-edges.md must document `{serialized}`"
