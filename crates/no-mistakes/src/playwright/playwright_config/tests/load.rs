@@ -166,3 +166,14 @@ fn test_dir_resolves_absolute_relative_and_relative_config_dir() {
         PathBuf::from("/repo/config/tests")
     );
 }
+
+#[test]
+fn load_bare_config_path_uses_root() {
+    // Exercises the bare-path resolution branch in `load` (lines 12-17):
+    // passing just a filename (no parent component) should resolve against
+    // `root` so the file is found and the parent is set correctly.
+    let dir = fixture_path(&["ast-snippets", "playwright_config", "bare-config-path"]);
+    let bare = Path::new("playwright.config.ts");
+    let parsed = load(&dir, bare).unwrap();
+    assert_eq!(parsed.projects[0].test_dir, "tests");
+}
