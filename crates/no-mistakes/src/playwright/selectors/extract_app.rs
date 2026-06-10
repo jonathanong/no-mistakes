@@ -178,3 +178,6 @@ pub(super) fn jsx_attribute_name<'a>(
         _ => None,
     }
 }
+
+#[cfg(test)]
+mod tests;
