@@ -162,43 +162,23 @@ describe("upstreamed generic rules", () => {
     );
     assert.deepEqual(
       messages(
-        fixture("mock-name.chain.invalid.test.ts"),
+        fixture("mock-name.fn-stub.valid.test.ts"),
         "vitest-mock-test-file-naming",
         undefined,
-        "mock-name.chain.invalid.test.ts",
-      ),
-      ["needsMock"],
-      "chain method should require .mock.test filename",
-    );
-    assert.deepEqual(
-      messages(
-        fixture("mock-name.chain.valid.mock.test.ts"),
-        "vitest-mock-test-file-naming",
-        undefined,
-        "mock-name.chain.valid.mock.test.ts",
+        "mock-name.fn-stub.valid.test.ts",
       ),
       [],
-      "chain method in .mock.test file should pass",
+      "typed vi.fn<T>() callback stub with no module mocking should not require .mock.test (#388)",
     );
     assert.deepEqual(
       messages(
-        fixture("mock-name.chain-only.invalid.test.ts"),
+        fixture("mock-name.fn-stub.invalid.mock.test.ts"),
         "vitest-mock-test-file-naming",
         undefined,
-        "mock-name.chain-only.invalid.test.ts",
+        "mock-name.fn-stub.invalid.mock.test.ts",
       ),
-      ["needsMock"],
-      "chain-only (no vi.fn) should require .mock.test filename",
-    );
-    assert.deepEqual(
-      messages(
-        fixture("mock-name.chain-only.valid.mock.test.ts"),
-        "vitest-mock-test-file-naming",
-        undefined,
-        "mock-name.chain-only.valid.mock.test.ts",
-      ),
-      [],
-      "chain-only in .mock.test file should pass",
+      ["unnecessaryMock"],
+      "vi.fn() alone does not justify a .mock.test filename (#388)",
     );
   });
 

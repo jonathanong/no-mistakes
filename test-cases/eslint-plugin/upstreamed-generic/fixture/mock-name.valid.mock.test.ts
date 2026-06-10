@@ -4,5 +4,7 @@ const mockClient = {
   send: vi.fn<VitestLooseMock>().mockResolvedValue({}),
 };
 
-vi.stubGlobal("crypto", undefined);
-vi["stubGlobal"]("crypto", undefined);
+vi.mock("./dep");
+vi.doMock("./other");
+vi.unmock("./dep");
+vi["doUnmock"]("./other");
