@@ -71,6 +71,34 @@ test("skips existing binaries when requested", async () => {
   }
 });
 
+test("cleans up temporary file and throws error on checksum mismatch", async () => {
+  const root = await mkdtemp(join(tmpdir(), "no-mistakes-error-"));
+  const vendorDir = join(root, "vendor");
+  const target = "x86_64-unknown-linux-gnu";
+  const asset = assetName(version, target);
+  const content = Buffer.from("#!/bin/sh\nexit 0\n");
+  const badHash = createHash("sha256").update(Buffer.from("wrong content")).digest("hex");
+
+  await mkdir(join(root, "assets"));
+  await writeFile(join(root, "assets", asset), content);
+  await writeFile(join(root, "assets", `${asset}.sha256`), `${badHash}  ${asset}\n`);
+
+  try {
+    await assert.rejects(
+      install({
+        baseUrl: assetBaseUrl(root),
+        checkExisting: true,
+        target,
+        vendorDir,
+        version,
+      }),
+      /Failed to install no-mistakes: Checksum mismatch/,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("installs only the requested platform binary and verifies checksum", async () => {
   const root = await mkdtemp(join(tmpdir(), "no-mistakes-test-"));
   const vendorDir = join(root, "vendor");
