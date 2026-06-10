@@ -36,13 +36,17 @@ pub(crate) fn matches(file_name: &str, compiled: &CompiledBasename, extensions: 
     }
 
     let (stem, ext) = split_stem_ext(file_name);
-    if !extensions.iter().any(|e| e.as_str() == format!(".{ext}")) {
+    if !extensions.iter().any(|e| e.strip_prefix('.') == Some(ext)) {
         return false;
     }
 
     let name = compiled.def.name.as_str();
     if compiled.def.match_compound_extensions {
-        stem == name || stem.starts_with(&format!("{name}."))
+        // `<name>` followed by a `.` and at least one more segment.
+        stem == name
+            || stem
+                .strip_prefix(name)
+                .is_some_and(|rest| rest.starts_with('.'))
     } else {
         stem == name
     }
