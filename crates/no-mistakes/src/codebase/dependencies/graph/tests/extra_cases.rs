@@ -155,22 +155,17 @@ fn playwright_route_edges_match_unresolved_interpolations_to_dynamic_segment() {
 
     let edges = collect_playwright_route_edges(&root, &all_files);
 
+    let dynamic_node = NodeId::File(dynamic_page);
+    let literal_node = NodeId::File(literal_page);
     for spec in &spec_files {
+        let spec_node = NodeId::File(spec.clone());
         assert!(
-            edges.contains(&(
-                NodeId::File(spec.clone()),
-                NodeId::File(dynamic_page.clone()),
-                EdgeKind::RouteTest
-            )),
+            edges.contains(&(spec_node.clone(), dynamic_node.clone(), EdgeKind::RouteTest)),
             "expected route edge from {} to the dynamic page, got {edges:?}",
             spec.display()
         );
         assert!(
-            !edges.iter().any(|(source, target, kind)| {
-                source == &NodeId::File(spec.clone())
-                    && target == &NodeId::File(literal_page.clone())
-                    && *kind == EdgeKind::RouteTest
-            }),
+            !edges.contains(&(spec_node, literal_node.clone(), EdgeKind::RouteTest)),
             "interpolated navigation in {} must not select the sibling literal route, got {edges:?}",
             spec.display()
         );
