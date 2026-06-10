@@ -107,6 +107,59 @@ fn collect_app_selectors_reads_source_files_and_skips_build_dirs() {
 }
 
 #[test]
+fn collect_app_selectors_handles_all_file_and_dir_types() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+
+    // Valid file
+    std::fs::write(root.join("valid.tsx"), r#"<div data-testid="valid" />"#).unwrap();
+
+    // Non-source file
+    std::fs::write(root.join("style.css"), r#".style { color: red; }"#).unwrap();
+
+    // Skipped directories
+    for dir in &["node_modules", "target", "dist", "build", ".git"] {
+        let skip_dir = root.join(dir);
+        std::fs::create_dir(&skip_dir).unwrap();
+        std::fs::write(
+            skip_dir.join("ignored.tsx"),
+            r#"<div data-testid="ignored" />"#,
+        )
+        .unwrap();
+    }
+
+    let selectors = collect_app_selectors(root, &attrs()).unwrap();
+    let mut values: Vec<String> = selectors.iter().map(AppSelector::display_value).collect();
+    values.sort();
+    assert_eq!(values, vec!["valid"]);
+}
+
+#[test]
+#[cfg(unix)]
+fn collect_app_selectors_handles_unreadable_files() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+
+    let file_path = root.join("unreadable.tsx");
+    std::fs::write(&file_path, r#"<div data-testid="unreadable" />"#).unwrap();
+
+    use std::os::unix::fs::PermissionsExt;
+    let mut perms = std::fs::metadata(&file_path).unwrap().permissions();
+    perms.set_mode(0o000);
+    std::fs::set_permissions(&file_path, perms).unwrap();
+
+    assert!(collect_app_selectors(root, &attrs()).is_err());
+}
+
+#[test]
+fn collect_app_selectors_handles_missing_root() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path().join("missing");
+    let selectors = collect_app_selectors(&root, &attrs()).unwrap();
+    assert!(selectors.is_empty());
+}
+
+#[test]
 fn extracts_html_ids_when_enabled() {
     let regexes = compile_selector_regexes_with_html_ids(
         &["data-testid".to_string()],
