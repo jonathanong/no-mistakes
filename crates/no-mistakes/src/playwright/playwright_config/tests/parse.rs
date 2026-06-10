@@ -12,6 +12,20 @@ fn parses_test_dir_and_match() {
 }
 
 #[test]
+fn parse_from_path_handles_valid_config() {
+    let source = "export default { testDir: './custom-dir' };";
+    let parsed = parse_from_path(
+        source,
+        Path::new("custom.config.ts"),
+        Path::new("/custom/repo"),
+    )
+    .unwrap();
+
+    assert_eq!(parsed.projects.len(), 1);
+    assert_eq!(parsed.projects[0].test_dir, "./custom-dir");
+}
+
+#[test]
 fn parse_from_path_surfaces_parser_errors() {
     let err = parse_from_path(
         "await page.goto(",
