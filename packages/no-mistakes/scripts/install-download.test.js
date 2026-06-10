@@ -553,6 +553,25 @@ test("rejects invalid redirect Location headers", async () => {
   }
 });
 
+test("request rejects if validateUrl throws", async () => {
+  const client = { get: () => {} };
+  const error = new Error("invalid url");
+  await assert.rejects(
+    () =>
+      request(
+        "http://example.test/file",
+        () => {},
+        0,
+        { http: client, https: client },
+        100,
+        () => {
+          throw error;
+        },
+      ),
+    (err) => err === error,
+  );
+});
+
 test("validates redirected URLs before following", async () => {
   const server = createServer((request, response) => {
     if (request.url === "/redirect") {
