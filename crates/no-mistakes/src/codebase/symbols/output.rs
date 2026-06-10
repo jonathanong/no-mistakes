@@ -8,3 +8,6 @@ use std::path::PathBuf;
 include!("output/types.rs");
 include!("output/structured.rs");
 include!("output/text.rs");
+
+#[cfg(test)]
+mod tests;
