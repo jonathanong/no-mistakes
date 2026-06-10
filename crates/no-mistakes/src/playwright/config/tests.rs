@@ -206,3 +206,70 @@ fn test_playwright_config_from_file() {
     assert_eq!(settings.playwright_configs.len(), 1);
     assert!(settings.playwright_configs[0].ends_with("playwright.config.ts"));
 }
+
+#[test]
+fn test_has_configured_html_id_selector_false() {
+    let mut settings = load_settings(
+        &fixture_path(&["scan-config", "missing-default"]),
+        None,
+        &[],
+        None,
+    )
+    .unwrap();
+    settings.selector_attributes = vec!["data-testid".to_string(), "data-pw".to_string()];
+    settings.component_selector_attributes = BTreeMap::new();
+    settings
+        .component_selector_attributes
+        .insert("Button".to_string(), "data-testid".to_string());
+
+    assert!(!has_configured_html_id_selector(&settings));
+}
+
+#[test]
+fn test_has_configured_html_id_selector_true_attributes() {
+    let mut settings = load_settings(
+        &fixture_path(&["scan-config", "missing-default"]),
+        None,
+        &[],
+        None,
+    )
+    .unwrap();
+    settings.selector_attributes = vec!["data-testid".to_string(), "id".to_string()];
+    settings.component_selector_attributes = BTreeMap::new();
+
+    assert!(has_configured_html_id_selector(&settings));
+}
+
+#[test]
+fn test_load_discovered_v2_without_playwright_settings() {
+    let root = fixture_path(&["scan-config", "no-mistakes-v2-no-playwright"]);
+    let settings = load_settings(&root, None, &[], None).unwrap();
+    assert_eq!(settings.frontend_root, "app");
+    assert_eq!(settings.selector_attributes, vec!["data-testid", "data-pw"]);
+}
+
+#[test]
+fn test_default_frontend_root_with_app_dir() {
+    let root = fixture_path(&["scan-config", "no-mistakes-v2-app-exists"]);
+    let settings = load_settings(&root, None, &[], None).unwrap();
+    // The default value assigned is "app", since the dir exists
+    assert_eq!(settings.frontend_root, "app");
+}
+
+#[test]
+fn test_has_configured_html_id_selector_true_components() {
+    let mut settings = load_settings(
+        &fixture_path(&["scan-config", "missing-default"]),
+        None,
+        &[],
+        None,
+    )
+    .unwrap();
+    settings.selector_attributes = vec!["data-testid".to_string()];
+    settings.component_selector_attributes = BTreeMap::new();
+    settings
+        .component_selector_attributes
+        .insert("Button".to_string(), "id".to_string());
+
+    assert!(has_configured_html_id_selector(&settings));
+}
