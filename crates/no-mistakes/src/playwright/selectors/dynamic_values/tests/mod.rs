@@ -70,6 +70,63 @@ fn collect_string_leaves_logical() {
 }
 
 #[test]
+fn collect_string_leaves_nested_ternary() {
+    let source = r#"const x = cond1 ? (cond2 ? 'a' : 'b') : 'c';"#;
+    ast::with_program(Path::new("fixture.tsx"), source, |program, _| {
+        for stmt in &program.body {
+            if let oxc_ast::ast::Statement::VariableDeclaration(decl) = stmt {
+                for d in &decl.declarations {
+                    if let Some(init) = d.init.as_ref() {
+                        let mut leaves = collect_string_leaves(init);
+                        leaves.sort();
+                        assert_eq!(leaves, vec!["a", "b", "c"]);
+                    }
+                }
+            }
+        }
+    })
+    .unwrap();
+}
+
+#[test]
+fn collect_string_leaves_nested_logical() {
+    let source = r#"const x = 'a' || ('b' && 'c');"#;
+    ast::with_program(Path::new("fixture.tsx"), source, |program, _| {
+        for stmt in &program.body {
+            if let oxc_ast::ast::Statement::VariableDeclaration(decl) = stmt {
+                for d in &decl.declarations {
+                    if let Some(init) = d.init.as_ref() {
+                        let mut leaves = collect_string_leaves(init);
+                        leaves.sort();
+                        assert_eq!(leaves, vec!["a", "b", "c"]);
+                    }
+                }
+            }
+        }
+    })
+    .unwrap();
+}
+
+#[test]
+fn collect_string_leaves_mixed_nested() {
+    let source = r#"const x = cond ? ('a' as string) : ('b'!);"#;
+    ast::with_program(Path::new("fixture.tsx"), source, |program, _| {
+        for stmt in &program.body {
+            if let oxc_ast::ast::Statement::VariableDeclaration(decl) = stmt {
+                for d in &decl.declarations {
+                    if let Some(init) = d.init.as_ref() {
+                        let mut leaves = collect_string_leaves(init);
+                        leaves.sort();
+                        assert_eq!(leaves, vec!["a", "b"]);
+                    }
+                }
+            }
+        }
+    })
+    .unwrap();
+}
+
+#[test]
 fn collect_string_leaves_non_string() {
     let source = r#"const x = 1 + 2;"#;
     ast::with_program(Path::new("fixture.tsx"), source, |program, _| {
