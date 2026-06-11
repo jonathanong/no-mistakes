@@ -46,8 +46,14 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         );
     };
     let impact_edges = signature_impact_edges();
-    let entries =
+    let mut entries =
         graph.dependents_of_symbol_nodes(std::slice::from_ref(&target), None, Some(&impact_edges));
+    let dynamic_import_edges = HashSet::from([EdgeKind::DynamicImport]);
+    entries.extend(graph.dependents_of(
+        &[NodeId::File(target_file.clone())],
+        None,
+        Some(&dynamic_import_edges),
+    ));
 
     let (exports, export_nodes) = export_paths(&graph, &target, symbol, &root, &definition);
     let target_symbols = signature_target_symbols(&target_file, symbol, &export_nodes);
@@ -64,6 +70,11 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
     let suggested_entries =
         suggested_test_entries(&graph, &entries, &production_extra_callers, &root);
     let suggested_tests = suggested_tests(&suggested_entries, &root, &test_filter, &test_extra_callers);
+    let caller_context = CallerEntriesContext {
+        root: &root,
+        test_filter: &test_filter,
+        export_nodes: &export_nodes,
+    };
 
     Ok(SignatureImpactReport {
         roots: vec![format!("{}#{}", args.files[0].display(), symbol)],
@@ -71,20 +82,11 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         definition,
         production_callers: caller_entries(
             &entries,
-            &root,
-            &test_filter,
+            &caller_context,
             false,
-            &export_nodes,
             &production_extra_callers,
         ),
-        test_callers: caller_entries(
-            &entries,
-            &root,
-            &test_filter,
-            true,
-            &export_nodes,
-            &test_extra_callers,
-        ),
+        test_callers: caller_entries(&entries, &caller_context, true, &test_extra_callers),
         warnings: warnings(&suggested_tests),
         exports,
         suggested_tests,
@@ -154,5 +156,7 @@ fn export_paths(
     (exports.into_iter().collect(), export_nodes)
 }
 
+#[cfg(test)]
+mod impact_collect_caller_tests;
 #[cfg(test)]
 mod impact_collect_tests;

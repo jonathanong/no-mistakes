@@ -5,19 +5,25 @@ fn target_local_names(
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> BTreeSet<String> {
     if let Some(exported_symbols) = target_symbols.get(file) {
-        let mut names = exported_symbols.clone();
-        names.extend(symbols.exports.iter().filter_map(|export| {
-            if !matches!(export.kind, ExportKind::ReExport { .. })
-                && !export.is_type_only
-                && (exported_symbols.contains(&export.name)
-                    || (exported_symbols.contains("default")
-                        && matches!(export.kind, ExportKind::Default)))
-            {
-                return Some(export.local.clone().unwrap_or_else(|| export.name.clone()));
-            }
-            None
-        }));
-        return names;
+        let names: BTreeSet<_> = symbols
+            .exports
+            .iter()
+            .filter_map(|export| {
+                if !matches!(export.kind, ExportKind::ReExport { .. })
+                    && !export.is_type_only
+                    && (exported_symbols.contains(&export.name)
+                        || (exported_symbols.contains("default")
+                            && matches!(export.kind, ExportKind::Default)))
+                {
+                    return Some(export.local.clone().unwrap_or_else(|| export.name.clone()));
+                }
+                None
+            })
+            .collect();
+        if !names.is_empty() {
+            return names;
+        }
+        return exported_symbols.clone();
     }
     symbols
         .imports

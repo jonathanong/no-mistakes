@@ -128,3 +128,33 @@ fn signature_impact_ignores_import_only_files_without_symbol_usage() {
         entry["file"] == "unused-import.mts" && entry.get("symbol").is_none()
     }));
 }
+
+#[test]
+fn signature_impact_keeps_dynamic_import_file_callers() {
+    let out = run_capture(impact_args("parseDate", Format::Json));
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+
+    assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "dynamic-import-caller.mts" && entry.get("symbol").is_none()
+    }));
+}
+
+#[test]
+fn signature_impact_does_not_treat_alias_export_name_as_local() {
+    let out = run_capture(impact_file_args("aliased-shadow.mts", "parseDate", Format::Json));
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+
+    assert!(!v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "aliased-shadow.mts" && entry["symbol"] == "formatShadowDate"
+    }));
+}
+
+#[test]
+fn signature_impact_keeps_private_callers_in_mixed_reexport_files() {
+    let out = run_capture(impact_args("parseDate", Format::Json));
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+
+    assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "mixed-date-barrel.mts" && entry.get("symbol").is_none()
+    }));
+}

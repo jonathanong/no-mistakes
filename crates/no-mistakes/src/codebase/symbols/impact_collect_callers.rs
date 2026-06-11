@@ -30,10 +30,18 @@ fn local_caller_entries(
         if local_names.is_empty() {
             continue;
         }
+        let has_target_function_call = facts
+            .function_calls
+            .iter()
+            .any(|call| local_names.contains(&call.callee));
         for call in facts
             .function_calls
             .iter()
-            .chain(facts.symbol_references.iter())
+            .chain(facts.symbol_references.iter().filter(|call| {
+                !target_symbols.contains_key(&file)
+                    || has_target_function_call
+                    || call.caller.is_some()
+            }))
         {
             if !local_names.contains(&call.callee) {
                 continue;
@@ -56,23 +64,31 @@ fn local_caller_entries(
     callers.into_values().collect()
 }
 
+struct CallerEntriesContext<'a> {
+    root: &'a Path,
+    test_filter: &'a TestFileFilter,
+    export_nodes: &'a BTreeSet<NodeId>,
+}
+
 fn caller_entries(
     entries: &[NodeEntry],
-    root: &Path,
-    test_filter: &TestFileFilter,
+    context: &CallerEntriesContext<'_>,
     want_tests: bool,
-    export_nodes: &BTreeSet<NodeId>,
     extra_callers: &[CallerEntry],
 ) -> Vec<CallerEntry> {
     let mut by_key: BTreeMap<(String, Option<String>), CallerEntry> = BTreeMap::new();
-    let export_files: BTreeSet<&Path> = export_nodes.iter().filter_map(NodeId::as_file).collect();
+    let export_files: BTreeSet<&Path> = context
+        .export_nodes
+        .iter()
+        .filter_map(NodeId::as_file)
+        .collect();
     let extra_file_callers: BTreeSet<&str> = extra_callers
         .iter()
         .filter(|caller| caller.symbol.is_none())
         .map(|caller| caller.file.as_str())
         .collect();
     for entry in entries {
-        if export_nodes.contains(&entry.node) {
+        if context.export_nodes.contains(&entry.node) {
             continue;
         }
         if let NodeId::File(file) = &entry.node {
@@ -80,11 +96,12 @@ fn caller_entries(
                 continue;
             }
         }
-        let Some((file, symbol)) = caller_parts(&entry.node, root) else {
+        let Some((file, symbol)) = caller_parts(&entry.node, context.root) else {
             continue;
         };
         if matches!(entry.node, NodeId::File(_))
             && symbol.is_none()
+            && !entry.via.contains(&EdgeKind::DynamicImport)
             && !entry.via.contains(&EdgeKind::TestOf)
             && !extra_file_callers.contains(file.as_str())
         {
@@ -93,20 +110,13 @@ fn caller_entries(
         let is_test = entry
             .node
             .as_file()
-            .is_some_and(|path| test_filter.is_match(root, path));
+            .is_some_and(|path| context.test_filter.is_match(context.root, path));
         if is_test != want_tests {
             continue;
         }
         insert_caller(&mut by_key, entry, file, symbol);
     }
     for caller in extra_callers {
-        if caller.symbol.is_none()
-            && export_files
-                .iter()
-                .any(|file| relative_slash_path(root, file) == caller.file)
-        {
-            continue;
-        }
         merge_caller_entry(&mut by_key, caller.clone());
     }
     let mut callers: Vec<_> = by_key.into_values().collect();
