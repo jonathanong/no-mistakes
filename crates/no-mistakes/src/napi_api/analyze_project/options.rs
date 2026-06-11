@@ -12,7 +12,7 @@ pub(super) fn symbols_options(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,
 ) -> AnyhowResult<String> {
-    let value = merged_options(request, options, true, false, false)?;
+    let value = merged_options(request, options, true, false, true)?;
     let _: SymbolOptions = serde_json::from_value(value.clone())?;
     Ok(serde_json::to_string(&value)?)
 }
@@ -68,8 +68,12 @@ fn merged_options(
     }
     if include_config {
         if let Some(config) = &options.config {
-            map.entry("config".to_string())
-                .or_insert_with(|| Value::String(config.clone()));
+            if !map.contains_key("config") {
+                map.insert(
+                    "config".to_string(),
+                    Value::String(forwarded_config(options, config)?),
+                );
+            }
         }
     }
     if include_filters && !options.filters.is_empty() {
@@ -80,14 +84,44 @@ fn merged_options(
 }
 
 fn forwarded_tsconfig(options: &AnalyzeProjectOptions, tsconfig: &str) -> AnyhowResult<String> {
-    let path = PathBuf::from(tsconfig);
+    forwarded_path(options, tsconfig)
+}
+
+fn forwarded_config(options: &AnalyzeProjectOptions, config: &str) -> AnyhowResult<String> {
+    let path = PathBuf::from(config);
+    if path.is_absolute() {
+        return Ok(path.display().to_string());
+    }
+    Ok(resolve_forward_root(options.root.as_deref())?
+        .join(path)
+        .display()
+        .to_string())
+}
+
+fn forwarded_path(options: &AnalyzeProjectOptions, value: &str) -> AnyhowResult<String> {
+    let path = PathBuf::from(value);
     if path.is_absolute() {
         return Ok(path.display().to_string());
     }
     let Some(root) = &options.root else {
-        return Ok(tsconfig.to_string());
+        return Ok(value.to_string());
     };
-    Ok(resolve_root(Some(root))?.join(path).display().to_string())
+    Ok(resolve_forward_root(Some(root))?
+        .join(path)
+        .display()
+        .to_string())
+}
+
+fn resolve_forward_root(root: Option<&str>) -> AnyhowResult<PathBuf> {
+    let root = resolve_root(root)?;
+    if root.is_absolute() {
+        return Ok(root);
+    }
+    Ok(crate::codebase::ts_resolver::normalize_path(
+        &std::env::current_dir()
+            .context("reading current directory")?
+            .join(root),
+    ))
 }
 
 pub(super) fn resolve_root(root: Option<&str>) -> AnyhowResult<PathBuf> {

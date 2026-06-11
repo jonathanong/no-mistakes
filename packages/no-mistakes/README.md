@@ -48,6 +48,12 @@ const {
     files: ["src/utils.mts"],
     include: "both",
   });
+  const signatureImpact = await symbols({
+    root: process.cwd(),
+    files: ["src/utils.mts"],
+    mode: "signature-impact",
+    symbol: "parseDate",
+  });
   const plan = await testsPlan({
     root: process.cwd(),
     framework: "vitest",

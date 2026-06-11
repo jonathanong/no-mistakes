@@ -13,6 +13,7 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use is_terminal::IsTerminal;
 use rayon::prelude::*;
+use serde::Serialize;
 use std::io;
 use std::path::{Path, PathBuf};
 
@@ -25,6 +26,11 @@ include!("resolve.rs");
 include!("pipeline.rs");
 include!("entry.rs");
 include!("filters.rs");
+
+mod impact {
+    use super::*;
+    include!("impact.rs");
+}
 
 #[cfg(test)]
 mod tests;

@@ -85,6 +85,16 @@ test("programmatic API proxies object options through async native addon calls",
       (await api.symbols({ files: ["d.mts"], include: "both" })).options.include,
       "both",
     );
+    assert.equal(
+      (
+        await api.symbols({
+          files: ["d.mts"],
+          mode: "signature-impact",
+          symbol: "handler",
+        })
+      ).options.mode,
+      "signature-impact",
+    );
     assert.equal((await api.fetches({ targets: ["/users"] })).command, "fetches");
     assert.equal((await api.check({ tsconfig: "tsconfig.json" })).command, "check");
     assert.deepEqual(
@@ -138,7 +148,16 @@ test("programmatic API proxies object options through async native addon calls",
 
 test("analyzeProject declarations mirror report-specific runtime requirements", () => {
   const declarations = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
-  assert.match(declarations, /type: "symbols"; id\?: string } & SymbolsOptions/);
+  assert.match(declarations, /export type SymbolsSignatureImpactOptions = SymbolsOptions & \{/);
+  assert.match(
+    readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
+    /export function symbols\(options: SymbolsOptions\): Promise<SymbolsResult \| SignatureImpactResult>;/,
+  );
+  assert.match(declarations, /mode: "signature-impact";\n  symbol: string;/);
+  assert.match(
+    declarations,
+    /type: "symbols"; id\?: string } & \(SymbolsListOptions \| SymbolsSignatureImpactOptions\)/,
+  );
   assert.match(
     declarations,
     /type BatchedQueueRelatedOptions = BatchedProjectOptions & \{ files: string\[\] \}/,

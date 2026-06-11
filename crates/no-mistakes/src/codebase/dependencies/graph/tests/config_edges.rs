@@ -98,6 +98,20 @@ fn graph_collectors_cover_malformed_and_invalid_config_branches() {
 }
 
 #[test]
+fn graph_config_options_use_explicit_config_for_legacy_rule_options() {
+    let empty = crate::codebase::ts_resolver::normalize_path(&fixture("graph-empty-route-config"));
+    let explicit = crate::codebase::ts_resolver::normalize_path(
+        &fixture("graph-default-route-config").join(".no-mistakes.yml"),
+    );
+
+    let default_options = graph_config_options_with_config(&empty, None).unwrap();
+    let explicit_options = graph_config_options_with_config(&empty, Some(&explicit)).unwrap();
+
+    assert!(!route_backend_facts_configured(&default_options));
+    assert!(route_backend_facts_configured(&explicit_options));
+}
+
+#[test]
 fn route_collectors_cover_configured_prefixes_and_scan_globs() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
     let tsconfig =

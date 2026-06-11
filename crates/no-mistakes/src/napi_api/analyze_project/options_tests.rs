@@ -13,6 +13,8 @@ fn fixture_root(name: &str) -> String {
     .to_string()
 }
 
+include!("options_config_tests.rs");
+
 #[test]
 fn report_options_merge_top_level_defaults() {
     let options = parse_options::<AnalyzeProjectOptions>(
@@ -41,20 +43,29 @@ fn report_options_merge_top_level_defaults() {
         format!("{}/tsconfig.json", fixture_root("simple"))
     );
     assert!(symbols.get("filters").is_none());
-    assert!(symbols.get("config").is_none());
+    assert_eq!(
+        symbols["config"],
+        format!("{}/no-mistakes.json", fixture_root("simple"))
+    );
 
     let playwright: Value =
         serde_json::from_str(&options::playwright_options(&options.reports[1], &options).unwrap())
             .unwrap();
     assert_eq!(playwright["root"], fixture_root("simple"));
-    assert_eq!(playwright["config"], "no-mistakes.json");
+    assert_eq!(
+        playwright["config"],
+        format!("{}/no-mistakes.json", fixture_root("simple"))
+    );
     assert!(playwright.get("tsconfig").is_none());
     assert!(playwright.get("filters").is_none());
 
     let project: Value =
         serde_json::from_str(&options::project_options(&options.reports[2], &options).unwrap())
             .unwrap();
-    assert_eq!(project["config"], "no-mistakes.json");
+    assert_eq!(
+        project["config"],
+        format!("{}/no-mistakes.json", fixture_root("simple"))
+    );
 
     let traverse = options::traverse_options(&options.reports[3], &options).unwrap();
     assert_eq!(traverse.filters, vec!["src/**"]);

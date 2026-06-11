@@ -83,7 +83,17 @@ fn test_impact_symbol_opt_in_limits_to_symbol_consumers() {
         .iter()
         .map(|t| t["test_file"].as_str().unwrap())
         .collect();
-    assert_eq!(test_files, vec!["helper-export.test.mts", "other.test.mts"]);
+    assert_eq!(
+        test_files,
+        vec![
+            "barrel-consumer.test.mts",
+            "excluded-private-caller.test.mts",
+            "helper-export.test.mts",
+            "other.test.mts",
+            "private-barrel-caller-with-export.test.mts",
+            "private-caller-with-export.test.mts"
+        ]
+    );
     assert!(!test_files.contains(&"unrelated-consumer.test.mts"));
     assert_eq!(
         plan["selected_tests"][0]["reasons"][0]["changed_file"],

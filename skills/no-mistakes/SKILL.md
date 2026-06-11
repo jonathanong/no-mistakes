@@ -18,6 +18,7 @@ route fetches, or what React traits a component has.
 | What does this file transitively import? | `no-mistakes dependencies <file>` |
 | Which files are affected by touching this file? | `no-mistakes dependents <file>` |
 | Which files import this named export? | `no-mistakes dependents <file>#SYMBOL` |
+| What must I update before changing this function signature? | `no-mistakes symbols <file> --mode signature-impact --symbol SYMBOL --format json` |
 | Which tests should rerun? | `no-mistakes tests plan vitest --changed-file <file> --format paths` |
 | Which tests should rerun? (lower-level fallback) | `no-mistakes dependents <file> --test vitest --format paths` |
 | Why was this test selected? | `no-mistakes tests why <test> --plan plan.json` |
@@ -54,6 +55,7 @@ no-mistakes tests why tests/users.test.mts --plan plan.json
 
 # Public API and imports
 no-mistakes symbols src/api.mts --include both --format json
+no-mistakes symbols src/api.mts --mode signature-impact --symbol handler --format json
 
 # Playwright coverage gate before finishing Next.js / Playwright work
 no-mistakes playwright check --json

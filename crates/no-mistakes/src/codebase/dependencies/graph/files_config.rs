@@ -27,8 +27,19 @@ struct GraphConfigOptions {
 }
 
 fn graph_config_options(root: &Path) -> Option<GraphConfigOptions> {
-    let config = crate::codebase::config::load_config(root).ok()?;
-    let v2_config = load_v2_config(root, None).ok();
+    graph_config_options_with_config(root, None)
+}
+
+fn graph_config_options_with_config(
+    root: &Path,
+    config_path: Option<&Path>,
+) -> Option<GraphConfigOptions> {
+    let config = match config_path {
+        Some(path) => crate::codebase::config::load_config_with_path(root, Some(path)),
+        None => crate::codebase::config::load_config(root),
+    }
+    .ok()?;
+    let v2_config = load_v2_config(root, config_path).ok();
     let project_route_globs = v2_config
         .as_ref()
         .map(|config| ConfigView::new(config).server_route_globs())
@@ -56,6 +67,21 @@ fn graph_config_options(root: &Path) -> Option<GraphConfigOptions> {
 fn graph_config_options_for_plan(root: &Path, plan: GraphBuildPlan) -> Option<GraphConfigOptions> {
     if graph_plan_needs_config(plan) {
         graph_config_options(root)
+    } else {
+        None
+    }
+}
+
+fn graph_config_options_for_plan_with_config(
+    root: &Path,
+    plan: GraphBuildPlan,
+    config_path: Option<&Path>,
+) -> Option<GraphConfigOptions> {
+    if graph_plan_needs_config(plan) {
+        match config_path {
+            Some(_) => graph_config_options_with_config(root, config_path),
+            None => graph_config_options(root),
+        }
     } else {
         None
     }

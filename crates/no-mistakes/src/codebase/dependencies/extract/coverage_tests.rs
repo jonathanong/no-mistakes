@@ -39,6 +39,27 @@ fn nested_jsx_member_references_are_recorded() {
 }
 
 #[test]
+fn nested_type_binding_can_resolve_to_known_function_scope() {
+    let allocator = Allocator::default();
+    let ret = Parser::new(
+        &allocator,
+        "export function outer() {
+           function Local() {}
+           interface Local { value: string }
+           type Uses = Local.Member;
+         }",
+        SourceType::ts(),
+    )
+    .parse();
+
+    let facts = extract_import_facts_from_program(&ret.program);
+
+    assert!(facts.symbol_references.iter().any(|reference| {
+        reference.caller.as_deref() == Some("outer") && reference.callee == "outer/Local.Member"
+    }));
+}
+
+#[test]
 fn parenthesized_default_object_expression_records_members() {
     let allocator = Allocator::default();
     let ret = Parser::new(

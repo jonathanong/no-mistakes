@@ -33,6 +33,19 @@ fn collect_entries_with_timings(
 
 pub fn run(args: SymbolsArgs) -> Result<()> {
     let mut timings = crate::codebase::timing::PhaseTimings::start();
+    if args.mode == SymbolsMode::SignatureImpact {
+        let report = impact::collect_report(&args)?;
+        timings.mark("parse+analysis");
+        let format = resolve_format(args.json, args.format, io::stdout().is_terminal());
+        let stdout = io::stdout();
+        let mut out = stdout.lock();
+        impact::write_report(&report, format, &mut out)?;
+        timings.mark("output");
+        if args.timings {
+            timings.print_stderr();
+        }
+        return Ok(());
+    }
     let (entries, root_strs) = collect_entries_with_timings(&args, Some(&mut timings))?;
 
     let format = resolve_format(args.json, args.format, io::stdout().is_terminal());
@@ -54,6 +67,9 @@ pub fn run(args: SymbolsArgs) -> Result<()> {
 }
 
 pub fn run_json(args: SymbolsArgs) -> Result<String> {
+    if args.mode == SymbolsMode::SignatureImpact {
+        return impact::report_json(args);
+    }
     let (entries, root_strs) = collect_entries(&args)?;
     let mut out = Vec::new();
     output::write_json(&root_strs, &entries, &mut out)?;

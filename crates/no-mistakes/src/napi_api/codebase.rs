@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use anyhow::{bail, Result as AnyhowResult};
 
 use super::options::{
-    parse_export_kind, parse_include, parse_options, parse_relationship, to_napi_error,
-    SymbolOptions, TraverseOptions,
+    parse_export_kind, parse_include, parse_options, parse_relationship, parse_symbols_mode,
+    to_napi_error, SymbolOptions, TraverseOptions,
 };
 use crate::cli::Format;
 use crate::codebase::dependencies::{Direction, TraverseArgs};
@@ -70,6 +70,9 @@ fn build_symbols_args(options: SymbolOptions) -> AnyhowResult<SymbolsArgs> {
         files: strings_to_paths(options.files),
         root: options.root.map(PathBuf::from),
         tsconfig: options.tsconfig.map(PathBuf::from),
+        config: options.config.map(PathBuf::from),
+        mode: parse_symbols_mode(options.mode.as_deref())?,
+        symbol: options.symbol,
         kinds: options
             .kinds
             .iter()

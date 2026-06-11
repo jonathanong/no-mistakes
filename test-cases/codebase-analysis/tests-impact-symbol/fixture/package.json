@@ -1,1 +1,4 @@
-{ "name": "test-fixture" }
+{
+  "private": true,
+  "workspaces": ["packages/*"]
+}

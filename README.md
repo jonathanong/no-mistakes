@@ -14,6 +14,7 @@ that need small, reliable answers they can feed into follow-up edits and tests.
 | What does this file import? | `no-mistakes dependencies <file> --format json` |
 | What can this change affect? | `no-mistakes dependents <file> --format paths` |
 | Who uses this export? | `no-mistakes dependents <file>#Symbol --format json` |
+| What does a signature change affect? | `no-mistakes symbols <file> --mode signature-impact --symbol Symbol --format json` |
 | What does this module export/import? | `no-mistakes symbols <file> --include both --format json` |
 | Which tests should run? | `no-mistakes tests plan <playwright\|vitest> --format json` |
 | Why was a test selected? | `no-mistakes tests why <test> --plan plan.json` |

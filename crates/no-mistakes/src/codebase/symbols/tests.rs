@@ -10,6 +10,13 @@ fn fixture_root() -> PathBuf {
 /// Render `args` through the same `collect_entries` pipeline production uses,
 /// then serialize via the requested formatter into a String.
 fn run_capture(args: SymbolsArgs) -> String {
+    if args.mode == SymbolsMode::SignatureImpact {
+        let report = impact::collect_report(&args).unwrap();
+        let mut buf = Vec::new();
+        let format = args.format.unwrap_or(Format::Json);
+        impact::write_report(&report, format, &mut buf).unwrap();
+        return String::from_utf8(buf).unwrap();
+    }
     let (entries, root_strs) = collect_entries(&args).unwrap();
     let mut buf = Vec::new();
     let format = args.format.unwrap_or(Format::Json);
@@ -28,6 +35,9 @@ fn args_for(root: &Path, files: Vec<&str>, format: Format) -> SymbolsArgs {
         files: files.into_iter().map(PathBuf::from).collect(),
         root: Some(root.to_path_buf()),
         tsconfig: None,
+        config: None,
+        mode: SymbolsMode::List,
+        symbol: None,
         kinds: vec![],
         include: Include::Exports,
         format: Some(format),
@@ -39,6 +49,14 @@ fn args_for(root: &Path, files: Vec<&str>, format: Format) -> SymbolsArgs {
 fn fixture_args(files: Vec<&str>, format: Format) -> SymbolsArgs {
     args_for(&fixture_root(), files, format)
 }
+
+include!("tests_signature_impact.rs");
+include!("tests_signature_impact_callers.rs");
+include!("tests_signature_impact_dynamic.rs");
+include!("tests_signature_impact_exports.rs");
+include!("tests_signature_impact_local_barrels.rs");
+include!("tests_signature_impact_namespaces.rs");
+include!("tests_signature_impact_validation.rs");
 
 #[test]
 fn collect_entries_surfaces_tsconfig_errors() {

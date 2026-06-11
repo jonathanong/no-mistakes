@@ -15,8 +15,11 @@ import type {
   ReactUsagesReport,
   ReactViolation,
   ServerRoutesReport,
+  SignatureImpactResult,
+  SymbolsListOptions,
   SymbolsOptions,
   SymbolsResult,
+  SymbolsSignatureImpactOptions,
   TestGraph,
   TestPlan,
   TestsImpactOptions,
@@ -33,7 +36,9 @@ export function dependencies(options: TraverseOptions): Promise<DependencyResult
 export function dependents(options: TraverseOptions): Promise<DependencyResult>;
 export function related(options: TraverseOptions): Promise<DependencyResult>;
 export function analyzeProject(options: AnalyzeProjectOptions): Promise<AnalyzeProjectResult>;
-export function symbols(options: SymbolsOptions): Promise<SymbolsResult>;
+export function symbols(options: SymbolsSignatureImpactOptions): Promise<SignatureImpactResult>;
+export function symbols(options: SymbolsListOptions): Promise<SymbolsResult>;
+export function symbols(options: SymbolsOptions): Promise<SymbolsResult | SignatureImpactResult>;
 export function fetches(options?: FetchesOptions): Promise<unknown>;
 export function check(options?: ProjectOptions): Promise<CheckReport>;
 export function testsPlan(options: TestsPlanOptions): Promise<TestPlan>;

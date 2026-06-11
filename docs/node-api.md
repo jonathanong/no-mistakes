@@ -18,6 +18,7 @@ const { analyzeProject, dependents, symbols, testsPlan } = require("no-mistakes"
     root: process.cwd(),
     reports: [
       { type: "symbols", files: ["src/api.mts"], include: "both" },
+      { type: "symbols", files: ["src/api.mts"], mode: "signature-impact", symbol: "handler" },
       { type: "check" },
     ],
   });

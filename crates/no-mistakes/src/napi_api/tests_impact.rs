@@ -33,7 +33,17 @@ fn tests_impact_json_accepts_structured_symbol_entrypoint() {
         .iter()
         .map(|test| test["test_file"].as_str().unwrap())
         .collect();
-    assert_eq!(test_files, vec!["helper-export.test.mts", "other.test.mts"]);
+    assert_eq!(
+        test_files,
+        vec![
+            "barrel-consumer.test.mts",
+            "excluded-private-caller.test.mts",
+            "helper-export.test.mts",
+            "other.test.mts",
+            "private-barrel-caller-with-export.test.mts",
+            "private-caller-with-export.test.mts"
+        ]
+    );
     assert!(selected
         .iter()
         .all(|test| test["reasons"][0]["changed_file"] == "utils.mts#parseDate"));
