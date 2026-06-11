@@ -24,6 +24,9 @@ fn collect_route_helpers<'a>(
             },
         );
     }
+    for stmt in &program.body {
+        collect_helper_alias_exports_from_statement(stmt, &mut defs);
+    }
 
     let imported_helpers = collect_route_helper_bindings(&[], imports);
     let mut helpers: Vec<RouteHelper> = defs

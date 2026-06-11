@@ -83,10 +83,10 @@ fn push_helper_refs_from_expression(
     collect_route_helper_callee_names(expr, &mut callees);
     let line = byte_offset_to_line(source, offset);
     refs.extend(callees.into_iter().filter_map(|callee| {
-        helper_callee_is_bound(&callee, helper_bindings).then(|| RouteHelperRef {
-            callee,
+        bound_helper_callee_name(&callee, helper_bindings).map(|callee| RouteHelperRef {
             file: file.to_string(),
             line,
+            callee,
         })
     }));
 }

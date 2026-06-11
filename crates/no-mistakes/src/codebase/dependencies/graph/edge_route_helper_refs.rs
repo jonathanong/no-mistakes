@@ -78,8 +78,22 @@ fn imported_route_helper_patterns(
     if let Some((namespace, member)) = callee.split_once('.') {
         return imports
             .iter()
-            .find(|import| import.local == namespace && import.imported == "*")
-            .and_then(|import| route_helper_patterns_from_import(path, member, import, facts, resolver, 0))
+            .filter(|import| import.local == namespace)
+            .find_map(|import| {
+                if import.imported == "*" {
+                    route_helper_patterns_from_import(path, member, import, facts, resolver, 0)
+                } else {
+                    route_helper_namespace_member_patterns(
+                        path,
+                        &import.imported,
+                        member,
+                        import,
+                        facts,
+                        resolver,
+                        0,
+                    )
+                }
+            })
             .unwrap_or_default();
     }
 
@@ -136,6 +150,34 @@ fn route_helper_patterns_from_import(
     {
         if let Some(patterns) =
             route_helper_patterns_from_import(&target, helper_name, reexport, facts, resolver, depth + 1)
+        {
+            return Some(patterns);
+        }
+    }
+    None
+}
+
+fn route_helper_namespace_member_patterns(
+    path: &Path,
+    namespace: &str,
+    member: &str,
+    import: &crate::codebase::ts_routes::refs::RouteHelperImport,
+    facts: &dyn TsFactLookup,
+    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
+    depth: usize,
+) -> Option<Vec<String>> {
+    if depth > 4 {
+        return None;
+    }
+    let target = resolver.resolve(&import.source, path)?;
+    let target_facts = facts.get_ts_facts(&target)?;
+    for reexport in target_facts
+        .route_helper_imports
+        .iter()
+        .filter(|candidate| candidate.local == namespace && candidate.imported == "*")
+    {
+        if let Some(patterns) =
+            route_helper_patterns_from_import(&target, member, reexport, facts, resolver, depth + 1)
         {
             return Some(patterns);
         }

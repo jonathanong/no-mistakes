@@ -56,7 +56,11 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
             }
             Statement::ExportAllDeclaration(export) if !export.export_kind.is_type() => {
                 imports.push(RouteHelperImport {
-                    local: "*".to_string(),
+                    local: export
+                        .exported
+                        .as_ref()
+                        .map(|name| name.name().to_string())
+                        .unwrap_or_else(|| "*".to_string()),
                     imported: "*".to_string(),
                     source: export.source.value.as_str().to_string(),
                 });

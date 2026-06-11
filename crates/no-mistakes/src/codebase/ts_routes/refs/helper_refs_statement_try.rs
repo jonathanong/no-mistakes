@@ -17,12 +17,16 @@ fn collect_helper_refs_from_try_statement<'a>(
         refs,
     );
     if let Some(handler) = &try_stmt.handler {
+        let mut handler_helper_bindings = helper_bindings.clone();
+        if let Some(param) = &handler.param {
+            remove_shadowed_helper_binding(&param.pattern, &mut handler_helper_bindings);
+        }
         collect_helper_refs_from_block_statement(
             &handler.body,
             source,
             file,
             router_bindings,
-            helper_bindings,
+            &mut handler_helper_bindings,
             local_helpers,
             refs,
         );

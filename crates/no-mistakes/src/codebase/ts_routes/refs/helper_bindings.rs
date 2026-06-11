@@ -2,6 +2,7 @@
 struct RouteHelperBindings {
     identifiers: HashSet<String>,
     namespaces: HashSet<String>,
+    aliases: HashMap<String, String>,
 }
 
 fn collect_route_helper_bindings(
@@ -17,21 +18,35 @@ fn collect_route_helper_bindings(
             bindings.namespaces.insert(import.local.clone());
         } else {
             bindings.identifiers.insert(import.local.clone());
+            bindings.namespaces.insert(import.local.clone());
         }
     }
     bindings
 }
 
-fn helper_callee_is_bound(callee: &str, bindings: &RouteHelperBindings) -> bool {
-    callee
+fn bound_helper_callee_name(callee: &str, bindings: &RouteHelperBindings) -> Option<String> {
+    if callee
         .split_once('.')
-        .map(|(namespace, _)| bindings.namespaces.contains(namespace))
-        .unwrap_or_else(|| bindings.identifiers.contains(callee))
+        .is_some_and(|(namespace, _)| bindings.namespaces.contains(namespace))
+    {
+        return Some(callee.to_string());
+    }
+    if !bindings.identifiers.contains(callee) {
+        return None;
+    }
+    Some(
+        bindings
+            .aliases
+            .get(callee)
+            .cloned()
+            .unwrap_or_else(|| callee.to_string()),
+    )
 }
 
 fn remove_shadowed_helper_name(name: &str, bindings: &mut RouteHelperBindings) {
     bindings.identifiers.remove(name);
     bindings.namespaces.remove(name);
+    bindings.aliases.remove(name);
 }
 
 fn remove_shadowed_helper_binding(pattern: &BindingPattern, bindings: &mut RouteHelperBindings) {
@@ -108,5 +123,26 @@ fn remove_shadowed_helper_var_bindings(
             continue;
         }
         remove_shadowed_helper_binding(&decl.id, bindings);
+        let (Some(name), Some(init)) = (binding_identifier_name(&decl.id), &decl.init) else {
+            continue;
+        };
+        if let Some(target) = helper_alias_target(init, bindings) {
+            bindings.identifiers.insert(name.to_string());
+            bindings.aliases.insert(name.to_string(), target);
+        }
+    }
+}
+
+fn helper_alias_target(expr: &Expression, bindings: &RouteHelperBindings) -> Option<String> {
+    match expr {
+        Expression::ParenthesizedExpression(paren) => helper_alias_target(&paren.expression, bindings),
+        Expression::TSAsExpression(type_expr) => helper_alias_target(&type_expr.expression, bindings),
+        Expression::TSSatisfiesExpression(type_expr) => {
+            helper_alias_target(&type_expr.expression, bindings)
+        }
+        Expression::TSNonNullExpression(type_expr) => helper_alias_target(&type_expr.expression, bindings),
+        Expression::TSTypeAssertion(type_expr) => helper_alias_target(&type_expr.expression, bindings),
+        other => route_helper_callee_name_from_callee(other)
+            .and_then(|callee| bound_helper_callee_name(&callee, bindings)),
     }
 }
