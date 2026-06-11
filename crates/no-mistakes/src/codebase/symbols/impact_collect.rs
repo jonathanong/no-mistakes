@@ -48,7 +48,6 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
     let entries = graph.dependents_of_symbol_nodes(std::slice::from_ref(&target), None, None);
 
     let (exports, export_nodes) = export_paths(&graph, &target, symbol, &root, &definition);
-    let suggested_tests = suggested_tests(&entries, &root, &test_filter);
     let production_extra_callers = local_caller_entries(
         &graph,
         &target_file,
@@ -67,6 +66,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         &test_filter,
         true,
     );
+    let suggested_tests = suggested_tests(&entries, &root, &test_filter, &test_extra_callers);
 
     Ok(SignatureImpactReport {
         roots: vec![format!("{}#{}", args.files[0].display(), symbol)],

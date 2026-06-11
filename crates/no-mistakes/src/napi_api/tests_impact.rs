@@ -38,7 +38,8 @@ fn tests_impact_json_accepts_structured_symbol_entrypoint() {
         vec![
             "barrel-consumer.test.mts",
             "helper-export.test.mts",
-            "other.test.mts"
+            "other.test.mts",
+            "private-caller-with-export.test.mts"
         ]
     );
     assert!(selected

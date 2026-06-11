@@ -31,6 +31,7 @@ fn suggested_tests(
     entries: &[NodeEntry],
     root: &Path,
     test_filter: &TestFileFilter,
+    extra_callers: &[CallerEntry],
 ) -> Vec<TestSuggestion> {
     let mut by_file: BTreeMap<String, TestSuggestion> = BTreeMap::new();
     for entry in entries {
@@ -52,6 +53,19 @@ fn suggested_tests(
                 file,
                 depth: entry.depth,
                 via,
+            });
+    }
+    for caller in extra_callers {
+        by_file
+            .entry(caller.file.clone())
+            .and_modify(|existing| {
+                existing.depth = existing.depth.min(caller.depth);
+                merge_via(&mut existing.via, &caller.via);
+            })
+            .or_insert(TestSuggestion {
+                file: caller.file.clone(),
+                depth: caller.depth,
+                via: caller.via.clone(),
             });
     }
     let mut tests: Vec<_> = by_file.into_values().collect();

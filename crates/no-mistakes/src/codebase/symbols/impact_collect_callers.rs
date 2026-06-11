@@ -65,18 +65,31 @@ fn target_local_names(
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> BTreeSet<String> {
     if file == target_file {
-        return BTreeSet::from([target_symbol.to_string()]);
+        let mut names = BTreeSet::from([target_symbol.to_string()]);
+        names.extend(symbols.exports.iter().filter_map(|export| {
+            (!matches!(export.kind, ExportKind::ReExport { .. })
+                && !export.is_type_only
+                && export.name == target_symbol)
+                .then(|| export.local.clone())
+                .flatten()
+        }));
+        return names;
     }
     symbols
         .imports
         .iter()
-        .filter(|import| {
-            !import.is_type_only
-                && import.imported == target_symbol
-                && resolve_import(&import.source, file, tsconfig)
-                    .is_some_and(|resolved| resolved == target_file)
+        .filter_map(|import| {
+            if import.is_type_only
+                || resolve_import(&import.source, file, tsconfig)
+                    .is_none_or(|resolved| resolved != target_file)
+            {
+                return None;
+            }
+            if import.imported == "*" {
+                return Some(format!("{}.{}", import.local, target_symbol));
+            }
+            (import.imported == target_symbol).then(|| import.local.clone())
         })
-        .map(|import| import.local.clone())
         .collect()
 }
 

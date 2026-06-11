@@ -75,6 +75,16 @@ export interface SymbolsOptions {
   include?: "exports" | "imports" | "both";
 }
 
+export type SymbolsListOptions = Omit<SymbolsOptions, "mode" | "symbol"> & {
+  mode?: "list";
+  symbol?: string;
+};
+
+export type SymbolsSignatureImpactOptions = SymbolsOptions & {
+  mode: "signature-impact";
+  symbol: string;
+};
+
 export interface SymbolExport {
   name: string;
   kind: string;
@@ -175,7 +185,7 @@ export type AnalyzeProjectReportRequest =
       TraverseOptions,
       "root" | "tsconfig"
     >)
-  | ({ type: "symbols"; id?: string } & SymbolsOptions)
+  | ({ type: "symbols"; id?: string } & (SymbolsListOptions | SymbolsSignatureImpactOptions))
   | ({ type: "queues" | "queueEdges" | "queueCheck"; id?: string } & BatchedProjectOptions)
   | ({ type: "queueRelated"; id?: string } & BatchedQueueRelatedOptions)
   | ({

@@ -88,7 +88,8 @@ fn test_impact_symbol_opt_in_limits_to_symbol_consumers() {
         vec![
             "barrel-consumer.test.mts",
             "helper-export.test.mts",
-            "other.test.mts"
+            "other.test.mts",
+            "private-caller-with-export.test.mts"
         ]
     );
     assert!(!test_files.contains(&"unrelated-consumer.test.mts"));

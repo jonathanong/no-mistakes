@@ -63,12 +63,19 @@ fn suggested_tests_merges_duplicate_test_files() {
         },
     ];
 
-    let tests = suggested_tests(&entries, root, &filter);
+    let extra = vec![CallerEntry {
+        file: "src/date.test.mts".to_string(),
+        symbol: None,
+        depth: 2,
+        via: vec!["symbol"],
+    }];
+
+    let tests = suggested_tests(&entries, root, &filter, &extra);
 
     assert_eq!(tests.len(), 1);
     assert_eq!(tests[0].file, "src/date.test.mts");
     assert_eq!(tests[0].depth, 1);
-    assert_eq!(tests[0].via, vec!["import", "test"]);
+    assert_eq!(tests[0].via, vec!["import", "symbol", "test"]);
 }
 
 #[test]
