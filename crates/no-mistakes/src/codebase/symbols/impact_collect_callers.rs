@@ -104,11 +104,11 @@ fn caller_entries(
         .map(|caller| caller.file.as_str())
         .collect();
     for entry in entries {
-        if context.export_nodes.contains(&entry.node) {
+        if context.export_nodes.contains(&entry.node) && !has_file_level_import_edge(&entry.via) {
             continue;
         }
         if let NodeId::File(file) = &entry.node {
-            if export_files.contains(file.as_path()) {
+            if export_files.contains(file.as_path()) && !has_file_level_import_edge(&entry.via) {
                 continue;
             }
         }
@@ -118,7 +118,6 @@ fn caller_entries(
         if matches!(entry.node, NodeId::File(_))
             && symbol.is_none()
             && !has_file_level_import_edge(&entry.via)
-            && !entry.via.contains(&EdgeKind::TestOf)
             && !extra_file_callers.contains(file.as_str())
         {
             continue;

@@ -24,6 +24,13 @@ fn signature_impact_keeps_dynamic_import_file_callers() {
         entry["file"] == "dynamic-import-chained-member-caller.mts"
             && entry.get("symbol").is_none()
     }));
+    assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "dynamic-import-export-barrel.mts" && entry.get("symbol").is_none()
+    }));
+    assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "dynamic-import-namespace-destructure-caller.mts"
+            && entry.get("symbol").is_none()
+    }));
     assert!(v["suggestedTests"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "dynamic-import-caller.test.mts"
     }));

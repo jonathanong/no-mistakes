@@ -52,9 +52,7 @@ fn caller_entries_filters_export_nodes_and_non_file_nodes() {
     assert_eq!(production.len(), 1);
     assert_eq!(production[0].file, "src/consumer.mts");
     assert_eq!(production[0].symbol.as_deref(), Some("format"));
-    assert_eq!(tests.len(), 1);
-    assert_eq!(tests[0].file, "src/consumer.test.mts");
-    assert_eq!(tests[0].symbol, None);
+    assert!(tests.is_empty());
 }
 
 #[test]

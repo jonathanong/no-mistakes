@@ -86,15 +86,25 @@ fn dynamic_module_bindings(source: &str) -> BTreeSet<String> {
 
 fn dynamic_symbol_aliases_in_source(source: &str, target_symbol: &str) -> BTreeSet<String> {
     let mut aliases = BTreeSet::new();
-    if target_symbol.contains('.') {
-        return aliases;
-    }
     for line in source
         .lines()
         .filter(|line| line.contains("import(") || line.contains("require("))
     {
-        aliases.extend(destructured_symbol_aliases(line, target_symbol));
-        aliases.extend(member_assignment_alias(line, target_symbol));
+        if let Some((base, tail)) = target_symbol.split_once('.') {
+            aliases.extend(
+                destructured_symbol_aliases(line, base)
+                    .into_iter()
+                    .map(|alias| format!("{alias}.{tail}")),
+            );
+            aliases.extend(
+                member_assignment_alias(line, base)
+                    .into_iter()
+                    .map(|alias| format!("{alias}.{tail}")),
+            );
+        } else {
+            aliases.extend(destructured_symbol_aliases(line, target_symbol));
+            aliases.extend(member_assignment_alias(line, target_symbol));
+        }
     }
     aliases
 }

@@ -42,6 +42,11 @@ fn signature_impact_json_groups_callers_exports_and_tests() {
         .unwrap()
         .iter()
         .any(|entry| { entry["file"] == "helper-export.test.mts" && entry["symbol"] == "helper" }));
+    assert!(!v["testCallers"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|entry| { entry["file"] == "other.test.mts" }));
 }
 
 #[test]
