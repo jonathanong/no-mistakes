@@ -42,26 +42,52 @@ pub fn matches_any(reference: &str, defined_patterns: &[String]) -> bool {
 fn matches_segments(reference: &[&str], defined: &[&str]) -> bool {
     match (reference, defined) {
         ([], []) => true,
+        (["**"], []) => true,
         (_, []) => false,
         ([], [next, rest @ ..]) => *next == "**" && rest.is_empty(),
-        ([ref_head, ref_rest @ ..], [def_head, def_rest @ ..])
-            if def_head.starts_with(':') && !ref_head.is_empty() =>
+        ([ref_head, ref_rest @ ..], defined)
+            if (*ref_head == "**" || *ref_head == "*") && ref_rest.is_empty() =>
         {
-            matches_segments(ref_rest, def_rest)
-        }
-        ([ref_head, ref_rest @ ..], ["*", def_rest @ ..]) if !ref_head.is_empty() => {
-            def_rest.is_empty() || matches_segments(ref_rest, def_rest)
+            if *ref_head == "**" {
+                true
+            } else if let [segment] = defined {
+                is_dynamic_definition_segment(segment)
+            } else {
+                false
+            }
         }
         (reference, ["**", def_rest @ ..]) => {
             def_rest.is_empty()
                 || matches_segments(reference, def_rest)
                 || (!reference.is_empty() && matches_segments(&reference[1..], defined))
         }
+        (["**", ref_rest @ ..], defined) => {
+            ref_rest.is_empty()
+                || matches_segments(ref_rest, defined)
+                || (!defined.is_empty() && matches_segments(reference, &defined[1..]))
+        }
+        ([ref_head, ref_rest @ ..], [def_head, def_rest @ ..])
+            if def_head.starts_with(':') && !ref_head.is_empty() =>
+        {
+            matches_segments(ref_rest, def_rest)
+        }
+        ([ref_head, ref_rest @ ..], [def_head, def_rest @ ..])
+            if *ref_head == "*" && is_dynamic_definition_segment(def_head) =>
+        {
+            matches_segments(ref_rest, def_rest)
+        }
+        ([ref_head, ref_rest @ ..], ["*", def_rest @ ..]) if !ref_head.is_empty() => {
+            def_rest.is_empty() || matches_segments(ref_rest, def_rest)
+        }
         ([ref_head, ref_rest @ ..], [def_head, def_rest @ ..]) if ref_head == def_head => {
             matches_segments(ref_rest, def_rest)
         }
         _ => false,
     }
+}
+
+fn is_dynamic_definition_segment(segment: &str) -> bool {
+    segment.starts_with(':') || segment == "*" || segment == "**"
 }
 
 #[cfg(test)]

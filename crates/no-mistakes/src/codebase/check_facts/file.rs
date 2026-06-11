@@ -136,6 +136,9 @@ pub(crate) fn collect_file_facts(
         has_unknown_top_level_call: import_facts.has_unknown_top_level_call,
         symbols: symbols.clone(),
         route_refs: domain.route_refs,
+        route_helpers: domain.route_helpers,
+        route_helper_imports: domain.route_helper_imports,
+        route_helper_refs: domain.route_helper_refs,
         backend_routes: domain.backend_routes,
         queue_usage: domain.queue_usage,
         queue_create_line: domain.queue_create_line,
@@ -171,6 +174,9 @@ fn should_store_source(plan: &CheckFactPlan) -> bool {
 fn ts_source(source: Option<String>) -> TsFileFacts {
     TsFileFacts {
         source,
+        route_helpers: Vec::new(),
+        route_helper_imports: Vec::new(),
+        route_helper_refs: Vec::new(),
         ..Default::default()
     }
 }

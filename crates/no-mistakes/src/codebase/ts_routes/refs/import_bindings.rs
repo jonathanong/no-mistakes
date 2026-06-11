@@ -5,6 +5,7 @@ fn collect_import_bindings<'a>(stmts: &'a [Statement<'a>]) -> RouterBindings<'a>
             continue;
         };
         if import.source.value.as_str() != "next/navigation" {
+            mark_shadowed_fetch_import(import, &mut bindings);
             continue;
         }
         let Some(specifiers) = &import.specifiers else {
@@ -20,6 +21,32 @@ fn collect_import_bindings<'a>(stmts: &'a [Statement<'a>]) -> RouterBindings<'a>
         }
     }
     bindings
+}
+
+fn mark_shadowed_fetch_import(import: &oxc::ast::ast::ImportDeclaration<'_>, bindings: &mut RouterBindings<'_>) {
+    let Some(specifiers) = &import.specifiers else {
+        return;
+    };
+    for specifier in specifiers {
+        match specifier {
+            ImportDeclarationSpecifier::ImportSpecifier(specifier)
+                if specifier.local.name.as_str() == "fetch" =>
+            {
+                bindings.fetch_shadowed = true;
+            }
+            ImportDeclarationSpecifier::ImportDefaultSpecifier(specifier)
+                if specifier.local.name.as_str() == "fetch" =>
+            {
+                bindings.fetch_shadowed = true;
+            }
+            ImportDeclarationSpecifier::ImportNamespaceSpecifier(specifier)
+                if specifier.local.name.as_str() == "fetch" =>
+            {
+                bindings.fetch_shadowed = true;
+            }
+            _ => {}
+        }
+    }
 }
 
 fn register_router_bindings_from_statement<'a>(
