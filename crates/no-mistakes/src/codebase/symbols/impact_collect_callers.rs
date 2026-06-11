@@ -88,6 +88,7 @@ fn caller_entries(
     extra_callers: &[CallerEntry],
 ) -> Vec<CallerEntry> {
     let mut by_key: BTreeMap<(String, Option<String>), CallerEntry> = BTreeMap::new();
+    let mut dynamic_usage_cache: BTreeMap<String, bool> = BTreeMap::new();
     let export_files: BTreeSet<&Path> = context
         .export_nodes
         .iter()
@@ -119,10 +120,14 @@ fn caller_entries(
         {
             continue;
         }
-        if (entry.via.contains(&EdgeKind::DynamicImport) || entry.via.contains(&EdgeKind::Require))
-            && !file_entry_uses_any_symbol(context.root, file.as_str(), context.target_symbols)
+        if entry.via.contains(&EdgeKind::DynamicImport) || entry.via.contains(&EdgeKind::Require)
         {
-            continue;
+            let uses_target = *dynamic_usage_cache.entry(file.clone()).or_insert_with(|| {
+                file_entry_uses_any_symbol(context.root, file.as_str(), context.target_symbols)
+            });
+            if !uses_target {
+                continue;
+            }
         }
         let is_test = entry
             .node

@@ -3,4 +3,4 @@ async function renderDynamicAliasDate(input: string) {
   return pd(input).toISOString();
 }
 
-export const renderedDynamicAliasDate = renderDynamicAliasDate("2026-01-01");
+export const renderedDynamicAliasDate = await renderDynamicAliasDate("2026-01-01");
