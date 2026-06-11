@@ -97,9 +97,10 @@ fn double_star_matches_empty_reference_tail_only_when_final() {
 
 #[test]
 fn reference_wildcards_match_route_definition_segments() {
-    assert!(matches("/*/*/tags/*", "/reviews/:id/tags/:tagType"));
     assert!(matches("/crawler/*", "/crawler/:id"));
     assert!(matches("/communities/*/posts", "/communities/:slug/posts"));
+    assert!(!matches("/users/*", "/users/settings"));
+    assert!(!matches("/*/*/tags/*", "/reviews/:id/tags/:tagType"));
 }
 
 #[test]
@@ -117,7 +118,7 @@ fn reference_param_does_not_match_static_definition_segment() {
 fn reference_double_star_matches_definition_tail() {
     assert!(matches("/crawler/*/**", "/crawler/:id"));
     assert!(matches("/crawler/*/**", "/crawler/:id/edit"));
-    assert!(matches("/*/*/**", "/reviews/:id/tags/:tagType"));
+    assert!(!matches("/*/*/**", "/reviews/:id/tags/:tagType"));
 }
 
 #[test]

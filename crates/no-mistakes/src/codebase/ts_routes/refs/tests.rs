@@ -2,6 +2,7 @@ use super::*;
 use std::path::PathBuf;
 
 mod helper_facts;
+mod helper_facts_context;
 
 fn route_fixture_source(name: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

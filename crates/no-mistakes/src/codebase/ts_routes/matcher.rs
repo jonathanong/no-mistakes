@@ -48,7 +48,8 @@ fn matches_segments(reference: &[&str], defined: &[&str]) -> bool {
         ([ref_head, ref_rest @ ..], defined)
             if (*ref_head == "**" || *ref_head == "*") && ref_rest.is_empty() =>
         {
-            *ref_head == "**" || defined.len() == 1
+            *ref_head == "**"
+                || matches!(defined, [segment] if is_dynamic_definition_segment(segment))
         }
         (reference, ["**", def_rest @ ..]) => {
             def_rest.is_empty()
@@ -66,7 +67,7 @@ fn matches_segments(reference: &[&str], defined: &[&str]) -> bool {
             matches_segments(ref_rest, def_rest)
         }
         ([ref_head, ref_rest @ ..], [def_head, def_rest @ ..])
-            if *ref_head == "*" && !def_head.is_empty() =>
+            if *ref_head == "*" && is_dynamic_definition_segment(def_head) =>
         {
             matches_segments(ref_rest, def_rest)
         }
@@ -78,6 +79,10 @@ fn matches_segments(reference: &[&str], defined: &[&str]) -> bool {
         }
         _ => false,
     }
+}
+
+fn is_dynamic_definition_segment(segment: &str) -> bool {
+    segment.starts_with(':') || segment == "*" || segment == "**"
 }
 
 #[cfg(test)]

@@ -43,6 +43,9 @@ fn evaluate_helper_return_statement<'a>(
             }
             values
         }
+        Statement::SwitchStatement(switch_stmt) => {
+            evaluate_helper_switch_statement(switch_stmt, defs, imported_helpers, env, depth + 1)
+        }
         _ => Vec::new(),
     }
 }

@@ -186,6 +186,16 @@ export function branchedHref(entity: { id: string }, archived: boolean): string 
   }
   return `/active/${entity.id}`;
 }
+export function switchHref(entity: { id: string }, kind: 'user' | 'org'): string {
+  switch (kind) {
+    case 'user':
+      return `/users/${entity.id}`;
+    case 'org':
+      return `/orgs/${entity.id}`;
+    default:
+      return `/unknown/${entity.id}`;
+  }
+}
 export const urlObjectHref = (entity: { id: string }) => ({
   pathname: `/object/${entity.id}`,
 });
@@ -213,6 +223,10 @@ let noInit;
     assert!(capped_patterns.contains(&"/a/d/f/h/j".to_string()));
     assert!(!capped_patterns.contains(&"/z/y/x/w/v".to_string()));
     assert_eq!(helper("branchedHref"), vec!["/active/*", "/archive/*"]);
+    assert_eq!(
+        helper("switchHref"),
+        vec!["/orgs/*", "/unknown/*", "/users/*"]
+    );
     assert_eq!(helper("urlObjectHref"), vec!["/object/*"]);
     assert_eq!(helper("composedHref"), vec!["/**/settings"]);
 }
@@ -261,6 +275,11 @@ for (const item of items) {
   router.prefetch(entityHref(item));
 }
 while (next) router.replace(entityHref(next));
+switch (tab) {
+  case 'details':
+    router.push(entityHref(entity));
+    break;
+}
 "#;
     let facts = extract_route_ref_facts(source, "component.tsx");
     assert_eq!(
@@ -270,6 +289,7 @@ while (next) router.replace(entityHref(next));
             .map(|route_ref| route_ref.callee.as_str())
             .collect::<Vec<_>>(),
         vec![
+            "entityHref",
             "entityHref",
             "entityHref",
             "entityHref",
@@ -443,35 +463,6 @@ const link = <Link href={links.topicHref(topic)} />;
     assert_eq!(facts.route_helper_refs.len(), 1);
     assert_eq!(facts.route_helper_refs[0].callee, "links.topicHref");
     assert_eq!(facts.route_helper_imports[0].imported, "*");
-}
-
-#[test]
-fn ignores_shadowed_helper_calls_in_route_contexts() {
-    let source = r#"
-import { entityHref } from './entity-href';
-import * as links from './links';
-
-function Row({ entityHref, links }) {
-  return (
-    <>
-      <Link href={entityHref(row)} />
-      <Link href={links.entityHref(row)} />
-    </>
-  );
-}
-
-const link = <Link href={entityHref(entity)} />;
-const namespaceLink = <Link href={links.entityHref(entity)} />;
-"#;
-    let facts = extract_route_ref_facts(source, "component.tsx");
-    assert_eq!(
-        facts
-            .route_helper_refs
-            .iter()
-            .map(|route_ref| route_ref.callee.as_str())
-            .collect::<Vec<_>>(),
-        vec!["entityHref", "links.entityHref"]
-    );
 }
 
 #[test]
