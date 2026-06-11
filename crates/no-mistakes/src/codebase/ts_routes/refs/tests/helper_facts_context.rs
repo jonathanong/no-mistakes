@@ -58,3 +58,17 @@ fn ignores_loop_and_switch_bindings_that_shadow_route_helpers() {
         vec!["entityHref", "entityHref"]
     );
 }
+
+#[test]
+fn ignores_shadowed_fetch_and_catch_router_route_contexts() {
+    let source = route_fixture_source("route-helper-fetch-router-shadowing.tsx");
+    let facts = extract_route_ref_facts(&source, "component.tsx");
+    assert_eq!(
+        facts
+            .route_helper_refs
+            .iter()
+            .map(|route_ref| route_ref.callee.as_str())
+            .collect::<Vec<_>>(),
+        vec!["entityHref"]
+    );
+}

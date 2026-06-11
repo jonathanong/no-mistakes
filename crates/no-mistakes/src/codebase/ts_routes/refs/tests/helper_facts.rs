@@ -153,6 +153,7 @@ fn summarizes_route_helper_edge_expression_shapes() {
         helper("reassignedSwitchHref"),
         vec!["/switch/*", "/switch/*/settings"]
     );
+    assert_eq!(helper("tryHref"), vec!["/fallback/*", "/try/*"]);
     assert_eq!(helper("urlObjectHref"), vec!["/object/*"]);
 }
 

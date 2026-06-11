@@ -28,6 +28,7 @@ include!("helper_patterns_call.rs");
 include!("helper_patterns_returns.rs");
 include!("helper_patterns_switch.rs");
 include!("helper_patterns_template.rs");
+include!("helper_patterns_try.rs");
 include!("helper_patterns_utils.rs");
 include!("helper_refs.rs");
 include!("helper_refs_statements.rs");

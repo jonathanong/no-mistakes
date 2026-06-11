@@ -32,7 +32,7 @@ fn callee_is_route_context(expr: &Expression, router_bindings: &RouterBindings<'
             let name = id.name.as_str();
             router_bindings.redirects.contains(name)
                 || router_bindings.methods.contains(name)
-                || name == "fetch"
+                || (name == "fetch" && !router_bindings.fetch_shadowed)
         }
         Expression::ChainExpression(chain) => match &chain.expression {
             oxc::ast::ast::ChainElement::CallExpression(call) => {

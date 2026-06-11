@@ -106,6 +106,9 @@ fn evaluate_helper_body<'a>(
                     depth + 1,
                 ));
             }
+            Statement::TryStatement(try_stmt) => {
+                returns.extend(evaluate_helper_try_statement(try_stmt, defs, imported_helpers, env, depth + 1));
+            }
             _ => {}
         }
     }

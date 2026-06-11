@@ -10,6 +10,9 @@ fn remove_shadowed_name(name: &str, bindings: &mut RouterBindings<'_>) {
     bindings.objects.remove(name);
     bindings.methods.remove(name);
     bindings.redirects.remove(name);
+    if name == "fetch" {
+        bindings.fetch_shadowed = true;
+    }
 }
 
 fn remove_shadowed_function_binding(

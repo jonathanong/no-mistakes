@@ -70,6 +70,13 @@ export function reassignedSwitchHref(entity: { id: string }, kind: string): stri
   }
   return href;
 }
+export function tryHref(entity: { id: string }): string {
+  try {
+    return `/try/${entity.id}`;
+  } catch {
+    return `/fallback/${entity.id}`;
+  }
+}
 export const urlObjectHref = (entity: { id: string }) => ({
   pathname: `/object/${entity.id}`,
 });

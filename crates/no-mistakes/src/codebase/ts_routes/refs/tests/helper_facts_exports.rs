@@ -28,3 +28,27 @@ fn records_namespace_export_all_route_helper_imports() {
     assert_eq!(facts.route_helper_imports[0].imported, "*");
     assert_eq!(facts.route_helper_imports[0].source, "./entity-href");
 }
+
+#[test]
+fn records_imported_route_helpers_reexported_as_default() {
+    let source = route_fixture_source("route-helper-default-imported-alias.ts");
+    let facts = extract_route_ref_facts(&source, "links.ts");
+
+    assert_eq!(
+        facts
+            .route_helper_imports
+            .iter()
+            .map(|import| {
+                (
+                    import.local.as_str(),
+                    import.imported.as_str(),
+                    import.source.as_str(),
+                )
+            })
+            .collect::<Vec<_>>(),
+        vec![
+            ("default", "entityHref", "./entity-href"),
+            ("entityHref", "entityHref", "./entity-href"),
+        ]
+    );
+}

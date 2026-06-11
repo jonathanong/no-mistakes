@@ -90,4 +90,5 @@ struct RouterBindings<'a> {
     objects: HashSet<&'a str>,
     methods: HashSet<&'a str>,
     redirects: HashSet<&'a str>,
+    fetch_shadowed: bool,
 }
