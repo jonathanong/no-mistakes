@@ -50,11 +50,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         graph.dependents_of_symbol_nodes(std::slice::from_ref(&target), None, Some(&impact_edges));
     let (exports, export_nodes) = export_paths(&graph, &target, symbol, &root, &definition);
     let target_symbols = signature_target_symbols(&target_file, symbol, &export_nodes);
-    let file_import_edges = HashSet::from([
-        EdgeKind::DynamicImport,
-        EdgeKind::Require,
-        EdgeKind::WorkspaceImport,
-    ]);
+    let file_import_edges = HashSet::from([EdgeKind::DynamicImport, EdgeKind::Require]);
     let mut file_roots: Vec<_> = export_nodes
         .iter()
         .filter_map(NodeId::as_file)

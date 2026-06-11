@@ -24,57 +24,44 @@ fn signature_target_symbols(
         target_file.to_path_buf(),
         BTreeSet::from([target_symbol.to_string()]),
     )]);
-    for node in export_nodes {
-        match node {
-            NodeId::Symbol { file, symbol } => {
-                let symbol_name = namespace_reexport_target_symbol(file, symbol, target_symbol)
-                    .unwrap_or_else(|| symbol.clone());
-                target_symbols
-                    .entry(file.clone())
-                    .or_default()
-                    .insert(symbol_name);
+    let mut changed = true;
+    while changed {
+        changed = false;
+        let known_symbols: BTreeSet<String> =
+            target_symbols.values().flatten().cloned().collect();
+        for node in export_nodes {
+            match node {
+                NodeId::Symbol { file, symbol } => {
+                    let symbol_name = known_symbols
+                        .iter()
+                        .filter_map(|candidate| {
+                            namespace_reexport_target_symbol(file, symbol, candidate)
+                        })
+                        .max_by_key(|candidate| candidate.matches('.').count())
+                        .or_else(|| {
+                            (!is_namespace_reexport_symbol(file, symbol)).then(|| symbol.clone())
+                        });
+                    if let Some(symbol_name) = symbol_name {
+                        if target_symbols
+                            .entry(file.clone())
+                            .or_default()
+                            .insert(symbol_name)
+                        {
+                            changed = true;
+                        }
+                    }
+                }
+                NodeId::File(file) => {
+                    target_symbols.entry(file.clone()).or_default();
+                }
+                NodeId::Module(_) | NodeId::QueueJob { .. } => {}
             }
-            NodeId::File(file) => {
-                target_symbols.entry(file.clone()).or_default();
-            }
-            NodeId::Module(_) | NodeId::QueueJob { .. } => {}
         }
     }
     target_symbols
 }
 
-fn namespace_reexport_target_symbol(
-    file: &Path,
-    symbol: &str,
-    target_symbol: &str,
-) -> Option<String> {
-    let source = std::fs::read_to_string(file).ok()?;
-    let is_tsx = file
-        .extension()
-        .and_then(|s| s.to_str())
-        .is_some_and(|ext| ext.eq_ignore_ascii_case("tsx") || ext.eq_ignore_ascii_case("jsx"));
-    let symbols = extract_symbols(&source, is_tsx).ok()?;
-    let local = symbols.exports.iter().find_map(|export| {
-        if matches!(export.kind, ExportKind::ReExport { .. }) || export.name != symbol {
-            return None;
-        }
-        Some(export.local.as_deref().unwrap_or(&export.name))
-    });
-    if local.is_some_and(|local| {
-        symbols
-            .imports
-            .iter()
-            .any(|import| import.local == local && import.imported == "*")
-    }) {
-        return Some(format!("{symbol}.{target_symbol}"));
-    }
-    symbols.exports.iter().find_map(|export| match &export.kind {
-        ExportKind::ReExport { imported, .. } if imported == "*" && export.name == symbol => {
-            Some(format!("{symbol}.{target_symbol}"))
-        }
-        _ => None,
-    })
-}
+include!("impact_collect_target_helpers.rs");
 
 fn suggested_test_entries(
     graph: &DepGraph,
@@ -85,18 +72,27 @@ fn suggested_test_entries(
 ) -> Vec<NodeEntry> {
     let mut suggested_entries = entries.to_vec();
     let test_edges = HashSet::from([EdgeKind::TestOf]);
-    let mut production_files: BTreeSet<PathBuf> = entries
-        .iter()
-        .filter(|entry| has_file_level_import_edge(&entry.via))
-        .filter_map(|entry| entry.node.as_file())
-        .filter(|file| {
-            let file = relative_slash_path(root, file);
-            file_target_symbols
-                .get(file.as_str())
-                .is_some_and(|symbols| file_entry_uses_any_symbol(root, file.as_str(), symbols))
-        })
-        .map(Path::to_path_buf)
-        .collect();
+    let mut production_files: BTreeSet<PathBuf> = BTreeSet::new();
+    for entry in entries {
+        if has_file_level_import_edge(&entry.via) {
+            let Some(file) = entry.node.as_file() else {
+                continue;
+            };
+            let relative_file = relative_slash_path(root, file);
+            if file_target_symbols
+                .get(relative_file.as_str())
+                .is_some_and(|symbols| file_entry_uses_any_symbol(root, relative_file.as_str(), symbols))
+            {
+                production_files.insert(file.to_path_buf());
+            }
+        } else if !entry.via.contains(&EdgeKind::TestOf)
+            && matches!(entry.node, NodeId::Symbol { .. })
+        {
+            if let Some(file) = entry.node.as_file() {
+                production_files.insert(file.to_path_buf());
+            }
+        }
+    }
     for caller in production_extra_callers {
         production_files.insert(root.join(&caller.file));
     }

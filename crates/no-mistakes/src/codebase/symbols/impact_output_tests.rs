@@ -79,6 +79,35 @@ fn suggested_tests_merges_duplicate_test_files() {
 }
 
 #[test]
+fn suggested_tests_filters_file_level_edges_without_matching_target_usage() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/tests-impact-symbol/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let filter = TestFileFilter::new(&root, &NoMistakesConfig::default());
+    let entries = vec![
+        NodeEntry {
+            node: NodeId::File(root.join("dynamic-import-caller.test.mts")),
+            depth: 1,
+            via: vec![EdgeKind::DynamicImport],
+        },
+        NodeEntry {
+            node: NodeId::File(root.join("dynamic-import-unused.test.mts")),
+            depth: 1,
+            via: vec![EdgeKind::DynamicImport],
+        },
+    ];
+    let mut file_target_symbols = BTreeMap::new();
+    file_target_symbols.insert(
+        "dynamic-import-unused.test.mts".to_string(),
+        BTreeSet::from(["parseDate".to_string()]),
+    );
+
+    let tests = suggested_tests(&entries, &root, &filter, &[], &file_target_symbols);
+
+    assert!(tests.is_empty());
+}
+
+#[test]
 fn markdown_report_uses_symbol_title_when_roots_are_empty() {
     let report = SignatureImpactReport {
         roots: vec![],

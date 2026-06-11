@@ -97,3 +97,108 @@ fn signature_target_symbols_keeps_file_entries_and_ignores_non_file_nodes() {
     assert_eq!(target_symbols.get(&barrel), Some(&BTreeSet::new()));
     assert_eq!(target_symbols.len(), 2);
 }
+
+#[test]
+fn signature_target_symbols_preserves_chained_namespace_reexport_names() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/tests-impact-symbol/fixture"),
+    );
+    let target = root.join("utils.mts");
+    let namespace_barrel = root.join("namespace-date-barrel.mts");
+    let outer_barrel = root.join("namespace-outer-date-barrel.mts");
+    let extensionless_barrel = root.join("namespace-extensionless-date-barrel.mts");
+    let export_nodes = BTreeSet::from([
+        NodeId::Symbol {
+            file: namespace_barrel.clone(),
+            symbol: "dates".to_string(),
+        },
+        NodeId::Symbol {
+            file: outer_barrel.clone(),
+            symbol: "outer".to_string(),
+        },
+        NodeId::Symbol {
+            file: extensionless_barrel.clone(),
+            symbol: "extensionlessDates".to_string(),
+        },
+    ]);
+
+    let target_symbols = signature_target_symbols(&target, "parseDate", &export_nodes);
+
+    assert_eq!(
+        target_symbols.get(&namespace_barrel),
+        Some(&BTreeSet::from(["dates.parseDate".to_string()]))
+    );
+    assert_eq!(
+        target_symbols.get(&outer_barrel),
+        Some(&BTreeSet::from(["outer.dates.parseDate".to_string()]))
+    );
+    assert_eq!(
+        target_symbols.get(&extensionless_barrel),
+        Some(&BTreeSet::from(["extensionlessDates.parseDate".to_string()]))
+    );
+}
+
+#[test]
+fn namespace_target_helpers_handle_defensive_paths() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/tests-impact-symbol/fixture"),
+    );
+    let invalid = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/symbols-output/fixture/src/invalid.mts"),
+    );
+    let namespace_barrel = root.join("namespace-date-barrel.mts");
+    let mut symbols = crate::codebase::ts_symbols::FileSymbols::default();
+
+    assert!(!is_namespace_reexport_symbol(&root.join("missing.mts"), "dates"));
+    assert!(!is_namespace_reexport_symbol(&invalid, "dates"));
+    assert!(namespace_tail_applies(
+        &namespace_barrel,
+        &symbols,
+        "dates",
+        "dates.parseDate"
+    ));
+
+    symbols
+        .imports
+        .push(crate::codebase::ts_symbols::NamedImport {
+            source: "./utils.mts".to_string(),
+            imported: "*".to_string(),
+            local: "dates".to_string(),
+            line: 1,
+            is_type_only: false,
+        });
+    assert!(namespace_tail_applies(
+        &namespace_barrel,
+        &symbols,
+        "outer",
+        "dates.parseDate"
+    ));
+    assert!(!source_exports_symbol(Path::new("/"), "./missing.mts", "parseDate"));
+    assert!(!source_exports_symbol(
+        &namespace_barrel,
+        "./missing.mts",
+        "parseDate"
+    ));
+}
+
+#[test]
+fn suggested_test_entries_ignores_file_level_edges_without_file_nodes() {
+    let root = PathBuf::from("/repo");
+    let graph = crate::codebase::dependencies::graph::test_support::from_typed_maps(
+        root.clone(),
+        std::collections::HashMap::new(),
+        std::collections::HashMap::new(),
+    );
+    let entries = vec![NodeEntry {
+        node: NodeId::Module("pkg".to_string()),
+        depth: 1,
+        via: vec![EdgeKind::DynamicImport],
+    }];
+
+    let suggested = suggested_test_entries(&graph, &entries, &[], &root, &BTreeMap::new());
+
+    assert_eq!(suggested, entries);
+}

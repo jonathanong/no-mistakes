@@ -55,6 +55,8 @@ include!("tests_signature_impact_callers.rs");
 include!("tests_signature_impact_dynamic.rs");
 include!("tests_signature_impact_exports.rs");
 include!("tests_signature_impact_local_barrels.rs");
+include!("tests_signature_impact_namespaces.rs");
+include!("tests_signature_impact_validation.rs");
 
 #[test]
 fn collect_entries_surfaces_tsconfig_errors() {

@@ -21,6 +21,7 @@ fn export_paths(
                         let local_import_export = local_import_export(file, symbol, &current_symbol);
                         if location.kind == "re-export" || local_import_export {
                             frontier.push((neighbor.clone(), symbol.clone()));
+                            frontier.push((NodeId::File(file.clone()), symbol.clone()));
                             exports.insert(location);
                             export_nodes.insert(neighbor.clone());
                         }
@@ -60,7 +61,7 @@ fn local_import_export(file: &Path, symbol: &str, current_symbol: &str) -> bool 
         .is_some()
 }
 
-fn value_alias_export(
+pub(super) fn value_alias_export(
     source: &str,
     imports: &[crate::codebase::ts_symbols::NamedImport],
     export_symbol: &str,

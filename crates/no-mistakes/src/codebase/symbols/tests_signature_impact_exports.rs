@@ -16,3 +16,21 @@ fn signature_impact_classifies_value_alias_exports_as_exports() {
         entry["file"] == "namespace-value-alias-date-barrel.mts"
     }));
 }
+
+#[test]
+fn value_alias_exports_ignore_unrelated_imports() {
+    let imports = vec![crate::codebase::ts_symbols::NamedImport {
+        source: "./utils.mts".to_string(),
+        imported: "formatDate".to_string(),
+        local: "formatDate".to_string(),
+        line: 1,
+        is_type_only: false,
+    }];
+
+    assert!(!impact::value_alias_export(
+        "export const parse = formatDate;",
+        &imports,
+        "parse",
+        "parseDate"
+    ));
+}

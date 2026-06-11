@@ -5,9 +5,7 @@ fn file_entry_uses_any_symbol(root: &Path, file: &str, target_symbols: &BTreeSet
 }
 
 fn has_file_level_import_edge(via: &[EdgeKind]) -> bool {
-    via.contains(&EdgeKind::DynamicImport)
-        || via.contains(&EdgeKind::Require)
-        || via.contains(&EdgeKind::WorkspaceImport)
+    via.contains(&EdgeKind::DynamicImport) || via.contains(&EdgeKind::Require)
 }
 
 fn file_entry_uses_symbol(root: &Path, file: &str, target_symbol: &str) -> bool {
@@ -36,7 +34,7 @@ fn file_entry_uses_symbol(root: &Path, file: &str, target_symbol: &str) -> bool 
     }
     if module_bindings.iter().any(|binding| {
         let member = format!("{binding}.{target_symbol}");
-        callees.contains(&member) || source.contains(&member)
+        callees.contains(&member) || source_contains_member_name(&source, &member)
     }) {
         return true;
     }
@@ -50,6 +48,13 @@ fn direct_dynamic_member_use(source: &str, target_symbol: &str) -> bool {
         .lines()
         .filter(|line| line.contains("import(") || line.contains("require("))
         .any(|line| line.contains(&format!(").{target_symbol}")))
+}
+
+fn source_contains_member_name(source: &str, member: &str) -> bool {
+    source.match_indices(member).any(|(index, _)| {
+        let after = source[index + member.len()..].chars().next();
+        !after.is_some_and(|ch| ch.is_ascii_alphanumeric() || ch == '_' || ch == '$')
+    })
 }
 
 fn dynamic_module_bindings(source: &str) -> BTreeSet<String> {

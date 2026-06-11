@@ -181,6 +181,13 @@ fn dynamic_usage_helpers_ignore_non_module_and_malformed_bindings() {
     assert!(dynamic_module_bindings("const readDate = require('./utils.mts').parseDate;").is_empty());
     assert!(destructured_symbol_aliases("const { parseDate = await import('./utils.mts');", "parseDate").is_empty());
     assert!(member_assignment_alias("exports.value = utils.parseDate;", "parseDate").is_empty());
+    assert!(member_assignment_alias("const readDate = utils.other;", "parseDate").is_empty());
+    assert!(dynamic_symbol_aliases_in_source("const utils = await import('./utils.mts');", "dates.parseDate").is_empty());
+    assert!(source_contains_member_name("utils.parseDate(value)", "utils.parseDate"));
+    assert!(!source_contains_member_name(
+        "utils.parseDateOld(value)",
+        "utils.parseDate"
+    ));
 }
 
 #[test]
