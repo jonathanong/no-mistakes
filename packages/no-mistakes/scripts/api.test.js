@@ -85,6 +85,16 @@ test("programmatic API proxies object options through async native addon calls",
       (await api.symbols({ files: ["d.mts"], include: "both" })).options.include,
       "both",
     );
+    assert.equal(
+      (
+        await api.symbols({
+          files: ["d.mts"],
+          mode: "signature-impact",
+          symbol: "handler",
+        })
+      ).options.mode,
+      "signature-impact",
+    );
     assert.equal((await api.fetches({ targets: ["/users"] })).command, "fetches");
     assert.equal((await api.check({ tsconfig: "tsconfig.json" })).command, "check");
     assert.deepEqual(

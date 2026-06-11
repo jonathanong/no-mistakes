@@ -11,6 +11,8 @@ use super::options::{
 };
 use super::*;
 
+include!("tests_symbols_impact.rs");
+
 fn fixture_root(name: &str) -> String {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

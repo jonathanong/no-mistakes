@@ -309,6 +309,34 @@ fn analyze_project_shared_dependents_uses_symbol_graph_when_included() {
 }
 
 #[test]
+fn analyze_project_dispatches_signature_impact_symbols_report() {
+    let output = analyze_project_json_impl(
+        json!({
+            "root": fixture_root("tests-impact-symbol"),
+            "reports": [{
+                "type": "symbols",
+                "id": "impact",
+                "files": ["utils.mts"],
+                "mode": "signature-impact",
+                "symbol": "parseDate"
+            }]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let value: Value = serde_json::from_str(&output).unwrap();
+    let result = &value["reports"][0]["result"];
+
+    assert_eq!(value["reports"][0]["id"], "impact");
+    assert_eq!(result["symbol"], "parseDate");
+    assert!(result["testCallers"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|entry| { entry["file"] == "helper-export.test.mts" }));
+}
+
+#[test]
 fn analyze_project_shared_symbol_dependents_expands_file_roots() {
     let output = analyze_project_json_impl(
         json!({

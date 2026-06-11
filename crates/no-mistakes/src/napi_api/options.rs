@@ -5,7 +5,7 @@ use serde::Deserialize;
 use serde_json::Value;
 
 use crate::codebase::dependencies::RelationshipArg;
-use crate::codebase::symbols::{ExportKindArg, Include};
+use crate::codebase::symbols::{ExportKindArg, Include, SymbolsMode};
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
@@ -116,6 +116,9 @@ pub(crate) struct SymbolOptions {
     pub(crate) files: Vec<String>,
     pub(crate) root: Option<String>,
     pub(crate) tsconfig: Option<String>,
+    pub(crate) config: Option<String>,
+    pub(crate) mode: Option<String>,
+    pub(crate) symbol: Option<String>,
     pub(crate) kinds: Vec<String>,
     pub(crate) include: Option<String>,
 }
@@ -189,6 +192,8 @@ pub(crate) fn parse_include(value: Option<&str>) -> AnyhowResult<Include> {
         value => bail!("unknown include value: {value}"),
     }
 }
+
+include!("options_symbols.rs");
 
 pub(crate) fn parse_queue_direction(
     value: Option<&str>,

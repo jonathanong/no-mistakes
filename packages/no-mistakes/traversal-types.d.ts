@@ -68,6 +68,9 @@ export interface SymbolsOptions {
   files: string[];
   root?: string;
   tsconfig?: string;
+  config?: string;
+  mode?: "list" | "signature-impact";
+  symbol?: string;
   kinds?: ExportKind[];
   include?: "exports" | "imports" | "both";
 }
@@ -101,6 +104,42 @@ export interface SymbolFile {
 export interface SymbolsResult {
   roots: string[];
   files: SymbolFile[];
+}
+
+export interface SignatureImpactLocation {
+  file: string;
+  symbol: string;
+  line: number;
+  kind: string;
+}
+
+export interface SignatureImpactCaller {
+  file: string;
+  symbol?: string;
+  depth: number;
+  via: string[];
+}
+
+export interface SignatureImpactTest {
+  file: string;
+  depth: number;
+  via: string[];
+}
+
+export interface SignatureImpactWarning {
+  type: string;
+  message: string;
+}
+
+export interface SignatureImpactResult {
+  roots: string[];
+  symbol: string;
+  definition: SignatureImpactLocation;
+  exports: SignatureImpactLocation[];
+  productionCallers: SignatureImpactCaller[];
+  testCallers: SignatureImpactCaller[];
+  suggestedTests: SignatureImpactTest[];
+  warnings: SignatureImpactWarning[];
 }
 
 export interface ProjectOptions {

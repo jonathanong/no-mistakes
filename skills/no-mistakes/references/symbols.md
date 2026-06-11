@@ -12,6 +12,7 @@ Find every named export and (optionally) named import of one or more TS/JS files
 ```
 no-mistakes symbols <FILE>... [--root <PATH>] [--tsconfig <FILE>]
         [--kind <KIND>]... [--include exports|imports|both]
+        [--mode list|signature-impact] [--symbol <SYMBOL>]
         [--format <FORMAT>] [--json] [-j <N>]
 ```
 
@@ -32,6 +33,9 @@ no-mistakes symbols src/utils.mts --root /path/to/project --kind function
 
 # Multiple files at once, JSON output
 no-mistakes symbols src/a.mts src/b.mts --root /path/to/project --json
+
+# Signature-changing refactor impact report
+no-mistakes symbols src/api.mts --symbol handler --mode signature-impact --json
 ```
 
 ## Flags
@@ -42,6 +46,8 @@ no-mistakes symbols src/a.mts src/b.mts --root /path/to/project --json
 | `--tsconfig <FILE>` | auto-detected | Path to tsconfig.json |
 | `--kind <KIND>` | all | Only include exports of this kind (repeatable). Values: `function`, `class`, `const`, `let`, `var`, `type`, `interface`, `enum`, `default`, `re-export` |
 | `--include <SECTION>` | `exports` | What to emit: `exports`, `imports`, or `both` |
+| `--mode <MODE>` | `list` | `list` keeps the normal symbol listing; `signature-impact` reports definition, exports, callers, and suggested tests for one symbol |
+| `--symbol <SYMBOL>` | none | Required with `--mode signature-impact` |
 | `--format <FORMAT>` | human (TTY) / json (pipe) | Output format: `json`, `md`, `yml`, `paths`, `human` |
 | `--json` | false | Shorthand for `--format json` |
 | `-j / --jobs <N>` | all cores | Worker threads. Honors `RAYON_NUM_THREADS`. |
@@ -80,5 +86,7 @@ src/queues.mts:3:withRetry
 - For imports, `resolved` is similarly project-relative when resolvable; absent for bare specifiers
 - Default `--include` is `exports` because the most common question is "what does this module expose?"
 - `--kind` filter only applies to exports, not imports
+- `--mode signature-impact` requires exactly one file and one exported symbol
+- In signature-impact mode, `--format paths` emits only suggested test files
 - TSX/JSX files are auto-detected by extension and parsed with the appropriate grammar
 - Only top-level statements are walked — nested or conditional exports are not surfaced

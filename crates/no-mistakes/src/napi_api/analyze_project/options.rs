@@ -12,7 +12,7 @@ pub(super) fn symbols_options(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,
 ) -> AnyhowResult<String> {
-    let value = merged_options(request, options, true, false, false)?;
+    let value = merged_options(request, options, true, false, true)?;
     let _: SymbolOptions = serde_json::from_value(value.clone())?;
     Ok(serde_json::to_string(&value)?)
 }

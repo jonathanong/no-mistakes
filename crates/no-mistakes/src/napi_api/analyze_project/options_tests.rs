@@ -41,7 +41,7 @@ fn report_options_merge_top_level_defaults() {
         format!("{}/tsconfig.json", fixture_root("simple"))
     );
     assert!(symbols.get("filters").is_none());
-    assert!(symbols.get("config").is_none());
+    assert_eq!(symbols["config"], "no-mistakes.json");
 
     let playwright: Value =
         serde_json::from_str(&options::playwright_options(&options.reports[1], &options).unwrap())

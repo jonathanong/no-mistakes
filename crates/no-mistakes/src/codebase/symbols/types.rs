@@ -6,6 +6,14 @@ pub enum Include {
     Both,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, clap::ValueEnum, Default)]
+#[clap(rename_all = "kebab-case")]
+pub enum SymbolsMode {
+    #[default]
+    List,
+    SignatureImpact,
+}
+
 /// `--kind` filter values, validated by clap at parse time. Maps 1:1 onto
 /// `crate::codebase::ts_symbols::ExportKind` so a typo like `--kind functoin` is rejected
 /// with a helpful error instead of silently producing an empty result set.
@@ -58,6 +66,18 @@ pub struct SymbolsArgs {
     /// If omitted, searches upward from --root.
     #[arg(long, value_name = "FILE")]
     pub tsconfig: Option<PathBuf>,
+
+    /// Path to no-mistakes config for test classification in impact mode.
+    #[arg(long, value_name = "FILE")]
+    pub config: Option<PathBuf>,
+
+    /// Report mode. `list` preserves the default symbols output.
+    #[arg(long, value_enum, default_value_t = SymbolsMode::List)]
+    pub mode: SymbolsMode,
+
+    /// Exported symbol to analyze with `--mode signature-impact`.
+    #[arg(long, value_name = "SYMBOL")]
+    pub symbol: Option<String>,
 
     /// Only include exports of this kind. Repeatable. Validated by clap.
     #[arg(long = "kind", value_enum, value_name = "KIND")]
