@@ -103,6 +103,12 @@ fn reference_wildcards_match_route_definition_segments() {
 }
 
 #[test]
+fn trailing_reference_wildcard_matches_one_definition_segment() {
+    assert!(matches("/crawler/*", "/crawler/:id"));
+    assert!(!matches("/crawler/*", "/crawler/:id/edit"));
+}
+
+#[test]
 fn reference_param_does_not_match_static_definition_segment() {
     assert!(!matches("/users/:param", "/users/settings"));
 }

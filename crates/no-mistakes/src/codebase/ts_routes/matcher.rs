@@ -48,7 +48,7 @@ fn matches_segments(reference: &[&str], defined: &[&str]) -> bool {
         ([ref_head, ref_rest @ ..], defined)
             if (*ref_head == "**" || *ref_head == "*") && ref_rest.is_empty() =>
         {
-            *ref_head == "**" || !defined.is_empty()
+            *ref_head == "**" || defined.len() == 1
         }
         (reference, ["**", def_rest @ ..]) => {
             def_rest.is_empty()
