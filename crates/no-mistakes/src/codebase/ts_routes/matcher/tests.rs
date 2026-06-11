@@ -98,6 +98,8 @@ fn double_star_matches_empty_reference_tail_only_when_final() {
 #[test]
 fn reference_wildcards_match_route_definition_segments() {
     assert!(matches("/crawler/*", "/crawler/:id"));
+    assert!(matches("/files/*", "/files/*"));
+    assert!(matches("/files/*", "/files/**"));
     assert!(matches("/communities/*/posts", "/communities/:slug/posts"));
     assert!(!matches("/users/*", "/users/settings"));
     assert!(!matches("/*/*/tags/*", "/reviews/:id/tags/:tagType"));
@@ -107,6 +109,16 @@ fn reference_wildcards_match_route_definition_segments() {
 fn trailing_reference_wildcard_matches_one_definition_segment() {
     assert!(matches("/crawler/*", "/crawler/:id"));
     assert!(!matches("/crawler/*", "/crawler/:id/edit"));
+}
+
+#[test]
+fn trailing_reference_wildcard_branch_covers_dynamic_definition_shapes() {
+    assert!(matches_segments(&["*"], &[":id"]));
+    assert!(matches_segments(&["*"], &["*"]));
+    assert!(matches_segments(&["*"], &["**"]));
+    assert!(!matches_segments(&["*"], &["settings"]));
+    assert!(!matches_segments(&["*"], &[":id", "edit"]));
+    assert!(matches_segments(&["**"], &["settings", "edit"]));
 }
 
 #[test]

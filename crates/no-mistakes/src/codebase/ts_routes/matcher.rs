@@ -48,8 +48,13 @@ fn matches_segments(reference: &[&str], defined: &[&str]) -> bool {
         ([ref_head, ref_rest @ ..], defined)
             if (*ref_head == "**" || *ref_head == "*") && ref_rest.is_empty() =>
         {
-            *ref_head == "**"
-                || matches!(defined, [segment] if is_dynamic_definition_segment(segment))
+            if *ref_head == "**" {
+                true
+            } else if let [segment] = defined {
+                is_dynamic_definition_segment(segment)
+            } else {
+                false
+            }
         }
         (reference, ["**", def_rest @ ..]) => {
             def_rest.is_empty()
