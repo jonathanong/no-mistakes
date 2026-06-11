@@ -3,6 +3,7 @@ fn collect_route_context_helper_ref<'a>(
     source: &str,
     file: &str,
     router_bindings: &RouterBindings<'a>,
+    helper_bindings: &RouteHelperBindings,
     refs: &mut Vec<RouteHelperRef>,
 ) {
     if !callee_is_route_context(&call.callee, router_bindings) {
@@ -15,7 +16,14 @@ fn collect_route_context_helper_ref<'a>(
     let Some(expr) = first.as_expression() else {
         return;
     };
-    push_helper_refs_from_expression(expr, source, file, call.span.start as usize, refs);
+    push_helper_refs_from_expression(
+        expr,
+        source,
+        file,
+        call.span.start as usize,
+        helper_bindings,
+        refs,
+    );
 }
 
 fn callee_is_route_context(expr: &Expression, router_bindings: &RouterBindings<'_>) -> bool {
@@ -68,15 +76,18 @@ fn push_helper_refs_from_expression(
     source: &str,
     file: &str,
     offset: usize,
+    helper_bindings: &RouteHelperBindings,
     refs: &mut Vec<RouteHelperRef>,
 ) {
     let mut callees = Vec::new();
     collect_route_helper_callee_names(expr, &mut callees);
     let line = byte_offset_to_line(source, offset);
-    refs.extend(callees.into_iter().map(|callee| RouteHelperRef {
-        callee,
-        file: file.to_string(),
-        line,
+    refs.extend(callees.into_iter().filter_map(|callee| {
+        helper_callee_is_bound(&callee, helper_bindings).then(|| RouteHelperRef {
+            callee,
+            file: file.to_string(),
+            line,
+        })
     }));
 }
 

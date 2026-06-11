@@ -6,7 +6,10 @@ struct HelperDef<'a> {
     expression_body: bool,
 }
 
-fn collect_route_helpers<'a>(program: &'a Program<'a>) -> Vec<RouteHelper> {
+fn collect_route_helpers<'a>(
+    program: &'a Program<'a>,
+    imports: &[RouteHelperImport],
+) -> Vec<RouteHelper> {
     let mut defs = HashMap::new();
     let mut default_alias = None;
     for stmt in &program.body {
@@ -22,10 +25,11 @@ fn collect_route_helpers<'a>(program: &'a Program<'a>) -> Vec<RouteHelper> {
         );
     }
 
+    let imported_helpers = collect_route_helper_bindings(&[], imports);
     let mut helpers: Vec<RouteHelper> = defs
         .values()
         .filter_map(|def| {
-            let patterns = evaluate_helper_def(def, &defs, &HashMap::new(), 0);
+            let patterns = evaluate_helper_def(def, &defs, &imported_helpers, &HashMap::new(), 0);
             (!patterns.is_empty()).then(|| RouteHelper {
                 name: def.name.to_string(),
                 patterns,

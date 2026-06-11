@@ -1,6 +1,7 @@
 fn evaluate_template_literal<'a>(
     tpl: &'a TemplateLiteral<'a>,
     defs: &HashMap<&'a str, HelperDef<'a>>,
+    imported_helpers: &RouteHelperBindings,
     env: &HashMap<String, Vec<String>>,
     depth: usize,
 ) -> Vec<String> {
@@ -15,7 +16,8 @@ fn evaluate_template_literal<'a>(
             value.push_str(cooked);
         }
         if let Some(expr) = tpl.expressions.get(index) {
-            let expr_values = evaluate_route_expression(expr, defs, env, depth + 1);
+            let expr_values =
+                evaluate_route_expression(expr, defs, imported_helpers, env, depth + 1);
             values = concat_candidates(&values, &expr_values);
         }
     }

@@ -116,6 +116,17 @@ fn route_helper_patterns_from_import(
     let reexport = target_facts
         .route_helper_imports
         .iter()
-        .find(|candidate| candidate.local == helper_name && candidate.imported != "*")?;
-    route_helper_patterns_from_import(&target, &reexport.imported, reexport, facts, resolver, depth + 1)
+        .find(|candidate| candidate.local == helper_name && candidate.imported != "*")
+        .or_else(|| {
+            target_facts
+                .route_helper_imports
+                .iter()
+                .find(|candidate| candidate.local == "*" && candidate.imported == "*")
+        })?;
+    let next_helper = if reexport.local == "*" {
+        helper_name
+    } else {
+        &reexport.imported
+    };
+    route_helper_patterns_from_import(&target, next_helper, reexport, facts, resolver, depth + 1)
 }

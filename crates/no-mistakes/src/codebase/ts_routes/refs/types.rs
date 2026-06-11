@@ -67,9 +67,15 @@ pub fn extract_route_ref_facts_from_program<'a>(
         collect_from_statement(stmt, source, file, &mut router_bindings, &mut refs);
     }
 
-    let route_helpers = collect_route_helpers(program);
     let route_helper_imports = collect_route_helper_imports(program);
-    let route_helper_refs = collect_route_helper_refs_from_program(program, source, file);
+    let route_helpers = collect_route_helpers(program, &route_helper_imports);
+    let route_helper_refs = collect_route_helper_refs_from_program(
+        program,
+        source,
+        file,
+        &route_helpers,
+        &route_helper_imports,
+    );
 
     RouteRefFacts {
         route_refs: refs,

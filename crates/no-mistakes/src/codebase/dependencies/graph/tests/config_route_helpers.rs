@@ -198,3 +198,55 @@ fn route_helper_ref_patterns_follow_named_reexport_barrels() {
         vec!["/prefix/*/suffix/*".to_string()]
     );
 }
+
+#[test]
+fn route_helper_ref_patterns_follow_star_reexport_barrels() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
+    let tsconfig =
+        crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
+    let client = root.join("src/client.ts");
+    let barrel = root.join("src/links.ts");
+    let helper_file = root.join("src/entity-href.ts");
+
+    let mut facts = TsFactMap::new();
+    facts.insert(
+        helper_file,
+        TsFileFacts {
+            route_helpers: vec![crate::codebase::ts_routes::refs::RouteHelper {
+                name: "entityHref".to_string(),
+                patterns: vec!["/prefix/*/suffix/*".to_string()],
+            }],
+            ..TsFileFacts::default()
+        },
+    );
+    facts.insert(
+        barrel,
+        TsFileFacts {
+            route_helper_imports: vec![crate::codebase::ts_routes::refs::RouteHelperImport {
+                local: "*".to_string(),
+                imported: "*".to_string(),
+                source: "./entity-href".to_string(),
+            }],
+            ..TsFileFacts::default()
+        },
+    );
+    let file_facts = TsFileFacts {
+        route_helper_imports: vec![crate::codebase::ts_routes::refs::RouteHelperImport {
+            local: "entityHref".to_string(),
+            imported: "entityHref".to_string(),
+            source: "./links".to_string(),
+        }],
+        route_helper_refs: vec![crate::codebase::ts_routes::refs::RouteHelperRef {
+            callee: "entityHref".to_string(),
+            file: "src/client.ts".to_string(),
+            line: 1,
+        }],
+        ..TsFileFacts::default()
+    };
+
+    assert_eq!(
+        route_helper_ref_patterns(&client, &file_facts, &facts, &resolver),
+        vec!["/prefix/*/suffix/*".to_string()]
+    );
+}

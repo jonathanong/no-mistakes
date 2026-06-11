@@ -54,6 +54,13 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
                     });
                 }
             }
+            Statement::ExportAllDeclaration(export) if !export.export_kind.is_type() => {
+                imports.push(RouteHelperImport {
+                    local: "*".to_string(),
+                    imported: "*".to_string(),
+                    source: export.source.value.as_str().to_string(),
+                });
+            }
             _ => {}
         }
     }
@@ -66,13 +73,28 @@ fn collect_route_helper_refs_from_program<'a>(
     program: &'a Program<'a>,
     source: &str,
     file: &str,
+    helpers: &[RouteHelper],
+    imports: &[RouteHelperImport],
 ) -> Vec<RouteHelperRef> {
     let mut router_bindings = collect_import_bindings(&program.body);
     collect_router_bindings_for_scope(&program.body, &mut router_bindings);
+    let mut helper_bindings = collect_route_helper_bindings(helpers, imports);
+    let local_helpers = helpers
+        .iter()
+        .map(|helper| helper.name.clone())
+        .collect::<HashSet<_>>();
 
     let mut refs = Vec::new();
     for stmt in &program.body {
-        collect_helper_refs_from_statement(stmt, source, file, &mut router_bindings, &mut refs);
+        collect_helper_refs_from_statement(
+            stmt,
+            source,
+            file,
+            &mut router_bindings,
+            &mut helper_bindings,
+            &local_helpers,
+            &mut refs,
+        );
     }
     refs.sort_by(|a, b| (&a.file, a.line, &a.callee).cmp(&(&b.file, b.line, &b.callee)));
     refs.dedup();

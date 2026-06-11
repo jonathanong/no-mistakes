@@ -3,6 +3,8 @@ fn collect_helper_refs_from_jsx_element<'a>(
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,
+    helper_bindings: &mut RouteHelperBindings,
+    local_helpers: &HashSet<String>,
     refs: &mut Vec<RouteHelperRef>,
 ) {
     for attr_item in &jsx_elem.opening_element.attributes {
@@ -22,11 +24,26 @@ fn collect_helper_refs_from_jsx_element<'a>(
         let Some(expr) = container.expression.as_expression() else {
             continue;
         };
-        push_helper_refs_from_expression(expr, source, file, attr.span.start as usize, refs);
+        push_helper_refs_from_expression(
+            expr,
+            source,
+            file,
+            attr.span.start as usize,
+            helper_bindings,
+            refs,
+        );
     }
 
     for child in &jsx_elem.children {
-        collect_helper_refs_from_jsx_child(child, source, file, router_bindings, refs);
+        collect_helper_refs_from_jsx_child(
+            child,
+            source,
+            file,
+            router_bindings,
+            helper_bindings,
+            local_helpers,
+            refs,
+        );
     }
 }
 
@@ -35,20 +52,46 @@ fn collect_helper_refs_from_jsx_child<'a>(
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,
+    helper_bindings: &mut RouteHelperBindings,
+    local_helpers: &HashSet<String>,
     refs: &mut Vec<RouteHelperRef>,
 ) {
     match child {
         JSXChild::Element(elem) => {
-            collect_helper_refs_from_jsx_element(elem, source, file, router_bindings, refs);
+            collect_helper_refs_from_jsx_element(
+                elem,
+                source,
+                file,
+                router_bindings,
+                helper_bindings,
+                local_helpers,
+                refs,
+            );
         }
         JSXChild::Fragment(frag) => {
             for child in &frag.children {
-                collect_helper_refs_from_jsx_child(child, source, file, router_bindings, refs);
+                collect_helper_refs_from_jsx_child(
+                    child,
+                    source,
+                    file,
+                    router_bindings,
+                    helper_bindings,
+                    local_helpers,
+                    refs,
+                );
             }
         }
         JSXChild::ExpressionContainer(container) => {
             if let Some(expr) = container.expression.as_expression() {
-                collect_helper_refs_from_expression(expr, source, file, router_bindings, refs);
+                collect_helper_refs_from_expression(
+                    expr,
+                    source,
+                    file,
+                    router_bindings,
+                    helper_bindings,
+                    local_helpers,
+                    refs,
+                );
             }
         }
         _ => {}
