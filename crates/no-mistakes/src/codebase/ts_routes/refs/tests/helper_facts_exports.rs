@@ -96,7 +96,35 @@ fn records_imported_route_helpers_wrapped_by_exported_helpers() {
             .collect::<Vec<_>>(),
         vec![
             ("entityHref", "entityHref", "./entity-href"),
+            ("functionExpressionHref", "entityHref", "./entity-href"),
+            ("functionHref", "entityHref", "./entity-href"),
             ("href", "entityHref", "./entity-href"),
+            ("topicHref", "topicHref", "./entity-href"),
+            ("topicLink", "topicHref", "./entity-href"),
+        ]
+    );
+}
+
+#[test]
+fn records_namespace_route_helper_imports_reexported_under_local_aliases() {
+    let source = route_fixture_source("route-helper-namespace-local-reexport-alias.ts");
+    let facts = extract_route_ref_facts(&source, "links.ts");
+
+    assert_eq!(
+        facts
+            .route_helper_imports
+            .iter()
+            .map(|import| {
+                (
+                    import.local.as_str(),
+                    import.imported.as_str(),
+                    import.source.as_str(),
+                )
+            })
+            .collect::<Vec<_>>(),
+        vec![
+            ("links", "*", "./entity-href"),
+            ("routes", "*", "./entity-href"),
         ]
     );
 }

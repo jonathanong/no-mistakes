@@ -89,10 +89,8 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
             Statement::ExportNamedDeclaration(export)
                 if export.source.is_none() && !export.export_kind.is_type() =>
             {
-                if let Some(forwarded) =
-                    exported_imported_helper_wrapper(export.declaration.as_ref(), &imports)
-                {
-                    imports.push(forwarded);
+                if let Some(declaration) = export.declaration.as_ref() {
+                    imports.extend(exported_imported_helper_wrapper(declaration, &imports));
                 }
             }
             _ => {}
@@ -114,7 +112,7 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
     for (local, exported) in named_aliases {
         let forwarded = imports
             .iter()
-            .find(|import| import.local == local && import.imported != "*")
+            .find(|import| import.local == local)
             .cloned();
         if let Some(import) = forwarded {
             imports.push(RouteHelperImport {

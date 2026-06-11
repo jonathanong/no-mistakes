@@ -1,29 +1,31 @@
 fn exported_imported_helper_wrapper(
-    declaration: Option<&oxc::ast::ast::Declaration<'_>>,
+    declaration: &oxc::ast::ast::Declaration<'_>,
     imports: &[RouteHelperImport],
-) -> Option<RouteHelperImport> {
-    match declaration? {
+) -> Vec<RouteHelperImport> {
+    match declaration {
         oxc::ast::ast::Declaration::FunctionDeclaration(func) => {
-            let id = func.id.as_ref()?;
-            let call = single_return_call(func.body.as_ref()?)?;
-            import_for_helper_call(id.name.as_str(), call, imports)
+            func.id
+                .as_ref()
+                .zip(func.body.as_ref())
+                .and_then(|(id, body)| {
+                    single_return_call(body)
+                        .and_then(|call| import_for_helper_call(id.name.as_str(), call, imports))
+                })
+                .into_iter()
+                .collect()
         }
         oxc::ast::ast::Declaration::VariableDeclaration(var_decl) => {
-            for decl in &var_decl.declarations {
-                let Some(local) = binding_identifier_name(&decl.id) else {
-                    continue;
-                };
-                let Some(init) = &decl.init else {
-                    continue;
-                };
-                if let Some(import) = imported_helper_wrapper_from_expression(local, init, imports)
-                {
-                    return Some(import);
-                }
-            }
-            None
+            var_decl
+                .declarations
+                .iter()
+                .filter_map(|decl| {
+                    let local = binding_identifier_name(&decl.id)?;
+                    let init = decl.init.as_ref()?;
+                    imported_helper_wrapper_from_expression(local, init, imports)
+                })
+                .collect()
         }
-        _ => None,
+        _ => Vec::new(),
     }
 }
 
@@ -34,13 +36,19 @@ fn imported_helper_wrapper_from_expression(
 ) -> Option<RouteHelperImport> {
     match expr {
         Expression::ArrowFunctionExpression(arrow) if arrow.expression => {
-            let Statement::ExpressionStatement(expr_stmt) = arrow.body.statements.first()? else {
-                return None;
-            };
-            let Expression::CallExpression(call) = &expr_stmt.expression else {
-                return None;
-            };
-            import_for_helper_call(local, call, imports)
+            arrow
+                .body
+                .statements
+                .first()
+                .and_then(|stmt| match stmt {
+                    Statement::ExpressionStatement(expr_stmt) => Some(&expr_stmt.expression),
+                    _ => None,
+                })
+                .and_then(|expr| match expr {
+                    Expression::CallExpression(call) => Some(call),
+                    _ => None,
+                })
+                .and_then(|call| import_for_helper_call(local, call, imports))
         }
         Expression::FunctionExpression(func) => {
             import_for_helper_call(local, single_return_call(func.body.as_ref()?)?, imports)

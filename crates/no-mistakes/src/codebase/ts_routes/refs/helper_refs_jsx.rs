@@ -15,23 +15,32 @@ fn collect_helper_refs_from_jsx_element<'a>(
             JSXAttributeName::Identifier(id) => id.name.as_str(),
             JSXAttributeName::NamespacedName(_) => continue,
         };
-        if attr_name != "href" && attr_name != "to" {
-            continue;
-        }
         let Some(JSXAttributeValue::ExpressionContainer(container)) = &attr.value else {
             continue;
         };
         let Some(expr) = container.expression.as_expression() else {
             continue;
         };
-        push_helper_refs_from_expression(
-            expr,
-            source,
-            file,
-            attr.span.start as usize,
-            helper_bindings,
-            refs,
-        );
+        if attr_name == "href" || attr_name == "to" {
+            push_helper_refs_from_expression(
+                expr,
+                source,
+                file,
+                attr.span.start as usize,
+                helper_bindings,
+                refs,
+            );
+        } else {
+            collect_helper_refs_from_expression(
+                expr,
+                source,
+                file,
+                router_bindings,
+                helper_bindings,
+                local_helpers,
+                refs,
+            );
+        }
     }
 
     for child in &jsx_elem.children {

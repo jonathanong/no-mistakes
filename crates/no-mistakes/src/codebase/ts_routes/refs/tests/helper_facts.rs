@@ -228,6 +228,7 @@ fn records_helper_calls_only_in_route_contexts() {
             "entityHref",
             "entityHref",
             "entityHref",
+            "entityHref",
             "entityHref"
         ]
     );

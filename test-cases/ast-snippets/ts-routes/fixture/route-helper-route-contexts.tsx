@@ -7,6 +7,7 @@ api.fetch(entityHref(entity));
 const link = <Link href={entityHref(entity)} />;
 const router = useRouter();
 router.push(entityHref.invalid(entity));
+const button = <button onClick={() => router.push(entityHref(entity))} />;
 router.push(entityHref(entity));
 router.push(entityHref(fallbackHref(row)));
 router.push(isActive(entityHref(row)) ? '/dashboard' : '/login');
