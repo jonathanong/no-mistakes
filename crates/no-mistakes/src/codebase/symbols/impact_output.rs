@@ -119,4 +119,7 @@ fn merge_via(target: &mut Vec<&'static str>, source: &[&'static str]) {
     target.dedup();
 }
 
+#[cfg(test)]
+mod impact_output_tests;
+
 include!("impact_text.rs");

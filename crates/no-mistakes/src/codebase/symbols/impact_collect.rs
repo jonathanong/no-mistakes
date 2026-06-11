@@ -140,3 +140,6 @@ fn caller_sort_key(caller: &CallerEntry) -> (usize, &str, &str) {
         caller.symbol.as_deref().unwrap_or_default(),
     )
 }
+
+#[cfg(test)]
+mod impact_collect_tests;
