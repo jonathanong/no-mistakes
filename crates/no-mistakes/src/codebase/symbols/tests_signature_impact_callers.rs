@@ -6,6 +6,9 @@ fn signature_impact_includes_same_file_exported_callers() {
     assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "utils.mts" && entry["symbol"] == "parseAndFormatDate"
     }));
+    assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "utils.mts" && entry["symbol"] == "mapParsedDates"
+    }));
 }
 
 #[test]
@@ -126,6 +129,9 @@ fn signature_impact_ignores_import_only_files_without_symbol_usage() {
 
     assert!(!v["productionCallers"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "unused-import.mts" && entry.get("symbol").is_none()
+    }));
+    assert!(!v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "dynamic-import-wrapper-consumer.mts" && entry.get("symbol").is_none()
     }));
 }
 

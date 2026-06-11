@@ -44,11 +44,12 @@ fn local_caller_entries(
             .function_calls
             .iter()
             .chain(facts.symbol_references.iter().filter(|call| {
+                let Some(caller) = call.caller.as_deref() else {
+                    return false;
+                };
                 !target_symbols.contains_key(&file)
-                    || call
-                        .caller
-                        .as_deref()
-                        .is_some_and(|caller| target_function_call_callers.contains(caller))
+                    || target_function_call_callers.contains(caller)
+                    || !caller_is_target_export(symbols, &file, target_symbols, caller)
             }))
         {
             if !matches_local_callee(&call.callee, &local_names) {
@@ -70,12 +71,6 @@ fn local_caller_entries(
         }
     }
     callers.into_values().collect()
-}
-
-fn matches_local_callee(callee: &str, local_names: &BTreeSet<String>) -> bool {
-    local_names
-        .iter()
-        .any(|local| callee == local || callee.strip_prefix(local).is_some_and(|suffix| suffix.starts_with('.')))
 }
 
 struct CallerEntriesContext<'a> {

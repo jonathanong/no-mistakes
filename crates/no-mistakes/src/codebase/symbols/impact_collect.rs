@@ -67,7 +67,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         let symbols_for_root = target_symbols.get(root_file).cloned().unwrap_or_default();
         let file_entries = graph.dependents_of(
             std::slice::from_ref(&file_root),
-            None,
+            Some(1),
             Some(&file_import_edges),
         );
         if !symbols_for_root.is_empty() {

@@ -149,6 +149,10 @@ test("programmatic API proxies object options through async native addon calls",
 test("analyzeProject declarations mirror report-specific runtime requirements", () => {
   const declarations = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
   assert.match(declarations, /export type SymbolsSignatureImpactOptions = SymbolsOptions & \{/);
+  assert.match(
+    readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
+    /export function symbols\(options: SymbolsOptions\): Promise<SymbolsResult \| SignatureImpactResult>;/,
+  );
   assert.match(declarations, /mode: "signature-impact";\n  symbol: string;/);
   assert.match(
     declarations,
