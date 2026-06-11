@@ -22,7 +22,7 @@ fn collect_helper_refs_from_jsx_element<'a>(
         let Some(expr) = container.expression.as_expression() else {
             continue;
         };
-        push_helper_ref_from_expression(expr, source, file, attr.span.start as usize, refs);
+        push_helper_refs_from_expression(expr, source, file, attr.span.start as usize, refs);
     }
 
     for child in &jsx_elem.children {

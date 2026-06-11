@@ -53,14 +53,10 @@ impl TsFactContext {
     }
 
     pub fn matches_queue_factory(&self, path: &Path) -> bool {
-        self.matches_optional_glob(path, &self.queue_factory_glob)
-    }
-
-    fn matches_optional_glob(&self, path: &Path, glob: &Option<GlobSet>) -> bool {
-        let Some(glob) = glob else {
-            return false;
-        };
-        self.matches_glob(path, glob)
+        self.queue_factory_glob
+            .as_ref()
+            .map(|glob| self.matches_glob(path, glob))
+            .unwrap_or(true)
     }
 
     pub fn matches_glob(&self, path: &Path, glob: &GlobSet) -> bool {

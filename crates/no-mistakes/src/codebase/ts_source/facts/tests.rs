@@ -180,6 +180,14 @@ fn queue_factory_context_requires_specifier_and_function_even_when_glob_matches(
 }
 
 #[test]
+fn queue_factory_context_without_glob_matches_all_paths() {
+    let ts = fixture("imports.ts");
+    let context = TsFactContext::new(ts.parent().unwrap());
+
+    assert!(context.matches_queue_factory(&ts));
+}
+
+#[test]
 fn collect_ts_facts_skips_non_indexable_and_unreadable_files() {
     let ts = fixture("imports.ts");
     let txt = fixture("plain.txt");

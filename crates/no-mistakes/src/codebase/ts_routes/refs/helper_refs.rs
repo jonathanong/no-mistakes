@@ -1,43 +1,60 @@
 fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelperImport> {
     let mut imports = Vec::new();
     for stmt in &program.body {
-        let Statement::ImportDeclaration(import) = stmt else {
-            continue;
-        };
-        if import.import_kind.is_type() {
-            continue;
-        }
-        let source = import.source.value.as_str();
-        let Some(specifiers) = &import.specifiers else {
-            continue;
-        };
-        for specifier in specifiers {
-            match specifier {
-                ImportDeclarationSpecifier::ImportSpecifier(specifier)
-                    if !specifier.import_kind.is_type() =>
-                {
-                    imports.push(RouteHelperImport {
-                        local: specifier.local.name.as_str().to_string(),
-                        imported: specifier.imported.name().to_string(),
-                        source: source.to_string(),
-                    });
+        match stmt {
+            Statement::ImportDeclaration(import) => {
+                if import.import_kind.is_type() {
+                    continue;
                 }
-                ImportDeclarationSpecifier::ImportDefaultSpecifier(specifier) => {
-                    imports.push(RouteHelperImport {
-                        local: specifier.local.name.as_str().to_string(),
-                        imported: "default".to_string(),
-                        source: source.to_string(),
-                    });
+                let source = import.source.value.as_str();
+                let Some(specifiers) = &import.specifiers else {
+                    continue;
+                };
+                for specifier in specifiers {
+                    match specifier {
+                        ImportDeclarationSpecifier::ImportSpecifier(specifier)
+                            if !specifier.import_kind.is_type() =>
+                        {
+                            imports.push(RouteHelperImport {
+                                local: specifier.local.name.as_str().to_string(),
+                                imported: specifier.imported.name().to_string(),
+                                source: source.to_string(),
+                            });
+                        }
+                        ImportDeclarationSpecifier::ImportDefaultSpecifier(specifier) => {
+                            imports.push(RouteHelperImport {
+                                local: specifier.local.name.as_str().to_string(),
+                                imported: "default".to_string(),
+                                source: source.to_string(),
+                            });
+                        }
+                        ImportDeclarationSpecifier::ImportNamespaceSpecifier(specifier) => {
+                            imports.push(RouteHelperImport {
+                                local: specifier.local.name.as_str().to_string(),
+                                imported: "*".to_string(),
+                                source: source.to_string(),
+                            });
+                        }
+                        _ => {}
+                    }
                 }
-                ImportDeclarationSpecifier::ImportNamespaceSpecifier(specifier) => {
-                    imports.push(RouteHelperImport {
-                        local: specifier.local.name.as_str().to_string(),
-                        imported: "*".to_string(),
-                        source: source.to_string(),
-                    });
-                }
-                _ => {}
             }
+            Statement::ExportNamedDeclaration(export)
+                if export.source.is_some() && !export.export_kind.is_type() =>
+            {
+                let source = export.source.as_ref().expect("checked source").value.as_str();
+                for specifier in &export.specifiers {
+                    if specifier.export_kind.is_type() {
+                        continue;
+                    }
+                    imports.push(RouteHelperImport {
+                        local: specifier.exported.name().to_string(),
+                        imported: specifier.local.name().to_string(),
+                        source: source.to_string(),
+                    });
+                }
+            }
+            _ => {}
         }
     }
     imports.sort_by(|a, b| (&a.local, &a.imported, &a.source).cmp(&(&b.local, &b.imported, &b.source)));

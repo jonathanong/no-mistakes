@@ -79,9 +79,7 @@ fn imported_route_helper_patterns(
         return imports
             .iter()
             .find(|import| import.local == namespace && import.imported == "*")
-            .and_then(|import| {
-                route_helper_patterns_from_import(path, member, import, facts, resolver)
-            })
+            .and_then(|import| route_helper_patterns_from_import(path, member, import, facts, resolver, 0))
             .unwrap_or_default();
     }
 
@@ -89,7 +87,7 @@ fn imported_route_helper_patterns(
         .iter()
         .find(|import| import.local == callee && import.imported != "*")
         .and_then(|import| {
-            route_helper_patterns_from_import(path, &import.imported, import, facts, resolver)
+            route_helper_patterns_from_import(path, &import.imported, import, facts, resolver, 0)
         })
         .unwrap_or_default()
 }
@@ -100,12 +98,24 @@ fn route_helper_patterns_from_import(
     import: &crate::codebase::ts_routes::refs::RouteHelperImport,
     facts: &dyn TsFactLookup,
     resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
+    depth: usize,
 ) -> Option<Vec<String>> {
+    if depth > 4 {
+        return None;
+    }
     let target = resolver.resolve(&import.source, path)?;
     let target_facts = facts.get_ts_facts(&target)?;
-    target_facts
+    if let Some(patterns) = target_facts
         .route_helpers
         .iter()
         .find(|helper| helper.name == helper_name)
         .map(|helper| helper.patterns.clone())
+    {
+        return Some(patterns);
+    }
+    let reexport = target_facts
+        .route_helper_imports
+        .iter()
+        .find(|candidate| candidate.local == helper_name && candidate.imported != "*")?;
+    route_helper_patterns_from_import(&target, &reexport.imported, reexport, facts, resolver, depth + 1)
 }

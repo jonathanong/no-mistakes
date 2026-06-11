@@ -211,6 +211,7 @@ import { entityHref } from './entity-href';
 import { type Entity } from './entity-href';
 
 const loose = entityHref(entity);
+api.fetch(entityHref(entity));
 const link = <Link href={entityHref(entity)} />;
 const router = useRouter();
 router.push(entityHref(entity));
@@ -241,6 +242,51 @@ const optionalMember = links?.entityHref;
             "entityHref",
             "entityHref",
             "entityHref"
+        ]
+    );
+}
+
+#[test]
+fn records_all_helper_calls_inside_route_context_expressions() {
+    let source = r#"
+import { aHref, bHref } from './entity-href';
+
+const link = <Link href={flag ? aHref(a) : bHref(b)} />;
+const objectLink = <Link href={{ pathname: flag ? aHref(a) : bHref(b) }} />;
+const router = useRouter();
+router.push(flag ? aHref(a) : bHref(b));
+router.replace(aHref(a) || bHref(b));
+"#;
+    let facts = extract_route_ref_facts(source, "component.tsx");
+    assert_eq!(
+        facts
+            .route_helper_refs
+            .iter()
+            .map(|route_ref| route_ref.callee.as_str())
+            .collect::<Vec<_>>(),
+        vec!["aHref", "bHref", "aHref", "bHref", "aHref", "bHref", "aHref", "bHref"]
+    );
+}
+
+#[test]
+fn records_named_reexport_route_helper_imports() {
+    let source = "export { entityHref, otherHref as renamedHref } from './entity-href';";
+    let facts = extract_route_ref_facts(source, "links.ts");
+    assert_eq!(
+        facts
+            .route_helper_imports
+            .iter()
+            .map(|import| {
+                (
+                    import.local.as_str(),
+                    import.imported.as_str(),
+                    import.source.as_str(),
+                )
+            })
+            .collect::<Vec<_>>(),
+        vec![
+            ("entityHref", "entityHref", "./entity-href"),
+            ("renamedHref", "otherHref", "./entity-href"),
         ]
     );
 }

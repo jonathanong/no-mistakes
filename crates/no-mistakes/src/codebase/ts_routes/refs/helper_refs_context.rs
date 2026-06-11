@@ -15,7 +15,7 @@ fn collect_route_context_helper_ref<'a>(
     let Some(expr) = first.as_expression() else {
         return;
     };
-    push_helper_ref_from_expression(expr, source, file, call.span.start as usize, refs);
+    push_helper_refs_from_expression(expr, source, file, call.span.start as usize, refs);
 }
 
 fn callee_is_route_context(expr: &Expression, router_bindings: &RouterBindings<'_>) -> bool {
@@ -48,7 +48,11 @@ fn member_is_route_context(
         return false;
     };
     if property == "fetch" {
-        return true;
+        return matches!(
+            member.object(),
+            Expression::Identifier(ident)
+                if matches!(ident.name.as_str(), "globalThis" | "window" | "self")
+        );
     }
     if property != "push" && property != "replace" && property != "prefetch" {
         return false;
@@ -59,21 +63,57 @@ fn member_is_route_context(
     )
 }
 
-fn push_helper_ref_from_expression(
+fn push_helper_refs_from_expression(
     expr: &Expression,
     source: &str,
     file: &str,
     offset: usize,
     refs: &mut Vec<RouteHelperRef>,
 ) {
-    let Some(callee) = route_helper_callee_name(expr) else {
-        return;
-    };
-    refs.push(RouteHelperRef {
+    let mut callees = Vec::new();
+    collect_route_helper_callee_names(expr, &mut callees);
+    let line = byte_offset_to_line(source, offset);
+    refs.extend(callees.into_iter().map(|callee| RouteHelperRef {
         callee,
         file: file.to_string(),
-        line: byte_offset_to_line(source, offset),
-    });
+        line,
+    }));
+}
+
+fn collect_route_helper_callee_names(expr: &Expression, callees: &mut Vec<String>) {
+    if let Some(callee) = route_helper_callee_name(expr) {
+        callees.push(callee);
+        return;
+    }
+    match expr {
+        Expression::ConditionalExpression(cond) => {
+            collect_route_helper_callee_names(&cond.consequent, callees);
+            collect_route_helper_callee_names(&cond.alternate, callees);
+        }
+        Expression::LogicalExpression(logical) => {
+            collect_route_helper_callee_names(&logical.left, callees);
+            collect_route_helper_callee_names(&logical.right, callees);
+        }
+        Expression::ObjectExpression(obj) => {
+            for prop in &obj.properties {
+                let ObjectPropertyKind::ObjectProperty(prop) = prop else {
+                    continue;
+                };
+                if property_key_is_pathname(&prop.key) {
+                    collect_route_helper_callee_names(&prop.value, callees);
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
+fn property_key_is_pathname(key: &PropertyKey<'_>) -> bool {
+    match key {
+        PropertyKey::StaticIdentifier(id) => id.name == "pathname",
+        PropertyKey::StringLiteral(s) => s.value == "pathname",
+        _ => false,
+    }
 }
 
 fn route_helper_callee_name(expr: &Expression) -> Option<String> {
