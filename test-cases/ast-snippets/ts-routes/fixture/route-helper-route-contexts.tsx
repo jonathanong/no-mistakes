@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { entityHref } from './entity-href';
+import { entityHref, fallbackHref } from './entity-href';
 import { type Entity } from './entity-href';
 
 const loose = entityHref(entity);
@@ -8,6 +8,8 @@ const link = <Link href={entityHref(entity)} />;
 const router = useRouter();
 router.push(entityHref.invalid(entity));
 router.push(entityHref(entity));
+router.push(entityHref(fallbackHref(row)));
+router.push(isActive(entityHref(row)) ? '/dashboard' : '/login');
 void router.push(entityHref(entity));
 redirect(entityHref(entity));
 fetch(entityHref(entity));
@@ -17,6 +19,7 @@ redirect?.(entityHref(entity));
 globalThis?.fetch(entityHref(entity));
 router?.[method](entityHref(entity));
 router.push(entityHref?.(entity));
+router.push(links?.[method]);
 const optionalMember = links?.entityHref;
 for (const item of items) {
   router.prefetch(entityHref(item));

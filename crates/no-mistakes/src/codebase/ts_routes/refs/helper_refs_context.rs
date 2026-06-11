@@ -80,7 +80,7 @@ fn push_helper_refs_from_expression(
     refs: &mut Vec<RouteHelperRef>,
 ) {
     let mut callees = Vec::new();
-    collect_route_helper_callee_names(expr, &mut callees);
+    collect_route_helper_callee_names(expr, helper_bindings, &mut callees);
     let line = byte_offset_to_line(source, offset);
     refs.extend(callees.into_iter().filter_map(|callee| {
         bound_helper_callee_name(&callee, helper_bindings).map(|callee| RouteHelperRef {
@@ -89,86 +89,6 @@ fn push_helper_refs_from_expression(
             callee,
         })
     }));
-}
-
-fn collect_route_helper_callee_names(expr: &Expression, callees: &mut Vec<String>) {
-    match expr {
-        Expression::CallExpression(call) => {
-            if let Some(callee) = route_helper_callee_name_from_callee(&call.callee) {
-                callees.push(callee);
-            }
-            for arg in &call.arguments {
-                if let Some(expr) = arg.as_expression() {
-                    collect_route_helper_callee_names(expr, callees);
-                }
-            }
-        }
-        Expression::ChainExpression(chain) => match &chain.expression {
-            oxc::ast::ast::ChainElement::CallExpression(call) => {
-                if let Some(callee) = route_helper_callee_name_from_callee(&call.callee) {
-                    callees.push(callee);
-                }
-                for arg in &call.arguments {
-                    if let Some(expr) = arg.as_expression() {
-                        collect_route_helper_callee_names(expr, callees);
-                    }
-                }
-            }
-            other => {
-                if let Some(member) = other.as_member_expression() {
-                    if let Some(callee) = route_helper_callee_name_from_member(member) {
-                        callees.push(callee);
-                    }
-                }
-            }
-        },
-        Expression::BinaryExpression(binary) => {
-            collect_route_helper_callee_names(&binary.left, callees);
-            collect_route_helper_callee_names(&binary.right, callees);
-        }
-        Expression::TemplateLiteral(tpl) => {
-            for expr in &tpl.expressions {
-                collect_route_helper_callee_names(expr, callees);
-            }
-        }
-        Expression::ParenthesizedExpression(paren) => {
-            collect_route_helper_callee_names(&paren.expression, callees);
-        }
-        Expression::TSAsExpression(ts_as) => {
-            collect_route_helper_callee_names(&ts_as.expression, callees);
-        }
-        Expression::TSTypeAssertion(ts_assertion) => {
-            collect_route_helper_callee_names(&ts_assertion.expression, callees);
-        }
-        Expression::TSNonNullExpression(ts_nn) => {
-            collect_route_helper_callee_names(&ts_nn.expression, callees);
-        }
-        Expression::TSSatisfiesExpression(ts_sat) => {
-            collect_route_helper_callee_names(&ts_sat.expression, callees);
-        }
-        Expression::AwaitExpression(await_expr) => {
-            collect_route_helper_callee_names(&await_expr.argument, callees);
-        }
-        Expression::ConditionalExpression(cond) => {
-            collect_route_helper_callee_names(&cond.consequent, callees);
-            collect_route_helper_callee_names(&cond.alternate, callees);
-        }
-        Expression::LogicalExpression(logical) => {
-            collect_route_helper_callee_names(&logical.left, callees);
-            collect_route_helper_callee_names(&logical.right, callees);
-        }
-        Expression::ObjectExpression(obj) => {
-            for prop in &obj.properties {
-                let ObjectPropertyKind::ObjectProperty(prop) = prop else {
-                    continue;
-                };
-                if property_key_is_pathname(&prop.key) {
-                    collect_route_helper_callee_names(&prop.value, callees);
-                }
-            }
-        }
-        _ => {}
-    }
 }
 
 fn property_key_is_pathname(key: &PropertyKey<'_>) -> bool {

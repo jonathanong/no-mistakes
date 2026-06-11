@@ -47,6 +47,7 @@ include!("helper_refs_expression_objects.rs");
 include!("helper_refs_expression_wrappers.rs");
 include!("helper_refs_jsx.rs");
 include!("helper_refs_context.rs");
+include!("helper_refs_context_callees.rs");
 
 #[cfg(test)]
 mod tests;
