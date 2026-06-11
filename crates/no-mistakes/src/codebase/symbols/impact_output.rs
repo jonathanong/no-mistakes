@@ -73,10 +73,10 @@ fn warnings(suggested_tests: &[TestSuggestion]) -> Vec<ImpactWarning> {
 fn export_location(file: &Path, root: &Path, symbol: &str) -> Result<Option<SymbolLocation>> {
     let source =
         std::fs::read_to_string(file).with_context(|| format!("reading {}", file.display()))?;
-    let is_tsx = matches!(
-        file.extension().and_then(|s| s.to_str()),
-        Some("tsx") | Some("jsx")
-    );
+    let is_tsx = file
+        .extension()
+        .and_then(|s| s.to_str())
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("tsx") || ext.eq_ignore_ascii_case("jsx"));
     let symbols = extract_symbols(&source, is_tsx)
         .with_context(|| format!("extracting symbols from {}", file.display()))?;
     Ok(symbols
@@ -106,19 +106,6 @@ fn caller_parts(node: &NodeId, root: &Path) -> Option<(String, Option<String>)> 
             Some((relative_slash_path(root, file), Some(symbol.clone())))
         }
         NodeId::Module(_) | NodeId::QueueJob { .. } => None,
-    }
-}
-
-fn node_name(node: &NodeId, root: &Path) -> String {
-    match node {
-        NodeId::File(path) => relative_slash_path(root, path),
-        NodeId::Symbol { file, symbol } => {
-            format!("{}#{}", relative_slash_path(root, file), symbol)
-        }
-        NodeId::Module(specifier) => specifier.clone(),
-        NodeId::QueueJob { queue_file, job } => {
-            format!("{}#{}", relative_slash_path(root, queue_file), job)
-        }
     }
 }
 

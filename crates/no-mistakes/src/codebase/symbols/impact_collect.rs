@@ -34,8 +34,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
     };
     let entries = graph.dependents_of_symbol_nodes(std::slice::from_ref(&target), None, None);
 
-    let exports = export_paths(&graph, &target, &root, &definition);
-    let export_nodes = export_node_names(&exports);
+    let (exports, export_nodes) = export_paths(&graph, &target, &root, &definition);
     let suggested_tests = suggested_tests(&entries, &root, &test_filter);
 
     Ok(SignatureImpactReport {
@@ -55,10 +54,11 @@ fn export_paths(
     target: &NodeId,
     root: &Path,
     definition: &SymbolLocation,
-) -> Vec<SymbolLocation> {
+) -> (Vec<SymbolLocation>, BTreeSet<NodeId>) {
     let mut exports = BTreeSet::from([definition.clone()]);
+    let mut export_nodes = BTreeSet::from([target.clone()]);
     let mut frontier = vec![target.clone()];
-    let mut seen = BTreeSet::from([node_name(target, root)]);
+    let mut seen = BTreeSet::from([target.clone()]);
     while let Some(node) = frontier.pop() {
         let Some(neighbors) = graph.dependents_of_node(&node) else {
             continue;
@@ -67,7 +67,7 @@ fn export_paths(
             let NodeId::Symbol { file, symbol } = neighbor else {
                 continue;
             };
-            if !seen.insert(node_name(neighbor, root)) {
+            if !seen.insert(neighbor.clone()) {
                 continue;
             }
             let Some(location) = export_location(file, root, symbol).ok().flatten() else {
@@ -76,17 +76,11 @@ fn export_paths(
             if location.kind == "re-export" {
                 frontier.push(neighbor.clone());
                 exports.insert(location);
+                export_nodes.insert(neighbor.clone());
             }
         }
     }
-    exports.into_iter().collect()
-}
-
-fn export_node_names(exports: &[SymbolLocation]) -> BTreeSet<String> {
-    exports
-        .iter()
-        .map(|location| format!("{}#{}", location.file, location.symbol))
-        .collect()
+    (exports.into_iter().collect(), export_nodes)
 }
 
 fn caller_entries(
@@ -94,16 +88,16 @@ fn caller_entries(
     root: &Path,
     test_filter: &TestFileFilter,
     want_tests: bool,
-    export_nodes: &BTreeSet<String>,
+    export_nodes: &BTreeSet<NodeId>,
 ) -> Vec<CallerEntry> {
     let mut by_key: BTreeMap<(String, Option<String>), CallerEntry> = BTreeMap::new();
     for entry in entries.iter().filter(|entry| entry.depth == 1) {
+        if export_nodes.contains(&entry.node) {
+            continue;
+        }
         let Some((file, symbol)) = caller_parts(&entry.node, root) else {
             continue;
         };
-        if export_nodes.contains(&node_name(&entry.node, root)) {
-            continue;
-        }
         let is_test = entry
             .node
             .as_file()
