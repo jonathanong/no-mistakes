@@ -38,15 +38,50 @@ export function localBranchHref(entity: { id: string }, archived: boolean): stri
   }
   return `/active-local/${entity.id}`;
 }
+export function nestedStatementHref(entity: { id: string }, kind: string): string {
+  if (kind === 'block') {
+    {
+      const { id: localId } = entity;
+      const href = `/nested-block/${entity.id}`;
+      return href;
+    }
+  } else if (kind === 'switch') {
+    switch (kind) {
+      case 'switch':
+        return `/nested-switch/${entity.id}`;
+    }
+  } else {
+    try {
+      return `/nested-try/${entity.id}`;
+    } catch {
+      return `/nested-catch/${entity.id}`;
+    }
+  }
+  return `/nested-fallback/${entity.id}`;
+}
 export function reassignedHref(entity: { id: string }, tab?: string): string {
   let href = `/users/${entity.id}`;
   if (tab) href += `/tabs/${tab}`;
+  return href;
+}
+export function assignedHref(entity: { id: string }, tab?: string): string {
+  let href = `/assigned/${entity.id}`;
+  if (tab) href = `/assigned/${entity.id}/tabs/${tab}`;
   return href;
 }
 export function topLevelAssignedHref(entity: { id: string }): string {
   let href = `/top/${entity.id}`;
   href += '/edit';
   return href;
+}
+export function memberAssignmentIgnoredHref(entity: { id: string }): string {
+  let href = `/member-assignment/${entity.id}`;
+  target.href = `/ignored-member-assignment/${entity.id}`;
+  return href;
+}
+export function destructuredLocalHref(entity: { id: string }): string {
+  const { id } = entity;
+  return `/destructured/${id}`;
 }
 export function reassignedBranchHref(entity: { id: string }, kind: string): string {
   let href = `/items/${entity.id}`;
@@ -87,6 +122,11 @@ export function switchAllBranchesAssignedHref(entity: { id: string }, kind: stri
   }
   return href;
 }
+export function emptySwitchHref(entity: { id: string }, kind: string): string {
+  let href = `/empty-switch/${entity.id}`;
+  switch (kind) {}
+  return href;
+}
 export function tryHref(entity: { id: string }): string {
   try {
     return `/try/${entity.id}`;
@@ -104,6 +144,10 @@ export function tryFinallyHref(entity: { id: string }): string {
 }
 export const urlObjectHref = (entity: { id: string }) => ({
   pathname: `/object/${entity.id}`,
+});
+export const spreadObjectHref = (entity: { id: string }) => ({
+  ...base,
+  pathname: `/spread/${entity.id}`,
 });
 import { entityHref } from './entity-href';
 export const composedHref = (entity: { id: string }) => `${entityHref(entity)}/settings`;

@@ -5,6 +5,7 @@ const href = entityHref;
 const router = useRouter();
 router.push(href(entity));
 router.replace(links.entityHref(entity));
+router.replace(links?.entityHref);
 try {
   router.push(entityHref(entity));
 } catch (entityHref) {

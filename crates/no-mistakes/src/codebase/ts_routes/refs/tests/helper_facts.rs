@@ -138,10 +138,29 @@ fn summarizes_route_helper_edge_expression_shapes() {
         vec!["/active-local/*", "/archive-local/*"]
     );
     assert_eq!(
+        helper("nestedStatementHref"),
+        vec![
+            "/nested-block/*",
+            "/nested-catch/*",
+            "/nested-fallback/*",
+            "/nested-switch/*",
+            "/nested-try/*"
+        ]
+    );
+    assert_eq!(
         helper("reassignedHref"),
         vec!["/users/*", "/users/*/tabs/*"]
     );
+    assert_eq!(
+        helper("assignedHref"),
+        vec!["/assigned/*", "/assigned/*/tabs/*"]
+    );
     assert_eq!(helper("topLevelAssignedHref"), vec!["/top/*/edit"]);
+    assert_eq!(
+        helper("memberAssignmentIgnoredHref"),
+        vec!["/member-assignment/*"]
+    );
+    assert_eq!(helper("destructuredLocalHref"), vec!["/destructured/*"]);
     assert_eq!(
         helper("reassignedBranchHref"),
         vec!["/items/*/a", "/items/*/b"]
@@ -158,9 +177,11 @@ fn summarizes_route_helper_edge_expression_shapes() {
         helper("switchAllBranchesAssignedHref"),
         vec!["/switch-all/*/default", "/switch-all/*/settings"]
     );
+    assert_eq!(helper("emptySwitchHref"), vec!["/empty-switch/*"]);
     assert_eq!(helper("tryHref"), vec!["/fallback/*", "/try/*"]);
     assert_eq!(helper("tryFinallyHref"), vec!["/finally/*"]);
     assert_eq!(helper("urlObjectHref"), vec!["/object/*"]);
+    assert_eq!(helper("spreadObjectHref"), vec!["/spread/*"]);
 }
 
 #[test]
@@ -320,49 +341,76 @@ fn records_namespace_helper_calls_in_route_contexts() {
     assert_eq!(facts.route_helper_imports[0].imported, "*");
 }
 
-#[test]
-fn recognizes_optional_member_expressions_as_route_contexts() {
+fn with_route_fixture_var_init<T>(
+    name: &str,
+    index: usize,
+    analyze: impl for<'a> FnOnce(&'a Expression<'a>, &'a Program<'a>) -> T,
+) -> T {
     let allocator = Allocator::default();
-    let source = "const router = useRouter(); const maybePush = router?.push;";
-    let ret = Parser::new(&allocator, source, SourceType::ts()).parse();
-    let mut bindings = collect_import_bindings(&ret.program.body);
-    collect_router_bindings_for_scope(&ret.program.body, &mut bindings);
-    let Statement::VariableDeclaration(var_decl) = &ret.program.body[1] else {
+    let source = route_fixture_source(name);
+    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
+    let Statement::VariableDeclaration(var_decl) = &ret.program.body[index] else {
         panic!("expected variable declaration");
     };
     let expr = var_decl.declarations[0]
         .init
         .as_ref()
         .expect("expected initializer");
+    analyze(expr, &ret.program)
+}
 
-    assert!(callee_is_route_context(expr, &bindings));
+#[test]
+fn recognizes_optional_member_expressions_as_route_contexts() {
+    with_route_fixture_var_init(
+        "route-helper-optional-route-context.ts",
+        1,
+        |expr, program| {
+            let mut bindings = collect_import_bindings(&program.body);
+            collect_router_bindings_for_scope(&program.body, &mut bindings);
+            assert!(callee_is_route_context(expr, &bindings));
+        },
+    );
+}
+
+#[test]
+fn recognizes_optional_call_expressions_as_route_contexts() {
+    with_route_fixture_var_init(
+        "route-helper-optional-route-context.ts",
+        2,
+        |expr, program| {
+            let mut bindings = collect_import_bindings(&program.body);
+            collect_router_bindings_for_scope(&program.body, &mut bindings);
+            assert!(callee_is_route_context(expr, &bindings));
+        },
+    );
 }
 
 #[test]
 fn recognizes_optional_member_expressions_as_helper_callees() {
-    let allocator = Allocator::default();
-    let source = "const maybeHref = links?.entityHref;";
-    let ret = Parser::new(&allocator, source, SourceType::ts()).parse();
-    let Statement::VariableDeclaration(var_decl) = &ret.program.body[0] else {
-        panic!("expected variable declaration");
-    };
-    let expr = var_decl.declarations[0]
-        .init
-        .as_ref()
-        .expect("expected initializer");
+    with_route_fixture_var_init("route-helper-optional-helper-callee.ts", 0, |expr, _| {
+        assert_eq!(
+            route_helper_callee_name_from_callee(expr),
+            Some("links.entityHref".to_string())
+        );
+    });
+}
 
-    assert_eq!(
-        route_helper_callee_name_from_callee(expr),
-        Some("links.entityHref".to_string())
-    );
+#[test]
+fn recognizes_optional_call_expressions_as_helper_callees() {
+    with_route_fixture_var_init("route-helper-optional-helper-callee.ts", 1, |expr, _| {
+        assert_eq!(
+            route_helper_callee_name_from_callee(expr),
+            Some("links.entityHref".to_string())
+        );
+    });
 }
 
 #[test]
 fn extracts_route_refs_from_existing_program() {
     let allocator = Allocator::default();
-    let source = "fetch('/program-route');";
-    let ret = Parser::new(&allocator, source, SourceType::ts()).parse();
-    let refs = extract_route_refs_from_program(&ret.program, source, "program.ts");
+    let source = route_fixture_source("route-helper-program-route.ts");
+    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
+    let refs = extract_route_refs_from_program(&ret.program, &source, "program.ts");
 
     assert_eq!(refs.len(), 1);
     assert_eq!(refs[0].pattern, "/program-route");

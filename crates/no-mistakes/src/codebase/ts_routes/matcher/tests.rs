@@ -114,6 +114,8 @@ fn trailing_reference_wildcard_matches_one_definition_segment() {
 #[test]
 fn trailing_reference_wildcard_branch_covers_dynamic_definition_shapes() {
     assert!(matches_segments(&["*"], &[":id"]));
+    assert!(matches_segments(&["*", "posts"], &[":id", "posts"]));
+    assert!(matches_segments(&["*", "posts"], &["*", "posts"]));
     assert!(matches_segments(&["*"], &["*"]));
     assert!(matches_segments(&["*"], &["**"]));
     assert!(!matches_segments(&["*"], &["settings"]));

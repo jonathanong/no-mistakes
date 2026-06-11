@@ -3,6 +3,10 @@ import { fetch } from './client';
 
 const router = useRouter();
 fetch(entityHref(row));
+{
+  const fetch = customFetch;
+  fetch(entityHref(row));
+}
 try {
   router.push(entityHref(row));
 } catch (router) {
