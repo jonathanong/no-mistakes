@@ -12,6 +12,7 @@ fn local_caller_entries(
         .map(Path::to_path_buf)
         .collect();
     let files: Vec<_> = files.into_iter().collect();
+    let workspace = crate::codebase::workspaces::load(root).unwrap_or_default();
     let facts = crate::codebase::ts_source::facts::collect_ts_facts(
         &files,
         crate::codebase::ts_source::facts::TsFactPlan::imports_and_symbols(),
@@ -26,7 +27,7 @@ fn local_caller_entries(
             .symbols
             .as_ref()
             .expect("imports_and_symbols fact plan collects symbols");
-        let local_names = target_local_names(symbols, &file, target_symbols, tsconfig);
+        let local_names = target_local_names(symbols, &file, target_symbols, tsconfig, &workspace);
         if local_names.is_empty() {
             continue;
         }
@@ -68,6 +69,7 @@ struct CallerEntriesContext<'a> {
     root: &'a Path,
     test_filter: &'a TestFileFilter,
     export_nodes: &'a BTreeSet<NodeId>,
+    target_symbol: &'a str,
 }
 
 fn caller_entries(
@@ -101,9 +103,15 @@ fn caller_entries(
         };
         if matches!(entry.node, NodeId::File(_))
             && symbol.is_none()
-            && !entry.via.contains(&EdgeKind::DynamicImport)
+            && !(entry.via.contains(&EdgeKind::DynamicImport)
+                || entry.via.contains(&EdgeKind::Require))
             && !entry.via.contains(&EdgeKind::TestOf)
             && !extra_file_callers.contains(file.as_str())
+        {
+            continue;
+        }
+        if (entry.via.contains(&EdgeKind::DynamicImport) || entry.via.contains(&EdgeKind::Require))
+            && !file_entry_uses_symbol(context.root, file.as_str(), context.target_symbol)
         {
             continue;
         }
@@ -122,6 +130,33 @@ fn caller_entries(
     let mut callers: Vec<_> = by_key.into_values().collect();
     callers.sort_by(|a, b| caller_sort_key(a).cmp(&caller_sort_key(b)));
     callers
+}
+
+fn file_entry_uses_symbol(root: &Path, file: &str, target_symbol: &str) -> bool {
+    let path = root.join(file);
+    let mut facts_by_file = crate::codebase::ts_source::facts::collect_ts_facts(
+        std::slice::from_ref(&path),
+        crate::codebase::ts_source::facts::TsFactPlan::imports_and_symbols(),
+    );
+    let extracted_usage = facts_by_file.remove(&path).is_some_and(|facts| {
+        facts
+            .function_calls
+            .iter()
+            .chain(facts.symbol_references.iter())
+            .any(|call| {
+                call.callee == target_symbol
+                    || call
+                        .callee
+                        .rsplit_once('.')
+                        .is_some_and(|(_, member)| member == target_symbol)
+            })
+    });
+    extracted_usage
+        || std::fs::read_to_string(path)
+            .is_ok_and(|source| {
+                source.contains(&format!(".{target_symbol}"))
+                    || source.contains(&format!("{target_symbol}("))
+            })
 }
 
 fn merge_caller_entry(

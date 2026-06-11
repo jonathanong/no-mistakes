@@ -134,8 +134,23 @@ fn signature_impact_keeps_dynamic_import_file_callers() {
     let out = run_capture(impact_args("parseDate", Format::Json));
     let v: serde_json::Value = serde_json::from_str(&out).unwrap();
 
+    assert!(v["productionCallers"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|entry| { entry["file"] == "dynamic-import-caller.mts" }));
+    assert!(!v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "dynamic-import-unused.mts" && entry.get("symbol").is_none()
+    }));
+}
+
+#[test]
+fn signature_impact_keeps_require_file_callers() {
+    let out = run_capture(impact_args("parseDate", Format::Json));
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+
     assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
-        entry["file"] == "dynamic-import-caller.mts" && entry.get("symbol").is_none()
+        entry["file"] == "require-caller.mts" && entry.get("symbol").is_none()
     }));
 }
 
@@ -156,5 +171,15 @@ fn signature_impact_keeps_private_callers_in_mixed_reexport_files() {
 
     assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "mixed-date-barrel.mts" && entry.get("symbol").is_none()
+    }));
+}
+
+#[test]
+fn signature_impact_recovers_workspace_import_private_callers() {
+    let out = run_capture(impact_args("parseDate", Format::Json));
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+
+    assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "workspace-private-caller.mts" && entry.get("symbol").is_none()
     }));
 }

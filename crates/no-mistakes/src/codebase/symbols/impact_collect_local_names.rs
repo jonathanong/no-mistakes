@@ -3,6 +3,7 @@ fn target_local_names(
     file: &Path,
     target_symbols: &BTreeMap<PathBuf, BTreeSet<String>>,
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
+    workspace: &crate::codebase::workspaces::WorkspaceMap,
 ) -> BTreeSet<String> {
     if let Some(exported_symbols) = target_symbols.get(file) {
         let names: BTreeSet<_> = symbols
@@ -32,10 +33,9 @@ fn target_local_names(
             if import.is_type_only {
                 return None;
             }
-            let exported_symbols =
-                resolve_import(&import.source, file, tsconfig).and_then(|resolved| {
-                    target_symbols.get(&resolved)
-                })?;
+            let exported_symbols = resolve_import(&import.source, file, tsconfig)
+                .or_else(|| workspace.resolve_specifier_from(&import.source, file))
+                .and_then(|resolved| target_symbols.get(&resolved))?;
             if exported_symbols.is_empty() {
                 return None;
             }

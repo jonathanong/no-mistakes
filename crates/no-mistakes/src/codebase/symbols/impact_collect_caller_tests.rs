@@ -42,6 +42,7 @@ fn caller_entries_filters_export_nodes_and_non_file_nodes() {
         root,
         test_filter: &filter,
         export_nodes: &export_nodes,
+        target_symbol: "parseDate",
     };
 
     let production = caller_entries(&entries, &context, false, &[]);
@@ -64,6 +65,7 @@ fn caller_entries_merges_duplicate_callers_and_sorts() {
         root,
         test_filter: &filter,
         export_nodes: &export_nodes,
+        target_symbol: "beta",
     };
     let entries = vec![
         NodeEntry {
@@ -80,7 +82,7 @@ fn caller_entries_merges_duplicate_callers_and_sorts() {
                 symbol: "alpha".to_string(),
             },
             depth: 1,
-            via: vec![EdgeKind::Require],
+            via: vec![EdgeKind::Import],
         },
         NodeEntry {
             node: NodeId::Symbol {
@@ -88,7 +90,7 @@ fn caller_entries_merges_duplicate_callers_and_sorts() {
                 symbol: "beta".to_string(),
             },
             depth: 1,
-            via: vec![EdgeKind::DynamicImport],
+            via: vec![EdgeKind::Import],
         },
     ];
 
@@ -102,8 +104,30 @@ fn caller_entries_merges_duplicate_callers_and_sorts() {
 
     assert_eq!(callers.len(), 2);
     assert_eq!(callers[0].file, "src/a.mts");
-    assert_eq!(callers[0].via, vec!["require", "symbol"]);
+    assert_eq!(callers[0].via, vec!["import", "symbol"]);
     assert_eq!(callers[1].file, "src/b.mts");
     assert_eq!(callers[1].depth, 1);
-    assert_eq!(callers[1].via, vec!["dynamic-import", "import"]);
+    assert_eq!(callers[1].via, vec!["import"]);
+}
+
+#[test]
+fn file_entry_uses_symbol_checks_extracted_and_alias_member_uses() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/tests-impact-symbol/fixture");
+
+    assert!(file_entry_uses_symbol(
+        &root,
+        "require-caller.mts",
+        "parseDate"
+    ));
+    assert!(file_entry_uses_symbol(
+        &root,
+        "dynamic-import-caller.mts",
+        "parseDate"
+    ));
+    assert!(!file_entry_uses_symbol(
+        &root,
+        "dynamic-import-unused.mts",
+        "parseDate"
+    ));
 }

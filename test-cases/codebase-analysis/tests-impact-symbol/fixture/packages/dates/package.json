@@ -1,0 +1,5 @@
+{
+  "name": "@repo/dates",
+  "private": true,
+  "main": "index.mts"
+}

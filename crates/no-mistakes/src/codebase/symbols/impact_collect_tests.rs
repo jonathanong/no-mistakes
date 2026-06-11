@@ -64,13 +64,14 @@ fn target_local_names_skips_type_only_imports_and_empty_export_sets() {
         }],
     };
     let mut target_symbols = BTreeMap::from([(target.clone(), BTreeSet::from(["parseDate".to_string()]))]);
+    let workspace = crate::codebase::workspaces::WorkspaceMap::default();
 
-    assert!(target_local_names(&symbols, &file, &target_symbols, &tsconfig).is_empty());
+    assert!(target_local_names(&symbols, &file, &target_symbols, &tsconfig, &workspace).is_empty());
 
     symbols.imports[0].is_type_only = false;
     target_symbols.insert(target, BTreeSet::new());
 
-    assert!(target_local_names(&symbols, &file, &target_symbols, &tsconfig).is_empty());
+    assert!(target_local_names(&symbols, &file, &target_symbols, &tsconfig, &workspace).is_empty());
 }
 
 #[test]
