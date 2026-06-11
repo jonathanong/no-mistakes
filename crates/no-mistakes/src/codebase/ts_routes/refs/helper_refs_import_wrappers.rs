@@ -50,7 +50,7 @@ fn imported_helper_wrapper_from_expression(
         Expression::FunctionExpression(func) => {
             import_for_helper_call(local, single_return_call(func.body.as_ref()?)?, imports)
         }
-        _ => None,
+        _ => import_for_helper_expr(local, expr, imports),
     }
 }
 
@@ -71,7 +71,15 @@ fn import_for_helper_call(
     call: &oxc::ast::ast::CallExpression<'_>,
     imports: &[RouteHelperImport],
 ) -> Option<RouteHelperImport> {
-    let callee = route_helper_callee_name_from_callee(&call.callee)?;
+    import_for_helper_expr(local, &call.callee, imports)
+}
+
+fn import_for_helper_expr(
+    local: &str,
+    expr: &Expression,
+    imports: &[RouteHelperImport],
+) -> Option<RouteHelperImport> {
+    let callee = route_helper_callee_name_from_callee(expr)?;
     if let Some((namespace, member)) = callee.split_once('.') {
         let import = imports
             .iter()

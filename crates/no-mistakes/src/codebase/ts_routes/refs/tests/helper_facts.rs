@@ -178,6 +178,15 @@ fn summarizes_route_helper_edge_expression_shapes() {
         helper("switchAllBranchesAssignedHref"),
         vec!["/switch-all/*/default", "/switch-all/*/settings"]
     );
+    assert_eq!(
+        helper("switchFallthroughHref"),
+        vec![
+            "/fallthrough/*",
+            "/fallthrough/*/a",
+            "/fallthrough/*/a/b",
+            "/fallthrough/*/b"
+        ]
+    );
     assert_eq!(helper("emptySwitchHref"), vec!["/empty-switch/*"]);
     assert_eq!(helper("tryHref"), vec!["/fallback/*", "/try/*"]);
     assert_eq!(helper("tryFinallyHref"), vec!["/finally/*"]);
@@ -233,6 +242,15 @@ fn records_helper_calls_only_in_route_contexts() {
             "entityHref"
         ]
     );
+}
+
+#[test]
+fn records_same_file_exported_route_helper_calls() {
+    let source = route_fixture_source("route-helper-exported-local-ref.tsx");
+    let facts = extract_route_ref_facts(&source, "component.tsx");
+    assert_eq!(facts.route_helpers.len(), 1);
+    assert_eq!(facts.route_helper_refs.len(), 1);
+    assert_eq!(facts.route_helper_refs[0].callee, "entityHref");
 }
 
 #[test]

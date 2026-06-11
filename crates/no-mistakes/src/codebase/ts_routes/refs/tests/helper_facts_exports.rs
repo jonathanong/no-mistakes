@@ -95,6 +95,7 @@ fn records_imported_route_helpers_wrapped_by_exported_helpers() {
             })
             .collect::<Vec<_>>(),
         vec![
+            ("directHref", "entityHref", "./entity-href"),
             ("entityHref", "entityHref", "./entity-href"),
             ("functionExpressionHref", "entityHref", "./entity-href"),
             ("functionHref", "entityHref", "./entity-href"),

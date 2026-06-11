@@ -126,6 +126,17 @@ export function switchAllBranchesAssignedHref(entity: { id: string }, kind: stri
   }
   return href;
 }
+export function switchFallthroughHref(entity: { id: string }, kind: string): string {
+  let href = `/fallthrough/${entity.id}`;
+  switch (kind) {
+    case 'a':
+      href += '/a';
+    case 'b':
+      href += '/b';
+      break;
+  }
+  return href;
+}
 export function emptySwitchHref(entity: { id: string }, kind: string): string {
   let href = `/empty-switch/${entity.id}`;
   switch (kind) {}
