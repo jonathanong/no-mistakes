@@ -109,19 +109,29 @@ fn route_helper_ref_patterns_cover_local_and_imported_variants() {
                 line: 2,
             },
             crate::codebase::ts_routes::refs::RouteHelperRef {
-                callee: "defaultEntityHref".to_string(),
+                callee: "localHref".to_string(),
                 file: "src/client.ts".to_string(),
                 line: 3,
             },
             crate::codebase::ts_routes::refs::RouteHelperRef {
-                callee: "links.entityHref".to_string(),
+                callee: "entityHref".to_string(),
                 file: "src/client.ts".to_string(),
                 line: 4,
             },
             crate::codebase::ts_routes::refs::RouteHelperRef {
-                callee: "missing.entityHref".to_string(),
+                callee: "defaultEntityHref".to_string(),
                 file: "src/client.ts".to_string(),
                 line: 5,
+            },
+            crate::codebase::ts_routes::refs::RouteHelperRef {
+                callee: "links.entityHref".to_string(),
+                file: "src/client.ts".to_string(),
+                line: 6,
+            },
+            crate::codebase::ts_routes::refs::RouteHelperRef {
+                callee: "missing.entityHref".to_string(),
+                file: "src/client.ts".to_string(),
+                line: 7,
             },
         ],
         ..TsFileFacts::default()

@@ -24,6 +24,7 @@ include!("helper_patterns_utils.rs");
 include!("helper_refs.rs");
 include!("helper_refs_statements.rs");
 include!("helper_refs_expressions.rs");
+include!("helper_refs_jsx.rs");
 include!("helper_refs_context.rs");
 
 #[cfg(test)]

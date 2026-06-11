@@ -177,7 +177,11 @@ let noInit;
     assert_eq!(helper("angleAssertedHref"), vec!["/angle/*"]);
     assert_eq!(helper("wrappedObjectHref"), vec!["/object/*"]);
     assert!(helper("missingReturnHref").is_empty());
-    assert_eq!(helper("cappedHref").len(), 16);
+    let capped_patterns = helper("cappedHref");
+    assert_eq!(capped_patterns.len(), 16);
+    assert!(capped_patterns.contains(&"/a/c/e/g/i".to_string()));
+    assert!(capped_patterns.contains(&"/a/d/f/h/j".to_string()));
+    assert!(!capped_patterns.contains(&"/z/y/x/w/v".to_string()));
 }
 
 #[test]
@@ -212,6 +216,13 @@ const router = useRouter();
 router.push(entityHref(entity));
 redirect(entityHref(entity));
 fetch(entityHref(entity));
+router?.push(entityHref(entity));
+router.push?.(entityHref(entity));
+redirect?.(entityHref(entity));
+globalThis?.fetch(entityHref(entity));
+router?.[method](entityHref(entity));
+router.push(entityHref?.(entity));
+const optionalMember = links?.entityHref;
 "#;
     let facts = extract_route_ref_facts(source, "component.tsx");
     assert_eq!(
@@ -220,7 +231,17 @@ fetch(entityHref(entity));
             .iter()
             .map(|route_ref| route_ref.callee.as_str())
             .collect::<Vec<_>>(),
-        vec!["entityHref", "entityHref", "entityHref", "entityHref"]
+        vec![
+            "entityHref",
+            "entityHref",
+            "entityHref",
+            "entityHref",
+            "entityHref",
+            "entityHref",
+            "entityHref",
+            "entityHref",
+            "entityHref"
+        ]
     );
 }
 
@@ -271,6 +292,7 @@ import { entityHref } from './entity-href';
 const hashLink = <Link href={entityHref(entity) + '#reviews'} />;
 const queryLink = <Link href={`${entityHref(entity)}?tab=details`} />;
 const prefixLink = <Link href={'/prefix' + entityHref(entity)} />;
+const optionalLink = <Link href={entityHref?.(entity)} />;
 const loose = entityHref(entity) + '#ignored';
 "#;
     let facts = extract_route_ref_facts(source, "component.tsx");
@@ -280,7 +302,7 @@ const loose = entityHref(entity) + '#ignored';
             .iter()
             .map(|route_ref| route_ref.callee.as_str())
             .collect::<Vec<_>>(),
-        vec!["entityHref", "entityHref", "entityHref"]
+        vec!["entityHref", "entityHref", "entityHref", "entityHref"]
     );
 }
 
@@ -316,6 +338,47 @@ const link = <Link href={links.topicHref(topic)} />;
     assert_eq!(facts.route_helper_refs.len(), 1);
     assert_eq!(facts.route_helper_refs[0].callee, "links.topicHref");
     assert_eq!(facts.route_helper_imports[0].imported, "*");
+}
+
+#[test]
+fn recognizes_optional_member_expressions_as_route_contexts() {
+    let allocator = Allocator::default();
+    let source = "const router = useRouter(); const maybePush = router?.push;";
+    let ret = Parser::new(&allocator, source, SourceType::ts()).parse();
+    let mut bindings = collect_import_bindings(&ret.program.body);
+    collect_router_bindings_for_scope(&ret.program.body, &mut bindings);
+    let Statement::VariableDeclaration(var_decl) = &ret.program.body[1] else {
+        panic!("expected variable declaration");
+    };
+    let expr = var_decl.declarations[0]
+        .init
+        .as_ref()
+        .expect("expected initializer");
+
+    assert!(callee_is_route_context(expr, &bindings));
+}
+
+#[test]
+fn recognizes_optional_member_expressions_as_helper_callees() {
+    let allocator = Allocator::default();
+    let source = "const maybeHref = links?.entityHref;";
+    let ret = Parser::new(&allocator, source, SourceType::ts()).parse();
+    let Statement::VariableDeclaration(var_decl) = &ret.program.body[0] else {
+        panic!("expected variable declaration");
+    };
+    let expr = var_decl.declarations[0]
+        .init
+        .as_ref()
+        .expect("expected initializer");
+
+    assert_eq!(
+        route_helper_callee_name(expr),
+        Some("links.entityHref".to_string())
+    );
+    assert_eq!(
+        route_helper_callee_name_from_callee(expr),
+        Some("links.entityHref".to_string())
+    );
 }
 
 #[test]
