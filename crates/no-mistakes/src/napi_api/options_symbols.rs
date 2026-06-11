@@ -5,3 +5,6 @@ pub(crate) fn parse_symbols_mode(value: Option<&str>) -> AnyhowResult<SymbolsMod
         value => bail!("unknown symbols mode: {value}"),
     }
 }
+
+#[cfg(test)]
+mod options_symbols_tests;

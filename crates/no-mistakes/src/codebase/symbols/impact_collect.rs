@@ -23,11 +23,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
 
     let config = load_v2_config(&root, args.config.as_deref())?;
     let test_filter = TestFileFilter::new(&root, &config);
-    let graph = DepGraph::build_with_plan(
-        &root,
-        &tsconfig,
-        GraphBuildPlan::all().with_symbols(true),
-    )?;
+    let graph = DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::all().with_symbols(true))?;
     let target = NodeId::Symbol {
         file: target_file,
         symbol: symbol.to_string(),
@@ -60,23 +56,20 @@ fn export_paths(
     let mut frontier = vec![target.clone()];
     let mut seen = BTreeSet::from([target.clone()]);
     while let Some(node) = frontier.pop() {
-        let Some(neighbors) = graph.dependents_of_node(&node) else {
-            continue;
-        };
-        for (neighbor, _) in neighbors {
-            let NodeId::Symbol { file, symbol } = neighbor else {
-                continue;
-            };
-            if !seen.insert(neighbor.clone()) {
-                continue;
-            }
-            let Some(location) = export_location(file, root, symbol).ok().flatten() else {
-                continue;
-            };
-            if location.kind == "re-export" {
-                frontier.push(neighbor.clone());
-                exports.insert(location);
-                export_nodes.insert(neighbor.clone());
+        if let Some(neighbors) = graph.dependents_of_node(&node) {
+            for (neighbor, _) in neighbors {
+                let NodeId::Symbol { file, symbol } = neighbor else {
+                    continue;
+                };
+                if seen.insert(neighbor.clone()) {
+                    if let Some(location) = export_location(file, root, symbol).ok().flatten() {
+                        if location.kind == "re-export" {
+                            frontier.push(neighbor.clone());
+                            exports.insert(location);
+                            export_nodes.insert(neighbor.clone());
+                        }
+                    }
+                }
             }
         }
     }

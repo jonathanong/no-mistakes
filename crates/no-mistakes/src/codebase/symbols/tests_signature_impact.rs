@@ -128,6 +128,10 @@ fn signature_impact_supports_default_exports() {
 #[test]
 fn signature_impact_pipeline_run_handles_signature_impact_mode() {
     run(impact_args("parseDate", Format::Json)).unwrap();
+
+    let mut timed = impact_args("parseDate", Format::Json);
+    timed.timings = true;
+    run(timed).unwrap();
 }
 
 #[test]

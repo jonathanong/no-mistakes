@@ -1,11 +1,7 @@
 fn write_markdown(report: &SignatureImpactReport, out: &mut dyn Write) -> Result<()> {
     writeln!(out, "# `{}`", report.roots[0])?;
     writeln!(out)?;
-    writeln!(
-        out,
-        "- Defined in: `{}` (line {})",
-        report.definition.file, report.definition.line
-    )?;
+    writeln!(out, "- Defined in: `{}` (line {})", report.definition.file, report.definition.line)?;
     write_location_section("Exported via", &report.exports, out)?;
     write_caller_section("Production callers", &report.production_callers, out)?;
     write_caller_section("Test callers", &report.test_callers, out)?;
@@ -22,11 +18,7 @@ fn write_markdown(report: &SignatureImpactReport, out: &mut dyn Write) -> Result
 
 fn write_human(report: &SignatureImpactReport, out: &mut dyn Write) -> Result<()> {
     writeln!(out, "Symbol: {}", report.symbol)?;
-    writeln!(
-        out,
-        "Defined in: {}:{}",
-        report.definition.file, report.definition.line
-    )?;
+    writeln!(out, "Defined in: {}:{}", report.definition.file, report.definition.line)?;
     write_location_section("Exported via", &report.exports, out)?;
     write_caller_section("Production callers", &report.production_callers, out)?;
     write_caller_section("Test callers", &report.test_callers, out)?;
@@ -48,11 +40,7 @@ fn write_location_section(
 ) -> Result<()> {
     writeln!(out, "## {heading}")?;
     for location in locations {
-        writeln!(
-            out,
-            "- `{}#{}` ({}, line {})",
-            location.file, location.symbol, location.kind, location.line
-        )?;
+            writeln!(out, "- `{}#{}` ({}, line {})", location.file, location.symbol, location.kind, location.line)?;
     }
     Ok(())
 }
