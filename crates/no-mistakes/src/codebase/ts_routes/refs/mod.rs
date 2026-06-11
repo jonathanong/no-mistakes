@@ -20,6 +20,8 @@ include!("expressions.rs");
 include!("patterns.rs");
 include!("helper_patterns.rs");
 include!("helper_patterns_eval.rs");
+include!("helper_patterns_returns.rs");
+include!("helper_patterns_template.rs");
 include!("helper_patterns_utils.rs");
 include!("helper_refs.rs");
 include!("helper_refs_statements.rs");

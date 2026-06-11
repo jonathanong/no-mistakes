@@ -97,6 +97,25 @@ export default ((function (entity: { id: string }): string {
     let non_helper_expression = "export default ({ href: '/ignored' });";
     let facts = extract_route_ref_facts(non_helper_expression, "non-helper-expression.ts");
     assert!(facts.route_helpers.is_empty());
+
+    let default_alias = r#"
+const entityHref = (entity: { id: string }) => `/aliased-default/${entity.id}`;
+export default entityHref;
+"#;
+    let facts = extract_route_ref_facts(default_alias, "default-alias-href.ts");
+    let helpers = facts
+        .route_helpers
+        .iter()
+        .map(|helper| (helper.name.as_str(), helper.patterns.clone()))
+        .collect::<HashMap<_, _>>();
+    assert_eq!(
+        helpers.get("default"),
+        Some(&vec!["/aliased-default/*".to_string()])
+    );
+    assert_eq!(
+        helpers.get("entityHref"),
+        Some(&vec!["/aliased-default/*".to_string()])
+    );
 }
 
 #[test]
@@ -161,6 +180,12 @@ export function cappedHref(
 ): string {
   return a + b + c + d + e;
 }
+export function branchedHref(entity: { id: string }, archived: boolean): string {
+  if (archived) {
+    return `/archive/${entity.id}`;
+  }
+  return `/active/${entity.id}`;
+}
 let noInit;
 "#;
     let facts = extract_route_ref_facts(source, "edge-shapes.ts");
@@ -182,6 +207,7 @@ let noInit;
     assert!(capped_patterns.contains(&"/a/c/e/g/i".to_string()));
     assert!(capped_patterns.contains(&"/a/d/f/h/j".to_string()));
     assert!(!capped_patterns.contains(&"/z/y/x/w/v".to_string()));
+    assert_eq!(helper("branchedHref"), vec!["/active/*", "/archive/*"]);
 }
 
 #[test]
@@ -224,6 +250,10 @@ globalThis?.fetch(entityHref(entity));
 router?.[method](entityHref(entity));
 router.push(entityHref?.(entity));
 const optionalMember = links?.entityHref;
+for (const item of items) {
+  router.prefetch(entityHref(item));
+}
+while (next) router.replace(entityHref(next));
 "#;
     let facts = extract_route_ref_facts(source, "component.tsx");
     assert_eq!(
@@ -233,6 +263,8 @@ const optionalMember = links?.entityHref;
             .map(|route_ref| route_ref.callee.as_str())
             .collect::<Vec<_>>(),
         vec![
+            "entityHref",
+            "entityHref",
             "entityHref",
             "entityHref",
             "entityHref",

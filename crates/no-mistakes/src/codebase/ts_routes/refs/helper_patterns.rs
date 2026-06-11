@@ -8,8 +8,18 @@ struct HelperDef<'a> {
 
 fn collect_route_helpers<'a>(program: &'a Program<'a>) -> Vec<RouteHelper> {
     let mut defs = HashMap::new();
+    let mut default_alias = None;
     for stmt in &program.body {
-        collect_helper_def_from_statement(stmt, &mut defs);
+        collect_helper_def_from_statement(stmt, &mut defs, &mut default_alias);
+    }
+    if let Some(def) = default_alias.and_then(|alias| defs.get(alias).copied()) {
+        defs.insert(
+            "default",
+            HelperDef {
+                name: "default",
+                ..def
+            },
+        );
     }
 
     let mut helpers: Vec<RouteHelper> = defs
@@ -29,6 +39,7 @@ fn collect_route_helpers<'a>(program: &'a Program<'a>) -> Vec<RouteHelper> {
 fn collect_helper_def_from_statement<'a>(
     stmt: &'a Statement<'a>,
     defs: &mut HashMap<&'a str, HelperDef<'a>>,
+    default_alias: &mut Option<&'a str>,
 ) {
     match stmt {
         Statement::FunctionDeclaration(func) => {
@@ -89,7 +100,11 @@ fn collect_helper_def_from_statement<'a>(
             oxc::ast::ast::ExportDefaultDeclarationKind::ParenthesizedExpression(parenthesized) => {
                 collect_default_helper_def_from_expression(&parenthesized.expression, defs);
             }
-            _ => {}
+            other => {
+                if let Some(Expression::Identifier(id)) = other.as_expression() {
+                    *default_alias = Some(id.name.as_str());
+                }
+            }
         },
         _ => {}
     }

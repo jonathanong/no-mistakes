@@ -48,6 +48,43 @@ fn collect_helper_refs_from_statement<'a>(
                 collect_helper_refs_from_statement(alt, source, file, router_bindings, refs);
             }
         }
+        Statement::ForStatement(for_stmt) => {
+            if let Some(test) = &for_stmt.test {
+                collect_helper_refs_from_expression(test, source, file, router_bindings, refs);
+            }
+            if let Some(update) = &for_stmt.update {
+                collect_helper_refs_from_expression(update, source, file, router_bindings, refs);
+            }
+            collect_helper_refs_from_statement(&for_stmt.body, source, file, router_bindings, refs);
+        }
+        Statement::ForInStatement(for_stmt) => {
+            collect_helper_refs_from_expression(&for_stmt.right, source, file, router_bindings, refs);
+            collect_helper_refs_from_statement(&for_stmt.body, source, file, router_bindings, refs);
+        }
+        Statement::ForOfStatement(for_stmt) => {
+            collect_helper_refs_from_expression(&for_stmt.right, source, file, router_bindings, refs);
+            collect_helper_refs_from_statement(&for_stmt.body, source, file, router_bindings, refs);
+        }
+        Statement::WhileStatement(while_stmt) => {
+            collect_helper_refs_from_expression(&while_stmt.test, source, file, router_bindings, refs);
+            collect_helper_refs_from_statement(&while_stmt.body, source, file, router_bindings, refs);
+        }
+        Statement::DoWhileStatement(do_while_stmt) => {
+            collect_helper_refs_from_statement(
+                &do_while_stmt.body,
+                source,
+                file,
+                router_bindings,
+                refs,
+            );
+            collect_helper_refs_from_expression(
+                &do_while_stmt.test,
+                source,
+                file,
+                router_bindings,
+                refs,
+            );
+        }
         Statement::VariableDeclaration(var_decl) => {
             for decl in &var_decl.declarations {
                 if let Some(init) = &decl.init {

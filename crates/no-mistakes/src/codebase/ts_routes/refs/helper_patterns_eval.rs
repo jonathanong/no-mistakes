@@ -45,6 +45,7 @@ fn evaluate_helper_body<'a>(
     env: &mut HashMap<String, Vec<String>>,
     depth: usize,
 ) -> Vec<String> {
+    let mut returns = Vec::new();
     for stmt in &body.statements {
         match stmt {
             Statement::VariableDeclaration(var_decl) => {
@@ -59,16 +60,37 @@ fn evaluate_helper_body<'a>(
             }
             Statement::ReturnStatement(ret) => {
                 if let Some(expr) = &ret.argument {
-                    return evaluate_route_expression(expr, defs, env, depth + 1);
+                    returns.extend(evaluate_route_expression(expr, defs, env, depth + 1));
                 }
             }
             Statement::ExpressionStatement(expr_stmt) if expression_body => {
-                return evaluate_route_expression(&expr_stmt.expression, defs, env, depth + 1);
+                returns.extend(evaluate_route_expression(
+                    &expr_stmt.expression,
+                    defs,
+                    env,
+                    depth + 1,
+                ));
+            }
+            Statement::IfStatement(if_stmt) => {
+                returns.extend(evaluate_helper_return_statement(
+                    &if_stmt.consequent,
+                    defs,
+                    env,
+                    depth + 1,
+                ));
+                if let Some(alternate) = &if_stmt.alternate {
+                    returns.extend(evaluate_helper_return_statement(
+                        alternate,
+                        defs,
+                        env,
+                        depth + 1,
+                    ));
+                }
             }
             _ => {}
         }
     }
-    Vec::new()
+    returns
 }
 
 fn evaluate_route_expression<'a>(
@@ -161,28 +183,4 @@ fn evaluate_helper_call<'a>(
     } else {
         values
     }
-}
-
-fn evaluate_template_literal<'a>(
-    tpl: &'a TemplateLiteral<'a>,
-    defs: &HashMap<&'a str, HelperDef<'a>>,
-    env: &HashMap<String, Vec<String>>,
-    depth: usize,
-) -> Vec<String> {
-    let mut values = vec![String::new()];
-    for (index, quasi) in tpl.quasis.iter().enumerate() {
-        let cooked = quasi
-            .value
-            .cooked
-            .map(|value| value.as_str())
-            .unwrap_or("");
-        for value in &mut values {
-            value.push_str(cooked);
-        }
-        if let Some(expr) = tpl.expressions.get(index) {
-            let expr_values = evaluate_route_expression(expr, defs, env, depth + 1);
-            values = concat_candidates(&values, &expr_values);
-        }
-    }
-    values
 }
