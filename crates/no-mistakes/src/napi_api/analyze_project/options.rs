@@ -71,7 +71,7 @@ fn merged_options(
             if !map.contains_key("config") {
                 map.insert(
                     "config".to_string(),
-                    Value::String(forwarded_path(options, config)?),
+                    Value::String(forwarded_config(options, config)?),
                 );
             }
         }
@@ -85,6 +85,17 @@ fn merged_options(
 
 fn forwarded_tsconfig(options: &AnalyzeProjectOptions, tsconfig: &str) -> AnyhowResult<String> {
     forwarded_path(options, tsconfig)
+}
+
+fn forwarded_config(options: &AnalyzeProjectOptions, config: &str) -> AnyhowResult<String> {
+    let path = PathBuf::from(config);
+    if path.is_absolute() {
+        return Ok(path.display().to_string());
+    }
+    Ok(resolve_root(options.root.as_deref())?
+        .join(path)
+        .display()
+        .to_string())
 }
 
 fn forwarded_path(options: &AnalyzeProjectOptions, value: &str) -> AnyhowResult<String> {
