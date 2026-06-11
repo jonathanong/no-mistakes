@@ -53,6 +53,8 @@ export function nestedStatementHref(entity: { id: string }, kind: string): strin
     switch (kind) {
       case 'switch':
         return `/nested-switch/${entity.id}`;
+      default:
+        return `/nested-switch-default/${entity.id}`;
     }
   } else {
     try {
@@ -62,6 +64,17 @@ export function nestedStatementHref(entity: { id: string }, kind: string): strin
     }
   }
   return `/nested-fallback/${entity.id}`;
+}
+export function nestedBranchEnvIsolationHref(entity: { id: string }, archived: boolean): string {
+  let href = `/nested-branch/${entity.id}`;
+  {
+    if (archived) {
+      href = `/nested-branch-archive/${entity.id}`;
+    } else {
+      return href;
+    }
+  }
+  return href;
 }
 export function topLevelBlockReturnHref(entity: { id: string }): string {
   {

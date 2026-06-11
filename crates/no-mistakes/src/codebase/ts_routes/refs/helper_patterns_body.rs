@@ -53,59 +53,55 @@ fn evaluate_helper_body<'a>(
                     );
                 }
             }
-            Statement::IfStatement(if_stmt) => {
-                let base_env = env.clone();
-                let mut consequent_env = base_env.clone();
-                returns.extend(evaluate_helper_return_statement(
-                    &if_stmt.consequent,
+            Statement::IfStatement(_) => {
+                let evaluation = evaluate_helper_return_statement(
+                    stmt,
                     defs,
                     imported_helpers,
-                    &mut consequent_env,
+                    env,
                     depth + 1,
-                ));
-                if let Some(alternate) = &if_stmt.alternate {
-                    let mut alternate_env = base_env.clone();
-                    returns.extend(evaluate_helper_return_statement(
-                        alternate,
-                        defs,
-                        imported_helpers,
-                        &mut alternate_env,
-                        depth + 1,
-                    ));
-                    replace_helper_env_with_branches(env, vec![consequent_env, alternate_env]);
-                } else {
-                    merge_helper_env(env, consequent_env);
+                );
+                returns.extend(evaluation.values);
+                if !evaluation.can_continue {
+                    break;
                 }
             }
             Statement::SwitchStatement(switch_stmt) => {
-                returns.extend(evaluate_helper_switch_statement(
+                let evaluation = evaluate_helper_switch_statement(
                     switch_stmt,
                     defs,
                     imported_helpers,
                     env,
                     depth + 1,
-                ));
+                );
+                returns.extend(evaluation.values);
+                if !evaluation.can_continue {
+                    break;
+                }
             }
             Statement::TryStatement(try_stmt) => {
-                returns.extend(evaluate_helper_try_statement(
+                let evaluation = evaluate_helper_try_statement(
                     try_stmt,
                     defs,
                     imported_helpers,
                     env,
                     depth + 1,
-                ));
-            }
-            Statement::BlockStatement(block) => {
-                for stmt in &block.body {
-                    returns.extend(evaluate_helper_return_statement(
-                        stmt,
-                        defs,
-                        imported_helpers,
-                        env,
-                        depth + 1,
-                    ));
+                );
+                returns.extend(evaluation.values);
+                if !evaluation.can_continue {
+                    break;
                 }
-                if !returns.is_empty() {
+            }
+            Statement::BlockStatement(_) => {
+                let evaluation = evaluate_helper_return_statement(
+                    stmt,
+                    defs,
+                    imported_helpers,
+                    env,
+                    depth + 1,
+                );
+                returns.extend(evaluation.values);
+                if !evaluation.can_continue {
                     break;
                 }
             }
@@ -114,4 +110,3 @@ fn evaluate_helper_body<'a>(
     }
     returns
 }
-

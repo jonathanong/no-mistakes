@@ -143,10 +143,14 @@ fn summarizes_route_helper_edge_expression_shapes() {
         vec![
             "/nested-block/*",
             "/nested-catch/*",
-            "/nested-fallback/*",
+            "/nested-switch-default/*",
             "/nested-switch/*",
             "/nested-try/*"
         ]
+    );
+    assert_eq!(
+        helper("nestedBranchEnvIsolationHref"),
+        vec!["/nested-branch-archive/*", "/nested-branch/*"]
     );
     assert_eq!(helper("topLevelBlockReturnHref"), vec!["/block-return/*"]);
     assert_eq!(
@@ -185,12 +189,7 @@ fn summarizes_route_helper_edge_expression_shapes() {
     );
     assert_eq!(
         helper("switchFallthroughHref"),
-        vec![
-            "/fallthrough/*",
-            "/fallthrough/*/a",
-            "/fallthrough/*/a/b",
-            "/fallthrough/*/b"
-        ]
+        vec!["/fallthrough/*", "/fallthrough/*/a/b", "/fallthrough/*/b"]
     );
     assert_eq!(helper("emptySwitchHref"), vec!["/empty-switch/*"]);
     assert_eq!(helper("tryHref"), vec!["/fallback/*", "/try/*"]);

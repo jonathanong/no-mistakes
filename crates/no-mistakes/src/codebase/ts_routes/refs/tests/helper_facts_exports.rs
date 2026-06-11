@@ -54,6 +54,54 @@ fn records_imported_route_helpers_reexported_as_default() {
 }
 
 #[test]
+fn records_parenthesized_imported_route_helpers_reexported_as_default() {
+    let source = route_fixture_source("route-helper-default-parenthesized-imported-alias.ts");
+    let facts = extract_route_ref_facts(&source, "links.ts");
+
+    assert_eq!(
+        facts
+            .route_helper_imports
+            .iter()
+            .map(|import| {
+                (
+                    import.local.as_str(),
+                    import.imported.as_str(),
+                    import.source.as_str(),
+                )
+            })
+            .collect::<Vec<_>>(),
+        vec![
+            ("default", "entityHref", "./entity-href"),
+            ("entityHref", "entityHref", "./entity-href"),
+        ]
+    );
+}
+
+#[test]
+fn records_namespace_route_helper_imports_reexported_as_default() {
+    let source = route_fixture_source("route-helper-default-namespace-imported-alias.ts");
+    let facts = extract_route_ref_facts(&source, "links.ts");
+
+    assert_eq!(
+        facts
+            .route_helper_imports
+            .iter()
+            .map(|import| {
+                (
+                    import.local.as_str(),
+                    import.imported.as_str(),
+                    import.source.as_str(),
+                )
+            })
+            .collect::<Vec<_>>(),
+        vec![
+            ("default", "*", "./entity-href"),
+            ("links", "*", "./entity-href"),
+        ]
+    );
+}
+
+#[test]
 fn records_imported_route_helpers_reexported_under_local_aliases() {
     let source = route_fixture_source("route-helper-local-reexport-alias.ts");
     let facts = extract_route_ref_facts(&source, "links.ts");

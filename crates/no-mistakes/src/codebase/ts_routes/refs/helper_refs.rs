@@ -68,10 +68,8 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
                 });
             }
             Statement::ExportDefaultDeclaration(export) => {
-                if let oxc::ast::ast::ExportDefaultDeclarationKind::Identifier(id) =
-                    &export.declaration
-                {
-                    default_aliases.push(id.name.as_str().to_string());
+                if let Some(alias) = default_export_alias_name(&export.declaration) {
+                    default_aliases.push(alias.to_string());
                 }
             }
             Statement::ExportNamedDeclaration(export)
@@ -99,7 +97,7 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
     for alias in default_aliases {
         let forwarded = imports
             .iter()
-            .find(|import| import.local == alias && import.imported != "*")
+            .find(|import| import.local == alias)
             .cloned();
         if let Some(import) = forwarded {
             imports.push(RouteHelperImport {
@@ -125,6 +123,30 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
     imports.sort_by(|a, b| (&a.local, &a.imported, &a.source).cmp(&(&b.local, &b.imported, &b.source)));
     imports.dedup();
     imports
+}
+
+fn default_export_alias_name<'a>(
+    declaration: &'a oxc::ast::ast::ExportDefaultDeclarationKind<'a>,
+) -> Option<&'a str> {
+    match declaration {
+        oxc::ast::ast::ExportDefaultDeclarationKind::Identifier(id) => Some(id.name.as_str()),
+        oxc::ast::ast::ExportDefaultDeclarationKind::ParenthesizedExpression(parenthesized) => {
+            default_export_expression_alias_name(&parenthesized.expression)
+        }
+        other => other
+            .as_expression()
+            .and_then(default_export_expression_alias_name),
+    }
+}
+
+fn default_export_expression_alias_name<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
+    match expr {
+        Expression::Identifier(id) => Some(id.name.as_str()),
+        Expression::ParenthesizedExpression(parenthesized) => {
+            default_export_expression_alias_name(&parenthesized.expression)
+        }
+        _ => None,
+    }
 }
 
 fn collect_route_helper_refs_from_program<'a>(
