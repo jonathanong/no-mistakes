@@ -21,6 +21,34 @@ fn report_options_forward_relative_top_level_config_from_root() {
 }
 
 #[test]
+fn report_options_absolutize_relative_config_from_relative_root() {
+    let options = parse_options::<AnalyzeProjectOptions>(
+        &json!({
+            "root": "packages/a",
+            "config": ".no-mistakes.yml",
+            "reports": [{
+                "type": "symbols",
+                "root": "packages/b",
+                "files": ["src/index.mts"],
+            }]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let symbols: Value =
+        serde_json::from_str(&options::symbols_options(&options.reports[0], &options).unwrap())
+            .unwrap();
+    assert_eq!(
+        symbols["config"],
+        std::env::current_dir()
+            .unwrap()
+            .join("packages/a/.no-mistakes.yml")
+            .display()
+            .to_string()
+    );
+}
+
+#[test]
 fn report_options_keep_per_report_config_override() {
     let options = parse_options::<AnalyzeProjectOptions>(
         &json!({

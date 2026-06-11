@@ -92,7 +92,7 @@ fn forwarded_config(options: &AnalyzeProjectOptions, config: &str) -> AnyhowResu
     if path.is_absolute() {
         return Ok(path.display().to_string());
     }
-    Ok(resolve_root(options.root.as_deref())?
+    Ok(resolve_forward_root(options.root.as_deref())?
         .join(path)
         .display()
         .to_string())
@@ -106,7 +106,22 @@ fn forwarded_path(options: &AnalyzeProjectOptions, value: &str) -> AnyhowResult<
     let Some(root) = &options.root else {
         return Ok(value.to_string());
     };
-    Ok(resolve_root(Some(root))?.join(path).display().to_string())
+    Ok(resolve_forward_root(Some(root))?
+        .join(path)
+        .display()
+        .to_string())
+}
+
+fn resolve_forward_root(root: Option<&str>) -> AnyhowResult<PathBuf> {
+    let root = resolve_root(root)?;
+    if root.is_absolute() {
+        return Ok(root);
+    }
+    Ok(crate::codebase::ts_resolver::normalize_path(
+        &std::env::current_dir()
+            .context("reading current directory")?
+            .join(root),
+    ))
 }
 
 pub(super) fn resolve_root(root: Option<&str>) -> AnyhowResult<PathBuf> {

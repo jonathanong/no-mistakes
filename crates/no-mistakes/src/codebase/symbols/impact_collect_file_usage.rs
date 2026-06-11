@@ -6,6 +6,9 @@ fn file_entry_uses_any_symbol(root: &Path, file: &str, target_symbols: &BTreeSet
 
 fn file_entry_uses_symbol(root: &Path, file: &str, target_symbol: &str) -> bool {
     let path = root.join(file);
+    let Ok(source) = std::fs::read_to_string(&path) else {
+        return false;
+    };
     let mut facts_by_file = crate::codebase::ts_source::facts::collect_ts_facts(
         std::slice::from_ref(&path),
         crate::codebase::ts_source::facts::TsFactPlan::imports_and_symbols(),
@@ -21,28 +24,71 @@ fn file_entry_uses_symbol(root: &Path, file: &str, target_symbol: &str) -> bool 
                 .collect()
         })
         .unwrap_or_default();
-    if callees.iter().any(|callee| {
-        callee == target_symbol
-            || callee
-                .rsplit_once('.')
-                .is_some_and(|(_, member)| member == target_symbol)
+    let module_bindings = dynamic_module_bindings(&source);
+    if module_bindings.iter().any(|binding| {
+        let member = format!("{binding}.{target_symbol}");
+        callees.contains(&member) || source.contains(&member)
     }) {
         return true;
     }
-    let Ok(source) = std::fs::read_to_string(path) else {
-        return false;
-    };
-    source.contains(&format!(".{target_symbol}"))
-        || source.contains(&format!("{target_symbol}("))
-        || symbol_aliases_in_source(&source, target_symbol)
-            .iter()
-            .any(|alias| callees.contains(alias) || source.contains(&format!("{alias}(")))
+    dynamic_symbol_aliases_in_source(&source, target_symbol)
+        .iter()
+        .any(|alias| callees.contains(alias) || source.contains(&format!("{alias}(")))
 }
 
-fn symbol_aliases_in_source(source: &str, target_symbol: &str) -> BTreeSet<String> {
+fn dynamic_module_bindings(source: &str) -> BTreeSet<String> {
+    source
+        .lines()
+        .filter(|line| line.contains("import(") || line.contains("require("))
+        .filter_map(|line| line.split_once('='))
+        .filter_map(|(before, after)| {
+            if after.contains(").") {
+                return None;
+            }
+            identifier_after_declaration(before.trim())
+        })
+        .collect()
+}
+
+fn dynamic_symbol_aliases_in_source(source: &str, target_symbol: &str) -> BTreeSet<String> {
+    let mut aliases = BTreeSet::new();
+    if target_symbol.contains('.') {
+        return aliases;
+    }
+    for line in source
+        .lines()
+        .filter(|line| line.contains("import(") || line.contains("require("))
+    {
+        aliases.extend(destructured_symbol_aliases(line, target_symbol));
+        aliases.extend(member_assignment_alias(line, target_symbol));
+    }
+    aliases
+}
+
+fn destructured_symbol_aliases(line: &str, target_symbol: &str) -> BTreeSet<String> {
+    let mut aliases = BTreeSet::new();
+    let Some(start) = line.find('{') else {
+        return aliases;
+    };
+    let Some(end) = line[start + 1..].find('}').map(|offset| start + 1 + offset) else {
+        return aliases;
+    };
+    for part in line[start + 1..end].split(',').map(str::trim) {
+        if part == target_symbol {
+            aliases.insert(target_symbol.to_string());
+        } else if let Some((name, alias)) = part.split_once(':') {
+            if name.trim() == target_symbol {
+                aliases.insert(alias.trim().to_string());
+            }
+        }
+    }
+    aliases
+}
+
+fn member_assignment_alias(line: &str, target_symbol: &str) -> BTreeSet<String> {
     let mut aliases = BTreeSet::new();
     let destructured = format!("{target_symbol}:");
-    let mut rest = source;
+    let mut rest = line;
     while let Some(index) = rest.find(&destructured) {
         let after = &rest[index + destructured.len()..];
         let trimmed = after.trim_start();
@@ -57,26 +103,29 @@ fn symbol_aliases_in_source(source: &str, target_symbol: &str) -> BTreeSet<Strin
         rest = after;
     }
     let member = format!(".{target_symbol}");
-    for line in source.lines().filter(|line| line.contains(&member)) {
-        let Some(before_equals) = line.split_once('=').map(|(before, _)| before.trim()) else {
-            continue;
-        };
-        let Some(name) = before_equals
-            .strip_prefix("const ")
-            .or_else(|| before_equals.strip_prefix("let "))
-            .or_else(|| before_equals.strip_prefix("var "))
-            .map(str::trim)
-        else {
-            continue;
-        };
-        let end = name
-            .char_indices()
-            .take_while(|(_, ch)| ch.is_ascii_alphanumeric() || *ch == '_' || *ch == '$')
-            .map(|(index, ch)| index + ch.len_utf8())
-            .last();
-        if let Some(end) = end {
-            aliases.insert(name[..end].to_string());
+    if line.contains(&member) {
+        if let Some((before_equals, _)) = line.split_once('=') {
+            if let Some(name) = identifier_after_declaration(before_equals.trim()) {
+                aliases.insert(name);
+            }
         }
     }
     aliases
+}
+
+fn identifier_after_declaration(value: &str) -> Option<String> {
+    let name = value
+        .strip_prefix("const ")
+        .or_else(|| value.strip_prefix("let "))
+        .or_else(|| value.strip_prefix("var "))
+        .map(str::trim)?;
+    if name.starts_with('{') {
+        return None;
+    }
+    let end = name
+        .char_indices()
+        .take_while(|(_, ch)| ch.is_ascii_alphanumeric() || *ch == '_' || *ch == '$')
+        .map(|(index, ch)| index + ch.len_utf8())
+        .last()?;
+    Some(name[..end].to_string())
 }

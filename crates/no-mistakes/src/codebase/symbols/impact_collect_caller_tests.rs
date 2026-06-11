@@ -139,6 +139,11 @@ fn file_entry_uses_symbol_checks_extracted_and_alias_member_uses() {
     ));
     assert!(!file_entry_uses_symbol(
         &root,
+        "dynamic-import-shadowed-member.mts",
+        "parseDate"
+    ));
+    assert!(!file_entry_uses_symbol(
+        &root,
         "missing-dynamic-import-caller.mts",
         "parseDate"
     ));
@@ -146,7 +151,7 @@ fn file_entry_uses_symbol_checks_extracted_and_alias_member_uses() {
 
 #[test]
 fn symbol_aliases_collect_destructured_and_member_assignment_locals() {
-    let aliases = symbol_aliases_in_source(
+    let aliases = dynamic_symbol_aliases_in_source(
         "const { parseDate: pd } = await import('./utils.mts');\n\
          const readDate = require('./utils.mts').parseDate;\n\
          return utils.parseDate;\n\
@@ -157,6 +162,15 @@ fn symbol_aliases_collect_destructured_and_member_assignment_locals() {
 
     assert!(aliases.contains("pd"));
     assert!(aliases.contains("readDate"));
+    assert!(!aliases.contains("assigned"));
+}
+
+#[test]
+fn dynamic_usage_helpers_ignore_non_module_and_malformed_bindings() {
+    assert!(dynamic_module_bindings("const utils = await import('./utils.mts');").contains("utils"));
+    assert!(dynamic_module_bindings("const readDate = require('./utils.mts').parseDate;").is_empty());
+    assert!(destructured_symbol_aliases("const { parseDate = await import('./utils.mts');", "parseDate").is_empty());
+    assert!(member_assignment_alias("exports.value = utils.parseDate;", "parseDate").is_empty());
 }
 
 #[test]

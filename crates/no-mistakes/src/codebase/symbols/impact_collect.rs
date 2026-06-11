@@ -78,8 +78,13 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         &test_filter,
         true,
     );
-    let suggested_entries =
-        suggested_test_entries(&graph, &entries, &production_extra_callers, &root);
+    let suggested_entries = suggested_test_entries(
+        &graph,
+        &entries,
+        &production_extra_callers,
+        &root,
+        &target_symbol_names,
+    );
     let suggested_tests = suggested_tests(&suggested_entries, &root, &test_filter, &test_extra_callers);
     let caller_context = CallerEntriesContext {
         root: &root,

@@ -67,13 +67,20 @@ fn suggested_test_entries(
     entries: &[NodeEntry],
     production_extra_callers: &[CallerEntry],
     root: &Path,
+    target_symbols: &BTreeSet<String>,
 ) -> Vec<NodeEntry> {
     let mut suggested_entries = entries.to_vec();
     let test_edges = HashSet::from([EdgeKind::TestOf]);
     let mut production_files: BTreeSet<PathBuf> = entries
         .iter()
-        .filter(|entry| entry.via.contains(&EdgeKind::DynamicImport) || entry.via.contains(&EdgeKind::Require))
-        .filter_map(|entry| entry.node.as_file().map(Path::to_path_buf))
+        .filter(|entry| {
+            entry.via.contains(&EdgeKind::DynamicImport) || entry.via.contains(&EdgeKind::Require)
+        })
+        .filter_map(|entry| entry.node.as_file())
+        .filter(|file| {
+            file_entry_uses_any_symbol(root, &relative_slash_path(root, file), target_symbols)
+        })
+        .map(Path::to_path_buf)
         .collect();
     for caller in production_extra_callers {
         production_files.insert(root.join(&caller.file));
