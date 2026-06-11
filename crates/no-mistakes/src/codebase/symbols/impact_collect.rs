@@ -13,14 +13,6 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
     let abs_files = resolve_input_files(&args.files, &root, &cwd);
     let target_file = crate::codebase::ts_resolver::normalize_path(&abs_files[0]);
 
-    let definition = export_location(&target_file, &root, symbol, false)?.with_context(|| {
-        format!(
-            "`{}` is not exported by `{}`",
-            symbol,
-            args.files[0].display()
-        )
-    })?;
-
     let config = load_v2_config(&root, args.config.as_deref())?;
     let test_filter = TestFileFilter::new(&root, &config);
     let graph = DepGraph::build_with_plan_and_config(
@@ -30,12 +22,32 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         args.config.as_deref(),
     )?;
     let target = NodeId::Symbol {
-        file: target_file,
+        file: target_file.clone(),
         symbol: symbol.to_string(),
+    };
+    let definition = if let Some(location) = export_location(&target_file, &root, symbol, false)? {
+        location
+    } else if graph.dependencies_of_node(&target).is_some()
+        || graph.dependents_of_node(&target).is_some()
+    {
+        let Some(location) = export_location(&target_file, &root, symbol, true)? else {
+            bail!(
+                "`{}` is not exported by `{}`",
+                symbol,
+                args.files[0].display()
+            );
+        };
+        location
+    } else {
+        bail!(
+            "`{}` is not exported by `{}`",
+            symbol,
+            args.files[0].display()
+        );
     };
     let entries = graph.dependents_of_symbol_nodes(std::slice::from_ref(&target), None, None);
 
-    let (exports, export_nodes) = export_paths(&graph, &target, &root, &definition);
+    let (exports, export_nodes) = export_paths(&graph, &target, symbol, &root, &definition);
     let suggested_tests = suggested_tests(&entries, &root, &test_filter);
 
     Ok(SignatureImpactReport {
@@ -53,6 +65,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
 fn export_paths(
     graph: &DepGraph,
     target: &NodeId,
+    target_symbol: &str,
     root: &Path,
     definition: &SymbolLocation,
 ) -> (Vec<SymbolLocation>, BTreeSet<NodeId>) {
@@ -68,7 +81,35 @@ fn export_paths(
                 };
                 if seen.insert(neighbor.clone()) {
                     if let Some(location) = export_location(file, root, symbol, true).ok().flatten() {
-                        if is_export_path(&location, target, neighbor) {
+                        let local_import_export = location.symbol == target_symbol
+                            && symbol == target_symbol
+                            && std::fs::read_to_string(file)
+                                .ok()
+                                .and_then(|source| {
+                                    let is_tsx = file
+                                        .extension()
+                                        .and_then(|s| s.to_str())
+                                        .is_some_and(|ext| {
+                                            ext.eq_ignore_ascii_case("tsx")
+                                                || ext.eq_ignore_ascii_case("jsx")
+                                        });
+                                    extract_symbols(&source, is_tsx).ok()
+                                })
+                                .and_then(|symbols| {
+                                    let local = symbols.exports.iter().find_map(|export| {
+                                        (!matches!(
+                                            export.kind,
+                                            ExportKind::ReExport { .. }
+                                        ) && export.name == *symbol)
+                                            .then_some(export.local.as_deref())
+                                            .flatten()
+                                    })?;
+                                    symbols.imports.iter().any(|import| {
+                                        import.local == local && import.imported == target_symbol
+                                    }).then_some(())
+                                })
+                                .is_some();
+                        if location.kind == "re-export" || local_import_export {
                             frontier.push(neighbor.clone());
                             exports.insert(location);
                             export_nodes.insert(neighbor.clone());
@@ -79,26 +120,6 @@ fn export_paths(
         }
     }
     (exports.into_iter().collect(), export_nodes)
-}
-
-fn is_export_path(location: &SymbolLocation, target: &NodeId, neighbor: &NodeId) -> bool {
-    if location.kind == "re-export" {
-        return true;
-    }
-    let (
-        NodeId::Symbol {
-            symbol: target_symbol,
-            ..
-        },
-        NodeId::Symbol {
-            symbol: neighbor_symbol,
-            ..
-        },
-    ) = (target, neighbor)
-    else {
-        return false;
-    };
-    location.symbol == *target_symbol && neighbor_symbol == target_symbol
 }
 
 fn caller_entries(

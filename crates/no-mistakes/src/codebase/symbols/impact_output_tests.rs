@@ -32,6 +32,12 @@ fn export_location_errors_include_file_context() {
 }
 
 #[test]
+fn export_name_normalizes_default_exports() {
+    assert_eq!(export_name(&ExportKind::Default, "NamedDefault"), "default");
+    assert_eq!(export_name(&ExportKind::Function, "parseDate"), "parseDate");
+}
+
+#[test]
 fn suggested_tests_merges_duplicate_test_files() {
     let root = Path::new("/repo");
     let filter = TestFileFilter::new(root, &NoMistakesConfig::default());

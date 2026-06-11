@@ -34,7 +34,11 @@ fn graph_config_options_with_config(
     root: &Path,
     config_path: Option<&Path>,
 ) -> Option<GraphConfigOptions> {
-    let config = crate::codebase::config::load_config(root).ok()?;
+    let config = match config_path {
+        Some(path) => crate::codebase::config::load_config_with_path(root, Some(path)),
+        None => crate::codebase::config::load_config(root),
+    }
+    .ok()?;
     let v2_config = load_v2_config(root, config_path).ok();
     let project_route_globs = v2_config
         .as_ref()
