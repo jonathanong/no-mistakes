@@ -1,7 +1,7 @@
 fn evaluate_helper_call<'a>(
     call: &'a oxc::ast::ast::CallExpression<'a>,
     defs: &HashMap<&'a str, HelperDef<'a>>,
-    imported_helpers: &RouteHelperBindings,
+    _imported_helpers: &RouteHelperBindings,
     env: &HashMap<String, Vec<String>>,
     depth: usize,
 ) -> Vec<String> {
@@ -9,9 +9,6 @@ fn evaluate_helper_call<'a>(
         return vec!["*".to_string()];
     };
     let Some(def) = defs.get(callee.as_str()) else {
-        if helper_callee_is_bound(&callee, imported_helpers) {
-            return vec!["/**".to_string()];
-        }
         return vec!["*".to_string()];
     };
     let mut provided = HashMap::new();
@@ -21,11 +18,11 @@ fn evaluate_helper_call<'a>(
         };
         let value = arg
             .as_expression()
-            .map(|expr| evaluate_route_expression(expr, defs, imported_helpers, env, depth + 1))
+            .map(|expr| evaluate_route_expression(expr, defs, _imported_helpers, env, depth + 1))
             .unwrap_or_else(|| vec!["*".to_string()]);
         provided.insert(name.to_string(), value);
     }
-    let values = evaluate_helper_def(def, defs, imported_helpers, &provided, depth + 1);
+    let values = evaluate_helper_def(def, defs, _imported_helpers, &provided, depth + 1);
     if values.is_empty() {
         vec!["*".to_string()]
     } else {

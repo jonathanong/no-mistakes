@@ -123,6 +123,17 @@ fn collect_helper_refs_from_statement<'a>(
                 refs,
             );
         }
+        Statement::TryStatement(try_stmt) => {
+            collect_helper_refs_from_try_statement(
+                try_stmt,
+                source,
+                file,
+                router_bindings,
+                helper_bindings,
+                local_helpers,
+                refs,
+            );
+        }
         Statement::VariableDeclaration(var_decl) => {
             collect_helper_refs_from_var_declaration(
                 var_decl,

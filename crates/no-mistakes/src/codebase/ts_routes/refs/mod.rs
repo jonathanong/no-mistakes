@@ -34,6 +34,7 @@ include!("helper_refs_statement_control.rs");
 include!("helper_refs_statement_declarations.rs");
 include!("helper_refs_statement_functions.rs");
 include!("helper_refs_statement_switch.rs");
+include!("helper_refs_statement_try.rs");
 include!("helper_refs_expressions.rs");
 include!("helper_refs_expression_calls.rs");
 include!("helper_refs_expression_scopes.rs");

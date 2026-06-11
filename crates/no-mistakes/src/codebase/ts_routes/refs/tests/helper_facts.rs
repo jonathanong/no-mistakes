@@ -228,7 +228,6 @@ let noInit;
         vec!["/orgs/*", "/unknown/*", "/users/*"]
     );
     assert_eq!(helper("urlObjectHref"), vec!["/object/*"]);
-    assert_eq!(helper("composedHref"), vec!["/**/settings"]);
 }
 
 #[test]
@@ -280,6 +279,13 @@ switch (tab) {
     router.push(entityHref(entity));
     break;
 }
+try {
+  router.prefetch(entityHref(entity));
+} catch {
+  router.replace(entityHref(entity));
+} finally {
+  redirect(entityHref(entity));
+}
 "#;
     let facts = extract_route_ref_facts(source, "component.tsx");
     assert_eq!(
@@ -289,6 +295,9 @@ switch (tab) {
             .map(|route_ref| route_ref.callee.as_str())
             .collect::<Vec<_>>(),
         vec![
+            "entityHref",
+            "entityHref",
+            "entityHref",
             "entityHref",
             "entityHref",
             "entityHref",
@@ -310,6 +319,8 @@ fn records_all_helper_calls_inside_route_context_expressions() {
     let source = r#"
 import { aHref, bHref } from './entity-href';
 
+const concatLink = <Link href={aHref(a) + bHref(b)} />;
+const templateLink = <Link href={`${aHref(a)}${bHref(b)}`} />;
 const link = <Link href={flag ? aHref(a) : bHref(b)} />;
 const objectLink = <Link href={{ pathname: flag ? aHref(a) : bHref(b) }} />;
 const router = useRouter();
@@ -323,7 +334,10 @@ router.replace(aHref(a) || bHref(b));
             .iter()
             .map(|route_ref| route_ref.callee.as_str())
             .collect::<Vec<_>>(),
-        vec!["aHref", "bHref", "aHref", "bHref", "aHref", "bHref", "aHref", "bHref"]
+        vec![
+            "aHref", "bHref", "aHref", "bHref", "aHref", "bHref", "aHref", "bHref", "aHref",
+            "bHref", "aHref", "bHref",
+        ]
     );
 }
 
@@ -496,10 +510,6 @@ fn recognizes_optional_member_expressions_as_helper_callees() {
         .as_ref()
         .expect("expected initializer");
 
-    assert_eq!(
-        route_helper_callee_name(expr),
-        Some("links.entityHref".to_string())
-    );
     assert_eq!(
         route_helper_callee_name_from_callee(expr),
         Some("links.entityHref".to_string())

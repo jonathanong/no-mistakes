@@ -92,11 +92,50 @@ fn push_helper_refs_from_expression(
 }
 
 fn collect_route_helper_callee_names(expr: &Expression, callees: &mut Vec<String>) {
-    if let Some(callee) = route_helper_callee_name(expr) {
-        callees.push(callee);
-        return;
-    }
     match expr {
+        Expression::CallExpression(call) => {
+            if let Some(callee) = route_helper_callee_name_from_callee(&call.callee) {
+                callees.push(callee);
+            }
+        }
+        Expression::ChainExpression(chain) => match &chain.expression {
+            oxc::ast::ast::ChainElement::CallExpression(call) => {
+                if let Some(callee) = route_helper_callee_name_from_callee(&call.callee) {
+                    callees.push(callee);
+                }
+            }
+            other => {
+                if let Some(member) = other.as_member_expression() {
+                    if let Some(callee) = route_helper_callee_name_from_member(member) {
+                        callees.push(callee);
+                    }
+                }
+            }
+        },
+        Expression::BinaryExpression(binary) => {
+            collect_route_helper_callee_names(&binary.left, callees);
+            collect_route_helper_callee_names(&binary.right, callees);
+        }
+        Expression::TemplateLiteral(tpl) => {
+            for expr in &tpl.expressions {
+                collect_route_helper_callee_names(expr, callees);
+            }
+        }
+        Expression::ParenthesizedExpression(paren) => {
+            collect_route_helper_callee_names(&paren.expression, callees);
+        }
+        Expression::TSAsExpression(ts_as) => {
+            collect_route_helper_callee_names(&ts_as.expression, callees);
+        }
+        Expression::TSTypeAssertion(ts_assertion) => {
+            collect_route_helper_callee_names(&ts_assertion.expression, callees);
+        }
+        Expression::TSNonNullExpression(ts_nn) => {
+            collect_route_helper_callee_names(&ts_nn.expression, callees);
+        }
+        Expression::TSSatisfiesExpression(ts_sat) => {
+            collect_route_helper_callee_names(&ts_sat.expression, callees);
+        }
         Expression::ConditionalExpression(cond) => {
             collect_route_helper_callee_names(&cond.consequent, callees);
             collect_route_helper_callee_names(&cond.alternate, callees);
@@ -124,32 +163,6 @@ fn property_key_is_pathname(key: &PropertyKey<'_>) -> bool {
         PropertyKey::StaticIdentifier(id) => id.name == "pathname",
         PropertyKey::StringLiteral(s) => s.value == "pathname",
         _ => false,
-    }
-}
-
-fn route_helper_callee_name(expr: &Expression) -> Option<String> {
-    match expr {
-        Expression::CallExpression(call) => route_helper_callee_name_from_callee(&call.callee),
-        Expression::ChainExpression(chain) => match &chain.expression {
-            oxc::ast::ast::ChainElement::CallExpression(call) => {
-                route_helper_callee_name_from_callee(&call.callee)
-            }
-            other => route_helper_callee_name_from_member(other.as_member_expression()?),
-        },
-        Expression::BinaryExpression(binary) => route_helper_callee_name(&binary.left)
-            .or_else(|| route_helper_callee_name(&binary.right)),
-        Expression::TemplateLiteral(tpl) => tpl
-            .expressions
-            .iter()
-            .find_map(|expr| route_helper_callee_name(expr)),
-        Expression::ParenthesizedExpression(paren) => route_helper_callee_name(&paren.expression),
-        Expression::TSAsExpression(ts_as) => route_helper_callee_name(&ts_as.expression),
-        Expression::TSTypeAssertion(ts_assertion) => {
-            route_helper_callee_name(&ts_assertion.expression)
-        }
-        Expression::TSNonNullExpression(ts_nn) => route_helper_callee_name(&ts_nn.expression),
-        Expression::TSSatisfiesExpression(ts_sat) => route_helper_callee_name(&ts_sat.expression),
-        _ => None,
     }
 }
 

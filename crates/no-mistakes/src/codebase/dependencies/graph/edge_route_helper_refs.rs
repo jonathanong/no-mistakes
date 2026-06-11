@@ -113,20 +113,32 @@ fn route_helper_patterns_from_import(
     {
         return Some(patterns);
     }
-    let reexport = target_facts
+    for reexport in target_facts
         .route_helper_imports
         .iter()
-        .find(|candidate| candidate.local == helper_name && candidate.imported != "*")
-        .or_else(|| {
-            target_facts
-                .route_helper_imports
-                .iter()
-                .find(|candidate| candidate.local == "*" && candidate.imported == "*")
-        })?;
-    let next_helper = if reexport.local == "*" {
-        helper_name
-    } else {
-        &reexport.imported
-    };
-    route_helper_patterns_from_import(&target, next_helper, reexport, facts, resolver, depth + 1)
+        .filter(|candidate| candidate.local == helper_name && candidate.imported != "*")
+    {
+        if let Some(patterns) = route_helper_patterns_from_import(
+            &target,
+            &reexport.imported,
+            reexport,
+            facts,
+            resolver,
+            depth + 1,
+        ) {
+            return Some(patterns);
+        }
+    }
+    for reexport in target_facts
+        .route_helper_imports
+        .iter()
+        .filter(|candidate| candidate.local == "*" && candidate.imported == "*")
+    {
+        if let Some(patterns) =
+            route_helper_patterns_from_import(&target, helper_name, reexport, facts, resolver, depth + 1)
+        {
+            return Some(patterns);
+        }
+    }
+    None
 }
