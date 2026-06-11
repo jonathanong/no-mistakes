@@ -49,6 +49,18 @@ async function navigate() {
   await router.push(entityHref(entity));
   router.push(await entityHref(entity));
   router.replace(withLocale(entityHref(entity)));
+  if (ready) {
+    var blockHref = entityHref;
+  }
+  router.push(blockHref(row));
+  const arrayActions = [
+    ,
+    () => router.push(entityHref(row)),
+    { href: entityHref(row) },
+    ...[() => router.push(entityHref(row))],
+    { 'href': entityHref(row) },
+  ];
+  const spreadLink = <Link {...{ href: entityHref(entity) }} />;
   router.push('/admin' + entityHref(row));
   router.push(entityHref(row) + '/settings');
   router.replace(`/admin/${entityHref(row)}/settings`);

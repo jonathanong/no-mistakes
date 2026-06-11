@@ -22,6 +22,7 @@ fn collect_helper_refs_from_block_statement<'a>(
             refs,
         );
     }
+    collect_var_helper_bindings_for_scope(&block.body, helper_bindings, local_helpers);
 }
 
 fn collect_helper_refs_from_if_statement<'a>(

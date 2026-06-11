@@ -125,6 +125,15 @@ fn collect_helper_refs_from_expression<'a>(
             local_helpers,
             refs,
         ),
+        Expression::ArrayExpression(array) => collect_helper_refs_from_array_expression(
+            array,
+            source,
+            file,
+            router_bindings,
+            helper_bindings,
+            local_helpers,
+            refs,
+        ),
         _ => {}
     }
 }

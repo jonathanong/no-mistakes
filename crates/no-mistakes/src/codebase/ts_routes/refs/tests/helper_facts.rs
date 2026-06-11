@@ -148,6 +148,11 @@ fn summarizes_route_helper_edge_expression_shapes() {
             "/nested-try/*"
         ]
     );
+    assert_eq!(helper("topLevelBlockReturnHref"), vec!["/block-return/*"]);
+    assert_eq!(
+        helper("topLevelBlockAssignHref"),
+        vec!["/block-assign/*/details"]
+    );
     assert_eq!(
         helper("reassignedHref"),
         vec!["/users/*", "/users/*/tabs/*"]
@@ -211,7 +216,7 @@ fn summarizes_deep_route_helper_calls_as_wildcards() {
 fn records_helper_calls_only_in_route_contexts() {
     let source = route_fixture_source("route-helper-route-contexts.tsx");
     let facts = extract_route_ref_facts(&source, "component.tsx");
-    assert_eq!(facts.route_helper_refs.len(), 27);
+    assert_eq!(facts.route_helper_refs.len(), 33);
     assert!(facts
         .route_helper_refs
         .iter()

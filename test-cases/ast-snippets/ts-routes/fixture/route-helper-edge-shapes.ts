@@ -63,6 +63,18 @@ export function nestedStatementHref(entity: { id: string }, kind: string): strin
   }
   return `/nested-fallback/${entity.id}`;
 }
+export function topLevelBlockReturnHref(entity: { id: string }): string {
+  {
+    return `/block-return/${entity.id}`;
+  }
+}
+export function topLevelBlockAssignHref(entity: { id: string }): string {
+  let href = `/block-assign/${entity.id}`;
+  {
+    href += '/details';
+  }
+  return href;
+}
 export function reassignedHref(entity: { id: string }, tab?: string): string {
   let href = `/users/${entity.id}`;
   if (tab) href += `/tabs/${tab}`;

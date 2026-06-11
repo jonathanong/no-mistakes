@@ -1,10 +1,10 @@
 use crate::codebase::ts_source::byte_offset_to_line;
 use oxc::allocator::Allocator;
 use oxc::ast::ast::{
-    Argument, BindingPattern, Expression, ForStatementInit, ForStatementLeft,
-    ImportDeclarationSpecifier, JSXAttributeItem, JSXAttributeName, JSXAttributeValue, JSXChild,
-    JSXElement, JSXExpression, ObjectPropertyKind, Program, PropertyKey, Statement,
-    TemplateLiteral, VariableDeclarationKind,
+    Argument, ArrayExpressionElement, BindingPattern, Expression, ForStatementInit,
+    ForStatementLeft, ImportDeclarationSpecifier, JSXAttributeItem, JSXAttributeName,
+    JSXAttributeValue, JSXChild, JSXElement, JSXExpression, ObjectPropertyKind, Program,
+    PropertyKey, Statement, TemplateLiteral, VariableDeclarationKind,
 };
 use oxc::parser::Parser;
 use oxc::span::SourceType;
@@ -23,6 +23,7 @@ include!("helper_patterns.rs");
 include!("helper_patterns_aliases.rs");
 include!("helper_patterns_assign.rs");
 include!("helper_patterns_env.rs");
+include!("helper_patterns_body.rs");
 include!("helper_patterns_eval.rs");
 include!("helper_patterns_call.rs");
 include!("helper_patterns_returns.rs");
@@ -35,6 +36,7 @@ include!("helper_refs_import_wrappers.rs");
 include!("helper_refs_statements.rs");
 include!("helper_refs_statement_bindings.rs");
 include!("helper_refs_statement_control.rs");
+include!("helper_refs_statement_var_aliases.rs");
 include!("helper_refs_statement_for.rs");
 include!("helper_refs_statement_declarations.rs");
 include!("helper_refs_statement_functions.rs");
