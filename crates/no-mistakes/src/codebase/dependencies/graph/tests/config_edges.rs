@@ -337,13 +337,18 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
     let explicit =
         crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
     let explicit_options = graph_config_options(&explicit).unwrap();
+    let explicit_route_prefixes = vec![
+        "/api/".to_string(),
+        "/prefix/".to_string(),
+        "/crawler/".to_string(),
+    ];
     assert_eq!(
         resolved_backend_prefixes(&explicit_options),
         vec!["/api/".to_string()]
     );
     assert_eq!(
         route_backend_prefixes(&explicit_options),
-        vec!["/api/".to_string()]
+        explicit_route_prefixes
     );
 
     let missing_register_options = GraphConfigOptions {
