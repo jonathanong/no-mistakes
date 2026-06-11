@@ -66,6 +66,11 @@ fn caller_entries(
 ) -> Vec<CallerEntry> {
     let mut by_key: BTreeMap<(String, Option<String>), CallerEntry> = BTreeMap::new();
     let export_files: BTreeSet<&Path> = export_nodes.iter().filter_map(NodeId::as_file).collect();
+    let extra_file_callers: BTreeSet<&str> = extra_callers
+        .iter()
+        .filter(|caller| caller.symbol.is_none())
+        .map(|caller| caller.file.as_str())
+        .collect();
     for entry in entries {
         if export_nodes.contains(&entry.node) {
             continue;
@@ -78,6 +83,13 @@ fn caller_entries(
         let Some((file, symbol)) = caller_parts(&entry.node, root) else {
             continue;
         };
+        if matches!(entry.node, NodeId::File(_))
+            && symbol.is_none()
+            && !entry.via.contains(&EdgeKind::TestOf)
+            && !extra_file_callers.contains(file.as_str())
+        {
+            continue;
+        }
         let is_test = entry
             .node
             .as_file()
@@ -88,6 +100,13 @@ fn caller_entries(
         insert_caller(&mut by_key, entry, file, symbol);
     }
     for caller in extra_callers {
+        if caller.symbol.is_none()
+            && export_files
+                .iter()
+                .any(|file| relative_slash_path(root, file) == caller.file)
+        {
+            continue;
+        }
         merge_caller_entry(&mut by_key, caller.clone());
     }
     let mut callers: Vec<_> = by_key.into_values().collect();
