@@ -1,7 +1,6 @@
 fn binding_identifier_name<'a>(pattern: &'a BindingPattern<'a>) -> Option<&'a str> {
     match pattern {
         BindingPattern::BindingIdentifier(id) => Some(id.name.as_str()),
-        BindingPattern::AssignmentPattern(assign) => binding_identifier_name(&assign.left),
         _ => None,
     }
 }

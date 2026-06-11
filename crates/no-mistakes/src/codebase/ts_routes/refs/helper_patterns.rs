@@ -80,45 +80,56 @@ fn collect_helper_def_from_statement<'a>(
                             },
                         );
                     }
-                    defs.insert(
-                        "default",
-                        HelperDef {
-                            name: "default",
-                            params: &func.params,
-                            body,
-                            expression_body: false,
-                        },
-                    );
+                    insert_default_helper_def(defs, &func.params, body, false);
                 }
             }
             oxc::ast::ast::ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
-                defs.insert(
-                    "default",
-                    HelperDef {
-                        name: "default",
-                        params: &arrow.params,
-                        body: &arrow.body,
-                        expression_body: arrow.expression,
-                    },
-                );
+                insert_default_helper_def(defs, &arrow.params, &arrow.body, arrow.expression);
             }
-            oxc::ast::ast::ExportDefaultDeclarationKind::FunctionExpression(func) => {
-                if let Some(body) = &func.body {
-                    defs.insert(
-                        "default",
-                        HelperDef {
-                            name: "default",
-                            params: &func.params,
-                            body,
-                            expression_body: false,
-                        },
-                    );
-                }
+            oxc::ast::ast::ExportDefaultDeclarationKind::ParenthesizedExpression(parenthesized) => {
+                collect_default_helper_def_from_expression(&parenthesized.expression, defs);
             }
             _ => {}
         },
         _ => {}
     }
+}
+
+fn collect_default_helper_def_from_expression<'a>(
+    expr: &'a Expression<'a>,
+    defs: &mut HashMap<&'a str, HelperDef<'a>>,
+) {
+    match expr {
+        Expression::ArrowFunctionExpression(arrow) => {
+            insert_default_helper_def(defs, &arrow.params, &arrow.body, arrow.expression);
+        }
+        Expression::FunctionExpression(func) => {
+            if let Some(body) = &func.body {
+                insert_default_helper_def(defs, &func.params, body, false);
+            }
+        }
+        Expression::ParenthesizedExpression(parenthesized) => {
+            collect_default_helper_def_from_expression(&parenthesized.expression, defs);
+        }
+        _ => {}
+    }
+}
+
+fn insert_default_helper_def<'a>(
+    defs: &mut HashMap<&'a str, HelperDef<'a>>,
+    params: &'a oxc::ast::ast::FormalParameters<'a>,
+    body: &'a oxc::ast::ast::FunctionBody<'a>,
+    expression_body: bool,
+) {
+    defs.insert(
+        "default",
+        HelperDef {
+            name: "default",
+            params,
+            body,
+            expression_body,
+        },
+    );
 }
 
 fn collect_helper_defs_from_var_decl<'a>(

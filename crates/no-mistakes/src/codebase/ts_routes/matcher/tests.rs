@@ -119,3 +119,9 @@ fn reference_double_star_matches_definition_tail() {
     assert!(matches("/crawler/*/**", "/crawler/:id/edit"));
     assert!(matches("/*/*/**", "/reviews/:id/tags/:tagType"));
 }
+
+#[test]
+fn reference_double_star_matches_middle_definition_segments() {
+    assert!(matches("/api/**/users", "/api/v1/admin/users"));
+    assert!(!matches("/api/**/users", "/api/v1/admin/projects"));
+}

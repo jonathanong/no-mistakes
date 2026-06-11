@@ -40,12 +40,7 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
             }
         }
     }
-    imports.sort_by(|a, b| {
-        a.local
-            .cmp(&b.local)
-            .then_with(|| a.imported.cmp(&b.imported))
-            .then_with(|| a.source.cmp(&b.source))
-    });
+    imports.sort_by(|a, b| (&a.local, &a.imported, &a.source).cmp(&(&b.local, &b.imported, &b.source)));
     imports.dedup();
     imports
 }
@@ -62,12 +57,7 @@ fn collect_route_helper_refs_from_program<'a>(
     for stmt in &program.body {
         collect_helper_refs_from_statement(stmt, source, file, &mut router_bindings, &mut refs);
     }
-    refs.sort_by(|a, b| {
-        a.file
-            .cmp(&b.file)
-            .then_with(|| a.line.cmp(&b.line))
-            .then_with(|| a.callee.cmp(&b.callee))
-    });
+    refs.sort_by(|a, b| (&a.file, a.line, &a.callee).cmp(&(&b.file, b.line, &b.callee)));
     refs.dedup();
     refs
 }

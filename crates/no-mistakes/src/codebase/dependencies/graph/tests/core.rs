@@ -3,6 +3,7 @@ use super::*;
 mod config_edges;
 mod config_plan;
 mod config_project_routes;
+mod config_route_helpers;
 mod extra;
 mod extra_runtime;
 mod module_cases;
