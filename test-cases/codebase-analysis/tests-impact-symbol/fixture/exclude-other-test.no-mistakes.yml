@@ -1,0 +1,10 @@
+version: 2
+tests:
+  vitest:
+    projects:
+      unit:
+        include:
+          - "**/*.test.mts"
+        exclude:
+          - other.test.mts
+rules: []

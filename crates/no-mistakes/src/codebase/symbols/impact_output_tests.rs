@@ -22,12 +22,12 @@ fn caller_parts_ignores_non_file_backed_nodes() {
 fn export_location_errors_include_file_context() {
     let root = Path::new("/repo");
     let missing = root.join("missing.mts");
-    let missing_err = export_location(&missing, root, "parseDate").unwrap_err();
+    let missing_err = export_location(&missing, root, "parseDate", false).unwrap_err();
     assert!(format!("{missing_err:#}").contains("reading /repo/missing.mts"));
 
     let invalid = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/symbols-output/fixture/src/invalid.mts");
-    let parse_err = export_location(&invalid, root, "parseDate").unwrap_err();
+    let parse_err = export_location(&invalid, root, "parseDate", false).unwrap_err();
     assert!(format!("{parse_err:#}").contains("extracting symbols from"));
 }
 

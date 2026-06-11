@@ -142,6 +142,47 @@ fn signature_impact_tracks_star_reexport_paths_and_consumers() {
 }
 
 #[test]
+fn signature_impact_rejects_symbols_not_exported_by_star_barrel() {
+    let err = impact::collect_report(&impact_file_args(
+        "star-date-barrel.mts",
+        "default",
+        Format::Json,
+    ))
+    .unwrap_err();
+    assert!(err.to_string().contains("is not exported"));
+}
+
+#[test]
+fn signature_impact_treats_local_import_export_barrels_as_exports() {
+    let out = run_capture(impact_args("parseDate", Format::Json));
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+
+    assert!(v["exports"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "local-date-barrel.mts" && entry["symbol"] == "parseDate"
+    }));
+    assert!(!v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "local-date-barrel.mts" && entry["symbol"] == "parseDate"
+    }));
+    assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "local-barrel-consumer.mts" && entry["symbol"] == "parseLocalDate"
+    }));
+}
+
+#[test]
+fn signature_impact_passes_explicit_config_to_graph() {
+    let mut args = impact_args("parseDate", Format::Json);
+    args.config = Some(PathBuf::from("exclude-other-test.no-mistakes.yml"));
+    let out = run_capture(args);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+
+    assert!(!v["suggestedTests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|entry| entry["file"] == "other.test.mts"));
+}
+
+#[test]
 fn signature_impact_pipeline_run_handles_signature_impact_mode() {
     run(impact_args("parseDate", Format::Json)).unwrap();
 

@@ -70,7 +70,12 @@ fn warnings(suggested_tests: &[TestSuggestion]) -> Vec<ImpactWarning> {
     }
 }
 
-fn export_location(file: &Path, root: &Path, symbol: &str) -> Result<Option<SymbolLocation>> {
+fn export_location(
+    file: &Path,
+    root: &Path,
+    symbol: &str,
+    allow_star_reexport: bool,
+) -> Result<Option<SymbolLocation>> {
     let source =
         std::fs::read_to_string(file).with_context(|| format!("reading {}", file.display()))?;
     let is_tsx = file
@@ -82,7 +87,7 @@ fn export_location(file: &Path, root: &Path, symbol: &str) -> Result<Option<Symb
     Ok(symbols
         .exports
         .into_iter()
-        .find(|export| export_matches_symbol(&export.kind, &export.name, symbol))
+        .find(|export| export_matches_symbol(&export.kind, &export.name, symbol, allow_star_reexport))
         .map(|export| SymbolLocation {
             file: relative_slash_path(root, file),
             symbol: symbol.to_string(),
@@ -91,12 +96,17 @@ fn export_location(file: &Path, root: &Path, symbol: &str) -> Result<Option<Symb
         }))
 }
 
-fn export_matches_symbol(kind: &ExportKind, name: &str, symbol: &str) -> bool {
+fn export_matches_symbol(
+    kind: &ExportKind,
+    name: &str,
+    symbol: &str,
+    allow_star_reexport: bool,
+) -> bool {
     if matches!(
         kind,
         ExportKind::ReExport { imported, .. } if imported == "*" && name == "*"
     ) {
-        return true;
+        return allow_star_reexport;
     }
     export_name(kind, name) == symbol
 }

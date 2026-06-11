@@ -13,7 +13,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
     let abs_files = resolve_input_files(&args.files, &root, &cwd);
     let target_file = crate::codebase::ts_resolver::normalize_path(&abs_files[0]);
 
-    let definition = export_location(&target_file, &root, symbol)?.with_context(|| {
+    let definition = export_location(&target_file, &root, symbol, false)?.with_context(|| {
         format!(
             "`{}` is not exported by `{}`",
             symbol,
@@ -23,7 +23,12 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
 
     let config = load_v2_config(&root, args.config.as_deref())?;
     let test_filter = TestFileFilter::new(&root, &config);
-    let graph = DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::all().with_symbols(true))?;
+    let graph = DepGraph::build_with_plan_and_config(
+        &root,
+        &tsconfig,
+        GraphBuildPlan::all().with_symbols(true),
+        args.config.as_deref(),
+    )?;
     let target = NodeId::Symbol {
         file: target_file,
         symbol: symbol.to_string(),
@@ -62,8 +67,8 @@ fn export_paths(
                     continue;
                 };
                 if seen.insert(neighbor.clone()) {
-                    if let Some(location) = export_location(file, root, symbol).ok().flatten() {
-                        if location.kind == "re-export" {
+                    if let Some(location) = export_location(file, root, symbol, true).ok().flatten() {
+                        if is_export_path(&location, target, neighbor) {
                             frontier.push(neighbor.clone());
                             exports.insert(location);
                             export_nodes.insert(neighbor.clone());
@@ -74,6 +79,26 @@ fn export_paths(
         }
     }
     (exports.into_iter().collect(), export_nodes)
+}
+
+fn is_export_path(location: &SymbolLocation, target: &NodeId, neighbor: &NodeId) -> bool {
+    if location.kind == "re-export" {
+        return true;
+    }
+    let (
+        NodeId::Symbol {
+            symbol: target_symbol,
+            ..
+        },
+        NodeId::Symbol {
+            symbol: neighbor_symbol,
+            ..
+        },
+    ) = (target, neighbor)
+    else {
+        return false;
+    };
+    location.symbol == *target_symbol && neighbor_symbol == target_symbol
 }
 
 fn caller_entries(

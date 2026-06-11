@@ -7,37 +7,15 @@ pub struct DepGraph {
 }
 
 impl DepGraph {
-    pub fn build(root: &Path, tsconfig: &TsConfig) -> Result<Self> {
-        Self::build_with_plan(root, tsconfig, GraphBuildPlan::all())
-    }
-
-    pub fn build_with_plan(root: &Path, tsconfig: &TsConfig, plan: GraphBuildPlan) -> Result<Self> {
-        let graph_files = GraphFiles::discover(root);
-        Ok(Self::build_with_plan_and_files(
-            root,
-            tsconfig,
-            plan,
-            &graph_files,
-        ))
-    }
-
-    pub(crate) fn build_with_plan_and_files(
+    pub(crate) fn build_with_plan_files_config_and_facts(
         root: &Path,
         tsconfig: &TsConfig,
         plan: GraphBuildPlan,
         graph_files: &GraphFiles,
-    ) -> Self {
-        Self::build_with_plan_files_and_facts(root, tsconfig, plan, graph_files, None)
-    }
-
-    pub(crate) fn build_with_plan_files_and_facts(
-        root: &Path,
-        tsconfig: &TsConfig,
-        plan: GraphBuildPlan,
-        graph_files: &GraphFiles,
+        config_path: Option<&Path>,
         facts: Option<&dyn TsFactLookup>,
     ) -> Self {
-        let config_options = graph_config_options_for_plan(root, plan);
+        let config_options = graph_config_options_for_plan_with_config(root, plan, config_path);
         let resolver = ImportResolver::new(tsconfig).with_visible(graph_files.visible());
         let fact_plan = effective_ts_fact_plan(plan, config_options.as_ref());
         let fact_context = ts_fact_context_from_options(root, plan, config_options.as_ref());
