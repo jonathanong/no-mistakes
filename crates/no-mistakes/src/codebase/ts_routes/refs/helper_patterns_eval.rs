@@ -83,9 +83,8 @@ fn evaluate_helper_body<'a>(
                     &mut consequent_env,
                     depth + 1,
                 ));
-                merge_helper_env(env, consequent_env);
                 if let Some(alternate) = &if_stmt.alternate {
-                    let mut alternate_env = base_env;
+                    let mut alternate_env = base_env.clone();
                     returns.extend(evaluate_helper_return_statement(
                         alternate,
                         defs,
@@ -93,7 +92,9 @@ fn evaluate_helper_body<'a>(
                         &mut alternate_env,
                         depth + 1,
                     ));
-                    merge_helper_env(env, alternate_env);
+                    replace_helper_env_with_branches(env, vec![consequent_env, alternate_env]);
+                } else {
+                    merge_helper_env(env, consequent_env);
                 }
             }
             Statement::SwitchStatement(switch_stmt) => {

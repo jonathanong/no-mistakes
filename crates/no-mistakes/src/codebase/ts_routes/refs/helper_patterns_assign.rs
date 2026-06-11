@@ -30,3 +30,19 @@ fn merge_helper_env(
         env.insert(name, dedupe_candidates(merged));
     }
 }
+
+fn replace_helper_env_with_branches(
+    env: &mut HashMap<String, Vec<String>>,
+    branch_envs: Vec<HashMap<String, Vec<String>>>,
+) {
+    let mut merged = HashMap::<String, Vec<String>>::new();
+    for branch_env in branch_envs {
+        for (name, values) in branch_env {
+            merged.entry(name).or_default().extend(values);
+        }
+    }
+    for values in merged.values_mut() {
+        *values = dedupe_candidates(std::mem::take(values));
+    }
+    *env = merged;
+}

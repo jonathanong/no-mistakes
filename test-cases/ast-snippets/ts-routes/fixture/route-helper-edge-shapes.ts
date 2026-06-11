@@ -1,0 +1,78 @@
+export function logicalHref(value: string | null): string {
+  return value || `/logical/${value}`;
+}
+export function assertedHref(value: string): string {
+  return (`/asserted/${value}` as string);
+}
+export function angleAssertedHref(value: string): string {
+  return <string>`/angle/${value}`;
+}
+function objectHref({ id }: { id: string }): string {
+  return `/object/${id}`;
+}
+export function wrappedObjectHref(entity: { id: string }): string {
+  return objectHref(entity);
+}
+export function missingReturnHref(): string {
+  return;
+}
+export function cappedHref(
+  a = flag ? '/a' : '/b',
+  b = flag ? '/c' : '/d',
+  c = flag ? '/e' : '/f',
+  d = flag ? '/g' : '/h',
+  e = flag ? '/i' : '/j',
+): string {
+  return a + b + c + d + e;
+}
+export function branchedHref(entity: { id: string }, archived: boolean): string {
+  if (archived) {
+    return `/archive/${entity.id}`;
+  }
+  return `/active/${entity.id}`;
+}
+export function localBranchHref(entity: { id: string }, archived: boolean): string {
+  if (archived) {
+    const href = `/archive-local/${entity.id}`;
+    return href;
+  }
+  return `/active-local/${entity.id}`;
+}
+export function reassignedHref(entity: { id: string }, tab?: string): string {
+  let href = `/users/${entity.id}`;
+  if (tab) href += `/tabs/${tab}`;
+  return href;
+}
+export function reassignedBranchHref(entity: { id: string }, kind: string): string {
+  let href = `/items/${entity.id}`;
+  if (kind === 'a') href += '/a';
+  else href += '/b';
+  return href;
+}
+export function switchHref(entity: { id: string }, kind: 'user' | 'org'): string {
+  switch (kind) {
+    case 'user':
+      return `/users/${entity.id}`;
+    case 'org':
+      return `/orgs/${entity.id}`;
+    default:
+      return `/unknown/${entity.id}`;
+  }
+}
+export function reassignedSwitchHref(entity: { id: string }, kind: string): string {
+  let href = `/switch/${entity.id}`;
+  switch (kind) {
+    case 'settings':
+      href += '/settings';
+      return href;
+    case 'base':
+      return href;
+  }
+  return href;
+}
+export const urlObjectHref = (entity: { id: string }) => ({
+  pathname: `/object/${entity.id}`,
+});
+import { entityHref } from './entity-href';
+export const composedHref = (entity: { id: string }) => `${entityHref(entity)}/settings`;
+let noInit;

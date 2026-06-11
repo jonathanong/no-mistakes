@@ -1,14 +1,10 @@
-use super::super::*;
+use super::{super::*, route_fixture_source};
 use std::collections::HashMap;
 
 #[test]
 fn summarizes_basic_route_helper_patterns() {
-    let source = r#"
-export function entityHref(entity: { id: string }, kind: string): string {
-  return `/prefix/${entity.id}/suffix/${kind}`;
-}
-"#;
-    let facts = extract_route_ref_facts(source, "links.ts");
+    let source = route_fixture_source("route-helper-basic.ts");
+    let facts = extract_route_ref_facts(&source, "links.ts");
     assert_eq!(facts.route_helpers.len(), 1);
     assert_eq!(facts.route_helpers[0].name, "entityHref");
     assert_eq!(facts.route_helpers[0].patterns, vec!["/prefix/*/suffix/*"]);
@@ -16,12 +12,8 @@ export function entityHref(entity: { id: string }, kind: string): string {
 
 #[test]
 fn summarizes_default_exported_route_helper_patterns() {
-    let named = r#"
-export default function entityHref(entity: { id: string }): string {
-  return `/entities/${entity.id}`;
-}
-"#;
-    let facts = extract_route_ref_facts(named, "entity-href.ts");
+    let named = route_fixture_source("route-helper-default-named.ts");
+    let facts = extract_route_ref_facts(&named, "entity-href.ts");
     let helpers = facts
         .route_helpers
         .iter()
@@ -36,20 +28,14 @@ export default function entityHref(entity: { id: string }): string {
         Some(&vec!["/entities/*".to_string()])
     );
 
-    let anonymous = r#"
-export default (entity: { id: string }) => `/anonymous/${entity.id}`;
-"#;
-    let facts = extract_route_ref_facts(anonymous, "anonymous-href.ts");
+    let anonymous = route_fixture_source("route-helper-default-anonymous.ts");
+    let facts = extract_route_ref_facts(&anonymous, "anonymous-href.ts");
     assert_eq!(facts.route_helpers.len(), 1);
     assert_eq!(facts.route_helpers[0].name, "default");
     assert_eq!(facts.route_helpers[0].patterns, vec!["/anonymous/*"]);
 
-    let function_expression = r#"
-export default function (entity: { id: string }): string {
-  return `/function-expression/${entity.id}`;
-}
-"#;
-    let facts = extract_route_ref_facts(function_expression, "function-expression-href.ts");
+    let function_expression = route_fixture_source("route-helper-default-function-expression.ts");
+    let facts = extract_route_ref_facts(&function_expression, "function-expression-href.ts");
     assert_eq!(facts.route_helpers.len(), 1);
     assert_eq!(facts.route_helpers[0].name, "default");
     assert_eq!(
@@ -57,19 +43,14 @@ export default function (entity: { id: string }): string {
         vec!["/function-expression/*"]
     );
 
-    let declaration = r#"
-export default function declared(entity: { id: string }): string;
-"#;
-    let facts = extract_route_ref_facts(declaration, "declaration-href.ts");
+    let declaration = route_fixture_source("route-helper-default-declaration.ts");
+    let facts = extract_route_ref_facts(&declaration, "declaration-href.ts");
     assert!(facts.route_helpers.is_empty());
 
-    let parenthesized_function_expression = r#"
-export default (function (entity: { id: string }): string {
-  return `/parenthesized-function/${entity.id}`;
-});
-"#;
+    let parenthesized_function_expression =
+        route_fixture_source("route-helper-default-parenthesized-function.ts");
     let facts = extract_route_ref_facts(
-        parenthesized_function_expression,
+        &parenthesized_function_expression,
         "parenthesized-function-href.ts",
     );
     assert_eq!(facts.route_helpers.len(), 1);
@@ -79,13 +60,10 @@ export default (function (entity: { id: string }): string {
         vec!["/parenthesized-function/*"]
     );
 
-    let nested_parenthesized_function_expression = r#"
-export default ((function (entity: { id: string }): string {
-  return `/nested-parenthesized-function/${entity.id}`;
-}));
-"#;
+    let nested_parenthesized_function_expression =
+        route_fixture_source("route-helper-default-nested-parenthesized-function.ts");
     let facts = extract_route_ref_facts(
-        nested_parenthesized_function_expression,
+        &nested_parenthesized_function_expression,
         "nested-parenthesized-function-href.ts",
     );
     assert_eq!(facts.route_helpers.len(), 1);
@@ -94,15 +72,12 @@ export default ((function (entity: { id: string }): string {
         vec!["/nested-parenthesized-function/*"]
     );
 
-    let non_helper_expression = "export default ({ href: '/ignored' });";
-    let facts = extract_route_ref_facts(non_helper_expression, "non-helper-expression.ts");
+    let non_helper_expression = route_fixture_source("route-helper-default-non-helper.ts");
+    let facts = extract_route_ref_facts(&non_helper_expression, "non-helper-expression.ts");
     assert!(facts.route_helpers.is_empty());
 
-    let default_alias = r#"
-const entityHref = (entity: { id: string }) => `/aliased-default/${entity.id}`;
-export default entityHref;
-"#;
-    let facts = extract_route_ref_facts(default_alias, "default-alias-href.ts");
+    let default_alias = route_fixture_source("route-helper-default-alias.ts");
+    let facts = extract_route_ref_facts(&default_alias, "default-alias-href.ts");
     let helpers = facts
         .route_helpers
         .iter()
@@ -120,23 +95,8 @@ export default entityHref;
 
 #[test]
 fn summarizes_nested_route_helpers_with_suffixes() {
-    let source = r#"
-function getTopicTypeSlug(topicType: string): string {
-  return topicType;
-}
-type Topic = { topic_type: string; id: string; slug?: string | null };
-export function createTopicPathname(topic: Topic, suffix = ''): string {
-  const idOrSlug = topic.slug ?? topic.id;
-  return `/${getTopicTypeSlug(topic.topic_type)}/${idOrSlug}${suffix}`;
-}
-export function topicTagsHref(topic: Topic, tagType: string): string {
-  return createTopicPathname(topic, `/tags/${tagType}`);
-}
-export function topicHref(topic: Topic, tab?: string): string {
-  return createTopicPathname(topic, tab ? `/${tab}` : '');
-}
-"#;
-    let facts = extract_route_ref_facts(source, "entity-href.ts");
+    let source = route_fixture_source("route-helper-nested-suffixes.ts");
+    let facts = extract_route_ref_facts(&source, "entity-href.ts");
     let helper = |name: &str| {
         facts
             .route_helpers
@@ -152,70 +112,8 @@ export function topicHref(topic: Topic, tab?: string): string {
 
 #[test]
 fn summarizes_route_helper_edge_expression_shapes() {
-    let source = r#"
-export function logicalHref(value: string | null): string {
-  return value || `/logical/${value}`;
-}
-export function assertedHref(value: string): string {
-  return (`/asserted/${value}` as string);
-}
-export function angleAssertedHref(value: string): string {
-  return <string>`/angle/${value}`;
-}
-function objectHref({ id }: { id: string }): string {
-  return `/object/${id}`;
-}
-export function wrappedObjectHref(entity: { id: string }): string {
-  return objectHref(entity);
-}
-export function missingReturnHref(): string {
-  return;
-}
-export function cappedHref(
-  a = flag ? '/a' : '/b',
-  b = flag ? '/c' : '/d',
-  c = flag ? '/e' : '/f',
-  d = flag ? '/g' : '/h',
-  e = flag ? '/i' : '/j',
-): string {
-  return a + b + c + d + e;
-}
-export function branchedHref(entity: { id: string }, archived: boolean): string {
-  if (archived) {
-    return `/archive/${entity.id}`;
-  }
-  return `/active/${entity.id}`;
-}
-export function localBranchHref(entity: { id: string }, archived: boolean): string {
-  if (archived) {
-    const href = `/archive-local/${entity.id}`;
-    return href;
-  }
-  return `/active-local/${entity.id}`;
-}
-export function reassignedHref(entity: { id: string }, tab?: string): string {
-  let href = `/users/${entity.id}`;
-  if (tab) href += `/tabs/${tab}`;
-  return href;
-}
-export function switchHref(entity: { id: string }, kind: 'user' | 'org'): string {
-  switch (kind) {
-    case 'user':
-      return `/users/${entity.id}`;
-    case 'org':
-      return `/orgs/${entity.id}`;
-    default:
-      return `/unknown/${entity.id}`;
-  }
-}
-export const urlObjectHref = (entity: { id: string }) => ({
-  pathname: `/object/${entity.id}`,
-});
-import { entityHref } from './entity-href';
-export const composedHref = (entity: { id: string }) => `${entityHref(entity)}/settings`;
-let noInit;
-"#;
-    let facts = extract_route_ref_facts(source, "edge-shapes.ts");
+    let source = route_fixture_source("route-helper-edge-shapes.ts");
+    let facts = extract_route_ref_facts(&source, "edge-shapes.ts");
     let helper = |name: &str| {
         facts
             .route_helpers
@@ -244,23 +142,24 @@ let noInit;
         vec!["/users/*", "/users/*/tabs/*"]
     );
     assert_eq!(
+        helper("reassignedBranchHref"),
+        vec!["/items/*/a", "/items/*/b"]
+    );
+    assert_eq!(
         helper("switchHref"),
         vec!["/orgs/*", "/unknown/*", "/users/*"]
+    );
+    assert_eq!(
+        helper("reassignedSwitchHref"),
+        vec!["/switch/*", "/switch/*/settings"]
     );
     assert_eq!(helper("urlObjectHref"), vec!["/object/*"]);
 }
 
 #[test]
 fn summarizes_deep_route_helper_calls_as_wildcards() {
-    let source = r#"
-function passthrough(value: string): string {
-  return value;
-}
-export function deepHref(value: string): string {
-  return `/deep/${passthrough(passthrough(passthrough(passthrough(passthrough(value)))))}`;
-}
-"#;
-    let facts = extract_route_ref_facts(source, "deep-href.ts");
+    let source = route_fixture_source("route-helper-deep.ts");
+    let facts = extract_route_ref_facts(&source, "deep-href.ts");
     let helper = facts
         .route_helpers
         .iter()
@@ -271,47 +170,8 @@ export function deepHref(value: string): string {
 
 #[test]
 fn records_helper_calls_only_in_route_contexts() {
-    let source = r#"
-import { redirect } from 'next/navigation';
-import { entityHref } from './entity-href';
-import { type Entity } from './entity-href';
-
-const loose = entityHref(entity);
-api.fetch(entityHref(entity));
-const link = <Link href={entityHref(entity)} />;
-const router = useRouter();
-router.push(entityHref(entity));
-redirect(entityHref(entity));
-fetch(entityHref(entity));
-router?.push(entityHref(entity));
-router.push?.(entityHref(entity));
-redirect?.(entityHref(entity));
-globalThis?.fetch(entityHref(entity));
-router?.[method](entityHref(entity));
-router.push(entityHref?.(entity));
-const optionalMember = links?.entityHref;
-for (const item of items) {
-  router.prefetch(entityHref(item));
-}
-while (next) router.replace(entityHref(next));
-switch (tab) {
-  case 'details':
-    router.push(entityHref(entity));
-    break;
-}
-try {
-  router.prefetch(entityHref(entity));
-} catch {
-  router.replace(entityHref(entity));
-} finally {
-  redirect(entityHref(entity));
-}
-async function navigate() {
-  await router.push(entityHref(entity));
-  router.replace(withLocale(entityHref(entity)));
-}
-"#;
-    let facts = extract_route_ref_facts(source, "component.tsx");
+    let source = route_fixture_source("route-helper-route-contexts.tsx");
+    let facts = extract_route_ref_facts(&source, "component.tsx");
     assert_eq!(
         facts
             .route_helper_refs
@@ -342,8 +202,8 @@ async function navigate() {
 
 #[test]
 fn records_named_reexport_route_helper_imports() {
-    let source = "export { entityHref, otherHref as renamedHref } from './entity-href';";
-    let facts = extract_route_ref_facts(source, "links.ts");
+    let source = route_fixture_source("route-helper-named-reexport.ts");
+    let facts = extract_route_ref_facts(&source, "links.ts");
     assert_eq!(
         facts
             .route_helper_imports
@@ -365,8 +225,8 @@ fn records_named_reexport_route_helper_imports() {
 
 #[test]
 fn records_star_reexport_route_helper_imports() {
-    let source = "export * from './entity-href';";
-    let facts = extract_route_ref_facts(source, "links.ts");
+    let source = route_fixture_source("route-helper-star-reexport.ts");
+    let facts = extract_route_ref_facts(&source, "links.ts");
     assert_eq!(
         facts
             .route_helper_imports
@@ -385,15 +245,8 @@ fn records_star_reexport_route_helper_imports() {
 
 #[test]
 fn sorts_route_helper_imports_and_refs_deterministically() {
-    let source = r#"
-import { betaHref } from './b';
-import { alphaHref } from './a';
-import { entityHref } from './entity-href';
-
-const left = <><Link href={betaHref(entity)} /><Link href={alphaHref(entity)} /></>;
-const right = <Link href={entityHref(entity)} />;
-"#;
-    let facts = extract_route_ref_facts(source, "component.tsx");
+    let source = route_fixture_source("route-helper-import-sort.tsx");
+    let facts = extract_route_ref_facts(&source, "component.tsx");
     assert_eq!(
         facts
             .route_helper_imports
@@ -418,22 +271,14 @@ const right = <Link href={entityHref(entity)} />;
             .iter()
             .map(|route_ref| (route_ref.line, route_ref.callee.as_str()))
             .collect::<Vec<_>>(),
-        vec![(6, "alphaHref"), (6, "betaHref"), (7, "entityHref")]
+        vec![(5, "alphaHref"), (5, "betaHref"), (6, "entityHref")]
     );
 }
 
 #[test]
 fn records_route_helper_calls_inside_url_wrappers() {
-    let source = r#"
-import { entityHref } from './entity-href';
-
-const hashLink = <Link href={entityHref(entity) + '#reviews'} />;
-const queryLink = <Link href={`${entityHref(entity)}?tab=details`} />;
-const prefixLink = <Link href={'/prefix' + entityHref(entity)} />;
-const optionalLink = <Link href={entityHref?.(entity)} />;
-const loose = entityHref(entity) + '#ignored';
-"#;
-    let facts = extract_route_ref_facts(source, "component.tsx");
+    let source = route_fixture_source("route-helper-url-wrappers.tsx");
+    let facts = extract_route_ref_facts(&source, "component.tsx");
     assert_eq!(
         facts
             .route_helper_refs
@@ -446,16 +291,8 @@ const loose = entityHref(entity) + '#ignored';
 
 #[test]
 fn records_route_helper_calls_inside_type_wrappers() {
-    let source = r#"
-import { entityHref } from './entity-href';
-
-const router = useRouter();
-router.push(entityHref(entity)!);
-router.replace((entityHref(entity) satisfies string));
-router.prefetch(<string>entityHref(entity));
-router.push(getLinks().entityHref(entity));
-"#;
-    let facts = extract_route_ref_facts(source, "component.ts");
+    let source = route_fixture_source("route-helper-type-wrappers.ts");
+    let facts = extract_route_ref_facts(&source, "component.ts");
     assert_eq!(
         facts
             .route_helper_refs
@@ -468,11 +305,8 @@ router.push(getLinks().entityHref(entity));
 
 #[test]
 fn records_namespace_helper_calls_in_route_contexts() {
-    let source = r#"
-import * as links from './entity-href';
-const link = <Link href={links.topicHref(topic)} />;
-"#;
-    let facts = extract_route_ref_facts(source, "component.tsx");
+    let source = route_fixture_source("route-helper-namespace-context.tsx");
+    let facts = extract_route_ref_facts(&source, "component.tsx");
     assert_eq!(facts.route_helper_refs.len(), 1);
     assert_eq!(facts.route_helper_refs[0].callee, "links.topicHref");
     assert_eq!(facts.route_helper_imports[0].imported, "*");

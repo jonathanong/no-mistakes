@@ -28,13 +28,15 @@ fn collect_helper_refs_from_switch_statement<'a>(
                 refs,
             );
         }
+        let mut case_helper_bindings = helper_bindings.clone();
+        collect_scope_helper_bindings(&case.consequent, &mut case_helper_bindings, local_helpers);
         for stmt in &case.consequent {
             collect_helper_refs_from_statement(
                 stmt,
                 source,
                 file,
                 router_bindings,
-                helper_bindings,
+                &mut case_helper_bindings,
                 local_helpers,
                 refs,
             );

@@ -1,13 +1,10 @@
-use super::*;
+use super::{route_fixture_source, *};
 use std::collections::HashMap;
 
 #[test]
 fn summarizes_same_file_route_helper_export_aliases() {
-    let source = r#"
-const entityHref = (entity: { id: string }) => `/aliased/${entity.id}`;
-export { entityHref as href };
-"#;
-    let facts = extract_route_ref_facts(source, "entity-href.ts");
+    let source = route_fixture_source("route-helper-export-alias.ts");
+    let facts = extract_route_ref_facts(&source, "entity-href.ts");
     let helpers = facts
         .route_helpers
         .iter()
@@ -23,8 +20,8 @@ export { entityHref as href };
 
 #[test]
 fn records_namespace_export_all_route_helper_imports() {
-    let source = "export * as links from './entity-href';";
-    let facts = extract_route_ref_facts(source, "links.ts");
+    let source = route_fixture_source("route-helper-namespace-export.ts");
+    let facts = extract_route_ref_facts(&source, "links.ts");
 
     assert_eq!(facts.route_helper_imports.len(), 1);
     assert_eq!(facts.route_helper_imports[0].local, "links");

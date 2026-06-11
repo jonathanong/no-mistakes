@@ -107,7 +107,11 @@ fn collect_helper_refs_from_for_statement<'a>(
 }
 
 fn collect_helper_refs_from_loop_body<'a>(
-    parts: (&'a Expression<'a>, &'a Statement<'a>),
+    parts: (
+        &'a Expression<'a>,
+        &'a Statement<'a>,
+        Option<&'a ForStatementLeft<'a>>,
+    ),
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,
@@ -115,7 +119,7 @@ fn collect_helper_refs_from_loop_body<'a>(
     local_helpers: &HashSet<String>,
     refs: &mut Vec<RouteHelperRef>,
 ) {
-    let (test_or_right, body) = parts;
+    let (test_or_right, body, left) = parts;
     collect_helper_refs_from_expression(
         test_or_right,
         source,
@@ -125,12 +129,16 @@ fn collect_helper_refs_from_loop_body<'a>(
         local_helpers,
         refs,
     );
+    let mut scoped_helper_bindings = helper_bindings.clone();
+    if let Some(ForStatementLeft::VariableDeclaration(var_decl)) = left {
+        remove_shadowed_helper_var_bindings(var_decl, &mut scoped_helper_bindings, local_helpers);
+    }
     collect_helper_refs_from_statement(
         body,
         source,
         file,
         router_bindings,
-        helper_bindings,
+        &mut scoped_helper_bindings,
         local_helpers,
         refs,
     );

@@ -70,7 +70,7 @@ fn collect_helper_refs_from_statement<'a>(
         }
         Statement::ForInStatement(for_stmt) => {
             collect_helper_refs_from_loop_body(
-                (&for_stmt.right, &for_stmt.body),
+                (&for_stmt.right, &for_stmt.body, Some(&for_stmt.left)),
                 source,
                 file,
                 router_bindings,
@@ -81,7 +81,7 @@ fn collect_helper_refs_from_statement<'a>(
         }
         Statement::ForOfStatement(for_stmt) => {
             collect_helper_refs_from_loop_body(
-                (&for_stmt.right, &for_stmt.body),
+                (&for_stmt.right, &for_stmt.body, Some(&for_stmt.left)),
                 source,
                 file,
                 router_bindings,
@@ -92,7 +92,7 @@ fn collect_helper_refs_from_statement<'a>(
         }
         Statement::WhileStatement(while_stmt) => {
             collect_helper_refs_from_loop_body(
-                (&while_stmt.test, &while_stmt.body),
+                (&while_stmt.test, &while_stmt.body, None),
                 source,
                 file,
                 router_bindings,
