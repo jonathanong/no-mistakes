@@ -1,7 +1,6 @@
 fn local_caller_entries(
     graph: &DepGraph,
-    target_files: &BTreeSet<PathBuf>,
-    target_symbol: &str,
+    target_symbols: &BTreeMap<PathBuf, BTreeSet<String>>,
     root: &Path,
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
     test_filter: &TestFileFilter,
@@ -27,7 +26,7 @@ fn local_caller_entries(
             .symbols
             .as_ref()
             .expect("imports_and_symbols fact plan collects symbols");
-        let local_names = target_local_names(symbols, &file, target_files, target_symbol, tsconfig);
+        let local_names = target_local_names(symbols, &file, target_symbols, tsconfig);
         if local_names.is_empty() {
             continue;
         }
@@ -55,63 +54,6 @@ fn local_caller_entries(
         }
     }
     callers.into_values().collect()
-}
-
-fn target_local_names(
-    symbols: &crate::codebase::ts_symbols::FileSymbols,
-    file: &Path,
-    target_files: &BTreeSet<PathBuf>,
-    target_symbol: &str,
-    tsconfig: &crate::codebase::ts_resolver::TsConfig,
-) -> BTreeSet<String> {
-    if target_files.contains(file) {
-        let mut names = BTreeSet::from([target_symbol.to_string()]);
-        names.extend(symbols.exports.iter().filter_map(|export| {
-            if !matches!(export.kind, ExportKind::ReExport { .. })
-                && !export.is_type_only
-                && (export.name == target_symbol
-                    || (target_symbol == "default" && matches!(export.kind, ExportKind::Default)))
-            {
-                return Some(export.local.clone().unwrap_or_else(|| export.name.clone()));
-            }
-            None
-        }));
-        return names;
-    }
-    symbols
-        .imports
-        .iter()
-        .filter_map(|import| {
-            if import.is_type_only
-                || resolve_import(&import.source, file, tsconfig)
-                    .is_none_or(|resolved| !target_files.contains(&resolved))
-            {
-                return None;
-            }
-            if import.imported == "*" {
-                return Some(format!("{}.{}", import.local, target_symbol));
-            }
-            (import.imported == target_symbol).then(|| import.local.clone())
-        })
-        .collect()
-}
-
-fn exported_symbol_for_local(
-    symbols: &crate::codebase::ts_symbols::FileSymbols,
-    local: &str,
-) -> Option<String> {
-    symbols.exports.iter().find_map(|export| {
-        if matches!(export.kind, ExportKind::ReExport { .. }) || export.is_type_only {
-            return None;
-        }
-        (export.local.as_deref().unwrap_or(&export.name) == local).then(|| {
-            if matches!(export.kind, ExportKind::Default) {
-                "default".to_string()
-            } else {
-                export.name.clone()
-            }
-        })
-    })
 }
 
 fn caller_entries(

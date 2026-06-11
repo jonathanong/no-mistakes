@@ -89,6 +89,7 @@ fn test_impact_symbol_opt_in_limits_to_symbol_consumers() {
             "barrel-consumer.test.mts",
             "helper-export.test.mts",
             "other.test.mts",
+            "private-barrel-caller-with-export.test.mts",
             "private-caller-with-export.test.mts"
         ]
     );

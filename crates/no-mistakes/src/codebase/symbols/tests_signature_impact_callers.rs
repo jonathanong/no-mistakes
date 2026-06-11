@@ -94,3 +94,24 @@ fn signature_impact_recovers_private_callers_imported_through_barrels() {
         entry["file"] == "private-barrel-caller-with-export.mts" && entry.get("symbol").is_none()
     }));
 }
+
+#[test]
+fn signature_impact_recovers_private_callers_imported_through_aliased_barrels() {
+    let out = run_capture(impact_args("parseDate", Format::Json));
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+
+    assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "private-aliased-barrel-caller-with-export.mts"
+            && entry.get("symbol").is_none()
+    }));
+}
+
+#[test]
+fn signature_impact_suggests_tests_for_recovered_production_callers() {
+    let out = run_capture(impact_args("parseDate", Format::Json));
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+
+    assert!(v["suggestedTests"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "private-barrel-caller-with-export.test.mts"
+    }));
+}

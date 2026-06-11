@@ -1,0 +1,68 @@
+fn target_local_names(
+    symbols: &crate::codebase::ts_symbols::FileSymbols,
+    file: &Path,
+    target_symbols: &BTreeMap<PathBuf, BTreeSet<String>>,
+    tsconfig: &crate::codebase::ts_resolver::TsConfig,
+) -> BTreeSet<String> {
+    if let Some(exported_symbols) = target_symbols.get(file) {
+        let mut names = exported_symbols.clone();
+        names.extend(symbols.exports.iter().filter_map(|export| {
+            if !matches!(export.kind, ExportKind::ReExport { .. })
+                && !export.is_type_only
+                && (exported_symbols.contains(&export.name)
+                    || (exported_symbols.contains("default")
+                        && matches!(export.kind, ExportKind::Default)))
+            {
+                return Some(export.local.clone().unwrap_or_else(|| export.name.clone()));
+            }
+            None
+        }));
+        return names;
+    }
+    symbols
+        .imports
+        .iter()
+        .filter_map(|import| {
+            if import.is_type_only {
+                return None;
+            }
+            let exported_symbols =
+                resolve_import(&import.source, file, tsconfig).and_then(|resolved| {
+                    target_symbols.get(&resolved)
+                })?;
+            if exported_symbols.is_empty() {
+                return None;
+            }
+            if import.imported == "*" {
+                return Some(
+                    exported_symbols
+                        .iter()
+                        .map(|symbol| format!("{}.{}", import.local, symbol))
+                        .collect::<BTreeSet<_>>(),
+                );
+            }
+            exported_symbols
+                .contains(&import.imported)
+                .then(|| BTreeSet::from([import.local.clone()]))
+        })
+        .flatten()
+        .collect()
+}
+
+fn exported_symbol_for_local(
+    symbols: &crate::codebase::ts_symbols::FileSymbols,
+    local: &str,
+) -> Option<String> {
+    symbols.exports.iter().find_map(|export| {
+        if matches!(export.kind, ExportKind::ReExport { .. }) || export.is_type_only {
+            return None;
+        }
+        (export.local.as_deref().unwrap_or(&export.name) == local).then(|| {
+            if matches!(export.kind, ExportKind::Default) {
+                "default".to_string()
+            } else {
+                export.name.clone()
+            }
+        })
+    })
+}

@@ -39,6 +39,7 @@ fn tests_impact_json_accepts_structured_symbol_entrypoint() {
             "barrel-consumer.test.mts",
             "helper-export.test.mts",
             "other.test.mts",
+            "private-barrel-caller-with-export.test.mts",
             "private-caller-with-export.test.mts"
         ]
     );

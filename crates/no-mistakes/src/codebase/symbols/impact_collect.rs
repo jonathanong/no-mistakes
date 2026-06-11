@@ -18,7 +18,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
     let graph = DepGraph::build_with_plan_and_config(
         &root,
         &tsconfig,
-        GraphBuildPlan::all().with_symbols(true),
+        signature_impact_graph_plan(),
         args.config.as_deref(),
     )?;
     let target = NodeId::Symbol {
@@ -45,22 +45,25 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
             args.files[0].display()
         );
     };
-    let entries = graph.dependents_of_symbol_nodes(std::slice::from_ref(&target), None, None);
+    let impact_edges = signature_impact_edges();
+    let entries =
+        graph.dependents_of_symbol_nodes(std::slice::from_ref(&target), None, Some(&impact_edges));
 
     let (exports, export_nodes) = export_paths(&graph, &target, symbol, &root, &definition);
-    let target_files = signature_target_files(&target_file, &export_nodes);
+    let target_symbols = signature_target_symbols(&target_file, symbol, &export_nodes);
     let production_extra_callers =
-        local_caller_entries(&graph, &target_files, symbol, &root, &tsconfig, &test_filter, false);
+        local_caller_entries(&graph, &target_symbols, &root, &tsconfig, &test_filter, false);
     let test_extra_callers = local_caller_entries(
         &graph,
-        &target_files,
-        symbol,
+        &target_symbols,
         &root,
         &tsconfig,
         &test_filter,
         true,
     );
-    let suggested_tests = suggested_tests(&entries, &root, &test_filter, &test_extra_callers);
+    let suggested_entries =
+        suggested_test_entries(&graph, &entries, &production_extra_callers, &root);
+    let suggested_tests = suggested_tests(&suggested_entries, &root, &test_filter, &test_extra_callers);
 
     Ok(SignatureImpactReport {
         roots: vec![format!("{}#{}", args.files[0].display(), symbol)],
@@ -86,15 +89,6 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         exports,
         suggested_tests,
     })
-}
-
-fn signature_target_files(target_file: &Path, export_nodes: &BTreeSet<NodeId>) -> BTreeSet<PathBuf> {
-    let mut target_files = BTreeSet::from([target_file.to_path_buf()]);
-    target_files.extend(export_nodes.iter().filter_map(|node| match node {
-        NodeId::Symbol { file, .. } | NodeId::File(file) => Some(file.clone()),
-        _ => None,
-    }));
-    target_files
 }
 
 fn export_paths(
