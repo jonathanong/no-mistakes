@@ -70,3 +70,28 @@ fn suggested_tests_merges_duplicate_test_files() {
     assert_eq!(tests[0].depth, 1);
     assert_eq!(tests[0].via, vec!["import", "test"]);
 }
+
+#[test]
+fn markdown_report_uses_symbol_title_when_roots_are_empty() {
+    let report = SignatureImpactReport {
+        roots: vec![],
+        symbol: "parseDate".to_string(),
+        definition: SymbolLocation {
+            file: "src/date.mts".to_string(),
+            symbol: "parseDate".to_string(),
+            line: 1,
+            kind: "const",
+        },
+        exports: vec![],
+        production_callers: vec![],
+        test_callers: vec![],
+        suggested_tests: vec![],
+        warnings: vec![],
+    };
+    let mut out = Vec::new();
+
+    write_report(&report, Format::Md, &mut out).unwrap();
+
+    let rendered = String::from_utf8(out).unwrap();
+    assert!(rendered.starts_with("# `parseDate`"));
+}

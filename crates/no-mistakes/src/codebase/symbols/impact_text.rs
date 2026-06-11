@@ -1,5 +1,10 @@
 fn write_markdown(report: &SignatureImpactReport, out: &mut dyn Write) -> Result<()> {
-    writeln!(out, "# `{}`", report.roots[0])?;
+    let title = report
+        .roots
+        .first()
+        .map(String::as_str)
+        .unwrap_or(report.symbol.as_str());
+    writeln!(out, "# `{title}`")?;
     writeln!(out)?;
     writeln!(out, "- Defined in: `{}` (line {})", report.definition.file, report.definition.line)?;
     write_location_section("Exported via", &report.exports, out)?;

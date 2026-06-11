@@ -10,9 +10,21 @@ no-mistakes symbols src/api.mts --mode signature-impact --symbol handler --forma
 Use this before editing public APIs, replacing imports, or asking who consumes a
 symbol with `dependents FILE#SYMBOL`.
 
-Key options: `--root`, `--tsconfig`, repeatable `--kind`, `--include
+Usage:
+
+```sh
+no-mistakes symbols <FILE>... [--root <PATH>] [--tsconfig <FILE>] [--config <FILE>]
+  [--kind <KIND>]... [--include exports|imports|both]
+  [--mode list|signature-impact] [--symbol <SYMBOL>]
+```
+
+Key options: `--root`, `--tsconfig`, `--config`, repeatable `--kind`, `--include
 exports|imports|both`, `--mode`, `--symbol`, `--format`, `--json`, and
 `--timings`.
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `--config <FILE>` | auto-detected | Path to `.no-mistakes.yml` config. |
 
 ## Signature impact
 
