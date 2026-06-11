@@ -154,7 +154,14 @@ fn collect_route_helper_refs_from_program<'a>(
             &mut refs,
         );
     }
-    refs.sort_by(|a, b| (&a.file, a.line, &a.callee).cmp(&(&b.file, b.line, &b.callee)));
+    refs.sort_by(|a, b| {
+        (&a.file, a.line, &a.callee, &a.wrapper_pattern).cmp(&(
+            &b.file,
+            b.line,
+            &b.callee,
+            &b.wrapper_pattern,
+        ))
+    });
     refs.dedup();
     refs
 }

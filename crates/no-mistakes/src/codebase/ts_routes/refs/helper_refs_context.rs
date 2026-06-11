@@ -4,6 +4,7 @@ fn collect_route_context_helper_ref<'a>(
     file: &str,
     router_bindings: &RouterBindings<'a>,
     helper_bindings: &RouteHelperBindings,
+    local_helpers: &HashSet<String>,
     refs: &mut Vec<RouteHelperRef>,
 ) {
     if !callee_is_route_context(&call.callee, router_bindings) {
@@ -22,6 +23,7 @@ fn collect_route_context_helper_ref<'a>(
         file,
         call.span.start as usize,
         helper_bindings,
+        local_helpers,
         refs,
     );
 }
@@ -77,16 +79,19 @@ fn push_helper_refs_from_expression(
     file: &str,
     offset: usize,
     helper_bindings: &RouteHelperBindings,
+    local_helpers: &HashSet<String>,
     refs: &mut Vec<RouteHelperRef>,
 ) {
-    let mut callees = Vec::new();
-    collect_route_helper_callee_names(expr, helper_bindings, &mut callees);
+    let mut candidates = Vec::new();
+    collect_route_helper_callee_names(expr, helper_bindings, local_helpers, &mut candidates);
     let line = byte_offset_to_line(source, offset);
-    refs.extend(callees.into_iter().filter_map(|callee| {
-        bound_helper_callee_name(&callee, helper_bindings).map(|callee| RouteHelperRef {
+    refs.extend(candidates.into_iter().filter_map(|candidate| {
+        bound_helper_callee_name(&candidate.callee, helper_bindings).map(|callee| RouteHelperRef {
             file: file.to_string(),
             line,
             callee,
+            wrapper_pattern: (candidate.wrapper_pattern != ROUTE_HELPER_REF_PATTERN_MARKER)
+                .then_some(candidate.wrapper_pattern),
         })
     }));
 }

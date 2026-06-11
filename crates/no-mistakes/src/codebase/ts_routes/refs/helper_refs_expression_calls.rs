@@ -7,7 +7,15 @@ fn collect_helper_refs_from_call_expression<'a>(
     local_helpers: &HashSet<String>,
     refs: &mut Vec<RouteHelperRef>,
 ) {
-    collect_route_context_helper_ref(call, source, file, router_bindings, helper_bindings, refs);
+    collect_route_context_helper_ref(
+        call,
+        source,
+        file,
+        router_bindings,
+        helper_bindings,
+        local_helpers,
+        refs,
+    );
     collect_helper_refs_from_expression(
         &call.callee,
         source,

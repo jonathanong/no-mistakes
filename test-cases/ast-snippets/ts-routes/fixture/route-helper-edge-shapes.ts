@@ -158,6 +158,14 @@ export function tryFinallyHref(entity: { id: string }): string {
     return `/finally/${entity.id}`;
   }
 }
+export function catchParamShadowHref(entity: { id: string }): string {
+  let href = `/catch-shadow/${entity.id}`;
+  try {
+    throw new Error('boom');
+  } catch (href) {
+    return href;
+  }
+}
 export const urlObjectHref = (entity: { id: string }) => ({
   pathname: `/object/${entity.id}`,
 });

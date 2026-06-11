@@ -1,3 +1,5 @@
+pub(crate) const ROUTE_HELPER_REF_PATTERN_MARKER: &str = "{route_helper}";
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct RouteRef {
     pub pattern: String,
@@ -21,6 +23,7 @@ pub struct RouteHelperImport {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RouteHelperRef {
     pub callee: String,
+    pub wrapper_pattern: Option<String>,
     pub file: String,
     pub line: u32,
 }

@@ -190,6 +190,7 @@ fn summarizes_route_helper_edge_expression_shapes() {
     assert_eq!(helper("emptySwitchHref"), vec!["/empty-switch/*"]);
     assert_eq!(helper("tryHref"), vec!["/fallback/*", "/try/*"]);
     assert_eq!(helper("tryFinallyHref"), vec!["/finally/*"]);
+    assert!(helper("catchParamShadowHref").is_empty());
     assert_eq!(helper("urlObjectHref"), vec!["/object/*"]);
     assert_eq!(helper("spreadObjectHref"), vec!["/spread/*"]);
 }
@@ -210,36 +211,22 @@ fn summarizes_deep_route_helper_calls_as_wildcards() {
 fn records_helper_calls_only_in_route_contexts() {
     let source = route_fixture_source("route-helper-route-contexts.tsx");
     let facts = extract_route_ref_facts(&source, "component.tsx");
+    assert_eq!(facts.route_helper_refs.len(), 27);
+    assert!(facts
+        .route_helper_refs
+        .iter()
+        .all(|route_ref| route_ref.callee == "entityHref"));
     assert_eq!(
         facts
             .route_helper_refs
             .iter()
-            .map(|route_ref| route_ref.callee.as_str())
+            .filter_map(|route_ref| route_ref.wrapper_pattern.as_deref())
             .collect::<Vec<_>>(),
         vec![
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref",
-            "entityHref"
+            "/admin{route_helper}",
+            "{route_helper}/settings",
+            "/admin/{route_helper}/settings",
+            "/admin{route_helper}",
         ]
     );
 }

@@ -100,36 +100,43 @@ fn route_helper_ref_patterns_cover_local_and_imported_variants() {
         route_helper_refs: vec![
             crate::codebase::ts_routes::refs::RouteHelperRef {
                 callee: "localHref".to_string(),
+                wrapper_pattern: None,
                 file: "src/client.ts".to_string(),
                 line: 1,
             },
             crate::codebase::ts_routes::refs::RouteHelperRef {
                 callee: "entityHref".to_string(),
+                wrapper_pattern: None,
                 file: "src/client.ts".to_string(),
                 line: 2,
             },
             crate::codebase::ts_routes::refs::RouteHelperRef {
                 callee: "localHref".to_string(),
+                wrapper_pattern: None,
                 file: "src/client.ts".to_string(),
                 line: 3,
             },
             crate::codebase::ts_routes::refs::RouteHelperRef {
                 callee: "entityHref".to_string(),
+                wrapper_pattern: Some("/admin{route_helper}/settings".to_string()),
                 file: "src/client.ts".to_string(),
                 line: 4,
             },
             crate::codebase::ts_routes::refs::RouteHelperRef {
                 callee: "defaultEntityHref".to_string(),
+                wrapper_pattern: None,
                 file: "src/client.ts".to_string(),
                 line: 5,
             },
             crate::codebase::ts_routes::refs::RouteHelperRef {
                 callee: "links.entityHref".to_string(),
+                wrapper_pattern: None,
                 file: "src/client.ts".to_string(),
                 line: 6,
             },
             crate::codebase::ts_routes::refs::RouteHelperRef {
                 callee: "missing.entityHref".to_string(),
+                wrapper_pattern: None,
                 file: "src/client.ts".to_string(),
                 line: 7,
             },
@@ -140,10 +147,27 @@ fn route_helper_ref_patterns_cover_local_and_imported_variants() {
     assert_eq!(
         route_helper_ref_patterns(&client, &file_facts, &facts, &resolver),
         vec![
+            "/admin/prefix/*/suffix/*/settings".to_string(),
             "/local/*".to_string(),
             "/prefix/*/suffix/*".to_string(),
             "/prefix/*/suffix/default".to_string(),
         ]
+    );
+}
+
+#[test]
+fn route_helper_ref_wrapped_pattern_filters_non_absolute_patterns() {
+    assert_eq!(
+        route_helper_ref_wrapped_pattern("*{route_helper}", "/entities/*"),
+        None
+    );
+}
+
+#[test]
+fn route_helper_ref_wrapped_pattern_joins_duplicate_slashes() {
+    assert_eq!(
+        route_helper_ref_wrapped_pattern("/admin/{route_helper}/settings", "/entities/*"),
+        Some("/admin/entities/*/settings".to_string())
     );
 }
 
@@ -187,6 +211,7 @@ fn route_helper_ref_patterns_follow_named_reexport_barrels() {
         }],
         route_helper_refs: vec![crate::codebase::ts_routes::refs::RouteHelperRef {
             callee: "entityHref".to_string(),
+            wrapper_pattern: None,
             file: "src/client.ts".to_string(),
             line: 1,
         }],
@@ -239,6 +264,7 @@ fn route_helper_ref_patterns_follow_star_reexport_barrels() {
         }],
         route_helper_refs: vec![crate::codebase::ts_routes::refs::RouteHelperRef {
             callee: "entityHref".to_string(),
+            wrapper_pattern: None,
             file: "src/client.ts".to_string(),
             line: 1,
         }],
@@ -300,6 +326,7 @@ fn route_helper_ref_patterns_try_all_star_reexport_barrels() {
         }],
         route_helper_refs: vec![crate::codebase::ts_routes::refs::RouteHelperRef {
             callee: "entityHref".to_string(),
+            wrapper_pattern: None,
             file: "src/client.ts".to_string(),
             line: 1,
         }],
@@ -352,6 +379,7 @@ fn route_helper_ref_patterns_follow_namespace_reexport_barrels() {
         }],
         route_helper_refs: vec![crate::codebase::ts_routes::refs::RouteHelperRef {
             callee: "links.entityHref".to_string(),
+            wrapper_pattern: None,
             file: "src/client.ts".to_string(),
             line: 1,
         }],
@@ -395,6 +423,7 @@ fn route_helper_ref_patterns_ignore_unresolved_named_reexport_barrels() {
         }],
         route_helper_refs: vec![crate::codebase::ts_routes::refs::RouteHelperRef {
             callee: "entityHref".to_string(),
+            wrapper_pattern: None,
             file: "src/client.ts".to_string(),
             line: 1,
         }],
@@ -435,6 +464,7 @@ fn route_helper_ref_patterns_ignore_unresolved_namespace_reexport_barrels() {
         }],
         route_helper_refs: vec![crate::codebase::ts_routes::refs::RouteHelperRef {
             callee: "links.entityHref".to_string(),
+            wrapper_pattern: None,
             file: "src/client.ts".to_string(),
             line: 1,
         }],

@@ -28,6 +28,7 @@ fn collect_helper_refs_from_jsx_element<'a>(
                 file,
                 attr.span.start as usize,
                 helper_bindings,
+                local_helpers,
                 refs,
             );
         } else {

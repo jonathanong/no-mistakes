@@ -62,6 +62,7 @@ include!("edge_tests_md.rs");
 include!("edge_ci.rs");
 include!("edge_routes.rs");
 include!("edge_route_helper_refs.rs");
+include!("edge_route_helper_ref_wrappers.rs");
 include!("edge_route_defs.rs");
 include!("edge_queues.rs");
 include!("edge_queue_processors.rs");

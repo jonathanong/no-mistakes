@@ -122,7 +122,7 @@ fn object_pathname(obj: &oxc::ast::ast::ObjectExpression) -> Option<String> {
     None
 }
 
-fn normalize_next_pathname_pattern(path: &str) -> String {
+pub(crate) fn normalize_next_pathname_pattern(path: &str) -> String {
     let leading_slash = path.starts_with('/');
     let trailing_slash = path.ends_with('/') && path.len() > 1;
     let segments: Vec<String> = path
@@ -185,4 +185,3 @@ pub fn should_skip(pattern: &str) -> bool {
     }
     false
 }
-

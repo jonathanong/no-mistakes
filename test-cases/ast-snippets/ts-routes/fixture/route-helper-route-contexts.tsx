@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { entityHref, fallbackHref } from './entity-href';
 import { type Entity } from './entity-href';
+import { withLocale } from './i18n';
 
 const loose = entityHref(entity);
 api.fetch(entityHref(entity));
@@ -48,4 +49,8 @@ async function navigate() {
   await router.push(entityHref(entity));
   router.push(await entityHref(entity));
   router.replace(withLocale(entityHref(entity)));
+  router.push('/admin' + entityHref(row));
+  router.push(entityHref(row) + '/settings');
+  router.replace(`/admin/${entityHref(row)}/settings`);
+  router.replace(withLocale('/admin' + entityHref(row)));
 }

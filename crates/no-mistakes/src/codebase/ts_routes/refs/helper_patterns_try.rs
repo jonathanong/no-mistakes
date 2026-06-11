@@ -18,6 +18,11 @@ fn evaluate_helper_try_statement<'a>(
     let mut branch_envs = vec![block_env];
     if let Some(handler) = &try_stmt.handler {
         let mut handler_env = base_env.clone();
+        if let Some(param) = &handler.param {
+            if let Some(name) = binding_identifier_name(&param.pattern) {
+                handler_env.remove(name);
+            }
+        }
         values.extend(evaluate_helper_block_returns(
             &handler.body,
             defs,

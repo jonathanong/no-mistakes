@@ -40,17 +40,18 @@ fn route_helper_ref_patterns(
 ) -> Vec<String> {
     let mut patterns = Vec::new();
     for helper_ref in &file_facts.route_helper_refs {
-        patterns.extend(local_route_helper_patterns(
+        let mut helper_patterns = local_route_helper_patterns(
             &helper_ref.callee,
             &file_facts.route_helpers,
-        ));
-        patterns.extend(imported_route_helper_patterns(
+        );
+        helper_patterns.extend(imported_route_helper_patterns(
             path,
             &helper_ref.callee,
             &file_facts.route_helper_imports,
             facts,
             resolver,
         ));
+        patterns.extend(route_helper_ref_wrapped_patterns(helper_ref, helper_patterns));
     }
     patterns.sort();
     patterns.dedup();
