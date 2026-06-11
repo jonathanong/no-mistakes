@@ -1,6 +1,6 @@
 fn local_caller_entries(
     graph: &DepGraph,
-    target_file: &Path,
+    target_files: &BTreeSet<PathBuf>,
     target_symbol: &str,
     root: &Path,
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
@@ -27,7 +27,7 @@ fn local_caller_entries(
             .symbols
             .as_ref()
             .expect("imports_and_symbols fact plan collects symbols");
-        let local_names = target_local_names(symbols, &file, target_file, target_symbol, tsconfig);
+        let local_names = target_local_names(symbols, &file, target_files, target_symbol, tsconfig);
         if local_names.is_empty() {
             continue;
         }
@@ -60,18 +60,21 @@ fn local_caller_entries(
 fn target_local_names(
     symbols: &crate::codebase::ts_symbols::FileSymbols,
     file: &Path,
-    target_file: &Path,
+    target_files: &BTreeSet<PathBuf>,
     target_symbol: &str,
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> BTreeSet<String> {
-    if file == target_file {
+    if target_files.contains(file) {
         let mut names = BTreeSet::from([target_symbol.to_string()]);
         names.extend(symbols.exports.iter().filter_map(|export| {
-            (!matches!(export.kind, ExportKind::ReExport { .. })
+            if !matches!(export.kind, ExportKind::ReExport { .. })
                 && !export.is_type_only
-                && export.name == target_symbol)
-                .then(|| export.local.clone())
-                .flatten()
+                && (export.name == target_symbol
+                    || (target_symbol == "default" && matches!(export.kind, ExportKind::Default)))
+            {
+                return Some(export.local.clone().unwrap_or_else(|| export.name.clone()));
+            }
+            None
         }));
         return names;
     }
@@ -81,7 +84,7 @@ fn target_local_names(
         .filter_map(|import| {
             if import.is_type_only
                 || resolve_import(&import.source, file, tsconfig)
-                    .is_none_or(|resolved| resolved != target_file)
+                    .is_none_or(|resolved| !target_files.contains(&resolved))
             {
                 return None;
             }
@@ -101,7 +104,13 @@ fn exported_symbol_for_local(
         if matches!(export.kind, ExportKind::ReExport { .. }) || export.is_type_only {
             return None;
         }
-        (export.local.as_deref().unwrap_or(&export.name) == local).then(|| export.name.clone())
+        (export.local.as_deref().unwrap_or(&export.name) == local).then(|| {
+            if matches!(export.kind, ExportKind::Default) {
+                "default".to_string()
+            } else {
+                export.name.clone()
+            }
+        })
     })
 }
 

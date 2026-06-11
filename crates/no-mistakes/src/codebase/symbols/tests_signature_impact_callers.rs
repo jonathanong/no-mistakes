@@ -64,3 +64,33 @@ fn signature_impact_suggests_recovered_private_test_callers() {
         entry["type"] == "no-suggested-tests"
     }));
 }
+
+#[test]
+fn signature_impact_includes_same_file_default_export_local_callers() {
+    let out = run_capture(impact_file_args("default-utils.mts", "default", Format::Json));
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+
+    assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "default-utils.mts" && entry["symbol"] == "formatDefaultDate"
+    }));
+}
+
+#[test]
+fn signature_impact_reports_recovered_default_callers_as_default() {
+    let out = run_capture(impact_args("parseDate", Format::Json));
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+
+    assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "default-wrapper.mts" && entry["symbol"] == "default"
+    }));
+}
+
+#[test]
+fn signature_impact_recovers_private_callers_imported_through_barrels() {
+    let out = run_capture(impact_args("parseDate", Format::Json));
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+
+    assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "private-barrel-caller-with-export.mts" && entry.get("symbol").is_none()
+    }));
+}

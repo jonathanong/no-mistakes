@@ -48,18 +48,12 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
     let entries = graph.dependents_of_symbol_nodes(std::slice::from_ref(&target), None, None);
 
     let (exports, export_nodes) = export_paths(&graph, &target, symbol, &root, &definition);
-    let production_extra_callers = local_caller_entries(
-        &graph,
-        &target_file,
-        symbol,
-        &root,
-        &tsconfig,
-        &test_filter,
-        false,
-    );
+    let target_files = signature_target_files(&target_file, &export_nodes);
+    let production_extra_callers =
+        local_caller_entries(&graph, &target_files, symbol, &root, &tsconfig, &test_filter, false);
     let test_extra_callers = local_caller_entries(
         &graph,
-        &target_file,
+        &target_files,
         symbol,
         &root,
         &tsconfig,
@@ -92,6 +86,15 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         exports,
         suggested_tests,
     })
+}
+
+fn signature_target_files(target_file: &Path, export_nodes: &BTreeSet<NodeId>) -> BTreeSet<PathBuf> {
+    let mut target_files = BTreeSet::from([target_file.to_path_buf()]);
+    target_files.extend(export_nodes.iter().filter_map(|node| match node {
+        NodeId::Symbol { file, .. } | NodeId::File(file) => Some(file.clone()),
+        _ => None,
+    }));
+    target_files
 }
 
 fn export_paths(
