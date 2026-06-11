@@ -125,9 +125,50 @@ fn file_entry_uses_symbol_checks_extracted_and_alias_member_uses() {
         "dynamic-import-caller.mts",
         "parseDate"
     ));
+    assert!(file_entry_uses_symbol(
+        &root,
+        "dynamic-import-alias-caller.mts",
+        "parseDate"
+    ));
     assert!(!file_entry_uses_symbol(
         &root,
         "dynamic-import-unused.mts",
         "parseDate"
+    ));
+    assert!(!file_entry_uses_symbol(
+        &root,
+        "missing-dynamic-import-caller.mts",
+        "parseDate"
+    ));
+}
+
+#[test]
+fn symbol_aliases_collect_destructured_and_member_assignment_locals() {
+    let aliases = symbol_aliases_in_source(
+        "const { parseDate: pd } = await import('./utils.mts');\n\
+         const readDate = require('./utils.mts').parseDate;\n\
+         return utils.parseDate;\n\
+         assigned = utils.parseDate;\n\
+         pd(value); readDate(value);",
+        "parseDate",
+    );
+
+    assert!(aliases.contains("pd"));
+    assert!(aliases.contains("readDate"));
+}
+
+#[test]
+fn local_callee_matching_accepts_namespace_members() {
+    assert!(matches_local_callee(
+        "dates.parseDate",
+        &BTreeSet::from(["dates".to_string()])
+    ));
+    assert!(matches_local_callee(
+        "parseDate",
+        &BTreeSet::from(["parseDate".to_string()])
+    ));
+    assert!(!matches_local_callee(
+        "updatedDates.parseDate",
+        &BTreeSet::from(["dates".to_string()])
     ));
 }

@@ -34,7 +34,7 @@ fn local_caller_entries(
         let has_target_function_call = facts
             .function_calls
             .iter()
-            .any(|call| local_names.contains(&call.callee));
+            .any(|call| matches_local_callee(&call.callee, &local_names));
         for call in facts
             .function_calls
             .iter()
@@ -44,7 +44,7 @@ fn local_caller_entries(
                     || call.caller.is_some()
             }))
         {
-            if !local_names.contains(&call.callee) {
+            if !matches_local_callee(&call.callee, &local_names) {
                 continue;
             }
             let symbol = call
@@ -63,6 +63,12 @@ fn local_caller_entries(
         }
     }
     callers.into_values().collect()
+}
+
+fn matches_local_callee(callee: &str, local_names: &BTreeSet<String>) -> bool {
+    local_names
+        .iter()
+        .any(|local| callee == local || callee.strip_prefix(local).is_some_and(|suffix| suffix.starts_with('.')))
 }
 
 struct CallerEntriesContext<'a> {
@@ -130,33 +136,6 @@ fn caller_entries(
     let mut callers: Vec<_> = by_key.into_values().collect();
     callers.sort_by(|a, b| caller_sort_key(a).cmp(&caller_sort_key(b)));
     callers
-}
-
-fn file_entry_uses_symbol(root: &Path, file: &str, target_symbol: &str) -> bool {
-    let path = root.join(file);
-    let mut facts_by_file = crate::codebase::ts_source::facts::collect_ts_facts(
-        std::slice::from_ref(&path),
-        crate::codebase::ts_source::facts::TsFactPlan::imports_and_symbols(),
-    );
-    let extracted_usage = facts_by_file.remove(&path).is_some_and(|facts| {
-        facts
-            .function_calls
-            .iter()
-            .chain(facts.symbol_references.iter())
-            .any(|call| {
-                call.callee == target_symbol
-                    || call
-                        .callee
-                        .rsplit_once('.')
-                        .is_some_and(|(_, member)| member == target_symbol)
-            })
-    });
-    extracted_usage
-        || std::fs::read_to_string(path)
-            .is_ok_and(|source| {
-                source.contains(&format!(".{target_symbol}"))
-                    || source.contains(&format!("{target_symbol}("))
-            })
 }
 
 fn merge_caller_entry(

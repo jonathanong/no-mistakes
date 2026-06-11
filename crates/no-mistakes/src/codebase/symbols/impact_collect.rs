@@ -48,14 +48,21 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
     let impact_edges = signature_impact_edges();
     let mut entries =
         graph.dependents_of_symbol_nodes(std::slice::from_ref(&target), None, Some(&impact_edges));
+    let (exports, export_nodes) = export_paths(&graph, &target, symbol, &root, &definition);
     let file_import_edges = HashSet::from([EdgeKind::DynamicImport, EdgeKind::Require]);
+    let mut file_roots: Vec<_> = export_nodes
+        .iter()
+        .filter_map(NodeId::as_file)
+        .map(|path| NodeId::File(path.to_path_buf()))
+        .collect();
+    file_roots.push(NodeId::File(target_file.clone()));
+    file_roots.sort();
+    file_roots.dedup();
     entries.extend(graph.dependents_of(
-        &[NodeId::File(target_file.clone())],
+        &file_roots,
         None,
         Some(&file_import_edges),
     ));
-
-    let (exports, export_nodes) = export_paths(&graph, &target, symbol, &root, &definition);
     let target_symbols = signature_target_symbols(&target_file, symbol, &export_nodes);
     let production_extra_callers =
         local_caller_entries(&graph, &target_symbols, &root, &tsconfig, &test_filter, false);
@@ -105,6 +112,7 @@ fn export_paths(
     let mut export_nodes = BTreeSet::from([target.clone()]);
     let mut frontier = vec![(target.clone(), target_symbol.to_string())];
     let mut seen = BTreeSet::from([target.clone()]);
+    frontier.push((NodeId::File(root.join(&definition.file)), target_symbol.to_string()));
     while let Some((node, current_symbol)) = frontier.pop() {
         if let Some(neighbors) = graph.dependents_of_node(&node) {
             for (neighbor, _) in neighbors {
