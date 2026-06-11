@@ -82,7 +82,7 @@ fn export_location(file: &Path, root: &Path, symbol: &str) -> Result<Option<Symb
     Ok(symbols
         .exports
         .into_iter()
-        .find(|export| export_name(&export.kind, &export.name) == symbol)
+        .find(|export| export_matches_symbol(&export.kind, &export.name, symbol))
         .map(|export| SymbolLocation {
             file: relative_slash_path(root, file),
             symbol: symbol.to_string(),
@@ -91,11 +91,21 @@ fn export_location(file: &Path, root: &Path, symbol: &str) -> Result<Option<Symb
         }))
 }
 
-fn export_name(kind: &ExportKind, name: &str) -> String {
+fn export_matches_symbol(kind: &ExportKind, name: &str, symbol: &str) -> bool {
+    if matches!(
+        kind,
+        ExportKind::ReExport { imported, .. } if imported == "*" && name == "*"
+    ) {
+        return true;
+    }
+    export_name(kind, name) == symbol
+}
+
+fn export_name<'a>(kind: &ExportKind, name: &'a str) -> &'a str {
     if matches!(kind, ExportKind::Default) {
-        "default".to_string()
+        "default"
     } else {
-        name.to_string()
+        name
     }
 }
 

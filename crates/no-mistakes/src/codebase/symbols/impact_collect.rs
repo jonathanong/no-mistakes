@@ -84,7 +84,7 @@ fn caller_entries(
     export_nodes: &BTreeSet<NodeId>,
 ) -> Vec<CallerEntry> {
     let mut by_key: BTreeMap<(String, Option<String>), CallerEntry> = BTreeMap::new();
-    for entry in entries.iter().filter(|entry| entry.depth == 1) {
+    for entry in entries {
         if export_nodes.contains(&entry.node) {
             continue;
         }

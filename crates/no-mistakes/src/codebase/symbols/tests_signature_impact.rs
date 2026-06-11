@@ -34,6 +34,9 @@ fn signature_impact_json_groups_callers_exports_and_tests() {
         .unwrap()
         .iter()
         .any(|entry| { entry["file"] == "other.mts" && entry["symbol"] == "parse" }));
+    assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "barrel-consumer.mts" && entry["symbol"] == "parsePublicDate"
+    }));
     assert!(v["testCallers"]
         .as_array()
         .unwrap()
@@ -123,6 +126,19 @@ fn signature_impact_supports_default_exports() {
 
     assert_eq!(v["definition"]["symbol"], "default");
     assert_eq!(v["definition"]["kind"], "default");
+}
+
+#[test]
+fn signature_impact_tracks_star_reexport_paths_and_consumers() {
+    let out = run_capture(impact_args("parseDate", Format::Json));
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+
+    assert!(v["exports"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "star-date-barrel.mts" && entry["symbol"] == "parseDate"
+    }));
+    assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "star-consumer.mts" && entry["symbol"] == "parseStarDate"
+    }));
 }
 
 #[test]
