@@ -32,4 +32,7 @@ fn signature_impact_keeps_dynamic_import_file_callers() {
     assert!(!v["suggestedTests"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "dynamic-import-unused.test.mts"
     }));
+    assert!(!v["suggestedTests"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "dynamic-import-test-unused.test.mts"
+    }));
 }

@@ -54,6 +54,20 @@ fn namespace_reexport_target_symbol(
         .and_then(|s| s.to_str())
         .is_some_and(|ext| ext.eq_ignore_ascii_case("tsx") || ext.eq_ignore_ascii_case("jsx"));
     let symbols = extract_symbols(&source, is_tsx).ok()?;
+    let local = symbols.exports.iter().find_map(|export| {
+        if matches!(export.kind, ExportKind::ReExport { .. }) || export.name != symbol {
+            return None;
+        }
+        Some(export.local.as_deref().unwrap_or(&export.name))
+    });
+    if local.is_some_and(|local| {
+        symbols
+            .imports
+            .iter()
+            .any(|import| import.local == local && import.imported == "*")
+    }) {
+        return Some(format!("{symbol}.{target_symbol}"));
+    }
     symbols.exports.iter().find_map(|export| match &export.kind {
         ExportKind::ReExport { imported, .. } if imported == "*" && export.name == symbol => {
             Some(format!("{symbol}.{target_symbol}"))
@@ -73,9 +87,7 @@ fn suggested_test_entries(
     let test_edges = HashSet::from([EdgeKind::TestOf]);
     let mut production_files: BTreeSet<PathBuf> = entries
         .iter()
-        .filter(|entry| {
-            entry.via.contains(&EdgeKind::DynamicImport) || entry.via.contains(&EdgeKind::Require)
-        })
+        .filter(|entry| has_file_level_import_edge(&entry.via))
         .filter_map(|entry| entry.node.as_file())
         .filter(|file| {
             file_entry_uses_any_symbol(root, &relative_slash_path(root, file), target_symbols)

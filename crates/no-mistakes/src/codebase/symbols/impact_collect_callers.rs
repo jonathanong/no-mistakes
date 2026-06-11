@@ -113,15 +113,13 @@ fn caller_entries(
         };
         if matches!(entry.node, NodeId::File(_))
             && symbol.is_none()
-            && !(entry.via.contains(&EdgeKind::DynamicImport)
-                || entry.via.contains(&EdgeKind::Require))
+            && !has_file_level_import_edge(&entry.via)
             && !entry.via.contains(&EdgeKind::TestOf)
             && !extra_file_callers.contains(file.as_str())
         {
             continue;
         }
-        if entry.via.contains(&EdgeKind::DynamicImport) || entry.via.contains(&EdgeKind::Require)
-        {
+        if has_file_level_import_edge(&entry.via) {
             let uses_target = *dynamic_usage_cache.entry(file.clone()).or_insert_with(|| {
                 file_entry_uses_any_symbol(context.root, file.as_str(), context.target_symbols)
             });
@@ -156,6 +154,12 @@ fn is_test_like_file(file: &Path) -> bool {
     file.file_name().and_then(|name| name.to_str()).is_some_and(|name| {
         name.contains(".test.") || name.contains(".spec.")
     })
+}
+
+fn has_file_level_import_edge(via: &[EdgeKind]) -> bool {
+    via.contains(&EdgeKind::DynamicImport)
+        || via.contains(&EdgeKind::Require)
+        || via.contains(&EdgeKind::WorkspaceImport)
 }
 
 fn merge_caller_entry(

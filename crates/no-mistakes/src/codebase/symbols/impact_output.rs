@@ -32,6 +32,7 @@ fn suggested_tests(
     root: &Path,
     test_filter: &TestFileFilter,
     extra_callers: &[CallerEntry],
+    target_symbols: &BTreeSet<String>,
 ) -> Vec<TestSuggestion> {
     let mut by_file: BTreeMap<String, TestSuggestion> = BTreeMap::new();
     for entry in entries {
@@ -42,6 +43,11 @@ fn suggested_tests(
             continue;
         }
         let file = relative_slash_path(root, path);
+        if has_file_level_import_edge(&entry.via)
+            && !file_entry_uses_any_symbol(root, file.as_str(), target_symbols)
+        {
+            continue;
+        }
         let via = via_strings(&entry.via);
         by_file
             .entry(file.clone())

@@ -70,7 +70,7 @@ fn suggested_tests_merges_duplicate_test_files() {
         via: vec!["symbol"],
     }];
 
-    let tests = suggested_tests(&entries, root, &filter, &extra);
+    let tests = suggested_tests(&entries, root, &filter, &extra, &BTreeSet::new());
 
     assert_eq!(tests.len(), 1);
     assert_eq!(tests[0].file, "src/date.test.mts");
