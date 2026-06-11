@@ -81,6 +81,10 @@ fn export_paths(
                 };
                 if seen.insert(neighbor.clone()) {
                     if let Some(location) = export_location(file, root, symbol, true).ok().flatten() {
+                        let current_symbol = match &node {
+                            NodeId::Symbol { symbol, .. } => symbol.as_str(),
+                            _ => target_symbol,
+                        };
                         let local_import_export = std::fs::read_to_string(file)
                                 .ok()
                                 .and_then(|source| {
@@ -102,9 +106,14 @@ fn export_paths(
                                         }
                                         Some(export.local.as_deref().unwrap_or(&export.name))
                                     })?;
-                                    symbols.imports.iter().any(|import| {
-                                        import.local == local && import.imported == target_symbol
-                                    }).then_some(())
+                                    symbols
+                                        .imports
+                                        .iter()
+                                        .any(|import| {
+                                            import.local == local
+                                                && import.imported == current_symbol
+                                        })
+                                        .then_some(())
                                 })
                                 .is_some();
                         if location.kind == "re-export" || local_import_export {
