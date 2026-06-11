@@ -49,13 +49,45 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
 
     let (exports, export_nodes) = export_paths(&graph, &target, symbol, &root, &definition);
     let suggested_tests = suggested_tests(&entries, &root, &test_filter);
+    let production_extra_callers = local_caller_entries(
+        &graph,
+        &target_file,
+        symbol,
+        &root,
+        &tsconfig,
+        &test_filter,
+        false,
+    );
+    let test_extra_callers = local_caller_entries(
+        &graph,
+        &target_file,
+        symbol,
+        &root,
+        &tsconfig,
+        &test_filter,
+        true,
+    );
 
     Ok(SignatureImpactReport {
         roots: vec![format!("{}#{}", args.files[0].display(), symbol)],
         symbol: symbol.to_string(),
         definition,
-        production_callers: caller_entries(&entries, &root, &test_filter, false, &export_nodes),
-        test_callers: caller_entries(&entries, &root, &test_filter, true, &export_nodes),
+        production_callers: caller_entries(
+            &entries,
+            &root,
+            &test_filter,
+            false,
+            &export_nodes,
+            &production_extra_callers,
+        ),
+        test_callers: caller_entries(
+            &entries,
+            &root,
+            &test_filter,
+            true,
+            &export_nodes,
+            &test_extra_callers,
+        ),
         warnings: warnings(&suggested_tests),
         exports,
         suggested_tests,
@@ -123,64 +155,6 @@ fn export_paths(
         }
     }
     (exports.into_iter().collect(), export_nodes)
-}
-
-fn caller_entries(
-    entries: &[NodeEntry],
-    root: &Path,
-    test_filter: &TestFileFilter,
-    want_tests: bool,
-    export_nodes: &BTreeSet<NodeId>,
-) -> Vec<CallerEntry> {
-    let mut by_key: BTreeMap<(String, Option<String>), CallerEntry> = BTreeMap::new();
-    for entry in entries {
-        if export_nodes.contains(&entry.node) {
-            continue;
-        }
-        let Some((file, symbol)) = caller_parts(&entry.node, root) else {
-            continue;
-        };
-        let is_test = entry
-            .node
-            .as_file()
-            .is_some_and(|path| test_filter.is_match(root, path));
-        if is_test != want_tests {
-            continue;
-        }
-        insert_caller(&mut by_key, entry, file, symbol);
-    }
-    let mut callers: Vec<_> = by_key.into_values().collect();
-    callers.sort_by(|a, b| caller_sort_key(a).cmp(&caller_sort_key(b)));
-    callers
-}
-
-fn insert_caller(
-    by_key: &mut BTreeMap<(String, Option<String>), CallerEntry>,
-    entry: &NodeEntry,
-    file: String,
-    symbol: Option<String>,
-) {
-    let via = via_strings(&entry.via);
-    by_key
-        .entry((file.clone(), symbol.clone()))
-        .and_modify(|existing| {
-            existing.depth = existing.depth.min(entry.depth);
-            merge_via(&mut existing.via, &via);
-        })
-        .or_insert(CallerEntry {
-            file,
-            symbol,
-            depth: entry.depth,
-            via,
-        });
-}
-
-fn caller_sort_key(caller: &CallerEntry) -> (usize, &str, &str) {
-    (
-        caller.depth,
-        caller.file.as_str(),
-        caller.symbol.as_deref().unwrap_or_default(),
-    )
 }
 
 #[cfg(test)]

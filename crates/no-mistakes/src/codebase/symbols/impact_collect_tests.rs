@@ -2,6 +2,46 @@ use super::*;
 use crate::config::v2::NoMistakesConfig;
 
 #[test]
+fn exported_symbol_for_local_skips_re_exports_and_type_exports() {
+    let symbols = crate::codebase::ts_symbols::FileSymbols {
+        exports: vec![
+            crate::codebase::ts_symbols::Export {
+                name: "parseDate".to_string(),
+                local: None,
+                kind: ExportKind::ReExport {
+                    source: "./utils.mts".to_string(),
+                    imported: "parseDate".to_string(),
+                },
+                line: 1,
+                is_type_only: false,
+            },
+            crate::codebase::ts_symbols::Export {
+                name: "DateLike".to_string(),
+                local: None,
+                kind: ExportKind::TypeAlias,
+                line: 2,
+                is_type_only: true,
+            },
+            crate::codebase::ts_symbols::Export {
+                name: "formatDate".to_string(),
+                local: Some("format".to_string()),
+                kind: ExportKind::Const,
+                line: 3,
+                is_type_only: false,
+            },
+        ],
+        imports: vec![],
+    };
+
+    assert_eq!(
+        exported_symbol_for_local(&symbols, "format").as_deref(),
+        Some("formatDate")
+    );
+    assert_eq!(exported_symbol_for_local(&symbols, "parseDate"), None);
+    assert_eq!(exported_symbol_for_local(&symbols, "DateLike"), None);
+}
+
+#[test]
 fn caller_entries_filters_export_nodes_and_non_file_nodes() {
     let root = Path::new("/repo");
     let source = PathBuf::from("/repo/src/source.mts");
@@ -39,8 +79,8 @@ fn caller_entries_filters_export_nodes_and_non_file_nodes() {
     let filter = TestFileFilter::new(root, &NoMistakesConfig::default());
     let export_nodes = BTreeSet::from([export_node]);
 
-    let production = caller_entries(&entries, root, &filter, false, &export_nodes);
-    let tests = caller_entries(&entries, root, &filter, true, &export_nodes);
+    let production = caller_entries(&entries, root, &filter, false, &export_nodes, &[]);
+    let tests = caller_entries(&entries, root, &filter, true, &export_nodes, &[]);
 
     assert_eq!(production.len(), 1);
     assert_eq!(production[0].file, "src/consumer.mts");
@@ -82,11 +122,17 @@ fn caller_entries_merges_duplicate_callers_and_sorts() {
         },
     ];
 
-    let callers = caller_entries(&entries, root, &filter, false, &export_nodes);
+    let extra = vec![CallerEntry {
+        file: "src/a.mts".to_string(),
+        symbol: Some("alpha".to_string()),
+        depth: 2,
+        via: vec!["symbol"],
+    }];
+    let callers = caller_entries(&entries, root, &filter, false, &export_nodes, &extra);
 
     assert_eq!(callers.len(), 2);
     assert_eq!(callers[0].file, "src/a.mts");
-    assert_eq!(callers[0].via, vec!["require"]);
+    assert_eq!(callers[0].via, vec!["require", "symbol"]);
     assert_eq!(callers[1].file, "src/b.mts");
     assert_eq!(callers[1].depth, 1);
     assert_eq!(callers[1].via, vec!["dynamic-import", "import"]);

@@ -9,4 +9,5 @@ use std::io::Write;
 
 include!("impact_types.rs");
 include!("impact_collect.rs");
+include!("impact_collect_callers.rs");
 include!("impact_output.rs");
