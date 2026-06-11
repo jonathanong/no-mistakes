@@ -4,7 +4,7 @@ use crate::codebase::dependencies::extract::{
 use crate::codebase::ts_http_calls::HttpCall;
 use crate::codebase::ts_process_spawn::SpawnEdge;
 use crate::codebase::ts_queues::usage::QueueUsage;
-use crate::codebase::ts_routes::refs::RouteRef;
+use crate::codebase::ts_routes::refs::{RouteHelper, RouteHelperImport, RouteHelperRef, RouteRef};
 use crate::codebase::ts_symbols::{extract_symbols_from_program, FileSymbols};
 use crate::queue::extract::FileFacts as QueueProjectFacts;
 use crate::react_traits::report::types::ComponentFacts;
@@ -17,7 +17,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 pub(crate) mod domain;
-pub use domain::TsFactContext;
+pub use domain::{BackendRouteFact, TsFactContext};
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct TsFactPlan {
@@ -100,13 +100,6 @@ impl TsFactPlan {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct BackendRouteFact {
-    pub register_object: String,
-    pub route: String,
-    pub line: u32,
-}
-
-#[derive(Debug, Clone, Default)]
 pub struct TsFileFacts {
     pub source: Option<String>,
     pub imports: Vec<ExtractedImport>,
@@ -117,6 +110,9 @@ pub struct TsFileFacts {
     pub has_unknown_top_level_call: bool,
     pub symbols: Option<FileSymbols>,
     pub route_refs: Vec<RouteRef>,
+    pub route_helpers: Vec<RouteHelper>,
+    pub route_helper_imports: Vec<RouteHelperImport>,
+    pub route_helper_refs: Vec<RouteHelperRef>,
     pub backend_routes: Vec<BackendRouteFact>,
     pub queue_usage: Option<QueueUsage>,
     pub queue_create_line: Option<u32>,
@@ -195,6 +191,9 @@ fn collect_file_facts(
         has_unknown_top_level_call: import_facts.has_unknown_top_level_call,
         symbols,
         route_refs: domain.route_refs,
+        route_helpers: domain.route_helpers,
+        route_helper_imports: domain.route_helper_imports,
+        route_helper_refs: domain.route_helper_refs,
         backend_routes: domain.backend_routes,
         queue_usage: domain.queue_usage,
         queue_create_line: domain.queue_create_line,

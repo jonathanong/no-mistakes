@@ -6,6 +6,8 @@ rules:
     backendRegisterObject: app
     backendPrefixes:
     - "/api/"
+    - "/prefix/"
+    - "/crawler/"
 - rule: http-call-static-paths
   scope: repository
   options:

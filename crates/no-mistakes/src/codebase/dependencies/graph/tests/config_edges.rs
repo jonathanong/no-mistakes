@@ -105,6 +105,7 @@ fn route_collectors_cover_configured_prefixes_and_scan_globs() {
     let all_files = GraphFiles::discover(&root).all;
     let client = root.join("src/client.ts");
     let route = root.join("backend/api/users.mts");
+    let entity_route = root.join("backend/api/entity.mts");
     let admin_route = root.join("backend/api/admin.mts");
     let fake_route = root.join("src/fake-backend.mts");
     let config_options = graph_config_options(&root);
@@ -130,6 +131,11 @@ fn route_collectors_cover_configured_prefixes_and_scan_globs() {
         *kind == EdgeKind::RouteRef
             && from.as_file() == Some(client.as_path())
             && to.as_file() == Some(route.as_path())
+    }));
+    assert!(route_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RouteRef
+            && from.as_file() == Some(client.as_path())
+            && to.as_file() == Some(entity_route.as_path())
     }));
 
     let sources = vec![(client.clone(), std::fs::read_to_string(&client).unwrap())];
