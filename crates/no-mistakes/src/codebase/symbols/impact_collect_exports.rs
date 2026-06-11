@@ -46,7 +46,9 @@ fn local_import_export(file: &Path, symbol: &str, current_symbol: &str) -> bool 
         })
         .and_then(|(source, symbols)| {
             let local = symbols.exports.iter().find_map(|export| {
-                if matches!(export.kind, ExportKind::ReExport { .. }) || export.name != *symbol {
+                if matches!(export.kind, ExportKind::ReExport { .. })
+                    || export_name(&export.kind, &export.name) != symbol
+                {
                     return None;
                 }
                 Some(export.local.as_deref().unwrap_or(&export.name))

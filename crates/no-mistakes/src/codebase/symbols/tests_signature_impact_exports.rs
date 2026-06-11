@@ -9,11 +9,25 @@ fn signature_impact_classifies_value_alias_exports_as_exports() {
     assert!(v["exports"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "namespace-value-alias-date-barrel.mts" && entry["symbol"] == "parse"
     }));
+    assert!(v["exports"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "default-alias-date-barrel.mts" && entry["symbol"] == "default"
+    }));
+    assert!(v["exports"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "value-alias-private-caller-date-barrel.mts"
+            && entry["symbol"] == "parsePrivate"
+    }));
+    assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "value-alias-private-caller-date-barrel.mts"
+            && entry["symbol"] == "renderPrivateAliasDate"
+    }));
     assert!(!v["productionCallers"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "value-alias-date-barrel.mts"
     }));
     assert!(!v["productionCallers"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "namespace-value-alias-date-barrel.mts"
+    }));
+    assert!(!v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "default-alias-date-barrel.mts"
     }));
 }
 

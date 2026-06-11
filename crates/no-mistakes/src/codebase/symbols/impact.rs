@@ -11,6 +11,7 @@ include!("impact_types.rs");
 include!("impact_collect.rs");
 include!("impact_collect_targets.rs");
 include!("impact_collect_callers.rs");
+include!("impact_collect_caller_helpers.rs");
 include!("impact_collect_file_usage.rs");
 include!("impact_collect_local_names.rs");
 include!("impact_output.rs");

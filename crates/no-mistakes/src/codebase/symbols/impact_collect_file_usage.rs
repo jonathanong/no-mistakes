@@ -40,7 +40,7 @@ fn file_entry_uses_symbol(root: &Path, file: &str, target_symbol: &str) -> bool 
     }
     dynamic_symbol_aliases_in_source(&source, target_symbol)
         .iter()
-        .any(|alias| callees.contains(alias) || source.contains(&format!("{alias}(")))
+        .any(|alias| callees.contains(alias) || source_contains_call_name(&source, alias))
 }
 
 fn direct_dynamic_member_use(source: &str, target_symbol: &str) -> bool {
@@ -55,6 +55,19 @@ fn source_contains_member_name(source: &str, member: &str) -> bool {
         let after = source[index + member.len()..].chars().next();
         !after.is_some_and(|ch| ch.is_ascii_alphanumeric() || ch == '_' || ch == '$')
     })
+}
+
+fn source_contains_call_name(source: &str, name: &str) -> bool {
+    source.match_indices(name).any(|(index, _)| {
+        let before = source[..index].chars().next_back();
+        let mut after = source[index + name.len()..].chars();
+        !before.is_some_and(is_identifier_char)
+            && after.find(|ch| !ch.is_whitespace()).is_some_and(|ch| ch == '(')
+    })
+}
+
+fn is_identifier_char(ch: char) -> bool {
+    ch.is_ascii_alphanumeric() || ch == '_' || ch == '$'
 }
 
 fn dynamic_module_bindings(source: &str) -> BTreeSet<String> {

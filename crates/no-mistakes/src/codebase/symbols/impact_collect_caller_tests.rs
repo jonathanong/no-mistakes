@@ -188,6 +188,9 @@ fn dynamic_usage_helpers_ignore_non_module_and_malformed_bindings() {
         "utils.parseDateOld(value)",
         "utils.parseDate"
     ));
+    assert!(source_contains_call_name("pd(value)", "pd"));
+    assert!(source_contains_call_name("pd (value)", "pd"));
+    assert!(!source_contains_call_name("otherpd(value)", "pd"));
 }
 
 #[test]

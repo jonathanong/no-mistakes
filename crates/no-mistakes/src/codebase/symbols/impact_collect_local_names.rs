@@ -5,8 +5,9 @@ fn target_local_names(
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
     workspace: &crate::codebase::workspaces::WorkspaceMap,
 ) -> BTreeSet<String> {
+    let mut names = BTreeSet::new();
     if let Some(exported_symbols) = target_symbols.get(file) {
-        let names: BTreeSet<_> = symbols
+        names.extend(symbols
             .exports
             .iter()
             .filter_map(|export| {
@@ -19,13 +20,29 @@ fn target_local_names(
                     return Some(export.local.clone().unwrap_or_else(|| export.name.clone()));
                 }
                 None
-            })
-            .collect();
-        if !names.is_empty() {
-            return names;
+            }));
+        if names.is_empty() {
+            names.extend(exported_symbols.clone());
         }
-        return exported_symbols.clone();
     }
+
+    names.extend(imported_target_local_names(
+        symbols,
+        file,
+        target_symbols,
+        tsconfig,
+        workspace,
+    ));
+    names
+}
+
+fn imported_target_local_names(
+    symbols: &crate::codebase::ts_symbols::FileSymbols,
+    file: &Path,
+    target_symbols: &BTreeMap<PathBuf, BTreeSet<String>>,
+    tsconfig: &crate::codebase::ts_resolver::TsConfig,
+    workspace: &crate::codebase::workspaces::WorkspaceMap,
+) -> BTreeSet<String> {
     symbols
         .imports
         .iter()

@@ -34,17 +34,21 @@ fn local_caller_entries(
         if local_names.is_empty() {
             continue;
         }
-        let has_target_function_call = facts
+        let target_function_call_callers: BTreeSet<_> = facts
             .function_calls
             .iter()
-            .any(|call| matches_local_callee(&call.callee, &local_names));
+            .filter(|call| matches_local_callee(&call.callee, &local_names))
+            .filter_map(|call| call.caller.as_deref())
+            .collect();
         for call in facts
             .function_calls
             .iter()
             .chain(facts.symbol_references.iter().filter(|call| {
                 !target_symbols.contains_key(&file)
-                    || has_target_function_call
-                    || call.caller.is_some()
+                    || call
+                        .caller
+                        .as_deref()
+                        .is_some_and(|caller| target_function_call_callers.contains(caller))
             }))
         {
             if !matches_local_callee(&call.callee, &local_names) {
@@ -155,12 +159,6 @@ fn caller_entries(
     let mut callers: Vec<_> = by_key.into_values().collect();
     callers.sort_by(|a, b| caller_sort_key(a).cmp(&caller_sort_key(b)));
     callers
-}
-
-fn is_test_like_file(file: &Path) -> bool {
-    file.file_name().and_then(|name| name.to_str()).is_some_and(|name| {
-        name.contains(".test.") || name.contains(".spec.")
-    })
 }
 
 fn merge_caller_entry(
