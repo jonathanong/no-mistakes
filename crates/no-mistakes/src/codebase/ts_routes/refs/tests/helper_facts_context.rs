@@ -72,3 +72,15 @@ fn ignores_shadowed_fetch_and_catch_router_route_contexts() {
         vec!["entityHref"]
     );
 }
+
+#[test]
+fn ignores_default_and_namespace_fetch_imports_as_route_contexts() {
+    for fixture in [
+        "route-helper-default-fetch-shadowing.tsx",
+        "route-helper-namespace-fetch-shadowing.tsx",
+    ] {
+        let source = route_fixture_source(fixture);
+        let facts = extract_route_ref_facts(&source, "component.tsx");
+        assert!(facts.route_helper_refs.is_empty());
+    }
+}

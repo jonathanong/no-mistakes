@@ -43,6 +43,11 @@ export function reassignedHref(entity: { id: string }, tab?: string): string {
   if (tab) href += `/tabs/${tab}`;
   return href;
 }
+export function topLevelAssignedHref(entity: { id: string }): string {
+  let href = `/top/${entity.id}`;
+  href += '/edit';
+  return href;
+}
 export function reassignedBranchHref(entity: { id: string }, kind: string): string {
   let href = `/items/${entity.id}`;
   if (kind === 'a') href += '/a';
@@ -75,6 +80,14 @@ export function tryHref(entity: { id: string }): string {
     return `/try/${entity.id}`;
   } catch {
     return `/fallback/${entity.id}`;
+  }
+}
+export function tryFinallyHref(entity: { id: string }): string {
+  try {
+    let href = `/try-finally/${entity.id}`;
+    return href;
+  } finally {
+    return `/finally/${entity.id}`;
   }
 }
 export const urlObjectHref = (entity: { id: string }) => ({

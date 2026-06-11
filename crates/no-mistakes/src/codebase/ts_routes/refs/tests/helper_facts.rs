@@ -141,6 +141,7 @@ fn summarizes_route_helper_edge_expression_shapes() {
         helper("reassignedHref"),
         vec!["/users/*", "/users/*/tabs/*"]
     );
+    assert_eq!(helper("topLevelAssignedHref"), vec!["/top/*/edit"]);
     assert_eq!(
         helper("reassignedBranchHref"),
         vec!["/items/*/a", "/items/*/b"]
@@ -154,6 +155,10 @@ fn summarizes_route_helper_edge_expression_shapes() {
         vec!["/switch/*", "/switch/*/settings"]
     );
     assert_eq!(helper("tryHref"), vec!["/fallback/*", "/try/*"]);
+    assert_eq!(
+        helper("tryFinallyHref"),
+        vec!["/finally/*", "/try-finally/*"]
+    );
     assert_eq!(helper("urlObjectHref"), vec!["/object/*"]);
 }
 
@@ -180,6 +185,7 @@ fn records_helper_calls_only_in_route_contexts() {
             .map(|route_ref| route_ref.callee.as_str())
             .collect::<Vec<_>>(),
         vec![
+            "entityHref",
             "entityHref",
             "entityHref",
             "entityHref",

@@ -34,5 +34,6 @@ try {
 }
 async function navigate() {
   await router.push(entityHref(entity));
+  router.push(await entityHref(entity));
   router.replace(withLocale(entityHref(entity)));
 }

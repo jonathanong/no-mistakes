@@ -52,3 +52,11 @@ fn records_imported_route_helpers_reexported_as_default() {
         ]
     );
 }
+
+#[test]
+fn ignores_type_only_route_helper_reexports() {
+    let source = route_fixture_source("route-helper-type-reexport.ts");
+    let facts = extract_route_ref_facts(&source, "links.ts");
+
+    assert!(facts.route_helper_imports.is_empty());
+}
