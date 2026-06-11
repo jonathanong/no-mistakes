@@ -156,6 +156,17 @@ fn collect_helper_refs_from_statement<'a>(
                 refs,
             );
         }
+        Statement::ClassDeclaration(class) => {
+            collect_helper_refs_from_class_body(
+                class,
+                source,
+                file,
+                router_bindings,
+                helper_bindings,
+                local_helpers,
+                refs,
+            );
+        }
         Statement::ExportNamedDeclaration(export) => collect_helper_refs_from_named_export(
             export,
             source,

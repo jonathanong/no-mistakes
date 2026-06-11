@@ -216,7 +216,7 @@ fn summarizes_deep_route_helper_calls_as_wildcards() {
 fn records_helper_calls_only_in_route_contexts() {
     let source = route_fixture_source("route-helper-route-contexts.tsx");
     let facts = extract_route_ref_facts(&source, "component.tsx");
-    assert_eq!(facts.route_helper_refs.len(), 33);
+    assert_eq!(facts.route_helper_refs.len(), 37);
     assert!(facts
         .route_helper_refs
         .iter()
@@ -239,6 +239,15 @@ fn records_helper_calls_only_in_route_contexts() {
 #[test]
 fn records_same_file_exported_route_helper_calls() {
     let source = route_fixture_source("route-helper-exported-local-ref.tsx");
+    let facts = extract_route_ref_facts(&source, "component.tsx");
+    assert_eq!(facts.route_helpers.len(), 1);
+    assert_eq!(facts.route_helper_refs.len(), 1);
+    assert_eq!(facts.route_helper_refs[0].callee, "entityHref");
+}
+
+#[test]
+fn records_same_file_exported_const_route_helper_calls() {
+    let source = route_fixture_source("route-helper-exported-local-const-ref.tsx");
     let facts = extract_route_ref_facts(&source, "component.tsx");
     assert_eq!(facts.route_helpers.len(), 1);
     assert_eq!(facts.route_helper_refs.len(), 1);
@@ -352,8 +361,14 @@ fn records_route_helper_calls_inside_type_wrappers() {
 fn records_namespace_helper_calls_in_route_contexts() {
     let source = route_fixture_source("route-helper-namespace-context.tsx");
     let facts = extract_route_ref_facts(&source, "component.tsx");
-    assert_eq!(facts.route_helper_refs.len(), 1);
-    assert_eq!(facts.route_helper_refs[0].callee, "links.topicHref");
+    assert_eq!(
+        facts
+            .route_helper_refs
+            .iter()
+            .map(|route_ref| route_ref.callee.as_str())
+            .collect::<Vec<_>>(),
+        vec!["links.entityHref", "links.topicHref"]
+    );
     assert_eq!(facts.route_helper_imports[0].imported, "*");
 }
 

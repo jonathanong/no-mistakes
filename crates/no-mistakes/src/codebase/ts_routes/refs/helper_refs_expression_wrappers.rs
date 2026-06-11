@@ -95,7 +95,10 @@ fn collect_helper_refs_from_wrapper_expression<'a>(
     refs: &mut Vec<RouteHelperRef>,
 ) -> bool {
     let wrapped = match expr {
-        Expression::AssignmentExpression(assign) => Some(&assign.right),
+        Expression::AssignmentExpression(assign) => {
+            register_helper_assignment_alias(assign, helper_bindings);
+            Some(&assign.right)
+        }
         Expression::UnaryExpression(unary) => Some(&unary.argument),
         Expression::AwaitExpression(await_expr) => Some(&await_expr.argument),
         Expression::ParenthesizedExpression(paren) => Some(&paren.expression),

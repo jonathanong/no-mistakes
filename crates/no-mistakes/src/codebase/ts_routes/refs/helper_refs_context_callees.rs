@@ -104,6 +104,12 @@ fn route_helper_call_context_summary(
             );
         }
     }
+    if let Some(member) = call.callee.as_member_expression() {
+        argument_summary = merge_route_helper_context_summaries(
+            argument_summary,
+            route_helper_context_summary(member.object(), helper_bindings, local_helpers),
+        );
+    }
 
     let callee = route_helper_callee_name_from_callee(&call.callee)
         .and_then(|callee| bound_helper_callee_name(&callee, helper_bindings));

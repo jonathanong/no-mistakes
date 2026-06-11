@@ -61,6 +61,16 @@ async function navigate() {
     { 'href': entityHref(row) },
   ];
   const spreadLink = <Link {...{ href: entityHref(entity) }} />;
+  let assignedHref;
+  assignedHref = entityHref;
+  router.push(assignedHref(row));
+  class Navigator {
+    open = () => router.push(entityHref(row));
+    go() {
+      redirect(entityHref(row));
+    }
+  }
+  router.push(entityHref(row).toString());
   router.push('/admin' + entityHref(row));
   router.push(entityHref(row) + '/settings');
   router.replace(`/admin/${entityHref(row)}/settings`);

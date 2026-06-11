@@ -109,11 +109,16 @@ fn remove_shadowed_helper_class_binding(
 fn remove_shadowed_helper_var_bindings(
     var_decl: &oxc::ast::ast::VariableDeclaration<'_>,
     bindings: &mut RouteHelperBindings,
-    _local_helpers: &HashSet<String>,
+    local_helpers: &HashSet<String>,
 ) {
     for decl in &var_decl.declarations {
-        remove_shadowed_helper_binding(&decl.id, bindings);
+        if !binding_identifier_name(&decl.id).is_some_and(|name| local_helpers.contains(name)) {
+            remove_shadowed_helper_binding(&decl.id, bindings);
+        }
         let (Some(name), Some(init)) = (binding_identifier_name(&decl.id), &decl.init) else {
+            if let Some(init) = &decl.init {
+                register_namespace_destructured_helper_aliases(&decl.id, init, bindings);
+            }
             continue;
         };
         if let Some(target) = helper_alias_target(init, bindings) {

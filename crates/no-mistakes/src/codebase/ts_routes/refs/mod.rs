@@ -1,7 +1,7 @@
 use crate::codebase::ts_source::byte_offset_to_line;
 use oxc::allocator::Allocator;
 use oxc::ast::ast::{
-    Argument, ArrayExpressionElement, BindingPattern, Expression, ForStatementInit,
+    Argument, ArrayExpressionElement, BindingPattern, ClassElement, Expression, ForStatementInit,
     ForStatementLeft, ImportDeclarationSpecifier, JSXAttributeItem, JSXAttributeName,
     JSXAttributeValue, JSXChild, JSXElement, JSXExpression, ObjectPropertyKind, Program,
     PropertyKey, Statement, TemplateLiteral, VariableDeclarationKind,
@@ -19,6 +19,7 @@ include!("statements.rs");
 include!("expressions.rs");
 include!("patterns.rs");
 include!("helper_bindings.rs");
+include!("helper_bindings_namespace_aliases.rs");
 include!("helper_patterns.rs");
 include!("helper_patterns_aliases.rs");
 include!("helper_patterns_assign.rs");
@@ -35,6 +36,7 @@ include!("helper_refs.rs");
 include!("helper_refs_import_wrappers.rs");
 include!("helper_refs_statements.rs");
 include!("helper_refs_statement_bindings.rs");
+include!("helper_refs_statement_classes.rs");
 include!("helper_refs_statement_control.rs");
 include!("helper_refs_statement_var_aliases.rs");
 include!("helper_refs_statement_for.rs");
@@ -51,6 +53,7 @@ include!("helper_refs_jsx.rs");
 include!("helper_refs_context.rs");
 include!("helper_refs_context_callees.rs");
 include!("helper_refs_context_summary.rs");
+include!("helper_refs_assignment_aliases.rs");
 
 #[cfg(test)]
 mod tests;
