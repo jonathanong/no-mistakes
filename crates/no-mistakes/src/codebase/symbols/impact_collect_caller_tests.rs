@@ -38,11 +38,12 @@ fn caller_entries_filters_export_nodes_and_non_file_nodes() {
     ];
     let filter = TestFileFilter::new(root, &NoMistakesConfig::default());
     let export_nodes = BTreeSet::from([export_node]);
+    let target_symbols = BTreeSet::from(["parseDate".to_string()]);
     let context = CallerEntriesContext {
         root,
         test_filter: &filter,
         export_nodes: &export_nodes,
-        target_symbol: "parseDate",
+        target_symbols: &target_symbols,
     };
 
     let production = caller_entries(&entries, &context, false, &[]);
@@ -61,11 +62,12 @@ fn caller_entries_merges_duplicate_callers_and_sorts() {
     let root = Path::new("/repo");
     let filter = TestFileFilter::new(root, &NoMistakesConfig::default());
     let export_nodes = BTreeSet::new();
+    let target_symbols = BTreeSet::from(["beta".to_string()]);
     let context = CallerEntriesContext {
         root,
         test_filter: &filter,
         export_nodes: &export_nodes,
-        target_symbol: "beta",
+        target_symbols: &target_symbols,
     };
     let entries = vec![
         NodeEntry {

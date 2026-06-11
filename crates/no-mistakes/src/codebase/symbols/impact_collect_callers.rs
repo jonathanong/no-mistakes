@@ -20,6 +20,9 @@ fn local_caller_entries(
     let mut callers = BTreeMap::new();
     for (file, facts) in facts {
         let is_test = test_filter.is_match(root, &file);
+        if !want_tests && !is_test && is_test_like_file(&file) {
+            continue;
+        }
         if is_test != want_tests {
             continue;
         }
@@ -75,7 +78,7 @@ struct CallerEntriesContext<'a> {
     root: &'a Path,
     test_filter: &'a TestFileFilter,
     export_nodes: &'a BTreeSet<NodeId>,
-    target_symbol: &'a str,
+    target_symbols: &'a BTreeSet<String>,
 }
 
 fn caller_entries(
@@ -117,7 +120,7 @@ fn caller_entries(
             continue;
         }
         if (entry.via.contains(&EdgeKind::DynamicImport) || entry.via.contains(&EdgeKind::Require))
-            && !file_entry_uses_symbol(context.root, file.as_str(), context.target_symbol)
+            && !file_entry_uses_any_symbol(context.root, file.as_str(), context.target_symbols)
         {
             continue;
         }
@@ -125,6 +128,12 @@ fn caller_entries(
             .node
             .as_file()
             .is_some_and(|path| context.test_filter.is_match(context.root, path));
+        if !want_tests
+            && !is_test
+            && entry.node.as_file().is_some_and(is_test_like_file)
+        {
+            continue;
+        }
         if is_test != want_tests {
             continue;
         }
@@ -136,6 +145,12 @@ fn caller_entries(
     let mut callers: Vec<_> = by_key.into_values().collect();
     callers.sort_by(|a, b| caller_sort_key(a).cmp(&caller_sort_key(b)));
     callers
+}
+
+fn is_test_like_file(file: &Path) -> bool {
+    file.file_name().and_then(|name| name.to_str()).is_some_and(|name| {
+        name.contains(".test.") || name.contains(".spec.")
+    })
 }
 
 fn merge_caller_entry(

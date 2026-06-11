@@ -64,6 +64,10 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         Some(&file_import_edges),
     ));
     let target_symbols = signature_target_symbols(&target_file, symbol, &export_nodes);
+    let target_symbol_names: BTreeSet<String> = target_symbols
+        .values()
+        .flat_map(|symbols| symbols.iter().cloned())
+        .collect();
     let production_extra_callers =
         local_caller_entries(&graph, &target_symbols, &root, &tsconfig, &test_filter, false);
     let test_extra_callers = local_caller_entries(
@@ -81,7 +85,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         root: &root,
         test_filter: &test_filter,
         export_nodes: &export_nodes,
-        target_symbol: symbol,
+        target_symbols: &target_symbol_names,
     };
 
     Ok(SignatureImpactReport {

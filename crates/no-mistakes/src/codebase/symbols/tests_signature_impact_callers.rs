@@ -145,6 +145,13 @@ fn signature_impact_keeps_dynamic_import_file_callers() {
     assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "dynamic-import-alias-caller.mts" && entry.get("symbol").is_none()
     }));
+    assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "dynamic-import-aliased-barrel-caller.mts"
+            && entry.get("symbol").is_none()
+    }));
+    assert!(v["suggestedTests"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "dynamic-import-caller.test.mts"
+    }));
     assert!(!v["productionCallers"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "dynamic-import-unused.mts" && entry.get("symbol").is_none()
     }));
@@ -206,5 +213,23 @@ fn signature_impact_recovers_namespace_reexport_private_callers() {
     }));
     assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "namespace-barrel-caller.mts" && entry.get("symbol").is_none()
+    }));
+    assert!(!v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "namespace-barrel-unused-caller.mts"
+    }));
+}
+
+#[test]
+fn signature_impact_does_not_reclassify_excluded_tests_as_production() {
+    let mut args = impact_args("parseDate", Format::Json);
+    args.config = Some(PathBuf::from("exclude-other-test.no-mistakes.yml"));
+    let out = run_capture(args);
+    let v: serde_json::Value = serde_json::from_str(&out).unwrap();
+
+    assert!(!v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "excluded-private-caller.test.mts"
+    }));
+    assert!(!v["testCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "excluded-private-caller.test.mts"
     }));
 }

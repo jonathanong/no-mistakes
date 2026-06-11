@@ -7,4 +7,5 @@ tests:
           - "**/*.test.mts"
         exclude:
           - other.test.mts
+          - excluded-private-caller.test.mts
 rules: []

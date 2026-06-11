@@ -47,6 +47,17 @@ fn target_local_names(
                         .collect::<BTreeSet<_>>(),
                 );
             }
+            let member_names: BTreeSet<_> = exported_symbols
+                .iter()
+                .filter_map(|symbol| {
+                    symbol
+                        .strip_prefix(&format!("{}.", import.imported))
+                        .map(|suffix| format!("{}.{}", import.local, suffix))
+                })
+                .collect();
+            if !member_names.is_empty() {
+                return Some(member_names);
+            }
             exported_symbols
                 .contains(&import.imported)
                 .then(|| BTreeSet::from([import.local.clone()]))

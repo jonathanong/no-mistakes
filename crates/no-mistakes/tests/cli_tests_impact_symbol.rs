@@ -87,6 +87,7 @@ fn test_impact_symbol_opt_in_limits_to_symbol_consumers() {
         test_files,
         vec![
             "barrel-consumer.test.mts",
+            "excluded-private-caller.test.mts",
             "helper-export.test.mts",
             "other.test.mts",
             "private-barrel-caller-with-export.test.mts",

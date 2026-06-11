@@ -1,3 +1,9 @@
+fn file_entry_uses_any_symbol(root: &Path, file: &str, target_symbols: &BTreeSet<String>) -> bool {
+    target_symbols
+        .iter()
+        .any(|target_symbol| file_entry_uses_symbol(root, file, target_symbol))
+}
+
 fn file_entry_uses_symbol(root: &Path, file: &str, target_symbol: &str) -> bool {
     let path = root.join(file);
     let mut facts_by_file = crate::codebase::ts_source::facts::collect_ts_facts(
@@ -69,7 +75,7 @@ fn symbol_aliases_in_source(source: &str, target_symbol: &str) -> BTreeSet<Strin
             .map(|(index, ch)| index + ch.len_utf8())
             .last();
         if let Some(end) = end {
-                aliases.insert(name[..end].to_string());
+            aliases.insert(name[..end].to_string());
         }
     }
     aliases
