@@ -1,6 +1,7 @@
 fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelperImport> {
     let mut imports = Vec::new();
     let mut default_aliases = Vec::new();
+    let mut named_aliases = Vec::new();
     for stmt in &program.body {
         match stmt {
             Statement::ImportDeclaration(import) => {
@@ -73,6 +74,18 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
                     default_aliases.push(id.name.as_str().to_string());
                 }
             }
+            Statement::ExportNamedDeclaration(export)
+                if export.source.is_none() && export.declaration.is_none() && !export.export_kind.is_type() =>
+            {
+                for specifier in &export.specifiers {
+                    if !specifier.export_kind.is_type() {
+                        named_aliases.push((
+                            specifier.local.name().to_string(),
+                            specifier.exported.name().to_string(),
+                        ));
+                    }
+                }
+            }
             _ => {}
         }
     }
@@ -84,6 +97,19 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
         if let Some(import) = forwarded {
             imports.push(RouteHelperImport {
                 local: "default".to_string(),
+                imported: import.imported,
+                source: import.source,
+            });
+        }
+    }
+    for (local, exported) in named_aliases {
+        let forwarded = imports
+            .iter()
+            .find(|import| import.local == local && import.imported != "*")
+            .cloned();
+        if let Some(import) = forwarded {
+            imports.push(RouteHelperImport {
+                local: exported,
                 imported: import.imported,
                 source: import.source,
             });

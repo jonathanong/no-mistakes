@@ -7,9 +7,16 @@ for (const entityHref of hrefs) {
 for (const row of rows) {
   router.push(entityHref(row));
 }
+for (const router of routers) {
+  router.push(entityHref(row));
+}
 switch (kind) {
   case 'local':
     const entityHref = localHref;
+    router.push(entityHref(row));
+    break;
+  case 'router-local':
+    const router = localRouter;
     router.push(entityHref(row));
     break;
   case 'remote':

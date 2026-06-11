@@ -75,6 +75,18 @@ export function reassignedSwitchHref(entity: { id: string }, kind: string): stri
   }
   return href;
 }
+export function switchAllBranchesAssignedHref(entity: { id: string }, kind: string): string {
+  let href = `/switch-all/${entity.id}`;
+  switch (kind) {
+    case 'settings':
+      href += '/settings';
+      break;
+    default:
+      href += '/default';
+      break;
+  }
+  return href;
+}
 export function tryHref(entity: { id: string }): string {
   try {
     return `/try/${entity.id}`;

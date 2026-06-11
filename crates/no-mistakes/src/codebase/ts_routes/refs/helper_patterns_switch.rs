@@ -8,6 +8,7 @@ fn evaluate_helper_switch_statement<'a>(
     let mut values = Vec::new();
     let base_env = env.clone();
     let mut case_envs = Vec::new();
+    let has_default = switch_stmt.cases.iter().any(|case| case.test.is_none());
     for case in &switch_stmt.cases {
         let mut case_env = base_env.clone();
         for stmt in &case.consequent {
@@ -22,11 +23,15 @@ fn evaluate_helper_switch_statement<'a>(
         case_envs.push(case_env);
     }
     if !case_envs.is_empty() {
-        let mut merged_env = base_env;
-        for case_env in case_envs {
-            merge_helper_env(&mut merged_env, case_env);
+        if has_default {
+            replace_helper_env_with_branches(env, case_envs);
+        } else {
+            let mut merged_env = base_env;
+            for case_env in case_envs {
+                merge_helper_env(&mut merged_env, case_env);
+            }
+            *env = merged_env;
         }
-        *env = merged_env;
     }
     values
 }

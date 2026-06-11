@@ -29,13 +29,16 @@ fn evaluate_helper_try_statement<'a>(
     }
     replace_helper_env_with_branches(env, branch_envs);
     if let Some(finalizer) = &try_stmt.finalizer {
-        values.extend(evaluate_helper_block_returns(
+        let finalizer_values = evaluate_helper_block_returns(
             finalizer,
             defs,
             imported_helpers,
             env,
             depth + 1,
-        ));
+        );
+        if !finalizer_values.is_empty() {
+            return finalizer_values;
+        }
     }
     values
 }

@@ -129,15 +129,17 @@ fn collect_helper_refs_from_loop_body<'a>(
         local_helpers,
         refs,
     );
+    let mut scoped_router_bindings = router_bindings.clone();
     let mut scoped_helper_bindings = helper_bindings.clone();
     if let Some(ForStatementLeft::VariableDeclaration(var_decl)) = left {
+        collect_router_bindings_from_var_decl(var_decl, &mut scoped_router_bindings);
         remove_shadowed_helper_var_bindings(var_decl, &mut scoped_helper_bindings, local_helpers);
     }
     collect_helper_refs_from_statement(
         body,
         source,
         file,
-        router_bindings,
+        &mut scoped_router_bindings,
         &mut scoped_helper_bindings,
         local_helpers,
         refs,
