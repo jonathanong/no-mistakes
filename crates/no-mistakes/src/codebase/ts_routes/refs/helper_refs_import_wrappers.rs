@@ -40,10 +40,7 @@ fn imported_helper_wrapper_from_expression(
                 .body
                 .statements
                 .first()
-                .and_then(|stmt| match stmt {
-                    Statement::ExpressionStatement(expr_stmt) => Some(&expr_stmt.expression),
-                    _ => None,
-                })
+                .and_then(|stmt| match stmt { Statement::ExpressionStatement(expr_stmt) => Some(&expr_stmt.expression), _ => None })
                 .and_then(|expr| match expr {
                     Expression::CallExpression(call) => Some(call),
                     _ => None,

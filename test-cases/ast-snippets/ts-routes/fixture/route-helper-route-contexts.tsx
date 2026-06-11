@@ -41,6 +41,9 @@ try {
 const actions = {
   open: () => router.push(entityHref(entity)),
 };
+const spreadActions = {
+  ...{ open: () => router.push(entityHref(entity)) },
+};
 async function navigate() {
   await router.push(entityHref(entity));
   router.push(await entityHref(entity));

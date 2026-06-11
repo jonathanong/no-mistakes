@@ -8,11 +8,12 @@ fn collect_helper_refs_from_object_expression<'a>(
     refs: &mut Vec<RouteHelperRef>,
 ) {
     for prop in &obj.properties {
-        let ObjectPropertyKind::ObjectProperty(prop) = prop else {
-            continue;
+        let expr = match prop {
+            ObjectPropertyKind::ObjectProperty(prop) => &prop.value,
+            ObjectPropertyKind::SpreadProperty(spread) => &spread.argument,
         };
         collect_helper_refs_from_expression(
-            &prop.value,
+            expr,
             source,
             file,
             router_bindings,

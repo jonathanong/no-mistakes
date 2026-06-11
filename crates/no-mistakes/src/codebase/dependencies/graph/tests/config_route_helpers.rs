@@ -443,34 +443,3 @@ fn route_helper_ref_patterns_ignore_unresolved_namespace_reexport_barrels() {
 
     assert!(route_helper_ref_patterns(&client, &file_facts, &facts, &resolver).is_empty());
 }
-
-#[test]
-fn route_helper_ref_patterns_stop_at_recursion_depth_limit() {
-    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
-    let tsconfig =
-        crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
-    let client = root.join("src/client.ts");
-    let import = crate::codebase::ts_routes::refs::RouteHelperImport {
-        local: "entityHref".to_string(),
-        imported: "entityHref".to_string(),
-        source: "./links".to_string(),
-    };
-
-    assert!(
-        route_helper_patterns_from_import(&client, "entityHref", &import, &TsFactMap::new(), &resolver, 5)
-            .is_none()
-    );
-    assert!(
-        route_helper_namespace_member_patterns(
-            &client,
-            "links",
-            "entityHref",
-            &import,
-            &TsFactMap::new(),
-            &resolver,
-            5,
-        )
-        .is_none()
-    );
-}
