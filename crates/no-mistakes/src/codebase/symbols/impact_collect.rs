@@ -49,6 +49,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
     let mut entries =
         graph.dependents_of_symbol_nodes(std::slice::from_ref(&target), None, Some(&impact_edges));
     let (exports, export_nodes) = export_paths(&graph, &target, symbol, &root, &definition);
+    let target_symbols = signature_target_symbols(&target_file, symbol, &export_nodes);
     let file_import_edges = HashSet::from([
         EdgeKind::DynamicImport,
         EdgeKind::Require,
@@ -62,16 +63,31 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
     file_roots.push(NodeId::File(target_file.clone()));
     file_roots.sort();
     file_roots.dedup();
-    entries.extend(graph.dependents_of(
-        &file_roots,
-        None,
-        Some(&file_import_edges),
-    ));
-    let target_symbols = signature_target_symbols(&target_file, symbol, &export_nodes);
-    let target_symbol_names: BTreeSet<String> = target_symbols
-        .values()
-        .flat_map(|symbols| symbols.iter().cloned())
-        .collect();
+    let mut file_entry_target_symbols: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for file_root in file_roots {
+        let Some(root_file) = file_root.as_file() else {
+            continue;
+        };
+        let symbols_for_root = target_symbols.get(root_file).cloned().unwrap_or_default();
+        let file_entries = graph.dependents_of(
+            std::slice::from_ref(&file_root),
+            None,
+            Some(&file_import_edges),
+        );
+        if !symbols_for_root.is_empty() {
+            for entry in &file_entries {
+                if has_file_level_import_edge(&entry.via) {
+                    if let Some(path) = entry.node.as_file() {
+                        file_entry_target_symbols
+                            .entry(relative_slash_path(&root, path))
+                            .or_default()
+                            .extend(symbols_for_root.iter().cloned());
+                    }
+                }
+            }
+        }
+        entries.extend(file_entries);
+    }
     let production_extra_callers =
         local_caller_entries(&graph, &target_symbols, &root, &tsconfig, &test_filter, false);
     let test_extra_callers = local_caller_entries(
@@ -87,20 +103,20 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         &entries,
         &production_extra_callers,
         &root,
-        &target_symbol_names,
+        &file_entry_target_symbols,
     );
     let suggested_tests = suggested_tests(
         &suggested_entries,
         &root,
         &test_filter,
         &test_extra_callers,
-        &target_symbol_names,
+        &file_entry_target_symbols,
     );
     let caller_context = CallerEntriesContext {
         root: &root,
         test_filter: &test_filter,
         export_nodes: &export_nodes,
-        target_symbols: &target_symbol_names,
+        file_target_symbols: &file_entry_target_symbols,
     };
 
     Ok(SignatureImpactReport {
@@ -120,70 +136,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
     })
 }
 
-fn export_paths(
-    graph: &DepGraph,
-    target: &NodeId,
-    target_symbol: &str,
-    root: &Path,
-    definition: &SymbolLocation,
-) -> (Vec<SymbolLocation>, BTreeSet<NodeId>) {
-    let mut exports = BTreeSet::from([definition.clone()]);
-    let mut export_nodes = BTreeSet::from([target.clone()]);
-    let mut frontier = vec![(target.clone(), target_symbol.to_string())];
-    let mut seen = BTreeSet::from([target.clone()]);
-    frontier.push((NodeId::File(root.join(&definition.file)), target_symbol.to_string()));
-    while let Some((node, current_symbol)) = frontier.pop() {
-        if let Some(neighbors) = graph.dependents_of_node(&node) {
-            for (neighbor, _) in neighbors {
-                let NodeId::Symbol { file, symbol } = neighbor else {
-                    continue;
-                };
-                if seen.insert(neighbor.clone()) {
-                    if let Some(location) = export_location(file, root, symbol, true).ok().flatten() {
-                        let local_import_export = std::fs::read_to_string(file)
-                                .ok()
-                                .and_then(|source| {
-                                    let is_tsx = file
-                                        .extension()
-                                        .and_then(|s| s.to_str())
-                                        .is_some_and(|ext| {
-                                            ext.eq_ignore_ascii_case("tsx")
-                                                || ext.eq_ignore_ascii_case("jsx")
-                                        });
-                                    extract_symbols(&source, is_tsx).ok()
-                                })
-                                .and_then(|symbols| {
-                                    let local = symbols.exports.iter().find_map(|export| {
-                                        if matches!(export.kind, ExportKind::ReExport { .. })
-                                            || export.name != *symbol
-                                        {
-                                            return None;
-                                        }
-                                        Some(export.local.as_deref().unwrap_or(&export.name))
-                                    })?;
-                                    symbols
-                                        .imports
-                                        .iter()
-                                        .any(|import| {
-                                            import.local == local
-                                                && (import.imported == current_symbol
-                                                    || import.imported == "*")
-                                        })
-                                        .then_some(())
-                                })
-                                .is_some();
-                        if location.kind == "re-export" || local_import_export {
-                            frontier.push((neighbor.clone(), symbol.clone()));
-                            exports.insert(location);
-                            export_nodes.insert(neighbor.clone());
-                        }
-                    }
-                }
-            }
-        }
-    }
-    (exports.into_iter().collect(), export_nodes)
-}
+include!("impact_collect_exports.rs");
 
 #[cfg(test)]
 mod impact_collect_caller_tests;

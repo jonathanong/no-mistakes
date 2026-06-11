@@ -81,7 +81,7 @@ fn suggested_test_entries(
     entries: &[NodeEntry],
     production_extra_callers: &[CallerEntry],
     root: &Path,
-    target_symbols: &BTreeSet<String>,
+    file_target_symbols: &BTreeMap<String, BTreeSet<String>>,
 ) -> Vec<NodeEntry> {
     let mut suggested_entries = entries.to_vec();
     let test_edges = HashSet::from([EdgeKind::TestOf]);
@@ -90,7 +90,10 @@ fn suggested_test_entries(
         .filter(|entry| has_file_level_import_edge(&entry.via))
         .filter_map(|entry| entry.node.as_file())
         .filter(|file| {
-            file_entry_uses_any_symbol(root, &relative_slash_path(root, file), target_symbols)
+            let file = relative_slash_path(root, file);
+            file_target_symbols
+                .get(file.as_str())
+                .is_some_and(|symbols| file_entry_uses_any_symbol(root, file.as_str(), symbols))
         })
         .map(Path::to_path_buf)
         .collect();

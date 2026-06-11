@@ -20,6 +20,10 @@ fn signature_impact_keeps_dynamic_import_file_callers() {
         entry["file"] == "dynamic-import-aliased-barrel-caller.mts"
             && entry.get("symbol").is_none()
     }));
+    assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "dynamic-import-chained-member-caller.mts"
+            && entry.get("symbol").is_none()
+    }));
     assert!(v["suggestedTests"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "dynamic-import-caller.test.mts"
     }));
@@ -28,6 +32,9 @@ fn signature_impact_keeps_dynamic_import_file_callers() {
     }));
     assert!(!v["productionCallers"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "dynamic-import-shadowed-member.mts" && entry.get("symbol").is_none()
+    }));
+    assert!(!v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "dynamic-import-other-export-name.mts" && entry.get("symbol").is_none()
     }));
     assert!(!v["suggestedTests"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "dynamic-import-unused.test.mts"

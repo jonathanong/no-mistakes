@@ -53,6 +53,7 @@ fn fixture_args(files: Vec<&str>, format: Format) -> SymbolsArgs {
 include!("tests_signature_impact.rs");
 include!("tests_signature_impact_callers.rs");
 include!("tests_signature_impact_dynamic.rs");
+include!("tests_signature_impact_exports.rs");
 include!("tests_signature_impact_local_barrels.rs");
 
 #[test]

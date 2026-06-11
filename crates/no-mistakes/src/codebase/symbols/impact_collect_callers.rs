@@ -78,7 +78,7 @@ struct CallerEntriesContext<'a> {
     root: &'a Path,
     test_filter: &'a TestFileFilter,
     export_nodes: &'a BTreeSet<NodeId>,
-    target_symbols: &'a BTreeSet<String>,
+    file_target_symbols: &'a BTreeMap<String, BTreeSet<String>>,
 }
 
 fn caller_entries(
@@ -120,8 +120,15 @@ fn caller_entries(
             continue;
         }
         if has_file_level_import_edge(&entry.via) {
+            let Some(target_symbols) = context
+                .file_target_symbols
+                .get(file.as_str())
+                .filter(|symbols| !symbols.is_empty())
+            else {
+                continue;
+            };
             let uses_target = *dynamic_usage_cache.entry(file.clone()).or_insert_with(|| {
-                file_entry_uses_any_symbol(context.root, file.as_str(), context.target_symbols)
+                file_entry_uses_any_symbol(context.root, file.as_str(), target_symbols)
             });
             if !uses_target {
                 continue;
@@ -154,12 +161,6 @@ fn is_test_like_file(file: &Path) -> bool {
     file.file_name().and_then(|name| name.to_str()).is_some_and(|name| {
         name.contains(".test.") || name.contains(".spec.")
     })
-}
-
-fn has_file_level_import_edge(via: &[EdgeKind]) -> bool {
-    via.contains(&EdgeKind::DynamicImport)
-        || via.contains(&EdgeKind::Require)
-        || via.contains(&EdgeKind::WorkspaceImport)
 }
 
 fn merge_caller_entry(

@@ -4,6 +4,12 @@ fn file_entry_uses_any_symbol(root: &Path, file: &str, target_symbols: &BTreeSet
         .any(|target_symbol| file_entry_uses_symbol(root, file, target_symbol))
 }
 
+fn has_file_level_import_edge(via: &[EdgeKind]) -> bool {
+    via.contains(&EdgeKind::DynamicImport)
+        || via.contains(&EdgeKind::Require)
+        || via.contains(&EdgeKind::WorkspaceImport)
+}
+
 fn file_entry_uses_symbol(root: &Path, file: &str, target_symbol: &str) -> bool {
     let path = root.join(file);
     let Ok(source) = std::fs::read_to_string(&path) else {
@@ -25,6 +31,9 @@ fn file_entry_uses_symbol(root: &Path, file: &str, target_symbol: &str) -> bool 
         })
         .unwrap_or_default();
     let module_bindings = dynamic_module_bindings(&source);
+    if direct_dynamic_member_use(&source, target_symbol) {
+        return true;
+    }
     if module_bindings.iter().any(|binding| {
         let member = format!("{binding}.{target_symbol}");
         callees.contains(&member) || source.contains(&member)
@@ -34,6 +43,13 @@ fn file_entry_uses_symbol(root: &Path, file: &str, target_symbol: &str) -> bool 
     dynamic_symbol_aliases_in_source(&source, target_symbol)
         .iter()
         .any(|alias| callees.contains(alias) || source.contains(&format!("{alias}(")))
+}
+
+fn direct_dynamic_member_use(source: &str, target_symbol: &str) -> bool {
+    source
+        .lines()
+        .filter(|line| line.contains("import(") || line.contains("require("))
+        .any(|line| line.contains(&format!(").{target_symbol}")))
 }
 
 fn dynamic_module_bindings(source: &str) -> BTreeSet<String> {
