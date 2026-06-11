@@ -6,8 +6,6 @@ fn collect_import_bindings<'a>(stmts: &'a [Statement<'a>]) -> RouterBindings<'a>
         };
         if import.source.value.as_str() != "next/navigation" {
             mark_shadowed_fetch_import(import, &mut bindings);
-        }
-        if import.source.value.as_str() != "next/navigation" {
             continue;
         }
         let Some(specifiers) = &import.specifiers else {

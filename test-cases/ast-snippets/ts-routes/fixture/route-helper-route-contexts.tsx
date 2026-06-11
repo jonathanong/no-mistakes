@@ -6,7 +6,9 @@ const loose = entityHref(entity);
 api.fetch(entityHref(entity));
 const link = <Link href={entityHref(entity)} />;
 const router = useRouter();
+router.push(entityHref.invalid(entity));
 router.push(entityHref(entity));
+void router.push(entityHref(entity));
 redirect(entityHref(entity));
 fetch(entityHref(entity));
 router?.push(entityHref(entity));
@@ -32,6 +34,9 @@ try {
 } finally {
   redirect(entityHref(entity));
 }
+const actions = {
+  open: () => router.push(entityHref(entity)),
+};
 async function navigate() {
   await router.push(entityHref(entity));
   router.push(await entityHref(entity));

@@ -7,6 +7,17 @@ fn collect_helper_refs_from_expression<'a>(
     local_helpers: &HashSet<String>,
     refs: &mut Vec<RouteHelperRef>,
 ) {
+    if collect_helper_refs_from_wrapper_expression(
+        expr,
+        source,
+        file,
+        router_bindings,
+        helper_bindings,
+        local_helpers,
+        refs,
+    ) {
+        return;
+    }
     match expr {
         Expression::JSXElement(jsx_elem) => {
             collect_helper_refs_from_jsx_element(
@@ -105,83 +116,15 @@ fn collect_helper_refs_from_expression<'a>(
                 );
             }
         }
-        Expression::AssignmentExpression(assign) => {
-            collect_helper_refs_from_unary_wrapper(
-                &assign.right,
-                source,
-                file,
-                router_bindings,
-                helper_bindings,
-                local_helpers,
-                refs,
-            );
-        }
-        Expression::AwaitExpression(await_expr) => {
-            collect_helper_refs_from_unary_wrapper(
-                &await_expr.argument,
-                source,
-                file,
-                router_bindings,
-                helper_bindings,
-                local_helpers,
-                refs,
-            );
-        }
-        Expression::ParenthesizedExpression(paren) => {
-            collect_helper_refs_from_unary_wrapper(
-                &paren.expression,
-                source,
-                file,
-                router_bindings,
-                helper_bindings,
-                local_helpers,
-                refs,
-            );
-        }
-        Expression::TSAsExpression(ts_as) => {
-            collect_helper_refs_from_unary_wrapper(
-                &ts_as.expression,
-                source,
-                file,
-                router_bindings,
-                helper_bindings,
-                local_helpers,
-                refs,
-            );
-        }
-        Expression::TSTypeAssertion(ts_assertion) => {
-            collect_helper_refs_from_unary_wrapper(
-                &ts_assertion.expression,
-                source,
-                file,
-                router_bindings,
-                helper_bindings,
-                local_helpers,
-                refs,
-            );
-        }
-        Expression::TSNonNullExpression(ts_nn) => {
-            collect_helper_refs_from_unary_wrapper(
-                &ts_nn.expression,
-                source,
-                file,
-                router_bindings,
-                helper_bindings,
-                local_helpers,
-                refs,
-            );
-        }
-        Expression::TSSatisfiesExpression(ts_sat) => {
-            collect_helper_refs_from_unary_wrapper(
-                &ts_sat.expression,
-                source,
-                file,
-                router_bindings,
-                helper_bindings,
-                local_helpers,
-                refs,
-            );
-        }
+        Expression::ObjectExpression(obj) => collect_helper_refs_from_object_expression(
+            obj,
+            source,
+            file,
+            router_bindings,
+            helper_bindings,
+            local_helpers,
+            refs,
+        ),
         _ => {}
     }
 }

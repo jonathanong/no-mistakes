@@ -52,6 +52,7 @@ fn evaluate_helper_body<'a>(
                         depth + 1,
                     ));
                 }
+                break;
             }
             Statement::ExpressionStatement(expr_stmt) if expression_body => {
                 returns.extend(evaluate_route_expression(
@@ -61,6 +62,7 @@ fn evaluate_helper_body<'a>(
                     env,
                     depth + 1,
                 ));
+                break;
             }
             Statement::ExpressionStatement(expr_stmt) => {
                 if let Expression::AssignmentExpression(assignment) = &expr_stmt.expression {

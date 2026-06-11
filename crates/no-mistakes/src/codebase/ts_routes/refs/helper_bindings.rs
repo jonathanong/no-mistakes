@@ -18,7 +18,6 @@ fn collect_route_helper_bindings(
             bindings.namespaces.insert(import.local.clone());
         } else {
             bindings.identifiers.insert(import.local.clone());
-            bindings.namespaces.insert(import.local.clone());
         }
     }
     bindings
@@ -91,13 +90,10 @@ fn remove_shadowed_helper_parameters(
 fn remove_shadowed_helper_function_binding(
     func: &oxc::ast::ast::Function,
     bindings: &mut RouteHelperBindings,
-    local_helpers: &HashSet<String>,
+    _local_helpers: &HashSet<String>,
 ) {
     if let Some(id) = &func.id {
-        let name = id.name.as_str();
-        if !local_helpers.contains(name) {
-            remove_shadowed_helper_name(name, bindings);
-        }
+        remove_shadowed_helper_name(id.name.as_str(), bindings);
     }
 }
 
@@ -113,15 +109,9 @@ fn remove_shadowed_helper_class_binding(
 fn remove_shadowed_helper_var_bindings(
     var_decl: &oxc::ast::ast::VariableDeclaration<'_>,
     bindings: &mut RouteHelperBindings,
-    local_helpers: &HashSet<String>,
+    _local_helpers: &HashSet<String>,
 ) {
     for decl in &var_decl.declarations {
-        if binding_identifier_name(&decl.id)
-            .map(|name| local_helpers.contains(name))
-            .unwrap_or(false)
-        {
-            continue;
-        }
         remove_shadowed_helper_binding(&decl.id, bindings);
         let (Some(name), Some(init)) = (binding_identifier_name(&decl.id), &decl.init) else {
             continue;

@@ -12,3 +12,8 @@ function Row({ entityHref, links }) {
 
 const link = <Link href={entityHref(entity)} />;
 const namespaceLink = <Link href={links.entityHref(entity)} />;
+const router = useRouter();
+{
+  const entityHref = localBuilder;
+  router.push(entityHref(row));
+}

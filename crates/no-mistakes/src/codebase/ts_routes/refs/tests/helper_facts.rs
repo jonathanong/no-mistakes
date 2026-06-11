@@ -137,6 +137,7 @@ fn summarizes_route_helper_edge_expression_shapes() {
         helper("localBranchHref"),
         vec!["/active-local/*", "/archive-local/*"]
     );
+    assert_eq!(helper("deadReturnHref"), vec!["/dead-live/*"]);
     assert_eq!(
         helper("nestedStatementHref"),
         vec![
@@ -207,6 +208,8 @@ fn records_helper_calls_only_in_route_contexts() {
             .map(|route_ref| route_ref.callee.as_str())
             .collect::<Vec<_>>(),
         vec![
+            "entityHref",
+            "entityHref",
             "entityHref",
             "entityHref",
             "entityHref",

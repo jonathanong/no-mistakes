@@ -74,7 +74,7 @@ fn ignores_loop_and_switch_bindings_that_shadow_route_helpers() {
             .iter()
             .map(|route_ref| route_ref.callee.as_str())
             .collect::<Vec<_>>(),
-        vec!["entityHref", "entityHref"]
+        vec!["entityHref", "entityHref", "entityHref"]
     );
 }
 

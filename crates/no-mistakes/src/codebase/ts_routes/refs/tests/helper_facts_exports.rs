@@ -78,6 +78,30 @@ fn records_imported_route_helpers_reexported_under_local_aliases() {
 }
 
 #[test]
+fn records_imported_route_helpers_wrapped_by_exported_helpers() {
+    let source = route_fixture_source("route-helper-imported-wrapper.ts");
+    let facts = extract_route_ref_facts(&source, "links.ts");
+
+    assert_eq!(
+        facts
+            .route_helper_imports
+            .iter()
+            .map(|import| {
+                (
+                    import.local.as_str(),
+                    import.imported.as_str(),
+                    import.source.as_str(),
+                )
+            })
+            .collect::<Vec<_>>(),
+        vec![
+            ("entityHref", "entityHref", "./entity-href"),
+            ("href", "entityHref", "./entity-href"),
+        ]
+    );
+}
+
+#[test]
 fn ignores_type_only_route_helper_reexports() {
     let source = route_fixture_source("route-helper-type-reexport.ts");
     let facts = extract_route_ref_facts(&source, "links.ts");

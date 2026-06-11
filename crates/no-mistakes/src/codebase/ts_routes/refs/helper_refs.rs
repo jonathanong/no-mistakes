@@ -86,6 +86,15 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
                     }
                 }
             }
+            Statement::ExportNamedDeclaration(export)
+                if export.source.is_none() && !export.export_kind.is_type() =>
+            {
+                if let Some(forwarded) =
+                    exported_imported_helper_wrapper(export.declaration.as_ref(), &imports)
+                {
+                    imports.push(forwarded);
+                }
+            }
             _ => {}
         }
     }

@@ -73,13 +73,24 @@ fn collect_helper_refs_from_for_statement<'a>(
     local_helpers: &HashSet<String>,
     refs: &mut Vec<RouteHelperRef>,
 ) {
+    let mut scoped_router_bindings = router_bindings.clone();
+    let mut scoped_helper_bindings = helper_bindings.clone();
+    collect_helper_refs_from_for_init(
+        for_stmt,
+        source,
+        file,
+        &mut scoped_router_bindings,
+        &mut scoped_helper_bindings,
+        local_helpers,
+        refs,
+    );
     if let Some(test) = &for_stmt.test {
         collect_helper_refs_from_expression(
             test,
             source,
             file,
-            router_bindings,
-            helper_bindings,
+            &mut scoped_router_bindings,
+            &mut scoped_helper_bindings,
             local_helpers,
             refs,
         );
@@ -89,8 +100,8 @@ fn collect_helper_refs_from_for_statement<'a>(
             update,
             source,
             file,
-            router_bindings,
-            helper_bindings,
+            &mut scoped_router_bindings,
+            &mut scoped_helper_bindings,
             local_helpers,
             refs,
         );
@@ -99,8 +110,8 @@ fn collect_helper_refs_from_for_statement<'a>(
         &for_stmt.body,
         source,
         file,
-        router_bindings,
-        helper_bindings,
+        &mut scoped_router_bindings,
+        &mut scoped_helper_bindings,
         local_helpers,
         refs,
     );

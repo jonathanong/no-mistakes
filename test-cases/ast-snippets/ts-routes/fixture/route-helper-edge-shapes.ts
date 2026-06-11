@@ -38,6 +38,10 @@ export function localBranchHref(entity: { id: string }, archived: boolean): stri
   }
   return `/active-local/${entity.id}`;
 }
+export function deadReturnHref(entity: { id: string }): string {
+  return `/dead-live/${entity.id}`;
+  return `/dead-unreachable/${entity.id}`;
+}
 export function nestedStatementHref(entity: { id: string }, kind: string): string {
   if (kind === 'block') {
     {
@@ -139,6 +143,7 @@ export function tryFinallyHref(entity: { id: string }): string {
     let href = `/try-finally/${entity.id}`;
     return href;
   } finally {
+    // Intentional fixture: a finally return overrides the try return.
     return `/finally/${entity.id}`;
   }
 }

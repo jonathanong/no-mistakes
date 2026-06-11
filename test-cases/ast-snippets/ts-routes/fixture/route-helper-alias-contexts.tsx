@@ -1,5 +1,5 @@
 import { entityHref } from './entity-href';
-import { links } from './links';
+import * as links from './links';
 
 const href = entityHref;
 const router = useRouter();
