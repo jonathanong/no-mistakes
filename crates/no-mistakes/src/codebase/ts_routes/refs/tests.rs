@@ -1,6 +1,8 @@
 use super::*;
 use std::path::PathBuf;
 
+mod helper_facts;
+
 fn route_fixture_source(name: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/ast-snippets/ts-routes/fixture")
@@ -277,87 +279,6 @@ fn extracts_object_href_next_pathname() {
     let refs = extract_route_refs(source, "nav.tsx");
     assert_eq!(refs.len(), 1);
     assert_eq!(refs[0].pattern, "/users/:id");
-}
-
-#[test]
-fn summarizes_basic_route_helper_patterns() {
-    let source = r#"
-export function entityHref(entity: { id: string }, kind: string): string {
-  return `/prefix/${entity.id}/suffix/${kind}`;
-}
-"#;
-    let facts = extract_route_ref_facts(source, "links.ts");
-    assert_eq!(facts.route_helpers.len(), 1);
-    assert_eq!(facts.route_helpers[0].name, "entityHref");
-    assert_eq!(facts.route_helpers[0].patterns, vec!["/prefix/*/suffix/*"]);
-}
-
-#[test]
-fn summarizes_nested_route_helpers_with_suffixes() {
-    let source = r#"
-function getTopicTypeSlug(topicType: string): string {
-  return topicType;
-}
-type Topic = { topic_type: string; id: string; slug?: string | null };
-export function createTopicPathname(topic: Topic, suffix = ''): string {
-  const idOrSlug = topic.slug ?? topic.id;
-  return `/${getTopicTypeSlug(topic.topic_type)}/${idOrSlug}${suffix}`;
-}
-export function topicTagsHref(topic: Topic, tagType: string): string {
-  return createTopicPathname(topic, `/tags/${tagType}`);
-}
-export function topicHref(topic: Topic, tab?: string): string {
-  return createTopicPathname(topic, tab ? `/${tab}` : '');
-}
-"#;
-    let facts = extract_route_ref_facts(source, "entity-href.ts");
-    let helper = |name: &str| {
-        facts
-            .route_helpers
-            .iter()
-            .find(|helper| helper.name == name)
-            .map(|helper| helper.patterns.clone())
-            .unwrap_or_default()
-    };
-    assert_eq!(helper("createTopicPathname"), vec!["/*/*"]);
-    assert_eq!(helper("topicTagsHref"), vec!["/*/*/tags/*"]);
-    assert_eq!(helper("topicHref"), vec!["/*/*", "/*/*/*"]);
-}
-
-#[test]
-fn records_helper_calls_only_in_route_contexts() {
-    let source = r#"
-import { redirect } from 'next/navigation';
-import { entityHref } from './entity-href';
-
-const loose = entityHref(entity);
-const link = <Link href={entityHref(entity)} />;
-const router = useRouter();
-router.push(entityHref(entity));
-redirect(entityHref(entity));
-fetch(entityHref(entity));
-"#;
-    let facts = extract_route_ref_facts(source, "component.tsx");
-    assert_eq!(
-        facts
-            .route_helper_refs
-            .iter()
-            .map(|route_ref| route_ref.callee.as_str())
-            .collect::<Vec<_>>(),
-        vec!["entityHref", "entityHref", "entityHref", "entityHref"]
-    );
-}
-
-#[test]
-fn records_namespace_helper_calls_in_route_contexts() {
-    let source = r#"
-import * as links from './entity-href';
-const link = <Link href={links.topicHref(topic)} />;
-"#;
-    let facts = extract_route_ref_facts(source, "component.tsx");
-    assert_eq!(facts.route_helper_refs.len(), 1);
-    assert_eq!(facts.route_helper_refs[0].callee, "links.topicHref");
-    assert_eq!(facts.route_helper_imports[0].imported, "*");
 }
 
 #[test]

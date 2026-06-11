@@ -66,6 +66,57 @@ fn collect_helper_def_from_statement<'a>(
             }
             _ => {}
         },
+        Statement::ExportDefaultDeclaration(export) => match &export.declaration {
+            oxc::ast::ast::ExportDefaultDeclarationKind::FunctionDeclaration(func) => {
+                if let Some(body) = &func.body {
+                    if let Some(id) = &func.id {
+                        defs.insert(
+                            id.name.as_str(),
+                            HelperDef {
+                                name: id.name.as_str(),
+                                params: &func.params,
+                                body,
+                                expression_body: false,
+                            },
+                        );
+                    }
+                    defs.insert(
+                        "default",
+                        HelperDef {
+                            name: "default",
+                            params: &func.params,
+                            body,
+                            expression_body: false,
+                        },
+                    );
+                }
+            }
+            oxc::ast::ast::ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
+                defs.insert(
+                    "default",
+                    HelperDef {
+                        name: "default",
+                        params: &arrow.params,
+                        body: &arrow.body,
+                        expression_body: arrow.expression,
+                    },
+                );
+            }
+            oxc::ast::ast::ExportDefaultDeclarationKind::FunctionExpression(func) => {
+                if let Some(body) = &func.body {
+                    defs.insert(
+                        "default",
+                        HelperDef {
+                            name: "default",
+                            params: &func.params,
+                            body,
+                            expression_body: false,
+                        },
+                    );
+                }
+            }
+            _ => {}
+        },
         _ => {}
     }
 }

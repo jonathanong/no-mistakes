@@ -23,11 +23,10 @@ fn push_matching_route_edges(
 
     for pattern in all_patterns {
         if matcher::matches(route_pattern, pattern) {
-            for def_file in pattern_to_files[pattern]
-                .iter()
-                .filter(|def_file| *def_file != source)
-            {
-                push_route_ref_edge(edges, source, def_file);
+            if let Some(def_files) = pattern_to_files.get(pattern) {
+                for def_file in def_files.iter().filter(|def_file| *def_file != source) {
+                    push_route_ref_edge(edges, source, def_file);
+                }
             }
         }
     }

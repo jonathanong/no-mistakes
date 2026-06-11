@@ -76,6 +76,12 @@ fn route_helper_callee_name(expr: &Expression) -> Option<String> {
                 Some(format!("{object}.{property}"))
             }
         },
+        Expression::BinaryExpression(binary) => route_helper_callee_name(&binary.left)
+            .or_else(|| route_helper_callee_name(&binary.right)),
+        Expression::TemplateLiteral(tpl) => tpl
+            .expressions
+            .iter()
+            .find_map(|expr| route_helper_callee_name(expr)),
         Expression::ParenthesizedExpression(paren) => route_helper_callee_name(&paren.expression),
         Expression::TSAsExpression(ts_as) => route_helper_callee_name(&ts_as.expression),
         Expression::TSTypeAssertion(ts_assertion) => {
