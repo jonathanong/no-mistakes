@@ -51,6 +51,7 @@ fn fixture_args(files: Vec<&str>, format: Format) -> SymbolsArgs {
 }
 
 include!("tests_signature_impact.rs");
+include!("tests_signature_impact_local_barrels.rs");
 
 #[test]
 fn collect_entries_surfaces_tsconfig_errors() {

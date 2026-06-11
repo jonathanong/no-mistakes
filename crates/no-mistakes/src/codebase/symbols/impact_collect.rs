@@ -81,9 +81,7 @@ fn export_paths(
                 };
                 if seen.insert(neighbor.clone()) {
                     if let Some(location) = export_location(file, root, symbol, true).ok().flatten() {
-                        let local_import_export = location.symbol == target_symbol
-                            && symbol == target_symbol
-                            && std::fs::read_to_string(file)
+                        let local_import_export = std::fs::read_to_string(file)
                                 .ok()
                                 .and_then(|source| {
                                     let is_tsx = file
@@ -97,12 +95,12 @@ fn export_paths(
                                 })
                                 .and_then(|symbols| {
                                     let local = symbols.exports.iter().find_map(|export| {
-                                        (!matches!(
-                                            export.kind,
-                                            ExportKind::ReExport { .. }
-                                        ) && export.name == *symbol)
-                                            .then_some(export.local.as_deref())
-                                            .flatten()
+                                        if matches!(export.kind, ExportKind::ReExport { .. })
+                                            || export.name != *symbol
+                                        {
+                                            return None;
+                                        }
+                                        Some(export.local.as_deref().unwrap_or(&export.name))
                                     })?;
                                     symbols.imports.iter().any(|import| {
                                         import.local == local && import.imported == target_symbol

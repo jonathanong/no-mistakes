@@ -30,6 +30,8 @@ import type {
 
 export * from "./types";
 
+type SymbolsListOptions = Omit<SymbolsOptions, "mode"> & { mode?: "list" };
+
 export function dependencies(options: TraverseOptions): Promise<DependencyResult>;
 export function dependents(options: TraverseOptions): Promise<DependencyResult>;
 export function related(options: TraverseOptions): Promise<DependencyResult>;
@@ -37,7 +39,7 @@ export function analyzeProject(options: AnalyzeProjectOptions): Promise<AnalyzeP
 export function symbols(
   options: SymbolsOptions & { mode: "signature-impact"; symbol: string },
 ): Promise<SignatureImpactResult>;
-export function symbols(options: SymbolsOptions): Promise<SymbolsResult>;
+export function symbols(options: SymbolsListOptions): Promise<SymbolsResult>;
 export function fetches(options?: FetchesOptions): Promise<unknown>;
 export function check(options?: ProjectOptions): Promise<CheckReport>;
 export function testsPlan(options: TestsPlanOptions): Promise<TestPlan>;
