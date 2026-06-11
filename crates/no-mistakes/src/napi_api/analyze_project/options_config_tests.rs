@@ -42,6 +42,28 @@ fn report_options_keep_per_report_config_override() {
 }
 
 #[test]
+fn report_options_forward_absolute_top_level_config() {
+    let absolute = std::env::current_dir()
+        .unwrap()
+        .join("no-mistakes.json")
+        .display()
+        .to_string();
+    let options = parse_options::<AnalyzeProjectOptions>(
+        &json!({
+            "root": fixture_root("simple"),
+            "config": absolute,
+            "reports": [{ "type": "symbols", "files": ["a.mts"] }]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let symbols: Value =
+        serde_json::from_str(&options::symbols_options(&options.reports[0], &options).unwrap())
+            .unwrap();
+    assert_eq!(symbols["config"], absolute);
+}
+
+#[test]
 fn report_options_keep_relative_top_level_config_without_root() {
     let options = parse_options::<AnalyzeProjectOptions>(
         &json!({
