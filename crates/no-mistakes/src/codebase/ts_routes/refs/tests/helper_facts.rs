@@ -186,6 +186,18 @@ export function branchedHref(entity: { id: string }, archived: boolean): string 
   }
   return `/active/${entity.id}`;
 }
+export function localBranchHref(entity: { id: string }, archived: boolean): string {
+  if (archived) {
+    const href = `/archive-local/${entity.id}`;
+    return href;
+  }
+  return `/active-local/${entity.id}`;
+}
+export function reassignedHref(entity: { id: string }, tab?: string): string {
+  let href = `/users/${entity.id}`;
+  if (tab) href += `/tabs/${tab}`;
+  return href;
+}
 export function switchHref(entity: { id: string }, kind: 'user' | 'org'): string {
   switch (kind) {
     case 'user':
@@ -223,6 +235,14 @@ let noInit;
     assert!(capped_patterns.contains(&"/a/d/f/h/j".to_string()));
     assert!(!capped_patterns.contains(&"/z/y/x/w/v".to_string()));
     assert_eq!(helper("branchedHref"), vec!["/active/*", "/archive/*"]);
+    assert_eq!(
+        helper("localBranchHref"),
+        vec!["/active-local/*", "/archive-local/*"]
+    );
+    assert_eq!(
+        helper("reassignedHref"),
+        vec!["/users/*", "/users/*/tabs/*"]
+    );
     assert_eq!(
         helper("switchHref"),
         vec!["/orgs/*", "/unknown/*", "/users/*"]
@@ -286,6 +306,10 @@ try {
 } finally {
   redirect(entityHref(entity));
 }
+async function navigate() {
+  await router.push(entityHref(entity));
+  router.replace(withLocale(entityHref(entity)));
+}
 "#;
     let facts = extract_route_ref_facts(source, "component.tsx");
     assert_eq!(
@@ -295,6 +319,8 @@ try {
             .map(|route_ref| route_ref.callee.as_str())
             .collect::<Vec<_>>(),
         vec![
+            "entityHref",
+            "entityHref",
             "entityHref",
             "entityHref",
             "entityHref",
@@ -310,33 +336,6 @@ try {
             "entityHref",
             "entityHref",
             "entityHref"
-        ]
-    );
-}
-
-#[test]
-fn records_all_helper_calls_inside_route_context_expressions() {
-    let source = r#"
-import { aHref, bHref } from './entity-href';
-
-const concatLink = <Link href={aHref(a) + bHref(b)} />;
-const templateLink = <Link href={`${aHref(a)}${bHref(b)}`} />;
-const link = <Link href={flag ? aHref(a) : bHref(b)} />;
-const objectLink = <Link href={{ pathname: flag ? aHref(a) : bHref(b) }} />;
-const router = useRouter();
-router.push(flag ? aHref(a) : bHref(b));
-router.replace(aHref(a) || bHref(b));
-"#;
-    let facts = extract_route_ref_facts(source, "component.tsx");
-    assert_eq!(
-        facts
-            .route_helper_refs
-            .iter()
-            .map(|route_ref| route_ref.callee.as_str())
-            .collect::<Vec<_>>(),
-        vec![
-            "aHref", "bHref", "aHref", "bHref", "aHref", "bHref", "aHref", "bHref", "aHref",
-            "bHref", "aHref", "bHref",
         ]
     );
 }

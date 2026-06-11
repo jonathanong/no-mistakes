@@ -11,6 +11,23 @@ fn evaluate_helper_return_statement<'a>(
             .as_ref()
             .map(|expr| evaluate_route_expression(expr, defs, imported_helpers, env, depth + 1))
             .unwrap_or_default(),
+        Statement::VariableDeclaration(var_decl) => {
+            for decl in &var_decl.declarations {
+                let (Some(name), Some(init)) = (binding_identifier_name(&decl.id), &decl.init)
+                else {
+                    continue;
+                };
+                let value = evaluate_route_expression(init, defs, imported_helpers, env, depth + 1);
+                env.insert(name.to_string(), value);
+            }
+            Vec::new()
+        }
+        Statement::ExpressionStatement(expr_stmt) => {
+            if let Expression::AssignmentExpression(assignment) = &expr_stmt.expression {
+                apply_helper_assignment_expression(assignment, defs, imported_helpers, env, depth + 1);
+            }
+            Vec::new()
+        }
         Statement::BlockStatement(block) => {
             let mut values = Vec::new();
             for stmt in &block.body {

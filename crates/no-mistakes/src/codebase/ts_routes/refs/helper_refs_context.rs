@@ -97,11 +97,21 @@ fn collect_route_helper_callee_names(expr: &Expression, callees: &mut Vec<String
             if let Some(callee) = route_helper_callee_name_from_callee(&call.callee) {
                 callees.push(callee);
             }
+            for arg in &call.arguments {
+                if let Some(expr) = arg.as_expression() {
+                    collect_route_helper_callee_names(expr, callees);
+                }
+            }
         }
         Expression::ChainExpression(chain) => match &chain.expression {
             oxc::ast::ast::ChainElement::CallExpression(call) => {
                 if let Some(callee) = route_helper_callee_name_from_callee(&call.callee) {
                     callees.push(callee);
+                }
+                for arg in &call.arguments {
+                    if let Some(expr) = arg.as_expression() {
+                        collect_route_helper_callee_names(expr, callees);
+                    }
                 }
             }
             other => {
@@ -135,6 +145,9 @@ fn collect_route_helper_callee_names(expr: &Expression, callees: &mut Vec<String
         }
         Expression::TSSatisfiesExpression(ts_sat) => {
             collect_route_helper_callee_names(&ts_sat.expression, callees);
+        }
+        Expression::AwaitExpression(await_expr) => {
+            collect_route_helper_callee_names(&await_expr.argument, callees);
         }
         Expression::ConditionalExpression(cond) => {
             collect_route_helper_callee_names(&cond.consequent, callees);

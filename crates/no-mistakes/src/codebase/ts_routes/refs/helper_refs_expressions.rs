@@ -116,6 +116,17 @@ fn collect_helper_refs_from_expression<'a>(
                 refs,
             );
         }
+        Expression::AwaitExpression(await_expr) => {
+            collect_helper_refs_from_unary_wrapper(
+                &await_expr.argument,
+                source,
+                file,
+                router_bindings,
+                helper_bindings,
+                local_helpers,
+                refs,
+            );
+        }
         Expression::ParenthesizedExpression(paren) => {
             collect_helper_refs_from_unary_wrapper(
                 &paren.expression,

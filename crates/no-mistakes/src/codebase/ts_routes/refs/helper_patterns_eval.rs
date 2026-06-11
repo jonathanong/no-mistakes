@@ -62,22 +62,38 @@ fn evaluate_helper_body<'a>(
                     depth + 1,
                 ));
             }
-            Statement::IfStatement(if_stmt) => {
-                returns.extend(evaluate_helper_return_statement(
-                    &if_stmt.consequent,
-                    defs,
-                    imported_helpers,
-                    env,
-                    depth + 1,
-                ));
-                if let Some(alternate) = &if_stmt.alternate {
-                    returns.extend(evaluate_helper_return_statement(
-                        alternate,
+            Statement::ExpressionStatement(expr_stmt) => {
+                if let Expression::AssignmentExpression(assignment) = &expr_stmt.expression {
+                    apply_helper_assignment_expression(
+                        assignment,
                         defs,
                         imported_helpers,
                         env,
                         depth + 1,
+                    );
+                }
+            }
+            Statement::IfStatement(if_stmt) => {
+                let base_env = env.clone();
+                let mut consequent_env = base_env.clone();
+                returns.extend(evaluate_helper_return_statement(
+                    &if_stmt.consequent,
+                    defs,
+                    imported_helpers,
+                    &mut consequent_env,
+                    depth + 1,
+                ));
+                merge_helper_env(env, consequent_env);
+                if let Some(alternate) = &if_stmt.alternate {
+                    let mut alternate_env = base_env;
+                    returns.extend(evaluate_helper_return_statement(
+                        alternate,
+                        defs,
+                        imported_helpers,
+                        &mut alternate_env,
+                        depth + 1,
                     ));
+                    merge_helper_env(env, alternate_env);
                 }
             }
             Statement::SwitchStatement(switch_stmt) => {
