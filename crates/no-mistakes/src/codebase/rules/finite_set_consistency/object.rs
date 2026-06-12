@@ -122,10 +122,11 @@ fn trim_ignorable(mut source: &str) -> &str {
     loop {
         let trimmed = source.trim_start_matches(|ch: char| ch == ',' || ch.is_whitespace());
         if let Some(rest) = trimmed.strip_prefix("...") {
-            let Some((_, after)) = rest.split_once(',') else {
+            let end = top_level_value_end(rest);
+            if end == rest.len() {
                 return "";
-            };
-            source = after;
+            }
+            source = &rest[end + 1..];
             continue;
         }
         if let Some(rest) = trimmed.strip_prefix("//") {

@@ -361,6 +361,21 @@ const ROUTE_META = {
 }
 
 #[test]
+fn object_extraction_skips_spread_operands_with_nested_commas() {
+    let source = r#"
+const ROUTE_META = {
+  ...buildRoutes("a", "b"),
+  users: { slug: "users" },
+};
+"#;
+
+    assert_eq!(
+        extract_ts_const_object_keys(source, "ROUTE_META"),
+        BTreeSet::from(["users".to_string()])
+    );
+}
+
+#[test]
 fn matching_brace_reports_unclosed_objects() {
     assert_eq!(matching_brace("const x = { a: 1", 10), None);
 }
