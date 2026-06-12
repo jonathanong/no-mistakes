@@ -88,6 +88,12 @@ fn scan(
         || config
             .tests
             .vitest
+            .configs
+            .as_ref()
+            .is_some_and(|configs| configs.values().iter().any(|raw| root.join(raw).exists()))
+        || config
+            .tests
+            .vitest
             .projects
             .values()
             .any(|policy| policy.include.is_empty());

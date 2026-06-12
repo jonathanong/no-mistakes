@@ -253,7 +253,11 @@ const ignored = "ignored";
 "#,
             "RouteName",
         ),
-        BTreeSet::from(["done".to_string(), "single;quoted".to_string()])
+        BTreeSet::from([
+            "done".to_string(),
+            "single;quoted".to_string(),
+            "template`;still quoted".to_string()
+        ])
     );
 }
 
@@ -407,6 +411,14 @@ fn string_union_extraction_supports_ts_single_quote_escapes() {
     assert_eq!(
         extract_ts_string_union(r#"type RouteName = 'can\'t' | 'users';"#, "RouteName"),
         BTreeSet::from(["can't".to_string(), "users".to_string()])
+    );
+}
+
+#[test]
+fn string_union_extraction_supports_template_literal_members() {
+    assert_eq!(
+        extract_ts_string_union(r#"type RouteName = `users` | `billing`;"#, "RouteName"),
+        BTreeSet::from(["billing".to_string(), "users".to_string()])
     );
 }
 

@@ -158,6 +158,44 @@ fn typescript_companion_imports_are_parsed() {
 }
 
 #[test]
+fn strip_source_prefix_requires_path_boundary() {
+    let opts = Options {
+        strip_source_prefix: "src/".to_string(),
+        source_extensions: vec![".tsx".to_string()],
+        ..Default::default()
+    };
+    let extensions = source_extensions(&opts);
+    let exclude_basenames = HashSet::new();
+
+    assert_eq!(
+        source_info(
+            "src-old/Button.tsx",
+            &["src-old/Button.tsx".to_string()],
+            &opts,
+            None,
+            &extensions,
+            &exclude_basenames,
+        )
+        .unwrap()
+        .import_path,
+        "src-old/Button"
+    );
+    assert_eq!(
+        source_info(
+            "src/Button.tsx",
+            &["src/Button.tsx".to_string()],
+            &opts,
+            None,
+            &extensions,
+            &exclude_basenames,
+        )
+        .unwrap()
+        .import_path,
+        "Button"
+    );
+}
+
+#[test]
 fn declaration_files_are_not_source_candidates() {
     let root = fixture_root("fixture");
     let files = vec![root.join("src/components/Button.d.ts")];

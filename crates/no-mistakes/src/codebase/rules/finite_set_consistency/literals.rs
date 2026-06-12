@@ -12,7 +12,7 @@ fn quoted_strings(source: &str, ts_single_quote_escapes: bool) -> BTreeSet<Strin
     let mut values = BTreeSet::new();
     let mut chars = source.char_indices().peekable();
     while let Some((_, ch)) = chars.next() {
-        if ch != '"' && ch != '\'' {
+        if ch != '"' && ch != '\'' && !(ts_single_quote_escapes && ch == '`') {
             continue;
         }
         let quote = ch;
@@ -24,7 +24,9 @@ fn quoted_strings(source: &str, ts_single_quote_escapes: bool) -> BTreeSet<Strin
                 escaped = false;
                 continue;
             }
-            if (quote == '"' || (quote == '\'' && ts_single_quote_escapes)) && literal_ch == '\\' {
+            if (quote == '"' || (quote == '\'' && ts_single_quote_escapes) || quote == '`')
+                && literal_ch == '\\'
+            {
                 escaped = true;
                 continue;
             }

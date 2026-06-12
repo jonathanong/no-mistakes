@@ -268,6 +268,24 @@ include: [src/custom.spec.ts]
 }
 
 #[test]
+fn configured_projects_extend_explicit_vitest_config_projects() {
+    let root = fixture_root("fixture");
+    let mut config = load_config(&root);
+    config.tests.vitest.configs = Some(crate::config::v2::schema::StringOrList::One(
+        "vitest.config.mts".to_string(),
+    ));
+    config.tests.vitest.projects.insert(
+        "custom".to_string(),
+        serde_yaml::from_str("include: [src/custom.spec.ts]\n").unwrap(),
+    );
+    config.rules[0].options = serde_yaml::from_str("scopes: [src]\n").unwrap();
+    let files = vec![root.join("src/a.test.ts"), root.join("src/custom.spec.ts")];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn configured_project_replaces_discovered_project_with_same_name() {
     let root = fixture_root("fixture");
     let mut config = load_config(&root);
