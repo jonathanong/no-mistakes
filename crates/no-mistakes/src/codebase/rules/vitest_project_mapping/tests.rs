@@ -185,6 +185,28 @@ exclude: [./src/unmapped.spec.ts]
 }
 
 #[test]
+fn configured_project_globs_escape_literal_config_roots() {
+    let root = fixture_root("fixture");
+    let include = project_config::prefix_globs(
+        &root,
+        &root.join("packages/[tenant]"),
+        &["src/**/*.test.ts".to_string()],
+    );
+    let projects = vec![projects::ProjectGlob {
+        name: "tenant".to_string(),
+        explicit: false,
+        scope: Some("packages/[tenant]".to_string()),
+        include: project_config::build_globset(&include).unwrap(),
+        exclude: project_config::build_globset(&[]).unwrap(),
+    }];
+
+    assert_eq!(
+        matching_projects("packages/[tenant]/src/a.test.ts", &projects),
+        vec!["tenant".to_string()]
+    );
+}
+
+#[test]
 fn configured_projects_extend_auto_discovered_vitest_configs() {
     let root = fixture_root("fixture");
     let mut config = load_config(&root);

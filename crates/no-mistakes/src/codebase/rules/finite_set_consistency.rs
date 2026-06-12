@@ -128,4 +128,10 @@ fn finding(file: &str, comparison: &Comparison, fallback: String, value: &str) -
 }
 
 #[cfg(test)]
+mod object_comment_tests;
+#[cfg(test)]
+mod object_property_tests;
+#[cfg(test)]
+mod object_tests;
+#[cfg(test)]
 mod tests;

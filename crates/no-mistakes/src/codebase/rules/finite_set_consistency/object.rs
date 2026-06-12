@@ -118,6 +118,22 @@ fn quoted_string_literal(value: &str) -> Option<String> {
     if quote != '"' && quote != '\'' {
         return None;
     }
-    let end = value[1..].find(quote)? + 1;
-    Some(value[1..end].to_string())
+    let mut literal = String::new();
+    let mut escaped = false;
+    for ch in value[1..].chars() {
+        if escaped {
+            literal.push(ch);
+            escaped = false;
+            continue;
+        }
+        if ch == '\\' {
+            escaped = true;
+            continue;
+        }
+        if ch == quote {
+            return Some(literal);
+        }
+        literal.push(ch);
+    }
+    None
 }

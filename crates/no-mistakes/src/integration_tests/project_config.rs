@@ -102,7 +102,7 @@ pub(crate) fn prefix_globs(root: &Path, base: &Path, patterns: &[String]) -> Vec
     }
     patterns
         .iter()
-        .map(|pattern| format!("{rel}/{pattern}"))
+        .map(|pattern| format!("{}/{pattern}", glob_escape_literal(&rel)))
         .collect()
 }
 
@@ -134,4 +134,17 @@ fn normalize_glob_pattern(pattern: &str) -> String {
         }
     }
     parts.join("/")
+}
+
+fn glob_escape_literal(value: &str) -> String {
+    value
+        .chars()
+        .flat_map(|ch| {
+            if matches!(ch, '*' | '?' | '[' | ']' | '{' | '}' | '\\') {
+                vec!['\\', ch]
+            } else {
+                vec![ch]
+            }
+        })
+        .collect()
 }
