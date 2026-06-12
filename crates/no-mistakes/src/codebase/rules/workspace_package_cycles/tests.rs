@@ -132,6 +132,15 @@ fn cycle_detection_handles_self_cycles_and_external_edges() {
 }
 
 #[test]
+fn cycle_detection_returns_empty_for_acyclic_graph() {
+    let mut graph = BTreeMap::new();
+    graph.insert("a".to_string(), BTreeSet::from(["b".to_string()]));
+    graph.insert("b".to_string(), BTreeSet::new());
+
+    assert!(scc::cycle_keys(&graph).is_empty());
+}
+
+#[test]
 fn package_dependency_helpers_tolerate_missing_and_invalid_files() {
     let root = fixture_root("invalid-package-json");
 

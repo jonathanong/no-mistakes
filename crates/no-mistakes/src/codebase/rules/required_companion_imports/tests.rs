@@ -228,7 +228,7 @@ specifierTemplate: "@/components/{sourceStem}"
 #[test]
 fn helper_branches_cover_empty_dirs_missing_files_and_extension_normalization() {
     let opts = Options {
-        source_extensions: vec!["mts".to_string()],
+        source_extensions: vec!["mts".to_string(), ".mts".to_string()],
         ..Default::default()
     };
 
@@ -238,6 +238,7 @@ fn helper_branches_cover_empty_dirs_missing_files_and_extension_normalization() 
     assert!(source_extensions(&opts)
         .iter()
         .any(|extension| extension == ".mts"));
+    assert_eq!(source_extensions(&opts), vec![".mts".to_string()]);
     assert_eq!(
         source_info(
             "src/components/Button.mts",

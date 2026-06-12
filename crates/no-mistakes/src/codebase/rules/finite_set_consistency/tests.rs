@@ -162,6 +162,11 @@ fn extraction_helpers_return_empty_sets_when_targets_are_missing() {
     )
     .is_empty());
     assert!(extract_sql_enum("CREATE TYPE other AS ENUM ('a')", "missing").is_empty());
+    assert!(extract_ts_const_object_keys(
+        "const ROUTE_META: Record<string, string>;",
+        "ROUTE_META"
+    )
+    .is_empty());
 }
 
 #[test]
@@ -546,6 +551,20 @@ const ROUTE_META = {
         extract_ts_const_object_property(source, "ROUTE_META", "slug"),
         BTreeSet::from(["literal".to_string()])
     );
+}
+
+#[test]
+fn object_extraction_preserves_repository_relative_error_files() {
+    let root = fixture_root("fixture");
+    let spec = SetSpec {
+        name: "missing".to_string(),
+        file: "src/missing.ts".to_string(),
+        kind: "ts-string-union".to_string(),
+        target: "RouteName".to_string(),
+        ..Default::default()
+    };
+
+    assert!(extract_set(&root, &spec, &[], &[]).is_err());
 }
 
 #[test]
