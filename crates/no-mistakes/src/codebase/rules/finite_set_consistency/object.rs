@@ -76,9 +76,6 @@ fn top_level_entries(body: &str) -> Vec<(String, String)> {
 
 fn take_key(source: &str) -> Option<(String, &str)> {
     let source = trim_ignorable(source);
-    if source.starts_with("...") {
-        return None;
-    }
     let mut chars = source.char_indices();
     let (_, first) = chars.next()?;
     if first == '"' || first == '\'' {

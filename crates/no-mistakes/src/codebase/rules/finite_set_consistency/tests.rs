@@ -148,6 +148,36 @@ export const LABELS = { users: "Users" };
 }
 
 #[test]
+fn string_union_extraction_stops_before_blank_lines_and_declaration_keywords() {
+    assert_eq!(
+        extract_ts_string_union(
+            "type RouteName = 'users'\n\nconst x = 'ignored'",
+            "RouteName"
+        ),
+        BTreeSet::from(["users".to_string()])
+    );
+
+    for keyword in [
+        "import",
+        "const",
+        "let",
+        "var",
+        "type",
+        "interface",
+        "class",
+        "enum",
+        "function",
+    ] {
+        let source = format!("type RouteName = 'users'\n{keyword} Next = 'ignored'");
+        assert_eq!(
+            extract_ts_string_union(&source, "RouteName"),
+            BTreeSet::from(["users".to_string()]),
+            "keyword {keyword} should terminate the union"
+        );
+    }
+}
+
+#[test]
 fn object_property_extraction_handles_nested_quoted_braces() {
     let source = r#"
 const ROUTE_META = {
@@ -253,6 +283,23 @@ const ROUTE_META = {
         extract_ts_const_object_property(source, "ROUTE_META", "slug"),
         BTreeSet::from(["billing".to_string(), "users".to_string()])
     );
+}
+
+#[test]
+fn object_property_extraction_ignores_terminal_spreads_and_non_literal_values() {
+    assert!(
+        extract_ts_const_object_keys("const ROUTE_META = { ...COMMON_ROUTES }", "ROUTE_META")
+            .is_empty()
+    );
+
+    let source = r#"
+const ROUTE_META = {
+  users: "users",
+  billing: { slug: ROUTE_BILLING },
+};
+"#;
+
+    assert!(extract_ts_const_object_property(source, "ROUTE_META", "slug").is_empty());
 }
 
 #[test]

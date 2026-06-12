@@ -153,9 +153,9 @@ pub(super) fn file_imports(root: &Path, rel: &str, expected_specifier: &str) -> 
     } else {
         ImportExtractor::for_typescript()
     };
-    let Ok(imports) = extractor.and_then(|extractor| extractor.extract(&source)) else {
-        return false;
-    };
+    let imports = extractor
+        .and_then(|extractor| extractor.extract(&source))
+        .unwrap_or_default();
     imports
         .iter()
         .any(|import| import.specifier == expected_specifier)

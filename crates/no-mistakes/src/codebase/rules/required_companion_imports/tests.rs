@@ -106,6 +106,15 @@ specifierTemplate: "@/components/{sourceStem}"
 }
 
 #[test]
+fn typescript_companion_imports_are_parsed() {
+    assert!(file_imports(
+        &fixture_root("fixture"),
+        "src/components/Plain.story.ts",
+        "@/components/Plain"
+    ));
+}
+
+#[test]
 fn declaration_files_are_not_source_candidates() {
     let root = fixture_root("fixture");
     let files = vec![root.join("src/components/Button.d.ts")];
