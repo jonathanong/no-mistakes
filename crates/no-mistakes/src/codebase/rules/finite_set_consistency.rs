@@ -1,5 +1,6 @@
 mod comments;
 mod extract;
+mod literals;
 mod object;
 
 use super::RuleFinding;

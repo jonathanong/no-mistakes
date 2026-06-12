@@ -170,6 +170,33 @@ fn extraction_helpers_return_empty_sets_when_targets_are_missing() {
 }
 
 #[test]
+fn extraction_helpers_parse_blank_lines_and_escaped_quotes() {
+    assert_eq!(
+        extract_ts_string_union(
+            r#"type RouteName =
+  | "users"
+
+  | "billing"
+  | "a\"b";
+"#,
+            "RouteName"
+        ),
+        BTreeSet::from([
+            "a\"b".to_string(),
+            "billing".to_string(),
+            "users".to_string()
+        ])
+    );
+    assert_eq!(
+        extract_sql_enum(
+            "CREATE TYPE route_name AS ENUM ('can''t', 'users');",
+            "route_name"
+        ),
+        BTreeSet::from(["can't".to_string(), "users".to_string()])
+    );
+}
+
+#[test]
 fn sql_enum_extraction_ignores_commented_matching_definitions() {
     let source = r#"
 -- CREATE TYPE route_name AS ENUM ('legacy');

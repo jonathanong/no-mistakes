@@ -1,4 +1,5 @@
 use super::comments::{strip_comments, strip_sql_comments};
+use super::literals::quoted_strings;
 use super::object::{const_object_body, top_level_object_keys, top_level_property_values};
 use super::SetSpec;
 use crate::codebase::ts_source::relative_slash_path;
@@ -146,8 +147,8 @@ fn ts_union_body(source: &str) -> &str {
     for line in source.lines() {
         let trimmed = line.trim_start();
         if trimmed.is_empty() {
-            end = offset.saturating_sub(1);
-            break;
+            offset += line.len() + 1;
+            continue;
         }
         if offset > 0
             && matches!(
@@ -176,19 +177,6 @@ fn ts_union_body(source: &str) -> &str {
         offset += line.len() + 1;
     }
     &source[..end]
-}
-
-fn quoted_strings(source: &str) -> BTreeSet<String> {
-    let regex = Regex::new(r#""([^"]+)"|'([^']+)'"#).expect("quoted string regex compiles");
-    regex
-        .captures_iter(source)
-        .filter_map(|captures| {
-            captures
-                .get(1)
-                .or_else(|| captures.get(2))
-                .map(|capture| capture.as_str().to_string())
-        })
-        .collect()
 }
 
 trait EmptyStringExt {

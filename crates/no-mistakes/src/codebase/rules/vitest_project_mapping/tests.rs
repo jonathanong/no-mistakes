@@ -77,6 +77,21 @@ fn default_extensions_include_commonjs_typescript_test_files() {
 }
 
 #[test]
+fn default_extensions_include_all_vitest_parser_variants() {
+    let root = fixture_root("fixture");
+    let config = load_config(&root);
+    let files = vec![
+        root.join("src/unmapped.test.mtsx"),
+        root.join("src/__tests__/widget.mjsx"),
+    ];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert_eq!(findings.len(), 2);
+    assert_eq!(findings[0].file, "src/__tests__/widget.mjsx");
+    assert_eq!(findings[1].file, "src/unmapped.test.mtsx");
+}
+
+#[test]
 fn default_extensions_include_tests_directory_files() {
     let root = fixture_root("fixture");
     let config = load_config(&root);

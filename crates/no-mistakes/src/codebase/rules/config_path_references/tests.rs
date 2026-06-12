@@ -138,6 +138,15 @@ fn glob_reference_patterns_normalize_relative_segments_and_escape_config_dirs() 
     assert_eq!(
         reference_pattern(
             &root,
+            &root.join("config/app.yml"),
+            &opts,
+            "../../secrets/*.json"
+        ),
+        "../secrets/*.json"
+    );
+    assert_eq!(
+        reference_pattern(
+            &root,
             &root.join("apps/[tenant]/config.yml"),
             &opts,
             "*.json"

@@ -162,7 +162,11 @@ fn normalize_glob_pattern(pattern: &str) -> String {
         match part {
             "" | "." => {}
             ".." => {
-                parts.pop();
+                if !parts.is_empty() && parts.last() != Some(&"..") {
+                    parts.pop();
+                } else {
+                    parts.push(part);
+                }
             }
             _ => parts.push(part),
         }

@@ -14,26 +14,33 @@ pub const RULE_ID: &str = "vitest-project-mapping";
 
 const DEFAULT_TEST_EXTENSIONS: &[&str] = &[
     ".test.mts",
+    ".test.mtsx",
     ".test.cts",
     ".test.ctsx",
     ".test.ts",
     ".test.tsx",
     ".test.mjs",
+    ".test.mjsx",
     ".test.cjs",
+    ".test.cjsx",
     ".test.js",
     ".test.jsx",
     ".spec.mts",
+    ".spec.mtsx",
     ".spec.cts",
     ".spec.ctsx",
     ".spec.ts",
     ".spec.tsx",
     ".spec.mjs",
+    ".spec.mjsx",
     ".spec.cjs",
+    ".spec.cjsx",
     ".spec.js",
     ".spec.jsx",
 ];
 const DEFAULT_TEST_DIR_EXTENSIONS: &[&str] = &[
-    ".mts", ".cts", ".ctsx", ".ts", ".tsx", ".mjs", ".cjs", ".js", ".jsx",
+    ".mts", ".mtsx", ".cts", ".ctsx", ".ts", ".tsx", ".mjs", ".mjsx", ".cjs", ".cjsx", ".js",
+    ".jsx",
 ];
 
 #[derive(Deserialize, Default)]
