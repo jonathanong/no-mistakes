@@ -91,17 +91,7 @@ fn normalize_workspace_glob(pattern: &str) -> String {
     let (negated, pattern) = pattern
         .strip_prefix('!')
         .map_or((false, pattern), |stripped| (true, stripped));
-    let mut parts = Vec::new();
-    for part in pattern.split('/') {
-        match part {
-            "" | "." => {}
-            ".." => {
-                parts.pop();
-            }
-            _ => parts.push(part),
-        }
-    }
-    let normalized = parts.join("/");
+    let normalized = glob_normalize::normalize(pattern);
     if negated {
         format!("!{normalized}")
     } else {

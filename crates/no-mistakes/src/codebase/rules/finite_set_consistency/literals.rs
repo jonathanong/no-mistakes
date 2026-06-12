@@ -1,6 +1,14 @@
 use std::collections::BTreeSet;
 
-pub(super) fn quoted_strings(source: &str) -> BTreeSet<String> {
+pub(super) fn quoted_strings_ts(source: &str) -> BTreeSet<String> {
+    quoted_strings(source, true)
+}
+
+pub(super) fn quoted_strings_sql(source: &str) -> BTreeSet<String> {
+    quoted_strings(source, false)
+}
+
+fn quoted_strings(source: &str, ts_single_quote_escapes: bool) -> BTreeSet<String> {
     let mut values = BTreeSet::new();
     let mut chars = source.char_indices().peekable();
     while let Some((_, ch)) = chars.next() {
@@ -16,12 +24,15 @@ pub(super) fn quoted_strings(source: &str) -> BTreeSet<String> {
                 escaped = false;
                 continue;
             }
-            if quote == '"' && literal_ch == '\\' {
+            if (quote == '"' || (quote == '\'' && ts_single_quote_escapes)) && literal_ch == '\\' {
                 escaped = true;
                 continue;
             }
             if literal_ch == quote {
-                if quote == '\'' && chars.peek().is_some_and(|(_, next)| *next == '\'') {
+                if quote == '\''
+                    && !ts_single_quote_escapes
+                    && chars.peek().is_some_and(|(_, next)| *next == '\'')
+                {
                     chars.next();
                     value.push('\'');
                     continue;

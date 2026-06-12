@@ -1,5 +1,6 @@
 use super::test_config;
 use super::types::{ConfigProject, Framework};
+use crate::codebase::glob_normalize;
 use crate::codebase::ts_resolver::{find_tsconfig, load_tsconfig, TsConfig};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::schema::StringOrList;
@@ -123,17 +124,7 @@ pub(crate) fn build_globset(patterns: &[String]) -> Result<GlobSet> {
 }
 
 fn normalize_glob_pattern(pattern: &str) -> String {
-    let mut parts = Vec::new();
-    for part in pattern.split('/') {
-        match part {
-            "" | "." => {}
-            ".." => {
-                parts.pop();
-            }
-            _ => parts.push(part),
-        }
-    }
-    parts.join("/")
+    glob_normalize::normalize(pattern)
 }
 
 fn glob_escape_literal(value: &str) -> String {
@@ -148,3 +139,6 @@ fn glob_escape_literal(value: &str) -> String {
         })
         .collect()
 }
+
+#[cfg(test)]
+mod tests;

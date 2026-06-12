@@ -9,11 +9,38 @@ use std::collections::BTreeSet;
 pub(super) fn const_object_body(source: &str, target: &str) -> Option<String> {
     let source = strip_comments(source);
     let pattern = format!(r#"\bconst\s+{}\b"#, regex::escape(target));
-    let mat = Regex::new(&pattern).ok()?.find(&source)?;
-    let assignment = assignment_index(&source, mat.end())?;
+    let start = Regex::new(&pattern)
+        .ok()
+        .and_then(|regex| const_object_start(&source, &regex))?;
+    let assignment = assignment_index(&source, start)?;
     let open = source[assignment..].find('{')? + assignment;
     let close = matching_brace(&source, open)?;
     source.get(open + 1..close).map(str::to_string)
+}
+
+fn const_object_start(source: &str, regex: &Regex) -> Option<usize> {
+    let mut quote = None;
+    let mut escaped = false;
+    for (idx, ch) in source.char_indices() {
+        if let Some(active_quote) = quote {
+            if escaped {
+                escaped = false;
+            } else if ch == '\\' {
+                escaped = true;
+            } else if ch == active_quote {
+                quote = None;
+            }
+            continue;
+        }
+        if ch == '"' || ch == '\'' || ch == '`' {
+            quote = Some(ch);
+            continue;
+        }
+        if let Some(mat) = regex.find(&source[idx..]).filter(|mat| mat.start() == 0) {
+            return Some(idx + mat.end());
+        }
+    }
+    None
 }
 
 pub(super) fn top_level_object_keys(body: &str) -> BTreeSet<String> {

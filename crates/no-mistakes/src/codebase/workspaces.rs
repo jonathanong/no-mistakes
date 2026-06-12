@@ -5,7 +5,7 @@ use std::cmp::Ordering;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-use crate::codebase::ts_resolver::normalize_path;
+use crate::codebase::{glob_normalize, ts_resolver::normalize_path};
 include!("workspaces/types.rs");
 include!("workspaces/globs.rs");
 include!("workspaces/package.rs");

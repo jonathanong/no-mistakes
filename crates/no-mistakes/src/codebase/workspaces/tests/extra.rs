@@ -37,6 +37,14 @@ fn workspace_globs_and_expansion_cover_empty_and_outside_paths() {
         &files,
     );
     assert_eq!(normalized_dirs, vec![dir.path().join("packages/app")]);
+    assert_eq!(
+        normalize_workspace_glob("*/../packages/*"),
+        "*/../packages/*"
+    );
+    assert_eq!(
+        normalize_workspace_glob("**/../packages/*"),
+        "**/../packages/*"
+    );
 }
 
 #[test]

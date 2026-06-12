@@ -1,5 +1,5 @@
 use super::comments::{strip_comments, strip_sql_comments};
-use super::literals::quoted_strings;
+use super::literals::{quoted_strings_sql, quoted_strings_ts};
 use super::object::{const_object_body, top_level_object_keys, top_level_property_values};
 use super::ts_union;
 use super::SetSpec;
@@ -24,34 +24,45 @@ pub(super) fn extract_set(
     if spec.kind == "path-regex-capture" {
         return extract_path_regex_set(root, spec, files, target_roots);
     }
-    let path = resolve_spec_file(root, &spec.file, target_roots);
-    let source = std::fs::read_to_string(&path)?;
-    let values = match spec.kind.as_str() {
-        "ts-string-union" => extract_ts_string_union(&source, &spec.target),
-        "ts-const-object-keys" => extract_ts_const_object_keys(&source, &spec.target),
-        "ts-const-object-property" => {
-            extract_ts_const_object_property(&source, &spec.target, &spec.property)
-        }
-        "sql-enum" => extract_sql_enum(&source, &spec.target),
-        _ => BTreeSet::new(),
-    };
+    let paths = resolve_spec_files(root, &spec.file, target_roots);
+    let mut values = BTreeSet::new();
+    for path in &paths {
+        let source = std::fs::read_to_string(path)?;
+        values.extend(match spec.kind.as_str() {
+            "ts-string-union" => extract_ts_string_union(&source, &spec.target),
+            "ts-const-object-keys" => extract_ts_const_object_keys(&source, &spec.target),
+            "ts-const-object-property" => {
+                extract_ts_const_object_property(&source, &spec.target, &spec.property)
+            }
+            "sql-enum" => extract_sql_enum(&source, &spec.target),
+            _ => BTreeSet::new(),
+        });
+    }
+    let path = paths
+        .first()
+        .expect("resolve_spec_files always returns at least one path");
     Ok(ExtractedSet {
-        file: relative_slash_path(root, &path),
+        file: relative_slash_path(root, path),
         values,
     })
 }
 
-fn resolve_spec_file(root: &Path, file: &str, target_roots: &[PathBuf]) -> PathBuf {
+fn resolve_spec_files(root: &Path, file: &str, target_roots: &[PathBuf]) -> Vec<PathBuf> {
     let repo_path = root.join(file);
     if repo_path.exists() {
-        return repo_path;
+        return vec![repo_path];
     }
-    target_roots
+    let paths = target_roots
         .iter()
         .filter(|target_root| *target_root != root)
         .map(|target_root| target_root.join(file))
-        .find(|path| path.exists())
-        .unwrap_or(repo_path)
+        .filter(|path| path.exists())
+        .collect::<Vec<_>>();
+    if paths.is_empty() {
+        vec![repo_path]
+    } else {
+        paths
+    }
 }
 
 pub(super) fn extract_path_regex_set(
@@ -102,7 +113,7 @@ pub(super) fn extract_ts_string_union(source: &str, target: &str) -> BTreeSet<St
     else {
         return BTreeSet::new();
     };
-    quoted_strings(&strip_comments(ts_union::body(&source[start..])))
+    quoted_strings_ts(&strip_comments(ts_union::body(&source[start..])))
 }
 
 fn ts_type_alias_body_start(source: &str, regex: &Regex) -> Option<usize> {
@@ -151,20 +162,40 @@ pub(super) fn extract_ts_const_object_property(
 pub(super) fn extract_sql_enum(source: &str, target: &str) -> BTreeSet<String> {
     let source = strip_sql_comments(source);
     let pattern = format!(
-        r#"(?is)CREATE\s+TYPE\s+{}\s+AS\s+ENUM\s*\(([^;]+)\)"#,
+        r#"(?is)CREATE\s+TYPE\s+{}\s+AS\s+ENUM\s*\("#,
         regex::escape(target)
     );
-    capture_first(&source, &pattern)
-        .map(|body| quoted_strings(&body))
+    Regex::new(&pattern)
+        .ok()
+        .and_then(|regex| regex.find(&source))
+        .and_then(|mat| sql_enum_body(&source[mat.end()..]))
+        .map(quoted_strings_sql)
         .unwrap_or_default()
 }
 
-fn capture_first(source: &str, pattern: &str) -> Option<String> {
-    Regex::new(pattern)
-        .ok()?
-        .captures(source)?
-        .get(1)
-        .map(|capture| capture.as_str().to_string())
+fn sql_enum_body(source: &str) -> Option<&str> {
+    let mut quote = false;
+    let mut chars = source.char_indices().peekable();
+    while let Some((idx, ch)) = chars.next() {
+        if quote {
+            if ch == '\'' {
+                if chars.peek().is_some_and(|(_, next)| *next == '\'') {
+                    chars.next();
+                } else {
+                    quote = false;
+                }
+            }
+            continue;
+        }
+        if ch == '\'' {
+            quote = true;
+            continue;
+        }
+        if ch == ')' {
+            return Some(&source[..idx]);
+        }
+    }
+    None
 }
 
 trait EmptyStringExt {

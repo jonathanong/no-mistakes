@@ -113,6 +113,52 @@ comparisons:
 }
 
 #[test]
+fn project_scoped_set_files_read_each_project_root() {
+    let root = fixture_root("project");
+    let files = vec![
+        root.join("packages/app/src/types.ts"),
+        root.join("packages/app/src/routes/users.ts"),
+        root.join("packages/admin/src/types.ts"),
+        root.join("packages/admin/src/routes/admin.ts"),
+    ];
+    let mut config = config(
+        r#"
+sets:
+  - name: routeType
+    file: src/types.ts
+    kind: ts-string-union
+    target: RouteName
+  - name: routeFiles
+    kind: path-regex-capture
+    pattern: '^src/routes/(?<value>[^/]+)\.ts$'
+comparisons:
+  - left: routeType
+    right: routeFiles
+"#,
+    );
+    config.projects.insert(
+        "app".to_string(),
+        Project {
+            root: Some("packages/app".to_string()),
+            ..Default::default()
+        },
+    );
+    config.projects.insert(
+        "admin".to_string(),
+        Project {
+            root: Some("packages/admin".to_string()),
+            ..Default::default()
+        },
+    );
+    config.rules[0].scope = None;
+    config.rules[0].projects = vec!["app".to_string(), "admin".to_string()];
+
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn extracts_const_object_keys_and_property_values() {
     let root = fixture_root("fixture");
     let source = std::fs::read_to_string(root.join("src/types.ts")).unwrap();
@@ -353,6 +399,25 @@ type RouteName = "users" | "billing";
     assert_eq!(
         extract_ts_string_union(source, "RouteName"),
         BTreeSet::from(["billing".to_string(), "users".to_string()])
+    );
+}
+
+#[test]
+fn string_union_extraction_supports_ts_single_quote_escapes() {
+    assert_eq!(
+        extract_ts_string_union(r#"type RouteName = 'can\'t' | 'users';"#, "RouteName"),
+        BTreeSet::from(["can't".to_string(), "users".to_string()])
+    );
+}
+
+#[test]
+fn sql_enum_extraction_ignores_semicolons_inside_labels() {
+    assert_eq!(
+        extract_sql_enum(
+            "CREATE TYPE route_name AS ENUM ('a;b', 'can''t');",
+            "route_name"
+        ),
+        BTreeSet::from(["a;b".to_string(), "can't".to_string()])
     );
 }
 

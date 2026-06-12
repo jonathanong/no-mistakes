@@ -47,6 +47,21 @@ const ROUTE_META = {
 }
 
 #[test]
+fn object_extraction_ignores_matching_declarations_inside_literals() {
+    let source = r#"
+const docs = "const ROUTE_META = { legacy: { slug: 'legacy' } }";
+const ROUTE_META = {
+  users: { slug: "users" },
+};
+"#;
+
+    assert_eq!(
+        extract_ts_const_object_keys(source, "ROUTE_META"),
+        BTreeSet::from(["users".to_string()])
+    );
+}
+
+#[test]
 fn object_key_extraction_ignores_unclosed_quoted_keys() {
     assert!(extract_ts_const_object_keys(
         r#"const ROUTE_META = { "unterminated: { slug: "ignored" } }"#,

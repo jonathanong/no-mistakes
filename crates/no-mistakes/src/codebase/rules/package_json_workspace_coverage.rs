@@ -1,4 +1,5 @@
 use super::RuleFinding;
+use crate::codebase::glob_normalize;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::workspaces;
 use crate::config::v2::NoMistakesConfig;
@@ -140,17 +141,7 @@ fn path_under_package_roots(path: &str, package_roots: &[String]) -> bool {
 }
 
 fn normalize_relative_path(path: &str) -> String {
-    let mut parts = Vec::new();
-    for part in path.split('/') {
-        match part {
-            "" | "." => {}
-            ".." => {
-                parts.pop();
-            }
-            _ => parts.push(part),
-        }
-    }
-    parts.join("/")
+    glob_normalize::normalize(path)
 }
 
 fn package_name(path: &Path) -> Option<String> {

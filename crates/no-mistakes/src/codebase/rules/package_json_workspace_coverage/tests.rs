@@ -142,4 +142,8 @@ fn workspace_globset_builder_splits_includes_and_excludes() {
         normalize_relative_path("./packages/../packages/web"),
         "packages/web"
     );
+    assert_eq!(
+        normalize_relative_path("*/../packages/*"),
+        "*/../packages/*"
+    );
 }
