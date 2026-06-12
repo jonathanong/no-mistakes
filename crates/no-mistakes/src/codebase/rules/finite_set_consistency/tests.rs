@@ -1,3 +1,4 @@
+use super::comments::{strip_comments, strip_sql_comments};
 use super::extract::{
     extract_path_regex_set, extract_set, extract_sql_enum, extract_ts_const_object_keys,
     extract_ts_const_object_property, extract_ts_string_union,
@@ -415,6 +416,54 @@ const ROUTE_META = {
     assert_eq!(
         extract_ts_const_object_keys(source, "ROUTE_META"),
         BTreeSet::from(["users".to_string()])
+    );
+}
+
+#[test]
+fn comment_strippers_preserve_quoted_comment_markers_and_newlines() {
+    assert_eq!(
+        strip_comments(r#"const value = "not // a comment"; // removed"#),
+        r#"const value = "not // a comment"; __comment__"#
+    );
+    assert_eq!(
+        strip_comments("const value = `not /* a comment */`; /* removed */\nnext"),
+        "const value = `not /* a comment */`; __comment__\nnext"
+    );
+    assert_eq!(
+        strip_sql_comments("SELECT 'it''s -- quoted'; -- removed\nSELECT 1"),
+        "SELECT 'it''s -- quoted'; \nSELECT 1"
+    );
+    assert_eq!(
+        strip_sql_comments("SELECT 1 /* removed\nstill removed */\nSELECT 2"),
+        "SELECT 1 \n\nSELECT 2"
+    );
+}
+
+#[test]
+fn object_helpers_cover_comment_quotes_and_ignored_entries() {
+    let source = r#"
+const ROUTE_META = {
+  // ignored: { slug: "ignored" },
+  literal: { slug: "literal" },
+  block: /* { } */ { slug: "block" },
+  array: [",", { ignored: true }],
+  ...buildRoutes({ nested: "value" }),
+  templated: { slug: `template-${"ignored"}` },
+};
+"#;
+
+    assert_eq!(
+        extract_ts_const_object_keys(source, "ROUTE_META"),
+        BTreeSet::from([
+            "array".to_string(),
+            "block".to_string(),
+            "literal".to_string(),
+            "templated".to_string()
+        ])
+    );
+    assert_eq!(
+        extract_ts_const_object_property(source, "ROUTE_META", "slug"),
+        BTreeSet::from(["literal".to_string()])
     );
 }
 

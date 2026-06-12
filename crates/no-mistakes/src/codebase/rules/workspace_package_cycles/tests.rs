@@ -120,6 +120,18 @@ fn overlapping_component_reports_cycles_beyond_an_allowlisted_pair() {
 }
 
 #[test]
+fn cycle_detection_handles_self_cycles_and_external_edges() {
+    let mut graph = BTreeMap::new();
+    graph.insert(
+        "a".to_string(),
+        BTreeSet::from(["a".to_string(), "outside".to_string()]),
+    );
+    graph.insert("b".to_string(), BTreeSet::from(["outside".to_string()]));
+
+    assert_eq!(scc::cycle_keys(&graph), BTreeSet::from(["a".to_string()]));
+}
+
+#[test]
 fn package_dependency_helpers_tolerate_missing_and_invalid_files() {
     let root = fixture_root("invalid-package-json");
 
