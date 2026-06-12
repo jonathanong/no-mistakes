@@ -157,6 +157,34 @@ include: [src/custom.spec.ts]
 }
 
 #[test]
+fn configured_project_globs_normalize_relative_segments() {
+    let root = fixture_root("fixture");
+    let mut config = load_config(&root);
+    config.tests.vitest.configs = None;
+    config.tests.vitest.projects.insert(
+        "custom".to_string(),
+        serde_yaml::from_str(
+            r#"
+include: [./src/**/*.spec.ts]
+exclude: [./src/unmapped.spec.ts]
+"#,
+        )
+        .unwrap(),
+    );
+    config.rules[0].options =
+        serde_yaml::from_str("testExtensions: [.spec.ts]\nscopes: [src]\n").unwrap();
+    let files = vec![
+        root.join("src/custom.spec.ts"),
+        root.join("src/unmapped.spec.ts"),
+    ];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "src/unmapped.spec.ts");
+    assert!(findings[0].message.contains("does not map"));
+}
+
+#[test]
 fn configured_projects_extend_auto_discovered_vitest_configs() {
     let root = fixture_root("fixture");
     let mut config = load_config(&root);

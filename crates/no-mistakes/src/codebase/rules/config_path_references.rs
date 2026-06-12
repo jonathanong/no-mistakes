@@ -1,4 +1,5 @@
 use super::RuleFinding;
+use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -124,7 +125,8 @@ fn reference_exists(
     } else {
         config_file.parent().unwrap_or(root).to_path_buf()
     };
-    if base.join(reference).exists() {
+    let target = normalize_path(&base.join(reference));
+    if target.starts_with(root) && target.exists() {
         return Ok(true);
     }
     if opts.allow_globs

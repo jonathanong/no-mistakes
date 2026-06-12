@@ -67,6 +67,26 @@ fn allowlist_suppresses_known_non_workspace_packages() {
 }
 
 #[test]
+fn allowlist_normalizes_relative_package_json_paths() {
+    let root = fixture_root("missing");
+    let files = vec![
+        root.join("package.json"),
+        root.join("packages/api/package.json"),
+        root.join("packages/web/package.json"),
+    ];
+    let findings = check_with_files(
+        &root,
+        &config(
+            "packageRoots: [packages]\nallowlist: [./packages/web/package.json]\nrequireNamedPackage: true\n",
+        ),
+        &files,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn skips_non_package_files_and_unnamed_packages_when_required() {
     let root = fixture_root("missing");
     let files = vec![

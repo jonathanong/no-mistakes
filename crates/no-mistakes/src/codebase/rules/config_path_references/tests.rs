@@ -213,6 +213,21 @@ fn existing_literal_paths_with_glob_metacharacters_win_before_glob_matching() {
 }
 
 #[test]
+fn literal_references_outside_the_repository_do_not_exist_for_this_rule() {
+    let root = fixture_root("fixture");
+    let opts = Options::default();
+
+    assert!(!reference_exists(
+        &root,
+        &root.join("config/app.yml"),
+        &opts,
+        "../../../../../Cargo.toml",
+        &[]
+    )
+    .unwrap());
+}
+
+#[test]
 fn ignores_unreadable_or_invalid_config_files() {
     let root = fixture_root("fixture");
     let files = vec![root.join("config"), root.join("config/invalid.yml")];

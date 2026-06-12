@@ -257,6 +257,35 @@ stripSourcePrefix: packages/app/src/
 }
 
 #[test]
+fn strip_source_prefix_matches_project_relative_paths() {
+    let root = fixture_root("fixture");
+    let mut config = config(
+        r#"
+sourceGlobs: ["src/components/Button.tsx"]
+sourceExtensions: [.tsx]
+companionGlobs: ["{sourceDir}/{sourceStem}.stories.tsx"]
+specifierTemplate: "@/{sourcePath}"
+stripSourcePrefix: src/
+"#,
+    );
+    config.projects.insert(
+        "app".to_string(),
+        Project {
+            root: Some("packages/app".to_string()),
+            ..Default::default()
+        },
+    );
+    config.rules[0].projects = vec!["app".to_string()];
+    let files = vec![
+        root.join("packages/app/src/components/Button.tsx"),
+        root.join("packages/app/src/components/Button.stories.tsx"),
+    ];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn reports_when_no_companion_file_exists() {
     let root = fixture_root("fixture");
     let files = vec![root.join("src/components/Missing.tsx")];

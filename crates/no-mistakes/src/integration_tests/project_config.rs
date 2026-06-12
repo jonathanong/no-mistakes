@@ -117,7 +117,21 @@ pub(super) fn resolve_tsconfig(root: &Path) -> Result<TsConfig> {
 pub(crate) fn build_globset(patterns: &[String]) -> Result<GlobSet> {
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
-        builder.add(Glob::new(pattern)?);
+        builder.add(Glob::new(&normalize_glob_pattern(pattern))?);
     }
     Ok(builder.build()?)
+}
+
+fn normalize_glob_pattern(pattern: &str) -> String {
+    let mut parts = Vec::new();
+    for part in pattern.split('/') {
+        match part {
+            "" | "." => {}
+            ".." => {
+                parts.pop();
+            }
+            _ => parts.push(part),
+        }
+    }
+    parts.join("/")
 }

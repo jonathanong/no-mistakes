@@ -56,7 +56,11 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
         .map(|pkg| relative_slash_path(root, &pkg.dir))
         .collect();
     let covered_workspace_dirs = covered_workspace_dirs(root, files)?;
-    let allowlist: HashSet<&str> = opts.allowlist.iter().map(String::as_str).collect();
+    let allowlist: HashSet<String> = opts
+        .allowlist
+        .iter()
+        .map(|path| normalize_relative_path(path))
+        .collect();
 
     let mut findings = Vec::new();
     for path in files {
