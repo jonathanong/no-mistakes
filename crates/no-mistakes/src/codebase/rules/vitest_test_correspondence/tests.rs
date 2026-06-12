@@ -260,6 +260,29 @@ fn ts_tsx_test_file_candidates() {
 }
 
 #[test]
+fn duplicate_group_can_collapse_first_dot_segment() {
+    let root = fixture_root("duplicate-first-dot");
+    let config = config_with_rule(
+        "{scopes: [backend], testExtensions: [\".test.mts\"], testsDir: __tests__, duplicateStemGroup: first-dot-segment}",
+    );
+    let files = vec![
+        root.join("backend/modules/report/index.mts"),
+        root.join("backend/modules/report/index.test.mts"),
+        root.join("backend/modules/report/index.edge.test.mts"),
+    ];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert_eq!(
+        findings.len(),
+        2,
+        "expected duplicate findings: {findings:?}"
+    );
+    assert!(findings
+        .iter()
+        .all(|finding| finding.message.contains("duplicate-stem")));
+}
+
+#[test]
 fn source_candidates_empty_dir_has_no_slash_prefix() {
     // Exercises line 84: dir.is_empty() → String::new() (no path prefix).
     let candidates = source_candidates("", "widget", ".test.ts");

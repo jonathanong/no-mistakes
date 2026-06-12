@@ -1,0 +1,6 @@
+{
+  "name": "@x/ui",
+  "dependencies": {
+    "@x/api": "workspace:*"
+  }
+}

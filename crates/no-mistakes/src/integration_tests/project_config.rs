@@ -1,5 +1,6 @@
 use super::test_config;
 use super::types::{ConfigProject, Framework};
+use crate::codebase::glob_normalize;
 use crate::codebase::ts_resolver::{find_tsconfig, load_tsconfig, TsConfig};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::schema::StringOrList;
@@ -102,7 +103,7 @@ pub(crate) fn prefix_globs(root: &Path, base: &Path, patterns: &[String]) -> Vec
     }
     patterns
         .iter()
-        .map(|pattern| format!("{rel}/{pattern}"))
+        .map(|pattern| format!("{}/{pattern}", glob_escape_literal(&rel)))
         .collect()
 }
 
@@ -114,10 +115,30 @@ pub(super) fn resolve_tsconfig(root: &Path) -> Result<TsConfig> {
     }
 }
 
-pub(super) fn build_globset(patterns: &[String]) -> Result<GlobSet> {
+pub(crate) fn build_globset(patterns: &[String]) -> Result<GlobSet> {
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
-        builder.add(Glob::new(pattern)?);
+        builder.add(Glob::new(&normalize_glob_pattern(pattern))?);
     }
     Ok(builder.build()?)
 }
+
+fn normalize_glob_pattern(pattern: &str) -> String {
+    glob_normalize::normalize(pattern)
+}
+
+fn glob_escape_literal(value: &str) -> String {
+    value
+        .chars()
+        .flat_map(|ch| {
+            if matches!(ch, '*' | '?' | '[' | ']' | '{' | '}' | '\\') {
+                vec!['\\', ch]
+            } else {
+                vec![ch]
+            }
+        })
+        .collect()
+}
+
+#[cfg(test)]
+mod tests;

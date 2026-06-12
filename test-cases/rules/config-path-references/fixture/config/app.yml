@@ -1,0 +1,5 @@
+paths:
+  required:
+    - existing.json
+    - missing.json
+  glob: "*.json"

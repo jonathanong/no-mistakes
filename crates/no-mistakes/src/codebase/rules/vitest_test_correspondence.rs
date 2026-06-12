@@ -1,6 +1,6 @@
 mod helpers;
 pub(crate) use helpers::source_candidates;
-use helpers::{check_source_to_test, stem_and_dir};
+use helpers::{check_source_to_test, duplicate_group_base, stem_and_dir};
 
 use super::RuleFinding;
 use crate::codebase::ts_source::{discover_files, relative_slash_path};
@@ -24,6 +24,7 @@ pub(crate) struct Options {
     pub(crate) tests_dir: String,
     pub(crate) direction: Direction,
     pub(crate) stem_suffixes_to_strip: Vec<String>,
+    pub(crate) duplicate_stem_group: DuplicateStemGroup,
 }
 
 #[derive(Clone, Copy, Deserialize, Default, PartialEq, Eq)]
@@ -33,6 +34,14 @@ pub(crate) enum Direction {
     Both,
     TestToSource,
     SourceToTest,
+}
+
+#[derive(Clone, Copy, Deserialize, Default, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub(crate) enum DuplicateStemGroup {
+    #[default]
+    Exact,
+    FirstDotSegment,
 }
 
 impl Direction {
@@ -135,7 +144,10 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
                 continue; // in __tests__ — exempt
             }
             let (dir, base) = stem_and_dir(rel, test_ext);
-            dir_stems.entry(dir.clone()).or_default().push(base.clone());
+            dir_stems
+                .entry(dir.clone())
+                .or_default()
+                .push(duplicate_group_base(&base, opts.duplicate_stem_group));
             let mut candidates = source_candidates(&dir, &base, test_ext);
             for suffix in &opts.stem_suffixes_to_strip {
                 if let Some(stripped) = base.strip_suffix(suffix.as_str()) {
@@ -172,7 +184,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
                         if !rel.contains(sep.as_str())
                             && !rel.starts_with(pre.as_str())
                             && fdir == *dir
-                            && fbase == dup
+                            && duplicate_group_base(&fbase, opts.duplicate_stem_group) == dup
                         {
                             findings.push(RuleFinding {
                                 rule: RULE_ID.to_string(),

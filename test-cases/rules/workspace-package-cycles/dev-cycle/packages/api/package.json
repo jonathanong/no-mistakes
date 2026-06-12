@@ -1,0 +1,6 @@
+{
+  "name": "@x/api",
+  "devDependencies": {
+    "@x/domain": "workspace:*"
+  }
+}

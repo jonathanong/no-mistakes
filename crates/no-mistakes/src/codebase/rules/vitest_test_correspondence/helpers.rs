@@ -1,4 +1,4 @@
-use super::{Options, RULE_ID};
+use super::{DuplicateStemGroup, Options, RULE_ID};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use rayon::prelude::*;
@@ -10,6 +10,13 @@ pub(super) fn stem_and_dir(rel: &str, test_ext: &str) -> (String, String) {
     match stem.rfind('/') {
         Some(i) => (stem[..i].to_string(), stem[i + 1..].to_string()),
         None => (String::new(), stem.to_string()),
+    }
+}
+
+pub(super) fn duplicate_group_base(base: &str, group: DuplicateStemGroup) -> String {
+    match group {
+        DuplicateStemGroup::Exact => base.to_string(),
+        DuplicateStemGroup::FirstDotSegment => base.split('.').next().unwrap_or(base).to_string(),
     }
 }
 

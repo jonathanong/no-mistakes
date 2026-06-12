@@ -1,0 +1,4 @@
+runtime:
+  version: 1
+legacy:
+  enabled: true

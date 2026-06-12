@@ -5,21 +5,25 @@ use std::sync::Mutex;
 type RuleAcc = Mutex<Vec<(&'static str, Result<Vec<RuleFinding>>)>>;
 
 use super::{
-    agents_md_max_size, banned_renamed_files, doc_consistency, file_extension_policy,
-    github_actions_pinned_hash, lockfile_allowlist, no_empty_or_comments_only_files,
-    no_git_identity_mutation, package_json_registry_only, require_files_in_subdirs,
-    require_test_per_subdir, required_local_docs, rust_rules_combined, shellcheck_runner,
-    strict_package_layout, tsconfig_alias_folder_mapping, vitest_test_correspondence,
+    agents_md_max_size, banned_renamed_files, config_path_references, doc_consistency,
+    file_extension_policy, finite_set_consistency, github_actions_pinned_hash, lockfile_allowlist,
+    no_empty_or_comments_only_files, no_git_identity_mutation, package_json_registry_only,
+    package_json_workspace_coverage, require_files_in_subdirs, require_test_per_subdir,
+    required_companion_imports, required_local_docs, rust_rules_combined, shellcheck_runner,
+    strict_package_layout, structured_config_policy, tsconfig_alias_folder_mapping,
+    vitest_project_mapping, vitest_test_correspondence, workspace_package_cycles,
 };
 
 mod preserved;
 use super::{
     rule_enabled, suppress_rule_findings, RuleFinding, AGENTS_MD_MAX_SIZE, BANNED_RENAMED_FILES,
-    DOC_CONSISTENCY, FILE_EXTENSION_POLICY, LOCKFILE_ALLOWLIST, NO_EMPTY_OR_COMMENTS_ONLY_FILES,
-    NO_GIT_IDENTITY_MUTATION, PACKAGE_JSON_REGISTRY_ONLY, REQUIRED_DOC_SECTION,
-    REQUIRED_LOCAL_DOCS, REQUIRE_FILES_IN_SUBDIRS, REQUIRE_TEST_PER_SUBDIR,
+    CONFIG_PATH_REFERENCES, DOC_CONSISTENCY, FILE_EXTENSION_POLICY, FINITE_SET_CONSISTENCY,
+    LOCKFILE_ALLOWLIST, NO_EMPTY_OR_COMMENTS_ONLY_FILES, NO_GIT_IDENTITY_MUTATION,
+    PACKAGE_JSON_REGISTRY_ONLY, PACKAGE_JSON_WORKSPACE_COVERAGE, REQUIRED_COMPANION_IMPORTS,
+    REQUIRED_DOC_SECTION, REQUIRED_LOCAL_DOCS, REQUIRE_FILES_IN_SUBDIRS, REQUIRE_TEST_PER_SUBDIR,
     RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS, SHELLCHECK_RUNNER,
-    STRICT_PACKAGE_LAYOUT, TSCONFIG_ALIAS_FOLDER_MAPPING, VITEST_TEST_CORRESPONDENCE,
+    STRICT_PACKAGE_LAYOUT, STRUCTURED_CONFIG_POLICY, TSCONFIG_ALIAS_FOLDER_MAPPING,
+    VITEST_PROJECT_MAPPING, VITEST_TEST_CORRESPONDENCE, WORKSPACE_PACKAGE_CYCLES,
 };
 const GITHUB_ACTIONS_PINNED_HASH: &str = github_actions_pinned_hash::RULE_ID;
 
@@ -28,9 +32,16 @@ macro_rules! filesystem_rules {
         $macro! {
             AGENTS_MD_MAX_SIZE => agents_md_max_size::check_with_files,
             GITHUB_ACTIONS_PINNED_HASH => github_actions_pinned_hash::check_with_files,
+            CONFIG_PATH_REFERENCES => config_path_references::check_with_files,
+            FINITE_SET_CONSISTENCY => finite_set_consistency::check_with_files,
+            STRUCTURED_CONFIG_POLICY => structured_config_policy::check_with_files,
             TSCONFIG_ALIAS_FOLDER_MAPPING => tsconfig_alias_folder_mapping::check_with_files,
             NO_GIT_IDENTITY_MUTATION => no_git_identity_mutation::check_with_files,
             PACKAGE_JSON_REGISTRY_ONLY => package_json_registry_only::check_with_files,
+            PACKAGE_JSON_WORKSPACE_COVERAGE => package_json_workspace_coverage::check_with_files,
+            WORKSPACE_PACKAGE_CYCLES => workspace_package_cycles::check_with_files,
+            REQUIRED_COMPANION_IMPORTS => required_companion_imports::check_with_files,
+            VITEST_PROJECT_MAPPING => vitest_project_mapping::check_with_files,
             REQUIRE_TEST_PER_SUBDIR => require_test_per_subdir::check_with_files,
             REQUIRE_FILES_IN_SUBDIRS => require_files_in_subdirs::check_with_files,
             STRICT_PACKAGE_LAYOUT => strict_package_layout::check_with_files,
