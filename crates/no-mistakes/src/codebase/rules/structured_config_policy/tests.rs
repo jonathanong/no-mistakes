@@ -74,13 +74,13 @@ policies:
 #[test]
 fn ignores_unreadable_structured_config_paths() {
     let root = fixture_root("fixture");
-    let files = vec![root.clone()];
+    let files = vec![root.join("config")];
     let findings = check_with_files(
         &root,
         &config(
             r#"
 policies:
-  - files: ["."]
+  - files: [config]
     requiredKeys: [runtime.version]
 "#,
         ),

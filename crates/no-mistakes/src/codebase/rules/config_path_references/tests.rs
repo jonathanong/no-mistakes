@@ -69,6 +69,33 @@ fn glob_references_default_to_config_file_directory() {
 }
 
 #[test]
+fn glob_reference_patterns_handle_root_base_and_root_level_configs() {
+    let root = fixture_root("fixture");
+    let root_opts = Options {
+        allow_globs: true,
+        base_dir: BaseDir::Root,
+        ..Default::default()
+    };
+    let config_file_opts = Options {
+        allow_globs: true,
+        ..Default::default()
+    };
+
+    assert_eq!(
+        reference_pattern(&root, &root.join("config/app.yml"), &root_opts, "src/*.ts"),
+        "src/*.ts"
+    );
+    assert_eq!(
+        reference_pattern(&root, &root.join("app.yml"), &config_file_opts, "*.json"),
+        "*.json"
+    );
+    assert_eq!(
+        reference_pattern(&root, Path::new(""), &config_file_opts, "*.json"),
+        "*.json"
+    );
+}
+
+#[test]
 fn invalid_glob_references_surface_errors() {
     let root = fixture_root("fixture");
     let opts = Options {

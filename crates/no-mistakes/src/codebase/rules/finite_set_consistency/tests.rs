@@ -181,6 +181,34 @@ export const ROUTE_META: Record<string, { slug: string }> = {
 }
 
 #[test]
+fn object_extraction_handles_quoted_keys_unterminated_comments_and_final_values() {
+    let source = r#"
+const ROUTE_META = {
+  "quoted-route": { slug: "quoted-route" },
+  final: { slug: "final" }
+};
+"#;
+
+    assert_eq!(
+        extract_ts_const_object_keys(source, "ROUTE_META"),
+        BTreeSet::from(["final".to_string(), "quoted-route".to_string()])
+    );
+    assert_eq!(
+        extract_ts_const_object_property(source, "ROUTE_META", "slug"),
+        BTreeSet::from(["final".to_string(), "quoted-route".to_string()])
+    );
+    assert!(
+        extract_ts_const_object_keys("const ROUTE_META = { invalidEntry }", "ROUTE_META")
+            .is_empty()
+    );
+    assert!(extract_ts_const_object_keys(
+        "const ROUTE_META = { /* intentionally unterminated\n}",
+        "ROUTE_META"
+    )
+    .is_empty());
+}
+
+#[test]
 fn object_property_extraction_requires_whole_key_match() {
     let source = r#"
 const ROUTE_META = {
