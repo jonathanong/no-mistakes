@@ -128,10 +128,13 @@ fn finding(file: &str, comparison: &Comparison, fallback: String, value: &str) -
 }
 
 #[cfg(test)]
+#[path = "finite_set_consistency/tests/object_comment.rs"]
 mod object_comment_tests;
 #[cfg(test)]
+#[path = "finite_set_consistency/tests/object_property.rs"]
 mod object_property_tests;
 #[cfg(test)]
+#[path = "finite_set_consistency/tests/object.rs"]
 mod object_tests;
 #[cfg(test)]
 mod tests;
