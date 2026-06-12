@@ -1,3 +1,4 @@
+use super::comments::strip_comments;
 use super::object::{const_object_body, top_level_object_keys, top_level_property_values};
 use super::SetSpec;
 use crate::codebase::ts_source::relative_slash_path;
@@ -64,7 +65,7 @@ pub(super) fn extract_ts_string_union(source: &str, target: &str) -> BTreeSet<St
     else {
         return BTreeSet::new();
     };
-    quoted_strings(ts_union_body(&source[mat.end()..]))
+    quoted_strings(&strip_comments(ts_union_body(&source[mat.end()..])))
 }
 
 pub(super) fn extract_ts_const_object_keys(source: &str, target: &str) -> BTreeSet<String> {

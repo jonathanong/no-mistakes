@@ -106,6 +106,26 @@ specifierTemplate: "@/components/{sourceStem}"
 }
 
 #[test]
+fn root_level_sources_normalize_empty_source_dir_in_companion_globs() {
+    let root = fixture_root("fixture");
+    let files = vec![root.join("Root.tsx"), root.join("Root.stories.tsx")];
+    let findings = check_with_files(
+        &root,
+        &config(
+            r#"
+sourceExtensions: [.tsx]
+companionGlobs: ["{sourceDir}/{sourceStem}.stories.tsx"]
+specifierTemplate: "./{sourceStem}"
+"#,
+        ),
+        &files,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn typescript_companion_imports_are_parsed() {
     assert!(file_imports(
         &fixture_root("fixture"),

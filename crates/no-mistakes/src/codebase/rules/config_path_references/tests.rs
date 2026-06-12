@@ -116,6 +116,45 @@ fn glob_reference_patterns_handle_root_base_and_root_level_configs() {
 }
 
 #[test]
+fn glob_reference_patterns_normalize_relative_segments_and_escape_config_dirs() {
+    let root = fixture_root("fixture");
+    let opts = Options {
+        allow_globs: true,
+        ..Default::default()
+    };
+    let rel_files = vec![
+        "schemas/user.json".to_string(),
+        "apps/[tenant]/foo.json".to_string(),
+    ];
+
+    assert!(reference_exists(
+        &root,
+        &root.join("config/app.yml"),
+        &opts,
+        "../schemas/*.json",
+        &rel_files
+    )
+    .unwrap());
+    assert_eq!(
+        reference_pattern(
+            &root,
+            &root.join("apps/[tenant]/config.yml"),
+            &opts,
+            "*.json"
+        ),
+        r#"apps/\[tenant\]/*.json"#
+    );
+    assert!(reference_exists(
+        &root,
+        &root.join("apps/[tenant]/config.yml"),
+        &opts,
+        "*.json",
+        &rel_files
+    )
+    .unwrap());
+}
+
+#[test]
 fn invalid_glob_references_surface_errors() {
     let root = fixture_root("fixture");
     let opts = Options {

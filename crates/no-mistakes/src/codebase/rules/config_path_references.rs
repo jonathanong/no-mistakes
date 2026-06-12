@@ -139,17 +139,44 @@ fn reference_exists(
 
 fn reference_pattern(root: &Path, config_file: &Path, opts: &Options, reference: &str) -> String {
     if opts.base_dir == BaseDir::Root {
-        return reference.to_string();
+        return normalize_glob_pattern(reference);
     }
     let Some(parent) = config_file.parent() else {
-        return reference.to_string();
+        return normalize_glob_pattern(reference);
     };
     let dir = relative_slash_path(root, parent);
     if dir.is_empty() {
-        reference.to_string()
+        normalize_glob_pattern(reference)
     } else {
-        format!("{dir}/{reference}")
+        normalize_glob_pattern(&format!("{}/{reference}", glob_escape_literal(&dir)))
     }
+}
+
+fn normalize_glob_pattern(pattern: &str) -> String {
+    let mut parts = Vec::new();
+    for part in pattern.split('/') {
+        match part {
+            "" | "." => {}
+            ".." => {
+                parts.pop();
+            }
+            _ => parts.push(part),
+        }
+    }
+    parts.join("/")
+}
+
+fn glob_escape_literal(value: &str) -> String {
+    value
+        .chars()
+        .flat_map(|ch| {
+            if matches!(ch, '*' | '?' | '[' | ']' | '{' | '}' | '\\') {
+                vec!['\\', ch]
+            } else {
+                vec![ch]
+            }
+        })
+        .collect()
 }
 
 #[cfg(test)]

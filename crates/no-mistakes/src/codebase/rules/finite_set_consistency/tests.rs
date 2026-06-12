@@ -178,6 +178,21 @@ fn string_union_extraction_stops_before_blank_lines_and_declaration_keywords() {
 }
 
 #[test]
+fn string_union_extraction_ignores_commented_literals() {
+    let source = r#"
+type RouteName =
+  | "users"
+  // | "legacy"
+  | "billing" /* "example" */
+"#;
+
+    assert_eq!(
+        extract_ts_string_union(source, "RouteName"),
+        BTreeSet::from(["billing".to_string(), "users".to_string()])
+    );
+}
+
+#[test]
 fn object_property_extraction_handles_nested_quoted_braces() {
     let source = r#"
 const ROUTE_META = {
@@ -203,6 +218,23 @@ const ROUTE_META = {
     assert_eq!(
         extract_ts_const_object_keys(source, "ROUTE_META"),
         BTreeSet::from(["users".to_string()])
+    );
+}
+
+#[test]
+fn object_extraction_ignores_comment_braces_when_matching_body() {
+    let source = r#"
+const ROUTE_META = {
+  // } old route map shape
+  users: { slug: "users" },
+  /* } block comment */
+  billing: { slug: "billing" },
+};
+"#;
+
+    assert_eq!(
+        extract_ts_const_object_keys(source, "ROUTE_META"),
+        BTreeSet::from(["billing".to_string(), "users".to_string()])
     );
 }
 

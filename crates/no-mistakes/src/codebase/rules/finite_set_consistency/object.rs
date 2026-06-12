@@ -13,7 +13,11 @@ pub(super) fn matching_brace(source: &str, open: usize) -> Option<usize> {
     let mut depth = 0usize;
     let mut quote = None;
     let mut escaped = false;
-    for (idx, ch) in source.char_indices().skip_while(|(idx, _)| *idx < open) {
+    let mut iter = source
+        .char_indices()
+        .skip_while(|(idx, _)| *idx < open)
+        .peekable();
+    while let Some((idx, ch)) = iter.next() {
         if let Some(active_quote) = quote {
             if escaped {
                 escaped = false;
@@ -23,6 +27,31 @@ pub(super) fn matching_brace(source: &str, open: usize) -> Option<usize> {
                 quote = None;
             }
             continue;
+        }
+        if ch == '/' {
+            match iter.peek().copied() {
+                Some((_, '/')) => {
+                    iter.next();
+                    for (_, comment_ch) in iter.by_ref() {
+                        if comment_ch == '\n' {
+                            break;
+                        }
+                    }
+                    continue;
+                }
+                Some((_, '*')) => {
+                    iter.next();
+                    let mut previous = '\0';
+                    for (_, comment_ch) in iter.by_ref() {
+                        if previous == '*' && comment_ch == '/' {
+                            break;
+                        }
+                        previous = comment_ch;
+                    }
+                    continue;
+                }
+                _ => {}
+            }
         }
         match ch {
             '"' | '\'' | '`' => quote = Some(ch),

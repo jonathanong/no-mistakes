@@ -121,7 +121,9 @@ pub(super) fn build_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
 pub(super) fn build_companion_globset(opts: &Options, source: &SourceInfo) -> Result<GlobSet> {
     let mut builder = GlobSetBuilder::new();
     for pattern in &opts.companion_globs {
-        builder.add(Glob::new(&render_glob_template(pattern, source))?);
+        builder.add(Glob::new(&normalize_glob_template(&render_glob_template(
+            pattern, source,
+        )))?);
     }
     Ok(builder.build()?)
 }
@@ -172,6 +174,20 @@ fn glob_escape_literal(value: &str) -> String {
             }
         })
         .collect()
+}
+
+fn normalize_glob_template(pattern: &str) -> String {
+    let mut parts = Vec::new();
+    for part in pattern.split('/') {
+        match part {
+            "" | "." => {}
+            ".." => {
+                parts.pop();
+            }
+            _ => parts.push(part),
+        }
+    }
+    parts.join("/")
 }
 
 fn is_declaration_file(rel: &str) -> bool {
