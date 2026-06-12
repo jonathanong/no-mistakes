@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 fn bin() -> PathBuf {
@@ -13,6 +13,30 @@ fn fixture(category: &str, scenario: &str) -> PathBuf {
             .join("fixture")
             .join(scenario),
     )
+}
+
+fn rule_fixture(category: &str) -> PathBuf {
+    no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules")
+            .join(category)
+            .join("fixture"),
+    )
+}
+
+fn rule_fixture_scenario(category: &str, scenario: &str) -> PathBuf {
+    no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules")
+            .join(category)
+            .join(scenario),
+    )
+}
+
+fn filesystem_findings(root: &Path, yaml: &str) -> Vec<no_mistakes::codebase::rules::RuleFinding> {
+    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
+    std::fs::write(config.path(), yaml).unwrap();
+    no_mistakes::codebase::rules::run_filesystem_rules(root, Some(config.path())).unwrap()
 }
 
 fn check_fixture_config(root: &PathBuf, name: &str) -> Output {
@@ -68,4 +92,62 @@ fn github_actions_pinned_hash_passes_for_local_actions() {
     let root = fixture("github-actions-pinned-hash", "local-action-pass");
     let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
+fn generic_filesystem_rules_run_through_public_dispatch() {
+    let config_paths = filesystem_findings(
+        &rule_fixture("config-path-references"),
+        r#"
+rules:
+  - rule: config-path-references
+    scope: repository
+    options:
+      files: [config/app.yml]
+      keys: [paths.required]
+      baseDir: root
+"#,
+    );
+    assert!(format!("{config_paths:?}").contains("missing.json"));
+
+    let companions = filesystem_findings(
+        &rule_fixture("required-companion-imports"),
+        r#"
+rules:
+  - rule: required-companion-imports
+    scope: repository
+    options:
+      sourceDirs: [src/components]
+      directChildOnly: true
+      sourceExtensions: [.tsx]
+      excludeBasenames: [Internal.tsx, Button.stories.tsx, Card.stories.tsx]
+      companionGlobs: ["{sourceDir}/{sourceStem}.stories.tsx"]
+      specifierTemplate: "@/components/{sourceStem}"
+      stripSourcePrefix: src/
+"#,
+    );
+    assert!(format!("{companions:?}").contains("@/components/Card"));
+
+    let vitest_projects = filesystem_findings(
+        &rule_fixture("vitest-project-mapping"),
+        r#"
+tests:
+  vitest:
+    configs: vitest.config.mts
+rules:
+  - rule: vitest-project-mapping
+    scope: repository
+"#,
+    );
+    assert!(format!("{vitest_projects:?}").contains("src/unmapped.test.ts"));
+
+    let package_cycles = filesystem_findings(
+        &rule_fixture_scenario("workspace-package-cycles", "cycle"),
+        r#"
+rules:
+  - rule: workspace-package-cycles
+    scope: repository
+"#,
+    );
+    assert!(format!("{package_cycles:?}").contains("@x/api -> @x/domain -> @x/api"));
 }
