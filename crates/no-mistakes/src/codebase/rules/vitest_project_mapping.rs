@@ -75,7 +75,8 @@ fn scan(
     opts: &Options,
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let needs_config_projects = config.tests.vitest.projects.is_empty()
+    let needs_config_projects = config.tests.vitest.configs.is_none()
+        || config.tests.vitest.projects.is_empty()
         || config
             .tests
             .vitest

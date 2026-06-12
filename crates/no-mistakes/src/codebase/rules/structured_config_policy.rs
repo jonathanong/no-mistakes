@@ -41,7 +41,7 @@ pub(crate) fn check_with_files(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files)
+            scan(root, &opts, &files, &target_roots)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -49,10 +49,15 @@ pub(crate) fn check_with_files(
     Ok(findings)
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+fn scan(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    target_roots: &[PathBuf],
+) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for policy in &opts.policies {
-        let matching = super::matching_files(root, &policy.files, files)?;
+        let matching = super::matching_files(root, &policy.files, files, target_roots)?;
         for path in matching {
             let rel = relative_slash_path(root, &path);
             let Ok(source) = std::fs::read_to_string(&path) else {

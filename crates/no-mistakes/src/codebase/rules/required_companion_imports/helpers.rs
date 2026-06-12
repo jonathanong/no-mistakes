@@ -93,10 +93,16 @@ pub(super) fn source_dir_matches(dir: &str, source_dir: &str, direct_child_only:
     if source_dir.is_empty() {
         return false;
     }
+    let project_relative_dir = dir
+        .strip_suffix(source_dir)
+        .is_some_and(|prefix| prefix.ends_with('/'));
     if direct_child_only {
-        dir == source_dir
+        dir == source_dir || project_relative_dir
     } else {
-        dir == source_dir || dir.starts_with(&format!("{source_dir}/"))
+        dir == source_dir
+            || dir.starts_with(&format!("{source_dir}/"))
+            || project_relative_dir
+            || dir.contains(&format!("/{source_dir}/"))
     }
 }
 

@@ -141,6 +141,27 @@ include: [src/custom.spec.ts]
 }
 
 #[test]
+fn configured_projects_extend_auto_discovered_vitest_configs() {
+    let root = fixture_root("fixture");
+    let mut config = load_config(&root);
+    config.tests.vitest.configs = None;
+    config.tests.vitest.projects.insert(
+        "custom".to_string(),
+        serde_yaml::from_str(
+            r#"
+include: [src/custom.spec.ts]
+"#,
+        )
+        .unwrap(),
+    );
+    config.rules[0].options = serde_yaml::from_str("scopes: [src]\n").unwrap();
+    let files = vec![root.join("src/a.test.ts"), root.join("src/custom.spec.ts")];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn explicit_projects_do_not_require_missing_vitest_configs() {
     let root = fixture_root("fixture");
     let mut config = load_config(&root);

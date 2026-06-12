@@ -235,7 +235,17 @@ fn helper_branches_cover_empty_dirs_missing_files_and_extension_normalization() 
     assert!(source_extensions(&opts).contains(".mts"));
     assert!(!source_dir_matches("src/components", "", false));
     assert!(source_dir_matches(
+        "packages/app/src/components",
+        "src/components",
+        true
+    ));
+    assert!(source_dir_matches(
         "src/components/nested",
+        "src/components",
+        false
+    ));
+    assert!(source_dir_matches(
+        "packages/app/src/components/nested",
         "src/components",
         false
     ));

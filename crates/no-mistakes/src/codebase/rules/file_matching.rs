@@ -7,6 +7,7 @@ pub(crate) fn matching_files(
     root: &Path,
     patterns: &[String],
     files: &[PathBuf],
+    target_roots: &[PathBuf],
 ) -> Result<Vec<PathBuf>> {
     if patterns.is_empty() {
         return Ok(Vec::new());
@@ -18,7 +19,13 @@ pub(crate) fn matching_files(
     let globs = builder.build()?;
     Ok(files
         .iter()
-        .filter(|path| globs.is_match(relative_slash_path(root, path)))
+        .filter(|path| {
+            globs.is_match(relative_slash_path(root, path))
+                || target_roots
+                    .iter()
+                    .filter(|target_root| *target_root != root && path.starts_with(target_root))
+                    .any(|target_root| globs.is_match(relative_slash_path(target_root, path)))
+        })
         .cloned()
         .collect())
 }
