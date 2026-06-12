@@ -70,6 +70,18 @@ fn scopes_can_limit_checked_test_candidates() {
 }
 
 #[test]
+fn root_scope_matches_all_relative_test_paths() {
+    let root = fixture_root("fixture");
+    let mut config = load_config(&root);
+    config.rules[0].options = serde_yaml::from_str("scopes: [/]\n").unwrap();
+    let files = vec![root.join("src/unmapped.test.ts")];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "src/unmapped.test.ts");
+}
+
+#[test]
 fn configured_projects_and_custom_extensions_are_checked() {
     let root = fixture_root("fixture");
     let mut config = load_config(&root);

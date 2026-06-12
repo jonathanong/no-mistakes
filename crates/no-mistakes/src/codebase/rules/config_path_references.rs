@@ -2,7 +2,7 @@ use super::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use globset::{Glob, GlobSetBuilder};
+use globset::Glob;
 use rayon::prelude::*;
 use serde::Deserialize;
 use serde_yaml::Value;
@@ -54,7 +54,7 @@ pub(crate) fn check_with_files(
 }
 
 fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
-    let config_files = matching_files(root, &opts.files, files)?;
+    let config_files = super::matching_files(root, &opts.files, files)?;
     let rel_files = files
         .iter()
         .map(|path| relative_slash_path(root, path))
@@ -70,7 +70,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
         };
         for key in &opts.keys {
             for reference in values_at_key(&value, key) {
-                if !reference_exists(root, &path, opts, &reference, &rel_files) {
+                if !reference_exists(root, &path, opts, &reference, &rel_files)? {
                     findings.push(RuleFinding {
                         rule: RULE_ID.to_string(),
                         file: rel.clone(),
@@ -87,22 +87,6 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
     }
     findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
     Ok(findings)
-}
-
-fn matching_files(root: &Path, patterns: &[String], files: &[PathBuf]) -> Result<Vec<PathBuf>> {
-    if patterns.is_empty() {
-        return Ok(Vec::new());
-    }
-    let mut builder = GlobSetBuilder::new();
-    for pattern in patterns {
-        builder.add(Glob::new(pattern)?);
-    }
-    let globs = builder.build()?;
-    Ok(files
-        .iter()
-        .filter(|path| globs.is_match(relative_slash_path(root, path)))
-        .cloned()
-        .collect())
 }
 
 fn values_at_key(value: &Value, key: &str) -> Vec<String> {
@@ -128,24 +112,21 @@ fn reference_exists(
     opts: &Options,
     reference: &str,
     rel_files: &[String],
-) -> bool {
+) -> Result<bool> {
     if opts.allow_globs
         && (reference.contains('*') || reference.contains('?') || reference.contains('['))
     {
         let pattern = reference_pattern(root, config_file, opts, reference);
-        return Glob::new(&pattern)
-            .map(|glob| {
-                let matcher = glob.compile_matcher();
-                rel_files.iter().any(|rel| matcher.is_match(rel))
-            })
-            .unwrap_or(false);
+        let glob = Glob::new(&pattern)?;
+        let matcher = glob.compile_matcher();
+        return Ok(rel_files.iter().any(|rel| matcher.is_match(rel)));
     }
     let base = if opts.base_dir == BaseDir::Root {
         root.to_path_buf()
     } else {
         config_file.parent().unwrap_or(root).to_path_buf()
     };
-    base.join(reference).exists()
+    Ok(base.join(reference).exists())
 }
 
 fn reference_pattern(root: &Path, config_file: &Path, opts: &Options, reference: &str) -> String {

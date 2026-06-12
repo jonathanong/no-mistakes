@@ -64,7 +64,19 @@ fn glob_references_default_to_config_file_directory() {
         &opts,
         "*.json",
         &rel_files
-    ));
+    )
+    .unwrap());
+}
+
+#[test]
+fn invalid_glob_references_surface_errors() {
+    let root = fixture_root("fixture");
+    let opts = Options {
+        allow_globs: true,
+        ..Default::default()
+    };
+
+    assert!(reference_exists(&root, &root.join("config/app.yml"), &opts, "[", &[]).is_err());
 }
 
 #[test]
@@ -120,5 +132,6 @@ fn can_resolve_references_from_repository_root() {
         &opts,
         "config/existing.json",
         &[]
-    ));
+    )
+    .unwrap());
 }

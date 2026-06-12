@@ -83,7 +83,10 @@ fn skips_non_package_files_and_unnamed_packages_when_required() {
     .unwrap();
 
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
-    assert_eq!(package_name(&root.join("missing/package.json")), None);
+    assert_eq!(
+        package_name(&root.join("packages/unnamed/package.json")),
+        None
+    );
     assert_eq!(
         package_name(&fixture_root("invalid-package-json").join("packages/bad/package.json")),
         None

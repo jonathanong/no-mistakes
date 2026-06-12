@@ -2,7 +2,6 @@ use super::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use globset::{Glob, GlobSetBuilder};
 use rayon::prelude::*;
 use serde::Deserialize;
 use serde_yaml::Value;
@@ -53,7 +52,7 @@ pub(crate) fn check_with_files(
 fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for policy in &opts.policies {
-        let matching = matching_files(root, &policy.files, files)?;
+        let matching = super::matching_files(root, &policy.files, files)?;
         for path in matching {
             let rel = relative_slash_path(root, &path);
             let Ok(source) = std::fs::read_to_string(&path) else {
@@ -90,19 +89,6 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
     }
     findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
     Ok(findings)
-}
-
-fn matching_files(root: &Path, patterns: &[String], files: &[PathBuf]) -> Result<Vec<PathBuf>> {
-    let mut builder = GlobSetBuilder::new();
-    for pattern in patterns {
-        builder.add(Glob::new(pattern)?);
-    }
-    let globs = builder.build()?;
-    Ok(files
-        .iter()
-        .filter(|path| globs.is_match(relative_slash_path(root, path)))
-        .cloned()
-        .collect())
 }
 
 fn value_at_key<'a>(value: &'a Value, key: &str) -> Option<&'a Value> {

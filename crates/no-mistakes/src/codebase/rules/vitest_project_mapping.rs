@@ -137,9 +137,10 @@ fn is_test_file(rel: &str, test_extensions: &[&str]) -> bool {
 
 fn in_scope(rel: &str, scopes: &[String]) -> bool {
     scopes.is_empty()
-        || scopes
-            .iter()
-            .any(|scope| rel == scope || rel.starts_with(&format!("{}/", scope.trim_matches('/'))))
+        || scopes.iter().any(|scope| {
+            let scope = scope.trim_matches('/');
+            scope.is_empty() || rel == scope || rel.starts_with(&format!("{scope}/"))
+        })
 }
 
 fn matching_projects(rel: &str, projects: &[(String, GlobSet, GlobSet)]) -> Vec<String> {

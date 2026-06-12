@@ -3,6 +3,7 @@ pub mod banned_renamed_files;
 pub mod config_path_references;
 pub mod doc_consistency;
 pub mod file_extension_policy;
+mod file_matching;
 pub mod finite_set_consistency;
 pub mod forbidden_dependencies;
 pub mod github_actions_pinned_hash;
@@ -44,6 +45,8 @@ use std::path::{Path, PathBuf};
 pub use filesystem_dispatch::{run_filesystem_rules, run_filesystem_rules_with_files};
 pub use ids::*;
 pub use run::{run_check, run_check_with_facts};
+
+pub(crate) use file_matching::matching_files;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 #[serde(rename_all = "camelCase")]
