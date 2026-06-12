@@ -138,4 +138,8 @@ fn workspace_globset_builder_splits_includes_and_excludes() {
     assert!(include.is_match("packages/internal"));
     assert!(exclude.is_match("packages/internal"));
     assert!(!exclude.is_match("packages/web"));
+    assert_eq!(
+        normalize_relative_path("./packages/../packages/web"),
+        "packages/web"
+    );
 }

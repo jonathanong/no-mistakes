@@ -200,6 +200,15 @@ fn string_union_extraction_ignores_semicolons_inside_literals() {
         extract_ts_string_union(r#"type RouteName = "a;b" | "c";"#, "RouteName"),
         BTreeSet::from(["a;b".to_string(), "c".to_string()])
     );
+    assert_eq!(
+        extract_ts_string_union(
+            r#"type RouteName = 'single;quoted' | `template\`;still quoted` | "done";
+const ignored = "ignored";
+"#,
+            "RouteName",
+        ),
+        BTreeSet::from(["done".to_string(), "single;quoted".to_string()])
+    );
 }
 
 #[test]

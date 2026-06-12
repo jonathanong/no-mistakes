@@ -66,3 +66,18 @@ const ROUTE_META = {
         BTreeSet::from(["users".to_string()])
     );
 }
+
+#[test]
+fn object_extraction_skips_computed_keys_with_nested_values() {
+    let source = r#"
+const ROUTE_META = {
+  [buildKey("ignored", { nested: true })]: { slug: "ignored" },
+  users: { slug: "users" },
+};
+"#;
+
+    assert_eq!(
+        extract_ts_const_object_keys(source, "ROUTE_META"),
+        BTreeSet::from(["users".to_string()])
+    );
+}

@@ -232,6 +232,21 @@ fn project_scoped_rules_match_scopes_against_project_relative_paths() {
 }
 
 #[test]
+fn matching_paths_include_repo_relative_fallback_once() {
+    let root = fixture_root("fixture");
+    let file = root.join("src/a.test.ts");
+
+    assert_eq!(
+        relative_paths_for_matching(&root, &file, std::slice::from_ref(&root)),
+        vec!["src/a.test.ts".to_string()]
+    );
+    assert_eq!(
+        relative_paths_for_matching(&root, &file, &[]),
+        vec!["src/a.test.ts".to_string()]
+    );
+}
+
+#[test]
 fn configured_projects_extend_auto_discovered_vitest_configs() {
     let root = fixture_root("fixture");
     let mut config = load_config(&root);
