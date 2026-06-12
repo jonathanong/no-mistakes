@@ -345,6 +345,7 @@ type RouteName = "users" | "billing"
 fn string_union_extraction_ignores_matching_alias_text_inside_literals() {
     let source = r#"
 const docs = 'type RouteName = "legacy"';
+const escapedDocs = "type RouteName = \"escaped\"";
 const templateDocs = `type RouteName = "template"`;
 type RouteName = "users" | "billing";
 "#;

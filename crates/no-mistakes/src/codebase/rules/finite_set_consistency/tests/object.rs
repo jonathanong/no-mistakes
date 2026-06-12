@@ -47,6 +47,15 @@ const ROUTE_META = {
 }
 
 #[test]
+fn object_key_extraction_ignores_unclosed_quoted_keys() {
+    assert!(extract_ts_const_object_keys(
+        r#"const ROUTE_META = { "unterminated: { slug: "ignored" } }"#,
+        "ROUTE_META"
+    )
+    .is_empty());
+}
+
+#[test]
 fn object_extraction_ignores_equals_in_type_annotations() {
     let source = r#"
 const ROUTE_META: Record<string, () => { slug: string }> = {

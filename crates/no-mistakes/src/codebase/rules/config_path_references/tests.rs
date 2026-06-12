@@ -233,6 +233,15 @@ fn bracketed_references_are_literals_when_missing() {
 }
 
 #[test]
+fn escaped_glob_metacharacters_do_not_enable_glob_matching() {
+    assert!(!has_glob_metachar(r"schemas/\*.json"));
+    assert!(!has_glob_metachar(r"schemas/\?.json"));
+    assert!(!has_glob_metachar(r"schemas/path\"));
+    assert!(has_glob_metachar("schemas/{tenant,default}.json"));
+    assert!(has_glob_metachar("schemas/?.json"));
+}
+
+#[test]
 fn literal_references_outside_the_repository_do_not_exist_for_this_rule() {
     let root = fixture_root("fixture");
     let opts = Options::default();
