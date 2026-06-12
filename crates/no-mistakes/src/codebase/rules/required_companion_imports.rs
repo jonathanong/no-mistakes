@@ -48,7 +48,7 @@ pub(crate) fn check_with_files(
                 .collect();
             let source_files =
                 super::path_filter::filter_rule_files(root, config, rule, &candidate_files)?;
-            scan(root, &opts, &source_files, &candidate_files)
+            scan(root, &opts, &source_files, &candidate_files, &target_roots)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -61,6 +61,7 @@ fn scan(
     opts: &Options,
     source_files: &[PathBuf],
     candidate_files: &[PathBuf],
+    target_roots: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
     if opts.companion_globs.is_empty() || opts.specifier_template.is_empty() {
         return Ok(Vec::new());
@@ -70,9 +71,14 @@ fn scan(
     let extensions = source_extensions(opts);
     let exclude_basenames: HashSet<&str> =
         opts.exclude_basenames.iter().map(String::as_str).collect();
-    let rel_source_files: Vec<String> = source_files
+    let rel_source_files: Vec<(String, Vec<String>)> = source_files
         .iter()
-        .map(|path| relative_slash_path(root, path))
+        .map(|path| {
+            (
+                relative_slash_path(root, path),
+                relative_paths_for_matching(root, path, target_roots),
+            )
+        })
         .collect();
     let rel_candidate_files: Vec<String> = candidate_files
         .iter()
@@ -81,9 +87,10 @@ fn scan(
 
     let sources = rel_source_files
         .iter()
-        .filter_map(|rel| {
+        .filter_map(|(rel, glob_rels)| {
             source_info(
                 rel,
+                glob_rels,
                 opts,
                 source_globs.as_ref(),
                 &extensions,
@@ -156,6 +163,19 @@ fn companion_files(
         );
     }
     Ok(companions)
+}
+
+fn relative_paths_for_matching(root: &Path, file: &Path, target_roots: &[PathBuf]) -> Vec<String> {
+    let mut paths = target_roots
+        .iter()
+        .filter(|target_root| file.starts_with(target_root))
+        .map(|target_root| relative_slash_path(target_root, file))
+        .collect::<Vec<_>>();
+    let repo_rel = relative_slash_path(root, file);
+    if !paths.contains(&repo_rel) {
+        paths.push(repo_rel);
+    }
+    paths
 }
 
 #[cfg(test)]

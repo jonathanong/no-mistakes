@@ -40,6 +40,7 @@ pub(super) fn source_extensions(opts: &Options) -> Vec<String> {
 
 pub(super) fn source_info(
     rel: &str,
+    glob_rels: &[String],
     opts: &Options,
     source_globs: Option<&GlobSet>,
     extensions: &[String],
@@ -51,7 +52,7 @@ pub(super) fn source_info(
     if is_declaration_file(rel) {
         return None;
     }
-    if source_globs.is_some_and(|globs| !globs.is_match(rel)) {
+    if source_globs.is_some_and(|globs| !glob_rels.iter().any(|rel| globs.is_match(rel))) {
         return None;
     }
     let (dir, base) = split_dir_base(rel);

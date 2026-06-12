@@ -1,7 +1,7 @@
 use super::helpers::{source_dir_matches, source_info, split_dir_base};
 use super::*;
 use crate::config::v2::{
-    schema::{RuleDef, RuleScope},
+    schema::{Project, RuleDef, RuleScope},
     NoMistakesConfig,
 };
 use std::collections::HashSet;
@@ -228,6 +228,35 @@ specifierTemplate: "@/components/{sourceStem}"
 }
 
 #[test]
+fn source_globs_match_project_relative_paths() {
+    let root = fixture_root("fixture");
+    let mut config = config(
+        r#"
+sourceGlobs: ["src/components/Button.tsx"]
+sourceExtensions: [.tsx]
+companionGlobs: ["{sourceDir}/{sourceStem}.stories.tsx"]
+specifierTemplate: "@/components/{sourceStem}"
+stripSourcePrefix: packages/app/src/
+"#,
+    );
+    config.projects.insert(
+        "app".to_string(),
+        Project {
+            root: Some("packages/app".to_string()),
+            ..Default::default()
+        },
+    );
+    config.rules[0].projects = vec!["app".to_string()];
+    let files = vec![
+        root.join("packages/app/src/components/Button.tsx"),
+        root.join("packages/app/src/components/Button.stories.tsx"),
+    ];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn reports_when_no_companion_file_exists() {
     let root = fixture_root("fixture");
     let files = vec![root.join("src/components/Missing.tsx")];
@@ -289,6 +318,7 @@ fn helper_branches_cover_empty_dirs_missing_files_and_extension_normalization() 
     assert_eq!(
         source_info(
             "src/components/Button.mts",
+            &["src/components/Button.mts".to_string()],
             &Options::default(),
             None,
             &source_extensions(&Options::default()),

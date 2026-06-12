@@ -197,6 +197,20 @@ fn extraction_helpers_parse_blank_lines_and_escaped_quotes() {
 }
 
 #[test]
+fn extraction_helpers_stop_semicolonless_unions_before_declare() {
+    assert_eq!(
+        extract_ts_string_union(
+            r#"type RouteName =
+  | "users"
+declare const ignored: "ignored"
+"#,
+            "RouteName"
+        ),
+        BTreeSet::from(["users".to_string()])
+    );
+}
+
+#[test]
 fn sql_enum_extraction_ignores_commented_matching_definitions() {
     let source = r#"
 -- CREATE TYPE route_name AS ENUM ('legacy');

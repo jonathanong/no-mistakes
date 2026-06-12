@@ -156,6 +156,7 @@ fn ts_union_body(source: &str) -> &str {
                 Some(
                     "export"
                         | "import"
+                        | "declare"
                         | "const"
                         | "let"
                         | "var"
