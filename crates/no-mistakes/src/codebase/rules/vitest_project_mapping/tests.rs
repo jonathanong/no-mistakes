@@ -91,7 +91,8 @@ fn default_extensions_include_tests_directory_files() {
 fn scopes_can_limit_checked_test_candidates() {
     let root = fixture_root("fixture");
     let mut config = load_config(&root);
-    config.rules[0].options = serde_yaml::from_str("scopes: [./src/a.test.ts]\n").unwrap();
+    config.rules[0].options =
+        serde_yaml::from_str("scopes: [./ignored/../src/a.test.ts]\n").unwrap();
     let files = vec![
         root.join("src/a.test.ts"),
         root.join("src/shared.test.ts"),

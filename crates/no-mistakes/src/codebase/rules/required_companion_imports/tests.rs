@@ -298,6 +298,11 @@ fn helper_branches_cover_empty_dirs_missing_files_and_extension_normalization() 
         "./src/components",
         false
     ));
+    assert!(source_dir_matches(
+        "src/components",
+        "./ignored/../src/components",
+        true
+    ));
     assert_eq!(
         split_dir_base("Root.ts"),
         (String::new(), "Root.ts".to_string())

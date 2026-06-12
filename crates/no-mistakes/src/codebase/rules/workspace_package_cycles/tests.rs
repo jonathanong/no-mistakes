@@ -120,6 +120,22 @@ fn overlapping_component_reports_cycles_beyond_an_allowlisted_pair() {
 }
 
 #[test]
+fn cycle_detection_ignores_external_edges_inside_cyclic_components() {
+    let mut graph = BTreeMap::new();
+    graph.insert(
+        "a".to_string(),
+        BTreeSet::from(["b".to_string(), "outside".to_string()]),
+    );
+    graph.insert("b".to_string(), BTreeSet::from(["a".to_string()]));
+    graph.insert("outside".to_string(), BTreeSet::new());
+
+    assert_eq!(
+        scc::cycle_keys(&graph),
+        BTreeSet::from(["a -> b".to_string()])
+    );
+}
+
+#[test]
 fn cycle_detection_handles_self_cycles_and_external_edges() {
     let mut graph = BTreeMap::new();
     graph.insert(

@@ -554,6 +554,47 @@ const ROUTE_META = {
 }
 
 #[test]
+fn object_helpers_cover_ignored_tail_entries_and_quoted_literals() {
+    let source = r#"
+const ROUTE_META = {
+  'quoted-key': { slug: 'quoted' },
+  ...buildRoutes({ nested: "value" }),
+  // line comment before ignored tail
+  /* block comment before ignored tail */
+  [dynamicKey()]
+};
+"#;
+
+    assert_eq!(
+        extract_ts_const_object_keys(source, "ROUTE_META"),
+        BTreeSet::from(["quoted-key".to_string()])
+    );
+    assert_eq!(
+        extract_ts_const_object_property(source, "ROUTE_META", "slug"),
+        BTreeSet::from(["quoted".to_string()])
+    );
+}
+
+#[test]
+fn object_helpers_stop_at_ignored_unclosed_tail_entries() {
+    let source = r#"
+const ROUTE_META = {
+  literal: { slug: "literal" },
+  ...buildRoutes({ nested: "value" })
+};
+const BROKEN = {
+  literal: { slug: "literal" },
+  /* unterminated
+"#;
+
+    assert_eq!(
+        extract_ts_const_object_keys(source, "ROUTE_META"),
+        BTreeSet::from(["literal".to_string()])
+    );
+    assert!(extract_ts_const_object_keys(source, "BROKEN").is_empty());
+}
+
+#[test]
 fn object_extraction_preserves_repository_relative_error_files() {
     let root = fixture_root("fixture");
     let spec = SetSpec {

@@ -16,6 +16,20 @@ fn assignment_index_returns_none_without_initializer() {
 }
 
 #[test]
+fn assignment_index_handles_escaped_quotes() {
+    let source = r#"const ROUTES = "not \" = done"; const NEXT = {}"#;
+
+    assert_eq!(
+        assignment_index(source, "const ROUTES".len()),
+        Some("const ROUTES =".len())
+    );
+    assert_eq!(
+        assignment_index(source, source.find("const NEXT").unwrap()),
+        Some(source.rfind('=').unwrap() + 1)
+    );
+}
+
+#[test]
 fn matching_brace_ignores_comments_and_regex_literals() {
     let source = r#"{
   // }
@@ -36,4 +50,10 @@ fn matching_brace_handles_unclosed_values() {
 fn top_level_value_end_ignores_nested_and_regex_commas() {
     assert_eq!(top_level_value_end(r#"/[,{}]/, next: true"#), 7);
     assert_eq!(top_level_value_end(r#"{ value: "," }, next: true"#), 14);
+}
+
+#[test]
+fn top_level_value_end_handles_comments_and_division() {
+    assert_eq!(top_level_value_end("value // comment, ignored\n, next"), 16);
+    assert_eq!(top_level_value_end("a / b, next"), 5);
 }
