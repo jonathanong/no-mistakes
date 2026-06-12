@@ -1,8 +1,13 @@
+use super::extract::{
+    extract_path_regex_set, extract_set, extract_sql_enum, extract_ts_const_object_keys,
+    extract_ts_const_object_property, extract_ts_string_union, matching_brace,
+};
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
+use std::collections::BTreeSet;
 use std::path::Path;
 
 fn fixture_root(name: &str) -> PathBuf {

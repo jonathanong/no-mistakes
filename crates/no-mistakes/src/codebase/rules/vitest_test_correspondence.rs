@@ -1,6 +1,6 @@
 mod helpers;
 pub(crate) use helpers::source_candidates;
-use helpers::{check_source_to_test, stem_and_dir};
+use helpers::{check_source_to_test, duplicate_group_base, stem_and_dir};
 
 use super::RuleFinding;
 use crate::codebase::ts_source::{discover_files, relative_slash_path};
@@ -210,13 +210,6 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
     }
     findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
     Ok(findings)
-}
-
-fn duplicate_group_base(base: &str, group: DuplicateStemGroup) -> String {
-    match group {
-        DuplicateStemGroup::Exact => base.to_string(),
-        DuplicateStemGroup::FirstDotSegment => base.split('.').next().unwrap_or(base).to_string(),
-    }
 }
 
 #[cfg(test)]

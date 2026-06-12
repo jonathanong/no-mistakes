@@ -1,3 +1,4 @@
+use super::helpers::{source_dir_matches, split_dir_base};
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
