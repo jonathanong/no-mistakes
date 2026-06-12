@@ -1,9 +1,10 @@
-use super::helpers::{source_dir_matches, split_dir_base};
+use super::helpers::{source_dir_matches, source_info, split_dir_base};
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
+use std::collections::HashSet;
 use std::path::Path;
 
 fn fixture_root(name: &str) -> PathBuf {
@@ -231,8 +232,24 @@ fn helper_branches_cover_empty_dirs_missing_files_and_extension_normalization() 
         ..Default::default()
     };
 
-    assert!(source_extensions(&Options::default()).contains(".tsx"));
-    assert!(source_extensions(&opts).contains(".mts"));
+    assert!(source_extensions(&Options::default())
+        .iter()
+        .any(|extension| extension == ".tsx"));
+    assert!(source_extensions(&opts)
+        .iter()
+        .any(|extension| extension == ".mts"));
+    assert_eq!(
+        source_info(
+            "src/components/Button.mts",
+            &Options::default(),
+            None,
+            &source_extensions(&Options::default()),
+            &HashSet::new(),
+        )
+        .unwrap()
+        .stem,
+        "Button"
+    );
     assert!(!source_dir_matches("src/components", "", false));
     assert!(source_dir_matches("src/components", "src/components", true));
     assert!(source_dir_matches(

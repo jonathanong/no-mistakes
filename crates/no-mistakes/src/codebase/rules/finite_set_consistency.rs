@@ -57,7 +57,7 @@ pub(crate) fn check_with_files(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files)
+            scan(root, &opts, &files, &target_roots)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -65,13 +65,21 @@ pub(crate) fn check_with_files(
     Ok(findings)
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+fn scan(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    target_roots: &[PathBuf],
+) -> Result<Vec<RuleFinding>> {
     let mut sets = BTreeMap::new();
     for spec in &opts.sets {
         if spec.name.is_empty() {
             continue;
         }
-        sets.insert(spec.name.clone(), extract_set(root, spec, files)?);
+        sets.insert(
+            spec.name.clone(),
+            extract_set(root, spec, files, target_roots)?,
+        );
     }
 
     let mut findings = Vec::new();

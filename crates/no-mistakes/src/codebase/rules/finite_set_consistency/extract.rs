@@ -13,11 +13,17 @@ pub(super) struct ExtractedSet {
     pub(super) values: BTreeSet<String>,
 }
 
-pub(super) fn extract_set(root: &Path, spec: &SetSpec, files: &[PathBuf]) -> Result<ExtractedSet> {
+pub(super) fn extract_set(
+    root: &Path,
+    spec: &SetSpec,
+    files: &[PathBuf],
+    target_roots: &[PathBuf],
+) -> Result<ExtractedSet> {
     if spec.kind == "path-regex-capture" {
         return extract_path_regex_set(root, spec, files);
     }
-    let source = std::fs::read_to_string(root.join(&spec.file))?;
+    let path = resolve_spec_file(root, &spec.file, target_roots);
+    let source = std::fs::read_to_string(&path)?;
     let values = match spec.kind.as_str() {
         "ts-string-union" => extract_ts_string_union(&source, &spec.target),
         "ts-const-object-keys" => extract_ts_const_object_keys(&source, &spec.target),
@@ -28,9 +34,22 @@ pub(super) fn extract_set(root: &Path, spec: &SetSpec, files: &[PathBuf]) -> Res
         _ => BTreeSet::new(),
     };
     Ok(ExtractedSet {
-        file: spec.file.clone(),
+        file: relative_slash_path(root, &path),
         values,
     })
+}
+
+fn resolve_spec_file(root: &Path, file: &str, target_roots: &[PathBuf]) -> PathBuf {
+    let repo_path = root.join(file);
+    if repo_path.exists() {
+        return repo_path;
+    }
+    target_roots
+        .iter()
+        .filter(|target_root| *target_root != root)
+        .map(|target_root| target_root.join(file))
+        .find(|path| path.exists())
+        .unwrap_or(repo_path)
 }
 
 pub(super) fn extract_path_regex_set(

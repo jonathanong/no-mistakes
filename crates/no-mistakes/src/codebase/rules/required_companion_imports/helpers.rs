@@ -15,8 +15,8 @@ pub(super) struct SourceInfo {
     pub(super) import_path: String,
 }
 
-pub(super) fn source_extensions(opts: &Options) -> HashSet<String> {
-    if opts.source_extensions.is_empty() {
+pub(super) fn source_extensions(opts: &Options) -> Vec<String> {
+    let mut extensions: Vec<String> = if opts.source_extensions.is_empty() {
         TS_JS_EXTENSIONS
             .iter()
             .map(|ext| format!(".{ext}"))
@@ -32,14 +32,17 @@ pub(super) fn source_extensions(opts: &Options) -> HashSet<String> {
                 }
             })
             .collect()
-    }
+    };
+    extensions.sort_by(|left, right| right.len().cmp(&left.len()).then(left.cmp(right)));
+    extensions.dedup();
+    extensions
 }
 
 pub(super) fn source_info(
     rel: &str,
     opts: &Options,
     source_globs: Option<&GlobSet>,
-    extensions: &HashSet<String>,
+    extensions: &[String],
     exclude_basenames: &HashSet<&str>,
 ) -> Option<SourceInfo> {
     let extension = extensions

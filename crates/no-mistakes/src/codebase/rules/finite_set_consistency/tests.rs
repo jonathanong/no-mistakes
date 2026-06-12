@@ -6,7 +6,7 @@ use super::extract::{
 use super::object::matching_brace;
 use super::*;
 use crate::config::v2::{
-    schema::{RuleDef, RuleScope},
+    schema::{Project, RuleDef, RuleScope},
     NoMistakesConfig,
 };
 use std::collections::BTreeSet;
@@ -75,6 +75,43 @@ comparisons:
     assert!(findings
         .iter()
         .any(|finding| finding.message.contains("routeType contains `settings`")));
+}
+
+#[test]
+fn project_scoped_set_files_resolve_against_project_root() {
+    let root = fixture_root("project");
+    let files = vec![
+        root.join("packages/app/src/types.ts"),
+        root.join("packages/app/src/routes/users.ts"),
+    ];
+    let mut config = config(
+        r#"
+sets:
+  - name: routeType
+    file: src/types.ts
+    kind: ts-string-union
+    target: RouteName
+  - name: routeFiles
+    kind: path-regex-capture
+    pattern: '^packages/app/src/routes/(?<value>[^/]+)\.ts$'
+comparisons:
+  - left: routeType
+    right: routeFiles
+"#,
+    );
+    config.projects.insert(
+        "app".to_string(),
+        Project {
+            root: Some("packages/app".to_string()),
+            ..Default::default()
+        },
+    );
+    config.rules[0].scope = None;
+    config.rules[0].projects = vec!["app".to_string()];
+
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 }
 
 #[test]
@@ -150,6 +187,17 @@ CREATE TYPE route_name AS ENUM ('users', 'billing');
     assert_eq!(
         extract_sql_enum(source, "route_name"),
         BTreeSet::from(["billing".to_string(), "users".to_string()])
+    );
+}
+
+#[test]
+fn sql_enum_extraction_preserves_comment_token_boundaries() {
+    assert_eq!(
+        extract_sql_enum(
+            "CREATE/* comment */TYPE route_name AS ENUM ('users')",
+            "route_name"
+        ),
+        BTreeSet::from(["users".to_string()])
     );
 }
 
@@ -248,6 +296,20 @@ const ROUTE_META = {
 }
 
 #[test]
+fn object_extraction_ignores_equals_in_type_annotations() {
+    let source = r#"
+const ROUTE_META: Record<string, () => { slug: string }> = {
+  users: { slug: "users" },
+};
+"#;
+
+    assert_eq!(
+        extract_ts_const_object_keys(source, "ROUTE_META"),
+        BTreeSet::from(["users".to_string()])
+    );
+}
+
+#[test]
 fn object_key_extraction_uses_only_top_level_keys() {
     let source = r#"
 const ROUTE_META = {
@@ -304,6 +366,25 @@ const ROUTE_META = {
 
     assert_eq!(
         extract_ts_const_object_keys(source, "ROUTE_META"),
+        BTreeSet::from(["billing".to_string(), "users".to_string()])
+    );
+}
+
+#[test]
+fn object_extraction_ignores_regex_literal_braces() {
+    let source = r#"
+const ROUTE_META = {
+  users: { pattern: /}/, slug: "users" },
+  billing: { pattern: /[{}]/, slug: "billing" },
+};
+"#;
+
+    assert_eq!(
+        extract_ts_const_object_keys(source, "ROUTE_META"),
+        BTreeSet::from(["billing".to_string(), "users".to_string()])
+    );
+    assert_eq!(
+        extract_ts_const_object_property(source, "ROUTE_META", "slug"),
         BTreeSet::from(["billing".to_string(), "users".to_string()])
     );
 }
@@ -525,7 +606,7 @@ fn extract_set_supports_const_object_property_specs() {
         property: "slug".to_string(),
         ..Default::default()
     };
-    let extracted = extract_set(&root, &spec, &[]).unwrap();
+    let extracted = extract_set(&root, &spec, &[], &[]).unwrap();
 
     assert!(extracted.values.contains("users"));
 }

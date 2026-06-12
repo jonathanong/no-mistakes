@@ -1,73 +1,19 @@
 use super::comments::strip_comments;
+mod scanner;
+pub(super) use scanner::matching_brace;
+use scanner::{assignment_index, top_level_value_end};
+
 use regex::Regex;
 use std::collections::BTreeSet;
 
 pub(super) fn const_object_body(source: &str, target: &str) -> Option<String> {
     let source = strip_comments(source);
-    let pattern = format!(r#"\bconst\s+{}\b\s*(?::[^=]+)?="#, regex::escape(target));
+    let pattern = format!(r#"\bconst\s+{}\b"#, regex::escape(target));
     let mat = Regex::new(&pattern).ok()?.find(&source)?;
-    let open = source[mat.end()..].find('{')? + mat.end();
+    let assignment = assignment_index(&source, mat.end())?;
+    let open = source[assignment..].find('{')? + assignment;
     let close = matching_brace(&source, open)?;
     source.get(open + 1..close).map(str::to_string)
-}
-
-pub(super) fn matching_brace(source: &str, open: usize) -> Option<usize> {
-    let mut depth = 0usize;
-    let mut quote = None;
-    let mut escaped = false;
-    let mut iter = source
-        .char_indices()
-        .skip_while(|(idx, _)| *idx < open)
-        .peekable();
-    while let Some((idx, ch)) = iter.next() {
-        if let Some(active_quote) = quote {
-            if escaped {
-                escaped = false;
-            } else if ch == '\\' {
-                escaped = true;
-            } else if ch == active_quote {
-                quote = None;
-            }
-            continue;
-        }
-        if ch == '/' {
-            match iter.peek().copied() {
-                Some((_, '/')) => {
-                    iter.next();
-                    for (_, comment_ch) in iter.by_ref() {
-                        if comment_ch == '\n' {
-                            break;
-                        }
-                    }
-                    continue;
-                }
-                Some((_, '*')) => {
-                    iter.next();
-                    let mut previous = '\0';
-                    for (_, comment_ch) in iter.by_ref() {
-                        if previous == '*' && comment_ch == '/' {
-                            break;
-                        }
-                        previous = comment_ch;
-                    }
-                    continue;
-                }
-                _ => {}
-            }
-        }
-        match ch {
-            '"' | '\'' | '`' => quote = Some(ch),
-            '{' => depth += 1,
-            '}' => {
-                depth = depth.saturating_sub(1);
-                if depth == 0 {
-                    return Some(idx);
-                }
-            }
-            _ => {}
-        }
-    }
-    None
 }
 
 pub(super) fn top_level_object_keys(body: &str) -> BTreeSet<String> {
@@ -174,30 +120,4 @@ fn quoted_string_literal(value: &str) -> Option<String> {
     }
     let end = value[1..].find(quote)? + 1;
     Some(value[1..end].to_string())
-}
-
-fn top_level_value_end(source: &str) -> usize {
-    let mut depth = 0usize;
-    let mut quote = None;
-    let mut escaped = false;
-    for (idx, ch) in source.char_indices() {
-        if let Some(active_quote) = quote {
-            if escaped {
-                escaped = false;
-            } else if ch == '\\' {
-                escaped = true;
-            } else if ch == active_quote {
-                quote = None;
-            }
-            continue;
-        }
-        match ch {
-            '"' | '\'' | '`' => quote = Some(ch),
-            '{' | '[' | '(' => depth += 1,
-            '}' | ']' | ')' => depth = depth.saturating_sub(1),
-            ',' if depth == 0 => return idx,
-            _ => {}
-        }
-    }
-    source.len()
 }

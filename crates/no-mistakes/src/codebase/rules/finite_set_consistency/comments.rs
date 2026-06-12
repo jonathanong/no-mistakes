@@ -76,6 +76,7 @@ pub(super) fn strip_sql_comments(source: &str) -> String {
         }
         if ch == '-' && iter.peek() == Some(&'-') {
             iter.next();
+            push_comment_separator(&mut stripped);
             for comment_ch in iter.by_ref() {
                 if comment_ch == '\n' {
                     stripped.push('\n');
@@ -86,6 +87,7 @@ pub(super) fn strip_sql_comments(source: &str) -> String {
         }
         if ch == '/' && iter.peek() == Some(&'*') {
             iter.next();
+            push_comment_separator(&mut stripped);
             let mut previous = '\0';
             for comment_ch in iter.by_ref() {
                 if comment_ch == '\n' {
@@ -101,4 +103,10 @@ pub(super) fn strip_sql_comments(source: &str) -> String {
         stripped.push(ch);
     }
     stripped
+}
+
+fn push_comment_separator(stripped: &mut String) {
+    if !stripped.ends_with(char::is_whitespace) {
+        stripped.push(' ');
+    }
 }
