@@ -1,9 +1,11 @@
+mod projects;
+
 use super::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use crate::integration_tests::{config as integration_config, project_config, types::Framework};
 use anyhow::Result;
-use globset::GlobSet;
+use projects::{build_project_globs, matching_projects};
 use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
@@ -73,11 +75,22 @@ fn scan(
     opts: &Options,
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let mut projects = project_config::load_projects(
-        root,
-        Framework::Vitest,
-        config.tests.vitest.configs.as_ref(),
-    )?;
+    let needs_config_projects = config.tests.vitest.projects.is_empty()
+        || config
+            .tests
+            .vitest
+            .projects
+            .values()
+            .any(|policy| policy.include.is_empty());
+    let mut projects = if needs_config_projects {
+        project_config::load_projects(
+            root,
+            Framework::Vitest,
+            config.tests.vitest.configs.as_ref(),
+        )?
+    } else {
+        Vec::new()
+    };
     for (project_name, policy) in &config.tests.vitest.projects {
         if let Some(project) = integration_config::configured_project(root, project_name, policy) {
             projects.push(project);
@@ -87,19 +100,7 @@ fn scan(
         return Ok(Vec::new());
     }
 
-    let project_globs = projects
-        .iter()
-        .map(|project| {
-            Ok((
-                project
-                    .policy_name
-                    .clone()
-                    .unwrap_or_else(|| "default".to_string()),
-                project_config::build_globset(&project.include)?,
-                project_config::build_globset(&project.exclude)?,
-            ))
-        })
-        .collect::<Result<Vec<_>>>()?;
+    let project_globs = build_project_globs(&projects)?;
     let test_extensions = test_extensions(opts);
 
     let mut findings = Vec::new();
@@ -158,19 +159,12 @@ fn is_test_file(rel: &str, test_extensions: &[&str], default_extensions: bool) -
 }
 
 fn in_scope(rel: &str, scopes: &[String]) -> bool {
-    scopes.is_empty()
-        || scopes.iter().any(|scope| {
-            let scope = scope.trim_matches('/');
-            scope.is_empty() || rel == scope || rel.starts_with(&format!("{scope}/"))
-        })
+    scopes.is_empty() || scopes.iter().any(|scope| rel_in_scope(rel, scope))
 }
 
-fn matching_projects(rel: &str, projects: &[(String, GlobSet, GlobSet)]) -> Vec<String> {
-    projects
-        .iter()
-        .filter(|(_, include, exclude)| include.is_match(rel) && !exclude.is_match(rel))
-        .map(|(name, _, _)| name.clone())
-        .collect()
+fn rel_in_scope(rel: &str, scope: &str) -> bool {
+    let scope = scope.trim_matches('/');
+    scope.is_empty() || rel == scope || rel.starts_with(&format!("{scope}/"))
 }
 
 #[cfg(test)]

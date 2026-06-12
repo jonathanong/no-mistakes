@@ -76,7 +76,7 @@ fn dependency_type_filter_can_ignore_dev_dependency_cycles() {
 }
 
 #[test]
-fn dense_cycle_graph_reports_one_cycle_per_component() {
+fn dense_cycle_graph_reports_bounded_cycles_per_cyclic_edge() {
     let mut graph = BTreeMap::new();
     graph.insert(
         "a".to_string(),
@@ -93,8 +93,30 @@ fn dense_cycle_graph_reports_one_cycle_per_component() {
 
     let cycles = scc::cycle_keys(&graph);
 
-    assert_eq!(cycles.len(), 1);
-    assert!(cycles.iter().next().unwrap().starts_with('a'));
+    assert_eq!(
+        cycles,
+        BTreeSet::from([
+            "a -> b".to_string(),
+            "a -> c".to_string(),
+            "b -> c".to_string(),
+        ])
+    );
+}
+
+#[test]
+fn overlapping_component_reports_cycles_beyond_an_allowlisted_pair() {
+    let mut graph = BTreeMap::new();
+    graph.insert("a".to_string(), BTreeSet::from(["b".to_string()]));
+    graph.insert(
+        "b".to_string(),
+        BTreeSet::from(["a".to_string(), "c".to_string()]),
+    );
+    graph.insert("c".to_string(), BTreeSet::from(["b".to_string()]));
+
+    let mut cycles = scc::cycle_keys(&graph);
+    cycles.remove("a -> b");
+
+    assert_eq!(cycles, BTreeSet::from(["b -> c".to_string()]));
 }
 
 #[test]

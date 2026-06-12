@@ -13,7 +13,7 @@ pub(crate) fn matching_files(
     }
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
-        builder.add(Glob::new(pattern)?);
+        builder.add(Glob::new(pattern.trim_start_matches("./"))?);
     }
     let globs = builder.build()?;
     Ok(files
@@ -22,3 +22,6 @@ pub(crate) fn matching_files(
         .cloned()
         .collect())
 }
+
+#[cfg(test)]
+mod tests;

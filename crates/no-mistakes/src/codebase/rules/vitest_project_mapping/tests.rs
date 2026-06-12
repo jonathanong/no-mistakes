@@ -141,6 +141,27 @@ include: [src/custom.spec.ts]
 }
 
 #[test]
+fn explicit_projects_do_not_require_missing_vitest_configs() {
+    let root = fixture_root("fixture");
+    let mut config = load_config(&root);
+    config.tests.vitest.configs = Some(serde_yaml::from_str("missing.config.ts").unwrap());
+    config.tests.vitest.projects.insert(
+        "custom".to_string(),
+        serde_yaml::from_str(
+            r#"
+include: [src/custom.spec.ts]
+"#,
+        )
+        .unwrap(),
+    );
+    config.rules[0].options = serde_yaml::from_str("testExtensions: [.spec.ts]\n").unwrap();
+    let files = vec![root.join("src/custom.spec.ts")];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn missing_config_paths_surface_load_errors() {
     let root = fixture_root("fixture");
     let mut config = load_config(&root);
@@ -148,4 +169,57 @@ fn missing_config_paths_surface_load_errors() {
     let result = check_with_files(&root, &config, &[root.join("src/a.test.ts")]);
 
     assert!(result.is_err());
+}
+
+#[test]
+fn matching_projects_prefers_deepest_config_scope() {
+    let projects = vec![
+        projects::ProjectGlob {
+            name: "root".to_string(),
+            explicit: false,
+            scope: None,
+            include: project_config::build_globset(&["**/*.test.ts".to_string()]).unwrap(),
+            exclude: project_config::build_globset(&[]).unwrap(),
+        },
+        projects::ProjectGlob {
+            name: "app".to_string(),
+            explicit: false,
+            scope: Some("packages/app".to_string()),
+            include: project_config::build_globset(&["packages/app/**/*.test.ts".to_string()])
+                .unwrap(),
+            exclude: project_config::build_globset(&[]).unwrap(),
+        },
+    ];
+
+    assert_eq!(
+        matching_projects("packages/app/routes.test.ts", &projects),
+        vec!["app".to_string()]
+    );
+}
+
+#[test]
+fn matching_projects_keeps_explicit_projects_with_scoped_configs() {
+    let projects = vec![
+        projects::ProjectGlob {
+            name: "explicit".to_string(),
+            explicit: true,
+            scope: None,
+            include: project_config::build_globset(&["packages/app/**/*.test.ts".to_string()])
+                .unwrap(),
+            exclude: project_config::build_globset(&[]).unwrap(),
+        },
+        projects::ProjectGlob {
+            name: "app".to_string(),
+            explicit: false,
+            scope: Some("packages/app".to_string()),
+            include: project_config::build_globset(&["packages/app/**/*.test.ts".to_string()])
+                .unwrap(),
+            exclude: project_config::build_globset(&[]).unwrap(),
+        },
+    ];
+
+    assert_eq!(
+        matching_projects("packages/app/routes.test.ts", &projects),
+        vec!["explicit".to_string(), "app".to_string()]
+    );
 }
