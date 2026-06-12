@@ -68,7 +68,7 @@ pub(crate) fn check_with_files(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, config, &opts, &files)
+            scan(root, config, &opts, &files, &target_roots)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -81,6 +81,7 @@ fn scan(
     config: &NoMistakesConfig,
     opts: &Options,
     files: &[PathBuf],
+    target_roots: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
     let needs_config_projects = config.tests.vitest.configs.is_none()
         || config.tests.vitest.projects.is_empty()
@@ -115,8 +116,9 @@ fn scan(
     let mut findings = Vec::new();
     for path in files {
         let rel = relative_slash_path(root, path);
+        let match_rels = relative_paths_for_matching(root, path, target_roots);
         if !is_test_file(&rel, &test_extensions, opts.test_extensions.is_empty())
-            || !in_scope(&rel, &opts.scopes)
+            || !match_rels.iter().any(|rel| in_scope(rel, &opts.scopes))
         {
             continue;
         }
@@ -188,6 +190,19 @@ pub(super) fn normalize_scope(scope: &str) -> String {
         }
     }
     parts.join("/")
+}
+
+fn relative_paths_for_matching(root: &Path, file: &Path, target_roots: &[PathBuf]) -> Vec<String> {
+    let mut paths = target_roots
+        .iter()
+        .filter(|target_root| file.starts_with(target_root))
+        .map(|target_root| relative_slash_path(target_root, file))
+        .collect::<Vec<_>>();
+    let repo_rel = relative_slash_path(root, file);
+    if !paths.contains(&repo_rel) {
+        paths.push(repo_rel);
+    }
+    paths
 }
 
 #[cfg(test)]

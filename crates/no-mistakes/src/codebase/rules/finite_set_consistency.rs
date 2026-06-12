@@ -2,6 +2,7 @@ mod comments;
 mod extract;
 mod literals;
 mod object;
+mod ts_union;
 
 use super::RuleFinding;
 use crate::config::v2::NoMistakesConfig;

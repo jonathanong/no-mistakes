@@ -27,15 +27,16 @@ pub fn load_workspace_globs(root: &Path) -> Result<Vec<String>> {
 fn build_glob_set(glob_strs: &[String], excluded: bool) -> globset::GlobSet {
     let mut builder = GlobSetBuilder::new();
     for pattern in glob_strs {
+        let normalized = normalize_workspace_glob(pattern);
         let pattern = if excluded {
-            let Some(stripped) = pattern.strip_prefix('!') else {
+            let Some(stripped) = normalized.strip_prefix('!') else {
                 continue;
             };
             stripped
-        } else if pattern.starts_with('!') {
+        } else if normalized.starts_with('!') {
             continue;
         } else {
-            pattern.as_str()
+            normalized.as_str()
         };
         let Ok(glob) = Glob::new(pattern) else {
             continue;
@@ -57,6 +58,7 @@ fn expand_workspace_globs(root: &Path, glob_strs: &[String]) -> Vec<PathBuf> {
         .iter()
         .filter(|pattern| !pattern.starts_with('!'))
         .map(|pattern| {
+            let pattern = normalize_workspace_glob(pattern);
             if pattern.contains("**") {
                 usize::MAX
             } else {
@@ -83,6 +85,28 @@ fn expand_workspace_globs(root: &Path, glob_strs: &[String]) -> Vec<PathBuf> {
     }
 
     dirs
+}
+
+fn normalize_workspace_glob(pattern: &str) -> String {
+    let (negated, pattern) = pattern
+        .strip_prefix('!')
+        .map_or((false, pattern), |stripped| (true, stripped));
+    let mut parts = Vec::new();
+    for part in pattern.split('/') {
+        match part {
+            "" | "." => {}
+            ".." => {
+                parts.pop();
+            }
+            _ => parts.push(part),
+        }
+    }
+    let normalized = parts.join("/");
+    if negated {
+        format!("!{normalized}")
+    } else {
+        normalized
+    }
 }
 
 fn expand_workspace_globs_from_files(

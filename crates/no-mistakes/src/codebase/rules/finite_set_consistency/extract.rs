@@ -1,6 +1,7 @@
 use super::comments::{strip_comments, strip_sql_comments};
 use super::literals::quoted_strings;
 use super::object::{const_object_body, top_level_object_keys, top_level_property_values};
+use super::ts_union;
 use super::SetSpec;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
@@ -101,7 +102,7 @@ pub(super) fn extract_ts_string_union(source: &str, target: &str) -> BTreeSet<St
     else {
         return BTreeSet::new();
     };
-    quoted_strings(&strip_comments(ts_union_body(&source[mat.end()..])))
+    quoted_strings(&strip_comments(ts_union::body(&source[mat.end()..])))
 }
 
 pub(super) fn extract_ts_const_object_keys(source: &str, target: &str) -> BTreeSet<String> {
@@ -139,45 +140,6 @@ fn capture_first(source: &str, pattern: &str) -> Option<String> {
         .captures(source)?
         .get(1)
         .map(|capture| capture.as_str().to_string())
-}
-
-fn ts_union_body(source: &str) -> &str {
-    let mut end = source.len();
-    let mut offset = 0usize;
-    for line in source.lines() {
-        let trimmed = line.trim_start();
-        if trimmed.is_empty() {
-            offset += line.len() + 1;
-            continue;
-        }
-        if offset > 0
-            && matches!(
-                trimmed.split_whitespace().next(),
-                Some(
-                    "export"
-                        | "import"
-                        | "declare"
-                        | "const"
-                        | "let"
-                        | "var"
-                        | "type"
-                        | "interface"
-                        | "class"
-                        | "enum"
-                        | "function"
-                )
-            )
-        {
-            end = offset.saturating_sub(1);
-            break;
-        }
-        if let Some(index) = line.find(';') {
-            end = offset + index;
-            break;
-        }
-        offset += line.len() + 1;
-    }
-    &source[..end]
 }
 
 trait EmptyStringExt {

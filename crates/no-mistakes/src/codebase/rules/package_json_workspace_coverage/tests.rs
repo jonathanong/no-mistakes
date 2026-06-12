@@ -127,7 +127,10 @@ fn covered_unnamed_packages_pass_when_names_are_not_required() {
 
 #[test]
 fn workspace_globset_builder_splits_includes_and_excludes() {
-    let patterns = vec!["packages/*".to_string(), "!packages/internal".to_string()];
+    let patterns = vec![
+        "./packages/*".to_string(),
+        "!./packages/internal".to_string(),
+    ];
     let include = build_workspace_globset(&patterns, false).unwrap();
     let exclude = build_workspace_globset(&patterns, true).unwrap();
 

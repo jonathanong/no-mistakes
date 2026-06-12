@@ -207,6 +207,31 @@ fn configured_project_globs_escape_literal_config_roots() {
 }
 
 #[test]
+fn project_scoped_rules_match_scopes_against_project_relative_paths() {
+    let root = fixture_root("fixture");
+    let mut config = load_config(&root);
+    config.projects.insert(
+        "app".to_string(),
+        crate::config::v2::schema::Project {
+            root: Some("packages/app".to_string()),
+            ..Default::default()
+        },
+    );
+    config.rules[0].projects = vec!["app".to_string()];
+    config.rules[0].options = serde_yaml::from_str("scopes: [src]\n").unwrap();
+    config.tests.vitest.configs = None;
+    config.tests.vitest.projects.insert(
+        "unit".to_string(),
+        serde_yaml::from_str("include: [packages/app/src/a.test.ts]\n").unwrap(),
+    );
+    let files = vec![root.join("packages/app/src/unmapped.test.ts")];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "packages/app/src/unmapped.test.ts");
+}
+
+#[test]
 fn configured_projects_extend_auto_discovered_vitest_configs() {
     let root = fixture_root("fixture");
     let mut config = load_config(&root);

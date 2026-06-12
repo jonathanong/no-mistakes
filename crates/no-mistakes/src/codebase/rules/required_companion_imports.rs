@@ -80,9 +80,14 @@ fn scan(
             )
         })
         .collect();
-    let rel_candidate_files: Vec<String> = candidate_files
+    let rel_candidate_files: Vec<(String, Vec<String>)> = candidate_files
         .iter()
-        .map(|path| relative_slash_path(root, path))
+        .map(|path| {
+            (
+                relative_slash_path(root, path),
+                relative_paths_for_matching(root, path, target_roots),
+            )
+        })
         .collect();
 
     let sources = rel_source_files
@@ -108,7 +113,8 @@ fn scan(
         let companion_globs = build_companion_globset(opts, source)?;
         let companions = rel_candidate_files
             .iter()
-            .filter(|rel| companion_globs.is_match(rel.as_str()))
+            .filter(|(_, rels)| rels.iter().any(|rel| companion_globs.is_match(rel)))
+            .map(|(rel, _)| rel)
             .collect::<Vec<_>>();
         let expected_specifier = render_template(&opts.specifier_template, source);
         if companions.is_empty() {
@@ -150,7 +156,7 @@ fn scan(
 fn companion_files(
     opts: &Options,
     sources: &[helpers::SourceInfo],
-    rel_files: &[String],
+    rel_files: &[(String, Vec<String>)],
 ) -> Result<HashSet<String>> {
     let mut companions = HashSet::new();
     for source in sources {
@@ -158,8 +164,8 @@ fn companion_files(
         companions.extend(
             rel_files
                 .iter()
-                .filter(|rel| globs.is_match(rel.as_str()))
-                .cloned(),
+                .filter(|(_, rels)| rels.iter().any(|rel| globs.is_match(rel)))
+                .map(|(rel, _)| rel.clone()),
         );
     }
     Ok(companions)

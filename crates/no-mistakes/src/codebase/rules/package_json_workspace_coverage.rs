@@ -127,7 +127,7 @@ fn build_workspace_globset(patterns: &[String], excluded: bool) -> Result<GlobSe
         } else {
             pattern.as_str()
         };
-        builder.add(Glob::new(pattern)?);
+        builder.add(Glob::new(&normalize_relative_path(pattern))?);
     }
     Ok(builder.build()?)
 }
