@@ -424,6 +424,32 @@ fn matching_brace_reports_unclosed_objects() {
 }
 
 #[test]
+fn matching_brace_handles_comments_strings_and_escapes() {
+    assert_eq!(
+        matching_brace(r#"const x = { value: "not } yet", done: true };"#, 10),
+        Some(43)
+    );
+    assert_eq!(
+        matching_brace(r#"const x = { value: 'escaped \' }', done: true };"#, 10),
+        Some(46)
+    );
+    assert_eq!(
+        matching_brace("const x = { value: `template }`, done: true };", 10),
+        Some(44)
+    );
+    assert_eq!(
+        matching_brace("const x = { // } comment\n done: true };", 10),
+        Some(37)
+    );
+    assert_eq!(
+        matching_brace("const x = { /* } comment */ done: true };", 10),
+        Some(39)
+    );
+    assert_eq!(matching_brace("const x = { value: a / b };", 10), Some(25));
+    assert_eq!(matching_brace("const x = { /* unterminated", 10), None);
+}
+
+#[test]
 fn path_regex_set_uses_spec_file_when_present() {
     let root = fixture_root("fixture");
     let files = vec![root.join("src/routes/users.ts")];
