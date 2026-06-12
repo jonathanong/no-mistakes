@@ -50,6 +50,9 @@ const ROUTE_META = {
 fn object_extraction_ignores_matching_declarations_inside_literals() {
     let source = r#"
 const docs = "const ROUTE_META = { legacy: { slug: 'legacy' } }";
+const singleDocs = 'const ROUTE_META = { single: { slug: "single" } }';
+const templateDocs = `const ROUTE_META = { template: { slug: "template" } }`;
+const escapedDocs = "not closed yet \" const ROUTE_META = { escaped: { slug: 'escaped' } }";
 const ROUTE_META = {
   users: { slug: "users" },
 };
