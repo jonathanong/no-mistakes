@@ -132,7 +132,8 @@ fn reference_exists(
     if opts.allow_globs
         && (reference.contains('*') || reference.contains('?') || reference.contains('['))
     {
-        return Glob::new(reference)
+        let pattern = reference_pattern(root, config_file, opts, reference);
+        return Glob::new(&pattern)
             .map(|glob| {
                 let matcher = glob.compile_matcher();
                 rel_files.iter().any(|rel| matcher.is_match(rel))
@@ -145,6 +146,21 @@ fn reference_exists(
         config_file.parent().unwrap_or(root).to_path_buf()
     };
     base.join(reference).exists()
+}
+
+fn reference_pattern(root: &Path, config_file: &Path, opts: &Options, reference: &str) -> String {
+    if opts.base_dir == BaseDir::Root {
+        return reference.to_string();
+    }
+    let Some(parent) = config_file.parent() else {
+        return reference.to_string();
+    };
+    let dir = relative_slash_path(root, parent);
+    if dir.is_empty() {
+        reference.to_string()
+    } else {
+        format!("{dir}/{reference}")
+    }
 }
 
 #[cfg(test)]

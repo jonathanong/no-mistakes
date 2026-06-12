@@ -2,4 +2,4 @@ paths:
   required:
     - existing.json
     - missing.json
-  glob: src/*.test.ts
+  glob: "*.json"

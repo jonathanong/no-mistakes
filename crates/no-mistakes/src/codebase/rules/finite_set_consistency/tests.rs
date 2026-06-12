@@ -1,7 +1,8 @@
 use super::extract::{
     extract_path_regex_set, extract_set, extract_sql_enum, extract_ts_const_object_keys,
-    extract_ts_const_object_property, extract_ts_string_union, matching_brace,
+    extract_ts_const_object_property, extract_ts_string_union,
 };
+use super::object::matching_brace;
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -126,6 +127,14 @@ fn extraction_helpers_return_empty_sets_when_targets_are_missing() {
 }
 
 #[test]
+fn string_union_extraction_does_not_require_semicolons() {
+    assert_eq!(
+        extract_ts_string_union("type RouteName = 'users' | 'billing'\n", "RouteName"),
+        BTreeSet::from(["billing".to_string(), "users".to_string()])
+    );
+}
+
+#[test]
 fn object_property_extraction_handles_nested_quoted_braces() {
     let source = r#"
 const ROUTE_META = {
@@ -137,6 +146,34 @@ const ROUTE_META = {
     assert_eq!(
         extract_ts_const_object_property(source, "ROUTE_META", "slug"),
         BTreeSet::from(["billing".to_string(), "users".to_string()])
+    );
+}
+
+#[test]
+fn object_key_extraction_uses_only_top_level_keys() {
+    let source = r#"
+const ROUTE_META = {
+  users: { slug: "users" },
+};
+"#;
+
+    assert_eq!(
+        extract_ts_const_object_keys(source, "ROUTE_META"),
+        BTreeSet::from(["users".to_string()])
+    );
+}
+
+#[test]
+fn object_property_extraction_requires_whole_key_match() {
+    let source = r#"
+const ROUTE_META = {
+  users: { grid: "compact", id: "users" },
+};
+"#;
+
+    assert_eq!(
+        extract_ts_const_object_property(source, "ROUTE_META", "id"),
+        BTreeSet::from(["users".to_string()])
     );
 }
 

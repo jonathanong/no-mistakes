@@ -10,7 +10,14 @@ use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "vitest-project-mapping";
 
-const DEFAULT_TEST_EXTENSIONS: &[&str] = &[".test.mts", ".test.ts", ".test.tsx"];
+const DEFAULT_TEST_EXTENSIONS: &[&str] = &[
+    ".test.mts",
+    ".test.ts",
+    ".test.tsx",
+    ".spec.mts",
+    ".spec.ts",
+    ".spec.tsx",
+];
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]

@@ -43,7 +43,7 @@ fn requires_companion_file_importing_rendered_specifier() {
 sourceDirs: [src/components]
 directChildOnly: true
 sourceExtensions: [.tsx]
-excludeBasenames: [Internal.tsx, Button.stories.tsx, Card.stories.tsx]
+excludeBasenames: [Internal.tsx]
 companionGlobs: ["{sourceDir}/{sourceStem}.stories.tsx"]
 specifierTemplate: "@/components/{sourceStem}"
 stripSourcePrefix: src/
@@ -56,6 +56,29 @@ stripSourcePrefix: src/
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].file, "src/components/Card.tsx");
     assert!(findings[0].message.contains("@/components/Card"));
+}
+
+#[test]
+fn source_names_are_escaped_before_building_companion_globs() {
+    let root = fixture_root("fixture");
+    let files = vec![
+        root.join("src/components/[id].tsx"),
+        root.join("src/components/[id].stories.tsx"),
+    ];
+    let findings = check_with_files(
+        &root,
+        &config(
+            r#"
+sourceExtensions: [.tsx]
+companionGlobs: ["{sourceDir}/{sourceStem}.stories.tsx"]
+specifierTemplate: "@/components/{sourceStem}"
+"#,
+        ),
+        &files,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 }
 
 #[test]

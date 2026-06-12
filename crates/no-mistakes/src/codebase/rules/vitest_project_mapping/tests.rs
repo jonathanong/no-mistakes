@@ -44,6 +44,17 @@ fn reports_unmapped_and_ambiguous_vitest_tests() {
 }
 
 #[test]
+fn default_extensions_include_spec_files() {
+    let root = fixture_root("fixture");
+    let config = load_config(&root);
+    let files = vec![root.join("src/unmapped.spec.ts")];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "src/unmapped.spec.ts");
+}
+
+#[test]
 fn scopes_can_limit_checked_test_candidates() {
     let root = fixture_root("fixture");
     let mut config = load_config(&root);

@@ -69,22 +69,31 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
         .map(|path| relative_slash_path(root, path))
         .collect();
 
+    let sources = rel_files
+        .iter()
+        .filter_map(|rel| {
+            source_info(
+                rel,
+                opts,
+                source_globs.as_ref(),
+                &extensions,
+                &exclude_basenames,
+            )
+        })
+        .collect::<Vec<_>>();
+    let companion_files = companion_files(opts, &sources, &rel_files)?;
+
     let mut findings = Vec::new();
-    for source in rel_files.iter().filter_map(|rel| {
-        source_info(
-            rel,
-            opts,
-            source_globs.as_ref(),
-            &extensions,
-            &exclude_basenames,
-        )
-    }) {
-        let companion_globs = build_companion_globset(opts, &source)?;
+    for source in sources
+        .iter()
+        .filter(|source| !companion_files.contains(&source.rel))
+    {
+        let companion_globs = build_companion_globset(opts, source)?;
         let companions = rel_files
             .iter()
             .filter(|rel| companion_globs.is_match(rel.as_str()))
             .collect::<Vec<_>>();
-        let expected_specifier = render_template(&opts.specifier_template, &source);
+        let expected_specifier = render_template(&opts.specifier_template, source);
         if companions.is_empty() {
             findings.push(RuleFinding {
                 rule: RULE_ID.to_string(),
@@ -119,6 +128,24 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
     }
     findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
     Ok(findings)
+}
+
+fn companion_files(
+    opts: &Options,
+    sources: &[helpers::SourceInfo],
+    rel_files: &[String],
+) -> Result<HashSet<String>> {
+    let mut companions = HashSet::new();
+    for source in sources {
+        let globs = build_companion_globset(opts, source)?;
+        companions.extend(
+            rel_files
+                .iter()
+                .filter(|rel| globs.is_match(rel.as_str()))
+                .cloned(),
+        );
+    }
+    Ok(companions)
 }
 
 #[cfg(test)]

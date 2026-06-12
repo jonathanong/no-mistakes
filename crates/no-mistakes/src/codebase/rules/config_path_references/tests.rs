@@ -50,6 +50,24 @@ allowGlobs: true
 }
 
 #[test]
+fn glob_references_default_to_config_file_directory() {
+    let root = fixture_root("fixture");
+    let opts = Options {
+        allow_globs: true,
+        ..Default::default()
+    };
+    let rel_files = vec!["config/existing.json".to_string()];
+
+    assert!(reference_exists(
+        &root,
+        &root.join("config/app.yml"),
+        &opts,
+        "*.json",
+        &rel_files
+    ));
+}
+
+#[test]
 fn ignores_unreadable_or_invalid_config_files() {
     let root = fixture_root("fixture");
     let files = vec![root.join("config"), root.join("config/invalid.yml")];

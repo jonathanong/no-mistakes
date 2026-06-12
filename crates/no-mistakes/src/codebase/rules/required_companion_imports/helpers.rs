@@ -117,9 +117,18 @@ pub(super) fn build_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
 pub(super) fn build_companion_globset(opts: &Options, source: &SourceInfo) -> Result<GlobSet> {
     let mut builder = GlobSetBuilder::new();
     for pattern in &opts.companion_globs {
-        builder.add(Glob::new(&render_template(pattern, source))?);
+        builder.add(Glob::new(&render_glob_template(pattern, source))?);
     }
     Ok(builder.build()?)
+}
+
+fn render_glob_template(template: &str, source: &SourceInfo) -> String {
+    template
+        .replace("{sourcePath}", &glob_escape_literal(&source.import_path))
+        .replace("{sourceRel}", &glob_escape_literal(&source.rel))
+        .replace("{sourceDir}", &glob_escape_literal(&source.dir))
+        .replace("{sourceStem}", &glob_escape_literal(&source.stem))
+        .replace("{sourceBase}", &glob_escape_literal(&source.base))
 }
 
 pub(super) fn render_template(template: &str, source: &SourceInfo) -> String {
@@ -139,4 +148,17 @@ pub(super) fn file_imports(root: &Path, rel: &str, expected_specifier: &str) -> 
         || source.contains(&format!("from '{expected_specifier}'"))
         || source.contains(&format!("import \"{expected_specifier}\""))
         || source.contains(&format!("import '{expected_specifier}'"))
+}
+
+fn glob_escape_literal(value: &str) -> String {
+    value
+        .chars()
+        .flat_map(|ch| {
+            if matches!(ch, '*' | '?' | '[' | ']' | '{' | '}' | '\\') {
+                vec!['\\', ch]
+            } else {
+                vec![ch]
+            }
+        })
+        .collect()
 }

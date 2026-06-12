@@ -1,4 +1,5 @@
 mod extract;
+mod object;
 
 use super::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
