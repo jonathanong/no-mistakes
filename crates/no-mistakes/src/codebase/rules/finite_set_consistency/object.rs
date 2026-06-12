@@ -56,14 +56,35 @@ fn take_key(source: &str) -> Option<(String, &str)> {
     let mut chars = source.char_indices();
     let (_, first) = chars.next()?;
     if first == '"' || first == '\'' {
-        let end = source[1..].find(first)? + 1;
-        return Some((source[1..end].to_string(), &source[end + 1..]));
+        let (key, rest) = take_quoted_key(source, first)?;
+        return Some((key, rest));
     }
     let end = source
         .char_indices()
         .find(|(_, ch)| !(ch.is_alphanumeric() || *ch == '_' || *ch == '$' || *ch == '-'))
         .map(|(idx, _)| idx)?;
     Some((source[..end].to_string(), &source[end..]))
+}
+
+fn take_quoted_key(source: &str, quote: char) -> Option<(String, &str)> {
+    let mut key = String::new();
+    let mut escaped = false;
+    for (idx, ch) in source[1..].char_indices() {
+        if escaped {
+            key.push(ch);
+            escaped = false;
+            continue;
+        }
+        if ch == '\\' {
+            escaped = true;
+            continue;
+        }
+        if ch == quote {
+            return Some((key, &source[idx + 2..]));
+        }
+        key.push(ch);
+    }
+    None
 }
 
 fn trim_ignorable(mut source: &str) -> &str {

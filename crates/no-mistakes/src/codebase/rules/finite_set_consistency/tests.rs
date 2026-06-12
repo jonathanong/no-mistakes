@@ -342,6 +342,20 @@ type RouteName = "users" | "billing"
 }
 
 #[test]
+fn string_union_extraction_ignores_matching_alias_text_inside_literals() {
+    let source = r#"
+const docs = 'type RouteName = "legacy"';
+const templateDocs = `type RouteName = "template"`;
+type RouteName = "users" | "billing";
+"#;
+
+    assert_eq!(
+        extract_ts_string_union(source, "RouteName"),
+        BTreeSet::from(["billing".to_string(), "users".to_string()])
+    );
+}
+
+#[test]
 fn object_extraction_preserves_repository_relative_error_files() {
     let root = fixture_root("fixture");
     let spec = SetSpec {

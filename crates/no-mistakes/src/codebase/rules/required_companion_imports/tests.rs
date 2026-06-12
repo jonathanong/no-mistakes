@@ -257,6 +257,37 @@ stripSourcePrefix: packages/app/src/
 }
 
 #[test]
+fn source_dirs_match_project_relative_paths() {
+    let root = fixture_root("fixture");
+    let mut config = config(
+        r#"
+sourceDirs: [src/components]
+directChildOnly: true
+sourceExtensions: [.tsx]
+companionGlobs: ["src/components/{sourceStem}.stories.tsx"]
+specifierTemplate: "@/components/{sourceStem}"
+stripSourcePrefix: packages/app/src/
+"#,
+    );
+    config.projects.insert(
+        "app".to_string(),
+        Project {
+            root: Some("packages/app".to_string()),
+            ..Default::default()
+        },
+    );
+    config.rules[0].projects = vec!["app".to_string()];
+    let files = vec![
+        root.join("packages/app/src/components/Button.tsx"),
+        root.join("packages/app/src/components/Button.stories.tsx"),
+        root.join("packages/app/src/other/Outside.tsx"),
+    ];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn strip_source_prefix_matches_project_relative_paths() {
     let root = fixture_root("fixture");
     let mut config = config(

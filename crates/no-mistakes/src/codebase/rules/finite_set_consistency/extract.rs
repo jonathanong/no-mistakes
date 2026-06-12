@@ -96,13 +96,38 @@ fn relative_paths_for_matching(root: &Path, file: &Path, target_roots: &[PathBuf
 pub(super) fn extract_ts_string_union(source: &str, target: &str) -> BTreeSet<String> {
     let source = strip_comments(source);
     let pattern = format!(r#"\btype\s+{}\s*=\s*"#, regex::escape(target));
-    let Some(mat) = Regex::new(&pattern)
+    let Some(start) = Regex::new(&pattern)
         .ok()
-        .and_then(|regex| regex.find(&source))
+        .and_then(|regex| ts_type_alias_body_start(&source, &regex))
     else {
         return BTreeSet::new();
     };
-    quoted_strings(&strip_comments(ts_union::body(&source[mat.end()..])))
+    quoted_strings(&strip_comments(ts_union::body(&source[start..])))
+}
+
+fn ts_type_alias_body_start(source: &str, regex: &Regex) -> Option<usize> {
+    let mut quote = None;
+    let mut escaped = false;
+    for (idx, ch) in source.char_indices() {
+        if let Some(active_quote) = quote {
+            if escaped {
+                escaped = false;
+            } else if ch == '\\' {
+                escaped = true;
+            } else if ch == active_quote {
+                quote = None;
+            }
+            continue;
+        }
+        if ch == '"' || ch == '\'' || ch == '`' {
+            quote = Some(ch);
+            continue;
+        }
+        if let Some(mat) = regex.find(&source[idx..]).filter(|mat| mat.start() == 0) {
+            return Some(idx + mat.end());
+        }
+    }
+    None
 }
 
 pub(super) fn extract_ts_const_object_keys(source: &str, target: &str) -> BTreeSet<String> {

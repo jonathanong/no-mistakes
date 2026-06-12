@@ -32,6 +32,21 @@ const ROUTE_META = {
 }
 
 #[test]
+fn object_key_extraction_handles_escaped_quote_literals() {
+    let source = r#"
+const ROUTE_META = {
+  "a\"b": { slug: "quoted" },
+  'can\'t': { slug: "single" },
+};
+"#;
+
+    assert_eq!(
+        extract_ts_const_object_keys(source, "ROUTE_META"),
+        BTreeSet::from(["a\"b".to_string(), "can't".to_string()])
+    );
+}
+
+#[test]
 fn object_extraction_ignores_equals_in_type_annotations() {
     let source = r#"
 const ROUTE_META: Record<string, () => { slug: string }> = {

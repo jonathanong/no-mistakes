@@ -57,10 +57,12 @@ pub(super) fn source_info(
     }
     let (dir, base) = split_dir_base(rel);
     if !opts.source_dirs.is_empty()
-        && !opts
-            .source_dirs
-            .iter()
-            .any(|source_dir| source_dir_matches(&dir, source_dir, opts.direct_child_only))
+        && !opts.source_dirs.iter().any(|source_dir| {
+            glob_rels.iter().any(|rel| {
+                let (dir, _) = split_dir_base(rel);
+                source_dir_matches(&dir, source_dir, opts.direct_child_only)
+            })
+        })
     {
         return None;
     }

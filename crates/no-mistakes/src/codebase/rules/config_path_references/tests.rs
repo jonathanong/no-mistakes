@@ -171,7 +171,7 @@ fn invalid_glob_references_surface_errors() {
         ..Default::default()
     };
 
-    assert!(reference_exists(&root, &root.join("config/app.yml"), &opts, "[", &[]).is_err());
+    assert!(reference_exists(&root, &root.join("config/app.yml"), &opts, "{", &[]).is_err());
 }
 
 #[test]
@@ -208,6 +208,26 @@ fn existing_literal_paths_with_glob_metacharacters_win_before_glob_matching() {
         &opts,
         "schemas/[tenant].json",
         &[]
+    )
+    .unwrap());
+}
+
+#[test]
+fn bracketed_references_are_literals_when_missing() {
+    let root = fixture_root("fixture");
+    let opts = Options {
+        allow_globs: true,
+        base_dir: BaseDir::Root,
+        ..Default::default()
+    };
+    let rel_files = vec!["schemas/t.json".to_string()];
+
+    assert!(!reference_exists(
+        &root,
+        &root.join("config/app.yml"),
+        &opts,
+        "schemas/[missing].json",
+        &rel_files
     )
     .unwrap());
 }

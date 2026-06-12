@@ -129,18 +129,31 @@ fn reference_exists(
     if target.starts_with(root) && target.exists() {
         return Ok(true);
     }
-    if opts.allow_globs
-        && (reference.contains('*')
-            || reference.contains('?')
-            || reference.contains('[')
-            || reference.contains('{'))
-    {
+    if opts.allow_globs && has_glob_metachar(reference) {
         let pattern = reference_pattern(root, config_file, opts, reference);
         let glob = Glob::new(&pattern)?;
         let matcher = glob.compile_matcher();
         return Ok(rel_files.iter().any(|rel| matcher.is_match(rel)));
     }
     Ok(false)
+}
+
+fn has_glob_metachar(reference: &str) -> bool {
+    let mut escaped = false;
+    for ch in reference.chars() {
+        if escaped {
+            escaped = false;
+            continue;
+        }
+        if ch == '\\' {
+            escaped = true;
+            continue;
+        }
+        if matches!(ch, '*' | '?' | '{') {
+            return true;
+        }
+    }
+    false
 }
 
 fn reference_pattern(root: &Path, config_file: &Path, opts: &Options, reference: &str) -> String {
