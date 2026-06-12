@@ -130,9 +130,23 @@ fn build_workspace_globset(patterns: &[String], excluded: bool) -> Result<GlobSe
 
 fn path_under_package_roots(path: &str, package_roots: &[String]) -> bool {
     package_roots.iter().any(|root| {
-        let root = root.trim_matches('/');
+        let root = normalize_relative_path(root);
         !root.is_empty() && (path == root || path.starts_with(&format!("{root}/")))
     })
+}
+
+fn normalize_relative_path(path: &str) -> String {
+    let mut parts = Vec::new();
+    for part in path.split('/') {
+        match part {
+            "" | "." => {}
+            ".." => {
+                parts.pop();
+            }
+            _ => parts.push(part),
+        }
+    }
+    parts.join("/")
 }
 
 fn package_name(path: &Path) -> Option<String> {

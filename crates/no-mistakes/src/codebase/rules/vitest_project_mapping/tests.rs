@@ -163,6 +163,26 @@ include: [src/custom.spec.ts]
 }
 
 #[test]
+fn configured_project_replaces_discovered_project_with_same_name() {
+    let root = fixture_root("fixture");
+    let mut config = load_config(&root);
+    config.tests.vitest.configs = None;
+    config.tests.vitest.projects.insert(
+        "unit-a".to_string(),
+        serde_yaml::from_str(
+            r#"
+include: [src/a.test.ts]
+"#,
+        )
+        .unwrap(),
+    );
+    let files = vec![root.join("src/a.test.ts")];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn explicit_projects_do_not_require_missing_vitest_configs() {
     let root = fixture_root("fixture");
     let mut config = load_config(&root);

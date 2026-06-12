@@ -20,7 +20,7 @@ pub(super) fn extract_set(
     target_roots: &[PathBuf],
 ) -> Result<ExtractedSet> {
     if spec.kind == "path-regex-capture" {
-        return extract_path_regex_set(root, spec, files);
+        return extract_path_regex_set(root, spec, files, target_roots);
     }
     let path = resolve_spec_file(root, &spec.file, target_roots);
     let source = std::fs::read_to_string(&path)?;
@@ -56,24 +56,39 @@ pub(super) fn extract_path_regex_set(
     root: &Path,
     spec: &SetSpec,
     files: &[PathBuf],
+    target_roots: &[PathBuf],
 ) -> Result<ExtractedSet> {
     let regex = Regex::new(&spec.pattern)?;
     let mut values = BTreeSet::new();
     for file in files {
-        let rel = relative_slash_path(root, file);
-        let Some(captures) = regex.captures(&rel) else {
-            continue;
-        };
-        let value = captures
-            .name("value")
-            .or_else(|| captures.get(1))
-            .map(|capture| capture.as_str().to_string());
-        values.extend(value);
+        for rel in relative_paths_for_matching(root, file, target_roots) {
+            let Some(captures) = regex.captures(&rel) else {
+                continue;
+            };
+            let value = captures
+                .name("value")
+                .or_else(|| captures.get(1))
+                .map(|capture| capture.as_str().to_string());
+            values.extend(value);
+        }
     }
     Ok(ExtractedSet {
         file: spec.file.clone().if_empty(".".to_string()),
         values,
     })
+}
+
+fn relative_paths_for_matching(root: &Path, file: &Path, target_roots: &[PathBuf]) -> Vec<String> {
+    let mut paths = target_roots
+        .iter()
+        .filter(|target_root| file.starts_with(target_root))
+        .map(|target_root| relative_slash_path(target_root, file))
+        .collect::<Vec<_>>();
+    let repo_rel = relative_slash_path(root, file);
+    if !paths.contains(&repo_rel) {
+        paths.push(repo_rel);
+    }
+    paths
 }
 
 pub(super) fn extract_ts_string_union(source: &str, target: &str) -> BTreeSet<String> {

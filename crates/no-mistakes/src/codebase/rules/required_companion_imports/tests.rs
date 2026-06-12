@@ -47,7 +47,7 @@ sourceExtensions: [.tsx]
 excludeBasenames: [Internal.tsx]
 companionGlobs: ["{sourceDir}/{sourceStem}.stories.tsx"]
 specifierTemplate: "@/components/{sourceStem}"
-stripSourcePrefix: src/
+stripSourcePrefix: ./src/
 "#,
         ),
         &files,
@@ -57,6 +57,28 @@ stripSourcePrefix: src/
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].file, "src/components/Card.tsx");
     assert!(findings[0].message.contains("@/components/Card"));
+}
+
+#[test]
+fn include_filter_selects_sources_without_hiding_companions() {
+    let root = fixture_root("fixture");
+    let files = vec![
+        root.join("src/components/Button.tsx"),
+        root.join("src/components/Button.stories.tsx"),
+        root.join("src/components/Card.tsx"),
+        root.join("src/components/Card.stories.tsx"),
+    ];
+    let mut config = config(
+        r#"
+sourceExtensions: [.tsx]
+companionGlobs: ["{sourceDir}/{sourceStem}.stories.tsx"]
+specifierTemplate: "@/components/{sourceStem}"
+"#,
+    );
+    config.rules[0].include = vec!["src/components/Button.tsx".to_string()];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 }
 
 #[test]

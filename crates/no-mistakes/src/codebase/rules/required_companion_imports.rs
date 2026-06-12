@@ -41,13 +41,14 @@ pub(crate) fn check_with_files(
             let opts: Options = rule.rule_options();
             let target_roots = super::target_roots(root, config, rule);
             let skip = super::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
+            let candidate_files: Vec<PathBuf> = all_files
                 .iter()
                 .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
                 .cloned()
                 .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files)
+            let source_files =
+                super::path_filter::filter_rule_files(root, config, rule, &candidate_files)?;
+            scan(root, &opts, &source_files, &candidate_files)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -55,7 +56,12 @@ pub(crate) fn check_with_files(
     Ok(findings)
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+fn scan(
+    root: &Path,
+    opts: &Options,
+    source_files: &[PathBuf],
+    candidate_files: &[PathBuf],
+) -> Result<Vec<RuleFinding>> {
     if opts.companion_globs.is_empty() || opts.specifier_template.is_empty() {
         return Ok(Vec::new());
     }
@@ -64,12 +70,16 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
     let extensions = source_extensions(opts);
     let exclude_basenames: HashSet<&str> =
         opts.exclude_basenames.iter().map(String::as_str).collect();
-    let rel_files: Vec<String> = files
+    let rel_source_files: Vec<String> = source_files
+        .iter()
+        .map(|path| relative_slash_path(root, path))
+        .collect();
+    let rel_candidate_files: Vec<String> = candidate_files
         .iter()
         .map(|path| relative_slash_path(root, path))
         .collect();
 
-    let sources = rel_files
+    let sources = rel_source_files
         .iter()
         .filter_map(|rel| {
             source_info(
@@ -81,7 +91,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
             )
         })
         .collect::<Vec<_>>();
-    let companion_files = companion_files(opts, &sources, &rel_files)?;
+    let companion_files = companion_files(opts, &sources, &rel_candidate_files)?;
 
     let mut findings = Vec::new();
     for source in sources
@@ -89,7 +99,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
         .filter(|source| !companion_files.contains(&source.rel))
     {
         let companion_globs = build_companion_globset(opts, source)?;
-        let companions = rel_files
+        let companions = rel_candidate_files
             .iter()
             .filter(|rel| companion_globs.is_match(rel.as_str()))
             .collect::<Vec<_>>();

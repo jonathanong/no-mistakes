@@ -94,6 +94,7 @@ fn scan(
     };
     for (project_name, policy) in &config.tests.vitest.projects {
         if let Some(project) = integration_config::configured_project(root, project_name, policy) {
+            projects.retain(|existing| existing.policy_name.as_deref() != Some(project_name));
             projects.push(project);
         }
     }

@@ -76,8 +76,9 @@ pub(super) fn source_info(
     let import_path = if opts.strip_source_prefix.is_empty() {
         source_path.clone()
     } else {
+        let source_prefix = normalize_relative_pattern(&opts.strip_source_prefix);
         source_path
-            .strip_prefix(opts.strip_source_prefix.trim_start_matches('/'))
+            .strip_prefix(&source_prefix)
             .unwrap_or(source_path.as_str())
             .trim_start_matches('/')
             .to_string()

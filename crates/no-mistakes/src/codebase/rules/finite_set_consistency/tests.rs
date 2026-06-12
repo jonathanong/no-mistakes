@@ -650,9 +650,26 @@ fn path_regex_set_uses_spec_file_when_present() {
         pattern: r#"^src/routes/([^/]+)\.ts$"#.to_string(),
         ..Default::default()
     };
-    let extracted = extract_path_regex_set(&root, &spec, &files).unwrap();
+    let extracted = extract_path_regex_set(&root, &spec, &files, &[]).unwrap();
 
     assert_eq!(extracted.file, "routes-index");
+    assert_eq!(extracted.values, BTreeSet::from(["users".to_string()]));
+}
+
+#[test]
+fn path_regex_set_matches_project_relative_paths() {
+    let root = fixture_root("fixture");
+    let project_root = root.join("packages/app");
+    let files = vec![project_root.join("src/routes/users.ts")];
+    let spec = SetSpec {
+        name: "routes".to_string(),
+        file: "routes-index".to_string(),
+        kind: "path-regex-capture".to_string(),
+        pattern: r#"^src/routes/([^/]+)\.ts$"#.to_string(),
+        ..Default::default()
+    };
+    let extracted = extract_path_regex_set(&root, &spec, &files, &[project_root]).unwrap();
+
     assert_eq!(extracted.values, BTreeSet::from(["users".to_string()]));
 }
 

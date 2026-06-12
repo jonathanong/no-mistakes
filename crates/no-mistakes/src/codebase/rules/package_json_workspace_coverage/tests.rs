@@ -35,7 +35,7 @@ fn reports_package_json_under_configured_roots_missing_from_workspaces() {
     ];
     let findings = check_with_files(
         &root,
-        &config("packageRoots: [packages]\nrequireNamedPackage: true\n"),
+        &config("packageRoots: [./packages]\nrequireNamedPackage: true\n"),
         &files,
     )
     .unwrap();
