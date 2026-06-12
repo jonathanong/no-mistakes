@@ -185,6 +185,25 @@ fn brace_alternates_are_treated_as_globs() {
 }
 
 #[test]
+fn existing_literal_paths_with_glob_metacharacters_win_before_glob_matching() {
+    let root = fixture_root("fixture");
+    let opts = Options {
+        allow_globs: true,
+        base_dir: BaseDir::Root,
+        ..Default::default()
+    };
+
+    assert!(reference_exists(
+        &root,
+        &root.join("config/app.yml"),
+        &opts,
+        "schemas/[tenant].json",
+        &[]
+    )
+    .unwrap());
+}
+
+#[test]
 fn ignores_unreadable_or_invalid_config_files() {
     let root = fixture_root("fixture");
     let files = vec![root.join("config"), root.join("config/invalid.yml")];

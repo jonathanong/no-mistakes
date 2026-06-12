@@ -1,11 +1,13 @@
+use super::comments::strip_comments;
 use regex::Regex;
 use std::collections::BTreeSet;
 
 pub(super) fn const_object_body(source: &str, target: &str) -> Option<String> {
+    let source = strip_comments(source);
     let pattern = format!(r#"\bconst\s+{}\b\s*(?::[^=]+)?="#, regex::escape(target));
-    let mat = Regex::new(&pattern).ok()?.find(source)?;
+    let mat = Regex::new(&pattern).ok()?.find(&source)?;
     let open = source[mat.end()..].find('{')? + mat.end();
-    let close = matching_brace(source, open)?;
+    let close = matching_brace(&source, open)?;
     source.get(open + 1..close).map(str::to_string)
 }
 
@@ -127,6 +129,18 @@ fn trim_ignorable(mut source: &str) -> &str {
                 return "";
             }
             source = &rest[end + 1..];
+            continue;
+        }
+        if let Some(rest) = trimmed.strip_prefix("__comment__") {
+            source = rest;
+            continue;
+        }
+        if trimmed.starts_with('[') {
+            let end = top_level_value_end(trimmed);
+            if end == trimmed.len() {
+                return "";
+            }
+            source = &trimmed[end + 1..];
             continue;
         }
         if let Some(rest) = trimmed.strip_prefix("//") {

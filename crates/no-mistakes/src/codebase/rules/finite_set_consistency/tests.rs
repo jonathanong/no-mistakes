@@ -140,6 +140,19 @@ CREATE TYPE route_name AS ENUM ('users', 'billing');
 }
 
 #[test]
+fn sql_enum_extraction_ignores_block_commented_matching_definitions() {
+    let source = r#"
+/* CREATE TYPE route_name AS ENUM ('legacy'); */
+CREATE TYPE route_name AS ENUM ('users', 'billing');
+"#;
+
+    assert_eq!(
+        extract_sql_enum(source, "route_name"),
+        BTreeSet::from(["billing".to_string(), "users".to_string()])
+    );
+}
+
+#[test]
 fn string_union_extraction_does_not_require_semicolons() {
     assert_eq!(
         extract_ts_string_union("type RouteName = 'users' | 'billing'\n", "RouteName"),
@@ -244,6 +257,36 @@ const ROUTE_META = {
     assert_eq!(
         extract_ts_const_object_keys(source, "ROUTE_META"),
         BTreeSet::from(["users".to_string()])
+    );
+}
+
+#[test]
+fn object_extraction_ignores_commented_matching_declarations() {
+    let source = r#"
+// const ROUTE_META = { legacy: { slug: "legacy" } };
+const ROUTE_META = {
+  users: { slug: "users" },
+};
+"#;
+
+    assert_eq!(
+        extract_ts_const_object_keys(source, "ROUTE_META"),
+        BTreeSet::from(["users".to_string()])
+    );
+}
+
+#[test]
+fn object_extraction_skips_computed_keys() {
+    let source = r#"
+const ROUTE_META = {
+  [ROUTES.users]: { slug: "users" },
+  billing: { slug: "billing" },
+};
+"#;
+
+    assert_eq!(
+        extract_ts_const_object_keys(source, "ROUTE_META"),
+        BTreeSet::from(["billing".to_string()])
     );
 }
 

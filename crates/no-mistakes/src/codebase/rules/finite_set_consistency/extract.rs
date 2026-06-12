@@ -1,4 +1,4 @@
-use super::comments::strip_comments;
+use super::comments::{strip_comments, strip_sql_comments};
 use super::object::{const_object_body, top_level_object_keys, top_level_property_values};
 use super::SetSpec;
 use crate::codebase::ts_source::relative_slash_path;
@@ -155,16 +155,6 @@ fn quoted_strings(source: &str) -> BTreeSet<String> {
                 .map(|capture| capture.as_str().to_string())
         })
         .collect()
-}
-
-fn strip_sql_comments(source: &str) -> String {
-    let mut stripped = String::with_capacity(source.len());
-    for line in source.lines() {
-        let body = line.split_once("--").map_or(line, |(before, _)| before);
-        stripped.push_str(body);
-        stripped.push('\n');
-    }
-    stripped
 }
 
 trait EmptyStringExt {

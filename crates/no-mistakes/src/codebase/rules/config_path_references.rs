@@ -118,6 +118,14 @@ fn reference_exists(
     reference: &str,
     rel_files: &[String],
 ) -> Result<bool> {
+    let base = if opts.base_dir == BaseDir::Root {
+        root.to_path_buf()
+    } else {
+        config_file.parent().unwrap_or(root).to_path_buf()
+    };
+    if base.join(reference).exists() {
+        return Ok(true);
+    }
     if opts.allow_globs
         && (reference.contains('*')
             || reference.contains('?')
@@ -129,12 +137,7 @@ fn reference_exists(
         let matcher = glob.compile_matcher();
         return Ok(rel_files.iter().any(|rel| matcher.is_match(rel)));
     }
-    let base = if opts.base_dir == BaseDir::Root {
-        root.to_path_buf()
-    } else {
-        config_file.parent().unwrap_or(root).to_path_buf()
-    };
-    Ok(base.join(reference).exists())
+    Ok(false)
 }
 
 fn reference_pattern(root: &Path, config_file: &Path, opts: &Options, reference: &str) -> String {
