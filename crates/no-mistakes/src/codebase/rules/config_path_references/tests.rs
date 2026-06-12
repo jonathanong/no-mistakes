@@ -69,6 +69,26 @@ fn glob_references_default_to_config_file_directory() {
 }
 
 #[test]
+fn glob_references_match_targets_outside_rule_include_filter() {
+    let root = fixture_root("fixture");
+    let mut config = config(
+        r#"
+files: [config/app.yml]
+keys: [paths.glob]
+allowGlobs: true
+"#,
+    );
+    config.rules[0].include = vec!["config/app.yml".to_string()];
+    let files = vec![
+        root.join("config/app.yml"),
+        root.join("config/existing.json"),
+    ];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn glob_reference_patterns_handle_root_base_and_root_level_configs() {
     let root = fixture_root("fixture");
     let root_opts = Options {

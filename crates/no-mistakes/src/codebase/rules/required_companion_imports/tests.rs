@@ -82,6 +82,30 @@ specifierTemplate: "@/components/{sourceStem}"
 }
 
 #[test]
+fn commented_companion_imports_do_not_satisfy_requirement() {
+    let root = fixture_root("fixture");
+    let files = vec![
+        root.join("src/components/Commented.tsx"),
+        root.join("src/components/Commented.stories.tsx"),
+    ];
+    let findings = check_with_files(
+        &root,
+        &config(
+            r#"
+sourceExtensions: [.tsx]
+companionGlobs: ["{sourceDir}/{sourceStem}.stories.tsx"]
+specifierTemplate: "@/components/{sourceStem}"
+"#,
+        ),
+        &files,
+    )
+    .unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "src/components/Commented.tsx");
+}
+
+#[test]
 fn declaration_files_are_not_source_candidates() {
     let root = fixture_root("fixture");
     let files = vec![root.join("src/components/Button.d.ts")];

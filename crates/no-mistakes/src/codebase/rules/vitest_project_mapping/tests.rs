@@ -66,6 +66,17 @@ fn default_extensions_include_javascript_test_files() {
 }
 
 #[test]
+fn default_extensions_include_commonjs_typescript_test_files() {
+    let root = fixture_root("fixture");
+    let config = load_config(&root);
+    let files = vec![root.join("src/unmapped.test.cts")];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "src/unmapped.test.cts");
+}
+
+#[test]
 fn scopes_can_limit_checked_test_candidates() {
     let root = fixture_root("fixture");
     let mut config = load_config(&root);

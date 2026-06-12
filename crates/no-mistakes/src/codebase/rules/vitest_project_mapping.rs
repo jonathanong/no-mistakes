@@ -12,6 +12,8 @@ pub const RULE_ID: &str = "vitest-project-mapping";
 
 const DEFAULT_TEST_EXTENSIONS: &[&str] = &[
     ".test.mts",
+    ".test.cts",
+    ".test.ctsx",
     ".test.ts",
     ".test.tsx",
     ".test.mjs",
@@ -19,6 +21,8 @@ const DEFAULT_TEST_EXTENSIONS: &[&str] = &[
     ".test.js",
     ".test.jsx",
     ".spec.mts",
+    ".spec.cts",
+    ".spec.ctsx",
     ".spec.ts",
     ".spec.tsx",
     ".spec.mjs",

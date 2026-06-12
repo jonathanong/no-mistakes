@@ -135,6 +135,19 @@ fn string_union_extraction_does_not_require_semicolons() {
 }
 
 #[test]
+fn string_union_extraction_stops_before_following_declarations() {
+    let source = r#"
+type RouteName = "users" | "billing"
+export const LABELS = { users: "Users" };
+"#;
+
+    assert_eq!(
+        extract_ts_string_union(source, "RouteName"),
+        BTreeSet::from(["billing".to_string(), "users".to_string()])
+    );
+}
+
+#[test]
 fn object_property_extraction_handles_nested_quoted_braces() {
     let source = r#"
 const ROUTE_META = {
@@ -219,6 +232,26 @@ const ROUTE_META = {
     assert_eq!(
         extract_ts_const_object_property(source, "ROUTE_META", "id"),
         BTreeSet::from(["users".to_string()])
+    );
+}
+
+#[test]
+fn object_property_extraction_ignores_nested_properties_and_spreads() {
+    let source = r#"
+const ROUTE_META = {
+  ...COMMON_ROUTES,
+  users: { seo: { slug: "seo-users" }, slug: "users" },
+  billing: { slug: "billing" },
+};
+"#;
+
+    assert_eq!(
+        extract_ts_const_object_keys(source, "ROUTE_META"),
+        BTreeSet::from(["billing".to_string(), "users".to_string()])
+    );
+    assert_eq!(
+        extract_ts_const_object_property(source, "ROUTE_META", "slug"),
+        BTreeSet::from(["billing".to_string(), "users".to_string()])
     );
 }
 

@@ -1,4 +1,5 @@
 use super::Options;
+use crate::codebase::dependencies::extract::ImportExtractor;
 use crate::codebase::ts_source::TS_JS_EXTENSIONS;
 use anyhow::Result;
 use globset::{Glob, GlobSet, GlobSetBuilder};
@@ -147,10 +148,17 @@ pub(super) fn file_imports(root: &Path, rel: &str, expected_specifier: &str) -> 
     let Ok(source) = std::fs::read_to_string(root.join(rel)) else {
         return false;
     };
-    source.contains(&format!("from \"{expected_specifier}\""))
-        || source.contains(&format!("from '{expected_specifier}'"))
-        || source.contains(&format!("import \"{expected_specifier}\""))
-        || source.contains(&format!("import '{expected_specifier}'"))
+    let extractor = if rel.ends_with(".tsx") || rel.ends_with(".jsx") {
+        ImportExtractor::for_tsx()
+    } else {
+        ImportExtractor::for_typescript()
+    };
+    let Ok(imports) = extractor.and_then(|extractor| extractor.extract(&source)) else {
+        return false;
+    };
+    imports
+        .iter()
+        .any(|import| import.specifier == expected_specifier)
 }
 
 fn glob_escape_literal(value: &str) -> String {

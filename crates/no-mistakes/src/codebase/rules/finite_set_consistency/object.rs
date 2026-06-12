@@ -47,25 +47,14 @@ pub(super) fn top_level_object_keys(body: &str) -> BTreeSet<String> {
 }
 
 pub(super) fn top_level_property_values(body: &str, property: &str) -> BTreeSet<String> {
-    let pattern = format!(
-        r#"(?m)(?:^|[,\{{]\s*)(?:"{}"|'{}'|{})\s*:\s*(?:"([^"]+)"|'([^']+)')"#,
-        regex::escape(property),
-        regex::escape(property),
-        regex::escape(property)
-    );
-    let regex = Regex::new(&pattern).expect("object property regex compiles");
     top_level_entries(body)
         .into_iter()
-        .flat_map(|(_, value)| {
-            regex
-                .captures_iter(&value)
-                .filter_map(|captures| {
-                    captures
-                        .get(1)
-                        .or_else(|| captures.get(2))
-                        .map(|capture| capture.as_str().to_string())
-                })
-                .collect::<Vec<_>>()
+        .filter_map(|(_, value)| direct_object_body(&value).map(|body| top_level_entries(&body)))
+        .flatten()
+        .filter_map(|(key, value)| {
+            (key == property)
+                .then(|| quoted_string_literal(value.trim()))
+                .flatten()
         })
         .collect()
 }
@@ -87,6 +76,9 @@ fn top_level_entries(body: &str) -> Vec<(String, String)> {
 
 fn take_key(source: &str) -> Option<(String, &str)> {
     let source = trim_ignorable(source);
+    if source.starts_with("...") {
+        return None;
+    }
     let mut chars = source.char_indices();
     let (_, first) = chars.next()?;
     if first == '"' || first == '\'' {
@@ -103,6 +95,13 @@ fn take_key(source: &str) -> Option<(String, &str)> {
 fn trim_ignorable(mut source: &str) -> &str {
     loop {
         let trimmed = source.trim_start_matches(|ch: char| ch == ',' || ch.is_whitespace());
+        if let Some(rest) = trimmed.strip_prefix("...") {
+            let Some((_, after)) = rest.split_once(',') else {
+                return "";
+            };
+            source = after;
+            continue;
+        }
         if let Some(rest) = trimmed.strip_prefix("//") {
             source = rest.split_once('\n').map_or("", |(_, after)| after);
             continue;
@@ -116,6 +115,24 @@ fn trim_ignorable(mut source: &str) -> &str {
         }
         return trimmed;
     }
+}
+
+fn direct_object_body(value: &str) -> Option<String> {
+    let value = value.trim();
+    if !value.starts_with('{') {
+        return None;
+    }
+    let close = matching_brace(value, 0)?;
+    value.get(1..close).map(str::to_string)
+}
+
+fn quoted_string_literal(value: &str) -> Option<String> {
+    let quote = value.chars().next()?;
+    if quote != '"' && quote != '\'' {
+        return None;
+    }
+    let end = value[1..].find(quote)? + 1;
+    Some(value[1..end].to_string())
 }
 
 fn top_level_value_end(source: &str) -> usize {

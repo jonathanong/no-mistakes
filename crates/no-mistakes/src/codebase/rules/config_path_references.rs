@@ -44,8 +44,8 @@ pub(crate) fn check_with_files(
                 .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
                 .cloned()
                 .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files)
+            let config_files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+            scan(root, &opts, &config_files, &files)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -53,9 +53,14 @@ pub(crate) fn check_with_files(
     Ok(findings)
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
-    let config_files = super::matching_files(root, &opts.files, files)?;
-    let rel_files = files
+fn scan(
+    root: &Path,
+    opts: &Options,
+    config_candidates: &[PathBuf],
+    reference_candidates: &[PathBuf],
+) -> Result<Vec<RuleFinding>> {
+    let config_files = super::matching_files(root, &opts.files, config_candidates)?;
+    let rel_files = reference_candidates
         .iter()
         .map(|path| relative_slash_path(root, path))
         .collect::<Vec<_>>();
