@@ -1,4 +1,4 @@
-use super::rel_in_scope;
+use super::{normalize_scope, rel_in_scope};
 use crate::integration_tests::{project_config, types::ConfigProject};
 use anyhow::Result;
 use globset::GlobSet;
@@ -64,8 +64,7 @@ impl ProjectGlob {
 }
 
 fn scope_depth(scope: &str) -> usize {
-    scope
-        .trim_matches('/')
+    normalize_scope(scope)
         .split('/')
         .filter(|part| !part.is_empty())
         .count()

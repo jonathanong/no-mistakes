@@ -92,20 +92,14 @@ pub(super) fn source_info(
 }
 
 pub(super) fn source_dir_matches(dir: &str, source_dir: &str, direct_child_only: bool) -> bool {
-    let source_dir = source_dir.trim_matches('/');
+    let source_dir = normalize_relative_pattern(source_dir);
     if source_dir.is_empty() {
         return false;
     }
-    let project_relative_dir = dir
-        .strip_suffix(source_dir)
-        .is_some_and(|prefix| prefix.ends_with('/'));
     if direct_child_only {
-        dir == source_dir || project_relative_dir
-    } else {
         dir == source_dir
-            || dir.starts_with(&format!("{source_dir}/"))
-            || project_relative_dir
-            || dir.contains(&format!("/{source_dir}/"))
+    } else {
+        dir == source_dir || dir.starts_with(&format!("{source_dir}/"))
     }
 }
 
@@ -122,7 +116,7 @@ pub(super) fn build_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
     }
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
-        builder.add(Glob::new(pattern)?);
+        builder.add(Glob::new(&normalize_glob_template(pattern))?);
     }
     Ok(Some(builder.build()?))
 }
@@ -186,6 +180,10 @@ fn glob_escape_literal(value: &str) -> String {
 }
 
 fn normalize_glob_template(pattern: &str) -> String {
+    normalize_relative_pattern(pattern)
+}
+
+fn normalize_relative_pattern(pattern: &str) -> String {
     let mut parts = Vec::new();
     for part in pattern.split('/') {
         match part {

@@ -181,6 +181,31 @@ specifierTemplate: "@/components/{sourceStem}"
 }
 
 #[test]
+fn source_globs_normalize_relative_prefixes() {
+    let root = fixture_root("fixture");
+    let files = vec![
+        root.join("src/components/Button.tsx"),
+        root.join("src/components/Button.stories.tsx"),
+        root.join("src/components/Card.tsx"),
+    ];
+    let findings = check_with_files(
+        &root,
+        &config(
+            r#"
+sourceGlobs: ["./src/components/Button.tsx"]
+sourceExtensions: [.tsx]
+companionGlobs: ["{sourceDir}/{sourceStem}.stories.tsx"]
+specifierTemplate: "@/components/{sourceStem}"
+"#,
+        ),
+        &files,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn reports_when_no_companion_file_exists() {
     let root = fixture_root("fixture");
     let files = vec![root.join("src/components/Missing.tsx")];
@@ -258,14 +283,19 @@ fn helper_branches_cover_empty_dirs_missing_files_and_extension_normalization() 
         "src/components",
         false
     ));
-    assert!(source_dir_matches(
+    assert!(!source_dir_matches(
         "packages/app/src/components",
         "src/components",
         true
     ));
-    assert!(source_dir_matches(
+    assert!(!source_dir_matches(
         "packages/app/src/components/nested",
         "src/components",
+        false
+    ));
+    assert!(source_dir_matches(
+        "src/components/nested",
+        "./src/components",
         false
     ));
     assert_eq!(

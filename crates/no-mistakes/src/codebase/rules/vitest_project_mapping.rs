@@ -164,8 +164,22 @@ fn in_scope(rel: &str, scopes: &[String]) -> bool {
 }
 
 fn rel_in_scope(rel: &str, scope: &str) -> bool {
-    let scope = scope.trim_matches('/');
+    let scope = normalize_scope(scope);
     scope.is_empty() || rel == scope || rel.starts_with(&format!("{scope}/"))
+}
+
+pub(super) fn normalize_scope(scope: &str) -> String {
+    let mut parts = Vec::new();
+    for part in scope.split('/') {
+        match part {
+            "" | "." => {}
+            ".." => {
+                parts.pop();
+            }
+            _ => parts.push(part),
+        }
+    }
+    parts.join("/")
 }
 
 #[cfg(test)]
