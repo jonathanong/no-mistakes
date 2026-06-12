@@ -30,6 +30,9 @@ const DEFAULT_TEST_EXTENSIONS: &[&str] = &[
     ".spec.js",
     ".spec.jsx",
 ];
+const DEFAULT_TEST_DIR_EXTENSIONS: &[&str] = &[
+    ".mts", ".cts", ".ctsx", ".ts", ".tsx", ".mjs", ".cjs", ".js", ".jsx",
+];
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -102,7 +105,9 @@ fn scan(
     let mut findings = Vec::new();
     for path in files {
         let rel = relative_slash_path(root, path);
-        if !is_test_file(&rel, &test_extensions) || !in_scope(&rel, &opts.scopes) {
+        if !is_test_file(&rel, &test_extensions, opts.test_extensions.is_empty())
+            || !in_scope(&rel, &opts.scopes)
+        {
             continue;
         }
         let matches = matching_projects(&rel, &project_globs);
@@ -141,10 +146,15 @@ fn test_extensions(opts: &Options) -> Vec<&str> {
     }
 }
 
-fn is_test_file(rel: &str, test_extensions: &[&str]) -> bool {
+fn is_test_file(rel: &str, test_extensions: &[&str], default_extensions: bool) -> bool {
     test_extensions
         .iter()
         .any(|extension| rel.ends_with(extension))
+        || (default_extensions
+            && (rel.starts_with("__tests__/") || rel.contains("/__tests__/"))
+            && DEFAULT_TEST_DIR_EXTENSIONS
+                .iter()
+                .any(|extension| rel.ends_with(extension)))
 }
 
 fn in_scope(rel: &str, scopes: &[String]) -> bool {

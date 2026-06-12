@@ -127,6 +127,19 @@ fn extraction_helpers_return_empty_sets_when_targets_are_missing() {
 }
 
 #[test]
+fn sql_enum_extraction_ignores_commented_matching_definitions() {
+    let source = r#"
+-- CREATE TYPE route_name AS ENUM ('legacy');
+CREATE TYPE route_name AS ENUM ('users', 'billing');
+"#;
+
+    assert_eq!(
+        extract_sql_enum(source, "route_name"),
+        BTreeSet::from(["billing".to_string(), "users".to_string()])
+    );
+}
+
+#[test]
 fn string_union_extraction_does_not_require_semicolons() {
     assert_eq!(
         extract_ts_string_union("type RouteName = 'users' | 'billing'\n", "RouteName"),
@@ -184,6 +197,19 @@ type RouteName =
   | "users"
   // | "legacy"
   | "billing" /* "example" */
+"#;
+
+    assert_eq!(
+        extract_ts_string_union(source, "RouteName"),
+        BTreeSet::from(["billing".to_string(), "users".to_string()])
+    );
+}
+
+#[test]
+fn string_union_extraction_ignores_commented_matching_aliases() {
+    let source = r#"
+// type RouteName = "legacy"
+type RouteName = "users" | "billing"
 "#;
 
     assert_eq!(

@@ -1,3 +1,5 @@
+mod scc;
+
 use super::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::workspaces;
@@ -74,13 +76,8 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
         .collect();
     let graph = workspace_graph(&workspace, &package_names, &dependency_types);
 
-    let mut cycles = BTreeMap::new();
-    for package in graph.keys() {
-        collect_cycles(package, package, &graph, &mut Vec::new(), &mut cycles);
-    }
-
     let mut findings = Vec::new();
-    for (key, _) in cycles {
+    for key in scc::cycle_keys(&graph) {
         if allowlist.contains(&key) {
             continue;
         }
@@ -149,27 +146,7 @@ fn package_dependencies(path: &Path, dependency_types: &[&str]) -> BTreeSet<Stri
     deps
 }
 
-fn collect_cycles(
-    start: &str,
-    current: &str,
-    graph: &BTreeMap<String, BTreeSet<String>>,
-    stack: &mut Vec<String>,
-    cycles: &mut BTreeMap<String, Vec<String>>,
-) {
-    stack.push(current.to_string());
-    for next in graph.get(current).into_iter().flatten() {
-        if next == start {
-            let mut cycle = stack.clone();
-            cycle.push(start.to_string());
-            cycles.insert(canonical_cycle(&cycle.join(" -> ")), cycle);
-        } else if !stack.iter().any(|seen| seen == next) {
-            collect_cycles(start, next, graph, stack, cycles);
-        }
-    }
-    stack.pop();
-}
-
-fn canonical_cycle(cycle: &str) -> String {
+pub(super) fn canonical_cycle(cycle: &str) -> String {
     let mut nodes: Vec<String> = cycle
         .split("->")
         .map(str::trim)

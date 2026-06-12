@@ -58,10 +58,11 @@ pub(super) fn extract_path_regex_set(
 }
 
 pub(super) fn extract_ts_string_union(source: &str, target: &str) -> BTreeSet<String> {
+    let source = strip_comments(source);
     let pattern = format!(r#"\btype\s+{}\s*=\s*"#, regex::escape(target));
     let Some(mat) = Regex::new(&pattern)
         .ok()
-        .and_then(|regex| regex.find(source))
+        .and_then(|regex| regex.find(&source))
     else {
         return BTreeSet::new();
     };
@@ -87,11 +88,12 @@ pub(super) fn extract_ts_const_object_property(
 }
 
 pub(super) fn extract_sql_enum(source: &str, target: &str) -> BTreeSet<String> {
+    let source = strip_sql_comments(source);
     let pattern = format!(
         r#"(?is)CREATE\s+TYPE\s+{}\s+AS\s+ENUM\s*\(([^;]+)\)"#,
         regex::escape(target)
     );
-    capture_first(source, &pattern)
+    capture_first(&source, &pattern)
         .map(|body| quoted_strings(&body))
         .unwrap_or_default()
 }
@@ -153,6 +155,16 @@ fn quoted_strings(source: &str) -> BTreeSet<String> {
                 .map(|capture| capture.as_str().to_string())
         })
         .collect()
+}
+
+fn strip_sql_comments(source: &str) -> String {
+    let mut stripped = String::with_capacity(source.len());
+    for line in source.lines() {
+        let body = line.split_once("--").map_or(line, |(before, _)| before);
+        stripped.push_str(body);
+        stripped.push('\n');
+    }
+    stripped
 }
 
 trait EmptyStringExt {

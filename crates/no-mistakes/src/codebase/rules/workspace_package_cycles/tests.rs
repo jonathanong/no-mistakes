@@ -76,6 +76,28 @@ fn dependency_type_filter_can_ignore_dev_dependency_cycles() {
 }
 
 #[test]
+fn dense_cycle_graph_reports_one_cycle_per_component() {
+    let mut graph = BTreeMap::new();
+    graph.insert(
+        "a".to_string(),
+        BTreeSet::from(["b".to_string(), "c".to_string()]),
+    );
+    graph.insert(
+        "b".to_string(),
+        BTreeSet::from(["a".to_string(), "c".to_string()]),
+    );
+    graph.insert(
+        "c".to_string(),
+        BTreeSet::from(["a".to_string(), "b".to_string()]),
+    );
+
+    let cycles = scc::cycle_keys(&graph);
+
+    assert_eq!(cycles.len(), 1);
+    assert!(cycles.iter().next().unwrap().starts_with('a'));
+}
+
+#[test]
 fn package_dependency_helpers_tolerate_missing_and_invalid_files() {
     let root = fixture_root("invalid-package-json");
 

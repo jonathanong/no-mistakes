@@ -24,6 +24,7 @@ pub(super) fn strip_comments(source: &str) -> String {
             match iter.peek().copied() {
                 Some((_, '/')) => {
                     iter.next();
+                    stripped.push_str("__comment__");
                     for (_, comment_ch) in iter.by_ref() {
                         if comment_ch == '\n' {
                             stripped.push('\n');
@@ -34,6 +35,7 @@ pub(super) fn strip_comments(source: &str) -> String {
                 }
                 Some((_, '*')) => {
                     iter.next();
+                    stripped.push_str("__comment__");
                     let mut previous = '\0';
                     for (_, comment_ch) in iter.by_ref() {
                         if previous == '*' && comment_ch == '/' {
