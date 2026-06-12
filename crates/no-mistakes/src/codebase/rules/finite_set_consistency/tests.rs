@@ -164,6 +164,23 @@ const ROUTE_META = {
 }
 
 #[test]
+fn object_extraction_handles_type_annotations_and_comments() {
+    let source = r#"
+export const ROUTE_META: Record<string, { slug: string }> = {
+  // user route
+  users: { slug: "users" },
+  /* billing route */
+  billing: { slug: "billing" },
+};
+"#;
+
+    assert_eq!(
+        extract_ts_const_object_keys(source, "ROUTE_META"),
+        BTreeSet::from(["billing".to_string(), "users".to_string()])
+    );
+}
+
+#[test]
 fn object_property_extraction_requires_whole_key_match() {
     let source = r#"
 const ROUTE_META = {

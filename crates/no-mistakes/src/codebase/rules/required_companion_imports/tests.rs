@@ -82,6 +82,25 @@ specifierTemplate: "@/components/{sourceStem}"
 }
 
 #[test]
+fn declaration_files_are_not_source_candidates() {
+    let root = fixture_root("fixture");
+    let files = vec![root.join("src/components/Button.d.ts")];
+    let findings = check_with_files(
+        &root,
+        &config(
+            r#"
+companionGlobs: ["{sourceDir}/{sourceStem}.stories.tsx"]
+specifierTemplate: "@/components/{sourceStem}"
+"#,
+        ),
+        &files,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn source_globs_and_prefix_excludes_can_narrow_candidates() {
     let root = fixture_root("fixture");
     let files = vec![

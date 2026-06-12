@@ -92,3 +92,15 @@ fn skips_non_package_files_and_unnamed_packages_when_required() {
         None
     );
 }
+
+#[test]
+fn covered_unnamed_packages_pass_when_names_are_not_required() {
+    let root = fixture_root("unnamed-covered");
+    let files = vec![
+        root.join("package.json"),
+        root.join("packages/unnamed/package.json"),
+    ];
+    let findings = check_with_files(&root, &config("packageRoots: [packages]\n"), &files).unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}

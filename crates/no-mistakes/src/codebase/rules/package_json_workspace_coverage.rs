@@ -3,6 +3,7 @@ use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::workspaces;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
+use globset::{Glob, GlobSet, GlobSetBuilder};
 use rayon::prelude::*;
 use serde::Deserialize;
 use std::collections::HashSet;
@@ -54,6 +55,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
         .iter()
         .map(|pkg| relative_slash_path(root, &pkg.dir))
         .collect();
+    let covered_workspace_dirs = covered_workspace_dirs(root, files)?;
     let allowlist: HashSet<&str> = opts.allowlist.iter().map(String::as_str).collect();
 
     let mut findings = Vec::new();
@@ -72,7 +74,9 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
         if dir_rel.is_empty() || !path_under_package_roots(&dir_rel, &opts.package_roots) {
             continue;
         }
-        if workspace_dirs.contains(&dir_rel) {
+        if workspace_dirs.contains(&dir_rel)
+            || (!opts.require_named_package && covered_workspace_dirs.contains(&dir_rel))
+        {
             continue;
         }
         if opts.require_named_package && package_name(path).is_none() {
@@ -89,6 +93,39 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
     }
     findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
     Ok(findings)
+}
+
+fn covered_workspace_dirs(root: &Path, files: &[PathBuf]) -> Result<HashSet<String>> {
+    let workspace_globs = workspaces::load_workspace_globs(root)?;
+    let include = build_workspace_globset(&workspace_globs, false)?;
+    let exclude = build_workspace_globset(&workspace_globs, true)?;
+    Ok(files
+        .iter()
+        .filter(|path| path.file_name().and_then(|name| name.to_str()) == Some("package.json"))
+        .filter_map(|path| path.parent())
+        .filter_map(|dir| {
+            let rel = relative_slash_path(root, dir);
+            (include.is_match(rel.as_str()) && !exclude.is_match(rel.as_str())).then_some(rel)
+        })
+        .collect())
+}
+
+fn build_workspace_globset(patterns: &[String], excluded: bool) -> Result<GlobSet> {
+    let mut builder = GlobSetBuilder::new();
+    for pattern in patterns {
+        let pattern = if excluded {
+            let Some(stripped) = pattern.strip_prefix('!') else {
+                continue;
+            };
+            stripped
+        } else if pattern.starts_with('!') {
+            continue;
+        } else {
+            pattern.as_str()
+        };
+        builder.add(Glob::new(pattern)?);
+    }
+    Ok(builder.build()?)
 }
 
 fn path_under_package_roots(path: &str, package_roots: &[String]) -> bool {

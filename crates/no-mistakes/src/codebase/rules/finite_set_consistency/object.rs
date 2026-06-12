@@ -2,7 +2,7 @@ use regex::Regex;
 use std::collections::BTreeSet;
 
 pub(super) fn const_object_body(source: &str, target: &str) -> Option<String> {
-    let pattern = format!(r#"\bconst\s+{}\s*="#, regex::escape(target));
+    let pattern = format!(r#"\bconst\s+{}\b\s*(?::[^=]+)?="#, regex::escape(target));
     let mat = Regex::new(&pattern).ok()?.find(source)?;
     let open = source[mat.end()..].find('{')? + mat.end();
     let close = matching_brace(source, open)?;
@@ -80,13 +80,13 @@ fn top_level_entries(body: &str) -> Vec<(String, String)> {
         let value = &after_key[colon + 1..];
         let end = top_level_value_end(value);
         entries.push((key, value[..end].to_string()));
-        rest = value[end..].trim_start_matches(|ch: char| ch == ',' || ch.is_whitespace());
+        rest = trim_ignorable(&value[end..]);
     }
     entries
 }
 
 fn take_key(source: &str) -> Option<(String, &str)> {
-    let source = source.trim_start_matches(|ch: char| ch == ',' || ch.is_whitespace());
+    let source = trim_ignorable(source);
     let mut chars = source.char_indices();
     let (_, first) = chars.next()?;
     if first == '"' || first == '\'' {
@@ -98,6 +98,24 @@ fn take_key(source: &str) -> Option<(String, &str)> {
         .find(|(_, ch)| !(ch.is_alphanumeric() || *ch == '_' || *ch == '$' || *ch == '-'))
         .map(|(idx, _)| idx)?;
     Some((source[..end].to_string(), &source[end..]))
+}
+
+fn trim_ignorable(mut source: &str) -> &str {
+    loop {
+        let trimmed = source.trim_start_matches(|ch: char| ch == ',' || ch.is_whitespace());
+        if let Some(rest) = trimmed.strip_prefix("//") {
+            source = rest.split_once('\n').map_or("", |(_, after)| after);
+            continue;
+        }
+        if let Some(rest) = trimmed.strip_prefix("/*") {
+            let Some((_, after)) = rest.split_once("*/") else {
+                return "";
+            };
+            source = after;
+            continue;
+        }
+        return trimmed;
+    }
 }
 
 fn top_level_value_end(source: &str) -> usize {

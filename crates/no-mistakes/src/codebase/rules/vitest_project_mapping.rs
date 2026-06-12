@@ -14,9 +14,17 @@ const DEFAULT_TEST_EXTENSIONS: &[&str] = &[
     ".test.mts",
     ".test.ts",
     ".test.tsx",
+    ".test.mjs",
+    ".test.cjs",
+    ".test.js",
+    ".test.jsx",
     ".spec.mts",
     ".spec.ts",
     ".spec.tsx",
+    ".spec.mjs",
+    ".spec.cjs",
+    ".spec.js",
+    ".spec.jsx",
 ];
 
 #[derive(Deserialize, Default)]

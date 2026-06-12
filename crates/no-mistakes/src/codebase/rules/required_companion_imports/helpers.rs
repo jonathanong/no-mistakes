@@ -44,6 +44,9 @@ pub(super) fn source_info(
     let extension = extensions
         .iter()
         .find(|extension| rel.ends_with(extension.as_str()))?;
+    if is_declaration_file(rel) {
+        return None;
+    }
     if source_globs.is_some_and(|globs| !globs.is_match(rel)) {
         return None;
     }
@@ -161,4 +164,8 @@ fn glob_escape_literal(value: &str) -> String {
             }
         })
         .collect()
+}
+
+fn is_declaration_file(rel: &str) -> bool {
+    rel.ends_with(".d.ts") || rel.ends_with(".d.mts") || rel.ends_with(".d.cts")
 }

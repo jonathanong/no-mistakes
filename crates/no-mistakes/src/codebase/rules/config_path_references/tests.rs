@@ -80,6 +80,25 @@ fn invalid_glob_references_surface_errors() {
 }
 
 #[test]
+fn brace_alternates_are_treated_as_globs() {
+    let root = fixture_root("fixture");
+    let opts = Options {
+        allow_globs: true,
+        ..Default::default()
+    };
+    let rel_files = vec!["config/existing.json".to_string()];
+
+    assert!(reference_exists(
+        &root,
+        &root.join("config/app.yml"),
+        &opts,
+        "{existing,missing}.json",
+        &rel_files
+    )
+    .unwrap());
+}
+
+#[test]
 fn ignores_unreadable_or_invalid_config_files() {
     let root = fixture_root("fixture");
     let files = vec![root.join("config"), root.join("config/invalid.yml")];

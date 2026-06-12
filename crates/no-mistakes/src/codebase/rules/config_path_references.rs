@@ -114,7 +114,10 @@ fn reference_exists(
     rel_files: &[String],
 ) -> Result<bool> {
     if opts.allow_globs
-        && (reference.contains('*') || reference.contains('?') || reference.contains('['))
+        && (reference.contains('*')
+            || reference.contains('?')
+            || reference.contains('[')
+            || reference.contains('{'))
     {
         let pattern = reference_pattern(root, config_file, opts, reference);
         let glob = Glob::new(&pattern)?;
