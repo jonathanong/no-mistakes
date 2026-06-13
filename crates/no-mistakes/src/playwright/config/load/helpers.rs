@@ -93,9 +93,10 @@ pub(super) fn find_default_playwright_configs(root: &Path) -> Result<Vec<PathBuf
         }
 
         let path = entry.path();
-        // ⚡ Bolt: Use `entry.file_type()` instead of `path.is_file()` to avoid a redundant `stat`
-        // syscall, utilizing the directory entry's cached file type on supported platforms.
-        if !entry.file_type().is_ok_and(|ft| ft.is_file()) {
+        let is_file = entry
+            .file_type()
+            .is_ok_and(|ft| ft.is_file() || (ft.is_symlink() && path.is_file()));
+        if !is_file {
             continue;
         }
         configs.push(path);
