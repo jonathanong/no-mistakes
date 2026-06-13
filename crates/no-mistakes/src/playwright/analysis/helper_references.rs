@@ -18,6 +18,7 @@ pub(crate) struct TestFileAnalysis {
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub(crate) struct SelectorHelperReferenceWithValue {
+    pub(crate) attribute: String,
     pub(crate) value: String,
     pub(crate) reference: SelectorHelperReference,
 }

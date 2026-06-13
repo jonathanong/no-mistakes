@@ -159,6 +159,7 @@ pub(crate) fn analyze_test_occurrences(
 
     append_locator_text_edges(&mut edges, &rel_test_file, context, text_locators);
 
+    let test_id_attributes = test_file.test_id_attributes();
     let helper_references = helper_references
         .into_iter()
         .filter(|reference| context.test_policy.allows(reference.status))
@@ -166,13 +167,20 @@ pub(crate) fn analyze_test_occurrences(
             reference.scope
                 != crate::playwright::playwright_tests::TestOccurrenceScope::TeardownHook
         })
-        .map(|reference| SelectorHelperReferenceWithValue {
-            value: reference.value.value,
-            reference: SelectorHelperReference {
+        .flat_map(|reference| {
+            let value = reference.value.value;
+            let helper_reference = SelectorHelperReference {
                 test_file: rel_test_file.clone(),
                 line: reference.line,
                 call: reference.value.call,
-            },
+            };
+            test_id_attributes.iter().cloned().map(move |attribute| {
+                SelectorHelperReferenceWithValue {
+                    attribute,
+                    value: value.clone(),
+                    reference: helper_reference.clone(),
+                }
+            })
         })
         .collect();
 

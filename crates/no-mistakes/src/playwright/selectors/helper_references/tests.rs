@@ -12,6 +12,8 @@ function getAsideLocator(page, dataPw) {
 
 test('uses helper', async ({ page }) => {
   await page.getByTestId('direct-button').click();
+  await page.getByRole('button', { name: 'role-button' }).click();
+  await page.getByText('text-button').click();
   await getAsideLocator(page, 'helper-button').click();
 });
 "#;
@@ -30,12 +32,14 @@ test('uses helper', async ({ page }) => {
             && reference.value.call == "getAsideLocator(...)"
             && reference.scope == playwright_tests::TestOccurrenceScope::Test
     }));
-    assert!(
-        references
-            .iter()
-            .all(|reference| reference.value.value != "direct-button"),
-        "direct getByTestId coverage calls must not be helper-reference hints: {references:?}"
-    );
+    for native_value in ["direct-button", "role-button", "text-button"] {
+        assert!(
+            references
+                .iter()
+                .all(|reference| reference.value.value != native_value),
+            "native locator calls must not be helper-reference hints: {references:?}"
+        );
+    }
 }
 
 #[test]

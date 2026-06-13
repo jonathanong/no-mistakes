@@ -1,10 +1,11 @@
-use super::call_shapes::{callee_is_static_member_named, selector_argument_mode};
 use crate::codebase::ts_source::byte_offset_to_line;
 use crate::playwright::{ast, playwright_tests};
 use oxc_ast_visit::Visit;
 
 mod arguments;
+mod classifier;
 use arguments::helper_argument_literals;
+use classifier::is_helper_reference_call;
 
 pub fn extract_playwright_helper_reference_occurrences_from_program(
     program: &oxc_ast::ast::Program<'_>,
@@ -173,39 +174,6 @@ impl PlaywrightHelperReferenceVisitor<'_> {
                 playwright_tests::merge_annotation_status(self.annotation_status, status);
         }
     }
-}
-
-fn is_helper_reference_call(callee: &oxc_ast::ast::Expression<'_>, path: &[String]) -> bool {
-    if callee_is_static_member_named(callee, "getByTestId")
-        || selector_argument_mode(callee).is_some()
-    {
-        return false;
-    }
-    let Some(name) = path.last().map(String::as_str) else {
-        return false;
-    };
-    !is_non_helper_call_name(name)
-}
-
-fn is_non_helper_call_name(name: &str) -> bool {
-    matches!(
-        name,
-        "afterAll"
-            | "afterEach"
-            | "beforeAll"
-            | "beforeEach"
-            | "describe"
-            | "expect"
-            | "fixme"
-            | "only"
-            | "skip"
-            | "slow"
-            | "step"
-            | "test"
-            | "use"
-            | "goto"
-            | "setTimeout"
-    ) || name.starts_with("to")
 }
 
 #[cfg(test)]
