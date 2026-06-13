@@ -1,67 +1,46 @@
-use super::call_shapes::{
-    callee_is_static_member_named, extract_get_by_test_id_call, selector_argument_literals,
-    selector_argument_mode,
-};
-use super::css::{extract_css_attribute_selectors, extract_css_id_selectors};
-use super::types::{PlaywrightSelector, SelectorRegexes};
+use super::call_shapes::{callee_is_static_member_named, selector_argument_mode};
 use crate::codebase::ts_source::byte_offset_to_line;
-use crate::playwright::playwright_tests;
+use crate::playwright::{ast, playwright_tests};
 use oxc_ast_visit::Visit;
 
-pub fn extract_playwright_selector_occurrences_from_program(
+mod arguments;
+use arguments::helper_argument_literals;
+
+pub fn extract_playwright_helper_reference_occurrences_from_program(
     program: &oxc_ast::ast::Program<'_>,
     source: &str,
-    regexes: &SelectorRegexes,
-    test_id_attributes: &[String],
-) -> Vec<playwright_tests::TestOccurrence<PlaywrightSelector>> {
-    let mut visitor = PlaywrightSelectorVisitor {
+) -> Vec<playwright_tests::TestOccurrence<super::types::PlaywrightHelperReference>> {
+    let mut visitor = PlaywrightHelperReferenceVisitor {
         source,
-        regexes,
-        test_id_attributes,
         status: playwright_tests::TestStatus::Active,
         annotation_status: playwright_tests::TestStatus::Active,
-        selectors: Vec::new(),
+        references: Vec::new(),
         current_test_name: None,
         current_scope: playwright_tests::TestOccurrenceScope::File,
         describe_stack: Vec::new(),
     };
     visitor.visit_program(program);
-    playwright_tests::dedup_occurrences_by_identity(&mut visitor.selectors);
-    visitor.selectors
+    playwright_tests::dedup_occurrences_by_identity(&mut visitor.references);
+    visitor.references
 }
 
-struct PlaywrightSelectorVisitor<'a, 'r> {
+struct PlaywrightHelperReferenceVisitor<'a> {
     source: &'a str,
-    regexes: &'r SelectorRegexes,
-    test_id_attributes: &'r [String],
     status: playwright_tests::TestStatus,
     annotation_status: playwright_tests::TestStatus,
-    selectors: Vec<playwright_tests::TestOccurrence<PlaywrightSelector>>,
+    references: Vec<playwright_tests::TestOccurrence<super::types::PlaywrightHelperReference>>,
     current_test_name: Option<String>,
     current_scope: playwright_tests::TestOccurrenceScope,
     describe_stack: Vec<String>,
 }
 
-impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightSelectorVisitor<'a, '_> {
+impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightHelperReferenceVisitor<'a> {
     fn visit_call_expression(&mut self, call: &oxc_ast::ast::CallExpression<'a>) {
-        if callee_is_static_member_named(&call.callee, "getByTestId") {
-            extract_get_by_test_id_call(
-                call,
-                self.source,
-                self.test_id_attributes,
-                &mut |selector| self.insert(selector, call.span.start),
-            );
-        } else if let Some(argument_mode) = selector_argument_mode(&call.callee) {
-            for selector in selector_argument_literals(call, self.source, argument_mode) {
-                extract_css_attribute_selectors(
-                    &selector,
-                    &self.regexes.playwright_attributes,
-                    &mut |selector| self.insert(selector, call.span.start),
-                );
-                if self.regexes.html_ids {
-                    extract_css_id_selectors(&selector, &mut |selector| {
-                        self.insert(selector, call.span.start)
-                    });
+        if let Some(path) = ast::expression_path(&call.callee) {
+            if is_helper_reference_call(&call.callee, &path) {
+                let call_display = format!("{}(...)", path.join("."));
+                for value in helper_argument_literals(call, self.source) {
+                    self.insert(value, call_display.clone(), call.span.start);
                 }
             }
         }
@@ -161,10 +140,10 @@ impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightSelectorVisitor<'a, '_> {
     }
 }
 
-impl PlaywrightSelectorVisitor<'_, '_> {
-    fn insert(&mut self, value: PlaywrightSelector, byte_offset: u32) {
-        self.selectors.push(playwright_tests::TestOccurrence {
-            value,
+impl PlaywrightHelperReferenceVisitor<'_> {
+    fn insert(&mut self, value: String, call: String, byte_offset: u32) {
+        self.references.push(playwright_tests::TestOccurrence {
+            value: super::types::PlaywrightHelperReference { value, call },
             status: self.status.merge(self.annotation_status),
             scope: self.current_scope,
             test_name: self.current_test_name.clone(),
@@ -194,6 +173,39 @@ impl PlaywrightSelectorVisitor<'_, '_> {
                 playwright_tests::merge_annotation_status(self.annotation_status, status);
         }
     }
+}
+
+fn is_helper_reference_call(callee: &oxc_ast::ast::Expression<'_>, path: &[String]) -> bool {
+    if callee_is_static_member_named(callee, "getByTestId")
+        || selector_argument_mode(callee).is_some()
+    {
+        return false;
+    }
+    let Some(name) = path.last().map(String::as_str) else {
+        return false;
+    };
+    !is_non_helper_call_name(name)
+}
+
+fn is_non_helper_call_name(name: &str) -> bool {
+    matches!(
+        name,
+        "afterAll"
+            | "afterEach"
+            | "beforeAll"
+            | "beforeEach"
+            | "describe"
+            | "expect"
+            | "fixme"
+            | "only"
+            | "skip"
+            | "slow"
+            | "step"
+            | "test"
+            | "use"
+            | "goto"
+            | "setTimeout"
+    ) || name.starts_with("to")
 }
 
 #[cfg(test)]

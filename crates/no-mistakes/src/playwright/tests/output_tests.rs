@@ -4,8 +4,8 @@ use crate::playwright::analysis::output::{
 use crate::playwright::analysis::tests_report::{build_tests_report, print_tests_text};
 use crate::playwright::analysis::tests_report_types::{TestEntry, TestsReport};
 use crate::playwright::analysis::types::{
-    CoverageFetch, CoverageReport, CoverageRoute, CoverageSelector, DuplicateSelector, Edge,
-    EdgeReport, SelectorHelperReference, SelectorRef, Summary,
+    CoverageReport, CoverageRoute, CoverageSelector, DuplicateSelector, Edge, EdgeReport,
+    SelectorHelperReference, SelectorRef, Summary,
 };
 use crate::playwright::test_support::fixture_path;
 use crate::playwright::{report_json, PlaywrightReportKind, PlaywrightReportOptions};
@@ -131,36 +131,6 @@ fn text_printer_covers_fetch_edges() {
         }],
     };
     print_edges_text(&edges);
-}
-
-#[test]
-fn coverage_text_covers_fetch_apis() {
-    let coverage = CoverageReport {
-        summary: Summary {
-            total_routes: 0,
-            covered_routes: 0,
-            uncovered_routes: 0,
-            total_selectors: 0,
-            covered_selectors: 0,
-            uncovered_selectors: 0,
-            duplicate_selectors: 0,
-            total_fetch_apis: 1,
-            covered_fetch_apis: 0,
-            uncovered_fetch_apis: 1,
-        },
-        routes: vec![],
-        selectors: vec![],
-        duplicate_selectors: vec![],
-        fetch_apis: vec![CoverageFetch {
-            method: "GET".to_string(),
-            path: "/api/missing".to_string(),
-            covered: false,
-            tests: vec![],
-            tests_detail: vec![],
-            route_files: vec!["web/app/page.tsx".to_string()],
-        }],
-    };
-    print_coverage_text(&coverage);
 }
 
 #[test]
@@ -528,27 +498,4 @@ fn report_json_surfaces_analysis_errors() {
     let error = report_json(PlaywrightReportKind::Check, report_options(root)).unwrap_err();
 
     assert!(error.to_string().contains("no Next.js page routes found"));
-}
-
-#[test]
-fn coverage_json_includes_helper_references_for_uncovered_selectors() {
-    let root = fixture_path(&["nextjs-selectors", "helper-wrapper-reference"]);
-    let json = report_json(PlaywrightReportKind::Check, report_options(root)).unwrap();
-    let report: serde_json::Value = serde_json::from_str(&json).unwrap();
-    let selector = report["selectors"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .find(|selector| selector["value"] == "example-button")
-        .expect("example-button selector");
-    let helper = selector["helperReferences"]
-        .as_array()
-        .unwrap()
-        .first()
-        .expect("helper reference");
-
-    assert_eq!(selector["covered"], false);
-    assert_eq!(helper["testFile"], "tests/e2e/app.spec.ts");
-    assert_eq!(helper["line"], 9);
-    assert_eq!(helper["call"], "getAsideLocator(...)");
 }

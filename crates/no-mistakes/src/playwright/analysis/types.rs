@@ -2,6 +2,9 @@ use serde::Serialize;
 use std::path::Path;
 use std::sync::Arc;
 
+pub(crate) use super::helper_references::{
+    SelectorHelperReference, SelectorHelperReferenceWithValue, TestFileAnalysis,
+};
 use crate::playwright::config::Settings;
 use crate::playwright::routes::Route;
 use crate::playwright::selectors;
@@ -55,26 +58,6 @@ pub(crate) struct CoverageSelector {
     pub(crate) selectors: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub(crate) helper_references: Vec<SelectorHelperReference>,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct SelectorHelperReference {
-    pub(crate) test_file: Arc<String>,
-    pub(crate) line: u32,
-    pub(crate) call: String,
-}
-
-#[derive(Default)]
-pub(crate) struct TestFileAnalysis {
-    pub(crate) edges: Vec<Edge>,
-    pub(crate) helper_references: Vec<SelectorHelperReferenceWithValue>,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub(crate) struct SelectorHelperReferenceWithValue {
-    pub(crate) value: String,
-    pub(crate) reference: SelectorHelperReference,
 }
 
 #[derive(Serialize)]
