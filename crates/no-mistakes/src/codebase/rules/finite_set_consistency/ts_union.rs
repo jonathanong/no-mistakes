@@ -1,10 +1,11 @@
 pub(super) fn body(source: &str) -> &str {
     let mut end = source.len();
     let mut offset = 0usize;
-    for line in source.lines() {
+    for chunk in source.split_inclusive('\n') {
+        let line = chunk.trim_end_matches(['\r', '\n']);
         let trimmed = line.trim_start();
         if trimmed.is_empty() {
-            offset += line.len() + 1;
+            offset += chunk.len();
             continue;
         }
         if offset > 0
@@ -25,16 +26,20 @@ pub(super) fn body(source: &str) -> &str {
                 )
             )
         {
-            end = offset.saturating_sub(1);
+            end = previous_line_end(source, offset);
             break;
         }
         if let Some(index) = semicolon_outside_strings(line) {
             end = offset + index;
             break;
         }
-        offset += line.len() + 1;
+        offset += chunk.len();
     }
     &source[..end]
+}
+
+fn previous_line_end(source: &str, offset: usize) -> usize {
+    source[..offset].trim_end_matches(['\r', '\n']).len()
 }
 
 fn semicolon_outside_strings(line: &str) -> Option<usize> {

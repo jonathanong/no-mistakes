@@ -334,6 +334,19 @@ export const LABELS = { users: "Users" };
 }
 
 #[test]
+fn string_union_extraction_handles_crlf_before_following_declaration() {
+    let source = std::fs::read_to_string(fixture_root("fixture").join("src/crlf-union.ts"))
+        .unwrap()
+        .replace("\r\n", "\n")
+        .replace('\n', "\r\n");
+
+    assert_eq!(
+        extract_ts_string_union(&source, "RouteName"),
+        BTreeSet::from(["billing".to_string(), "users".to_string()])
+    );
+}
+
+#[test]
 fn string_union_extraction_stops_before_blank_lines_and_declaration_keywords() {
     assert_eq!(
         extract_ts_string_union(
