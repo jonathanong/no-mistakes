@@ -15,6 +15,7 @@ test('uses helper', async ({ page }) => {
   await page.getByRole('button', { name: 'role-button' }).click();
   await page.getByText('text-button').click();
   await expect(locator).toBeVisible('matcher-noise');
+  await expect(locator).toContainText('contain-text-noise');
   await toggleSidebar(page, 'toggle-helper').click();
   await getAsideLocator(page, 'helper-button').click();
 });

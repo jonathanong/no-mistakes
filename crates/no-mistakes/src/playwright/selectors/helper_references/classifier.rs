@@ -9,6 +9,9 @@ pub(super) fn is_helper_reference_call(
     {
         return false;
     }
+    if path.first().is_some_and(|name| name == "expect") {
+        return false;
+    }
     let Some(name) = path.last().map(String::as_str) else {
         return false;
     };
