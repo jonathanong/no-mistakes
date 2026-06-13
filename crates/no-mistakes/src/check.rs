@@ -115,6 +115,10 @@ fn print_check_md(results: &check_runner::CheckResults) {
             f.file, f.line, f.export_name, f.message
         );
     }
+    println!("## advisories");
+    for f in &results.advisories {
+        println!("- `{}`:{} {} {}", f.file, f.line, f.rule, f.message);
+    }
 }
 
 fn print_check_paths(results: &check_runner::CheckResults) {
@@ -143,6 +147,7 @@ fn print_check_human(results: &check_runner::CheckResults) {
     print_rules_human(&results.rules);
     print_integration_human(&results.integration);
     print_codebase_human(&results.codebase);
+    print_advisories_human(&results.advisories);
 }
 
 fn print_queue_human(findings: &[CheckFinding]) {
@@ -179,6 +184,12 @@ fn print_codebase_human(findings: &[UniqueExportFinding]) {
             "{}[{}] {}:{} {}",
             f.rule, f.export_name, f.file, f.line, f.message
         );
+    }
+}
+
+fn print_advisories_human(findings: &[RuleFinding]) {
+    for f in findings {
+        println!("advisory {} {}:{} {}", f.rule, f.file, f.line, f.message);
     }
 }
 

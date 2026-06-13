@@ -6,6 +6,7 @@ use crate::check_tasks::{
 use anyhow::{Context, Result};
 use enabled::{fact_plan, integration_configured, plan_requests_facts};
 use no_mistakes::codebase::check_facts::collect_check_facts_with_graph_files_and_playwright;
+use no_mistakes::codebase::rules::agents_md_max_size::advisories_with_files;
 use no_mistakes::config::v2::load_v2_config;
 use no_mistakes::react_traits;
 use std::path::PathBuf;
@@ -118,7 +119,7 @@ pub(crate) fn run_all(
             queues_enabled,
             unique_exports_enabled,
             filesystem_rules_enabled,
-            discovered_files: fs_files,
+            discovered_files: fs_files.clone(),
             facts: &facts,
         });
 
@@ -150,6 +151,11 @@ pub(crate) fn run_all(
     .collect();
 
     rules.findings.extend(filesystem_rules.findings);
+    let advisories = if filesystem_rules_enabled {
+        advisories_with_files(&root, &config, &fs_files)?
+    } else {
+        Vec::new()
+    };
 
     Ok(CheckResults {
         timings: vec![
@@ -168,6 +174,7 @@ pub(crate) fn run_all(
         integration: integration.findings,
         codebase: codebase.findings,
         warnings,
+        advisories,
     })
 }
 

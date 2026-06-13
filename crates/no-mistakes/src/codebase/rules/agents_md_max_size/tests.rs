@@ -1,3 +1,4 @@
+use super::agents_md_max_size_budget::{check_file, count_lines};
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -67,6 +68,8 @@ fn check_file_fails_char_count() {
     let findings = check_file(&path, tmp.path(), 100, 5);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("characters"));
+    assert!(findings[0].message.contains("bytes"));
+    assert!(findings[0].message.contains("over"));
 }
 
 #[test]
@@ -96,6 +99,98 @@ fn check_file_multibyte_chars() {
     let findings = check_file(&path, tmp.path(), 100, 3);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("5 characters"));
+}
+
+#[test]
+fn advisories_report_near_limit_files_without_findings() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("CLAUDE.md");
+    std::fs::write(&path, "hello world").unwrap();
+    let config = config_with_rule("{maxChars: 20, advisoryCharsRemaining: 10}");
+    let files = vec![path];
+
+    let findings = check_with_files(tmp.path(), &config, &files).unwrap();
+    let advisories = advisories_with_files(tmp.path(), &config, &files).unwrap();
+
+    assert!(findings.is_empty());
+    assert_eq!(advisories.len(), 1);
+    assert!(advisories[0].message.contains("11 characters"));
+    assert!(advisories[0].message.contains("11 bytes"));
+    assert!(advisories[0].message.contains("9 remaining"));
+}
+
+#[test]
+fn advisories_skip_over_limit_files() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("CLAUDE.md");
+    std::fs::write(&path, "hello world").unwrap();
+    let config = config_with_rule("{maxChars: 5, advisoryCharsRemaining: 10}");
+    let files = vec![path];
+
+    let findings = check_with_files(tmp.path(), &config, &files).unwrap();
+    let advisories = advisories_with_files(tmp.path(), &config, &files).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert!(advisories.is_empty());
+}
+
+#[test]
+fn advisories_skip_files_outside_threshold() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("CLAUDE.md");
+    std::fs::write(&path, "hello").unwrap();
+    let config = config_with_rule("{maxChars: 20, advisoryCharsRemaining: 10}");
+    let files = vec![path];
+
+    let advisories = advisories_with_files(tmp.path(), &config, &files).unwrap();
+
+    assert!(advisories.is_empty());
+}
+
+#[test]
+fn advisories_skip_unreadable_files() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("CLAUDE.md");
+    let config = config_with_rule("{maxChars: 20, advisoryCharsRemaining: 20}");
+    let files = vec![path];
+
+    let advisories = advisories_with_files(tmp.path(), &config, &files).unwrap();
+
+    assert!(advisories.is_empty());
+}
+
+#[test]
+fn advisories_respect_disable_file_comment() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("CLAUDE.md");
+    std::fs::write(
+        &path,
+        format!("# no-mistakes-disable-file {RULE_ID}\nhello world"),
+    )
+    .unwrap();
+    let config = config_with_rule("{maxChars: 100, advisoryCharsRemaining: 100}");
+    let files = vec![path];
+
+    let advisories = advisories_with_files(tmp.path(), &config, &files).unwrap();
+
+    assert!(advisories.is_empty());
+}
+
+#[test]
+fn advisories_respect_line_suppressions() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("CLAUDE.md");
+    std::fs::write(
+        &path,
+        format!("# no-mistakes-disable-line {RULE_ID}\nhello world"),
+    )
+    .unwrap();
+    let config = config_with_rule("{maxChars: 100, advisoryCharsRemaining: 100}");
+    let files = vec![path];
+
+    let advisories = advisories_with_files(tmp.path(), &config, &files).unwrap();
+
+    assert!(advisories.is_empty());
 }
 
 #[test]

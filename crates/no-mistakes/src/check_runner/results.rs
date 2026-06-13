@@ -15,6 +15,7 @@ pub(crate) struct CheckResults {
     pub(crate) integration: Vec<IntegrationFinding>,
     pub(crate) codebase: Vec<UniqueExportFinding>,
     pub(crate) warnings: Vec<String>,
+    pub(crate) advisories: Vec<RuleFinding>,
     pub(crate) timings: Vec<(&'static str, Duration)>,
 }
 
@@ -48,6 +49,7 @@ pub(crate) fn empty_results(warnings: [Option<String>; 1]) -> CheckResults {
         integration: Vec::new(),
         codebase: Vec::new(),
         warnings,
+        advisories: Vec::new(),
         timings: vec![
             ("discover", Duration::ZERO),
             ("parse_extract", Duration::ZERO),
@@ -69,6 +71,7 @@ pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
         integration,
         codebase,
         warnings,
+        advisories,
         timings,
     } = results;
     let _ = timings;
@@ -79,5 +82,6 @@ pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
         "integration": integration,
         "codebase": codebase,
         "warnings": warnings,
+        "advisories": advisories,
     })
 }

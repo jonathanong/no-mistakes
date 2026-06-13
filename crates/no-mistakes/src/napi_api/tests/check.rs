@@ -34,3 +34,29 @@ fn check_json_returns_warnings_for_skipped_configured_check() {
     }));
     assert_eq!(value["rules"].as_array().map(Vec::len), Some(0));
 }
+
+#[test]
+fn check_json_returns_non_blocking_agent_doc_advisories() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/agents-md-max-size/fixture/advisory");
+    let options = json!({
+        "root": root,
+        "config": ".no-mistakes.yml"
+    })
+    .to_string();
+    let output = check_json_impl(options).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(value["rules"].as_array().map(Vec::len), Some(0));
+    assert!(value["advisories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|advisory| {
+            advisory["rule"] == "agents-md-max-size"
+                && advisory["file"] == "CLAUDE.md"
+                && advisory["message"]
+                    .as_str()
+                    .is_some_and(|message| message.contains("8 remaining"))
+        }));
+}
