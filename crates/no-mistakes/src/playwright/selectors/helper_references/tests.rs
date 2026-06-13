@@ -14,6 +14,8 @@ test('uses helper', async ({ page }) => {
   await page.getByTestId('direct-button').click();
   await page.getByRole('button', { name: 'role-button' }).click();
   await page.getByText('text-button').click();
+  await expect(locator).toBeVisible('matcher-noise');
+  await toggleSidebar(page, 'toggle-helper').click();
   await getAsideLocator(page, 'helper-button').click();
 });
 "#;
@@ -32,7 +34,17 @@ test('uses helper', async ({ page }) => {
             && reference.value.call == "getAsideLocator(...)"
             && reference.scope == playwright_tests::TestOccurrenceScope::Test
     }));
-    for native_value in ["direct-button", "role-button", "text-button"] {
+    assert!(references.iter().any(|reference| {
+        reference.value.value == "toggle-helper"
+            && reference.value.call == "toggleSidebar(...)"
+            && reference.scope == playwright_tests::TestOccurrenceScope::Test
+    }));
+    for native_value in [
+        "direct-button",
+        "role-button",
+        "text-button",
+        "matcher-noise",
+    ] {
         assert!(
             references
                 .iter()
