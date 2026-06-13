@@ -83,6 +83,19 @@ fn v2_without_config_paths_finds_default_playwright_config() {
 }
 
 #[test]
+fn default_playwright_config_discovery_follows_symlinked_config() {
+    let root = fixture_path(&["scan-config", "symlinked-default-playwright"]);
+    let config = root.join("playwright.config.ts");
+    assert!(
+        config.is_file(),
+        "fixture symlink should resolve to a regular config file"
+    );
+
+    let settings = load_settings(&root, None, &[], None).unwrap();
+    assert_eq!(settings.playwright_configs, vec![config]);
+}
+
+#[test]
 fn cli_playwright_configs_override_file_settings() {
     let root = fixture_path(&["scan-config", "full"]);
     let settings = load_settings(
