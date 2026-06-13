@@ -39,14 +39,7 @@ pub(super) fn body(source: &str) -> &str {
 }
 
 fn previous_line_end(source: &str, offset: usize) -> usize {
-    let prefix = &source[..offset];
-    if prefix.ends_with("\r\n") {
-        offset.saturating_sub(2)
-    } else if prefix.ends_with(['\r', '\n']) {
-        offset.saturating_sub(1)
-    } else {
-        offset
-    }
+    source[..offset].trim_end_matches(['\r', '\n']).len()
 }
 
 fn semicolon_outside_strings(line: &str) -> Option<usize> {
