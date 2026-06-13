@@ -5,7 +5,7 @@ use crate::playwright::analysis::tests_report::{build_tests_report, print_tests_
 use crate::playwright::analysis::tests_report_types::{TestEntry, TestsReport};
 use crate::playwright::analysis::types::{
     CoverageFetch, CoverageReport, CoverageRoute, CoverageSelector, DuplicateSelector, Edge,
-    EdgeReport, SelectorRef, Summary,
+    EdgeReport, SelectorHelperReference, SelectorRef, Summary,
 };
 use crate::playwright::test_support::fixture_path;
 use crate::playwright::{report_json, PlaywrightReportKind, PlaywrightReportOptions};
@@ -57,7 +57,11 @@ fn text_printers_cover_routes_and_selectors() {
             tests: vec![],
             tests_detail: vec![],
             selectors: vec![],
-            helper_references: vec![],
+            helper_references: vec![SelectorHelperReference {
+                test_file: std::sync::Arc::new("tests/e2e/app.spec.ts".to_string()),
+                line: 4,
+                call: "getAsideLocator(...)".to_string(),
+            }],
         }],
         duplicate_selectors: vec![DuplicateSelector {
             attribute: "data-testid".to_string(),
