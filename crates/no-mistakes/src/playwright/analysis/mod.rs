@@ -7,6 +7,7 @@ pub(crate) mod coverage_edges;
 pub(crate) mod discover;
 pub(crate) mod duplicates;
 pub(crate) mod fetch;
+pub(crate) mod helper_references;
 pub(crate) mod output;
 pub(crate) mod pipeline;
 pub(crate) mod pipeline_selectors;

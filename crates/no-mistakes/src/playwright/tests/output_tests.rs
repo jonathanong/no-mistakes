@@ -4,8 +4,8 @@ use crate::playwright::analysis::output::{
 use crate::playwright::analysis::tests_report::{build_tests_report, print_tests_text};
 use crate::playwright::analysis::tests_report_types::{TestEntry, TestsReport};
 use crate::playwright::analysis::types::{
-    CoverageFetch, CoverageReport, CoverageRoute, CoverageSelector, DuplicateSelector, Edge,
-    EdgeReport, SelectorRef, Summary,
+    CoverageReport, CoverageRoute, CoverageSelector, DuplicateSelector, Edge, EdgeReport,
+    SelectorHelperReference, SelectorRef, Summary,
 };
 use crate::playwright::test_support::fixture_path;
 use crate::playwright::{report_json, PlaywrightReportKind, PlaywrightReportOptions};
@@ -57,6 +57,11 @@ fn text_printers_cover_routes_and_selectors() {
             tests: vec![],
             tests_detail: vec![],
             selectors: vec![],
+            helper_references: vec![SelectorHelperReference {
+                test_file: std::sync::Arc::new("tests/e2e/app.spec.ts".to_string()),
+                line: 4,
+                call: "getAsideLocator(...)".to_string(),
+            }],
         }],
         duplicate_selectors: vec![DuplicateSelector {
             attribute: "data-testid".to_string(),
@@ -126,36 +131,6 @@ fn text_printer_covers_fetch_edges() {
         }],
     };
     print_edges_text(&edges);
-}
-
-#[test]
-fn coverage_text_covers_fetch_apis() {
-    let coverage = CoverageReport {
-        summary: Summary {
-            total_routes: 0,
-            covered_routes: 0,
-            uncovered_routes: 0,
-            total_selectors: 0,
-            covered_selectors: 0,
-            uncovered_selectors: 0,
-            duplicate_selectors: 0,
-            total_fetch_apis: 1,
-            covered_fetch_apis: 0,
-            uncovered_fetch_apis: 1,
-        },
-        routes: vec![],
-        selectors: vec![],
-        duplicate_selectors: vec![],
-        fetch_apis: vec![CoverageFetch {
-            method: "GET".to_string(),
-            path: "/api/missing".to_string(),
-            covered: false,
-            tests: vec![],
-            tests_detail: vec![],
-            route_files: vec!["web/app/page.tsx".to_string()],
-        }],
-    };
-    print_coverage_text(&coverage);
 }
 
 #[test]

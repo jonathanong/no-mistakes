@@ -2,6 +2,9 @@ use serde::Serialize;
 use std::path::Path;
 use std::sync::Arc;
 
+pub(crate) use super::helper_references::{
+    SelectorHelperReference, SelectorHelperReferenceWithValue, TestFileAnalysis,
+};
 use crate::playwright::config::Settings;
 use crate::playwright::routes::Route;
 use crate::playwright::selectors;
@@ -53,6 +56,8 @@ pub(crate) struct CoverageSelector {
     pub(crate) tests: Vec<String>,
     pub(crate) tests_detail: Vec<TestRef>,
     pub(crate) selectors: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub(crate) helper_references: Vec<SelectorHelperReference>,
 }
 
 #[derive(Serialize)]
@@ -184,6 +189,7 @@ pub(crate) struct CoverageInputs<'a> {
     pub(crate) app_selectors: &'a [selectors::AppSelector],
     pub(crate) app_selector_occurrences: &'a [selectors::AppSelector],
     pub(crate) edges: &'a [Edge],
+    pub(crate) helper_references: &'a [SelectorHelperReferenceWithValue],
     pub(crate) settings: &'a Settings,
     pub(crate) unique_selector_policy: UniqueSelectorPolicy,
     pub(crate) fetch_index: &'a FetchIndex,

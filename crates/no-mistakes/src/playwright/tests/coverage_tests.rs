@@ -1,12 +1,31 @@
 use crate::fetch::types::{CacheKind, FetchOccurrence, FetchSide, SourceType};
 use crate::playwright::analysis::coverage::build_coverage as build_coverage_report;
+use crate::playwright::analysis::output::print_coverage_text;
 use crate::playwright::analysis::types::CoverageInputs;
-use crate::playwright::analysis::types::{Edge, FetchIndex, UniqueSelectorPolicy};
+use crate::playwright::analysis::types::{
+    CoverageFetch, CoverageReport, Edge, FetchIndex, Summary, UniqueSelectorPolicy,
+};
 use crate::playwright::config::Settings;
 use crate::playwright::routes::Route;
 use crate::playwright::selectors::{self, AppSelectorValue};
+use crate::playwright::test_support::fixture_path;
+use crate::playwright::{report_json, PlaywrightReportKind, PlaywrightReportOptions};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+
+fn report_options(root: PathBuf) -> PlaywrightReportOptions {
+    PlaywrightReportOptions {
+        root,
+        config: None,
+        playwright_config: Vec::new(),
+        project: None,
+        files: Vec::new(),
+        assert_conditional_tests: false,
+        allow_skipped_tests: false,
+        assert_unique_test_ids: false,
+        assert_unique_html_ids: false,
+    }
+}
 
 fn build_coverage(
     root: &Path,
@@ -23,6 +42,7 @@ fn build_coverage(
         app_selectors,
         app_selector_occurrences: app_selectors,
         edges,
+        helper_references: &[],
         settings,
         unique_selector_policy,
         fetch_index,
@@ -398,4 +418,57 @@ fn fetch_occurrence(method: &str, path: &str, dynamic: bool, unsupported: bool) 
         error_handled: false,
         source_type: SourceType::Page,
     }
+}
+
+#[test]
+fn coverage_json_includes_helper_references_for_uncovered_selectors() {
+    let root = fixture_path(&["nextjs-selectors", "helper-wrapper-reference"]);
+    let json = report_json(PlaywrightReportKind::Check, report_options(root)).unwrap();
+    let report: serde_json::Value = serde_json::from_str(&json).unwrap();
+    let selector = report["selectors"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|selector| selector["value"] == "example-button")
+        .expect("example-button selector");
+    let helper = selector["helperReferences"]
+        .as_array()
+        .unwrap()
+        .first()
+        .expect("helper reference");
+
+    assert_eq!(selector["covered"], false);
+    assert_eq!(helper["testFile"], "tests/e2e/app.spec.ts");
+    assert_eq!(helper["line"], 9);
+    assert_eq!(helper["call"], "getAsideLocator(...)");
+}
+
+#[test]
+fn coverage_text_covers_fetch_apis() {
+    let coverage = CoverageReport {
+        summary: Summary {
+            total_routes: 0,
+            covered_routes: 0,
+            uncovered_routes: 0,
+            total_selectors: 0,
+            covered_selectors: 0,
+            uncovered_selectors: 0,
+            duplicate_selectors: 0,
+            total_fetch_apis: 1,
+            covered_fetch_apis: 0,
+            uncovered_fetch_apis: 1,
+        },
+        routes: vec![],
+        selectors: vec![],
+        duplicate_selectors: vec![],
+        fetch_apis: vec![CoverageFetch {
+            method: "GET".to_string(),
+            path: "/api/missing".to_string(),
+            covered: false,
+            tests: vec![],
+            tests_detail: vec![],
+            route_files: vec!["web/app/page.tsx".to_string()],
+        }],
+    };
+    print_coverage_text(&coverage);
 }

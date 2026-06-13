@@ -44,6 +44,12 @@ pub struct PlaywrightSelector {
     pub(super) matcher: SelectorMatcher,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub struct PlaywrightHelperReference {
+    pub value: String,
+    pub call: String,
+}
+
 impl PlaywrightSelector {
     pub fn for_test(attribute: &str, selector: &str, matcher: SelectorMatcher) -> Self {
         Self {

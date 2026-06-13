@@ -1,7 +1,9 @@
 use crate::playwright::analysis::context::{DiscoveredTestFile, TestAnalysisContext};
 use crate::playwright::analysis::routes_index::route_specificity;
 use crate::playwright::analysis::text_edges::append_locator_text_edges;
-use crate::playwright::analysis::types::Edge;
+use crate::playwright::analysis::types::{
+    Edge, SelectorHelperReference, SelectorHelperReferenceWithValue, TestFileAnalysis,
+};
 use crate::playwright::fsutil::relative_string;
 use crate::playwright::matcher;
 use crate::playwright::selectors;
@@ -12,7 +14,7 @@ use anyhow::{Context, Result};
 pub(crate) fn analyze_test_file(
     test_file: &DiscoveredTestFile,
     context: &TestAnalysisContext<'_>,
-) -> Result<Vec<Edge>> {
+) -> Result<TestFileAnalysis> {
     let source = std::fs::read_to_string(&test_file.path)
         .context(format!("reading test file {}", test_file.path.display()))?;
     let test_id_attributes = test_file.test_id_attributes();
@@ -38,15 +40,25 @@ pub(crate) fn analyze_test_file(
         } else {
             selectors::extract_playwright_text_locator_occurrences_from_program(program, source)
         };
-        (raw_urls, playwright_selectors, text_locators)
+        let helper_references =
+            selectors::extract_playwright_helper_reference_occurrences_from_program(
+                program, source,
+            );
+        (
+            raw_urls,
+            playwright_selectors,
+            text_locators,
+            helper_references,
+        )
     });
-    let (raw_urls, playwright_selectors, text_locators) = parsed?;
+    let (raw_urls, playwright_selectors, text_locators, helper_references) = parsed?;
     Ok(analyze_test_occurrences(
         test_file,
         context,
         raw_urls,
         playwright_selectors,
         text_locators,
+        helper_references,
     ))
 }
 
@@ -62,7 +74,10 @@ pub(crate) fn analyze_test_occurrences(
             crate::playwright::analysis::text_types::PlaywrightTextLocator,
         >,
     >,
-) -> Vec<Edge> {
+    helper_references: Vec<
+        crate::playwright::playwright_tests::TestOccurrence<selectors::PlaywrightHelperReference>,
+    >,
+) -> TestFileAnalysis {
     let rel_test_file = std::sync::Arc::new(relative_string(context.root, &test_file.path));
     let mut edges = Vec::new();
     let base_urls = test_file.base_urls();
@@ -144,5 +159,33 @@ pub(crate) fn analyze_test_occurrences(
 
     append_locator_text_edges(&mut edges, &rel_test_file, context, text_locators);
 
-    edges
+    let test_id_attributes = test_file.test_id_attributes();
+    let helper_references = helper_references
+        .into_iter()
+        .filter(|reference| context.test_policy.allows(reference.status))
+        .filter(|reference| {
+            reference.scope
+                != crate::playwright::playwright_tests::TestOccurrenceScope::TeardownHook
+        })
+        .flat_map(|reference| {
+            let value = reference.value.value;
+            let helper_reference = SelectorHelperReference {
+                test_file: rel_test_file.clone(),
+                line: reference.line,
+                call: reference.value.call,
+            };
+            test_id_attributes.iter().cloned().map(move |attribute| {
+                SelectorHelperReferenceWithValue {
+                    attribute,
+                    value: value.clone(),
+                    reference: helper_reference.clone(),
+                }
+            })
+        })
+        .collect();
+
+    TestFileAnalysis {
+        edges,
+        helper_references,
+    }
 }

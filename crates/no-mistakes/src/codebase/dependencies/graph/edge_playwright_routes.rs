@@ -49,12 +49,12 @@ fn collect_playwright_route_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edg
 
     let mut edges = Vec::new();
     for test_file in &test_files {
-        let Ok(test_edges) =
+        let Ok(test_analysis) =
             crate::playwright::analysis::test_file::analyze_test_file(test_file, &test_analysis)
         else {
             continue;
         };
-        for edge in test_edges {
+        for edge in test_analysis.edges {
             let crate::playwright::analysis::types::Edge::Route {
                 test_file,
                 route_file,

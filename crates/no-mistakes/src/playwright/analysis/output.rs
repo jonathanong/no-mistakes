@@ -43,6 +43,12 @@ pub(crate) fn print_coverage_text(report: &CoverageReport) {
                 "  [{}=\"{}\"]  {}",
                 selector.attribute, selector.value, selector.file
             );
+            if let Some(reference) = selector.helper_references.first() {
+                println!(
+                    "    Found '{}' in {}:{} {}, but selector coverage only counts literal getByTestId('{}') calls. Inline the getByTestId call or add explicit wrapper support.",
+                    selector.value, reference.test_file, reference.line, reference.call, selector.value
+                );
+            }
         }
     }
 

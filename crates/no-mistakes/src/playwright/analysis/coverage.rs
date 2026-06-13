@@ -27,6 +27,7 @@ pub(crate) fn build_coverage(inputs: CoverageInputs<'_>) -> CoverageReport {
     let app_selectors = inputs.app_selectors;
     let app_selector_occurrences = inputs.app_selector_occurrences;
     let edges = inputs.edges;
+    let helper_references = inputs.helper_references;
     let settings = inputs.settings;
     let unique_selector_policy = inputs.unique_selector_policy;
     let fetch_index = inputs.fetch_index;
@@ -56,6 +57,17 @@ pub(crate) fn build_coverage(inputs: CoverageInputs<'_>) -> CoverageReport {
     }
 
     coverage_routes.sort_by(|a, b| a.route.cmp(&b.route).then_with(|| a.file.cmp(&b.file)));
+    let mut helper_references_by_selector = BTreeMap::<(String, String), Vec<_>>::new();
+    for helper_reference in helper_references {
+        helper_references_by_selector
+            .entry((
+                helper_reference.attribute.clone(),
+                helper_reference.value.clone(),
+            ))
+            .or_default()
+            .push(helper_reference.reference.clone());
+    }
+
     let mut coverage_selectors: Vec<CoverageSelector> = Vec::new();
     for app_selector in app_selectors {
         let app_file = Arc::new(relative_string(root, &app_selector.file));
@@ -64,18 +76,28 @@ pub(crate) fn build_coverage(inputs: CoverageInputs<'_>) -> CoverageReport {
         let key = (app_file.clone(), attribute.clone(), value.clone());
         let ((tests, selectors), tests_detail) = by_selector.get(&key).cloned().unwrap_or_default();
         let covered = !tests.is_empty();
+        let unsupported_dynamic = app_selector.unsupported_dynamic();
+        let helper_references = if covered || unsupported_dynamic {
+            Vec::new()
+        } else {
+            helper_references_by_selector
+                .get(&(attribute.clone(), value.clone()))
+                .cloned()
+                .unwrap_or_default()
+        };
         coverage_selectors.push(CoverageSelector {
             attribute,
             value,
             file: app_file.to_string(),
             covered,
-            unsupported_dynamic: app_selector.unsupported_dynamic(),
+            unsupported_dynamic,
             tests: tests.into_iter().map(|test| test.to_string()).collect(),
             tests_detail: tests_detail.into_iter().collect(),
             selectors: selectors
                 .into_iter()
                 .map(|selector| selector.to_string())
                 .collect(),
+            helper_references,
         });
     }
     coverage_selectors.sort_by(|a, b| {

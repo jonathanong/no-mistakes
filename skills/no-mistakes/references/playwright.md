@@ -47,6 +47,11 @@ no-mistakes playwright check --assert-unique-test-ids --json
 
 Node API: `playwrightCheck(options)`.
 
+If an uncovered selector value appears only in a helper-wrapper call such as
+`getAsideLocator(page, 'save')`, `playwright check` reports that location as a
+hint. The wrapper still does not count as selector coverage; use a literal
+`getByTestId('save')` call or add explicit wrapper support.
+
 ## `playwright related`
 
 Tests that cover a route or selector-bearing component.

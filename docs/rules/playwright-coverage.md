@@ -29,3 +29,14 @@ so `getByTestId('save')` still covers `data-pw="save"`. You can also declare the
 attribute explicitly with
 [`tests.playwright.testIdAttribute`](../configuration/tests.md#testidattribute),
 which takes precedence over both.
+
+## Helper wrappers
+
+Selector coverage does not infer wrapper semantics. If a spec calls a helper such
+as `getAsideLocator(page, 'save')` and that helper internally calls
+`page.getByTestId(dataPw)`, the selector remains uncovered because the literal
+`getByTestId('save')` call is not present in the spec.
+
+When an uncovered selector value appears in a helper-wrapper call, the failure
+includes a hint pointing at that call. Fix it by inlining the literal
+`getByTestId(...)` assertion or by adding explicit wrapper support intentionally.

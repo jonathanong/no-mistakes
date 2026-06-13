@@ -27,5 +27,9 @@ pub(crate) fn collect_playwright_facts(
             crate::playwright::selectors::extract_playwright_text_locator_occurrences_from_program(
                 program, source,
             ),
+        helper_references:
+            crate::playwright::selectors::extract_playwright_helper_reference_occurrences_from_program(
+                program, source,
+            ),
     })
 }

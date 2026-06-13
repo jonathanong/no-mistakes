@@ -364,3 +364,26 @@ fn filter_rule_findings_applies_path_filters_per_playwright_rule() {
         vec!["tests/pages/home.spec.ts", "tests/login.spec.ts"]
     );
 }
+
+#[test]
+fn uncovered_selector_message_mentions_helper_wrapper_reference() {
+    let root = fixture_path(&["nextjs-selectors", "helper-wrapper-reference"]);
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+
+    let findings = check(&root, None, &config).unwrap();
+    let finding = findings
+        .iter()
+        .find(|finding| finding.target.as_deref() == Some("data-pw=example-button"))
+        .expect("uncovered example-button selector finding");
+
+    assert!(
+        finding
+            .message
+            .contains("found 'example-button' in tests/e2e/app.spec.ts:9 getAsideLocator(...)"),
+        "expected helper-wrapper hint in finding, got: {}",
+        finding.message
+    );
+    assert!(finding
+        .message
+        .contains("selector coverage only counts literal getByTestId"));
+}

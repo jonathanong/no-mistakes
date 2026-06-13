@@ -462,10 +462,16 @@ fn analyze_test_occurrences_skips_non_test_route_inputs() {
         },
     ];
 
-    let edges =
-        analyze_test_occurrences(&test_file, &context, raw_urls, playwright_selectors, vec![]);
+    let analysis = analyze_test_occurrences(
+        &test_file,
+        &context,
+        raw_urls,
+        playwright_selectors,
+        vec![],
+        vec![],
+    );
 
-    assert!(edges.is_empty());
+    assert!(analysis.edges.is_empty());
 }
 
 #[test]

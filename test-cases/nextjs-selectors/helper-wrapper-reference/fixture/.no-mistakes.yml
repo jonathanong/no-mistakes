@@ -1,0 +1,11 @@
+tests:
+  playwright:
+    frontendRoot: web/app
+    testIdAttribute: data-pw
+    selectors:
+      testIds:
+        - data-pw
+
+rules:
+  - rule: playwright-coverage
+    scope: repository

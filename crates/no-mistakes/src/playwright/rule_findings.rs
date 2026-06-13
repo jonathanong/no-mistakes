@@ -51,15 +51,28 @@ fn coverage_findings(report: &CoverageReport) -> Vec<RuleFinding> {
             rule: PLAYWRIGHT_COVERAGE.to_string(),
             file: selector.file.clone(),
             line: 1,
-            message: format!(
-                "selector [{}=\"{}\"] is not covered by a Playwright locator",
-                selector.attribute, selector.value
-            ),
+            message: uncovered_selector_message(selector),
             import: None,
             target: Some(format!("{}={}", selector.attribute, selector.value)),
         });
     }
     findings
+}
+
+fn uncovered_selector_message(
+    selector: &crate::playwright::analysis::types::CoverageSelector,
+) -> String {
+    let mut message = format!(
+        "selector [{}=\"{}\"] is not covered by a Playwright locator",
+        selector.attribute, selector.value
+    );
+    if let Some(reference) = selector.helper_references.first() {
+        message.push_str(&format!(
+            "; found '{}' in {}:{} {}, but selector coverage only counts literal getByTestId('{}') calls. Inline the getByTestId call or add explicit wrapper support.",
+            selector.value, reference.test_file, reference.line, reference.call, selector.value
+        ));
+    }
+    message
 }
 
 fn unique_findings(

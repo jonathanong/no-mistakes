@@ -4,6 +4,7 @@ mod duplicates_tests;
 mod edges_tests;
 mod fetch_tests;
 mod fsutil_tests;
+mod helper_reference_tests;
 mod output_tests;
 mod pipeline_tests;
 mod test_support_tests;
