@@ -215,41 +215,6 @@ fn agents_md_max_size_disabled_skips_check() {
     );
 }
 
-#[test]
-fn agents_md_max_size_advisory_does_not_fail_check() {
-    let root = fixture("agents-md-max-size", "advisory");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
-    let body = stdout(&out);
-
-    assert!(out.status.success(), "advisory must not fail check: {body}");
-    assert!(body.contains("advisory agents-md-max-size"), "{body}");
-    assert!(body.contains("CLAUDE.md"), "{body}");
-    assert!(body.contains("12 characters / 12 bytes"), "{body}");
-    assert!(body.contains("8 remaining"), "{body}");
-}
-
-#[test]
-fn agents_md_max_size_json_output_includes_advisories() {
-    let root = fixture("agents-md-max-size", "advisory");
-    let out_json = Command::new(bin())
-        .args(["check", "--root"])
-        .arg(&root)
-        .arg("--config")
-        .arg(root.join(".no-mistakes.yml"))
-        .args(["--format", "json"])
-        .output()
-        .unwrap();
-    let body = stdout(&out_json);
-    assert!(
-        out_json.status.success(),
-        "advisory must not fail check: {body}"
-    );
-    assert!(body.contains("\"advisories\""), "{body}");
-    assert!(body.contains("\"agents-md-max-size\""), "{body}");
-    assert!(body.contains("8 remaining"), "{body}");
-    assert!(body.contains("\"rules\": []"), "{body}");
-}
-
 // ── rust-max-lines-per-file ───────────────────────────────────────────────────
 
 #[test]

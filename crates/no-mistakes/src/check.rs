@@ -137,9 +137,6 @@ fn print_check_paths(results: &check_runner::CheckResults) {
     for f in &results.codebase {
         println!("{}:{}:{}", f.file, f.line, f.export_name);
     }
-    for f in &results.advisories {
-        println!("{}:{}", f.file, f.line);
-    }
 }
 
 fn print_check_human(results: &check_runner::CheckResults) {
