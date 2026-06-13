@@ -90,6 +90,22 @@ fn run_all_includes_playwright_unique_html_id_rules() {
 }
 
 #[test]
+fn run_all_includes_filesystem_rule_advisories() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/agents-md-max-size/fixture/advisory");
+    let config = root.join(".no-mistakes.yml");
+
+    let results = run_all(root, Some(config), None).unwrap();
+
+    assert!(results.rules.is_empty());
+    assert!(results.advisories.iter().any(|finding| {
+        finding.rule == no_mistakes::codebase::rules::AGENTS_MD_MAX_SIZE
+            && finding.file == "CLAUDE.md"
+            && finding.message.contains("8 remaining")
+    }));
+}
+
+#[test]
 fn run_codebase_check_uses_explicit_tsconfig_with_shared_facts() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/unique-exports-basic/fixture");

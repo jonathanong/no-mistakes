@@ -135,6 +135,48 @@ fn advisories_skip_over_limit_files() {
 }
 
 #[test]
+fn advisories_skip_files_outside_threshold() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("CLAUDE.md");
+    std::fs::write(&path, "hello").unwrap();
+    let config = config_with_rule("{maxChars: 20, advisoryCharsRemaining: 10}");
+    let files = vec![path];
+
+    let advisories = advisories_with_files(tmp.path(), &config, &files).unwrap();
+
+    assert!(advisories.is_empty());
+}
+
+#[test]
+fn advisories_skip_unreadable_files() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("CLAUDE.md");
+    let config = config_with_rule("{maxChars: 20, advisoryCharsRemaining: 20}");
+    let files = vec![path];
+
+    let advisories = advisories_with_files(tmp.path(), &config, &files).unwrap();
+
+    assert!(advisories.is_empty());
+}
+
+#[test]
+fn advisories_respect_disable_file_comment() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("CLAUDE.md");
+    std::fs::write(
+        &path,
+        format!("# no-mistakes-disable-file {RULE_ID}\nhello world"),
+    )
+    .unwrap();
+    let config = config_with_rule("{maxChars: 100, advisoryCharsRemaining: 100}");
+    let files = vec![path];
+
+    let advisories = advisories_with_files(tmp.path(), &config, &files).unwrap();
+
+    assert!(advisories.is_empty());
+}
+
+#[test]
 fn advisories_respect_line_suppressions() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("CLAUDE.md");
