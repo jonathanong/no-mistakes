@@ -23,6 +23,7 @@ fn build_coverage(
         app_selectors,
         app_selector_occurrences: app_selectors,
         edges,
+        helper_references: &[],
         settings,
         unique_selector_policy,
         fetch_index,

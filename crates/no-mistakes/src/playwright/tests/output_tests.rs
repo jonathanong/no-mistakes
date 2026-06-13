@@ -57,6 +57,7 @@ fn text_printers_cover_routes_and_selectors() {
             tests: vec![],
             tests_detail: vec![],
             selectors: vec![],
+            helper_references: vec![],
         }],
         duplicate_selectors: vec![DuplicateSelector {
             attribute: "data-testid".to_string(),
@@ -523,4 +524,27 @@ fn report_json_surfaces_analysis_errors() {
     let error = report_json(PlaywrightReportKind::Check, report_options(root)).unwrap_err();
 
     assert!(error.to_string().contains("no Next.js page routes found"));
+}
+
+#[test]
+fn coverage_json_includes_helper_references_for_uncovered_selectors() {
+    let root = fixture_path(&["nextjs-selectors", "helper-wrapper-reference"]);
+    let json = report_json(PlaywrightReportKind::Check, report_options(root)).unwrap();
+    let report: serde_json::Value = serde_json::from_str(&json).unwrap();
+    let selector = report["selectors"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|selector| selector["value"] == "example-button")
+        .expect("example-button selector");
+    let helper = selector["helperReferences"]
+        .as_array()
+        .unwrap()
+        .first()
+        .expect("helper reference");
+
+    assert_eq!(selector["covered"], false);
+    assert_eq!(helper["testFile"], "tests/e2e/app.spec.ts");
+    assert_eq!(helper["line"], 9);
+    assert_eq!(helper["call"], "getAsideLocator(...)");
 }

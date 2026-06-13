@@ -53,6 +53,28 @@ pub(crate) struct CoverageSelector {
     pub(crate) tests: Vec<String>,
     pub(crate) tests_detail: Vec<TestRef>,
     pub(crate) selectors: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub(crate) helper_references: Vec<SelectorHelperReference>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct SelectorHelperReference {
+    pub(crate) test_file: Arc<String>,
+    pub(crate) line: u32,
+    pub(crate) call: String,
+}
+
+#[derive(Default)]
+pub(crate) struct TestFileAnalysis {
+    pub(crate) edges: Vec<Edge>,
+    pub(crate) helper_references: Vec<SelectorHelperReferenceWithValue>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub(crate) struct SelectorHelperReferenceWithValue {
+    pub(crate) value: String,
+    pub(crate) reference: SelectorHelperReference,
 }
 
 #[derive(Serialize)]
@@ -184,6 +206,7 @@ pub(crate) struct CoverageInputs<'a> {
     pub(crate) app_selectors: &'a [selectors::AppSelector],
     pub(crate) app_selector_occurrences: &'a [selectors::AppSelector],
     pub(crate) edges: &'a [Edge],
+    pub(crate) helper_references: &'a [SelectorHelperReferenceWithValue],
     pub(crate) settings: &'a Settings,
     pub(crate) unique_selector_policy: UniqueSelectorPolicy,
     pub(crate) fetch_index: &'a FetchIndex,

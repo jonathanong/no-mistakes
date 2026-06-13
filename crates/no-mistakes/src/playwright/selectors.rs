@@ -18,12 +18,15 @@ mod types;
 
 pub use extract_app::extract_app_selectors_with_regexes;
 pub use extract_app::{collect_app_selectors, extract_app_selectors};
+pub(crate) use extract_playwright::extract_playwright_helper_reference_occurrences_from_program;
 pub use extract_playwright::extract_playwright_selector_occurrences_from_program;
 pub use regex_mod::compile_selector_regexes;
 pub use regex_mod::compile_selector_regexes_with_html_ids;
 pub(crate) use text_locators::extract_playwright_text_locator_occurrences_from_program;
 pub use types::SelectorRegexes;
-pub(crate) use types::{AppSelector, AppSelectorValue, PlaywrightSelector};
+pub(crate) use types::{
+    AppSelector, AppSelectorValue, PlaywrightHelperReference, PlaywrightSelector,
+};
 pub use types::{SelectorMatcher, TemplatePattern};
 
 pub(crate) const HTML_ID_ATTRIBUTE: &str = "id";

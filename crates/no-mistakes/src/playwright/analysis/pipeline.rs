@@ -12,7 +12,7 @@ use crate::playwright::analysis::routes_index::route_index;
 use crate::playwright::analysis::selectors_index::{app_selector_targets, selector_index};
 use crate::playwright::analysis::test_file::{analyze_test_file, analyze_test_occurrences};
 use crate::playwright::analysis::types::{
-    Analysis, CoverageInputs, EdgeReport, UniqueSelectorPolicy,
+    Analysis, CoverageInputs, EdgeReport, TestFileAnalysis, UniqueSelectorPolicy,
 };
 use crate::playwright::config;
 use crate::playwright::config::has_configured_html_id_selector;
@@ -134,34 +134,49 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
         test_policy,
     };
 
-    let mut edges = test_files
+    let mut test_analysis_result = test_files
         .par_iter()
-        .try_fold(Vec::new, |mut edges, test_file| -> Result<_> {
-            let test_edges = if let Some(facts) = facts {
-                match facts
-                    .ts
-                    .get(&test_file.path)
-                    .and_then(|file_facts| file_facts.playwright.as_ref())
-                {
-                    Some(playwright) => analyze_test_occurrences(
-                        test_file,
-                        &test_analysis,
-                        playwright.urls.clone(),
-                        playwright.selectors.clone(),
-                        playwright.text_locators.clone(),
-                    ),
-                    None => analyze_test_file(test_file, &test_analysis)?,
-                }
-            } else {
-                analyze_test_file(test_file, &test_analysis)?
-            };
-            edges.extend(test_edges);
-            Ok(edges)
-        })
-        .try_reduce(Vec::new, |mut left, mut right| -> Result<_> {
-            left.append(&mut right);
-            Ok(left)
-        })?;
+        .try_fold(
+            TestFileAnalysis::default,
+            |mut result, test_file| -> Result<_> {
+                let file_analysis = if let Some(facts) = facts {
+                    match facts
+                        .ts
+                        .get(&test_file.path)
+                        .and_then(|file_facts| file_facts.playwright.as_ref())
+                    {
+                        Some(playwright) => analyze_test_occurrences(
+                            test_file,
+                            &test_analysis,
+                            playwright.urls.clone(),
+                            playwright.selectors.clone(),
+                            playwright.text_locators.clone(),
+                            playwright.helper_references.clone(),
+                        ),
+                        None => analyze_test_file(test_file, &test_analysis)?,
+                    }
+                } else {
+                    analyze_test_file(test_file, &test_analysis)?
+                };
+                result.edges.extend(file_analysis.edges);
+                result
+                    .helper_references
+                    .extend(file_analysis.helper_references);
+                Ok(result)
+            },
+        )
+        .try_reduce(
+            TestFileAnalysis::default,
+            |mut left, mut right| -> Result<_> {
+                left.edges.append(&mut right.edges);
+                left.helper_references.append(&mut right.helper_references);
+                Ok(left)
+            },
+        )?;
+
+    let mut edges = test_analysis_result.edges;
+    test_analysis_result.helper_references.sort();
+    test_analysis_result.helper_references.dedup();
 
     let fetch_idx = if routes.is_empty() {
         Default::default()
@@ -179,6 +194,7 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
         app_selectors: &app_selectors,
         app_selector_occurrences: &app_selector_occurrences,
         edges: &edge_report.edges,
+        helper_references: &test_analysis_result.helper_references,
         settings,
         unique_selector_policy,
         fetch_index: &fetch_idx,

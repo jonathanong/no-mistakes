@@ -7,7 +7,9 @@ use crate::codebase::ts_symbols::FileSymbols;
 use crate::integration_tests::types::FileAnalysis as IntegrationFileAnalysis;
 use crate::playwright::analysis::text_types::PlaywrightTextLocator;
 use crate::playwright::playwright_tests::TestOccurrence;
-use crate::playwright::selectors::{PlaywrightSelector, SelectorRegexes};
+use crate::playwright::selectors::{
+    PlaywrightHelperReference, PlaywrightSelector, SelectorRegexes,
+};
 use crate::react_traits::analyze::file::FileAnalysis as ReactFileAnalysis;
 use rayon::prelude::*;
 use std::collections::{BTreeSet, HashMap};
@@ -78,6 +80,7 @@ pub(crate) struct PlaywrightTestFacts {
     pub(crate) urls: Vec<TestOccurrence<String>>,
     pub(crate) selectors: Vec<TestOccurrence<PlaywrightSelector>>,
     pub(crate) text_locators: Vec<TestOccurrence<PlaywrightTextLocator>>,
+    pub(crate) helper_references: Vec<TestOccurrence<PlaywrightHelperReference>>,
 }
 
 impl CheckFactMap {

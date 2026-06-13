@@ -33,6 +33,7 @@ fn findings_from_report_maps_routes_selectors_and_duplicates() {
             tests: vec![],
             tests_detail: vec![],
             selectors: vec![],
+            helper_references: vec![],
         }],
         duplicate_selectors: vec![
             DuplicateSelector {
@@ -134,6 +135,7 @@ fn findings_from_report_skips_unsupported_dynamic_selectors() {
                 tests: vec![],
                 tests_detail: vec![],
                 selectors: vec![],
+                helper_references: vec![],
             },
             CoverageSelector {
                 attribute: "data-pw".to_string(),
@@ -144,6 +146,7 @@ fn findings_from_report_skips_unsupported_dynamic_selectors() {
                 tests: vec![],
                 tests_detail: vec![],
                 selectors: vec![],
+                helper_references: vec![],
             },
         ],
         duplicate_selectors: vec![],

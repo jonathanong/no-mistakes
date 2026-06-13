@@ -54,3 +54,40 @@ fn selector_occurrences_preserve_file_test_and_hook_scope() {
             && occurrence.test_name.is_none()
     }));
 }
+
+#[test]
+fn helper_references_skip_counted_locator_calls() {
+    let source = r#"
+import { test } from '@playwright/test';
+
+function getAsideLocator(page, dataPw) {
+  return page.getByTestId(dataPw).first();
+}
+
+test('uses helper', async ({ page }) => {
+  await page.getByTestId('direct-button').click();
+  await getAsideLocator(page, 'helper-button').click();
+});
+"#;
+
+    let references = ast::with_program(
+        std::path::Path::new("helper.ts"),
+        source,
+        |program, source| {
+            extract_playwright_helper_reference_occurrences_from_program(program, source)
+        },
+    )
+    .expect("fixture should parse");
+
+    assert!(references.iter().any(|reference| {
+        reference.value.value == "helper-button"
+            && reference.value.call == "getAsideLocator(...)"
+            && reference.scope == playwright_tests::TestOccurrenceScope::Test
+    }));
+    assert!(
+        references
+            .iter()
+            .all(|reference| reference.value.value != "direct-button"),
+        "direct getByTestId coverage calls must not be helper-reference hints: {references:?}"
+    );
+}
