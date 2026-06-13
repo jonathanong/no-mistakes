@@ -19,6 +19,7 @@ const DEFAULT_FILENAMES: &[&str] = &["AGENTS.md", "CLAUDE.md"];
 pub(crate) struct Options {
     pub(crate) max_lines: Option<usize>,
     pub(crate) max_chars: Option<usize>,
+    pub(crate) advisory_chars_remaining: Option<usize>,
     pub(crate) filenames: Option<Vec<String>>,
     pub(crate) roots: Option<Vec<PathBuf>>,
 }
@@ -27,7 +28,7 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
     let skip = &config.filesystem.skip_directories;
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let opts = rule.rule_options();
+        let opts: Options = rule.rule_options();
         let filenames = filenames_from_opts(&opts);
         let target_roots = super::target_roots(root, config, rule);
         let roots = roots_from_opts(&opts, root, &target_roots);
@@ -40,6 +41,38 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
     }
     super::sort_findings(&mut findings);
     Ok(findings)
+}
+
+pub fn advisories_with_files(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+) -> Result<Vec<RuleFinding>> {
+    let mut advisories = Vec::new();
+    for rule in config.rule_applications(RULE_ID) {
+        let opts: Options = rule.rule_options();
+        if opts.advisory_chars_remaining.is_none() {
+            continue;
+        }
+        let filenames = filenames_from_opts(&opts);
+        let target_roots = super::target_roots(root, config, rule);
+        let roots = roots_from_opts(&opts, root, &target_roots);
+        let skip = super::skip_dir_set(config);
+        let files: Vec<PathBuf> = all_files
+            .iter()
+            .filter(|p| {
+                super::file_allowed_by_roots_and_skip(root, &skip, p, &roots)
+                    && p.file_name()
+                        .and_then(|n| n.to_str())
+                        .is_some_and(|n| filenames.contains(&n))
+            })
+            .cloned()
+            .collect();
+        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+        advisories.extend(scan_advisories(root, &opts, &files)?);
+    }
+    super::sort_findings(&mut advisories);
+    Ok(advisories)
 }
 
 /// Check using a pre-discovered file list to avoid a second filesystem walk.
@@ -107,6 +140,17 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
     Ok(findings)
 }
 
+fn scan_advisories(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+    let max_chars = opts.max_chars.unwrap_or(DEFAULT_MAX_CHARS);
+    let threshold = opts.advisory_chars_remaining.unwrap_or_default();
+    let mut advisories: Vec<RuleFinding> = files
+        .par_iter()
+        .filter_map(|path| check_file_advisory(path, root, max_chars, threshold))
+        .collect();
+    advisories.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
+    Ok(advisories)
+}
+
 fn check_file(path: &Path, root: &Path, max_lines: usize, max_chars: usize) -> Vec<RuleFinding> {
     let Ok(content) = std::fs::read_to_string(path) else {
         return Vec::new();
@@ -136,13 +180,60 @@ fn check_file(path: &Path, root: &Path, max_lines: usize, max_chars: usize) -> V
             file,
             line: 1,
             message: format!(
-                "{char_count} characters (max {max_chars}) - trim to keep agent context lean"
+                "{} - trim to keep agent context lean",
+                format_char_budget(&content, char_count, max_chars)
             ),
             import: None,
             target: None,
         });
     }
     findings
+}
+
+fn check_file_advisory(
+    path: &Path,
+    root: &Path,
+    max_chars: usize,
+    threshold: usize,
+) -> Option<RuleFinding> {
+    let Ok(content) = std::fs::read_to_string(path) else {
+        return None;
+    };
+    if has_disable_file_comment(&content, RULE_ID) {
+        return None;
+    }
+    let char_count = content.chars().count();
+    if char_count > max_chars {
+        return None;
+    }
+    let remaining = max_chars - char_count;
+    if remaining > threshold {
+        return None;
+    }
+    Some(RuleFinding {
+        rule: RULE_ID.to_string(),
+        file: relative_slash_path(root, path),
+        line: 1,
+        message: format!(
+            "{} - consider moving detail into linked docs before editing",
+            format_char_budget(&content, char_count, max_chars)
+        ),
+        import: None,
+        target: None,
+    })
+}
+
+fn format_char_budget(content: &str, char_count: usize, max_chars: usize) -> String {
+    let byte_count = content.len();
+    if char_count > max_chars {
+        let over = char_count - max_chars;
+        format!("{char_count} characters / {byte_count} bytes (max {max_chars}, {over} over)")
+    } else {
+        let remaining = max_chars - char_count;
+        format!(
+            "{char_count} characters / {byte_count} bytes (max {max_chars}, {remaining} remaining)"
+        )
+    }
 }
 
 pub(crate) fn count_lines(content: &str) -> usize {

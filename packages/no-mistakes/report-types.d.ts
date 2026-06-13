@@ -21,6 +21,7 @@ export interface CheckReport {
   integration: unknown[];
   codebase: unknown[];
   warnings: string[];
+  advisories: unknown[];
 }
 
 export interface QueueReport {
