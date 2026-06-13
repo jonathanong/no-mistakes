@@ -57,16 +57,13 @@ pub(crate) fn build_coverage(inputs: CoverageInputs<'_>) -> CoverageReport {
     }
 
     coverage_routes.sort_by(|a, b| a.route.cmp(&b.route).then_with(|| a.file.cmp(&b.file)));
-    let helper_references_by_value = helper_references.iter().fold(
-        BTreeMap::<String, BTreeSet<_>>::new(),
-        |mut by_value, helper_reference| {
-            by_value
-                .entry(helper_reference.value.clone())
-                .or_default()
-                .insert(helper_reference.reference.clone());
-            by_value
-        },
-    );
+    let mut helper_references_by_value = BTreeMap::<String, Vec<_>>::new();
+    for helper_reference in helper_references {
+        helper_references_by_value
+            .entry(helper_reference.value.clone())
+            .or_default()
+            .push(helper_reference.reference.clone());
+    }
 
     let mut coverage_selectors: Vec<CoverageSelector> = Vec::new();
     for app_selector in app_selectors {
@@ -84,8 +81,6 @@ pub(crate) fn build_coverage(inputs: CoverageInputs<'_>) -> CoverageReport {
                 .get(&value)
                 .cloned()
                 .unwrap_or_default()
-                .into_iter()
-                .collect()
         };
         coverage_selectors.push(CoverageSelector {
             attribute,

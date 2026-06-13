@@ -38,8 +38,9 @@ struct PlaywrightHelperReferenceVisitor<'a> {
 
 impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightHelperReferenceVisitor<'a> {
     fn visit_call_expression(&mut self, call: &oxc_ast::ast::CallExpression<'a>) {
-        if is_helper_reference_call(&call.callee) {
-            if let Some(call_display) = helper_call_display(&call.callee) {
+        if let Some(path) = ast::expression_path(&call.callee) {
+            if is_helper_reference_call(&call.callee, &path) {
+                let call_display = format!("{}(...)", path.join("."));
                 for value in helper_argument_literals(call, self.source) {
                     self.insert(value, call_display.clone(), call.span.start);
                 }
@@ -176,15 +177,12 @@ impl PlaywrightHelperReferenceVisitor<'_> {
     }
 }
 
-fn is_helper_reference_call(callee: &oxc_ast::ast::Expression<'_>) -> bool {
+fn is_helper_reference_call(callee: &oxc_ast::ast::Expression<'_>, path: &[String]) -> bool {
     if callee_is_static_member_named(callee, "getByTestId")
         || selector_argument_mode(callee).is_some()
     {
         return false;
     }
-    let Some(path) = ast::expression_path(callee) else {
-        return false;
-    };
     let Some(name) = path.last().map(String::as_str) else {
         return false;
     };
@@ -210,11 +208,6 @@ fn is_non_helper_call_name(name: &str) -> bool {
             | "goto"
             | "setTimeout"
     ) || name.starts_with("to")
-}
-
-fn helper_call_display(callee: &oxc_ast::ast::Expression<'_>) -> Option<String> {
-    let path = ast::expression_path(callee)?;
-    Some(format!("{}(...)", path.join(".")))
 }
 
 fn helper_argument_literals(call: &oxc_ast::ast::CallExpression<'_>, source: &str) -> Vec<String> {
