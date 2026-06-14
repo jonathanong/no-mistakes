@@ -105,6 +105,35 @@ fn count_code_lines_escaped_quote_in_string() {
 }
 
 #[test]
+fn count_code_lines_raw_string_with_comment_markers() {
+    // Raw string fixture text must not enter block-comment mode.
+    let src = r##"let s = r#"/* not a comment */"#;
+fn foo() {}
+"##;
+    assert_eq!(count_code_lines(src), 2);
+}
+
+#[test]
+fn count_code_lines_multiline_raw_string_with_comment_markers() {
+    // The raw string spans lines and contains a fake nested block comment.
+    let src = r####"let s = r###"
+/* not a comment
+*/
+"###;
+fn foo() {}
+"####;
+    assert_eq!(count_code_lines(src), 5);
+}
+
+#[test]
+fn count_code_lines_byte_raw_string_with_comment_markers() {
+    let src = r##"let s = br#"/* not a comment */"#;
+fn foo() {}
+"##;
+    assert_eq!(count_code_lines(src), 2);
+}
+
+#[test]
 fn count_code_lines_char_with_slash() {
     let src = "let c = '/';\n";
     assert_eq!(count_code_lines(src), 1);
