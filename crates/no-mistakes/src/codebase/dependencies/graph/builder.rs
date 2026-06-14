@@ -151,31 +151,21 @@ impl DepGraph {
             merge_edges(&mut forward, &mut reverse, selector_edges);
         }
 
-        merge_http_process_edges(
+        let edge_inputs = GraphEdgeBuildInputs {
             root,
             tsconfig,
             plan,
-            facts,
             graph_files,
-            config_options.as_ref(),
-            &mut forward,
-            &mut reverse,
-        );
+            config_options: config_options.as_ref(),
+        };
+        merge_http_process_edges(&edge_inputs, facts, &mut forward, &mut reverse);
 
         if plan.react {
             let react_edges = collect_react_render_edges(root, facts, graph_files.indexable());
             merge_edges(&mut forward, &mut reverse, react_edges);
         }
 
-        merge_swift_edges(
-            root,
-            tsconfig,
-            plan,
-            graph_files,
-            config_options.as_ref(),
-            &mut forward,
-            &mut reverse,
-        );
+        merge_swift_edges(&edge_inputs, &mut forward, &mut reverse);
 
         sort_adjacency_lists(&mut forward, &mut reverse);
 

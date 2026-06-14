@@ -1,49 +1,59 @@
-fn merge_http_process_edges(
-    root: &Path,
-    tsconfig: &TsConfig,
+struct GraphEdgeBuildInputs<'a> {
+    root: &'a Path,
+    tsconfig: &'a TsConfig,
     plan: GraphBuildPlan,
+    graph_files: &'a GraphFiles,
+    config_options: Option<&'a GraphConfigOptions>,
+}
+
+fn merge_http_process_edges(
+    inputs: &GraphEdgeBuildInputs<'_>,
     facts: Option<&dyn TsFactLookup>,
-    graph_files: &GraphFiles,
-    config_options: Option<&GraphConfigOptions>,
     forward: &mut EdgeMap,
     reverse: &mut EdgeMap,
 ) {
     // HTTP and process collectors consume shared TS facts in this path.
     // Keep the file-content fallback empty so graph builds do not add a
     // second source read pass.
-    if plan.http {
+    if inputs.plan.http {
         let http_call_edges = collect_http_call_edges(
-            root,
-            tsconfig,
+            inputs.root,
+            inputs.tsconfig,
             facts,
             &[],
-            graph_files.indexable(),
-            &graph_files.all,
-            config_options,
+            inputs.graph_files.indexable(),
+            &inputs.graph_files.all,
+            inputs.config_options,
         );
         merge_edges(forward, reverse, http_call_edges);
     }
 
-    if plan.process {
-        let spawn_edges = collect_process_spawn_edges(root, facts, &[], graph_files.indexable());
+    if inputs.plan.process {
+        let spawn_edges = collect_process_spawn_edges(
+            inputs.root,
+            facts,
+            &[],
+            inputs.graph_files.indexable(),
+        );
         merge_edges(forward, reverse, spawn_edges);
     }
 }
 
 fn merge_swift_edges(
-    root: &Path,
-    tsconfig: &TsConfig,
-    plan: GraphBuildPlan,
-    graph_files: &GraphFiles,
-    config_options: Option<&GraphConfigOptions>,
+    inputs: &GraphEdgeBuildInputs<'_>,
     forward: &mut EdgeMap,
     reverse: &mut EdgeMap,
 ) {
-    if !plan.swift {
+    if !inputs.plan.swift {
         return;
     }
 
-    let swift_edges = collect_swift_edges(root, tsconfig, &graph_files.all, config_options);
+    let swift_edges = collect_swift_edges(
+        inputs.root,
+        inputs.tsconfig,
+        &inputs.graph_files.all,
+        inputs.config_options,
+    );
     for (from, to, _) in &swift_edges {
         forward.entry(from.clone()).or_default();
         forward.entry(to.clone()).or_default();
