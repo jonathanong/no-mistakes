@@ -124,6 +124,10 @@ impl GraphBuildPlan {
     }
 }
 
+fn graph_plan_needs_config(plan: GraphBuildPlan) -> bool {
+    plan.routes || plan.queues || plan.http || plan.tests || plan.swift
+}
+
 fn effective_ts_fact_plan(plan: GraphBuildPlan, options: Option<&GraphConfigOptions>) -> TsFactPlan {
     let mut fact_plan = plan.ts_fact_plan();
     let route_refs_configured = options.is_some_and(route_ref_facts_configured);

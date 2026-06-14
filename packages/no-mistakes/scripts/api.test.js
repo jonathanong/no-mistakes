@@ -1,5 +1,5 @@
-const assert = require("node:assert/strict");
 const { test } = require("node:test");
+const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 

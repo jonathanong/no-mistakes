@@ -15,6 +15,7 @@ pub use graph::{DepGraph, EdgeKind, NodeId};
 
 pub use crate::cli::Format;
 
+include!("args_test_globs.rs");
 include!("args_relationships.rs");
 
 include!("traversal_entrypoints.rs");

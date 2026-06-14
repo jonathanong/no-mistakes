@@ -1,6 +1,7 @@
 mod filters;
 mod ownership;
 mod projects;
+mod reserved;
 mod targets;
 mod types;
 
@@ -149,7 +150,7 @@ fn discover_with_fallback(
     mut targets_by_path: BTreeMap<PathBuf, BTreeSet<TestExecutionTarget>>,
     project_scoped_paths: BTreeSet<PathBuf>,
 ) -> DiscoveredTests {
-    let runner_reserved_tests = runner_reserved_tests(root, config, runner, &files);
+    let runner_reserved_tests = reserved::runner_reserved_tests(root, config, runner, &files);
     let mut used_fallback = false;
     for path in files {
         if tests.contains(&path)
@@ -169,35 +170,6 @@ fn discover_with_fallback(
         }
     }
     to_discovered(tests, targets_by_path, used_fallback)
-}
-
-fn runner_reserved_tests(
-    root: &Path,
-    config: &NoMistakesConfig,
-    runner: TestRunner,
-    files: &[PathBuf],
-) -> BTreeSet<PathBuf> {
-    if runner != TestRunner::Vitest {
-        return BTreeSet::new();
-    }
-    let playwright_projects = projects::runner_projects_lossy(root, config, TestRunner::Playwright);
-    if playwright_projects.is_empty() {
-        return BTreeSet::new();
-    }
-    let playwright_filters = playwright_projects
-        .into_iter()
-        .filter_map(ProjectTestFilter::from_project)
-        .collect::<Vec<_>>();
-    files
-        .iter()
-        .filter(|path| {
-            let rel = crate::codebase::ts_source::relative_slash_path(root, path);
-            playwright_filters
-                .iter()
-                .any(|filter| filter.is_match(&rel))
-        })
-        .cloned()
-        .collect()
 }
 
 fn to_discovered(

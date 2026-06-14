@@ -36,12 +36,10 @@ pub(crate) struct SwiftFactMap {
 }
 
 pub(crate) fn extract_test_target_names(package_swift: &str) -> Vec<String> {
-    let Ok(re) = Regex::new(r#"\.testTarget\s*\([^)]*name\s*:\s*\"([^\"]+)\""#) else {
-        return Vec::new();
-    };
-    let mut names: Vec<String> = re
-        .captures_iter(package_swift)
-        .filter_map(|cap| cap.get(1).map(|m| m.as_str().to_string()))
+    let mut names: Vec<String> = parse_manifest_targets(package_swift)
+        .into_iter()
+        .filter(|target| target.is_test)
+        .map(|target| target.name)
         .collect();
     names.sort();
     names.dedup();
@@ -129,32 +127,19 @@ fn parse_package(root: &Path, package: &str) -> Option<SwiftPackageFacts> {
 }
 
 fn parse_manifest_targets(source: &str) -> Vec<SwiftTargetFacts> {
-    let Ok(re) = Regex::new(r#"\.(target|testTarget)\s*\((?s:.*?)\)"#) else {
+    let Ok(re) = Regex::new(r#"\.(target|testTarget)\s*\("#) else {
         return Vec::new();
     };
     let name_re = Regex::new(r#"name\s*:\s*\"([^\"]+)\""#).expect("valid name regex");
-    let deps_re = Regex::new(r#"dependencies\s*:\s*\[(?s:(.*?))\]"#).expect("valid deps regex");
-    let dep_name_re =
-        Regex::new(r#"(?:\.target\s*\(|\.product\s*\()?\s*name\s*:\s*\"([^\"]+)\"|\"([^\"]+)\""#)
-            .expect("valid dependency regex");
     re.captures_iter(source)
         .filter_map(|cap| {
             let kind = cap.get(1)?.as_str();
-            let body = cap.get(0)?.as_str();
+            let call = cap.get(0)?;
+            let body_end = find_matching_delimiter(source, call.end().checked_sub(1)?, '(', ')')?;
+            let body = &source[call.start()..=body_end];
             let name = name_re.captures(body)?.get(1)?.as_str().to_string();
-            let dependencies = deps_re
-                .captures(body)
-                .and_then(|deps| deps.get(1))
-                .map(|deps| {
-                    dep_name_re
-                        .captures_iter(deps.as_str())
-                        .filter_map(|dep| {
-                            dep.get(1)
-                                .or_else(|| dep.get(2))
-                                .map(|m| m.as_str().to_string())
-                        })
-                        .collect::<Vec<_>>()
-                })
+            let dependencies = manifest_dependencies_body(body)
+                .map(manifest_dependency_names)
                 .unwrap_or_default();
             Some(SwiftTargetFacts {
                 name,
@@ -164,6 +149,142 @@ fn parse_manifest_targets(source: &str) -> Vec<SwiftTargetFacts> {
             })
         })
         .collect()
+}
+
+fn manifest_dependencies_body(target_body: &str) -> Option<&str> {
+    let deps_re = Regex::new(r#"dependencies\s*:\s*\["#).expect("valid dependencies regex");
+    let deps = deps_re.find(target_body)?;
+    let open_bracket = deps.end().checked_sub(1)?;
+    let close_bracket = find_matching_delimiter(target_body, open_bracket, '[', ']')?;
+    target_body.get(open_bracket + 1..close_bracket)
+}
+
+fn manifest_dependency_names(dependencies_body: &str) -> Vec<String> {
+    let name_re = Regex::new(r#"name\s*:\s*\"([^\"]+)\""#).expect("valid dependency name regex");
+    let mut names = Vec::new();
+    let mut index = 0usize;
+
+    while index < dependencies_body.len() {
+        let rest = &dependencies_body[index..];
+        if rest.starts_with(".target") || rest.starts_with(".product") {
+            let Some(open_rel) = rest.find('(') else {
+                break;
+            };
+            let open = index + open_rel;
+            let Some(close) = find_matching_delimiter(dependencies_body, open, '(', ')') else {
+                break;
+            };
+            if let Some(name) = name_re
+                .captures(&dependencies_body[index..=close])
+                .and_then(|cap| cap.get(1))
+            {
+                names.push(name.as_str().to_string());
+            }
+            index = close + 1;
+            continue;
+        }
+
+        let Some(ch) = rest.chars().next() else {
+            break;
+        };
+        if ch == '"' {
+            if let Some((value, next)) = read_quoted_string(dependencies_body, index) {
+                names.push(value);
+                index = next;
+                continue;
+            }
+        }
+        index += ch.len_utf8();
+    }
+
+    names
+}
+
+fn read_quoted_string(source: &str, quote_index: usize) -> Option<(String, usize)> {
+    let mut value = String::new();
+    let mut escaped = false;
+    for (offset, ch) in source[quote_index + 1..].char_indices() {
+        if escaped {
+            value.push(ch);
+            escaped = false;
+        } else if ch == '\\' {
+            escaped = true;
+            value.push(ch);
+        } else if ch == '"' {
+            return Some((value, quote_index + 1 + offset + ch.len_utf8()));
+        } else {
+            value.push(ch);
+        }
+    }
+    None
+}
+
+fn find_matching_delimiter(
+    source: &str,
+    open_index: usize,
+    open_char: char,
+    close_char: char,
+) -> Option<usize> {
+    let mut chars = source.char_indices().peekable();
+    let mut depth = 0usize;
+    let mut in_string = false;
+    let mut escaped = false;
+    let mut in_line_comment = false;
+    let mut in_block_comment = false;
+
+    while let Some((index, ch)) = chars.next() {
+        if index < open_index {
+            continue;
+        }
+
+        if in_line_comment {
+            if ch == '\n' {
+                in_line_comment = false;
+            }
+            continue;
+        }
+        if in_block_comment {
+            if ch == '*' && chars.peek().is_some_and(|(_, next)| *next == '/') {
+                chars.next();
+                in_block_comment = false;
+            }
+            continue;
+        }
+        if in_string {
+            if escaped {
+                escaped = false;
+            } else if ch == '\\' {
+                escaped = true;
+            } else if ch == '"' {
+                in_string = false;
+            }
+            continue;
+        }
+
+        if ch == '/' && chars.peek().is_some_and(|(_, next)| *next == '/') {
+            chars.next();
+            in_line_comment = true;
+            continue;
+        }
+        if ch == '/' && chars.peek().is_some_and(|(_, next)| *next == '*') {
+            chars.next();
+            in_block_comment = true;
+            continue;
+        }
+        if ch == '"' {
+            in_string = true;
+            continue;
+        }
+        if ch == open_char {
+            depth += 1;
+        } else if ch == close_char {
+            depth = depth.checked_sub(1)?;
+            if depth == 0 {
+                return Some(index);
+            }
+        }
+    }
+    None
 }
 
 fn target_index(
@@ -206,10 +327,14 @@ fn parse_swift_file(path: &Path, target: Option<String>) -> Option<SwiftFileFact
 }
 
 fn strip_comments(source: &str) -> String {
-    let line_re = Regex::new(r"//.*").expect("valid line comment regex");
-    let block_re = Regex::new(r"(?s)/\*.*?\*/").expect("valid block comment regex");
-    let source = block_re.replace_all(source, " ");
-    line_re.replace_all(&source, " ").into_owned()
+    let re = Regex::new(r#"(?s)(\"(?:\\.|[^\"\\])*\")|/\*.*?\*/|//[^\n]*"#)
+        .expect("valid comment regex");
+    re.replace_all(source, |caps: &regex::Captures<'_>| {
+        caps.get(1)
+            .map(|mat| mat.as_str().to_string())
+            .unwrap_or_else(|| " ".to_string())
+    })
+    .into_owned()
 }
 
 fn extract_imports(source: &str) -> Vec<String> {
@@ -297,4 +422,78 @@ where
     out.sort();
     out.dedup();
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn manifest_targets_handle_nested_dependency_parentheses() {
+        let source = r#"
+            let package = Package(
+                name: "Fixture",
+                targets: [
+                    .target(
+                        name: "VouchaFeatures",
+                        dependencies: [
+                            .product(name: "VouchaCore", package: "core"),
+                            "VouchaAPI",
+                        ]
+                    ),
+                    .testTarget(
+                        name: "VouchaUITests",
+                        dependencies: [
+                            .target(name: "VouchaFeatures"),
+                            .product(name: "VouchaModels", package: "core"),
+                        ]
+                    ),
+                ]
+            )
+        "#;
+
+        let targets = parse_manifest_targets(source);
+        let features = targets
+            .iter()
+            .find(|target| target.name == "VouchaFeatures")
+            .expect("source target should parse");
+        assert_eq!(
+            features.dependencies,
+            vec!["VouchaCore".to_string(), "VouchaAPI".to_string()]
+        );
+
+        let ui_tests = targets
+            .iter()
+            .find(|target| target.name == "VouchaUITests")
+            .expect("test target should parse");
+        assert!(ui_tests.is_test);
+        assert_eq!(
+            ui_tests.dependencies,
+            vec!["VouchaFeatures".to_string(), "VouchaModels".to_string()]
+        );
+        assert_eq!(
+            extract_test_target_names(source),
+            vec!["VouchaUITests".to_string()]
+        );
+    }
+
+    #[test]
+    fn comment_stripping_preserves_comment_markers_inside_strings() {
+        let source = r#"
+            let site = "https://example.com/feed"
+            static let rss = Endpoint(path: "/api/v1/feeds/rss_feed_items/\(feedType)")
+            // Endpoint(path: "/api/v1/commented")
+            let marker = "not /* a comment */"
+            /* Endpoint(path: "/api/v1/blocked") */
+        "#;
+
+        let stripped = strip_comments(source);
+        assert!(stripped.contains(r#""https://example.com/feed""#));
+        assert!(stripped.contains(r#""/api/v1/feeds/rss_feed_items/\(feedType)""#));
+        assert!(stripped.contains(r#""not /* a comment */""#));
+        assert_eq!(
+            extract_endpoint_paths(&stripped),
+            vec!["/api/v1/feeds/rss_feed_items/*".to_string()]
+        );
+    }
 }

@@ -89,10 +89,6 @@ fn graph_config_options_for_plan_with_config(
     }
 }
 
-fn graph_plan_needs_config(plan: GraphBuildPlan) -> bool {
-    plan.routes || plan.queues || plan.http || plan.tests || plan.swift
-}
-
 fn ts_fact_context_from_options(
     root: &Path,
     plan: GraphBuildPlan,
