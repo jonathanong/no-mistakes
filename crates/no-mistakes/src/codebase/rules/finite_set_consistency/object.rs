@@ -1,7 +1,7 @@
 use super::comments::strip_comments;
-mod scanner;
+pub(super) mod scanner;
 pub(super) use scanner::matching_brace;
-use scanner::{assignment_index, top_level_value_end};
+use scanner::{assignment_index, matching_delimiter, top_level_value_end};
 
 use regex::Regex;
 use std::collections::BTreeSet;
@@ -15,6 +15,18 @@ pub(super) fn const_object_body(source: &str, target: &str) -> Option<String> {
     let assignment = assignment_index(&source, start)?;
     let open = source[assignment..].find('{')? + assignment;
     let close = matching_brace(&source, open)?;
+    source.get(open + 1..close).map(str::to_string)
+}
+
+pub(super) fn const_array_body(source: &str, target: &str) -> Option<String> {
+    let source = strip_comments(source);
+    let pattern = format!(r#"\bconst\s+{}\b"#, regex::escape(target));
+    let start = Regex::new(&pattern)
+        .ok()
+        .and_then(|regex| const_object_start(&source, &regex))?;
+    let assignment = assignment_index(&source, start)?;
+    let open = source[assignment..].find('[')? + assignment;
+    let close = matching_delimiter(&source, open, '[', ']')?;
     source.get(open + 1..close).map(str::to_string)
 }
 
@@ -63,7 +75,7 @@ pub(super) fn top_level_property_values(body: &str, property: &str) -> BTreeSet<
         .collect()
 }
 
-fn top_level_entries(body: &str) -> Vec<(String, String)> {
+pub(super) fn top_level_entries(body: &str) -> Vec<(String, String)> {
     let mut entries = Vec::new();
     let mut rest = body;
     while let Some((key, after_key)) = take_key(rest) {
@@ -152,7 +164,7 @@ fn trim_ignorable(mut source: &str) -> &str {
     }
 }
 
-fn direct_object_body(value: &str) -> Option<String> {
+pub(super) fn direct_object_body(value: &str) -> Option<String> {
     let value = value.trim();
     if !value.starts_with('{') {
         return None;

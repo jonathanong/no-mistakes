@@ -3,9 +3,12 @@ use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 use serde_yaml::Value;
 use std::path::{Path, PathBuf};
+
+mod value_assertions;
+use value_assertions::assert_value;
 
 pub const RULE_ID: &str = "structured-config-policy";
 
@@ -21,6 +24,58 @@ pub(crate) struct Policy {
     pub(crate) files: Vec<String>,
     pub(crate) required_keys: Vec<String>,
     pub(crate) banned_keys: Vec<String>,
+    pub(crate) value_assertions: Vec<ValueAssertion>,
+}
+
+#[derive(Deserialize, Default)]
+#[serde(default, rename_all = "camelCase")]
+pub(crate) struct ValueAssertion {
+    pub(crate) key: String,
+    #[serde(default, deserialize_with = "deserialize_assertion_kind")]
+    pub(crate) kind: Option<AssertionKind>,
+    pub(crate) prefix: String,
+    pub(crate) glob: String,
+    pub(crate) value: Option<Value>,
+    pub(crate) required_keys: Vec<String>,
+    pub(crate) required_values: std::collections::BTreeMap<String, Value>,
+    pub(crate) message: Option<String>,
+}
+
+#[derive(Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub(crate) enum AssertionKind {
+    Boolean,
+    PositiveNumber,
+    StringArray,
+    StringPrefix,
+    StringGlob,
+    NotSingleFile,
+    Equals,
+    ObjectShape,
+}
+
+impl AssertionKind {
+    fn from_str(value: &str) -> Option<Self> {
+        match value {
+            "boolean" => Some(Self::Boolean),
+            "positive-number" => Some(Self::PositiveNumber),
+            "string-array" => Some(Self::StringArray),
+            "string-prefix" => Some(Self::StringPrefix),
+            "string-glob" => Some(Self::StringGlob),
+            "not-single-file" => Some(Self::NotSingleFile),
+            "equals" => Some(Self::Equals),
+            "object-shape" => Some(Self::ObjectShape),
+            _ => None,
+        }
+    }
+}
+
+fn deserialize_assertion_kind<'de, D>(deserializer: D) -> Result<Option<AssertionKind>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value = Option::<String>::deserialize(deserializer)?;
+    Ok(value.as_deref().and_then(AssertionKind::from_str))
 }
 
 pub(crate) fn check_with_files(
@@ -89,6 +144,9 @@ fn scan(
                         target: Some(key.clone()),
                     });
                 }
+            }
+            for assertion in &policy.value_assertions {
+                findings.extend(assert_value(&rel, &value, assertion)?);
             }
         }
     }

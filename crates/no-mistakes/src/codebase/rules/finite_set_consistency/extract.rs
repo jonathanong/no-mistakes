@@ -1,7 +1,10 @@
 use super::comments::{strip_comments, strip_sql_comments};
 use super::literals::{quoted_strings_sql, quoted_strings_ts};
+pub(super) use super::markdown::extract_markdown_table_code_cells;
 use super::object::{const_object_body, top_level_object_keys, top_level_property_values};
+pub(super) use super::ts_array::{extract_ts_array_literal, extract_ts_const_array_property};
 use super::ts_union;
+pub(super) use super::yaml::extract_yaml_sequence;
 use super::SetSpec;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
@@ -34,6 +37,12 @@ pub(super) fn extract_set(
             "ts-const-object-property" => {
                 extract_ts_const_object_property(&source, &spec.target, &spec.property)
             }
+            "ts-array-literal" => extract_ts_array_literal(&source, &spec.target),
+            "ts-const-array-property" => {
+                extract_ts_const_array_property(&source, &spec.target, &spec.property)
+            }
+            "yaml-sequence" => extract_yaml_sequence(&source, &spec.key),
+            "markdown-table-code-cells" => extract_markdown_table_code_cells(&source),
             "sql-enum" => extract_sql_enum(&source, &spec.target),
             _ => BTreeSet::new(),
         });
@@ -86,7 +95,10 @@ pub(super) fn extract_path_regex_set(
         }
     }
     Ok(ExtractedSet {
-        file: spec.file.clone().if_empty(".".to_string()),
+        file: match spec.file.is_empty() {
+            true => ".".to_string(),
+            false => spec.file.clone(),
+        },
         values,
     })
 }
@@ -196,18 +208,4 @@ fn sql_enum_body(source: &str) -> Option<&str> {
         }
     }
     None
-}
-
-trait EmptyStringExt {
-    fn if_empty(self, fallback: String) -> String;
-}
-
-impl EmptyStringExt for String {
-    fn if_empty(self, fallback: String) -> String {
-        if self.is_empty() {
-            fallback
-        } else {
-            self
-        }
-    }
 }

@@ -1,0 +1,6 @@
+minimumReleaseAgeExclude:
+  - "@acme/api"
+  - "@acme/web"
+  - "@acme/cli"
+invalidGlobs:
+  - "["

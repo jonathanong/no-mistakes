@@ -29,6 +29,15 @@ pub(in crate::codebase::rules::finite_set_consistency) fn matching_brace(
     source: &str,
     open: usize,
 ) -> Option<usize> {
+    matching_delimiter(source, open, '{', '}')
+}
+
+pub(in crate::codebase::rules::finite_set_consistency) fn matching_delimiter(
+    source: &str,
+    open: usize,
+    open_ch: char,
+    close_ch: char,
+) -> Option<usize> {
     let mut depth = 0usize;
     let mut quote = None;
     let mut escaped = false;
@@ -80,8 +89,8 @@ pub(in crate::codebase::rules::finite_set_consistency) fn matching_brace(
         }
         match ch {
             '"' | '\'' | '`' => quote = Some(ch),
-            '{' => depth += 1,
-            '}' => {
+            ch if ch == open_ch => depth += 1,
+            ch if ch == close_ch => {
                 depth = depth.saturating_sub(1);
                 if depth == 0 {
                     return Some(idx);
@@ -96,7 +105,9 @@ pub(in crate::codebase::rules::finite_set_consistency) fn matching_brace(
     None
 }
 
-pub(super) fn top_level_value_end(source: &str) -> usize {
+pub(in crate::codebase::rules::finite_set_consistency) fn top_level_value_end(
+    source: &str,
+) -> usize {
     let mut depth = 0usize;
     let mut quote = None;
     let mut escaped = false;

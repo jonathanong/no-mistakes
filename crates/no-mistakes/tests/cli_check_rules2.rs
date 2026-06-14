@@ -151,3 +151,51 @@ rules:
     );
     assert!(format!("{package_cycles:?}").contains("@x/api -> @x/domain -> @x/api"));
 }
+
+#[test]
+fn finite_set_consistency_glob_coverage_appears_in_cli_json() {
+    let root = rule_fixture("finite-set-consistency");
+    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
+    std::fs::write(
+        config.path(),
+        r#"
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      sets:
+        - name: registry
+          file: src/types.ts
+          kind: ts-const-array-property
+          target: FIRST_PARTY_EXEMPTIONS
+          property: name
+        - name: dependabotGlobs
+          file: .github/dependabot.yml
+          kind: yaml-sequence
+          key: updates.0.cooldown.exclude
+      comparisons:
+        - left: registry
+          right: dependabotGlobs
+          mode: glob-coverage
+"#,
+    )
+    .unwrap();
+
+    let out = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(root)
+        .arg("--config")
+        .arg(config.path())
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let body = stdout(&out);
+
+    assert!(!out.status.success(), "expected finite-set finding");
+    assert!(body.contains("finite-set-consistency"), "{body}");
+    assert!(body.contains("@acme/docs"), "{body}");
+    assert!(
+        body.contains("no glob in dependabotGlobs covers it"),
+        "{body}"
+    );
+}
