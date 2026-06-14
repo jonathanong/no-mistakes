@@ -3441,3 +3441,8 @@ impl<'a> Visit<'a> for CallAssertions {
         walk::walk_call_expression(self, call);
     }
 }
+
+#[test]
+fn swift_framework_string_is_stable() {
+    assert_eq!(types::Framework::Swift.as_str(), "swift");
+}
