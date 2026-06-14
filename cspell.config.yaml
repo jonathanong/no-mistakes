@@ -16,6 +16,7 @@ words:
   - Basenames
   - callsite
   - callsites
+  - cooldown
   - dtolnay
   - codebase
   - codecov

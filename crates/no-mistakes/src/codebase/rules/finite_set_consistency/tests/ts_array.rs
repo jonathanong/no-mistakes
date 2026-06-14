@@ -1,0 +1,84 @@
+use super::extract::extract_ts_array_literal;
+use super::ts_array::{quoted_string_literal, top_level_values};
+use std::collections::BTreeSet;
+
+#[test]
+fn quoted_string_literal_rejects_unclosed_literals() {
+    assert!(quoted_string_literal("\"unterminated").is_none());
+}
+
+#[test]
+fn quoted_string_literal_rejects_interpolated_templates() {
+    assert_eq!(
+        quoted_string_literal("`@acme/static`"),
+        Some("@acme/static".to_string())
+    );
+    assert_eq!(
+        quoted_string_literal(r"`@acme/\${pkg}`"),
+        Some("@acme/${pkg}".to_string())
+    );
+    assert!(quoted_string_literal("`@acme/${pkg}`").is_none());
+}
+
+#[test]
+fn quoted_string_literal_rejects_prefix_expressions() {
+    assert_eq!(
+        quoted_string_literal("\"@acme/api\""),
+        Some("@acme/api".to_string())
+    );
+    assert!(quoted_string_literal("\"@acme/\" + pkg").is_none());
+    assert!(quoted_string_literal("'@acme/'.concat(pkg)").is_none());
+    assert!(quoted_string_literal("`@acme/` + pkg").is_none());
+}
+
+#[test]
+fn array_extraction_skips_trailing_comments_without_values() {
+    assert_eq!(
+        extract_ts_array_literal(
+            r#"const NAMES = [
+  "api",
+  // trailing comment
+];"#,
+            "NAMES"
+        ),
+        BTreeSet::from(["api".to_string()])
+    );
+    assert_eq!(
+        extract_ts_array_literal(
+            r#"const NAMES = [
+  "api",
+  /* trailing block */
+];"#,
+            "NAMES"
+        ),
+        BTreeSet::from(["api".to_string()])
+    );
+    assert_eq!(
+        top_level_values(
+            r#"
+"api",
+/* unterminated
+"#,
+        ),
+        vec!["\"api\"".to_string()]
+    );
+    assert_eq!(
+        top_level_values(
+            r#"
+// leading comment
+"api"
+"#,
+        ),
+        vec!["\"api\"".to_string()]
+    );
+    assert_eq!(
+        top_level_values(
+            r#"
+/* leading block */
+"api"
+"#,
+        ),
+        vec!["\"api\"".to_string()]
+    );
+    assert!(top_level_values("// no newline").is_empty());
+}

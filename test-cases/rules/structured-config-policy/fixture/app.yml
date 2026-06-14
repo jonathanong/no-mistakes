@@ -1,4 +1,21 @@
 runtime:
   version: 1
+  mode: prod
 legacy:
   enabled: true
+features:
+  strict: "yes"
+limits:
+  retries: 0
+overrides:
+  - files:
+      - src/button.ts
+badFiles:
+  - "**/*.ts"
+  - 3
+globTarget: dist/app.js
+rules:
+  - name: no-console
+    severity: warn
+    options:
+      allow: []

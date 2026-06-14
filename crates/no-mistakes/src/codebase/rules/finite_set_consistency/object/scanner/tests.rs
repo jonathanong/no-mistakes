@@ -30,6 +30,16 @@ fn assignment_index_handles_escaped_quotes() {
 }
 
 #[test]
+fn assignment_index_handles_escaped_backslashes_in_strings() {
+    let source = r#"const ROUTES: Record<"not \\ done", string> = {}"#;
+
+    assert_eq!(
+        assignment_index(source, "const ROUTES".len()),
+        Some(source.rfind('=').unwrap() + 1)
+    );
+}
+
+#[test]
 fn matching_brace_ignores_comments_and_regex_literals() {
     let source = r#"{
   // }
@@ -62,6 +72,8 @@ fn top_level_value_end_ignores_nested_and_regex_commas() {
 #[test]
 fn top_level_value_end_handles_comments_and_division() {
     assert_eq!(top_level_value_end("value // comment, ignored\n, next"), 16);
+    assert_eq!(top_level_value_end("// comment\n, next"), 11);
+    assert_eq!(top_level_value_end("/* comment */, next"), 13);
     assert_eq!(top_level_value_end("a / b, next"), 5);
 }
 

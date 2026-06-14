@@ -1,8 +1,12 @@
 mod comments;
+mod comparison;
 mod extract;
 mod literals;
+mod markdown;
 mod object;
+mod ts_array;
 mod ts_union;
+mod yaml;
 
 use super::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
@@ -31,6 +35,7 @@ pub(crate) struct SetSpec {
     pub(crate) target: String,
     pub(crate) property: String,
     pub(crate) pattern: String,
+    pub(crate) key: String,
 }
 
 #[derive(Deserialize, Default)]
@@ -38,6 +43,7 @@ pub(crate) struct SetSpec {
 pub(crate) struct Comparison {
     pub(crate) left: String,
     pub(crate) right: String,
+    pub(crate) mode: String,
     pub(crate) message: Option<String>,
 }
 
@@ -90,34 +96,18 @@ fn scan(
         else {
             continue;
         };
-        for value in left.values.difference(&right.values) {
-            findings.push(finding(
-                &right.file,
-                comparison,
-                format!(
-                    "{} contains `{}` but {} does not",
-                    comparison.left, value, comparison.right
-                ),
-                value,
-            ));
-        }
-        for value in right.values.difference(&left.values) {
-            findings.push(finding(
-                &left.file,
-                comparison,
-                format!(
-                    "{} contains `{}` but {} does not",
-                    comparison.right, value, comparison.left
-                ),
-                value,
-            ));
-        }
+        comparison::compare(left, right, comparison, &mut findings);
     }
     findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
     Ok(findings)
 }
 
-fn finding(file: &str, comparison: &Comparison, fallback: String, value: &str) -> RuleFinding {
+pub(super) fn finding(
+    file: &str,
+    comparison: &Comparison,
+    fallback: String,
+    value: &str,
+) -> RuleFinding {
     RuleFinding {
         rule: RULE_ID.to_string(),
         file: file.to_string(),
@@ -129,6 +119,9 @@ fn finding(file: &str, comparison: &Comparison, fallback: String, value: &str) -
 }
 
 #[cfg(test)]
+#[path = "finite_set_consistency/tests/config_sets.rs"]
+mod config_set_tests;
+#[cfg(test)]
 #[path = "finite_set_consistency/tests/object_comment.rs"]
 mod object_comment_tests;
 #[cfg(test)]
@@ -139,3 +132,6 @@ mod object_property_tests;
 mod object_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+#[path = "finite_set_consistency/tests/ts_array.rs"]
+mod ts_array_tests;
