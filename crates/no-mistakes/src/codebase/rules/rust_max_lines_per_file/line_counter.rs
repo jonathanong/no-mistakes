@@ -102,12 +102,9 @@ fn raw_string_starts_at(bytes: &[u8], i: usize) -> Option<(usize, usize)> {
     }
 }
 
-fn raw_string_hashes(bytes: &[u8], mut i: usize) -> Option<usize> {
-    let start = i;
-    while bytes.get(i) == Some(&b'#') {
-        i += 1;
-    }
-    (bytes.get(i) == Some(&b'"')).then_some(i - start)
+fn raw_string_hashes(bytes: &[u8], i: usize) -> Option<usize> {
+    let hash_count = bytes.get(i..)?.iter().take_while(|&&b| b == b'#').count();
+    (bytes.get(i + hash_count) == Some(&b'"')).then_some(hash_count)
 }
 
 fn raw_string_ends_at(bytes: &[u8], i: usize, hash_count: usize) -> bool {
