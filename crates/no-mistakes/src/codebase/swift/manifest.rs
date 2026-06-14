@@ -84,21 +84,22 @@ fn manifest_dependency_names(dependencies_body: &str) -> Vec<String> {
             }
             continue;
         }
-        if rest.starts_with(".target(")
-            || rest.starts_with(".product(")
-            || rest.starts_with(".byName(")
-        {
-            let Some(open_rel) = rest.find('(') else {
-                continue;
-            };
-            let open = index + open_rel;
-            let Some(close) = find_matching_delimiter(dependencies_body, open, '(', ')') else {
-                continue;
-            };
-            if let Some(name) = string_arg(&dependencies_body[open + 1..close], "name") {
-                names.push(name);
+        let open = if rest.starts_with(".target(") {
+            Some(index + ".target".len())
+        } else if rest.starts_with(".product(") {
+            Some(index + ".product".len())
+        } else if rest.starts_with(".byName(") {
+            Some(index + ".byName".len())
+        } else {
+            None
+        };
+        if let Some(open) = open {
+            if let Some(close) = find_matching_delimiter(dependencies_body, open, '(', ')') {
+                if let Some(name) = string_arg(&dependencies_body[open + 1..close], "name") {
+                    names.push(name);
+                }
+                scanner.skip_to(close + 1);
             }
-            scanner.skip_to(close + 1);
         }
     }
     names

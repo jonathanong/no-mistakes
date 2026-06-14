@@ -23,7 +23,7 @@ fn strip_comments(source: &str) -> String {
     while let Some((_, ch)) = chars.next() {
         if ch == '"' {
             out.push(ch);
-            copy_string(source, &mut chars, &mut out);
+            copy_string(&mut chars, &mut out);
             continue;
         }
         if ch == '/' && chars.peek().is_some_and(|(_, next)| *next == '/') {
@@ -62,11 +62,7 @@ fn strip_comments(source: &str) -> String {
     out
 }
 
-fn copy_string(
-    source: &str,
-    chars: &mut std::iter::Peekable<std::str::CharIndices<'_>>,
-    out: &mut String,
-) {
+fn copy_string(chars: &mut std::iter::Peekable<std::str::CharIndices<'_>>, out: &mut String) {
     let mut escaped = false;
     for (_, ch) in chars.by_ref() {
         out.push(ch);
@@ -77,9 +73,6 @@ fn copy_string(
         } else if ch == '"' {
             break;
         }
-    }
-    if out.len() > source.len() {
-        out.truncate(source.len());
     }
 }
 

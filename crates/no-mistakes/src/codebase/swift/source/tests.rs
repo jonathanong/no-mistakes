@@ -7,7 +7,8 @@ fn comment_stripping_preserves_comment_markers_inside_strings() {
         static let rss = Endpoint(path: "/api/v1/feeds/rss_feed_items/\(feedType)")
         // Endpoint(path: "/api/v1/commented")
         let marker = "not /* a comment */"
-        /* Endpoint(path: "/api/v1/blocked") */
+        /* Endpoint(path: "/api/v1/blocked")
+           Endpoint(path: "/api/v1/also-blocked") */
     "#;
 
     let stripped = strip_comments(source);

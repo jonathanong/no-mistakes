@@ -147,3 +147,6 @@ fn target_index(
     }
     index
 }
+
+#[cfg(test)]
+mod tests;

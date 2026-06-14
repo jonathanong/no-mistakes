@@ -8,6 +8,7 @@ mod config_route_helpers;
 mod extra;
 mod extra_runtime;
 mod module_cases;
+mod swift_edges;
 
 fn p(s: &str) -> PathBuf {
     PathBuf::from(s)

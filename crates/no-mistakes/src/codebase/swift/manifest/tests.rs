@@ -48,3 +48,23 @@ fn manifest_targets_handle_nested_dependency_parentheses() {
         vec!["VouchaUITests".to_string()]
     );
 }
+
+#[test]
+fn manifest_targets_ignore_malformed_dependency_lists_and_calls() {
+    let source = r#"
+        let package = Package(
+            name: "Fixture",
+            targets: [
+                .target(name: "NoDeps", dependencies: "not an array"),
+                .testTarget(name: "Broken", dependencies: [.target(name: "NoDeps")
+            ]
+        )
+    "#;
+
+    let targets = parse_manifest_targets(source);
+    let no_deps = targets
+        .iter()
+        .find(|target| target.name == "NoDeps")
+        .expect("valid target should still parse");
+    assert!(no_deps.dependencies.is_empty());
+}

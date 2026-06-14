@@ -128,3 +128,6 @@ impl<'a> Scanner<'a> {
 fn is_identifier_char(ch: char) -> bool {
     ch == '_' || ch.is_ascii_alphanumeric()
 }
+
+#[cfg(test)]
+mod tests;
