@@ -41,6 +41,16 @@ fn check_with_files(
     Ok(findings)
 }
 
+fn fixture(path: &str) -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/rust-max-lines-per-file/fixture")
+        .join(path)
+}
+
+fn read_fixture(path: &str) -> String {
+    std::fs::read_to_string(fixture(path)).unwrap()
+}
+
 #[test]
 fn count_code_lines_empty() {
     assert_eq!(count_code_lines(""), 0);
@@ -107,30 +117,21 @@ fn count_code_lines_escaped_quote_in_string() {
 #[test]
 fn count_code_lines_raw_string_with_comment_markers() {
     // Raw string fixture text must not enter block-comment mode.
-    let src = r##"let s = r#"/* not a comment */"#;
-fn foo() {}
-"##;
-    assert_eq!(count_code_lines(src), 2);
+    let src = read_fixture("unit/raw_string_comment_markers.rs");
+    assert_eq!(count_code_lines(&src), 2);
 }
 
 #[test]
 fn count_code_lines_multiline_raw_string_with_comment_markers() {
     // The raw string spans lines and contains a fake nested block comment.
-    let src = r####"let s = r###"
-/* not a comment
-*/
-"###;
-fn foo() {}
-"####;
-    assert_eq!(count_code_lines(src), 5);
+    let src = read_fixture("unit/multiline_raw_string_comment_markers.rs");
+    assert_eq!(count_code_lines(&src), 5);
 }
 
 #[test]
 fn count_code_lines_byte_raw_string_with_comment_markers() {
-    let src = r##"let s = br#"/* not a comment */"#;
-fn foo() {}
-"##;
-    assert_eq!(count_code_lines(src), 2);
+    let src = read_fixture("unit/byte_raw_string_comment_markers.rs");
+    assert_eq!(count_code_lines(&src), 2);
 }
 
 #[test]
