@@ -1,3 +1,4 @@
+// no-mistakes-disable-file rust-max-lines-per-file: legacy resolver coverage suite
 use super::*;
 use std::collections::HashSet;
 use tempfile::TempDir;

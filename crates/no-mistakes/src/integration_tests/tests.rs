@@ -1,3 +1,4 @@
+// no-mistakes-disable-file rust-max-lines-per-file: legacy parser coverage suite
 use super::*;
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::Span;

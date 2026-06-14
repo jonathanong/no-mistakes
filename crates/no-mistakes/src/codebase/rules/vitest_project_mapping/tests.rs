@@ -3,6 +3,7 @@ use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
+use crate::integration_tests::project_config;
 use std::path::Path;
 
 fn fixture_root(name: &str) -> PathBuf {
@@ -303,6 +304,45 @@ include: [src/a.test.ts]
     let findings = check_with_files(&root, &config, &files).unwrap();
 
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
+fn explicit_projects_only_handles_dynamic_vitest_configs() {
+    let root = fixture_root("dynamic-config");
+    let mut config = load_config(&root);
+    config.rules[0].options = serde_yaml::from_str("explicitProjectsOnly: true\n").unwrap();
+    let files = vec![
+        root.join("backend/api.test.ts"),
+        root.join("tooling/lint.test.ts"),
+        root.join("web/page.test.ts"),
+        root.join("web/skipped.generated.test.ts"),
+        root.join("orphan.test.ts"),
+    ];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    let finding_files = findings
+        .iter()
+        .map(|finding| finding.file.as_str())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        finding_files,
+        vec!["orphan.test.ts", "web/skipped.generated.test.ts"]
+    );
+    assert!(findings
+        .iter()
+        .all(|finding| finding.message.contains("does not map")));
+}
+
+#[test]
+fn explicit_projects_only_requires_explicit_includes() {
+    let root = fixture_root("fixture");
+    let mut config = load_config(&root);
+    config.tests.vitest.projects.clear();
+    config.rules[0].options = serde_yaml::from_str("explicitProjectsOnly: true\n").unwrap();
+    let result = check_with_files(&root, &config, &[root.join("src/a.test.ts")]);
+
+    let error = result.unwrap_err().to_string();
+    assert!(error.contains("explicitProjectsOnly requires at least one tests.vitest.projects"));
 }
 
 #[test]

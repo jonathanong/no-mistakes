@@ -1,3 +1,4 @@
+// no-mistakes-disable-file rust-max-lines-per-file: legacy fixture-heavy test module
 use super::*;
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::codebase::storybook::StorybookFileFacts;

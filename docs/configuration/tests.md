@@ -29,6 +29,26 @@ tests:
 
 Selector settings feed Playwright coverage, route impact, and graph edges.
 
+## Explicit Vitest projects
+
+`tests.vitest.projects` can declare project ownership directly when a Vitest
+config is too dynamic to parse statically:
+
+```yaml
+tests:
+  vitest:
+    configs: vitest.config.mts
+    projects:
+      backend:
+        include: [backend/**/*.test.ts]
+      web:
+        include: [web/**/*.test.ts]
+        exclude: [web/**/*.generated.test.ts]
+```
+
+These policies are also used by `vitest-project-mapping` when that rule sets
+`explicitProjectsOnly: true`.
+
 ## Multiple configs
 
 `configs` accepts a single path or a list. When several configs are listed,
