@@ -41,3 +41,32 @@ fn vitest_keeps_file_arg_literal() {
         ]
     );
 }
+
+#[test]
+fn swift_target_uses_file_parent_as_filter_without_project() {
+    let target = target_for(
+        TestRunner::Swift,
+        Some("swift-clients/core"),
+        None,
+        "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift",
+    );
+
+    assert_eq!(target.base_command, vec!["swift", "test"]);
+    assert_eq!(
+        target.runner_args,
+        vec![
+            "--package-path",
+            "swift-clients/core",
+            "--filter",
+            "VouchaCoreTests"
+        ]
+    );
+}
+
+#[test]
+fn swift_test_file_arg_keeps_literal_path_for_private_fallback() {
+    assert_eq!(
+        test_file_arg(TestRunner::Swift, "Tests/AppTests.swift"),
+        "Tests/AppTests.swift"
+    );
+}

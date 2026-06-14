@@ -96,3 +96,50 @@ fn swift_http_edge_helper_covers_configured_route_lookup_without_matches() {
     collect_swift_http_edges(&root, &tsconfig, &all_files, &options, &facts, &mut edges);
     assert!(edges.iter().all(|(_, _, kind)| *kind == EdgeKind::HttpCall));
 }
+
+
+#[test]
+fn swift_http_edges_include_backend_route_defs() {
+    let root = fixture("swift-test-plan");
+    let tsconfig = crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
+    let all_files = GraphFiles::discover(&root).all;
+    let mut options = graph_config_options(&root).expect("swift fixture config should parse");
+    options.route.backend_pattern = "backend/api/**/*.mts".to_string();
+    options.route.backend_register_object = "app".to_string();
+    let swift_file = root.join("swift-clients/core/Sources/VouchaAPI/Endpoint.swift");
+    let mut facts = crate::codebase::swift::SwiftFactMap::default();
+    facts.files.insert(
+        swift_file.clone(),
+        crate::codebase::swift::SwiftFileFacts {
+            path: swift_file.clone(),
+            endpoint_paths: vec!["/api/v1/feeds/rss_feed_items/*".to_string()],
+            ..Default::default()
+        },
+    );
+
+    let mut edges = Vec::new();
+    collect_swift_http_edges(&root, &tsconfig, &all_files, &options, &facts, &mut edges);
+
+    assert!(edges.iter().all(|(_, _, kind)| *kind == EdgeKind::HttpCall));
+}
+
+#[test]
+fn swift_package_edges_skip_targets_without_files() {
+    let mut facts = crate::codebase::swift::SwiftFactMap::default();
+    facts.packages.push(crate::codebase::swift::SwiftPackageFacts {
+        package_root: p("Client"),
+        targets: BTreeMap::from([(
+            "Missing".to_string(),
+            crate::codebase::swift::SwiftTargetFacts {
+                name: "Missing".to_string(),
+                dependencies: vec!["Core".to_string()],
+                ..Default::default()
+            },
+        )]),
+    });
+
+    let mut edges = Vec::new();
+    collect_swift_package_edges(&facts, &mut edges);
+
+    assert!(edges.is_empty());
+}

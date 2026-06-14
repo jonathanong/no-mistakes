@@ -45,3 +45,50 @@ fn explicit_policy_replaces_each_matching_config_project() {
         .any(|project| project.config.as_deref() == Some("vitest.browser.ts")));
     assert_eq!(projects.len(), 3);
 }
+
+#[test]
+fn swift_projects_cover_package_fallback_and_policy_overrides() {
+    let root = Path::new("");
+    let mut config = NoMistakesConfig::default();
+    config.tests.swift.packages = vec![
+        "swift-clients/missing/".to_string(),
+        "swift-clients/core".to_string(),
+    ];
+    config.tests.swift.projects.insert(
+        "swift-clients/missing".to_string(),
+        TestProjectPolicy {
+            include: vec!["swift-clients/missing/CustomTests/**/*.swift".to_string()],
+            exclude: vec!["swift-clients/missing/CustomTests/Skipped/**/*.swift".to_string()],
+            ..Default::default()
+        },
+    );
+    config.tests.swift.projects.insert(
+        "orphan-policy".to_string(),
+        TestProjectPolicy {
+            include: vec!["ExternalTests/**/*.swift".to_string()],
+            ..Default::default()
+        },
+    );
+    config
+        .tests
+        .swift
+        .projects
+        .insert("empty-policy".to_string(), TestProjectPolicy::default());
+
+    let projects = runner_projects(root, &config, TestRunner::Swift).unwrap();
+
+    assert!(projects.iter().any(|project| {
+        project.policy_name.as_deref() == Some("swift-clients/missing")
+            && project.config.as_deref() == Some("swift-clients/missing")
+            && project.include == vec!["swift-clients/missing/CustomTests/**/*.swift"]
+            && project.exclude == vec!["swift-clients/missing/CustomTests/Skipped/**/*.swift"]
+    }));
+    assert!(projects.iter().any(|project| {
+        project.policy_name.as_deref() == Some("orphan-policy")
+            && project.config.as_deref() == Some("swift-clients/missing")
+            && project.include == vec!["ExternalTests/**/*.swift"]
+    }));
+    assert!(!projects
+        .iter()
+        .any(|project| project.policy_name.as_deref() == Some("empty-policy")));
+}
