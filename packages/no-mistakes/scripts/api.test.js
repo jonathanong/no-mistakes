@@ -1,5 +1,5 @@
-const { test } = require("node:test");
 const assert = require("node:assert/strict");
+const test = globalThis.test || require("node:test").test;
 const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 
