@@ -1,6 +1,6 @@
 use super::extract::{
-    extract_markdown_table_code_cells, extract_ts_array_literal, extract_ts_const_array_property,
-    extract_yaml_sequence, ExtractedSet,
+    extract_markdown_table_code_cells, extract_sql_enum, extract_ts_array_literal,
+    extract_ts_const_array_property, extract_yaml_sequence, ExtractedSet,
 };
 use super::*;
 use crate::config::v2::{
@@ -218,6 +218,7 @@ fn config_set_extractors_cover_edge_cases() {
         BTreeSet::from(["api".to_string(), "web".to_string()])
     );
     assert!(extract_yaml_sequence("packages:\n  nested: []\n", "packages.0").is_empty());
+    assert!(extract_sql_enum("CREATE TYPE status AS ENUM ('open'", "status").is_empty());
 }
 
 #[test]

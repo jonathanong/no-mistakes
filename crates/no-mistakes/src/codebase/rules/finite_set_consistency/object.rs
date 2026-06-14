@@ -173,7 +173,7 @@ pub(super) fn direct_object_body(value: &str) -> Option<String> {
     value.get(1..close).map(str::to_string)
 }
 
-fn quoted_string_literal(value: &str) -> Option<String> {
+pub(super) fn quoted_string_literal(value: &str) -> Option<String> {
     let quote = value.chars().next()?;
     if quote != '"' && quote != '\'' {
         return None;

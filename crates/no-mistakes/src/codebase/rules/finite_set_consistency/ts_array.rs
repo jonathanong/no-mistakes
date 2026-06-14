@@ -32,7 +32,7 @@ pub(super) fn extract_ts_const_array_property(
         .collect()
 }
 
-fn top_level_values(body: &str) -> Vec<String> {
+pub(super) fn top_level_values(body: &str) -> Vec<String> {
     let mut values = Vec::new();
     let mut rest = trim_ignorable(body);
     while !rest.is_empty() {

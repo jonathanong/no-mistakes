@@ -1,4 +1,5 @@
 use super::extract::{extract_ts_const_object_keys, extract_ts_const_object_property};
+use super::object::{quoted_string_literal, top_level_entries, top_level_property_values};
 use std::collections::BTreeSet;
 
 #[test]
@@ -210,4 +211,33 @@ const ROUTE_META = {
         "ROUTE_META"
     )
     .is_empty());
+}
+
+#[test]
+fn object_entry_parser_skips_ignorable_values_and_comments() {
+    assert_eq!(
+        top_level_entries(
+            r#"
+...buildRoutes("a", "b"),
+__comment__
+[dynamicKey("ignored")]: { slug: "ignored" },
+// line comment
+/* block comment */
+users: { slug: "users" },
+"#,
+        ),
+        vec![("users".to_string(), " { slug: \"users\" }".to_string())]
+    );
+
+    assert!(top_level_entries("...buildRoutes(\"a\", \"b\")").is_empty());
+    assert!(top_level_entries("[dynamicKey(\"ignored\")]").is_empty());
+    assert!(top_level_entries("/* unterminated").is_empty());
+    assert!(top_level_entries("// no newline").is_empty());
+}
+
+#[test]
+fn object_property_parser_rejects_unclosed_literals() {
+    assert!(top_level_property_values("{ slug: \"unterminated }", "slug").is_empty());
+    assert!(top_level_entries("\"unterminated").is_empty());
+    assert!(quoted_string_literal("\"unterminated").is_none());
 }
