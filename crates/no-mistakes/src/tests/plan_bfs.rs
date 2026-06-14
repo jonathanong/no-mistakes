@@ -141,7 +141,8 @@ pub(crate) fn path_confidence(edges: &[EdgeKind]) -> Confidence {
             | EdgeKind::Selector
             | EdgeKind::AssetImport
             | EdgeKind::ReactRender
-            | EdgeKind::PackageDependency => return Confidence::Low,
+            | EdgeKind::PackageDependency
+            | EdgeKind::SwiftPackageDependency => return Confidence::Low,
             EdgeKind::DynamicImport => conf = Confidence::Medium,
             _ => {}
         }
@@ -168,5 +169,7 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
         EdgeKind::AssetImport => "asset",
         EdgeKind::ReactRender => "react-render",
         EdgeKind::Selector => "selector",
+        EdgeKind::SwiftImport | EdgeKind::SwiftReference => "swift",
+        EdgeKind::SwiftPackageDependency => "swift package dependency",
     }
 }

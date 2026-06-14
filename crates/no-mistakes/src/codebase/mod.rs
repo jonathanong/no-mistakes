@@ -11,6 +11,7 @@ pub mod pnpm_lock;
 pub mod rules;
 pub(crate) mod storybook;
 pub(crate) mod storybook_mdx;
+pub mod swift;
 pub mod symbols;
 pub mod test_discovery;
 pub mod test_filter;

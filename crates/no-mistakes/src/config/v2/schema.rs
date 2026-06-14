@@ -12,8 +12,8 @@ mod string_or_list;
 mod tests_config;
 
 pub use tests_config::{
-    JestConfig, PlaywrightSelectors, PlaywrightTestConfig, StorybookConfig, TestProjectPolicy,
-    Tests, VitestConfig,
+    JestConfig, PlaywrightSelectors, PlaywrightTestConfig, StorybookConfig, SwiftConfig,
+    TestProjectPolicy, Tests, VitestConfig,
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
@@ -130,6 +130,7 @@ impl Default for RuleDef {
 pub struct RuleTestTargets {
     pub vitest: Vec<String>,
     pub playwright: Vec<String>,
+    pub swift: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]

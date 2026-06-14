@@ -35,6 +35,7 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
 }
 
 include!("builder.rs");
+include!("builder_helpers.rs");
 include!("builder_entrypoints.rs");
 include!("methods_lazy.rs");
 include!("lazy_imports.rs");
@@ -71,6 +72,7 @@ include!("edge_playwright_routes.rs");
 include!("edge_playwright_selectors.rs");
 include!("edge_playwright_http_process.rs");
 include!("edge_react.rs");
+include!("edge_swift.rs");
 include!("filter.rs");
 include!("symbol_index.rs");
 

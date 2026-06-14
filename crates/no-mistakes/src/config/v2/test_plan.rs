@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 pub struct TestPlanConfig {
     pub playwright: TestPlanFrameworkConfig,
     pub vitest: TestPlanFrameworkConfig,
+    pub swift: TestPlanFrameworkConfig,
 }
 
 /// Raw deserialization target that accepts both `fullSuiteTriggers` (current)
@@ -68,6 +69,7 @@ pub struct TestPlanDependencies {
 pub enum TestPlanIgnoredChangedTestsFramework {
     Playwright,
     Vitest,
+    Swift,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]

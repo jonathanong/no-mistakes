@@ -28,6 +28,9 @@ serialized in JSON/YAML/text output through the `via` field.
 | `md` | `MarkdownLink` | `md` | Markdown file -> linked visible file | [`codebase-intel/README.md`](../test-cases/codebase-analysis/codebase-intel/fixture/README.md) |
 | `ci` | `CiInvocation` | `ci` | GitHub Actions workflow -> Rust binary source invoked by supported Cargo commands | [`codebase-intel/.github/workflows/ci.yml`](../test-cases/codebase-analysis/codebase-intel/fixture/.github/workflows/ci.yml) |
 | `process` | `ProcessSpawn` | `process` | spawner/config file -> launched entry file | [`codebase-intel/packages/api/src/spawn-runner.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/spawn-runner.mts) |
+| `swift-import` | `SwiftImport` | `swift` | Swift file -> local files in imported SwiftPM target | [`swift-test-plan`](../test-cases/codebase-analysis/swift-test-plan) |
+| `swift-ref` | `SwiftReference` | `swift` | Swift file -> file declaring a referenced Swift symbol/member | [`swift-test-plan`](../test-cases/codebase-analysis/swift-test-plan) |
+| `swift-package` | `SwiftPackageDependency` | `swift` | Swift file -> files in a declared SwiftPM target dependency | [`swift-test-plan`](../test-cases/codebase-analysis/swift-test-plan) |
 
 ## Relationship Filters
 
@@ -51,6 +54,7 @@ serialized in JSON/YAML/text output through the `via` field.
 | `process` | `process` |
 | `asset` | `asset` |
 | `react` | `react-render` |
+| `swift` | `swift-import`, `swift-ref`, `swift-package` |
 | `all` | all edge kinds |
 
 ## Examples And Counterexamples
@@ -127,3 +131,8 @@ not assumed to equal a concrete literal route such as `/user/settings`.
 - Function-scoped dynamic `import()` and `require()` edges are pruned unless the
   containing function is statically called, exported, reached through an unknown
   top-level call shape, or contains an unknown call shape in reachable code.
+
+
+Swift endpoint literals such as `Endpoint(path: "/api/items/\(id)")` reuse
+`http` edges. Interpolated Swift path segments are treated as `*` route
+segments for matching configured backend route definitions.

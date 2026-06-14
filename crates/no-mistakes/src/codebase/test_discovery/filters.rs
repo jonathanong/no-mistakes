@@ -70,6 +70,7 @@ pub(crate) fn fallback_runner_match(runner: TestRunner, rel: &str) -> bool {
                     || rel.starts_with("playwright/")
                     || rel.starts_with("specs/"))
         }
+        TestRunner::Swift => rel.contains("/Tests/") && rel.ends_with(".swift"),
     }
 }
 

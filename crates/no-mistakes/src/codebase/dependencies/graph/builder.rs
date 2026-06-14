@@ -78,7 +78,11 @@ impl DepGraph {
         }
 
         if plan.assets {
-            merge_edges(&mut forward, &mut reverse, collect_asset_edges(&parsed_imports, &resolver, graph_files));
+            merge_edges(
+                &mut forward,
+                &mut reverse,
+                collect_asset_edges(&parsed_imports, &resolver, graph_files),
+            );
         }
 
         if plan.symbols {
@@ -147,46 +151,23 @@ impl DepGraph {
             merge_edges(&mut forward, &mut reverse, selector_edges);
         }
 
-        // HTTP and process collectors consume shared TS facts in this path.
-        // Keep the file-content fallback empty so graph builds do not add a
-        // second source read pass.
-        if plan.http || plan.process {
-            if plan.http {
-                let http_call_edges = collect_http_call_edges(
-                    root,
-                    tsconfig,
-                    facts,
-                    &[],
-                    graph_files.indexable(),
-                    &graph_files.all,
-                    config_options.as_ref(),
-                );
-                merge_edges(&mut forward, &mut reverse, http_call_edges);
-            }
-
-            if plan.process {
-                let spawn_edges = collect_process_spawn_edges(
-                    root,
-                    facts,
-                    &[],
-                    graph_files.indexable(),
-                );
-                merge_edges(&mut forward, &mut reverse, spawn_edges);
-            }
-        }
+        let edge_inputs = GraphEdgeBuildInputs {
+            root,
+            tsconfig,
+            plan,
+            graph_files,
+            config_options: config_options.as_ref(),
+        };
+        merge_http_process_edges(&edge_inputs, facts, &mut forward, &mut reverse);
 
         if plan.react {
             let react_edges = collect_react_render_edges(root, facts, graph_files.indexable());
             merge_edges(&mut forward, &mut reverse, react_edges);
         }
 
-        // ⚡ Bolt: Sort adjacency lists for deterministic BFS output.
-        // Using sort_by_cached_key improves performance by ~7% on large repositories
-        // since it prevents repeated allocation when computing the sort key via node_sort_key.
-        for adj in forward.values_mut().chain(reverse.values_mut()) {
-            adj.sort_by_cached_key(|(n, k)| (node_sort_key(n), *k as u8));
-            adj.dedup();
-        }
+        merge_swift_edges(&edge_inputs, &mut forward, &mut reverse);
+
+        sort_adjacency_lists(&mut forward, &mut reverse);
 
         Self {
             root: root.to_path_buf(),

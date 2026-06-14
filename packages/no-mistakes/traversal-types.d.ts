@@ -17,6 +17,7 @@ export type Relationship =
   | "process"
   | "asset"
   | "react"
+  | "swift"
   | "all";
 
 export interface TraverseOptions {

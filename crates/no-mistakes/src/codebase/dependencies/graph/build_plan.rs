@@ -17,6 +17,7 @@ pub struct GraphBuildPlan {
     pub assets: bool,
     pub react: bool,
     pub symbols: bool,
+    pub swift: bool,
 }
 
 impl GraphBuildPlan {
@@ -37,6 +38,7 @@ impl GraphBuildPlan {
             assets: true,
             react: true,
             symbols: false,
+            swift: true,
         }
     }
 
@@ -74,6 +76,9 @@ impl GraphBuildPlan {
             assets: allowed.contains(&EdgeKind::AssetImport),
             react: allowed.contains(&EdgeKind::ReactRender),
             symbols: false,
+            swift: allowed.contains(&EdgeKind::SwiftImport)
+                || allowed.contains(&EdgeKind::SwiftReference)
+                || allowed.contains(&EdgeKind::SwiftPackageDependency),
         }
     }
 
@@ -93,6 +98,7 @@ impl GraphBuildPlan {
         self.assets |= other.assets;
         self.react |= other.react;
         self.symbols |= other.symbols;
+        self.swift |= other.swift;
     }
 
     pub fn with_symbols(mut self, symbols: bool) -> Self {
@@ -116,6 +122,10 @@ impl GraphBuildPlan {
             ..TsFactPlan::default()
         }
     }
+}
+
+fn graph_plan_needs_config(plan: GraphBuildPlan) -> bool {
+    plan.routes || plan.queues || plan.http || plan.tests || plan.swift
 }
 
 fn effective_ts_fact_plan(plan: GraphBuildPlan, options: Option<&GraphConfigOptions>) -> TsFactPlan {

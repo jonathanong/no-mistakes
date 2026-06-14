@@ -56,7 +56,7 @@ const {
   });
   const plan = await testsPlan({
     root: process.cwd(),
-    framework: "vitest",
+    framework: "vitest", // also supports "playwright" and "swift"
     changedFiles: ["src/utils.mts"],
   });
   const projectCheck = await check({

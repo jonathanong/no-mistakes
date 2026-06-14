@@ -6,6 +6,7 @@ dependency graph analysis.
 ```sh
 no-mistakes tests plan vitest --base origin/main --format json
 no-mistakes tests plan playwright --changed-file web/app/users/page.tsx --format paths
+no-mistakes tests plan swift --changed-file backend/api/feeds.mts --format paths
 ```
 
 Use this for agent test selection before running expensive suites. Inputs can
@@ -17,3 +18,8 @@ Key options: `--root`, `--config`, `--tsconfig`, `--environment`,
 `--json`.
 
 Node API: `testsPlan(options)`.
+
+
+`swift` plans require `tests.swift.packages` config. They select changed Swift
+tests directly and select dependent Swift tests through Swift graph edges and
+HTTP route edges.

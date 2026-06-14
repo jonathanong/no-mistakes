@@ -410,3 +410,33 @@ fn large_graph_monorepo_exercises_all_relationships() {
         );
     }
 }
+
+#[test]
+fn swift_relationship_edges_and_test_filter_work() {
+    let root = fixture("swift-test-plan");
+    let dependents = run_json(
+        &root,
+        &[
+            "dependents",
+            "--relationship",
+            "swift",
+            "--test",
+            "swift",
+            "swift-clients/core/Sources/VouchaAPI/Endpoint.swift",
+        ],
+    );
+    let mut paths = file_paths(&dependents);
+    paths.sort();
+    assert_eq!(
+        paths,
+        vec![
+            "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift",
+            "swift-clients/ui/Tests/VouchaUITests/RSSFeedListViewModelTests.swift",
+        ]
+    );
+    assert!(has_path_with_via(
+        &dependents,
+        "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift",
+        "swift-ref"
+    ));
+}

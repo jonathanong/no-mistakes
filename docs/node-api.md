@@ -11,7 +11,7 @@ const { analyzeProject, dependents, symbols, testsPlan } = require("no-mistakes"
   const impact = await dependents({
     root: process.cwd(),
     files: ["src/api.mts#handler"],
-    tests: ["vitest"],
+    tests: ["vitest", "swift"],
   });
 
   const report = await analyzeProject({
@@ -37,7 +37,7 @@ const { analyzeProject, dependents, symbols, testsPlan } = require("no-mistakes"
 | `symbols` | `symbols(options)` |
 | `fetches` | `fetches(options)` |
 | `check` | `check(options)` |
-| `tests plan` | `testsPlan(options)` |
+| `tests plan` | `testsPlan(options)`; `framework` accepts `vitest`, `playwright`, or `swift` |
 | `tests impact` | `testsImpact(options)` |
 | `tests why` | `testsWhy(options)` |
 | `tests comment` | `testsComment(options)` |
