@@ -8,6 +8,19 @@ fn quoted_string_literal_rejects_unclosed_literals() {
 }
 
 #[test]
+fn quoted_string_literal_rejects_interpolated_templates() {
+    assert_eq!(
+        quoted_string_literal("`@acme/static`"),
+        Some("@acme/static".to_string())
+    );
+    assert_eq!(
+        quoted_string_literal(r"`@acme/\${pkg}`"),
+        Some("@acme/${pkg}".to_string())
+    );
+    assert!(quoted_string_literal("`@acme/${pkg}`").is_none());
+}
+
+#[test]
 fn array_extraction_skips_trailing_comments_without_values() {
     assert_eq!(
         extract_ts_array_literal(

@@ -178,6 +178,11 @@ fn config_set_extractors_cover_edge_cases() {
             "template".to_string()
         ])
     );
+    assert!(extract_ts_array_literal(
+        r#"const NAMES = getNames(); const OTHER = ["api"];"#,
+        "NAMES"
+    )
+    .is_empty());
     assert_eq!(
         extract_ts_array_literal(
             r#"const NAMES = [
@@ -199,6 +204,12 @@ fn config_set_extractors_cover_edge_cases() {
     );
     assert!(extract_ts_const_array_property(
         r#"const ITEMS = [{ name: "unterminated }];"#,
+        "ITEMS",
+        "name"
+    )
+    .is_empty());
+    assert!(extract_ts_const_array_property(
+        r#"const ITEMS = getItems(); const OTHER = [{ name: "api" }];"#,
         "ITEMS",
         "name"
     )

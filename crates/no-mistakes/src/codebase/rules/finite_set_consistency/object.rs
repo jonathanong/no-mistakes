@@ -25,7 +25,11 @@ pub(super) fn const_array_body(source: &str, target: &str) -> Option<String> {
         .ok()
         .and_then(|regex| const_object_start(&source, &regex))?;
     let assignment = assignment_index(&source, start)?;
-    let open = source[assignment..].find('[')? + assignment;
+    let initializer = source[assignment..].trim_start();
+    if !initializer.starts_with('[') {
+        return None;
+    }
+    let open = assignment + source[assignment..].len() - initializer.len();
     let close = matching_delimiter(&source, open, '[', ']')?;
     source.get(open + 1..close).map(str::to_string)
 }
