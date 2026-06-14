@@ -1,10 +1,11 @@
+mod project_sources;
 mod projects;
 
 use super::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
-use crate::integration_tests::{config as integration_config, project_config, types::Framework};
 use anyhow::Result;
+use project_sources::vitest_projects;
 use projects::{build_project_globs, matching_projects};
 use rayon::prelude::*;
 use serde::Deserialize;
@@ -48,6 +49,7 @@ const DEFAULT_TEST_DIR_EXTENSIONS: &[&str] = &[
 pub(crate) struct Options {
     pub(crate) scopes: Vec<String>,
     pub(crate) test_extensions: Vec<String>,
+    pub(crate) explicit_projects_only: bool,
 }
 
 pub(crate) fn check_with_files(
@@ -83,35 +85,7 @@ fn scan(
     files: &[PathBuf],
     target_roots: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let needs_config_projects = config.tests.vitest.configs.is_none()
-        || config.tests.vitest.projects.is_empty()
-        || config
-            .tests
-            .vitest
-            .configs
-            .as_ref()
-            .is_some_and(|configs| configs.values().iter().any(|raw| root.join(raw).exists()))
-        || config
-            .tests
-            .vitest
-            .projects
-            .values()
-            .any(|policy| policy.include.is_empty());
-    let mut projects = if needs_config_projects {
-        project_config::load_projects(
-            root,
-            Framework::Vitest,
-            config.tests.vitest.configs.as_ref(),
-        )?
-    } else {
-        Vec::new()
-    };
-    for (project_name, policy) in &config.tests.vitest.projects {
-        if let Some(project) = integration_config::configured_project(root, project_name, policy) {
-            projects.retain(|existing| existing.policy_name.as_deref() != Some(project_name));
-            projects.push(project);
-        }
-    }
+    let projects = vitest_projects(root, config, opts)?;
     if projects.is_empty() {
         return Ok(Vec::new());
     }

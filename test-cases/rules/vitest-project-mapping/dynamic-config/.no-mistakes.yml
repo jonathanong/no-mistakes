@@ -1,0 +1,11 @@
+tests:
+  vitest:
+    configs: vitest.config.mts
+    projects:
+      backend-core:
+        include: [backend/**/*.test.ts]
+      tooling:
+        include: [tooling/**/*.test.ts]
+      web:
+        include: [web/**/*.test.ts]
+        exclude: [web/**/*.generated.test.ts]
