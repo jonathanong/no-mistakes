@@ -48,17 +48,17 @@ fn trim_ignorable(source: &str) -> &str {
     loop {
         rest = rest.trim_start_matches(|ch: char| ch == ',' || ch.is_whitespace());
         if let Some(after_comment) = rest.strip_prefix("//") {
-            rest = after_comment
-                .find('\n')
-                .map(|index| &after_comment[index + 1..])
-                .unwrap_or("");
+            rest = match after_comment.find('\n') {
+                Some(index) => &after_comment[index + 1..],
+                None => "",
+            };
             continue;
         }
         if let Some(after_comment) = rest.strip_prefix("/*") {
-            rest = after_comment
-                .find("*/")
-                .map(|index| &after_comment[index + 2..])
-                .unwrap_or("");
+            rest = match after_comment.find("*/") {
+                Some(index) => &after_comment[index + 2..],
+                None => "",
+            };
             continue;
         }
         return rest;

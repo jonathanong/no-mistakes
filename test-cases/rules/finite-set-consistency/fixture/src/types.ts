@@ -11,4 +11,10 @@ export const FIRST_PARTY_EXEMPTIONS = [
   { name: "@acme/docs", reason: "workspace package" },
 ] as const;
 
-export const FIRST_PARTY_NAMES = ["@acme/api", "@acme/web"] as const;
+export const FIRST_PARTY_NAMES = [
+  // dynamic templates are intentionally skipped by the finite-set extractor
+  `@acme/${pkg}`,
+  "@acme/api",
+  /* documented in docs/dependency-updates.md */
+  "@acme/web",
+] as const;

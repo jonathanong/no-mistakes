@@ -51,5 +51,23 @@ fn array_extraction_skips_trailing_comments_without_values() {
         ),
         vec!["\"api\"".to_string()]
     );
+    assert_eq!(
+        top_level_values(
+            r#"
+// leading comment
+"api"
+"#,
+        ),
+        vec!["\"api\"".to_string()]
+    );
+    assert_eq!(
+        top_level_values(
+            r#"
+/* leading block */
+"api"
+"#,
+        ),
+        vec!["\"api\"".to_string()]
+    );
     assert!(top_level_values("// no newline").is_empty());
 }

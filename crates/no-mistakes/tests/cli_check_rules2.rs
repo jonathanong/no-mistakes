@@ -173,10 +173,19 @@ rules:
           file: .github/dependabot.yml
           kind: yaml-sequence
           key: updates.0.cooldown.exclude
+        - name: names
+          file: src/types.ts
+          kind: ts-array-literal
+          target: FIRST_PARTY_NAMES
+        - name: docsMentions
+          file: docs/dependency-updates.md
+          kind: markdown-table-code-cells
       comparisons:
         - left: registry
           right: dependabotGlobs
           mode: glob-coverage
+        - left: names
+          right: docsMentions
 "#,
     )
     .unwrap();
