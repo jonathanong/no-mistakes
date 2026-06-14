@@ -53,7 +53,11 @@ pub fn project_filters(
     config: &NoMistakesConfig,
 ) -> Vec<(TestRunner, ProjectTestFilter)> {
     let mut filters = Vec::new();
-    for runner in [TestRunner::Vitest, TestRunner::Playwright] {
+    for runner in [
+        TestRunner::Vitest,
+        TestRunner::Playwright,
+        TestRunner::Swift,
+    ] {
         let projects = projects::runner_projects_lossy(root, config, runner);
         filters.extend(
             projects

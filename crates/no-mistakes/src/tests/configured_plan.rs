@@ -156,8 +156,13 @@ pub(crate) fn generate_configured_plan(
             ));
             continue;
         }
-        if framework == TestFramework::Vitest && group.type_ == TestPlanGroupType::Coverage {
-            anyhow::bail!("vitest test plans do not support the coverage group");
+        if matches!(framework, TestFramework::Vitest | TestFramework::Swift)
+            && group.type_ == TestPlanGroupType::Coverage
+        {
+            anyhow::bail!(
+                "{} test plans do not support the coverage group",
+                framework_name(framework)
+            );
         }
         let mut candidates = group_candidates(
             group.type_,
@@ -327,6 +332,7 @@ fn configured_environment(
     let plan = match framework {
         TestFramework::Playwright => &config.test_plan.playwright,
         TestFramework::Vitest => &config.test_plan.vitest,
+        TestFramework::Swift => &config.test_plan.swift,
     };
     let key = normalize_environment(&args.environment);
     for (name, env) in &plan.environments {
@@ -380,6 +386,7 @@ fn framework_name(framework: TestFramework) -> &'static str {
     match framework {
         TestFramework::Playwright => "playwright",
         TestFramework::Vitest => "vitest",
+        TestFramework::Swift => "swift",
     }
 }
 
@@ -444,6 +451,7 @@ fn test_runner(framework: TestFramework) -> TestRunner {
     match framework {
         TestFramework::Playwright => TestRunner::Playwright,
         TestFramework::Vitest => TestRunner::Vitest,
+        TestFramework::Swift => TestRunner::Swift,
     }
 }
 

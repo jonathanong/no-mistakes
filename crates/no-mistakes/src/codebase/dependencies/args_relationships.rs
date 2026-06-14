@@ -36,12 +36,14 @@ pub(crate) fn test_globs(framework: &str) -> Vec<String> {
         "**/playwright/**/*.spec.jsx",
     ];
     const CARGO: &[&str] = &["**/tests/**/*.rs", "src/**/*_test.rs"];
+    const SWIFT: &[&str] = &["**/Tests/**/*.swift"];
 
     match framework {
         "vitest" => globs_to_strings(VITEST_JEST_TEST_GLOBS),
         "jest" => globs_to_strings(VITEST_JEST_TEST_GLOBS),
         "playwright" => globs_to_strings(PLAYWRIGHT),
         "cargo" => globs_to_strings(CARGO),
+        "swift" => globs_to_strings(SWIFT),
         _ => vec![],
     }
 }
@@ -77,6 +79,7 @@ pub enum RelationshipArg {
     Process,
     Asset,
     React,
+    Swift,
     All,
 }
 
@@ -99,6 +102,7 @@ impl RelationshipArg {
             RelationshipArg::Process => "process",
             RelationshipArg::Asset => "asset",
             RelationshipArg::React => "react",
+            RelationshipArg::Swift => "swift",
             RelationshipArg::All => "all",
         }
     }
@@ -174,6 +178,11 @@ pub(crate) fn relationship_filter(
             }
             RelationshipArg::React => {
                 set.insert(EdgeKind::ReactRender);
+            }
+            RelationshipArg::Swift => {
+                set.insert(EdgeKind::SwiftImport);
+                set.insert(EdgeKind::SwiftReference);
+                set.insert(EdgeKind::SwiftPackageDependency);
             }
             RelationshipArg::All => return None,
         }

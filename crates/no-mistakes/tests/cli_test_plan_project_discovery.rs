@@ -268,3 +268,103 @@ fn test_plan_playwright_nested_configs_scope_targets_to_owning_config() {
     assert_eq!(home_targets[0]["config"], "playwright.config.mts");
     assert_eq!(home_targets[0]["project"], "chromium");
 }
+
+#[test]
+fn test_plan_swift_uses_packages_and_dependency_graph() {
+    let root = fixture("swift-test-plan");
+    let output = run(&[
+        "test",
+        "plan",
+        "swift",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "backend/api/feeds.mts",
+        "--json",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let selected: Vec<&str> = plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|test| test["test_file"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        selected,
+        vec![
+            "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift",
+            "swift-clients/ui/Tests/VouchaUITests/RSSFeedListViewModelTests.swift",
+        ]
+    );
+    let core_targets = plan["selected_tests"][0]["targets"].as_array().unwrap();
+    let core = core_targets
+        .iter()
+        .find(|target| target["project"] == "VouchaCoreTests")
+        .expect("SwiftPM test target should be emitted");
+    assert_eq!(core["runner"], "swift");
+    assert_eq!(core["config"], "swift-clients/core");
+    assert_eq!(core["base_command"], serde_json::json!(["swift", "test"]));
+    assert_eq!(
+        core["runner_args"],
+        serde_json::json!([
+            "--package-path",
+            "swift-clients/core",
+            "--filter",
+            "VouchaCoreTests"
+        ])
+    );
+    let via: Vec<&str> = plan["selected_tests"][0]["reasons"][0]["via"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|value| value.as_str().unwrap())
+        .collect();
+    assert_eq!(via, vec!["http", "swift"]);
+}
+
+#[test]
+fn test_plan_swift_direct_and_coverage_error() {
+    let root = fixture("swift-test-plan");
+    let direct = run(&[
+        "test",
+        "plan",
+        "swift",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "swift-clients/ui/Tests/VouchaUITests/RSSFeedListViewModelTests.swift",
+        "--json",
+    ]);
+    assert!(
+        direct.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&direct.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&direct)).unwrap();
+    assert_eq!(
+        plan["groups"][0]["selected"],
+        serde_json::json!(["swift-clients/ui/Tests/VouchaUITests/RSSFeedListViewModelTests.swift"])
+    );
+
+    let coverage = run(&[
+        "test",
+        "plan",
+        "swift",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "backend/api/feeds.mts",
+        "--environment",
+        "coverage-only",
+        "--json",
+    ]);
+    assert!(!coverage.status.success());
+    assert!(String::from_utf8_lossy(&coverage.stderr)
+        .contains("swift test plans do not support the coverage group"));
+}

@@ -1,0 +1,38 @@
+projects:
+  backend:
+    type: server
+    root: backend
+    routes:
+      - api/**
+  swift-clients:
+    type: tests
+    root: swift-clients
+tests:
+  swift:
+    packages:
+      - swift-clients/core
+      - swift-clients/ui
+    projects:
+      swift-core:
+        include:
+          - swift-clients/core/Tests/**/*.swift
+      swift-ui:
+        include:
+          - swift-clients/ui/Tests/**/*.swift
+test_plan:
+  swift:
+    fullSuiteTriggers:
+      projects:
+        swift-clients:
+          - core/Package.swift
+          - ui/Package.swift
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies
+      all:
+        all: true
+      coverage-only:
+        groups:
+          - type: coverage

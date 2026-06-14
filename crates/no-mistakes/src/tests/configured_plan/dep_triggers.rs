@@ -1,4 +1,4 @@
-// Full-suite trigger logic for configured (Playwright/Vitest) plans.
+// Full-suite trigger logic for configured test plans.
 // Determines whether a changed file matches a project-level dependency pattern
 // that should force a full-suite run.
 
@@ -21,6 +21,7 @@ pub(super) fn dependency_trigger(
     let plan = match framework {
         TestFramework::Playwright => &config.test_plan.playwright,
         TestFramework::Vitest => &config.test_plan.vitest,
+        TestFramework::Swift => &config.test_plan.swift,
     };
     let ignored_sets = ignored_changed_test_sets(
         root,
@@ -61,6 +62,7 @@ fn ignored_changed_test_sets(
         let runner = match framework {
             TestPlanIgnoredChangedTestsFramework::Playwright => TestRunner::Playwright,
             TestPlanIgnoredChangedTestsFramework::Vitest => TestRunner::Vitest,
+            TestPlanIgnoredChangedTestsFramework::Swift => TestRunner::Swift,
         };
         let set = match no_mistakes::codebase::test_discovery::discover_tests(root, config, runner)
         {

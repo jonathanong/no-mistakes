@@ -4,6 +4,7 @@ pub(crate) fn build_plan_args(
     let framework = match options.framework.as_deref() {
         Some("playwright") => Some(crate::tests::TestFramework::Playwright),
         Some("vitest") => Some(crate::tests::TestFramework::Vitest),
+        Some("swift") => Some(crate::tests::TestFramework::Swift),
         Some(value) => bail!("unknown test framework: {value}"),
         None => None,
     };

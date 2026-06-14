@@ -180,6 +180,15 @@ impl DepGraph {
             merge_edges(&mut forward, &mut reverse, react_edges);
         }
 
+        if plan.swift {
+            let swift_edges = collect_swift_edges(root, tsconfig, &graph_files.all, config_options.as_ref());
+            for (from, to, _) in &swift_edges {
+                forward.entry(from.clone()).or_default();
+                forward.entry(to.clone()).or_default();
+            }
+            merge_edges(&mut forward, &mut reverse, swift_edges);
+        }
+
         // ⚡ Bolt: Sort adjacency lists for deterministic BFS output.
         // Using sort_by_cached_key improves performance by ~7% on large repositories
         // since it prevents repeated allocation when computing the sort key via node_sort_key.

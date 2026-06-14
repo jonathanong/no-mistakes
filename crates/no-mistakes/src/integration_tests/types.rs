@@ -22,6 +22,7 @@ pub struct IntegrationFinding {
 pub(crate) enum Framework {
     Playwright,
     Vitest,
+    Swift,
 }
 
 impl Framework {
@@ -29,6 +30,7 @@ impl Framework {
         match self {
             Self::Playwright => "playwright",
             Self::Vitest => "vitest",
+            Self::Swift => "swift",
         }
     }
 }

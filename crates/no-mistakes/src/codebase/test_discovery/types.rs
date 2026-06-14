@@ -8,6 +8,7 @@ use super::targets::TestExecutionTarget;
 pub enum TestRunner {
     Playwright,
     Vitest,
+    Swift,
 }
 
 impl TestRunner {
@@ -15,6 +16,7 @@ impl TestRunner {
         match self {
             Self::Playwright => "playwright",
             Self::Vitest => "vitest",
+            Self::Swift => "swift",
         }
     }
 
@@ -22,6 +24,7 @@ impl TestRunner {
         match self {
             Self::Playwright => Framework::Playwright,
             Self::Vitest => Framework::Vitest,
+            Self::Swift => Framework::Swift,
         }
     }
 }

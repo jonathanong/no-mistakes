@@ -91,6 +91,12 @@ pub enum EdgeKind {
     /// text).  Direction mirrors `TestOf` so that `dependents_of(component)`
     /// returns tests that cover it via selector-based paths.
     Selector,
+    /// Swift module import from one Swift file to local files in the imported target.
+    SwiftImport,
+    /// Swift symbol/member reference from one Swift file to the declaring file.
+    SwiftReference,
+    /// SwiftPM target dependency fallback edge between package targets.
+    SwiftPackageDependency,
 }
 
 impl EdgeKind {
@@ -115,6 +121,9 @@ impl EdgeKind {
             EdgeKind::AssetImport => "asset",
             EdgeKind::ReactRender => "react-render",
             EdgeKind::Selector => "selector",
+            EdgeKind::SwiftImport => "swift-import",
+            EdgeKind::SwiftReference => "swift-ref",
+            EdgeKind::SwiftPackageDependency => "swift-package",
         }
     }
 }

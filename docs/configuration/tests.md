@@ -17,6 +17,14 @@ tests:
     selectorExclude: ["web/generated/**"]
   vitest:
     configs: vitest.config.mts
+  swift:
+    packages:
+      - swift-clients/core
+      - swift-clients/ui
+    projects:
+      swift-core:
+        include:
+          - swift-clients/core/Tests/**/*.swift
 ```
 
 Selector settings feed Playwright coverage, route impact, and graph edges.
@@ -64,3 +72,15 @@ report every `getByTestId` selector as uncovered. Declaring
 `testIdAttribute: data-pw` (or relying on the `selectors.testIds` fallback) makes
 coverage match `getByTestId('x')` against `data-pw="x"`. See
 [`playwright-coverage`](../rules/playwright-coverage.md).
+
+## Swift
+
+`tests.swift.packages` lists SwiftPM package roots explicitly. `no-mistakes` does
+not infer repository-wide Swift packages. Swift test discovery reads each
+configured `Package.swift`, discovers `.testTarget(...)` targets under
+`Tests/<target>/**/*.swift`, and emits `swift test --package-path <package>
+--filter <test-target>` execution targets.
+
+Use `tests.swift.projects` when a package needs named include/exclude policies.
+Project aliases affect discovery, while runnable Swift filters remain SwiftPM
+test targets derived from the selected test file.

@@ -22,6 +22,10 @@ pub(super) fn target_for(
     project: Option<&str>,
     test_file: &str,
 ) -> TestExecutionTarget {
+    if runner == TestRunner::Swift {
+        return swift_target_for(config, project, test_file);
+    }
+
     let mut runner_args = Vec::new();
     if let Some(config) = config {
         runner_args.push("--config".to_string());
@@ -40,15 +44,47 @@ pub(super) fn target_for(
         base_command: match runner {
             TestRunner::Playwright => vec!["playwright".to_string(), "test".to_string()],
             TestRunner::Vitest => vec!["vitest".to_string()],
+            TestRunner::Swift => unreachable!("swift targets return above"),
         },
         runner_args,
     }
+}
+
+fn swift_target_for(
+    package: Option<&str>,
+    project: Option<&str>,
+    test_file: &str,
+) -> TestExecutionTarget {
+    let mut runner_args = Vec::new();
+    if let Some(package) = package {
+        runner_args.push("--package-path".to_string());
+        runner_args.push(package.to_string());
+    }
+    runner_args.push("--filter".to_string());
+    runner_args.push(
+        project
+            .unwrap_or_else(|| swift_filter_from_path(test_file))
+            .to_string(),
+    );
+
+    TestExecutionTarget {
+        runner: TestRunner::Swift.as_str().to_string(),
+        config: package.map(str::to_string),
+        project: project.map(str::to_string),
+        base_command: vec!["swift".to_string(), "test".to_string()],
+        runner_args,
+    }
+}
+
+fn swift_filter_from_path(test_file: &str) -> &str {
+    test_file.split('/').rev().nth(1).unwrap_or(test_file)
 }
 
 fn test_file_arg(runner: TestRunner, test_file: &str) -> String {
     match runner {
         TestRunner::Playwright => regex_escape(test_file),
         TestRunner::Vitest => test_file.to_string(),
+        TestRunner::Swift => test_file.to_string(),
     }
 }
 

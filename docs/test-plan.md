@@ -98,7 +98,7 @@ falling back to the full test suite. This applies to both plain plans and framew
    the graph records a `NodeId::File(entry)` instead; the workspace map is consulted as a
    fallback when no `Module` node is present.
 
-For framework (Playwright/Vitest) plans the BFS-found tests are injected into the
+For framework (Playwright/Vitest/Swift) plans the BFS-found tests are injected into the
 `dependencies` group, exactly mirroring the non-framework path.
 
 Full-suite fallback fires only for:

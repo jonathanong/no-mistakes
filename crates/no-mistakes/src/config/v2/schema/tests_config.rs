@@ -8,6 +8,7 @@ use super::StringOrList;
 pub struct Tests {
     pub playwright: PlaywrightTestConfig,
     pub vitest: VitestConfig,
+    pub swift: SwiftConfig,
     pub jest: JestConfig,
     pub storybook: StorybookConfig,
 }
@@ -46,6 +47,13 @@ pub struct PlaywrightSelectors {
 #[serde(rename_all = "camelCase", default)]
 pub struct VitestConfig {
     pub configs: Option<StringOrList>,
+    pub projects: BTreeMap<String, TestProjectPolicy>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct SwiftConfig {
+    pub packages: Vec<String>,
     pub projects: BTreeMap<String, TestProjectPolicy>,
 }
 

@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { test } = require("node:test");
 const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 
@@ -98,8 +99,8 @@ test("programmatic API proxies object options through async native addon calls",
     assert.equal((await api.fetches({ targets: ["/users"] })).command, "fetches");
     assert.equal((await api.check({ tsconfig: "tsconfig.json" })).command, "check");
     assert.deepEqual(
-      (await api.testsPlan({ framework: "vitest", globalConfigFallback: false })).options,
-      { framework: "vitest", globalConfigFallback: false },
+      (await api.testsPlan({ framework: "swift", globalConfigFallback: false })).options,
+      { framework: "swift", globalConfigFallback: false },
     );
     assert.equal((await api.testsWhy({ test: "source.test.ts" })).command, "testsWhy");
     assert.equal(await api.testsComment({ plan: "plan.json" }), "comment:plan.json");

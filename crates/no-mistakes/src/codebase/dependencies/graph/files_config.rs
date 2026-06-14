@@ -24,6 +24,7 @@ struct GraphConfigOptions {
     test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
     rewrites: Vec<crate::config::v2::schema::RewriteRule>,
     queue_project_factory_names: Vec<String>,
+    swift_packages: Vec<String>,
 }
 
 fn graph_config_options(root: &Path) -> Option<GraphConfigOptions> {
@@ -61,6 +62,7 @@ fn graph_config_options_with_config(
         test_filter,
         rewrites,
         queue_project_factory_names: v2_config.as_ref().map(|c| c.queues.factories.clone()).unwrap_or_default(),
+        swift_packages: v2_config.as_ref().map(|c| c.tests.swift.packages.clone()).unwrap_or_default(),
     })
 }
 
@@ -88,7 +90,7 @@ fn graph_config_options_for_plan_with_config(
 }
 
 fn graph_plan_needs_config(plan: GraphBuildPlan) -> bool {
-    plan.routes || plan.queues || plan.http || plan.tests
+    plan.routes || plan.queues || plan.http || plan.tests || plan.swift
 }
 
 fn ts_fact_context_from_options(

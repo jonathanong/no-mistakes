@@ -220,6 +220,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         test_filter: None,
         rewrites: vec![],
         queue_project_factory_names: vec![],
+        swift_packages: vec![],
     };
     assert!(collect_symbol_http_route_defs(
         Path::new("/repo"),

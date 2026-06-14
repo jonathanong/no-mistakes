@@ -418,6 +418,9 @@ fn edge_kind_str_all_variants() {
     assert_eq!(EdgeKind::AssetImport.as_str(), "asset");
     assert_eq!(EdgeKind::ReactRender.as_str(), "react-render");
     assert_eq!(EdgeKind::Selector.as_str(), "selector");
+    assert_eq!(EdgeKind::SwiftImport.as_str(), "swift-import");
+    assert_eq!(EdgeKind::SwiftReference.as_str(), "swift-ref");
+    assert_eq!(EdgeKind::SwiftPackageDependency.as_str(), "swift-package");
 }
 
 #[test]
@@ -446,6 +449,9 @@ fn serialized_edge_kinds_are_documented() {
         EdgeKind::AssetImport,
         EdgeKind::ReactRender,
         EdgeKind::Selector,
+        EdgeKind::SwiftImport,
+        EdgeKind::SwiftReference,
+        EdgeKind::SwiftPackageDependency,
     ] {
         match kind {
             EdgeKind::Import => {}
@@ -467,6 +473,9 @@ fn serialized_edge_kinds_are_documented() {
             EdgeKind::AssetImport => {}
             EdgeKind::ReactRender => {}
             EdgeKind::Selector => {}
+            EdgeKind::SwiftImport => {}
+            EdgeKind::SwiftReference => {}
+            EdgeKind::SwiftPackageDependency => {}
         }
         let serialized = kind.as_str();
         assert!(

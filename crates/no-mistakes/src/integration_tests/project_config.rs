@@ -58,6 +58,7 @@ fn discovered_config_paths(root: &Path, framework: Framework) -> Vec<String> {
     let names = match framework {
         Framework::Playwright => PLAYWRIGHT_CONFIGS,
         Framework::Vitest => VITEST_CONFIGS,
+        Framework::Swift => &[],
     };
     names
         .iter()
@@ -93,6 +94,7 @@ fn load_config_projects(
                 })
                 .collect())
         }
+        Framework::Swift => Ok(Vec::new()),
     }
 }
 

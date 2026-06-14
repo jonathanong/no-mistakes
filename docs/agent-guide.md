@@ -27,7 +27,7 @@ or the repository's agent guide:
 ```md
 Use no-mistakes for structural TS/JS questions before falling back to grep.
 Run no-mistakes dependents <changed-file> --format paths to choose focused tests.
-Prefer no-mistakes test plan <playwright|vitest> when the project has configured testPlan environments.
+Prefer no-mistakes test plan <playwright|vitest|swift> when the project has configured testPlan environments.
 Run no-mistakes playwright check --json before finishing Next.js App Router or Playwright work.
 Use no-mistakes playwright related <file> to identify Playwright tests for changed pages or selector-bearing components.
 Keep test IDs and fetch URLs static unless the project explicitly accepts that the AST tools cannot reason about them.
