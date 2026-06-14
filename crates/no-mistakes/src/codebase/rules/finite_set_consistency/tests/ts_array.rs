@@ -21,6 +21,17 @@ fn quoted_string_literal_rejects_interpolated_templates() {
 }
 
 #[test]
+fn quoted_string_literal_rejects_prefix_expressions() {
+    assert_eq!(
+        quoted_string_literal("\"@acme/api\""),
+        Some("@acme/api".to_string())
+    );
+    assert!(quoted_string_literal("\"@acme/\" + pkg").is_none());
+    assert!(quoted_string_literal("'@acme/'.concat(pkg)").is_none());
+    assert!(quoted_string_literal("`@acme/` + pkg").is_none());
+}
+
+#[test]
 fn array_extraction_skips_trailing_comments_without_values() {
     assert_eq!(
         extract_ts_array_literal(

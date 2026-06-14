@@ -72,8 +72,8 @@ pub(super) fn quoted_string_literal(value: &str) -> Option<String> {
     }
     let mut literal = String::new();
     let mut escaped = false;
-    let mut chars = value[1..].chars().peekable();
-    while let Some(ch) = chars.next() {
+    let mut chars = value[quote.len_utf8()..].char_indices().peekable();
+    while let Some((offset, ch)) = chars.next() {
         if escaped {
             literal.push(ch);
             escaped = false;
@@ -84,9 +84,10 @@ pub(super) fn quoted_string_literal(value: &str) -> Option<String> {
             continue;
         }
         if ch == quote {
-            return Some(literal);
+            let end = quote.len_utf8() + offset + ch.len_utf8();
+            return value[end..].trim().is_empty().then_some(literal);
         }
-        if quote == '`' && ch == '$' && chars.peek().is_some_and(|next| *next == '{') {
+        if quote == '`' && ch == '$' && chars.peek().is_some_and(|(_, next)| *next == '{') {
             return None;
         }
         literal.push(ch);
