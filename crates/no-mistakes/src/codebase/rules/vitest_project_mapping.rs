@@ -85,6 +85,9 @@ fn scan(
     files: &[PathBuf],
     target_roots: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    if files.is_empty() {
+        return Ok(Vec::new());
+    }
     let projects = vitest_projects(root, config, opts)?;
     if projects.is_empty() {
         return Ok(Vec::new());
