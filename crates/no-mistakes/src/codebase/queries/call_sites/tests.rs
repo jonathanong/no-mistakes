@@ -135,7 +135,16 @@ fn unknown_export_is_rejected() {
     let error = compute(&args(fixture_root("queries"), "util.ts", "nope"))
         .err()
         .unwrap();
-    assert!(error.to_string().contains("is not an export"));
+    assert!(error.to_string().contains("is not a value export"));
+}
+
+#[test]
+fn type_only_export_is_rejected() {
+    // `I` is an exported interface — not a runtime callee.
+    let error = compute(&args(fixture_root("queries-kinds"), "kinds.ts", "I"))
+        .err()
+        .unwrap();
+    assert!(error.to_string().contains("is not a value export"));
 }
 
 #[test]

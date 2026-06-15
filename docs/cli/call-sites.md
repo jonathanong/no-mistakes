@@ -14,7 +14,8 @@ it stays fast. Each call site reports the `file`, `line`, enclosing `caller`
 Argument shapes are coarse syntactic tags — `string`, `number`, `boolean`,
 `null`, `identifier`, `object`, `array`, `arrow`, `call`, `spread`, or `other` —
 with no type inference. Re-export barrels are followed, so call sites in files
-that import the function through a barrel are included. Only direct identifier
+that import the function through a barrel are included (a barrel that locally
+shadows the re-exported name is an edge case that may over-report). Only direct identifier
 calls (`handler(...)`) match; namespace member calls (`ns.handler()`), indirect
 aliases (`const h = handler; h()`), and a local binding that shadows the import
 inside a nested scope are not resolved. In-file calls are searched under the

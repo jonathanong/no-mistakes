@@ -194,6 +194,22 @@ fn type_import_via_js_resolves_to_declaration() {
 }
 
 #[test]
+fn extensionless_specifier_resolves_to_literal_file() {
+    let report = kinds_compute("rawmod-user.ts");
+    assert!(report.all_resolve);
+    assert_eq!(report.imports[0].resolved.as_deref(), Some("rawmod"));
+}
+
+#[test]
+fn plain_js_specifier_resolves_to_literal_file() {
+    // No TS source, so `./plain.js` resolves to the checked-in `.js`; a `.js`
+    // with neither a source nor a literal file is unresolved.
+    let report = kinds_compute("plainjs-user.ts");
+    assert_eq!(report.imports[0].resolved.as_deref(), Some("plain.js"));
+    assert_eq!(report.unresolved, vec!["./ghost.js".to_string()]);
+}
+
+#[test]
 fn esm_js_specifier_resolves_to_ts_source() {
     // `./dep.js` resolves to the `dep.ts` source (NodeNext/ESM convention).
     let root = named_fixture("queries-kinds");

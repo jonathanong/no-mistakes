@@ -152,9 +152,11 @@ fn sites_for_file(path: &Path, names: &HashSet<String>, root: &Path) -> Vec<Call
 fn compute(args: &CallSitesArgs) -> Result<CallSitesReport> {
     let target = resolve_target(&args.file, args.root.as_deref(), args.tsconfig.as_deref())?;
     let symbols = read_symbols(&target.abs_file)?;
+    // call-sites finds invocations, so the target must be a value export — a
+    // type-only export (interface/type alias) has no runtime callee.
     anyhow::ensure!(
-        find_export(&symbols, &args.export_name).is_some(),
-        "`{}` is not an export of {}",
+        find_export(&symbols, &args.export_name).is_some_and(|export| !export.is_type_only),
+        "`{}` is not a value export of {}",
         args.export_name,
         args.file.display()
     );

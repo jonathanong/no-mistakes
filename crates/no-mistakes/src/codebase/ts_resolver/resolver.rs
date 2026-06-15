@@ -107,15 +107,19 @@ impl<'a> ImportResolver<'a> {
     /// Try `base` as-is, then with each known extension appended, then as an index file.
     fn try_path(&self, base: &Path) -> Option<PathBuf> {
         let base = normalize_path(base);
-        let s = base.to_string_lossy();
+        if has_explicit_extension(&base) {
+            // NodeNext/ESM: an emitted `.js`/`.mjs`/`.cjs` specifier resolves to
+            // its TypeScript source first (TS prefers `util.ts` over a checked-in
+            // `util.js`), then falls back to the literal file.
+            if let Some(source) = self.try_emitted_source(&base) {
+                return Some(source);
+            }
+            return self.path_is_file(&base).then_some(base);
+        }
         if self.path_is_file(&base) {
             return Some(base);
         }
-        if has_explicit_extension(&base) {
-            // NodeNext/ESM: an emitted `.js`/`.mjs`/`.cjs` specifier maps to its
-            // TypeScript source (`./util.js` → `util.ts`/`util.d.ts`).
-            return self.try_emitted_source(&base);
-        }
+        let s = base.to_string_lossy();
 
         for ext in EXTENSIONS {
             let candidate = PathBuf::from(format!("{}{}", s, ext));
