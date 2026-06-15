@@ -116,6 +116,21 @@ fn namespace_reexport_is_not_treated_as_star_row() {
 }
 
 #[test]
+fn reexport_via_js_specifier_resolves_source() {
+    // `export { x } from './dep.js'` resolves the re-export to its `.ts` source.
+    let report = compute(&ExportsOfArgs {
+        file: PathBuf::from("js-barrel.ts"),
+        root: Some(named_fixture("queries-kinds")),
+        tsconfig: None,
+        no_importers: true,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert_eq!(report.exports[0].resolved.as_deref(), Some("dep.ts"));
+}
+
+#[test]
 fn reexport_resolves_target() {
     let report = compute(&args("barrel.ts", true)).unwrap();
     assert_eq!(report.exports[0].name, "used");

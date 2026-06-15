@@ -19,7 +19,8 @@ Importers are derived from ES named/namespace/default import edges. Side-effect-
 only imports (`import './setup'`), CommonJS `require('./util')` consumers, and
 imports by workspace package name are not counted. For transitive or symbol-level
 impact, CommonJS/cross-package consumers, or to follow non-import edges, use
-[`dependents`](dependents.md) instead.
+[`dependents`](dependents.md) instead. (Relative, alias, NodeNext `.js`, and
+declaration-only `.d.ts` import targets are resolved.)
 
 Key options: `--root`, `--tsconfig`, `--tests`, `--format`, and `--json`.
 

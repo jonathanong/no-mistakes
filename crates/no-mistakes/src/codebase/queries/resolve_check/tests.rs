@@ -126,6 +126,21 @@ fn kinds_compute(file: &str) -> ResolveCheckReport {
 }
 
 #[test]
+fn exact_alias_to_declaration_resolves() {
+    // `@types` (exact path alias) backed only by `types.d.ts`.
+    let report = compute(&ResolveCheckArgs {
+        file: PathBuf::from("user.ts"),
+        root: Some(named_fixture("queries-alias")),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(report.all_resolve);
+    assert_eq!(report.imports[0].resolved.as_deref(), Some("types.d.ts"));
+}
+
+#[test]
 fn js_specifier_resolves_to_jsx_source() {
     let report = kinds_compute("jsx-user.ts");
     assert!(report.all_resolve);

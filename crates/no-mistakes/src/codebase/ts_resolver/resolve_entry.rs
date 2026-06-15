@@ -15,7 +15,20 @@ pub fn find_tsconfig(start: &Path) -> Option<PathBuf> {
     }
 }
 
-const EXTENSIONS: &[&str] = &[".mts", ".ts", ".tsx", ".mjs", ".js", ".jsx", ".cjs", ".cts"];
+const EXTENSIONS: &[&str] = &[
+    ".mts", ".ts", ".tsx", ".mjs", ".js", ".jsx", ".cjs", ".cts", ".d.ts", ".d.mts", ".d.cts",
+];
+
+/// NodeNext/ESM source candidates for an emitted `.js`/`.mjs`/`.cjs` specifier,
+/// tried (after the literal file) when the import carries an emitted extension.
+fn emitted_source_candidates(extension: &str) -> &'static [&'static str] {
+    match extension {
+        "mjs" => &[".mts", ".d.mts"],
+        "cjs" => &[".cts", ".d.cts"],
+        "js" => &[".ts", ".tsx", ".jsx", ".d.ts"],
+        _ => &[],
+    }
+}
 const EXPLICIT_EXTENSIONS: &[&str] = &[
     "mts", "ts", "tsx", "mjs", "js", "jsx", "cjs", "cts", "json", "css", "scss", "sass", "less",
     "svg", "png", "jpg", "jpeg", "gif", "webp", "avif", "txt", "wasm",

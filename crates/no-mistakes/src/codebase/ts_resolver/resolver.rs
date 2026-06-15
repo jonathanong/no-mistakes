@@ -112,7 +112,9 @@ impl<'a> ImportResolver<'a> {
             return Some(base);
         }
         if has_explicit_extension(&base) {
-            return None;
+            // NodeNext/ESM: an emitted `.js`/`.mjs`/`.cjs` specifier maps to its
+            // TypeScript source (`./util.js` → `util.ts`/`util.d.ts`).
+            return self.try_emitted_source(&base);
         }
 
         for ext in EXTENSIONS {
@@ -130,6 +132,20 @@ impl<'a> ImportResolver<'a> {
         }
 
         None
+    }
+
+    /// Resolve an emitted `.js`/`.mjs`/`.cjs` specifier to its TypeScript source
+    /// or declaration. Returns `None` for any other explicit extension.
+    fn try_emitted_source(&self, base: &Path) -> Option<PathBuf> {
+        let extension = base.extension().and_then(|ext| ext.to_str())?;
+        let stem = {
+            let s = base.to_string_lossy();
+            s[..s.len() - extension.len() - 1].to_string()
+        };
+        emitted_source_candidates(extension).iter().find_map(|ext| {
+            let candidate = PathBuf::from(format!("{stem}{ext}"));
+            self.path_exists(&candidate).then_some(candidate)
+        })
     }
 
     fn path_exists(&self, path: &Path) -> bool {

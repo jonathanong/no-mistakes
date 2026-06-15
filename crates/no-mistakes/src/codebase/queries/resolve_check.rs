@@ -1,5 +1,3 @@
-mod resolution;
-
 use super::render::{render, resolve_format, to_json, Report};
 use super::shared::resolve_target;
 use crate::cli::Format;
@@ -9,7 +7,6 @@ use crate::codebase::dependencies::extract::{
 use crate::codebase::ts_resolver::ImportResolver;
 use anyhow::{Context, Result};
 use is_terminal::IsTerminal;
-use resolution::{is_declaration_file, resolve_declaration, resolve_ts_source};
 use serde::Serialize;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
@@ -89,23 +86,24 @@ fn kind_str(kind: ImportKind) -> &'static str {
     }
 }
 
+/// True for a `.d.ts`/`.d.mts`/`.d.cts` declaration file, which only satisfies
+/// type-only references (no emitted runtime module).
+fn is_declaration_file(path: &Path) -> bool {
+    let name = path.to_string_lossy();
+    name.ends_with(".d.ts") || name.ends_with(".d.mts") || name.ends_with(".d.cts")
+}
+
 /// Classify one import specifier against a shared resolver and tsconfig aliases.
+/// The resolver handles NodeNext `.js`→source and declaration resolution; a
+/// declaration file has no runtime module, so a value import of one is rejected.
 fn classify(
     imp: &ExtractedImport,
     abs_file: &Path,
     target: &super::shared::Target,
     resolver: &ImportResolver,
 ) -> ImportRow {
-    // Fall back to declaration-file candidates so a *type-only* import of a
-    // declaration-only module (`import type { Foo } from './types'` →
-    // `types.d.ts` or `types/index.d.ts`) resolves. A value import still needs
-    // an emitted module, so the fallback is gated on the import being type-only.
     let resolved = resolver
         .resolve(&imp.specifier, abs_file)
-        .or_else(|| resolve_ts_source(&imp.specifier, abs_file, resolver))
-        .or_else(|| resolve_declaration(imp, abs_file, resolver))
-        // A declaration file has no runtime module, so a value import of one is
-        // not actually resolved.
         .filter(|path| imp.kind == ImportKind::Type || !is_declaration_file(path));
     let status = if resolved.is_some() {
         Status::Resolved
