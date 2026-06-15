@@ -18,11 +18,11 @@ fn build_globset(patterns: &[String]) -> Result<GlobSet> {
     Ok(builder.build()?)
 }
 
-fn discover_files(root: &Path) -> Vec<PathBuf> {
+fn discover_files(root: &Path, extra_skip: &[String]) -> Vec<PathBuf> {
     let mut files = Vec::new();
-    let walker = WalkDir::new(root)
-        .into_iter()
-        .filter_entry(|entry| !(entry.file_type().is_dir() && is_skip_dir(entry.path())));
+    let walker = WalkDir::new(root).into_iter().filter_entry(|entry| {
+        !(entry.file_type().is_dir() && is_skip_dir(entry.path(), extra_skip))
+    });
     for entry in walker.filter_map(|entry| entry.ok()) {
         if !entry.file_type().is_file() {
             continue;
@@ -36,7 +36,9 @@ fn discover_files(root: &Path) -> Vec<PathBuf> {
     files
 }
 
-fn is_skip_dir(path: &Path) -> bool {
+/// Skip dot-directories and the usual build artifacts, plus any directory named
+/// in the configured `filesystem.skip_directories`.
+fn is_skip_dir(path: &Path, extra_skip: &[String]) -> bool {
     path.file_name()
         .and_then(|name| name.to_str())
         .is_some_and(|name| {
@@ -45,6 +47,7 @@ fn is_skip_dir(path: &Path) -> bool {
                     name,
                     "node_modules" | "target" | "dist" | "build" | "coverage"
                 )
+                || extra_skip.iter().any(|skip| skip == name)
         })
 }
 
@@ -102,5 +105,5 @@ fn scan_file(path: &Path, rel: &str, scan: &ScanConfig) -> Vec<(FileKind, DataPw
 /// Whether `rel` lives under directory prefix `root` (e.g. `app` matches
 /// `app/page.tsx` but not `apply.ts`).
 fn path_in_root(rel: &str, root: &str) -> bool {
-    rel == root || rel.starts_with(&format!("{root}/"))
+    rel == root || (rel.starts_with(root) && rel.as_bytes().get(root.len()) == Some(&b'/'))
 }

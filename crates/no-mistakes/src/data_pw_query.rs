@@ -151,7 +151,7 @@ pub fn run(
         exclude_globs: &build_globset(view.selector_exclude())?,
     };
 
-    let files = discover_files(root);
+    let files = discover_files(root, view.skip_directories());
     let hits: Vec<(FileKind, DataPwHit)> = files
         .par_iter()
         .flat_map(|path| {
