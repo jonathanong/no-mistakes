@@ -32,7 +32,7 @@ fn walk_default_expression<'a>(
 
 fn parenthesized_default_function<'a>(
     declaration: &'a ExportDefaultDeclarationKind<'a>,
-) -> Option<&'a oxc::ast::ast::Function<'a>> {
+) -> Option<&'a oxc_ast::ast::Function<'a>> {
     let ExportDefaultDeclarationKind::ParenthesizedExpression(parenthesized) = declaration else {
         return None;
     };
@@ -41,7 +41,7 @@ fn parenthesized_default_function<'a>(
 
 fn parenthesized_function_expression<'a>(
     expression: &'a Expression<'a>,
-) -> Option<&'a oxc::ast::ast::Function<'a>> {
+) -> Option<&'a oxc_ast::ast::Function<'a>> {
     match expression {
         Expression::FunctionExpression(function) => Some(function),
         Expression::ParenthesizedExpression(parenthesized) => {
@@ -53,7 +53,7 @@ fn parenthesized_function_expression<'a>(
 
 fn parenthesized_default_arrow<'a>(
     declaration: &'a ExportDefaultDeclarationKind<'a>,
-) -> Option<&'a oxc::ast::ast::ArrowFunctionExpression<'a>> {
+) -> Option<&'a oxc_ast::ast::ArrowFunctionExpression<'a>> {
     let ExportDefaultDeclarationKind::ParenthesizedExpression(parenthesized) = declaration else {
         return None;
     };
@@ -62,7 +62,7 @@ fn parenthesized_default_arrow<'a>(
 
 fn parenthesized_arrow_expression<'a>(
     expression: &'a Expression<'a>,
-) -> Option<&'a oxc::ast::ast::ArrowFunctionExpression<'a>> {
+) -> Option<&'a oxc_ast::ast::ArrowFunctionExpression<'a>> {
     match expression {
         Expression::ArrowFunctionExpression(arrow) => Some(arrow),
         Expression::ParenthesizedExpression(parenthesized) => {
@@ -103,7 +103,7 @@ fn object_expression<'a>(expression: &'a Expression<'a>) -> Option<&'a ObjectExp
 
 fn walk_default_arrow_with_scope<'a>(
     collector: &mut ImportCollector,
-    arrow: &oxc::ast::ast::ArrowFunctionExpression<'a>,
+    arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
 ) {
     collector.push_function_scope(Some("default".to_string()));
     collector.exported_functions.insert("default".to_string());
@@ -116,7 +116,7 @@ fn walk_default_arrow_with_scope<'a>(
 
 fn walk_default_function_with_scope<'a>(
     collector: &mut ImportCollector,
-    function: &oxc::ast::ast::Function<'a>,
+    function: &oxc_ast::ast::Function<'a>,
     scope: &str,
 ) {
     collector.push_function_scope(Some(scope.to_string()));

@@ -66,7 +66,7 @@ fn walk_args(args: &[Argument], v: &mut dyn Visitor) {
 
 fn walk_chain_expression(chain: &ChainExpression, v: &mut dyn Visitor) {
     match &chain.expression {
-        oxc::ast::ast::ChainElement::CallExpression(call) => {
+        oxc_ast::ast::ChainElement::CallExpression(call) => {
             walk_expression(&call.callee, v);
             walk_args(&call.arguments, v);
         }
@@ -108,12 +108,12 @@ fn walk_jsx_children(children: &[JSXChild], v: &mut dyn Visitor) {
 }
 
 fn walk_member_expression(
-    member: Option<&oxc::ast::ast::MemberExpression<'_>>,
+    member: Option<&oxc_ast::ast::MemberExpression<'_>>,
     v: &mut dyn Visitor,
 ) {
     if let Some(member) = member {
         walk_expression(member.object(), v);
-        if let oxc::ast::ast::MemberExpression::ComputedMemberExpression(cm) = member {
+        if let oxc_ast::ast::MemberExpression::ComputedMemberExpression(cm) = member {
             walk_expression(&cm.expression, v);
         }
     }

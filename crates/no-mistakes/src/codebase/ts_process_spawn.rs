@@ -1,11 +1,11 @@
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc::allocator::Allocator;
-use oxc::ast::ast::{
+use oxc_allocator::Allocator;
+use oxc_ast::ast::{
     Argument, ExportNamedDeclaration, Expression, ObjectPropertyKind, Program, PropertyKey,
     Statement, TryStatement,
 };
-use oxc::parser::Parser;
-use oxc::span::SourceType;
+use oxc_parser::Parser;
+use oxc_span::SourceType;
 use std::path::{Path, PathBuf};
 include!("ts_process_spawn/types.rs");
 include!("ts_process_spawn/statements.rs");

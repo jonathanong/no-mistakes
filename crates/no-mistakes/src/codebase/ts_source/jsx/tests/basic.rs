@@ -1,11 +1,11 @@
 use super::*;
-use oxc::allocator::Allocator;
-use oxc::ast::ast::JSXElementName;
-use oxc::parser::Parser;
-use oxc::span::SourceType;
+use oxc_allocator::Allocator;
+use oxc_ast::ast::JSXElementName;
+use oxc_parser::Parser;
+use oxc_span::SourceType;
 use std::path::PathBuf;
 
-fn parse<'a>(allocator: &'a Allocator, source: &'a str) -> oxc::ast::ast::Program<'a> {
+fn parse<'a>(allocator: &'a Allocator, source: &'a str) -> oxc_ast::ast::Program<'a> {
     Parser::new(allocator, source, SourceType::tsx())
         .parse()
         .program
@@ -237,7 +237,7 @@ fn visit_expression_hits_assignments_inside_jsx_handlers() {
 fn visits_import_declarations() {
     struct Imports(Vec<String>);
     impl Visitor for Imports {
-        fn visit_import(&mut self, import: &oxc::ast::ast::ImportDeclaration) {
+        fn visit_import(&mut self, import: &oxc_ast::ast::ImportDeclaration) {
             self.0.push(import.source.value.to_string());
         }
     }
@@ -286,7 +286,7 @@ fn walker_visits_statement_expression_and_jsx_variants_from_fixture() {
         imports: usize,
     }
     impl Visitor for Counts {
-        fn visit_import(&mut self, _import: &oxc::ast::ast::ImportDeclaration) {
+        fn visit_import(&mut self, _import: &oxc_ast::ast::ImportDeclaration) {
             self.imports += 1;
         }
 

@@ -1,5 +1,5 @@
 use super::{assignment_target::collect_from_assignment_target, collect_from_expr, HttpCall};
-use oxc::ast::ast::{Declaration, ExportDefaultDeclarationKind, ForStatementInit, Statement};
+use oxc_ast::ast::{Declaration, ExportDefaultDeclarationKind, ForStatementInit, Statement};
 
 pub(super) fn collect_from_stmt(
     stmt: &Statement,
@@ -87,7 +87,7 @@ pub(super) fn collect_from_stmt(
 }
 
 fn collect_from_for_stmt(
-    stmt: &oxc::ast::ast::ForStatement,
+    stmt: &oxc_ast::ast::ForStatement,
     source: &str,
     prefixes: &[&str],
     out: &mut Vec<HttpCall>,

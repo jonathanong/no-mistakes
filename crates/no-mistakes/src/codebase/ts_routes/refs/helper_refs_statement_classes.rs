@@ -1,5 +1,5 @@
 fn collect_helper_refs_from_class_body<'a>(
-    class: &'a oxc::ast::ast::Class<'a>,
+    class: &'a oxc_ast::ast::Class<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,

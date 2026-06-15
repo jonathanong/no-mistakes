@@ -1,6 +1,6 @@
-fn binding_identifier_name<'a>(pattern: &'a oxc::ast::ast::BindingPattern<'a>) -> Option<&'a str> {
+fn binding_identifier_name<'a>(pattern: &'a oxc_ast::ast::BindingPattern<'a>) -> Option<&'a str> {
     match pattern {
-        oxc::ast::ast::BindingPattern::BindingIdentifier(identifier) => {
+        oxc_ast::ast::BindingPattern::BindingIdentifier(identifier) => {
             Some(identifier.name.as_str())
         }
         _ => None,
@@ -29,24 +29,24 @@ fn simple_static_member_name(member: &StaticMemberExpression<'_>) -> Option<Stri
     }
 }
 
-fn jsx_element_reference_name(name: &oxc::ast::ast::JSXElementName<'_>) -> Option<String> {
+fn jsx_element_reference_name(name: &oxc_ast::ast::JSXElementName<'_>) -> Option<String> {
     match name {
-        oxc::ast::ast::JSXElementName::Identifier(id) => Some(id.name.to_string()),
-        oxc::ast::ast::JSXElementName::IdentifierReference(id) => Some(id.name.to_string()),
-        oxc::ast::ast::JSXElementName::MemberExpression(member) => {
+        oxc_ast::ast::JSXElementName::Identifier(id) => Some(id.name.to_string()),
+        oxc_ast::ast::JSXElementName::IdentifierReference(id) => Some(id.name.to_string()),
+        oxc_ast::ast::JSXElementName::MemberExpression(member) => {
             jsx_member_expression_name(member)
         }
         _ => None,
     }
 }
 
-fn jsx_member_expression_name(member: &oxc::ast::ast::JSXMemberExpression<'_>) -> Option<String> {
+fn jsx_member_expression_name(member: &oxc_ast::ast::JSXMemberExpression<'_>) -> Option<String> {
     let object = match &member.object {
-        oxc::ast::ast::JSXMemberExpressionObject::IdentifierReference(id) => id.name.to_string(),
-        oxc::ast::ast::JSXMemberExpressionObject::MemberExpression(member) => {
+        oxc_ast::ast::JSXMemberExpressionObject::IdentifierReference(id) => id.name.to_string(),
+        oxc_ast::ast::JSXMemberExpressionObject::MemberExpression(member) => {
             jsx_member_expression_name(member)?
         }
-        oxc::ast::ast::JSXMemberExpressionObject::ThisExpression(_) => return None,
+        oxc_ast::ast::JSXMemberExpressionObject::ThisExpression(_) => return None,
     };
     Some(format!("{}.{}", object, member.property.name.as_str()))
 }

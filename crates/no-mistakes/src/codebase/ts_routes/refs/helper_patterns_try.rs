@@ -1,5 +1,5 @@
 fn evaluate_helper_try_statement<'a>(
-    try_stmt: &'a oxc::ast::ast::TryStatement<'a>,
+    try_stmt: &'a oxc_ast::ast::TryStatement<'a>,
     defs: &HashMap<&'a str, HelperDef<'a>>,
     imported_helpers: &RouteHelperBindings,
     env: &mut HashMap<String, Vec<String>>,
@@ -63,7 +63,7 @@ fn evaluate_helper_try_statement<'a>(
 }
 
 fn evaluate_helper_block_returns<'a>(
-    block: &'a oxc::ast::ast::BlockStatement<'a>,
+    block: &'a oxc_ast::ast::BlockStatement<'a>,
     defs: &HashMap<&'a str, HelperDef<'a>>,
     imported_helpers: &RouteHelperBindings,
     env: &mut HashMap<String, Vec<String>>,

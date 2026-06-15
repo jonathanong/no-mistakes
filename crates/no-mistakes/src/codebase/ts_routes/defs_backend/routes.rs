@@ -17,7 +17,7 @@ fn extract_route_from_chain(expr: &Expression, register_object: &str) -> Option<
 }
 
 fn direct_route_arg(
-    call: &oxc::ast::ast::CallExpression,
+    call: &oxc_ast::ast::CallExpression,
     callee_object: &Expression,
     register_object: &str,
 ) -> Option<String> {

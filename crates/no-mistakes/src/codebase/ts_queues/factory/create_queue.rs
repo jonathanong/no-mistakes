@@ -84,7 +84,7 @@ fn check_stmt_for_create_queue(
         Statement::ExportNamedDeclaration(export) => {
             if let Some(decl) = &export.declaration {
                 match decl {
-                    oxc::ast::ast::Declaration::VariableDeclaration(var_decl) => {
+                    oxc_ast::ast::Declaration::VariableDeclaration(var_decl) => {
                         for d in &var_decl.declarations {
                             if let Some(init) = &d.init {
                                 if let Some(line) = check_expr_for_create_queue(
@@ -134,7 +134,7 @@ fn check_expr_for_create_queue(
             }
 
             if let Some(line) = call_expr.arguments.iter().find_map(|arg| {
-                let oxc::ast::ast::Argument::CallExpression(inner) = arg else {
+                let oxc_ast::ast::Argument::CallExpression(inner) = arg else {
                     return None;
                 };
                 let Expression::Identifier(id) = &inner.callee else {

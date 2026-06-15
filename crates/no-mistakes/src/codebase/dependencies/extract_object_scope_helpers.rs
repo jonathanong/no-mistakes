@@ -46,8 +46,8 @@ fn walk_object_property_value_with_parent_scope<'a>(
 
 fn walk_function_property_value<'a>(
     collector: &mut ImportCollector,
-    key: &oxc::ast::ast::PropertyKey<'a>,
-    function: &oxc::ast::ast::Function<'a>,
+    key: &oxc_ast::ast::PropertyKey<'a>,
+    function: &oxc_ast::ast::Function<'a>,
 ) {
     let name = crate::codebase::ts_source::static_property_key_name(key);
     let pushed = name.is_some();
@@ -67,8 +67,8 @@ fn walk_function_property_value<'a>(
 
 fn walk_arrow_property_value<'a>(
     collector: &mut ImportCollector,
-    key: &oxc::ast::ast::PropertyKey<'a>,
-    arrow: &oxc::ast::ast::ArrowFunctionExpression<'a>,
+    key: &oxc_ast::ast::PropertyKey<'a>,
+    arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
 ) {
     let name = crate::codebase::ts_source::static_property_key_name(key);
     let pushed = name.is_some();

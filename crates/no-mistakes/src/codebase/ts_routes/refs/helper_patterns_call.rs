@@ -1,5 +1,5 @@
 fn evaluate_helper_call<'a>(
-    call: &'a oxc::ast::ast::CallExpression<'a>,
+    call: &'a oxc_ast::ast::CallExpression<'a>,
     defs: &HashMap<&'a str, HelperDef<'a>>,
     _imported_helpers: &RouteHelperBindings,
     env: &HashMap<String, Vec<String>>,
@@ -31,7 +31,7 @@ fn evaluate_helper_call<'a>(
 }
 
 fn evaluate_url_object_expression<'a>(
-    obj: &'a oxc::ast::ast::ObjectExpression<'a>,
+    obj: &'a oxc_ast::ast::ObjectExpression<'a>,
     defs: &HashMap<&'a str, HelperDef<'a>>,
     imported_helpers: &RouteHelperBindings,
     env: &HashMap<String, Vec<String>>,

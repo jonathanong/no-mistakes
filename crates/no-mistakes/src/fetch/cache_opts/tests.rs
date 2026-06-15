@@ -137,108 +137,18 @@ fn test_empty_options() {
 
 #[test]
 fn test_extract_fetch_cache_options_direct_ast_construction() {
-    let allocator = oxc_allocator::Allocator::default();
-
-    // Construct a dummy SpreadElement
-    let spread = oxc_ast::ast::SpreadElement {
-        node_id: std::cell::Cell::new(oxc_syntax::node::NodeId::new(0)),
-        span: oxc_span::Span::default(),
-        argument: Expression::Identifier(oxc_allocator::Box::new_in(
-            oxc_ast::ast::IdentifierReference {
-                node_id: std::cell::Cell::new(oxc_syntax::node::NodeId::new(0)),
-                span: oxc_span::Span::default(),
-                name: "spread".into(),
-                reference_id: std::cell::Cell::new(None),
-            },
-            &allocator,
-        )),
-    };
-
-    let properties = oxc_allocator::Vec::from_iter_in(
-        vec![oxc_ast::ast::ObjectPropertyKind::SpreadProperty(
-            oxc_allocator::Box::new_in(spread, &allocator),
-        )],
-        &allocator,
-    );
-
-    let obj = oxc_ast::ast::ObjectExpression {
-        node_id: std::cell::Cell::new(oxc_syntax::node::NodeId::new(0)),
-        span: oxc_span::Span::default(),
-        properties,
-    };
-
-    let (cached, kind) = extract_fetch_cache_options(&obj);
+    // oxc_ast structs are non-exhaustive since 0.135 — use source parsing instead
+    let source = "fetch('url', { ...spread });";
+    let (cached, kind) = extract_from_source(source);
     assert!(!cached);
     assert_eq!(kind, CacheKind::None);
 }
 
 #[test]
 fn test_extract_fetch_cache_options_direct_ast_construction_next_spread() {
-    let allocator = oxc_allocator::Allocator::default();
-
-    // Construct a dummy SpreadElement for `next`
-    let spread = oxc_ast::ast::SpreadElement {
-        node_id: std::cell::Cell::new(oxc_syntax::node::NodeId::new(0)),
-        span: oxc_span::Span::default(),
-        argument: Expression::Identifier(oxc_allocator::Box::new_in(
-            oxc_ast::ast::IdentifierReference {
-                node_id: std::cell::Cell::new(oxc_syntax::node::NodeId::new(0)),
-                span: oxc_span::Span::default(),
-                name: "spread".into(),
-                reference_id: std::cell::Cell::new(None),
-            },
-            &allocator,
-        )),
-    };
-
-    let next_properties = oxc_allocator::Vec::from_iter_in(
-        vec![oxc_ast::ast::ObjectPropertyKind::SpreadProperty(
-            oxc_allocator::Box::new_in(spread, &allocator),
-        )],
-        &allocator,
-    );
-
-    let next_obj = oxc_ast::ast::ObjectExpression {
-        node_id: std::cell::Cell::new(oxc_syntax::node::NodeId::new(0)),
-        span: oxc_span::Span::default(),
-        properties: next_properties,
-    };
-
-    let properties = oxc_allocator::Vec::from_iter_in(
-        vec![oxc_ast::ast::ObjectPropertyKind::ObjectProperty(
-            oxc_allocator::Box::new_in(
-                oxc_ast::ast::ObjectProperty {
-                    node_id: std::cell::Cell::new(oxc_syntax::node::NodeId::new(0)),
-                    span: oxc_span::Span::default(),
-                    kind: oxc_ast::ast::PropertyKind::Init,
-                    key: oxc_ast::ast::PropertyKey::StaticIdentifier(oxc_allocator::Box::new_in(
-                        oxc_ast::ast::IdentifierName {
-                            node_id: std::cell::Cell::new(oxc_syntax::node::NodeId::new(0)),
-                            span: oxc_span::Span::default(),
-                            name: "next".into(),
-                        },
-                        &allocator,
-                    )),
-                    value: Expression::ObjectExpression(oxc_allocator::Box::new_in(
-                        next_obj, &allocator,
-                    )),
-                    method: false,
-                    shorthand: false,
-                    computed: false,
-                },
-                &allocator,
-            ),
-        )],
-        &allocator,
-    );
-
-    let obj = oxc_ast::ast::ObjectExpression {
-        node_id: std::cell::Cell::new(oxc_syntax::node::NodeId::new(0)),
-        span: oxc_span::Span::default(),
-        properties,
-    };
-
-    let (cached, kind) = extract_fetch_cache_options(&obj);
+    // oxc_ast structs are non-exhaustive since 0.135 — use source parsing instead
+    let source = "fetch('url', { next: { ...spread } });";
+    let (cached, kind) = extract_from_source(source);
     assert!(!cached);
     assert_eq!(kind, CacheKind::None);
 }

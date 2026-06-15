@@ -1,5 +1,5 @@
 use super::{collect_from_expr, HttpCall};
-use oxc::ast::ast::AssignmentTarget;
+use oxc_ast::ast::AssignmentTarget;
 
 pub(super) fn collect_from_assignment_target(
     target: &AssignmentTarget,

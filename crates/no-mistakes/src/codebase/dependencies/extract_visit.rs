@@ -38,7 +38,7 @@ impl<'a> Visit<'a> for ImportCollector {
 
     fn visit_function(
         &mut self,
-        function: &oxc::ast::ast::Function<'a>,
+        function: &oxc_ast::ast::Function<'a>,
         flags: oxc_syntax::scope::ScopeFlags,
     ) {
         let name = function_name(function);
@@ -67,7 +67,7 @@ impl<'a> Visit<'a> for ImportCollector {
 
     fn visit_arrow_function_expression(
         &mut self,
-        arrow: &oxc::ast::ast::ArrowFunctionExpression<'a>,
+        arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
     ) {
         self.push_anonymous_function_scope();
         self.add_type_parameter_names(arrow.type_parameters.as_deref());

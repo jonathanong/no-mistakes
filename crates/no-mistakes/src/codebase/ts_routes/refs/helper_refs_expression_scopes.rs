@@ -1,5 +1,5 @@
 fn collect_helper_refs_from_arrow_body<'a>(
-    arrow: &'a oxc::ast::ast::ArrowFunctionExpression<'a>,
+    arrow: &'a oxc_ast::ast::ArrowFunctionExpression<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,
@@ -31,7 +31,7 @@ fn collect_helper_refs_from_arrow_body<'a>(
 }
 
 fn collect_helper_refs_from_function_expression<'a>(
-    func: &'a oxc::ast::ast::Function<'a>,
+    func: &'a oxc_ast::ast::Function<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,

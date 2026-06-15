@@ -1,14 +1,14 @@
 use crate::codebase::ts_source::byte_offset_to_line;
-use oxc::allocator::Allocator;
-use oxc::ast::ast::{
+use oxc_allocator::Allocator;
+use oxc_ast::ast::{
     Argument, ArrayExpressionElement, BindingPattern, ClassElement, Expression, ForStatementInit,
     ForStatementLeft, ImportDeclarationSpecifier, JSXAttributeItem, JSXAttributeName,
     JSXAttributeValue, JSXChild, JSXElement, JSXExpression, ObjectPropertyKind, Program,
     PropertyKey, Statement, TemplateLiteral, VariableDeclarationKind,
 };
-use oxc::parser::Parser;
-use oxc::span::SourceType;
-use oxc::syntax::operator::BinaryOperator;
+use oxc_parser::Parser;
+use oxc_span::SourceType;
+use oxc_syntax::operator::BinaryOperator;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 include!("types.rs");

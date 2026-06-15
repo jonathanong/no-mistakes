@@ -1,6 +1,6 @@
 use crate::codebase::ts_source::byte_offset_to_line;
-use oxc::ast::ast::{Argument, CallExpression, Expression, Function, Program};
-use oxc::ast_visit::{walk, Visit};
+use oxc_ast::ast::{Argument, CallExpression, Expression, Function, Program};
+use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
 use std::collections::HashSet;
 

@@ -1,5 +1,5 @@
 fn collect_helper_refs_from_call_expression<'a>(
-    call: &'a oxc::ast::ast::CallExpression<'a>,
+    call: &'a oxc_ast::ast::CallExpression<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,
@@ -39,7 +39,7 @@ fn collect_helper_refs_from_call_expression<'a>(
 }
 
 fn collect_helper_refs_from_chain_expression<'a>(
-    chain: &'a oxc::ast::ast::ChainExpression<'a>,
+    chain: &'a oxc_ast::ast::ChainExpression<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,
@@ -48,7 +48,7 @@ fn collect_helper_refs_from_chain_expression<'a>(
     refs: &mut Vec<RouteHelperRef>,
 ) {
     match &chain.expression {
-        oxc::ast::ast::ChainElement::CallExpression(call) => {
+        oxc_ast::ast::ChainElement::CallExpression(call) => {
             collect_helper_refs_from_call_expression(
                 call,
                 source,

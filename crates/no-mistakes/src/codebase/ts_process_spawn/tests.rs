@@ -1,8 +1,8 @@
 use super::*;
-use oxc::allocator::Allocator;
-use oxc::ast::ast::{ObjectPropertyKind, PropertyKey, Statement};
-use oxc::parser::Parser;
-use oxc::span::SourceType;
+use oxc_allocator::Allocator;
+use oxc_ast::ast::{ObjectPropertyKind, PropertyKey, Statement};
+use oxc_parser::Parser;
+use oxc_span::SourceType;
 use std::fs;
 use std::path::PathBuf;
 use tempfile::TempDir;

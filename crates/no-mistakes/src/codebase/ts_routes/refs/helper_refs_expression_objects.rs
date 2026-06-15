@@ -1,5 +1,5 @@
 fn collect_helper_refs_from_object_expression<'a>(
-    obj: &'a oxc::ast::ast::ObjectExpression<'a>,
+    obj: &'a oxc_ast::ast::ObjectExpression<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,
@@ -47,7 +47,7 @@ fn collect_helper_refs_from_object_expression<'a>(
 }
 
 fn collect_helper_refs_from_array_expression<'a>(
-    array: &'a oxc::ast::ast::ArrayExpression<'a>,
+    array: &'a oxc_ast::ast::ArrayExpression<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,

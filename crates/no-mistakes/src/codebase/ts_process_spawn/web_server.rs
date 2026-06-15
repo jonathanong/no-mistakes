@@ -20,7 +20,7 @@ fn extract_optional_web_server_entry(
 }
 
 fn extract_define_config_web_server(
-    call: &oxc::ast::ast::CallExpression,
+    call: &oxc_ast::ast::CallExpression,
     file_path: &Path,
     root: &Path,
     out: &mut Vec<SpawnEdge>,
@@ -89,12 +89,12 @@ fn collect_from_export_named(
 ) {
     let Some(decl) = &e.declaration else { return };
     match decl {
-        oxc::ast::ast::Declaration::VariableDeclaration(v) => {
+        oxc_ast::ast::Declaration::VariableDeclaration(v) => {
             for d in &v.declarations {
                 collect_from_optional_expr(d.init.as_ref(), source, file_path, root, out);
             }
         }
-        oxc::ast::ast::Declaration::FunctionDeclaration(f) => {
+        oxc_ast::ast::Declaration::FunctionDeclaration(f) => {
             if let Some(body) = &f.body {
                 for s in &body.statements {
                     collect_from_stmt(s, source, file_path, root, out);

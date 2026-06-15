@@ -1,7 +1,7 @@
-use oxc::allocator::Allocator;
-use oxc::ast::ast::Program;
-use oxc::parser::Parser;
-use oxc::span::SourceType;
+use oxc_allocator::Allocator;
+use oxc_ast::ast::Program;
+use oxc_parser::Parser;
+use oxc_span::SourceType;
 
 mod walk;
 

@@ -71,26 +71,26 @@ fn collect_from_optional_expr(
 }
 
 fn collect_from_export_default(
-    kind: &oxc::ast::ast::ExportDefaultDeclarationKind,
+    kind: &oxc_ast::ast::ExportDefaultDeclarationKind,
     source: &str,
     file_path: &Path,
     root: &Path,
     out: &mut Vec<SpawnEdge>,
 ) {
     match kind {
-        oxc::ast::ast::ExportDefaultDeclarationKind::FunctionDeclaration(f) => {
+        oxc_ast::ast::ExportDefaultDeclarationKind::FunctionDeclaration(f) => {
             if let Some(body) = &f.body {
                 for s in &body.statements {
                     collect_from_stmt(s, source, file_path, root, out);
                 }
             }
         }
-        oxc::ast::ast::ExportDefaultDeclarationKind::ArrowFunctionExpression(a) => {
+        oxc_ast::ast::ExportDefaultDeclarationKind::ArrowFunctionExpression(a) => {
             for s in &a.body.statements {
                 collect_from_stmt(s, source, file_path, root, out);
             }
         }
-        oxc::ast::ast::ExportDefaultDeclarationKind::CallExpression(call)
+        oxc_ast::ast::ExportDefaultDeclarationKind::CallExpression(call)
             if callee_name(&call.callee) == Some("defineConfig") =>
         {
             extract_define_config_web_server(call, file_path, root, out);

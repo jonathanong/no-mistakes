@@ -33,7 +33,7 @@ fn route_helper_context_summary(
             route_helper_call_context_summary(call, helper_bindings, local_helpers)
         }
         Expression::ChainExpression(chain) => match &chain.expression {
-            oxc::ast::ast::ChainElement::CallExpression(call) => {
+            oxc_ast::ast::ChainElement::CallExpression(call) => {
                 route_helper_call_context_summary(call, helper_bindings, local_helpers)
             }
             other => match other
@@ -91,7 +91,7 @@ fn route_helper_context_summary(
 }
 
 fn route_helper_call_context_summary(
-    call: &oxc::ast::ast::CallExpression<'_>,
+    call: &oxc_ast::ast::CallExpression<'_>,
     helper_bindings: &RouteHelperBindings,
     local_helpers: &HashSet<String>,
 ) -> RouteHelperContextSummary {
@@ -171,7 +171,7 @@ fn route_helper_template_context_summary(
 }
 
 fn route_helper_object_context_summary(
-    obj: &oxc::ast::ast::ObjectExpression<'_>,
+    obj: &oxc_ast::ast::ObjectExpression<'_>,
     helper_bindings: &RouteHelperBindings,
     local_helpers: &HashSet<String>,
 ) -> RouteHelperContextSummary {

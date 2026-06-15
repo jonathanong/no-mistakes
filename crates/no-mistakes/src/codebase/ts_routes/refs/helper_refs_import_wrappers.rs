@@ -1,9 +1,9 @@
 fn exported_imported_helper_wrapper(
-    declaration: &oxc::ast::ast::Declaration<'_>,
+    declaration: &oxc_ast::ast::Declaration<'_>,
     imports: &[RouteHelperImport],
 ) -> Vec<RouteHelperImport> {
     match declaration {
-        oxc::ast::ast::Declaration::FunctionDeclaration(func) => {
+        oxc_ast::ast::Declaration::FunctionDeclaration(func) => {
             func.id
                 .as_ref()
                 .zip(func.body.as_ref())
@@ -14,7 +14,7 @@ fn exported_imported_helper_wrapper(
                 .into_iter()
                 .collect()
         }
-        oxc::ast::ast::Declaration::VariableDeclaration(var_decl) => {
+        oxc_ast::ast::Declaration::VariableDeclaration(var_decl) => {
             var_decl
                 .declarations
                 .iter()
@@ -55,8 +55,8 @@ fn imported_helper_wrapper_from_expression(
 }
 
 fn single_return_call<'a>(
-    body: &'a oxc::ast::ast::FunctionBody<'a>,
-) -> Option<&'a oxc::ast::ast::CallExpression<'a>> {
+    body: &'a oxc_ast::ast::FunctionBody<'a>,
+) -> Option<&'a oxc_ast::ast::CallExpression<'a>> {
     let Statement::ReturnStatement(ret) = body.statements.first()? else {
         return None;
     };
@@ -68,7 +68,7 @@ fn single_return_call<'a>(
 
 fn import_for_helper_call(
     local: &str,
-    call: &oxc::ast::ast::CallExpression<'_>,
+    call: &oxc_ast::ast::CallExpression<'_>,
     imports: &[RouteHelperImport],
 ) -> Option<RouteHelperImport> {
     import_for_helper_expr(local, &call.callee, imports)

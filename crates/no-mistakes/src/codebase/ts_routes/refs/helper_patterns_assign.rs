@@ -1,21 +1,21 @@
 fn apply_helper_assignment_expression<'a>(
-    assignment: &'a oxc::ast::ast::AssignmentExpression<'a>,
+    assignment: &'a oxc_ast::ast::AssignmentExpression<'a>,
     defs: &HashMap<&'a str, HelperDef<'a>>,
     imported_helpers: &RouteHelperBindings,
     env: &mut HashMap<String, Vec<String>>,
     depth: usize,
 ) {
-    let oxc::ast::ast::AssignmentTarget::AssignmentTargetIdentifier(ident) = &assignment.left else {
+    let oxc_ast::ast::AssignmentTarget::AssignmentTargetIdentifier(ident) = &assignment.left else {
         return;
     };
     let value = evaluate_route_expression(&assignment.right, defs, imported_helpers, env, depth + 1);
-    if assignment.operator == oxc::ast::ast::AssignmentOperator::Addition {
+    if assignment.operator == oxc_ast::ast::AssignmentOperator::Addition {
         let current = env
             .get(ident.name.as_str())
             .cloned()
             .unwrap_or_else(|| vec!["*".to_string()]);
         env.insert(ident.name.to_string(), concat_candidates(&current, &value));
-    } else if assignment.operator == oxc::ast::ast::AssignmentOperator::Assign {
+    } else if assignment.operator == oxc_ast::ast::AssignmentOperator::Assign {
         env.insert(ident.name.to_string(), value);
     }
 }

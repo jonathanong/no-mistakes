@@ -76,7 +76,7 @@ fn remove_shadowed_helper_binding(pattern: &BindingPattern, bindings: &mut Route
 }
 
 fn remove_shadowed_helper_parameters(
-    params: &oxc::ast::ast::FormalParameters,
+    params: &oxc_ast::ast::FormalParameters,
     bindings: &mut RouteHelperBindings,
 ) {
     for param in &params.items {
@@ -88,7 +88,7 @@ fn remove_shadowed_helper_parameters(
 }
 
 fn remove_shadowed_helper_function_binding(
-    func: &oxc::ast::ast::Function,
+    func: &oxc_ast::ast::Function,
     bindings: &mut RouteHelperBindings,
     _local_helpers: &HashSet<String>,
 ) {
@@ -98,7 +98,7 @@ fn remove_shadowed_helper_function_binding(
 }
 
 fn remove_shadowed_helper_class_binding(
-    class: &oxc::ast::ast::Class,
+    class: &oxc_ast::ast::Class,
     bindings: &mut RouteHelperBindings,
 ) {
     if let Some(id) = &class.id {
@@ -107,7 +107,7 @@ fn remove_shadowed_helper_class_binding(
 }
 
 fn remove_shadowed_helper_var_bindings(
-    var_decl: &oxc::ast::ast::VariableDeclaration<'_>,
+    var_decl: &oxc_ast::ast::VariableDeclaration<'_>,
     bindings: &mut RouteHelperBindings,
     local_helpers: &HashSet<String>,
 ) {

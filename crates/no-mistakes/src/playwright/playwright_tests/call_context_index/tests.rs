@@ -1,8 +1,8 @@
 use super::super::{TestOccurrenceScope, TestStatus};
 use super::build_call_context_index;
-use oxc::allocator::Allocator;
-use oxc::parser::Parser;
-use oxc::span::SourceType;
+use oxc_allocator::Allocator;
+use oxc_parser::Parser;
+use oxc_span::SourceType;
 
 fn parse_index(source: &str) -> std::collections::HashMap<u32, super::CallContext> {
     let allocator = Allocator::default();

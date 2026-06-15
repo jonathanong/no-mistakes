@@ -1,5 +1,5 @@
 fn collect_route_context_helper_ref<'a>(
-    call: &'a oxc::ast::ast::CallExpression<'a>,
+    call: &'a oxc_ast::ast::CallExpression<'a>,
     source: &str,
     file: &str,
     router_bindings: &RouterBindings<'a>,
@@ -37,7 +37,7 @@ fn callee_is_route_context(expr: &Expression, router_bindings: &RouterBindings<'
                 || (name == "fetch" && !router_bindings.fetch_shadowed)
         }
         Expression::ChainExpression(chain) => match &chain.expression {
-            oxc::ast::ast::ChainElement::CallExpression(call) => {
+            oxc_ast::ast::ChainElement::CallExpression(call) => {
                 callee_is_route_context(&call.callee, router_bindings)
             }
             other => other
@@ -51,7 +51,7 @@ fn callee_is_route_context(expr: &Expression, router_bindings: &RouterBindings<'
 }
 
 fn member_is_route_context(
-    member: &oxc::ast::ast::MemberExpression<'_>,
+    member: &oxc_ast::ast::MemberExpression<'_>,
     router_bindings: &RouterBindings<'_>,
 ) -> bool {
     let Some(property) = member.static_property_name() else {
@@ -108,7 +108,7 @@ fn route_helper_callee_name_from_callee(callee: &Expression) -> Option<String> {
     match callee {
         Expression::Identifier(id) => Some(id.name.as_str().to_string()),
         Expression::ChainExpression(chain) => match &chain.expression {
-            oxc::ast::ast::ChainElement::CallExpression(call) => {
+            oxc_ast::ast::ChainElement::CallExpression(call) => {
                 route_helper_callee_name_from_callee(&call.callee)
             }
             other => route_helper_callee_name_from_member(other.as_member_expression()?),
@@ -118,7 +118,7 @@ fn route_helper_callee_name_from_callee(callee: &Expression) -> Option<String> {
 }
 
 fn route_helper_callee_name_from_member(
-    member: &oxc::ast::ast::MemberExpression<'_>,
+    member: &oxc_ast::ast::MemberExpression<'_>,
 ) -> Option<String> {
     let object = match member.object() {
         Expression::Identifier(id) => id.name.as_str(),
