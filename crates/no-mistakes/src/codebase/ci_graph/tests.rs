@@ -216,7 +216,9 @@ fn permission_resolution_across_jobs() {
     );
 
     let empty = effective_permissions(workflow, job("empty"));
-    assert!(empty.scopes.is_empty());
+    // `permissions: {}` still carries the non-configurable metadata: read.
+    assert_eq!(empty.scopes.get("metadata"), Some(&PermissionLevel::Read));
+    assert_eq!(empty.scopes.len(), 1);
 }
 
 #[test]

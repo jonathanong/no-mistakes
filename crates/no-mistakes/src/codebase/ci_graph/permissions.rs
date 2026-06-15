@@ -55,16 +55,28 @@ pub fn effective_permissions(workflow: &Workflow, job: &Job) -> ResolvedPermissi
     }
 }
 
-/// Expand a spec into an explicit scope → level map.
+/// Expand a spec into an explicit scope → level map. Every explicit spec also
+/// gets the non-configurable `metadata: read` that GitHub always grants.
 fn expand(spec: &PermissionSpec) -> BTreeMap<String, PermissionLevel> {
     match spec {
-        PermissionSpec::ReadAll => all_scopes(PermissionLevel::Read),
-        PermissionSpec::WriteAll => all_scopes(PermissionLevel::Write),
-        PermissionSpec::Empty => BTreeMap::new(),
-        PermissionSpec::Map(scopes) => scopes.clone(),
+        PermissionSpec::ReadAll => with_metadata(all_scopes(PermissionLevel::Read)),
+        PermissionSpec::WriteAll => with_metadata(all_scopes(PermissionLevel::Write)),
+        PermissionSpec::Empty => with_metadata(BTreeMap::new()),
+        PermissionSpec::Map(scopes) => with_metadata(scopes.clone()),
         // `Unspecified` is handled by the caller before reaching expand.
         PermissionSpec::Unspecified => BTreeMap::new(),
     }
+}
+
+/// GitHub always grants `metadata: read` (it cannot be removed), so include it
+/// unless the spec already set it explicitly.
+fn with_metadata(
+    mut scopes: BTreeMap<String, PermissionLevel>,
+) -> BTreeMap<String, PermissionLevel> {
+    scopes
+        .entry("metadata".to_string())
+        .or_insert(PermissionLevel::Read);
+    scopes
 }
 
 /// Scopes that only support `write`/`none` (never `read`): under `read-all`

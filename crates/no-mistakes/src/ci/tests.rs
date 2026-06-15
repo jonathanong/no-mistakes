@@ -45,14 +45,50 @@ fn render_impact_empty() {
 
 #[test]
 fn render_impact_permissions_branches() {
-    // perms.yml exercises an explicit map, write/none levels, and empty.
+    // perms.yml exercises an explicit map, write/none levels, and `{}`.
     let report = impact("permissions", "any.ts");
     let human = render_impact(&report, Format::Human).unwrap();
     assert!(human.contains("packages:write"));
-    assert!(human.contains("(none)"));
     assert!(human.contains("contents:none"));
+    // `permissions: {}` now carries the implicit metadata: read.
+    assert!(human.contains("metadata:read"));
     // default.yml renders the assumed-default marker.
     assert!(human.contains("assumed default"));
+}
+
+#[test]
+fn render_impact_no_permissions_renders_none() {
+    use crate::codebase::ci_graph::impact::{ImpactedJob, ImpactedWorkflow};
+    use crate::codebase::ci_graph::model::CiWarning;
+    use crate::codebase::ci_graph::permissions::{PermissionSource, ResolvedPermissions};
+    use crate::codebase::ci_graph::triggers::TriggerMatch;
+    use std::collections::BTreeMap;
+    let report = CiImpactReport {
+        changed_files: vec!["a.ts".to_string()],
+        workflows: vec![ImpactedWorkflow {
+            path: "w.yml".to_string(),
+            name: None,
+            trigger: TriggerMatch::Always,
+            reusable: false,
+            matched_filters: Vec::new(),
+            jobs: vec![ImpactedJob {
+                id: "build".to_string(),
+                name: None,
+                uses: None,
+                permissions: ResolvedPermissions {
+                    source: PermissionSource::Job,
+                    scopes: BTreeMap::new(),
+                    assumed_default: false,
+                },
+            }],
+        }],
+        warnings: vec![CiWarning {
+            path: "w.yml".to_string(),
+            message: "note".to_string(),
+        }],
+    };
+    let human = render_impact(&report, Format::Human).unwrap();
+    assert!(human.contains("(none)"));
 }
 
 #[test]

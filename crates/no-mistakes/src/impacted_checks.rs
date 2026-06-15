@@ -16,6 +16,7 @@ use std::io::IsTerminal;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
+mod frameworks;
 mod generate;
 pub use generate::generate_impacted_checks;
 
@@ -146,6 +147,9 @@ fn render_text(report: &ImpactedChecksReport, bullet: &str) -> String {
     }
     for check in &report.checks {
         out.push_str(&format!("{bullet}{}\n", check.command.join(" ")));
+    }
+    for warning in &report.warnings {
+        out.push_str(&format!("warning: {}: {}\n", warning.file, warning.message));
     }
     if report.fallback_triggered {
         out.push_str("note: full-suite fallback triggered\n");

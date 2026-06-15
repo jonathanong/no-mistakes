@@ -32,6 +32,9 @@ absolute).
   supported. Matching is case-sensitive.
 - Workflows with only `workflow_dispatch`/`schedule`/`workflow_call` are not
   file-triggered and are omitted.
+- A job that calls a local reusable workflow (`uses: ./.github/workflows/x.yml`)
+  is reported with its `uses` target, but the called workflow's own jobs and
+  permissions are not recursively resolved (a documented v1 limitation).
 - If an event declares both `paths` and `paths-ignore` (which GitHub disallows),
   a warning is emitted and `paths` is honored.
 

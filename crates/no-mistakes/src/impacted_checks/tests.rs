@@ -1,6 +1,8 @@
+use super::frameworks::framework_present;
 use super::generate::{dedupe_checks, dedupe_warnings, generic_checks};
 use super::*;
 use crate::config::v2::schema::NoMistakesConfig;
+use crate::tests::TestFramework;
 use std::collections::BTreeSet;
 
 fn fixture() -> PathBuf {
@@ -80,15 +82,21 @@ fn renders_every_format() {
 }
 
 #[test]
-fn renders_empty_and_fallback() {
+fn renders_empty_warnings_and_fallback() {
     let report = ImpactedChecksReport {
         changed_files: Vec::new(),
         checks: Vec::new(),
-        warnings: Vec::new(),
+        warnings: vec![Warning {
+            r#type: "dynamic-import".to_string(),
+            message: "uncertain".to_string(),
+            file: "a.ts".to_string(),
+        }],
         fallback_triggered: true,
     };
     let human = render(&report, Format::Human).unwrap();
     assert!(human.contains("No checks for the changed files"));
+    // Warnings are surfaced in human/md output, not just JSON/YAML.
+    assert!(human.contains("warning: a.ts: uncertain"));
     assert!(human.contains("fallback triggered"));
 }
 
@@ -177,6 +185,32 @@ fn generic_checks_normalizes_dot_slash_globs() {
         checks[0].command,
         vec!["eslint".to_string(), "src/foo.ts".to_string()]
     );
+}
+
+#[test]
+fn framework_present_detects_config_file() {
+    let autodetect = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/impacted-checks/autodetect"),
+    );
+    let config = NoMistakesConfig::default();
+    // vitest.config.mts exists at root → Vitest is present without explicit config.
+    assert!(framework_present(
+        &autodetect,
+        &config,
+        TestFramework::Vitest
+    ));
+    // No playwright.config / swift config → absent.
+    assert!(!framework_present(
+        &autodetect,
+        &config,
+        TestFramework::Playwright
+    ));
+    assert!(!framework_present(
+        &autodetect,
+        &config,
+        TestFramework::Swift
+    ));
 }
 
 #[test]

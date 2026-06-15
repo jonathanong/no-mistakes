@@ -1,6 +1,7 @@
 //! Report generation for `impacted-checks`: reuse the test-plan engine per
 //! framework and apply the configured generic checks.
 
+use super::frameworks::framework_present;
 use super::{CheckCommand, CheckKind, ImpactedChecksArgs, ImpactedChecksReport};
 use crate::config::v2::load_v2_config;
 use crate::config::v2::schema::{CheckFileArgs, NoMistakesConfig};
@@ -41,15 +42,19 @@ pub fn generate_impacted_checks(args: &ImpactedChecksArgs) -> Result<ImpactedChe
     let mut warnings: Vec<Warning> = Vec::new();
     let mut fallback_triggered = false;
 
-    // Attempt every framework and keep nonempty results. The test-plan engine
-    // autodetects root `vitest.config.*` / `playwright.config.*` even without an
-    // explicit `configs` entry, and returns an empty plan when nothing matches —
-    // so we mirror `tests plan` rather than gate on explicit config.
+    // Only run frameworks the repo actually uses. The test-plan engine's
+    // discovery fallback classifies conventional `*.test.*` files as Vitest even
+    // when Vitest is absent, so without this gate a Jest/Mocha repo would emit
+    // spurious `vitest` commands. A framework counts as present when it is
+    // explicitly configured or its config file exists at the repo root.
     for framework in [
         TestFramework::Vitest,
         TestFramework::Playwright,
         TestFramework::Swift,
     ] {
+        if !framework_present(&root, &config, framework) {
+            continue;
+        }
         let framework_args = plan_args_for(args, Some(framework));
         let plan = crate::tests::plan::generate_plan(&framework_args)?;
         fallback_triggered |= plan.fallback_triggered;
