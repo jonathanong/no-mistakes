@@ -98,7 +98,9 @@ pub(crate) fn build_impacted_checks_args(
         head: options.head,
         changed_file: strings_to_paths(options.changed_files),
         changed_files: options.changed_files_file.map(PathBuf::from),
-        diff: options.diff.map(PathBuf::from),
+        // Match `testsPlan`: the N-API `diff` option is inline diff content.
+        diff: None,
+        diff_content: options.diff,
         format: None,
         json: false,
     }

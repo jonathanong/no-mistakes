@@ -49,6 +49,9 @@ pub struct ImpactedChecksArgs {
     /// Path to a unified diff file.
     #[arg(long)]
     pub(crate) diff: Option<PathBuf>,
+    /// Inline unified diff content (programmatic/N-API only).
+    #[arg(skip)]
+    pub(crate) diff_content: Option<String>,
     /// Output format: json, md, yml, paths, human.
     #[arg(long, value_enum, conflicts_with = "json")]
     pub(crate) format: Option<Format>,

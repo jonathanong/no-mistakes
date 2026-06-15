@@ -22,6 +22,7 @@ fn args(files: &[&str]) -> ImpactedChecksArgs {
         changed_file: Vec::new(),
         changed_files: None,
         diff: None,
+        diff_content: None,
         format: None,
         json: false,
     }

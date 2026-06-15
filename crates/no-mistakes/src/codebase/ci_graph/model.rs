@@ -109,7 +109,6 @@ pub const PERMISSION_SCOPES: &[&str] = &[
     "packages",
     "pages",
     "pull-requests",
-    "repository-projects",
     "security-events",
     "statuses",
     "vulnerability-alerts",

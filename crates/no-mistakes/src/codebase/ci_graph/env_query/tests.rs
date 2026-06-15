@@ -21,6 +21,14 @@ fn reference_regex_requires_standalone_env_context() {
 }
 
 #[test]
+fn reference_regex_matches_index_syntax() {
+    let re = reference_regex("FOO");
+    assert!(re.is_match("${{ env['FOO'] }}"));
+    assert!(re.is_match("${{ env[\"FOO\"] }}"));
+    assert!(!re.is_match("${{ env['OTHER'] }}"));
+}
+
+#[test]
 fn null_job_body_is_skipped() {
     let found = locations("jobs:\n  empty:\n  real:\n    env:\n      X: y\n", "X");
     assert_eq!(found.len(), 1);

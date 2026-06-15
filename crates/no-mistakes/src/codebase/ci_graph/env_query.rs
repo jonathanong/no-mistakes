@@ -107,14 +107,20 @@ pub fn analyze_env(root: &Path, ci: &CiConfig, var: &str) -> CiEnvReport {
 }
 
 fn reference_regex(var: &str) -> Regex {
-    // `env.` must be a standalone context, not a property segment (e.g.
+    // `env` must be a standalone context, not a property segment (e.g.
     // `github.event.inputs.env.FOO`). Require it to sit at the start of the
     // expression (right after `${{`) or be preceded by a non-identifier,
-    // non-`.` character, so a leading `.env` does not match.
+    // non-`.` character, so a leading `.env` does not match. Match both dotted
+    // (`env.FOO`) and indexed (`env['FOO']` / `env["FOO"]`) access.
+    let v = regex::escape(var);
     let pattern = [
-        r"\$\{\{(?:[^}]*[^.\w])?env\.",
-        &regex::escape(var),
-        r"\b[^}]*\}\}",
+        r#"\$\{\{(?:[^}]*[^.\w])?env(?:\."#,
+        &v,
+        r#"\b|\['"#,
+        &v,
+        r#"'\]|\[""#,
+        &v,
+        r#""\])[^}]*\}\}"#,
     ]
     .concat();
     // The pattern is always valid: escaped var plus fixed structure.

@@ -26,6 +26,10 @@ The variable name is a positional argument and is matched case-sensitively.
 - References are a textual scan of every string scalar for a
   `${{ … env.VAR … }}` expression, attributed to the nearest enclosing scope.
   Computed expressions (e.g. `env[format(...)]`) are not resolved.
+- Both dotted (`env.VAR`) and indexed (`env['VAR']`, `env["VAR"]`) access inside
+  `${{ … }}` expressions are matched.
+- Bare references in `if:` conditions without `${{ … }}` delimiters (e.g.
+  `if: env.VAR == 'x'`) are a documented limitation and are not matched.
 - Exact line numbers are omitted because the YAML parser discards spans. Use
   `rg 'env.VAR' <file>` for line-level locations.
 

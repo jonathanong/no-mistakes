@@ -161,7 +161,7 @@ fn plan_args_for(args: &ImpactedChecksArgs, framework: Option<TestFramework>) ->
         entrypoints: Vec::new(),
         entrypoint_symbols: Vec::new(),
         include_symbols: false,
-        diff_content: None,
+        diff_content: args.diff_content.clone(),
         environment: "pre-push".to_string(),
         limit_percent: None,
         limit_files: None,
