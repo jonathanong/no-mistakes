@@ -132,6 +132,7 @@ pub fn run(
             if !runtime_edge(*kind) {
                 continue;
             }
+            // Reverse import edges of a file always resolve to file importers.
             let NodeId::File(path) = importer else {
                 continue;
             };

@@ -11,6 +11,10 @@ export function run() {
   client.createSubscriber();
   // Parenthesized callee resolving to the flat `functions` entry `standalone`.
   (standalone)();
+  // Destructuring binding of an arrow (non-identifier binding pattern).
+  const [first] = () => 0;
+  // Computed-member callee (neither identifier nor static member).
+  (client as never)[first]();
 }
 
 function standalone() {}

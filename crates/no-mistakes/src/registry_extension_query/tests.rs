@@ -181,6 +181,23 @@ fn distinct_registries_with_same_method_are_not_collapsed() {
 }
 
 #[test]
+fn edge_cases_yield_medium_confidence_and_cover_odd_callees() {
+    // Mixes imported and non-imported registrants (medium confidence), a literal
+    // arg, a nested-member constructor, a parenthesized constructor callee, an
+    // IIFE callee, an empty import, and a non-container default export.
+    let report = report("edge-cases.ts");
+    assert_eq!(report.pattern_kind, "register-call");
+    assert_eq!(report.confidence, "medium");
+    // Only the two imported `new Foo()/new Bar()` entries resolve to imports.
+    let with_imports = report
+        .entries
+        .iter()
+        .filter(|entry| entry.entry_import.is_some())
+        .count();
+    assert_eq!(with_imports, 2);
+}
+
+#[test]
 fn template_uses_local_name() {
     // Default import: symbol is `default` but the local `Plugin` appears in the
     // call shape, so the template must substitute the local name.

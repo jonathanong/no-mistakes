@@ -161,6 +161,17 @@ fn value_not_found_is_empty() {
 }
 
 #[test]
+fn is_skip_dir_honors_defaults_and_config() {
+    assert!(is_skip_dir(Path::new("x/node_modules"), &[]));
+    assert!(is_skip_dir(Path::new("x/.cache"), &[]));
+    assert!(is_skip_dir(
+        Path::new("x/generated"),
+        &["generated".to_string()]
+    ));
+    assert!(!is_skip_dir(Path::new("x/app"), &[]));
+}
+
+#[test]
 fn scan_file_ignores_unreadable_path() {
     let regex = compile_selector_attribute_value_regex(&["data-pw".to_string()]).unwrap();
     let globs = build_globset(&[]).unwrap();

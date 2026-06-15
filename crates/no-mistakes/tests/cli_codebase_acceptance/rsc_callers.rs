@@ -1,4 +1,4 @@
-use super::common::{assert_success, fixture, run_in, run_json, stdout};
+use super::common::{assert_success, fixture, run, run_in, run_json, stdout};
 
 #[test]
 fn rsc_callers_json_reports_server_callers() {
@@ -18,6 +18,21 @@ fn rsc_callers_json_reports_server_callers() {
     // Client boundary and everything above it are excluded.
     assert!(!files.contains(&"app/ui/ClientThing.tsx"));
     assert!(!files.contains(&"app/ui/ClientParent.tsx"));
+}
+
+#[test]
+fn rsc_callers_malformed_tsconfig_errors() {
+    let root = fixture("rsc-callers");
+    let root_arg = root.to_string_lossy();
+    let output = run(&[
+        "rsc-callers",
+        "app/ui/Button.tsx",
+        "--root",
+        root_arg.as_ref(),
+        "--tsconfig",
+        "bad-tsconfig.json",
+    ]);
+    assert!(!output.status.success());
 }
 
 #[test]

@@ -203,6 +203,12 @@ fn unknown_kind_with_no_effects_config_lists_none() {
 }
 
 #[test]
+fn resolve_tsconfig_defaults_when_absent() {
+    let cfg = resolve_tsconfig(Path::new("/nonexistent-effects-root"), None).unwrap();
+    assert!(cfg.paths.is_empty());
+}
+
+#[test]
 fn scan_file_ignores_unreadable_path() {
     let names = std::collections::HashMap::new();
     assert!(super::extract::scan_file(

@@ -102,6 +102,16 @@ fn data_pw_yml_and_filtered_sections() {
 }
 
 #[test]
+fn data_pw_without_configured_attributes_errors() {
+    // The effects fixture has no tests.playwright.selectors.testIds configured.
+    let root = fixture("effects");
+    let root_arg = root.to_string_lossy();
+    let output = run(&["data-pw", "search-bar", "--root", root_arg.as_ref()]);
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("no selector attributes"));
+}
+
+#[test]
 fn data_pw_value_not_found_is_empty_success() {
     let root = fixture("data-pw");
     let value = run_json(&root, &["data-pw", "missing-value"]);

@@ -169,8 +169,9 @@ fn expression_import(
         Expression::NewExpression(new) => new_expression_import(new, imports),
         // Imported factory call, e.g. `register(makeFoo())`: resolve the callee.
         Expression::CallExpression(call) => expression_import(&call.callee, imports),
-        Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_) => {
-            dynamic_import(expr)
+        Expression::ArrowFunctionExpression(arrow) => dynamic_import(&arrow.body),
+        Expression::FunctionExpression(function) => {
+            function.body.as_deref().and_then(dynamic_import)
         }
         _ => None,
     }
@@ -194,18 +195,10 @@ fn new_expression_import(
     }
 }
 
-/// Find a `() => import("...")` dynamic import inside an expression.
-fn dynamic_import(expr: &Expression<'_>) -> Option<EntryImport> {
+/// Find a `() => import("...")` dynamic import inside a function body.
+fn dynamic_import(body: &oxc::ast::ast::FunctionBody<'_>) -> Option<EntryImport> {
     let mut finder = ImportExprFinder { specifier: None };
-    match expr {
-        Expression::ArrowFunctionExpression(arrow) => finder.visit_function_body(&arrow.body),
-        Expression::FunctionExpression(function) => {
-            if let Some(body) = &function.body {
-                finder.visit_function_body(body);
-            }
-        }
-        _ => {}
-    }
+    finder.visit_function_body(body);
     finder.specifier.map(|specifier| EntryImport {
         specifier,
         symbol: None,
@@ -220,10 +213,8 @@ struct ImportExprFinder {
 
 impl<'a> Visit<'a> for ImportExprFinder {
     fn visit_import_expression(&mut self, import: &ImportExpression<'a>) {
-        if self.specifier.is_none() {
-            if let Expression::StringLiteral(literal) = &import.source {
-                self.specifier = Some(literal.value.as_str().to_string());
-            }
+        if let Expression::StringLiteral(literal) = &import.source {
+            self.specifier = Some(literal.value.as_str().to_string());
         }
         walk::walk_import_expression(self, import);
     }
