@@ -23,7 +23,7 @@ export's public name, so a call to the local binding of a renamed export
 re-export chains (`import { handler as h } from './x'; export { h }`) are not
 followed past the importing file, and a file that fails to parse (e.g. mid-edit)
 contributes no call sites rather than failing the query, so results can be
-underreported. Use `rg` on the returned files when exact call text matters.
+incomplete. Use `rg` on the returned files when exact call text matters.
 
 Key options: `--root`, `--tsconfig`, `--format`, and `--json`.
 
