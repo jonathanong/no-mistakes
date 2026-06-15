@@ -67,6 +67,22 @@ fn wildcard_and_default_imports_count_as_references() {
 }
 
 #[test]
+fn namespace_reexport_keeps_default_alive() {
+    // `export * as api` exposes `api.default`, so the default is referenced even
+    // though an anonymous `export *` would not forward it.
+    let report = compute(&DeadExportsArgs {
+        file: PathBuf::from("nsx.ts"),
+        names: Vec::new(),
+        root: Some(named_fixture("queries-reexport")),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(!report.any_dead);
+}
+
+#[test]
 fn star_barrel_does_not_keep_default_alive() {
     // `lonely`'s default is only seen by an `export *` barrel, which does not
     // forward defaults — so it is dead.

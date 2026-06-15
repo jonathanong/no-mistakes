@@ -61,21 +61,25 @@ fn symbol_importers(index: &SymbolIndex, file: &Path, symbol: &str, root: &Path)
 }
 
 /// Importers recorded under the wildcard `*` — namespace imports
-/// (`import * as ns`) and `export *` star barrels. `include_reexport=false`
-/// keeps only namespace imports, used for the `default` export which `export *`
-/// does not forward.
+/// (`import * as ns`), namespace re-exports (`export * as ns`, recorded with a
+/// concrete local name), and anonymous `export *` star barrels (local name
+/// `*`). When `exclude_anon_star` is set (for the `default` export, which an
+/// anonymous `export *` does not forward) only the anonymous star rows are
+/// dropped; namespace imports and `export * as ns` still expose `.default`.
 fn wildcard_importers(
     index: &SymbolIndex,
     file: &Path,
     root: &Path,
-    include_reexport: bool,
+    exclude_anon_star: bool,
 ) -> Vec<String> {
     index
         .importers_of(file, "*")
         .map(|records| {
             records
                 .iter()
-                .filter(|(_, _, is_reexport)| include_reexport || !*is_reexport)
+                .filter(|(_, local, is_reexport)| {
+                    !(exclude_anon_star && *is_reexport && local == "*")
+                })
                 .map(|(i, _, _)| rel_str(i, root))
                 .collect()
         })
@@ -93,7 +97,7 @@ pub(crate) fn importer_paths(
 ) -> Vec<String> {
     let mut paths = symbol_importers(index, file, symbol, root);
     if symbol != "*" {
-        paths.extend(wildcard_importers(index, file, root, symbol != "default"));
+        paths.extend(wildcard_importers(index, file, root, symbol == "default"));
     }
     dedup_sorted(paths)
 }
