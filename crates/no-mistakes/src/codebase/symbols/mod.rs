@@ -18,7 +18,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 pub use crate::codebase::dependencies::Format;
-use crate::codebase::ts_resolver::{find_tsconfig, load_tsconfig, resolve_import, TsConfig};
+use crate::codebase::ts_resolver::{resolve_import, TsConfig};
 use crate::codebase::ts_symbols::{extract_symbols, Export, ExportKind, FileSymbols, NamedImport};
 
 include!("types.rs");

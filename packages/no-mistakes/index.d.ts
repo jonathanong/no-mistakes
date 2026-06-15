@@ -2,8 +2,12 @@ import type {
   CheckReport,
   AnalyzeProjectOptions,
   AnalyzeProjectResult,
+  CallSitesOptions,
+  CallSitesResult,
   DataPwOptions,
   DataPwReport,
+  DeadExportsOptions,
+  DeadExportsResult,
   EffectsOptions,
   EffectsReport,
   RscCallersOptions,
@@ -11,7 +15,13 @@ import type {
   RegistryExtensionOptions,
   RegistryExtensionReport,
   DependencyResult,
+  ExportsOfOptions,
+  ExportsOfResult,
   FetchesOptions,
+  ImportersOptions,
+  ImportersResult,
+  ResolveCheckOptions,
+  ResolveCheckResult,
   GraphEdge,
   InfraOptions,
   LockfileDiffEntry,
@@ -54,6 +64,11 @@ export function analyzeProject(options: AnalyzeProjectOptions): Promise<AnalyzeP
 export function symbols(options: SymbolsSignatureImpactOptions): Promise<SignatureImpactResult>;
 export function symbols(options: SymbolsListOptions): Promise<SymbolsResult>;
 export function symbols(options: SymbolsOptions): Promise<SymbolsResult | SignatureImpactResult>;
+export function importers(options: ImportersOptions): Promise<ImportersResult>;
+export function exportsOf(options: ExportsOfOptions): Promise<ExportsOfResult>;
+export function deadExports(options: DeadExportsOptions): Promise<DeadExportsResult>;
+export function callSites(options: CallSitesOptions): Promise<CallSitesResult>;
+export function resolveCheck(options: ResolveCheckOptions): Promise<ResolveCheckResult>;
 export function fetches(options?: FetchesOptions): Promise<unknown>;
 export function check(options?: ProjectOptions): Promise<CheckReport>;
 export function testsPlan(options: TestsPlanOptions): Promise<TestPlan>;

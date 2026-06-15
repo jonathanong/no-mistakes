@@ -13,6 +13,7 @@ mod infra_swift;
 mod lockfile_diff;
 mod options;
 mod project;
+pub mod queries;
 
 #[cfg(not(coverage))]
 use async_task::{JsonTask, VersionTask};

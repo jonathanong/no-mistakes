@@ -15,7 +15,33 @@ pub fn find_tsconfig(start: &Path) -> Option<PathBuf> {
     }
 }
 
-const EXTENSIONS: &[&str] = &[".mts", ".ts", ".tsx", ".mjs", ".js", ".jsx", ".cjs", ".cts"];
+const EXTENSIONS: &[&str] = &[
+    ".mts", ".ts", ".tsx", ".mjs", ".js", ".jsx", ".cjs", ".cts", ".d.ts", ".d.mts", ".d.cts",
+];
+
+/// TypeScript source candidates for a NodeNext/ESM emitted extension.
+/// Tried before the literal file; excludes `.jsx` and declaration files,
+/// which may only appear after the literal file (see `emitted_fallback_candidates`).
+fn emitted_source_candidates(extension: &str) -> &'static [&'static str] {
+    match extension {
+        "mjs" => &[".mts"],
+        "cjs" => &[".cts"],
+        "js" => &[".ts", ".tsx"],
+        _ => &[],
+    }
+}
+
+/// Declaration and `.jsx` fallbacks for a NodeNext/ESM emitted extension.
+/// Tried only when neither a TypeScript source nor the literal file exists,
+/// so the literal `.js`/`.mjs`/`.cjs` always takes priority over `.d.*` and `.jsx`.
+fn emitted_fallback_candidates(extension: &str) -> &'static [&'static str] {
+    match extension {
+        "mjs" => &[".d.mts"],
+        "cjs" => &[".d.cts"],
+        "js" => &[".jsx", ".d.ts"],
+        _ => &[],
+    }
+}
 const EXPLICIT_EXTENSIONS: &[&str] = &[
     "mts", "ts", "tsx", "mjs", "js", "jsx", "cjs", "cts", "json", "css", "scss", "sass", "less",
     "svg", "png", "jpg", "jpeg", "gif", "webp", "avif", "txt", "wasm",
@@ -26,6 +52,26 @@ fn has_explicit_extension(path: &Path) -> bool {
         .and_then(|ext| ext.to_str())
         .map(|ext| EXPLICIT_EXTENSIONS.contains(&ext))
         .unwrap_or(false)
+}
+
+/// Load a `TsConfig` from `--tsconfig` if given, else search upward from `root`,
+/// else return an empty config anchored at `root`.
+///
+/// Shared by every command that resolves import/re-export specifiers so the
+/// `--tsconfig` fallback behaves identically across the CLI and N-API surface.
+pub fn resolve_tsconfig(arg: Option<&Path>, root: &Path) -> Result<TsConfig> {
+    if let Some(path) = arg {
+        return load_tsconfig(path).context(format!("loading tsconfig {}", path.display()));
+    }
+    if let Some(path) = find_tsconfig(root) {
+        return load_tsconfig(&path).context(format!("loading tsconfig {}", path.display()));
+    }
+    Ok(TsConfig {
+        dir: root.to_path_buf(),
+        paths: Vec::new(),
+        paths_dir: root.to_path_buf(),
+        base_url: None,
+    })
 }
 
 /// Resolve `specifier` (as it appears in an import in `importing_file`) to an

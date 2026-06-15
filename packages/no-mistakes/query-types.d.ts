@@ -1,108 +1,116 @@
-export interface DataPwOptions {
-  root?: string;
-  config?: string;
-  /** The selector-attribute value to find (e.g. `search-bar`). */
-  value: string;
-  /** Attribute names to scan instead of the configured `testIds`. */
-  attributes?: string[];
-  /** Source path prefixes to scan instead of the configured `selectorRoots`. */
-  scan?: string[];
-  /** Comma-separated subset of `source,test` (default: both). */
-  include?: string;
-}
+// Lightweight single-file query commands (issue #417).
 
-export interface DataPwHit {
+export interface QueryFileOptions {
+  /** The TS/JS file to query (relative to `root` or absolute). */
   file: string;
-  line: number;
-  attribute: string;
-}
-
-export interface DataPwReport {
-  value: string;
-  attributes: string[];
-  /** Source-file matches. Omitted when `--include test`. */
-  source?: DataPwHit[];
-  /** Test-file matches. Omitted when `--include source`. */
-  test?: DataPwHit[];
-}
-
-export interface EffectsOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
   tsconfig?: string;
-  config?: string;
-  /** Effect kind to resolve (a key under `effects:` in config). */
-  kind: string;
-  /** Entry file whose transitive imports are scanned. */
-  entry: string;
-  /** Restrict to one or more configured categories. */
-  categories?: string[];
-  /** Maximum traversal depth (default: unlimited). */
-  depth?: number;
 }
 
-export interface EffectCallSite {
+export interface ImportersOptions extends QueryFileOptions {
+  /** Also compute the transitive impacted-test set (builds the dependency graph). */
+  tests?: boolean;
+}
+
+export interface ImportersTestImpact {
+  tests: string[];
+  count: number;
+}
+
+export interface ImportersResult {
+  file: string;
+  directImporters: string[];
+  dependentsCount: number;
+  testImpact?: ImportersTestImpact;
+}
+
+export interface ExportsOfOptions extends QueryFileOptions {
+  /** Skip the reverse import scan; only list exports. */
+  noImporters?: boolean;
+}
+
+export interface ExportRowResult {
+  name: string;
+  kind: string;
+  line: number;
+  /** Resolved re-export target, root-relative. Only present for re-exports. */
+  resolved?: string;
+  importers: string[];
+}
+
+export interface ExportsOfResult {
+  file: string;
+  exports: ExportRowResult[];
+}
+
+export interface DeadExportsOptions extends QueryFileOptions {
+  /** Specific export names to check. Defaults to every export of the file. */
+  names?: string[];
+}
+
+export interface DeadExportResult {
+  name: string;
+  referenced: boolean;
+  importerCount: number;
+}
+
+export interface DeadExportsResult {
+  file: string;
+  results: DeadExportResult[];
+  anyDead: boolean;
+}
+
+export interface CallSitesOptions extends QueryFileOptions {
+  /** The exported function name to find call sites for. */
+  exportName: string;
+}
+
+export type ArgShape =
+  | "string"
+  | "number"
+  | "boolean"
+  | "null"
+  | "identifier"
+  | "object"
+  | "array"
+  | "arrow"
+  | "call"
+  | "spread"
+  | "other";
+
+export interface CallSite {
   file: string;
   line: number;
-  callee: string;
-  category?: string;
+  /** Enclosing named function, when determinable. */
   caller?: string;
-  depth: number;
+  argCount: number;
+  hasSpread: boolean;
+  args: ArgShape[];
 }
 
-export interface EffectsReport {
-  kind: string;
-  entry: string;
-  callSites: EffectCallSite[];
-  byCategory: Record<string, number>;
-}
-
-export interface RscCallersOptions {
-  root?: string;
-  tsconfig?: string;
-  config?: string;
-  /** Component file to find RSC callers of. */
-  component: string;
-  /** Maximum traversal depth (default: unlimited). */
-  depth?: number;
-}
-
-export interface RscCaller {
+export interface CallSitesResult {
   file: string;
-  kind: "page" | "component";
-  environment: "server" | "client" | "unknown";
-  depth: number;
+  export: string;
+  callSites: CallSite[];
 }
 
-export interface RscCallersReport {
-  component: string;
-  callers: RscCaller[];
-}
+export type ResolveCheckOptions = QueryFileOptions;
 
-export interface RegistryExtensionOptions {
-  root?: string;
-  /** Registry file to summarize the entry pattern of. */
-  registryFile: string;
-}
+export type ImportResolutionStatus = "resolved" | "unresolved" | "external";
 
-export interface RegistryEntryImport {
+export interface ResolveCheckImport {
   specifier: string;
-  symbol?: string;
-  local: string;
-  kind: string;
+  kind: "static" | "type" | "dynamic" | "require";
+  status: ImportResolutionStatus;
+  /** Root-relative resolved target, when the import resolves locally. */
+  resolved?: string;
 }
 
-export interface RegistryEntry {
-  line: number;
-  import?: RegistryEntryImport;
-  callShape: string;
-}
-
-export interface RegistryExtensionReport {
-  registryFile: string;
-  patternKind: string;
-  registrant?: string;
-  confidence: string;
-  entries: RegistryEntry[];
-  template?: string;
-  notes: string[];
+export interface ResolveCheckResult {
+  file: string;
+  allResolve: boolean;
+  imports: ResolveCheckImport[];
+  unresolved: string[];
 }

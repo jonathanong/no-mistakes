@@ -91,5 +91,21 @@ impl SymbolIndex {
     pub fn importers_of(&self, source: &Path, symbol: &str) -> Option<&Vec<ImporterRecord>> {
         self.map.get(&(source.to_path_buf(), symbol.to_string()))
     }
+
+    /// Files that import any exported symbol from `source`, regardless of which
+    /// symbol. Deduplicated and sorted. Powers file-level reverse queries
+    /// (`importers`, `exports-of`) without building the full dependency graph.
+    pub fn file_importers(&self, source: &Path) -> Vec<PathBuf> {
+        let source = source.to_path_buf();
+        let mut importers: Vec<PathBuf> = self
+            .map
+            .iter()
+            .filter(|((file, _), _)| file == &source)
+            .flat_map(|(_, records)| records.iter().map(|(importer, _, _)| importer.clone()))
+            .collect();
+        importers.sort();
+        importers.dedup();
+        importers
+    }
 }
 

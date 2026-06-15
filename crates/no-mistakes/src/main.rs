@@ -19,6 +19,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use no_mistakes::cli::{init_rayon_threads, JobsArg};
 use no_mistakes::codebase::dependencies::{self, Direction, TraverseArgs};
+use no_mistakes::codebase::queries;
 use no_mistakes::codebase::symbols::{self, SymbolsArgs};
 use no_mistakes::playwright;
 use no_mistakes::{tests_run, TestsArgs};
@@ -43,6 +44,16 @@ enum Command {
     Related(TraverseArgs),
     /// Dump named exports and imports of TS/JS files.
     Symbols(SymbolsArgs),
+    /// List the files that directly import a file, plus a dependents count.
+    Importers(queries::ImportersArgs),
+    /// List a file's named exports and who imports each one.
+    ExportsOf(queries::ExportsOfArgs),
+    /// Check whether any files still import the given exports (non-zero if dead).
+    DeadExports(queries::DeadExportsArgs),
+    /// List call sites of an exported function with their argument shapes.
+    CallSites(queries::CallSitesArgs),
+    /// Check whether all imports in a file resolve (non-zero if any do not).
+    ResolveCheck(queries::ResolveCheckArgs),
     /// Map Next.js App Router routes to static fetch API calls.
     Fetches(fetches::FetchesArgs),
     /// Analyze Playwright route, selector, and fetch coverage.
@@ -100,6 +111,11 @@ fn run() -> Result<ExitCode> {
             symbols::run(args)?;
             Ok(ExitCode::SUCCESS)
         }
+        Command::Importers(args) => queries::importers::run(args),
+        Command::ExportsOf(args) => queries::exports_of::run(args),
+        Command::DeadExports(args) => queries::dead_exports::run(args),
+        Command::CallSites(args) => queries::call_sites::run(args),
+        Command::ResolveCheck(args) => queries::resolve_check::run(args),
         Command::Fetches(args) => fetches::run(args),
         Command::Playwright(args) => playwright::run(args),
         Command::React(args) => react::run(args),
