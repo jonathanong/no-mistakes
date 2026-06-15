@@ -135,6 +135,16 @@ fn finds_default_export_callers() {
 }
 
 #[test]
+fn accepts_default_as_export_name() {
+    // Querying the literal `default` resolves the same default export.
+    let report = compute(&args(fixture_root("queries-reexport"), "mod.ts", "default")).unwrap();
+    assert!(report
+        .call_sites
+        .iter()
+        .any(|s| s.file == "default-consumer.ts"));
+}
+
+#[test]
 fn renders_formats_and_runs() {
     let report = compute(&args(fixture_root("queries"), "util.ts", "used")).unwrap();
     let mut human = Vec::new();

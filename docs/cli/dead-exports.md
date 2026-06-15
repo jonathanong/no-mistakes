@@ -22,6 +22,10 @@ file imports this symbol." Wildcard edges are counted conservatively: an
 `export *` barrel or `import * as ns` that may forward a symbol keeps it
 "referenced" even if that specific symbol is shadowed or unused through the
 barrel — `dead-exports` favors a false "referenced" over a false "dead".
+Consumers that import by **workspace package name** (`@scope/pkg`) rather than a
+relative or tsconfig-aliased path are not resolved, so a package entry export
+used only cross-package may be reported dead; use
+[`dependents`](dependents.md) for full cross-package impact.
 
 Key options: `--root`, `--tsconfig`, `--format`, and `--json`.
 

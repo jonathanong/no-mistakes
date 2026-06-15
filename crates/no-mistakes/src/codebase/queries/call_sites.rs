@@ -4,7 +4,7 @@ use super::reverse::{build_index, export_lookup_symbol};
 use super::shared::{read_symbols, rel_str, resolve_target};
 use crate::cli::Format;
 use crate::codebase::dependencies::graph::SymbolIndex;
-use crate::codebase::ts_symbols::FileSymbols;
+use crate::codebase::ts_symbols::{Export, ExportKind, FileSymbols};
 use anyhow::Result;
 use is_terminal::IsTerminal;
 use rayon::prelude::*;
@@ -62,6 +62,25 @@ pub struct CallSitesReport {
     call_sites: Vec<CallSite>,
 }
 
+/// Find an export by its public name, also accepting `default` for the default
+/// export (whose stored name is the local declaration name).
+fn find_export<'a>(symbols: &'a FileSymbols, name: &str) -> Option<&'a Export> {
+    symbols
+        .exports
+        .iter()
+        .find(|export| export.name == name)
+        .or_else(|| {
+            (name == "default")
+                .then(|| {
+                    symbols
+                        .exports
+                        .iter()
+                        .find(|export| export.kind == ExportKind::Default)
+                })
+                .flatten()
+        })
+}
+
 /// Map every file that may call the export to the local name(s) it is bound to.
 ///
 /// The defining file is scanned under the export's local binding (which differs
@@ -75,13 +94,12 @@ fn local_names_by_file(
     abs_file: &Path,
     export_name: &str,
 ) -> HashMap<PathBuf, HashSet<String>> {
-    let export = symbols
-        .exports
-        .iter()
-        .find(|export| export.name == export_name);
+    let export = find_export(symbols, export_name);
     let lookup = export.map_or_else(|| export_name.to_string(), export_lookup_symbol);
+    // Scan the defining file under the export's local binding (its declaration
+    // name for a default/renamed export), not the public query name.
     let local = export
-        .and_then(|export| export.local.clone())
+        .map(|export| export.local.clone().unwrap_or_else(|| export.name.clone()))
         .unwrap_or_else(|| export_name.to_string());
 
     let mut by_file: HashMap<PathBuf, HashSet<String>> = HashMap::new();
@@ -146,10 +164,7 @@ fn compute(args: &CallSitesArgs) -> Result<CallSitesReport> {
     let target = resolve_target(&args.file, args.root.as_deref(), args.tsconfig.as_deref())?;
     let symbols = read_symbols(&target.abs_file)?;
     anyhow::ensure!(
-        symbols
-            .exports
-            .iter()
-            .any(|export| export.name == args.export_name),
+        find_export(&symbols, &args.export_name).is_some(),
         "`{}` is not an export of {}",
         args.export_name,
         args.file.display()

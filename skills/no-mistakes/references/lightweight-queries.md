@@ -12,6 +12,16 @@ All emit JSON on non-TTY (or with `--json`) and accept `--root`, `--tsconfig`,
 - Need a symbol's **public-API list** without consumers → `no-mistakes symbols`.
 - Need exact call **text** or line context → `rg` on the files these return.
 
+## Resolution scope
+
+These commands run one reverse import scan that resolves **relative** and
+**tsconfig path** imports. Cross-package imports by **workspace package name**
+(`import { x } from '@scope/pkg'`) are not resolved unless the package is also a
+tsconfig `paths` alias, so in a monorepo `importers`/`exports-of`/`dead-exports`/
+`call-sites` may omit cross-package consumers and report a live package entry
+export as unimported. Use `no-mistakes dependents <file>` for full cross-package
+impact.
+
 ## `importers <file>`
 
 Direct importers of one file plus a `dependentsCount`. One reverse import scan,
