@@ -1,0 +1,11 @@
+version: 2
+# Same suite exclude as the default config, but WITHOUT
+# `tests.impact.alwaysIncludeTests` — proves the stub is dropped when not opted in.
+tests:
+  vitest:
+    projects:
+      unit:
+        include:
+          - "**/*.test.mts"
+        exclude:
+          - "**/*.mock.test.mts"

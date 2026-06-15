@@ -20,6 +20,13 @@ struct ImportCollector {
     imported_bindings: HashSet<String>,
     suppress_imports: bool,
     collect_suppressed_runtime_imports: bool,
+    /// `function_stack` depth captured at the start of an exported binding
+    /// initializer / default-export expression. A runtime (`import()`/`require()`)
+    /// import exactly one function level below this depth — the callback directly
+    /// forming the exported value, e.g. `dynamic(() => import('./Foo'))` — is
+    /// flagged reachable. Deeper, uninvoked nested imports fall back to normal
+    /// call-scope reachability so they are not falsely kept.
+    runtime_reachable_base_depth: Option<usize>,
     later_exported_type_names: HashSet<String>,
 }
 

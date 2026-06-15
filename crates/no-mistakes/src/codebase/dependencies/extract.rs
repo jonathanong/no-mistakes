@@ -37,6 +37,12 @@ pub struct ExtractedImport {
     pub kind: ImportKind,
     pub function_scope: Option<String>,
     pub side_effect_only: bool,
+    /// `true` for a runtime (`import()`/`require()`) import collected from inside
+    /// an exported binding initializer, where the enclosing callback is never
+    /// statically called (e.g. `next/dynamic(() => import('./Foo'))`). Such
+    /// imports are reachable through the exported binding even though no static
+    /// call reaches their anonymous scope.
+    pub runtime_reachable: bool,
 }
 
 /// A statically visible function call in a file.
@@ -98,6 +104,9 @@ pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFac
         .exported_functions
         .extend(later_named_value_exports(program, &local_type_names));
     collector
+        .exported_functions
+        .extend(later_default_export_value_names(program));
+    collector
         .later_exported_type_names
         .extend(later_named_type_exports(program, &local_type_names));
     collector.visit_program(program);
@@ -119,72 +128,7 @@ pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFac
     }
 }
 
-fn later_named_value_exports<'a>(
-    program: &Program<'a>,
-    local_type_names: &HashSet<String>,
-) -> Vec<String> {
-    let mut exports = Vec::new();
-    for statement in &program.body {
-        let Statement::ExportNamedDeclaration(export) = statement else {
-            continue;
-        };
-        if export.source.is_some() || export.export_kind.is_type() {
-            continue;
-        }
-        for specifier in &export.specifiers {
-            if specifier.export_kind.is_type() {
-                continue;
-            }
-            if let Some(name) = module_export_name_name(&specifier.local) {
-                if local_type_names.contains(name) {
-                    continue;
-                }
-                exports.push(name.to_string());
-            }
-        }
-    }
-    exports
-}
-
-fn later_named_type_exports<'a>(
-    program: &Program<'a>,
-    local_type_names: &HashSet<String>,
-) -> Vec<String> {
-    let mut exports = Vec::new();
-    for statement in &program.body {
-        let Statement::ExportNamedDeclaration(export) = statement else {
-            continue;
-        };
-        if export.source.is_some() {
-            continue;
-        }
-        for specifier in &export.specifiers {
-            if let Some(name) = module_export_name_name(&specifier.local) {
-                if !export.export_kind.is_type()
-                    && !specifier.export_kind.is_type()
-                    && !local_type_names.contains(name)
-                {
-                    continue;
-                }
-                exports.push(name.to_string());
-            }
-        }
-    }
-    exports
-}
-
-fn local_type_declaration_names<'a>(program: &Program<'a>) -> HashSet<String> {
-    program
-        .body
-        .iter()
-        .filter_map(|stmt| match stmt {
-            Statement::TSTypeAliasDeclaration(decl) => Some(decl.id.name.as_str().to_string()),
-            Statement::TSInterfaceDeclaration(decl) => Some(decl.id.name.as_str().to_string()),
-            _ => None,
-        })
-        .collect()
-}
-
+include!("extract_export_names.rs");
 include!("extract_visit.rs");
 include!("extract_collector_methods.rs");
 include!("extract_visit_aggregates.rs");

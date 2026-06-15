@@ -76,6 +76,12 @@ Impacted tests for specific changed files (no `testPlan` config required).
 no-mistakes tests impact src/utils.mts --format paths
 ```
 
+Traversal follows `next/dynamic(() => import('./Foo'))` boundaries (Foo's tests
+surface at `medium` confidence). Two opt-in `tests.impact` config knobs refine
+output: `alwaysIncludeTests` surfaces suite-excluded stub tests (e.g.
+`**/*.mock.test.*`), and `registries` emits a `registry-hint` warning when the
+changed file is imported by a registry file (e.g. `auth-gated-code-splitting.mts`).
+
 Node API: `testsImpact(options)`.
 
 ## `tests comment`

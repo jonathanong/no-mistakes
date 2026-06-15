@@ -1,0 +1,12 @@
+version: 2
+tests:
+  vitest:
+    projects:
+      unit:
+        include:
+          - "**/*.test.mts"
+        exclude:
+          - "**/*.mock.test.mts"
+  impact:
+    alwaysIncludeTests:
+      - "**/*.mock.test.*"
