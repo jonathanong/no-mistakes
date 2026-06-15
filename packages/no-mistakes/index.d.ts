@@ -72,9 +72,17 @@ export function reactUsages(
   options: ProjectOptions & { target: string },
 ): Promise<ReactUsagesReport>;
 export function lockfileDiff(options: LockfileDiffOptions): Promise<LockfileDiffEntry[]>;
-export function infraResourceRefs(options: InfraOptions): Promise<ResourceRefRow[]>;
-export function infraOutputs(options: InfraOptions): Promise<ModuleOutputsResult>;
-export function infraTestFor(options: InfraOptions): Promise<TestForRow[]>;
-export function swiftImporters(options: SwiftOptions): Promise<SwiftImporterRow[]>;
-export function swiftTestTargets(options: SwiftOptions): Promise<SwiftTestTargetRow[]>;
+export function infraResourceRefs(
+  options: InfraOptions & { address: string },
+): Promise<ResourceRefRow[]>;
+export function infraOutputs(
+  options: InfraOptions & { moduleDir: string },
+): Promise<ModuleOutputsResult>;
+export function infraTestFor(options: InfraOptions & { tfFile: string }): Promise<TestForRow[]>;
+export function swiftImporters(
+  options: SwiftOptions & { file: string },
+): Promise<SwiftImporterRow[]>;
+export function swiftTestTargets(
+  options: SwiftOptions & { file: string },
+): Promise<SwiftTestTargetRow[]>;
 export function version(): Promise<string>;

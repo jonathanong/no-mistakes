@@ -66,8 +66,20 @@ impl InfraReport {
             return false;
         }
         match std::fs::read_to_string(file) {
-            Ok(content) => declared.iter().any(|addr| content.contains(addr)),
+            Ok(content) => declared
+                .iter()
+                .any(|addr| references_address(&content, addr)),
             Err(_) => false,
         }
     }
+}
+
+/// Whether `content` references `addr` on an identifier boundary, so that a test
+/// mentioning `aws_s3_bucket.foo_logs` does not match a file declaring only
+/// `aws_s3_bucket.foo`.
+fn references_address(content: &str, addr: &str) -> bool {
+    content.match_indices(addr).any(|(index, _)| {
+        let after = content[index + addr.len()..].chars().next();
+        !after.is_some_and(|c| c.is_alphanumeric() || c == '_')
+    })
 }

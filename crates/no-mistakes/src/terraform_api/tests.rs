@@ -56,6 +56,11 @@ fn test_for_resource_mode_matches_referencing_tests() {
     assert!(rows
         .iter()
         .any(|row| row.test_file.ends_with("network.test.mts")));
+    // A test mentioning `aws_route53_record.foobar` must not match a file that
+    // declares only `aws_route53_record.foo` (identifier-boundary matching).
+    assert!(!rows
+        .iter()
+        .any(|row| row.test_file.ends_with("boundary.test.mts")));
 }
 
 #[test]

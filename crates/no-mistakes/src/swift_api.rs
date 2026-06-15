@@ -65,7 +65,16 @@ pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<SwiftR
     let facts = collect_swift_facts(&root, &all_files, &packages);
     let mut targets = HashMap::new();
     for package in &facts.packages {
-        let files_for = |name: &String| facts.files_by_target.get(name).into_iter().flatten();
+        // Target names are unique only within a package, so scope membership to
+        // files under this package's root before attaching its metadata.
+        let files_for = |name: &String| {
+            facts
+                .files_by_target
+                .get(name)
+                .into_iter()
+                .flatten()
+                .filter(|path| path.starts_with(&package.package_root))
+        };
         for (name, target) in &package.targets {
             for file in files_for(name) {
                 targets.insert(

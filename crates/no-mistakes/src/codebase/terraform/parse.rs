@@ -156,8 +156,16 @@ fn value_refs(body: &Body) -> Vec<TfAddr> {
         if let Structure::Attribute(attr) = structure {
             if attr.key.as_str() == "value" {
                 let mut sink = Vec::new();
-                walk_expr(&attr.expr, &mut sink);
-                let mut addrs: Vec<TfAddr> = sink.into_iter().map(|(addr, _)| addr).collect();
+                walk_expr(&attr.expr, &mut sink, &[]);
+                // Keep the module-output suffix so `module.network.zone_id` is not
+                // collapsed to a bare `module.network`.
+                let mut addrs: Vec<TfAddr> = sink
+                    .into_iter()
+                    .map(|(addr, output)| match output {
+                        Some(output) => format!("{addr}.{output}"),
+                        None => addr,
+                    })
+                    .collect();
                 addrs.sort();
                 addrs.dedup();
                 return addrs;

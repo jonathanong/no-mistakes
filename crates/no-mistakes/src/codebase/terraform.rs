@@ -107,13 +107,19 @@ pub(crate) fn collect_terraform_facts(
         .collect();
     let extensions = config.effective_extensions();
 
-    // Normalize discovered paths too, so `..` segments cannot cause the prefix
-    // check to miss valid files and so fact-map keys stay canonical.
+    // Normalize discovered paths too, so `..` segments cannot cause the parent
+    // check to miss valid files and so fact-map keys stay canonical. A Terraform
+    // module is a single directory, so only include files whose parent is a
+    // configured root — nested example/test/child directories are not part of it
+    // unless listed separately.
     let tf_files: Vec<PathBuf> = all_files
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
         .filter(|path| has_extension(path, &extensions))
-        .filter(|path| module_roots.iter().any(|root| path.starts_with(root)))
+        .filter(|path| {
+            path.parent()
+                .is_some_and(|parent| module_roots.iter().any(|root| parent == root))
+        })
         .collect();
     if tf_files.is_empty() {
         return TerraformFactMap::default();

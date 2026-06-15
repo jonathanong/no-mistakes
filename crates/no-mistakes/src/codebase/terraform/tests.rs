@@ -133,6 +133,52 @@ fn groups_files_by_module_directory() {
 }
 
 #[test]
+fn discovery_excludes_nested_non_module_directories() {
+    let facts = collect_fixture();
+    // `infra/modules/network/examples/example.tf` is in a nested directory that is
+    // not a configured module root, so it must not be indexed.
+    assert!(!facts.declarations.contains_key("aws_example.nested"));
+}
+
+#[test]
+fn ignores_for_expression_iterator_variables() {
+    let facts = parse(
+        r#"
+        resource "aws_lb" "web" {
+          ids = [for subnet in aws_subnet.main : subnet.id]
+          kv  = { for k, v in var.entries : k => v.id }
+        }
+        "#,
+    );
+    let addrs = to_addrs(&facts);
+    // The collection expressions are real references.
+    assert!(addrs.contains(&"aws_subnet.main".to_string()));
+    assert!(addrs.contains(&"var.entries".to_string()));
+    // The iterator variables are locals, not resource references.
+    assert!(!addrs.iter().any(|a| a.starts_with("subnet.")));
+    assert!(!addrs.iter().any(|a| a.starts_with("v.")));
+}
+
+#[test]
+fn output_value_refs_keep_module_output_suffix() {
+    let facts = parse(
+        r#"
+        output "zone" {
+          value = module.network.zone_id
+        }
+        "#,
+    );
+    let block = facts
+        .blocks
+        .iter()
+        .find(|b| b.addr == "output.zone")
+        .unwrap();
+    assert!(block
+        .value_refs
+        .contains(&"module.network.zone_id".to_string()));
+}
+
+#[test]
 fn classifies_every_reference_kind() {
     let facts = parse(
         r#"

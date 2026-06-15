@@ -18,6 +18,7 @@ export type Relationship =
   | "asset"
   | "react"
   | "swift"
+  | "terraform"
   | "all";
 
 export interface TraverseOptions {
