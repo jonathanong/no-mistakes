@@ -26,14 +26,39 @@ pub(super) fn collect_body_refs(
                 push_expr_refs(&attr.expr, path, from_addr, references, bound)
             }
             Structure::Block(block) if block.identifier.as_str() == "dynamic" => {
-                let mut inner = bound.to_vec();
-                if let Some(iterator) = dynamic_iterator(block) {
-                    inner.push(iterator);
-                }
-                collect_body_refs(&block.body, path, from_addr, references, &inner);
+                collect_dynamic_refs(block, path, from_addr, references, bound);
             }
             Structure::Block(block) => {
                 collect_body_refs(&block.body, path, from_addr, references, bound)
+            }
+        }
+    }
+}
+
+/// Walk a `dynamic` block. The iterator is only in scope inside `content` (and
+/// the `labels`/`iterator` attributes) — the `for_each` collection is evaluated
+/// in the outer scope, so it keeps the outer `bound`.
+fn collect_dynamic_refs(
+    block: &Block,
+    path: &Path,
+    from_addr: &str,
+    references: &mut Vec<TerraformRef>,
+    bound: &[&str],
+) {
+    let mut inner = bound.to_vec();
+    if let Some(iterator) = dynamic_iterator(block) {
+        inner.push(iterator);
+    }
+    for structure in block.body.iter() {
+        match structure {
+            Structure::Attribute(attr) if attr.key.as_str() == "for_each" => {
+                push_expr_refs(&attr.expr, path, from_addr, references, bound);
+            }
+            Structure::Attribute(attr) => {
+                push_expr_refs(&attr.expr, path, from_addr, references, &inner);
+            }
+            Structure::Block(content) => {
+                collect_body_refs(&content.body, path, from_addr, references, &inner);
             }
         }
     }

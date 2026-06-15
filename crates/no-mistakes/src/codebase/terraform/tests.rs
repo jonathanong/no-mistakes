@@ -180,6 +180,27 @@ fn binds_dynamic_block_iterator_variables() {
 }
 
 #[test]
+fn dynamic_for_each_is_evaluated_in_outer_scope() {
+    let facts = parse(
+        r#"
+        resource "aws_subnet" "web" {
+          dynamic "subnet" {
+            for_each = subnet.ids
+            content {
+              cidr = subnet.value.cidr
+            }
+          }
+        }
+        "#,
+    );
+    let addrs = to_addrs(&facts);
+    // `for_each` is outside the iterator scope, so `subnet.ids` is a real ref.
+    assert!(addrs.contains(&"subnet.ids".to_string()));
+    // Inside `content`, `subnet` is the bound iterator, not a resource.
+    assert!(!addrs.iter().any(|a| a == "subnet.value"));
+}
+
+#[test]
 fn binds_explicit_dynamic_iterator_and_template_for_keys() {
     let facts = parse(
         r#"

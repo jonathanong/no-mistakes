@@ -85,5 +85,7 @@ fn references_address(content: &str, addr: &str) -> bool {
 }
 
 fn is_identifier_char(ch: Option<char>) -> bool {
-    ch.is_some_and(|ch| ch.is_alphanumeric() || ch == '_')
+    // Terraform resource/data names may contain `-`, so treat it as part of the
+    // identifier when checking address boundaries.
+    ch.is_some_and(|ch| ch.is_alphanumeric() || ch == '_' || ch == '-')
 }
