@@ -18,15 +18,15 @@ fn walk_default_expression<'a>(
         record_object_member_calls(collector, "default", object);
     }
     collector.push_function_scope(Some("default".to_string()));
-    // Flag runtime imports inside a default-export expression — e.g.
-    // `export default dynamic(() => import('./Foo'))` — as reachable through the
-    // `default` binding instead of dropping them with their anonymous callback
-    // scope. Unlike full suppression this keeps non-runtime (type) imports such as
-    // `export default ({} as import('./schema').Schema)`.
-    let saved_force = collector.force_runtime_reachable;
-    collector.force_runtime_reachable = true;
+    // Flag the runtime import in the callback directly forming the default value —
+    // e.g. `export default dynamic(() => import('./Foo'))` — as reachable through
+    // the `default` binding instead of dropping it with its anonymous callback
+    // scope. This keeps non-runtime (type) imports and, being depth-limited, does
+    // not falsely keep deeper uninvoked nested imports.
+    let saved_base_depth = collector.runtime_reachable_base_depth;
+    collector.runtime_reachable_base_depth = Some(collector.function_stack.len());
     walk::walk_export_default_declaration(collector, export);
-    collector.force_runtime_reachable = saved_force;
+    collector.runtime_reachable_base_depth = saved_base_depth;
     collector.pop_function_scope(true);
 }
 

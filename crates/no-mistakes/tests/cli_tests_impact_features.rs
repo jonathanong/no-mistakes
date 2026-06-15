@@ -210,6 +210,38 @@ fn impact_does_not_overseed_parenthesized_function_default() {
     );
 }
 
+#[test]
+fn impact_does_not_overseed_shadowed_or_type_default_references() {
+    let root = fixture("tests-impact-next-dynamic");
+    // A lazy binding referenced only by a shadowed name inside a nested callback,
+    // or only in a type position, must NOT pull its test into a `foo.mts` change.
+    let plan = impact_json(&root, &["foo.mts"]);
+    let names = selected_files(&plan);
+    assert!(
+        !names.contains(&"nested-callback-default.test.mts".to_string()),
+        "nested callback shadow must not over-seed: {names:?}"
+    );
+    assert!(
+        !names.contains(&"type-collision-default.test.mts".to_string()),
+        "type-position reference must not over-seed: {names:?}"
+    );
+}
+
+#[test]
+fn impact_registry_hint_skips_deeply_nested_uninvoked_loader() {
+    let root = fixture("tests-impact-registry");
+    // `deep-loader-registry.mts` buries its dynamic import in an uninvoked nested
+    // function, so reachability prunes the edge and no hint is emitted for it.
+    let plan = impact_json(&root, &["feature.mts"]);
+    assert!(
+        !registry_hints(&plan)
+            .iter()
+            .any(|hint| hint.contains("deep-loader-registry.mts")),
+        "deeply-nested uninvoked loader must not produce a hint: {:?}",
+        registry_hints(&plan)
+    );
+}
+
 // ── Part 3: registry hint ───────────────────────────────────────────────────
 
 #[test]
