@@ -133,6 +133,24 @@ fn test_for_unknown_file_returns_empty_even_in_module_mode() {
 }
 
 #[test]
+fn test_for_normalizes_dot_slash_globs() {
+    let root = fixture();
+    let test_file = root.join("infra/envs/prod/__tests__/network.test.mts");
+    let report = report_with(
+        TerraformTestConvention {
+            test_globs: vec!["./__tests__/*.test.mts".to_string()],
+            test_root: None,
+            match_mode: Some("module".to_string()),
+        },
+        vec![test_file],
+    );
+    let rows = report.test_for("infra/envs/prod/variables.tf");
+    assert!(rows
+        .iter()
+        .any(|row| row.test_file.ends_with("network.test.mts")));
+}
+
+#[test]
 fn test_for_module_mode_returns_all_module_tests() {
     let root = fixture();
     let test_file = root.join("infra/envs/prod/__tests__/network.test.mts");

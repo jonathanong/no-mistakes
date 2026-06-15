@@ -169,8 +169,11 @@ fn compile_test_globs(globs: &[String]) -> Result<Option<GlobSet>> {
     }
     let mut builder = GlobSetBuilder::new();
     for glob in globs {
-        let compiled =
-            Glob::new(glob).with_context(|| format!("invalid terraform test glob: {glob}"))?;
+        // Globs are matched against module-relative paths, so a leading `./`
+        // (a common spelling) would never match; strip it before compiling.
+        let normalized = glob.strip_prefix("./").unwrap_or(glob);
+        let compiled = Glob::new(normalized)
+            .with_context(|| format!("invalid terraform test glob: {glob}"))?;
         builder.add(compiled);
     }
     Ok(Some(builder.build()?))
