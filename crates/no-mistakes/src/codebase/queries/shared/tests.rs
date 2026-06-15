@@ -22,11 +22,14 @@ fn resolve_target_handles_absolute_and_cwd_fallback() {
 }
 
 #[test]
-fn resolve_target_rejects_missing_file() {
-    let error = resolve_target(Path::new("does-not-exist.ts"), None, None)
+fn resolve_target_rejects_missing_file_or_directory() {
+    let missing = resolve_target(Path::new("does-not-exist.ts"), None, None)
         .err()
         .unwrap();
-    assert!(error.to_string().contains("file not found"));
+    assert!(missing.to_string().contains("not a file"));
+    // A directory is not a valid file target either.
+    let dir = resolve_target(Path::new("src"), None, None).err().unwrap();
+    assert!(dir.to_string().contains("not a file"));
 }
 
 #[test]

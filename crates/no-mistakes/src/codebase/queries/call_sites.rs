@@ -4,7 +4,7 @@ use super::reverse::{build_index, export_lookup_symbol, find_export};
 use super::shared::{read_symbols, rel_str, resolve_target};
 use crate::cli::Format;
 use crate::codebase::dependencies::graph::SymbolIndex;
-use crate::codebase::ts_symbols::FileSymbols;
+use crate::codebase::ts_symbols::{ExportKind, FileSymbols};
 use anyhow::Result;
 use is_terminal::IsTerminal;
 use rayon::prelude::*;
@@ -82,9 +82,17 @@ fn local_names_by_file(
     let local = export
         .map(|export| export.local.clone().unwrap_or_else(|| export.name.clone()))
         .unwrap_or_else(|| export_name.to_string());
+    // A re-export (`export { x } from`) creates no local binding in this file,
+    // so don't scan it — only follow it to its consumers.
+    let is_reexport_target = matches!(
+        export.map(|export| &export.kind),
+        Some(ExportKind::ReExport { .. })
+    );
 
     let mut by_file: HashMap<PathBuf, HashSet<String>> = HashMap::new();
-    by_file.insert(abs_file.to_path_buf(), HashSet::from([local]));
+    if !is_reexport_target {
+        by_file.insert(abs_file.to_path_buf(), HashSet::from([local]));
+    }
     let mut visited: HashSet<(PathBuf, String)> = HashSet::new();
     let mut worklist = vec![(abs_file.to_path_buf(), lookup)];
 

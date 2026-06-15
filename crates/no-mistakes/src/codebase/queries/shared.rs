@@ -26,9 +26,9 @@ pub(crate) fn resolve_target(
     ));
     let tsconfig = resolve_tsconfig(tsconfig, &root)?;
     let abs_file = resolve_input_file(file, &root, &cwd);
-    // Reject a missing target up front so a typo or stale path is an explicit
-    // error rather than an empty (and misleading) result.
-    anyhow::ensure!(abs_file.exists(), "file not found: {}", file.display());
+    // Reject a missing target or a directory up front so a typo or stale path
+    // is an explicit error rather than an empty (and misleading) result.
+    anyhow::ensure!(abs_file.is_file(), "not a file: {}", file.display());
     Ok(Target {
         root,
         tsconfig,

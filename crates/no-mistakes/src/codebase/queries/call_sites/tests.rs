@@ -116,6 +116,21 @@ fn follows_named_and_star_barrels_without_scanning_them() {
 }
 
 #[test]
+fn barrel_target_is_not_self_scanned() {
+    // Querying the barrel's re-exported `used` must follow to consumers, not
+    // scan the barrel's own unrelated local `used()` call.
+    let report = compute(&args(
+        fixture_root("queries-reexport"),
+        "named-barrel.ts",
+        "used",
+    ))
+    .unwrap();
+    let files: Vec<&str> = report.call_sites.iter().map(|s| s.file.as_str()).collect();
+    assert!(files.contains(&"named-consumer.ts"));
+    assert!(!files.contains(&"named-barrel.ts"));
+}
+
+#[test]
 fn unknown_export_is_rejected() {
     let error = compute(&args(fixture_root("queries"), "util.ts", "nope"))
         .err()

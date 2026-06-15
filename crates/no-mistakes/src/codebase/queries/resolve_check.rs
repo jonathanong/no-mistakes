@@ -4,7 +4,7 @@ use crate::cli::Format;
 use crate::codebase::dependencies::extract::{
     is_tsx_file, ExtractedImport, ImportExtractor, ImportKind,
 };
-use crate::codebase::ts_resolver::{resolve_import, ImportResolver};
+use crate::codebase::ts_resolver::ImportResolver;
 use anyhow::{Context, Result};
 use is_terminal::IsTerminal;
 use serde::Serialize;
@@ -86,9 +86,19 @@ fn kind_str(kind: ImportKind) -> &'static str {
     }
 }
 
-/// Classify one import specifier against the resolver and tsconfig aliases.
-fn classify(imp: &ExtractedImport, abs_file: &Path, target: &super::shared::Target) -> ImportRow {
-    let resolved = resolve_import(&imp.specifier, abs_file, &target.tsconfig);
+/// Classify one import specifier against a shared resolver and tsconfig aliases.
+fn classify(
+    imp: &ExtractedImport,
+    abs_file: &Path,
+    target: &super::shared::Target,
+    resolver: &ImportResolver,
+) -> ImportRow {
+    // Fall back to a `.d.ts` candidate so a type import of a declaration-only
+    // module (`import type { Foo } from './types'` → `types.d.ts`) resolves
+    // rather than reading as a broken relative import.
+    let resolved = resolver
+        .resolve(&imp.specifier, abs_file)
+        .or_else(|| resolver.resolve(&format!("{}.d.ts", imp.specifier), abs_file));
     let status = if resolved.is_some() {
         Status::Resolved
     } else if imp.specifier.starts_with('.')
@@ -115,10 +125,11 @@ fn compute(args: &ResolveCheckArgs) -> Result<ResolveCheckReport> {
     } else {
         ImportExtractor::for_typescript()?
     };
+    let resolver = ImportResolver::new(&target.tsconfig).without_cache();
     let imports: Vec<ImportRow> = extractor
         .extract(&source)?
         .iter()
-        .map(|imp| classify(imp, &target.abs_file, &target))
+        .map(|imp| classify(imp, &target.abs_file, &target, &resolver))
         .collect();
 
     let unresolved: Vec<String> = imports

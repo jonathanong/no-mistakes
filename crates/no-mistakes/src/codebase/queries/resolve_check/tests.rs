@@ -81,6 +81,21 @@ fn tags_every_import_kind_and_absolute_path() {
 }
 
 #[test]
+fn type_import_of_declaration_module_resolves() {
+    let root = named_fixture("queries-kinds");
+    let report = compute(&ResolveCheckArgs {
+        file: PathBuf::from("dts-user.ts"),
+        root: Some(root),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(report.all_resolve);
+    assert_eq!(report.imports[0].resolved.as_deref(), Some("types.d.ts"));
+}
+
+#[test]
 fn tsx_file_parses() {
     let root = named_fixture("queries-kinds");
     let report = compute(&ResolveCheckArgs {
