@@ -12,13 +12,12 @@ impl InfraReport {
     /// test convention.
     pub fn test_for(&self, tf_file: &str) -> Vec<TestForRow> {
         let abs = normalize_path(&self.root.join(tf_file));
-        let module_dir = self
-            .facts
-            .files
-            .get(&abs)
-            .map(|file| file.module_dir.clone())
-            .or_else(|| abs.parent().map(Path::to_path_buf))
-            .unwrap_or_else(|| self.root.clone());
+        // Only a parsed, configured Terraform file has a module to cover; an
+        // unknown or mistyped path must not fall back to every module test.
+        let Some(file_facts) = self.facts.files.get(&abs) else {
+            return Vec::new();
+        };
+        let module_dir = file_facts.module_dir.clone();
         let anchor = match &self.test.test_root {
             Some(test_root) => normalize_path(&self.root.join(test_root)),
             None => module_dir,
