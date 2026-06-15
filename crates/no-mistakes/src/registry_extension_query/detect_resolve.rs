@@ -83,8 +83,10 @@ struct ImportExprFinder {
 
 impl<'a> Visit<'a> for ImportExprFinder {
     fn visit_import_expression(&mut self, import: &ImportExpression<'a>) {
-        if let Expression::StringLiteral(literal) = &import.source {
-            self.specifier = Some(literal.value.as_str().to_string());
+        if self.specifier.is_none() {
+            if let Expression::StringLiteral(literal) = &import.source {
+                self.specifier = Some(literal.value.as_str().to_string());
+            }
         }
         walk::walk_import_expression(self, import);
     }
