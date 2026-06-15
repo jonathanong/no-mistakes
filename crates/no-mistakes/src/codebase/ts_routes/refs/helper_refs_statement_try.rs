@@ -1,5 +1,5 @@
 fn collect_helper_refs_from_try_statement<'a>(
-    try_stmt: &'a oxc::ast::ast::TryStatement<'a>,
+    try_stmt: &'a oxc_ast::ast::TryStatement<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,

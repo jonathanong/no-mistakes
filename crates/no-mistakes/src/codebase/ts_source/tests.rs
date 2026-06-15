@@ -4,10 +4,10 @@ use super::{
     normalize_discovery_path, relative_slash_path, starts_with_use_client,
     static_property_key_name, unwrap_ts_wrappers, walk_files,
 };
-use oxc::allocator::Allocator;
-use oxc::ast::ast::{Expression, ObjectPropertyKind, Statement};
-use oxc::parser::Parser;
-use oxc::span::SourceType;
+use oxc_allocator::Allocator;
+use oxc_ast::ast::{Expression, ObjectPropertyKind, Statement};
+use oxc_parser::Parser;
+use oxc_span::SourceType;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::TempDir;

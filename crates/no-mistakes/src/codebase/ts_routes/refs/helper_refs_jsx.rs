@@ -48,7 +48,7 @@ fn collect_helper_refs_from_jsx_element<'a>(
 }
 
 fn collect_helper_refs_from_jsx_attribute<'a>(
-    attr: &'a oxc::ast::ast::JSXAttribute<'a>,
+    attr: &'a oxc_ast::ast::JSXAttribute<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,
@@ -90,7 +90,7 @@ fn collect_helper_refs_from_jsx_attribute<'a>(
 }
 
 fn collect_helper_refs_from_jsx_spread_attribute<'a>(
-    spread: &'a oxc::ast::ast::JSXSpreadAttribute<'a>,
+    spread: &'a oxc_ast::ast::JSXSpreadAttribute<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,

@@ -20,8 +20,8 @@ pub fn program_contains_jsx(program: &Program) -> bool {
 /// expressions (`<foo.bar>`, `<ns:foo>`).
 pub fn jsx_identifier_name<'a>(opening: &'a JSXOpeningElement) -> Option<&'a str> {
     match &opening.name {
-        oxc::ast::ast::JSXElementName::Identifier(id) => Some(id.name.as_str()),
-        oxc::ast::ast::JSXElementName::IdentifierReference(id) => Some(id.name.as_str()),
+        oxc_ast::ast::JSXElementName::Identifier(id) => Some(id.name.as_str()),
+        oxc_ast::ast::JSXElementName::IdentifierReference(id) => Some(id.name.as_str()),
         _ => None,
     }
 }
@@ -39,7 +39,7 @@ pub fn find_string_attr<'a>(
             continue;
         };
         let attr_name = match &attr.name {
-            oxc::ast::ast::JSXAttributeName::Identifier(id) => id.name.as_str(),
+            oxc_ast::ast::JSXAttributeName::Identifier(id) => id.name.as_str(),
             _ => continue,
         };
         if attr_name != name {

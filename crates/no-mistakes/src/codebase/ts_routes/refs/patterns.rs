@@ -8,7 +8,7 @@ fn extract_pattern_from_jsx_expression(jsx_expr: &JSXExpression) -> Option<Strin
 }
 
 fn check_call_for_route_ref(
-    call: &oxc::ast::ast::CallExpression,
+    call: &oxc_ast::ast::CallExpression,
     source: &str,
     file: &str,
     router_bindings: &RouterBindings<'_>,
@@ -78,7 +78,7 @@ fn check_call_for_route_ref(
     }
 }
 
-fn first_arg_pattern(arguments: &oxc::allocator::Vec<Argument>) -> Option<String> {
+fn first_arg_pattern(arguments: &oxc_allocator::Vec<Argument>) -> Option<String> {
     let first = arguments.first()?;
     match first {
         Argument::StringLiteral(s) => Some(s.value.as_str().to_string()),
@@ -105,7 +105,7 @@ fn extract_pattern_from_expression(expr: &Expression) -> Option<String> {
     }
 }
 
-fn object_pathname(obj: &oxc::ast::ast::ObjectExpression) -> Option<String> {
+fn object_pathname(obj: &oxc_ast::ast::ObjectExpression) -> Option<String> {
     for prop in &obj.properties {
         let ObjectPropertyKind::ObjectProperty(prop) = prop else {
             continue;

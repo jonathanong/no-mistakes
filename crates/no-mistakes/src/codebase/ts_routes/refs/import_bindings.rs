@@ -23,7 +23,7 @@ fn collect_import_bindings<'a>(stmts: &'a [Statement<'a>]) -> RouterBindings<'a>
     bindings
 }
 
-fn mark_shadowed_fetch_import(import: &oxc::ast::ast::ImportDeclaration<'_>, bindings: &mut RouterBindings<'_>) {
+fn mark_shadowed_fetch_import(import: &oxc_ast::ast::ImportDeclaration<'_>, bindings: &mut RouterBindings<'_>) {
     let Some(specifiers) = &import.specifiers else {
         return;
     };
@@ -78,13 +78,13 @@ fn register_router_bindings_from_statement<'a>(
             collect_for_statement_left_var_bindings(&for_stmt.left, bindings);
         }
         Statement::ExportNamedDeclaration(export) => match export.declaration.as_ref() {
-            Some(oxc::ast::ast::Declaration::VariableDeclaration(var_decl)) => {
+            Some(oxc_ast::ast::Declaration::VariableDeclaration(var_decl)) => {
                 collect_router_bindings_from_var_decl(var_decl, bindings);
             }
-            Some(oxc::ast::ast::Declaration::FunctionDeclaration(func)) => {
+            Some(oxc_ast::ast::Declaration::FunctionDeclaration(func)) => {
                 remove_shadowed_function_binding(func, bindings);
             }
-            Some(oxc::ast::ast::Declaration::ClassDeclaration(class)) => {
+            Some(oxc_ast::ast::Declaration::ClassDeclaration(class)) => {
                 remove_shadowed_class_binding(class, bindings);
             }
             _ => {}
@@ -109,13 +109,13 @@ fn collect_scope_router_bindings<'a>(
                 remove_shadowed_class_binding(class, bindings);
             }
             Statement::ExportNamedDeclaration(export) => match export.declaration.as_ref() {
-                Some(oxc::ast::ast::Declaration::VariableDeclaration(var_decl)) => {
+                Some(oxc_ast::ast::Declaration::VariableDeclaration(var_decl)) => {
                     collect_router_bindings_from_var_decl(var_decl, bindings);
                 }
-                Some(oxc::ast::ast::Declaration::FunctionDeclaration(func)) => {
+                Some(oxc_ast::ast::Declaration::FunctionDeclaration(func)) => {
                     remove_shadowed_function_binding(func, bindings);
                 }
-                Some(oxc::ast::ast::Declaration::ClassDeclaration(class)) => {
+                Some(oxc_ast::ast::Declaration::ClassDeclaration(class)) => {
                     remove_shadowed_class_binding(class, bindings);
                 }
                 _ => {}

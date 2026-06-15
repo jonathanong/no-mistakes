@@ -16,15 +16,15 @@ fn register_helper_bindings_from_statement(
             remove_shadowed_helper_class_binding(class, bindings);
         }
         Statement::ExportNamedDeclaration(export) => match export.declaration.as_ref() {
-            Some(oxc::ast::ast::Declaration::VariableDeclaration(var_decl)) => {
+            Some(oxc_ast::ast::Declaration::VariableDeclaration(var_decl)) => {
                 remove_shadowed_helper_var_bindings(var_decl, bindings, local_helpers);
             }
-            Some(oxc::ast::ast::Declaration::FunctionDeclaration(func))
+            Some(oxc_ast::ast::Declaration::FunctionDeclaration(func))
                 if !function_declaration_is_route_helper(func, local_helpers) =>
             {
                 remove_shadowed_helper_function_binding(func, bindings, local_helpers);
             }
-            Some(oxc::ast::ast::Declaration::ClassDeclaration(class)) => {
+            Some(oxc_ast::ast::Declaration::ClassDeclaration(class)) => {
                 remove_shadowed_helper_class_binding(class, bindings);
             }
             _ => {}
@@ -34,7 +34,7 @@ fn register_helper_bindings_from_statement(
 }
 
 fn function_declaration_is_route_helper(
-    func: &oxc::ast::ast::Function<'_>,
+    func: &oxc_ast::ast::Function<'_>,
     local_helpers: &HashSet<String>,
 ) -> bool {
     func.id

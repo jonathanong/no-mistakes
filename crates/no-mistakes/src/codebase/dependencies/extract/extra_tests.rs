@@ -187,7 +187,7 @@ fn collector_defensive_scope_helpers_are_noops_without_active_scope() {
         .body
         .iter()
         .find_map(|statement| match statement {
-            oxc::ast::ast::Statement::FunctionDeclaration(function) => {
+            oxc_ast::ast::Statement::FunctionDeclaration(function) => {
                 function.type_parameters.as_deref()
             }
             _ => None,
@@ -198,7 +198,7 @@ fn collector_defensive_scope_helpers_are_noops_without_active_scope() {
         .body
         .iter()
         .find_map(|statement| match statement {
-            oxc::ast::ast::Statement::VariableDeclaration(declaration) => declaration
+            oxc_ast::ast::Statement::VariableDeclaration(declaration) => declaration
                 .declarations
                 .first()
                 .map(|declarator| &declarator.id),

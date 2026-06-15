@@ -1,5 +1,5 @@
 fn evaluate_helper_switch_statement<'a>(
-    switch_stmt: &'a oxc::ast::ast::SwitchStatement<'a>,
+    switch_stmt: &'a oxc_ast::ast::SwitchStatement<'a>,
     defs: &HashMap<&'a str, HelperDef<'a>>,
     imported_helpers: &RouteHelperBindings,
     env: &mut HashMap<String, Vec<String>>,

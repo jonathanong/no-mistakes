@@ -18,14 +18,14 @@ fn scan_stmt(
         Statement::ExportNamedDeclaration(e) => {
             if let Some(decl) = &e.declaration {
                 match decl {
-                    oxc::ast::ast::Declaration::VariableDeclaration(v) => {
+                    oxc_ast::ast::Declaration::VariableDeclaration(v) => {
                         for d in &v.declarations {
                             if let Some(init) = &d.init {
                                 scan_expr(init, source, namespace_imports, usage);
                             }
                         }
                     }
-                    oxc::ast::ast::Declaration::FunctionDeclaration(f) => {
+                    oxc_ast::ast::Declaration::FunctionDeclaration(f) => {
                         scan_function_body(f.body.as_deref(), source, namespace_imports, usage);
                     }
                     _ => {}

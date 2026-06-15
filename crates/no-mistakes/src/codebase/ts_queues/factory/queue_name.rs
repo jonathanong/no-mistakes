@@ -4,7 +4,7 @@ fn collect_const_string_bindings(stmts: &[Statement]) -> HashMap<String, String>
         let var_decl = match stmt {
             Statement::VariableDeclaration(v) => v,
             Statement::ExportNamedDeclaration(e) => {
-                if let Some(oxc::ast::ast::Declaration::VariableDeclaration(v)) = &e.declaration {
+                if let Some(oxc_ast::ast::Declaration::VariableDeclaration(v)) = &e.declaration {
                     v
                 } else {
                     continue;
@@ -12,12 +12,12 @@ fn collect_const_string_bindings(stmts: &[Statement]) -> HashMap<String, String>
             }
             _ => continue,
         };
-        if var_decl.kind != oxc::ast::ast::VariableDeclarationKind::Const {
+        if var_decl.kind != oxc_ast::ast::VariableDeclarationKind::Const {
             continue;
         }
         for decl in &var_decl.declarations {
             let name = match &decl.id {
-                oxc::ast::ast::BindingPattern::BindingIdentifier(id) => {
+                oxc_ast::ast::BindingPattern::BindingIdentifier(id) => {
                     id.name.as_str().to_string()
                 }
                 _ => continue,
@@ -113,7 +113,7 @@ fn find_queue_name_in_stmt(
             None
         }
         Statement::ExportNamedDeclaration(e) => {
-            if let Some(oxc::ast::ast::Declaration::VariableDeclaration(v)) = &e.declaration {
+            if let Some(oxc_ast::ast::Declaration::VariableDeclaration(v)) = &e.declaration {
                 for d in &v.declarations {
                     if let Some(init) = &d.init {
                         if let Some(name) = find_queue_name_in_expr(
@@ -150,10 +150,10 @@ fn find_queue_name_in_expr(
             if let Some((src, imported)) = bindings.get(callee_name) {
                 if src == factory_specifier && imported == factory_function {
                     let resolved = match call_expr.arguments.first() {
-                        Some(oxc::ast::ast::Argument::StringLiteral(s)) => {
+                        Some(oxc_ast::ast::Argument::StringLiteral(s)) => {
                             s.value.as_str().to_string()
                         }
-                        Some(oxc::ast::ast::Argument::Identifier(id)) => const_strings
+                        Some(oxc_ast::ast::Argument::Identifier(id)) => const_strings
                             .get(id.name.as_str())
                             .cloned()
                             .unwrap_or_else(|| "<unknown>".to_string()),

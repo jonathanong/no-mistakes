@@ -1,11 +1,11 @@
 fn register_helper_assignment_alias(
-    assignment: &oxc::ast::ast::AssignmentExpression<'_>,
+    assignment: &oxc_ast::ast::AssignmentExpression<'_>,
     bindings: &mut RouteHelperBindings,
 ) {
-    if assignment.operator != oxc::ast::ast::AssignmentOperator::Assign {
+    if assignment.operator != oxc_ast::ast::AssignmentOperator::Assign {
         return;
     }
-    let oxc::ast::ast::AssignmentTarget::AssignmentTargetIdentifier(ident) = &assignment.left else {
+    let oxc_ast::ast::AssignmentTarget::AssignmentTargetIdentifier(ident) = &assignment.left else {
         return;
     };
     let target = helper_alias_target(&assignment.right, bindings);

@@ -1,11 +1,11 @@
 use crate::codebase::ts_source::{byte_offset_to_line, is_skipped_dir};
-use oxc::allocator::Allocator;
-use oxc::ast::ast::{
+use oxc_allocator::Allocator;
+use oxc_ast::ast::{
     Argument, BindingPattern, Expression, ForStatementInit, ForStatementLeft, Program, Statement,
     TemplateLiteral, VariableDeclarationKind,
 };
-use oxc::parser::Parser;
-use oxc::span::SourceType;
+use oxc_parser::Parser;
+use oxc_span::SourceType;
 use std::path::PathBuf;
 
 include!("types.rs");

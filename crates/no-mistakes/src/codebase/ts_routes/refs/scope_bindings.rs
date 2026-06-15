@@ -91,7 +91,7 @@ fn collect_for_statement_left_var_bindings<'a>(
 }
 
 fn collect_router_bindings_from_var_decl<'a>(
-    var_decl: &'a oxc::ast::ast::VariableDeclaration<'a>,
+    var_decl: &'a oxc_ast::ast::VariableDeclaration<'a>,
     bindings: &mut RouterBindings<'a>,
 ) {
     for decl in &var_decl.declarations {

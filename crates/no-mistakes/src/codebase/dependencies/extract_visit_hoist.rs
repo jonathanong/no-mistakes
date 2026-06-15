@@ -1,6 +1,6 @@
 fn predeclare_function_body<'a>(
     collector: &mut ImportCollector,
-    function: &oxc::ast::ast::Function<'a>,
+    function: &oxc_ast::ast::Function<'a>,
 ) {
     if let Some(body) = &function.body {
         predeclare_function_declarations(collector, &body.statements);

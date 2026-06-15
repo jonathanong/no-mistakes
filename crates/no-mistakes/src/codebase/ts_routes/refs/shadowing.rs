@@ -16,7 +16,7 @@ fn remove_shadowed_name(name: &str, bindings: &mut RouterBindings<'_>) {
 }
 
 fn remove_shadowed_function_binding(
-    func: &oxc::ast::ast::Function,
+    func: &oxc_ast::ast::Function,
     bindings: &mut RouterBindings<'_>,
 ) {
     if let Some(id) = &func.id {
@@ -24,7 +24,7 @@ fn remove_shadowed_function_binding(
     }
 }
 
-fn remove_shadowed_class_binding(class: &oxc::ast::ast::Class, bindings: &mut RouterBindings<'_>) {
+fn remove_shadowed_class_binding(class: &oxc_ast::ast::Class, bindings: &mut RouterBindings<'_>) {
     if let Some(id) = &class.id {
         remove_shadowed_name(id.name.as_str(), bindings);
     }
@@ -58,7 +58,7 @@ fn remove_shadowed_binding(pattern: &BindingPattern, bindings: &mut RouterBindin
 }
 
 fn remove_shadowed_parameters(
-    params: &oxc::ast::ast::FormalParameters,
+    params: &oxc_ast::ast::FormalParameters,
     bindings: &mut RouterBindings<'_>,
 ) {
     for param in &params.items {

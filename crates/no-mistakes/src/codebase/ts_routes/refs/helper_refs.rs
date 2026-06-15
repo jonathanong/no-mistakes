@@ -126,11 +126,11 @@ fn collect_route_helper_imports<'a>(program: &'a Program<'a>) -> Vec<RouteHelper
 }
 
 fn default_export_alias_name<'a>(
-    declaration: &'a oxc::ast::ast::ExportDefaultDeclarationKind<'a>,
+    declaration: &'a oxc_ast::ast::ExportDefaultDeclarationKind<'a>,
 ) -> Option<&'a str> {
     match declaration {
-        oxc::ast::ast::ExportDefaultDeclarationKind::Identifier(id) => Some(id.name.as_str()),
-        oxc::ast::ast::ExportDefaultDeclarationKind::ParenthesizedExpression(parenthesized) => {
+        oxc_ast::ast::ExportDefaultDeclarationKind::Identifier(id) => Some(id.name.as_str()),
+        oxc_ast::ast::ExportDefaultDeclarationKind::ParenthesizedExpression(parenthesized) => {
             default_export_expression_alias_name(&parenthesized.expression)
         }
         other => other

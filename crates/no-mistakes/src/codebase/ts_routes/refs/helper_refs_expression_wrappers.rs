@@ -1,5 +1,5 @@
 fn collect_helper_refs_from_conditional_expression<'a>(
-    cond: &'a oxc::ast::ast::ConditionalExpression<'a>,
+    cond: &'a oxc_ast::ast::ConditionalExpression<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,
@@ -37,7 +37,7 @@ fn collect_helper_refs_from_conditional_expression<'a>(
 }
 
 fn collect_helper_refs_from_logical_expression<'a>(
-    logical: &'a oxc::ast::ast::LogicalExpression<'a>,
+    logical: &'a oxc_ast::ast::LogicalExpression<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,

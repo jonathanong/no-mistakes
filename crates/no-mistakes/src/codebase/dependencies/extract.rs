@@ -1,6 +1,6 @@
 use anyhow::Result;
-use oxc::allocator::Allocator;
-use oxc::ast::ast::{
+use oxc_allocator::Allocator;
+use oxc_ast::ast::{
     Argument, BindingPattern, BlockStatement, CallExpression, CatchClause, Class, ClassElement,
     ExportAllDeclaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind,
     ExportNamedDeclaration, ExportSpecifier, Expression, FormalParameters, IdentifierReference,
@@ -11,9 +11,9 @@ use oxc::ast::ast::{
     TSTypeParameterDeclaration, TSTypeReference, VariableDeclaration, VariableDeclarationKind,
     VariableDeclarator,
 };
-use oxc::ast_visit::{walk, Visit};
-use oxc::parser::Parser;
-use oxc::span::SourceType;
+use oxc_ast_visit::{walk, Visit};
+use oxc_parser::Parser;
+use oxc_span::SourceType;
 use std::collections::HashSet;
 use std::path::Path;
 

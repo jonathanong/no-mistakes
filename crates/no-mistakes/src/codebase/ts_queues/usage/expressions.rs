@@ -91,7 +91,7 @@ fn scan_expr(
             scan_expr(&a.argument, source, namespace_imports, usage);
         }
         Expression::ArrowFunctionExpression(arrow) => {
-            let oxc::ast::ast::FunctionBody { statements, .. } = arrow.body.as_ref();
+            let oxc_ast::ast::FunctionBody { statements, .. } = arrow.body.as_ref();
             for s in statements {
                 scan_stmt(s, source, namespace_imports, usage);
             }

@@ -64,7 +64,7 @@ fn collect_from_statement<'a>(
             }
         }
         Statement::ExportNamedDeclaration(export) => match export.declaration.as_ref() {
-            Some(oxc::ast::ast::Declaration::VariableDeclaration(var_decl)) => {
+            Some(oxc_ast::ast::Declaration::VariableDeclaration(var_decl)) => {
                 for init in var_decl
                     .declarations
                     .iter()
@@ -73,13 +73,13 @@ fn collect_from_statement<'a>(
                     collect_from_expression(init, source, file, router_bindings, refs);
                 }
             }
-            Some(oxc::ast::ast::Declaration::FunctionDeclaration(func)) => {
+            Some(oxc_ast::ast::Declaration::FunctionDeclaration(func)) => {
                 collect_from_function_body(func, source, file, router_bindings, refs);
             }
             _ => {}
         },
         Statement::ExportDefaultDeclaration(export) => match &export.declaration {
-            oxc::ast::ast::ExportDefaultDeclarationKind::FunctionDeclaration(func) => {
+            oxc_ast::ast::ExportDefaultDeclarationKind::FunctionDeclaration(func) => {
                 collect_from_function_body(func, source, file, router_bindings, refs);
             }
             other => {
@@ -93,7 +93,7 @@ fn collect_from_statement<'a>(
 }
 
 fn collect_from_function_body<'a>(
-    func: &'a oxc::ast::ast::Function<'a>,
+    func: &'a oxc_ast::ast::Function<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,

@@ -1,5 +1,5 @@
 fn collect_helper_refs_from_switch_statement<'a>(
-    switch_stmt: &'a oxc::ast::ast::SwitchStatement<'a>,
+    switch_stmt: &'a oxc_ast::ast::SwitchStatement<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,

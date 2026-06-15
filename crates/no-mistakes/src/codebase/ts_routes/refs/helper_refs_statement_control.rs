@@ -1,5 +1,5 @@
 fn collect_helper_refs_from_block_statement<'a>(
-    block: &'a oxc::ast::ast::BlockStatement<'a>,
+    block: &'a oxc_ast::ast::BlockStatement<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,
@@ -26,7 +26,7 @@ fn collect_helper_refs_from_block_statement<'a>(
 }
 
 fn collect_helper_refs_from_if_statement<'a>(
-    if_stmt: &'a oxc::ast::ast::IfStatement<'a>,
+    if_stmt: &'a oxc_ast::ast::IfStatement<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,
@@ -66,7 +66,7 @@ fn collect_helper_refs_from_if_statement<'a>(
 }
 
 fn collect_helper_refs_from_for_statement<'a>(
-    for_stmt: &'a oxc::ast::ast::ForStatement<'a>,
+    for_stmt: &'a oxc_ast::ast::ForStatement<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,
@@ -159,7 +159,7 @@ fn collect_helper_refs_from_loop_body<'a>(
 }
 
 fn collect_helper_refs_from_do_while_statement<'a>(
-    do_while_stmt: &'a oxc::ast::ast::DoWhileStatement<'a>,
+    do_while_stmt: &'a oxc_ast::ast::DoWhileStatement<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,

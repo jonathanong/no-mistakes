@@ -104,7 +104,7 @@ fn for_left_var_declaration_shadows_name(left: &ForStatementLeft, name: &str) ->
     )
 }
 
-fn function_name_shadows_name(func: &oxc::ast::ast::Function, name: &str) -> bool {
+fn function_name_shadows_name(func: &oxc_ast::ast::Function, name: &str) -> bool {
     func.id
         .as_ref()
         .map(|id| id.name.as_str() == name)
@@ -112,7 +112,7 @@ fn function_name_shadows_name(func: &oxc::ast::ast::Function, name: &str) -> boo
 }
 
 fn variable_declaration_shadows_name(
-    var_decl: &oxc::ast::ast::VariableDeclaration,
+    var_decl: &oxc_ast::ast::VariableDeclaration,
     name: &str,
 ) -> bool {
     var_decl
@@ -121,7 +121,7 @@ fn variable_declaration_shadows_name(
         .any(|decl| binding_pattern_contains_name(&decl.id, name))
 }
 
-fn params_shadow_name(params: &oxc::ast::ast::FormalParameters, name: &str) -> bool {
+fn params_shadow_name(params: &oxc_ast::ast::FormalParameters, name: &str) -> bool {
     params
         .items
         .iter()

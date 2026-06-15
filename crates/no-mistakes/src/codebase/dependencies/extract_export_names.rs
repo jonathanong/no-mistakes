@@ -10,7 +10,7 @@ struct DefaultExportIdentifierCollector {
 }
 
 impl<'a> Visit<'a> for DefaultExportIdentifierCollector {
-    fn visit_identifier_reference(&mut self, identifier: &oxc::ast::ast::IdentifierReference<'a>) {
+    fn visit_identifier_reference(&mut self, identifier: &oxc_ast::ast::IdentifierReference<'a>) {
         self.names.push(identifier.name.to_string());
     }
 
@@ -19,19 +19,19 @@ impl<'a> Visit<'a> for DefaultExportIdentifierCollector {
     // the outer value part of the default export.
     fn visit_function(
         &mut self,
-        _function: &oxc::ast::ast::Function<'a>,
+        _function: &oxc_ast::ast::Function<'a>,
         _flags: oxc_syntax::scope::ScopeFlags,
     ) {
     }
 
     fn visit_arrow_function_expression(
         &mut self,
-        _arrow: &oxc::ast::ast::ArrowFunctionExpression<'a>,
+        _arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
     ) {
     }
 
     // Type-position identifiers (e.g. `{} as Lazy`) are not runtime value uses.
-    fn visit_ts_type(&mut self, _ty: &oxc::ast::ast::TSType<'a>) {}
+    fn visit_ts_type(&mut self, _ty: &oxc_ast::ast::TSType<'a>) {}
 }
 
 /// Identifier names referenced by a `export default <expr>` alias/wrapper, if any.

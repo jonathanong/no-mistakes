@@ -1,5 +1,5 @@
 use ignore::WalkBuilder;
-use oxc::ast::ast::{Expression, PropertyKey};
+use oxc_ast::ast::{Expression, PropertyKey};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;

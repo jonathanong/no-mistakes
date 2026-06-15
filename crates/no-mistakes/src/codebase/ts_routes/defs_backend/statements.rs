@@ -58,7 +58,7 @@ fn collect_from_statement(
         Statement::ExportNamedDeclaration(export) => {
             if let Some(decl) = &export.declaration {
                 match decl {
-                    oxc::ast::ast::Declaration::VariableDeclaration(var_decl) => {
+                    oxc_ast::ast::Declaration::VariableDeclaration(var_decl) => {
                         let register_object_in_scope = register_object_in_scope
                             && !var_decl.declarations.iter().any(|decl| {
                                 binding_pattern_contains_name(&decl.id, register_object)
@@ -75,7 +75,7 @@ fn collect_from_statement(
                             }
                         }
                     }
-                    oxc::ast::ast::Declaration::FunctionDeclaration(func) => {
+                    oxc_ast::ast::Declaration::FunctionDeclaration(func) => {
                         collect_from_function_body(
                             func,
                             source,
@@ -93,7 +93,7 @@ fn collect_from_statement(
 }
 
 fn collect_from_function_body(
-    func: &oxc::ast::ast::Function,
+    func: &oxc_ast::ast::Function,
     source: &str,
     register_object: &str,
     register_object_in_scope: bool,

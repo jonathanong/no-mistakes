@@ -42,7 +42,7 @@ fn visit_binding_defaults_for_name<'a>(
     }
 }
 
-fn function_name(function: &oxc::ast::ast::Function<'_>) -> Option<String> {
+fn function_name(function: &oxc_ast::ast::Function<'_>) -> Option<String> {
     let id = function.id.as_ref()?;
     Some(id.name.to_string())
 }

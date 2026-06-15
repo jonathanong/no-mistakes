@@ -1,13 +1,13 @@
 use crate::codebase::ts_source::byte_offset_to_line;
 use anyhow::{bail, Result};
-use oxc::allocator::Allocator;
-use oxc::ast::ast::{
+use oxc_allocator::Allocator;
+use oxc_ast::ast::{
     BindingPattern, Declaration, ExportAllDeclaration, ExportDefaultDeclaration,
     ExportDefaultDeclarationKind, ExportNamedDeclaration, ImportDeclaration,
     ImportDeclarationSpecifier, Program, Statement, VariableDeclarationKind,
 };
-use oxc::parser::Parser;
-use oxc::span::SourceType;
+use oxc_parser::Parser;
+use oxc_span::SourceType;
 use std::collections::HashSet;
 include!("ts_symbols/types.rs");
 include!("ts_symbols/imports.rs");

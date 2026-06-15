@@ -4,7 +4,7 @@
 //! Each helper walks the program once via a `Visitor` trait. Rules implement
 //! the hooks they care about and leave the rest as no-ops.
 
-use oxc::ast::ast::{
+use oxc_ast::ast::{
     Argument, ArrayExpressionElement, ChainExpression, ClassBody, ClassElement, Declaration,
     ExportDefaultDeclarationKind, Expression, ForStatement, ForStatementInit, FunctionBody,
     ImportDeclaration, JSXAttributeItem, JSXAttributeValue, JSXChild, JSXElement, JSXExpression,

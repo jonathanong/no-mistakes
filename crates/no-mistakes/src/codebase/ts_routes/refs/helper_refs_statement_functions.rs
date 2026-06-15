@@ -1,5 +1,5 @@
 fn collect_helper_refs_from_function_body<'a>(
-    func: &'a oxc::ast::ast::Function<'a>,
+    func: &'a oxc_ast::ast::Function<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,

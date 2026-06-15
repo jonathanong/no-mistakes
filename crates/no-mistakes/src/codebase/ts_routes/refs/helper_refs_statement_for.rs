@@ -1,5 +1,5 @@
 fn collect_helper_refs_from_for_init<'a>(
-    for_stmt: &'a oxc::ast::ast::ForStatement<'a>,
+    for_stmt: &'a oxc_ast::ast::ForStatement<'a>,
     source: &str,
     file: &str,
     router_bindings: &mut RouterBindings<'a>,
