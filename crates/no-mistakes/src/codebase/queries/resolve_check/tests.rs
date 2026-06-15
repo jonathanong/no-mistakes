@@ -96,6 +96,22 @@ fn type_import_of_declaration_module_resolves() {
 }
 
 #[test]
+fn value_import_of_declaration_module_is_unresolved() {
+    // A non-type import of a `.d.ts`-only module needs an emitted runtime module.
+    let root = named_fixture("queries-kinds");
+    let report = compute(&ResolveCheckArgs {
+        file: PathBuf::from("dts-value-user.ts"),
+        root: Some(root),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(!report.all_resolve);
+    assert_eq!(report.unresolved, vec!["./types".to_string()]);
+}
+
+#[test]
 fn tsx_file_parses() {
     let root = named_fixture("queries-kinds");
     let report = compute(&ResolveCheckArgs {

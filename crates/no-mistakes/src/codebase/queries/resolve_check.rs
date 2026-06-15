@@ -93,12 +93,15 @@ fn classify(
     target: &super::shared::Target,
     resolver: &ImportResolver,
 ) -> ImportRow {
-    // Fall back to a `.d.ts` candidate so a type import of a declaration-only
-    // module (`import type { Foo } from './types'` → `types.d.ts`) resolves
-    // rather than reading as a broken relative import.
-    let resolved = resolver
-        .resolve(&imp.specifier, abs_file)
-        .or_else(|| resolver.resolve(&format!("{}.d.ts", imp.specifier), abs_file));
+    // Fall back to a `.d.ts` candidate so a *type-only* import of a
+    // declaration-only module (`import type { Foo } from './types'` →
+    // `types.d.ts`) resolves. A value import still needs an emitted module, so
+    // the fallback is gated on the import being type-only.
+    let resolved = resolver.resolve(&imp.specifier, abs_file).or_else(|| {
+        (imp.kind == ImportKind::Type)
+            .then(|| resolver.resolve(&format!("{}.d.ts", imp.specifier), abs_file))
+            .flatten()
+    });
     let status = if resolved.is_some() {
         Status::Resolved
     } else if imp.specifier.starts_with('.')
