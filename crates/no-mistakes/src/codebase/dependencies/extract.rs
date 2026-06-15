@@ -105,7 +105,7 @@ pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFac
         .extend(later_named_value_exports(program, &local_type_names));
     collector
         .exported_functions
-        .extend(later_default_export_value_name(program));
+        .extend(later_default_export_value_names(program));
     collector
         .later_exported_type_names
         .extend(later_named_type_exports(program, &local_type_names));

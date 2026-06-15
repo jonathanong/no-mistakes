@@ -2,22 +2,44 @@
 // the AST visit, so references declared before their `export` statement are
 // still treated as exported. Included into `extract.rs`.
 
-/// The identifier name of a `export default <ident>` alias, if any. Seeding it as
-/// an exported binding lets `const Foo = dynamic(() => import('./Foo')); export
-/// default Foo;` treat the dynamic import as reachable even though the binding is
-/// declared before the default export statement.
-fn later_default_export_value_name<'a>(program: &Program<'a>) -> Option<String> {
-    program.body.iter().find_map(|statement| {
-        let Statement::ExportDefaultDeclaration(export) = statement else {
-            return None;
-        };
-        match &export.declaration {
-            ExportDefaultDeclarationKind::Identifier(identifier) => {
-                Some(identifier.name.to_string())
-            }
-            _ => None,
-        }
-    })
+/// Collects identifier references inside a default-export expression so they can
+/// be pre-seeded as exported bindings.
+#[derive(Default)]
+struct DefaultExportIdentifierCollector {
+    names: Vec<String>,
+}
+
+impl<'a> Visit<'a> for DefaultExportIdentifierCollector {
+    fn visit_identifier_reference(&mut self, identifier: &oxc::ast::ast::IdentifierReference<'a>) {
+        self.names.push(identifier.name.to_string());
+    }
+}
+
+/// Identifier names referenced by a `export default <expr>` alias/wrapper, if any.
+/// Seeding them as exported bindings lets a lazy binding declared before the
+/// default export — `const Foo = dynamic(() => import('./Foo')); export default
+/// Foo;` or `export default memo(Foo);` — keep its dynamic import reachable even
+/// though the binding is visited first. Function/class/arrow defaults create
+/// their own scope and are handled by the visitor, so they are skipped here.
+fn later_default_export_value_names<'a>(program: &Program<'a>) -> Vec<String> {
+    let Some(export) = program.body.iter().find_map(|statement| match statement {
+        Statement::ExportDefaultDeclaration(export) => Some(export),
+        _ => None,
+    }) else {
+        return Vec::new();
+    };
+    if matches!(
+        export.declaration,
+        ExportDefaultDeclarationKind::FunctionDeclaration(_)
+            | ExportDefaultDeclarationKind::ClassDeclaration(_)
+            | ExportDefaultDeclarationKind::ArrowFunctionExpression(_)
+            | ExportDefaultDeclarationKind::FunctionExpression(_)
+    ) {
+        return Vec::new();
+    }
+    let mut collector = DefaultExportIdentifierCollector::default();
+    collector.visit_export_default_declaration(export);
+    collector.names
 }
 
 fn later_named_value_exports<'a>(
