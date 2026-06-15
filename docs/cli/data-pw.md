@@ -23,6 +23,10 @@ JSX attributes (`<div data-pw="x">`) and CSS attribute selectors
 Implicit references such as `getByTestId('x')`, which do not spell out
 `attribute="value"`, are intentionally **not** matched.
 
+When neither `selectorRoots` nor `--scan` is configured, source scanning covers
+the whole repository (so no usage is missed); narrow it with `selectorRoots` or
+`--scan` when you only care about a subtree.
+
 Key options: `--attribute` (repeatable), `--scan` (repeatable),
 `--include` (comma-separated subset of `source,test`), `--config`, `--format`,
 and `--json`.

@@ -47,6 +47,13 @@ fn reports_server_callers_and_prunes_client_boundary() {
 }
 
 #[test]
+fn depth_zero_reports_no_callers() {
+    // `--depth 0` is a hard limit: not even direct importers are reported.
+    let report = run_button(Some(0));
+    assert!(report.callers.is_empty());
+}
+
+#[test]
 fn depth_limit_excludes_transitive_page() {
     let report = run_button(Some(1));
     let files: Vec<&str> = report.callers.iter().map(|c| c.file.as_str()).collect();

@@ -147,6 +147,10 @@ pub fn run(
                 .entry(path.to_path_buf())
                 .or_insert_with(|| detect_environment(path));
             let importer_depth = node_depth + 1;
+            // `--depth` is a hard result limit: a caller beyond it is not reported.
+            if depth.is_some_and(|max| importer_depth > max) {
+                continue;
+            }
             if environment == Environment::Client {
                 // Client boundary: not a server caller, and the RSC chain stops.
                 continue;
