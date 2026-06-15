@@ -96,6 +96,25 @@ fn type_import_of_declaration_module_resolves() {
 }
 
 #[test]
+fn type_import_of_declaration_index_resolves() {
+    // `./decl` resolves to `decl/index.d.ts`.
+    let root = named_fixture("queries-kinds");
+    let report = compute(&ResolveCheckArgs {
+        file: PathBuf::from("decl-user.ts"),
+        root: Some(root),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(report.all_resolve);
+    assert_eq!(
+        report.imports[0].resolved.as_deref(),
+        Some("decl/index.d.ts")
+    );
+}
+
+#[test]
 fn value_import_of_declaration_module_is_unresolved() {
     // A non-type import of a `.d.ts`-only module needs an emitted runtime module.
     let root = named_fixture("queries-kinds");

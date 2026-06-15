@@ -86,6 +86,32 @@ fn kind_str(kind: ImportKind) -> &'static str {
     }
 }
 
+/// Declaration-file suffixes tried for a type-only import, in TypeScript's
+/// preference order (direct file, then directory index).
+const DECLARATION_SUFFIXES: &[&str] = &[
+    ".d.ts",
+    ".d.mts",
+    ".d.cts",
+    "/index.d.ts",
+    "/index.d.mts",
+    "/index.d.cts",
+];
+
+/// Resolve a type-only import to a declaration file or declaration index when
+/// no emitted module exists. Returns `None` for value imports.
+fn resolve_declaration(
+    imp: &ExtractedImport,
+    abs_file: &Path,
+    resolver: &ImportResolver,
+) -> Option<PathBuf> {
+    if imp.kind != ImportKind::Type {
+        return None;
+    }
+    DECLARATION_SUFFIXES
+        .iter()
+        .find_map(|suffix| resolver.resolve(&format!("{}{}", imp.specifier, suffix), abs_file))
+}
+
 /// Classify one import specifier against a shared resolver and tsconfig aliases.
 fn classify(
     imp: &ExtractedImport,
@@ -93,15 +119,13 @@ fn classify(
     target: &super::shared::Target,
     resolver: &ImportResolver,
 ) -> ImportRow {
-    // Fall back to a `.d.ts` candidate so a *type-only* import of a
+    // Fall back to declaration-file candidates so a *type-only* import of a
     // declaration-only module (`import type { Foo } from './types'` →
-    // `types.d.ts`) resolves. A value import still needs an emitted module, so
-    // the fallback is gated on the import being type-only.
-    let resolved = resolver.resolve(&imp.specifier, abs_file).or_else(|| {
-        (imp.kind == ImportKind::Type)
-            .then(|| resolver.resolve(&format!("{}.d.ts", imp.specifier), abs_file))
-            .flatten()
-    });
+    // `types.d.ts` or `types/index.d.ts`) resolves. A value import still needs
+    // an emitted module, so the fallback is gated on the import being type-only.
+    let resolved = resolver
+        .resolve(&imp.specifier, abs_file)
+        .or_else(|| resolve_declaration(imp, abs_file, resolver));
     let status = if resolved.is_some() {
         Status::Resolved
     } else if imp.specifier.starts_with('.')
