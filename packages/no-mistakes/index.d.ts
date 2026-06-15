@@ -2,6 +2,10 @@ import type {
   CheckReport,
   AnalyzeProjectOptions,
   AnalyzeProjectResult,
+  CiEnvOptions,
+  CiEnvReport,
+  CiImpactOptions,
+  CiImpactReport,
   CallSitesOptions,
   CallSitesResult,
   DeadExportsOptions,
@@ -10,6 +14,8 @@ import type {
   ExportsOfOptions,
   ExportsOfResult,
   FetchesOptions,
+  ImpactedChecksOptions,
+  ImpactedChecksReport,
   ImportersOptions,
   ImportersResult,
   ResolveCheckOptions,
@@ -87,6 +93,9 @@ export function reactUsages(
   options: ProjectOptions & { target: string },
 ): Promise<ReactUsagesReport>;
 export function lockfileDiff(options: LockfileDiffOptions): Promise<LockfileDiffEntry[]>;
+export function ciImpact(options: CiImpactOptions): Promise<CiImpactReport>;
+export function ciEnv(options: CiEnvOptions): Promise<CiEnvReport>;
+export function impactedChecks(options: ImpactedChecksOptions): Promise<ImpactedChecksReport>;
 export function infraResourceRefs(
   options: InfraOptions & { address: string },
 ): Promise<ResourceRefRow[]>;

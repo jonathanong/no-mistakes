@@ -7,11 +7,13 @@ pub use super::test_plan::{
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+mod ci_checks;
 mod infra_config;
 mod rule_targets;
 mod string_or_list;
 mod tests_config;
 
+pub use ci_checks::{CheckCommandDef, CheckFileArgs, ChecksConfig, CiConfig};
 pub use infra_config::{InfraConfig, TerraformConfig, TerraformTestConvention};
 pub use tests_config::{
     ImpactConfig, JestConfig, PlaywrightSelectors, PlaywrightTestConfig, StorybookConfig,
@@ -29,6 +31,10 @@ pub struct NoMistakesConfig {
     #[serde(rename = "testPlan", alias = "test_plan")]
     pub test_plan: TestPlanConfig,
     pub rules: Vec<RuleDef>,
+    /// GitHub Actions workflow analysis configuration (`no-mistakes ci`).
+    pub ci: CiConfig,
+    /// Changed-file validation command mappings (`no-mistakes impacted-checks`).
+    pub checks: ChecksConfig,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

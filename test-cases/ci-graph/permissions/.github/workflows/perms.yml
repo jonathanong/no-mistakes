@@ -1,0 +1,43 @@
+name: Permissions
+on: push
+permissions:
+  contents: read
+  issues: write
+jobs:
+  # Inherits the workflow-level permissions map.
+  inherit:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo inherit
+  # Job-level map fully overrides the workflow default.
+  override:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - run: echo override
+  # `read-all` expands to read for every scope.
+  readall:
+    runs-on: ubuntu-latest
+    permissions: read-all
+    steps:
+      - run: echo readall
+  # `write-all` expands to write for every scope.
+  writeall:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - run: echo writeall
+  # `{}` grants no permissions.
+  empty:
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - run: echo empty
+  # Explicit per-scope `none` level.
+  scoped:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: none
+    steps:
+      - run: echo scoped

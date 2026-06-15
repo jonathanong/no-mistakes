@@ -1,0 +1,8 @@
+# `on:` as a list of events with no path filters → always triggers.
+name: List
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo test

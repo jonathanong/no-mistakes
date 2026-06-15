@@ -1,0 +1,11 @@
+# A second workflow defining the same var so `ci env` returns multiple files
+# (exercises deterministic file sorting).
+name: Env Two
+on: push
+env:
+  CIGRAPH_WORKFLOW_VAR: world
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build

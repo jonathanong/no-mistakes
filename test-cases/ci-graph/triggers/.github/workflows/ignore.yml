@@ -1,0 +1,10 @@
+name: Ignore
+on:
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo lint

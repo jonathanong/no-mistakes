@@ -1,0 +1,15 @@
+# YAML anchors/aliases are resolved by serde_yaml before the typed model sees
+# them. This locks in that behavior.
+name: Anchor
+on: &on_push
+  push:
+    paths:
+      - "pkg/**"
+permissions: &perms
+  contents: read
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    permissions: *perms
+    steps:
+      - run: echo a

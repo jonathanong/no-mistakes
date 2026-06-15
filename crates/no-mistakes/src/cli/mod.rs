@@ -1,6 +1,6 @@
 pub mod output_format;
 
-pub use output_format::Format;
+pub use output_format::{resolve_format, Format};
 
 use std::path::{Path, PathBuf};
 

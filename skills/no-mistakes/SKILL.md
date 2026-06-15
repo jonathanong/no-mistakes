@@ -36,6 +36,9 @@ route fetches, or what React traits a component has.
 | What does this Playwright test assert? | `no-mistakes playwright tests <test-file>` |
 | Which API calls does this Next.js route make? | `no-mistakes fetches <route-or-file>` |
 | Which packages changed between two lockfile refs? | `no-mistakes lockfile diff --base <ref>` |
+| Which CI workflows/jobs does this changed file trigger, and with what permissions? | `no-mistakes ci impact <file> --format json` |
+| Which workflows define or reference this env var? | `no-mistakes ci env <VAR> --format json` |
+| What local validation commands should I run for these changed files? | `no-mistakes impacted-checks <file...> --format paths` |
 | Which queue producer/worker files are connected? | `no-mistakes queues related <file>` |
 | Are queue producers/workers unmatched? | `no-mistakes queues check` |
 | What server routes exist? | `no-mistakes server routes` |

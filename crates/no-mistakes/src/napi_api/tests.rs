@@ -563,6 +563,7 @@ include!("tests_impact.rs");
 include!("tests_queries.rs");
 
 mod check;
+mod ci;
 mod react_usages;
 mod tests_entrypoints;
 mod tests_sample_when_limited;
