@@ -55,6 +55,11 @@ fn cli_leaf_commands_have_docs() {
         "server-routes",
         "server-edges",
         "server-related",
+        "infra-resource-refs",
+        "infra-outputs",
+        "infra-test-for",
+        "swift-importers",
+        "swift-test-targets",
     ];
     for command in commands {
         let file = format!("{command}.md");

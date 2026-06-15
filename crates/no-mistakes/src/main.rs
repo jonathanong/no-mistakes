@@ -4,10 +4,12 @@ mod check_parallel;
 mod check_runner;
 mod check_tasks;
 mod fetches;
+mod infra;
 mod lockfile;
 mod queues;
 mod react;
 mod server;
+mod swift;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -47,6 +49,10 @@ enum Command {
     Queues(queues::QueuesArgs),
     /// Analyze server route graphs (Express, Hono, Koa).
     Server(server::ServerArgs),
+    /// Analyze Terraform/OpenTofu resource, module, and output relationships.
+    Infra(infra::InfraArgs),
+    /// Analyze Swift package importers and covering test targets.
+    Swift(swift::SwiftArgs),
     /// Run configured project checks.
     Check(check::CheckArgs),
     /// Plan, explain, and visualize test impacts based on changed files.
@@ -87,6 +93,8 @@ fn run() -> Result<ExitCode> {
         Command::React(args) => react::run(args),
         Command::Queues(args) => queues::run(args),
         Command::Server(args) => server::run(args),
+        Command::Infra(args) => infra::run(args),
+        Command::Swift(args) => swift::run(args),
         Command::Check(args) => check::run(args),
         Command::Tests(args) => tests_run(args),
         Command::Lockfile(args) => lockfile::run(args),

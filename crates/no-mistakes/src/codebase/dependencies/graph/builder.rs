@@ -166,6 +166,7 @@ impl DepGraph {
         }
 
         merge_swift_edges(&edge_inputs, &mut forward, &mut reverse);
+        merge_terraform_edges(&edge_inputs, &mut forward, &mut reverse);
 
         sort_adjacency_lists(&mut forward, &mut reverse);
 

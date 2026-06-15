@@ -9,6 +9,7 @@ mod extra;
 mod extra_runtime;
 mod module_cases;
 mod swift_edges;
+mod terraform_edges;
 
 fn p(s: &str) -> PathBuf {
     PathBuf::from(s)

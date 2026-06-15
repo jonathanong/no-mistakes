@@ -39,6 +39,63 @@ export interface GraphEdge {
   kind: string;
 }
 
+export interface InfraOptions {
+  root?: string;
+  config?: string;
+  /** `infraResourceRefs` address (`<type>.<name>`). */
+  address?: string;
+  /** `infraOutputs` module directory (relative to root). */
+  moduleDir?: string;
+  /** `infraTestFor` `.tf` file (relative to root). */
+  tfFile?: string;
+}
+
+export interface ResourceRefRow {
+  /** The referencing block's address. */
+  address: string;
+  /** The referencing file, relative to the root. */
+  file: string;
+}
+
+export interface ModuleOutput {
+  name: string;
+  references: string[];
+}
+
+export interface OutputConsumer {
+  output: string;
+  from: string;
+  file: string;
+}
+
+export interface ModuleOutputsResult {
+  module: string;
+  exports: ModuleOutput[];
+  consumers: OutputConsumer[];
+}
+
+export interface TestForRow {
+  test_file: string;
+}
+
+export interface SwiftOptions {
+  root?: string;
+  config?: string;
+  /** The Swift source file to query (relative to root). */
+  file?: string;
+}
+
+export interface SwiftImporterRow {
+  file: string;
+  depth: number;
+}
+
+export interface SwiftTestTargetRow {
+  target: string;
+  package: string;
+  command: string;
+}
+
 export interface ServerRoutesReport {
   summary: {
     totalRoutes: number;

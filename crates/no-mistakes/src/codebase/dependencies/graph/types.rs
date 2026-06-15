@@ -97,6 +97,15 @@ pub enum EdgeKind {
     SwiftReference,
     /// SwiftPM target dependency fallback edge between package targets.
     SwiftPackageDependency,
+    /// Terraform/OpenTofu resource reference: a file referencing `<type>.<name>`
+    /// → the file declaring that resource/data source.
+    TerraformReference,
+    /// Terraform/OpenTofu module block reference: the file with the `module` block
+    /// → files in the module's local source directory.
+    TerraformModuleRef,
+    /// Terraform/OpenTofu output consumption: a file referencing
+    /// `module.<name>.<output>` → the file declaring that output.
+    TerraformOutputRef,
 }
 
 impl EdgeKind {
@@ -124,6 +133,9 @@ impl EdgeKind {
             EdgeKind::SwiftImport => "swift-import",
             EdgeKind::SwiftReference => "swift-ref",
             EdgeKind::SwiftPackageDependency => "swift-package",
+            EdgeKind::TerraformReference => "terraform-ref",
+            EdgeKind::TerraformModuleRef => "terraform-module",
+            EdgeKind::TerraformOutputRef => "terraform-output",
         }
     }
 }

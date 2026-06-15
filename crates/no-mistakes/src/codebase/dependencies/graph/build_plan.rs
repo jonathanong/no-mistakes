@@ -18,6 +18,7 @@ pub struct GraphBuildPlan {
     pub react: bool,
     pub symbols: bool,
     pub swift: bool,
+    pub terraform: bool,
 }
 
 impl GraphBuildPlan {
@@ -39,6 +40,7 @@ impl GraphBuildPlan {
             react: true,
             symbols: false,
             swift: true,
+            terraform: true,
         }
     }
 
@@ -79,6 +81,9 @@ impl GraphBuildPlan {
             swift: allowed.contains(&EdgeKind::SwiftImport)
                 || allowed.contains(&EdgeKind::SwiftReference)
                 || allowed.contains(&EdgeKind::SwiftPackageDependency),
+            terraform: allowed.contains(&EdgeKind::TerraformReference)
+                || allowed.contains(&EdgeKind::TerraformModuleRef)
+                || allowed.contains(&EdgeKind::TerraformOutputRef),
         }
     }
 
@@ -99,6 +104,7 @@ impl GraphBuildPlan {
         self.react |= other.react;
         self.symbols |= other.symbols;
         self.swift |= other.swift;
+        self.terraform |= other.terraform;
     }
 
     pub fn with_symbols(mut self, symbols: bool) -> Self {
@@ -125,7 +131,7 @@ impl GraphBuildPlan {
 }
 
 fn graph_plan_needs_config(plan: GraphBuildPlan) -> bool {
-    plan.routes || plan.queues || plan.http || plan.tests || plan.swift
+    plan.routes || plan.queues || plan.http || plan.tests || plan.swift || plan.terraform
 }
 
 fn effective_ts_fact_plan(plan: GraphBuildPlan, options: Option<&GraphConfigOptions>) -> TsFactPlan {

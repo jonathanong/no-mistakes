@@ -452,6 +452,9 @@ fn serialized_edge_kinds_are_documented() {
         EdgeKind::SwiftImport,
         EdgeKind::SwiftReference,
         EdgeKind::SwiftPackageDependency,
+        EdgeKind::TerraformReference,
+        EdgeKind::TerraformModuleRef,
+        EdgeKind::TerraformOutputRef,
     ] {
         match kind {
             EdgeKind::Import => {}
@@ -476,6 +479,9 @@ fn serialized_edge_kinds_are_documented() {
             EdgeKind::SwiftImport => {}
             EdgeKind::SwiftReference => {}
             EdgeKind::SwiftPackageDependency => {}
+            EdgeKind::TerraformReference => {}
+            EdgeKind::TerraformModuleRef => {}
+            EdgeKind::TerraformOutputRef => {}
         }
         let serialized = kind.as_str();
         assert!(

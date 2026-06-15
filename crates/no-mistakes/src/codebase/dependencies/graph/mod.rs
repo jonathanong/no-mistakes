@@ -73,6 +73,7 @@ include!("edge_playwright_selectors.rs");
 include!("edge_playwright_http_process.rs");
 include!("edge_react.rs");
 include!("edge_swift.rs");
+include!("edge_terraform.rs");
 include!("filter.rs");
 include!("symbol_index.rs");
 

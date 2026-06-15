@@ -142,7 +142,10 @@ pub(crate) fn path_confidence(edges: &[EdgeKind]) -> Confidence {
             | EdgeKind::AssetImport
             | EdgeKind::ReactRender
             | EdgeKind::PackageDependency
-            | EdgeKind::SwiftPackageDependency => return Confidence::Low,
+            | EdgeKind::SwiftPackageDependency
+            | EdgeKind::TerraformReference
+            | EdgeKind::TerraformModuleRef
+            | EdgeKind::TerraformOutputRef => return Confidence::Low,
             EdgeKind::DynamicImport => conf = Confidence::Medium,
             _ => {}
         }
@@ -171,5 +174,8 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
         EdgeKind::Selector => "selector",
         EdgeKind::SwiftImport | EdgeKind::SwiftReference => "swift",
         EdgeKind::SwiftPackageDependency => "swift package dependency",
+        EdgeKind::TerraformReference => "terraform-ref",
+        EdgeKind::TerraformModuleRef => "terraform-module",
+        EdgeKind::TerraformOutputRef => "terraform-output",
     }
 }

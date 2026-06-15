@@ -24,3 +24,4 @@ rules:
 - [Rules](rules.md)
 - [Test plan](test-plan.md)
 - [Filesystem](filesystem.md)
+- [Infrastructure (Terraform/OpenTofu)](infra.md)

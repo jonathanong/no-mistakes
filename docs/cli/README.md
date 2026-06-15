@@ -26,6 +26,8 @@ analysis.
 | [`react`](react.md) | React component trait analysis and fetch checks. |
 | [`queues`](queues.md) | Queue producer/worker graph checks. |
 | [`server`](server.md) | Express, Hono, and Koa route graphs. |
+| [`infra`](infra.md) | Terraform/OpenTofu resource, module, and output relationships. |
+| [`swift`](swift.md) | Swift package importers and covering test targets. |
 
 ## Shared Output Formats
 

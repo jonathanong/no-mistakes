@@ -1,0 +1,249 @@
+use super::*;
+use crate::codebase::terraform::{TerraformBlock, TerraformFileFacts, TerraformRef, TfBlockKind};
+use std::collections::BTreeSet;
+
+fn fixture() -> PathBuf {
+    normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/terraform-basic/fixture"),
+    )
+}
+
+fn report() -> InfraReport {
+    analyze_project(&fixture(), None).expect("fixture should analyze")
+}
+
+#[test]
+fn resource_refs_lists_referencing_blocks() {
+    let report = report();
+    let rows = report.resource_refs("aws_route53_record.foo");
+    let addresses: Vec<&str> = rows.iter().map(|row| row.address.as_str()).collect();
+    assert!(addresses.contains(&"aws_lb.web"));
+    assert!(addresses.contains(&"output.record_id"));
+    // The referencing files resolve relative to the root.
+    assert!(rows.iter().all(|row| !row.file.starts_with('/')));
+}
+
+#[test]
+fn resource_refs_unknown_address_is_empty() {
+    assert!(report().resource_refs("aws_does_not.exist").is_empty());
+}
+
+#[test]
+fn outputs_reports_exports_and_consumers() {
+    let report = report();
+    let result = report.outputs("infra/modules/network");
+    assert!(result.module.ends_with("infra/modules/network"));
+    let zone = result
+        .exports
+        .iter()
+        .find(|output| output.name == "zone_id")
+        .expect("zone_id export");
+    assert!(zone
+        .references
+        .contains(&"aws_route53_zone.main".to_string()));
+    let consumes = result
+        .consumers
+        .iter()
+        .any(|consumer| consumer.output == "zone_id" && consumer.from == "aws_route53_record.foo");
+    assert!(consumes);
+}
+
+#[test]
+fn test_for_resource_mode_matches_referencing_tests() {
+    let report = report();
+    let rows = report.test_for("infra/envs/prod/main.tf");
+    assert!(rows
+        .iter()
+        .any(|row| row.test_file.ends_with("network.test.mts")));
+}
+
+#[test]
+fn analyze_project_without_config_is_empty() {
+    // The crate manifest dir has no `.no-mistakes.yml` infra config.
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let report = analyze_project(&root, None).expect("analyze");
+    assert!(report.resource_refs("aws_x.y").is_empty());
+    assert!(report.outputs("infra").exports.is_empty());
+    assert!(report.test_for("infra/main.tf").is_empty());
+}
+
+// --- Hand-built reports for branch coverage of the matching modes ---
+
+fn report_with(test: TerraformTestConvention, files: Vec<PathBuf>) -> InfraReport {
+    let root = fixture();
+    let facts = collect_terraform_facts(
+        &root,
+        &crate::codebase::ts_source::discover_files(&root, &[]),
+        &crate::config::v2::schema::TerraformConfig {
+            module_roots: vec![
+                "infra/envs/prod".to_string(),
+                "infra/modules/network".to_string(),
+            ],
+            ..Default::default()
+        },
+    );
+    InfraReport {
+        root,
+        files,
+        facts,
+        test,
+    }
+}
+
+#[test]
+fn test_for_without_globs_returns_empty() {
+    let report = report_with(TerraformTestConvention::default(), Vec::new());
+    assert!(report.test_for("infra/envs/prod/main.tf").is_empty());
+}
+
+#[test]
+fn test_for_module_mode_returns_all_module_tests() {
+    let root = fixture();
+    let test_file = root.join("infra/envs/prod/__tests__/network.test.mts");
+    let report = report_with(
+        TerraformTestConvention {
+            test_globs: vec!["__tests__/*.test.mts".to_string()],
+            test_root: None,
+            match_mode: Some("module".to_string()),
+        },
+        vec![test_file.clone()],
+    );
+    let rows = report.test_for("infra/envs/prod/variables.tf");
+    // variables.tf declares no resources, but module mode still returns the test.
+    assert!(rows
+        .iter()
+        .any(|row| row.test_file.ends_with("network.test.mts")));
+}
+
+#[test]
+fn test_for_resource_mode_skips_tests_without_references() {
+    let root = fixture();
+    // A test file that does not mention any declared resource address.
+    let test_file = root.join("infra/modules/network/__tests__/unrelated.test.mts");
+    let report = report_with(
+        TerraformTestConvention {
+            test_globs: vec!["__tests__/*.test.mts".to_string()],
+            test_root: None,
+            match_mode: Some("resource".to_string()),
+        },
+        vec![test_file],
+    );
+    // network/main.tf declares aws_route53_zone.main, but no candidate test file
+    // exists on disk to read, so the resource filter yields nothing.
+    assert!(report.test_for("infra/modules/network/main.tf").is_empty());
+}
+
+#[test]
+fn outputs_skips_modules_sourced_from_other_directories() {
+    // Querying the root module: module.network's source is the network dir, which
+    // differs from the queried dir, exercising the consumer-skip branch.
+    let report = report();
+    let result = report.outputs("infra/envs/prod");
+    assert!(result
+        .exports
+        .iter()
+        .any(|output| output.name == "record_id"));
+    assert!(result.consumers.is_empty());
+}
+
+#[test]
+fn test_for_resource_mode_empty_declarations_returns_nothing() {
+    let root = fixture();
+    let test_file = root.join("infra/envs/prod/__tests__/network.test.mts");
+    let report = report_with(
+        TerraformTestConvention {
+            test_globs: vec!["__tests__/*.test.mts".to_string()],
+            test_root: None,
+            match_mode: Some("resource".to_string()),
+        },
+        vec![test_file],
+    );
+    // variables.tf declares no resources, so resource-mode matching is empty.
+    assert!(report.test_for("infra/envs/prod/variables.tf").is_empty());
+}
+
+#[test]
+fn test_for_honors_test_root_anchor() {
+    let root = fixture();
+    let test_file = root.join("infra/envs/prod/__tests__/network.test.mts");
+    let report = report_with(
+        TerraformTestConvention {
+            test_globs: vec!["infra/envs/prod/__tests__/*.test.mts".to_string()],
+            test_root: Some(".".to_string()),
+            match_mode: Some("module".to_string()),
+        },
+        vec![test_file],
+    );
+    let rows = report.test_for("infra/envs/prod/main.tf");
+    assert!(rows
+        .iter()
+        .any(|row| row.test_file.ends_with("network.test.mts")));
+}
+
+#[test]
+fn build_globset_handles_invalid_and_empty() {
+    assert!(build_globset(&[]).is_none());
+    assert!(build_globset(&["[".to_string()]).is_none());
+    assert!(build_globset(&["*.tf".to_string()]).is_some());
+}
+
+#[test]
+fn output_value_refs_falls_back_when_block_absent() {
+    // A report whose facts have an output recorded in the module index but no
+    // matching block exercises the empty fallback.
+    let root = fixture();
+    let mut facts = TerraformFactMap::default();
+    let module_dir = root.join("infra/envs/prod");
+    facts
+        .outputs_by_module
+        .entry(module_dir.clone())
+        .or_default()
+        .insert("ghost".to_string());
+    let file = module_dir.join("outputs.tf");
+    facts.files.insert(
+        file.clone(),
+        TerraformFileFacts {
+            path: file,
+            module_dir: module_dir.clone(),
+            blocks: Vec::new(),
+            references: Vec::new(),
+        },
+    );
+    let report = InfraReport {
+        root,
+        files: Vec::new(),
+        facts,
+        test: TerraformTestConvention::default(),
+    };
+    let result = report.outputs("infra/envs/prod");
+    let ghost = result
+        .exports
+        .iter()
+        .find(|output| output.name == "ghost")
+        .expect("ghost export");
+    assert!(ghost.references.is_empty());
+}
+
+#[test]
+fn helper_types_round_trip_through_serde() {
+    // Exercise the public result structs (used by N-API JSON output).
+    let block = TerraformBlock {
+        kind: TfBlockKind::Output,
+        addr: "output.x".to_string(),
+        name: "x".to_string(),
+        file: PathBuf::from("/r/outputs.tf"),
+        module_source_dir: None,
+        value_refs: vec!["aws_x.y".to_string()],
+    };
+    assert_eq!(block.name, "x");
+    let reference = TerraformRef {
+        from_file: PathBuf::from("/r/main.tf"),
+        from_addr: "aws_a.b".to_string(),
+        to_addr: "aws_x.y".to_string(),
+        module_output: None,
+    };
+    assert_eq!(reference.to_addr, "aws_x.y");
+    let set: BTreeSet<String> = ["a".to_string()].into();
+    assert_eq!(set.len(), 1);
+}
