@@ -19,13 +19,26 @@ const EXTENSIONS: &[&str] = &[
     ".mts", ".ts", ".tsx", ".mjs", ".js", ".jsx", ".cjs", ".cts", ".d.ts", ".d.mts", ".d.cts",
 ];
 
-/// NodeNext/ESM source candidates for an emitted `.js`/`.mjs`/`.cjs` specifier,
-/// tried (after the literal file) when the import carries an emitted extension.
+/// TypeScript source candidates for a NodeNext/ESM emitted extension.
+/// Tried before the literal file; excludes `.jsx` and declaration files,
+/// which may only appear after the literal file (see `emitted_fallback_candidates`).
 fn emitted_source_candidates(extension: &str) -> &'static [&'static str] {
     match extension {
-        "mjs" => &[".mts", ".d.mts"],
-        "cjs" => &[".cts", ".d.cts"],
-        "js" => &[".ts", ".tsx", ".jsx", ".d.ts"],
+        "mjs" => &[".mts"],
+        "cjs" => &[".cts"],
+        "js" => &[".ts", ".tsx"],
+        _ => &[],
+    }
+}
+
+/// Declaration and `.jsx` fallbacks for a NodeNext/ESM emitted extension.
+/// Tried only when neither a TypeScript source nor the literal file exists,
+/// so the literal `.js`/`.mjs`/`.cjs` always takes priority over `.d.*` and `.jsx`.
+fn emitted_fallback_candidates(extension: &str) -> &'static [&'static str] {
+    match extension {
+        "mjs" => &[".d.mts"],
+        "cjs" => &[".d.cts"],
+        "js" => &[".jsx", ".d.ts"],
         _ => &[],
     }
 }

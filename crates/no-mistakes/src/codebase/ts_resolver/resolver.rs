@@ -108,13 +108,17 @@ impl<'a> ImportResolver<'a> {
     fn try_path(&self, base: &Path) -> Option<PathBuf> {
         let base = normalize_path(base);
         if has_explicit_extension(&base) {
-            // NodeNext/ESM: an emitted `.js`/`.mjs`/`.cjs` specifier resolves to
-            // its TypeScript source first (TS prefers `util.ts` over a checked-in
-            // `util.js`), then falls back to the literal file.
+            // NodeNext/ESM: for an emitted `.js`/`.mjs`/`.cjs` specifier:
+            // 1. TypeScript source (`.ts`/`.tsx`/`.mts`/`.cts`) — highest priority.
+            // 2. Literal file — takes precedence over `.jsx` and declarations.
+            // 3. `.jsx`/`.d.*` fallbacks — only when the literal file is absent.
             if let Some(source) = self.try_emitted_source(&base) {
                 return Some(source);
             }
-            return self.path_is_file(&base).then_some(base);
+            if self.path_is_file(&base) {
+                return Some(base);
+            }
+            return self.try_emitted_fallback(&base);
         }
         if self.path_is_file(&base) {
             return Some(base);
@@ -138,18 +142,34 @@ impl<'a> ImportResolver<'a> {
         None
     }
 
-    /// Resolve an emitted `.js`/`.mjs`/`.cjs` specifier to its TypeScript source
-    /// or declaration. Returns `None` for any other explicit extension.
+    /// Resolve an emitted `.js`/`.mjs`/`.cjs` specifier to its TypeScript source.
+    /// Only checks source files (`.ts`, `.tsx`, `.mts`, `.cts`); does not return
+    /// declarations or `.jsx`. Call `try_emitted_fallback` for those after the
+    /// literal-file check.
     fn try_emitted_source(&self, base: &Path) -> Option<PathBuf> {
         let extension = base.extension().and_then(|ext| ext.to_str())?;
-        let stem = {
-            let s = base.to_string_lossy();
-            s[..s.len() - extension.len() - 1].to_string()
-        };
+        let stem = self.stem_str(base, extension);
         emitted_source_candidates(extension).iter().find_map(|ext| {
             let candidate = PathBuf::from(format!("{stem}{ext}"));
             self.path_exists(&candidate).then_some(candidate)
         })
+    }
+
+    /// Resolve an emitted `.js`/`.mjs`/`.cjs` specifier to `.jsx` or a
+    /// declaration file. Only called when neither a TypeScript source nor the
+    /// literal file was found, so the literal always wins over these fallbacks.
+    fn try_emitted_fallback(&self, base: &Path) -> Option<PathBuf> {
+        let extension = base.extension().and_then(|ext| ext.to_str())?;
+        let stem = self.stem_str(base, extension);
+        emitted_fallback_candidates(extension).iter().find_map(|ext| {
+            let candidate = PathBuf::from(format!("{stem}{ext}"));
+            self.path_exists(&candidate).then_some(candidate)
+        })
+    }
+
+    fn stem_str(&self, base: &Path, extension: &str) -> String {
+        let s = base.to_string_lossy();
+        s[..s.len() - extension.len() - 1].to_string()
     }
 
     fn path_exists(&self, path: &Path) -> bool {

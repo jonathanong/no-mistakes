@@ -210,6 +210,27 @@ fn plain_js_specifier_resolves_to_literal_file() {
 }
 
 #[test]
+fn literal_js_wins_over_jsx_sibling() {
+    // JoaMi regression: when both comp.js and comp.jsx exist, `import './comp.js'`
+    // must resolve to the literal comp.js, not the .jsx sibling.
+    let report = kinds_compute("compjs-user.ts");
+    assert!(report.all_resolve);
+    assert_eq!(report.imports[0].resolved.as_deref(), Some("comp.js"));
+}
+
+#[test]
+fn literal_js_wins_over_declaration_sibling() {
+    // JoaMh regression: when both declruntime.js and declruntime.d.ts exist,
+    // a value `import './declruntime.js'` resolves to the runtime JS, not .d.ts.
+    let report = kinds_compute("declruntime-user.ts");
+    assert!(report.all_resolve);
+    assert_eq!(
+        report.imports[0].resolved.as_deref(),
+        Some("declruntime.js")
+    );
+}
+
+#[test]
 fn esm_js_specifier_resolves_to_ts_source() {
     // `./dep.js` resolves to the `dep.ts` source (NodeNext/ESM convention).
     let root = named_fixture("queries-kinds");
