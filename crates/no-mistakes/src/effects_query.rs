@@ -137,6 +137,9 @@ pub fn run(
     } else {
         root.join(entry)
     };
+    if !entry_abs.is_file() {
+        bail!("entry file not found: {}", entry_abs.display());
+    }
     let entry_node = NodeId::File(normalize_path(&entry_abs));
 
     let tsconfig = resolve_tsconfig(&root, tsconfig)?;

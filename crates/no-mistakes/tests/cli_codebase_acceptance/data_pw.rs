@@ -84,9 +84,13 @@ fn data_pw_yml_and_filtered_sections() {
     assert_success(&yml);
     assert!(stdout(&yml).contains("value: search-bar"));
 
-    // --include test drops the source section (covers the None-section print path).
+    // --include test drops the source section and keeps the test section.
     let human = run_in(&root, &["data-pw", "search-bar", "--include", "test"]);
     assert_success(&human);
+    let human_out = stdout(&human);
+    assert!(human_out.contains("e2e/search.spec.ts"));
+    assert!(!human_out.contains("app/search.tsx"));
+
     let md = run_in(
         &root,
         &[
@@ -99,6 +103,9 @@ fn data_pw_yml_and_filtered_sections() {
         ],
     );
     assert_success(&md);
+    let md_out = stdout(&md);
+    assert!(md_out.contains("## Test"));
+    assert!(!md_out.contains("## Source"));
 }
 
 #[test]

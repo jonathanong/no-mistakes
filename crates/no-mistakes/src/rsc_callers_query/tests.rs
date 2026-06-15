@@ -73,15 +73,21 @@ fn paths_helper_returns_sorted_files() {
 }
 
 #[test]
-fn missing_component_has_no_callers() {
-    let report = run(
+fn missing_component_errors() {
+    let err = run(
         &fixture(),
         None,
         None,
         Path::new("app/ui/DoesNotExist.tsx"),
         None,
     )
-    .unwrap();
+    .unwrap_err();
+    assert!(err.to_string().contains("component file not found"));
+}
+
+#[test]
+fn existing_unimported_component_has_no_callers() {
+    let report = run(&fixture(), None, None, Path::new("app/ui/Orphan.tsx"), None).unwrap();
     assert!(report.callers.is_empty());
 }
 

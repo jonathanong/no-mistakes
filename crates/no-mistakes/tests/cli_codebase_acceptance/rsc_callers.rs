@@ -33,6 +33,9 @@ fn rsc_callers_malformed_tsconfig_errors() {
         "bad-tsconfig.json",
     ]);
     assert!(!output.status.success());
+    let err = String::from_utf8_lossy(&output.stderr);
+    assert!(err.contains("bad-tsconfig.json"));
+    assert!(err.contains("parsing"));
 }
 
 #[test]

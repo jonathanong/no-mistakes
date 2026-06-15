@@ -111,8 +111,8 @@ fn unknown_category_yields_no_functions() {
 }
 
 #[test]
-fn missing_entry_is_empty() {
-    let report = run(
+fn missing_entry_errors() {
+    let err = run(
         &fixture(),
         None,
         None,
@@ -121,8 +121,8 @@ fn missing_entry_is_empty() {
         &[],
         None,
     )
-    .unwrap();
-    assert!(report.call_sites.is_empty());
+    .unwrap_err();
+    assert!(err.to_string().contains("entry file not found"));
 }
 
 #[test]

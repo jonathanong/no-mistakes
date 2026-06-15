@@ -91,9 +91,10 @@ fn print_human(report: &EffectsReport) {
     println!("{} effects reachable from {}", report.kind, report.entry);
     for site in &report.call_sites {
         let category = site.category.as_deref().unwrap_or("-");
+        let caller = site.caller.as_deref().unwrap_or("-");
         println!(
-            "  {}:{} {} [{}] (depth {})",
-            site.file, site.line, site.callee, category, site.depth
+            "  {}:{} {} [{}] caller={} (depth {})",
+            site.file, site.line, site.callee, category, caller, site.depth
         );
     }
 }
@@ -102,9 +103,10 @@ fn print_md(report: &EffectsReport) {
     println!("# effects `{}` from `{}`", report.kind, report.entry);
     for site in &report.call_sites {
         let category = site.category.as_deref().unwrap_or("-");
+        let caller = site.caller.as_deref().unwrap_or("-");
         println!(
-            "- `{}:{}` `{}` ({})",
-            site.file, site.line, site.callee, category
+            "- `{}:{}` `{}` ({}) caller={} depth {}",
+            site.file, site.line, site.callee, category, caller, site.depth
         );
     }
 }

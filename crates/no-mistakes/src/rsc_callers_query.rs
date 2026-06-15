@@ -116,6 +116,9 @@ pub fn run(
     } else {
         root.join(component)
     };
+    if !component_abs.is_file() {
+        anyhow::bail!("component file not found: {}", component_abs.display());
+    }
     let component_node = NodeId::File(normalize_path(&component_abs));
 
     let tsconfig = resolve_tsconfig(&root, tsconfig)?;

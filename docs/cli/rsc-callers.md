@@ -35,7 +35,8 @@ Output shape:
 }
 ```
 
-A component imported nowhere yields an empty `callers` list.
+A component that exists but is imported nowhere yields an empty `callers` list;
+a non-existent component path is an error.
 
 ## Limitation
 

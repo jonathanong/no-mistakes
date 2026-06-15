@@ -91,8 +91,8 @@ fn print_md(report: &RscCallersReport) {
     println!("# RSC callers of `{}`", report.component);
     for caller in &report.callers {
         println!(
-            "- `{}` ({:?}, {:?})",
-            caller.file, caller.kind, caller.environment
+            "- `{}` ({:?}, {:?}, depth {})",
+            caller.file, caller.kind, caller.environment, caller.depth
         );
     }
 }

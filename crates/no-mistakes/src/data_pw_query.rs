@@ -137,13 +137,22 @@ pub fn run(
     } else {
         scan_override.to_vec()
     };
-    // A `.`/`./` root means "scan the whole repo"; normalize it to the all-root
-    // (empty) case rather than a literal `.` prefix that matches nothing.
-    let normalized_roots: Vec<String> = roots
+    // A `.`/`./`/empty root anywhere means "scan the whole repo": collapse to the
+    // all-roots (empty) case rather than a literal `.` prefix that matches nothing.
+    let normalize_root = |root: &String| {
+        root.trim()
+            .trim_matches('/')
+            .trim_start_matches("./")
+            .to_string()
+    };
+    let has_all_root = roots
         .iter()
-        .map(|root| root.trim_matches('/').trim_start_matches("./").to_string())
-        .filter(|root| !root.is_empty() && root != ".")
-        .collect();
+        .any(|root| matches!(normalize_root(root).as_str(), "" | "."));
+    let normalized_roots: Vec<String> = if has_all_root {
+        Vec::new()
+    } else {
+        roots.iter().map(normalize_root).collect()
+    };
 
     let playwright = &config.tests.playwright;
     let selector_include = if playwright.selector_include.is_empty() {

@@ -48,6 +48,6 @@ Limitation: matching is by simple call/constructor name, so an aliased import
 (`import { ValkeyCache as VC }`) called as `VC()` is not matched. Reachability
 follows import edges from the entry, so a file that `filesystem.skipDirectories`
 excludes from discovery can still be reported if it is imported from the entry.
-An unknown `<kind>` is an error; a missing entry file yields an empty report.
+An unknown `<kind>` or a missing entry file is an error.
 
 Node API: `effects(options)`.

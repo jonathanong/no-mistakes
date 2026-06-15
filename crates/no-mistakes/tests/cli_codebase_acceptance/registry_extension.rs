@@ -57,7 +57,10 @@ fn registry_extension_yml_and_notes() {
         &["registry-extension", "register-call.ts", "--format", "yml"],
     );
     assert_success(&yml);
-    assert!(stdout(&yml).contains("registryFile:") || stdout(&yml).contains("patternKind:"));
+    let yml_out = stdout(&yml);
+    assert!(yml_out.contains("registryFile:"));
+    assert!(yml_out.contains("patternKind: register-call"));
+    assert!(yml_out.contains("registrant: registry.register"));
 
     // mixed.ts has a side-effect import note; exercise the human notes loop.
     let human = run_in(&root, &["registry-extension", "mixed.ts"]);
