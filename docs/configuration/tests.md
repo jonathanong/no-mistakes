@@ -119,7 +119,13 @@ tests:
   maps, code-splitting tables). When a changed file is imported by a file
   matching one of these globs, `tests impact` emits a `registry-hint` warning so
   you verify the registry entry is up to date. Prefix patterns with `**/` to
-  match at any depth.
+  match at any depth. The hint follows the dependency graph, so it fires when the
+  registry's mapping is reachable — for example an exported map
+  (`export const registry = { foo: () => import('./foo') }`). A fully private map
+  reached only through dynamic key indexing
+  (`const registry = {…}; export const load = k => registry[k]`) is pruned by
+  reachability analysis and may not trigger the hint; export the map (or the
+  loader's entries) for reliable detection.
 
 ## Swift
 

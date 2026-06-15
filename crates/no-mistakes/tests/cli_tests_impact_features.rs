@@ -171,6 +171,18 @@ fn impact_traverses_default_export_next_dynamic_boundary() {
     );
 }
 
+#[test]
+fn impact_traverses_default_alias_next_dynamic_boundary() {
+    let root = fixture("tests-impact-next-dynamic");
+    // `const Lazy = dynamic(...); export default Lazy;` must also surface its test.
+    let plan = impact_json(&root, &["foo.mts"]);
+    let names = selected_files(&plan);
+    assert!(
+        names.contains(&"aliased-default.test.mts".to_string()),
+        "expected aliased-default.test.mts to be surfaced: {names:?}"
+    );
+}
+
 // ── Part 3: registry hint ───────────────────────────────────────────────────
 
 #[test]

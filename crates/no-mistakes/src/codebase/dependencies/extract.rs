@@ -104,6 +104,9 @@ pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFac
         .exported_functions
         .extend(later_named_value_exports(program, &local_type_names));
     collector
+        .exported_functions
+        .extend(later_default_export_value_name(program));
+    collector
         .later_exported_type_names
         .extend(later_named_type_exports(program, &local_type_names));
     collector.visit_program(program);
@@ -123,6 +126,24 @@ pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFac
         unknown_callers: collector.unknown_callers,
         has_unknown_top_level_call: collector.has_unknown_top_level_call,
     }
+}
+
+/// The identifier name of a `export default <ident>` alias, if any. Seeding it as
+/// an exported binding lets `const Foo = dynamic(() => import('./Foo')); export
+/// default Foo;` treat the dynamic import as reachable even though the binding is
+/// declared before the default export statement.
+fn later_default_export_value_name<'a>(program: &Program<'a>) -> Option<String> {
+    program.body.iter().find_map(|statement| {
+        let Statement::ExportDefaultDeclaration(export) = statement else {
+            return None;
+        };
+        match &export.declaration {
+            ExportDefaultDeclarationKind::Identifier(identifier) => {
+                Some(identifier.name.to_string())
+            }
+            _ => None,
+        }
+    })
 }
 
 fn later_named_value_exports<'a>(
