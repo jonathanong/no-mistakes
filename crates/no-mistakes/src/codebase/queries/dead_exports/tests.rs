@@ -67,10 +67,51 @@ fn wildcard_and_default_imports_count_as_references() {
 }
 
 #[test]
+fn star_barrel_does_not_keep_default_alive() {
+    // `lonely`'s default is only seen by an `export *` barrel, which does not
+    // forward defaults — so it is dead.
+    let report = compute(&DeadExportsArgs {
+        file: PathBuf::from("lonely.ts"),
+        names: Vec::new(),
+        root: Some(named_fixture("queries-reexport")),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(report.any_dead);
+}
+
+#[test]
+fn explicit_default_display_name_is_normalized() {
+    // Passing the declaration name `def` (as shown by exports-of) must still
+    // resolve the default export's importers.
+    let report = compute(&DeadExportsArgs {
+        file: PathBuf::from("mod.ts"),
+        names: vec!["def".to_string()],
+        root: Some(named_fixture("queries-reexport")),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(report.results[0].referenced);
+}
+
+#[test]
 fn explicit_names_all_referenced() {
     let report = compute(&args("util.ts", &["used", "helper"])).unwrap();
     assert!(!report.any_dead);
     assert!(report.results.iter().all(|result| result.referenced));
+}
+
+#[test]
+fn explicit_name_that_is_not_an_export_is_dead() {
+    // `removed` is not (or no longer) an export of util.ts — the lookup falls
+    // back to the raw name and finds no importers.
+    let report = compute(&args("util.ts", &["removed"])).unwrap();
+    assert!(report.any_dead);
+    assert!(!report.results[0].referenced);
 }
 
 #[test]

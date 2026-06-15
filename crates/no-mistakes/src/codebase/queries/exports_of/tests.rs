@@ -78,6 +78,27 @@ fn tags_every_export_kind() {
 }
 
 #[test]
+fn star_export_row_shows_concrete_importers() {
+    // `export * from './mod'` consumers import concrete names from the barrel,
+    // so the star export row's importers are those concrete consumers.
+    let args = ExportsOfArgs {
+        file: PathBuf::from("star-barrel.ts"),
+        root: Some(named_fixture("queries-reexport")),
+        tsconfig: None,
+        no_importers: false,
+        format: None,
+        json: false,
+    };
+    let report = compute(&args).unwrap();
+    let star = report
+        .exports
+        .iter()
+        .find(|e| e.kind == "re-export")
+        .unwrap();
+    assert!(star.importers.contains(&"star-consumer.ts".to_string()));
+}
+
+#[test]
 fn reexport_resolves_target() {
     let report = compute(&args("barrel.ts", true)).unwrap();
     assert_eq!(report.exports[0].name, "used");

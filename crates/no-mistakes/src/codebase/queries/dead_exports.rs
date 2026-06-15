@@ -1,7 +1,8 @@
 use super::render::{render, resolve_format, to_json, Report};
-use super::reverse::{build_index, export_lookup_symbol, importer_paths};
+use super::reverse::{build_index, export_importer_paths, importer_paths};
 use super::shared::{read_symbols, rel_str, resolve_target};
 use crate::cli::Format;
+use crate::codebase::ts_symbols::Export;
 use anyhow::Result;
 use is_terminal::IsTerminal;
 use serde::Serialize;
@@ -66,26 +67,38 @@ impl DeadExportsReport {
 
 fn compute(args: &DeadExportsArgs) -> Result<DeadExportsReport> {
     let target = resolve_target(&args.file, args.root.as_deref(), args.tsconfig.as_deref())?;
-    // Each entry is (display name, index-lookup symbol). They differ only for a
-    // default export, indexed under `default` rather than its declaration name.
-    let names: Vec<(String, String)> = if args.names.is_empty() {
-        read_symbols(&target.abs_file)?
+    let symbols = read_symbols(&target.abs_file)?;
+    // Each entry pairs the display name with the matching export (when one
+    // exists), so default and `export *` rows are looked up correctly even when
+    // names are passed explicitly.
+    let entries: Vec<(String, Option<&Export>)> = if args.names.is_empty() {
+        symbols
             .exports
             .iter()
-            .map(|export| (export.name.clone(), export_lookup_symbol(export)))
+            .map(|export| (export.name.clone(), Some(export)))
             .collect()
     } else {
         args.names
             .iter()
-            .map(|name| (name.clone(), name.clone()))
+            .map(|name| {
+                (
+                    name.clone(),
+                    symbols.exports.iter().find(|export| &export.name == name),
+                )
+            })
             .collect()
     };
     let index = build_index(&target)?;
 
-    let results: Vec<DeadResult> = names
+    let results: Vec<DeadResult> = entries
         .iter()
-        .map(|(name, lookup)| {
-            let importers = importer_paths(&index, &target.abs_file, lookup, &target.root);
+        .map(|(name, export)| {
+            let importers = match export {
+                Some(export) => {
+                    export_importer_paths(&index, &target.abs_file, export, &target.root)
+                }
+                None => importer_paths(&index, &target.abs_file, name, &target.root),
+            };
             DeadResult {
                 name: name.clone(),
                 referenced: !importers.is_empty(),

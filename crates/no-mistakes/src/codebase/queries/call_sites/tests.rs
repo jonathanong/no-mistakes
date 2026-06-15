@@ -2,6 +2,7 @@ use super::*;
 use crate::cli::Format;
 use crate::codebase::dependencies::graph::SymbolIndex;
 use crate::codebase::queries::render::render;
+use crate::codebase::ts_symbols::FileSymbols;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -95,10 +96,34 @@ fn reexport_cycle_terminates() {
     map.insert(b.clone(), vec![(a.clone(), "S".into(), "S".into(), true)]);
     map.insert(a.clone(), vec![(b.clone(), "S".into(), "S".into(), true)]);
     let index = SymbolIndex::build(&map);
-    let by_file = local_names_by_file(&index, &a, "S");
-    // Both files are reached, each bound to `S`.
+    // The visited guard must make this terminate rather than loop forever.
+    let by_file = local_names_by_file(&index, &FileSymbols::default(), &a, "S");
+    // Only the defining file is scanned; the re-export barrels are traversal
+    // hops, not call-site sources.
     assert!(by_file.contains_key(&a));
-    assert!(by_file.contains_key(&b));
+}
+
+#[test]
+fn follows_named_and_star_barrels_without_scanning_them() {
+    let report = compute(&args(fixture_root("queries-reexport"), "mod.ts", "used")).unwrap();
+    let files: Vec<&str> = report.call_sites.iter().map(|s| s.file.as_str()).collect();
+    // Reached through the named barrel and the star barrel.
+    assert!(files.contains(&"named-consumer.ts"));
+    assert!(files.contains(&"star-consumer.ts"));
+    // The barrel files themselves are never scanned, so their unrelated local
+    // `used()` call is not reported.
+    assert!(!files.contains(&"named-barrel.ts"));
+}
+
+#[test]
+fn finds_default_export_callers() {
+    // `def` is the declaration name of the default export; external callers
+    // import it under `default`.
+    let report = compute(&args(fixture_root("queries-reexport"), "mod.ts", "def")).unwrap();
+    assert!(report
+        .call_sites
+        .iter()
+        .any(|s| s.file == "default-consumer.ts"));
 }
 
 #[test]

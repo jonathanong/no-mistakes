@@ -19,41 +19,88 @@ pub(crate) fn export_lookup_symbol(export: &Export) -> String {
     }
 }
 
-fn symbol_importers(
+/// True for an `export * from '...'` row, whose consumers import concrete names
+/// from the re-exporting file rather than a single symbol.
+fn is_star_reexport(export: &Export) -> bool {
+    matches!(&export.kind, ExportKind::ReExport { imported, .. } if imported == "*")
+}
+
+fn dedup_sorted(mut paths: Vec<String>) -> Vec<String> {
+    paths.sort();
+    paths.dedup();
+    paths
+}
+
+fn symbol_importers(index: &SymbolIndex, file: &Path, symbol: &str, root: &Path) -> Vec<String> {
+    index
+        .importers_of(file, symbol)
+        .map(|records| records.iter().map(|(i, _, _)| rel_str(i, root)).collect())
+        .unwrap_or_default()
+}
+
+/// Importers recorded under the wildcard `*` — namespace imports
+/// (`import * as ns`) and `export *` star barrels. `include_reexport=false`
+/// keeps only namespace imports, used for the `default` export which `export *`
+/// does not forward.
+fn wildcard_importers(
     index: &SymbolIndex,
-    abs_file: &Path,
-    symbol: &str,
+    file: &Path,
     root: &Path,
+    include_reexport: bool,
 ) -> Vec<String> {
     index
-        .importers_of(abs_file, symbol)
+        .importers_of(file, "*")
         .map(|records| {
             records
                 .iter()
-                .map(|(importer, _, _)| rel_str(importer, root))
+                .filter(|(_, _, is_reexport)| include_reexport || !*is_reexport)
+                .map(|(i, _, _)| rel_str(i, root))
                 .collect()
         })
         .unwrap_or_default()
 }
 
-/// Unique importer files of `(abs_file, symbol)`, as sorted root-relative
-/// strings. Includes barrel re-exporters and — because namespace imports
-/// (`import * as ns`) and star re-exports (`export *`) are indexed under the
-/// wildcard `*` and reference every concrete export — the wildcard importers
-/// too.
+/// Unique importer files that reference `(file, symbol)`, root-relative and
+/// sorted. Includes barrel re-exporters and wildcard importers (namespace
+/// imports always; `export *` barrels for every symbol except `default`).
 pub(crate) fn importer_paths(
     index: &SymbolIndex,
-    abs_file: &Path,
+    file: &Path,
     symbol: &str,
     root: &Path,
 ) -> Vec<String> {
-    let mut paths = symbol_importers(index, abs_file, symbol, root);
+    let mut paths = symbol_importers(index, file, symbol, root);
     if symbol != "*" {
-        paths.extend(symbol_importers(index, abs_file, "*", root));
+        paths.extend(wildcard_importers(index, file, root, symbol != "default"));
     }
-    paths.sort();
-    paths.dedup();
-    paths
+    dedup_sorted(paths)
+}
+
+/// All importers of any symbol of `file` — the consumers of an `export *` row,
+/// who import concrete names rather than the star itself.
+pub(crate) fn file_importer_paths(index: &SymbolIndex, file: &Path, root: &Path) -> Vec<String> {
+    dedup_sorted(
+        index
+            .file_importers(file)
+            .iter()
+            .map(|path| rel_str(path, root))
+            .collect(),
+    )
+}
+
+/// Importers of a specific export row. `export *` rows resolve to their
+/// concrete-name consumers; every other row uses the symbol lookup.
+pub(crate) fn export_importer_paths(
+    index: &SymbolIndex,
+    file: &Path,
+    export: &Export,
+    root: &Path,
+) -> Vec<String> {
+    if is_star_reexport(export) {
+        file_importer_paths(index, file, root)
+    } else {
+        importer_paths(index, file, &export_lookup_symbol(export), root)
+    }
 }
 
 pub(crate) fn export_kind_str(kind: &ExportKind) -> &'static str {

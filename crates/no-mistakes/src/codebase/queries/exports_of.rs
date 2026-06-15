@@ -1,5 +1,5 @@
 use super::render::{render, resolve_format, to_json, Report};
-use super::reverse::{build_index, export_kind_str, export_lookup_symbol, importer_paths};
+use super::reverse::{build_index, export_importer_paths, export_kind_str};
 use super::shared::{read_symbols, rel_str, resolve_target};
 use crate::cli::Format;
 use crate::codebase::ts_resolver::resolve_import;
@@ -78,14 +78,7 @@ fn compute(args: &ExportsOfArgs) -> Result<ExportsOfReport> {
             };
             let importers = index
                 .as_ref()
-                .map(|idx| {
-                    importer_paths(
-                        idx,
-                        &target.abs_file,
-                        &export_lookup_symbol(export),
-                        &target.root,
-                    )
-                })
+                .map(|idx| export_importer_paths(idx, &target.abs_file, export, &target.root))
                 .unwrap_or_default();
             ExportRow {
                 name: export.name.clone(),

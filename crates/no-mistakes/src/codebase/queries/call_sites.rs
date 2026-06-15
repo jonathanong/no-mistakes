@@ -1,9 +1,10 @@
 use super::call_sites_visit::collect_call_sites;
 use super::render::{render, resolve_format, to_json, Report};
-use super::reverse::build_index;
-use super::shared::{rel_str, resolve_target};
+use super::reverse::{build_index, export_lookup_symbol};
+use super::shared::{read_symbols, rel_str, resolve_target};
 use crate::cli::Format;
 use crate::codebase::dependencies::graph::SymbolIndex;
+use crate::codebase::ts_symbols::FileSymbols;
 use anyhow::Result;
 use is_terminal::IsTerminal;
 use rayon::prelude::*;
@@ -62,23 +63,56 @@ pub struct CallSitesReport {
 }
 
 /// Map every file that may call the export to the local name(s) it is bound to.
-/// The defining file is searched under the export's own name (internal calls).
+///
+/// The defining file is scanned under the export's local binding (which differs
+/// from the public name for renamed and default exports). Re-export barrels —
+/// named (`export { x } from`) and star (`export * from`) — are transparent: we
+/// follow them to their consumers but never scan the barrel file itself, so an
+/// unrelated local call in a barrel is not mistaken for a call of the export.
 fn local_names_by_file(
     index: &SymbolIndex,
+    symbols: &FileSymbols,
     abs_file: &Path,
     export_name: &str,
 ) -> HashMap<PathBuf, HashSet<String>> {
+    let export = symbols
+        .exports
+        .iter()
+        .find(|export| export.name == export_name);
+    let lookup = export.map_or_else(|| export_name.to_string(), export_lookup_symbol);
+    let local = export
+        .and_then(|export| export.local.clone())
+        .unwrap_or_else(|| export_name.to_string());
+
     let mut by_file: HashMap<PathBuf, HashSet<String>> = HashMap::new();
-    by_file
-        .entry(abs_file.to_path_buf())
-        .or_default()
-        .insert(export_name.to_string());
-    if let Some(records) = index.importers_of(abs_file, export_name) {
-        for (importer, local, _is_reexport) in records {
-            by_file
-                .entry(importer.clone())
-                .or_default()
-                .insert(local.clone());
+    by_file.insert(abs_file.to_path_buf(), HashSet::from([local]));
+    let mut visited: HashSet<(PathBuf, String)> = HashSet::new();
+    let mut worklist = vec![(abs_file.to_path_buf(), lookup)];
+
+    while let Some((file, name)) = worklist.pop() {
+        if !visited.insert((file.clone(), name.clone())) {
+            continue;
+        }
+        if let Some(records) = index.importers_of(&file, &name) {
+            for (importer, local, is_reexport) in records {
+                if *is_reexport {
+                    // Named re-export forwards the symbol under the barrel's name.
+                    worklist.push((importer.clone(), local.clone()));
+                } else {
+                    by_file
+                        .entry(importer.clone())
+                        .or_default()
+                        .insert(local.clone());
+                }
+            }
+        }
+        // `export *` barrels forward `name` unchanged under the wildcard `*`.
+        if let Some(records) = index.importers_of(&file, "*") {
+            for (importer, _local, is_reexport) in records {
+                if *is_reexport {
+                    worklist.push((importer.clone(), name.clone()));
+                }
+            }
         }
     }
     by_file
@@ -106,8 +140,9 @@ fn sites_for_file(path: &Path, names: &HashSet<String>, root: &Path) -> Vec<Call
 
 fn compute(args: &CallSitesArgs) -> Result<CallSitesReport> {
     let target = resolve_target(&args.file, args.root.as_deref(), args.tsconfig.as_deref())?;
+    let symbols = read_symbols(&target.abs_file)?;
     let index = build_index(&target)?;
-    let by_file = local_names_by_file(&index, &target.abs_file, &args.export_name);
+    let by_file = local_names_by_file(&index, &symbols, &target.abs_file, &args.export_name);
 
     let mut call_sites: Vec<CallSite> = by_file
         .par_iter()
