@@ -38,6 +38,48 @@ fn terraform_edges_emit_reference_module_and_output_kinds() {
 }
 
 #[test]
+fn terraform_bare_module_reference_links_module_files() {
+    use crate::codebase::terraform::{TerraformFactMap, TerraformFileFacts, TerraformRef};
+    use std::collections::BTreeSet;
+
+    // `infra/prod/main.tf` has `depends_on = [module.net]`; the module source
+    // lives in `infra/net`. A bare module reference should link to its files.
+    let consumer = PathBuf::from("/repo/infra/prod/main.tf");
+    let module_file = PathBuf::from("/repo/infra/net/main.tf");
+    let mut facts = TerraformFactMap::default();
+    facts.files.insert(
+        module_file.clone(),
+        TerraformFileFacts {
+            path: module_file.clone(),
+            module_dir: PathBuf::from("/repo/infra/net"),
+            blocks: Vec::new(),
+            references: Vec::new(),
+        },
+    );
+    facts
+        .module_sources
+        .insert("module.net".to_string(), PathBuf::from("/repo/infra/net"));
+    facts
+        .files_by_module
+        .insert(PathBuf::from("/repo/infra/net"), BTreeSet::from([module_file.clone()]));
+    facts.refs_to.insert(
+        "module.net".to_string(),
+        vec![TerraformRef {
+            from_file: consumer.clone(),
+            from_addr: "aws_lb.web".to_string(),
+            to_addr: "module.net".to_string(),
+            module_output: None,
+        }],
+    );
+
+    let mut edges = Vec::new();
+    collect_terraform_output_edges(&facts, &mut edges);
+    assert!(edges.iter().any(|(from, to, kind)| from == &NodeId::File(consumer.clone())
+        && to == &NodeId::File(module_file.clone())
+        && *kind == EdgeKind::TerraformModuleRef));
+}
+
+#[test]
 fn terraform_reference_edges_stay_within_a_module() {
     use crate::codebase::terraform::{
         TerraformBlock, TerraformFactMap, TerraformFileFacts, TerraformRef, TfBlockKind,

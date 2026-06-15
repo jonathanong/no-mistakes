@@ -86,30 +86,43 @@ fn push_module_source_edges(facts: &TerraformFactMap, block: &TerraformBlock, ed
     }
 }
 
-/// `module.<name>.<output>` references → the file declaring that output.
+/// References to a child module: `module.<name>.<output>` links to the file
+/// declaring that output; a bare `module.<name>` (e.g. `depends_on`) links to all
+/// of the module's files so whole-module dependencies are not lost.
 fn collect_terraform_output_edges(facts: &TerraformFactMap, edges: &mut Vec<Edge>) {
     for refs in facts.refs_to.values() {
         for reference in refs {
-            let Some(output) = &reference.module_output else {
-                continue;
-            };
             let Some(source_dir) = facts.module_sources.get(&reference.to_addr) else {
                 continue;
             };
-            let output_addr = format!("output.{output}");
-            let (Some(decls), Some(module_files)) = (
-                facts.declarations.get(&output_addr),
-                facts.files_by_module.get(source_dir),
-            ) else {
+            let Some(module_files) = facts.files_by_module.get(source_dir) else {
                 continue;
             };
-            for target in decls.iter().filter(|file| module_files.contains(*file)) {
-                push_terraform_edge(
-                    edges,
-                    &reference.from_file,
-                    target,
-                    EdgeKind::TerraformOutputRef,
-                );
+            match &reference.module_output {
+                Some(output) => {
+                    let output_addr = format!("output.{output}");
+                    let Some(decls) = facts.declarations.get(&output_addr) else {
+                        continue;
+                    };
+                    for target in decls.iter().filter(|file| module_files.contains(*file)) {
+                        push_terraform_edge(
+                            edges,
+                            &reference.from_file,
+                            target,
+                            EdgeKind::TerraformOutputRef,
+                        );
+                    }
+                }
+                None => {
+                    for target in module_files {
+                        push_terraform_edge(
+                            edges,
+                            &reference.from_file,
+                            target,
+                            EdgeKind::TerraformModuleRef,
+                        );
+                    }
+                }
             }
         }
     }
