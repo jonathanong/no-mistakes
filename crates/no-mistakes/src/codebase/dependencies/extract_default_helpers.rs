@@ -18,19 +18,15 @@ fn walk_default_expression<'a>(
         record_object_member_calls(collector, "default", object);
     }
     collector.push_function_scope(Some("default".to_string()));
-    // Mirror exported-binding handling so runtime imports inside a default-export
-    // expression — e.g. `export default dynamic(() => import('./Foo'))` — are
-    // collected and flagged reachable through the `default` binding instead of
-    // being dropped with their anonymous callback scope.
-    let saved_suppress_imports = collector.suppress_imports;
-    let saved_collect_runtime = collector.collect_suppressed_runtime_imports;
-    collector.suppress_imports = true;
-    collector.collect_suppressed_runtime_imports = collector
-        .current_function()
-        .is_some_and(|scope| collector.is_exported_top_level_name(&scope));
+    // Flag runtime imports inside a default-export expression — e.g.
+    // `export default dynamic(() => import('./Foo'))` — as reachable through the
+    // `default` binding instead of dropping them with their anonymous callback
+    // scope. Unlike full suppression this keeps non-runtime (type) imports such as
+    // `export default ({} as import('./schema').Schema)`.
+    let saved_force = collector.force_runtime_reachable;
+    collector.force_runtime_reachable = true;
     walk::walk_export_default_declaration(collector, export);
-    collector.suppress_imports = saved_suppress_imports;
-    collector.collect_suppressed_runtime_imports = saved_collect_runtime;
+    collector.force_runtime_reachable = saved_force;
     collector.pop_function_scope(true);
 }
 

@@ -97,15 +97,20 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
                 |symbol| format!("{}#{}", relative_path(&root, &normalized), symbol),
             );
 
-        if let Some(registry_set) = registry_set.as_ref() {
-            push_registry_hints(
-                &graph,
-                &normalized,
-                &root,
-                registry_set,
-                &mut warnings,
-                &mut registry_seen,
-            );
+        // Registry hints are file-level ("this file is registered in X"); a
+        // symbol-scoped entrypoint asks about one export, so a file-level hint
+        // could be unrelated. Only emit for whole-file entrypoints.
+        if symbol.is_none() {
+            if let Some(registry_set) = registry_set.as_ref() {
+                push_registry_hints(
+                    &graph,
+                    &normalized,
+                    &root,
+                    registry_set,
+                    &mut warnings,
+                    &mut registry_seen,
+                );
+            }
         }
 
         if test_filter.is_match(&root, &normalized) {

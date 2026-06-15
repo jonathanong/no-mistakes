@@ -20,6 +20,11 @@ struct ImportCollector {
     imported_bindings: HashSet<String>,
     suppress_imports: bool,
     collect_suppressed_runtime_imports: bool,
+    /// When set, runtime (`import()`/`require()`) imports are flagged reachable
+    /// without suppressing other (e.g. type) imports. Used while walking a
+    /// default-export expression so a nested `dynamic(() => import(...))` is kept
+    /// while preserving `import type` edges.
+    force_runtime_reachable: bool,
     later_exported_type_names: HashSet<String>,
 }
 

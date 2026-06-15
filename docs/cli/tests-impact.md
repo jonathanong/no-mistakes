@@ -29,7 +29,11 @@ chained through a second private binding (`const W = memo(X); export default W;`
 or referenced as JSX inside an exported component
 (`const X = dynamic(…); export function Page() { return <X /> }`) — is pruned by
 reachability analysis and may not be traced. Assign or export the
-`dynamic(…)` result directly for reliable detection.
+`dynamic(…)` result directly for reliable detection. Dynamic imports of a
+workspace/monorepo package (`dynamic(() => import('@app/foo'))`) are surfaced as
+`WorkspaceImport` edges, so they appear at high confidence without a
+`dynamic-import` warning, and a type-only workspace import in a registry file may
+still produce a hint.
 
 ## Stub tests and registry hints (opt-in)
 

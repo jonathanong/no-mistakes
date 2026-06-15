@@ -196,6 +196,20 @@ fn impact_traverses_wrapped_default_next_dynamic_boundary() {
     );
 }
 
+#[test]
+fn impact_does_not_overseed_parenthesized_function_default() {
+    let root = fixture("tests-impact-next-dynamic");
+    // `paren-fn-default.mts` only assigns the lazy binding to an unused private
+    // const and shadows its name inside a parenthesized function default, so its
+    // test must NOT be surfaced by a change to `foo.mts`.
+    let plan = impact_json(&root, &["foo.mts"]);
+    let names = selected_files(&plan);
+    assert!(
+        !names.contains(&"paren-fn-default.test.mts".to_string()),
+        "parenthesized function default must not over-seed: {names:?}"
+    );
+}
+
 // ── Part 3: registry hint ───────────────────────────────────────────────────
 
 #[test]
@@ -287,6 +301,30 @@ fn impact_registry_hint_ignores_type_only_imports() {
     assert!(hints
         .iter()
         .any(|hint| hint.contains("widgets-registry.mts")));
+}
+
+#[test]
+fn impact_skips_registry_hint_for_symbol_entrypoint() {
+    let root = fixture("tests-impact-registry");
+    let root_str = root.to_str().unwrap();
+    // A symbol-scoped entrypoint asks about one export; a file-level registry
+    // hint could be unrelated, so none is emitted.
+    let output = run(&[
+        "tests",
+        "impact",
+        "feature.mts#feature",
+        "--root",
+        root_str,
+        "--symbols",
+        "--json",
+    ]);
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert!(registry_hints(&plan).is_empty());
 }
 
 #[test]

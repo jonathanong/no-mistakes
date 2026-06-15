@@ -28,13 +28,18 @@ fn later_default_export_value_names<'a>(program: &Program<'a>) -> Vec<String> {
     }) else {
         return Vec::new();
     };
+    // Function/class/arrow defaults (including parenthesized ones) create their
+    // own scope; collecting identifiers from their bodies would pre-seed shadowed
+    // locals as exported and falsely mark their imports reachable.
     if matches!(
         export.declaration,
         ExportDefaultDeclarationKind::FunctionDeclaration(_)
             | ExportDefaultDeclarationKind::ClassDeclaration(_)
             | ExportDefaultDeclarationKind::ArrowFunctionExpression(_)
             | ExportDefaultDeclarationKind::FunctionExpression(_)
-    ) {
+    ) || parenthesized_default_function(&export.declaration).is_some()
+        || parenthesized_default_arrow(&export.declaration).is_some()
+    {
         return Vec::new();
     }
     let mut collector = DefaultExportIdentifierCollector::default();
