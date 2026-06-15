@@ -111,8 +111,10 @@ pub fn env_report(root: &Path, config: Option<&Path>, var: &str) -> Result<CiEnv
 fn resolve_root(root: &Path) -> Result<PathBuf> {
     let cwd = std::env::current_dir()?;
     let root = crate::cli::resolve_optional_root(Some(root), &cwd);
-    let root = crate::codebase::ts_resolver::normalize_path(&root);
-    Ok(root.canonicalize().unwrap_or(root))
+    // Lexical normalization only — never `canonicalize`, so we don't resolve
+    // symlinks (GitHub matches the literal repo path) and root/abs stay
+    // prefix-comparable on every platform (no Windows `\\?\` mismatch).
+    Ok(crate::codebase::ts_resolver::normalize_path(&root))
 }
 
 fn changed_rel(root: &Path, file: &Path) -> String {
@@ -121,9 +123,6 @@ fn changed_rel(root: &Path, file: &Path) -> String {
     } else {
         crate::codebase::ts_resolver::normalize_path(&root.join(file))
     };
-    // Canonicalize so `abs` matches `root` (also canonicalized) — on Windows
-    // both then carry the `\\?\` UNC prefix, so strip_prefix succeeds.
-    let abs = abs.canonicalize().unwrap_or(abs);
     relative_slash(root, &abs)
 }
 

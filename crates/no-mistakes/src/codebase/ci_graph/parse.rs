@@ -80,12 +80,27 @@ fn add_event(
     rel_path: &str,
     warnings: &mut Vec<String>,
 ) {
-    if PATH_FILTERABLE_EVENTS.contains(&name) {
+    if PATH_FILTERABLE_EVENTS.contains(&name) && !is_tag_only(config) {
         let filter = parse_path_filter(config, name, rel_path, warnings);
         triggers.events.insert(name.to_string(), filter);
     } else {
         triggers.other_events.push(name.to_string());
     }
+}
+
+/// A push filtered only by `tags`/`tags-ignore` (no `branches` or `paths`) does
+/// not run on branch pushes and ignores path filters on tag pushes, so a file
+/// change never triggers it — classify it as a non-file-triggered event.
+fn is_tag_only(config: Option<&Value>) -> bool {
+    let Some(config) = config else {
+        return false;
+    };
+    let has = |key: &str| config.get(key).is_some();
+    (has("tags") || has("tags-ignore"))
+        && !has("paths")
+        && !has("paths-ignore")
+        && !has("branches")
+        && !has("branches-ignore")
 }
 
 fn parse_path_filter(

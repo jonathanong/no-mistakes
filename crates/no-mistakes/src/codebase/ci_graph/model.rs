@@ -94,12 +94,15 @@ pub enum PermissionLevel {
 }
 
 /// The GitHub Actions permission scopes used to expand `read-all`/`write-all`.
+///
+/// Limited to scopes that support both `read` and `write`, so the `write-all`
+/// shorthand never reports `write` for a read-only scope (e.g.
+/// `vulnerability-alerts`). Read-only scopes are intentionally omitted rather
+/// than mis-reported.
 pub const PERMISSION_SCOPES: &[&str] = &[
     "actions",
-    "artifact-metadata",
     "attestations",
     "checks",
-    "code-quality",
     "contents",
     "deployments",
     "discussions",
@@ -112,7 +115,6 @@ pub const PERMISSION_SCOPES: &[&str] = &[
     "repository-projects",
     "security-events",
     "statuses",
-    "vulnerability-alerts",
 ];
 
 /// A non-fatal problem encountered while loading workflows.

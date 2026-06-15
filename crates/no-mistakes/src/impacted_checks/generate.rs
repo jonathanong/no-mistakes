@@ -26,9 +26,14 @@ pub fn generate_impacted_checks(args: &ImpactedChecksArgs) -> Result<ImpactedChe
             .iter()
             .map(|file| relative_slash(&root, file)),
     );
-    let deleted: BTreeSet<String> = collected
-        .deleted
+    // Files that no longer exist on disk — deleted via `--diff`, removed on the
+    // `--base` branch (whose `git diff --name-only` omits status), or a missing
+    // `--changed-file`. Per-file (append) checks must skip these so they never
+    // target a nonexistent path; whole-project checks still trigger.
+    let missing: BTreeSet<String> = collected
+        .files
         .iter()
+        .filter(|file| !file.exists())
         .map(|file| relative_slash(&root, file))
         .collect();
 
@@ -62,7 +67,7 @@ pub fn generate_impacted_checks(args: &ImpactedChecksArgs) -> Result<ImpactedChe
         }
     }
 
-    checks.extend(generic_checks(&config, &changed_files, &deleted)?);
+    checks.extend(generic_checks(&config, &changed_files, &missing)?);
 
     Ok(ImpactedChecksReport {
         changed_files,
@@ -95,7 +100,7 @@ pub(super) fn framework_configured(config: &NoMistakesConfig, framework: TestFra
 pub(super) fn generic_checks(
     config: &NoMistakesConfig,
     changed_files: &[String],
-    deleted: &BTreeSet<String>,
+    missing: &BTreeSet<String>,
 ) -> Result<Vec<CheckCommand>> {
     let mut out = Vec::new();
     for def in &config.checks.commands {
@@ -118,7 +123,7 @@ pub(super) fn generic_checks(
             // deleted path would fail. Whole-project checks still trigger below.
             let appended: Vec<String> = matched
                 .into_iter()
-                .filter(|f| !deleted.contains(f))
+                .filter(|f| !missing.contains(f))
                 .collect();
             if appended.is_empty() {
                 continue;

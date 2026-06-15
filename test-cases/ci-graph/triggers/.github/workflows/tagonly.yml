@@ -1,0 +1,12 @@
+# Tag-only push: runs on `v*` tag pushes, never on branch file changes — so
+# `ci impact` must NOT report it as triggered by a changed file.
+name: Release
+on:
+  push:
+    tags:
+      - "v*"
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo release

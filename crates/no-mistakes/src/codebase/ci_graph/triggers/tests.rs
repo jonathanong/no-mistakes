@@ -18,6 +18,15 @@ fn star_does_not_cross_slash() {
 }
 
 #[test]
+fn github_double_star_suffix_is_normalized() {
+    // `**.ts` is valid GitHub syntax but invalid for globset; it must still match.
+    let globs = compiled(&["**.ts"]);
+    assert!(selected_by(&globs, "a.ts"));
+    assert!(selected_by(&globs, "src/nested/a.ts"));
+    assert!(!selected_by(&globs, "a.js"));
+}
+
+#[test]
 fn negation_last_match_wins() {
     let globs = compiled(&["src/**", "!src/docs/**"]);
     assert!(selected_by(&globs, "src/a.ts"));

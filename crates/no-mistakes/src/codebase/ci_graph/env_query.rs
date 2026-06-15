@@ -150,7 +150,7 @@ fn collect_locations(value: &Value, var: &str, reference_re: &Regex) -> Vec<CiEn
         }
     }
 
-    sort_dedupe(out)
+    sort_locations(out)
 }
 
 fn collect_env_defs(
@@ -216,11 +216,13 @@ fn scalar_to_string(value: &Value) -> Option<String> {
     }
 }
 
-fn sort_dedupe(mut locations: Vec<CiEnvLocation>) -> Vec<CiEnvLocation> {
+/// Sort for deterministic output. We do NOT dedupe: two `${{ env.FOO }}`
+/// references in different steps of the same job look identical (no line/step
+/// id is recorded) but are distinct occurrences the user is auditing for.
+fn sort_locations(mut locations: Vec<CiEnvLocation>) -> Vec<CiEnvLocation> {
     locations.sort_by(|a, b| {
         (a.kind, a.scope, &a.job, &a.value).cmp(&(b.kind, b.scope, &b.job, &b.value))
     });
-    locations.dedup();
     locations
 }
 

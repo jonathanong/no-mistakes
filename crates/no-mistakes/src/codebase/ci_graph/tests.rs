@@ -101,6 +101,8 @@ fn impact_matches_paths_and_always() {
     // dispatch.yml and reusable.yml are not file-triggered.
     assert!(!paths.contains(&".github/workflows/dispatch.yml"));
     assert!(!paths.contains(&".github/workflows/reusable.yml"));
+    // tag-only push (release) is not triggered by a branch file change.
+    assert!(!paths.contains(&".github/workflows/tagonly.yml"));
     // both.yml has paths api/** which does not match.
     assert!(!paths.contains(&".github/workflows/both.yml"));
     // the both-paths warning is surfaced.
@@ -247,10 +249,14 @@ fn env_step_scope_definition_and_reference() {
         .locations
         .iter()
         .any(|l| l.kind == EnvLocationKind::Definition && l.scope == EnvScope::Step));
-    assert!(file
+    // The var is referenced in two distinct steps (a `run:` and a `with:`); both
+    // occurrences are preserved rather than deduped into one.
+    let refs = file
         .locations
         .iter()
-        .any(|l| l.kind == EnvLocationKind::Reference && l.scope == EnvScope::Step));
+        .filter(|l| l.kind == EnvLocationKind::Reference && l.scope == EnvScope::Step)
+        .count();
+    assert_eq!(refs, 2);
 }
 
 #[test]

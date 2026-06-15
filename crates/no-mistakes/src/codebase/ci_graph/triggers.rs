@@ -142,13 +142,14 @@ enum EventOutcome {
     NotMatched,
 }
 
-/// Compile each pattern once, dropping invalid globs (which never match).
+/// Compile each pattern once, dropping invalid globs (which never match). The
+/// reported `pattern` keeps the author's original text.
 fn compile_list(patterns: &[String]) -> Vec<CompiledGlob> {
     patterns
         .iter()
         .filter_map(|pattern| {
             let (negate, glob) = split_negation(pattern);
-            GlobBuilder::new(glob)
+            GlobBuilder::new(&normalize_github_glob(glob))
                 .literal_separator(true)
                 .build()
                 .ok()
@@ -159,6 +160,29 @@ fn compile_list(patterns: &[String]) -> Vec<CompiledGlob> {
                 })
         })
         .collect()
+}
+
+/// globset requires `**` to occupy a whole path segment, but GitHub's path
+/// syntax allows forms like `**.js` (match `.js` files anywhere). Rewrite a
+/// `**` that is immediately followed by a non-`/` character to `**/*` so the
+/// filter is honored instead of silently dropped.
+fn normalize_github_glob(pattern: &str) -> String {
+    let chars: Vec<char> = pattern.chars().collect();
+    let mut out = String::with_capacity(pattern.len() + 2);
+    let mut i = 0;
+    while i < chars.len() {
+        if chars[i] == '*' && chars.get(i + 1) == Some(&'*') {
+            out.push_str("**");
+            i += 2;
+            if matches!(chars.get(i), Some(c) if *c != '/') {
+                out.push_str("/*");
+            }
+        } else {
+            out.push(chars[i]);
+            i += 1;
+        }
+    }
+    out
 }
 
 /// gitignore-style ordered evaluation: positive patterns select a path, `!`
