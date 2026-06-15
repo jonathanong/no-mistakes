@@ -37,4 +37,13 @@ Output shape:
 
 A component imported nowhere yields an empty `callers` list.
 
+## Limitation
+
+Classification is by directive only. A file with no `"use client"`/`"use server"`
+directive is treated as a server component (the App Router default), so
+non-RSC importers without a directive — unit tests, stories, or helper modules
+outside the App Router — are reported as `environment: unknown` callers. Scope
+the result to the App Router (e.g. with `--root app`) or filter test/story files
+out of the output when that matters.
+
 Node API: `rscCallers(options)`.

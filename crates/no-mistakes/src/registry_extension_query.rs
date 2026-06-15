@@ -40,6 +40,7 @@ pub struct EntryImport {
 
 /// One existing registry entry.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RegistryEntry {
     pub line: usize,
     #[serde(skip_serializing_if = "Option::is_none", rename = "import")]
@@ -202,11 +203,13 @@ fn confidence_for(entries: &[RegistryEntry]) -> String {
 
 fn template_for_entry(entry: &RegistryEntry) -> String {
     match &entry.entry_import {
-        Some(import) => {
-            let symbol = import.symbol.as_deref().unwrap_or(&import.local);
-            entry.call_shape.replacen(symbol, "<Entry>", 1)
+        // Replace the local identifier that actually appears in `call_shape`
+        // (the imported `symbol` may be `default`/an alias). Dynamic-import
+        // entries have no local name, so leave the shape verbatim.
+        Some(import) if !import.local.is_empty() => {
+            entry.call_shape.replacen(&import.local, "<Entry>", 1)
         }
-        None => entry.call_shape.clone(),
+        _ => entry.call_shape.clone(),
     }
 }
 

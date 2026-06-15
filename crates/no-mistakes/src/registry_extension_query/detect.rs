@@ -138,14 +138,16 @@ fn slice(source: &str, start: u32, end: u32) -> String {
         .to_string()
 }
 
-/// `(key, display)` for a call's callee. `key` groups calls; `display` is the
-/// verbatim callee text.
+/// `(key, display)` for a call's callee. `key` groups calls and is the full
+/// callee text so different registries that share a method name
+/// (`alpha.register` vs `beta.register`) are not collapsed; `display` is the
+/// same verbatim callee text reported as the registrant.
 fn callee_key(callee: &Expression<'_>, source: &str) -> Option<(String, String)> {
     match callee {
         Expression::Identifier(ident) => Some((ident.name.to_string(), ident.name.to_string())),
         Expression::StaticMemberExpression(member) => {
             let display = slice(source, member.span.start, member.span.end);
-            Some((member.property.name.to_string(), display))
+            Some((display.clone(), display))
         }
         _ => None,
     }
@@ -165,6 +167,8 @@ fn expression_import(
     match expr {
         Expression::Identifier(ident) => imports.get(ident.name.as_str()).cloned(),
         Expression::NewExpression(new) => new_expression_import(new, imports),
+        // Imported factory call, e.g. `register(makeFoo())`: resolve the callee.
+        Expression::CallExpression(call) => expression_import(&call.callee, imports),
         Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_) => {
             dynamic_import(expr)
         }
@@ -176,10 +180,18 @@ fn new_expression_import(
     new: &NewExpression<'_>,
     imports: &HashMap<String, EntryImport>,
 ) -> Option<EntryImport> {
-    if let Expression::Identifier(ident) = &new.callee {
-        return imports.get(ident.name.as_str()).cloned();
+    match &new.callee {
+        Expression::Identifier(ident) => imports.get(ident.name.as_str()).cloned(),
+        // Namespace-import constructor, e.g. `new plugins.Foo()`: resolve the
+        // namespace binding (`plugins`).
+        Expression::StaticMemberExpression(member) => {
+            if let Expression::Identifier(object) = &member.object {
+                return imports.get(object.name.as_str()).cloned();
+            }
+            None
+        }
+        _ => None,
     }
-    None
 }
 
 /// Find a `() => import("...")` dynamic import inside an expression.

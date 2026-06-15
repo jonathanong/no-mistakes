@@ -7,6 +7,11 @@ fn registry_extension_json_register_call() {
     assert_eq!(value["patternKind"], "register-call");
     assert_eq!(value["registrant"], "registry.register");
     assert_eq!(value["entries"].as_array().unwrap().len(), 2);
+    // Entry fields serialize as camelCase (`callShape`, not `call_shape`).
+    assert!(value["entries"][0]["callShape"]
+        .as_str()
+        .unwrap()
+        .starts_with("registry.register"));
 }
 
 #[test]

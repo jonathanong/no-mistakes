@@ -151,3 +151,42 @@ fn absolute_registry_path_is_accepted() {
     let report = run(&fixture(), &abs).unwrap();
     assert_eq!(report.pattern_kind, "register-call");
 }
+
+#[test]
+fn resolves_imported_factory_call_args() {
+    let report = report("factory-call.ts");
+    assert_eq!(report.pattern_kind, "register-call");
+    assert_eq!(report.entries.len(), 2);
+    let import = report.entries[0].entry_import.as_ref().unwrap();
+    assert_eq!(import.symbol.as_deref(), Some("makeFoo"));
+    assert_eq!(import.specifier, "./factories/foo");
+}
+
+#[test]
+fn resolves_namespace_constructor_registrants() {
+    let report = report("namespace-new.ts");
+    assert_eq!(report.pattern_kind, "register-call");
+    assert_eq!(report.entries.len(), 2);
+    let import = report.entries[0].entry_import.as_ref().unwrap();
+    assert_eq!(import.kind, "namespace");
+    assert_eq!(import.local, "plugins");
+}
+
+#[test]
+fn distinct_registries_with_same_method_are_not_collapsed() {
+    // alpha.register / beta.register each appear once; neither reaches the
+    // >=2 threshold once grouped by the full callee, so no pattern is claimed.
+    let report = report("multi-registry.ts");
+    assert_eq!(report.pattern_kind, "none");
+}
+
+#[test]
+fn template_uses_local_name() {
+    // Default import: symbol is `default` but the local `Plugin` appears in the
+    // call shape, so the template must substitute the local name.
+    let report = report("import-kinds.ts");
+    assert_eq!(
+        report.template.as_deref(),
+        Some("registry.register(new <Entry>())")
+    );
+}
