@@ -33,6 +33,7 @@ pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<InfraR
     // instead of silently producing an empty result.
     let config = load_v2_config(&root, config_path)?;
     let terraform = config.infra.terraform.clone();
+    validate_match_mode(terraform.test.match_mode.as_deref())?;
     // Compile the test globs up front so an invalid pattern is reported rather
     // than silently dropping all covering-test suggestions.
     let test_globset = compile_test_globs(&terraform.test.test_globs)?;
@@ -126,6 +127,19 @@ impl InfraReport {
             .unwrap_or(path)
             .display()
             .to_string()
+    }
+}
+
+/// Reject an unknown `infra.terraform.test.match` value instead of silently
+/// falling back to resource mode.
+fn validate_match_mode(mode: Option<&str>) -> Result<()> {
+    match mode {
+        None | Some("resource") | Some("module") => Ok(()),
+        Some(other) => {
+            anyhow::bail!(
+                "invalid infra.terraform.test.match: {other} (expected 'resource' or 'module')"
+            )
+        }
     }
 }
 

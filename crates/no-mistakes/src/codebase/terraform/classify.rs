@@ -36,18 +36,16 @@ pub(super) fn traversal_to_addr(traversal: &Traversal) -> Option<(TfAddr, Option
     }
 }
 
-/// Collect the leading `GetAttr` identifiers of a traversal. Index operators are
-/// skipped so indexed resources/modules (`module.net[0].out`,
-/// `aws_x.y[count.index].id`) still resolve their name and output; splat operators
-/// terminate the chain.
+/// Collect the `GetAttr` identifiers of a traversal. Index and splat operators are
+/// skipped rather than terminating the chain, so indexed/splatted resources and
+/// modules (`module.net[0].out`, `module.net[*].zone_id`, `aws_x.y[count.index].id`)
+/// still resolve their name and output.
 fn leading_attrs(operators: &[TraversalOperator]) -> Vec<&str> {
-    let mut attrs = Vec::new();
-    for operator in operators {
-        match operator {
-            TraversalOperator::GetAttr(ident) => attrs.push(ident.as_str()),
-            TraversalOperator::Index(_) | TraversalOperator::LegacyIndex(_) => continue,
-            _ => break,
-        }
-    }
-    attrs
+    operators
+        .iter()
+        .filter_map(|operator| match operator {
+            TraversalOperator::GetAttr(ident) => Some(ident.as_str()),
+            _ => None,
+        })
+        .collect()
 }

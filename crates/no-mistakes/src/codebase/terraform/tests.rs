@@ -223,6 +223,25 @@ fn ignores_for_expression_iterator_variables() {
 }
 
 #[test]
+fn resolves_splatted_module_outputs() {
+    let facts = parse(
+        r#"
+        output "ids" {
+          value = module.network[*].zone_id
+        }
+        "#,
+    );
+    let block = facts
+        .blocks
+        .iter()
+        .find(|b| b.addr == "output.ids")
+        .unwrap();
+    assert!(block
+        .value_refs
+        .contains(&"module.network.zone_id".to_string()));
+}
+
+#[test]
 fn output_value_refs_keep_module_output_suffix() {
     let facts = parse(
         r#"

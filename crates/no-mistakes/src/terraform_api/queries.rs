@@ -74,12 +74,17 @@ impl InfraReport {
     }
 }
 
-/// Whether `content` references `addr` on an identifier boundary, so that a test
-/// mentioning `aws_s3_bucket.foo_logs` does not match a file declaring only
-/// `aws_s3_bucket.foo`.
+/// Whether `content` references `addr` on identifier boundaries, so that neither
+/// `aws_s3_bucket.foo_logs` (trailing) nor `legacy_aws_s3_bucket.foo` (leading)
+/// match a file declaring only `aws_s3_bucket.foo`.
 fn references_address(content: &str, addr: &str) -> bool {
     content.match_indices(addr).any(|(index, _)| {
+        let before = content[..index].chars().next_back();
         let after = content[index + addr.len()..].chars().next();
-        !after.is_some_and(|c| c.is_alphanumeric() || c == '_')
+        !is_identifier_char(before) && !is_identifier_char(after)
     })
+}
+
+fn is_identifier_char(ch: Option<char>) -> bool {
+    ch.is_some_and(|ch| ch.is_alphanumeric() || ch == '_')
 }

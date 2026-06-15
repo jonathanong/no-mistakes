@@ -163,7 +163,8 @@ impl SwiftReport {
 fn test_command(package: &str, target: &str) -> String {
     // `swift test --filter` matches a regex against `<target>.<case>`; anchor to
     // the target prefix and escape it so one target name cannot match another.
-    let filter = format!("^{}\\.", regex_escape(target));
+    // Single-quote it so the shell preserves the regex backslashes verbatim.
+    let filter = format!("'^{}\\.'", regex_escape(target));
     if package.is_empty() || package == "." {
         format!("swift test --filter {filter}")
     } else {

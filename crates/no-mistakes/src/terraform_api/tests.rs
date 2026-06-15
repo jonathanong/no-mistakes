@@ -202,6 +202,14 @@ fn compile_test_globs_validates_patterns() {
 }
 
 #[test]
+fn validate_match_mode_rejects_unknown_values() {
+    assert!(validate_match_mode(None).is_ok());
+    assert!(validate_match_mode(Some("resource")).is_ok());
+    assert!(validate_match_mode(Some("module")).is_ok());
+    assert!(validate_match_mode(Some("modules")).is_err());
+}
+
+#[test]
 fn analyze_project_rejects_invalid_test_globs() {
     // The dedicated fixture configures an unclosed character-class glob.
     let root = crate::codebase::ts_resolver::normalize_path(
