@@ -21,7 +21,9 @@ tsconfig `paths` alias, so in a monorepo `importers`/`exports-of`/`dead-exports`
 `call-sites` may omit cross-package consumers and report a live package entry
 export as unimported. Use `no-mistakes dependents <file>` for full cross-package
 impact. (Relative, alias, NodeNext `.js`, and declaration-only `.d.ts` imports
-are all resolved.)
+are all resolved.) When a module ships a runtime `.js` and a `.d.ts` side by
+side at the same path, resolution prefers the runtime file, so a type-only
+import may attach to the `.js` rather than the `.d.ts`.
 
 ## `importers <file>`
 
