@@ -216,6 +216,7 @@ fn template_for_entry(entry: &RegistryEntry) -> String {
 }
 
 include!("registry_extension_query/detect.rs");
+include!("registry_extension_query/detect_resolve.rs");
 
 #[cfg(test)]
 mod tests;
