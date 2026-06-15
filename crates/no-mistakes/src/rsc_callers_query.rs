@@ -102,6 +102,15 @@ fn runtime_edge(kind: EdgeKind) -> bool {
     )
 }
 
+fn runtime_edges() -> HashSet<EdgeKind> {
+    HashSet::from([
+        EdgeKind::Import,
+        EdgeKind::DynamicImport,
+        EdgeKind::Require,
+        EdgeKind::WorkspaceImport,
+    ])
+}
+
 /// Run the `rsc-callers` query.
 pub fn run(
     root: &Path,
@@ -122,8 +131,12 @@ pub fn run(
     let component_node = NodeId::File(normalize_path(&component_abs));
 
     let tsconfig = resolve_tsconfig(&root, tsconfig)?;
+    let allowed = runtime_edges();
+    // Build only import-edge producers; rsc-callers traverses runtime imports
+    // exclusively, so building route/queue/React/Swift/Terraform edges is waste.
+    let plan = GraphBuildPlan::from_allowed(Some(&allowed));
     let graph =
-        DepGraph::build_with_plan_and_config(&root, &tsconfig, GraphBuildPlan::all(), config_path)?;
+        DepGraph::build_with_plan_and_config(&root, &tsconfig, plan, config_path)?;
 
     let mut env_cache: HashMap<PathBuf, Environment> = HashMap::new();
     let mut visited: HashSet<NodeId> = HashSet::new();
