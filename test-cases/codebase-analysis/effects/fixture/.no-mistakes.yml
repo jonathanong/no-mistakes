@@ -1,0 +1,13 @@
+effects:
+  valkey:
+    categories:
+      cache:
+        - ValkeyCache
+        - getEntityCache
+      pubsub:
+        - createPublisher
+        - createSubscriber
+      invalidation:
+        - invalidate
+    functions:
+      - standalone

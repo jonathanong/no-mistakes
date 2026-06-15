@@ -118,6 +118,22 @@ async function reactUsages(options) {
   return callJson(native.reactUsagesJson, options);
 }
 
+async function dataPw(options) {
+  return callJson(native.dataPwJson, options);
+}
+
+async function effects(options) {
+  return callJson(native.effectsJson, options);
+}
+
+async function rscCallers(options) {
+  return callJson(native.rscCallersJson, options);
+}
+
+async function registryExtension(options) {
+  return callJson(native.registryExtensionJson, options);
+}
+
 async function lockfileDiff(options) {
   return callJson(native.lockfileDiffJson, options);
 }
@@ -129,8 +145,10 @@ async function version() {
 module.exports = {
   analyzeProject,
   check,
+  dataPw,
   dependencies,
   dependents,
+  effects,
   fetches,
   lockfileDiff,
   playwrightCheck,
@@ -144,7 +162,9 @@ module.exports = {
   reactAnalyze,
   reactCheck,
   reactUsages,
+  registryExtension,
   related,
+  rscCallers,
   serverRouteEdges,
   serverRouteList,
   serverRouteRelated,

@@ -2,6 +2,14 @@ import type {
   CheckReport,
   AnalyzeProjectOptions,
   AnalyzeProjectResult,
+  DataPwOptions,
+  DataPwReport,
+  EffectsOptions,
+  EffectsReport,
+  RscCallersOptions,
+  RscCallersReport,
+  RegistryExtensionOptions,
+  RegistryExtensionReport,
   DependencyResult,
   FetchesOptions,
   GraphEdge,
@@ -65,4 +73,10 @@ export function reactUsages(
   options: ProjectOptions & { target: string },
 ): Promise<ReactUsagesReport>;
 export function lockfileDiff(options: LockfileDiffOptions): Promise<LockfileDiffEntry[]>;
+export function dataPw(options: DataPwOptions): Promise<DataPwReport>;
+export function effects(options: EffectsOptions): Promise<EffectsReport>;
+export function rscCallers(options: RscCallersOptions): Promise<RscCallersReport>;
+export function registryExtension(
+  options: RegistryExtensionOptions,
+): Promise<RegistryExtensionReport>;
 export function version(): Promise<string>;
