@@ -89,7 +89,7 @@ struct ResolveCheckOptions {
 }
 
 fn require_file(file: &str) -> napi::Result<()> {
-    if file.is_empty() {
+    if file.trim().is_empty() {
         return Err(napi::Error::from_reason("file is required"));
     }
     Ok(())
@@ -140,7 +140,7 @@ pub(crate) fn dead_exports_json_impl(options_json: String) -> napi::Result<Strin
 pub(crate) fn call_sites_json_impl(options_json: String) -> napi::Result<String> {
     let options = parse_options::<CallSitesOptions>(&options_json)?;
     require_file(&options.file)?;
-    if options.export_name.is_empty() {
+    if options.export_name.trim().is_empty() {
         return Err(napi::Error::from_reason("exportName is required"));
     }
     crate::codebase::queries::call_sites::run_json(CallSitesArgs {

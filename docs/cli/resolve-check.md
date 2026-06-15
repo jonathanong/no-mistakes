@@ -8,7 +8,7 @@ no-mistakes resolve-check src/new-feature.test.ts --format json
 
 Use this right after writing or moving a file to confirm its imports point at real
 modules. It is fully local — it parses only the target file and resolves each
-specifier — so it returns in well under a second.
+specifier — so it is typically fast (well within the sub-5-second target).
 
 Each import is classified `resolved` (points at a local file), `external` (a bare
 npm package, Node builtin, or subpath import), or `unresolved` (a relative or
