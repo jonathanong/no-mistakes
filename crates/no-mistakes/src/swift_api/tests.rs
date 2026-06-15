@@ -58,6 +58,12 @@ fn analyze_project_without_packages_has_no_swift_edges() {
 }
 
 #[test]
+fn analyze_project_propagates_missing_explicit_config() {
+    let result = analyze_project(&fixture(), Some(Path::new("/no/such/no-mistakes.yml")));
+    assert!(result.is_err());
+}
+
+#[test]
 fn test_command_handles_root_and_named_packages() {
     assert_eq!(test_command("", "T"), "swift test --filter T");
     assert_eq!(test_command(".", "T"), "swift test --filter T");

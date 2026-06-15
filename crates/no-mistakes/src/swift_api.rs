@@ -49,7 +49,9 @@ pub struct TestTargetRow {
 /// Build the Swift graph and target index once.
 pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<SwiftReport> {
     let root = normalize_path(root);
-    let config = load_v2_config(&root, config_path).unwrap_or_default();
+    // Propagate errors so an explicit but missing/invalid `--config` is reported
+    // instead of silently producing an empty result.
+    let config = load_v2_config(&root, config_path)?;
     let packages = config.tests.swift.packages.clone();
 
     let tsconfig = TsConfig::default();

@@ -101,7 +101,7 @@ pub(crate) fn collect_terraform_facts(
         .module_roots
         .iter()
         .map(|dir| {
-            let dir = dir.trim_end_matches(|c| c == '/' || c == '\\');
+            let dir = dir.trim_end_matches(['/', '\\']);
             crate::codebase::ts_resolver::normalize_path(&root.join(dir))
         })
         .collect();

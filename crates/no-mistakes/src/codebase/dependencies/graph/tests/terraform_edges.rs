@@ -38,6 +38,61 @@ fn terraform_edges_emit_reference_module_and_output_kinds() {
 }
 
 #[test]
+fn terraform_reference_edges_stay_within_a_module() {
+    use crate::codebase::terraform::{
+        TerraformBlock, TerraformFactMap, TerraformFileFacts, TerraformRef, TfBlockKind,
+    };
+    use std::collections::BTreeSet;
+
+    // Two modules each declare `aws_s3_bucket.main`; m1/use.tf references it.
+    let decl1 = PathBuf::from("/repo/m1/main.tf");
+    let use1 = PathBuf::from("/repo/m1/use.tf");
+    let decl2 = PathBuf::from("/repo/m2/main.tf");
+    let mut facts = TerraformFactMap::default();
+    for (path, dir) in [(&decl1, "/repo/m1"), (&use1, "/repo/m1"), (&decl2, "/repo/m2")] {
+        facts.files.insert(
+            path.clone(),
+            TerraformFileFacts {
+                path: path.clone(),
+                module_dir: PathBuf::from(dir),
+                blocks: vec![TerraformBlock {
+                    kind: TfBlockKind::Resource,
+                    addr: "aws_s3_bucket.main".to_string(),
+                    name: "main".to_string(),
+                    file: path.clone(),
+                    module_source_dir: None,
+                    value_refs: Vec::new(),
+                }],
+                references: Vec::new(),
+            },
+        );
+    }
+    facts
+        .declarations
+        .insert("aws_s3_bucket.main".to_string(), BTreeSet::from([decl1.clone(), decl2.clone()]));
+    facts.refs_to.insert(
+        "aws_s3_bucket.main".to_string(),
+        vec![TerraformRef {
+            from_file: use1.clone(),
+            from_addr: "aws_lb.web".to_string(),
+            to_addr: "aws_s3_bucket.main".to_string(),
+            module_output: None,
+        }],
+    );
+
+    let mut edges = Vec::new();
+    collect_terraform_reference_edges(&facts, &mut edges);
+
+    // The reference resolves only to the same-module declaration, never m2's.
+    assert!(edges
+        .iter()
+        .any(|(from, to, _)| from == &NodeId::File(use1.clone()) && to == &NodeId::File(decl1.clone())));
+    assert!(!edges
+        .iter()
+        .any(|(_, to, _)| to == &NodeId::File(decl2.clone())));
+}
+
+#[test]
 fn terraform_edges_surface_in_full_graph_dependents() {
     let root = fixture("terraform-basic");
     let tsconfig = TsConfig::default();

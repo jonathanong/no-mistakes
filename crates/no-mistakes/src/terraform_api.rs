@@ -28,7 +28,9 @@ pub struct InfraReport {
 /// Discover and parse the configured Terraform files once.
 pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<InfraReport> {
     let root = normalize_path(root);
-    let config = load_v2_config(&root, config_path).unwrap_or_default();
+    // Propagate errors so an explicit but missing/invalid `--config` is reported
+    // instead of silently producing an empty result.
+    let config = load_v2_config(&root, config_path)?;
     let terraform = config.infra.terraform.clone();
     let files = crate::codebase::ts_source::discover_files(&root, &[]);
     let facts = collect_terraform_facts(&root, &files, &terraform);

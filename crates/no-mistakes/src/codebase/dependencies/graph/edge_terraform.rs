@@ -28,24 +28,38 @@ fn collect_terraform_edges(
 }
 
 /// `<type>.<name>` (and `data.<type>.<name>`) references → declaring files.
+///
+/// Terraform addresses are unique only within a module, so a reference resolves
+/// only to declarations in the referencing file's own module directory.
 fn collect_terraform_reference_edges(facts: &TerraformFactMap, edges: &mut Vec<Edge>) {
     for refs in facts.refs_to.values() {
         for reference in refs {
             if reference.module_output.is_some() || !is_resource_addr(&reference.to_addr) {
                 continue;
             }
-            if let Some(targets) = facts.declarations.get(&reference.to_addr) {
-                for target in targets {
-                    push_terraform_edge(
-                        edges,
-                        &reference.from_file,
-                        target,
-                        EdgeKind::TerraformReference,
-                    );
+            let Some(from_module) = module_dir_of(facts, &reference.from_file) else {
+                continue;
+            };
+            let Some(targets) = facts.declarations.get(&reference.to_addr) else {
+                continue;
+            };
+            for target in targets {
+                if module_dir_of(facts, target) != Some(from_module) {
+                    continue;
                 }
+                push_terraform_edge(
+                    edges,
+                    &reference.from_file,
+                    target,
+                    EdgeKind::TerraformReference,
+                );
             }
         }
     }
+}
+
+fn module_dir_of<'a>(facts: &'a TerraformFactMap, file: &Path) -> Option<&'a Path> {
+    facts.files.get(file).map(|file| file.module_dir.as_path())
 }
 
 /// `module` blocks → files in the module's local source directory.

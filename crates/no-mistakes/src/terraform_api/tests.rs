@@ -59,6 +59,12 @@ fn test_for_resource_mode_matches_referencing_tests() {
 }
 
 #[test]
+fn analyze_project_propagates_missing_explicit_config() {
+    let result = analyze_project(&fixture(), Some(Path::new("/no/such/no-mistakes.yml")));
+    assert!(result.is_err());
+}
+
+#[test]
 fn analyze_project_without_config_is_empty() {
     // The crate manifest dir has no `.no-mistakes.yml` infra config.
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
