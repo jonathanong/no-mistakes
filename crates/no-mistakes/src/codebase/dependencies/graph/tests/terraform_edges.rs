@@ -80,6 +80,46 @@ fn terraform_bare_module_reference_links_module_files() {
 }
 
 #[test]
+fn terraform_reference_edges_link_split_var_files() {
+    use crate::codebase::terraform::{TerraformFactMap, TerraformFileFacts, TerraformRef};
+    use std::collections::BTreeSet;
+
+    // main.tf references var.region; variables.tf declares it (same module).
+    let main_tf = PathBuf::from("/repo/m/main.tf");
+    let vars_tf = PathBuf::from("/repo/m/variables.tf");
+    let mut facts = TerraformFactMap::default();
+    for path in [&main_tf, &vars_tf] {
+        facts.files.insert(
+            path.clone(),
+            TerraformFileFacts {
+                path: path.clone(),
+                module_dir: PathBuf::from("/repo/m"),
+                blocks: Vec::new(),
+                references: Vec::new(),
+            },
+        );
+    }
+    facts
+        .declarations
+        .insert("var.region".to_string(), BTreeSet::from([vars_tf.clone()]));
+    facts.refs_to.insert(
+        "var.region".to_string(),
+        vec![TerraformRef {
+            from_file: main_tf.clone(),
+            from_addr: "aws_lb.web".to_string(),
+            to_addr: "var.region".to_string(),
+            module_output: None,
+        }],
+    );
+
+    let mut edges = Vec::new();
+    collect_terraform_reference_edges(&facts, &mut edges);
+    assert!(edges.iter().any(|(from, to, kind)| from == &NodeId::File(main_tf.clone())
+        && to == &NodeId::File(vars_tf.clone())
+        && *kind == EdgeKind::TerraformReference));
+}
+
+#[test]
 fn terraform_reference_edges_stay_within_a_module() {
     use crate::codebase::terraform::{
         TerraformBlock, TerraformFactMap, TerraformFileFacts, TerraformRef, TfBlockKind,

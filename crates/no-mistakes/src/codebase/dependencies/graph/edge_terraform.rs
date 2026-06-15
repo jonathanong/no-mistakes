@@ -27,14 +27,15 @@ fn collect_terraform_edges(
     edges
 }
 
-/// `<type>.<name>` (and `data.<type>.<name>`) references → declaring files.
+/// Module-local references (`<type>.<name>`, `data.<type>.<name>`, `var.<name>`,
+/// `local.<name>`) → declaring files. Module references are handled separately.
 ///
 /// Terraform addresses are unique only within a module, so a reference resolves
 /// only to declarations in the referencing file's own module directory.
 fn collect_terraform_reference_edges(facts: &TerraformFactMap, edges: &mut Vec<Edge>) {
     for refs in facts.refs_to.values() {
         for reference in refs {
-            if reference.module_output.is_some() || !is_resource_addr(&reference.to_addr) {
+            if reference.module_output.is_some() || !is_module_local_addr(&reference.to_addr) {
                 continue;
             }
             let Some(from_module) = module_dir_of(facts, &reference.from_file) else {
@@ -128,11 +129,11 @@ fn collect_terraform_output_edges(facts: &TerraformFactMap, edges: &mut Vec<Edge
     }
 }
 
-fn is_resource_addr(addr: &str) -> bool {
-    !addr.starts_with("var.")
-        && !addr.starts_with("local.")
-        && !addr.starts_with("module.")
-        && !addr.starts_with("output.")
+/// Whether `addr` names a module-local declaration (resource, data source, var,
+/// or local) — i.e. not a `module.` reference (handled by the module/output
+/// collectors) or a bare `output.` address (never referenced directly).
+fn is_module_local_addr(addr: &str) -> bool {
+    !addr.starts_with("module.") && !addr.starts_with("output.")
 }
 
 fn push_terraform_edge(edges: &mut Vec<Edge>, source: &Path, target: &Path, kind: EdgeKind) {
