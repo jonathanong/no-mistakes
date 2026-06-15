@@ -76,7 +76,9 @@ const PAGE_STEMS: &[&str] = &[
 
 fn resolve_tsconfig(root: &Path, tsconfig: Option<&Path>) -> Result<TsConfig> {
     match tsconfig {
-        Some(path) => load_tsconfig(path),
+        // Resolve a relative explicit tsconfig against `root`, not the cwd.
+        Some(path) if path.is_absolute() => load_tsconfig(path),
+        Some(path) => load_tsconfig(&root.join(path)),
         None => match find_tsconfig(root) {
             Some(path) => load_tsconfig(&path),
             None => Ok(TsConfig {

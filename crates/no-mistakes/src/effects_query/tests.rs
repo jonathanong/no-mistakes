@@ -185,6 +185,21 @@ fn explicit_tsconfig_is_honored() {
 }
 
 #[test]
+fn relative_tsconfig_resolved_against_root() {
+    let report = run(
+        &fixture(),
+        None,
+        Some(Path::new("tsconfig.json")),
+        "valkey",
+        Path::new("app/server.ts"),
+        &[],
+        None,
+    )
+    .unwrap();
+    assert!(!report.call_sites.is_empty());
+}
+
+#[test]
 fn unknown_kind_with_no_effects_config_lists_none() {
     // The data-pw fixture has no `effects` config at all.
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

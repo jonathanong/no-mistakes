@@ -1,0 +1,13 @@
+tests:
+  playwright:
+    selectors:
+      testIds:
+        - data-pw
+    selectorRoots:
+      - src
+    selectorInclude:
+      - "src/keep/**"
+    testInclude:
+      - "e2e/**/*.spec.ts"
+    testExclude:
+      - "e2e/flaky/**"

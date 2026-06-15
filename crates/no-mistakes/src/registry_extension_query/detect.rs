@@ -107,7 +107,7 @@ impl<'a> Visit<'a> for BodyCollector<'a, '_> {
                 .iter()
                 .filter_map(|property| match property {
                     oxc::ast::ast::ObjectPropertyKind::ObjectProperty(prop) => {
-                        Some(self.entry_from_expression(&prop.value))
+                        Some(self.entry_from_property(prop))
                     }
                     oxc::ast::ast::ObjectPropertyKind::SpreadProperty(_) => None,
                 })
@@ -131,6 +131,16 @@ impl BodyCollector<'_, '_> {
             line: byte_offset_to_line(self.source, span.start as usize) as usize,
             entry_import: expression_import(expr, self.imports),
             call_shape: slice(self.source, span.start, span.end),
+        }
+    }
+
+    /// Object-literal entry: keep the full `key: value` span as the shape while
+    /// resolving the import from the value.
+    fn entry_from_property(&self, property: &oxc::ast::ast::ObjectProperty<'_>) -> RegistryEntry {
+        RegistryEntry {
+            line: byte_offset_to_line(self.source, property.span.start as usize) as usize,
+            entry_import: expression_import(&property.value, self.imports),
+            call_shape: slice(self.source, property.span.start, property.span.end),
         }
     }
 }

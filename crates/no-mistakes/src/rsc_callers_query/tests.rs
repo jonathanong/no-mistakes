@@ -87,6 +87,19 @@ fn absolute_component_and_explicit_tsconfig() {
 }
 
 #[test]
+fn relative_tsconfig_resolved_against_root() {
+    let report = run(
+        &fixture(),
+        None,
+        Some(Path::new("tsconfig.json")),
+        Path::new("app/ui/Button.tsx"),
+        None,
+    )
+    .unwrap();
+    assert!(!report.callers.is_empty());
+}
+
+#[test]
 fn detect_environment_variants() {
     assert_eq!(
         detect_environment(&fixture().join("app/ui/ServerWidget.tsx")),

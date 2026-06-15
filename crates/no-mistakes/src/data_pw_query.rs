@@ -137,17 +137,27 @@ pub fn run(
     } else {
         scan_override.to_vec()
     };
+    // A `.`/`./` root means "scan the whole repo"; normalize it to the all-root
+    // (empty) case rather than a literal `.` prefix that matches nothing.
     let normalized_roots: Vec<String> = roots
         .iter()
         .map(|root| root.trim_matches('/').trim_start_matches("./").to_string())
-        .filter(|root| !root.is_empty())
+        .filter(|root| !root.is_empty() && root != ".")
         .collect();
 
+    let playwright = &config.tests.playwright;
+    let selector_include = if playwright.selector_include.is_empty() {
+        None
+    } else {
+        Some(build_globset(&playwright.selector_include)?)
+    };
     let scan = ScanConfig {
         value,
         regex: &regex,
         roots: &normalized_roots,
-        test_globs: &build_globset(&config.tests.playwright.test_include)?,
+        test_globs: &build_globset(&playwright.test_include)?,
+        test_exclude_globs: &build_globset(&playwright.test_exclude)?,
+        selector_include_globs: selector_include.as_ref(),
         exclude_globs: &build_globset(view.selector_exclude())?,
     };
 

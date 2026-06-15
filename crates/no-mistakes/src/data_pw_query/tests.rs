@@ -161,6 +161,39 @@ fn value_not_found_is_empty() {
 }
 
 #[test]
+fn dot_scan_root_scans_whole_repo() {
+    // `.` means "scan everything", so out-of-default-root source is included.
+    let report = run(
+        &fixture(),
+        None,
+        "search-bar",
+        &[],
+        &[".".to_string()],
+        &DataPwInclude::default(),
+    )
+    .unwrap();
+    let source = report.source.unwrap();
+    let files: Vec<&str> = source.iter().map(|h| h.file.as_str()).collect();
+    assert!(files.contains(&"other/elsewhere.tsx"));
+    assert!(files.contains(&"app/search.tsx"));
+}
+
+#[test]
+fn honors_test_exclude_and_selector_include() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/data-pw-globs/fixture");
+    let report = run(&root, None, "x", &[], &[], &DataPwInclude::default()).unwrap();
+    let source_hits = report.source.unwrap();
+    let source: Vec<&str> = source_hits.iter().map(|h| h.file.as_str()).collect();
+    // selectorInclude keeps src/keep, drops src/skip.
+    assert_eq!(source, vec!["src/keep/widget.tsx"]);
+    let test_hits = report.test.unwrap();
+    let test: Vec<&str> = test_hits.iter().map(|h| h.file.as_str()).collect();
+    // testExclude drops the flaky spec.
+    assert_eq!(test, vec!["e2e/main.spec.ts"]);
+}
+
+#[test]
 fn is_skip_dir_honors_defaults_and_config() {
     assert!(is_skip_dir(Path::new("x/node_modules"), &[]));
     assert!(is_skip_dir(Path::new("x/.cache"), &[]));
@@ -180,6 +213,8 @@ fn scan_file_ignores_unreadable_path() {
         regex: &regex,
         roots: &[],
         test_globs: &globs,
+        test_exclude_globs: &globs,
+        selector_include_globs: None,
         exclude_globs: &globs,
     };
     let hits = scan_file(Path::new("/no/such/file.tsx"), "x.tsx", &scan);

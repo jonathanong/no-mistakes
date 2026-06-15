@@ -113,10 +113,12 @@ fn analyze(
     for call in body.calls {
         by_callee.entry(call.key.clone()).or_default().push(call);
     }
+    // Pick the most-used registrant; break ties by callee key so the result is
+    // deterministic across runs (HashMap iteration order is randomized).
     let register_best = by_callee
         .into_iter()
         .filter(|(_, calls)| calls.len() >= 2 && calls.iter().any(|c| c.entry_import.is_some()))
-        .max_by_key(|(_, calls)| calls.len());
+        .max_by(|a, b| a.1.len().cmp(&b.1.len()).then_with(|| b.0.cmp(&a.0)));
 
     let container = body.container.filter(|c| c.entries.len() >= 2);
 

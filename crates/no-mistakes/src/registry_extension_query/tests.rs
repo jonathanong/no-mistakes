@@ -58,6 +58,17 @@ fn detects_container_object() {
             .as_deref(),
         Some("Alpha")
     );
+    // The entry shape keeps the object key so an agent can add a sibling.
+    assert_eq!(report.entries[0].call_shape, "alpha: Alpha");
+}
+
+#[test]
+fn tied_registries_pick_deterministic_winner() {
+    // alpha.register and beta.register both have two imported entries; the
+    // smaller callee key (alpha.register) wins deterministically.
+    let report = report("tied-registries.ts");
+    assert_eq!(report.pattern_kind, "register-call");
+    assert_eq!(report.registrant.as_deref(), Some("alpha.register"));
 }
 
 #[test]

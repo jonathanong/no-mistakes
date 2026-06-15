@@ -57,6 +57,9 @@ struct ScanConfig<'a> {
     regex: &'a regex::Regex,
     roots: &'a [String],
     test_globs: &'a GlobSet,
+    test_exclude_globs: &'a GlobSet,
+    /// `None` when `selectorInclude` is unset (no extra source restriction).
+    selector_include_globs: Option<&'a GlobSet>,
     exclude_globs: &'a GlobSet,
 }
 
@@ -64,12 +67,20 @@ fn scan_file(path: &Path, rel: &str, scan: &ScanConfig) -> Vec<(FileKind, DataPw
     if scan.exclude_globs.is_match(rel) {
         return Vec::new();
     }
-    let is_test = scan.test_globs.is_match(rel);
-    let in_source_root =
-        scan.roots.is_empty() || scan.roots.iter().any(|root| path_in_root(rel, root));
-    if !is_test && !in_source_root {
+    let matches_test = scan.test_globs.is_match(rel);
+    // An excluded (e.g. flaky) test file contributes nothing.
+    if matches_test && scan.test_exclude_globs.is_match(rel) {
         return Vec::new();
     }
+    let in_source_root =
+        scan.roots.is_empty() || scan.roots.iter().any(|root| path_in_root(rel, root));
+    let included = scan
+        .selector_include_globs
+        .is_none_or(|globs| globs.is_match(rel));
+    if !(matches_test || (in_source_root && included)) {
+        return Vec::new();
+    }
+    let is_test = matches_test;
     let kind = if is_test {
         FileKind::Test
     } else {
