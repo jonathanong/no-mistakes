@@ -16,7 +16,10 @@ aliased import whose target is missing). The command exits non-zero when any
 import is unresolved, and lists the offending specifiers under `unresolved`.
 
 A configured tsconfig path alias whose target is missing counts as `unresolved`,
-not `external`. Pass `--tsconfig` in a monorepo so aliases resolve correctly.
+not `external`. Pass `--tsconfig` in a monorepo so aliases resolve correctly. A
+catch-all mapping (`"*": [...]`) matches every bare specifier, so under one a bare
+npm package whose fallback target is absent is reported `unresolved` rather than
+`external`.
 
 Key options: `--root`, `--tsconfig`, `--format`, and `--json`.
 

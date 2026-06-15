@@ -1,5 +1,5 @@
 use super::render::{render, resolve_format, to_json, Report};
-use super::reverse::{build_index, importer_paths};
+use super::reverse::{build_index, export_lookup_symbol, importer_paths};
 use super::shared::{read_symbols, rel_str, resolve_target};
 use crate::cli::Format;
 use anyhow::Result;
@@ -66,21 +66,26 @@ impl DeadExportsReport {
 
 fn compute(args: &DeadExportsArgs) -> Result<DeadExportsReport> {
     let target = resolve_target(&args.file, args.root.as_deref(), args.tsconfig.as_deref())?;
-    let names = if args.names.is_empty() {
+    // Each entry is (display name, index-lookup symbol). They differ only for a
+    // default export, indexed under `default` rather than its declaration name.
+    let names: Vec<(String, String)> = if args.names.is_empty() {
         read_symbols(&target.abs_file)?
             .exports
             .iter()
-            .map(|export| export.name.clone())
+            .map(|export| (export.name.clone(), export_lookup_symbol(export)))
             .collect()
     } else {
-        args.names.clone()
+        args.names
+            .iter()
+            .map(|name| (name.clone(), name.clone()))
+            .collect()
     };
     let index = build_index(&target)?;
 
     let results: Vec<DeadResult> = names
         .iter()
-        .map(|name| {
-            let importers = importer_paths(&index, &target.abs_file, name, &target.root);
+        .map(|(name, lookup)| {
+            let importers = importer_paths(&index, &target.abs_file, lookup, &target.root);
             DeadResult {
                 name: name.clone(),
                 referenced: !importers.is_empty(),

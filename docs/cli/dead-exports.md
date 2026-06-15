@@ -14,8 +14,10 @@ deletion). Each result reports `referenced` and an `importerCount`; the command
 exits non-zero when any checked export is dead, which is convenient in CI and
 agent loops.
 
-References are counted from import edges (including re-export barrels). Dynamic or
-string-keyed access (`obj["fn"]`) is not detected, so a "dead" verdict means "no
+References are counted from import edges, including re-export barrels (named and
+`export *`), namespace imports (`import * as ns`), and default imports. Dynamic or
+string-keyed access (`obj["fn"]`) and inline import-type references
+(`type T = import('./x').Foo`) are not detected, so a "dead" verdict means "no
 file imports this symbol."
 
 Key options: `--root`, `--tsconfig`, `--format`, and `--json`.

@@ -1,6 +1,6 @@
 use super::shared::{rel_str, Target};
 use crate::codebase::dependencies::graph::SymbolIndex;
-use crate::codebase::ts_symbols::ExportKind;
+use crate::codebase::ts_symbols::{Export, ExportKind};
 use anyhow::Result;
 use std::path::Path;
 
@@ -10,15 +10,22 @@ pub(crate) fn build_index(target: &Target) -> Result<SymbolIndex> {
     SymbolIndex::build_from_root(&target.root, &target.tsconfig)
 }
 
-/// Unique importer files of `(abs_file, symbol)`, as sorted root-relative
-/// strings. Includes barrel re-exporters (they reference the symbol).
-pub(crate) fn importer_paths(
+/// The symbol name a concrete export is indexed under. Default exports are
+/// recorded under `default` regardless of the local declaration name.
+pub(crate) fn export_lookup_symbol(export: &Export) -> String {
+    match export.kind {
+        ExportKind::Default => "default".to_string(),
+        _ => export.name.clone(),
+    }
+}
+
+fn symbol_importers(
     index: &SymbolIndex,
     abs_file: &Path,
     symbol: &str,
     root: &Path,
 ) -> Vec<String> {
-    let mut paths: Vec<String> = index
+    index
         .importers_of(abs_file, symbol)
         .map(|records| {
             records
@@ -26,7 +33,24 @@ pub(crate) fn importer_paths(
                 .map(|(importer, _, _)| rel_str(importer, root))
                 .collect()
         })
-        .unwrap_or_default();
+        .unwrap_or_default()
+}
+
+/// Unique importer files of `(abs_file, symbol)`, as sorted root-relative
+/// strings. Includes barrel re-exporters and — because namespace imports
+/// (`import * as ns`) and star re-exports (`export *`) are indexed under the
+/// wildcard `*` and reference every concrete export — the wildcard importers
+/// too.
+pub(crate) fn importer_paths(
+    index: &SymbolIndex,
+    abs_file: &Path,
+    symbol: &str,
+    root: &Path,
+) -> Vec<String> {
+    let mut paths = symbol_importers(index, abs_file, symbol, root);
+    if symbol != "*" {
+        paths.extend(symbol_importers(index, abs_file, "*", root));
+    }
     paths.sort();
     paths.dedup();
     paths

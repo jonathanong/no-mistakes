@@ -4,9 +4,15 @@ use crate::codebase::queries::render::render;
 use std::path::PathBuf;
 
 fn fixture_root() -> PathBuf {
+    named_fixture("queries")
+}
+
+fn named_fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/codebase-analysis/queries/fixture"),
+            .join("../../test-cases/codebase-analysis")
+            .join(name)
+            .join("fixture"),
     )
 }
 
@@ -31,6 +37,33 @@ fn detects_dead_export_across_all_exports() {
     let dead = results.iter().find(|r| r["name"] == "dead").unwrap();
     assert_eq!(dead["referenced"], false);
     assert_eq!(dead["importerCount"], 0);
+}
+
+#[test]
+fn wildcard_and_default_imports_count_as_references() {
+    // `used` is referenced only via a star re-export and a namespace import
+    // (both indexed under `*`); the default export is referenced under
+    // `default`. None should be reported dead.
+    let report = compute(&DeadExportsArgs {
+        file: PathBuf::from("mod.ts"),
+        names: Vec::new(),
+        root: Some(named_fixture("queries-reexport")),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(!report.any_dead);
+    let used = report.results.iter().find(|r| r.name == "used").unwrap();
+    assert!(
+        used.referenced,
+        "used should be referenced via wildcard imports"
+    );
+    // The default export (declaration name `def`) is referenced under `default`.
+    assert!(report
+        .results
+        .iter()
+        .any(|r| r.referenced && r.name != "used"));
 }
 
 #[test]
