@@ -21,9 +21,12 @@ catch-all mapping (`"*": [...]`) matches every bare specifier, so under one a ba
 npm package whose fallback target is absent is reported `unresolved` rather than
 `external`. Conversely, with only `baseUrl` set (no `paths`), a missing
 `baseUrl`-relative import like `src/typo` is indistinguishable from a bare npm
-package and is reported `external` rather than `unresolved`. If the file itself
-has a syntax error, the parser recovers and checks whatever imports it can still
-read, so a malformed file may report `allResolve: true` from a partial list.
+package and is reported `external` rather than `unresolved`. Emitted `.js`/`.mjs`/`.cjs` specifiers resolve to their `.ts`/`.mts`/`.cts`
+sources (NodeNext/ESM), and a type-only import resolves declaration (`.d.ts`)
+modules. TypeScript `import x = require()` declarations are not checked. If the
+file itself has a syntax error, the parser recovers and checks whatever imports
+it can still read, so a malformed file may report `allResolve: true` from a
+partial list.
 
 Key options: `--root`, `--tsconfig`, `--format`, and `--json`.
 

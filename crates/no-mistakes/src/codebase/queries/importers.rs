@@ -60,7 +60,9 @@ pub struct ImportersReport {
 fn test_impact(args: &ImportersArgs, target: &Target) -> Result<TestImpact> {
     let plan = generate_impact_plan(&ImpactArgs {
         entrypoints: vec![target.abs_file.display().to_string()],
-        entrypoint_symbols: Vec::new(),
+        // Pass an empty structured symbol so a literal `#` in the path is not
+        // parsed as a `file#symbol` entrypoint.
+        entrypoint_symbols: vec![Some(String::new())],
         include_symbols: false,
         root: target.root.clone(),
         config: None,

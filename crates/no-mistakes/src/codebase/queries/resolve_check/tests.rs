@@ -131,6 +131,22 @@ fn value_import_of_declaration_module_is_unresolved() {
 }
 
 #[test]
+fn esm_js_specifier_resolves_to_ts_source() {
+    // `./dep.js` resolves to the `dep.ts` source (NodeNext/ESM convention).
+    let root = named_fixture("queries-kinds");
+    let report = compute(&ResolveCheckArgs {
+        file: PathBuf::from("esm-user.ts"),
+        root: Some(root),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(report.all_resolve);
+    assert_eq!(report.imports[0].resolved.as_deref(), Some("dep.ts"));
+}
+
+#[test]
 fn tsx_file_parses() {
     let root = named_fixture("queries-kinds");
     let report = compute(&ResolveCheckArgs {

@@ -112,6 +112,29 @@ fn resolve_declaration(
         .find_map(|suffix| resolver.resolve(&format!("{}{}", imp.specifier, suffix), abs_file))
 }
 
+/// Map an emitted-extension specifier to its TypeScript source, as NodeNext/ESM
+/// projects require (`./util.js` → `./util.ts`). Returns `None` for specifiers
+/// without an emitted JS extension.
+fn resolve_ts_source(
+    specifier: &str,
+    abs_file: &Path,
+    resolver: &ImportResolver,
+) -> Option<PathBuf> {
+    let (js_ext, source_exts): (&str, &[&str]) = if specifier.ends_with(".js") {
+        (".js", &[".ts", ".tsx"])
+    } else if specifier.ends_with(".mjs") {
+        (".mjs", &[".mts"])
+    } else if specifier.ends_with(".cjs") {
+        (".cjs", &[".cts"])
+    } else {
+        return None;
+    };
+    let stem = &specifier[..specifier.len() - js_ext.len()];
+    source_exts
+        .iter()
+        .find_map(|ext| resolver.resolve(&format!("{stem}{ext}"), abs_file))
+}
+
 /// Classify one import specifier against a shared resolver and tsconfig aliases.
 fn classify(
     imp: &ExtractedImport,
@@ -125,6 +148,7 @@ fn classify(
     // an emitted module, so the fallback is gated on the import being type-only.
     let resolved = resolver
         .resolve(&imp.specifier, abs_file)
+        .or_else(|| resolve_ts_source(&imp.specifier, abs_file, resolver))
         .or_else(|| resolve_declaration(imp, abs_file, resolver));
     let status = if resolved.is_some() {
         Status::Resolved
