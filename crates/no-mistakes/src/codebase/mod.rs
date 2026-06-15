@@ -14,6 +14,7 @@ pub(crate) mod storybook;
 pub(crate) mod storybook_mdx;
 pub mod swift;
 pub mod symbols;
+pub mod terraform;
 pub mod test_discovery;
 pub mod test_filter;
 pub mod timing;

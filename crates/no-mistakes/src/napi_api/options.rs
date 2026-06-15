@@ -166,6 +166,7 @@ pub(crate) fn parse_relationship(value: &str) -> AnyhowResult<RelationshipArg> {
         "asset" => Ok(RelationshipArg::Asset),
         "react" => Ok(RelationshipArg::React),
         "swift" => Ok(RelationshipArg::Swift),
+        "terraform" => Ok(RelationshipArg::Terraform),
         "all" => Ok(RelationshipArg::All),
         _ => bail!("unknown relationship: {value}"),
     }

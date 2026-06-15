@@ -46,6 +46,8 @@ const { analyzeProject, dependents, symbols, testsPlan } = require("no-mistakes"
 | `queues edges\|related\|check` | `queueEdges`, `queueRelated`, `queueCheck` |
 | `server routes\|edges\|related` | `serverRouteList`, `serverRouteEdges`, `serverRouteRelated` |
 | `react analyze\|check\|usages` | `reactAnalyze`, `reactCheck`, `reactUsages` |
+| `infra resource-refs\|outputs\|test-for` | `infraResourceRefs`, `infraOutputs`, `infraTestFor` |
+| `swift importers\|test-targets` | `swiftImporters`, `swiftTestTargets` |
 | `lockfile diff` | `lockfileDiff(options)` |
 | `ci impact` | `ciImpact(options)` |
 | `ci env` | `ciEnv(options)` |

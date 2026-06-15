@@ -380,6 +380,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         rewrites: vec![],
         queue_project_factory_names: vec![],
         swift_packages: vec![],
+        terraform: Default::default(),
     };
     let invalid_glob_options = GraphConfigOptions {
         route: crate::codebase::config::RouteOptions::default(),
@@ -396,6 +397,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         rewrites: vec![],
         queue_project_factory_names: vec![],
         swift_packages: vec![],
+        terraform: Default::default(),
     };
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&explicit.join("tsconfig.json")).unwrap();
@@ -428,6 +430,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         rewrites: vec![],
         queue_project_factory_names: vec![],
         swift_packages: vec![],
+        terraform: Default::default(),
     };
     let mut forward = EdgeMap::new();
     let mut reverse = EdgeMap::new();
@@ -503,6 +506,7 @@ fn effective_fact_plan_skips_config_dependent_domains_without_required_config() 
         rewrites: vec![],
         queue_project_factory_names: vec!["createQueue".to_string()],
         swift_packages: vec![],
+        terraform: Default::default(),
     };
     let queue_only = effective_ts_fact_plan(
         GraphBuildPlan {

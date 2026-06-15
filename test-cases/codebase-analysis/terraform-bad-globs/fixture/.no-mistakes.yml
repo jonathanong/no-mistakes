@@ -1,0 +1,8 @@
+infra:
+  terraform:
+    moduleRoots:
+      - infra
+    test:
+      # An unclosed character class — an invalid glob that must be reported.
+      testGlobs:
+        - "__tests__/[.test.mts"

@@ -11,6 +11,23 @@ pub struct Tests {
     pub swift: SwiftConfig,
     pub jest: JestConfig,
     pub storybook: StorybookConfig,
+    pub impact: ImpactConfig,
+}
+
+/// Opt-in knobs for the `tests impact` query. Both lists default to empty, so
+/// without configuration `tests impact` behaves exactly as before.
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct ImpactConfig {
+    /// Glob patterns for stub/mock test files (e.g. `**/*.mock.test.*`) that
+    /// `tests impact` must always surface when they transitively import a
+    /// changed file, even when a configured test-suite `exclude` glob would
+    /// otherwise drop them from test discovery.
+    pub always_include_tests: Vec<String>,
+    /// Glob patterns for "registry" files (e.g. `**/auth-gated-code-splitting.mts`,
+    /// `**/*-registry.mts`). When a changed file is imported by a file matching one
+    /// of these globs, `tests impact` emits a hint to verify the registry entry.
+    pub registries: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

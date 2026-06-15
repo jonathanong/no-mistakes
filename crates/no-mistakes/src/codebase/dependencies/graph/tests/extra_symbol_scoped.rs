@@ -36,6 +36,7 @@ fn scoped_import_targets_preserve_workspace_edges() {
             kind: ImportKind::Dynamic,
             function_scope: Some("run".to_string()),
         side_effect_only: false,
+        runtime_reachable: false,
         }],
         &current,
         &resolver,

@@ -95,13 +95,16 @@ fn visit_exported_variable_declarator_reference<'a>(
     collector.push_function_scope(name);
     let saved_suppress_imports = collector.suppress_imports;
     let saved_collect_runtime = collector.collect_suppressed_runtime_imports;
+    let saved_base_depth = collector.runtime_reachable_base_depth;
     collector.suppress_imports = true;
     collector.collect_suppressed_runtime_imports = collector
         .current_function()
         .is_some_and(|scope| collector.is_exported_top_level_name(&scope));
+    collector.runtime_reachable_base_depth = Some(collector.function_stack.len());
     walk::walk_variable_declarator(collector, declarator);
     collector.suppress_imports = saved_suppress_imports;
     collector.collect_suppressed_runtime_imports = saved_collect_runtime;
+    collector.runtime_reachable_base_depth = saved_base_depth;
     collector.pop_function_scope(pushed);
 }
 

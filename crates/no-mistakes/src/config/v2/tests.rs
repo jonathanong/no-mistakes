@@ -7,6 +7,7 @@ use super::schema::{
 use super::view::ConfigView;
 
 mod config_view;
+mod impact_parse;
 mod test_plan_parse;
 
 fn fixture(sub: &str) -> std::path::PathBuf {

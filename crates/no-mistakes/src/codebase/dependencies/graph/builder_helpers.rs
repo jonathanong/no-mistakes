@@ -61,6 +61,27 @@ fn merge_swift_edges(
     merge_edges(forward, reverse, swift_edges);
 }
 
+fn merge_terraform_edges(
+    inputs: &GraphEdgeBuildInputs<'_>,
+    forward: &mut EdgeMap,
+    reverse: &mut EdgeMap,
+) {
+    if !inputs.plan.terraform {
+        return;
+    }
+
+    let terraform_edges = collect_terraform_edges(
+        inputs.root,
+        &inputs.graph_files.all,
+        inputs.config_options,
+    );
+    for (from, to, _) in &terraform_edges {
+        forward.entry(from.clone()).or_default();
+        forward.entry(to.clone()).or_default();
+    }
+    merge_edges(forward, reverse, terraform_edges);
+}
+
 fn sort_adjacency_lists(forward: &mut EdgeMap, reverse: &mut EdgeMap) {
     // Sort adjacency lists for deterministic BFS output.
     for adj in forward.values_mut().chain(reverse.values_mut()) {

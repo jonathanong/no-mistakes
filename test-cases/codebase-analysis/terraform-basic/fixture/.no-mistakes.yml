@@ -1,0 +1,9 @@
+infra:
+  terraform:
+    moduleRoots:
+      - infra/envs/prod
+      - infra/modules/network
+    test:
+      testGlobs:
+        - __tests__/*.test.mts
+      match: resource

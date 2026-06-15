@@ -6,6 +6,7 @@ use crate::tests::{
     Confidence, ImpactArgs, ImpactReason, PlanFormat, SelectedTest, TestPlan, Warning,
 };
 use anyhow::{Context, Result};
+use globset::{Glob, GlobSet, GlobSetBuilder};
 use no_mistakes::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use no_mistakes::codebase::dependencies::parse_entrypoint;
 use no_mistakes::codebase::test_filter::TestFileFilter;
@@ -55,11 +56,13 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
     } else {
         DepGraph::build(root.as_path(), &tsconfig)?
     };
-    let test_filter = TestFileFilter::new(root.as_path(), &config);
+    let test_filter = TestFileFilter::for_impact(root.as_path(), &config);
+    let registry_set = compile_registry_globset(&config.tests.impact.registries);
 
     let mut selected_map: HashMap<PathBuf, SelectedTest> = HashMap::new();
     let mut warnings = Vec::new();
     let mut warnings_seen = HashSet::new();
+    let mut registry_seen: HashSet<(String, String)> = HashSet::new();
 
     for (index, raw) in args.entrypoints.iter().enumerate() {
         let structured_symbol = args.entrypoint_symbols.get(index).cloned().flatten();
@@ -93,6 +96,22 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
                 || relative_path(&root, &normalized),
                 |symbol| format!("{}#{}", relative_path(&root, &normalized), symbol),
             );
+
+        // Registry hints are file-level ("this file is registered in X"); a
+        // symbol-scoped entrypoint asks about one export, so a file-level hint
+        // could be unrelated. Only emit for whole-file entrypoints.
+        if symbol.is_none() {
+            if let Some(registry_set) = registry_set.as_ref() {
+                push_registry_hints(
+                    &graph,
+                    &normalized,
+                    &root,
+                    registry_set,
+                    &mut warnings,
+                    &mut registry_seen,
+                );
+            }
+        }
 
         if test_filter.is_match(&root, &normalized) {
             let rel_test = relative_path(&root, &normalized);
@@ -191,6 +210,64 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
         fallback_triggered: false,
         fallback_reason: None,
     })
+}
+
+/// Compile the opt-in registry glob list. Returns `None` when unconfigured or
+/// when every pattern is malformed. Malformed patterns are skipped so a single
+/// bad glob does not silently disable registry hints for the valid ones, and the
+/// impact query never fails on a bad glob.
+fn compile_registry_globset(patterns: &[String]) -> Option<GlobSet> {
+    if patterns.is_empty() {
+        return None;
+    }
+    let mut builder = GlobSetBuilder::new();
+    let mut has_valid = false;
+    for pattern in patterns {
+        if let Ok(glob) = Glob::new(pattern) {
+            builder.add(glob);
+            has_valid = true;
+        }
+    }
+    has_valid.then(|| builder.build().ok()).flatten()
+}
+
+/// Emit a hint for each direct dependent of `target` whose file matches a
+/// configured registry glob. Deduped per (target, registry) pair so each
+/// changed file gets its own reminder for each registry it appears in.
+fn push_registry_hints(
+    graph: &DepGraph,
+    target: &Path,
+    root: &Path,
+    registry_set: &GlobSet,
+    warnings: &mut Vec<Warning>,
+    registry_seen: &mut HashSet<(String, String)>,
+) {
+    let Some(dependents) = graph.dependents_of_node(&NodeId::File(target.to_path_buf())) else {
+        return;
+    };
+    let target_rel = relative_path(root, target);
+    for (dependent, kind) in dependents {
+        // A type-only reference does not "register" a runtime entry, so it must
+        // not produce a registry hint.
+        if *kind == EdgeKind::TypeImport {
+            continue;
+        }
+        if let NodeId::File(dep_path) = dependent {
+            let registry_rel = relative_path(root, dep_path);
+            if registry_set.is_match(&registry_rel)
+                && registry_seen.insert((target_rel.clone(), registry_rel.clone()))
+            {
+                warnings.push(Warning {
+                    r#type: "registry-hint".to_string(),
+                    message: format!(
+                        "`{}` is registered in `{}`; verify the registry entry is up to date",
+                        target_rel, registry_rel
+                    ),
+                    file: registry_rel,
+                });
+            }
+        }
+    }
 }
 
 fn push_warning(

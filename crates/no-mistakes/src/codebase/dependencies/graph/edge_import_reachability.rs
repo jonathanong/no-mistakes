@@ -12,6 +12,14 @@ fn import_is_reachable(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
     reachable: &HashSet<String>,
 ) -> bool {
+    // A runtime `import()`/`require()` collected from inside an exported binding
+    // initializer (e.g. `next/dynamic(() => import('./Foo'))`) lives in an
+    // anonymous callback scope that no static call reaches, but it is still
+    // loaded whenever the exported binding is used. The extractor flags these at
+    // collection time, so treat them as reachable here.
+    if import.runtime_reachable {
+        return true;
+    }
     let Some(scope) = &import.function_scope else {
         return true;
     };

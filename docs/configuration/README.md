@@ -26,3 +26,4 @@ rules:
 - [Filesystem](filesystem.md)
 - [CI workflow analysis](ci.md)
 - [Changed-file checks](checks.md)
+- [Infrastructure (Terraform/OpenTofu)](infra.md)
