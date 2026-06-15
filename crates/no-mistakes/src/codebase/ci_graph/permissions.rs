@@ -67,19 +67,27 @@ fn expand(spec: &PermissionSpec) -> BTreeMap<String, PermissionLevel> {
     }
 }
 
-/// Scopes that only support `write`/`none` (never `read`). Under `read-all`
+/// Scopes that only support `write`/`none` (never `read`): under `read-all`
 /// they are omitted rather than reported with an impossible `read` level.
 const WRITE_ONLY_SCOPES: &[&str] = &["id-token"];
+
+/// Scopes that only support `read`/`none` (never `write`): under `write-all`
+/// they are capped at `read`, which is what GitHub grants.
+const READ_ONLY_SCOPES: &[&str] = &["models", "vulnerability-alerts"];
 
 fn all_scopes(level: PermissionLevel) -> BTreeMap<String, PermissionLevel> {
     PERMISSION_SCOPES
         .iter()
         .filter_map(|scope| {
             if level == PermissionLevel::Read && WRITE_ONLY_SCOPES.contains(scope) {
-                None
-            } else {
-                Some((scope.to_string(), level))
+                return None;
             }
+            let effective = if level == PermissionLevel::Write && READ_ONLY_SCOPES.contains(scope) {
+                PermissionLevel::Read
+            } else {
+                level
+            };
+            Some((scope.to_string(), effective))
         })
         .collect()
 }

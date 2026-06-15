@@ -11,6 +11,16 @@ fn non_mapping_root_yields_nothing() {
 }
 
 #[test]
+fn reference_regex_requires_standalone_env_context() {
+    let re = reference_regex("FOO");
+    assert!(re.is_match("echo ${{ env.FOO }}"));
+    assert!(re.is_match("${{env.FOO}}"));
+    // A property segment named `env` must not match.
+    assert!(!re.is_match("${{ github.event.inputs.env.FOO }}"));
+    assert!(!re.is_match("${{ env.OTHER }}"));
+}
+
+#[test]
 fn null_job_body_is_skipped() {
     let found = locations("jobs:\n  empty:\n  real:\n    env:\n      X: y\n", "X");
     assert_eq!(found.len(), 1);

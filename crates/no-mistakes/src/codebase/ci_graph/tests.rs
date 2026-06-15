@@ -192,19 +192,27 @@ fn permission_resolution_across_jobs() {
     assert!(!override_job.scopes.contains_key("contents"));
 
     let readall = effective_permissions(workflow, job("readall"));
-    assert!(readall.scopes.values().all(|l| *l == PermissionLevel::Read));
+    assert_eq!(readall.scopes.get("contents"), Some(&PermissionLevel::Read));
     // id-token is write-only, so read-all omits it rather than reporting `read`.
     assert!(!readall.scopes.contains_key("id-token"));
+    // read-only scopes are reported as read.
+    assert_eq!(readall.scopes.get("models"), Some(&PermissionLevel::Read));
 
     let writeall = effective_permissions(workflow, job("writeall"));
-    assert!(writeall
-        .scopes
-        .values()
-        .all(|l| *l == PermissionLevel::Write));
-    // write-all still grants the write-only scope.
+    // read-write scopes become write; the write-only scope is granted write.
+    assert_eq!(
+        writeall.scopes.get("contents"),
+        Some(&PermissionLevel::Write)
+    );
     assert_eq!(
         writeall.scopes.get("id-token"),
         Some(&PermissionLevel::Write)
+    );
+    // write-all caps read-only scopes at read (GitHub never grants them write).
+    assert_eq!(writeall.scopes.get("models"), Some(&PermissionLevel::Read));
+    assert_eq!(
+        writeall.scopes.get("vulnerability-alerts"),
+        Some(&PermissionLevel::Read)
     );
 
     let empty = effective_permissions(workflow, job("empty"));

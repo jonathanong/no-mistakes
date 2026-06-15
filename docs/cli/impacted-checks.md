@@ -41,6 +41,11 @@ Changed files may also be passed as positional arguments.
 `--diff-stdin` / `--diff-command` are intentionally unsupported here because the
 inputs are read more than once; use `--diff <file>` instead.
 
+Known limitation: an explicit changed path that is a symlink is canonicalized to
+its target before glob matching (the shared change-collection step resolves
+existing paths for the dependency graph), so a `checks` glob written against the
+symlink path may not match. Match against the resolved target path instead.
+
 ## Output
 
 `paths` format prints each command joined by spaces, one per line — ready to
