@@ -1,0 +1,253 @@
+use super::frameworks::framework_present;
+use super::generate::{dedupe_checks, dedupe_warnings, generic_checks};
+use super::*;
+use crate::config::v2::schema::NoMistakesConfig;
+use crate::tests::TestFramework;
+use std::collections::BTreeSet;
+
+fn fixture() -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/impacted-checks/basic"),
+    )
+}
+
+fn args(files: &[&str]) -> ImpactedChecksArgs {
+    ImpactedChecksArgs {
+        files: files.iter().map(PathBuf::from).collect(),
+        root: fixture(),
+        config: None,
+        tsconfig: None,
+        base: None,
+        head: None,
+        changed_file: Vec::new(),
+        changed_files: None,
+        diff: None,
+        diff_content: None,
+        format: None,
+        json: false,
+    }
+}
+
+fn command_strings(report: &ImpactedChecksReport) -> Vec<String> {
+    report.checks.iter().map(|c| c.command.join(" ")).collect()
+}
+
+#[test]
+fn source_change_yields_test_lint_and_typecheck() {
+    let report = generate_impacted_checks(&args(&["src/foo.ts"])).unwrap();
+    let commands = command_strings(&report);
+    assert!(commands.contains(&"pnpm exec eslint src/foo.ts".to_string()));
+    assert!(commands.contains(&"pnpm exec tsc --noEmit".to_string()));
+    assert!(commands.contains(&"vitest --project unit src/foo.test.ts".to_string()));
+    // prettier (**/*.md) does not match → omitted.
+    assert!(!commands.iter().any(|c| c.contains("prettier")));
+}
+
+#[test]
+fn test_file_change_is_excluded_from_eslint() {
+    let report = generate_impacted_checks(&args(&["src/foo.test.ts"])).unwrap();
+    let commands = command_strings(&report);
+    // eslint excludes src/**/*.test.ts.
+    assert!(!commands.iter().any(|c| c.contains("eslint")));
+    assert!(commands.contains(&"pnpm exec tsc --noEmit".to_string()));
+    assert!(commands.contains(&"vitest --project unit src/foo.test.ts".to_string()));
+}
+
+#[test]
+fn duplicate_inputs_are_deduped() {
+    let mut a = args(&["src/foo.ts"]);
+    a.changed_file = vec![PathBuf::from("src/foo.ts")];
+    let report = generate_impacted_checks(&a).unwrap();
+    let commands = command_strings(&report);
+    let unique: BTreeSet<_> = commands.iter().collect();
+    assert_eq!(commands.len(), unique.len());
+}
+
+#[test]
+fn renders_every_format() {
+    let report = generate_impacted_checks(&args(&["src/foo.ts"])).unwrap();
+    // Exercise the report's derived Clone/PartialEq/Debug.
+    assert_eq!(report, report.clone());
+    assert!(!format!("{report:?}").is_empty());
+    assert!(render(&report, Format::Json)
+        .unwrap()
+        .contains("\"checks\""));
+    assert!(render(&report, Format::Yml).unwrap().contains("checks:"));
+    assert!(render(&report, Format::Paths)
+        .unwrap()
+        .contains("vitest --project unit"));
+    assert!(render(&report, Format::Md).unwrap().contains("- pnpm exec"));
+    assert!(render(&report, Format::Human)
+        .unwrap()
+        .contains("pnpm exec"));
+}
+
+#[test]
+fn renders_empty_warnings_and_fallback() {
+    let report = ImpactedChecksReport {
+        changed_files: Vec::new(),
+        checks: Vec::new(),
+        warnings: vec![Warning {
+            r#type: "dynamic-import".to_string(),
+            message: "uncertain".to_string(),
+            file: "a.ts".to_string(),
+        }],
+        fallback_triggered: true,
+    };
+    let human = render(&report, Format::Human).unwrap();
+    assert!(human.contains("No checks for the changed files"));
+    // Warnings are surfaced in human/md output, not just JSON/YAML.
+    assert!(human.contains("warning: a.ts: uncertain"));
+    assert!(human.contains("fallback triggered"));
+}
+
+#[test]
+fn run_executes() {
+    let mut a = args(&["src/foo.ts"]);
+    a.json = true;
+    run(a).unwrap();
+}
+
+#[test]
+fn dedupe_checks_merges_files_for_same_command() {
+    let mk = |files: &[&str]| CheckCommand {
+        name: "tsc".to_string(),
+        kind: CheckKind::Generic,
+        command: vec!["tsc".to_string()],
+        files: files.iter().map(|f| f.to_string()).collect(),
+    };
+    let out = dedupe_checks(vec![mk(&["b.ts"]), mk(&["a.ts"])]);
+    assert_eq!(out.len(), 1);
+    assert_eq!(out[0].files, vec!["a.ts".to_string(), "b.ts".to_string()]);
+}
+
+#[test]
+fn generic_checks_excludes_deleted_from_append() {
+    use crate::config::v2::schema::{CheckCommandDef, CheckFileArgs};
+    let mut config = NoMistakesConfig::default();
+    config.checks.commands = vec![
+        CheckCommandDef {
+            name: "eslint".to_string(),
+            include: vec!["**/*.ts".to_string()],
+            command: vec!["eslint".to_string()],
+            file_args: CheckFileArgs::Append,
+            ..Default::default()
+        },
+        CheckCommandDef {
+            name: "only-deleted".to_string(),
+            include: vec!["gone/**".to_string()],
+            command: vec!["lint".to_string()],
+            file_args: CheckFileArgs::Append,
+            ..Default::default()
+        },
+        CheckCommandDef {
+            name: "tsc".to_string(),
+            include: vec!["**/*.ts".to_string()],
+            command: vec!["tsc".to_string()],
+            file_args: CheckFileArgs::None,
+            ..Default::default()
+        },
+    ];
+    let changed = vec![
+        "a.ts".to_string(),
+        "b.ts".to_string(),
+        "gone/x.ts".to_string(),
+    ];
+    let deleted: BTreeSet<String> = ["a.ts".to_string(), "gone/x.ts".to_string()]
+        .into_iter()
+        .collect();
+    let checks = generic_checks(&config, &changed, &deleted).unwrap();
+    // Append: deleted files are dropped from the per-file args.
+    let eslint = checks.iter().find(|c| c.name == "eslint").unwrap();
+    assert_eq!(
+        eslint.command,
+        vec!["eslint".to_string(), "b.ts".to_string()]
+    );
+    // Append where every match is deleted: skipped entirely.
+    assert!(!checks.iter().any(|c| c.name == "only-deleted"));
+    // Whole-project check still triggers despite the deletion.
+    assert!(checks.iter().any(|c| c.name == "tsc"));
+}
+
+#[test]
+fn generic_checks_normalizes_dot_slash_globs() {
+    use crate::config::v2::schema::{CheckCommandDef, CheckFileArgs};
+    let mut config = NoMistakesConfig::default();
+    config.checks.commands = vec![CheckCommandDef {
+        name: "eslint".to_string(),
+        include: vec!["./src/**/*.ts".to_string()],
+        command: vec!["eslint".to_string()],
+        file_args: CheckFileArgs::Append,
+        ..Default::default()
+    }];
+    let checks = generic_checks(&config, &["src/foo.ts".to_string()], &BTreeSet::new()).unwrap();
+    assert_eq!(checks.len(), 1);
+    assert_eq!(
+        checks[0].command,
+        vec!["eslint".to_string(), "src/foo.ts".to_string()]
+    );
+}
+
+#[test]
+fn framework_present_detects_config_file() {
+    let autodetect = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/impacted-checks/autodetect"),
+    );
+    let config = NoMistakesConfig::default();
+    // vitest.config.mts exists at root → Vitest is present without explicit config.
+    assert!(framework_present(
+        &autodetect,
+        &config,
+        TestFramework::Vitest
+    ));
+    // No playwright.config / swift config → absent.
+    assert!(!framework_present(
+        &autodetect,
+        &config,
+        TestFramework::Playwright
+    ));
+    assert!(!framework_present(
+        &autodetect,
+        &config,
+        TestFramework::Swift
+    ));
+
+    // testPlan full-suite triggers alone mark the framework present (no config
+    // file needed): the basic fixture root has no vitest.config file.
+    use crate::config::v2::schema::TestPlanIgnoredChangedTestsFramework;
+    let mut plan_config = NoMistakesConfig::default();
+    plan_config
+        .test_plan
+        .vitest
+        .full_suite_triggers
+        .ignore_changed_tests
+        .push(TestPlanIgnoredChangedTestsFramework::Vitest);
+    assert!(framework_present(
+        &fixture(),
+        &plan_config,
+        TestFramework::Vitest
+    ));
+}
+
+#[test]
+fn shell_quote_escapes_unsafe_tokens() {
+    assert_eq!(shell_quote("vitest"), "vitest");
+    assert_eq!(shell_quote("src/a b.ts"), "'src/a b.ts'");
+    assert_eq!(shell_quote("it's"), "'it'\\''s'");
+    assert_eq!(shell_quote(""), "''");
+}
+
+#[test]
+fn dedupe_warnings_collapses_and_sorts() {
+    let warn = |file: &str| Warning {
+        r#type: "dynamic-import".to_string(),
+        message: "x".to_string(),
+        file: file.to_string(),
+    };
+    // Two distinct warnings (out of order) plus a duplicate: the dup collapses
+    // and the remainder is sorted, exercising the comparator.
+    let deduped = dedupe_warnings(vec![warn("b.ts"), warn("a.ts"), warn("b.ts")]);
+    assert_eq!(deduped.len(), 2);
+    assert_eq!(deduped[0].file, "a.ts");
+}

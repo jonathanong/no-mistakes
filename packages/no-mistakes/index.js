@@ -158,6 +158,18 @@ async function lockfileDiff(options) {
   return callJson(native.lockfileDiffJson, options);
 }
 
+async function ciImpact(options) {
+  return callJson(native.ciImpactJson, options);
+}
+
+async function ciEnv(options) {
+  return callJson(native.ciEnvJson, options);
+}
+
+async function impactedChecks(options) {
+  return callJson(native.impactedChecksJson, options);
+}
+
 async function infraResourceRefs(options) {
   return callJson(native.infraResourceRefsJson, options);
 }
@@ -186,6 +198,8 @@ module.exports = {
   analyzeProject,
   callSites,
   check,
+  ciEnv,
+  ciImpact,
   dataPw,
   deadExports,
   dependencies,
@@ -193,6 +207,7 @@ module.exports = {
   effects,
   exportsOf,
   fetches,
+  impactedChecks,
   importers,
   infraOutputs,
   infraResourceRefs,

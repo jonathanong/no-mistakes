@@ -1,0 +1,7 @@
+# Intentionally invalid YAML (unclosed flow mapping) to exercise the
+# parse-warning path. Do not "fix" this fixture.
+name: Broken
+on: push
+jobs:
+  build:
+    steps: [ { run: echo a }, { run: echo b

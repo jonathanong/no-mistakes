@@ -1,0 +1,24 @@
+# CI workflow analysis
+
+The `ci` block configures the [`no-mistakes ci`](../cli/ci.md) workflow-graph
+commands.
+
+```yaml
+ci:
+  # Directories (relative to root) scanned for GitHub Actions workflow YAML.
+  # Defaults to [.github/workflows].
+  workflowDirs:
+    - .github/workflows
+  # Directories holding local composite actions. Recorded for future use; their
+  # internal env/permissions are not yet inlined. Defaults to [].
+  actionDirs: []
+```
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `workflowDirs` | `[.github/workflows]` | Where to find `*.yml` / `*.yaml` workflows. |
+| `actionDirs` | `[]` | Local composite-action directories (reserved). |
+
+In a monorepo, point `--root` at the git root (where `.github/workflows` lives)
+or set `workflowDirs` to the correct relative path. Changed-file paths in
+`ci impact` are compared against repo-root-relative workflow path filters.

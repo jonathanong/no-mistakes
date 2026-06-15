@@ -1,0 +1,8 @@
+# No `permissions:` anywhere → reports GitHub's assumed restricted default.
+name: Default
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build

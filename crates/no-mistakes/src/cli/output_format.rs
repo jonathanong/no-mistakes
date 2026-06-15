@@ -12,3 +12,20 @@ pub enum Format {
     /// Indented tree (default on TTY).
     Human,
 }
+
+/// Resolve the effective output format from the `--json` shorthand, an explicit
+/// `--format`, or the TTY default (Human on a terminal, Json otherwise).
+pub fn resolve_format(json: bool, format: Option<Format>, stdout_is_terminal: bool) -> Format {
+    if json {
+        Format::Json
+    } else if let Some(format) = format {
+        format
+    } else if stdout_is_terminal {
+        Format::Human
+    } else {
+        Format::Json
+    }
+}
+
+#[cfg(test)]
+mod tests;

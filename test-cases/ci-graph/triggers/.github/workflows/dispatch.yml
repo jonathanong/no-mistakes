@@ -1,0 +1,8 @@
+# Manual-only: no path-filterable event, so file changes never trigger it.
+name: Dispatch
+on: workflow_dispatch
+jobs:
+  manual:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo manual

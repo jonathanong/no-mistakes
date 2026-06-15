@@ -66,6 +66,8 @@ pub(crate) struct TestsImpactOptions {
     pub(crate) include_symbols: bool,
 }
 
+include!("options_ci.rs");
+
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct TestsWhyOptions {
@@ -199,4 +201,4 @@ pub(crate) fn parse_include(value: Option<&str>) -> AnyhowResult<Include> {
 
 include!("options_symbols.rs");
 
-include!("options_directions.rs");
+include!("options_routing.rs");

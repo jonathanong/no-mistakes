@@ -1,0 +1,2 @@
+# This .yml entry is a DIRECTORY, not a file — discovery surfaces it as a
+# read error (covers the I/O-error branch). Do not convert to a file.

@@ -158,6 +158,49 @@ fn rule_def_enabled_defaults_to_true() {
 }
 
 #[test]
+fn ci_config_defaults_to_github_workflows() {
+    assert_eq!(
+        super::schema::CiConfig::default().workflow_dirs,
+        vec![".github/workflows".to_string()]
+    );
+    assert_eq!(
+        super::schema::CheckFileArgs::default(),
+        super::schema::CheckFileArgs::Append
+    );
+}
+
+#[test]
+fn ci_and_checks_blocks_round_trip() {
+    use super::schema::CheckFileArgs;
+    let yaml = "\
+ci:
+  workflowDirs: [custom/workflows]
+  actionDirs: [.github/actions]
+checks:
+  commands:
+    - name: eslint
+      include: [\"src/**/*.ts\"]
+      command: [pnpm, exec, eslint]
+    - name: tsc
+      include: [\"**/*.ts\"]
+      command: [pnpm, exec, tsc]
+      fileArgs: none
+";
+    let cfg: NoMistakesConfig = serde_yaml::from_str(yaml).unwrap();
+    assert_eq!(cfg.ci.workflow_dirs, vec!["custom/workflows".to_string()]);
+    assert_eq!(cfg.ci.action_dirs, vec![".github/actions".to_string()]);
+    assert_eq!(cfg.checks.commands.len(), 2);
+    // Missing fileArgs defaults to Append (exercises CheckCommandDef::default).
+    assert_eq!(cfg.checks.commands[0].file_args, CheckFileArgs::Append);
+    assert_eq!(cfg.checks.commands[1].file_args, CheckFileArgs::None);
+
+    // Serialize → deserialize is stable.
+    let serialized = serde_yaml::to_string(&cfg).unwrap();
+    let reparsed: NoMistakesConfig = serde_yaml::from_str(&serialized).unwrap();
+    assert_eq!(cfg, reparsed);
+}
+
+#[test]
 fn project_and_rule_path_filters_parse() {
     let cfg = load_v2_config(&fixture("rule-path-filters"), None).unwrap();
     let project = &cfg.projects["web"];

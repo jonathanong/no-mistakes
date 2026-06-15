@@ -1,9 +1,9 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use super::options::{
-    parse_options, resolve_project_root, to_napi_error, FetchesOptions, PlaywrightOptions,
-    ProjectOptions, TestsImpactOptions, TestsPlanDocumentOptions, TestsPlanOptions,
-    TestsWhyOptions,
+    parse_options, resolve_project_root, to_napi_error, CiEnvOptions, CiImpactOptions,
+    FetchesOptions, ImpactedChecksOptions, PlaywrightOptions, ProjectOptions, TestsImpactOptions,
+    TestsPlanDocumentOptions, TestsPlanOptions, TestsWhyOptions,
 };
 use anyhow::{bail, Context, Result as AnyhowResult};
 
@@ -52,6 +52,42 @@ pub(crate) fn tests_impact_json_impl(options_json: String) -> napi::Result<Strin
     let args = build_impact_args(options).map_err(to_napi_error)?;
     let plan = crate::tests::impact::generate_impact_plan(&args).map_err(to_napi_error)?;
     to_pretty_json(&plan)
+}
+
+pub(crate) fn ci_impact_json_impl(options_json: String) -> napi::Result<String> {
+    let options = parse_options::<CiImpactOptions>(&options_json)?;
+    let root = options.root.unwrap_or_else(|| ".".to_string());
+    let files: Vec<PathBuf> = options.files.into_iter().map(PathBuf::from).collect();
+    let report = crate::ci::impact_report(
+        Path::new(&root),
+        options.config.as_deref().map(Path::new),
+        &files,
+    )
+    .map_err(to_napi_error)?;
+    to_pretty_json(&report)
+}
+
+pub(crate) fn ci_env_json_impl(options_json: String) -> napi::Result<String> {
+    let options = parse_options::<CiEnvOptions>(&options_json)?;
+    let var = options
+        .var
+        .context("var is required")
+        .map_err(to_napi_error)?;
+    let root = options.root.unwrap_or_else(|| ".".to_string());
+    let report = crate::ci::env_report(
+        Path::new(&root),
+        options.config.as_deref().map(Path::new),
+        &var,
+    )
+    .map_err(to_napi_error)?;
+    to_pretty_json(&report)
+}
+
+pub(crate) fn impacted_checks_json_impl(options_json: String) -> napi::Result<String> {
+    let options = parse_options::<ImpactedChecksOptions>(&options_json)?;
+    let args = build_impacted_checks_args(options);
+    let report = crate::impacted_checks::generate_impacted_checks(&args).map_err(to_napi_error)?;
+    to_pretty_json(&report)
 }
 
 pub(crate) fn tests_why_json_impl(options_json: String) -> napi::Result<String> {

@@ -21,7 +21,10 @@ words:
   - codebase
   - codecov
   - emnapi
+  - extglob
+  - gitignore
   - glibc
+  - globset
   - guardrailsrc
   - invalidators
   - jsonc
@@ -34,6 +37,7 @@ words:
   - PCRE
   - pnpm
   - rustfmt
+  - serde
   - shellcheck
   - shasum
   - subdirs

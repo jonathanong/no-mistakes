@@ -49,6 +49,9 @@ const { analyzeProject, dependents, symbols, testsPlan } = require("no-mistakes"
 | `infra resource-refs\|outputs\|test-for` | `infraResourceRefs`, `infraOutputs`, `infraTestFor` |
 | `swift importers\|test-targets` | `swiftImporters`, `swiftTestTargets` |
 | `lockfile diff` | `lockfileDiff(options)` |
+| `ci impact` | `ciImpact(options)` |
+| `ci env` | `ciEnv(options)` |
+| `impacted-checks` | `impactedChecks(options)` |
 
 `check(options)` returns the same structured check report as CLI JSON,
 including `warnings: string[]` for configured checks that could not run.

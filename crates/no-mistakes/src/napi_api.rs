@@ -18,7 +18,8 @@ pub mod queries;
 #[cfg(not(coverage))]
 use async_task::{JsonTask, VersionTask};
 pub(crate) use cli_parity::{
-    check_json_impl, fetches_json_impl, playwright_check_json_impl, playwright_edges_json_impl,
+    check_json_impl, ci_env_json_impl, ci_impact_json_impl, fetches_json_impl,
+    impacted_checks_json_impl, playwright_check_json_impl, playwright_edges_json_impl,
     playwright_related_json_impl, playwright_tests_json_impl, tests_comment_markdown_impl,
     tests_graph_json_impl, tests_graph_mermaid_impl, tests_impact_json_impl, tests_plan_json_impl,
     tests_why_json_impl,
@@ -231,3 +232,5 @@ include!("napi_api/wrappers_query.rs");
 pub fn lockfile_diff_json(options_json: String) -> AsyncTask<JsonTask> {
     AsyncTask::new(JsonTask::new(options_json, lockfile_diff_json_impl))
 }
+
+include!("napi_api/ci_bindings.rs");
