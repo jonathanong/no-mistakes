@@ -131,6 +131,22 @@ fn value_import_of_declaration_module_is_unresolved() {
 }
 
 #[test]
+fn type_import_via_js_resolves_to_declaration() {
+    // `import type { Foo } from './types.js'` resolves to `types.d.ts`.
+    let root = named_fixture("queries-kinds");
+    let report = compute(&ResolveCheckArgs {
+        file: PathBuf::from("dts-js-user.ts"),
+        root: Some(root),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(report.all_resolve);
+    assert_eq!(report.imports[0].resolved.as_deref(), Some("types.d.ts"));
+}
+
+#[test]
 fn esm_js_specifier_resolves_to_ts_source() {
     // `./dep.js` resolves to the `dep.ts` source (NodeNext/ESM convention).
     let root = named_fixture("queries-kinds");

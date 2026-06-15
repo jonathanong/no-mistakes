@@ -1,3 +1,5 @@
+mod resolution;
+
 use super::render::{render, resolve_format, to_json, Report};
 use super::shared::resolve_target;
 use crate::cli::Format;
@@ -7,6 +9,7 @@ use crate::codebase::dependencies::extract::{
 use crate::codebase::ts_resolver::ImportResolver;
 use anyhow::{Context, Result};
 use is_terminal::IsTerminal;
+use resolution::{resolve_declaration, resolve_ts_source};
 use serde::Serialize;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
@@ -84,55 +87,6 @@ fn kind_str(kind: ImportKind) -> &'static str {
         ImportKind::Dynamic => "dynamic",
         ImportKind::Require => "require",
     }
-}
-
-/// Declaration-file suffixes tried for a type-only import, in TypeScript's
-/// preference order (direct file, then directory index).
-const DECLARATION_SUFFIXES: &[&str] = &[
-    ".d.ts",
-    ".d.mts",
-    ".d.cts",
-    "/index.d.ts",
-    "/index.d.mts",
-    "/index.d.cts",
-];
-
-/// Resolve a type-only import to a declaration file or declaration index when
-/// no emitted module exists. Returns `None` for value imports.
-fn resolve_declaration(
-    imp: &ExtractedImport,
-    abs_file: &Path,
-    resolver: &ImportResolver,
-) -> Option<PathBuf> {
-    if imp.kind != ImportKind::Type {
-        return None;
-    }
-    DECLARATION_SUFFIXES
-        .iter()
-        .find_map(|suffix| resolver.resolve(&format!("{}{}", imp.specifier, suffix), abs_file))
-}
-
-/// Map an emitted-extension specifier to its TypeScript source, as NodeNext/ESM
-/// projects require (`./util.js` → `./util.ts`). Returns `None` for specifiers
-/// without an emitted JS extension.
-fn resolve_ts_source(
-    specifier: &str,
-    abs_file: &Path,
-    resolver: &ImportResolver,
-) -> Option<PathBuf> {
-    let (js_ext, source_exts): (&str, &[&str]) = if specifier.ends_with(".js") {
-        (".js", &[".ts", ".tsx"])
-    } else if specifier.ends_with(".mjs") {
-        (".mjs", &[".mts"])
-    } else if specifier.ends_with(".cjs") {
-        (".cjs", &[".cts"])
-    } else {
-        return None;
-    };
-    let stem = &specifier[..specifier.len() - js_ext.len()];
-    source_exts
-        .iter()
-        .find_map(|ext| resolver.resolve(&format!("{stem}{ext}"), abs_file))
 }
 
 /// Classify one import specifier against a shared resolver and tsconfig aliases.

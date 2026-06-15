@@ -21,9 +21,11 @@ tsconfig `paths` alias, so in a monorepo `importers`/`exports-of`/`dead-exports`
 `call-sites` may omit cross-package consumers and report a live package entry
 export as unimported. Use `no-mistakes dependents <file>` for full cross-package
 impact. The reverse scan also does not resolve declaration-only (`.d.ts`)
-modules, so a type export consumed only through `import type { Foo } from
-'./types'` (where just `types.d.ts` exists) may show no importers. (`resolve-check`
-does resolve declaration files for type imports.)
+modules or NodeNext/ESM emitted `.js` specifiers, so a consumer that writes
+`import { used } from './util.js'` (backed by `util.ts`) or a type export used
+only through `import type { Foo } from './types'` (where just `types.d.ts`
+exists) may show no importers. (`resolve-check` does resolve both for the file it
+checks.)
 
 ## `importers <file>`
 
