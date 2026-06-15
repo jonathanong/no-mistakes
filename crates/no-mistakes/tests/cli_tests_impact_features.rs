@@ -255,6 +255,7 @@ fn impact_emits_registry_hint_per_target_and_registry() {
         registry_hints(&plan),
         vec![
             "`feature.mts` is registered in `auth-gated-code-splitting.mts`; verify the registry entry is up to date".to_string(),
+            "`feature.mts` is registered in `deferred-registry.mts`; verify the registry entry is up to date".to_string(),
             "`feature.mts` is registered in `widgets-registry.mts`; verify the registry entry is up to date".to_string(),
             "`feature2.mts` is registered in `auth-gated-code-splitting.mts`; verify the registry entry is up to date".to_string(),
         ]
@@ -270,6 +271,7 @@ fn impact_registry_hint_dedups_repeated_target() {
         registry_hints(&plan),
         vec![
             "`feature.mts` is registered in `auth-gated-code-splitting.mts`; verify the registry entry is up to date".to_string(),
+            "`feature.mts` is registered in `deferred-registry.mts`; verify the registry entry is up to date".to_string(),
             "`feature.mts` is registered in `widgets-registry.mts`; verify the registry entry is up to date".to_string(),
         ]
     );
