@@ -109,6 +109,12 @@ fn missing_file_errors() {
 }
 
 #[test]
+fn unparseable_file_errors() {
+    let err = run(&fixture(), Path::new("unparseable.ts")).unwrap_err();
+    assert!(err.to_string().contains("failed to parse"));
+}
+
+#[test]
 fn both_register_dominant_notes_container() {
     let report = report("both-register-dominant.ts");
     assert_eq!(report.pattern_kind, "register-call");

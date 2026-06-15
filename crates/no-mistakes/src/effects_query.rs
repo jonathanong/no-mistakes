@@ -150,12 +150,11 @@ pub fn run(
     if let NodeId::File(path) = &entry_node {
         file_depths.insert(path.clone(), 0);
     }
+    // `deps_of` yields each node once at its minimum depth, so a first-wins
+    // insert preserves the shallowest depth without a redundant merge.
     for entry in &reachable {
         if let NodeId::File(path) = &entry.node {
-            file_depths
-                .entry(path.clone())
-                .and_modify(|existing| *existing = (*existing).min(entry.depth))
-                .or_insert(entry.depth);
+            file_depths.entry(path.clone()).or_insert(entry.depth);
         }
     }
 

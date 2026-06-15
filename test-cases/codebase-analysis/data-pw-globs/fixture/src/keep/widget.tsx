@@ -1,1 +1,1 @@
-export const A = () => <div data-pw="x">a</div>;
+export const A = () => <div data-pw='x'>a</div>;

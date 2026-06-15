@@ -19,8 +19,9 @@ pub(crate) fn data_pw_json_impl(options_json: String) -> napi::Result<String> {
         &include,
     )
     .map_err(to_napi_error)?;
-    serde_json::to_string_pretty(&report)
-        .map_err(|error| napi::Error::from_reason(error.to_string()))
+    // Serialization of these report structs is infallible (string keys, no
+    // floats), so avoid an unreachable error branch here.
+    Ok(serde_json::to_string_pretty(&report).expect("report serialization never fails"))
 }
 
 pub(crate) fn effects_json_impl(options_json: String) -> napi::Result<String> {
@@ -44,8 +45,9 @@ pub(crate) fn effects_json_impl(options_json: String) -> napi::Result<String> {
         options.depth,
     )
     .map_err(to_napi_error)?;
-    serde_json::to_string_pretty(&report)
-        .map_err(|error| napi::Error::from_reason(error.to_string()))
+    // Serialization of these report structs is infallible (string keys, no
+    // floats), so avoid an unreachable error branch here.
+    Ok(serde_json::to_string_pretty(&report).expect("report serialization never fails"))
 }
 
 pub(crate) fn rsc_callers_json_impl(options_json: String) -> napi::Result<String> {
@@ -64,8 +66,9 @@ pub(crate) fn rsc_callers_json_impl(options_json: String) -> napi::Result<String
         options.depth,
     )
     .map_err(to_napi_error)?;
-    serde_json::to_string_pretty(&report)
-        .map_err(|error| napi::Error::from_reason(error.to_string()))
+    // Serialization of these report structs is infallible (string keys, no
+    // floats), so avoid an unreachable error branch here.
+    Ok(serde_json::to_string_pretty(&report).expect("report serialization never fails"))
 }
 
 pub(crate) fn registry_extension_json_impl(options_json: String) -> napi::Result<String> {
@@ -76,6 +79,7 @@ pub(crate) fn registry_extension_json_impl(options_json: String) -> napi::Result
     })?;
     let report = crate::registry_extension_query::run(&root, &PathBuf::from(registry_file))
         .map_err(to_napi_error)?;
-    serde_json::to_string_pretty(&report)
-        .map_err(|error| napi::Error::from_reason(error.to_string()))
+    // Serialization of these report structs is infallible (string keys, no
+    // floats), so avoid an unreachable error branch here.
+    Ok(serde_json::to_string_pretty(&report).expect("report serialization never fails"))
 }
