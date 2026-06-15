@@ -197,11 +197,12 @@ fn test_for_resource_mode_empty_declarations_returns_nothing() {
 fn test_for_honors_test_root_anchor() {
     let root = fixture();
     let test_file = root.join("infra/envs/prod/__tests__/network.test.mts");
+    // Resource mode scopes by referenced address, so a shared `testRoot` is valid.
     let report = report_with(
         TerraformTestConvention {
-            test_globs: vec!["infra/envs/prod/__tests__/*.test.mts".to_string()],
+            test_globs: vec!["infra/envs/prod/__tests__/network.test.mts".to_string()],
             test_root: Some(".".to_string()),
-            match_mode: Some("module".to_string()),
+            match_mode: Some("resource".to_string()),
         },
         vec![test_file],
     );
@@ -209,6 +210,29 @@ fn test_for_honors_test_root_anchor() {
     assert!(rows
         .iter()
         .any(|row| row.test_file.ends_with("network.test.mts")));
+}
+
+#[test]
+fn validate_module_mode_test_root_rejects_shared_root() {
+    use crate::config::v2::schema::TerraformTestConvention;
+    let shared = TerraformTestConvention {
+        test_globs: vec!["**/*.test.mts".to_string()],
+        test_root: Some("tests".to_string()),
+        match_mode: Some("module".to_string()),
+    };
+    assert!(validate_module_mode_test_root(&shared).is_err());
+    // Module mode without a shared root, and resource mode with one, are allowed.
+    assert!(validate_module_mode_test_root(&TerraformTestConvention {
+        match_mode: Some("module".to_string()),
+        ..Default::default()
+    })
+    .is_ok());
+    assert!(validate_module_mode_test_root(&TerraformTestConvention {
+        test_root: Some("tests".to_string()),
+        match_mode: Some("resource".to_string()),
+        ..Default::default()
+    })
+    .is_ok());
 }
 
 #[test]

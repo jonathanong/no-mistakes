@@ -45,6 +45,9 @@ fn leading_attrs(operators: &[TraversalOperator]) -> Vec<&str> {
         .iter()
         .filter_map(|operator| match operator {
             TraversalOperator::GetAttr(ident) => Some(ident.as_str()),
+            // Static string index notation (`module.net["zone_id"]`) names an
+            // attribute/output just like `.zone_id` does.
+            TraversalOperator::Index(Expression::String(name)) => Some(name.as_str()),
             _ => None,
         })
         .collect()

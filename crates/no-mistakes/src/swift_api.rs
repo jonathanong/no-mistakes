@@ -168,7 +168,8 @@ fn test_command(package: &str, target: &str) -> String {
     if package.is_empty() || package == "." {
         format!("swift test --filter {filter}")
     } else {
-        format!("swift test --package-path {package} --filter {filter}")
+        // Single-quote the package path too, so paths with spaces survive the shell.
+        format!("swift test --package-path '{package}' --filter {filter}")
     }
 }
 

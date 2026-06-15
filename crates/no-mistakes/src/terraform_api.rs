@@ -34,6 +34,7 @@ pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<InfraR
     let config = load_v2_config(&root, config_path)?;
     let terraform = config.infra.terraform.clone();
     validate_match_mode(terraform.test.match_mode.as_deref())?;
+    validate_module_mode_test_root(&terraform.test)?;
     // Compile the test globs up front so an invalid pattern is reported rather
     // than silently dropping all covering-test suggestions.
     let test_globset = compile_test_globs(&terraform.test.test_globs)?;
@@ -141,6 +142,18 @@ fn validate_match_mode(mode: Option<&str>) -> Result<()> {
             )
         }
     }
+}
+
+/// `match: module` with a shared `testRoot` cannot scope tests per module (every
+/// module would match the same shared tree), so reject the combination.
+fn validate_module_mode_test_root(test: &TerraformTestConvention) -> Result<()> {
+    if test.match_mode.as_deref() == Some("module") && test.test_root.is_some() {
+        anyhow::bail!(
+            "infra.terraform.test: `match: module` cannot be combined with `testRoot` \
+             (a shared test root cannot be scoped per module)"
+        );
+    }
+    Ok(())
 }
 
 /// Compile the configured test globs. Returns `Ok(None)` when no convention is
