@@ -1,0 +1,12 @@
+# Reusable workflow: triggered only by `workflow_call`, never by file changes.
+name: Reusable
+on:
+  workflow_call:
+    inputs:
+      target:
+        type: string
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo reusable

@@ -1,4 +1,5 @@
 pub mod check_facts;
+pub mod ci_graph;
 pub mod ci_workflows;
 pub mod comment_only;
 pub mod config;

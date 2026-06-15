@@ -2,8 +2,14 @@ import type {
   CheckReport,
   AnalyzeProjectOptions,
   AnalyzeProjectResult,
+  CiEnvOptions,
+  CiEnvReport,
+  CiImpactOptions,
+  CiImpactReport,
   DependencyResult,
   FetchesOptions,
+  ImpactedChecksOptions,
+  ImpactedChecksReport,
   GraphEdge,
   LockfileDiffEntry,
   LockfileDiffOptions,
@@ -65,4 +71,7 @@ export function reactUsages(
   options: ProjectOptions & { target: string },
 ): Promise<ReactUsagesReport>;
 export function lockfileDiff(options: LockfileDiffOptions): Promise<LockfileDiffEntry[]>;
+export function ciImpact(options: CiImpactOptions): Promise<CiImpactReport>;
+export function ciEnv(options: CiEnvOptions): Promise<CiEnvReport>;
+export function impactedChecks(options: ImpactedChecksOptions): Promise<ImpactedChecksReport>;
 export function version(): Promise<string>;

@@ -1,0 +1,11 @@
+# Lives in a non-default workflow dir (ci.workflowDirs) and uses a .yaml ext.
+name: Custom Build
+on:
+  push:
+    paths:
+      - "lib/**"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build

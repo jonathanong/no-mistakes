@@ -15,7 +15,7 @@ use no_mistakes::cli::{init_rayon_threads, JobsArg};
 use no_mistakes::codebase::dependencies::{self, Direction, TraverseArgs};
 use no_mistakes::codebase::symbols::{self, SymbolsArgs};
 use no_mistakes::playwright;
-use no_mistakes::{tests_run, TestsArgs};
+use no_mistakes::{ci_run, impacted_checks_run, tests_run, CiArgs, ImpactedChecksArgs, TestsArgs};
 use std::process::ExitCode;
 
 #[derive(Parser)]
@@ -54,6 +54,10 @@ enum Command {
     Tests(TestsArgs),
     /// Analyze lockfile changes (diff packages).
     Lockfile(lockfile::LockfileArgs),
+    /// Map changed files to triggered GitHub Actions workflows and env usage.
+    Ci(CiArgs),
+    /// List the minimal local validation commands for changed files.
+    ImpactedChecks(ImpactedChecksArgs),
 }
 
 fn main() -> ExitCode {
@@ -90,5 +94,7 @@ fn run() -> Result<ExitCode> {
         Command::Check(args) => check::run(args),
         Command::Tests(args) => tests_run(args),
         Command::Lockfile(args) => lockfile::run(args),
+        Command::Ci(args) => ci_run(args),
+        Command::ImpactedChecks(args) => impacted_checks_run(args),
     }
 }

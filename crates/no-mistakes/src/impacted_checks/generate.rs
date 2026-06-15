@@ -1,0 +1,192 @@
+//! Report generation for `impacted-checks`: reuse the test-plan engine per
+//! framework and apply the configured generic checks.
+
+use super::{CheckCommand, CheckKind, ImpactedChecksArgs, ImpactedChecksReport};
+use crate::config::v2::load_v2_config;
+use crate::config::v2::schema::{CheckFileArgs, NoMistakesConfig};
+use crate::tests::{PlanArgs, TestFramework, Warning};
+use anyhow::Result;
+use globset::{Glob, GlobSet, GlobSetBuilder};
+use std::collections::BTreeSet;
+use std::path::Path;
+
+/// Compute the impacted-checks report (shared by the CLI and N-API).
+pub fn generate_impacted_checks(args: &ImpactedChecksArgs) -> Result<ImpactedChecksReport> {
+    let cwd = std::env::current_dir()?;
+    let root = crate::cli::resolve_optional_root(Some(&args.root), &cwd);
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let root = root.canonicalize().unwrap_or(root);
+    let config = load_v2_config(&root, args.config.as_deref())?;
+
+    let plan_args = plan_args_for(args, None);
+    let collected = crate::tests::changed_files::collect_changed_files(&plan_args, &root)?;
+    let changed_files: Vec<String> = sorted_unique(
+        collected
+            .files
+            .iter()
+            .map(|file| relative_slash(&root, file)),
+    );
+
+    let mut checks: Vec<CheckCommand> = Vec::new();
+    let mut warnings: Vec<Warning> = Vec::new();
+    let mut fallback_triggered = false;
+
+    for framework in [
+        TestFramework::Vitest,
+        TestFramework::Playwright,
+        TestFramework::Swift,
+    ] {
+        if !framework_configured(&config, framework) {
+            continue;
+        }
+        let framework_args = plan_args_for(args, Some(framework));
+        let plan = crate::tests::plan::generate_plan(&framework_args)?;
+        fallback_triggered |= plan.fallback_triggered;
+        warnings.extend(plan.warnings.iter().cloned());
+        for test in &plan.selected_tests {
+            for target in &test.targets {
+                let mut command = target.base_command.clone();
+                command.extend(target.runner_args.iter().cloned());
+                checks.push(CheckCommand {
+                    name: target.runner.clone(),
+                    kind: CheckKind::Test,
+                    command,
+                    files: vec![test.test_file.clone()],
+                });
+            }
+        }
+    }
+
+    checks.extend(generic_checks(&config, &changed_files)?);
+
+    Ok(ImpactedChecksReport {
+        changed_files,
+        checks: dedupe_checks(checks),
+        warnings: dedupe_warnings(warnings),
+        fallback_triggered,
+    })
+}
+
+pub(super) fn framework_configured(config: &NoMistakesConfig, framework: TestFramework) -> bool {
+    match framework {
+        TestFramework::Vitest => {
+            config.tests.vitest.configs.is_some()
+                || !config.tests.vitest.projects.is_empty()
+                || !config.test_plan.vitest.environments.is_empty()
+        }
+        TestFramework::Playwright => {
+            config.tests.playwright.configs.is_some()
+                || !config.tests.playwright.projects.is_empty()
+                || !config.test_plan.playwright.environments.is_empty()
+        }
+        TestFramework::Swift => {
+            !config.tests.swift.packages.is_empty()
+                || !config.tests.swift.projects.is_empty()
+                || !config.test_plan.swift.environments.is_empty()
+        }
+    }
+}
+
+fn generic_checks(
+    config: &NoMistakesConfig,
+    changed_files: &[String],
+) -> Result<Vec<CheckCommand>> {
+    let mut out = Vec::new();
+    for def in &config.checks.commands {
+        let include = build_globset(&def.include)?;
+        let exclude = build_globset(&def.exclude)?;
+        let matched: Vec<String> = changed_files
+            .iter()
+            .filter(|file| {
+                include.as_ref().is_some_and(|set| set.is_match(file))
+                    && exclude.as_ref().is_none_or(|set| !set.is_match(file))
+            })
+            .cloned()
+            .collect();
+        if matched.is_empty() {
+            continue;
+        }
+        let mut command = def.command.clone();
+        if def.file_args == CheckFileArgs::Append {
+            command.extend(matched.iter().cloned());
+        }
+        out.push(CheckCommand {
+            name: def.name.clone(),
+            kind: CheckKind::Generic,
+            command,
+            files: matched,
+        });
+    }
+    Ok(out)
+}
+
+fn build_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
+    if patterns.is_empty() {
+        return Ok(None);
+    }
+    let mut builder = GlobSetBuilder::new();
+    for pattern in patterns {
+        builder.add(Glob::new(pattern)?);
+    }
+    Ok(Some(builder.build()?))
+}
+
+fn plan_args_for(args: &ImpactedChecksArgs, framework: Option<TestFramework>) -> PlanArgs {
+    let mut changed_file = args.changed_file.clone();
+    changed_file.extend(args.files.iter().cloned());
+    PlanArgs {
+        framework,
+        root: args.root.clone(),
+        config: args.config.clone(),
+        tsconfig: args.tsconfig.clone(),
+        base: args.base.clone(),
+        head: args.head.clone(),
+        changed_file,
+        changed_files: args.changed_files.clone(),
+        diff: args.diff.clone(),
+        diff_stdin: false,
+        diff_command: None,
+        entrypoints: Vec::new(),
+        entrypoint_symbols: Vec::new(),
+        include_symbols: false,
+        diff_content: None,
+        environment: "pre-push".to_string(),
+        limit_percent: None,
+        limit_files: None,
+        global_config_fallback: None,
+        format: None,
+        json: false,
+    }
+}
+
+fn dedupe_checks(checks: Vec<CheckCommand>) -> Vec<CheckCommand> {
+    let mut seen = BTreeSet::new();
+    let mut unique: Vec<CheckCommand> = checks
+        .into_iter()
+        .filter(|check| seen.insert(check.command.clone()))
+        .collect();
+    unique.sort_by(|a, b| a.command.cmp(&b.command));
+    unique
+}
+
+pub(super) fn dedupe_warnings(warnings: Vec<Warning>) -> Vec<Warning> {
+    let mut seen = BTreeSet::new();
+    let mut unique: Vec<Warning> = warnings
+        .into_iter()
+        .filter(|warning| seen.insert((warning.r#type.clone(), warning.file.clone())))
+        .collect();
+    unique.sort_by(|a, b| (&a.file, &a.message).cmp(&(&b.file, &b.message)));
+    unique
+}
+
+fn sorted_unique(values: impl Iterator<Item = String>) -> Vec<String> {
+    let set: BTreeSet<String> = values.collect();
+    set.into_iter().collect()
+}
+
+fn relative_slash(root: &Path, path: &Path) -> String {
+    path.strip_prefix(root)
+        .unwrap_or(path)
+        .to_string_lossy()
+        .replace('\\', "/")
+}

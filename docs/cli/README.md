@@ -26,6 +26,8 @@ analysis.
 | [`react`](react.md) | React component trait analysis and fetch checks. |
 | [`queues`](queues.md) | Queue producer/worker graph checks. |
 | [`server`](server.md) | Express, Hono, and Koa route graphs. |
+| [`ci`](ci.md) | GitHub Actions impact ([`ci-impact`](ci-impact.md)) and env usage ([`ci-env`](ci-env.md)). |
+| [`impacted-checks`](impacted-checks.md) | Minimal local validation commands for changed files. |
 
 ## Shared Output Formats
 

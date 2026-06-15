@@ -1,0 +1,14 @@
+# Counterintuitive on purpose: GitHub disallows `paths` AND `paths-ignore` in
+# the same event. We warn and honor `paths`. Do not "simplify" this fixture.
+name: Both
+on:
+  push:
+    paths:
+      - "api/**"
+    paths-ignore:
+      - "api/generated/**"
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo api

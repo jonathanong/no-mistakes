@@ -55,6 +55,9 @@ fn cli_leaf_commands_have_docs() {
         "server-routes",
         "server-edges",
         "server-related",
+        "ci-impact",
+        "ci-env",
+        "impacted-checks",
     ];
     for command in commands {
         let file = format!("{command}.md");

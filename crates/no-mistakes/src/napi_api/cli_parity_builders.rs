@@ -86,6 +86,24 @@ fn strings_to_paths(values: Vec<String>) -> Vec<PathBuf> {
     values.into_iter().map(PathBuf::from).collect()
 }
 
+pub(crate) fn build_impacted_checks_args(
+    options: ImpactedChecksOptions,
+) -> crate::impacted_checks::ImpactedChecksArgs {
+    crate::impacted_checks::ImpactedChecksArgs {
+        files: Vec::new(),
+        root: options.root.map(PathBuf::from).unwrap_or_else(|| ".".into()),
+        config: options.config.map(PathBuf::from),
+        tsconfig: options.tsconfig.map(PathBuf::from),
+        base: options.base,
+        head: options.head,
+        changed_file: strings_to_paths(options.changed_files),
+        changed_files: options.changed_files_file.map(PathBuf::from),
+        diff: options.diff.map(PathBuf::from),
+        format: None,
+        json: false,
+    }
+}
+
 fn entrypoint_parts(
     values: Vec<super::options::EntrypointOption>,
 ) -> (Vec<String>, Vec<Option<String>>) {

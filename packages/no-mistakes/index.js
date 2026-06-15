@@ -122,6 +122,18 @@ async function lockfileDiff(options) {
   return callJson(native.lockfileDiffJson, options);
 }
 
+async function ciImpact(options) {
+  return callJson(native.ciImpactJson, options);
+}
+
+async function ciEnv(options) {
+  return callJson(native.ciEnvJson, options);
+}
+
+async function impactedChecks(options) {
+  return callJson(native.impactedChecksJson, options);
+}
+
 async function version() {
   return native.version();
 }
@@ -129,9 +141,12 @@ async function version() {
 module.exports = {
   analyzeProject,
   check,
+  ciEnv,
+  ciImpact,
   dependencies,
   dependents,
   fetches,
+  impactedChecks,
   lockfileDiff,
   playwrightCheck,
   playwrightEdges,

@@ -64,6 +64,8 @@ pub(crate) struct TestsImpactOptions {
     pub(crate) include_symbols: bool,
 }
 
+include!("options_ci.rs");
+
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct TestsWhyOptions {

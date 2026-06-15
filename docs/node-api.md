@@ -47,6 +47,9 @@ const { analyzeProject, dependents, symbols, testsPlan } = require("no-mistakes"
 | `server routes\|edges\|related` | `serverRouteList`, `serverRouteEdges`, `serverRouteRelated` |
 | `react analyze\|check\|usages` | `reactAnalyze`, `reactCheck`, `reactUsages` |
 | `lockfile diff` | `lockfileDiff(options)` |
+| `ci impact` | `ciImpact(options)` |
+| `ci env` | `ciEnv(options)` |
+| `impacted-checks` | `impactedChecks(options)` |
 
 `check(options)` returns the same structured check report as CLI JSON,
 including `warnings: string[]` for configured checks that could not run.
