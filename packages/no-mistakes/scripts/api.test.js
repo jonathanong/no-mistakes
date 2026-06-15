@@ -66,6 +66,16 @@ test("programmatic API proxies object options through async native addon calls",
         JSON.stringify({ command: "reactCheck", options: JSON.parse(json) }),
       reactUsagesJson: async (json) =>
         JSON.stringify({ command: "reactUsages", options: JSON.parse(json) }),
+      infraResourceRefsJson: async (json) =>
+        JSON.stringify({ command: "infraResourceRefs", options: JSON.parse(json) }),
+      infraOutputsJson: async (json) =>
+        JSON.stringify({ command: "infraOutputs", options: JSON.parse(json) }),
+      infraTestForJson: async (json) =>
+        JSON.stringify({ command: "infraTestFor", options: JSON.parse(json) }),
+      swiftImportersJson: async (json) =>
+        JSON.stringify({ command: "swiftImporters", options: JSON.parse(json) }),
+      swiftTestTargetsJson: async (json) =>
+        JSON.stringify({ command: "swiftTestTargets", options: JSON.parse(json) }),
       version: async () => "1.2.3",
     };
   };
@@ -136,6 +146,20 @@ test("programmatic API proxies object options through async native addon calls",
     assert.equal((await api.reactAnalyze({ targets: ["*.tsx"] })).command, "reactAnalyze");
     assert.equal((await api.reactCheck({ assertNoFetch: true })).command, "reactCheck");
     assert.equal((await api.reactUsages({ target: "a.tsx#Button" })).command, "reactUsages");
+    assert.equal(
+      (await api.infraResourceRefs({ address: "aws_lb.web" })).command,
+      "infraResourceRefs",
+    );
+    assert.equal(
+      (await api.infraOutputs({ moduleDir: "infra/modules/net" })).command,
+      "infraOutputs",
+    );
+    assert.equal((await api.infraTestFor({ tfFile: "infra/main.tf" })).command, "infraTestFor");
+    assert.equal((await api.swiftImporters({ file: "Sources/A.swift" })).command, "swiftImporters");
+    assert.equal(
+      (await api.swiftTestTargets({ file: "Sources/A.swift" })).command,
+      "swiftTestTargets",
+    );
     assert.equal(await api.version(), "1.2.3");
   } finally {
     delete require.cache[require.resolve(indexPath)];

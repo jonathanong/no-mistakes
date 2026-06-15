@@ -1,0 +1,7 @@
+version: 2
+# An invalid glob pattern: `tests impact` must degrade to "no registries"
+# instead of crashing.
+tests:
+  impact:
+    registries:
+      - "["

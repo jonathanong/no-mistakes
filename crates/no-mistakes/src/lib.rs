@@ -23,5 +23,7 @@ pub mod registry_extension_query;
 pub mod routes;
 pub mod rsc_callers_query;
 pub mod server_routes;
+pub mod swift_api;
+pub mod terraform_api;
 mod tests;
 pub use tests::{run as tests_run, TestsArgs};

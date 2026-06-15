@@ -31,6 +31,9 @@ serialized in JSON/YAML/text output through the `via` field.
 | `swift-import` | `SwiftImport` | `swift` | Swift file -> local files in imported SwiftPM target | [`swift-test-plan`](../test-cases/codebase-analysis/swift-test-plan) |
 | `swift-ref` | `SwiftReference` | `swift` | Swift file -> file declaring a referenced Swift symbol/member | [`swift-test-plan`](../test-cases/codebase-analysis/swift-test-plan) |
 | `swift-package` | `SwiftPackageDependency` | `swift` | Swift file -> files in a declared SwiftPM target dependency | [`swift-test-plan`](../test-cases/codebase-analysis/swift-test-plan) |
+| `terraform-ref` | `TerraformReference` | `terraform` | Terraform file referencing `<type>.<name>` -> file declaring that resource/data source | [`terraform-basic`](../test-cases/codebase-analysis/terraform-basic) |
+| `terraform-module` | `TerraformModuleRef` | `terraform` | Terraform file with a `module` block -> files in the module's local source directory | [`terraform-basic`](../test-cases/codebase-analysis/terraform-basic) |
+| `terraform-output` | `TerraformOutputRef` | `terraform` | Terraform file referencing `module.<name>.<output>` -> file declaring that output | [`terraform-basic`](../test-cases/codebase-analysis/terraform-basic) |
 
 ## Relationship Filters
 
@@ -55,6 +58,7 @@ serialized in JSON/YAML/text output through the `via` field.
 | `asset` | `asset` |
 | `react` | `react-render` |
 | `swift` | `swift-import`, `swift-ref`, `swift-package` |
+| `terraform` | `terraform-ref`, `terraform-module`, `terraform-output` |
 | `all` | all edge kinds |
 
 ## Examples And Counterexamples

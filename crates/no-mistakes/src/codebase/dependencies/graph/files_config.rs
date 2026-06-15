@@ -25,6 +25,7 @@ struct GraphConfigOptions {
     rewrites: Vec<crate::config::v2::schema::RewriteRule>,
     queue_project_factory_names: Vec<String>,
     swift_packages: Vec<String>,
+    terraform: crate::config::v2::schema::TerraformConfig,
 }
 
 fn graph_config_options(root: &Path) -> Option<GraphConfigOptions> {
@@ -45,7 +46,6 @@ fn graph_config_options_with_config(
         .as_ref()
         .map(|config| ConfigView::new(config).server_route_globs())
         .unwrap_or_default();
-    let project_route_globset = compile_project_route_globset(&project_route_globs);
     let test_filter = v2_config
         .as_ref()
         .map(|config| crate::codebase::test_filter::TestFileFilter::new(root, config));
@@ -58,11 +58,12 @@ fn graph_config_options_with_config(
         queue: config.rule_options("queue-dashboard-reachability"),
         http_route: config.rule_options("http-route-static-paths"),
         http_call: config.rule_options("http-call-static-paths"),
-        project_route_globset,
+        project_route_globset: compile_project_route_globset(&project_route_globs),
         test_filter,
         rewrites,
         queue_project_factory_names: v2_config.as_ref().map(|c| c.queues.factories.clone()).unwrap_or_default(),
         swift_packages: v2_config.as_ref().map(|c| c.tests.swift.packages.clone()).unwrap_or_default(),
+        terraform: v2_config.as_ref().map(|c| c.infra.terraform.clone()).unwrap_or_default(),
     })
 }
 

@@ -9,6 +9,7 @@ mod analyze_project;
 mod async_task;
 mod cli_parity;
 mod codebase;
+mod infra_swift;
 mod lockfile_diff;
 mod options;
 mod project;
@@ -23,6 +24,11 @@ pub(crate) use cli_parity::{
 };
 pub(crate) use codebase::{
     dependencies_json_impl, dependents_json_impl, related_json_impl, symbols_json_impl,
+};
+#[cfg(not(coverage))]
+pub use infra_swift::{
+    infra_outputs_json, infra_resource_refs_json, infra_test_for_json, swift_importers_json,
+    swift_test_targets_json,
 };
 pub(crate) use lockfile_diff::lockfile_diff_json_impl;
 pub(crate) use project::{

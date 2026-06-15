@@ -124,7 +124,14 @@ fn visit_variable_declarator_with_scope<'a>(
             if let Some(name) = name.as_deref() {
                 record_object_member_calls(collector, name, object);
             }
-            if collector.export_depth > 0 {
+            // Treat both inline `export const` and later `export { … }` named
+            // object bindings as exported, so a registry written either way keeps
+            // its dynamic-import edges reachable.
+            let exported = collector.export_depth > 0
+                || name
+                    .as_deref()
+                    .is_some_and(|name| collector.is_exported_top_level_name(name));
+            if exported {
                 visit_exported_variable_declarator_reference(collector, declarator, name);
             } else {
                 if let Some(name) = name.as_deref() {

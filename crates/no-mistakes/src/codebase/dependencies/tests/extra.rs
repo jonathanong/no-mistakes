@@ -458,5 +458,15 @@ fn relationship_arg_as_str_all_variants() {
     assert_eq!(RelationshipArg::Process.as_str(), "process");
     assert_eq!(RelationshipArg::Asset.as_str(), "asset");
     assert_eq!(RelationshipArg::React.as_str(), "react");
+    assert_eq!(RelationshipArg::Swift.as_str(), "swift");
+    assert_eq!(RelationshipArg::Terraform.as_str(), "terraform");
     assert_eq!(RelationshipArg::All.as_str(), "all");
+}
+
+#[test]
+fn terraform_relationship_maps_to_terraform_edge_kinds() {
+    let filter = relationship_filter(&[RelationshipArg::Terraform]).expect("filter set");
+    assert!(filter.contains(&EdgeKind::TerraformReference));
+    assert!(filter.contains(&EdgeKind::TerraformModuleRef));
+    assert!(filter.contains(&EdgeKind::TerraformOutputRef));
 }

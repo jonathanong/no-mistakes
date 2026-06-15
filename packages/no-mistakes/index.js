@@ -138,6 +138,26 @@ async function lockfileDiff(options) {
   return callJson(native.lockfileDiffJson, options);
 }
 
+async function infraResourceRefs(options) {
+  return callJson(native.infraResourceRefsJson, options);
+}
+
+async function infraOutputs(options) {
+  return callJson(native.infraOutputsJson, options);
+}
+
+async function infraTestFor(options) {
+  return callJson(native.infraTestForJson, options);
+}
+
+async function swiftImporters(options) {
+  return callJson(native.swiftImportersJson, options);
+}
+
+async function swiftTestTargets(options) {
+  return callJson(native.swiftTestTargetsJson, options);
+}
+
 async function version() {
   return native.version();
 }
@@ -150,6 +170,9 @@ module.exports = {
   dependents,
   effects,
   fetches,
+  infraOutputs,
+  infraResourceRefs,
+  infraTestFor,
   lockfileDiff,
   playwrightCheck,
   playwrightEdges,
@@ -169,6 +192,8 @@ module.exports = {
   serverRouteList,
   serverRouteRelated,
   serverRoutes,
+  swiftImporters,
+  swiftTestTargets,
   symbols,
   testsComment,
   testsGraph,

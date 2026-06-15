@@ -7,19 +7,22 @@ pub use super::test_plan::{
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+mod infra_config;
 mod rule_targets;
 mod string_or_list;
 mod tests_config;
 
+pub use infra_config::{InfraConfig, TerraformConfig, TerraformTestConvention};
 pub use tests_config::{
-    JestConfig, PlaywrightSelectors, PlaywrightTestConfig, StorybookConfig, SwiftConfig,
-    TestProjectPolicy, Tests, VitestConfig,
+    ImpactConfig, JestConfig, PlaywrightSelectors, PlaywrightTestConfig, StorybookConfig,
+    SwiftConfig, TestProjectPolicy, Tests, VitestConfig,
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct NoMistakesConfig {
     pub filesystem: FilesystemConfig,
+    pub infra: InfraConfig,
     pub projects: BTreeMap<String, Project>,
     pub queues: QueuesTopLevelConfig,
     /// Named effect families for the `effects` query, keyed by `<kind>`.
