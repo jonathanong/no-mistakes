@@ -17,7 +17,12 @@ route fetches, or what React traits a component has.
 | --- | --- |
 | What does this file transitively import? | `no-mistakes dependencies <file>` |
 | Which files are affected by touching this file? | `no-mistakes dependents <file>` |
+| Which files directly import this one file? (fast) | `no-mistakes importers <file>` |
 | Which files import this named export? | `no-mistakes dependents <file>#SYMBOL` |
+| What does this file export, and who imports each export? | `no-mistakes exports-of <file>` |
+| Is this export still used anywhere? (yes/no) | `no-mistakes dead-exports <file> [NAME...]` |
+| Where is this function called, and with what argument shapes? | `no-mistakes call-sites <file> SYMBOL` |
+| Do all imports in this file resolve? | `no-mistakes resolve-check <file>` |
 | What must I update before changing this function signature? | `no-mistakes symbols <file> --mode signature-impact --symbol SYMBOL --format json` |
 | Which tests should rerun? | `no-mistakes tests plan vitest --changed-file <file> --format paths` |
 | Which tests should rerun? (lower-level fallback) | `no-mistakes dependents <file> --test vitest --format paths` |
@@ -117,6 +122,8 @@ member usage.
 - `references/dependents.md`: full `dependents`/`related` reference and
   `FILE#SYMBOL` behavior.
 - `references/symbols.md`: full `symbols` reference.
+- `references/lightweight-queries.md`: full `importers`, `exports-of`,
+  `dead-exports`, `call-sites`, and `resolve-check` reference.
 - `references/tests.md`: full `tests plan/why` reference and `testPlan` config.
 - `references/playwright.md`: full `playwright` command reference.
 - `references/monorepo-resolution.md`: tsconfig paths and workspace packages.

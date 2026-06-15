@@ -560,6 +560,7 @@ fn option_parsers_cover_all_supported_values() {
 }
 
 include!("tests_impact.rs");
+include!("tests_queries.rs");
 
 mod check;
 mod ci;

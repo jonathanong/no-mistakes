@@ -24,6 +24,16 @@ test("programmatic API proxies object options through async native addon calls",
         JSON.stringify({ command: "analyzeProject", options: JSON.parse(json) }),
       symbolsJson: async (json) =>
         JSON.stringify({ command: "symbols", options: JSON.parse(json) }),
+      importersJson: async (json) =>
+        JSON.stringify({ command: "importers", options: JSON.parse(json) }),
+      exportsOfJson: async (json) =>
+        JSON.stringify({ command: "exportsOf", options: JSON.parse(json) }),
+      deadExportsJson: async (json) =>
+        JSON.stringify({ command: "deadExports", options: JSON.parse(json) }),
+      callSitesJson: async (json) =>
+        JSON.stringify({ command: "callSites", options: JSON.parse(json) }),
+      resolveCheckJson: async (json) =>
+        JSON.stringify({ command: "resolveCheck", options: JSON.parse(json) }),
       fetchesJson: async (json) =>
         JSON.stringify({ command: "fetches", options: JSON.parse(json) }),
       checkJson: async (json) => JSON.stringify({ command: "check", options: JSON.parse(json) }),
@@ -106,6 +116,17 @@ test("programmatic API proxies object options through async native addon calls",
       ).options.mode,
       "signature-impact",
     );
+    assert.deepEqual(await api.importers({ file: "a.ts", tests: true }), {
+      command: "importers",
+      options: { file: "a.ts", tests: true },
+    });
+    assert.equal((await api.exportsOf({ file: "a.ts" })).command, "exportsOf");
+    assert.equal((await api.deadExports({ file: "a.ts", names: ["foo"] })).options.names[0], "foo");
+    assert.equal(
+      (await api.callSites({ file: "a.ts", exportName: "foo" })).options.exportName,
+      "foo",
+    );
+    assert.equal((await api.resolveCheck({ file: "a.ts" })).command, "resolveCheck");
     assert.equal((await api.fetches({ targets: ["/users"] })).command, "fetches");
     assert.equal((await api.check({ tsconfig: "tsconfig.json" })).command, "check");
     assert.deepEqual(

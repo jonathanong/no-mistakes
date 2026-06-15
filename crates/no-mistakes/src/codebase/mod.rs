@@ -9,6 +9,7 @@ pub mod lockfile;
 pub mod markdown_sections;
 pub mod md_links;
 pub mod pnpm_lock;
+pub mod queries;
 pub mod rules;
 pub(crate) mod storybook;
 pub(crate) mod storybook_mdx;
