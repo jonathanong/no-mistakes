@@ -80,7 +80,10 @@ fn references_address(content: &str, addr: &str) -> bool {
     content.match_indices(addr).any(|(index, _)| {
         let before = content[..index].chars().next_back();
         let after = content[index + addr.len()..].chars().next();
-        !is_identifier_char(before) && !is_identifier_char(after)
+        // A preceding `.` means the match is the suffix of a longer dotted address
+        // (e.g. `data.aws_s3_bucket.foo`); a trailing `.` is a normal attribute
+        // access (`aws_s3_bucket.foo.arn`) and is allowed.
+        !is_identifier_char(before) && before != Some('.') && !is_identifier_char(after)
     })
 }
 
