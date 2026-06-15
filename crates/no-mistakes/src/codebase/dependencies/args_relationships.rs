@@ -26,6 +26,7 @@ pub enum RelationshipArg {
     Asset,
     React,
     Swift,
+    Terraform,
     All,
 }
 
@@ -49,6 +50,7 @@ impl RelationshipArg {
             RelationshipArg::Asset => "asset",
             RelationshipArg::React => "react",
             RelationshipArg::Swift => "swift",
+            RelationshipArg::Terraform => "terraform",
             RelationshipArg::All => "all",
         }
     }
@@ -129,6 +131,11 @@ pub(crate) fn relationship_filter(
                 set.insert(EdgeKind::SwiftImport);
                 set.insert(EdgeKind::SwiftReference);
                 set.insert(EdgeKind::SwiftPackageDependency);
+            }
+            RelationshipArg::Terraform => {
+                set.insert(EdgeKind::TerraformReference);
+                set.insert(EdgeKind::TerraformModuleRef);
+                set.insert(EdgeKind::TerraformOutputRef);
             }
             RelationshipArg::All => return None,
         }

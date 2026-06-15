@@ -7,10 +7,12 @@ pub use super::test_plan::{
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+mod infra_config;
 mod rule_targets;
 mod string_or_list;
 mod tests_config;
 
+pub use infra_config::{InfraConfig, TerraformConfig, TerraformTestConvention};
 pub use tests_config::{
     ImpactConfig, JestConfig, PlaywrightSelectors, PlaywrightTestConfig, StorybookConfig,
     SwiftConfig, TestProjectPolicy, Tests, VitestConfig,
@@ -20,6 +22,7 @@ pub use tests_config::{
 #[serde(rename_all = "camelCase", default)]
 pub struct NoMistakesConfig {
     pub filesystem: FilesystemConfig,
+    pub infra: InfraConfig,
     pub projects: BTreeMap<String, Project>,
     pub queues: QueuesTopLevelConfig,
     pub tests: Tests,

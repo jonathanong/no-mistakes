@@ -5,8 +5,10 @@ import type {
   DependencyResult,
   FetchesOptions,
   GraphEdge,
+  InfraOptions,
   LockfileDiffEntry,
   LockfileDiffOptions,
+  ModuleOutputsResult,
   PlaywrightOptions,
   PlaywrightRelatedOptions,
   ProjectOptions,
@@ -14,8 +16,13 @@ import type {
   ReactComponentFacts,
   ReactUsagesReport,
   ReactViolation,
+  ResourceRefRow,
   ServerRoutesReport,
   SignatureImpactResult,
+  SwiftImporterRow,
+  SwiftOptions,
+  SwiftTestTargetRow,
+  TestForRow,
   SymbolsListOptions,
   SymbolsOptions,
   SymbolsResult,
@@ -65,4 +72,17 @@ export function reactUsages(
   options: ProjectOptions & { target: string },
 ): Promise<ReactUsagesReport>;
 export function lockfileDiff(options: LockfileDiffOptions): Promise<LockfileDiffEntry[]>;
+export function infraResourceRefs(
+  options: InfraOptions & { address: string },
+): Promise<ResourceRefRow[]>;
+export function infraOutputs(
+  options: InfraOptions & { moduleDir: string },
+): Promise<ModuleOutputsResult>;
+export function infraTestFor(options: InfraOptions & { tfFile: string }): Promise<TestForRow[]>;
+export function swiftImporters(
+  options: SwiftOptions & { file: string },
+): Promise<SwiftImporterRow[]>;
+export function swiftTestTargets(
+  options: SwiftOptions & { file: string },
+): Promise<SwiftTestTargetRow[]>;
 export function version(): Promise<string>;

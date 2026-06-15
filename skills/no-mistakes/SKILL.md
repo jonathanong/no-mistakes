@@ -36,6 +36,11 @@ route fetches, or what React traits a component has.
 | What server routes exist? | `no-mistakes server routes` |
 | Which server route files are related? | `no-mistakes server related <file>` |
 | Raw queue/server edges for debugging | `no-mistakes queues edges [file]` / `no-mistakes server edges [file]` |
+| Which Terraform/OpenTofu resources reference this resource? | `no-mistakes infra resource-refs <type>.<name>` |
+| What outputs does this Terraform module export and who consumes them? | `no-mistakes infra outputs <module-dir>` |
+| Which tests cover this `.tf` file? | `no-mistakes infra test-for <tf-file>` |
+| Which Swift files import this file/type? | `no-mistakes swift importers <file>` |
+| Which Swift test targets cover this file? | `no-mistakes swift test-targets <file>` |
 | Run configured project checks in parallel | `no-mistakes check` |
 | What edge kinds are supported? | Read `references/decision-tree.md` or https://github.com/jonathanong/no-mistakes/blob/main/docs/graph-edges.md |
 | Plain text, comments, log messages, exact call lines | `rg` |
@@ -93,7 +98,7 @@ reports. Note: `analyzeProject` does not support `testsPlan`, `fetches`, or
 - `--filter <GLOB>` to include only matching files; repeatable.
 - `--target-module <GLOB>` to include only matching external module nodes (useful with `--relationship package`).
 - `--test vitest|playwright|cargo` to filter to test files.
-- `--relationship import|import-static|import-dynamic|import-type|import-require|workspace|package|test|route|queue|md|ci|http|process|asset|react|all`.
+- `--relationship import|import-static|import-dynamic|import-type|import-require|workspace|package|test|route|queue|md|ci|http|process|asset|react|swift|terraform|all`.
 - `--direction deps|dependents|both` for `queues related` and `server related`.
 - `--format json|md|yml|paths|human`, `--json`, `--timings` (stderr), and `--jobs`.
 
