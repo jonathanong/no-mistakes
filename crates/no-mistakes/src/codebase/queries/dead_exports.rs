@@ -101,15 +101,12 @@ impl Report for DeadExportsReport {
     fn write_human(&self, w: &mut dyn Write) -> io::Result<()> {
         writeln!(w, "{}", self.file)?;
         for result in &self.results {
-            if result.referenced {
-                writeln!(
-                    w,
-                    "  {}: referenced ({})",
-                    result.name, result.importer_count
-                )?;
+            let line = if result.referenced {
+                format!("  {}: referenced ({})", result.name, result.importer_count)
             } else {
-                writeln!(w, "  {}: DEAD", result.name)?;
-            }
+                format!("  {}: DEAD", result.name)
+            };
+            writeln!(w, "{line}")?;
         }
         Ok(())
     }

@@ -60,5 +60,13 @@ fn renders_formats_and_runs() {
         render(&report, format, &mut buf).unwrap();
         assert!(!buf.is_empty());
     }
+
+    // Human render without --tests: the test-impact section is omitted.
+    let no_tests = compute(&args("util.ts", false)).unwrap();
+    let mut human = Vec::new();
+    render(&no_tests, Format::Human, &mut human).unwrap();
+    let text = String::from_utf8(human).unwrap();
+    assert!(!text.contains("impacts"));
+
     let _ = run(args("util.ts", false)).unwrap();
 }

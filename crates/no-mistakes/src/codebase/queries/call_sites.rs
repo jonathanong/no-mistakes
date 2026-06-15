@@ -127,14 +127,8 @@ impl Report for CallSitesReport {
         writeln!(w, "{}#{}", self.file, self.export)?;
         for site in &self.call_sites {
             let caller = site.caller.as_deref().unwrap_or("(top-level)");
-            writeln!(
-                w,
-                "  {}:{} {}({})",
-                site.file,
-                site.line,
-                caller,
-                site.args.join(", ")
-            )?;
+            let args = site.args.join(", ");
+            writeln!(w, "  {}:{} {caller}({args})", site.file, site.line)?;
         }
         Ok(())
     }

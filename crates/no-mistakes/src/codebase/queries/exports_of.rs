@@ -105,11 +105,11 @@ impl Report for ExportsOfReport {
             } else {
                 export.importers.join(", ")
             };
-            writeln!(
-                w,
+            let line = format!(
                 "  {} ({}) line {} <- {}",
                 export.name, export.kind, export.line, consumers
-            )?;
+            );
+            writeln!(w, "{line}")?;
         }
         Ok(())
     }

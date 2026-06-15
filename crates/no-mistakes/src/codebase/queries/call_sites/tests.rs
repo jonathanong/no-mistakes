@@ -1,7 +1,9 @@
 use super::*;
 use crate::cli::Format;
+use crate::codebase::dependencies::graph::SymbolIndex;
 use crate::codebase::queries::render::render;
-use std::path::PathBuf;
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 
 fn fixture_root(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -67,6 +69,36 @@ fn covers_every_argument_shape() {
     assert!(arg_lists.contains(&vec!["array".into(), "arrow".into()]));
     assert!(arg_lists.contains(&vec!["call".into(), "arrow".into()]));
     assert!(arg_lists.contains(&vec!["other".into()]));
+}
+
+#[test]
+fn export_without_importers_has_no_call_sites() {
+    // `dead` is exported but never imported — exercises the no-importers branch.
+    let report = compute(&args(fixture_root("queries"), "util.ts", "dead")).unwrap();
+    assert!(report.call_sites.is_empty());
+}
+
+#[test]
+fn unreadable_file_yields_no_sites() {
+    let names: HashSet<String> = ["used".to_string()].into_iter().collect();
+    let sites = sites_for_file(Path::new("/no/such/file.ts"), &names, Path::new("/"));
+    assert!(sites.is_empty());
+}
+
+#[test]
+fn reexport_cycle_terminates() {
+    // a.ts and b.ts re-export `S` from each other; the visited guard must stop
+    // the worklist from looping forever.
+    let a = PathBuf::from("/repo/a.ts");
+    let b = PathBuf::from("/repo/b.ts");
+    let mut map: HashMap<PathBuf, Vec<(PathBuf, String, String, bool)>> = HashMap::new();
+    map.insert(b.clone(), vec![(a.clone(), "S".into(), "S".into(), true)]);
+    map.insert(a.clone(), vec![(b.clone(), "S".into(), "S".into(), true)]);
+    let index = SymbolIndex::build(&map);
+    let by_file = local_names_by_file(&index, &a, "S");
+    // Both files are reached, each bound to `S`.
+    assert!(by_file.contains_key(&a));
+    assert!(by_file.contains_key(&b));
 }
 
 #[test]

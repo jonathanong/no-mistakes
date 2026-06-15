@@ -81,6 +81,21 @@ fn tags_every_import_kind_and_absolute_path() {
 }
 
 #[test]
+fn tsx_file_parses() {
+    let root = named_fixture("queries-kinds");
+    let report = compute(&ResolveCheckArgs {
+        file: PathBuf::from("widget.tsx"),
+        root: Some(root),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(report.all_resolve);
+    assert_eq!(report.imports[0].specifier, "./dep");
+}
+
+#[test]
 fn renders_every_format() {
     let report = compute(&args("broken.ts")).unwrap();
     for format in [
