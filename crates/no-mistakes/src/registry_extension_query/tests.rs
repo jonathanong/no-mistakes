@@ -1,0 +1,233 @@
+use super::*;
+use std::path::PathBuf;
+
+fn fixture() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/registry-extension/fixture")
+}
+
+fn report(file: &str) -> RegistryExtensionReport {
+    run(&fixture(), Path::new(file)).unwrap()
+}
+
+#[test]
+fn detects_register_call_pattern() {
+    let report = report("register-call.ts");
+    assert_eq!(report.pattern_kind, "register-call");
+    assert_eq!(report.registrant.as_deref(), Some("registry.register"));
+    assert_eq!(report.confidence, "high");
+    assert_eq!(report.entries.len(), 2);
+
+    let first = &report.entries[0];
+    let import = first.entry_import.as_ref().unwrap();
+    assert_eq!(import.specifier, "./plugins/foo");
+    assert_eq!(import.symbol.as_deref(), Some("FooPlugin"));
+    assert!(first
+        .call_shape
+        .starts_with("registry.register(new FooPlugin"));
+    assert_eq!(
+        report.template.as_deref(),
+        Some("registry.register(new <Entry>({ id: \"foo\" }))")
+    );
+}
+
+#[test]
+fn detects_container_array() {
+    let report = report("container-array.ts");
+    assert_eq!(report.pattern_kind, "container-array");
+    assert!(report.registrant.is_none());
+    assert_eq!(report.entries.len(), 2);
+    assert_eq!(
+        report.entries[0].entry_import.as_ref().unwrap().specifier,
+        "./alpha"
+    );
+}
+
+#[test]
+fn detects_container_object() {
+    let report = report("container-object.ts");
+    assert_eq!(report.pattern_kind, "container-object");
+    assert_eq!(report.entries.len(), 2);
+    // Bare identifier values resolve to their imports.
+    assert_eq!(
+        report.entries[0]
+            .entry_import
+            .as_ref()
+            .unwrap()
+            .symbol
+            .as_deref(),
+        Some("Alpha")
+    );
+    // The entry shape keeps the object key so an agent can add a sibling.
+    assert_eq!(report.entries[0].call_shape, "alpha: Alpha");
+}
+
+#[test]
+fn tied_registries_pick_deterministic_winner() {
+    // alpha.register and beta.register both have two imported entries; the
+    // smaller callee key (alpha.register) wins deterministically.
+    let report = report("tied-registries.ts");
+    assert_eq!(report.pattern_kind, "register-call");
+    assert_eq!(report.registrant.as_deref(), Some("alpha.register"));
+}
+
+#[test]
+fn detects_dynamic_import_registrants() {
+    let report = report("dynamic-import.ts");
+    assert_eq!(report.pattern_kind, "register-call");
+    assert_eq!(report.entries.len(), 2);
+    let import = report.entries[0].entry_import.as_ref().unwrap();
+    assert_eq!(import.kind, "dynamic");
+    assert_eq!(import.specifier, "./plugins/lazy-a");
+    assert!(import.symbol.is_none());
+}
+
+#[test]
+fn mixed_file_reports_dominant_and_notes_side_effect() {
+    let report = report("mixed.ts");
+    assert_eq!(report.pattern_kind, "register-call");
+    assert!(report
+        .notes
+        .iter()
+        .any(|note| note.contains("side-effect import")));
+}
+
+#[test]
+fn no_pattern_reports_none() {
+    let report = report("none.ts");
+    assert_eq!(report.pattern_kind, "none");
+    assert_eq!(report.confidence, "low");
+    assert!(report.entries.is_empty());
+    assert!(report.template.is_none());
+    assert!(report.notes.iter().any(|note| note.contains("no repeated")));
+}
+
+#[test]
+fn missing_file_errors() {
+    let err = run(&fixture(), Path::new("does-not-exist.ts")).unwrap_err();
+    assert!(err.to_string().contains("cannot read"));
+}
+
+#[test]
+fn unparseable_file_errors() {
+    let err = run(&fixture(), Path::new("unparseable.ts")).unwrap_err();
+    assert!(err.to_string().contains("failed to parse"));
+}
+
+#[test]
+fn both_register_dominant_notes_container() {
+    let report = report("both-register-dominant.ts");
+    assert_eq!(report.pattern_kind, "register-call");
+    assert_eq!(report.entries.len(), 3);
+    assert!(report
+        .notes
+        .iter()
+        .any(|note| note.contains("container literal with 2 entries")));
+}
+
+#[test]
+fn both_container_dominant_notes_register() {
+    let report = report("both-container-dominant.ts");
+    assert_eq!(report.pattern_kind, "container-array");
+    assert_eq!(report.entries.len(), 3);
+    assert!(report
+        .notes
+        .iter()
+        .any(|note| note.contains("register-call shape with 2 entries")));
+}
+
+#[test]
+fn collects_default_and_namespace_imports() {
+    let report = report("import-kinds.ts");
+    assert_eq!(report.pattern_kind, "register-call");
+    let import = report.entries[0].entry_import.as_ref().unwrap();
+    assert_eq!(import.kind, "default");
+    assert_eq!(import.symbol.as_deref(), Some("default"));
+}
+
+#[test]
+fn container_object_skips_spread() {
+    let report = report("container-spread.ts");
+    assert_eq!(report.pattern_kind, "container-object");
+    // Only the two named properties are entries; the spread is skipped.
+    assert_eq!(report.entries.len(), 2);
+}
+
+#[test]
+fn function_expression_dynamic_import() {
+    let report = report("fn-expr-dynamic.ts");
+    assert_eq!(report.pattern_kind, "register-call");
+    let import = report.entries[0].entry_import.as_ref().unwrap();
+    assert_eq!(import.kind, "dynamic");
+    assert_eq!(import.specifier, "./plugins/fn-a");
+}
+
+#[test]
+fn absolute_registry_path_is_accepted() {
+    let abs = fixture().join("register-call.ts");
+    let report = run(&fixture(), &abs).unwrap();
+    assert_eq!(report.pattern_kind, "register-call");
+}
+
+#[test]
+fn resolves_imported_factory_call_args() {
+    let report = report("factory-call.ts");
+    assert_eq!(report.pattern_kind, "register-call");
+    assert_eq!(report.entries.len(), 2);
+    let import = report.entries[0].entry_import.as_ref().unwrap();
+    assert_eq!(import.symbol.as_deref(), Some("makeFoo"));
+    assert_eq!(import.specifier, "./factories/foo");
+}
+
+#[test]
+fn resolves_namespace_constructor_registrants() {
+    let report = report("namespace-new.ts");
+    assert_eq!(report.pattern_kind, "register-call");
+    assert_eq!(report.entries.len(), 2);
+    let import = report.entries[0].entry_import.as_ref().unwrap();
+    assert_eq!(import.kind, "namespace");
+    assert_eq!(import.local, "plugins");
+}
+
+#[test]
+fn distinct_registries_with_same_method_are_not_collapsed() {
+    // alpha.register / beta.register each appear once; neither reaches the
+    // >=2 threshold once grouped by the full callee, so no pattern is claimed.
+    let report = report("multi-registry.ts");
+    assert_eq!(report.pattern_kind, "none");
+}
+
+#[test]
+fn edge_cases_yield_medium_confidence_and_cover_odd_callees() {
+    // Mixes imported and non-imported registrants (medium confidence), a literal
+    // arg, a nested-member constructor, a parenthesized constructor callee, an
+    // IIFE callee, an empty import, and a non-container default export.
+    let report = report("edge-cases.ts");
+    assert_eq!(report.pattern_kind, "register-call");
+    assert_eq!(report.confidence, "medium");
+    // Only the two imported `new Foo()/new Bar()` entries resolve to imports.
+    let with_imports = report
+        .entries
+        .iter()
+        .filter(|entry| entry.entry_import.is_some())
+        .count();
+    assert_eq!(with_imports, 2);
+}
+
+#[test]
+fn detects_register_calls_inside_default_function() {
+    let report = report("default-function.ts");
+    assert_eq!(report.pattern_kind, "register-call");
+    assert_eq!(report.entries.len(), 2);
+}
+
+#[test]
+fn template_uses_local_name() {
+    // Default import: symbol is `default` but the local `Plugin` appears in the
+    // call shape, so the template must substitute the local name.
+    let report = report("import-kinds.ts");
+    assert_eq!(
+        report.template.as_deref(),
+        Some("registry.register(new <Entry>())")
+    );
+}

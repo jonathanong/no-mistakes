@@ -26,6 +26,7 @@ words:
   - glibc
   - globset
   - guardrailsrc
+  - invalidators
   - jsonc
   - linecount
   - lockfiles
@@ -43,5 +44,6 @@ words:
   - subpaths
   - tokei
   - tsconfig
+  - valkey
   - vitest
   - worktree

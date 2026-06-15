@@ -1,0 +1,13 @@
+tests:
+  playwright:
+    selectors:
+      testIds:
+        - data-pw
+        - data-testid
+    selectorRoots:
+      - app
+      - components
+    selectorExclude:
+      - "**/*.ignored.tsx"
+    testInclude:
+      - "e2e/**/*.spec.ts"

@@ -2,7 +2,8 @@ use std::path::PathBuf;
 
 use super::options::{
     parse_options, parse_queue_direction, parse_server_direction, project_roots,
-    resolve_project_root, to_napi_error, ProjectOptions,
+    resolve_project_root, to_napi_error, DataPwOptions, EffectsOptions, ProjectOptions,
+    RegistryExtensionOptions, RscCallersOptions,
 };
 use crate::cli::{edge_view, root_scoped_edge_depth};
 
@@ -123,6 +124,8 @@ pub(crate) fn server_route_related_json_impl(options_json: String) -> napi::Resu
     serde_json::to_string_pretty(&edges)
         .map_err(|error| napi::Error::from_reason(error.to_string()))
 }
+
+include!("project_query.rs");
 
 pub(crate) fn react_analyze_json_impl(options_json: String) -> napi::Result<String> {
     let options = parse_options::<ProjectOptions>(&options_json)?;

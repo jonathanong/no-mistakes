@@ -441,6 +441,8 @@ fn react_json_functions_return_reports() {
     assert!(!value.as_array().unwrap().is_empty());
 }
 
+include!("tests_query.rs");
+
 #[test]
 fn invalid_options_return_napi_errors() {
     let error = dependencies_json_impl("{}".to_string()).unwrap_err();

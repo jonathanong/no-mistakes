@@ -26,6 +26,8 @@ pub(crate) struct ProjectOptions {
     pub(crate) include: Option<String>,
 }
 
+include!("options_query.rs");
+
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct FetchesOptions {

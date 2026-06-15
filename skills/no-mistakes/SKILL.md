@@ -31,6 +31,11 @@ route fetches, or what React traits a component has.
 | What React traits does this component have? | `no-mistakes react analyze <glob>` |
 | Does this component tree call fetch? | `no-mistakes react check <glob> --assert-no-fetch` |
 | Which callsites render this component, and with what props? | `no-mistakes react usages <file>#SYMBOL` |
+| Where is this test id (e.g. data-pw) used across source and tests? | `no-mistakes data-pw <value>` |
+| Which cache/pubsub/queue effects does this entry reach? | `no-mistakes effects <kind> --entry <file>` |
+| Which server components/pages render this component (RSC)? | `no-mistakes rsc-callers <component-file>` |
+| How do existing entries register in this registry file? | `no-mistakes registry-extension <registry-file>` |
+| Structural blast-radius ("which .tsx have onClick without cursor-pointer")? | `ast-grep` directly (see `references/limits-and-fallbacks.md`) |
 | Are all App Router routes/selectors covered by Playwright? | `no-mistakes playwright check` |
 | Which Playwright tests cover this page/component? | `no-mistakes playwright related <file>` |
 | What does this Playwright test assert? | `no-mistakes playwright tests <test-file>` |

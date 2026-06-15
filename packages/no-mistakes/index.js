@@ -138,6 +138,22 @@ async function reactUsages(options) {
   return callJson(native.reactUsagesJson, options);
 }
 
+async function dataPw(options) {
+  return callJson(native.dataPwJson, options);
+}
+
+async function effects(options) {
+  return callJson(native.effectsJson, options);
+}
+
+async function rscCallers(options) {
+  return callJson(native.rscCallersJson, options);
+}
+
+async function registryExtension(options) {
+  return callJson(native.registryExtensionJson, options);
+}
+
 async function lockfileDiff(options) {
   return callJson(native.lockfileDiffJson, options);
 }
@@ -184,9 +200,11 @@ module.exports = {
   check,
   ciEnv,
   ciImpact,
+  dataPw,
   deadExports,
   dependencies,
   dependents,
+  effects,
   exportsOf,
   fetches,
   impactedChecks,
@@ -206,8 +224,10 @@ module.exports = {
   reactAnalyze,
   reactCheck,
   reactUsages,
+  registryExtension,
   related,
   resolveCheck,
+  rscCallers,
   serverRouteEdges,
   serverRouteList,
   serverRouteRelated,

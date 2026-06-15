@@ -8,8 +8,16 @@ import type {
   CiImpactReport,
   CallSitesOptions,
   CallSitesResult,
+  DataPwOptions,
+  DataPwReport,
   DeadExportsOptions,
   DeadExportsResult,
+  EffectsOptions,
+  EffectsReport,
+  RscCallersOptions,
+  RscCallersReport,
+  RegistryExtensionOptions,
+  RegistryExtensionReport,
   DependencyResult,
   ExportsOfOptions,
   ExportsOfResult,
@@ -96,6 +104,12 @@ export function lockfileDiff(options: LockfileDiffOptions): Promise<LockfileDiff
 export function ciImpact(options: CiImpactOptions): Promise<CiImpactReport>;
 export function ciEnv(options: CiEnvOptions): Promise<CiEnvReport>;
 export function impactedChecks(options: ImpactedChecksOptions): Promise<ImpactedChecksReport>;
+export function dataPw(options: DataPwOptions): Promise<DataPwReport>;
+export function effects(options: EffectsOptions): Promise<EffectsReport>;
+export function rscCallers(options: RscCallersOptions): Promise<RscCallersReport>;
+export function registryExtension(
+  options: RegistryExtensionOptions,
+): Promise<RegistryExtensionReport>;
 export function infraResourceRefs(
   options: InfraOptions & { address: string },
 ): Promise<ResourceRefRow[]>;

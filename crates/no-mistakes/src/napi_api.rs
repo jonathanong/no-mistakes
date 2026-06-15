@@ -34,8 +34,9 @@ pub use infra_swift::{
 };
 pub(crate) use lockfile_diff::lockfile_diff_json_impl;
 pub(crate) use project::{
-    queue_check_json_impl, queue_edges_json_impl, queue_related_json_impl, queues_json_impl,
-    react_analyze_json_impl, react_check_json_impl, react_usages_json_impl,
+    data_pw_json_impl, effects_json_impl, queue_check_json_impl, queue_edges_json_impl,
+    queue_related_json_impl, queues_json_impl, react_analyze_json_impl, react_check_json_impl,
+    react_usages_json_impl, registry_extension_json_impl, rsc_callers_json_impl,
     server_route_edges_json_impl, server_route_list_json_impl, server_route_related_json_impl,
     server_routes_json_impl,
 };
@@ -223,6 +224,8 @@ pub fn react_check_json(options_json: String) -> AsyncTask<JsonTask> {
 pub fn react_usages_json(options_json: String) -> AsyncTask<JsonTask> {
     AsyncTask::new(JsonTask::new(options_json, react_usages_json_impl))
 }
+
+include!("napi_api/wrappers_query.rs");
 
 #[cfg(not(coverage))]
 #[cfg_attr(not(test), napi(js_name = "lockfileDiffJson"))]

@@ -103,3 +103,24 @@ relationship should be visible to agents.
 Text-based Playwright selector edges are approximate. Prefer exact configured
 test ID attributes and literal locator values for strong route/component
 coverage.
+
+## Structural / AST-pattern blast radius — use `ast-grep`
+
+`no-mistakes` answers **graph-aware** and **config-aware** queries. It does not
+ship a structural pattern matcher. For a pure structural blast-radius question —
+matching an AST shape regardless of the import graph — reach for
+[`ast-grep`](https://ast-grep.github.io) directly. Example: "which `.tsx` files
+have `onClick` on a non-`button` element?"
+
+```sh
+# Find JSX elements with an onClick handler (then filter by hand / tighten the pattern).
+ast-grep --lang tsx --pattern '<$EL onClick={$$$} />'
+
+# Or a quick textual approximation with ripgrep when ast-grep is unavailable:
+rg -l --glob '*.tsx' 'onClick='
+```
+
+Use `no-mistakes` instead when the question needs the dependency graph
+(`effects`, `rsc-callers`, `dependents`) or project configuration
+(`data-pw`, `registry-extension`). Use `ast-grep` when the question is purely
+"which files contain this syntactic shape?"

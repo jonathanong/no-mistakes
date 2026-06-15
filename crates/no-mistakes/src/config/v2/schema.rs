@@ -27,6 +27,8 @@ pub struct NoMistakesConfig {
     pub infra: InfraConfig,
     pub projects: BTreeMap<String, Project>,
     pub queues: QueuesTopLevelConfig,
+    /// Named effect families for the `effects` query, keyed by `<kind>`.
+    pub effects: BTreeMap<String, EffectKindConfig>,
     pub tests: Tests,
     #[serde(rename = "testPlan", alias = "test_plan")]
     pub test_plan: TestPlanConfig,
@@ -35,6 +37,18 @@ pub struct NoMistakesConfig {
     pub ci: CiConfig,
     /// Changed-file validation command mappings (`no-mistakes impacted-checks`).
     pub checks: ChecksConfig,
+}
+
+/// One named effect family (e.g. `valkey`) for the `effects` query.
+///
+/// `categories` maps a category label (e.g. `cache`, `pubsub`) to the function
+/// or constructor names that belong to it; `functions` is a flat list applied
+/// when no category split is needed (reported as uncategorized).
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct EffectKindConfig {
+    pub categories: BTreeMap<String, Vec<String>>,
+    pub functions: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

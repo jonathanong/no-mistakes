@@ -3,11 +3,15 @@ mod check_discovery;
 mod check_parallel;
 mod check_runner;
 mod check_tasks;
+mod data_pw;
+mod effects;
 mod fetches;
 mod infra;
 mod lockfile;
 mod queues;
 mod react;
+mod registry_extension;
+mod rsc_callers;
 mod server;
 mod swift;
 
@@ -75,6 +79,14 @@ enum Command {
     Ci(CiArgs),
     /// List the minimal local validation commands for changed files.
     ImpactedChecks(ImpactedChecksArgs),
+    /// Find all selector-attribute (e.g. data-pw) usages of a value.
+    DataPw(data_pw::DataPwArgs),
+    /// Report transitive effect call sites reachable from an entry file.
+    Effects(effects::EffectsArgs),
+    /// Find server components/pages that transitively import a component (RSC).
+    RscCallers(rsc_callers::RscCallersArgs),
+    /// Summarize how existing entries register in a registry file.
+    RegistryExtension(registry_extension::RegistryExtensionArgs),
 }
 
 fn main() -> ExitCode {
@@ -120,5 +132,9 @@ fn run() -> Result<ExitCode> {
         Command::Lockfile(args) => lockfile::run(args),
         Command::Ci(args) => ci_run(args),
         Command::ImpactedChecks(args) => impacted_checks_run(args),
+        Command::DataPw(args) => data_pw::run(args),
+        Command::Effects(args) => effects::run(args),
+        Command::RscCallers(args) => rsc_callers::run(args),
+        Command::RegistryExtension(args) => registry_extension::run(args),
     }
 }
