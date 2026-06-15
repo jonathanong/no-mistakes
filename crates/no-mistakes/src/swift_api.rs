@@ -119,7 +119,7 @@ impl SwiftReport {
 
     /// SwiftPM test targets that transitively cover the given file.
     pub fn test_targets(&self, file: &str) -> Vec<TestTargetRow> {
-        let node = NodeId::File(normalize_path(&self.root.join(file)));
+        let path = normalize_path(&self.root.join(file));
         let allowed: HashSet<EdgeKind> = [
             EdgeKind::SwiftImport,
             EdgeKind::SwiftReference,
@@ -127,13 +127,13 @@ impl SwiftReport {
         ]
         .into();
         let mut seen: BTreeSet<(String, String)> = BTreeSet::new();
+        // The queried file's own test target covers it, but `dependents_of` does
+        // not return the root node, so seed it explicitly.
+        self.record_test_target(&path, &mut seen);
+        let node = NodeId::File(path);
         let entries = self.graph.dependents_of(&[node], None, Some(&allowed));
         for path in entries.iter().filter_map(|entry| entry.node.as_file()) {
-            if let Some(info) = self.targets.get(path) {
-                if info.is_test {
-                    seen.insert((info.target.clone(), self.rel(&info.package_root)));
-                }
-            }
+            self.record_test_target(path, &mut seen);
         }
         seen.into_iter()
             .map(|(target, package)| TestTargetRow {
@@ -142,6 +142,14 @@ impl SwiftReport {
                 package,
             })
             .collect()
+    }
+
+    fn record_test_target(&self, path: &Path, seen: &mut BTreeSet<(String, String)>) {
+        if let Some(info) = self.targets.get(path) {
+            if info.is_test {
+                seen.insert((info.target.clone(), self.rel(&info.package_root)));
+            }
+        }
     }
 
     fn rel(&self, path: &Path) -> String {
@@ -153,11 +161,25 @@ impl SwiftReport {
 }
 
 fn test_command(package: &str, target: &str) -> String {
+    // `swift test --filter` matches a regex against `<target>.<case>`; anchor to
+    // the target prefix and escape it so one target name cannot match another.
+    let filter = format!("^{}\\.", regex_escape(target));
     if package.is_empty() || package == "." {
-        format!("swift test --filter {target}")
+        format!("swift test --filter {filter}")
     } else {
-        format!("swift test --package-path {package} --filter {target}")
+        format!("swift test --package-path {package} --filter {filter}")
     }
+}
+
+fn regex_escape(value: &str) -> String {
+    let mut escaped = String::with_capacity(value.len());
+    for ch in value.chars() {
+        if "\\.+*?()|[]{}^$".contains(ch) {
+            escaped.push('\\');
+        }
+        escaped.push(ch);
+    }
+    escaped
 }
 
 #[cfg(test)]

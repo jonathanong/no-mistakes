@@ -6,6 +6,7 @@
 //! purely structural (HCL syntax, never evaluated), so `for_each`/`count` and
 //! remote/registry modules are not expanded — a documented heuristic limit.
 
+mod classify;
 mod parse;
 mod references;
 
@@ -127,11 +128,24 @@ pub(crate) fn collect_terraform_facts(
 
     let mut file_facts: Vec<TerraformFileFacts> = tf_files
         .par_iter()
-        .filter_map(|path| parse::parse_tf_file(path))
+        .filter_map(|path| parse_configured_file(path))
         .collect();
     file_facts.sort_by(|a, b| a.path.cmp(&b.path));
 
     build_fact_map(file_facts)
+}
+
+/// Parse a configured `.tf` file, surfacing a warning when it cannot be parsed so
+/// a malformed module file does not silently produce false-empty results.
+fn parse_configured_file(path: &Path) -> Option<TerraformFileFacts> {
+    let facts = parse::parse_tf_file(path);
+    if facts.is_none() {
+        eprintln!(
+            "warning: failed to parse Terraform file: {}",
+            path.display()
+        );
+    }
+    facts
 }
 
 fn has_extension(path: &Path, extensions: &[String]) -> bool {

@@ -94,11 +94,13 @@ fn report_with(test: TerraformTestConvention, files: Vec<PathBuf>) -> InfraRepor
             ..Default::default()
         },
     );
+    let test_globset = compile_test_globs(&test.test_globs).expect("valid test globs");
     InfraReport {
         root,
         files,
         facts,
         test,
+        test_globset,
     }
 }
 
@@ -193,10 +195,20 @@ fn test_for_honors_test_root_anchor() {
 }
 
 #[test]
-fn build_globset_handles_invalid_and_empty() {
-    assert!(build_globset(&[]).is_none());
-    assert!(build_globset(&["[".to_string()]).is_none());
-    assert!(build_globset(&["*.tf".to_string()]).is_some());
+fn compile_test_globs_validates_patterns() {
+    assert!(compile_test_globs(&[]).unwrap().is_none());
+    assert!(compile_test_globs(&["[".to_string()]).is_err());
+    assert!(compile_test_globs(&["*.tf".to_string()]).unwrap().is_some());
+}
+
+#[test]
+fn analyze_project_rejects_invalid_test_globs() {
+    // The dedicated fixture configures an unclosed character-class glob.
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/terraform-bad-globs/fixture"),
+    );
+    assert!(analyze_project(&root, None).is_err());
 }
 
 #[test]
@@ -226,6 +238,7 @@ fn output_value_refs_falls_back_when_block_absent() {
         files: Vec::new(),
         facts,
         test: TerraformTestConvention::default(),
+        test_globset: None,
     };
     let result = report.outputs("infra/envs/prod");
     let ghost = result

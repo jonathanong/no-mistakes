@@ -43,9 +43,17 @@ fn test_targets_reports_covering_test_target_and_command() {
         .find(|row| row.target == "VouchaCoreTests")
         .expect("VouchaCoreTests should cover Endpoint.swift");
     assert!(row.package.ends_with("swift-clients/core"));
+    // The filter is an anchored, escaped regex so it cannot match other targets.
     assert!(row
         .command
-        .contains("swift test --package-path swift-clients/core --filter VouchaCoreTests"));
+        .contains("swift test --package-path swift-clients/core --filter ^VouchaCoreTests\\."));
+}
+
+#[test]
+fn test_targets_includes_the_queried_test_files_own_target() {
+    let report = report();
+    let rows = report.test_targets("swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift");
+    assert!(rows.iter().any(|row| row.target == "VouchaCoreTests"));
 }
 
 #[test]
@@ -65,10 +73,18 @@ fn analyze_project_propagates_missing_explicit_config() {
 
 #[test]
 fn test_command_handles_root_and_named_packages() {
-    assert_eq!(test_command("", "T"), "swift test --filter T");
-    assert_eq!(test_command(".", "T"), "swift test --filter T");
+    assert_eq!(test_command("", "T"), "swift test --filter ^T\\.");
+    assert_eq!(test_command(".", "T"), "swift test --filter ^T\\.");
     assert_eq!(
         test_command("pkg/core", "T"),
-        "swift test --package-path pkg/core --filter T"
+        "swift test --package-path pkg/core --filter ^T\\."
+    );
+}
+
+#[test]
+fn test_command_escapes_regex_metacharacters() {
+    assert_eq!(
+        test_command("pkg", "App.Tests"),
+        "swift test --package-path pkg --filter ^App\\.Tests\\."
     );
 }

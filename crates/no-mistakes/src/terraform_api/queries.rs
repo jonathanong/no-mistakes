@@ -3,7 +3,7 @@
 
 use std::path::Path;
 
-use super::{build_globset, InfraReport, TestForRow};
+use super::{InfraReport, TestForRow};
 use crate::codebase::terraform::TfBlockKind;
 use crate::codebase::ts_resolver::normalize_path;
 
@@ -23,7 +23,7 @@ impl InfraReport {
             Some(test_root) => normalize_path(&self.root.join(test_root)),
             None => module_dir,
         };
-        let Some(globset) = build_globset(&self.test.test_globs) else {
+        let Some(globset) = &self.test_globset else {
             return Vec::new();
         };
 

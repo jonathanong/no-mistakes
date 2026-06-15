@@ -65,7 +65,7 @@ fn handle_block(
                 module_source_dir: None,
                 value_refs: Vec::new(),
             });
-            collect_body_refs(&block.body, path, &addr, references);
+            collect_body_refs(&block.body, path, &addr, references, &[]);
         }
         "module" => {
             let Some(name) = labels.first() else { return };
@@ -79,7 +79,7 @@ fn handle_block(
                 module_source_dir,
                 value_refs: Vec::new(),
             });
-            collect_body_refs(&block.body, path, &addr, references);
+            collect_body_refs(&block.body, path, &addr, references, &[]);
         }
         "output" => {
             let Some(name) = labels.first() else { return };
@@ -93,7 +93,7 @@ fn handle_block(
                 module_source_dir: None,
                 value_refs,
             });
-            collect_body_refs(&block.body, path, &addr, references);
+            collect_body_refs(&block.body, path, &addr, references, &[]);
         }
         "variable" => {
             let Some(name) = labels.first() else { return };
@@ -106,7 +106,7 @@ fn handle_block(
                 module_source_dir: None,
                 value_refs: Vec::new(),
             });
-            collect_body_refs(&block.body, path, &addr, references);
+            collect_body_refs(&block.body, path, &addr, references, &[]);
         }
         "locals" => {
             for structure in block.body.iter() {
@@ -120,7 +120,7 @@ fn handle_block(
                         module_source_dir: None,
                         value_refs: Vec::new(),
                     });
-                    push_expr_refs(&attr.expr, path, &addr, references);
+                    push_expr_refs(&attr.expr, path, &addr, references, &[]);
                 }
             }
         }

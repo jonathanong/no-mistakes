@@ -5,7 +5,7 @@
 mod queries;
 mod types;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use std::path::{Path, PathBuf};
 
@@ -23,6 +23,7 @@ pub struct InfraReport {
     files: Vec<PathBuf>,
     facts: TerraformFactMap,
     test: TerraformTestConvention,
+    test_globset: Option<GlobSet>,
 }
 
 /// Discover and parse the configured Terraform files once.
@@ -32,6 +33,9 @@ pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<InfraR
     // instead of silently producing an empty result.
     let config = load_v2_config(&root, config_path)?;
     let terraform = config.infra.terraform.clone();
+    // Compile the test globs up front so an invalid pattern is reported rather
+    // than silently dropping all covering-test suggestions.
+    let test_globset = compile_test_globs(&terraform.test.test_globs)?;
     let files = crate::codebase::ts_source::discover_files(&root, &[]);
     let facts = collect_terraform_facts(&root, &files, &terraform);
     Ok(InfraReport {
@@ -39,6 +43,7 @@ pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<InfraR
         files,
         facts,
         test: terraform.test,
+        test_globset,
     })
 }
 
@@ -124,15 +129,19 @@ impl InfraReport {
     }
 }
 
-fn build_globset(globs: &[String]) -> Option<GlobSet> {
+/// Compile the configured test globs. Returns `Ok(None)` when no convention is
+/// configured, and an error when a configured pattern is invalid.
+fn compile_test_globs(globs: &[String]) -> Result<Option<GlobSet>> {
     if globs.is_empty() {
-        return None;
+        return Ok(None);
     }
     let mut builder = GlobSetBuilder::new();
     for glob in globs {
-        builder.add(Glob::new(glob).ok()?);
+        let compiled =
+            Glob::new(glob).with_context(|| format!("invalid terraform test glob: {glob}"))?;
+        builder.add(compiled);
     }
-    builder.build().ok()
+    Ok(Some(builder.build()?))
 }
 
 #[cfg(test)]

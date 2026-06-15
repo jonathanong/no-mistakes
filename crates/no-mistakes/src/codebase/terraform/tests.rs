@@ -141,6 +141,69 @@ fn discovery_excludes_nested_non_module_directories() {
 }
 
 #[test]
+fn skips_and_warns_on_malformed_files() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/terraform-malformed/fixture"),
+    );
+    let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let config = TerraformConfig {
+        module_roots: vec!["infra".to_string()],
+        ..Default::default()
+    };
+    // The malformed file is skipped rather than panicking or being indexed.
+    let facts = collect_terraform_facts(&root, &all_files, &config);
+    assert!(facts.files.is_empty());
+}
+
+#[test]
+fn binds_dynamic_block_iterator_variables() {
+    let facts = parse(
+        r#"
+        resource "aws_security_group" "web" {
+          dynamic "ingress" {
+            for_each = var.rules
+            content {
+              from_port = ingress.value.port
+              cidr      = aws_subnet.main.cidr
+            }
+          }
+        }
+        "#,
+    );
+    let addrs = to_addrs(&facts);
+    // `for_each` and real references are recorded.
+    assert!(addrs.contains(&"var.rules".to_string()));
+    assert!(addrs.contains(&"aws_subnet.main".to_string()));
+    // The dynamic iterator `ingress` is a local, not an `ingress.value` resource.
+    assert!(!addrs.iter().any(|a| a.starts_with("ingress.")));
+}
+
+#[test]
+fn binds_explicit_dynamic_iterator_and_template_for_keys() {
+    let facts = parse(
+        r#"
+        resource "aws_security_group" "web" {
+          dynamic "ingress" {
+            for_each = var.rules
+            iterator = rule
+            content {
+              port = rule.value.port
+            }
+          }
+          banner = "%{ for k, v in var.pairs }${k}=${v} %{ endfor }"
+        }
+        "#,
+    );
+    let addrs = to_addrs(&facts);
+    assert!(addrs.contains(&"var.rules".to_string()));
+    assert!(addrs.contains(&"var.pairs".to_string()));
+    // The explicit `iterator = rule` and template `for` keys are locals.
+    assert!(!addrs.iter().any(|a| a.starts_with("rule.")));
+    assert!(!addrs.iter().any(|a| a == "k" || a == "v"));
+}
+
+#[test]
 fn ignores_for_expression_iterator_variables() {
     let facts = parse(
         r#"
