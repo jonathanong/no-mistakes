@@ -15,9 +15,10 @@ direct importer files and `dependentsCount` summarizes them.
 `--tests` additionally computes the transitive impacted-test set (this builds the
 dependency graph, so it is the slower path) and reports it as `testImpact`.
 
-Importers are derived from named/namespace/default import edges. Side-effect-only
-imports (`import './setup'`, which bind no symbols) are not counted. For
-transitive or symbol-level impact, or to follow non-import edges, use
+Importers are derived from ES named/namespace/default import edges. Side-effect-
+only imports (`import './setup'`), CommonJS `require('./util')` consumers, and
+imports by workspace package name are not counted. For transitive or symbol-level
+impact, CommonJS/cross-package consumers, or to follow non-import edges, use
 [`dependents`](dependents.md) instead.
 
 Key options: `--root`, `--tsconfig`, `--tests`, `--format`, and `--json`.

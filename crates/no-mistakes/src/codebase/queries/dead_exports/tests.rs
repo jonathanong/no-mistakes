@@ -83,6 +83,22 @@ fn star_barrel_does_not_keep_default_alive() {
 }
 
 #[test]
+fn explicit_literal_default_counts_namespace_use() {
+    // `dead-exports nsdef.ts default` must normalize to the default export, whose
+    // only reference is a namespace import (`n.default()`).
+    let report = compute(&DeadExportsArgs {
+        file: PathBuf::from("nsdef.ts"),
+        names: vec!["default".to_string()],
+        root: Some(named_fixture("queries-reexport")),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(report.results[0].referenced);
+}
+
+#[test]
 fn explicit_default_display_name_is_normalized() {
     // Passing the declaration name `def` (as shown by exports-of) must still
     // resolve the default export's importers.

@@ -1,10 +1,10 @@
 use super::call_sites_visit::collect_call_sites;
 use super::render::{render, resolve_format, to_json, Report};
-use super::reverse::{build_index, export_lookup_symbol};
+use super::reverse::{build_index, export_lookup_symbol, find_export};
 use super::shared::{read_symbols, rel_str, resolve_target};
 use crate::cli::Format;
 use crate::codebase::dependencies::graph::SymbolIndex;
-use crate::codebase::ts_symbols::{Export, ExportKind, FileSymbols};
+use crate::codebase::ts_symbols::FileSymbols;
 use anyhow::Result;
 use is_terminal::IsTerminal;
 use rayon::prelude::*;
@@ -60,25 +60,6 @@ pub struct CallSitesReport {
     file: String,
     export: String,
     call_sites: Vec<CallSite>,
-}
-
-/// Find an export by its public name, also accepting `default` for the default
-/// export (whose stored name is the local declaration name).
-fn find_export<'a>(symbols: &'a FileSymbols, name: &str) -> Option<&'a Export> {
-    symbols
-        .exports
-        .iter()
-        .find(|export| export.name == name)
-        .or_else(|| {
-            (name == "default")
-                .then(|| {
-                    symbols
-                        .exports
-                        .iter()
-                        .find(|export| export.kind == ExportKind::Default)
-                })
-                .flatten()
-        })
 }
 
 /// Map every file that may call the export to the local name(s) it is bound to.

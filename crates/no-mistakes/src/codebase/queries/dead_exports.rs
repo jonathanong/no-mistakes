@@ -1,5 +1,5 @@
 use super::render::{render, resolve_format, to_json, Report};
-use super::reverse::{build_index, direct_importer_paths, export_importer_paths};
+use super::reverse::{build_index, direct_importer_paths, export_importer_paths, find_export};
 use super::shared::{read_symbols, rel_str, resolve_target};
 use crate::cli::Format;
 use crate::codebase::ts_symbols::Export;
@@ -80,12 +80,7 @@ fn compute(args: &DeadExportsArgs) -> Result<DeadExportsReport> {
     } else {
         args.names
             .iter()
-            .map(|name| {
-                (
-                    name.clone(),
-                    symbols.exports.iter().find(|export| &export.name == name),
-                )
-            })
+            .map(|name| (name.clone(), find_export(&symbols, name)))
             .collect()
     };
     let index = build_index(&target)?;

@@ -1,8 +1,27 @@
 use super::shared::{rel_str, Target};
 use crate::codebase::dependencies::graph::SymbolIndex;
-use crate::codebase::ts_symbols::{Export, ExportKind};
+use crate::codebase::ts_symbols::{Export, ExportKind, FileSymbols};
 use anyhow::Result;
 use std::path::Path;
+
+/// Find an export by its public name, also accepting `default` for the default
+/// export (whose stored name is the local declaration name).
+pub(crate) fn find_export<'a>(symbols: &'a FileSymbols, name: &str) -> Option<&'a Export> {
+    symbols
+        .exports
+        .iter()
+        .find(|export| export.name == name)
+        .or_else(|| {
+            (name == "default")
+                .then(|| {
+                    symbols
+                        .exports
+                        .iter()
+                        .find(|export| export.kind == ExportKind::Default)
+                })
+                .flatten()
+        })
+}
 
 /// Build the reverse import index for the whole project in one parallel scan.
 /// Cheaper than a full `DepGraph` — it only resolves import/re-export edges.

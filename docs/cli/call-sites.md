@@ -21,9 +21,11 @@ inside a nested scope are not resolved. In-file calls are searched under the
 export's public name, so a call to the local binding of a renamed export
 (`function impl(){}; export { impl as handler }`) may be missed. Import-then-
 re-export chains (`import { handler as h } from './x'; export { h }`) are not
-followed past the importing file, and a file that fails to parse (e.g. mid-edit)
-contributes no call sites rather than failing the query, so results can be
-incomplete. Use `rg` on the returned files when exact call text matters.
+followed past the importing file; a type-only import (`import type { fn }`) is
+treated like any other binding, so a same-named value call in that file may be
+reported; and a file that fails to parse (e.g. mid-edit) contributes no call
+sites rather than failing the query, so results can be incomplete. Use `rg` on
+the returned files when exact call text matters.
 
 Key options: `--root`, `--tsconfig`, `--format`, and `--json`.
 
