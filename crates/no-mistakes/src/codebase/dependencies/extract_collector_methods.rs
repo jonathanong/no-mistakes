@@ -17,12 +17,13 @@ impl ImportCollector {
             return;
         }
         if !specifier.is_empty() {
-            // Runtime imports collected only because the enclosing exported
-            // binding is reachable (the suppressed-but-runtime path) sit in
-            // anonymous callback scopes no static call reaches; flag them so
-            // reachability analysis keeps the resulting edge.
-            let runtime_reachable =
-                self.suppress_imports && self.collect_suppressed_runtime_imports && runtime_import;
+            // Reaching this push while suppressed is only possible via the
+            // early-return guard's exception: a runtime import in an exported,
+            // reachable scope. Such imports sit in anonymous callback scopes no
+            // static call reaches (e.g. `next/dynamic(() => import('./Foo'))`),
+            // so flag them to keep the resulting edge during reachability
+            // analysis. `suppress_imports` alone captures this here.
+            let runtime_reachable = self.suppress_imports;
             self.imports.push(ExtractedImport {
                 specifier: specifier.to_string(),
                 kind,

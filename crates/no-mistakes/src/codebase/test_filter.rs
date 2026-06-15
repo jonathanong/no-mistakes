@@ -94,17 +94,22 @@ fn fallback_test_path(rel_path: &str) -> bool {
 }
 
 /// Compile an opt-in glob list into a [`GlobSet`]. Returns `None` when the list
-/// is empty (the unconfigured default) or when any pattern is malformed, so a
-/// bad user glob degrades to "no always-include" instead of panicking.
+/// is empty (the unconfigured default) or when every pattern is malformed.
+/// Malformed patterns are skipped so a single bad glob does not silently
+/// disable the valid ones, and a panic is never possible.
 fn compile_optional_globset(patterns: &[String]) -> Option<GlobSet> {
     if patterns.is_empty() {
         return None;
     }
     let mut builder = GlobSetBuilder::new();
+    let mut has_valid = false;
     for pattern in patterns {
-        builder.add(Glob::new(pattern).ok()?);
+        if let Ok(glob) = Glob::new(pattern) {
+            builder.add(glob);
+            has_valid = true;
+        }
     }
-    builder.build().ok()
+    has_valid.then(|| builder.build().ok()).flatten()
 }
 
 #[cfg(test)]

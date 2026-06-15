@@ -208,17 +208,22 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
 }
 
 /// Compile the opt-in registry glob list. Returns `None` when unconfigured or
-/// when any pattern is malformed, so a bad glob degrades to "no registry hints"
-/// instead of failing the whole impact query.
+/// when every pattern is malformed. Malformed patterns are skipped so a single
+/// bad glob does not silently disable registry hints for the valid ones, and the
+/// impact query never fails on a bad glob.
 fn compile_registry_globset(patterns: &[String]) -> Option<GlobSet> {
     if patterns.is_empty() {
         return None;
     }
     let mut builder = GlobSetBuilder::new();
+    let mut has_valid = false;
     for pattern in patterns {
-        builder.add(Glob::new(pattern).ok()?);
+        if let Ok(glob) = Glob::new(pattern) {
+            builder.add(glob);
+            has_valid = true;
+        }
     }
-    builder.build().ok()
+    has_valid.then(|| builder.build().ok()).flatten()
 }
 
 /// Emit a hint for each direct dependent of `target` whose file matches a

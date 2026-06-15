@@ -181,6 +181,27 @@ fn malformed_always_include_glob_does_not_panic() {
     assert!(!filter.is_match_rel("foo.mts"));
 }
 
+#[test]
+fn malformed_always_include_glob_is_skipped_keeping_valid_ones() {
+    let root = fixture_root();
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.projects.insert(
+        "api".to_string(),
+        TestProjectPolicy {
+            include: vec!["backend/api/**/*.test.mts".to_string()],
+            exclude: vec!["backend/api/**/*.mock.test.mts".to_string()],
+            ..Default::default()
+        },
+    );
+    // One malformed pattern is skipped; the valid one still surfaces the stub.
+    config.tests.impact.always_include_tests =
+        vec!["[".to_string(), "**/*.mock.test.mts".to_string()];
+
+    let filter = TestFileFilter::new(&root, &config);
+
+    assert!(filter.is_match_rel("backend/api/users.mock.test.mts"));
+}
+
 fn fixture_root() -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/test-filter/fixture")
