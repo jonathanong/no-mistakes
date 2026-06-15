@@ -260,6 +260,50 @@ fn has_extension_handles_uppercase_and_missing_extension() {
 }
 
 #[test]
+fn ignores_incomplete_data_refs_and_non_variable_bases() {
+    let facts = parse(
+        r#"
+        resource "aws_instance" "web" {
+          partial = data.aws_ami
+          wrapped = ({ inner = var.inner }).inner
+        }
+        "#,
+    );
+    let addrs = to_addrs(&facts);
+    // `data.aws_ami` lacks a name, so it does not resolve to a data address.
+    assert!(!addrs.iter().any(|a| a.starts_with("data.")));
+    // The traversal base here is a parenthesized object, not a variable, so the
+    // traversal itself yields no address — but its inner refs are still walked.
+    assert!(addrs.contains(&"var.inner".to_string()));
+}
+
+#[test]
+fn skips_self_references_and_recurses_nested_blocks() {
+    let facts = parse(
+        r#"
+        resource "aws_instance" "web" {
+          self_id = aws_instance.web.id
+          ingress {
+            cidr = var.cidr
+          }
+        }
+        "#,
+    );
+    // A block referencing its own address is not recorded.
+    assert!(!facts
+        .references
+        .iter()
+        .any(|r| r.to_addr == "aws_instance.web"));
+    // References inside a nested block are attributed to the enclosing resource.
+    let nested = facts
+        .references
+        .iter()
+        .find(|r| r.to_addr == "var.cidr")
+        .expect("nested ref");
+    assert_eq!(nested.from_addr, "aws_instance.web");
+}
+
+#[test]
 fn module_source_skips_non_string_and_missing_sources() {
     // `source` referencing a variable is not a static local path.
     let dynamic = parse(

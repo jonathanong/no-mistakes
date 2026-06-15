@@ -65,18 +65,17 @@ pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<SwiftR
     let facts = collect_swift_facts(&root, &all_files, &packages);
     let mut targets = HashMap::new();
     for package in &facts.packages {
+        let files_for = |name: &String| facts.files_by_target.get(name).into_iter().flatten();
         for (name, target) in &package.targets {
-            if let Some(files) = facts.files_by_target.get(name) {
-                for file in files {
-                    targets.insert(
-                        file.clone(),
-                        TargetInfo {
-                            target: name.clone(),
-                            is_test: target.is_test,
-                            package_root: package.package_root.clone(),
-                        },
-                    );
-                }
+            for file in files_for(name) {
+                targets.insert(
+                    file.clone(),
+                    TargetInfo {
+                        target: name.clone(),
+                        is_test: target.is_test,
+                        package_root: package.package_root.clone(),
+                    },
+                );
             }
         }
     }
@@ -97,12 +96,11 @@ impl SwiftReport {
             .graph
             .dependents_of(&[node], None, Some(&allowed))
             .into_iter()
-            .filter_map(|entry| match entry.node {
-                NodeId::File(path) => Some(ImporterRow {
-                    file: self.rel(&path),
+            .filter_map(|entry| {
+                entry.node.as_file().map(|path| ImporterRow {
+                    file: self.rel(path),
                     depth: entry.depth,
-                }),
-                _ => None,
+                })
             })
             .collect();
         rows.sort();
@@ -120,11 +118,9 @@ impl SwiftReport {
         ]
         .into();
         let mut seen: BTreeSet<(String, String)> = BTreeSet::new();
-        for entry in self.graph.dependents_of(&[node], None, Some(&allowed)) {
-            let NodeId::File(path) = entry.node else {
-                continue;
-            };
-            if let Some(info) = self.targets.get(&path) {
+        let entries = self.graph.dependents_of(&[node], None, Some(&allowed));
+        for path in entries.iter().filter_map(|entry| entry.node.as_file()) {
+            if let Some(info) = self.targets.get(path) {
                 if info.is_test {
                     seen.insert((info.target.clone(), self.rel(&info.package_root)));
                 }
