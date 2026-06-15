@@ -114,6 +114,38 @@ fn type_import_of_declaration_index_resolves() {
     );
 }
 
+fn kinds_compute(file: &str) -> ResolveCheckReport {
+    compute(&ResolveCheckArgs {
+        file: PathBuf::from(file),
+        root: Some(named_fixture("queries-kinds")),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap()
+}
+
+#[test]
+fn js_specifier_resolves_to_jsx_source() {
+    let report = kinds_compute("jsx-user.ts");
+    assert!(report.all_resolve);
+    assert_eq!(report.imports[0].resolved.as_deref(), Some("view.jsx"));
+}
+
+#[test]
+fn mjs_type_import_uses_mode_specific_declaration() {
+    let report = kinds_compute("mjs-dts-user.ts");
+    assert!(report.all_resolve);
+    assert_eq!(report.imports[0].resolved.as_deref(), Some("tm.d.mts"));
+}
+
+#[test]
+fn explicit_declaration_value_import_is_unresolved() {
+    let report = kinds_compute("dts-explicit-value-user.ts");
+    assert!(!report.all_resolve);
+    assert_eq!(report.unresolved, vec!["./types.d.ts".to_string()]);
+}
+
 #[test]
 fn value_import_of_declaration_module_is_unresolved() {
     // A non-type import of a `.d.ts`-only module needs an emitted runtime module.

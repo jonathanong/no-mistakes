@@ -9,7 +9,7 @@ use crate::codebase::dependencies::extract::{
 use crate::codebase::ts_resolver::ImportResolver;
 use anyhow::{Context, Result};
 use is_terminal::IsTerminal;
-use resolution::{resolve_declaration, resolve_ts_source};
+use resolution::{is_declaration_file, resolve_declaration, resolve_ts_source};
 use serde::Serialize;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
@@ -103,7 +103,10 @@ fn classify(
     let resolved = resolver
         .resolve(&imp.specifier, abs_file)
         .or_else(|| resolve_ts_source(&imp.specifier, abs_file, resolver))
-        .or_else(|| resolve_declaration(imp, abs_file, resolver));
+        .or_else(|| resolve_declaration(imp, abs_file, resolver))
+        // A declaration file has no runtime module, so a value import of one is
+        // not actually resolved.
+        .filter(|path| imp.kind == ImportKind::Type || !is_declaration_file(path));
     let status = if resolved.is_some() {
         Status::Resolved
     } else if imp.specifier.starts_with('.')
