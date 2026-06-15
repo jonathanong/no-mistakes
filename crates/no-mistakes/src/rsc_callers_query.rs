@@ -132,19 +132,17 @@ pub fn run(
         let Some(importers) = graph.dependents_of_node(&node) else {
             continue;
         };
-        for (importer, kind) in importers {
-            if !runtime_edge(*kind) {
-                continue;
-            }
-            // Reverse import edges of a file always resolve to file importers.
-            let NodeId::File(path) = importer else {
-                continue;
-            };
+        // Reverse runtime-import edges of a file always resolve to file importers.
+        let file_importers = importers
+            .iter()
+            .filter(|(_, kind)| runtime_edge(*kind))
+            .filter_map(|(importer, _)| importer.as_file().map(|path| (importer, path)));
+        for (importer, path) in file_importers {
             if !visited.insert(importer.clone()) {
                 continue;
             }
             let environment = *env_cache
-                .entry(path.clone())
+                .entry(path.to_path_buf())
                 .or_insert_with(|| detect_environment(path));
             let importer_depth = node_depth + 1;
             if environment == Environment::Client {
