@@ -76,9 +76,17 @@ pub fn analyze_env(root: &Path, ci: &CiConfig, var: &str) -> CiEnvReport {
 
     for path in discover_workflow_files(root, ci) {
         let rel = relative_slash(root, &path);
-        // An unreadable discovered file yields empty content (parses to null → no
-        // locations); only genuine parse failures warrant a warning.
-        let content = std::fs::read_to_string(&path).unwrap_or_default();
+        // Distinguish I/O failures from parse errors so the warning is accurate.
+        let content = match std::fs::read_to_string(&path) {
+            Ok(content) => content,
+            Err(error) => {
+                warnings.push(CiWarning {
+                    path: rel,
+                    message: format!("could not read workflow file: {error}"),
+                });
+                continue;
+            }
+        };
         let value: Value = match serde_yaml::from_str(&content) {
             Ok(value) => value,
             Err(error) => {

@@ -45,9 +45,18 @@ impl WorkflowSet {
 
         for path in discover_workflow_files(root, ci) {
             let rel = relative_slash(root, &path);
-            // An unreadable discovered file yields empty content, which parses to
-            // an empty workflow and contributes nothing — no special branch needed.
-            let content = std::fs::read_to_string(&path).unwrap_or_default();
+            // Distinguish I/O failures (permissions, encoding) from parse errors
+            // so the warning points at the real cause.
+            let content = match std::fs::read_to_string(&path) {
+                Ok(content) => content,
+                Err(error) => {
+                    warnings.push(CiWarning {
+                        path: rel,
+                        message: format!("could not read workflow file: {error}"),
+                    });
+                    continue;
+                }
+            };
             match parse::parse_workflow(&content, &rel) {
                 Ok(workflow) => {
                     for note in &workflow.warnings {
@@ -83,7 +92,10 @@ pub fn discover_workflow_files(root: &Path, ci: &CiConfig) -> Vec<PathBuf> {
         };
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.is_file() && has_yaml_extension(&path) {
+            // Match on the name's extension only (not `is_file`), so a directory
+            // mistakenly named like a workflow surfaces a clear read warning
+            // instead of being silently skipped.
+            if has_yaml_extension(&path) {
                 files.push(path);
             }
         }

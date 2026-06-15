@@ -93,13 +93,17 @@ pub enum PermissionLevel {
     None,
 }
 
-/// The GitHub Actions permission scopes that `read-all`/`write-all` expand.
-/// Per-scope `read`/`write` capability is applied in
-/// [`super::permissions`] so the shorthands never report an impossible level.
+/// The GitHub Actions permission scopes accepted in a workflow `permissions:`
+/// block (per the workflow-syntax docs) that `read-all`/`write-all` expand.
+/// Per-scope `read`/`write` capability is applied in [`super::permissions`] so
+/// the shorthands never report an impossible level. This list reflects the
+/// documented scopes and may need updating as GitHub adds new ones.
 pub const PERMISSION_SCOPES: &[&str] = &[
     "actions",
+    "artifact-metadata",
     "attestations",
     "checks",
+    "code-quality",
     "contents",
     "deployments",
     "discussions",

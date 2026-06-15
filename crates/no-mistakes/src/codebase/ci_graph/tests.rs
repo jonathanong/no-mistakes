@@ -342,6 +342,22 @@ fn malformed_workflow_produces_warning() {
 }
 
 #[test]
+fn unreadable_workflow_produces_read_warning() {
+    // The fixture has a directory named `broken.yml`; reading it fails as I/O.
+    let set = WorkflowSet::load(&fixture("unreadable"), &CiConfig::default());
+    assert!(set.workflows.is_empty());
+    assert!(set
+        .warnings
+        .iter()
+        .any(|w| w.message.contains("could not read")));
+    let report = analyze_env(&fixture("unreadable"), &CiConfig::default(), "X");
+    assert!(report
+        .warnings
+        .iter()
+        .any(|w| w.message.contains("could not read")));
+}
+
+#[test]
 fn anchors_and_aliases_resolve() {
     let set = WorkflowSet::load(&fixture("anchor"), &CiConfig::default());
     let wf = &set.workflows[0];

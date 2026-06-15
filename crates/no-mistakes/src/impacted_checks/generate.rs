@@ -196,7 +196,14 @@ pub(super) fn dedupe_warnings(warnings: Vec<Warning>) -> Vec<Warning> {
     let mut seen = BTreeSet::new();
     let mut unique: Vec<Warning> = warnings
         .into_iter()
-        .filter(|warning| seen.insert((warning.r#type.clone(), warning.file.clone())))
+        // Key on the message too so distinct warnings for the same file survive.
+        .filter(|warning| {
+            seen.insert((
+                warning.r#type.clone(),
+                warning.file.clone(),
+                warning.message.clone(),
+            ))
+        })
         .collect();
     unique.sort_by(|a, b| (&a.file, &a.message).cmp(&(&b.file, &b.message)));
     unique
