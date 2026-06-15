@@ -19,8 +19,11 @@ calls (`handler(...)`) match; namespace member calls (`ns.handler()`), indirect
 aliases (`const h = handler; h()`), and a local binding that shadows the import
 inside a nested scope are not resolved. In-file calls are searched under the
 export's public name, so a call to the local binding of a renamed export
-(`function impl(){}; export { impl as handler }`) may be missed. Use `rg` on the
-returned files when exact call text matters.
+(`function impl(){}; export { impl as handler }`) may be missed. Import-then-
+re-export chains (`import { handler as h } from './x'; export { h }`) are not
+followed past the importing file, and a file that fails to parse (e.g. mid-edit)
+contributes no call sites rather than failing the query, so results can be
+underreported. Use `rg` on the returned files when exact call text matters.
 
 Key options: `--root`, `--tsconfig`, `--format`, and `--json`.
 

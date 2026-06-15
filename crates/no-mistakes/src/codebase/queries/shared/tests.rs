@@ -30,9 +30,11 @@ fn resolve_target_rejects_missing_file() {
 }
 
 #[test]
-fn rel_str_strips_root_prefix() {
+fn rel_str_strips_root_prefix_and_forward_slashes() {
     let root = Path::new("/repo");
     assert_eq!(rel_str(Path::new("/repo/src/a.ts"), root), "src/a.ts");
     // A path outside the root is returned unchanged.
     assert_eq!(rel_str(Path::new("/other/a.ts"), root), "/other/a.ts");
+    // Backslash separators are normalized to forward slashes (Windows output).
+    assert_eq!(rel_str(Path::new(r"/repo/src\a.ts"), root), "src/a.ts");
 }

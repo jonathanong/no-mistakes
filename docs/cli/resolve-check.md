@@ -19,7 +19,9 @@ A configured tsconfig path alias whose target is missing counts as `unresolved`,
 not `external`. Pass `--tsconfig` in a monorepo so aliases resolve correctly. A
 catch-all mapping (`"*": [...]`) matches every bare specifier, so under one a bare
 npm package whose fallback target is absent is reported `unresolved` rather than
-`external`.
+`external`. Conversely, with only `baseUrl` set (no `paths`), a missing
+`baseUrl`-relative import like `src/typo` is indistinguishable from a bare npm
+package and is reported `external` rather than `unresolved`.
 
 Key options: `--root`, `--tsconfig`, `--format`, and `--json`.
 

@@ -56,9 +56,14 @@ pub(crate) fn make_relative(abs: &Path, root: &Path) -> PathBuf {
     abs.strip_prefix(root).unwrap_or(abs).to_path_buf()
 }
 
-/// Render a path relative to `root` as a forward-slashed string for output.
+/// Render a path relative to `root` as a forward-slashed string for output, so
+/// query JSON/paths match the rest of the CLI on every platform (including
+/// Windows, where `Path::display` would otherwise use `\`).
 pub(crate) fn rel_str(abs: &Path, root: &Path) -> String {
-    make_relative(abs, root).display().to_string()
+    make_relative(abs, root)
+        .display()
+        .to_string()
+        .replace('\\', "/")
 }
 
 /// Parse a file's top-level exports and named imports. Error messages include
