@@ -88,19 +88,16 @@ fn add_event(
     }
 }
 
-/// A push filtered only by `tags`/`tags-ignore` (no `branches` or `paths`) does
-/// not run on branch pushes and ignores path filters on tag pushes, so a file
-/// change never triggers it — classify it as a non-file-triggered event.
+/// A push filtered by `tags`/`tags-ignore` with no `branches`/`branches-ignore`
+/// does not run on branch pushes, and path filters are not evaluated for tag
+/// pushes — so a changed file never triggers it (even if `paths` is also set).
+/// Classify it as a non-file-triggered event.
 fn is_tag_only(config: Option<&Value>) -> bool {
     let Some(config) = config else {
         return false;
     };
     let has = |key: &str| config.get(key).is_some();
-    (has("tags") || has("tags-ignore"))
-        && !has("paths")
-        && !has("paths-ignore")
-        && !has("branches")
-        && !has("branches-ignore")
+    (has("tags") || has("tags-ignore")) && !has("branches") && !has("branches-ignore")
 }
 
 fn parse_path_filter(

@@ -1,7 +1,6 @@
-use super::generate::{dedupe_checks, dedupe_warnings, framework_configured, generic_checks};
+use super::generate::{dedupe_checks, dedupe_warnings, generic_checks};
 use super::*;
 use crate::config::v2::schema::NoMistakesConfig;
-use crate::tests::TestFramework;
 use std::collections::BTreeSet;
 
 fn fixture() -> PathBuf {
@@ -59,22 +58,6 @@ fn duplicate_inputs_are_deduped() {
     let commands = command_strings(&report);
     let unique: BTreeSet<_> = commands.iter().collect();
     assert_eq!(commands.len(), unique.len());
-}
-
-#[test]
-fn framework_configured_detects_each_source() {
-    use crate::config::v2::schema::StringOrList;
-    let mut config = NoMistakesConfig::default();
-    // All operands evaluate to false.
-    assert!(!framework_configured(&config, TestFramework::Vitest));
-    assert!(!framework_configured(&config, TestFramework::Playwright));
-    assert!(!framework_configured(&config, TestFramework::Swift));
-    config.tests.vitest.configs = Some(StringOrList::One("v".to_string()));
-    assert!(framework_configured(&config, TestFramework::Vitest));
-    config.tests.playwright.configs = Some(StringOrList::One("p".to_string()));
-    assert!(framework_configured(&config, TestFramework::Playwright));
-    config.tests.swift.packages.push("pkg".to_string());
-    assert!(framework_configured(&config, TestFramework::Swift));
 }
 
 #[test]
@@ -175,6 +158,25 @@ fn generic_checks_excludes_deleted_from_append() {
     assert!(!checks.iter().any(|c| c.name == "only-deleted"));
     // Whole-project check still triggers despite the deletion.
     assert!(checks.iter().any(|c| c.name == "tsc"));
+}
+
+#[test]
+fn generic_checks_normalizes_dot_slash_globs() {
+    use crate::config::v2::schema::{CheckCommandDef, CheckFileArgs};
+    let mut config = NoMistakesConfig::default();
+    config.checks.commands = vec![CheckCommandDef {
+        name: "eslint".to_string(),
+        include: vec!["./src/**/*.ts".to_string()],
+        command: vec!["eslint".to_string()],
+        file_args: CheckFileArgs::Append,
+        ..Default::default()
+    }];
+    let checks = generic_checks(&config, &["src/foo.ts".to_string()], &BTreeSet::new()).unwrap();
+    assert_eq!(checks.len(), 1);
+    assert_eq!(
+        checks[0].command,
+        vec!["eslint".to_string(), "src/foo.ts".to_string()]
+    );
 }
 
 #[test]

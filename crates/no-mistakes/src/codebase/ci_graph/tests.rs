@@ -193,12 +193,19 @@ fn permission_resolution_across_jobs() {
 
     let readall = effective_permissions(workflow, job("readall"));
     assert!(readall.scopes.values().all(|l| *l == PermissionLevel::Read));
+    // id-token is write-only, so read-all omits it rather than reporting `read`.
+    assert!(!readall.scopes.contains_key("id-token"));
 
     let writeall = effective_permissions(workflow, job("writeall"));
     assert!(writeall
         .scopes
         .values()
         .all(|l| *l == PermissionLevel::Write));
+    // write-all still grants the write-only scope.
+    assert_eq!(
+        writeall.scopes.get("id-token"),
+        Some(&PermissionLevel::Write)
+    );
 
     let empty = effective_permissions(workflow, job("empty"));
     assert!(empty.scopes.is_empty());

@@ -67,10 +67,20 @@ fn expand(spec: &PermissionSpec) -> BTreeMap<String, PermissionLevel> {
     }
 }
 
+/// Scopes that only support `write`/`none` (never `read`). Under `read-all`
+/// they are omitted rather than reported with an impossible `read` level.
+const WRITE_ONLY_SCOPES: &[&str] = &["id-token"];
+
 fn all_scopes(level: PermissionLevel) -> BTreeMap<String, PermissionLevel> {
     PERMISSION_SCOPES
         .iter()
-        .map(|scope| (scope.to_string(), level))
+        .filter_map(|scope| {
+            if level == PermissionLevel::Read && WRITE_ONLY_SCOPES.contains(scope) {
+                None
+            } else {
+                Some((scope.to_string(), level))
+            }
+        })
         .collect()
 }
 

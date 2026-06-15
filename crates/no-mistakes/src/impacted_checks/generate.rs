@@ -41,14 +41,15 @@ pub fn generate_impacted_checks(args: &ImpactedChecksArgs) -> Result<ImpactedChe
     let mut warnings: Vec<Warning> = Vec::new();
     let mut fallback_triggered = false;
 
+    // Attempt every framework and keep nonempty results. The test-plan engine
+    // autodetects root `vitest.config.*` / `playwright.config.*` even without an
+    // explicit `configs` entry, and returns an empty plan when nothing matches —
+    // so we mirror `tests plan` rather than gate on explicit config.
     for framework in [
         TestFramework::Vitest,
         TestFramework::Playwright,
         TestFramework::Swift,
     ] {
-        if !framework_configured(&config, framework) {
-            continue;
-        }
         let framework_args = plan_args_for(args, Some(framework));
         let plan = crate::tests::plan::generate_plan(&framework_args)?;
         fallback_triggered |= plan.fallback_triggered;
@@ -75,26 +76,6 @@ pub fn generate_impacted_checks(args: &ImpactedChecksArgs) -> Result<ImpactedChe
         warnings: dedupe_warnings(warnings),
         fallback_triggered,
     })
-}
-
-pub(super) fn framework_configured(config: &NoMistakesConfig, framework: TestFramework) -> bool {
-    match framework {
-        TestFramework::Vitest => {
-            config.tests.vitest.configs.is_some()
-                || !config.tests.vitest.projects.is_empty()
-                || !config.test_plan.vitest.environments.is_empty()
-        }
-        TestFramework::Playwright => {
-            config.tests.playwright.configs.is_some()
-                || !config.tests.playwright.projects.is_empty()
-                || !config.test_plan.playwright.environments.is_empty()
-        }
-        TestFramework::Swift => {
-            !config.tests.swift.packages.is_empty()
-                || !config.tests.swift.projects.is_empty()
-                || !config.test_plan.swift.environments.is_empty()
-        }
-    }
 }
 
 pub(super) fn generic_checks(
@@ -149,7 +130,10 @@ fn build_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
     }
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
-        builder.add(Glob::new(pattern)?);
+        // Strip leading `./` (and resolve `.`/`..`) so a root-relative pattern
+        // like `./src/**/*.ts` matches repo-relative paths such as `src/foo.ts`.
+        let pattern = crate::codebase::glob_normalize::normalize(pattern);
+        builder.add(Glob::new(&pattern)?);
     }
     Ok(Some(builder.build()?))
 }

@@ -1,10 +1,13 @@
-# Tag-only push: runs on `v*` tag pushes, never on branch file changes — so
-# `ci impact` must NOT report it as triggered by a changed file.
+# Tag-filtered push with no branch filter: runs on `v*` tag pushes only, never
+# on branch file changes — and path filters are ignored on tag pushes. So
+# `ci impact` must NOT report it as triggered, even though `paths` is set.
 name: Release
 on:
   push:
     tags:
       - "v*"
+    paths:
+      - "src/**"
 jobs:
   release:
     runs-on: ubuntu-latest
