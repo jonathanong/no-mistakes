@@ -135,8 +135,7 @@ pub fn run(
     // Build only import-edge producers; rsc-callers traverses runtime imports
     // exclusively, so building route/queue/React/Swift/Terraform edges is waste.
     let plan = GraphBuildPlan::from_allowed(Some(&allowed));
-    let graph =
-        DepGraph::build_with_plan_and_config(&root, &tsconfig, plan, config_path)?;
+    let graph = DepGraph::build_with_plan_and_config(&root, &tsconfig, plan, config_path)?;
 
     let mut env_cache: HashMap<PathBuf, Environment> = HashMap::new();
     let mut visited: HashSet<NodeId> = HashSet::new();
