@@ -92,7 +92,11 @@ fn resolve_tsconfig(root: &Path, tsconfig: Option<&Path>) -> Result<TsConfig> {
 fn runtime_edge(kind: EdgeKind) -> bool {
     matches!(
         kind,
-        EdgeKind::Import | EdgeKind::DynamicImport | EdgeKind::Require
+        EdgeKind::Import
+            | EdgeKind::DynamicImport
+            | EdgeKind::Require
+            // Workspace-package imports are runtime imports in a monorepo.
+            | EdgeKind::WorkspaceImport
     )
 }
 

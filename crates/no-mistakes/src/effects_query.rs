@@ -63,7 +63,13 @@ impl EffectsReport {
 /// Edge kinds that represent runtime reachability (code that actually executes
 /// when the entry module is imported). Type-only imports are excluded.
 fn runtime_edges() -> HashSet<EdgeKind> {
-    HashSet::from([EdgeKind::Import, EdgeKind::DynamicImport, EdgeKind::Require])
+    HashSet::from([
+        EdgeKind::Import,
+        EdgeKind::DynamicImport,
+        EdgeKind::Require,
+        // Workspace-package imports are runtime imports in a monorepo.
+        EdgeKind::WorkspaceImport,
+    ])
 }
 
 fn resolve_tsconfig(root: &Path, tsconfig: Option<&Path>) -> Result<TsConfig> {

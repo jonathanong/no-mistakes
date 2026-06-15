@@ -198,6 +198,13 @@ fn edge_cases_yield_medium_confidence_and_cover_odd_callees() {
 }
 
 #[test]
+fn detects_register_calls_inside_default_function() {
+    let report = report("default-function.ts");
+    assert_eq!(report.pattern_kind, "register-call");
+    assert_eq!(report.entries.len(), 2);
+}
+
+#[test]
 fn template_uses_local_name() {
     // Default import: symbol is `default` but the local `Plugin` appears in the
     // call shape, so the template must substitute the local name.

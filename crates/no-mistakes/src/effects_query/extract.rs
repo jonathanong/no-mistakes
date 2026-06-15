@@ -145,10 +145,13 @@ fn callee_candidates(expr: &Expression<'_>) -> Vec<String> {
         }
         Expression::StaticMemberExpression(member) => {
             let property = member.property.name.to_string();
-            let mut candidates = vec![property.clone()];
+            // Try the qualified `object.property` form before the bare property
+            // so a configured `cache.invalidate` wins over a bare `invalidate`.
+            let mut candidates = Vec::new();
             if let Expression::Identifier(object) = &member.object {
                 candidates.push(format!("{}.{}", object.name, property));
             }
+            candidates.push(property);
             candidates
         }
         _ => Vec::new(),

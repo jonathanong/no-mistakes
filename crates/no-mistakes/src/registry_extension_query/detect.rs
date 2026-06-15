@@ -116,6 +116,10 @@ impl<'a> Visit<'a> for BodyCollector<'a, '_> {
                 kind: "container-object".to_string(),
                 entries,
             });
+        } else {
+            // e.g. `export default function setup() { registry.register(...) }`:
+            // keep walking so register calls inside are still detected.
+            walk::walk_export_default_declaration(self, decl);
         }
     }
 }

@@ -32,6 +32,12 @@ imports are matched by local name and reported via their imported symbol +
 source; dynamic-import registrants (`() => import("./x")`) get
 `kind: "dynamic"` with a null `symbol`.
 
+Known heuristic gaps (best-effort): namespace-imported factory calls
+(`registry.register(plugins.makeFoo())`) may not resolve to an import; entries
+wrapped in a local helper (`registry.register(makeEntry(Foo))`) can misattribute
+the registrant; and the generated `template` placeholder is approximate for
+namespace-import constructors.
+
 Key options: `--format`, `--json`.
 
 Output shape:
