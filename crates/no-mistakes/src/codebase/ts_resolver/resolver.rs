@@ -41,6 +41,17 @@ impl<'a> ImportResolver<'a> {
         self
     }
 
+    /// Returns `true` if `specifier` matches any configured tsconfig path
+    /// alias pattern, regardless of whether the target exists on disk. Used by
+    /// `resolve-check` to flag a configured alias whose target is missing as a
+    /// real error rather than an external/bare specifier.
+    pub fn matches_alias(&self, specifier: &str) -> bool {
+        self.tsconfig
+            .paths
+            .iter()
+            .any(|(pattern, _)| match_alias(pattern, specifier).is_some())
+    }
+
     pub fn resolve(&self, specifier: &str, importing_file: &Path) -> Option<PathBuf> {
         if !self.cache_enabled {
             return self.resolve_uncached(specifier, importing_file);

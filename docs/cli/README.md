@@ -18,6 +18,11 @@ analysis.
 | [`dependents`](dependents.md) | Files, tests, and modules affected by changed files. |
 | [`related`](related.md) | Alias for `dependents`; useful when agents ask for impact. |
 | [`symbols`](symbols.md) | Named exports and imports in TS/JS files. |
+| [`importers`](importers.md) | Direct importers of one file, plus a dependents count. |
+| [`exports-of`](exports-of.md) | A file's named exports and who imports each. |
+| [`dead-exports`](dead-exports.md) | Whether any file still imports the given exports. |
+| [`call-sites`](call-sites.md) | Call sites of an exported function with argument shapes. |
+| [`resolve-check`](resolve-check.md) | Whether all imports in a file resolve. |
 | [`fetches`](fetches.md) | Next.js routes mapped to static fetch API calls. |
 | [`check`](check.md) | Configured project-wide checks. |
 | [`lockfile`](lockfile.md) | Show which packages changed between two lockfile versions. |

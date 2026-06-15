@@ -28,6 +28,26 @@ fn has_explicit_extension(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
+/// Load a `TsConfig` from `--tsconfig` if given, else search upward from `root`,
+/// else return an empty config anchored at `root`.
+///
+/// Shared by every command that resolves import/re-export specifiers so the
+/// `--tsconfig` fallback behaves identically across the CLI and N-API surface.
+pub fn resolve_tsconfig(arg: Option<&Path>, root: &Path) -> Result<TsConfig> {
+    if let Some(path) = arg {
+        return load_tsconfig(path).context(format!("loading tsconfig {}", path.display()));
+    }
+    if let Some(path) = find_tsconfig(root) {
+        return load_tsconfig(&path).context(format!("loading tsconfig {}", path.display()));
+    }
+    Ok(TsConfig {
+        dir: root.to_path_buf(),
+        paths: Vec::new(),
+        paths_dir: root.to_path_buf(),
+        base_url: None,
+    })
+}
+
 /// Resolve `specifier` (as it appears in an import in `importing_file`) to an
 /// absolute path on disk. Returns `None` for bare npm specifiers or if no file
 /// is found.

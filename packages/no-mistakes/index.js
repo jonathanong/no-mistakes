@@ -26,6 +26,26 @@ async function symbols(options) {
   return callJson(native.symbolsJson, options);
 }
 
+async function importers(options) {
+  return callJson(native.importersJson, options);
+}
+
+async function exportsOf(options) {
+  return callJson(native.exportsOfJson, options);
+}
+
+async function deadExports(options) {
+  return callJson(native.deadExportsJson, options);
+}
+
+async function callSites(options) {
+  return callJson(native.callSitesJson, options);
+}
+
+async function resolveCheck(options) {
+  return callJson(native.resolveCheckJson, options);
+}
+
 async function fetches(options) {
   return callJson(native.fetchesJson, options);
 }
@@ -148,10 +168,14 @@ async function version() {
 
 module.exports = {
   analyzeProject,
+  callSites,
   check,
+  deadExports,
   dependencies,
   dependents,
+  exportsOf,
   fetches,
+  importers,
   infraOutputs,
   infraResourceRefs,
   infraTestFor,
@@ -168,6 +192,7 @@ module.exports = {
   reactCheck,
   reactUsages,
   related,
+  resolveCheck,
   serverRouteEdges,
   serverRouteList,
   serverRouteRelated,
