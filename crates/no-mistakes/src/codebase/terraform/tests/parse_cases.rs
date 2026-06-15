@@ -105,11 +105,12 @@ fn resolves_splatted_module_outputs() {
 }
 
 #[test]
-fn resolves_bracketed_module_outputs() {
+fn resolves_for_each_keyed_module_outputs() {
+    // `module.network["prod"]` is a for_each instance key; the output is `.zone_id`.
     let facts = parse(
         r#"
         output "ids" {
-          value = module.network["zone_id"]
+          value = module.network["prod"].zone_id
         }
         "#,
     );

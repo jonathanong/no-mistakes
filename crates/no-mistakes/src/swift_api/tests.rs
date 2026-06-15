@@ -88,3 +88,11 @@ fn test_command_escapes_regex_metacharacters() {
         "swift test --package-path 'pkg' --filter '^App\\.Tests\\.'"
     );
 }
+
+#[test]
+fn test_command_escapes_quotes_in_package_path() {
+    assert_eq!(
+        test_command("bob's app", "T"),
+        "swift test --package-path 'bob'\\''s app' --filter '^T\\.'"
+    );
+}

@@ -65,18 +65,12 @@ pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<SwiftR
     let facts = collect_swift_facts(&root, &all_files, &packages);
     let mut targets = HashMap::new();
     for package in &facts.packages {
-        // Target names are unique only within a package, so scope membership to
-        // files under this package's root before attaching its metadata.
-        let files_for = |name: &String| {
-            facts
-                .files_by_target
-                .get(name)
-                .into_iter()
-                .flatten()
-                .filter(|path| path.starts_with(&package.package_root))
-        };
         for (name, target) in &package.targets {
-            for file in files_for(name) {
+            // Target names are unique only within a package, and nested packages
+            // can share a name, so scope membership to this target's own source
+            // roots rather than the (prefix-matching) package root.
+            let files = facts.files_by_target.get(name).into_iter().flatten();
+            for file in files.filter(|path| target.roots.iter().any(|r| path.starts_with(r))) {
                 targets.insert(
                     file.clone(),
                     TargetInfo {
@@ -164,12 +158,14 @@ fn test_command(package: &str, target: &str) -> String {
     // `swift test --filter` matches a regex against `<target>.<case>`; anchor to
     // the target prefix and escape it so one target name cannot match another.
     // Single-quote it so the shell preserves the regex backslashes verbatim.
-    let filter = format!("'^{}\\.'", regex_escape(target));
+    let filter = shell_single_quote(&format!("^{}\\.", regex_escape(target)));
     if package.is_empty() || package == "." {
         format!("swift test --filter {filter}")
     } else {
-        // Single-quote the package path too, so paths with spaces survive the shell.
-        format!("swift test --package-path '{package}' --filter {filter}")
+        format!(
+            "swift test --package-path {} --filter {filter}",
+            shell_single_quote(package)
+        )
     }
 }
 
@@ -182,6 +178,12 @@ fn regex_escape(value: &str) -> String {
         escaped.push(ch);
     }
     escaped
+}
+
+/// Wrap a value in single quotes for POSIX shells, escaping embedded quotes so a
+/// package path like `bob's app` stays a single argument.
+fn shell_single_quote(value: &str) -> String {
+    format!("'{}'", value.replace('\'', "'\\''"))
 }
 
 #[cfg(test)]

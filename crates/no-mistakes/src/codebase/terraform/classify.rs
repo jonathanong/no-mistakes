@@ -41,13 +41,15 @@ pub(super) fn traversal_to_addr(traversal: &Traversal) -> Option<(TfAddr, Option
 /// modules (`module.net[0].out`, `module.net[*].zone_id`, `aws_x.y[count.index].id`)
 /// still resolve their name and output.
 fn leading_attrs(operators: &[TraversalOperator]) -> Vec<&str> {
+    // Only attribute accesses name addresses/outputs. Index operators are skipped:
+    // for `module.net["prod"].zone_id` (a `for_each` instance key) the output is
+    // the following `.zone_id`, and for `module.net[*].zone_id` the splat is not a
+    // name. (Bare `module.net["zone_id"]` bracket-output notation is not resolved —
+    // a documented heuristic limit.)
     operators
         .iter()
         .filter_map(|operator| match operator {
             TraversalOperator::GetAttr(ident) => Some(ident.as_str()),
-            // Static string index notation (`module.net["zone_id"]`) names an
-            // attribute/output just like `.zone_id` does.
-            TraversalOperator::Index(Expression::String(name)) => Some(name.as_str()),
             _ => None,
         })
         .collect()
