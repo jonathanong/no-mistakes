@@ -121,6 +121,9 @@ fn changed_rel(root: &Path, file: &Path) -> String {
     } else {
         crate::codebase::ts_resolver::normalize_path(&root.join(file))
     };
+    // Canonicalize so `abs` matches `root` (also canonicalized) — on Windows
+    // both then carry the `\\?\` UNC prefix, so strip_prefix succeeds.
+    let abs = abs.canonicalize().unwrap_or(abs);
     relative_slash(root, &abs)
 }
 

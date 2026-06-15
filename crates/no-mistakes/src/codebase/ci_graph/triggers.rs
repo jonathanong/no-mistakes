@@ -5,9 +5,12 @@
 //! with `literal_separator` enabled, so `*` does not cross `/` while `**`
 //! does. Ordered `!` negations within `paths` follow gitignore-style
 //! last-match-wins. Rarely-used extglob forms (`+()`, `?()`) are not supported.
+//!
+//! Globs are compiled once per workflow into [`CompiledTriggers`] and reused
+//! across all changed files, so a multi-file query never recompiles a pattern.
 
 use super::model::{PathFilter, Workflow};
-use globset::GlobBuilder;
+use globset::{GlobBuilder, GlobMatcher};
 use serde::Serialize;
 
 /// Result of evaluating a workflow's triggers against a single changed file.
@@ -33,41 +36,104 @@ pub struct MatchedFilter {
     pub pattern: String,
 }
 
+/// A workflow's triggers with their globs pre-compiled.
+pub struct CompiledTriggers {
+    events: Vec<(String, CompiledFilter)>,
+}
+
+struct CompiledFilter {
+    unconstrained: bool,
+    has_paths: bool,
+    paths: Vec<CompiledGlob>,
+    paths_ignore: Vec<CompiledGlob>,
+}
+
+struct CompiledGlob {
+    negate: bool,
+    pattern: String,
+    matcher: GlobMatcher,
+}
+
+impl CompiledTriggers {
+    /// Compile every path-filterable event's globs once.
+    pub fn new(workflow: &Workflow) -> Self {
+        let events = workflow
+            .triggers
+            .events
+            .iter()
+            .map(|(event, filter)| (event.clone(), CompiledFilter::new(filter)))
+            .collect();
+        CompiledTriggers { events }
+    }
+
+    /// Evaluate the compiled triggers against one changed file.
+    pub fn evaluate(&self, changed_rel: &str) -> (TriggerMatch, Vec<MatchedFilter>) {
+        if self.events.is_empty() {
+            return (TriggerMatch::NoPathEvents, Vec::new());
+        }
+
+        let mut matched_filters = Vec::new();
+        let mut any_always = false;
+
+        for (event, filter) in &self.events {
+            match filter.evaluate(changed_rel) {
+                EventOutcome::Always => any_always = true,
+                EventOutcome::Matched(patterns) => {
+                    for pattern in patterns {
+                        matched_filters.push(MatchedFilter {
+                            event: event.clone(),
+                            pattern,
+                        });
+                    }
+                }
+                EventOutcome::NotMatched => {}
+            }
+        }
+
+        if !matched_filters.is_empty() {
+            (TriggerMatch::Matched, matched_filters)
+        } else if any_always {
+            (TriggerMatch::Always, Vec::new())
+        } else {
+            (TriggerMatch::NotMatched, Vec::new())
+        }
+    }
+}
+
+impl CompiledFilter {
+    fn new(filter: &PathFilter) -> Self {
+        CompiledFilter {
+            unconstrained: filter.is_unconstrained(),
+            has_paths: !filter.paths.is_empty(),
+            paths: compile_list(&filter.paths),
+            paths_ignore: compile_list(&filter.paths_ignore),
+        }
+    }
+
+    fn evaluate(&self, path: &str) -> EventOutcome {
+        if self.unconstrained {
+            return EventOutcome::Always;
+        }
+        if self.has_paths {
+            if selected_by(&self.paths, path) {
+                return EventOutcome::Matched(matching_patterns(&self.paths, path));
+            }
+            return EventOutcome::NotMatched;
+        }
+        // paths-ignore only: the file triggers the event unless it is ignored.
+        if !selected_by(&self.paths_ignore, path) {
+            return EventOutcome::Matched(vec!["(not ignored)".to_string()]);
+        }
+        EventOutcome::NotMatched
+    }
+}
+
 /// Evaluate a workflow against one changed file (repo-relative, slash path).
 pub fn evaluate_trigger(
     workflow: &Workflow,
     changed_rel: &str,
 ) -> (TriggerMatch, Vec<MatchedFilter>) {
-    if workflow.triggers.events.is_empty() {
-        return (TriggerMatch::NoPathEvents, Vec::new());
-    }
-
-    let mut matched_filters = Vec::new();
-    let mut any_always = false;
-
-    // Iterate events deterministically (BTreeMap is already ordered).
-    for (event, filter) in &workflow.triggers.events {
-        match evaluate_event(filter, changed_rel) {
-            EventOutcome::Always => any_always = true,
-            EventOutcome::Matched(patterns) => {
-                for pattern in patterns {
-                    matched_filters.push(MatchedFilter {
-                        event: event.clone(),
-                        pattern,
-                    });
-                }
-            }
-            EventOutcome::NotMatched => {}
-        }
-    }
-
-    if !matched_filters.is_empty() {
-        (TriggerMatch::Matched, matched_filters)
-    } else if any_always {
-        (TriggerMatch::Always, Vec::new())
-    } else {
-        (TriggerMatch::NotMatched, Vec::new())
-    }
+    CompiledTriggers::new(workflow).evaluate(changed_rel)
 }
 
 enum EventOutcome {
@@ -76,32 +142,32 @@ enum EventOutcome {
     NotMatched,
 }
 
-fn evaluate_event(filter: &PathFilter, path: &str) -> EventOutcome {
-    if filter.is_unconstrained() {
-        return EventOutcome::Always;
-    }
-    if !filter.paths.is_empty() {
-        let matched = matching_patterns(&filter.paths, path);
-        if selected_by(&filter.paths, path) {
-            return EventOutcome::Matched(matched);
-        }
-        return EventOutcome::NotMatched;
-    }
-    // paths-ignore only: the file triggers the event unless it is ignored.
-    if !selected_by(&filter.paths_ignore, path) {
-        return EventOutcome::Matched(vec!["(not ignored)".to_string()]);
-    }
-    EventOutcome::NotMatched
+/// Compile each pattern once, dropping invalid globs (which never match).
+fn compile_list(patterns: &[String]) -> Vec<CompiledGlob> {
+    patterns
+        .iter()
+        .filter_map(|pattern| {
+            let (negate, glob) = split_negation(pattern);
+            GlobBuilder::new(glob)
+                .literal_separator(true)
+                .build()
+                .ok()
+                .map(|glob| CompiledGlob {
+                    negate,
+                    pattern: pattern.clone(),
+                    matcher: glob.compile_matcher(),
+                })
+        })
+        .collect()
 }
 
 /// gitignore-style ordered evaluation: positive patterns select a path, `!`
 /// patterns deselect it, last match wins. Returns whether `path` is selected.
-fn selected_by(patterns: &[String], path: &str) -> bool {
+fn selected_by(globs: &[CompiledGlob], path: &str) -> bool {
     let mut selected = false;
-    for pattern in patterns {
-        let (negate, glob) = split_negation(pattern);
-        if glob_matches(glob, path) {
-            selected = !negate;
+    for glob in globs {
+        if glob.matcher.is_match(path) {
+            selected = !glob.negate;
         }
     }
     selected
@@ -109,14 +175,11 @@ fn selected_by(patterns: &[String], path: &str) -> bool {
 
 /// The positive patterns (ignoring `!` negations) that match `path`, for
 /// reporting which filter caused the match.
-fn matching_patterns(patterns: &[String], path: &str) -> Vec<String> {
-    patterns
+fn matching_patterns(globs: &[CompiledGlob], path: &str) -> Vec<String> {
+    globs
         .iter()
-        .filter(|pattern| {
-            let (negate, glob) = split_negation(pattern);
-            !negate && glob_matches(glob, path)
-        })
-        .cloned()
+        .filter(|glob| !glob.negate && glob.matcher.is_match(path))
+        .map(|glob| glob.pattern.clone())
         .collect()
 }
 
@@ -124,13 +187,6 @@ fn split_negation(pattern: &str) -> (bool, &str) {
     match pattern.strip_prefix('!') {
         Some(rest) => (true, rest),
         None => (false, pattern),
-    }
-}
-
-fn glob_matches(pattern: &str, path: &str) -> bool {
-    match GlobBuilder::new(pattern).literal_separator(true).build() {
-        Ok(glob) => glob.compile_matcher().is_match(path),
-        Err(_) => false,
     }
 }
 

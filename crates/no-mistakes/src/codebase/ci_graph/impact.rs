@@ -3,7 +3,7 @@
 
 use super::model::CiWarning;
 use super::permissions::{effective_permissions, ResolvedPermissions};
-use super::triggers::{evaluate_trigger, MatchedFilter, TriggerMatch};
+use super::triggers::{CompiledTriggers, MatchedFilter, TriggerMatch};
 use super::WorkflowSet;
 use serde::Serialize;
 
@@ -60,8 +60,10 @@ pub fn analyze_impact(set: &WorkflowSet, changed_files: &[String]) -> CiImpactRe
         let mut any_always = false;
         let mut matched_filters: Vec<MatchedFilter> = Vec::new();
 
+        // Compile this workflow's globs once, then reuse across all files.
+        let compiled = CompiledTriggers::new(workflow);
         for file in changed_files {
-            match evaluate_trigger(workflow, file) {
+            match compiled.evaluate(file) {
                 (TriggerMatch::Matched, filters) => {
                     any_matched = true;
                     for filter in filters {

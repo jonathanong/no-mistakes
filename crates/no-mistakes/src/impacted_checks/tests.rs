@@ -1,4 +1,4 @@
-use super::generate::{dedupe_warnings, framework_configured};
+use super::generate::{dedupe_checks, dedupe_warnings, framework_configured};
 use super::*;
 use crate::config::v2::schema::NoMistakesConfig;
 use crate::tests::TestFramework;
@@ -114,6 +114,19 @@ fn run_executes() {
     let mut a = args(&["src/foo.ts"]);
     a.json = true;
     run(a).unwrap();
+}
+
+#[test]
+fn dedupe_checks_merges_files_for_same_command() {
+    let mk = |files: &[&str]| CheckCommand {
+        name: "tsc".to_string(),
+        kind: CheckKind::Generic,
+        command: vec!["tsc".to_string()],
+        files: files.iter().map(|f| f.to_string()).collect(),
+    };
+    let out = dedupe_checks(vec![mk(&["b.ts"]), mk(&["a.ts"])]);
+    assert_eq!(out.len(), 1);
+    assert_eq!(out[0].files, vec!["a.ts".to_string(), "b.ts".to_string()]);
 }
 
 #[test]

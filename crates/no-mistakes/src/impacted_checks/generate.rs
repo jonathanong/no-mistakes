@@ -7,7 +7,7 @@ use crate::config::v2::schema::{CheckFileArgs, NoMistakesConfig};
 use crate::tests::{PlanArgs, TestFramework, Warning};
 use anyhow::Result;
 use globset::{Glob, GlobSet, GlobSetBuilder};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 /// Compute the impacted-checks report (shared by the CLI and N-API).
@@ -159,12 +159,23 @@ fn plan_args_for(args: &ImpactedChecksArgs, framework: Option<TestFramework>) ->
     }
 }
 
-fn dedupe_checks(checks: Vec<CheckCommand>) -> Vec<CheckCommand> {
-    let mut seen = BTreeSet::new();
-    let mut unique: Vec<CheckCommand> = checks
-        .into_iter()
-        .filter(|check| seen.insert(check.command.clone()))
-        .collect();
+pub(super) fn dedupe_checks(checks: Vec<CheckCommand>) -> Vec<CheckCommand> {
+    // Collapse checks sharing the same command, merging their triggering files
+    // so the report lists every file that caused the command (not just the first).
+    let mut by_command: BTreeMap<Vec<String>, CheckCommand> = BTreeMap::new();
+    for mut check in checks {
+        match by_command.get_mut(&check.command) {
+            Some(existing) => existing.files.append(&mut check.files),
+            None => {
+                by_command.insert(check.command.clone(), check);
+            }
+        }
+    }
+    let mut unique: Vec<CheckCommand> = by_command.into_values().collect();
+    for check in &mut unique {
+        check.files.sort();
+        check.files.dedup();
+    }
     unique.sort_by(|a, b| a.command.cmp(&b.command));
     unique
 }
