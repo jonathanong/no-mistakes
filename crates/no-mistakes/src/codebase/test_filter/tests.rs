@@ -138,7 +138,7 @@ fn always_include_globs_surface_suite_excluded_mock_tests() {
     );
     config.tests.impact.always_include_tests = vec!["**/*.mock.test.mts".to_string()];
 
-    let filter = TestFileFilter::new(&root, &config);
+    let filter = TestFileFilter::for_impact(&root, &config);
 
     // The stub test is normally dropped by the suite exclude, but the
     // always-include glob surfaces it anyway.
@@ -147,6 +147,26 @@ fn always_include_globs_surface_suite_excluded_mock_tests() {
     assert!(filter.is_match_rel("backend/api/users.test.mts"));
     // A non-test file that matches no stub glob is still not a test.
     assert!(!filter.is_match_rel("backend/api/users.mts"));
+}
+
+#[test]
+fn non_impact_filter_ignores_always_include_globs() {
+    let root = fixture_root();
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.projects.insert(
+        "api".to_string(),
+        TestProjectPolicy {
+            include: vec!["backend/api/**/*.test.mts".to_string()],
+            exclude: vec!["backend/api/**/*.mock.test.mts".to_string()],
+            ..Default::default()
+        },
+    );
+    config.tests.impact.always_include_tests = vec!["**/*.mock.test.mts".to_string()];
+
+    // `new` is the shared filter used by `tests plan` / configured plans; it must
+    // NOT surface the stub the suite excludes, even with the impact knob set.
+    let filter = TestFileFilter::new(&root, &config);
+    assert!(!filter.is_match_rel("backend/api/users.mock.test.mts"));
 }
 
 #[test]
@@ -163,7 +183,7 @@ fn empty_always_include_globs_leave_suite_excludes_intact() {
         },
     );
     // No always-include config: behavior is unchanged from before this feature.
-    let filter = TestFileFilter::new(&root, &config);
+    let filter = TestFileFilter::for_impact(&root, &config);
 
     assert!(!filter.is_match_rel("backend/api/users.mock.test.mts"));
 }
@@ -174,7 +194,7 @@ fn malformed_always_include_glob_does_not_panic() {
     let mut config = NoMistakesConfig::default();
     config.tests.impact.always_include_tests = vec!["[".to_string()];
 
-    let filter = TestFileFilter::new(&root, &config);
+    let filter = TestFileFilter::for_impact(&root, &config);
 
     // Bad glob degrades to no always-include; default fallback still applies.
     assert!(filter.is_match_rel("foo.test.mts"));
@@ -197,7 +217,7 @@ fn malformed_always_include_glob_is_skipped_keeping_valid_ones() {
     config.tests.impact.always_include_tests =
         vec!["[".to_string(), "**/*.mock.test.mts".to_string()];
 
-    let filter = TestFileFilter::new(&root, &config);
+    let filter = TestFileFilter::for_impact(&root, &config);
 
     assert!(filter.is_match_rel("backend/api/users.mock.test.mts"));
 }

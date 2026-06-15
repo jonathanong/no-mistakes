@@ -56,7 +56,7 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
     } else {
         DepGraph::build(root.as_path(), &tsconfig)?
     };
-    let test_filter = TestFileFilter::new(root.as_path(), &config);
+    let test_filter = TestFileFilter::for_impact(root.as_path(), &config);
     let registry_set = compile_registry_globset(&config.tests.impact.registries);
 
     let mut selected_map: HashMap<PathBuf, SelectedTest> = HashMap::new();

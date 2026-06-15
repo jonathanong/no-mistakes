@@ -23,7 +23,7 @@ struct TestSuiteFilter {
 impl TestFileFilter {
     pub fn new(root: &Path, config: &NoMistakesConfig) -> Self {
         Self {
-            always_include: compile_optional_globset(&config.tests.impact.always_include_tests),
+            always_include: None,
             config_filter:
                 crate::codebase::rules::test_no_unmocked_dynamic_imports::config::test_filter(
                     root, config,
@@ -34,6 +34,17 @@ impl TestFileFilter {
                 .map(|(_runner, filter)| TestSuiteFilter { filter })
                 .collect(),
         }
+    }
+
+    /// Filter variant for the `tests impact` query: additionally always-surfaces
+    /// the stub/mock tests configured under `tests.impact.alwaysIncludeTests`,
+    /// even when a suite `exclude` would drop them. This is scoped to impact and
+    /// is intentionally NOT applied by `tests plan` / configured plans, which
+    /// schedule tests to *run* and must respect suite excludes.
+    pub fn for_impact(root: &Path, config: &NoMistakesConfig) -> Self {
+        let mut filter = Self::new(root, config);
+        filter.always_include = compile_optional_globset(&config.tests.impact.always_include_tests);
+        filter
     }
 
     pub fn is_match(&self, root: &Path, path: &Path) -> bool {

@@ -107,6 +107,35 @@ fn impact_omits_mock_stub_when_always_include_not_configured() {
     assert_eq!(selected_files(&plan), vec!["widget.test.mts"]);
 }
 
+#[test]
+fn tests_plan_does_not_apply_always_include_stub_override() {
+    let root = fixture("tests-impact-mock-stub");
+    let root_str = root.to_str().unwrap();
+    // `tests plan` schedules tests to run and must respect the suite exclude even
+    // though `tests.impact.alwaysIncludeTests` is configured (it is impact-only).
+    let output = run(&[
+        "tests",
+        "plan",
+        "--root",
+        root_str,
+        "--changed-file",
+        "widget.mts",
+        "--json",
+    ]);
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let names = selected_files(&plan);
+    assert!(
+        !names.contains(&"widget.mock.test.mts".to_string()),
+        "tests plan must not surface the suite-excluded stub: {names:?}"
+    );
+    assert!(names.contains(&"widget.test.mts".to_string()), "{names:?}");
+}
+
 // ── Part 2: next/dynamic() boundary traversal ───────────────────────────────
 
 #[test]
@@ -126,6 +155,19 @@ fn impact_traverses_next_dynamic_boundary_at_medium_confidence() {
             .iter()
             .any(|w| w["type"] == "dynamic-import"),
         "expected a dynamic-import warning: {plan:?}"
+    );
+}
+
+#[test]
+fn impact_traverses_default_export_next_dynamic_boundary() {
+    let root = fixture("tests-impact-next-dynamic");
+    // `export default dynamic(() => import('./foo.mts'))` must also surface its
+    // test through the dynamic boundary.
+    let plan = impact_json(&root, &["foo.mts"]);
+    let names = selected_files(&plan);
+    assert!(
+        names.contains(&"default-caller.test.mts".to_string()),
+        "expected default-caller.test.mts to be surfaced: {names:?}"
     );
 }
 
