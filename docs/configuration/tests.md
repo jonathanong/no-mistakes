@@ -93,6 +93,34 @@ report every `getByTestId` selector as uncovered. Declaring
 coverage match `getByTestId('x')` against `data-pw="x"`. See
 [`playwright-coverage`](../rules/playwright-coverage.md).
 
+## `tests.impact`
+
+Opt-in knobs for the [`tests impact`](../cli/tests-impact.md) query. Both lists
+default to empty, so without configuration `tests impact` is unchanged.
+
+```yaml
+tests:
+  impact:
+    alwaysIncludeTests:
+      - "**/*.mock.test.*"
+    registries:
+      - "**/auth-gated-code-splitting.mts"
+      - "**/*-registry.mts"
+```
+
+- `alwaysIncludeTests` — glob patterns for stub/mock test files that `tests
+  impact` must always surface when they transitively import a changed file, even
+  when a test-suite `exclude` glob would normally drop them from discovery. Use
+  this for mock stubs (e.g. `*.mock.test.*`) that run in a separate project but
+  still need updating whenever the file they stub changes. Keep the globs
+  test-shaped — a broad pattern like `**/*` would make every transitively
+  imported file look like a test.
+- `registries` — glob patterns for hand-maintained registry files (lazy-import
+  maps, code-splitting tables). When a changed file is imported by a file
+  matching one of these globs, `tests impact` emits a `registry-hint` warning so
+  you verify the registry entry is up to date. Prefix patterns with `**/` to
+  match at any depth.
+
 ## Swift
 
 `tests.swift.packages` lists SwiftPM package roots explicitly. `no-mistakes` does

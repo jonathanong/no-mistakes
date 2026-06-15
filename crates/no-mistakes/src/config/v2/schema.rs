@@ -12,8 +12,8 @@ mod string_or_list;
 mod tests_config;
 
 pub use tests_config::{
-    JestConfig, PlaywrightSelectors, PlaywrightTestConfig, StorybookConfig, SwiftConfig,
-    TestProjectPolicy, Tests, VitestConfig,
+    ImpactConfig, JestConfig, PlaywrightSelectors, PlaywrightTestConfig, StorybookConfig,
+    SwiftConfig, TestProjectPolicy, Tests, VitestConfig,
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

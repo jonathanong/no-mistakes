@@ -12,18 +12,23 @@ impl ImportCollector {
     }
 
     fn push_with_side_effect(&mut self, specifier: &str, kind: ImportKind, side_effect_only: bool) {
-        if self.suppress_imports
-            && !(self.collect_suppressed_runtime_imports
-                && matches!(kind, ImportKind::Dynamic | ImportKind::Require))
-        {
+        let runtime_import = matches!(kind, ImportKind::Dynamic | ImportKind::Require);
+        if self.suppress_imports && !(self.collect_suppressed_runtime_imports && runtime_import) {
             return;
         }
         if !specifier.is_empty() {
+            // Runtime imports collected only because the enclosing exported
+            // binding is reachable (the suppressed-but-runtime path) sit in
+            // anonymous callback scopes no static call reaches; flag them so
+            // reachability analysis keeps the resulting edge.
+            let runtime_reachable =
+                self.suppress_imports && self.collect_suppressed_runtime_imports && runtime_import;
             self.imports.push(ExtractedImport {
                 specifier: specifier.to_string(),
                 kind,
                 function_scope: self.function_stack.last().cloned(),
                 side_effect_only,
+                runtime_reachable,
             });
         }
     }

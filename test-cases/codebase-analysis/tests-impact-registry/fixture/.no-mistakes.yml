@@ -1,0 +1,6 @@
+version: 2
+tests:
+  impact:
+    registries:
+      - "**/auth-gated-code-splitting.mts"
+      - "**/*-registry.mts"

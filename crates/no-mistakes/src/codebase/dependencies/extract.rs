@@ -37,6 +37,12 @@ pub struct ExtractedImport {
     pub kind: ImportKind,
     pub function_scope: Option<String>,
     pub side_effect_only: bool,
+    /// `true` for a runtime (`import()`/`require()`) import collected from inside
+    /// an exported binding initializer, where the enclosing callback is never
+    /// statically called (e.g. `next/dynamic(() => import('./Foo'))`). Such
+    /// imports are reachable through the exported binding even though no static
+    /// call reaches their anonymous scope.
+    pub runtime_reachable: bool,
 }
 
 /// A statically visible function call in a file.

@@ -1,4 +1,5 @@
 use crate::config::v2::NoMistakesConfig;
+use globset::{Glob, GlobSet, GlobSetBuilder};
 use std::path::Path;
 
 type RunnerTestFilter =
@@ -6,6 +7,10 @@ type RunnerTestFilter =
 
 #[derive(Clone)]
 pub struct TestFileFilter {
+    /// Opt-in stub/mock test globs that are always treated as test files,
+    /// even when a configured suite `exclude` would otherwise drop them.
+    /// `None` when unconfigured, keeping the default path a no-op.
+    always_include: Option<GlobSet>,
     config_filter: Option<RunnerTestFilter>,
     suites: Vec<TestSuiteFilter>,
 }
@@ -18,6 +23,7 @@ struct TestSuiteFilter {
 impl TestFileFilter {
     pub fn new(root: &Path, config: &NoMistakesConfig) -> Self {
         Self {
+            always_include: compile_optional_globset(&config.tests.impact.always_include_tests),
             config_filter:
                 crate::codebase::rules::test_no_unmocked_dynamic_imports::config::test_filter(
                     root, config,
@@ -36,6 +42,14 @@ impl TestFileFilter {
     }
 
     pub fn is_match_rel(&self, rel_path: &str) -> bool {
+        // Opt-in stub/mock tests are always surfaced, bypassing suite excludes.
+        if self
+            .always_include
+            .as_ref()
+            .is_some_and(|set| set.is_match(rel_path))
+        {
+            return true;
+        }
         if let Some(is_match) = self.configured_suite_match(rel_path) {
             return is_match;
         }
@@ -77,6 +91,20 @@ impl TestSuiteFilter {
 
 fn fallback_test_path(rel_path: &str) -> bool {
     crate::codebase::test_discovery::fallback_test_path(rel_path)
+}
+
+/// Compile an opt-in glob list into a [`GlobSet`]. Returns `None` when the list
+/// is empty (the unconfigured default) or when any pattern is malformed, so a
+/// bad user glob degrades to "no always-include" instead of panicking.
+fn compile_optional_globset(patterns: &[String]) -> Option<GlobSet> {
+    if patterns.is_empty() {
+        return None;
+    }
+    let mut builder = GlobSetBuilder::new();
+    for pattern in patterns {
+        builder.add(Glob::new(pattern).ok()?);
+    }
+    builder.build().ok()
 }
 
 #[cfg(test)]
