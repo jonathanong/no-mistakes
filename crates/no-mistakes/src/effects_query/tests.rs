@@ -205,5 +205,11 @@ fn unknown_kind_with_no_effects_config_lists_none() {
 #[test]
 fn scan_file_ignores_unreadable_path() {
     let names = std::collections::HashMap::new();
-    assert!(scan_file(&fixture(), Path::new("/no/such/effects-file.ts"), 0, &names).is_empty());
+    assert!(super::extract::scan_file(
+        &fixture(),
+        Path::new("/no/such/effects-file.ts"),
+        0,
+        &names
+    )
+    .is_empty());
 }

@@ -143,23 +143,20 @@ pub fn run(
         .filter(|root| !root.is_empty())
         .collect();
 
-    let test_globs = build_globset(&config.tests.playwright.test_include)?;
-    let exclude_globs = build_globset(view.selector_exclude())?;
+    let scan = ScanConfig {
+        value,
+        regex: &regex,
+        roots: &normalized_roots,
+        test_globs: &build_globset(&config.tests.playwright.test_include)?,
+        exclude_globs: &build_globset(view.selector_exclude())?,
+    };
 
     let files = discover_files(root);
     let hits: Vec<(FileKind, DataPwHit)> = files
         .par_iter()
         .flat_map(|path| {
             let rel = relative_slash_path(root, path);
-            scan_file(
-                path,
-                &rel,
-                value,
-                &regex,
-                &normalized_roots,
-                &test_globs,
-                &exclude_globs,
-            )
+            scan_file(path, &rel, &scan)
         })
         .collect();
 
@@ -184,108 +181,7 @@ pub fn run(
     })
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum FileKind {
-    Source,
-    Test,
-}
-
-fn build_globset(patterns: &[String]) -> Result<GlobSet> {
-    let mut builder = GlobSetBuilder::new();
-    for pattern in patterns {
-        let glob = GlobBuilder::new(pattern.trim_start_matches("./"))
-            .literal_separator(false)
-            .build()?;
-        builder.add(glob);
-    }
-    Ok(builder.build()?)
-}
-
-fn discover_files(root: &Path) -> Vec<PathBuf> {
-    let mut files = Vec::new();
-    let walker = WalkDir::new(root)
-        .into_iter()
-        .filter_entry(|entry| !(entry.file_type().is_dir() && is_skip_dir(entry.path())));
-    for entry in walker.filter_map(|entry| entry.ok()) {
-        if !entry.file_type().is_file() {
-            continue;
-        }
-        let path = entry.path();
-        let ext = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
-        if SOURCE_EXTENSIONS.contains(&ext) {
-            files.push(path.to_path_buf());
-        }
-    }
-    files
-}
-
-fn is_skip_dir(path: &Path) -> bool {
-    path.file_name()
-        .and_then(|name| name.to_str())
-        .is_some_and(|name| {
-            name.starts_with('.')
-                || matches!(
-                    name,
-                    "node_modules" | "target" | "dist" | "build" | "coverage"
-                )
-        })
-}
-
-#[allow(clippy::too_many_arguments)]
-fn scan_file(
-    path: &Path,
-    rel: &str,
-    value: &str,
-    regex: &regex::Regex,
-    roots: &[String],
-    test_globs: &GlobSet,
-    exclude_globs: &GlobSet,
-) -> Vec<(FileKind, DataPwHit)> {
-    if exclude_globs.is_match(rel) {
-        return Vec::new();
-    }
-    let is_test = test_globs.is_match(rel);
-    let in_source_root = roots.is_empty() || roots.iter().any(|root| path_in_root(rel, root));
-    if !is_test && !in_source_root {
-        return Vec::new();
-    }
-    let kind = if is_test {
-        FileKind::Test
-    } else {
-        FileKind::Source
-    };
-    let Ok(source) = std::fs::read_to_string(path) else {
-        return Vec::new();
-    };
-    let mut hits = Vec::new();
-    for (index, line) in source.lines().enumerate() {
-        for caps in regex.captures_iter(line) {
-            let attribute = &caps["attr"];
-            let matched = caps
-                .name("dq")
-                .or_else(|| caps.name("sq"))
-                .map(|m| m.as_str())
-                .unwrap_or("");
-            if matched == value {
-                hits.push((
-                    kind,
-                    DataPwHit {
-                        file: rel.to_string(),
-                        line: index + 1,
-                        attribute: attribute.to_string(),
-                    },
-                ));
-            }
-        }
-    }
-    hits
-}
-
-/// Whether `rel` lives under directory prefix `root` (e.g. `app` matches
-/// `app/page.tsx` but not `apply.ts`).
-fn path_in_root(rel: &str, root: &str) -> bool {
-    rel == root || rel.starts_with(&format!("{root}/"))
-}
+include!("data_pw_query/scan.rs");
 
 #[cfg(test)]
 mod tests;

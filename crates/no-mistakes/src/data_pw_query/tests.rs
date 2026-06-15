@@ -164,15 +164,14 @@ fn value_not_found_is_empty() {
 fn scan_file_ignores_unreadable_path() {
     let regex = compile_selector_attribute_value_regex(&["data-pw".to_string()]).unwrap();
     let globs = build_globset(&[]).unwrap();
-    let hits = scan_file(
-        Path::new("/no/such/file.tsx"),
-        "x.tsx",
-        "v",
-        &regex,
-        &[],
-        &globs,
-        &globs,
-    );
+    let scan = ScanConfig {
+        value: "v",
+        regex: &regex,
+        roots: &[],
+        test_globs: &globs,
+        exclude_globs: &globs,
+    };
+    let hits = scan_file(Path::new("/no/such/file.tsx"), "x.tsx", &scan);
     assert!(hits.is_empty());
 }
 
