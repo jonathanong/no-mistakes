@@ -28,8 +28,12 @@ absolute).
 - `paths` matches if any include glob matches; `!`-negations apply
   gitignore-style (last match wins). `paths-ignore` excludes matching files.
 - Matching approximates GitHub's filter patterns with `globset`
-  (`*` does not cross `/`, `**` does). `+()`/`?()` extglob forms are not
-  supported. Matching is case-sensitive.
+  (`*` does not cross `/`, `**` does, and a `**suffix` form like `**.js` is
+  normalized). GitHub's extglob operators (`+()`, `?()`, `@()`, `!()`) are not
+  translated and such patterns are skipped. Matching is case-sensitive.
+- Only `paths:` / `paths-ignore:` filters are evaluated — `ci impact` is
+  branch-agnostic. A workflow that also restricts `branches:` is reported
+  whenever its paths match, even though it would only run on matching branches.
 - Workflows with only `workflow_dispatch`/`schedule`/`workflow_call` are not
   file-triggered and are omitted.
 - A job that calls a local reusable workflow (`uses: ./.github/workflows/x.yml`)
