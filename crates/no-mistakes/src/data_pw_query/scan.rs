@@ -64,21 +64,22 @@ struct ScanConfig<'a> {
 }
 
 fn scan_file(path: &Path, rel: &str, scan: &ScanConfig) -> Vec<(FileKind, DataPwHit)> {
-    if scan.exclude_globs.is_match(rel) {
-        return Vec::new();
-    }
     let matches_test = scan.test_globs.is_match(rel);
-    // An excluded (e.g. flaky) test file contributes nothing.
-    if matches_test && scan.test_exclude_globs.is_match(rel) {
-        return Vec::new();
-    }
-    let in_source_root =
-        scan.roots.is_empty() || scan.roots.iter().any(|root| path_in_root(rel, root));
-    let included = scan
-        .selector_include_globs
-        .is_none_or(|globs| globs.is_match(rel));
-    if !(matches_test || (in_source_root && included)) {
-        return Vec::new();
+    if matches_test {
+        // Test files are filtered only by `testExclude`; `selectorExclude` is a
+        // source-scanning setting and must not drop legitimate test usages.
+        if scan.test_exclude_globs.is_match(rel) {
+            return Vec::new();
+        }
+    } else {
+        let in_source_root =
+            scan.roots.is_empty() || scan.roots.iter().any(|root| path_in_root(rel, root));
+        let included = scan
+            .selector_include_globs
+            .is_none_or(|globs| globs.is_match(rel));
+        if !in_source_root || !included || scan.exclude_globs.is_match(rel) {
+            return Vec::new();
+        }
     }
     let is_test = matches_test;
     let kind = if is_test {

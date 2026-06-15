@@ -143,9 +143,11 @@ pub fn run(
     let entry_node = NodeId::File(normalize_path(&entry_abs));
 
     let tsconfig = resolve_tsconfig(&root, tsconfig)?;
-    let graph =
-        DepGraph::build_with_plan_and_config(&root, &tsconfig, GraphBuildPlan::all(), config_path)?;
     let allowed = runtime_edges();
+    // Build only the runtime-import edges we traverse, not every edge producer
+    // (routes, queues, React, Swift, …), which an `effects` query discards.
+    let plan = GraphBuildPlan::from_allowed(Some(&allowed));
+    let graph = DepGraph::build_with_plan_and_config(&root, &tsconfig, plan, config_path)?;
     let reachable = graph.deps_of(std::slice::from_ref(&entry_node), depth, Some(&allowed));
 
     // Map every reachable file (plus the entry itself at depth 0) to its depth.
