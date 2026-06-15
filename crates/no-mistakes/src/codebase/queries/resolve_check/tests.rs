@@ -1,0 +1,312 @@
+use super::*;
+use crate::cli::Format;
+use crate::codebase::queries::render::{render, resolve_format};
+use std::path::PathBuf;
+
+fn fixture_root() -> PathBuf {
+    named_fixture("queries")
+}
+
+fn named_fixture(name: &str) -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis")
+            .join(name)
+            .join("fixture"),
+    )
+}
+
+fn args(file: &str) -> ResolveCheckArgs {
+    ResolveCheckArgs {
+        file: PathBuf::from(file),
+        root: Some(fixture_root()),
+        tsconfig: None,
+        format: None,
+        json: false,
+    }
+}
+
+#[test]
+fn classifies_each_import() {
+    let json = run_json(args("broken.ts")).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&json).unwrap();
+    assert_eq!(value["allResolve"], false);
+    assert_eq!(
+        value["unresolved"],
+        serde_json::json!(["./missing", "@app/missing"])
+    );
+    let statuses: Vec<&str> = value["imports"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| row["status"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        statuses,
+        vec![
+            "resolved",
+            "unresolved",
+            "unresolved",
+            "external",
+            "external"
+        ]
+    );
+    assert_eq!(value["imports"][0]["resolved"], "util.ts");
+}
+
+#[test]
+fn clean_file_resolves() {
+    let report = compute(&args("consumer.ts")).unwrap();
+    assert!(report.all_resolve);
+    assert!(report.unresolved.is_empty());
+}
+
+#[test]
+fn tags_every_import_kind_and_absolute_path() {
+    let root = named_fixture("queries-kinds");
+    // Absolute file path exercises the absolute branch of input resolution.
+    let report = compute(&ResolveCheckArgs {
+        file: root.join("imports.ts"),
+        root: Some(root.clone()),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    let kinds: Vec<&str> = report.imports.iter().map(|row| row.kind).collect();
+    assert!(kinds.contains(&"type"));
+    assert!(kinds.contains(&"dynamic"));
+    assert!(kinds.contains(&"require"));
+    assert!(report.all_resolve);
+}
+
+#[test]
+fn type_import_of_declaration_module_resolves() {
+    let root = named_fixture("queries-kinds");
+    let report = compute(&ResolveCheckArgs {
+        file: PathBuf::from("dts-user.ts"),
+        root: Some(root),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(report.all_resolve);
+    assert_eq!(report.imports[0].resolved.as_deref(), Some("types.d.ts"));
+}
+
+#[test]
+fn type_import_of_declaration_index_resolves() {
+    // `./decl` resolves to `decl/index.d.ts`.
+    let root = named_fixture("queries-kinds");
+    let report = compute(&ResolveCheckArgs {
+        file: PathBuf::from("decl-user.ts"),
+        root: Some(root),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(report.all_resolve);
+    assert_eq!(
+        report.imports[0].resolved.as_deref(),
+        Some("decl/index.d.ts")
+    );
+}
+
+fn kinds_compute(file: &str) -> ResolveCheckReport {
+    compute(&ResolveCheckArgs {
+        file: PathBuf::from(file),
+        root: Some(named_fixture("queries-kinds")),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap()
+}
+
+#[test]
+fn exact_alias_to_declaration_resolves() {
+    // `@types` (exact path alias) backed only by `types.d.ts`.
+    let report = compute(&ResolveCheckArgs {
+        file: PathBuf::from("user.ts"),
+        root: Some(named_fixture("queries-alias")),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(report.all_resolve);
+    assert_eq!(report.imports[0].resolved.as_deref(), Some("types.d.ts"));
+}
+
+#[test]
+fn js_specifier_resolves_to_jsx_source() {
+    let report = kinds_compute("jsx-user.ts");
+    assert!(report.all_resolve);
+    assert_eq!(report.imports[0].resolved.as_deref(), Some("view.jsx"));
+}
+
+#[test]
+fn mjs_type_import_uses_mode_specific_declaration() {
+    let report = kinds_compute("mjs-dts-user.ts");
+    assert!(report.all_resolve);
+    assert_eq!(report.imports[0].resolved.as_deref(), Some("tm.d.mts"));
+}
+
+#[test]
+fn explicit_declaration_value_import_is_unresolved() {
+    let report = kinds_compute("dts-explicit-value-user.ts");
+    assert!(!report.all_resolve);
+    assert_eq!(report.unresolved, vec!["./types.d.ts".to_string()]);
+}
+
+#[test]
+fn value_import_of_declaration_module_is_unresolved() {
+    // A non-type import of a `.d.ts`-only module needs an emitted runtime module.
+    let root = named_fixture("queries-kinds");
+    let report = compute(&ResolveCheckArgs {
+        file: PathBuf::from("dts-value-user.ts"),
+        root: Some(root),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(!report.all_resolve);
+    assert_eq!(report.unresolved, vec!["./types".to_string()]);
+}
+
+#[test]
+fn type_import_via_js_resolves_to_declaration() {
+    // `import type { Foo } from './types.js'` resolves to `types.d.ts`.
+    let root = named_fixture("queries-kinds");
+    let report = compute(&ResolveCheckArgs {
+        file: PathBuf::from("dts-js-user.ts"),
+        root: Some(root),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(report.all_resolve);
+    assert_eq!(report.imports[0].resolved.as_deref(), Some("types.d.ts"));
+}
+
+#[test]
+fn extensionless_specifier_resolves_to_literal_file() {
+    let report = kinds_compute("rawmod-user.ts");
+    assert!(report.all_resolve);
+    assert_eq!(report.imports[0].resolved.as_deref(), Some("rawmod"));
+}
+
+#[test]
+fn plain_js_specifier_resolves_to_literal_file() {
+    // No TS source, so `./plain.js` resolves to the checked-in `.js`; a `.js`
+    // with neither a source nor a literal file is unresolved.
+    let report = kinds_compute("plainjs-user.ts");
+    assert_eq!(report.imports[0].resolved.as_deref(), Some("plain.js"));
+    assert_eq!(report.unresolved, vec!["./ghost.js".to_string()]);
+}
+
+#[test]
+fn literal_js_wins_over_jsx_sibling() {
+    // JoaMi regression: when both comp.js and comp.jsx exist, `import './comp.js'`
+    // must resolve to the literal comp.js, not the .jsx sibling.
+    let report = kinds_compute("compjs-user.ts");
+    assert!(report.all_resolve);
+    assert_eq!(report.imports[0].resolved.as_deref(), Some("comp.js"));
+}
+
+#[test]
+fn literal_js_wins_over_declaration_sibling() {
+    // JoaMh regression: when both declruntime.js and declruntime.d.ts exist,
+    // a value `import './declruntime.js'` resolves to the runtime JS, not .d.ts.
+    let report = kinds_compute("declruntime-user.ts");
+    assert!(report.all_resolve);
+    assert_eq!(
+        report.imports[0].resolved.as_deref(),
+        Some("declruntime.js")
+    );
+}
+
+#[test]
+fn esm_js_specifier_resolves_to_ts_source() {
+    // `./dep.js` resolves to the `dep.ts` source (NodeNext/ESM convention).
+    let root = named_fixture("queries-kinds");
+    let report = compute(&ResolveCheckArgs {
+        file: PathBuf::from("esm-user.ts"),
+        root: Some(root),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(report.all_resolve);
+    assert_eq!(report.imports[0].resolved.as_deref(), Some("dep.ts"));
+}
+
+#[test]
+fn tsx_file_parses() {
+    let root = named_fixture("queries-kinds");
+    let report = compute(&ResolveCheckArgs {
+        file: PathBuf::from("widget.tsx"),
+        root: Some(root),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(report.all_resolve);
+    assert_eq!(report.imports[0].specifier, "./dep");
+}
+
+#[test]
+fn renders_every_format() {
+    let report = compute(&args("broken.ts")).unwrap();
+    for format in [
+        Format::Json,
+        Format::Yml,
+        Format::Human,
+        Format::Paths,
+        Format::Md,
+    ] {
+        let mut buf = Vec::new();
+        render(&report, format, &mut buf).unwrap();
+        assert!(!buf.is_empty());
+    }
+    let mut human = Vec::new();
+    render(&report, Format::Human, &mut human).unwrap();
+    let text = String::from_utf8(human).unwrap();
+    assert!(text.contains("MISSING  ./missing"));
+    assert!(text.contains("external express"));
+    assert!(text.contains("ok       ./util -> util.ts"));
+}
+
+#[test]
+fn paths_lists_resolved_targets() {
+    let report = compute(&args("broken.ts")).unwrap();
+    let mut buf = Vec::new();
+    render(&report, Format::Paths, &mut buf).unwrap();
+    assert_eq!(String::from_utf8(buf).unwrap(), "util.ts\n");
+}
+
+#[test]
+fn resolve_format_precedence() {
+    assert_eq!(
+        resolve_format(true, Some(Format::Human), true),
+        Format::Json
+    );
+    assert_eq!(resolve_format(false, Some(Format::Md), true), Format::Md);
+    assert_eq!(resolve_format(false, None, true), Format::Human);
+    assert_eq!(resolve_format(false, None, false), Format::Json);
+}
+
+#[test]
+fn run_returns_exit_codes() {
+    // Exercises run() and both exit_code branches (value not comparable).
+    let _broken = run(args("broken.ts")).unwrap();
+    let _clean = run(args("consumer.ts")).unwrap();
+    let _ = compute(&args("broken.ts")).unwrap().exit_code();
+    let _ = compute(&args("consumer.ts")).unwrap().exit_code();
+}

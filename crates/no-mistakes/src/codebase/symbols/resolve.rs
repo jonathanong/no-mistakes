@@ -7,21 +7,10 @@ fn resolve_root(arg: Option<&Path>, cwd: &Path) -> PathBuf {
 }
 
 /// Load tsconfig from `--tsconfig` if given, else search upward from `root`,
-/// else return an empty config.
+/// else return an empty config. Thin wrapper over the shared resolver helper.
 #[inline(never)]
 fn resolve_tsconfig(arg: Option<&Path>, root: &Path) -> Result<TsConfig> {
-    if let Some(path) = arg {
-        return load_tsconfig(path).context(format!("loading tsconfig {}", path.display()));
-    }
-    if let Some(path) = find_tsconfig(root) {
-        return load_tsconfig(&path).context(format!("loading tsconfig {}", path.display()));
-    }
-    Ok(TsConfig {
-        dir: root.to_path_buf(),
-        paths: Vec::new(),
-        paths_dir: root.to_path_buf(),
-        base_url: None,
-    })
+    crate::codebase::ts_resolver::resolve_tsconfig(arg, root)
 }
 
 /// Resolve each input file path against `--root` first, falling back to cwd.
