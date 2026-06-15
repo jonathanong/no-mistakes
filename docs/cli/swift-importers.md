@@ -4,7 +4,7 @@ List the Swift source files that import or reference a given Swift file, followi
 `swift-import` and `swift-ref` edges (direct and transitive).
 
 ```sh
-no-mistakes swift importers swift-clients/core/Sources/VouchaAPI/Endpoint.swift --json
+no-mistakes swift importers swift-clients/core/Sources/CoreAPI/Endpoint.swift --json
 ```
 
 Each result is an importing file plus its traversal depth (1 = direct). Requires

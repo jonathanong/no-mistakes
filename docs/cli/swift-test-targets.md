@@ -5,7 +5,7 @@ following `swift-import`, `swift-ref`, and `swift-package` edges to files that
 belong to a test target.
 
 ```sh
-no-mistakes swift test-targets swift-clients/core/Sources/VouchaAPI/Endpoint.swift --json
+no-mistakes swift test-targets swift-clients/core/Sources/CoreAPI/Endpoint.swift --json
 ```
 
 Each result is a test target, its package directory, and the `swift test --filter`

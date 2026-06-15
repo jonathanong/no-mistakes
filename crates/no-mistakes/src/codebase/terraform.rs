@@ -101,16 +101,19 @@ pub(crate) fn collect_terraform_facts(
         .module_roots
         .iter()
         .map(|dir| {
-            crate::codebase::ts_resolver::normalize_path(&root.join(dir.trim_end_matches('/')))
+            let dir = dir.trim_end_matches(|c| c == '/' || c == '\\');
+            crate::codebase::ts_resolver::normalize_path(&root.join(dir))
         })
         .collect();
     let extensions = config.effective_extensions();
 
+    // Normalize discovered paths too, so `..` segments cannot cause the prefix
+    // check to miss valid files and so fact-map keys stay canonical.
     let tf_files: Vec<PathBuf> = all_files
         .iter()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(path))
         .filter(|path| has_extension(path, &extensions))
         .filter(|path| module_roots.iter().any(|root| path.starts_with(root)))
-        .cloned()
         .collect();
     if tf_files.is_empty() {
         return TerraformFactMap::default();
@@ -127,12 +130,16 @@ pub(crate) fn collect_terraform_facts(
 
 fn has_extension(path: &Path, extensions: &[String]) -> bool {
     // `.tf.json` is intentionally excluded: hcl-rs parses HCL native syntax only.
-    if path.extension().and_then(|e| e.to_str()) == Some("json") {
+    // Extension comparison is case-insensitive for case-insensitive filesystems.
+    let Some(ext) = path.extension().and_then(|e| e.to_str()) else {
+        return false;
+    };
+    if ext.eq_ignore_ascii_case("json") {
         return false;
     }
-    path.extension()
-        .and_then(|e| e.to_str())
-        .is_some_and(|ext| extensions.iter().any(|wanted| wanted == ext))
+    extensions
+        .iter()
+        .any(|wanted| wanted.eq_ignore_ascii_case(ext))
 }
 
 fn build_fact_map(file_facts: Vec<TerraformFileFacts>) -> TerraformFactMap {

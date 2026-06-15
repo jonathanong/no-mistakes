@@ -228,6 +228,38 @@ fn walks_template_directives_unary_parenthesis_and_index() {
 }
 
 #[test]
+fn resolves_indexed_references_and_terminates_on_splat() {
+    let facts = parse(
+        r#"
+        resource "aws_lb" "web" {
+          zone    = module.net[0].zone_id
+          ids     = aws_subnet.main[*].id
+        }
+        "#,
+    );
+    // Indexed module reference still resolves the module and its output.
+    let module_ref = facts
+        .references
+        .iter()
+        .find(|r| r.to_addr == "module.net")
+        .expect("indexed module ref");
+    assert_eq!(module_ref.module_output.as_deref(), Some("zone_id"));
+    // The splat reference resolves the resource name (chain terminates at splat).
+    assert!(facts
+        .references
+        .iter()
+        .any(|r| r.to_addr == "aws_subnet.main"));
+}
+
+#[test]
+fn has_extension_handles_uppercase_and_missing_extension() {
+    let extensions = vec!["tf".to_string()];
+    assert!(has_extension(Path::new("/repo/main.TF"), &extensions));
+    assert!(!has_extension(Path::new("/repo/main.TF.JSON"), &extensions));
+    assert!(!has_extension(Path::new("/repo/Makefile"), &extensions));
+}
+
+#[test]
 fn module_source_skips_non_string_and_missing_sources() {
     // `source` referencing a variable is not a static local path.
     let dynamic = parse(
