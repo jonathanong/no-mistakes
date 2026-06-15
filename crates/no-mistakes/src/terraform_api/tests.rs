@@ -47,6 +47,11 @@ fn outputs_reports_exports_and_consumers() {
         .iter()
         .any(|consumer| consumer.output == "zone_id" && consumer.from == "aws_route53_record.foo");
     assert!(consumes);
+    // A reference to an output the module does not export is not a consumer.
+    assert!(!result
+        .consumers
+        .iter()
+        .any(|consumer| consumer.output == "does_not_exist"));
 }
 
 #[test]

@@ -14,6 +14,9 @@ resource "aws_route53_record" "foo" {
 resource "aws_lb" "web" {
   name     = aws_route53_record.foo.name
   internal = local.is_internal
+  # A stale reference to an output the network module does not export; must not
+  # be reported as a consumer by `infra outputs`.
+  stale = module.network.does_not_exist
 }
 
 locals {

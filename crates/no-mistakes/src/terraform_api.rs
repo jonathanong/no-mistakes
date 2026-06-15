@@ -84,18 +84,23 @@ impl InfraReport {
             .collect();
         exports.sort();
 
+        let exported = self.facts.outputs_by_module.get(&dir);
         let mut consumers = Vec::new();
         for (to_addr, source_dir) in &self.facts.module_sources {
             if source_dir != &dir {
                 continue;
             }
             for reference in self.facts.refs_to.get(to_addr).into_iter().flatten() {
+                // Only count references to outputs the module actually exports, so
+                // a stale/typoed `module.x.bogus` is not reported as a consumer.
                 if let Some(output) = &reference.module_output {
-                    consumers.push(OutputConsumer {
-                        output: output.clone(),
-                        from: reference.from_addr.clone(),
-                        file: self.rel(&reference.from_file),
-                    });
+                    if exported.is_some_and(|names| names.contains(output)) {
+                        consumers.push(OutputConsumer {
+                            output: output.clone(),
+                            from: reference.from_addr.clone(),
+                            file: self.rel(&reference.from_file),
+                        });
+                    }
                 }
             }
         }
