@@ -18,8 +18,18 @@ Key options: `--root`, `--config`, `--tsconfig`, `--format`, and `--json`.
 Impact traversal follows runtime `import()` boundaries, including
 `next/dynamic(() => import('./Foo'))`: changing `Foo` surfaces the tests that
 reach it through the dynamic caller, at `medium` confidence with a
-`dynamic-import` warning. Computed specifiers (non-string-literal `import(...)`)
-cannot be resolved statically and are not traversed.
+`dynamic-import` warning. This covers the dynamic import assigned to or wrapped
+by an exported binding — `export const X = dynamic(…)`,
+`export default dynamic(…)`, `const X = dynamic(…); export default X`, and
+`export default memo(X)`.
+
+Limitations: computed specifiers (non-string-literal `import(...)`) cannot be
+resolved statically. A lazy binding reached only through further indirection —
+chained through a second private binding (`const W = memo(X); export default W;`)
+or referenced as JSX inside an exported component
+(`const X = dynamic(…); export function Page() { return <X /> }`) — is pruned by
+reachability analysis and may not be traced. Assign or export the
+`dynamic(…)` result directly for reliable detection.
 
 ## Stub tests and registry hints (opt-in)
 

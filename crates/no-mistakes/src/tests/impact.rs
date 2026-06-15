@@ -241,7 +241,12 @@ fn push_registry_hints(
         return;
     };
     let target_rel = relative_path(root, target);
-    for (dependent, _kind) in dependents {
+    for (dependent, kind) in dependents {
+        // A type-only reference does not "register" a runtime entry, so it must
+        // not produce a registry hint.
+        if *kind == EdgeKind::TypeImport {
+            continue;
+        }
         if let NodeId::File(dep_path) = dependent {
             let registry_rel = relative_path(root, dep_path);
             if registry_set.is_match(&registry_rel)

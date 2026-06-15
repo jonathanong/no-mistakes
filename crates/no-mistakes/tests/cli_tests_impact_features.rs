@@ -273,6 +273,23 @@ fn impact_tolerates_malformed_registry_glob() {
 }
 
 #[test]
+fn impact_registry_hint_ignores_type_only_imports() {
+    let root = fixture("tests-impact-registry");
+    // `types-registry.mts` only `import type`s the target, which is not a runtime
+    // registration, so it must not appear in any registry hint.
+    let plan = impact_json(&root, &["feature.mts"]);
+    let hints = registry_hints(&plan);
+    assert!(
+        !hints.iter().any(|hint| hint.contains("types-registry.mts")),
+        "type-only import must not produce a registry hint: {hints:?}"
+    );
+    // The value-import registries still produce hints.
+    assert!(hints
+        .iter()
+        .any(|hint| hint.contains("widgets-registry.mts")));
+}
+
+#[test]
 fn impact_registry_hint_renders_in_markdown() {
     let root = fixture("tests-impact-registry");
     let root_str = root.to_str().unwrap();
