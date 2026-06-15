@@ -1,4 +1,4 @@
-use super::generate::{dedupe_checks, dedupe_warnings, framework_configured};
+use super::generate::{dedupe_checks, dedupe_warnings, framework_configured, generic_checks};
 use super::*;
 use crate::config::v2::schema::NoMistakesConfig;
 use crate::tests::TestFramework;
@@ -127,6 +127,62 @@ fn dedupe_checks_merges_files_for_same_command() {
     let out = dedupe_checks(vec![mk(&["b.ts"]), mk(&["a.ts"])]);
     assert_eq!(out.len(), 1);
     assert_eq!(out[0].files, vec!["a.ts".to_string(), "b.ts".to_string()]);
+}
+
+#[test]
+fn generic_checks_excludes_deleted_from_append() {
+    use crate::config::v2::schema::{CheckCommandDef, CheckFileArgs};
+    let mut config = NoMistakesConfig::default();
+    config.checks.commands = vec![
+        CheckCommandDef {
+            name: "eslint".to_string(),
+            include: vec!["**/*.ts".to_string()],
+            command: vec!["eslint".to_string()],
+            file_args: CheckFileArgs::Append,
+            ..Default::default()
+        },
+        CheckCommandDef {
+            name: "only-deleted".to_string(),
+            include: vec!["gone/**".to_string()],
+            command: vec!["lint".to_string()],
+            file_args: CheckFileArgs::Append,
+            ..Default::default()
+        },
+        CheckCommandDef {
+            name: "tsc".to_string(),
+            include: vec!["**/*.ts".to_string()],
+            command: vec!["tsc".to_string()],
+            file_args: CheckFileArgs::None,
+            ..Default::default()
+        },
+    ];
+    let changed = vec![
+        "a.ts".to_string(),
+        "b.ts".to_string(),
+        "gone/x.ts".to_string(),
+    ];
+    let deleted: BTreeSet<String> = ["a.ts".to_string(), "gone/x.ts".to_string()]
+        .into_iter()
+        .collect();
+    let checks = generic_checks(&config, &changed, &deleted).unwrap();
+    // Append: deleted files are dropped from the per-file args.
+    let eslint = checks.iter().find(|c| c.name == "eslint").unwrap();
+    assert_eq!(
+        eslint.command,
+        vec!["eslint".to_string(), "b.ts".to_string()]
+    );
+    // Append where every match is deleted: skipped entirely.
+    assert!(!checks.iter().any(|c| c.name == "only-deleted"));
+    // Whole-project check still triggers despite the deletion.
+    assert!(checks.iter().any(|c| c.name == "tsc"));
+}
+
+#[test]
+fn shell_quote_escapes_unsafe_tokens() {
+    assert_eq!(shell_quote("vitest"), "vitest");
+    assert_eq!(shell_quote("src/a b.ts"), "'src/a b.ts'");
+    assert_eq!(shell_quote("it's"), "'it'\\''s'");
+    assert_eq!(shell_quote(""), "''");
 }
 
 #[test]

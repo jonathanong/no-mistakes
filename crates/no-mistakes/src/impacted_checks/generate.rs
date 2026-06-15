@@ -26,6 +26,11 @@ pub fn generate_impacted_checks(args: &ImpactedChecksArgs) -> Result<ImpactedChe
             .iter()
             .map(|file| relative_slash(&root, file)),
     );
+    let deleted: BTreeSet<String> = collected
+        .deleted
+        .iter()
+        .map(|file| relative_slash(&root, file))
+        .collect();
 
     let mut checks: Vec<CheckCommand> = Vec::new();
     let mut warnings: Vec<Warning> = Vec::new();
@@ -57,7 +62,7 @@ pub fn generate_impacted_checks(args: &ImpactedChecksArgs) -> Result<ImpactedChe
         }
     }
 
-    checks.extend(generic_checks(&config, &changed_files)?);
+    checks.extend(generic_checks(&config, &changed_files, &deleted)?);
 
     Ok(ImpactedChecksReport {
         changed_files,
@@ -87,9 +92,10 @@ pub(super) fn framework_configured(config: &NoMistakesConfig, framework: TestFra
     }
 }
 
-fn generic_checks(
+pub(super) fn generic_checks(
     config: &NoMistakesConfig,
     changed_files: &[String],
+    deleted: &BTreeSet<String>,
 ) -> Result<Vec<CheckCommand>> {
     let mut out = Vec::new();
     for def in &config.checks.commands {
@@ -107,14 +113,26 @@ fn generic_checks(
             continue;
         }
         let mut command = def.command.clone();
-        if def.file_args == CheckFileArgs::Append {
-            command.extend(matched.iter().cloned());
-        }
+        let files = if def.file_args == CheckFileArgs::Append {
+            // Append only surviving files — a per-file command (e.g. eslint) on a
+            // deleted path would fail. Whole-project checks still trigger below.
+            let appended: Vec<String> = matched
+                .into_iter()
+                .filter(|f| !deleted.contains(f))
+                .collect();
+            if appended.is_empty() {
+                continue;
+            }
+            command.extend(appended.iter().cloned());
+            appended
+        } else {
+            matched
+        };
         out.push(CheckCommand {
             name: def.name.clone(),
             kind: CheckKind::Generic,
             command,
-            files: matched,
+            files,
         });
     }
     Ok(out)

@@ -96,18 +96,23 @@ pub enum PermissionLevel {
 /// The GitHub Actions permission scopes used to expand `read-all`/`write-all`.
 pub const PERMISSION_SCOPES: &[&str] = &[
     "actions",
+    "artifact-metadata",
     "attestations",
     "checks",
+    "code-quality",
     "contents",
     "deployments",
+    "discussions",
     "id-token",
     "issues",
+    "models",
     "packages",
     "pages",
     "pull-requests",
     "repository-projects",
     "security-events",
     "statuses",
+    "vulnerability-alerts",
 ];
 
 /// A non-fatal problem encountered while loading workflows.

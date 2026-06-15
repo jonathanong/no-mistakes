@@ -109,11 +109,34 @@ fn render(report: &ImpactedChecksReport, format: Format) -> Result<String> {
         Format::Paths => report
             .checks
             .iter()
-            .map(|check| format!("{}\n", check.command.join(" ")))
+            .map(|check| format!("{}\n", shell_join(&check.command)))
             .collect(),
         Format::Md => render_text(report, "- "),
         Format::Human => render_text(report, ""),
     })
+}
+
+/// Join command tokens with POSIX shell quoting so the `paths` output is safe to
+/// `eval` even when a file path contains spaces or shell metacharacters.
+fn shell_join(command: &[String]) -> String {
+    command
+        .iter()
+        .map(|token| shell_quote(token))
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+fn shell_quote(token: &str) -> String {
+    let safe = !token.is_empty()
+        && token.chars().all(|c| {
+            c.is_ascii_alphanumeric()
+                || matches!(c, '_' | '-' | '.' | '/' | ':' | '=' | '@' | ',' | '+')
+        });
+    if safe {
+        token.to_string()
+    } else {
+        format!("'{}'", token.replace('\'', "'\\''"))
+    }
 }
 
 fn render_text(report: &ImpactedChecksReport, bullet: &str) -> String {
