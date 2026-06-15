@@ -211,6 +211,22 @@ fn framework_present_detects_config_file() {
         &config,
         TestFramework::Swift
     ));
+
+    // testPlan full-suite triggers alone mark the framework present (no config
+    // file needed): the basic fixture root has no vitest.config file.
+    use crate::config::v2::schema::TestPlanIgnoredChangedTestsFramework;
+    let mut plan_config = NoMistakesConfig::default();
+    plan_config
+        .test_plan
+        .vitest
+        .full_suite_triggers
+        .ignore_changed_tests
+        .push(TestPlanIgnoredChangedTestsFramework::Vitest);
+    assert!(framework_present(
+        &fixture(),
+        &plan_config,
+        TestFramework::Vitest
+    ));
 }
 
 #[test]
