@@ -18,7 +18,10 @@ References are counted from import edges, including re-export barrels (named and
 `export *`), namespace imports (`import * as ns`), and default imports. Dynamic or
 string-keyed access (`obj["fn"]`) and inline import-type references
 (`type T = import('./x').Foo`) are not detected, so a "dead" verdict means "no
-file imports this symbol."
+file imports this symbol." Wildcard edges are counted conservatively: an
+`export *` barrel or `import * as ns` that may forward a symbol keeps it
+"referenced" even if that specific symbol is shadowed or unused through the
+barrel — `dead-exports` favors a false "referenced" over a false "dead".
 
 Key options: `--root`, `--tsconfig`, `--format`, and `--json`.
 

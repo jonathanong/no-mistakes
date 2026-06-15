@@ -1,5 +1,5 @@
 use super::render::{render, resolve_format, to_json, Report};
-use super::reverse::{build_index, export_importer_paths, importer_paths};
+use super::reverse::{build_index, direct_importer_paths, export_importer_paths};
 use super::shared::{read_symbols, rel_str, resolve_target};
 use crate::cli::Format;
 use crate::codebase::ts_symbols::Export;
@@ -97,7 +97,7 @@ fn compute(args: &DeadExportsArgs) -> Result<DeadExportsReport> {
                 Some(export) => {
                     export_importer_paths(&index, &target.abs_file, export, &target.root)
                 }
-                None => importer_paths(&index, &target.abs_file, name, &target.root),
+                None => direct_importer_paths(&index, &target.abs_file, name, &target.root),
             };
             DeadResult {
                 name: name.clone(),

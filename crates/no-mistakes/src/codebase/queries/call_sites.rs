@@ -106,11 +106,15 @@ fn local_names_by_file(
                 }
             }
         }
-        // `export *` barrels forward `name` unchanged under the wildcard `*`.
-        if let Some(records) = index.importers_of(&file, "*") {
-            for (importer, _local, is_reexport) in records {
-                if *is_reexport {
-                    worklist.push((importer.clone(), name.clone()));
+        // Anonymous `export *` barrels (local name `*`) forward `name`
+        // unchanged. Default is not forwarded by `export *`, and a named
+        // `export * as ns` is not a transparent forward, so neither is followed.
+        if name != "default" {
+            if let Some(records) = index.importers_of(&file, "*") {
+                for (importer, local, is_reexport) in records {
+                    if *is_reexport && local == "*" {
+                        worklist.push((importer.clone(), name.clone()));
+                    }
                 }
             }
         }
@@ -141,6 +145,15 @@ fn sites_for_file(path: &Path, names: &HashSet<String>, root: &Path) -> Vec<Call
 fn compute(args: &CallSitesArgs) -> Result<CallSitesReport> {
     let target = resolve_target(&args.file, args.root.as_deref(), args.tsconfig.as_deref())?;
     let symbols = read_symbols(&target.abs_file)?;
+    anyhow::ensure!(
+        symbols
+            .exports
+            .iter()
+            .any(|export| export.name == args.export_name),
+        "`{}` is not an export of {}",
+        args.export_name,
+        args.file.display()
+    );
     let index = build_index(&target)?;
     let by_file = local_names_by_file(&index, &symbols, &target.abs_file, &args.export_name);
 

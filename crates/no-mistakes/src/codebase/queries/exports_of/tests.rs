@@ -99,6 +99,23 @@ fn star_export_row_shows_concrete_importers() {
 }
 
 #[test]
+fn namespace_reexport_is_not_treated_as_star_row() {
+    // `export * as api from './mod'` is a concrete export named `api`, so its
+    // importers are only consumers of `api` — not every importer of the file.
+    let args = ExportsOfArgs {
+        file: PathBuf::from("ns-reexport.ts"),
+        root: Some(named_fixture("queries-reexport")),
+        tsconfig: None,
+        no_importers: false,
+        format: None,
+        json: false,
+    };
+    let report = compute(&args).unwrap();
+    let api = report.exports.iter().find(|e| e.name == "api").unwrap();
+    assert_eq!(api.importers, vec!["api-consumer.ts".to_string()]);
+}
+
+#[test]
 fn reexport_resolves_target() {
     let report = compute(&args("barrel.ts", true)).unwrap();
     assert_eq!(report.exports[0].name, "used");

@@ -19,10 +19,13 @@ pub(crate) fn export_lookup_symbol(export: &Export) -> String {
     }
 }
 
-/// True for an `export * from '...'` row, whose consumers import concrete names
-/// from the re-exporting file rather than a single symbol.
+/// True for an anonymous `export * from '...'` row, whose consumers import
+/// concrete names from the re-exporting file rather than a single symbol. A
+/// named `export * as ns from '...'` has a concrete public name (`ns`) and is
+/// not a transparent star row.
 fn is_star_reexport(export: &Export) -> bool {
-    matches!(&export.kind, ExportKind::ReExport { imported, .. } if imported == "*")
+    export.name == "*"
+        && matches!(&export.kind, ExportKind::ReExport { imported, .. } if imported == "*")
 }
 
 fn dedup_sorted(mut paths: Vec<String>) -> Vec<String> {
@@ -74,6 +77,18 @@ pub(crate) fn importer_paths(
         paths.extend(wildcard_importers(index, file, root, symbol != "default"));
     }
     dedup_sorted(paths)
+}
+
+/// Importers recorded for exactly `(file, symbol)`, with no wildcard widening.
+/// Used for names that are not (or no longer) exports, where a namespace import
+/// or `export *` barrel does not reference the specific deleted name.
+pub(crate) fn direct_importer_paths(
+    index: &SymbolIndex,
+    file: &Path,
+    symbol: &str,
+    root: &Path,
+) -> Vec<String> {
+    dedup_sorted(symbol_importers(index, file, symbol, root))
 }
 
 /// All importers of any symbol of `file` — the consumers of an `export *` row,

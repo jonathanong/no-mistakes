@@ -115,6 +115,23 @@ fn explicit_name_that_is_not_an_export_is_dead() {
 }
 
 #[test]
+fn deleted_name_ignores_wildcard_importers() {
+    // `mod.ts` is consumed via `import * as m` and `export *` barrels, but a
+    // deleted name still has no concrete import edge, so it is dead.
+    let report = compute(&DeadExportsArgs {
+        file: PathBuf::from("mod.ts"),
+        names: vec!["removed".to_string()],
+        root: Some(named_fixture("queries-reexport")),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+    assert!(report.any_dead);
+    assert!(!report.results[0].referenced);
+}
+
+#[test]
 fn renders_formats_runs_and_exit_codes() {
     let report = compute(&args("util.ts", &[])).unwrap();
     let mut human = Vec::new();

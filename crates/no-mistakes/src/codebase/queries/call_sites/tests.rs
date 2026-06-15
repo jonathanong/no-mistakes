@@ -116,6 +116,14 @@ fn follows_named_and_star_barrels_without_scanning_them() {
 }
 
 #[test]
+fn unknown_export_is_rejected() {
+    let error = compute(&args(fixture_root("queries"), "util.ts", "nope"))
+        .err()
+        .unwrap();
+    assert!(error.to_string().contains("is not an export"));
+}
+
+#[test]
 fn finds_default_export_callers() {
     // `def` is the declaration name of the default export; external callers
     // import it under `default`.
