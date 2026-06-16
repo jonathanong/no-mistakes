@@ -88,7 +88,7 @@ impl<'a> Visit<'a> for BodyCollector<'a, '_> {
 
     fn visit_export_default_declaration(
         &mut self,
-        decl: &oxc::ast::ast::ExportDefaultDeclaration<'a>,
+        decl: &oxc_ast::ast::ExportDefaultDeclaration<'a>,
     ) {
         if let ExportDefaultDeclarationKind::ArrayExpression(array) = &decl.declaration {
             let entries = array
@@ -106,10 +106,10 @@ impl<'a> Visit<'a> for BodyCollector<'a, '_> {
                 .properties
                 .iter()
                 .filter_map(|property| match property {
-                    oxc::ast::ast::ObjectPropertyKind::ObjectProperty(prop) => {
+                    oxc_ast::ast::ObjectPropertyKind::ObjectProperty(prop) => {
                         Some(self.entry_from_property(prop))
                     }
-                    oxc::ast::ast::ObjectPropertyKind::SpreadProperty(_) => None,
+                    oxc_ast::ast::ObjectPropertyKind::SpreadProperty(_) => None,
                 })
                 .collect();
             self.container = Some(RawContainer {
@@ -136,7 +136,7 @@ impl BodyCollector<'_, '_> {
 
     /// Object-literal entry: keep the full `key: value` span as the shape while
     /// resolving the import from the value.
-    fn entry_from_property(&self, property: &oxc::ast::ast::ObjectProperty<'_>) -> RegistryEntry {
+    fn entry_from_property(&self, property: &oxc_ast::ast::ObjectProperty<'_>) -> RegistryEntry {
         RegistryEntry {
             line: byte_offset_to_line(self.source, property.span.start as usize) as usize,
             entry_import: expression_import(&property.value, self.imports),

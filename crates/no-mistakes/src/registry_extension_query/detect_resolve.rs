@@ -66,7 +66,7 @@ fn new_expression_import(
 }
 
 /// Find a `() => import("...")` dynamic import inside a function body.
-fn dynamic_import(body: &oxc::ast::ast::FunctionBody<'_>) -> Option<EntryImport> {
+fn dynamic_import(body: &oxc_ast::ast::FunctionBody<'_>) -> Option<EntryImport> {
     let mut finder = ImportExprFinder { specifier: None };
     finder.visit_function_body(body);
     finder.specifier.map(|specifier| EntryImport {

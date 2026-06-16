@@ -18,7 +18,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use anyhow::Result;
-use oxc::ast::ast::{
+use oxc_ast::ast::{
     Argument, CallExpression, ExportDefaultDeclarationKind, Expression, ImportDeclaration,
     ImportDeclarationSpecifier, ImportExpression, NewExpression,
 };
@@ -81,7 +81,7 @@ pub fn run(root: &Path, registry_file: &Path) -> Result<RegistryExtensionReport>
 }
 
 fn analyze(
-    program: &oxc::ast::ast::Program<'_>,
+    program: &oxc_ast::ast::Program<'_>,
     source: &str,
     registry_file: String,
 ) -> Result<RegistryExtensionReport> {

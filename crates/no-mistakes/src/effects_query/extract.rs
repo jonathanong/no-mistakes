@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use oxc::ast::ast::{CallExpression, Expression, Function, NewExpression, VariableDeclarator};
+use oxc_ast::ast::{CallExpression, Expression, Function, NewExpression, VariableDeclarator};
 use oxc_ast_visit::{walk, Visit};
 
 use crate::codebase::ts_source::{byte_offset_to_line, relative_slash_path};
@@ -120,7 +120,7 @@ fn declarator_function_name(declarator: &VariableDeclarator<'_>) -> Option<Strin
         return None;
     }
     match &declarator.id {
-        oxc::ast::ast::BindingPattern::BindingIdentifier(id) => Some(id.name.to_string()),
+        oxc_ast::ast::BindingPattern::BindingIdentifier(id) => Some(id.name.to_string()),
         _ => None,
     }
 }
