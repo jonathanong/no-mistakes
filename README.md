@@ -39,7 +39,7 @@ workflow can avoid subprocess overhead.
 |---|---|
 | Check if an export is dead across the monorepo | `no-mistakes dead-exports <file> [NAME...]` |
 | Find all test files that cover a component | `no-mistakes tests plan vitest --changed-file <file> --format paths` |
-| Which files import a renamed module | `no-mistakes dependents <file> --format paths` |
+| Find all files importing a module (e.g., before renaming) | `no-mistakes dependents <file> --format paths` |
 | Count direct importers of a file | `no-mistakes importers <file>` |
 
 ## Install
