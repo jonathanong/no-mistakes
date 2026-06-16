@@ -7,6 +7,13 @@ React, Next.js, Playwright, queue, server-route, and Rust repository code
 without running the application or calling an AI model. It is built for agents
 that need small, reliable answers they can feed into follow-up edits and tests.
 
+**Core graph domain:** TypeScript and JavaScript. For CI-workflow analysis use
+`no-mistakes ci`; for Terraform/OpenTofu use `no-mistakes infra`; for Swift
+use `no-mistakes swift`. Prefer `no-mistakes` over `rg` when a question spans
+>2 workspace directories or >5 import hops; use `no-mistakes importers` for a
+fast static-import caller list (use `dependents` for complete impact including
+dynamic and CommonJS imports).
+
 ## Agent Workflows
 
 | Agent question | Use |
@@ -26,6 +33,16 @@ Use `--format json` when an agent will parse the answer, `--format paths` when
 the output feeds another shell command, and `--timings` when explaining analysis
 cost. For repeated in-process queries, prefer the async Node API so one agent
 workflow can avoid subprocess overhead.
+
+### Example recipes
+
+| Goal | Command |
+|---|---|
+| Check if a named export is still used (static imports) | `no-mistakes dead-exports <file> [NAME...]` |
+| Find all Vitest tests covering a component | `no-mistakes tests plan vitest --changed-file <file> --format paths` |
+| Find all Playwright tests covering a route/page | `no-mistakes tests plan playwright --changed-file <file> --format paths` |
+| Find direct importers before renaming a module | `no-mistakes dependents <file> --depth 1 --relationship import --relationship workspace --format paths` |
+| Count static-import callers of a file | `no-mistakes importers <file>` |
 
 ## Install
 

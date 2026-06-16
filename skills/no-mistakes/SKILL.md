@@ -1,6 +1,6 @@
 ---
 name: no-mistakes
-description: Answer structural TS/JS and app-graph questions deterministically. Use for imports, dependents, named exports/imports, test impact, test planning, Playwright coverage, React traits, queue/server graphs, fetches, lockfile diffs, and global no-mistakes checks.
+description: "Core: TS/JS module graph (imports, dependents, exports, test impact, Playwright, React, queue/server, fetches, lockfile, no-mistakes checks). Also: CI-workflow, Terraform/OpenTofu, and Swift graphs. Prefer over rg when a question spans >2 workspace dirs or >5 import hops."
 allowed-tools: Bash(no-mistakes:*) Bash(rg:*) Read Glob
 ---
 
@@ -10,6 +10,38 @@ Use `no-mistakes` before `rg` when the question is structural: what a TS/JS file
 imports, who imports it, what it exports, which tests are related, whether a
 queue job is connected, which server route owns an endpoint, what a Next.js
 route fetches, or what React traits a component has.
+
+## Scope
+
+**Core:** TypeScript/JavaScript module graphs — imports, dependents, exports,
+test impact, Playwright coverage, React traits, queue/server routes, Next.js
+fetches, lockfile diffs, and `no-mistakes check` rules.
+
+**Adjacent graph domains** (separate subcommands, not TS/JS module edges):
+`no-mistakes ci` — GitHub Actions workflow graphs ·
+`no-mistakes infra` — Terraform/OpenTofu resource graphs ·
+`no-mistakes swift` — Swift package graphs.
+
+## When To Reach For It
+
+✅ **Use `no-mistakes`** when the question spans >2 workspace dirs, involves
+>5 import hops, or requires transitive test-impact across a large graph.
+
+⚡ **Use `rg`** for: exact call lines or text content (comments, strings,
+prose). For structural graph questions outside TS/JS, see Command Selection:
+`.yml` → `ci` · `.tf` → `infra` · `.swift` → `swift` · Rust binary CI
+impact → `--relationship ci` · CSS/JSON asset imports →
+`--relationship asset`. Go source files have no graph domain — use `rg`.
+For "what directly imports this one file?" in a single directory,
+`no-mistakes importers <file>` is faster than a full graph walk.
+
+**Pre-implementation:** for existing TS/JS files, run the appropriate test
+planner before editing to discover affected tests first (for new files,
+rerun after creating them):
+- Vitest: `no-mistakes tests plan vitest --changed-file <file> --format paths`
+- Playwright (route/page changes): `no-mistakes tests plan playwright --changed-file <file> --format paths`
+
+See `references/tests.md`.
 
 ## Command Selection
 
