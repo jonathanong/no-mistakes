@@ -27,14 +27,17 @@ fetches, lockfile diffs, and `no-mistakes check` rules.
 ✅ **Use `no-mistakes`** when the question spans >2 workspace dirs, involves
 >5 import hops, or requires transitive test-impact across a large graph.
 
-⚡ **Use `rg`** for: exact call lines, non-import text (comments, strings), or
-file types not covered by `no-mistakes` graph domains (e.g. Go, Rust, CSS,
-JSON — use `ci`/`infra`/`swift` for structural questions on `.yml`/`.tf`/
-`.swift` files). For "what directly imports this one file?" in a single
-directory, `no-mistakes importers <file>` is faster than a full graph walk.
+⚡ **Use `rg`** for: exact call lines or text content (comments, strings,
+prose). For structural graph questions outside TS/JS, see Command Selection:
+`.yml` → `ci` · `.tf` → `infra` · `.swift` → `swift` · Rust binary CI
+impact → `--relationship ci` · CSS/JSON asset imports →
+`--relationship asset`. Go source files have no graph domain — use `rg`.
+For "what directly imports this one file?" in a single directory,
+`no-mistakes importers <file>` is faster than a full graph walk.
 
-**Pre-implementation:** before writing any TS/JS code, run the appropriate
-test planner to discover affected tests first:
+**Pre-implementation:** for existing TS/JS files, run the appropriate test
+planner before editing to discover affected tests first (for new files,
+rerun after creating them):
 - Vitest: `no-mistakes tests plan vitest --changed-file <file> --format paths`
 - Playwright (route/page changes): `no-mistakes tests plan playwright --changed-file <file> --format paths`
 

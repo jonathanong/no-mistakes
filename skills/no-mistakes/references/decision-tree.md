@@ -129,8 +129,10 @@ no-mistakes dependents src/auth.mts --filter 'backend/**' --filter 'integration-
   graph.
 - ⚡ Use `rg` when: you need the exact call line, the pattern may appear in
   non-import contexts (comments, strings, dynamic lookups), or the file type
-  is not covered by a `no-mistakes` graph domain (Go, Rust, CSS, JSON —
-  for `.yml` use `ci`, for `.tf` use `infra`, for `.swift` use `swift`).
+  has no `no-mistakes` graph domain (Go source, prose). For non-TS/JS
+  structural questions: `.yml` → `ci` · `.tf` → `infra` · `.swift` →
+  `swift` · Rust binary CI impact → `--relationship ci` · CSS/JSON asset
+  imports → `--relationship asset`.
 - For "what directly imports this one file?" in a single directory,
   `no-mistakes importers <file>` is faster and prints static-import callers.
   For complete impact including dynamic and CommonJS imports, use
