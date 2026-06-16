@@ -28,12 +28,17 @@ fetches, lockfile diffs, and `no-mistakes check` rules.
 >5 import hops, or requires transitive test-impact across a large graph.
 
 ⚡ **Use `rg`** for: exact call lines, non-import text (comments, strings), or
-non-TS/JS files. For "what directly imports this one file?" in a single
+file types not covered by `no-mistakes` graph domains (e.g. Go, Rust, CSS,
+JSON — use `ci`/`infra`/`swift` for structural questions on `.yml`/`.tf`/
+`.swift` files). For "what directly imports this one file?" in a single
 directory, `no-mistakes importers <file>` is faster than a full graph walk.
 
-**Pre-implementation:** before writing any TS/JS code, run
-`no-mistakes tests plan vitest --changed-file <file> --format paths` to
-discover affected tests first. See `references/tests.md`.
+**Pre-implementation:** before writing any TS/JS code, run the appropriate
+test planner to discover affected tests first:
+- Vitest: `no-mistakes tests plan vitest --changed-file <file> --format paths`
+- Playwright (route/page changes): `no-mistakes tests plan playwright --changed-file <file> --format paths`
+
+See `references/tests.md`.
 
 ## Command Selection
 

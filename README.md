@@ -11,7 +11,8 @@ that need small, reliable answers they can feed into follow-up edits and tests.
 `no-mistakes ci`; for Terraform/OpenTofu use `no-mistakes infra`; for Swift
 use `no-mistakes swift`. Prefer `no-mistakes` over `rg` when a question spans
 >2 workspace directories or >5 import hops; use `no-mistakes importers` for a
-fast single-file direct-caller list and count.
+fast static-import caller list (use `dependents` for complete impact including
+dynamic and CommonJS imports).
 
 ## Agent Workflows
 
