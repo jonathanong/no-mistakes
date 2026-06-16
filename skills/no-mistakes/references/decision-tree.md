@@ -123,6 +123,17 @@ no-mistakes dependents src/auth.mts --filter 'backend/**' --filter 'integration-
 **When to use rg instead of no-mistakes dependents for callers:**
 `no-mistakes dependents` answers "who imports this file/symbol" with resolution-correct graph traversal. Use `rg` when you need the specific line of code where a symbol is called, or when a pattern may appear in non-import contexts (template strings, comments, dynamic lookups).
 
+**Payoff threshold — when does `no-mistakes` beat `rg`?**
+- ✅ Use `no-mistakes` when: the question spans >2 workspace directories,
+  involves >5 import hops, or requires transitive test-impact across a large
+  graph.
+- ⚡ Use `rg` when: you need the exact call line, the pattern may appear in
+  non-import contexts (comments, strings, dynamic lookups), or the file is not
+  TS/JS (Go, Rust, CSS, JSON).
+- For "what directly imports this one file?" in a single directory,
+  `no-mistakes importers <file>` is faster than a full graph walk and prints
+  the count plus the list.
+
 **When to pass --tsconfig explicitly:**
 In a monorepo with per-package tsconfigs and no root `tsconfig.json`, auto-discovery may pick the wrong one. Pass `--tsconfig <pkg>/tsconfig.json` whenever you get empty or wrong results from a file inside a specific package.
 
