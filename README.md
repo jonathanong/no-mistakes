@@ -38,10 +38,11 @@ workflow can avoid subprocess overhead.
 
 | Goal | Command |
 |---|---|
-| Check if an export is dead across the monorepo | `no-mistakes dead-exports <file> [NAME...]` |
-| Find all test files that cover a component | `no-mistakes tests plan vitest --changed-file <file> --format paths` |
-| Find all files importing a module (e.g., before renaming) | `no-mistakes dependents <file> --format paths` |
-| Count direct importers of a file | `no-mistakes importers <file>` |
+| Check if a named export is still used (static imports) | `no-mistakes dead-exports <file> [NAME...]` |
+| Find all Vitest tests covering a component | `no-mistakes tests plan vitest --changed-file <file> --format paths` |
+| Find all Playwright tests covering a route/page | `no-mistakes tests plan playwright --changed-file <file> --format paths` |
+| Find direct importers before renaming a module | `no-mistakes dependents <file> --depth 1 --relationship import --format paths` |
+| Count static-import callers of a file | `no-mistakes importers <file>` |
 
 ## Install
 

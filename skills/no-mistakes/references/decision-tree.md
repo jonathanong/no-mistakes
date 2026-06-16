@@ -128,11 +128,13 @@ no-mistakes dependents src/auth.mts --filter 'backend/**' --filter 'integration-
   involves >5 import hops, or requires transitive test-impact across a large
   graph.
 - ⚡ Use `rg` when: you need the exact call line, the pattern may appear in
-  non-import contexts (comments, strings, dynamic lookups), or the file is not
-  TS/JS (Go, Rust, CSS, JSON).
+  non-import contexts (comments, strings, dynamic lookups), or the file type
+  is not covered by a `no-mistakes` graph domain (Go, Rust, CSS, JSON —
+  for `.yml` use `ci`, for `.tf` use `infra`, for `.swift` use `swift`).
 - For "what directly imports this one file?" in a single directory,
-  `no-mistakes importers <file>` is faster than a full graph walk and prints
-  the count plus the list.
+  `no-mistakes importers <file>` is faster and prints static-import callers.
+  For complete impact including dynamic and CommonJS imports, use
+  `no-mistakes dependents <file>`.
 
 **When to pass --tsconfig explicitly:**
 In a monorepo with per-package tsconfigs and no root `tsconfig.json`, auto-discovery may pick the wrong one. Pass `--tsconfig <pkg>/tsconfig.json` whenever you get empty or wrong results from a file inside a specific package.
