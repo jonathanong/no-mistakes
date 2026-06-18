@@ -10,10 +10,8 @@ fn normalize_discovery_path(path: &Path) -> PathBuf {
 pub(crate) fn is_under_skipped_dir(root: &Path, path: &Path, extra_skip: &HashSet<&str>) -> bool {
     path.strip_prefix(root).ok().is_some_and(|rel| {
         rel.components().any(|component| {
-            component
-                .as_os_str()
-                .to_str()
-                .is_some_and(|name| SKIP_DIRS.contains(&name) || extra_skip.contains(name))
+            let name = component.as_os_str().to_str();
+            name.is_some_and(|name| SKIP_DIRS.contains(&name) || extra_skip.contains(name))
         })
     })
 }

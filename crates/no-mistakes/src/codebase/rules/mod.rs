@@ -94,16 +94,21 @@ pub(crate) fn file_allowed_by_roots_and_skip(
     path: &Path,
     roots: &[PathBuf],
 ) -> bool {
-    if !roots.iter().any(|rule_root| path.starts_with(rule_root)) {
+    let mut matching_roots = roots.iter().filter(|rule_root| path.starts_with(rule_root));
+    let Some(first_root) = matching_roots.next() else {
         return false;
-    }
+    };
+
     if !crate::codebase::ts_source::is_under_skipped_dir(root, path, skip) {
         return true;
     }
-    roots.iter().any(|rule_root| {
-        path.starts_with(rule_root)
-            && !crate::codebase::ts_source::is_under_skipped_dir(rule_root, path, skip)
-    })
+
+    if !crate::codebase::ts_source::is_under_skipped_dir(first_root, path, skip) {
+        return true;
+    }
+
+    matching_roots
+        .any(|rule_root| !crate::codebase::ts_source::is_under_skipped_dir(rule_root, path, skip))
 }
 
 pub(crate) fn skip_dir_set(config: &crate::config::v2::NoMistakesConfig) -> HashSet<&str> {

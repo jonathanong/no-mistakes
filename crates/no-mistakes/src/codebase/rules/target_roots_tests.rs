@@ -135,3 +135,36 @@ fn target_roots_infer_vitejs_project_root() {
 
     assert_eq!(roots, vec![root.join("web")]);
 }
+
+#[test]
+fn file_allowed_rejects_files_outside_target_roots() {
+    let root = std::path::Path::new("/repo");
+    let skip = HashSet::new();
+    let roots = vec![std::path::PathBuf::from("/repo/app")];
+    let path = std::path::Path::new("/repo/packages/shared/src/lib.rs");
+
+    assert!(!file_allowed_by_roots_and_skip(root, &skip, path, &roots));
+}
+
+#[test]
+fn file_allowed_preserves_project_root_under_skipped_dir() {
+    let root = std::path::Path::new("/repo");
+    let skip = HashSet::from(["fixtures"]);
+    let roots = vec![std::path::PathBuf::from("/repo/fixtures/app")];
+    let path = std::path::Path::new("/repo/fixtures/app/src/lib.rs");
+
+    assert!(file_allowed_by_roots_and_skip(root, &skip, path, &roots));
+}
+
+#[test]
+fn file_allowed_preserves_later_root_under_skipped_dir() {
+    let root = std::path::Path::new("/repo");
+    let skip = HashSet::from(["generated"]);
+    let roots = vec![
+        std::path::PathBuf::from("/repo/app"),
+        std::path::PathBuf::from("/repo/app/generated"),
+    ];
+    let path = std::path::Path::new("/repo/app/generated/src/lib.rs");
+
+    assert!(file_allowed_by_roots_and_skip(root, &skip, path, &roots));
+}
