@@ -94,28 +94,21 @@ pub(crate) fn file_allowed_by_roots_and_skip(
     path: &Path,
     roots: &[PathBuf],
 ) -> bool {
-    // ⚡ Bolt optimization: Combine roots iteration and skip checks into a single pass
-    // to avoid multiple iterations and redundant `starts_with` and `is_under_skipped_dir` calls.
-    let mut inside_any_root = false;
-    let mut any_rule_allowed = false;
+    let mut matching_roots = roots.iter().filter(|rule_root| path.starts_with(rule_root));
+    let Some(first_root) = matching_roots.next() else {
+        return false;
+    };
 
-    for rule_root in roots {
-        if path.starts_with(rule_root) {
-            inside_any_root = true;
-            if !crate::codebase::ts_source::is_under_skipped_dir(rule_root, path, skip) {
-                any_rule_allowed = true;
-                break;
-            }
-        }
+    if !crate::codebase::ts_source::is_under_skipped_dir(root, path, skip) {
+        return true;
     }
 
-    if !inside_any_root {
-        false
-    } else if any_rule_allowed {
-        true
-    } else {
-        !crate::codebase::ts_source::is_under_skipped_dir(root, path, skip)
+    if !crate::codebase::ts_source::is_under_skipped_dir(first_root, path, skip) {
+        return true;
     }
+
+    matching_roots
+        .any(|rule_root| !crate::codebase::ts_source::is_under_skipped_dir(rule_root, path, skip))
 }
 
 pub(crate) fn skip_dir_set(config: &crate::config::v2::NoMistakesConfig) -> HashSet<&str> {
