@@ -193,7 +193,11 @@ function isFunctionParameterSource(node, context) {
 function findVariable(scope, name) {
   let variable = null;
   for (let current = scope; current && variable === null; current = current.upper) {
-    variable = current.variables.find((item) => item.name === name) || null;
+    if (current.set) {
+      variable = current.set.get(name) || null;
+    } else {
+      variable = current.variables.find((item) => item.name === name) || null;
+    }
   }
   return variable;
 }
