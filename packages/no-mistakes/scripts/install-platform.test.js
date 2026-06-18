@@ -7,31 +7,31 @@ test("supportedGlibc parses valid versions correctly", () => {
     supportedGlibc({
       getReport: () => ({ header: { glibcVersionRuntime: "2.35" } }),
     }),
-    true
+    true,
   );
   assert.equal(
     supportedGlibc({
       getReport: () => ({ header: { glibcVersionRuntime: "2.36" } }),
     }),
-    true
+    true,
   );
   assert.equal(
     supportedGlibc({
       getReport: () => ({ header: { glibcVersionRuntime: "3.0" } }),
     }),
-    true
+    true,
   );
   assert.equal(
     supportedGlibc({
       getReport: () => ({ header: { glibcVersionRuntime: "2.34" } }),
     }),
-    false
+    false,
   );
   assert.equal(
     supportedGlibc({
       getReport: () => ({ header: { glibcVersionRuntime: "1.99" } }),
     }),
-    false
+    false,
   );
 });
 
@@ -40,13 +40,13 @@ test("supportedGlibc uses glibcVersionCompiler when runtime is unavailable", () 
     supportedGlibc({
       getReport: () => ({ header: { glibcVersionCompiler: "2.35" } }),
     }),
-    true
+    true,
   );
   assert.equal(
     supportedGlibc({
       getReport: () => ({ header: { glibcVersionCompiler: "2.34" } }),
     }),
-    false
+    false,
   );
 });
 
@@ -56,13 +56,13 @@ test("supportedGlibc handles missing or invalid reports", () => {
     supportedGlibc({
       getReport: () => ({}),
     }),
-    false
+    false,
   );
   assert.equal(
     supportedGlibc({
       getReport: () => ({ header: {} }),
     }),
-    false
+    false,
   );
 });
 
@@ -71,12 +71,12 @@ test("supportedGlibc handles invalid version formats", () => {
     supportedGlibc({
       getReport: () => ({ header: { glibcVersionRuntime: "invalid" } }),
     }),
-    false
+    false,
   );
   assert.equal(
     supportedGlibc({
       getReport: () => ({ header: { glibcVersionRuntime: "2.invalid" } }),
     }),
-    false
+    false,
   );
 });
