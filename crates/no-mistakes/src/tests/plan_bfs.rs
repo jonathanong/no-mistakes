@@ -116,9 +116,11 @@ pub(crate) fn bfs_path_find(
                             owner_widened_files.insert(neighbor.clone());
                         }
                     }
-                    visited.insert(neighbor.clone());
-                    parents.insert(neighbor.clone(), (current.clone(), *kind));
-                    queue.push_back(neighbor.clone());
+                    if !visited.contains(neighbor) {
+                        visited.insert(neighbor.clone());
+                        parents.insert(neighbor.clone(), (current.clone(), *kind));
+                        queue.push_back(neighbor.clone());
+                    }
                 }
             }
         }

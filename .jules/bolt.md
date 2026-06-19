@@ -13,3 +13,6 @@
 ## 2026-06-16 - [Optimize nested iterator checks]
 **Learning:** `file_allowed_by_roots_and_skip` in `crates/no-mistakes/src/codebase/rules/mod.rs` was redundantly evaluating `.iter().any(|rule_root| ... )` over the rule roots array multiple times, causing repeated `.starts_with` and `is_under_skipped_dir` evaluations.
 **Action:** When performing `any()` checks that compute expensive values or need to test multiple conditions on the matching items, combine them into a single pass (`for ... in`) to short-circuit properly and avoid redundant function calls.
+## 2026-06-25 - [Optimize BFS HashSet Insertions]
+**Learning:** In Rust, when tracking visited nodes in a HashSet during hot loops (like graph traversals), unconditionally calling `visited.insert(value.clone())` with expensive types like `NodeId` or `PathBuf` causes unnecessary heap allocations for already visited elements.
+**Action:** Use a pre-check `if !visited.contains(&value) { visited.insert(value.clone()); ... }` to prevent these allocations, resulting in measurable performance improvements in traversals.
