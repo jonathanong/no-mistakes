@@ -213,4 +213,32 @@ test("parses sha256 files with or without filenames", () => {
   assert.equal(parseChecksum(`${hash} *binary\n`, "binary"), hash);
   assert.equal(parseChecksum(`${hash}  /tmp/release/binary\n`, "binary"), hash);
   assert.throws(() => parseChecksum(`${hash} other\n`, "binary"), /No SHA-256 checksum/);
+
+  // uppercase hashes
+  const upperHash = hash.toUpperCase();
+  assert.equal(parseChecksum(`${upperHash} binary\n`, "binary"), hash);
+
+  // CRLF line endings
+  assert.equal(parseChecksum(`${hash} binary\r\n`, "binary"), hash);
+
+  // Empty lines and whitespace
+  assert.equal(parseChecksum(`\n   \n${hash} binary\n\n`, "binary"), hash);
+  assert.equal(parseChecksum(`  ${hash} binary  \n`, "binary"), hash);
+
+  // Invalid hashes
+  const shortHash = "a".repeat(63);
+  const longHash = "a".repeat(65);
+  const invalidHex = "z".repeat(64);
+  assert.throws(() => parseChecksum(`${shortHash} binary\n`, "binary"), /No SHA-256 checksum/);
+  assert.throws(() => parseChecksum(`${longHash} binary\n`, "binary"), /No SHA-256 checksum/);
+  assert.throws(() => parseChecksum(`${invalidHex} binary\n`, "binary"), /No SHA-256 checksum/);
+
+  // Multiline ignoring other files and finding the correct one
+  const otherHash = "b".repeat(64);
+  const multilineText = `
+${otherHash}  other_binary
+${hash}  binary
+${otherHash}  another_binary
+`;
+  assert.equal(parseChecksum(multilineText, "binary"), hash);
 });
