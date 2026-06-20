@@ -76,7 +76,8 @@ pub(crate) fn lazy_import_deps_of_with_files(
                 if is_symbol_owner_bridge(&node, &neighbor) && !root_nodes.contains(&node) {
                     continue;
                 }
-                if visited.insert(neighbor.clone()) {
+                if !visited.contains(&neighbor) {
+                    visited.insert(neighbor.clone());
                     let idx = result.len();
                     result.push(NodeEntry {
                         node: neighbor.clone(),
@@ -171,7 +172,8 @@ fn bfs(
                     continue;
                 }
 
-                if visited.insert(neighbor.clone()) {
+                if !visited.contains(neighbor) {
+                    visited.insert(neighbor.clone());
                     let next_depth = depth + 1;
                     if should_emit_node(&node, neighbor, *kind, allowed, owner_bridge_allowed) {
                         let idx = result.len();
