@@ -60,22 +60,35 @@ Use this before adding a new directory to `tests.playwright.selectorRoots` or
 before deciding whether selectors under a directory are intentionally uncovered.
 
 ```bash
-rg -n 'selectorRoots|selectorExclude|testIdAttribute|testIds' .no-mistakes.yml
+rg -n 'selectorRoots|selectorInclude|selectorExclude|testIdAttribute|testIds|componentTestIds' .no-mistakes.yml
 rg -n 'data-pw=|data-testid=|dataPw|testId' web/path/to/candidate-root another/path/to/root
 ```
 
-Replace the example root paths with the candidate directories from the current
-repository. To preview uncovered selectors for new roots, first add the
-candidate directories to `tests.playwright.selectorRoots` in `.no-mistakes.yml`
-or in a temporary config copy, then run:
+Replace `.no-mistakes.yml` with the effective config path for the repository
+(`.no-mistakes.yml`, `.no-mistakes.yaml`, `.no-mistakes.json`,
+`.no-mistakes.jsonc`, or the explicit `--config` path). Replace the candidate
+root paths with directories from the current repository, and derive the selector
+grep terms from configured `selectors.testIds` and `selectors.componentTestIds`
+keys/values. The default example above only covers default-ish `data-pw`,
+`data-testid`, `dataPw`, and `testId` names.
+
+To preview uncovered selectors for new roots, first add the candidate
+directories to `tests.playwright.selectorRoots` and update `selectorInclude`
+when it would otherwise filter them out. Make that change in the real config or
+in a temporary config copy. Then run:
 
 ```bash
 no-mistakes playwright check --json
+no-mistakes playwright check --config /tmp/no-mistakes-preview.yml --json
 ```
+
+Use the first command when editing the real config and the second command when
+previewing with a temporary config copy.
 
 Report the preview as:
 
-- existing selector roots and excludes from `.no-mistakes.yml`;
+- effective config path, selector roots, includes, excludes, and tracked
+  selector attributes or component test-id props;
 - candidate directories that contain literal selector-bearing JSX or selector
   props;
 - selector-bearing directories not yet covered by `selectorRoots`;
