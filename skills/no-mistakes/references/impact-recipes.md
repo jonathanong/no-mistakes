@@ -3,7 +3,8 @@
 Use these recipes when a PR changes UI surfaces, shared TS helpers, workflow
 files, or static-analysis gates and the next action is not obvious from a single
 command. Prefer `--format json` for agent parsing and `--format paths` when
-turning results into local commands.
+turning results into local commands. Playwright subcommands are the exception:
+they use `--json` for structured output.
 
 Recipe index:
 
@@ -18,7 +19,7 @@ For a changed component file or export:
 
 ```bash
 no-mistakes react usages web/components/Button.tsx#Button --format json
-no-mistakes playwright related web/components/Button.tsx --format json
+no-mistakes playwright related web/components/Button.tsx --json
 no-mistakes tests plan playwright --changed-file web/components/Button.tsx --format paths
 no-mistakes impacted-checks web/components/Button.tsx --format paths
 ```
@@ -36,8 +37,8 @@ Read the results as:
   component before changing props or public component shape.
 - `playwright related` answers which browser tests already cover the route or
   selector-bearing component.
-- `tests plan playwright` and `impacted-checks` answer which local commands to
-  run after editing.
+- `tests plan playwright` prints selected test paths. Use `impacted-checks` when
+  you need runnable local validation commands after editing.
 - `data-pw` answers where a literal test id is declared in source and selected in
   tests. It does not match implicit `getByTestId("value")` calls, so use
   `playwright related` / `playwright tests` for coverage context.
@@ -45,7 +46,7 @@ Read the results as:
 Before finishing selector or route work, run the project coverage gate:
 
 ```bash
-no-mistakes playwright check --format json
+no-mistakes playwright check --json
 no-mistakes check --format json
 ```
 
@@ -61,11 +62,16 @@ before deciding whether selectors under a directory are intentionally uncovered.
 ```bash
 rg -n 'selectorRoots|selectorExclude|testIdAttribute|testIds' .no-mistakes.yml
 rg -n 'data-pw=|data-testid=|dataPw|testId' web/path/to/candidate-root another/path/to/root
-no-mistakes playwright check --format json
 ```
 
 Replace the example root paths with the candidate directories from the current
-repository.
+repository. To preview uncovered selectors for new roots, first add the
+candidate directories to `tests.playwright.selectorRoots` in `.no-mistakes.yml`
+or in a temporary config copy, then run:
+
+```bash
+no-mistakes playwright check --json
+```
 
 Report the preview as:
 
@@ -99,8 +105,9 @@ Use the outputs as:
 - `dependents FILE#SYMBOL` finds importers of the named export; namespace imports
   are file-level matches, so follow up with `rg` inside returned files when exact
   call lines matter.
-- `tests plan vitest` and `impacted-checks` choose validation commands from the
-  configured test plan and changed-file checks.
+- `tests plan vitest` prints selected test paths. Use `impacted-checks` when you
+  need runnable local validation commands from the configured test plan and
+  changed-file checks.
 
 For SQL/schema-adjacent helpers, no-mistakes follows TS/JS imports and configured
 checks. It does not query databases or infer dynamic schema usage; add explicit
