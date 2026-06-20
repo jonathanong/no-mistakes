@@ -5,6 +5,13 @@ files, or static-analysis gates and the next action is not obvious from a single
 command. Prefer `--format json` for agent parsing and `--format paths` when
 turning results into local commands.
 
+Recipe index:
+
+- React component selector impact
+- Selector-root expansion preview
+- TS helper or named export impact
+- Workflow and static-analysis changed files
+
 ## React component selector impact
 
 For a changed component file or export:
@@ -25,7 +32,7 @@ no-mistakes data-pw save-button --format json
 
 Read the results as:
 
-- `react usages` answers which callsites, stories, and tests import or render the
+- `react usages` answers which call sites, stories, and tests import or render the
   component before changing props or public component shape.
 - `playwright related` answers which browser tests already cover the route or
   selector-bearing component.
@@ -53,9 +60,12 @@ before deciding whether selectors under a directory are intentionally uncovered.
 
 ```bash
 rg -n 'selectorRoots|selectorExclude|testIdAttribute|testIds' .no-mistakes.yml
-rg -n 'data-pw=|data-testid=|dataPw|testId' web/lib/navigation web/lib/podcast-player
+rg -n 'data-pw=|data-testid=|dataPw|testId' web/path/to/candidate-root another/path/to/root
 no-mistakes playwright check --format json
 ```
+
+Replace the example root paths with the candidate directories from the current
+repository.
 
 Report the preview as:
 
