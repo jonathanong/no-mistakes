@@ -11,7 +11,7 @@ For a changed component file or export:
 
 ```bash
 no-mistakes react usages web/components/Button.tsx#Button --format json
-no-mistakes playwright related web/components/Button.tsx --json
+no-mistakes playwright related web/components/Button.tsx --format json
 no-mistakes tests plan playwright --changed-file web/components/Button.tsx --format paths
 no-mistakes impacted-checks web/components/Button.tsx --format paths
 ```
@@ -38,7 +38,7 @@ Read the results as:
 Before finishing selector or route work, run the project coverage gate:
 
 ```bash
-no-mistakes playwright check --json
+no-mistakes playwright check --format json
 no-mistakes check --format json
 ```
 
@@ -54,7 +54,7 @@ before deciding whether selectors under a directory are intentionally uncovered.
 ```bash
 rg -n 'selectorRoots|selectorExclude|testIdAttribute|testIds' .no-mistakes.yml
 rg -n 'data-pw=|data-testid=|dataPw|testId' web/lib/navigation web/lib/podcast-player
-no-mistakes playwright check --json
+no-mistakes playwright check --format json
 ```
 
 Report the preview as:
