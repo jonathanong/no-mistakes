@@ -206,15 +206,13 @@ fn scan_refs(
     out: &mut Vec<CiEnvLocation>,
 ) {
     match value {
-        Value::String(s) => {
-            if reference_re.is_match(s) {
-                out.push(CiEnvLocation {
-                    kind: EnvLocationKind::Reference,
-                    scope,
-                    job: job.map(str::to_string),
-                    value: None,
-                });
-            }
+        Value::String(s) if reference_re.is_match(s) => {
+            out.push(CiEnvLocation {
+                kind: EnvLocationKind::Reference,
+                scope,
+                job: job.map(str::to_string),
+                value: None,
+            });
         }
         Value::Sequence(seq) => {
             for item in seq {

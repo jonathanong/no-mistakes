@@ -1,4 +1,5 @@
 pub mod agents_md_max_size;
+pub mod banned_paths;
 pub mod banned_renamed_files;
 pub mod config_path_references;
 pub mod doc_consistency;

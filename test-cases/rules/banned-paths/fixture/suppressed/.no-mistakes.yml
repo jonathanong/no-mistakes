@@ -1,0 +1,9 @@
+rules:
+  - rule: banned-paths
+    scope: repository
+    include:
+      - web/**
+    options:
+      bannedPaths:
+        - glob: web/pages/**
+          message: Next.js pages router files are not allowed

@@ -6,26 +6,25 @@ const {
   createRegistryReports,
   createViMockTracker,
   isInsideUncalledNestedFunction,
-  isModuleMutable,
-  isResetAssignment,
   walkSharedMutations,
 } = require("./test-no-shared-state-analysis");
 
 const {
-  calleeName,
   collectPatternNames,
   createCleanupTracker,
   firstNamedCallbackArgument,
-  isFunctionNode,
+  importSpecifierName,
   isMutableInitializer,
+  isKnownTestCallee,
+  isTestExtendCall,
   isTestCall,
-  mutatingCallPropertyName,
-  mutatingCallTarget,
-  mutationPath,
   mutationRootName,
   namedCallbackArgument,
   setupCallbackKind,
 } = require("./test-no-shared-state-helpers");
+const { createMutationHandlers } = require("./test-no-shared-state-mutations");
+const { createImportedTestAliases } = require("./test-no-shared-state-aliases");
+const { createRuleHelpers } = require("./test-no-shared-state-rule-helpers");
 
 module.exports = rule(
   {
@@ -39,6 +38,8 @@ module.exports = rule(
   },
   (context) => {
     const mutableTopLevel = new Set();
+    const testCalleeNames = new Set(["it", "test", "describe"]);
+    const testAliases = createImportedTestAliases(context);
     const pendingNamedCallbacks = [];
     const pendingNamedSetupCallbacks = [];
     const ruleOptions = context.options?.[0] ?? {};
@@ -52,103 +53,61 @@ module.exports = rule(
     );
     let testDepth = 0;
     let setupDepth = 0;
+    const { calleeHasProperty, isDescribeCall, isInlineCallback, resolveFunctionCallback } =
+      createRuleHelpers(context, testCalleeNames);
+    const mutationHandlers = createMutationHandlers({
+      cleanupTracker,
+      context,
+      depths: { setup: () => setupDepth, test: () => testDepth },
+      mutableTopLevel,
+      registryReports,
+      viMockTracker,
+    });
 
-    function reportIfShared(node, name) {
-      if (
-        name &&
-        testDepth > 0 &&
-        setupDepth === 0 &&
-        !viMockTracker.isCaptured(name) &&
-        isModuleMutable({ context, mutableTopLevel, node, name })
-      )
-        context.report({ node, messageId: "shared" });
-    }
-
-    function reportAssignment(node) {
-      for (const name of collectPatternNames(node.left)) reportIfShared(node, name);
-      if (node.left.type !== "MemberExpression") return;
-      reportIfShared(node, mutationRootName(node.left));
-    }
-
-    function rememberSetupCleanup(node, name, path) {
-      if (
-        name &&
-        setupDepth > 0 &&
-        mutableTopLevel.has(name) &&
-        isModuleMutable({ context, mutableTopLevel, node, name })
-      )
-        cleanupTracker.remember(path);
-    }
-
-    function rememberCall(node) {
-      const { name, path } = mutatingCallTarget(node);
-      if (mutatingCallPropertyName(node) === "clear") {
-        rememberSetupCleanup(node, name, path);
-      }
-      registryReports.remember(node, name, path, testDepth, setupDepth);
-    }
-
-    function rememberAssignmentCleanup(node) {
-      if (setupDepth === 0) return;
-      if (!isResetAssignment(node, isMutableInitializer)) return;
-      if (node.left.type === "Identifier") {
-        rememberSetupCleanup(node, node.left.name, node.left.name);
-        return;
-      }
-      rememberSetupCleanup(node, mutationRootName(node.left), mutationPath(node.left.object));
-    }
-
-    const mutationWalk = {
-      onAssignment: (assignment) => {
-        rememberAssignmentCleanup(assignment);
-        reportAssignment(assignment);
-      },
-      onCall: rememberCall,
-      onUpdate: (update) => reportIfShared(update, mutationRootName(update.argument)),
-    };
-
-    function resolveFunctionCallback(node, callback) {
-      let scope = context.sourceCode.getScope(node);
-      while (scope) {
-        const get = scope.set?.get;
-        const resolvedVariable =
-          (typeof get === "function" ? get.call(scope.set, callback.name) : null) ||
-          (typeof get !== "function"
-            ? scope.variables?.find((item) => item.name === callback.name)
-            : null);
-
-        if (!resolvedVariable) {
-          scope = scope.upper;
-          continue;
+    function visitTopLevelVariableDeclaration(node) {
+      for (const declaration of node.declarations) {
+        if (isTestExtendCall(declaration.init, testCalleeNames)) {
+          for (const name of collectPatternNames(declaration.id)) testCalleeNames.add(name);
+          if (declaration.id.type === "Identifier") testAliases.add(declaration.id, "test");
         }
-
-        const declaration = resolvedVariable.defs[0]?.node;
-        if (declaration?.type === "FunctionDeclaration") return declaration;
-        if (declaration?.type === "VariableDeclarator" && isFunctionNode(declaration.init)) {
-          return declaration.init;
+        if (node.kind === "const" && !isMutableInitializer(declaration.init)) continue;
+        for (const name of collectPatternNames(declaration.id)) {
+          mutableTopLevel.add(name);
+          viMockTracker.markIfCaptured(name);
         }
-        return null;
       }
-      return null;
+    }
+
+    function configureSerialMode(node) {
+      if (!calleeHasProperty(node.callee, "configure")) return false;
+      if (
+        node.callee.type !== "MemberExpression" ||
+        !isKnownTestCallee(node.callee.object, testCalleeNames) ||
+        !calleeHasProperty(node.callee.object, "describe")
+      ) {
+        return false;
+      }
+      const options = node.arguments[0];
+      if (options?.type !== "ObjectExpression") return false;
+      return options.properties.some(
+        (property) =>
+          property.type === "Property" &&
+          (property.key?.name ?? property.key?.value) === "mode" &&
+          property.value?.type === "Literal" &&
+          property.value.value === "serial",
+      );
     }
 
     return {
-      "Program > VariableDeclaration"(node) {
-        for (const declaration of node.declarations) {
-          if (node.kind === "const" && !isMutableInitializer(declaration.init)) continue;
-          for (const name of collectPatternNames(declaration.id)) {
-            mutableTopLevel.add(name);
-            viMockTracker.markIfCaptured(name);
-          }
-        }
-      },
+      "Program > VariableDeclaration": visitTopLevelVariableDeclaration,
+      "Program > ExportNamedDeclaration > VariableDeclaration": visitTopLevelVariableDeclaration,
       "Program:exit"() {
         for (const { declaration, suiteKey, kind } of pendingNamedSetupCallbacks) {
           if (!declaration) continue;
           const previousSetupDepth = setupDepth;
           setupDepth = 1;
           cleanupTracker.beginSetup(kind, suiteKey);
-          walkSharedMutations(declaration.body, mutationWalk);
+          walkSharedMutations(declaration.body, mutationHandlers.mutationWalk);
           setupDepth = previousSetupDepth;
           cleanupTracker.endSetup();
         }
@@ -156,25 +115,41 @@ module.exports = rule(
         for (const { declaration, suiteKey } of pendingNamedCallbacks) {
           if (!declaration) continue;
           cleanupTracker.setReplaySuite(suiteKey);
-          walkSharedMutations(declaration.body, mutationWalk);
+          walkSharedMutations(declaration.body, mutationHandlers.mutationWalk);
           cleanupTracker.clearReplaySuite();
         }
         registryReports.flush();
       },
+      ImportDeclaration(node) {
+        if (node.source.value !== "vitest" && node.source.value !== "@playwright/test") return;
+        for (const specifier of node.specifiers) {
+          if (specifier.type !== "ImportSpecifier") continue;
+          const imported = importSpecifierName(specifier);
+          if (["describe", "it", "test"].includes(imported) && specifier.local?.name) {
+            testCalleeNames.add(specifier.local.name);
+            testAliases.add(specifier.local, imported);
+          }
+        }
+      },
       CallExpression(node) {
         viMockTracker.collectFactoryReferences(node);
-        if (calleeName(node.callee) === "describe") cleanupTracker.enterSuite();
-        if (isTestCall(node)) {
+        const isShadowed = testAliases.isShadowed(node.callee);
+        const isDescribe =
+          !isShadowed && (isDescribeCall(node) || testAliases.isDescribeAliasCall(node.callee));
+        const isSerialSuite = isDescribe && testAliases.hasProperty(node.callee, "serial");
+        if (isDescribe) cleanupTracker.enterSuite(isSerialSuite);
+        if (configureSerialMode(node)) cleanupTracker.markCurrentSuiteSerial();
+        if (!isShadowed && isTestCall(node, testCalleeNames)) {
           testDepth += 1;
           const callback = namedCallbackArgument(node.arguments);
-          if (callback && !setupCallbackKind(node)) {
+          if (callback && !setupCallbackKind(node, testCalleeNames)) {
             pendingNamedCallbacks.push({
               declaration: resolveFunctionCallback(node, callback),
               suiteKey: cleanupTracker.currentSuiteKey(),
             });
           }
         }
-        const setupKind = setupCallbackKind(node);
+        const setupKind = !isShadowed && setupCallbackKind(node, testCalleeNames);
         const setupCallback = setupKind && firstNamedCallbackArgument(node.arguments);
         if (setupCallback) {
           pendingNamedSetupCallbacks.push({
@@ -189,23 +164,31 @@ module.exports = rule(
         }
       },
       AssignmentExpression(node) {
-        if (isInsideUncalledNestedFunction(node, testDepth, setupDepth)) return;
-        rememberAssignmentCleanup(node);
-        reportAssignment(node);
+        if (isInsideUncalledNestedFunction(node, testDepth, setupDepth, isInlineCallback)) return;
+        mutationHandlers.rememberAssignmentCleanup(node);
+        mutationHandlers.reportAssignment(node);
       },
       UpdateExpression(node) {
-        if (isInsideUncalledNestedFunction(node, testDepth, setupDepth)) return;
-        reportIfShared(node, mutationRootName(node.argument));
+        if (isInsideUncalledNestedFunction(node, testDepth, setupDepth, isInlineCallback)) return;
+        mutationHandlers.reportIfShared(node, mutationRootName(node.argument));
       },
       "CallExpression:exit"(node) {
-        if (isTestCall(node)) testDepth -= 1;
-        if (setupCallbackKind(node)) {
+        const isShadowed = testAliases.isShadowed(node.callee);
+        if (!isShadowed && isTestCall(node, testCalleeNames)) testDepth -= 1;
+        if (!isShadowed && setupCallbackKind(node, testCalleeNames)) {
           setupDepth -= 1;
           cleanupTracker.endSetup();
         }
-        const isInsideNested = isInsideUncalledNestedFunction(node, testDepth, setupDepth);
-        if (!isInsideNested) rememberCall(node);
-        if (calleeName(node.callee) === "describe") cleanupTracker.exitSuite();
+        const isInsideNested = isInsideUncalledNestedFunction(
+          node,
+          testDepth,
+          setupDepth,
+          isInlineCallback,
+        );
+        if (!isInsideNested) mutationHandlers.rememberCall(node);
+        if (!isShadowed && (isDescribeCall(node) || testAliases.isDescribeAliasCall(node.callee))) {
+          cleanupTracker.exitSuite();
+        }
       },
     };
   },

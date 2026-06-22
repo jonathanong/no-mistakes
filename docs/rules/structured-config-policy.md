@@ -27,7 +27,7 @@ rules:
 ```
 
 Supported assertion kinds are `boolean`, `positive-number`, `string-array`,
-`string-prefix`, `string-glob`, `not-single-file`, `equals`, and
+`record-of-boolean`, `string-prefix`, `string-glob`, `not-single-file`, `equals`, and
 `object-shape`. Selectors are dotted paths; use numeric parts for array indexes
 and `[]` to apply an assertion to every array entry.
 

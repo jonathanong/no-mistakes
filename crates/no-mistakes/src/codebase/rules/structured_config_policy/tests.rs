@@ -108,6 +108,8 @@ policies:
         kind: positive-number
       - key: badFiles
         kind: string-array
+      - key: allowBuilds
+        kind: record-of-boolean
       - key: overrides.[].files.[]
         kind: string-prefix
         prefix: "**/"
@@ -130,10 +132,11 @@ policies:
     .unwrap();
     let body = format!("{findings:?}");
 
-    assert_eq!(findings.len(), 8, "{body}");
+    assert_eq!(findings.len(), 9, "{body}");
     assert!(body.contains("strict boolean"), "{body}");
     assert!(body.contains("positive number"), "{body}");
     assert!(body.contains("array of strings"), "{body}");
+    assert!(body.contains("strict boolean values"), "{body}");
     assert!(body.contains("starting with `**/`"), "{body}");
     assert!(body.contains("single-file entry"), "{body}");
     assert!(body.contains("match glob `src/**/*.ts`"), "{body}");
@@ -149,6 +152,9 @@ fn value_assertions_pass_for_matching_values() {
 enabled: true
 count: 2
 files: ["**/*.ts"]
+allowBuilds:
+  sharp: true
+  esbuild: false
 entry:
   severity: error
 "#,
@@ -173,6 +179,11 @@ entry:
         ValueAssertion {
             key: "files.[]".to_string(),
             kind: Some(AssertionKind::NotSingleFile),
+            ..Default::default()
+        },
+        ValueAssertion {
+            key: "allowBuilds".to_string(),
+            kind: Some(AssertionKind::RecordOfBoolean),
             ..Default::default()
         },
         ValueAssertion {

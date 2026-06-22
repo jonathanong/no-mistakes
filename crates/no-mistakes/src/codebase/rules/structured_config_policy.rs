@@ -45,6 +45,7 @@ pub(crate) struct ValueAssertion {
 #[serde(rename_all = "kebab-case")]
 pub(crate) enum AssertionKind {
     Boolean,
+    RecordOfBoolean,
     PositiveNumber,
     StringArray,
     StringPrefix,
@@ -58,6 +59,7 @@ impl AssertionKind {
     fn from_str(value: &str) -> Option<Self> {
         match value {
             "boolean" => Some(Self::Boolean),
+            "record-of-boolean" => Some(Self::RecordOfBoolean),
             "positive-number" => Some(Self::PositiveNumber),
             "string-array" => Some(Self::StringArray),
             "string-prefix" => Some(Self::StringPrefix),

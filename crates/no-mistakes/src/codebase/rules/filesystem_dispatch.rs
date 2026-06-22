@@ -5,25 +5,27 @@ use std::sync::Mutex;
 type RuleAcc = Mutex<Vec<(&'static str, Result<Vec<RuleFinding>>)>>;
 
 use super::{
-    agents_md_max_size, banned_renamed_files, config_path_references, doc_consistency,
-    file_extension_policy, finite_set_consistency, github_actions_pinned_hash, lockfile_allowlist,
-    no_empty_or_comments_only_files, no_git_identity_mutation, package_json_registry_only,
-    package_json_workspace_coverage, require_files_in_subdirs, require_test_per_subdir,
-    required_companion_imports, required_local_docs, rust_rules_combined, shellcheck_runner,
-    strict_package_layout, structured_config_policy, tsconfig_alias_folder_mapping,
-    vitest_project_mapping, vitest_test_correspondence, workspace_package_cycles,
+    agents_md_max_size, banned_paths, banned_renamed_files, config_path_references,
+    doc_consistency, file_extension_policy, finite_set_consistency, github_actions_pinned_hash,
+    lockfile_allowlist, no_empty_or_comments_only_files, no_git_identity_mutation,
+    package_json_registry_only, package_json_workspace_coverage, require_files_in_subdirs,
+    require_test_per_subdir, required_companion_imports, required_local_docs, rust_rules_combined,
+    shellcheck_runner, strict_package_layout, structured_config_policy,
+    tsconfig_alias_folder_mapping, vitest_project_mapping, vitest_test_correspondence,
+    workspace_package_cycles,
 };
 
 mod preserved;
 use super::{
-    rule_enabled, suppress_rule_findings, RuleFinding, AGENTS_MD_MAX_SIZE, BANNED_RENAMED_FILES,
-    CONFIG_PATH_REFERENCES, DOC_CONSISTENCY, FILE_EXTENSION_POLICY, FINITE_SET_CONSISTENCY,
-    LOCKFILE_ALLOWLIST, NO_EMPTY_OR_COMMENTS_ONLY_FILES, NO_GIT_IDENTITY_MUTATION,
-    PACKAGE_JSON_REGISTRY_ONLY, PACKAGE_JSON_WORKSPACE_COVERAGE, REQUIRED_COMPANION_IMPORTS,
-    REQUIRED_DOC_SECTION, REQUIRED_LOCAL_DOCS, REQUIRE_FILES_IN_SUBDIRS, REQUIRE_TEST_PER_SUBDIR,
-    RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS, SHELLCHECK_RUNNER,
-    STRICT_PACKAGE_LAYOUT, STRUCTURED_CONFIG_POLICY, TSCONFIG_ALIAS_FOLDER_MAPPING,
-    VITEST_PROJECT_MAPPING, VITEST_TEST_CORRESPONDENCE, WORKSPACE_PACKAGE_CYCLES,
+    rule_enabled, suppress_rule_findings, RuleFinding, AGENTS_MD_MAX_SIZE, BANNED_PATHS,
+    BANNED_RENAMED_FILES, CONFIG_PATH_REFERENCES, DOC_CONSISTENCY, FILE_EXTENSION_POLICY,
+    FINITE_SET_CONSISTENCY, LOCKFILE_ALLOWLIST, NO_EMPTY_OR_COMMENTS_ONLY_FILES,
+    NO_GIT_IDENTITY_MUTATION, PACKAGE_JSON_REGISTRY_ONLY, PACKAGE_JSON_WORKSPACE_COVERAGE,
+    REQUIRED_COMPANION_IMPORTS, REQUIRED_DOC_SECTION, REQUIRED_LOCAL_DOCS,
+    REQUIRE_FILES_IN_SUBDIRS, REQUIRE_TEST_PER_SUBDIR, RUST_MAX_LINES_PER_FILE,
+    RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS, SHELLCHECK_RUNNER, STRICT_PACKAGE_LAYOUT,
+    STRUCTURED_CONFIG_POLICY, TSCONFIG_ALIAS_FOLDER_MAPPING, VITEST_PROJECT_MAPPING,
+    VITEST_TEST_CORRESPONDENCE, WORKSPACE_PACKAGE_CYCLES,
 };
 const GITHUB_ACTIONS_PINNED_HASH: &str = github_actions_pinned_hash::RULE_ID;
 
@@ -50,6 +52,7 @@ macro_rules! filesystem_rules {
             NO_EMPTY_OR_COMMENTS_ONLY_FILES => no_empty_or_comments_only_files::check_with_files,
             VITEST_TEST_CORRESPONDENCE => vitest_test_correspondence::check_with_files,
             FILE_EXTENSION_POLICY => file_extension_policy::check_with_files,
+            BANNED_PATHS => banned_paths::check_with_files,
             BANNED_RENAMED_FILES => banned_renamed_files::check_with_files,
             LOCKFILE_ALLOWLIST => lockfile_allowlist::check_with_files,
             DOC_CONSISTENCY => doc_consistency::check_with_files,

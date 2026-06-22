@@ -13,6 +13,9 @@ overrides:
 badFiles:
   - "**/*.ts"
   - 3
+allowBuilds:
+  sharp: true
+  esbuild: pending
 globTarget: dist/app.js
 rules:
   - name: no-console

@@ -1,8 +1,17 @@
 "use strict";
 
-const TEST_CALLEES = new Set(["it", "test", "describe"]);
-const SETUP_CALLEES = new Set(["beforeEach", "afterEach", "beforeAll", "afterAll"]);
-const PER_TEST_CALLEES = new Set(["beforeEach", "afterEach"]);
+const { collectPatternNames } = require("./ast-pattern-names");
+const { createCleanupTracker } = require("./test-no-shared-state-cleanup");
+const {
+  SETUP_CALLEES,
+  calleeName,
+  importSpecifierName,
+  isKnownTestCallee,
+  isTestCall,
+  isTestExtendCall,
+  propertyName,
+  setupCallbackKind,
+} = require("./test-no-shared-state-callees");
 const MUTATING_METHODS = new Set(
   "add clear copyWithin delete fill pop push reverse set shift sort splice unshift".split(" "),
 );
@@ -13,56 +22,10 @@ const FUNCTION_NODES = new Set([
   "ArrowFunctionExpression",
 ]);
 
-function calleeName(node) {
-  if (node?.type === "Identifier") return node.name;
-  if (node?.type === "MemberExpression" && !node.computed) return calleeName(node.object);
-  if (node?.type === "CallExpression") return calleeName(node.callee);
-  return null;
-}
-
-function isTestCall(node) {
-  return TEST_CALLEES.has(calleeName(node.callee));
-}
-
-function setupCallbackKind(node) {
-  const name = calleeName(node.callee);
-  if (PER_TEST_CALLEES.has(name)) return "per-test";
-  if (name === "beforeAll") return "before-once";
-  if (name === "afterAll") return "once";
-  if (node.callee.type !== "MemberExpression" || !TEST_CALLEES.has(name)) return null;
-  if (PER_TEST_CALLEES.has(node.callee.property.name)) return "per-test";
-  if (node.callee.property.name === "beforeAll") return "before-once";
-  return node.callee.property.name === "afterAll" ? "once" : null;
-}
-
-function collectPatternNames(node, names = new Set()) {
-  if (!node) return names;
-  if (node.type === "Identifier") {
-    names.add(node.name);
-    return names;
-  }
-  const children =
-    node.type === "ObjectPattern"
-      ? node.properties.map((property) => property.value || property.argument)
-      : node.type === "ArrayPattern"
-        ? node.elements
-        : node.type === "RestElement"
-          ? [node.argument]
-          : node.type === "AssignmentPattern"
-            ? [node.left]
-            : [];
-  for (const child of children) collectPatternNames(child, names);
-  return names;
-}
-
 function mutationRootName(node) {
   if (node.type === "Identifier") return node.name;
   if (node.type === "MemberExpression") return mutationRootName(node.object);
   return null;
-}
-
-function propertyName(node) {
-  return node.type === "Literal" ? String(node.value) : node.name;
 }
 
 function mutationPath(node) {
@@ -152,69 +115,21 @@ function firstNamedCallbackArgument(args) {
   return args[0]?.type === "Identifier" ? args[0] : undefined;
 }
 
-function createCleanupTracker(options = {}) {
-  const pathsBySuite = new Map();
-  const suiteStack = [];
-  let activeSuiteKey, replaySuiteKey;
-  let nextSuiteId = 0;
-  const ao = options.allowBeforeAllAssignments;
-  const sKinds = new Set(ao ? ["per-test", "before-once"] : ["per-test"]);
-
-  function currentSuiteKey() {
-    return replaySuiteKey ?? suiteStack.join("/");
-  }
-
-  function has(path, suiteKey) {
-    if (!path) return false;
-    for (const [cleanupSuiteKey, paths] of pathsBySuite) {
-      if (!paths.has(path)) continue;
-      if (!cleanupSuiteKey || suiteKey === cleanupSuiteKey) return true;
-      if (suiteKey.startsWith(`${cleanupSuiteKey}/`)) return true;
-    }
-    return false;
-  }
-
-  return {
-    beginSetup(kind, suiteKey = currentSuiteKey()) {
-      activeSuiteKey = sKinds.has(kind) ? suiteKey : undefined;
-    },
-    clearReplaySuite() {
-      replaySuiteKey = undefined;
-    },
-    currentSuiteKey,
-    endSetup() {
-      activeSuiteKey = undefined;
-    },
-    enterSuite() {
-      suiteStack.push(String(nextSuiteId++));
-    },
-    exitSuite() {
-      suiteStack.pop();
-    },
-    has,
-    remember(path) {
-      if (!path || activeSuiteKey === undefined) return;
-      const paths = pathsBySuite.get(activeSuiteKey) ?? new Set();
-      pathsBySuite.set(activeSuiteKey, paths.add(path));
-    },
-    setReplaySuite(suiteKey) {
-      replaySuiteKey = suiteKey;
-    },
-  };
-}
-
 module.exports = {
   childNodes,
   collectPatternNames,
   createCleanupTracker,
   firstNamedCallbackArgument,
+  importSpecifierName,
   isCalledFunction,
   isFunctionNode,
   isInlineSetupCallback,
   isInlineTestCallback,
   isMutableInitializer,
+  isTestExtendCall,
   calleeName,
   isTestCall,
+  isKnownTestCallee,
   mutatingCallPropertyName,
   mutatingCallTarget,
   mutationPath,
