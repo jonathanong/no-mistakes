@@ -1,0 +1,17 @@
+rules:
+  - rule: banned-paths
+    scope: repository
+    options:
+      bannedPaths:
+        - glob: web/pages/**
+          message: Next.js pages router files are not allowed
+        - glob: web/src/pages/**
+          message: Next.js pages router files are not allowed
+        - glob: web/app/**/[topicType]/**
+          message: topicType dynamic segments are banned
+        - glob: web/app/topic/**
+          message: ""
+        - glob: web/app/*.[jt]s
+          message: direct app JavaScript and TypeScript files are banned
+        - glob: web/app/**/[[...slug]]/**
+          message: optional catch-all routes are banned

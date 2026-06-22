@@ -4,6 +4,8 @@ const rules = {
   "await-array-methods": require("./rules/await-array-methods"),
   "nextjs-static-fetch-method": require("./rules/nextjs-static-fetch-method"),
   "nextjs-static-fetch-url": require("./rules/nextjs-static-fetch-url"),
+  "module-mock-boundary": require("./rules/module-mock-boundary"),
+  "module-mock-preserve-exports": require("./rules/module-mock-preserve-exports"),
   "nextjs-metadata-exports-location": require("./rules/nextjs-metadata-exports-location"),
   "nextjs-no-manual-script-tags": require("./rules/nextjs-no-manual-script-tags"),
   "no-delete-property": require("./rules/no-delete-property"),

@@ -8,14 +8,14 @@ const {
   isInlineTestCallback,
 } = require("./test-no-shared-state-helpers");
 
-function isInsideUncalledNestedFunction(node, testDepth, setupDepth) {
+function isInsideUncalledNestedFunction(node, testDepth, setupDepth, isInlineCallback) {
   if (testDepth === 0 && setupDepth === 0) return false;
   let current = node.parent;
   while (current) {
     const isUncalledFunction =
       isFunctionNode(current) &&
       !isInlineSetupCallback(current) &&
-      !isInlineTestCallback(current) &&
+      !(isInlineCallback ? isInlineCallback(current) : isInlineTestCallback(current)) &&
       !isCalledFunction(current);
     if (isUncalledFunction) return true;
     current = current.parent;

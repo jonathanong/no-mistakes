@@ -22,6 +22,7 @@ rules:
 | Rule | Purpose |
 | --- | --- |
 | [`agents-md-max-size`](agents-md-max-size.md) | Keep agent instruction files small enough for context. |
+| [`banned-paths`](banned-paths.md) | Ban tracked files matching configured path globs. |
 | [`banned-renamed-files`](banned-renamed-files.md) | Ban legacy filenames that should be renamed. |
 | [`config-path-references`](config-path-references.md) | Validate path strings in structured config files. |
 | [`doc-consistency`](doc-consistency.md) | Require files, headings, substrings, and banned-substring checks. |

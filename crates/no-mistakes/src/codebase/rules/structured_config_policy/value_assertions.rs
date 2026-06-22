@@ -35,6 +35,8 @@ pub(super) fn assert_value(
             AssertionKind::Boolean => {
                 (!matches!(value, Value::Bool(_))).then(|| "must be a strict boolean".to_string())
             }
+            AssertionKind::RecordOfBoolean => (!record_of_boolean(value))
+                .then(|| "must be an object with strict boolean values".to_string()),
             AssertionKind::PositiveNumber => {
                 (!positive_number(value)).then(|| "must be a positive number".to_string())
             }
@@ -144,6 +146,10 @@ fn positive_number(value: &Value) -> bool {
 
 fn string_array(value: &Value) -> bool {
     matches!(value, Value::Sequence(items) if items.iter().all(|item| matches!(item, Value::String(_))))
+}
+
+fn record_of_boolean(value: &Value) -> bool {
+    matches!(value, Value::Mapping(items) if items.values().all(|item| matches!(item, Value::Bool(_))))
 }
 
 fn string_value(value: &Value) -> Option<&str> {

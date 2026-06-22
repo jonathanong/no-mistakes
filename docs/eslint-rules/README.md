@@ -28,6 +28,8 @@ See [ESLint and Oxlint plugin](../eslint-plugin.md) for option schemas.
 | Rule | Purpose |
 | --- | --- |
 | [`await-array-methods`](await-array-methods.md) | Disallow awaiting synchronous array methods. |
+| [`module-mock-boundary`](module-mock-boundary.md) | Enforce configured module mock boundaries. |
+| [`module-mock-preserve-exports`](module-mock-preserve-exports.md) | Require module mock factories to preserve real exports. |
 | [`nextjs-metadata-exports-location`](nextjs-metadata-exports-location.md) | Restrict Next.js metadata exports to route segment files. |
 | [`nextjs-no-manual-script-tags`](nextjs-no-manual-script-tags.md) | Prefer `next/script` over raw JSX script tags. |
 | [`nextjs-static-fetch-method`](nextjs-static-fetch-method.md) | Require static `fetch()` method options. |

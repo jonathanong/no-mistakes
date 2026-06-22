@@ -45,6 +45,8 @@ Rules not listed here have no options.
 
 | Rule | Options |
 | --- | --- |
+| `module-mock-boundary` | `{ internalSpecifiers?: string[], includePathPatterns?: string[], excludePathPatterns?: string[], requireLiteralSpecifiers?: boolean, baseline?: [string, string, number][], integrationExports?: object }`. |
+| `module-mock-preserve-exports` | `{ internalSpecifiers?: string[], includePathPatterns?: string[], excludePathPatterns?: string[], baseline?: [string, string][] }`. |
 | `playwright-assertion-timeout-cap` | `{ max?: number }`, default `10000`. |
 | `playwright-consistent-attribute` | `{ selectorAttributes?: string[], canonicalAttribute?: string }`, defaults `["data-testid", "data-pw"]` and `"data-pw"`. |
 | `playwright-defaults` | `{ selectorAttributes?: string[] }`. |
