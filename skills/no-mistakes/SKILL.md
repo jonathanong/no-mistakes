@@ -56,7 +56,7 @@ manifests before pushing.
 
 ```bash
 # Direct files that import the new package entrypoint.
-no-mistakes dependents ts-shared/feed-capabilities/index.mts --relationship import --depth 1 --format paths
+no-mistakes dependents ts-shared/feed-capabilities/index.mts --relationship import --relationship workspace --depth 1 --format paths
 
 # package.json files that already declare the package edge.
 no-mistakes dependents ts-shared/feed-capabilities/index.mts --relationship package --format json
