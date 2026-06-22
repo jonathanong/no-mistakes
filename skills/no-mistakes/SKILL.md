@@ -46,6 +46,52 @@ For high-signal multi-command workflows around UI selectors, selector-root
 expansion, named-export impact, and workflow/static-analysis changes, see
 `references/impact-recipes.md`.
 
+## Common Failure-Mode Recipes
+
+Use these when the task sounds like a known review failure, not just a generic
+graph question.
+
+**When you add a new workspace package:** verify both code importers and owning
+manifests before pushing.
+
+```bash
+# Direct files that import the new package entrypoint.
+no-mistakes dependents ts-shared/feed-capabilities/index.mts --relationship import --relationship workspace --depth 1 --format paths
+
+# package.json files that already declare the package edge.
+no-mistakes dependents ts-shared/feed-capabilities/index.mts --relationship package --format json
+```
+
+Then compare the direct importer files with each file's nearest `package.json`.
+Every package that imports the workspace entrypoint should declare the
+dependency directly.
+
+**When you add a hook that needs context to an existing component:** find render
+and test hosts before editing, especially for hooks such as `useRouter`,
+`usePathname`, or providers required by app context.
+
+```bash
+no-mistakes react usages web/components/news/news-item-actions.tsx#NewsItemActions --format json
+no-mistakes tests plan vitest --changed-file web/components/news/news-item-actions.tsx --format paths
+```
+
+Check the returned call sites, stories, and tests for hosts that render the
+component without the new context. If a parent component is the actual test
+entry, run `react usages` on that parent too.
+
+**When you add fire-and-forget work around a suppression option:** first find
+callers structurally, then grep exact option literals and verify each bypassed
+invariant is rebuilt where needed.
+
+```bash
+no-mistakes call-sites backend/services/urls/add-url.mts addUrl --format json
+rg -n 'addUrl\(|skipCreatedEvents' backend/
+```
+
+`no-mistakes` does not model option propagation. Use the call site report to
+scope the review and `rg` to inspect exact argument objects such as
+`skipCreatedEvents: true`.
+
 ## Command Selection
 
 | Question | Tool |
