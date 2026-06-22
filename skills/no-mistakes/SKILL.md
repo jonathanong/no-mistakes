@@ -75,7 +75,7 @@ no-mistakes react usages web/components/news/news-item-actions.tsx#NewsItemActio
 no-mistakes tests plan vitest --changed-file web/components/news/news-item-actions.tsx --format paths
 ```
 
-Check the returned callsites, stories, and tests for hosts that render the
+Check the returned call sites, stories, and tests for hosts that render the
 component without the new context. If a parent component is the actual test
 entry, run `react usages` on that parent too.
 
@@ -88,7 +88,7 @@ no-mistakes call-sites backend/services/urls/add-url.mts addUrl --format json
 rg -n 'addUrl\(|skipCreatedEvents' backend/
 ```
 
-`no-mistakes` does not model option propagation. Use the call-site report to
+`no-mistakes` does not model option propagation. Use the call site report to
 scope the review and `rg` to inspect exact argument objects such as
 `skipCreatedEvents: true`.
 
