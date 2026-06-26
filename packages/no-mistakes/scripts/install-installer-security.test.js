@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { access, mkdir, mkdtemp, readdir, rm, writeFile } = require("node:fs/promises");
+const { mkdir, mkdtemp, readdir, rm, writeFile } = require("node:fs/promises");
 const { join } = require("node:path");
 const { tmpdir } = require("node:os");
 const { pathToFileURL } = require("node:url");
@@ -94,7 +94,6 @@ test("rejects checksum mismatches and cleans temporary files", async () => {
   const target = "x86_64-unknown-linux-gnu";
   const asset = assetName(version, target);
   const content = Buffer.from("#!/bin/sh\nexit 0\n");
-  const destination = join(vendorDir, binName);
 
   await mkdir(join(root, "assets"));
   await writeFile(join(root, "assets", asset), content);

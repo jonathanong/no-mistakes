@@ -29,5 +29,5 @@ test("isPlaceholder handles unexpected errors", () => {
   assert.throws(() => {
     // A null byte in the path will cause openSync to throw a TypeError: path must be a string without null bytes
     core.isPlaceholder("some\0path");
-  }, /Failed to inspect native binary placeholder some\0path:/);
+  }, /Failed to inspect native binary placeholder some\x00path:/);
 });
