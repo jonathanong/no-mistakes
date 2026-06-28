@@ -46,7 +46,7 @@ pub(crate) fn check_with_files(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, config, &opts, &files)
+            scan(root, config, &opts, &files, all_files)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -59,8 +59,9 @@ fn scan(
     config: &NoMistakesConfig,
     opts: &Options,
     files: &[PathBuf],
+    all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    if files.is_empty() {
+    if files.is_empty() && all_files.is_empty() {
         return Ok(Vec::new());
     }
 
@@ -78,7 +79,12 @@ fn scan(
         .unwrap_or(".github/workflows");
 
     for unit in coverage_units(root, config, opts)? {
-        let paths = coverage_paths(root, &unit, files)?;
+        let path_files = if unit.source.uses_all_files() {
+            all_files
+        } else {
+            files
+        };
+        let paths = coverage_paths(root, &unit, path_files)?;
         if paths.is_empty() {
             continue;
         }
@@ -126,7 +132,7 @@ fn missing_mapping_finding(file: &str, unit: &CoverageUnit) -> RuleFinding {
         line: 1,
         message: format!(
             "Vitest project `{}` {} paths are not mapped to any CI path filter; configure options.projectFilters.{}",
-            unit.project, unit.source, unit.project
+            unit.project, unit.source.label(), unit.project
         ),
         import: None,
         target: Some(unit.project.clone()),
@@ -153,7 +159,7 @@ fn missed_path_finding(
             "{}: Vitest project `{}` {}{} is not covered by CI path filters: {filter_list}",
             path.rel,
             unit.project,
-            unit.source,
+            unit.source.label(),
             if path.synthetic {
                 " glob witness path"
             } else {

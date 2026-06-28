@@ -15,8 +15,29 @@ mod tests;
 #[derive(Debug)]
 pub(super) struct CoverageUnit {
     pub(super) project: String,
-    pub(super) source: &'static str,
+    pub(super) source: CoverageSource,
     pub(super) patterns: Vec<String>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(super) enum CoverageSource {
+    TestInclude,
+    FullSuiteTrigger,
+    ConfiguredSource,
+}
+
+impl CoverageSource {
+    pub(super) fn label(self) -> &'static str {
+        match self {
+            CoverageSource::TestInclude => "test include",
+            CoverageSource::FullSuiteTrigger => "full-suite trigger",
+            CoverageSource::ConfiguredSource => "configured source",
+        }
+    }
+
+    pub(super) fn uses_all_files(self) -> bool {
+        self != CoverageSource::TestInclude
+    }
 }
 
 pub(super) fn coverage_units(
@@ -29,7 +50,7 @@ pub(super) fn coverage_units(
         for project in vitest_projects(root, config, opts)? {
             units.push(CoverageUnit {
                 project: project_name(&project),
-                source: "test include",
+                source: CoverageSource::TestInclude,
                 patterns: include_without_excludes(&project),
             });
         }
@@ -41,7 +62,7 @@ pub(super) fn coverage_units(
             };
             units.push(CoverageUnit {
                 project: project_name.clone(),
-                source: "full-suite trigger",
+                source: CoverageSource::FullSuiteTrigger,
                 patterns: project_dependency_patterns(project_name, project, trigger),
             });
         }
@@ -49,7 +70,7 @@ pub(super) fn coverage_units(
     for (project, patterns) in &opts.source_globs_by_project {
         units.push(CoverageUnit {
             project: project.clone(),
-            source: "configured source",
+            source: CoverageSource::ConfiguredSource,
             patterns: patterns.clone(),
         });
     }

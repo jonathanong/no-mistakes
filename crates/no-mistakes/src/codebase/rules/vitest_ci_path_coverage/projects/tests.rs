@@ -158,7 +158,7 @@ fn coverage_units_cover_missing_project_and_explicit_project_branches() {
         },
     )
     .unwrap();
-    assert_eq!(units[0].source, "test include");
+    assert_eq!(units[0].source, CoverageSource::TestInclude);
     assert_eq!(units[0].patterns, vec!["src/**/*.test.ts"]);
 }
 

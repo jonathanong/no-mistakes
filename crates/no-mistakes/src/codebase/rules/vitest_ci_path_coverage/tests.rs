@@ -1,5 +1,7 @@
 use super::*;
+use crate::codebase::rules::vitest_ci_path_coverage::projects::CoverageSource;
 use crate::config::v2::load_v2_config;
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 fn fixture_root(name: &str) -> PathBuf {
@@ -31,7 +33,7 @@ fn scan_returns_no_findings_when_no_files_are_in_scope() {
     let config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
     let opts = Options::default();
 
-    let findings = scan(&root, &config, &opts, &[]).unwrap();
+    let findings = scan(&root, &config, &opts, &[], &[]).unwrap();
 
     assert!(findings.is_empty());
 }
@@ -50,6 +52,33 @@ fn reports_source_input_missed_by_too_narrow_ci_filter() {
         findings[0]
             .message
             .contains("Vitest project `ts-shared` full-suite trigger path"),
+        "{}",
+        findings[0].message
+    );
+}
+
+#[test]
+fn full_suite_trigger_inputs_are_checked_even_when_rule_files_are_scoped() {
+    let root = fixture_root("fixture");
+    let config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    let mut project_filters = BTreeMap::new();
+    project_filters.insert("ts-shared".to_string(), vec!["backend".to_string()]);
+    let opts = Options {
+        include_vitest_project_globs: Some(false),
+        project_filters,
+        workflows: vec![WorkflowSelector {
+            path: ".github/workflows/ci.yml".to_string(),
+            job: "detect-changes".to_string(),
+            step_id: "filter".to_string(),
+        }],
+        ..Options::default()
+    };
+
+    let findings = scan(&root, &config, &opts, &[], &files(&root)).unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert!(
+        findings[0].message.contains("ts-shared/utils/index.mts"),
         "{}",
         findings[0].message
     );
@@ -237,7 +266,7 @@ fn mapped_filter_names_default_to_project_and_missing_mapping_points_at_project(
         ".github/workflows/ci.yml",
         &CoverageUnit {
             project: "backend".to_string(),
-            source: "test include",
+            source: CoverageSource::TestInclude,
             patterns: Vec::new(),
         },
     );
@@ -252,7 +281,7 @@ fn coverage_paths_include_real_files_and_recursive_witnesses_once() {
     let root = fixture_root("glob-witness");
     let unit = CoverageUnit {
         project: "backend".to_string(),
-        source: "configured source",
+        source: CoverageSource::ConfiguredSource,
         patterns: vec!["src/**/*.ts".to_string(), "!src/generated/**".to_string()],
     };
     let files = vec![root.join("src/index.ts"), root.join("src/index.ts")];
@@ -277,6 +306,10 @@ fn coverage_paths_include_real_files_and_recursive_witnesses_once() {
 fn witness_paths_skip_negated_and_broad_patterns() {
     assert!(
         coverage_paths::witness_paths(&["**".to_string(), "!src/**/*.ts".to_string()]).is_empty()
+    );
+    assert_eq!(
+        coverage_paths::witness_paths(&["src/**.ts".to_string()]),
+        vec!["src/__no_mistakes_witness__/nested.ts"]
     );
 }
 

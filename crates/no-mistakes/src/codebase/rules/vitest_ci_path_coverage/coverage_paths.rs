@@ -56,9 +56,22 @@ pub(super) fn witness_paths(patterns: &[String]) -> Vec<String> {
 }
 
 fn needs_recursive_witness(pattern: &str) -> bool {
-    pattern
-        .split_once("**/")
-        .is_some_and(|(_, tail)| tail.chars().any(|ch| ch != '*' && ch != '/'))
+    let chars = pattern.chars().collect::<Vec<_>>();
+    let mut index = 0;
+    while index + 1 < chars.len() {
+        if chars[index] == '*' && chars[index + 1] == '*' {
+            let next = chars.get(index + 2);
+            if next.is_some_and(|ch| *ch != '/') {
+                return true;
+            }
+            if next == Some(&'/') {
+                let tail = chars[index + 3..].iter().collect::<String>();
+                return tail.chars().any(|ch| ch != '*' && ch != '/');
+            }
+        }
+        index += 1;
+    }
+    false
 }
 
 pub(super) fn witness_path(pattern: &str) -> String {
