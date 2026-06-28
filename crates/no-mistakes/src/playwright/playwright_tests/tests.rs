@@ -49,6 +49,64 @@ impl<'a> Visit<'a> for HookVisitor {
 }
 
 #[test]
+fn describe_name_extracts_correct_names() {
+    let source = r#"
+        test.describe('single quotes', () => {});
+        test.describe("double quotes", () => {});
+        test.describe(`template literal`, () => {});
+        test.describe.only('modifier only', () => {});
+        test.describe.parallel.skip('multiple modifiers', () => {});
+        test.describe();
+        test.describe(`${variable} template`, () => {});
+        test('not describe', () => {});
+        describe('no test prefix', () => {});
+    "#;
+
+    let names =
+        crate::playwright::ast::with_program(Path::new("fixture.ts"), source, |program, _| {
+            let mut visitor = DescribeNameVisitor::default();
+            visitor.visit_program(program);
+            visitor.names
+        })
+        .expect("fixture parses");
+
+    assert_eq!(
+        names,
+        vec![
+            Some("single quotes".to_string()),
+            Some("double quotes".to_string()),
+            Some("template literal".to_string()),
+            Some("modifier only".to_string()),
+            Some("multiple modifiers".to_string()),
+            None,
+            None,
+            None,
+            None,
+        ]
+    );
+}
+
+#[derive(Default)]
+struct DescribeNameVisitor {
+    names: Vec<Option<String>>,
+}
+
+impl<'a> Visit<'a> for DescribeNameVisitor {
+    fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        if let Some(path) = crate::playwright::ast::expression_path(&call.callee) {
+            if path.first().map(String::as_str) == Some("test")
+                || path.first().map(String::as_str) == Some("describe")
+            {
+                let name = describe_name(call);
+                // Collect results for all test/describe related calls to verify negative cases too
+                self.names.push(name);
+            }
+        }
+        walk::walk_call_expression(self, call);
+    }
+}
+
+#[test]
 fn test_callback_identity_matches_test_names() {
     let source = r#"
         test('my test', () => {});
