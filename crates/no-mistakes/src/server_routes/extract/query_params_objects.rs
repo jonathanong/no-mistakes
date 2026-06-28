@@ -19,12 +19,16 @@ fn query_param_from_call(call: &oxc_ast::ast::CallExpression<'_>) -> Option<Stri
 
 fn expression_is_query_object(expr: &Expression<'_>) -> bool {
     match expr {
-        Expression::StaticMemberExpression(member) => member.property.name == "query",
+        Expression::StaticMemberExpression(member) => {
+            member.property.name == "query" && is_request_object_expr(&member.object, 0)
+        }
         Expression::ChainExpression(chain) => chain
             .expression
             .as_member_expression()
-            .and_then(|member| member.static_property_name())
-            .is_some_and(|property| property == "query"),
+            .is_some_and(|member| {
+                member.static_property_name() == Some("query")
+                    && is_request_object_expr(member.object(), 0)
+            }),
         _ => false,
     }
 }

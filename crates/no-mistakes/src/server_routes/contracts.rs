@@ -1,4 +1,5 @@
 use crate::codebase::ts_routes::matcher;
+use crate::codebase::ts_source::is_test_file;
 use crate::config::v2::load_v2_config;
 use crate::server_routes::model::ProjectReport;
 use crate::server_routes::source::{discover_source_files, relative_string};
@@ -52,7 +53,10 @@ pub fn analyze_contracts(root: &Path, route_report: &ProjectReport) -> ServerCon
         .as_ref()
         .map(|config| config.filesystem.skip_directories.as_slice())
         .unwrap_or(&[]);
-    let files = discover_source_files(&root, extra_skip);
+    let files: Vec<_> = discover_source_files(&root, extra_skip)
+        .into_iter()
+        .filter(|path| !is_test_file(&relative_string(&root, path)))
+        .collect();
     let facts = crate::codebase::ts_source::facts::collect_ts_facts_with_context(
         &files,
         crate::codebase::ts_source::facts::TsFactPlan {

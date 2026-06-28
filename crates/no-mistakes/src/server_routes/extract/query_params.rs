@@ -39,30 +39,46 @@ fn collect_query_params_from_arg(
     params: &mut BTreeSet<String>,
     named_handlers: &HashMap<String, BTreeSet<String>>,
 ) {
-    if let Argument::Identifier(id) = arg {
-        if let Some(handler_params) = named_handlers.get(id.name.as_str()) {
-            params.extend(handler_params.iter().cloned());
-        }
-        return;
-    }
     if let Some(expr) = arg.as_expression() {
-        match expr {
-            Expression::ArrowFunctionExpression(arrow) => {
-                collect_query_params_from_formal_parameters(&arrow.params, params);
-                for statement in &arrow.body.statements {
-                    collect_query_params_from_statement(statement, params, named_handlers);
-                }
+        collect_query_params_from_handler_expression(expr, params, named_handlers);
+    }
+}
+
+fn collect_query_params_from_handler_expression(
+    expr: &Expression<'_>,
+    params: &mut BTreeSet<String>,
+    named_handlers: &HashMap<String, BTreeSet<String>>,
+) {
+    match expr {
+        Expression::Identifier(id) => {
+            if let Some(handler_params) = named_handlers.get(id.name.as_str()) {
+                params.extend(handler_params.iter().cloned());
             }
-            Expression::FunctionExpression(function) => {
-                collect_query_params_from_formal_parameters(&function.params, params);
-                collect_query_params_from_optional_function_body(
-                    function.body.as_ref(),
-                    params,
-                    named_handlers,
-                );
-            }
-            _ => {}
         }
+        Expression::ArrowFunctionExpression(arrow) => {
+            collect_query_params_from_formal_parameters(&arrow.params, params);
+            for statement in &arrow.body.statements {
+                collect_query_params_from_statement(statement, params, named_handlers);
+            }
+        }
+        Expression::FunctionExpression(function) => {
+            collect_query_params_from_formal_parameters(&function.params, params);
+            collect_query_params_from_optional_function_body(
+                function.body.as_ref(),
+                params,
+                named_handlers,
+            );
+        }
+        Expression::ArrayExpression(array) => {
+            for element in array
+                .elements
+                .iter()
+                .filter_map(|element| element.as_expression())
+            {
+                collect_query_params_from_handler_expression(element, params, named_handlers);
+            }
+        }
+        _ => {}
     }
 }
 

@@ -45,9 +45,12 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
         const [] = req.query;
         const condition = req.query.a && req.query.b ? req.query.c : req.query.d;
         const optionalStatic = req.query?.optionalStatic;
+        const optionalRoot = req?.query?.optionalRoot;
         const ignoredOptionalComputed = req.query?.[dynamicKey()];
         const computedDynamic = req.query[dynamicKey()];
         const computedOtherObject = other[req.query.computedOtherObject];
+        const ignoredDbQuery = db.query.result;
+        const { rows } = client.query;
         const sequence = (req.query.sequence, req.query.afterSequence);
         const object = { nested: req.query.object };
         const array = [req.query.array];
@@ -88,6 +91,7 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
         const localExported = req.query.exportSpecifierLocal;
         export { localExported };
         export class ExportedClass {}
+        const awaitedExpression = await req.query.awaited;
         async function awaits() { await req.query.awaited; }
         "#,
     );
@@ -103,7 +107,6 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
         "catchBody",
         "computedOtherObject",
         "elseBody",
-        "exportedFunction",
         "exportedValue",
         "finallyBody",
         "first",
@@ -112,8 +115,6 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
         "forInit",
         "forNoInitTest",
         "forOf",
-        "functionBody",
-        "functionExpressionBody",
         "honoCall",
         "ifBody",
         "ifTest",
@@ -121,6 +122,7 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
         "nonNull",
         "object",
         "optionalStatic",
+        "optionalRoot",
         "paren",
         "requestContextCall",
         "satisfies",
@@ -143,6 +145,11 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
     assert!(!params.iter().any(|value| value == "ignoredCall"));
     assert!(!params.iter().any(|value| value == "ignoredMemberObject"));
     assert!(!params.iter().any(|value| value == "ignoredNestedRequest"));
+    assert!(!params.iter().any(|value| value == "result"));
+    assert!(!params.iter().any(|value| value == "rows"));
+    assert!(!params.iter().any(|value| value == "functionBody"));
+    assert!(!params.iter().any(|value| value == "functionExpressionBody"));
+    assert!(!params.iter().any(|value| value == "exportedFunction"));
 }
 
 #[test]
@@ -156,6 +163,12 @@ fn query_param_arg_walker_handles_function_expressions_and_non_handlers() {
         app.get("/num", 123);
         app.get("/spread", ...handlers);
         app.get("/assigned", ({ query: { assignedParam } } = fallback) => assignedParam);
+        app.get("/array", [search, (req) => req.query.inlineArray]);
+        app.get("/nested", (req) => {
+            const readDebug = () => req.query.debug;
+            function readTrace() { return req.query.trace; }
+            return req.query.used;
+        });
         app.get("/rest", (...[{ query: { restParam } }]) => restParam);
         "#,
         SourceType::ts(),
@@ -163,7 +176,11 @@ fn query_param_arg_walker_handles_function_expressions_and_non_handlers() {
     .parse();
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
     let mut params = BTreeSet::new();
-    let named_handlers = HashMap::new();
+    let mut named_handlers = HashMap::new();
+    named_handlers.insert(
+        "search".to_string(),
+        BTreeSet::from(["arrayTerm".to_string()]),
+    );
 
     for statement in &parsed.program.body {
         if let Statement::ExpressionStatement(statement) = statement {
@@ -177,5 +194,10 @@ fn query_param_arg_walker_handles_function_expressions_and_non_handlers() {
 
     assert!(params.contains("functionExpression"));
     assert!(params.contains("assignedParam"));
+    assert!(params.contains("arrayTerm"));
+    assert!(params.contains("inlineArray"));
+    assert!(params.contains("used"));
+    assert!(!params.contains("debug"));
+    assert!(!params.contains("trace"));
     collect_query_params_from_optional_function_body(None, &mut params, &named_handlers);
 }

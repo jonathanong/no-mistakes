@@ -69,6 +69,10 @@ fn analyze_contracts_reports_client_query_params_missing_from_server_route() {
     let report = analyze_contracts(&root, &route_report);
 
     assert_eq!(report.client_refs.len(), 2);
+    assert!(report
+        .client_refs
+        .iter()
+        .all(|client_ref| client_ref.query_params != vec!["debug"]));
     assert_eq!(report.mismatches.len(), 1);
     assert_eq!(report.mismatches[0].missing_params, vec!["sort"]);
 }

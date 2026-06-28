@@ -15,6 +15,18 @@ fn expression_matches_request_object(source: &str) -> bool {
     is_request_query_object(expression)
 }
 
+fn expression_matches_query_object(source: &str) -> bool {
+    let allocator = Allocator::default();
+    let source = format!("const value = {source};");
+    let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let Statement::VariableDeclaration(declaration) = &parsed.program.body[0] else {
+        panic!("expected variable declaration");
+    };
+    let expression = declaration.declarations[0].init.as_ref().unwrap();
+    expression_is_query_object(expression)
+}
+
 fn expression_matches_request_object_at_nesting(source: &str, nesting: u8) -> bool {
     let allocator = Allocator::default();
     let source = format!("const value = {source};");
@@ -29,6 +41,8 @@ fn expression_matches_request_object_at_nesting(source: &str, nesting: u8) -> bo
 
 #[test]
 fn request_query_object_detection_handles_optional_and_nested_members() {
+    assert!(expression_matches_query_object("req?.query"));
+    assert!(!expression_matches_query_object("db?.query"));
     assert!(expression_matches_request_object("context?.request"));
     assert!(!expression_matches_request_object("context?.[dynamicKey]"));
     assert!(!expression_matches_request_object("context?.other"));

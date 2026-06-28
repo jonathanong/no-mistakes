@@ -48,13 +48,6 @@ fn collect_query_params_from_statement(
         Statement::TryStatement(statement) => {
             collect_query_params_from_try_statement(statement, params, named_handlers);
         }
-        Statement::FunctionDeclaration(function) => {
-            collect_query_params_from_optional_function_body(
-                function.body.as_ref(),
-                params,
-                named_handlers,
-            );
-        }
         Statement::ExportNamedDeclaration(export) => {
             collect_query_params_from_export_named_declaration(export, params, named_handlers);
         }
@@ -155,13 +148,7 @@ fn collect_query_params_from_export_named_declaration(
         oxc_ast::ast::Declaration::VariableDeclaration(declaration) => {
             collect_query_params_from_variable_declaration(declaration, params, named_handlers);
         }
-        oxc_ast::ast::Declaration::FunctionDeclaration(function) => {
-            collect_query_params_from_optional_function_body(
-                function.body.as_ref(),
-                params,
-                named_handlers,
-            );
-        }
+        oxc_ast::ast::Declaration::FunctionDeclaration(_) => {}
         _ => {}
     }
 }

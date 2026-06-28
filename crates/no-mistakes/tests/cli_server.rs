@@ -59,7 +59,6 @@ fn server_routes_json_lists_routes() {
     let params = shapes["queryParams"].as_array().unwrap();
     for param in [
         "array",
-        "arrowBody",
         "call",
         "calls",
         "conditional",
@@ -67,8 +66,6 @@ fn server_routes_json_lists_routes() {
         "finallyBlock",
         "first",
         "forBody",
-        "functionBody",
-        "functionExpressionBody",
         "object",
         "switchOn",
         "tryBlock",

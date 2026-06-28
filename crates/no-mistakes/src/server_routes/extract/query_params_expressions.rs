@@ -19,18 +19,6 @@ fn collect_query_params_from_expression(
         Expression::AssignmentExpression(assign) => {
             collect_query_params_from_expression(&assign.right, params, named_handlers);
         }
-        Expression::ArrowFunctionExpression(arrow) => {
-            for statement in &arrow.body.statements {
-                collect_query_params_from_statement(statement, params, named_handlers);
-            }
-        }
-        Expression::FunctionExpression(function) => {
-            collect_query_params_from_optional_function_body(
-                function.body.as_ref(),
-                params,
-                named_handlers,
-            );
-        }
         Expression::ConditionalExpression(expr) => {
             collect_query_params_from_expression(&expr.test, params, named_handlers);
             collect_query_params_from_expression(&expr.consequent, params, named_handlers);
