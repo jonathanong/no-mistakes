@@ -12,7 +12,7 @@ Fix: create state inside each test or reset it through explicit setup/cleanup.
 Playwright serial suites may initialize or reset module-scope state in
 `beforeAll` when the suite is marked with `test.describe.serial()` or
 `test.describe.configure({ mode: "serial" })`. The exception is limited to
-serial setup because those tests intentionally share ordered setup state.
+serial suites because those tests intentionally share ordered setup state.
 
 Counterexample:
 
