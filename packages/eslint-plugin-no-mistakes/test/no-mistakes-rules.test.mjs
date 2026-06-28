@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, it } from "vitest";
-import { __dirname, messages, require } from "./helpers.mjs";
+import { __dirname, lint, messages, require } from "./helpers.mjs";
 
 function ruleFixture(rule, name) {
   return readFileSync(
@@ -10,6 +10,202 @@ function ruleFixture(rule, name) {
     "utf8",
   );
 }
+
+const asyncTargetOptions = {
+  targets: [
+    {
+      sourcePatterns: ["^@app/jobs$"],
+      calleeNamePatterns: ["^enqueue[A-Z].*", "^sendSms$"],
+    },
+  ],
+};
+
+const rateLimitTargetOptions = {
+  targets: [
+    {
+      sourcePatterns: ["^@app/rate-limit$"],
+      calleeNamePatterns: ["^handle.*RateLimit$"],
+    },
+  ],
+};
+
+describe("async-enqueue-disposition", () => {
+  it("allows explicit enqueue promise disposition", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("async-enqueue-disposition", "valid.ts"),
+        "async-enqueue-disposition",
+        asyncTargetOptions,
+        "valid.ts",
+      ),
+      [],
+    );
+  });
+
+  it("reports floating enqueue promises", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("async-enqueue-disposition", "invalid.ts"),
+        "async-enqueue-disposition",
+        asyncTargetOptions,
+        "invalid.ts",
+      ),
+      [
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+      ],
+    );
+  });
+
+  it("offers void fixes for bare enqueue expression statements", () => {
+    const [message] = lint(
+      `import { enqueueEmail } from "@app/jobs";\nenqueueEmail("1");`,
+      { "no-mistakes/async-enqueue-disposition": ["error", asyncTargetOptions] },
+      "fix.ts",
+    );
+    assert.equal(message.messageId, "disposition");
+    assert.deepEqual(message.fix, { range: [42, 42], text: "void " });
+  });
+
+  it("is a no-op without targets and ignores invalid regexes", () => {
+    const code = ruleFixture("async-enqueue-disposition", "invalid.ts");
+    assert.deepEqual(messages(code, "async-enqueue-disposition", undefined, "invalid.ts"), []);
+    assert.deepEqual(
+      messages(
+        code,
+        "async-enqueue-disposition",
+        { targets: [{ sourcePatterns: ["["], calleeNamePatterns: ["^enqueue"] }] },
+        "invalid.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        code,
+        "async-enqueue-disposition",
+        { targets: [{ sourcePatterns: [], calleeNamePatterns: [] }] },
+        "invalid.ts",
+      ),
+      [],
+    );
+  });
+});
+
+describe("async-try-catch-return-await", () => {
+  it("allows awaited returns in configured try/catch handlers", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("async-try-catch-return-await", "valid.ts"),
+        "async-try-catch-return-await",
+        rateLimitTargetOptions,
+        "valid.ts",
+      ),
+      [],
+    );
+  });
+
+  it("reports unawaited returns in configured try/catch handlers", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("async-try-catch-return-await", "invalid.ts"),
+        "async-try-catch-return-await",
+        rateLimitTargetOptions,
+        "invalid.ts",
+      ),
+      [
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+      ],
+    );
+  });
+
+  it("offers return-await fixes inside async functions", () => {
+    const [message] = lint(
+      `import { handleRateLimit } from "@app/rate-limit";\nasync function run() { try { return request(); } catch (error) { handleRateLimit(error); } }`,
+      { "no-mistakes/async-try-catch-return-await": ["error", rateLimitTargetOptions] },
+      "fix.ts",
+    );
+    assert.equal(message.messageId, "awaitReturn");
+    assert.deepEqual(message.fix, { range: [87, 87], text: "await " });
+    const [wrapped] = lint(
+      `import { handleRateLimit } from "@app/rate-limit";\nasync function run() { try { return request() satisfies Promise<string>; } catch (error) { handleRateLimit(error); } }`,
+      { "no-mistakes/async-try-catch-return-await": ["error", rateLimitTargetOptions] },
+      "fix.ts",
+    );
+    assert.equal(wrapped.messageId, "awaitReturn");
+    assert.equal(wrapped.fix.text, "await (request() satisfies Promise<string>)");
+    const [conditional] = lint(
+      `import { handleRateLimit } from "@app/rate-limit";\nasync function run(useFallback) { try { return useFallback ? cachedRequest() : request(); } catch (error) { handleRateLimit(error); } }`,
+      { "no-mistakes/async-try-catch-return-await": ["error", rateLimitTargetOptions] },
+      "fix.ts",
+    );
+    assert.equal(conditional.messageId, "awaitReturn");
+    assert.equal(conditional.fix.text, "await (useFallback ? cachedRequest() : request())");
+    const [logical] = lint(
+      `import { handleRateLimit } from "@app/rate-limit";\nasync function run(cached) { try { return cached ?? request(); } catch (error) { handleRateLimit(error); } }`,
+      { "no-mistakes/async-try-catch-return-await": ["error", rateLimitTargetOptions] },
+      "fix.ts",
+    );
+    assert.equal(logical.messageId, "awaitReturn");
+    assert.equal(logical.fix.text, "await (cached ?? request())");
+  });
+
+  it("is a no-op without targets and ignores invalid regexes", () => {
+    const code = ruleFixture("async-try-catch-return-await", "invalid.ts");
+    assert.deepEqual(messages(code, "async-try-catch-return-await", undefined, "invalid.ts"), []);
+    assert.deepEqual(
+      messages(
+        code,
+        "async-try-catch-return-await",
+        { targets: [{ sourcePatterns: ["^@app"], calleeNamePatterns: ["["] }] },
+        "invalid.ts",
+      ),
+      [],
+    );
+  });
+});
 
 describe("ts-no-export-renaming", () => {
   it("allows direct value exports and type-only aliases", () => {
