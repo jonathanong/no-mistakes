@@ -28,6 +28,7 @@ pub use super::strict_package_layout::RULE_ID as STRICT_PACKAGE_LAYOUT;
 pub use super::structured_config_policy::RULE_ID as STRUCTURED_CONFIG_POLICY;
 pub use super::test_no_unmocked_dynamic_imports::RULE_ID as TEST_NO_UNMOCKED_DYNAMIC_IMPORTS;
 pub use super::tsconfig_alias_folder_mapping::RULE_ID as TSCONFIG_ALIAS_FOLDER_MAPPING;
+pub use super::vitest_ci_path_coverage::RULE_ID as VITEST_CI_PATH_COVERAGE;
 pub use super::vitest_project_mapping::RULE_ID as VITEST_PROJECT_MAPPING;
 pub use super::vitest_test_correspondence::RULE_ID as VITEST_TEST_CORRESPONDENCE;
 pub use super::workspace_package_cycles::RULE_ID as WORKSPACE_PACKAGE_CYCLES;

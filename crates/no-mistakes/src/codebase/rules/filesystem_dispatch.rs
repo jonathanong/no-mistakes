@@ -11,8 +11,8 @@ use super::{
     package_json_registry_only, package_json_workspace_coverage, require_files_in_subdirs,
     require_test_per_subdir, required_companion_imports, required_local_docs, rust_rules_combined,
     shellcheck_runner, strict_package_layout, structured_config_policy,
-    tsconfig_alias_folder_mapping, vitest_project_mapping, vitest_test_correspondence,
-    workspace_package_cycles,
+    tsconfig_alias_folder_mapping, vitest_ci_path_coverage, vitest_project_mapping,
+    vitest_test_correspondence, workspace_package_cycles,
 };
 
 mod preserved;
@@ -24,8 +24,8 @@ use super::{
     REQUIRED_COMPANION_IMPORTS, REQUIRED_DOC_SECTION, REQUIRED_LOCAL_DOCS,
     REQUIRE_FILES_IN_SUBDIRS, REQUIRE_TEST_PER_SUBDIR, RUST_MAX_LINES_PER_FILE,
     RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS, SHELLCHECK_RUNNER, STRICT_PACKAGE_LAYOUT,
-    STRUCTURED_CONFIG_POLICY, TSCONFIG_ALIAS_FOLDER_MAPPING, VITEST_PROJECT_MAPPING,
-    VITEST_TEST_CORRESPONDENCE, WORKSPACE_PACKAGE_CYCLES,
+    STRUCTURED_CONFIG_POLICY, TSCONFIG_ALIAS_FOLDER_MAPPING, VITEST_CI_PATH_COVERAGE,
+    VITEST_PROJECT_MAPPING, VITEST_TEST_CORRESPONDENCE, WORKSPACE_PACKAGE_CYCLES,
 };
 const GITHUB_ACTIONS_PINNED_HASH: &str = github_actions_pinned_hash::RULE_ID;
 
@@ -43,6 +43,7 @@ macro_rules! filesystem_rules {
             PACKAGE_JSON_WORKSPACE_COVERAGE => package_json_workspace_coverage::check_with_files,
             WORKSPACE_PACKAGE_CYCLES => workspace_package_cycles::check_with_files,
             REQUIRED_COMPANION_IMPORTS => required_companion_imports::check_with_files,
+            VITEST_CI_PATH_COVERAGE => vitest_ci_path_coverage::check_with_files,
             VITEST_PROJECT_MAPPING => vitest_project_mapping::check_with_files,
             REQUIRE_TEST_PER_SUBDIR => require_test_per_subdir::check_with_files,
             REQUIRE_FILES_IN_SUBDIRS => require_files_in_subdirs::check_with_files,
