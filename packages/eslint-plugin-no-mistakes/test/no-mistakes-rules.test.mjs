@@ -1173,8 +1173,29 @@ describe("no-global-fetch-outside-helper", () => {
       let conditional = fetch;
       if (useClient) conditional = client.fetch;
       conditional("/api/conditional");
+      let branchLocal = fetch;
+      if (useClient) {
+        branchLocal = client.fetch;
+        branchLocal("/api/branch-local");
+      }
+      branchLocal("/api/after-branch");
+      let maybeGlobal = client.fetch;
+      if (useGlobal) maybeGlobal = fetch;
+      maybeGlobal("/api/not-definitely-global");
+      var conditionalVar = fetch;
+      if (useClient) var conditionalVar = client.fetch;
+      conditionalVar("/api/conditional-var");
+      function forwardLoad() {
+        return forwardRequest("/api/forward");
+      }
+      let forwardRequest = fetch;
+      forwardLoad();
+      assigned ||= self.fetch;
     `;
     assert.deepEqual(messages(code, "no-global-fetch-outside-helper", option, "web/app/users.ts"), [
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
       "globalFetch",
       "globalFetch",
       "globalFetch",
@@ -1319,5 +1340,6 @@ describe("no-global-fetch-outside-helper", () => {
       }),
       false,
     );
+    assert.equal(__test.isMaybeExecuted({ parent: { type: "FunctionDeclaration" } }), false);
   });
 });

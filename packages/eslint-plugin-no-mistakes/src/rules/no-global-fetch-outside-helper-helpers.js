@@ -16,6 +16,18 @@ const LOCAL_BINDING_TYPES = new Set([
   "ImportBinding",
   "ClassName",
 ]);
+const MAYBE_EXECUTED_ANCESTORS = new Set([
+  "ConditionalExpression",
+  "DoWhileStatement",
+  "ForInStatement",
+  "ForOfStatement",
+  "ForStatement",
+  "IfStatement",
+  "LogicalExpression",
+  "SwitchCase",
+  "SwitchStatement",
+  "WhileStatement",
+]);
 
 function variableFromScope(scope, name) {
   const get = scope?.set?.get;
@@ -132,13 +144,29 @@ function collectVariableDeclarators(node, declarators = []) {
   return declarators;
 }
 
+function isMaybeExecuted(node) {
+  let current = node.parent;
+  while (current) {
+    if (MAYBE_EXECUTED_ANCESTORS.has(current.type)) return true;
+    if (
+      current.type === "FunctionDeclaration" ||
+      current.type === "FunctionExpression" ||
+      current.type === "ArrowFunctionExpression"
+    ) {
+      return false;
+    }
+    current = current.parent;
+  }
+  return false;
+}
+
 function collectFetchAliases(program, context, aliases) {
   const declarators = collectVariableDeclarators(program);
   let changed = true;
   while (changed) {
     changed = false;
     for (const node of declarators) {
-      if (node.parent?.type !== "VariableDeclaration" || node.parent.kind !== "const") continue;
+      if (!node.init || isMaybeExecuted(node)) continue;
       const before = aliases.size;
       recordObjectPatternFetchAliases(node.id, node.init, context, aliases);
       if (node.id.type === "Identifier" && isGlobalFetchExpression(node.init, context, aliases)) {
@@ -164,6 +192,7 @@ module.exports = {
   hasLocalBinding,
   isGlobalFetchExpression,
   isGlobalFetchMember,
+  isMaybeExecuted,
   recordObjectPatternFetchAliases,
   setAlias,
   setObjectPatternFetchAliases,

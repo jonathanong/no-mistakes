@@ -12,35 +12,6 @@ const {
   shouldCheckFile,
 } = helpers;
 
-const CONDITIONAL_ASSIGNMENT_ANCESTORS = new Set([
-  "ConditionalExpression",
-  "DoWhileStatement",
-  "ForInStatement",
-  "ForOfStatement",
-  "ForStatement",
-  "IfStatement",
-  "LogicalExpression",
-  "SwitchCase",
-  "SwitchStatement",
-  "WhileStatement",
-]);
-
-function isMaybeExecuted(node) {
-  let current = node.parent;
-  while (current) {
-    if (CONDITIONAL_ASSIGNMENT_ANCESTORS.has(current.type)) return true;
-    if (
-      current.type === "FunctionDeclaration" ||
-      current.type === "FunctionExpression" ||
-      current.type === "ArrowFunctionExpression"
-    ) {
-      return false;
-    }
-    current = current.parent;
-  }
-  return false;
-}
-
 module.exports = Object.assign(
   rule(
     {
@@ -89,6 +60,24 @@ module.exports = Object.assign(
         "FunctionExpression:exit": popAliasScope,
         ArrowFunctionExpression: pushAliasScope,
         "ArrowFunctionExpression:exit": popAliasScope,
+        IfStatement: pushAliasScope,
+        "IfStatement:exit": popAliasScope,
+        ForStatement: pushAliasScope,
+        "ForStatement:exit": popAliasScope,
+        ForInStatement: pushAliasScope,
+        "ForInStatement:exit": popAliasScope,
+        ForOfStatement: pushAliasScope,
+        "ForOfStatement:exit": popAliasScope,
+        WhileStatement: pushAliasScope,
+        "WhileStatement:exit": popAliasScope,
+        DoWhileStatement: pushAliasScope,
+        "DoWhileStatement:exit": popAliasScope,
+        SwitchStatement: pushAliasScope,
+        "SwitchStatement:exit": popAliasScope,
+        ConditionalExpression: pushAliasScope,
+        "ConditionalExpression:exit": popAliasScope,
+        LogicalExpression: pushAliasScope,
+        "LogicalExpression:exit": popAliasScope,
         VariableDeclarator(node) {
           if (!node.init) return;
           if (node.id?.type === "Identifier") {
@@ -105,7 +94,6 @@ module.exports = Object.assign(
         AssignmentExpression(node) {
           if (node.operator !== "=") return;
           const enabled = isGlobalFetchExpression(node.right, context, aliases);
-          if (!enabled && isMaybeExecuted(node)) return;
           if (node.left?.type === "Identifier") {
             setAlias(node.left, enabled, context, aliases);
             return;
