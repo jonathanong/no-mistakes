@@ -57,9 +57,11 @@ Rules not listed here have no options.
 | `playwright-require-exported-component-attribute` | `{ attributes?: string[], componentNamePattern?: string, components?: string[], ignoreComponents?: string[], wrappers?: string[], allowSpreadAttributes?: boolean, exportTypes?: ("named" \| "default")[], checkAnonymousDefault?: boolean }`. |
 | `playwright-require-interactive-test-id` | `{ selectorAttributes?: string[], interactiveComponents?: string[] }`; component entries may be exact names or `/regex/` patterns. |
 | `playwright-unique` | `{ selectorAttributes?: string[] }`. |
+| `server-require-nullable-fetch-wrapper` | `{ includePathPatterns?: string[], excludePathPatterns?: string[], getterCalleePatterns: string[], requiredWrapperCallee: string, nullableReturnTypeNames?: string[], inferNullableFromTopLevelEntityPath?: boolean, topLevelEntityPathPatterns?: string[] }`. |
 | `nextjs-no-manual-script-tags` | `{ allowInlineScriptIds?: string[], allowInlineScriptIdPatterns?: string[] }`. |
 | `test-no-shared-state` | `{ allowBeforeAllAssignments?: boolean }`. |
 | `ts-no-export-renaming` | `{ allowDefaultReExports?: boolean, includePathPatterns?: string[] }`. |
+| `ts-preserve-null-option-defaults` | `{ includePathPatterns?: string[], excludePathPatterns?: string[], optionObjectNames?: string[], optionObjectNamePatterns?: string[] }`. |
 
 ```js
 module.exports = [
