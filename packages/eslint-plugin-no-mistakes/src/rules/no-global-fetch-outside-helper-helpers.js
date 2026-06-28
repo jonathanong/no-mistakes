@@ -100,10 +100,14 @@ function setAlias(id, enabled, context, aliases) {
 }
 
 function recordObjectPatternFetchAliases(id, init, context, aliases) {
-  if (id.type !== "ObjectPattern" || !isUnshadowedGlobalRoot(init, context)) return;
+  setObjectPatternFetchAliases(id, isUnshadowedGlobalRoot(init, context), context, aliases);
+}
+
+function setObjectPatternFetchAliases(id, enabled, context, aliases) {
+  if (id.type !== "ObjectPattern") return;
   for (const property of id.properties) {
     if (property.type !== "Property" || propertyName(property.key) !== "fetch") continue;
-    setAlias(bindingIdentifier(property.value), true, context, aliases);
+    setAlias(bindingIdentifier(property.value), enabled, context, aliases);
   }
 }
 
@@ -162,6 +166,7 @@ module.exports = {
   isGlobalFetchMember,
   recordObjectPatternFetchAliases,
   setAlias,
+  setObjectPatternFetchAliases,
   shouldCheckFile,
   unwrapTSAndChain,
 };

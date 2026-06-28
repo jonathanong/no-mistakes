@@ -8,6 +8,7 @@ const {
   isGlobalFetchExpression,
   recordObjectPatternFetchAliases,
   setAlias,
+  setObjectPatternFetchAliases,
   shouldCheckFile,
 } = helpers;
 
@@ -37,14 +38,31 @@ module.exports = Object.assign(
     (context) => {
       const options = context.options?.[0] ?? {};
       if (!shouldCheckFile(context.filename, options)) return {};
-      const aliases = new Set();
+      let aliases = new Set();
+      const aliasStack = [];
+
+      function pushAliasScope() {
+        aliasStack.push(aliases);
+        aliases = new Set(aliases);
+      }
+
+      function popAliasScope() {
+        aliases = aliasStack.pop();
+      }
 
       return {
         Program(node) {
           collectFetchAliases(node, context, aliases);
         },
+        FunctionDeclaration: pushAliasScope,
+        "FunctionDeclaration:exit": popAliasScope,
+        FunctionExpression: pushAliasScope,
+        "FunctionExpression:exit": popAliasScope,
+        ArrowFunctionExpression: pushAliasScope,
+        "ArrowFunctionExpression:exit": popAliasScope,
+        BlockStatement: pushAliasScope,
+        "BlockStatement:exit": popAliasScope,
         VariableDeclarator(node) {
-          if (node.parent?.type === "VariableDeclaration" && node.parent.kind === "const") return;
           if (node.id?.type === "Identifier") {
             setAlias(
               node.id,
@@ -57,8 +75,17 @@ module.exports = Object.assign(
           recordObjectPatternFetchAliases(node.id, node.init, context, aliases);
         },
         AssignmentExpression(node) {
-          if (node.operator !== "=" || node.left?.type !== "Identifier") return;
-          setAlias(
+          if (node.operator !== "=") return;
+          if (node.left?.type === "Identifier") {
+            setAlias(
+              node.left,
+              isGlobalFetchExpression(node.right, context, aliases),
+              context,
+              aliases,
+            );
+            return;
+          }
+          setObjectPatternFetchAliases(
             node.left,
             isGlobalFetchExpression(node.right, context, aliases),
             context,
