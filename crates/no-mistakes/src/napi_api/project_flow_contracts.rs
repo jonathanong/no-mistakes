@@ -2,12 +2,20 @@ pub(crate) fn server_contracts_json_impl(options_json: String) -> napi::Result<S
     let options = parse_options::<ProjectOptions>(&options_json)?;
     let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
     let tsconfig = options.tsconfig.as_deref().map(PathBuf::from);
-    let report =
-        crate::server_routes::analyze_project(&root, tsconfig.as_deref(), &options.filters)
+    let filters = server_contract_filters(&options);
+    let report = crate::server_routes::analyze_project(&root, tsconfig.as_deref(), &filters)
+        .map_err(to_napi_error)?;
+    let contracts =
+        crate::server_routes::analyze_contracts(&root, tsconfig.as_deref(), &report, &filters)
             .map_err(to_napi_error)?;
-    let contracts = crate::server_routes::analyze_contracts(&root, &report);
     serde_json::to_string_pretty(&contracts)
         .map_err(|error| napi::Error::from_reason(error.to_string()))
+}
+
+fn server_contract_filters(options: &ProjectOptions) -> Vec<String> {
+    let mut filters = options.filters.clone();
+    filters.extend(project_roots(options));
+    filters
 }
 
 pub(crate) fn flow_json_impl(options_json: String) -> napi::Result<String> {

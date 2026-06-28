@@ -59,6 +59,7 @@ fn server_routes_json_lists_routes() {
     let params = shapes["queryParams"].as_array().unwrap();
     for param in [
         "array",
+        "aliasValue",
         "call",
         "calls",
         "conditional",

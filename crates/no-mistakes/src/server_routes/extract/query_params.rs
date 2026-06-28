@@ -6,6 +6,11 @@ use std::collections::{BTreeSet, HashMap};
 
 use super::ServerRouteVisitor;
 
+#[derive(Default)]
+struct QueryParamState {
+    query_aliases: BTreeSet<String>,
+}
+
 impl ServerRouteVisitor<'_> {
     pub(super) fn query_params_from_call(
         &self,
@@ -26,9 +31,10 @@ impl ServerRouteVisitor<'_> {
         named_handlers: &HashMap<String, BTreeSet<String>>,
     ) -> BTreeSet<String> {
         let mut params = BTreeSet::new();
+        let mut state = QueryParamState::default();
         collect_query_params_from_formal_parameters(parameters, &mut params);
         for statement in body {
-            collect_query_params_from_statement(statement, &mut params, named_handlers);
+            collect_query_params_from_statement(statement, &mut params, named_handlers, &mut state);
         }
         params
     }
@@ -56,9 +62,10 @@ fn collect_query_params_from_handler_expression(
             }
         }
         Expression::ArrowFunctionExpression(arrow) => {
+            let mut state = QueryParamState::default();
             collect_query_params_from_formal_parameters(&arrow.params, params);
             for statement in &arrow.body.statements {
-                collect_query_params_from_statement(statement, params, named_handlers);
+                collect_query_params_from_statement(statement, params, named_handlers, &mut state);
             }
         }
         Expression::FunctionExpression(function) => {
@@ -88,8 +95,9 @@ fn collect_query_params_from_optional_function_body(
     named_handlers: &HashMap<String, BTreeSet<String>>,
 ) {
     if let Some(body) = body {
+        let mut state = QueryParamState::default();
         for statement in &body.statements {
-            collect_query_params_from_statement(statement, params, named_handlers);
+            collect_query_params_from_statement(statement, params, named_handlers, &mut state);
         }
     }
 }

@@ -14,6 +14,7 @@ app.get("/api/v1/query-shapes", function (req, res) {
   // This fixture intentionally exercises static AST shapes for query-param
   // extraction; many branches are unreachable at runtime but parsable.
   const alias = req.query;
+  const aliasValue = alias.aliasValue;
   let withoutInit;
   const { first: renamed, nested = "fallback" } = req.query;
   const { [dynamicKey]: computed = req.query.assignedPattern } = req.query;
@@ -80,6 +81,7 @@ app.get("/api/v1/query-shapes", function (req, res) {
 
   res.json({
     alias,
+    aliasValue,
     withoutInit,
     renamed,
     nested,

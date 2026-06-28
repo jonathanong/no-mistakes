@@ -158,6 +158,26 @@ fn server_contracts_napi_direct_impl_returns_report() {
 }
 
 #[test]
+fn server_contracts_napi_honors_roots_scope() {
+    let output = crate::napi_api::server_contracts_json_impl(
+        json!({
+            "root": server_fixture_root("express"),
+            "roots": ["backend/api/users.ts"]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let value: Value = serde_json::from_str(&output).unwrap();
+
+    assert!(value["routes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|row| row["route"] == "/api/v1/search"));
+    assert!(value["clientRefs"].as_array().unwrap().is_empty());
+}
+
+#[test]
 fn tests_targets_napi_reports_project_commands() {
     let output = crate::napi_api::cli_parity::tests_targets_json_impl(
         json!({

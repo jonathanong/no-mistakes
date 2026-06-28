@@ -106,7 +106,12 @@ pub(crate) fn run(args: ServerArgs) -> Result<ExitCode> {
             print_related(roots, &edges, format)?;
         }
         ServerCommand::Contracts => {
-            let contracts = no_mistakes::server_routes::analyze_contracts(&root, &report);
+            let contracts = no_mistakes::server_routes::analyze_contracts(
+                &root,
+                args.tsconfig.as_deref(),
+                &report,
+                &args.filters,
+            )?;
             print_contracts(&contracts, format)?;
         }
     }

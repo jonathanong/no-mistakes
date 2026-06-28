@@ -66,13 +66,17 @@ fn analyze_contracts_reports_client_query_params_missing_from_server_route() {
         diagnostics: Vec::new(),
     };
 
-    let report = analyze_contracts(&root, &route_report);
+    let report = analyze_contracts(&root, None, &route_report, &[]).unwrap();
 
-    assert_eq!(report.client_refs.len(), 2);
+    assert_eq!(report.client_refs.len(), 3);
     assert!(report
         .client_refs
         .iter()
         .all(|client_ref| client_ref.query_params != vec!["debug"]));
+    assert!(report
+        .client_refs
+        .iter()
+        .any(|client_ref| client_ref.query_params == vec!["include"]));
     assert_eq!(report.mismatches.len(), 1);
     assert_eq!(report.mismatches[0].missing_params, vec!["sort"]);
 }
@@ -107,7 +111,7 @@ fn analyze_contracts_matches_same_path_routes_by_fetch_method() {
         diagnostics: Vec::new(),
     };
 
-    let report = analyze_contracts(&root, &route_report);
+    let report = analyze_contracts(&root, None, &route_report, &[]).unwrap();
 
     let mismatch = report
         .mismatches
@@ -115,4 +119,29 @@ fn analyze_contracts_matches_same_path_routes_by_fetch_method() {
         .find(|mismatch| mismatch.missing_params == vec!["sort"])
         .expect("POST fetch should be compared to POST route");
     assert_eq!(mismatch.matched_route, "/api/users");
+}
+
+#[test]
+fn analyze_contracts_applies_filters_to_client_scan() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/server-contracts/mismatch/fixture");
+    let route_report = ProjectReport {
+        summary: Default::default(),
+        routes: vec![ServerRoute {
+            file: "server.ts".to_string(),
+            line: 1,
+            method: "GET".to_string(),
+            route: "/api/users".to_string(),
+            raw_path: "/api/users".to_string(),
+            query_params: vec!["include".to_string(), "sort".to_string()],
+            framework: crate::server_routes::types::Framework::Express,
+        }],
+        edges: Vec::new(),
+        diagnostics: Vec::new(),
+    };
+
+    let report = analyze_contracts(&root, None, &route_report, &["links.ts".to_string()]).unwrap();
+
+    assert!(report.client_refs.is_empty());
+    assert!(report.mismatches.is_empty());
 }

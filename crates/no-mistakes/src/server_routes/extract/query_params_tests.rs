@@ -10,8 +10,9 @@ fn params_from_source(source: &str) -> Vec<String> {
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
     let mut params = BTreeSet::new();
     let named_handlers = HashMap::new();
+    let mut state = QueryParamState::default();
     for statement in &parsed.program.body {
-        collect_query_params_from_statement(statement, &mut params, &named_handlers);
+        collect_query_params_from_statement(statement, &mut params, &named_handlers, &mut state);
     }
     params.into_iter().collect()
 }
@@ -41,6 +42,8 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
     let params = params_from_source(
         r#"
         const { first = "x", second: renamed } = req.query;
+        const query = req.query;
+        const aliasRead = query.aliasRead;
         const { [dynamicKey]: computed = req.query.assignedPattern } = req.query;
         const [] = req.query;
         const condition = req.query.a && req.query.b ? req.query.c : req.query.d;
@@ -101,6 +104,7 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
         "array",
         "assertion",
         "awaited",
+        "aliasRead",
         "call",
         "calls",
         "cast",

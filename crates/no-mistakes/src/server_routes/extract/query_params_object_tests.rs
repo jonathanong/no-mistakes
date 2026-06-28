@@ -24,7 +24,7 @@ fn expression_matches_query_object(source: &str) -> bool {
         panic!("expected variable declaration");
     };
     let expression = declaration.declarations[0].init.as_ref().unwrap();
-    expression_is_query_object(expression)
+    expression_is_query_object(expression, &BTreeSet::new())
 }
 
 fn expression_matches_request_object_at_nesting(source: &str, nesting: u8) -> bool {

@@ -9,7 +9,7 @@ use oxc_ast::ast::{
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 use oxc_syntax::operator::BinaryOperator;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::Path;
 include!("types.rs");
 include!("import_bindings.rs");

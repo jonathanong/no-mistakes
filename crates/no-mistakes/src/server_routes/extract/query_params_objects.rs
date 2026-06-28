@@ -17,8 +17,9 @@ fn query_param_from_call(call: &oxc_ast::ast::CallExpression<'_>) -> Option<Stri
     Some(value.value.as_str().to_string())
 }
 
-fn expression_is_query_object(expr: &Expression<'_>) -> bool {
+fn expression_is_query_object(expr: &Expression<'_>, query_aliases: &BTreeSet<String>) -> bool {
     match expr {
+        Expression::Identifier(id) => query_aliases.contains(id.name.as_str()),
         Expression::StaticMemberExpression(member) => {
             member.property.name == "query" && is_request_object_expr(&member.object, 0)
         }
