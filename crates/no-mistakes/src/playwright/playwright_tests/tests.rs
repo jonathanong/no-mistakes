@@ -59,21 +59,42 @@ impl<'a> Visit<'a> for OuterCallVisitor {
 fn test_callback_status_identifies_all_statuses() {
     let cases = vec![
         ("test('active', () => {});", Some(TestStatus::Active)),
-        ("test.skipIf(condition)('skip if', () => {});", Some(TestStatus::Conditional)),
+        (
+            "test.skipIf(condition)('skip if', () => {});",
+            Some(TestStatus::Conditional),
+        ),
         ("not_a_test('foo', () => {});", None),
-        ("test.describe('describe', () => {});", Some(TestStatus::Active)),
-        ("test.skip('skip string', () => {});", Some(TestStatus::Skipped)),
+        (
+            "test.describe('describe', () => {});",
+            Some(TestStatus::Active),
+        ),
+        (
+            "test.skip('skip string', () => {});",
+            Some(TestStatus::Skipped),
+        ),
         ("test.skip(() => {});", None),
-        ("test.describe.skip('describe skip string', () => {});", Some(TestStatus::Skipped)),
+        (
+            "test.describe.skip('describe skip string', () => {});",
+            Some(TestStatus::Skipped),
+        ),
         ("test.describe.skip(() => {});", Some(TestStatus::Skipped)),
-        ("test.fixme('fixme string', () => {});", Some(TestStatus::Skipped)),
+        (
+            "test.fixme('fixme string', () => {});",
+            Some(TestStatus::Skipped),
+        ),
         ("test.only('only', () => {});", Some(TestStatus::Active)),
         ("test.skip(true, 'skip bool');", None),
         ("test.skip(condition, 'skip conditional');", None),
         ("test('no callback');", None),
         ("test.fail('fail string', () => {});", None),
-        ("test.skip(`template string`, () => {});", Some(TestStatus::Skipped)),
-        ("test.describe.fixme('describe fixme string', () => {});", Some(TestStatus::Skipped)),
+        (
+            "test.skip(`template string`, () => {});",
+            Some(TestStatus::Skipped),
+        ),
+        (
+            "test.describe.fixme('describe fixme string', () => {});",
+            Some(TestStatus::Skipped),
+        ),
         ("test.describe.fixme(() => {});", Some(TestStatus::Skipped)),
     ];
 
