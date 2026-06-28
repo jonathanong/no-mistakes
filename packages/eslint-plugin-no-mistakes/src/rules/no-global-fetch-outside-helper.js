@@ -6,9 +6,8 @@ const helpers = require("./no-global-fetch-outside-helper-helpers");
 const {
   collectFetchAliases,
   isGlobalFetchExpression,
-  recordObjectPatternFetchAliases,
-  setAlias,
-  setObjectPatternFetchAliases,
+  recordAssignmentFetchAliases,
+  recordVariableFetchAliases,
   shouldCheckFile,
 } = helpers;
 
@@ -50,6 +49,18 @@ module.exports = Object.assign(
         aliases = aliasStack.pop();
       }
 
+      function recordForInitializer(node) {
+        if (node.init?.type === "VariableDeclaration") {
+          for (const declaration of node.init.declarations) {
+            recordVariableFetchAliases(declaration, context, aliases);
+          }
+          return;
+        }
+        if (node.init?.type === "AssignmentExpression") {
+          recordAssignmentFetchAliases(node.init, context, aliases);
+        }
+      }
+
       return {
         Program(node) {
           collectFetchAliases(node, context, aliases);
@@ -62,7 +73,10 @@ module.exports = Object.assign(
         "ArrowFunctionExpression:exit": popAliasScope,
         IfStatement: pushAliasScope,
         "IfStatement:exit": popAliasScope,
-        ForStatement: pushAliasScope,
+        ForStatement(node) {
+          recordForInitializer(node);
+          pushAliasScope();
+        },
         "ForStatement:exit": popAliasScope,
         ForInStatement: pushAliasScope,
         "ForInStatement:exit": popAliasScope,
@@ -74,31 +88,19 @@ module.exports = Object.assign(
         "DoWhileStatement:exit": popAliasScope,
         SwitchStatement: pushAliasScope,
         "SwitchStatement:exit": popAliasScope,
+        TryStatement: pushAliasScope,
+        "TryStatement:exit": popAliasScope,
+        ClassBody: pushAliasScope,
+        "ClassBody:exit": popAliasScope,
         ConditionalExpression: pushAliasScope,
         "ConditionalExpression:exit": popAliasScope,
         LogicalExpression: pushAliasScope,
         "LogicalExpression:exit": popAliasScope,
         VariableDeclarator(node) {
-          if (!node.init) return;
-          if (node.id?.type === "Identifier") {
-            setAlias(
-              node.id,
-              isGlobalFetchExpression(node.init, context, aliases),
-              context,
-              aliases,
-            );
-            return;
-          }
-          recordObjectPatternFetchAliases(node.id, node.init, context, aliases);
+          recordVariableFetchAliases(node, context, aliases);
         },
         AssignmentExpression(node) {
-          if (node.operator !== "=") return;
-          const enabled = isGlobalFetchExpression(node.right, context, aliases);
-          if (node.left?.type === "Identifier") {
-            setAlias(node.left, enabled, context, aliases);
-            return;
-          }
-          setObjectPatternFetchAliases(node.left, enabled, context, aliases);
+          recordAssignmentFetchAliases(node, context, aliases);
         },
         CallExpression(node) {
           if (!isGlobalFetchExpression(node.callee, context, aliases)) return;

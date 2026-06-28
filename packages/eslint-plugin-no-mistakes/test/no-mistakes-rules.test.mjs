@@ -1190,9 +1190,44 @@ describe("no-global-fetch-outside-helper", () => {
       }
       let forwardRequest = fetch;
       forwardLoad();
+      function assignedForwardLoad() {
+        return assignedForwardRequest("/api/assigned-forward");
+      }
+      let assignedForwardRequest;
+      assignedForwardRequest = fetch;
+      assignedForwardLoad();
+      let tryAlias = fetch;
+      try {
+        risky();
+      } catch {
+        tryAlias = client.fetch;
+      }
+      tryAlias("/api/try-alias");
+      let forInit = client.fetch;
+      for (forInit = fetch; false;) {}
+      forInit("/api/for-init");
+      for (var declaredForInit = fetch; false;) {}
+      declaredForInit("/api/declared-for-init");
+      function destructuredAssignedForwardLoad() {
+        return destructuredAssignedForwardRequest("/api/destructured-assigned-forward");
+      }
+      let destructuredAssignedForwardRequest;
+      ({ fetch: destructuredAssignedForwardRequest } = globalThis);
+      destructuredAssignedForwardLoad();
+      let classAlias = fetch;
+      class AliasReset {
+        field = (classAlias = client.fetch);
+      }
+      classAlias("/api/class-alias");
       assigned ||= self.fetch;
     `;
     assert.deepEqual(messages(code, "no-global-fetch-outside-helper", option, "web/app/users.ts"), [
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
       "globalFetch",
       "globalFetch",
       "globalFetch",

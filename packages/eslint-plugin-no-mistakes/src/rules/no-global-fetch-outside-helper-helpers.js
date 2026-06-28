@@ -6,6 +6,12 @@ const {
   repoRelativeFilename,
   stringMatches,
 } = require("./module-mock-helpers");
+const {
+  childNodes,
+  collectAssignmentExpressions,
+  collectVariableDeclarators,
+  isMaybeExecuted,
+} = require("./no-global-fetch-outside-helper-traversal");
 
 const GLOBAL_FETCH_ROOTS = new Set(["globalThis", "window", "self", "global"]);
 const LOCAL_BINDING_TYPES = new Set([
@@ -15,18 +21,6 @@ const LOCAL_BINDING_TYPES = new Set([
   "FunctionName",
   "ImportBinding",
   "ClassName",
-]);
-const MAYBE_EXECUTED_ANCESTORS = new Set([
-  "ConditionalExpression",
-  "DoWhileStatement",
-  "ForInStatement",
-  "ForOfStatement",
-  "ForStatement",
-  "IfStatement",
-  "LogicalExpression",
-  "SwitchCase",
-  "SwitchStatement",
-  "WhileStatement",
 ]);
 
 function variableFromScope(scope, name) {
@@ -123,55 +117,56 @@ function setObjectPatternFetchAliases(id, enabled, context, aliases) {
   }
 }
 
-function childNodes(node) {
-  const children = [];
-  for (const [key, value] of Object.entries(node)) {
-    if (key === "parent") continue;
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        if (item?.type) children.push(item);
-      }
-    } else if (value?.type) {
-      children.push(value);
-    }
+function recordVariableFetchAliases(node, context, aliases) {
+  if (!node.init) return;
+  if (node.id.type === "Identifier") {
+    setAlias(node.id, isGlobalFetchExpression(node.init, context, aliases), context, aliases);
+    return;
   }
-  return children;
+  recordObjectPatternFetchAliases(node.id, node.init, context, aliases);
 }
 
-function collectVariableDeclarators(node, declarators = []) {
-  if (node.type === "VariableDeclarator") declarators.push(node);
-  for (const child of childNodes(node)) collectVariableDeclarators(child, declarators);
-  return declarators;
+function recordAssignmentFetchAliases(node, context, aliases) {
+  if (node.operator !== "=") return;
+  if (node.left?.type === "Identifier") {
+    setAlias(node.left, isGlobalFetchExpression(node.right, context, aliases), context, aliases);
+    return;
+  }
+  recordObjectPatternFetchAliases(node.left, node.right, context, aliases);
 }
 
-function isMaybeExecuted(node) {
-  let current = node.parent;
-  while (current) {
-    if (MAYBE_EXECUTED_ANCESTORS.has(current.type)) return true;
-    if (
-      current.type === "FunctionDeclaration" ||
-      current.type === "FunctionExpression" ||
-      current.type === "ArrowFunctionExpression"
-    ) {
-      return false;
+function collectPossibleAlias(node, context, aliases) {
+  if (node.type === "VariableDeclarator") {
+    if (!node.init) return;
+    if (node.id.type === "Identifier" && isGlobalFetchExpression(node.init, context, aliases)) {
+      setAlias(node.id, true, context, aliases);
+      return;
     }
-    current = current.parent;
+    if (isUnshadowedGlobalRoot(node.init, context))
+      recordObjectPatternFetchAliases(node.id, node.init, context, aliases);
+    return;
   }
-  return false;
+  if (node.operator !== "=") return;
+  if (node.left?.type === "Identifier") {
+    if (!isGlobalFetchExpression(node.right, context, aliases)) return;
+    setAlias(node.left, true, context, aliases);
+  } else if (isUnshadowedGlobalRoot(node.right, context)) {
+    setObjectPatternFetchAliases(node.left, true, context, aliases);
+  }
 }
 
 function collectFetchAliases(program, context, aliases) {
-  const declarators = collectVariableDeclarators(program);
+  const candidates = [
+    ...collectVariableDeclarators(program),
+    ...collectAssignmentExpressions(program),
+  ];
   let changed = true;
   while (changed) {
     changed = false;
-    for (const node of declarators) {
-      if (!node.init || isMaybeExecuted(node)) continue;
+    for (const node of candidates) {
+      if (isMaybeExecuted(node)) continue;
       const before = aliases.size;
-      recordObjectPatternFetchAliases(node.id, node.init, context, aliases);
-      if (node.id.type === "Identifier" && isGlobalFetchExpression(node.init, context, aliases)) {
-        setAlias(node.id, true, context, aliases);
-      }
+      collectPossibleAlias(node, context, aliases);
       changed ||= aliases.size > before;
     }
   }
@@ -186,6 +181,7 @@ function shouldCheckFile(filename, options) {
 
 module.exports = {
   bindingIdentifier,
+  collectAssignmentExpressions,
   childNodes,
   collectFetchAliases,
   collectVariableDeclarators,
@@ -193,7 +189,9 @@ module.exports = {
   isGlobalFetchExpression,
   isGlobalFetchMember,
   isMaybeExecuted,
+  recordAssignmentFetchAliases,
   recordObjectPatternFetchAliases,
+  recordVariableFetchAliases,
   setAlias,
   setObjectPatternFetchAliases,
   shouldCheckFile,
