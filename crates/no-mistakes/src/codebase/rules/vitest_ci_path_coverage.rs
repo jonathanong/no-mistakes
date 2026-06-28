@@ -1,12 +1,13 @@
+mod coverage_paths;
 mod globs;
 mod projects;
 mod workflow_filters;
 
 use super::RuleFinding;
-use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::schema::NoMistakesConfig;
-use anyhow::{Context, Result};
-use globs::{compile_patterns, selected_by, selected_by_paths_filter};
+use anyhow::Result;
+use coverage_paths::{coverage_paths, CoveragePath};
+use globs::selected_by_paths_filter;
 use projects::{coverage_units, CoverageUnit};
 use rayon::prelude::*;
 use serde::Deserialize;
@@ -63,10 +64,6 @@ fn scan(
         return Ok(Vec::new());
     }
 
-    let rel_files = files
-        .iter()
-        .map(|path| relative_slash_path(root, path))
-        .collect::<Vec<_>>();
     let (filters, mut findings) = ci_filters(root, config, &opts.workflows);
     let filters_by_name = filters.iter().fold(
         BTreeMap::<&str, Vec<&workflow_filters::CiFilter>>::new(),
@@ -81,8 +78,8 @@ fn scan(
         .unwrap_or(".github/workflows");
 
     for unit in coverage_units(root, config, opts)? {
-        let matched_files = files_matching_unit(&unit, &rel_files)?;
-        if matched_files.is_empty() {
+        let paths = coverage_paths(root, &unit, files)?;
+        if paths.is_empty() {
             continue;
         }
         let mapped_names = mapped_filter_names(opts, &unit.project);
@@ -100,28 +97,17 @@ fn scan(
             findings.push(missing_mapping_finding(fallback_file, &unit));
             continue;
         }
-        for rel in matched_files {
-            if mapped_filters
-                .iter()
-                .any(|filter| selected_by_paths_filter(&filter.compiled, filter.quantifier, &rel))
-            {
+        for path in paths {
+            if mapped_filters.iter().any(|filter| {
+                selected_by_paths_filter(&filter.compiled, filter.quantifier, &path.rel)
+            }) {
                 continue;
             }
-            findings.push(missed_path_finding(&mapped_filters, &unit, rel));
+            findings.push(missed_path_finding(&mapped_filters, &unit, path));
         }
     }
     findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
     Ok(findings)
-}
-
-fn files_matching_unit(unit: &CoverageUnit, rel_files: &[String]) -> Result<Vec<String>> {
-    let compiled = compile_patterns(&unit.patterns)
-        .with_context(|| format!("invalid glob in {RULE_ID} {}", unit.project))?;
-    Ok(rel_files
-        .iter()
-        .filter(|rel| selected_by(&compiled, rel))
-        .cloned()
-        .collect())
 }
 
 fn mapped_filter_names(opts: &Options, project: &str) -> Vec<String> {
@@ -149,7 +135,7 @@ fn missing_mapping_finding(file: &str, unit: &CoverageUnit) -> RuleFinding {
 fn missed_path_finding(
     filters: &[&workflow_filters::CiFilter],
     unit: &CoverageUnit,
-    rel: String,
+    path: CoveragePath,
 ) -> RuleFinding {
     let filter_list = filters
         .iter()
@@ -163,11 +149,18 @@ fn missed_path_finding(
         file: filters[0].workflow.clone(),
         line: 1,
         message: format!(
-            "{rel}: Vitest project `{}` {} path is not covered by CI path filters: {filter_list}",
-            unit.project, unit.source
+            "{}: Vitest project `{}` {}{} is not covered by CI path filters: {filter_list}",
+            path.rel,
+            unit.project,
+            unit.source,
+            if path.synthetic {
+                " glob witness path"
+            } else {
+                " path"
+            }
         ),
         import: None,
-        target: Some(rel),
+        target: Some(path.rel),
     }
 }
 

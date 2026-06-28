@@ -1,9 +1,12 @@
+mod merge;
+
 use super::Options;
 use crate::config::v2::schema::{NoMistakesConfig, Project, TestPlanProjectDependency};
 use crate::integration_tests::{
     config as integration_config, project_config, types::ConfigProject, types::Framework,
 };
 use anyhow::Result;
+use merge::merge_explicit_project;
 use std::path::Path;
 
 #[derive(Debug)]
@@ -76,9 +79,7 @@ fn vitest_projects(
         Vec::new()
     };
     for project in explicit_vitest_projects(root, config) {
-        projects
-            .retain(|existing| existing.policy_name.as_deref() != project.policy_name.as_deref());
-        projects.push(project);
+        merge_explicit_project(&mut projects, project);
     }
     Ok(projects)
 }

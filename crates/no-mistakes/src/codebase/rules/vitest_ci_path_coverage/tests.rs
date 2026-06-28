@@ -14,6 +14,17 @@ fn files(root: &Path) -> Vec<PathBuf> {
     crate::codebase::ts_source::discover_files(root, &[])
 }
 
+fn rule_options_mut(
+    config: &mut crate::config::v2::schema::NoMistakesConfig,
+) -> &mut serde_yaml::Value {
+    &mut config
+        .rules
+        .iter_mut()
+        .find(|rule| rule.rule == RULE_ID)
+        .expect("fixture should include vitest-ci-path-coverage rule")
+        .options
+}
+
 #[test]
 fn reports_source_input_missed_by_too_narrow_ci_filter() {
     let root = fixture_root("fixture");
@@ -46,7 +57,7 @@ fn passes_when_ci_filter_covers_source_inputs() {
 fn reports_missing_filter_mapping_for_matched_project_files() {
     let root = fixture_root("fixture");
     let mut config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
-    config.rules[0].options = serde_yaml::from_str(
+    *rule_options_mut(&mut config) = serde_yaml::from_str(
         r#"
 includeFullSuiteTriggers: false
 projectFilters:
@@ -75,7 +86,7 @@ workflows:
 fn source_globs_by_project_are_checked() {
     let root = fixture_root("fixture");
     let mut config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
-    config.rules[0].options = serde_yaml::from_str(
+    *rule_options_mut(&mut config) = serde_yaml::from_str(
         r#"
 includeVitestProjectGlobs: false
 includeFullSuiteTriggers: false
@@ -93,8 +104,19 @@ workflows:
 
     let findings = check_with_files(&root, &config, &files(&root)).unwrap();
 
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert!(findings[0].message.contains("configured source path"));
+    assert_eq!(findings.len(), 2, "{findings:#?}");
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("configured source path")),
+        "{findings:#?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("glob witness path")),
+        "{findings:#?}"
+    );
 }
 
 #[test]
@@ -150,8 +172,35 @@ fn non_paths_filter_steps_are_ignored() {
 
     let findings = check_with_files(&root, &config, &files(&root)).unwrap();
 
+    assert_eq!(findings.len(), 2, "{findings:#?}");
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("src/index.ts")),
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn reports_glob_witness_missed_by_too_shallow_ci_filter() {
+    let root = fixture_root("glob-witness");
+    let config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+
+    let findings = check_with_files(&root, &config, &files(&root)).unwrap();
+
     assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert!(findings[0].message.contains("src/index.ts"));
+    assert!(
+        findings[0]
+            .message
+            .contains("src/__no_mistakes_witness__/nested/__no_mistakes_witness__.ts"),
+        "{}",
+        findings[0].message
+    );
+    assert!(
+        findings[0].message.contains("glob witness path"),
+        "{}",
+        findings[0].message
+    );
 }
 
 #[test]
