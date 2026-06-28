@@ -86,7 +86,10 @@ fn test_callback_status_identifies_all_statuses() {
         ("test.skip(true, 'skip bool');", None),
         ("test.skip(condition, 'skip conditional');", None),
         ("test('no callback');", None),
-        ("test.fail('fail string', () => {});", Some(TestStatus::Active)),
+        (
+            "test.fail('fail string', () => {});",
+            Some(TestStatus::Active),
+        ),
         (
             "test.skip(`template string`, () => {});",
             Some(TestStatus::Skipped),
