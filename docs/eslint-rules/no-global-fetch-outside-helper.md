@@ -6,6 +6,8 @@ Why: projects that centralize request behavior in API/client helpers can keep
 auth, retry, error, and observability policy in one layer instead of spreading
 bare network calls through application code.
 
+Example: a configured helper path centralizes global `fetch`.
+
 ```ts
 export function getUser(id: string) {
   return fetch(`/api/users/${id}`);
@@ -13,6 +15,12 @@ export function getUser(id: string) {
 ```
 
 Counterexample: a checked application file calls global `fetch` directly.
+
+```ts
+export function UserPage({ id }: { id: string }) {
+  return fetch(`/api/users/${id}`);
+}
+```
 
 Fix: move the call into a configured helper path and call that helper from the
 application file.
