@@ -31,6 +31,9 @@ interface ExtendedOptions extends BaseOptions {
 }
 
 type PublicOptions = Options;
+type IntersectedOptions = BaseOptions & {
+  intersected?: string | null;
+};
 
 export function optionalMember(options: Options) {
   return options?.value ?? "fallback";
@@ -142,6 +145,28 @@ export function plainAssignment(options: Options) {
 
 export function assertedMemberDefault(options: Options) {
   return (options.value as string | null) ?? "fallback";
+}
+
+export function intersected(options: IntersectedOptions) {
+  return [options.inherited ?? "fallback", options.intersected ?? "fallback"];
+}
+
+export function loopScope(options: Options) {
+  for (let options of [{}]) {
+    options.value;
+  }
+  return options.value ?? "fallback";
+}
+
+export function switchScope(options: Options) {
+  switch (Math.random()) {
+    case 1: {
+      const options = {};
+      options.value;
+      break;
+    }
+  }
+  return options.value ?? "fallback";
 }
 
 export function ignoredBranches(options: Options) {

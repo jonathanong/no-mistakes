@@ -45,3 +45,9 @@ export function catchShadow(options: Options) {
     return options.value ?? "fallback";
   }
 }
+
+export function staleAssignmentCleared(options: Options) {
+  let value = options.value;
+  value = "forced";
+  return value ?? "fallback";
+}

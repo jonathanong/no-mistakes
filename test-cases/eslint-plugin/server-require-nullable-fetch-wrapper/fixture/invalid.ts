@@ -44,3 +44,13 @@ function defaultIdentifier(): User | null {
 export default defaultIdentifier;
 
 export const typedAlias: Getter = () => serverApi.get("/users/10");
+
+export function typedCallee(): User | null {
+  return (serverApi.get as typeof serverApi.get)("/users/11");
+}
+
+export function overloadedMixed(path: "missing"): User | null;
+export function overloadedMixed(path: "present"): User;
+export function overloadedMixed(path: string) {
+  return serverApi.get(path);
+}

@@ -57,23 +57,23 @@ function propsFromType(type, facts) {
   if (current.type === "TSTypeLiteral") {
     return nullablePropsFromMembers(current.members, facts.aliases);
   }
-  if (current.type === "TSUnionType") {
-    const props = new Set();
-    for (const item of current.types) {
-      const itemProps = propsFromType(item, facts);
-      for (const prop of itemProps || []) props.add(prop);
-    }
-    return props.size > 0 ? props : null;
+  if (current.type === "TSUnionType" || current.type === "TSIntersectionType") {
+    return propsFromTypes(current.types, facts);
   }
   const name = typeName(current);
   return name ? resolveTypeProps(name, facts) : null;
 }
-function isIdentifier(node) {
-  return node?.type === "Identifier";
+function propsFromTypes(types, facts) {
+  const props = new Set();
+  for (const item of types) {
+    const itemProps = propsFromType(item, facts);
+    for (const prop of itemProps || []) props.add(prop);
+  }
+  return props.size > 0 ? props : null;
 }
-function objectPropertyName(property) {
-  return property.type === "Property" ? keyName(property.key) : null;
-}
+const isIdentifier = (node) => node?.type === "Identifier";
+const objectPropertyName = (property) =>
+  property.type === "Property" ? keyName(property.key) : null;
 function memberRootAndProperty(node) {
   let current = node;
   while (
@@ -101,10 +101,8 @@ function declarationOf(statement) {
     ? statement.declaration
     : statement;
 }
-function heritageName(heritage) {
-  const expression = heritage?.expression;
-  return expression?.type === "Identifier" ? expression.name : null;
-}
+const heritageName = (heritage) =>
+  heritage?.expression?.type === "Identifier" ? heritage.expression.name : null;
 function collectNullableAliases(program) {
   const aliases = new Set();
   let changed = true;
@@ -127,13 +125,18 @@ function collectNullableAliases(program) {
 function resolveTypeProps(name, facts, seen = new Set()) {
   if (seen.has(name)) return null;
   seen.add(name);
-  return facts.typeProps.get(name) || resolveTypeProps(facts.objectAliases.get(name), facts, seen);
+  const props = facts.typeProps.get(name);
+  if (props) return props;
+  const target = facts.objectAliases.get(name);
+  if (target) return resolveTypeProps(target, facts, seen);
+  return facts.includeAll === true ? facts.allTypeProps?.get(name) || null : null;
 }
 function collectTypeProps(program, options, patterns, facts) {
   const aliases = collectNullableAliases(program);
   facts.aliases = aliases;
   const interfaces = new Map();
   const interfaceExtends = new Map();
+  const typeAliases = new Map();
   for (const statement of program.body || []) {
     const declaration = declarationOf(statement);
     if (declaration.type === "TSInterfaceDeclaration") {
@@ -149,14 +152,15 @@ function collectTypeProps(program, options, patterns, facts) {
     }
     if (
       declaration.type === "TSTypeAliasDeclaration" &&
-      optionTypeAllowed(declaration.id.name, options, patterns) &&
       declaration.typeAnnotation.type === "TSTypeLiteral"
     ) {
-      facts.typeProps.set(
-        declaration.id.name,
-        nullablePropsFromMembers(declaration.typeAnnotation.members, aliases),
-      );
+      const props = nullablePropsFromMembers(declaration.typeAnnotation.members, aliases);
+      facts.allTypeProps.set(declaration.id.name, props);
+      if (optionTypeAllowed(declaration.id.name, options, patterns)) {
+        facts.typeProps.set(declaration.id.name, props);
+      }
     } else if (declaration.type === "TSTypeAliasDeclaration") {
+      typeAliases.set(declaration.id.name, declaration.typeAnnotation);
       const target = typeName(declaration.typeAnnotation);
       if (target) facts.objectAliases.set(declaration.id.name, target);
     }
@@ -171,8 +175,14 @@ function collectTypeProps(program, options, patterns, facts) {
     return props;
   }
   for (const name of interfaces.keys()) {
-    if (optionTypeAllowed(name, options, patterns))
-      facts.typeProps.set(name, resolveInterface(name));
+    const props = resolveInterface(name);
+    facts.allTypeProps.set(name, props);
+    if (optionTypeAllowed(name, options, patterns)) facts.typeProps.set(name, props);
+  }
+  for (const [name, type] of typeAliases) {
+    if (!optionTypeAllowed(name, options, patterns) || facts.typeProps.has(name)) continue;
+    const props = propsFromType(type, { ...facts, includeAll: true });
+    if (props) facts.typeProps.set(name, props);
   }
 }
 

@@ -14,6 +14,12 @@ type InlineOptions = {
   value?: string | null;
 };
 
+interface InternalOptions {
+  publicValue?: string | null;
+}
+
+type PublicOptions = InternalOptions;
+
 export function selected(options: Options) {
   return [options.value ?? "fallback", options.inherited ?? "fallback"];
 }
@@ -25,4 +31,8 @@ export function ignored(other: OtherConfig) {
 export function inline(options: InlineOptions) {
   const { value = "fallback" } = options;
   return value;
+}
+
+export function publicAlias(options: PublicOptions) {
+  return options.publicValue ?? "fallback";
 }

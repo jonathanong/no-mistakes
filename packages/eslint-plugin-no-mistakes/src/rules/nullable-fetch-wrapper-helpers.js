@@ -20,6 +20,13 @@ function compilePatterns(patterns = []) {
 function calleePath(node) {
   let current = node;
   if (!current) return null;
+  while (
+    current.type === "TSAsExpression" ||
+    current.type === "TSTypeAssertion" ||
+    current.type === "TSNonNullExpression"
+  ) {
+    current = current.expression;
+  }
   if (current.type === "ChainExpression") current = current.expression;
   if (current.type === "Identifier") return current.name;
   if (current.type !== "MemberExpression") return null;
@@ -164,7 +171,12 @@ function collectFunctionOverloadReturnTypes(program, functionTypes = new Map()) 
       continue;
     }
     const returnType = functionReturnAnnotation(declaration, functionTypes);
-    if (returnType) types.set(declaration.id.name, returnType);
+    if (!returnType) continue;
+    const existing = types.get(declaration.id.name);
+    types.set(
+      declaration.id.name,
+      existing ? { type: "TSUnionType", types: [existing, returnType] } : returnType,
+    );
   }
   return types;
 }

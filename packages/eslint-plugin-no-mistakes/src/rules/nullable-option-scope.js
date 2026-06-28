@@ -37,6 +37,11 @@ function isNullableBinding(scopes, name) {
   return false;
 }
 
+function clearNullableBinding(scopes, name) {
+  const scope = bindingScope(scopes, name);
+  if (scope) scope.nullableBindings.delete(name);
+}
+
 function bindingScope(scopes, name) {
   for (let index = scopes.length - 1; index >= 0; index -= 1) {
     if (scopes[index].bindings.has(name)) return scopes[index];
@@ -53,11 +58,28 @@ function functionScopeVisitors(enter, exit) {
   );
 }
 
+function lexicalScopeVisitors(enter, exit) {
+  return Object.fromEntries(
+    [
+      "BlockStatement",
+      "ForStatement",
+      "ForInStatement",
+      "ForOfStatement",
+      "SwitchStatement",
+    ].flatMap((key) => [
+      [key, enter],
+      [`${key}:exit`, exit],
+    ]),
+  );
+}
+
 module.exports = {
   bindingScope,
+  clearNullableBinding,
   createScope,
   functionScopeVisitors,
   isNullableBinding,
+  lexicalScopeVisitors,
   objectProps,
   variableScope,
 };

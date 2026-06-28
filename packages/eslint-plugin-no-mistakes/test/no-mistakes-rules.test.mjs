@@ -240,7 +240,16 @@ describe("ts-preserve-null-option-defaults", () => {
         { optionObjectNamePatterns: ["Options$"] },
         "backend/options.ts",
       ),
-      ["default", "default"],
+      ["default", "default", "default"],
+    );
+    assert.deepEqual(
+      messages(
+        code,
+        "ts-preserve-null-option-defaults",
+        { optionObjectNames: ["PublicOptions"] },
+        "backend/options.ts",
+      ),
+      ["default"],
     );
     assert.deepEqual(
       messages(
@@ -386,7 +395,7 @@ describe("ts-preserve-null-option-defaults", () => {
         undefined,
         "coverage.ts",
       ),
-      Array(25).fill("default"),
+      Array(29).fill("default"),
     );
   });
 });
@@ -422,7 +431,7 @@ describe("server-require-nullable-fetch-wrapper", () => {
         option,
         "backend/users.ts",
       ),
-      Array(10).fill("wrapper"),
+      Array(12).fill("wrapper"),
     );
   });
 
@@ -486,6 +495,18 @@ describe("server-require-nullable-fetch-wrapper", () => {
     assert.equal(
       __test.calleePath({
         type: "ChainExpression",
+        expression: {
+          type: "MemberExpression",
+          computed: false,
+          object: { type: "Identifier", name: "serverApi" },
+          property: { type: "Identifier", name: "get" },
+        },
+      }),
+      "serverApi.get",
+    );
+    assert.equal(
+      __test.calleePath({
+        type: "TSAsExpression",
         expression: {
           type: "MemberExpression",
           computed: false,
@@ -628,12 +649,21 @@ describe("server-require-nullable-fetch-wrapper", () => {
                   },
                 },
               },
+              {
+                type: "TSDeclareFunction",
+                id: { type: "Identifier", name: "getUser" },
+                body: null,
+                returnType: {
+                  type: "TSTypeAnnotation",
+                  typeAnnotation: { type: "TSStringKeyword" },
+                },
+              },
             ],
           },
           functionTypes,
         )
-        .get("getUser").type,
-      "TSNullKeyword",
+        .get("getUser").types.length,
+      2,
     );
     assert.equal(
       __test.collectFunctionOverloadReturnTypes({
