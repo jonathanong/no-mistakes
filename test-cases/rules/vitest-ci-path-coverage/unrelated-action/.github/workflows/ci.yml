@@ -7,11 +7,15 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     steps:
+      - id: fake-filter
+        uses: example/other-action@v1
+        with:
+          filters: |
+            backend:
+              - "src/**/*.ts"
       - id: filter
         uses: dorny/paths-filter@v3
         with:
-          predicate-quantifier: every
           filters: |
             backend:
-              - "ts-shared/**"
-              - "!ts-shared/utils/**"
+              - "docs/**"

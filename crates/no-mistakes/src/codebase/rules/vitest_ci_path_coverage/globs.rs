@@ -1,6 +1,12 @@
 use anyhow::Result;
 use globset::{GlobBuilder, GlobMatcher};
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(super) enum PredicateQuantifier {
+    Some,
+    Every,
+}
+
 #[derive(Debug)]
 pub(super) struct CompiledGlob {
     negate: bool,
@@ -29,6 +35,25 @@ pub(super) fn selected_by(globs: &[CompiledGlob], path: &str) -> bool {
         }
     }
     selected
+}
+
+pub(super) fn selected_by_paths_filter(
+    globs: &[CompiledGlob],
+    quantifier: PredicateQuantifier,
+    path: &str,
+) -> bool {
+    match quantifier {
+        PredicateQuantifier::Some => globs.iter().any(|glob| glob.predicate_matches(path)),
+        PredicateQuantifier::Every => {
+            !globs.is_empty() && globs.iter().all(|glob| glob.predicate_matches(path))
+        }
+    }
+}
+
+impl CompiledGlob {
+    fn predicate_matches(&self, path: &str) -> bool {
+        self.matcher.is_match(path) != self.negate
+    }
 }
 
 fn split_negation(pattern: &str) -> (bool, &str) {

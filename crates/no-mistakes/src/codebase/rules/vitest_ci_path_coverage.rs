@@ -6,7 +6,7 @@ use super::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::schema::NoMistakesConfig;
 use anyhow::{Context, Result};
-use globs::{compile_patterns, selected_by};
+use globs::{compile_patterns, selected_by, selected_by_paths_filter};
 use projects::{coverage_units, CoverageUnit};
 use rayon::prelude::*;
 use serde::Deserialize;
@@ -103,7 +103,7 @@ fn scan(
         for rel in matched_files {
             if mapped_filters
                 .iter()
-                .any(|filter| selected_by(&filter.compiled, &rel))
+                .any(|filter| selected_by_paths_filter(&filter.compiled, filter.quantifier, &rel))
             {
                 continue;
             }

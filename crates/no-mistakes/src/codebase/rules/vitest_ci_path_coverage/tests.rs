@@ -114,6 +114,47 @@ fn negated_filters_remove_coverage() {
 }
 
 #[test]
+fn default_paths_filter_quantifier_does_not_treat_negations_as_exclusions() {
+    let root = fixture_root("negated-default");
+    let config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+
+    let findings = check_with_files(&root, &config, &files(&root)).unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn external_filter_files_are_loaded() {
+    let root = fixture_root("external");
+    let config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+
+    let findings = check_with_files(&root, &config, &files(&root)).unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn change_type_filter_rules_preserve_paths() {
+    let root = fixture_root("change-type");
+    let config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+
+    let findings = check_with_files(&root, &config, &files(&root)).unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn non_paths_filter_steps_are_ignored() {
+    let root = fixture_root("unrelated-action");
+    let config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+
+    let findings = check_with_files(&root, &config, &files(&root)).unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert!(findings[0].message.contains("src/index.ts"));
+}
+
+#[test]
 fn invalid_filter_globs_are_reported_as_findings() {
     let root = fixture_root("malformed");
     let config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();

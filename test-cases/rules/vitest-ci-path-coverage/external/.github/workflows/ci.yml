@@ -10,8 +10,4 @@ jobs:
       - id: filter
         uses: dorny/paths-filter@v3
         with:
-          predicate-quantifier: every
-          filters: |
-            backend:
-              - "ts-shared/**"
-              - "!ts-shared/utils/**"
+          filters: .github/filters.yml
