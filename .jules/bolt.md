@@ -16,3 +16,6 @@
 ## 2026-06-25 - [Optimize BFS HashSet Insertions]
 **Learning:** In Rust, when tracking visited nodes in a HashSet during hot loops (like graph traversals), unconditionally calling `visited.insert(value.clone())` with expensive types like `NodeId` or `PathBuf` causes unnecessary heap allocations for already visited elements.
 **Action:** Use a pre-check `if !visited.contains(&value) { visited.insert(value.clone()); ... }` to prevent these allocations, resulting in measurable performance improvements in traversals.
+## 2026-06-25 - [Optimize WalkDir file type check]
+**Learning:** `entry.path().is_file()` triggers a synchronous `stat` syscall on every call. In Rust, `walkdir::WalkDir`'s `DirEntry::file_type()` accesses the cached directory entry type provided by the OS (`d_type`), allowing for O(1) checks without any `stat` syscall overhead.
+**Action:** When iterating over directory entries (like with `WalkDir` or `fs::read_dir`), always use `entry.file_type().is_file()` (or similar) instead of reconstructing the path and checking `path.is_file()` to save significant traversal time.

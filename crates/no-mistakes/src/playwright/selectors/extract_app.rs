@@ -32,7 +32,13 @@ pub fn collect_app_selectors(
             .into_par_iter()
             .filter_map(|entry| {
                 let path = entry.path();
-                if !path.is_file() || !is_source_file(path) {
+                if !is_source_file(path) {
+                    return None;
+                }
+                // Use the cached WalkDir file type for regular files, but preserve
+                // the previous Path::is_file behavior for symlinked source files.
+                let file_type = entry.file_type();
+                if !(file_type.is_file() || file_type.is_symlink() && path.is_file()) {
                     return None;
                 }
                 Some(
