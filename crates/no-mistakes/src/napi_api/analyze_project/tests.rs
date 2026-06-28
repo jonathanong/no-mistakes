@@ -105,6 +105,21 @@ fn analyze_project_dispatches_import_usages_report() {
 }
 
 #[test]
+fn import_usages_report_requires_shared_context() {
+    let options = parse_options::<AnalyzeProjectOptions>(
+        &json!({
+            "root": fixture_root("import-usages"),
+            "reports": [{ "type": "importUsages", "filters": ["src/main.mts"] }]
+        })
+        .to_string(),
+    )
+    .unwrap();
+
+    let error = import_usages_report(&options.reports[0], &options, None).unwrap_err();
+    assert!(error.to_string().contains("without traversal context"));
+}
+
+#[test]
 fn analyze_project_rejects_unknown_report_type() {
     let error = analyze_project_json_impl(
         json!({
@@ -226,6 +241,23 @@ fn shared_graph_context_keeps_import_only_dependencies_lazy() {
         .unwrap()
         .iter()
         .any(|file| { file["path"] == "b.mts" }));
+}
+
+#[test]
+fn shared_import_usages_context_reuses_collected_facts() {
+    let options = parse_options::<AnalyzeProjectOptions>(
+        &json!({
+            "root": fixture_root("import-usages"),
+            "reports": [
+                { "type": "importUsages", "filters": ["src/main.mts"] }
+            ]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let mut shared = prepare_shared_traversal(&options).unwrap().unwrap();
+    assert!(!shared.facts().is_empty());
+    assert!(!shared.facts().is_empty());
 }
 
 #[test]

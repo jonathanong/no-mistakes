@@ -55,7 +55,15 @@ fn run_covers_cli_output_and_timing_path() {
 
 #[test]
 fn output_formats_cover_all_branches() {
-    let report = sample_report();
+    let mut report = sample_report();
+    report.files[1].imports.push(ImportUsage {
+        specifier: "./local".to_string(),
+        package_name: None,
+        kind: "static",
+        line: 2,
+        side_effect_only: false,
+        re_export: false,
+    });
     assert_eq!(output::resolve_format(true, None, false), Format::Json);
     assert_eq!(
         output::resolve_format(false, Some(Format::Yml), false),
@@ -96,6 +104,11 @@ fn scan_roots_filters_and_output_roots_cover_path_branches() {
         paths::roots_for_output(&file_args, &root),
         vec!["src/main.mts"]
     );
+
+    let mut absolute_file_args = base_args();
+    absolute_file_args.files = vec![root.join("src/main.mts")];
+    let absolute_input = paths::resolve_files(&absolute_file_args, &root, &cwd).unwrap();
+    assert_eq!(absolute_input, vec![root.join("src/main.mts")]);
 }
 
 #[test]
@@ -108,4 +121,25 @@ fn relative_roots_and_empty_package_segments_are_handled() {
     assert!(files[0].ends_with("src/main.mts"));
     assert_eq!(package_name_from_specifier(""), None);
     assert_eq!(package_name_from_specifier("@scope/"), None);
+}
+
+struct NoFacts;
+
+impl crate::codebase::dependencies::graph::TsFactLookup for NoFacts {
+    fn get_ts_facts(
+        &self,
+        _path: &Path,
+    ) -> Option<&crate::codebase::ts_source::facts::TsFileFacts> {
+        None
+    }
+}
+
+#[test]
+fn collect_from_facts_skips_files_without_facts() {
+    let root = fixture_root();
+    let graph_files = GraphFiles::from_files(vec![root.join("src/main.mts")]);
+    let report =
+        collect_from_facts(&root, vec!["fixture".to_string()], &graph_files, &NoFacts).unwrap();
+
+    assert!(report.files.is_empty());
 }

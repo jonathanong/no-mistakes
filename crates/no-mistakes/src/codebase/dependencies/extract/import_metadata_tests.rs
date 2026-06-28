@@ -30,6 +30,14 @@ fn non_literal_require_resolve_call_is_ignored() {
 }
 
 #[test]
+fn argumentless_require_resolve_call_is_ignored() {
+    let imports = ts_extractor()
+        .extract("const path = require.resolve();")
+        .unwrap();
+    assert!(imports.is_empty());
+}
+
+#[test]
 fn records_lines_side_effects_and_reexports() {
     let imports = ts_extractor()
         .extract("import 'polyfill';\nexport { helper } from '@scope/pkg/helpers';")

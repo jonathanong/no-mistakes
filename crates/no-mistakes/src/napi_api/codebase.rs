@@ -126,3 +126,6 @@ fn entrypoint_symbols(values: Vec<super::options::EntrypointOption>) -> Vec<Opti
 fn entrypoint_structured(values: &[super::options::EntrypointOption]) -> Vec<bool> {
     values.iter().map(|value| value.is_structured()).collect()
 }
+
+#[cfg(test)]
+mod tests;

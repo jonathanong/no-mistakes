@@ -81,6 +81,11 @@ fn tags_every_import_kind_and_absolute_path() {
 }
 
 #[test]
+fn tags_require_resolve_import_kind() {
+    assert_eq!(kind_str(ImportKind::RequireResolve), "require-resolve");
+}
+
+#[test]
 fn type_import_of_declaration_module_resolves() {
     let root = named_fixture("queries-kinds");
     let report = compute(&ResolveCheckArgs {
