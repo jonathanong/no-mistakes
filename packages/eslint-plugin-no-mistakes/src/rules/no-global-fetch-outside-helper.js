@@ -39,16 +39,21 @@ module.exports = Object.assign(
       if (!shouldCheckFile(context.filename, options)) return {};
       let aliases = new Set();
       const forwardAliases = new Set();
+      let clearedForwardAliases = new Set();
       const aliasStack = [];
+      const clearedAliasStack = [];
       let functionDepth = 0;
 
       function pushAliasScope() {
         aliasStack.push(aliases);
+        clearedAliasStack.push(clearedForwardAliases);
         aliases = new Set(aliases);
+        clearedForwardAliases = new Set(clearedForwardAliases);
       }
 
       function popAliasScope() {
         aliases = aliasStack.pop();
+        clearedForwardAliases = clearedAliasStack.pop();
       }
 
       function pushFunctionScope() {
@@ -62,18 +67,22 @@ module.exports = Object.assign(
       }
 
       function activeAliases() {
-        return functionDepth === 0 ? aliases : new Set([...forwardAliases, ...aliases]);
+        if (functionDepth === 0) return aliases;
+        const active = new Set(forwardAliases);
+        for (const alias of clearedForwardAliases) active.delete(alias);
+        for (const alias of aliases) active.add(alias);
+        return active;
       }
 
       function recordForInitializer(node) {
         if (node.init?.type === "VariableDeclaration") {
           for (const declaration of node.init.declarations) {
-            recordVariableFetchAliases(declaration, context, aliases);
+            recordVariableFetchAliases(declaration, context, aliases, clearedForwardAliases);
           }
           return;
         }
         if (node.init?.type === "AssignmentExpression") {
-          recordAssignmentFetchAliases(node.init, context, aliases);
+          recordAssignmentFetchAliases(node.init, context, aliases, clearedForwardAliases);
         }
       }
 
@@ -119,10 +128,10 @@ module.exports = Object.assign(
         "LogicalExpression > .right": pushAliasScope,
         "LogicalExpression > .right:exit": popAliasScope,
         VariableDeclarator(node) {
-          recordVariableFetchAliases(node, context, aliases);
+          recordVariableFetchAliases(node, context, aliases, clearedForwardAliases);
         },
         AssignmentExpression(node) {
-          recordAssignmentFetchAliases(node, context, aliases);
+          recordAssignmentFetchAliases(node, context, aliases, clearedForwardAliases);
         },
         CallExpression(node) {
           if (!isGlobalFetchExpression(node.callee, context, activeAliases())) return;

@@ -7,6 +7,12 @@ const {
   stringMatches,
 } = require("./module-mock-helpers");
 const {
+  hasLocalBinding,
+  isAmbientDeclaration,
+  isRuntimeBinding,
+  resolveVariable,
+} = require("./no-global-fetch-outside-helper-bindings");
+const {
   childNodes,
   collectAssignmentExpressions,
   collectVariableDeclarators,
@@ -15,45 +21,6 @@ const {
 } = require("./no-global-fetch-outside-helper-traversal");
 
 const GLOBAL_FETCH_ROOTS = new Set(["globalThis", "window", "self", "global"]);
-const LOCAL_BINDING_TYPES = new Set([
-  "Variable",
-  "Parameter",
-  "CatchClause",
-  "FunctionName",
-  "ClassName",
-]);
-
-function variableFromScope(scope, name) {
-  const get = scope?.set?.get;
-  if (typeof get === "function") return get.call(scope.set, name) ?? null;
-  return scope?.variables?.find((item) => item.name === name) ?? null;
-}
-
-function resolveVariable(node, context) {
-  if (node?.type !== "Identifier") return null;
-  let scope = context.sourceCode.getScope(node);
-  while (scope) {
-    const variable = variableFromScope(scope, node.name);
-    if (variable) return variable;
-    scope = scope.upper;
-  }
-  return null;
-}
-
-function hasLocalBinding(node, context) {
-  const variable = resolveVariable(node, context);
-  return Boolean(variable?.defs?.some(isRuntimeBinding));
-}
-
-function isRuntimeBinding(def) {
-  if (LOCAL_BINDING_TYPES.has(def.type)) return !isAmbientDeclaration(def);
-  if (def.type !== "ImportBinding") return false;
-  return def.node?.importKind !== "type" && def.parent?.importKind !== "type";
-}
-
-function isAmbientDeclaration(def) {
-  return def.node?.declare === true || def.parent?.declare === true;
-}
 
 function unwrapTSAndChain(node) {
   while (
@@ -105,44 +72,68 @@ function bindingIdentifier(node) {
   return node?.type === "AssignmentPattern" && node.left.type === "Identifier" ? node.left : null;
 }
 
-function setAlias(id, enabled, context, aliases) {
+function setAlias(id, enabled, context, aliases, clearedAliases) {
   const variable = resolveVariable(id, context);
   if (!variable) return;
   if (enabled) {
     aliases.add(variable);
+    clearedAliases?.delete(variable);
   } else {
     aliases.delete(variable);
+    clearedAliases?.add(variable);
   }
 }
 
-function recordObjectPatternFetchAliases(id, init, context, aliases) {
-  setObjectPatternFetchAliases(id, isUnshadowedGlobalRoot(init, context), context, aliases);
+function recordObjectPatternFetchAliases(id, init, context, aliases, clearedAliases) {
+  setObjectPatternFetchAliases(
+    id,
+    isUnshadowedGlobalRoot(init, context),
+    context,
+    aliases,
+    clearedAliases,
+  );
 }
 
-function setObjectPatternFetchAliases(id, enabled, context, aliases) {
+function setObjectPatternFetchAliases(id, enabled, context, aliases, clearedAliases) {
   if (id.type !== "ObjectPattern") return;
   for (const property of id.properties) {
     if (property.type !== "Property" || propertyName(property.key) !== "fetch") continue;
-    setAlias(bindingIdentifier(property.value), enabled, context, aliases);
+    setAlias(bindingIdentifier(property.value), enabled, context, aliases, clearedAliases);
   }
 }
 
-function recordVariableFetchAliases(node, context, aliases) {
+function recordVariableFetchAliases(node, context, aliases, clearedAliases) {
   if (!node.init) return;
   if (node.id.type === "Identifier") {
-    setAlias(node.id, isGlobalFetchExpression(node.init, context, aliases), context, aliases);
+    setAlias(
+      node.id,
+      isGlobalFetchExpression(node.init, context, aliases),
+      context,
+      aliases,
+      clearedAliases,
+    );
     return;
   }
-  recordObjectPatternFetchAliases(node.id, node.init, context, aliases);
+  recordObjectPatternFetchAliases(node.id, node.init, context, aliases, clearedAliases);
 }
 
-function recordAssignmentFetchAliases(node, context, aliases) {
-  if (node.operator !== "=") return;
-  if (node.left?.type === "Identifier") {
-    setAlias(node.left, isGlobalFetchExpression(node.right, context, aliases), context, aliases);
+function recordAssignmentFetchAliases(node, context, aliases, clearedAliases) {
+  if (node.operator !== "=") {
+    if (node.left?.type === "Identifier")
+      setAlias(node.left, false, context, aliases, clearedAliases);
     return;
   }
-  recordObjectPatternFetchAliases(node.left, node.right, context, aliases);
+  if (node.left?.type === "Identifier") {
+    setAlias(
+      node.left,
+      isGlobalFetchExpression(node.right, context, aliases),
+      context,
+      aliases,
+      clearedAliases,
+    );
+    return;
+  }
+  recordObjectPatternFetchAliases(node.left, node.right, context, aliases, clearedAliases);
 }
 
 function collectPossibleAlias(node, context, aliases) {

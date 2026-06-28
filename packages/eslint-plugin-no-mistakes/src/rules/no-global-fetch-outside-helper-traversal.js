@@ -78,7 +78,7 @@ function isMaybeExecuted(node) {
       current.type === "FunctionExpression" ||
       current.type === "ArrowFunctionExpression"
     ) {
-      return false;
+      return true;
     }
     child = current;
     current = current.parent;

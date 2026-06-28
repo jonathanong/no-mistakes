@@ -1235,6 +1235,9 @@ describe("no-global-fetch-outside-helper", () => {
       let logicalClear = fetch;
       (logicalClear = client.fetch) && noop();
       logicalClear("/api/logical-clear");
+      let compoundClear = fetch;
+      compoundClear &&= client.fetch;
+      compoundClear("/api/compound-clear");
       let finallyAlias = client.fetch;
       try {
         risky();
@@ -1267,6 +1270,17 @@ describe("no-global-fetch-outside-helper", () => {
       let lateAssigned;
       lateAssigned("/api/late-before-assignment");
       lateAssigned = fetch;
+      let uncalledFunctionAlias = client.fetch;
+      (() => uncalledFunctionAlias("/api/uncalled-function-alias"))();
+      function enableUncalledGlobal() {
+        uncalledFunctionAlias = fetch;
+      }
+      function clearedForwardLoad() {
+        let clearedForwardRequest = fetch;
+        clearedForwardRequest = client.fetch;
+        clearedForwardRequest("/api/cleared-forward");
+      }
+      clearedForwardLoad();
       function destructuredAssignedForwardLoad() {
         return destructuredAssignedForwardRequest("/api/destructured-assigned-forward");
       }
@@ -1519,6 +1533,6 @@ describe("no-global-fetch-outside-helper", () => {
       ),
       true,
     );
-    assert.equal(__test.isMaybeExecuted({ parent: { type: "FunctionDeclaration" } }), false);
+    assert.equal(__test.isMaybeExecuted({ parent: { type: "FunctionDeclaration" } }), true);
   });
 });
