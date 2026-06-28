@@ -42,3 +42,7 @@ satisfiesFetch("/api/satisfies");
   const { fetch } = globalThis;
   fetch("/api/fetch-name-destructured");
 }
+
+let later;
+later = self.fetch;
+later("/api/assigned-alias");

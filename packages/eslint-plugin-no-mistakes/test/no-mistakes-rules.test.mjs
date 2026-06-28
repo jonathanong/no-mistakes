@@ -1081,6 +1081,18 @@ describe("no-global-fetch-outside-helper", () => {
     allowedPathPatterns: ["web/lib/api/**", "web/lib/client/**"],
   };
 
+  it("is opt-in without checked paths", () => {
+    assert.deepEqual(
+      messages(
+        "fetch('/api/users')",
+        "no-global-fetch-outside-helper",
+        undefined,
+        "web/app/page.ts",
+      ),
+      [],
+    );
+  });
+
   it("reports global fetch calls in checked non-helper files", () => {
     assert.deepEqual(
       messages(
@@ -1089,7 +1101,7 @@ describe("no-global-fetch-outside-helper", () => {
         option,
         "web/app/users.ts",
       ),
-      Array(19).fill("globalFetch"),
+      Array(20).fill("globalFetch"),
     );
   });
 
@@ -1105,7 +1117,7 @@ describe("no-global-fetch-outside-helper", () => {
     );
   });
 
-  it("ignores local fetch bindings, global-root shadows, and reduced-fidelity aliases", () => {
+  it("ignores local fetch bindings, global-root shadows, and unsupported dynamic aliases", () => {
     assert.deepEqual(
       messages(
         ruleFixture("no-global-fetch-outside-helper", "valid.ts"),
@@ -1115,6 +1127,34 @@ describe("no-global-fetch-outside-helper", () => {
       ),
       [],
     );
+  });
+
+  it("does not report shadowed aliases", () => {
+    const code = `
+      const request = fetch;
+      function run(request) {
+        request("/api/shadowed");
+      }
+      request("/api/global");
+    `;
+    assert.deepEqual(messages(code, "no-global-fetch-outside-helper", option, "web/app/users.ts"), [
+      "globalFetch",
+    ]);
+  });
+
+  it("tracks assignment aliases and reassignment clearing", () => {
+    const code = `
+      let assigned;
+      assigned = self.fetch;
+      assigned("/api/assigned");
+      const nonFetchAlias = 1;
+      let reassigned = fetch;
+      reassigned = nonFetchAlias;
+      reassigned("/api/not-global");
+    `;
+    assert.deepEqual(messages(code, "no-global-fetch-outside-helper", option, "web/app/users.ts"), [
+      "globalFetch",
+    ]);
   });
 
   it("covers helper fallback branches", () => {

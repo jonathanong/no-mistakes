@@ -33,5 +33,7 @@ export function UserPage({ id }: { id: string }) {
 }
 ```
 
-Options: `checkedPathPatterns` and `allowedPathPatterns`. Both are required and
-must be non-empty.
+Options: `checkedPathPatterns` and `allowedPathPatterns`.
+`checkedPathPatterns` opts files into the rule; when it is missing or empty,
+the rule reports nothing. `allowedPathPatterns` is optional and exempts helper
+or client paths where global fetch is permitted.

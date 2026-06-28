@@ -37,6 +37,8 @@ describe("docs coverage", () => {
       "allowInlineScriptIds",
       "allowInlineScriptIdPatterns",
       "includePathPatterns",
+      "checkedPathPatterns",
+      "allowedPathPatterns",
       "allowDefaultReExports",
       "allowDefaultedProps",
       "allowStaticTemplates",
