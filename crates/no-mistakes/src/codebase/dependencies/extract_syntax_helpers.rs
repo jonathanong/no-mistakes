@@ -115,6 +115,12 @@ fn is_require_callee(expr: &Expression<'_>) -> bool {
     matches!(expr, Expression::Identifier(ident) if ident.name == "require")
 }
 
+fn is_require_resolve_callee(expr: &Expression<'_>) -> bool {
+    matches!(expr, Expression::StaticMemberExpression(member)
+        if matches!(&member.object, Expression::Identifier(ident) if ident.name == "require")
+            && member.property.name == "resolve")
+}
+
 fn string_literal_expr<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
     match expr {
         Expression::StringLiteral(s) => Some(s.value.as_str()),

@@ -8,6 +8,7 @@ npm install --save-dev no-mistakes
 npx no-mistakes dependencies src/main.mts --json
 npx no-mistakes dependents src/utils.mts --json
 npx no-mistakes symbols src/utils.mts --json
+npx no-mistakes import-usages --root . --filter 'src/**' --json
 npx no-mistakes check --json
 ```
 
@@ -19,6 +20,7 @@ const {
   dependents,
   check,
   fetches,
+  importUsages,
   playwrightRelated,
   symbols,
   testsPlan,
@@ -47,6 +49,10 @@ const {
     root: process.cwd(),
     files: ["src/utils.mts"],
     include: "both",
+  });
+  const imports = await importUsages({
+    root: process.cwd(),
+    filters: ["src/**"],
   });
   const signatureImpact = await symbols({
     root: process.cwd(),

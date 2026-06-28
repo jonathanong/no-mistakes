@@ -110,6 +110,7 @@ scope the review and `rg` to inspect exact argument objects such as
 | Which tests should rerun? (lower-level fallback) | `no-mistakes dependents <file> --test vitest --format paths` |
 | Why was this test selected? | `no-mistakes tests why <test> --plan plan.json` |
 | What does this module export/import? | `no-mistakes symbols <file> --include both` |
+| Which packages/specifiers are directly imported by source files? | `no-mistakes import-usages --root <root> --filter 'src/**' --format json` |
 | What React traits does this component have? | `no-mistakes react analyze <glob>` |
 | Does this component tree call fetch? | `no-mistakes react check <glob> --assert-no-fetch` |
 | Which callsites render this component, and with what props? | `no-mistakes react usages <file>#SYMBOL` |
@@ -155,6 +156,7 @@ no-mistakes tests why tests/users.test.mts --plan plan.json
 
 # Public API and imports
 no-mistakes symbols src/api.mts --include both --format json
+no-mistakes import-usages --root . --filter 'src/**' --format json
 no-mistakes symbols src/api.mts --mode signature-impact --symbol handler --format json
 
 # Playwright coverage gate before finishing Next.js / Playwright work

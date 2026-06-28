@@ -1,5 +1,6 @@
 #[derive(Default)]
 struct ImportCollector {
+    source: String,
     imports: Vec<ExtractedImport>,
     function_calls: Vec<FunctionCall>,
     symbol_references: Vec<FunctionCall>,
@@ -126,14 +127,20 @@ impl<'a> Visit<'a> for ImportCollector {
     fn visit_import_declaration(&mut self, import: &ImportDeclaration<'a>) {
         let kind = import_declaration_kind(import);
         let side_effect_only = import.specifiers.as_ref().is_none_or(|specifiers| specifiers.is_empty());
-        self.push_with_side_effect(import.source.value.as_str(), kind, side_effect_only);
+        self.push_with_side_effect(
+            import.source.value.as_str(),
+            kind,
+            import.span.start as usize,
+            side_effect_only,
+            false,
+        );
         self.record_imported_bindings(import);
     }
 
     fn visit_export_named_declaration(&mut self, export: &ExportNamedDeclaration<'a>) {
         if let Some(source) = &export.source {
             let kind = export_named_declaration_kind(export);
-            self.push(source.value.as_str(), kind);
+            self.push_reexport(source.value.as_str(), kind, export.span.start as usize);
         } else if !export.export_kind.is_type() {
             for specifier in &export.specifiers {
                 if specifier.export_kind.is_type() {
@@ -155,7 +162,7 @@ impl<'a> Visit<'a> for ImportCollector {
         } else {
             ImportKind::Static
         };
-        self.push(export.source.value.as_str(), kind);
+        self.push_reexport(export.source.value.as_str(), kind, export.span.start as usize);
     }
 
     fn visit_export_default_declaration(&mut self, export: &ExportDefaultDeclaration<'a>) {
@@ -164,39 +171,18 @@ impl<'a> Visit<'a> for ImportCollector {
 
     fn visit_import_expression(&mut self, import: &ImportExpression<'a>) {
         if let Some(specifier) = string_literal_expr(&import.source) {
-            self.push(specifier, ImportKind::Dynamic);
+            self.push(specifier, ImportKind::Dynamic, import.span.start as usize);
         }
         walk::walk_import_expression(self, import);
     }
 
     fn visit_ts_import_type(&mut self, import: &TSImportType<'a>) {
-        self.push(import.source.value.as_str(), ImportKind::Type);
+        self.push(import.source.value.as_str(), ImportKind::Type, import.span.start as usize);
         walk::walk_ts_import_type(self, import);
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        if is_require_callee(&call.callee) {
-            if let Some(first) = call.arguments.first() {
-                if let Some(specifier) = string_literal_argument(first) {
-                    self.push(specifier, ImportKind::Require);
-                }
-            }
-        } else if let Some(callee) = simple_callee_name(&call.callee) {
-            if self.should_record_call(&callee) {
-                self.function_calls.push(FunctionCall {
-                    caller: self.current_function(),
-                    static_cwd: static_process_cwd_arg(&callee, &call.arguments),
-                    callee,
-                    static_arg: call.arguments.first().and_then(static_path_argument),
-                });
-            }
-        } else {
-            let caller = self.current_function();
-            if caller.is_none() {
-                self.has_unknown_top_level_call = true;
-            }
-            self.unknown_callers.push(caller);
-        }
+        visit_call_expression_with_imports(self, call);
         walk::walk_call_expression(self, call);
     }
 

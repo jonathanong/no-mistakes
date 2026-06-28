@@ -25,7 +25,8 @@ pub(crate) use cli_parity::{
     tests_why_json_impl,
 };
 pub(crate) use codebase::{
-    dependencies_json_impl, dependents_json_impl, related_json_impl, symbols_json_impl,
+    dependencies_json_impl, dependents_json_impl, import_usages_json_impl, related_json_impl,
+    symbols_json_impl,
 };
 #[cfg(not(coverage))]
 pub use infra_swift::{
@@ -81,11 +82,7 @@ pub fn analyze_project_json(options_json: String) -> AsyncTask<JsonTask> {
     ))
 }
 
-#[cfg(not(coverage))]
-#[cfg_attr(not(test), napi(js_name = "symbolsJson"))]
-pub fn symbols_json(options_json: String) -> AsyncTask<JsonTask> {
-    AsyncTask::new(JsonTask::new(options_json, symbols_json_impl))
-}
+include!("napi_api/codebase_bindings.rs");
 
 #[cfg(not(coverage))]
 #[cfg_attr(not(test), napi(js_name = "fetchesJson"))]

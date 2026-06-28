@@ -43,6 +43,7 @@ fn analyze_project_batches_graph_and_queue_reports() {
 fn analyze_project_dispatches_all_domain_report_types() {
     for report_type in [
         "symbols",
+        "importUsages",
         "queueEdges",
         "queueRelated",
         "queueCheck",
@@ -76,6 +77,31 @@ fn analyze_project_dispatches_all_domain_report_types() {
             );
         }
     }
+}
+
+#[test]
+fn analyze_project_dispatches_import_usages_report() {
+    let output = analyze_project_json_impl(
+        json!({
+            "root": fixture_root("import-usages"),
+            "reports": [{
+                "type": "importUsages",
+                "id": "imports",
+                "filters": ["src/main.mts"]
+            }]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let value: Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(value["reports"][0]["id"], "imports");
+    assert_eq!(value["reports"][0]["type"], "importUsages");
+    assert!(value["reports"][0]["result"]["files"][0]["imports"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|row| row["kind"] == "require-resolve" && row["packageName"] == "@scope/pkg"));
 }
 
 #[test]

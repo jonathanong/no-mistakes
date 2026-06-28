@@ -19,6 +19,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use no_mistakes::cli::{init_rayon_threads, JobsArg};
 use no_mistakes::codebase::dependencies::{self, Direction, TraverseArgs};
+use no_mistakes::codebase::import_usages::{self, ImportUsagesArgs};
 use no_mistakes::codebase::queries;
 use no_mistakes::codebase::symbols::{self, SymbolsArgs};
 use no_mistakes::playwright;
@@ -44,6 +45,8 @@ enum Command {
     Related(TraverseArgs),
     /// Dump named exports and imports of TS/JS files.
     Symbols(SymbolsArgs),
+    /// Report direct import usages in TS/JS files.
+    ImportUsages(ImportUsagesArgs),
     /// List the files that directly import a file, plus a dependents count.
     Importers(queries::ImportersArgs),
     /// List a file's named exports and who imports each one.
@@ -113,6 +116,10 @@ fn run() -> Result<ExitCode> {
         }
         Command::Symbols(args) => {
             symbols::run(args)?;
+            Ok(ExitCode::SUCCESS)
+        }
+        Command::ImportUsages(args) => {
+            import_usages::run(args)?;
             Ok(ExitCode::SUCCESS)
         }
         Command::Importers(args) => queries::importers::run(args),
