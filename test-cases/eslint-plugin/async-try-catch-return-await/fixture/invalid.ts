@@ -48,10 +48,48 @@ export async function blockAlias() {
   }
 }
 
+export async function copiedAlias() {
+  try {
+    const result = request();
+    const response = result;
+    return response;
+  } catch (error) {
+    handleRateLimit(error);
+  }
+}
+
+export async function aliasBranch(useCache: boolean, cached: string) {
+  try {
+    const result = request();
+    return useCache ? cached : result;
+  } catch (error) {
+    handleRateLimit(error);
+  }
+}
+
+export async function logicalAlias(cached: string) {
+  try {
+    const result = request();
+    return cached || result;
+  } catch (error) {
+    handleRateLimit(error);
+  }
+}
+
 export async function conditionalAwait(warm: boolean) {
   try {
     const result = request();
     if (warm) await result;
+    return result;
+  } catch (error) {
+    handleRateLimit(error);
+  }
+}
+
+export async function conditionalReassignment(cached: boolean, cachedValue: string) {
+  try {
+    let result = request();
+    if (cached) result = cachedValue;
     return result;
   } catch (error) {
     handleRateLimit(error);

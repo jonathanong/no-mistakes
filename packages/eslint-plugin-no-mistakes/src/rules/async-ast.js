@@ -60,10 +60,30 @@ function traverse(context, node, visit, root = node) {
   }
 }
 
+function isUnconditionalBeforeReturn(node, block) {
+  let current = node;
+  while (current && current !== block) {
+    const parent = current.parent;
+    if (!parent || parent.type === "IfStatement" || parent.type.endsWith("Expression")) {
+      return false;
+    }
+    if (
+      parent.type.endsWith("Statement") &&
+      parent.type !== "ExpressionStatement" &&
+      parent.type !== "BlockStatement"
+    ) {
+      return false;
+    }
+    current = parent;
+  }
+  return current === block;
+}
+
 module.exports = {
   findContainingFunction,
   isFunction,
   isTransparentExpression,
+  isUnconditionalBeforeReturn,
   traverse,
   unwrapExpression,
   unwrapTransparentParent,

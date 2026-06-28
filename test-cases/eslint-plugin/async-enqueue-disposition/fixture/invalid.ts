@@ -18,10 +18,13 @@ export async function worker(id: string) {
   enqueueDefault(id);
   void enqueueEmail(id).catch;
   await enqueueEmail(id).status;
+  (() => enqueueEmail(id))();
 }
 
 export async function fanout(items: string[]) {
   Promise.all(items.map((item) => enqueueEmail(item)));
+  await Promise.all(enqueueEmail(items[0]));
+  await Promise.all([enqueueEmail(items[0]).status]);
   await Promise.all([wrap(enqueueEmail(items[0]))]);
   await Promise.all([[enqueueEmail(items[0])]]);
   await Promise.all([{ job: enqueueEmail(items[0]) }]);

@@ -1,7 +1,13 @@
 "use strict";
 
 const { rule } = require("../helpers");
-const { findContainingFunction, traverse, unwrapExpression } = require("./async-ast");
+const {
+  findContainingFunction,
+  isUnconditionalBeforeReturn,
+  traverse,
+  unwrapExpression,
+} = require("./async-ast");
+const { targetOptionsSchema } = require("./async-schema");
 const { createTargetMatcher } = require("./async-targets");
 
 function isAwaited(node) {
@@ -36,7 +42,7 @@ function resolveVariable(node, context) {
   }
 }
 
-function isReassignedBeforeReturn(variable, node, allowedWrite) {
+function isReassignedBeforeReturn(variable, node, allowedWrite, block) {
   const definitionNames = new Set(variable.defs.map((def) => def.name));
   const containingFunction = findContainingFunction(node);
   return variable.references.some(
@@ -45,6 +51,7 @@ function isReassignedBeforeReturn(variable, node, allowedWrite) {
       !definitionNames.has(reference.identifier) &&
       reference.identifier !== allowedWrite &&
       findContainingFunction(reference.identifier) === containingFunction &&
+      isUnconditionalBeforeReturn(reference.identifier, block) &&
       reference.identifier.range[0] < node.range[0],
   );
 }
@@ -52,6 +59,36 @@ function isReassignedBeforeReturn(variable, node, allowedWrite) {
 function assignedVariable(node, context) {
   if (node.left?.type !== "Identifier" || node.operator !== "=") return null;
   return resolveVariable(node.left, context);
+}
+
+function promiseAliasWrite(node, context, promiseAliases) {
+  const expression = unwrapExpression(node);
+  if (mayReturnPromise(expression)) return node;
+  if (expression?.type !== "Identifier") return null;
+  const variable = resolveVariable(expression, context);
+  return variable ? promiseAliases.get(variable) : null;
+}
+
+function returnsPromiseAlias(node, context, promiseAliases, block) {
+  const expression = unwrapExpression(node);
+  if (expression?.type === "ConditionalExpression") {
+    return (
+      returnsPromiseAlias(expression.consequent, context, promiseAliases, block) ||
+      returnsPromiseAlias(expression.alternate, context, promiseAliases, block)
+    );
+  }
+  if (expression?.type === "LogicalExpression") {
+    return (
+      returnsPromiseAlias(expression.left, context, promiseAliases, block) ||
+      returnsPromiseAlias(expression.right, context, promiseAliases, block)
+    );
+  }
+  if (expression?.type !== "Identifier") return false;
+  const variable = resolveVariable(expression, context);
+  const promiseWrite = variable ? promiseAliases.get(variable) : null;
+  return (
+    variable && promiseWrite && !isReassignedBeforeReturn(variable, expression, promiseWrite, block)
+  );
 }
 
 function shouldParenthesizeAwaitArgument(node) {
@@ -63,25 +100,6 @@ function shouldParenthesizeAwaitArgument(node) {
   );
 }
 
-function isUnconditionalBeforeReturn(node, block) {
-  let current = node;
-  while (current && current !== block) {
-    const parent = current.parent;
-    if (!parent || parent.type === "IfStatement" || parent.type.endsWith("Expression")) {
-      return false;
-    }
-    if (
-      parent.type.endsWith("Statement") &&
-      parent.type !== "ExpressionStatement" &&
-      parent.type !== "BlockStatement"
-    ) {
-      return false;
-    }
-    current = parent;
-  }
-  return current === block;
-}
-
 module.exports = rule(
   {
     type: "problem",
@@ -90,25 +108,7 @@ module.exports = rule(
       recommended: false,
     },
     fixable: "code",
-    schema: [
-      {
-        type: "object",
-        properties: {
-          targets: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                sourcePatterns: { type: "array", items: { type: "string" } },
-                calleeNamePatterns: { type: "array", items: { type: "string" } },
-              },
-              additionalProperties: false,
-            },
-          },
-        },
-        additionalProperties: false,
-      },
-    ],
+    schema: targetOptionsSchema,
     messages: {
       awaitReturn:
         "Use return await inside this try block so rejections are handled by the configured catch handler.",
@@ -151,15 +151,17 @@ module.exports = rule(
           const name = variableName(child.id);
           if (!name || isAwaited(child.init)) return;
           const variable = resolveVariable(child.id, context);
-          if (variable && mayReturnPromise(child.init)) promiseAliases.set(variable, child.id);
+          if (variable && promiseAliasWrite(child.init, context, promiseAliases)) {
+            promiseAliases.set(variable, child.id);
+          }
           return;
         }
         if (child.type === "AssignmentExpression") {
           const variable = assignedVariable(child, context);
           if (!variable) return;
-          if (mayReturnPromise(child.right) && !isAwaited(child.right)) {
+          if (promiseAliasWrite(child.right, context, promiseAliases) && !isAwaited(child.right)) {
             promiseAliases.set(variable, child.left);
-          } else {
+          } else if (isUnconditionalBeforeReturn(child, node.block)) {
             promiseAliases.delete(variable);
           }
           return;
@@ -175,20 +177,11 @@ module.exports = rule(
         if (child.type !== "ReturnStatement" || !child.argument || isAwaited(child.argument))
           return;
         const argument = unwrapExpression(child.argument);
-        if (mayReturnPromise(argument)) {
+        if (
+          mayReturnPromise(argument) ||
+          returnsPromiseAlias(argument, context, promiseAliases, node.block)
+        ) {
           reportReturn(child);
-          return;
-        }
-        if (argument.type === "Identifier") {
-          const variable = resolveVariable(argument, context);
-          const promiseWrite = variable ? promiseAliases.get(variable) : null;
-          if (
-            variable &&
-            promiseWrite &&
-            !isReassignedBeforeReturn(variable, argument, promiseWrite)
-          ) {
-            reportReturn(child);
-          }
         }
       });
     }

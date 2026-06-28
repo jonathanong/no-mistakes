@@ -7,6 +7,7 @@ const {
   isTransparentExpression,
   unwrapTransparentParent,
 } = require("./async-ast");
+const { targetOptionsSchema } = require("./async-schema");
 const { createTargetMatcher, memberPropertyName } = require("./async-targets");
 
 function isPromiseAllCall(node) {
@@ -28,6 +29,7 @@ function directlyDisposed(node) {
     return !isCallArgument(fn);
   }
   if (parent?.type === "ArrowFunctionExpression" && parent.body === expression) {
+    if (isCallCallee(parent)) return directlyDisposed(parent.parent);
     return !isCallArgument(parent);
   }
   return (
@@ -40,14 +42,25 @@ function isCallArgument(node) {
   return Boolean(node?.parent?.type === "CallExpression" && node.parent.arguments.includes(node));
 }
 
+function isCallCallee(node) {
+  return node?.parent?.type === "CallExpression" && node.parent.callee === node;
+}
+
+function isPromiseAllIterable(node, promiseAll) {
+  return promiseAll.arguments[0] === node && (node.type === "ArrayExpression" || isMapCall(node));
+}
+
+function isMapCall(node) {
+  return (
+    node?.type === "CallExpression" &&
+    node.callee.type === "MemberExpression" &&
+    memberPropertyName(node.callee) === "map"
+  );
+}
+
 function isMapCallback(fn) {
   const call = fn.parent;
-  return (
-    call?.type === "CallExpression" &&
-    call.arguments.includes(fn) &&
-    call.callee.type === "MemberExpression" &&
-    memberPropertyName(call.callee) === "map"
-  );
+  return isMapCall(call) && call.arguments.includes(fn);
 }
 
 function expressionReturnedFromCallback(node, fn) {
@@ -73,6 +86,8 @@ function canReachPromiseAll(node, promiseAll) {
       current = parent;
       continue;
     }
+    if (parent?.type === "MemberExpression") return false;
+    if (parent === promiseAll) return isPromiseAllIterable(current, promiseAll);
     if (isFunction(parent)) {
       if (!expressionReturnedFromCallback(node, parent) || !isMapCallback(parent)) {
         return false;
@@ -152,25 +167,7 @@ module.exports = rule(
       recommended: false,
     },
     fixable: "code",
-    schema: [
-      {
-        type: "object",
-        properties: {
-          targets: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                sourcePatterns: { type: "array", items: { type: "string" } },
-                calleeNamePatterns: { type: "array", items: { type: "string" } },
-              },
-              additionalProperties: false,
-            },
-          },
-        },
-        additionalProperties: false,
-      },
-    ],
+    schema: targetOptionsSchema,
     messages: {
       disposition:
         "Handle this enqueue promise explicitly with await, return, Promise.all(...), or void.",

@@ -22,6 +22,7 @@ export async function fanout(items: string[]) {
 export async function explicitDiscard(id: string) {
   void enqueuePush(id);
   await typedQueue.enqueueEmail(id);
+  await (() => enqueueEmail(id))();
   void Promise.all([queue.enqueuePush(id), enqueueDefault(id)]);
   void (enqueueEmail(id) as Promise<void>);
   await enqueueEmail(id).catch(logError);
