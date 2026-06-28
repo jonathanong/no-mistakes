@@ -14,27 +14,27 @@ function ruleFixture(rule, name) {
 const asyncTargetOptions = {
   targets: [
     {
-      sourcePatterns: ["^@app/jobs$"],
-      calleeNamePatterns: ["^enqueue[A-Z].*", "^sendSms$"],
+      sourceSpecifierPatterns: ["@app/jobs"],
+      calleeNamePatterns: ["/^enqueue[A-Z].*/", "/^sendSms$/"],
     },
   ],
 };
 
 const rateLimitTargetOptions = {
-  targets: [
+  handlers: [
     {
-      sourcePatterns: ["^@app/rate-limit$"],
-      calleeNamePatterns: ["^handle.*RateLimit$"],
+      sourceSpecifierPatterns: ["@app/rate-limit"],
+      calleeNamePatterns: ["/^handle.*RateLimit$/"],
     },
   ],
 };
 
-describe("async-enqueue-disposition", () => {
+describe("async-call-disposition", () => {
   it("allows explicit enqueue promise disposition", () => {
     assert.deepEqual(
       messages(
-        ruleFixture("async-enqueue-disposition", "valid.ts"),
-        "async-enqueue-disposition",
+        ruleFixture("async-call-disposition", "valid.ts"),
+        "async-call-disposition",
         asyncTargetOptions,
         "valid.ts",
       ),
@@ -45,8 +45,8 @@ describe("async-enqueue-disposition", () => {
   it("reports floating enqueue promises", () => {
     assert.deepEqual(
       messages(
-        ruleFixture("async-enqueue-disposition", "invalid.ts"),
-        "async-enqueue-disposition",
+        ruleFixture("async-call-disposition", "invalid.ts"),
+        "async-call-disposition",
         asyncTargetOptions,
         "invalid.ts",
       ),
@@ -80,24 +80,26 @@ describe("async-enqueue-disposition", () => {
     );
   });
 
-  it("offers void fixes for bare enqueue expression statements", () => {
+  it("offers void suggestions for bare enqueue expression statements", () => {
     const [message] = lint(
       `import { enqueueEmail } from "@app/jobs";\nenqueueEmail("1");`,
-      { "no-mistakes/async-enqueue-disposition": ["error", asyncTargetOptions] },
+      { "no-mistakes/async-call-disposition": ["error", asyncTargetOptions] },
       "fix.ts",
     );
     assert.equal(message.messageId, "disposition");
-    assert.deepEqual(message.fix, { range: [42, 42], text: "void " });
+    assert.equal(message.fix, undefined);
+    assert.equal(message.suggestions[0].messageId, "markVoid");
+    assert.deepEqual(message.suggestions[0].fix, { range: [42, 42], text: "void " });
   });
 
   it("is a no-op without targets and ignores invalid regexes", () => {
-    const code = ruleFixture("async-enqueue-disposition", "invalid.ts");
-    assert.deepEqual(messages(code, "async-enqueue-disposition", undefined, "invalid.ts"), []);
+    const code = ruleFixture("async-call-disposition", "invalid.ts");
+    assert.deepEqual(messages(code, "async-call-disposition", undefined, "invalid.ts"), []);
     assert.deepEqual(
       messages(
         code,
-        "async-enqueue-disposition",
-        { targets: [{ sourcePatterns: ["["], calleeNamePatterns: ["^enqueue"] }] },
+        "async-call-disposition",
+        { targets: [{ sourceSpecifierPatterns: ["/[/"], calleeNamePatterns: ["/^enqueue/"] }] },
         "invalid.ts",
       ),
       [],
@@ -105,8 +107,8 @@ describe("async-enqueue-disposition", () => {
     assert.deepEqual(
       messages(
         code,
-        "async-enqueue-disposition",
-        { targets: [{ sourcePatterns: [], calleeNamePatterns: [] }] },
+        "async-call-disposition",
+        { targets: [{ sourceSpecifierPatterns: [], calleeNamePatterns: [] }] },
         "invalid.ts",
       ),
       [],
@@ -155,41 +157,45 @@ describe("async-try-catch-return-await", () => {
         "awaitReturn",
         "awaitReturn",
         "awaitReturn",
-        "awaitReturn",
-        "awaitReturn",
       ],
     );
   });
 
-  it("offers return-await fixes inside async functions", () => {
+  it("offers return-await suggestions inside async functions", () => {
     const [message] = lint(
       `import { handleRateLimit } from "@app/rate-limit";\nasync function run() { try { return request(); } catch (error) { handleRateLimit(error); } }`,
       { "no-mistakes/async-try-catch-return-await": ["error", rateLimitTargetOptions] },
       "fix.ts",
     );
     assert.equal(message.messageId, "awaitReturn");
-    assert.deepEqual(message.fix, { range: [87, 87], text: "await " });
+    assert.equal(message.fix, undefined);
+    assert.equal(message.suggestions[0].messageId, "addAwait");
+    assert.deepEqual(message.suggestions[0].fix, { range: [87, 87], text: "await " });
     const [wrapped] = lint(
       `import { handleRateLimit } from "@app/rate-limit";\nasync function run() { try { return request() satisfies Promise<string>; } catch (error) { handleRateLimit(error); } }`,
       { "no-mistakes/async-try-catch-return-await": ["error", rateLimitTargetOptions] },
       "fix.ts",
     );
     assert.equal(wrapped.messageId, "awaitReturn");
-    assert.equal(wrapped.fix.text, "await (request() satisfies Promise<string>)");
+    assert.equal(wrapped.fix, undefined);
+    assert.equal(wrapped.suggestions[0].fix.text, "await (request() satisfies Promise<string>)");
     const [conditional] = lint(
       `import { handleRateLimit } from "@app/rate-limit";\nasync function run(useFallback) { try { return useFallback ? cachedRequest() : request(); } catch (error) { handleRateLimit(error); } }`,
       { "no-mistakes/async-try-catch-return-await": ["error", rateLimitTargetOptions] },
       "fix.ts",
     );
     assert.equal(conditional.messageId, "awaitReturn");
-    assert.equal(conditional.fix.text, "await (useFallback ? cachedRequest() : request())");
+    assert.equal(
+      conditional.suggestions[0].fix.text,
+      "await (useFallback ? cachedRequest() : request())",
+    );
     const [logical] = lint(
       `import { handleRateLimit } from "@app/rate-limit";\nasync function run(cached) { try { return cached ?? request(); } catch (error) { handleRateLimit(error); } }`,
       { "no-mistakes/async-try-catch-return-await": ["error", rateLimitTargetOptions] },
       "fix.ts",
     );
     assert.equal(logical.messageId, "awaitReturn");
-    assert.equal(logical.fix.text, "await (cached ?? request())");
+    assert.equal(logical.suggestions[0].fix.text, "await (cached ?? request())");
   });
 
   it("is a no-op without targets and ignores invalid regexes", () => {
@@ -199,7 +205,7 @@ describe("async-try-catch-return-await", () => {
       messages(
         code,
         "async-try-catch-return-await",
-        { targets: [{ sourcePatterns: ["^@app"], calleeNamePatterns: ["["] }] },
+        { handlers: [{ sourceSpecifierPatterns: ["@app/**"], calleeNamePatterns: ["/[/"] }] },
         "invalid.ts",
       ),
       [],

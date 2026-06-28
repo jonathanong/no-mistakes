@@ -11,13 +11,44 @@ function safeRegExp(source) {
   }
 }
 
-function compileTargets(options) {
-  return (options.targets || [])
+function patternToRegExp(pattern) {
+  if (pattern.startsWith("/") && pattern.endsWith("/") && pattern.length > 2) {
+    return safeRegExp(pattern.slice(1, -1));
+  }
+  let source = "^";
+  for (let index = 0; index < pattern.length; index += 1) {
+    const ch = pattern[index];
+    const next = pattern[index + 1];
+    if (ch === "*" && next === "*") {
+      if (pattern[index + 2] === "/") {
+        source += "(?:.*/)?";
+        index += 2;
+      } else {
+        source += ".*";
+        index += 1;
+      }
+    } else if (ch === "*") {
+      source += "[^/]*";
+    } else if (ch === "?") {
+      source += "[^/]";
+    } else {
+      source += ch.replace(/[\\^$+?.()|[\]{}]/g, "\\$&");
+    }
+  }
+  return safeRegExp(`${source}$`);
+}
+
+function compileTargets(options, optionKey) {
+  return (options[optionKey] || [])
     .map((target) => ({
-      sourcePatterns: (target.sourcePatterns || []).map(safeRegExp).filter(Boolean),
-      calleeNamePatterns: (target.calleeNamePatterns || []).map(safeRegExp).filter(Boolean),
+      sourceSpecifierPatterns: (target.sourceSpecifierPatterns || [])
+        .map(patternToRegExp)
+        .filter(Boolean),
+      calleeNamePatterns: (target.calleeNamePatterns || []).map(patternToRegExp).filter(Boolean),
     }))
-    .filter((target) => target.sourcePatterns.length > 0 && target.calleeNamePatterns.length > 0);
+    .filter(
+      (target) => target.sourceSpecifierPatterns.length > 0 && target.calleeNamePatterns.length > 0,
+    );
 }
 
 function matchesAny(value, patterns) {
@@ -27,7 +58,7 @@ function matchesAny(value, patterns) {
 function targetMatches(targets, source, calleeName) {
   return targets.some(
     (target) =>
-      matchesAny(source, target.sourcePatterns) &&
+      matchesAny(source, target.sourceSpecifierPatterns) &&
       matchesAny(calleeName, target.calleeNamePatterns),
   );
 }
@@ -70,9 +101,9 @@ function memberPropertyName(node) {
   return node.property?.type === "Literal" ? String(node.property.value) : null;
 }
 
-function createTargetMatcher(context) {
-  const targets = compileTargets(context.options?.[0] || {});
-  const sourcePatterns = targets.flatMap((target) => target.sourcePatterns);
+function createTargetMatcher(context, optionKey = "targets") {
+  const targets = compileTargets(context.options?.[0] || {}, optionKey);
+  const sourceSpecifierPatterns = targets.flatMap((target) => target.sourceSpecifierPatterns);
   const directBindings = new Map();
   const namespaceBindings = new Map();
 
@@ -83,7 +114,7 @@ function createTargetMatcher(context) {
   }
 
   function recordNamespace(id, source) {
-    if (id.type !== "Identifier" || !matchesAny(source, sourcePatterns)) {
+    if (id.type !== "Identifier" || !matchesAny(source, sourceSpecifierPatterns)) {
       return;
     }
     const variable = resolveVariable(id, context);

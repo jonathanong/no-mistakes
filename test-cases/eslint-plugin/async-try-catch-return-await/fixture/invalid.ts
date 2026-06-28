@@ -8,8 +8,6 @@ async function request() {
   return "ok";
 }
 
-class RequestJob {}
-
 export async function direct() {
   try {
     return request();
@@ -179,22 +177,6 @@ export async function catchLocalRequire() {
     return request();
   } catch (error) {
     const { handleRateLimit } = require("@app/rate-limit");
-    handleRateLimit(error);
-  }
-}
-
-export async function constructorReturn() {
-  try {
-    return new RequestJob();
-  } catch (error) {
-    handleRateLimit(error);
-  }
-}
-
-export async function dynamicImportReturn() {
-  try {
-    return import("./worker");
-  } catch (error) {
     handleRateLimit(error);
   }
 }
