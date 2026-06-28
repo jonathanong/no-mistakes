@@ -19,7 +19,6 @@ const LOCAL_BINDING_TYPES = new Set([
   "Parameter",
   "CatchClause",
   "FunctionName",
-  "ImportBinding",
   "ClassName",
 ]);
 
@@ -42,7 +41,13 @@ function resolveVariable(node, context) {
 
 function hasLocalBinding(node, context) {
   const variable = resolveVariable(node, context);
-  return Boolean(variable?.defs?.some((def) => LOCAL_BINDING_TYPES.has(def.type)));
+  return Boolean(variable?.defs?.some(isRuntimeBinding));
+}
+
+function isRuntimeBinding(def) {
+  if (LOCAL_BINDING_TYPES.has(def.type)) return true;
+  if (def.type !== "ImportBinding") return false;
+  return def.node?.importKind !== "type" && def.parent?.importKind !== "type";
 }
 
 function unwrapTSAndChain(node) {
@@ -186,6 +191,7 @@ module.exports = {
   collectFetchAliases,
   collectVariableDeclarators,
   hasLocalBinding,
+  isRuntimeBinding,
   isGlobalFetchExpression,
   isGlobalFetchMember,
   isMaybeExecuted,

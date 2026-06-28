@@ -1179,6 +1179,12 @@ describe("no-global-fetch-outside-helper", () => {
         branchLocal("/api/branch-local");
       }
       branchLocal("/api/after-branch");
+      let branchIsolated = fetch;
+      if (useClient) {
+        branchIsolated = client.fetch;
+      } else {
+        branchIsolated("/api/branch-isolated");
+      }
       let maybeGlobal = client.fetch;
       if (useGlobal) maybeGlobal = fetch;
       maybeGlobal("/api/not-definitely-global");
@@ -1203,6 +1209,20 @@ describe("no-global-fetch-outside-helper", () => {
         tryAlias = client.fetch;
       }
       tryAlias("/api/try-alias");
+      let finallyAlias = client.fetch;
+      try {
+        risky();
+      } finally {
+        finallyAlias = fetch;
+      }
+      finallyAlias("/api/finally-alias");
+      let finallyCleared = fetch;
+      try {
+        risky();
+      } finally {
+        finallyCleared = client.fetch;
+      }
+      finallyCleared("/api/finally-cleared");
       let forInit = client.fetch;
       for (forInit = fetch; false;) {}
       forInit("/api/for-init");
@@ -1219,6 +1239,18 @@ describe("no-global-fetch-outside-helper", () => {
         field = (classAlias = client.fetch);
       }
       classAlias("/api/class-alias");
+      let staticBlockAlias = client.fetch;
+      class StaticBlockAlias {
+        static {
+          staticBlockAlias = fetch;
+        }
+      }
+      staticBlockAlias("/api/static-block-alias");
+      let staticFieldAlias = client.fetch;
+      class StaticFieldAlias {
+        static field = (staticFieldAlias = fetch);
+      }
+      staticFieldAlias("/api/static-field-alias");
       assigned ||= self.fetch;
     `;
     assert.deepEqual(messages(code, "no-global-fetch-outside-helper", option, "web/app/users.ts"), [
@@ -1238,7 +1270,32 @@ describe("no-global-fetch-outside-helper", () => {
       "globalFetch",
       "globalFetch",
       "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
     ]);
+  });
+
+  it("ignores type-only imports when checking global fetch shadows", () => {
+    const typeOnlyCode = `
+      import type { fetch, window } from "./types";
+      fetch("/api/type-only-fetch");
+      window.fetch("/api/type-only-window");
+    `;
+    assert.deepEqual(
+      messages(typeOnlyCode, "no-global-fetch-outside-helper", option, "web/app/users.ts"),
+      ["globalFetch", "globalFetch"],
+    );
+
+    const valueImportCode = `
+      import { fetch } from "./runtime";
+      fetch("/api/value-import");
+    `;
+    assert.deepEqual(
+      messages(valueImportCode, "no-global-fetch-outside-helper", option, "web/app/users.ts"),
+      [],
+    );
   });
 
   it("covers helper fallback branches", () => {
@@ -1345,6 +1402,15 @@ describe("no-global-fetch-outside-helper", () => {
     assert.equal(
       __test.hasLocalBinding(null, { sourceCode: { getScope: () => ({ upper: null }) } }),
       false,
+    );
+    assert.equal(__test.isRuntimeBinding({ type: "Type" }), false);
+    assert.doesNotThrow(() =>
+      __test.setObjectPatternFetchAliases(
+        { type: "Identifier", name: "request" },
+        true,
+        aliasContext,
+        new Set(),
+      ),
     );
     assert.equal(
       __test.hasLocalBinding(
