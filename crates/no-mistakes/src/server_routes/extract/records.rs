@@ -145,7 +145,7 @@ impl ServerRouteVisitor<'_> {
 
     fn push_route(&mut self, call: &CallExpression<'_>, binding: &str, method: &str, path: &str) {
         let framework = self.framework_for(binding);
-        let query_params = self.query_params_from_call(call);
+        let query_params = self.query_params_from_call(call, &self.named_handler_query_params);
         self.facts.routes.push(RouteSite {
             file: self.path.to_path_buf(),
             line: line_number(self.source, call.span.start),

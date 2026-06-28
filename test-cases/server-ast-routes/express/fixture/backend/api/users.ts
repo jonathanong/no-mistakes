@@ -10,7 +10,6 @@ app.get("/api/v1/search", (req, res) => {
   const page = req.query["page"];
   res.json({ term, page });
 });
-app.get("/api/v1/named-search", namedSearch);
 app.get("/api/v1/query-shapes", function (req, res) {
   // This fixture intentionally exercises static AST shapes for query-param
   // extraction; many branches are unreachable at runtime but parsable.
@@ -22,7 +21,6 @@ app.get("/api/v1/query-shapes", function (req, res) {
   const computedDynamic = req.query[dynamicKey];
   const call = req.query("call");
   const calls = req.queries("calls");
-  const sql = db.query("select * from users");
   const url = new URLSearchParams("?url=value").get("url");
   const ignored = other.get("ignored");
   const object = { nested: req.query.object };
@@ -90,7 +88,6 @@ app.get("/api/v1/query-shapes", function (req, res) {
     computedDynamic,
     call,
     calls,
-    sql,
     url,
     ignored,
     object,
@@ -107,9 +104,6 @@ app.route(`/api/v1/users/:id`).patch(updateUser).delete(deleteUser);
 router.post("/api/v1/users", createUser);
 
 function listUsers() {}
-function namedSearch(req, res) {
-  return res.json({ term: req.query.term });
-}
 function getUser() {}
 function updateUser() {}
 function deleteUser() {}

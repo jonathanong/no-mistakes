@@ -28,11 +28,16 @@ impl Traversal<'_> {
             let Some(neighbors) = neighbors else {
                 continue;
             };
+            let skip_symbol_owner_bridge = matches!(&node, NodeId::Symbol { .. }) && depth == 0;
             for (neighbor, kind) in neighbors {
-                if matches!(direction, TraverseDirection::Dependents)
-                    && is_symbol_owner_bridge(&node, neighbor)
-                {
-                    continue;
+                if matches!(direction, TraverseDirection::Dependents) && skip_symbol_owner_bridge {
+                    if let (NodeId::Symbol { file: owner, .. }, NodeId::File(neighbor_file)) =
+                        (&node, neighbor)
+                    {
+                        if neighbor_file == owner {
+                            continue;
+                        }
+                    }
                 }
                 if self.allowed.is_some_and(|allowed| !allowed.contains(kind)) {
                     continue;
@@ -143,12 +148,4 @@ fn relative(root: &Path, path: &Path) -> String {
         .unwrap_or(path)
         .to_string_lossy()
         .replace('\\', "/")
-}
-
-fn is_symbol_owner_bridge(from: &NodeId, to: &NodeId) -> bool {
-    match (from, to) {
-        (NodeId::File(file), NodeId::Symbol { file: symbol_file, .. })
-        | (NodeId::Symbol { file: symbol_file, .. }, NodeId::File(file)) => file == symbol_file,
-        _ => false,
-    }
 }

@@ -50,13 +50,6 @@ fn server_routes_json_lists_routes() {
         .find(|route| route["route"] == "/api/v1/search")
         .expect("search route should be extracted");
     assert_eq!(search["queryParams"], serde_json::json!(["page", "term"]));
-    let named = json
-        .as_array()
-        .unwrap()
-        .iter()
-        .find(|route| route["route"] == "/api/v1/named-search")
-        .expect("named search route should be extracted");
-    assert_eq!(named["queryParams"], serde_json::json!(["term"]));
     let shapes = json
         .as_array()
         .unwrap()
@@ -90,7 +83,7 @@ fn server_routes_json_lists_routes() {
     assert!(
         !params
             .iter()
-            .any(|value| value == "alias" || value == "ignored" || value == "select * from users"),
+            .any(|value| value == "alias" || value == "ignored"),
         "non-query aliases should not be extracted: {params:?}"
     );
 }

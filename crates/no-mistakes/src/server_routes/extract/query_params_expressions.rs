@@ -1,13 +1,22 @@
-fn collect_query_params_from_expression(expr: &Expression<'_>, params: &mut BTreeSet<String>) {
+fn collect_query_params_from_expression(
+    expr: &Expression<'_>,
+    params: &mut BTreeSet<String>,
+    named_handlers: &HashMap<String, BTreeSet<String>>,
+) {
     match expr {
         Expression::CallExpression(call) => {
             if let Some(name) = query_param_from_call(call) {
                 params.insert(name);
             }
-            collect_query_params_from_expression(&call.callee, params);
+            if let Expression::Identifier(id) = &call.callee {
+                if let Some(handler_params) = named_handlers.get(id.name.as_str()) {
+                    params.extend(handler_params.iter().cloned());
+                }
+            }
+            collect_query_params_from_expression(&call.callee, params, named_handlers);
             for arg in &call.arguments {
                 if let Some(expr) = arg.as_expression() {
-                    collect_query_params_from_expression(expr, params);
+                    collect_query_params_from_expression(expr, params, named_handlers);
                 }
             }
         }
@@ -15,48 +24,52 @@ fn collect_query_params_from_expression(expr: &Expression<'_>, params: &mut BTre
             if expression_is_query_object(&member.object) {
                 params.insert(member.property.name.as_str().to_string());
             }
-            collect_query_params_from_expression(&member.object, params);
+            collect_query_params_from_expression(&member.object, params, named_handlers);
         }
         Expression::ComputedMemberExpression(member) => {
             if let Some(name) = computed_query_param_name(member) {
                 params.insert(name);
             }
-            collect_query_params_from_expression(&member.object, params);
-            collect_query_params_from_expression(&member.expression, params);
+            collect_query_params_from_expression(&member.object, params, named_handlers);
+            collect_query_params_from_expression(&member.expression, params, named_handlers);
         }
         Expression::AssignmentExpression(assign) => {
-            collect_query_params_from_expression(&assign.right, params);
+            collect_query_params_from_expression(&assign.right, params, named_handlers);
         }
         Expression::ArrowFunctionExpression(arrow) => {
             for statement in &arrow.body.statements {
-                collect_query_params_from_statement(statement, params);
+                collect_query_params_from_statement(statement, params, named_handlers);
             }
         }
         Expression::FunctionExpression(function) => {
-            collect_query_params_from_optional_function_body(function.body.as_ref(), params);
+            collect_query_params_from_optional_function_body(
+                function.body.as_ref(),
+                params,
+                named_handlers,
+            );
         }
         Expression::ConditionalExpression(expr) => {
-            collect_query_params_from_expression(&expr.test, params);
-            collect_query_params_from_expression(&expr.consequent, params);
-            collect_query_params_from_expression(&expr.alternate, params);
+            collect_query_params_from_expression(&expr.test, params, named_handlers);
+            collect_query_params_from_expression(&expr.consequent, params, named_handlers);
+            collect_query_params_from_expression(&expr.alternate, params, named_handlers);
         }
         Expression::LogicalExpression(expr) => {
-            collect_query_params_from_expression(&expr.left, params);
-            collect_query_params_from_expression(&expr.right, params);
+            collect_query_params_from_expression(&expr.left, params, named_handlers);
+            collect_query_params_from_expression(&expr.right, params, named_handlers);
         }
         Expression::BinaryExpression(expr) => {
-            collect_query_params_from_expression(&expr.left, params);
-            collect_query_params_from_expression(&expr.right, params);
+            collect_query_params_from_expression(&expr.left, params, named_handlers);
+            collect_query_params_from_expression(&expr.right, params, named_handlers);
         }
         Expression::SequenceExpression(expr) => {
             for expression in &expr.expressions {
-                collect_query_params_from_expression(expression, params);
+                collect_query_params_from_expression(expression, params, named_handlers);
             }
         }
         Expression::ObjectExpression(object) => {
             for property in &object.properties {
                 if let ObjectPropertyKind::ObjectProperty(property) = property {
-                    collect_query_params_from_expression(&property.value, params);
+                    collect_query_params_from_expression(&property.value, params, named_handlers);
                 }
             }
         }
@@ -66,26 +79,26 @@ fn collect_query_params_from_expression(expr: &Expression<'_>, params: &mut BTre
                 .iter()
                 .filter_map(|element| element.as_expression())
             {
-                collect_query_params_from_expression(element, params);
+                collect_query_params_from_expression(element, params, named_handlers);
             }
         }
         Expression::AwaitExpression(expr) => {
-            collect_query_params_from_expression(&expr.argument, params)
+            collect_query_params_from_expression(&expr.argument, params, named_handlers)
         }
         Expression::ParenthesizedExpression(expr) => {
-            collect_query_params_from_expression(&expr.expression, params);
+            collect_query_params_from_expression(&expr.expression, params, named_handlers);
         }
         Expression::TSAsExpression(expr) => {
-            collect_query_params_from_expression(&expr.expression, params)
+            collect_query_params_from_expression(&expr.expression, params, named_handlers)
         }
         Expression::TSTypeAssertion(expr) => {
-            collect_query_params_from_expression(&expr.expression, params);
+            collect_query_params_from_expression(&expr.expression, params, named_handlers);
         }
         Expression::TSNonNullExpression(expr) => {
-            collect_query_params_from_expression(&expr.expression, params);
+            collect_query_params_from_expression(&expr.expression, params, named_handlers);
         }
         Expression::TSSatisfiesExpression(expr) => {
-            collect_query_params_from_expression(&expr.expression, params);
+            collect_query_params_from_expression(&expr.expression, params, named_handlers);
         }
         _ => {}
     }

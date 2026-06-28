@@ -1,5 +1,5 @@
 use crate::tests::{TargetsArgs, TargetsFormat, TestFramework, TestPlan};
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use no_mistakes::codebase::test_discovery::{discover_tests, TestExecutionTarget, TestRunner};
 use no_mistakes::config::v2::load_v2_config;
 use serde::Serialize;
@@ -37,6 +37,17 @@ pub(crate) fn run(args: TargetsArgs) -> Result<ExitCode> {
     } else {
         args.format.unwrap_or(TargetsFormat::Json)
     };
+    if matches!(format, TargetsFormat::Commands) && !report.warnings.is_empty() {
+        let warnings = report
+            .warnings
+            .iter()
+            .map(|warning| format!("warning: {}: {}", warning.file, warning.message))
+            .collect::<Vec<_>>()
+            .join("\n");
+        bail!(
+            "{warnings}\n`tests targets --format commands` requires all requested files to be owned by a configured test framework.\n"
+        );
+    }
     print!("{}", render_targets(&report, format)?);
     Ok(ExitCode::SUCCESS)
 }
@@ -82,14 +93,7 @@ pub(crate) fn generate_targets(args: &TargetsArgs) -> Result<TestsTargetsReport>
     })
 }
 
-pub(crate) fn commands_for_plan(plan: &TestPlan) -> Result<Vec<String>> {
-    if plan
-        .selected_tests
-        .iter()
-        .any(|test| test.targets.is_empty())
-    {
-        anyhow::bail!("commands format requires framework test execution targets");
-    }
+pub(crate) fn commands_for_plan(plan: &TestPlan) -> Vec<String> {
     let mut commands = Vec::new();
     for test in &plan.selected_tests {
         for target in &test.targets {
@@ -98,14 +102,26 @@ pub(crate) fn commands_for_plan(plan: &TestPlan) -> Result<Vec<String>> {
     }
     commands.sort();
     commands.dedup();
-    Ok(commands)
+    commands
+}
+
+pub(crate) fn ensure_plan_commands_available(plan: &TestPlan, command: &str) -> Result<()> {
+    if plan
+        .selected_tests
+        .iter()
+        .any(|test| test.targets.is_empty())
+    {
+        bail!(
+            "`{command} --format commands` requires selected tests to include framework execution targets.\n"
+        );
+    }
+    Ok(())
 }
 
 fn render_targets(report: &TestsTargetsReport, format: TargetsFormat) -> Result<String> {
     Ok(match format {
         TargetsFormat::Json => format!("{}\n", serde_json::to_string_pretty(report)?),
         TargetsFormat::Commands => {
-            ensure_no_target_warnings(report)?;
             let mut commands = Vec::new();
             for row in &report.tests {
                 for target in &row.targets {
@@ -138,13 +154,6 @@ fn render_targets(report: &TestsTargetsReport, format: TargetsFormat) -> Result<
             out
         }
     })
-}
-
-fn ensure_no_target_warnings(report: &TestsTargetsReport) -> Result<()> {
-    if let Some(warning) = report.warnings.first() {
-        anyhow::bail!("{}", warning.message);
-    }
-    Ok(())
 }
 
 fn target_command(target: &TestExecutionTarget) -> Vec<String> {

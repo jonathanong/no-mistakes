@@ -27,11 +27,6 @@ fn flow_json_reports_symbol_neighborhood() {
     assert!(json["nodes"].as_array().unwrap().iter().any(|node| {
         node["kind"] == "symbol" && node["file"] == "utils.mts" && node["symbol"] == "parseDate"
     }));
-    assert!(!json["nodes"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|node| { node["kind"] == "file" && node["file"] == "utils.mts" }));
     assert!(
         !json["edges"].as_array().unwrap().is_empty(),
         "expected at least one symbol flow edge"

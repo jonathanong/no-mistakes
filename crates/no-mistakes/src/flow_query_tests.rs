@@ -33,6 +33,27 @@ fn flow_query_covers_deps_and_dependents_directions() {
 }
 
 #[test]
+fn flow_query_symbol_dependents_skip_owner_file_bridge() {
+    let root = fixture_root("tests-impact-symbol");
+    let report = run(&FlowOptions {
+        target: "utils.mts#parseDate".to_string(),
+        root,
+        tsconfig: None,
+        config: None,
+        direction: FlowDirection::Dependents,
+        depth: 1,
+        relationships: vec![RelationshipArg::Import],
+    })
+    .unwrap();
+
+    assert!(report
+        .nodes
+        .iter()
+        .any(|node| node.id == "utils.mts#parseDate"));
+    assert!(!report.nodes.iter().any(|node| node.id == "utils.mts"));
+}
+
+#[test]
 fn flow_query_deps_edges_and_resolvers_cover_path_branches() {
     let root = fixture_root("tests-impact-symbol");
     let report = run(&FlowOptions {

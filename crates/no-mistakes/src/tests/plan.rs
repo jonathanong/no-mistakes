@@ -31,7 +31,8 @@ pub(crate) fn run(args: PlanArgs) -> Result<ExitCode> {
             }
         }
         PlanFormat::Commands => {
-            for command in crate::tests::targets::commands_for_plan(&plan)? {
+            crate::tests::targets::ensure_plan_commands_available(&plan, "tests plan")?;
+            for command in crate::tests::targets::commands_for_plan(&plan) {
                 println!("{command}");
             }
         }

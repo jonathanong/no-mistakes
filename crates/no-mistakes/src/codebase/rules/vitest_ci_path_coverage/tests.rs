@@ -303,6 +303,21 @@ fn coverage_paths_include_real_files_and_recursive_witnesses_once() {
 }
 
 #[test]
+fn coverage_paths_reports_invalid_glob_context() {
+    let root = fixture_root("glob-witness");
+    let unit = CoverageUnit {
+        project: "backend".to_string(),
+        source: CoverageSource::ConfiguredSource,
+        patterns: vec!["[".to_string()],
+    };
+    let error = coverage_paths::coverage_paths(&root, &unit, &[]).unwrap_err();
+
+    assert!(error
+        .to_string()
+        .contains("invalid glob in vitest-ci-path-coverage backend"));
+}
+
+#[test]
 fn witness_paths_skip_negated_and_broad_patterns() {
     assert!(
         coverage_paths::witness_paths(&["**".to_string(), "!src/**/*.ts".to_string()]).is_empty()

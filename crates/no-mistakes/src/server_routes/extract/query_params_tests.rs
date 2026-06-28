@@ -2,14 +2,16 @@ use super::*;
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
+use std::collections::HashMap;
 
 fn params_from_source(source: &str) -> Vec<String> {
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
     let mut params = BTreeSet::new();
+    let named_handlers = HashMap::new();
     for statement in &parsed.program.body {
-        collect_query_params_from_statement(statement, &mut params);
+        collect_query_params_from_statement(statement, &mut params, &named_handlers);
     }
     params.into_iter().collect()
 }
@@ -34,10 +36,16 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
         const satisfies = req.query.satisfies satisfies string;
         req.query("call");
         req.queries("calls");
-        c.req.query("hono");
-        db.query("select * from users");
-        ({}).query("objectQuery");
+        req?.query?.("optionalCall");
+        c.req.query("honoCall");
+        req.context.query("requestContextCall");
+        context.request.query("contextCall");
+        context?.request?.query?.("optionalContextCall");
+        context.req.query("contextReqCall");
+        context.deep.req.query("ignoredNestedRequest");
+        unrelated.req.query("ignoredMemberObject");
         req.query(dynamic);
+        unrelated.query("ignoredCall");
         req.get("ignored");
         new URLSearchParams("?url=value").get("url");
         if (req.query.ifTest) { req.query.ifBody; } else { req.query.elseBody; }
@@ -83,13 +91,14 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
         "forOf",
         "functionBody",
         "functionExpressionBody",
-        "hono",
+        "honoCall",
         "ifBody",
         "ifTest",
         "exportSpecifierLocal",
         "nonNull",
         "object",
         "paren",
+        "requestContextCall",
         "satisfies",
         "second",
         "switchCase",
@@ -97,6 +106,8 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
         "tryBody",
         "url",
         "whileTest",
+        "contextCall",
+        "contextReqCall",
     ] {
         assert!(
             params.iter().any(|value| value == param),
@@ -104,8 +115,33 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
         );
     }
     assert!(!params.iter().any(|value| value == "ignored"));
-    assert!(!params.iter().any(|value| value == "select * from users"));
-    assert!(!params.iter().any(|value| value == "objectQuery"));
+    assert!(!params.iter().any(|value| value == "ignoredCall"));
+    assert!(!params.iter().any(|value| value == "ignoredMemberObject"));
+    assert!(!params.iter().any(|value| value == "ignoredNestedRequest"));
+}
+
+fn expression_matches_request_object(source: &str) -> bool {
+    let allocator = Allocator::default();
+    let source = format!("const value = {source};");
+    let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let Statement::VariableDeclaration(declaration) = &parsed.program.body[0] else {
+        panic!("expected variable declaration");
+    };
+    let expression = declaration.declarations[0].init.as_ref().unwrap();
+    is_request_query_object(expression)
+}
+
+#[test]
+fn request_query_object_detection_handles_optional_and_nested_members() {
+    assert!(expression_matches_request_object("context?.request"));
+    assert!(!expression_matches_request_object(
+        "context?.request?.query()"
+    ));
+    assert!(expression_matches_request_object("context.req"));
+    assert!(!expression_matches_request_object("context.deep.req"));
+    assert!(!expression_matches_request_object("unrelated.req"));
+    assert!(!expression_matches_request_object("123"));
 }
 
 #[test]
@@ -124,18 +160,18 @@ fn query_param_arg_walker_handles_function_expressions_and_non_handlers() {
     .parse();
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
     let mut params = BTreeSet::new();
-    let visitor = ServerRouteVisitor::new(std::path::Path::new("routes.ts"), "");
+    let named_handlers = HashMap::new();
 
     for statement in &parsed.program.body {
         if let Statement::ExpressionStatement(statement) = statement {
             if let Expression::CallExpression(call) = &statement.expression {
                 for arg in &call.arguments {
-                    visitor.collect_query_params_from_arg(arg, &mut params);
+                    collect_query_params_from_arg(arg, &mut params, &named_handlers);
                 }
             }
         }
     }
 
     assert!(params.contains("functionExpression"));
-    collect_query_params_from_optional_function_body(None, &mut params);
+    collect_query_params_from_optional_function_body(None, &mut params, &named_handlers);
 }

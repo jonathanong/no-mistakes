@@ -119,30 +119,7 @@ fn matching_route<'a>(report: &'a ProjectReport, route_path: &str) -> Option<&'a
     report
         .routes
         .iter()
-        .filter(|route| matcher::matches(route_path, &route.route))
-        .max_by_key(|route| route_specificity(&route.route))
-}
-
-fn route_specificity(route: &str) -> (usize, usize, std::cmp::Reverse<usize>) {
-    let segments: Vec<&str> = route
-        .trim_matches('/')
-        .split('/')
-        .filter(|segment| !segment.is_empty())
-        .collect();
-    let static_count = segments
-        .iter()
-        .filter(|segment| !is_dynamic_route_segment(segment))
-        .count();
-    let dynamic_count = segments.len() - static_count;
-    (
-        static_count,
-        segments.len(),
-        std::cmp::Reverse(dynamic_count),
-    )
-}
-
-fn is_dynamic_route_segment(segment: &str) -> bool {
-    segment.starts_with(':') || matches!(segment, "*" | "**")
+        .find(|route| matcher::matches(route_path, &route.route))
 }
 
 fn missing_query_params(client: &[String], server: &[String]) -> Vec<String> {
@@ -159,15 +136,11 @@ fn query_params_from_pattern(pattern: &str) -> Option<Vec<String>> {
     let mut params: BTreeSet<String> = BTreeSet::new();
     for pair in query.split('&') {
         let name = pair.split_once('=').map_or(pair, |(name, _)| name);
-        if is_static_query_param_name(name) {
+        if !name.is_empty() && !name.starts_with(':') {
             params.insert(name.to_string());
         }
     }
     (!params.is_empty()).then(|| params.into_iter().collect())
-}
-
-fn is_static_query_param_name(name: &str) -> bool {
-    !name.is_empty() && !name.starts_with(':') && name != "*" && name != "**" && !name.contains('/')
 }
 
 fn path_without_query(pattern: &str) -> String {
