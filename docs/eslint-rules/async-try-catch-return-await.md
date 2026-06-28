@@ -8,6 +8,8 @@ process those failures.
 
 Counterexample: `try { return request(); } catch (error) { handleRateLimit(error); }`.
 
+Example: `try { return await request(); } catch (error) { handleRateLimit(error); }`.
+
 Fix: write `return await request()` or await the promise before returning it.
 
 Configure `targets` with grouped `sourcePatterns` and `calleeNamePatterns` regex

@@ -76,6 +76,15 @@ export async function branchReturn(useFallback: boolean) {
   }
 }
 
+export async function catchLocalRequire() {
+  try {
+    return request();
+  } catch (error) {
+    const { handleRateLimit } = require("@app/rate-limit");
+    handleRateLimit(error);
+  }
+}
+
 export async function constructorReturn() {
   try {
     return new RequestJob();

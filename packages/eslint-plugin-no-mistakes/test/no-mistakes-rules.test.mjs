@@ -133,6 +133,7 @@ describe("async-try-catch-return-await", () => {
         "awaitReturn",
         "awaitReturn",
         "awaitReturn",
+        "awaitReturn",
       ],
     );
   });
@@ -152,6 +153,13 @@ describe("async-try-catch-return-await", () => {
     );
     assert.equal(wrapped.messageId, "awaitReturn");
     assert.equal(wrapped.fix.text, "await (request() satisfies Promise<string>)");
+    const [conditional] = lint(
+      `import { handleRateLimit } from "@app/rate-limit";\nasync function run(useFallback) { try { return useFallback ? cachedRequest() : request(); } catch (error) { handleRateLimit(error); } }`,
+      { "no-mistakes/async-try-catch-return-await": ["error", rateLimitTargetOptions] },
+      "fix.ts",
+    );
+    assert.equal(conditional.messageId, "awaitReturn");
+    assert.equal(conditional.fix.text, "await (useFallback ? cachedRequest() : request())");
   });
 
   it("is a no-op without targets and ignores invalid regexes", () => {

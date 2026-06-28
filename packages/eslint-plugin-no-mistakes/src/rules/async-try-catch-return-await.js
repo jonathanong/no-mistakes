@@ -92,6 +92,10 @@ function isReassignedBeforeReturn(variable, node) {
   );
 }
 
+function shouldParenthesizeAwaitArgument(node) {
+  return unwrapExpression(node) !== node || node.type === "ConditionalExpression";
+}
+
 module.exports = rule(
   {
     type: "problem",
@@ -141,7 +145,7 @@ module.exports = rule(
         node,
         messageId: "awaitReturn",
         fix(fixer) {
-          if (unwrapExpression(node.argument) !== node.argument) {
+          if (shouldParenthesizeAwaitArgument(node.argument)) {
             return fixer.replaceText(
               node.argument,
               `await (${context.sourceCode.getText(node.argument)})`,
@@ -186,7 +190,7 @@ module.exports = rule(
 
     return {
       ...matcher.visitors,
-      TryStatement: checkTryBlock,
+      "TryStatement:exit": checkTryBlock,
     };
   },
 );

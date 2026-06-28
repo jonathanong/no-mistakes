@@ -7,6 +7,14 @@ failed job submissions and make worker control flow ambiguous.
 
 Counterexample: `enqueueEmail(user.id)`.
 
+Example:
+
+```js
+await enqueueEmail(user.id);
+void enqueueEmail(user.id);
+return enqueueEmail(user.id);
+```
+
 Fix: use `await enqueueEmail(...)`, `return enqueueEmail(...)`,
 `void enqueueEmail(...)`, or group multiple calls under an awaited or returned
 `Promise.all(...)`.
