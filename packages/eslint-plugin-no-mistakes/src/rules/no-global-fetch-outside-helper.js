@@ -88,10 +88,11 @@ function recordObjectPatternFetchAliases(id, init, context, aliases) {
 }
 
 function shouldCheckFile(filename, options) {
+  if (!options) return false;
   const file = repoRelativeFilename(filename);
   return (
-    stringMatches(file, options.checkedPathPatterns) &&
-    !stringMatches(file, options.allowedPathPatterns)
+    stringMatches(file, options.checkedPathPatterns ?? []) &&
+    !stringMatches(file, options.allowedPathPatterns ?? [])
   );
 }
 
