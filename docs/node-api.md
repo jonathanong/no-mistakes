@@ -38,15 +38,17 @@ const { analyzeProject, dependents, importUsages, symbols, testsPlan } = require
 | `symbols` | `symbols(options)` |
 | `import-usages` | `importUsages(options)` |
 | `fetches` | `fetches(options)` |
+| `flow` | `flow(options)` |
 | `check` | `check(options)` |
 | `tests plan` | `testsPlan(options)`; `framework` accepts `vitest`, `playwright`, or `swift` |
+| `tests targets` | `testsTargets(options)` |
 | `tests impact` | `testsImpact(options)` |
 | `tests why` | `testsWhy(options)` |
 | `tests comment` | `testsComment(options)` |
 | `tests graph` | `testsGraph(options)` or `testsGraphMermaid(options)` |
 | `playwright check\|edges\|related\|tests` | `playwrightCheck`, `playwrightEdges`, `playwrightRelated`, `playwrightTests` |
 | `queues edges\|related\|check` | `queueEdges`, `queueRelated`, `queueCheck` |
-| `server routes\|edges\|related` | `serverRouteList`, `serverRouteEdges`, `serverRouteRelated` |
+| `server routes\|edges\|related\|contracts` | `serverRouteList`, `serverRouteEdges`, `serverRouteRelated`, `serverContracts` |
 | `react analyze\|check\|usages` | `reactAnalyze`, `reactCheck`, `reactUsages` |
 | `infra resource-refs\|outputs\|test-for` | `infraResourceRefs`, `infraOutputs`, `infraTestFor` |
 | `swift importers\|test-targets` | `swiftImporters`, `swiftTestTargets` |

@@ -13,6 +13,7 @@ pub(crate) mod graph;
 pub(crate) mod impact;
 pub(crate) mod lockfile_changes;
 pub(crate) mod plan;
+pub(crate) mod targets;
 pub(crate) mod why;
 
 pub use args::TestsArgs;
@@ -80,6 +81,7 @@ pub struct Warning {
 pub fn run(args: TestsArgs) -> Result<ExitCode> {
     match args.command {
         TestsCommand::Plan(sub_args) => plan::run(sub_args),
+        TestsCommand::Targets(sub_args) => targets::run(sub_args),
         TestsCommand::Impact(sub_args) => impact::run(sub_args),
         TestsCommand::Why(sub_args) => why::run(sub_args),
         TestsCommand::Comment(sub_args) => comment::run(sub_args),

@@ -186,6 +186,7 @@ fn expand_site(
                 method: site.method.clone(),
                 route: normalize_route(&raw_path),
                 raw_path,
+                query_params: site.query_params.clone(),
                 framework: site.framework,
             }
         })

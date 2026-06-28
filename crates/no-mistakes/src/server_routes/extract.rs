@@ -3,6 +3,7 @@ mod commonjs;
 mod helpers;
 mod imports;
 mod literals;
+mod query_params;
 mod records;
 mod shape;
 

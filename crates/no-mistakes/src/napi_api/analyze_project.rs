@@ -6,19 +6,25 @@ use super::codebase::build_traverse_args;
 use super::options::{parse_options, to_napi_error};
 use crate::codebase::dependencies::{Direction, SharedTraversalContext, TraverseArgs};
 
-type ReportRunner = fn(String) -> napi::Result<String>;
-
+mod dispatch;
 mod options;
 mod types;
 
+use dispatch::{graph_direction, playwright_runner, project_runner, symbols_runner};
 use options::{
-    import_usages_options, playwright_options, project_options, resolve_root, resolve_tsconfig,
-    symbols_options,
+    flow_options, import_usages_options, playwright_options, project_options, resolve_root,
+    resolve_tsconfig, symbols_options,
 };
 use types::{
     AnalyzeProjectOptions, AnalyzeProjectResult, AnalyzeReportRequest, AnalyzeReportResult,
 };
 
+#[cfg(test)]
+#[path = "analyze_project/cli_parity_tests.rs"]
+mod cli_parity_tests;
+#[cfg(test)]
+#[path = "analyze_project/flow_server_tests.rs"]
+mod flow_server_tests;
 #[cfg(test)]
 mod options_tests;
 #[cfg(test)]
@@ -64,6 +70,9 @@ fn run_report(
     if let Some(run) = playwright_runner(&request.report_type) {
         return call_report(playwright_options(request, options)?, run);
     }
+    if request.report_type == "flow" {
+        return call_report(flow_options(request, options)?, super::flow_json_impl);
+    }
     if let Some(run) = project_runner(&request.report_type) {
         return call_report(project_options(request, options)?, run);
     }
@@ -71,49 +80,6 @@ fn run_report(
         "unknown analyzeProject report type: {}",
         request.report_type
     )
-}
-
-fn graph_direction(report_type: &str) -> Option<Direction> {
-    match report_type {
-        "dependencies" => Some(Direction::Deps),
-        "dependents" | "related" => Some(Direction::Dependents),
-        _ => None,
-    }
-}
-
-fn symbols_runner(report_type: &str) -> Option<ReportRunner> {
-    match report_type {
-        "symbols" => Some(super::symbols_json_impl),
-        _ => None,
-    }
-}
-
-fn playwright_runner(report_type: &str) -> Option<ReportRunner> {
-    match report_type {
-        "playwrightCheck" => Some(super::playwright_check_json_impl),
-        "playwrightEdges" => Some(super::playwright_edges_json_impl),
-        "playwrightRelated" => Some(super::playwright_related_json_impl),
-        "playwrightTests" => Some(super::playwright_tests_json_impl),
-        _ => None,
-    }
-}
-
-fn project_runner(report_type: &str) -> Option<ReportRunner> {
-    match report_type {
-        "queues" => Some(super::queues_json_impl),
-        "queueEdges" => Some(super::queue_edges_json_impl),
-        "queueRelated" => Some(super::queue_related_json_impl),
-        "queueCheck" => Some(super::queue_check_json_impl),
-        "serverRoutes" => Some(super::server_routes_json_impl),
-        "serverRouteList" => Some(super::server_route_list_json_impl),
-        "serverRouteEdges" => Some(super::server_route_edges_json_impl),
-        "serverRouteRelated" => Some(super::server_route_related_json_impl),
-        "reactAnalyze" => Some(super::react_analyze_json_impl),
-        "reactCheck" => Some(super::react_check_json_impl),
-        "reactUsages" => Some(super::react_usages_json_impl),
-        "check" => Some(super::check_json_impl),
-        _ => None,
-    }
 }
 
 fn graph_report(

@@ -22,6 +22,8 @@ import type {
   ExportsOfOptions,
   ExportsOfResult,
   FetchesOptions,
+  FlowOptions,
+  FlowReport,
   ImpactedChecksOptions,
   ImpactedChecksReport,
   ImportUsagesOptions,
@@ -44,6 +46,7 @@ import type {
   ReactViolation,
   ResourceRefRow,
   ServerRoutesReport,
+  ServerContractsReport,
   SignatureImpactResult,
   SwiftImporterRow,
   SwiftOptions,
@@ -58,6 +61,8 @@ import type {
   TestsImpactOptions,
   TestsPlanDocumentOptions,
   TestsPlanOptions,
+  TestsTargetsOptions,
+  TestsTargetsReport,
   TestsWhyOptions,
   TraverseOptions,
   WhyStep,
@@ -79,9 +84,11 @@ export function deadExports(options: DeadExportsOptions): Promise<DeadExportsRes
 export function callSites(options: CallSitesOptions): Promise<CallSitesResult>;
 export function resolveCheck(options: ResolveCheckOptions): Promise<ResolveCheckResult>;
 export function fetches(options?: FetchesOptions): Promise<unknown>;
+export function flow(options: FlowOptions): Promise<FlowReport>;
 export function check(options?: ProjectOptions): Promise<CheckReport>;
 export function testsPlan(options: TestsPlanOptions): Promise<TestPlan>;
 export function testsImpact(options: TestsImpactOptions): Promise<TestPlan>;
+export function testsTargets(options: TestsTargetsOptions): Promise<TestsTargetsReport>;
 export function testsWhy(options: TestsWhyOptions): Promise<Record<string, WhyStep[]>>;
 export function testsComment(options: TestsPlanDocumentOptions): Promise<string>;
 export function testsGraph(options: TestsPlanDocumentOptions): Promise<TestGraph>;
@@ -98,6 +105,7 @@ export function serverRoutes(options?: ProjectOptions): Promise<ServerRoutesRepo
 export function serverRouteList(options?: ProjectOptions): Promise<unknown[]>;
 export function serverRouteEdges(options?: ProjectOptions): Promise<GraphEdge[]>;
 export function serverRouteRelated(options: ProjectOptions): Promise<GraphEdge[]>;
+export function serverContracts(options?: ProjectOptions): Promise<ServerContractsReport>;
 export function reactAnalyze(options?: ProjectOptions): Promise<ReactComponentFacts[]>;
 export function reactCheck(options?: ProjectOptions): Promise<ReactViolation[]>;
 export function reactUsages(

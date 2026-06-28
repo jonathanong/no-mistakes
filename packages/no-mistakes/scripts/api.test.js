@@ -41,6 +41,8 @@ test("programmatic API proxies object options through async native addon calls",
       checkJson: async (json) => JSON.stringify({ command: "check", options: JSON.parse(json) }),
       testsPlanJson: async (json) =>
         JSON.stringify({ command: "testsPlan", options: JSON.parse(json) }),
+      testsTargetsJson: async (json) =>
+        JSON.stringify({ command: "testsTargets", options: JSON.parse(json) }),
       testsWhyJson: async (json) =>
         JSON.stringify({ command: "testsWhy", options: JSON.parse(json) }),
       testsCommentMarkdown: async (json) =>
@@ -72,6 +74,9 @@ test("programmatic API proxies object options through async native addon calls",
         JSON.stringify({ command: "serverRouteEdges", options: JSON.parse(json) }),
       serverRouteRelatedJson: async (json) =>
         JSON.stringify({ command: "serverRouteRelated", options: JSON.parse(json) }),
+      serverContractsJson: async (json) =>
+        JSON.stringify({ command: "serverContracts", options: JSON.parse(json) }),
+      flowJson: async (json) => JSON.stringify({ command: "flow", options: JSON.parse(json) }),
       reactAnalyzeJson: async (json) =>
         JSON.stringify({ command: "reactAnalyze", options: JSON.parse(json) }),
       reactCheckJson: async (json) =>
@@ -139,6 +144,10 @@ test("programmatic API proxies object options through async native addon calls",
       (await api.testsPlan({ framework: "swift", globalConfigFallback: false })).options,
       { framework: "swift", globalConfigFallback: false },
     );
+    assert.equal(
+      (await api.testsTargets({ framework: "vitest", files: ["source.test.ts"] })).command,
+      "testsTargets",
+    );
     assert.equal((await api.testsWhy({ test: "source.test.ts" })).command, "testsWhy");
     assert.equal(await api.testsComment({ plan: "plan.json" }), "comment:plan.json");
     assert.equal(
@@ -170,6 +179,8 @@ test("programmatic API proxies object options through async native addon calls",
       (await api.serverRouteRelated({ roots: ["routes.ts"] })).command,
       "serverRouteRelated",
     );
+    assert.equal((await api.serverContracts({ root: "." })).command, "serverContracts");
+    assert.equal((await api.flow({ target: "src/api.ts#handler" })).command, "flow");
     assert.equal((await api.reactAnalyze({ targets: ["*.tsx"] })).command, "reactAnalyze");
     assert.equal((await api.reactCheck({ assertNoFetch: true })).command, "reactCheck");
     assert.equal((await api.reactUsages({ target: "a.tsx#Button" })).command, "reactUsages");

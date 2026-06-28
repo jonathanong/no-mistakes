@@ -20,6 +20,7 @@ pub struct ServerRoute {
     pub method: String,
     pub route: String,
     pub raw_path: String,
+    pub query_params: Vec<String>,
     pub framework: Framework,
 }
 

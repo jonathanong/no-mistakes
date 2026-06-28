@@ -11,6 +11,8 @@ pub struct TestsArgs {
 pub(crate) enum TestsCommand {
     /// Plan test targets based on changed files and dependency graph analysis.
     Plan(PlanArgs),
+    /// Look up executable runner targets for test files.
+    Targets(TargetsArgs),
     /// Find impacted tests from file#symbol entrypoints.
     Impact(ImpactArgs),
     /// Explain the dependency path from a changed file to a test file.
@@ -211,8 +213,44 @@ pub(crate) enum TestFramework {
 pub(crate) enum PlanFormat {
     Json,
     Paths,
+    Commands,
     Markdown,
     Md,
+}
+
+#[derive(Args, Debug, Clone)]
+pub(crate) struct TargetsArgs {
+    /// Test framework whose project/config ownership should be resolved.
+    #[arg(value_enum)]
+    pub(crate) framework: TestFramework,
+
+    /// Test files to look up.
+    #[arg(required = true)]
+    pub(crate) files: Vec<PathBuf>,
+
+    /// Project root directory.
+    #[arg(long, default_value = ".")]
+    pub(crate) root: PathBuf,
+
+    /// Path to config file.
+    #[arg(long)]
+    pub(crate) config: Option<PathBuf>,
+
+    /// Output format.
+    #[arg(long, value_enum, conflicts_with = "json")]
+    pub(crate) format: Option<TargetsFormat>,
+
+    /// Shorthand for --format json.
+    #[arg(long, default_value_t = false, conflicts_with = "format")]
+    pub(crate) json: bool,
+}
+
+#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum TargetsFormat {
+    Json,
+    Commands,
+    Paths,
+    Human,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
