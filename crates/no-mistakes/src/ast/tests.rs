@@ -70,9 +70,9 @@ fn test_template_literal_text() {
     let source = "`${a}b${c}`";
     let parsed = Parser::new(&allocator, source, source_type).parse();
     assert!(
-        parsed.errors.is_empty(),
+        parsed.diagnostics.is_empty(),
         "template literal parse errors: {:?}",
-        parsed.errors
+        parsed.diagnostics
     );
     let t = statement_template_literal(&parsed.program.body[0]);
     assert_eq!(template_literal_text(t, source), "${a}b${c}");
@@ -80,9 +80,9 @@ fn test_template_literal_text() {
     let source = "`no_expressions`";
     let parsed = Parser::new(&allocator, source, source_type).parse();
     assert!(
-        parsed.errors.is_empty(),
+        parsed.diagnostics.is_empty(),
         "template literal parse errors: {:?}",
-        parsed.errors
+        parsed.diagnostics
     );
     let t = statement_template_literal(&parsed.program.body[0]);
     assert_eq!(template_literal_text(t, source), "no_expressions");
@@ -96,9 +96,9 @@ fn test_expression_path() {
     let source = "a.b.c";
     let parsed = Parser::new(&allocator, source, source_type).parse();
     assert!(
-        parsed.errors.is_empty(),
+        parsed.diagnostics.is_empty(),
         "parse errors: {:?}",
-        parsed.errors
+        parsed.diagnostics
     );
     let path = expression_path(statement_expression(&parsed.program.body[0])).unwrap();
     assert_eq!(path, vec!["a", "b", "c"]);
@@ -106,9 +106,9 @@ fn test_expression_path() {
     let source = "(a).b";
     let parsed = Parser::new(&allocator, source, source_type).parse();
     assert!(
-        parsed.errors.is_empty(),
+        parsed.diagnostics.is_empty(),
         "parse errors: {:?}",
-        parsed.errors
+        parsed.diagnostics
     );
     let path = expression_path(statement_expression(&parsed.program.body[0])).unwrap();
     assert_eq!(path, vec!["a", "b"]);
@@ -116,9 +116,9 @@ fn test_expression_path() {
     let source = "123";
     let parsed = Parser::new(&allocator, source, source_type).parse();
     assert!(
-        parsed.errors.is_empty(),
+        parsed.diagnostics.is_empty(),
         "parse errors: {:?}",
-        parsed.errors
+        parsed.diagnostics
     );
     assert_eq!(
         expression_path(statement_expression(&parsed.program.body[0])),
@@ -128,9 +128,9 @@ fn test_expression_path() {
     let source = "a['b']";
     let parsed = Parser::new(&allocator, source, source_type).parse();
     assert!(
-        parsed.errors.is_empty(),
+        parsed.diagnostics.is_empty(),
         "parse errors: {:?}",
-        parsed.errors
+        parsed.diagnostics
     );
     assert_eq!(
         expression_path(statement_expression(&parsed.program.body[0])),

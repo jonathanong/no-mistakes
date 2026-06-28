@@ -13,7 +13,7 @@ pub(in crate::codebase::rules::require_storybook_stories) fn extract_storybook_s
 ) -> Vec<String> {
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
-    if parsed.panicked || !parsed.errors.is_empty() {
+    if parsed.panicked || !parsed.diagnostics.is_empty() {
         return Vec::new();
     }
     export_config::stories_expression(&parsed.program)

@@ -55,9 +55,9 @@ pub(crate) fn collect_file_facts(
     };
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, &source, source_type).parse();
-    if parsed.panicked || !parsed.errors.is_empty() {
+    if parsed.panicked || !parsed.diagnostics.is_empty() {
         let parse_error = parsed
-            .errors
+            .diagnostics
             .first()
             .map(|error| format!("{error:?}"))
             .unwrap_or("parser panicked without diagnostic details".to_string());

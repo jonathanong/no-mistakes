@@ -15,9 +15,9 @@ pub fn with_program<T>(
         .with_context(|| format!("unsupported JavaScript/TypeScript file: {}", path.display()))?;
     let parsed = Parser::new(&allocator, source, source_type).parse();
 
-    if parsed.panicked || !parsed.errors.is_empty() {
+    if parsed.panicked || !parsed.diagnostics.is_empty() {
         let detail = parsed
-            .errors
+            .diagnostics
             .first()
             .map(|e| format!("{e:?}"))
             .unwrap_or("unknown error (parser panicked)".to_string());

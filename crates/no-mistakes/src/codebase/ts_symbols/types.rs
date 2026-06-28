@@ -60,7 +60,7 @@ pub fn extract_symbols(source: &str, is_tsx: bool) -> Result<FileSymbols> {
     let ret = Parser::new(&allocator, source, source_type).parse();
     if ret.panicked {
         let detail = ret
-            .errors
+            .diagnostics
             .first()
             .map(|err| format!("{err:?}"))
             .unwrap_or("unknown error (parser panicked)".to_string());

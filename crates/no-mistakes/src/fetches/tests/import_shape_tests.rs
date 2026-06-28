@@ -16,9 +16,9 @@ fn test_is_runtime_export_variants() {
     let source_type = oxc_span::SourceType::from_path(std::path::Path::new("test.ts")).unwrap();
     let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
     assert!(
-        parsed.errors.is_empty(),
+        parsed.diagnostics.is_empty(),
         "export parser errors: {:?}",
-        parsed.errors
+        parsed.diagnostics
     );
     let exports = parsed
         .program
@@ -70,9 +70,9 @@ fn test_is_runtime_export_declaration_variants() {
     let source_type = oxc_span::SourceType::from_path(std::path::Path::new("test.ts")).unwrap();
     let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
     assert!(
-        parsed.errors.is_empty(),
+        parsed.diagnostics.is_empty(),
         "parse errors: {:?}",
-        parsed.errors
+        parsed.diagnostics
     );
     let exports: Vec<_> = parsed
         .program
@@ -104,9 +104,9 @@ fn test_is_runtime_export_enum_and_namespace_variants() {
     let source_type = oxc_span::SourceType::from_path(std::path::Path::new("test.ts")).unwrap();
     let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
     assert!(
-        parsed.errors.is_empty(),
+        parsed.diagnostics.is_empty(),
         "parse errors: {:?}",
-        parsed.errors
+        parsed.diagnostics
     );
     let exports: Vec<_> = parsed
         .program
