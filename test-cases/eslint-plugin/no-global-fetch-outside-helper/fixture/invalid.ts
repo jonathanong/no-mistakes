@@ -25,3 +25,13 @@ globalThis.fetch?.("/api/optional");
 
 const satisfiesFetch = fetch satisfies typeof fetch;
 satisfiesFetch("/api/satisfies");
+
+{
+  const fetch = globalThis.fetch;
+  fetch("/api/fetch-name-alias");
+}
+
+{
+  const { fetch } = globalThis;
+  fetch("/api/fetch-name-destructured");
+}

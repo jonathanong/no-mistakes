@@ -81,9 +81,10 @@ function isGlobalFetchExpression(node, context, aliases) {
   const unwrapped = unwrapTSAndChain(node);
   if (!unwrapped) return false;
   if (unwrapped.type === "Identifier") {
-    if (unwrapped.name === "fetch") return !hasLocalBinding(unwrapped, context);
     const variable = resolveVariable(unwrapped, context);
-    return Boolean(variable && aliases.has(variable));
+    if (variable && aliases.has(variable)) return true;
+    if (unwrapped.name === "fetch") return !hasLocalBinding(unwrapped, context);
+    return false;
   }
   return isGlobalFetchMember(unwrapped, context);
 }
