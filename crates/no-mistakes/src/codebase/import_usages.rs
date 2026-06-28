@@ -135,4 +135,6 @@ pub(crate) fn collect_from_facts(
 }
 
 #[cfg(test)]
+mod coverage_tests;
+#[cfg(test)]
 mod tests;
