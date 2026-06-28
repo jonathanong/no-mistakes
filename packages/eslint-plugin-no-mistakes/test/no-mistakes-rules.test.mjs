@@ -1089,7 +1089,7 @@ describe("no-global-fetch-outside-helper", () => {
         option,
         "web/app/users.ts",
       ),
-      Array(8).fill("globalFetch"),
+      Array(15).fill("globalFetch"),
     );
   });
 
@@ -1147,6 +1147,22 @@ describe("no-global-fetch-outside-helper", () => {
         new Set(),
       ),
       true,
+    );
+    assert.equal(
+      __test.unwrapTSAndChain({
+        type: "TSTypeAssertion",
+        expression: {
+          type: "TSNonNullExpression",
+          expression: {
+            type: "TSSatisfiesExpression",
+            expression: {
+              type: "TSInstantiationExpression",
+              expression: { type: "Identifier", name: "fetch" },
+            },
+          },
+        },
+      }).name,
+      "fetch",
     );
     assert.equal(
       __test.isGlobalFetchExpression(

@@ -40,11 +40,27 @@ function hasLocalBinding(node, context) {
   return Boolean(variable?.defs?.some((def) => LOCAL_BINDING_TYPES.has(def.type)));
 }
 
+function unwrapTSAndChain(node) {
+  while (
+    node &&
+    (node.type === "ChainExpression" ||
+      node.type === "TSAsExpression" ||
+      node.type === "TSSatisfiesExpression" ||
+      node.type === "TSNonNullExpression" ||
+      node.type === "TSInstantiationExpression" ||
+      node.type === "TSTypeAssertion")
+  ) {
+    node = node.expression;
+  }
+  return node;
+}
+
 function isUnshadowedGlobalRoot(node, context) {
+  const unwrapped = unwrapTSAndChain(node);
   return (
-    node?.type === "Identifier" &&
-    GLOBAL_FETCH_ROOTS.has(node.name) &&
-    !hasLocalBinding(node, context)
+    unwrapped?.type === "Identifier" &&
+    GLOBAL_FETCH_ROOTS.has(unwrapped.name) &&
+    !hasLocalBinding(unwrapped, context)
   );
 }
 
@@ -53,23 +69,23 @@ function fetchMemberProperty(node) {
 }
 
 function isGlobalFetchMember(node, context) {
+  const unwrapped = unwrapTSAndChain(node);
   return (
-    node?.type === "MemberExpression" &&
-    fetchMemberProperty(node) &&
-    isUnshadowedGlobalRoot(node.object, context)
+    unwrapped?.type === "MemberExpression" &&
+    fetchMemberProperty(unwrapped) &&
+    isUnshadowedGlobalRoot(unwrapped.object, context)
   );
 }
 
 function isGlobalFetchExpression(node, context, aliases) {
-  if (!node) return false;
-  if (node.type === "ChainExpression")
-    return isGlobalFetchExpression(node.expression, context, aliases);
-  if (node.type === "Identifier") {
-    if (node.name === "fetch") return !hasLocalBinding(node, context);
-    const variable = resolveVariable(node, context);
+  const unwrapped = unwrapTSAndChain(node);
+  if (!unwrapped) return false;
+  if (unwrapped.type === "Identifier") {
+    if (unwrapped.name === "fetch") return !hasLocalBinding(unwrapped, context);
+    const variable = resolveVariable(unwrapped, context);
     return Boolean(variable && aliases.has(variable));
   }
-  return isGlobalFetchMember(node, context);
+  return isGlobalFetchMember(unwrapped, context);
 }
 
 function bindingIdentifier(node) {
@@ -155,6 +171,7 @@ module.exports = Object.assign(
       isGlobalFetchExpression,
       isGlobalFetchMember,
       shouldCheckFile,
+      unwrapTSAndChain,
     },
   },
 );
