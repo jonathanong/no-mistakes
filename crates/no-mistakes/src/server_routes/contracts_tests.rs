@@ -46,3 +46,29 @@ fn contract_helpers_ignore_dynamic_query_placeholders() {
         Some(vec!["term".to_string()])
     );
 }
+
+#[test]
+fn analyze_contracts_reports_client_query_params_missing_from_server_route() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/server-contracts/mismatch/fixture");
+    let route_report = ProjectReport {
+        summary: Default::default(),
+        routes: vec![ServerRoute {
+            file: "server.ts".to_string(),
+            line: 1,
+            method: "GET".to_string(),
+            route: "/api/users".to_string(),
+            raw_path: "/api/users".to_string(),
+            query_params: vec!["include".to_string()],
+            framework: crate::server_routes::types::Framework::Express,
+        }],
+        edges: Vec::new(),
+        diagnostics: Vec::new(),
+    };
+
+    let report = analyze_contracts(&root, &route_report);
+
+    assert_eq!(report.client_refs.len(), 1);
+    assert_eq!(report.mismatches.len(), 1);
+    assert_eq!(report.mismatches[0].missing_params, vec!["sort"]);
+}

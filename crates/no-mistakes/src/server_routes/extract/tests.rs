@@ -150,3 +150,15 @@ fn extract_file_collects_named_handler_query_params() {
     assert_eq!(route_params("/exported"), vec!["exported"]);
     assert_eq!(route_params("/defaulted"), vec!["defaulted"]);
 }
+
+#[test]
+fn extract_file_ignores_named_handlers_without_collectable_bodies() {
+    let facts = extract_file(&fixture("named-handler-defensive.ts")).unwrap();
+
+    let declared = facts
+        .routes
+        .iter()
+        .find(|route| route.raw_path == "/declared")
+        .expect("declared route");
+    assert!(declared.query_params.is_empty());
+}
