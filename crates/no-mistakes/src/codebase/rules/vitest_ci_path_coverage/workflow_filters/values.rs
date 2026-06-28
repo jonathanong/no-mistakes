@@ -2,6 +2,9 @@ use super::{workflow_finding, RuleFinding};
 use serde_yaml::Value;
 use std::path::Path;
 
+#[cfg(test)]
+mod tests;
+
 pub(super) fn parse_filters_value(
     root: &Path,
     rel: &str,

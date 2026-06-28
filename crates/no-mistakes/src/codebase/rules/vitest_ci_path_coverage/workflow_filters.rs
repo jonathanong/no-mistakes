@@ -11,6 +11,9 @@ use serde_yaml::Value;
 use std::path::Path;
 use values::{filter_patterns, parse_filters_value};
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Clone, Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
 pub(crate) struct WorkflowSelector {

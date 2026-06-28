@@ -1,5 +1,8 @@
 use crate::integration_tests::types::ConfigProject;
 
+#[cfg(test)]
+mod tests;
+
 pub(super) fn merge_explicit_project(projects: &mut Vec<ConfigProject>, project: ConfigProject) {
     let Some(existing) = projects
         .iter_mut()

@@ -9,6 +9,9 @@ use anyhow::Result;
 use merge::merge_explicit_project;
 use std::path::Path;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Debug)]
 pub(super) struct CoverageUnit {
     pub(super) project: String,

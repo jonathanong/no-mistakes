@@ -44,7 +44,7 @@ pub(super) fn coverage_paths(
     Ok(paths)
 }
 
-fn witness_paths(patterns: &[String]) -> Vec<String> {
+pub(super) fn witness_paths(patterns: &[String]) -> Vec<String> {
     patterns
         .iter()
         .filter(|pattern| !pattern.starts_with('!'))
@@ -61,7 +61,7 @@ fn needs_recursive_witness(pattern: &str) -> bool {
         .is_some_and(|(_, tail)| tail.chars().any(|ch| ch != '*' && ch != '/'))
 }
 
-fn witness_path(pattern: &str) -> String {
+pub(super) fn witness_path(pattern: &str) -> String {
     let mut chars = pattern.chars().peekable();
     let mut out = String::with_capacity(pattern.len() + 24);
     while let Some(ch) = chars.next() {

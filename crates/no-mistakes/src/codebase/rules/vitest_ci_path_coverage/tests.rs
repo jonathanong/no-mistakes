@@ -26,6 +26,17 @@ fn rule_options_mut(
 }
 
 #[test]
+fn scan_returns_no_findings_when_no_files_are_in_scope() {
+    let root = fixture_root("fixture");
+    let config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    let opts = Options::default();
+
+    let findings = scan(&root, &config, &opts, &[]).unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn reports_source_input_missed_by_too_narrow_ci_filter() {
     let root = fixture_root("fixture");
     let config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
@@ -218,11 +229,83 @@ fn invalid_filter_globs_are_reported_as_findings() {
 }
 
 #[test]
+fn mapped_filter_names_default_to_project_and_missing_mapping_points_at_project() {
+    let opts = Options::default();
+    assert_eq!(mapped_filter_names(&opts, "backend"), vec!["backend"]);
+
+    let finding = missing_mapping_finding(
+        ".github/workflows/ci.yml",
+        &CoverageUnit {
+            project: "backend".to_string(),
+            source: "test include",
+            patterns: Vec::new(),
+        },
+    );
+
+    assert_eq!(finding.file, ".github/workflows/ci.yml");
+    assert_eq!(finding.target.as_deref(), Some("backend"));
+    assert!(finding.message.contains("options.projectFilters.backend"));
+}
+
+#[test]
+fn coverage_paths_include_real_files_and_recursive_witnesses_once() {
+    let root = fixture_root("glob-witness");
+    let unit = CoverageUnit {
+        project: "backend".to_string(),
+        source: "configured source",
+        patterns: vec!["src/**/*.ts".to_string(), "!src/generated/**".to_string()],
+    };
+    let files = vec![root.join("src/index.ts"), root.join("src/index.ts")];
+
+    let paths = coverage_paths::coverage_paths(&root, &unit, &files).unwrap();
+
+    assert_eq!(
+        paths
+            .iter()
+            .map(|path| path.rel.as_str())
+            .collect::<Vec<_>>(),
+        vec![
+            "src/index.ts",
+            "src/__no_mistakes_witness__/nested/__no_mistakes_witness__.ts"
+        ]
+    );
+    assert!(!paths[0].synthetic);
+    assert!(paths[1].synthetic);
+}
+
+#[test]
+fn witness_paths_skip_negated_and_broad_patterns() {
+    assert!(
+        coverage_paths::witness_paths(&["**".to_string(), "!src/**/*.ts".to_string()]).is_empty()
+    );
+}
+
+#[test]
+fn witness_path_handles_supported_glob_tokens() {
+    assert_eq!(
+        coverage_paths::witness_path("src/**/{app,lib}/file[ab]?.\\*"),
+        "src/__no_mistakes_witness__/nested/app/fileax.*"
+    );
+    assert_eq!(
+        coverage_paths::witness_path("src/**/{app}/file.ts"),
+        "src/__no_mistakes_witness__/nested/app/file.ts"
+    );
+    assert_eq!(coverage_paths::witness_path("[ab].ts"), "a.ts");
+}
+
+#[test]
 fn double_star_suffix_globs_match_repo_root_files() {
     let compiled = globs::compile_patterns(&["**.ts".to_string()]).unwrap();
 
     assert!(globs::selected_by(&compiled, "index.ts"));
     assert!(globs::selected_by(&compiled, "src/index.ts"));
+}
+
+#[test]
+fn double_star_inside_path_segments_compiles() {
+    let compiled = globs::compile_patterns(&["src/foo**bar.ts".to_string()]).unwrap();
+
+    assert_eq!(compiled.len(), 1);
 }
 
 #[test]
