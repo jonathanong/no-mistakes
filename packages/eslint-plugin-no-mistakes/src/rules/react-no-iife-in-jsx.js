@@ -16,7 +16,7 @@ function visit(node, callback, seen = new Set()) {
   seen.add(node);
   callback(node);
   for (const key in node) {
-    if (SKIP_KEYS.has(key)) continue;
+    if (!Object.hasOwn(node, key) || SKIP_KEYS.has(key)) continue;
     const value = node[key];
     if (!value) continue;
     if (Array.isArray(value)) {
