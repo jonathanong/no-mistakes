@@ -20,11 +20,13 @@ function compilePatterns(patterns = []) {
 }
 
 function calleePath(node) {
-  if (!node) return null;
-  if (node.type === "Identifier") return node.name;
-  if (node.type !== "MemberExpression") return null;
-  const object = calleePath(node.object);
-  const property = memberPropertyName(node);
+  let current = node;
+  if (!current) return null;
+  if (current.type === "ChainExpression") current = current.expression;
+  if (current.type === "Identifier") return current.name;
+  if (current.type !== "MemberExpression") return null;
+  const object = calleePath(current.object);
+  const property = memberPropertyName(current);
   return object && property ? `${object}.${property}` : null;
 }
 

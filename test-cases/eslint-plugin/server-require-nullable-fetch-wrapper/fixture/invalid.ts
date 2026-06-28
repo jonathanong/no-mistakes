@@ -18,3 +18,7 @@ export const typed: () => MaybeUser = () => {
 export default function defaultDirect(): Promise<User | null> {
   return serverApi.get("/users/4");
 }
+
+export function optionalGetter(): User | null {
+  return serverApi?.get("/users/5");
+}

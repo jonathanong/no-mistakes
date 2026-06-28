@@ -218,7 +218,7 @@ describe("ts-preserve-null-option-defaults", () => {
         undefined,
         "invalid.ts",
       ),
-      ["default", "default", "default", "default", "default", "default", "default"],
+      Array(7).fill("default"),
     );
   });
 
@@ -335,7 +335,7 @@ describe("ts-preserve-null-option-defaults", () => {
         undefined,
         "coverage.ts",
       ),
-      ["default", "default", "default", "default", "default", "default", "default"],
+      Array(16).fill("default"),
     );
   });
 });
@@ -367,7 +367,7 @@ describe("server-require-nullable-fetch-wrapper", () => {
         option,
         "backend/users.ts",
       ),
-      ["wrapper", "wrapper", "wrapper", "wrapper"],
+      ["wrapper", "wrapper", "wrapper", "wrapper", "wrapper"],
     );
   });
 
@@ -428,6 +428,27 @@ describe("server-require-nullable-fetch-wrapper", () => {
     assert.equal(__test.compilePatterns(["^serverApi\\.get$", "["]).length, 1);
     assert.equal(__test.calleePath(null), null);
     assert.equal(__test.calleePath({ type: "CallExpression" }), null);
+    assert.equal(
+      __test.calleePath({
+        type: "ChainExpression",
+        expression: {
+          type: "MemberExpression",
+          computed: false,
+          object: { type: "Identifier", name: "serverApi" },
+          property: { type: "Identifier", name: "get" },
+        },
+      }),
+      "serverApi.get",
+    );
+    assert.equal(
+      __test.calleePath({
+        type: "MemberExpression",
+        computed: false,
+        object: { type: "CallExpression" },
+        property: { type: "Identifier", name: "get" },
+      }),
+      null,
+    );
     assert.equal(__test.typeMatchesNullableHint(null, new Set()), false);
     assert.equal(__test.typeMatchesNullableHint({ type: "TSNullKeyword" }, new Set()), true);
     assert.equal(__test.typeMatchesNullableHint({ type: "TSStringKeyword" }, new Set()), false);

@@ -71,6 +71,17 @@ function objectPropertyName(property) {
   return property.type === "Property" ? keyName(property.key) : null;
 }
 
+function reportDefaultsInPattern(context, pattern, props) {
+  if (!pattern || pattern.type !== "ObjectPattern" || !props) return;
+  for (const property of pattern.properties || []) {
+    const name = objectPropertyName(property);
+    if (!name || !props.has(name)) continue;
+    if (property.value?.type === "AssignmentPattern") {
+      context.report({ node: property.value, messageId: "default", data: { name } });
+    }
+  }
+}
+
 function memberRootAndProperty(node) {
   let current = node;
   if (current?.type === "ChainExpression") current = current.expression;
@@ -81,13 +92,92 @@ function memberRootAndProperty(node) {
   return isIdentifier(object) && property ? { object: object.name, property } : null;
 }
 
+function createScope(kind) {
+  return {
+    bindings: new Set(),
+    kind,
+    nullableBindings: new Set(),
+    objectProps: new Map(),
+  };
+}
+
+function variableScope(scopes, currentScope, node) {
+  if (!node.parent || node.parent.kind !== "var") return currentScope();
+  for (let index = scopes.length - 1; index >= 0; index -= 1) {
+    if (scopes[index].kind === "function" || scopes[index].kind === "program") {
+      return scopes[index];
+    }
+  }
+  return currentScope();
+}
+
+function objectProps(scopes, name) {
+  for (let index = scopes.length - 1; index >= 0; index -= 1) {
+    if (scopes[index].bindings.has(name) && !scopes[index].objectProps.has(name)) return null;
+    const props = scopes[index].objectProps.get(name);
+    if (props) return props;
+  }
+  return null;
+}
+
+function isNullableBinding(scopes, name) {
+  for (let index = scopes.length - 1; index >= 0; index -= 1) {
+    if (scopes[index].bindings.has(name)) {
+      return scopes[index].nullableBindings.has(name);
+    }
+  }
+  return false;
+}
+
+function assertionType(node) {
+  return node?.type === "TSAsExpression" || node?.type === "TSTypeAssertion"
+    ? node.typeAnnotation
+    : null;
+}
+
+function collectTypeProps(program, options, patterns, typeProps) {
+  for (const statement of program.body || []) {
+    const declaration =
+      (statement.type === "ExportNamedDeclaration" ||
+        statement.type === "ExportDefaultDeclaration") &&
+      statement.declaration
+        ? statement.declaration
+        : statement;
+    if (
+      declaration.type === "TSInterfaceDeclaration" &&
+      optionTypeAllowed(declaration.id.name, options, patterns)
+    ) {
+      const props = typeProps.get(declaration.id.name) || new Set();
+      for (const prop of nullablePropsFromMembers(declaration.body.body)) props.add(prop);
+      typeProps.set(declaration.id.name, props);
+    }
+    if (
+      declaration.type === "TSTypeAliasDeclaration" &&
+      optionTypeAllowed(declaration.id.name, options, patterns) &&
+      declaration.typeAnnotation.type === "TSTypeLiteral"
+    ) {
+      typeProps.set(
+        declaration.id.name,
+        nullablePropsFromMembers(declaration.typeAnnotation.members),
+      );
+    }
+  }
+}
+
 module.exports = {
+  assertionType,
+  collectTypeProps,
   compilePatterns,
+  createScope,
   isIdentifier,
+  isNullableBinding,
   memberRootAndProperty,
   nullablePropsFromMembers,
+  objectProps,
   objectPropertyName,
   optionTypeAllowed,
   propsFromType,
+  reportDefaultsInPattern,
   typeIncludesNull,
+  variableScope,
 };
