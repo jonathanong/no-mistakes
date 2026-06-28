@@ -5,8 +5,8 @@ use serde_json::{json, Value};
 
 use super::types::{AnalyzeProjectOptions, AnalyzeReportRequest};
 use crate::napi_api::options::{
-    project_roots, ImportUsagesOptions, PlaywrightOptions, ProjectOptions, SymbolOptions,
-    TraverseOptions,
+    project_roots, FlowOptions, ImportUsagesOptions, PlaywrightOptions, ProjectOptions,
+    SymbolOptions, TraverseOptions,
 };
 
 pub(super) fn symbols_options(
@@ -34,6 +34,15 @@ pub(super) fn project_options(
     let value = merged_options(request, options, true, true, true)?;
     let project_options: ProjectOptions = serde_json::from_value(value.clone())?;
     let _ = project_roots(&project_options);
+    Ok(serde_json::to_string(&value)?)
+}
+
+pub(super) fn flow_options(
+    request: &AnalyzeReportRequest,
+    options: &AnalyzeProjectOptions,
+) -> AnyhowResult<String> {
+    let value = merged_options(request, options, true, false, true)?;
+    let _: FlowOptions = serde_json::from_value(value.clone())?;
     Ok(serde_json::to_string(&value)?)
 }
 

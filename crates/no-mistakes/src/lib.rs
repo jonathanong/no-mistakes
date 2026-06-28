@@ -13,6 +13,7 @@ pub mod data_pw_query;
 pub mod effects_query;
 pub mod fetch;
 mod fetches;
+pub mod flow_query;
 pub mod impacted_checks;
 pub mod import_shape;
 pub mod imports;

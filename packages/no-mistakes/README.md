@@ -21,15 +21,18 @@ const {
   check,
   fetches,
   importUsages,
+  flow,
   playwrightRelated,
   symbols,
   testsPlan,
+  testsTargets,
   queueEdges,
   queueRelated,
   queueCheck,
   serverRouteList,
   serverRouteEdges,
   serverRouteRelated,
+  serverContracts,
   reactAnalyze,
   reactCheck,
 } = require("no-mistakes");
@@ -65,9 +68,20 @@ const {
     framework: "vitest", // also supports "playwright" and "swift"
     changedFiles: ["src/utils.mts"],
   });
+  const targetCommands = await testsTargets({
+    root: process.cwd(),
+    framework: "vitest",
+    files: ["src/utils.test.mts"],
+  });
   const projectCheck = await check({
     root: process.cwd(),
     tsconfig: "tsconfig.json",
+  });
+  const localFlow = await flow({
+    root: process.cwd(),
+    target: "src/utils.mts#parseDate",
+    direction: "dependents",
+    depth: 1,
   });
   const coveredByPlaywright = await playwrightRelated({
     root: process.cwd(),
@@ -80,6 +94,10 @@ const {
     direction: "both",
   });
   const routeEdges = await serverRouteEdges({
+    root: process.cwd(),
+    roots: ["src/server.ts"],
+  });
+  const contracts = await serverContracts({
     root: process.cwd(),
     roots: ["src/server.ts"],
   });

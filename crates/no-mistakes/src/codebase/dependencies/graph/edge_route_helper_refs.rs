@@ -38,6 +38,21 @@ fn route_helper_ref_patterns(
     facts: &dyn TsFactLookup,
     resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
 ) -> Vec<String> {
+    let mut patterns: Vec<_> = route_helper_ref_patterns_with_lines(path, file_facts, facts, resolver)
+        .into_iter()
+        .map(|(_, pattern)| pattern)
+        .collect();
+    patterns.sort();
+    patterns.dedup();
+    patterns
+}
+
+pub(crate) fn route_helper_ref_patterns_with_lines(
+    path: &Path,
+    file_facts: &crate::codebase::ts_source::facts::TsFileFacts,
+    facts: &dyn TsFactLookup,
+    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
+) -> Vec<(u32, String)> {
     let mut patterns = Vec::new();
     for helper_ref in &file_facts.route_helper_refs {
         let mut helper_patterns = local_route_helper_patterns(
@@ -51,7 +66,11 @@ fn route_helper_ref_patterns(
             facts,
             resolver,
         ));
-        patterns.extend(route_helper_ref_wrapped_patterns(helper_ref, helper_patterns));
+        patterns.extend(
+            route_helper_ref_wrapped_patterns(helper_ref, helper_patterns)
+                .into_iter()
+                .map(|pattern| (helper_ref.line, pattern)),
+        );
     }
     patterns.sort();
     patterns.dedup();

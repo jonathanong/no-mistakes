@@ -18,6 +18,7 @@ fn extracts_simple_href() {
     let refs = extract_route_refs(source, "nav.tsx");
     assert_eq!(refs.len(), 1);
     assert_eq!(refs[0].pattern, "/communities");
+    assert_eq!(refs[0].method.as_deref(), Some("GET"));
 }
 
 #[test]
@@ -26,6 +27,7 @@ fn extracts_router_push() {
     let refs = extract_route_refs(source, "comp.tsx");
     assert_eq!(refs.len(), 1);
     assert_eq!(refs[0].pattern, "/source");
+    assert_eq!(refs[0].method.as_deref(), Some("GET"));
 }
 
 #[test]
@@ -41,6 +43,7 @@ fn extracts_router_prefetch() {
     let refs = extract_route_refs(source, "comp.tsx");
     assert_eq!(refs.len(), 1);
     assert_eq!(refs[0].pattern, "/source");
+    assert_eq!(refs[0].method.as_deref(), Some("GET"));
 }
 
 #[test]
@@ -50,6 +53,7 @@ fn extracts_use_router_binding() {
     let refs = extract_route_refs(source, "comp.tsx");
     assert_eq!(refs.len(), 1);
     assert_eq!(refs[0].pattern, "/dashboard");
+    assert_eq!(refs[0].method.as_deref(), Some("GET"));
 }
 
 #[test]
@@ -113,6 +117,23 @@ fn extracts_redirect_call() {
     let refs = extract_route_refs(source, "comp.tsx");
     assert_eq!(refs.len(), 1);
     assert_eq!(refs[0].pattern, "/login");
+    assert_eq!(refs[0].method.as_deref(), Some("GET"));
+}
+
+#[test]
+fn extracts_query_keys_from_route_objects() {
+    let source = r#"
+        const router = useRouter();
+        router.push({ pathname: "/search", query: { term: value, page: 2 } });
+        const link = <a href={{ pathname: "/search", query: { sort: "name" } }}>Search</a>;
+    "#;
+    let refs = extract_route_refs(source, "comp.tsx");
+
+    assert_eq!(refs.len(), 2);
+    assert_eq!(refs[0].pattern, "/search?page&term");
+    assert_eq!(refs[0].method.as_deref(), Some("GET"));
+    assert_eq!(refs[1].pattern, "/search?sort");
+    assert_eq!(refs[1].method.as_deref(), Some("GET"));
 }
 
 #[test]
@@ -289,6 +310,24 @@ fn extracts_fetch_local_path() {
     let refs = extract_route_refs(source, "comp.tsx");
     assert_eq!(refs.len(), 1);
     assert_eq!(refs[0].pattern, "/api/v1/my/api-keys");
+}
+
+#[test]
+fn extracts_fetch_methods_from_options() {
+    let source = r#"
+        fetch('/api/default-options', { headers: {} });
+        fetch('/api/spread-options', { ...defaults, method: "post" });
+        fetch('/api/dynamic-method', { method: methodName });
+    "#;
+    let refs = extract_route_refs(source, "comp.tsx");
+
+    assert_eq!(refs.len(), 3);
+    assert_eq!(refs[0].pattern, "/api/default-options");
+    assert_eq!(refs[0].method.as_deref(), Some("GET"));
+    assert_eq!(refs[1].pattern, "/api/spread-options");
+    assert_eq!(refs[1].method.as_deref(), Some("POST"));
+    assert_eq!(refs[2].pattern, "/api/dynamic-method");
+    assert_eq!(refs[2].method, None);
 }
 
 #[test]

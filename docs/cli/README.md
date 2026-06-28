@@ -25,6 +25,7 @@ analysis.
 | [`call-sites`](call-sites.md) | Call sites of an exported function with argument shapes. |
 | [`resolve-check`](resolve-check.md) | Whether all imports in a file resolve. |
 | [`fetches`](fetches.md) | Next.js routes mapped to static fetch API calls. |
+| [`flow`](flow.md) | Compact dependency/symbol flow around one file or export. |
 | [`check`](check.md) | Configured project-wide checks. |
 | [`lockfile`](lockfile.md) | Show which packages changed between two lockfile versions. |
 | [`tests`](tests.md) | Test plan, impact, explanation, comments, and graphs. |

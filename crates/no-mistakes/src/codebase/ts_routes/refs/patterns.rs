@@ -28,11 +28,12 @@ fn check_call_for_route_ref(
                     if let Some(pattern) =
                         first_arg_pattern(&call.arguments).filter(|p| !should_skip(p))
                     {
-                        refs.push(RouteRef {
-                            pattern,
-                            file: file.to_string(),
-                            line,
-                        });
+	                    refs.push(RouteRef {
+	                        pattern,
+	                        file: file.to_string(),
+	                        line,
+	                        method: Some("GET".to_string()),
+	                    });
                     }
                 }
             }
@@ -44,11 +45,12 @@ fn check_call_for_route_ref(
         if router_bindings.redirects.contains(name) || router_bindings.methods.contains(name) {
             let line = byte_offset_to_line(source, call.span.start as usize);
             if let Some(pattern) = first_arg_pattern(&call.arguments).filter(|p| !should_skip(p)) {
-                refs.push(RouteRef {
-                    pattern,
-                    file: file.to_string(),
-                    line,
-                });
+	                refs.push(RouteRef {
+	                    pattern,
+	                    file: file.to_string(),
+	                    line,
+	                    method: Some("GET".to_string()),
+	                });
             }
         }
     }
@@ -72,10 +74,29 @@ fn check_call_for_route_ref(
                     pattern,
                     file: file.to_string(),
                     line,
+                    method: fetch_method(&call.arguments),
                 });
             }
         }
     }
+}
+
+fn fetch_method(arguments: &oxc_allocator::Vec<Argument>) -> Option<String> {
+    let Some(Argument::ObjectExpression(options)) = arguments.get(1) else {
+        return Some("GET".to_string());
+    };
+    for property in &options.properties {
+        let ObjectPropertyKind::ObjectProperty(property) = property else {
+            continue;
+        };
+        if property.key.static_name().is_some_and(|name| name == "method") {
+            if let Expression::StringLiteral(value) = &property.value {
+                return Some(value.value.to_ascii_uppercase());
+            }
+            return None;
+        }
+    }
+    Some("GET".to_string())
 }
 
 fn first_arg_pattern(arguments: &oxc_allocator::Vec<Argument>) -> Option<String> {
@@ -97,7 +118,7 @@ fn extract_pattern_from_expression(expr: &Expression) -> Option<String> {
     match expr {
         Expression::StringLiteral(s) => Some(normalize_next_pathname_pattern(s.value.as_str())),
         Expression::TemplateLiteral(tpl) => Some(normalize_template(tpl)),
-        Expression::ObjectExpression(obj) => object_pathname(obj),
+        Expression::ObjectExpression(obj) => object_route_pattern(obj),
         Expression::TSTypeAssertion(ts_assertion) => {
             extract_pattern_from_expression(&ts_assertion.expression)
         }
@@ -105,22 +126,7 @@ fn extract_pattern_from_expression(expr: &Expression) -> Option<String> {
     }
 }
 
-fn object_pathname(obj: &oxc_ast::ast::ObjectExpression) -> Option<String> {
-    for prop in &obj.properties {
-        let ObjectPropertyKind::ObjectProperty(prop) = prop else {
-            continue;
-        };
-        let is_pathname = match &prop.key {
-            PropertyKey::StaticIdentifier(id) => id.name == "pathname",
-            PropertyKey::StringLiteral(s) => s.value == "pathname",
-            _ => false,
-        };
-        if is_pathname {
-            return extract_pattern_from_expression(&prop.value);
-        }
-    }
-    None
-}
+include!("patterns_route_objects.rs");
 
 pub(crate) fn normalize_next_pathname_pattern(path: &str) -> String {
     let leading_slash = path.starts_with('/');

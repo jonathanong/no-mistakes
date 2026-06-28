@@ -1,0 +1,129 @@
+use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, GraphBuildPlan, NodeId};
+use crate::codebase::dependencies::{parse_entrypoint, relationship_filter, RelationshipArg};
+use crate::codebase::ts_resolver::{find_tsconfig, load_tsconfig, normalize_path, TsConfig};
+use anyhow::{Context, Result};
+use serde::Serialize;
+use std::collections::{BTreeMap, BTreeSet, HashSet, VecDeque};
+use std::path::{Path, PathBuf};
+
+#[derive(Debug, Clone)]
+pub struct FlowOptions {
+    pub target: String,
+    pub root: PathBuf,
+    pub tsconfig: Option<PathBuf>,
+    pub config: Option<PathBuf>,
+    pub direction: FlowDirection,
+    pub depth: usize,
+    pub relationships: Vec<RelationshipArg>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FlowDirection {
+    Deps,
+    Dependents,
+    Both,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct FlowReport {
+    pub root: String,
+    pub target: String,
+    pub nodes: Vec<FlowNode>,
+    pub edges: Vec<FlowEdge>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct FlowNode {
+    pub id: String,
+    pub kind: &'static str,
+    pub depth: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub file: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub symbol: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub module: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub queue_file: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub job: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "camelCase")]
+pub struct FlowEdge {
+    pub from: String,
+    pub to: String,
+    pub kind: &'static str,
+}
+
+pub fn run(options: &FlowOptions) -> Result<FlowReport> {
+    let root = normalize_path(&options.root);
+    let root = root.canonicalize().unwrap_or(root);
+    let tsconfig = resolve_tsconfig(&root, options.tsconfig.as_deref())?;
+    let allowed = relationship_filter(&options.relationships);
+    let plan = GraphBuildPlan::from_allowed(allowed.as_ref()).with_symbols(true);
+    let graph =
+        DepGraph::build_with_plan_and_config(&root, &tsconfig, plan, options.config.as_deref())?;
+    let target = resolve_target(&root, &options.target);
+    let mut nodes = BTreeMap::new();
+    let mut edges = BTreeSet::new();
+    insert_node(&mut nodes, &target, &root, 0);
+
+    let mut traversal = Traversal {
+        graph: &graph,
+        root: &root,
+        max_depth: options.depth,
+        allowed: allowed.as_ref(),
+        nodes: &mut nodes,
+        edges: &mut edges,
+    };
+    match options.direction {
+        FlowDirection::Deps => traversal.traverse(&target, TraverseDirection::Deps),
+        FlowDirection::Dependents => traversal.traverse(&target, TraverseDirection::Dependents),
+        FlowDirection::Both => {
+            traversal.traverse(&target, TraverseDirection::Deps);
+            traversal.traverse(&target, TraverseDirection::Dependents);
+        }
+    }
+
+    Ok(FlowReport {
+        root: root.to_string_lossy().into_owned(),
+        target: target.display_name(&root).replace('\\', "/"),
+        nodes: nodes.into_values().collect(),
+        edges: edges.into_iter().collect(),
+    })
+}
+
+include!("flow_query_traverse.rs");
+
+#[cfg(test)]
+#[path = "flow_query_tests.rs"]
+mod flow_query_tests;
+
+fn resolve_tsconfig(root: &Path, explicit: Option<&Path>) -> Result<TsConfig> {
+    let explicit_path = explicit.is_some();
+    let path = match explicit {
+        Some(path) if path.is_absolute() => Some(path.to_path_buf()),
+        Some(path) => Some(root.join(path)),
+        None => find_tsconfig(root),
+    };
+    match path {
+        Some(path) if explicit_path => {
+            load_tsconfig(&path).context(format!("loading tsconfig {}", path.display()))
+        }
+        Some(path) => Ok(load_tsconfig(&path).unwrap_or_else(|_| empty_tsconfig(root))),
+        None => Ok(empty_tsconfig(root)),
+    }
+}
+
+fn empty_tsconfig(root: &Path) -> TsConfig {
+    TsConfig {
+        dir: root.to_path_buf(),
+        paths_dir: root.to_path_buf(),
+        paths: Vec::new(),
+        base_url: None,
+    }
+}

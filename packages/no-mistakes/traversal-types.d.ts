@@ -1,4 +1,5 @@
 import type { ImportUsagesOptions } from "./import-usage-types";
+import type { FlowOptions } from "./flow-types";
 import type { PlaywrightOptions, PlaywrightRelatedOptions } from "./report-types";
 
 export type Relationship =
@@ -173,15 +174,10 @@ export interface ProjectOptions {
 }
 
 type BatchedProjectOptions = Omit<ProjectOptions, "root" | "tsconfig" | "config">;
+type BatchedFlowOptions = Omit<FlowOptions, "root" | "tsconfig" | "config">;
 type BatchedQueueRelatedOptions = BatchedProjectOptions & { files: string[] };
 type BatchedServerRouteRelatedOptions = BatchedProjectOptions &
   ({ files: string[] } | { roots: string[] });
-
-export interface FetchesOptions {
-  root?: string;
-  config?: string;
-  targets?: string[];
-}
 
 export type AnalyzeProjectReportRequest =
   | ({ type: "dependencies" | "dependents" | "related"; id?: string } & Omit<
@@ -190,12 +186,14 @@ export type AnalyzeProjectReportRequest =
     >)
   | ({ type: "symbols"; id?: string } & (SymbolsListOptions | SymbolsSignatureImpactOptions))
   | ({ type: "importUsages"; id?: string } & Omit<ImportUsagesOptions, "root">)
+  | ({ type: "flow"; id?: string } & BatchedFlowOptions)
   | ({ type: "queues" | "queueEdges" | "queueCheck"; id?: string } & BatchedProjectOptions)
   | ({ type: "queueRelated"; id?: string } & BatchedQueueRelatedOptions)
   | ({
       type: "serverRoutes" | "serverRouteList" | "serverRouteEdges";
       id?: string;
     } & BatchedProjectOptions)
+  | ({ type: "serverContracts"; id?: string } & BatchedProjectOptions)
   | ({ type: "serverRouteRelated"; id?: string } & BatchedServerRouteRelatedOptions)
   | ({ type: "reactAnalyze" | "reactCheck"; id?: string } & Pick<
       ProjectOptions,

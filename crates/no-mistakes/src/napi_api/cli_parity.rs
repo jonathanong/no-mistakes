@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use super::options::{
     parse_options, resolve_project_root, to_napi_error, CiEnvOptions, CiImpactOptions,
     FetchesOptions, ImpactedChecksOptions, PlaywrightOptions, ProjectOptions, TestsImpactOptions,
-    TestsPlanDocumentOptions, TestsPlanOptions, TestsWhyOptions,
+    TestsPlanDocumentOptions, TestsPlanOptions, TestsTargetsOptions, TestsWhyOptions,
 };
 use anyhow::{bail, Context, Result as AnyhowResult};
 
@@ -52,6 +52,34 @@ pub(crate) fn tests_impact_json_impl(options_json: String) -> napi::Result<Strin
     let args = build_impact_args(options).map_err(to_napi_error)?;
     let plan = crate::tests::impact::generate_impact_plan(&args).map_err(to_napi_error)?;
     to_pretty_json(&plan)
+}
+
+pub(crate) fn tests_targets_json_impl(options_json: String) -> napi::Result<String> {
+    let options = parse_options::<TestsTargetsOptions>(&options_json)?;
+    let framework = options
+        .framework
+        .as_deref()
+        .map(parse_test_framework)
+        .transpose()
+        .map_err(to_napi_error)?
+        .context("framework is required")
+        .map_err(to_napi_error)?;
+    if options.files.is_empty() {
+        return Err(to_napi_error(anyhow::anyhow!("files is required")));
+    }
+    let args = crate::tests::TargetsArgs {
+        framework,
+        files: options.files.into_iter().map(PathBuf::from).collect(),
+        root: options
+            .root
+            .map(PathBuf::from)
+            .unwrap_or_else(|| ".".into()),
+        config: options.config.map(PathBuf::from),
+        format: None,
+        json: true,
+    };
+    let report = crate::tests::targets::generate_targets(&args).map_err(to_napi_error)?;
+    to_pretty_json(&report)
 }
 
 pub(crate) fn ci_impact_json_impl(options_json: String) -> napi::Result<String> {

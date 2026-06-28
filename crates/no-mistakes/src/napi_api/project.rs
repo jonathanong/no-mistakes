@@ -125,6 +125,8 @@ pub(crate) fn server_route_related_json_impl(options_json: String) -> napi::Resu
         .map_err(|error| napi::Error::from_reason(error.to_string()))
 }
 
+include!("project_flow_contracts.rs");
+
 include!("project_query.rs");
 
 pub(crate) fn react_analyze_json_impl(options_json: String) -> napi::Result<String> {

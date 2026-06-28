@@ -43,6 +43,7 @@ fn analyze_project_batches_graph_and_queue_reports() {
 fn analyze_project_dispatches_all_domain_report_types() {
     for report_type in [
         "symbols",
+        "flow",
         "importUsages",
         "queueEdges",
         "queueRelated",
@@ -51,6 +52,7 @@ fn analyze_project_dispatches_all_domain_report_types() {
         "serverRouteList",
         "serverRouteEdges",
         "serverRouteRelated",
+        "serverContracts",
         "reactAnalyze",
         "reactCheck",
         "playwrightCheck",

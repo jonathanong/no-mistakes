@@ -17,6 +17,7 @@ pub(crate) struct RouteSite {
     pub method: String,
     pub raw_path: String,
     pub path: String,
+    pub query_params: Vec<String>,
     pub framework: Framework,
 }
 

@@ -131,3 +131,36 @@ fn default_export_non_identifier_is_ignored() {
 
     assert_eq!(facts.exports["default"], "default");
 }
+
+#[test]
+fn extract_file_collects_named_handler_query_params() {
+    let facts = extract_file(&fixture("named-query-handlers.ts")).unwrap();
+
+    let route_params = |path: &str| {
+        facts
+            .routes
+            .iter()
+            .find(|route| route.raw_path == path)
+            .map(|route| route.query_params.clone())
+            .unwrap_or_else(|| panic!("missing route {path}"))
+    };
+    assert_eq!(route_params("/search"), vec!["term"]);
+    assert_eq!(route_params("/list"), vec!["page"]);
+    assert_eq!(route_params("/delegated"), vec!["page"]);
+    assert_eq!(route_params("/destructured"), vec!["namedParam"]);
+    assert_eq!(route_params("/inline-destructured"), vec!["inlineParam"]);
+    assert_eq!(route_params("/exported"), vec!["exported"]);
+    assert_eq!(route_params("/defaulted"), vec!["defaulted"]);
+}
+
+#[test]
+fn extract_file_ignores_named_handlers_without_collectable_bodies() {
+    let facts = extract_file(&fixture("named-handler-defensive.ts")).unwrap();
+
+    let declared = facts
+        .routes
+        .iter()
+        .find(|route| route.raw_path == "/declared")
+        .expect("declared route");
+    assert!(declared.query_params.is_empty());
+}

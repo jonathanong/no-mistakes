@@ -6,6 +6,7 @@ dependency graph analysis.
 ```sh
 no-mistakes tests plan vitest --base origin/main --format json
 no-mistakes tests plan playwright --changed-file web/app/users/page.tsx --format paths
+no-mistakes tests plan vitest --changed-file web/app/users/users.test.ts --format commands
 no-mistakes tests plan swift --changed-file backend/api/feeds.mts --format paths
 ```
 
@@ -16,6 +17,10 @@ come from `--base/--head`, `--changed-file`, `--changed-files`, `--diff`,
 Key options: `--root`, `--config`, `--tsconfig`, `--environment`,
 `--limit-percent`, `--limit-files`, `--global-config-fallback`, `--format`, and
 `--json`.
+
+`--format commands` prints the exact runner commands for selected execution
+targets. Use it when an agent needs runnable commands instead of test paths or a
+structured plan.
 
 Node API: `testsPlan(options)`.
 

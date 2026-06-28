@@ -61,6 +61,8 @@ enum ServerCommand {
         #[arg(long, value_enum, default_value = "both")]
         direction: ServerDirection,
     },
+    /// Report backend route query params and static client query refs.
+    Contracts,
 }
 
 #[derive(clap::ValueEnum, Clone, Copy)]
@@ -102,6 +104,15 @@ pub(crate) fn run(args: ServerArgs) -> Result<ExitCode> {
         ServerCommand::Related { roots, direction } => {
             let edges = related(&report, roots, (*direction).into());
             print_related(roots, &edges, format)?;
+        }
+        ServerCommand::Contracts => {
+            let contracts = no_mistakes::server_routes::analyze_contracts(
+                &root,
+                args.tsconfig.as_deref(),
+                &report,
+                &args.filters,
+            )?;
+            print_contracts(&contracts, format)?;
         }
     }
     Ok(ExitCode::SUCCESS)
@@ -189,12 +200,5 @@ fn print_related(roots: &[String], edges: &[Edge], format: Format) -> Result<()>
     Ok(())
 }
 
-fn print_edge_paths(edges: &[Edge]) {
-    let paths: BTreeSet<&str> = edges
-        .iter()
-        .flat_map(|e| [e.from.as_str(), e.to.as_str()])
-        .collect();
-    for p in paths {
-        println!("{p}");
-    }
-}
+include!("server_edge_paths.rs");
+include!("server_contracts_print.rs");

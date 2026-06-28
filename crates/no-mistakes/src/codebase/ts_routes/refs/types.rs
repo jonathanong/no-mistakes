@@ -5,6 +5,7 @@ pub struct RouteRef {
     pub pattern: String,
     pub file: String,
     pub line: u32,
+    pub method: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

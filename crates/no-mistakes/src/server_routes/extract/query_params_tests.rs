@@ -1,0 +1,207 @@
+use super::*;
+use oxc_allocator::Allocator;
+use oxc_parser::Parser;
+use oxc_span::SourceType;
+use std::collections::HashMap;
+
+fn params_from_source(source: &str) -> Vec<String> {
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let mut params = BTreeSet::new();
+    let named_handlers = HashMap::new();
+    let mut state = QueryParamState::default();
+    for statement in &parsed.program.body {
+        collect_query_params_from_statement(statement, &mut params, &named_handlers, &mut state);
+    }
+    params.into_iter().collect()
+}
+
+#[test]
+fn formal_parameter_query_destructuring_handles_defaulted_parameters() {
+    let allocator = Allocator::default();
+    let parsed = Parser::new(
+        &allocator,
+        "function handler({ query: { assignedParam } } = fallback) {}",
+        SourceType::ts(),
+    )
+    .parse();
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let Statement::FunctionDeclaration(function) = &parsed.program.body[0] else {
+        panic!("expected function declaration");
+    };
+    let mut params = BTreeSet::new();
+
+    collect_query_params_from_formal_parameters(&function.params, &mut params);
+
+    assert!(params.contains("assignedParam"));
+}
+
+#[test]
+fn query_param_walker_covers_statement_and_expression_shapes() {
+    let params = params_from_source(
+        r#"
+        const { first = "x", second: renamed } = req.query;
+        const query = req.query;
+        const aliasRead = query.aliasRead;
+        const { [dynamicKey]: computed = req.query.assignedPattern } = req.query;
+        const [] = req.query;
+        const condition = req.query.a && req.query.b ? req.query.c : req.query.d;
+        const optionalStatic = req.query?.optionalStatic;
+        const optionalRoot = req?.query?.optionalRoot;
+        const ignoredOptionalComputed = req.query?.[dynamicKey()];
+        const computedDynamic = req.query[dynamicKey()];
+        const computedOtherObject = other[req.query.computedOtherObject];
+        const ignoredDbQuery = db.query.result;
+        const { rows } = client.query;
+        const sequence = (req.query.sequence, req.query.afterSequence);
+        const object = { nested: req.query.object };
+        const array = [req.query.array];
+        const paren = (req.query.paren);
+        const cast = req.query.cast as string;
+        const assertion = <string>req.query.assertion;
+        const nonNull = req.query.nonNull!;
+        const satisfies = req.query.satisfies satisfies string;
+        req.query("call");
+        req.queries("calls");
+        req?.query?.("optionalCall");
+        c.req.query("honoCall");
+        new URL(req.url).searchParams.get("urlSearch");
+        req.context.query("requestContextCall");
+        context.request.query("contextCall");
+        context?.request?.query?.("optionalContextCall");
+        context.req.query("contextReqCall");
+        context.deep.req.query("ignoredNestedRequest");
+        unrelated.req.query("ignoredMemberObject");
+        req.query(dynamic);
+        unrelated.query("ignoredCall");
+        req.get("ignored");
+        new URLSearchParams("?url=value").get("url");
+        if (req.query.ifTest) { req.query.ifBody; } else { req.query.elseBody; }
+        for (let i = Number(req.query.forInit); i < Number(req.query.forTest); i += 1) {
+            req.query.forBody;
+        }
+        for (; req.query.forNoInitTest; ) { break; }
+        while (req.query.whileTest) { break; }
+        for (const item of [req.query.forOf]) { item; }
+        for (const key in { value: req.query.forIn }) { key; }
+        switch (req.query.switchTest) { case "x": req.query.switchCase; }
+        try { req.query.tryBody; } catch { req.query.catchBody; } finally { req.query.finallyBody; }
+        function nested() { return req.query.functionBody; }
+        const nestedFunctionExpression = function () { return req.query.functionExpressionBody; };
+        export function exported() { return req.query.exportedFunction; }
+        export const exportedValue = req.query.exportedValue;
+        const localExported = req.query.exportSpecifierLocal;
+        export { localExported };
+        export class ExportedClass {}
+        const awaitedExpression = await req.query.awaited;
+        async function awaits() { await req.query.awaited; }
+        "#,
+    );
+
+    for param in [
+        "afterSequence",
+        "array",
+        "assertion",
+        "awaited",
+        "aliasRead",
+        "call",
+        "calls",
+        "cast",
+        "catchBody",
+        "computedOtherObject",
+        "elseBody",
+        "exportedValue",
+        "finallyBody",
+        "first",
+        "forBody",
+        "forIn",
+        "forInit",
+        "forNoInitTest",
+        "forOf",
+        "honoCall",
+        "ifBody",
+        "ifTest",
+        "exportSpecifierLocal",
+        "nonNull",
+        "object",
+        "optionalStatic",
+        "optionalRoot",
+        "paren",
+        "requestContextCall",
+        "satisfies",
+        "second",
+        "switchCase",
+        "switchTest",
+        "tryBody",
+        "url",
+        "urlSearch",
+        "whileTest",
+        "contextCall",
+        "contextReqCall",
+    ] {
+        assert!(
+            params.iter().any(|value| value == param),
+            "{param}: {params:?}"
+        );
+    }
+    assert!(!params.iter().any(|value| value == "ignored"));
+    assert!(!params.iter().any(|value| value == "ignoredCall"));
+    assert!(!params.iter().any(|value| value == "ignoredMemberObject"));
+    assert!(!params.iter().any(|value| value == "ignoredNestedRequest"));
+    assert!(!params.iter().any(|value| value == "result"));
+    assert!(!params.iter().any(|value| value == "rows"));
+    assert!(!params.iter().any(|value| value == "functionBody"));
+    assert!(!params.iter().any(|value| value == "functionExpressionBody"));
+    assert!(!params.iter().any(|value| value == "exportedFunction"));
+}
+
+#[test]
+fn query_param_arg_walker_handles_function_expressions_and_non_handlers() {
+    let allocator = Allocator::default();
+    let parsed = Parser::new(
+        &allocator,
+        r#"
+        app.get("/fn", function () { return req.query.functionExpression; });
+        app.get("/noop", "not a function");
+        app.get("/num", 123);
+        app.get("/spread", ...handlers);
+        app.get("/assigned", ({ query: { assignedParam } } = fallback) => assignedParam);
+        app.get("/array", [search, (req) => req.query.inlineArray]);
+        app.get("/nested", (req) => {
+            const readDebug = () => req.query.debug;
+            function readTrace() { return req.query.trace; }
+            return req.query.used;
+        });
+        app.get("/rest", (...[{ query: { restParam } }]) => restParam);
+        "#,
+        SourceType::ts(),
+    )
+    .parse();
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let mut params = BTreeSet::new();
+    let mut named_handlers = HashMap::new();
+    named_handlers.insert(
+        "search".to_string(),
+        BTreeSet::from(["arrayTerm".to_string()]),
+    );
+
+    for statement in &parsed.program.body {
+        if let Statement::ExpressionStatement(statement) = statement {
+            if let Expression::CallExpression(call) = &statement.expression {
+                for arg in &call.arguments {
+                    collect_query_params_from_arg(arg, &mut params, &named_handlers);
+                }
+            }
+        }
+    }
+
+    assert!(params.contains("functionExpression"));
+    assert!(params.contains("assignedParam"));
+    assert!(params.contains("arrayTerm"));
+    assert!(params.contains("inlineArray"));
+    assert!(params.contains("used"));
+    assert!(!params.contains("debug"));
+    assert!(!params.contains("trace"));
+    collect_query_params_from_optional_function_body(None, &mut params, &named_handlers);
+}

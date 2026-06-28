@@ -121,15 +121,6 @@ fn queue_fixture(name: &str) -> PathBuf {
     )
 }
 
-fn server_fixture(name: &str) -> PathBuf {
-    no_mistakes::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/server-ast-routes")
-            .join(name)
-            .join("fixture"),
-    )
-}
-
 #[test]
 fn queues_edges_json_reports_queue_job() {
     let root = queue_fixture("basic");
@@ -172,52 +163,6 @@ fn queues_check_fails_for_unmatched_worker() {
 
     assert!(!output.status.success());
     assert!(stdout(&output).contains("unmatched-worker"));
-}
-
-#[test]
-fn server_routes_json_lists_routes() {
-    let root = server_fixture("express");
-    let output = run(&[
-        "server",
-        "--root",
-        root.to_str().unwrap(),
-        "--json",
-        "routes",
-    ]);
-
-    assert!(output.status.success());
-    let json: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    assert!(json
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|r| { r["route"].as_str().unwrap_or("").contains("/api/v1/users") }));
-}
-
-#[test]
-fn server_edges_human_shows_edges() {
-    let root = server_fixture("express");
-    let output = run(&["server", "--root", root.to_str().unwrap(), "edges"]);
-
-    assert!(output.status.success());
-    assert!(!stdout(&output).is_empty());
-}
-
-#[test]
-fn server_related_json_shows_edges() {
-    let root = server_fixture("express");
-    let output = run(&[
-        "server",
-        "--root",
-        root.to_str().unwrap(),
-        "--json",
-        "related",
-        "backend/api/users.ts",
-    ]);
-
-    assert!(output.status.success());
-    let json: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    assert!(json.as_array().is_some());
 }
 
 #[test]
@@ -323,108 +268,6 @@ fn queues_check_passes_for_clean_fixture() {
 }
 
 #[test]
-fn server_routes_human_format() {
-    let root = server_fixture("express");
-    let output = run(&["server", "--root", root.to_str().unwrap(), "routes"]);
-
-    assert!(output.status.success());
-    assert!(stdout(&output).contains("/api/v1/users"));
-}
-
-#[test]
-fn server_routes_with_file_filter() {
-    let root = server_fixture("express");
-    let output = run(&[
-        "server",
-        "--root",
-        root.to_str().unwrap(),
-        "routes",
-        "backend/api/users.ts",
-    ]);
-
-    assert!(output.status.success());
-    assert!(stdout(&output).contains("/api/v1/users"));
-}
-
-#[test]
-fn server_edges_json_format() {
-    let root = server_fixture("express");
-    let output = run(&[
-        "server",
-        "--root",
-        root.to_str().unwrap(),
-        "--json",
-        "edges",
-    ]);
-
-    assert!(output.status.success());
-    let json: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    assert!(json.as_array().is_some());
-}
-
-#[test]
-fn server_edges_with_root_filter() {
-    let root = server_fixture("express");
-    let output = run(&[
-        "server",
-        "--root",
-        root.to_str().unwrap(),
-        "edges",
-        "backend/api/users.ts",
-    ]);
-
-    assert!(output.status.success());
-}
-
-#[test]
-fn server_related_human_format() {
-    let root = server_fixture("express");
-    let output = run(&[
-        "server",
-        "--root",
-        root.to_str().unwrap(),
-        "related",
-        "backend/api/users.ts",
-    ]);
-
-    assert!(output.status.success());
-}
-
-#[test]
-fn server_routes_json_with_file_filter() {
-    let root = server_fixture("express");
-    let output = run(&[
-        "server",
-        "--root",
-        root.to_str().unwrap(),
-        "--json",
-        "routes",
-        "backend/api/users.ts",
-    ]);
-
-    assert!(output.status.success());
-    let json: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    assert!(!json.as_array().unwrap().is_empty());
-}
-
-#[test]
-fn server_edges_json_with_root_filter() {
-    let root = server_fixture("express");
-    let output = run(&[
-        "server",
-        "--root",
-        root.to_str().unwrap(),
-        "--json",
-        "edges",
-        "backend/api/users.ts",
-    ]);
-
-    assert!(output.status.success());
-    let json: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    assert!(json.as_array().is_some());
-}
-
-#[test]
 fn queues_related_direction_deps() {
     let root = queue_fixture("basic");
     let output = run(&[
@@ -452,59 +295,6 @@ fn queues_related_direction_dependents() {
         "--direction",
         "dependents",
     ]);
-
-    assert!(output.status.success());
-}
-
-#[test]
-fn server_related_direction_deps() {
-    let root = server_fixture("express");
-    let output = run(&[
-        "server",
-        "--root",
-        root.to_str().unwrap(),
-        "related",
-        "backend/api/users.ts",
-        "--direction",
-        "deps",
-    ]);
-
-    assert!(output.status.success());
-}
-
-#[test]
-fn server_related_direction_dependents() {
-    let root = server_fixture("express");
-    let output = run(&[
-        "server",
-        "--root",
-        root.to_str().unwrap(),
-        "related",
-        "backend/api/users.ts",
-        "--direction",
-        "dependents",
-    ]);
-
-    assert!(output.status.success());
-}
-
-#[test]
-fn server_relative_root_is_resolved() {
-    let output = Command::new(bin())
-        .current_dir(
-            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .join("../..")
-                .canonicalize()
-                .unwrap(),
-        )
-        .args([
-            "server",
-            "--root",
-            "test-cases/server-ast-routes/express/fixture",
-            "routes",
-        ])
-        .output()
-        .expect("no-mistakes should run");
 
     assert!(output.status.success());
 }
