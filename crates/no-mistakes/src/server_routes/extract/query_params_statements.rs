@@ -8,14 +8,7 @@ fn collect_query_params_from_statement(
             collect_query_params_from_expression(&statement.expression, params, named_handlers);
         }
         Statement::VariableDeclaration(declaration) => {
-            for declarator in &declaration.declarations {
-                if let Some(init) = &declarator.init {
-                    if expression_is_query_object(init) {
-                        collect_query_object_destructure_names(&declarator.id, params);
-                    }
-                    collect_query_params_from_expression(init, params, named_handlers);
-                }
-            }
+            collect_query_params_from_variable_declaration(declaration, params, named_handlers);
         }
         Statement::BlockStatement(block) => {
             for statement in &block.body {
@@ -35,24 +28,7 @@ fn collect_query_params_from_statement(
             }
         }
         Statement::ForStatement(statement) => {
-            if let Some(init) = &statement.init {
-                if let oxc_ast::ast::ForStatementInit::VariableDeclaration(declaration) = init {
-                    for declarator in &declaration.declarations {
-                        if let Some(init) = &declarator.init {
-                            collect_query_params_from_expression(init, params, named_handlers);
-                        }
-                    }
-                } else if let Some(expression) = init.as_expression() {
-                    collect_query_params_from_expression(expression, params, named_handlers);
-                }
-            }
-            if let Some(test) = &statement.test {
-                collect_query_params_from_expression(test, params, named_handlers);
-            }
-            if let Some(update) = &statement.update {
-                collect_query_params_from_expression(update, params, named_handlers);
-            }
-            collect_query_params_from_statement(&statement.body, params, named_handlers);
+            collect_query_params_from_for_statement(statement, params, named_handlers);
         }
         Statement::WhileStatement(statement) => {
             collect_query_params_from_expression(&statement.test, params, named_handlers);
@@ -67,30 +43,10 @@ fn collect_query_params_from_statement(
             collect_query_params_from_statement(&statement.body, params, named_handlers);
         }
         Statement::SwitchStatement(statement) => {
-            collect_query_params_from_expression(&statement.discriminant, params, named_handlers);
-            for case in &statement.cases {
-                if let Some(test) = &case.test {
-                    collect_query_params_from_expression(test, params, named_handlers);
-                }
-                for consequent in &case.consequent {
-                    collect_query_params_from_statement(consequent, params, named_handlers);
-                }
-            }
+            collect_query_params_from_switch_statement(statement, params, named_handlers);
         }
         Statement::TryStatement(statement) => {
-            for statement in &statement.block.body {
-                collect_query_params_from_statement(statement, params, named_handlers);
-            }
-            if let Some(handler) = &statement.handler {
-                for statement in &handler.body.body {
-                    collect_query_params_from_statement(statement, params, named_handlers);
-                }
-            }
-            if let Some(finalizer) = &statement.finalizer {
-                for statement in &finalizer.body {
-                    collect_query_params_from_statement(statement, params, named_handlers);
-                }
-            }
+            collect_query_params_from_try_statement(statement, params, named_handlers);
         }
         Statement::FunctionDeclaration(function) => {
             collect_query_params_from_optional_function_body(
@@ -100,25 +56,111 @@ fn collect_query_params_from_statement(
             );
         }
         Statement::ExportNamedDeclaration(export) => {
-            if let Some(declaration) = &export.declaration {
-                match declaration {
-                    oxc_ast::ast::Declaration::VariableDeclaration(declaration) => {
-                        for declarator in &declaration.declarations {
-                            if let Some(init) = &declarator.init {
-                                collect_query_params_from_expression(init, params, named_handlers);
-                            }
-                        }
-                    }
-                    oxc_ast::ast::Declaration::FunctionDeclaration(function) => {
-                        collect_query_params_from_optional_function_body(
-                            function.body.as_ref(),
-                            params,
-                            named_handlers,
-                        );
-                    }
-                    _ => {}
-                }
+            collect_query_params_from_export_named_declaration(export, params, named_handlers);
+        }
+        _ => {}
+    }
+}
+
+fn collect_query_params_from_variable_declaration(
+    declaration: &oxc_ast::ast::VariableDeclaration<'_>,
+    params: &mut BTreeSet<String>,
+    named_handlers: &HashMap<String, BTreeSet<String>>,
+) {
+    for declarator in &declaration.declarations {
+        if let Some(init) = &declarator.init {
+            if expression_is_query_object(init) {
+                collect_query_object_destructure_names(&declarator.id, params);
             }
+            collect_query_params_from_expression(init, params, named_handlers);
+        }
+    }
+}
+
+fn collect_query_params_from_for_statement(
+    statement: &oxc_ast::ast::ForStatement<'_>,
+    params: &mut BTreeSet<String>,
+    named_handlers: &HashMap<String, BTreeSet<String>>,
+) {
+    collect_query_params_from_for_init(statement.init.as_ref(), params, named_handlers);
+    if let Some(test) = &statement.test {
+        collect_query_params_from_expression(test, params, named_handlers);
+    }
+    if let Some(update) = &statement.update {
+        collect_query_params_from_expression(update, params, named_handlers);
+    }
+    collect_query_params_from_statement(&statement.body, params, named_handlers);
+}
+
+fn collect_query_params_from_for_init(
+    init: Option<&oxc_ast::ast::ForStatementInit<'_>>,
+    params: &mut BTreeSet<String>,
+    named_handlers: &HashMap<String, BTreeSet<String>>,
+) {
+    let Some(init) = init else {
+        return;
+    };
+    if let oxc_ast::ast::ForStatementInit::VariableDeclaration(declaration) = init {
+        collect_query_params_from_variable_declaration(declaration, params, named_handlers);
+    } else if let Some(expression) = init.as_expression() {
+        collect_query_params_from_expression(expression, params, named_handlers);
+    }
+}
+
+fn collect_query_params_from_switch_statement(
+    statement: &oxc_ast::ast::SwitchStatement<'_>,
+    params: &mut BTreeSet<String>,
+    named_handlers: &HashMap<String, BTreeSet<String>>,
+) {
+    collect_query_params_from_expression(&statement.discriminant, params, named_handlers);
+    for case in &statement.cases {
+        if let Some(test) = &case.test {
+            collect_query_params_from_expression(test, params, named_handlers);
+        }
+        for consequent in &case.consequent {
+            collect_query_params_from_statement(consequent, params, named_handlers);
+        }
+    }
+}
+
+fn collect_query_params_from_try_statement(
+    statement: &oxc_ast::ast::TryStatement<'_>,
+    params: &mut BTreeSet<String>,
+    named_handlers: &HashMap<String, BTreeSet<String>>,
+) {
+    for statement in &statement.block.body {
+        collect_query_params_from_statement(statement, params, named_handlers);
+    }
+    if let Some(handler) = &statement.handler {
+        for statement in &handler.body.body {
+            collect_query_params_from_statement(statement, params, named_handlers);
+        }
+    }
+    if let Some(finalizer) = &statement.finalizer {
+        for statement in &finalizer.body {
+            collect_query_params_from_statement(statement, params, named_handlers);
+        }
+    }
+}
+
+fn collect_query_params_from_export_named_declaration(
+    export: &oxc_ast::ast::ExportNamedDeclaration<'_>,
+    params: &mut BTreeSet<String>,
+    named_handlers: &HashMap<String, BTreeSet<String>>,
+) {
+    let Some(declaration) = &export.declaration else {
+        return;
+    };
+    match declaration {
+        oxc_ast::ast::Declaration::VariableDeclaration(declaration) => {
+            collect_query_params_from_variable_declaration(declaration, params, named_handlers);
+        }
+        oxc_ast::ast::Declaration::FunctionDeclaration(function) => {
+            collect_query_params_from_optional_function_body(
+                function.body.as_ref(),
+                params,
+                named_handlers,
+            );
         }
         _ => {}
     }

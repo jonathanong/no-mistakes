@@ -5,33 +5,13 @@ fn collect_query_params_from_expression(
 ) {
     match expr {
         Expression::CallExpression(call) => {
-            if let Some(name) = query_param_from_call(call) {
-                params.insert(name);
-            }
-            if let Expression::Identifier(id) = &call.callee {
-                if let Some(handler_params) = named_handlers.get(id.name.as_str()) {
-                    params.extend(handler_params.iter().cloned());
-                }
-            }
-            collect_query_params_from_expression(&call.callee, params, named_handlers);
-            for arg in &call.arguments {
-                if let Some(expr) = arg.as_expression() {
-                    collect_query_params_from_expression(expr, params, named_handlers);
-                }
-            }
+            collect_query_params_from_call_expression(call, params, named_handlers);
         }
         Expression::StaticMemberExpression(member) => {
-            if expression_is_query_object(&member.object) {
-                params.insert(member.property.name.as_str().to_string());
-            }
-            collect_query_params_from_expression(&member.object, params, named_handlers);
+            collect_query_params_from_static_member_expression(member, params, named_handlers);
         }
         Expression::ComputedMemberExpression(member) => {
-            if let Some(name) = computed_query_param_name(member) {
-                params.insert(name);
-            }
-            collect_query_params_from_expression(&member.object, params, named_handlers);
-            collect_query_params_from_expression(&member.expression, params, named_handlers);
+            collect_query_params_from_computed_member_expression(member, params, named_handlers);
         }
         Expression::AssignmentExpression(assign) => {
             collect_query_params_from_expression(&assign.right, params, named_handlers);
@@ -102,6 +82,50 @@ fn collect_query_params_from_expression(
         }
         _ => {}
     }
+}
+
+fn collect_query_params_from_call_expression(
+    call: &oxc_ast::ast::CallExpression<'_>,
+    params: &mut BTreeSet<String>,
+    named_handlers: &HashMap<String, BTreeSet<String>>,
+) {
+    if let Some(name) = query_param_from_call(call) {
+        params.insert(name);
+    }
+    if let Expression::Identifier(id) = &call.callee {
+        if let Some(handler_params) = named_handlers.get(id.name.as_str()) {
+            params.extend(handler_params.iter().cloned());
+        }
+    }
+    collect_query_params_from_expression(&call.callee, params, named_handlers);
+    for arg in &call.arguments {
+        if let Some(expr) = arg.as_expression() {
+            collect_query_params_from_expression(expr, params, named_handlers);
+        }
+    }
+}
+
+fn collect_query_params_from_static_member_expression(
+    member: &oxc_ast::ast::StaticMemberExpression<'_>,
+    params: &mut BTreeSet<String>,
+    named_handlers: &HashMap<String, BTreeSet<String>>,
+) {
+    if expression_is_query_object(&member.object) {
+        params.insert(member.property.name.as_str().to_string());
+    }
+    collect_query_params_from_expression(&member.object, params, named_handlers);
+}
+
+fn collect_query_params_from_computed_member_expression(
+    member: &oxc_ast::ast::ComputedMemberExpression<'_>,
+    params: &mut BTreeSet<String>,
+    named_handlers: &HashMap<String, BTreeSet<String>>,
+) {
+    if let Some(name) = computed_query_param_name(member) {
+        params.insert(name);
+    }
+    collect_query_params_from_expression(&member.object, params, named_handlers);
+    collect_query_params_from_expression(&member.expression, params, named_handlers);
 }
 
 fn computed_query_param_name(
