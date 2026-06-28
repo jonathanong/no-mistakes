@@ -147,9 +147,9 @@ fn test_is_runtime_import_variants() {
     let source_type = oxc_span::SourceType::from_path(std::path::Path::new("test.ts")).unwrap();
     let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
     assert!(
-        parsed.errors.is_empty(),
+        parsed.diagnostics.is_empty(),
         "import parser errors: {:?}",
-        parsed.errors
+        parsed.diagnostics
     );
     let imports = parsed
         .program

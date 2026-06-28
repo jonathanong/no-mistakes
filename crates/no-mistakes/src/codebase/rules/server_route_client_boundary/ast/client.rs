@@ -31,7 +31,7 @@ pub(in crate::codebase::rules::server_route_client_boundary) fn client_call_line
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(path).unwrap_or_else(|_| SourceType::ts());
     let parsed = Parser::new(&allocator, source, source_type).parse();
-    if parsed.panicked || !parsed.errors.is_empty() {
+    if parsed.panicked || !parsed.diagnostics.is_empty() {
         return Vec::new();
     }
     let mut visitor = ClientHttpVisitor::new(source);
