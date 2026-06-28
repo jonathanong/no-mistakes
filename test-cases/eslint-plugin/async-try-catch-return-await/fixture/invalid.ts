@@ -27,6 +27,27 @@ export async function alias() {
   }
 }
 
+export async function assignedAlias() {
+  try {
+    let result;
+    result = request();
+    return result;
+  } catch (error) {
+    handleRateLimit(error);
+  }
+}
+
+export async function blockAlias() {
+  try {
+    const result = request();
+    {
+      return result;
+    }
+  } catch (error) {
+    handleRateLimit(error);
+  }
+}
+
 export async function namespaceHandler() {
   try {
     return request();
@@ -71,6 +92,22 @@ export async function satisfiesWrapper() {
 export async function branchReturn(useFallback: boolean) {
   try {
     return useFallback ? cachedRequest() : request();
+  } catch (error) {
+    handleRateLimit(error);
+  }
+}
+
+export async function logicalReturn(useCache: boolean, cached: string) {
+  try {
+    return useCache || request();
+  } catch (error) {
+    handleRateLimit(error);
+  }
+}
+
+export async function nullishReturn(cached: string | undefined) {
+  try {
+    return cached ?? request();
   } catch (error) {
     handleRateLimit(error);
   }

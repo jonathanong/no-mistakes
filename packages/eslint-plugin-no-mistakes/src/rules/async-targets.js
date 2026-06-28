@@ -2,6 +2,38 @@
 
 const { propertyName } = require("./module-mock-helpers");
 
+const transparentExpressionTypes = new Set([
+  "ChainExpression",
+  "TSNonNullExpression",
+  "TSAsExpression",
+  "TSTypeAssertion",
+  "TSSatisfiesExpression",
+]);
+
+function isFunction(node) {
+  return (
+    node?.type === "ArrowFunctionExpression" ||
+    node?.type === "FunctionDeclaration" ||
+    node?.type === "FunctionExpression"
+  );
+}
+
+function isTransparentExpression(node) {
+  return transparentExpressionTypes.has(node?.type);
+}
+
+function unwrapExpression(node) {
+  let current = node;
+  while (isTransparentExpression(current)) current = current.expression;
+  return current;
+}
+
+function unwrapTransparentParent(node) {
+  let current = node;
+  while (isTransparentExpression(current.parent)) current = current.parent;
+  return current;
+}
+
 function safeRegExp(source) {
   try {
     return new RegExp(source);
@@ -122,9 +154,11 @@ function createTargetMatcher(context) {
     if (node.type !== "MemberExpression") return false;
     const name = memberPropertyName(node);
     if (!name) return false;
-    if (node.object.type !== "Identifier") return false;
-    const variable = resolveVariable(node.object, context);
-    const source = variable ? namespaceBindings.get(variable) : null;
+    const source =
+      requireSource(node.object) ||
+      (node.object.type === "Identifier"
+        ? namespaceBindings.get(resolveVariable(node.object, context))
+        : null);
     return Boolean(source && targetMatches(targets, source, name));
   }
 
@@ -156,5 +190,9 @@ function createTargetMatcher(context) {
 
 module.exports = {
   createTargetMatcher,
+  isFunction,
+  isTransparentExpression,
   memberPropertyName,
+  unwrapExpression,
+  unwrapTransparentParent,
 };

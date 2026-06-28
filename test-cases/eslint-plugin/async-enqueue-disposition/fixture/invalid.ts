@@ -17,6 +17,10 @@ export async function worker(id: string) {
 export async function fanout(items: string[]) {
   Promise.all(items.map((item) => enqueueEmail(item)));
   await Promise.all([wrap(enqueueEmail(items[0]))]);
+  await Promise.all([[enqueueEmail(items[0])]]);
+  await Promise.all([{ job: enqueueEmail(items[0]) }]);
+  await Promise.all(items.forEach((item) => enqueueEmail(item)));
+  await Promise.all(items.map((item) => [enqueueEmail(item)]));
   await Promise.all(
     items.map((item) => {
       enqueueEmail(item);
@@ -33,3 +37,7 @@ export function laterRequire(id: string) {
 }
 
 const { enqueueLater } = require("@app/jobs");
+
+export function inlineRequire(id: string) {
+  require("@app/jobs").enqueueEmail(id);
+}

@@ -36,6 +36,16 @@ export async function alias() {
   }
 }
 
+export async function awaitedAlias() {
+  try {
+    const result = request();
+    await result;
+    return result;
+  } catch (error) {
+    handleRateLimit(error);
+  }
+}
+
 export async function reassignedAlias() {
   try {
     let result = request();

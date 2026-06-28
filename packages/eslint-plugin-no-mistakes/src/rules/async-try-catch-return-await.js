@@ -1,29 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
-const { createTargetMatcher } = require("./async-targets");
-
-function isFunction(node) {
-  return (
-    node?.type === "ArrowFunctionExpression" ||
-    node?.type === "FunctionDeclaration" ||
-    node?.type === "FunctionExpression"
-  );
-}
-
-function unwrapExpression(node) {
-  let current = node;
-  while (
-    current?.type === "ChainExpression" ||
-    current?.type === "TSNonNullExpression" ||
-    current?.type === "TSAsExpression" ||
-    current?.type === "TSTypeAssertion" ||
-    current?.type === "TSSatisfiesExpression"
-  ) {
-    current = current.expression;
-  }
-  return current;
-}
+const { createTargetMatcher, isFunction, unwrapExpression } = require("./async-targets");
 
 function isAwaited(node) {
   return node?.type === "AwaitExpression";
@@ -33,6 +11,9 @@ function mayReturnPromise(node) {
   const expression = unwrapExpression(node);
   if (expression?.type === "ConditionalExpression") {
     return mayReturnPromise(expression.consequent) || mayReturnPromise(expression.alternate);
+  }
+  if (expression?.type === "LogicalExpression") {
+    return mayReturnPromise(expression.left) || mayReturnPromise(expression.right);
   }
   return (
     expression?.type === "CallExpression" ||
@@ -82,18 +63,29 @@ function resolveVariable(node, context) {
   }
 }
 
-function isReassignedBeforeReturn(variable, node) {
+function isReassignedBeforeReturn(variable, node, allowedWrite) {
   const definitionNames = new Set(variable.defs.map((def) => def.name));
   return variable.references.some(
     (reference) =>
       reference.isWrite() &&
       !definitionNames.has(reference.identifier) &&
+      reference.identifier !== allowedWrite &&
       reference.identifier.range[0] < node.range[0],
   );
 }
 
+function assignedVariable(node, context) {
+  if (node.left?.type !== "Identifier" || node.operator !== "=") return null;
+  return resolveVariable(node.left, context);
+}
+
 function shouldParenthesizeAwaitArgument(node) {
-  return unwrapExpression(node) !== node || node.type === "ConditionalExpression";
+  const expression = unwrapExpression(node);
+  return (
+    expression !== node ||
+    expression.type === "ConditionalExpression" ||
+    expression.type === "LogicalExpression"
+  );
 }
 
 module.exports = rule(
@@ -159,13 +151,31 @@ module.exports = rule(
     function checkTryBlock(node) {
       if (!node.handler || !catchCallsHandler(node.handler)) return;
       if (!findContainingFunction(node)?.async) return;
-      const promiseAliases = new WeakSet();
+      const promiseAliases = new WeakMap();
       traverse(context, node.block, (child) => {
         if (child.type === "VariableDeclarator") {
           const name = variableName(child.id);
           if (!name || isAwaited(child.init)) return;
           const variable = resolveVariable(child.id, context);
-          if (variable && mayReturnPromise(child.init)) promiseAliases.add(variable);
+          if (variable && mayReturnPromise(child.init)) promiseAliases.set(variable, child.id);
+          return;
+        }
+        if (child.type === "AssignmentExpression") {
+          const variable = assignedVariable(child, context);
+          if (!variable) return;
+          if (mayReturnPromise(child.right) && !isAwaited(child.right)) {
+            promiseAliases.set(variable, child.left);
+          } else {
+            promiseAliases.delete(variable);
+          }
+          return;
+        }
+        if (child.type === "AwaitExpression") {
+          const argument = unwrapExpression(child.argument);
+          if (argument.type === "Identifier") {
+            const variable = resolveVariable(argument, context);
+            if (variable) promiseAliases.delete(variable);
+          }
           return;
         }
         if (child.type !== "ReturnStatement" || !child.argument || isAwaited(child.argument))
@@ -177,10 +187,11 @@ module.exports = rule(
         }
         if (argument.type === "Identifier") {
           const variable = resolveVariable(argument, context);
+          const promiseWrite = variable ? promiseAliases.get(variable) : null;
           if (
             variable &&
-            promiseAliases.has(variable) &&
-            !isReassignedBeforeReturn(variable, argument)
+            promiseWrite &&
+            !isReassignedBeforeReturn(variable, argument, promiseWrite)
           ) {
             reportReturn(child);
           }

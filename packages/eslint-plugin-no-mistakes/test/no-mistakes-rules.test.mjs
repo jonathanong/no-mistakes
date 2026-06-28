@@ -63,6 +63,11 @@ describe("async-enqueue-disposition", () => {
         "disposition",
         "disposition",
         "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
       ],
     );
   });
@@ -134,6 +139,10 @@ describe("async-try-catch-return-await", () => {
         "awaitReturn",
         "awaitReturn",
         "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
+        "awaitReturn",
       ],
     );
   });
@@ -160,6 +169,13 @@ describe("async-try-catch-return-await", () => {
     );
     assert.equal(conditional.messageId, "awaitReturn");
     assert.equal(conditional.fix.text, "await (useFallback ? cachedRequest() : request())");
+    const [logical] = lint(
+      `import { handleRateLimit } from "@app/rate-limit";\nasync function run(cached) { try { return cached ?? request(); } catch (error) { handleRateLimit(error); } }`,
+      { "no-mistakes/async-try-catch-return-await": ["error", rateLimitTargetOptions] },
+      "fix.ts",
+    );
+    assert.equal(logical.messageId, "awaitReturn");
+    assert.equal(logical.fix.text, "await (cached ?? request())");
   });
 
   it("is a no-op without targets and ignores invalid regexes", () => {

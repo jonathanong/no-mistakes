@@ -1,15 +1,13 @@
 "use strict";
 
 const { rule } = require("../helpers");
-const { createTargetMatcher, memberPropertyName } = require("./async-targets");
-
-function isFunction(node) {
-  return (
-    node?.type === "ArrowFunctionExpression" ||
-    node?.type === "FunctionDeclaration" ||
-    node?.type === "FunctionExpression"
-  );
-}
+const {
+  createTargetMatcher,
+  isFunction,
+  isTransparentExpression,
+  memberPropertyName,
+  unwrapTransparentParent,
+} = require("./async-targets");
 
 function isPromiseAllCall(node) {
   return (
@@ -23,12 +21,13 @@ function isPromiseAllCall(node) {
 }
 
 function directlyDisposed(node) {
-  const parent = node.parent;
+  const expression = unwrapTransparentParent(node);
+  const parent = expression.parent;
   if (parent?.type === "ReturnStatement") {
     const fn = findContainingFunction(parent);
     return !isCallArgument(fn);
   }
-  if (parent?.type === "ArrowFunctionExpression" && parent.body === node) {
+  if (parent?.type === "ArrowFunctionExpression" && parent.body === expression) {
     return !isCallArgument(parent);
   }
   return (
@@ -47,6 +46,16 @@ function findContainingFunction(node) {
 
 function isCallArgument(node) {
   return Boolean(node?.parent?.type === "CallExpression" && node.parent.arguments.includes(node));
+}
+
+function isMapCallback(fn) {
+  const call = fn.parent;
+  return (
+    call?.type === "CallExpression" &&
+    call.arguments.includes(fn) &&
+    call.callee.type === "MemberExpression" &&
+    memberPropertyName(call.callee) === "map"
+  );
 }
 
 function expressionReturnedFromCallback(node, fn) {
@@ -68,15 +77,25 @@ function canReachPromiseAll(node, promiseAll) {
   let current = node;
   while (current && current !== promiseAll) {
     const parent = current.parent;
+    if (isTransparentExpression(parent)) {
+      current = parent;
+      continue;
+    }
     if (isFunction(parent)) {
-      if (!expressionReturnedFromCallback(node, parent) || !isCallArgument(parent)) {
+      if (!expressionReturnedFromCallback(node, parent) || !isMapCallback(parent)) {
         return false;
       }
       current = parent.parent;
       continue;
     }
+    if (parent?.type === "ArrayExpression") {
+      if (parent.parent !== promiseAll || promiseAll.arguments[0] !== parent) return false;
+      current = parent;
+      continue;
+    }
+    if (parent?.type === "ObjectExpression") return false;
     if (
-      parent.type === "CallExpression" &&
+      parent?.type === "CallExpression" &&
       parent !== promiseAll &&
       parent.arguments.includes(current)
     ) {
@@ -85,6 +104,27 @@ function canReachPromiseAll(node, promiseAll) {
     current = parent;
   }
   return current === promiseAll;
+}
+
+function observedExpression(node) {
+  let current = node;
+  while (current.parent) {
+    const parent = current.parent;
+    if (isTransparentExpression(parent)) {
+      current = parent;
+      continue;
+    }
+    if (parent.type === "MemberExpression" && parent.object === current) {
+      current = parent;
+      continue;
+    }
+    if (parent.type === "CallExpression" && parent.callee === current) {
+      current = parent;
+      continue;
+    }
+    break;
+  }
+  return current;
 }
 
 function promiseAllDisposed(node) {
@@ -99,7 +139,8 @@ function promiseAllDisposed(node) {
 }
 
 function isDisposed(node) {
-  return directlyDisposed(node) || promiseAllDisposed(node);
+  const observed = observedExpression(node);
+  return directlyDisposed(node) || directlyDisposed(observed) || promiseAllDisposed(node);
 }
 
 module.exports = rule(

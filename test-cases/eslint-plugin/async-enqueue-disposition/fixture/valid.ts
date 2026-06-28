@@ -21,6 +21,9 @@ export async function fanout(items: string[]) {
 export async function explicitDiscard(id: string) {
   void enqueuePush(id);
   void Promise.all([queue.enqueuePush(id), enqueueDefault(id)]);
+  void (enqueueEmail(id) as Promise<void>);
+  await enqueueEmail(id).catch(logError);
+  void enqueueEmail(id).catch(logError);
 }
 
 export async function blockCallback(items: string[]) {
@@ -34,6 +37,15 @@ export async function blockCallback(items: string[]) {
       if (item) return enqueueEmail(item);
     }),
   );
+}
+
+export async function typedPromiseAll(id: string) {
+  await Promise.all([enqueueEmail(id) as Promise<void>]);
+  return Promise.all([enqueueEmail(id)]) as Promise<void>;
+}
+
+export async function inlineRequire(id: string) {
+  await require("@app/jobs").enqueueEmail(id);
 }
 
 export async function shadowed(enqueueEmail: (id: string) => void, id: string) {
