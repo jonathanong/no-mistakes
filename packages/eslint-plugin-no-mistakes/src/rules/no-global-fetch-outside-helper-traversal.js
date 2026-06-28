@@ -44,11 +44,30 @@ function collectAssignmentExpressions(node, assignments = []) {
   return assignments;
 }
 
+function isAlwaysExecutedChild(parent, child) {
+  switch (parent.type) {
+    case "ForStatement":
+      return parent.init === child;
+    case "IfStatement":
+    case "WhileStatement":
+    case "DoWhileStatement":
+      return parent.test === child;
+    case "LogicalExpression":
+      return parent.left === child;
+    case "ConditionalExpression":
+      return parent.test === child;
+    case "TryStatement":
+      return parent.block === child;
+    default:
+      return false;
+  }
+}
+
 function isMaybeExecuted(node) {
   let child = node;
   let current = node.parent;
   while (current) {
-    if (current.type === "ForStatement" && current.init === child) {
+    if (isAlwaysExecutedChild(current, child)) {
       child = current;
       current = current.parent;
       continue;
@@ -71,5 +90,6 @@ module.exports = {
   childNodes,
   collectAssignmentExpressions,
   collectVariableDeclarators,
+  isAlwaysExecutedChild,
   isMaybeExecuted,
 };

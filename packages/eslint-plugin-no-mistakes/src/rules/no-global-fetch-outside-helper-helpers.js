@@ -10,6 +10,7 @@ const {
   childNodes,
   collectAssignmentExpressions,
   collectVariableDeclarators,
+  isAlwaysExecutedChild,
   isMaybeExecuted,
 } = require("./no-global-fetch-outside-helper-traversal");
 
@@ -194,6 +195,7 @@ module.exports = {
   isRuntimeBinding,
   isGlobalFetchExpression,
   isGlobalFetchMember,
+  isAlwaysExecutedChild,
   isMaybeExecuted,
   recordAssignmentFetchAliases,
   recordObjectPatternFetchAliases,

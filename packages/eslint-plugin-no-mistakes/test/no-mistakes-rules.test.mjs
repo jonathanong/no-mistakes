@@ -1209,6 +1209,17 @@ describe("no-global-fetch-outside-helper", () => {
         tryAlias = client.fetch;
       }
       tryAlias("/api/try-alias");
+      try {
+        function tryBlockForwardLoad() {
+          return tryBlockForwardRequest("/api/try-block-forward");
+        }
+        const tryBlockForwardRequest = fetch;
+        tryBlockForwardLoad();
+      } catch {}
+      let ifTestAlias;
+      if ((ifTestAlias = fetch)) {
+        ifTestAlias("/api/if-test");
+      }
       let finallyAlias = client.fetch;
       try {
         risky();
@@ -1254,6 +1265,8 @@ describe("no-global-fetch-outside-helper", () => {
       assigned ||= self.fetch;
     `;
     assert.deepEqual(messages(code, "no-global-fetch-outside-helper", option, "web/app/users.ts"), [
+      "globalFetch",
+      "globalFetch",
       "globalFetch",
       "globalFetch",
       "globalFetch",
@@ -1440,6 +1453,26 @@ describe("no-global-fetch-outside-helper", () => {
         allowedPathPatterns: ["web/app/**"],
       }),
       false,
+    );
+    assert.equal(
+      __test.isAlwaysExecutedChild(
+        { type: "IfStatement", test: { type: "Identifier", name: "check" } },
+        { type: "Identifier", name: "other" },
+      ),
+      false,
+    );
+    const logicalLeft = { type: "Identifier", name: "left" };
+    assert.equal(
+      __test.isAlwaysExecutedChild({ type: "LogicalExpression", left: logicalLeft }, logicalLeft),
+      true,
+    );
+    const conditionalTest = { type: "Identifier", name: "test" };
+    assert.equal(
+      __test.isAlwaysExecutedChild(
+        { type: "ConditionalExpression", test: conditionalTest },
+        conditionalTest,
+      ),
+      true,
     );
     assert.equal(__test.isMaybeExecuted({ parent: { type: "FunctionDeclaration" } }), false);
   });
