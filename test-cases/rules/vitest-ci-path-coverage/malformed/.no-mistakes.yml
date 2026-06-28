@@ -1,0 +1,10 @@
+rules:
+  - rule: vitest-ci-path-coverage
+    scope: repository
+    options:
+      sourceGlobsByProject:
+        backend: ["src/**/*.ts"]
+      projectFilters:
+        backend: [backend]
+      workflows:
+        - path: .github/workflows/ci.yml

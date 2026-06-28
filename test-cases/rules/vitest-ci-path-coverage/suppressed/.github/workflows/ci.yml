@@ -1,0 +1,15 @@
+# no-mistakes-disable-file vitest-ci-path-coverage: fixture asserts workflow-level suppression
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - id: filter
+        with:
+          filters: |
+            backend:
+              - "package.json"

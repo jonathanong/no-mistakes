@@ -57,6 +57,7 @@ rules:
 | [`test-no-unmocked-dynamic-imports`](test-no-unmocked-dynamic-imports.md) | Require dynamic imports in tests to be mocked. |
 | [`tsconfig-alias-folder-mapping`](tsconfig-alias-folder-mapping.md) | Enforce alias/folder consistency. |
 | [`unique-exports`](unique-exports.md) | Prevent ambiguous duplicate public export names. |
+| [`vitest-ci-path-coverage`](vitest-ci-path-coverage.md) | Require Vitest inputs to be covered by CI path filters. |
 | [`vitest-project-mapping`](vitest-project-mapping.md) | Require Vitest tests to map to exactly one project. |
 | [`vitest-test-correspondence`](vitest-test-correspondence.md) | Enforce source/test correspondence for Vitest. |
 | [`workspace-package-cycles`](workspace-package-cycles.md) | Prevent dependency cycles between workspace packages. |

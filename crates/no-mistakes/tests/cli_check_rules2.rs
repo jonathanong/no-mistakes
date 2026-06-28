@@ -141,6 +141,33 @@ rules:
     );
     assert!(format!("{vitest_projects:?}").contains("src/unmapped.test.ts"));
 
+    let vitest_ci = filesystem_findings(
+        &rule_fixture_scenario("vitest-ci-path-coverage", "fixture"),
+        r#"
+projects:
+  ts-shared:
+    root: ts-shared
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        ts-shared:
+          - "**"
+rules:
+  - rule: vitest-ci-path-coverage
+    scope: repository
+    options:
+      includeVitestProjectGlobs: false
+      projectFilters:
+        ts-shared: [backend]
+      workflows:
+        - path: .github/workflows/ci.yml
+          job: detect-changes
+          stepId: filter
+"#,
+    );
+    assert!(format!("{vitest_ci:?}").contains("ts-shared/utils/index.mts"));
+
     let package_cycles = filesystem_findings(
         &rule_fixture_scenario("workspace-package-cycles", "cycle"),
         r#"
@@ -207,4 +234,39 @@ rules:
         body.contains("no glob in dependabotGlobs covers it"),
         "{body}"
     );
+}
+
+#[test]
+fn vitest_ci_path_coverage_appears_in_cli_json() {
+    let root = rule_fixture_scenario("vitest-ci-path-coverage", "fixture");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+
+    assert!(!out.status.success(), "expected vitest CI path finding");
+    assert!(body.contains("vitest-ci-path-coverage"), "{body}");
+    assert!(body.contains("ts-shared/utils/index.mts"), "{body}");
+
+    let json = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let json_body = stdout(&json);
+    assert!(!json.status.success(), "expected json check failure");
+    assert!(json_body.contains("vitest-ci-path-coverage"), "{json_body}");
+}
+
+#[test]
+fn vitest_ci_path_coverage_supports_no_mistakes_suppression() {
+    let root = rule_fixture_scenario("vitest-ci-path-coverage", "suppressed");
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(
+        &root,
+        Some(&root.join(".no-mistakes.yml")),
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "{findings:#?}");
 }

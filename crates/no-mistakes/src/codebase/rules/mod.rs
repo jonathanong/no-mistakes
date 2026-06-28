@@ -31,6 +31,7 @@ pub mod strict_package_layout;
 pub mod structured_config_policy;
 pub mod test_no_unmocked_dynamic_imports;
 pub mod tsconfig_alias_folder_mapping;
+pub mod vitest_ci_path_coverage;
 pub mod vitest_project_mapping;
 pub mod vitest_test_correspondence;
 pub mod workspace_package_cycles;
