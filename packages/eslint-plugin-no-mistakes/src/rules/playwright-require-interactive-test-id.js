@@ -107,7 +107,11 @@ function regexLiteral(value) {
     return null;
   }
   const lastSlash = value.lastIndexOf("/");
-  return new RegExp(value.slice(1, lastSlash), value.slice(lastSlash + 1));
+  try {
+    return new RegExp(value.slice(1, lastSlash), value.slice(lastSlash + 1));
+  } catch {
+    return null;
+  }
 }
 
 function matchesAny(name, matchers) {

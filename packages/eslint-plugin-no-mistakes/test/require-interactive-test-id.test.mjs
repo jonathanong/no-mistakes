@@ -213,5 +213,11 @@ describe("messages coverage", () => {
       }),
       [],
     );
+    assert.deepEqual(
+      messages("<Button />;", "playwright-require-interactive-test-id", {
+        interactiveComponents: ["/(/"],
+      }),
+      [],
+    );
   });
 });

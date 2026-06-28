@@ -20,5 +20,5 @@ Use `interactiveComponents` to opt wrapper components into the same check:
 }
 ```
 
-Unconfigured capitalized components are ignored because component-name matching
-is project-specific.
+Capitalized components that are not configured are ignored because
+component-name matching is project-specific.

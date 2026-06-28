@@ -130,11 +130,11 @@ fn prefer_test_id_locator_findings(analysis: &Analysis) -> Vec<RuleFinding> {
             continue;
         };
         by_locator
-            .entry((test_file.to_string(), *line as usize, locator.to_string()))
+            .entry((test_file.as_ref().clone(), *line as usize, locator.clone()))
             .or_insert_with(|| {
                 RuleFinding {
                     rule: PLAYWRIGHT_PREFER_TEST_ID_LOCATORS.to_string(),
-                    file: test_file.to_string(),
+                    file: test_file.as_ref().clone(),
                     line: *line as usize,
                     message: format!(
                         "Prefer getByTestId('{}') over copy-coupled {} locator {}; matched app element exposes {}=\"{}\"",
