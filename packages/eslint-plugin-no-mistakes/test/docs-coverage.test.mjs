@@ -41,6 +41,8 @@ describe("docs coverage", () => {
       "allowDefaultedProps",
       "allowStaticTemplates",
       "allowBeforeAllAssignments",
+      "allowedPathPatterns",
+      "checkedPathPatterns",
       "targets",
       "handlers",
       "sourceSpecifierPatterns",

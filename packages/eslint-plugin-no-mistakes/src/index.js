@@ -10,6 +10,7 @@ const rules = {
   "module-mock-preserve-exports": require("./rules/module-mock-preserve-exports"),
   "nextjs-metadata-exports-location": require("./rules/nextjs-metadata-exports-location"),
   "nextjs-no-manual-script-tags": require("./rules/nextjs-no-manual-script-tags"),
+  "no-global-fetch-outside-helper": require("./rules/no-global-fetch-outside-helper"),
   "no-delete-property": require("./rules/no-delete-property"),
   "no-import-only-test-files": require("./rules/no-import-only-test-files"),
   "no-placeholder-never-type-exports": require("./rules/no-placeholder-never-type-exports"),

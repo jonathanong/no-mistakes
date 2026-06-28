@@ -37,6 +37,7 @@ See [ESLint and Oxlint plugin](../eslint-plugin.md) for option schemas.
 | [`nextjs-static-fetch-method`](nextjs-static-fetch-method.md) | Require static `fetch()` method options. |
 | [`nextjs-static-fetch-url`](nextjs-static-fetch-url.md) | Require static `fetch()` URL arguments. |
 | [`no-delete-property`](no-delete-property.md) | Disallow deleting object properties. |
+| [`no-global-fetch-outside-helper`](no-global-fetch-outside-helper.md) | Disallow global fetch outside configured helper paths. |
 | [`no-import-only-test-files`](no-import-only-test-files.md) | Disallow aggregate test files that only import tests. |
 | [`no-placeholder-never-type-exports`](no-placeholder-never-type-exports.md) | Disallow exported `never` placeholder type aliases. |
 | [`no-vitest-sequential`](no-vitest-sequential.md) | Disallow Vitest sequential modifiers. |
