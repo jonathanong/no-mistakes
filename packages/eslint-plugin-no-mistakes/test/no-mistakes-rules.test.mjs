@@ -1194,6 +1194,14 @@ describe("no-global-fetch-outside-helper", () => {
           switchAlias("/api/switch-alias");
           break;
       }
+      let switchFallthroughAlias = client.fetch;
+      switch (kind) {
+        case "global":
+          switchFallthroughAlias = fetch;
+        case "load":
+          switchFallthroughAlias("/api/switch-fallthrough-alias");
+          break;
+      }
       let maybeGlobal = client.fetch;
       if (useGlobal) maybeGlobal = fetch;
       maybeGlobal("/api/not-definitely-global");
@@ -1219,11 +1227,8 @@ describe("no-global-fetch-outside-helper", () => {
       }
       tryAlias("/api/try-alias");
       try {
-        function tryBlockForwardLoad() {
-          return tryBlockForwardRequest("/api/try-block-forward");
-        }
         const tryBlockForwardRequest = fetch;
-        tryBlockForwardLoad();
+        tryBlockForwardRequest("/api/try-block-forward");
       } catch {}
       let ifTestAlias;
       if ((ifTestAlias = fetch)) {
@@ -1238,6 +1243,15 @@ describe("no-global-fetch-outside-helper", () => {
       let compoundClear = fetch;
       compoundClear &&= client.fetch;
       compoundClear("/api/compound-clear");
+      let logicalPreserve = fetch;
+      logicalPreserve ||= client.fetch;
+      logicalPreserve("/api/logical-preserve");
+      let optionalArgumentAlias = client.fetch;
+      maybeClient?.send((optionalArgumentAlias = fetch));
+      optionalArgumentAlias("/api/optional-argument");
+      let whileClear = fetch;
+      while ((whileClear = client.fetch) && false) {}
+      whileClear("/api/while-clear");
       let finallyAlias = client.fetch;
       try {
         risky();
@@ -1275,6 +1289,30 @@ describe("no-global-fetch-outside-helper", () => {
       function enableUncalledGlobal() {
         uncalledFunctionAlias = fetch;
       }
+      let iifeAlias = client.fetch;
+      (() => {
+        iifeAlias = fetch;
+      })();
+      iifeAlias("/api/iife-alias");
+      let iifeClear = fetch;
+      (() => {
+        iifeClear = client.fetch;
+      })();
+      iifeClear("/api/iife-clear");
+      function localForwardAliasLoad() {
+        const localForwardAlias = forwardRequest;
+        localForwardAlias("/api/local-forward-alias");
+      }
+      localForwardAliasLoad();
+      function recoverableTryLoad() {
+        recoverableTryRequest("/api/recoverable-try");
+      }
+      let recoverableTryRequest = client.fetch;
+      try {
+        risky();
+        recoverableTryRequest = fetch;
+      } catch {}
+      recoverableTryLoad();
       function clearedForwardLoad() {
         let clearedForwardRequest = fetch;
         clearedForwardRequest = client.fetch;
@@ -1307,6 +1345,10 @@ describe("no-global-fetch-outside-helper", () => {
       assigned ||= self.fetch;
     `;
     assert.deepEqual(messages(code, "no-global-fetch-outside-helper", option, "web/app/users.ts"), [
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
       "globalFetch",
       "globalFetch",
       "globalFetch",

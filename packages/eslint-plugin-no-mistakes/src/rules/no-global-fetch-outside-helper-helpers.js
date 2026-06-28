@@ -18,6 +18,7 @@ const {
   collectVariableDeclarators,
   isAlwaysExecutedChild,
   isMaybeExecuted,
+  isOptionalChainArgument,
 } = require("./no-global-fetch-outside-helper-traversal");
 
 const GLOBAL_FETCH_ROOTS = new Set(["globalThis", "window", "self", "global"]);
@@ -102,12 +103,12 @@ function setObjectPatternFetchAliases(id, enabled, context, aliases, clearedAlia
   }
 }
 
-function recordVariableFetchAliases(node, context, aliases, clearedAliases) {
+function recordVariableFetchAliases(node, context, aliases, clearedAliases, readAliases = aliases) {
   if (!node.init) return;
   if (node.id.type === "Identifier") {
     setAlias(
       node.id,
-      isGlobalFetchExpression(node.init, context, aliases),
+      isGlobalFetchExpression(node.init, context, readAliases),
       context,
       aliases,
       clearedAliases,
@@ -117,7 +118,15 @@ function recordVariableFetchAliases(node, context, aliases, clearedAliases) {
   recordObjectPatternFetchAliases(node.id, node.init, context, aliases, clearedAliases);
 }
 
-function recordAssignmentFetchAliases(node, context, aliases, clearedAliases) {
+function recordAssignmentFetchAliases(
+  node,
+  context,
+  aliases,
+  clearedAliases,
+  readAliases = aliases,
+) {
+  if (isOptionalChainArgument(node)) return;
+  if (node.operator === "||=" || node.operator === "??=") return;
   if (node.operator !== "=") {
     if (node.left?.type === "Identifier")
       setAlias(node.left, false, context, aliases, clearedAliases);
@@ -126,7 +135,7 @@ function recordAssignmentFetchAliases(node, context, aliases, clearedAliases) {
   if (node.left?.type === "Identifier") {
     setAlias(
       node.left,
-      isGlobalFetchExpression(node.right, context, aliases),
+      isGlobalFetchExpression(node.right, context, readAliases),
       context,
       aliases,
       clearedAliases,
@@ -193,6 +202,7 @@ module.exports = {
   isGlobalFetchMember,
   isAlwaysExecutedChild,
   isMaybeExecuted,
+  isOptionalChainArgument,
   recordAssignmentFetchAliases,
   recordObjectPatternFetchAliases,
   recordVariableFetchAliases,

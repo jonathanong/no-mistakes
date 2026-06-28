@@ -42,6 +42,7 @@ module.exports = Object.assign(
       let clearedForwardAliases = new Set();
       const aliasStack = [];
       const clearedAliasStack = [];
+      const switchStack = [];
       let functionDepth = 0;
 
       function pushAliasScope() {
@@ -56,12 +57,14 @@ module.exports = Object.assign(
         clearedForwardAliases = clearedAliasStack.pop();
       }
 
-      function pushFunctionScope() {
+      function pushFunctionScope(node) {
+        if (isIifeFunction(node)) return;
         functionDepth += 1;
         pushAliasScope();
       }
 
-      function popFunctionScope() {
+      function popFunctionScope(node) {
+        if (isIifeFunction(node)) return;
         popAliasScope();
         functionDepth -= 1;
       }
@@ -72,6 +75,46 @@ module.exports = Object.assign(
         for (const alias of clearedForwardAliases) active.delete(alias);
         for (const alias of aliases) active.add(alias);
         return active;
+      }
+
+      function isIifeFunction(node) {
+        const parent = node?.parent;
+        return parent?.type === "CallExpression" && parent.callee === node;
+      }
+
+      function enterSwitch() {
+        switchStack.push({
+          baseAliases: aliases,
+          baseCleared: clearedForwardAliases,
+          fallthrough: false,
+        });
+      }
+
+      function exitSwitch() {
+        const state = switchStack.pop();
+        aliases = state.baseAliases;
+        clearedForwardAliases = state.baseCleared;
+      }
+
+      function enterSwitchCase() {
+        const state = switchStack.at(-1);
+        if (!state || state.fallthrough) return;
+        aliases = new Set(state.baseAliases);
+        clearedForwardAliases = new Set(state.baseCleared);
+      }
+
+      function exitsWithBreak(node) {
+        return node.consequent?.some((child) => child.type === "BreakStatement") ?? false;
+      }
+
+      function exitSwitchCase(node) {
+        const state = switchStack.at(-1);
+        if (!state) return;
+        state.fallthrough = !exitsWithBreak(node);
+        if (!state.fallthrough) {
+          aliases = new Set(state.baseAliases);
+          clearedForwardAliases = new Set(state.baseCleared);
+        }
       }
 
       function recordForInitializer(node) {
@@ -109,10 +152,12 @@ module.exports = Object.assign(
         "ForInStatement:exit": popAliasScope,
         ForOfStatement: pushAliasScope,
         "ForOfStatement:exit": popAliasScope,
-        WhileStatement: pushAliasScope,
-        "WhileStatement:exit": popAliasScope,
-        SwitchCase: pushAliasScope,
-        "SwitchCase:exit": popAliasScope,
+        "WhileStatement > .body": pushAliasScope,
+        "WhileStatement > .body:exit": popAliasScope,
+        SwitchStatement: enterSwitch,
+        "SwitchStatement:exit": exitSwitch,
+        SwitchCase: enterSwitchCase,
+        "SwitchCase:exit": exitSwitchCase,
         "TryStatement > .block": pushAliasScope,
         "TryStatement > .block:exit": popAliasScope,
         "TryStatement > .handler": pushAliasScope,
@@ -128,10 +173,22 @@ module.exports = Object.assign(
         "LogicalExpression > .right": pushAliasScope,
         "LogicalExpression > .right:exit": popAliasScope,
         VariableDeclarator(node) {
-          recordVariableFetchAliases(node, context, aliases, clearedForwardAliases);
+          recordVariableFetchAliases(
+            node,
+            context,
+            aliases,
+            clearedForwardAliases,
+            activeAliases(),
+          );
         },
         AssignmentExpression(node) {
-          recordAssignmentFetchAliases(node, context, aliases, clearedForwardAliases);
+          recordAssignmentFetchAliases(
+            node,
+            context,
+            aliases,
+            clearedForwardAliases,
+            activeAliases(),
+          );
         },
         CallExpression(node) {
           if (!isGlobalFetchExpression(node.callee, context, activeAliases())) return;

@@ -56,11 +56,33 @@ function isAlwaysExecutedChild(parent, child) {
       return parent.left === child;
     case "ConditionalExpression":
       return parent.test === child;
-    case "TryStatement":
-      return parent.block === child;
     default:
       return false;
   }
+}
+
+function isOptionalChainArgument(node) {
+  let child = node;
+  let current = node.parent;
+  while (current) {
+    if (
+      current.type === "CallExpression" &&
+      (current.optional === true || current.callee?.optional === true) &&
+      current.arguments?.includes(child)
+    ) {
+      return true;
+    }
+    if (
+      current.type === "FunctionDeclaration" ||
+      current.type === "FunctionExpression" ||
+      current.type === "ArrowFunctionExpression"
+    ) {
+      return false;
+    }
+    child = current;
+    current = current.parent;
+  }
+  return false;
 }
 
 function isMaybeExecuted(node) {
@@ -92,4 +114,5 @@ module.exports = {
   collectVariableDeclarators,
   isAlwaysExecutedChild,
   isMaybeExecuted,
+  isOptionalChainArgument,
 };
