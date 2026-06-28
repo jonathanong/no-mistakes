@@ -107,6 +107,20 @@ fn collect_app_selectors_reads_source_files_and_skips_build_dirs() {
 }
 
 #[test]
+#[cfg(unix)]
+fn collect_app_selectors_reads_symlinked_source_files() {
+    let temp = tempfile::tempdir().unwrap();
+    let source = fixture_path(&["ast-snippets", "selectors", "collect-app", "page.tsx"]);
+    let link = temp.path().join("linked.tsx");
+    std::os::unix::fs::symlink(source, &link).unwrap();
+
+    let selectors = collect_app_selectors(temp.path(), &attrs()).unwrap();
+    assert_eq!(selectors.len(), 1);
+    assert_eq!(selectors[0].file, link);
+    assert_eq!(selectors[0].display_value(), "ok");
+}
+
+#[test]
 fn collect_app_selectors_handles_all_file_and_dir_types() {
     let temp = tempfile::tempdir().unwrap();
     let root = temp.path();
