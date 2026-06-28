@@ -28,6 +28,9 @@ function directlyDisposed(node) {
     const fn = findContainingFunction(parent);
     return !isCallArgument(fn);
   }
+  if (parent?.type === "ArrowFunctionExpression" && parent.body === node) {
+    return !isCallArgument(parent);
+  }
   return (
     parent?.type === "AwaitExpression" ||
     (parent?.type === "UnaryExpression" && parent.operator === "void")

@@ -17,7 +17,8 @@ function unwrapExpression(node) {
     current?.type === "ChainExpression" ||
     current?.type === "TSNonNullExpression" ||
     current?.type === "TSAsExpression" ||
-    current?.type === "TSTypeAssertion"
+    current?.type === "TSTypeAssertion" ||
+    current?.type === "TSSatisfiesExpression"
   ) {
     current = current.expression;
   }
@@ -46,7 +47,7 @@ function findContainingFunction(node) {
 }
 
 function visitorKeys(context, node) {
-  return context.sourceCode.visitorKeys[node.type];
+  return context.sourceCode.visitorKeys[node.type] || [];
 }
 
 function traverse(context, node, visit, root = node) {

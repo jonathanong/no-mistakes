@@ -129,6 +129,7 @@ describe("async-try-catch-return-await", () => {
         "awaitReturn",
         "awaitReturn",
         "awaitReturn",
+        "awaitReturn",
       ],
     );
   });

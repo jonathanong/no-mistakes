@@ -11,6 +11,8 @@ export async function worker(items: string[]) {
   return sendSms(items[1]);
 }
 
+export const enqueueLater = (id: string) => enqueueEmail(id);
+
 export async function fanout(items: string[]) {
   await Promise.all(items.map((item) => enqueueEmail(item)));
   return Promise.all(items.map((item) => jobs.enqueueSms(item)));

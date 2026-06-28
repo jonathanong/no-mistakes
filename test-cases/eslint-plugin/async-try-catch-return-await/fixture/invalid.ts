@@ -60,6 +60,14 @@ export async function typeWrappers() {
   }
 }
 
+export async function satisfiesWrapper() {
+  try {
+    return request() satisfies Promise<string>;
+  } catch (error) {
+    handleRateLimit(error);
+  }
+}
+
 export async function constructorReturn() {
   try {
     return new RequestJob();
