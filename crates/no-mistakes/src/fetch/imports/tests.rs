@@ -149,7 +149,6 @@ fn test_is_import_used() {
             is_import_used(imports[5], &referenced_identifiers),
             "Mixed import should be used"
         );
-
     })
     .unwrap();
 }
