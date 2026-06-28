@@ -1147,12 +1147,15 @@ describe("no-global-fetch-outside-helper", () => {
       let assigned;
       assigned = self.fetch;
       assigned("/api/assigned");
+      let { fetch: destructured } = self;
+      destructured("/api/destructured");
       const nonFetchAlias = 1;
       let reassigned = fetch;
       reassigned = nonFetchAlias;
       reassigned("/api/not-global");
     `;
     assert.deepEqual(messages(code, "no-global-fetch-outside-helper", option, "web/app/users.ts"), [
+      "globalFetch",
       "globalFetch",
     ]);
   });
