@@ -160,6 +160,169 @@ jobs:
 }
 
 #[test]
+fn workflow_level_paths_ignore_rejects_ignored_source_paths() {
+    let root = fixture_root("fixture");
+    let source = r#"
+on:
+  pull_request:
+    paths-ignore:
+      - "src/**"
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    steps:
+      - id: selected
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - "src/**"
+"#;
+
+    let (filters, findings) =
+        extract_filters_from_workflow(&root, ".github/workflows/ci.yml", source, &[]);
+
+    assert!(findings.is_empty());
+    assert_eq!(filters.len(), 1);
+    assert!(!filters[0].workflow_allows("src/index.ts"));
+    assert!(filters[0].workflow_allows("docs/readme.md"));
+}
+
+#[test]
+fn workflow_level_filters_reject_non_file_triggered_workflows() {
+    let root = fixture_root("fixture");
+    let source = r#"
+on:
+  workflow_dispatch:
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    steps:
+      - id: selected
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - "src/**"
+"#;
+
+    let (filters, findings) =
+        extract_filters_from_workflow(&root, ".github/workflows/ci.yml", source, &[]);
+
+    assert!(findings.is_empty());
+    assert_eq!(filters.len(), 1);
+    assert!(!filters[0].workflow_allows("src/index.ts"));
+}
+
+#[test]
+fn workflow_level_filters_reject_tag_only_push_triggers() {
+    let root = fixture_root("fixture");
+    let source = r#"
+on:
+  push:
+    tags:
+      - "v*"
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    steps:
+      - id: selected
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - "src/**"
+"#;
+
+    let (filters, findings) =
+        extract_filters_from_workflow(&root, ".github/workflows/ci.yml", source, &[]);
+
+    assert!(findings.is_empty());
+    assert_eq!(filters.len(), 1);
+    assert!(!filters[0].workflow_allows("src/index.ts"));
+}
+
+#[test]
+fn workflow_level_filters_allow_scalar_file_triggers() {
+    let root = fixture_root("fixture");
+    let source = r#"
+on: pull_request
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    steps:
+      - id: selected
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - "src/**"
+"#;
+
+    let (filters, findings) =
+        extract_filters_from_workflow(&root, ".github/workflows/ci.yml", source, &[]);
+
+    assert!(findings.is_empty());
+    assert_eq!(filters.len(), 1);
+    assert!(filters[0].workflow_allows("src/index.ts"));
+}
+
+#[test]
+fn workflow_level_filters_allow_sequence_file_triggers() {
+    let root = fixture_root("fixture");
+    let source = r#"
+on:
+  - pull_request
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    steps:
+      - id: selected
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - "src/**"
+"#;
+
+    let (filters, findings) =
+        extract_filters_from_workflow(&root, ".github/workflows/ci.yml", source, &[]);
+
+    assert!(findings.is_empty());
+    assert_eq!(filters.len(), 1);
+    assert!(filters[0].workflow_allows("src/index.ts"));
+}
+
+#[test]
+fn workflow_level_filters_keep_unrestricted_file_triggers() {
+    let root = fixture_root("fixture");
+    let source = r#"
+on:
+  pull_request:
+  push:
+    paths:
+      - "docs/**"
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    steps:
+      - id: selected
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - "src/**"
+"#;
+
+    let (filters, findings) =
+        extract_filters_from_workflow(&root, ".github/workflows/ci.yml", source, &[]);
+
+    assert!(findings.is_empty());
+    assert_eq!(filters.len(), 1);
+    assert!(filters[0].workflow_allows("src/index.ts"));
+}
+
+#[test]
 fn extract_filters_covers_non_mapping_filter_values_and_non_string_names() {
     let root = fixture_root("malformed");
     let source = r#"

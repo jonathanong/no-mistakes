@@ -39,6 +39,7 @@ fn project_pattern_helpers_cover_roots_relative_patterns_and_excludes() {
         include_without_excludes(&project),
         vec!["src/**/*.test.ts", "!src/generated/**"]
     );
+    assert_eq!(normalize_project_glob_part("./src/**/*.ts"), "src/**/*.ts");
 }
 
 #[test]
@@ -191,6 +192,29 @@ fn coverage_units_merges_explicit_projects_without_loading_config_when_not_neede
         units[0].patterns,
         vec!["src/**/*.test.ts", "!src/generated/**"]
     );
+}
+
+#[test]
+fn coverage_units_normalizes_configured_source_globs() {
+    let root = fixture_root("fixture");
+    let mut source_globs_by_project = BTreeMap::new();
+    source_globs_by_project.insert("unit".to_string(), vec!["./src/**/*.ts".to_string()]);
+
+    let units = coverage_units(
+        &root,
+        &NoMistakesConfig::default(),
+        &Options {
+            include_vitest_project_globs: Some(false),
+            include_full_suite_triggers: Some(false),
+            source_globs_by_project,
+            ..Options::default()
+        },
+    )
+    .unwrap();
+
+    assert_eq!(units.len(), 1);
+    assert_eq!(units[0].source, CoverageSource::ConfiguredSource);
+    assert_eq!(units[0].patterns, vec!["src/**/*.ts"]);
 }
 
 #[test]

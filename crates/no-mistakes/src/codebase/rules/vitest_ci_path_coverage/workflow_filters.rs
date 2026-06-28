@@ -12,7 +12,7 @@ use serde::Deserialize;
 use serde_yaml::Value;
 use std::path::Path;
 use step::{collect_step_filters, StepContext};
-use workflow_paths::workflow_path_filters;
+use workflow_paths::{workflow_path_filters, WorkflowPathFilters};
 
 #[cfg(test)]
 mod tests;
@@ -31,16 +31,12 @@ pub(super) struct CiFilter {
     pub(super) name: String,
     pub(super) compiled: Vec<Vec<super::globs::CompiledGlob>>,
     pub(super) quantifier: PredicateQuantifier,
-    workflow_paths: Vec<Vec<super::globs::CompiledGlob>>,
+    workflow_paths: WorkflowPathFilters,
 }
 
 impl CiFilter {
     pub(super) fn workflow_allows(&self, path: &str) -> bool {
-        self.workflow_paths.is_empty()
-            || self
-                .workflow_paths
-                .iter()
-                .any(|patterns| selected_by(patterns, path))
+        self.workflow_paths.allows(path)
     }
 }
 

@@ -1,7 +1,8 @@
 use super::values::{filter_predicates, parse_filters_value};
+use super::workflow_paths::WorkflowPathFilters;
 use super::{workflow_finding, CiFilter, RuleFinding};
 use crate::codebase::rules::vitest_ci_path_coverage::globs::{
-    compile_pattern_predicates, CompiledGlob, PredicateQuantifier,
+    compile_pattern_predicates, PredicateQuantifier,
 };
 use serde_yaml::Value;
 use std::path::Path;
@@ -10,7 +11,7 @@ pub(super) struct StepContext<'a> {
     pub(super) rel: &'a str,
     pub(super) job_id: &'a str,
     pub(super) step_id: &'a str,
-    pub(super) workflow_paths: &'a [Vec<CompiledGlob>],
+    pub(super) workflow_paths: &'a WorkflowPathFilters,
 }
 
 pub(super) fn collect_step_filters(
@@ -63,7 +64,7 @@ pub(super) fn collect_step_filters(
             name: name.to_string(),
             compiled,
             quantifier,
-            workflow_paths: context.workflow_paths.to_vec(),
+            workflow_paths: context.workflow_paths.clone(),
         });
     }
 }

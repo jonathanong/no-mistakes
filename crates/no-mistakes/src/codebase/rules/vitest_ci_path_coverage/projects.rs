@@ -1,4 +1,5 @@
 mod merge;
+mod patterns;
 
 use super::Options;
 use crate::config::v2::schema::{NoMistakesConfig, Project, TestPlanProjectDependency};
@@ -7,6 +8,7 @@ use crate::integration_tests::{
 };
 use anyhow::Result;
 use merge::merge_explicit_project;
+use patterns::{normalize_project_glob_part, project_relative_pattern, project_root_patterns};
 use std::path::Path;
 
 #[cfg(test)]
@@ -71,7 +73,10 @@ pub(super) fn coverage_units(
         units.push(CoverageUnit {
             project: project.clone(),
             source: CoverageSource::ConfiguredSource,
-            patterns: patterns.clone(),
+            patterns: patterns
+                .iter()
+                .map(|pattern| normalize_project_glob_part(pattern))
+                .collect(),
         });
     }
     Ok(units)
@@ -186,31 +191,4 @@ fn project_dependency_patterns(
                 .collect()
         }
     }
-}
-
-fn project_root_patterns(project_root: &str) -> Vec<String> {
-    let root = normalize_project_glob_part(project_root);
-    if root.is_empty() || root == "." {
-        vec!["**".to_string()]
-    } else {
-        vec![format!("{root}/**")]
-    }
-}
-
-fn project_relative_pattern(project_root: &str, pattern: &str) -> String {
-    let root = normalize_project_glob_part(project_root);
-    let pattern = normalize_project_glob_part(pattern);
-    if root.is_empty() || root == "." || pattern.starts_with(&format!("{root}/")) {
-        pattern
-    } else {
-        format!("{root}/{pattern}")
-    }
-}
-
-fn normalize_project_glob_part(raw: &str) -> String {
-    let mut part = raw.trim().trim_matches('/').to_string();
-    while let Some(rest) = part.strip_prefix("./") {
-        part = rest.to_string();
-    }
-    part
 }
