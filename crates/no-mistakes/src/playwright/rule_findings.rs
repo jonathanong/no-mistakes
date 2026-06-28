@@ -119,6 +119,7 @@ fn prefer_test_id_locator_findings(analysis: &Analysis) -> Vec<RuleFinding> {
             test_file,
             locator_kind,
             locator,
+            test_id_attributes,
             selector_refs,
             line,
             ..
@@ -126,7 +127,10 @@ fn prefer_test_id_locator_findings(analysis: &Analysis) -> Vec<RuleFinding> {
         else {
             continue;
         };
-        let Some(selector) = selector_refs.first() else {
+        let Some(selector) = selector_refs
+            .iter()
+            .find(|selector| test_id_attributes.contains(&selector.attribute))
+        else {
             continue;
         };
         by_locator

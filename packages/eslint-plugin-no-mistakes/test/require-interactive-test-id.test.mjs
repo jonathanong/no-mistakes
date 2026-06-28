@@ -125,6 +125,11 @@ tester.run("playwright-require-interactive-test-id", rule, {
       errors: [{ messageId: "missing" }],
     },
     {
+      code: "<><Button /><Button /></>;",
+      options: [{ interactiveComponents: ["/^Button$/g"] }],
+      errors: [{ messageId: "missing" }, { messageId: "missing" }],
+    },
+    {
       code: [
         "<>",
         '  <div role="button" />',

@@ -13,9 +13,6 @@ impl AppTextVisitor<'_> {
         let aria_label = self
             .string_attr(opening, "aria-label")
             .and_then(|value| normalize_locator_text(&value));
-        if jsx::attr_exists_at_runtime(opening, "aria-labelledby") {
-            return;
-        }
         let alt = self
             .string_attr(opening, "alt")
             .and_then(|value| normalize_locator_text(&value));
@@ -24,6 +21,19 @@ impl AppTextVisitor<'_> {
             .and_then(|value| normalize_locator_text(&value));
         if let Some(text) = title.as_ref() {
             self.push(AppTextKind::Title, role.clone(), text.clone(), refs);
+        }
+        if let Some(text) = alt.as_ref().filter(|_| {
+            alt_supports_accessible_name(
+                opening,
+                tag,
+                self.source,
+                self.scoped_static_identifier_defaults,
+            )
+        }) {
+            self.push(AppTextKind::Alt, role.clone(), (*text).clone(), refs);
+        }
+        if jsx::attr_exists_at_runtime(opening, "aria-labelledby") {
+            return;
         }
 
         if let Some(text) = aria_label {
@@ -54,7 +64,6 @@ impl AppTextVisitor<'_> {
                 self.scoped_static_identifier_defaults,
             )
         }) {
-            self.push(AppTextKind::Alt, role.clone(), text.clone(), refs);
             self.push(AppTextKind::AccessibleName, role.clone(), text, refs);
         } else if !visible_name_exists {
             if let Some(text) = title {

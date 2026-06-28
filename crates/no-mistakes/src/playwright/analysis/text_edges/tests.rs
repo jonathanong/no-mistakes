@@ -357,6 +357,7 @@ fn teardown_text_locators_do_not_create_text_edges() {
     append_locator_text_edges(
         &mut edges,
         &test_file,
+        &["data-pw".to_string()],
         &context,
         vec![crate::playwright::playwright_tests::TestOccurrence {
             value: locator,

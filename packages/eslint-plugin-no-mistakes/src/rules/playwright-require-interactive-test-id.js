@@ -117,6 +117,12 @@ function regexLiteral(value) {
 function matchesAny(name, matchers) {
   return Boolean(
     name &&
-    matchers.some((matcher) => (matcher.regex ? matcher.regex.test(name) : matcher.exact === name)),
+    matchers.some((matcher) => {
+      if (!matcher.regex) {
+        return matcher.exact === name;
+      }
+      matcher.regex.lastIndex = 0;
+      return matcher.regex.test(name);
+    }),
   );
 }

@@ -208,6 +208,7 @@ fn findings_from_report_flags_copy_coupled_locators_with_selector_refs() {
         role: Some("button".to_string()),
         text: "Save".to_string(),
         locator: "getByRole(button, name: Save)".to_string(),
+        test_id_attributes: vec!["data-pw".to_string()],
         selector_refs: vec![SelectorRef {
             attribute: "data-pw".to_string(),
             value: "save-button".to_string(),
@@ -229,6 +230,79 @@ fn findings_from_report_flags_copy_coupled_locators_with_selector_refs() {
     assert_eq!(findings[0].file, "tests/e2e/app.spec.ts");
     assert_eq!(findings[0].line, 12);
     assert_eq!(findings[0].target.as_deref(), Some("data-pw=save-button"));
+}
+
+#[test]
+fn prefer_test_id_locator_uses_effective_test_id_attribute() {
+    let edge = Edge::LocatorText {
+        test_file: Arc::new("tests/e2e/app.spec.ts".to_string()),
+        test_name: Some(Arc::new("uses text locator".to_string())),
+        describe_path: Arc::new(vec![]),
+        app_file: Arc::new("web/app/page.tsx".to_string()),
+        locator_kind: "role".to_string(),
+        role: Some("button".to_string()),
+        text: "Save".to_string(),
+        locator: "getByRole(button, name: Save)".to_string(),
+        test_id_attributes: vec!["data-qa".to_string()],
+        selector_refs: vec![
+            SelectorRef {
+                attribute: "id".to_string(),
+                value: "save".to_string(),
+            },
+            SelectorRef {
+                attribute: "data-pw".to_string(),
+                value: "save-button".to_string(),
+            },
+            SelectorRef {
+                attribute: "data-qa".to_string(),
+                value: "save-action".to_string(),
+            },
+        ],
+        reasons: vec!["route-signal".to_string()],
+        line: 12,
+    };
+
+    let findings = findings_from_report(
+        &analysis(empty_report(), vec![edge]),
+        false,
+        false,
+        false,
+        true,
+    );
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].target.as_deref(), Some("data-qa=save-action"));
+}
+
+#[test]
+fn prefer_test_id_locator_ignores_non_effective_selector_refs() {
+    let edge = Edge::LocatorText {
+        test_file: Arc::new("tests/e2e/app.spec.ts".to_string()),
+        test_name: Some(Arc::new("uses text locator".to_string())),
+        describe_path: Arc::new(vec![]),
+        app_file: Arc::new("web/app/page.tsx".to_string()),
+        locator_kind: "role".to_string(),
+        role: Some("button".to_string()),
+        text: "Save".to_string(),
+        locator: "getByRole(button, name: Save)".to_string(),
+        test_id_attributes: vec!["data-qa".to_string()],
+        selector_refs: vec![SelectorRef {
+            attribute: "data-pw".to_string(),
+            value: "save-button".to_string(),
+        }],
+        reasons: vec!["route-signal".to_string()],
+        line: 12,
+    };
+
+    let findings = findings_from_report(
+        &analysis(empty_report(), vec![edge]),
+        false,
+        false,
+        false,
+        true,
+    );
+
+    assert!(findings.is_empty());
 }
 
 fn analysis(report: CoverageReport, edges: Vec<Edge>) -> Analysis {
