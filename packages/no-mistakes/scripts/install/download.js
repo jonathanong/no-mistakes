@@ -78,6 +78,13 @@ function request(
           return;
         }
 
+        try {
+          validateUrl(redirectedUrl.toString());
+        } catch (error) {
+          reject(error);
+          return;
+        }
+
         request(
           redirectedUrl.toString(),
           handleResponse,
