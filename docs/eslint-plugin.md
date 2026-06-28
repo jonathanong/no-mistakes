@@ -45,8 +45,8 @@ Rules not listed here have no options.
 
 | Rule | Options |
 | --- | --- |
-| `async-enqueue-disposition` | `{ targets?: { sourcePatterns?: string[], calleeNamePatterns?: string[] }[] }`. |
-| `async-try-catch-return-await` | `{ targets?: { sourcePatterns?: string[], calleeNamePatterns?: string[] }[] }`. |
+| `async-call-disposition` | `{ targets?: { sourceSpecifierPatterns?: string[], calleeNamePatterns?: string[] }[] }`. |
+| `async-try-catch-return-await` | `{ handlers?: { sourceSpecifierPatterns?: string[], calleeNamePatterns?: string[] }[] }`. |
 | `module-mock-boundary` | `{ internalSpecifiers?: string[], includePathPatterns?: string[], excludePathPatterns?: string[], requireLiteralSpecifiers?: boolean, baseline?: [string, string, number][], integrationExports?: object }`. |
 | `module-mock-preserve-exports` | `{ internalSpecifiers?: string[], includePathPatterns?: string[], excludePathPatterns?: string[], baseline?: [string, string][] }`. |
 | `playwright-assertion-timeout-cap` | `{ max?: number }`, default `10000`. |
@@ -82,13 +82,13 @@ module.exports = [
         "error",
         { includePathPatterns: ["^src/"], allowDefaultReExports: true },
       ],
-      "no-mistakes/async-enqueue-disposition": [
+      "no-mistakes/async-call-disposition": [
         "error",
         {
           targets: [
             {
-              sourcePatterns: ["^@app/jobs$"],
-              calleeNamePatterns: ["^enqueue[A-Z].*"],
+              sourceSpecifierPatterns: ["@app/jobs"],
+              calleeNamePatterns: ["/^enqueue[A-Z].*/"],
             },
           ],
         },

@@ -8,6 +8,8 @@ async function request() {
   return "ok";
 }
 
+class RequestJob {}
+
 export async function direct() {
   try {
     await Promise.all([, request()]);
@@ -117,6 +119,22 @@ export async function unmatchedHandler() {
 export function nonAsync() {
   try {
     return request();
+  } catch (error) {
+    handleRateLimit(error);
+  }
+}
+
+export async function constructorReturnIsIgnored() {
+  try {
+    return new RequestJob();
+  } catch (error) {
+    handleRateLimit(error);
+  }
+}
+
+export async function dynamicImportReturnIsIgnored() {
+  try {
+    return import("./worker");
   } catch (error) {
     handleRateLimit(error);
   }

@@ -27,7 +27,7 @@ See [ESLint and Oxlint plugin](../eslint-plugin.md) for option schemas.
 
 | Rule | Purpose |
 | --- | --- |
-| [`async-enqueue-disposition`](async-enqueue-disposition.md) | Require explicit async disposition for configured enqueue calls. |
+| [`async-call-disposition`](async-call-disposition.md) | Require explicit disposition for configured async calls. |
 | [`async-try-catch-return-await`](async-try-catch-return-await.md) | Require `return await` in configured async try/catch handlers. |
 | [`await-array-methods`](await-array-methods.md) | Disallow awaiting synchronous array methods. |
 | [`module-mock-boundary`](module-mock-boundary.md) | Enforce configured module mock boundaries. |

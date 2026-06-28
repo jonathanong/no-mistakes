@@ -163,14 +163,15 @@ module.exports = rule(
   {
     type: "problem",
     docs: {
-      description: "require explicit async disposition for configured enqueue calls",
+      description: "require explicit async disposition for configured async calls",
       recommended: false,
     },
-    fixable: "code",
+    hasSuggestions: true,
     schema: targetOptionsSchema,
     messages: {
       disposition:
-        "Handle this enqueue promise explicitly with await, return, Promise.all(...), or void.",
+        "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+      markVoid: "Prefix the call with void to mark this promise as intentionally floating.",
     },
   },
   (context) => {
@@ -184,10 +185,17 @@ module.exports = rule(
         context.report({
           node,
           messageId: "disposition",
-          fix(fixer) {
-            if (node.parent?.type !== "ExpressionStatement") return null;
-            return fixer.insertTextBefore(node, "void ");
-          },
+          suggest:
+            node.parent?.type === "ExpressionStatement"
+              ? [
+                  {
+                    messageId: "markVoid",
+                    fix(fixer) {
+                      return fixer.insertTextBefore(node, "void ");
+                    },
+                  },
+                ]
+              : [],
         });
       },
     };

@@ -12,5 +12,5 @@ Example: `try { return await request(); } catch (error) { handleRateLimit(error)
 
 Fix: write `return await request()` or await the promise before returning it.
 
-Configure `targets` with grouped `sourcePatterns` and `calleeNamePatterns` regex
-strings for the catch-handler APIs that require local rejection handling.
+Configure `handlers` with grouped `sourceSpecifierPatterns` and `calleeNamePatterns` glob or
+`/regex/` strings for the catch-handler APIs that require local rejection handling.

@@ -7,7 +7,7 @@ const {
   traverse,
   unwrapExpression,
 } = require("./async-ast");
-const { targetOptionsSchema } = require("./async-schema");
+const { handlerOptionsSchema } = require("./async-schema");
 const { createTargetMatcher } = require("./async-targets");
 
 function isAwaited(node) {
@@ -22,10 +22,14 @@ function mayReturnPromise(node) {
   if (expression?.type === "LogicalExpression") {
     return mayReturnPromise(expression.left) || mayReturnPromise(expression.right);
   }
+  return expression?.type === "CallExpression" || isPromiseConstructor(expression);
+}
+
+function isPromiseConstructor(node) {
   return (
-    expression?.type === "CallExpression" ||
-    expression?.type === "NewExpression" ||
-    expression?.type === "ImportExpression"
+    node?.type === "NewExpression" &&
+    node.callee.type === "Identifier" &&
+    node.callee.name === "Promise"
   );
 }
 
@@ -107,15 +111,16 @@ module.exports = rule(
       description: "require return await in configured async try/catch handlers",
       recommended: false,
     },
-    fixable: "code",
-    schema: targetOptionsSchema,
+    hasSuggestions: true,
+    schema: handlerOptionsSchema,
     messages: {
       awaitReturn:
         "Use return await inside this try block so rejections are handled by the configured catch handler.",
+      addAwait: "Insert await before the returned promise.",
     },
   },
   (context) => {
-    const matcher = createTargetMatcher(context);
+    const matcher = createTargetMatcher(context, "handlers");
     if (!matcher.hasTargets) return {};
 
     function catchCallsHandler(catchClause) {
@@ -130,15 +135,20 @@ module.exports = rule(
       context.report({
         node,
         messageId: "awaitReturn",
-        fix(fixer) {
-          if (shouldParenthesizeAwaitArgument(node.argument)) {
-            return fixer.replaceText(
-              node.argument,
-              `await (${context.sourceCode.getText(node.argument)})`,
-            );
-          }
-          return fixer.insertTextBefore(node.argument, "await ");
-        },
+        suggest: [
+          {
+            messageId: "addAwait",
+            fix(fixer) {
+              if (shouldParenthesizeAwaitArgument(node.argument)) {
+                return fixer.replaceText(
+                  node.argument,
+                  `await (${context.sourceCode.getText(node.argument)})`,
+                );
+              }
+              return fixer.insertTextBefore(node.argument, "await ");
+            },
+          },
+        ],
       });
     }
 

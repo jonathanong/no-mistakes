@@ -42,7 +42,8 @@ describe("docs coverage", () => {
       "allowStaticTemplates",
       "allowBeforeAllAssignments",
       "targets",
-      "sourcePatterns",
+      "handlers",
+      "sourceSpecifierPatterns",
       "calleeNamePatterns",
     ]) {
       assert.ok(pluginDoc.includes(optionName), `missing option ${optionName}`);
