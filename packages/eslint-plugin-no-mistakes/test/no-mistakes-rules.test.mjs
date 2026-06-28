@@ -1202,6 +1202,29 @@ describe("no-global-fetch-outside-helper", () => {
           switchFallthroughAlias("/api/switch-fallthrough-alias");
           break;
       }
+      let switchReturnAlias = fetch;
+      function switchReturnLoad(kind) {
+        switch (kind) {
+          case "client":
+            switchReturnAlias = client.fetch;
+            return;
+          case "load":
+            switchReturnAlias("/api/switch-return-alias");
+        }
+      }
+      switchReturnLoad(kind);
+      let switchDiscriminantClear = fetch;
+      switch ((switchDiscriminantClear = client.fetch)) {
+        default:
+          break;
+      }
+      switchDiscriminantClear("/api/switch-discriminant-clear");
+      let switchDiscriminantAlias = client.fetch;
+      switch ((switchDiscriminantAlias = fetch)) {
+        default:
+          break;
+      }
+      switchDiscriminantAlias("/api/switch-discriminant-alias");
       let maybeGlobal = client.fetch;
       if (useGlobal) maybeGlobal = fetch;
       maybeGlobal("/api/not-definitely-global");
@@ -1271,6 +1294,18 @@ describe("no-global-fetch-outside-helper", () => {
       forInit("/api/for-init");
       for (var declaredForInit = fetch; false;) {}
       declaredForInit("/api/declared-for-init");
+      let forTestClear = fetch;
+      for (; (forTestClear = client.fetch) && false;) {}
+      forTestClear("/api/for-test-clear");
+      let forTestAlias = client.fetch;
+      for (; (forTestAlias = fetch) && false;) {}
+      forTestAlias("/api/for-test-alias");
+      let forOfSourceClear = fetch;
+      for (const item of ((forOfSourceClear = client.fetch), [])) {}
+      forOfSourceClear("/api/for-of-source-clear");
+      let forOfSourceAlias = client.fetch;
+      for (const item of ((forOfSourceAlias = fetch), [])) {}
+      forOfSourceAlias("/api/for-of-source-alias");
       let doAlias = client.fetch;
       do {
         doAlias = fetch;
@@ -1325,11 +1360,27 @@ describe("no-global-fetch-outside-helper", () => {
       let destructuredAssignedForwardRequest;
       ({ fetch: destructuredAssignedForwardRequest } = globalThis);
       destructuredAssignedForwardLoad();
+      let objectPatternClear = fetch;
+      ({ other: objectPatternClear } = client);
+      objectPatternClear("/api/object-pattern-clear");
+      let arrayPatternClear = fetch;
+      [arrayPatternClear] = values;
+      arrayPatternClear("/api/array-pattern-clear");
       let classAlias = fetch;
       class AliasReset {
         field = (classAlias = client.fetch);
       }
       classAlias("/api/class-alias");
+      let classKeyClear = fetch;
+      class KeyClear {
+        [(classKeyClear = client.fetch)] = 1;
+      }
+      classKeyClear("/api/class-key-clear");
+      let classKeyAlias = client.fetch;
+      class KeyAlias {
+        [(classKeyAlias = fetch)] = 1;
+      }
+      classKeyAlias("/api/class-key-alias");
       let staticBlockAlias = client.fetch;
       class StaticBlockAlias {
         static {
@@ -1345,6 +1396,10 @@ describe("no-global-fetch-outside-helper", () => {
       assigned ||= self.fetch;
     `;
     assert.deepEqual(messages(code, "no-global-fetch-outside-helper", option, "web/app/users.ts"), [
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
       "globalFetch",
       "globalFetch",
       "globalFetch",

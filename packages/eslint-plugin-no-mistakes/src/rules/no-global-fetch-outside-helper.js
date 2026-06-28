@@ -83,34 +83,43 @@ module.exports = Object.assign(
       }
 
       function enterSwitch() {
-        switchStack.push({
-          baseAliases: aliases,
-          baseCleared: clearedForwardAliases,
-          fallthrough: false,
-        });
+        switchStack.push({ baseAliases: null, baseCleared: null, fallthrough: false });
       }
 
       function exitSwitch() {
         const state = switchStack.pop();
+        if (!state.baseAliases) return;
         aliases = state.baseAliases;
         clearedForwardAliases = state.baseCleared;
       }
 
       function enterSwitchCase() {
         const state = switchStack.at(-1);
-        if (!state || state.fallthrough) return;
+        if (!state) return;
+        if (!state.baseAliases) {
+          state.baseAliases = aliases;
+          state.baseCleared = clearedForwardAliases;
+        }
+        if (state.fallthrough) return;
         aliases = new Set(state.baseAliases);
         clearedForwardAliases = new Set(state.baseCleared);
       }
 
-      function exitsWithBreak(node) {
-        return node.consequent?.some((child) => child.type === "BreakStatement") ?? false;
+      function exitsSwitchCase(node) {
+        return (
+          node.consequent?.some(
+            (child) =>
+              child.type === "BreakStatement" ||
+              child.type === "ReturnStatement" ||
+              child.type === "ThrowStatement",
+          ) ?? false
+        );
       }
 
       function exitSwitchCase(node) {
         const state = switchStack.at(-1);
         if (!state) return;
-        state.fallthrough = !exitsWithBreak(node);
+        state.fallthrough = !exitsSwitchCase(node);
         if (!state.fallthrough) {
           aliases = new Set(state.baseAliases);
           clearedForwardAliases = new Set(state.baseCleared);
@@ -145,13 +154,13 @@ module.exports = Object.assign(
         "IfStatement > .alternate:exit": popAliasScope,
         ForStatement(node) {
           recordForInitializer(node);
-          pushAliasScope();
         },
-        "ForStatement:exit": popAliasScope,
-        ForInStatement: pushAliasScope,
-        "ForInStatement:exit": popAliasScope,
-        ForOfStatement: pushAliasScope,
-        "ForOfStatement:exit": popAliasScope,
+        "ForStatement > .body": pushAliasScope,
+        "ForStatement > .body:exit": popAliasScope,
+        "ForInStatement > .body": pushAliasScope,
+        "ForInStatement > .body:exit": popAliasScope,
+        "ForOfStatement > .body": pushAliasScope,
+        "ForOfStatement > .body:exit": popAliasScope,
         "WhileStatement > .body": pushAliasScope,
         "WhileStatement > .body:exit": popAliasScope,
         SwitchStatement: enterSwitch,
@@ -162,10 +171,10 @@ module.exports = Object.assign(
         "TryStatement > .block:exit": popAliasScope,
         "TryStatement > .handler": pushAliasScope,
         "TryStatement > .handler:exit": popAliasScope,
-        "ClassBody > FieldDefinition[static=false]": pushAliasScope,
-        "ClassBody > FieldDefinition[static=false]:exit": popAliasScope,
-        "ClassBody > PropertyDefinition[static=false]": pushAliasScope,
-        "ClassBody > PropertyDefinition[static=false]:exit": popAliasScope,
+        "FieldDefinition[static=false] > .value": pushAliasScope,
+        "FieldDefinition[static=false] > .value:exit": popAliasScope,
+        "PropertyDefinition[static=false] > .value": pushAliasScope,
+        "PropertyDefinition[static=false] > .value:exit": popAliasScope,
         "ConditionalExpression > .consequent": pushAliasScope,
         "ConditionalExpression > .consequent:exit": popAliasScope,
         "ConditionalExpression > .alternate": pushAliasScope,

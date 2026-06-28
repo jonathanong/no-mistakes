@@ -40,7 +40,33 @@ function isAmbientDeclaration(def) {
   return def.node?.declare === true || def.parent?.declare === true;
 }
 
+function bindingIdentifier(node) {
+  if (node?.type === "Identifier") return node;
+  return node?.type === "AssignmentPattern" && node.left.type === "Identifier" ? node.left : null;
+}
+
+function bindingIdentifiers(node, identifiers = []) {
+  const identifier = bindingIdentifier(node);
+  if (identifier) {
+    identifiers.push(identifier);
+    return identifiers;
+  }
+  if (node?.type === "ObjectPattern") {
+    for (const property of node.properties) {
+      if (property.type === "Property") bindingIdentifiers(property.value, identifiers);
+      if (property.type === "RestElement") bindingIdentifiers(property.argument, identifiers);
+    }
+  }
+  if (node?.type === "ArrayPattern") {
+    for (const element of node.elements) bindingIdentifiers(element, identifiers);
+  }
+  if (node?.type === "RestElement") bindingIdentifiers(node.argument, identifiers);
+  return identifiers;
+}
+
 module.exports = {
+  bindingIdentifier,
+  bindingIdentifiers,
   hasLocalBinding,
   isAmbientDeclaration,
   isRuntimeBinding,

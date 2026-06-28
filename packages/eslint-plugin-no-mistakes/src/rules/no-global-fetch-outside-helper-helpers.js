@@ -7,6 +7,8 @@ const {
   stringMatches,
 } = require("./module-mock-helpers");
 const {
+  bindingIdentifier,
+  bindingIdentifiers,
   hasLocalBinding,
   isAmbientDeclaration,
   isRuntimeBinding,
@@ -68,11 +70,6 @@ function isGlobalFetchExpression(node, context, aliases) {
   return isGlobalFetchMember(unwrapped, context);
 }
 
-function bindingIdentifier(node) {
-  if (node?.type === "Identifier") return node;
-  return node?.type === "AssignmentPattern" && node.left.type === "Identifier" ? node.left : null;
-}
-
 function setAlias(id, enabled, context, aliases, clearedAliases) {
   const variable = resolveVariable(id, context);
   if (!variable) return;
@@ -86,6 +83,9 @@ function setAlias(id, enabled, context, aliases, clearedAliases) {
 }
 
 function recordObjectPatternFetchAliases(id, init, context, aliases, clearedAliases) {
+  for (const identifier of bindingIdentifiers(id)) {
+    setAlias(identifier, false, context, aliases, clearedAliases);
+  }
   setObjectPatternFetchAliases(
     id,
     isUnshadowedGlobalRoot(init, context),
@@ -191,6 +191,7 @@ function shouldCheckFile(filename, options) {
 
 module.exports = {
   bindingIdentifier,
+  bindingIdentifiers,
   collectAssignmentExpressions,
   childNodes,
   collectFetchAliases,
