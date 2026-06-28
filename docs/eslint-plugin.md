@@ -55,7 +55,7 @@ Rules not listed here have no options.
 | `playwright-no-empty` | `{ selectorAttributes?: string[] }`. |
 | `playwright-prefer-get-by-test-id` | `{ selectorAttributes?: string[] }`. |
 | `playwright-require-exported-component-attribute` | `{ attributes?: string[], componentNamePattern?: string, components?: string[], ignoreComponents?: string[], wrappers?: string[], allowSpreadAttributes?: boolean, exportTypes?: ("named" \| "default")[], checkAnonymousDefault?: boolean }`. |
-| `playwright-require-interactive-test-id` | `{ selectorAttributes?: string[] }`. |
+| `playwright-require-interactive-test-id` | `{ selectorAttributes?: string[], interactiveComponents?: string[] }`; component entries may be exact names or `/regex/` patterns. |
 | `playwright-unique` | `{ selectorAttributes?: string[] }`. |
 | `nextjs-no-manual-script-tags` | `{ allowInlineScriptIds?: string[], allowInlineScriptIdPatterns?: string[] }`. |
 | `test-no-shared-state` | `{ allowBeforeAllAssignments?: boolean }`. |

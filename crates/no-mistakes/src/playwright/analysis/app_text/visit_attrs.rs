@@ -22,6 +22,9 @@ impl AppTextVisitor<'_> {
         let title = self
             .string_attr(opening, "title")
             .and_then(|value| normalize_locator_text(&value));
+        if let Some(text) = title.as_ref() {
+            self.push(AppTextKind::Title, role.clone(), text.clone(), refs);
+        }
 
         if let Some(text) = aria_label {
             self.push(
@@ -51,6 +54,7 @@ impl AppTextVisitor<'_> {
                 self.scoped_static_identifier_defaults,
             )
         }) {
+            self.push(AppTextKind::Alt, role.clone(), text.clone(), refs);
             self.push(AppTextKind::AccessibleName, role.clone(), text, refs);
         } else if !visible_name_exists {
             if let Some(text) = title {

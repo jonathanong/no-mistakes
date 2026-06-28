@@ -90,6 +90,29 @@ fn run_all_includes_playwright_unique_html_id_rules() {
 }
 
 #[test]
+fn run_all_includes_playwright_prefer_test_id_locator_rules() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/check-runner/playwright-prefer-test-id-locators/fixture");
+
+    let results = run_all(root, None, None).unwrap();
+    let targets = results
+        .rules
+        .iter()
+        .filter(|finding| {
+            finding.rule == no_mistakes::playwright::rules::PLAYWRIGHT_PREFER_TEST_ID_LOCATORS
+        })
+        .map(|finding| finding.target.as_deref())
+        .collect::<Vec<_>>();
+
+    assert_eq!(targets.len(), 5, "{targets:?}");
+    assert!(targets.contains(&Some("data-pw=save-button")));
+    assert!(targets.contains(&Some("data-pw=email-input")));
+    assert!(targets.contains(&Some("data-pw=search-input")));
+    assert!(targets.contains(&Some("data-pw=logo-image")));
+    assert!(targets.contains(&Some("data-pw=help-button")));
+}
+
+#[test]
 fn run_all_includes_filesystem_rule_advisories() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/agents-md-max-size/fixture/advisory");

@@ -27,6 +27,15 @@ tester.run("playwright-require-interactive-test-id", rule, {
     { code: "<div role='presentation' />;" },
     { code: "<div {...props} />;" },
     { code: "<Comp.Button />;" },
+    { code: "<Button />;" },
+    {
+      code: "<Button data-pw='save' />;",
+      options: [{ interactiveComponents: ["Button"] }],
+    },
+    {
+      code: "<Ui.Button data-pw='save' />;",
+      options: [{ interactiveComponents: ["Ui.Button"] }],
+    },
     { code: "<a>link</a>;" },
     { code: "<div className='x' />;" },
     { code: "<div role='button' data-pw={id} />;" },
@@ -91,6 +100,31 @@ tester.run("playwright-require-interactive-test-id", rule, {
       errors: [{ messageId: "missing" }],
     },
     {
+      code: "<Link href='/login'>Create your free page</Link>;",
+      options: [{ interactiveComponents: ["Link"] }],
+      errors: [{ messageId: "missing" }],
+    },
+    {
+      code: "<Button type='submit'>Submit</Button>;",
+      options: [{ interactiveComponents: ["Button"] }],
+      errors: [{ messageId: "missing" }],
+    },
+    {
+      code: "<SelectItem value='incorrect_facts'>The facts cited are incorrect</SelectItem>;",
+      options: [{ interactiveComponents: ["SelectItem"] }],
+      errors: [{ messageId: "missing" }],
+    },
+    {
+      code: "<Ui.Button>Submit</Ui.Button>;",
+      options: [{ interactiveComponents: ["Ui.Button"] }],
+      errors: [{ messageId: "missing" }],
+    },
+    {
+      code: "<Menu.Item>Open</Menu.Item>;",
+      options: [{ interactiveComponents: ["/\\.Item$/"] }],
+      errors: [{ messageId: "missing" }],
+    },
+    {
       code: [
         "<>",
         '  <div role="button" />',
@@ -147,6 +181,36 @@ describe("messages coverage", () => {
     ]);
     assert.deepEqual(
       messages("<span title='copy' />;", "playwright-require-interactive-test-id"),
+      [],
+    );
+  });
+
+  it("reports configured component matchers", () => {
+    assert.deepEqual(
+      messages("<Button />;", "playwright-require-interactive-test-id", {
+        interactiveComponents: ["Button"],
+      }),
+      ["missing"],
+    );
+    assert.deepEqual(
+      messages("<Menu.Item />;", "playwright-require-interactive-test-id", {
+        interactiveComponents: ["/\\.Item$/"],
+      }),
+      ["missing"],
+    );
+  });
+
+  it("ignores empty configured component matchers and unsupported JSX names", () => {
+    assert.deepEqual(
+      messages("<Button />;", "playwright-require-interactive-test-id", {
+        interactiveComponents: [""],
+      }),
+      [],
+    );
+    assert.deepEqual(
+      messages("<svg:path />;", "playwright-require-interactive-test-id", {
+        interactiveComponents: ["svg:path"],
+      }),
       [],
     );
   });

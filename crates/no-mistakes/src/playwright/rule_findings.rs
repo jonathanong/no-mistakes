@@ -1,17 +1,21 @@
 use crate::codebase::rules::RuleFinding;
-use crate::playwright::analysis::types::{CoverageReport, DuplicateSelector};
+use crate::playwright::analysis::types::{Analysis, CoverageReport, DuplicateSelector, Edge};
 use crate::playwright::rules::{
-    PLAYWRIGHT_COVERAGE, PLAYWRIGHT_UNIQUE_HTML_IDS, PLAYWRIGHT_UNIQUE_TEST_IDS,
+    PLAYWRIGHT_COVERAGE, PLAYWRIGHT_PREFER_TEST_ID_LOCATORS, PLAYWRIGHT_UNIQUE_HTML_IDS,
+    PLAYWRIGHT_UNIQUE_TEST_IDS,
 };
 use crate::playwright::selectors::HTML_ID_ATTRIBUTE;
+use std::collections::BTreeMap;
 
 pub(crate) fn findings_from_report(
-    report: &CoverageReport,
+    analysis: &Analysis,
     coverage: bool,
     unique_test_ids: bool,
     unique_html_ids: bool,
+    prefer_test_id_locators: bool,
 ) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
+    let report = &analysis.coverage;
     if coverage {
         findings.extend(coverage_findings(report));
     }
@@ -21,6 +25,9 @@ pub(crate) fn findings_from_report(
             unique_test_ids,
             unique_html_ids,
         ));
+    }
+    if prefer_test_id_locators {
+        findings.extend(prefer_test_id_locator_findings(analysis));
     }
     findings.sort();
     findings.dedup();
@@ -103,6 +110,42 @@ fn unique_findings(
             })
         })
         .collect()
+}
+
+fn prefer_test_id_locator_findings(analysis: &Analysis) -> Vec<RuleFinding> {
+    let mut by_locator = BTreeMap::new();
+    for edge in &analysis.edges.edges {
+        let Edge::LocatorText {
+            test_file,
+            locator_kind,
+            locator,
+            selector_refs,
+            line,
+            ..
+        } = edge
+        else {
+            continue;
+        };
+        let Some(selector) = selector_refs.first() else {
+            continue;
+        };
+        by_locator
+            .entry((test_file.to_string(), *line as usize, locator.to_string()))
+            .or_insert_with(|| {
+                RuleFinding {
+                    rule: PLAYWRIGHT_PREFER_TEST_ID_LOCATORS.to_string(),
+                    file: test_file.to_string(),
+                    line: *line as usize,
+                    message: format!(
+                        "Prefer getByTestId('{}') over copy-coupled {} locator {}; matched app element exposes {}=\"{}\"",
+                        selector.value, locator_kind, locator, selector.attribute, selector.value
+                    ),
+                    import: None,
+                    target: Some(format!("{}={}", selector.attribute, selector.value)),
+                }
+            });
+    }
+    by_locator.into_values().collect()
 }
 
 #[cfg(test)]

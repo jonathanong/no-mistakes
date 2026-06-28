@@ -1,7 +1,8 @@
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use crate::playwright::rules::{
-    PLAYWRIGHT_COVERAGE, PLAYWRIGHT_UNIQUE_HTML_IDS, PLAYWRIGHT_UNIQUE_TEST_IDS,
+    PLAYWRIGHT_COVERAGE, PLAYWRIGHT_PREFER_TEST_ID_LOCATORS, PLAYWRIGHT_UNIQUE_HTML_IDS,
+    PLAYWRIGHT_UNIQUE_TEST_IDS,
 };
 use anyhow::Result;
 use std::path::Path;
@@ -16,6 +17,7 @@ pub(super) fn filter_rule_findings(
         PLAYWRIGHT_COVERAGE,
         PLAYWRIGHT_UNIQUE_TEST_IDS,
         PLAYWRIGHT_UNIQUE_HTML_IDS,
+        PLAYWRIGHT_PREFER_TEST_ID_LOCATORS,
     ] {
         let rule_findings = findings
             .iter()

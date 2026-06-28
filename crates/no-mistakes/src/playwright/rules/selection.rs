@@ -1,4 +1,7 @@
-use super::{PLAYWRIGHT_COVERAGE, PLAYWRIGHT_UNIQUE_HTML_IDS, PLAYWRIGHT_UNIQUE_TEST_IDS};
+use super::{
+    PLAYWRIGHT_COVERAGE, PLAYWRIGHT_PREFER_TEST_ID_LOCATORS, PLAYWRIGHT_UNIQUE_HTML_IDS,
+    PLAYWRIGHT_UNIQUE_TEST_IDS,
+};
 use crate::config::v2::NoMistakesConfig;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -8,6 +11,7 @@ pub(super) struct RuleSelection {
     pub(super) coverage: bool,
     pub(super) unique_test_ids: bool,
     pub(super) unique_html_ids: bool,
+    pub(super) prefer_test_id_locators: bool,
 }
 
 pub(super) fn rule_selections(config: &NoMistakesConfig) -> Vec<RuleSelection> {
@@ -28,6 +32,12 @@ pub(super) fn rule_selections(config: &NoMistakesConfig) -> Vec<RuleSelection> {
         config,
         PLAYWRIGHT_UNIQUE_HTML_IDS,
         |selection| selection.unique_html_ids = true,
+        &mut by_project,
+    );
+    add_rule_selections(
+        config,
+        PLAYWRIGHT_PREFER_TEST_ID_LOCATORS,
+        |selection| selection.prefer_test_id_locators = true,
         &mut by_project,
     );
     by_project.into_values().collect()

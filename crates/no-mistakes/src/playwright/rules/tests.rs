@@ -200,6 +200,7 @@ fn rule_selections_merge_rules_by_playwright_target() {
         (PLAYWRIGHT_COVERAGE, vec!["web"]),
         (PLAYWRIGHT_UNIQUE_TEST_IDS, vec!["web", "storybook"]),
         (PLAYWRIGHT_UNIQUE_HTML_IDS, vec!["storybook"]),
+        (PLAYWRIGHT_PREFER_TEST_ID_LOCATORS, vec!["web"]),
     ]);
 
     let selections = rule_selections(&config);
@@ -212,6 +213,7 @@ fn rule_selections_merge_rules_by_playwright_target() {
     assert!(web.coverage);
     assert!(web.unique_test_ids);
     assert!(!web.unique_html_ids);
+    assert!(web.prefer_test_id_locators);
     let storybook = selections
         .iter()
         .find(|selection| selection.playwright_project.as_deref() == Some("storybook"))
@@ -219,6 +221,7 @@ fn rule_selections_merge_rules_by_playwright_target() {
     assert!(!storybook.coverage);
     assert!(storybook.unique_test_ids);
     assert!(storybook.unique_html_ids);
+    assert!(!storybook.prefer_test_id_locators);
 }
 
 #[test]

@@ -40,6 +40,8 @@ test("annotation text", async ({ page }) => {
   await page.getByRole("button", { name: "Old name", name: "New name", includeHidden: true, includeHidden: false }).click();
   await page.getByRole("button" as const, { name: "TS role name" as const, includeHidden: false as boolean }).click();
   await page.getByRole("button", { name: `TS template role` as const }).click();
+  await page.getByAltText("Company logo").click();
+  await page.getByTitle("Only title").click();
   await page.getByRole("button", { 0: "zero", name: "Numeric property" }).click();
 });
 

@@ -16,5 +16,6 @@ fn rule_supports_playwright_test_targets(rule_id: &str) -> bool {
             | "playwright-coverage"
             | "playwright-unique-test-ids"
             | "playwright-unique-html-ids"
+            | "playwright-prefer-test-id-locators"
     )
 }

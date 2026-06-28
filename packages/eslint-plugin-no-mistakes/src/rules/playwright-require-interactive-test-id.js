@@ -17,21 +17,29 @@ module.exports = rule(
     schema: [
       {
         type: "object",
-        properties: { selectorAttributes: { type: "array", items: { type: "string" } } },
+        properties: {
+          selectorAttributes: { type: "array", items: { type: "string" } },
+          interactiveComponents: { type: "array", items: { type: "string" } },
+        },
         additionalProperties: false,
       },
     ],
     messages: { missing: "Interactive elements should have a test ID." },
   },
   (context) => {
-    const attrs = selectorAttributes(options(context));
+    const opts = options(context);
+    const attrs = selectorAttributes(opts);
+    const interactiveComponents = compileMatchers(opts.interactiveComponents);
     return {
       JSXOpeningElement(node) {
-        const elementName = node.name.type === "JSXIdentifier" ? node.name.name : null;
+        const elementName = jsxElementName(node.name);
         const hasSelector = node.attributes.some((attr) =>
           isSelectorAttribute(attributeName(attr), attrs),
         );
-        if (hasSelector || !isInteractiveElement(elementName, node.attributes)) {
+        if (
+          hasSelector ||
+          !isInteractiveElement(elementName, node.attributes, interactiveComponents)
+        ) {
           return;
         }
         context.report({ node: node.name, messageId: "missing" });
@@ -40,7 +48,10 @@ module.exports = rule(
   },
 );
 
-function isInteractiveElement(elementName, attributes) {
+function isInteractiveElement(elementName, attributes, interactiveComponents) {
+  if (matchesAny(elementName, interactiveComponents)) {
+    return true;
+  }
   if (INTERACTIVE_ELEMENTS.has(elementName)) {
     return true;
   }
@@ -66,4 +77,42 @@ function isInteractiveElement(elementName, attributes) {
       "textbox",
     ].includes(selectorLiteral(attr));
   });
+}
+
+function jsxElementName(name) {
+  if (name.type === "JSXIdentifier") {
+    return name.name;
+  }
+  if (name.type === "JSXMemberExpression") {
+    const object = jsxElementName(name.object);
+    const property = jsxElementName(name.property);
+    return object && property ? `${object}.${property}` : null;
+  }
+}
+
+function compileMatchers(values) {
+  if (!Array.isArray(values)) {
+    return [];
+  }
+  return values
+    .filter((value) => typeof value === "string" && value.length > 0)
+    .map((value) => {
+      const regex = regexLiteral(value);
+      return regex ? { regex } : { exact: value };
+    });
+}
+
+function regexLiteral(value) {
+  if (!value.startsWith("/") || value.lastIndexOf("/") === 0) {
+    return null;
+  }
+  const lastSlash = value.lastIndexOf("/");
+  return new RegExp(value.slice(1, lastSlash), value.slice(lastSlash + 1));
+}
+
+function matchesAny(name, matchers) {
+  return Boolean(
+    name &&
+    matchers.some((matcher) => (matcher.regex ? matcher.regex.test(name) : matcher.exact === name)),
+  );
 }

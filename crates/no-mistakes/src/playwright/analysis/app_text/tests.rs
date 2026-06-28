@@ -97,6 +97,14 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
     assert!(targets.iter().any(|target| {
         target.kind == AppTextKind::AccessibleName && target.text == "Company logo"
     }));
+    assert!(targets.iter().any(|target| {
+        target.kind == AppTextKind::Alt
+            && target.text == "Company logo"
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "company-logo")
+    }));
     assert!(has_selector(&targets, "Save", "save-button"));
     assert!(!targets.iter().any(|t| {
         t.text == "Save changes"
@@ -373,6 +381,15 @@ fn extracts_app_text_targets_from_fixture_jsx_shapes() {
     assert!(targets.iter().any(|target| {
         target.text == "Only title"
             && target.kind == AppTextKind::AccessibleName
+            && target.role.as_deref() == Some("button")
+            && target
+                .selector_refs
+                .iter()
+                .any(|selector| selector.value == "title-only-button")
+    }));
+    assert!(targets.iter().any(|target| {
+        target.text == "Only title"
+            && target.kind == AppTextKind::Title
             && target.role.as_deref() == Some("button")
             && target
                 .selector_refs
