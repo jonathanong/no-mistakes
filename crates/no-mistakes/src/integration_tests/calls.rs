@@ -1,9 +1,12 @@
 use super::types::CallTarget;
 use crate::ast;
+use collector::CallCollector;
 use oxc_ast::ast::{Argument, CallExpression, Expression};
-use oxc_ast_visit::{walk, Visit};
+use oxc_ast_visit::Visit;
 use oxc_span::Span;
 use std::path::Path;
+
+mod collector;
 
 pub(super) fn callback_argument<'a>(
     call: &'a CallExpression<'a>,
@@ -107,57 +110,6 @@ pub(super) fn collect_calls_in_span(source: &str, span: Span, expression: bool) 
         collector.calls
     })
     .unwrap_or_default()
-}
-
-#[derive(Default)]
-struct CallCollector {
-    calls: Vec<CallTarget>,
-    function_depth: usize,
-}
-
-impl<'a> Visit<'a> for CallCollector {
-    fn visit_arrow_function_expression(
-        &mut self,
-        function: &oxc_ast::ast::ArrowFunctionExpression<'a>,
-    ) {
-        if self.function_depth > 0 {
-            return;
-        }
-        self.function_depth += 1;
-        walk::walk_arrow_function_expression(self, function);
-        self.function_depth -= 1;
-    }
-
-    fn visit_function(
-        &mut self,
-        function: &oxc_ast::ast::Function<'a>,
-        flags: oxc_syntax::scope::ScopeFlags,
-    ) {
-        if self.function_depth > 0 {
-            return;
-        }
-        self.function_depth += 1;
-        walk::walk_function(self, function, flags);
-        self.function_depth -= 1;
-    }
-
-    fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        if let Some(path) = ast::expression_path(&call.callee) {
-            if path.len() == 1 {
-                self.calls.push(CallTarget::Local(path[0].clone()));
-            } else if path.len() == 2 {
-                self.calls.push(CallTarget::Namespace {
-                    namespace: path[0].clone(),
-                    member: path[1].clone(),
-                });
-            } else if let Some(local) = path.first() {
-                self.calls.push(CallTarget::Imported {
-                    local: local.clone(),
-                });
-            }
-        }
-        walk::walk_call_expression(self, call);
-    }
 }
 
 pub(super) fn integration_annotation_before(source: &str, span: Span) -> Option<String> {
