@@ -98,18 +98,22 @@ function visitNode(node, callback) {
 
 function childNodes(node) {
   const children = [];
-  for (const [key, value] of Object.entries(node)) {
+  for (const key in node) {
     if (key === "parent" || key === "tokens" || key === "comments") {
       continue;
     }
-    if (Array.isArray(value)) {
-      for (const child of value) {
-        if (isAstNode(child)) {
-          children.push(child);
+    if (Object.prototype.hasOwnProperty.call(node, key)) {
+      const value = node[key];
+      if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; i++) {
+          const child = value[i];
+          if (isAstNode(child)) {
+            children.push(child);
+          }
         }
+      } else if (isAstNode(value)) {
+        children.push(value);
       }
-    } else if (isAstNode(value)) {
-      children.push(value);
     }
   }
   return children;
