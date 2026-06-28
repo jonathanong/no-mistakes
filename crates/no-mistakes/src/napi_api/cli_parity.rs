@@ -64,6 +64,9 @@ pub(crate) fn tests_targets_json_impl(options_json: String) -> napi::Result<Stri
         .map_err(to_napi_error)?
         .context("framework is required")
         .map_err(to_napi_error)?;
+    if options.files.is_empty() {
+        return Err(to_napi_error(anyhow::anyhow!("files is required")));
+    }
     let args = crate::tests::TargetsArgs {
         framework,
         files: options.files.into_iter().map(PathBuf::from).collect(),

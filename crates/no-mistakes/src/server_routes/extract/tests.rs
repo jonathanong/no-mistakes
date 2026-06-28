@@ -147,6 +147,8 @@ fn extract_file_collects_named_handler_query_params() {
     assert_eq!(route_params("/search"), vec!["term"]);
     assert_eq!(route_params("/list"), vec!["page"]);
     assert_eq!(route_params("/delegated"), vec!["page"]);
+    assert_eq!(route_params("/destructured"), vec!["namedParam"]);
+    assert_eq!(route_params("/inline-destructured"), vec!["inlineParam"]);
     assert_eq!(route_params("/exported"), vec!["exported"]);
     assert_eq!(route_params("/defaulted"), vec!["defaulted"]);
 }

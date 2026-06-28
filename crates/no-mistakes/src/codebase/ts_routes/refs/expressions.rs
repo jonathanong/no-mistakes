@@ -129,6 +129,7 @@ fn collect_from_jsx_element<'a>(
                 pattern,
                 file: file.to_string(),
                 line,
+                method: None,
             });
         }
     }

@@ -292,6 +292,24 @@ fn extracts_fetch_local_path() {
 }
 
 #[test]
+fn extracts_fetch_methods_from_options() {
+    let source = r#"
+        fetch('/api/default-options', { headers: {} });
+        fetch('/api/spread-options', { ...defaults, method: "post" });
+        fetch('/api/dynamic-method', { method: methodName });
+    "#;
+    let refs = extract_route_refs(source, "comp.tsx");
+
+    assert_eq!(refs.len(), 3);
+    assert_eq!(refs[0].pattern, "/api/default-options");
+    assert_eq!(refs[0].method.as_deref(), Some("GET"));
+    assert_eq!(refs[1].pattern, "/api/spread-options");
+    assert_eq!(refs[1].method.as_deref(), Some("POST"));
+    assert_eq!(refs[2].pattern, "/api/dynamic-method");
+    assert_eq!(refs[2].method, None);
+}
+
+#[test]
 fn fetch_external_url_skipped() {
     // fetch() to an external URL should NOT be captured.
     let source = r#"fetch('https://api.stripe.com/v1/charges');"#;

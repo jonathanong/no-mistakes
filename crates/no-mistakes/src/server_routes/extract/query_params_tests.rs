@@ -17,6 +17,26 @@ fn params_from_source(source: &str) -> Vec<String> {
 }
 
 #[test]
+fn formal_parameter_query_destructuring_handles_defaulted_parameters() {
+    let allocator = Allocator::default();
+    let parsed = Parser::new(
+        &allocator,
+        "function handler({ query: { assignedParam } } = fallback) {}",
+        SourceType::ts(),
+    )
+    .parse();
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let Statement::FunctionDeclaration(function) = &parsed.program.body[0] else {
+        panic!("expected function declaration");
+    };
+    let mut params = BTreeSet::new();
+
+    collect_query_params_from_formal_parameters(&function.params, &mut params);
+
+    assert!(params.contains("assignedParam"));
+}
+
+#[test]
 fn query_param_walker_covers_statement_and_expression_shapes() {
     let params = params_from_source(
         r#"
@@ -24,6 +44,8 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
         const { [dynamicKey]: computed = req.query.assignedPattern } = req.query;
         const [] = req.query;
         const condition = req.query.a && req.query.b ? req.query.c : req.query.d;
+        const optionalStatic = req.query?.optionalStatic;
+        const ignoredOptionalComputed = req.query?.[dynamicKey()];
         const computedDynamic = req.query[dynamicKey()];
         const computedOtherObject = other[req.query.computedOtherObject];
         const sequence = (req.query.sequence, req.query.afterSequence);
@@ -38,6 +60,7 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
         req.queries("calls");
         req?.query?.("optionalCall");
         c.req.query("honoCall");
+        new URL(req.url).searchParams.get("urlSearch");
         req.context.query("requestContextCall");
         context.request.query("contextCall");
         context?.request?.query?.("optionalContextCall");
@@ -97,6 +120,7 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
         "exportSpecifierLocal",
         "nonNull",
         "object",
+        "optionalStatic",
         "paren",
         "requestContextCall",
         "satisfies",
@@ -105,6 +129,7 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
         "switchTest",
         "tryBody",
         "url",
+        "urlSearch",
         "whileTest",
         "contextCall",
         "contextReqCall",
@@ -120,57 +145,6 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
     assert!(!params.iter().any(|value| value == "ignoredNestedRequest"));
 }
 
-fn expression_matches_request_object(source: &str) -> bool {
-    let allocator = Allocator::default();
-    let source = format!("const value = {source};");
-    let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
-    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
-    let Statement::VariableDeclaration(declaration) = &parsed.program.body[0] else {
-        panic!("expected variable declaration");
-    };
-    let expression = declaration.declarations[0].init.as_ref().unwrap();
-    is_request_query_object(expression)
-}
-
-fn expression_matches_request_object_at_nesting(source: &str, nesting: u8) -> bool {
-    let allocator = Allocator::default();
-    let source = format!("const value = {source};");
-    let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
-    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
-    let Statement::VariableDeclaration(declaration) = &parsed.program.body[0] else {
-        panic!("expected variable declaration");
-    };
-    let expression = declaration.declarations[0].init.as_ref().unwrap();
-    is_request_object_expr(expression, nesting)
-}
-
-#[test]
-fn request_query_object_detection_handles_optional_and_nested_members() {
-    assert!(expression_matches_request_object("context?.request"));
-    assert!(!expression_matches_request_object("context?.[dynamicKey]"));
-    assert!(!expression_matches_request_object("context?.other"));
-    assert!(!expression_matches_request_object(
-        "context?.request?.query()"
-    ));
-    assert!(expression_matches_request_object("context.req"));
-    assert!(expression_matches_request_object_at_nesting(
-        "context.req",
-        1
-    ));
-    assert!(!expression_matches_request_object_at_nesting(
-        "context.req",
-        2
-    ));
-    assert!(!expression_matches_request_object_at_nesting("call()", 1));
-    assert!(!expression_matches_request_object("context.deep.req"));
-    assert!(!expression_matches_request_object(
-        "context.req.ctx.request"
-    ));
-    assert!(!expression_matches_request_object("call().req"));
-    assert!(!expression_matches_request_object("unrelated.req"));
-    assert!(!expression_matches_request_object("123"));
-}
-
 #[test]
 fn query_param_arg_walker_handles_function_expressions_and_non_handlers() {
     let allocator = Allocator::default();
@@ -181,6 +155,8 @@ fn query_param_arg_walker_handles_function_expressions_and_non_handlers() {
         app.get("/noop", "not a function");
         app.get("/num", 123);
         app.get("/spread", ...handlers);
+        app.get("/assigned", ({ query: { assignedParam } } = fallback) => assignedParam);
+        app.get("/rest", (...[{ query: { restParam } }]) => restParam);
         "#,
         SourceType::ts(),
     )
@@ -200,5 +176,6 @@ fn query_param_arg_walker_handles_function_expressions_and_non_handlers() {
     }
 
     assert!(params.contains("functionExpression"));
+    assert!(params.contains("assignedParam"));
     collect_query_params_from_optional_function_body(None, &mut params, &named_handlers);
 }

@@ -13,6 +13,9 @@ fn collect_query_params_from_expression(
         Expression::ComputedMemberExpression(member) => {
             collect_query_params_from_computed_member_expression(member, params, named_handlers);
         }
+        Expression::ChainExpression(chain) => {
+            collect_query_params_from_chain_element(&chain.expression, params, named_handlers);
+        }
         Expression::AssignmentExpression(assign) => {
             collect_query_params_from_expression(&assign.right, params, named_handlers);
         }
@@ -82,6 +85,36 @@ fn collect_query_params_from_expression(
         }
         _ => {}
     }
+}
+
+fn collect_query_params_from_chain_element(
+    chain: &ChainElement<'_>,
+    params: &mut BTreeSet<String>,
+    named_handlers: &HashMap<String, BTreeSet<String>>,
+) {
+    match chain {
+        ChainElement::CallExpression(call) => {
+            collect_query_params_from_call_expression(call, params, named_handlers);
+        }
+        other => {
+            if let Some(member) = other.as_member_expression() {
+                collect_query_params_from_member_expression(member, params, named_handlers);
+            }
+        }
+    }
+}
+
+fn collect_query_params_from_member_expression(
+    member: &oxc_ast::ast::MemberExpression<'_>,
+    params: &mut BTreeSet<String>,
+    named_handlers: &HashMap<String, BTreeSet<String>>,
+) {
+    if let Some(property) = member.static_property_name() {
+        if expression_is_query_object(member.object()) && property != "query" {
+            params.insert(property.to_string());
+        }
+    }
+    collect_query_params_from_expression(member.object(), params, named_handlers);
 }
 
 fn collect_query_params_from_call_expression(

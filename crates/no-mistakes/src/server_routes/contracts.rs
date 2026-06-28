@@ -70,7 +70,7 @@ pub fn analyze_contracts(root: &Path, route_report: &ProjectReport) -> ServerCon
                 continue;
             };
             let route_path = path_without_query(&route_ref.pattern);
-            let matched = matching_route(route_report, &route_path);
+            let matched = matching_route(route_report, &route_path, route_ref.method.as_deref());
             if let Some(route) = matched {
                 let missing = missing_query_params(&query_params, &route.query_params);
                 if !missing.is_empty() {
@@ -115,11 +115,15 @@ pub fn analyze_contracts(root: &Path, route_report: &ProjectReport) -> ServerCon
     }
 }
 
-fn matching_route<'a>(report: &'a ProjectReport, route_path: &str) -> Option<&'a ServerRoute> {
-    report
-        .routes
-        .iter()
-        .find(|route| matcher::matches(route_path, &route.route))
+fn matching_route<'a>(
+    report: &'a ProjectReport,
+    route_path: &str,
+    method: Option<&str>,
+) -> Option<&'a ServerRoute> {
+    report.routes.iter().find(|route| {
+        method.is_none_or(|method| route.method.eq_ignore_ascii_case(method))
+            && matcher::matches(route_path, &route.route)
+    })
 }
 
 fn missing_query_params(client: &[String], server: &[String]) -> Vec<String> {

@@ -22,6 +22,10 @@ function delegated(req, res) {
   res.send("ok");
 }
 
+function destructured({ query: { namedParam } }, res) {
+  res.send("ok");
+}
+
 export default function defaulted(req, res) {
   req.query.defaulted;
   res.send("ok");
@@ -30,5 +34,9 @@ export default function defaulted(req, res) {
 app.get("/search", search);
 app.get("/list", list);
 app.get("/delegated", delegated);
+app.get("/destructured", destructured);
+app.get("/inline-destructured", ({ query: { inlineParam } }, res) => {
+  res.send("ok");
+});
 app.get("/exported", exportedList);
 app.get("/defaulted", defaulted);

@@ -174,3 +174,22 @@ fn tests_targets_napi_reports_project_commands() {
     assert!(targets.iter().any(|target| target["project"] == "browser"));
     assert!(targets.iter().any(|target| target["project"] == "stories"));
 }
+
+#[test]
+fn tests_targets_napi_rejects_missing_files() {
+    for options in [
+        json!({
+            "root": fixture_root("test-plan-project-discovery"),
+            "framework": "vitest"
+        }),
+        json!({
+            "root": fixture_root("test-plan-project-discovery"),
+            "framework": "vitest",
+            "files": []
+        }),
+    ] {
+        let error = crate::napi_api::cli_parity::tests_targets_json_impl(options.to_string())
+            .expect_err("missing files should fail");
+        assert!(error.reason.contains("files is required"));
+    }
+}

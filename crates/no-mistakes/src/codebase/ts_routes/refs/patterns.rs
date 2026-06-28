@@ -32,6 +32,7 @@ fn check_call_for_route_ref(
                             pattern,
                             file: file.to_string(),
                             line,
+                            method: None,
                         });
                     }
                 }
@@ -48,6 +49,7 @@ fn check_call_for_route_ref(
                     pattern,
                     file: file.to_string(),
                     line,
+                    method: None,
                 });
             }
         }
@@ -72,10 +74,29 @@ fn check_call_for_route_ref(
                     pattern,
                     file: file.to_string(),
                     line,
+                    method: fetch_method(&call.arguments),
                 });
             }
         }
     }
+}
+
+fn fetch_method(arguments: &oxc_allocator::Vec<Argument>) -> Option<String> {
+    let Some(Argument::ObjectExpression(options)) = arguments.get(1) else {
+        return Some("GET".to_string());
+    };
+    for property in &options.properties {
+        let ObjectPropertyKind::ObjectProperty(property) = property else {
+            continue;
+        };
+        if property.key.static_name().is_some_and(|name| name == "method") {
+            if let Expression::StringLiteral(value) = &property.value {
+                return Some(value.value.to_ascii_uppercase());
+            }
+            return None;
+        }
+    }
+    Some("GET".to_string())
 }
 
 fn first_arg_pattern(arguments: &oxc_allocator::Vec<Argument>) -> Option<String> {
