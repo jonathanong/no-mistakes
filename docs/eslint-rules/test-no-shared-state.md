@@ -27,5 +27,5 @@ myTest.describe("suite", () => {
 ```
 
 Shadowing caveat: local variables that shadow imported or extended test aliases
-are ignored so helper parameters named `test` or `myTest` do not become test
-callbacks accidentally.
+are ignored, so helper parameters named `test` or `myTest` do not accidentally
+become test callbacks.
