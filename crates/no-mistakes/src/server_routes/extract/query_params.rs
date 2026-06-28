@@ -1,7 +1,7 @@
 use oxc_ast::ast::{
     Argument, BindingPattern, ChainElement, Expression, FunctionBody, ObjectPropertyKind, Statement,
 };
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 
 use super::ServerRouteVisitor;
 
@@ -9,25 +9,52 @@ impl ServerRouteVisitor<'_> {
     pub(super) fn query_params_from_call(
         &self,
         call: &oxc_ast::ast::CallExpression<'_>,
+        named_handlers: &HashMap<String, BTreeSet<String>>,
     ) -> Vec<String> {
         let mut params = BTreeSet::new();
         for arg in &call.arguments {
-            collect_query_params_from_arg(arg, &mut params);
+            collect_query_params_from_arg(arg, &mut params, named_handlers);
         }
         params.into_iter().collect()
     }
+
+    pub(super) fn query_params_from_function_body(
+        &self,
+        body: &'_ [Statement<'_>],
+        named_handlers: &HashMap<String, BTreeSet<String>>,
+    ) -> BTreeSet<String> {
+        let mut params = BTreeSet::new();
+        for statement in body {
+            collect_query_params_from_statement(statement, &mut params, named_handlers);
+        }
+        params
+    }
 }
 
-fn collect_query_params_from_arg(arg: &Argument<'_>, params: &mut BTreeSet<String>) {
+fn collect_query_params_from_arg(
+    arg: &Argument<'_>,
+    params: &mut BTreeSet<String>,
+    named_handlers: &HashMap<String, BTreeSet<String>>,
+) {
+    if let Argument::Identifier(id) = arg {
+        if let Some(handler_params) = named_handlers.get(id.name.as_str()) {
+            params.extend(handler_params.iter().cloned());
+        }
+        return;
+    }
     if let Some(expr) = arg.as_expression() {
         match expr {
             Expression::ArrowFunctionExpression(arrow) => {
                 for statement in &arrow.body.statements {
-                    collect_query_params_from_statement(statement, params);
+                    collect_query_params_from_statement(statement, params, named_handlers);
                 }
             }
             Expression::FunctionExpression(function) => {
-                collect_query_params_from_optional_function_body(function.body.as_ref(), params);
+                collect_query_params_from_optional_function_body(
+                    function.body.as_ref(),
+                    params,
+                    named_handlers,
+                );
             }
             _ => {}
         }
@@ -37,10 +64,11 @@ fn collect_query_params_from_arg(arg: &Argument<'_>, params: &mut BTreeSet<Strin
 fn collect_query_params_from_optional_function_body(
     body: Option<&oxc_allocator::Box<'_, FunctionBody<'_>>>,
     params: &mut BTreeSet<String>,
+    named_handlers: &HashMap<String, BTreeSet<String>>,
 ) {
     if let Some(body) = body {
         for statement in &body.statements {
-            collect_query_params_from_statement(statement, params);
+            collect_query_params_from_statement(statement, params, named_handlers);
         }
     }
 }

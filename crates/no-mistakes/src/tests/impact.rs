@@ -32,6 +32,7 @@ pub(crate) fn run(args: ImpactArgs) -> Result<ExitCode> {
             }
         }
         PlanFormat::Commands => {
+            crate::tests::targets::ensure_plan_commands_available(&plan, "tests impact")?;
             for command in crate::tests::targets::commands_for_plan(&plan) {
                 println!("{command}");
             }

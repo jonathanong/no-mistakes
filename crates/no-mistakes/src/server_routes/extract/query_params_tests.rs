@@ -2,14 +2,16 @@ use super::*;
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
+use std::collections::HashMap;
 
 fn params_from_source(source: &str) -> Vec<String> {
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
     let mut params = BTreeSet::new();
+    let named_handlers = HashMap::new();
     for statement in &parsed.program.body {
-        collect_query_params_from_statement(statement, &mut params);
+        collect_query_params_from_statement(statement, &mut params, &named_handlers);
     }
     params.into_iter().collect()
 }
@@ -124,17 +126,18 @@ fn query_param_arg_walker_handles_function_expressions_and_non_handlers() {
     .parse();
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
     let mut params = BTreeSet::new();
+    let named_handlers = HashMap::new();
 
     for statement in &parsed.program.body {
         if let Statement::ExpressionStatement(statement) = statement {
             if let Expression::CallExpression(call) = &statement.expression {
                 for arg in &call.arguments {
-                    collect_query_params_from_arg(arg, &mut params);
+                    collect_query_params_from_arg(arg, &mut params, &named_handlers);
                 }
             }
         }
     }
 
     assert!(params.contains("functionExpression"));
-    collect_query_params_from_optional_function_body(None, &mut params);
+    collect_query_params_from_optional_function_body(None, &mut params, &named_handlers);
 }

@@ -131,3 +131,20 @@ fn default_export_non_identifier_is_ignored() {
 
     assert_eq!(facts.exports["default"], "default");
 }
+
+#[test]
+fn extract_file_collects_named_handler_query_params() {
+    let facts = extract_file(&fixture("named-query-handlers.ts")).unwrap();
+
+    let route_params = |path: &str| {
+        facts
+            .routes
+            .iter()
+            .find(|route| route.raw_path == path)
+            .map(|route| route.query_params.clone())
+            .unwrap_or_else(|| panic!("missing route {path}"))
+    };
+    assert_eq!(route_params("/search"), vec!["term"]);
+    assert_eq!(route_params("/list"), vec!["page"]);
+    assert_eq!(route_params("/delegated"), vec!["page"]);
+}

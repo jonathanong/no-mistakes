@@ -3,6 +3,7 @@ mod commonjs;
 mod helpers;
 mod imports;
 mod literals;
+mod named_handlers;
 mod query_params;
 mod records;
 mod shape;
@@ -13,7 +14,7 @@ use oxc_ast::ast::{
     ImportOrExportKind, ModuleExportName, TSImportEqualsDeclaration,
 };
 use oxc_ast_visit::{walk, Visit};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::Path;
 
 pub(crate) use bindings::is_client_http_module;
@@ -29,6 +30,7 @@ pub(crate) fn extract_program(
     program: &oxc_ast::ast::Program<'_>,
 ) -> FileFacts {
     let mut visitor = ServerRouteVisitor::new(path, source);
+    visitor.pre_collect_named_handlers(program);
     visitor.visit_program(program);
     visitor.facts
 }
@@ -44,6 +46,7 @@ pub(super) struct ServerRouteVisitor<'a> {
     pub(super) path_match_names: HashSet<String>,
     pub(super) api_server_names: HashSet<String>,
     pub(super) client_http_names: HashSet<String>,
+    pub(super) named_handler_query_params: HashMap<String, BTreeSet<String>>,
 }
 
 impl<'a> Visit<'a> for ServerRouteVisitor<'a> {
@@ -173,6 +176,7 @@ impl<'a> ServerRouteVisitor<'a> {
             path_match_names: HashSet::new(),
             api_server_names: HashSet::new(),
             client_http_names: HashSet::new(),
+            named_handler_query_params: HashMap::new(),
         }
     }
 }

@@ -100,6 +100,49 @@ fn tests_plan_json_outputs_impacted_tests() {
 }
 
 #[test]
+fn tests_plan_commands_format_requires_execution_targets() {
+    let root = fixture("tests-impact");
+    let output = run(&[
+        "tests",
+        "plan",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "c.mts",
+        "--format",
+        "commands",
+    ]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains(
+        "`tests plan --format commands` requires selected tests to include framework execution targets"
+    ));
+    assert!(stdout(&output).is_empty());
+}
+
+#[test]
+fn tests_impact_commands_format_requires_execution_targets() {
+    let root = fixture("tests-impact");
+    let output = run(&[
+        "tests",
+        "impact",
+        "--root",
+        root.to_str().unwrap(),
+        "c.mts",
+        "--format",
+        "commands",
+    ]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains(
+        "`tests impact --format commands` requires selected tests to include framework execution targets"
+    ));
+    assert!(stdout(&output).is_empty());
+}
+
+#[test]
 fn tests_plan_ignores_deleted_changed_files() {
     let root = fixture("tests-impact");
     let output = run(&[

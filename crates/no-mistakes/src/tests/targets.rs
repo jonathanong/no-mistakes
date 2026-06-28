@@ -105,6 +105,19 @@ pub(crate) fn commands_for_plan(plan: &TestPlan) -> Vec<String> {
     commands
 }
 
+pub(crate) fn ensure_plan_commands_available(plan: &TestPlan, command: &str) -> Result<()> {
+    if plan
+        .selected_tests
+        .iter()
+        .any(|test| test.targets.is_empty())
+    {
+        bail!(
+            "`{command} --format commands` requires selected tests to include framework execution targets.\n"
+        );
+    }
+    Ok(())
+}
+
 fn render_targets(report: &TestsTargetsReport, format: TargetsFormat) -> Result<String> {
     Ok(match format {
         TargetsFormat::Json => format!("{}\n", serde_json::to_string_pretty(report)?),
