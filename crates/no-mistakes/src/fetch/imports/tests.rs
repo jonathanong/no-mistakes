@@ -79,3 +79,77 @@ fn test_collect_imports_from_program() {
     })
     .unwrap();
 }
+
+#[test]
+fn test_is_import_used() {
+    let source = r#"
+        import './side_effect';
+        import DefaultImport from './default';
+        import * as NamespaceImport from './namespace';
+        import { NamedImport } from './named';
+        import { UnusedImport } from './unused';
+        import { Used, Unused2 } from './mixed';
+    "#;
+
+    let path = std::path::PathBuf::from("dummy.ts");
+
+    ast::with_program(&path, source, |program, _| {
+        let mut referenced_identifiers = HashSet::new();
+        referenced_identifiers.insert("DefaultImport".to_string());
+        referenced_identifiers.insert("NamespaceImport".to_string());
+        referenced_identifiers.insert("NamedImport".to_string());
+        referenced_identifiers.insert("Used".to_string());
+
+        let imports: Vec<_> = program
+            .body
+            .iter()
+            .filter_map(|stmt| {
+                if let oxc_ast::ast::Statement::ImportDeclaration(import) = stmt {
+                    Some(import)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        assert_eq!(imports.len(), 6);
+
+        // 1. Side-effect import (no specifiers) -> always considered used
+        assert!(
+            is_import_used(imports[0], &referenced_identifiers),
+            "Side-effect import should be used"
+        );
+
+        // 2. Default import -> used
+        assert!(
+            is_import_used(imports[1], &referenced_identifiers),
+            "Default import should be used"
+        );
+
+        // 3. Namespace import -> used
+        assert!(
+            is_import_used(imports[2], &referenced_identifiers),
+            "Namespace import should be used"
+        );
+
+        // 4. Named import -> used
+        assert!(
+            is_import_used(imports[3], &referenced_identifiers),
+            "Named import should be used"
+        );
+
+        // 5. Unused import -> not used
+        assert!(
+            !is_import_used(imports[4], &referenced_identifiers),
+            "Unused import should NOT be used"
+        );
+
+        // 6. Mixed import (one used, one unused) -> used
+        assert!(
+            is_import_used(imports[5], &referenced_identifiers),
+            "Mixed import should be used"
+        );
+
+    })
+    .unwrap();
+}
