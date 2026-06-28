@@ -1151,6 +1151,14 @@ describe("no-global-fetch-outside-helper", () => {
       destructured("/api/destructured");
       ({ fetch: destructured } = client);
       destructured("/api/client");
+      let blockAssigned;
+      {
+        blockAssigned = self.fetch;
+      }
+      blockAssigned("/api/block");
+      var repeated = fetch;
+      var repeated;
+      repeated("/api/repeated");
       const nonFetchAlias = 1;
       let reassigned = fetch;
       reassigned = nonFetchAlias;
@@ -1162,8 +1170,14 @@ describe("no-global-fetch-outside-helper", () => {
       request("/api/outer");
       const apiFetch = request;
       apiFetch("/api/const-from-mutable");
+      let conditional = fetch;
+      if (useClient) conditional = client.fetch;
+      conditional("/api/conditional");
     `;
     assert.deepEqual(messages(code, "no-global-fetch-outside-helper", option, "web/app/users.ts"), [
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
       "globalFetch",
       "globalFetch",
       "globalFetch",
