@@ -68,6 +68,11 @@ describe("async-enqueue-disposition", () => {
         "disposition",
         "disposition",
         "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
+        "disposition",
       ],
     );
   });
@@ -128,6 +133,8 @@ describe("async-try-catch-return-await", () => {
         "invalid.ts",
       ),
       [
+        "awaitReturn",
+        "awaitReturn",
         "awaitReturn",
         "awaitReturn",
         "awaitReturn",

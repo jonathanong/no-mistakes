@@ -3,6 +3,8 @@ import * as jobs from "@app/jobs";
 
 const queue = require("@app/jobs");
 const { enqueuePush } = require("@app/jobs");
+const typedQueue = require("@app/jobs") as Jobs;
+const { enqueueEmail: enqueueFallback = noop } = require("@app/jobs") as Jobs;
 
 export async function worker(id: string) {
   enqueueEmail(id);
@@ -10,8 +12,12 @@ export async function worker(id: string) {
   jobs.enqueueSms(id);
   jobs["enqueueSms"](id);
   queue.enqueuePush(id);
+  typedQueue.enqueueEmail(id);
   enqueuePush(id);
+  enqueueFallback(id);
   enqueueDefault(id);
+  void enqueueEmail(id).catch;
+  await enqueueEmail(id).status;
 }
 
 export async function fanout(items: string[]) {
@@ -40,4 +46,5 @@ const { enqueueLater } = require("@app/jobs");
 
 export function inlineRequire(id: string) {
   require("@app/jobs").enqueueEmail(id);
+  (require("@app/jobs") as Jobs).enqueueEmail(id);
 }

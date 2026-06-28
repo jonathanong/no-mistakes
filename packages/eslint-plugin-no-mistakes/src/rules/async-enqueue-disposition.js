@@ -2,12 +2,12 @@
 
 const { rule } = require("../helpers");
 const {
-  createTargetMatcher,
+  findContainingFunction,
   isFunction,
   isTransparentExpression,
-  memberPropertyName,
   unwrapTransparentParent,
-} = require("./async-targets");
+} = require("./async-ast");
+const { createTargetMatcher, memberPropertyName } = require("./async-targets");
 
 function isPromiseAllCall(node) {
   return (
@@ -34,14 +34,6 @@ function directlyDisposed(node) {
     parent?.type === "AwaitExpression" ||
     (parent?.type === "UnaryExpression" && parent.operator === "void")
   );
-}
-
-function findContainingFunction(node) {
-  let current = node.parent;
-  while (current) {
-    if (isFunction(current)) return current;
-    current = current.parent;
-  }
 }
 
 function isCallArgument(node) {
@@ -114,7 +106,12 @@ function observedExpression(node) {
       current = parent;
       continue;
     }
-    if (parent.type === "MemberExpression" && parent.object === current) {
+    if (
+      parent.type === "MemberExpression" &&
+      parent.object === current &&
+      parent.parent?.type === "CallExpression" &&
+      parent.parent.callee === parent
+    ) {
       current = parent;
       continue;
     }
@@ -131,7 +128,11 @@ function promiseAllDisposed(node) {
   let current = node.parent;
   while (current) {
     if (isPromiseAllCall(current) && canReachPromiseAll(node, current)) {
-      return directlyDisposed(current) || promiseAllDisposed(current);
+      return (
+        directlyDisposed(current) ||
+        directlyDisposed(observedExpression(current)) ||
+        promiseAllDisposed(current)
+      );
     }
     current = current.parent;
   }

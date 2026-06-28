@@ -48,6 +48,29 @@ export async function blockAlias() {
   }
 }
 
+export async function conditionalAwait(warm: boolean) {
+  try {
+    const result = request();
+    if (warm) await result;
+    return result;
+  } catch (error) {
+    handleRateLimit(error);
+  }
+}
+
+export async function nestedFunctionWrite(cached: string) {
+  try {
+    let result = request();
+    function reset() {
+      result = cached;
+    }
+    void reset;
+    return result;
+  } catch (error) {
+    handleRateLimit(error);
+  }
+}
+
 export async function namespaceHandler() {
   try {
     return request();

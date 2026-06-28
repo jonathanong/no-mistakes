@@ -1,7 +1,8 @@
 "use strict";
 
 const { rule } = require("../helpers");
-const { createTargetMatcher, isFunction, unwrapExpression } = require("./async-targets");
+const { findContainingFunction, traverse, unwrapExpression } = require("./async-ast");
+const { createTargetMatcher } = require("./async-targets");
 
 function isAwaited(node) {
   return node?.type === "AwaitExpression";
@@ -22,34 +23,6 @@ function mayReturnPromise(node) {
   );
 }
 
-function findContainingFunction(node) {
-  let current = node.parent;
-  while (current) {
-    if (isFunction(current)) return current;
-    current = current.parent;
-  }
-}
-
-function visitorKeys(context, node) {
-  return context.sourceCode.visitorKeys[node.type] || [];
-}
-
-function traverse(context, node, visit, root = node) {
-  if (!node) return;
-  if (node !== root && isFunction(node)) return;
-  visit(node);
-  for (const key of visitorKeys(context, node)) {
-    const value = node[key];
-    if (Array.isArray(value)) {
-      for (const child of value) {
-        if (child?.type) traverse(context, child, visit, root);
-      }
-    } else if (value?.type) {
-      traverse(context, value, visit, root);
-    }
-  }
-}
-
 function variableName(node) {
   return node?.type === "Identifier" ? node.name : null;
 }
@@ -65,11 +38,13 @@ function resolveVariable(node, context) {
 
 function isReassignedBeforeReturn(variable, node, allowedWrite) {
   const definitionNames = new Set(variable.defs.map((def) => def.name));
+  const containingFunction = findContainingFunction(node);
   return variable.references.some(
     (reference) =>
       reference.isWrite() &&
       !definitionNames.has(reference.identifier) &&
       reference.identifier !== allowedWrite &&
+      findContainingFunction(reference.identifier) === containingFunction &&
       reference.identifier.range[0] < node.range[0],
   );
 }
@@ -86,6 +61,25 @@ function shouldParenthesizeAwaitArgument(node) {
     expression.type === "ConditionalExpression" ||
     expression.type === "LogicalExpression"
   );
+}
+
+function isUnconditionalBeforeReturn(node, block) {
+  let current = node;
+  while (current && current !== block) {
+    const parent = current.parent;
+    if (!parent || parent.type === "IfStatement" || parent.type.endsWith("Expression")) {
+      return false;
+    }
+    if (
+      parent.type.endsWith("Statement") &&
+      parent.type !== "ExpressionStatement" &&
+      parent.type !== "BlockStatement"
+    ) {
+      return false;
+    }
+    current = parent;
+  }
+  return current === block;
 }
 
 module.exports = rule(
@@ -172,7 +166,7 @@ module.exports = rule(
         }
         if (child.type === "AwaitExpression") {
           const argument = unwrapExpression(child.argument);
-          if (argument.type === "Identifier") {
+          if (argument.type === "Identifier" && isUnconditionalBeforeReturn(child, node.block)) {
             const variable = resolveVariable(argument, context);
             if (variable) promiseAliases.delete(variable);
           }

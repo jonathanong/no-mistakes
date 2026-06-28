@@ -1,38 +1,7 @@
 "use strict";
 
+const { unwrapExpression } = require("./async-ast");
 const { propertyName } = require("./module-mock-helpers");
-
-const transparentExpressionTypes = new Set([
-  "ChainExpression",
-  "TSNonNullExpression",
-  "TSAsExpression",
-  "TSTypeAssertion",
-  "TSSatisfiesExpression",
-]);
-
-function isFunction(node) {
-  return (
-    node?.type === "ArrowFunctionExpression" ||
-    node?.type === "FunctionDeclaration" ||
-    node?.type === "FunctionExpression"
-  );
-}
-
-function isTransparentExpression(node) {
-  return transparentExpressionTypes.has(node?.type);
-}
-
-function unwrapExpression(node) {
-  let current = node;
-  while (isTransparentExpression(current)) current = current.expression;
-  return current;
-}
-
-function unwrapTransparentParent(node) {
-  let current = node;
-  while (isTransparentExpression(current.parent)) current = current.parent;
-  return current;
-}
 
 function safeRegExp(source) {
   try {
@@ -82,12 +51,18 @@ function importSpecifierName(specifier) {
 }
 
 function requireSource(node) {
-  return node?.type === "CallExpression" &&
-    node.callee.type === "Identifier" &&
-    node.callee.name === "require" &&
-    typeof node.arguments[0]?.value === "string"
-    ? node.arguments[0].value
+  const expression = unwrapExpression(node);
+  return expression?.type === "CallExpression" &&
+    expression.callee.type === "Identifier" &&
+    expression.callee.name === "require" &&
+    typeof expression.arguments[0]?.value === "string"
+    ? expression.arguments[0].value
     : null;
+}
+
+function bindingIdentifier(node) {
+  if (node?.type === "Identifier") return node;
+  return node?.type === "AssignmentPattern" && node.left.type === "Identifier" ? node.left : null;
 }
 
 function memberPropertyName(node) {
@@ -126,7 +101,7 @@ function createTargetMatcher(context) {
     if (node.id.type === "ObjectPattern") {
       for (const property of node.id.properties) {
         if (property.type !== "Property") continue;
-        recordDirect(property.value, source, propertyName(property.key));
+        recordDirect(bindingIdentifier(property.value), source, propertyName(property.key));
       }
     }
   }
@@ -190,9 +165,5 @@ function createTargetMatcher(context) {
 
 module.exports = {
   createTargetMatcher,
-  isFunction,
-  isTransparentExpression,
   memberPropertyName,
-  unwrapExpression,
-  unwrapTransparentParent,
 };

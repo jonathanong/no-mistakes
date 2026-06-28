@@ -5,6 +5,7 @@ import * as otherJobs from "@other/jobs";
 const queue = require("@app/jobs");
 const { enqueuePush } = require("@app/jobs");
 const { ...rest } = require("@app/jobs");
+const typedQueue = require("@app/jobs") as Jobs;
 
 export async function worker(items: string[]) {
   await enqueueEmail(items[0]);
@@ -20,10 +21,12 @@ export async function fanout(items: string[]) {
 
 export async function explicitDiscard(id: string) {
   void enqueuePush(id);
+  await typedQueue.enqueueEmail(id);
   void Promise.all([queue.enqueuePush(id), enqueueDefault(id)]);
   void (enqueueEmail(id) as Promise<void>);
   await enqueueEmail(id).catch(logError);
   void enqueueEmail(id).catch(logError);
+  await Promise.all([enqueueEmail(id)]).catch(logError);
 }
 
 export async function blockCallback(items: string[]) {
