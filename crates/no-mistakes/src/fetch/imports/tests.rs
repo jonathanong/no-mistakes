@@ -65,7 +65,10 @@ fn test_collect_imports_from_program() {
 
         assert_eq!(imports.len(), 3);
 
-        let import_strs: Vec<_> = imports.iter().map(|p| p.to_string_lossy().to_string()).collect();
+        let import_strs: Vec<_> = imports
+            .iter()
+            .map(|p| p.to_string_lossy().to_string())
+            .collect();
         assert!(import_strs.iter().any(|s| s.contains("runtime_import")));
         assert!(import_strs.iter().any(|s| s.contains("runtime_export")));
         assert!(import_strs.iter().any(|s| s.contains("runtime_export_all")));
