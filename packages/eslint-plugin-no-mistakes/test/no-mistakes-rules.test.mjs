@@ -1074,3 +1074,182 @@ describe("server-require-nullable-fetch-wrapper", () => {
     );
   });
 });
+
+describe("no-global-fetch-outside-helper", () => {
+  const option = {
+    checkedPathPatterns: ["web/**"],
+    allowedPathPatterns: ["web/lib/api/**", "web/lib/client/**"],
+  };
+
+  it("reports global fetch calls in checked non-helper files", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("no-global-fetch-outside-helper", "invalid.ts"),
+        "no-global-fetch-outside-helper",
+        option,
+        "web/app/users.ts",
+      ),
+      Array(19).fill("globalFetch"),
+    );
+  });
+
+  it("allows configured helper paths and unchecked paths", () => {
+    const code = ruleFixture("no-global-fetch-outside-helper", "invalid.ts");
+    assert.deepEqual(
+      messages(code, "no-global-fetch-outside-helper", option, "web/lib/api/users.ts"),
+      [],
+    );
+    assert.deepEqual(
+      messages(code, "no-global-fetch-outside-helper", option, "backend/jobs/users.ts"),
+      [],
+    );
+  });
+
+  it("ignores local fetch bindings, global-root shadows, and reduced-fidelity aliases", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("no-global-fetch-outside-helper", "valid.ts"),
+        "no-global-fetch-outside-helper",
+        option,
+        "web/app/users.ts",
+      ),
+      [],
+    );
+  });
+
+  it("covers helper fallback branches", () => {
+    const { __test } = require("../src/rules/no-global-fetch-outside-helper");
+    const aliasVariable = { name: "request", defs: [{ type: "Variable" }] };
+    const aliasContext = {
+      sourceCode: {
+        getScope: () => ({
+          set: new Map([
+            ["request", aliasVariable],
+            ["window", { name: "window", defs: [{ type: "Variable" }] }],
+          ]),
+          upper: null,
+        }),
+      },
+    };
+    assert.equal(__test.isGlobalFetchExpression(null, aliasContext, new Set()), false);
+    assert.equal(
+      __test.isGlobalFetchExpression(
+        {
+          type: "ChainExpression",
+          expression: {
+            type: "MemberExpression",
+            computed: false,
+            object: { type: "Identifier", name: "self" },
+            property: { type: "Identifier", name: "fetch" },
+          },
+        },
+        { sourceCode: { getScope: () => ({ set: new Map(), upper: null }) } },
+        new Set(),
+      ),
+      true,
+    );
+    assert.equal(
+      __test.unwrapTSAndChain({
+        type: "TSTypeAssertion",
+        expression: {
+          type: "TSNonNullExpression",
+          expression: {
+            type: "TSSatisfiesExpression",
+            expression: {
+              type: "TSInstantiationExpression",
+              expression: { type: "Identifier", name: "fetch" },
+            },
+          },
+        },
+      }).name,
+      "fetch",
+    );
+    assert.equal(
+      __test.isGlobalFetchExpression(
+        { type: "Identifier", name: "request" },
+        aliasContext,
+        new Set([aliasVariable]),
+      ),
+      true,
+    );
+    assert.equal(
+      __test.isGlobalFetchExpression(
+        { type: "Identifier", name: "request" },
+        aliasContext,
+        new Set(),
+      ),
+      false,
+    );
+    assert.equal(
+      __test.isGlobalFetchMember(
+        {
+          type: "MemberExpression",
+          computed: false,
+          object: { type: "Identifier", name: "window" },
+          property: { type: "Identifier", name: "fetch" },
+        },
+        aliasContext,
+      ),
+      false,
+    );
+    assert.equal(
+      __test.isGlobalFetchMember(
+        {
+          type: "MemberExpression",
+          computed: false,
+          object: { type: "Identifier", name: "self" },
+          property: { type: "Identifier", name: "postMessage" },
+        },
+        aliasContext,
+      ),
+      false,
+    );
+    assert.equal(
+      __test.hasLocalBinding(
+        { type: "Identifier", name: "fetch" },
+        {
+          sourceCode: {
+            getScope: () => ({
+              variables: [{ name: "fetch", defs: [{ type: "Variable" }] }],
+              upper: null,
+            }),
+          },
+        },
+      ),
+      true,
+    );
+    assert.equal(
+      __test.hasLocalBinding(null, { sourceCode: { getScope: () => ({ upper: null }) } }),
+      false,
+    );
+    assert.equal(
+      __test.hasLocalBinding(
+        { type: "Identifier", name: "missing" },
+        {
+          sourceCode: {
+            getScope: () => ({
+              variables: [{ name: "other", defs: [{ type: "Variable" }] }],
+              upper: null,
+            }),
+          },
+        },
+      ),
+      false,
+    );
+    assert.deepEqual(
+      __test.bindingIdentifier({
+        type: "AssignmentPattern",
+        left: { type: "Identifier", name: "fetchAlias" },
+      }),
+      { type: "Identifier", name: "fetchAlias" },
+    );
+    assert.equal(__test.bindingIdentifier({ type: "RestElement" }), null);
+    assert.equal(
+      __test.shouldCheckFile("web/app/users.ts", {
+        checkedPathPatterns: ["web/**"],
+        allowedPathPatterns: ["web/app/**"],
+      }),
+      false,
+    );
+  });
+});
