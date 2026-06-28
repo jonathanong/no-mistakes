@@ -215,6 +215,31 @@ jobs:
 }
 
 #[test]
+fn workflow_level_filters_reject_invalid_trigger_shapes() {
+    let root = fixture_root("fixture");
+    let source = r#"
+on: 1
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    steps:
+      - id: selected
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - "src/**"
+"#;
+
+    let (filters, findings) =
+        extract_filters_from_workflow(&root, ".github/workflows/ci.yml", source, &[]);
+
+    assert!(findings.is_empty());
+    assert_eq!(filters.len(), 1);
+    assert!(!filters[0].workflow_allows("src/index.ts"));
+}
+
+#[test]
 fn workflow_level_filters_reject_tag_only_push_triggers() {
     let root = fixture_root("fixture");
     let source = r#"
@@ -240,6 +265,61 @@ jobs:
     assert!(findings.is_empty());
     assert_eq!(filters.len(), 1);
     assert!(!filters[0].workflow_allows("src/index.ts"));
+}
+
+#[test]
+fn workflow_level_filters_allow_branch_push_without_path_filters() {
+    let root = fixture_root("fixture");
+    let source = r#"
+on:
+  push:
+    branches:
+      - main
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    steps:
+      - id: selected
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - "src/**"
+"#;
+
+    let (filters, findings) =
+        extract_filters_from_workflow(&root, ".github/workflows/ci.yml", source, &[]);
+
+    assert!(findings.is_empty());
+    assert_eq!(filters.len(), 1);
+    assert!(filters[0].workflow_allows("src/index.ts"));
+}
+
+#[test]
+fn workflow_level_filters_allow_empty_path_lists_as_unrestricted() {
+    let root = fixture_root("fixture");
+    let source = r#"
+on:
+  pull_request:
+    paths: []
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    steps:
+      - id: selected
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - "src/**"
+"#;
+
+    let (filters, findings) =
+        extract_filters_from_workflow(&root, ".github/workflows/ci.yml", source, &[]);
+
+    assert!(findings.is_empty());
+    assert_eq!(filters.len(), 1);
+    assert!(filters[0].workflow_allows("src/index.ts"));
 }
 
 #[test]
