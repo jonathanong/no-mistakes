@@ -1185,6 +1185,15 @@ describe("no-global-fetch-outside-helper", () => {
       } else {
         branchIsolated("/api/branch-isolated");
       }
+      let switchAlias = fetch;
+      switch (kind) {
+        case "client":
+          switchAlias = client.fetch;
+          break;
+        case "load":
+          switchAlias("/api/switch-alias");
+          break;
+      }
       let maybeGlobal = client.fetch;
       if (useGlobal) maybeGlobal = fetch;
       maybeGlobal("/api/not-definitely-global");
@@ -1220,6 +1229,12 @@ describe("no-global-fetch-outside-helper", () => {
       if ((ifTestAlias = fetch)) {
         ifTestAlias("/api/if-test");
       }
+      let conditionalClear = fetch;
+      (conditionalClear = client.fetch) ? noop() : noop();
+      conditionalClear("/api/conditional-clear");
+      let logicalClear = fetch;
+      (logicalClear = client.fetch) && noop();
+      logicalClear("/api/logical-clear");
       let finallyAlias = client.fetch;
       try {
         risky();
@@ -1239,6 +1254,19 @@ describe("no-global-fetch-outside-helper", () => {
       forInit("/api/for-init");
       for (var declaredForInit = fetch; false;) {}
       declaredForInit("/api/declared-for-init");
+      let doAlias = client.fetch;
+      do {
+        doAlias = fetch;
+      } while (false);
+      doAlias("/api/do-alias");
+      let doCleared = fetch;
+      do {
+        doCleared = client.fetch;
+      } while (false);
+      doCleared("/api/do-cleared");
+      let lateAssigned;
+      lateAssigned("/api/late-before-assignment");
+      lateAssigned = fetch;
       function destructuredAssignedForwardLoad() {
         return destructuredAssignedForwardRequest("/api/destructured-assigned-forward");
       }
@@ -1287,6 +1315,8 @@ describe("no-global-fetch-outside-helper", () => {
       "globalFetch",
       "globalFetch",
       "globalFetch",
+      "globalFetch",
+      "globalFetch",
     ]);
   });
 
@@ -1308,6 +1338,17 @@ describe("no-global-fetch-outside-helper", () => {
     assert.deepEqual(
       messages(valueImportCode, "no-global-fetch-outside-helper", option, "web/app/users.ts"),
       [],
+    );
+
+    const ambientCode = `
+      declare const fetch: typeof globalThis.fetch;
+      declare const window: Window;
+      fetch("/api/ambient-fetch");
+      window.fetch("/api/ambient-window");
+    `;
+    assert.deepEqual(
+      messages(ambientCode, "no-global-fetch-outside-helper", option, "web/app/users.ts"),
+      ["globalFetch", "globalFetch"],
     );
   });
 
@@ -1417,6 +1458,10 @@ describe("no-global-fetch-outside-helper", () => {
       false,
     );
     assert.equal(__test.isRuntimeBinding({ type: "Type" }), false);
+    assert.equal(
+      __test.isAmbientDeclaration({ type: "Variable", parent: { declare: true } }),
+      true,
+    );
     assert.doesNotThrow(() =>
       __test.setObjectPatternFetchAliases(
         { type: "Identifier", name: "request" },

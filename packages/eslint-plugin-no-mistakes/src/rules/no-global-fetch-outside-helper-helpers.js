@@ -46,9 +46,13 @@ function hasLocalBinding(node, context) {
 }
 
 function isRuntimeBinding(def) {
-  if (LOCAL_BINDING_TYPES.has(def.type)) return true;
+  if (LOCAL_BINDING_TYPES.has(def.type)) return !isAmbientDeclaration(def);
   if (def.type !== "ImportBinding") return false;
   return def.node?.importKind !== "type" && def.parent?.importKind !== "type";
+}
+
+function isAmbientDeclaration(def) {
+  return def.node?.declare === true || def.parent?.declare === true;
 }
 
 function unwrapTSAndChain(node) {
@@ -193,6 +197,7 @@ module.exports = {
   collectVariableDeclarators,
   hasLocalBinding,
   isRuntimeBinding,
+  isAmbientDeclaration,
   isGlobalFetchExpression,
   isGlobalFetchMember,
   isAlwaysExecutedChild,

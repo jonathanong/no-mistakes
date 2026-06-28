@@ -38,7 +38,9 @@ module.exports = Object.assign(
       const options = context.options?.[0] ?? {};
       if (!shouldCheckFile(context.filename, options)) return {};
       let aliases = new Set();
+      const forwardAliases = new Set();
       const aliasStack = [];
+      let functionDepth = 0;
 
       function pushAliasScope() {
         aliasStack.push(aliases);
@@ -47,6 +49,20 @@ module.exports = Object.assign(
 
       function popAliasScope() {
         aliases = aliasStack.pop();
+      }
+
+      function pushFunctionScope() {
+        functionDepth += 1;
+        pushAliasScope();
+      }
+
+      function popFunctionScope() {
+        popAliasScope();
+        functionDepth -= 1;
+      }
+
+      function activeAliases() {
+        return functionDepth === 0 ? aliases : new Set([...forwardAliases, ...aliases]);
       }
 
       function recordForInitializer(node) {
@@ -63,14 +79,14 @@ module.exports = Object.assign(
 
       return {
         Program(node) {
-          collectFetchAliases(node, context, aliases);
+          collectFetchAliases(node, context, forwardAliases);
         },
-        FunctionDeclaration: pushAliasScope,
-        "FunctionDeclaration:exit": popAliasScope,
-        FunctionExpression: pushAliasScope,
-        "FunctionExpression:exit": popAliasScope,
-        ArrowFunctionExpression: pushAliasScope,
-        "ArrowFunctionExpression:exit": popAliasScope,
+        FunctionDeclaration: pushFunctionScope,
+        "FunctionDeclaration:exit": popFunctionScope,
+        FunctionExpression: pushFunctionScope,
+        "FunctionExpression:exit": popFunctionScope,
+        ArrowFunctionExpression: pushFunctionScope,
+        "ArrowFunctionExpression:exit": popFunctionScope,
         "IfStatement > .consequent": pushAliasScope,
         "IfStatement > .consequent:exit": popAliasScope,
         "IfStatement > .alternate": pushAliasScope,
@@ -86,10 +102,8 @@ module.exports = Object.assign(
         "ForOfStatement:exit": popAliasScope,
         WhileStatement: pushAliasScope,
         "WhileStatement:exit": popAliasScope,
-        DoWhileStatement: pushAliasScope,
-        "DoWhileStatement:exit": popAliasScope,
-        SwitchStatement: pushAliasScope,
-        "SwitchStatement:exit": popAliasScope,
+        SwitchCase: pushAliasScope,
+        "SwitchCase:exit": popAliasScope,
         "TryStatement > .block": pushAliasScope,
         "TryStatement > .block:exit": popAliasScope,
         "TryStatement > .handler": pushAliasScope,
@@ -98,10 +112,12 @@ module.exports = Object.assign(
         "ClassBody > FieldDefinition[static=false]:exit": popAliasScope,
         "ClassBody > PropertyDefinition[static=false]": pushAliasScope,
         "ClassBody > PropertyDefinition[static=false]:exit": popAliasScope,
-        ConditionalExpression: pushAliasScope,
-        "ConditionalExpression:exit": popAliasScope,
-        LogicalExpression: pushAliasScope,
-        "LogicalExpression:exit": popAliasScope,
+        "ConditionalExpression > .consequent": pushAliasScope,
+        "ConditionalExpression > .consequent:exit": popAliasScope,
+        "ConditionalExpression > .alternate": pushAliasScope,
+        "ConditionalExpression > .alternate:exit": popAliasScope,
+        "LogicalExpression > .right": pushAliasScope,
+        "LogicalExpression > .right:exit": popAliasScope,
         VariableDeclarator(node) {
           recordVariableFetchAliases(node, context, aliases);
         },
@@ -109,7 +125,7 @@ module.exports = Object.assign(
           recordAssignmentFetchAliases(node, context, aliases);
         },
         CallExpression(node) {
-          if (!isGlobalFetchExpression(node.callee, context, aliases)) return;
+          if (!isGlobalFetchExpression(node.callee, context, activeAliases())) return;
           context.report({ node: node.callee, messageId: "globalFetch" });
         },
       };
