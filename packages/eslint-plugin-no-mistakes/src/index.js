@@ -1,6 +1,8 @@
 "use strict";
 
 const rules = {
+  "async-enqueue-disposition": require("./rules/async-enqueue-disposition"),
+  "async-try-catch-return-await": require("./rules/async-try-catch-return-await"),
   "await-array-methods": require("./rules/await-array-methods"),
   "nextjs-static-fetch-method": require("./rules/nextjs-static-fetch-method"),
   "nextjs-static-fetch-url": require("./rules/nextjs-static-fetch-url"),
