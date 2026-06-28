@@ -22,3 +22,11 @@ export default function defaultDirect(): Promise<User | null> {
 export function optionalGetter(): User | null {
   return serverApi?.get("/users/5");
 }
+
+function exportedLater(): User | null {
+  return serverApi.get("/users/6");
+}
+
+const exportedArrow = (): User | null => serverApi.get("/users/7");
+
+export { exportedArrow, exportedLater };

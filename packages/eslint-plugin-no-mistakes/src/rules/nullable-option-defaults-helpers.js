@@ -26,12 +26,14 @@ function unwrapType(node) {
   return current;
 }
 
-function typeIncludesNull(node) {
+function typeIncludesNull(node, aliases = new Set()) {
   const current = unwrapType(node);
   if (!current) return false;
   if (current.type === "TSNullKeyword") return true;
+  const name = typeName(current);
+  if (name && aliases.has(name)) return true;
   if (current.type === "TSUnionType") {
-    return current.types.some((item) => typeIncludesNull(item));
+    return current.types.some((item) => typeIncludesNull(item, aliases));
   }
   return false;
 }
@@ -44,11 +46,11 @@ function optionTypeAllowed(name, options, patterns) {
   return names.includes(name) || patterns.some((pattern) => pattern.test(name));
 }
 
-function nullablePropsFromMembers(members) {
+function nullablePropsFromMembers(members, aliases = new Set()) {
   const props = new Set();
   for (const member of members || []) {
     if (member.type !== "TSPropertySignature" || member.optional !== true) continue;
-    if (!typeIncludesNull(typeAnnotation(member))) continue;
+    if (!typeIncludesNull(typeAnnotation(member), aliases)) continue;
     const name = keyName(member.key);
     if (name) props.add(name);
   }
@@ -92,64 +94,64 @@ function memberRootAndProperty(node) {
   return isIdentifier(object) && property ? { object: object.name, property } : null;
 }
 
-function createScope(kind) {
-  return {
-    bindings: new Set(),
-    kind,
-    nullableBindings: new Set(),
-    objectProps: new Map(),
-  };
-}
-
-function variableScope(scopes, currentScope, node) {
-  if (!node.parent || node.parent.kind !== "var") return currentScope();
-  for (let index = scopes.length - 1; index >= 0; index -= 1) {
-    if (scopes[index].kind === "function" || scopes[index].kind === "program") {
-      return scopes[index];
-    }
-  }
-  return currentScope();
-}
-
-function objectProps(scopes, name) {
-  for (let index = scopes.length - 1; index >= 0; index -= 1) {
-    if (scopes[index].bindings.has(name) && !scopes[index].objectProps.has(name)) return null;
-    const props = scopes[index].objectProps.get(name);
-    if (props) return props;
-  }
-  return null;
-}
-
-function isNullableBinding(scopes, name) {
-  for (let index = scopes.length - 1; index >= 0; index -= 1) {
-    if (scopes[index].bindings.has(name)) {
-      return scopes[index].nullableBindings.has(name);
-    }
-  }
-  return false;
-}
-
 function assertionType(node) {
   return node?.type === "TSAsExpression" || node?.type === "TSTypeAssertion"
     ? node.typeAnnotation
     : null;
 }
 
+function declarationOf(statement) {
+  return (statement.type === "ExportNamedDeclaration" ||
+    statement.type === "ExportDefaultDeclaration") &&
+    statement.declaration
+    ? statement.declaration
+    : statement;
+}
+
+function heritageName(heritage) {
+  const expression = heritage?.expression;
+  return expression?.type === "Identifier" ? expression.name : null;
+}
+
+function collectNullableAliases(program) {
+  const aliases = new Set();
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const statement of program.body || []) {
+      const declaration = declarationOf(statement);
+      if (declaration.type !== "TSTypeAliasDeclaration") continue;
+      if (
+        !aliases.has(declaration.id.name) &&
+        typeIncludesNull(declaration.typeAnnotation, aliases)
+      ) {
+        aliases.add(declaration.id.name);
+        changed = true;
+      }
+    }
+  }
+  return aliases;
+}
+
 function collectTypeProps(program, options, patterns, typeProps) {
+  const aliases = collectNullableAliases(program);
+  const interfaces = new Map();
+  const interfaceExtends = new Map();
   for (const statement of program.body || []) {
-    const declaration =
-      (statement.type === "ExportNamedDeclaration" ||
-        statement.type === "ExportDefaultDeclaration") &&
-      statement.declaration
-        ? statement.declaration
-        : statement;
+    const declaration = declarationOf(statement);
     if (
       declaration.type === "TSInterfaceDeclaration" &&
       optionTypeAllowed(declaration.id.name, options, patterns)
     ) {
-      const props = typeProps.get(declaration.id.name) || new Set();
-      for (const prop of nullablePropsFromMembers(declaration.body.body)) props.add(prop);
-      typeProps.set(declaration.id.name, props);
+      const props = interfaces.get(declaration.id.name) || new Set();
+      for (const prop of nullablePropsFromMembers(declaration.body.body, aliases)) props.add(prop);
+      interfaces.set(declaration.id.name, props);
+      interfaceExtends.set(
+        declaration.id.name,
+        (interfaceExtends.get(declaration.id.name) || []).concat(
+          (declaration.extends || []).map(heritageName).filter(Boolean),
+        ),
+      );
     }
     if (
       declaration.type === "TSTypeAliasDeclaration" &&
@@ -158,26 +160,32 @@ function collectTypeProps(program, options, patterns, typeProps) {
     ) {
       typeProps.set(
         declaration.id.name,
-        nullablePropsFromMembers(declaration.typeAnnotation.members),
+        nullablePropsFromMembers(declaration.typeAnnotation.members, aliases),
       );
     }
   }
+  function resolveInterface(name, seen = new Set()) {
+    if (seen.has(name)) return interfaces.get(name) || new Set();
+    seen.add(name);
+    const props = new Set(interfaces.get(name) || []);
+    for (const base of interfaceExtends.get(name) || []) {
+      for (const prop of resolveInterface(base, seen)) props.add(prop);
+    }
+    return props;
+  }
+  for (const name of interfaces.keys()) typeProps.set(name, resolveInterface(name));
 }
 
 module.exports = {
   assertionType,
   collectTypeProps,
   compilePatterns,
-  createScope,
   isIdentifier,
-  isNullableBinding,
   memberRootAndProperty,
   nullablePropsFromMembers,
-  objectProps,
   objectPropertyName,
   optionTypeAllowed,
   propsFromType,
   reportDefaultsInPattern,
   typeIncludesNull,
-  variableScope,
 };

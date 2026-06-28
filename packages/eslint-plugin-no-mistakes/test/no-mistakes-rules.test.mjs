@@ -303,6 +303,57 @@ describe("ts-preserve-null-option-defaults", () => {
       0,
     );
     assert.equal(__test.objectPropertyName({ type: "RestElement" }), null);
+    const fallbackScope = {
+      bindings: new Set(),
+      nullableBindings: new Set(),
+      objectProps: new Map(),
+    };
+    assert.equal(
+      __test.variableScope([{ kind: "block" }], () => fallbackScope, {
+        parent: { kind: "var" },
+      }),
+      fallbackScope,
+    );
+    const functionScope = { kind: "function" };
+    assert.equal(
+      __test.variableScope([{ kind: "block" }, functionScope], () => fallbackScope, {
+        parent: { kind: "var" },
+      }),
+      functionScope,
+    );
+    assert.equal(
+      __test.variableScope([], () => fallbackScope, {
+        parent: null,
+      }),
+      fallbackScope,
+    );
+    const props = new Set(["value"]);
+    assert.equal(
+      __test.objectProps([{ bindings: new Set(), objectProps: new Map() }], "missing"),
+      null,
+    );
+    assert.equal(
+      __test.objectProps(
+        [{ bindings: new Set(["options"]), objectProps: new Map([["options", props]]) }],
+        "options",
+      ),
+      props,
+    );
+    assert.equal(
+      __test.isNullableBinding(
+        [{ bindings: new Set(["value"]), nullableBindings: props }],
+        "value",
+      ),
+      true,
+    );
+    assert.equal(__test.isNullableBinding([], "value"), false);
+    assert.equal(
+      typeof __test.functionScopeVisitors(
+        () => {},
+        () => {},
+      ).FunctionDeclaration,
+      "function",
+    );
     assert.equal(
       __test.memberRootAndProperty({
         type: "ChainExpression",
@@ -335,7 +386,7 @@ describe("ts-preserve-null-option-defaults", () => {
         undefined,
         "coverage.ts",
       ),
-      Array(16).fill("default"),
+      Array(20).fill("default"),
     );
   });
 });
@@ -348,6 +399,10 @@ describe("server-require-nullable-fetch-wrapper", () => {
   };
 
   it("allows wrapped calls and helpers that are not checked", () => {
+    assert.deepEqual(
+      messages("serverApi.get('/users/1')", "server-require-nullable-fetch-wrapper"),
+      [],
+    );
     assert.deepEqual(
       messages(
         ruleFixture("server-require-nullable-fetch-wrapper", "valid.ts"),
@@ -367,7 +422,7 @@ describe("server-require-nullable-fetch-wrapper", () => {
         option,
         "backend/users.ts",
       ),
-      ["wrapper", "wrapper", "wrapper", "wrapper", "wrapper"],
+      ["wrapper", "wrapper", "wrapper", "wrapper", "wrapper", "wrapper", "wrapper"],
     );
   });
 
@@ -454,12 +509,55 @@ describe("server-require-nullable-fetch-wrapper", () => {
     assert.equal(__test.typeMatchesNullableHint({ type: "TSStringKeyword" }, new Set()), false);
     assert.equal(
       __test.typeMatchesNullableHint(
+        {
+          type: "TSTypeReference",
+          typeName: { type: "Identifier", name: "Result" },
+          typeArguments: { params: [{ type: "TSNullKeyword" }] },
+        },
+        new Set(),
+      ),
+      true,
+    );
+    assert.equal(
+      __test.typeMatchesNullableHint(
+        { type: "TSTypeReference", typeName: { type: "Identifier", name: "MaybeUser" } },
+        new Set(["MaybeUser"]),
+      ),
+      true,
+    );
+    assert.equal(
+      __test.typeMatchesNullableHint(
         { type: "TSOptionalType", typeAnnotation: { type: "TSNullKeyword" } },
         new Set(),
       ),
       true,
     );
+    assert.equal(
+      __test
+        .collectExportedNames({
+          body: [
+            { type: "ExportNamedDeclaration", source: { value: "./other" }, specifiers: [] },
+            {
+              type: "ExportNamedDeclaration",
+              specifiers: [
+                { type: "ExportSpecifier", local: { type: "Identifier", name: "getUser" } },
+                { type: "ExportDefaultSpecifier", local: { type: "Identifier", name: "ignored" } },
+              ],
+            },
+          ],
+        })
+        .has("getUser"),
+      true,
+    );
+    assert.equal(
+      __test.functionName({
+        type: "FunctionDeclaration",
+        id: { type: "Identifier", name: "getUser" },
+      }),
+      "getUser",
+    );
     assert.equal(__test.functionTypeReturn({ type: "TSTypeReference" }), null);
+    assert.equal(__test.functionReturnAnnotation({ type: "FunctionDeclaration" }), null);
     assert.equal(
       __test.isExportedFunction({
         type: "FunctionExpression",

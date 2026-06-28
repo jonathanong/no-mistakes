@@ -3,6 +3,13 @@ interface Options {
   "literal-name"?: string | null;
 }
 
+type MaybeLabel = string | null;
+type MaybeAlias = MaybeLabel;
+
+interface AliasedOptions {
+  label?: MaybeAlias;
+}
+
 interface MergedOptions {
   first?: string | null;
 }
@@ -13,6 +20,14 @@ interface MergedOptions {
 
 export default interface DefaultOptions {
   defaulted?: string | null;
+}
+
+interface BaseOptions {
+  inherited?: string | null;
+}
+
+interface ExtendedOptions extends BaseOptions {
+  own?: string | null;
 }
 
 export function optionalMember(options: Options) {
@@ -76,6 +91,20 @@ export function merged(options: MergedOptions) {
 
 export function defaultExported(options: DefaultOptions) {
   return options.defaulted ?? "fallback";
+}
+
+export function aliased(options: AliasedOptions) {
+  return options.label ?? "fallback";
+}
+
+export function inherited(options: ExtendedOptions) {
+  return [options.inherited ?? "fallback", options.own ?? "fallback"];
+}
+
+export function destructuringAssignment(options: Options) {
+  let value;
+  ({ value = "fallback" } = options);
+  return value;
 }
 
 export function ignoredBranches(options: Options) {

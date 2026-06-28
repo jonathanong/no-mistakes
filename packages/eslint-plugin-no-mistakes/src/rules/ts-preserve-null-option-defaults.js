@@ -7,16 +7,19 @@ const {
   assertionType,
   collectTypeProps,
   compilePatterns,
-  createScope,
   isIdentifier,
-  isNullableBinding,
   memberRootAndProperty,
-  objectProps,
   objectPropertyName,
   propsFromType,
   reportDefaultsInPattern,
-  variableScope,
 } = require("./nullable-option-defaults-helpers");
+const {
+  createScope,
+  functionScopeVisitors,
+  isNullableBinding,
+  objectProps,
+  variableScope,
+} = require("./nullable-option-scope");
 
 module.exports = Object.assign(
   rule(
@@ -60,6 +63,11 @@ module.exports = Object.assign(
 
       function popScope() {
         scopes.pop();
+      }
+
+      function enterFunction(node) {
+        scopes.push(createScope("function"));
+        for (const param of node.params || []) defineParam(param);
       }
 
       function defineBinding(name, scope = currentScope()) {
@@ -136,6 +144,12 @@ module.exports = Object.assign(
         }
       }
 
+      function propsForAssignmentSource(node) {
+        const asserted = assertionType(node);
+        if (asserted) return propsFromType(asserted, facts);
+        return isIdentifier(node) ? objectProps(scopes, node.name) : null;
+      }
+
       function reportDefault(node, target) {
         if (isIdentifier(target)) {
           if (isNullableBinding(scopes, target.name)) {
@@ -156,21 +170,7 @@ module.exports = Object.assign(
           scopes.push(createScope("program"));
         },
         "Program:exit": popScope,
-        FunctionDeclaration(node) {
-          scopes.push(createScope("function"));
-          for (const param of node.params || []) defineParam(param);
-        },
-        "FunctionDeclaration:exit": popScope,
-        FunctionExpression(node) {
-          scopes.push(createScope("function"));
-          for (const param of node.params || []) defineParam(param);
-        },
-        "FunctionExpression:exit": popScope,
-        ArrowFunctionExpression(node) {
-          scopes.push(createScope("function"));
-          for (const param of node.params || []) defineParam(param);
-        },
-        "ArrowFunctionExpression:exit": popScope,
+        ...functionScopeVisitors(enterFunction, popScope),
         BlockStatement() {
           pushScope();
         },
@@ -180,12 +180,21 @@ module.exports = Object.assign(
           if (node.operator === "??" || node.operator === "||") reportDefault(node, node.left);
         },
         AssignmentExpression(node) {
+          if (node.operator === "=" && node.left.type === "ObjectPattern") {
+            const props = propsForAssignmentSource(node.right);
+            reportDefaultsInPattern(context, node.left, props);
+            definePatternBindings(node.left, props);
+            return;
+          }
           if (node.operator === "??=" || node.operator === "||=") reportDefault(node, node.left);
         },
       };
     },
   ),
   {
-    __test: require("./nullable-option-defaults-helpers"),
+    __test: {
+      ...require("./nullable-option-defaults-helpers"),
+      ...require("./nullable-option-scope"),
+    },
   },
 );
