@@ -105,6 +105,15 @@ describe("upstreamed generic rules", () => {
     );
   });
 
+  it("tracks JSX IIFE invocations inside expression arrays", () => {
+    const code = `
+      export default function Component() {
+        return <>{[ (function renderTag() { return "tag"; })() ]}</>;
+      }
+    `;
+    assert.deepEqual(messages(code, "react-no-iife-in-jsx"), ["iife"]);
+  });
+
   it("reports mock test filename mismatches", () => {
     assert.deepEqual(
       messages(
