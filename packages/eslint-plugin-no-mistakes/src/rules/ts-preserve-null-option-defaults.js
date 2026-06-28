@@ -165,17 +165,17 @@ module.exports = Object.assign(
         },
         "Program:exit": popScope,
         FunctionDeclaration(node) {
-          scopes.push({ bindings: new Set(), kind: "function", objectProps: new Map() });
+          scopes.push({ bindings: new Set(), kind: "function", objectProps: new Map(), nullableBindings: new Set() });
           for (const param of node.params || []) defineParam(param);
         },
         "FunctionDeclaration:exit": popScope,
         FunctionExpression(node) {
-          scopes.push({ bindings: new Set(), kind: "function", objectProps: new Map() });
+          scopes.push({ bindings: new Set(), kind: "function", objectProps: new Map(), nullableBindings: new Set() });
           for (const param of node.params || []) defineParam(param);
         },
         "FunctionExpression:exit": popScope,
         ArrowFunctionExpression(node) {
-          scopes.push({ bindings: new Set(), kind: "function", objectProps: new Map() });
+          scopes.push({ bindings: new Set(), kind: "function", objectProps: new Map(), nullableBindings: new Set() });
           for (const param of node.params || []) defineParam(param);
         },
         "ArrowFunctionExpression:exit": popScope,
