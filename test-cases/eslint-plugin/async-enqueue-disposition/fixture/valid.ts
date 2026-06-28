@@ -1,0 +1,66 @@
+import enqueueDefault, { enqueueEmail, enqueueSms as sendSms } from "@app/jobs";
+import * as jobs from "@app/jobs";
+import * as otherJobs from "@other/jobs";
+
+const queue = require("@app/jobs");
+const { enqueuePush } = require("@app/jobs");
+const { ...rest } = require("@app/jobs");
+const typedQueue = require("@app/jobs") as Jobs;
+
+export async function worker(items: string[]) {
+  await enqueueEmail(items[0]);
+  return sendSms(items[1]);
+}
+
+export const enqueueLater = (id: string) => enqueueEmail(id);
+
+export async function fanout(items: string[]) {
+  await Promise.all(items.map((item) => enqueueEmail(item)));
+  return Promise.all(items.map((item) => jobs.enqueueSms(item)));
+}
+
+export async function explicitDiscard(id: string) {
+  void enqueuePush(id);
+  await typedQueue.enqueueEmail(id);
+  await (() => enqueueEmail(id))();
+  void Promise.all([queue.enqueuePush(id), enqueueDefault(id)]);
+  void (enqueueEmail(id) as Promise<void>);
+  await enqueueEmail(id).catch(logError);
+  void enqueueEmail(id).catch(logError);
+  await Promise.all([enqueueEmail(id)]).catch(logError);
+}
+
+export async function blockCallback(items: string[]) {
+  await Promise.all(
+    items.map((item) => {
+      return enqueueEmail(item);
+    }),
+  );
+  await Promise.all(
+    items.map((item) => {
+      if (item) return enqueueEmail(item);
+    }),
+  );
+}
+
+export async function typedPromiseAll(id: string) {
+  await Promise.all([enqueueEmail(id) as Promise<void>]);
+  return Promise.all([enqueueEmail(id)]) as Promise<void>;
+}
+
+export async function inlineRequire(id: string) {
+  await require("@app/jobs").enqueueEmail(id);
+}
+
+export async function shadowed(enqueueEmail: (id: string) => void, id: string) {
+  enqueueEmail(id);
+}
+
+export async function unmatched(id: string) {
+  saveEmail(id);
+  otherJobs.enqueueEmail(id);
+  jobs.notConfigured(id);
+  jobs[dynamicMethod](id);
+  getJobs().enqueueEmail(id);
+  rest.enqueueEmail(id);
+}

@@ -39,7 +39,7 @@ fn import_target(
         ImportKind::Static => EdgeKind::Import,
         ImportKind::Type => EdgeKind::TypeImport,
         ImportKind::Dynamic => EdgeKind::DynamicImport,
-        ImportKind::Require => EdgeKind::Require,
+        ImportKind::Require | ImportKind::RequireResolve => EdgeKind::Require,
     };
     if let Some(target) = resolver.resolve(specifier, path) {
         let edge_kind = if is_indexable(&target) {

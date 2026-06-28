@@ -1,3 +1,4 @@
+import type { ImportUsagesOptions } from "./import-usage-types";
 import type { PlaywrightOptions, PlaywrightRelatedOptions } from "./report-types";
 
 export type Relationship =
@@ -188,6 +189,7 @@ export type AnalyzeProjectReportRequest =
       "root" | "tsconfig"
     >)
   | ({ type: "symbols"; id?: string } & (SymbolsListOptions | SymbolsSignatureImpactOptions))
+  | ({ type: "importUsages"; id?: string } & Omit<ImportUsagesOptions, "root">)
   | ({ type: "queues" | "queueEdges" | "queueCheck"; id?: string } & BatchedProjectOptions)
   | ({ type: "queueRelated"; id?: string } & BatchedQueueRelatedOptions)
   | ({

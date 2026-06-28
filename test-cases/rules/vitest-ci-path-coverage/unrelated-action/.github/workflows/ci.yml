@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - id: fake-filter
+        uses: example/other-action@v1
+        with:
+          filters: |
+            backend:
+              - "src/**/*.ts"
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - "docs/**"

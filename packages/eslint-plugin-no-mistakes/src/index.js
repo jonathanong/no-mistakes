@@ -1,6 +1,8 @@
 "use strict";
 
 const rules = {
+  "async-enqueue-disposition": require("./rules/async-enqueue-disposition"),
+  "async-try-catch-return-await": require("./rules/async-try-catch-return-await"),
   "await-array-methods": require("./rules/await-array-methods"),
   "nextjs-static-fetch-method": require("./rules/nextjs-static-fetch-method"),
   "nextjs-static-fetch-url": require("./rules/nextjs-static-fetch-url"),
@@ -27,10 +29,12 @@ const rules = {
   "playwright-unique": require("./rules/playwright-unique"),
   "react-no-nullish-react-node": require("./rules/react-no-nullish-react-node"),
   "react-no-use-promise-resolve": require("./rules/react-no-use-promise-resolve"),
+  "server-require-nullable-fetch-wrapper": require("./rules/server-require-nullable-fetch-wrapper"),
   "test-no-error-message-matching": require("./rules/test-no-error-message-matching"),
   "test-no-shared-state": require("./rules/test-no-shared-state"),
   "ts-no-export-renaming": require("./rules/ts-no-export-renaming"),
   "ts-no-function-aliases": require("./rules/ts-no-function-aliases"),
+  "ts-preserve-null-option-defaults": require("./rules/ts-preserve-null-option-defaults"),
   "vitest-mock-test-file-naming": require("./rules/vitest-mock-test-file-naming"),
 };
 

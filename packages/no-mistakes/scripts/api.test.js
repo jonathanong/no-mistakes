@@ -24,6 +24,8 @@ test("programmatic API proxies object options through async native addon calls",
         JSON.stringify({ command: "analyzeProject", options: JSON.parse(json) }),
       symbolsJson: async (json) =>
         JSON.stringify({ command: "symbols", options: JSON.parse(json) }),
+      importUsagesJson: async (json) =>
+        JSON.stringify({ command: "importUsages", options: JSON.parse(json) }),
       importersJson: async (json) =>
         JSON.stringify({ command: "importers", options: JSON.parse(json) }),
       exportsOfJson: async (json) =>
@@ -116,6 +118,10 @@ test("programmatic API proxies object options through async native addon calls",
       ).options.mode,
       "signature-impact",
     );
+    assert.deepEqual(await api.importUsages({ filters: ["src/**"] }), {
+      command: "importUsages",
+      options: { filters: ["src/**"] },
+    });
     assert.deepEqual(await api.importers({ file: "a.ts", tests: true }), {
       command: "importers",
       options: { file: "a.ts", tests: true },
@@ -203,6 +209,14 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   assert.match(
     declarations,
     /type: "symbols"; id\?: string } & \(SymbolsListOptions \| SymbolsSignatureImpactOptions\)/,
+  );
+  assert.match(
+    declarations,
+    /type: "importUsages"; id\?: string } & Omit<ImportUsagesOptions, "root">/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
+    /export function importUsages\(options\?: ImportUsagesOptions\): Promise<ImportUsagesResult>;/,
   );
   assert.match(
     declarations,

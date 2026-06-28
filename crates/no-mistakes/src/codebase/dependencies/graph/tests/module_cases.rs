@@ -256,8 +256,10 @@ fn import_fact_kinds_map_to_edge_kinds() {
     let mut import = ExtractedImport {
         specifier: "dep".to_string(),
         kind: ImportKind::Static,
+        line: 1,
         function_scope: None,
         side_effect_only: false,
+        re_export: false,
         runtime_reachable: false,
     };
 
@@ -268,6 +270,8 @@ fn import_fact_kinds_map_to_edge_kinds() {
     assert_eq!(edge_kind_for_import(&import), EdgeKind::DynamicImport);
     import.kind = ImportKind::Require;
     assert_eq!(edge_kind_for_import(&import), EdgeKind::Require);
+    import.kind = ImportKind::RequireResolve;
+    assert_eq!(edge_kind_for_import(&import), EdgeKind::Require);
 }
 
 #[test]
@@ -275,8 +279,10 @@ fn type_imports_in_exported_symbol_scopes_are_reachable() {
     let import = ExtractedImport {
         specifier: "./target.mts".to_string(),
         kind: ImportKind::Type,
+        line: 1,
         function_scope: Some("PublicShape".to_string()),
         side_effect_only: false,
+        re_export: false,
         runtime_reachable: false,
     };
     let facts = crate::codebase::ts_source::facts::TsFileFacts {

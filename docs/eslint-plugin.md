@@ -45,6 +45,8 @@ Rules not listed here have no options.
 
 | Rule | Options |
 | --- | --- |
+| `async-enqueue-disposition` | `{ targets?: { sourcePatterns?: string[], calleeNamePatterns?: string[] }[] }`. |
+| `async-try-catch-return-await` | `{ targets?: { sourcePatterns?: string[], calleeNamePatterns?: string[] }[] }`. |
 | `module-mock-boundary` | `{ internalSpecifiers?: string[], includePathPatterns?: string[], excludePathPatterns?: string[], requireLiteralSpecifiers?: boolean, baseline?: [string, string, number][], integrationExports?: object }`. |
 | `module-mock-preserve-exports` | `{ internalSpecifiers?: string[], includePathPatterns?: string[], excludePathPatterns?: string[], baseline?: [string, string][] }`. |
 | `playwright-assertion-timeout-cap` | `{ max?: number }`, default `10000`. |
@@ -57,9 +59,11 @@ Rules not listed here have no options.
 | `playwright-require-exported-component-attribute` | `{ attributes?: string[], componentNamePattern?: string, components?: string[], ignoreComponents?: string[], wrappers?: string[], allowSpreadAttributes?: boolean, exportTypes?: ("named" \| "default")[], checkAnonymousDefault?: boolean }`. |
 | `playwright-require-interactive-test-id` | `{ selectorAttributes?: string[], interactiveComponents?: string[] }`; component entries may be exact names or `/regex/` patterns. |
 | `playwright-unique` | `{ selectorAttributes?: string[] }`. |
+| `server-require-nullable-fetch-wrapper` | `{ includePathPatterns?: string[], excludePathPatterns?: string[], getterCalleePatterns: string[], requiredWrapperCallee: string, nullableReturnTypeNames?: string[], inferNullableFromTopLevelEntityPath?: boolean, topLevelEntityPathPatterns?: string[] }`. |
 | `nextjs-no-manual-script-tags` | `{ allowInlineScriptIds?: string[], allowInlineScriptIdPatterns?: string[] }`. |
 | `test-no-shared-state` | `{ allowBeforeAllAssignments?: boolean }`. |
 | `ts-no-export-renaming` | `{ allowDefaultReExports?: boolean, includePathPatterns?: string[] }`. |
+| `ts-preserve-null-option-defaults` | `{ includePathPatterns?: string[], excludePathPatterns?: string[], optionObjectNames?: string[], optionObjectNamePatterns?: string[] }`. |
 
 ```js
 module.exports = [
@@ -77,6 +81,17 @@ module.exports = [
       "no-mistakes/ts-no-export-renaming": [
         "error",
         { includePathPatterns: ["^src/"], allowDefaultReExports: true },
+      ],
+      "no-mistakes/async-enqueue-disposition": [
+        "error",
+        {
+          targets: [
+            {
+              sourcePatterns: ["^@app/jobs$"],
+              calleeNamePatterns: ["^enqueue[A-Z].*"],
+            },
+          ],
+        },
       ],
     },
   },

@@ -1,6 +1,10 @@
 impl ImportCollector {
-    fn push(&mut self, specifier: &str, kind: ImportKind) {
-        self.push_with_side_effect(specifier, kind, false);
+    fn push(&mut self, specifier: &str, kind: ImportKind, byte_offset: usize) {
+        self.push_with_side_effect(specifier, kind, byte_offset, false, false);
+    }
+
+    fn push_reexport(&mut self, specifier: &str, kind: ImportKind, byte_offset: usize) {
+        self.push_with_side_effect(specifier, kind, byte_offset, false, true);
     }
 
     fn is_exported_top_level_name(&self, name: &str) -> bool {
@@ -11,8 +15,18 @@ impl ImportCollector {
         self.export_depth > 0 || self.later_exported_type_names.contains(name)
     }
 
-    fn push_with_side_effect(&mut self, specifier: &str, kind: ImportKind, side_effect_only: bool) {
-        let runtime_import = matches!(kind, ImportKind::Dynamic | ImportKind::Require);
+    fn push_with_side_effect(
+        &mut self,
+        specifier: &str,
+        kind: ImportKind,
+        byte_offset: usize,
+        side_effect_only: bool,
+        re_export: bool,
+    ) {
+        let runtime_import = matches!(
+            kind,
+            ImportKind::Dynamic | ImportKind::Require | ImportKind::RequireResolve
+        );
         if self.suppress_imports && !(self.collect_suppressed_runtime_imports && runtime_import) {
             return;
         }
@@ -29,8 +43,14 @@ impl ImportCollector {
             self.imports.push(ExtractedImport {
                 specifier: specifier.to_string(),
                 kind,
+                line: if self.source.is_empty() {
+                    1
+                } else {
+                    crate::codebase::ts_source::byte_offset_to_line(&self.source, byte_offset)
+                },
                 function_scope: self.function_stack.last().cloned(),
                 side_effect_only,
+                re_export,
                 runtime_reachable,
             });
         }
@@ -105,5 +125,36 @@ impl ImportCollector {
             self.type_local_stack.pop();
             self.type_parameter_stack.pop();
         }
+    }
+}
+
+fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &CallExpression<'_>) {
+    if is_require_resolve_callee(&call.callee) {
+        if let Some(first) = call.arguments.first() {
+            if let Some(specifier) = string_literal_argument(first) {
+                collector.push(specifier, ImportKind::RequireResolve, call.span.start as usize);
+            }
+        }
+    } else if is_require_callee(&call.callee) {
+        if let Some(first) = call.arguments.first() {
+            if let Some(specifier) = string_literal_argument(first) {
+                collector.push(specifier, ImportKind::Require, call.span.start as usize);
+            }
+        }
+    } else if let Some(callee) = simple_callee_name(&call.callee) {
+        if collector.should_record_call(&callee) {
+            collector.function_calls.push(FunctionCall {
+                caller: collector.current_function(),
+                static_cwd: static_process_cwd_arg(&callee, &call.arguments),
+                callee,
+                static_arg: call.arguments.first().and_then(static_path_argument),
+            });
+        }
+    } else {
+        let caller = collector.current_function();
+        if caller.is_none() {
+            collector.has_unknown_top_level_call = true;
+        }
+        collector.unknown_callers.push(caller);
     }
 }

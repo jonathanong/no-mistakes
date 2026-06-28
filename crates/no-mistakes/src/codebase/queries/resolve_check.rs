@@ -83,6 +83,7 @@ fn kind_str(kind: ImportKind) -> &'static str {
         ImportKind::Type => "type",
         ImportKind::Dynamic => "dynamic",
         ImportKind::Require => "require",
+        ImportKind::RequireResolve => "require-resolve",
     }
 }
 

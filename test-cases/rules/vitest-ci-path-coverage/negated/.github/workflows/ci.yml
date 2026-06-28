@@ -1,0 +1,17 @@
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          predicate-quantifier: every
+          filters: |
+            backend:
+              - "ts-shared/**"
+              - "!ts-shared/utils/**"

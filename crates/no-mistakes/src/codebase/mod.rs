@@ -5,6 +5,7 @@ pub mod comment_only;
 pub mod config;
 pub mod dependencies;
 pub(crate) mod glob_normalize;
+pub mod import_usages;
 pub mod lockfile;
 pub mod markdown_sections;
 pub mod md_links;

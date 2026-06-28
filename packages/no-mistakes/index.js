@@ -26,6 +26,10 @@ async function symbols(options) {
   return callJson(native.symbolsJson, options);
 }
 
+async function importUsages(options) {
+  return callJson(native.importUsagesJson, options);
+}
+
 async function importers(options) {
   return callJson(native.importersJson, options);
 }
@@ -208,6 +212,7 @@ module.exports = {
   exportsOf,
   fetches,
   impactedChecks,
+  importUsages,
   importers,
   infraOutputs,
   infraResourceRefs,

@@ -4,10 +4,11 @@ use anyhow::{bail, Result as AnyhowResult};
 
 use super::options::{
     parse_export_kind, parse_include, parse_options, parse_relationship, parse_symbols_mode,
-    to_napi_error, SymbolOptions, TraverseOptions,
+    to_napi_error, ImportUsagesOptions, SymbolOptions, TraverseOptions,
 };
 use crate::cli::Format;
 use crate::codebase::dependencies::{Direction, TraverseArgs};
+use crate::codebase::import_usages::ImportUsagesArgs;
 use crate::codebase::symbols::SymbolsArgs;
 
 pub(crate) fn dependencies_json_impl(options_json: String) -> napi::Result<String> {
@@ -26,6 +27,12 @@ pub(crate) fn symbols_json_impl(options_json: String) -> napi::Result<String> {
     let options = parse_options::<SymbolOptions>(&options_json)?;
     let args = build_symbols_args(options).map_err(to_napi_error)?;
     crate::codebase::symbols::run_json(args).map_err(to_napi_error)
+}
+
+pub(crate) fn import_usages_json_impl(options_json: String) -> napi::Result<String> {
+    let options = parse_options::<ImportUsagesOptions>(&options_json)?;
+    let args = build_import_usages_args(options);
+    crate::codebase::import_usages::run_json(args).map_err(to_napi_error)
 }
 
 fn traverse_json(options_json: String, direction: Direction) -> napi::Result<String> {
@@ -59,6 +66,18 @@ pub(crate) fn build_traverse_args(options: TraverseOptions) -> AnyhowResult<Trav
         include_symbols: options.include_symbols,
         timings: false,
     })
+}
+
+pub(crate) fn build_import_usages_args(options: ImportUsagesOptions) -> ImportUsagesArgs {
+    ImportUsagesArgs {
+        files: strings_to_paths(options.files),
+        root: options.root.map(PathBuf::from),
+        scan_roots: strings_to_paths(options.scan_roots),
+        filters: options.filters,
+        format: Some(Format::Json),
+        json: true,
+        timings: false,
+    }
 }
 
 fn build_symbols_args(options: SymbolOptions) -> AnyhowResult<SymbolsArgs> {
@@ -107,3 +126,6 @@ fn entrypoint_symbols(values: Vec<super::options::EntrypointOption>) -> Vec<Opti
 fn entrypoint_structured(values: &[super::options::EntrypointOption]) -> Vec<bool> {
     values.iter().map(|value| value.is_structured()).collect()
 }
+
+#[cfg(test)]
+mod tests;

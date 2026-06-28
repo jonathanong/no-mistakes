@@ -18,6 +18,7 @@ analysis.
 | [`dependents`](dependents.md) | Files, tests, and modules affected by changed files. |
 | [`related`](related.md) | Alias for `dependents`; useful when agents ask for impact. |
 | [`symbols`](symbols.md) | Named exports and imports in TS/JS files. |
+| [`import-usages`](import-usages.md) | Direct import usage rows for dependency declaration checks. |
 | [`importers`](importers.md) | Direct importers of one file, plus a dependents count. |
 | [`exports-of`](exports-of.md) | A file's named exports and who imports each. |
 | [`dead-exports`](dead-exports.md) | Whether any file still imports the given exports. |

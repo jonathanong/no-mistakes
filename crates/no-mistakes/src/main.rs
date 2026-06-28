@@ -19,6 +19,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use no_mistakes::cli::{init_rayon_threads, JobsArg};
 use no_mistakes::codebase::dependencies::{self, Direction, TraverseArgs};
+use no_mistakes::codebase::import_usages::{self, ImportUsagesArgs};
 use no_mistakes::codebase::queries;
 use no_mistakes::codebase::symbols::{self, SymbolsArgs};
 use no_mistakes::playwright;
@@ -44,6 +45,8 @@ enum Command {
     Related(TraverseArgs),
     /// Dump named exports and imports of TS/JS files.
     Symbols(SymbolsArgs),
+    /// Report direct import usages in TS/JS files.
+    ImportUsages(ImportUsagesArgs),
     /// List the files that directly import a file, plus a dependents count.
     Importers(queries::ImportersArgs),
     /// List a file's named exports and who imports each one.
@@ -102,24 +105,52 @@ fn main() -> ExitCode {
 fn run() -> Result<ExitCode> {
     let cli = Cli::parse();
     init_rayon_threads(cli.jobs);
-    match cli.command {
-        Command::Dependencies(args) => {
-            dependencies::run(args, Direction::Deps)?;
-            Ok(ExitCode::SUCCESS)
-        }
+    run_command(cli.command)
+}
+
+enum CommandDispatch {
+    Handled(ExitCode),
+    Unhandled(Box<Command>),
+}
+
+fn run_command(command: Command) -> Result<ExitCode> {
+    match run_codebase_command(command)? {
+        CommandDispatch::Handled(code) => Ok(code),
+        CommandDispatch::Unhandled(command) => match run_domain_command(*command)? {
+            CommandDispatch::Handled(code) => Ok(code),
+            CommandDispatch::Unhandled(_) => unreachable!("all command variants are dispatched"),
+        },
+    }
+}
+
+fn run_success(result: Result<()>) -> Result<CommandDispatch> {
+    result?;
+    Ok(CommandDispatch::Handled(ExitCode::SUCCESS))
+}
+
+fn run_codebase_command(command: Command) -> Result<CommandDispatch> {
+    match command {
+        Command::Dependencies(args) => run_success(dependencies::run(args, Direction::Deps)),
         Command::Dependents(args) | Command::Related(args) => {
-            dependencies::run(args, Direction::Dependents)?;
-            Ok(ExitCode::SUCCESS)
+            run_success(dependencies::run(args, Direction::Dependents))
         }
-        Command::Symbols(args) => {
-            symbols::run(args)?;
-            Ok(ExitCode::SUCCESS)
+        Command::Symbols(args) => run_success(symbols::run(args)),
+        Command::ImportUsages(args) => run_success(import_usages::run(args)),
+        Command::Importers(args) => Ok(CommandDispatch::Handled(queries::importers::run(args)?)),
+        Command::ExportsOf(args) => Ok(CommandDispatch::Handled(queries::exports_of::run(args)?)),
+        Command::DeadExports(args) => {
+            Ok(CommandDispatch::Handled(queries::dead_exports::run(args)?))
         }
-        Command::Importers(args) => queries::importers::run(args),
-        Command::ExportsOf(args) => queries::exports_of::run(args),
-        Command::DeadExports(args) => queries::dead_exports::run(args),
-        Command::CallSites(args) => queries::call_sites::run(args),
-        Command::ResolveCheck(args) => queries::resolve_check::run(args),
+        Command::CallSites(args) => Ok(CommandDispatch::Handled(queries::call_sites::run(args)?)),
+        Command::ResolveCheck(args) => {
+            Ok(CommandDispatch::Handled(queries::resolve_check::run(args)?))
+        }
+        command => Ok(CommandDispatch::Unhandled(Box::new(command))),
+    }
+}
+
+fn run_domain_command(command: Command) -> Result<CommandDispatch> {
+    let code = match command {
         Command::Fetches(args) => fetches::run(args),
         Command::Playwright(args) => playwright::run(args),
         Command::React(args) => react::run(args),
@@ -136,5 +167,7 @@ fn run() -> Result<ExitCode> {
         Command::Effects(args) => effects::run(args),
         Command::RscCallers(args) => rsc_callers::run(args),
         Command::RegistryExtension(args) => registry_extension::run(args),
-    }
+        command => return Ok(CommandDispatch::Unhandled(Box::new(command))),
+    }?;
+    Ok(CommandDispatch::Handled(code))
 }

@@ -1,5 +1,5 @@
 use crate::codebase::dependencies::extract::{
-    extract_import_facts_from_program, is_indexable, ExtractedImport, FunctionCall,
+    extract_import_facts_from_program_with_source, is_indexable, ExtractedImport, FunctionCall,
 };
 use crate::codebase::ts_http_calls::HttpCall;
 use crate::codebase::ts_process_spawn::SpawnEdge;
@@ -158,7 +158,7 @@ fn collect_file_facts(
     let source_type = SourceType::from_path(path).unwrap_or_else(|_| SourceType::ts());
     let parsed = Parser::new(&allocator, &source, source_type).parse();
     let import_facts = if plan.imports || plan.function_calls {
-        extract_import_facts_from_program(&parsed.program)
+        extract_import_facts_from_program_with_source(&parsed.program, &source)
     } else {
         Default::default()
     };

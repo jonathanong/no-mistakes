@@ -27,6 +27,8 @@ See [ESLint and Oxlint plugin](../eslint-plugin.md) for option schemas.
 
 | Rule | Purpose |
 | --- | --- |
+| [`async-enqueue-disposition`](async-enqueue-disposition.md) | Require explicit async disposition for configured enqueue calls. |
+| [`async-try-catch-return-await`](async-try-catch-return-await.md) | Require `return await` in configured async try/catch handlers. |
 | [`await-array-methods`](await-array-methods.md) | Disallow awaiting synchronous array methods. |
 | [`module-mock-boundary`](module-mock-boundary.md) | Enforce configured module mock boundaries. |
 | [`module-mock-preserve-exports`](module-mock-preserve-exports.md) | Require module mock factories to preserve real exports. |
@@ -53,8 +55,10 @@ See [ESLint and Oxlint plugin](../eslint-plugin.md) for option schemas.
 | [`react-no-iife-in-jsx`](react-no-iife-in-jsx.md) | Disallow immediately invoked functions inside JSX. |
 | [`react-no-nullish-react-node`](react-no-nullish-react-node.md) | Disallow nullish coalescing on ReactNode-like values. |
 | [`react-no-use-promise-resolve`](react-no-use-promise-resolve.md) | Disallow `React.use(Promise.resolve(...))`. |
+| [`server-require-nullable-fetch-wrapper`](server-require-nullable-fetch-wrapper.md) | Require configured nullable entity fetch helpers to wrap getter calls. |
 | [`test-no-error-message-matching`](test-no-error-message-matching.md) | Disallow assertions on error message strings. |
 | [`test-no-shared-state`](test-no-shared-state.md) | Disallow mutable module-scope test state. |
 | [`ts-no-export-renaming`](ts-no-export-renaming.md) | Disallow value export renaming. |
 | [`ts-no-function-aliases`](ts-no-function-aliases.md) | Disallow function wrappers that only alias another function. |
+| [`ts-preserve-null-option-defaults`](ts-preserve-null-option-defaults.md) | Preserve explicit null in nullable option defaults. |
 | [`vitest-mock-test-file-naming`](vitest-mock-test-file-naming.md) | Require `.mock.test` filenames for module-mocking tests. |

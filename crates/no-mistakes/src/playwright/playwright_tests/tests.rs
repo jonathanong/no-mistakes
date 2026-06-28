@@ -99,9 +99,64 @@ impl<'a> Visit<'a> for DescribeNameVisitor {
             {
                 let name = describe_name(call);
                 // Collect results for all test/describe related calls to verify negative cases too
-                // (except test.describe() inner parts, so we just check if it's a top level call in our context)
                 self.names.push(name);
             }
+        }
+        walk::walk_call_expression(self, call);
+    }
+}
+
+#[test]
+fn test_callback_identity_matches_test_names() {
+    let source = r#"
+        test('my test', () => {});
+        test.only('my only test', () => {});
+        test.skip('my skipped test', () => {});
+        test.fixme('my fixme test', () => {});
+        test.slow('my slow test', () => {});
+        test.serial('my serial test', () => {});
+        test.parallel('my parallel test', () => {});
+        test.describe('describe is a test path', () => {});
+        test.step('my step', () => {});
+        not_test('also not a test', () => {});
+        test(`template test`, () => {});
+        test(`template with ${variable}`, () => {});
+        test(123, () => {});
+    "#;
+
+    let names =
+        crate::playwright::ast::with_program(Path::new("fixture.ts"), source, |program, _| {
+            let mut visitor = TestCallbackIdentityVisitor::default();
+            visitor.visit_program(program);
+            visitor.names
+        })
+        .expect("fixture parses");
+
+    assert_eq!(
+        names,
+        vec![
+            "my test".to_string(),
+            "my only test".to_string(),
+            "my skipped test".to_string(),
+            "my fixme test".to_string(),
+            "my slow test".to_string(),
+            "my serial test".to_string(),
+            "my parallel test".to_string(),
+            "describe is a test path".to_string(),
+            "template test".to_string(),
+        ]
+    );
+}
+
+#[derive(Default)]
+struct TestCallbackIdentityVisitor {
+    names: Vec<String>,
+}
+
+impl<'a> Visit<'a> for TestCallbackIdentityVisitor {
+    fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        if let Some(name) = test_callback_identity(call) {
+            self.names.push(name);
         }
         walk::walk_call_expression(self, call);
     }

@@ -41,6 +41,9 @@ describe("docs coverage", () => {
       "allowDefaultedProps",
       "allowStaticTemplates",
       "allowBeforeAllAssignments",
+      "targets",
+      "sourcePatterns",
+      "calleeNamePatterns",
     ]) {
       assert.ok(pluginDoc.includes(optionName), `missing option ${optionName}`);
     }

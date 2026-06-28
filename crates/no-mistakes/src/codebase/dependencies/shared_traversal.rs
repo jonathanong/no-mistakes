@@ -3,6 +3,7 @@ pub(crate) struct SharedTraversalContext {
     tsconfig: TsConfig,
     graph_files: graph::GraphFiles,
     build_plan: graph::GraphBuildPlan,
+    facts: Option<crate::codebase::ts_source::facts::TsFactMap>,
     graph: Option<graph::DepGraph>,
     pub(crate) graph_builds: usize,
 }
@@ -14,6 +15,7 @@ impl SharedTraversalContext {
             tsconfig,
             graph_files,
             build_plan: graph::GraphBuildPlan::default(),
+            facts: None,
             graph: None,
             graph_builds: 0,
         }
@@ -23,13 +25,39 @@ impl SharedTraversalContext {
         self.build_plan.include(plan);
     }
 
+    pub(crate) fn root(&self) -> &Path {
+        &self.root
+    }
+
+    pub(crate) fn facts(&mut self) -> &crate::codebase::ts_source::facts::TsFactMap {
+        self.ensure_facts();
+        self.facts.as_ref().expect("TS facts are initialized")
+    }
+
+    fn ensure_facts(&mut self) {
+        if self.facts.is_some() {
+            return;
+        }
+        let (fact_plan, fact_context) =
+            graph::ts_fact_plan_and_context_for_plan(&self.root, self.build_plan);
+        self.facts = Some(crate::codebase::ts_source::facts::collect_ts_facts_with_context(
+            self.graph_files.indexable(),
+            fact_plan,
+            &fact_context,
+        ));
+    }
+
     fn graph(&mut self) -> &graph::DepGraph {
         if self.graph.is_none() {
-            self.graph = Some(graph::DepGraph::build_with_plan_and_files(
+            self.ensure_facts();
+            self.graph = Some(graph::DepGraph::build_with_plan_files_and_facts(
                 &self.root,
                 &self.tsconfig,
                 self.build_plan,
                 &self.graph_files,
+                self.facts
+                    .as_ref()
+                    .map(|facts| facts as &dyn graph::TsFactLookup),
             ));
             self.graph_builds += 1;
         }
@@ -37,14 +65,18 @@ impl SharedTraversalContext {
     }
 
     fn request_graph_without_symbols(
-        &self,
+        &mut self,
         allowed: Option<&std::collections::HashSet<EdgeKind>>,
     ) -> graph::DepGraph {
-        graph::DepGraph::build_with_plan_and_files(
+        self.ensure_facts();
+        graph::DepGraph::build_with_plan_files_and_facts(
             &self.root,
             &self.tsconfig,
             graph::GraphBuildPlan::from_allowed(allowed),
             &self.graph_files,
+            self.facts
+                .as_ref()
+                .map(|facts| facts as &dyn graph::TsFactLookup),
         )
     }
 }

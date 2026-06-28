@@ -127,6 +127,15 @@ pub(crate) struct SymbolOptions {
     pub(crate) include: Option<String>,
 }
 
+#[derive(Debug, Default, Deserialize)]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct ImportUsagesOptions {
+    pub(crate) files: Vec<String>,
+    pub(crate) root: Option<String>,
+    pub(crate) scan_roots: Vec<String>,
+    pub(crate) filters: Vec<String>,
+}
+
 include!("options_entrypoint.rs");
 
 pub(crate) fn parse_options<T: for<'de> Deserialize<'de>>(options_json: &str) -> napi::Result<T> {
