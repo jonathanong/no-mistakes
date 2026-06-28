@@ -1,11 +1,9 @@
 "use strict";
-
 const { rule } = require("../helpers");
 const { typeAnnotation } = require("../react-node-types");
 const { pathAllowed } = require("./module-mock-helpers");
 const {
   assertionType,
-  collectTypeProps,
   compilePatterns,
   isIdentifier,
   memberRootAndProperty,
@@ -15,6 +13,7 @@ const {
 const {
   bindingScope,
   clearNullableBinding,
+  clearObjectProps,
   createScope,
   functionScopeVisitors,
   isNullableBinding,
@@ -22,6 +21,7 @@ const {
   objectProps,
   variableScope,
 } = require("./nullable-option-scope");
+const { collectTypeProps, createTypeFacts } = require("./nullable-option-type-props");
 module.exports = Object.assign(
   rule(
     {
@@ -52,12 +52,7 @@ module.exports = Object.assign(
       if (!pathAllowed(context.filename, options)) return {};
       const objectNamePatterns = compilePatterns(options.optionObjectNamePatterns);
       const scopes = [];
-      const facts = {
-        aliases: new Set(),
-        allTypeProps: new Map(),
-        objectAliases: new Map(),
-        typeProps: new Map(),
-      };
+      const facts = createTypeFacts();
       const currentScope = () => scopes[scopes.length - 1];
       const pushScope = () => scopes.push(createScope("block"));
       const popScope = () => scopes.pop();
@@ -88,6 +83,10 @@ module.exports = Object.assign(
       }
       function definePatternBindings(pattern, props, scope = currentScope(), useExisting = false) {
         for (const property of pattern.properties || []) {
+          if (property.type === "RestElement" && isIdentifier(property.argument)) {
+            defineObject(property.argument.name, props, scope);
+            continue;
+          }
           if (property.type !== "Property") continue;
           const name = objectPropertyName(property);
           const value =
@@ -180,7 +179,10 @@ module.exports = Object.assign(
                 node.left.name,
                 bindingScope(scopes, node.left.name) || currentScope(),
               );
-            } else clearNullableBinding(scopes, node.left.name);
+            } else {
+              clearNullableBinding(scopes, node.left.name);
+              clearObjectProps(scopes, node.left.name);
+            }
             return;
           }
           if (node.operator === "??=" || node.operator === "||=") reportDefault(node, node.left);
@@ -192,6 +194,7 @@ module.exports = Object.assign(
     __test: {
       ...require("./nullable-option-defaults-helpers"),
       ...require("./nullable-option-scope"),
+      ...require("./nullable-option-type-props"),
     },
   },
 );

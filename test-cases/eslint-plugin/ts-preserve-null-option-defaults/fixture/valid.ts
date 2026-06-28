@@ -8,6 +8,14 @@ type Inline = {
   value?: string | null;
 };
 
+interface NullableBase {
+  narrowed?: string | null;
+}
+
+interface NarrowedOptions extends NullableBase {
+  narrowed: string;
+}
+
 export function explicitUndefined(options: Options) {
   return options.value === undefined ? "fallback" : options.value;
 }
@@ -50,4 +58,14 @@ export function staleAssignmentCleared(options: Options) {
   let value = options.value;
   value = "forced";
   return value ?? "fallback";
+}
+
+export function objectAliasCleared(options: Options) {
+  let opts = options;
+  opts = {};
+  return opts.value ?? "fallback";
+}
+
+export function inheritedNarrowed(options: NarrowedOptions) {
+  return options.narrowed ?? "fallback";
 }

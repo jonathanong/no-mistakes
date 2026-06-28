@@ -298,6 +298,127 @@ describe("ts-preserve-null-option-defaults", () => {
       true,
     );
     assert.equal(__test.propsFromType({ type: "TSStringKeyword" }, { typeProps: new Map() }), null);
+    const typeFacts = __test.createTypeFacts();
+    typeFacts.typeProps.set("Options", new Set(["value"]));
+    assert.equal(
+      __test
+        .propsFromType(
+          {
+            type: "TSTypeReference",
+            typeName: { type: "Identifier", name: "Readonly" },
+            typeArguments: {
+              params: [
+                { type: "TSTypeReference", typeName: { type: "Identifier", name: "Options" } },
+              ],
+            },
+          },
+          typeFacts,
+        )
+        .has("value"),
+      true,
+    );
+    const collectedFacts = __test.createTypeFacts();
+    __test.collectTypeProps(
+      {
+        body: [
+          { type: "VariableDeclaration" },
+          {
+            type: "ExportNamedDeclaration",
+            declaration: {
+              type: "TSTypeAliasDeclaration",
+              id: { type: "Identifier", name: "Maybe" },
+              typeAnnotation: {
+                type: "TSUnionType",
+                types: [{ type: "TSStringKeyword" }, { type: "TSNullKeyword" }],
+              },
+            },
+          },
+          {
+            type: "TSInterfaceDeclaration",
+            id: { type: "Identifier", name: "Loop" },
+            extends: [{ expression: { type: "Identifier", name: "Loop" } }],
+            body: { body: [] },
+          },
+          {
+            type: "TSInterfaceDeclaration",
+            id: { type: "Identifier", name: "Options" },
+            extends: [{ expression: { type: "CallExpression" } }],
+            body: {
+              body: [
+                {
+                  type: "TSPropertySignature",
+                  optional: true,
+                  key: { type: "Identifier", name: "value" },
+                  typeAnnotation: {
+                    typeAnnotation: {
+                      type: "TSTypeReference",
+                      typeName: { type: "Identifier", name: "Maybe" },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+          {
+            type: "TSTypeAliasDeclaration",
+            id: { type: "Identifier", name: "IgnoredAlias" },
+            typeAnnotation: { type: "TSStringKeyword" },
+          },
+        ],
+      },
+      { optionObjectNames: ["Options"] },
+      [],
+      collectedFacts,
+    );
+    assert.equal(collectedFacts.typeProps.get("Options").has("value"), true);
+    const noBodyFacts = __test.createTypeFacts();
+    __test.collectTypeProps({}, {}, [], noBodyFacts);
+    assert.equal(noBodyFacts.typeProps.size, 0);
+    const literalAliasFacts = __test.createTypeFacts();
+    __test.collectTypeProps(
+      {
+        body: [
+          {
+            type: "ExportDefaultDeclaration",
+            declaration: {
+              type: "TSTypeAliasDeclaration",
+              id: { type: "Identifier", name: "LiteralOptions" },
+              typeAnnotation: {
+                type: "TSTypeLiteral",
+                members: [
+                  {
+                    type: "TSPropertySignature",
+                    optional: true,
+                    key: { type: "Identifier", name: "value" },
+                    typeAnnotation: { typeAnnotation: { type: "TSNullKeyword" } },
+                  },
+                ],
+              },
+            },
+          },
+        ],
+      },
+      { optionObjectNames: ["LiteralOptions"] },
+      [],
+      literalAliasFacts,
+    );
+    assert.equal(literalAliasFacts.typeProps.get("LiteralOptions").has("value"), true);
+    const emptyFacts = __test.createTypeFacts();
+    __test.collectTypeProps(
+      {
+        body: [
+          {
+            type: "TSInterfaceDeclaration",
+            id: { type: "Identifier", name: "Other" },
+            body: { body: [] },
+          },
+        ],
+      },
+      { optionObjectNames: ["Options"] },
+      [],
+      emptyFacts,
+    );
+    assert.equal(emptyFacts.typeProps.has("Other"), false);
     assert.equal(
       __test.nullablePropsFromMembers([
         { type: "TSMethodSignature" },
@@ -312,6 +433,14 @@ describe("ts-preserve-null-option-defaults", () => {
       0,
     );
     assert.equal(__test.objectPropertyName({ type: "RestElement" }), null);
+    assert.deepEqual(
+      [
+        ...__test.propNamesFromMembers([
+          { type: "TSPropertySignature", key: { type: "Identifier", name: "value" } },
+        ]),
+      ],
+      ["value"],
+    );
     const fallbackScope = {
       bindings: new Set(),
       nullableBindings: new Set(),
@@ -375,6 +504,21 @@ describe("ts-preserve-null-option-defaults", () => {
       }).property,
       "value",
     );
+    assert.equal(
+      __test.memberRootAndProperty({
+        type: "TSNonNullExpression",
+        expression: {
+          type: "MemberExpression",
+          computed: false,
+          object: {
+            type: "TSNonNullExpression",
+            expression: { type: "Identifier", name: "options" },
+          },
+          property: { type: "Identifier", name: "value" },
+        },
+      }).object,
+      "options",
+    );
     assert.equal(__test.memberRootAndProperty({ type: "Identifier", name: "value" }), null);
     assert.equal(
       __test.memberRootAndProperty({
@@ -395,7 +539,7 @@ describe("ts-preserve-null-option-defaults", () => {
         undefined,
         "coverage.ts",
       ),
-      Array(29).fill("default"),
+      Array(33).fill("default"),
     );
   });
 });
@@ -431,7 +575,7 @@ describe("server-require-nullable-fetch-wrapper", () => {
         option,
         "backend/users.ts",
       ),
-      Array(12).fill("wrapper"),
+      Array(13).fill("wrapper"),
     );
   });
 

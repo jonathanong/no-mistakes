@@ -42,6 +42,11 @@ function clearNullableBinding(scopes, name) {
   if (scope) scope.nullableBindings.delete(name);
 }
 
+function clearObjectProps(scopes, name) {
+  const scope = bindingScope(scopes, name);
+  if (scope) scope.objectProps.delete(name);
+}
+
 function bindingScope(scopes, name) {
   for (let index = scopes.length - 1; index >= 0; index -= 1) {
     if (scopes[index].bindings.has(name)) return scopes[index];
@@ -76,6 +81,7 @@ function lexicalScopeVisitors(enter, exit) {
 module.exports = {
   bindingScope,
   clearNullableBinding,
+  clearObjectProps,
   createScope,
   functionScopeVisitors,
   isNullableBinding,

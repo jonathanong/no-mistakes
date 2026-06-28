@@ -5,6 +5,7 @@ type Getter = () => User | null;
 declare const serverApi: {
   get(path: string): Promise<User | null>;
 };
+declare function retry<T>(callback: () => T): T;
 
 export function direct(): User | null {
   return serverApi.get("/users/1");
@@ -53,4 +54,8 @@ export function overloadedMixed(path: "missing"): User | null;
 export function overloadedMixed(path: "present"): User;
 export function overloadedMixed(path: string) {
   return serverApi.get(path);
+}
+
+export function callbackFetch(): User | null {
+  return retry(() => serverApi.get("/users/12"));
 }

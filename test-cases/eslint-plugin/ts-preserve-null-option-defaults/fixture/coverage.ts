@@ -147,6 +147,19 @@ export function assertedMemberDefault(options: Options) {
   return (options.value as string | null) ?? "fallback";
 }
 
+export function nonNullMemberDefault(options: Options) {
+  return [options.value! ?? "fallback", options!.value ?? "fallback"];
+}
+
+export function readonlyOptions(options: Readonly<Options>) {
+  return options.value ?? "fallback";
+}
+
+export function restAlias(options: Options) {
+  const { ...opts } = options;
+  return opts.value ?? "fallback";
+}
+
 export function intersected(options: IntersectedOptions) {
   return [options.inherited ?? "fallback", options.intersected ?? "fallback"];
 }

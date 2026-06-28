@@ -86,7 +86,7 @@ module.exports = Object.assign(
       }
 
       function enterFunction(node) {
-        functionStack.push(checkedFunction(node));
+        functionStack.push(currentFunctionChecked() || checkedFunction(node));
       }
 
       function exitFunction() {
