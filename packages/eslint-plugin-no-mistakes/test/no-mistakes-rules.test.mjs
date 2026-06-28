@@ -1081,6 +1081,18 @@ describe("no-global-fetch-outside-helper", () => {
     allowedPathPatterns: ["web/lib/api/**", "web/lib/client/**"],
   };
 
+  it("is opt-in without checked paths", () => {
+    assert.deepEqual(
+      messages(
+        "fetch('/api/users')",
+        "no-global-fetch-outside-helper",
+        undefined,
+        "web/app/page.ts",
+      ),
+      [],
+    );
+  });
+
   it("reports global fetch calls in checked non-helper files", () => {
     assert.deepEqual(
       messages(
@@ -1089,7 +1101,7 @@ describe("no-global-fetch-outside-helper", () => {
         option,
         "web/app/users.ts",
       ),
-      Array(19).fill("globalFetch"),
+      Array(20).fill("globalFetch"),
     );
   });
 
@@ -1105,7 +1117,7 @@ describe("no-global-fetch-outside-helper", () => {
     );
   });
 
-  it("ignores local fetch bindings, global-root shadows, and reduced-fidelity aliases", () => {
+  it("ignores local fetch bindings, global-root shadows, and unsupported dynamic aliases", () => {
     assert.deepEqual(
       messages(
         ruleFixture("no-global-fetch-outside-helper", "valid.ts"),
@@ -1114,6 +1126,340 @@ describe("no-global-fetch-outside-helper", () => {
         "web/app/users.ts",
       ),
       [],
+    );
+  });
+
+  it("does not report shadowed aliases", () => {
+    const code = `
+      const request = fetch;
+      function run(request) {
+        request("/api/shadowed");
+      }
+      request("/api/global");
+    `;
+    assert.deepEqual(messages(code, "no-global-fetch-outside-helper", option, "web/app/users.ts"), [
+      "globalFetch",
+    ]);
+  });
+
+  it("tracks assignment aliases and reassignment clearing", () => {
+    const code = `
+      let assigned;
+      assigned = self.fetch;
+      assigned("/api/assigned");
+      let { fetch: destructured } = self;
+      destructured("/api/destructured");
+      ({ fetch: destructured } = client);
+      destructured("/api/client");
+      let blockAssigned;
+      {
+        blockAssigned = self.fetch;
+      }
+      blockAssigned("/api/block");
+      var repeated = fetch;
+      var repeated;
+      repeated("/api/repeated");
+      const nonFetchAlias = 1;
+      let reassigned = fetch;
+      reassigned = nonFetchAlias;
+      reassigned("/api/not-global");
+      let request = fetch;
+      function reset() {
+        request = client.fetch;
+      }
+      request("/api/outer");
+      const apiFetch = request;
+      apiFetch("/api/const-from-mutable");
+      let conditional = fetch;
+      if (useClient) conditional = client.fetch;
+      conditional("/api/conditional");
+      let branchLocal = fetch;
+      if (useClient) {
+        branchLocal = client.fetch;
+        branchLocal("/api/branch-local");
+      }
+      branchLocal("/api/after-branch");
+      let branchIsolated = fetch;
+      if (useClient) {
+        branchIsolated = client.fetch;
+      } else {
+        branchIsolated("/api/branch-isolated");
+      }
+      let switchAlias = fetch;
+      switch (kind) {
+        case "client":
+          switchAlias = client.fetch;
+          break;
+        case "load":
+          switchAlias("/api/switch-alias");
+          break;
+      }
+      let switchFallthroughAlias = client.fetch;
+      switch (kind) {
+        case "global":
+          switchFallthroughAlias = fetch;
+        case "load":
+          switchFallthroughAlias("/api/switch-fallthrough-alias");
+          break;
+      }
+      let switchReturnAlias = fetch;
+      function switchReturnLoad(kind) {
+        switch (kind) {
+          case "client":
+            switchReturnAlias = client.fetch;
+            return;
+          case "load":
+            switchReturnAlias("/api/switch-return-alias");
+        }
+      }
+      switchReturnLoad(kind);
+      let switchDiscriminantClear = fetch;
+      switch ((switchDiscriminantClear = client.fetch)) {
+        default:
+          break;
+      }
+      switchDiscriminantClear("/api/switch-discriminant-clear");
+      let switchDiscriminantAlias = client.fetch;
+      switch ((switchDiscriminantAlias = fetch)) {
+        default:
+          break;
+      }
+      switchDiscriminantAlias("/api/switch-discriminant-alias");
+      let maybeGlobal = client.fetch;
+      if (useGlobal) maybeGlobal = fetch;
+      maybeGlobal("/api/not-definitely-global");
+      var conditionalVar = fetch;
+      if (useClient) var conditionalVar = client.fetch;
+      conditionalVar("/api/conditional-var");
+      function forwardLoad() {
+        return forwardRequest("/api/forward");
+      }
+      let forwardRequest = fetch;
+      forwardLoad();
+      function assignedForwardLoad() {
+        return assignedForwardRequest("/api/assigned-forward");
+      }
+      let assignedForwardRequest;
+      assignedForwardRequest = fetch;
+      assignedForwardLoad();
+      let tryAlias = fetch;
+      try {
+        risky();
+      } catch {
+        tryAlias = client.fetch;
+      }
+      tryAlias("/api/try-alias");
+      try {
+        const tryBlockForwardRequest = fetch;
+        tryBlockForwardRequest("/api/try-block-forward");
+      } catch {}
+      let ifTestAlias;
+      if ((ifTestAlias = fetch)) {
+        ifTestAlias("/api/if-test");
+      }
+      let conditionalClear = fetch;
+      (conditionalClear = client.fetch) ? noop() : noop();
+      conditionalClear("/api/conditional-clear");
+      let logicalClear = fetch;
+      (logicalClear = client.fetch) && noop();
+      logicalClear("/api/logical-clear");
+      let compoundClear = fetch;
+      compoundClear &&= client.fetch;
+      compoundClear("/api/compound-clear");
+      let logicalPreserve = fetch;
+      logicalPreserve ||= client.fetch;
+      logicalPreserve("/api/logical-preserve");
+      let optionalArgumentAlias = client.fetch;
+      maybeClient?.send((optionalArgumentAlias = fetch));
+      optionalArgumentAlias("/api/optional-argument");
+      let whileClear = fetch;
+      while ((whileClear = client.fetch) && false) {}
+      whileClear("/api/while-clear");
+      let finallyAlias = client.fetch;
+      try {
+        risky();
+      } finally {
+        finallyAlias = fetch;
+      }
+      finallyAlias("/api/finally-alias");
+      let finallyCleared = fetch;
+      try {
+        risky();
+      } finally {
+        finallyCleared = client.fetch;
+      }
+      finallyCleared("/api/finally-cleared");
+      let forInit = client.fetch;
+      for (forInit = fetch; false;) {}
+      forInit("/api/for-init");
+      for (var declaredForInit = fetch; false;) {}
+      declaredForInit("/api/declared-for-init");
+      let forTestClear = fetch;
+      for (; (forTestClear = client.fetch) && false;) {}
+      forTestClear("/api/for-test-clear");
+      let forTestAlias = client.fetch;
+      for (; (forTestAlias = fetch) && false;) {}
+      forTestAlias("/api/for-test-alias");
+      let forOfSourceClear = fetch;
+      for (const item of ((forOfSourceClear = client.fetch), [])) {}
+      forOfSourceClear("/api/for-of-source-clear");
+      let forOfSourceAlias = client.fetch;
+      for (const item of ((forOfSourceAlias = fetch), [])) {}
+      forOfSourceAlias("/api/for-of-source-alias");
+      let doAlias = client.fetch;
+      do {
+        doAlias = fetch;
+      } while (false);
+      doAlias("/api/do-alias");
+      let doCleared = fetch;
+      do {
+        doCleared = client.fetch;
+      } while (false);
+      doCleared("/api/do-cleared");
+      let lateAssigned;
+      lateAssigned("/api/late-before-assignment");
+      lateAssigned = fetch;
+      let uncalledFunctionAlias = client.fetch;
+      (() => uncalledFunctionAlias("/api/uncalled-function-alias"))();
+      function enableUncalledGlobal() {
+        uncalledFunctionAlias = fetch;
+      }
+      let iifeAlias = client.fetch;
+      (() => {
+        iifeAlias = fetch;
+      })();
+      iifeAlias("/api/iife-alias");
+      let iifeClear = fetch;
+      (() => {
+        iifeClear = client.fetch;
+      })();
+      iifeClear("/api/iife-clear");
+      function localForwardAliasLoad() {
+        const localForwardAlias = forwardRequest;
+        localForwardAlias("/api/local-forward-alias");
+      }
+      localForwardAliasLoad();
+      function recoverableTryLoad() {
+        recoverableTryRequest("/api/recoverable-try");
+      }
+      let recoverableTryRequest = client.fetch;
+      try {
+        risky();
+        recoverableTryRequest = fetch;
+      } catch {}
+      recoverableTryLoad();
+      function clearedForwardLoad() {
+        let clearedForwardRequest = fetch;
+        clearedForwardRequest = client.fetch;
+        clearedForwardRequest("/api/cleared-forward");
+      }
+      clearedForwardLoad();
+      function destructuredAssignedForwardLoad() {
+        return destructuredAssignedForwardRequest("/api/destructured-assigned-forward");
+      }
+      let destructuredAssignedForwardRequest;
+      ({ fetch: destructuredAssignedForwardRequest } = globalThis);
+      destructuredAssignedForwardLoad();
+      let objectPatternClear = fetch;
+      ({ other: objectPatternClear } = client);
+      objectPatternClear("/api/object-pattern-clear");
+      let arrayPatternClear = fetch;
+      [arrayPatternClear] = values;
+      arrayPatternClear("/api/array-pattern-clear");
+      let classAlias = fetch;
+      class AliasReset {
+        field = (classAlias = client.fetch);
+      }
+      classAlias("/api/class-alias");
+      let classKeyClear = fetch;
+      class KeyClear {
+        [(classKeyClear = client.fetch)] = 1;
+      }
+      classKeyClear("/api/class-key-clear");
+      let classKeyAlias = client.fetch;
+      class KeyAlias {
+        [(classKeyAlias = fetch)] = 1;
+      }
+      classKeyAlias("/api/class-key-alias");
+      let staticBlockAlias = client.fetch;
+      class StaticBlockAlias {
+        static {
+          staticBlockAlias = fetch;
+        }
+      }
+      staticBlockAlias("/api/static-block-alias");
+      let staticFieldAlias = client.fetch;
+      class StaticFieldAlias {
+        static field = (staticFieldAlias = fetch);
+      }
+      staticFieldAlias("/api/static-field-alias");
+      assigned ||= self.fetch;
+    `;
+    assert.deepEqual(messages(code, "no-global-fetch-outside-helper", option, "web/app/users.ts"), [
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+      "globalFetch",
+    ]);
+  });
+
+  it("ignores type-only imports when checking global fetch shadows", () => {
+    const typeOnlyCode = `
+      import type { fetch, window } from "./types";
+      fetch("/api/type-only-fetch");
+      window.fetch("/api/type-only-window");
+    `;
+    assert.deepEqual(
+      messages(typeOnlyCode, "no-global-fetch-outside-helper", option, "web/app/users.ts"),
+      ["globalFetch", "globalFetch"],
+    );
+
+    const valueImportCode = `
+      import { fetch } from "./runtime";
+      fetch("/api/value-import");
+    `;
+    assert.deepEqual(
+      messages(valueImportCode, "no-global-fetch-outside-helper", option, "web/app/users.ts"),
+      [],
+    );
+
+    const ambientCode = `
+      declare const fetch: typeof globalThis.fetch;
+      declare const window: Window;
+      fetch("/api/ambient-fetch");
+      window.fetch("/api/ambient-window");
+    `;
+    assert.deepEqual(
+      messages(ambientCode, "no-global-fetch-outside-helper", option, "web/app/users.ts"),
+      ["globalFetch", "globalFetch"],
     );
   });
 
@@ -1222,6 +1568,19 @@ describe("no-global-fetch-outside-helper", () => {
       __test.hasLocalBinding(null, { sourceCode: { getScope: () => ({ upper: null }) } }),
       false,
     );
+    assert.equal(__test.isRuntimeBinding({ type: "Type" }), false);
+    assert.equal(
+      __test.isAmbientDeclaration({ type: "Variable", parent: { declare: true } }),
+      true,
+    );
+    assert.doesNotThrow(() =>
+      __test.setObjectPatternFetchAliases(
+        { type: "Identifier", name: "request" },
+        true,
+        aliasContext,
+        new Set(),
+      ),
+    );
     assert.equal(
       __test.hasLocalBinding(
         { type: "Identifier", name: "missing" },
@@ -1251,5 +1610,26 @@ describe("no-global-fetch-outside-helper", () => {
       }),
       false,
     );
+    assert.equal(
+      __test.isAlwaysExecutedChild(
+        { type: "IfStatement", test: { type: "Identifier", name: "check" } },
+        { type: "Identifier", name: "other" },
+      ),
+      false,
+    );
+    const logicalLeft = { type: "Identifier", name: "left" };
+    assert.equal(
+      __test.isAlwaysExecutedChild({ type: "LogicalExpression", left: logicalLeft }, logicalLeft),
+      true,
+    );
+    const conditionalTest = { type: "Identifier", name: "test" };
+    assert.equal(
+      __test.isAlwaysExecutedChild(
+        { type: "ConditionalExpression", test: conditionalTest },
+        conditionalTest,
+      ),
+      true,
+    );
+    assert.equal(__test.isMaybeExecuted({ parent: { type: "FunctionDeclaration" } }), true);
   });
 });

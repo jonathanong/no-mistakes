@@ -49,7 +49,7 @@ Rules not listed here have no options.
 | `async-try-catch-return-await` | `{ handlers?: { sourceSpecifierPatterns?: string[], calleeNamePatterns?: string[] }[] }`. |
 | `module-mock-boundary` | `{ internalSpecifiers?: string[], includePathPatterns?: string[], excludePathPatterns?: string[], requireLiteralSpecifiers?: boolean, baseline?: [string, string, number][], integrationExports?: object }`. |
 | `module-mock-preserve-exports` | `{ internalSpecifiers?: string[], includePathPatterns?: string[], excludePathPatterns?: string[], baseline?: [string, string][] }`. |
-| `no-global-fetch-outside-helper` | `{ checkedPathPatterns: string[], allowedPathPatterns: string[] }`; both arrays are required and non-empty. |
+| `no-global-fetch-outside-helper` | `{ checkedPathPatterns?: string[], allowedPathPatterns?: string[] }`. |
 | `playwright-assertion-timeout-cap` | `{ max?: number }`, default `10000`. |
 | `playwright-consistent-attribute` | `{ selectorAttributes?: string[], canonicalAttribute?: string }`, defaults `["data-testid", "data-pw"]` and `"data-pw"`. |
 | `playwright-defaults` | `{ selectorAttributes?: string[] }`. |
