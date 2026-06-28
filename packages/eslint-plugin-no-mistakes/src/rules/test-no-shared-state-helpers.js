@@ -101,6 +101,7 @@ function isMutableInitializer(node) {
 function childNodes(node) {
   const children = [];
   for (const key in node) {
+    if (!Object.prototype.hasOwnProperty.call(node, key)) continue;
     if (
       key === "parent" ||
       key === "loc" ||
