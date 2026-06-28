@@ -16,6 +16,7 @@ export async function worker(id: string) {
 
 export async function fanout(items: string[]) {
   Promise.all(items.map((item) => enqueueEmail(item)));
+  await Promise.all([wrap(enqueueEmail(items[0]))]);
   await Promise.all(
     items.map((item) => {
       enqueueEmail(item);
@@ -26,3 +27,9 @@ export async function fanout(items: string[]) {
   });
   await Promise.all(callbacks);
 }
+
+export function laterRequire(id: string) {
+  enqueueLater(id);
+}
+
+const { enqueueLater } = require("@app/jobs");

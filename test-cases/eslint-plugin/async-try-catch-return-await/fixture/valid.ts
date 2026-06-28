@@ -36,6 +36,28 @@ export async function alias() {
   }
 }
 
+export async function reassignedAlias() {
+  try {
+    let result = request();
+    result = "cached";
+    return result;
+  } catch (error) {
+    handleRateLimit(error);
+  }
+}
+
+export async function shadowedAlias() {
+  try {
+    const result = request();
+    {
+      const result = "cached";
+      return result;
+    }
+  } catch (error) {
+    handleRateLimit(error);
+  }
+}
+
 export async function namespaceHandler() {
   try {
     return await request();

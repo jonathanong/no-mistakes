@@ -31,6 +31,9 @@ function isAwaited(node) {
 
 function mayReturnPromise(node) {
   const expression = unwrapExpression(node);
+  if (expression?.type === "ConditionalExpression") {
+    return mayReturnPromise(expression.consequent) || mayReturnPromise(expression.alternate);
+  }
   return (
     expression?.type === "CallExpression" ||
     expression?.type === "NewExpression" ||
@@ -68,6 +71,25 @@ function traverse(context, node, visit, root = node) {
 
 function variableName(node) {
   return node?.type === "Identifier" ? node.name : null;
+}
+
+function resolveVariable(node, context) {
+  let scope = context.sourceCode.getScope(node);
+  while (scope) {
+    const variable = scope.variables.find((candidate) => candidate.name === node.name);
+    if (variable) return variable;
+    scope = scope.upper;
+  }
+}
+
+function isReassignedBeforeReturn(variable, node) {
+  const definitionNames = new Set(variable.defs.map((def) => def.name));
+  return variable.references.some(
+    (reference) =>
+      reference.isWrite() &&
+      !definitionNames.has(reference.identifier) &&
+      reference.identifier.range[0] < node.range[0],
+  );
 }
 
 module.exports = rule(
@@ -119,6 +141,12 @@ module.exports = rule(
         node,
         messageId: "awaitReturn",
         fix(fixer) {
+          if (unwrapExpression(node.argument) !== node.argument) {
+            return fixer.replaceText(
+              node.argument,
+              `await (${context.sourceCode.getText(node.argument)})`,
+            );
+          }
           return fixer.insertTextBefore(node.argument, "await ");
         },
       });
@@ -127,12 +155,13 @@ module.exports = rule(
     function checkTryBlock(node) {
       if (!node.handler || !catchCallsHandler(node.handler)) return;
       if (!findContainingFunction(node)?.async) return;
-      const promiseAliases = new Set();
+      const promiseAliases = new WeakSet();
       traverse(context, node.block, (child) => {
         if (child.type === "VariableDeclarator") {
           const name = variableName(child.id);
           if (!name || isAwaited(child.init)) return;
-          if (mayReturnPromise(child.init)) promiseAliases.add(name);
+          const variable = resolveVariable(child.id, context);
+          if (variable && mayReturnPromise(child.init)) promiseAliases.add(variable);
           return;
         }
         if (child.type !== "ReturnStatement" || !child.argument || isAwaited(child.argument))
@@ -142,8 +171,15 @@ module.exports = rule(
           reportReturn(child);
           return;
         }
-        if (argument.type === "Identifier" && promiseAliases.has(argument.name)) {
-          reportReturn(child);
+        if (argument.type === "Identifier") {
+          const variable = resolveVariable(argument, context);
+          if (
+            variable &&
+            promiseAliases.has(variable) &&
+            !isReassignedBeforeReturn(variable, argument)
+          ) {
+            reportReturn(child);
+          }
         }
       });
     }

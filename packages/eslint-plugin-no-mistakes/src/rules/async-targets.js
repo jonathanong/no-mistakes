@@ -83,6 +83,35 @@ function createTargetMatcher(context) {
     if (variable) namespaceBindings.set(variable, source);
   }
 
+  function recordRequireDeclarator(node) {
+    const source = requireSource(node.init);
+    if (!source) return;
+    if (node.id.type === "Identifier") {
+      recordNamespace(node.id, source);
+      recordDirect(node.id, source, node.id.name);
+      return;
+    }
+    if (node.id.type === "ObjectPattern") {
+      for (const property of node.id.properties) {
+        if (property.type !== "Property") continue;
+        recordDirect(property.value, source, propertyName(property.key));
+      }
+    }
+  }
+
+  function recordProgramRequires(node) {
+    for (const statement of node.body) {
+      const declarations =
+        statement.type === "VariableDeclaration"
+          ? statement.declarations
+          : statement.type === "ExportNamedDeclaration" &&
+              statement.declaration?.type === "VariableDeclaration"
+            ? statement.declaration.declarations
+            : [];
+      for (const declaration of declarations) recordRequireDeclarator(declaration);
+    }
+  }
+
   function isDirectTarget(node) {
     if (node.type !== "Identifier") return false;
     const variable = resolveVariable(node, context);
@@ -105,6 +134,7 @@ function createTargetMatcher(context) {
       return isDirectTarget(node.callee) || isNamespaceTarget(node.callee);
     },
     visitors: {
+      Program: recordProgramRequires,
       ImportDeclaration(node) {
         const source = node.source.value;
         for (const specifier of node.specifiers) {
@@ -118,19 +148,7 @@ function createTargetMatcher(context) {
         }
       },
       VariableDeclarator(node) {
-        const source = requireSource(node.init);
-        if (!source) return;
-        if (node.id.type === "Identifier") {
-          recordNamespace(node.id, source);
-          recordDirect(node.id, source, node.id.name);
-          return;
-        }
-        if (node.id.type === "ObjectPattern") {
-          for (const property of node.id.properties) {
-            if (property.type !== "Property") continue;
-            recordDirect(property.value, source, propertyName(property.key));
-          }
-        }
+        recordRequireDeclarator(node);
       },
     },
   };

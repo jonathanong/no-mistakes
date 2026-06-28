@@ -29,6 +29,11 @@ export async function blockCallback(items: string[]) {
       return enqueueEmail(item);
     }),
   );
+  await Promise.all(
+    items.map((item) => {
+      if (item) return enqueueEmail(item);
+    }),
+  );
 }
 
 export async function shadowed(enqueueEmail: (id: string) => void, id: string) {

@@ -68,6 +68,14 @@ export async function satisfiesWrapper() {
   }
 }
 
+export async function branchReturn(useFallback: boolean) {
+  try {
+    return useFallback ? cachedRequest() : request();
+  } catch (error) {
+    handleRateLimit(error);
+  }
+}
+
 export async function constructorReturn() {
   try {
     return new RequestJob();

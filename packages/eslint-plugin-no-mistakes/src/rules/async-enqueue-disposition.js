@@ -51,25 +51,38 @@ function isCallArgument(node) {
 
 function expressionReturnedFromCallback(node, fn) {
   let current = node;
+  let returnStatement = null;
   while (current && current !== fn) {
     if (current.parent === fn && fn.body === current && fn.body.type !== "BlockStatement") {
       return true;
     }
-    if (current.parent?.type === "ReturnStatement" && current.parent.parent === fn.body) {
-      return true;
+    if (current.parent?.type === "ReturnStatement") {
+      returnStatement = current.parent;
     }
     current = current.parent;
   }
-  return false;
+  return Boolean(returnStatement);
 }
 
 function canReachPromiseAll(node, promiseAll) {
   let current = node;
   while (current && current !== promiseAll) {
-    if (isFunction(current) && !expressionReturnedFromCallback(node, current)) {
+    const parent = current.parent;
+    if (isFunction(parent)) {
+      if (!expressionReturnedFromCallback(node, parent) || !isCallArgument(parent)) {
+        return false;
+      }
+      current = parent.parent;
+      continue;
+    }
+    if (
+      parent.type === "CallExpression" &&
+      parent !== promiseAll &&
+      parent.arguments.includes(current)
+    ) {
       return false;
     }
-    current = current.parent;
+    current = parent;
   }
   return current === promiseAll;
 }
