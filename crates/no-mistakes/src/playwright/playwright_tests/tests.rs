@@ -94,13 +94,13 @@ struct DescribeNameVisitor {
 impl<'a> Visit<'a> for DescribeNameVisitor {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         if let Some(path) = crate::playwright::ast::expression_path(&call.callee) {
-            if path.first().map(String::as_str) == Some("test") || path.first().map(String::as_str) == Some("describe") {
+            if path.first().map(String::as_str) == Some("test")
+                || path.first().map(String::as_str) == Some("describe")
+            {
                 let name = describe_name(call);
                 // Collect results for all test/describe related calls to verify negative cases too
                 // (except test.describe() inner parts, so we just check if it's a top level call in our context)
-                if path.len() >= 1 {
-                    self.names.push(name);
-                }
+                self.names.push(name);
             }
         }
         walk::walk_call_expression(self, call);
