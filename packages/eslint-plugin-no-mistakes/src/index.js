@@ -27,10 +27,12 @@ const rules = {
   "playwright-unique": require("./rules/playwright-unique"),
   "react-no-nullish-react-node": require("./rules/react-no-nullish-react-node"),
   "react-no-use-promise-resolve": require("./rules/react-no-use-promise-resolve"),
+  "server-require-nullable-fetch-wrapper": require("./rules/server-require-nullable-fetch-wrapper"),
   "test-no-error-message-matching": require("./rules/test-no-error-message-matching"),
   "test-no-shared-state": require("./rules/test-no-shared-state"),
   "ts-no-export-renaming": require("./rules/ts-no-export-renaming"),
   "ts-no-function-aliases": require("./rules/ts-no-function-aliases"),
+  "ts-preserve-null-option-defaults": require("./rules/ts-preserve-null-option-defaults"),
   "vitest-mock-test-file-naming": require("./rules/vitest-mock-test-file-naming"),
 };
 
