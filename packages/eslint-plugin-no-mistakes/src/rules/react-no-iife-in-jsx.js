@@ -15,12 +15,20 @@ function visit(node, callback, seen = new Set()) {
   if (!node || seen.has(node)) return;
   seen.add(node);
   callback(node);
-  for (const [key, value] of Object.entries(node)) {
-    if (SKIP_KEYS.has(key) || !value) continue;
-    const values = Array.isArray(value) ? value : [value];
-    for (const child of values) {
-      if (child && typeof child === "object" && typeof child.type === "string") {
-        visit(child, callback, seen);
+  for (const key in node) {
+    if (SKIP_KEYS.has(key)) continue;
+    const value = node[key];
+    if (!value) continue;
+    if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i++) {
+        const child = value[i];
+        if (child && typeof child === "object" && typeof child.type === "string") {
+          visit(child, callback, seen);
+        }
+      }
+    } else {
+      if (typeof value === "object" && typeof value.type === "string") {
+        visit(value, callback, seen);
       }
     }
   }
