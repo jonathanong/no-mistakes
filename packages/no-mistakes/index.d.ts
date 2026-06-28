@@ -24,6 +24,8 @@ import type {
   FetchesOptions,
   ImpactedChecksOptions,
   ImpactedChecksReport,
+  ImportUsagesOptions,
+  ImportUsagesResult,
   ImportersOptions,
   ImportersResult,
   ResolveCheckOptions,
@@ -70,6 +72,7 @@ export function analyzeProject(options: AnalyzeProjectOptions): Promise<AnalyzeP
 export function symbols(options: SymbolsSignatureImpactOptions): Promise<SignatureImpactResult>;
 export function symbols(options: SymbolsListOptions): Promise<SymbolsResult>;
 export function symbols(options: SymbolsOptions): Promise<SymbolsResult | SignatureImpactResult>;
+export function importUsages(options?: ImportUsagesOptions): Promise<ImportUsagesResult>;
 export function importers(options: ImportersOptions): Promise<ImportersResult>;
 export function exportsOf(options: ExportsOfOptions): Promise<ExportsOfResult>;
 export function deadExports(options: DeadExportsOptions): Promise<DeadExportsResult>;

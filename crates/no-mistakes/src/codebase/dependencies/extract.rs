@@ -28,6 +28,8 @@ pub enum ImportKind {
     Dynamic,
     /// CommonJS `require("...")` call.
     Require,
+    /// CommonJS `require.resolve("...")` call.
+    RequireResolve,
 }
 
 /// An extracted import specifier with syntax metadata.
@@ -35,8 +37,10 @@ pub enum ImportKind {
 pub struct ExtractedImport {
     pub specifier: String,
     pub kind: ImportKind,
+    pub line: u32,
     pub function_scope: Option<String>,
     pub side_effect_only: bool,
+    pub re_export: bool,
     /// `true` for a runtime (`import()`/`require()`) import collected from inside
     /// an exported binding initializer, where the enclosing callback is never
     /// statically called (e.g. `next/dynamic(() => import('./Foo'))`). Such
@@ -89,7 +93,7 @@ impl ImportExtractor {
         };
         let ret = Parser::new(&allocator, source, source_type).parse();
 
-        Ok(extract_import_facts_from_program(&ret.program).imports)
+        Ok(extract_import_facts_from_program_with_source(&ret.program, source).imports)
     }
 }
 
@@ -98,7 +102,17 @@ pub fn extract_imports_from_program<'a>(program: &Program<'a>) -> Vec<ExtractedI
 }
 
 pub fn extract_import_facts_from_program<'a>(program: &Program<'a>) -> ImportFacts {
-    let mut collector = ImportCollector::default();
+    extract_import_facts_from_program_with_source(program, "")
+}
+
+pub fn extract_import_facts_from_program_with_source<'a>(
+    program: &Program<'a>,
+    source: &str,
+) -> ImportFacts {
+    let mut collector = ImportCollector {
+        source: source.to_string(),
+        ..ImportCollector::default()
+    };
     let local_type_names = local_type_declaration_names(program);
     collector
         .exported_functions
@@ -162,5 +176,7 @@ pub fn is_indexable(path: &Path) -> bool {
 mod coverage_tests;
 #[cfg(test)]
 mod extra_tests;
+#[cfg(test)]
+mod import_metadata_tests;
 #[cfg(test)]
 mod tests;

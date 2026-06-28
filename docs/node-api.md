@@ -5,7 +5,7 @@ analysis as the CLI. Use it when an agent or tool needs repeated structured
 queries without subprocess overhead.
 
 ```js
-const { analyzeProject, dependents, symbols, testsPlan } = require("no-mistakes");
+const { analyzeProject, dependents, importUsages, symbols, testsPlan } = require("no-mistakes");
 
 (async () => {
   const impact = await dependents({
@@ -17,6 +17,7 @@ const { analyzeProject, dependents, symbols, testsPlan } = require("no-mistakes"
   const report = await analyzeProject({
     root: process.cwd(),
     reports: [
+      { type: "importUsages", filters: ["src/**"] },
       { type: "symbols", files: ["src/api.mts"], include: "both" },
       { type: "symbols", files: ["src/api.mts"], mode: "signature-impact", symbol: "handler" },
       { type: "check" },
@@ -35,6 +36,7 @@ const { analyzeProject, dependents, symbols, testsPlan } = require("no-mistakes"
 | `dependents` | `dependents(options)` |
 | `related` | `related(options)` |
 | `symbols` | `symbols(options)` |
+| `import-usages` | `importUsages(options)` |
 | `fetches` | `fetches(options)` |
 | `check` | `check(options)` |
 | `tests plan` | `testsPlan(options)`; `framework` accepts `vitest`, `playwright`, or `swift` |

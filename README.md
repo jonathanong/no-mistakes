@@ -23,6 +23,7 @@ dynamic and CommonJS imports).
 | Who uses this export? | `no-mistakes dependents <file>#Symbol --format json` |
 | What does a signature change affect? | `no-mistakes symbols <file> --mode signature-impact --symbol Symbol --format json` |
 | What does this module export/import? | `no-mistakes symbols <file> --include both --format json` |
+| Which packages do source files import directly? | `no-mistakes import-usages --root . --filter 'src/**' --format json` |
 | Which tests should run? | `no-mistakes tests plan <playwright\|vitest> --format json` |
 | Why was a test selected? | `no-mistakes tests why <test> --plan plan.json` |
 | Which Playwright tests cover this page? | `no-mistakes playwright related <file> --json` |

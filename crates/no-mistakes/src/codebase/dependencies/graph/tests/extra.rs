@@ -163,8 +163,10 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
     let imports_items = vec![ExtractedImport {
         specifier: "@x/web".to_string(),
         kind: ImportKind::Static,
+        line: 1,
         function_scope: None,
         side_effect_only: false,
+        re_export: false,
         runtime_reachable: false,
     }];
     let imports_facts = crate::codebase::ts_source::facts::TsFileFacts {
@@ -178,8 +180,10 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
     let hidden_workspace_items = vec![ExtractedImport {
         specifier: "@x/hidden".to_string(),
         kind: ImportKind::Static,
+        line: 1,
         function_scope: None,
         side_effect_only: false,
+        re_export: false,
         runtime_reachable: false,
     }];
     let hidden_workspace_facts = crate::codebase::ts_source::facts::TsFileFacts {
@@ -221,8 +225,10 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
     let hidden_imports_items = vec![ExtractedImport {
         specifier: "./index.mts".to_string(),
         kind: ImportKind::Static,
+        line: 1,
         function_scope: None,
         side_effect_only: false,
+        re_export: false,
         runtime_reachable: false,
     }];
     let hidden_imports_facts = crate::codebase::ts_source::facts::TsFileFacts {

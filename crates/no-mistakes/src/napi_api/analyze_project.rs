@@ -1,6 +1,7 @@
 use anyhow::{bail, Context, Result as AnyhowResult};
 use serde_json::Value;
 
+use super::codebase::build_import_usages_args;
 use super::codebase::build_traverse_args;
 use super::options::{parse_options, to_napi_error};
 use crate::codebase::dependencies::{Direction, SharedTraversalContext, TraverseArgs};
@@ -11,7 +12,8 @@ mod options;
 mod types;
 
 use options::{
-    playwright_options, project_options, resolve_root, resolve_tsconfig, symbols_options,
+    import_usages_options, playwright_options, project_options, resolve_root, resolve_tsconfig,
+    symbols_options,
 };
 use types::{
     AnalyzeProjectOptions, AnalyzeProjectResult, AnalyzeReportRequest, AnalyzeReportResult,
@@ -55,6 +57,9 @@ fn run_report(
     }
     if let Some(run) = symbols_runner(&request.report_type) {
         return call_report(symbols_options(request, options)?, run);
+    }
+    if request.report_type == "importUsages" {
+        return import_usages_report(request, options, shared);
     }
     if let Some(run) = playwright_runner(&request.report_type) {
         return call_report(playwright_options(request, options)?, run);
@@ -129,13 +134,31 @@ fn graph_report(
     Ok(serde_json::from_str(&json)?)
 }
 
+fn import_usages_report(
+    request: &AnalyzeReportRequest,
+    options: &AnalyzeProjectOptions,
+    shared: Option<&mut SharedTraversalContext>,
+) -> AnyhowResult<Value> {
+    let Some(shared) = shared else {
+        bail!("internal error: importUsages report requested without traversal context");
+    };
+    let value = import_usages_options(request, options)?;
+    let options = serde_json::from_str(value.as_str())?;
+    let args = build_import_usages_args(options);
+    let cwd = std::env::current_dir().context("reading current directory")?;
+    let root = shared.root().to_path_buf();
+    let report =
+        crate::codebase::import_usages::collect_with_facts(&args, &root, &cwd, shared.facts())?;
+    Ok(serde_json::to_value(report)?)
+}
+
 fn prepare_shared_traversal(
     options: &AnalyzeProjectOptions,
 ) -> AnyhowResult<Option<SharedTraversalContext>> {
     if !options.reports.iter().any(|request| {
         matches!(
             request.report_type.as_str(),
-            "dependencies" | "dependents" | "related"
+            "dependencies" | "dependents" | "related" | "importUsages"
         )
     }) {
         return Ok(None);
@@ -159,6 +182,11 @@ fn prepare_shared_traversal(
                 )
                 .with_symbols(args.include_symbols),
             );
+        } else if request.report_type == "importUsages" {
+            shared.include_plan(crate::codebase::dependencies::graph::GraphBuildPlan {
+                imports: true,
+                ..Default::default()
+            });
         }
     }
 

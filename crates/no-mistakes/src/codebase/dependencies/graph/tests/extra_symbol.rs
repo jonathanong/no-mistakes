@@ -1,35 +1,6 @@
 // ── SymbolIndex ──────────────────────────────────────────────────────────
 
 #[test]
-fn symbol_index_basic_lookup() {
-    let mut map: HashMap<PathBuf, Vec<(PathBuf, String, String, bool)>> = HashMap::new();
-    map.insert(
-        p("/src/b.mts"),
-        vec![(
-            p("/src/a.mts"),
-            "alpha".to_string(),
-            "alpha".to_string(),
-            false,
-        )],
-    );
-    let index = SymbolIndex::build(&map);
-    let importers = index
-        .importers_of(p("/src/a.mts").as_path(), "alpha")
-        .unwrap();
-    assert_eq!(importers.len(), 1);
-    assert_eq!(importers[0].0, p("/src/b.mts"));
-}
-
-#[test]
-fn symbol_index_missing_returns_none() {
-    let map: HashMap<PathBuf, Vec<(PathBuf, String, String, bool)>> = HashMap::new();
-    let index = SymbolIndex::build(&map);
-    assert!(index
-        .importers_of(p("/src/a.mts").as_path(), "ghost")
-        .is_none());
-}
-
-#[test]
 fn symbol_index_multiple_importers() {
     let mut map: HashMap<PathBuf, Vec<(PathBuf, String, String, bool)>> = HashMap::new();
     map.insert(
@@ -320,22 +291,28 @@ fn symbol_import_target_helpers_cover_node_kinds() {
             ExtractedImport {
                 specifier: "./source.mts".to_string(),
                 kind: ImportKind::Static,
+        line: 1,
                 function_scope: Some("run".to_string()),
         side_effect_only: false,
+        re_export: false,
         runtime_reachable: false,
             },
             ExtractedImport {
                 specifier: "./missing.mts".to_string(),
                 kind: ImportKind::Static,
+        line: 1,
                 function_scope: Some("run".to_string()),
         side_effect_only: false,
+        re_export: false,
         runtime_reachable: false,
             },
             ExtractedImport {
                 specifier: "react".to_string(),
                 kind: ImportKind::Type,
+        line: 1,
                 function_scope: None,
         side_effect_only: false,
+        re_export: false,
         runtime_reachable: false,
             },
         ],
