@@ -1,5 +1,5 @@
 use crate::tests::{TargetsArgs, TargetsFormat, TestFramework, TestPlan};
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use no_mistakes::codebase::test_discovery::{discover_tests, TestExecutionTarget, TestRunner};
 use no_mistakes::config::v2::load_v2_config;
 use serde::Serialize;
@@ -37,6 +37,17 @@ pub(crate) fn run(args: TargetsArgs) -> Result<ExitCode> {
     } else {
         args.format.unwrap_or(TargetsFormat::Json)
     };
+    if matches!(format, TargetsFormat::Commands) && !report.warnings.is_empty() {
+        let warnings = report
+            .warnings
+            .iter()
+            .map(|warning| format!("warning: {}: {}", warning.file, warning.message))
+            .collect::<Vec<_>>()
+            .join("\n");
+        bail!(
+            "{warnings}\n`tests targets --format commands` requires all requested files to be owned by a configured test framework.\n"
+        );
+    }
     print!("{}", render_targets(&report, format)?);
     Ok(ExitCode::SUCCESS)
 }

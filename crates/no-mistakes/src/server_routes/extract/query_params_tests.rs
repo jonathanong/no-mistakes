@@ -34,7 +34,10 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
         const satisfies = req.query.satisfies satisfies string;
         req.query("call");
         req.queries("calls");
+        c.req.query("honoCall");
+        context.request.query("contextCall");
         req.query(dynamic);
+        unrelated.query("ignoredCall");
         req.get("ignored");
         new URLSearchParams("?url=value").get("url");
         if (req.query.ifTest) { req.query.ifBody; } else { req.query.elseBody; }
@@ -80,6 +83,7 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
         "forOf",
         "functionBody",
         "functionExpressionBody",
+        "honoCall",
         "ifBody",
         "ifTest",
         "exportSpecifierLocal",
@@ -93,6 +97,7 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
         "tryBody",
         "url",
         "whileTest",
+        "contextCall",
     ] {
         assert!(
             params.iter().any(|value| value == param),
@@ -100,6 +105,7 @@ fn query_param_walker_covers_statement_and_expression_shapes() {
         );
     }
     assert!(!params.iter().any(|value| value == "ignored"));
+    assert!(!params.iter().any(|value| value == "ignoredCall"));
 }
 
 #[test]

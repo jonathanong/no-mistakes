@@ -38,3 +38,11 @@ fn contract_helpers_match_routes_and_extract_query_parts() {
         vec!["sort"]
     );
 }
+
+#[test]
+fn contract_helpers_ignore_dynamic_query_placeholders() {
+    assert_eq!(
+        query_params_from_pattern("/search?:param&term"),
+        Some(vec!["term".to_string()])
+    );
+}

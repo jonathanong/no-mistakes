@@ -111,6 +111,29 @@ fn test_targets_vitest_reports_project_commands() {
 }
 
 #[test]
+fn test_targets_vitest_commands_format_requires_unmatched_files() {
+    let root = fixture("test-plan-project-discovery");
+    let output = run(&[
+        "test",
+        "targets",
+        "vitest",
+        "web/storybook/button.stories.tsx",
+        "web/app/page.tsx",
+        "--root",
+        root.to_str().unwrap(),
+        "--format",
+        "commands",
+    ]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("warning: web/app/page.tsx"));
+    assert!(stderr
+        .contains("`tests targets --format commands` requires all requested files to be owned"));
+    assert!(stdout(&output).is_empty());
+}
+
+#[test]
 fn test_plan_vitest_project_excludes_are_applied() {
     let root = fixture("test-plan-project-discovery");
     let output = run(&[

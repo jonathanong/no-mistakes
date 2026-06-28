@@ -136,7 +136,7 @@ fn query_params_from_pattern(pattern: &str) -> Option<Vec<String>> {
     let mut params: BTreeSet<String> = BTreeSet::new();
     for pair in query.split('&') {
         let name = pair.split_once('=').map_or(pair, |(name, _)| name);
-        if !name.is_empty() {
+        if !name.is_empty() && !name.starts_with(':') {
             params.insert(name.to_string());
         }
     }
