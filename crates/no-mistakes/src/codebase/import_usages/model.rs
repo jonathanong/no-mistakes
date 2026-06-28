@@ -50,6 +50,8 @@ pub(crate) fn package_name_from_specifier(specifier: &str) -> Option<String> {
         || specifier.starts_with('/')
         || specifier.starts_with('#')
         || specifier.starts_with("node:")
+        || specifier.contains("://")
+        || specifier.starts_with("data:")
     {
         return None;
     }

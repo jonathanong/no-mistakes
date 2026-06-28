@@ -41,3 +41,18 @@ fn records_lines_side_effects_and_reexports() {
     assert!(!imports[1].side_effect_only);
     assert!(imports[1].re_export);
 }
+
+#[test]
+fn source_less_program_extraction_defaults_import_lines_to_one() {
+    let allocator = oxc_allocator::Allocator::default();
+    let parsed = Parser::new(
+        &allocator,
+        "\n\nconst resolved = require.resolve('pkg');",
+        SourceType::ts(),
+    )
+    .parse();
+
+    let facts = extract_import_facts_from_program(&parsed.program);
+
+    assert_eq!(facts.imports[0].line, 1);
+}

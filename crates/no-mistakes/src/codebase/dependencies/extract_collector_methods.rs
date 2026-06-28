@@ -43,7 +43,11 @@ impl ImportCollector {
             self.imports.push(ExtractedImport {
                 specifier: specifier.to_string(),
                 kind,
-                line: crate::codebase::ts_source::byte_offset_to_line(&self.source, byte_offset),
+                line: if self.source.is_empty() {
+                    1
+                } else {
+                    crate::codebase::ts_source::byte_offset_to_line(&self.source, byte_offset)
+                },
                 function_scope: self.function_stack.last().cloned(),
                 side_effect_only,
                 re_export,

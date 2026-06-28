@@ -31,6 +31,11 @@ fn package_name_handles_npm_boundaries() {
     assert_eq!(package_name_from_specifier("./local"), None);
     assert_eq!(package_name_from_specifier("#internal/register"), None);
     assert_eq!(package_name_from_specifier("node:fs/promises"), None);
+    assert_eq!(package_name_from_specifier("https://esm.sh/react"), None);
+    assert_eq!(
+        package_name_from_specifier("data:text/javascript,export{}"),
+        None
+    );
     assert_eq!(package_name_from_specifier("@scope"), None);
 }
 
