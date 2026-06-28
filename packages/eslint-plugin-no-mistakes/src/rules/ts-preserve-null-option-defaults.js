@@ -13,13 +13,13 @@ const {
   propsFromType,
 } = require("./nullable-option-defaults-helpers");
 const {
+  bindingScope,
   createScope,
   functionScopeVisitors,
   isNullableBinding,
   objectProps,
   variableScope,
 } = require("./nullable-option-scope");
-
 module.exports = Object.assign(
   rule(
     {
@@ -50,43 +50,34 @@ module.exports = Object.assign(
       if (!pathAllowed(context.filename, options)) return {};
       const objectNamePatterns = compilePatterns(options.optionObjectNamePatterns);
       const scopes = [];
-      const facts = { typeProps: new Map() };
-
+      const facts = { aliases: new Set(), objectAliases: new Map(), typeProps: new Map() };
       function currentScope() {
         return scopes[scopes.length - 1];
       }
-
       function pushScope() {
         scopes.push(createScope("block"));
       }
-
       function popScope() {
         scopes.pop();
       }
-
       function enterFunction(node) {
         scopes.push(createScope("function"));
         for (const param of node.params || []) defineParam(param);
       }
-
       function defineBinding(name, scope = currentScope()) {
         scope.bindings.add(name);
       }
-
       function defineNullableBinding(name, scope = currentScope()) {
         scope.bindings.add(name);
         scope.nullableBindings.add(name);
       }
-
       function defineObject(name, props, scope = currentScope()) {
         scope.bindings.add(name);
         if (props && props.size > 0) scope.objectProps.set(name, props);
       }
-
       function propsForAnnotation(node) {
         return propsFromType(typeAnnotation(node), facts);
       }
-
       function defineParam(param) {
         const target = param.type === "AssignmentPattern" ? param.left : param;
         const props = propsForAnnotation(param) || propsForAnnotation(target);
@@ -96,22 +87,21 @@ module.exports = Object.assign(
           definePatternBindings(target, props);
         }
       }
-
-      function definePatternBindings(pattern, props, scope = currentScope()) {
+      function definePatternBindings(pattern, props, scope = currentScope(), useExisting = false) {
         for (const property of pattern.properties || []) {
           if (property.type !== "Property") continue;
           const name = objectPropertyName(property);
           const value =
             property.value?.type === "AssignmentPattern" ? property.value.left : property.value;
           if (!isIdentifier(value)) continue;
+          const targetScope = useExisting ? bindingScope(scopes, value.name) || scope : scope;
           if (name && props?.has(name)) {
-            defineNullableBinding(value.name, scope);
+            defineNullableBinding(value.name, targetScope);
           } else {
-            defineBinding(value.name, scope);
+            defineBinding(value.name, targetScope);
           }
         }
       }
-
       function defineVariable(node) {
         const scope = variableScope(scopes, currentScope, node);
         let props = propsForAnnotation(node.id);
@@ -127,6 +117,7 @@ module.exports = Object.assign(
               defineNullableBinding(node.id.name, scope);
               return;
             }
+            props = isIdentifier(node.init) ? objectProps(scopes, node.init.name) : null;
           }
           defineObject(node.id.name, props, scope);
           return;
@@ -140,13 +131,11 @@ module.exports = Object.assign(
           definePatternBindings(node.id, finalProps, scope);
         }
       }
-
       function propsForAssignmentSource(node) {
         const asserted = assertionType(node);
         if (asserted) return propsFromType(asserted, facts);
         return isIdentifier(node) ? objectProps(scopes, node.name) : null;
       }
-
       function reportDefault(node, target) {
         if (isIdentifier(target)) {
           if (isNullableBinding(scopes, target.name)) {
@@ -160,10 +149,13 @@ module.exports = Object.assign(
         if (!props?.has(member.property)) return;
         context.report({ node, messageId: "default", data: { name: member.property } });
       }
-
+      function markAssignmentTarget(node) {
+        const scope = bindingScope(scopes, node.name) || currentScope();
+        defineNullableBinding(node.name, scope);
+      }
       return {
         Program(node) {
-          collectTypeProps(node, options, objectNamePatterns, facts.typeProps);
+          collectTypeProps(node, options, objectNamePatterns, facts);
           scopes.push(createScope("program"));
         },
         "Program:exit": popScope,
@@ -172,6 +164,12 @@ module.exports = Object.assign(
           pushScope();
         },
         "BlockStatement:exit": popScope,
+        CatchClause(node) {
+          pushScope();
+          if (isIdentifier(node.param)) defineBinding(node.param.name);
+          if (node.param?.type === "ObjectPattern") definePatternBindings(node.param, null);
+        },
+        "CatchClause:exit": popScope,
         VariableDeclarator: defineVariable,
         LogicalExpression(node) {
           if (node.operator === "??" || node.operator === "||") reportDefault(node, node.left);
@@ -179,7 +177,13 @@ module.exports = Object.assign(
         AssignmentExpression(node) {
           if (node.operator === "=" && node.left.type === "ObjectPattern") {
             const props = propsForAssignmentSource(node.right);
-            definePatternBindings(node.left, props);
+            definePatternBindings(node.left, props, currentScope(), true);
+            return;
+          }
+          if (node.operator === "=" && isIdentifier(node.left)) {
+            const member = memberRootAndProperty(node.right);
+            const props = member ? objectProps(scopes, member.object) : null;
+            if (props?.has(member.property)) markAssignmentTarget(node.left);
             return;
           }
           if (node.operator === "??=" || node.operator === "||=") reportDefault(node, node.left);

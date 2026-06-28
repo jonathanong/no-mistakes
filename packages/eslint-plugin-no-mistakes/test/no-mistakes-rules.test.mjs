@@ -231,7 +231,7 @@ describe("ts-preserve-null-option-defaults", () => {
         { optionObjectNames: ["Options"] },
         "backend/options.ts",
       ),
-      ["default"],
+      ["default", "default"],
     );
     assert.deepEqual(
       messages(
@@ -240,7 +240,7 @@ describe("ts-preserve-null-option-defaults", () => {
         { optionObjectNamePatterns: ["Options$"] },
         "backend/options.ts",
       ),
-      ["default"],
+      ["default", "default"],
     );
     assert.deepEqual(
       messages(
@@ -386,7 +386,7 @@ describe("ts-preserve-null-option-defaults", () => {
         undefined,
         "coverage.ts",
       ),
-      Array(18).fill("default"),
+      Array(25).fill("default"),
     );
   });
 });
@@ -422,7 +422,7 @@ describe("server-require-nullable-fetch-wrapper", () => {
         option,
         "backend/users.ts",
       ),
-      ["wrapper", "wrapper", "wrapper", "wrapper", "wrapper", "wrapper", "wrapper", "wrapper"],
+      Array(10).fill("wrapper"),
     );
   });
 
@@ -565,6 +565,10 @@ describe("server-require-nullable-fetch-wrapper", () => {
       __test
         .collectExportedNames({
           body: [
+            {
+              type: "ExportDefaultDeclaration",
+              declaration: { type: "Identifier", name: "defaultUser" },
+            },
             { type: "ExportNamedDeclaration", source: { value: "./other" }, specifiers: [] },
             {
               type: "ExportNamedDeclaration",
@@ -580,22 +584,54 @@ describe("server-require-nullable-fetch-wrapper", () => {
     );
     assert.equal(
       __test
-        .collectFunctionOverloadReturnTypes({
+        .collectExportedNames({
           body: [
             {
-              type: "ExportNamedDeclaration",
-              declaration: {
-                type: "FunctionDeclaration",
-                id: { type: "Identifier", name: "getUser" },
-                body: null,
-                returnType: {
-                  type: "TSTypeAnnotation",
-                  typeAnnotation: { type: "TSNullKeyword" },
-                },
-              },
+              type: "ExportDefaultDeclaration",
+              declaration: { type: "Identifier", name: "defaultUser" },
             },
           ],
         })
+        .has("defaultUser"),
+      true,
+    );
+    const functionTypes = __test.collectFunctionTypeReturns({
+      body: [
+        {
+          type: "TSTypeAliasDeclaration",
+          id: { type: "Identifier", name: "Getter" },
+          typeAnnotation: {
+            type: "TSFunctionType",
+            returnType: {
+              type: "TSTypeAnnotation",
+              typeAnnotation: { type: "TSNullKeyword" },
+            },
+          },
+        },
+      ],
+    });
+    assert.equal(functionTypes.get("Getter").type, "TSNullKeyword");
+    assert.equal(
+      __test
+        .collectFunctionOverloadReturnTypes(
+          {
+            body: [
+              {
+                type: "ExportNamedDeclaration",
+                declaration: {
+                  type: "FunctionDeclaration",
+                  id: { type: "Identifier", name: "getUser" },
+                  body: null,
+                  returnType: {
+                    type: "TSTypeAnnotation",
+                    typeAnnotation: { type: "TSNullKeyword" },
+                  },
+                },
+              },
+            ],
+          },
+          functionTypes,
+        )
         .get("getUser").type,
       "TSNullKeyword",
     );
@@ -626,7 +662,20 @@ describe("server-require-nullable-fetch-wrapper", () => {
       }),
       null,
     );
-    assert.equal(__test.functionTypeReturn({ type: "TSTypeReference" }), null);
+    assert.equal(
+      __test.functionTypeReturn({
+        type: "TSTypeReference",
+        typeName: { type: "Identifier", name: "Missing" },
+      }),
+      null,
+    );
+    assert.equal(
+      __test.functionTypeReturn(
+        { type: "TSTypeReference", typeName: { type: "Identifier", name: "Getter" } },
+        functionTypes,
+      ).type,
+      "TSNullKeyword",
+    );
     assert.equal(__test.functionReturnAnnotation({ type: "FunctionDeclaration" }), null);
     assert.equal(
       __test.isExportedFunction({

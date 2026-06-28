@@ -1,4 +1,8 @@
-interface Options {
+interface BaseOptions {
+  inherited?: string | null;
+}
+
+interface Options extends BaseOptions {
   value?: string | null;
 }
 
@@ -11,7 +15,7 @@ type InlineOptions = {
 };
 
 export function selected(options: Options) {
-  return options.value ?? "fallback";
+  return [options.value ?? "fallback", options.inherited ?? "fallback"];
 }
 
 export function ignored(other: OtherConfig) {

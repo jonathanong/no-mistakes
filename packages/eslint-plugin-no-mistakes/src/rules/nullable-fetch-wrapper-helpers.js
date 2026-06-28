@@ -94,17 +94,19 @@ function functionName(node) {
   return declarator?.id?.type === "Identifier" ? declarator.id.name : null;
 }
 
-function functionTypeReturn(type) {
+function functionTypeReturn(type, functionTypes = new Map()) {
   const current = unwrapType(type);
   if (current?.type === "TSFunctionType") return returnTypeAnnotation(current);
+  const name = typeName(current);
+  if (name) return functionTypes.get(name) || null;
   return null;
 }
 
-function functionReturnAnnotation(node) {
+function functionReturnAnnotation(node, functionTypes = new Map()) {
   const direct = returnTypeAnnotation(node);
   if (direct) return direct;
   const declarator = variableDeclarator(node);
-  return declarator?.id ? functionTypeReturn(typeAnnotation(declarator.id)) : null;
+  return declarator?.id ? functionTypeReturn(typeAnnotation(declarator.id), functionTypes) : null;
 }
 
 function hasCheckedPath(filename, options) {
@@ -117,6 +119,12 @@ function hasCheckedPath(filename, options) {
 function collectExportedNames(program) {
   const names = new Set();
   for (const statement of program.body || []) {
+    if (
+      statement.type === "ExportDefaultDeclaration" &&
+      statement.declaration.type === "Identifier"
+    ) {
+      names.add(statement.declaration.name);
+    }
     if (statement.type !== "ExportNamedDeclaration" || statement.source) continue;
     for (const specifier of statement.specifiers || []) {
       if (specifier.type === "ExportSpecifier" && specifier.local.type === "Identifier") {
@@ -133,7 +141,18 @@ function declarationOf(statement) {
     : statement;
 }
 
-function collectFunctionOverloadReturnTypes(program) {
+function collectFunctionTypeReturns(program) {
+  const types = new Map();
+  for (const statement of program.body || []) {
+    const declaration = declarationOf(statement);
+    if (declaration.type !== "TSTypeAliasDeclaration") continue;
+    const returnType = functionTypeReturn(declaration.typeAnnotation, types);
+    if (returnType) types.set(declaration.id.name, returnType);
+  }
+  return types;
+}
+
+function collectFunctionOverloadReturnTypes(program, functionTypes = new Map()) {
   const types = new Map();
   for (const statement of program.body || []) {
     const declaration = declarationOf(statement);
@@ -144,7 +163,7 @@ function collectFunctionOverloadReturnTypes(program) {
     ) {
       continue;
     }
-    const returnType = functionReturnAnnotation(declaration);
+    const returnType = functionReturnAnnotation(declaration, functionTypes);
     if (returnType) types.set(declaration.id.name, returnType);
   }
   return types;
@@ -153,6 +172,7 @@ function collectFunctionOverloadReturnTypes(program) {
 module.exports = {
   calleePath,
   collectExportedNames,
+  collectFunctionTypeReturns,
   collectFunctionOverloadReturnTypes,
   compilePatterns,
   functionName,

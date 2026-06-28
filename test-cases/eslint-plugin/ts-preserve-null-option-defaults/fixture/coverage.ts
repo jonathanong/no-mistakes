@@ -30,6 +30,8 @@ interface ExtendedOptions extends BaseOptions {
   own?: string | null;
 }
 
+type PublicOptions = Options;
+
 export function optionalMember(options: Options) {
   return options?.value ?? "fallback";
 }
@@ -105,6 +107,41 @@ export function destructuringAssignment(options: Options) {
   let value;
   ({ value = "fallback" } = options);
   return value;
+}
+
+export function inlineAlias(options: { label?: MaybeAlias }) {
+  return options.label ?? "fallback";
+}
+
+export function unionOptions(options: Options | undefined = {}) {
+  return options.value ?? "fallback";
+}
+
+export function typeAliasOptions(options: PublicOptions) {
+  return options.value ?? "fallback";
+}
+
+export function objectAlias(options: Options) {
+  const opts = options;
+  return opts.value ?? "fallback";
+}
+
+export function nestedDestructuringAssignment(options: Options) {
+  let value;
+  if (Math.random()) {
+    ({ value } = options);
+  }
+  return value ?? "fallback";
+}
+
+export function plainAssignment(options: Options) {
+  let value;
+  value = options.value;
+  return value ?? "fallback";
+}
+
+export function assertedMemberDefault(options: Options) {
+  return (options.value as string | null) ?? "fallback";
 }
 
 export function ignoredBranches(options: Options) {

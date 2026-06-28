@@ -37,6 +37,13 @@ function isNullableBinding(scopes, name) {
   return false;
 }
 
+function bindingScope(scopes, name) {
+  for (let index = scopes.length - 1; index >= 0; index -= 1) {
+    if (scopes[index].bindings.has(name)) return scopes[index];
+  }
+  return null;
+}
+
 function functionScopeVisitors(enter, exit) {
   return Object.fromEntries(
     ["FunctionDeclaration", "FunctionExpression", "ArrowFunctionExpression"].flatMap((key) => [
@@ -47,6 +54,7 @@ function functionScopeVisitors(enter, exit) {
 }
 
 module.exports = {
+  bindingScope,
   createScope,
   functionScopeVisitors,
   isNullableBinding,

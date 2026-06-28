@@ -37,3 +37,11 @@ export function destructuringWithoutDefault(options: Options) {
 export function inlineOk(options: Inline) {
   return options.value === undefined ? "fallback" : options.value;
 }
+
+export function catchShadow(options: Options) {
+  try {
+    return options.value === undefined ? "fallback" : options.value;
+  } catch (options) {
+    return options.value ?? "fallback";
+  }
+}

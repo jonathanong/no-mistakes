@@ -2,7 +2,6 @@
 
 const { keyName, typeAnnotation, typeName } = require("../react-node-types");
 const { memberPropertyName } = require("./module-mock-helpers");
-
 function compilePatterns(patterns = []) {
   return patterns.flatMap((pattern) => {
     try {
@@ -12,7 +11,6 @@ function compilePatterns(patterns = []) {
     }
   });
 }
-
 function unwrapType(node) {
   let current = node;
   while (
@@ -25,7 +23,6 @@ function unwrapType(node) {
   }
   return current;
 }
-
 function typeIncludesNull(node, aliases = new Set()) {
   const current = unwrapType(node);
   if (!current) return false;
@@ -37,7 +34,6 @@ function typeIncludesNull(node, aliases = new Set()) {
   }
   return false;
 }
-
 function optionTypeAllowed(name, options, patterns) {
   if (!name) return true;
   const names = options.optionObjectNames ?? [];
@@ -45,7 +41,6 @@ function optionTypeAllowed(name, options, patterns) {
   if (names.length === 0 && rawPatterns.length === 0) return true;
   return names.includes(name) || patterns.some((pattern) => pattern.test(name));
 }
-
 function nullablePropsFromMembers(members, aliases = new Set()) {
   const props = new Set();
   for (const member of members || []) {
@@ -56,39 +51,49 @@ function nullablePropsFromMembers(members, aliases = new Set()) {
   }
   return props;
 }
-
 function propsFromType(type, facts) {
   const current = unwrapType(type);
   if (!current) return null;
-  if (current.type === "TSTypeLiteral") return nullablePropsFromMembers(current.members);
+  if (current.type === "TSTypeLiteral") {
+    return nullablePropsFromMembers(current.members, facts.aliases);
+  }
+  if (current.type === "TSUnionType") {
+    const props = new Set();
+    for (const item of current.types) {
+      const itemProps = propsFromType(item, facts);
+      for (const prop of itemProps || []) props.add(prop);
+    }
+    return props.size > 0 ? props : null;
+  }
   const name = typeName(current);
-  return name ? facts.typeProps.get(name) : null;
+  return name ? resolveTypeProps(name, facts) : null;
 }
-
 function isIdentifier(node) {
   return node?.type === "Identifier";
 }
-
 function objectPropertyName(property) {
   return property.type === "Property" ? keyName(property.key) : null;
 }
-
 function memberRootAndProperty(node) {
   let current = node;
-  if (current?.type === "ChainExpression") current = current.expression;
+  while (
+    current?.type === "ChainExpression" ||
+    current?.type === "TSAsExpression" ||
+    current?.type === "TSTypeAssertion"
+  ) {
+    current = current.expression;
+  }
   if (current?.type !== "MemberExpression") return null;
   const property = memberPropertyName(current);
   let object = current.object;
   if (object?.type === "ChainExpression") object = object.expression;
   return isIdentifier(object) && property ? { object: object.name, property } : null;
 }
-
 function assertionType(node) {
   return node?.type === "TSAsExpression" || node?.type === "TSTypeAssertion"
     ? node.typeAnnotation
     : null;
 }
-
 function declarationOf(statement) {
   return (statement.type === "ExportNamedDeclaration" ||
     statement.type === "ExportDefaultDeclaration") &&
@@ -96,12 +101,10 @@ function declarationOf(statement) {
     ? statement.declaration
     : statement;
 }
-
 function heritageName(heritage) {
   const expression = heritage?.expression;
   return expression?.type === "Identifier" ? expression.name : null;
 }
-
 function collectNullableAliases(program) {
   const aliases = new Set();
   let changed = true;
@@ -121,17 +124,19 @@ function collectNullableAliases(program) {
   }
   return aliases;
 }
-
-function collectTypeProps(program, options, patterns, typeProps) {
+function resolveTypeProps(name, facts, seen = new Set()) {
+  if (seen.has(name)) return null;
+  seen.add(name);
+  return facts.typeProps.get(name) || resolveTypeProps(facts.objectAliases.get(name), facts, seen);
+}
+function collectTypeProps(program, options, patterns, facts) {
   const aliases = collectNullableAliases(program);
+  facts.aliases = aliases;
   const interfaces = new Map();
   const interfaceExtends = new Map();
   for (const statement of program.body || []) {
     const declaration = declarationOf(statement);
-    if (
-      declaration.type === "TSInterfaceDeclaration" &&
-      optionTypeAllowed(declaration.id.name, options, patterns)
-    ) {
+    if (declaration.type === "TSInterfaceDeclaration") {
       const props = interfaces.get(declaration.id.name) || new Set();
       for (const prop of nullablePropsFromMembers(declaration.body.body, aliases)) props.add(prop);
       interfaces.set(declaration.id.name, props);
@@ -147,10 +152,13 @@ function collectTypeProps(program, options, patterns, typeProps) {
       optionTypeAllowed(declaration.id.name, options, patterns) &&
       declaration.typeAnnotation.type === "TSTypeLiteral"
     ) {
-      typeProps.set(
+      facts.typeProps.set(
         declaration.id.name,
         nullablePropsFromMembers(declaration.typeAnnotation.members, aliases),
       );
+    } else if (declaration.type === "TSTypeAliasDeclaration") {
+      const target = typeName(declaration.typeAnnotation);
+      if (target) facts.objectAliases.set(declaration.id.name, target);
     }
   }
   function resolveInterface(name, seen = new Set()) {
@@ -162,7 +170,10 @@ function collectTypeProps(program, options, patterns, typeProps) {
     }
     return props;
   }
-  for (const name of interfaces.keys()) typeProps.set(name, resolveInterface(name));
+  for (const name of interfaces.keys()) {
+    if (optionTypeAllowed(name, options, patterns))
+      facts.typeProps.set(name, resolveInterface(name));
+  }
 }
 
 module.exports = {

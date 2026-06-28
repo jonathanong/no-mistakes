@@ -1,5 +1,6 @@
 type User = { id: string };
 type MaybeUser = User | null;
+type Getter = () => User | null;
 
 declare const serverApi: {
   get(path: string): Promise<User | null>;
@@ -35,3 +36,11 @@ export function overloaded(): Promise<User | null>;
 export function overloaded() {
   return serverApi.get("/users/8");
 }
+
+function defaultIdentifier(): User | null {
+  return serverApi.get("/users/9");
+}
+
+export default defaultIdentifier;
+
+export const typedAlias: Getter = () => serverApi.get("/users/10");

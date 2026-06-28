@@ -8,6 +8,7 @@ const {
   calleePath,
   collectExportedNames,
   collectFunctionOverloadReturnTypes,
+  collectFunctionTypeReturns,
   compilePatterns,
   functionName,
   functionReturnAnnotation,
@@ -69,13 +70,15 @@ module.exports = Object.assign(
       const getterPatterns = compilePatterns(options.getterCalleePatterns);
       const nullableNames = new Set(options.nullableReturnTypeNames ?? []);
       const exportedNames = new Set();
+      const functionTypes = new Map();
       const overloadReturnTypes = new Map();
       const functionStack = [];
 
       function checkedFunction(node) {
         const name = functionName(node);
         if (!isExportedFunction(node) && (!name || !exportedNames.has(name))) return false;
-        const returnType = functionReturnAnnotation(node) || overloadReturnTypes.get(name);
+        const returnType =
+          functionReturnAnnotation(node, functionTypes) || overloadReturnTypes.get(name);
         return (
           typeMatchesNullableHint(returnType, nullableNames) ||
           hasCheckedPath(context.filename, options)
@@ -97,7 +100,13 @@ module.exports = Object.assign(
       return {
         Program(node) {
           for (const name of collectExportedNames(node)) exportedNames.add(name);
-          for (const [name, returnType] of collectFunctionOverloadReturnTypes(node)) {
+          for (const [name, returnType] of collectFunctionTypeReturns(node)) {
+            functionTypes.set(name, returnType);
+          }
+          for (const [name, returnType] of collectFunctionOverloadReturnTypes(
+            node,
+            functionTypes,
+          )) {
             overloadReturnTypes.set(name, returnType);
           }
         },
