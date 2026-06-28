@@ -11,7 +11,6 @@ const {
   memberRootAndProperty,
   objectPropertyName,
   propsFromType,
-  reportDefaultsInPattern,
 } = require("./nullable-option-defaults-helpers");
 const {
   createScope,
@@ -43,7 +42,7 @@ module.exports = Object.assign(
       ],
       messages: {
         default:
-          "Do not default nullable option '{{name}}' with ??, ||, ??=, ||=, or destructuring defaults. Preserve explicit null and check undefined explicitly.",
+          "Do not default nullable option '{{name}}' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
       },
     },
     (context) => {
@@ -94,7 +93,6 @@ module.exports = Object.assign(
         if (isIdentifier(target)) {
           defineObject(target.name, props);
         } else if (target?.type === "ObjectPattern") {
-          reportDefaultsInPattern(context, target, props);
           definePatternBindings(target, props);
         }
       }
@@ -139,7 +137,6 @@ module.exports = Object.assign(
             initProps = propsFromType(asserted, facts);
           }
           const finalProps = props || initProps;
-          reportDefaultsInPattern(context, node.id, finalProps);
           definePatternBindings(node.id, finalProps, scope);
         }
       }
@@ -182,7 +179,6 @@ module.exports = Object.assign(
         AssignmentExpression(node) {
           if (node.operator === "=" && node.left.type === "ObjectPattern") {
             const props = propsForAssignmentSource(node.right);
-            reportDefaultsInPattern(context, node.left, props);
             definePatternBindings(node.left, props);
             return;
           }

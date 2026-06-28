@@ -16,7 +16,7 @@ function render(options: Options) {
 ```
 
 Counterexample: a nullable optional member is defaulted with `??`, `||`, `??=`,
-`||=`, or an object destructuring default.
+or `||=`.
 
 Fix: check for `undefined` explicitly and preserve `null`.
 
@@ -28,3 +28,6 @@ function render(options: Options) {
 
 Options: `includePathPatterns`, `excludePathPatterns`, `optionObjectNames`, and
 `optionObjectNamePatterns`.
+
+Object destructuring defaults are allowed because they only apply when the
+property value is `undefined`, preserving explicit `null`.

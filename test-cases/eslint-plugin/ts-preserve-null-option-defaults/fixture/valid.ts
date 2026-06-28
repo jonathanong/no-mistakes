@@ -12,6 +12,15 @@ export function explicitUndefined(options: Options) {
   return options.value === undefined ? "fallback" : options.value;
 }
 
+export function destructured(options: Options) {
+  const { value = "fallback", alias = "fallback" } = options;
+  return [value, alias];
+}
+
+export function paramDestructured({ value = "fallback" }: Options) {
+  return value;
+}
+
 export function nonNullable(options: Options) {
   return options.count ?? 0;
 }

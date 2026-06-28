@@ -218,7 +218,7 @@ describe("ts-preserve-null-option-defaults", () => {
         undefined,
         "invalid.ts",
       ),
-      Array(7).fill("default"),
+      Array(4).fill("default"),
     );
   });
 
@@ -240,7 +240,7 @@ describe("ts-preserve-null-option-defaults", () => {
         { optionObjectNamePatterns: ["Options$"] },
         "backend/options.ts",
       ),
-      ["default", "default"],
+      ["default"],
     );
     assert.deepEqual(
       messages(
@@ -386,7 +386,7 @@ describe("ts-preserve-null-option-defaults", () => {
         undefined,
         "coverage.ts",
       ),
-      Array(20).fill("default"),
+      Array(18).fill("default"),
     );
   });
 });
@@ -422,7 +422,7 @@ describe("server-require-nullable-fetch-wrapper", () => {
         option,
         "backend/users.ts",
       ),
-      ["wrapper", "wrapper", "wrapper", "wrapper", "wrapper", "wrapper", "wrapper"],
+      ["wrapper", "wrapper", "wrapper", "wrapper", "wrapper", "wrapper", "wrapper", "wrapper"],
     );
   });
 
@@ -511,12 +511,41 @@ describe("server-require-nullable-fetch-wrapper", () => {
       __test.typeMatchesNullableHint(
         {
           type: "TSTypeReference",
-          typeName: { type: "Identifier", name: "Result" },
+          typeName: { type: "Identifier", name: "Promise" },
           typeArguments: { params: [{ type: "TSNullKeyword" }] },
         },
         new Set(),
       ),
       true,
+    );
+    assert.equal(
+      __test.typeMatchesNullableHint(
+        {
+          type: "TSTypeReference",
+          typeName: { type: "Identifier", name: "Promise" },
+          typeParameters: { params: [{ type: "TSNullKeyword" }] },
+        },
+        new Set(),
+      ),
+      true,
+    );
+    assert.equal(
+      __test.typeMatchesNullableHint(
+        { type: "TSTypeReference", typeName: { type: "Identifier", name: "Promise" } },
+        new Set(),
+      ),
+      false,
+    );
+    assert.equal(
+      __test.typeMatchesNullableHint(
+        {
+          type: "TSTypeReference",
+          typeName: { type: "Identifier", name: "Array" },
+          typeArguments: { params: [{ type: "TSNullKeyword" }] },
+        },
+        new Set(),
+      ),
+      false,
     );
     assert.equal(
       __test.typeMatchesNullableHint(
@@ -550,11 +579,52 @@ describe("server-require-nullable-fetch-wrapper", () => {
       true,
     );
     assert.equal(
+      __test
+        .collectFunctionOverloadReturnTypes({
+          body: [
+            {
+              type: "ExportNamedDeclaration",
+              declaration: {
+                type: "FunctionDeclaration",
+                id: { type: "Identifier", name: "getUser" },
+                body: null,
+                returnType: {
+                  type: "TSTypeAnnotation",
+                  typeAnnotation: { type: "TSNullKeyword" },
+                },
+              },
+            },
+          ],
+        })
+        .get("getUser").type,
+      "TSNullKeyword",
+    );
+    assert.equal(
+      __test.collectFunctionOverloadReturnTypes({
+        body: [
+          {
+            type: "TSDeclareFunction",
+            id: { type: "Identifier", name: "missingReturn" },
+            body: null,
+          },
+          { type: "FunctionDeclaration", id: null, body: null },
+        ],
+      }).size,
+      0,
+    );
+    assert.equal(
       __test.functionName({
         type: "FunctionDeclaration",
         id: { type: "Identifier", name: "getUser" },
       }),
       "getUser",
+    );
+    assert.equal(
+      __test.functionName({
+        type: "ArrowFunctionExpression",
+        parent: { type: "CallExpression" },
+      }),
+      null,
     );
     assert.equal(__test.functionTypeReturn({ type: "TSTypeReference" }), null);
     assert.equal(__test.functionReturnAnnotation({ type: "FunctionDeclaration" }), null);

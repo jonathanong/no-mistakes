@@ -73,17 +73,6 @@ function objectPropertyName(property) {
   return property.type === "Property" ? keyName(property.key) : null;
 }
 
-function reportDefaultsInPattern(context, pattern, props) {
-  if (!pattern || pattern.type !== "ObjectPattern" || !props) return;
-  for (const property of pattern.properties || []) {
-    const name = objectPropertyName(property);
-    if (!name || !props.has(name)) continue;
-    if (property.value?.type === "AssignmentPattern") {
-      context.report({ node: property.value, messageId: "default", data: { name } });
-    }
-  }
-}
-
 function memberRootAndProperty(node) {
   let current = node;
   if (current?.type === "ChainExpression") current = current.expression;
@@ -186,6 +175,5 @@ module.exports = {
   objectPropertyName,
   optionTypeAllowed,
   propsFromType,
-  reportDefaultsInPattern,
   typeIncludesNull,
 };

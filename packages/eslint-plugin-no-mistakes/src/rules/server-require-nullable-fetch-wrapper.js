@@ -7,6 +7,7 @@ const helpers = require("./nullable-fetch-wrapper-helpers");
 const {
   calleePath,
   collectExportedNames,
+  collectFunctionOverloadReturnTypes,
   compilePatterns,
   functionName,
   functionReturnAnnotation,
@@ -68,12 +69,13 @@ module.exports = Object.assign(
       const getterPatterns = compilePatterns(options.getterCalleePatterns);
       const nullableNames = new Set(options.nullableReturnTypeNames ?? []);
       const exportedNames = new Set();
+      const overloadReturnTypes = new Map();
       const functionStack = [];
 
       function checkedFunction(node) {
         const name = functionName(node);
         if (!isExportedFunction(node) && (!name || !exportedNames.has(name))) return false;
-        const returnType = functionReturnAnnotation(node);
+        const returnType = functionReturnAnnotation(node) || overloadReturnTypes.get(name);
         return (
           typeMatchesNullableHint(returnType, nullableNames) ||
           hasCheckedPath(context.filename, options)
@@ -95,6 +97,9 @@ module.exports = Object.assign(
       return {
         Program(node) {
           for (const name of collectExportedNames(node)) exportedNames.add(name);
+          for (const [name, returnType] of collectFunctionOverloadReturnTypes(node)) {
+            overloadReturnTypes.set(name, returnType);
+          }
         },
         FunctionDeclaration: enterFunction,
         "FunctionDeclaration:exit": exitFunction,

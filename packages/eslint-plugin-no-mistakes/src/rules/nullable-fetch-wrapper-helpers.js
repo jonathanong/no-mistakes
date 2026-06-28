@@ -42,7 +42,7 @@ function unwrapType(node) {
 }
 
 function typeMatchesNullableHint(node, names) {
-  const current = unwrapType(node);
+  const current = unwrapTransparentReturnType(node);
   if (!current) return false;
   if (current.type === "TSNullKeyword") return true;
   const name = typeName(current);
@@ -50,12 +50,18 @@ function typeMatchesNullableHint(node, names) {
   if (current.type === "TSUnionType") {
     return current.types.some((item) => typeMatchesNullableHint(item, names));
   }
-  if (current.type === "TSTypeReference") {
-    return (current.typeArguments?.params || current.typeParameters?.params || []).some((item) =>
-      typeMatchesNullableHint(item, names),
-    );
-  }
   return false;
+}
+
+function typeArguments(node) {
+  return node.typeArguments?.params || node.typeParameters?.params || [];
+}
+
+function unwrapTransparentReturnType(node) {
+  const current = unwrapType(node);
+  if (typeName(current) !== "Promise") return current;
+  const [value] = typeArguments(current);
+  return value ? unwrapTransparentReturnType(value) : current;
 }
 
 function returnTypeAnnotation(node) {
@@ -121,9 +127,33 @@ function collectExportedNames(program) {
   return names;
 }
 
+function declarationOf(statement) {
+  return statement.type === "ExportNamedDeclaration" && statement.declaration
+    ? statement.declaration
+    : statement;
+}
+
+function collectFunctionOverloadReturnTypes(program) {
+  const types = new Map();
+  for (const statement of program.body || []) {
+    const declaration = declarationOf(statement);
+    if (
+      !["FunctionDeclaration", "TSDeclareFunction"].includes(declaration.type) ||
+      declaration.body ||
+      declaration.id?.type !== "Identifier"
+    ) {
+      continue;
+    }
+    const returnType = functionReturnAnnotation(declaration);
+    if (returnType) types.set(declaration.id.name, returnType);
+  }
+  return types;
+}
+
 module.exports = {
   calleePath,
   collectExportedNames,
+  collectFunctionOverloadReturnTypes,
   compilePatterns,
   functionName,
   functionReturnAnnotation,

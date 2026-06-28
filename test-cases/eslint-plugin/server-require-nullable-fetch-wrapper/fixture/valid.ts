@@ -30,3 +30,7 @@ export function hinted(): MaybeUser {
 export default function defaultWrapped(): Promise<User | null> {
   return nullableEntity(serverApi.get("/users/1"));
 }
+
+export function nullableElements(): Promise<Array<User | null>> {
+  return serverApi.get("/users/2") as Promise<Array<User | null>>;
+}

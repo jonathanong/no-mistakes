@@ -30,3 +30,8 @@ function exportedLater(): User | null {
 const exportedArrow = (): User | null => serverApi.get("/users/7");
 
 export { exportedArrow, exportedLater };
+
+export function overloaded(): Promise<User | null>;
+export function overloaded() {
+  return serverApi.get("/users/8");
+}
