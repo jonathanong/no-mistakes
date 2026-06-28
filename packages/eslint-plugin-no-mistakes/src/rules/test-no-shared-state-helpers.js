@@ -99,10 +99,31 @@ function isMutableInitializer(node) {
 }
 
 function childNodes(node) {
-  return Object.entries(node)
-    .filter(([key]) => !["parent", "loc", "range", "tokens", "comments"].includes(key))
-    .flatMap(([, value]) => (Array.isArray(value) ? value : [value]))
-    .filter((value) => value && typeof value.type === "string");
+  const children = [];
+  for (const key in node) {
+    if (
+      key === "parent" ||
+      key === "loc" ||
+      key === "range" ||
+      key === "tokens" ||
+      key === "comments"
+    ) {
+      continue;
+    }
+
+    const value = node[key];
+    if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i += 1) {
+        const child = value[i];
+        if (child && typeof child.type === "string") {
+          children.push(child);
+        }
+      }
+    } else if (value && typeof value.type === "string") {
+      children.push(value);
+    }
+  }
+  return children;
 }
 
 function namedCallbackArgument(args) {
