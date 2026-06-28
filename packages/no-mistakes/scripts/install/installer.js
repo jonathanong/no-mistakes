@@ -65,7 +65,6 @@ async function install(binName, repository, options = {}) {
   await mkdir(vendorDir, { recursive: true });
 
   try {
-    console.log(`Downloading ${binName} v${version} for ${target}...`);
     await download(`${baseUrl}/${asset}`, temp, 0, validateReleaseDownloadUrl);
 
     let checksumText;
