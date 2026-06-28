@@ -85,6 +85,30 @@ fn aria_names_take_precedence_over_fallback_names() {
         AppTextKind::AccessibleName,
         "aria-labelledby-precedence"
     ));
+    assert!(has_target(
+        &targets,
+        "Ignored title",
+        AppTextKind::Title,
+        "aria-labelledby-precedence"
+    ));
+    assert!(has_target(
+        &targets,
+        "Ignored by aria",
+        AppTextKind::Alt,
+        "aria-label-alt-image"
+    ));
+    assert!(!has_target(
+        &targets,
+        "Ignored by aria",
+        AppTextKind::AccessibleName,
+        "aria-label-alt-image"
+    ));
+    assert!(has_target(
+        &targets,
+        "Aria image",
+        AppTextKind::AccessibleName,
+        "aria-label-alt-image"
+    ));
     assert!(!has_target(
         &targets,
         "Ignored empty label title",

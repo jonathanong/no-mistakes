@@ -37,7 +37,8 @@ export function Example(props: { label: string }) {
       <label htmlFor="missing-control">Missing control</label>
       <input data-pw={"search-input"} aria-label={"Search field"} placeholder={"Search"} />
       <div data-pw="decorative-placeholder" placeholder="Decorative placeholder">Decorative placeholder</div>
-      <img alt="Company logo" />
+      <img data-pw="company-logo" alt="Company logo" />
+      <img data-pw="aria-label-alt-image" alt="Ignored by aria" aria-label="Aria image" />
       <Button testId="save-button" title="Save changes">Save</Button>
       <div data-pw={props.label}>Dynamic selector</div>
       <div {...props}>Spread child</div>

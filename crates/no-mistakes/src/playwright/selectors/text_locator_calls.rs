@@ -16,6 +16,8 @@ pub(super) fn extract_text_locator_call(
         "getByPlaceholder" => {
             simple_locator(call, source, LocatorKind::Placeholder, "getByPlaceholder")
         }
+        "getByAltText" => simple_locator(call, source, LocatorKind::Alt, "getByAltText"),
+        "getByTitle" => simple_locator(call, source, LocatorKind::Title, "getByTitle"),
         "getByRole" => role_locator(call, source),
         _ => None,
     }

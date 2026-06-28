@@ -140,6 +140,14 @@ fn rule_configured_requires_an_effective_target() {
     assert!(repository.rule_configured("unique-exports"));
     let test_target = load_v2_config(&fixture("rule-test-target"), None).unwrap();
     assert!(test_target.rule_configured("test-no-unmocked-dynamic-imports"));
+    let yaml = r#"
+rules:
+  - rule: playwright-prefer-test-id-locators
+    tests:
+      playwright: [web]
+"#;
+    let cfg: NoMistakesConfig = serde_yaml::from_str(yaml).unwrap();
+    assert!(cfg.rule_configured("playwright-prefer-test-id-locators"));
     let non_test_rule = load_v2_config(&fixture("non-test-rule-test-target"), None).unwrap();
     assert!(!non_test_rule.rule_configured("unique-exports"));
 }

@@ -32,6 +32,7 @@ describe("docs coverage", () => {
 
     for (const optionName of [
       "selectorAttributes",
+      "interactiveComponents",
       "canonicalAttribute",
       "allowInlineScriptIds",
       "allowInlineScriptIdPatterns",

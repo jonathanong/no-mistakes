@@ -1,5 +1,9 @@
 use super::*;
-use crate::playwright::analysis::types::{CoverageFetch, CoverageRoute, CoverageSelector, Summary};
+use crate::playwright::analysis::types::{
+    Analysis, CoverageFetch, CoverageRoute, CoverageSelector, Edge, EdgeReport, SelectorRef,
+    Summary,
+};
+use std::sync::Arc;
 
 #[test]
 fn findings_from_report_maps_routes_selectors_and_duplicates() {
@@ -57,7 +61,7 @@ fn findings_from_report_maps_routes_selectors_and_duplicates() {
         }],
     };
 
-    let findings = findings_from_report(&report, true, true, true);
+    let findings = findings_from_report(&analysis(report, vec![]), true, true, true, false);
     let targets: Vec<_> = findings
         .iter()
         .map(|finding| (finding.rule.as_str(), finding.target.as_deref()))
@@ -101,7 +105,7 @@ fn findings_from_report_filters_disabled_duplicate_rules() {
         fetch_apis: vec![],
     };
 
-    let findings = findings_from_report(&report, false, false, true);
+    let findings = findings_from_report(&analysis(report, vec![]), false, false, true, false);
 
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].rule, PLAYWRIGHT_UNIQUE_HTML_IDS);
@@ -153,7 +157,7 @@ fn findings_from_report_skips_unsupported_dynamic_selectors() {
         fetch_apis: vec![],
     };
 
-    let findings = findings_from_report(&report, true, false, false);
+    let findings = findings_from_report(&analysis(report, vec![]), true, false, false, false);
     assert_eq!(
         findings.len(),
         1,
@@ -187,8 +191,144 @@ fn findings_from_report_maps_id_duplicates_to_test_ids_when_html_rule_is_disable
         fetch_apis: vec![],
     };
 
-    let findings = findings_from_report(&report, false, true, false);
+    let findings = findings_from_report(&analysis(report, vec![]), false, true, false, false);
 
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].rule, PLAYWRIGHT_UNIQUE_TEST_IDS);
+}
+
+#[test]
+fn findings_from_report_flags_copy_coupled_locators_with_selector_refs() {
+    let edge = Edge::LocatorText {
+        test_file: Arc::new("tests/e2e/app.spec.ts".to_string()),
+        test_name: Some(Arc::new("uses text locator".to_string())),
+        describe_path: Arc::new(vec![]),
+        app_file: Arc::new("web/app/page.tsx".to_string()),
+        locator_kind: "role".to_string(),
+        role: Some("button".to_string()),
+        text: "Save".to_string(),
+        locator: "getByRole(button, name: Save)".to_string(),
+        test_id_attributes: vec!["data-pw".to_string()],
+        selector_refs: vec![SelectorRef {
+            attribute: "data-pw".to_string(),
+            value: "save-button".to_string(),
+        }],
+        reasons: vec!["route-signal".to_string()],
+        line: 12,
+    };
+
+    let findings = findings_from_report(
+        &analysis(empty_report(), vec![edge]),
+        false,
+        false,
+        false,
+        true,
+    );
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].rule, PLAYWRIGHT_PREFER_TEST_ID_LOCATORS);
+    assert_eq!(findings[0].file, "tests/e2e/app.spec.ts");
+    assert_eq!(findings[0].line, 12);
+    assert_eq!(findings[0].target.as_deref(), Some("data-pw=save-button"));
+}
+
+#[test]
+fn prefer_test_id_locator_uses_effective_test_id_attribute() {
+    let edge = Edge::LocatorText {
+        test_file: Arc::new("tests/e2e/app.spec.ts".to_string()),
+        test_name: Some(Arc::new("uses text locator".to_string())),
+        describe_path: Arc::new(vec![]),
+        app_file: Arc::new("web/app/page.tsx".to_string()),
+        locator_kind: "role".to_string(),
+        role: Some("button".to_string()),
+        text: "Save".to_string(),
+        locator: "getByRole(button, name: Save)".to_string(),
+        test_id_attributes: vec!["data-qa".to_string()],
+        selector_refs: vec![
+            SelectorRef {
+                attribute: "id".to_string(),
+                value: "save".to_string(),
+            },
+            SelectorRef {
+                attribute: "data-pw".to_string(),
+                value: "save-button".to_string(),
+            },
+            SelectorRef {
+                attribute: "data-qa".to_string(),
+                value: "save-action".to_string(),
+            },
+        ],
+        reasons: vec!["route-signal".to_string()],
+        line: 12,
+    };
+
+    let findings = findings_from_report(
+        &analysis(empty_report(), vec![edge]),
+        false,
+        false,
+        false,
+        true,
+    );
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].target.as_deref(), Some("data-qa=save-action"));
+}
+
+#[test]
+fn prefer_test_id_locator_ignores_non_effective_selector_refs() {
+    let edge = Edge::LocatorText {
+        test_file: Arc::new("tests/e2e/app.spec.ts".to_string()),
+        test_name: Some(Arc::new("uses text locator".to_string())),
+        describe_path: Arc::new(vec![]),
+        app_file: Arc::new("web/app/page.tsx".to_string()),
+        locator_kind: "role".to_string(),
+        role: Some("button".to_string()),
+        text: "Save".to_string(),
+        locator: "getByRole(button, name: Save)".to_string(),
+        test_id_attributes: vec!["data-qa".to_string()],
+        selector_refs: vec![SelectorRef {
+            attribute: "data-pw".to_string(),
+            value: "save-button".to_string(),
+        }],
+        reasons: vec!["route-signal".to_string()],
+        line: 12,
+    };
+
+    let findings = findings_from_report(
+        &analysis(empty_report(), vec![edge]),
+        false,
+        false,
+        false,
+        true,
+    );
+
+    assert!(findings.is_empty());
+}
+
+fn analysis(report: CoverageReport, edges: Vec<Edge>) -> Analysis {
+    Analysis {
+        coverage: report,
+        edges: EdgeReport { edges },
+    }
+}
+
+fn empty_report() -> CoverageReport {
+    CoverageReport {
+        summary: Summary {
+            total_routes: 0,
+            covered_routes: 0,
+            uncovered_routes: 0,
+            total_selectors: 0,
+            covered_selectors: 0,
+            uncovered_selectors: 0,
+            duplicate_selectors: 0,
+            total_fetch_apis: 0,
+            covered_fetch_apis: 0,
+            uncovered_fetch_apis: 0,
+        },
+        routes: vec![],
+        selectors: vec![],
+        duplicate_selectors: vec![],
+        fetch_apis: vec![],
+    }
 }

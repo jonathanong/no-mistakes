@@ -37,6 +37,8 @@ pub(super) fn text_target_matches(
             LocatorKind::Text => target.kind == AppTextKind::VisibleText,
             LocatorKind::Label => target.kind == AppTextKind::Label,
             LocatorKind::Placeholder => target.kind == AppTextKind::Placeholder,
+            LocatorKind::Alt => target.kind == AppTextKind::Alt,
+            LocatorKind::Title => target.kind == AppTextKind::Title,
             LocatorKind::Role => {
                 target.role.as_deref() == role
                     && (include_hidden || !target.hidden)

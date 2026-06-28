@@ -24,9 +24,13 @@ mod selection;
 pub const PLAYWRIGHT_COVERAGE: &str = "playwright-coverage";
 pub const PLAYWRIGHT_UNIQUE_TEST_IDS: &str = "playwright-unique-test-ids";
 pub const PLAYWRIGHT_UNIQUE_HTML_IDS: &str = "playwright-unique-html-ids";
+pub const PLAYWRIGHT_PREFER_TEST_ID_LOCATORS: &str = "playwright-prefer-test-id-locators";
 
 pub fn configured(config: &NoMistakesConfig) -> bool {
-    coverage_enabled(config) || unique_test_ids_enabled(config) || unique_html_ids_enabled(config)
+    coverage_enabled(config)
+        || unique_test_ids_enabled(config)
+        || unique_html_ids_enabled(config)
+        || prefer_test_id_locators_enabled(config)
 }
 
 pub fn check(
@@ -54,10 +58,11 @@ pub fn check(
             analyze_selectors_with_policy(root, &settings, test_policy, unique_policy)
         }?;
         let report_findings = findings_from_report(
-            &analysis.coverage,
+            &analysis,
             selection.coverage,
             selection.unique_test_ids,
             selection.unique_html_ids,
+            selection.prefer_test_id_locators,
         );
         findings.extend(filter_rule_findings(root, config, report_findings)?);
     }
@@ -146,10 +151,11 @@ pub(crate) fn check_with_facts(
             )
         }?;
         let report_findings = findings_from_report(
-            &analysis.coverage,
+            &analysis,
             selection.coverage,
             selection.unique_test_ids,
             selection.unique_html_ids,
+            selection.prefer_test_id_locators,
         );
         findings.extend(filter_rule_findings(root, config, report_findings)?);
     }
@@ -177,6 +183,10 @@ fn unique_test_ids_enabled(config: &NoMistakesConfig) -> bool {
 
 fn unique_html_ids_enabled(config: &NoMistakesConfig) -> bool {
     config.rule_configured(PLAYWRIGHT_UNIQUE_HTML_IDS)
+}
+
+fn prefer_test_id_locators_enabled(config: &NoMistakesConfig) -> bool {
+    config.rule_configured(PLAYWRIGHT_PREFER_TEST_ID_LOCATORS)
 }
 
 #[cfg(test)]

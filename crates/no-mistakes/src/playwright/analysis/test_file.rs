@@ -157,9 +157,15 @@ pub(crate) fn analyze_test_occurrences(
         }
     }
 
-    append_locator_text_edges(&mut edges, &rel_test_file, context, text_locators);
-
     let test_id_attributes = test_file.test_id_attributes();
+    append_locator_text_edges(
+        &mut edges,
+        &rel_test_file,
+        &test_id_attributes,
+        context,
+        text_locators,
+    );
+
     let helper_references = helper_references
         .into_iter()
         .filter(|reference| context.test_policy.allows(reference.status))

@@ -84,6 +84,8 @@ impl AppTextKindRoleKey {
             LocatorKind::Text => AppTextKind::VisibleText,
             LocatorKind::Label => AppTextKind::Label,
             LocatorKind::Placeholder => AppTextKind::Placeholder,
+            LocatorKind::Alt => AppTextKind::Alt,
+            LocatorKind::Title => AppTextKind::Title,
             LocatorKind::Role => AppTextKind::AccessibleName,
         };
         let role = match locator.kind {

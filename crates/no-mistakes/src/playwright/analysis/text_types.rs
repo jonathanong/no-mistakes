@@ -7,6 +7,8 @@ pub(crate) enum AppTextKind {
     VisibleText,
     Label,
     Placeholder,
+    Alt,
+    Title,
     AccessibleName,
 }
 
@@ -27,6 +29,8 @@ pub(crate) enum LocatorKind {
     Text,
     Label,
     Placeholder,
+    Alt,
+    Title,
 }
 
 impl LocatorKind {
@@ -36,6 +40,8 @@ impl LocatorKind {
             Self::Text => "text",
             Self::Label => "label",
             Self::Placeholder => "placeholder",
+            Self::Alt => "alt",
+            Self::Title => "title",
         }
     }
 }

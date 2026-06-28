@@ -38,6 +38,7 @@ rules:
 | [`package-json-registry-only`](package-json-registry-only.md) | Require package registries to match configured policy. |
 | [`package-json-workspace-coverage`](package-json-workspace-coverage.md) | Require package directories to be covered by workspace config. |
 | [`playwright-coverage`](playwright-coverage.md) | Require Playwright route/selector coverage. |
+| [`playwright-prefer-test-id-locators`](playwright-prefer-test-id-locators.md) | Prefer test ID locators when matched app elements expose test IDs. |
 | [`playwright-unique-html-ids`](playwright-unique-html-ids.md) | Require unique HTML `id` values in Playwright analysis. |
 | [`playwright-unique-test-ids`](playwright-unique-test-ids.md) | Require unique test ID values in Playwright analysis. |
 | [`require-files-in-subdirs`](require-files-in-subdirs.md) | Require files under matching subdirectories. |

@@ -152,6 +152,8 @@ pub(crate) enum Edge {
         role: Option<String>,
         text: String,
         locator: String,
+        #[serde(skip_serializing)]
+        test_id_attributes: Vec<String>,
         selector_refs: Vec<SelectorRef>,
         reasons: Vec<String>,
         line: u32,

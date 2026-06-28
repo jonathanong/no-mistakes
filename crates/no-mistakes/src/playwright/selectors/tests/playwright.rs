@@ -255,7 +255,7 @@ fn extracts_text_locator_status_and_ignores_unsupported_shapes() {
     ]);
     let locators = extract_playwright_text_locator_occurrences(&source);
 
-    assert_eq!(locators.len(), 16);
+    assert_eq!(locators.len(), 18);
     assert!(locators.contains(&(
         "role".to_string(),
         "Save".to_string(),

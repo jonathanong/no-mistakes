@@ -43,6 +43,7 @@ fn selector_dep_edge_maps_locator_text_edge_to_dep_graph_edge() {
         role: Some("button".to_string()),
         text: "Save".to_string(),
         locator: "getByRole('button', { name: 'Save' })".to_string(),
+        test_id_attributes: vec!["data-pw".to_string()],
         selector_refs: vec![SelectorRef {
             attribute: "data-pw".to_string(),
             value: "save-btn".to_string(),

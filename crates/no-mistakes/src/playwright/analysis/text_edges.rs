@@ -23,6 +23,7 @@ struct LocatorTestScope<'a> {
 pub(crate) fn append_locator_text_edges(
     edges: &mut Vec<Edge>,
     rel_test_file: &Arc<String>,
+    test_id_attributes: &[String],
     context: &TestAnalysisContext<'_>,
     text_locators: Vec<TestOccurrence<PlaywrightTextLocator>>,
 ) {
@@ -78,6 +79,7 @@ pub(crate) fn append_locator_text_edges(
                         role: text_locator.value.role.clone(),
                         text: text_locator.value.text.clone(),
                         locator: text_locator.value.locator.clone(),
+                        test_id_attributes: test_id_attributes.to_vec(),
                         selector_refs: app_text.selector_refs.clone(),
                         reasons,
                         line: text_locator.line,

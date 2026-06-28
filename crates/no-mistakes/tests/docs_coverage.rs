@@ -94,6 +94,7 @@ fn no_mistakes_rules_have_docs() {
         rules::NO_GIT_IDENTITY_MUTATION,
         rules::PACKAGE_JSON_REGISTRY_ONLY,
         playwright_rules::PLAYWRIGHT_COVERAGE,
+        playwright_rules::PLAYWRIGHT_PREFER_TEST_ID_LOCATORS,
         playwright_rules::PLAYWRIGHT_UNIQUE_HTML_IDS,
         playwright_rules::PLAYWRIGHT_UNIQUE_TEST_IDS,
         rules::REQUIRE_FILES_IN_SUBDIRS,
