@@ -1,7 +1,9 @@
+mod step;
 mod values;
+mod workflow_paths;
 
 use super::{
-    globs::{compile_patterns, PredicateQuantifier},
+    globs::{selected_by, PredicateQuantifier},
     RuleFinding, RULE_ID,
 };
 use crate::codebase::ci_graph::{discover_workflow_files, relative_slash};
@@ -9,7 +11,8 @@ use crate::config::v2::schema::NoMistakesConfig;
 use serde::Deserialize;
 use serde_yaml::Value;
 use std::path::Path;
-use values::{filter_patterns, parse_filters_value};
+use step::{collect_step_filters, StepContext};
+use workflow_paths::workflow_path_filters;
 
 #[cfg(test)]
 mod tests;
@@ -26,8 +29,19 @@ pub(crate) struct WorkflowSelector {
 pub(super) struct CiFilter {
     pub(super) workflow: String,
     pub(super) name: String,
-    pub(super) compiled: Vec<super::globs::CompiledGlob>,
+    pub(super) compiled: Vec<Vec<super::globs::CompiledGlob>>,
     pub(super) quantifier: PredicateQuantifier,
+    workflow_paths: Vec<Vec<super::globs::CompiledGlob>>,
+}
+
+impl CiFilter {
+    pub(super) fn workflow_allows(&self, path: &str) -> bool {
+        self.workflow_paths.is_empty()
+            || self
+                .workflow_paths
+                .iter()
+                .any(|patterns| selected_by(patterns, path))
+    }
 }
 
 pub(super) fn ci_filters(
@@ -87,6 +101,7 @@ fn extract_filters_from_workflow(
     };
     let mut filters = Vec::new();
     let mut findings = Vec::new();
+    let workflow_paths = workflow_path_filters(&value);
     let Some(jobs) = value.get("jobs").and_then(Value::as_mapping) else {
         return (filters, findings);
     };
@@ -108,9 +123,12 @@ fn extract_filters_from_workflow(
             }
             collect_step_filters(
                 root,
-                rel,
-                job_id,
-                step_id,
+                StepContext {
+                    rel,
+                    job_id,
+                    step_id,
+                    workflow_paths: &workflow_paths,
+                },
                 step,
                 &mut filters,
                 &mut findings,
@@ -118,70 +136,6 @@ fn extract_filters_from_workflow(
         }
     }
     (filters, findings)
-}
-
-fn collect_step_filters(
-    root: &Path,
-    rel: &str,
-    job_id: &str,
-    step_id: &str,
-    step: &Value,
-    filters: &mut Vec<CiFilter>,
-    findings: &mut Vec<RuleFinding>,
-) {
-    if !is_paths_filter_step(step) {
-        return;
-    }
-    let Some(with) = step.get("with") else { return };
-    let Some(raw_filters) = with.get("filters").and_then(Value::as_str) else {
-        return;
-    };
-    let quantifier = predicate_quantifier(with);
-    let Some(parsed) = parse_filters_value(root, rel, job_id, step_id, raw_filters, findings)
-    else {
-        return;
-    };
-    let Some(map) = parsed.as_mapping() else {
-        return;
-    };
-    for (name, patterns) in map {
-        let Some(name) = name.as_str() else { continue };
-        let patterns = filter_patterns(patterns);
-        let compiled = match compile_patterns(&patterns) {
-            Ok(compiled) => compiled,
-            Err(error) => {
-                findings.push(workflow_finding(
-                    rel,
-                    format!("{rel}: filter `{name}` contains invalid glob: {error}"),
-                    Some(name.to_string()),
-                ));
-                continue;
-            }
-        };
-        filters.push(CiFilter {
-            workflow: rel.to_string(),
-            name: name.to_string(),
-            compiled,
-            quantifier,
-        });
-    }
-}
-
-fn is_paths_filter_step(step: &Value) -> bool {
-    step.get("uses")
-        .and_then(Value::as_str)
-        .is_some_and(|uses| uses.trim().starts_with("dorny/paths-filter"))
-}
-
-fn predicate_quantifier(with: &Value) -> PredicateQuantifier {
-    match with
-        .get("predicate-quantifier")
-        .and_then(Value::as_str)
-        .unwrap_or_default()
-    {
-        "every" => PredicateQuantifier::Every,
-        _ => PredicateQuantifier::Some,
-    }
 }
 
 pub(super) fn workflow_finding(file: &str, message: String, target: Option<String>) -> RuleFinding {

@@ -124,8 +124,17 @@ fn project_name(project: &ConfigProject) -> String {
 }
 
 fn include_without_excludes(project: &ConfigProject) -> Vec<String> {
-    let mut patterns = project.include.clone();
-    patterns.extend(project.exclude.iter().map(|pattern| format!("!{pattern}")));
+    let mut patterns = project
+        .include
+        .iter()
+        .map(|pattern| normalize_project_glob_part(pattern))
+        .collect::<Vec<_>>();
+    patterns.extend(
+        project
+            .exclude
+            .iter()
+            .map(|pattern| format!("!{}", normalize_project_glob_part(pattern))),
+    );
     patterns
 }
 
@@ -168,21 +177,12 @@ fn project_root_patterns(project_root: &str) -> Vec<String> {
 }
 
 fn project_relative_pattern(project_root: &str, pattern: &str) -> String {
-    let (negate, pattern) = match pattern.strip_prefix('!') {
-        Some(rest) => (true, rest),
-        None => (false, pattern),
-    };
     let root = normalize_project_glob_part(project_root);
     let pattern = normalize_project_glob_part(pattern);
-    let rel = if root.is_empty() || root == "." || pattern.starts_with(&format!("{root}/")) {
+    if root.is_empty() || root == "." || pattern.starts_with(&format!("{root}/")) {
         pattern
     } else {
         format!("{root}/{pattern}")
-    };
-    if negate {
-        format!("!{rel}")
-    } else {
-        rel
     }
 }
 

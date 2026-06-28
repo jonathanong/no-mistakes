@@ -90,3 +90,23 @@ fn merge_overlays_non_empty_explicit_fields() {
     assert_eq!(projects[0].runner_project_arg.as_deref(), Some("new-unit"));
     assert_eq!(projects[0].scope.as_deref(), Some("new"));
 }
+
+#[test]
+fn merge_clears_existing_excludes_when_explicit_include_has_no_excludes() {
+    let mut projects = vec![project(
+        "unit",
+        &["old/**"],
+        &["old-ignore/**"],
+        None,
+        None,
+        None,
+    )];
+
+    merge_explicit_project(
+        &mut projects,
+        project("unit", &["new/**"], &[], None, None, None),
+    );
+
+    assert_eq!(projects[0].include, vec!["new/**"]);
+    assert!(projects[0].exclude.is_empty());
+}

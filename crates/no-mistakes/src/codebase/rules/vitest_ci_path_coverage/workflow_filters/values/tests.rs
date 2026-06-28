@@ -70,12 +70,16 @@ fn parse_filters_value_loads_external_files_and_reports_invalid_external_yaml() 
 }
 
 #[test]
-fn filter_patterns_recurses_through_supported_shapes() {
+fn filter_predicates_recurses_through_supported_shapes() {
     let value: Value = serde_yaml::from_str(
         r#"
 - "src/**/*.ts"
 - added|modified:
     - "pkg/**/*.ts"
+- added:
+    nested: "api/**/*.ts"
+- deleted:
+    - "deleted/**/*.ts"
 - paths:
     - "web/**/*.tsx"
 - other:
@@ -86,12 +90,27 @@ fn filter_patterns_recurses_through_supported_shapes() {
     .unwrap();
 
     assert_eq!(
-        filter_patterns(&value),
+        filter_predicates(&value),
         vec![
-            "src/**/*.ts",
-            "pkg/**/*.ts",
-            "web/**/*.tsx",
-            "scripts/**/*.mts"
+            vec!["src/**/*.ts".to_string()],
+            vec!["pkg/**/*.ts".to_string()],
         ]
+    );
+}
+
+#[test]
+fn change_type_list_values_stay_single_predicate_alternatives() {
+    let value: Value = serde_yaml::from_str(
+        r#"
+added|modified:
+  - "src/**"
+  - "lib/**"
+"#,
+    )
+    .unwrap();
+
+    assert_eq!(
+        filter_predicates(&value),
+        vec![vec!["src/**".to_string(), "lib/**".to_string()]]
     );
 }

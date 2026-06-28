@@ -7,7 +7,7 @@ pub(super) enum PredicateQuantifier {
     Every,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub(super) struct CompiledGlob {
     negate: bool,
     matcher: GlobMatcher,
@@ -38,16 +38,34 @@ pub(super) fn selected_by(globs: &[CompiledGlob], path: &str) -> bool {
 }
 
 pub(super) fn selected_by_paths_filter(
-    globs: &[CompiledGlob],
+    predicates: &[Vec<CompiledGlob>],
     quantifier: PredicateQuantifier,
     path: &str,
 ) -> bool {
     match quantifier {
-        PredicateQuantifier::Some => globs.iter().any(|glob| glob.predicate_matches(path)),
+        PredicateQuantifier::Some => predicates
+            .iter()
+            .any(|predicate| predicate_matches(predicate, path)),
         PredicateQuantifier::Every => {
-            !globs.is_empty() && globs.iter().all(|glob| glob.predicate_matches(path))
+            !predicates.is_empty()
+                && predicates
+                    .iter()
+                    .all(|predicate| predicate_matches(predicate, path))
         }
     }
+}
+
+pub(super) fn compile_pattern_predicates(
+    patterns: &[Vec<String>],
+) -> Result<Vec<Vec<CompiledGlob>>> {
+    patterns
+        .iter()
+        .map(|predicate| compile_patterns(predicate))
+        .collect()
+}
+
+fn predicate_matches(predicate: &[CompiledGlob], path: &str) -> bool {
+    predicate.iter().any(|glob| glob.predicate_matches(path))
 }
 
 impl CompiledGlob {

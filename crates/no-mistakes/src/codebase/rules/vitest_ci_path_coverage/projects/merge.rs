@@ -23,8 +23,8 @@ pub(super) fn merge_explicit_project(projects: &mut Vec<ConfigProject>, project:
     }
     if !project.include.is_empty() {
         existing.include = project.include;
-    }
-    if !project.exclude.is_empty() {
+        existing.exclude = project.exclude;
+    } else if !project.exclude.is_empty() {
         existing.exclude = project.exclude;
     }
 }

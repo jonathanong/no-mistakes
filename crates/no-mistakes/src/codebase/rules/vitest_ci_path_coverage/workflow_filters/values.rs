@@ -58,16 +58,57 @@ pub(super) fn parse_filters_value(
     }
 }
 
-pub(super) fn filter_patterns(value: &Value) -> Vec<String> {
+pub(super) fn filter_predicates(value: &Value) -> Vec<Vec<String>> {
     match value {
-        Value::Sequence(items) => items.iter().flat_map(filter_patterns).collect(),
-        Value::String(pattern) => vec![pattern.clone()],
-        Value::Mapping(map) => {
-            if let Some(paths) = map.get("paths") {
-                return filter_patterns(paths);
+        Value::Sequence(items) => {
+            let mut predicates = Vec::new();
+            for item in items {
+                predicates.extend(filter_predicates(item));
             }
-            map.values().flat_map(filter_patterns).collect()
+            predicates
+        }
+        Value::String(pattern) => vec![vec![pattern.clone()]],
+        Value::Mapping(map) => {
+            let mut predicates = Vec::new();
+            for (change_types, patterns) in map {
+                if change_types_cover_source_changes(change_types) {
+                    predicates.extend(predicate_alternatives(patterns));
+                }
+            }
+            predicates
         }
         _ => Vec::new(),
     }
+}
+
+fn predicate_alternatives(value: &Value) -> Vec<Vec<String>> {
+    match value {
+        Value::Sequence(items) => {
+            let alternatives = items
+                .iter()
+                .filter_map(Value::as_str)
+                .map(str::to_string)
+                .collect();
+            vec![alternatives]
+        }
+        Value::String(pattern) => vec![vec![pattern.clone()]],
+        Value::Mapping(map) => {
+            let mut predicates = Vec::new();
+            for (change_types, patterns) in map {
+                if change_types_cover_source_changes(change_types) {
+                    predicates.extend(predicate_alternatives(patterns));
+                }
+            }
+            predicates
+        }
+        _ => Vec::new(),
+    }
+}
+
+fn change_types_cover_source_changes(value: &Value) -> bool {
+    let Some(raw) = value.as_str() else {
+        return false;
+    };
+    raw.split('|')
+        .any(|part| matches!(part.trim(), "added" | "modified"))
 }

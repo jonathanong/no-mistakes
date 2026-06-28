@@ -99,7 +99,8 @@ fn scan(
         }
         for path in paths {
             if mapped_filters.iter().any(|filter| {
-                selected_by_paths_filter(&filter.compiled, filter.quantifier, &path.rel)
+                filter.workflow_allows(&path.rel)
+                    && selected_by_paths_filter(&filter.compiled, filter.quantifier, &path.rel)
             }) {
                 continue;
             }

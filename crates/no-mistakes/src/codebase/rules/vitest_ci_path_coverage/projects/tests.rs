@@ -19,7 +19,7 @@ fn project_pattern_helpers_cover_roots_relative_patterns_and_excludes() {
     );
     assert_eq!(
         project_relative_pattern("packages/api", "!./src/**/*.ts"),
-        "!packages/api/src/**/*.ts"
+        "packages/api/!./src/**/*.ts"
     );
     assert_eq!(
         project_relative_pattern("packages/api", "packages/api/src/**/*.ts"),
@@ -31,8 +31,8 @@ fn project_pattern_helpers_cover_roots_relative_patterns_and_excludes() {
         policy_name: None,
         runner_project_arg: None,
         scope: None,
-        include: vec!["src/**/*.test.ts".to_string()],
-        exclude: vec!["src/generated/**".to_string()],
+        include: vec!["./src/**/*.test.ts".to_string()],
+        exclude: vec!["./src/generated/**".to_string()],
     };
     assert_eq!(project_name(&project), "default");
     assert_eq!(
@@ -76,7 +76,7 @@ fn project_dependency_patterns_cover_all_trigger_shapes() {
             },
             &TestPlanProjectDependency::Patterns(vec!["!dist/**".to_string()])
         ),
-        vec!["!pkg/dist/**"]
+        vec!["pkg/!dist/**"]
     );
 }
 

@@ -71,6 +71,95 @@ jobs:
 }
 
 #[test]
+fn extract_filters_preserves_change_type_alternatives_for_every_quantifier() {
+    let root = fixture_root("fixture");
+    let source = r#"
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    steps:
+      - id: selected
+        uses: dorny/paths-filter@v3
+        with:
+          predicate-quantifier: every
+          filters: |
+            backend:
+              - added|modified:
+                  - "src/**"
+                  - "lib/**"
+"#;
+
+    let (filters, findings) =
+        extract_filters_from_workflow(&root, ".github/workflows/ci.yml", source, &[]);
+
+    assert!(findings.is_empty());
+    assert_eq!(filters.len(), 1);
+    assert!(super::super::globs::selected_by_paths_filter(
+        &filters[0].compiled,
+        filters[0].quantifier,
+        "src/index.ts"
+    ));
+}
+
+#[test]
+fn extract_filters_ignores_unsupported_paths_change_type_key() {
+    let root = fixture_root("fixture");
+    let source = r#"
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    steps:
+      - id: selected
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              paths:
+                - "src/**"
+"#;
+
+    let (filters, findings) =
+        extract_filters_from_workflow(&root, ".github/workflows/ci.yml", source, &[]);
+
+    assert!(findings.is_empty());
+    assert_eq!(filters.len(), 1);
+    assert!(!super::super::globs::selected_by_paths_filter(
+        &filters[0].compiled,
+        filters[0].quantifier,
+        "src/index.ts"
+    ));
+}
+
+#[test]
+fn workflow_level_paths_must_allow_the_changed_source_path() {
+    let root = fixture_root("fixture");
+    let source = r#"
+on:
+  pull_request:
+    paths:
+      - "docs/**"
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    steps:
+      - id: selected
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - "src/**"
+"#;
+
+    let (filters, findings) =
+        extract_filters_from_workflow(&root, ".github/workflows/ci.yml", source, &[]);
+
+    assert!(findings.is_empty());
+    assert_eq!(filters.len(), 1);
+    assert!(!filters[0].workflow_allows("src/index.ts"));
+    assert!(filters[0].workflow_allows("docs/readme.md"));
+}
+
+#[test]
 fn extract_filters_covers_non_mapping_filter_values_and_non_string_names() {
     let root = fixture_root("malformed");
     let source = r#"
