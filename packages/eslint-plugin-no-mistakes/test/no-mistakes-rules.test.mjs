@@ -1089,7 +1089,7 @@ describe("no-global-fetch-outside-helper", () => {
         option,
         "web/app/users.ts",
       ),
-      Array(17).fill("globalFetch"),
+      Array(19).fill("globalFetch"),
     );
   });
 

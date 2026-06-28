@@ -2,6 +2,7 @@ fetch("/api/bare");
 globalThis.fetch("/api/global");
 window.fetch("/api/window");
 self["fetch"]("/api/self");
+global.fetch("/api/node-global");
 
 const request = fetch;
 request("/api/alias");
@@ -15,6 +16,12 @@ selfFetch("/api/self-alias");
 const { fetch: globalFetch } = globalThis;
 const nestedFetch = globalFetch;
 nestedFetch("/api/nested-alias");
+
+function beforeAlias() {
+  return laterRequest("/api/later-alias");
+}
+
+const laterRequest = fetch;
 
 (fetch as typeof fetch)("/api/cast");
 (fetch!)("/api/non-null");

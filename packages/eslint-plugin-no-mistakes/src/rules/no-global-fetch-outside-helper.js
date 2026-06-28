@@ -8,7 +8,7 @@ const {
   stringMatches,
 } = require("./module-mock-helpers");
 
-const GLOBAL_FETCH_ROOTS = new Set(["globalThis", "window", "self"]);
+const GLOBAL_FETCH_ROOTS = new Set(["globalThis", "window", "self", "global"]);
 const LOCAL_BINDING_TYPES = new Set([
   "Variable",
   "Parameter",
@@ -104,6 +104,44 @@ function recordObjectPatternFetchAliases(id, init, context, aliases) {
   }
 }
 
+function childNodes(node) {
+  const children = [];
+  for (const [key, value] of Object.entries(node)) {
+    if (key === "parent") continue;
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (item?.type) children.push(item);
+      }
+    } else if (value?.type) {
+      children.push(value);
+    }
+  }
+  return children;
+}
+
+function collectVariableDeclarators(node, declarators = []) {
+  if (node.type === "VariableDeclarator") declarators.push(node);
+  for (const child of childNodes(node)) collectVariableDeclarators(child, declarators);
+  return declarators;
+}
+
+function collectFetchAliases(program, context, aliases) {
+  const declarators = collectVariableDeclarators(program);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const node of declarators) {
+      if (node.parent?.type !== "VariableDeclaration" || node.parent.kind !== "const") continue;
+      const before = aliases.size;
+      recordObjectPatternFetchAliases(node.id, node.init, context, aliases);
+      if (node.id.type === "Identifier" && isGlobalFetchExpression(node.init, context, aliases)) {
+        aliases.add(resolveVariable(node.id, context));
+      }
+      changed ||= aliases.size > before;
+    }
+  }
+}
+
 function shouldCheckFile(filename, options) {
   if (!options) return false;
   const file = repoRelativeFilename(filename);
@@ -148,15 +186,8 @@ module.exports = Object.assign(
       const aliases = new Set();
 
       return {
-        VariableDeclarator(node) {
-          if (node.parent?.type !== "VariableDeclaration" || node.parent.kind !== "const") return;
-          recordObjectPatternFetchAliases(node.id, node.init, context, aliases);
-          if (
-            node.id.type !== "Identifier" ||
-            !isGlobalFetchExpression(node.init, context, aliases)
-          )
-            return;
-          aliases.add(resolveVariable(node.id, context));
+        Program(node) {
+          collectFetchAliases(node, context, aliases);
         },
         CallExpression(node) {
           if (!isGlobalFetchExpression(node.callee, context, aliases)) return;
@@ -168,6 +199,9 @@ module.exports = Object.assign(
   {
     __test: {
       bindingIdentifier,
+      childNodes,
+      collectFetchAliases,
+      collectVariableDeclarators,
       hasLocalBinding,
       isGlobalFetchExpression,
       isGlobalFetchMember,
