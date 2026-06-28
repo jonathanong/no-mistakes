@@ -31,6 +31,13 @@ export interface TestsImpactOptions {
   includeSymbols?: boolean;
 }
 
+export interface TestsTargetsOptions {
+  framework: "vitest" | "playwright" | "swift";
+  root?: string;
+  config?: string;
+  files: string[];
+}
+
 export interface TestPlan {
   selected_tests: SelectedTest[];
   groups?: TestPlanGroup[];
@@ -68,6 +75,23 @@ export interface TestPlanGroup {
 }
 
 export interface TestPlanWarning {
+  type: string;
+  message: string;
+  file: string;
+}
+
+export interface TestsTargetsReport {
+  framework: "vitest" | "playwright" | "swift";
+  tests: TestTargetRow[];
+  warnings: TestTargetWarning[];
+}
+
+export interface TestTargetRow {
+  testFile: string;
+  targets: TestExecutionTarget[];
+}
+
+export interface TestTargetWarning {
   type: string;
   message: string;
   file: string;

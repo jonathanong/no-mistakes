@@ -54,6 +54,82 @@ fn test_plan_vitest_uses_project_includes_and_targets() {
 }
 
 #[test]
+fn test_plan_vitest_commands_format_uses_execution_targets() {
+    let root = fixture("test-plan-project-discovery");
+    let output = run(&[
+        "test",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "web/storybook/button.stories.tsx",
+        "--format",
+        "commands",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = stdout(&output);
+    assert!(stdout.contains(
+        "vitest --config vitest.config.mts --project browser web/storybook/button.stories.tsx"
+    ));
+    assert!(stdout.contains(
+        "vitest --config vitest.config.mts --project stories web/storybook/button.stories.tsx"
+    ));
+}
+
+#[test]
+fn test_targets_vitest_reports_project_commands() {
+    let root = fixture("test-plan-project-discovery");
+    let output = run(&[
+        "test",
+        "targets",
+        "vitest",
+        "web/storybook/button.stories.tsx",
+        "--root",
+        root.to_str().unwrap(),
+        "--format",
+        "commands",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = stdout(&output);
+    assert!(stdout.contains(
+        "vitest --config vitest.config.mts --project browser web/storybook/button.stories.tsx"
+    ));
+    assert!(stdout.contains(
+        "vitest --config vitest.config.mts --project stories web/storybook/button.stories.tsx"
+    ));
+}
+
+#[test]
+fn test_targets_commands_format_rejects_unmatched_files() {
+    let root = fixture("test-plan-project-discovery");
+    let output = run(&[
+        "test",
+        "targets",
+        "vitest",
+        "missing.test.ts",
+        "--root",
+        root.to_str().unwrap(),
+        "--format",
+        "commands",
+    ]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("not owned by a vitest test project"));
+}
+
+#[test]
 fn test_plan_vitest_project_excludes_are_applied() {
     let root = fixture("test-plan-project-discovery");
     let output = run(&[

@@ -6,6 +6,7 @@ mod check_tasks;
 mod data_pw;
 mod effects;
 mod fetches;
+mod flow;
 mod infra;
 mod lockfile;
 mod queues;
@@ -59,6 +60,8 @@ enum Command {
     ResolveCheck(queries::ResolveCheckArgs),
     /// Map Next.js App Router routes to static fetch API calls.
     Fetches(fetches::FetchesArgs),
+    /// Show a compact local dependency/symbol flow graph.
+    Flow(flow::FlowArgs),
     /// Analyze Playwright route, selector, and fetch coverage.
     Playwright(playwright::PlaywrightArgs),
     /// Analyze React component traits.
@@ -152,6 +155,7 @@ fn run_codebase_command(command: Command) -> Result<CommandDispatch> {
 fn run_domain_command(command: Command) -> Result<CommandDispatch> {
     let code = match command {
         Command::Fetches(args) => fetches::run(args),
+        Command::Flow(args) => flow::run(args),
         Command::Playwright(args) => playwright::run(args),
         Command::React(args) => react::run(args),
         Command::Queues(args) => queues::run(args),

@@ -1,15 +1,17 @@
 mod bindings;
 mod commonjs;
+mod handler_query_params;
 mod helpers;
 mod imports;
 mod literals;
+mod query_params;
 mod records;
 mod shape;
 
 use crate::server_routes::model::FileFacts;
 use oxc_ast::ast::{
     CallExpression, ExportDefaultDeclarationKind, Expression, ImportDeclarationSpecifier,
-    ImportOrExportKind, ModuleExportName, TSImportEqualsDeclaration,
+    ImportOrExportKind, ModuleExportName, Program, TSImportEqualsDeclaration,
 };
 use oxc_ast_visit::{walk, Visit};
 use std::collections::{HashMap, HashSet};
@@ -43,9 +45,15 @@ pub(super) struct ServerRouteVisitor<'a> {
     pub(super) path_match_names: HashSet<String>,
     pub(super) api_server_names: HashSet<String>,
     pub(super) client_http_names: HashSet<String>,
+    pub(super) handler_query_params: HashMap<String, Vec<String>>,
 }
 
 impl<'a> Visit<'a> for ServerRouteVisitor<'a> {
+    fn visit_program(&mut self, program: &Program<'a>) {
+        self.index_handler_query_params(program);
+        walk::walk_program(self, program);
+    }
+
     fn visit_import_declaration(&mut self, import: &oxc_ast::ast::ImportDeclaration<'a>) {
         let source = import.source.value.as_str().to_string();
         if let Some(specifiers) = &import.specifiers {
@@ -172,6 +180,7 @@ impl<'a> ServerRouteVisitor<'a> {
             path_match_names: HashSet::new(),
             api_server_names: HashSet::new(),
             client_http_names: HashSet::new(),
+            handler_query_params: HashMap::new(),
         }
     }
 }

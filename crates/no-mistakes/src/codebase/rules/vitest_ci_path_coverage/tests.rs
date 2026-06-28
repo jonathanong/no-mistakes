@@ -332,6 +332,12 @@ fn double_star_suffix_globs_match_repo_root_files() {
 
     assert!(globs::selected_by(&compiled, "index.ts"));
     assert!(globs::selected_by(&compiled, "src/index.ts"));
+
+    let nested = globs::compile_patterns(&["src/**.test.ts/fixtures/**".to_string()]).unwrap();
+    assert!(globs::selected_by(
+        &nested,
+        "src/foo.test.ts/fixtures/data.ts"
+    ));
 }
 
 #[test]

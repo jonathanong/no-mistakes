@@ -15,6 +15,7 @@
     "bin/",
     "*.d.ts",
     "index.js",
+    "planning.js",
     "scripts/install.js",
     "scripts/install/",
     "README.md",

@@ -265,6 +265,43 @@ fn tests_plan_paths_outputs_newline_separated_paths() {
 }
 
 #[test]
+fn tests_plan_commands_format_requires_framework_targets() {
+    let root = fixture("tests-impact");
+    let output = run(&[
+        "tests",
+        "plan",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "c.mts",
+        "--format",
+        "commands",
+    ]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("commands format requires framework test execution targets"));
+}
+
+#[test]
+fn tests_impact_commands_format_requires_framework_targets() {
+    let root = fixture("tests-impact");
+    let output = run(&[
+        "tests",
+        "impact",
+        "--root",
+        root.to_str().unwrap(),
+        "c.mts",
+        "--format",
+        "commands",
+    ]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("commands format requires framework test execution targets"));
+}
+
+#[test]
 fn tests_plan_md_outputs_markdown_table() {
     let root = fixture("tests-impact");
     let output = run(&[

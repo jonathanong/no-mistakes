@@ -31,6 +31,11 @@ pub(crate) fn run(args: ImpactArgs) -> Result<ExitCode> {
                 println!("{}", test.test_file);
             }
         }
+        PlanFormat::Commands => {
+            for command in crate::tests::targets::commands_for_plan(&plan)? {
+                println!("{command}");
+            }
+        }
         PlanFormat::Markdown | PlanFormat::Md => println!("{}", render_markdown_plan(&plan)),
     }
 

@@ -1,13 +1,11 @@
 pub(crate) fn build_plan_args(
     options: TestsPlanOptions,
 ) -> AnyhowResult<crate::tests::PlanArgs> {
-    let framework = match options.framework.as_deref() {
-        Some("playwright") => Some(crate::tests::TestFramework::Playwright),
-        Some("vitest") => Some(crate::tests::TestFramework::Vitest),
-        Some("swift") => Some(crate::tests::TestFramework::Swift),
-        Some(value) => bail!("unknown test framework: {value}"),
-        None => None,
-    };
+    let framework = options
+        .framework
+        .as_deref()
+        .map(parse_test_framework)
+        .transpose()?;
 
     let (entrypoints, entrypoint_symbols) = entrypoint_parts(options.entrypoints);
 
@@ -39,6 +37,15 @@ pub(crate) fn build_plan_args(
         format: Some(crate::tests::PlanFormat::Json),
         json: true,
     })
+}
+
+pub(crate) fn parse_test_framework(value: &str) -> AnyhowResult<crate::tests::TestFramework> {
+    match value {
+        "playwright" => Ok(crate::tests::TestFramework::Playwright),
+        "vitest" => Ok(crate::tests::TestFramework::Vitest),
+        "swift" => Ok(crate::tests::TestFramework::Swift),
+        _ => bail!("unknown test framework: {value}"),
+    }
 }
 
 pub(crate) fn build_why_args(

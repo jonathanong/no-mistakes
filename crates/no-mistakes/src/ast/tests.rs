@@ -89,6 +89,38 @@ fn test_template_literal_text() {
 }
 
 #[test]
+fn test_binary_concat_path_text() {
+    let allocator = Allocator::default();
+    let source_type = SourceType::from_path(Path::new("test.ts")).unwrap();
+    let source = r#""/api/" + ("v1/") + `${resource}/` + id"#;
+    let parsed = Parser::new(&allocator, source, source_type).parse();
+    assert!(
+        parsed.diagnostics.is_empty(),
+        "parse errors: {:?}",
+        parsed.diagnostics
+    );
+    let Expression::BinaryExpression(binary) = statement_expression(&parsed.program.body[0]) else {
+        panic!("expected binary expression");
+    };
+    assert_eq!(
+        binary_concat_path_text(binary, source).as_deref(),
+        Some("/api/v1/${resource}/${id}")
+    );
+
+    let source = "1 - 1";
+    let parsed = Parser::new(&allocator, source, source_type).parse();
+    assert!(
+        parsed.diagnostics.is_empty(),
+        "parse errors: {:?}",
+        parsed.diagnostics
+    );
+    let Expression::BinaryExpression(binary) = statement_expression(&parsed.program.body[0]) else {
+        panic!("expected binary expression");
+    };
+    assert_eq!(binary_concat_path_text(binary, source), None);
+}
+
+#[test]
 fn test_expression_path() {
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(Path::new("test.ts")).unwrap();

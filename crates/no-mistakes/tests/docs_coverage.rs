@@ -41,8 +41,10 @@ fn cli_leaf_commands_have_docs() {
         "call-sites",
         "resolve-check",
         "fetches",
+        "flow",
         "check",
         "tests-plan",
+        "tests-targets",
         "tests-impact",
         "tests-why",
         "tests-comment",
@@ -60,6 +62,7 @@ fn cli_leaf_commands_have_docs() {
         "server-routes",
         "server-edges",
         "server-related",
+        "server-contracts",
         "ci-impact",
         "ci-env",
         "impacted-checks",
@@ -243,7 +246,7 @@ fn review_found_doc_regressions_stay_fixed() {
     assert!(node_api.contains("(async () => {"));
     assert!(node_api.contains("playwright check\\|edges\\|related\\|tests"));
     assert!(node_api.contains("queues edges\\|related\\|check"));
-    assert!(node_api.contains("server routes\\|edges\\|related"));
+    assert!(node_api.contains("server routes\\|edges\\|related\\|contracts"));
     assert!(node_api.contains("react analyze\\|check"));
 
     let eslint_plugin = read_root("docs/eslint-plugin.md");

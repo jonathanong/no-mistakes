@@ -149,6 +149,10 @@ fn modular_mounts_apply_prefixes_across_files() {
     assert!(report
         .routes
         .iter()
+        .any(|route| route.route == "/legacy/*" && route.file == "backend/api/legacy.ts"));
+    assert!(report
+        .routes
+        .iter()
         .any(|route| route.route == "/admin" && route.file == "backend/api/admin.ts"));
 }
 
@@ -260,6 +264,7 @@ fn mount_resolver_covers_local_imported_fallback_and_recursive_prefixes() {
         method: "get".to_string(),
         raw_path: "/leaf".to_string(),
         path: "/leaf".to_string(),
+        query_params: Vec::new(),
         framework: Framework::Express,
     });
 
@@ -404,6 +409,7 @@ fn mount_resolver_covers_import_binding_fallbacks_and_cycles() {
         method: "get".to_string(),
         raw_path: "/leaf".to_string(),
         path: "/leaf".to_string(),
+        query_params: Vec::new(),
         framework: Framework::Express,
     };
     let prefixes = super::mounts::prefixes_for(&site, &facts, &mounts);
@@ -440,6 +446,7 @@ fn report_builder_includes_diagnostics_and_dynamic_summary() {
         method: "get".to_string(),
         raw_path: "/users/:id".to_string(),
         path: "/users/:id".to_string(),
+        query_params: Vec::new(),
         framework: Framework::Express,
     });
 
@@ -523,6 +530,7 @@ fn mount_resolver_covers_single_export_none_and_cycle_guards() {
         method: "get".to_string(),
         raw_path: "/leaf".to_string(),
         path: "/leaf".to_string(),
+        query_params: Vec::new(),
         framework: Framework::Express,
     };
     let prefixes = super::mounts::prefixes_for(&site, &facts, &cycle);
