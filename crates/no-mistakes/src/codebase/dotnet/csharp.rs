@@ -2,7 +2,7 @@ use regex::Regex;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-use super::DotnetFileFacts;
+use super::{csharp_strip::strip_comments_and_strings, DotnetFileFacts};
 
 pub(crate) fn parse_csharp_file(path: &Path, project: Option<PathBuf>) -> Option<DotnetFileFacts> {
     let source = std::fs::read_to_string(path).ok()?;
@@ -16,75 +16,6 @@ pub(crate) fn parse_csharp_file(path: &Path, project: Option<PathBuf>) -> Option
         references: extract_references(&stripped),
         has_xunit_tests: has_xunit_tests(&stripped),
     })
-}
-
-fn strip_comments_and_strings(source: &str) -> String {
-    let mut out = String::with_capacity(source.len());
-    let mut chars = source.char_indices().peekable();
-    while let Some((_, ch)) = chars.next() {
-        if ch == '"' {
-            strip_string(&mut out, &mut chars);
-            continue;
-        }
-        if ch == '/' && chars.peek().is_some_and(|(_, next)| *next == '/') {
-            strip_line_comment(&mut out, &mut chars);
-            continue;
-        }
-        if ch == '/' && chars.peek().is_some_and(|(_, next)| *next == '*') {
-            strip_block_comment(&mut out, &mut chars);
-            continue;
-        }
-        out.push(ch);
-    }
-    out
-}
-
-fn strip_string(out: &mut String, chars: &mut std::iter::Peekable<std::str::CharIndices<'_>>) {
-    out.push(' ');
-    let mut escaped = false;
-    for (_, string_ch) in chars.by_ref() {
-        out.push(if string_ch == '\n' { '\n' } else { ' ' });
-        if escaped {
-            escaped = false;
-        } else if string_ch == '\\' {
-            escaped = true;
-        } else if string_ch == '"' {
-            break;
-        }
-    }
-}
-
-fn strip_line_comment(
-    out: &mut String,
-    chars: &mut std::iter::Peekable<std::str::CharIndices<'_>>,
-) {
-    chars.next();
-    out.push(' ');
-    out.push(' ');
-    for (_, comment_ch) in chars.by_ref() {
-        if comment_ch == '\n' {
-            out.push('\n');
-            break;
-        }
-        out.push(' ');
-    }
-}
-
-fn strip_block_comment(
-    out: &mut String,
-    chars: &mut std::iter::Peekable<std::str::CharIndices<'_>>,
-) {
-    chars.next();
-    out.push(' ');
-    out.push(' ');
-    let mut previous = '\0';
-    for (_, comment_ch) in chars.by_ref() {
-        out.push(if comment_ch == '\n' { '\n' } else { ' ' });
-        if previous == '*' && comment_ch == '/' {
-            break;
-        }
-        previous = comment_ch;
-    }
 }
 
 fn extract_namespace(source: &str) -> Option<String> {

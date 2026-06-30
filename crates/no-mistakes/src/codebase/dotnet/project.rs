@@ -11,8 +11,9 @@ pub(super) fn parse_project(
     all_files: &[PathBuf],
     config: &DotnetConfigProject,
 ) -> Option<(DotnetProjectFacts, Vec<String>)> {
+    let root = normalize_path(root);
     let project_path = normalize_path(&root.join(&config.project));
-    let project_dir = project_path.parent().unwrap_or(root).to_path_buf();
+    let project_dir = project_path.parent().unwrap_or(&root).to_path_buf();
     let source = std::fs::read_to_string(&project_path).ok()?;
     let mut warnings = Vec::new();
     let evaluated = evaluate_project_with_msbuild(&project_path, &config.name)
@@ -40,7 +41,7 @@ pub(super) fn parse_project(
     }
     facts
         .compile_files
-        .retain(|path| path.starts_with(&project_dir) && path.exists());
+        .retain(|path| path.starts_with(&root) && path.exists());
     Some((facts, warnings))
 }
 
@@ -67,7 +68,10 @@ fn evaluate_project_with_msbuild(
 }
 
 fn parse_msbuild_json(project_path: &Path, output: &str) -> Option<DotnetProjectFacts> {
-    let value: serde_json::Value = serde_json::from_str(output.trim()).ok()?;
+    let trimmed = output.trim();
+    let start = trimmed.find('{')?;
+    let end = trimmed.rfind('}')?;
+    let value: serde_json::Value = serde_json::from_str(&trimmed[start..=end]).ok()?;
     let properties = value.get("Properties").or_else(|| value.get("properties"));
     let items = value.get("Items").or_else(|| value.get("items"));
     let project_dir = project_path.parent().unwrap_or_else(|| Path::new("."));

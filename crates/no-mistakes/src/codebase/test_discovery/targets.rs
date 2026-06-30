@@ -80,7 +80,7 @@ fn dotnet_target_for(
 
 fn dotnet_filter_from_path(test_file: &str, project: Option<&str>) -> Option<String> {
     let class_name = test_file
-        .rsplit('/')
+        .rsplit(['/', '\\'])
         .next()
         .and_then(|name| name.strip_suffix(".cs"))?;
     let prefix = project.unwrap_or("");

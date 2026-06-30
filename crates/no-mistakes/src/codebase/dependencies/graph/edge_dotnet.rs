@@ -59,9 +59,12 @@ fn collect_dotnet_project_edges(
         let Some(source_files) = facts.files_by_project.get(&project.project_path) else {
             continue;
         };
+        let test_files = source_files
+            .iter()
+            .filter(|path| facts.files.get(*path).is_some_and(|file| file.has_xunit_tests));
         for reference in &project.project_references {
             if let Some(target_files) = facts.files_by_project.get(reference) {
-                for source in source_files {
+                for source in test_files.clone() {
                     push_dotnet_file_edges(
                         edges,
                         source,

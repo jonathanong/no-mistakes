@@ -1,5 +1,6 @@
 mod config;
 mod csharp;
+mod csharp_strip;
 mod project;
 mod project_static;
 mod types;
