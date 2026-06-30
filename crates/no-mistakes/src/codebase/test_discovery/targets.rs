@@ -40,16 +40,17 @@ pub(super) fn target_for(
     }
     runner_args.push(test_file_arg(runner, test_file));
 
+    let base_command = if runner == TestRunner::Playwright {
+        vec!["playwright".to_string(), "test".to_string()]
+    } else {
+        vec!["vitest".to_string()]
+    };
+
     TestExecutionTarget {
         runner: runner.as_str().to_string(),
         config: config.map(str::to_string),
         project: project.map(str::to_string),
-        base_command: match runner {
-            TestRunner::Dotnet => unreachable!("dotnet targets return above"),
-            TestRunner::Playwright => vec!["playwright".to_string(), "test".to_string()],
-            TestRunner::Vitest => vec!["vitest".to_string()],
-            TestRunner::Swift => unreachable!("swift targets return above"),
-        },
+        base_command,
         runner_args,
     }
 }

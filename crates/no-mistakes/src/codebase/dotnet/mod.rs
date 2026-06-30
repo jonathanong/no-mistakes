@@ -106,18 +106,7 @@ fn project_index(projects: &BTreeMap<PathBuf, DotnetProjectFacts>) -> HashMap<Pa
 }
 
 pub(super) fn normalize_path(path: &Path) -> PathBuf {
-    let normalized = crate::codebase::ts_resolver::normalize_path(path);
-    let mut out = PathBuf::new();
-    for component in normalized.components() {
-        match component {
-            std::path::Component::ParentDir => {
-                out.pop();
-            }
-            std::path::Component::CurDir => {}
-            other => out.push(other.as_os_str()),
-        }
-    }
-    out
+    crate::codebase::ts_resolver::normalize_path(path)
 }
 
 pub(super) fn msbuild_path(raw: &str) -> PathBuf {

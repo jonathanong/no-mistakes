@@ -6,7 +6,7 @@ use super::{
     DotnetProjectFacts,
 };
 
-pub(super) fn parse_project(
+pub(in crate::codebase::dotnet) fn parse_project(
     root: &Path,
     all_files: &[PathBuf],
     config: &DotnetConfigProject,
@@ -30,9 +30,28 @@ pub(super) fn parse_project(
         .map_err(|warning| warnings.push(warning))
         .ok();
     let mut facts = evaluated.unwrap_or_else(|| parse_project_static(&project_path, &source));
+    finalize_project_facts(
+        &mut facts,
+        &root,
+        all_files,
+        config,
+        &project_path,
+        &project_dir,
+    );
+    (Some(facts), warnings)
+}
+
+pub(in crate::codebase::dotnet) fn finalize_project_facts(
+    facts: &mut DotnetProjectFacts,
+    root: &Path,
+    all_files: &[PathBuf],
+    config: &DotnetConfigProject,
+    project_path: &Path,
+    project_dir: &Path,
+) {
     facts.name = config.name.clone();
-    facts.project_path = project_path.clone();
-    facts.project_dir = project_dir.clone();
+    facts.project_path = project_path.to_path_buf();
+    facts.project_dir = project_dir.to_path_buf();
     if config.test {
         facts.is_test = true;
     }
@@ -47,12 +66,11 @@ pub(super) fn parse_project(
         facts.root_namespace = facts.assembly_name.clone();
     }
     if facts.compile_files.is_empty() {
-        facts.compile_files = default_compile_files(all_files, &project_dir);
+        facts.compile_files = default_compile_files(all_files, project_dir);
     }
     facts
         .compile_files
-        .retain(|path| path.starts_with(&root) && path.exists());
-    (Some(facts), warnings)
+        .retain(|path| path.starts_with(root) && path.exists());
 }
 
 fn evaluate_project_with_msbuild(
@@ -77,7 +95,10 @@ fn evaluate_project_with_msbuild(
         .ok_or_else(|| format!("dotnet msbuild output was not parseable for `{name}`"))
 }
 
-fn parse_msbuild_json(project_path: &Path, output: &str) -> Option<DotnetProjectFacts> {
+pub(in crate::codebase::dotnet) fn parse_msbuild_json(
+    project_path: &Path,
+    output: &str,
+) -> Option<DotnetProjectFacts> {
     let trimmed = output.trim();
     let start = trimmed.find('{')?;
     let end = trimmed.rfind('}')?;
