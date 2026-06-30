@@ -1,18 +1,46 @@
 use crate::config::v2::schema::NoMistakesConfig;
 use crate::integration_tests::project_config::prefix_globs;
 use crate::integration_tests::types::ConfigProject;
+use anyhow::{bail, Result};
 use std::path::{Path, PathBuf};
 
-pub(super) fn dotnet_projects(root: &Path, config: &NoMistakesConfig) -> Vec<ConfigProject> {
+pub(super) fn dotnet_projects(
+    root: &Path,
+    config: &NoMistakesConfig,
+) -> Result<Vec<ConfigProject>> {
+    let (projects, missing) = collect_projects(root, config);
+    if let Some(project) = missing.first() {
+        bail!(
+            "configured dotnet project `{}` at `{}` could not be resolved",
+            project.name,
+            project.project
+        );
+    }
+    Ok(projects)
+}
+
+pub(super) fn dotnet_projects_lossy(root: &Path, config: &NoMistakesConfig) -> Vec<ConfigProject> {
+    collect_projects(root, config).0
+}
+
+fn collect_projects(
+    root: &Path,
+    config: &NoMistakesConfig,
+) -> (
+    Vec<ConfigProject>,
+    Vec<crate::codebase::dotnet::DotnetConfigProject>,
+) {
     let all_files =
         crate::codebase::ts_source::discover_files(root, &config.filesystem.skip_directories);
     let configured = crate::codebase::dotnet::configured_projects(root, &config.tests.dotnet);
     let facts = crate::codebase::dotnet::collect_dotnet_facts(root, &all_files, &configured);
     let mut projects = Vec::new();
+    let mut missing = Vec::new();
     for configured_project in configured {
         let project_path =
             crate::codebase::ts_resolver::normalize_path(&root.join(&configured_project.project));
         let Some(project_facts) = facts.projects.get(&project_path) else {
+            missing.push(configured_project);
             continue;
         };
         if !project_facts.is_test && !configured_project.test {
@@ -27,7 +55,7 @@ pub(super) fn dotnet_projects(root: &Path, config: &NoMistakesConfig) -> Vec<Con
             exclude: prefix_globs(root, root, &configured_project.exclude),
         });
     }
-    projects
+    (projects, missing)
 }
 
 fn project_scope(root: &Path, project_path: &Path) -> Option<String> {

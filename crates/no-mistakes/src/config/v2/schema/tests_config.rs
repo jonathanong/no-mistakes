@@ -82,12 +82,15 @@ pub struct DotnetConfig {
     pub projects: BTreeMap<String, DotnetProjectConfig>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct DotnetProjectConfig {
     pub project: String,
+    #[serde(default)]
     pub include: Vec<String>,
+    #[serde(default)]
     pub exclude: Vec<String>,
+    #[serde(default)]
     pub test: bool,
 }
 

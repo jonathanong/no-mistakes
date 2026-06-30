@@ -10,12 +10,22 @@ pub(super) fn parse_project(
     root: &Path,
     all_files: &[PathBuf],
     config: &DotnetConfigProject,
-) -> Option<(DotnetProjectFacts, Vec<String>)> {
+) -> (Option<DotnetProjectFacts>, Vec<String>) {
     let root = normalize_path(root);
     let project_path = normalize_path(&root.join(&config.project));
     let project_dir = project_path.parent().unwrap_or(&root).to_path_buf();
-    let source = std::fs::read_to_string(&project_path).ok()?;
     let mut warnings = Vec::new();
+    let source = match std::fs::read_to_string(&project_path) {
+        Ok(source) => source,
+        Err(error) => {
+            warnings.push(format!(
+                "configured dotnet project `{}` at `{}` could not be read: {error}",
+                config.name,
+                project_path.display()
+            ));
+            return (None, warnings);
+        }
+    };
     let evaluated = evaluate_project_with_msbuild(&project_path, &config.name)
         .map_err(|warning| warnings.push(warning))
         .ok();
@@ -42,7 +52,7 @@ pub(super) fn parse_project(
     facts
         .compile_files
         .retain(|path| path.starts_with(&root) && path.exists());
-    Some((facts, warnings))
+    (Some(facts), warnings)
 }
 
 fn evaluate_project_with_msbuild(

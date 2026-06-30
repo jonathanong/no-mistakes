@@ -16,7 +16,7 @@ pub(super) fn runner_projects(
     runner: TestRunner,
 ) -> Result<Vec<ConfigProject>> {
     if runner == TestRunner::Dotnet {
-        return Ok(super::dotnet_projects::dotnet_projects(root, config));
+        return super::dotnet_projects::dotnet_projects(root, config);
     }
     if runner == TestRunner::Swift {
         return Ok(super::swift_projects::swift_projects(root, config));
@@ -34,7 +34,7 @@ pub(super) fn runner_projects_lossy(
     runner: TestRunner,
 ) -> Vec<ConfigProject> {
     if runner == TestRunner::Dotnet {
-        return super::dotnet_projects::dotnet_projects(root, config);
+        return super::dotnet_projects::dotnet_projects_lossy(root, config);
     }
     if runner == TestRunner::Swift {
         return super::swift_projects::swift_projects(root, config);

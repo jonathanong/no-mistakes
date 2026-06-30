@@ -57,17 +57,13 @@ pub(super) fn target_for(
 fn dotnet_target_for(
     project_path: Option<&str>,
     project: Option<&str>,
-    test_file: &str,
+    _test_file: &str,
 ) -> TestExecutionTarget {
     let mut runner_args = Vec::new();
     if let Some(project_path) = project_path {
         runner_args.push(project_path.to_string());
     }
     runner_args.push("--no-restore".to_string());
-    if let Some(filter) = dotnet_filter_from_path(test_file, project) {
-        runner_args.push("--filter".to_string());
-        runner_args.push(filter);
-    }
 
     TestExecutionTarget {
         runner: TestRunner::Dotnet.as_str().to_string(),
@@ -75,19 +71,6 @@ fn dotnet_target_for(
         project: project.map(str::to_string),
         base_command: vec!["dotnet".to_string(), "test".to_string()],
         runner_args,
-    }
-}
-
-fn dotnet_filter_from_path(test_file: &str, project: Option<&str>) -> Option<String> {
-    let class_name = test_file
-        .rsplit(['/', '\\'])
-        .next()
-        .and_then(|name| name.strip_suffix(".cs"))?;
-    let prefix = project.unwrap_or("");
-    if prefix.is_empty() {
-        Some(format!("FullyQualifiedName~{class_name}"))
-    } else {
-        Some(format!("FullyQualifiedName~{prefix}.{class_name}"))
     }
 }
 

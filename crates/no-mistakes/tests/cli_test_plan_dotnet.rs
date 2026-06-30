@@ -47,9 +47,7 @@ fn test_plan_dotnet_uses_projects_and_dependency_graph() {
         target["runner_args"],
         serde_json::json!([
             "dotnet-clients/tests/App.Tests/App.Tests.csproj",
-            "--no-restore",
-            "--filter",
-            "FullyQualifiedName~Company.App.Tests.FeedServiceTests"
+            "--no-restore"
         ])
     );
     let via: Vec<&str> = plan["selected_tests"][0]["reasons"][0]["via"]

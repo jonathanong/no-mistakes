@@ -23,14 +23,17 @@ pub(crate) fn collect_dotnet_facts(
         return DotnetFactMap::default();
     }
 
-    let project_facts: Vec<(DotnetProjectFacts, Vec<String>)> = projects
+    let project_facts: Vec<(Option<DotnetProjectFacts>, Vec<String>)> = projects
         .par_iter()
-        .filter_map(|project| parse_project(root, all_files, project))
+        .map(|project| parse_project(root, all_files, project))
         .collect();
 
     let mut facts = DotnetFactMap::default();
     for (project, warnings) in project_facts {
         facts.warnings.extend(warnings);
+        let Some(project) = project else {
+            continue;
+        };
         facts
             .files_by_project
             .entry(project.project_path.clone())

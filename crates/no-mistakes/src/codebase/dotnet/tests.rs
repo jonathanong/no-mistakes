@@ -60,7 +60,9 @@ fn configured_projects_adds_solution_projects_without_duplicating_explicit_proje
         "app".to_string(),
         crate::config::v2::schema::DotnetProjectConfig {
             project: "dotnet-clients/src/App/App.csproj".to_string(),
-            ..Default::default()
+            include: Vec::new(),
+            exclude: Vec::new(),
+            test: false,
         },
     );
 
