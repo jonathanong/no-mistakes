@@ -1,4 +1,34 @@
 use super::*;
+use std::path::Path;
+
+#[test]
+fn source_file_filter_accepts_matching_root_relative_paths() {
+    let root = Path::new("/repo");
+    let filter = build_filter(&["src/routes/**/*.ts".to_string()])
+        .expect("glob should compile")
+        .expect("filter should be present");
+
+    assert!(source_file_matches_filter(
+        root,
+        Path::new("/repo/src/routes/feed.ts"),
+        Some(&filter),
+    ));
+    assert!(!source_file_matches_filter(
+        root,
+        Path::new("/repo/src/components/feed.ts"),
+        Some(&filter),
+    ));
+}
+
+#[test]
+fn resolve_tsconfig_reports_explicit_relative_load_errors() {
+    let error = resolve_tsconfig(Path::new("/repo"), Some(Path::new("missing-tsconfig.json")))
+        .expect_err("explicit missing tsconfig should fail");
+
+    assert!(error
+        .to_string()
+        .contains("loading tsconfig /repo/missing-tsconfig.json"));
+}
 
 #[test]
 fn contract_helpers_match_routes_and_extract_query_parts() {

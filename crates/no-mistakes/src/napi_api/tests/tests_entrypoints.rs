@@ -116,3 +116,10 @@ fn tests_plan_json_preserves_structured_hash_file_entrypoints_without_symbol() {
     assert_eq!(selected.len(), 1);
     assert_eq!(selected[0]["test_file"], "hash-consumer.test.mts");
 }
+
+#[test]
+fn tests_targets_json_requires_framework() {
+    let error =
+        tests_targets_json_impl(json!({ "files": ["tests/app.test.ts"] }).to_string()).unwrap_err();
+    assert!(error.reason.contains("framework is required"));
+}

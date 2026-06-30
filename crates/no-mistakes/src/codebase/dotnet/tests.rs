@@ -35,6 +35,17 @@ fn csharp_parser_ignores_comments_and_csharp_string_forms() {
 }
 
 #[test]
+fn csharp_parser_handles_block_scoped_namespaces() {
+    let path = fixture().join("dotnet-clients/src/App/BlockNamespace.cs");
+    let facts = parse_csharp_file(&path, None).expect("fixture should parse");
+
+    assert_eq!(facts.namespace.as_deref(), Some("Company.App"));
+    assert!(facts.usings.contains(&"Company.App".to_string()));
+    assert!(facts.declarations.contains(&"BlockNamespace".to_string()));
+    assert!(facts.references.contains(&"FeedService".to_string()));
+}
+
+#[test]
 fn project_static_parser_extracts_test_project_references_and_packages() {
     let path = fixture().join("dotnet-clients/tests/App.Tests/App.Tests.csproj");
     let source = std::fs::read_to_string(&path).unwrap();
@@ -58,6 +69,18 @@ fn project_static_parser_uses_defaults_and_test_sdk_signal() {
     assert!(facts.is_test);
     assert_eq!(facts.assembly_name, "Fallback");
     assert_eq!(facts.root_namespace, "Fallback");
+}
+
+#[test]
+fn project_static_parser_handles_missing_file_stem_and_empty_tags() {
+    let facts = parse_project_static(Path::new("/"), "<Project><PropertyGroup /></Project>");
+
+    assert_eq!(facts.assembly_name, "Project");
+    assert_eq!(facts.root_namespace, "Project");
+    assert!(!facts.is_test);
+    assert!(facts.compile_files.is_empty());
+    assert!(facts.project_references.is_empty());
+    assert!(facts.package_references.is_empty());
 }
 
 #[test]
@@ -114,6 +137,30 @@ fn msbuild_json_parser_handles_missing_items_and_lowercase_identity() {
     let facts = parse_msbuild_json(&project_path, json).expect("json should parse");
 
     assert!(!facts.is_test);
+    assert!(facts
+        .compile_files
+        .iter()
+        .any(|path| path.ends_with("FeedService.cs")));
+    assert!(facts.project_references.is_empty());
+    assert!(facts.package_references.is_empty());
+}
+
+#[test]
+fn msbuild_json_parser_ignores_items_without_identity() {
+    let project_path = fixture().join("dotnet-clients/src/App/App.csproj");
+    let json = r#"{
+      "Properties": {
+        "AssemblyName": "App",
+        "RootNamespace": "Company.App"
+      },
+      "Items": {
+        "Compile": [{}, { "Identity": "FeedService.cs" }],
+        "ProjectReference": [{}],
+        "PackageReference": [{}]
+      }
+    }"#;
+    let facts = parse_msbuild_json(&project_path, json).expect("json should parse");
+
     assert!(facts
         .compile_files
         .iter()

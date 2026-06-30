@@ -517,6 +517,9 @@ fn option_parsers_cover_all_supported_values() {
         "process",
         "asset",
         "react",
+        "dotnet",
+        "swift",
+        "terraform",
         "all",
     ] {
         parse_relationship(relationship).unwrap();
