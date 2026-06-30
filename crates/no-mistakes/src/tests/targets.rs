@@ -201,6 +201,7 @@ fn relative_slash(root: &Path, path: &Path) -> String {
 
 fn runner_for(framework: TestFramework) -> TestRunner {
     match framework {
+        TestFramework::Dotnet => TestRunner::Dotnet,
         TestFramework::Vitest => TestRunner::Vitest,
         TestFramework::Playwright => TestRunner::Playwright,
         TestFramework::Swift => TestRunner::Swift,
@@ -209,6 +210,7 @@ fn runner_for(framework: TestFramework) -> TestRunner {
 
 fn framework_name(framework: TestFramework) -> &'static str {
     match framework {
+        TestFramework::Dotnet => "dotnet",
         TestFramework::Vitest => "vitest",
         TestFramework::Playwright => "playwright",
         TestFramework::Swift => "swift",

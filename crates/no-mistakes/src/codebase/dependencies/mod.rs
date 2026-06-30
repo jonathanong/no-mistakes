@@ -186,6 +186,7 @@ fn apply_filters(
 
 fn test_filters(root: &Path, framework: &str) -> Vec<String> {
     let runner = match framework {
+        "dotnet" => Some(crate::codebase::test_discovery::TestRunner::Dotnet),
         "vitest" => Some(crate::codebase::test_discovery::TestRunner::Vitest),
         "playwright" => Some(crate::codebase::test_discovery::TestRunner::Playwright),
         "swift" => Some(crate::codebase::test_discovery::TestRunner::Swift),

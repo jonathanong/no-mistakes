@@ -56,6 +56,13 @@ pub fn fallback_test_path(rel_path: &str) -> bool {
 
 pub(crate) fn fallback_runner_match(runner: TestRunner, rel: &str) -> bool {
     match runner {
+        TestRunner::Dotnet => {
+            rel.ends_with(".cs")
+                && (rel.contains("/Tests/")
+                    || rel.contains(".Tests/")
+                    || rel.contains("/tests/")
+                    || rel.contains(".Test/"))
+        }
         TestRunner::Vitest => {
             fallback_test_path(rel)
                 && !rel.split('/').any(|component| component == "playwright")

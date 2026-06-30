@@ -156,8 +156,10 @@ pub(crate) fn generate_configured_plan(
             ));
             continue;
         }
-        if matches!(framework, TestFramework::Vitest | TestFramework::Swift)
-            && group.type_ == TestPlanGroupType::Coverage
+        if matches!(
+            framework,
+            TestFramework::Dotnet | TestFramework::Vitest | TestFramework::Swift
+        ) && group.type_ == TestPlanGroupType::Coverage
         {
             anyhow::bail!(
                 "{} test plans do not support the coverage group",
@@ -330,6 +332,7 @@ fn configured_environment(
     config: &NoMistakesConfig,
 ) -> Result<TestPlanEnvironment> {
     let plan = match framework {
+        TestFramework::Dotnet => &config.test_plan.dotnet,
         TestFramework::Playwright => &config.test_plan.playwright,
         TestFramework::Vitest => &config.test_plan.vitest,
         TestFramework::Swift => &config.test_plan.swift,
@@ -386,6 +389,7 @@ fn framework_name(framework: TestFramework) -> &'static str {
     match framework {
         TestFramework::Playwright => "playwright",
         TestFramework::Vitest => "vitest",
+        TestFramework::Dotnet => "dotnet",
         TestFramework::Swift => "swift",
     }
 }
@@ -451,6 +455,7 @@ fn test_runner(framework: TestFramework) -> TestRunner {
     match framework {
         TestFramework::Playwright => TestRunner::Playwright,
         TestFramework::Vitest => TestRunner::Vitest,
+        TestFramework::Dotnet => TestRunner::Dotnet,
         TestFramework::Swift => TestRunner::Swift,
     }
 }

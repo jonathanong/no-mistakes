@@ -204,6 +204,7 @@ pub(crate) struct GraphArgs {
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum TestFramework {
+    Dotnet,
     Playwright,
     Vitest,
     Swift,

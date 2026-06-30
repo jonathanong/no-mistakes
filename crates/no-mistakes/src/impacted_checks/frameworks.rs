@@ -12,6 +12,12 @@ pub(super) fn framework_present(
     framework: TestFramework,
 ) -> bool {
     match framework {
+        TestFramework::Dotnet => {
+            let c = &config.tests.dotnet;
+            !c.projects.is_empty()
+                || !c.solutions.is_empty()
+                || test_plan_configured(&config.test_plan.dotnet)
+        }
         TestFramework::Vitest => {
             let c = &config.tests.vitest;
             c.configs.is_some()

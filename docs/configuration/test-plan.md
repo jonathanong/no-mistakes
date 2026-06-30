@@ -22,6 +22,34 @@ where supported by the parser.
 Global full-suite fallback is explicit opt-in through config or
 `--global-config-fallback true`.
 
+## Dotnet
+
+Dotnet test plans are configured under `tests.dotnet` and `testPlan.dotnet`.
+Projects are explicit; no `.csproj` or `.sln` is scanned unless it is configured.
+
+```yaml
+tests:
+  dotnet:
+    solutions:
+      - dotnet-clients/App.sln
+    projects:
+      app:
+        project: dotnet-clients/src/App/App.csproj
+      app-tests:
+        project: dotnet-clients/tests/App.Tests/App.Tests.csproj
+        test: true
+testPlan:
+  dotnet:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies
+```
+
+Dependency groups use the canonical graph, including C# namespace imports, type
+references, and `.csproj` `ProjectReference` edges. The `coverage` group is
+Playwright-only; Dotnet plans reject it with a framework-specific error.
 
 ## Swift
 

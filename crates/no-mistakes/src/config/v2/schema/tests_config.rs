@@ -8,6 +8,7 @@ use super::StringOrList;
 pub struct Tests {
     pub playwright: PlaywrightTestConfig,
     pub vitest: VitestConfig,
+    pub dotnet: DotnetConfig,
     pub swift: SwiftConfig,
     pub jest: JestConfig,
     pub storybook: StorybookConfig,
@@ -72,6 +73,22 @@ pub struct VitestConfig {
 pub struct SwiftConfig {
     pub packages: Vec<String>,
     pub projects: BTreeMap<String, TestProjectPolicy>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct DotnetConfig {
+    pub solutions: Vec<String>,
+    pub projects: BTreeMap<String, DotnetProjectConfig>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct DotnetProjectConfig {
+    pub project: String,
+    pub include: Vec<String>,
+    pub exclude: Vec<String>,
+    pub test: bool,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

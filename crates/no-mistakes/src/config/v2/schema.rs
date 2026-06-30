@@ -16,8 +16,8 @@ mod tests_config;
 pub use ci_checks::{CheckCommandDef, CheckFileArgs, ChecksConfig, CiConfig};
 pub use infra_config::{InfraConfig, TerraformConfig, TerraformTestConvention};
 pub use tests_config::{
-    ImpactConfig, JestConfig, PlaywrightSelectors, PlaywrightTestConfig, StorybookConfig,
-    SwiftConfig, TestProjectPolicy, Tests, VitestConfig,
+    DotnetConfig, DotnetProjectConfig, ImpactConfig, JestConfig, PlaywrightSelectors,
+    PlaywrightTestConfig, StorybookConfig, SwiftConfig, TestProjectPolicy, Tests, VitestConfig,
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
@@ -151,6 +151,7 @@ impl Default for RuleDef {
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct RuleTestTargets {
+    pub dotnet: Vec<String>,
     pub vitest: Vec<String>,
     pub playwright: Vec<String>,
     pub swift: Vec<String>,

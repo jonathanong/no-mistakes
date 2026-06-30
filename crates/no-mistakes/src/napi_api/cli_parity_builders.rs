@@ -41,6 +41,7 @@ pub(crate) fn build_plan_args(
 
 pub(crate) fn parse_test_framework(value: &str) -> AnyhowResult<crate::tests::TestFramework> {
     match value {
+        "dotnet" => Ok(crate::tests::TestFramework::Dotnet),
         "playwright" => Ok(crate::tests::TestFramework::Playwright),
         "vitest" => Ok(crate::tests::TestFramework::Vitest),
         "swift" => Ok(crate::tests::TestFramework::Swift),

@@ -61,6 +61,27 @@ fn merge_swift_edges(
     merge_edges(forward, reverse, swift_edges);
 }
 
+fn merge_dotnet_edges(
+    inputs: &GraphEdgeBuildInputs<'_>,
+    forward: &mut EdgeMap,
+    reverse: &mut EdgeMap,
+) {
+    if !inputs.plan.dotnet {
+        return;
+    }
+
+    let dotnet_edges = collect_dotnet_edges(
+        inputs.root,
+        &inputs.graph_files.all,
+        inputs.config_options,
+    );
+    for (from, to, _) in &dotnet_edges {
+        forward.entry(from.clone()).or_default();
+        forward.entry(to.clone()).or_default();
+    }
+    merge_edges(forward, reverse, dotnet_edges);
+}
+
 fn merge_terraform_edges(
     inputs: &GraphEdgeBuildInputs<'_>,
     forward: &mut EdgeMap,

@@ -449,6 +449,9 @@ fn serialized_edge_kinds_are_documented() {
         EdgeKind::AssetImport,
         EdgeKind::ReactRender,
         EdgeKind::Selector,
+        EdgeKind::DotnetUsing,
+        EdgeKind::DotnetReference,
+        EdgeKind::DotnetProjectDependency,
         EdgeKind::SwiftImport,
         EdgeKind::SwiftReference,
         EdgeKind::SwiftPackageDependency,
@@ -476,6 +479,9 @@ fn serialized_edge_kinds_are_documented() {
             EdgeKind::AssetImport => {}
             EdgeKind::ReactRender => {}
             EdgeKind::Selector => {}
+            EdgeKind::DotnetUsing => {}
+            EdgeKind::DotnetReference => {}
+            EdgeKind::DotnetProjectDependency => {}
             EdgeKind::SwiftImport => {}
             EdgeKind::SwiftReference => {}
             EdgeKind::SwiftPackageDependency => {}

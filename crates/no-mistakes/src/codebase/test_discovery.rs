@@ -1,7 +1,9 @@
+mod dotnet_projects;
 mod filters;
 mod ownership;
 mod projects;
 mod reserved;
+mod swift_projects;
 mod targets;
 mod types;
 
@@ -55,6 +57,7 @@ pub fn project_filters(
 ) -> Vec<(TestRunner, ProjectTestFilter)> {
     let mut filters = Vec::new();
     for runner in [
+        TestRunner::Dotnet,
         TestRunner::Vitest,
         TestRunner::Playwright,
         TestRunner::Swift,

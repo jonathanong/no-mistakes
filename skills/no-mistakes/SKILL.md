@@ -17,7 +17,9 @@ route fetches, or what React traits a component has.
 test impact, Playwright coverage, React traits, queue/server routes, Next.js
 fetches, lockfile diffs, and `no-mistakes check` rules.
 
-**Adjacent graph domains** (separate subcommands, not TS/JS module edges):
+**Adjacent graph domains**:
+Dotnet/C# test-impact edges participate in the canonical graph via configured
+`tests.dotnet.projects`.
 `no-mistakes ci` — GitHub Actions workflow graphs ·
 `no-mistakes infra` — Terraform/OpenTofu resource graphs ·
 `no-mistakes swift` — Swift package graphs.
@@ -136,6 +138,7 @@ scope the review and `rg` to inspect exact argument objects such as
 | What outputs does this Terraform module export and who consumes them? | `no-mistakes infra outputs <module-dir>` |
 | Which tests cover this `.tf` file? | `no-mistakes infra test-for <tf-file>` |
 | Which Swift files import this file/type? | `no-mistakes swift importers <file>` |
+| Which dotnet tests should rerun? | `no-mistakes tests plan dotnet --changed-file <file> --format paths` |
 | Which Swift test targets cover this file? | `no-mistakes swift test-targets <file>` |
 | Run configured project checks in parallel | `no-mistakes check` |
 | What edge kinds are supported? | Read `references/decision-tree.md` or https://github.com/jonathanong/no-mistakes/blob/main/docs/graph-edges.md |
@@ -194,8 +197,8 @@ reports. Note: `analyzeProject` does not support `testsPlan`, `fetches`, or
 - `--depth <N>` to limit traversal depth.
 - `--filter <GLOB>` to include only matching files; repeatable.
 - `--target-module <GLOB>` to include only matching external module nodes (useful with `--relationship package`).
-- `--test vitest|playwright|cargo` to filter to test files.
-- `--relationship import|import-static|import-dynamic|import-type|import-require|workspace|package|test|route|queue|md|ci|http|process|asset|react|swift|terraform|all`.
+- `--test vitest|playwright|cargo|dotnet|swift` to filter to test files.
+- `--relationship import|import-static|import-dynamic|import-type|import-require|workspace|package|test|route|queue|md|ci|http|process|asset|react|dotnet|swift|terraform|all`.
 - `--direction deps|dependents|both` for `queues related` and `server related`.
 - `--format json|md|yml|paths|human`, `--json`, `--timings` (stderr), and `--jobs`.
 

@@ -28,6 +28,9 @@ serialized in JSON/YAML/text output through the `via` field.
 | `md` | `MarkdownLink` | `md` | Markdown file -> linked visible file | [`codebase-intel/README.md`](../test-cases/codebase-analysis/codebase-intel/fixture/README.md) |
 | `ci` | `CiInvocation` | `ci` | GitHub Actions workflow -> Rust binary source invoked by supported Cargo commands | [`codebase-intel/.github/workflows/ci.yml`](../test-cases/codebase-analysis/codebase-intel/fixture/.github/workflows/ci.yml) |
 | `process` | `ProcessSpawn` | `process` | spawner/config file -> launched entry file | [`codebase-intel/packages/api/src/spawn-runner.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/spawn-runner.mts) |
+| `dotnet-using` | `DotnetUsing` | `dotnet` | C# file -> local files in the imported namespace | [`dotnet-test-plan`](../test-cases/codebase-analysis/dotnet-test-plan) |
+| `dotnet-ref` | `DotnetReference` | `dotnet` | C# file -> file declaring a referenced C# type | [`dotnet-test-plan`](../test-cases/codebase-analysis/dotnet-test-plan) |
+| `dotnet-project` | `DotnetProjectDependency` | `dotnet` | C# project source file -> files in a referenced `.csproj` | [`dotnet-test-plan`](../test-cases/codebase-analysis/dotnet-test-plan) |
 | `swift-import` | `SwiftImport` | `swift` | Swift file -> local files in imported SwiftPM target | [`swift-test-plan`](../test-cases/codebase-analysis/swift-test-plan) |
 | `swift-ref` | `SwiftReference` | `swift` | Swift file -> file declaring a referenced Swift symbol/member | [`swift-test-plan`](../test-cases/codebase-analysis/swift-test-plan) |
 | `swift-package` | `SwiftPackageDependency` | `swift` | Swift file -> files in a declared SwiftPM target dependency | [`swift-test-plan`](../test-cases/codebase-analysis/swift-test-plan) |
@@ -57,6 +60,7 @@ serialized in JSON/YAML/text output through the `via` field.
 | `process` | `process` |
 | `asset` | `asset` |
 | `react` | `react-render` |
+| `dotnet` | `dotnet-using`, `dotnet-ref`, `dotnet-project` |
 | `swift` | `swift-import`, `swift-ref`, `swift-package` |
 | `terraform` | `terraform-ref`, `terraform-module`, `terraform-output` |
 | `all` | all edge kinds |

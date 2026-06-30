@@ -65,7 +65,7 @@ const {
   });
   const plan = await testsPlan({
     root: process.cwd(),
-    framework: "vitest", // also supports "playwright" and "swift"
+    framework: "vitest", // also supports "playwright", "dotnet", and "swift"
     changedFiles: ["src/utils.mts"],
   });
   const targetCommands = await testsTargets({

@@ -97,6 +97,12 @@ pub enum EdgeKind {
     SwiftReference,
     /// SwiftPM target dependency fallback edge between package targets.
     SwiftPackageDependency,
+    /// C# using directive from one file to local files in the used namespace.
+    DotnetUsing,
+    /// C# type/member reference from one file to the declaring file.
+    DotnetReference,
+    /// .NET ProjectReference fallback edge between project source files.
+    DotnetProjectDependency,
     /// Terraform/OpenTofu resource reference: a file referencing `<type>.<name>`
     /// → the file declaring that resource/data source.
     TerraformReference,
@@ -133,6 +139,9 @@ impl EdgeKind {
             EdgeKind::SwiftImport => "swift-import",
             EdgeKind::SwiftReference => "swift-ref",
             EdgeKind::SwiftPackageDependency => "swift-package",
+            EdgeKind::DotnetUsing => "dotnet-using",
+            EdgeKind::DotnetReference => "dotnet-ref",
+            EdgeKind::DotnetProjectDependency => "dotnet-project",
             EdgeKind::TerraformReference => "terraform-ref",
             EdgeKind::TerraformModuleRef => "terraform-module",
             EdgeKind::TerraformOutputRef => "terraform-output",

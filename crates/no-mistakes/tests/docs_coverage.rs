@@ -157,6 +157,9 @@ fn graph_edge_kinds_are_documented() {
         "asset",
         "react-render",
         "selector",
+        "dotnet-using",
+        "dotnet-ref",
+        "dotnet-project",
     ];
     for edge_kind in edge_kinds {
         assert!(

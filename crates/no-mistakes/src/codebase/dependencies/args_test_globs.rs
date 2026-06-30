@@ -36,6 +36,7 @@ pub(crate) fn test_globs(framework: &str) -> Vec<String> {
         "**/playwright/**/*.spec.jsx",
     ];
     const CARGO: &[&str] = &["**/tests/**/*.rs", "src/**/*_test.rs"];
+    const DOTNET: &[&str] = &["**/Tests/**/*.cs", "**/*.Tests/**/*.cs", "**/*Tests/**/*.cs"];
     const SWIFT: &[&str] = &["**/Tests/**/*.swift"];
 
     match framework {
@@ -43,6 +44,7 @@ pub(crate) fn test_globs(framework: &str) -> Vec<String> {
         "jest" => globs_to_strings(VITEST_JEST_TEST_GLOBS),
         "playwright" => globs_to_strings(PLAYWRIGHT),
         "cargo" => globs_to_strings(CARGO),
+        "dotnet" => globs_to_strings(DOTNET),
         "swift" => globs_to_strings(SWIFT),
         _ => vec![],
     }
@@ -51,4 +53,3 @@ pub(crate) fn test_globs(framework: &str) -> Vec<String> {
 fn globs_to_strings(globs: &[&str]) -> Vec<String> {
     globs.iter().map(|&s| s.to_string()).collect()
 }
-

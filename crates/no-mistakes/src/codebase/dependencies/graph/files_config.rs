@@ -24,6 +24,7 @@ struct GraphConfigOptions {
     test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
     rewrites: Vec<crate::config::v2::schema::RewriteRule>,
     queue_project_factory_names: Vec<String>,
+    dotnet_projects: Vec<crate::codebase::dotnet::DotnetConfigProject>,
     swift_packages: Vec<String>,
     terraform: crate::config::v2::schema::TerraformConfig,
 }
@@ -62,6 +63,10 @@ fn graph_config_options_with_config(
         test_filter,
         rewrites,
         queue_project_factory_names: v2_config.as_ref().map(|c| c.queues.factories.clone()).unwrap_or_default(),
+        dotnet_projects: v2_config
+            .as_ref()
+            .map(|c| crate::codebase::dotnet::configured_projects(root, &c.tests.dotnet))
+            .unwrap_or_default(),
         swift_packages: v2_config.as_ref().map(|c| c.tests.swift.packages.clone()).unwrap_or_default(),
         terraform: v2_config.as_ref().map(|c| c.infra.terraform.clone()).unwrap_or_default(),
     })
@@ -179,41 +184,4 @@ fn compile_graph_glob(pattern: &str) -> Option<GlobSet> {
     let mut builder = GlobSetBuilder::new();
     builder.add(glob);
     builder.build().ok()
-}
-
-fn resolved_backend_pattern(options: &GraphConfigOptions) -> Option<String> {
-    if !options.http_route.backend_pattern.is_empty() {
-        Some(options.http_route.backend_pattern.clone())
-    } else {
-        route_backend_pattern(options)
-    }
-}
-
-fn resolved_backend_register_object(options: &GraphConfigOptions) -> Option<String> {
-    if !options.http_route.register_object.is_empty() {
-        Some(options.http_route.register_object.clone())
-    } else {
-        route_backend_register_object(options)
-    }
-}
-
-fn resolved_backend_prefixes(options: &GraphConfigOptions) -> Vec<String> {
-    if !options.http_call.backend_prefixes.is_empty() {
-        options.http_call.backend_prefixes.clone()
-    } else {
-        route_backend_prefixes(options)
-    }
-}
-
-fn route_backend_prefixes(options: &GraphConfigOptions) -> Vec<String> {
-    options.route.backend_prefixes.clone()
-}
-
-fn route_backend_pattern(options: &GraphConfigOptions) -> Option<String> {
-    (!options.route.backend_pattern.is_empty()).then(|| options.route.backend_pattern.clone())
-}
-
-fn route_backend_register_object(options: &GraphConfigOptions) -> Option<String> {
-    (!options.route.backend_register_object.is_empty())
-        .then(|| options.route.backend_register_object.clone())
 }

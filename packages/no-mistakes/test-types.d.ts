@@ -1,7 +1,7 @@
 import type { SymbolEntrypoint } from "./traversal-types";
 
 export interface TestsPlanOptions {
-  framework?: "vitest" | "playwright" | "swift";
+  framework?: "vitest" | "playwright" | "dotnet" | "swift";
   root?: string;
   config?: string;
   tsconfig?: string;
@@ -32,7 +32,7 @@ export interface TestsImpactOptions {
 }
 
 export interface TestsTargetsOptions {
-  framework: "vitest" | "playwright" | "swift";
+  framework: "vitest" | "playwright" | "dotnet" | "swift";
   root?: string;
   config?: string;
   files: string[];
@@ -54,7 +54,7 @@ export interface SelectedTest {
 }
 
 export interface TestExecutionTarget {
-  runner: "vitest" | "playwright" | "swift";
+  runner: "vitest" | "playwright" | "dotnet" | "swift";
   config?: string | null;
   project?: string | null;
   base_command: string[];
@@ -81,7 +81,7 @@ export interface TestPlanWarning {
 }
 
 export interface TestsTargetsReport {
-  framework: "vitest" | "playwright" | "swift";
+  framework: "vitest" | "playwright" | "dotnet" | "swift";
   tests: TestTargetRow[];
   warnings: TestTargetWarning[];
 }
