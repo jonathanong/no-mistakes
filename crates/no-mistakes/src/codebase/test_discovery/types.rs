@@ -6,6 +6,7 @@ use super::targets::TestExecutionTarget;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TestRunner {
+    Dotnet,
     Playwright,
     Vitest,
     Swift,
@@ -14,6 +15,7 @@ pub enum TestRunner {
 impl TestRunner {
     pub fn as_str(self) -> &'static str {
         match self {
+            Self::Dotnet => "dotnet",
             Self::Playwright => "playwright",
             Self::Vitest => "vitest",
             Self::Swift => "swift",
@@ -22,6 +24,7 @@ impl TestRunner {
 
     pub(super) fn framework(self) -> Framework {
         match self {
+            Self::Dotnet => Framework::Dotnet,
             Self::Playwright => Framework::Playwright,
             Self::Vitest => Framework::Vitest,
             Self::Swift => Framework::Swift,

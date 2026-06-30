@@ -165,6 +165,7 @@ impl DepGraph {
             merge_edges(&mut forward, &mut reverse, react_edges);
         }
 
+        merge_dotnet_edges(&edge_inputs, &mut forward, &mut reverse);
         merge_swift_edges(&edge_inputs, &mut forward, &mut reverse);
         merge_terraform_edges(&edge_inputs, &mut forward, &mut reverse);
 

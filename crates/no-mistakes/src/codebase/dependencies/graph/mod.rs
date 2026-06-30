@@ -16,6 +16,7 @@ include!("types.rs");
 include!("build_plan.rs");
 include!("graph_files.rs");
 include!("files_config.rs");
+include!("files_config_routes.rs");
 include!("edge_maps.rs");
 
 pub(crate) trait TsFactLookup: Sync {
@@ -72,6 +73,7 @@ include!("edge_playwright_routes.rs");
 include!("edge_playwright_selectors.rs");
 include!("edge_playwright_http_process.rs");
 include!("edge_react.rs");
+include!("edge_dotnet.rs");
 include!("edge_swift.rs");
 include!("edge_terraform.rs");
 include!("filter.rs");

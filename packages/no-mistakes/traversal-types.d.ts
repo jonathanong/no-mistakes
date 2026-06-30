@@ -19,6 +19,7 @@ export type Relationship =
   | "process"
   | "asset"
   | "react"
+  | "dotnet"
   | "swift"
   | "terraform"
   | "all";

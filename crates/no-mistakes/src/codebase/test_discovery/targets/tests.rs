@@ -43,6 +43,26 @@ fn vitest_keeps_file_arg_literal() {
 }
 
 #[test]
+fn dotnet_target_without_project_path_runs_project_scope() {
+    let target = target_for(
+        TestRunner::Dotnet,
+        None,
+        Some("Company.App.Tests"),
+        "dotnet-clients/tests/App.Tests/FeedServiceTests.cs",
+    );
+
+    assert_eq!(target.base_command, vec!["dotnet", "test"]);
+    assert_eq!(target.runner_args, vec!["--no-restore"]);
+    assert_eq!(
+        test_file_arg(
+            TestRunner::Dotnet,
+            "dotnet-clients/tests/App.Tests/FeedServiceTests.cs"
+        ),
+        "dotnet-clients/tests/App.Tests/FeedServiceTests.cs"
+    );
+}
+
+#[test]
 fn swift_target_uses_file_parent_as_filter_without_project() {
     let target = target_for(
         TestRunner::Swift,

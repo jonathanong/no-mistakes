@@ -220,6 +220,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         test_filter: None,
         rewrites: vec![],
         queue_project_factory_names: vec![],
+        dotnet_projects: vec![],
         swift_packages: vec![],
         terraform: Default::default(),
     };

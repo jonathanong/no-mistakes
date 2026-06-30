@@ -56,6 +56,7 @@ pub(crate) fn load_projects(
 
 fn discovered_config_paths(root: &Path, framework: Framework) -> Vec<String> {
     let names = match framework {
+        Framework::Dotnet => &[],
         Framework::Playwright => PLAYWRIGHT_CONFIGS,
         Framework::Vitest => VITEST_CONFIGS,
         Framework::Swift => &[],
@@ -76,6 +77,7 @@ fn load_config_projects(
     config_dir: &Path,
 ) -> Result<Vec<ConfigProject>> {
     match framework {
+        Framework::Dotnet => Ok(Vec::new()),
         Framework::Playwright => {
             let tsconfig = resolve_tsconfig(config_dir)?;
             let parsed =

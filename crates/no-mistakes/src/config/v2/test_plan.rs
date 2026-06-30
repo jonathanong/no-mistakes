@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct TestPlanConfig {
+    pub dotnet: TestPlanFrameworkConfig,
     pub playwright: TestPlanFrameworkConfig,
     pub vitest: TestPlanFrameworkConfig,
     pub swift: TestPlanFrameworkConfig,
@@ -67,6 +68,7 @@ pub struct TestPlanDependencies {
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub enum TestPlanIgnoredChangedTestsFramework {
+    Dotnet,
     Playwright,
     Vitest,
     Swift,

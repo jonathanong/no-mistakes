@@ -11,7 +11,7 @@ const { analyzeProject, dependents, importUsages, symbols, testsPlan } = require
   const impact = await dependents({
     root: process.cwd(),
     files: ["src/api.mts#handler"],
-    tests: ["vitest", "swift"],
+    tests: ["vitest", "dotnet", "swift"],
   });
 
   const report = await analyzeProject({
@@ -40,7 +40,7 @@ const { analyzeProject, dependents, importUsages, symbols, testsPlan } = require
 | `fetches` | `fetches(options)` |
 | `flow` | `flow(options)` |
 | `check` | `check(options)` |
-| `tests plan` | `testsPlan(options)`; `framework` accepts `vitest`, `playwright`, or `swift` |
+| `tests plan` | `testsPlan(options)`; `framework` accepts `vitest`, `playwright`, `dotnet`, or `swift` |
 | `tests targets` | `testsTargets(options)` |
 | `tests impact` | `testsImpact(options)` |
 | `tests why` | `testsWhy(options)` |

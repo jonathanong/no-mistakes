@@ -4,6 +4,7 @@ pub mod ci_workflows;
 pub mod comment_only;
 pub mod config;
 pub mod dependencies;
+pub mod dotnet;
 pub(crate) mod glob_normalize;
 pub mod import_usages;
 pub mod lockfile;

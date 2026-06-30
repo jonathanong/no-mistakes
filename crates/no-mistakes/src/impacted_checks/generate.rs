@@ -48,6 +48,7 @@ pub fn generate_impacted_checks(args: &ImpactedChecksArgs) -> Result<ImpactedChe
     // spurious `vitest` commands. A framework counts as present when it is
     // explicitly configured or its config file exists at the repo root.
     for framework in [
+        TestFramework::Dotnet,
         TestFramework::Vitest,
         TestFramework::Playwright,
         TestFramework::Swift,

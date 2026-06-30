@@ -444,5 +444,6 @@ impl<'a> Visit<'a> for CallAssertions {
 
 #[test]
 fn swift_framework_string_is_stable() {
+    assert_eq!(types::Framework::Dotnet.as_str(), "dotnet");
     assert_eq!(types::Framework::Swift.as_str(), "swift");
 }

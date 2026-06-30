@@ -20,6 +20,7 @@ pub struct IntegrationFinding {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Framework {
+    Dotnet,
     Playwright,
     Vitest,
     Swift,
@@ -28,6 +29,7 @@ pub(crate) enum Framework {
 impl Framework {
     pub(crate) fn as_str(self) -> &'static str {
         match self {
+            Self::Dotnet => "dotnet",
             Self::Playwright => "playwright",
             Self::Vitest => "vitest",
             Self::Swift => "swift",

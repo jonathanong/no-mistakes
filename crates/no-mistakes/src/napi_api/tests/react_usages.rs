@@ -32,3 +32,9 @@ fn react_usages_json_requires_target() {
     let error = react_usages_json_impl(json!({ "root": root }).to_string()).unwrap_err();
     assert!(error.reason.contains("target is required"));
 }
+
+#[test]
+fn react_usages_json_requires_target_without_root() {
+    let error = react_usages_json_impl(json!({}).to_string()).unwrap_err();
+    assert!(error.reason.contains("target is required for react usages"));
+}

@@ -22,6 +22,9 @@ pub(super) fn target_for(
     project: Option<&str>,
     test_file: &str,
 ) -> TestExecutionTarget {
+    if runner == TestRunner::Dotnet {
+        return dotnet_target_for(config, project, test_file);
+    }
     if runner == TestRunner::Swift {
         return swift_target_for(config, project, test_file);
     }
@@ -37,15 +40,37 @@ pub(super) fn target_for(
     }
     runner_args.push(test_file_arg(runner, test_file));
 
+    let base_command = if runner == TestRunner::Playwright {
+        vec!["playwright".to_string(), "test".to_string()]
+    } else {
+        vec!["vitest".to_string()]
+    };
+
     TestExecutionTarget {
         runner: runner.as_str().to_string(),
         config: config.map(str::to_string),
         project: project.map(str::to_string),
-        base_command: match runner {
-            TestRunner::Playwright => vec!["playwright".to_string(), "test".to_string()],
-            TestRunner::Vitest => vec!["vitest".to_string()],
-            TestRunner::Swift => unreachable!("swift targets return above"),
-        },
+        base_command,
+        runner_args,
+    }
+}
+
+fn dotnet_target_for(
+    project_path: Option<&str>,
+    project: Option<&str>,
+    _test_file: &str,
+) -> TestExecutionTarget {
+    let mut runner_args = Vec::new();
+    if let Some(project_path) = project_path {
+        runner_args.push(project_path.to_string());
+    }
+    runner_args.push("--no-restore".to_string());
+
+    TestExecutionTarget {
+        runner: TestRunner::Dotnet.as_str().to_string(),
+        config: project_path.map(str::to_string),
+        project: project.map(str::to_string),
+        base_command: vec!["dotnet".to_string(), "test".to_string()],
         runner_args,
     }
 }
@@ -82,6 +107,7 @@ fn swift_filter_from_path(test_file: &str) -> &str {
 
 fn test_file_arg(runner: TestRunner, test_file: &str) -> String {
     match runner {
+        TestRunner::Dotnet => test_file.to_string(),
         TestRunner::Playwright => regex_escape(test_file),
         TestRunner::Vitest => test_file.to_string(),
         TestRunner::Swift => test_file.to_string(),

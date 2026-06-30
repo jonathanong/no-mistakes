@@ -19,6 +19,7 @@ pub(super) fn dependency_trigger(
     changed_files: &[PathBuf],
 ) -> Result<Option<(String, PathBuf)>> {
     let plan = match framework {
+        TestFramework::Dotnet => &config.test_plan.dotnet,
         TestFramework::Playwright => &config.test_plan.playwright,
         TestFramework::Vitest => &config.test_plan.vitest,
         TestFramework::Swift => &config.test_plan.swift,
@@ -60,6 +61,7 @@ fn ignored_changed_test_sets(
     let mut sets = Vec::new();
     for framework in ignored {
         let runner = match framework {
+            TestPlanIgnoredChangedTestsFramework::Dotnet => TestRunner::Dotnet,
             TestPlanIgnoredChangedTestsFramework::Playwright => TestRunner::Playwright,
             TestPlanIgnoredChangedTestsFramework::Vitest => TestRunner::Vitest,
             TestPlanIgnoredChangedTestsFramework::Swift => TestRunner::Swift,

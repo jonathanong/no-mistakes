@@ -114,6 +114,35 @@ fn server_contracts_reports_client_query_mismatches() {
 }
 
 #[test]
+fn server_contracts_public_api_reports_client_query_mismatches() {
+    let root = server_fixture("express");
+    let route_report = no_mistakes::server_routes::analyze_project(&root, None, &[])
+        .expect("route report should analyze");
+    let filters = vec!["backend/api/**".to_string()];
+    let report =
+        no_mistakes::server_routes::analyze_contracts(&root, None, &route_report, &filters)
+            .expect("contracts should analyze");
+
+    assert!(report.routes.iter().any(|route| {
+        route.route == "/api/v1/search" && route.query_params == ["page", "term"]
+    }));
+    assert!(report.mismatches.iter().any(|mismatch| {
+        mismatch.matched_route == "/api/v1/search" && mismatch.missing_params == ["unused"]
+    }));
+}
+
+#[test]
+fn server_contracts_public_api_falls_back_for_implicit_invalid_tsconfig() {
+    let root = server_fixture("invalid-tsconfig");
+    let route_report = no_mistakes::server_routes::analyze_project(&root, None, &[])
+        .expect("route report should analyze");
+    let report = no_mistakes::server_routes::analyze_contracts(&root, None, &route_report, &[])
+        .expect("contracts should fall back to an empty tsconfig");
+
+    assert!(report.routes.iter().any(|route| route.route == "/health"));
+}
+
+#[test]
 fn server_contracts_supports_all_render_formats() {
     let root = server_fixture("express");
     for format in ["human", "md", "paths", "yml"] {

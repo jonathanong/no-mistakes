@@ -1,0 +1,20 @@
+tests:
+  dotnet:
+    solutions:
+      - dotnet-clients/App.sln
+    projects:
+      app:
+        project: dotnet-clients/src/App/App.csproj
+      app-tests:
+        project: dotnet-clients/tests/App.Tests/App.Tests.csproj
+        test: true
+testPlan:
+  dotnet:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies
+      coverage-only:
+        groups:
+          - type: coverage

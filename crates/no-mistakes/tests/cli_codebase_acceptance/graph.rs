@@ -440,3 +440,29 @@ fn swift_relationship_edges_and_test_filter_work() {
         "swift-ref"
     ));
 }
+
+#[test]
+fn dotnet_relationship_edges_and_test_filter_work() {
+    let root = fixture("dotnet-test-plan");
+    let dependents = run_json(
+        &root,
+        &[
+            "dependents",
+            "--relationship",
+            "dotnet",
+            "--test",
+            "dotnet",
+            "dotnet-clients/src/App/FeedService.cs",
+        ],
+    );
+    let paths = file_paths(&dependents);
+    assert_eq!(
+        paths,
+        vec!["dotnet-clients/tests/App.Tests/FeedServiceTests.cs"]
+    );
+    assert!(has_path_with_via(
+        &dependents,
+        "dotnet-clients/tests/App.Tests/FeedServiceTests.cs",
+        "dotnet-ref"
+    ));
+}

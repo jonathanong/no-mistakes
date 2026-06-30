@@ -25,6 +25,7 @@ pub enum RelationshipArg {
     Process,
     Asset,
     React,
+    Dotnet,
     Swift,
     Terraform,
     All,
@@ -49,6 +50,7 @@ impl RelationshipArg {
             RelationshipArg::Process => "process",
             RelationshipArg::Asset => "asset",
             RelationshipArg::React => "react",
+            RelationshipArg::Dotnet => "dotnet",
             RelationshipArg::Swift => "swift",
             RelationshipArg::Terraform => "terraform",
             RelationshipArg::All => "all",
@@ -126,6 +128,11 @@ pub(crate) fn relationship_filter(
             }
             RelationshipArg::React => {
                 set.insert(EdgeKind::ReactRender);
+            }
+            RelationshipArg::Dotnet => {
+                set.insert(EdgeKind::DotnetUsing);
+                set.insert(EdgeKind::DotnetReference);
+                set.insert(EdgeKind::DotnetProjectDependency);
             }
             RelationshipArg::Swift => {
                 set.insert(EdgeKind::SwiftImport);

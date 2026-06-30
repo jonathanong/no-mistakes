@@ -13,6 +13,32 @@ fn route_fixture_source(name: &str) -> String {
 }
 
 #[test]
+fn helper_env_merge_and_replace_dedupe_candidates() {
+    let mut env = HashMap::from([("slug".to_string(), vec!["/a".to_string(), "/b".to_string()])]);
+    merge_helper_env(
+        &mut env,
+        HashMap::from([("slug".to_string(), vec!["/b".to_string(), "/c".to_string()])]),
+    );
+    assert_eq!(
+        env.get("slug").unwrap(),
+        &vec!["/a".to_string(), "/b".to_string(), "/c".to_string()]
+    );
+
+    replace_helper_env_with_branches(
+        &mut env,
+        vec![
+            HashMap::from([("id".to_string(), vec!["1".to_string()])]),
+            HashMap::from([("id".to_string(), vec!["1".to_string(), "2".to_string()])]),
+        ],
+    );
+    assert_eq!(
+        env.get("id").unwrap(),
+        &vec!["1".to_string(), "2".to_string()]
+    );
+    assert!(!env.contains_key("slug"));
+}
+
+#[test]
 fn extracts_simple_href() {
     let source = r#"const x = <a href="/communities">Communities</a>;"#;
     let refs = extract_route_refs(source, "nav.tsx");

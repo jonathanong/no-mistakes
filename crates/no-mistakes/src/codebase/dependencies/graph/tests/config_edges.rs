@@ -379,6 +379,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         test_filter: None,
         rewrites: vec![],
         queue_project_factory_names: vec![],
+        dotnet_projects: vec![],
         swift_packages: vec![],
         terraform: Default::default(),
     };
@@ -396,6 +397,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         test_filter: None,
         rewrites: vec![],
         queue_project_factory_names: vec![],
+        dotnet_projects: vec![],
         swift_packages: vec![],
         terraform: Default::default(),
     };
@@ -429,6 +431,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         test_filter: None,
         rewrites: vec![],
         queue_project_factory_names: vec![],
+        dotnet_projects: vec![],
         swift_packages: vec![],
         terraform: Default::default(),
     };
@@ -505,6 +508,7 @@ fn effective_fact_plan_skips_config_dependent_domains_without_required_config() 
         test_filter: None,
         rewrites: vec![],
         queue_project_factory_names: vec!["createQueue".to_string()],
+        dotnet_projects: vec![],
         swift_packages: vec![],
         terraform: Default::default(),
     };

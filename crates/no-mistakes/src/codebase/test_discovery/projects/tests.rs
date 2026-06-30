@@ -92,3 +92,28 @@ fn swift_projects_cover_package_fallback_and_policy_overrides() {
         .iter()
         .any(|project| project.policy_name.as_deref() == Some("empty-policy")));
 }
+
+#[test]
+fn swift_projects_lossy_uses_swift_project_loader() {
+    let root = Path::new("");
+    let config = NoMistakesConfig::default();
+
+    assert!(runner_projects_lossy(root, &config, TestRunner::Swift).is_empty());
+}
+
+#[test]
+fn runner_config_returns_swift_policy_map() {
+    let config = NoMistakesConfig::default();
+    let (configs, policies) = runner_config(&config, TestRunner::Swift);
+
+    assert!(configs.is_none());
+    assert!(policies.is_empty());
+}
+
+#[test]
+#[should_panic(expected = "dotnet projects are handled before runner_config")]
+fn runner_config_rejects_dotnet_after_fast_path() {
+    let config = NoMistakesConfig::default();
+
+    let _ = runner_config(&config, TestRunner::Dotnet);
+}

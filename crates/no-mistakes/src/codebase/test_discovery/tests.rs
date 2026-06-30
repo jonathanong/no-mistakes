@@ -12,6 +12,110 @@ fn fixture_root(name: &str) -> PathBuf {
 }
 
 #[test]
+fn dotnet_strict_project_discovery_errors_on_missing_projects() {
+    let root = fixture_root("dotnet-test-plan");
+    let mut config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    config.tests.dotnet.projects.insert(
+        "missing".to_string(),
+        crate::config::v2::schema::DotnetProjectConfig {
+            project: "dotnet-clients/tests/Missing/Missing.csproj".to_string(),
+            include: Vec::new(),
+            exclude: Vec::new(),
+            test: true,
+        },
+    );
+
+    let error = projects::runner_projects(&root, &config, TestRunner::Dotnet).unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("configured dotnet project `missing`"));
+}
+
+#[test]
+fn dotnet_lossy_project_discovery_skips_missing_projects() {
+    let root = fixture_root("dotnet-test-plan");
+    let mut config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    config.tests.dotnet.projects.insert(
+        "missing".to_string(),
+        crate::config::v2::schema::DotnetProjectConfig {
+            project: "dotnet-clients/tests/Missing/Missing.csproj".to_string(),
+            include: Vec::new(),
+            exclude: Vec::new(),
+            test: true,
+        },
+    );
+
+    let projects = projects::runner_projects_lossy(&root, &config, TestRunner::Dotnet);
+    assert!(projects
+        .iter()
+        .any(|project| project.policy_name.as_deref() == Some("app-tests")));
+    assert!(!projects
+        .iter()
+        .any(|project| project.policy_name.as_deref() == Some("missing")));
+}
+
+#[test]
+fn dotnet_project_discovery_honors_include_override() {
+    let root = fixture_root("dotnet-test-plan");
+    let mut config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let project = config
+        .tests
+        .dotnet
+        .projects
+        .get_mut("app-tests")
+        .expect("fixture should define app-tests");
+    project.include = vec!["dotnet-clients/tests/App.Tests/ParserEdgeCases.cs".to_string()];
+
+    let projects = projects::runner_projects(&root, &config, TestRunner::Dotnet).unwrap();
+    let app_tests = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("app-tests"))
+        .expect("app-tests project should be discovered");
+
+    assert_eq!(
+        app_tests.include,
+        vec!["dotnet-clients/tests/App.Tests/ParserEdgeCases.cs"]
+    );
+}
+
+#[test]
+fn dotnet_project_discovery_falls_back_when_no_xunit_files_are_known() {
+    let root = fixture_root("dotnet-test-plan");
+    let mut config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    config.tests.dotnet.solutions.clear();
+    config.tests.dotnet.projects.clear();
+    config.tests.dotnet.projects.insert(
+        "fallback".to_string(),
+        crate::config::v2::schema::DotnetProjectConfig {
+            project: "dotnet-clients/src/Fallback/Fallback.csproj".to_string(),
+            include: Vec::new(),
+            exclude: Vec::new(),
+            test: true,
+        },
+    );
+
+    let projects = projects::runner_projects(&root, &config, TestRunner::Dotnet).unwrap();
+
+    assert_eq!(projects.len(), 1);
+    assert_eq!(
+        projects[0].include,
+        vec!["dotnet-clients/src/Fallback/**/*.cs"]
+    );
+}
+
+#[test]
+fn test_runner_framework_maps_dotnet_and_swift() {
+    assert_eq!(
+        TestRunner::Dotnet.framework(),
+        crate::integration_tests::types::Framework::Dotnet
+    );
+    assert_eq!(
+        TestRunner::Swift.framework(),
+        crate::integration_tests::types::Framework::Swift
+    );
+}
+
+#[test]
 fn vitest_project_discovery_without_playwright_projects_keeps_matching_tests() {
     let root = fixture_root("symbols-output");
     let config = NoMistakesConfig::default();

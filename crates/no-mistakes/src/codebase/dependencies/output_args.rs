@@ -31,7 +31,7 @@ pub struct TraverseArgs {
     pub target_modules: Vec<String>,
 
     /// Filter to test files for a specific framework. Can be repeated.
-    /// Values: vitest, playwright, cargo.
+    /// Values: vitest, playwright, cargo, dotnet, swift.
     #[arg(long = "test", value_name = "FRAMEWORK")]
     pub tests: Vec<String>,
 
@@ -45,7 +45,7 @@ pub struct TraverseArgs {
     pub json: bool,
 
     /// Only follow edges of this relationship kind. Can be repeated (OR logic).
-    /// Values: import, import-static, import-dynamic, import-type, import-require, workspace, package, test, route, queue, md, ci, http, process, asset, react, all.
+    /// Values: import, import-static, import-dynamic, import-type, import-require, workspace, package, test, route, queue, md, ci, http, process, asset, react, dotnet, swift, terraform, all.
     /// Default: all.
     #[arg(long = "relationship", value_enum, value_name = "KIND")]
     pub relationships: Vec<RelationshipArg>,
