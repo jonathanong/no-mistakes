@@ -19,3 +19,15 @@ fn swift_load_projects_has_no_config_discovery_or_projects() {
             .is_empty()
     );
 }
+
+#[test]
+fn dotnet_load_projects_has_no_config_discovery_or_projects() {
+    let root = Path::new("");
+
+    assert!(discovered_config_paths(root, Framework::Dotnet).is_empty());
+    assert!(
+        load_config_projects(root, Framework::Dotnet, "App.csproj", root, "", root)
+            .unwrap()
+            .is_empty()
+    );
+}
