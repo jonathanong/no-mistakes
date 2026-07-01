@@ -1,0 +1,20 @@
+tests:
+  dotnet:
+    projects:
+      app:
+        project: clients/src/App/App.csproj
+      app-tests:
+        project: clients/tests/App.Tests/App.Tests.csproj
+        test: true
+      other:
+        project: clients/src/Other/Other.csproj
+      other-tests:
+        project: clients/tests/Other.Tests/Other.Tests.csproj
+        test: true
+testPlan:
+  dotnet:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies

@@ -57,6 +57,10 @@ const { analyzeProject, dependents, importUsages, symbols, testsPlan } = require
 | `ci env` | `ciEnv(options)` |
 | `impacted-checks` | `impactedChecks(options)` |
 
+`testsPlan(options)` returns `fallback_triggered` and `fallback_reason` when a
+`dotnet` or `swift` plan has to fall back from native graph tracing to
+framework-scoped discovered tests.
+
 `check(options)` returns the same structured check report as CLI JSON,
 including `warnings: string[]` for configured checks that could not run.
 

@@ -21,12 +21,14 @@ mod fallback;
 mod hints;
 mod hints_domains;
 mod lockfile_seeds;
+mod native_fallback;
 #[cfg(test)]
 mod tests;
 use dep_triggers::dependency_trigger;
 use fallback::{fallback_plan, FallbackRequest};
 use hints::build_coverage_hints;
 use lockfile_seeds::{apply_lockfile_seeds, lockfile_seed_candidates};
+use native_fallback::{native_fallback_tests, untraced_native_change};
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn generate_configured_plan(
@@ -265,6 +267,39 @@ pub(crate) fn generate_configured_plan(
                 return Ok(fallback);
             }
         }
+    }
+
+    let native_fallback_trigger = (!all_tests.is_empty())
+        .then(|| untraced_native_change(framework, root, changed_files, &selected_map))
+        .flatten();
+    if let Some(trigger_file) = native_fallback_trigger {
+        let fallback_tests = native_fallback_tests(
+            framework,
+            root,
+            config,
+            &trigger_file,
+            &all_tests,
+            &discovered_tests,
+        );
+        let mut plan = fallback_plan(
+            root,
+            &fallback_tests,
+            FallbackRequest {
+                group_type: "dependencies",
+                via: "native source fallback",
+                changed_file: Some(&trigger_file),
+                limit: global_limit,
+                has_limit: has_global_limit,
+                reason: format!(
+                    "{} source impact for `{}` could not be determined; falling back to discovered {} tests",
+                    framework_name(framework),
+                    relative_path(root, &trigger_file),
+                    framework_name(framework)
+                ),
+            },
+        );
+        attach_targets(&mut plan, root, &discovered_tests);
+        return Ok(plan);
     }
 
     let mut plan = TestPlan {

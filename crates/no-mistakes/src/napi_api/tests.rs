@@ -12,6 +12,7 @@ use super::options::{
 use super::*;
 
 include!("tests_symbols_impact.rs");
+include!("tests/tests_native_fallback.rs");
 
 fn fixture_root(name: &str) -> String {
     crate::codebase::ts_resolver::normalize_path(
