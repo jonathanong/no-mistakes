@@ -64,7 +64,10 @@ fn is_native_source_or_project_change(framework: TestFramework, rel: &str) -> bo
         }
         TestFramework::Swift => {
             rel.ends_with("Package.swift")
-                || (rel.ends_with(".swift") && !rel.split('/').any(|part| part == "Tests"))
+                || (rel.ends_with(".swift")
+                    && !rel
+                        .split('/')
+                        .any(|part| part.eq_ignore_ascii_case("tests")))
         }
         TestFramework::Playwright | TestFramework::Vitest => false,
     }
@@ -104,7 +107,7 @@ fn dotnet_project_fallback_tests(
         return Vec::new();
     }
 
-    let trigger = no_mistakes::codebase::ts_resolver::normalize_path(trigger_file);
+    let trigger = no_mistakes::codebase::ts_resolver::normalize_path(&root.join(&rel));
     let all_files =
         no_mistakes::codebase::ts_source::discover_files(root, &config.filesystem.skip_directories);
     let configured = no_mistakes::codebase::dotnet::configured_projects(root, &config.tests.dotnet);
@@ -193,6 +196,10 @@ mod tests {
         assert!(!is_native_source_or_project_change(
             TestFramework::Swift,
             r"swift-clients\core\Tests\AppTests\ConfigTests.swift"
+        ));
+        assert!(!is_native_source_or_project_change(
+            TestFramework::Swift,
+            r"swift-clients\core\tests\AppTests\ConfigTests.swift"
         ));
         assert!(is_native_source_or_project_change(
             TestFramework::Dotnet,
