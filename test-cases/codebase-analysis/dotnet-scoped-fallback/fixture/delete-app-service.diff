@@ -1,0 +1,11 @@
+diff --git a/clients/src/App/DeletedService.cs b/clients/src/App/DeletedService.cs
+deleted file mode 100644
+index 1111111..0000000
+--- a/clients/src/App/DeletedService.cs
++++ /dev/null
+@@ -1,5 +0,0 @@
+-namespace Company.App;
+-
+-public sealed class DeletedService
+-{
+-}

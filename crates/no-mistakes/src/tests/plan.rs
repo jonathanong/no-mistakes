@@ -104,6 +104,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
             &config,
             &tsconfig,
             &changed_files,
+            deleted_files,
             &collected.diff_files,
             &lockfile_changed_packages,
             &workspace_map,

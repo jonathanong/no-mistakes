@@ -19,18 +19,30 @@ Key options: `--root`, `--config`, `--tsconfig`, `--environment`,
 `--limit-percent`, `--limit-files`, `--global-config-fallback`, `--format`, and
 `--json`.
 
+Dotnet and Swift plans require explicit config to build the native source graph
+that maps changed source files to test projects or targets. `tests.dotnet.projects`
+or `tests.dotnet.solutions`, and `tests.swift.packages`, are the source-graph
+inputs. If native tests are discoverable but the native source/project change
+cannot be traced, the plan falls back to the framework-scoped discovered tests
+and sets `fallback_triggered` with a `fallback_reason`.
+
 `--format commands` prints the exact runner commands for selected execution
 targets. Use it when an agent needs runnable commands instead of test paths or a
 structured plan.
 
 Node API: `testsPlan(options)`.
 
-`dotnet` plans require `tests.dotnet.projects` config. They select changed C#
-test files directly and select dependent C# tests through namespace imports,
-type references, and `.csproj` `ProjectReference` edges. Command output uses
-`dotnet test <project.csproj> --no-restore` plus a class-name filter when the
-test file maps cleanly to a fully qualified test class.
+`dotnet` plans require configured `.csproj` or `.sln` paths. They select
+changed C# test files directly and select dependent C# tests through namespace
+imports, type references, and `.csproj` `ProjectReference` edges. When native
+tests are discoverable but the source/project change cannot be traced, the plan
+falls back to the framework-scoped discovered tests and reports
+`fallback_triggered`/`fallback_reason`. Command output uses `dotnet test
+<project.csproj> --no-restore` plus a class-name filter when the test file
+maps cleanly to a fully qualified test class.
 
 `swift` plans require `tests.swift.packages` config. They select changed Swift
 tests directly and select dependent Swift tests through Swift graph edges and
-HTTP route edges.
+HTTP route edges. When native tests are discoverable but the source/project
+change cannot be traced, the plan falls back to the framework-scoped discovered
+tests and reports `fallback_triggered`/`fallback_reason`.

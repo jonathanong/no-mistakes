@@ -43,8 +43,11 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
     if let Some(ref base) = args.base {
         match get_git_changed_files(root, base, args.head.as_deref()) {
             Ok(git_files) => {
-                for f in git_files {
+                for f in git_files.files {
                     files.push(root.join(f));
+                }
+                for f in git_files.deleted {
+                    deleted.push(root.join(f));
                 }
             }
             Err(e) if has_explicit_files => {
@@ -205,27 +208,58 @@ fn file_is_present(path: &Path) -> bool {
     }
 }
 
-fn get_git_changed_files(root: &Path, base: &str, head: Option<&str>) -> Result<Vec<PathBuf>> {
+struct GitChangedFiles {
+    files: Vec<PathBuf>,
+    deleted: Vec<PathBuf>,
+}
+
+fn get_git_changed_files(root: &Path, base: &str, head: Option<&str>) -> Result<GitChangedFiles> {
     let head_commit = head.unwrap_or("HEAD");
     let output = run_git(
         &[
             "diff",
             "--relative",
-            "--name-only",
+            "--name-status",
             &format!("{}...{}", base, head_commit),
         ],
         root,
     )?;
-    let mut changed = HashSet::new();
+    Ok(parse_git_name_status(&output))
+}
+
+fn parse_git_name_status(output: &str) -> GitChangedFiles {
+    let mut files = HashSet::new();
+    let mut deleted = HashSet::new();
     for line in output.lines() {
         let trimmed = line.trim();
-        if !trimmed.is_empty() {
-            changed.insert(PathBuf::from(trimmed));
+        if trimmed.is_empty() {
+            continue;
+        }
+        let mut parts = trimmed.split('\t');
+        let status = parts.next().unwrap_or_default();
+        if status.starts_with('R') {
+            if let Some(old_path) = parts.next() {
+                files.insert(PathBuf::from(old_path));
+                deleted.insert(PathBuf::from(old_path));
+            }
+            if let Some(new_path) = parts.next() {
+                files.insert(PathBuf::from(new_path));
+            }
+            continue;
+        }
+        if let Some(path) = parts.next() {
+            let path = PathBuf::from(path);
+            files.insert(path.clone());
+            if status == "D" {
+                deleted.insert(path);
+            }
         }
     }
-    let mut result: Vec<_> = changed.into_iter().collect();
-    result.sort();
-    Ok(result)
+    let mut files: Vec<_> = files.into_iter().collect();
+    files.sort();
+    let mut deleted: Vec<_> = deleted.into_iter().collect();
+    deleted.sort();
+    GitChangedFiles { files, deleted }
 }
 
 fn run_git(args: &[&str], root: &Path) -> Result<String> {
@@ -240,4 +274,29 @@ fn run_git(args: &[&str], root: &Path) -> Result<String> {
         );
     }
     Ok(String::from_utf8(output.stdout)?)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn git_name_status_preserves_deleted_and_renamed_paths() {
+        let changed =
+            parse_git_name_status("M\talive.cs\nD\tdeleted.cs\nR100\told-name.cs\tnew-name.cs\n");
+
+        assert_eq!(
+            changed.files,
+            vec![
+                PathBuf::from("alive.cs"),
+                PathBuf::from("deleted.cs"),
+                PathBuf::from("new-name.cs"),
+                PathBuf::from("old-name.cs"),
+            ]
+        );
+        assert_eq!(
+            changed.deleted,
+            vec![PathBuf::from("deleted.cs"), PathBuf::from("old-name.cs")]
+        );
+    }
 }

@@ -369,6 +369,7 @@ fn test_plan_swift_uses_packages_and_dependency_graph() {
         String::from_utf8_lossy(&output.stderr)
     );
     let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(plan["fallback_triggered"], false);
     let selected: Vec<&str> = plan["selected_tests"]
         .as_array()
         .unwrap()

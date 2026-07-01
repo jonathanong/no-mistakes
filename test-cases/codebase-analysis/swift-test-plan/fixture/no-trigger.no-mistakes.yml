@@ -1,0 +1,16 @@
+projects:
+  swift-clients:
+    type: tests
+    root: swift-clients
+tests:
+  swift:
+    packages:
+      - swift-clients/core
+      - swift-clients/ui
+test_plan:
+  swift:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies

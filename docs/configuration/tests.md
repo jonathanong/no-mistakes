@@ -29,6 +29,14 @@ tests:
 
 Selector settings feed Playwright coverage, route impact, and graph edges.
 
+Dotnet and Swift test plans use explicit config for source-graph targeting.
+`tests.dotnet.projects` or `tests.dotnet.solutions`, and
+`tests.swift.packages`, are the explicit inputs; `no-mistakes` does not infer
+repository-wide project or package scans. When `tests plan dotnet` or
+`tests plan swift` can discover native tests but cannot trace the native
+source/project change, the plan falls back to framework-scoped discovered tests
+and sets `fallback_triggered`/`fallback_reason`.
+
 ## Explicit Vitest projects
 
 `tests.vitest.projects` can declare project ownership directly when a Vitest
@@ -48,6 +56,19 @@ tests:
 
 These policies are also used by `vitest-project-mapping` when that rule sets
 `explicitProjectsOnly: true`.
+
+## Dotnet
+
+`tests.dotnet.projects` lists explicit .NET project mappings used by
+`tests plan dotnet` for source-graph targeting. `tests.dotnet.solutions` can
+add the projects listed in a solution, but `no-mistakes` does not infer
+repository-wide `.csproj` or `.sln` scans.
+
+Use `tests.dotnet.projects` when a project needs named include/exclude policies
+or a stable mapping from source changes to test projects. When native tests are
+discoverable but the source/project change cannot be traced, `tests plan dotnet`
+falls back to framework-scoped discovered tests and sets
+`fallback_triggered`/`fallback_reason`.
 
 ## Multiple configs
 
@@ -138,3 +159,7 @@ configured `Package.swift`, discovers `.testTarget(...)` targets under
 Use `tests.swift.projects` when a package needs named include/exclude policies.
 Project aliases affect discovery, while runnable Swift filters remain SwiftPM
 test targets derived from the selected test file.
+
+When native tests are discoverable but the source/project change cannot be
+traced, `tests plan swift` falls back to framework-scoped discovered tests and
+sets `fallback_triggered`/`fallback_reason`.
