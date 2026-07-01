@@ -1,0 +1,7 @@
+diff --git a/swift-clients/core/Package.swift b/swift-clients/core/Package.swift
+--- a/swift-clients/core/Package.swift
++++ /dev/null
+@@ -1,3 +0,0 @@
+-// swift-tools-version: 5.9
+-import PackageDescription
+-let package = Package(name: "VouchaCore")

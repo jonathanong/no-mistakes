@@ -90,3 +90,40 @@ fn test_plan_swift_scopes_package_manifest_fallback_to_package_tests() {
         "swift-clients/core"
     );
 }
+
+#[test]
+fn test_plan_swift_deleted_package_manifest_triggers_native_fallback() {
+    let root = fixture("swift-test-plan");
+    let diff_path = root.join("delete-core-package.diff");
+    let output = run(&[
+        "test",
+        "plan",
+        "swift",
+        "--root",
+        root.to_str().unwrap(),
+        "--diff",
+        diff_path.to_str().unwrap(),
+        "--json",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(plan["fallback_triggered"], true);
+    let selected: Vec<&str> = plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|test| test["test_file"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        selected,
+        vec![
+            "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift",
+            "swift-clients/ui/Tests/VouchaUITests/RSSFeedListViewModelTests.swift",
+        ]
+    );
+}

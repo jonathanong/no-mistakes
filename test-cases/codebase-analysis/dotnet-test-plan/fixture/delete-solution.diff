@@ -1,0 +1,7 @@
+diff --git a/dotnet-clients/App.sln b/dotnet-clients/App.sln
+--- a/dotnet-clients/App.sln
++++ /dev/null
+@@ -1,3 +0,0 @@
+-Microsoft Visual Studio Solution File, Format Version 12.00
+-# Visual Studio Version 17
+-EndGlobal
