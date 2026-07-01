@@ -15,19 +15,19 @@ pub(super) fn untraced_native_change(
         return None;
     }
 
-    let traced_changed_files: HashSet<&str> = selected_map
+    let traced_changed_files: HashSet<String> = selected_map
         .values()
         .flat_map(|test| {
             test.reasons
                 .iter()
-                .map(|reason| reason.changed_file.as_str())
+                .map(|reason| slash_path(&reason.changed_file))
         })
         .collect();
 
     changed_files.iter().find_map(|changed| {
-        let rel = relative_path(root, changed);
+        let rel = slash_path(&relative_path(root, changed));
         (is_native_source_or_project_change(framework, &rel)
-            && !traced_changed_files.contains(rel.as_str()))
+            && !traced_changed_files.contains(&rel))
         .then(|| changed.clone())
     })
 }
@@ -57,9 +57,10 @@ pub(super) fn native_fallback_tests(
 }
 
 fn is_native_source_or_project_change(framework: TestFramework, rel: &str) -> bool {
+    let rel = slash_path(rel);
     match framework {
         TestFramework::Dotnet => {
-            rel.ends_with(".csproj") || (rel.ends_with(".cs") && !is_dotnet_test_path(rel))
+            rel.ends_with(".csproj") || (rel.ends_with(".cs") && !is_dotnet_test_path(&rel))
         }
         TestFramework::Swift => {
             rel.ends_with("Package.swift")
@@ -70,10 +71,9 @@ fn is_native_source_or_project_change(framework: TestFramework, rel: &str) -> bo
 }
 
 fn is_dotnet_test_path(rel: &str) -> bool {
-    rel.contains("/Tests/")
-        || rel.contains(".Tests/")
-        || rel.contains("/tests/")
-        || rel.contains(".Test/")
+    slash_path(rel).split('/').any(|part| {
+        part == "Tests" || part == "tests" || part.ends_with(".Tests") || part.ends_with(".Test")
+    })
 }
 
 fn swift_manifest_fallback_tests(
@@ -82,7 +82,7 @@ fn swift_manifest_fallback_tests(
     all_tests: &[PathBuf],
     discovered: &DiscoveredTests,
 ) -> Vec<PathBuf> {
-    let rel = relative_path(root, trigger_file);
+    let rel = slash_path(&relative_path(root, trigger_file));
     if !rel.ends_with("Package.swift") {
         return Vec::new();
     }
@@ -135,7 +135,7 @@ fn dotnet_project_fallback_tests(
             .get(&project_path)
             .is_some_and(|project| project.is_test)
         {
-            test_project_configs.insert(relative_path(root, &project_path));
+            test_project_configs.insert(slash_path(&relative_path(root, &project_path)));
         }
         if let Some(referencing_projects) = reverse_refs.get(&project_path) {
             queue.extend(referencing_projects.iter().cloned());
@@ -153,7 +153,10 @@ fn tests_with_target_configs<I>(
 where
     I: IntoIterator<Item = String>,
 {
-    let configs: BTreeSet<String> = configs.into_iter().collect();
+    let configs: BTreeSet<String> = configs
+        .into_iter()
+        .map(|config| slash_path(&config))
+        .collect();
     all_tests
         .iter()
         .filter(|test| {
@@ -165,10 +168,39 @@ where
                         target
                             .config
                             .as_ref()
-                            .is_some_and(|config| configs.contains(config))
+                            .is_some_and(|config| configs.contains(&slash_path(config)))
                     })
                 })
         })
         .cloned()
         .collect()
+}
+
+fn slash_path(path: &str) -> String {
+    path.replace('\\', "/")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn native_source_detection_handles_backslash_paths() {
+        assert!(is_native_source_or_project_change(
+            TestFramework::Swift,
+            r"swift-clients\core\Sources\App\Config.swift"
+        ));
+        assert!(!is_native_source_or_project_change(
+            TestFramework::Swift,
+            r"swift-clients\core\Tests\AppTests\ConfigTests.swift"
+        ));
+        assert!(is_native_source_or_project_change(
+            TestFramework::Dotnet,
+            r"dotnet-clients\src\App\AppConfig.cs"
+        ));
+        assert!(!is_native_source_or_project_change(
+            TestFramework::Dotnet,
+            r"dotnet-clients\tests\App.Tests\AppConfigTests.cs"
+        ));
+    }
 }
