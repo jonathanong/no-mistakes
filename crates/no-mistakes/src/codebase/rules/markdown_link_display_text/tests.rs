@@ -142,6 +142,10 @@ fn ignores_links_inside_html_comments() {
     let findings = findings("html-comment");
 
     assert!(findings.is_empty(), "{findings:#?}");
+    assert!(
+        parser::markdown_links_outside_code("<!-- [OLD.md](new.md)").is_empty(),
+        "unterminated comments should mask through EOF"
+    );
 }
 
 #[test]
