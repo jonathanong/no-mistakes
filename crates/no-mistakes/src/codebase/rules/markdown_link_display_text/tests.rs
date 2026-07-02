@@ -34,6 +34,16 @@ fn allows_matching_and_descriptive_links() {
 }
 
 #[test]
+fn allows_parenthesized_local_markdown_filenames() {
+    let findings = findings("parentheses");
+
+    assert!(findings.is_empty(), "{findings:#?}");
+    let (link, _) = parser::parse_inline_link("[x](docs/a\\)b.md)", 0).unwrap();
+    assert_eq!(link.href, "docs/a\\)b.md");
+    assert!(parser::parse_inline_link("[x](docs/a(b.md)", 0).is_none());
+}
+
+#[test]
 fn skips_images_non_local_and_directory_hrefs() {
     let findings = findings("skipped");
 
@@ -94,6 +104,15 @@ fn reports_real_link_line_after_fenced_content() {
 }
 
 #[test]
+fn ignores_links_after_invalid_closing_fence_text() {
+    let findings = findings("bad-closing-fence");
+
+    assert!(findings.is_empty(), "{findings:#?}");
+    let links = parser::inline_links_outside_code("    ```\n[REAL.md](actual.md)");
+    assert_eq!(links.len(), 1, "{links:#?}");
+}
+
+#[test]
 fn covers_custom_extensions_non_matching_files_missing_files_and_malformed_links() {
     let root = fixture("custom");
     let mdx = root.join("docs/page.mdx");
@@ -108,8 +127,11 @@ fn covers_custom_extensions_non_matching_files_missing_files_and_malformed_links
     .unwrap();
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].file, "docs/page.mdx");
+    assert_eq!(findings[0].import.as_deref(), Some("OLD.mdx"));
+    assert_eq!(findings[0].target.as_deref(), Some("new.mdx"));
 
     assert!(check_file(&root, &mdx, &[".md"]).is_empty());
     assert!(parser::parse_inline_link("[text] no href", 0).is_none());
     assert!(parser::parse_inline_link("[text", 0).is_none());
+    assert_eq!(href_destination("<docs/new.md"), "<docs/new.md");
 }

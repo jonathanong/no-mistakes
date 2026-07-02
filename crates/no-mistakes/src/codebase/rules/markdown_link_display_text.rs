@@ -74,13 +74,18 @@ fn check_file(root: &Path, path: &Path, extensions: &[&str]) -> Vec<RuleFinding>
     let fenced = strip_fenced_code(&source);
     inline_links_outside_code(&source)
         .into_iter()
-        .filter_map(|link| finding_for_link(&rel, &fenced, link))
+        .filter_map(|link| finding_for_link(&rel, &fenced, link, extensions))
         .collect()
 }
 
-fn finding_for_link(file: &str, source: &str, link: InlineLink) -> Option<RuleFinding> {
+fn finding_for_link(
+    file: &str,
+    source: &str,
+    link: InlineLink,
+    extensions: &[&str],
+) -> Option<RuleFinding> {
     let text = link.text.replace('`', "");
-    if !looks_like_md_filename(&text) || is_non_local_href(&link.href) {
+    if !looks_like_md_filename(&text, extensions) || is_non_local_href(&link.href) {
         return None;
     }
     let basename = href_basename(&link.href)?;
@@ -99,8 +104,8 @@ fn finding_for_link(file: &str, source: &str, link: InlineLink) -> Option<RuleFi
     })
 }
 
-fn looks_like_md_filename(text: &str) -> bool {
-    text.ends_with(".md")
+fn looks_like_md_filename(text: &str, extensions: &[&str]) -> bool {
+    extensions.iter().any(|extension| text.ends_with(extension))
         && !text.is_empty()
         && !text
             .chars()

@@ -6,6 +6,9 @@ Bans configured mocking libraries and mock helpers in integration tests.
 rules:
   - rule: integration-test-no-mocks
     projects: [web]
+    include:
+      - integration-tests/**/*.test.*
+      - integration-tests/**/*.spec.*
     options:
       forbiddenCalls: [vi.mock, vi.spyOn]
       forbiddenModules: [msw, nock, sinon]

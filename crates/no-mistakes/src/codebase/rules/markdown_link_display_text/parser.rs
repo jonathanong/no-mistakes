@@ -62,7 +62,7 @@ pub(super) fn parse_inline_link(source: &str, start: usize) -> Option<(InlineLin
         return None;
     }
     let href_start = text_end + 2;
-    let href_end = find_byte(bytes, href_start, b')')?;
+    let href_end = find_link_destination_end(bytes, href_start)?;
     Some((
         InlineLink {
             text: source[start + 1..text_end].to_string(),
@@ -71,6 +71,27 @@ pub(super) fn parse_inline_link(source: &str, start: usize) -> Option<(InlineLin
         },
         href_end + 1,
     ))
+}
+
+fn find_link_destination_end(bytes: &[u8], start: usize) -> Option<usize> {
+    let mut index = start;
+    let mut paren_depth = 0usize;
+    while index < bytes.len() {
+        match bytes[index] {
+            b'\\' => index = (index + 2).min(bytes.len()),
+            b'(' => {
+                paren_depth += 1;
+                index += 1;
+            }
+            b')' if paren_depth == 0 => return Some(index),
+            b')' => {
+                paren_depth -= 1;
+                index += 1;
+            }
+            _ => index += 1,
+        }
+    }
+    None
 }
 
 fn find_byte(bytes: &[u8], start: usize, target: u8) -> Option<usize> {
@@ -85,7 +106,7 @@ pub(super) fn strip_fenced_code(source: &str) -> String {
     let mut out = String::with_capacity(source.len());
     let mut in_fence: Option<Fence> = None;
     for line in source.split_inclusive('\n') {
-        let marker = fence_marker(line);
+        let marker = fence_marker(line, in_fence.is_none());
         match (in_fence, marker) {
             (None, Some(marker)) => {
                 in_fence = Some(marker);
@@ -112,7 +133,7 @@ struct Fence {
     len: usize,
 }
 
-fn fence_marker(line: &str) -> Option<Fence> {
+fn fence_marker(line: &str, allow_trailing_text: bool) -> Option<Fence> {
     let trimmed = line.trim_start_matches([' ', '\t']);
     let indent = line.len() - trimmed.len();
     if indent > 3 {
@@ -124,6 +145,9 @@ fn fence_marker(line: &str) -> Option<Fence> {
         return None;
     }
     let len = count_marker(bytes, marker);
+    if !allow_trailing_text && !trimmed[len..].trim().is_empty() {
+        return None;
+    }
     (len >= 3).then_some(Fence { marker, len })
 }
 

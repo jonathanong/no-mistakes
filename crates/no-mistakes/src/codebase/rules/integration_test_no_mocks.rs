@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "integration-test-no-mocks";
 
+mod strings;
 mod strip;
 
 const DEFAULT_FORBIDDEN_CALLS: &[&str] = &[
@@ -172,7 +173,9 @@ fn module_findings(
         .flat_map(|(label, regex)| {
             regex
                 .find_iter(comments_removed)
-                .filter(|matched| !is_inside_string(comments_removed.as_bytes(), matched.start()))
+                .filter(|matched| {
+                    !strings::is_inside_string(comments_removed.as_bytes(), matched.start())
+                })
                 .map(|matched| RuleFinding {
                     rule: RULE_ID.to_string(),
                     file: rel.to_string(),
@@ -186,27 +189,6 @@ fn module_findings(
                 .collect::<Vec<_>>()
         })
         .collect()
-}
-
-fn is_inside_string(bytes: &[u8], target: usize) -> bool {
-    let mut quote = None;
-    let mut index = 0usize;
-    while index < target {
-        match (quote, bytes[index]) {
-            (Some(_), b'\\') => index += 2,
-            (Some(active), byte) if byte == active => {
-                quote = None;
-                index += 1;
-            }
-            (Some(_), _) => index += 1,
-            (None, b'\'' | b'"' | b'`') => {
-                quote = Some(bytes[index]);
-                index += 1;
-            }
-            (None, _) => index += 1,
-        }
-    }
-    quote.is_some()
 }
 
 #[cfg(test)]

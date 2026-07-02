@@ -74,6 +74,29 @@ fn detects_wrapped_dynamic_imports_and_requires() {
 }
 
 #[test]
+fn detects_calls_and_modules_inside_template_expressions() {
+    let findings = findings("template-expression");
+
+    assert_eq!(findings.len(), 4, "{findings:#?}");
+    assert!(findings
+        .iter()
+        .any(|finding| finding.line == 1 && finding.import.as_deref() == Some("vi.mock")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.line == 2 && finding.import.as_deref() == Some("msw")));
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.line == 3 && finding.import.as_deref() == Some("msw"))
+            .count(),
+        1
+    );
+    assert!(findings
+        .iter()
+        .any(|finding| finding.line == 3 && finding.import.as_deref() == Some("nock")));
+}
+
+#[test]
 fn strip_helpers_preserve_offsets_for_unclosed_and_escaped_tokens() {
     assert_eq!(
         strip::comments("before /* unclosed\nvi.fn()"),
@@ -87,6 +110,28 @@ fn strip_helpers_preserve_offsets_for_unclosed_and_escaped_tokens() {
         strip::comments_and_strings("const tail = 'open\\"),
         "const tail =       "
     );
+    let complex_template =
+        "const value = `${/* hidden */ ({ nested: `text ${vi.fn()}` }) // tail\n}`";
+    let stripped = strip::comments_and_strings(complex_template);
+    assert!(stripped.contains("vi.fn()"), "{stripped}");
+    assert!(!stripped.contains("hidden"), "{stripped}");
+    assert!(!stripped.contains("text"), "{stripped}");
+    assert_eq!(
+        strip::comments_and_strings("const value = `open\\"),
+        "const value =       "
+    );
+    assert_eq!(
+        strip::comments_and_strings("const value = `open\\x`"),
+        "const value =         "
+    );
+    assert_eq!(
+        strip::comments_and_strings("const value = `${unterminated"),
+        "const value =    unterminated"
+    );
+    assert_eq!(
+        strip::comments("const value = `open\\"),
+        "const value = `open\\"
+    );
 }
 
 #[test]
@@ -97,6 +142,13 @@ fn module_matches_ignore_closed_string_literals_before_real_imports() {
     assert_eq!(results[0].import.as_deref(), Some("msw"));
     assert!(findings("string-only").is_empty());
     assert!(findings("escaped-string-only").is_empty());
+
+    let nested = b"`${condition ? `${value}` : { value: require('nock') }}` after";
+    let after = nested
+        .windows("after".len())
+        .position(|window| window == b"after")
+        .unwrap();
+    assert!(!strings::is_inside_string(nested, after));
 }
 
 #[test]
