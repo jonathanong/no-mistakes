@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+mod html_comments;
+mod indent;
 mod references;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -10,7 +12,8 @@ pub(super) struct InlineLink {
 }
 
 pub(super) fn markdown_links_outside_code(source: &str) -> Vec<InlineLink> {
-    let fenced = strip_fenced_code(source);
+    let source = html_comments::mask(source);
+    let fenced = strip_fenced_code(&source);
     let reference_definitions = references::definitions(&fenced);
     scan_links(&fenced, &reference_definitions)
 }
@@ -23,7 +26,11 @@ fn scan_links(source: &str, reference_definitions: &HashMap<String, String>) -> 
         if bytes[index] == b'\\' {
             index = (index + 2).min(bytes.len());
         } else if bytes[index] == b'`' {
-            index = skip_inline_code(bytes, index);
+            if indent::is_code_line(bytes, index) {
+                index += 1;
+            } else {
+                index = skip_inline_code(bytes, index);
+            }
         } else if bytes[index] == b'[' && (index == 0 || bytes[index - 1] != b'!') {
             if let Some((link, next)) = parse_inline_link(source, index) {
                 links.push(link);
@@ -170,8 +177,7 @@ struct Fence {
 
 fn fence_marker(line: &str, allow_trailing_text: bool) -> Option<Fence> {
     let trimmed = line.trim_start_matches([' ', '\t']);
-    let indent = line.len() - trimmed.len();
-    if indent > 3 {
+    if indent::columns(line) > 3 {
         return None;
     }
     let bytes = trimmed.as_bytes();

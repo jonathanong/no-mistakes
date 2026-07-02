@@ -119,6 +119,15 @@ fn detects_wrapped_dynamic_imports_and_requires() {
 }
 
 #[test]
+fn ignores_module_specifiers_inside_regex_literals() {
+    let findings = findings("regex-literal");
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].line, 3);
+    assert_eq!(findings[0].import.as_deref(), Some("sinon"));
+}
+
+#[test]
 fn detects_calls_and_modules_inside_template_expressions() {
     let findings = findings("template-expression");
 
@@ -153,7 +162,7 @@ fn detects_calls_and_modules_inside_template_expressions() {
 #[test]
 fn strip_helpers_preserve_offsets_for_unclosed_and_escaped_tokens() {
     assert_eq!(
-        strip::comments("before /* unclosed\nvi.fn()"),
+        strip::comments_and_regex_literals("before /* unclosed\nvi.fn()"),
         "before            \n       "
     );
     assert_eq!(
@@ -183,7 +192,7 @@ fn strip_helpers_preserve_offsets_for_unclosed_and_escaped_tokens() {
         "const value =    unterminated"
     );
     assert_eq!(
-        strip::comments("const value = `open\\"),
+        strip::comments_and_regex_literals("const value = `open\\"),
         "const value = `open\\"
     );
     let regex_stripped = strip::comments_and_strings("expect(src).toMatch(/vi\\.mock\\(/gi)");

@@ -6,7 +6,7 @@ pub(super) fn definitions(source: &str) -> HashMap<String, String> {
     let mut definitions = HashMap::new();
     for line in source.split_inclusive('\n') {
         if let Some((label, href)) = parse_definition(line) {
-            definitions.insert(label, href);
+            definitions.entry(label).or_insert(href);
         }
     }
     definitions
@@ -24,7 +24,11 @@ pub(super) fn parse_link(
     }
     let label_start = text_end + 2;
     let label_end = super::find_byte(bytes, label_start, b']')?;
-    let label = normalize_label(source[label_start..label_end].trim());
+    let label = if label_start == label_end {
+        normalize_label(&source[start + 1..text_end])
+    } else {
+        normalize_label(source[label_start..label_end].trim())
+    };
     if label.is_empty() {
         return None;
     }

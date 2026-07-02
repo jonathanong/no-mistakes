@@ -157,7 +157,7 @@ fn check_file(root: &Path, path: &Path, compiled: &CompiledOptions) -> Vec<RuleF
         return Vec::new();
     };
     let rel = relative_slash_path(root, path);
-    let comments_removed = strip::comments(&content);
+    let comments_removed = strip::comments_and_regex_literals(&content);
     let strings_removed = strip::comments_and_strings(&content);
     let mut findings = calls::findings(&rel, &strings_removed, &compiled.calls);
     findings.extend(module_findings(&rel, &comments_removed, &compiled.modules));

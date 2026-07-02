@@ -1,14 +1,14 @@
 mod regex_literal;
 
-pub(super) fn comments(content: &str) -> String {
-    strip(content, false)
+pub(super) fn comments_and_regex_literals(content: &str) -> String {
+    strip(content, false, true)
 }
 
 pub(super) fn comments_and_strings(content: &str) -> String {
-    strip(content, true)
+    strip(content, true, true)
 }
 
-fn strip(content: &str, strings: bool) -> String {
+fn strip(content: &str, strings: bool, regex_literals: bool) -> String {
     let mut out = String::with_capacity(content.len());
     let bytes = content.as_bytes();
     let mut index = 0usize;
@@ -34,7 +34,7 @@ fn strip(content: &str, strings: bool) -> String {
                     push_preserved_string(bytes, index, &mut out)
                 };
             }
-            b'/' if strings && regex_literal::can_start(&out) => {
+            b'/' if regex_literals && regex_literal::can_start(&out) => {
                 index = regex_literal::push_erased(bytes, index, &mut out);
             }
             byte => {

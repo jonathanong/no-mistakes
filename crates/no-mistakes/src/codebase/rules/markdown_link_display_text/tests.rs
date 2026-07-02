@@ -40,6 +40,26 @@ fn flags_reference_style_markdown_filename_text_mismatch() {
 }
 
 #[test]
+fn flags_collapsed_reference_style_markdown_filename_text_mismatch() {
+    let findings = findings("collapsed-reference");
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].line, 1);
+    assert_eq!(findings[0].import.as_deref(), Some("OLD.md"));
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some("news-story-clusters.md")
+    );
+}
+
+#[test]
+fn keeps_first_duplicate_reference_definition() {
+    let findings = findings("duplicate-reference");
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
 fn handles_reference_style_edge_cases() {
     let links = parser::markdown_links_outside_code(
         "[OLD.md][]\n[OLD2.md][missing]\n[OLD3.md][story]\n\n[]: docs/empty.md\n[story]: <docs/new.md>",
@@ -96,6 +116,13 @@ fn ignores_links_inside_code() {
 }
 
 #[test]
+fn ignores_links_inside_html_comments() {
+    let findings = findings("html-comment");
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
 fn parses_reference_style_links_outside_code() {
     let links = parser::markdown_links_outside_code(
         "[OLD.md][story]\n\n[story]: docs/news-story-clusters.md",
@@ -145,6 +172,22 @@ fn long_fences_preserve_offsets_and_ignore_short_inner_fences() {
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].line, 6);
     assert_eq!(findings[0].import.as_deref(), Some("REAL.md"));
+}
+
+#[test]
+fn tab_indented_fences_do_not_mask_links() {
+    let source = "\t```markdown\n[OLD.md](docs/news-story-clusters.md)";
+    assert_eq!(parser::strip_fenced_code(source), source);
+
+    let links = parser::markdown_links_outside_code(source);
+    assert_eq!(links.len(), 1, "{links:#?}");
+    assert_eq!(links[0].text, "OLD.md");
+
+    let findings = findings("tab-indented-fence");
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].line, 2);
+    assert_eq!(findings[0].import.as_deref(), Some("OLD.md"));
 }
 
 #[test]
