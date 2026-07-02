@@ -142,8 +142,18 @@ fn allows_parenthesized_local_markdown_filenames() {
     let (escaped_title_link, _) =
         parser::parse_inline_link("[OLD.md](<docs/new.md> \"detail\\)s\")", 0).unwrap();
     assert_eq!(escaped_title_link.href, "<docs/new.md> \"detail\\)s\"");
+    let (paren_title_link, _) =
+        parser::parse_inline_link("[OLD.md](docs/new.md \"see (details\")", 0).unwrap();
+    assert_eq!(paren_title_link.href, "docs/new.md \"see (details\"");
+    let (escaped_paren_title_link, _) =
+        parser::parse_inline_link("[OLD.md](docs/new.md \"see \\(details\")", 0).unwrap();
+    assert_eq!(
+        escaped_paren_title_link.href,
+        "docs/new.md \"see \\(details\""
+    );
     assert!(parser::parse_inline_link("[x](docs/a(b.md)", 0).is_none());
     assert!(parser::parse_inline_link("[x](<docs/a.md> \"title\"", 0).is_none());
+    assert!(parser::parse_inline_link("[x](docs/a.md \"title", 0).is_none());
 }
 
 #[test]
@@ -238,6 +248,10 @@ fn preserves_offsets_after_non_ascii_inline_code() {
 
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].line, 2);
+    let source = "```\né\n```\n[OLD.md](docs/new.md)";
+    let links = parser::markdown_links_outside_code(source);
+    assert_eq!(links.len(), 1, "{links:#?}");
+    assert_eq!(links[0].offset, source.find("[OLD.md]").unwrap());
 }
 
 #[test]

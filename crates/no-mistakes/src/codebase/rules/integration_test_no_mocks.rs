@@ -77,11 +77,15 @@ fn candidate_files(
     all_files
         .iter()
         .filter(|path| {
-            if target_roots.is_empty() && has_test_target(rule) {
+            let allowed_by_scope = if target_roots.is_empty() {
                 !crate::codebase::ts_source::is_under_skipped_dir(root, path, skip)
-                    && test_targets::selected_match(root, config, rule, path)
             } else {
                 super::file_allowed_by_roots_and_skip(root, skip, path, target_roots)
+            };
+            if has_test_target(rule) {
+                allowed_by_scope && test_targets::selected_match(root, config, rule, path)
+            } else {
+                allowed_by_scope
             }
         })
         .cloned()

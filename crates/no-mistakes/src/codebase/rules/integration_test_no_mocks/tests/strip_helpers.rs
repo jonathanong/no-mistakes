@@ -48,6 +48,24 @@ fn strip_helpers_preserve_offsets_for_unclosed_and_escaped_tokens() {
         true,
     );
     assert!(!template_regex_text.contains("vi"), "{template_regex_text}");
+    let preserved_template_regex =
+        strip::comments_and_regex_literals("const value = `${/from \"msw\"/.test(source)}`");
+    assert!(
+        !preserved_template_regex.contains("msw"),
+        "{preserved_template_regex}"
+    );
+    assert_eq!(
+        strip::comments_and_regex_literals("const value = `open\\x`"),
+        "const value = `open\\x`"
+    );
+    assert_eq!(
+        strip::comments_and_regex_literals("const value = `${'open\\}`"),
+        "const value = `${'open\\}`"
+    );
+    assert_eq!(
+        strip::comments_and_regex_literals("const value = `${'open\\"),
+        "const value = `${'open\\"
+    );
     let template_regex_brace = strip::strip(
         "const value = `${/\\}/.test(source) ? vi.fn() : value}`",
         true,

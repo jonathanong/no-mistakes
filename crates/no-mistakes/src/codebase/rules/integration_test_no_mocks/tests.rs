@@ -5,6 +5,7 @@ use crate::config::v2::{
 };
 use std::path::PathBuf;
 
+mod candidate_files;
 mod strip_helpers;
 
 fn fixture(name: &str) -> PathBuf {
@@ -362,7 +363,7 @@ fn ignores_module_specifiers_inside_regex_literals() {
 fn detects_calls_and_modules_inside_template_expressions() {
     let findings = findings("template-expression");
 
-    assert_eq!(findings.len(), 6, "{findings:#?}");
+    assert_eq!(findings.len(), 7, "{findings:#?}");
     assert!(findings
         .iter()
         .any(|finding| finding.line == 1 && finding.import.as_deref() == Some("vi.mock")));
@@ -385,6 +386,9 @@ fn detects_calls_and_modules_inside_template_expressions() {
     assert!(findings
         .iter()
         .any(|finding| finding.line == 5 && finding.import.as_deref() == Some("nock")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.line == 10 && finding.import.as_deref() == Some("nock")));
     assert!(findings.iter().all(|finding| finding.line != 6
         && finding.line != 7
         && finding.line != 8

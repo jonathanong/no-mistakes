@@ -186,5 +186,11 @@ fn count_marker(bytes: &[u8], marker: u8) -> usize {
 }
 
 fn push_masked_line(line: &str, out: &mut String) {
-    out.extend(line.chars().map(|ch| if ch == '\n' { '\n' } else { ' ' }));
+    for ch in line.chars() {
+        if ch == '\n' {
+            out.push('\n');
+        } else {
+            out.extend(std::iter::repeat_n(' ', ch.len_utf8()));
+        }
+    }
 }

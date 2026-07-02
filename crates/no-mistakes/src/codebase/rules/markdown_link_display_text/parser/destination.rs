@@ -7,6 +7,9 @@ pub(super) fn end(bytes: &[u8], start: usize) -> Option<usize> {
     while index < bytes.len() {
         match bytes[index] {
             b'\\' => index = (index + 2).min(bytes.len()),
+            b'\'' | b'"' => {
+                index = skip_quoted_title(bytes, index)?;
+            }
             b'(' => {
                 paren_depth += 1;
                 index += 1;
@@ -16,6 +19,19 @@ pub(super) fn end(bytes: &[u8], start: usize) -> Option<usize> {
                 paren_depth -= 1;
                 index += 1;
             }
+            _ => index += 1,
+        }
+    }
+    None
+}
+
+fn skip_quoted_title(bytes: &[u8], start: usize) -> Option<usize> {
+    let quote = bytes[start];
+    let mut index = start + 1;
+    while index < bytes.len() {
+        match bytes[index] {
+            b'\\' => index = (index + 2).min(bytes.len()),
+            byte if byte == quote => return Some(index + 1),
             _ => index += 1,
         }
     }

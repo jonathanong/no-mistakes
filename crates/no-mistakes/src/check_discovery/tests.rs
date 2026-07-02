@@ -97,6 +97,9 @@ fn discover_check_files_preserves_included_fixture_roots() {
     assert!(files
         .iter()
         .any(|path| path.ends_with("web/fixtures/project-users.json")));
+    assert!(!files
+        .iter()
+        .any(|path| path.ends_with("generated/fixtures/ignored-users.json")));
 }
 
 #[test]
@@ -112,7 +115,8 @@ fn literal_include_prefix_stops_before_brace_alternation() {
     assert_eq!(leading_globstar_literal_prefix("**/*.ts"), None);
     assert!(descendant_dirs_matching_suffix(
         &PathBuf::from("/missing-no-mistakes-fixture-root"),
-        &PathBuf::from("fixtures")
+        &PathBuf::from("fixtures"),
+        &[]
     )
     .is_empty());
 }
@@ -131,7 +135,7 @@ fn include_preserved_roots_ignore_unknown_projects() {
     };
 
     assert_eq!(
-        include_preserved_roots(&root, &config),
+        include_preserved_roots(&root, &config, &[]),
         vec![root.join("fixtures")]
     );
 }

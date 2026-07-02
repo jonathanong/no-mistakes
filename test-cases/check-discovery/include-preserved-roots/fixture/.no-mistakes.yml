@@ -1,6 +1,7 @@
 filesystem:
   skipDirectories:
     - fixtures
+    - generated
 projects:
   web:
     root: web
