@@ -75,6 +75,38 @@ const server = await import('msw/node')
 }
 
 #[test]
+fn detects_modules_after_comment_markers_inside_strings() {
+    let source = r#"
+const url = "http://example.test"
+const nock = require("nock")
+"#;
+    let findings = findings(source);
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].line, 3);
+    assert_eq!(findings[0].import.as_deref(), Some("nock"));
+}
+
+#[test]
+fn detects_wrapped_dynamic_imports_and_requires() {
+    let source = "\
+const server = await import(
+  'msw/node'
+)
+const nock = require(
+  'nock'
+)
+";
+    let findings = findings(source);
+
+    assert_eq!(findings.len(), 2, "{findings:#?}");
+    assert_eq!(findings[0].line, 1);
+    assert_eq!(findings[0].import.as_deref(), Some("msw"));
+    assert_eq!(findings[1].line, 4);
+    assert_eq!(findings[1].import.as_deref(), Some("nock"));
+}
+
+#[test]
 fn strip_helpers_preserve_offsets_for_unclosed_and_escaped_tokens() {
     assert_eq!(
         strip::comments("before /* unclosed\nvi.fn()"),
@@ -92,20 +124,12 @@ fn strip_helpers_preserve_offsets_for_unclosed_and_escaped_tokens() {
 
 #[test]
 fn module_matches_ignore_closed_string_literals_before_real_imports() {
-    let regex = Regex::new(&module_pattern("msw")).unwrap();
+    let results = findings(r#"const note = "import('msw')"; import real from 'msw/node'"#);
 
-    assert!(has_match_outside_string(
-        r#"const note = "import('msw')"; import real from 'msw/node'"#,
-        &regex
-    ));
-    assert!(!has_match_outside_string(
-        r#"const note = "import('msw/node')""#,
-        &regex
-    ));
-    assert!(!has_match_outside_string(
-        r#"const note = "escaped \\ before import('msw/node')""#,
-        &regex
-    ));
+    assert_eq!(results.len(), 1, "{results:#?}");
+    assert_eq!(results[0].import.as_deref(), Some("msw"));
+    assert!(findings(r#"const note = "import('msw/node')""#).is_empty());
+    assert!(findings(r#"const note = "escaped \\ before import('msw/node')""#).is_empty());
 }
 
 #[test]

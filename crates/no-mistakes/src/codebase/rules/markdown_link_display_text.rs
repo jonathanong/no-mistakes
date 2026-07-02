@@ -107,7 +107,7 @@ fn looks_like_md_filename(text: &str) -> bool {
 }
 
 fn href_basename(href: &str) -> Option<String> {
-    let bare = strip_angle_wrappers(href);
+    let bare = href_destination(href);
     let before_fragment = bare.split('#').next().unwrap_or_default();
     let before_query = before_fragment.split('?').next().unwrap_or_default();
     if before_query.ends_with('/') {
@@ -121,7 +121,7 @@ fn href_basename(href: &str) -> Option<String> {
 }
 
 fn is_non_local_href(href: &str) -> bool {
-    let bare = strip_angle_wrappers(href);
+    let bare = href_destination(href);
     bare.starts_with('#')
         || bare.starts_with("http://")
         || bare.starts_with("https://")
@@ -129,11 +129,16 @@ fn is_non_local_href(href: &str) -> bool {
         || bare.starts_with("//")
 }
 
-fn strip_angle_wrappers(value: &str) -> &str {
-    if value.starts_with('<') && value.ends_with('>') {
-        &value[1..value.len() - 1]
+fn href_destination(value: &str) -> &str {
+    let trimmed = value.trim();
+    if let Some(rest) = trimmed.strip_prefix('<') {
+        if let Some(end) = rest.find('>') {
+            &rest[..end]
+        } else {
+            trimmed
+        }
     } else {
-        value
+        trimmed.split_ascii_whitespace().next().unwrap_or_default()
     }
 }
 

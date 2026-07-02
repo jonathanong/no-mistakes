@@ -1,5 +1,5 @@
 use super::RuleFinding;
-use crate::codebase::ts_source::relative_slash_path;
+use crate::codebase::ts_source::{byte_offset_to_line, relative_slash_path};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
@@ -134,16 +134,11 @@ fn check_file(root: &Path, path: &Path, compiled: &CompiledOptions) -> Vec<RuleF
     let comments_removed = strip::comments(&content);
     let strings_removed = strip::comments_and_strings(&content);
     let mut findings = Vec::new();
-    for (index, (call_line, module_line)) in strings_removed
-        .lines()
-        .zip(comments_removed.lines())
-        .enumerate()
-    {
+    for (index, call_line) in strings_removed.lines().enumerate() {
         if call_line.trim_start().starts_with('*') {
             continue;
         }
-        if let Some(label) = first_match(call_line, module_line, &compiled.calls, &compiled.modules)
-        {
+        if let Some(label) = first_call_match(call_line, &compiled.calls) {
             findings.push(RuleFinding {
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
@@ -156,31 +151,41 @@ fn check_file(root: &Path, path: &Path, compiled: &CompiledOptions) -> Vec<RuleF
             });
         }
     }
+    findings.extend(module_findings(&rel, &comments_removed, &compiled.modules));
     findings
 }
 
-fn first_match(
-    call_line: &str,
-    module_line: &str,
-    calls: &[(String, Regex)],
-    modules: &[(String, Regex)],
-) -> Option<String> {
+fn first_call_match(call_line: &str, calls: &[(String, Regex)]) -> Option<String> {
     calls
         .iter()
         .find(|(_, regex)| regex.is_match(call_line))
         .map(|(label, _)| label.clone())
-        .or_else(|| {
-            modules
-                .iter()
-                .find(|(_, regex)| has_match_outside_string(module_line, regex))
-                .map(|(label, _)| label.clone())
-        })
 }
 
-fn has_match_outside_string(line: &str, regex: &Regex) -> bool {
-    regex
-        .find_iter(line)
-        .any(|matched| !is_inside_string(line.as_bytes(), matched.start()))
+fn module_findings(
+    rel: &str,
+    comments_removed: &str,
+    modules: &[(String, Regex)],
+) -> Vec<RuleFinding> {
+    modules
+        .iter()
+        .flat_map(|(label, regex)| {
+            regex
+                .find_iter(comments_removed)
+                .filter(|matched| !is_inside_string(comments_removed.as_bytes(), matched.start()))
+                .map(|matched| RuleFinding {
+                    rule: RULE_ID.to_string(),
+                    file: rel.to_string(),
+                    line: byte_offset_to_line(comments_removed, matched.start()) as usize,
+                    message: format!(
+                        "{rel}: integration tests must not use mocking libraries (`{label}`); use real dependencies and test helpers instead"
+                    ),
+                    import: Some(label.clone()),
+                    target: None,
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect()
 }
 
 fn is_inside_string(bytes: &[u8], target: usize) -> bool {

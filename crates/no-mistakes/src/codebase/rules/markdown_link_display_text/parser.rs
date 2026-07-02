@@ -83,31 +83,54 @@ fn find_byte(bytes: &[u8], start: usize, target: u8) -> Option<usize> {
 
 fn strip_fenced_code(source: &str) -> String {
     let mut out = String::with_capacity(source.len());
-    let mut in_fence: Option<&str> = None;
+    let mut in_fence: Option<Fence> = None;
     for line in source.split_inclusive('\n') {
-        let trimmed = line.trim_start_matches([' ', '\t']);
-        let indent = line.len() - trimmed.len();
-        let marker = if indent <= 3 && trimmed.starts_with("```") {
-            Some("```")
-        } else if indent <= 3 && trimmed.starts_with("~~~") {
-            Some("~~~")
-        } else {
-            None
-        };
+        let marker = fence_marker(line);
         match (in_fence, marker) {
             (None, Some(marker)) => {
                 in_fence = Some(marker);
-                out.push_str(&"\n".repeat(line.matches('\n').count()));
+                push_masked_line(line, &mut out);
             }
-            (Some(active), Some(marker)) if active == marker => {
+            (Some(active), Some(marker))
+                if active.marker == marker.marker && marker.len >= active.len =>
+            {
                 in_fence = None;
-                out.push_str(&"\n".repeat(line.matches('\n').count()));
+                push_masked_line(line, &mut out);
             }
             (Some(_), _) => {
-                out.push_str(&"\n".repeat(line.matches('\n').count()));
+                push_masked_line(line, &mut out);
             }
             (None, _) => out.push_str(line),
         }
     }
     out
+}
+
+#[derive(Clone, Copy)]
+struct Fence {
+    marker: u8,
+    len: usize,
+}
+
+fn fence_marker(line: &str) -> Option<Fence> {
+    let trimmed = line.trim_start_matches([' ', '\t']);
+    let indent = line.len() - trimmed.len();
+    if indent > 3 {
+        return None;
+    }
+    let bytes = trimmed.as_bytes();
+    let marker = *bytes.first()?;
+    if marker != b'`' && marker != b'~' {
+        return None;
+    }
+    let len = count_marker(bytes, marker);
+    (len >= 3).then_some(Fence { marker, len })
+}
+
+fn count_marker(bytes: &[u8], marker: u8) -> usize {
+    bytes.iter().take_while(|byte| **byte == marker).count()
+}
+
+fn push_masked_line(line: &str, out: &mut String) {
+    out.extend(line.chars().map(|ch| if ch == '\n' { '\n' } else { ' ' }));
 }

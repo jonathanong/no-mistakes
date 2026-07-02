@@ -18,8 +18,12 @@ fn strip(content: &str, strings: bool) -> String {
             b'/' if bytes.get(index + 1) == Some(&b'*') => {
                 index = push_block_comment(bytes, index + 2, &mut out);
             }
-            b'\'' | b'"' | b'`' if strings => {
-                index = push_string(bytes, index, &mut out);
+            b'\'' | b'"' | b'`' => {
+                index = if strings {
+                    push_erased_string(bytes, index, &mut out)
+                } else {
+                    push_preserved_string(bytes, index, &mut out)
+                };
             }
             byte => {
                 out.push(byte as char);
@@ -56,7 +60,7 @@ fn push_block_comment(bytes: &[u8], mut index: usize, out: &mut String) -> usize
     index
 }
 
-fn push_string(bytes: &[u8], start: usize, out: &mut String) -> usize {
+fn push_erased_string(bytes: &[u8], start: usize, out: &mut String) -> usize {
     let quote = bytes[start];
     out.push(' ');
     let mut index = start + 1;
@@ -74,6 +78,29 @@ fn push_string(bytes: &[u8], start: usize, out: &mut String) -> usize {
             return index + 1;
         } else {
             out.push(if bytes[index] == b'\n' { '\n' } else { ' ' });
+            index += 1;
+        }
+    }
+    index
+}
+
+fn push_preserved_string(bytes: &[u8], start: usize, out: &mut String) -> usize {
+    let quote = bytes[start];
+    out.push(quote as char);
+    let mut index = start + 1;
+    while index < bytes.len() {
+        let byte = bytes[index];
+        out.push(byte as char);
+        if byte == b'\\' {
+            if let Some(next) = bytes.get(index + 1) {
+                out.push(*next as char);
+                index += 2;
+            } else {
+                index += 1;
+            }
+        } else if byte == quote {
+            return index + 1;
+        } else {
             index += 1;
         }
     }

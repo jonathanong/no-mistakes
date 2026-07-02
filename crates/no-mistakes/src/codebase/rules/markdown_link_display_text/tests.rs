@@ -24,7 +24,7 @@ fn flags_bare_markdown_filename_text_mismatch() {
 #[test]
 fn allows_matching_and_descriptive_links() {
     let findings = findings(
-        "[target.md](../docs/target.md#section)\n[see the contributing guide](CONTRIBUTING.md)\n[with spaces.md](other.md)\n",
+        "[target.md](../docs/target.md#section)\n[README.md](docs/README.md \"reference\")\n[see the contributing guide](CONTRIBUTING.md)\n[with spaces.md](other.md)\n",
     );
 
     assert!(findings.is_empty(), "{findings:#?}");
@@ -76,6 +76,16 @@ fn skips_escaped_backticks_inside_matched_inline_code() {
 
     assert_eq!(links.len(), 1, "{links:#?}");
     assert_eq!(links[0].text, "REAL.md");
+}
+
+#[test]
+fn long_fences_preserve_offsets_and_ignore_short_inner_fences() {
+    let findings =
+        findings("````markdown\n```markdown\n[OLD.md](new.md)\n```\n````\n[REAL.md](actual.md)\n");
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].line, 6);
+    assert_eq!(findings[0].import.as_deref(), Some("REAL.md"));
 }
 
 #[test]
