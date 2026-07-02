@@ -6,13 +6,17 @@ pub(super) fn rule_has_effective_test_target(rule: &RuleDef) -> bool {
 }
 
 fn rule_supports_vitest_test_targets(rule_id: &str) -> bool {
-    matches!(rule_id, "test-no-unmocked-dynamic-imports")
+    matches!(
+        rule_id,
+        "integration-test-no-mocks" | "test-no-unmocked-dynamic-imports"
+    )
 }
 
 fn rule_supports_playwright_test_targets(rule_id: &str) -> bool {
     matches!(
         rule_id,
-        "test-no-unmocked-dynamic-imports"
+        "integration-test-no-mocks"
+            | "test-no-unmocked-dynamic-imports"
             | "playwright-coverage"
             | "playwright-unique-test-ids"
             | "playwright-unique-html-ids"

@@ -250,6 +250,95 @@ fn vitest_ci_path_coverage_appears_in_cli_json() {
 }
 
 #[test]
+fn migrated_generic_content_rules_run_through_filesystem_dispatch() {
+    let integration_root = rule_fixture("integration-test-no-mocks");
+    let integration = no_mistakes::codebase::rules::run_filesystem_rules(
+        &integration_root,
+        Some(&integration_root.join(".no-mistakes.yml")),
+    )
+    .unwrap();
+    let integration_body = format!("{integration:?}");
+    assert!(
+        integration.iter().any(|finding| finding.rule
+            == no_mistakes::codebase::rules::INTEGRATION_TEST_NO_MOCKS
+            && finding.file == "integration-tests/web-api/mocked.test.mts"
+            && finding.import.as_deref() == Some("vi.mock")),
+        "{integration_body}"
+    );
+    assert!(
+        integration
+            .iter()
+            .any(|finding| finding.import.as_deref() == Some("msw")),
+        "{integration_body}"
+    );
+    assert!(
+        !integration_body.contains("backend/service.mock.test.mts"),
+        "{integration_body}"
+    );
+
+    let email_root = rule_fixture("test-email-domain-policy");
+    let email = no_mistakes::codebase::rules::run_filesystem_rules(
+        &email_root,
+        Some(&email_root.join(".no-mistakes.yml")),
+    )
+    .unwrap();
+    let email_body = format!("{email:?}");
+    assert!(
+        email.iter().any(|finding| finding.rule
+            == no_mistakes::codebase::rules::TEST_EMAIL_DOMAIN_POLICY
+            && finding.file == "backend/services/emails/send.test.mts"
+            && finding.target.as_deref() == Some("example.com")),
+        "{email_body}"
+    );
+    assert!(
+        email
+            .iter()
+            .any(|finding| finding.file == "email-templates/__snapshots__/login.txt"),
+        "{email_body}"
+    );
+    assert!(!email_body.contains("source.mts"), "{email_body}");
+
+    let markdown_root = rule_fixture("markdown-link-display-text");
+    let markdown = no_mistakes::codebase::rules::run_filesystem_rules(
+        &markdown_root,
+        Some(&markdown_root.join(".no-mistakes.yml")),
+    )
+    .unwrap();
+    let markdown_body = format!("{markdown:?}");
+    assert_eq!(markdown.len(), 2, "{markdown_body}");
+    assert!(
+        markdown.iter().any(|finding| {
+            finding.rule == no_mistakes::codebase::rules::MARKDOWN_LINK_DISPLAY_TEXT
+                && finding.import.as_deref() == Some("SOURCE-STORIES.md")
+                && finding.target.as_deref() == Some("news-story-clusters.md")
+        }),
+        "{markdown_body}"
+    );
+}
+
+#[test]
+fn migrated_generic_content_rules_appear_in_cli_json() {
+    let root = rule_fixture("markdown-link-display-text");
+    let out = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let body = stdout(&out);
+    let json: serde_json::Value = serde_json::from_str(&body).expect("stdout should be json");
+
+    assert!(!out.status.success(), "expected markdown link finding");
+    assert!(json["rules"].as_array().unwrap().iter().any(|finding| {
+        finding["rule"] == "markdown-link-display-text"
+            && finding["file"] == "docs/bad.md"
+            && finding["target"] == "news-story-clusters.md"
+    }));
+}
+
+#[test]
 fn vitest_ci_path_coverage_supports_no_mistakes_suppression() {
     let root = rule_fixture_scenario("vitest-ci-path-coverage", "suppressed");
     let findings = no_mistakes::codebase::rules::run_filesystem_rules(

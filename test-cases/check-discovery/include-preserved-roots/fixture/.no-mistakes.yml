@@ -1,0 +1,24 @@
+filesystem:
+  skipDirectories:
+    - fixtures
+    - generated
+projects:
+  web:
+    root: web
+rules:
+  - rule: test-email-domain-policy
+    scope: repository
+    include:
+      - fixtures/**
+      - "**/fixtures/**"
+    options:
+      bannedDomains:
+        - example.com
+  - rule: test-email-domain-policy
+    projects:
+      - web
+    include:
+      - fixtures/**
+    options:
+      bannedDomains:
+        - example.com

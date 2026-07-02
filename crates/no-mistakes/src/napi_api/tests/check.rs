@@ -60,3 +60,22 @@ fn check_json_returns_non_blocking_agent_doc_advisories() {
                     .is_some_and(|message| message.contains("8 remaining"))
         }));
 }
+
+#[test]
+fn check_json_returns_migrated_filesystem_rules() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/markdown-link-display-text/fixture");
+    let options = json!({
+        "root": root,
+        "config": ".no-mistakes.yml"
+    })
+    .to_string();
+    let output = check_json_impl(options).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert!(value["rules"].as_array().unwrap().iter().any(|finding| {
+        finding["rule"] == "markdown-link-display-text"
+            && finding["file"] == "docs/bad.md"
+            && finding["target"] == "news-story-clusters.md"
+    }));
+}

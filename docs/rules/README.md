@@ -30,7 +30,9 @@ rules:
 | [`finite-set-consistency`](finite-set-consistency.md) | Compare finite string sets extracted from source and paths. |
 | [`github-actions-pinned-hash`](github-actions-pinned-hash.md) | Require every `uses:` step to be pinned to a commit SHA with a version comment. |
 | [`forbidden-dependencies`](forbidden-dependencies.md) | Prevent configured files/modules from depending on forbidden targets. |
+| [`integration-test-no-mocks`](integration-test-no-mocks.md) | Ban mocking libraries and mock helpers in integration tests. |
 | [`lockfile-allowlist`](lockfile-allowlist.md) | Allow only configured package lock files. |
+| [`markdown-link-display-text`](markdown-link-display-text.md) | Require Markdown link text to match the linked file basename. |
 | [`nextjs-no-api-routes`](nextjs-no-api-routes.md) | Ban Next.js API route files. |
 | [`nextjs-no-caching`](nextjs-no-caching.md) | Ban Next.js caching features. |
 | [`no-empty-or-comments-only-files`](no-empty-or-comments-only-files.md) | Ban empty/comment-only files. |
@@ -54,6 +56,7 @@ rules:
 | [`shellcheck-runner`](shellcheck-runner.md) | Run ShellCheck for shell files/scripts. |
 | [`strict-package-layout`](strict-package-layout.md) | Enforce configured package file layout. |
 | [`structured-config-policy`](structured-config-policy.md) | Require or ban structured config keys. |
+| [`test-email-domain-policy`](test-email-domain-policy.md) | Ban configured email domains in tracked fixtures and docs. |
 | [`test-no-unmocked-dynamic-imports`](test-no-unmocked-dynamic-imports.md) | Require dynamic imports in tests to be mocked. |
 | [`tsconfig-alias-folder-mapping`](tsconfig-alias-folder-mapping.md) | Enforce alias/folder consistency. |
 | [`unique-exports`](unique-exports.md) | Prevent ambiguous duplicate public export names. |

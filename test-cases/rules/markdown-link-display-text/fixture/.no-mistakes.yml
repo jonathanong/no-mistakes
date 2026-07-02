@@ -1,0 +1,5 @@
+rules:
+  - rule: markdown-link-display-text
+    scope: repository
+    include:
+      - '**/*.md'

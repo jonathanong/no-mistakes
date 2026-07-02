@@ -1,0 +1,14 @@
+rules:
+  - rule: test-email-domain-policy
+    scope: repository
+    include:
+      - '**/*.test.*'
+      - '**/*.spec.*'
+      - '**/__tests__/**'
+      - '**/__snapshots__/**'
+      - '**/fixtures/**'
+    options:
+      bannedDomains: [example.com]
+      allowedEmailPatterns:
+        - '(?i)^tests(?:\+[a-z0-9._%${}-]+|%2b[a-z0-9._%${}-]+)(?:@|%40)voucha\.ai$'
+      replacement: tests+<hash>@voucha.ai
