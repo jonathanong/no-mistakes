@@ -82,6 +82,18 @@ fn discover_check_files_does_not_rescan_repository_root() {
 }
 
 #[test]
+fn discover_check_files_preserves_included_fixture_roots() {
+    let root = fixture("check-discovery/include-preserved-roots");
+    let config = load_config(&root);
+
+    let files = discover_check_files(&root, &config, &[], false);
+
+    assert!(files
+        .iter()
+        .any(|path| path.ends_with("fixtures/users.json")));
+}
+
+#[test]
 fn nextjs_project_without_single_config_root_is_ignored() {
     let root = fixture("check-discovery/nextjs-without-config");
     let config = load_config(&root);

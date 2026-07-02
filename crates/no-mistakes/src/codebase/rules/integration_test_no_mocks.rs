@@ -14,6 +14,7 @@ pub const RULE_ID: &str = "integration-test-no-mocks";
 mod calls;
 mod strings;
 mod strip;
+mod test_targets;
 
 const DEFAULT_FORBIDDEN_CALLS: &[&str] = &[
     "vi.mock",
@@ -54,7 +55,7 @@ pub(crate) fn check_with_files(
             let opts: Options = rule.rule_options();
             let target_roots = super::target_roots(root, config, rule);
             let skip = super::skip_dir_set(config);
-            let files = candidate_files(root, all_files, &skip, &target_roots, rule);
+            let files = candidate_files(root, config, all_files, &skip, &target_roots, rule);
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
             scan(root, &opts, &files)
         })
@@ -66,6 +67,7 @@ pub(crate) fn check_with_files(
 
 fn candidate_files(
     root: &Path,
+    config: &NoMistakesConfig,
     all_files: &[PathBuf],
     skip: &HashSet<&str>,
     target_roots: &[PathBuf],
@@ -74,7 +76,10 @@ fn candidate_files(
     all_files
         .iter()
         .filter(|path| {
-            if target_roots.is_empty() && has_test_target(rule) {
+            if target_roots.is_empty() && has_test_target(rule) && rule.include.is_empty() {
+                !crate::codebase::ts_source::is_under_skipped_dir(root, path, skip)
+                    && test_targets::selected_match(root, config, rule, path)
+            } else if target_roots.is_empty() && has_test_target(rule) {
                 !crate::codebase::ts_source::is_under_skipped_dir(root, path, skip)
             } else {
                 super::file_allowed_by_roots_and_skip(root, skip, path, target_roots)

@@ -86,6 +86,8 @@ fn handles_reference_style_edge_cases() {
         parser::markdown_links_outside_code("[OLD.md][story]\n\n[story]: <docs/new.md");
     assert_eq!(unclosed_angle.len(), 1, "{unclosed_angle:#?}");
     assert_eq!(unclosed_angle[0].href, "<docs/new.md");
+
+    assert!(parser::markdown_links_outside_code("[OLD.md][ ]\n\n[OLD.md]: docs/new.md").is_empty());
 }
 
 #[test]
@@ -149,6 +151,44 @@ fn masks_code_before_html_comments() {
     assert_eq!(findings.len(), 2, "{findings:#?}");
     assert_eq!(findings[0].line, 4);
     assert_eq!(findings[1].line, 6);
+
+    let links = parser::markdown_links_outside_code(
+        "``<!-- ` not closed`` [OLD.md](new.md)\n`<!--\n-->` [OLD2.md](new2.md)",
+    );
+    assert_eq!(links.len(), 2, "{links:#?}");
+    assert_eq!(links[0].text, "OLD.md");
+    assert_eq!(links[1].text, "OLD2.md");
+}
+
+#[test]
+fn skips_links_inside_raw_html_blocks() {
+    let findings = findings("raw-html");
+
+    assert!(findings.is_empty(), "{findings:#?}");
+
+    let links = parser::markdown_links_outside_code(
+        "<PRE class=\"code\">[OLD.md](new.md)</PRE>\n<script\tdefer>[OLD2.md](new2.md)</script>\n<style\n>[OLD3.md](new3.md)</style>",
+    );
+    assert!(links.is_empty(), "{links:#?}");
+}
+
+#[test]
+fn allows_percent_encoded_local_basenames() {
+    let findings = findings("percent-encoded");
+
+    assert!(findings.is_empty(), "{findings:#?}");
+    assert_eq!(href_basename("docs/a%2fb.md").as_deref(), Some("a/b.md"));
+    assert_eq!(href_basename("docs/a%2Fb.md").as_deref(), Some("a/b.md"));
+    assert_eq!(href_basename("docs/a%zz.md").as_deref(), Some("a%zz.md"));
+    assert_eq!(href_basename("docs/a%.md").as_deref(), Some("a%.md"));
+}
+
+#[test]
+fn preserves_offsets_after_non_ascii_inline_code() {
+    let findings = findings("non-ascii-offset");
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].line, 2);
 }
 
 #[test]

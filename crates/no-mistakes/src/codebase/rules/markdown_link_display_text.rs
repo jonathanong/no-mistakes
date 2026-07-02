@@ -122,7 +122,38 @@ fn href_basename(href: &str) -> Option<String> {
         .rsplit('/')
         .next()
         .filter(|basename| !basename.is_empty())
-        .map(ToString::to_string)
+        .map(percent_decode)
+}
+
+fn percent_decode(value: &str) -> String {
+    let bytes = value.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut index = 0usize;
+    while index < bytes.len() {
+        if bytes[index] == b'%' {
+            if let Some(decoded) = decode_hex_byte(bytes.get(index + 1), bytes.get(index + 2)) {
+                out.push(decoded);
+                index += 3;
+                continue;
+            }
+        }
+        out.push(bytes[index]);
+        index += 1;
+    }
+    String::from_utf8(out).unwrap_or_else(|_| value.to_string())
+}
+
+fn decode_hex_byte(high: Option<&u8>, low: Option<&u8>) -> Option<u8> {
+    Some(hex_value(*high?)? * 16 + hex_value(*low?)?)
+}
+
+fn hex_value(byte: u8) -> Option<u8> {
+    match byte {
+        b'0'..=b'9' => Some(byte - b'0'),
+        b'a'..=b'f' => Some(byte - b'a' + 10),
+        b'A'..=b'F' => Some(byte - b'A' + 10),
+        _ => None,
+    }
 }
 
 fn is_non_local_href(href: &str) -> bool {

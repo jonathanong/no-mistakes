@@ -7,7 +7,12 @@ pub(crate) fn discover_check_files(
     skip_directories: &[String],
     unique_exports_enabled: bool,
 ) -> Vec<PathBuf> {
-    let mut files = no_mistakes::codebase::ts_source::discover_files(root, skip_directories);
+    let preserved_roots = include_preserved_roots(root, config);
+    let mut files = no_mistakes::codebase::ts_source::discover_files_preserving_roots(
+        root,
+        skip_directories,
+        &preserved_roots,
+    );
     if unique_exports_enabled {
         for project_root in unique_exports_project_roots(root, config) {
             if project_root == root {
@@ -22,6 +27,32 @@ pub(crate) fn discover_check_files(
     files.sort();
     files.dedup();
     files
+}
+
+fn include_preserved_roots(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
+    let mut roots = Vec::new();
+    for rule in config.rules.iter().filter(|rule| rule.enabled) {
+        for include in &rule.include {
+            if let Some(prefix) = literal_include_prefix(include) {
+                roots.push(root.join(prefix));
+            }
+        }
+    }
+    roots.sort();
+    roots.dedup();
+    roots
+}
+
+fn literal_include_prefix(include: &str) -> Option<PathBuf> {
+    let prefix = include
+        .split(['*', '?', '['])
+        .next()
+        .unwrap_or_default()
+        .trim_end_matches('/');
+    if prefix.is_empty() {
+        return None;
+    }
+    Some(PathBuf::from(prefix))
 }
 
 fn unique_exports_project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {

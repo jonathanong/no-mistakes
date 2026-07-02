@@ -88,6 +88,92 @@ fn test_target_only_rules_keep_files_for_include_filtering() {
 }
 
 #[test]
+fn test_target_only_rules_use_configured_test_file_filter() {
+    let root = fixture("defaults");
+    let file = root.join("example.test.mts");
+    let config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            tests: RuleTestTargets {
+                vitest: vec!["integration".to_string()],
+                ..Default::default()
+            },
+            ..Default::default()
+        }],
+        tests: crate::config::v2::schema::Tests {
+            vitest: crate::config::v2::schema::VitestConfig {
+                projects: std::collections::BTreeMap::from([(
+                    "integration".to_string(),
+                    crate::config::v2::schema::TestProjectPolicy {
+                        include: vec!["integration-tests/**/*.test.mts".to_string()],
+                        ..Default::default()
+                    },
+                )]),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+
+    let findings = check_with_files(&root, &config, &[file]).unwrap();
+
+    assert!(
+        findings.is_empty(),
+        "unmatched test file should not be scanned: {findings:#?}"
+    );
+}
+
+#[test]
+fn selected_test_target_match_handles_playwright_excludes_and_empty_policies() {
+    let root = fixture("defaults");
+    let config = NoMistakesConfig {
+        tests: crate::config::v2::schema::Tests {
+            playwright: crate::config::v2::schema::PlaywrightTestConfig {
+                projects: std::collections::BTreeMap::from([
+                    (
+                        "e2e".to_string(),
+                        crate::config::v2::schema::TestProjectPolicy {
+                            include: vec!["tests/e2e/**/*.test.mts".to_string()],
+                            exclude: vec!["tests/e2e/skip/**/*.test.mts".to_string()],
+                            ..Default::default()
+                        },
+                    ),
+                    (
+                        "empty".to_string(),
+                        crate::config::v2::schema::TestProjectPolicy::default(),
+                    ),
+                ]),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let rule = RuleDef {
+        rule: RULE_ID.to_string(),
+        tests: RuleTestTargets {
+            playwright: vec!["e2e".to_string(), "empty".to_string()],
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+
+    assert!(test_targets::selected_match(
+        &root,
+        &config,
+        &rule,
+        &root.join("tests/e2e/login.test.mts")
+    ));
+    assert!(!test_targets::selected_match(
+        &root,
+        &config,
+        &rule,
+        &root.join("tests/e2e/skip/login.test.mts")
+    ));
+}
+
+#[test]
 fn strips_comments_and_strings_without_hiding_real_code() {
     let findings = findings("strings");
 

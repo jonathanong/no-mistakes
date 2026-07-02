@@ -18,8 +18,12 @@ pub(super) fn mask(source: &str) -> String {
                 index += 1;
             }
         } else {
-            out.push(bytes[index] as char);
-            index += 1;
+            let ch = source[index..]
+                .chars()
+                .next()
+                .expect("index is within source");
+            out.push(ch);
+            index += ch.len_utf8();
         }
     }
     out
@@ -48,5 +52,11 @@ fn count_backticks(bytes: &[u8], start: usize) -> usize {
 }
 
 fn push_masked(value: &str, out: &mut String) {
-    out.extend(value.chars().map(|ch| if ch == '\n' { '\n' } else { 'x' }));
+    for ch in value.chars() {
+        if ch == '\n' {
+            out.push('\n');
+        } else {
+            out.extend(std::iter::repeat_n('x', ch.len_utf8()));
+        }
+    }
 }
