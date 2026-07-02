@@ -143,6 +143,15 @@ fn ignores_links_inside_html_comments() {
 }
 
 #[test]
+fn masks_code_before_html_comments() {
+    let findings = findings("html-comment-in-code");
+
+    assert_eq!(findings.len(), 2, "{findings:#?}");
+    assert_eq!(findings[0].line, 4);
+    assert_eq!(findings[1].line, 6);
+}
+
+#[test]
 fn parses_reference_style_links_outside_code() {
     let links = parser::markdown_links_outside_code(
         "[OLD.md][story]\n\n[story]: docs/news-story-clusters.md",

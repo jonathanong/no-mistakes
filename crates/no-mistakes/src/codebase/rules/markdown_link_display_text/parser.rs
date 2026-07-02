@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 mod html_comments;
 mod indent;
+mod inline_code;
 mod references;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -12,10 +13,11 @@ pub(super) struct InlineLink {
 }
 
 pub(super) fn markdown_links_outside_code(source: &str) -> Vec<InlineLink> {
-    let source = html_comments::mask(source);
-    let fenced = strip_fenced_code(&source);
-    let reference_definitions = references::definitions(&fenced);
-    scan_links(&fenced, &reference_definitions)
+    let fenced = strip_fenced_code(source);
+    let code = inline_code::mask(&fenced);
+    let comments = html_comments::mask(&code);
+    let reference_definitions = references::definitions(&comments);
+    scan_links(&comments, &reference_definitions)
 }
 
 fn scan_links(source: &str, reference_definitions: &HashMap<String, String>) -> Vec<InlineLink> {
