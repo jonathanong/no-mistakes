@@ -105,6 +105,25 @@ fn literal_include_prefix_stops_before_brace_alternation() {
 }
 
 #[test]
+fn include_preserved_roots_ignore_unknown_projects() {
+    let root = PathBuf::from("/repo");
+    let config = NoMistakesConfig {
+        rules: vec![no_mistakes::config::v2::schema::RuleDef {
+            rule: "test-email-domain-policy".to_string(),
+            projects: vec!["missing".to_string()],
+            include: vec!["fixtures/**".to_string()],
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+
+    assert_eq!(
+        include_preserved_roots(&root, &config),
+        vec![root.join("fixtures")]
+    );
+}
+
+#[test]
 fn nextjs_project_without_single_config_root_is_ignored() {
     let root = fixture("check-discovery/nextjs-without-config");
     let config = load_config(&root);
