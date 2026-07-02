@@ -110,6 +110,11 @@ fn literal_include_prefix_stops_before_brace_alternation() {
         Some(PathBuf::from("fixtures"))
     );
     assert_eq!(leading_globstar_literal_prefix("**/*.ts"), None);
+    assert!(descendant_dirs_matching_suffix(
+        &PathBuf::from("/missing-no-mistakes-fixture-root"),
+        &PathBuf::from("fixtures")
+    )
+    .is_empty());
 }
 
 #[test]

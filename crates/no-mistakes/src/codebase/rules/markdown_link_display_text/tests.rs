@@ -139,7 +139,11 @@ fn allows_parenthesized_local_markdown_filenames() {
     let (titled_angle_link, _) =
         parser::parse_inline_link("[OLD.md](<docs/new.md> \"details\")", 0).unwrap();
     assert_eq!(titled_angle_link.href, "<docs/new.md> \"details\"");
+    let (escaped_title_link, _) =
+        parser::parse_inline_link("[OLD.md](<docs/new.md> \"detail\\)s\")", 0).unwrap();
+    assert_eq!(escaped_title_link.href, "<docs/new.md> \"detail\\)s\"");
     assert!(parser::parse_inline_link("[x](docs/a(b.md)", 0).is_none());
+    assert!(parser::parse_inline_link("[x](<docs/a.md> \"title\"", 0).is_none());
 }
 
 #[test]
