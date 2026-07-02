@@ -69,6 +69,16 @@ fn handles_unmatched_escaped_and_multi_backtick_inline_code() {
 }
 
 #[test]
+fn skips_escaped_backticks_inside_matched_inline_code() {
+    let links = parser::inline_links_outside_code(
+        r#"See `[OLD.md](new.md) \` still code` and [REAL.md](actual.md)"#,
+    );
+
+    assert_eq!(links.len(), 1, "{links:#?}");
+    assert_eq!(links[0].text, "REAL.md");
+}
+
+#[test]
 fn covers_custom_extensions_non_matching_files_missing_files_and_malformed_links() {
     let tmp = tempfile::tempdir().unwrap();
     let mdx = tmp.path().join("docs/page.mdx");

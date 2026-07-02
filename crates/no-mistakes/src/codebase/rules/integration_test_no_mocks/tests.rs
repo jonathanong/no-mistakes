@@ -75,6 +75,40 @@ const server = await import('msw/node')
 }
 
 #[test]
+fn strip_helpers_preserve_offsets_for_unclosed_and_escaped_tokens() {
+    assert_eq!(
+        strip::comments("before /* unclosed\nvi.fn()"),
+        "before            \n       "
+    );
+    assert_eq!(
+        strip::comments_and_strings("const value = 'escaped\\' quote'\nconst tail = `open"),
+        "const value =                  \nconst tail =      "
+    );
+    assert_eq!(
+        strip::comments_and_strings("const tail = 'open\\"),
+        "const tail =       "
+    );
+}
+
+#[test]
+fn module_matches_ignore_closed_string_literals_before_real_imports() {
+    let regex = Regex::new(&module_pattern("msw")).unwrap();
+
+    assert!(has_match_outside_string(
+        r#"const note = "import('msw')"; import real from 'msw/node'"#,
+        &regex
+    ));
+    assert!(!has_match_outside_string(
+        r#"const note = "import('msw/node')""#,
+        &regex
+    ));
+    assert!(!has_match_outside_string(
+        r#"const note = "escaped \\ before import('msw/node')""#,
+        &regex
+    ));
+}
+
+#[test]
 fn custom_call_and_module_options_replace_defaults() {
     let opts = Options {
         forbidden_calls: vec!["mockLib.fake".to_string()],
