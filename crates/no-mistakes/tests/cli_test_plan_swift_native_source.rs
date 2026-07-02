@@ -90,7 +90,7 @@ fn test_plan_swift_native_source_commands_format_uses_package_filters() {
         String::from_utf8_lossy(&output.stderr)
     );
     let stdout = stdout(&output);
-    let commands: Vec<&str> = stdout.lines().collect();
+    let commands: Vec<&str> = stdout.trim().lines().collect();
     assert_eq!(
         commands,
         vec![
