@@ -1,3 +1,5 @@
+mod regex_literal;
+
 pub(super) fn comments(content: &str) -> String {
     strip(content, false)
 }
@@ -31,6 +33,9 @@ fn strip(content: &str, strings: bool) -> String {
                 } else {
                     push_preserved_string(bytes, index, &mut out)
                 };
+            }
+            b'/' if strings && regex_literal::can_start(&out) => {
+                index = regex_literal::push_erased(bytes, index, &mut out);
             }
             byte => {
                 out.push(byte as char);

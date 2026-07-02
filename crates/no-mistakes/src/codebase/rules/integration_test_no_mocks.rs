@@ -1,10 +1,12 @@
 use super::RuleFinding;
 use crate::codebase::ts_source::{byte_offset_to_line, relative_slash_path};
+use crate::config::v2::schema::RuleDef;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
 use regex::Regex;
 use serde::Deserialize;
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "integration-test-no-mocks";
@@ -49,11 +51,7 @@ pub(crate) fn check_with_files(
             let opts: Options = rule.rule_options();
             let target_roots = super::target_roots(root, config, rule);
             let skip = super::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
-                .iter()
-                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
-                .cloned()
-                .collect();
+            let files = candidate_files(root, all_files, &skip, &target_roots, rule);
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
             scan(root, &opts, &files)
         })
@@ -61,6 +59,30 @@ pub(crate) fn check_with_files(
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
     super::sort_findings(&mut findings);
     Ok(findings)
+}
+
+fn candidate_files(
+    root: &Path,
+    all_files: &[PathBuf],
+    skip: &HashSet<&str>,
+    target_roots: &[PathBuf],
+    rule: &RuleDef,
+) -> Vec<PathBuf> {
+    all_files
+        .iter()
+        .filter(|path| {
+            if target_roots.is_empty() && has_test_target(rule) {
+                !crate::codebase::ts_source::is_under_skipped_dir(root, path, skip)
+            } else {
+                super::file_allowed_by_roots_and_skip(root, skip, path, target_roots)
+            }
+        })
+        .cloned()
+        .collect()
+}
+
+fn has_test_target(rule: &RuleDef) -> bool {
+    !rule.tests.vitest.is_empty() || !rule.tests.playwright.is_empty()
 }
 
 fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {

@@ -5,6 +5,8 @@ pub(super) fn is_inside_string(bytes: &[u8], target: usize) -> bool {
         String(u8),
         Template,
         TemplateExpression { depth: usize },
+        LineComment,
+        BlockComment,
     }
 
     let mut stack = vec![State::Normal];
@@ -20,10 +22,30 @@ pub(super) fn is_inside_string(bytes: &[u8], target: usize) -> bool {
                 stack.push(State::Template);
                 index += 1;
             }
+            (State::Normal | State::TemplateExpression { .. }, b'/')
+                if bytes.get(index + 1) == Some(&b'/') =>
+            {
+                stack.push(State::LineComment);
+                index += 2;
+            }
+            (State::Normal | State::TemplateExpression { .. }, b'/')
+                if bytes.get(index + 1) == Some(&b'*') =>
+            {
+                stack.push(State::BlockComment);
+                index += 2;
+            }
             (State::String(_), b'\\') | (State::Template, b'\\') => index += 2,
             (State::String(active), byte) if byte == active => {
                 stack.pop();
                 index += 1;
+            }
+            (State::LineComment, b'\n') => {
+                stack.pop();
+                index += 1;
+            }
+            (State::BlockComment, b'*') if bytes.get(index + 1) == Some(&b'/') => {
+                stack.pop();
+                index += 2;
             }
             (State::Template, b'`') => {
                 stack.pop();
@@ -58,5 +80,11 @@ pub(super) fn is_inside_string(bytes: &[u8], target: usize) -> bool {
             _ => index += 1,
         }
     }
-    matches!(stack.last(), Some(State::String(_)) | Some(State::Template))
+    matches!(
+        stack.last(),
+        Some(State::String(_))
+            | Some(State::Template)
+            | Some(State::LineComment)
+            | Some(State::BlockComment)
+    )
 }

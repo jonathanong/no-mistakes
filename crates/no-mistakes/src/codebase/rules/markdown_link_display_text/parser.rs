@@ -1,3 +1,7 @@
+use std::collections::HashMap;
+
+mod references;
+
 #[derive(Debug, PartialEq, Eq)]
 pub(super) struct InlineLink {
     pub(super) text: String,
@@ -5,9 +9,14 @@ pub(super) struct InlineLink {
     pub(super) offset: usize,
 }
 
-pub(super) fn inline_links_outside_code(source: &str) -> Vec<InlineLink> {
+pub(super) fn markdown_links_outside_code(source: &str) -> Vec<InlineLink> {
     let fenced = strip_fenced_code(source);
-    let bytes = fenced.as_bytes();
+    let reference_definitions = references::definitions(&fenced);
+    scan_links(&fenced, &reference_definitions)
+}
+
+fn scan_links(source: &str, reference_definitions: &HashMap<String, String>) -> Vec<InlineLink> {
+    let bytes = source.as_bytes();
     let mut links = Vec::new();
     let mut index = 0usize;
     while index < bytes.len() {
@@ -16,7 +25,12 @@ pub(super) fn inline_links_outside_code(source: &str) -> Vec<InlineLink> {
         } else if bytes[index] == b'`' {
             index = skip_inline_code(bytes, index);
         } else if bytes[index] == b'[' && (index == 0 || bytes[index - 1] != b'!') {
-            if let Some((link, next)) = parse_inline_link(&fenced, index) {
+            if let Some((link, next)) = parse_inline_link(source, index) {
+                links.push(link);
+                index = next;
+            } else if let Some((link, next)) =
+                references::parse_link(source, index, reference_definitions)
+            {
                 links.push(link);
                 index = next;
             } else {

@@ -27,6 +27,35 @@ fn flags_bare_markdown_filename_text_mismatch() {
 }
 
 #[test]
+fn flags_reference_style_markdown_filename_text_mismatch() {
+    let findings = findings("reference");
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].line, 1);
+    assert_eq!(findings[0].import.as_deref(), Some("OLD.md"));
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some("news-story-clusters.md")
+    );
+}
+
+#[test]
+fn handles_reference_style_edge_cases() {
+    let links = parser::markdown_links_outside_code(
+        "[OLD.md][]\n[OLD2.md][missing]\n[OLD3.md][story]\n\n[]: docs/empty.md\n[story]: <docs/new.md>",
+    );
+
+    assert_eq!(links.len(), 1, "{links:#?}");
+    assert_eq!(links[0].text, "OLD3.md");
+    assert_eq!(links[0].href, "docs/new.md");
+
+    let unclosed_angle =
+        parser::markdown_links_outside_code("[OLD.md][story]\n\n[story]: <docs/new.md");
+    assert_eq!(unclosed_angle.len(), 1, "{unclosed_angle:#?}");
+    assert_eq!(unclosed_angle[0].href, "<docs/new.md");
+}
+
+#[test]
 fn allows_matching_and_descriptive_links() {
     let findings = findings("allowed");
 
@@ -67,6 +96,17 @@ fn ignores_links_inside_code() {
 }
 
 #[test]
+fn parses_reference_style_links_outside_code() {
+    let links = parser::markdown_links_outside_code(
+        "[OLD.md][story]\n\n[story]: docs/news-story-clusters.md",
+    );
+
+    assert_eq!(links.len(), 1, "{links:#?}");
+    assert_eq!(links[0].text, "OLD.md");
+    assert_eq!(links[0].href, "docs/news-story-clusters.md");
+}
+
+#[test]
 fn handles_unmatched_escaped_and_multi_backtick_inline_code() {
     let findings = findings("inline");
 
@@ -77,7 +117,7 @@ fn handles_unmatched_escaped_and_multi_backtick_inline_code() {
 
 #[test]
 fn skips_escaped_backticks_inside_matched_inline_code() {
-    let links = parser::inline_links_outside_code(
+    let links = parser::markdown_links_outside_code(
         r#"See `[OLD.md](new.md) \` still code` and [REAL.md](actual.md)"#,
     );
 
@@ -108,7 +148,7 @@ fn ignores_links_after_invalid_closing_fence_text() {
     let findings = findings("bad-closing-fence");
 
     assert!(findings.is_empty(), "{findings:#?}");
-    let links = parser::inline_links_outside_code("    ```\n[REAL.md](actual.md)");
+    let links = parser::markdown_links_outside_code("    ```\n[REAL.md](actual.md)");
     assert_eq!(links.len(), 1, "{links:#?}");
 }
 

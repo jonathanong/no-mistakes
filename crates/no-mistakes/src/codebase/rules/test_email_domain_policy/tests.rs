@@ -37,6 +37,14 @@ fn rejects_raw_and_encoded_banned_domains() {
 }
 
 #[test]
+fn rejects_jsx_files_by_default() {
+    let findings = findings("react", "src/send.jsx");
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].target.as_deref(), Some("example.com"));
+}
+
+#[test]
 fn allows_configured_pattern_urls_and_longer_domains() {
     let findings = findings("allowed", "src/send.test.mts");
 

@@ -11,8 +11,8 @@ use std::path::{Path, PathBuf};
 pub const RULE_ID: &str = "test-email-domain-policy";
 
 const DEFAULT_EXTENSIONS: &[&str] = &[
-    ".cjs", ".css", ".csv", ".cts", ".html", ".js", ".json", ".jsonc", ".md", ".mjs", ".mts",
-    ".sql", ".ts", ".tsx", ".txt", ".xml", ".yml", ".yaml",
+    ".cjs", ".css", ".csv", ".cts", ".html", ".js", ".jsx", ".json", ".jsonc", ".md", ".mjs",
+    ".mts", ".sql", ".ts", ".tsx", ".txt", ".xml", ".yml", ".yaml",
 ];
 
 const EMAIL_PATTERN: &str = r"(?i)[a-z0-9._%+\$\{\}-]+@[a-z0-9.-]+\.[a-z]{2,}|[a-z0-9._%+\$\{\}-]+%40[a-z0-9.-]*(?:\.|%2e)[a-z0-9.%+-]+";

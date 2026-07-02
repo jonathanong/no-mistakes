@@ -1,4 +1,8 @@
 use super::*;
+use crate::config::v2::{
+    schema::{RuleDef, RuleTestTargets},
+    NoMistakesConfig,
+};
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
@@ -40,6 +44,28 @@ fn rejects_default_mock_calls_and_modules() {
 #[test]
 fn ignores_comments_and_global_fetch_router() {
     assert!(findings("comments").is_empty());
+}
+
+#[test]
+fn test_target_only_rules_keep_files_for_include_filtering() {
+    let root = fixture("defaults");
+    let file = root.join("example.test.mts");
+    let config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            tests: RuleTestTargets {
+                vitest: vec!["integration".to_string()],
+                ..Default::default()
+            },
+            include: vec!["**/*.test.mts".to_string()],
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+
+    let findings = check_with_files(&root, &config, &[file]).unwrap();
+
+    assert!(!findings.is_empty(), "expected included test file findings");
 }
 
 #[test]
@@ -94,6 +120,9 @@ fn detects_calls_and_modules_inside_template_expressions() {
     assert!(findings
         .iter()
         .any(|finding| finding.line == 3 && finding.import.as_deref() == Some("nock")));
+    assert!(findings
+        .iter()
+        .all(|finding| finding.line != 4 && finding.line != 5));
 }
 
 #[test]
@@ -132,6 +161,40 @@ fn strip_helpers_preserve_offsets_for_unclosed_and_escaped_tokens() {
         strip::comments("const value = `open\\"),
         "const value = `open\\"
     );
+    let regex_stripped = strip::comments_and_strings("expect(src).toMatch(/vi\\.mock\\(/gi)");
+    assert!(!regex_stripped.contains("vi"), "{regex_stripped}");
+    assert_eq!(
+        strip::comments_and_strings("/vi\\.mock\\(/"),
+        "            "
+    );
+    assert_eq!(
+        strip::comments_and_strings("return /vi\\.mock\\(/"),
+        "return             "
+    );
+    assert_eq!(
+        strip::comments_and_strings("const re = /[a\\/b]/g"),
+        "const re =          "
+    );
+    assert_eq!(
+        strip::comments_and_strings("const re = /unterminated\nvi.fn()"),
+        "const re =              \nvi.fn()"
+    );
+    assert_eq!(
+        strip::comments_and_strings("const re = /unterminated"),
+        "const re =              "
+    );
+    assert_eq!(
+        strip::comments_and_strings("throw /vi\\.fn\\(/"),
+        "throw           "
+    );
+    assert_eq!(
+        strip::comments_and_strings("case /vi\\.fn\\(/"),
+        "case           "
+    );
+    assert_eq!(
+        strip::comments_and_strings("const fn = () => /vi\\.fn\\(/"),
+        "const fn = () =>           "
+    );
 }
 
 #[test]
@@ -149,6 +212,53 @@ fn module_matches_ignore_closed_string_literals_before_real_imports() {
         .position(|window| window == b"after")
         .unwrap();
     assert!(!strings::is_inside_string(nested, after));
+
+    let block_comment = b"`${/* await import('msw/node') */ value}`";
+    let commented_import = block_comment
+        .windows("import".len())
+        .position(|window| window == b"import")
+        .unwrap();
+    assert!(strings::is_inside_string(block_comment, commented_import));
+
+    let line_comment = b"`${// require('nock')\nvalue}`";
+    let commented_require = line_comment
+        .windows("require".len())
+        .position(|window| window == b"require")
+        .unwrap();
+    assert!(strings::is_inside_string(line_comment, commented_require));
+    let after_line_comment = line_comment
+        .windows("value".len())
+        .position(|window| window == b"value")
+        .unwrap();
+    assert!(!strings::is_inside_string(line_comment, after_line_comment));
+
+    let normal_line_comment = b"// require('nock')\nconst value = 1";
+    let normal_line_comment_import = normal_line_comment
+        .windows("require".len())
+        .position(|window| window == b"require")
+        .unwrap();
+    assert!(strings::is_inside_string(
+        normal_line_comment,
+        normal_line_comment_import
+    ));
+
+    let normal_block_comment = b"/* require('nock') */ const value = 1";
+    let normal_block_comment_import = normal_block_comment
+        .windows("require".len())
+        .position(|window| window == b"require")
+        .unwrap();
+    assert!(strings::is_inside_string(
+        normal_block_comment,
+        normal_block_comment_import
+    ));
+    let after_block_comment = normal_block_comment
+        .windows("const".len())
+        .position(|window| window == b"const")
+        .unwrap();
+    assert!(!strings::is_inside_string(
+        normal_block_comment,
+        after_block_comment
+    ));
 }
 
 #[test]

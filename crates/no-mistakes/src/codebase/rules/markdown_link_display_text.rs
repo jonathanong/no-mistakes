@@ -7,7 +7,7 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 mod parser;
-use parser::{inline_links_outside_code, strip_fenced_code, InlineLink};
+use parser::{markdown_links_outside_code, InlineLink};
 
 pub const RULE_ID: &str = "markdown-link-display-text";
 
@@ -71,10 +71,9 @@ fn check_file(root: &Path, path: &Path, extensions: &[&str]) -> Vec<RuleFinding>
     let Ok(source) = std::fs::read_to_string(path) else {
         return Vec::new();
     };
-    let fenced = strip_fenced_code(&source);
-    inline_links_outside_code(&source)
+    markdown_links_outside_code(&source)
         .into_iter()
-        .filter_map(|link| finding_for_link(&rel, &fenced, link, extensions))
+        .filter_map(|link| finding_for_link(&rel, &source, link, extensions))
         .collect()
 }
 
@@ -128,11 +127,22 @@ fn href_basename(href: &str) -> Option<String> {
 
 fn is_non_local_href(href: &str) -> bool {
     let bare = href_destination(href);
-    bare.starts_with('#')
-        || bare.starts_with("http://")
-        || bare.starts_with("https://")
-        || bare.starts_with("mailto:")
-        || bare.starts_with("//")
+    bare.starts_with('#') || bare.starts_with("//") || has_url_scheme(bare)
+}
+
+fn has_url_scheme(value: &str) -> bool {
+    let Some(colon) = value.find(':') else {
+        return false;
+    };
+    let scheme = &value[..colon];
+    !scheme.is_empty()
+        && scheme
+            .chars()
+            .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '+' | '-' | '.'))
+        && scheme
+            .chars()
+            .next()
+            .is_some_and(|ch| ch.is_ascii_alphabetic())
 }
 
 fn href_destination(value: &str) -> &str {
