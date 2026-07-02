@@ -7,7 +7,7 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 mod parser;
-use parser::{inline_links_outside_code, InlineLink};
+use parser::{inline_links_outside_code, strip_fenced_code, InlineLink};
 
 pub const RULE_ID: &str = "markdown-link-display-text";
 
@@ -71,9 +71,10 @@ fn check_file(root: &Path, path: &Path, extensions: &[&str]) -> Vec<RuleFinding>
     let Ok(source) = std::fs::read_to_string(path) else {
         return Vec::new();
     };
+    let fenced = strip_fenced_code(&source);
     inline_links_outside_code(&source)
         .into_iter()
-        .filter_map(|link| finding_for_link(&rel, &source, link))
+        .filter_map(|link| finding_for_link(&rel, &fenced, link))
         .collect()
 }
 

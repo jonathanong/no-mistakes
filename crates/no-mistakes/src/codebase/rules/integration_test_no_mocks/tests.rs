@@ -1,29 +1,23 @@
 use super::*;
+use std::path::PathBuf;
 
-fn findings(source: &str) -> Vec<RuleFinding> {
-    let tmp = tempfile::tempdir().unwrap();
-    let file = tmp
-        .path()
-        .join("integration-tests/web-api/example.test.mts");
-    std::fs::create_dir_all(file.parent().unwrap()).unwrap();
-    std::fs::write(&file, source).unwrap();
+fn fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/integration-test-no-mocks/unit-fixture")
+        .join(name)
+}
+
+fn findings(name: &str) -> Vec<RuleFinding> {
+    let root = fixture(name);
+    let file = root.join("example.test.mts");
     let opts = Options::default();
     let compiled = compile_options(&opts).unwrap();
-    check_file(tmp.path(), &file, &compiled)
+    check_file(&root, &file, &compiled)
 }
 
 #[test]
 fn rejects_default_mock_calls_and_modules() {
-    let source = "\
-import { vi } from 'vitest'
-vi.mock('../module')
-const fn = vi.fn()
-const server = await import('msw/node')
-const nock = require('nock')
-import sinon from 'sinon'
-import 'msw'
-";
-    let findings = findings(source);
+    let findings = findings("defaults");
 
     assert_eq!(findings.len(), 6, "{findings:#?}");
     assert!(findings
@@ -45,27 +39,12 @@ import 'msw'
 
 #[test]
 fn ignores_comments_and_global_fetch_router() {
-    let source = "\
-// vi.mock('foo') is forbidden by policy
-/* vi.fn() */
- * vi.spyOn(console, 'log')
-globalThis.fetch = previousFetch
-";
-    assert!(findings(source).is_empty());
+    assert!(findings("comments").is_empty());
 }
 
 #[test]
 fn strips_comments_and_strings_without_hiding_real_code() {
-    let source = "\
-const message = 'vi.mock should only be text'
-const other = \"import('msw') is documentation\"
-/*
-vi.fn()
-*/
-/* setup */ vi.mock('../module')
-const server = await import('msw/node')
-";
-    let findings = findings(source);
+    let findings = findings("strings");
 
     assert_eq!(findings.len(), 2, "{findings:#?}");
     assert_eq!(findings[0].line, 6);
@@ -76,11 +55,7 @@ const server = await import('msw/node')
 
 #[test]
 fn detects_modules_after_comment_markers_inside_strings() {
-    let source = r#"
-const url = "http://example.test"
-const nock = require("nock")
-"#;
-    let findings = findings(source);
+    let findings = findings("string-comment-marker");
 
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].line, 3);
@@ -89,15 +64,7 @@ const nock = require("nock")
 
 #[test]
 fn detects_wrapped_dynamic_imports_and_requires() {
-    let source = "\
-const server = await import(
-  'msw/node'
-)
-const nock = require(
-  'nock'
-)
-";
-    let findings = findings(source);
+    let findings = findings("wrapped");
 
     assert_eq!(findings.len(), 2, "{findings:#?}");
     assert_eq!(findings[0].line, 1);
@@ -124,12 +91,12 @@ fn strip_helpers_preserve_offsets_for_unclosed_and_escaped_tokens() {
 
 #[test]
 fn module_matches_ignore_closed_string_literals_before_real_imports() {
-    let results = findings(r#"const note = "import('msw')"; import real from 'msw/node'"#);
+    let results = findings("string-before-real");
 
     assert_eq!(results.len(), 1, "{results:#?}");
     assert_eq!(results[0].import.as_deref(), Some("msw"));
-    assert!(findings(r#"const note = "import('msw/node')""#).is_empty());
-    assert!(findings(r#"const note = "escaped \\ before import('msw/node')""#).is_empty());
+    assert!(findings("string-only").is_empty());
+    assert!(findings("escaped-string-only").is_empty());
 }
 
 #[test]
@@ -139,15 +106,10 @@ fn custom_call_and_module_options_replace_defaults() {
         forbidden_modules: vec!["wiremock".to_string()],
     };
     let compiled = compile_options(&opts).unwrap();
-    let tmp = tempfile::tempdir().unwrap();
-    let file = tmp.path().join("case.mts");
-    std::fs::write(
-        &file,
-        "vi.mock('allowed-by-custom-config')\nmockLib.fake()\nimport x from 'wiremock/node'\n",
-    )
-    .unwrap();
+    let root = fixture("custom");
+    let file = root.join("case.mts");
 
-    let findings = check_file(tmp.path(), &file, &compiled);
+    let findings = check_file(&root, &file, &compiled);
 
     assert_eq!(findings.len(), 2, "{findings:#?}");
     assert!(findings
@@ -165,14 +127,13 @@ fn extensionless_custom_call_and_missing_file_paths_are_handled() {
         forbidden_modules: Vec::new(),
     };
     let compiled = compile_options(&opts).unwrap();
-    let tmp = tempfile::tempdir().unwrap();
-    let file = tmp.path().join("case.mts");
-    std::fs::write(&file, "mock()\n").unwrap();
+    let root = fixture("extensionless");
+    let file = root.join("case.mts");
 
-    let findings = check_file(tmp.path(), &file, &compiled);
+    let findings = check_file(&root, &file, &compiled);
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].import.as_deref(), Some("mock"));
 
-    let missing = tmp.path().join("missing.mts");
-    assert!(check_file(tmp.path(), &missing, &compiled).is_empty());
+    let missing = root.join("missing.mts");
+    assert!(check_file(&root, &missing, &compiled).is_empty());
 }

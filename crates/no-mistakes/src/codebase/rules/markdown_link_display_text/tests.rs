@@ -1,16 +1,21 @@
 use super::*;
+use std::path::PathBuf;
 
-fn findings(source: &str) -> Vec<RuleFinding> {
-    let tmp = tempfile::tempdir().unwrap();
-    let file = tmp.path().join("docs/index.md");
-    std::fs::create_dir_all(file.parent().unwrap()).unwrap();
-    std::fs::write(&file, source).unwrap();
-    check_file(tmp.path(), &file, &[".md"])
+fn fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/markdown-link-display-text/unit-fixture")
+        .join(name)
+}
+
+fn findings(name: &str) -> Vec<RuleFinding> {
+    let root = fixture(name);
+    let file = root.join("docs/index.md");
+    check_file(&root, &file, &[".md"])
 }
 
 #[test]
 fn flags_bare_markdown_filename_text_mismatch() {
-    let findings = findings("[SOURCE-STORIES.md](docs/news-story-clusters.md)\n");
+    let findings = findings("mismatch");
 
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].line, 1);
@@ -23,25 +28,21 @@ fn flags_bare_markdown_filename_text_mismatch() {
 
 #[test]
 fn allows_matching_and_descriptive_links() {
-    let findings = findings(
-        "[target.md](../docs/target.md#section)\n[README.md](docs/README.md \"reference\")\n[see the contributing guide](CONTRIBUTING.md)\n[with spaces.md](other.md)\n",
-    );
+    let findings = findings("allowed");
 
     assert!(findings.is_empty(), "{findings:#?}");
 }
 
 #[test]
 fn skips_images_non_local_and_directory_hrefs() {
-    let findings = findings(
-        "![README.md](assets/readme.png)\n[OLD.md](<https://example.com/new.md>)\n[README.md](docs/)\n[README.md](#readme)\n[README.md](mailto:user@example.com)\n",
-    );
+    let findings = findings("skipped");
 
     assert!(findings.is_empty(), "{findings:#?}");
 }
 
 #[test]
 fn handles_angle_destinations_and_backticked_text() {
-    let findings = findings("[`OLD-NAME.md`](<docs/new-name.md>)\n");
+    let findings = findings("angle");
 
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].import.as_deref(), Some("OLD-NAME.md"));
@@ -50,18 +51,14 @@ fn handles_angle_destinations_and_backticked_text() {
 
 #[test]
 fn ignores_links_inside_code() {
-    let findings = findings(
-        "```markdown\n[OLD-NAME.md](new-name.md)\n```\n~~~\n[OLD2.md](new2.md)\n~~~\nSee `[OLD3.md](new3.md)` for an example.\n",
-    );
+    let findings = findings("code");
 
     assert!(findings.is_empty(), "{findings:#?}");
 }
 
 #[test]
 fn handles_unmatched_escaped_and_multi_backtick_inline_code() {
-    let findings = findings(
-        "Escaped \\` [OLD.md](new.md)\nUnmatched ` [OLD2.md](new2.md)\nMatched ``[OLD3.md](new3.md)`` text\n",
-    );
+    let findings = findings("inline");
 
     assert_eq!(findings.len(), 2, "{findings:#?}");
     assert_eq!(findings[0].import.as_deref(), Some("OLD.md"));
@@ -80,8 +77,7 @@ fn skips_escaped_backticks_inside_matched_inline_code() {
 
 #[test]
 fn long_fences_preserve_offsets_and_ignore_short_inner_fences() {
-    let findings =
-        findings("````markdown\n```markdown\n[OLD.md](new.md)\n```\n````\n[REAL.md](actual.md)\n");
+    let findings = findings("long-fence");
 
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].line, 6);
@@ -89,28 +85,31 @@ fn long_fences_preserve_offsets_and_ignore_short_inner_fences() {
 }
 
 #[test]
+fn reports_real_link_line_after_fenced_content() {
+    let findings = findings("after-fence");
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].line, 5);
+    assert_eq!(findings[0].import.as_deref(), Some("REAL.md"));
+}
+
+#[test]
 fn covers_custom_extensions_non_matching_files_missing_files_and_malformed_links() {
-    let tmp = tempfile::tempdir().unwrap();
-    let mdx = tmp.path().join("docs/page.mdx");
-    std::fs::create_dir_all(mdx.parent().unwrap()).unwrap();
-    std::fs::write(
-        &mdx,
-        "[OLD.md](new.md)\n[unterminated.md\n[reference.md][ref]\n",
-    )
-    .unwrap();
+    let root = fixture("custom");
+    let mdx = root.join("docs/page.mdx");
 
     let findings = scan(
-        tmp.path(),
+        &root,
         &Options {
             extensions: vec![".mdx".to_string()],
         },
-        &[mdx.clone(), tmp.path().join("docs/missing.mdx")],
+        &[mdx.clone(), root.join("docs/missing.mdx")],
     )
     .unwrap();
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].file, "docs/page.mdx");
 
-    assert!(check_file(tmp.path(), &mdx, &[".md"]).is_empty());
+    assert!(check_file(&root, &mdx, &[".md"]).is_empty());
     assert!(parser::parse_inline_link("[text] no href", 0).is_none());
     assert!(parser::parse_inline_link("[text", 0).is_none());
 }

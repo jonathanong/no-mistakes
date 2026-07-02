@@ -1,6 +1,6 @@
 # `markdown-link-display-text`
 
-Requires local markdown link text to match the linked file basename.
+Requires local Markdown link text to match the linked file basename.
 
 ```yaml
 rules:
@@ -15,7 +15,7 @@ different basename than the visible link text.
 
 Fix: rename the link text to `news-story-clusters.md`, rename the target to
 match the existing text, or use descriptive link text when the destination is
-not a local markdown file.
+not a local Markdown file.
 
 Suppression caveat: suppress only when the filename-style text is intentionally
 different from the destination basename. The rule ignores images, fenced code,

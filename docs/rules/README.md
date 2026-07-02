@@ -32,7 +32,7 @@ rules:
 | [`forbidden-dependencies`](forbidden-dependencies.md) | Prevent configured files/modules from depending on forbidden targets. |
 | [`integration-test-no-mocks`](integration-test-no-mocks.md) | Ban mocking libraries and mock helpers in integration tests. |
 | [`lockfile-allowlist`](lockfile-allowlist.md) | Allow only configured package lock files. |
-| [`markdown-link-display-text`](markdown-link-display-text.md) | Require markdown link text to match the linked file basename. |
+| [`markdown-link-display-text`](markdown-link-display-text.md) | Require Markdown link text to match the linked file basename. |
 | [`nextjs-no-api-routes`](nextjs-no-api-routes.md) | Ban Next.js API route files. |
 | [`nextjs-no-caching`](nextjs-no-caching.md) | Ban Next.js caching features. |
 | [`no-empty-or-comments-only-files`](no-empty-or-comments-only-files.md) | Ban empty/comment-only files. |

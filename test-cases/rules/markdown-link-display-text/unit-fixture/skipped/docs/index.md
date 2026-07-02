@@ -1,0 +1,5 @@
+![README.md](assets/readme.png)
+[OLD.md](<https://example.com/new.md>)
+[README.md](docs/)
+[README.md](#readme)
+[README.md](mailto:user@example.com)

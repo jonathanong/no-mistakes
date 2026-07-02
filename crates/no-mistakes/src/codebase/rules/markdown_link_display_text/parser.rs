@@ -81,7 +81,7 @@ fn find_byte(bytes: &[u8], start: usize, target: u8) -> Option<usize> {
         .find_map(|(index, byte)| (*byte == target).then_some(index))
 }
 
-fn strip_fenced_code(source: &str) -> String {
+pub(super) fn strip_fenced_code(source: &str) -> String {
     let mut out = String::with_capacity(source.len());
     let mut in_fence: Option<Fence> = None;
     for line in source.split_inclusive('\n') {
