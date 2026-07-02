@@ -76,11 +76,9 @@ fn candidate_files(
     all_files
         .iter()
         .filter(|path| {
-            if target_roots.is_empty() && has_test_target(rule) && rule.include.is_empty() {
+            if target_roots.is_empty() && has_test_target(rule) {
                 !crate::codebase::ts_source::is_under_skipped_dir(root, path, skip)
                     && test_targets::selected_match(root, config, rule, path)
-            } else if target_roots.is_empty() && has_test_target(rule) {
-                !crate::codebase::ts_source::is_under_skipped_dir(root, path, skip)
             } else {
                 super::file_allowed_by_roots_and_skip(root, skip, path, target_roots)
             }
@@ -140,14 +138,26 @@ fn call_pattern(call: &str) -> String {
     let first = pieces.next().unwrap_or_default();
     let rest: Vec<&str> = pieces.collect();
     if first.is_empty() || rest.is_empty() {
-        return format!(r"\b{}\s*\(", regex::escape(call));
+        return format!(r"\b{}{}\(", regex::escape(call), type_args_pattern());
     }
     let member = rest
         .into_iter()
-        .map(regex::escape)
+        .map(|part| {
+            let escaped = regex::escape(part);
+            format!(r#"(?:\s*\.\s*{escaped}|\s*\[\s*['"]{escaped}['"]\s*\])"#)
+        })
         .collect::<Vec<_>>()
-        .join(r"\s*\.\s*");
-    format!(r"\b{}\s*\.\s*{}\s*\(", regex::escape(first), member)
+        .join("");
+    format!(
+        r"\b{}{}{}\(",
+        regex::escape(first),
+        member,
+        type_args_pattern()
+    )
+}
+
+fn type_args_pattern() -> &'static str {
+    r"\s*(?:<[^;\n]*>)?\s*"
 }
 
 fn module_pattern(module: &str) -> String {
@@ -163,8 +173,7 @@ fn check_file(root: &Path, path: &Path, compiled: &CompiledOptions) -> Vec<RuleF
     };
     let rel = relative_slash_path(root, path);
     let comments_removed = strip::comments_and_regex_literals(&content);
-    let strings_removed = strip::comments_and_strings(&content);
-    let mut findings = calls::findings(&rel, &strings_removed, &compiled.calls);
+    let mut findings = calls::findings(&rel, &comments_removed, &compiled.calls);
     findings.extend(module_findings(&rel, &comments_removed, &compiled.modules));
     findings
 }

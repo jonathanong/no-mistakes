@@ -73,6 +73,25 @@ pub fn project_filters(
     filters
 }
 
+pub(crate) fn named_project_filters(
+    root: &Path,
+    config: &NoMistakesConfig,
+    runner: TestRunner,
+    names: &[String],
+) -> Vec<ProjectTestFilter> {
+    let projects = projects::runner_projects_lossy(root, config, runner);
+    projects
+        .into_iter()
+        .filter(|project| {
+            project
+                .policy_name
+                .as_ref()
+                .is_some_and(|name| names.contains(name))
+        })
+        .filter_map(ProjectTestFilter::from_project)
+        .collect()
+}
+
 pub fn literal_path_glob(path: &str) -> String {
     let mut escaped = String::with_capacity(path.len());
     for ch in path.chars() {

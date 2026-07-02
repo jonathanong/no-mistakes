@@ -4,11 +4,7 @@ pub(super) fn comments_and_regex_literals(content: &str) -> String {
     strip(content, false, true)
 }
 
-pub(super) fn comments_and_strings(content: &str) -> String {
-    strip(content, true, true)
-}
-
-fn strip(content: &str, strings: bool, regex_literals: bool) -> String {
+pub(super) fn strip(content: &str, strings: bool, regex_literals: bool) -> String {
     let mut out = String::with_capacity(content.len());
     let bytes = content.as_bytes();
     let mut index = 0usize;

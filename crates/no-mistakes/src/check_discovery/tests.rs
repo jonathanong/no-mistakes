@@ -86,11 +86,14 @@ fn discover_check_files_preserves_included_fixture_roots() {
     let root = fixture("check-discovery/include-preserved-roots");
     let config = load_config(&root);
 
-    let files = discover_check_files(&root, &config, &[], false);
+    let files = discover_check_files(&root, &config, &config.filesystem.skip_directories, false);
 
     assert!(files
         .iter()
         .any(|path| path.ends_with("fixtures/users.json")));
+    assert!(files
+        .iter()
+        .any(|path| path.ends_with("web/fixtures/project-users.json")));
 }
 
 #[test]

@@ -31,10 +31,19 @@ pub(crate) fn discover_check_files(
 
 fn include_preserved_roots(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
     let mut roots = Vec::new();
+    let mut inferred_roots = no_mistakes::codebase::config::InferredRoots::default();
     for rule in config.rules.iter().filter(|rule| rule.enabled) {
         for include in &rule.include {
             if let Some(prefix) = literal_include_prefix(include) {
-                roots.push(root.join(prefix));
+                roots.push(root.join(&prefix));
+                for project_name in &rule.projects {
+                    let Some(project) = config.projects.get(project_name) else {
+                        continue;
+                    };
+                    if let Some(project_root) = project_root(root, project, &mut inferred_roots) {
+                        roots.push(project_root.join(&prefix));
+                    }
+                }
             }
         }
     }

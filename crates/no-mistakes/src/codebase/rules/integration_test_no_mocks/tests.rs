@@ -88,6 +88,50 @@ fn test_target_only_rules_keep_files_for_include_filtering() {
 }
 
 #[test]
+fn test_target_rules_with_include_stay_inside_selected_test_project() {
+    let root = fixture("defaults");
+    let unit = root.join("example.test.mts");
+    let integration = root.join("integration-tests/example.test.mts");
+    let config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            tests: RuleTestTargets {
+                vitest: vec!["integration".to_string()],
+                ..Default::default()
+            },
+            include: vec!["**/*.test.mts".to_string()],
+            ..Default::default()
+        }],
+        tests: crate::config::v2::schema::Tests {
+            vitest: crate::config::v2::schema::VitestConfig {
+                projects: std::collections::BTreeMap::from([(
+                    "integration".to_string(),
+                    crate::config::v2::schema::TestProjectPolicy {
+                        include: vec!["integration-tests/**/*.test.mts".to_string()],
+                        ..Default::default()
+                    },
+                )]),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let skip = super::super::skip_dir_set(&config);
+
+    let files = candidate_files(
+        &root,
+        &config,
+        &[unit, integration.clone()],
+        &skip,
+        &[],
+        &config.rules[0],
+    );
+
+    assert_eq!(files, vec![integration]);
+}
+
+#[test]
 fn test_target_only_rules_use_configured_test_file_filter() {
     let root = fixture("defaults");
     let file = root.join("example.test.mts");
@@ -174,6 +218,51 @@ fn selected_test_target_match_handles_playwright_excludes_and_empty_policies() {
 }
 
 #[test]
+fn selected_test_target_match_falls_back_when_named_policy_has_no_include() {
+    let root = fixture("defaults");
+    let config = NoMistakesConfig {
+        tests: crate::config::v2::schema::Tests {
+            vitest: crate::config::v2::schema::VitestConfig {
+                projects: std::collections::BTreeMap::from([(
+                    "integration".to_string(),
+                    crate::config::v2::schema::TestProjectPolicy {
+                        integration_suites: std::collections::BTreeMap::from([(
+                            "openai".to_string(),
+                            vec!["openai".to_string()],
+                        )]),
+                        ..Default::default()
+                    },
+                )]),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let rule = RuleDef {
+        rule: RULE_ID.to_string(),
+        tests: RuleTestTargets {
+            vitest: vec!["integration".to_string()],
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+
+    assert!(test_targets::selected_match(
+        &root,
+        &config,
+        &rule,
+        &root.join("src/example.test.mts")
+    ));
+    assert!(!test_targets::selected_match(
+        &root,
+        &config,
+        &rule,
+        &root.join("src/example.mts")
+    ));
+}
+
+#[test]
 fn strips_comments_and_strings_without_hiding_real_code() {
     let findings = findings("strings");
 
@@ -182,6 +271,24 @@ fn strips_comments_and_strings_without_hiding_real_code() {
     assert_eq!(findings[0].import.as_deref(), Some("vi.mock"));
     assert_eq!(findings[1].line, 7);
     assert_eq!(findings[1].import.as_deref(), Some("msw"));
+}
+
+#[test]
+fn detects_bracket_and_typed_forbidden_calls() {
+    let findings = findings("bracket-typed-calls");
+
+    assert_eq!(findings.len(), 5, "{findings:#?}");
+    for (line, import) in [
+        (1, "vi.mock"),
+        (2, "vi.fn"),
+        (3, "jest.spyOn"),
+        (4, "vi.fn"),
+        (5, "jest.fn"),
+    ] {
+        assert!(findings
+            .iter()
+            .any(|finding| finding.line == line && finding.import.as_deref() == Some(import)));
+    }
 }
 
 #[test]
@@ -253,76 +360,83 @@ fn strip_helpers_preserve_offsets_for_unclosed_and_escaped_tokens() {
         "before            \n       "
     );
     assert_eq!(
-        strip::comments_and_strings("const value = 'escaped\\' quote'\nconst tail = `open"),
+        strip::strip(
+            "const value = 'escaped\\' quote'\nconst tail = `open",
+            true,
+            true,
+        ),
         "const value =                  \nconst tail =      "
     );
     assert_eq!(
-        strip::comments_and_strings("const tail = 'open\\"),
+        strip::strip("const tail = 'open\\", true, true),
         "const tail =       "
     );
     let complex_template =
         "const value = `${/* hidden */ ({ nested: `text ${vi.fn()}` }) // tail\n}`";
-    let stripped = strip::comments_and_strings(complex_template);
+    let stripped = strip::strip(complex_template, true, true);
     assert!(stripped.contains("vi.fn()"), "{stripped}");
     assert!(!stripped.contains("hidden"), "{stripped}");
     assert!(!stripped.contains("text"), "{stripped}");
     assert_eq!(
-        strip::comments_and_strings("const value = `open\\"),
+        strip::strip("const value = `open\\", true, true),
         "const value =       "
     );
     assert_eq!(
-        strip::comments_and_strings("const value = `open\\x`"),
+        strip::strip("const value = `open\\x`", true, true),
         "const value =         "
     );
     assert_eq!(
-        strip::comments_and_strings("const value = `${unterminated"),
+        strip::strip("const value = `${unterminated", true, true),
         "const value =    unterminated"
     );
     assert_eq!(
         strip::comments_and_regex_literals("const value = `open\\"),
         "const value = `open\\"
     );
-    let regex_stripped = strip::comments_and_strings("expect(src).toMatch(/vi\\.mock\\(/gi)");
+    let regex_stripped = strip::strip("expect(src).toMatch(/vi\\.mock\\(/gi)", true, true);
     assert!(!regex_stripped.contains("vi"), "{regex_stripped}");
-    let template_regex_text =
-        strip::comments_and_strings("const value = `${/vi\\.mock\\({1}\\)/.test(source)}`");
+    let template_regex_text = strip::strip(
+        "const value = `${/vi\\.mock\\({1}\\)/.test(source)}`",
+        true,
+        true,
+    );
     assert!(!template_regex_text.contains("vi"), "{template_regex_text}");
-    let template_regex_brace =
-        strip::comments_and_strings("const value = `${/\\}/.test(source) ? vi.fn() : value}`");
+    let template_regex_brace = strip::strip(
+        "const value = `${/\\}/.test(source) ? vi.fn() : value}`",
+        true,
+        true,
+    );
     assert!(
         template_regex_brace.contains("vi.fn()"),
         "{template_regex_brace}"
     );
+    assert_eq!(strip::strip("/vi\\.mock\\(/", true, true), "            ");
     assert_eq!(
-        strip::comments_and_strings("/vi\\.mock\\(/"),
-        "            "
-    );
-    assert_eq!(
-        strip::comments_and_strings("return /vi\\.mock\\(/"),
+        strip::strip("return /vi\\.mock\\(/", true, true),
         "return             "
     );
     assert_eq!(
-        strip::comments_and_strings("const re = /[a\\/b]/g"),
+        strip::strip("const re = /[a\\/b]/g", true, true),
         "const re =          "
     );
     assert_eq!(
-        strip::comments_and_strings("const re = /unterminated\nvi.fn()"),
+        strip::strip("const re = /unterminated\nvi.fn()", true, true),
         "const re =              \nvi.fn()"
     );
     assert_eq!(
-        strip::comments_and_strings("const re = /unterminated"),
+        strip::strip("const re = /unterminated", true, true),
         "const re =              "
     );
     assert_eq!(
-        strip::comments_and_strings("throw /vi\\.fn\\(/"),
+        strip::strip("throw /vi\\.fn\\(/", true, true),
         "throw           "
     );
     assert_eq!(
-        strip::comments_and_strings("case /vi\\.fn\\(/"),
+        strip::strip("case /vi\\.fn\\(/", true, true),
         "case           "
     );
     assert_eq!(
-        strip::comments_and_strings("const fn = () => /vi\\.fn\\(/"),
+        strip::strip("const fn = () => /vi\\.fn\\(/", true, true),
         "const fn = () =>           "
     );
 }

@@ -4,19 +4,22 @@ use super::{byte_offset_to_line, RuleFinding, RULE_ID};
 
 pub(super) fn findings(
     rel: &str,
-    strings_removed: &str,
+    comments_removed: &str,
     calls: &[(String, Regex)],
 ) -> Vec<RuleFinding> {
     calls
         .iter()
         .flat_map(|(label, regex)| {
             regex
-                .find_iter(strings_removed)
-                .filter(|matched| !line_starts_with_star(strings_removed, matched.start()))
+                .find_iter(comments_removed)
+                .filter(|matched| {
+                    !super::strings::is_inside_string(comments_removed.as_bytes(), matched.start())
+                })
+                .filter(|matched| !line_starts_with_star(comments_removed, matched.start()))
                 .map(|matched| RuleFinding {
                     rule: RULE_ID.to_string(),
                     file: rel.to_string(),
-                    line: byte_offset_to_line(strings_removed, matched.start()) as usize,
+                    line: byte_offset_to_line(comments_removed, matched.start()) as usize,
                     message: format!(
                         "{rel}: integration tests must not use mocking libraries (`{label}`); use real dependencies and test helpers instead"
                     ),
