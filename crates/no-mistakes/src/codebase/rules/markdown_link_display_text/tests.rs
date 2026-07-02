@@ -105,6 +105,8 @@ fn allows_parenthesized_local_markdown_filenames() {
     let (link, _) = parser::parse_inline_link("[x](docs/a\\)b.md)", 0).unwrap();
     assert_eq!(link.href, "docs/a\\)b.md");
     assert_eq!(href_basename("docs/a\\)b.md").as_deref(), Some("a)b.md"));
+    assert_eq!(href_basename("docs/a\\x.md").as_deref(), Some("a\\x.md"));
+    assert_eq!(href_basename("docs/a\\").as_deref(), Some("a\\"));
     let (angle_link, _) = parser::parse_inline_link("[a)b.md](<docs/a)b.md>)", 0).unwrap();
     assert_eq!(angle_link.href, "<docs/a)b.md>");
     assert!(parser::parse_inline_link("[x](docs/a(b.md)", 0).is_none());
