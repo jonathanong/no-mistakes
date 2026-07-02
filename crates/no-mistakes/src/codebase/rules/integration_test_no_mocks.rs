@@ -9,6 +9,8 @@ use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "integration-test-no-mocks";
 
+mod strip;
+
 const DEFAULT_FORBIDDEN_CALLS: &[&str] = &[
     "vi.mock",
     "vi.doMock",
@@ -120,7 +122,7 @@ fn call_pattern(call: &str) -> String {
 fn module_pattern(module: &str) -> String {
     let module = regex::escape(module);
     format!(
-        r#"\bfrom\s+['"]{module}(?:['"/])|\brequire\s*\(\s*['"]{module}(?:['"/])|\bimport\s*\(\s*['"]{module}(?:['"/])"#
+        r#"\bfrom\s+['"]{module}(?:['"/])|\bimport\s+['"]{module}(?:['"/])|\brequire\s*\(\s*['"]{module}(?:['"/])|\bimport\s*\(\s*['"]{module}(?:['"/])"#
     )
 }
 
@@ -129,13 +131,19 @@ fn check_file(root: &Path, path: &Path, compiled: &CompiledOptions) -> Vec<RuleF
         return Vec::new();
     };
     let rel = relative_slash_path(root, path);
+    let comments_removed = strip::comments(&content);
+    let strings_removed = strip::comments_and_strings(&content);
     let mut findings = Vec::new();
-    for (index, raw_line) in content.lines().enumerate() {
-        let line = raw_line.split("//").next().unwrap_or("").trim();
-        if line.starts_with("/*") || line.starts_with('*') {
+    for (index, (call_line, module_line)) in strings_removed
+        .lines()
+        .zip(comments_removed.lines())
+        .enumerate()
+    {
+        if call_line.trim_start().starts_with('*') {
             continue;
         }
-        if let Some(label) = first_match(line, &compiled.calls, &compiled.modules) {
+        if let Some(label) = first_match(call_line, module_line, &compiled.calls, &compiled.modules)
+        {
             findings.push(RuleFinding {
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
@@ -152,20 +160,48 @@ fn check_file(root: &Path, path: &Path, compiled: &CompiledOptions) -> Vec<RuleF
 }
 
 fn first_match(
-    line: &str,
+    call_line: &str,
+    module_line: &str,
     calls: &[(String, Regex)],
     modules: &[(String, Regex)],
 ) -> Option<String> {
     calls
         .iter()
-        .find(|(_, regex)| regex.is_match(line))
+        .find(|(_, regex)| regex.is_match(call_line))
         .map(|(label, _)| label.clone())
         .or_else(|| {
             modules
                 .iter()
-                .find(|(_, regex)| regex.is_match(line))
+                .find(|(_, regex)| has_match_outside_string(module_line, regex))
                 .map(|(label, _)| label.clone())
         })
+}
+
+fn has_match_outside_string(line: &str, regex: &Regex) -> bool {
+    regex
+        .find_iter(line)
+        .any(|matched| !is_inside_string(line.as_bytes(), matched.start()))
+}
+
+fn is_inside_string(bytes: &[u8], target: usize) -> bool {
+    let mut quote = None;
+    let mut index = 0usize;
+    while index < target {
+        match (quote, bytes[index]) {
+            (Some(_), b'\\') => index += 2,
+            (Some(active), byte) if byte == active => {
+                quote = None;
+                index += 1;
+            }
+            (Some(_), _) => index += 1,
+            (None, b'\'' | b'"' | b'`') => {
+                quote = Some(bytes[index]);
+                index += 1;
+            }
+            (None, _) => index += 1,
+        }
+    }
+    quote.is_some()
 }
 
 #[cfg(test)]

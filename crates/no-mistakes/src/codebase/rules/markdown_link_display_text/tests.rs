@@ -58,6 +58,17 @@ fn ignores_links_inside_code() {
 }
 
 #[test]
+fn handles_unmatched_escaped_and_multi_backtick_inline_code() {
+    let findings = findings(
+        "Escaped \\` [OLD.md](new.md)\nUnmatched ` [OLD2.md](new2.md)\nMatched ``[OLD3.md](new3.md)`` text\n",
+    );
+
+    assert_eq!(findings.len(), 2, "{findings:#?}");
+    assert_eq!(findings[0].import.as_deref(), Some("OLD.md"));
+    assert_eq!(findings[1].import.as_deref(), Some("OLD2.md"));
+}
+
+#[test]
 fn covers_custom_extensions_non_matching_files_missing_files_and_malformed_links() {
     let tmp = tempfile::tempdir().unwrap();
     let mdx = tmp.path().join("docs/page.mdx");

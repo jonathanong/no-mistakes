@@ -145,14 +145,15 @@ fn message(file: &str, domain: &str, replacement: Option<&str>) -> String {
 }
 
 fn email_domain(value: &str) -> String {
-    let separator = if value.contains('@') { "@" } else { "%40" };
-    let Some(index) = value.rfind(separator) else {
-        return String::new();
-    };
-    let raw = value[index + separator.len()..]
+    let decoded = value
+        .replace("%40", "@")
         .replace("%2e", ".")
         .replace("%2E", ".")
         .to_lowercase();
+    let Some(index) = decoded.rfind('@') else {
+        return String::new();
+    };
+    let raw = &decoded[index + 1..];
     let mut end = 0usize;
     for (index, ch) in raw.char_indices() {
         if ch.is_ascii_alphanumeric() || ch == '.' || ch == '-' {

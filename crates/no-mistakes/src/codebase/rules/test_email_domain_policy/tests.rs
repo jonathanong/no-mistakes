@@ -94,4 +94,5 @@ fn covers_custom_extensions_no_replacement_invalid_regex_and_missing_files() {
     assert!(compile_options(&invalid).is_err());
 
     assert_eq!(email_domain("not-an-email"), "");
+    assert_eq!(email_domain("person%40EXAMPLE%2ECOM%26otp"), "example.com");
 }

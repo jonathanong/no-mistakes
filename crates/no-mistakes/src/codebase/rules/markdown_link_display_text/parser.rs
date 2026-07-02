@@ -10,25 +10,49 @@ pub(super) fn inline_links_outside_code(source: &str) -> Vec<InlineLink> {
     let bytes = fenced.as_bytes();
     let mut links = Vec::new();
     let mut index = 0usize;
-    let mut in_inline_code = false;
     while index < bytes.len() {
-        match bytes[index] {
-            b'`' => {
-                in_inline_code = !in_inline_code;
+        if bytes[index] == b'\\' {
+            index = (index + 2).min(bytes.len());
+        } else if bytes[index] == b'`' {
+            index = skip_inline_code(bytes, index);
+        } else if bytes[index] == b'[' && (index == 0 || bytes[index - 1] != b'!') {
+            if let Some((link, next)) = parse_inline_link(&fenced, index) {
+                links.push(link);
+                index = next;
+            } else {
                 index += 1;
             }
-            b'[' if !in_inline_code && (index == 0 || bytes[index - 1] != b'!') => {
-                if let Some((link, next)) = parse_inline_link(&fenced, index) {
-                    links.push(link);
-                    index = next;
-                } else {
-                    index += 1;
-                }
-            }
-            _ => index += 1,
+        } else {
+            index += 1;
         }
     }
     links
+}
+
+fn skip_inline_code(bytes: &[u8], start: usize) -> usize {
+    let marker_len = count_backticks(bytes, start);
+    let mut index = start + marker_len;
+    while index < bytes.len() {
+        if bytes[index] == b'\\' {
+            index = (index + 2).min(bytes.len());
+        } else if bytes[index] == b'`' {
+            let close_len = count_backticks(bytes, index);
+            if close_len == marker_len {
+                return index + close_len;
+            }
+            index += close_len;
+        } else {
+            index += 1;
+        }
+    }
+    start + marker_len
+}
+
+fn count_backticks(bytes: &[u8], start: usize) -> usize {
+    bytes[start..]
+        .iter()
+        .take_while(|byte| **byte == b'`')
+        .count()
 }
 
 pub(super) fn parse_inline_link(source: &str, start: usize) -> Option<(InlineLink, usize)> {

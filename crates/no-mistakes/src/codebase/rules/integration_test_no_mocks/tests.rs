@@ -21,10 +21,11 @@ const fn = vi.fn()
 const server = await import('msw/node')
 const nock = require('nock')
 import sinon from 'sinon'
+import 'msw'
 ";
     let findings = findings(source);
 
-    assert_eq!(findings.len(), 5, "{findings:#?}");
+    assert_eq!(findings.len(), 6, "{findings:#?}");
     assert!(findings
         .iter()
         .any(|finding| finding.import.as_deref() == Some("vi.mock")));
@@ -51,6 +52,26 @@ fn ignores_comments_and_global_fetch_router() {
 globalThis.fetch = previousFetch
 ";
     assert!(findings(source).is_empty());
+}
+
+#[test]
+fn strips_comments_and_strings_without_hiding_real_code() {
+    let source = "\
+const message = 'vi.mock should only be text'
+const other = \"import('msw') is documentation\"
+/*
+vi.fn()
+*/
+/* setup */ vi.mock('../module')
+const server = await import('msw/node')
+";
+    let findings = findings(source);
+
+    assert_eq!(findings.len(), 2, "{findings:#?}");
+    assert_eq!(findings[0].line, 6);
+    assert_eq!(findings[0].import.as_deref(), Some("vi.mock"));
+    assert_eq!(findings[1].line, 7);
+    assert_eq!(findings[1].import.as_deref(), Some("msw"));
 }
 
 #[test]
