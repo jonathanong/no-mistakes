@@ -55,5 +55,11 @@ fn contains_close_tag(line: &str, tag: &str) -> bool {
 }
 
 fn push_masked(line: &str, out: &mut String) {
-    out.extend(line.chars().map(|ch| if ch == '\n' { '\n' } else { ' ' }));
+    for ch in line.chars() {
+        if ch == '\n' {
+            out.push('\n');
+        } else {
+            out.extend(std::iter::repeat_n(' ', ch.len_utf8()));
+        }
+    }
 }
