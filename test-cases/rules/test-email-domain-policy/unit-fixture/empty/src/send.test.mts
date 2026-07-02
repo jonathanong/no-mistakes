@@ -1,1 +1,1 @@
-person@example.com
+const email = "person@example.com";

@@ -154,9 +154,10 @@ fn detects_calls_and_modules_inside_template_expressions() {
     assert!(findings
         .iter()
         .any(|finding| finding.line == 5 && finding.import.as_deref() == Some("nock")));
-    assert!(findings
-        .iter()
-        .all(|finding| finding.line != 6 && finding.line != 7));
+    assert!(findings.iter().all(|finding| finding.line != 6
+        && finding.line != 7
+        && finding.line != 8
+        && finding.line != 9));
 }
 
 #[test]
@@ -197,6 +198,15 @@ fn strip_helpers_preserve_offsets_for_unclosed_and_escaped_tokens() {
     );
     let regex_stripped = strip::comments_and_strings("expect(src).toMatch(/vi\\.mock\\(/gi)");
     assert!(!regex_stripped.contains("vi"), "{regex_stripped}");
+    let template_regex_text =
+        strip::comments_and_strings("const value = `${/vi\\.mock\\({1}\\)/.test(source)}`");
+    assert!(!template_regex_text.contains("vi"), "{template_regex_text}");
+    let template_regex_brace =
+        strip::comments_and_strings("const value = `${/\\}/.test(source) ? vi.fn() : value}`");
+    assert!(
+        template_regex_brace.contains("vi.fn()"),
+        "{template_regex_brace}"
+    );
     assert_eq!(
         strip::comments_and_strings("/vi\\.mock\\(/"),
         "            "

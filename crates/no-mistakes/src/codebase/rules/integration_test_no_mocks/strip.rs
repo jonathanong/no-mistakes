@@ -131,6 +131,9 @@ fn push_template_expression(bytes: &[u8], mut index: usize, out: &mut String) ->
             b'/' if bytes.get(index + 1) == Some(&b'*') => {
                 index = push_block_comment(bytes, index + 2, out);
             }
+            b'/' if regex_literal::can_start(out) => {
+                index = regex_literal::push_erased(bytes, index, out);
+            }
             b'\'' | b'"' => {
                 index = push_erased_string(bytes, index, out);
             }

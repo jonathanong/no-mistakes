@@ -6,3 +6,5 @@ const staticTemplateRequire = require(`nock`)
 const commentedBlock = `${/* await import('msw/node') */ value}`
 const commentedLine = `${// require('nock')
 value}`
+const regexCallText = `${/vi\.mock\({1}\)/.test(source)}`
+const regexBrace = `${/\}/.test(source) ? require('nock') : value}`
