@@ -31,7 +31,10 @@ fn scan_links(source: &str, reference_definitions: &HashMap<String, String>) -> 
             } else {
                 index = skip_inline_code(bytes, index);
             }
-        } else if bytes[index] == b'[' && (index == 0 || bytes[index - 1] != b'!') {
+        } else if bytes[index] == b'['
+            && (index == 0 || bytes[index - 1] != b'!')
+            && !indent::is_code_line(bytes, index)
+        {
             if let Some((link, next)) = parse_inline_link(source, index) {
                 links.push(link);
                 index = next;

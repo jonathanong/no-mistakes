@@ -53,6 +53,19 @@ fn flags_collapsed_reference_style_markdown_filename_text_mismatch() {
 }
 
 #[test]
+fn flags_shortcut_reference_style_markdown_filename_text_mismatch() {
+    let findings = findings("shortcut-reference");
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].line, 1);
+    assert_eq!(findings[0].import.as_deref(), Some("OLD.md"));
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some("news-story-clusters.md")
+    );
+}
+
+#[test]
 fn keeps_first_duplicate_reference_definition() {
     let findings = findings("duplicate-reference");
 
@@ -111,6 +124,13 @@ fn handles_angle_destinations_and_backticked_text() {
 #[test]
 fn ignores_links_inside_code() {
     let findings = findings("code");
+
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn ignores_links_inside_indented_code() {
+    let findings = findings("indented-code");
 
     assert!(findings.is_empty(), "{findings:#?}");
 }

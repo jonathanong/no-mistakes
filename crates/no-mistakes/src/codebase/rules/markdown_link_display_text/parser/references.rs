@@ -20,7 +20,22 @@ pub(super) fn parse_link(
     let bytes = source.as_bytes();
     let text_end = super::find_byte(bytes, start + 1, b']')?;
     if bytes.get(text_end + 1) != Some(&b'[') {
-        return None;
+        if bytes.get(text_end + 1) == Some(&b':') {
+            return None;
+        }
+        let label = normalize_label(&source[start + 1..text_end]);
+        if label.is_empty() {
+            return None;
+        }
+        let href = reference_definitions.get(&label)?.clone();
+        return Some((
+            InlineLink {
+                text: source[start + 1..text_end].to_string(),
+                href,
+                offset: start,
+            },
+            text_end + 1,
+        ));
     }
     let label_start = text_end + 2;
     let label_end = super::find_byte(bytes, label_start, b']')?;
@@ -45,8 +60,7 @@ pub(super) fn parse_link(
 
 fn parse_definition(line: &str) -> Option<(String, String)> {
     let trimmed = line.trim_start_matches([' ', '\t']);
-    let indent = line.len() - trimmed.len();
-    if indent > 3 || !trimmed.starts_with('[') {
+    if super::indent::columns(line) > 3 || !trimmed.starts_with('[') {
         return None;
     }
     let label_end = super::find_byte(trimmed.as_bytes(), 1, b']')?;
