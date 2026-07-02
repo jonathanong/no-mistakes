@@ -38,8 +38,8 @@ imports, type references, and `.csproj` `ProjectReference` edges. When native
 tests are discoverable but the source/project change cannot be traced, the plan
 falls back to the framework-scoped discovered tests and reports
 `fallback_triggered`/`fallback_reason`. Command output uses `dotnet test
-<project.csproj> --no-restore` plus a class-name filter when the test file
-maps cleanly to a fully qualified test class.
+<project.csproj> --no-restore`. If no project target owns the selected test,
+the fallback command is `dotnet test --no-restore`.
 
 `swift` plans require `tests.swift.packages` config. They select changed Swift
 tests directly and select dependent Swift tests through Swift graph edges and

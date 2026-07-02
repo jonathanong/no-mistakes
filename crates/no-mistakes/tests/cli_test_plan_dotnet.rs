@@ -61,6 +61,34 @@ fn test_plan_dotnet_uses_projects_and_dependency_graph() {
 }
 
 #[test]
+fn test_plan_dotnet_commands_format_uses_project_level_command() {
+    let root = fixture("dotnet-test-plan");
+    let output = run(&[
+        "test",
+        "plan",
+        "dotnet",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "dotnet-clients/src/App/FeedService.cs",
+        "--format",
+        "commands",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = stdout(&output);
+    assert_eq!(
+        stdout.trim(),
+        "dotnet test dotnet-clients/tests/App.Tests/App.Tests.csproj --no-restore"
+    );
+    assert!(!stdout.contains("--filter"));
+}
+
+#[test]
 fn test_plan_dotnet_direct_and_coverage_error() {
     let root = fixture("dotnet-test-plan");
     let direct = run(&[
