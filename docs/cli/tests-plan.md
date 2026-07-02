@@ -26,6 +26,28 @@ inputs. If native tests are discoverable but the native source/project change
 cannot be traced, the plan falls back to the framework-scoped discovered tests
 and sets `fallback_triggered` with a `fallback_reason`.
 
+Example native workspace config:
+
+```yaml
+tests:
+  dotnet:
+    solutions:
+      - dotnet-clients/App.sln
+    projects:
+      app:
+        project: dotnet-clients/src/App/App.csproj
+      app-tests:
+        project: dotnet-clients/tests/App.Tests/App.Tests.csproj
+        test: true
+  swift:
+    packages:
+      - swift-clients/core
+      - swift-clients/ui
+```
+
+Keep these paths scoped to the native workspaces you want analyzed; no
+repository-wide `.csproj`, `.sln`, or `Package.swift` scan runs by default.
+
 `--format commands` prints the exact runner commands for selected execution
 targets. Use it when an agent needs runnable commands instead of test paths or a
 structured plan.
@@ -38,8 +60,8 @@ imports, type references, and `.csproj` `ProjectReference` edges. When native
 tests are discoverable but the source/project change cannot be traced, the plan
 falls back to the framework-scoped discovered tests and reports
 `fallback_triggered`/`fallback_reason`. Command output uses `dotnet test
-<project.csproj> --no-restore` plus a class-name filter when the test file
-maps cleanly to a fully qualified test class.
+<project.csproj> --no-restore`. If no project target owns the selected test,
+the fallback command is `dotnet test --no-restore`.
 
 `swift` plans require `tests.swift.packages` config. They select changed Swift
 tests directly and select dependent Swift tests through Swift graph edges and
