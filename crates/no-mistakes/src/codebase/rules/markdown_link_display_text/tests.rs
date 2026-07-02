@@ -107,6 +107,19 @@ fn parses_reference_style_links_outside_code() {
 }
 
 #[test]
+fn parses_nested_and_escaped_brackets_in_inline_links() {
+    let links = parser::markdown_links_outside_code(
+        "[ADR[1].md](docs/ADR[2].md)\n[ADR\\].md](docs/ADR.md)",
+    );
+
+    assert_eq!(links.len(), 2, "{links:#?}");
+    assert_eq!(links[0].text, "ADR[1].md");
+    assert_eq!(links[0].href, "docs/ADR[2].md");
+    assert_eq!(links[1].text, r"ADR\].md");
+    assert_eq!(links[1].href, "docs/ADR.md");
+}
+
+#[test]
 fn handles_unmatched_escaped_and_multi_backtick_inline_code() {
     let findings = findings("inline");
 
@@ -174,4 +187,13 @@ fn covers_custom_extensions_non_matching_files_missing_files_and_malformed_links
     assert!(parser::parse_inline_link("[text] no href", 0).is_none());
     assert!(parser::parse_inline_link("[text", 0).is_none());
     assert_eq!(href_destination("<docs/new.md"), "<docs/new.md");
+}
+
+#[test]
+fn flags_nested_and_escaped_bracket_filename_mismatches() {
+    let findings = findings("nested-brackets");
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].import.as_deref(), Some("ADR[1].md"));
+    assert_eq!(findings[0].target.as_deref(), Some("ADR[2].md"));
 }

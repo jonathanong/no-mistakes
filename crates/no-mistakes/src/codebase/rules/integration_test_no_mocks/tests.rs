@@ -23,13 +23,19 @@ fn findings(name: &str) -> Vec<RuleFinding> {
 fn rejects_default_mock_calls_and_modules() {
     let findings = findings("defaults");
 
-    assert_eq!(findings.len(), 6, "{findings:#?}");
+    assert_eq!(findings.len(), 8, "{findings:#?}");
     assert!(findings
         .iter()
         .any(|finding| finding.import.as_deref() == Some("vi.mock")));
     assert!(findings
         .iter()
         .any(|finding| finding.import.as_deref() == Some("vi.fn")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.import.as_deref() == Some("jest.fn")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.import.as_deref() == Some("jest.spyOn")));
     assert!(findings
         .iter()
         .any(|finding| finding.import.as_deref() == Some("msw")));
@@ -39,6 +45,19 @@ fn rejects_default_mock_calls_and_modules() {
     assert!(findings
         .iter()
         .any(|finding| finding.import.as_deref() == Some("sinon")));
+}
+
+#[test]
+fn detects_wrapped_forbidden_calls_across_lines() {
+    let findings = findings("wrapped-calls");
+
+    assert_eq!(findings.len(), 2, "{findings:#?}");
+    assert!(findings
+        .iter()
+        .any(|finding| finding.line == 1 && finding.import.as_deref() == Some("vi.mock")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.line == 4 && finding.import.as_deref() == Some("vi.mock")));
 }
 
 #[test]
@@ -103,7 +122,7 @@ fn detects_wrapped_dynamic_imports_and_requires() {
 fn detects_calls_and_modules_inside_template_expressions() {
     let findings = findings("template-expression");
 
-    assert_eq!(findings.len(), 4, "{findings:#?}");
+    assert_eq!(findings.len(), 6, "{findings:#?}");
     assert!(findings
         .iter()
         .any(|finding| finding.line == 1 && finding.import.as_deref() == Some("vi.mock")));
@@ -122,7 +141,13 @@ fn detects_calls_and_modules_inside_template_expressions() {
         .any(|finding| finding.line == 3 && finding.import.as_deref() == Some("nock")));
     assert!(findings
         .iter()
-        .all(|finding| finding.line != 4 && finding.line != 5));
+        .any(|finding| finding.line == 4 && finding.import.as_deref() == Some("msw")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.line == 5 && finding.import.as_deref() == Some("nock")));
+    assert!(findings
+        .iter()
+        .all(|finding| finding.line != 6 && finding.line != 7));
 }
 
 #[test]

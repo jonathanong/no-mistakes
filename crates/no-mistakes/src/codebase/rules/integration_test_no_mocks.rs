@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "integration-test-no-mocks";
 
+mod calls;
 mod strings;
 mod strip;
 
@@ -23,6 +24,8 @@ const DEFAULT_FORBIDDEN_CALLS: &[&str] = &[
     "vi.stubGlobal",
     "jest.mock",
     "jest.doMock",
+    "jest.fn",
+    "jest.spyOn",
 ];
 
 const DEFAULT_FORBIDDEN_MODULES: &[&str] = &["msw", "nock", "sinon"];
@@ -145,7 +148,7 @@ fn call_pattern(call: &str) -> String {
 fn module_pattern(module: &str) -> String {
     let module = regex::escape(module);
     format!(
-        r#"\bfrom\s+['"]{module}(?:['"/])|\bimport\s+['"]{module}(?:['"/])|\brequire\s*\(\s*['"]{module}(?:['"/])|\bimport\s*\(\s*['"]{module}(?:['"/])"#
+        r#"\bfrom\s+['"]{module}(?:['"/])|\bimport\s+['"]{module}(?:['"/])|\brequire\s*\(\s*['"`]{module}(?:['"`/])|\bimport\s*\(\s*['"`]{module}(?:['"`/])"#
     )
 }
 
@@ -156,33 +159,9 @@ fn check_file(root: &Path, path: &Path, compiled: &CompiledOptions) -> Vec<RuleF
     let rel = relative_slash_path(root, path);
     let comments_removed = strip::comments(&content);
     let strings_removed = strip::comments_and_strings(&content);
-    let mut findings = Vec::new();
-    for (index, call_line) in strings_removed.lines().enumerate() {
-        if call_line.trim_start().starts_with('*') {
-            continue;
-        }
-        if let Some(label) = first_call_match(call_line, &compiled.calls) {
-            findings.push(RuleFinding {
-                rule: RULE_ID.to_string(),
-                file: rel.clone(),
-                line: index + 1,
-                message: format!(
-                    "{rel}: integration tests must not use mocking libraries (`{label}`); use real dependencies and test helpers instead"
-                ),
-                import: Some(label),
-                target: None,
-            });
-        }
-    }
+    let mut findings = calls::findings(&rel, &strings_removed, &compiled.calls);
     findings.extend(module_findings(&rel, &comments_removed, &compiled.modules));
     findings
-}
-
-fn first_call_match(call_line: &str, calls: &[(String, Regex)]) -> Option<String> {
-    calls
-        .iter()
-        .find(|(_, regex)| regex.is_match(call_line))
-        .map(|(label, _)| label.clone())
 }
 
 fn module_findings(

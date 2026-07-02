@@ -71,7 +71,7 @@ fn count_backticks(bytes: &[u8], start: usize) -> usize {
 
 pub(super) fn parse_inline_link(source: &str, start: usize) -> Option<(InlineLink, usize)> {
     let bytes = source.as_bytes();
-    let text_end = find_byte(bytes, start + 1, b']')?;
+    let text_end = find_link_text_end(bytes, start + 1)?;
     if bytes.get(text_end + 1) != Some(&b'(') {
         return None;
     }
@@ -85,6 +85,27 @@ pub(super) fn parse_inline_link(source: &str, start: usize) -> Option<(InlineLin
         },
         href_end + 1,
     ))
+}
+
+fn find_link_text_end(bytes: &[u8], start: usize) -> Option<usize> {
+    let mut index = start;
+    let mut bracket_depth = 0usize;
+    while index < bytes.len() {
+        match bytes[index] {
+            b'\\' => index = (index + 2).min(bytes.len()),
+            b'[' => {
+                bracket_depth += 1;
+                index += 1;
+            }
+            b']' if bracket_depth == 0 => return Some(index),
+            b']' => {
+                bracket_depth -= 1;
+                index += 1;
+            }
+            _ => index += 1,
+        }
+    }
+    None
 }
 
 fn find_link_destination_end(bytes: &[u8], start: usize) -> Option<usize> {
