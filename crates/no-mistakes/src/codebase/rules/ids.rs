@@ -6,7 +6,9 @@ pub use super::doc_consistency::RULE_ID as DOC_CONSISTENCY;
 pub use super::file_extension_policy::RULE_ID as FILE_EXTENSION_POLICY;
 pub use super::finite_set_consistency::RULE_ID as FINITE_SET_CONSISTENCY;
 pub use super::forbidden_dependencies::RULE_ID as FORBIDDEN_DEPENDENCIES;
+pub use super::integration_test_no_mocks::RULE_ID as INTEGRATION_TEST_NO_MOCKS;
 pub use super::lockfile_allowlist::RULE_ID as LOCKFILE_ALLOWLIST;
+pub use super::markdown_link_display_text::RULE_ID as MARKDOWN_LINK_DISPLAY_TEXT;
 pub use super::nextjs_no_api_routes::RULE_ID as NEXTJS_NO_API_ROUTES;
 pub use super::nextjs_no_caching::RULE_ID as NEXTJS_NO_CACHING;
 pub use super::no_empty_or_comments_only_files::RULE_ID as NO_EMPTY_OR_COMMENTS_ONLY_FILES;
@@ -26,6 +28,7 @@ pub use super::server_route_client_boundary::RULE_ID as SERVER_ROUTE_CLIENT_BOUN
 pub use super::shellcheck_runner::RULE_ID as SHELLCHECK_RUNNER;
 pub use super::strict_package_layout::RULE_ID as STRICT_PACKAGE_LAYOUT;
 pub use super::structured_config_policy::RULE_ID as STRUCTURED_CONFIG_POLICY;
+pub use super::test_email_domain_policy::RULE_ID as TEST_EMAIL_DOMAIN_POLICY;
 pub use super::test_no_unmocked_dynamic_imports::RULE_ID as TEST_NO_UNMOCKED_DYNAMIC_IMPORTS;
 pub use super::tsconfig_alias_folder_mapping::RULE_ID as TSCONFIG_ALIAS_FOLDER_MAPPING;
 pub use super::vitest_ci_path_coverage::RULE_ID as VITEST_CI_PATH_COVERAGE;
