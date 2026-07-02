@@ -83,7 +83,7 @@ fn finding_for_link(
     link: InlineLink,
     extensions: &[&str],
 ) -> Option<RuleFinding> {
-    let text = link.text.replace('`', "");
+    let text = markdown_unescape(link.text).replace('`', "");
     if !looks_like_md_filename(&text, extensions) || is_non_local_href(&link.href) {
         return None;
     }

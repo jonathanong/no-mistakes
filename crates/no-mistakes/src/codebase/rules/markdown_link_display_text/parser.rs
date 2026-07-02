@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+mod destination;
 mod html_blocks;
 mod html_comments;
 mod indent;
@@ -88,7 +89,7 @@ pub(super) fn parse_inline_link(source: &str, start: usize) -> Option<(InlineLin
         return None;
     }
     let href_start = text_end + 2;
-    let href_end = find_link_destination_end(bytes, href_start)?;
+    let href_end = destination::end(bytes, href_start)?;
     Some((
         InlineLink {
             text: source[start + 1..text_end].to_string(),
@@ -118,35 +119,6 @@ fn find_link_text_end(bytes: &[u8], start: usize) -> Option<usize> {
         }
     }
     None
-}
-
-fn find_link_destination_end(bytes: &[u8], start: usize) -> Option<usize> {
-    if bytes.get(start) == Some(&b'<') {
-        return find_angle_destination_end(bytes, start + 1);
-    }
-    let mut index = start;
-    let mut paren_depth = 0usize;
-    while index < bytes.len() {
-        match bytes[index] {
-            b'\\' => index = (index + 2).min(bytes.len()),
-            b'(' => {
-                paren_depth += 1;
-                index += 1;
-            }
-            b')' if paren_depth == 0 => return Some(index),
-            b')' => {
-                paren_depth -= 1;
-                index += 1;
-            }
-            _ => index += 1,
-        }
-    }
-    None
-}
-
-fn find_angle_destination_end(bytes: &[u8], start: usize) -> Option<usize> {
-    let end = bytes[start..].iter().position(|byte| *byte == b'>')? + start;
-    (bytes.get(end + 1) == Some(&b')')).then_some(end + 1)
 }
 
 fn find_byte(bytes: &[u8], start: usize, target: u8) -> Option<usize> {
@@ -199,7 +171,11 @@ fn fence_marker(line: &str, allow_trailing_text: bool) -> Option<Fence> {
         return None;
     }
     let len = count_marker(bytes, marker);
-    if !allow_trailing_text && !trimmed[len..].trim().is_empty() {
+    let trailing = trimmed[len..].trim();
+    if !allow_trailing_text && !trailing.is_empty() {
+        return None;
+    }
+    if allow_trailing_text && marker == b'`' && trailing.as_bytes().contains(&b'`') {
         return None;
     }
     (len >= 3).then_some(Fence { marker, len })

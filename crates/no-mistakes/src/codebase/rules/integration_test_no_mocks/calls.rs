@@ -11,7 +11,8 @@ pub(super) fn findings(
         .iter()
         .flat_map(|(label, regex)| {
             regex
-                .find_iter(comments_removed)
+                .captures_iter(comments_removed)
+                .filter_map(|captures| captures.name("call"))
                 .filter(|matched| {
                     !super::strings::is_inside_string(comments_removed.as_bytes(), matched.start())
                 })

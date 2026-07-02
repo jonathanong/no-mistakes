@@ -95,6 +95,33 @@ fn allows_matching_and_descriptive_links() {
     let findings = findings("allowed");
 
     assert!(findings.is_empty(), "{findings:#?}");
+    assert!(finding_for_link(
+        "docs/index.md",
+        "[ADR\\.md](docs/ADR.md)",
+        parser::parse_inline_link("[ADR\\.md](docs/ADR.md)", 0)
+            .unwrap()
+            .0,
+        &[".md"],
+    )
+    .is_none());
+    assert!(finding_for_link(
+        "docs/index.md",
+        "[ADR\\[1\\].md](docs/ADR[1].md)",
+        parser::parse_inline_link("[ADR\\[1\\].md](docs/ADR[1].md)", 0)
+            .unwrap()
+            .0,
+        &[".md"],
+    )
+    .is_none());
+    assert!(finding_for_link(
+        "docs/index.md",
+        "[ADR\\`.md](docs/ADR.md)",
+        parser::parse_inline_link("[ADR\\`.md](docs/ADR.md)", 0)
+            .unwrap()
+            .0,
+        &[".md"],
+    )
+    .is_none());
 }
 
 #[test]
@@ -109,6 +136,9 @@ fn allows_parenthesized_local_markdown_filenames() {
     assert_eq!(href_basename("docs/a\\").as_deref(), Some("a\\"));
     let (angle_link, _) = parser::parse_inline_link("[a)b.md](<docs/a)b.md>)", 0).unwrap();
     assert_eq!(angle_link.href, "<docs/a)b.md>");
+    let (titled_angle_link, _) =
+        parser::parse_inline_link("[OLD.md](<docs/new.md> \"details\")", 0).unwrap();
+    assert_eq!(titled_angle_link.href, "<docs/new.md> \"details\"");
     assert!(parser::parse_inline_link("[x](docs/a(b.md)", 0).is_none());
 }
 
@@ -290,6 +320,9 @@ fn ignores_links_after_invalid_closing_fence_text() {
     assert!(findings.is_empty(), "{findings:#?}");
     let links = parser::markdown_links_outside_code("    ```\n[REAL.md](actual.md)");
     assert_eq!(links.len(), 1, "{links:#?}");
+    let links = parser::markdown_links_outside_code("``` js `\n[REAL.md](actual.md)\n```");
+    assert_eq!(links.len(), 1, "{links:#?}");
+    assert_eq!(links[0].text, "REAL.md");
 }
 
 #[test]

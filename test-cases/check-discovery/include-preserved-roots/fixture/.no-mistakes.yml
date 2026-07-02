@@ -9,6 +9,7 @@ rules:
     scope: repository
     include:
       - fixtures/**
+      - "**/fixtures/**"
     options:
       bannedDomains:
         - example.com

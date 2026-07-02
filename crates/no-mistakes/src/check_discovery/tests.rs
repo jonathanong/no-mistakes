@@ -93,6 +93,9 @@ fn discover_check_files_preserves_included_fixture_roots() {
         .any(|path| path.ends_with("fixtures/users.json")));
     assert!(files
         .iter()
+        .any(|path| path.ends_with("backend/fixtures/backend-users.json")));
+    assert!(files
+        .iter()
         .any(|path| path.ends_with("web/fixtures/project-users.json")));
 }
 
@@ -102,6 +105,11 @@ fn literal_include_prefix_stops_before_brace_alternation() {
         literal_include_prefix("docs/{a,b}/**"),
         Some(PathBuf::from("docs"))
     );
+    assert_eq!(
+        leading_globstar_literal_prefix("**/fixtures/**"),
+        Some(PathBuf::from("fixtures"))
+    );
+    assert_eq!(leading_globstar_literal_prefix("**/*.ts"), None);
 }
 
 #[test]

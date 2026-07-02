@@ -310,7 +310,7 @@ fn strips_comments_and_strings_without_hiding_real_code() {
 fn detects_bracket_and_typed_forbidden_calls() {
     let findings = findings("bracket-typed-calls");
 
-    assert_eq!(findings.len(), 7, "{findings:#?}");
+    assert_eq!(findings.len(), 8, "{findings:#?}");
     assert_eq!(
         findings
             .iter()
@@ -319,6 +319,7 @@ fn detects_bracket_and_typed_forbidden_calls() {
         vec![
             (1, Some("vi.mock")),
             (6, Some("vi.mock")),
+            (8, Some("vi.mock")),
             (2, Some("vi.fn")),
             (4, Some("vi.fn")),
             (5, Some("jest.fn")),

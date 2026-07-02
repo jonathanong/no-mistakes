@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 pub const RULE_ID: &str = "integration-test-no-mocks";
 
 mod calls;
+mod patterns;
 mod strings;
 mod strip;
 mod test_targets;
@@ -117,7 +118,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         calls: calls
             .into_iter()
             .map(|call| {
-                let pattern = call_pattern(call);
+                let pattern = patterns::call(call);
                 let regex = Regex::new(&pattern).expect("escaped call pattern is valid regex");
                 Ok((call.to_string(), regex))
             })
@@ -125,48 +126,12 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         modules: modules
             .into_iter()
             .map(|module| {
-                let pattern = module_pattern(module);
+                let pattern = patterns::module(module);
                 let regex = Regex::new(&pattern).expect("escaped module pattern is valid regex");
                 Ok((module.to_string(), regex))
             })
             .collect::<Result<Vec<_>>>()?,
     })
-}
-
-fn call_pattern(call: &str) -> String {
-    let mut pieces = call.split('.');
-    let first = pieces.next().unwrap_or_default();
-    let rest: Vec<&str> = pieces.collect();
-    if first.is_empty() || rest.is_empty() {
-        return format!(r"\b{}{}\(", regex::escape(call), type_args_pattern());
-    }
-    let member = rest
-        .into_iter()
-        .map(|part| {
-            let escaped = regex::escape(part);
-            format!(
-                r#"(?:\s*\.\s*{escaped}|\s*\?\.\s*{escaped}|\s*\[\s*['"]{escaped}['"]\s*\]|\s*\?\.\s*\[\s*['"]{escaped}['"]\s*\])"#
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("");
-    format!(
-        r"\b{}{}{}\(",
-        regex::escape(first),
-        member,
-        type_args_pattern()
-    )
-}
-
-fn type_args_pattern() -> &'static str {
-    r"\s*(?:<[^;\n]*>)?\s*"
-}
-
-fn module_pattern(module: &str) -> String {
-    let module = regex::escape(module);
-    format!(
-        r#"\bfrom\s+['"]{module}(?:['"/])|\bimport\s+['"]{module}(?:['"/])|\brequire\s*\(\s*['"`]{module}(?:['"`/])|\bimport\s*\(\s*['"`]{module}(?:['"`/])"#
-    )
 }
 
 fn check_file(root: &Path, path: &Path, compiled: &CompiledOptions) -> Vec<RuleFinding> {

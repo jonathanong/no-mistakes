@@ -34,15 +34,13 @@ fn include_preserved_roots(root: &Path, config: &NoMistakesConfig) -> Vec<PathBu
     let mut inferred_roots = no_mistakes::codebase::config::InferredRoots::default();
     for rule in config.rules.iter().filter(|rule| rule.enabled) {
         for include in &rule.include {
-            if let Some(prefix) = literal_include_prefix(include) {
-                roots.push(root.join(&prefix));
-                for project_name in &rule.projects {
-                    let Some(project) = config.projects.get(project_name) else {
-                        continue;
-                    };
-                    if let Some(project_root) = project_root(root, project, &mut inferred_roots) {
-                        roots.push(project_root.join(&prefix));
-                    }
+            push_include_preserved_roots(&mut roots, root, include);
+            for project_name in &rule.projects {
+                let Some(project) = config.projects.get(project_name) else {
+                    continue;
+                };
+                if let Some(project_root) = project_root(root, project, &mut inferred_roots) {
+                    push_include_preserved_roots(&mut roots, &project_root, include);
                 }
             }
         }
@@ -50,6 +48,54 @@ fn include_preserved_roots(root: &Path, config: &NoMistakesConfig) -> Vec<PathBu
     roots.sort();
     roots.dedup();
     roots
+}
+
+fn push_include_preserved_roots(roots: &mut Vec<PathBuf>, base: &Path, include: &str) {
+    if let Some(prefix) = literal_include_prefix(include) {
+        roots.push(base.join(&prefix));
+    }
+    if let Some(suffix) = leading_globstar_literal_prefix(include) {
+        roots.extend(descendant_dirs_matching_suffix(base, &suffix));
+    }
+}
+
+fn descendant_dirs_matching_suffix(base: &Path, suffix: &Path) -> Vec<PathBuf> {
+    let mut roots = Vec::new();
+    collect_descendant_dirs_matching_suffix(base, base, suffix, &mut roots);
+    roots
+}
+
+fn collect_descendant_dirs_matching_suffix(
+    base: &Path,
+    dir: &Path,
+    suffix: &Path,
+    roots: &mut Vec<PathBuf>,
+) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if !entry
+            .file_type()
+            .ok()
+            .is_some_and(|file_type| file_type.is_dir())
+        {
+            continue;
+        }
+        if path
+            .strip_prefix(base)
+            .ok()
+            .is_some_and(|rel| rel.ends_with(suffix))
+        {
+            roots.push(path.clone());
+        }
+        collect_descendant_dirs_matching_suffix(base, &path, suffix, roots);
+    }
+}
+
+fn leading_globstar_literal_prefix(include: &str) -> Option<PathBuf> {
+    include.strip_prefix("**/").and_then(literal_include_prefix)
 }
 
 fn literal_include_prefix(include: &str) -> Option<PathBuf> {
