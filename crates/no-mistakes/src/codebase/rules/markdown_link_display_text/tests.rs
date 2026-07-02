@@ -104,6 +104,9 @@ fn allows_parenthesized_local_markdown_filenames() {
     assert!(findings.is_empty(), "{findings:#?}");
     let (link, _) = parser::parse_inline_link("[x](docs/a\\)b.md)", 0).unwrap();
     assert_eq!(link.href, "docs/a\\)b.md");
+    assert_eq!(href_basename("docs/a\\)b.md").as_deref(), Some("a)b.md"));
+    let (angle_link, _) = parser::parse_inline_link("[a)b.md](<docs/a)b.md>)", 0).unwrap();
+    assert_eq!(angle_link.href, "<docs/a)b.md>");
     assert!(parser::parse_inline_link("[x](docs/a(b.md)", 0).is_none());
 }
 
@@ -128,6 +131,7 @@ fn ignores_links_inside_code() {
     let findings = findings("code");
 
     assert!(findings.is_empty(), "{findings:#?}");
+    assert!(parser::markdown_links_outside_code(r"`[OLD.md](new.md)\`").is_empty());
 }
 
 #[test]

@@ -61,9 +61,7 @@ fn skip_inline_code(bytes: &[u8], start: usize) -> usize {
     let marker_len = count_backticks(bytes, start);
     let mut index = start + marker_len;
     while index < bytes.len() {
-        if bytes[index] == b'\\' {
-            index = (index + 2).min(bytes.len());
-        } else if bytes[index] == b'`' {
+        if bytes[index] == b'`' {
             let close_len = count_backticks(bytes, index);
             if close_len == marker_len {
                 return index + close_len;
@@ -123,6 +121,9 @@ fn find_link_text_end(bytes: &[u8], start: usize) -> Option<usize> {
 }
 
 fn find_link_destination_end(bytes: &[u8], start: usize) -> Option<usize> {
+    if bytes.get(start) == Some(&b'<') {
+        return find_angle_destination_end(bytes, start + 1);
+    }
     let mut index = start;
     let mut paren_depth = 0usize;
     while index < bytes.len() {
@@ -141,6 +142,11 @@ fn find_link_destination_end(bytes: &[u8], start: usize) -> Option<usize> {
         }
     }
     None
+}
+
+fn find_angle_destination_end(bytes: &[u8], start: usize) -> Option<usize> {
+    let end = bytes[start..].iter().position(|byte| *byte == b'>')? + start;
+    (bytes.get(end + 1) == Some(&b')')).then_some(end + 1)
 }
 
 fn find_byte(bytes: &[u8], start: usize, target: u8) -> Option<usize> {

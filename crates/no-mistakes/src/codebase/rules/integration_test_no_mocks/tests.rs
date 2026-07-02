@@ -81,6 +81,16 @@ fn test_target_only_rules_keep_files_for_include_filtering() {
             include: vec!["**/*.test.mts".to_string()],
             ..Default::default()
         }],
+        tests: crate::config::v2::schema::Tests {
+            vitest: crate::config::v2::schema::VitestConfig {
+                projects: std::collections::BTreeMap::from([(
+                    "integration".to_string(),
+                    crate::config::v2::schema::TestProjectPolicy::default(),
+                )]),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
         ..Default::default()
     };
 
@@ -265,6 +275,27 @@ fn selected_test_target_match_falls_back_when_named_policy_has_no_include() {
 }
 
 #[test]
+fn selected_test_target_match_does_not_fallback_for_missing_target_name() {
+    let root = fixture("defaults");
+    let config = NoMistakesConfig::default();
+    let rule = RuleDef {
+        rule: RULE_ID.to_string(),
+        tests: RuleTestTargets {
+            vitest: vec!["typo".to_string()],
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+
+    assert!(!test_targets::selected_match(
+        &root,
+        &config,
+        &rule,
+        &root.join("src/example.test.mts")
+    ));
+}
+
+#[test]
 fn strips_comments_and_strings_without_hiding_real_code() {
     let findings = findings("strings");
 
@@ -279,7 +310,7 @@ fn strips_comments_and_strings_without_hiding_real_code() {
 fn detects_bracket_and_typed_forbidden_calls() {
     let findings = findings("bracket-typed-calls");
 
-    assert_eq!(findings.len(), 5, "{findings:#?}");
+    assert_eq!(findings.len(), 7, "{findings:#?}");
     assert_eq!(
         findings
             .iter()
@@ -287,9 +318,11 @@ fn detects_bracket_and_typed_forbidden_calls() {
             .collect::<Vec<_>>(),
         vec![
             (1, Some("vi.mock")),
+            (6, Some("vi.mock")),
             (2, Some("vi.fn")),
             (4, Some("vi.fn")),
             (5, Some("jest.fn")),
+            (7, Some("jest.fn")),
             (3, Some("jest.spyOn"))
         ]
     );

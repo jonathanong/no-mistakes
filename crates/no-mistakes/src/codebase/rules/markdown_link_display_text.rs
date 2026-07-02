@@ -123,6 +123,7 @@ fn href_basename(href: &str) -> Option<String> {
         .next()
         .filter(|basename| !basename.is_empty())
         .map(percent_decode)
+        .map(markdown_unescape)
 }
 
 fn percent_decode(value: &str) -> String {
@@ -141,6 +142,28 @@ fn percent_decode(value: &str) -> String {
         index += 1;
     }
     String::from_utf8(out).unwrap_or_else(|_| value.to_string())
+}
+
+fn markdown_unescape(value: String) -> String {
+    let mut out = String::with_capacity(value.len());
+    let mut chars = value.chars();
+    while let Some(ch) = chars.next() {
+        if ch == '\\' {
+            if let Some(next) = chars.next() {
+                if next.is_ascii_punctuation() {
+                    out.push(next);
+                } else {
+                    out.push(ch);
+                    out.push(next);
+                }
+            } else {
+                out.push(ch);
+            }
+        } else {
+            out.push(ch);
+        }
+    }
+    out
 }
 
 fn decode_hex_byte(high: Option<&u8>, low: Option<&u8>) -> Option<u8> {

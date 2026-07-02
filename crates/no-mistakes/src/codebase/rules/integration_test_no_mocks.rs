@@ -144,7 +144,9 @@ fn call_pattern(call: &str) -> String {
         .into_iter()
         .map(|part| {
             let escaped = regex::escape(part);
-            format!(r#"(?:\s*\.\s*{escaped}|\s*\[\s*['"]{escaped}['"]\s*\])"#)
+            format!(
+                r#"(?:\s*\.\s*{escaped}|\s*\?\.\s*{escaped}|\s*\[\s*['"]{escaped}['"]\s*\]|\s*\?\.\s*\[\s*['"]{escaped}['"]\s*\])"#
+            )
         })
         .collect::<Vec<_>>()
         .join("");
