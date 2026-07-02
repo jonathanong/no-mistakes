@@ -174,6 +174,11 @@ fn skips_links_inside_raw_html_blocks() {
         "<PRE class=\"code\">[OLD.md](new.md)</PRE>\n<script\tdefer>[OLD2.md](new2.md)</script>\n<style\n>[OLD3.md](new3.md)</style>",
     );
     assert!(links.is_empty(), "{links:#?}");
+
+    let source = "<pre>日本語</pre>\n[OLD.md](new.md)";
+    let links = parser::markdown_links_outside_code(source);
+    assert_eq!(links.len(), 1, "{links:#?}");
+    assert_eq!(links[0].offset, source.find("[OLD.md]").unwrap());
 }
 
 #[test]

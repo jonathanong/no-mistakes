@@ -94,6 +94,14 @@ fn discover_check_files_preserves_included_fixture_roots() {
 }
 
 #[test]
+fn literal_include_prefix_stops_before_brace_alternation() {
+    assert_eq!(
+        literal_include_prefix("docs/{a,b}/**"),
+        Some(PathBuf::from("docs"))
+    );
+}
+
+#[test]
 fn nextjs_project_without_single_config_root_is_ignored() {
     let root = fixture("check-discovery/nextjs-without-config");
     let config = load_config(&root);

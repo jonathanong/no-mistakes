@@ -45,7 +45,7 @@ fn include_preserved_roots(root: &Path, config: &NoMistakesConfig) -> Vec<PathBu
 
 fn literal_include_prefix(include: &str) -> Option<PathBuf> {
     let prefix = include
-        .split(['*', '?', '['])
+        .split(['*', '?', '[', '{'])
         .next()
         .unwrap_or_default()
         .trim_end_matches('/');
