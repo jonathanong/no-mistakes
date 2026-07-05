@@ -149,4 +149,8 @@ fn valid_package_name(name: &str) -> bool {
         && !name.starts_with('*')
         && !name.starts_with('^')
         && !name.starts_with('~')
+        && !name.starts_with(|c: char| c.is_ascii_digit())
+        && !name.starts_with('<')
+        && !name.starts_with('>')
+        && !name.starts_with('=')
 }

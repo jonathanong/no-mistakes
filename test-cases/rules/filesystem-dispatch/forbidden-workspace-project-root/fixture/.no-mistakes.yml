@@ -1,6 +1,9 @@
+filesystem:
+  skipDirectories:
+    - fixtures
 projects:
   app:
-    root: packages/app
+    root: fixtures/app
 rules:
   - rule: forbidden-workspace-closure
     projects: [app]

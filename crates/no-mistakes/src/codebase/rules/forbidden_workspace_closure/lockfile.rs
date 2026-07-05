@@ -4,6 +4,8 @@ use crate::codebase::workspaces;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::path::{Path, PathBuf};
 
+mod path_alias;
+
 pub(super) fn lockfile_nodes(
     root: &Path,
     lockfile: &Path,
@@ -43,6 +45,11 @@ pub(super) fn lockfile_nodes(
         .map(|package| (package.name.clone(), package))
         .collect();
     let workspace_names: BTreeSet<String> = package_by_name.keys().cloned().collect();
+    let package_by_dir: BTreeMap<PathBuf, String> = workspace
+        .packages
+        .iter()
+        .map(|package| (package.dir.clone(), package.name.clone()))
+        .collect();
     let mut nodes = BTreeMap::new();
     let mut queued = BTreeSet::new();
     let mut queue = VecDeque::new();
@@ -61,8 +68,13 @@ pub(super) fn lockfile_nodes(
             ));
         };
         let manifest = package.dir.join("package.json");
-        let deps =
-            lockfile_dependencies(importer, &manifest_nodes[&package_name], &dependency_types);
+        let deps = lockfile_dependencies(
+            lockfile_root,
+            importer,
+            &package_by_dir,
+            &manifest_nodes[&package_name],
+            &dependency_types,
+        );
         for dep in &deps {
             let workspace_dep = dep.resolved_name.as_ref().unwrap_or(&dep.name);
             if workspace_names.contains(workspace_dep) && queued.insert(workspace_dep.clone()) {
@@ -146,7 +158,9 @@ fn absolute_lockfile_path(root: &Path, lockfile: &Path) -> PathBuf {
 }
 
 fn lockfile_dependencies(
+    lockfile_root: &Path,
     importer: &crate::codebase::lockfile::pnpm::PnpmImporter,
+    package_by_dir: &BTreeMap<PathBuf, String>,
     manifest_node: &PackageNode,
     dependency_types: &[LockfileDependencyType],
 ) -> Vec<Dependency> {
@@ -155,7 +169,14 @@ fn lockfile_dependencies(
         if let Some((field_name, entries)) = field.importer_entries(importer) {
             deps.extend(entries.iter().map(|entry| Dependency {
                 name: entry.alias.clone(),
-                resolved_name: entry.resolution_name.clone(),
+                resolved_name: entry.resolution_name.clone().or_else(|| {
+                    path_alias::resolve_workspace_path_dependency(
+                        lockfile_root,
+                        importer,
+                        entry,
+                        package_by_dir,
+                    )
+                }),
                 field: field_name.to_string(),
             }));
         } else {

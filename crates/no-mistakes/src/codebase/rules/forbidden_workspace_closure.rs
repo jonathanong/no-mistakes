@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 
 mod alias;
 mod lockfile;
+mod manifest;
 mod traversal;
 
 pub const RULE_ID: &str = "forbidden-workspace-closure";
@@ -49,7 +50,10 @@ pub(crate) fn check_with_files(
             let opts: Options = rule.rule_options();
             let target_roots = super::target_roots(root, config, rule);
             let skip = super::skip_dir_set(config);
-            let discovery_roots = vec![root.to_path_buf()];
+            let mut discovery_roots = vec![root.to_path_buf()];
+            discovery_roots.extend(target_roots.iter().cloned());
+            discovery_roots.sort();
+            discovery_roots.dedup();
             let files: Vec<PathBuf> = all_files
                 .iter()
                 .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &discovery_roots))
@@ -89,7 +93,7 @@ fn scan(
         }
     };
     let dependency_types = dependency_types(opts);
-    let mut nodes = manifest_nodes(&workspace, &dependency_types);
+    let mut nodes = manifest::manifest_nodes(&workspace, &dependency_types);
     if let Some(lockfile) = &opts.lockfile {
         match lockfile::lockfile_nodes(
             root,
@@ -159,28 +163,6 @@ fn dependency_types(opts: &Options) -> Vec<&str> {
     }
 }
 
-fn manifest_nodes(
-    workspace: &workspaces::WorkspaceMap,
-    dependency_types: &[&str],
-) -> BTreeMap<String, PackageNode> {
-    workspace
-        .packages
-        .iter()
-        .map(|package| {
-            let manifest = package.dir.join("package.json");
-            let deps = package_deps::dependency_entries(&manifest, dependency_types)
-                .into_iter()
-                .map(|entry| Dependency {
-                    name: entry.name,
-                    resolved_name: alias::resolved_dependency_name(&entry.specifier),
-                    field: entry.field,
-                })
-                .collect();
-            (package.name.clone(), PackageNode { manifest, deps })
-        })
-        .collect()
-}
-
 fn build_globset(patterns: &[String]) -> std::result::Result<GlobSet, globset::Error> {
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
@@ -204,5 +186,7 @@ fn config_finding(message: &str) -> RuleFinding {
 mod tests;
 #[cfg(test)]
 mod tests_lockfile;
+#[cfg(test)]
+mod tests_lockfile_alias;
 #[cfg(test)]
 mod tests_lockfile_config;
