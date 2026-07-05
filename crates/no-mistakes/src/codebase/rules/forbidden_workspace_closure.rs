@@ -29,6 +29,7 @@ pub(crate) struct Options {
 pub(super) struct Dependency {
     name: String,
     resolved_name: Option<String>,
+    workspace_name: Option<String>,
     field: String,
 }
 

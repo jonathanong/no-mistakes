@@ -40,7 +40,9 @@ pub(super) fn collect_findings_for_package(
                     sink.push(&dep_chain, &target, start_node, node);
                 }
             }
-            let workspace_dep = dep.resolved_name.as_ref().unwrap_or(&dep.name);
+            let Some(workspace_dep) = dep.workspace_name.as_ref() else {
+                continue;
+            };
             if workspace_names.contains(workspace_dep) && !seen.contains(workspace_dep) {
                 let mut next_chain = chain.clone();
                 next_chain.push(workspace_dep.clone());

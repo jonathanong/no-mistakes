@@ -1,0 +1,6 @@
+{
+  "name": "@acme/app",
+  "dependencies": {
+    "domain": "npm:@acme/domain@1.0.0"
+  }
+}

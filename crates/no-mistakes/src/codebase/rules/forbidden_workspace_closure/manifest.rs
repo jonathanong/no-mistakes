@@ -14,12 +14,18 @@ pub(super) fn manifest_nodes(
             let deps = package_deps::dependency_entries(&manifest, dependency_types)
                 .into_iter()
                 .map(|entry| Dependency {
-                    name: entry.name,
+                    workspace_name: alias::workspace_dependency_name(
+                        &entry.name,
+                        &entry.specifier,
+                        &package.dir,
+                        workspace,
+                    ),
                     resolved_name: alias::resolved_dependency_name(
                         &entry.specifier,
                         &package.dir,
                         workspace,
                     ),
+                    name: entry.name,
                     field: entry.field,
                 })
                 .collect();

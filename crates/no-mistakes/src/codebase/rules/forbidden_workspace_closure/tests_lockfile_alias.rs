@@ -115,6 +115,30 @@ fn pnpm_lockfile_workspace_path_alias_extends_closure() {
 }
 
 #[test]
+fn pnpm_lockfile_registry_dependency_name_does_not_extend_closure() {
+    let root = fixture_root("lockfile-registry-same-name");
+    let files = package_files(
+        &root,
+        &[
+            "package.json",
+            "packages/app/package.json",
+            "packages/domain/package.json",
+        ],
+    );
+
+    let findings = check_with_files(
+        &root,
+        &config(
+            "packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\nlockfile: pnpm-lock.yaml\n",
+        ),
+        &files,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn pnpm_lockfile_root_workspace_path_alias_extends_closure() {
     let root = fixture_root("lockfile-root-path-alias");
     let files = package_files(

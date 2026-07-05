@@ -8,8 +8,8 @@ rules:
   - rule: forbidden-workspace-closure
     scope: repository
     options:
-      packages: [@acme/app]
-      forbidden: [@acme/secret]
+      packages: ["@acme/app"]
+      forbidden: ["@acme/secret"]
       dependencyTypes: [dependencies, devDependencies]
       lockfile: pnpm-lock.yaml
 ```

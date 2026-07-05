@@ -17,6 +17,31 @@ pub(super) fn resolved_dependency_name(
     package_name_from_alias_specifier(aliased)
 }
 
+pub(super) fn workspace_dependency_name(
+    dependency_name: &str,
+    specifier: &str,
+    package_dir: &Path,
+    workspace: &workspaces::WorkspaceMap,
+) -> Option<String> {
+    if let Some(path) = workspace_path_specifier(specifier) {
+        return resolve_workspace_path(path, package_dir, workspace);
+    }
+    if specifier.starts_with("workspace:") {
+        return resolved_dependency_name(specifier, package_dir, workspace).or_else(|| {
+            workspace_has_package(dependency_name, workspace).then(|| dependency_name.to_string())
+        });
+    }
+    (!specifier.starts_with("npm:") && workspace_has_package(dependency_name, workspace))
+        .then(|| dependency_name.to_string())
+}
+
+fn workspace_has_package(name: &str, workspace: &workspaces::WorkspaceMap) -> bool {
+    workspace
+        .packages
+        .iter()
+        .any(|package| package.name == name)
+}
+
 fn package_name_from_alias_specifier(specifier: &str) -> Option<String> {
     if let Some(stripped) = specifier.strip_prefix('@') {
         let slash = stripped.find('/')?;

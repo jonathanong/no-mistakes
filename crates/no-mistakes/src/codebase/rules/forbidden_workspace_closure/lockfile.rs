@@ -4,6 +4,7 @@ use crate::codebase::workspaces;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::path::{Path, PathBuf};
 
+mod dependency_type;
 mod path_alias;
 
 pub(super) fn lockfile_nodes(
@@ -19,7 +20,7 @@ pub(super) fn lockfile_nodes(
             "{RULE_ID}: lockfile currently supports pnpm-lock.yaml only"
         ));
     }
-    let dependency_types = validate_dependency_types(dependency_types)?;
+    let dependency_types = dependency_type::validate(dependency_types)?;
     let lockfile_path = absolute_lockfile_path(root, lockfile);
     let lockfile_root = lockfile_path.parent().unwrap_or(root);
     let content = std::fs::read_to_string(&lockfile_path).map_err(|error| {
@@ -72,11 +73,14 @@ pub(super) fn lockfile_nodes(
             lockfile_root,
             importer,
             &package_by_dir,
+            &workspace_names,
             &manifest_nodes[&package_name],
             &dependency_types,
         );
         for dep in &deps {
-            let workspace_dep = dep.resolved_name.as_ref().unwrap_or(&dep.name);
+            let Some(workspace_dep) = dep.workspace_name.as_ref() else {
+                continue;
+            };
             if workspace_names.contains(workspace_dep) && queued.insert(workspace_dep.clone()) {
                 queue.push_back(workspace_dep.clone());
             }
@@ -95,60 +99,6 @@ fn importer_key(lockfile_root: &Path, package_dir: &Path) -> String {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-enum LockfileDependencyType {
-    Dependencies,
-    DevDependencies,
-    PeerDependencies,
-    OptionalDependencies,
-}
-
-impl LockfileDependencyType {
-    fn field(self) -> &'static str {
-        match self {
-            Self::Dependencies => "dependencies",
-            Self::DevDependencies => "devDependencies",
-            Self::PeerDependencies => "peerDependencies",
-            Self::OptionalDependencies => "optionalDependencies",
-        }
-    }
-
-    fn importer_entries(
-        self,
-        importer: &crate::codebase::lockfile::pnpm::PnpmImporter,
-    ) -> Option<(
-        &'static str,
-        &[crate::codebase::lockfile::pnpm::PnpmImporterDependency],
-    )> {
-        match self {
-            Self::Dependencies => Some((self.field(), &importer.dependencies)),
-            Self::DevDependencies => Some((self.field(), &importer.dev_dependencies)),
-            Self::PeerDependencies => None,
-            Self::OptionalDependencies => Some((self.field(), &importer.optional_dependencies)),
-        }
-    }
-}
-
-fn validate_dependency_types(
-    dependency_types: &[&str],
-) -> std::result::Result<Vec<LockfileDependencyType>, String> {
-    let mut validated = Vec::new();
-    for field in dependency_types {
-        validated.push(match *field {
-            "dependencies" => LockfileDependencyType::Dependencies,
-            "devDependencies" => LockfileDependencyType::DevDependencies,
-            "peerDependencies" => LockfileDependencyType::PeerDependencies,
-            "optionalDependencies" => LockfileDependencyType::OptionalDependencies,
-            _ => {
-                return Err(format!(
-                    "{RULE_ID}: lockfile dependencyTypes supports dependencies, devDependencies, peerDependencies, and optionalDependencies only; unsupported dependency type '{field}'"
-                ));
-            }
-        });
-    }
-    Ok(validated)
-}
-
 fn absolute_lockfile_path(root: &Path, lockfile: &Path) -> PathBuf {
     if lockfile.is_absolute() {
         lockfile.to_path_buf()
@@ -161,23 +111,35 @@ fn lockfile_dependencies(
     lockfile_root: &Path,
     importer: &crate::codebase::lockfile::pnpm::PnpmImporter,
     package_by_dir: &BTreeMap<PathBuf, String>,
+    workspace_names: &BTreeSet<String>,
     manifest_node: &PackageNode,
-    dependency_types: &[LockfileDependencyType],
+    dependency_types: &[dependency_type::LockfileDependencyType],
 ) -> Vec<Dependency> {
     let mut deps = Vec::new();
     for field in dependency_types {
         if let Some((field_name, entries)) = field.importer_entries(importer) {
-            deps.extend(entries.iter().map(|entry| Dependency {
-                name: entry.alias.clone(),
-                resolved_name: entry.resolution_name.clone().or_else(|| {
-                    path_alias::resolve_workspace_path_dependency(
-                        lockfile_root,
-                        importer,
-                        entry,
-                        package_by_dir,
-                    )
-                }),
-                field: field_name.to_string(),
+            deps.extend(entries.iter().map(|entry| {
+                let path_workspace_name = path_alias::resolve_workspace_path_dependency(
+                    lockfile_root,
+                    importer,
+                    entry,
+                    package_by_dir,
+                );
+                let workspace_name = if let Some(name) = path_workspace_name.clone() {
+                    Some(name)
+                } else if entry.specifier.starts_with("workspace:")
+                    && workspace_names.contains(&entry.alias)
+                {
+                    Some(entry.alias.clone())
+                } else {
+                    None
+                };
+                Dependency {
+                    name: entry.alias.clone(),
+                    resolved_name: entry.resolution_name.clone().or(path_workspace_name),
+                    workspace_name,
+                    field: field_name.to_string(),
+                }
             }));
         } else {
             deps.extend(

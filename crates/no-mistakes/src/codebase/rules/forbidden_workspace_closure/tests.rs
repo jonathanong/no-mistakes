@@ -107,6 +107,28 @@ fn passes_when_forbidden_package_is_outside_closure() {
 }
 
 #[test]
+fn npm_alias_does_not_extend_manifest_workspace_closure() {
+    let root = fixture_root("manifest-npm-alias-registry");
+    let files = package_files(
+        &root,
+        &[
+            "package.json",
+            "packages/app/package.json",
+            "packages/domain/package.json",
+        ],
+    );
+
+    let findings = check_with_files(
+        &root,
+        &config("packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\n"),
+        &files,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn dependency_types_control_dev_dependency_closure() {
     let root = fixture_root("dependency-types");
     let files = package_files(
@@ -423,11 +445,13 @@ fn traversal_tolerates_duplicate_and_missing_workspace_nodes() {
                 Dependency {
                     name: "@acme/missing".to_string(),
                     resolved_name: None,
+                    workspace_name: Some("@acme/missing".to_string()),
                     field: "dependencies".to_string(),
                 },
                 Dependency {
                     name: "@acme/missing".to_string(),
                     resolved_name: None,
+                    workspace_name: Some("@acme/missing".to_string()),
                     field: "dependencies".to_string(),
                 },
             ],
