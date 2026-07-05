@@ -12,7 +12,7 @@ pub(super) fn resolve_workspace_path_dependency(
         entry
             .version
             .strip_prefix("link:")
-            .filter(|path| path.starts_with('.'))
+            .filter(|path| relative_link_path(path))
     })?;
     let importer_dir = if super::normalize_importer_path(&importer.path) == "." {
         lockfile_root.to_path_buf()
@@ -21,4 +21,8 @@ pub(super) fn resolve_workspace_path_dependency(
     };
     let target_dir = normalize_path(&importer_dir.join(path));
     package_by_dir.get(&target_dir).cloned()
+}
+
+fn relative_link_path(path: &str) -> bool {
+    !path.is_empty() && !path.starts_with('/') && !path.starts_with('\\') && !path.contains("://")
 }

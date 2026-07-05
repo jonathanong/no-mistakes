@@ -139,3 +139,20 @@ fn lockfile_dependency_types_preserve_manifest_peer_dependencies() {
     assert_eq!(findings[0].file, "packages/app/package.json");
     assert_eq!(findings[0].target.as_deref(), Some("@acme/secret-peer"));
 }
+
+#[test]
+fn lockfile_dependency_types_do_not_treat_manifest_peer_as_dependency() {
+    let root = fixture_root("lockfile-dependency-types");
+    let files = package_files(&root, &["package.json", "packages/app/package.json"]);
+
+    let findings = check_with_files(
+        &root,
+        &config(
+            "packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret-peer\"]\ndependencyTypes: [dependencies]\nlockfile: pnpm-lock.yaml\n",
+        ),
+        &files,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}

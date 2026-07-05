@@ -7,8 +7,16 @@ use std::path::{Path, PathBuf};
 mod dependency_type;
 mod path_alias;
 
+pub(super) fn base_root<'a>(root: &'a Path, target_roots: &'a [PathBuf]) -> &'a Path {
+    target_roots
+        .first()
+        .filter(|_| target_roots.len() == 1)
+        .map_or(root, PathBuf::as_path)
+}
+
 pub(super) fn lockfile_nodes(
     root: &Path,
+    lockfile_base: &Path,
     lockfile: &Path,
     workspace: &workspaces::WorkspaceMap,
     manifest_nodes: &BTreeMap<String, PackageNode>,
@@ -21,7 +29,7 @@ pub(super) fn lockfile_nodes(
         ));
     }
     let dependency_types = dependency_type::validate(dependency_types)?;
-    let lockfile_path = absolute_lockfile_path(root, lockfile);
+    let lockfile_path = absolute_lockfile_path(lockfile_base, lockfile);
     let lockfile_root = lockfile_path.parent().unwrap_or(root);
     let content = std::fs::read_to_string(&lockfile_path).map_err(|error| {
         format!(
@@ -118,7 +126,15 @@ fn lockfile_dependencies(
     let mut deps = Vec::new();
     for field in dependency_types {
         if let Some((field_name, entries)) = field.importer_entries(importer) {
-            deps.extend(entries.iter().map(|entry| {
+            deps.extend(entries.iter().filter_map(|entry| {
+                let manifest_field = manifest_node
+                    .deps
+                    .iter()
+                    .find(|dep| dep.name == entry.alias)
+                    .map(|dep| dep.field.as_str());
+                if manifest_field.is_some_and(|manifest_field| manifest_field != field_name) {
+                    return None;
+                }
                 let path_workspace_name = path_alias::resolve_workspace_path_dependency(
                     lockfile_root,
                     importer,
@@ -134,12 +150,12 @@ fn lockfile_dependencies(
                 } else {
                     None
                 };
-                Dependency {
+                Some(Dependency {
                     name: entry.alias.clone(),
                     resolved_name: entry.resolution_name.clone().or(path_workspace_name),
                     workspace_name,
-                    field: field_name.to_string(),
-                }
+                    field: manifest_field.unwrap_or(field_name).to_string(),
+                })
             }));
         } else {
             deps.extend(

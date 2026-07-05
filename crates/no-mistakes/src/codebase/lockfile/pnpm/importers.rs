@@ -167,6 +167,12 @@ fn looks_like_semver_range(name: &str) -> bool {
     !major.is_empty()
         && !minor.is_empty()
         && major.chars().all(|c| c.is_ascii_digit())
-        && minor.chars().all(|c| c.is_ascii_digit())
-        && parts.all(|part| !part.is_empty() && part.chars().all(|c| c.is_ascii_digit()))
+        && semver_range_part(minor)
+        && parts.all(semver_range_part)
+}
+
+fn semver_range_part(part: &str) -> bool {
+    !part.is_empty()
+        && (part.chars().all(|c| c.is_ascii_digit())
+            || matches!(part.to_ascii_lowercase().as_str(), "x" | "*"))
 }

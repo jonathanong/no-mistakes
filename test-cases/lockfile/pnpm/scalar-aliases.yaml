@@ -7,6 +7,7 @@ importers:
       prerelease-workspace-range: workspace:1.0.0-beta.1
       registry-alias: npm:@acme/secret@1.0.0
       workspace-alias: workspace:@acme/domain@*
+      x-workspace-range: workspace:1.x
     dependencies:
       digit-npm-alias: 7zip-bin@5.2.0
       digit-workspace-alias: link:../domain
@@ -16,3 +17,4 @@ importers:
       registry-alias: /@acme/secret/1.0.0
       version-path-alias: /@acme/version-secret/2.0.0
       workspace-alias: link:../domain
+      x-workspace-range: link:../domain

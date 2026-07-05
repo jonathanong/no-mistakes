@@ -115,6 +115,11 @@ fn pnpm_lockfile_prerelease_workspace_range_uses_dependency_name() {
 }
 
 #[test]
+fn pnpm_lockfile_x_workspace_range_uses_dependency_name() {
+    assert_lockfile_closure("lockfile-x-workspace-range");
+}
+
+#[test]
 fn pnpm_lockfile_digit_prefixed_aliases_resolve_package_names() {
     let root = fixture_root("lockfile-digit-alias");
     let files = package_files(
@@ -180,32 +185,4 @@ fn pnpm_lockfile_registry_dependency_name_does_not_extend_closure() {
     .unwrap();
 
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
-}
-
-#[test]
-fn pnpm_lockfile_root_workspace_path_alias_extends_closure() {
-    let root = fixture_root("lockfile-root-path-alias");
-    let files = package_files(
-        &root,
-        &[
-            "pnpm-workspace.yaml",
-            "frontend/packages/app/package.json",
-            "frontend/packages/app/domain/package.json",
-        ],
-    );
-
-    let findings = check_with_files(
-        &root,
-        &config(
-            "packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\nlockfile: frontend/packages/app/pnpm-lock.yaml\n",
-        ),
-        &files,
-    )
-    .unwrap();
-
-    assert_eq!(findings.len(), 1);
-    assert_eq!(
-        findings[0].import.as_deref(),
-        Some("@acme/app -> @acme/domain -> @acme/secret")
-    );
 }

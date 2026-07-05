@@ -162,7 +162,7 @@ fn parse_importers_resolves_scalar_aliases_from_specifiers_and_version_path() {
     let importers = parse_importers(&fixture("scalar-aliases.yaml"));
     let deps = &importers[0].dependencies;
 
-    assert_eq!(deps.len(), 8);
+    assert_eq!(deps.len(), 9);
     assert_eq!(deps[0].alias, "digit-npm-alias");
     assert_eq!(deps[0].specifier, "npm:7zip-bin@5.2.0");
     assert_eq!(deps[0].resolution_name.as_deref(), Some("7zip-bin"));
@@ -188,6 +188,9 @@ fn parse_importers_resolves_scalar_aliases_from_specifiers_and_version_path() {
     assert_eq!(deps[7].alias, "workspace-alias");
     assert_eq!(deps[7].specifier, "workspace:@acme/domain@*");
     assert_eq!(deps[7].resolution_name.as_deref(), Some("@acme/domain"));
+    assert_eq!(deps[8].alias, "x-workspace-range");
+    assert_eq!(deps[8].specifier, "workspace:1.x");
+    assert_eq!(deps[8].resolution_name, None);
 }
 
 #[test]

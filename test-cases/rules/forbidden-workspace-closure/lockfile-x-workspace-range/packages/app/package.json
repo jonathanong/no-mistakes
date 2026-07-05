@@ -1,0 +1,6 @@
+{
+  "name": "@acme/app",
+  "dependencies": {
+    "@acme/domain": "workspace:1.x"
+  }
+}

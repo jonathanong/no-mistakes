@@ -99,11 +99,15 @@ fn scan(
     };
     let mut nodes = manifest::manifest_nodes(&workspace, &dependency_types);
     if let Some(lockfile) = &opts.lockfile {
+        let lockfile_manifest_nodes =
+            manifest::manifest_nodes(&workspace, package_deps::ALL_DEPENDENCY_FIELDS);
+        let lockfile_base = lockfile::base_root(root, target_roots);
         match lockfile::lockfile_nodes(
             root,
+            lockfile_base,
             lockfile,
             &workspace,
-            &nodes,
+            &lockfile_manifest_nodes,
             &dependency_types,
             &opts.packages,
         ) {
@@ -202,5 +206,7 @@ mod tests_lockfile;
 mod tests_lockfile_alias;
 #[cfg(test)]
 mod tests_lockfile_config;
+#[cfg(test)]
+mod tests_lockfile_path_alias;
 #[cfg(test)]
 mod tests_manifest_alias;
