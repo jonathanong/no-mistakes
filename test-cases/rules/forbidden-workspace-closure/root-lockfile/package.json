@@ -1,0 +1,10 @@
+{
+  "name": "@acme/root",
+  "private": true,
+  "workspaces": [
+    "."
+  ],
+  "dependencies": {
+    "@acme/secret": "1.0.0"
+  }
+}
