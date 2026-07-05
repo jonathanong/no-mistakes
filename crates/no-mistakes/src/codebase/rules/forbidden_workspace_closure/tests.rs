@@ -281,6 +281,30 @@ fn project_scoped_package_root_loads_repository_workspace() {
 }
 
 #[test]
+fn include_filter_applies_to_start_package_not_transitive_manifest() {
+    let root = fixture_root("transitive-workspace");
+    let files = package_files(
+        &root,
+        &[
+            "package.json",
+            "packages/app/package.json",
+            "packages/domain/package.json",
+        ],
+    );
+    let mut config = config("packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\n");
+    config.rules[0].include = vec!["packages/app/**".to_string()];
+
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "packages/domain/package.json");
+    assert_eq!(
+        findings[0].import.as_deref(),
+        Some("@acme/app -> @acme/domain -> @acme/secret")
+    );
+}
+
+#[test]
 fn invalid_glob_pattern_emits_config_finding() {
     let root = fixture_root("pass");
     let files = package_files(&root, &["package.json", "packages/app/package.json"]);
@@ -358,6 +382,31 @@ fn traversal_tolerates_duplicate_and_missing_workspace_nodes() {
         },
     );
     let workspace_names = BTreeSet::from(["@acme/app".to_string(), "@acme/missing".to_string()]);
+    let forbidden = build_globset(&["@acme/secret".to_string()]).unwrap();
+    let config = config("packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\n");
+    let source_filter =
+        crate::codebase::rules::path_filter::RulePathFilter::new(&root, &config, &config.rules[0])
+            .unwrap();
+    let mut findings = Vec::new();
+
+    traversal::collect_findings_for_package(
+        &root,
+        "@acme/app",
+        &nodes,
+        &workspace_names,
+        &forbidden,
+        &source_filter,
+        &mut findings,
+    );
+
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn traversal_tolerates_missing_start_node() {
+    let root = fixture_root("pass");
+    let nodes = BTreeMap::new();
+    let workspace_names = BTreeSet::from(["@acme/app".to_string()]);
     let forbidden = build_globset(&["@acme/secret".to_string()]).unwrap();
     let config = config("packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\n");
     let source_filter =

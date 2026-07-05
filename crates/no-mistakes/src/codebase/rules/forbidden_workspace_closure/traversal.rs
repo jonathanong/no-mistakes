@@ -14,6 +14,15 @@ pub(super) fn collect_findings_for_package(
     source_filter: &crate::codebase::rules::path_filter::RulePathFilter,
     findings: &mut Vec<RuleFinding>,
 ) {
+    let Some(start_node) = nodes.get(start) else {
+        return;
+    };
+    let mut sink = FindingSink {
+        root,
+        start,
+        source_filter,
+        findings,
+    };
     let mut seen = BTreeSet::new();
     let mut queue = VecDeque::from([(start.to_string(), vec![start.to_string()])]);
     while let Some((package, chain)) = queue.pop_front() {
@@ -28,15 +37,7 @@ pub(super) fn collect_findings_for_package(
                 if target != start {
                     let mut dep_chain = chain.clone();
                     dep_chain.push(target.clone());
-                    push_finding(
-                        root,
-                        start,
-                        &dep_chain,
-                        &target,
-                        node,
-                        source_filter,
-                        findings,
-                    );
+                    sink.push(&dep_chain, &target, start_node, node);
                 }
             }
             let workspace_dep = dep.resolved_name.as_ref().unwrap_or(&dep.name);
@@ -59,28 +60,36 @@ fn matched_forbidden_name(dep: &Dependency, forbidden: &GlobSet) -> Option<Strin
         .cloned()
 }
 
-fn push_finding(
-    root: &Path,
-    start: &str,
-    chain: &[String],
-    target: &str,
-    node: &PackageNode,
-    source_filter: &crate::codebase::rules::path_filter::RulePathFilter,
-    findings: &mut Vec<RuleFinding>,
-) {
-    if !source_filter.is_match(&node.manifest) {
-        return;
+struct FindingSink<'a> {
+    root: &'a Path,
+    start: &'a str,
+    source_filter: &'a crate::codebase::rules::path_filter::RulePathFilter,
+    findings: &'a mut Vec<RuleFinding>,
+}
+
+impl FindingSink<'_> {
+    fn push(
+        &mut self,
+        chain: &[String],
+        target: &str,
+        start_node: &PackageNode,
+        node: &PackageNode,
+    ) {
+        if !self.source_filter.is_match(&start_node.manifest) {
+            return;
+        }
+        let file = relative_slash_path(self.root, &node.manifest);
+        let chain_text = chain.join(" -> ");
+        self.findings.push(RuleFinding {
+            rule: RULE_ID.to_string(),
+            file,
+            line: 1,
+            message: format!(
+                "{} reaches forbidden package '{}' through package.json dependency chain: {chain_text}. Remove the dependency or move it outside this workspace closure.",
+                self.start, target
+            ),
+            import: Some(chain_text),
+            target: Some(target.to_string()),
+        });
     }
-    let file = relative_slash_path(root, &node.manifest);
-    let chain_text = chain.join(" -> ");
-    findings.push(RuleFinding {
-        rule: RULE_ID.to_string(),
-        file,
-        line: 1,
-        message: format!(
-            "{start} reaches forbidden package '{target}' through package.json dependency chain: {chain_text}. Remove the dependency or move it outside this workspace closure."
-        ),
-        import: Some(chain_text),
-        target: Some(target.to_string()),
-    });
 }

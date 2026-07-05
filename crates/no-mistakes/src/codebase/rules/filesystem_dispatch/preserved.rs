@@ -26,6 +26,9 @@ fn filesystem_rule_preserved_roots(
 ) -> Vec<PathBuf> {
     let mut roots = Vec::new();
     for rule in config.rule_applications(rule_id) {
+        if rule_id == super::FORBIDDEN_WORKSPACE_CLOSURE {
+            roots.push(root.to_path_buf());
+        }
         roots.extend(super::super::target_roots(root, config, rule));
         if !rule_supports_discovery_roots(rule_id) {
             continue;
