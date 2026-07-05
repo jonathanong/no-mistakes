@@ -109,6 +109,25 @@ fn standalone_filesystem_rules_preserve_option_roots_without_leaking() {
 }
 
 #[test]
+fn forbidden_workspace_closure_preserves_repo_workspace_for_project_rules() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/rules/filesystem-dispatch/forbidden-workspace-project-root/fixture",
+    );
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let config = root.join(".no-mistakes.yml");
+
+    let findings = run_filesystem_rules(&root, Some(&config)).unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].rule, FORBIDDEN_WORKSPACE_CLOSURE);
+    assert_eq!(findings[0].file, "packages/domain/package.json");
+    assert_eq!(
+        findings[0].import.as_deref(),
+        Some("@acme/app -> @acme/domain -> @acme/secret")
+    );
+}
+
+#[test]
 fn combined_rust_rules_emit_all_configured_findings() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/filesystem-dispatch/rust-combined/fixture");

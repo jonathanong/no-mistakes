@@ -1,0 +1,10 @@
+importers:
+  packages/app:
+    dependencies:
+      secret-alias:
+        specifier: npm:@acme/secret@^1.0.0
+        version: 1.0.0
+packages:
+  /@acme/secret@1.0.0:
+    resolution:
+      integrity: sha512-test

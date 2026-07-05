@@ -78,6 +78,122 @@ fn parse_no_packages_section() {
 }
 
 #[test]
+fn parse_packages_with_importers_fixture() {
+    let pkgs = parse(&fixture("importers.yaml"));
+    let lodash = pkgs.iter().find(|p| p.name == "lodash").unwrap();
+    assert_eq!(lodash.version, "4.17.21");
+    assert_eq!(lodash.fingerprint, "sha512-abc123");
+    assert_eq!(lodash.kind, ResolutionKind::Registry);
+}
+
+#[test]
+fn parse_importers_groups_by_dependency_type() {
+    let importers = parse_importers(&fixture("importers.yaml"));
+    assert_eq!(importers.len(), 2);
+    assert_eq!(importers[0].path, ".");
+    assert_eq!(importers[1].path, "packages/app");
+
+    let app = importers.iter().find(|i| i.path == "packages/app").unwrap();
+    assert_eq!(app.dependencies.len(), 1);
+    assert_eq!(app.dependencies[0].alias, "lodash");
+    assert_eq!(app.dependencies[0].specifier, "^4.17.21");
+    assert_eq!(app.dependencies[0].version, "4.17.21");
+    assert_eq!(app.dependencies[0].resolution_name, None);
+
+    assert_eq!(app.dev_dependencies.len(), 2);
+    assert_eq!(app.dev_dependencies[0].alias, "chalk");
+    assert_eq!(app.dev_dependencies[0].resolution_name, None);
+    assert_eq!(app.dev_dependencies[1].alias, "image-lib");
+    assert_eq!(
+        app.dev_dependencies[1].resolution_name.as_deref(),
+        Some("sharp")
+    );
+    assert_eq!(app.optional_dependencies.len(), 1);
+    assert_eq!(app.optional_dependencies[0].alias, "@scope/optional");
+}
+
+#[test]
+fn parse_importers_empty_content() {
+    assert!(parse_importers("").is_empty());
+}
+
+#[test]
+fn parse_importers_missing_importers_section() {
+    assert!(parse_importers("packages:\n  lodash@4.17.21: {}\n").is_empty());
+}
+
+#[test]
+fn parse_importers_invalid_yaml() {
+    assert!(parse_importers("{ invalid: yaml: [[[").is_empty());
+}
+
+#[test]
+fn parse_importers_skips_empty_importer_and_dependency_keys() {
+    let importers = parse_importers(
+        "importers:\n  ~:\n    dependencies:\n      lodash: 4.17.21\n  packages/app:\n    dependencies:\n      ~: 1.0.0\n      lodash: 4.17.21\n",
+    );
+
+    assert_eq!(importers.len(), 1);
+    assert_eq!(importers[0].path, "packages/app");
+    assert_eq!(importers[0].dependencies.len(), 1);
+    assert_eq!(importers[0].dependencies[0].alias, "lodash");
+}
+
+#[test]
+fn parse_importers_accepts_string_and_other_dependency_shapes() {
+    let importers = parse_importers(
+        "importers:\n  packages/app:\n    dependencies:\n      string-form: '1.0.0'\n      object-form:\n        specifier: 'npm:'\n        version: '2.0.0'\n      number-form: 3\n",
+    );
+    let deps = &importers[0].dependencies;
+
+    assert_eq!(deps.len(), 3);
+    assert_eq!(deps[0].alias, "number-form");
+    assert_eq!(deps[0].specifier, "");
+    assert_eq!(deps[0].version, "");
+    assert_eq!(deps[1].alias, "object-form");
+    assert_eq!(deps[1].resolution_name, None);
+    assert_eq!(deps[2].alias, "string-form");
+    assert_eq!(deps[2].specifier, "");
+    assert_eq!(deps[2].version, "1.0.0");
+}
+
+#[test]
+fn parse_importers_resolves_scalar_aliases_from_specifiers_and_version_path() {
+    let importers = parse_importers(&fixture("scalar-aliases.yaml"));
+    let deps = &importers[0].dependencies;
+
+    assert_eq!(deps.len(), 9);
+    assert_eq!(deps[0].alias, "digit-npm-alias");
+    assert_eq!(deps[0].specifier, "npm:7zip-bin@5.2.0");
+    assert_eq!(deps[0].resolution_name.as_deref(), Some("7zip-bin"));
+    assert_eq!(deps[1].alias, "digit-workspace-alias");
+    assert_eq!(deps[1].specifier, "workspace:3d-domain@*");
+    assert_eq!(deps[1].resolution_name.as_deref(), Some("3d-domain"));
+    assert_eq!(deps[2].alias, "empty-path");
+    assert_eq!(deps[2].resolution_name, None);
+    assert_eq!(deps[3].alias, "exact-workspace-range");
+    assert_eq!(deps[3].specifier, "workspace:1.0.0");
+    assert_eq!(deps[3].resolution_name, None);
+    assert_eq!(deps[4].alias, "prerelease-workspace-range");
+    assert_eq!(deps[4].specifier, "workspace:1.0.0-beta.1");
+    assert_eq!(deps[4].resolution_name, None);
+    assert_eq!(deps[5].alias, "registry-alias");
+    assert_eq!(deps[5].specifier, "npm:@acme/secret@1.0.0");
+    assert_eq!(deps[5].resolution_name.as_deref(), Some("@acme/secret"));
+    assert_eq!(deps[6].alias, "version-path-alias");
+    assert_eq!(
+        deps[6].resolution_name.as_deref(),
+        Some("@acme/version-secret")
+    );
+    assert_eq!(deps[7].alias, "workspace-alias");
+    assert_eq!(deps[7].specifier, "workspace:@acme/domain@*");
+    assert_eq!(deps[7].resolution_name.as_deref(), Some("@acme/domain"));
+    assert_eq!(deps[8].alias, "x-workspace-range");
+    assert_eq!(deps[8].specifier, "workspace:1.x");
+    assert_eq!(deps[8].resolution_name, None);
+}
+
+#[test]
 fn parse_invalid_yaml() {
     assert!(parse("{ invalid: yaml: [[[").is_empty());
 }

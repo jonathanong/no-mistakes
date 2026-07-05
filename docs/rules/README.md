@@ -30,6 +30,7 @@ rules:
 | [`finite-set-consistency`](finite-set-consistency.md) | Compare finite string sets extracted from source and paths. |
 | [`github-actions-pinned-hash`](github-actions-pinned-hash.md) | Require every `uses:` step to be pinned to a commit SHA with a version comment. |
 | [`forbidden-dependencies`](forbidden-dependencies.md) | Prevent configured files/modules from depending on forbidden targets. |
+| [`forbidden-workspace-closure`](forbidden-workspace-closure.md) | Prevent workspace package closures from reaching forbidden packages. |
 | [`integration-test-no-mocks`](integration-test-no-mocks.md) | Ban mocking libraries and mock helpers in integration tests. |
 | [`lockfile-allowlist`](lockfile-allowlist.md) | Allow only configured package lock files. |
 | [`markdown-link-display-text`](markdown-link-display-text.md) | Require Markdown link text to match the linked file basename. |

@@ -1,0 +1,6 @@
+{
+  "name": "@acme/app",
+  "dependencies": {
+    "secret-alias": "npm:@acme/secret@1.0.0"
+  }
+}

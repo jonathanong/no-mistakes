@@ -1,0 +1,7 @@
+{
+  "name": "@acme/app",
+  "dependencies": {
+    "@acme/domain": "1.2.3",
+    "published-helper": "workspace:1.0.0"
+  }
+}

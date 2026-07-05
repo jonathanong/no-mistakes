@@ -24,6 +24,10 @@ fn load_package(dir: &Path) -> Result<Option<WorkspacePackage>> {
     }))
 }
 
+pub fn load_root_package(dir: &Path) -> Result<Option<WorkspacePackage>> {
+    load_package(dir)
+}
+
 #[inline(never)]
 fn resolve_entry(dir: &Path, pkg: &PackageJson) -> Option<PathBuf> {
     // Check `exports` first (supports both string and `{".": ...}` forms).

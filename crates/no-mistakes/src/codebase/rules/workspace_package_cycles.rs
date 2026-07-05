@@ -130,20 +130,7 @@ fn workspace_graph(
 }
 
 fn package_dependencies(path: &Path, dependency_types: &[&str]) -> BTreeSet<String> {
-    let Ok(source) = std::fs::read_to_string(path) else {
-        return BTreeSet::new();
-    };
-    let Ok(json) = serde_json::from_str::<serde_json::Value>(&source) else {
-        return BTreeSet::new();
-    };
-    let mut deps = BTreeSet::new();
-    for field in dependency_types {
-        let Some(map) = json.get(*field).and_then(|value| value.as_object()) else {
-            continue;
-        };
-        deps.extend(map.keys().cloned());
-    }
-    deps
+    crate::codebase::package_deps::dependency_names(path, dependency_types)
 }
 
 pub(super) fn canonical_cycle(cycle: &str) -> String {

@@ -90,6 +90,7 @@ fn no_mistakes_rules_have_docs() {
         rules::DOC_CONSISTENCY,
         rules::FILE_EXTENSION_POLICY,
         rules::FORBIDDEN_DEPENDENCIES,
+        rules::FORBIDDEN_WORKSPACE_CLOSURE,
         rules::INTEGRATION_TEST_NO_MOCKS,
         rules::LOCKFILE_ALLOWLIST,
         rules::MARKDOWN_LINK_DISPLAY_TEXT,

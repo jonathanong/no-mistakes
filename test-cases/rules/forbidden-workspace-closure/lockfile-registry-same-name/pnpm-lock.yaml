@@ -1,0 +1,22 @@
+lockfileVersion: '6.0'
+importers:
+  packages/app:
+    dependencies:
+      "@acme/domain":
+        specifier: 1.2.3
+        version: 1.2.3
+      published-helper:
+        specifier: workspace:1.0.0
+        version: 1.0.0
+  packages/domain:
+    dependencies:
+      "@acme/secret":
+        specifier: 1.0.0
+        version: 1.0.0
+packages:
+  /@acme/domain/1.2.3:
+    resolution: {integrity: sha512-domain}
+  /@acme/secret/1.0.0:
+    resolution: {integrity: sha512-secret}
+  /published-helper/1.0.0:
+    resolution: {integrity: sha512-helper}

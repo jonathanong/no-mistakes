@@ -1,0 +1,12 @@
+filesystem:
+  skipDirectories:
+    - fixtures
+projects:
+  app:
+    root: fixtures/app
+rules:
+  - rule: forbidden-workspace-closure
+    projects: [app]
+    options:
+      packages: ["@acme/app"]
+      forbidden: ["@acme/secret"]

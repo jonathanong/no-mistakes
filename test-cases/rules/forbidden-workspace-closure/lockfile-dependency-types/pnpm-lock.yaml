@@ -1,0 +1,17 @@
+importers:
+  packages/app:
+    dependencies:
+      "@acme/public":
+        specifier: 1.0.0
+        version: 1.0.0
+      "@acme/secret-peer":
+        specifier: 1.0.0
+        version: 1.0.0
+    devDependencies:
+      "@acme/secret-dev":
+        specifier: 1.0.0
+        version: 1.0.0
+    optionalDependencies:
+      "@acme/secret-optional":
+        specifier: 1.0.0
+        version: 1.0.0

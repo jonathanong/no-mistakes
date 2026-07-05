@@ -1,0 +1,10 @@
+lockfileVersion: '6.0'
+importers:
+  packages/app:
+    specifiers:
+      secret-alias: npm:@acme/secret@1.0.0
+    dependencies:
+      secret-alias: /@acme/secret/1.0.0
+packages:
+  /@acme/secret/1.0.0:
+    resolution: {integrity: sha512-test}

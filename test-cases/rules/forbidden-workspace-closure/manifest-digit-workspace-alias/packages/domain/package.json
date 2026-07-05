@@ -1,0 +1,6 @@
+{
+  "name": "3d-domain",
+  "dependencies": {
+    "@acme/secret": "1.0.0"
+  }
+}

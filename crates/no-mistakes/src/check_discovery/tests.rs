@@ -103,6 +103,21 @@ fn discover_check_files_preserves_included_fixture_roots() {
 }
 
 #[test]
+fn discover_check_files_preserves_forbidden_workspace_project_roots() {
+    let root = fixture("rules/filesystem-dispatch/forbidden-workspace-project-root");
+    let config = load_config(&root);
+
+    let files = discover_check_files(&root, &config, &config.filesystem.skip_directories, false);
+
+    assert!(files
+        .iter()
+        .any(|path| path.ends_with("fixtures/app/package.json")));
+    assert!(files
+        .iter()
+        .any(|path| path.ends_with("packages/domain/package.json")));
+}
+
+#[test]
 fn literal_include_prefix_stops_before_brace_alternation() {
     assert_eq!(
         literal_include_prefix("docs/{a,b}/**"),

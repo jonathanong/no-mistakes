@@ -7,6 +7,7 @@ pub mod file_extension_policy;
 mod file_matching;
 pub mod finite_set_consistency;
 pub mod forbidden_dependencies;
+pub mod forbidden_workspace_closure;
 pub mod github_actions_pinned_hash;
 mod ids;
 pub mod integration_test_no_mocks;
