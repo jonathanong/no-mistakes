@@ -1,18 +1,18 @@
 use super::RuleFinding;
 use crate::codebase::package_deps;
-use crate::codebase::workspaces;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use rayon::prelude::*;
 use serde::Deserialize;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 mod alias;
 mod lockfile;
 mod manifest;
 mod traversal;
+mod workspace;
 
 pub const RULE_ID: &str = "forbidden-workspace-closure";
 
@@ -76,7 +76,7 @@ fn scan(
     files: &[PathBuf],
     source_filter: &super::path_filter::RulePathFilter,
 ) -> Result<Vec<RuleFinding>> {
-    let workspace = load_workspace(root, target_roots, files)?;
+    let workspace = workspace::load_workspace(root, target_roots, files)?;
     if workspace.packages.is_empty() {
         return Ok(Vec::new());
     }
@@ -140,29 +140,6 @@ fn scan(
     Ok(findings)
 }
 
-fn load_workspace(
-    root: &Path,
-    target_roots: &[PathBuf],
-    files: &[PathBuf],
-) -> Result<workspaces::WorkspaceMap> {
-    let mut roots: Vec<&Path> = Vec::new();
-    roots.push(root);
-    for target_root in target_roots {
-        if !roots.contains(&target_root.as_path()) {
-            roots.push(target_root);
-        }
-    }
-    let mut packages = BTreeMap::new();
-    for target_root in roots {
-        for package in workspaces::load_from_files(target_root, files)?.packages {
-            packages.insert(package.name.clone(), package);
-        }
-    }
-    Ok(workspaces::WorkspaceMap {
-        packages: packages.into_values().collect(),
-    })
-}
-
 fn dependency_types(opts: &Options) -> std::result::Result<Vec<&str>, String> {
     if opts.dependency_types.is_empty() {
         return Ok(package_deps::PRODUCTION_DEPENDENCY_FIELDS.to_vec());
@@ -210,3 +187,5 @@ mod tests_lockfile_config;
 mod tests_lockfile_path_alias;
 #[cfg(test)]
 mod tests_manifest_alias;
+#[cfg(test)]
+mod tests_workspace;

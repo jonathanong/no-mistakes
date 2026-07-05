@@ -50,6 +50,28 @@ fn npm_alias_does_not_extend_manifest_workspace_closure() {
 }
 
 #[test]
+fn registry_range_same_name_does_not_extend_manifest_workspace_closure() {
+    let root = fixture_root("manifest-registry-same-name");
+    let files = package_files(
+        &root,
+        &[
+            "package.json",
+            "packages/app/package.json",
+            "packages/domain/package.json",
+        ],
+    );
+
+    let findings = check_with_files(
+        &root,
+        &config("packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\n"),
+        &files,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn manifest_dependency_types_reject_unknown_dependency_type() {
     let root = fixture_root("direct-external");
     let files = package_files(
@@ -117,6 +139,32 @@ fn digit_prefixed_workspace_alias_extends_closure() {
     assert_eq!(
         findings[0].import.as_deref(),
         Some("@acme/app -> 3d-domain -> @acme/secret")
+    );
+}
+
+#[test]
+fn file_path_alias_extends_closure() {
+    let root = fixture_root("manifest-file-path-alias");
+    let files = package_files(
+        &root,
+        &[
+            "package.json",
+            "packages/app/package.json",
+            "packages/domain/package.json",
+        ],
+    );
+
+    let findings = check_with_files(
+        &root,
+        &config("packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\n"),
+        &files,
+    )
+    .unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(
+        findings[0].import.as_deref(),
+        Some("@acme/app -> @acme/domain -> @acme/secret")
     );
 }
 

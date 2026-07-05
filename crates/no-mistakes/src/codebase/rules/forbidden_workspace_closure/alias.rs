@@ -7,7 +7,7 @@ pub(super) fn resolved_dependency_name(
     package_dir: &Path,
     workspace: &workspaces::WorkspaceMap,
 ) -> Option<String> {
-    if let Some(path) = workspace_path_specifier(specifier) {
+    if let Some(path) = local_path_specifier(specifier) {
         return resolve_workspace_path(path, package_dir, workspace);
     }
     let stripped = specifier
@@ -23,7 +23,7 @@ pub(super) fn workspace_dependency_name(
     package_dir: &Path,
     workspace: &workspaces::WorkspaceMap,
 ) -> Option<String> {
-    if let Some(path) = workspace_path_specifier(specifier) {
+    if let Some(path) = local_path_specifier(specifier) {
         return resolve_workspace_path(path, package_dir, workspace);
     }
     if specifier.starts_with("workspace:") {
@@ -31,7 +31,7 @@ pub(super) fn workspace_dependency_name(
             workspace_has_package(dependency_name, workspace).then(|| dependency_name.to_string())
         });
     }
-    (!specifier.starts_with("npm:") && workspace_has_package(dependency_name, workspace))
+    (local_path_specifier(specifier).is_some() && workspace_has_package(dependency_name, workspace))
         .then(|| dependency_name.to_string())
 }
 
@@ -94,6 +94,15 @@ fn semver_range_part(part: &str) -> bool {
 pub(super) fn workspace_path_specifier(specifier: &str) -> Option<&str> {
     let stripped = specifier.strip_prefix("workspace:")?;
     stripped.starts_with('.').then_some(stripped)
+}
+
+fn local_path_specifier(specifier: &str) -> Option<&str> {
+    workspace_path_specifier(specifier).or_else(|| {
+        specifier
+            .strip_prefix("file:")
+            .or_else(|| specifier.strip_prefix("link:"))
+            .filter(|path| path.starts_with('.'))
+    })
 }
 
 pub(super) fn resolve_workspace_path(

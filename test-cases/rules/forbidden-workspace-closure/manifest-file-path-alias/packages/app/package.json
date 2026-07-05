@@ -1,0 +1,6 @@
+{
+  "name": "@acme/app",
+  "dependencies": {
+    "domain": "file:../domain"
+  }
+}

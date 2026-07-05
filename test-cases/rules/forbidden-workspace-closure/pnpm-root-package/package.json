@@ -1,0 +1,7 @@
+{
+  "name": "@acme/root",
+  "private": true,
+  "dependencies": {
+    "@acme/domain": "workspace:*"
+  }
+}
