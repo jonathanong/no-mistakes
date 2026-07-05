@@ -15,6 +15,7 @@ pub(super) fn lockfile_nodes(
             "{RULE_ID}: lockfile currently supports pnpm-lock.yaml only"
         ));
     }
+    let dependency_types = validate_dependency_types(dependency_types)?;
     let lockfile_path = absolute_lockfile_path(root, lockfile);
     let content = std::fs::read_to_string(&lockfile_path).map_err(|error| {
         format!(
@@ -48,10 +49,57 @@ pub(super) fn lockfile_nodes(
             ));
         };
         let manifest = package.dir.join("package.json");
-        let deps = lockfile_dependencies(importer, dependency_types);
+        let deps = lockfile_dependencies(importer, &dependency_types);
         nodes.insert(package.name.clone(), PackageNode { manifest, deps });
     }
     Ok(nodes)
+}
+
+#[derive(Debug, Clone, Copy)]
+enum LockfileDependencyType {
+    Dependencies,
+    DevDependencies,
+    OptionalDependencies,
+}
+
+impl LockfileDependencyType {
+    fn field(self) -> &'static str {
+        match self {
+            Self::Dependencies => "dependencies",
+            Self::DevDependencies => "devDependencies",
+            Self::OptionalDependencies => "optionalDependencies",
+        }
+    }
+
+    fn entries(
+        self,
+        importer: &crate::codebase::lockfile::pnpm::PnpmImporter,
+    ) -> &[crate::codebase::lockfile::pnpm::PnpmImporterDependency] {
+        match self {
+            Self::Dependencies => &importer.dependencies,
+            Self::DevDependencies => &importer.dev_dependencies,
+            Self::OptionalDependencies => &importer.optional_dependencies,
+        }
+    }
+}
+
+fn validate_dependency_types(
+    dependency_types: &[&str],
+) -> std::result::Result<Vec<LockfileDependencyType>, String> {
+    let mut validated = Vec::new();
+    for field in dependency_types {
+        validated.push(match *field {
+            "dependencies" => LockfileDependencyType::Dependencies,
+            "devDependencies" => LockfileDependencyType::DevDependencies,
+            "optionalDependencies" => LockfileDependencyType::OptionalDependencies,
+            _ => {
+                return Err(format!(
+                    "{RULE_ID}: lockfile dependencyTypes supports dependencies, devDependencies, and optionalDependencies only; unsupported dependency type '{field}'"
+                ));
+            }
+        });
+    }
+    Ok(validated)
 }
 
 fn absolute_lockfile_path(root: &Path, lockfile: &Path) -> PathBuf {
@@ -64,20 +112,14 @@ fn absolute_lockfile_path(root: &Path, lockfile: &Path) -> PathBuf {
 
 fn lockfile_dependencies(
     importer: &crate::codebase::lockfile::pnpm::PnpmImporter,
-    dependency_types: &[&str],
+    dependency_types: &[LockfileDependencyType],
 ) -> Vec<Dependency> {
     let mut deps = Vec::new();
     for field in dependency_types {
-        let entries = match *field {
-            "dependencies" => &importer.dependencies,
-            "devDependencies" => &importer.dev_dependencies,
-            "optionalDependencies" => &importer.optional_dependencies,
-            _ => continue,
-        };
-        deps.extend(entries.iter().map(|entry| Dependency {
+        deps.extend(field.entries(importer).iter().map(|entry| Dependency {
             name: entry.alias.clone(),
             resolved_name: entry.resolution_name.clone(),
-            field: (*field).to_string(),
+            field: field.field().to_string(),
         }));
     }
     deps.sort_by(|a, b| {

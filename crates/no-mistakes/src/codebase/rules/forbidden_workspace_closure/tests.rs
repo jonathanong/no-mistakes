@@ -353,7 +353,7 @@ fn lockfile_dependency_types_include_dev_and_optional_dependencies() {
     let findings = check_with_files(
         &root,
         &config(
-            "packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret-optional\"]\ndependencyTypes: [dependencies, devDependencies, optionalDependencies, peerDependencies]\nlockfile: pnpm-lock.yaml\n",
+            "packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret-optional\"]\ndependencyTypes: [dependencies, devDependencies, optionalDependencies]\nlockfile: pnpm-lock.yaml\n",
         ),
         &files,
     )
@@ -362,6 +362,27 @@ fn lockfile_dependency_types_include_dev_and_optional_dependencies() {
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].file, "packages/app/package.json");
     assert_eq!(findings[0].target.as_deref(), Some("@acme/secret-optional"));
+}
+
+#[test]
+fn lockfile_dependency_types_reject_unsupported_dependency_type() {
+    let root = fixture_root("lockfile-dependency-types");
+    let files = package_files(&root, &["package.json", "packages/app/package.json"]);
+
+    let findings = check_with_files(
+        &root,
+        &config(
+            "packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret-optional\"]\ndependencyTypes: [dependencies, peerDependencies]\nlockfile: pnpm-lock.yaml\n",
+        ),
+        &files,
+    )
+    .unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, ".no-mistakes.yml");
+    assert!(findings[0]
+        .message
+        .contains("unsupported dependency type 'peerDependencies'"));
 }
 
 #[test]
