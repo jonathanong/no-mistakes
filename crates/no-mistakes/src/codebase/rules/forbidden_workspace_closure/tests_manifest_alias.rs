@@ -119,3 +119,29 @@ fn digit_prefixed_workspace_alias_extends_closure() {
         Some("@acme/app -> 3d-domain -> @acme/secret")
     );
 }
+
+#[test]
+fn prerelease_workspace_range_uses_dependency_name() {
+    let root = fixture_root("manifest-prerelease-workspace-range");
+    let files = package_files(
+        &root,
+        &[
+            "package.json",
+            "packages/app/package.json",
+            "packages/domain/package.json",
+        ],
+    );
+
+    let findings = check_with_files(
+        &root,
+        &config("packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\n"),
+        &files,
+    )
+    .unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(
+        findings[0].import.as_deref(),
+        Some("@acme/app -> @acme/domain -> @acme/secret")
+    );
+}

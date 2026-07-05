@@ -110,6 +110,50 @@ fn pnpm_lockfile_exact_workspace_range_uses_dependency_name() {
 }
 
 #[test]
+fn pnpm_lockfile_prerelease_workspace_range_uses_dependency_name() {
+    assert_lockfile_closure("lockfile-prerelease-workspace-range");
+}
+
+#[test]
+fn pnpm_lockfile_digit_prefixed_aliases_resolve_package_names() {
+    let root = fixture_root("lockfile-digit-alias");
+    let files = package_files(
+        &root,
+        &[
+            "package.json",
+            "packages/app/package.json",
+            "packages/domain/package.json",
+        ],
+    );
+
+    let direct = check_with_files(
+        &root,
+        &config("packages: [\"@acme/app\"]\nforbidden: [\"7zip-bin\"]\nlockfile: pnpm-lock.yaml\n"),
+        &files,
+    )
+    .unwrap();
+
+    assert_eq!(direct.len(), 1);
+    assert_eq!(direct[0].target.as_deref(), Some("7zip-bin"));
+    assert_eq!(direct[0].import.as_deref(), Some("@acme/app -> 7zip-bin"));
+
+    let closure = check_with_files(
+        &root,
+        &config(
+            "packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\nlockfile: pnpm-lock.yaml\n",
+        ),
+        &files,
+    )
+    .unwrap();
+
+    assert_eq!(closure.len(), 1);
+    assert_eq!(
+        closure[0].import.as_deref(),
+        Some("@acme/app -> 3d-domain -> @acme/secret")
+    );
+}
+
+#[test]
 fn pnpm_lockfile_workspace_path_alias_extends_closure() {
     assert_lockfile_closure("lockfile-path-alias");
 }

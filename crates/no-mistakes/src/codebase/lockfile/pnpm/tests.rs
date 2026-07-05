@@ -162,23 +162,32 @@ fn parse_importers_resolves_scalar_aliases_from_specifiers_and_version_path() {
     let importers = parse_importers(&fixture("scalar-aliases.yaml"));
     let deps = &importers[0].dependencies;
 
-    assert_eq!(deps.len(), 5);
-    assert_eq!(deps[0].alias, "empty-path");
-    assert_eq!(deps[0].resolution_name, None);
-    assert_eq!(deps[1].alias, "exact-workspace-range");
-    assert_eq!(deps[1].specifier, "workspace:1.0.0");
-    assert_eq!(deps[1].resolution_name, None);
-    assert_eq!(deps[2].alias, "registry-alias");
-    assert_eq!(deps[2].specifier, "npm:@acme/secret@1.0.0");
-    assert_eq!(deps[2].resolution_name.as_deref(), Some("@acme/secret"));
-    assert_eq!(deps[3].alias, "version-path-alias");
+    assert_eq!(deps.len(), 8);
+    assert_eq!(deps[0].alias, "digit-npm-alias");
+    assert_eq!(deps[0].specifier, "npm:7zip-bin@5.2.0");
+    assert_eq!(deps[0].resolution_name.as_deref(), Some("7zip-bin"));
+    assert_eq!(deps[1].alias, "digit-workspace-alias");
+    assert_eq!(deps[1].specifier, "workspace:3d-domain@*");
+    assert_eq!(deps[1].resolution_name.as_deref(), Some("3d-domain"));
+    assert_eq!(deps[2].alias, "empty-path");
+    assert_eq!(deps[2].resolution_name, None);
+    assert_eq!(deps[3].alias, "exact-workspace-range");
+    assert_eq!(deps[3].specifier, "workspace:1.0.0");
+    assert_eq!(deps[3].resolution_name, None);
+    assert_eq!(deps[4].alias, "prerelease-workspace-range");
+    assert_eq!(deps[4].specifier, "workspace:1.0.0-beta.1");
+    assert_eq!(deps[4].resolution_name, None);
+    assert_eq!(deps[5].alias, "registry-alias");
+    assert_eq!(deps[5].specifier, "npm:@acme/secret@1.0.0");
+    assert_eq!(deps[5].resolution_name.as_deref(), Some("@acme/secret"));
+    assert_eq!(deps[6].alias, "version-path-alias");
     assert_eq!(
-        deps[3].resolution_name.as_deref(),
+        deps[6].resolution_name.as_deref(),
         Some("@acme/version-secret")
     );
-    assert_eq!(deps[4].alias, "workspace-alias");
-    assert_eq!(deps[4].specifier, "workspace:@acme/domain@*");
-    assert_eq!(deps[4].resolution_name.as_deref(), Some("@acme/domain"));
+    assert_eq!(deps[7].alias, "workspace-alias");
+    assert_eq!(deps[7].specifier, "workspace:@acme/domain@*");
+    assert_eq!(deps[7].resolution_name.as_deref(), Some("@acme/domain"));
 }
 
 #[test]

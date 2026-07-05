@@ -1,12 +1,18 @@
 importers:
   packages/app:
     specifiers:
+      digit-npm-alias: npm:7zip-bin@5.2.0
+      digit-workspace-alias: workspace:3d-domain@*
       exact-workspace-range: workspace:1.0.0
+      prerelease-workspace-range: workspace:1.0.0-beta.1
       registry-alias: npm:@acme/secret@1.0.0
       workspace-alias: workspace:@acme/domain@*
     dependencies:
+      digit-npm-alias: 7zip-bin@5.2.0
+      digit-workspace-alias: link:../domain
       empty-path: /
       exact-workspace-range: link:../domain
+      prerelease-workspace-range: link:../domain
       registry-alias: /@acme/secret/1.0.0
       version-path-alias: /@acme/version-secret/2.0.0
       workspace-alias: link:../domain

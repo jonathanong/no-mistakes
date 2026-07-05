@@ -1,0 +1,20 @@
+lockfileVersion: '6.0'
+importers:
+  packages/app:
+    dependencies:
+      zip:
+        specifier: npm:7zip-bin@5.2.0
+        version: 7zip-bin@5.2.0
+      domain:
+        specifier: workspace:3d-domain@*
+        version: link:../domain
+  packages/domain:
+    dependencies:
+      "@acme/secret":
+        specifier: 1.0.0
+        version: 1.0.0
+packages:
+  /7zip-bin/5.2.0:
+    resolution: {integrity: sha512-test}
+  /@acme/secret/1.0.0:
+    resolution: {integrity: sha512-test}

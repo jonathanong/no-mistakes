@@ -1,0 +1,7 @@
+{
+  "name": "@acme/app",
+  "dependencies": {
+    "zip": "npm:7zip-bin@5.2.0",
+    "domain": "workspace:3d-domain@*"
+  }
+}
