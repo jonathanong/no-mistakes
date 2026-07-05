@@ -115,3 +115,19 @@ fn lockfile_dependency_types_reject_unknown_dependency_type() {
         .message
         .contains("unsupported dependency type 'bundledDependencies'"));
 }
+
+#[test]
+fn absolute_lockfile_path_is_supported() {
+    let root = fixture_root("lockfile-alias");
+    let files = package_files(&root, &["package.json", "packages/app/package.json"]);
+    let lockfile = root.join("pnpm-lock.yaml");
+    let yaml = format!(
+        "packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\nlockfile: {}\n",
+        lockfile.display()
+    );
+
+    let findings = check_with_files(&root, &config(&yaml), &files).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "packages/app/package.json");
+}

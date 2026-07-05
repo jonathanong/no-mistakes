@@ -73,6 +73,62 @@ fn pnpm_lockfile_scalar_alias_resolution_name_is_forbidden() {
 }
 
 #[test]
+fn pnpm_lockfile_workspace_alias_extends_closure() {
+    let root = fixture_root("lockfile-workspace-alias");
+    let files = package_files(
+        &root,
+        &[
+            "package.json",
+            "packages/app/package.json",
+            "packages/domain/package.json",
+        ],
+    );
+
+    let findings = check_with_files(
+        &root,
+        &config(
+            "packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\nlockfile: pnpm-lock.yaml\n",
+        ),
+        &files,
+    )
+    .unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "packages/domain/package.json");
+    assert_eq!(
+        findings[0].import.as_deref(),
+        Some("@acme/app -> @acme/domain -> @acme/secret")
+    );
+}
+
+#[test]
+fn lockfile_missing_unrelated_workspace_importer_is_ignored() {
+    let root = fixture_root("lockfile-partial-workspace");
+    let files = package_files(
+        &root,
+        &[
+            "package.json",
+            "packages/app/package.json",
+            "packages/domain/package.json",
+            "packages/tools/package.json",
+        ],
+    );
+
+    let findings = check_with_files(
+        &root,
+        &config(
+            "packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\nlockfile: pnpm-lock.yaml\n",
+        ),
+        &files,
+    )
+    .unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "packages/domain/package.json");
+    assert_eq!(findings[0].target.as_deref(), Some("@acme/secret"));
+}
+
+#[test]
 fn nested_lockfile_importers_are_relative_to_lockfile_directory() {
     let root = fixture_root("nested-lockfile");
     let files = package_files(
@@ -156,20 +212,4 @@ fn lockfile_dependency_types_preserve_manifest_peer_dependencies() {
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].file, "packages/app/package.json");
     assert_eq!(findings[0].target.as_deref(), Some("@acme/secret-peer"));
-}
-
-#[test]
-fn absolute_lockfile_path_is_supported() {
-    let root = fixture_root("lockfile-alias");
-    let files = package_files(&root, &["package.json", "packages/app/package.json"]);
-    let lockfile = root.join("pnpm-lock.yaml");
-    let yaml = format!(
-        "packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\nlockfile: {}\n",
-        lockfile.display()
-    );
-
-    let findings = check_with_files(&root, &config(&yaml), &files).unwrap();
-
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, "packages/app/package.json");
 }

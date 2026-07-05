@@ -256,6 +256,31 @@ fn project_scoped_rule_loads_workspace_from_project_root() {
 }
 
 #[test]
+fn project_scoped_package_root_loads_repository_workspace() {
+    let root = fixture_root("project-package-root-workspace");
+    let files = package_files(&root, &["pnpm-workspace.yaml", "packages/app/package.json"]);
+    let mut config = config("packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\n");
+    config.projects.insert(
+        "app".to_string(),
+        Project {
+            root: Some("packages/app".to_string()),
+            ..Default::default()
+        },
+    );
+    config.rules[0].scope = None;
+    config.rules[0].projects = vec!["app".to_string()];
+
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "packages/app/package.json");
+    assert_eq!(
+        findings[0].import.as_deref(),
+        Some("@acme/app -> @acme/secret")
+    );
+}
+
+#[test]
 fn invalid_glob_pattern_emits_config_finding() {
     let root = fixture_root("pass");
     let files = package_files(&root, &["package.json", "packages/app/package.json"]);

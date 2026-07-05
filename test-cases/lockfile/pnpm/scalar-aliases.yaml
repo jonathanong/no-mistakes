@@ -2,7 +2,9 @@ importers:
   packages/app:
     specifiers:
       registry-alias: npm:@acme/secret@1.0.0
+      workspace-alias: workspace:@acme/domain@*
     dependencies:
       empty-path: /
       registry-alias: /@acme/secret/1.0.0
       version-path-alias: /@acme/version-secret/2.0.0
+      workspace-alias: link:../domain

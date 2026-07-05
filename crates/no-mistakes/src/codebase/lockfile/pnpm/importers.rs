@@ -118,9 +118,12 @@ fn importer_dependency(
 }
 
 fn resolution_name_from_specifier(specifier: &str) -> Option<String> {
-    let aliased = specifier.strip_prefix("npm:")?;
+    let stripped = specifier
+        .strip_prefix("workspace:")
+        .or_else(|| specifier.strip_prefix("npm:"))?;
+    let aliased = stripped.strip_prefix("npm:").unwrap_or(stripped);
     let (name, _) = split_name_version(aliased);
-    if name.is_empty() {
+    if !valid_package_name(name) {
         None
     } else {
         Some(name.to_string())
@@ -137,4 +140,13 @@ fn resolution_name_from_version(version: &str) -> Option<String> {
     } else {
         Some(name.to_string())
     }
+}
+
+fn valid_package_name(name: &str) -> bool {
+    !name.is_empty()
+        && !name.starts_with('.')
+        && !name.starts_with('/')
+        && !name.starts_with('*')
+        && !name.starts_with('^')
+        && !name.starts_with('~')
 }

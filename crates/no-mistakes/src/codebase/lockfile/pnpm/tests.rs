@@ -162,7 +162,7 @@ fn parse_importers_resolves_scalar_aliases_from_specifiers_and_version_path() {
     let importers = parse_importers(&fixture("scalar-aliases.yaml"));
     let deps = &importers[0].dependencies;
 
-    assert_eq!(deps.len(), 3);
+    assert_eq!(deps.len(), 4);
     assert_eq!(deps[0].alias, "empty-path");
     assert_eq!(deps[0].resolution_name, None);
     assert_eq!(deps[1].alias, "registry-alias");
@@ -173,6 +173,9 @@ fn parse_importers_resolves_scalar_aliases_from_specifiers_and_version_path() {
         deps[2].resolution_name.as_deref(),
         Some("@acme/version-secret")
     );
+    assert_eq!(deps[3].alias, "workspace-alias");
+    assert_eq!(deps[3].specifier, "workspace:@acme/domain@*");
+    assert_eq!(deps[3].resolution_name.as_deref(), Some("@acme/domain"));
 }
 
 #[test]

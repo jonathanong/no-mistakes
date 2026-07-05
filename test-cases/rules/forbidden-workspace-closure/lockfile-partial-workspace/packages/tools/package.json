@@ -1,0 +1,6 @@
+{
+  "name": "@acme/tools",
+  "dependencies": {
+    "@acme/unused": "1.0.0"
+  }
+}

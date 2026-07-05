@@ -49,9 +49,10 @@ pub(crate) fn check_with_files(
             let opts: Options = rule.rule_options();
             let target_roots = super::target_roots(root, config, rule);
             let skip = super::skip_dir_set(config);
+            let discovery_roots = vec![root.to_path_buf()];
             let files: Vec<PathBuf> = all_files
                 .iter()
-                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
+                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &discovery_roots))
                 .cloned()
                 .collect();
             let source_filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
@@ -90,7 +91,14 @@ fn scan(
     let dependency_types = dependency_types(opts);
     let mut nodes = manifest_nodes(&workspace, &dependency_types);
     if let Some(lockfile) = &opts.lockfile {
-        match lockfile::lockfile_nodes(root, lockfile, &workspace, &nodes, &dependency_types) {
+        match lockfile::lockfile_nodes(
+            root,
+            lockfile,
+            &workspace,
+            &nodes,
+            &dependency_types,
+            &opts.packages,
+        ) {
             Ok(lockfile_backed) => nodes = lockfile_backed,
             Err(message) => return Ok(vec![config_finding(&message)]),
         }
@@ -125,11 +133,13 @@ fn load_workspace(
     target_roots: &[PathBuf],
     files: &[PathBuf],
 ) -> Result<workspaces::WorkspaceMap> {
-    let roots: Vec<&Path> = if target_roots.is_empty() {
-        vec![root]
-    } else {
-        target_roots.iter().map(PathBuf::as_path).collect()
-    };
+    let mut roots: Vec<&Path> = Vec::new();
+    roots.push(root);
+    for target_root in target_roots {
+        if !roots.contains(&target_root.as_path()) {
+            roots.push(target_root);
+        }
+    }
     let mut packages = BTreeMap::new();
     for target_root in roots {
         for package in workspaces::load_from_files(target_root, files)?.packages {

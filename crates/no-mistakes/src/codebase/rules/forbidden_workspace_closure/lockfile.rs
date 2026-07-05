@@ -1,7 +1,7 @@
 use super::{Dependency, PackageNode, RULE_ID};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::workspaces;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::path::{Path, PathBuf};
 
 pub(super) fn lockfile_nodes(
@@ -10,6 +10,7 @@ pub(super) fn lockfile_nodes(
     workspace: &workspaces::WorkspaceMap,
     manifest_nodes: &BTreeMap<String, PackageNode>,
     dependency_types: &[&str],
+    start_packages: &[String],
 ) -> std::result::Result<BTreeMap<String, PackageNode>, String> {
     if lockfile.file_name().and_then(|name| name.to_str()) != Some("pnpm-lock.yaml") {
         return Err(format!(
@@ -36,14 +37,23 @@ pub(super) fn lockfile_nodes(
         .into_iter()
         .map(|importer| (normalize_importer_path(&importer.path), importer))
         .collect();
+    let package_by_name: BTreeMap<String, _> = workspace
+        .packages
+        .iter()
+        .map(|package| (package.name.clone(), package))
+        .collect();
+    let workspace_names: BTreeSet<String> = package_by_name.keys().cloned().collect();
     let mut nodes = BTreeMap::new();
-    for package in &workspace.packages {
-        let rel_dir = relative_slash_path(lockfile_root, &package.dir);
-        let importer_key = if rel_dir.is_empty() {
-            ".".to_string()
-        } else {
-            rel_dir
-        };
+    let mut queued = BTreeSet::new();
+    let mut queue = VecDeque::new();
+    for package in start_packages {
+        if manifest_nodes.contains_key(package) && queued.insert(package.clone()) {
+            queue.push_back(package.clone());
+        }
+    }
+    while let Some(package_name) = queue.pop_front() {
+        let package = package_by_name[&package_name];
+        let importer_key = importer_key(lockfile_root, &package.dir);
         let Some(importer) = importer_by_path.get(&importer_key) else {
             return Err(format!(
                 "{RULE_ID}: lockfile is missing importer for workspace package '{}'",
@@ -52,10 +62,25 @@ pub(super) fn lockfile_nodes(
         };
         let manifest = package.dir.join("package.json");
         let deps =
-            lockfile_dependencies(importer, &manifest_nodes[&package.name], &dependency_types);
-        nodes.insert(package.name.clone(), PackageNode { manifest, deps });
+            lockfile_dependencies(importer, &manifest_nodes[&package_name], &dependency_types);
+        for dep in &deps {
+            let workspace_dep = dep.resolved_name.as_ref().unwrap_or(&dep.name);
+            if workspace_names.contains(workspace_dep) && queued.insert(workspace_dep.clone()) {
+                queue.push_back(workspace_dep.clone());
+            }
+        }
+        nodes.insert(package_name, PackageNode { manifest, deps });
     }
     Ok(nodes)
+}
+
+fn importer_key(lockfile_root: &Path, package_dir: &Path) -> String {
+    let rel_dir = relative_slash_path(lockfile_root, package_dir);
+    if rel_dir.is_empty() {
+        ".".to_string()
+    } else {
+        rel_dir
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
