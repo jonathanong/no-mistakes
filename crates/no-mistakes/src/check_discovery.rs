@@ -37,6 +37,16 @@ fn include_preserved_roots(
     let mut roots = Vec::new();
     let mut inferred_roots = no_mistakes::codebase::config::InferredRoots::default();
     for rule in config.rules.iter().filter(|rule| rule.enabled) {
+        if rule.rule == no_mistakes::codebase::rules::FORBIDDEN_WORKSPACE_CLOSURE {
+            for project_name in &rule.projects {
+                let Some(project) = config.projects.get(project_name) else {
+                    continue;
+                };
+                if let Some(project_root) = project_root(root, project, &mut inferred_roots) {
+                    roots.push(project_root);
+                }
+            }
+        }
         for include in &rule.include {
             push_include_preserved_roots(&mut roots, root, include, skip_directories);
             for project_name in &rule.projects {

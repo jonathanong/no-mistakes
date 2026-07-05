@@ -63,10 +63,11 @@ fn valid_package_name(name: &str) -> bool {
         && !name.starts_with('*')
         && !name.starts_with('^')
         && !name.starts_with('~')
-        && !name.starts_with(|c: char| c.is_ascii_digit())
         && !name.starts_with('<')
         && !name.starts_with('>')
         && !name.starts_with('=')
+        && (!name.starts_with(|c: char| c.is_ascii_digit())
+            || name.chars().any(|c| c.is_ascii_alphabetic()))
 }
 
 pub(super) fn workspace_path_specifier(specifier: &str) -> Option<&str> {

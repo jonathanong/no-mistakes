@@ -93,7 +93,10 @@ fn scan(
             ))]);
         }
     };
-    let dependency_types = dependency_types(opts);
+    let dependency_types = match dependency_types(opts) {
+        Ok(dependency_types) => dependency_types,
+        Err(message) => return Ok(vec![config_finding(&message)]),
+    };
     let mut nodes = manifest::manifest_nodes(&workspace, &dependency_types);
     if let Some(lockfile) = &opts.lockfile {
         match lockfile::lockfile_nodes(
@@ -156,12 +159,20 @@ fn load_workspace(
     })
 }
 
-fn dependency_types(opts: &Options) -> Vec<&str> {
+fn dependency_types(opts: &Options) -> std::result::Result<Vec<&str>, String> {
     if opts.dependency_types.is_empty() {
-        package_deps::PRODUCTION_DEPENDENCY_FIELDS.to_vec()
-    } else {
-        opts.dependency_types.iter().map(String::as_str).collect()
+        return Ok(package_deps::PRODUCTION_DEPENDENCY_FIELDS.to_vec());
     }
+    let mut validated = Vec::new();
+    for field in &opts.dependency_types {
+        if !package_deps::ALL_DEPENDENCY_FIELDS.contains(&field.as_str()) {
+            return Err(format!(
+                "dependencyTypes supports dependencies, devDependencies, peerDependencies, and optionalDependencies only; unsupported dependency type '{field}'"
+            ));
+        }
+        validated.push(field.as_str());
+    }
+    Ok(validated)
 }
 
 fn build_globset(patterns: &[String]) -> std::result::Result<GlobSet, globset::Error> {
@@ -191,3 +202,5 @@ mod tests_lockfile;
 mod tests_lockfile_alias;
 #[cfg(test)]
 mod tests_lockfile_config;
+#[cfg(test)]
+mod tests_manifest_alias;
