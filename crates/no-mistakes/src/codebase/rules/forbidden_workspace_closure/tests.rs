@@ -161,6 +161,7 @@ fn glob_pattern_matches_forbidden_package_name() {
     .unwrap();
 
     assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "packages/app/package.json");
     assert_eq!(findings[0].target.as_deref(), Some("@acme/infra-secret"));
     assert_eq!(
         findings[0].import.as_deref(),
@@ -216,6 +217,11 @@ fn pnpm_lockfile_alias_resolution_name_is_forbidden() {
         findings[0].import.as_deref(),
         Some("@acme/app -> @acme/secret")
     );
+}
+
+#[test]
+fn normalize_importer_path_keeps_workspace_root_as_dot() {
+    assert_eq!(lockfile::normalize_importer_path("./"), ".");
 }
 
 #[test]

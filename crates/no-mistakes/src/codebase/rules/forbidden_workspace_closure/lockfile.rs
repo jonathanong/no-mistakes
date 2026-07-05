@@ -90,8 +90,11 @@ fn lockfile_dependencies(
     deps
 }
 
-fn normalize_importer_path(path: &str) -> String {
-    path.trim_start_matches("./")
-        .trim_end_matches('/')
-        .to_string()
+pub(super) fn normalize_importer_path(path: &str) -> String {
+    let normalized = path.trim_start_matches("./").trim_end_matches('/');
+    if normalized.is_empty() {
+        ".".to_string()
+    } else {
+        normalized.to_string()
+    }
 }

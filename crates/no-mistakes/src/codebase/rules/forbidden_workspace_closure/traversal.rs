@@ -20,33 +20,29 @@ pub(super) fn collect_findings_for_package(
         if !seen.insert(package.clone()) {
             continue;
         }
-        if package != start && forbidden.is_match(&package) {
-            if let Some(node) = nodes.get(&package) {
-                push_finding(root, start, &chain, &package, node, source_filter, findings);
-            }
-        }
         let Some(node) = nodes.get(&package) else {
             continue;
         };
         for dep in &node.deps {
+            if let Some(target) = matched_forbidden_name(dep, forbidden) {
+                if target != start {
+                    let mut dep_chain = chain.clone();
+                    dep_chain.push(target.clone());
+                    push_finding(
+                        root,
+                        start,
+                        &dep_chain,
+                        &target,
+                        node,
+                        source_filter,
+                        findings,
+                    );
+                }
+            }
             if workspace_names.contains(&dep.name) && !seen.contains(&dep.name) {
                 let mut next_chain = chain.clone();
                 next_chain.push(dep.name.clone());
                 queue.push_back((dep.name.clone(), next_chain));
-                continue;
-            }
-            if let Some(target) = matched_forbidden_name(dep, forbidden) {
-                let mut dep_chain = chain.clone();
-                dep_chain.push(target.clone());
-                push_finding(
-                    root,
-                    start,
-                    &dep_chain,
-                    &target,
-                    node,
-                    source_filter,
-                    findings,
-                );
             }
         }
     }
