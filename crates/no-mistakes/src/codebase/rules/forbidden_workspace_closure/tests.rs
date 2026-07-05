@@ -1,6 +1,6 @@
 use super::*;
 use crate::config::v2::{
-    schema::{RuleDef, RuleScope},
+    schema::{Project, RuleDef, RuleScope},
     NoMistakesConfig,
 };
 
@@ -197,25 +197,61 @@ fn cycle_does_not_prevent_finding() {
 }
 
 #[test]
-fn pnpm_lockfile_alias_resolution_name_is_forbidden() {
-    let root = fixture_root("lockfile-alias");
-    let files = package_files(&root, &["package.json", "packages/app/package.json"]);
+fn manifest_alias_workspace_dependency_extends_closure() {
+    let root = fixture_root("manifest-alias-workspace");
+    let files = package_files(
+        &root,
+        &[
+            "package.json",
+            "packages/app/package.json",
+            "packages/domain/package.json",
+        ],
+    );
 
     let findings = check_with_files(
         &root,
-        &config(
-            "packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\nlockfile: pnpm-lock.yaml\n",
-        ),
+        &config("packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\n"),
         &files,
     )
     .unwrap();
 
     assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, "packages/app/package.json");
-    assert_eq!(findings[0].target.as_deref(), Some("@acme/secret"));
+    assert_eq!(findings[0].file, "packages/domain/package.json");
     assert_eq!(
         findings[0].import.as_deref(),
-        Some("@acme/app -> @acme/secret")
+        Some("@acme/app -> @acme/domain -> @acme/secret")
+    );
+}
+
+#[test]
+fn project_scoped_rule_loads_workspace_from_project_root() {
+    let root = fixture_root("project-local-workspace");
+    let files = package_files(
+        &root,
+        &[
+            "frontend/pnpm-workspace.yaml",
+            "frontend/packages/app/package.json",
+            "frontend/packages/domain/package.json",
+        ],
+    );
+    let mut config = config("packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\n");
+    config.projects.insert(
+        "frontend".to_string(),
+        Project {
+            root: Some("frontend".to_string()),
+            ..Default::default()
+        },
+    );
+    config.rules[0].scope = None;
+    config.rules[0].projects = vec!["frontend".to_string()];
+
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "frontend/packages/domain/package.json");
+    assert_eq!(
+        findings[0].import.as_deref(),
+        Some("@acme/app -> @acme/domain -> @acme/secret")
     );
 }
 
@@ -253,152 +289,6 @@ fn unknown_configured_package_emits_config_finding() {
     assert!(findings[0]
         .message
         .contains("not a named workspace package"));
-}
-
-#[test]
-fn unsupported_lockfile_emits_config_finding() {
-    let root = fixture_root("lockfile-alias");
-    let files = package_files(&root, &["package.json", "packages/app/package.json"]);
-
-    let findings = check_with_files(
-        &root,
-        &config("packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\nlockfile: package-lock.json\n"),
-        &files,
-    )
-    .unwrap();
-
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, ".no-mistakes.yml");
-    assert!(findings[0].message.contains("pnpm-lock.yaml only"));
-}
-
-#[test]
-fn unreadable_lockfile_emits_config_finding() {
-    let root = fixture_root("lockfile-alias");
-    let files = package_files(&root, &["package.json", "packages/app/package.json"]);
-
-    let findings = check_with_files(
-        &root,
-        &config("packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\nlockfile: missing/pnpm-lock.yaml\n"),
-        &files,
-    )
-    .unwrap();
-
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, ".no-mistakes.yml");
-    assert!(findings[0].message.contains("could not read lockfile"));
-}
-
-#[test]
-fn lockfile_without_importers_emits_config_finding() {
-    let root = fixture_root("lockfile-alias");
-    let files = package_files(&root, &["package.json", "packages/app/package.json"]);
-
-    let findings = check_with_files(
-        &root,
-        &config("packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\nlockfile: no-importers/pnpm-lock.yaml\n"),
-        &files,
-    )
-    .unwrap();
-
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, ".no-mistakes.yml");
-    assert!(findings[0].message.contains("has no pnpm importers"));
-}
-
-#[test]
-fn lockfile_missing_workspace_importer_emits_config_finding() {
-    let root = fixture_root("lockfile-alias");
-    let files = package_files(&root, &["package.json", "packages/app/package.json"]);
-
-    let findings = check_with_files(
-        &root,
-        &config("packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\nlockfile: missing-importer/pnpm-lock.yaml\n"),
-        &files,
-    )
-    .unwrap();
-
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, ".no-mistakes.yml");
-    assert!(findings[0].message.contains("missing importer"));
-}
-
-#[test]
-fn lockfile_root_importer_accepts_dot_slash_key() {
-    let root = fixture_root("root-lockfile");
-    let files = package_files(&root, &["package.json"]);
-
-    let findings = check_with_files(
-        &root,
-        &config(
-            "packages: [\"@acme/root\"]\nforbidden: [\"@acme/secret\"]\nlockfile: pnpm-lock.yaml\n",
-        ),
-        &files,
-    )
-    .unwrap();
-
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, "package.json");
-    assert_eq!(
-        findings[0].import.as_deref(),
-        Some("@acme/root -> @acme/secret")
-    );
-}
-
-#[test]
-fn lockfile_dependency_types_include_dev_and_optional_dependencies() {
-    let root = fixture_root("lockfile-dependency-types");
-    let files = package_files(&root, &["package.json", "packages/app/package.json"]);
-
-    let findings = check_with_files(
-        &root,
-        &config(
-            "packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret-optional\"]\ndependencyTypes: [dependencies, devDependencies, optionalDependencies]\nlockfile: pnpm-lock.yaml\n",
-        ),
-        &files,
-    )
-    .unwrap();
-
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, "packages/app/package.json");
-    assert_eq!(findings[0].target.as_deref(), Some("@acme/secret-optional"));
-}
-
-#[test]
-fn lockfile_dependency_types_reject_unsupported_dependency_type() {
-    let root = fixture_root("lockfile-dependency-types");
-    let files = package_files(&root, &["package.json", "packages/app/package.json"]);
-
-    let findings = check_with_files(
-        &root,
-        &config(
-            "packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret-optional\"]\ndependencyTypes: [dependencies, peerDependencies]\nlockfile: pnpm-lock.yaml\n",
-        ),
-        &files,
-    )
-    .unwrap();
-
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, ".no-mistakes.yml");
-    assert!(findings[0]
-        .message
-        .contains("unsupported dependency type 'peerDependencies'"));
-}
-
-#[test]
-fn absolute_lockfile_path_is_supported() {
-    let root = fixture_root("lockfile-alias");
-    let files = package_files(&root, &["package.json", "packages/app/package.json"]);
-    let lockfile = root.join("pnpm-lock.yaml");
-    let yaml = format!(
-        "packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\nlockfile: {}\n",
-        lockfile.display()
-    );
-
-    let findings = check_with_files(&root, &config(&yaml), &files).unwrap();
-
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, "packages/app/package.json");
 }
 
 #[test]
@@ -461,6 +351,17 @@ fn traversal_tolerates_duplicate_and_missing_workspace_nodes() {
     );
 
     assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn load_workspace_defaults_to_repository_root_when_target_roots_are_empty() {
+    let root = fixture_root("pass");
+    let files = package_files(&root, &["package.json", "packages/app/package.json"]);
+
+    let workspace = load_workspace(&root, &[], &files).unwrap();
+
+    assert_eq!(workspace.packages.len(), 1);
+    assert_eq!(workspace.packages[0].name, "@acme/app");
 }
 
 #[test]

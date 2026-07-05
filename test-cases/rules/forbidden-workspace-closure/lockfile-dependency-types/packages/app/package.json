@@ -1,3 +1,6 @@
 {
-  "name": "@acme/app"
+  "name": "@acme/app",
+  "peerDependencies": {
+    "@acme/secret-peer": "1.0.0"
+  }
 }

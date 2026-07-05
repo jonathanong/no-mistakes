@@ -9,6 +9,7 @@ use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
+mod alias;
 mod lockfile;
 mod traversal;
 
@@ -54,7 +55,7 @@ pub(crate) fn check_with_files(
                 .cloned()
                 .collect();
             let source_filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
-            scan(root, &opts, &files, &source_filter)
+            scan(root, &target_roots, &opts, &files, &source_filter)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -64,11 +65,12 @@ pub(crate) fn check_with_files(
 
 fn scan(
     root: &Path,
+    target_roots: &[PathBuf],
     opts: &Options,
     files: &[PathBuf],
     source_filter: &super::path_filter::RulePathFilter,
 ) -> Result<Vec<RuleFinding>> {
-    let workspace = workspaces::load_from_files(root, files)?;
+    let workspace = load_workspace(root, target_roots, files)?;
     if workspace.packages.is_empty() {
         return Ok(Vec::new());
     }
@@ -88,7 +90,7 @@ fn scan(
     let dependency_types = dependency_types(opts);
     let mut nodes = manifest_nodes(&workspace, &dependency_types);
     if let Some(lockfile) = &opts.lockfile {
-        match lockfile::lockfile_nodes(root, lockfile, &workspace, &dependency_types) {
+        match lockfile::lockfile_nodes(root, lockfile, &workspace, &nodes, &dependency_types) {
             Ok(lockfile_backed) => nodes = lockfile_backed,
             Err(message) => return Ok(vec![config_finding(&message)]),
         }
@@ -118,6 +120,27 @@ fn scan(
     Ok(findings)
 }
 
+fn load_workspace(
+    root: &Path,
+    target_roots: &[PathBuf],
+    files: &[PathBuf],
+) -> Result<workspaces::WorkspaceMap> {
+    let roots: Vec<&Path> = if target_roots.is_empty() {
+        vec![root]
+    } else {
+        target_roots.iter().map(PathBuf::as_path).collect()
+    };
+    let mut packages = BTreeMap::new();
+    for target_root in roots {
+        for package in workspaces::load_from_files(target_root, files)?.packages {
+            packages.insert(package.name.clone(), package);
+        }
+    }
+    Ok(workspaces::WorkspaceMap {
+        packages: packages.into_values().collect(),
+    })
+}
+
 fn dependency_types(opts: &Options) -> Vec<&str> {
     if opts.dependency_types.is_empty() {
         package_deps::PRODUCTION_DEPENDENCY_FIELDS.to_vec()
@@ -139,7 +162,7 @@ fn manifest_nodes(
                 .into_iter()
                 .map(|entry| Dependency {
                     name: entry.name,
-                    resolved_name: None,
+                    resolved_name: alias::resolved_dependency_name(&entry.specifier),
                     field: entry.field,
                 })
                 .collect();
@@ -169,3 +192,7 @@ fn config_finding(message: &str) -> RuleFinding {
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_lockfile;
+#[cfg(test)]
+mod tests_lockfile_config;

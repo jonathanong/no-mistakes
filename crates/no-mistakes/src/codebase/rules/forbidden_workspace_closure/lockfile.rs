@@ -8,6 +8,7 @@ pub(super) fn lockfile_nodes(
     root: &Path,
     lockfile: &Path,
     workspace: &workspaces::WorkspaceMap,
+    manifest_nodes: &BTreeMap<String, PackageNode>,
     dependency_types: &[&str],
 ) -> std::result::Result<BTreeMap<String, PackageNode>, String> {
     if lockfile.file_name().and_then(|name| name.to_str()) != Some("pnpm-lock.yaml") {
@@ -17,6 +18,7 @@ pub(super) fn lockfile_nodes(
     }
     let dependency_types = validate_dependency_types(dependency_types)?;
     let lockfile_path = absolute_lockfile_path(root, lockfile);
+    let lockfile_root = lockfile_path.parent().unwrap_or(root);
     let content = std::fs::read_to_string(&lockfile_path).map_err(|error| {
         format!(
             "{RULE_ID}: could not read lockfile {}: {error}",
@@ -36,7 +38,7 @@ pub(super) fn lockfile_nodes(
         .collect();
     let mut nodes = BTreeMap::new();
     for package in &workspace.packages {
-        let rel_dir = relative_slash_path(root, &package.dir);
+        let rel_dir = relative_slash_path(lockfile_root, &package.dir);
         let importer_key = if rel_dir.is_empty() {
             ".".to_string()
         } else {
@@ -49,7 +51,8 @@ pub(super) fn lockfile_nodes(
             ));
         };
         let manifest = package.dir.join("package.json");
-        let deps = lockfile_dependencies(importer, &dependency_types);
+        let deps =
+            lockfile_dependencies(importer, &manifest_nodes[&package.name], &dependency_types);
         nodes.insert(package.name.clone(), PackageNode { manifest, deps });
     }
     Ok(nodes)
@@ -59,6 +62,7 @@ pub(super) fn lockfile_nodes(
 enum LockfileDependencyType {
     Dependencies,
     DevDependencies,
+    PeerDependencies,
     OptionalDependencies,
 }
 
@@ -67,18 +71,23 @@ impl LockfileDependencyType {
         match self {
             Self::Dependencies => "dependencies",
             Self::DevDependencies => "devDependencies",
+            Self::PeerDependencies => "peerDependencies",
             Self::OptionalDependencies => "optionalDependencies",
         }
     }
 
-    fn entries(
+    fn importer_entries(
         self,
         importer: &crate::codebase::lockfile::pnpm::PnpmImporter,
-    ) -> &[crate::codebase::lockfile::pnpm::PnpmImporterDependency] {
+    ) -> Option<(
+        &'static str,
+        &[crate::codebase::lockfile::pnpm::PnpmImporterDependency],
+    )> {
         match self {
-            Self::Dependencies => &importer.dependencies,
-            Self::DevDependencies => &importer.dev_dependencies,
-            Self::OptionalDependencies => &importer.optional_dependencies,
+            Self::Dependencies => Some((self.field(), &importer.dependencies)),
+            Self::DevDependencies => Some((self.field(), &importer.dev_dependencies)),
+            Self::PeerDependencies => None,
+            Self::OptionalDependencies => Some((self.field(), &importer.optional_dependencies)),
         }
     }
 }
@@ -91,10 +100,11 @@ fn validate_dependency_types(
         validated.push(match *field {
             "dependencies" => LockfileDependencyType::Dependencies,
             "devDependencies" => LockfileDependencyType::DevDependencies,
+            "peerDependencies" => LockfileDependencyType::PeerDependencies,
             "optionalDependencies" => LockfileDependencyType::OptionalDependencies,
             _ => {
                 return Err(format!(
-                    "{RULE_ID}: lockfile dependencyTypes supports dependencies, devDependencies, and optionalDependencies only; unsupported dependency type '{field}'"
+                    "{RULE_ID}: lockfile dependencyTypes supports dependencies, devDependencies, peerDependencies, and optionalDependencies only; unsupported dependency type '{field}'"
                 ));
             }
         });
@@ -112,15 +122,26 @@ fn absolute_lockfile_path(root: &Path, lockfile: &Path) -> PathBuf {
 
 fn lockfile_dependencies(
     importer: &crate::codebase::lockfile::pnpm::PnpmImporter,
+    manifest_node: &PackageNode,
     dependency_types: &[LockfileDependencyType],
 ) -> Vec<Dependency> {
     let mut deps = Vec::new();
     for field in dependency_types {
-        deps.extend(field.entries(importer).iter().map(|entry| Dependency {
-            name: entry.alias.clone(),
-            resolved_name: entry.resolution_name.clone(),
-            field: field.field().to_string(),
-        }));
+        if let Some((field_name, entries)) = field.importer_entries(importer) {
+            deps.extend(entries.iter().map(|entry| Dependency {
+                name: entry.alias.clone(),
+                resolved_name: entry.resolution_name.clone(),
+                field: field_name.to_string(),
+            }));
+        } else {
+            deps.extend(
+                manifest_node
+                    .deps
+                    .iter()
+                    .filter(|dep| dep.field == field.field())
+                    .cloned(),
+            );
+        }
     }
     deps.sort_by(|a, b| {
         a.name

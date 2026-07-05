@@ -158,6 +158,24 @@ fn parse_importers_accepts_string_and_other_dependency_shapes() {
 }
 
 #[test]
+fn parse_importers_resolves_scalar_aliases_from_specifiers_and_version_path() {
+    let importers = parse_importers(&fixture("scalar-aliases.yaml"));
+    let deps = &importers[0].dependencies;
+
+    assert_eq!(deps.len(), 3);
+    assert_eq!(deps[0].alias, "empty-path");
+    assert_eq!(deps[0].resolution_name, None);
+    assert_eq!(deps[1].alias, "registry-alias");
+    assert_eq!(deps[1].specifier, "npm:@acme/secret@1.0.0");
+    assert_eq!(deps[1].resolution_name.as_deref(), Some("@acme/secret"));
+    assert_eq!(deps[2].alias, "version-path-alias");
+    assert_eq!(
+        deps[2].resolution_name.as_deref(),
+        Some("@acme/version-secret")
+    );
+}
+
+#[test]
 fn parse_invalid_yaml() {
     assert!(parse("{ invalid: yaml: [[[").is_empty());
 }

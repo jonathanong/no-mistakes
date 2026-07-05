@@ -39,10 +39,11 @@ pub(super) fn collect_findings_for_package(
                     );
                 }
             }
-            if workspace_names.contains(&dep.name) && !seen.contains(&dep.name) {
+            let workspace_dep = dep.resolved_name.as_ref().unwrap_or(&dep.name);
+            if workspace_names.contains(workspace_dep) && !seen.contains(workspace_dep) {
                 let mut next_chain = chain.clone();
-                next_chain.push(dep.name.clone());
-                queue.push_back((dep.name.clone(), next_chain));
+                next_chain.push(workspace_dep.clone());
+                queue.push_back((workspace_dep.clone(), next_chain));
             }
         }
     }

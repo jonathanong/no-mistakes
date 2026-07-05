@@ -1,4 +1,5 @@
 use super::{split_name_version, yaml_key_to_string};
+use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct PnpmImporter {
@@ -47,6 +48,7 @@ fn importer_dependencies(importer: &serde_yaml::Value, field: &str) -> Vec<PnpmI
     let Some(dependencies) = importer.get(field).and_then(|v| v.as_mapping()) else {
         return Vec::new();
     };
+    let specifiers = importer_specifiers(importer);
     let mut result: Vec<PnpmImporterDependency> = dependencies
         .iter()
         .filter_map(|(key, value)| {
@@ -54,7 +56,7 @@ fn importer_dependencies(importer: &serde_yaml::Value, field: &str) -> Vec<PnpmI
             if alias.is_empty() {
                 return None;
             }
-            Some(importer_dependency(alias, value))
+            Some(importer_dependency(alias, value, &specifiers))
         })
         .collect();
     result.sort_by(|a, b| {
@@ -67,7 +69,25 @@ fn importer_dependencies(importer: &serde_yaml::Value, field: &str) -> Vec<PnpmI
     result
 }
 
-fn importer_dependency(alias: String, value: &serde_yaml::Value) -> PnpmImporterDependency {
+fn importer_specifiers(importer: &serde_yaml::Value) -> BTreeMap<String, String> {
+    importer
+        .get("specifiers")
+        .and_then(|v| v.as_mapping())
+        .into_iter()
+        .flatten()
+        .filter_map(|(key, value)| {
+            let alias = yaml_key_to_string(key);
+            let specifier = value.as_str()?.to_string();
+            (!alias.is_empty()).then_some((alias, specifier))
+        })
+        .collect()
+}
+
+fn importer_dependency(
+    alias: String,
+    value: &serde_yaml::Value,
+    specifiers: &BTreeMap<String, String>,
+) -> PnpmImporterDependency {
     let (specifier, version) = match value {
         serde_yaml::Value::Mapping(_) => (
             value
@@ -81,12 +101,16 @@ fn importer_dependency(alias: String, value: &serde_yaml::Value) -> PnpmImporter
                 .unwrap_or("")
                 .to_string(),
         ),
-        serde_yaml::Value::String(version) => (String::new(), version.clone()),
+        serde_yaml::Value::String(version) => (
+            specifiers.get(&alias).cloned().unwrap_or_default(),
+            version.clone(),
+        ),
         _ => (String::new(), String::new()),
     };
 
     PnpmImporterDependency {
-        resolution_name: resolution_name_from_specifier(&specifier),
+        resolution_name: resolution_name_from_specifier(&specifier)
+            .or_else(|| resolution_name_from_version(&version)),
         alias,
         specifier,
         version,
@@ -96,6 +120,18 @@ fn importer_dependency(alias: String, value: &serde_yaml::Value) -> PnpmImporter
 fn resolution_name_from_specifier(specifier: &str) -> Option<String> {
     let aliased = specifier.strip_prefix("npm:")?;
     let (name, _) = split_name_version(aliased);
+    if name.is_empty() {
+        None
+    } else {
+        Some(name.to_string())
+    }
+}
+
+fn resolution_name_from_version(version: &str) -> Option<String> {
+    if !version.starts_with('/') {
+        return None;
+    }
+    let (name, _) = split_name_version(version);
     if name.is_empty() {
         None
     } else {
