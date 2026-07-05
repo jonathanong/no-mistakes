@@ -1,4 +1,5 @@
 use super::{Dependency, PackageNode, RULE_ID};
+use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::workspaces;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
@@ -108,7 +109,7 @@ fn importer_key(lockfile_root: &Path, package_dir: &Path) -> String {
 }
 
 fn absolute_lockfile_path(root: &Path, lockfile_base: &Path, lockfile: &Path) -> PathBuf {
-    if lockfile.is_absolute() {
+    let path = if lockfile.is_absolute() {
         lockfile.to_path_buf()
     } else if lockfile_base != root {
         let project_lockfile = lockfile_base.join(lockfile);
@@ -119,7 +120,8 @@ fn absolute_lockfile_path(root: &Path, lockfile_base: &Path, lockfile: &Path) ->
         }
     } else {
         root.join(lockfile)
-    }
+    };
+    normalize_path(&path)
 }
 
 fn lockfile_dependencies(
