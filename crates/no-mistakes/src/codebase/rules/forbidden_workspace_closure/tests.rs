@@ -400,6 +400,49 @@ fn rule_exclude_filter_suppresses_declaring_manifest() {
 }
 
 #[test]
+fn traversal_tolerates_duplicate_and_missing_workspace_nodes() {
+    let root = fixture_root("pass");
+    let mut nodes = BTreeMap::new();
+    nodes.insert(
+        "@acme/app".to_string(),
+        PackageNode {
+            manifest: root.join("packages/app/package.json"),
+            deps: vec![
+                Dependency {
+                    name: "@acme/missing".to_string(),
+                    resolved_name: None,
+                    field: "dependencies".to_string(),
+                },
+                Dependency {
+                    name: "@acme/missing".to_string(),
+                    resolved_name: None,
+                    field: "dependencies".to_string(),
+                },
+            ],
+        },
+    );
+    let workspace_names = BTreeSet::from(["@acme/app".to_string(), "@acme/missing".to_string()]);
+    let forbidden = build_globset(&["@acme/secret".to_string()]).unwrap();
+    let config = config("packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\n");
+    let source_filter =
+        crate::codebase::rules::path_filter::RulePathFilter::new(&root, &config, &config.rules[0])
+            .unwrap();
+    let mut findings = Vec::new();
+
+    traversal::collect_findings_for_package(
+        &root,
+        "@acme/app",
+        &nodes,
+        &workspace_names,
+        &forbidden,
+        &source_filter,
+        &mut findings,
+    );
+
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
 fn normalize_importer_path_keeps_workspace_root_as_dot() {
     assert_eq!(lockfile::normalize_importer_path("./"), ".");
 }

@@ -1,6 +1,9 @@
 {
   "name": "@acme/app",
   "dependencies": {
+    "@acme/object-shaped-entry": {
+      "version": "1.0.0"
+    },
     "@acme/secret": "^1.0.0"
   }
 }

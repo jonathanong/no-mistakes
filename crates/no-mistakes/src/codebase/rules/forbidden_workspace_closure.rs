@@ -89,8 +89,7 @@ fn scan(
     let mut nodes = manifest_nodes(&workspace, &dependency_types);
     if let Some(lockfile) = &opts.lockfile {
         match lockfile::lockfile_nodes(root, lockfile, &workspace, &dependency_types) {
-            Ok(Some(lockfile_backed)) => nodes = lockfile_backed,
-            Ok(None) => {}
+            Ok(lockfile_backed) => nodes = lockfile_backed,
             Err(message) => return Ok(vec![config_finding(&message)]),
         }
     }

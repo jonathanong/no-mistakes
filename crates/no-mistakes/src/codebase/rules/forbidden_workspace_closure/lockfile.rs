@@ -9,7 +9,7 @@ pub(super) fn lockfile_nodes(
     lockfile: &Path,
     workspace: &workspaces::WorkspaceMap,
     dependency_types: &[&str],
-) -> std::result::Result<Option<BTreeMap<String, PackageNode>>, String> {
+) -> std::result::Result<BTreeMap<String, PackageNode>, String> {
     if lockfile.file_name().and_then(|name| name.to_str()) != Some("pnpm-lock.yaml") {
         return Err(format!(
             "{RULE_ID}: lockfile currently supports pnpm-lock.yaml only"
@@ -51,7 +51,7 @@ pub(super) fn lockfile_nodes(
         let deps = lockfile_dependencies(importer, dependency_types);
         nodes.insert(package.name.clone(), PackageNode { manifest, deps });
     }
-    Ok(Some(nodes))
+    Ok(nodes)
 }
 
 fn absolute_lockfile_path(root: &Path, lockfile: &Path) -> PathBuf {

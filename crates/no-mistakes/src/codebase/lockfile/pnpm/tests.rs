@@ -128,6 +128,36 @@ fn parse_importers_invalid_yaml() {
 }
 
 #[test]
+fn parse_importers_skips_empty_importer_and_dependency_keys() {
+    let importers = parse_importers(
+        "importers:\n  ~:\n    dependencies:\n      lodash: 4.17.21\n  packages/app:\n    dependencies:\n      ~: 1.0.0\n      lodash: 4.17.21\n",
+    );
+
+    assert_eq!(importers.len(), 1);
+    assert_eq!(importers[0].path, "packages/app");
+    assert_eq!(importers[0].dependencies.len(), 1);
+    assert_eq!(importers[0].dependencies[0].alias, "lodash");
+}
+
+#[test]
+fn parse_importers_accepts_string_and_other_dependency_shapes() {
+    let importers = parse_importers(
+        "importers:\n  packages/app:\n    dependencies:\n      string-form: '1.0.0'\n      object-form:\n        specifier: 'npm:'\n        version: '2.0.0'\n      number-form: 3\n",
+    );
+    let deps = &importers[0].dependencies;
+
+    assert_eq!(deps.len(), 3);
+    assert_eq!(deps[0].alias, "number-form");
+    assert_eq!(deps[0].specifier, "");
+    assert_eq!(deps[0].version, "");
+    assert_eq!(deps[1].alias, "object-form");
+    assert_eq!(deps[1].resolution_name, None);
+    assert_eq!(deps[2].alias, "string-form");
+    assert_eq!(deps[2].specifier, "");
+    assert_eq!(deps[2].version, "1.0.0");
+}
+
+#[test]
 fn parse_invalid_yaml() {
     assert!(parse("{ invalid: yaml: [[[").is_empty());
 }
