@@ -6,6 +6,7 @@ pub use super::doc_consistency::RULE_ID as DOC_CONSISTENCY;
 pub use super::file_extension_policy::RULE_ID as FILE_EXTENSION_POLICY;
 pub use super::finite_set_consistency::RULE_ID as FINITE_SET_CONSISTENCY;
 pub use super::forbidden_dependencies::RULE_ID as FORBIDDEN_DEPENDENCIES;
+pub use super::forbidden_workspace_closure::RULE_ID as FORBIDDEN_WORKSPACE_CLOSURE;
 pub use super::integration_test_no_mocks::RULE_ID as INTEGRATION_TEST_NO_MOCKS;
 pub use super::lockfile_allowlist::RULE_ID as LOCKFILE_ALLOWLIST;
 pub use super::markdown_link_display_text::RULE_ID as MARKDOWN_LINK_DISPLAY_TEXT;

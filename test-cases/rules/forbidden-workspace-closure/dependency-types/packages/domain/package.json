@@ -1,0 +1,6 @@
+{
+  "name": "@acme/domain",
+  "devDependencies": {
+    "@acme/secret": "^1.0.0"
+  }
+}

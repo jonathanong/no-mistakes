@@ -1,5 +1,8 @@
 use super::{ResolutionKind, ResolvedPackage};
 
+mod importers;
+pub use importers::{parse_importers, PnpmImporter, PnpmImporterDependency};
+
 pub fn parse(content: &str) -> Vec<ResolvedPackage> {
     let Ok(root) = serde_yaml::from_str::<serde_yaml::Value>(content) else {
         return Vec::new();
@@ -23,7 +26,7 @@ pub fn parse(content: &str) -> Vec<ResolvedPackage> {
         .collect()
 }
 
-fn split_name_version(key: &str) -> (&str, &str) {
+pub(super) fn split_name_version(key: &str) -> (&str, &str) {
     // Strip peer-dep suffix enclosed in parens: pkg@ver(peer@X) → pkg@ver
     let base = key.split_once('(').map_or(key, |(b, _)| b);
     // Strip pnpm v5/v6 leading slash (e.g. `/lodash@4.17.21` → `lodash@4.17.21`).
@@ -142,7 +145,7 @@ fn resolution_info(value: &serde_yaml::Value) -> (String, ResolutionKind) {
     (String::new(), ResolutionKind::Other)
 }
 
-fn yaml_key_to_string(value: &serde_yaml::Value) -> String {
+pub(super) fn yaml_key_to_string(value: &serde_yaml::Value) -> String {
     match value {
         serde_yaml::Value::String(s) => s.clone(),
         serde_yaml::Value::Number(n) => n.to_string(),

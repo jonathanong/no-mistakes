@@ -1,0 +1,6 @@
+{
+  "name": "@acme/domain",
+  "dependencies": {
+    "left-pad": "^1.3.0"
+  }
+}

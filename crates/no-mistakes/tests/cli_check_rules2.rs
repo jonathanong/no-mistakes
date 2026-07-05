@@ -158,6 +158,20 @@ rules:
 "#,
     );
     assert!(format!("{package_cycles:?}").contains("@x/api -> @x/domain -> @x/api"));
+
+    let closure_root = rule_fixture_scenario("forbidden-workspace-closure", "transitive-workspace");
+    let closure = filesystem_findings(
+        &closure_root,
+        r#"
+rules:
+  - rule: forbidden-workspace-closure
+    scope: repository
+    options:
+      packages: ["@acme/app"]
+      forbidden: ["@acme/secret"]
+"#,
+    );
+    assert!(format!("{closure:?}").contains("@acme/app -> @acme/domain -> @acme/secret"));
 }
 
 #[test]

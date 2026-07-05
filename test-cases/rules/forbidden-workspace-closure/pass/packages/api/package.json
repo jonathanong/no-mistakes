@@ -1,0 +1,7 @@
+{
+  "name": "@app/api",
+  "version": "1.0.0",
+  "dependencies": {
+    "@app/domain": "workspace:*"
+  }
+}

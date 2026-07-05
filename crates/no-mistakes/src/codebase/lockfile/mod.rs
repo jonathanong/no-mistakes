@@ -3,6 +3,8 @@ pub mod npm;
 pub mod pnpm;
 pub mod yarn;
 
+pub use pnpm::{parse_importers, PnpmImporter, PnpmImporterDependency};
+
 #[cfg(test)]
 mod tests;
 

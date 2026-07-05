@@ -26,7 +26,10 @@ fn collect_workspace_manifest_edges(
             let Ok(package_json) = serde_json::from_str::<serde_json::Value>(&source) else {
                 return edges;
             };
-            for name in package_dependency_names(&package_json) {
+            for name in crate::codebase::package_deps::dependency_names_from_value(
+                &package_json,
+                crate::codebase::package_deps::ALL_DEPENDENCY_FIELDS,
+            ) {
                 let target = workspace_entries
                     .get(name.as_str())
                     .map(|entry| NodeId::File(entry.clone()))
@@ -40,26 +43,4 @@ fn collect_workspace_manifest_edges(
             edges
         })
         .collect()
-}
-
-fn package_dependency_names(package_json: &serde_json::Value) -> Vec<String> {
-    let mut names = Vec::new();
-    for field in [
-        "dependencies",
-        "devDependencies",
-        "peerDependencies",
-        "optionalDependencies",
-    ] {
-        let Some(deps) = package_json.get(field).and_then(|value| value.as_object()) else {
-            continue;
-        };
-        for (name, version) in deps {
-            if version.as_str().is_some() {
-                names.push(name.clone());
-            }
-        }
-    }
-    names.sort();
-    names.dedup();
-    names
 }

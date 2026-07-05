@@ -56,7 +56,10 @@ fn package_dependency_names_returns_dependency_names() {
         }
     });
 
-    let names = package_dependency_names(&package_json);
+    let names = crate::codebase::package_deps::dependency_names_from_value(
+        &package_json,
+        crate::codebase::package_deps::ALL_DEPENDENCY_FIELDS,
+    );
 
     assert_eq!(names, vec!["@scope/dev-local", "@scope/local", "external"]);
 }

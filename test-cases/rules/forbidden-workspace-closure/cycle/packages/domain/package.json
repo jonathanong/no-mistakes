@@ -1,0 +1,7 @@
+{
+  "name": "@acme/domain",
+  "dependencies": {
+    "@acme/app": "workspace:*",
+    "@acme/secret": "^1.0.0"
+  }
+}

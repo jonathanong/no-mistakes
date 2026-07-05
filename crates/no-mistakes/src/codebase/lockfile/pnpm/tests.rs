@@ -78,6 +78,56 @@ fn parse_no_packages_section() {
 }
 
 #[test]
+fn parse_packages_with_importers_fixture() {
+    let pkgs = parse(&fixture("importers.yaml"));
+    let lodash = pkgs.iter().find(|p| p.name == "lodash").unwrap();
+    assert_eq!(lodash.version, "4.17.21");
+    assert_eq!(lodash.fingerprint, "sha512-abc123");
+    assert_eq!(lodash.kind, ResolutionKind::Registry);
+}
+
+#[test]
+fn parse_importers_groups_by_dependency_type() {
+    let importers = parse_importers(&fixture("importers.yaml"));
+    assert_eq!(importers.len(), 2);
+    assert_eq!(importers[0].path, ".");
+    assert_eq!(importers[1].path, "packages/app");
+
+    let app = importers.iter().find(|i| i.path == "packages/app").unwrap();
+    assert_eq!(app.dependencies.len(), 1);
+    assert_eq!(app.dependencies[0].alias, "lodash");
+    assert_eq!(app.dependencies[0].specifier, "^4.17.21");
+    assert_eq!(app.dependencies[0].version, "4.17.21");
+    assert_eq!(app.dependencies[0].resolution_name, None);
+
+    assert_eq!(app.dev_dependencies.len(), 2);
+    assert_eq!(app.dev_dependencies[0].alias, "chalk");
+    assert_eq!(app.dev_dependencies[0].resolution_name, None);
+    assert_eq!(app.dev_dependencies[1].alias, "image-lib");
+    assert_eq!(
+        app.dev_dependencies[1].resolution_name.as_deref(),
+        Some("sharp")
+    );
+    assert_eq!(app.optional_dependencies.len(), 1);
+    assert_eq!(app.optional_dependencies[0].alias, "@scope/optional");
+}
+
+#[test]
+fn parse_importers_empty_content() {
+    assert!(parse_importers("").is_empty());
+}
+
+#[test]
+fn parse_importers_missing_importers_section() {
+    assert!(parse_importers("packages:\n  lodash@4.17.21: {}\n").is_empty());
+}
+
+#[test]
+fn parse_importers_invalid_yaml() {
+    assert!(parse_importers("{ invalid: yaml: [[[").is_empty());
+}
+
+#[test]
 fn parse_invalid_yaml() {
     assert!(parse("{ invalid: yaml: [[[").is_empty());
 }
