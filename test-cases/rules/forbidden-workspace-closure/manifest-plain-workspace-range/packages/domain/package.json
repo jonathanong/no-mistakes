@@ -1,0 +1,7 @@
+{
+  "name": "@acme/domain",
+  "version": "1.0.0",
+  "dependencies": {
+    "@acme/secret": "1.0.0"
+  }
+}

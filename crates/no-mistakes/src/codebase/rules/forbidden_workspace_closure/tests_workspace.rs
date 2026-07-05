@@ -147,6 +147,40 @@ fn project_scoped_package_root_loads_repository_workspace() {
 }
 
 #[test]
+fn project_scoped_relative_lockfile_falls_back_to_repository_root() {
+    let root = fixture_root("project-package-root-workspace");
+    let files = package_files(
+        &root,
+        &[
+            "pnpm-workspace.yaml",
+            "pnpm-lock.yaml",
+            "packages/app/package.json",
+        ],
+    );
+    let mut config = config(
+        "packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\nlockfile: pnpm-lock.yaml\n",
+    );
+    config.projects.insert(
+        "app".to_string(),
+        Project {
+            root: Some("packages/app".to_string()),
+            ..Default::default()
+        },
+    );
+    config.rules[0].scope = None;
+    config.rules[0].projects = vec!["app".to_string()];
+
+    let findings = check_with_files(&root, &config, &files).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "packages/app/package.json");
+    assert_eq!(
+        findings[0].import.as_deref(),
+        Some("@acme/app -> @acme/secret")
+    );
+}
+
+#[test]
 fn load_workspace_defaults_to_repository_root_when_target_roots_are_empty() {
     let root = fixture_root("pass");
     let files = package_files(&root, &["package.json", "packages/app/package.json"]);

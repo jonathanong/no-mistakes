@@ -188,4 +188,6 @@ mod tests_lockfile_path_alias;
 #[cfg(test)]
 mod tests_manifest_alias;
 #[cfg(test)]
+mod tests_manifest_path_alias;
+#[cfg(test)]
 mod tests_workspace;

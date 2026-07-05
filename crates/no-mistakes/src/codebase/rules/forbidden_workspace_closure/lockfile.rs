@@ -29,7 +29,7 @@ pub(super) fn lockfile_nodes(
         ));
     }
     let dependency_types = dependency_type::validate(dependency_types)?;
-    let lockfile_path = absolute_lockfile_path(lockfile_base, lockfile);
+    let lockfile_path = absolute_lockfile_path(root, lockfile_base, lockfile);
     let lockfile_root = lockfile_path.parent().unwrap_or(root);
     let content = std::fs::read_to_string(&lockfile_path).map_err(|error| {
         format!(
@@ -107,9 +107,16 @@ fn importer_key(lockfile_root: &Path, package_dir: &Path) -> String {
     }
 }
 
-fn absolute_lockfile_path(root: &Path, lockfile: &Path) -> PathBuf {
+fn absolute_lockfile_path(root: &Path, lockfile_base: &Path, lockfile: &Path) -> PathBuf {
     if lockfile.is_absolute() {
         lockfile.to_path_buf()
+    } else if lockfile_base != root {
+        let project_lockfile = lockfile_base.join(lockfile);
+        if project_lockfile.exists() {
+            project_lockfile
+        } else {
+            root.join(lockfile)
+        }
     } else {
         root.join(lockfile)
     }
