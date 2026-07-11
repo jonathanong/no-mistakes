@@ -48,9 +48,14 @@ fn recognizes_typed_mock_import_specifiers() {
     let source = r#"
 vi.mock(import('./a.mts'), () => ({}))
 vi.doMock(import('./b.mts'), () => ({}))
+jest.mock(import('./a.mts'), () => ({}))
+jest.doMock(import('./b.mts'), () => ({}))
 "#;
     let facts = extract(Path::new("x.test.mts"), source).unwrap();
-    assert_eq!(facts.mock_specifiers, vec!["./a.mts", "./b.mts"]);
+    assert_eq!(
+        facts.mock_specifiers,
+        vec!["./a.mts", "./b.mts", "./a.mts", "./b.mts"]
+    );
     assert!(
         facts.dynamic_imports.is_empty(),
         "type-carrier imports must not be treated as dynamic imports"
