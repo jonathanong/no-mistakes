@@ -60,6 +60,41 @@ fn fixture_reports_unmocked_transitive_and_nonliteral_dynamic_imports() {
 }
 
 #[test]
+fn typed_mock_import_specifiers_cover_dependencies_and_keep_factory_imports() {
+    // Regression for issue #506: `vi.mock(import("./dep"), factory)` /
+    // `vi.doMock(import("./dep"), factory)` must cover the typed dependency, and a genuine
+    // dynamic import written inside the factory body must still be flagged.
+    let root = fixture();
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let findings = check(&root, &config, None).unwrap();
+    assert!(
+        !findings
+            .iter()
+            .any(|f| f.file == "tests/typed-mock.test.mts"),
+        "typed vi.mock specifier must cover the dependency"
+    );
+    assert!(
+        !findings
+            .iter()
+            .any(|f| f.file == "tests/typed-do-mock.test.mts"),
+        "typed vi.doMock specifier must cover the dependency"
+    );
+    assert!(
+        !findings
+            .iter()
+            .any(|f| f.target.as_deref() == Some("src/typed-covered.mts")),
+        "the type-carrier import must never itself be flagged"
+    );
+    assert!(
+        findings.iter().any(|f| {
+            f.file == "tests/typed-mock-factory.test.mts"
+                && f.target.as_deref() == Some("src/typed-factory-leaf.mts")
+        }),
+        "a genuine dynamic import inside the mock factory body must still be flagged"
+    );
+}
+
+#[test]
 fn next_line_disable_and_unresolved_import_branches_are_reported() {
     let root = fixture();
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();

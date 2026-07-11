@@ -6,6 +6,7 @@ use oxc_ast::ast::{
 use oxc_ast_visit::{walk, Visit};
 use oxc_parser::Parser;
 use oxc_span::SourceType;
+use std::collections::HashSet;
 use std::path::Path;
 
 #[derive(Clone)]
@@ -34,6 +35,7 @@ pub(crate) fn extract_program(source: &str, program: &Program<'_>) -> TestFacts 
     let mut visitor = Collector {
         source,
         facts: TestFacts::default(),
+        mock_import_starts: HashSet::new(),
     };
     visitor.visit_program(program);
     visitor.facts
@@ -42,10 +44,22 @@ pub(crate) fn extract_program(source: &str, program: &Program<'_>) -> TestFacts 
 struct Collector<'s> {
     source: &'s str,
     facts: TestFacts,
+    /// Byte offsets (`Span::start`) of `ImportExpression`s used as the first argument of a
+    /// mock call, e.g. `vi.mock(import("./dep"), factory)`. These are type carriers for the
+    /// mocked module, not runtime dynamic imports, so `visit_import_expression` skips
+    /// recording them into `TestFacts.dynamic_imports`. See issue #506.
+    mock_import_starts: HashSet<u32>,
 }
 
 impl<'a> Visit<'a> for Collector<'_> {
     fn visit_import_expression(&mut self, import: &ImportExpression<'a>) {
+        if self.mock_import_starts.contains(&import.span.start) {
+            // Type-carrier import for a typed mock specifier; already recorded (if static)
+            // into `mock_specifiers` by `visit_call_expression`. Still walk its children so
+            // any nested dynamic import is not missed.
+            walk::walk_import_expression(self, import);
+            return;
+        }
         let line = crate::codebase::ts_source::byte_offset_to_line(
             self.source,
             import.span.start as usize,
@@ -62,6 +76,18 @@ impl<'a> Visit<'a> for Collector<'_> {
             if let Some(first) = call.arguments.first() {
                 if let Some(specifier) = string_arg(first) {
                     self.facts.mock_specifiers.push(specifier);
+                } else if let Argument::ImportExpression(import) = first {
+                    // Typed Vitest/Jest mock specifier, e.g.
+                    // `vi.mock(import("./dep"), factory)` — bare `import(...)` form only
+                    // (a TS-wrapped carrier like `import("./dep") as unknown` is not matched).
+                    // The import exists only so TypeScript can infer the mocked module's
+                    // shape; it is not a runtime dynamic import. Record its specifier as a
+                    // mock specifier when statically known, and mark its span so
+                    // `visit_import_expression` does not also record it as a dynamic import.
+                    if let Some(specifier) = string_expr(&import.source) {
+                        self.facts.mock_specifiers.push(specifier);
+                    }
+                    self.mock_import_starts.insert(import.span.start);
                 }
             }
         }
