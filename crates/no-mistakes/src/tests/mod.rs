@@ -80,7 +80,7 @@ pub struct Warning {
 
 pub fn run(args: TestsArgs) -> Result<ExitCode> {
     match args.command {
-        TestsCommand::Plan(sub_args) => plan::run(sub_args),
+        TestsCommand::Plan(sub_args) => plan::run(*sub_args),
         TestsCommand::Targets(sub_args) => targets::run(sub_args),
         TestsCommand::Impact(sub_args) => impact::run(sub_args),
         TestsCommand::Why(sub_args) => why::run(sub_args),

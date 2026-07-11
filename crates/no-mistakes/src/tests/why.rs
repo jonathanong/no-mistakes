@@ -143,6 +143,7 @@ fn run_live_analysis(
         tsconfig: args.tsconfig.clone(),
         base: None,
         head: None,
+        from_git_diff: None,
         changed_file: args.changed.clone().into_iter().collect(),
         changed_files: None,
         diff: None,

@@ -36,6 +36,8 @@ words:
   - oxlint
   - PCRE
   - pnpm
+  - refspec
+  - refspecs
   - rustfmt
   - serde
   - shellcheck

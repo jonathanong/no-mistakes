@@ -10,7 +10,10 @@ pub struct TestsArgs {
 #[derive(Subcommand, Debug)]
 pub(crate) enum TestsCommand {
     /// Plan test targets based on changed files and dependency graph analysis.
-    Plan(PlanArgs),
+    // Boxed: `PlanArgs` is by far the largest variant here (it carries every
+    // changed-file/diff/git-ref input `tests plan` accepts), so an unboxed
+    // field trips clippy::large_enum_variant.
+    Plan(Box<PlanArgs>),
     /// Look up executable runner targets for test files.
     Targets(TargetsArgs),
     /// Find impacted tests from file#symbol entrypoints.
@@ -48,6 +51,11 @@ pub(crate) struct PlanArgs {
     /// Git head commit/branch to diff against (defaults to HEAD).
     #[arg(long, requires = "base")]
     pub(crate) head: Option<String>,
+
+    /// Git diff refspec, e.g. origin/main...HEAD. Sugar for --base/--head;
+    /// desugars to the same `git diff --name-status <base>...<head>` lookup.
+    #[arg(long = "from-git-diff", conflicts_with_all = ["base", "head"])]
+    pub(crate) from_git_diff: Option<String>,
 
     /// Specific changed file path. Can be repeated.
     #[arg(long = "changed-file")]

@@ -154,6 +154,7 @@ fn plan_args_for(args: &ImpactedChecksArgs, framework: Option<TestFramework>) ->
         tsconfig: args.tsconfig.clone(),
         base: args.base.clone(),
         head: args.head.clone(),
+        from_git_diff: None,
         changed_file,
         changed_files: args.changed_files.clone(),
         diff: args.diff.clone(),
