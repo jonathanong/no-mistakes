@@ -17,12 +17,14 @@ Fix: add a manual mock, make the dependency static, or narrow the rule target.
 ## Typed Vitest/Jest mock specifiers
 
 Vitest and Jest support type-safe mock specifiers written as
-`vi.mock(import("./dependency"), factory)` (and `vi.doMock(...)`). The
-`import(...)` here is a type carrier for the mocked module's shape — it is not
-a runtime dynamic import. The rule recognizes a bare `import(...)` used as the
-first argument of `vi.mock` / `vi.doMock` the same way it recognizes a
-string-literal specifier: it covers the dependency and is never itself
-reported as an unmocked dynamic import.
+`vi.mock(import("./dependency"), factory)` (and `vi.doMock(...)`); the same
+forms are also recognized for `jest.mock(import("./dependency"), factory)`
+and `jest.doMock(...)`. The `import(...)` here is a type carrier for the
+mocked module's shape — it is not a runtime dynamic import. The rule
+recognizes a bare `import(...)` used as the first argument of
+`vi.mock` / `vi.doMock` / `jest.mock` / `jest.doMock` the same way it
+recognizes a string-literal specifier: it covers the dependency and is never
+itself reported as an unmocked dynamic import.
 
 ```ts
 vi.mock(import('./dependency.mts'), () => ({
