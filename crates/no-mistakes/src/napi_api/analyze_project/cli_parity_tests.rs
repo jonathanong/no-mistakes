@@ -27,6 +27,23 @@ fn cli_parity_builders_cover_defaults_and_validation() {
         vec![None, Some("handler".to_string())]
     );
 
+    // from_git_diff passes through to PlanArgs unchanged, alongside base/head
+    // staying unset — the CLI's --base/--head desugar happens later in
+    // `collect_changed_files`, not in this options-to-args mapping.
+    let from_git_diff_plan =
+        crate::napi_api::cli_parity::build_plan_args(crate::napi_api::options::TestsPlanOptions {
+            framework: Some("vitest".to_string()),
+            from_git_diff: Some("origin/main...HEAD".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+    assert_eq!(
+        from_git_diff_plan.from_git_diff,
+        Some("origin/main...HEAD".to_string())
+    );
+    assert_eq!(from_git_diff_plan.base, None);
+    assert_eq!(from_git_diff_plan.head, None);
+
     let why =
         crate::napi_api::cli_parity::build_why_args(crate::napi_api::options::TestsWhyOptions {
             test: Some("src/app.test.ts".to_string()),
