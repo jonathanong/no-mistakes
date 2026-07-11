@@ -25,6 +25,29 @@ fn collect_reachable_findings(
 }
 
 #[test]
+fn typed_mock_carrier_does_not_leak_mocked_leaf_into_reachability_scanning() {
+    // Regression for #506: `vi.mock(import("./dep"), factory)`'s carrier is a real
+    // ImportExpression AST node, so the shared dependency graph (built independently of
+    // this rule's own extractor) records a dynamic-import edge from the test file to the
+    // mocked leaf even when the test never dynamically imports it directly. Before the
+    // `reachable::collect` fix, this made the mocked leaf's own (unmocked) internal
+    // dynamic import look reachable and reportable, even though the leaf never executes
+    // once mocked. Covers both the typed and string-literal mock forms.
+    let root = fixture();
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let findings = check(&root, &config, None).unwrap();
+    assert!(
+        !findings.iter().any(|f| {
+            f.file.contains("typed-mock-reachable")
+                || f.file.contains("string-mock-reachable")
+                || f.target.as_deref() == Some("src/typed-mock-reachable-internal.mts")
+                || f.target.as_deref() == Some("src/typed-mock-reachable-leaf.mts")
+        }),
+        "a mocked leaf's own internals must not be scanned via reachability: {findings:?}"
+    );
+}
+
+#[test]
 fn fixture_reports_unmocked_transitive_and_nonliteral_dynamic_imports() {
     let root = fixture();
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();

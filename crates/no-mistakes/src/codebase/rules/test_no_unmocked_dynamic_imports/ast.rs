@@ -76,18 +76,23 @@ impl<'a> Visit<'a> for Collector<'_> {
             if let Some(first) = call.arguments.first() {
                 if let Some(specifier) = string_arg(first) {
                     self.facts.mock_specifiers.push(specifier);
-                } else if let Argument::ImportExpression(import) = first {
-                    // Typed Vitest/Jest mock specifier, e.g.
-                    // `vi.mock(import("./dep"), factory)` — bare `import(...)` form only
-                    // (a TS-wrapped carrier like `import("./dep") as unknown` is not matched).
-                    // The import exists only so TypeScript can infer the mocked module's
-                    // shape; it is not a runtime dynamic import. Record its specifier as a
-                    // mock specifier when statically known, and mark its span so
-                    // `visit_import_expression` does not also record it as a dynamic import.
-                    if let Some(specifier) = string_expr(&import.source) {
-                        self.facts.mock_specifiers.push(specifier);
+                } else if accepts_typed_import_specifier(call) {
+                    if let Argument::ImportExpression(import) = first {
+                        // Typed Vitest/Jest mock specifier, e.g.
+                        // `vi.mock(import("./dep"), factory)` — bare `import(...)` form only
+                        // (a TS-wrapped carrier like `import("./dep") as unknown` is not
+                        // matched). The import exists only so TypeScript can infer the mocked
+                        // module's shape; it is not a runtime dynamic import. Only exclude it
+                        // from `dynamic_imports` when the specifier is statically known:
+                        // `import(name)` with a non-static specifier is not a verifiable mock
+                        // and must still surface as a reportable dynamic import, the same as
+                        // a bare `import(name)` elsewhere — otherwise a test could evade the
+                        // rule entirely by wrapping an unknown dynamic import in `vi.mock(...)`.
+                        if let Some(specifier) = string_expr(&import.source) {
+                            self.facts.mock_specifiers.push(specifier);
+                            self.mock_import_starts.insert(import.span.start);
+                        }
                     }
-                    self.mock_import_starts.insert(import.span.start);
                 }
             }
         }
@@ -95,20 +100,37 @@ impl<'a> Visit<'a> for Collector<'_> {
     }
 }
 
-fn is_mock_call(call: &CallExpression<'_>) -> bool {
+/// Returns the `vi`/`jest` mock method name for `call` (e.g. `"mock"`, `"doMock"`), or
+/// `None` if the callee is not a `vi.<method>()` / `jest.<method>()` static member call.
+/// Shared by `is_mock_call` and `accepts_typed_import_specifier` so both callee shapes are
+/// matched in one place.
+fn mock_method_name<'e>(call: &'e CallExpression<'_>) -> Option<&'e str> {
     let Expression::StaticMemberExpression(member) = &call.callee else {
-        return false;
+        return None;
     };
     let Expression::Identifier(object) = &member.object else {
-        return false;
+        return None;
     };
     if !matches!(object.name.as_str(), "vi" | "jest") {
-        return false;
+        return None;
     }
+    Some(member.property.name.as_str())
+}
+
+fn is_mock_call(call: &CallExpression<'_>) -> bool {
     matches!(
-        member.property.name.as_str(),
-        "mock" | "doMock" | "unstable_mockModule" | "setMock"
+        mock_method_name(call),
+        Some("mock" | "doMock" | "unstable_mockModule" | "setMock")
     )
+}
+
+/// Whether `call`'s first argument may be a typed `import(...)` mock specifier. Only
+/// `vi.mock` / `vi.doMock` / `jest.mock` / `jest.doMock` support the module-promise
+/// overload; `jest.setMock` and `jest.unstable_mockModule` accept a plain string module
+/// name only, so a literal `import(...)` passed there is a genuine runtime dynamic import
+/// (its result is not used as a specifier) and must still be tracked as one.
+fn accepts_typed_import_specifier(call: &CallExpression<'_>) -> bool {
+    matches!(mock_method_name(call), Some("mock" | "doMock"))
 }
 
 fn string_arg(arg: &Argument<'_>) -> Option<String> {

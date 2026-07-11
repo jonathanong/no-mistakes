@@ -79,14 +79,39 @@ vi.mock(import('./a.mts'), () => import('./real.mts'))
 }
 
 #[test]
-fn excludes_non_static_typed_mock_carrier() {
-    // A non-static import specifier (`import(name)`) as the first argument still marks the
-    // carrier as a type carrier (excluded from dynamic_imports), but yields no mock
-    // specifier since the module path is not statically known.
+fn keeps_non_static_typed_mock_carrier_as_dynamic_import() {
+    // A non-static import specifier (`import(name)`) as the first argument is not a
+    // verifiable mock: it must still surface as a reportable dynamic import (specifier
+    // unknown), the same as a bare `import(name)` elsewhere. Otherwise a test could evade
+    // the rule entirely by wrapping an unknown dynamic import in `vi.mock(...)`. See #506.
     let source = r#"
 vi.mock(import(name), () => ({}))
 "#;
     let facts = extract(Path::new("x.test.mts"), source).unwrap();
     assert!(facts.mock_specifiers.is_empty());
-    assert!(facts.dynamic_imports.is_empty());
+    assert_eq!(facts.dynamic_imports.len(), 1);
+    assert_eq!(facts.dynamic_imports[0].specifier, None);
+}
+
+#[test]
+fn limits_typed_carriers_to_promise_aware_mock_apis() {
+    // `jest.setMock` / `jest.unstable_mockModule` only accept a plain string module name;
+    // they have no module-promise overload. A literal `import(...)` passed there is a
+    // genuine runtime dynamic import (its resolved value is not used as a specifier) and
+    // must still be tracked, not swallowed as a typed mock carrier. See #506.
+    let source = r#"
+jest.setMock(import('./a.mts'), {})
+jest.unstable_mockModule(import('./b.mts'), () => ({}))
+"#;
+    let facts = extract(Path::new("x.test.mts"), source).unwrap();
+    assert!(facts.mock_specifiers.is_empty());
+    assert_eq!(facts.dynamic_imports.len(), 2);
+    assert_eq!(
+        facts.dynamic_imports[0].specifier.as_deref(),
+        Some("./a.mts")
+    );
+    assert_eq!(
+        facts.dynamic_imports[1].specifier.as_deref(),
+        Some("./b.mts")
+    );
 }
