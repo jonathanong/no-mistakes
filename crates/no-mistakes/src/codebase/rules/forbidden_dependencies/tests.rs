@@ -475,3 +475,50 @@ fn absolute_root_path_resolves() {
         "file should be repo-relative even when root is absolute"
     );
 }
+
+/// Regression test: `check_with_config` (used by both `run_check` and
+/// `check_with_facts`'s parse-error/missing-graph-facts fallbacks) must
+/// resolve the `DepGraph`'s `GraphConfigOptions` from the given
+/// `config_path`, not silently fall back to default discovery — `check`
+/// itself delegates to `check_with_config(.., None, ..)`, so this also
+/// covers that `check_with_config(.., Some(path), ..)` genuinely differs.
+///
+/// Reuses the `graph-default-route-config`/`graph-empty-route-config`
+/// fixture pair from the graph module's own config_path tests: the former's
+/// `.no-mistakes.yml` configures a real `backendPattern` (so `src/client.ts`
+/// reaches `backend/api/users.mts` via a `RouteRef` edge), the latter's
+/// configures an empty one (so it doesn't).
+#[test]
+fn check_with_config_uses_explicit_config_path() {
+    let root = fixture("graph-default-route-config");
+    let empty_config = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/graph-empty-route-config/fixture")
+            .join(".no-mistakes.yml"),
+    );
+    let raw = r#"
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots:
+        - src/client.ts
+      forbiddenFiles:
+        - backend/api/users.mts
+      relationships:
+        - route
+"#;
+    let config: NoMistakesConfig = serde_yaml::from_str(raw).unwrap();
+
+    let default_findings = check_with_config(&root, &config, None, None).unwrap();
+    assert!(
+        !default_findings.is_empty(),
+        "default-discovered config (this fixture's own .no-mistakes.yml) should register the backend route pattern and produce a finding via the RouteRef edge"
+    );
+
+    let explicit_findings = check_with_config(&root, &config, Some(&empty_config), None).unwrap();
+    assert!(
+        explicit_findings.is_empty(),
+        "passing the explicit empty-pattern config must be honored, not silently ignored in favor of default discovery"
+    );
+}

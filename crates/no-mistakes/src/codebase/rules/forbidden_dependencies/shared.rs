@@ -27,10 +27,10 @@ pub(crate) fn check_with_facts(
             config_path,
         );
     if required_graph_plan.is_empty() && shared.graph_files().is_empty() {
-        return super::check(root, config, tsconfig_path);
+        return super::check_with_config(root, config, config_path, tsconfig_path);
     }
     if shared.stats.parse_errors > 0 {
-        return super::check(root, config, tsconfig_path);
+        return super::check_with_config(root, config, config_path, tsconfig_path);
     }
     if !shared.graph_plan().covers(required_graph_plan) {
         bail!(

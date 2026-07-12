@@ -38,7 +38,12 @@ pub fn run_check(
         findings.extend(crate::playwright::rules::check(root, config_path, &config)?);
     }
     if rule_enabled(&config, FORBIDDEN_DEPENDENCIES) {
-        findings.extend(forbidden_dependencies::check(root, &config, tsconfig_path)?);
+        findings.extend(forbidden_dependencies::check_with_config(
+            root,
+            &config,
+            config_path,
+            tsconfig_path,
+        )?);
     }
     suppress_rule_findings(root, &mut findings);
     sort_findings(&mut findings);
