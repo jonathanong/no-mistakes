@@ -322,3 +322,78 @@ fn from_git_diff_traces_lockfile_package_bump_like_base_head() {
         "should trace workspace package lib to utils.test.ts via --from-git-diff: {selected:?}"
     );
 }
+
+// Regression for a further review finding on #508: the bare-base form
+// (`--from-git-diff <base>`, no explicit head) must resolve head to the
+// literal ref "HEAD" for *every* consumer of args.head, not just
+// collect_changed_files (which already defaults a None head to "HEAD" via
+// unwrap_or). analyze_lockfile_changes treats a None head differently — it
+// reads the lockfile from the *working tree* instead of `git show HEAD`. To
+// tell those two interpretations apart, this test deliberately makes the
+// working tree disagree with HEAD after the "bump" commit (an uncommitted
+// revert back to the "before" lockfile) and asserts the plan still traces
+// the package bump from HEAD's committed content, not the stale disk state.
+#[test]
+fn from_git_diff_bare_base_traces_lockfile_from_head_not_working_tree() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    copy_dir_all(
+        &lockfile_fixture_dir("workspace-package-bump/initial"),
+        root,
+    );
+    setup_git_repo(root);
+
+    std::fs::copy(
+        lockfile_fixture_dir("workspace-package-bump/after-pnpm-lock.yaml"),
+        root.join("pnpm-lock.yaml"),
+    )
+    .unwrap();
+    git_commit_all(root, "bump workspace package");
+
+    // Uncommitted: revert the working tree back to the "before" lockfile, so
+    // disk and HEAD disagree. If head resolution stayed None (working-tree
+    // read), this would make the lockfile diff look empty and the consumer
+    // test would not be selected.
+    std::fs::copy(
+        lockfile_fixture_dir("workspace-package-bump/initial/pnpm-lock.yaml"),
+        root.join("pnpm-lock.yaml"),
+    )
+    .unwrap();
+
+    let output = Command::new(bin())
+        .args([
+            "tests",
+            "plan",
+            "--root",
+            root.to_str().unwrap(),
+            "--changed-file",
+            "pnpm-lock.yaml",
+            "--from-git-diff",
+            "HEAD~1",
+            "--json",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let warnings = plan["warnings"].as_array().unwrap();
+    assert!(
+        !warnings
+            .iter()
+            .any(|w| w["type"] == "lockfile-no-baseline"),
+        "bare-base --from-git-diff must resolve head to HEAD for lockfile analysis too: {warnings:?}"
+    );
+    let selected = plan["selected_tests"].as_array().unwrap();
+    assert!(
+        selected
+            .iter()
+            .any(|t| t["test_file"].as_str().unwrap().contains("utils.test")),
+        "bare-base --from-git-diff should trace the bump from HEAD's lockfile content, \
+         not the working tree: {selected:?}"
+    );
+}

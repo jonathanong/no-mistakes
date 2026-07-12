@@ -63,12 +63,22 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     // `git show` lockfile contents) would see neither set, and a diff that
     // touches a lockfile would silently lose package-impact tracing under
     // --from-git-diff even though the changed-file list traced correctly.
+    //
+    // An omitted head (bare `<base>` or trailing `<base>...`) must resolve to
+    // the *literal* ref "HEAD" here, not stay `None`. `collect_changed_files`
+    // treats a `None` head as "HEAD" (`unwrap_or("HEAD")`), but
+    // `analyze_lockfile_changes` treats a `None` head as "read the lockfile
+    // from the working tree" instead — a different interpretation of the
+    // same `None`. Pinning it to `Some("HEAD")` makes both consumers agree,
+    // so `--from-git-diff origin/main` is equivalent to `--from-git-diff
+    // origin/main...HEAD` / `--base origin/main --head HEAD` everywhere, even
+    // when the working tree has uncommitted lockfile changes beyond HEAD.
     let resolved_args;
     let args = if let Some(spec) = &args.from_git_diff {
         let (base, head) = super::changed_files::parse_git_diff_refspec(spec)?;
         let mut cloned = args.clone();
         cloned.base = Some(base);
-        cloned.head = head;
+        cloned.head = Some(head.unwrap_or_else(|| "HEAD".to_string()));
         cloned.from_git_diff = None;
         resolved_args = cloned;
         &resolved_args
