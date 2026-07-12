@@ -138,6 +138,20 @@ fn run_check_executes_forbidden_dependencies_rule() {
     assert!(findings.iter().any(|f| f.rule == FORBIDDEN_DEPENDENCIES));
 }
 
+/// Regression test: `run_check`'s `forbidden_dependencies::check_with_config`
+/// call must surface a real error (`?`, not silently swallowed) — a bad
+/// `tsconfig_path` fails `resolve_tsconfig` inside `check_with_config`.
+#[test]
+fn run_check_surfaces_forbidden_dependencies_tsconfig_error() {
+    let root = fixture("codebase-analysis/forbidden-dependencies-basic");
+    let missing_tsconfig = root.join("does-not-exist.tsconfig.json");
+    let error = run_check(&root, None, Some(&missing_tsconfig)).unwrap_err();
+    assert!(
+        format!("{error:#}").contains("does-not-exist.tsconfig.json"),
+        "expected the missing tsconfig path in the error, got: {error:#}"
+    );
+}
+
 #[test]
 fn run_check_with_facts_executes_forbidden_dependencies_rule() {
     let root = fixture("codebase-analysis/forbidden-dependencies-basic");
