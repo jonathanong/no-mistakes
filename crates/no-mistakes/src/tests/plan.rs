@@ -47,6 +47,15 @@ pub(crate) fn run(args: PlanArgs) -> Result<ExitCode> {
 const _: fn(PlanArgs) -> Result<ExitCode> = run;
 
 pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
+    // clap's conflicts_with_all rejects --from-git-diff combined with
+    // --base/--head on the CLI, but the N-API options struct isn't bound by
+    // clap. Guard here too — the single shared entry point both callers
+    // funnel through — so N-API callers who set both get the same parity
+    // error instead of the resolution below silently overwriting base/head.
+    if args.from_git_diff.is_some() && (args.base.is_some() || args.head.is_some()) {
+        anyhow::bail!("--from-git-diff conflicts with --base/--head; provide only one");
+    }
+
     // Resolve --from-git-diff into base/head once, up front, so every
     // downstream consumer of args.base/args.head sees the same pair —
     // not just `collect_changed_files`'s own git-diff lookup. Without this,

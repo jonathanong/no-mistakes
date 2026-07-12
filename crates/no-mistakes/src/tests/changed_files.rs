@@ -255,8 +255,10 @@ pub(crate) fn parse_git_diff_refspec(spec: &str) -> Result<(String, Option<Strin
 
     if trimmed.contains("..") {
         anyhow::bail!(
-            "--from-git-diff does not support two-dot refspecs ('{trimmed}'); use three-dot \
-             base...head (e.g. origin/main...HEAD) or pass --base/--head directly"
+            "--from-git-diff does not support two-dot refspecs ('{trimmed}'); tests plan only \
+             compares base...head (merge-base) diffs — use three-dot base...head \
+             (e.g. origin/main...HEAD). --base/--head use the same three-dot comparison, \
+             so switching to them will not change the diff you get."
         );
     }
 
