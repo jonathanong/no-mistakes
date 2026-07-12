@@ -13,51 +13,41 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 use rayon::prelude::*;
 use std::collections::BTreeSet;
-use walkdir::WalkDir;
+
+mod discovery;
+
 pub fn collect_app_selectors(
     frontend_root: &Path,
     attributes: &[String],
 ) -> Result<Vec<AppSelector>> {
-    use super::is_skipped_dir;
     use super::is_source_file;
     let component_attributes = BTreeMap::new();
-    if frontend_root.exists() {
-        let entries: Vec<_> = WalkDir::new(frontend_root)
-            .into_iter()
-            .filter_entry(|entry| !is_skipped_dir(entry.path()))
-            .filter_map(|entry| entry.ok())
-            .collect();
-
-        let selectors: BTreeSet<AppSelector> = entries
-            .into_par_iter()
-            .filter_map(|entry| {
-                let path = entry.path();
-                if !is_source_file(path) {
-                    return None;
-                }
-                // Use the cached WalkDir file type for regular files, but preserve
-                // the previous Path::is_file behavior for symlinked source files.
-                let file_type = entry.file_type();
-                if !(file_type.is_file() || file_type.is_symlink() && path.is_file()) {
-                    return None;
-                }
-                Some(
-                    std::fs::read_to_string(path)
-                        .map_err(|e| e.into())
-                        .and_then(|source| {
-                            extract_app_selectors(path, &source, attributes, &component_attributes)
-                        }),
-                )
-            })
-            .collect::<Result<Vec<_>>>()?
-            .into_iter()
-            .flatten()
-            .collect();
-        Ok(selectors.into_iter().collect())
-    } else {
-        Ok(Vec::new())
+    if !frontend_root.exists() {
+        return Ok(Vec::new());
     }
+    let candidates = discovery::source_file_candidates(frontend_root);
+
+    let selectors: BTreeSet<AppSelector> = candidates
+        .into_par_iter()
+        .filter_map(|path| {
+            if !is_source_file(&path) {
+                return None;
+            }
+            Some(
+                std::fs::read_to_string(&path)
+                    .map_err(|e| e.into())
+                    .and_then(|source| {
+                        extract_app_selectors(&path, &source, attributes, &component_attributes)
+                    }),
+            )
+        })
+        .collect::<Result<Vec<_>>>()?
+        .into_iter()
+        .flatten()
+        .collect();
+    Ok(selectors.into_iter().collect())
 }
+
 pub fn extract_app_selectors(
     path: &Path,
     source: &str,

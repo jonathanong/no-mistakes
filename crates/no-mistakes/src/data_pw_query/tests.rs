@@ -1,8 +1,48 @@
 use super::*;
+use std::process::Command;
+use tempfile::TempDir;
 
 fn fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/data-pw/fixture")
+}
+
+fn git_init(dir: &Path) {
+    let output = Command::new("git")
+        .args(["init", "-q", "--initial-branch=main"])
+        .current_dir(dir)
+        .env_remove("GIT_DIR")
+        .env_remove("GIT_WORK_TREE")
+        .env_remove("GIT_INDEX_FILE")
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "git init failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+fn git_add_all(dir: &Path) {
+    let output = Command::new("git")
+        .args(["add", "."])
+        .current_dir(dir)
+        .env_remove("GIT_DIR")
+        .env_remove("GIT_WORK_TREE")
+        .env_remove("GIT_INDEX_FILE")
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "git add failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+fn write(dir: &Path, path: &str, content: &str) {
+    let full = dir.join(path);
+    std::fs::create_dir_all(full.parent().unwrap()).unwrap();
+    std::fs::write(full, content).unwrap();
 }
 
 #[test]
@@ -229,4 +269,104 @@ fn errors_without_configured_attributes() {
     assert!(err
         .to_string()
         .contains("no selector attributes configured"));
+}
+
+/// Regression test for `discover_files` walking large gitignored directories
+/// instead of deriving candidates from the git-visible file list. Before the
+/// fix, `discover_files` always did a raw recursive `WalkDir` walk whose
+/// only `.gitignore` awareness was `is_skip_dir`'s small hardcoded list, so
+/// a source file anywhere under a large gitignored directory with an
+/// unrelated name (e.g. a dependency store) would still be visited and
+/// returned.
+#[test]
+fn discover_files_does_not_walk_gitignored_directory() {
+    let dir = TempDir::new().unwrap();
+    git_init(dir.path());
+    write(dir.path(), ".gitignore", "dependency-store/\n");
+    write(dir.path(), "app/search.tsx", "<div />");
+    write(dir.path(), "dependency-store/nested/trap.tsx", "<div />");
+    git_add_all(dir.path());
+
+    let files = discover_files(dir.path(), &[]);
+
+    assert!(files.contains(&dir.path().join("app/search.tsx")));
+    assert!(!files
+        .iter()
+        .any(|path| path.starts_with(dir.path().join("dependency-store"))));
+}
+
+/// Hardcoded skip directories (e.g. `coverage`) can still be git-tracked, so
+/// the skip check must apply to the git-derived candidate list too, not only
+/// during a live filesystem walk.
+#[test]
+fn discover_files_excludes_git_tracked_skip_dir() {
+    let dir = TempDir::new().unwrap();
+    git_init(dir.path());
+    write(dir.path(), "app/search.tsx", "<div />");
+    write(dir.path(), "coverage/report.tsx", "<div />");
+    git_add_all(dir.path());
+
+    let files = discover_files(dir.path(), &[]);
+
+    assert!(files.contains(&dir.path().join("app/search.tsx")));
+    assert!(!files
+        .iter()
+        .any(|path| path.starts_with(dir.path().join("coverage"))));
+}
+
+/// Configured `filesystem.skip_directories` (`extra_skip`) must also apply
+/// to the git-derived candidate list.
+#[test]
+fn discover_files_honors_extra_skip_directories() {
+    let dir = TempDir::new().unwrap();
+    git_init(dir.path());
+    write(dir.path(), "app/search.tsx", "<div />");
+    write(dir.path(), "generated/ignored.tsx", "<div />");
+    git_add_all(dir.path());
+
+    let files = discover_files(dir.path(), &["generated".to_string()]);
+
+    assert!(files.contains(&dir.path().join("app/search.tsx")));
+    assert!(!files
+        .iter()
+        .any(|path| path.starts_with(dir.path().join("generated"))));
+}
+
+/// A file can be staged in git's index without existing on disk (e.g.
+/// deleted outside of `git rm`). The git-derived path must not hand back a
+/// path that cannot actually be read.
+#[test]
+fn discover_files_skips_missing_git_tracked_file() {
+    let dir = TempDir::new().unwrap();
+    git_init(dir.path());
+    write(dir.path(), "app/search.tsx", "<div />");
+    git_add_all(dir.path());
+    std::fs::remove_file(dir.path().join("app/search.tsx")).unwrap();
+
+    let files = discover_files(dir.path(), &[]);
+
+    assert!(!files.contains(&dir.path().join("app/search.tsx")));
+}
+
+/// Outside a git repository, `discover_files` still falls back to the raw
+/// `WalkDir` walk, exercising `discover_files_via_walk`'s skip-dir pruning
+/// directly since there is no git-visible file list to derive candidates
+/// from.
+///
+/// The walk root itself is a plain (non-dot-prefixed) subdirectory rather
+/// than the `TempDir` directly: `tempfile` defaults to a dot-prefixed
+/// directory name, and `is_skip_dir` treats any dot-prefixed name as a skip
+/// directory, which would otherwise prune the walk root before it is ever
+/// descended into — unrelated to the behavior under test here.
+#[test]
+fn discover_files_falls_back_to_walk_outside_git_repositories() {
+    let temp = TempDir::new().unwrap();
+    let dir = temp.path().join("root");
+    write(&dir, "app/search.tsx", "<div />");
+    write(&dir, "dist/ignored.tsx", "<div />");
+
+    let files = discover_files(&dir, &[]);
+
+    assert!(files.contains(&dir.join("app/search.tsx")));
+    assert!(!files.iter().any(|path| path.starts_with(dir.join("dist"))));
 }
