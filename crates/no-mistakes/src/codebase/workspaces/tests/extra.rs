@@ -182,7 +182,11 @@ fn git_init(dir: &Path) {
         .env_remove("GIT_INDEX_FILE")
         .output()
         .unwrap();
-    assert!(output.status.success());
+    assert!(
+        output.status.success(),
+        "git init failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
 }
 
 fn git_add_all(dir: &Path) {
@@ -194,7 +198,11 @@ fn git_add_all(dir: &Path) {
         .env_remove("GIT_INDEX_FILE")
         .output()
         .unwrap();
-    assert!(output.status.success());
+    assert!(
+        output.status.success(),
+        "git add failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
 }
 
 /// Regression test: `load` must not walk a large gitignored directory looking for
