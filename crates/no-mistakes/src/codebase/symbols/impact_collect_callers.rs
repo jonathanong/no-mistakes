@@ -1,24 +1,15 @@
 fn local_caller_entries(
-    graph: &DepGraph,
+    context: &LocalCallerContext,
     target_symbols: &BTreeMap<PathBuf, BTreeSet<String>>,
     root: &Path,
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
     test_filter: &TestFileFilter,
     want_tests: bool,
 ) -> Vec<CallerEntry> {
-    let files: BTreeSet<PathBuf> = graph
-        .all_files()
-        .filter_map(NodeId::as_file)
-        .map(Path::to_path_buf)
-        .collect();
-    let files: Vec<_> = files.into_iter().collect();
-    let workspace = crate::codebase::workspaces::load(root).unwrap_or_default();
-    let facts = crate::codebase::ts_source::facts::collect_ts_facts(
-        &files,
-        crate::codebase::ts_source::facts::TsFactPlan::imports_and_symbols(),
-    );
+    let workspace = &context.workspace;
     let mut callers = BTreeMap::new();
-    for (file, facts) in facts {
+    for (file, facts) in &context.facts {
+        let file = file.clone();
         let is_test = test_filter.is_match(root, &file);
         if !want_tests && !is_test && is_test_like_file(&file) {
             continue;
@@ -30,7 +21,7 @@ fn local_caller_entries(
             .symbols
             .as_ref()
             .expect("imports_and_symbols fact plan collects symbols");
-        let local_names = target_local_names(symbols, &file, target_symbols, tsconfig, &workspace);
+        let local_names = target_local_names(symbols, &file, target_symbols, tsconfig, workspace);
         if local_names.is_empty() {
             continue;
         }
