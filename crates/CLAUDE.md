@@ -33,6 +33,40 @@ let deps = cache
     .clone();
 ```
 
+### Verify a builder method doesn't silently disable an existing cache
+
+A builder method that configures one thing (e.g. a visible-file set) can also
+flip an unrelated flag (e.g. disabling the resolver's memoization cache) if the
+two were bundled together at some point, often for a reason that no longer
+applies. This is easy to miss because the code still returns correct results —
+only performance regresses — and the cache's own hit/reuse tests can still pass
+because they only assert result *consistency*, not that a cache lookup actually
+occurred.
+
+```rust
+// Bad – with_visible() bundles an unrelated cache_enabled=false, so every
+// caller that needs a visible-file set (e.g. every DepGraph build) silently
+// loses memoization, even though nothing about resolving from an in-memory
+// visible set makes caching unsafe.
+pub fn with_visible(mut self, visible: &'a HashSet<PathBuf>) -> Self {
+    self.visible = Some(visible);
+    self.cache_enabled = false;
+    self
+}
+
+// Good – caching stays on unless a caller explicitly opts out via a separate,
+// clearly-named builder method (`without_cache()`).
+pub fn with_visible(mut self, visible: &'a HashSet<PathBuf>) -> Self {
+    self.visible = Some(visible);
+    self
+}
+```
+
+Before trusting a "cache reuses/preserves result" test as coverage for actual
+memoization, check whether it only asserts the same value comes back twice —
+that holds regardless of whether caching happened. Assert on the cache's own
+state (e.g. its length, or a hit counter) instead.
+
 ### Hoist per-iteration I/O and parsing out of hot loops
 
 Never read from disk, spawn processes, or parse files inside a loop that runs

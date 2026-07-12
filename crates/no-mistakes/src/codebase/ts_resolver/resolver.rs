@@ -32,7 +32,6 @@ impl<'a> ImportResolver<'a> {
 
     pub fn with_visible(mut self, visible: &'a HashSet<PathBuf>) -> Self {
         self.visible = Some(visible);
-        self.cache_enabled = false;
         self
     }
 
