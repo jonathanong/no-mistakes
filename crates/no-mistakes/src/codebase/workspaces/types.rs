@@ -100,9 +100,22 @@ struct PnpmWorkspace {
 /// Load the workspace map from `root/package.json` or `root/pnpm-workspace.yaml`.
 ///
 /// Returns an empty map if neither file declares workspaces.
+///
+/// Prefers deriving package directories from the git-visible file list
+/// (avoiding a raw filesystem walk that would otherwise descend into
+/// `node_modules`/build output with no `.gitignore` awareness), falling back
+/// to a raw walk only when `root` isn't inside a git repository. Callers that
+/// already have a discovered file list on hand should use
+/// [`load_from_files`] directly instead, to avoid a second `git ls-files`.
 pub fn load(root: &Path) -> Result<WorkspaceMap> {
     let workspace_globs = load_workspace_globs(root)?;
-    let dirs = expand_workspace_globs(root, &workspace_globs);
+    let dirs = match crate::codebase::ts_source::git_visible_files(root) {
+        Some(files) => {
+            let files: Vec<PathBuf> = files.iter().map(|rel| root.join(rel)).collect();
+            expand_workspace_globs_from_files(root, &workspace_globs, &files)
+        }
+        None => expand_workspace_globs(root, &workspace_globs),
+    };
     load_packages_from_dirs(dirs)
 }
 

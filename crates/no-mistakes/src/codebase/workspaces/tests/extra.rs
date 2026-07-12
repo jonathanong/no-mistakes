@@ -172,3 +172,76 @@ fn fixture_load_covers_entry_resolution_branches() {
         Some(&root.join("main-only/index.js"))
     );
 }
+
+fn git_init(dir: &Path) {
+    let output = std::process::Command::new("git")
+        .args(["init", "-q", "--initial-branch=main"])
+        .current_dir(dir)
+        .env_remove("GIT_DIR")
+        .env_remove("GIT_WORK_TREE")
+        .env_remove("GIT_INDEX_FILE")
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+}
+
+fn git_add_all(dir: &Path) {
+    let output = std::process::Command::new("git")
+        .args(["add", "."])
+        .current_dir(dir)
+        .env_remove("GIT_DIR")
+        .env_remove("GIT_WORK_TREE")
+        .env_remove("GIT_INDEX_FILE")
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+}
+
+/// Regression test: `load` must not walk a large gitignored directory looking for
+/// workspace package.json files. Before the fix, `load` always called the raw
+/// `expand_workspace_globs` (a `.gitignore`-blind `WalkDir` walk), so a workspace
+/// glob like `packages/*` would still descend into a gitignored `packages/`-shaped
+/// tree even though none of its contents are ever git-visible.
+#[test]
+fn load_does_not_walk_gitignored_directory() {
+    let dir = TempDir::new().unwrap();
+    git_init(dir.path());
+    super::write(&dir.path().join(".gitignore"), "packages/ignored/\n");
+    super::write(
+        &dir.path().join("package.json"),
+        r#"{"name":"root","workspaces":["packages/*"]}"#,
+    );
+    super::write(
+        &dir.path().join("packages/app/package.json"),
+        r#"{"name":"@fixtures/app"}"#,
+    );
+    super::write(
+        &dir.path().join("packages/ignored/package.json"),
+        r#"{"name":"@fixtures/trap"}"#,
+    );
+    git_add_all(dir.path());
+
+    let map = load(dir.path()).unwrap();
+
+    assert!(map.packages.iter().any(|pkg| pkg.name == "@fixtures/app"));
+    assert!(!map.packages.iter().any(|pkg| pkg.name == "@fixtures/trap"));
+}
+
+/// Outside a git repository, `load` still falls back to the raw `expand_workspace_globs`
+/// walk, exercising it directly since there's no git-visible file list to derive from.
+#[test]
+fn load_falls_back_to_walk_outside_git_repositories() {
+    let dir = TempDir::new().unwrap();
+    super::write(
+        &dir.path().join("package.json"),
+        r#"{"name":"root","workspaces":["packages/*"]}"#,
+    );
+    super::write(
+        &dir.path().join("packages/app/package.json"),
+        r#"{"name":"@fixtures/app"}"#,
+    );
+
+    let map = load(dir.path()).unwrap();
+
+    assert!(map.packages.iter().any(|pkg| pkg.name == "@fixtures/app"));
+}

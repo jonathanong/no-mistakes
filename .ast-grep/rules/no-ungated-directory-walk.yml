@@ -29,6 +29,17 @@
 #     each, not the whole repo tree.
 #   - integration_tests/tests/parser_coverage.rs: test-only helper listing a
 #     small checked-in fixture directory, not production discovery code.
+#   - routes.rs, playwright/fsutil.rs, data_pw_query/scan.rs,
+#     react_traits/pipeline/glob.rs, playwright/selectors/extract_app/discovery.rs,
+#     codebase/workspaces/globs.rs: each pairs a git-visible-derived fast path
+#     with the documented raw-walk fallback, used only outside git repos —
+#     same shape as check_discovery/preserved_roots.rs above.
+#   - codebase/ts_routes/defs_frontend.rs, codebase/ts_routes/defs_backend/types.rs:
+#     raw walks reached only via test-only wrappers in production (every real
+#     caller goes through a `_from_files`/`_from_graph_inputs` git-derived
+#     twin) — deliberately left as-is rather than fixed, since no production
+#     command path exercises them; listed here so a future contributor doesn't
+#     need to re-discover that before wiring a real caller to the raw path.
 id: no-ungated-directory-walk
 language: rust
 severity: error
@@ -50,3 +61,11 @@ ignores:
   - "crates/no-mistakes/src/playwright/config/load/helpers.rs"
   - "crates/no-mistakes/src/codebase/ci_graph/mod.rs"
   - "crates/no-mistakes/src/integration_tests/tests/parser_coverage.rs"
+  - "crates/no-mistakes/src/routes.rs"
+  - "crates/no-mistakes/src/playwright/fsutil.rs"
+  - "crates/no-mistakes/src/data_pw_query/scan.rs"
+  - "crates/no-mistakes/src/react_traits/pipeline/glob.rs"
+  - "crates/no-mistakes/src/playwright/selectors/extract_app/discovery.rs"
+  - "crates/no-mistakes/src/codebase/workspaces/globs.rs"
+  - "crates/no-mistakes/src/codebase/ts_routes/defs_frontend.rs"
+  - "crates/no-mistakes/src/codebase/ts_routes/defs_backend/types.rs"
