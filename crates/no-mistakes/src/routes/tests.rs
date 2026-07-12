@@ -152,6 +152,29 @@ fn collect_routes_does_not_walk_gitignored_directory() {
         .any(|r| r.file.starts_with(dir.path().join("dependency-store"))));
 }
 
+/// A file can be git-tracked (staged/committed) yet missing on disk — e.g. deleted
+/// with `rm` rather than `git rm`. The git-derived path must not surface such a
+/// route, matching `collect_routes_by_walk`'s implicit guarantee that every entry
+/// it finds actually exists.
+#[test]
+fn collect_routes_excludes_git_tracked_file_missing_on_disk() {
+    let dir = tempfile::tempdir().unwrap();
+    git_init(dir.path());
+    write(dir.path(), "app/page.tsx", "");
+    write(dir.path(), "app/deleted/page.tsx", "");
+    git_add_all(dir.path());
+    std::fs::remove_file(dir.path().join("app/deleted/page.tsx")).unwrap();
+
+    let routes = collect_routes(dir.path(), &["page"]);
+
+    assert!(routes
+        .iter()
+        .any(|r| r.file == dir.path().join("app/page.tsx")));
+    assert!(!routes
+        .iter()
+        .any(|r| r.file == dir.path().join("app/deleted/page.tsx")));
+}
+
 /// `git ls-files` can surface tracked files under dot-directories (e.g. a
 /// committed `.next/` build-output fixture, mirroring the
 /// `test-cases/nextjs-routes/skip-dot-next` fixture above, which is itself
