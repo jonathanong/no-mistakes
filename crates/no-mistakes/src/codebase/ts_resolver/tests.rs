@@ -308,6 +308,57 @@ fn import_resolver_uses_visible_file_set() {
     assert_eq!(resolver.resolve("./utils", &importer), Some(target));
 }
 
+/// Regression test: `with_visible` (used by every `DepGraph` build and by
+/// `server_routes`) must not disable the resolve cache. `resolve()`'s cache-hit
+/// branch is a no-op when `cache_enabled` is false, so the "reuses/preserves"
+/// tests below pass on identical *results* even with caching off — they don't
+/// prove memoization happened. This asserts the cache is actually populated.
+#[test]
+fn import_resolver_with_visible_keeps_cache_enabled() {
+    let dir = TempDir::new().unwrap();
+    let target = dir.path().join("src").join("utils.mts");
+    let importer = dir.path().join("src").join("main.mts");
+    let tc = TsConfig {
+        dir: dir.path().to_path_buf(),
+        paths: vec![],
+        paths_dir: dir.path().to_path_buf(),
+        base_url: None,
+    };
+    let visible: HashSet<PathBuf> = [target].into();
+    let resolver = ImportResolver::new(&tc).with_visible(&visible);
+    assert!(resolver.cache_enabled);
+
+    resolver.resolve("./utils", &importer);
+
+    assert_eq!(resolver.cache.len(), 1);
+}
+
+/// Regression test: calling `with_visible` on a resolver that already has
+/// cached entries (resolved against the real filesystem, or an earlier
+/// `visible` set) must not leak those stale answers into the new visibility
+/// scope — `with_visible` consumes and returns `Self`, so a reused resolver's
+/// `cache` would otherwise carry answers computed under different visibility.
+#[test]
+fn import_resolver_with_visible_clears_stale_cache_entries() {
+    let dir = TempDir::new().unwrap();
+    let target = normalize_path(&dir.path().join("src").join("utils.mts"));
+    let importer = dir.path().join("src").join("main.mts");
+    write(&target, "");
+    let tc = TsConfig {
+        dir: dir.path().to_path_buf(),
+        paths: vec![],
+        paths_dir: dir.path().to_path_buf(),
+        base_url: None,
+    };
+    let resolver = ImportResolver::new(&tc);
+    assert_eq!(resolver.resolve("./utils", &importer), Some(target));
+
+    let visible: HashSet<PathBuf> = HashSet::new();
+    let resolver = resolver.with_visible(&visible);
+
+    assert!(resolver.resolve("./utils", &importer).is_none());
+}
+
 #[test]
 fn import_resolver_cache_reuses_present_result() {
     let dir = TempDir::new().unwrap();
