@@ -15,12 +15,30 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
 
     let config = load_v2_config(&root, args.config.as_deref())?;
     let test_filter = TestFileFilter::new(&root, &config);
-    let graph = DepGraph::build_with_plan_and_config(
+    let graph_plan = signature_impact_graph_plan();
+    // Discover files and parse imports+symbols facts once, then hand the same
+    // `TsFactMap` to both the `DepGraph` build and `prepare_local_caller_context`
+    // below, instead of letting the graph build parse internally and then having
+    // `prepare_local_caller_context` parse the same file set again from scratch.
+    // `signature_impact_graph_plan()`'s effective `TsFactPlan` (imports + workspace
+    // + symbols) is always a superset of the `imports_and_symbols` shape
+    // `local_caller_entries` needs, so one parse pass covers both consumers.
+    let graph_files = GraphFiles::discover(&root);
+    let (fact_plan, fact_context) =
+        ts_fact_plan_and_context_for_plan_with_config(&root, graph_plan, args.config.as_deref());
+    let facts = crate::codebase::ts_source::facts::collect_ts_facts_with_context(
+        graph_files.indexable(),
+        fact_plan,
+        &fact_context,
+    );
+    let graph = DepGraph::build_with_plan_files_config_and_facts(
         &root,
         &tsconfig,
-        signature_impact_graph_plan(),
+        graph_plan,
+        &graph_files,
         args.config.as_deref(),
-    )?;
+        Some(&facts as &dyn TsFactLookup),
+    );
     let target = NodeId::Symbol {
         file: target_file.clone(),
         symbol: symbol.to_string(),
@@ -84,7 +102,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         }
         entries.extend(file_entries);
     }
-    let local_caller_context = prepare_local_caller_context(&graph, &root);
+    let local_caller_context = prepare_local_caller_context(facts, &root);
     let production_extra_callers = local_caller_entries(
         &local_caller_context,
         &target_symbols,
@@ -146,29 +164,27 @@ struct LocalCallerContext {
     workspace: crate::codebase::workspaces::WorkspaceMap,
 }
 
-/// Discovers indexable files once, parses them once for import/symbol facts, and resolves the
-/// workspace map once, so [`local_caller_entries`] can be called for both `want_tests` values
-/// without repeating the file walk, parse pass, or workspace resolution.
+/// Resolves the workspace map once and pairs it with the already-collected import/symbol
+/// `facts` (built once in [`collect_report`] and shared with the `DepGraph` build), so
+/// [`local_caller_entries`] can be called for both `want_tests` values without repeating the
+/// file walk, parse pass, or workspace resolution.
+///
+/// `facts` must already cover `TsFactPlan::imports_and_symbols()` — `collect_report` builds it
+/// from `signature_impact_graph_plan()`'s effective fact plan, a strict superset (imports +
+/// workspace + symbols), so no re-parse happens here.
 ///
 /// The workspace map intentionally uses `crate::codebase::ts_source::discover_files` (the same
 /// `.gitignore`-aware walk the dependency graph itself uses to seed `workspaces::load_from_files`
-/// in `graph/builder.rs`) rather than `graph.all_files()`. The graph only exposes indexable
-/// TS/JS file nodes, which never include `package.json`, so feeding that narrower list into
-/// `load_from_files` would silently resolve zero workspace packages.
-fn prepare_local_caller_context(graph: &DepGraph, root: &Path) -> LocalCallerContext {
-    let files: BTreeSet<PathBuf> = graph
-        .all_files()
-        .filter_map(NodeId::as_file)
-        .map(Path::to_path_buf)
-        .collect();
-    let files: Vec<_> = files.into_iter().collect();
+/// in `graph/builder.rs`) rather than the narrower indexable-file set backing `facts`. The graph
+/// only indexes TS/JS file nodes, which never include `package.json`, so feeding that narrower
+/// list into `load_from_files` would silently resolve zero workspace packages.
+fn prepare_local_caller_context(
+    facts: crate::codebase::ts_source::facts::TsFactMap,
+    root: &Path,
+) -> LocalCallerContext {
     let discovery_files = crate::codebase::ts_source::discover_files(root, &[]);
     let workspace =
         crate::codebase::workspaces::load_from_files(root, &discovery_files).unwrap_or_default();
-    let facts = crate::codebase::ts_source::facts::collect_ts_facts(
-        &files,
-        crate::codebase::ts_source::facts::TsFactPlan::imports_and_symbols(),
-    );
     LocalCallerContext { facts, workspace }
 }
 
