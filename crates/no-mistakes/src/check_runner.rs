@@ -74,11 +74,19 @@ pub(crate) fn run_all(
     }
     let discover_start = Instant::now();
     let skip_directories = config.filesystem.skip_directories.clone();
+    // Fetch the git-visible file list once and reuse it below for both the
+    // skip-filtered and (when forbidden-dependencies is configured) unfiltered
+    // discover_check_files calls, since they differ only in the in-memory
+    // skip-directory filter applied afterward — not in what `git ls-files`
+    // would return. Without this, each call independently re-spawns `git
+    // ls-files` for the identical root.
+    let git_files = no_mistakes::codebase::ts_source::git_visible_files(&root);
     let discovered = crate::check_discovery::discover_check_files(
         &root,
         &config,
         &skip_directories,
         unique_exports_enabled,
+        git_files.as_deref(),
     );
     let discover_duration = discover_start.elapsed();
     let facts_start = Instant::now();
@@ -95,6 +103,7 @@ pub(crate) fn run_all(
                 &config,
                 &[],
                 unique_exports_enabled,
+                git_files.as_deref(),
             )
         } else {
             Vec::new()

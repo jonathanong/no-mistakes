@@ -73,7 +73,7 @@ fn discover_check_files_includes_inferred_nextjs_project_files() {
     let root = fixture("config-v2/nextjs-inferred-root");
     let config = load_config(&root);
 
-    let files = discover_check_files(&root, &config, &[], true);
+    let files = discover_check_files(&root, &config, &[], true, None);
 
     assert!(files.iter().any(|path| path.ends_with("web/app/page.tsx")));
 }
@@ -83,7 +83,7 @@ fn discover_check_files_includes_inferred_remix_project_files() {
     let root = fixture("config-v2/remix-inferred-root");
     let config = load_config(&root);
 
-    let files = discover_check_files(&root, &config, &[], true);
+    let files = discover_check_files(&root, &config, &[], true, None);
 
     assert!(files.iter().any(|path| path.ends_with("web/app/page.tsx")));
 }
@@ -93,7 +93,7 @@ fn discover_check_files_includes_inferred_remix_vite_project_files() {
     let root = fixture("config-v2/remix-vite-inferred-root");
     let config = load_config(&root);
 
-    let files = discover_check_files(&root, &config, &[], true);
+    let files = discover_check_files(&root, &config, &[], true, None);
 
     assert!(files.iter().any(|path| path.ends_with("web/app/page.tsx")));
 }
@@ -103,7 +103,7 @@ fn discover_check_files_includes_inferred_vitejs_project_files() {
     let root = fixture("config-v2/vitejs-inferred-root");
     let config = load_config(&root);
 
-    let files = discover_check_files(&root, &config, &[], true);
+    let files = discover_check_files(&root, &config, &[], true, None);
 
     assert!(files.iter().any(|path| path.ends_with("web/app/page.tsx")));
 }
@@ -116,7 +116,7 @@ fn discover_check_files_does_not_rescan_repository_root() {
     expected.sort();
     expected.dedup();
 
-    let files = discover_check_files(&root, &config, &[], true);
+    let files = discover_check_files(&root, &config, &[], true, None);
 
     assert_eq!(files, expected);
 }
@@ -126,7 +126,13 @@ fn discover_check_files_preserves_included_fixture_roots() {
     let root = fixture("check-discovery/include-preserved-roots");
     let config = load_config(&root);
 
-    let files = discover_check_files(&root, &config, &config.filesystem.skip_directories, false);
+    let files = discover_check_files(
+        &root,
+        &config,
+        &config.filesystem.skip_directories,
+        false,
+        None,
+    );
 
     assert!(files
         .iter()
@@ -147,7 +153,13 @@ fn discover_check_files_preserves_forbidden_workspace_project_roots() {
     let root = fixture("rules/filesystem-dispatch/forbidden-workspace-project-root");
     let config = load_config(&root);
 
-    let files = discover_check_files(&root, &config, &config.filesystem.skip_directories, false);
+    let files = discover_check_files(
+        &root,
+        &config,
+        &config.filesystem.skip_directories,
+        false,
+        None,
+    );
 
     assert!(files
         .iter()
@@ -190,7 +202,7 @@ fn discover_check_files_preserves_roots_without_descending_into_gitignored_direc
     git_add_all(dir.path());
 
     let config = load_config(dir.path());
-    let files = discover_check_files(dir.path(), &config, &[], false);
+    let files = discover_check_files(dir.path(), &config, &[], false, None);
 
     assert!(files
         .iter()

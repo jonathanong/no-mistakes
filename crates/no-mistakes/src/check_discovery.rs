@@ -4,18 +4,36 @@ use std::path::{Path, PathBuf};
 
 mod preserved_roots;
 
+/// Discovers files for `no-mistakes check`, optionally reusing a git-visible file
+/// list a caller already fetched via `git_visible_files` instead of spawning
+/// `git ls-files` again for `root`. Pass `git_files: None` to fetch it
+/// internally. `no-mistakes check` calls this twice for the same `root` when
+/// `forbidden-dependencies` is configured — once with the configured
+/// skip-directory filter, once with none — so `check_runner.rs` fetches the
+/// list once and passes it to both calls via `Some(&files)`.
+///
+/// The unique-exports loop below is intentionally NOT threaded through
+/// `git_files`: it discovers each configured project root independently, and
+/// those roots are frequently different directories than `root` (a nested
+/// `web/`/`backend/` project, an inferred Next.js/Remix/Vite.js root, etc). A
+/// git-visible list fetched for `root` is relative to `root`'s working
+/// directory, so reusing it for a different project root would silently
+/// mis-resolve paths; each project root keeps discovering its own list.
 pub(crate) fn discover_check_files(
     root: &Path,
     config: &NoMistakesConfig,
     skip_directories: &[String],
     unique_exports_enabled: bool,
+    git_files: Option<&[String]>,
 ) -> Vec<PathBuf> {
     let preserved_roots = include_preserved_roots(root, config, skip_directories);
-    let mut files = no_mistakes::codebase::ts_source::discover_files_preserving_roots(
-        root,
-        skip_directories,
-        &preserved_roots,
-    );
+    let mut files =
+        no_mistakes::codebase::ts_source::discover_files_preserving_roots_from_git_files(
+            root,
+            skip_directories,
+            &preserved_roots,
+            git_files,
+        );
     if unique_exports_enabled {
         for project_root in unique_exports_project_roots(root, config) {
             if project_root == root {

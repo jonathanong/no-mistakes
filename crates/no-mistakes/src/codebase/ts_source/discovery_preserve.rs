@@ -3,6 +3,19 @@ pub fn discover_files_preserving_roots(
     extra_skip: &[String],
     preserved_roots: &[PathBuf],
 ) -> Vec<PathBuf> {
+    discover_files_preserving_roots_from_git_files(root, extra_skip, preserved_roots, None)
+}
+
+/// Same as [`discover_files_preserving_roots`], but lets a caller reuse a
+/// git-visible file list it already fetched via [`git_visible_files`] instead of
+/// spawning `git ls-files` again for the same root. See
+/// [`discover_files_from_git_files`] for the `None`/`Some(files)` contract.
+pub fn discover_files_preserving_roots_from_git_files(
+    root: &Path,
+    extra_skip: &[String],
+    preserved_roots: &[PathBuf],
+    git_files: Option<&[String]>,
+) -> Vec<PathBuf> {
     let root = normalize_discovery_path(root);
     let mut preserved_roots: Vec<PathBuf> = preserved_roots
         .iter()
@@ -13,10 +26,18 @@ pub fn discover_files_preserving_roots(
     preserved_roots.dedup();
 
     if preserved_roots.is_empty() {
-        return discover_files(&root, extra_skip);
+        return discover_files_from_git_files(&root, extra_skip, git_files);
     }
 
-    match git_visible_files(&root) {
+    let fetched;
+    let files: Option<&[String]> = match git_files {
+        Some(files) => Some(files),
+        None => {
+            fetched = git_visible_files(&root);
+            fetched.as_deref()
+        }
+    };
+    match files {
         Some(files) => discover_git_files_preserving_roots(&root, extra_skip, &preserved_roots, files),
         None => discover_walk_files_preserving_roots(&root, extra_skip, &preserved_roots),
     }
@@ -26,11 +47,11 @@ fn discover_git_files_preserving_roots(
     root: &Path,
     extra_skip: &[String],
     preserved_roots: &[PathBuf],
-    files: Vec<String>,
+    files: &[String],
 ) -> Vec<PathBuf> {
     let extra_skip: HashSet<&str> = extra_skip.iter().map(String::as_str).collect();
     files
-        .into_iter()
+        .iter()
         .map(|rel| normalize_discovery_path(&root.join(rel)))
         .filter(|p| p.exists())
         .filter(|p| {
