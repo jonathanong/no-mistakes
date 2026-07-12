@@ -1,6 +1,6 @@
 [package]
 name = "no-mistakes"
-version = "0.31.2"
+version = "0.31.3"
 edition = "2021"
 license = "MIT"
 description = "Static analysis tools for codebase dependency and symbol queries"
