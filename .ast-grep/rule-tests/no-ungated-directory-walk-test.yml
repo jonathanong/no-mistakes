@@ -1,0 +1,35 @@
+id: no-ungated-directory-walk
+valid:
+  - |
+    fn discover(root: &Path) -> Vec<PathBuf> {
+        match git_visible_files(root) {
+            Some(files) => files.into_iter().map(PathBuf::from).collect(),
+            None => walk_with_ignore_crate(root),
+        }
+    }
+  - |
+    fn walk_with_ignore_crate(root: &Path) -> Vec<PathBuf> {
+        WalkBuilder::new(root)
+            .hidden(true)
+            .build()
+            .filter_map(|e| e.ok())
+            .map(|e| e.into_path())
+            .collect()
+    }
+invalid:
+  - |
+    fn collect_recursive(base: &Path, out: &mut Vec<PathBuf>) {
+        let Ok(entries) = std::fs::read_dir(base) else {
+            return;
+        };
+        for entry in entries.flatten() {
+            out.push(entry.path());
+        }
+    }
+  - |
+    fn collect_routes(frontend_root: &Path) -> Vec<Route> {
+        for entry in WalkDir::new(frontend_root).into_iter().filter_map(|e| e.ok()) {
+            // ...
+        }
+        Vec::new()
+    }

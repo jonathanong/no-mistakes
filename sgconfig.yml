@@ -1,0 +1,6 @@
+# ast-grep project config. See docs/ast-grep-rules.md for why these rules exist
+# as ast-grep rules instead of native `no-mistakes check` rules.
+ruleDirs:
+  - .ast-grep/rules
+testConfigs:
+  - testDir: .ast-grep/rule-tests

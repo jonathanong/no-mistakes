@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# Flags a consuming builder method (`fn foo(mut self, ...) -> Self`) whose body
+# assigns `false` to a field whose name looks cache-related, as an undocumented
+# side effect of configuring something unrelated. See crates/CLAUDE.md's
+# "Verify a builder method doesn't silently disable an existing cache" section
+# for the historical bug this catches (`ImportResolver::with_visible` used to
+# bundle `self.cache_enabled = false` into a method that only needed to set a
+# visible-file set) and the fix pattern.
+#
+# `without_*`/`no_*`/`disable_*`-named methods are an intentional, clearly
+# named opt-out (e.g. `without_cache`) and are exempted by the NAME
+# constraint below — reviewers should treat a finding on one of those names as
+# a false positive in this rule, not a bug in the exemption.
+#
+# Known limitation: this only catches a `false` literal assigned directly to a
+# field whose name matches the cache regex inside the builder's own body. It
+# will not catch the same side effect performed indirectly (e.g. via a helper
+# method call, or a field written through `std::mem::replace`/`Option::take`).
+id: no-cache-disabling-builder
+language: rust
+severity: error
+message: >-
+  Builder method takes `mut self` and returns `Self` but silently disables a
+  cache-flag-looking field as a side effect. If this is an intentional,
+  explicit opt-out, rename the method to start with `without_`, `no_`, or
+  `disable_` so the exemption below applies and the intent is clear at call
+  sites. See crates/CLAUDE.md, "Verify a builder method doesn't silently
+  disable an existing cache".
+rule:
+  all:
+    - kind: function_item
+    - has:
+        field: name
+        pattern: $NAME
+    - has:
+        kind: self_parameter
+        stopBy: end
+        regex: "^mut self$"
+    - has:
+        field: return_type
+        kind: type_identifier
+        regex: "^Self$"
+    - has:
+        kind: assignment_expression
+        stopBy: end
+        pattern: $FIELD = false
+constraints:
+  FIELD:
+    regex: "(?i)cache"
+  NAME:
+    not:
+      regex: "^(without_|no_|disable_)"
