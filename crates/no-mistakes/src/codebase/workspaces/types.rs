@@ -111,7 +111,11 @@ pub fn load(root: &Path) -> Result<WorkspaceMap> {
     let workspace_globs = load_workspace_globs(root)?;
     let dirs = match crate::codebase::ts_source::git_visible_files(root) {
         Some(files) => {
-            let files: Vec<PathBuf> = files.iter().map(|rel| root.join(rel)).collect();
+            let files: Vec<PathBuf> = files
+                .iter()
+                .map(|rel| root.join(rel))
+                .filter(|p| p.exists())
+                .collect();
             expand_workspace_globs_from_files(root, &workspace_globs, &files)
         }
         None => expand_workspace_globs(root, &workspace_globs),
