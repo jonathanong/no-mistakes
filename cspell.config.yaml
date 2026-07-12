@@ -21,6 +21,7 @@ words:
   - codebase
   - codecov
   - emnapi
+  - eprintln
   - extglob
   - gitignore
   - glibc
