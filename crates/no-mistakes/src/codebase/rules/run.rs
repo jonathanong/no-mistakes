@@ -94,7 +94,15 @@ pub fn run_check_with_facts(
     if rule_enabled(&config, FORBIDDEN_DEPENDENCIES) {
         findings.extend(crate::perf_trace::trace(
             "rules.forbidden_dependencies",
-            || forbidden_dependencies::check_with_facts(root, &config, tsconfig_path, shared),
+            || {
+                forbidden_dependencies::check_with_facts(
+                    root,
+                    &config,
+                    config_path,
+                    tsconfig_path,
+                    shared,
+                )
+            },
         )?);
     }
     suppress_rule_findings(root, &mut findings);

@@ -8,6 +8,7 @@ use std::path::Path;
 pub(crate) fn check_with_facts(
     root: &Path,
     config: &NoMistakesConfig,
+    config_path: Option<&Path>,
     tsconfig_path: Option<&Path>,
     shared: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
@@ -32,11 +33,12 @@ pub(crate) fn check_with_facts(
             "shared check facts are missing graph facts required by {RULE_ID}; collect facts with forbidden_dependencies::graph_plan before calling run_check_with_facts"
         );
     }
-    let graph = DepGraph::build_with_plan_file_list_and_check_facts(
+    let graph = DepGraph::build_with_plan_file_list_config_and_check_facts(
         root,
         &tsconfig,
         plan,
         shared.graph_files().to_vec(),
+        config_path,
         shared,
     );
     let mut findings = Vec::new();
