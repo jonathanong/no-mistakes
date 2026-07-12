@@ -59,7 +59,7 @@ fn shared_facts_path_matches_standalone_check() {
     );
 
     let standalone = check(&root, &config, None).unwrap();
-    let with_facts = check_with_facts(&root, &config, None, &shared).unwrap();
+    let with_facts = check_with_facts(&root, &config, None, None, &shared).unwrap();
 
     assert_eq!(with_facts, standalone);
 }
@@ -70,7 +70,7 @@ fn shared_facts_path_rejects_missing_graph_facts() {
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
     let shared = crate::codebase::check_facts::CheckFactMap::default();
 
-    let error = check_with_facts(&root, &config, None, &shared).unwrap_err();
+    let error = check_with_facts(&root, &config, None, None, &shared).unwrap_err();
 
     assert!(
         format!("{error:#}").contains("missing graph facts"),
@@ -84,7 +84,7 @@ fn shared_facts_path_falls_back_when_graph_plan_needs_no_ts_facts() {
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
     let shared = crate::codebase::check_facts::CheckFactMap::default();
 
-    let findings = check_with_facts(&root, &config, None, &shared).unwrap();
+    let findings = check_with_facts(&root, &config, None, None, &shared).unwrap();
 
     assert!(
         findings.iter().any(|f| f.rule == RULE_ID),
@@ -111,7 +111,7 @@ fn shared_facts_path_falls_back_for_parse_errors() {
     );
 
     assert!(shared.stats.parse_errors > 0);
-    let findings = check_with_facts(&root, &config, None, &shared).unwrap();
+    let findings = check_with_facts(&root, &config, None, None, &shared).unwrap();
 
     assert!(
         findings.iter().any(|f| f.rule == RULE_ID),
@@ -126,7 +126,7 @@ fn graph_plan_and_shared_facts_empty_when_rule_is_not_configured() {
     let shared = crate::codebase::check_facts::CheckFactMap::default();
 
     assert!(graph_plan(&config).is_none());
-    let findings = check_with_facts(&root, &config, None, &shared).unwrap();
+    let findings = check_with_facts(&root, &config, None, None, &shared).unwrap();
     assert!(findings.is_empty());
 }
 

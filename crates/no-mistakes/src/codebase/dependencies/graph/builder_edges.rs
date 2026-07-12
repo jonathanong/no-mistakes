@@ -17,6 +17,7 @@ fn collect_and_merge_all_edges(
     let plan = edge_inputs.plan;
     let graph_files = edge_inputs.graph_files;
     let config_options = edge_inputs.config_options;
+    let config_path = edge_inputs.config_path;
     let files = &graph_files.indexable;
 
     crate::perf_trace::trace("graph.imports", || {
@@ -114,7 +115,8 @@ fn collect_and_merge_all_edges(
 
     crate::perf_trace::trace("graph.playwright_selectors", || {
         if plan.playwright_selectors {
-            let selector_edges = collect_playwright_selector_edges(root, &graph_files.all, facts);
+            let selector_edges =
+                collect_playwright_selector_edges(root, config_path, &graph_files.all, facts);
             merge_edges(forward, reverse, selector_edges);
         }
     });

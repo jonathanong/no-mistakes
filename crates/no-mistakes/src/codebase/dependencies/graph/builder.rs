@@ -65,6 +65,7 @@ impl DepGraph {
             plan,
             graph_files,
             config_options: config_options.as_ref(),
+            config_path,
         };
         collect_and_merge_all_edges(
             &edge_inputs,
@@ -85,6 +86,25 @@ impl DepGraph {
         }
     }
 
+    pub(crate) fn build_with_plan_file_list_config_and_check_facts(
+        root: &Path,
+        tsconfig: &TsConfig,
+        plan: GraphBuildPlan,
+        files: Vec<PathBuf>,
+        config_path: Option<&Path>,
+        facts: &crate::codebase::check_facts::CheckFactMap,
+    ) -> Self {
+        let graph_files = GraphFiles::from_files(files);
+        Self::build_with_plan_files_config_and_facts(
+            root,
+            tsconfig,
+            plan,
+            &graph_files,
+            config_path,
+            Some(facts as &dyn TsFactLookup),
+        )
+    }
+
     pub(crate) fn build_with_plan_file_list_and_check_facts(
         root: &Path,
         tsconfig: &TsConfig,
@@ -92,13 +112,8 @@ impl DepGraph {
         files: Vec<PathBuf>,
         facts: &crate::codebase::check_facts::CheckFactMap,
     ) -> Self {
-        let graph_files = GraphFiles::from_files(files);
-        Self::build_with_plan_files_and_facts(
-            root,
-            tsconfig,
-            plan,
-            &graph_files,
-            Some(facts as &dyn TsFactLookup),
+        Self::build_with_plan_file_list_config_and_check_facts(
+            root, tsconfig, plan, files, None, facts,
         )
     }
 }

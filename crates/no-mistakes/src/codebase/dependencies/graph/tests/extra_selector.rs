@@ -83,7 +83,7 @@ fn collect_playwright_selector_edges_returns_empty_without_playwright_config() {
     // A fixture with no playwright config should return empty without panicking.
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("simple"));
     let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
-    let edges = collect_playwright_selector_edges(&root, &all_files, None);
+    let edges = collect_playwright_selector_edges(&root, None, &all_files, None);
     // No playwright config → error → empty vec (graceful fallback).
     assert!(edges.is_empty());
 }
@@ -96,7 +96,7 @@ fn collect_playwright_selector_edges_returns_edges_for_route_group_fixture() {
         .join("../../test-cases/codebase-analysis/playwright-coverage-route-group/fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
-    let edges = collect_playwright_selector_edges(&root, &all_files, None);
+    let edges = collect_playwright_selector_edges(&root, None, &all_files, None);
     assert!(
         !edges.is_empty(),
         "expected selector edges from playwright-coverage-route-group fixture"
@@ -123,7 +123,7 @@ fn collect_playwright_selector_edges_returns_edges_for_fixture_with_selectors() 
         .join("../../test-cases/nextjs-selectors/selector-covered/fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
-    let edges = collect_playwright_selector_edges(&root, &all_files, None);
+    let edges = collect_playwright_selector_edges(&root, None, &all_files, None);
     assert!(
         !edges.is_empty(),
         "expected selector edges from nextjs-selectors/selector-covered fixture"
@@ -142,7 +142,7 @@ fn collect_playwright_selector_edges_filters_to_all_files_set() {
         .join("../../test-cases/codebase-analysis/playwright-coverage-route-group/fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     // Pass an empty file list — all candidate edge endpoints are outside the set.
-    let edges = collect_playwright_selector_edges(&root, &[], None);
+    let edges = collect_playwright_selector_edges(&root, None, &[], None);
     assert!(
         edges.is_empty(),
         "edges outside all_files set must be filtered out, got: {edges:?}"
@@ -205,9 +205,9 @@ fn collect_playwright_selector_edges_matches_with_and_without_shared_facts() {
         Some(playwright_plan),
     );
 
-    let mut edges_without_facts = collect_playwright_selector_edges(&root, &all_files, None);
+    let mut edges_without_facts = collect_playwright_selector_edges(&root, None, &all_files, None);
     let mut edges_with_facts =
-        collect_playwright_selector_edges(&root, &all_files, Some(&facts));
+        collect_playwright_selector_edges(&root, None, &all_files, Some(&facts));
     edges_without_facts.sort();
     edges_with_facts.sort();
 
@@ -219,6 +219,252 @@ fn collect_playwright_selector_edges_matches_with_and_without_shared_facts() {
         edges_without_facts, edges_with_facts,
         "reusing shared Playwright facts must not change which edges are produced"
     );
+}
+
+/// Regression test: `collect_playwright_selector_edges` must resolve Playwright
+/// settings from the given `config_path`, not silently fall back to
+/// default-discovery. The fixture's default-discovered `.no-mistakes.yml`
+/// configures `data-testid` as the only test-id attribute, which does not
+/// match the app file's `data-pw` attribute, so scanning without an explicit
+/// config finds no selector edges. `custom.no-mistakes.yml` configures
+/// `data-pw` instead — passing it as `config_path` must produce the edge that
+/// default-discovery misses; if `config_path` were ignored (as it was before
+/// this fix), both scans would return the same empty result.
+#[test]
+fn collect_playwright_selector_edges_uses_explicit_config_path_not_default_discovery() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/playwright-config-path-selector-scan/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
+
+    let edges_default = collect_playwright_selector_edges(&root, None, &all_files, None);
+    assert!(
+        edges_default.is_empty(),
+        "sanity check: default-discovered config (data-testid) should not match the fixture's data-pw attribute, got: {edges_default:?}"
+    );
+
+    let custom_config = root.join("custom.no-mistakes.yml");
+    let edges_custom =
+        collect_playwright_selector_edges(&root, Some(&custom_config), &all_files, None);
+    assert!(
+        !edges_custom.is_empty(),
+        "expected selector edges when passing the explicit --config path (data-pw)"
+    );
+}
+
+// ── shared app-selector-occurrences cache (CheckFactMap) ─────────────────
+
+/// Regression test: `CheckFactMap::get_or_compute_app_selector_occurrences`
+/// must call `compute` at most once per distinct `scan_html_ids` key — this
+/// is what actually makes `no-mistakes check` dedupe the app-wide selector
+/// scan across `playwright::rules::check_with_facts` and
+/// `forbidden_dependencies`'s `DepGraph` build (previously each paid the
+/// full scan independently). Asserting on the *returned value* alone
+/// wouldn't prove this — a non-caching implementation returns the same
+/// value too, just by recomputing it; asserting on the call count does.
+#[test]
+fn get_or_compute_app_selector_occurrences_caches_per_scan_html_ids_key() {
+    use crate::codebase::check_facts::CheckFactMap;
+    use crate::codebase::dependencies::graph::TsFactLookup;
+    use crate::playwright::selectors::AppSelector;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    let facts = CheckFactMap::default();
+    let calls = AtomicUsize::new(0);
+    let compute = || -> anyhow::Result<Vec<AppSelector>> {
+        calls.fetch_add(1, Ordering::SeqCst);
+        Ok(Vec::new())
+    };
+
+    let first = facts
+        .get_or_compute_app_selector_occurrences(false, &compute)
+        .unwrap();
+    let second = facts
+        .get_or_compute_app_selector_occurrences(false, &compute)
+        .unwrap();
+    assert_eq!(
+        calls.load(Ordering::SeqCst),
+        1,
+        "a second call with the same scan_html_ids key must reuse the cached result, not recompute"
+    );
+    assert!(
+        std::sync::Arc::ptr_eq(&first, &second),
+        "cached calls must return the same Arc allocation, not merely an equal value"
+    );
+
+    facts
+        .get_or_compute_app_selector_occurrences(true, &compute)
+        .unwrap();
+    assert_eq!(
+        calls.load(Ordering::SeqCst),
+        2,
+        "a different scan_html_ids key is a real input to the scan (see doc comment) and must recompute"
+    );
+}
+
+/// Regression test: a failing `compute` must still be cached (as a `String`,
+/// since `anyhow::Error` isn't `Clone`) and reported back through `Result`,
+/// not just the success path — and a second call with a failing `compute`
+/// must reuse the cached error rather than recomputing (same call-count
+/// discipline as the success-path tests above).
+#[test]
+fn get_or_compute_methods_cache_and_report_compute_errors() {
+    use crate::codebase::check_facts::CheckFactMap;
+    use crate::codebase::dependencies::graph::TsFactLookup;
+    use crate::playwright::selectors::AppSelector;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    let facts = CheckFactMap::default();
+
+    let selector_calls = AtomicUsize::new(0);
+    let failing_selectors = || -> anyhow::Result<Vec<AppSelector>> {
+        selector_calls.fetch_add(1, Ordering::SeqCst);
+        anyhow::bail!("selector scan failed")
+    };
+    let first_error = facts
+        .get_or_compute_app_selector_occurrences(false, &failing_selectors)
+        .unwrap_err();
+    assert!(first_error.to_string().contains("selector scan failed"));
+    let second_error = facts
+        .get_or_compute_app_selector_occurrences(false, &failing_selectors)
+        .unwrap_err();
+    assert!(second_error.to_string().contains("selector scan failed"));
+    assert_eq!(
+        selector_calls.load(Ordering::SeqCst),
+        1,
+        "a cached error must not trigger a recompute"
+    );
+
+    let text_target_calls = AtomicUsize::new(0);
+    let failing_text_targets = || -> anyhow::Result<_> {
+        text_target_calls.fetch_add(1, Ordering::SeqCst);
+        anyhow::bail!("app text scan failed")
+    };
+    facts
+        .get_or_compute_app_text_targets(&failing_text_targets)
+        .unwrap_err();
+    facts
+        .get_or_compute_app_text_targets(&failing_text_targets)
+        .unwrap_err();
+    assert_eq!(text_target_calls.load(Ordering::SeqCst), 1);
+
+    let route_reachable_calls = AtomicUsize::new(0);
+    let failing_route_reachable = || -> anyhow::Result<_> {
+        route_reachable_calls.fetch_add(1, Ordering::SeqCst);
+        anyhow::bail!("route reachability scan failed")
+    };
+    facts
+        .get_or_compute_route_reachable_files(&failing_route_reachable)
+        .unwrap_err();
+    facts
+        .get_or_compute_route_reachable_files(&failing_route_reachable)
+        .unwrap_err();
+    assert_eq!(route_reachable_calls.load(Ordering::SeqCst), 1);
+}
+
+/// Regression test: `get_or_compute_route_reachable_files` — the cache behind
+/// this session's largest measured win (~8s per call on a real monorepo,
+/// dropping to ~0 on the second call) — must call `compute` at most once,
+/// with no key needed (unlike `app_selector_occurrences`, this scan has no
+/// caller-varying input; see the trait doc comment).
+#[test]
+fn get_or_compute_route_reachable_files_caches_across_calls() {
+    use crate::codebase::check_facts::CheckFactMap;
+    use crate::codebase::dependencies::graph::TsFactLookup;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    let facts = CheckFactMap::default();
+    let calls = AtomicUsize::new(0);
+    let compute = || -> anyhow::Result<_> {
+        calls.fetch_add(1, Ordering::SeqCst);
+        Ok(Default::default())
+    };
+
+    let first = facts.get_or_compute_route_reachable_files(&compute).unwrap();
+    let second = facts.get_or_compute_route_reachable_files(&compute).unwrap();
+    assert_eq!(
+        calls.load(Ordering::SeqCst),
+        1,
+        "a second call must reuse the cached result, not recompute the reachability scan"
+    );
+    assert!(
+        std::sync::Arc::ptr_eq(&first, &second),
+        "cached calls must return the same Arc allocation, not merely an equal value"
+    );
+}
+
+/// Regression test: `get_or_compute_playwright_routes` and
+/// `get_or_compute_app_text_targets` — the two smaller keyless caches added
+/// alongside `route_reachable_files` — must each call `compute` at most once.
+#[test]
+fn get_or_compute_routes_and_app_text_targets_cache_across_calls() {
+    use crate::codebase::check_facts::CheckFactMap;
+    use crate::codebase::dependencies::graph::TsFactLookup;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    let facts = CheckFactMap::default();
+
+    let route_calls = AtomicUsize::new(0);
+    let compute_routes = || -> Vec<crate::routes::Route> {
+        route_calls.fetch_add(1, Ordering::SeqCst);
+        Vec::new()
+    };
+    facts.get_or_compute_playwright_routes(&compute_routes);
+    facts.get_or_compute_playwright_routes(&compute_routes);
+    assert_eq!(
+        route_calls.load(Ordering::SeqCst),
+        1,
+        "a second call must reuse the cached routes, not recompute"
+    );
+
+    let text_target_calls = AtomicUsize::new(0);
+    let compute_text_targets = || -> anyhow::Result<_> {
+        text_target_calls.fetch_add(1, Ordering::SeqCst);
+        Ok(Vec::new())
+    };
+    facts
+        .get_or_compute_app_text_targets(&compute_text_targets)
+        .unwrap();
+    facts
+        .get_or_compute_app_text_targets(&compute_text_targets)
+        .unwrap();
+    assert_eq!(
+        text_target_calls.load(Ordering::SeqCst),
+        1,
+        "a second call must reuse the cached app text targets, not recompute"
+    );
+}
+
+/// `TsFactMap` never overrides the `get_or_compute_*` cache methods (only
+/// `CheckFactMap` does — it's the only implementor that ever needs to share
+/// these scans across call sites), so it exercises the trait's default
+/// "always call compute, no caching" bodies. Every `compute` still runs
+/// exactly once per call here (there's nothing to cache), which is the
+/// correct, expected behavior for this fallback path.
+#[test]
+fn ts_fact_map_uses_uncached_trait_defaults_for_get_or_compute_methods() {
+    use crate::codebase::dependencies::graph::TsFactLookup;
+    use crate::codebase::ts_source::facts::TsFactMap;
+
+    let facts = TsFactMap::new();
+
+    let selectors = facts
+        .get_or_compute_app_selector_occurrences(false, &|| Ok(Vec::new()))
+        .unwrap();
+    assert!(selectors.is_empty());
+
+    let routes = facts.get_or_compute_playwright_routes(&|| Vec::<crate::routes::Route>::new());
+    assert!(routes.is_empty());
+
+    let app_text_targets = facts
+        .get_or_compute_app_text_targets(&|| Ok(Vec::new()))
+        .unwrap();
+    assert!(app_text_targets.is_empty());
+
+    let route_reachable_files = facts
+        .get_or_compute_route_reachable_files(&|| Ok(Default::default()))
+        .unwrap();
+    assert!(route_reachable_files.is_empty());
 }
 
 #[test]

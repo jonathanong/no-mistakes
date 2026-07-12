@@ -1,6 +1,7 @@
 use super::*;
 
 mod config_edges;
+mod config_path_full_graph;
 mod config_plan;
 mod config_project_routes;
 mod config_route_helper_depth;

@@ -7,7 +7,24 @@ pub fn ts_fact_plan_and_context_for_plan(
     root: &Path,
     plan: GraphBuildPlan,
 ) -> (TsFactPlan, TsFactContext) {
-    let options = graph_config_options_for_plan(root, plan);
+    ts_fact_plan_and_context_for_plan_with_config(root, plan, None)
+}
+
+/// Same as [`ts_fact_plan_and_context_for_plan`], but resolves
+/// `GraphConfigOptions` from an explicit `--config` path instead of always
+/// falling back to default discovery. Callers that already have a
+/// `config_path` in scope (e.g. `check_runner`, `forbidden_dependencies`'s
+/// shared-facts path) must use this, not the config-insensitive variant —
+/// otherwise the `TsFactPlan`/`TsFactContext` used to *collect* facts can
+/// disagree with the `GraphConfigOptions` the `DepGraph` build itself later
+/// resolves from the same `config_path`, silently missing backend
+/// route/http/queue facts a custom config enables.
+pub fn ts_fact_plan_and_context_for_plan_with_config(
+    root: &Path,
+    plan: GraphBuildPlan,
+    config_path: Option<&Path>,
+) -> (TsFactPlan, TsFactContext) {
+    let options = graph_config_options_for_plan_with_config(root, plan, config_path);
     (
         effective_ts_fact_plan(plan, options.as_ref()),
         ts_fact_context_from_options(root, plan, options.as_ref()),

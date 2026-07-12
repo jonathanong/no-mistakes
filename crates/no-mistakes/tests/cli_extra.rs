@@ -304,6 +304,41 @@ fn global_check_without_verbose_timings_omits_fine_grained_labels() {
     );
 }
 
+/// Regression test for the `collect_app_selector_occurrences` duplicate-work
+/// fix: when both a Playwright rule and `forbidden-dependencies` are
+/// configured together, `rules.playwright` builds its own Playwright
+/// analysis and `rules.forbidden_dependencies`'s `DepGraph` build
+/// (`graph.playwright_selectors`) builds another — both used to pay the full
+/// app-wide selector scan independently. This only proves both real call
+/// sites run in one invocation without erroring; the actual "only computed
+/// once" guarantee is proven deterministically (via a call-count assertion)
+/// by `get_or_compute_app_selector_occurrences_caches_per_scan_html_ids_key`
+/// in the graph module's own tests — timing-based assertions here would be
+/// flaky under CI load.
+#[test]
+fn global_check_shares_app_selector_scan_between_playwright_rule_and_forbidden_dependencies() {
+    let root = fixture(
+        "codebase-analysis",
+        "playwright-coverage-and-forbidden-dependencies",
+    );
+    let output = run(&[
+        "check",
+        "--root",
+        root.to_str().unwrap(),
+        "--format",
+        "json",
+        "--verbose-timings",
+    ]);
+
+    let err = stderr(&output);
+    for label in ["rules.playwright:", "graph.playwright_selectors:"] {
+        assert!(
+            err.contains(label),
+            "expected both the playwright rule and the forbidden-dependencies graph build to run: {err}"
+        );
+    }
+}
+
 #[test]
 fn global_check_reports_integration_suite_findings() {
     let root = fixture("integration-tests", "basic");

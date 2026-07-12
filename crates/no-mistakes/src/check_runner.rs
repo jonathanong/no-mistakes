@@ -56,8 +56,10 @@ pub(crate) fn run_all(
     });
     if let Some(graph_plan) = forbidden_graph_plan {
         let (fact_plan, fact_context) =
-            no_mistakes::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan(
-                &root, graph_plan,
+            no_mistakes::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_config(
+                &root,
+                graph_plan,
+                config_path.as_deref(),
             );
         plan.graph = fact_plan;
         plan.graph_context = fact_context;
