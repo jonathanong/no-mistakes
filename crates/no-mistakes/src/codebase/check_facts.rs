@@ -5,16 +5,17 @@ use crate::codebase::storybook::StorybookFileFacts;
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::codebase::ts_symbols::FileSymbols;
 use crate::integration_tests::types::FileAnalysis as IntegrationFileAnalysis;
-use crate::playwright::analysis::text_types::PlaywrightTextLocator;
+use crate::playwright::analysis::text_types::{AppTextTarget, PlaywrightTextLocator};
 use crate::playwright::playwright_tests::TestOccurrence;
 use crate::playwright::selectors::{
-    PlaywrightHelperReference, PlaywrightSelector, SelectorRegexes,
+    AppSelector, PlaywrightHelperReference, PlaywrightSelector, SelectorRegexes,
 };
 use crate::react_traits::analyze::file::FileAnalysis as ReactFileAnalysis;
+use dashmap::DashMap;
 use rayon::prelude::*;
 use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 mod file;
 mod file_parse_error;
@@ -52,6 +53,26 @@ pub struct CheckFactMap {
     pub(crate) ts: HashMap<PathBuf, CheckFileFacts>,
     pub(crate) graph_plan: crate::codebase::ts_source::facts::TsFactPlan,
     pub stats: CheckFactStats,
+    /// Memoizes the app-wide Playwright selector-occurrence scan
+    /// (`collect_app_selector_occurrences`), keyed by whether HTML id
+    /// attributes are included (see `TsFactLookup::get_or_compute_app_selector_occurrences`).
+    /// Populated lazily — empty unless a `check` run actually triggers the
+    /// scan from more than one place (e.g. the `playwright` rule and
+    /// `forbidden-dependencies`'s `DepGraph` build in the same invocation).
+    pub(crate) app_selector_occurrences_cache: DashMap<bool, Arc<Vec<AppSelector>>>,
+    /// Memoizes `routes::collect_routes` + rewrite expansion — see
+    /// `TsFactLookup::get_or_compute_playwright_routes`. Unlike the selector
+    /// scan above this needs no key: every caller within one invocation wants
+    /// the same routes.
+    pub(crate) playwright_routes_cache: OnceLock<Arc<Vec<crate::routes::Route>>>,
+    /// Memoizes `collect_app_text_targets` — see
+    /// `TsFactLookup::get_or_compute_app_text_targets`.
+    pub(crate) app_text_targets_cache: OnceLock<Arc<Vec<AppTextTarget>>>,
+    /// Memoizes `collect_route_reachable_files` — see
+    /// `TsFactLookup::get_or_compute_route_reachable_files`. The single
+    /// largest cost this cache eliminates in practice.
+    pub(crate) route_reachable_files_cache:
+        OnceLock<Arc<crate::codebase::dependencies::graph::RouteReachableFiles>>,
 }
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -165,6 +186,10 @@ fn collect_check_facts_inner(
             parse_errors,
             ..stats
         },
+        app_selector_occurrences_cache: DashMap::new(),
+        playwright_routes_cache: OnceLock::new(),
+        app_text_targets_cache: OnceLock::new(),
+        route_reachable_files_cache: OnceLock::new(),
     }
 }
 

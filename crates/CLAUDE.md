@@ -18,16 +18,26 @@
 ### Diagnosing a performance regression
 
 Use `no-mistakes check --timings --verbose-timings` (`crates/no-mistakes/src/perf_trace.rs`)
-before reaching for a special instrumented build. `--verbose-timings` prints a
-`[timing] <label>: <ms>` line per hot path already wrapped in
-`crate::perf_trace::trace(label, || { ... })` — `rules.*`, `graph.*` (per
-`DepGraph` edge kind), `playwright.*`. Wrap new hot paths the same way instead of
-a temporary `eprintln!` timer reverted before commit.
+before a special instrumented build — it prints a `[timing] <label>: <ms>` line
+per hot path wrapped in `crate::perf_trace::trace(label, || { ... })`
+(`rules.*`, `graph.*`, `playwright.*`). Wrap new hot paths the same way instead
+of a temporary `eprintln!` timer reverted before commit. `cargo bench` in CI is
+diagnostic-only — the real regression-prevention layer is the `ast-grep` rules
+under `.ast-grep/rules/` plus tests proving buggy vs. fixed paths disagree.
 
-`cargo bench` in CI is diagnostic-only (no baseline/threshold); the real
-regression-prevention layer is the `ast-grep` rules under `.ast-grep/rules/`
-(`docs/ast-grep-rules.md`) plus regression tests proving buggy vs. fixed
-code paths disagree.
+### Duplicate full-repo work across independent call paths
+
+When two independent call paths in one invocation (a standalone rule, a
+`DepGraph` edge collector) need the same repo-wide computation, share one
+result instead of paying twice, even if neither path knows about the other.
+Most of these need no cache key — see `get_or_compute_route_reachable_files`
+(`graph/fact_lookup.rs`, a `OnceLock` on the shared fact map): the largest win
+found this way, ~8s dropping to ~0 on a real monorepo. Only key a cache when
+an input genuinely varies between callers (`get_or_compute_app_selector_occurrences`
+in the same file needs one) — grep the callee for anything caller-specific
+(e.g. a Playwright project) before assuming "compute once" is safe; a wrong
+key returns silently wrong data. **Regression guard:** assert on a call count,
+not value equality — a non-caching implementation returns the same value too.
 
 ### Shared state in parallel loops
 
@@ -50,12 +60,12 @@ let deps = cache
 ### Verify a builder method doesn't silently disable an existing cache
 
 A builder method that configures one thing (e.g. a visible-file set) can also
-flip an unrelated flag (e.g. disabling the resolver's memoization cache) if the
-two were bundled together at some point, often for a reason that no longer
-applies. This is easy to miss because the code still returns correct results —
-only performance regresses — and the cache's own hit/reuse tests can still pass
-because they only assert result *consistency*, not that a cache lookup actually
-occurred.
+flip an unrelated flag (e.g. disabling a cache) if the two were bundled together
+for a reason that no longer applies. Easy to miss: results stay correct, only
+performance regresses. A "cache reuses result" test doesn't catch this either —
+it only asserts the same value comes back twice, which holds regardless of
+whether caching happened; assert on the cache's own state (length, hit counter)
+instead.
 
 ```rust
 // Bad – with_visible() bundles an unrelated cache_enabled=false, so every
@@ -75,11 +85,6 @@ pub fn with_visible(mut self, visible: &'a HashSet<PathBuf>) -> Self {
     self
 }
 ```
-
-Before trusting a "cache reuses/preserves result" test as coverage for actual
-memoization, check whether it only asserts the same value comes back twice —
-that holds regardless of whether caching happened. Assert on the cache's own
-state (e.g. its length, or a hit counter) instead.
 
 ### Hoist per-iteration I/O and parsing out of hot loops
 
@@ -162,19 +167,15 @@ fn find_dirs_matching(base: &Path, name: &str, git_files: Option<&[String]>) -> 
 }
 ```
 
-Root/prefix expansion (include globs, preserved roots, project roots) must reuse the
-single discovered file list, not trigger a fresh filesystem walk per pattern or per
-project — compute once, memoize per `(base, pattern)`, and early-return when there is
-nothing to expand.
+Root/prefix expansion (include globs, preserved roots, project roots) must reuse
+the single discovered file list, not walk per pattern or per project — compute
+once, memoize per `(base, pattern)`, and early-return when nothing to expand.
 
-**Regression guard:** when fixing a walk like this, add a test proving the fast path is
-taken, not just that final output is unchanged — a `.gitignore`-blind walk and a
-git-aware one often produce the *same final file list* (later filtering hides the
-difference) while differing enormously in work done. A reliable way to prove which path
-executed: construct a case where the raw walk and the git-derived approach would
-disagree (e.g. a directory that exists on disk but contains no git-visible file, or a
-gitignored directory containing a nested match for the pattern) and assert on the
-disagreement, not just the end-to-end result.
+**Regression guard:** prove the fast path is taken, not just that output is
+unchanged — a `.gitignore`-blind walk and a git-aware one often produce the same
+final file list while differing enormously in work done. Construct a case where
+the two approaches would disagree (e.g. a gitignored directory containing a
+nested match) and assert on the disagreement.
 
 ### Pre-compute BFS traversals in parallel before the per-entity loop
 

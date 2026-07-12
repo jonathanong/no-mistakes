@@ -65,6 +65,7 @@ impl DepGraph {
             plan,
             graph_files,
             config_options: config_options.as_ref(),
+            config_path,
         };
         collect_and_merge_all_edges(
             &edge_inputs,

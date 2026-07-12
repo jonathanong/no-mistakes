@@ -12,10 +12,11 @@
 /// paths, even with no URL-navigation route connecting them.
 pub(super) fn collect_playwright_selector_edges(
     root: &Path,
+    config_path: Option<&Path>,
     all_files: &[PathBuf],
     facts: Option<&dyn TsFactLookup>,
 ) -> Vec<Edge> {
-    let Ok(analysis) = run_playwright_selector_analysis(root, facts) else {
+    let Ok(analysis) = run_playwright_selector_analysis(root, config_path, facts) else {
         return vec![];
     };
     // Use the graph's pre-discovered file set to filter: only emit edges whose
@@ -65,9 +66,16 @@ fn selector_dep_edge(root: &Path, edge: &crate::playwright::analysis::types::Edg
 
 fn run_playwright_selector_analysis(
     root: &Path,
+    config_path: Option<&Path>,
     facts: Option<&dyn TsFactLookup>,
 ) -> anyhow::Result<crate::playwright::analysis::types::Analysis> {
-    let settings = crate::playwright::config::load_settings(root, None, &[], None)?;
+    // Reuse the same config file the rest of this DepGraph build (and, when
+    // called from `check`, the sibling `playwright` rule) resolved settings
+    // from — previously hardcoded to `None`, which silently ignored an
+    // explicit `--config` and fell back to default-discovery instead. That
+    // divergence would also have made sharing the app-wide selector scan
+    // between this path and the `playwright` rule's path unsafe.
+    let settings = crate::playwright::config::load_settings(root, config_path, &[], None)?;
     let test_policy = crate::playwright::playwright_tests::TestPolicy {
         assert_conditional_tests: false,
         allow_skipped_tests: false,

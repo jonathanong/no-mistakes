@@ -1,0 +1,26 @@
+projects:
+  web:
+    type: nextjs
+    root: web
+
+tests:
+  playwright:
+    frontendRoot: web/app
+    selectors:
+      testIds:
+        - data-pw
+      htmlIds: false
+    selectorRoots:
+      - web/app
+      - web/components
+
+rules:
+  - rule: playwright-coverage
+    scope: repository
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots:
+        - web/app/layout.tsx
+      forbiddenModules:
+        - definitely-not-a-real-module
