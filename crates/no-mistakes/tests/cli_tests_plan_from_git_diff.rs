@@ -72,14 +72,22 @@ fn stdout(output: &Output) -> String {
 
 // Sets up two commits (an initial fixture commit, then a commit that changes
 // helper.mts) and returns the tempdir so the caller can run `tests plan`
-// against it with a refspec spanning the two commits.
+// against it with a refspec spanning the two commits. Mirrors the
+// initial/-plus-sibling-"after"-file layout used by
+// tests-plan-lockfile/workspace-package-bump: the "after" content lives
+// outside `basic/initial/` so copy_dir_all doesn't pull it into the
+// first commit.
 fn two_commit_repo() -> tempfile::TempDir {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
-    copy_dir_all(&fixture_dir("basic"), root);
+    copy_dir_all(&fixture_dir("basic/initial"), root);
     setup_git_repo(root);
 
-    std::fs::write(root.join("helper.mts"), "export const helper = () => 2;\n").unwrap();
+    std::fs::copy(
+        fixture_dir("basic/after-helper.mts"),
+        root.join("helper.mts"),
+    )
+    .unwrap();
     git_commit_all(root, "change helper");
 
     dir
@@ -201,7 +209,7 @@ fn from_git_diff_bare_base_defaults_head_to_head() {
 
 #[test]
 fn from_git_diff_rejects_two_dot_refspec() {
-    let root = fixture_dir("basic");
+    let root = fixture_dir("basic/initial");
 
     let output = Command::new(bin())
         .args([
@@ -226,7 +234,7 @@ fn from_git_diff_rejects_two_dot_refspec() {
 
 #[test]
 fn from_git_diff_conflicts_with_base() {
-    let root = fixture_dir("basic");
+    let root = fixture_dir("basic/initial");
 
     let output = Command::new(bin())
         .args([
