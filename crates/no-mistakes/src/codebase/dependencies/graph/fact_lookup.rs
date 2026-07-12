@@ -111,10 +111,16 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
         if let Some(cached) = self.app_selector_occurrences_cache.get(&scan_html_ids) {
             return Ok(cached.clone());
         }
+        // As with the OnceLock-backed caches below, the fallible compute
+        // happens outside any lock: `compute` may run more than once under a
+        // genuine race, but `entry(..).or_insert_with(..)` still inserts
+        // exactly once and every caller ends up with the same cached Arc.
         let computed = Arc::new(compute()?);
-        self.app_selector_occurrences_cache
-            .insert(scan_html_ids, computed.clone());
-        Ok(computed)
+        Ok(self
+            .app_selector_occurrences_cache
+            .entry(scan_html_ids)
+            .or_insert_with(|| computed.clone())
+            .clone())
     }
 
     fn get_or_compute_playwright_routes(
