@@ -14,10 +14,14 @@ pub(super) fn get_or_compute_route_imports(
     // Install only a cheap synchronization cell while holding DashMap's shard
     // lock. The expensive read and parse then run outside that lock, once per
     // path even when many route traversals reach the same module concurrently.
-    let cache_entry = import_cache
-        .entry(normalized_path.clone())
-        .or_default()
-        .clone();
+    let cache_entry = if let Some(entry) = import_cache.get(&normalized_path) {
+        entry.value().clone()
+    } else {
+        import_cache
+            .entry(normalized_path.clone())
+            .or_default()
+            .clone()
+    };
     cache_entry
         .get_or_init(|| {
             compute(&normalized_path)
@@ -25,5 +29,5 @@ pub(super) fn get_or_compute_route_imports(
                 .map_err(|error| Arc::new(format!("{error:#}")))
         })
         .clone()
-        .map_err(|error| anyhow::Error::msg(error.as_str().to_string()))
+        .map_err(anyhow::Error::msg)
 }
