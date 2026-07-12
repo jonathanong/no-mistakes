@@ -37,9 +37,17 @@ pub(crate) struct CheckArgs {
     /// Print per-check timing information to stderr.
     #[arg(long, global = true)]
     timings: bool,
+    /// Print fine-grained timing for internal hot paths to stderr (which
+    /// `rules` sub-check dominates, which dependency-graph edge kind is
+    /// expensive, which Playwright analysis step is slow). Implies
+    /// `--timings`-level detail is not enough on its own to diagnose a
+    /// regression; use this instead of a special instrumented build.
+    #[arg(long, global = true)]
+    verbose_timings: bool,
 }
 
 pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
+    no_mistakes::perf_trace::set_enabled(args.verbose_timings);
     let cwd = std::env::current_dir().context("cwd must be accessible")?;
     let root = resolve_root(&args.root, &cwd);
     let results = check_runner::run_all(root, args.config, args.tsconfig)?;

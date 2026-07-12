@@ -11,6 +11,7 @@ pub(crate) mod helper_references;
 pub(crate) mod output;
 pub(crate) mod pipeline;
 pub(crate) mod pipeline_selectors;
+pub(crate) mod pipeline_test_analysis;
 pub(crate) mod route_reachability;
 pub(crate) mod routes_index;
 pub(crate) mod selectors_index;

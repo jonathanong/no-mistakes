@@ -246,6 +246,65 @@ fn global_check_timings_are_reported_in_phase_order() {
 }
 
 #[test]
+fn global_check_verbose_timings_reports_fine_grained_labels() {
+    let root = fixture("codebase-analysis", "forbidden-dependencies-basic");
+    let output = run(&[
+        "check",
+        "--root",
+        root.to_str().unwrap(),
+        "--format",
+        "json",
+        "--timings",
+        "--verbose-timings",
+    ]);
+
+    assert_eq!(output.status.code(), Some(1));
+    let err = stderr(&output);
+
+    // Ensure core timing labels are present, including Playwright-related labels.
+    for label in [
+        "rules.forbidden_dependencies:",
+        "graph.imports:",
+        "playwright.",
+    ] {
+        assert!(
+            err.contains(label),
+            "expected verbose timing label {label} in stderr: {err}"
+        );
+    }
+
+    // Ensure the `[timing]` prefix formatting is present so downstream tools relying on it
+    // will break visibly if the format changes.
+    let has_timing_prefix = err
+        .lines()
+        .any(|line| line.starts_with("[timing] ") || line.contains(" [timing] "));
+    assert!(
+        has_timing_prefix,
+        "expected at least one line with a `[timing]` prefix in stderr: {err}"
+    );
+}
+
+#[test]
+fn global_check_without_verbose_timings_omits_fine_grained_labels() {
+    let root = fixture("codebase-analysis", "forbidden-dependencies-basic");
+    let output = run(&[
+        "check",
+        "--root",
+        root.to_str().unwrap(),
+        "--format",
+        "json",
+        "--timings",
+    ]);
+
+    assert_eq!(output.status.code(), Some(1));
+    let err = stderr(&output);
+    assert!(
+        !err.contains("rules.forbidden_dependencies:") && !err.contains("graph.imports:"),
+        "verbose timing labels should not appear without --verbose-timings: {err}"
+    );
+}
+
+#[test]
 fn global_check_reports_integration_suite_findings() {
     let root = fixture("integration-tests", "basic");
     let json_output = run(&["check", "--root", root.to_str().unwrap(), "--json"]);

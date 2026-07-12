@@ -57,11 +57,16 @@ pub fn run_check_with_facts(
     }
     let mut findings = Vec::new();
     if rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
-        findings.extend(test_no_unmocked_dynamic_imports::check_with_facts(
-            root,
-            &config,
-            tsconfig_path,
-            shared,
+        findings.extend(crate::perf_trace::trace(
+            "rules.test_no_unmocked_dynamic_imports",
+            || {
+                test_no_unmocked_dynamic_imports::check_with_facts(
+                    root,
+                    &config,
+                    tsconfig_path,
+                    shared,
+                )
+            },
         )?);
     }
     if rule_enabled(&config, SERVER_ROUTE_CLIENT_BOUNDARY) {
@@ -82,19 +87,14 @@ pub fn run_check_with_facts(
         findings.extend(storybook_findings);
     }
     if crate::playwright::rules::configured(&config) {
-        findings.extend(crate::playwright::rules::check_with_facts(
-            root,
-            config_path,
-            &config,
-            shared,
-        )?);
+        findings.extend(crate::perf_trace::trace("rules.playwright", || {
+            crate::playwright::rules::check_with_facts(root, config_path, &config, shared)
+        })?);
     }
     if rule_enabled(&config, FORBIDDEN_DEPENDENCIES) {
-        findings.extend(forbidden_dependencies::check_with_facts(
-            root,
-            &config,
-            tsconfig_path,
-            shared,
+        findings.extend(crate::perf_trace::trace(
+            "rules.forbidden_dependencies",
+            || forbidden_dependencies::check_with_facts(root, &config, tsconfig_path, shared),
         )?);
     }
     suppress_rule_findings(root, &mut findings);

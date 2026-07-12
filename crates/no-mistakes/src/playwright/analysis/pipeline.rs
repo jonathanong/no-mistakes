@@ -7,12 +7,12 @@ use crate::playwright::analysis::fetch::{collect_fetches_for_routes, expand_fetc
 pub(crate) use crate::playwright::analysis::pipeline_selectors::{
     analyze_selectors_with_policy, analyze_selectors_with_policy_and_facts,
 };
+use crate::playwright::analysis::pipeline_test_analysis::analyze_test_files;
 use crate::playwright::analysis::route_reachability::collect_route_reachable_files;
 use crate::playwright::analysis::routes_index::route_index;
 use crate::playwright::analysis::selectors_index::{app_selector_targets, selector_index};
-use crate::playwright::analysis::test_file::{analyze_test_file, analyze_test_occurrences};
 use crate::playwright::analysis::types::{
-    Analysis, CoverageInputs, EdgeReport, TestFileAnalysis, UniqueSelectorPolicy,
+    Analysis, CoverageInputs, EdgeReport, UniqueSelectorPolicy,
 };
 use crate::playwright::config;
 use crate::playwright::config::has_configured_html_id_selector;
@@ -20,7 +20,6 @@ use crate::playwright::playwright_tests;
 use crate::playwright::routes;
 use crate::playwright::selectors;
 use anyhow::Result;
-use rayon::prelude::*;
 use std::path::Path;
 pub(crate) fn analyze_with_policy(
     root: &Path,
@@ -65,7 +64,8 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
 ) -> Result<Analysis> {
     unique_selector_policy.configured_html_id_selector = has_configured_html_id_selector(settings);
     let route_root = root.join(&settings.frontend_root);
-    let mut routes = routes::collect_routes(&route_root);
+    let mut routes =
+        crate::perf_trace::trace("playwright.routes", || routes::collect_routes(&route_root));
     let virtual_routes = crate::routes::rewrites::expand_rewrites(&settings.rewrites, &routes);
     routes.extend(virtual_routes);
     if require_routes && routes.is_empty() {
@@ -81,7 +81,9 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
         &settings.playwright_configs,
         settings.project.as_deref(),
     )?;
-    let test_files = discover_test_files(root, settings, &playwright)?;
+    let test_files = crate::perf_trace::trace("playwright.discover_test_files", || {
+        discover_test_files(root, settings, &playwright)
+    })?;
     let selector_regexes = selectors::compile_selector_regexes_with_html_ids(
         &settings.selector_attributes,
         &settings.component_selector_attributes,
@@ -100,7 +102,9 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
     {
         Vec::new()
     } else {
-        collect_app_selector_occurrences(root, settings, &app_selector_regexes)?
+        crate::perf_trace::trace("playwright.app_selector_occurrences", || {
+            collect_app_selector_occurrences(root, settings, &app_selector_regexes)
+        })?
     };
     let mut app_selectors: Vec<_> = app_selector_occurrences
         .iter()
@@ -113,11 +117,15 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
         .collect();
     app_selectors.sort();
     app_selectors.dedup();
-    let app_text_targets = collect_app_text_targets(root, settings)?;
+    let app_text_targets = crate::perf_trace::trace("playwright.app_text_targets", || {
+        collect_app_text_targets(root, settings)
+    })?;
     let route_reachable_files = if app_text_targets.is_empty() {
         Default::default()
     } else {
-        collect_route_reachable_files(root, settings, &routes)?
+        crate::perf_trace::trace("playwright.route_reachable_files", || {
+            collect_route_reachable_files(root, settings, &routes)
+        })?
     };
     let route_idx = route_index(root, &routes);
     let app_selector_tgts = app_selector_targets(root, &app_selectors);
@@ -134,41 +142,10 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
         test_policy,
     };
 
-    let mut test_analysis_result = test_files
-        .par_iter()
-        .try_fold(
-            TestFileAnalysis::default,
-            |mut result, test_file| -> Result<_> {
-                let file_analysis = if let Some(facts) = facts {
-                    match facts.get_playwright_facts(&test_file.path) {
-                        Some(playwright) => analyze_test_occurrences(
-                            test_file,
-                            &test_analysis,
-                            playwright.urls.clone(),
-                            playwright.selectors.clone(),
-                            playwright.text_locators.clone(),
-                            playwright.helper_references.clone(),
-                        ),
-                        None => analyze_test_file(test_file, &test_analysis)?,
-                    }
-                } else {
-                    analyze_test_file(test_file, &test_analysis)?
-                };
-                result.edges.extend(file_analysis.edges);
-                result
-                    .helper_references
-                    .extend(file_analysis.helper_references);
-                Ok(result)
-            },
-        )
-        .try_reduce(
-            TestFileAnalysis::default,
-            |mut left, mut right| -> Result<_> {
-                left.edges.append(&mut right.edges);
-                left.helper_references.append(&mut right.helper_references);
-                Ok(left)
-            },
-        )?;
+    let mut test_analysis_result =
+        crate::perf_trace::trace("playwright.test_file_analysis", || {
+            analyze_test_files(&test_files, &test_analysis, facts)
+        })?;
 
     let mut edges = test_analysis_result.edges;
     test_analysis_result.helper_references.sort();
@@ -177,23 +154,27 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
     let fetch_idx = if routes.is_empty() {
         Default::default()
     } else {
-        collect_fetches_for_routes(&routes, &route_root, root)?
+        crate::perf_trace::trace("playwright.fetches_for_routes", || {
+            collect_fetches_for_routes(&routes, &route_root, root)
+        })?
     };
     edges.extend(expand_fetch_edges(&edges, &fetch_idx));
     edges.sort();
     edges.dedup();
 
     let edge_report = EdgeReport { edges };
-    let coverage = build_coverage(CoverageInputs {
-        root,
-        routes: &routes,
-        app_selectors: &app_selectors,
-        app_selector_occurrences: &app_selector_occurrences,
-        edges: &edge_report.edges,
-        helper_references: &test_analysis_result.helper_references,
-        settings,
-        unique_selector_policy,
-        fetch_index: &fetch_idx,
+    let coverage = crate::perf_trace::trace("playwright.build_coverage", || {
+        build_coverage(CoverageInputs {
+            root,
+            routes: &routes,
+            app_selectors: &app_selectors,
+            app_selector_occurrences: &app_selector_occurrences,
+            edges: &edge_report.edges,
+            helper_references: &test_analysis_result.helper_references,
+            settings,
+            unique_selector_policy,
+            fetch_index: &fetch_idx,
+        })
     });
     Ok(Analysis {
         coverage,
