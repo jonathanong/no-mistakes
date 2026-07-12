@@ -41,21 +41,14 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
     // analysis, which will emit its own warning about the missing baseline.
     let has_explicit_files = !args.changed_file.is_empty() || args.changed_files.is_some();
 
-    // `--from-git-diff <refspec>` is sugar over `--base`/`--head`: it desugars
-    // to the same (base, head) pair here so both paths run the identical
-    // `git diff --name-status` lookup below. `--from-git-diff` takes
-    // precedence when both are set (clap's `conflicts_with_all` already
-    // rejects that combination on the CLI; programmatic callers going through
-    // the N-API options struct are not bound by clap's conflict checks).
-    let git_ref = match &args.from_git_diff {
-        Some(spec) => Some(parse_git_diff_refspec(spec)?),
-        None => args
-            .base
-            .as_ref()
-            .map(|base| (base.clone(), args.head.clone())),
-    };
-    if let Some((base, head)) = git_ref {
-        match get_git_changed_files(root, &base, head.as_deref()) {
+    // `--from-git-diff <refspec>` is resolved into base/head once, up front, by
+    // `generate_plan` (before this function is ever called) — not here — so
+    // that every consumer of args.base/args.head (this git-diff lookup AND
+    // `analyze_lockfile_changes`, which reads the same fields directly) sees
+    // an identical, already-desugared pair. By the time `args` reaches this
+    // function, `args.from_git_diff` is always `None`.
+    if let Some(ref base) = args.base {
+        match get_git_changed_files(root, base, args.head.as_deref()) {
             Ok(git_files) => {
                 for f in git_files.files {
                     files.push(root.join(f));

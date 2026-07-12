@@ -15,6 +15,15 @@ fn fixture_dir(name: &str) -> PathBuf {
         .join(name)
 }
 
+// Shares the `workspace-package-bump` fixture with cli_tests_plan_lockfile2.rs
+// (same repo-relative fixture files, no duplication) to prove --from-git-diff
+// traces lockfile package changes exactly like --base/--head.
+fn lockfile_fixture_dir(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/tests-plan-lockfile")
+        .join(name)
+}
+
 fn copy_dir_all(src: &std::path::Path, dst: &std::path::Path) {
     std::fs::create_dir_all(dst).unwrap();
     for entry in std::fs::read_dir(src).unwrap() {
@@ -237,5 +246,71 @@ fn from_git_diff_conflicts_with_base() {
     assert!(
         !output.status.success(),
         "--from-git-diff and --base must conflict on the CLI"
+    );
+}
+
+// Regression for a review finding on #508: analyze_lockfile_changes reads
+// args.base/args.head directly, so --from-git-diff must resolve into those
+// fields (in generate_plan, before collect_changed_files/lockfile analysis
+// run) rather than only being consulted locally inside the changed-file
+// git-diff lookup. Otherwise a diff that bumps a workspace package would
+// silently lose lockfile-package tracing and fall back with
+// lockfile-no-baseline under --from-git-diff even though the equivalent
+// --base/--head invocation traces it correctly.
+#[test]
+fn from_git_diff_traces_lockfile_package_bump_like_base_head() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    copy_dir_all(
+        &lockfile_fixture_dir("workspace-package-bump/initial"),
+        root,
+    );
+    setup_git_repo(root);
+
+    std::fs::copy(
+        lockfile_fixture_dir("workspace-package-bump/after-pnpm-lock.yaml"),
+        root.join("pnpm-lock.yaml"),
+    )
+    .unwrap();
+    git_commit_all(root, "bump workspace package");
+
+    let output = Command::new(bin())
+        .args([
+            "tests",
+            "plan",
+            "--root",
+            root.to_str().unwrap(),
+            "--changed-file",
+            "pnpm-lock.yaml",
+            "--from-git-diff",
+            "HEAD~1...HEAD",
+            "--json",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let warnings = plan["warnings"].as_array().unwrap();
+    assert!(
+        !warnings
+            .iter()
+            .any(|w| w["type"] == "lockfile-no-baseline"),
+        "--from-git-diff must resolve base/head for lockfile analysis, not just changed-file lookup: {warnings:?}"
+    );
+    assert!(
+        !plan["fallback_triggered"].as_bool().unwrap(),
+        "workspace package bump should be traceable via --from-git-diff, not fall back: {plan:?}"
+    );
+    let selected = plan["selected_tests"].as_array().unwrap();
+    assert!(
+        selected
+            .iter()
+            .any(|t| t["test_file"].as_str().unwrap().contains("utils.test")),
+        "should trace workspace package lib to utils.test.ts via --from-git-diff: {selected:?}"
     );
 }

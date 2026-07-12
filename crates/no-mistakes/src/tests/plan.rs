@@ -47,6 +47,26 @@ pub(crate) fn run(args: PlanArgs) -> Result<ExitCode> {
 const _: fn(PlanArgs) -> Result<ExitCode> = run;
 
 pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
+    // Resolve --from-git-diff into base/head once, up front, so every
+    // downstream consumer of args.base/args.head sees the same pair —
+    // not just `collect_changed_files`'s own git-diff lookup. Without this,
+    // `analyze_lockfile_changes` (which reads args.base/args.head directly to
+    // `git show` lockfile contents) would see neither set, and a diff that
+    // touches a lockfile would silently lose package-impact tracing under
+    // --from-git-diff even though the changed-file list traced correctly.
+    let resolved_args;
+    let args = if let Some(spec) = &args.from_git_diff {
+        let (base, head) = super::changed_files::parse_git_diff_refspec(spec)?;
+        let mut cloned = args.clone();
+        cloned.base = Some(base);
+        cloned.head = head;
+        cloned.from_git_diff = None;
+        resolved_args = cloned;
+        &resolved_args
+    } else {
+        args
+    };
+
     let cwd = std::env::current_dir().context("cwd must be accessible")?;
     let root = no_mistakes::cli::resolve_optional_root(Some(&args.root), &cwd);
     let root = no_mistakes::codebase::ts_resolver::normalize_path(&root);
