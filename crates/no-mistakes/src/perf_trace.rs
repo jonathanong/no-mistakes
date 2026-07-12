@@ -38,14 +38,19 @@ pub fn record(label: &str, elapsed: Duration) {
     }
 }
 
-/// Time `f` and report it under `label` via [`record`] regardless of whether
-/// tracing is enabled (the `Instant::now()` call is cheap enough not to
-/// bother skipping). Returns `f`'s result unchanged.
+/// Time `f` and report it under `label` via [`record`] when tracing is
+/// enabled; otherwise just calls `f`, skipping the `Instant::now()` calls so
+/// a `trace`-wrapped call added inside a future hot inner loop stays free
+/// when the flag is off. Returns `f`'s result unchanged.
 pub fn trace<T>(label: &str, f: impl FnOnce() -> T) -> T {
-    let start = Instant::now();
-    let result = f();
-    record(label, start.elapsed());
-    result
+    if enabled() {
+        let start = Instant::now();
+        let result = f();
+        record(label, start.elapsed());
+        result
+    } else {
+        f()
+    }
 }
 
 #[cfg(test)]
