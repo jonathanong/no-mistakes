@@ -40,12 +40,14 @@ words:
   - refspecs
   - rustfmt
   - serde
+  - sgconfig
   - shellcheck
   - shasum
   - subdirs
   - subpaths
   - tokei
   - tsconfig
+  - ungated
   - valkey
   - vitest
   - worktree

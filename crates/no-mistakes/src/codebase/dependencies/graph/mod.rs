@@ -21,6 +21,19 @@ include!("edge_maps.rs");
 
 pub(crate) trait TsFactLookup: Sync {
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts>;
+
+    /// Already-collected Playwright test-file facts (URLs, selectors, text
+    /// locators, helper references), when available. Lets a consumer skip
+    /// re-parsing/re-analyzing a test file it already has facts for.
+    /// `TsFactMap` never carries these (only `CheckFactMap` does), so the
+    /// default returns `None` — callers must already tolerate a per-file
+    /// `None` by falling back to full analysis for that file.
+    fn get_playwright_facts(
+        &self,
+        _path: &Path,
+    ) -> Option<&crate::codebase::check_facts::PlaywrightTestFacts> {
+        None
+    }
 }
 
 impl TsFactLookup for TsFactMap {
@@ -32,6 +45,15 @@ impl TsFactLookup for TsFactMap {
 impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
         self.ts.get(path).map(|facts| &facts.ts)
+    }
+
+    fn get_playwright_facts(
+        &self,
+        path: &Path,
+    ) -> Option<&crate::codebase::check_facts::PlaywrightTestFacts> {
+        self.ts
+            .get(path)
+            .and_then(|facts| facts.playwright.as_ref())
     }
 }
 

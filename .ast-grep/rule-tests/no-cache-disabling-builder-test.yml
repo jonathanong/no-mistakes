@@ -1,0 +1,49 @@
+id: no-cache-disabling-builder
+valid:
+  - |
+    impl<'a> ImportResolver<'a> {
+        pub fn with_visible(mut self, visible: &'a HashSet<PathBuf>) -> Self {
+            self.cache.clear();
+            self.visible = Some(visible);
+            self
+        }
+    }
+  - |
+    impl<'a> ImportResolver<'a> {
+        pub fn without_cache(mut self) -> Self {
+            self.cache_enabled = false;
+            self
+        }
+    }
+  - |
+    impl Foo {
+        pub fn with_caching(mut self) -> Self {
+            self.cache_enabled = true;
+            self
+        }
+    }
+  - |
+    impl Foo {
+        pub fn set_cache_flag(&mut self, v: bool) -> Self {
+            self.cache_enabled = false;
+            self
+        }
+    }
+invalid:
+  - |
+    impl<'a> ImportResolver<'a> {
+        pub fn with_visible(mut self, visible: &'a HashSet<PathBuf>) -> Self {
+            self.visible = Some(visible);
+            self.cache_enabled = false;
+            self
+        }
+    }
+  - |
+    impl Foo {
+        pub fn with_something(mut self, flag: bool) -> Self {
+            if flag {
+                self.cache_enabled = false;
+            }
+            self
+        }
+    }

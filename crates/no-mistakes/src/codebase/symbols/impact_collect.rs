@@ -84,10 +84,17 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         }
         entries.extend(file_entries);
     }
-    let production_extra_callers =
-        local_caller_entries(&graph, &target_symbols, &root, &tsconfig, &test_filter, false);
+    let local_caller_context = prepare_local_caller_context(&graph, &root);
+    let production_extra_callers = local_caller_entries(
+        &local_caller_context,
+        &target_symbols,
+        &root,
+        &tsconfig,
+        &test_filter,
+        false,
+    );
     let test_extra_callers = local_caller_entries(
-        &graph,
+        &local_caller_context,
         &target_symbols,
         &root,
         &tsconfig,
@@ -132,9 +139,44 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
     })
 }
 
+/// Shared, `want_tests`-independent inputs for [`local_caller_entries`], computed once per
+/// `signature-impact` run and reused for both the production and test passes.
+struct LocalCallerContext {
+    facts: crate::codebase::ts_source::facts::TsFactMap,
+    workspace: crate::codebase::workspaces::WorkspaceMap,
+}
+
+/// Discovers indexable files once, parses them once for import/symbol facts, and resolves the
+/// workspace map once, so [`local_caller_entries`] can be called for both `want_tests` values
+/// without repeating the file walk, parse pass, or workspace resolution.
+///
+/// The workspace map intentionally uses `crate::codebase::ts_source::discover_files` (the same
+/// `.gitignore`-aware walk the dependency graph itself uses to seed `workspaces::load_from_files`
+/// in `graph/builder.rs`) rather than `graph.all_files()`. The graph only exposes indexable
+/// TS/JS file nodes, which never include `package.json`, so feeding that narrower list into
+/// `load_from_files` would silently resolve zero workspace packages.
+fn prepare_local_caller_context(graph: &DepGraph, root: &Path) -> LocalCallerContext {
+    let files: BTreeSet<PathBuf> = graph
+        .all_files()
+        .filter_map(NodeId::as_file)
+        .map(Path::to_path_buf)
+        .collect();
+    let files: Vec<_> = files.into_iter().collect();
+    let discovery_files = crate::codebase::ts_source::discover_files(root, &[]);
+    let workspace =
+        crate::codebase::workspaces::load_from_files(root, &discovery_files).unwrap_or_default();
+    let facts = crate::codebase::ts_source::facts::collect_ts_facts(
+        &files,
+        crate::codebase::ts_source::facts::TsFactPlan::imports_and_symbols(),
+    );
+    LocalCallerContext { facts, workspace }
+}
+
 include!("impact_collect_exports.rs");
 
 #[cfg(test)]
 mod impact_collect_caller_tests;
+#[cfg(test)]
+mod impact_collect_caller_context_tests;
 #[cfg(test)]
 mod impact_collect_tests;

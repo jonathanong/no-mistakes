@@ -2,12 +2,13 @@
 
 const { createHash, randomBytes } = require("node:crypto");
 const { closeSync, createReadStream, existsSync, openSync, readSync } = require("node:fs");
-const { chmod, mkdir, rename, rm } = require("node:fs/promises");
+const { chmod, mkdir, rename, rm, writeFile } = require("node:fs/promises");
 const { join } = require("node:path");
 
 const { assetName, parseChecksum, releaseBaseUrl } = require("./assets");
 const { download, fetchText } = require("./download");
 const { platformTarget, supportedGlibc } = require("./platform");
+const { installedVersion, versionMarkerPath } = require("./version-marker");
 
 const PLACEHOLDER_TEXT = "Native binary placeholder.";
 const PLACEHOLDER_READ_BYTES = 256;
@@ -48,7 +49,12 @@ async function install(binName, repository, options = {}) {
     );
   }
 
-  if (options.checkExisting && destinationExists && !destinationIsPlaceholder) {
+  if (
+    options.checkExisting &&
+    destinationExists &&
+    !destinationIsPlaceholder &&
+    installedVersion(destination) === version
+  ) {
     return destination;
   }
 
@@ -84,6 +90,7 @@ async function install(binName, repository, options = {}) {
       await chmod(temp, 0o755);
     }
     await rename(temp, destination);
+    await writeFile(versionMarkerPath(destination), version);
     return destination;
   } catch (error) {
     await rm(temp, { force: true });
@@ -202,8 +209,10 @@ function unsupportedPlatformMessage(
 
 module.exports = {
   install,
+  installedVersion,
   isPlaceholder,
   sha256,
   unsupportedPlatformMessage,
   validateReleaseBaseUrl,
+  versionMarkerPath,
 };

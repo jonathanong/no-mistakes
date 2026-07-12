@@ -168,6 +168,7 @@ test("supports legacy install overloads and unsupported platform overload", asyn
   try {
     await mkdir(vendor, { recursive: true });
     await writeFile(custom, "custom");
+    await writeFile(core.versionMarkerPath(custom), "1.0.0");
     await writeFile(customDestination, "custom destination");
 
     assert.equal(executable.endsWith("bin/no-mistakes"), true);

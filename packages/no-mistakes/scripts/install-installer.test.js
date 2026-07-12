@@ -56,7 +56,7 @@ test("rejects unsupported install targets", async () => {
   );
 });
 
-test("skips existing binaries when requested", async () => {
+test("skips existing binaries when requested and the installed version matches", async () => {
   const root = await mkdtemp(join(tmpdir(), "no-mistakes-existing-"));
   const vendorDir = join(root, "vendor");
   const target = "x86_64-unknown-linux-gnu";
@@ -65,7 +65,65 @@ test("skips existing binaries when requested", async () => {
   try {
     await mkdir(vendorDir, { recursive: true });
     await writeFile(existing, "already here");
+    await writeFile(core.versionMarkerPath(existing), version);
     assert.equal(await install({ checkExisting: true, target, vendorDir, version }), existing);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// Regression test: checkExisting must not treat "a file happens to be at the
+// destination" as "the requested version is already installed." Without a
+// version marker (e.g. a binary left behind by an older no-mistakes release
+// whose postinstall predates version marking, or one belonging to a
+// different version that a package manager didn't fully replace on upgrade),
+// checkExisting previously skipped the download unconditionally — silently
+// stranding users on a stale binary indefinitely. It must fall through to a
+// real (re)download whenever the marker is missing or names a different
+// version, then leave a marker for the version it actually installed.
+test("redownloads when checkExisting finds no version marker or a stale one", async () => {
+  const root = await mkdtemp(join(tmpdir(), "no-mistakes-stale-"));
+  const vendorDir = join(root, "vendor");
+  const target = "x86_64-unknown-linux-gnu";
+  const destination = join(vendorDir, executableName(target));
+  const asset = assetName(version, target);
+  const content = Buffer.from("#!/bin/sh\nexit 0\n");
+  const hash = createHash("sha256").update(content).digest("hex");
+
+  await mkdir(join(root, "assets"));
+  await writeFile(join(root, "assets", asset), content);
+  await writeFile(join(root, "assets", `${asset}.sha256`), `${hash}  ${asset}\n`);
+
+  try {
+    // Case 1: destination exists but has no version marker at all (as if left
+    // by a pre-version-marking install).
+    await mkdir(vendorDir, { recursive: true });
+    await writeFile(destination, "old binary, no marker");
+    await install({ baseUrl: assetBaseUrl(root), checkExisting: true, target, vendorDir, version });
+    assert.equal(await readFile(destination, "utf8"), content.toString("utf8"));
+    assert.equal(await readFile(core.versionMarkerPath(destination), "utf8"), version);
+
+    // Case 2: destination exists with a marker naming a different (older) version.
+    await writeFile(destination, "old binary, stale marker");
+    await writeFile(core.versionMarkerPath(destination), "1.0.0");
+    await install({ baseUrl: assetBaseUrl(root), checkExisting: true, target, vendorDir, version });
+    assert.equal(await readFile(destination, "utf8"), content.toString("utf8"));
+    assert.equal(await readFile(core.versionMarkerPath(destination), "utf8"), version);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("installedVersion propagates unexpected read errors instead of treating them as missing", async () => {
+  const root = await mkdtemp(join(tmpdir(), "no-mistakes-marker-error-"));
+  const vendorDir = join(root, "vendor");
+  const destination = join(vendorDir, executableName("x86_64-unknown-linux-gnu"));
+
+  try {
+    await mkdir(vendorDir, { recursive: true });
+    // A directory at the marker path triggers EISDIR, not ENOENT.
+    await mkdir(core.versionMarkerPath(destination));
+    assert.throws(() => core.installedVersion(destination), /EISDIR/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

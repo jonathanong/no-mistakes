@@ -10,8 +10,12 @@
 /// The direction mirrors `EdgeKind::TestOf` (test depends on source) so that
 /// `dependents_of(app_file)` returns tests that cover it via selector-based
 /// paths, even with no URL-navigation route connecting them.
-pub(super) fn collect_playwright_selector_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edge> {
-    let Ok(analysis) = run_playwright_selector_analysis(root) else {
+pub(super) fn collect_playwright_selector_edges(
+    root: &Path,
+    all_files: &[PathBuf],
+    facts: Option<&dyn TsFactLookup>,
+) -> Vec<Edge> {
+    let Ok(analysis) = run_playwright_selector_analysis(root, facts) else {
         return vec![];
     };
     // Use the graph's pre-discovered file set to filter: only emit edges whose
@@ -61,6 +65,7 @@ fn selector_dep_edge(root: &Path, edge: &crate::playwright::analysis::types::Edg
 
 fn run_playwright_selector_analysis(
     root: &Path,
+    facts: Option<&dyn TsFactLookup>,
 ) -> anyhow::Result<crate::playwright::analysis::types::Analysis> {
     let settings = crate::playwright::config::load_settings(root, None, &[], None)?;
     let test_policy = crate::playwright::playwright_tests::TestPolicy {
@@ -70,10 +75,22 @@ fn run_playwright_selector_analysis(
     let unique_policy = crate::playwright::analysis::types::UniqueSelectorPolicy::default();
     // Use the selectors-only pipeline: does not require Next.js routes to exist,
     // so selector edges work for components that have no direct route coverage.
-    crate::playwright::analysis::pipeline_selectors::analyze_selectors_with_policy(
-        root,
-        &settings,
-        test_policy,
-        unique_policy,
-    )
+    // Reuse already-collected Playwright test-file facts when the caller has
+    // them (e.g. `check`'s shared CheckFactMap) instead of re-parsing and
+    // re-analyzing every test file from scratch.
+    match facts {
+        Some(facts) => crate::playwright::analysis::pipeline_selectors::analyze_selectors_with_policy_and_facts(
+            root,
+            &settings,
+            test_policy,
+            unique_policy,
+            facts,
+        ),
+        None => crate::playwright::analysis::pipeline_selectors::analyze_selectors_with_policy(
+            root,
+            &settings,
+            test_policy,
+            unique_policy,
+        ),
+    }
 }

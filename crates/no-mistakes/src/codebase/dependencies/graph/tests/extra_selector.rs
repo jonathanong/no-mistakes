@@ -83,7 +83,7 @@ fn collect_playwright_selector_edges_returns_empty_without_playwright_config() {
     // A fixture with no playwright config should return empty without panicking.
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("simple"));
     let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
-    let edges = collect_playwright_selector_edges(&root, &all_files);
+    let edges = collect_playwright_selector_edges(&root, &all_files, None);
     // No playwright config → error → empty vec (graceful fallback).
     assert!(edges.is_empty());
 }
@@ -96,7 +96,7 @@ fn collect_playwright_selector_edges_returns_edges_for_route_group_fixture() {
         .join("../../test-cases/codebase-analysis/playwright-coverage-route-group/fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
-    let edges = collect_playwright_selector_edges(&root, &all_files);
+    let edges = collect_playwright_selector_edges(&root, &all_files, None);
     assert!(
         !edges.is_empty(),
         "expected selector edges from playwright-coverage-route-group fixture"
@@ -123,7 +123,7 @@ fn collect_playwright_selector_edges_returns_edges_for_fixture_with_selectors() 
         .join("../../test-cases/nextjs-selectors/selector-covered/fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
-    let edges = collect_playwright_selector_edges(&root, &all_files);
+    let edges = collect_playwright_selector_edges(&root, &all_files, None);
     assert!(
         !edges.is_empty(),
         "expected selector edges from nextjs-selectors/selector-covered fixture"
@@ -142,10 +142,82 @@ fn collect_playwright_selector_edges_filters_to_all_files_set() {
         .join("../../test-cases/codebase-analysis/playwright-coverage-route-group/fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     // Pass an empty file list — all candidate edge endpoints are outside the set.
-    let edges = collect_playwright_selector_edges(&root, &[]);
+    let edges = collect_playwright_selector_edges(&root, &[], None);
     assert!(
         edges.is_empty(),
         "edges outside all_files set must be filtered out, got: {edges:?}"
+    );
+}
+
+/// Regression test: `collect_playwright_selector_edges` must produce the same
+/// edges whether or not it's handed already-collected Playwright facts. The
+/// facts-aware path (`analyze_test_occurrences`, reusing cached URLs/
+/// selectors/text-locators/helper-references) exists specifically so a
+/// `DepGraph` build sharing a `CheckFactMap` (e.g. `check`'s `forbidden-
+/// dependencies` rule) doesn't re-parse and re-analyze every Playwright test
+/// file from scratch — a real, measured cost on large repos. This proves that
+/// reuse path is wired correctly and doesn't silently drop or duplicate edges.
+#[test]
+fn collect_playwright_selector_edges_matches_with_and_without_shared_facts() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/playwright-coverage-route-group/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    // Build the PlaywrightFactPlan directly from Playwright *settings* (which
+    // this fixture has) rather than via `playwright::rules::fact_plan`, which
+    // additionally requires a Playwright *rule* to be configured — an
+    // unrelated, orthogonal gate this fixture intentionally leaves unset.
+    let settings = crate::playwright::config::load_settings(&root, None, &[], None).unwrap();
+    let selector_regexes = std::sync::Arc::new(
+        crate::playwright::selectors::compile_selector_regexes_with_html_ids(
+            &settings.selector_attributes,
+            &settings.component_selector_attributes,
+            settings.html_ids,
+        ),
+    );
+    let playwright_configs = crate::playwright::playwright_config::load_many(
+        &root,
+        &settings.playwright_configs,
+        settings.project.as_deref(),
+    )
+    .unwrap();
+    let mut test_id_attributes_by_path = std::collections::HashMap::new();
+    for test_file in
+        crate::playwright::analysis::discover::discover_test_files(&root, &settings, &playwright_configs)
+            .unwrap()
+    {
+        let attributes = test_file.test_id_attributes();
+        test_id_attributes_by_path.insert(test_file.path, attributes);
+    }
+    assert!(
+        !test_id_attributes_by_path.is_empty(),
+        "sanity check: fixture must have discoverable Playwright test files"
+    );
+    let playwright_plan = crate::codebase::check_facts::PlaywrightFactPlan {
+        navigation_helpers: settings.navigation_helpers.clone(),
+        selector_regexes,
+        test_id_attributes_by_path: std::sync::Arc::new(test_id_attributes_by_path),
+    };
+    let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let facts = crate::codebase::check_facts::collect_check_facts_with_playwright(
+        &root,
+        all_files.clone(),
+        crate::codebase::check_facts::CheckFactPlan::default(),
+        Some(playwright_plan),
+    );
+
+    let mut edges_without_facts = collect_playwright_selector_edges(&root, &all_files, None);
+    let mut edges_with_facts =
+        collect_playwright_selector_edges(&root, &all_files, Some(&facts));
+    edges_without_facts.sort();
+    edges_with_facts.sort();
+
+    assert!(
+        !edges_without_facts.is_empty(),
+        "sanity check: fixture must produce selector edges"
+    );
+    assert_eq!(
+        edges_without_facts, edges_with_facts,
+        "reusing shared Playwright facts must not change which edges are produced"
     );
 }
 

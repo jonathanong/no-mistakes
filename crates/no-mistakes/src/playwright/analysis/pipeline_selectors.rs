@@ -26,7 +26,7 @@ pub(crate) fn analyze_selectors_with_policy_and_facts(
     settings: &config::Settings,
     test_policy: playwright_tests::TestPolicy,
     unique_selector_policy: UniqueSelectorPolicy,
-    facts: &crate::codebase::check_facts::CheckFactMap,
+    facts: &dyn crate::codebase::dependencies::graph::TsFactLookup,
 ) -> Result<Analysis> {
     analyze_with_policy_and_optional_facts(
         root,

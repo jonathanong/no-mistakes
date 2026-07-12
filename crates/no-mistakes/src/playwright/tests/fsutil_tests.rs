@@ -6,6 +6,46 @@ use crate::playwright::test_support::fixture_path;
 use anyhow::Result;
 use std::collections::BTreeMap;
 use std::path::Path;
+use std::process::Command;
+use tempfile::TempDir;
+
+fn git_init(dir: &Path) {
+    let output = Command::new("git")
+        .args(["init", "-q", "--initial-branch=main"])
+        .current_dir(dir)
+        .env_remove("GIT_DIR")
+        .env_remove("GIT_WORK_TREE")
+        .env_remove("GIT_INDEX_FILE")
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "git init failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+fn git_add_all(dir: &Path) {
+    let output = Command::new("git")
+        .args(["add", "."])
+        .current_dir(dir)
+        .env_remove("GIT_DIR")
+        .env_remove("GIT_WORK_TREE")
+        .env_remove("GIT_INDEX_FILE")
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "git add failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+fn write(dir: &Path, path: &str, content: &str) {
+    let full = dir.join(path);
+    std::fs::create_dir_all(full.parent().unwrap()).unwrap();
+    std::fs::write(full, content).unwrap();
+}
 
 fn collect_app_selectors(
     root: &Path,
@@ -131,4 +171,70 @@ fn collect_app_selectors_honors_include_and_exclude_globs() {
     let selectors = collect_app_selectors(&root, &settings, &selector_regexes).unwrap();
 
     assert!(selectors.is_empty());
+}
+
+/// Regression test for `walk_files` doing a raw, `.gitignore`-blind recursive
+/// walk instead of deriving candidates from the git-visible file list. Before
+/// the fix, a matching file placed inside a gitignored directory would still
+/// be visited and returned, even though no discovery consumer of `walk_files`
+/// would ever see it survive `git ls-files`.
+#[test]
+fn walk_files_prefers_git_visible_files_over_gitignored_directory() {
+    let dir = TempDir::new().unwrap();
+    git_init(dir.path());
+    write(dir.path(), ".gitignore", "vendor/\n");
+    write(
+        dir.path(),
+        "src/App.tsx",
+        "export default function App() {}\n",
+    );
+    write(
+        dir.path(),
+        "vendor/nested/Trap.tsx",
+        "export default function Trap() {}\n",
+    );
+    git_add_all(dir.path());
+
+    let files: Vec<String> = walk_files(dir.path())
+        .into_iter()
+        .map(|path| relative_string(dir.path(), &path))
+        .collect();
+
+    assert_eq!(files, vec![".gitignore", "src/App.tsx"]);
+}
+
+/// The git-derived path still applies `is_skipped_dir`: a directory on the
+/// hardcoded denylist must be excluded even when git tracks it directly
+/// (i.e. it is not merely relying on `.gitignore` to prune it).
+#[test]
+fn walk_files_still_skips_hardcoded_dirs_when_git_tracked() {
+    let dir = TempDir::new().unwrap();
+    git_init(dir.path());
+    write(dir.path(), "src/App.tsx", "");
+    write(dir.path(), "node_modules/pkg/index.tsx", "");
+    git_add_all(dir.path());
+
+    let files: Vec<String> = walk_files(dir.path())
+        .into_iter()
+        .map(|path| relative_string(dir.path(), &path))
+        .collect();
+
+    assert_eq!(files, vec!["src/App.tsx"]);
+}
+
+/// Outside a git repository, `walk_files` still falls back to the raw
+/// `WalkDir` walk, since there is no git-visible file list to derive
+/// candidates from.
+#[test]
+fn walk_files_falls_back_to_raw_walk_outside_git_repositories() {
+    let dir = TempDir::new().unwrap();
+    write(dir.path(), "src/App.tsx", "");
+    write(dir.path(), "node_modules/pkg/index.tsx", "");
+
+    let files: Vec<String> = walk_files(dir.path())
+        .into_iter()
+        .map(|path| relative_string(dir.path(), &path))
+        .collect();
+
+    assert_eq!(files, vec!["src/App.tsx"]);
 }
