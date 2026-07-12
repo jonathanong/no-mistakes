@@ -108,19 +108,17 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
         scan_html_ids: bool,
         compute: &dyn Fn() -> Result<Vec<crate::playwright::selectors::AppSelector>>,
     ) -> Result<Arc<Vec<crate::playwright::selectors::AppSelector>>> {
-        if let Some(cached) = self.app_selector_occurrences_cache.get(&scan_html_ids) {
-            return Ok(cached.clone());
-        }
-        // As with the OnceLock-backed caches below, the fallible compute
-        // happens outside any lock: `compute` may run more than once under a
-        // genuine race, but `entry(..).or_insert_with(..)` still inserts
-        // exactly once and every caller ends up with the same cached Arc.
-        let computed = Arc::new(compute()?);
-        Ok(self
-            .app_selector_occurrences_cache
+        // `OnceLock::get_or_try_init` is not yet stable, so a fallible
+        // `entry(..).or_insert_with(..)` closure is the only way to keep the
+        // *compute itself* — not just the insert — inside the per-key lock:
+        // errors are cached as `String` (`anyhow::Error` isn't `Clone`) so two
+        // concurrent misses can't both pay the full scan before either caches
+        // it.
+        self.app_selector_occurrences_cache
             .entry(scan_html_ids)
-            .or_insert_with(|| computed.clone())
-            .clone())
+            .or_insert_with(|| compute().map(Arc::new).map_err(|error| format!("{error:#}")))
+            .clone()
+            .map_err(anyhow::Error::msg)
     }
 
     fn get_or_compute_playwright_routes(
@@ -136,31 +134,19 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
         &self,
         compute: &dyn Fn() -> Result<Vec<crate::playwright::analysis::text_types::AppTextTarget>>,
     ) -> Result<Arc<Vec<crate::playwright::analysis::text_types::AppTextTarget>>> {
-        // `OnceLock::get_or_try_init` is not yet stable, so the fallible
-        // compute happens outside the lock: `compute` may run more than once
-        // under a genuine race, but it's deterministic, so a benign race just
-        // means both threads agree on the value that ends up cached.
-        if let Some(cached) = self.app_text_targets_cache.get() {
-            return Ok(cached.clone());
-        }
-        let computed = Arc::new(compute()?);
-        Ok(self
-            .app_text_targets_cache
-            .get_or_init(|| computed.clone())
-            .clone())
+        self.app_text_targets_cache
+            .get_or_init(|| compute().map(Arc::new).map_err(|error| format!("{error:#}")))
+            .clone()
+            .map_err(anyhow::Error::msg)
     }
 
     fn get_or_compute_route_reachable_files(
         &self,
         compute: &dyn Fn() -> Result<RouteReachableFiles>,
     ) -> Result<Arc<RouteReachableFiles>> {
-        if let Some(cached) = self.route_reachable_files_cache.get() {
-            return Ok(cached.clone());
-        }
-        let computed = Arc::new(compute()?);
-        Ok(self
-            .route_reachable_files_cache
-            .get_or_init(|| computed.clone())
-            .clone())
+        self.route_reachable_files_cache
+            .get_or_init(|| compute().map(Arc::new).map_err(|error| format!("{error:#}")))
+            .clone()
+            .map_err(anyhow::Error::msg)
     }
 }
