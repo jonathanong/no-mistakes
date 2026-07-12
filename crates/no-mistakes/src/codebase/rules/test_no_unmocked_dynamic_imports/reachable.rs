@@ -47,6 +47,14 @@ pub(super) fn collect(
         {
             continue;
         }
+        // A reachable file that is itself a mocked target never executes its own body
+        // (the mock factory fully replaces it), so its internal imports must not be
+        // scanned. Without this, a typed mock specifier's `import(...)` carrier (or any
+        // other coincidental dynamic-import edge to a mocked module) makes the mocked
+        // module's own dependencies look "reachable" and produces false positives. See #506.
+        if mocks.contains(file) {
+            continue;
+        }
         if let Some(shared) = ctx.shared {
             if let Some(file_facts) = shared.ts.get(file) {
                 if file_facts.parse_error.is_some() {
