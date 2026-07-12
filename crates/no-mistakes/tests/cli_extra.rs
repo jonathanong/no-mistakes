@@ -246,6 +246,49 @@ fn global_check_timings_are_reported_in_phase_order() {
 }
 
 #[test]
+fn global_check_verbose_timings_reports_fine_grained_labels() {
+    let root = fixture("codebase-analysis", "forbidden-dependencies-basic");
+    let output = run(&[
+        "check",
+        "--root",
+        root.to_str().unwrap(),
+        "--format",
+        "json",
+        "--timings",
+        "--verbose-timings",
+    ]);
+
+    assert_eq!(output.status.code(), Some(1));
+    let err = stderr(&output);
+    for label in ["rules.forbidden_dependencies:", "graph.imports:"] {
+        assert!(
+            err.contains(label),
+            "expected verbose timing label {label} in stderr: {err}"
+        );
+    }
+}
+
+#[test]
+fn global_check_without_verbose_timings_omits_fine_grained_labels() {
+    let root = fixture("codebase-analysis", "forbidden-dependencies-basic");
+    let output = run(&[
+        "check",
+        "--root",
+        root.to_str().unwrap(),
+        "--format",
+        "json",
+        "--timings",
+    ]);
+
+    assert_eq!(output.status.code(), Some(1));
+    let err = stderr(&output);
+    assert!(
+        !err.contains("rules.forbidden_dependencies:") && !err.contains("graph.imports:"),
+        "verbose timing labels should not appear without --verbose-timings: {err}"
+    );
+}
+
+#[test]
 fn global_check_reports_integration_suite_findings() {
     let root = fixture("integration-tests", "basic");
     let json_output = run(&["check", "--root", root.to_str().unwrap(), "--json"]);

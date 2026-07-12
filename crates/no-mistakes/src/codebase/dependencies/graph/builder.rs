@@ -59,98 +59,6 @@ impl DepGraph {
             Default::default()
         };
 
-        if plan.imports {
-            let import_edges =
-                collect_import_edges(&parsed_imports, &resolver, &workspace, graph_files);
-            merge_edges(&mut forward, &mut reverse, import_edges);
-        }
-
-        if plan.workspace {
-            let workspace_edges =
-                collect_workspace_edges(&parsed_imports, &resolver, &workspace, graph_files);
-            merge_edges(&mut forward, &mut reverse, workspace_edges);
-        }
-
-        if plan.package {
-            let workspace_manifest_edges =
-                collect_workspace_manifest_edges(&graph_files.all, &workspace, graph_files);
-            merge_edges(&mut forward, &mut reverse, workspace_manifest_edges);
-        }
-
-        if plan.assets {
-            merge_edges(
-                &mut forward,
-                &mut reverse,
-                collect_asset_edges(&parsed_imports, &resolver, graph_files),
-            );
-        }
-
-        if plan.symbols {
-            let symbol_edges = collect_symbol_edges(
-                root,
-                files,
-                &graph_files.all,
-                facts.expect("TS symbol facts are collected when symbol edges are requested"),
-                &resolver,
-                &workspace,
-                config_options.as_ref(),
-            );
-            merge_edges(&mut forward, &mut reverse, symbol_edges);
-        }
-
-        if plan.tests {
-            let test_edges = collect_test_edges(
-                root,
-                files,
-                config_options
-                    .as_ref()
-                    .and_then(|options| options.test_filter.as_ref()),
-            );
-            merge_edges(&mut forward, &mut reverse, test_edges);
-        }
-
-        if plan.markdown {
-            let md_edges = collect_md_edges(&graph_files.all, graph_files);
-            merge_edges(&mut forward, &mut reverse, md_edges);
-        }
-
-        if plan.ci {
-            add_ci_edges(root, &graph_files.all, &mut forward, &mut reverse);
-        }
-
-        if plan.routes {
-            let route_edges = collect_route_edges(
-                root,
-                tsconfig,
-                &graph_files.all,
-                facts,
-                config_options.as_ref(),
-            );
-            merge_edges(&mut forward, &mut reverse, route_edges);
-        }
-
-        if plan.queues {
-            add_queue_edges(
-                root,
-                &resolver,
-                files,
-                facts,
-                config_options.as_ref(),
-                &mut forward,
-                &mut reverse,
-            );
-        }
-
-        if plan.playwright_routes {
-            let playwright_edges = collect_playwright_route_edges(root, &graph_files.all);
-            merge_edges(&mut forward, &mut reverse, playwright_edges);
-        }
-
-        if plan.playwright_selectors {
-            let selector_edges = collect_playwright_selector_edges(root, &graph_files.all, facts);
-            merge_edges(&mut forward, &mut reverse, selector_edges);
-        }
-
         let edge_inputs = GraphEdgeBuildInputs {
             root,
             tsconfig,
@@ -158,16 +66,15 @@ impl DepGraph {
             graph_files,
             config_options: config_options.as_ref(),
         };
-        merge_http_process_edges(&edge_inputs, facts, &mut forward, &mut reverse);
-
-        if plan.react {
-            let react_edges = collect_react_render_edges(root, facts, graph_files.indexable());
-            merge_edges(&mut forward, &mut reverse, react_edges);
-        }
-
-        merge_dotnet_edges(&edge_inputs, &mut forward, &mut reverse);
-        merge_swift_edges(&edge_inputs, &mut forward, &mut reverse);
-        merge_terraform_edges(&edge_inputs, &mut forward, &mut reverse);
+        collect_and_merge_all_edges(
+            &edge_inputs,
+            facts,
+            &resolver,
+            &parsed_imports,
+            &workspace,
+            &mut forward,
+            &mut reverse,
+        );
 
         sort_adjacency_lists(&mut forward, &mut reverse);
 

@@ -15,6 +15,20 @@
 - No hardcoded domain defaults: route roots, HTTP prefixes, queue factories, and
   worker locations must be configured instead of inferred from repo conventions.
 
+### Diagnosing a performance regression
+
+Use `no-mistakes check --timings --verbose-timings` (`crates/no-mistakes/src/perf_trace.rs`)
+before reaching for a special instrumented build. `--verbose-timings` prints a
+`[timing] <label>: <ms>` line per hot path already wrapped in
+`crate::perf_trace::trace(label, || { ... })` — `rules.*`, `graph.*` (per
+`DepGraph` edge kind), `playwright.*`. Wrap new hot paths the same way instead of
+a temporary `eprintln!` timer reverted before commit.
+
+`cargo bench` in CI is diagnostic-only (no baseline/threshold); the real
+regression-prevention layer is the `ast-grep` rules under `.ast-grep/rules/`
+(`docs/ast-grep-rules.md`) plus regression tests proving buggy vs. fixed
+code paths disagree.
+
 ### Shared state in parallel loops
 
 Avoid `Mutex<HashMap<K, V>>` for caches accessed from rayon `par_iter()`. The

@@ -58,6 +58,7 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
 }
 
 include!("builder.rs");
+include!("builder_edges.rs");
 include!("builder_helpers.rs");
 include!("builder_entrypoints.rs");
 include!("methods_lazy.rs");
