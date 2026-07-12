@@ -1,8 +1,10 @@
 "use strict";
 
 const { createHash, randomBytes } = require("node:crypto");
-const { closeSync, createReadStream, existsSync, openSync, readSync } = require("node:fs");
-const { chmod, mkdir, rename, rm } = require("node:fs/promises");
+const { closeSync, createReadStream, existsSync, openSync, readFileSync, readSync } = require(
+  "node:fs",
+);
+const { chmod, mkdir, rename, rm, writeFile } = require("node:fs/promises");
 const { join } = require("node:path");
 
 const { assetName, parseChecksum, releaseBaseUrl } = require("./assets");
@@ -18,6 +20,28 @@ async function sha256(path) {
     hash.update(chunk);
   }
   return hash.digest("hex");
+}
+
+function versionMarkerPath(destination) {
+  return `${destination}.version`;
+}
+
+// The destination binary alone can't tell us which version it is (the CLI's
+// own --version requires spawning a process, and the N-API .node addon isn't
+// executable at all), so track the installed version in a small sidecar file
+// written right after a successful install. A missing or mismatched marker
+// means we can't prove the existing file matches the requested version, so
+// checkExisting must fall through to a real (re)download rather than trust
+// stale bytes left behind by an earlier install of a different version.
+function installedVersion(destination) {
+  try {
+    return readFileSync(versionMarkerPath(destination), "utf8").trim();
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return null;
+    }
+    throw error;
+  }
 }
 
 async function install(binName, repository, options = {}) {
@@ -48,7 +72,12 @@ async function install(binName, repository, options = {}) {
     );
   }
 
-  if (options.checkExisting && destinationExists && !destinationIsPlaceholder) {
+  if (
+    options.checkExisting &&
+    destinationExists &&
+    !destinationIsPlaceholder &&
+    installedVersion(destination) === version
+  ) {
     return destination;
   }
 
@@ -84,6 +113,7 @@ async function install(binName, repository, options = {}) {
       await chmod(temp, 0o755);
     }
     await rename(temp, destination);
+    await writeFile(versionMarkerPath(destination), version);
     return destination;
   } catch (error) {
     await rm(temp, { force: true });
@@ -202,8 +232,10 @@ function unsupportedPlatformMessage(
 
 module.exports = {
   install,
+  installedVersion,
   isPlaceholder,
   sha256,
   unsupportedPlatformMessage,
   validateReleaseBaseUrl,
+  versionMarkerPath,
 };
