@@ -31,6 +31,10 @@ impl<'a> ImportResolver<'a> {
     }
 
     pub fn with_visible(mut self, visible: &'a HashSet<PathBuf>) -> Self {
+        // Any entries cached before this call were resolved under different
+        // visibility (real filesystem, or an earlier `visible` set) and would
+        // otherwise leak stale answers into the new scope.
+        self.cache.clear();
         self.visible = Some(visible);
         self
     }
