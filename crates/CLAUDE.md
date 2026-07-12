@@ -77,6 +77,57 @@ fn expand_config_patterns(root: &Path, patterns: Vec<String>) -> Vec<ConfigFile>
 }
 ```
 
+### Never walk the tree without `.gitignore` awareness
+
+A raw recursive `std::fs::read_dir`/`WalkDir` walk has no `.gitignore` awareness beyond
+whatever directory names you hardcode into a denylist. Dependency stores, build
+caches, and other generated directories are routinely gitignored but not in any
+hardcoded skip list, so an unguarded walk can visit hundreds of thousands of entries
+per call on a real repo even though the equivalent `git ls-files` call returns
+instantly.
+
+Prefer, in order:
+1. Derive candidate paths from the already-discovered git-visible file list (tracked
+   files plus untracked files not excluded by `.gitignore`) instead of walking the
+   filesystem at all — a candidate only matters if it can contain a file that discovery
+   would otherwise surface, so this is both correct and touches zero extra I/O.
+2. If a walk is unavoidable (e.g. outside a git repository), use the `ignore` crate
+   (`WalkBuilder`) so `.gitignore` rules apply, not a hardcoded directory denylist.
+
+```rust
+// Bad – .gitignore-blind; visits every entry under `base`, including large ignored
+// directories that a hardcoded SKIP_DIRS list doesn't know about
+fn find_dirs_matching(base: &Path, name: &str) -> Vec<PathBuf> {
+    let mut out = Vec::new();
+    collect_recursive(base, name, &mut out); // raw std::fs::read_dir recursion
+    out
+}
+
+// Good – derive from the file list already known to be git-visible; only a
+// non-git fallback needs any filesystem walk, and that walk should still respect
+// .gitignore via the `ignore` crate
+fn find_dirs_matching(base: &Path, name: &str, git_files: Option<&[String]>) -> Vec<PathBuf> {
+    match git_files {
+        Some(files) => dirs_matching_from_files(base, name, files),
+        None => walk_with_ignore_crate(base, name),
+    }
+}
+```
+
+Root/prefix expansion (include globs, preserved roots, project roots) must reuse the
+single discovered file list, not trigger a fresh filesystem walk per pattern or per
+project — compute once, memoize per `(base, pattern)`, and early-return when there is
+nothing to expand.
+
+**Regression guard:** when fixing a walk like this, add a test proving the fast path is
+taken, not just that final output is unchanged — a `.gitignore`-blind walk and a
+git-aware one often produce the *same final file list* (later filtering hides the
+difference) while differing enormously in work done. A reliable way to prove which path
+executed: construct a case where the raw walk and the git-derived approach would
+disagree (e.g. a directory that exists on disk but contains no git-visible file, or a
+gitignored directory containing a nested match for the pattern) and assert on the
+disagreement, not just the end-to-end result.
+
 ### Pre-compute BFS traversals in parallel before the per-entity loop
 
 When every parallel work item needs a BFS traversal of the same graph, run all

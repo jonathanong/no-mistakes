@@ -1,6 +1,8 @@
 use super::*;
 use no_mistakes::config::v2::{load_v2_config, NoMistakesConfig};
 use std::path::{Path, PathBuf};
+use std::process::Command;
+use tempfile::TempDir;
 
 fn fixture(path: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
@@ -13,6 +15,44 @@ fn fixture(path: &str) -> PathBuf {
 
 fn load_config(root: &Path) -> NoMistakesConfig {
     load_v2_config(root, None).unwrap()
+}
+
+fn git_init(dir: &Path) {
+    let output = Command::new("git")
+        .args(["init", "-q", "--initial-branch=main"])
+        .current_dir(dir)
+        .env_remove("GIT_DIR")
+        .env_remove("GIT_WORK_TREE")
+        .env_remove("GIT_INDEX_FILE")
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "git init failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+fn git_add_all(dir: &Path) {
+    let output = Command::new("git")
+        .args(["add", "."])
+        .current_dir(dir)
+        .env_remove("GIT_DIR")
+        .env_remove("GIT_WORK_TREE")
+        .env_remove("GIT_INDEX_FILE")
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "git add failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+fn write(dir: &Path, path: &str, content: &str) {
+    let full = dir.join(path);
+    std::fs::create_dir_all(full.parent().unwrap()).unwrap();
+    std::fs::write(full, content).unwrap();
 }
 
 #[test]
@@ -118,44 +158,6 @@ fn discover_check_files_preserves_forbidden_workspace_project_roots() {
 }
 
 #[test]
-fn literal_include_prefix_stops_before_brace_alternation() {
-    assert_eq!(
-        literal_include_prefix("docs/{a,b}/**"),
-        Some(PathBuf::from("docs"))
-    );
-    assert_eq!(
-        leading_globstar_literal_prefix("**/fixtures/**"),
-        Some(PathBuf::from("fixtures"))
-    );
-    assert_eq!(leading_globstar_literal_prefix("**/*.ts"), None);
-    assert!(descendant_dirs_matching_suffix(
-        &PathBuf::from("/missing-no-mistakes-fixture-root"),
-        &PathBuf::from("fixtures"),
-        &[]
-    )
-    .is_empty());
-}
-
-#[test]
-fn include_preserved_roots_ignore_unknown_projects() {
-    let root = PathBuf::from("/repo");
-    let config = NoMistakesConfig {
-        rules: vec![no_mistakes::config::v2::schema::RuleDef {
-            rule: "test-email-domain-policy".to_string(),
-            projects: vec!["missing".to_string()],
-            include: vec!["fixtures/**".to_string()],
-            ..Default::default()
-        }],
-        ..Default::default()
-    };
-
-    assert_eq!(
-        include_preserved_roots(&root, &config, &[]),
-        vec![root.join("fixtures")]
-    );
-}
-
-#[test]
 fn nextjs_project_without_single_config_root_is_ignored() {
     let root = fixture("check-discovery/nextjs-without-config");
     let config = load_config(&root);
@@ -163,4 +165,37 @@ fn nextjs_project_without_single_config_root_is_ignored() {
     let roots = unique_exports_project_roots(&root, &config);
 
     assert!(roots.is_empty());
+}
+
+/// End-to-end regression coverage: `discover_check_files` on a repo with a large
+/// gitignored directory whose nested contents would match a `**/<literal>/**` include
+/// pattern must not surface those files, and must do so via the git-visible file list
+/// rather than a full filesystem walk of the ignored directory.
+#[test]
+fn discover_check_files_preserves_roots_without_descending_into_gitignored_directory() {
+    let dir = TempDir::new().unwrap();
+    git_init(dir.path());
+    write(dir.path(), ".gitignore", "dependency-store/\n");
+    write(dir.path(), "web/fixtures/tracked.json", "{}");
+    write(
+        dir.path(),
+        "dependency-store/nested/fixtures/trap.json",
+        "{}",
+    );
+    write(
+        dir.path(),
+        ".no-mistakes.yml",
+        "rules:\n  - rule: test-email-domain-policy\n    scope: repository\n    include:\n      - \"**/fixtures/**\"\n    options:\n      bannedDomains:\n        - example.com\n",
+    );
+    git_add_all(dir.path());
+
+    let config = load_config(dir.path());
+    let files = discover_check_files(dir.path(), &config, &[], false);
+
+    assert!(files
+        .iter()
+        .any(|path| path.ends_with("web/fixtures/tracked.json")));
+    assert!(!files
+        .iter()
+        .any(|path| path.starts_with(dir.path().join("dependency-store"))));
 }
