@@ -21,7 +21,11 @@ pub(crate) fn check_with_facts(
     let plan = GraphBuildPlan::from_allowed(union_allowed.as_ref());
     let tsconfig = resolve_tsconfig(root, tsconfig_path)?;
     let (required_graph_plan, _) =
-        crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan(root, plan);
+        crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_config(
+            root,
+            plan,
+            config_path,
+        );
     if required_graph_plan.is_empty() && shared.graph_files().is_empty() {
         return super::check(root, config, tsconfig_path);
     }

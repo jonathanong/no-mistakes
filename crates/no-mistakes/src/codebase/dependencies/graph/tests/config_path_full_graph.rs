@@ -74,3 +74,46 @@ fn build_with_plan_file_list_config_and_check_facts_uses_explicit_config_path() 
         "passing the explicit empty-pattern config must be honored, not silently ignored in favor of default discovery"
     );
 }
+
+/// Regression test, one layer earlier than the one above:
+/// `ts_fact_plan_and_context_for_plan_with_config` (used by `check_runner`
+/// and `forbidden_dependencies::check_with_facts` to decide *what to parse*
+/// before any `DepGraph` is built) must also resolve `GraphConfigOptions`
+/// from the given `config_path`. If it didn't, the `TsFactContext` used to
+/// collect shared facts could disagree with the `GraphConfigOptions` the
+/// `DepGraph` build resolves later from the same `config_path` — the facts
+/// collector would never even attempt to recognize a custom
+/// `backendRegisterObject`/`backendPattern`, silently missing backend route
+/// facts regardless of how correctly the graph build itself honors
+/// `config_path`.
+#[test]
+fn ts_fact_plan_and_context_for_plan_with_config_uses_explicit_config_path() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
+    let empty_config = crate::codebase::ts_resolver::normalize_path(
+        &fixture("graph-empty-route-config").join(".no-mistakes.yml"),
+    );
+    let plan = GraphBuildPlan {
+        routes: true,
+        ..GraphBuildPlan::default()
+    };
+
+    let (_, default_context) =
+        crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_config(
+            &root, plan, None,
+        );
+    assert!(
+        !default_context.backend_route_extractors.is_empty(),
+        "default-discovered config (this fixture's own .no-mistakes.yml) should register a backend route extractor"
+    );
+
+    let (_, explicit_context) =
+        crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_config(
+            &root,
+            plan,
+            Some(&empty_config),
+        );
+    assert!(
+        explicit_context.backend_route_extractors.is_empty(),
+        "passing the explicit empty-pattern config must be honored, not silently ignored in favor of default discovery"
+    );
+}
