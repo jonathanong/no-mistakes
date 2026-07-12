@@ -114,6 +114,21 @@ test("redownloads when checkExisting finds no version marker or a stale one", as
   }
 });
 
+test("installedVersion propagates unexpected read errors instead of treating them as missing", async () => {
+  const root = await mkdtemp(join(tmpdir(), "no-mistakes-marker-error-"));
+  const vendorDir = join(root, "vendor");
+  const destination = join(vendorDir, executableName("x86_64-unknown-linux-gnu"));
+
+  try {
+    await mkdir(vendorDir, { recursive: true });
+    // A directory at the marker path triggers EISDIR, not ENOENT.
+    await mkdir(core.versionMarkerPath(destination));
+    assert.throws(() => core.installedVersion(destination), /EISDIR/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("cleans up temporary file and throws error on checksum mismatch", async () => {
   const root = await mkdtemp(join(tmpdir(), "no-mistakes-error-"));
   const vendorDir = join(root, "vendor");
