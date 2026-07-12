@@ -171,7 +171,7 @@ refspec once instead of hand-building repeated `--changed-file` arguments:
 ```bash
 no-mistakes tests plan vitest --from-git-diff origin/main...HEAD --format commands
 no-mistakes tests plan playwright --from-git-diff origin/main...HEAD --environment pre-push --format commands
-no-mistakes impacted-checks --from-git-diff origin/main...HEAD --format paths
+no-mistakes impacted-checks --base origin/main --format paths
 ```
 
 Read the results as:
@@ -216,20 +216,22 @@ Read the results as:
   `OrderResponse`) to its importers, including generated fixture files and
   cross-package consumers that a plain import scan would miss.
 - `importers --tests` adds the transitive impacted-test set for a shared type
-  file, so tests covering the shape (backend, web, or native) surface in one
-  call.
+  file, but only over the TS/JS dependency graph — it surfaces backend and web
+  tests, not native Swift/.NET tests.
 - `tests plan` / `impacted-checks` turn the fanout into runnable commands once
   you know which files moved.
 
-Caveats: no-mistakes follows static TS/JS imports (and, for native targets,
-configured `tests.swift.packages` / `tests.dotnet.projects` graphs — see
-[`tests plan`](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/tests-plan.md)).
-It does not parse Swift
-`Codable`/.NET model files directly, generate API fixtures, or infer
-serialization at runtime — trace the shared TS type/schema file each generated
-target is derived from, and treat native/generated-fixture drift as something
-to verify by running the project's contract or codegen check, not something
-no-mistakes proves by itself.
+Caveats: no-mistakes follows static TS/JS imports for `dependents`,
+`exports-of`, and `importers`. It does not parse Swift `Codable`/.NET model
+files directly, generate API fixtures, or infer serialization at runtime —
+trace the shared TS type/schema file each generated target is derived from.
+For the native test targets themselves, use the framework-specific planners
+(`tests plan swift` / `tests plan dotnet`, which read the configured
+`tests.swift.packages` / `tests.dotnet.projects` graphs — see
+[`tests plan`](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/tests-plan.md)),
+and treat native/generated-fixture drift as something to verify by running the
+project's contract or codegen check, not something no-mistakes proves by
+itself.
 
 ## Package entrypoint and direct-subpath report
 
