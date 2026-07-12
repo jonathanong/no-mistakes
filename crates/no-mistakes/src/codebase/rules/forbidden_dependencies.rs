@@ -23,6 +23,11 @@ pub(crate) struct Options {
     pub relationships: Vec<RelationshipArg>,
 }
 
+/// Resolves the `DepGraph`'s `GraphConfigOptions` via default `--config`
+/// discovery. Callers that already have an explicit `config_path` in scope
+/// must use [`check_with_config`] instead, or a custom config changing
+/// route/http/queue/dotnet/swift/terraform graph settings is silently
+/// ignored for this rule's graph build.
 pub fn check(
     root: &Path,
     config: &NoMistakesConfig,

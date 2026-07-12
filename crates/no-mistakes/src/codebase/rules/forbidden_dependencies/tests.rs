@@ -491,11 +491,7 @@ fn absolute_root_path_resolves() {
 #[test]
 fn check_with_config_uses_explicit_config_path() {
     let root = fixture("graph-default-route-config");
-    let empty_config = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/codebase-analysis/graph-empty-route-config/fixture")
-            .join(".no-mistakes.yml"),
-    );
+    let empty_config = fixture("graph-empty-route-config").join(".no-mistakes.yml");
     let raw = r#"
 rules:
   - rule: forbidden-dependencies
