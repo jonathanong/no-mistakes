@@ -1,15 +1,14 @@
 "use strict";
 
 const { createHash, randomBytes } = require("node:crypto");
-const { closeSync, createReadStream, existsSync, openSync, readFileSync, readSync } = require(
-  "node:fs",
-);
+const { closeSync, createReadStream, existsSync, openSync, readSync } = require("node:fs");
 const { chmod, mkdir, rename, rm, writeFile } = require("node:fs/promises");
 const { join } = require("node:path");
 
 const { assetName, parseChecksum, releaseBaseUrl } = require("./assets");
 const { download, fetchText } = require("./download");
 const { platformTarget, supportedGlibc } = require("./platform");
+const { installedVersion, versionMarkerPath } = require("./version-marker");
 
 const PLACEHOLDER_TEXT = "Native binary placeholder.";
 const PLACEHOLDER_READ_BYTES = 256;
@@ -20,28 +19,6 @@ async function sha256(path) {
     hash.update(chunk);
   }
   return hash.digest("hex");
-}
-
-function versionMarkerPath(destination) {
-  return `${destination}.version`;
-}
-
-// The destination binary alone can't tell us which version it is (the CLI's
-// own --version requires spawning a process, and the N-API .node addon isn't
-// executable at all), so track the installed version in a small sidecar file
-// written right after a successful install. A missing or mismatched marker
-// means we can't prove the existing file matches the requested version, so
-// checkExisting must fall through to a real (re)download rather than trust
-// stale bytes left behind by an earlier install of a different version.
-function installedVersion(destination) {
-  try {
-    return readFileSync(versionMarkerPath(destination), "utf8").trim();
-  } catch (error) {
-    if (error.code === "ENOENT") {
-      return null;
-    }
-    throw error;
-  }
 }
 
 async function install(binName, repository, options = {}) {
