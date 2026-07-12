@@ -3,7 +3,6 @@ use crate::playwright::config;
 use crate::playwright::fsutil::build_globset;
 use crate::playwright::routes;
 use anyhow::Result;
-use dashmap::DashMap;
 use oxc_ast::ast::{ImportOrExportKind, Statement};
 use rayon::prelude::*;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
@@ -11,6 +10,8 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 mod dynamic_imports;
+mod import_cache;
+use import_cache::{get_or_compute_route_imports, RouteImportCache};
 
 pub(crate) fn collect_route_reachable_files(
     root: &Path,
@@ -43,7 +44,7 @@ pub(crate) fn collect_route_reachable_files(
             base_url: None,
         });
     let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
-    let import_cache = DashMap::new();
+    let import_cache = RouteImportCache::new();
     let route_reachable_files = routes
         .par_iter()
         .map(|route| {
@@ -69,7 +70,7 @@ fn reachable_files(
     route_file: &Path,
     selector_rel_by_file: &HashMap<std::path::PathBuf, Arc<String>>,
     resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
-    import_cache: &DashMap<PathBuf, Arc<Vec<PathBuf>>>,
+    import_cache: &RouteImportCache,
 ) -> Result<BTreeSet<Arc<String>>> {
     let mut reachable = BTreeSet::new();
     let mut stack = route_entry_files(root, settings, route_file)
@@ -133,25 +134,22 @@ fn route_entry_files(root: &Path, settings: &config::Settings, route_file: &Path
 fn collect_route_imports(
     path: &Path,
     resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
-    import_cache: &DashMap<PathBuf, Arc<Vec<PathBuf>>>,
+    import_cache: &RouteImportCache,
 ) -> Result<Arc<Vec<PathBuf>>> {
-    let abs_path = path.canonicalize()?;
-    if let Some(cached_imports) = import_cache.get(&abs_path) {
-        return Ok(cached_imports.value().clone());
-    }
-    if !is_script_path(&abs_path) {
-        let imports = Arc::new(Vec::new());
-        import_cache.insert(abs_path, imports.clone());
-        return Ok(imports);
-    }
+    let normalized_path = crate::codebase::ts_resolver::normalize_path(path);
+    get_or_compute_route_imports(import_cache, normalized_path, |normalized_path| {
+        // Preserve the existing symlink behavior for reads and relative import
+        // resolution, but pay for canonicalization only on a cache miss.
+        let abs_path = normalized_path.canonicalize()?;
+        if !is_script_path(&abs_path) {
+            return Ok(Vec::new());
+        }
 
-    let source = std::fs::read_to_string(&abs_path)?;
-    let imports = crate::ast::with_program(&abs_path, &source, |program, _source| {
-        collect_route_imports_from_program(&abs_path, program, resolver)
-    })?;
-    let imports = Arc::new(imports);
-    import_cache.insert(abs_path, imports.clone());
-    Ok(imports)
+        let source = std::fs::read_to_string(&abs_path)?;
+        crate::ast::with_program(&abs_path, &source, |program, _source| {
+            collect_route_imports_from_program(&abs_path, program, resolver)
+        })
+    })
 }
 
 fn collect_route_imports_from_program<'a>(
