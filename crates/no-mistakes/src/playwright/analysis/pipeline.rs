@@ -43,7 +43,7 @@ pub(crate) fn analyze_with_policy_and_facts(
     settings: &config::Settings,
     test_policy: playwright_tests::TestPolicy,
     unique_selector_policy: UniqueSelectorPolicy,
-    facts: &crate::codebase::check_facts::CheckFactMap,
+    facts: &dyn crate::codebase::dependencies::graph::TsFactLookup,
 ) -> Result<Analysis> {
     analyze_with_policy_and_optional_facts(
         root,
@@ -61,7 +61,7 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
     test_policy: playwright_tests::TestPolicy,
     mut unique_selector_policy: UniqueSelectorPolicy,
     require_routes: bool,
-    facts: Option<&crate::codebase::check_facts::CheckFactMap>,
+    facts: Option<&dyn crate::codebase::dependencies::graph::TsFactLookup>,
 ) -> Result<Analysis> {
     unique_selector_policy.configured_html_id_selector = has_configured_html_id_selector(settings);
     let route_root = root.join(&settings.frontend_root);
@@ -140,11 +140,7 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
             TestFileAnalysis::default,
             |mut result, test_file| -> Result<_> {
                 let file_analysis = if let Some(facts) = facts {
-                    match facts
-                        .ts
-                        .get(&test_file.path)
-                        .and_then(|file_facts| file_facts.playwright.as_ref())
-                    {
+                    match facts.get_playwright_facts(&test_file.path) {
                         Some(playwright) => analyze_test_occurrences(
                             test_file,
                             &test_analysis,

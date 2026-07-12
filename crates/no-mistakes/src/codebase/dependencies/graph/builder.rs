@@ -147,7 +147,7 @@ impl DepGraph {
         }
 
         if plan.playwright_selectors {
-            let selector_edges = collect_playwright_selector_edges(root, &graph_files.all);
+            let selector_edges = collect_playwright_selector_edges(root, &graph_files.all, facts);
             merge_edges(&mut forward, &mut reverse, selector_edges);
         }
 
