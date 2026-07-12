@@ -89,7 +89,7 @@ instantly.
 Prefer, in order:
 1. Derive candidate paths from the already-discovered git-visible file list (tracked
    files plus untracked files not excluded by `.gitignore`) instead of walking the
-   filesystem at all — a candidate only matters if it can contain a file discovery
+   filesystem at all — a candidate only matters if it can contain a file that discovery
    would otherwise surface, so this is both correct and touches zero extra I/O.
 2. If a walk is unavoidable (e.g. outside a git repository), use the `ignore` crate
    (`WalkBuilder`) so `.gitignore` rules apply, not a hardcoded directory denylist.
