@@ -187,6 +187,30 @@ fn route_import_collection_computes_shared_cache_entries_once() {
 }
 
 #[test]
+fn route_import_collection_caches_failed_computations() {
+    let root = crate::playwright::test_support::fixture_path(&[
+        "nextjs-selectors",
+        "selector-text-locator",
+    ]);
+    let route_file = root.join("web/app/page.tsx");
+    let import_cache = RouteImportCache::new();
+    let compute_calls = AtomicUsize::new(0);
+    let error_message = "failed to compute imports";
+
+    (0..32_usize).into_par_iter().for_each(|_| {
+        let error =
+            get_or_compute_route_imports(&import_cache, route_file.clone(), |_normalized_path| {
+                compute_calls.fetch_add(1, Ordering::SeqCst);
+                anyhow::bail!(error_message)
+            })
+            .expect_err("imports should fail");
+        assert_eq!(error.to_string(), error_message);
+    });
+
+    assert_eq!(compute_calls.load(Ordering::SeqCst), 1);
+}
+
+#[test]
 fn route_import_collection_serves_cached_paths_without_filesystem_lookup() {
     let root = crate::playwright::test_support::fixture_path(&[
         "nextjs-selectors",
