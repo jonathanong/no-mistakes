@@ -37,6 +37,14 @@ done
 echo "Running no-mistakes check..."
 cargo run -p no-mistakes --quiet -- check || exit 1
 
+echo "Running ast-grep scan..."
+if ! command -v ast-grep >/dev/null 2>&1; then
+  echo "Error: ast-grep is not installed. Install it (e.g. 'brew install ast-grep') and retry."
+  exit 1
+fi
+ast-grep test --skip-snapshot-tests || exit 1
+ast-grep scan || exit 1
+
 echo "Running cargo fmt..."
 cargo fmt --all -- --check || exit 1
 

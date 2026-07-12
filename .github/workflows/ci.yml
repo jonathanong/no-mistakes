@@ -212,6 +212,20 @@ jobs:
       - name: Run no-mistakes check
         run: target/release/no-mistakes check
 
+      - name: Install ast-grep
+        run: |
+          curl -sSfL -o ast-grep.zip https://github.com/ast-grep/ast-grep/releases/download/0.44.1/app-x86_64-unknown-linux-gnu.zip
+          unzip -o ast-grep.zip ast-grep
+          chmod +x ast-grep
+          sudo mv ast-grep /usr/local/bin/ast-grep
+          rm ast-grep.zip
+
+      - name: Run ast-grep rule tests
+        run: ast-grep test --skip-snapshot-tests
+
+      - name: Run ast-grep scan
+        run: ast-grep scan
+
   bench:
     name: Benchmarks
     runs-on: ubuntu-latest
