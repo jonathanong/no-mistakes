@@ -29,26 +29,40 @@ pub fn check_with_facts(
     let files = shared.files().to_vec();
     let tsconfig = resolve_tsconfig(root, tsconfig_path)?;
     let resolver = ImportResolver::new(&tsconfig);
-    let graph = DepGraph::build_with_plan_file_list_and_check_facts(
-        root,
-        &tsconfig,
-        GraphBuildPlan::imports_and_workspace(),
-        files.clone(),
-        shared,
-    );
-    let manual_mocks = manual_mocks::discover_from_files(root, &files);
+    let graph = crate::perf_trace::trace("test_no_unmocked_dynamic_imports.graph_build", || {
+        DepGraph::build_with_plan_file_list_and_check_facts(
+            root,
+            &tsconfig,
+            GraphBuildPlan::imports_and_workspace(),
+            files.clone(),
+            shared,
+        )
+    });
+    let manual_mocks =
+        crate::perf_trace::trace("test_no_unmocked_dynamic_imports.manual_mocks", || {
+            manual_mocks::discover_from_files(root, &files)
+        });
     let test_files = matching_test_files(root, &files, config)?;
-    let setup_data = config::precompute_setup_data(root, config)?;
+    let setup_data =
+        crate::perf_trace::trace("test_no_unmocked_dynamic_imports.setup_data", || {
+            config::precompute_setup_data(root, config)
+        })?;
 
     // Pre-populate the dependency cache for all test files in parallel so that
     // reachable source checks hit the cache instead of re-running BFS per test.
     let dependency_cache: DashMap<PathBuf, Arc<Vec<PathBuf>>> = DashMap::new();
-    test_files.par_iter().for_each(|file| {
-        dependency_cache
-            .entry(file.clone())
-            .or_insert_with(|| Arc::new(runtime_deps(&graph, file.clone())));
-    });
+    crate::perf_trace::trace(
+        "test_no_unmocked_dynamic_imports.dependency_cache_prepopulate",
+        || {
+            test_files.par_iter().for_each(|file| {
+                dependency_cache
+                    .entry(file.clone())
+                    .or_insert_with(|| Arc::new(runtime_deps(&graph, file.clone())));
+            });
+        },
+    );
 
+    let per_test_start = std::time::Instant::now();
     let per_test: Vec<PerTestResult> = test_files
         .into_par_iter()
         .map(|file| {
@@ -121,6 +135,10 @@ pub fn check_with_facts(
             })
         })
         .collect::<Result<Vec<_>>>()?;
+    crate::perf_trace::record(
+        "test_no_unmocked_dynamic_imports.per_test_analysis",
+        per_test_start.elapsed(),
+    );
 
     let mut covered_reachable_imports = HashSet::new();
     for result in &per_test {
