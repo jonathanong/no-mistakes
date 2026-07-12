@@ -19,6 +19,7 @@ pub(crate) fn build_plan_args(
         tsconfig: options.tsconfig.map(PathBuf::from),
         base: options.base,
         head: options.head,
+        from_git_diff: options.from_git_diff,
         changed_file: strings_to_paths(options.changed_files),
         changed_files: options.changed_files_file.map(PathBuf::from),
         diff: None,

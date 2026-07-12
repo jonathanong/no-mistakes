@@ -5,6 +5,7 @@ dependency graph analysis.
 
 ```sh
 no-mistakes tests plan vitest --base origin/main --format json
+no-mistakes tests plan vitest --from-git-diff origin/main...HEAD --format json
 no-mistakes tests plan playwright --changed-file web/app/users/page.tsx --format paths
 no-mistakes tests plan dotnet --changed-file dotnet-clients/src/App/FeedService.cs --format paths
 no-mistakes tests plan vitest --changed-file web/app/users/users.test.ts --format commands
@@ -12,8 +13,17 @@ no-mistakes tests plan swift --changed-file backend/api/feeds.mts --format paths
 ```
 
 Use this for agent test selection before running expensive suites. Inputs can
-come from `--base/--head`, `--changed-file`, `--changed-files`, `--diff`,
-`--diff-stdin`, `--diff-command`, or repeatable `--entrypoint`.
+come from `--base/--head`, `--from-git-diff`, `--changed-file`,
+`--changed-files`, `--diff`, `--diff-stdin`, `--diff-command`, or repeatable
+`--entrypoint`.
+
+`--from-git-diff <base...head>` is single-argument sugar over `--base`/`--head`
+(conflicts with both): it parses a three-dot refspec and runs the identical
+`git diff --relative --name-status <base>...<head>` lookup. A bare base or a
+trailing `<base>...` both default head to `HEAD`. Two-dot refspecs
+(`<base>..<head>`) are rejected — `git diff` gives `..` and `...` different
+comparison bases, so accepting `..` here would silently desugar to a different
+diff than the equivalent `--base`/`--head` flags.
 
 Key options: `--root`, `--config`, `--tsconfig`, `--environment`,
 `--limit-percent`, `--limit-files`, `--global-config-fallback`, `--format`, and

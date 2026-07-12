@@ -40,6 +40,13 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
     // failure is non-fatal: the explicit list is still valid input for lockfile
     // analysis, which will emit its own warning about the missing baseline.
     let has_explicit_files = !args.changed_file.is_empty() || args.changed_files.is_some();
+
+    // `--from-git-diff <refspec>` is resolved into base/head once, up front, by
+    // `generate_plan` (before this function is ever called) — not here — so
+    // that every consumer of args.base/args.head (this git-diff lookup AND
+    // `analyze_lockfile_changes`, which reads the same fields directly) sees
+    // an identical, already-desugared pair. By the time `args` reaches this
+    // function, `args.from_git_diff` is always `None`.
     if let Some(ref base) = args.base {
         match get_git_changed_files(root, base, args.head.as_deref()) {
             Ok(git_files) => {
@@ -213,6 +220,51 @@ struct GitChangedFiles {
     deleted: Vec<PathBuf>,
 }
 
+/// Parse a `git diff` refspec into `(base, optional head)`.
+///
+/// Accepts three-dot `A...B`, three-dot with an implicit head `A...` (head
+/// defaults to `HEAD` downstream in [`get_git_changed_files`]), and a bare
+/// base `A` (also defaults head to `HEAD`). This mirrors the merge-base
+/// three-dot semantics `git diff` already uses for `--base`/`--head`, so
+/// `--from-git-diff` is sugar over that existing path rather than a new
+/// comparison mode.
+///
+/// Two-dot refspecs (`A..B`) are rejected: `git diff A..B` and
+/// `git diff A...B` compare different bases (direct vs. merge-base), and
+/// silently accepting `..` here would make `--from-git-diff` desugar to a
+/// different comparison than the equivalent `--base`/`--head` flags. Callers
+/// that want two-dot semantics should keep using `--base`/`--head` directly
+/// (which also only supports the three-dot form today).
+pub(crate) fn parse_git_diff_refspec(spec: &str) -> Result<(String, Option<String>)> {
+    let trimmed = spec.trim();
+    if trimmed.is_empty() {
+        anyhow::bail!("--from-git-diff requires a non-empty refspec, e.g. origin/main...HEAD");
+    }
+
+    if let Some((base, head)) = trimmed.split_once("...") {
+        let base = base.trim();
+        let head = head.trim();
+        if base.is_empty() {
+            anyhow::bail!("--from-git-diff refspec is missing a base before '...': {trimmed}");
+        }
+        if head.is_empty() {
+            return Ok((base.to_string(), None));
+        }
+        return Ok((base.to_string(), Some(head.to_string())));
+    }
+
+    if trimmed.contains("..") {
+        anyhow::bail!(
+            "--from-git-diff does not support two-dot refspecs ('{trimmed}'); tests plan only \
+             compares base...head (merge-base) diffs — use three-dot base...head \
+             (e.g. origin/main...HEAD). --base/--head use the same three-dot comparison, \
+             so switching to them will not change the diff you get."
+        );
+    }
+
+    Ok((trimmed.to_string(), None))
+}
+
 fn get_git_changed_files(root: &Path, base: &str, head: Option<&str>) -> Result<GitChangedFiles> {
     let head_commit = head.unwrap_or("HEAD");
     let output = run_git(
@@ -297,6 +349,61 @@ mod tests {
         assert_eq!(
             changed.deleted,
             vec![PathBuf::from("deleted.cs"), PathBuf::from("old-name.cs")]
+        );
+    }
+
+    #[test]
+    fn refspec_three_dot_splits_base_and_head() {
+        let (base, head) = parse_git_diff_refspec("origin/main...HEAD").unwrap();
+        assert_eq!(base, "origin/main");
+        assert_eq!(head.as_deref(), Some("HEAD"));
+    }
+
+    #[test]
+    fn refspec_three_dot_with_trailing_dots_defaults_head() {
+        let (base, head) = parse_git_diff_refspec("origin/main...").unwrap();
+        assert_eq!(base, "origin/main");
+        assert_eq!(head, None);
+    }
+
+    #[test]
+    fn refspec_bare_base_defaults_head() {
+        let (base, head) = parse_git_diff_refspec("origin/main").unwrap();
+        assert_eq!(base, "origin/main");
+        assert_eq!(head, None);
+    }
+
+    #[test]
+    fn refspec_trims_surrounding_whitespace() {
+        let (base, head) = parse_git_diff_refspec("  origin/main ... HEAD  ").unwrap();
+        assert_eq!(base, "origin/main");
+        assert_eq!(head.as_deref(), Some("HEAD"));
+    }
+
+    #[test]
+    fn refspec_rejects_two_dot_form() {
+        let err = parse_git_diff_refspec("origin/main..HEAD").unwrap_err();
+        assert!(
+            err.to_string().contains("two-dot"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn refspec_rejects_empty_string() {
+        let err = parse_git_diff_refspec("   ").unwrap_err();
+        assert!(
+            err.to_string().contains("non-empty"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn refspec_rejects_missing_base_before_three_dots() {
+        let err = parse_git_diff_refspec("...HEAD").unwrap_err();
+        assert!(
+            err.to_string().contains("missing a base"),
+            "unexpected error: {err}"
         );
     }
 }

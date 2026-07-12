@@ -47,6 +47,45 @@ pub(crate) fn run(args: PlanArgs) -> Result<ExitCode> {
 const _: fn(PlanArgs) -> Result<ExitCode> = run;
 
 pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
+    // clap's conflicts_with_all rejects --from-git-diff combined with
+    // --base/--head on the CLI, but the N-API options struct isn't bound by
+    // clap. Guard here too — the single shared entry point both callers
+    // funnel through — so N-API callers who set both get the same parity
+    // error instead of the resolution below silently overwriting base/head.
+    if args.from_git_diff.is_some() && (args.base.is_some() || args.head.is_some()) {
+        anyhow::bail!("--from-git-diff conflicts with --base/--head; provide only one");
+    }
+
+    // Resolve --from-git-diff into base/head once, up front, so every
+    // downstream consumer of args.base/args.head sees the same pair —
+    // not just `collect_changed_files`'s own git-diff lookup. Without this,
+    // `analyze_lockfile_changes` (which reads args.base/args.head directly to
+    // `git show` lockfile contents) would see neither set, and a diff that
+    // touches a lockfile would silently lose package-impact tracing under
+    // --from-git-diff even though the changed-file list traced correctly.
+    //
+    // An omitted head (bare `<base>` or trailing `<base>...`) must resolve to
+    // the *literal* ref "HEAD" here, not stay `None`. `collect_changed_files`
+    // treats a `None` head as "HEAD" (`unwrap_or("HEAD")`), but
+    // `analyze_lockfile_changes` treats a `None` head as "read the lockfile
+    // from the working tree" instead — a different interpretation of the
+    // same `None`. Pinning it to `Some("HEAD")` makes both consumers agree,
+    // so `--from-git-diff origin/main` is equivalent to `--from-git-diff
+    // origin/main...HEAD` / `--base origin/main --head HEAD` everywhere, even
+    // when the working tree has uncommitted lockfile changes beyond HEAD.
+    let resolved_args;
+    let args = if let Some(spec) = &args.from_git_diff {
+        let (base, head) = super::changed_files::parse_git_diff_refspec(spec)?;
+        let mut cloned = args.clone();
+        cloned.base = Some(base);
+        cloned.head = Some(head.unwrap_or_else(|| "HEAD".to_string()));
+        cloned.from_git_diff = None;
+        resolved_args = cloned;
+        &resolved_args
+    } else {
+        args
+    };
+
     let cwd = std::env::current_dir().context("cwd must be accessible")?;
     let root = no_mistakes::cli::resolve_optional_root(Some(&args.root), &cwd);
     let root = no_mistakes::codebase::ts_resolver::normalize_path(&root);

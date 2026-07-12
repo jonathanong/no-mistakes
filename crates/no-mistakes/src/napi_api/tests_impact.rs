@@ -118,6 +118,27 @@ fn tests_plan_json_without_input_returns_empty() {
     assert!(selected.is_empty());
 }
 
+// Regression for a review finding on #508: the CLI rejects --from-git-diff
+// combined with --base/--head via clap's conflicts_with_all, but the N-API
+// options struct isn't bound by clap. Without a matching guard in
+// generate_plan, this combination would silently resolve to fromGitDiff's
+// value instead of surfacing the same parity error the CLI gives.
+#[test]
+fn tests_plan_json_rejects_from_git_diff_with_base() {
+    let root = fixture_root("tests-impact-diff");
+    let options = json!({
+        "root": root,
+        "fromGitDiff": "origin/main...HEAD",
+        "base": "origin/main"
+    })
+    .to_string();
+    let error = tests_plan_json_impl(options).unwrap_err();
+    assert!(
+        error.to_string().contains("conflicts"),
+        "expected a conflicts error, got: {error}"
+    );
+}
+
 #[test]
 fn entrypoint_option_without_symbol_parts_as_file_only() {
     assert_eq!(

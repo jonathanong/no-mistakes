@@ -25,6 +25,7 @@ no-mistakes tests plan playwright --changed-file web/app/users/page.tsx --format
 
 # Diff-based (from git)
 no-mistakes tests plan vitest --base origin/main --format json
+no-mistakes tests plan vitest --from-git-diff origin/main...HEAD --format json
 
 # Named environment (from .no-mistakes.yml testPlan)
 no-mistakes tests plan vitest --environment prePush --changed-file src/api.mts --format paths
@@ -34,6 +35,11 @@ Key flags:
 - `--changed-file <FILE>` — explicit changed file path; repeatable.
 - `--changed-files <FILE>` — path to a file containing one changed path per line.
 - `--base <REF>` / `--head <REF>` — compute changed files from a git diff.
+- `--from-git-diff <BASE...HEAD>` — single-argument sugar for `--base`/`--head`;
+  desugars to the same `git diff --name-status <base>...<head>` lookup (three-dot
+  only — bare `<base>` and `<base>...` both default head to `HEAD`; two-dot
+  `<base>..<head>` is rejected since it compares a different baseline). Conflicts
+  with `--base`/`--head`.
 - `--diff <FILE>` / `--diff-stdin` / `--diff-command <CMD>` — supply a diff
   directly.
 - `--entrypoint <FILE>` — treat a file as the root regardless of changes.

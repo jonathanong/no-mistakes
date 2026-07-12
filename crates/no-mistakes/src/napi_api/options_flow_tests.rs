@@ -28,6 +28,7 @@ pub(crate) struct TestsPlanOptions {
     pub(crate) tsconfig: Option<String>,
     pub(crate) base: Option<String>,
     pub(crate) head: Option<String>,
+    pub(crate) from_git_diff: Option<String>,
     pub(crate) changed_files: Vec<String>,
     pub(crate) changed_files_file: Option<String>,
     pub(crate) diff: Option<String>,

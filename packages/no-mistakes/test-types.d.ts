@@ -7,6 +7,8 @@ export interface TestsPlanOptions {
   tsconfig?: string;
   base?: string;
   head?: string;
+  /** Git diff refspec, e.g. "origin/main...HEAD". Sugar for base/head. */
+  fromGitDiff?: string;
   changedFiles?: string[];
   changedFilesFile?: string;
   /** Inline unified diff content to extract changed files from. */
