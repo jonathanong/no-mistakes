@@ -23,9 +23,32 @@ pub(crate) struct Options {
     pub relationships: Vec<RelationshipArg>,
 }
 
+/// Resolves the `DepGraph`'s `GraphConfigOptions` via default `--config`
+/// discovery. Callers that already have an explicit `config_path` in scope
+/// must use [`check_with_config`] instead, or a custom config changing
+/// route/http/queue/dotnet/swift/terraform graph settings is silently
+/// ignored for this rule's graph build.
 pub fn check(
     root: &Path,
     config: &NoMistakesConfig,
+    tsconfig_path: Option<&Path>,
+) -> Result<Vec<RuleFinding>> {
+    check_with_config(root, config, None, tsconfig_path)
+}
+
+/// Same as [`check`], but resolves the `DepGraph`'s `GraphConfigOptions`
+/// (route-consistency, queue-dashboard-reachability, http-route/call-static-
+/// paths, dotnet, swift, terraform) from an explicit `--config` path instead
+/// of always falling back to default discovery. Callers that already have a
+/// `config_path` in scope (the shared-facts path's `run_check_with_facts`,
+/// and its own parse-error/missing-graph-facts fallback) must use this —
+/// otherwise an explicit `--config` changing those settings is silently
+/// ignored for this rule's graph build even though the rest of `check`
+/// honors it.
+pub(crate) fn check_with_config(
+    root: &Path,
+    config: &NoMistakesConfig,
+    config_path: Option<&Path>,
     tsconfig_path: Option<&Path>,
 ) -> Result<Vec<RuleFinding>> {
     let applications = config.rule_applications(RULE_ID);
@@ -36,7 +59,7 @@ pub fn check(
     let union_allowed = union_allowed_set(&opts_list);
     let plan = GraphBuildPlan::from_allowed(union_allowed.as_ref());
     let tsconfig = resolve_tsconfig(root, tsconfig_path)?;
-    let graph = DepGraph::build_with_plan(root, &tsconfig, plan)?;
+    let graph = DepGraph::build_with_plan_and_config(root, &tsconfig, plan, config_path)?;
     let mut findings = Vec::new();
     for (rule, opts) in applications.iter().zip(opts_list.iter()) {
         findings.extend(check_rule_application(root, config, rule, opts, &graph)?);
