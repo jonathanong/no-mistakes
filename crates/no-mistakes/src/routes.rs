@@ -45,9 +45,13 @@ fn collect_routes_from_git_files(
         if is_under_dot_directory(relative) || !matches_route_file(relative, stems) {
             continue;
         }
+        let file = frontend_root.join(relative);
+        if !file.is_file() {
+            continue;
+        }
 
         routes.push(Route {
-            file: frontend_root.join(relative),
+            file,
             pattern: path_to_route_pattern(relative),
         });
     }
