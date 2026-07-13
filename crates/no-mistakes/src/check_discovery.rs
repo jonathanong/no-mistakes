@@ -3,7 +3,10 @@ use preserved_roots::include_preserved_roots;
 use std::path::{Path, PathBuf};
 
 mod preserved_roots;
+mod project_reopen;
 mod views;
+
+use project_reopen::{explicit_reopened_roots, unresolved_typed_reopen_suffixes};
 
 pub(crate) use views::discover_check_file_views;
 
@@ -54,9 +57,17 @@ pub(crate) fn discover_check_files(
 }
 
 fn unique_exports_project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
+    let mut inferred_roots = no_mistakes::codebase::config::InferredRoots::default();
+    unique_exports_project_roots_with_inferred(root, config, &mut inferred_roots)
+}
+
+fn unique_exports_project_roots_with_inferred(
+    root: &Path,
+    config: &NoMistakesConfig,
+    inferred_roots: &mut no_mistakes::codebase::config::InferredRoots,
+) -> Vec<PathBuf> {
     let rule_id = no_mistakes::codebase::unique_exports::RULE_ID;
     let mut roots = Vec::new();
-    let mut inferred_roots = no_mistakes::codebase::config::InferredRoots::default();
     for rule in config.rule_applications(rule_id) {
         if rule.applies_to_repository() {
             roots.push(root.to_path_buf());
@@ -65,7 +76,7 @@ fn unique_exports_project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<P
             let Some(project) = config.projects.get(project_name) else {
                 continue;
             };
-            if let Some(project_root) = project_root(root, project, &mut inferred_roots) {
+            if let Some(project_root) = project_root(root, project, inferred_roots) {
                 roots.push(project_root);
             }
         }
@@ -74,6 +85,35 @@ fn unique_exports_project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<P
         .into_iter()
         .map(|root| no_mistakes::codebase::ts_resolver::normalize_path(&root))
         .collect();
+    roots.sort();
+    roots.dedup();
+    roots
+}
+
+fn preserved_project_roots_with_inferred(
+    root: &Path,
+    config: &NoMistakesConfig,
+    inferred_roots: &mut no_mistakes::codebase::config::InferredRoots,
+) -> Vec<PathBuf> {
+    let mut roots = Vec::new();
+    for rule in config.rules.iter().filter(|rule| rule.enabled) {
+        let has_project_include = !rule.projects.is_empty() && !rule.include.is_empty();
+        let preserves_project_root =
+            rule.rule == no_mistakes::codebase::rules::FORBIDDEN_WORKSPACE_CLOSURE;
+        if !has_project_include && !preserves_project_root {
+            continue;
+        }
+        for project_name in &rule.projects {
+            let Some(project) = config.projects.get(project_name) else {
+                continue;
+            };
+            if let Some(project_root) = project_root(root, project, inferred_roots) {
+                roots.push(no_mistakes::codebase::ts_resolver::normalize_path(
+                    &project_root,
+                ));
+            }
+        }
+    }
     roots.sort();
     roots.dedup();
     roots

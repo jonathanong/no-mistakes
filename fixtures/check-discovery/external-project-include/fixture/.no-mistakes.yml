@@ -1,0 +1,28 @@
+filesystem:
+  skipDirectories:
+    - generated
+
+projects:
+  external:
+    root: ../external-project
+  typed:
+    type: nextjs
+
+rules:
+  - rule: test-email-domain-policy
+    projects:
+      - external
+    include:
+      - "**/fixtures/**"
+      - "**/generated/**"
+    options:
+      bannedDomains:
+        - example.com
+  - rule: test-email-domain-policy
+    projects:
+      - typed
+    include:
+      - "**/fixtures/**"
+    options:
+      bannedDomains:
+        - example.com

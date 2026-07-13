@@ -151,11 +151,13 @@ pub(super) fn collect_descendant_dirs_matching_suffix(
     roots.extend(matches);
 }
 
-pub(super) fn leading_globstar_literal_prefix(include: &str) -> Option<PathBuf> {
+pub(in crate::check_discovery) fn leading_globstar_literal_prefix(
+    include: &str,
+) -> Option<PathBuf> {
     include.strip_prefix("**/").and_then(literal_include_prefix)
 }
 
-pub(super) fn literal_include_prefix(include: &str) -> Option<PathBuf> {
+pub(in crate::check_discovery) fn literal_include_prefix(include: &str) -> Option<PathBuf> {
     let prefix = include
         .split(['*', '?', '[', '{'])
         .next()

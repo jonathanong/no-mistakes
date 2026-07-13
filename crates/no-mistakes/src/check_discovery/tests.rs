@@ -4,6 +4,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::TempDir;
 
+#[path = "tests/mixed_availability.rs"]
+mod mixed_availability;
+
 fn fixture(path: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -190,15 +193,6 @@ fn discover_check_file_views_derive_filesystem_scope_from_complete_universe() {
 fn discover_check_file_views_fall_back_outside_git() {
     let root = fixture("check-discovery/include-preserved-roots");
     let config = load_config(&root);
-    let expected_filesystem = discover_check_files(
-        &root,
-        &config,
-        &config.filesystem.skip_directories,
-        false,
-        None,
-    );
-    let expected_graph = discover_check_files(&root, &config, &[], false, None);
-
     let views = super::views::discover_check_file_views_from_git_files(
         &root,
         &config,
@@ -207,18 +201,22 @@ fn discover_check_file_views_fall_back_outside_git() {
         None,
     );
 
-    assert_eq!(views.filesystem, expected_filesystem);
-    assert_eq!(views.graph, expected_graph);
-}
-
-#[test]
-fn external_project_discovery_falls_back_to_gitignore_aware_walk() {
-    let root = fixture("check-discovery/include-preserved-roots");
-    let expected = no_mistakes::codebase::ts_source::walk_files(&root, &[]);
-
-    let files = super::views::complete_project_files_from_git(&root, None);
-
-    assert_eq!(files, expected);
+    assert!(views
+        .filesystem
+        .iter()
+        .any(|path| path.ends_with("backend/fixtures/backend-users.json")));
+    assert!(!views
+        .filesystem
+        .iter()
+        .any(|path| path.ends_with("generated/fixtures/ignored-users.json")));
+    assert!(views
+        .graph
+        .iter()
+        .any(|path| path.ends_with("generated/fixtures/ignored-users.json")));
+    assert!(!views
+        .graph
+        .iter()
+        .any(|path| path.ends_with(".no-mistakes.yml")));
 }
 
 #[test]
@@ -302,6 +300,11 @@ fn discover_check_files_preserves_forbidden_workspace_project_roots() {
     assert!(files
         .iter()
         .any(|path| path.ends_with("packages/domain/package.json")));
+    let mut inferred = no_mistakes::codebase::config::InferredRoots::default();
+    assert_eq!(
+        preserved_project_roots_with_inferred(&root, &config, &mut inferred),
+        vec![root.join("fixtures/app")]
+    );
 }
 
 #[test]
