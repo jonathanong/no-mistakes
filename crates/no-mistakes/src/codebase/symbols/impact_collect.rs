@@ -102,7 +102,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         }
         entries.extend(file_entries);
     }
-    let local_caller_context = prepare_local_caller_context(facts, &root);
+    let local_caller_context = prepare_local_caller_context(facts, graph_files.all(), &root);
     let production_extra_callers = local_caller_entries(
         &local_caller_context,
         &target_symbols,
@@ -173,18 +173,20 @@ struct LocalCallerContext {
 /// from `signature_impact_graph_plan()`'s effective fact plan, a strict superset (imports +
 /// workspace + symbols), so no re-parse happens here.
 ///
-/// The workspace map intentionally uses `crate::codebase::ts_source::discover_files` (the same
-/// `.gitignore`-aware walk the dependency graph itself uses to seed `workspaces::load_from_files`
-/// in `graph/builder.rs`) rather than the narrower indexable-file set backing `facts`. The graph
+/// `discovery_files` must be `GraphFiles::all()` (the same `.gitignore`-aware walk
+/// `GraphFiles::discover` already ran to seed `graph/builder.rs`'s own
+/// `workspaces::load_from_files` call) — the caller passes it in rather than this function
+/// re-discovering it, so a second `discover_files`/`git ls-files` pass doesn't happen. It must
+/// specifically be `all()`, not `indexable()` (the narrower list backing `facts`): the graph
 /// only indexes TS/JS file nodes, which never include `package.json`, so feeding that narrower
 /// list into `load_from_files` would silently resolve zero workspace packages.
 fn prepare_local_caller_context(
     facts: crate::codebase::ts_source::facts::TsFactMap,
+    discovery_files: &[PathBuf],
     root: &Path,
 ) -> LocalCallerContext {
-    let discovery_files = crate::codebase::ts_source::discover_files(root, &[]);
     let workspace =
-        crate::codebase::workspaces::load_from_files(root, &discovery_files).unwrap_or_default();
+        crate::codebase::workspaces::load_from_files(root, discovery_files).unwrap_or_default();
     LocalCallerContext { facts, workspace }
 }
 

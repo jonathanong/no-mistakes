@@ -3,7 +3,8 @@ use crate::config::v2::NoMistakesConfig;
 
 /// Regression test for the `prepare_local_caller_context` hoist: it must resolve the workspace
 /// map from the same `.gitignore`-aware file list the dependency graph itself uses
-/// (`ts_source::discover_files`), not from the narrower indexable-file set backing `facts`.
+/// (`GraphFiles::all()`, backed by `ts_source::discover_files`), not from the narrower
+/// indexable-file set backing `facts`.
 ///
 /// The narrower set only yields indexable TS/JS graph nodes, which never include
 /// `package.json`. Feeding that narrower list into `workspaces::load_from_files` silently
@@ -12,9 +13,9 @@ use crate::config::v2::NoMistakesConfig;
 /// exact bug) when first tried during this fix. This test pins the fix at the unit level so a
 /// future refactor that re-derives the workspace file list from `facts` fails fast here.
 ///
-/// This also exercises the shared-facts hand-off `collect_report` performs in production: the
-/// same `TsFactMap` built here for the `DepGraph` build is moved into
-/// `prepare_local_caller_context` instead of being re-parsed.
+/// This also exercises the shared-facts/shared-discovery hand-off `collect_report` performs in
+/// production: the same `TsFactMap` and `GraphFiles::all()` list built here for the `DepGraph`
+/// build are moved/passed into `prepare_local_caller_context` instead of being recomputed.
 #[test]
 fn prepare_local_caller_context_resolves_workspace_packages_once() {
     let root = crate::codebase::ts_resolver::normalize_path(
@@ -46,7 +47,7 @@ fn prepare_local_caller_context_resolves_workspace_packages_once() {
         "sanity check: shared facts must still let the graph build succeed"
     );
 
-    let context = prepare_local_caller_context(facts, &root);
+    let context = prepare_local_caller_context(facts, graph_files.all(), &root);
 
     assert!(
         !context.workspace.packages.is_empty(),
@@ -80,33 +81,34 @@ fn prepare_local_caller_context_resolves_workspace_packages_once() {
         .any(|caller| caller.file == "workspace-private-caller.mts"));
 }
 
-/// Regression test: `prepare_local_caller_context` must use exactly the `TsFactMap` it's
-/// handed, never independently re-parse the file set via its own `collect_ts_facts` call.
-/// Constructs a disagreement case (`crates/CLAUDE.md`: "assert on a call count, not value
-/// equality" / "construct a case where the two approaches would disagree") rather than
-/// checking output equality, which a re-parsing version would also satisfy: hands in a
-/// deliberately empty `TsFactMap` for a fixture that has real, non-empty facts on disk, and
-/// asserts the resulting context's facts are still empty. A version that silently re-parses
-/// (ignoring the passed-in map) would find the real files on disk and produce non-empty facts.
+/// Regression test: `prepare_local_caller_context` must use exactly the `TsFactMap` and
+/// discovery file list it's handed, never independently re-derive either via its own
+/// `collect_ts_facts`/`discover_files` calls. Constructs disagreement cases
+/// (`crates/CLAUDE.md`: "assert on a call count, not value equality" / "construct a case where
+/// the two approaches would disagree") rather than checking output equality, which a
+/// re-deriving version would also satisfy: hands in a deliberately empty `TsFactMap` (for facts)
+/// and a deliberately empty discovery file list (for the workspace map), for a fixture that has
+/// real, non-empty facts and a real, non-empty workspace on disk, and asserts the resulting
+/// context reflects the supplied (empty) inputs, not the real files on disk.
 #[test]
-fn prepare_local_caller_context_never_reparses_the_supplied_facts() {
+fn prepare_local_caller_context_never_rederives_its_supplied_inputs() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/codebase-analysis/tests-impact-symbol/fixture"),
     );
 
     let empty_facts: crate::codebase::ts_source::facts::TsFactMap = std::collections::HashMap::new();
-    let context = prepare_local_caller_context(empty_facts, &root);
+    let context = prepare_local_caller_context(empty_facts, &[], &root);
 
     assert!(
         context.facts.is_empty(),
         "prepare_local_caller_context must use exactly the supplied (empty) facts map, not \
          silently re-parse the real files on disk"
     );
-    // The workspace resolution is intentionally independent of `facts` (see the doc comment
-    // above `prepare_local_caller_context`), so it must still succeed even with empty facts.
     assert!(
-        !context.workspace.packages.is_empty(),
-        "sanity check: workspace resolution must be unaffected by an empty facts map"
+        context.workspace.packages.is_empty(),
+        "prepare_local_caller_context must resolve the workspace from exactly the supplied \
+         (empty) discovery file list, not silently re-run discover_files against the real, \
+         package.json-inclusive file set on disk"
     );
 }
