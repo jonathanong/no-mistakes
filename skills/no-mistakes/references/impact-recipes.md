@@ -327,9 +327,9 @@ rg -n 'expect\(|mockResolvedValue|vi\.mock|error message|branch|queue|enqueue' <
 
 If the deleted test is the direct behavioral owner of an assertion, add or
 identify a replacement — a sibling unit test or an integration/Playwright test —
-before removing it. `references/tests.md` covers how `tests plan` already
-treats a deleted test file as a changed file for diff-based planning; this
-recipe is for the deliberate "should I delete this" decision, not diff replay.
+before removing it. `tests.md` covers how `tests plan` already treats a
+deleted test file as a changed file for diff-based planning; this recipe is
+for the deliberate "should I delete this" decision, not diff replay.
 
 ## Queue enqueue call-disposition audit
 
@@ -351,7 +351,7 @@ Read the results as:
 - `importers` and `call-sites <file> SYMBOL` find direct callers and their
   argument shapes, but `call-sites` matches direct-identifier calls only
   (`enqueueEmail(...)`), not `ns.enqueueEmail()` or aliased indirection — see
-  `references/lightweight-queries.md`.
+  `lightweight-queries.md`.
 
 Then use `rg` on the returned callers to classify each call's disposition —
 awaited, returned, grouped in an awaited `Promise.all`, explicitly discarded
