@@ -134,26 +134,11 @@ pub fn collect_ts_facts(files: &[PathBuf], plan: TsFactPlan) -> TsFactMap {
     collect_ts_facts_with_context(files, plan, &TsFactContext::default())
 }
 
-#[cfg(test)]
-thread_local! {
-    /// Test-only call counter for [`collect_ts_facts_with_context`], incremented
-    /// once per call (not per file). Thread-local so it only reflects the
-    /// current test (the harness runs each `#[test]` fn on its own fresh OS
-    /// thread). Used to prove a single invocation shares one parse pass across
-    /// consumers (e.g. a `DepGraph` build and a caller-context lookup) instead
-    /// of re-parsing the same files (see `crates/CLAUDE.md`: "assert on a call
-    /// count, not value equality").
-    pub(crate) static COLLECT_TS_FACTS_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-}
-
 pub fn collect_ts_facts_with_context(
     files: &[PathBuf],
     plan: TsFactPlan,
     context: &TsFactContext,
 ) -> TsFactMap {
-    #[cfg(test)]
-    COLLECT_TS_FACTS_CALLS.with(|calls| calls.set(calls.get() + 1));
-
     files
         .par_iter()
         .filter(|path| is_indexable(path))

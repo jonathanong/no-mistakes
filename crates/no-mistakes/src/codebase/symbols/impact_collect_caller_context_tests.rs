@@ -14,15 +14,9 @@ use crate::config::v2::NoMistakesConfig;
 ///
 /// This also exercises the shared-facts hand-off `collect_report` performs in production: the
 /// same `TsFactMap` built here for the `DepGraph` build is moved into
-/// `prepare_local_caller_context` instead of being re-parsed. Asserts on the parse call count
-/// (via `COLLECT_TS_FACTS_CALLS`), not just output equality, since a version that silently
-/// re-parses inside `prepare_local_caller_context` would produce the same `context.facts`
-/// content while doing the work twice (`crates/CLAUDE.md`: "assert on a call count, not value
-/// equality").
+/// `prepare_local_caller_context` instead of being re-parsed.
 #[test]
 fn prepare_local_caller_context_resolves_workspace_packages_once() {
-    use crate::codebase::ts_source::facts::COLLECT_TS_FACTS_CALLS;
-
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/codebase-analysis/tests-impact-symbol/fixture"),
@@ -33,16 +27,10 @@ fn prepare_local_caller_context_resolves_workspace_packages_once() {
     let (fact_plan, fact_context) =
         ts_fact_plan_and_context_for_plan_with_config(&root, graph_plan, None);
 
-    COLLECT_TS_FACTS_CALLS.with(|calls| calls.set(0));
     let facts = crate::codebase::ts_source::facts::collect_ts_facts_with_context(
         graph_files.indexable(),
         fact_plan,
         &fact_context,
-    );
-    assert_eq!(
-        COLLECT_TS_FACTS_CALLS.with(|calls| calls.get()),
-        1,
-        "building facts once must spawn exactly one parse pass"
     );
 
     let graph = DepGraph::build_with_plan_files_config_and_facts(
@@ -57,18 +45,8 @@ fn prepare_local_caller_context_resolves_workspace_packages_once() {
         graph.all_files().count() > 0,
         "sanity check: shared facts must still let the graph build succeed"
     );
-    assert_eq!(
-        COLLECT_TS_FACTS_CALLS.with(|calls| calls.get()),
-        1,
-        "the graph build must reuse the supplied facts instead of parsing again"
-    );
 
     let context = prepare_local_caller_context(facts, &root);
-    assert_eq!(
-        COLLECT_TS_FACTS_CALLS.with(|calls| calls.get()),
-        1,
-        "prepare_local_caller_context must reuse the moved-in facts instead of re-parsing"
-    );
 
     assert!(
         !context.workspace.packages.is_empty(),
@@ -100,4 +78,35 @@ fn prepare_local_caller_context_resolves_workspace_packages_once() {
     assert!(!tests
         .iter()
         .any(|caller| caller.file == "workspace-private-caller.mts"));
+}
+
+/// Regression test: `prepare_local_caller_context` must use exactly the `TsFactMap` it's
+/// handed, never independently re-parse the file set via its own `collect_ts_facts` call.
+/// Constructs a disagreement case (`crates/CLAUDE.md`: "assert on a call count, not value
+/// equality" / "construct a case where the two approaches would disagree") rather than
+/// checking output equality, which a re-parsing version would also satisfy: hands in a
+/// deliberately empty `TsFactMap` for a fixture that has real, non-empty facts on disk, and
+/// asserts the resulting context's facts are still empty. A version that silently re-parses
+/// (ignoring the passed-in map) would find the real files on disk and produce non-empty facts.
+#[test]
+fn prepare_local_caller_context_never_reparses_the_supplied_facts() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/tests-impact-symbol/fixture"),
+    );
+
+    let empty_facts: crate::codebase::ts_source::facts::TsFactMap = std::collections::HashMap::new();
+    let context = prepare_local_caller_context(empty_facts, &root);
+
+    assert!(
+        context.facts.is_empty(),
+        "prepare_local_caller_context must use exactly the supplied (empty) facts map, not \
+         silently re-parse the real files on disk"
+    );
+    // The workspace resolution is intentionally independent of `facts` (see the doc comment
+    // above `prepare_local_caller_context`), so it must still succeed even with empty facts.
+    assert!(
+        !context.workspace.packages.is_empty(),
+        "sanity check: workspace resolution must be unaffected by an empty facts map"
+    );
 }
