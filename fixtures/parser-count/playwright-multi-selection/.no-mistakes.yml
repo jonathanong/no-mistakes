@@ -1,0 +1,13 @@
+tests:
+  playwright:
+    configs:
+      - playwright.web.config.ts
+      - playwright.admin.config.ts
+
+rules:
+  - rule: playwright-coverage
+    tests:
+      playwright: [web]
+  - rule: playwright-unique-test-ids
+    tests:
+      playwright: [admin]

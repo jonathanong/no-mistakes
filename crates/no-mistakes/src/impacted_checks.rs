@@ -1,9 +1,9 @@
 //! `no-mistakes impacted-checks <file...>` — the minimal local validation
 //! commands to run for a set of changed files.
 //!
-//! Test commands are derived by reusing the `tests plan` engine
-//! ([`crate::tests::plan::generate_plan`]) for each configured framework, so the
-//! emitted `vitest`/`playwright`/`swift` invocations match `tests plan` exactly.
+//! Test commands are derived by reusing one prepared `tests plan` request across
+//! configured frameworks, so emitted runner invocations match `tests plan`
+//! exactly without rebuilding the repository graph for every framework.
 //! Generic checks (lint, typecheck, …) come from the `checks:` config block,
 //! keyed by file globs.
 

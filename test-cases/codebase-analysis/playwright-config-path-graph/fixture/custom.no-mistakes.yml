@@ -1,0 +1,7 @@
+tests:
+  playwright:
+    frontendRoot: web/app
+    configs: playwright.config.mts
+    selectors:
+      testIds:
+        - data-pw

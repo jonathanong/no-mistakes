@@ -1,6 +1,10 @@
-use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, GraphBuildPlan, NodeId};
+use crate::codebase::dependencies::graph::{
+    DepGraph, EdgeKind, GraphBuildPlan, GraphFiles, NodeId,
+};
 use crate::codebase::dependencies::{parse_entrypoint, relationship_filter, RelationshipArg};
-use crate::codebase::ts_resolver::{find_tsconfig, load_tsconfig, normalize_path, TsConfig};
+use crate::codebase::ts_resolver::{
+    find_tsconfig_from_visible, load_tsconfig, normalize_path, TsConfig,
+};
 use anyhow::{Context, Result};
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet, HashSet, VecDeque};
@@ -62,19 +66,54 @@ pub struct FlowEdge {
 pub fn run(options: &FlowOptions) -> Result<FlowReport> {
     let root = normalize_path(&options.root);
     let root = root.canonicalize().unwrap_or(root);
-    let tsconfig = resolve_tsconfig(&root, options.tsconfig.as_deref())?;
+    let visible_paths = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let root_visible_paths = visible_paths.paths_for(&root);
+    let graph_files = GraphFiles::from_files(
+        crate::codebase::ts_source::discover_files_from_visible(&root, &[], &root_visible_paths),
+    );
+    let tsconfig =
+        resolve_tsconfig_from_visible(&root, options.tsconfig.as_deref(), &root_visible_paths)?;
     let allowed = relationship_filter(&options.relationships);
     let plan = GraphBuildPlan::from_allowed(allowed.as_ref()).with_symbols(true);
-    let graph =
-        DepGraph::build_with_plan_and_config(&root, &tsconfig, plan, options.config.as_deref())?;
-    let target = resolve_target(&root, &options.target);
+    let config = crate::config::v2::load_v2_config_from_visible(
+        &root,
+        options.config.as_deref(),
+        &root_visible_paths,
+    )?;
+    let codebase_config =
+        crate::codebase::config::config_from_loaded_v2(&root, options.config.as_deref(), &config);
+    let prepared_graph = crate::codebase::dependencies::graph::prepare_graph_config(
+        &root,
+        plan,
+        &codebase_config,
+        &config,
+        &visible_paths,
+    )?;
+    let graph = DepGraph::build_with_plan_files_prepared_config(
+        &root,
+        &tsconfig,
+        plan,
+        &graph_files,
+        options.config.as_deref(),
+        &prepared_graph,
+    )?;
+    run_with_prepared_graph(options, &root, &graph)
+}
+
+pub(crate) fn run_with_prepared_graph(
+    options: &FlowOptions,
+    root: &Path,
+    graph: &DepGraph,
+) -> Result<FlowReport> {
+    let target = resolve_target(root, &options.target);
+    let allowed = relationship_filter(&options.relationships);
     let mut nodes = BTreeMap::new();
     let mut edges = BTreeSet::new();
-    insert_node(&mut nodes, &target, &root, 0);
+    insert_node(&mut nodes, &target, root, 0);
 
     let mut traversal = Traversal {
-        graph: &graph,
-        root: &root,
+        graph,
+        root,
         max_depth: options.depth,
         allowed: allowed.as_ref(),
         nodes: &mut nodes,
@@ -91,7 +130,7 @@ pub fn run(options: &FlowOptions) -> Result<FlowReport> {
 
     Ok(FlowReport {
         root: root.to_string_lossy().into_owned(),
-        target: target.display_name(&root).replace('\\', "/"),
+        target: target.display_name(root).replace('\\', "/"),
         nodes: nodes.into_values().collect(),
         edges: edges.into_iter().collect(),
     })
@@ -103,12 +142,16 @@ include!("flow_query_traverse.rs");
 #[path = "flow_query_tests.rs"]
 mod flow_query_tests;
 
-fn resolve_tsconfig(root: &Path, explicit: Option<&Path>) -> Result<TsConfig> {
+fn resolve_tsconfig_from_visible(
+    root: &Path,
+    explicit: Option<&Path>,
+    visible_paths: &[PathBuf],
+) -> Result<TsConfig> {
     let explicit_path = explicit.is_some();
     let path = match explicit {
         Some(path) if path.is_absolute() => Some(path.to_path_buf()),
         Some(path) => Some(root.join(path)),
-        None => find_tsconfig(root),
+        None => find_tsconfig_from_visible(root, visible_paths),
     };
     match path {
         Some(path) if explicit_path => {

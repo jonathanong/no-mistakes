@@ -2,175 +2,168 @@ pub(crate) struct SharedTraversalContext {
     root: PathBuf,
     tsconfig: TsConfig,
     graph_files: graph::GraphFiles,
+    visible_paths: std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot>,
+    config: crate::config::v2::NoMistakesConfig,
+    config_path: Option<PathBuf>,
+    prepared_graph: graph::PreparedGraphConfig,
     build_plan: graph::GraphBuildPlan,
+    fact_plan: crate::codebase::ts_source::facts::TsFactPlan,
+    fact_context: crate::codebase::ts_source::facts::TsFactContext,
+    prepared_test_projects: Option<crate::codebase::test_discovery::PreparedTestProjects>,
+    test_filter: crate::codebase::test_filter::TestFileFilter,
     facts: Option<crate::codebase::ts_source::facts::TsFactMap>,
     graph: Option<graph::DepGraph>,
     pub(crate) graph_builds: usize,
 }
 
 impl SharedTraversalContext {
-    pub(crate) fn new(root: PathBuf, tsconfig: TsConfig, graph_files: graph::GraphFiles) -> Self {
-        Self {
+    pub(crate) fn prepare(
+        root: PathBuf,
+        tsconfig_path: Option<&Path>,
+        config_path: Option<&Path>,
+        build_plan: graph::GraphBuildPlan,
+    ) -> Result<Self> {
+        let visible_paths = std::sync::Arc::new(
+            crate::codebase::ts_source::VisiblePathSnapshot::new(&root),
+        );
+        Self::prepare_with_snapshot(
+            root,
+            tsconfig_path,
+            config_path,
+            build_plan,
+            visible_paths,
+        )
+    }
+
+    pub(crate) fn prepare_with_snapshot(
+        root: PathBuf,
+        tsconfig_path: Option<&Path>,
+        config_path: Option<&Path>,
+        build_plan: graph::GraphBuildPlan,
+        visible_paths: std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot>,
+    ) -> Result<Self> {
+        let root_visible_paths = visible_paths.paths_for(&root);
+        let graph_files = graph::GraphFiles::from_files(
+            crate::codebase::ts_source::discover_files_from_visible(
+                &root,
+                &[],
+                &root_visible_paths,
+            ),
+        );
+        let config = crate::config::v2::load_v2_config_from_visible(
+            &root,
+            config_path,
+            &root_visible_paths,
+        )?;
+        let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
+            tsconfig_path,
+            &root,
+            &root_visible_paths,
+        )?;
+        let codebase_config =
+            crate::codebase::config::config_from_loaded_v2(&root, config_path, &config);
+        let preliminary_graph = graph::prepare_graph_config_with_test_filter(
+            &root,
+            build_plan,
+            &codebase_config,
+            &config,
+            visible_paths.as_ref(),
+            crate::codebase::test_filter::TestFileFilter::fallback_only(),
+        )?;
+        let (preliminary_fact_plan, preliminary_fact_context) =
+            graph::ts_fact_plan_and_context_for_plan_with_prepared(
+                &root,
+                build_plan,
+                &preliminary_graph,
+            );
+        let prepared_test_projects =
+            crate::codebase::test_discovery::prepare_test_projects_from_visible(
+                &root,
+                &config,
+                &root_visible_paths,
+                &tsconfig,
+                graph_files.indexable(),
+                preliminary_fact_plan,
+                preliminary_fact_context,
+            );
+        let test_filter = crate::codebase::test_filter::TestFileFilter::from_prepared_projects(
+            &root,
+            &config,
+            &root_visible_paths,
+            prepared_test_projects.project_filters(),
+        );
+        let prepared_graph = graph::prepare_graph_config_with_test_filter(
+            &root,
+            build_plan,
+            &codebase_config,
+            &config,
+            visible_paths.as_ref(),
+            test_filter.clone(),
+        )?;
+        let (fact_plan, mut fact_context) =
+            graph::ts_fact_plan_and_context_for_plan_with_prepared(
+                &root,
+                build_plan,
+                &prepared_graph,
+            );
+        fact_context.set_visible_files(graph_files.visible().iter().cloned());
+        Ok(Self {
             root,
             tsconfig,
             graph_files,
-            build_plan: graph::GraphBuildPlan::default(),
-            facts: None,
+            visible_paths,
+            config,
+            config_path: config_path.map(Path::to_path_buf),
+            prepared_graph,
+            build_plan,
+            fact_plan,
+            fact_context,
+            facts: Some(prepared_test_projects.graph_facts().clone()),
+            prepared_test_projects: Some(prepared_test_projects),
+            test_filter,
             graph: None,
             graph_builds: 0,
-        }
-    }
-
-    pub(crate) fn include_plan(&mut self, plan: graph::GraphBuildPlan) {
-        self.build_plan.include(plan);
+        })
     }
 
     pub(crate) fn root(&self) -> &Path {
         &self.root
     }
 
-    pub(crate) fn facts(&mut self) -> &crate::codebase::ts_source::facts::TsFactMap {
-        self.ensure_facts();
-        self.facts.as_ref().expect("TS facts are initialized")
+    pub(crate) fn tsconfig(&self) -> &TsConfig {
+        &self.tsconfig
     }
 
-    fn ensure_facts(&mut self) {
-        if self.facts.is_some() {
-            return;
-        }
-        let (fact_plan, fact_context) =
-            graph::ts_fact_plan_and_context_for_plan(&self.root, self.build_plan);
-        self.facts = Some(crate::codebase::ts_source::facts::collect_ts_facts_with_context(
-            self.graph_files.indexable(),
-            fact_plan,
-            &fact_context,
-        ));
+    pub(crate) fn graph_files(&self) -> &graph::GraphFiles {
+        &self.graph_files
     }
 
-    fn graph(&mut self) -> Result<&graph::DepGraph> {
-        if self.graph.is_none() {
-            self.ensure_facts();
-            let graph = graph::DepGraph::build_with_plan_files_and_facts(
-                &self.root,
-                &self.tsconfig,
-                self.build_plan,
-                &self.graph_files,
-                self.facts
-                    .as_ref()
-                    .map(|facts| facts as &dyn graph::TsFactLookup),
-            )?;
-            self.graph = Some(graph);
-            self.graph_builds += 1;
-        }
-        Ok(self.graph.as_ref().expect("graph is initialized"))
+    pub(crate) fn visible_paths(
+        &self,
+    ) -> &crate::codebase::ts_source::VisiblePathSnapshot {
+        self.visible_paths.as_ref()
     }
 
-    fn request_graph_without_symbols(
-        &mut self,
-        allowed: Option<&std::collections::HashSet<EdgeKind>>,
-    ) -> Result<graph::DepGraph> {
-        self.ensure_facts();
-        graph::DepGraph::build_with_plan_files_and_facts(
-            &self.root,
-            &self.tsconfig,
-            graph::GraphBuildPlan::from_allowed(allowed),
-            &self.graph_files,
-            self.facts
-                .as_ref()
-                .map(|facts| facts as &dyn graph::TsFactLookup),
-        )
+    pub(crate) fn visible_paths_arc(
+        &self,
+    ) -> std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot> {
+        self.visible_paths.clone()
     }
-}
 
-pub(crate) fn collect_and_filter_entries_shared(
-    args: &TraverseArgs,
-    direction: Direction,
-    cwd_early: &Path,
-    shared: &mut SharedTraversalContext,
-) -> Result<TraversalResult> {
-    let entrypoints = resolve_entrypoints_with_files(
-        &args.files,
-        &args.file_symbols,
-        &args.file_entrypoints_are_structured,
-        &shared.root,
-        cwd_early,
-        &shared.graph_files,
-        args.include_symbols,
-    );
+    pub(crate) fn config_path(&self) -> Option<&Path> {
+        self.config_path.as_deref()
+    }
 
-    validate_direction(&direction, &entrypoints)?;
+    pub(crate) fn config(&self) -> &crate::config::v2::NoMistakesConfig {
+        &self.config
+    }
 
-    let allowed = relationship_filter(&args.relationships);
-    let roots: Vec<NodeId> = entrypoints.iter().map(|e| e.node.clone()).collect();
-    let import_only = !args.include_symbols && relationships_are_import_only(&args.relationships);
-    let any_symbol = entrypoints
-        .iter()
-        .any(|entrypoint| entrypoint.symbol.is_some());
-    let symbol_index = if matches!(direction, Direction::Dependents) && any_symbol && !args.include_symbols
-    {
-        Some(graph::SymbolIndex::build_from_files(
-            &shared.tsconfig,
-            &shared.graph_files,
-        ))
-    } else {
-        None
-    };
-    let root = shared.root.clone();
-    let entries = match direction {
-        Direction::Deps if import_only => graph::lazy_import_deps_of_with_files(
-            &roots,
-            &shared.root,
-            &shared.tsconfig,
-            args.depth,
-            &shared.graph_files,
-            allowed.as_ref(),
-        ),
-        Direction::Deps if shared.build_plan.symbols && !args.include_symbols => shared
-            .request_graph_without_symbols(allowed.as_ref())?
-            .deps_of(&roots, args.depth, allowed.as_ref()),
-        Direction::Deps => shared
-            .graph()?
-            .deps_of(&roots, args.depth, allowed.as_ref()),
-        Direction::Dependents if args.include_symbols => {
-            let graph = shared.graph()?;
-            let roots = roots_with_existing_queue_jobs(&roots, &entrypoints, graph);
-            let roots = roots_with_exported_symbol_roots(&roots, graph);
-            graph.dependents_of_symbol_nodes(&roots, args.depth, allowed.as_ref())
-        }
-        Direction::Dependents if any_symbol && shared.build_plan.symbols => {
-            let graph = shared.request_graph_without_symbols(allowed.as_ref())?;
-            resolve_symbol_dependents(
-                &root,
-                &entrypoints,
-                args.depth,
-                allowed.as_ref(),
-                &graph,
-                symbol_index
-                    .as_ref()
-                    .expect("symbol index is built for symbol dependents"),
-            )
-        }
-        Direction::Dependents if any_symbol => resolve_symbol_dependents(
-            &root,
-            &entrypoints,
-            args.depth,
-            allowed.as_ref(),
-            shared.graph()?,
-            symbol_index
-                .as_ref()
-                .expect("symbol index is built for symbol dependents"),
-        ),
-        Direction::Dependents if shared.build_plan.symbols && !args.include_symbols => shared
-            .request_graph_without_symbols(allowed.as_ref())?
-            .dependents_of(&roots, args.depth, allowed.as_ref()),
-        Direction::Dependents => shared
-            .graph()?
-            .dependents_of(&roots, args.depth, allowed.as_ref()),
-    };
-    let entries = apply_filters(entries, args, &shared.root)?;
+    pub(crate) fn build_plan(&self) -> graph::GraphBuildPlan {
+        self.build_plan
+    }
 
-    Ok(TraversalResult {
-        entries,
-        root: shared.root.clone(),
-    })
+    pub(crate) fn prepared_graph(&self) -> &graph::PreparedGraphConfig {
+        &self.prepared_graph
+    }
+
 }

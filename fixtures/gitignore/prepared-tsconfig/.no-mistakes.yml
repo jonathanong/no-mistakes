@@ -1,0 +1,28 @@
+effects:
+  regression:
+    functions:
+      - trackedEffect
+
+projects:
+  web:
+    type: library
+    root: "."
+    queues:
+      enqueues: [enqueue.ts]
+      workers: [src/queues/emails.ts]
+
+rules:
+  - rule: unique-exports
+    scope: repository
+  - rule: test-no-unmocked-dynamic-imports
+    scope: repository
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      stories: ["stories/**/*.stories.tsx"]
+      include_all_react_named_exports: true
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [entry.ts]
+      forbiddenFiles: [src/forbidden.ts]

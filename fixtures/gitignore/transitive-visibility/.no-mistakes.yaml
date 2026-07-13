@@ -1,0 +1,7 @@
+frontendRoot: app
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    scope: repository

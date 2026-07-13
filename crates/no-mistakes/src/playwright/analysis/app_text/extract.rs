@@ -15,21 +15,31 @@ pub(super) fn extract_app_text_targets(
     settings: &Settings,
 ) -> Result<Vec<AppTextTarget>> {
     ast::with_program(path, source, |program, _| {
-        let scoped_static_identifier_defaults = collect_scoped_static_identifier_defaults(program);
-        let mut visitor = AppTextVisitor {
-            root,
-            path,
-            source,
-            settings,
-            scoped_static_identifier_defaults: &scoped_static_identifier_defaults,
-            targets: Vec::new(),
-            controls_by_id: HashMap::new(),
-            pending_labels: Vec::new(),
-            texts_by_id: HashMap::new(),
-            hidden_depth: 0,
-        };
-        visitor.visit_program(program);
-        visitor.finish();
-        visitor.targets
+        extract_app_text_targets_from_program(root, path, source, settings, program)
     })
+}
+
+pub(crate) fn extract_app_text_targets_from_program(
+    root: &Path,
+    path: &Path,
+    source: &str,
+    settings: &Settings,
+    program: &oxc_ast::ast::Program<'_>,
+) -> Vec<AppTextTarget> {
+    let scoped_static_identifier_defaults = collect_scoped_static_identifier_defaults(program);
+    let mut visitor = AppTextVisitor {
+        root,
+        path,
+        source,
+        settings,
+        scoped_static_identifier_defaults: &scoped_static_identifier_defaults,
+        targets: Vec::new(),
+        controls_by_id: HashMap::new(),
+        pending_labels: Vec::new(),
+        texts_by_id: HashMap::new(),
+        hidden_depth: 0,
+    };
+    visitor.visit_program(program);
+    visitor.finish();
+    visitor.targets
 }

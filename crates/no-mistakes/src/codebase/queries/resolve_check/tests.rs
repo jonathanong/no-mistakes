@@ -62,6 +62,28 @@ fn clean_file_resolves() {
 }
 
 #[test]
+fn pass4b_resolve_check_skips_ignored_candidate_for_visible_fallback() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass4b-shadow");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let report = compute(&ResolveCheckArgs {
+        file: PathBuf::from("query/source.ts"),
+        root: Some(root),
+        tsconfig: None,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+
+    assert!(report.all_resolve);
+    assert!(report
+        .imports
+        .iter()
+        .all(|row| row.resolved.as_deref() == Some("query/target.ts")));
+}
+
+#[test]
 fn tags_every_import_kind_and_absolute_path() {
     let root = named_fixture("queries-kinds");
     // Absolute file path exercises the absolute branch of input resolution.

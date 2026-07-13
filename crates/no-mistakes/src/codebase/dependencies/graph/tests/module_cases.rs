@@ -9,14 +9,18 @@ fn dynamic_imports_inside_uncalled_functions_are_pruned() {
         paths_dir: root.clone(),
         base_url: None,
     };
-    let graph = DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
-        .unwrap();
+    let graph =
+        DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
+            .unwrap();
     let deps = graph.deps_of(
         &[NodeId::File(root.join("src/entry.mts"))],
         None,
         Some(&[EdgeKind::DynamicImport].into()),
     );
-    let paths: HashSet<_> = deps.iter().filter_map(|entry| entry.node.as_file()).collect();
+    let paths: HashSet<_> = deps
+        .iter()
+        .filter_map(|entry| entry.node.as_file())
+        .collect();
 
     assert!(paths.contains(root.join("src/called.mts").as_path()));
     assert!(!paths.contains(root.join("src/uncalled.mts").as_path()));
@@ -31,8 +35,9 @@ fn unknown_top_level_calls_keep_function_scoped_dynamic_imports() {
         paths_dir: root.clone(),
         base_url: None,
     };
-    let graph = DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
-        .unwrap();
+    let graph =
+        DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
+            .unwrap();
     let deps = graph.deps_of(
         &[NodeId::File(root.join("src/unknown.mts"))],
         None,
@@ -53,14 +58,18 @@ fn named_reexports_keep_function_scoped_dynamic_imports() {
         paths_dir: root.clone(),
         base_url: None,
     };
-    let graph = DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
-        .unwrap();
+    let graph =
+        DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
+            .unwrap();
     let deps = graph.deps_of(
         &[NodeId::File(root.join("src/export-named.mts"))],
         None,
         Some(&[EdgeKind::DynamicImport].into()),
     );
-    let paths: HashSet<_> = deps.iter().filter_map(|entry| entry.node.as_file()).collect();
+    let paths: HashSet<_> = deps
+        .iter()
+        .filter_map(|entry| entry.node.as_file())
+        .collect();
 
     assert!(paths.contains(root.join("src/called.mts").as_path()));
     assert!(!paths.contains(root.join("src/uncalled.mts").as_path()));
@@ -75,14 +84,18 @@ fn default_identifier_exports_keep_function_scoped_dynamic_imports() {
         paths_dir: root.clone(),
         base_url: None,
     };
-    let graph = DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
-        .unwrap();
+    let graph =
+        DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
+            .unwrap();
     let deps = graph.deps_of(
         &[NodeId::File(root.join("src/export-default-identifier.mts"))],
         None,
         Some(&[EdgeKind::DynamicImport].into()),
     );
-    let paths: HashSet<_> = deps.iter().filter_map(|entry| entry.node.as_file()).collect();
+    let paths: HashSet<_> = deps
+        .iter()
+        .filter_map(|entry| entry.node.as_file())
+        .collect();
 
     assert!(paths.contains(root.join("src/called.mts").as_path()));
     assert!(!paths.contains(root.join("src/uncalled.mts").as_path()));
@@ -97,8 +110,9 @@ fn nested_functions_inside_exported_functions_are_not_exported() {
         paths_dir: root.clone(),
         base_url: None,
     };
-    let graph = DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
-        .unwrap();
+    let graph =
+        DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
+            .unwrap();
     let deps = graph.deps_of(
         &[NodeId::File(root.join("src/export-nested.mts"))],
         None,
@@ -117,14 +131,18 @@ fn same_named_nested_functions_do_not_share_reachability() {
         paths_dir: root.clone(),
         base_url: None,
     };
-    let graph = DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
-        .unwrap();
+    let graph =
+        DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
+            .unwrap();
     let deps = graph.deps_of(
         &[NodeId::File(root.join("src/duplicate-name.mts"))],
         None,
         Some(&[EdgeKind::DynamicImport].into()),
     );
-    let paths: HashSet<_> = deps.iter().filter_map(|entry| entry.node.as_file()).collect();
+    let paths: HashSet<_> = deps
+        .iter()
+        .filter_map(|entry| entry.node.as_file())
+        .collect();
 
     assert!(paths.contains(root.join("src/called.mts").as_path()));
     assert!(!paths.contains(root.join("src/uncalled.mts").as_path()));
@@ -139,8 +157,9 @@ fn nested_function_calls_resolve_sibling_scopes() {
         paths_dir: root.clone(),
         base_url: None,
     };
-    let graph = DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
-        .unwrap();
+    let graph =
+        DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
+            .unwrap();
     let deps = graph.deps_of(
         &[NodeId::File(root.join("src/sibling.mts"))],
         None,
@@ -161,8 +180,9 @@ fn uncalled_method_dynamic_imports_are_pruned() {
         paths_dir: root.clone(),
         base_url: None,
     };
-    let graph = DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
-        .unwrap();
+    let graph =
+        DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
+            .unwrap();
     let deps = graph.deps_of(
         &[NodeId::File(root.join("src/method.mts"))],
         None,
@@ -181,8 +201,9 @@ fn unknown_calls_inside_reachable_functions_keep_function_scoped_dynamic_imports
         paths_dir: root.clone(),
         base_url: None,
     };
-    let graph = DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
-        .unwrap();
+    let graph =
+        DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
+            .unwrap();
     let deps = graph.deps_of(
         &[NodeId::File(root.join("src/unknown-nested.mts"))],
         None,
@@ -203,8 +224,9 @@ fn unknown_calls_inside_unreachable_functions_do_not_broaden_imports() {
         paths_dir: root.clone(),
         base_url: None,
     };
-    let graph = DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
-        .unwrap();
+    let graph =
+        DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
+            .unwrap();
     let deps = graph.deps_of(
         &[NodeId::File(root.join("src/unknown-uncalled.mts"))],
         None,

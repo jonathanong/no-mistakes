@@ -5,6 +5,8 @@ use common::{fixture, run, stdout};
 #[test]
 fn test_plan_swift_falls_back_when_source_graph_is_unconfigured() {
     let root = fixture("swift-test-plan").join("swift-clients");
+    // A source file without a configured graph can only fall back to the full
+    // suite when the caller explicitly opts in to global fallback behavior.
     let output = run(&[
         "test",
         "plan",
@@ -13,6 +15,8 @@ fn test_plan_swift_falls_back_when_source_graph_is_unconfigured() {
         root.to_str().unwrap(),
         "--changed-file",
         "core/Sources/VouchaAPI/Endpoint.swift",
+        "--global-config-fallback",
+        "true",
         "--json",
     ]);
 

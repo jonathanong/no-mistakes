@@ -8,7 +8,7 @@ fn local_caller_entries(
 ) -> Vec<CallerEntry> {
     let workspace = &context.workspace;
     let mut callers = BTreeMap::new();
-    for (file, facts) in &context.facts {
+    for (file, facts) in context.facts {
         let file = file.clone();
         let is_test = test_filter.is_match(root, &file);
         if !want_tests && !is_test && is_test_like_file(&file) {
@@ -21,7 +21,14 @@ fn local_caller_entries(
             .symbols
             .as_ref()
             .expect("imports_and_symbols fact plan collects symbols");
-        let local_names = target_local_names(symbols, &file, target_symbols, tsconfig, workspace);
+        let local_names = target_local_names(
+            symbols,
+            &file,
+            target_symbols,
+            tsconfig,
+            workspace,
+            context.visible_files,
+        );
         if local_names.is_empty() {
             continue;
         }
@@ -69,6 +76,7 @@ struct CallerEntriesContext<'a> {
     test_filter: &'a TestFileFilter,
     export_nodes: &'a BTreeSet<NodeId>,
     file_target_symbols: &'a BTreeMap<String, BTreeSet<String>>,
+    facts: &'a TsFactMap,
 }
 
 fn caller_entries(
@@ -117,7 +125,12 @@ fn caller_entries(
                 continue;
             };
             let uses_target = *dynamic_usage_cache.entry(file.clone()).or_insert_with(|| {
-                file_entry_uses_any_symbol(context.root, file.as_str(), target_symbols)
+                file_entry_uses_any_symbol(
+                    context.root,
+                    file.as_str(),
+                    target_symbols,
+                    context.facts,
+                )
             });
             if !uses_target {
                 continue;

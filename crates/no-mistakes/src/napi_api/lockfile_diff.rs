@@ -1,7 +1,10 @@
 use super::options::{parse_options, resolve_project_root, to_napi_error};
 use no_mistakes::codebase::lockfile::{self, PackageManager};
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+
+mod git;
+use git::{detect_lockfiles_from_head, find_git_root, git_ref_exists, git_show_file};
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
@@ -46,6 +49,7 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
         // the working tree is still at a different commit.
         detect_lockfiles_from_head(&git_root, head, &root)
     } else {
+        let visible_paths = no_mistakes::codebase::ts_source::discover_visible_paths(&root);
         [
             "pnpm-lock.yaml",
             "package-lock.json",
@@ -54,8 +58,12 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
             "bun.lock",
         ]
         .iter()
-        .map(|n| root.join(n))
-        .filter(|p| p.exists())
+        .map(|name| no_mistakes::codebase::ts_resolver::normalize_path(&root.join(name)))
+        .filter(|candidate| {
+            visible_paths
+                .iter()
+                .any(|path| no_mistakes::codebase::ts_resolver::normalize_path(path) == *candidate)
+        })
         .collect()
     };
 
@@ -136,69 +144,6 @@ pub(crate) fn lockfile_diff_json_impl(options_json: String) -> napi::Result<Stri
     }
 
     serde_json::to_string_pretty(&entries).map_err(|e| napi::Error::from_reason(e.to_string()))
-}
-
-fn detect_lockfiles_from_head(git_root: &Path, head: &str, root: &Path) -> Vec<PathBuf> {
-    let candidates = [
-        "pnpm-lock.yaml",
-        "package-lock.json",
-        "npm-shrinkwrap.json",
-        "yarn.lock",
-        "bun.lock",
-    ];
-    let root_rel = root
-        .strip_prefix(git_root)
-        .unwrap_or(std::path::Path::new(""))
-        .to_string_lossy()
-        .replace('\\', "/");
-    candidates
-        .iter()
-        .filter(|name| {
-            let rel = if root_rel.is_empty() {
-                name.to_string()
-            } else {
-                format!("{}/{}", root_rel, name)
-            };
-            git_show_file(git_root, head, &rel).is_some()
-        })
-        .map(|name| root.join(name))
-        .collect()
-}
-
-fn find_git_root(dir: &Path) -> Option<PathBuf> {
-    let output = std::process::Command::new("git")
-        .args(["rev-parse", "--show-toplevel"])
-        .current_dir(dir)
-        .output()
-        .ok()?;
-    if output.status.success() {
-        let s = String::from_utf8(output.stdout).ok()?;
-        Some(PathBuf::from(s.trim()))
-    } else {
-        None
-    }
-}
-
-fn git_ref_exists(root: &Path, git_ref: &str) -> bool {
-    std::process::Command::new("git")
-        .args(["rev-parse", "--verify", git_ref])
-        .current_dir(root)
-        .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false)
-}
-
-fn git_show_file(root: &Path, git_ref: &str, rel_path: &str) -> Option<String> {
-    let output = std::process::Command::new("git")
-        .args(["show", &format!("{}:{}", git_ref, rel_path)])
-        .current_dir(root)
-        .output()
-        .ok()?;
-    if output.status.success() {
-        String::from_utf8(output.stdout).ok()
-    } else {
-        None
-    }
 }
 
 fn manager_name(m: PackageManager) -> &'static str {

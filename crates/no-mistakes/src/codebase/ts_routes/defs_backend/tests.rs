@@ -187,3 +187,16 @@ fn collect_backend_routes_helpers_filter_files_and_directories() {
     assert!(from_dir.iter().any(|(_, route)| route == "/chain"));
     assert!(!globset.is_match("ts-routes/backend-walk-all.tsx"));
 }
+
+#[test]
+fn public_backend_route_collector_applies_gitignore_outside_git() {
+    let dir = crate::test_support::materialize_gitignore_fixture("non-git-discovery");
+    let mut builder = globset::GlobSetBuilder::new();
+    builder.add(globset::Glob::new("**/*.mts").unwrap());
+    let globset = builder.build().unwrap();
+
+    let routes = collect_backend_routes_in_dir(dir.path(), "app", &globset);
+
+    assert!(routes.iter().any(|(_, route)| route == "/visible"));
+    assert!(!routes.iter().any(|(_, route)| route == "/ignored"));
+}

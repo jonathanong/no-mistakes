@@ -3,7 +3,6 @@
 
 use super::frameworks::framework_present;
 use super::{CheckCommand, CheckKind, ImpactedChecksArgs, ImpactedChecksReport};
-use crate::config::v2::load_v2_config;
 use crate::config::v2::schema::{CheckFileArgs, NoMistakesConfig};
 use crate::tests::{PlanArgs, TestFramework, Warning};
 use anyhow::Result;
@@ -13,19 +12,16 @@ use std::path::Path;
 
 /// Compute the impacted-checks report (shared by the CLI and N-API).
 pub fn generate_impacted_checks(args: &ImpactedChecksArgs) -> Result<ImpactedChecksReport> {
-    let cwd = std::env::current_dir()?;
-    let root = crate::cli::resolve_optional_root(Some(&args.root), &cwd);
-    let root = crate::codebase::ts_resolver::normalize_path(&root);
-    let root = root.canonicalize().unwrap_or(root);
-    let config = load_v2_config(&root, args.config.as_deref())?;
-
     let plan_args = plan_args_for(args, None);
-    let collected = crate::tests::changed_files::collect_changed_files(&plan_args, &root)?;
+    let prepared = crate::tests::prepared_plan::PreparedTestPlanRequest::prepare(&plan_args)?;
+    let root = &prepared.root;
+    let config = &prepared.config;
+    let collected = &prepared.collected;
     let changed_files: Vec<String> = sorted_unique(
         collected
             .files
             .iter()
-            .map(|file| relative_slash(&root, file)),
+            .map(|file| relative_slash(root, file)),
     );
     // Files that no longer exist on disk — deleted via `--diff`, removed on the
     // `--base` branch (whose `git diff --name-only` omits status), or a missing
@@ -35,7 +31,7 @@ pub fn generate_impacted_checks(args: &ImpactedChecksArgs) -> Result<ImpactedChe
         .files
         .iter()
         .filter(|file| !file.exists())
-        .map(|file| relative_slash(&root, file))
+        .map(|file| relative_slash(root, file))
         .collect();
 
     let mut checks: Vec<CheckCommand> = Vec::new();
@@ -53,11 +49,11 @@ pub fn generate_impacted_checks(args: &ImpactedChecksArgs) -> Result<ImpactedChe
         TestFramework::Playwright,
         TestFramework::Swift,
     ] {
-        if !framework_present(&root, &config, framework) {
+        if !framework_present(root, config, framework, prepared.root_visible_paths()) {
             continue;
         }
         let framework_args = plan_args_for(args, Some(framework));
-        let plan = crate::tests::plan::generate_plan(&framework_args)?;
+        let plan = crate::tests::plan::generate_plan_with_prepared(&framework_args, &prepared)?;
         fallback_triggered |= plan.fallback_triggered;
         warnings.extend(plan.warnings.iter().cloned());
         for test in &plan.selected_tests {
@@ -74,7 +70,7 @@ pub fn generate_impacted_checks(args: &ImpactedChecksArgs) -> Result<ImpactedChe
         }
     }
 
-    checks.extend(generic_checks(&config, &changed_files, &missing)?);
+    checks.extend(generic_checks(config, &changed_files, &missing)?);
 
     Ok(ImpactedChecksReport {
         changed_files,
@@ -144,7 +140,10 @@ fn build_globset(patterns: &[String]) -> Result<Option<GlobSet>> {
     Ok(Some(builder.build()?))
 }
 
-fn plan_args_for(args: &ImpactedChecksArgs, framework: Option<TestFramework>) -> PlanArgs {
+pub(super) fn plan_args_for(
+    args: &ImpactedChecksArgs,
+    framework: Option<TestFramework>,
+) -> PlanArgs {
     let mut changed_file = args.changed_file.clone();
     changed_file.extend(args.files.iter().cloned());
     PlanArgs {

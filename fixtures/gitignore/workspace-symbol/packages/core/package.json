@@ -1,0 +1,4 @@
+{
+  "name": "@fixture/hidden",
+  "exports": "./generated-output/index.mts"
+}

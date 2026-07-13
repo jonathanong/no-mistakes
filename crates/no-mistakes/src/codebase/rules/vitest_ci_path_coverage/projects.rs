@@ -42,14 +42,15 @@ impl CoverageSource {
     }
 }
 
-pub(super) fn coverage_units(
+pub(super) fn coverage_units_with_catalog(
     root: &Path,
     config: &NoMistakesConfig,
     opts: &Options,
+    catalog: Option<&super::super::PreparedVitestProjectCatalog>,
 ) -> Result<Vec<CoverageUnit>> {
     let mut units = Vec::new();
     if opts.include_vitest_project_globs.unwrap_or(true) {
-        for project in vitest_projects(root, config, opts)? {
+        for project in vitest_projects(root, config, opts, catalog)? {
             units.push(CoverageUnit {
                 project: project_name(&project),
                 source: CoverageSource::TestInclude,
@@ -86,6 +87,7 @@ fn vitest_projects(
     root: &Path,
     config: &NoMistakesConfig,
     opts: &Options,
+    catalog: Option<&super::super::PreparedVitestProjectCatalog>,
 ) -> Result<Vec<ConfigProject>> {
     if opts.explicit_projects_only {
         let projects = explicit_vitest_projects(root, config);
@@ -98,15 +100,19 @@ fn vitest_projects(
         return Ok(projects);
     }
 
-    let mut projects = if needs_config_projects(root, config) {
-        project_config::load_projects(
-            root,
-            Framework::Vitest,
-            config.tests.vitest.configs.as_ref(),
-        )?
-    } else {
-        Vec::new()
-    };
+    let mut projects =
+        if super::super::vitest_project_catalog::config_projects_required(root, config) {
+            match catalog {
+                Some(catalog) => catalog.config_projects()?,
+                None => project_config::load_projects(
+                    root,
+                    Framework::Vitest,
+                    config.tests.vitest.configs.as_ref(),
+                )?,
+            }
+        } else {
+            Vec::new()
+        };
     for project in explicit_vitest_projects(root, config) {
         merge_explicit_project(&mut projects, project);
     }
@@ -123,23 +129,6 @@ fn explicit_vitest_projects(root: &Path, config: &NoMistakesConfig) -> Vec<Confi
             integration_config::configured_project(root, project_name, policy)
         })
         .collect()
-}
-
-fn needs_config_projects(root: &Path, config: &NoMistakesConfig) -> bool {
-    config.tests.vitest.configs.is_none()
-        || config.tests.vitest.projects.is_empty()
-        || config
-            .tests
-            .vitest
-            .configs
-            .as_ref()
-            .is_some_and(|configs| configs.values().iter().any(|raw| root.join(raw).exists()))
-        || config
-            .tests
-            .vitest
-            .projects
-            .values()
-            .any(|policy| policy.include.is_empty())
 }
 
 fn project_name(project: &ConfigProject) -> String {

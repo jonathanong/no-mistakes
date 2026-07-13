@@ -1,5 +1,8 @@
 use super::coverage::build_coverage;
-use super::fetch::{collect_fetches_for_routes, expand_fetch_edges};
+use super::fetch::{
+    collect_fetches_for_routes_from_snapshot, collect_fetches_for_routes_from_snapshot_with_facts,
+    expand_fetch_edges,
+};
 use super::pipeline_setup::PlaywrightSetup;
 use super::types::{Analysis, CoverageInputs, EdgeReport, TestFileAnalysis, UniqueSelectorPolicy};
 use crate::playwright::config::Settings;
@@ -12,6 +15,8 @@ pub(crate) fn finish_analysis(
     unique_selector_policy: UniqueSelectorPolicy,
     setup: PlaywrightSetup,
     test_analysis: TestFileAnalysis,
+    facts: Option<&dyn crate::codebase::dependencies::graph::TsFactLookup>,
+    snapshot: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> Result<Analysis> {
     let route_root = root.join(&settings.frontend_root);
     let mut edges = test_analysis.edges;
@@ -19,7 +24,21 @@ pub(crate) fn finish_analysis(
         Default::default()
     } else {
         crate::perf_trace::trace("playwright.fetches_for_routes", || {
-            collect_fetches_for_routes(setup.routes.as_slice(), &route_root, root)
+            match facts.filter(|facts| facts.playwright_source_files().is_some()) {
+                Some(facts) => collect_fetches_for_routes_from_snapshot_with_facts(
+                    setup.routes.as_slice(),
+                    &route_root,
+                    root,
+                    snapshot,
+                    facts,
+                ),
+                None => collect_fetches_for_routes_from_snapshot(
+                    setup.routes.as_slice(),
+                    &route_root,
+                    root,
+                    snapshot,
+                ),
+            }
         })?
     };
     edges.extend(expand_fetch_edges(&edges, &fetch_idx));

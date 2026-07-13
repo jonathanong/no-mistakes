@@ -1,14 +1,41 @@
 use crate::playwright::selectors::{
     collect_app_selectors, compile_selector_regexes, compile_selector_regexes_with_html_ids,
-    extract_app_selectors, extract_app_selectors_with_regexes, AppSelector, AppSelectorValue,
+    extract_app_selectors, extract_app_selectors_with_regexes,
+    extract_app_selectors_with_regexes_from_visible, AppSelector, AppSelectorValue,
     SelectorMatcher,
 };
 use crate::playwright::test_support::{fixture_path, fixture_source};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
 
 fn attrs() -> Vec<String> {
     vec!["data-testid".to_string(), "data-pw".to_string()]
+}
+
+#[test]
+fn pass4b_selector_import_skips_ignored_candidate_for_visible_fallback() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass4b-shadow");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let app = root.join("playwright/App.tsx");
+    let source = std::fs::read_to_string(&app).unwrap();
+    let visible = crate::codebase::ts_source::discover_visible_paths(&root)
+        .into_iter()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
+        .collect::<HashSet<_>>();
+    let regexes = compile_selector_regexes(&["data-testid".to_string()], &BTreeMap::new());
+
+    let selectors =
+        extract_app_selectors_with_regexes_from_visible(&app, &source, &regexes, &visible).unwrap();
+
+    assert_eq!(selectors.len(), 1);
+    assert_eq!(selectors[0].display_value(), "visible-selector");
+
+    let discovered =
+        collect_app_selectors(&root.join("playwright"), &["data-testid".to_string()]).unwrap();
+    assert_eq!(discovered.len(), 1);
+    assert_eq!(discovered[0].display_value(), "visible-selector");
 }
 
 fn component_attrs() -> BTreeMap<String, String> {

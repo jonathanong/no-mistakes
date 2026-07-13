@@ -1,6 +1,9 @@
-fn load_package(dir: &Path) -> Result<Option<WorkspacePackage>> {
+fn load_package(
+    dir: &Path,
+    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+) -> Result<Option<WorkspacePackage>> {
     let pkg_path = dir.join("package.json");
-    if !pkg_path.exists() {
+    if !workspace_path_is_file(&pkg_path, visible_files) {
         return Ok(None);
     }
 
@@ -13,7 +16,7 @@ fn load_package(dir: &Path) -> Result<Option<WorkspacePackage>> {
     };
 
     // Resolve the entry file in priority order: exports > module > main > types
-    let entry = resolve_entry(dir, &pkg);
+    let entry = resolve_entry_with_visibility(dir, &pkg, visible_files);
 
     Ok(Some(WorkspacePackage {
         name,
@@ -25,16 +28,39 @@ fn load_package(dir: &Path) -> Result<Option<WorkspacePackage>> {
 }
 
 pub fn load_root_package(dir: &Path) -> Result<Option<WorkspacePackage>> {
-    load_package(dir)
+    let files = crate::codebase::ts_source::discover_visible_paths(dir);
+    load_root_package_from_files(dir, &files)
 }
 
-#[inline(never)]
-fn resolve_entry(dir: &Path, pkg: &PackageJson) -> Option<PathBuf> {
+#[doc(hidden)]
+pub fn load_root_package_from_files(
+    dir: &Path,
+    files: &[PathBuf],
+) -> Result<Option<WorkspacePackage>> {
+    let manifest = normalize_path(&dir.join("package.json"));
+    if !files
+        .iter()
+        .any(|path| normalize_path(path) == manifest)
+    {
+        return Ok(None);
+    }
+    let visible: std::collections::HashSet<PathBuf> = files
+        .iter()
+        .map(|path| normalize_path(path))
+        .collect();
+    load_package(dir, Some(&visible))
+}
+
+fn resolve_entry_with_visibility(
+    dir: &Path,
+    pkg: &PackageJson,
+    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+) -> Option<PathBuf> {
     // Check `exports` first (supports both string and `{".": ...}` forms).
     if let Some(exports) = &pkg.exports {
         if let Some(entry_str) = exports_to_entry_path(exports) {
             let candidate = normalize_path(&dir.join(entry_str));
-            if let Some(resolved) = try_resolve(&candidate) {
+            if let Some(resolved) = resolve_workspace_path(&candidate, visible_files) {
                 return Some(resolved);
             }
         }
@@ -43,7 +69,7 @@ fn resolve_entry(dir: &Path, pkg: &PackageJson) -> Option<PathBuf> {
     // module field (ESM)
     if let Some(module) = &pkg.module {
         let candidate = normalize_path(&dir.join(module));
-        if let Some(resolved) = try_resolve(&candidate) {
+        if let Some(resolved) = resolve_workspace_path(&candidate, visible_files) {
             return Some(resolved);
         }
     }
@@ -51,7 +77,7 @@ fn resolve_entry(dir: &Path, pkg: &PackageJson) -> Option<PathBuf> {
     // main field (CJS/default)
     if let Some(main) = &pkg.main {
         let candidate = normalize_path(&dir.join(main));
-        if let Some(resolved) = try_resolve(&candidate) {
+        if let Some(resolved) = resolve_workspace_path(&candidate, visible_files) {
             return Some(resolved);
         }
     }
@@ -59,7 +85,7 @@ fn resolve_entry(dir: &Path, pkg: &PackageJson) -> Option<PathBuf> {
     // types field
     if let Some(types) = &pkg.types {
         let candidate = normalize_path(&dir.join(types));
-        if candidate.is_file() {
+        if workspace_path_is_file(&candidate, visible_files) {
             return Some(candidate);
         }
     }
@@ -72,13 +98,23 @@ fn resolve_entry(dir: &Path, pkg: &PackageJson) -> Option<PathBuf> {
         "index.mts",
         "index.ts",
     ] {
-        let p = dir.join(name);
-        if p.is_file() {
+        let p = normalize_path(&dir.join(name));
+        if workspace_path_is_file(&p, visible_files) {
             return Some(p);
         }
     }
 
     None
+}
+
+fn resolve_workspace_path(
+    path: &Path,
+    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+) -> Option<PathBuf> {
+    match visible_files {
+        Some(visible) => try_resolve_from_visible(path, visible),
+        None => try_resolve(path),
+    }
 }
 
 fn exports_to_entry_path(exports: &serde_json::Value) -> Option<String> {

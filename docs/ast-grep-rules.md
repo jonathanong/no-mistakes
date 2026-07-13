@@ -43,7 +43,8 @@ finding — no extra flag needed.
 
 ### `no-ungated-directory-walk`
 
-Flags a raw `std::fs::read_dir(...)` or `WalkDir::new(...)` call expression
+Flags raw `std::fs::read_dir(...)`, `fs::read_dir(...)`, `WalkDir::new(...)`,
+or `walkdir::WalkDir::new(...)` call expressions
 under `crates/no-mistakes/src/**`. Neither has `.gitignore` awareness beyond
 whatever directory names get hardcoded into a denylist, so an unguarded
 recursive walk can descend into huge generated/vendored directories
@@ -53,13 +54,11 @@ awareness" section for the full explanation and the preferred fix order
 (derive from the git-visible file list first; fall back to the `ignore`
 crate's `WalkBuilder` only outside a git repo).
 
-The rule carries a small, explicit `ignores` allowlist for call sites that are
-either the documented non-git fallback itself or are genuinely bounded
-(single-level `read_dir`, or looping over a small explicitly-configured
-directory list) — see the comment at the top of
-`.ast-grep/rules/no-ungated-directory-walk.yml` for the reasoning behind each
-entry. Sites are added to the allowlist deliberately and individually, not via
-broad glob categories, so a new raw walk anywhere else still gets caught.
+Production discovery has no file-level exemptions. Non-git fallbacks must use
+the `ignore` crate, and bounded discovery must still derive from the shared
+git-visible candidate list so later edits cannot introduce an unchecked
+recursive walk inside an exempt file. The rule's sole `ignores` entry is a
+test-only helper that lists one small checked-in parser fixture directory.
 
 ### `no-cache-disabling-builder`
 

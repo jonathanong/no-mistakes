@@ -21,76 +21,8 @@ pub use filters::{fallback_test_path, ProjectTestFilter};
 use ownership::owning_projects;
 pub use targets::TestExecutionTarget;
 pub use types::{DiscoveredTests, TestRunner};
-
-pub fn discover_tests(
-    root: &Path,
-    config: &NoMistakesConfig,
-    runner: TestRunner,
-) -> Result<DiscoveredTests> {
-    let projects = projects::runner_projects(root, config, runner)?;
-    discover_from_projects(root, config, runner, projects)
-}
-
-pub fn discovered_test_globs(
-    root: &Path,
-    config: &NoMistakesConfig,
-    runner: TestRunner,
-) -> Result<Option<Vec<String>>> {
-    let discovered = discover_tests(root, config, runner)?;
-    if discovered.tests.is_empty() {
-        return Ok(None);
-    }
-    Ok(Some(
-        discovered
-            .tests
-            .iter()
-            .map(|path| {
-                literal_path_glob(&crate::codebase::ts_source::relative_slash_path(root, path))
-            })
-            .collect(),
-    ))
-}
-
-pub fn project_filters(
-    root: &Path,
-    config: &NoMistakesConfig,
-) -> Vec<(TestRunner, ProjectTestFilter)> {
-    let mut filters = Vec::new();
-    for runner in [
-        TestRunner::Dotnet,
-        TestRunner::Vitest,
-        TestRunner::Playwright,
-        TestRunner::Swift,
-    ] {
-        let projects = projects::runner_projects_lossy(root, config, runner);
-        filters.extend(
-            projects
-                .into_iter()
-                .filter_map(ProjectTestFilter::from_project)
-                .map(|filter| (runner, filter)),
-        );
-    }
-    filters
-}
-
-pub(crate) fn named_project_filters(
-    root: &Path,
-    config: &NoMistakesConfig,
-    runner: TestRunner,
-    names: &[String],
-) -> Vec<ProjectTestFilter> {
-    let projects = projects::runner_projects_lossy(root, config, runner);
-    projects
-        .into_iter()
-        .filter(|project| {
-            project
-                .policy_name
-                .as_ref()
-                .is_some_and(|name| names.contains(name))
-        })
-        .filter_map(ProjectTestFilter::from_project)
-        .collect()
-}
+include!("test_discovery/prepared.rs");
+include!("test_discovery/api.rs");
 
 pub fn literal_path_glob(path: &str) -> String {
     let mut escaped = String::with_capacity(path.len());
@@ -103,14 +35,19 @@ pub fn literal_path_glob(path: &str) -> String {
     escaped
 }
 
-fn discover_from_projects(
+fn discover_from_projects_from_visible(
     root: &Path,
     config: &NoMistakesConfig,
     runner: TestRunner,
     projects: Vec<ConfigProject>,
+    visible_paths: &[PathBuf],
+    tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> Result<DiscoveredTests> {
-    let files =
-        crate::codebase::ts_source::discover_files(root, &config.filesystem.skip_directories);
+    let files = crate::codebase::ts_source::discover_files_from_visible(
+        root,
+        &config.filesystem.skip_directories,
+        visible_paths,
+    );
     let mut tests = BTreeSet::new();
     let mut targets_by_path: BTreeMap<PathBuf, BTreeSet<TestExecutionTarget>> = BTreeMap::new();
 
@@ -156,23 +93,59 @@ fn discover_from_projects(
         root,
         config,
         runner,
-        files,
-        tests,
-        targets_by_path,
-        project_scoped_paths,
+        ProjectDiscoveryState {
+            files,
+            tests,
+            targets_by_path,
+            project_scoped_paths,
+        },
+        visible_paths,
+        tsconfig,
     ))
+}
+
+fn resolve_tsconfig_lossy(
+    root: &Path,
+    visible_paths: &[PathBuf],
+) -> crate::codebase::ts_resolver::TsConfig {
+    crate::codebase::ts_resolver::resolve_tsconfig_from_visible(None, root, visible_paths)
+        .unwrap_or_else(|_| crate::codebase::ts_resolver::TsConfig {
+            dir: root.to_path_buf(),
+            paths: Vec::new(),
+            paths_dir: root.to_path_buf(),
+            base_url: None,
+        })
+}
+
+struct ProjectDiscoveryState {
+    files: Vec<PathBuf>,
+    tests: BTreeSet<PathBuf>,
+    targets_by_path: BTreeMap<PathBuf, BTreeSet<TestExecutionTarget>>,
+    project_scoped_paths: BTreeSet<PathBuf>,
 }
 
 fn discover_with_fallback(
     root: &Path,
     config: &NoMistakesConfig,
     runner: TestRunner,
-    files: Vec<PathBuf>,
-    mut tests: BTreeSet<PathBuf>,
-    mut targets_by_path: BTreeMap<PathBuf, BTreeSet<TestExecutionTarget>>,
-    project_scoped_paths: BTreeSet<PathBuf>,
+    state: ProjectDiscoveryState,
+    visible_paths: &[PathBuf],
+    tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> DiscoveredTests {
-    let runner_reserved_tests = reserved::runner_reserved_tests(root, config, runner, &files);
+    let ProjectDiscoveryState {
+        files,
+        mut tests,
+        mut targets_by_path,
+        project_scoped_paths,
+    } = state;
+    let runner_reserved_tests = reserved::runner_reserved_tests_from_visible(
+        root,
+        config,
+        runner,
+        &files,
+        visible_paths,
+        tsconfig,
+    );
     let mut used_fallback = false;
     for path in files {
         if tests.contains(&path)

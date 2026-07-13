@@ -1,0 +1,12 @@
+vitest.config.ts
+playwright.config.ts
+tsconfig.json
+server/ignored-route.ts
+client/ignored-client.ts
+pnpm-lock.yaml
+src/bin/ignored.rs
+crates/ignored/Cargo.toml
+ignored-root/Cargo.toml
+explicit-dir/index.ts
+dotnet/Ignored.cs
+ignored-worker.ts

@@ -17,6 +17,7 @@ pub(super) fn dependency_trigger(
     config: &NoMistakesConfig,
     framework: TestFramework,
     changed_files: &[PathBuf],
+    prepared: &crate::tests::prepared_plan::PreparedTestPlanRequest,
 ) -> Result<Option<(String, PathBuf)>> {
     let plan = match framework {
         TestFramework::Dotnet => &config.test_plan.dotnet,
@@ -26,9 +27,9 @@ pub(super) fn dependency_trigger(
     };
     let ignored_sets = ignored_changed_test_sets(
         root,
-        config,
         &plan.full_suite_triggers.ignore_changed_tests,
         changed_files,
+        prepared,
     )?;
     for (project_name, trigger) in &plan.full_suite_triggers.projects {
         let Some(project) = config.projects.get(project_name) else {
@@ -54,9 +55,9 @@ pub(super) fn dependency_trigger(
 
 fn ignored_changed_test_sets(
     root: &Path,
-    config: &NoMistakesConfig,
     ignored: &[TestPlanIgnoredChangedTestsFramework],
     changed_files: &[PathBuf],
+    prepared: &crate::tests::prepared_plan::PreparedTestPlanRequest,
 ) -> Result<Vec<HashSet<PathBuf>>> {
     let mut sets = Vec::new();
     for framework in ignored {
@@ -66,8 +67,7 @@ fn ignored_changed_test_sets(
             TestPlanIgnoredChangedTestsFramework::Vitest => TestRunner::Vitest,
             TestPlanIgnoredChangedTestsFramework::Swift => TestRunner::Swift,
         };
-        let set = match no_mistakes::codebase::test_discovery::discover_tests(root, config, runner)
-        {
+        let set = match prepared.discover_runner_tests(runner) {
             Ok(discovered) => discovered.tests.into_iter().collect(),
             Err(_) => changed_files
                 .iter()

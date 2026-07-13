@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, GraphBuildPlan, NodeId};
 use crate::codebase::swift::collect_swift_facts;
 use crate::codebase::ts_resolver::{normalize_path, TsConfig};
-use crate::config::v2::load_v2_config;
+use crate::config::v2::load_v2_config_from_visible;
 
 struct TargetInfo {
     target: String,
@@ -49,9 +49,11 @@ pub struct TestTargetRow {
 /// Build the Swift graph and target index once.
 pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<SwiftReport> {
     let root = normalize_path(root);
+    let visible_paths = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let root_visible_paths = visible_paths.paths_for(&root);
     // Propagate errors so an explicit but missing/invalid `--config` is reported
     // instead of silently producing an empty result.
-    let config = load_v2_config(&root, config_path)?;
+    let config = load_v2_config_from_visible(&root, config_path, &root_visible_paths)?;
     let packages = config.tests.swift.packages.clone();
 
     let tsconfig = TsConfig::default();
@@ -59,10 +61,29 @@ pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<SwiftR
         swift: true,
         ..GraphBuildPlan::default()
     };
-    let graph = DepGraph::build_with_plan_and_config(&root, &tsconfig, plan, config_path)?;
-
-    let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
-    let facts = collect_swift_facts(&root, &all_files, &packages);
+    let graph_files = crate::codebase::dependencies::graph::GraphFiles::from_files(
+        crate::codebase::ts_source::discover_files_from_visible(&root, &[], &root_visible_paths),
+    );
+    let codebase_config =
+        crate::codebase::config::config_from_loaded_v2(&root, config_path, &config);
+    let prepared_graph = crate::codebase::dependencies::graph::prepare_graph_config(
+        &root,
+        plan,
+        &codebase_config,
+        &config,
+        &visible_paths,
+    )?;
+    let all_files = graph_files.all();
+    let facts = collect_swift_facts(&root, all_files, &packages);
+    let graph = DepGraph::build_with_plan_files_prepared_config_and_swift_facts(
+        &root,
+        &tsconfig,
+        plan,
+        &graph_files,
+        config_path,
+        &prepared_graph,
+        &facts,
+    )?;
     let mut targets = HashMap::new();
     for package in &facts.packages {
         for (name, target) in &package.targets {

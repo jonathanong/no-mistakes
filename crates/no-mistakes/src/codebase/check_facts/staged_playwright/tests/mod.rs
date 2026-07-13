@@ -27,7 +27,8 @@ fn occurrence_settings(
     navigation_helpers: &[&str],
     selector_attributes: &[&str],
 ) -> crate::playwright::config::Settings {
-    let mut settings = crate::playwright::config::load_settings(&root(), None, &[], None).unwrap();
+    let mut settings =
+        crate::playwright::config::test_support::load_settings(&root(), None, &[], None).unwrap();
     settings.navigation_helpers = navigation_helpers
         .iter()
         .map(|value| value.to_string())

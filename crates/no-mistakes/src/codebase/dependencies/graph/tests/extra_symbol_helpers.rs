@@ -40,6 +40,7 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
     visible.insert(current.clone());
     visible.insert(asset.clone());
     visible.insert(barrel.clone());
+    visible.insert(workspace_target.clone());
     let tsconfig = TsConfig {
         dir: p("/repo/packages/app"),
         paths: vec![],
@@ -112,7 +113,7 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
         ],
     };
 
-    let imported = imported_symbol_map(&current, &symbols, &resolver, &workspace);
+    let imported = imported_symbol_map(&current, &symbols, &resolver, &workspace, &visible);
     assert_eq!(
         target_node(imported.get("workspaceValue").unwrap()),
         (
@@ -133,7 +134,7 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
     );
     assert!(!imported.contains_key("missing"));
 
-    let namespaces = namespace_import_map(&current, &symbols, &resolver, &workspace);
+    let namespaces = namespace_import_map(&current, &symbols, &resolver, &workspace, &visible);
     assert_eq!(
         namespace_target_node(namespaces.get("core").unwrap(), "parse"),
         (
@@ -195,7 +196,8 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
             &HashMap::new(),
             &facts,
             &resolver,
-            &workspace
+            &workspace,
+            &visible,
         ),
         Some((
             NodeId::Symbol {
@@ -211,7 +213,8 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
         &HashMap::new(),
         &facts,
         &resolver,
-        &workspace
+        &workspace,
+        &visible,
     )
     .is_some());
     assert!(resolve_imported_callee(
@@ -220,7 +223,8 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
         &HashMap::new(),
         &facts,
         &resolver,
-        &workspace
+        &workspace,
+        &visible,
     )
     .is_none());
 }
@@ -323,8 +327,11 @@ fn star_reexport_edges_skip_invalid_default_and_unresolved_targets() {
 
     let edges = collect_symbol_edges(
         Path::new("/repo"),
-        std::slice::from_ref(&current),
-        &[current.clone(), target.clone()],
+        SymbolGraphFiles {
+            indexable: std::slice::from_ref(&current),
+            all: &[current.clone(), target.clone()],
+            visible: &visible,
+        },
         &facts,
         &resolver,
         &Default::default(),
@@ -400,10 +407,16 @@ fn symbol_edge_helpers_cover_unreachable_export_and_barrel_fallback_paths() {
     );
     let inputs = ExportEdgeInputs {
         path: &current,
-        symbols: facts.get_ts_facts(&barrel).unwrap().symbols.as_ref().unwrap(),
+        symbols: facts
+            .get_ts_facts(&barrel)
+            .unwrap()
+            .symbols
+            .as_ref()
+            .unwrap(),
         facts: &facts,
         resolver: &resolver,
         workspace: &workspace,
+        visible_files: &visible,
     };
     let mut edges = Vec::new();
     collect_star_reexport_edges(&inputs, &mut edges);
@@ -425,7 +438,8 @@ fn symbol_edge_helpers_cover_unreachable_export_and_barrel_fallback_paths() {
             &HashMap::new(),
             &facts,
             &resolver,
-            &workspace
+            &workspace,
+            &visible,
         ),
         None
     );
@@ -449,7 +463,10 @@ fn symbol_bfs_records_alternate_via_kinds_for_existing_nodes() {
     let mut edges = EdgeMap::new();
     edges.insert(
         root.clone(),
-        vec![(left.clone(), EdgeKind::Import), (right.clone(), EdgeKind::Import)],
+        vec![
+            (left.clone(), EdgeKind::Import),
+            (right.clone(), EdgeKind::Import),
+        ],
     );
     edges.insert(left, vec![(target.clone(), EdgeKind::Import)]);
     edges.insert(right, vec![(target.clone(), EdgeKind::DynamicImport)]);

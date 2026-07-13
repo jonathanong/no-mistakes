@@ -1,0 +1,13 @@
+tests:
+  playwright:
+    configs: playwright.config.ts
+    projects:
+      pw-unit:
+        integration_suites:
+          unit: [openai]
+  vitest:
+    configs: vitest.config.ts
+    projects:
+      unit:
+        integration_suites:
+          unit: [aws]

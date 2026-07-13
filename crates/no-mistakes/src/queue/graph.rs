@@ -1,16 +1,13 @@
 use crate::queue::extract::FileFacts;
 use crate::queue::graph_build::build_report;
 use crate::queue::graph_model::{build_filter, InternalProducer, InternalWorker, ProjectReport};
-use crate::queue::resolver::{load_tsconfig, resolve_import};
-use crate::queue::source::discover_source_files;
+use crate::queue::resolver::{load_tsconfig_from_visible, resolve_import_from_visible};
 use crate::queue::types::QueueKey;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 mod fact_sources;
-use fact_sources::{
-    load_factory_names, queue_project_facts_from_shared, queue_project_facts_from_ts,
-};
+use fact_sources::{queue_project_facts_from_shared, queue_project_facts_from_ts};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum RelatedDirection {
@@ -25,11 +22,25 @@ pub fn analyze_project(
     filters: &[String],
 ) -> anyhow::Result<ProjectReport> {
     let root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
-    let tsconfig = load_tsconfig(&root, tsconfig_path)?;
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let visible_paths = snapshot.paths_for(&root);
+    let visible_files =
+        crate::codebase::ts_source::discover_files_from_visible(&root, &[], &visible_paths);
+    let visible_set = visible_files.iter().cloned().collect();
+    let tsconfig = load_tsconfig_from_visible(&root, tsconfig_path, &visible_files)?;
     let filter = build_filter(filters)?;
-    let factory_names = load_factory_names(&root);
-    let files = discover_source_files(&root)
+    let factory_names = crate::config::v2::load_v2_config_from_visible(&root, None, &visible_paths)
+        .map(|config| config.queues.factories)
+        .unwrap_or_default();
+    let files = visible_files
         .into_iter()
+        .filter(|path| {
+            path.extension()
+                .and_then(|extension| extension.to_str())
+                .is_some_and(|extension| {
+                    crate::codebase::ts_source::TS_JS_EXTENSIONS.contains(&extension)
+                })
+        })
         .filter(|path| {
             filter
                 .as_ref()
@@ -49,8 +60,8 @@ pub fn analyze_project(
     let facts = queue_project_facts_from_ts(ts_facts, filter.as_ref(), &root);
 
     let queue_defs = queue_definitions(&facts);
-    let producers = resolve_producers(&root, &facts, &queue_defs, &tsconfig);
-    let workers = resolve_workers(&root, &facts, &queue_defs, &tsconfig);
+    let producers = resolve_producers(&root, &facts, &queue_defs, &tsconfig, &visible_set);
+    let workers = resolve_workers(&root, &facts, &queue_defs, &tsconfig, &visible_set);
     Ok(build_report(&root, producers, workers, &facts))
 }
 
@@ -62,12 +73,37 @@ pub fn analyze_project_with_facts(
 ) -> anyhow::Result<ProjectReport> {
     let root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
     let root = root.as_path();
-    let tsconfig = load_tsconfig(root, tsconfig_path)?;
+    let tsconfig = load_tsconfig_from_visible(root, tsconfig_path, shared.files())?;
     let filter = build_filter(filters)?;
     let facts = queue_project_facts_from_shared(shared, filter.as_ref(), root);
+    let visible_files = shared.files().iter().cloned().collect();
     let queue_defs = queue_definitions(&facts);
-    let producers = resolve_producers(root, &facts, &queue_defs, &tsconfig);
-    let workers = resolve_workers(root, &facts, &queue_defs, &tsconfig);
+    let producers = resolve_producers(root, &facts, &queue_defs, &tsconfig, &visible_files);
+    let workers = resolve_workers(root, &facts, &queue_defs, &tsconfig, &visible_files);
+    Ok(build_report(root, producers, workers, &facts))
+}
+
+/// Analyze shared queue facts with a TypeScript config already prepared by the caller.
+///
+/// The aggregate check uses this entrypoint so every domain shares the request's
+/// gitignore-aware config selection. Standalone queue commands continue to use
+/// [`analyze_project_with_facts`] and retain their existing config discovery behavior.
+#[doc(hidden)]
+pub fn analyze_project_with_prepared_facts(
+    root: &Path,
+    tsconfig: &crate::codebase::ts_resolver::TsConfig,
+    filters: &[String],
+    shared: &crate::codebase::check_facts::CheckFactMap,
+) -> anyhow::Result<ProjectReport> {
+    let root = root.canonicalize().unwrap_or(root.to_path_buf());
+    let root = root.as_path();
+    let tsconfig = crate::queue::resolver::TsConfig::from(tsconfig);
+    let filter = build_filter(filters)?;
+    let facts = queue_project_facts_from_shared(shared, filter.as_ref(), root);
+    let visible_files = shared.files().iter().cloned().collect();
+    let queue_defs = queue_definitions(&facts);
+    let producers = resolve_producers(root, &facts, &queue_defs, &tsconfig, &visible_files);
+    let workers = resolve_workers(root, &facts, &queue_defs, &tsconfig, &visible_files);
     Ok(build_report(root, producers, workers, &facts))
 }
 
@@ -85,10 +121,11 @@ fn resolve_producers(
     facts: &HashMap<PathBuf, FileFacts>,
     queue_defs: &HashMap<PathBuf, HashMap<String, String>>,
     tsconfig: &crate::queue::resolver::TsConfig,
+    visible_files: &std::collections::HashSet<PathBuf>,
 ) -> Vec<InternalProducer> {
     let mut out = Vec::new();
     for (path, facts) in facts {
-        let local = local_queues(path, root, facts, queue_defs, tsconfig);
+        let local = local_queues(path, root, facts, queue_defs, tsconfig, visible_files);
         for site in &facts.producers {
             let queue = local.get(&site.binding).cloned();
             out.push(InternalProducer {
@@ -105,6 +142,7 @@ fn resolve_workers(
     facts: &HashMap<PathBuf, FileFacts>,
     queue_defs: &HashMap<PathBuf, HashMap<String, String>>,
     tsconfig: &crate::queue::resolver::TsConfig,
+    visible_files: &std::collections::HashSet<PathBuf>,
 ) -> Vec<InternalWorker> {
     let by_name = queue_defs
         .iter()
@@ -120,10 +158,9 @@ fn resolve_workers(
                 })
             });
             let mut site = site.clone();
-            site.processor_file = site
-                .processor_specifier
-                .as_ref()
-                .and_then(|spec| resolve_import(spec, path, root, tsconfig));
+            site.processor_file = site.processor_specifier.as_ref().and_then(|spec| {
+                resolve_import_from_visible(spec, path, root, tsconfig, visible_files)
+            });
             out.push(InternalWorker { site, queue });
         }
     }
@@ -136,6 +173,7 @@ fn local_queues(
     facts: &FileFacts,
     queue_defs: &HashMap<PathBuf, HashMap<String, String>>,
     tsconfig: &crate::queue::resolver::TsConfig,
+    visible_files: &std::collections::HashSet<PathBuf>,
 ) -> HashMap<String, QueueKey> {
     let mut map = facts
         .queue_bindings
@@ -151,7 +189,9 @@ fn local_queues(
         })
         .collect::<HashMap<_, _>>();
     for import in &facts.imports {
-        let Some(resolved) = resolve_import(&import.source, path, root, tsconfig) else {
+        let Some(resolved) =
+            resolve_import_from_visible(&import.source, path, root, tsconfig, visible_files)
+        else {
             continue;
         };
         if let Some(exports) = queue_defs.get(&resolved) {

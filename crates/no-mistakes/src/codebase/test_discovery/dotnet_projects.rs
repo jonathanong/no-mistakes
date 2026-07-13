@@ -4,11 +4,12 @@ use crate::integration_tests::types::ConfigProject;
 use anyhow::{bail, Result};
 use std::path::{Path, PathBuf};
 
-pub(super) fn dotnet_projects(
+pub(super) fn dotnet_projects_from_visible(
     root: &Path,
     config: &NoMistakesConfig,
+    visible_paths: &[PathBuf],
 ) -> Result<Vec<ConfigProject>> {
-    let (projects, missing) = collect_projects(root, config);
+    let (projects, missing) = collect_projects(root, config, visible_paths);
     if let Some(project) = missing.first() {
         bail!(
             "configured dotnet project `{}` at `{}` could not be resolved",
@@ -19,19 +20,27 @@ pub(super) fn dotnet_projects(
     Ok(projects)
 }
 
-pub(super) fn dotnet_projects_lossy(root: &Path, config: &NoMistakesConfig) -> Vec<ConfigProject> {
-    collect_projects(root, config).0
+pub(super) fn dotnet_projects_lossy_from_visible(
+    root: &Path,
+    config: &NoMistakesConfig,
+    visible_paths: &[PathBuf],
+) -> Vec<ConfigProject> {
+    collect_projects(root, config, visible_paths).0
 }
 
 fn collect_projects(
     root: &Path,
     config: &NoMistakesConfig,
+    visible_paths: &[PathBuf],
 ) -> (
     Vec<ConfigProject>,
     Vec<crate::codebase::dotnet::DotnetConfigProject>,
 ) {
-    let all_files =
-        crate::codebase::ts_source::discover_files(root, &config.filesystem.skip_directories);
+    let all_files = crate::codebase::ts_source::discover_files_from_visible(
+        root,
+        &config.filesystem.skip_directories,
+        visible_paths,
+    );
     let configured = crate::codebase::dotnet::configured_projects(root, &config.tests.dotnet);
     let facts = crate::codebase::dotnet::collect_dotnet_facts(root, &all_files, &configured);
     let mut projects = Vec::new();

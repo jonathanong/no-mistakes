@@ -2,7 +2,6 @@ use super::{
     import_bindings, root_spreads, shared, top_level_function_bodies, Ctx, ExprMap, ImportBinding,
     Options,
 };
-use crate::ast;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use anyhow::Result;
 use exports::exported_star_options;
@@ -13,6 +12,9 @@ use std::path::Path;
 mod calls;
 mod exports;
 mod members;
+mod merge;
+
+use merge::merge_options;
 
 pub(super) fn project_options(
     object: &ObjectExpression<'_>,
@@ -147,9 +149,13 @@ fn imported_options_from(
     }
     let result = match std::fs::read_to_string(&path) {
         Err(_) => Ok(None),
-        Ok(source) => ast::with_program(&path, &source, |program, source| {
-            exported_options(program, source, import.imported.as_str(), &path, ctx)
-        })
+        Ok(source) => crate::integration_tests::runner_config::with_program(
+            &path,
+            &source,
+            |program, source| {
+                exported_options(program, source, import.imported.as_str(), &path, ctx)
+            },
+        )
         .and_then(|options| options),
     };
     ctx.seen.remove(&path);
@@ -193,19 +199,4 @@ fn exported_options(
         object_seen: &mut object_seen,
     };
     project_options(object, &mut ctx).map(Some)
-}
-
-fn merge_options(base: &mut Options, next: Options) {
-    if next.name.is_some() {
-        base.name = next.name;
-    }
-    if next.root.is_some() {
-        base.root = next.root;
-    }
-    if next.include.is_some() {
-        base.include = next.include;
-    }
-    if next.exclude.is_some() {
-        base.exclude = next.exclude;
-    }
 }

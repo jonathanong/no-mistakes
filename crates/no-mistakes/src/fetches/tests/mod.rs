@@ -17,6 +17,7 @@ mod run_args_tests;
 mod run_with_base_root_tests;
 mod target_tests;
 mod url_extract_tests;
+mod visibility_tests;
 
 mod metadata_context_tests;
 mod metadata_visitor_tests;

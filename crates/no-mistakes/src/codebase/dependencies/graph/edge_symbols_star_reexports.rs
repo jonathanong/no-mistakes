@@ -1,7 +1,4 @@
-fn collect_star_reexport_edges(
-    inputs: &ExportEdgeInputs<'_>,
-    edges: &mut Vec<Edge>,
-) {
+fn collect_star_reexport_edges(inputs: &ExportEdgeInputs<'_>, edges: &mut Vec<Edge>) {
     let shadowed_exports = explicit_export_keys(inputs.symbols);
     let mut visited = HashSet::new();
     let mut candidates = Vec::new();
@@ -30,7 +27,9 @@ fn collect_star_reexport_edges(
     }
     let mut export_counts: HashMap<StarExportKey, usize> = HashMap::new();
     for candidate in &candidates {
-        *export_counts.entry(candidate.export_key.clone()).or_default() += 1;
+        *export_counts
+            .entry(candidate.export_key.clone())
+            .or_default() += 1;
     }
     for candidate in candidates {
         if export_counts.get(&candidate.export_key) == Some(&1) {
@@ -45,7 +44,11 @@ struct StarReexportKind {
     source_kind: EdgeKind,
 }
 
-type StarReexportVisitKey = (PathBuf, StarReexportKind, Vec<(String, StarExportNamespace)>);
+type StarReexportVisitKey = (
+    PathBuf,
+    StarReexportKind,
+    Vec<(String, StarExportNamespace)>,
+);
 
 fn collect_star_reexport_target(
     inputs: &ExportEdgeInputs<'_>,
@@ -175,7 +178,8 @@ fn resolve_star_source(
     } else {
         inputs
             .workspace
-            .resolve_specifier_from(source, from)
+            .resolve_specifier_from_file_visible(source, from, inputs.visible_files)
+            .filter(|target| inputs.visible_files.contains(target))
             .map(|target| (target, EdgeKind::WorkspaceImport))
     }
 }

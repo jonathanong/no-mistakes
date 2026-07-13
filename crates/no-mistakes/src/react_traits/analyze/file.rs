@@ -4,12 +4,15 @@ use crate::imports::{
 };
 use crate::react_traits::analyze::components::extract_components;
 use crate::react_traits::analyze::environment::{detect_file_environment, FileEnvironment};
-use crate::react_traits::analyze::import_table::build_import_table;
+use crate::react_traits::analyze::import_table::{
+    build_import_table, build_import_table_from_visible,
+};
 use crate::react_traits::analyze::jsx_children::collect_jsx_children;
 use crate::react_traits::report::types::{ComponentFacts, ComponentRef, Environment, FetchCall};
 use crate::react_traits::traits;
 use anyhow::Result;
-use std::path::Path;
+use std::collections::HashSet;
+use std::path::{Path, PathBuf};
 
 pub(crate) struct FileAnalysis {
     pub(crate) components: Vec<ComponentFacts>,
@@ -19,9 +22,25 @@ pub(crate) struct FileAnalysis {
 mod tests;
 
 pub(crate) fn analyze_file(abs_path: &Path, root: &Path) -> Result<FileAnalysis> {
+    analyze_file_inner(abs_path, root, None)
+}
+
+pub(crate) fn analyze_file_from_visible(
+    abs_path: &Path,
+    root: &Path,
+    visible_files: &HashSet<PathBuf>,
+) -> Result<FileAnalysis> {
+    analyze_file_inner(abs_path, root, Some(visible_files))
+}
+
+fn analyze_file_inner(
+    abs_path: &Path,
+    root: &Path,
+    visible_files: Option<&HashSet<PathBuf>>,
+) -> Result<FileAnalysis> {
     let source = std::fs::read_to_string(abs_path)?;
     ast::with_program(abs_path, &source, |program, _src| {
-        analyze_program(abs_path, root, &source, program)
+        analyze_program_inner(abs_path, root, &source, program, visible_files)
     })
 }
 
@@ -31,15 +50,48 @@ pub(crate) fn analyze_program(
     source: &str,
     program: &oxc_ast::ast::Program<'_>,
 ) -> FileAnalysis {
+    analyze_program_inner(abs_path, root, source, program, None)
+}
+
+pub(crate) fn analyze_program_from_visible(
+    abs_path: &Path,
+    root: &Path,
+    source: &str,
+    program: &oxc_ast::ast::Program<'_>,
+    visible_files: &HashSet<PathBuf>,
+) -> FileAnalysis {
+    analyze_program_inner(abs_path, root, source, program, Some(visible_files))
+}
+
+fn analyze_program_inner(
+    abs_path: &Path,
+    root: &Path,
+    source: &str,
+    program: &oxc_ast::ast::Program<'_>,
+    visible_files: Option<&HashSet<PathBuf>>,
+) -> FileAnalysis {
     let rel_path = relative_string(root, abs_path);
 
     let components = {
         let env = detect_file_environment(program);
-        let import_table = build_import_table(abs_path, program);
+        let import_table = match visible_files {
+            Some(visible) => build_import_table_from_visible(abs_path, program, visible),
+            None => build_import_table(abs_path, program),
+        };
         let component_defs = extract_components(program);
 
         let referenced = collect_identifier_references(program);
-        let deps = collect_runtime_imports_from_program(abs_path, program, &referenced);
+        let deps = match visible_files {
+            Some(visible) => {
+                crate::fetch::imports::collect_runtime_imports_from_program_from_visible(
+                    abs_path,
+                    program,
+                    &referenced,
+                    visible,
+                )
+            }
+            None => collect_runtime_imports_from_program(abs_path, program, &referenced),
+        };
 
         let environment = match env {
             FileEnvironment::Server => Environment::Server,

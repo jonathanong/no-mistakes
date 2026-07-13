@@ -1,7 +1,6 @@
 use crate::playwright::analysis::output::{
     build_related_report, print_coverage_text, print_edges_text, print_related_text,
 };
-use crate::playwright::analysis::pipeline::analyze_with_policy;
 use crate::playwright::analysis::tests_report::{build_tests_report, print_tests_text};
 use crate::playwright::analysis::types::UniqueSelectorPolicy;
 use crate::playwright::cli::{Command, PlaywrightArgs};
@@ -12,14 +11,20 @@ use anyhow::{Context, Result};
 use std::process::ExitCode;
 
 pub fn run(cli: PlaywrightArgs) -> Result<ExitCode> {
+    crate::ast::with_request_parse_cache(|| run_with_cache(cli))
+}
+
+fn run_with_cache(cli: PlaywrightArgs) -> Result<ExitCode> {
     let root = absolutize(&cli.root).context("failed to resolve --root")?;
-    let settings = config::load_settings(
+    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(&root);
+    let settings = config::load_settings_from_visible(
         &root,
         cli.config.as_deref(),
         &cli.playwright_config,
         cli.project.clone(),
+        &snapshot,
     )?;
-    let analysis = analyze_with_policy(
+    let analysis = crate::playwright::analysis::pipeline::analyze_with_policy_from_snapshot(
         &root,
         &settings,
         playwright_tests::TestPolicy {
@@ -32,6 +37,7 @@ pub fn run(cli: PlaywrightArgs) -> Result<ExitCode> {
             aggregate: false,
             configured_html_id_selector: false,
         },
+        &snapshot,
     )?;
     match cli.command {
         Command::Check => {

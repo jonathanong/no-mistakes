@@ -15,6 +15,66 @@ pub fn find_tsconfig(start: &Path) -> Option<PathBuf> {
     }
 }
 
+/// Find the nearest `tsconfig.json` that is present in the request's canonical
+/// visible-path candidates.
+///
+/// Callers should pass the candidates they already discovered for the request
+/// so automatic config selection does not require a second repository scan.
+#[doc(hidden)]
+pub fn find_tsconfig_from_visible(start: &Path, visible_paths: &[PathBuf]) -> Option<PathBuf> {
+    let mut current = if start.is_file() {
+        start.parent()?.to_path_buf()
+    } else {
+        start.to_path_buf()
+    };
+    loop {
+        let candidate = normalize_path(&current.join("tsconfig.json"));
+        if visible_paths
+            .iter()
+            .any(|path| normalize_path(path) == candidate)
+        {
+            return Some(candidate);
+        }
+        if !current.pop() {
+            return None;
+        }
+    }
+}
+
+/// Resolve the request's TypeScript configuration without consulting an
+/// ignored auto-discovered `tsconfig.json`.
+///
+/// An explicit path remains authoritative, including when Git ignores it.
+/// Automatic discovery is restricted to the caller's canonical visible path
+/// candidates and otherwise falls back to an empty config anchored at `root`.
+#[doc(hidden)]
+pub fn resolve_tsconfig_from_visible(
+    arg: Option<&Path>,
+    root: &Path,
+    visible_paths: &[PathBuf],
+) -> Result<TsConfig> {
+    if let Some(path) = arg {
+        let path = if path.is_absolute() {
+            path.to_path_buf()
+        } else {
+            root.join(path)
+        };
+        return load_tsconfig(&path).context(format!("loading tsconfig {}", path.display()));
+    }
+    if let Some(candidate) = find_tsconfig_from_visible(root, visible_paths) {
+        return load_tsconfig(&candidate).context(format!(
+            "loading tsconfig {}",
+            candidate.display()
+        ));
+    }
+    Ok(TsConfig {
+        dir: root.to_path_buf(),
+        paths: Vec::new(),
+        paths_dir: root.to_path_buf(),
+        base_url: None,
+    })
+}
+
 const EXTENSIONS: &[&str] = &[
     ".mts", ".ts", ".tsx", ".mjs", ".js", ".jsx", ".cjs", ".cts", ".d.ts", ".d.mts", ".d.cts",
 ];
@@ -60,18 +120,8 @@ fn has_explicit_extension(path: &Path) -> bool {
 /// Shared by every command that resolves import/re-export specifiers so the
 /// `--tsconfig` fallback behaves identically across the CLI and N-API surface.
 pub fn resolve_tsconfig(arg: Option<&Path>, root: &Path) -> Result<TsConfig> {
-    if let Some(path) = arg {
-        return load_tsconfig(path).context(format!("loading tsconfig {}", path.display()));
-    }
-    if let Some(path) = find_tsconfig(root) {
-        return load_tsconfig(&path).context(format!("loading tsconfig {}", path.display()));
-    }
-    Ok(TsConfig {
-        dir: root.to_path_buf(),
-        paths: Vec::new(),
-        paths_dir: root.to_path_buf(),
-        base_url: None,
-    })
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(root);
+    resolve_tsconfig_from_visible(arg, root, &visible_paths)
 }
 
 /// Resolve `specifier` (as it appears in an import in `importing_file`) to an
@@ -91,4 +141,3 @@ pub fn resolve_import(
         .without_cache()
         .resolve(specifier, importing_file)
 }
-

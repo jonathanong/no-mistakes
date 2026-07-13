@@ -1,0 +1,4 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules: []

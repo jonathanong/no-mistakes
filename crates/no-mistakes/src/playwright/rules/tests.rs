@@ -41,6 +41,56 @@ fn staged_playwright_fixture() -> std::path::PathBuf {
 }
 
 #[test]
+fn aggregate_playwright_rule_parses_each_source_file_once() {
+    let source = crate::codebase::ts_resolver::normalize_path(
+        &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/parser-count/playwright"),
+    );
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let snapshot = std::sync::Arc::new(crate::playwright::fsutil::VisiblePathSnapshot::new(&root));
+    let visible_paths = snapshot.paths_for(&root);
+    let config =
+        crate::config::v2::load_v2_config_from_visible(&root, None, &visible_paths).unwrap();
+    let files = crate::codebase::ts_source::discover_files_from_visible(
+        &root,
+        &config.filesystem.skip_directories,
+        &visible_paths,
+    );
+
+    crate::ast::begin_parse_count(&root);
+    let prepared = prepare_from_snapshot(&root, None, &config, std::sync::Arc::clone(&snapshot))
+        .unwrap()
+        .expect("fixture enables a Playwright rule");
+    let facts = crate::codebase::check_facts::collect_check_facts_with_graph_files_and_playwright(
+        &root,
+        files,
+        Vec::new(),
+        crate::codebase::check_facts::CheckFactPlan::default(),
+        Some(prepared.fact_plan()),
+    );
+    let findings = check_with_prepared_facts(&root, None, &config, &facts, &prepared).unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+    let expected = [
+        root.join("app/Widget.tsx"),
+        root.join("app/page.tsx"),
+        root.join("playwright.config.ts"),
+        root.join("playwright.helper.ts"),
+        root.join("tests/home.spec.ts"),
+    ];
+
+    assert!(
+        findings.iter().all(|finding| !finding.file.is_empty()),
+        "{findings:?}"
+    );
+    assert_eq!(counts.len(), expected.len(), "{counts:?}");
+    assert!(counts.values().all(|count| *count == 1), "{counts:?}");
+    for file in expected {
+        assert_eq!(counts.get(&file), Some(&1), "{counts:?}");
+    }
+}
+
+#[test]
 fn configured_is_false_without_playwright_rules() {
     let config = NoMistakesConfig::default();
 

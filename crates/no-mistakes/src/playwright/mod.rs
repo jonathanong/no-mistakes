@@ -2,7 +2,7 @@ pub(crate) mod analysis;
 mod ast;
 mod cli;
 pub(crate) mod config;
-mod fsutil;
+pub(crate) mod fsutil;
 pub(crate) mod matcher;
 pub mod playwright_config;
 pub mod playwright_tests;
@@ -13,7 +13,7 @@ pub mod rules;
 pub mod selectors;
 pub(crate) mod test_file_occurrences;
 #[cfg(test)]
-mod test_support;
+pub(crate) mod test_support;
 #[cfg(test)]
 mod tests;
 pub(crate) mod url;
@@ -48,6 +48,13 @@ pub(crate) fn report_json(
     kind: PlaywrightReportKind,
     options: PlaywrightReportOptions,
 ) -> Result<String> {
+    crate::ast::with_request_parse_cache(|| report_json_with_cache(kind, options))
+}
+
+fn report_json_with_cache(
+    kind: PlaywrightReportKind,
+    options: PlaywrightReportOptions,
+) -> Result<String> {
     let root = fsutil::absolutize(&options.root).context("failed to resolve root")?;
     if matches!(kind, PlaywrightReportKind::Related) {
         require_files(&options.files)?;
@@ -55,8 +62,9 @@ pub(crate) fn report_json(
     let config_path = options.config.as_deref();
     let configs = &options.playwright_config;
     let project = options.project.clone();
-    let settings = report_settings(&root, config_path, configs, project)?;
-    let analysis = analysis::pipeline::analyze_with_policy(
+    let snapshot = fsutil::VisiblePathSnapshot::new(&root);
+    let settings = report_settings(&root, config_path, configs, project, &snapshot)?;
+    let analysis = analysis::pipeline::analyze_with_policy_from_snapshot(
         &root,
         &settings,
         playwright_tests::TestPolicy {
@@ -69,6 +77,7 @@ pub(crate) fn report_json(
             aggregate: false,
             configured_html_id_selector: false,
         },
+        &snapshot,
     )?;
 
     match kind {
@@ -93,13 +102,14 @@ pub(crate) fn report_json(
     }
 }
 
-fn report_settings(
+pub(crate) fn report_settings(
     root: &Path,
     config_path: Option<&std::path::Path>,
     playwright_configs: &[PathBuf],
     project: Option<String>,
+    snapshot: &fsutil::VisiblePathSnapshot,
 ) -> Result<config::Settings> {
-    config::load_settings(root, config_path, playwright_configs, project)
+    config::load_settings_from_visible(root, config_path, playwright_configs, project, snapshot)
 }
 
 fn require_files(files: &[PathBuf]) -> Result<()> {

@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@ignored/*": ["web/app/components/*"]
+    }
+  }
+}

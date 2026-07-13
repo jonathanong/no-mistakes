@@ -180,36 +180,35 @@ fn collect_playwright_selector_edges_matches_with_and_without_shared_facts() {
     // this fixture has) rather than via `playwright::rules::fact_plan`, which
     // additionally requires a Playwright *rule* to be configured — an
     // unrelated, orthogonal gate this fixture intentionally leaves unset.
-    let settings = crate::playwright::config::load_settings(&root, None, &[], None).unwrap();
+    let settings =
+        crate::playwright::config::test_support::load_settings(&root, None, &[], None).unwrap();
     let playwright_configs = crate::playwright::playwright_config::load_many(
         &root,
         &settings.playwright_configs,
         settings.project.as_deref(),
     )
     .unwrap();
-    let mut playwright_plan = crate::codebase::check_facts::PlaywrightFactPlan::default();
-    let mut test_count = 0;
+    let mut test_id_attributes_by_path = std::collections::HashMap::new();
     for test_file in
-        crate::playwright::analysis::discover::discover_test_files(&root, &settings, &playwright_configs)
+        crate::playwright::test_support::discover_test_files(&root, &settings, &playwright_configs)
             .unwrap()
     {
         let attributes = test_file.test_id_attributes();
-        playwright_plan.add_file(crate::codebase::check_facts::PlaywrightFactSelection {
-            path: test_file.path,
-            navigation_helpers: &settings.navigation_helpers,
-            selector_attributes: &settings.selector_attributes,
-            component_selector_attributes: &settings.component_selector_attributes,
-            html_ids: settings.html_ids,
-            test_id_attributes: &attributes,
-            policy: crate::playwright::playwright_tests::TestPolicy::default(),
-            demands_text_imports: true,
-        });
-        test_count += 1;
+        test_id_attributes_by_path.insert(test_file.path, attributes);
     }
     assert!(
-        test_count > 0,
+        !test_id_attributes_by_path.is_empty(),
         "sanity check: fixture must have discoverable Playwright test files"
     );
+    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(&root);
+    let playwright_plan = crate::codebase::check_facts::PlaywrightFactPlan::from_settings(
+        &root,
+        settings,
+        test_id_attributes_by_path,
+        false,
+        &snapshot,
+    )
+    .unwrap();
     let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
     let facts = crate::codebase::check_facts::collect_check_facts_with_playwright(
         &root,
@@ -263,9 +262,9 @@ fn selector_analysis_reuses_matching_route_import_graph() {
         .join("../../test-cases/nextjs-selectors/selector-text-locator/fixture")
         .canonicalize()
         .expect("fixture root resolves");
-    let settings = crate::playwright::config::load_settings(&root, None, &[], None)
+    let settings = crate::playwright::config::test_support::load_settings(&root, None, &[], None)
         .expect("Playwright settings load");
-    let tsconfig = crate::playwright::analysis::pipeline_text_setup::load_route_import_tsconfig(
+    let tsconfig = crate::playwright::analysis::pipeline_text_test_support::load_route_import_tsconfig(
         &root, &settings,
     )
     .expect("route-import tsconfig loads");
@@ -275,7 +274,7 @@ fn selector_analysis_reuses_matching_route_import_graph() {
         graph_files: graph_files.clone(),
         lookups: AtomicUsize::new(0),
     };
-    let graph = crate::playwright::analysis::pipeline_text_setup::build_route_import_graph(
+    let graph = crate::playwright::analysis::pipeline_text_test_support::build_route_import_graph(
         &root,
         &settings,
         Some(&facts),
@@ -371,10 +370,10 @@ fn get_or_compute_app_selector_occurrences_caches_per_scan_html_ids_key() {
     };
 
     let first = facts
-        .get_or_compute_app_selector_occurrences(false, &compute)
+        .get_or_compute_app_selector_occurrences(&cache_settings(), false, &compute)
         .unwrap();
     let second = facts
-        .get_or_compute_app_selector_occurrences(false, &compute)
+        .get_or_compute_app_selector_occurrences(&cache_settings(), false, &compute)
         .unwrap();
     assert_eq!(
         calls.load(Ordering::SeqCst),
@@ -387,7 +386,7 @@ fn get_or_compute_app_selector_occurrences_caches_per_scan_html_ids_key() {
     );
 
     facts
-        .get_or_compute_app_selector_occurrences(true, &compute)
+        .get_or_compute_app_selector_occurrences(&cache_settings(), true, &compute)
         .unwrap();
     assert_eq!(
         calls.load(Ordering::SeqCst),
@@ -416,11 +415,11 @@ fn get_or_compute_methods_cache_and_report_compute_errors() {
         anyhow::bail!("selector scan failed")
     };
     let first_error = facts
-        .get_or_compute_app_selector_occurrences(false, &failing_selectors)
+        .get_or_compute_app_selector_occurrences(&cache_settings(), false, &failing_selectors)
         .unwrap_err();
     assert!(first_error.to_string().contains("selector scan failed"));
     let second_error = facts
-        .get_or_compute_app_selector_occurrences(false, &failing_selectors)
+        .get_or_compute_app_selector_occurrences(&cache_settings(), false, &failing_selectors)
         .unwrap_err();
     assert!(second_error.to_string().contains("selector scan failed"));
     assert_eq!(
@@ -435,10 +434,10 @@ fn get_or_compute_methods_cache_and_report_compute_errors() {
         anyhow::bail!("app text scan failed")
     };
     facts
-        .get_or_compute_app_text_targets(&failing_text_targets)
+        .get_or_compute_app_text_targets(&cache_settings(), &failing_text_targets)
         .unwrap_err();
     facts
-        .get_or_compute_app_text_targets(&failing_text_targets)
+        .get_or_compute_app_text_targets(&cache_settings(), &failing_text_targets)
         .unwrap_err();
     assert_eq!(text_target_calls.load(Ordering::SeqCst), 1);
 
@@ -448,10 +447,10 @@ fn get_or_compute_methods_cache_and_report_compute_errors() {
         anyhow::bail!("route reachability scan failed")
     };
     facts
-        .get_or_compute_route_reachable_files(&failing_route_reachable)
+        .get_or_compute_route_reachable_files(&cache_settings(), &failing_route_reachable)
         .unwrap_err();
     facts
-        .get_or_compute_route_reachable_files(&failing_route_reachable)
+        .get_or_compute_route_reachable_files(&cache_settings(), &failing_route_reachable)
         .unwrap_err();
     assert_eq!(route_reachable_calls.load(Ordering::SeqCst), 1);
 }
@@ -474,8 +473,12 @@ fn get_or_compute_route_reachable_files_caches_across_calls() {
         Ok(Default::default())
     };
 
-    let first = facts.get_or_compute_route_reachable_files(&compute).unwrap();
-    let second = facts.get_or_compute_route_reachable_files(&compute).unwrap();
+    let first = facts
+        .get_or_compute_route_reachable_files(&cache_settings(), &compute)
+        .unwrap();
+    let second = facts
+        .get_or_compute_route_reachable_files(&cache_settings(), &compute)
+        .unwrap();
     assert_eq!(
         calls.load(Ordering::SeqCst),
         1,
@@ -503,8 +506,8 @@ fn get_or_compute_routes_and_app_text_targets_cache_across_calls() {
         route_calls.fetch_add(1, Ordering::SeqCst);
         Vec::new()
     };
-    facts.get_or_compute_playwright_routes(&compute_routes);
-    facts.get_or_compute_playwright_routes(&compute_routes);
+    facts.get_or_compute_playwright_routes(&cache_settings(), &compute_routes);
+    facts.get_or_compute_playwright_routes(&cache_settings(), &compute_routes);
     assert_eq!(
         route_calls.load(Ordering::SeqCst),
         1,
@@ -517,10 +520,10 @@ fn get_or_compute_routes_and_app_text_targets_cache_across_calls() {
         Ok(Vec::new())
     };
     facts
-        .get_or_compute_app_text_targets(&compute_text_targets)
+        .get_or_compute_app_text_targets(&cache_settings(), &compute_text_targets)
         .unwrap();
     facts
-        .get_or_compute_app_text_targets(&compute_text_targets)
+        .get_or_compute_app_text_targets(&cache_settings(), &compute_text_targets)
         .unwrap();
     assert_eq!(
         text_target_calls.load(Ordering::SeqCst),
@@ -543,20 +546,22 @@ fn ts_fact_map_uses_uncached_trait_defaults_for_get_or_compute_methods() {
     let facts = TsFactMap::new();
 
     let selectors = facts
-        .get_or_compute_app_selector_occurrences(false, &|| Ok(Vec::new()))
+        .get_or_compute_app_selector_occurrences(&cache_settings(), false, &|| Ok(Vec::new()))
         .unwrap();
     assert!(selectors.is_empty());
 
-    let routes = facts.get_or_compute_playwright_routes(&|| Vec::<crate::routes::Route>::new());
+    let routes = facts.get_or_compute_playwright_routes(&cache_settings(), &|| {
+        Vec::<crate::routes::Route>::new()
+    });
     assert!(routes.is_empty());
 
     let app_text_targets = facts
-        .get_or_compute_app_text_targets(&|| Ok(Vec::new()))
+        .get_or_compute_app_text_targets(&cache_settings(), &|| Ok(Vec::new()))
         .unwrap();
     assert!(app_text_targets.is_empty());
 
     let route_reachable_files = facts
-        .get_or_compute_route_reachable_files(&|| Ok(Default::default()))
+        .get_or_compute_route_reachable_files(&cache_settings(), &|| Ok(Default::default()))
         .unwrap();
     assert!(route_reachable_files.is_empty());
 }

@@ -4,6 +4,7 @@ fn target_local_names(
     target_symbols: &BTreeMap<PathBuf, BTreeSet<String>>,
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
     workspace: &crate::codebase::workspaces::WorkspaceMap,
+    visible_files: &HashSet<PathBuf>,
 ) -> BTreeSet<String> {
     let mut names = BTreeSet::new();
     if let Some(exported_symbols) = target_symbols.get(file) {
@@ -32,6 +33,7 @@ fn target_local_names(
         target_symbols,
         tsconfig,
         workspace,
+        visible_files,
     ));
     names
 }
@@ -42,7 +44,10 @@ fn imported_target_local_names(
     target_symbols: &BTreeMap<PathBuf, BTreeSet<String>>,
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
     workspace: &crate::codebase::workspaces::WorkspaceMap,
+    visible_files: &HashSet<PathBuf>,
 ) -> BTreeSet<String> {
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new(tsconfig)
+        .with_visible(visible_files);
     symbols
         .imports
         .iter()
@@ -50,8 +55,15 @@ fn imported_target_local_names(
             if import.is_type_only {
                 return None;
             }
-            let exported_symbols = resolve_import(&import.source, file, tsconfig)
-                .or_else(|| workspace.resolve_specifier_from(&import.source, file))
+            let exported_symbols = resolver
+                .resolve(&import.source, file)
+                .or_else(|| {
+                    workspace.resolve_specifier_from_file_visible(
+                        &import.source,
+                        file,
+                        visible_files,
+                    )
+                })
                 .and_then(|resolved| target_symbols.get(&resolved))?;
             if exported_symbols.is_empty() {
                 return None;

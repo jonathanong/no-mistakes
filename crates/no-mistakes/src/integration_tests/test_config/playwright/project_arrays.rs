@@ -1,5 +1,4 @@
 use super::{shared, Options};
-use crate::ast;
 use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use anyhow::Result;
@@ -8,21 +7,24 @@ use oxc_ast::ast::{
     ArrayExpression, ArrayExpressionElement, Expression, FunctionBody, ObjectExpression, Program,
     Statement,
 };
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
 
 mod calls;
 mod exports;
 mod function_returns;
+mod functions;
 mod imports;
+mod member_helpers;
 mod members;
 mod objects;
 mod root_options;
 mod root_spreads;
 
 use function_returns::body_return_options;
+use functions::top_level_function_bodies;
 use imports::{import_bindings, ImportBinding};
-pub(super) use root_options::root_options;
+pub(super) use root_options::{root_options, root_options_from_visible};
 
 type ExprMap<'a> = BTreeMap<String, &'a Expression<'a>>;
 type FnMap<'a> = BTreeMap<String, &'a FunctionBody<'a>>;
@@ -46,7 +48,32 @@ pub(super) fn project_options(
     path: &Path,
     tsconfig: &TsConfig,
 ) -> Result<Vec<Options>> {
-    let resolver = ImportResolver::new(tsconfig);
+    project_options_inner(program, object, source, path, tsconfig, None)
+}
+
+pub(super) fn project_options_from_visible(
+    program: &Program<'_>,
+    object: &ObjectExpression<'_>,
+    source: &str,
+    path: &Path,
+    tsconfig: &TsConfig,
+    visible_files: &HashSet<PathBuf>,
+) -> Result<Vec<Options>> {
+    project_options_inner(program, object, source, path, tsconfig, Some(visible_files))
+}
+
+fn project_options_inner(
+    program: &Program<'_>,
+    object: &ObjectExpression<'_>,
+    source: &str,
+    path: &Path,
+    tsconfig: &TsConfig,
+    visible_files: Option<&HashSet<PathBuf>>,
+) -> Result<Vec<Options>> {
+    let resolver = match visible_files {
+        Some(visible) => ImportResolver::new(tsconfig).with_visible(visible),
+        None => ImportResolver::new(tsconfig),
+    };
     let mut seen = BTreeSet::new();
     let mut local_seen = BTreeSet::new();
     let mut object_seen = BTreeSet::new();
@@ -163,35 +190,15 @@ pub(in crate::integration_tests::test_config::playwright::project_arrays) fn imp
     }
     let result = match std::fs::read_to_string(&path) {
         Err(_) => Ok(Vec::new()),
-        Ok(source) => ast::with_program(&path, &source, |program, source| {
-            exports::exported_options(program, source, &path, ctx, &import.imported)
-        })
+        Ok(source) => crate::integration_tests::runner_config::with_program(
+            &path,
+            &source,
+            |program, source| {
+                exports::exported_options(program, source, &path, ctx, &import.imported)
+            },
+        )
         .and_then(|options| options),
     };
     ctx.seen.remove(&path);
     result
-}
-
-pub(super) fn top_level_function_bodies<'a>(program: &'a Program<'a>) -> FnMap<'a> {
-    program
-        .body
-        .iter()
-        .filter_map(|statement| {
-            let function = match statement {
-                Statement::FunctionDeclaration(function) => Some(function),
-                Statement::ExportNamedDeclaration(export) => match export.declaration.as_ref() {
-                    Some(oxc_ast::ast::Declaration::FunctionDeclaration(function)) => {
-                        Some(function)
-                    }
-                    _ => None,
-                },
-                _ => None,
-            };
-            let function = function?;
-            Some((
-                function.id.as_ref()?.name.to_string(),
-                function.body.as_ref()?.as_ref(),
-            ))
-        })
-        .collect()
 }

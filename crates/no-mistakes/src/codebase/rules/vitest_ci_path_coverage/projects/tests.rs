@@ -1,4 +1,12 @@
 use super::*;
+
+fn coverage_units(
+    root: &Path,
+    config: &NoMistakesConfig,
+    opts: &Options,
+) -> Result<Vec<CoverageUnit>> {
+    coverage_units_with_catalog(root, config, opts, None)
+}
 use crate::config::v2::schema::{StringOrList, TestProjectPolicy};
 use std::collections::BTreeMap;
 
@@ -85,7 +93,9 @@ fn project_dependency_patterns_cover_all_trigger_shapes() {
 fn needs_config_projects_covers_config_and_policy_branches() {
     let root = fixture_root("fixture");
     let mut config = NoMistakesConfig::default();
-    assert!(needs_config_projects(&root, &config));
+    assert!(
+        crate::codebase::rules::vitest_project_catalog::config_projects_required(&root, &config)
+    );
 
     config.tests.vitest.configs = Some(StringOrList::One("missing.config.mts".to_string()));
     config.tests.vitest.projects.insert(
@@ -96,10 +106,14 @@ fn needs_config_projects_covers_config_and_policy_branches() {
             integration_suites: BTreeMap::new(),
         },
     );
-    assert!(!needs_config_projects(&root, &config));
+    assert!(
+        !crate::codebase::rules::vitest_project_catalog::config_projects_required(&root, &config)
+    );
 
     config.tests.vitest.configs = Some(StringOrList::One("vitest.config.mts".to_string()));
-    assert!(needs_config_projects(&root, &config));
+    assert!(
+        crate::codebase::rules::vitest_project_catalog::config_projects_required(&root, &config)
+    );
 
     config.tests.vitest.configs = Some(StringOrList::One("missing.config.mts".to_string()));
     config
@@ -110,7 +124,9 @@ fn needs_config_projects_covers_config_and_policy_branches() {
         .unwrap()
         .include
         .clear();
-    assert!(needs_config_projects(&root, &config));
+    assert!(
+        crate::codebase::rules::vitest_project_catalog::config_projects_required(&root, &config)
+    );
 }
 
 #[test]

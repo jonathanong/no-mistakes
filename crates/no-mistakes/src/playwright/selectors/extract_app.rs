@@ -1,5 +1,5 @@
 use super::dynamic_values::DynamicIdentifierValues;
-use super::jsx_resolve::app_selector_values;
+use super::jsx_resolve::{app_selector_values, app_selector_values_from_visible};
 use super::scoped_defaults::{
     collect_scoped_static_identifier_defaults, ScopedStaticIdentifierDefault,
 };
@@ -7,7 +7,7 @@ use super::types::{AppSelector, SelectorRegexes};
 use super::HTML_ID_ATTRIBUTE;
 use crate::playwright::ast;
 use oxc_ast_visit::Visit;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
@@ -26,6 +26,11 @@ pub fn collect_app_selectors(
         return Ok(Vec::new());
     }
     let candidates = discovery::source_file_candidates(frontend_root);
+    let visible_files = candidates
+        .iter()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(path))
+        .collect::<HashSet<_>>();
+    let regexes = super::regex_mod::compile_selector_regexes(attributes, &component_attributes);
 
     let selectors: BTreeSet<AppSelector> = candidates
         .into_par_iter()
@@ -37,7 +42,12 @@ pub fn collect_app_selectors(
                 std::fs::read_to_string(&path)
                     .map_err(|e| e.into())
                     .and_then(|source| {
-                        extract_app_selectors(&path, &source, attributes, &component_attributes)
+                        extract_app_selectors_with_regexes_from_visible(
+                            &path,
+                            &source,
+                            &regexes,
+                            &visible_files,
+                        )
                     }),
             )
         })
@@ -64,116 +74,80 @@ pub fn extract_app_selectors_with_regexes(
     source: &str,
     regexes: &SelectorRegexes,
 ) -> anyhow::Result<Vec<AppSelector>> {
+    extract_app_selectors_with_regexes_inner(path, source, regexes, None)
+}
+
+pub(crate) fn extract_app_selectors_with_regexes_from_visible(
+    path: &Path,
+    source: &str,
+    regexes: &SelectorRegexes,
+    visible_files: &HashSet<PathBuf>,
+) -> anyhow::Result<Vec<AppSelector>> {
+    extract_app_selectors_with_regexes_inner(path, source, regexes, Some(visible_files))
+}
+
+fn extract_app_selectors_with_regexes_inner(
+    path: &Path,
+    source: &str,
+    regexes: &SelectorRegexes,
+    visible_files: Option<&HashSet<PathBuf>>,
+) -> anyhow::Result<Vec<AppSelector>> {
     ast::with_program(path, source, |program, source| {
-        let scoped_static_identifier_defaults = collect_scoped_static_identifier_defaults(program);
-        let dynamic_identifier_values =
-            super::dynamic_values::collect_dynamic_identifier_values_with_file(
-                program, source, path,
-            );
-        let mut visitor = AppSelectorVisitor {
-            path,
-            source,
-            attributes: &regexes.app_attributes,
-            component_attributes: &regexes.component_attributes,
-            html_ids: regexes.html_ids,
-            scoped_static_identifier_defaults: &scoped_static_identifier_defaults,
-            dynamic_identifier_values: &dynamic_identifier_values,
-            program,
-            selectors: Vec::new(),
-        };
-        visitor.visit_program(program);
-        visitor.selectors
+        extract_app_selectors_from_program(path, source, program, regexes, visible_files, false)
     })
 }
 
-struct AppSelectorVisitor<'a, 'r> {
-    path: &'r Path,
-    source: &'a str,
-    attributes: &'r [String],
-    component_attributes: &'r BTreeMap<String, String>,
-    html_ids: bool,
-    scoped_static_identifier_defaults: &'r [ScopedStaticIdentifierDefault],
-    dynamic_identifier_values: &'r [DynamicIdentifierValues],
-    program: &'a oxc_ast::ast::Program<'a>,
-    selectors: Vec<AppSelector>,
+pub(crate) fn extract_app_selectors_from_program_from_visible_deferred(
+    path: &Path,
+    source: &str,
+    program: &oxc_ast::ast::Program<'_>,
+    regexes: &SelectorRegexes,
+    visible_files: &HashSet<PathBuf>,
+) -> Vec<AppSelector> {
+    extract_app_selectors_from_program(path, source, program, regexes, Some(visible_files), true)
 }
 
-impl<'a> oxc_ast_visit::Visit<'a> for AppSelectorVisitor<'a, '_> {
-    fn visit_jsx_opening_element(&mut self, element: &oxc_ast::ast::JSXOpeningElement<'a>) {
-        let component = is_component_jsx_element_name(&element.name);
-        for item in &element.attributes {
-            let oxc_ast::ast::JSXAttributeItem::Attribute(attribute) = item else {
-                continue;
-            };
-            let Some(name) = jsx_attribute_name(&attribute.name) else {
-                continue;
-            };
-            let Some(mapped_attribute) = self.mapped_attribute(name, component).map(str::to_string)
-            else {
-                continue;
-            };
-
-            for value in app_selector_values(
-                attribute.value.as_ref(),
-                self.source,
-                self.path,
-                self.scoped_static_identifier_defaults,
-                self.dynamic_identifier_values,
-                self.program,
-            ) {
-                self.selectors.push(AppSelector {
-                    file: PathBuf::from(self.path),
-                    attribute: mapped_attribute.clone(),
-                    value,
-                });
-            }
+fn extract_app_selectors_from_program(
+    path: &Path,
+    source: &str,
+    program: &oxc_ast::ast::Program<'_>,
+    regexes: &SelectorRegexes,
+    visible_files: Option<&HashSet<PathBuf>>,
+    defer_cross_file: bool,
+) -> Vec<AppSelector> {
+    let scoped_static_identifier_defaults = collect_scoped_static_identifier_defaults(program);
+    let dynamic_identifier_values = match (visible_files, defer_cross_file) {
+        (Some(visible), true) => {
+            super::dynamic_values::collect_dynamic_identifier_values_with_file_from_visible_deferred(
+                program, source, path, visible,
+            )
         }
-
-        oxc_ast_visit::walk::walk_jsx_opening_element(self, element);
-    }
-}
-
-impl AppSelectorVisitor<'_, '_> {
-    fn mapped_attribute<'a>(&'a self, name: &'a str, component: bool) -> Option<&'a str> {
-        if self.attributes.iter().any(|attribute| attribute == name) {
-            return Some(name);
+        (Some(visible), false) => {
+            super::dynamic_values::collect_dynamic_identifier_values_with_file_from_visible(
+                program, source, path, visible,
+            )
         }
-        if self.html_ids && !component && name == HTML_ID_ATTRIBUTE {
-            return Some(HTML_ID_ATTRIBUTE);
-        }
-        if component {
-            return self.component_attributes.get(name).map(String::as_str);
-        }
-        None
-    }
+        (None, _) => super::dynamic_values::collect_dynamic_identifier_values_with_file(
+            program, source, path,
+        ),
+    };
+    let mut visitor = AppSelectorVisitor {
+        path,
+        source,
+        attributes: &regexes.app_attributes,
+        component_attributes: &regexes.component_attributes,
+        html_ids: regexes.html_ids,
+        scoped_static_identifier_defaults: &scoped_static_identifier_defaults,
+        dynamic_identifier_values: &dynamic_identifier_values,
+        program,
+        visible_files,
+        selectors: Vec::new(),
+    };
+    visitor.visit_program(program);
+    visitor.selectors
 }
 
-pub(super) fn is_component_jsx_element_name(name: &oxc_ast::ast::JSXElementName<'_>) -> bool {
-    match name {
-        oxc_ast::ast::JSXElementName::Identifier(identifier) => identifier
-            .name
-            .chars()
-            .next()
-            .is_some_and(|ch| !ch.is_ascii_lowercase()),
-        oxc_ast::ast::JSXElementName::IdentifierReference(identifier) => identifier
-            .name
-            .chars()
-            .next()
-            .is_some_and(|ch| !ch.is_ascii_lowercase()),
-        oxc_ast::ast::JSXElementName::MemberExpression(_) => true,
-        oxc_ast::ast::JSXElementName::NamespacedName(_)
-        | oxc_ast::ast::JSXElementName::ThisExpression(_) => false,
-    }
-}
-
-pub(super) fn jsx_attribute_name<'a>(
-    name: &'a oxc_ast::ast::JSXAttributeName<'a>,
-) -> Option<&'a str> {
-    match name {
-        oxc_ast::ast::JSXAttributeName::Identifier(identifier) => Some(identifier.name.as_str()),
-        _ => None,
-    }
-}
+include!("extract_app_visitor.rs");
 
 #[cfg(test)]
 mod tests;

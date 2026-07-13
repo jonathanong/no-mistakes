@@ -1,0 +1,11 @@
+tests:
+  playwright:
+    projects:
+      auto-playwright:
+        integration_suites:
+          unit: [aws]
+  vitest:
+    projects:
+      auto-vitest:
+        integration_suites:
+          unit: [aws]

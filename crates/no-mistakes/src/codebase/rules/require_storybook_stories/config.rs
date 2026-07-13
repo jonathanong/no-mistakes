@@ -1,26 +1,9 @@
 use super::types::Options;
-use crate::codebase::ts_resolver::{load_tsconfig, TsConfig};
 use crate::config::v2::schema::NoMistakesConfig;
-use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 mod story_patterns;
 pub(super) use story_patterns::{extract_storybook_story_patterns, project_relative_pattern};
-
-pub(super) fn resolve_tsconfig(root: &Path, tsconfig_path: Option<&Path>) -> Result<TsConfig> {
-    match tsconfig_path {
-        Some(path) => load_tsconfig(path),
-        None => match crate::codebase::ts_resolver::find_tsconfig(root) {
-            Some(path) => load_tsconfig(&path),
-            None => Ok(TsConfig {
-                dir: root.to_path_buf(),
-                paths: vec![],
-                paths_dir: root.to_path_buf(),
-                base_url: None,
-            }),
-        },
-    }
-}
 
 pub(super) fn effective_story_patterns(
     root: &Path,

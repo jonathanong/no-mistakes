@@ -63,6 +63,36 @@ fn augment_from_gitignore_ignores_missing_file() {
 }
 
 #[test]
+fn framework_root_inference_uses_only_visible_config_candidates() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("framework-root-inference");
+    let root = fixture.path();
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
+    let visible_paths = snapshot.paths_for(root);
+
+    assert!(!visible_paths
+        .iter()
+        .any(|path| path.starts_with(root.join("ignored-next"))));
+    assert!(!visible_paths
+        .iter()
+        .any(|path| path.starts_with(root.join("ignored-remix"))));
+    assert!(!visible_paths
+        .iter()
+        .any(|path| path.starts_with(root.join("ignored-vite"))));
+    assert_eq!(
+        infer_nextjs_root_from_visible(root, &visible_paths),
+        Some(root.join("visible-next"))
+    );
+    assert_eq!(
+        infer_remix_root_from_visible(root, &visible_paths),
+        Some(root.join("visible-remix"))
+    );
+    assert_eq!(
+        infer_vitejs_root_from_visible(root, &visible_paths),
+        Some(root.join("visible-vite"))
+    );
+}
+
+#[test]
 fn load_codebase_config_uses_explicit_config_path() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/config-v2/disabled-rule/fixture");
@@ -210,6 +240,26 @@ fn load_codebase_config_rejects_duplicate_parent_configs() {
 }
 
 #[test]
+fn parent_search_skips_ignored_auto_config_but_honors_explicit_ignored_config() {
+    let dir = crate::test_support::materialize_gitignore_fixture("auto-discovery");
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_all(dir.path());
+    let nested = dir.path().join("nested");
+    // Keep the nested repository boundary: parent config search must still
+    // evaluate the outer repository's visibility when it ascends.
+    crate::test_support::git_init(&nested);
+    crate::test_support::git_add_all(&nested);
+
+    let automatic = load_codebase_config_with_path(&nested, None).unwrap();
+    assert!(automatic.is_rule_enabled("unique-exports"));
+
+    let explicit =
+        load_codebase_config_with_path(&nested, Some(Path::new("../ignored-explicit.yml")))
+            .unwrap();
+    assert!(!explicit.is_rule_enabled("unique-exports"));
+}
+
+#[test]
 fn project_roots_for_rule_covers_default_and_unmatched_projects() {
     let root = Path::new("/repo");
     let config = Config::from_yaml(
@@ -251,6 +301,61 @@ fn project_roots_for_rule_infers_nextjs_root() {
     assert_eq!(
         config.project_roots_for_rule(&root, "unique-exports"),
         vec![root.join("web")]
+    );
+}
+
+#[test]
+fn prepared_root_queries_reuse_supplied_inference() {
+    let root = Path::new("/repo");
+    let inferred = InferredRoots {
+        nextjs: Some(Some(root.join("prepared-next"))),
+        remix: Some(None),
+        vitejs: Some(None),
+    };
+    let config = Config {
+        projects: HashMap::from([
+            (
+                "web".to_string(),
+                project::ProjectConfig {
+                    type_: Some(crate::config::v2::schema::ProjectType::Nextjs),
+                    rules: vec!["unique-exports".to_string()],
+                    ..Default::default()
+                },
+            ),
+            (
+                "explicit".to_string(),
+                project::ProjectConfig {
+                    root: Some("packages/explicit".to_string()),
+                    ..Default::default()
+                },
+            ),
+            ("fallback".to_string(), project::ProjectConfig::default()),
+        ]),
+        ..Default::default()
+    };
+
+    assert_eq!(
+        config.project_roots_for_rule_with_inferred(root, "unique-exports", &inferred),
+        vec![root.join("prepared-next")]
+    );
+
+    let application = RuleApplicationConfig {
+        projects: vec![
+            "web".to_string(),
+            "explicit".to_string(),
+            "fallback".to_string(),
+            "missing".to_string(),
+        ],
+        repository: true,
+        ..Default::default()
+    };
+    assert_eq!(
+        config.project_roots_for_rule_application_with_inferred(root, &application, &inferred),
+        vec![
+            root.to_path_buf(),
+            root.join("packages/explicit"),
+            root.join("prepared-next"),
+        ]
     );
 }
 

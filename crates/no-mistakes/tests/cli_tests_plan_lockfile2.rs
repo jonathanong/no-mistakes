@@ -53,12 +53,10 @@ fn stdout(output: &Output) -> String {
     String::from_utf8(output.stdout.clone()).expect("stdout should be utf8")
 }
 
-// Covers the binary_lockfile_fallback path: bun.lockb is a binary lockfile that
-// cannot be parsed. The fallback is unconditional (no --global-config-fallback flag
-// required) because a lockfile change was detected but cannot be analysed, so
-// zero selected tests would be incorrect.
+// A binary lockfile cannot be parsed, but selecting the full suite remains an
+// explicit policy choice through --global-config-fallback.
 #[test]
-fn tests_plan_binary_lockfile_fallback_is_unconditional() {
+fn tests_plan_binary_lockfile_fallback_requires_explicit_opt_in() {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
     copy_dir_all(&fixture_dir("binary-lockfile-fallback"), root);
@@ -71,7 +69,6 @@ fn tests_plan_binary_lockfile_fallback_is_unconditional() {
             "--changed-file",
             "bun.lockb",
             "--json",
-            // Deliberately omit --global-config-fallback to verify it is not needed
         ])
         .output()
         .expect("no-mistakes should run");
@@ -81,10 +78,7 @@ fn tests_plan_binary_lockfile_fallback_is_unconditional() {
         String::from_utf8_lossy(&output.stderr)
     );
     let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    assert!(
-        plan["fallback_triggered"].as_bool().unwrap(),
-        "binary lockfile fallback must trigger without --global-config-fallback: {plan:?}"
-    );
+    assert_eq!(plan["fallback_triggered"], false, "{plan:?}");
     let warnings = plan["warnings"].as_array().unwrap();
     assert!(
         warnings
@@ -92,6 +86,28 @@ fn tests_plan_binary_lockfile_fallback_is_unconditional() {
             .any(|w| w["type"].as_str().unwrap_or("") == "lockfile-binary-unsupported"),
         "expected lockfile-binary-unsupported warning: {plan:?}"
     );
+
+    let opted_in = Command::new(bin())
+        .args([
+            "tests",
+            "plan",
+            "--root",
+            root.to_str().unwrap(),
+            "--changed-file",
+            "bun.lockb",
+            "--global-config-fallback=true",
+            "--json",
+        ])
+        .output()
+        .expect("no-mistakes should run");
+    assert!(
+        opted_in.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&opted_in.stderr)
+    );
+    let opted_in: serde_json::Value = serde_json::from_str(&stdout(&opted_in)).unwrap();
+    assert_eq!(opted_in["fallback_triggered"], true, "{opted_in:?}");
+    assert_eq!(opted_in["selected_tests"].as_array().unwrap().len(), 1);
 }
 
 // Covers workspace package tracing: when a lockfile bumps a workspace package

@@ -1,7 +1,8 @@
 use crate::codebase::dependencies::extract::is_tsx_file;
-use crate::codebase::ts_resolver::{normalize_path, resolve_tsconfig, TsConfig};
+use crate::codebase::ts_resolver::{normalize_path, TsConfig};
 use crate::codebase::ts_symbols::{extract_symbols, FileSymbols};
 use anyhow::{Context, Result};
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 /// Resolved root, tsconfig, and the single absolute target file. Shared setup
@@ -12,6 +13,7 @@ pub(crate) struct Target {
     pub root: PathBuf,
     pub tsconfig: TsConfig,
     pub abs_file: PathBuf,
+    pub visible_files: HashSet<PathBuf>,
 }
 
 pub(crate) fn resolve_target(
@@ -24,7 +26,16 @@ pub(crate) fn resolve_target(
         root.unwrap_or_else(|| Path::new(".")),
         &cwd,
     ));
-    let tsconfig = resolve_tsconfig(tsconfig, &root)?;
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(&root);
+    let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
+        tsconfig,
+        &root,
+        &visible_paths,
+    )?;
+    let visible_files = visible_paths
+        .into_iter()
+        .map(|path| normalize_path(&path))
+        .collect();
     let abs_file = resolve_input_file(file, &root, &cwd);
     // Reject a missing target or a directory up front so a typo or stale path
     // is an explicit error rather than an empty (and misleading) result.
@@ -33,6 +44,7 @@ pub(crate) fn resolve_target(
         root,
         tsconfig,
         abs_file,
+        visible_files,
     })
 }
 

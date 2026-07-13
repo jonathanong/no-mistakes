@@ -1,55 +1,15 @@
-struct TraversalCtx<'a> {
-    root: &'a Path,
-    tsconfig: &'a TsConfig,
-    graph_files: &'a graph::GraphFiles,
-    build_plan: graph::GraphBuildPlan,
-    allowed: Option<&'a std::collections::HashSet<EdgeKind>>,
-    symbols: bool,
+use super::*;
+
+pub(super) struct TraversalCtx<'a> {
+    pub(super) root: &'a Path,
+    pub(super) tsconfig: &'a TsConfig,
+    pub(super) graph_files: &'a graph::GraphFiles,
+    pub(super) build_plan: graph::GraphBuildPlan,
+    pub(super) allowed: Option<&'a std::collections::HashSet<EdgeKind>>,
+    pub(super) symbols: bool,
 }
 
-fn resolve_tsconfig(args: &TraverseArgs, root: &Path) -> Result<TsConfig> {
-    match args.tsconfig {
-        Some(ref path) => crate::codebase::ts_resolver::load_tsconfig(path),
-        None => match crate::codebase::ts_resolver::find_tsconfig(root) {
-            Some(path) => crate::codebase::ts_resolver::load_tsconfig(&path),
-            None => Ok(crate::codebase::ts_resolver::TsConfig {
-                dir: root.to_path_buf(),
-                paths: vec![],
-                paths_dir: root.to_path_buf(),
-                base_url: None,
-            }),
-        },
-    }
-}
-
-fn resolve_root(args: &TraverseArgs, cwd: &Path) -> PathBuf {
-    match &args.root {
-        Some(p) => {
-            if p.is_absolute() {
-                p.clone()
-            } else {
-                cwd.join(p)
-            }
-        }
-        None => cwd.to_path_buf(),
-    }
-}
-
-fn validate_direction(direction: &Direction, entrypoints: &[Entrypoint]) -> Result<()> {
-    if matches!(direction, Direction::Deps) {
-        for ep in entrypoints {
-            if ep.symbol.is_some() && !matches!(ep.node, NodeId::Symbol { .. }) {
-                bail!(
-                    "#symbol targeting (e.g. `file.mts#exportName`) is only supported \
-                     in the `dependents` direction unless --symbols is enabled."
-                );
-            }
-        }
-    }
-    Ok(())
-}
-
-fn deps_entries(
+pub(super) fn deps_entries(
     depth: Option<usize>,
     import_only: bool,
     roots: &[NodeId],
@@ -75,7 +35,7 @@ fn deps_entries(
     }
 }
 
-fn get_entries(
+pub(super) fn get_entries(
     direction: Direction,
     roots: &[NodeId],
     entrypoints: &[Entrypoint],
@@ -89,7 +49,7 @@ fn get_entries(
     }
 }
 
-fn dependents_entries(
+pub(super) fn dependents_entries(
     entrypoints: &[Entrypoint],
     roots: &[NodeId],
     depth: Option<usize>,
@@ -111,7 +71,9 @@ fn dependents_entries(
         let mut fact_plan = ctx.build_plan.ts_fact_plan();
         fact_plan.imports = true;
         fact_plan.symbols = true;
-        let fact_context = graph::ts_fact_context_for_plan(ctx.root, ctx.build_plan);
+        let mut fact_context =
+            graph::test_support::ts_fact_context_for_plan(ctx.root, ctx.build_plan);
+        fact_context.set_visible_files(ctx.graph_files.visible().iter().cloned());
         crate::codebase::ts_source::facts::collect_ts_facts_with_context(
             ctx.graph_files.indexable(),
             fact_plan,
@@ -124,7 +86,7 @@ fn dependents_entries(
             .as_ref()
             .expect("symbol facts are collected for symbol queries");
         let symbol_index =
-            graph::SymbolIndex::build_from_facts(ctx.tsconfig, ctx.graph_files, facts);
+            graph::SymbolIndex::build_from_facts(ctx.root, ctx.tsconfig, ctx.graph_files, facts);
         Ok(resolve_symbol_dependents(
             ctx.root,
             entrypoints,
@@ -135,5 +97,26 @@ fn dependents_entries(
         ))
     } else {
         Ok(graph.dependents_of(roots, depth, ctx.allowed))
+    }
+}
+
+fn build_dependents_graph(
+    ctx: &TraversalCtx<'_>,
+    symbol_facts: Option<&crate::codebase::ts_source::facts::TsFactMap>,
+) -> Result<graph::DepGraph> {
+    match symbol_facts {
+        Some(facts) => graph::DepGraph::build_with_plan_files_and_facts(
+            ctx.root,
+            ctx.tsconfig,
+            ctx.build_plan,
+            ctx.graph_files,
+            Some(facts as &dyn graph::TsFactLookup),
+        ),
+        None => graph::DepGraph::build_with_plan_and_files(
+            ctx.root,
+            ctx.tsconfig,
+            ctx.build_plan,
+            ctx.graph_files,
+        ),
     }
 }

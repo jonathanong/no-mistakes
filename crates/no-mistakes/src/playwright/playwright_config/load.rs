@@ -36,6 +36,40 @@ pub fn load_many(
     config_paths: &[PathBuf],
     config_name_filter: Option<&str>,
 ) -> Result<PlaywrightConfig> {
+    let configs = load_configs(root, config_paths)?;
+    select_loaded(root, config_paths, config_name_filter, &configs)
+}
+
+pub(crate) fn load_configs(
+    root: &Path,
+    config_paths: &[PathBuf],
+) -> Result<Vec<(PathBuf, PlaywrightConfig)>> {
+    if config_paths.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    if crate::ast::request_parse_cache_active() {
+        // The cached OXC programs are intentionally same-thread. Aggregate analysis
+        // loads configs on the owning thread so later runner/check consumers can reuse
+        // them; standalone config loading remains parallel.
+        config_paths
+            .iter()
+            .map(|path| load_with_path(root, path))
+            .collect()
+    } else {
+        config_paths
+            .par_iter()
+            .map(|path| load_with_path(root, path))
+            .collect()
+    }
+}
+
+pub(crate) fn select_loaded(
+    root: &Path,
+    config_paths: &[PathBuf],
+    config_name_filter: Option<&str>,
+    loaded: &[(PathBuf, PlaywrightConfig)],
+) -> Result<PlaywrightConfig> {
     if config_paths.is_empty() {
         if let Some(name) = config_name_filter {
             anyhow::bail!("--project requires a named Playwright config, but no config was found matching {name}");
@@ -43,14 +77,34 @@ pub fn load_many(
         return Ok(default_config(root));
     }
 
-    let configs: Vec<(&PathBuf, PlaywrightConfig)> = config_paths
-        .par_iter()
-        .map(|config_path| {
-            let config = load(root, config_path)?;
-            Ok((config_path, config))
+    let configs = config_paths
+        .iter()
+        .map(|path| {
+            let normalized = resolved_config_path(root, path);
+            let config = loaded
+                .iter()
+                .find(|(loaded_path, _)| *loaded_path == normalized)
+                .map(|(_, config)| config.clone())
+                .ok_or_else(|| {
+                    anyhow::anyhow!("Playwright config was not prepared: {}", path.display())
+                })?;
+            Ok((normalized, config))
         })
         .collect::<Result<Vec<_>>>()?;
 
+    // A single unnamed config has no top-level name to disambiguate, so let
+    // `--project` select one of its ordinary Playwright projects directly.
+    // Multiple configs must still use unique top-level names.
+    let sole_unnamed_project_filter = config_name_filter.filter(|name| {
+        configs.len() == 1
+            && configs[0].1.name.is_none()
+            && configs[0]
+                .1
+                .projects
+                .iter()
+                .any(|project| project.name.as_deref() == Some(*name))
+    });
+    let config_name_filter = config_name_filter.filter(|_| sole_unnamed_project_filter.is_none());
     validate_config_names(&configs, config_name_filter)?;
     match config_name_filter {
         Some(name)
@@ -68,13 +122,31 @@ pub fn load_many(
         if config_name_filter.is_some_and(|name| config.name.as_deref() != Some(name)) {
             continue;
         }
-        projects.extend(config.projects);
+        projects.extend(config.projects.into_iter().filter(|project| {
+            sole_unnamed_project_filter.is_none_or(|name| project.name.as_deref() == Some(name))
+        }));
     }
 
     Ok(PlaywrightConfig {
         name: config_name_filter.map(str::to_string),
         projects,
     })
+}
+
+fn load_with_path(root: &Path, config_path: &Path) -> Result<(PathBuf, PlaywrightConfig)> {
+    Ok((
+        resolved_config_path(root, config_path),
+        load(root, config_path)?,
+    ))
+}
+
+fn resolved_config_path(root: &Path, config_path: &Path) -> PathBuf {
+    let path = if config_path.is_absolute() {
+        config_path.to_path_buf()
+    } else {
+        root.join(config_path)
+    };
+    crate::codebase::ts_resolver::normalize_path(&path)
 }
 
 fn missing_config_name_error(name: &str) -> anyhow::Error {
@@ -99,7 +171,7 @@ fn default_config(root: &Path) -> PlaywrightConfig {
 }
 
 fn validate_config_names(
-    configs: &[(&PathBuf, PlaywrightConfig)],
+    configs: &[(PathBuf, PlaywrightConfig)],
     config_name_filter: Option<&str>,
 ) -> Result<()> {
     if configs.len() <= 1 && config_name_filter.is_none() {

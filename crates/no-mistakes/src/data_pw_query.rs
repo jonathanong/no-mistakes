@@ -21,10 +21,9 @@ use anyhow::{bail, Result};
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use rayon::prelude::*;
 use serde::Serialize;
-use walkdir::WalkDir;
 
 use crate::codebase::ts_source::relative_slash_path;
-use crate::config::v2::{load_v2_config, ConfigView};
+use crate::config::v2::{load_v2_config_from_visible, ConfigView};
 use crate::playwright::selectors::compile_selector_attribute_value_regex;
 
 const SOURCE_EXTENSIONS: &[&str] = &["tsx", "ts", "jsx", "js", "mts", "cts", "mjs", "cjs"];
@@ -117,7 +116,13 @@ pub fn run(
     scan_override: &[String],
     include: &DataPwInclude,
 ) -> Result<DataPwReport> {
-    let config = load_v2_config(root, config_path)?;
+    // VisiblePathSnapshot returns lexically normalized paths. Normalize the
+    // matching boundary once too so roots containing `.`/`..` still produce
+    // relative report paths and pass the visibility filter.
+    let root = crate::codebase::ts_source::normalize_discovery_path(root);
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let visible_paths = snapshot.paths_for(&root);
+    let config = load_v2_config_from_visible(&root, config_path, &visible_paths)?;
     let view = ConfigView::new(&config);
 
     let attributes: Vec<String> = if attribute_override.is_empty() {
@@ -170,11 +175,11 @@ pub fn run(
         exclude_globs: &build_globset(view.selector_exclude())?,
     };
 
-    let files = discover_files(root, view.skip_directories());
+    let files = discover_files_from_visible_paths(&root, &visible_paths, view.skip_directories());
     let hits: Vec<(FileKind, DataPwHit)> = files
         .par_iter()
         .flat_map(|path| {
-            let rel = relative_slash_path(root, path);
+            let rel = relative_slash_path(&root, path);
             scan_file(path, &rel, &scan)
         })
         .collect();

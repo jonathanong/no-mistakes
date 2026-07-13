@@ -1,4 +1,15 @@
 use super::*;
+
+fn scan(
+    root: &Path,
+    config: &NoMistakesConfig,
+    opts: &Options,
+    files: &[PathBuf],
+    all_files: &[PathBuf],
+    snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
+) -> Result<Vec<RuleFinding>> {
+    scan_with_catalog(root, config, opts, files, all_files, snapshot, None)
+}
 use crate::codebase::rules::vitest_ci_path_coverage::projects::CoverageSource;
 use crate::config::v2::load_v2_config;
 use std::collections::BTreeMap;
@@ -32,8 +43,9 @@ fn scan_returns_no_findings_when_no_files_are_in_scope() {
     let root = fixture_root("fixture");
     let config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
     let opts = Options::default();
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
 
-    let findings = scan(&root, &config, &opts, &[], &[]).unwrap();
+    let findings = scan(&root, &config, &opts, &[], &[], &snapshot).unwrap();
 
     assert!(findings.is_empty());
 }
@@ -58,6 +70,31 @@ fn reports_source_input_missed_by_too_narrow_ci_filter() {
 }
 
 #[test]
+fn prepared_vitest_catalog_matches_standalone_coverage_loading() {
+    let root = fixture_root("fixture");
+    let config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    let files = files(&root);
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let visible = snapshot.paths_for(&root);
+    let tsconfig =
+        crate::codebase::ts_resolver::resolve_tsconfig_from_visible(None, &root, &visible).unwrap();
+    let catalog =
+        super::super::prepare_vitest_project_catalog(&root, &config, &snapshot, &tsconfig);
+
+    let standalone = check_with_files(&root, &config, &files).unwrap();
+    let prepared = check_with_files_from_snapshot_and_catalog(
+        &root,
+        &config,
+        &files,
+        &snapshot,
+        Some(&catalog),
+    )
+    .unwrap();
+
+    assert_eq!(prepared, standalone);
+}
+
+#[test]
 fn full_suite_trigger_inputs_are_checked_even_when_rule_files_are_scoped() {
     let root = fixture_root("fixture");
     let config = load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
@@ -73,8 +110,9 @@ fn full_suite_trigger_inputs_are_checked_even_when_rule_files_are_scoped() {
         }],
         ..Options::default()
     };
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
 
-    let findings = scan(&root, &config, &opts, &[], &files(&root)).unwrap();
+    let findings = scan(&root, &config, &opts, &[], &files(&root), &snapshot).unwrap();
 
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert!(

@@ -1,0 +1,5 @@
+name: Visible
+on: push
+env:
+  VISIBLE_ENV: visible
+jobs: {}

@@ -1,4 +1,5 @@
 export * from "./traversal-types";
+export * from "./analyze-project-types";
 export * from "./flow-types";
 export * from "./import-usage-types";
 export * from "./test-types";

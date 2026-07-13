@@ -22,13 +22,17 @@ fn package_name_from_spec(spec: &str) -> &str {
 
 include!("core.rs");
 include!("route_import.rs");
+include!("route_import_prepared.rs");
 include!("extra_cases.rs");
 include!("extra_playwright_routes.rs");
 include!("extra_selector.rs");
 include!("extra_symbol_scoped.rs");
 include!("extra_symbol_defensive.rs");
 include!("extra_symbol_helpers.rs");
+include!("extra_symbol_visibility.rs");
 include!("extra_symbol.rs");
+include!("extra_symbol_gitignore.rs");
+include!("extra_gitignore_pass3.rs");
 include!("types.rs");
 
 mod selector_fact_plan;

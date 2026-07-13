@@ -25,7 +25,7 @@ pub(super) fn collect_source_files_from_facts(
     files: &[PathBuf],
     shared: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<SourceFile>> {
-    let nextjs_projects = NextJsProjectLookup::new(root, files);
+    let nextjs_projects = NextJsProjectLookup::new(root, files, shared.files());
     let mut source_files = Vec::new();
     for path in files {
         let Some(facts) = shared.ts.get(path) else {
@@ -65,8 +65,12 @@ pub(super) struct NextJsProjectLookup {
 }
 
 impl NextJsProjectLookup {
-    pub(super) fn new(root: &Path, files: &[PathBuf]) -> Self {
+    pub(super) fn new(root: &Path, files: &[PathBuf], visible_files: &[PathBuf]) -> Self {
         let root = normalize_path(root);
+        let visible_files = visible_files
+            .iter()
+            .map(|path| normalize_path(path))
+            .collect::<HashSet<_>>();
         let mut directories = HashSet::from([root.clone()]);
         for path in files {
             let mut current = path
@@ -90,10 +94,12 @@ impl NextJsProjectLookup {
                 .and_then(|parent| directories.get(&normalize_path(parent)))
                 .copied()
                 .unwrap_or(false);
+            let manifest = normalize_path(&directory.join("package.json"));
             directories.insert(
-                directory.clone(),
+                directory,
                 parent_is_nextjs
-                    || package_json_has_next_dependency(&directory.join("package.json")),
+                    || (visible_files.contains(&manifest)
+                        && package_json_has_next_dependency(&manifest)),
             );
         }
         Self { directories }

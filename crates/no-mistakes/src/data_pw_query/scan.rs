@@ -18,60 +18,26 @@ fn build_globset(patterns: &[String]) -> Result<GlobSet> {
     Ok(builder.build()?)
 }
 
-/// Discover source files (by [`SOURCE_EXTENSIONS`]) under `root`.
-///
-/// Prefers deriving candidates from the git-visible file list (tracked files
-/// plus untracked files not excluded by `.gitignore`) when `root` is inside a
-/// git repository, since a raw recursive walk has no `.gitignore` awareness
-/// beyond [`is_skip_dir`]'s small hardcoded list and can otherwise descend
-/// into large untracked-and-ignored directories (dependency stores, build
-/// output) that `git ls-files` would never surface. See `crates/CLAUDE.md`'s
-/// "Never walk the tree without `.gitignore` awareness". The raw walk is
-/// used only outside git repositories (e.g. ad-hoc test fixtures).
-fn discover_files(root: &Path, extra_skip: &[String]) -> Vec<PathBuf> {
-    match crate::codebase::ts_source::git_visible_files(root) {
-        Some(files) => discover_files_from_git_list(root, &files, extra_skip),
-        None => discover_files_via_walk(root, extra_skip),
-    }
-}
-
-/// Same match + skip-descent semantics as [`discover_files_via_walk`], but
-/// checked against each git-visible file's directory chain instead of a live
-/// filesystem walk.
-fn discover_files_from_git_list(
+/// Apply the scanner's existing match and skip-descent semantics to the shared
+/// ignore-aware candidate list.
+fn discover_files_from_visible_paths(
     root: &Path,
-    files: &[String],
+    files: &[PathBuf],
     extra_skip: &[String],
 ) -> Vec<PathBuf> {
     files
         .iter()
-        .filter(|rel| !rel_path_under_skip_dir(Path::new(rel), extra_skip))
-        .map(|rel| root.join(rel))
+        .filter(|path| {
+            path.strip_prefix(root)
+                .is_ok_and(|rel| !rel_path_under_skip_dir(rel, extra_skip))
+        })
         .filter(|path| has_source_extension(path))
         // `WalkDir`'s default (non-link-following) file type never reports a
         // symlink as a file, so match that here rather than `Path::is_file`,
         // which follows the link.
-        .filter(|path| {
-            std::fs::symlink_metadata(path).is_ok_and(|metadata| metadata.is_file())
-        })
+        .filter(|path| std::fs::symlink_metadata(path).is_ok_and(|metadata| metadata.is_file()))
+        .cloned()
         .collect()
-}
-
-fn discover_files_via_walk(root: &Path, extra_skip: &[String]) -> Vec<PathBuf> {
-    let mut files = Vec::new();
-    let walker = WalkDir::new(root).into_iter().filter_entry(|entry| {
-        !(entry.file_type().is_dir() && is_skip_dir(entry.path(), extra_skip))
-    });
-    for entry in walker.filter_map(|entry| entry.ok()) {
-        if !entry.file_type().is_file() {
-            continue;
-        }
-        let path = entry.path();
-        if has_source_extension(path) {
-            files.push(path.to_path_buf());
-        }
-    }
-    files
 }
 
 fn has_source_extension(path: &Path) -> bool {
@@ -85,20 +51,17 @@ fn has_source_extension(path: &Path) -> bool {
 /// filesystem walk, where descent stops at the first skip dir: a match at
 /// any depth disqualifies the file.
 fn rel_path_under_skip_dir(rel: &Path, extra_skip: &[String]) -> bool {
-    rel.parent().into_iter().flat_map(Path::components).any(|component| {
-        let name = component.as_os_str().to_str().unwrap_or_default();
-        is_skip_dir_name(name, extra_skip)
-    })
+    rel.parent()
+        .into_iter()
+        .flat_map(Path::components)
+        .any(|component| {
+            let name = component.as_os_str().to_str().unwrap_or_default();
+            is_skip_dir_name(name, extra_skip)
+        })
 }
 
 /// Skip dot-directories and the usual build artifacts, plus any directory named
 /// in the configured `filesystem.skip_directories`.
-fn is_skip_dir(path: &Path, extra_skip: &[String]) -> bool {
-    path.file_name()
-        .and_then(|name| name.to_str())
-        .is_some_and(|name| is_skip_dir_name(name, extra_skip))
-}
-
 fn is_skip_dir_name(name: &str, extra_skip: &[String]) -> bool {
     name.starts_with('.')
         || matches!(

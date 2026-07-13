@@ -1,3 +1,5 @@
+use crate::codebase::dependencies::graph::playwright_route_layouts::collect_layout_chain_files_from_file_set;
+
 #[test]
 fn playwright_layout_edges_use_discovered_file_set() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("playwright-impact-routing"));
@@ -96,9 +98,11 @@ fn playwright_route_edges_reuse_shared_route_cache_instead_of_rescanning() {
     ];
 
     let facts = CheckFactMap::default();
+    let settings =
+        crate::playwright::config::test_support::load_settings(&root, None, &[], None).unwrap();
     // Pre-populate the shared route cache with an empty list before the producer ever runs,
     // so a correct implementation sees this stale-but-cached value instead of rescanning disk.
-    let prepopulated = facts.get_or_compute_playwright_routes(&Vec::new);
+    let prepopulated = facts.get_or_compute_playwright_routes(&settings, &Vec::new);
     assert!(prepopulated.is_empty(), "sanity check on the pre-populated cache value");
 
     let edges = collect_playwright_route_edges(&root, None, &all_files, Some(&facts));
@@ -211,10 +215,8 @@ fn playwright_route_edges_honor_cached_parse_errors_without_rereading_disk() {
 
 /// Regression test (Codex review finding): `collect_playwright_route_edges` must load
 /// Playwright settings from the same `config_path` its caller resolves, not a hardcoded `None`
-/// — `get_or_compute_playwright_routes` is an unkeyed cache, so if this producer's settings
-/// silently diverged from the `playwright` rule's (which does thread its resolved config path,
-/// see `playwright/rules.rs`), the shared route list would reflect whichever caller happened to
-/// populate the cache first for the *other* caller's config too. Constructs a disagreement
+/// — route caches are keyed by exact settings, so this producer must resolve the supplied config
+/// path just as the `playwright` rule does. Constructs a disagreement
 /// case: same fixture and `all_files`, only `config_path` differs — `None` (discovered config)
 /// must succeed and produce real edges, while an explicit, nonexistent `config_path` must fail
 /// `load_settings` and produce no edges. If `config_path` were still hardcoded to `None`

@@ -7,6 +7,40 @@ use tempfile::TempDir;
 #[path = "tests/mixed_availability.rs"]
 mod mixed_availability;
 
+fn discover_check_file_views(
+    root: &Path,
+    config: &NoMistakesConfig,
+    skip_directories: &[String],
+    unique_exports_enabled: bool,
+) -> super::views::CheckFileViews {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(root);
+    let root_files = no_mistakes::codebase::ts_source::git_visible_files(&root);
+    discover_check_file_views_from_git_files(
+        &root,
+        config,
+        skip_directories,
+        unique_exports_enabled,
+        root_files,
+    )
+}
+
+fn discover_check_file_views_from_git_files(
+    root: &Path,
+    config: &NoMistakesConfig,
+    skip_directories: &[String],
+    unique_exports_enabled: bool,
+    root_files: Option<Vec<String>>,
+) -> super::views::CheckFileViews {
+    super::views::discover_check_file_views_with_external_lookup(
+        root,
+        config,
+        skip_directories,
+        unique_exports_enabled,
+        root_files,
+        no_mistakes::codebase::ts_source::git_visible_files,
+    )
+}
+
 fn fixture(path: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -18,6 +52,31 @@ fn fixture(path: &str) -> PathBuf {
 
 fn load_config(root: &Path) -> NoMistakesConfig {
     load_v2_config(root, None).unwrap()
+}
+
+fn discover_files(
+    root: &Path,
+    config: &NoMistakesConfig,
+    skip_directories: &[String],
+    unique_exports_enabled: bool,
+) -> Vec<PathBuf> {
+    let snapshot = no_mistakes::codebase::ts_source::VisiblePathSnapshot::new(root);
+    discover_check_file_views_from_snapshot(
+        root,
+        config,
+        skip_directories,
+        unique_exports_enabled,
+        &snapshot,
+    )
+    .filesystem
+}
+
+fn unique_exports_project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
+    let snapshot = no_mistakes::codebase::ts_source::VisiblePathSnapshot::new(root);
+    let visible_paths = snapshot.paths_for(root);
+    let mut inferred_roots =
+        no_mistakes::codebase::config::InferredRoots::from_visible(root, visible_paths.as_ref());
+    super::unique_exports_project_roots_with_inferred(root, config, &mut inferred_roots)
 }
 
 fn git_init(dir: &Path) {
@@ -76,7 +135,7 @@ fn discover_check_files_includes_inferred_nextjs_project_files() {
     let root = fixture("config-v2/nextjs-inferred-root");
     let config = load_config(&root);
 
-    let files = discover_check_files(&root, &config, &[], true, None);
+    let files = discover_files(&root, &config, &[], true);
 
     assert!(files.iter().any(|path| path.ends_with("web/app/page.tsx")));
 }
@@ -86,7 +145,7 @@ fn discover_check_files_includes_inferred_remix_project_files() {
     let root = fixture("config-v2/remix-inferred-root");
     let config = load_config(&root);
 
-    let files = discover_check_files(&root, &config, &[], true, None);
+    let files = discover_files(&root, &config, &[], true);
 
     assert!(files.iter().any(|path| path.ends_with("web/app/page.tsx")));
 }
@@ -96,7 +155,7 @@ fn discover_check_files_includes_inferred_remix_vite_project_files() {
     let root = fixture("config-v2/remix-vite-inferred-root");
     let config = load_config(&root);
 
-    let files = discover_check_files(&root, &config, &[], true, None);
+    let files = discover_files(&root, &config, &[], true);
 
     assert!(files.iter().any(|path| path.ends_with("web/app/page.tsx")));
 }
@@ -106,7 +165,7 @@ fn discover_check_files_includes_inferred_vitejs_project_files() {
     let root = fixture("config-v2/vitejs-inferred-root");
     let config = load_config(&root);
 
-    let files = discover_check_files(&root, &config, &[], true, None);
+    let files = discover_files(&root, &config, &[], true);
 
     assert!(files.iter().any(|path| path.ends_with("web/app/page.tsx")));
 }
@@ -119,7 +178,7 @@ fn discover_check_files_does_not_rescan_repository_root() {
     expected.sort();
     expected.dedup();
 
-    let files = discover_check_files(&root, &config, &[], true, None);
+    let files = discover_files(&root, &config, &[], true);
 
     assert_eq!(files, expected);
 }
@@ -129,13 +188,7 @@ fn discover_check_files_preserves_included_fixture_roots() {
     let root = fixture("check-discovery/include-preserved-roots");
     let config = load_config(&root);
 
-    let files = discover_check_files(
-        &root,
-        &config,
-        &config.filesystem.skip_directories,
-        false,
-        None,
-    );
+    let files = discover_files(&root, &config, &config.filesystem.skip_directories, false);
 
     assert!(files
         .iter()
@@ -155,14 +208,9 @@ fn discover_check_files_preserves_included_fixture_roots() {
 fn discover_check_file_views_derive_filesystem_scope_from_complete_universe() {
     let root = fixture("check-discovery/include-preserved-roots");
     let config = load_config(&root);
-    let expected_filesystem = discover_check_files(
-        &root,
-        &config,
-        &config.filesystem.skip_directories,
-        false,
-        None,
-    );
-    let expected_graph = discover_check_files(&root, &config, &[], false, None);
+    let expected_filesystem =
+        discover_files(&root, &config, &config.filesystem.skip_directories, false);
+    let expected_graph = discover_files(&root, &config, &[], false);
 
     let views =
         discover_check_file_views(&root, &config, &config.filesystem.skip_directories, false);
@@ -193,7 +241,7 @@ fn discover_check_file_views_derive_filesystem_scope_from_complete_universe() {
 fn discover_check_file_views_fall_back_outside_git() {
     let root = fixture("check-discovery/include-preserved-roots");
     let config = load_config(&root);
-    let views = super::views::discover_check_file_views_from_git_files(
+    let views = discover_check_file_views_from_git_files(
         &root,
         &config,
         &config.filesystem.skip_directories,
@@ -245,14 +293,9 @@ fn discover_check_file_views_preserve_unique_export_project_scope() {
 fn discover_check_file_views_scope_normalized_external_unique_export_project() {
     let root = fixture("check-discovery/unique-exports-external-project");
     let config = load_config(&root);
-    let expected_filesystem = discover_check_files(
-        &root,
-        &config,
-        &config.filesystem.skip_directories,
-        true,
-        None,
-    );
-    let expected_graph = discover_check_files(&root, &config, &[], true, None);
+    let expected_filesystem =
+        discover_files(&root, &config, &config.filesystem.skip_directories, true);
+    let expected_graph = discover_files(&root, &config, &[], true);
 
     let views =
         discover_check_file_views(&root, &config, &config.filesystem.skip_directories, true);
@@ -286,13 +329,7 @@ fn discover_check_files_preserves_forbidden_workspace_project_roots() {
     let root = fixture("rules/filesystem-dispatch/forbidden-workspace-project-root");
     let config = load_config(&root);
 
-    let files = discover_check_files(
-        &root,
-        &config,
-        &config.filesystem.skip_directories,
-        false,
-        None,
-    );
+    let files = discover_files(&root, &config, &config.filesystem.skip_directories, false);
 
     assert!(files
         .iter()
@@ -340,7 +377,7 @@ fn discover_check_files_preserves_roots_without_descending_into_gitignored_direc
     git_add_all(dir.path());
 
     let config = load_config(dir.path());
-    let files = discover_check_files(dir.path(), &config, &[], false, None);
+    let files = discover_files(dir.path(), &config, &[], false);
 
     assert!(files
         .iter()

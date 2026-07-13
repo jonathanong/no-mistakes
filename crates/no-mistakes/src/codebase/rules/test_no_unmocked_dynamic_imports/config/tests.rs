@@ -1,4 +1,8 @@
 use super::*;
+
+fn setup_files_from_configs(root: &Path, config_files: Vec<PathBuf>) -> Result<Vec<PathBuf>> {
+    setup_files_from_configs_inner(root, config_files, None)
+}
 use crate::config::v2::schema::{Project, RuleDef};
 
 mod rule_targets;

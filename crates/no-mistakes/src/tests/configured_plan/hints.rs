@@ -34,14 +34,14 @@ struct SelectorSettings {
 /// empty `CoverageHints` for non-playwright frameworks or when no removed
 /// identifier was detected across any of those domains.
 #[allow(clippy::too_many_arguments)]
-pub(super) fn build_coverage_hints(
-    root: &std::path::Path,
-    cli_config: Option<&std::path::Path>,
+pub(super) fn build_coverage_hints_from_prepared(
+    prepared: &crate::tests::prepared_plan::PreparedTestPlanRequest,
     config: &NoMistakesConfig,
     framework: TestFramework,
     diff_files: &[DiffFile],
     all_tests: &[PathBuf],
 ) -> CoverageHints {
+    let root = &prepared.root;
     if framework != TestFramework::Playwright {
         return CoverageHints::default();
     }
@@ -81,7 +81,13 @@ pub(super) fn build_coverage_hints(
     let route_config = if removed_route_paths.is_empty() {
         RouteDependentConfig::default()
     } else {
-        match crate::playwright::config::load_settings(root, cli_config, &[], None) {
+        match crate::playwright::config::settings_from_loaded_v2(
+            root,
+            config,
+            &[],
+            None,
+            &prepared.visible_paths,
+        ) {
             Ok(settings) => {
                 let base_urls = crate::playwright::playwright_config::load_many(
                     root,

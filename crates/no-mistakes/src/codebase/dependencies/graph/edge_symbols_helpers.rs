@@ -10,7 +10,9 @@ fn export_local_name(export: &crate::codebase::ts_symbols::Export) -> String {
     export.local.clone().unwrap_or_else(|| export.name.clone())
 }
 
-fn value_export_symbol_names(symbols: &crate::codebase::ts_symbols::FileSymbols) -> HashSet<String> {
+fn value_export_symbol_names(
+    symbols: &crate::codebase::ts_symbols::FileSymbols,
+) -> HashSet<String> {
     symbols
         .exports
         .iter()
@@ -37,6 +39,7 @@ fn imported_symbol_map(
     symbols: &crate::codebase::ts_symbols::FileSymbols,
     resolver: &ImportResolver<'_>,
     workspace: &crate::codebase::workspaces::WorkspaceMap,
+    visible_files: &HashSet<PathBuf>,
 ) -> HashMap<String, ImportedSymbolTarget> {
     let mut map = HashMap::new();
     for import in &symbols.imports {
@@ -57,12 +60,21 @@ fn imported_symbol_map(
                     kind: EdgeKind::AssetImport,
                 }
             }
-        } else if let Some(target) = workspace.resolve_specifier_from(&import.source, path) {
+        } else if let Some(target) = workspace.resolve_specifier_from_file_visible(
+            &import.source,
+            path,
+            visible_files,
+        ) {
+            if !visible_files.contains(&target) {
+                continue;
+            }
             ImportedSymbolTarget::Symbol {
                 file: target,
                 symbol: import.imported.clone(),
                 kind: EdgeKind::WorkspaceImport,
             }
+        } else if workspace.recognizes_specifier_from(&import.source, path) {
+            continue;
         } else if let Some(node) = bare_module_node(&import.source) {
             ImportedSymbolTarget::Node { node, kind }
         } else {
@@ -78,6 +90,7 @@ fn namespace_import_map(
     symbols: &crate::codebase::ts_symbols::FileSymbols,
     resolver: &ImportResolver<'_>,
     workspace: &crate::codebase::workspaces::WorkspaceMap,
+    visible_files: &HashSet<PathBuf>,
 ) -> HashMap<String, ImportedSymbolTarget> {
     let mut map = HashMap::new();
     for import in &symbols.imports {
@@ -98,12 +111,21 @@ fn namespace_import_map(
                     kind: EdgeKind::AssetImport,
                 }
             }
-        } else if let Some(file) = workspace.resolve_specifier_from(&import.source, path) {
+        } else if let Some(file) = workspace.resolve_specifier_from_file_visible(
+            &import.source,
+            path,
+            visible_files,
+        ) {
+            if !visible_files.contains(&file) {
+                continue;
+            }
             ImportedSymbolTarget::Symbol {
                 file,
                 symbol: "*".to_string(),
                 kind: EdgeKind::WorkspaceImport,
             }
+        } else if workspace.recognizes_specifier_from(&import.source, path) {
+            continue;
         } else if let Some(node) = bare_module_node(&import.source) {
             ImportedSymbolTarget::Node { node, kind }
         } else {
@@ -121,6 +143,7 @@ fn resolve_imported_callee(
     facts: &dyn TsFactLookup,
     resolver: &ImportResolver<'_>,
     workspace: &crate::codebase::workspaces::WorkspaceMap,
+    visible_files: &HashSet<PathBuf>,
 ) -> Option<(NodeId, EdgeKind)> {
     if let Some(target) = imported_symbols.get(callee) {
         return Some(target_node(target));
@@ -140,7 +163,18 @@ fn resolve_imported_callee(
     else {
         return None;
     };
-    resolve_reexported_namespace_member(barrel, imported, member, *kind, facts, resolver, workspace)
+    resolve_reexported_namespace_member(
+        barrel,
+        imported,
+        member,
+        *kind,
+        ReexportNamespaceInputs {
+            facts,
+            resolver,
+            workspace,
+            visible_files,
+        },
+    )
 }
 
 fn target_export_is_type(target: &Path, symbol: &str, facts: &dyn TsFactLookup) -> bool {

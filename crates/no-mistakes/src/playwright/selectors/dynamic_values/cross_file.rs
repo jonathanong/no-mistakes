@@ -3,20 +3,146 @@ use oxc_ast::ast::{
     Declaration, ExportDefaultDeclarationKind, Expression, ImportDeclarationSpecifier,
     ObjectPropertyKind, Program, Statement,
 };
-use std::path::Path;
+use std::collections::HashSet;
+use std::path::{Path, PathBuf};
+
+const DEFERRED_IMPORT_PREFIX: &str = "\0no-mistakes-playwright-import:";
+
+#[derive(Clone, Default)]
+pub(crate) struct StaticExportValues {
+    named: std::collections::HashMap<String, Vec<String>>,
+    default: Vec<String>,
+}
+
+impl StaticExportValues {
+    pub(crate) fn values(&self, exported_name: &str, is_default: bool) -> &[String] {
+        if is_default {
+            &self.default
+        } else {
+            self.named
+                .get(exported_name)
+                .map(Vec::as_slice)
+                .unwrap_or_default()
+        }
+    }
+}
 
 pub(crate) fn resolve_imported_values(
     local_name: &str,
     program: &Program<'_>,
     importing_file: &Path,
 ) -> Vec<String> {
+    resolve_imported_values_inner(local_name, program, importing_file, None)
+}
+
+pub(crate) fn resolve_imported_values_from_visible(
+    local_name: &str,
+    program: &Program<'_>,
+    importing_file: &Path,
+    visible_files: &HashSet<PathBuf>,
+) -> Vec<String> {
+    resolve_imported_values_inner(local_name, program, importing_file, Some(visible_files))
+}
+
+pub(crate) fn defer_imported_values_from_visible(
+    local_name: &str,
+    program: &Program<'_>,
+    importing_file: &Path,
+    visible_files: &HashSet<PathBuf>,
+) -> Vec<String> {
+    let Some((source, exported_name, is_default)) = find_import_info(local_name, program) else {
+        return Vec::new();
+    };
+    let Some(path) =
+        crate::fetch::resolve::resolve_import_from_visible(importing_file, &source, visible_files)
+    else {
+        return Vec::new();
+    };
+    let payload = serde_json::to_string(&(
+        crate::codebase::ts_resolver::normalize_path(&path),
+        exported_name,
+        is_default,
+    ))
+    .expect("deferred Playwright import marker is serializable");
+    vec![format!("{DEFERRED_IMPORT_PREFIX}{payload}")]
+}
+
+pub(crate) fn resolve_deferred_import<'a>(
+    value: &str,
+    exports: &'a std::collections::HashMap<PathBuf, StaticExportValues>,
+) -> Option<&'a [String]> {
+    let payload = value.strip_prefix(DEFERRED_IMPORT_PREFIX)?;
+    let (path, exported_name, is_default): (PathBuf, String, bool) =
+        serde_json::from_str(payload).ok()?;
+    Some(
+        exports
+            .get(&path)
+            .map(|values| values.values(&exported_name, is_default))
+            .unwrap_or_default(),
+    )
+}
+
+pub(crate) fn collect_static_export_values(program: &Program<'_>) -> StaticExportValues {
+    let mut facts = StaticExportValues::default();
+    for statement in &program.body {
+        match statement {
+            Statement::ExportNamedDeclaration(export) => {
+                let Some(declaration) = &export.declaration else {
+                    continue;
+                };
+                match declaration {
+                    Declaration::VariableDeclaration(variable) => {
+                        for declarator in &variable.declarations {
+                            let Some(name) = binding_ident_name(&declarator.id) else {
+                                continue;
+                            };
+                            let mut values = Vec::new();
+                            collect_from_named_declaration(declaration, &name, &mut values);
+                            if !values.is_empty() {
+                                facts.named.insert(name, values);
+                            }
+                        }
+                    }
+                    Declaration::FunctionDeclaration(function) => {
+                        let Some(name) = function.id.as_ref().map(|id| id.name.to_string()) else {
+                            continue;
+                        };
+                        let mut values = Vec::new();
+                        collect_from_named_declaration(declaration, &name, &mut values);
+                        if !values.is_empty() {
+                            facts.named.insert(name, values);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            Statement::ExportDefaultDeclaration(export) => {
+                collect_from_default_export(&export.declaration, &mut facts.default);
+            }
+            _ => {}
+        }
+    }
+    facts
+}
+
+fn resolve_imported_values_inner(
+    local_name: &str,
+    program: &Program<'_>,
+    importing_file: &Path,
+    visible_files: Option<&HashSet<PathBuf>>,
+) -> Vec<String> {
     let Some((source_str, exported_name, is_default)) = find_import_info(local_name, program)
     else {
         return vec![];
     };
 
-    let Some(resolved_path) = crate::fetch::resolve::resolve_import(importing_file, &source_str)
-    else {
+    let resolved_path = match visible_files {
+        Some(visible) => {
+            crate::fetch::resolve::resolve_import_from_visible(importing_file, &source_str, visible)
+        }
+        None => crate::fetch::resolve::resolve_import(importing_file, &source_str),
+    };
+    let Some(resolved_path) = resolved_path else {
         return vec![];
     };
 
@@ -84,114 +210,4 @@ fn collect_exported_values(
     values
 }
 
-fn collect_from_default_export(kind: &ExportDefaultDeclarationKind<'_>, values: &mut Vec<String>) {
-    match kind {
-        ExportDefaultDeclarationKind::ObjectExpression(obj) => {
-            for prop in &obj.properties {
-                if let ObjectPropertyKind::ObjectProperty(p) = prop {
-                    if !p.computed {
-                        if let Expression::StringLiteral(lit) = &p.value {
-                            values.push(lit.value.to_string());
-                        }
-                    }
-                }
-            }
-        }
-        ExportDefaultDeclarationKind::FunctionDeclaration(func) => {
-            if let Some(body) = &func.body {
-                collect_returns_from_function_body(&body.statements, values);
-            }
-        }
-        ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
-            if arrow.expression {
-                for s in &arrow.body.statements {
-                    if let Statement::ExpressionStatement(expr_stmt) = s {
-                        values.extend(collect_string_leaves(&expr_stmt.expression));
-                    }
-                }
-            } else {
-                collect_returns_from_function_body(&arrow.body.statements, values);
-            }
-        }
-        _ => {}
-    }
-}
-
-fn collect_from_named_declaration(
-    decl: &Declaration<'_>,
-    exported_name: &str,
-    values: &mut Vec<String>,
-) {
-    match decl {
-        Declaration::VariableDeclaration(var_decl) => {
-            for declarator in &var_decl.declarations {
-                let Some(name) = binding_ident_name(&declarator.id) else {
-                    continue;
-                };
-                if name != exported_name {
-                    continue;
-                }
-                let Some(init) = declarator.init.as_ref() else {
-                    continue;
-                };
-                let leaves = collect_string_leaves(init);
-                if !leaves.is_empty() {
-                    values.extend(leaves);
-                    continue;
-                }
-                values.extend(collect_object_string_values(init));
-            }
-        }
-        Declaration::FunctionDeclaration(func)
-            if func.id.as_ref().is_some_and(|id| id.name == exported_name) =>
-        {
-            if let Some(body) = &func.body {
-                collect_returns_from_function_body(&body.statements, values);
-            }
-        }
-        _ => {}
-    }
-}
-
-fn collect_returns_from_function_body(statements: &[Statement<'_>], values: &mut Vec<String>) {
-    for stmt in statements {
-        match stmt {
-            Statement::ReturnStatement(ret) => {
-                if let Some(expr) = &ret.argument {
-                    values.extend(collect_string_leaves(expr));
-                }
-            }
-            Statement::IfStatement(if_stmt) => {
-                collect_returns_from_stmt(&if_stmt.consequent, values);
-                if let Some(alt) = &if_stmt.alternate {
-                    collect_returns_from_stmt(alt, values);
-                }
-            }
-            Statement::BlockStatement(block) => {
-                collect_returns_from_function_body(&block.body, values);
-            }
-            _ => {}
-        }
-    }
-}
-
-fn collect_returns_from_stmt(stmt: &Statement<'_>, values: &mut Vec<String>) {
-    match stmt {
-        Statement::ReturnStatement(ret) => {
-            if let Some(expr) = &ret.argument {
-                values.extend(collect_string_leaves(expr));
-            }
-        }
-        Statement::BlockStatement(block) => {
-            collect_returns_from_function_body(&block.body, values);
-        }
-        _ => {}
-    }
-}
-
-fn binding_ident_name(pattern: &oxc_ast::ast::BindingPattern<'_>) -> Option<String> {
-    match pattern {
-        oxc_ast::ast::BindingPattern::BindingIdentifier(id) => Some(id.name.to_string()),
-        _ => None,
-    }
-}
+include!("cross_file_collect.rs");

@@ -1,9 +1,16 @@
 use super::{analyze_unique_exports, filter_source_files, load_codebase_config_with_path};
-use super::{find_tsconfig, load_tsconfig, normalize_path, workspaces, DefaultTsConfig};
-use super::{ImportResolver, UniqueExportFinding, UniqueExportsOptions, RULE_ID};
+use super::{normalize_path, workspaces};
+use super::{ImportResolver, UniqueExportFinding, UniqueExportsOptions};
 use crate::codebase::check_facts::CheckFactMap;
 use anyhow::Result;
+use std::collections::HashSet;
 use std::path::Path;
+
+mod prepared;
+pub use prepared::{
+    analyze_project_with_config_and_facts, analyze_project_with_prepared_facts,
+    analyze_project_with_prepared_facts_and_inferred,
+};
 
 pub fn analyze_project_with_facts(
     root: &Path,
@@ -14,56 +21,36 @@ pub fn analyze_project_with_facts(
     let root = normalize_path(root);
     let root = root.as_path();
     let config = load_codebase_config_with_path(root, config_path)?;
-    let applications = config.rule_applications_for(RULE_ID);
-    if !applications.is_empty() {
-        let mut findings = Vec::new();
-        for application in applications {
-            let project_roots = config
-                .project_roots_for_rule_application(root, application)
-                .into_iter()
-                .map(|path| normalize_path(&path))
-                .collect::<Vec<_>>();
-            let options = application.rule_options();
-            let application_findings = analyze_project_roots_with_facts(
-                root,
-                Some((&config, application)),
-                tsconfig_path,
-                shared,
-                project_roots,
-                options,
-            )?;
-            findings.extend(application_findings);
-        }
-        findings.sort();
-        findings.dedup();
-        return Ok(findings);
-    }
-    let project_roots = config
-        .project_roots_for_rule(root, RULE_ID)
-        .into_iter()
-        .map(|path| normalize_path(&path))
-        .collect::<Vec<_>>();
-    analyze_project_roots_with_facts(
-        root,
-        None,
-        tsconfig_path,
-        shared,
-        project_roots,
-        config.rule_options(RULE_ID),
-    )
+    analyze_project_with_config_and_facts(root, &config, tsconfig_path, shared)
+}
+
+struct ProjectRootsAnalysis<'a> {
+    root: &'a Path,
+    application_filter: Option<(
+        &'a crate::codebase::config::Config,
+        &'a crate::codebase::config::RuleApplicationConfig,
+    )>,
+    tsconfig_path: Option<&'a Path>,
+    prepared_tsconfig: Option<&'a crate::codebase::ts_resolver::TsConfig>,
+    shared: &'a CheckFactMap,
+    project_roots: Vec<std::path::PathBuf>,
+    options: UniqueExportsOptions,
+    inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
 }
 
 fn analyze_project_roots_with_facts(
-    root: &Path,
-    application_filter: Option<(
-        &crate::codebase::config::Config,
-        &crate::codebase::config::RuleApplicationConfig,
-    )>,
-    tsconfig_path: Option<&Path>,
-    shared: &CheckFactMap,
-    project_roots: Vec<std::path::PathBuf>,
-    options: UniqueExportsOptions,
+    inputs: ProjectRootsAnalysis<'_>,
 ) -> Result<Vec<UniqueExportFinding>> {
+    let ProjectRootsAnalysis {
+        root,
+        application_filter,
+        tsconfig_path,
+        prepared_tsconfig,
+        shared,
+        project_roots,
+        options,
+        inferred_roots,
+    } = inputs;
     if project_roots.is_empty() {
         return Ok(Vec::new());
     }
@@ -78,27 +65,31 @@ fn analyze_project_roots_with_facts(
         .cloned()
         .collect::<Vec<_>>();
     if let Some((config, application)) = application_filter {
-        analysis_files = filter_application_files(root, config, application, analysis_files)?;
+        analysis_files =
+            filter_application_files(root, config, application, analysis_files, inferred_roots)?;
     }
     analysis_files.sort();
     analysis_files.dedup();
     let analysis_files = filter_source_files(&analysis_files);
     let symbol_files = shared_symbol_files(&workspace_files, &analysis_files);
-    let tsconfig = match tsconfig_path {
-        Some(path) => {
-            let path = if path.is_absolute() {
-                path.to_path_buf()
-            } else {
-                root.join(path)
-            };
-            load_tsconfig(&path)?
-        }
-        None => find_tsconfig(root)
-            .map(|path| load_tsconfig(&path))
-            .transpose()?
-            .unwrap_or_default_for(root),
-    };
-    let resolver = ImportResolver::new(&tsconfig);
+    let loaded_tsconfig = prepared_tsconfig
+        .is_none()
+        .then(|| {
+            crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
+                tsconfig_path,
+                root,
+                shared.files(),
+            )
+        })
+        .transpose()?;
+    let tsconfig = prepared_tsconfig
+        .or(loaded_tsconfig.as_ref())
+        .expect("prepared or locally resolved tsconfig");
+    let visible_files = workspace_files
+        .iter()
+        .map(|path| normalize_path(path))
+        .collect::<HashSet<_>>();
+    let resolver = ImportResolver::new(tsconfig).with_visible(&visible_files);
     let workspace = workspaces::load_from_files(root, &workspace_files).unwrap_or_default();
     let source_files = super::scan::collect_source_files_from_facts(root, &symbol_files, shared)?;
     analyze_unique_exports(
@@ -116,18 +107,20 @@ fn filter_application_files(
     config: &crate::codebase::config::Config,
     application: &crate::codebase::config::RuleApplicationConfig,
     files: Vec<std::path::PathBuf>,
+    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
 ) -> Result<Vec<std::path::PathBuf>> {
     use crate::codebase::rules::path_filter::GlobMatcher;
 
     let include = GlobMatcher::new(&application.include, "unique-exports rule include")?;
     let exclude = GlobMatcher::new(&application.exclude, "unique-exports rule exclude")?;
+    let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
     let projects = application
         .projects
         .iter()
         .filter_map(|project_name| {
             let project = config.projects.get(project_name)?;
             let project_root = project
-                .effective_root(root)
+                .effective_root_with_cache(root, &mut inferred_roots)
                 .unwrap_or_else(|| root.to_path_buf());
             let project_root = normalize_path(&project_root);
             let project_include =

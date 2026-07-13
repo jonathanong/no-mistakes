@@ -141,7 +141,13 @@ pub(super) fn resolve_export_source(
     if let Some(path) = resolver.resolve(source, importing_file) {
         return Some(normalize_path(&path));
     }
-    if let Some(path) = workspace.resolve_specifier(source) {
+    let workspace_path = match resolver.visible_files() {
+        Some(visible) => {
+            workspace.resolve_specifier_from_file_visible(source, importing_file, visible)
+        }
+        None => workspace.resolve_specifier(source),
+    };
+    if let Some(path) = workspace_path {
         return Some(normalize_path(&path));
     }
     None

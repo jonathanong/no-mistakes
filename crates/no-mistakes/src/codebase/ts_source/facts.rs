@@ -15,8 +15,9 @@ pub(crate) mod domain;
 mod map;
 mod plan;
 
+pub(crate) use collect::collect_file_facts_from_program;
 pub use collect::{collect_ts_facts, collect_ts_facts_with_context};
-pub use domain::{BackendRouteFact, TsFactContext};
+pub use domain::{BackendRouteFact, EffectCallFact, RscEnvironmentFact, TsFactContext};
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct TsFactPlan {
@@ -33,6 +34,8 @@ pub struct TsFactPlan {
     pub process_spawns: bool,
     pub server_routes: bool,
     pub react: bool,
+    pub effect_calls: bool,
+    pub rsc_environment: bool,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -61,6 +64,8 @@ pub struct TsFileFacts {
     pub process_spawns: Vec<SpawnEdge>,
     pub(crate) server_routes: Option<ServerRouteFileFacts>,
     pub react_components: Vec<ComponentFacts>,
+    pub effect_calls: Vec<EffectCallFact>,
+    pub rsc_environment: Option<RscEnvironmentFact>,
 }
 
 #[derive(Debug, Clone, Default)]

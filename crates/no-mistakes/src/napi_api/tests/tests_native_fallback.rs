@@ -5,6 +5,7 @@ fn tests_plan_json_reports_native_source_fallback() {
         "framework": "dotnet",
         "root": dotnet_root,
         "changedFiles": ["src/App/FeedService.cs"],
+        "globalConfigFallback": true,
     })
     .to_string();
     let output = tests_plan_json_impl(options).unwrap();

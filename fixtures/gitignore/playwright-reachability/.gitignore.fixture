@@ -1,0 +1,3 @@
+tsconfig.json
+web/app/ignored-bridge.tsx
+web/app/layout.tsx

@@ -6,6 +6,7 @@ struct SymbolRuntimeEdgeInputs<'a> {
     calls_by_caller: &'a HashMap<String, Vec<FunctionCall>>,
     http_route_defs: &'a [(PathBuf, String)],
     process_spawns: &'a [crate::codebase::ts_process_spawn::SpawnEdge],
+    visible_files: &'a HashSet<PathBuf>,
 }
 
 fn collect_symbol_runtime_owner_file_edges(
@@ -18,8 +19,13 @@ fn collect_symbol_runtime_owner_file_edges(
     let Some(calls) = inputs.calls_by_caller.get(inputs.caller) else {
         return;
     };
-    let process_targets =
-        symbol_process_targets(inputs.root, inputs.path, calls, inputs.process_spawns);
+    let process_targets = symbol_process_targets(
+        inputs.root,
+        inputs.path,
+        calls,
+        inputs.process_spawns,
+        inputs.visible_files,
+    );
     let http_targets = symbol_http_targets(inputs.path, calls, inputs.http_route_defs);
     if http_targets.is_empty() && process_targets.is_empty() {
         return;
@@ -47,6 +53,7 @@ fn symbol_process_targets(
     path: &Path,
     calls: &[FunctionCall],
     process_spawns: &[crate::codebase::ts_process_spawn::SpawnEdge],
+    visible_files: &HashSet<PathBuf>,
 ) -> Vec<PathBuf> {
     let mut targets = Vec::new();
     for call in calls {
@@ -57,23 +64,25 @@ fn symbol_process_targets(
             continue;
         };
         let resolved = if call.callee.ends_with("exec") || call.callee == "exec" {
-            crate::codebase::ts_process_spawn::resolve_entry_file_from_shell(
+            crate::codebase::ts_process_spawn::resolve_entry_file_from_shell_from_visible(
                 static_arg,
                 call.static_cwd.as_deref(),
                 path,
                 root,
+                visible_files,
             )
         } else {
-            crate::codebase::ts_process_spawn::resolve_entry_file(
+            crate::codebase::ts_process_spawn::resolve_entry_file_from_visible(
                 static_arg,
                 call.static_cwd.as_deref(),
                 path,
                 root,
+                visible_files,
             )
         };
         if let Some(resolved) = resolved {
             for spawn in process_spawns {
-                if spawn.entry == resolved {
+                if spawn.entry == resolved && visible_files.contains(&spawn.entry) {
                     targets.push(spawn.entry.clone());
                 }
             }

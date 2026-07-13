@@ -112,10 +112,17 @@ include_all_react_named_exports: true
 
 #[test]
 fn config_helpers_cover_tsconfig_and_storybook_fallbacks() {
-    let root = fixture("covered");
-    let tsconfig = config::resolve_tsconfig(&root, Some(&root.join("tsconfig.json"))).unwrap();
+    let root = normalize_path(&fixture("covered"));
+    let visible = crate::codebase::ts_source::discover_visible_paths(&root);
+    let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
+        Some(&root.join("tsconfig.json")),
+        &root,
+        &visible,
+    )
+    .unwrap();
     assert_eq!(tsconfig.dir, root);
-    let discovered = config::resolve_tsconfig(&root, None).unwrap();
+    let discovered =
+        crate::codebase::ts_resolver::resolve_tsconfig_from_visible(None, &root, &visible).unwrap();
     assert_eq!(discovered.dir, root);
 
     let mut missing = crate::config::v2::NoMistakesConfig::default();

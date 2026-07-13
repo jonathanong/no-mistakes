@@ -2,7 +2,6 @@ use super::{
     expression_options, import_bindings, imported_options, root_spreads, shared,
     top_level_function_bodies, Ctx, ImportBinding,
 };
-use crate::ast;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::integration_tests::test_config::playwright::Options;
 use anyhow::Result;
@@ -19,7 +18,11 @@ pub(super) fn namespace_member_options(
     };
     if let Some(import) = ctx.imports.get(object.name.as_str()).cloned() {
         if import.imported != "*" {
-            return imported_member_options(&import, member.property.name.as_str(), ctx);
+            return super::member_helpers::imported_member_options(
+                &import,
+                member.property.name.as_str(),
+                ctx,
+            );
         }
         return imported_options(
             &ImportBinding {
@@ -69,21 +72,13 @@ fn imported_spread_member_options(
                 ctx,
             )?
         } else {
-            imported_member_options(&import, member, ctx)?
+            super::member_helpers::imported_member_options(&import, member, ctx)?
         };
         if !options.is_empty() {
             found = options;
         }
     }
     Ok(found)
-}
-
-fn imported_member_options(
-    import: &ImportBinding,
-    member: &str,
-    ctx: &mut Ctx<'_, '_>,
-) -> Result<Vec<Options>> {
-    imported_member_options_from(import, member, ctx.path, ctx)
 }
 
 fn imported_options_from_base(
@@ -99,16 +94,20 @@ fn imported_options_from_base(
     }
     let result = match std::fs::read_to_string(&path) {
         Err(_) => Ok(Vec::new()),
-        Ok(source) => ast::with_program(&path, &source, |program, source| {
-            super::exports::exported_options(program, source, &path, ctx, &import.imported)
-        })
+        Ok(source) => crate::integration_tests::runner_config::with_program(
+            &path,
+            &source,
+            |program, source| {
+                super::exports::exported_options(program, source, &path, ctx, &import.imported)
+            },
+        )
         .and_then(|options| options),
     };
     ctx.seen.remove(&path);
     result
 }
 
-fn imported_member_options_from(
+pub(super) fn imported_member_options_from(
     import: &ImportBinding,
     member: &str,
     base_path: &Path,
@@ -122,16 +121,20 @@ fn imported_member_options_from(
     }
     let result = match std::fs::read_to_string(&path) {
         Err(_) => Ok(Vec::new()),
-        Ok(source) => ast::with_program(&path, &source, |program, source| {
-            exported_member_options(
-                program,
-                source,
-                import.imported.as_str(),
-                member,
-                &path,
-                ctx,
-            )
-        })
+        Ok(source) => crate::integration_tests::runner_config::with_program(
+            &path,
+            &source,
+            |program, source| {
+                exported_member_options(
+                    program,
+                    source,
+                    import.imported.as_str(),
+                    member,
+                    &path,
+                    ctx,
+                )
+            },
+        )
         .and_then(|options| options),
     };
     ctx.seen.remove(&path);

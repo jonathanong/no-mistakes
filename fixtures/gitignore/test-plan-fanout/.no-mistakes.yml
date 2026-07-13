@@ -1,0 +1,9 @@
+tests:
+  vitest:
+    projects:
+      unit:
+        include: ["**/*.test.ts"]
+  playwright:
+    projects:
+      e2e:
+        include: ["**/*.spec.ts"]

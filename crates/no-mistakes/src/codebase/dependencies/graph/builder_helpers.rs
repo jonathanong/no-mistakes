@@ -4,7 +4,9 @@ struct GraphEdgeBuildInputs<'a> {
     plan: GraphBuildPlan,
     graph_files: &'a GraphFiles,
     config_options: Option<&'a GraphConfigOptions>,
+    playwright_settings: Option<&'a crate::playwright::config::Settings>,
     config_path: Option<&'a Path>,
+    swift_facts: Option<&'a crate::codebase::swift::SwiftFactMap>,
 }
 
 fn merge_http_process_edges(
@@ -35,6 +37,7 @@ fn merge_http_process_edges(
             facts,
             &[],
             inputs.graph_files.indexable(),
+            inputs.graph_files.visible(),
         );
         merge_edges(forward, reverse, spawn_edges);
     }
@@ -49,11 +52,12 @@ fn merge_swift_edges(
         return;
     }
 
-    let swift_edges = collect_swift_edges(
+    let swift_edges = collect_swift_edges_with_facts(
         inputs.root,
         inputs.tsconfig,
         &inputs.graph_files.all,
         inputs.config_options,
+        inputs.swift_facts,
     );
     for (from, to, _) in &swift_edges {
         forward.entry(from.clone()).or_default();

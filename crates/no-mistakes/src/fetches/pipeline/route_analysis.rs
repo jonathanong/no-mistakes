@@ -1,6 +1,3 @@
-pub(crate) use no_mistakes::fetch::route_analysis::collect_route_fetches;
-
-use crate::fetches::analyze::routes::route_reaches_target;
 use crate::fetches::pipeline::cache::Cache;
 use crate::fetches::pipeline::target::{route_matches_target, TargetSpec};
 use anyhow::Result;
@@ -12,6 +9,9 @@ pub(crate) fn check_route_matches(
     target_specs: &[TargetSpec],
     wrapper_files: &[PathBuf],
     cache: &mut Cache,
+    parsed_files: &mut no_mistakes::fetch::ParsedFileCache,
+    root: &Path,
+    visible_files: &HashSet<PathBuf>,
 ) -> Result<(bool, Vec<String>)> {
     let mut newly_matched = Vec::new();
 
@@ -28,7 +28,14 @@ pub(crate) fn check_route_matches(
         }
 
         if let Some(target_file) = &target.file {
-            let reaches_route_target = reaches_target(&route.file, target_file, cache)?;
+            let reaches_route_target = reaches_target(
+                &route.file,
+                target_file,
+                root,
+                cache,
+                parsed_files,
+                visible_files,
+            )?;
             if reaches_route_target {
                 matched = true;
                 newly_matched.push(target.raw.clone());
@@ -42,7 +49,14 @@ pub(crate) fn check_route_matches(
                     break;
                 }
 
-                let reaches_wrapper_target = reaches_target(wrapper_file, target_file, cache)?;
+                let reaches_wrapper_target = reaches_target(
+                    wrapper_file,
+                    target_file,
+                    root,
+                    cache,
+                    parsed_files,
+                    visible_files,
+                )?;
                 if reaches_wrapper_target {
                     wrapper_file_matches = true;
                     break;
@@ -60,12 +74,22 @@ pub(crate) fn check_route_matches(
     Ok((matched, newly_matched))
 }
 
-fn reaches_target(source_file: &Path, target_file: &Path, cache: &mut Cache) -> Result<bool> {
+fn reaches_target(
+    source_file: &Path,
+    target_file: &Path,
+    root: &Path,
+    cache: &mut Cache,
+    parsed_files: &mut no_mistakes::fetch::ParsedFileCache,
+    visible_files: &HashSet<PathBuf>,
+) -> Result<bool> {
     let mut visited_targets = HashSet::new();
-    route_reaches_target(
+    no_mistakes::fetch::route_reaches_target_from_visible_with_facts(
         source_file,
         target_file,
+        root,
         &mut visited_targets,
         &mut cache.imports,
+        parsed_files,
+        visible_files,
     )
 }

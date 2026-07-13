@@ -82,7 +82,7 @@ fn generic_fact_rule_runner_checks_server_route_client_boundary() {
     );
     let findings = crate::codebase::rules::run_check_with_facts(
         &root,
-        Some(&root.join("no-mistakes.yml")),
+        Some(&root.join("boundary-only.no-mistakes.yml")),
         None,
         &facts,
     )

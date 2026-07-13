@@ -93,11 +93,13 @@ fn direct_resolution_covers_cycles_and_import_shapes() {
     analyses.insert(helper.clone(), types::FileAnalysis::default());
     let mut export_index = HashMap::new();
     export_index.insert((helper, "default".into()), imported_key);
-    let tsconfig = tsconfig_without_config(&root);
+    let tsconfig = test_support::tsconfig_without_config(&root);
+    let visible_files = analyses.keys().cloned().collect();
     let resolver = resolve::ImportResolution {
         analyses: &analyses,
         export_index: &export_index,
         tsconfig: &tsconfig,
+        visible_files: &visible_files,
     };
 
     assert_eq!(
@@ -113,6 +115,34 @@ fn direct_resolution_covers_cycles_and_import_shapes() {
         resolve::resolved_integrations(&imported_namespace_key, &function_index, &resolver)
             .is_empty()
     );
+}
+
+#[test]
+fn pass4b_call_tracing_skips_ignored_helper_for_visible_fallback() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass4b-shadow");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let files = crate::codebase::ts_source::discover_source_files(&root, &[]);
+    let analyses = test_support::analyze_files(&files).unwrap();
+    let function_index = resolve::build_function_index(&analyses);
+    let export_index = resolve::build_export_index(&analyses);
+    let visible_files = files.into_iter().collect();
+    let tsconfig = test_support::tsconfig_without_config(&root);
+    let resolver = resolve::ImportResolution {
+        analyses: &analyses,
+        export_index: &export_index,
+        tsconfig: &tsconfig,
+        visible_files: &visible_files,
+    };
+
+    let integrations = resolve::resolved_integrations(
+        &function_key(&root.join("integration/caller.ts"), "caller"),
+        &function_index,
+        &resolver,
+    );
+
+    assert_eq!(integrations, vec!["visible".to_string()]);
 }
 
 fn import_binding(source: &str, imported: types::ImportedName) -> types::ImportBinding {

@@ -27,7 +27,7 @@ pub fn is_skipped_dir(name: &str) -> bool {
 pub fn walk_files(root: &Path, extra_skip: &[String]) -> Vec<PathBuf> {
     let extra_skip: HashSet<String> = extra_skip.iter().cloned().collect();
 
-    let mut files = walk_non_ignored_files(root, &extra_skip, &[]);
+    let mut files = walk_non_ignored_files(root, &extra_skip);
     files.extend(walk_github_workflow_files(root, &extra_skip));
     sort_dedup(files)
 }
@@ -40,27 +40,22 @@ fn sort_dedup(mut files: Vec<PathBuf>) -> Vec<PathBuf> {
     files
 }
 
-fn walk_non_ignored_files(
-    root: &Path,
-    extra_skip: &HashSet<String>,
-    preserved_roots: &[PathBuf],
-) -> Vec<PathBuf> {
+fn walk_non_ignored_files(root: &Path, extra_skip: &HashSet<String>) -> Vec<PathBuf> {
     let entry_extra_skip = extra_skip.clone();
     let file_extra_skip: HashSet<&str> = extra_skip.iter().map(String::as_str).collect();
-    let preserved_roots = preserved_roots.to_vec();
-    let filter_preserved_roots = preserved_roots.clone();
     WalkBuilder::new(root)
         .hidden(true)
+        // Outside a Git checkout, `ignore` defaults to requiring `.git`
+        // metadata before it applies `.gitignore`. Discovery must keep the
+        // same ignore semantics for source archives and ad-hoc directories.
+        .require_git(false)
         .filter_entry(move |e| {
-            let path = normalize_discovery_path(e.path());
             let name = e.file_name().to_str().unwrap_or("");
             if e.depth() > 0
                 && e.file_type().is_some_and(|ft| ft.is_dir())
                 && (SKIP_DIRS.contains(&name) || entry_extra_skip.contains(name))
             {
-                return filter_preserved_roots
-                    .iter()
-                    .any(|root| root.starts_with(&path));
+                return false;
             }
             true
         })
@@ -68,12 +63,7 @@ fn walk_non_ignored_files(
         .filter_map(|e| e.ok())
         .filter(|e| e.file_type().is_some_and(|ft| ft.is_file()))
         .map(|e| normalize_discovery_path(e.path()))
-        .filter(|path| {
-            !is_under_skipped_dir(root, path, &file_extra_skip)
-                || preserved_roots.iter().any(|root| {
-                    path.starts_with(root) && !is_under_skipped_dir(root, path, &file_extra_skip)
-                })
-        })
+        .filter(|path| !is_under_skipped_dir(root, path, &file_extra_skip))
         .collect()
 }
 
@@ -91,6 +81,7 @@ fn walk_github_workflow_files(root: &Path, extra_skip: &HashSet<String>) -> Vec<
     let file_root = root.to_path_buf();
     WalkBuilder::new(root)
         .hidden(false)
+        .require_git(false)
         .filter_entry(move |e| {
             let name = e.file_name().to_str().unwrap_or("");
             if e.depth() > 0
@@ -128,53 +119,84 @@ fn is_github_workflows_prefix(root: &Path, path: &Path) -> bool {
 /// file discovery: tracked files plus untracked files that are not hidden by
 /// `.gitignore`. The result is repo-relative, sorted, and deduplicated.
 pub fn git_visible_files(root: &Path) -> Option<Vec<String>> {
-    git_ls_files(root)
+    git_ls_paths(root).map(|paths| {
+        paths
+            .into_iter()
+            .map(|path| path.to_string_lossy().into_owned())
+            .collect()
+    })
+}
+
+/// Return the filesystem entries Git would make visible under `root`.
+///
+/// Inside a Git worktree this is the tracked plus untracked-nonignored file
+/// list. Outside Git, an `ignore::WalkBuilder` applies `.gitignore`, `.ignore`,
+/// and parent ignore files without requiring repository metadata. Hidden paths
+/// are left visible so each analyzer can preserve its own hidden-directory and
+/// symlink policy after sharing this single candidate-discovery boundary.
+pub fn discover_visible_paths(root: &Path) -> Vec<PathBuf> {
+    let mut paths: Vec<PathBuf> = match git_ls_paths(root) {
+        Some(files) => files
+            .into_iter()
+            .map(|relative| root.join(relative))
+            .filter(|path| std::fs::symlink_metadata(path).is_ok())
+            .collect(),
+        None => WalkBuilder::new(root)
+            .hidden(false)
+            .require_git(false)
+            .build()
+            .filter_map(|entry| entry.ok())
+            .filter(|entry| {
+                entry
+                    .file_type()
+                    .is_some_and(|file_type| file_type.is_file() || file_type.is_symlink())
+            })
+            .map(|entry| entry.into_path())
+            .collect(),
+    };
+    paths.sort();
+    paths.dedup();
+    paths
 }
 
 /// Return git-visible files as absolute paths. Falls back to the ignore-based
 /// walker outside git repositories so unit tests and ad-hoc directories still
 /// behave sensibly.
 pub fn discover_files(root: &Path, extra_skip: &[String]) -> Vec<PathBuf> {
-    discover_files_from_git_files(root, extra_skip, None)
+    let visible_paths = discover_visible_paths(root);
+    discover_files_from_visible(root, extra_skip, &visible_paths)
 }
 
-/// Same as [`discover_files`], but lets a caller reuse a git-visible file list it
-/// already fetched via [`git_visible_files`] instead of spawning `git ls-files`
-/// again for the same root. Pass `git_files: None` to fetch it internally —
-/// identical to calling [`discover_files`] directly. Pass `Some(files)` when the
-/// caller already has the list from an earlier call within the same invocation
-/// (e.g. `no-mistakes check` discovering the same root twice with different
-/// skip-directory filters).
-pub fn discover_files_from_git_files(
+/// Filter a request-scoped visible-path snapshot using the standard source
+/// discovery exclusions without walking the filesystem again.
+pub fn discover_files_from_visible(
     root: &Path,
     extra_skip: &[String],
-    git_files: Option<&[String]>,
+    visible_paths: &[PathBuf],
 ) -> Vec<PathBuf> {
     let root = normalize_discovery_path(root);
-    let fetched;
-    let files: Option<&[String]> = match git_files {
-        Some(files) => Some(files),
-        None => {
-            fetched = git_visible_files(&root);
-            fetched.as_deref()
-        }
-    };
-    match files {
-        Some(files) => {
-            let extra_skip: HashSet<&str> = extra_skip.iter().map(String::as_str).collect();
-            files
-                .iter()
-                .map(|rel| normalize_discovery_path(&root.join(rel)))
-                .filter(|p| p.exists())
-                .filter(|p| !is_under_skipped_dir(&root, p, &extra_skip))
-                .collect()
-        }
-        None => walk_files(&root, extra_skip),
-    }
+    let extra_skip: HashSet<&str> = extra_skip.iter().map(String::as_str).collect();
+    visible_paths
+        .iter()
+        .map(|path| normalize_discovery_path(path))
+        .filter(|path| path.starts_with(&root))
+        .filter(|path| path.exists())
+        .filter(|path| !is_under_skipped_dir(&root, path, &extra_skip))
+        .collect()
 }
 
 pub fn discover_source_files(root: &Path, extra_skip: &[String]) -> Vec<PathBuf> {
-    discover_files(root, extra_skip)
+    let visible_paths = discover_visible_paths(root);
+    discover_source_files_from_visible(root, extra_skip, &visible_paths)
+}
+
+/// Return TypeScript/JavaScript files from a request-scoped visible snapshot.
+pub fn discover_source_files_from_visible(
+    root: &Path,
+    extra_skip: &[String],
+    visible_paths: &[PathBuf],
+) -> Vec<PathBuf> {
+    discover_files_from_visible(root, extra_skip, visible_paths)
         .into_iter()
         .filter(|path| {
             path.extension()
@@ -184,43 +206,4 @@ pub fn discover_source_files(root: &Path, extra_skip: &[String]) -> Vec<PathBuf>
         .collect()
 }
 
-pub fn discover_with_extensions(
-    root: &Path,
-    extra_skip: &[String],
-    extensions: &[&str],
-) -> Vec<PathBuf> {
-    discover_files(root, extra_skip)
-        .into_iter()
-        .filter(|path| {
-            path.extension()
-                .and_then(|ext| ext.to_str())
-                .is_some_and(|ext| extensions.contains(&ext))
-        })
-        .collect()
-}
-
-pub fn discover_with_basenames(
-    root: &Path,
-    extra_skip: &[String],
-    basenames: &[&str],
-) -> Vec<PathBuf> {
-    discover_files(root, extra_skip)
-        .into_iter()
-        .filter(|path| {
-            path.file_name()
-                .and_then(|n| n.to_str())
-                .is_some_and(|n| basenames.contains(&n))
-        })
-        .collect()
-}
-
-pub fn relative_slash_path(root: &Path, path: &Path) -> String {
-    path.strip_prefix(root)
-        .unwrap_or(path)
-        .to_string_lossy()
-        .replace('\\', "/")
-}
-
-pub fn line_number(source: &str, start: u32) -> usize {
-    byte_offset_to_line(source, start as usize) as usize
-}
+include!("discovery/helpers.rs");

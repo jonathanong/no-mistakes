@@ -1,0 +1,6 @@
+app/ignored-bridge.ts
+app/ignored-helper.ts
+app/layout.tsx
+app/template.tsx
+dynamic/ignored-target.ts
+queue/ignored-processor.ts

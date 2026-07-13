@@ -39,24 +39,36 @@ pub(crate) trait TsFactLookup: Sync {
         None
     }
 
+    fn playwright_source_files(&self) -> Option<&[PathBuf]> {
+        None
+    }
+
+    fn get_playwright_test_files(
+        &self,
+        _project: Option<&str>,
+    ) -> Option<Arc<Vec<crate::playwright::analysis::context::DiscoveredTestFile>>> {
+        None
+    }
+
+    fn get_playwright_fetch_facts(
+        &self,
+        _path: &Path,
+    ) -> Option<Result<crate::fetch::file_facts::ParsedFileFacts, String>> {
+        None
+    }
+
     /// Get-or-compute the app-wide Playwright selector-occurrence scan
-    /// (`collect_app_selector_occurrences`), keyed by `scan_html_ids` — whether
-    /// HTML id attributes are included in the scan. Every other input to that
-    /// scan (selector attributes, frontend root, selector roots/include/
-    /// exclude) is resolved from one config file per `check` invocation and
-    /// is therefore invariant across every caller within a run;
-    /// `scan_html_ids` is the only value that can legitimately differ (e.g. a
-    /// `playwright-unique-html-ids` rule selection scans with HTML ids
-    /// included, while a `DepGraph` build for `forbidden-dependencies` never
-    /// does), so a 2-entry cache fully captures the variance — a repo with
-    /// that rule configured still pays the scan twice (once per key), by
-    /// design, not by bug.
+    /// (`collect_app_selector_occurrences`), keyed by the exact Playwright
+    /// settings and `scan_html_ids`. A single request may analyze multiple
+    /// projects with different roots, selector attributes, or rewrites; those
+    /// scopes must never share cached app facts.
     ///
     /// Default: always calls `compute`, no caching — correct for `TsFactMap`
     /// and for any standalone single-invocation caller that has no reason to
     /// share this scan with another call site.
     fn get_or_compute_app_selector_occurrences(
         &self,
+        _settings: &crate::playwright::config::Settings,
         _scan_html_ids: bool,
         compute: &dyn Fn() -> Result<Vec<crate::playwright::selectors::AppSelector>>,
     ) -> Result<Arc<Vec<crate::playwright::selectors::AppSelector>>> {
@@ -64,21 +76,21 @@ pub(crate) trait TsFactLookup: Sync {
     }
 
     /// Get-or-compute the app's Playwright page routes (`routes::collect_routes`
-    /// plus rewrite expansion). Depends only on `root` and `settings.frontend_root`
-    /// /`settings.rewrites`, neither of which varies by Playwright project —
-    /// unlike `get_or_compute_app_selector_occurrences`, no key is needed:
-    /// every caller within one invocation wants the same value.
+    /// plus rewrite expansion), keyed by the exact Playwright settings so
+    /// different frontend roots and rewrite sets remain isolated.
     fn get_or_compute_playwright_routes(
         &self,
+        _settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> Vec<crate::routes::Route>,
     ) -> Arc<Vec<crate::routes::Route>> {
         Arc::new(compute())
     }
 
-    /// Get-or-compute the app-wide visible-text scan (`collect_app_text_targets`).
-    /// Same invariance argument as `get_or_compute_playwright_routes`.
+    /// Get-or-compute the app-wide visible-text scan
+    /// (`collect_app_text_targets`), keyed by exact Playwright settings.
     fn get_or_compute_app_text_targets(
         &self,
+        _settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> Result<Vec<crate::playwright::analysis::text_types::AppTextTarget>>,
     ) -> Result<Arc<Vec<crate::playwright::analysis::text_types::AppTextTarget>>> {
         compute().map(Arc::new)
@@ -87,10 +99,11 @@ pub(crate) trait TsFactLookup: Sync {
     /// Get-or-compute route-reachability (`collect_route_reachable_files`) —
     /// the single largest cost this cache eliminates in practice (roughly 8s
     /// per call on a large monorepo, paid twice without this). Depends on
-    /// `root`, `settings`, and the already-shared routes list; same
-    /// invariance argument as the other keyless caches above.
+    /// `root`, `settings`, and the already-shared routes list, so the cache is
+    /// scoped by exact Playwright settings as well.
     fn get_or_compute_route_reachable_files(
         &self,
+        _settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> Result<RouteReachableFiles>,
     ) -> Result<Arc<RouteReachableFiles>> {
         compute().map(Arc::new)
@@ -119,7 +132,6 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
         self.ts.get(path).map(|facts| &facts.ts)
     }
 
-
     fn covers_ts_fact_plan(&self, required: TsFactPlan) -> bool {
         self.graph_plan().covers(required)
     }
@@ -133,9 +145,32 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
         &self,
         path: &Path,
     ) -> Option<&crate::codebase::check_facts::PlaywrightTestFacts> {
-        self.ts
-            .get(path)
-            .and_then(|facts| facts.playwright.as_ref())
+        self.ts.get(path).and_then(|facts| facts.playwright.as_ref())
+    }
+
+    fn playwright_source_files(&self) -> Option<&[PathBuf]> {
+        Some(&self.playwright_source_files)
+    }
+
+    fn get_playwright_test_files(
+        &self,
+        project: Option<&str>,
+    ) -> Option<Arc<Vec<crate::playwright::analysis::context::DiscoveredTestFile>>> {
+        self.playwright_test_files_by_project
+            .iter()
+            .find(|(candidate, _)| candidate.as_deref() == project)
+            .map(|(_, files)| Arc::clone(files))
+    }
+
+    fn get_playwright_fetch_facts(
+        &self,
+        path: &Path,
+    ) -> Option<Result<crate::fetch::file_facts::ParsedFileFacts, String>> {
+        let facts = self.ts.get(path)?;
+        if let Some(error) = &facts.parse_error {
+            return Some(Err(format!("failed to parse {}: {error}", path.display())));
+        }
+        facts.playwright_fetch.as_ref().cloned().map(Ok)
     }
 
     fn get_playwright_parse_error(&self, path: &Path) -> Option<&str> {
@@ -146,6 +181,7 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
 
     fn get_or_compute_app_selector_occurrences(
         &self,
+        settings: &crate::playwright::config::Settings,
         scan_html_ids: bool,
         compute: &dyn Fn() -> Result<Vec<crate::playwright::selectors::AppSelector>>,
     ) -> Result<Arc<Vec<crate::playwright::selectors::AppSelector>>> {
@@ -156,7 +192,10 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
         // concurrent misses can't both pay the full scan before either caches
         // it.
         self.app_selector_occurrences_cache
-            .entry(scan_html_ids)
+            .entry((
+                crate::codebase::check_facts::PlaywrightSettingsKey::new(settings),
+                scan_html_ids,
+            ))
             .or_insert_with(|| compute().map(Arc::new).map_err(|error| format!("{error:#}")))
             .clone()
             .map_err(anyhow::Error::msg)
@@ -164,29 +203,35 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
 
     fn get_or_compute_playwright_routes(
         &self,
+        settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> Vec<crate::routes::Route>,
     ) -> Arc<Vec<crate::routes::Route>> {
         self.playwright_routes_cache
-            .get_or_init(|| Arc::new(compute()))
+            .entry(crate::codebase::check_facts::PlaywrightSettingsKey::new(settings))
+            .or_insert_with(|| Arc::new(compute()))
             .clone()
     }
 
     fn get_or_compute_app_text_targets(
         &self,
+        settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> Result<Vec<crate::playwright::analysis::text_types::AppTextTarget>>,
     ) -> Result<Arc<Vec<crate::playwright::analysis::text_types::AppTextTarget>>> {
         self.app_text_targets_cache
-            .get_or_init(|| compute().map(Arc::new).map_err(|error| format!("{error:#}")))
+            .entry(crate::codebase::check_facts::PlaywrightSettingsKey::new(settings))
+            .or_insert_with(|| compute().map(Arc::new).map_err(|error| format!("{error:#}")))
             .clone()
             .map_err(anyhow::Error::msg)
     }
 
     fn get_or_compute_route_reachable_files(
         &self,
+        settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> Result<RouteReachableFiles>,
     ) -> Result<Arc<RouteReachableFiles>> {
         self.route_reachable_files_cache
-            .get_or_init(|| compute().map(Arc::new).map_err(|error| format!("{error:#}")))
+            .entry(crate::codebase::check_facts::PlaywrightSettingsKey::new(settings))
+            .or_insert_with(|| compute().map(Arc::new).map_err(|error| format!("{error:#}")))
             .clone()
             .map_err(anyhow::Error::msg)
     }

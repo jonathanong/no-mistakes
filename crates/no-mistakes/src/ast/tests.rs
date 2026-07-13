@@ -1,4 +1,5 @@
 use super::*;
+use std::path::PathBuf;
 
 #[test]
 fn parser_reports_invalid_sources_and_extensions() {
@@ -17,6 +18,33 @@ fn parser_reports_invalid_sources_and_extensions() {
     );
 
     let _ = with_program(Path::new("non-existent.ts"), "", |_, _| ());
+}
+
+#[test]
+fn parsed_program_cache_reuses_parse_and_source_type_errors() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/integration-tests/parse-errors/fixture");
+    let syntax_error_path = root.join("vitest.syntax-error.mts");
+    let syntax_error = std::fs::read_to_string(&syntax_error_path).unwrap();
+    let cache = ParsedProgramCache::default();
+
+    let first = cache
+        .with_program(&syntax_error_path, &syntax_error, |_, _| ())
+        .unwrap_err();
+    let cached = cache
+        .with_program(&syntax_error_path, "export default {}", |_, _| ())
+        .unwrap_err();
+    assert_eq!(cached, first, "a request cache is keyed by normalized path");
+
+    let unsupported_path = root.join("../README.md");
+    let first = cache
+        .with_program(&unsupported_path, "", |_, _| ())
+        .unwrap_err();
+    let cached = cache
+        .with_program(&unsupported_path, "", |_, _| ())
+        .unwrap_err();
+    assert_eq!(cached, first);
+    assert!(first.contains("unsupported JavaScript/TypeScript file"));
 }
 
 #[test]

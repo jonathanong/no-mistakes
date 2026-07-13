@@ -3,13 +3,111 @@ use oxc_allocator::Allocator;
 use oxc_ast::ast::{BinaryExpression, BinaryOperator, Expression, Program, TemplateLiteral};
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
+use std::cell::RefCell;
 use std::path::Path;
+
+mod parsed_cache;
+pub(crate) use parsed_cache::ParsedProgramCache;
+
+thread_local! {
+    static REQUEST_PARSE_CACHES: RefCell<Vec<ParsedProgramCache>> = const { RefCell::new(Vec::new()) };
+}
+
+struct RequestParseCacheGuard;
+
+impl Drop for RequestParseCacheGuard {
+    fn drop(&mut self) {
+        REQUEST_PARSE_CACHES.with(|caches| {
+            caches
+                .borrow_mut()
+                .pop()
+                .expect("request parse cache must be active");
+        });
+    }
+}
+
+pub(crate) fn current_request_parse_cache() -> Option<ParsedProgramCache> {
+    REQUEST_PARSE_CACHES.with(|caches| caches.borrow().last().cloned())
+}
+
+pub(crate) fn request_parse_cache_active() -> bool {
+    REQUEST_PARSE_CACHES.with(|caches| !caches.borrow().is_empty())
+}
+
+pub(crate) fn with_request_parse_cache<T>(collect: impl FnOnce() -> T) -> T {
+    let cache = current_request_parse_cache().unwrap_or_default();
+    REQUEST_PARSE_CACHES.with(|caches| caches.borrow_mut().push(cache));
+    let _guard = RequestParseCacheGuard;
+    collect()
+}
+
+#[cfg(any(test, feature = "test-instrumentation"))]
+struct ParseCountSession {
+    owner: std::thread::ThreadId,
+    counts: std::collections::HashMap<std::path::PathBuf, usize>,
+}
+
+#[cfg(any(test, feature = "test-instrumentation"))]
+type ParseCounts = std::collections::HashMap<std::path::PathBuf, ParseCountSession>;
+
+#[cfg(any(test, feature = "test-instrumentation"))]
+fn parse_counts() -> &'static std::sync::Mutex<ParseCounts> {
+    static COUNTS: std::sync::OnceLock<std::sync::Mutex<ParseCounts>> = std::sync::OnceLock::new();
+    COUNTS.get_or_init(|| std::sync::Mutex::new(ParseCounts::new()))
+}
+
+#[doc(hidden)]
+#[cfg(any(test, feature = "test-instrumentation"))]
+pub fn begin_parse_count(root: &Path) {
+    parse_counts()
+        .lock()
+        .expect("parse-count mutex poisoned")
+        .insert(
+            root.to_path_buf(),
+            ParseCountSession {
+                owner: std::thread::current().id(),
+                counts: std::collections::HashMap::new(),
+            },
+        );
+}
+
+#[doc(hidden)]
+#[cfg(any(test, feature = "test-instrumentation"))]
+pub fn finish_parse_count(root: &Path) -> std::collections::HashMap<std::path::PathBuf, usize> {
+    parse_counts()
+        .lock()
+        .expect("parse-count mutex poisoned")
+        .remove(root)
+        .map(|session| session.counts)
+        .unwrap_or_default()
+}
+
+#[cfg(any(test, feature = "test-instrumentation"))]
+pub(crate) fn record_parse_path(path: &Path) {
+    let mut counts = parse_counts().lock().expect("parse-count mutex poisoned");
+    let current_thread = std::thread::current().id();
+    for (root, session) in counts.iter_mut() {
+        // Synthetic parses conventionally use relative sentinel paths. Keep them visible to
+        // the owning fixture counter so a parser-reuse regression cannot hide outside the
+        // fixture without collecting unrelated relative-path parses from parallel tests.
+        if path.starts_with(root) || (path.is_relative() && session.owner == current_thread) {
+            *session.counts.entry(path.to_path_buf()).or_insert(0) += 1;
+        }
+    }
+}
 
 pub fn with_program<T>(
     path: &Path,
     source: &str,
     analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str) -> T,
 ) -> Result<T> {
+    if let Some(cache) = current_request_parse_cache() {
+        return cache
+            .with_program(path, source, analyze)
+            .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()));
+    }
+    #[cfg(any(test, feature = "test-instrumentation"))]
+    record_parse_path(path);
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(path)
         .with_context(|| format!("unsupported JavaScript/TypeScript file: {}", path.display()))?;

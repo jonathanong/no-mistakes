@@ -36,6 +36,24 @@ pub(crate) fn check_with_facts(
     config: &NoMistakesConfig,
     shared: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
+    check_with_optional_inferred(root, config, shared, None)
+}
+
+pub(crate) fn check_with_facts_and_inferred(
+    root: &Path,
+    config: &NoMistakesConfig,
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    inferred_roots: &crate::codebase::config::InferredRoots,
+) -> Result<Vec<RuleFinding>> {
+    check_with_optional_inferred(root, config, shared, Some(inferred_roots))
+}
+
+fn check_with_optional_inferred(
+    root: &Path,
+    config: &NoMistakesConfig,
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+) -> Result<Vec<RuleFinding>> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut sources = Vec::new();
     for path in shared.files() {
@@ -47,7 +65,7 @@ pub(crate) fn check_with_facts(
         };
         sources.push(SourceItem::new(path.as_path(), source.as_str()));
     }
-    check_sources(&root, config, &sources)
+    check_sources(&root, config, &sources, inferred_roots)
 }
 
 struct SourceItem<'a> {
@@ -91,6 +109,7 @@ fn check_files(
         &sources,
         |item| item.path.as_path(),
         |item| item.source.as_str(),
+        None,
     )
 }
 
@@ -98,8 +117,16 @@ fn check_sources(
     root: &Path,
     config: &NoMistakesConfig,
     sources: &[SourceItem<'_>],
+    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
 ) -> Result<Vec<RuleFinding>> {
-    check_items(root, config, sources, |item| item.path, |item| item.source)
+    check_items(
+        root,
+        config,
+        sources,
+        |item| item.path,
+        |item| item.source,
+        inferred_roots,
+    )
 }
 
 fn check_items<T>(
@@ -108,15 +135,22 @@ fn check_items<T>(
     items: &[T],
     path_for: impl Fn(&T) -> &Path + Sync,
     source_for: impl Fn(&T) -> &str + Sync,
+    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
 ) -> Result<Vec<RuleFinding>>
 where
     T: Sync,
 {
     let mut findings = Vec::new();
+    let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.rule_options();
         let exclude_matcher = ExcludeMatcher::new(&opts.excludes);
-        let filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
+        let filter = super::path_filter::RulePathFilter::new_with_inferred(
+            root,
+            config,
+            rule,
+            &mut inferred_roots,
+        )?;
         let Some(route_globset) = route_globset_for_rule(config, rule) else {
             continue;
         };

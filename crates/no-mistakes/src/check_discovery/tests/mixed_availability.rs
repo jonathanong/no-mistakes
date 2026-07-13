@@ -35,7 +35,7 @@ fn git_and_known_no_git_roots_preserve_external_project_includes() {
         discover_check_file_views(&root, &config, &config.filesystem.skip_directories, false);
     assert_scoped_external_includes(&git_views);
 
-    let fallback_views = super::super::views::discover_check_file_views_from_git_files(
+    let fallback_views = super::discover_check_file_views_from_git_files(
         &root,
         &config,
         &config.filesystem.skip_directories,
@@ -77,7 +77,7 @@ fn mixed_git_availability_walks_external_base_with_its_patterns_once() {
 fn known_no_git_reopens_forbidden_workspace_project_under_skipped_root() {
     let root = fixture("rules/filesystem-dispatch/forbidden-workspace-project-root");
     let config = load_config(&root);
-    let views = super::super::views::discover_check_file_views_from_git_files(
+    let views = super::discover_check_file_views_from_git_files(
         &root,
         &config,
         &config.filesystem.skip_directories,
@@ -96,7 +96,7 @@ fn known_no_git_reopens_forbidden_workspace_project_under_skipped_root() {
 fn known_no_git_reopens_unique_exports_project_under_skipped_root() {
     let root = fixture("check-discovery/unique-exports-under-skipped-root");
     let config = load_config(&root);
-    let views = super::super::views::discover_check_file_views_from_git_files(
+    let views = super::discover_check_file_views_from_git_files(
         &root,
         &config,
         &config.filesystem.skip_directories,
@@ -189,7 +189,7 @@ fn fallback_universe_is_git_free_and_applies_ignore_aware_pruning() {
 fn known_no_git_reopens_project_patterns_under_skipped_ancestors() {
     let root = root_fixture("project-pattern-reopen");
     let config = load_config(&root);
-    let views = super::super::views::discover_check_file_views_from_git_files(
+    let views = super::discover_check_file_views_from_git_files(
         &root,
         &config,
         &config.filesystem.skip_directories,

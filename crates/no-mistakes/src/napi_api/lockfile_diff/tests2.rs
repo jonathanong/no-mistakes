@@ -86,3 +86,43 @@ fn lockfile_diff_json_impl_newly_added_no_head_reports_all_added() {
         "all packages should be reported as added for a new lockfile: {added:?}"
     );
 }
+
+#[test]
+fn lockfile_diff_napi_ignores_worktree_lockfile_but_honors_explicit_path() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass3-visibility");
+    let root = fixture.path();
+    setup_git_repo(root);
+    std::process::Command::new("git")
+        .args(["add", "."])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::process::Command::new("git")
+        .args(["commit", "-m", "initial"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+
+    let automatic =
+        lockfile_diff_json_impl(serde_json::json!({ "root": root, "base": "HEAD" }).to_string())
+            .unwrap();
+    let automatic: Vec<serde_json::Value> = serde_json::from_str(&automatic).unwrap();
+    assert!(automatic.is_empty());
+
+    let explicit = lockfile_diff_json_impl(
+        serde_json::json!({
+            "root": root,
+            "base": "HEAD",
+            "lockfile": "pnpm-lock.yaml"
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let explicit: Vec<serde_json::Value> = serde_json::from_str(&explicit).unwrap();
+    assert_eq!(explicit.len(), 1);
+    assert!(explicit[0]["added"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|package| package == "lodash"));
+}

@@ -1,12 +1,13 @@
 use super::test_config;
 use super::types::{ConfigProject, Framework};
-use crate::codebase::glob_normalize;
-use crate::codebase::ts_resolver::{find_tsconfig, load_tsconfig, TsConfig};
-use crate::codebase::ts_source::relative_slash_path;
+use crate::codebase::ts_resolver::TsConfig;
 use crate::config::v2::schema::StringOrList;
-use anyhow::{Context, Result};
-use globset::{Glob, GlobSet, GlobSetBuilder};
+use anyhow::Result;
+use std::collections::HashSet;
 use std::path::Path;
+
+mod globs;
+pub(crate) use globs::{build_globset, prefix_globs};
 
 const PLAYWRIGHT_CONFIGS: &[&str] = &[
     "playwright.config.ts",
@@ -30,10 +31,28 @@ pub(crate) fn load_projects(
     framework: Framework,
     configs: Option<&StringOrList>,
 ) -> Result<Vec<ConfigProject>> {
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
+    let visible_paths = snapshot.paths_for(root);
+    let tsconfig =
+        crate::codebase::ts_resolver::resolve_tsconfig_from_visible(None, root, &visible_paths)?;
+    load_projects_from_visible(root, framework, configs, &visible_paths, &tsconfig)
+}
+
+pub(crate) fn load_projects_from_visible(
+    root: &Path,
+    framework: Framework,
+    configs: Option<&StringOrList>,
+    visible_paths: &[std::path::PathBuf],
+    tsconfig: &TsConfig,
+) -> Result<Vec<ConfigProject>> {
+    let visible_files = visible_paths
+        .iter()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(path))
+        .collect::<HashSet<_>>();
     let config_values = if let Some(configs) = configs {
         configs.values()
     } else {
-        discovered_config_paths(root, framework)
+        discovered_config_paths(root, framework, visible_paths)
     };
     let mut projects = Vec::new();
     for raw in config_values {
@@ -47,14 +66,27 @@ pub(crate) fn load_projects(
         }
         let source = std::fs::read_to_string(&path)?;
         let config_dir = path.parent().unwrap_or(root);
-        projects.extend(load_config_projects(
-            root, framework, &raw, &path, &source, config_dir,
+        projects.extend(load_config_projects_inner(
+            ConfigProjectInput {
+                root,
+                framework,
+                raw: &raw,
+                path: &path,
+                source: &source,
+                config_dir,
+                tsconfig,
+            },
+            Some(&visible_files),
         )?);
     }
     Ok(projects)
 }
 
-fn discovered_config_paths(root: &Path, framework: Framework) -> Vec<String> {
+pub(super) fn discovered_config_paths(
+    root: &Path,
+    framework: Framework,
+    visible_paths: &[std::path::PathBuf],
+) -> Vec<String> {
     let names = match framework {
         Framework::Dotnet => &[],
         Framework::Playwright => PLAYWRIGHT_CONFIGS,
@@ -63,31 +95,96 @@ fn discovered_config_paths(root: &Path, framework: Framework) -> Vec<String> {
     };
     names
         .iter()
-        .filter(|name| root.join(name).exists())
+        .filter(|name| {
+            let candidate = crate::codebase::ts_resolver::normalize_path(&root.join(name));
+            visible_paths
+                .iter()
+                .any(|path| crate::codebase::ts_resolver::normalize_path(path) == candidate)
+        })
         .map(|name| (*name).to_string())
         .collect()
 }
 
-fn load_config_projects(
-    root: &Path,
-    framework: Framework,
-    raw: &str,
-    path: &Path,
-    source: &str,
-    config_dir: &Path,
+pub(super) struct ConfigProjectInput<'a> {
+    pub(super) root: &'a Path,
+    pub(super) framework: Framework,
+    pub(super) raw: &'a str,
+    pub(super) path: &'a Path,
+    pub(super) source: &'a str,
+    pub(super) config_dir: &'a Path,
+    pub(super) tsconfig: &'a TsConfig,
+}
+
+pub(super) fn load_config_projects_inner(
+    input: ConfigProjectInput<'_>,
+    visible_files: Option<&HashSet<std::path::PathBuf>>,
 ) -> Result<Vec<ConfigProject>> {
+    let ConfigProjectInput {
+        root,
+        framework,
+        raw,
+        path,
+        source,
+        config_dir,
+        tsconfig,
+    } = input;
+    if matches!(framework, Framework::Dotnet | Framework::Swift) {
+        return Ok(Vec::new());
+    }
+    crate::integration_tests::runner_config::with_program(path, source, |program, _| {
+        load_config_projects_from_program(
+            ConfigProjectInput {
+                root,
+                framework,
+                raw,
+                path,
+                source,
+                config_dir,
+                tsconfig,
+            },
+            program,
+            visible_files,
+        )
+    })?
+}
+
+pub(super) fn load_config_projects_from_program(
+    input: ConfigProjectInput<'_>,
+    program: &oxc_ast::ast::Program<'_>,
+    visible_files: Option<&HashSet<std::path::PathBuf>>,
+) -> Result<Vec<ConfigProject>> {
+    let ConfigProjectInput {
+        root,
+        framework,
+        raw,
+        path,
+        source,
+        config_dir,
+        tsconfig,
+    } = input;
     match framework {
         Framework::Dotnet => Ok(Vec::new()),
         Framework::Playwright => {
-            let tsconfig = resolve_tsconfig(config_dir)?;
-            let parsed =
-                test_config::playwright::parse_from_path(source, path, config_dir, &tsconfig)?;
+            let parsed = test_config::playwright::parse_program(
+                program,
+                source,
+                path,
+                config_dir,
+                tsconfig,
+                visible_files,
+            )?;
             Ok(parsed.into_projects(root, raw))
         }
         Framework::Vitest => {
-            let tsconfig = resolve_tsconfig(config_dir)?;
-            let parsed =
-                test_config::vitest::parse_from_path(source, path, config_dir, root, &tsconfig)?;
+            let parsed = test_config::vitest::parse_program(
+                program,
+                source,
+                path,
+                config_dir,
+                root,
+                tsconfig,
+                visible_files,
+            )?;
             Ok(parsed
                 .into_iter()
                 .map(|mut project| {
@@ -98,50 +195,6 @@ fn load_config_projects(
         }
         Framework::Swift => Ok(Vec::new()),
     }
-}
-
-pub(crate) fn prefix_globs(root: &Path, base: &Path, patterns: &[String]) -> Vec<String> {
-    let rel = relative_slash_path(root, base);
-    if rel.is_empty() || rel == "." {
-        return patterns.to_vec();
-    }
-    patterns
-        .iter()
-        .map(|pattern| format!("{}/{pattern}", glob_escape_literal(&rel)))
-        .collect()
-}
-
-pub(super) fn resolve_tsconfig(root: &Path) -> Result<TsConfig> {
-    if let Some(path) = find_tsconfig(root) {
-        load_tsconfig(&path).context(format!("loading tsconfig {}", path.display()))
-    } else {
-        Ok(super::tsconfig_without_config(root))
-    }
-}
-
-pub(crate) fn build_globset(patterns: &[String]) -> Result<GlobSet> {
-    let mut builder = GlobSetBuilder::new();
-    for pattern in patterns {
-        builder.add(Glob::new(&normalize_glob_pattern(pattern))?);
-    }
-    Ok(builder.build()?)
-}
-
-fn normalize_glob_pattern(pattern: &str) -> String {
-    glob_normalize::normalize(pattern)
-}
-
-fn glob_escape_literal(value: &str) -> String {
-    value
-        .chars()
-        .flat_map(|ch| {
-            if matches!(ch, '*' | '?' | '[' | ']' | '{' | '}' | '\\') {
-                vec!['\\', ch]
-            } else {
-                vec![ch]
-            }
-        })
-        .collect()
 }
 
 #[cfg(test)]

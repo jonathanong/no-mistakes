@@ -36,6 +36,7 @@ pub mod test_email_domain_policy;
 pub mod test_no_unmocked_dynamic_imports;
 pub mod tsconfig_alias_folder_mapping;
 pub mod vitest_ci_path_coverage;
+mod vitest_project_catalog;
 pub mod vitest_project_mapping;
 pub mod vitest_test_correspondence;
 pub mod workspace_package_cycles;
@@ -43,16 +44,27 @@ pub mod workspace_package_cycles;
 pub mod filesystem_dispatch;
 pub(crate) mod path_filter;
 mod run;
+mod suppression;
 
 use serde::Serialize;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-pub use filesystem_dispatch::{run_filesystem_rules, run_filesystem_rules_with_files};
+pub use filesystem_dispatch::{
+    run_filesystem_rules, run_filesystem_rules_with_config,
+    run_filesystem_rules_with_config_and_snapshot,
+    run_filesystem_rules_with_config_snapshot_and_vitest_catalog, run_filesystem_rules_with_files,
+};
 pub use ids::*;
-pub use run::{run_check, run_check_with_facts};
+pub use run::{
+    run_check, run_check_with_config_and_facts_and_playwright, run_check_with_facts,
+    run_check_with_facts_and_playwright, PreparedRulesCheck,
+};
+#[doc(hidden)]
+pub use vitest_project_catalog::{prepare_vitest_project_catalog, PreparedVitestProjectCatalog};
 
 pub(crate) use file_matching::matching_files;
+pub(crate) use suppression::suppress_rule_findings;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -76,16 +88,25 @@ pub(crate) fn target_roots(
     config: &crate::config::v2::NoMistakesConfig,
     rule: &crate::config::v2::schema::RuleDef,
 ) -> Vec<PathBuf> {
+    let mut inferred_roots = crate::codebase::config::InferredRoots::default();
+    target_roots_with_inferred(root, config, rule, &mut inferred_roots)
+}
+
+pub(crate) fn target_roots_with_inferred(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    rule: &crate::config::v2::schema::RuleDef,
+    inferred_roots: &mut crate::codebase::config::InferredRoots,
+) -> Vec<PathBuf> {
     let mut roots = Vec::new();
     if rule.applies_to_repository() {
         roots.push(root.to_path_buf());
     }
-    let mut inferred_roots = crate::codebase::config::InferredRoots::default();
     for project_name in &rule.projects {
         let Some(project) = config.projects.get(project_name) else {
             continue;
         };
-        if let Some(project_root) = target_project_root(root, project, &mut inferred_roots) {
+        if let Some(project_root) = target_project_root(root, project, inferred_roots) {
             roots.push(project_root);
         }
     }
@@ -135,22 +156,13 @@ fn target_project_root(
         return Some(root.join(project_root));
     }
     if project.type_ == Some(crate::config::v2::schema::ProjectType::Nextjs) {
-        return inferred_roots
-            .nextjs
-            .get_or_insert_with(|| crate::codebase::config::infer_nextjs_root(root))
-            .clone();
+        return inferred_roots.nextjs_root(root);
     }
     if project.type_ == Some(crate::config::v2::schema::ProjectType::Remix) {
-        return inferred_roots
-            .remix
-            .get_or_insert_with(|| crate::codebase::config::infer_remix_root(root))
-            .clone();
+        return inferred_roots.remix_root(root);
     }
     if project.type_ == Some(crate::config::v2::schema::ProjectType::Vitejs) {
-        return inferred_roots
-            .vitejs
-            .get_or_insert_with(|| crate::codebase::config::infer_vitejs_root(root))
-            .clone();
+        return inferred_roots.vitejs_root(root);
     }
     Some(root.to_path_buf())
 }
@@ -158,50 +170,6 @@ fn target_project_root(
 pub(crate) fn sort_findings(findings: &mut Vec<RuleFinding>) {
     findings.sort();
     findings.dedup();
-}
-
-pub(crate) fn suppress_rule_findings(root: &Path, findings: &mut Vec<RuleFinding>) {
-    let Some(root) = std::fs::canonicalize(root).ok() else {
-        return;
-    };
-    let mut sources: HashMap<String, Option<String>> = HashMap::new();
-    findings.retain(|finding| {
-        let source = sources.entry(finding.file.clone()).or_insert_with(|| {
-            source_path_for_finding(&root, &finding.file)
-                .and_then(|path| std::fs::read_to_string(path).ok())
-        });
-        !source
-            .as_deref()
-            .is_some_and(|source| finding_is_suppressed(source, finding))
-    });
-}
-
-fn source_path_for_finding(root: &Path, file: &str) -> Option<PathBuf> {
-    let path = Path::new(file);
-    if path.is_absolute()
-        || path.components().any(|component| {
-            matches!(
-                component,
-                std::path::Component::Prefix(_)
-                    | std::path::Component::RootDir
-                    | std::path::Component::ParentDir
-            )
-        })
-    {
-        return None;
-    }
-    let candidate = std::fs::canonicalize(root.join(path)).ok()?;
-    let metadata = std::fs::metadata(&candidate).ok()?;
-    (candidate.starts_with(root) && metadata.is_file()).then_some(candidate)
-}
-
-fn finding_is_suppressed(source: &str, finding: &RuleFinding) -> bool {
-    let line = finding.line.try_into().ok();
-    crate::codebase::ts_source::has_disable_file_comment(source, &finding.rule)
-        || line.is_some_and(|line| {
-            crate::codebase::ts_source::has_disable_comment(source, line, &finding.rule)
-                || crate::codebase::ts_source::has_disable_line_comment(source, line, &finding.rule)
-        })
 }
 
 #[cfg(test)]

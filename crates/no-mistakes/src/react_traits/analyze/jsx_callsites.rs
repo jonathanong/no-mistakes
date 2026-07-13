@@ -13,6 +13,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 /// A resolved JSX render site before it is filtered against a target component.
+#[derive(Clone)]
 pub(crate) struct RawCallsite {
     pub(crate) resolved_path: PathBuf,
     pub(crate) exported_name: String,

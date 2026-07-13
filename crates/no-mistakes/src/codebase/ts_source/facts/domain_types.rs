@@ -1,5 +1,7 @@
 use globset::GlobSet;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub struct TsFactContext {
@@ -10,6 +12,8 @@ pub struct TsFactContext {
     pub queue_factory_glob: Option<GlobSet>,
     pub queue_project_factory_names: Vec<String>,
     pub http_prefixes: Vec<String>,
+    pub effect_functions: HashMap<String, Option<String>>,
+    pub visible_files: Option<Arc<HashSet<PathBuf>>>,
 }
 
 #[derive(Debug, Clone)]
@@ -24,6 +28,21 @@ pub struct BackendRouteFact {
     pub register_object: String,
     pub route: String,
     pub line: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EffectCallFact {
+    pub line: usize,
+    pub callee: String,
+    pub category: Option<String>,
+    pub caller: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RscEnvironmentFact {
+    Server,
+    Client,
+    Unknown,
 }
 
 impl TsFactContext {
@@ -52,6 +71,53 @@ impl TsFactContext {
         });
     }
 
+    pub fn set_visible_files(&mut self, files: impl IntoIterator<Item = PathBuf>) {
+        self.visible_files = Some(Arc::new(
+            files
+                .into_iter()
+                .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
+                .collect(),
+        ));
+    }
+
+    pub(crate) fn include(&mut self, other: Self) {
+        for extractor in other.backend_route_extractors {
+            self.add_backend_route_extractor(
+                extractor.register_object,
+                extractor.pattern,
+                extractor.glob,
+            );
+        }
+        self.queue_factory_specifier = self
+            .queue_factory_specifier
+            .take()
+            .or(other.queue_factory_specifier);
+        self.queue_factory_function = self
+            .queue_factory_function
+            .take()
+            .or(other.queue_factory_function);
+        self.queue_factory_glob = self.queue_factory_glob.take().or(other.queue_factory_glob);
+        self.queue_project_factory_names
+            .extend(other.queue_project_factory_names);
+        self.queue_project_factory_names.sort();
+        self.queue_project_factory_names.dedup();
+        self.http_prefixes.extend(other.http_prefixes);
+        self.http_prefixes.sort();
+        self.http_prefixes.dedup();
+        self.effect_functions.extend(other.effect_functions);
+        let mut visible = self
+            .visible_files
+            .take()
+            .map(|files| files.iter().cloned().collect::<HashSet<_>>())
+            .unwrap_or_default();
+        if let Some(other_visible) = other.visible_files {
+            visible.extend(other_visible.iter().cloned());
+        }
+        if !visible.is_empty() {
+            self.visible_files = Some(Arc::new(visible));
+        }
+    }
+
     pub fn matches_queue_factory(&self, path: &Path) -> bool {
         self.queue_factory_glob
             .as_ref()
@@ -76,6 +142,8 @@ impl Default for TsFactContext {
             queue_factory_glob: None,
             queue_project_factory_names: Vec::new(),
             http_prefixes: Vec::new(),
+            effect_functions: HashMap::new(),
+            visible_files: None,
         }
     }
 }

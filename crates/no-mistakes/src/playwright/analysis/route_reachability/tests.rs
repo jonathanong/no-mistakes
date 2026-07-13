@@ -28,29 +28,16 @@ fn collect_for_test(
     settings: &Settings,
     routes: &[routes::Route],
 ) -> anyhow::Result<BTreeMap<Arc<String>, BTreeSet<Arc<String>>>> {
-    let tsconfig = crate::playwright::analysis::pipeline_text_setup::load_route_import_tsconfig(
-        root, settings,
-    )?;
-    let source_files = collect_route_source_files(root, settings)?;
-    let mut graph_file_paths = crate::codebase::dependencies::graph::GraphFiles::discover(root)
-        .all()
-        .to_vec();
-    graph_file_paths.extend_from_slice(&source_files.graph_files);
-    graph_file_paths.sort();
-    graph_file_paths.dedup();
-    let graph_files =
-        crate::codebase::dependencies::graph::GraphFiles::from_files(graph_file_paths);
+    let snapshot = VisiblePathSnapshot::new(root);
+    let source_files = collect_route_source_files_from_visible(root, settings, &snapshot)?;
     let graph =
-        crate::codebase::dependencies::graph::DepGraph::build_with_plan_files_config_and_facts(
+        crate::playwright::analysis::pipeline_text_setup::build_route_import_graph_from_snapshot(
             root,
-            &tsconfig,
-            crate::codebase::dependencies::graph::GraphBuildPlan {
-                route_imports: true,
-                ..Default::default()
-            },
-            &graph_files,
+            settings,
             None,
-            None,
+            Some(&snapshot.paths_for(root)),
+            &source_files.graph_files,
+            &snapshot,
         )?;
     collect_route_reachable_files(root, settings, routes, &graph, &source_files)
 }
@@ -154,6 +141,27 @@ fn route_reachability_uses_frontend_tsconfig_and_literal_dynamic_imports() {
 }
 
 #[test]
+fn route_reachability_excludes_ignored_wrappers_and_import_bridges() {
+    let dir = crate::test_support::materialize_gitignore_fixture("playwright-reachability");
+    let root = dir.path();
+    let route = routes::Route {
+        file: root.join("web/app/page.tsx"),
+        pattern: "/".to_string(),
+    };
+    let reachable = collect_for_test(root, &settings(vec![]), &[route])
+        .expect("route reachability should collect");
+    let files = reachable
+        .get(&Arc::new("web/app/page.tsx".to_string()))
+        .expect("route should have reachable files");
+    assert!(files.contains(&Arc::new(
+        "web/app/components/direct-button.tsx".to_string()
+    )));
+    for ignored_only in ["alias-button", "bridge-button", "layout-button"] {
+        assert!(!files.contains(&Arc::new(format!("web/app/components/{ignored_only}.tsx"))));
+    }
+}
+
+#[test]
 fn standalone_and_shared_fact_route_reachability_match() {
     let root =
         crate::playwright::test_support::fixture_path(&["nextjs-selectors", "frontend-tsconfig"]);
@@ -161,14 +169,13 @@ fn standalone_and_shared_fact_route_reachability_match() {
     let route = root_route(&root);
     let standalone = collect_for_test(&root, &settings, std::slice::from_ref(&route))
         .expect("standalone reachability collects");
-    let source_files = collect_route_source_files(&root, &settings).expect("sources collect");
-    let mut files = crate::codebase::ts_source::discover_files(&root, &[]);
-    files.extend_from_slice(&source_files.graph_files);
-    files.sort();
-    files.dedup();
+    let snapshot = VisiblePathSnapshot::new(&root);
+    let source_files = collect_route_source_files_from_visible(&root, &settings, &snapshot)
+        .expect("sources collect");
+    let files = snapshot.paths_for(&root);
     let facts = crate::codebase::check_facts::collect_check_facts(
         &root,
-        files,
+        files.to_vec(),
         crate::codebase::check_facts::CheckFactPlan {
             graph: crate::codebase::ts_source::facts::TsFactPlan {
                 imports: true,
@@ -177,14 +184,16 @@ fn standalone_and_shared_fact_route_reachability_match() {
             ..Default::default()
         },
     );
-    let graph = crate::playwright::analysis::pipeline_text_setup::build_route_import_graph(
-        &root,
-        &settings,
-        Some(&facts),
-        None,
-        &source_files.graph_files,
-    )
-    .expect("shared-fact graph builds");
+    let graph =
+        crate::playwright::analysis::pipeline_text_setup::build_route_import_graph_from_snapshot(
+            &root,
+            &settings,
+            Some(&facts),
+            Some(&files),
+            &source_files.graph_files,
+            &snapshot,
+        )
+        .expect("shared-fact graph builds");
     let shared = collect_route_reachable_files(&root, &settings, &[route], &graph, &source_files)
         .expect("shared reachability collects");
 

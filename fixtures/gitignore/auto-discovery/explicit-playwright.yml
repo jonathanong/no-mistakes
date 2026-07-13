@@ -1,0 +1,3 @@
+tests:
+  playwright:
+    configs: playwright.ignored.config.ts

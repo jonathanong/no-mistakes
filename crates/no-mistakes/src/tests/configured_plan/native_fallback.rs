@@ -57,6 +57,8 @@ pub(super) fn native_fallback_selection(
     used: &HashSet<String>,
     all_tests: &[PathBuf],
     discovered: &DiscoveredTests,
+    visible_paths: &[PathBuf],
+    allow_full_suite_fallback: bool,
     limit: usize,
 ) -> Option<(String, Vec<SelectedTest>)> {
     let triggers = untraced_native_changes(
@@ -74,8 +76,16 @@ pub(super) fn native_fallback_selection(
 
     let mut native_candidates: BTreeMap<String, SelectedTest> = BTreeMap::new();
     for trigger_file in &triggers {
-        let fallback_tests =
-            native_fallback_tests(framework, root, config, trigger_file, all_tests, discovered);
+        let fallback_tests = native_fallback_tests(
+            framework,
+            root,
+            config,
+            trigger_file,
+            all_tests,
+            discovered,
+            visible_paths,
+            allow_full_suite_fallback,
+        );
         for candidate in selected_from_paths(
             root,
             &fallback_tests,
@@ -145,6 +155,7 @@ pub(super) fn untraced_native_changes(
     triggers.into_iter().collect()
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(super) fn native_fallback_tests(
     framework: TestFramework,
     root: &Path,
@@ -152,17 +163,24 @@ pub(super) fn native_fallback_tests(
     trigger_file: &Path,
     all_tests: &[PathBuf],
     discovered: &DiscoveredTests,
+    visible_paths: &[PathBuf],
+    allow_full_suite_fallback: bool,
 ) -> Vec<PathBuf> {
     let scoped = match framework {
         TestFramework::Swift => {
             swift_manifest_fallback_tests(root, trigger_file, all_tests, discovered)
         }
-        TestFramework::Dotnet => {
-            dotnet_fallback_tests(root, config, trigger_file, all_tests, discovered)
-        }
+        TestFramework::Dotnet => dotnet_fallback_tests(
+            root,
+            config,
+            trigger_file,
+            all_tests,
+            discovered,
+            visible_paths,
+        ),
         TestFramework::Playwright | TestFramework::Vitest => Vec::new(),
     };
-    if scoped.is_empty() {
+    if scoped.is_empty() && allow_full_suite_fallback {
         all_tests.to_vec()
     } else {
         scoped
@@ -258,13 +276,13 @@ fn dotnet_project_fallback_tests(
     trigger_file: &Path,
     all_tests: &[PathBuf],
     discovered: &DiscoveredTests,
+    visible_paths: &[PathBuf],
 ) -> Vec<PathBuf> {
     let rel = relative_path(root, trigger_file);
     let trigger = no_mistakes::codebase::ts_resolver::normalize_path(&root.join(&rel));
-    let all_files =
-        no_mistakes::codebase::ts_source::discover_files(root, &config.filesystem.skip_directories);
     let configured = no_mistakes::codebase::dotnet::configured_projects(root, &config.tests.dotnet);
-    let facts = no_mistakes::codebase::dotnet::collect_dotnet_facts(root, &all_files, &configured);
+    let facts =
+        no_mistakes::codebase::dotnet::collect_dotnet_facts(root, visible_paths, &configured);
     if facts.projects.is_empty() {
         return Vec::new();
     }
@@ -312,10 +330,18 @@ fn dotnet_fallback_tests(
     trigger_file: &Path,
     all_tests: &[PathBuf],
     discovered: &DiscoveredTests,
+    visible_paths: &[PathBuf],
 ) -> Vec<PathBuf> {
     let rel = relative_path(root, trigger_file);
     if rel.ends_with(".csproj") {
-        return dotnet_project_fallback_tests(root, config, trigger_file, all_tests, discovered);
+        return dotnet_project_fallback_tests(
+            root,
+            config,
+            trigger_file,
+            all_tests,
+            discovered,
+            visible_paths,
+        );
     }
     if rel.ends_with(".sln") {
         return dotnet_solution_fallback_tests(root, trigger_file, all_tests, discovered);

@@ -58,16 +58,20 @@ fn imported_member_options(
     }
     let result = match std::fs::read_to_string(&path) {
         Err(_) => Ok(None),
-        Ok(source) => crate::ast::with_program(&path, &source, |program, source| {
-            exported_member_options(
-                program,
-                source,
-                import.imported.as_str(),
-                member,
-                &path,
-                ctx,
-            )
-        })
+        Ok(source) => crate::integration_tests::runner_config::with_program(
+            &path,
+            &source,
+            |program, source| {
+                exported_member_options(
+                    program,
+                    source,
+                    import.imported.as_str(),
+                    member,
+                    &path,
+                    ctx,
+                )
+            },
+        )
         .and_then(|options| options),
     };
     ctx.seen.remove(&path);

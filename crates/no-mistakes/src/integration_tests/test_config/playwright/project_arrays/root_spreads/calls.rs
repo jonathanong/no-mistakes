@@ -2,7 +2,6 @@ use super::{
     import_bindings, objects, project_options, shared, top_level_function_bodies, Ctx,
     ImportBinding, Options,
 };
-use crate::ast;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use anyhow::Result;
 use oxc_ast::ast::{Expression, FunctionBody, Statement};
@@ -47,27 +46,31 @@ fn imported_project_options(
     }
     let result = match std::fs::read_to_string(&path) {
         Err(_) => Ok(None),
-        Ok(source) => ast::with_program(&path, &source, |program, source| {
-            let bindings = shared::top_level_object_bindings(program);
-            let functions = top_level_function_bodies(program);
-            let Some(body) = functions.get(import.imported.as_str()).copied() else {
-                return Ok(None);
-            };
-            let mut local_seen = BTreeSet::new();
-            let mut object_seen = BTreeSet::new();
-            let mut scoped = Ctx {
-                source,
-                bindings,
-                functions,
-                imports: import_bindings(program),
-                resolver: ctx.resolver,
-                path: &path,
-                seen: ctx.seen,
-                local_seen: &mut local_seen,
-                object_seen: &mut object_seen,
-            };
-            body_return_project_options(body, &mut scoped)
-        })
+        Ok(source) => crate::integration_tests::runner_config::with_program(
+            &path,
+            &source,
+            |program, source| {
+                let bindings = shared::top_level_object_bindings(program);
+                let functions = top_level_function_bodies(program);
+                let Some(body) = functions.get(import.imported.as_str()).copied() else {
+                    return Ok(None);
+                };
+                let mut local_seen = BTreeSet::new();
+                let mut object_seen = BTreeSet::new();
+                let mut scoped = Ctx {
+                    source,
+                    bindings,
+                    functions,
+                    imports: import_bindings(program),
+                    resolver: ctx.resolver,
+                    path: &path,
+                    seen: ctx.seen,
+                    local_seen: &mut local_seen,
+                    object_seen: &mut object_seen,
+                };
+                body_return_project_options(body, &mut scoped)
+            },
+        )
         .and_then(|options| options),
     };
     ctx.seen.remove(&path);

@@ -58,18 +58,17 @@ fn parenthesized_expression<'a>(expression: &'a Expression<'a>) -> &'a Expressio
 #[test]
 fn config_parsers_reject_invalid_literals() {
     let root = fixture("coverage");
-    let tsconfig = tsconfig_without_config(&root);
+    let tsconfig = test_support::tsconfig_without_config(&root);
     let pw_path = root.join("playwright.invalid.ts");
     let pw_source = std::fs::read_to_string(&pw_path).unwrap();
-    let pw_err =
-        match test_config::playwright::parse_from_path(&pw_source, &pw_path, &root, &tsconfig) {
-            Ok(_) => panic!("expected invalid Playwright config to fail"),
-            Err(err) => err,
-        };
+    let pw_err = match test_support::parse_playwright(&pw_source, &pw_path, &root, &tsconfig) {
+        Ok(_) => panic!("expected invalid Playwright config to fail"),
+        Err(err) => err,
+    };
     assert!(pw_err.to_string().contains("expected string literal"));
     let empty_match_path = root.join("playwright.empty-match-invalid.ts");
     let empty_match_source = std::fs::read_to_string(&empty_match_path).unwrap();
-    let empty_match_err = match test_config::playwright::parse_from_path(
+    let empty_match_err = match test_support::parse_playwright(
         &empty_match_source,
         &empty_match_path,
         &root,
@@ -85,7 +84,7 @@ fn config_parsers_reject_invalid_literals() {
     let vitest_path = root.join("vitest.invalid.mts");
     let vitest_source = std::fs::read_to_string(&vitest_path).unwrap();
     let vitest_err =
-        test_config::vitest::parse_from_path(&vitest_source, &vitest_path, &root, &root, &tsconfig)
+        test_support::parse_vitest(&vitest_source, &vitest_path, &root, &root, &tsconfig)
             .unwrap_err();
     assert!(vitest_err
         .to_string()

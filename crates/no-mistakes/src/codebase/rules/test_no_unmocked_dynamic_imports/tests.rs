@@ -1,13 +1,20 @@
 use super::*;
 use crate::codebase::dependencies::graph::test_support::from_raw_maps;
+use crate::codebase::ts_resolver::load_tsconfig;
 use dashmap::DashMap;
 use std::collections::HashMap;
+
+mod visibility;
 
 fn fixture() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports/fixture"),
     )
+}
+
+fn resolve_tsconfig(root: &Path, explicit: Option<&Path>) -> Result<TsConfig> {
+    crate::codebase::ts_resolver::resolve_tsconfig(explicit, root)
 }
 
 fn collect_reachable_findings(

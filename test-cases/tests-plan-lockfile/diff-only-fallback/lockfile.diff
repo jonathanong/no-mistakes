@@ -1,0 +1,7 @@
+diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
+index 0000000..0000001 100644
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -1 +1 @@
+-old
++new

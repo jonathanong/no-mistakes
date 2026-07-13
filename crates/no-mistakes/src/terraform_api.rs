@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 
 use crate::codebase::terraform::{collect_terraform_facts, TerraformFactMap, TfBlockKind};
 use crate::codebase::ts_resolver::normalize_path;
-use crate::config::v2::load_v2_config;
+use crate::config::v2::load_v2_config_from_visible;
 use crate::config::v2::schema::TerraformTestConvention;
 
 pub use types::{ModuleOutput, ModuleOutputsResult, OutputConsumer, ResourceRefRow, TestForRow};
@@ -29,16 +29,19 @@ pub struct InfraReport {
 /// Discover and parse the configured Terraform files once.
 pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<InfraReport> {
     let root = normalize_path(root);
+    let visible_paths = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let root_visible_paths = visible_paths.paths_for(&root);
     // Propagate errors so an explicit but missing/invalid `--config` is reported
     // instead of silently producing an empty result.
-    let config = load_v2_config(&root, config_path)?;
+    let config = load_v2_config_from_visible(&root, config_path, &root_visible_paths)?;
     let terraform = config.infra.terraform.clone();
     validate_match_mode(terraform.test.match_mode.as_deref())?;
     validate_module_mode_test_root(&terraform.test)?;
     // Compile the test globs up front so an invalid pattern is reported rather
     // than silently dropping all covering-test suggestions.
     let test_globset = compile_test_globs(&terraform.test.test_globs)?;
-    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let files =
+        crate::codebase::ts_source::discover_files_from_visible(&root, &[], &root_visible_paths);
     let facts = collect_terraform_facts(&root, &files, &terraform);
     Ok(InfraReport {
         root,

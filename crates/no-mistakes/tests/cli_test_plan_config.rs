@@ -49,6 +49,28 @@ fn test_plan_vitest_applies_configured_groups_and_limits() {
 }
 
 #[test]
+fn test_plan_resolves_explicit_relative_tsconfig_under_request_root() {
+    let root = fixture("aliased");
+    let output = run(&[
+        "test",
+        "plan",
+        "--root",
+        root.to_str().unwrap(),
+        "--tsconfig",
+        "tsconfig.json",
+        "--changed-file",
+        "main.mts",
+        "--json",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+#[test]
 fn test_plan_vitest_direct_group_is_mutually_exclusive() {
     let root = fixture("test-plan-config");
     let output = run(&[

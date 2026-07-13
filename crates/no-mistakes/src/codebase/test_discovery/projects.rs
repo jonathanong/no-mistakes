@@ -3,46 +3,68 @@ use crate::integration_tests::project_config::prefix_globs;
 use crate::integration_tests::types::ConfigProject;
 use anyhow::Result;
 use std::collections::BTreeMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use super::types::TestRunner;
 
 #[cfg(test)]
 mod tests;
 
-pub(super) fn runner_projects(
+pub(super) fn runner_projects_from_visible(
     root: &Path,
     config: &NoMistakesConfig,
     runner: TestRunner,
+    visible_paths: &[PathBuf],
+    tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> Result<Vec<ConfigProject>> {
     if runner == TestRunner::Dotnet {
-        return super::dotnet_projects::dotnet_projects(root, config);
+        return super::dotnet_projects::dotnet_projects_from_visible(root, config, visible_paths);
     }
     if runner == TestRunner::Swift {
-        return Ok(super::swift_projects::swift_projects(root, config));
+        return Ok(super::swift_projects::swift_projects_from_visible(
+            root,
+            config,
+            visible_paths,
+        ));
     }
     let (configs, policies) = runner_config(config, runner);
-    let mut projects =
-        crate::integration_tests::project_config::load_projects(root, runner.framework(), configs)?;
+    let mut projects = crate::integration_tests::project_config::load_projects_from_visible(
+        root,
+        runner.framework(),
+        configs,
+        visible_paths,
+        tsconfig,
+    )?;
     apply_explicit_policy_projects(root, configs, policies, &mut projects);
     Ok(projects)
 }
 
-pub(super) fn runner_projects_lossy(
+pub(super) fn runner_projects_lossy_from_visible(
     root: &Path,
     config: &NoMistakesConfig,
     runner: TestRunner,
+    visible_paths: &[PathBuf],
+    tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> Vec<ConfigProject> {
     if runner == TestRunner::Dotnet {
-        return super::dotnet_projects::dotnet_projects_lossy(root, config);
+        return super::dotnet_projects::dotnet_projects_lossy_from_visible(
+            root,
+            config,
+            visible_paths,
+        );
     }
     if runner == TestRunner::Swift {
-        return super::swift_projects::swift_projects(root, config);
+        return super::swift_projects::swift_projects_from_visible(root, config, visible_paths);
     }
     let (configs, policies) = runner_config(config, runner);
-    let mut projects =
-        crate::integration_tests::project_config::load_projects(root, runner.framework(), configs)
-            .unwrap_or_default();
+    let mut projects = crate::integration_tests::project_config::load_projects_from_visible(
+        root,
+        runner.framework(),
+        configs,
+        visible_paths,
+        tsconfig,
+    )
+    .unwrap_or_default();
     apply_explicit_policy_projects(root, configs, policies, &mut projects);
     projects
 }

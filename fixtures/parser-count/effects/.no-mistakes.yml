@@ -1,0 +1,4 @@
+effects:
+  storage:
+    functions:
+      - trackedEffect

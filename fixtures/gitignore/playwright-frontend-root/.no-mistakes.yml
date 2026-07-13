@@ -1,0 +1,8 @@
+projects:
+  web:
+    type: nextjs
+    root: web
+tests:
+  playwright:
+    selectors:
+      htmlIds: true

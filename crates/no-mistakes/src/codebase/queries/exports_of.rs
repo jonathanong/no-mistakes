@@ -2,7 +2,7 @@ use super::render::{render, resolve_format, to_json, Report};
 use super::reverse::{build_index, export_importer_paths, export_kind_str};
 use super::shared::{read_symbols, rel_str, resolve_target};
 use crate::cli::Format;
-use crate::codebase::ts_resolver::resolve_import;
+use crate::codebase::ts_resolver::ImportResolver;
 use crate::codebase::ts_symbols::ExportKind;
 use anyhow::Result;
 use is_terminal::IsTerminal;
@@ -65,13 +65,15 @@ fn compute(args: &ExportsOfArgs) -> Result<ExportsOfReport> {
     } else {
         Some(build_index(&target)?)
     };
+    let resolver = ImportResolver::new(&target.tsconfig).with_visible(&target.visible_files);
 
     let exports = symbols
         .exports
         .iter()
         .map(|export| {
             let resolved = if let ExportKind::ReExport { source, .. } = &export.kind {
-                resolve_import(source, &target.abs_file, &target.tsconfig)
+                resolver
+                    .resolve(source, &target.abs_file)
                     .map(|abs| rel_str(&abs, &target.root))
             } else {
                 None

@@ -1,14 +1,21 @@
 use anyhow::Result;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use std::path::{Path, PathBuf};
-use walkdir::WalkDir;
 
 const EXTENSIONS: &[&str] = &["tsx", "ts", "jsx", "js"];
 
-pub(crate) fn expand_globs(root: &Path, patterns: &[String]) -> Result<Vec<PathBuf>> {
+pub(crate) fn expand_globs_from_files(
+    root: &Path,
+    patterns: &[String],
+    visible_paths: &[PathBuf],
+) -> Result<Vec<PathBuf>> {
     if patterns.is_empty() {
         return Ok(Vec::new());
     }
+    // VisiblePathSnapshot normalizes its returned candidates. Use the same
+    // lexical form for prefix and glob matching without canonicalizing away a
+    // caller-selected symlink root.
+    let root = crate::codebase::ts_source::normalize_discovery_path(root);
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
         let glob = GlobBuilder::new(pattern).literal_separator(false).build()?;
@@ -16,36 +23,23 @@ pub(crate) fn expand_globs(root: &Path, patterns: &[String]) -> Result<Vec<PathB
     }
     let globset = builder.build()?;
 
-    // Prefer the git-visible file list (tracked plus untracked-but-not-ignored
-    // files) when `root` is inside a git repository: the raw `WalkDir` fallback
-    // below only prunes a small hardcoded denylist (`is_skip_dir`), so on real
-    // repos it can descend into large untracked-and-ignored directories
-    // (dependency stores, build caches) that `git ls-files` would never
-    // surface. The raw walk still runs, unchanged, outside git repositories
-    // (e.g. ad-hoc test fixtures).
-    let mut files = match no_mistakes::codebase::ts_source::git_visible_files(root) {
-        Some(git_files) => git_visible_matching_files(root, &git_files, &globset),
-        None => walk_matching_files_raw(root, &globset),
-    };
+    // Apply React-specific glob, extension, and skip-directory rules to the
+    // caller's ignore-aware candidate list.
+    let mut files = visible_matching_files(&root, visible_paths, &globset);
     files.sort();
     Ok(files)
 }
 
-fn git_visible_matching_files(
-    root: &Path,
-    git_files: &[String],
-    globset: &GlobSet,
-) -> Vec<PathBuf> {
-    git_files
+fn visible_matching_files(root: &Path, files: &[PathBuf], globset: &GlobSet) -> Vec<PathBuf> {
+    files
         .iter()
-        .map(Path::new)
-        .filter(|rel| !is_under_skip_dir(rel))
-        .filter(|rel| has_matching_extension(rel))
-        .filter(|rel| globset.is_match(rel))
-        .map(|rel| root.join(rel))
-        // Mirrors `WalkDir`'s default (non-follow-symlink) `file_type().is_file()`
-        // check: a symlink to a file is not itself a file entry.
-        .filter(|path| std::fs::symlink_metadata(path).is_ok_and(|metadata| metadata.is_file()))
+        .filter_map(|path| {
+            let path = crate::codebase::ts_source::normalize_discovery_path(path);
+            let matches = path.strip_prefix(root).is_ok_and(|rel| {
+                !is_under_skip_dir(rel) && has_matching_extension(rel) && globset.is_match(rel)
+            });
+            matches.then_some(path)
+        })
         .collect()
 }
 
@@ -66,32 +60,13 @@ fn has_matching_extension(path: &Path) -> bool {
         .is_some_and(|ext| EXTENSIONS.contains(&ext))
 }
 
-fn walk_matching_files_raw(root: &Path, globset: &GlobSet) -> Vec<PathBuf> {
-    let mut files = Vec::new();
-    let walker = WalkDir::new(root)
-        .into_iter()
-        .filter_entry(|e| !(e.file_type().is_dir() && is_skip_dir(e.path())));
-    for entry in walker.filter_map(|e| e.ok()) {
-        if !entry.file_type().is_file() {
-            continue;
-        }
-        let path = entry.path();
-        if !has_matching_extension(path) {
-            continue;
-        }
-        let rel = path.strip_prefix(root).unwrap_or(path);
-        if globset.is_match(rel) {
-            files.push(path.to_path_buf());
-        }
-    }
-    files
-}
-
 fn is_skip_dir(path: &Path) -> bool {
     path.file_name().and_then(|n| n.to_str()).is_some_and(|n| {
         n.starts_with('.') || matches!(n, "node_modules" | "target" | "dist" | "build" | "coverage")
     })
 }
 
+#[cfg(test)]
+mod test_support;
 #[cfg(test)]
 mod tests;

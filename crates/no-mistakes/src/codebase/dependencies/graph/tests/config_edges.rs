@@ -23,20 +23,34 @@ fn graph_collectors_cover_malformed_and_invalid_config_branches() {
     assert!(collect_route_edges(
         &malformed,
         &tsconfig,
+        &resolver,
         &files,
         None,
         malformed_options.as_ref()
     )
     .is_empty());
-    assert!(
-        collect_route_edges(&invalid, &tsconfig, &files, None, invalid_options.as_ref()).is_empty()
-    );
-    assert!(
-        collect_route_edges(&empty, &tsconfig, &files, None, empty_options.as_ref()).is_empty()
-    );
+    assert!(collect_route_edges(
+        &invalid,
+        &tsconfig,
+        &resolver,
+        &files,
+        None,
+        invalid_options.as_ref(),
+    )
+    .is_empty());
+    assert!(collect_route_edges(
+        &empty,
+        &tsconfig,
+        &resolver,
+        &files,
+        None,
+        empty_options.as_ref(),
+    )
+    .is_empty());
     assert!(collect_route_edges(
         &frontend_only,
         &tsconfig,
+        &resolver,
         &frontend_files,
         None,
         frontend_options.as_ref(),
@@ -138,9 +152,16 @@ fn route_collectors_cover_configured_prefixes_and_scan_globs() {
         },
     );
     let facts = collect_ts_facts_with_context(&all_files, fact_plan, &fact_context);
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
 
-    let route_edges =
-        collect_route_edges(&root, &tsconfig, &all_files, Some(&facts), config_options.as_ref());
+    let route_edges = collect_route_edges(
+        &root,
+        &tsconfig,
+        &resolver,
+        &all_files,
+        Some(&facts),
+        config_options.as_ref(),
+    );
     assert!(route_edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::RouteRef
             && from.as_file() == Some(client.as_path())
@@ -272,10 +293,12 @@ fn route_and_http_fact_context_keep_separate_backend_matchers() {
         .backend_routes
         .iter()
         .all(|route| route.register_object != "routeApp"));
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
 
     let route_edges = collect_route_edges(
         &root,
         &tsconfig,
+        &resolver,
         &all_files,
         Some(&facts),
         config_options.as_ref(),
@@ -404,9 +427,15 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&explicit.join("tsconfig.json")).unwrap();
     let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
-    assert!(
-        collect_route_edges(&explicit, &tsconfig, &[], None, Some(&explicit_options),).is_empty()
-    );
+    assert!(collect_route_edges(
+        &explicit,
+        &tsconfig,
+        &resolver,
+        &[],
+        None,
+        Some(&explicit_options),
+    )
+    .is_empty());
     assert!(collect_http_call_edges(
         &explicit,
         &tsconfig,
@@ -468,59 +497,4 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         Some(&invalid_glob_options),
     )
     .is_empty());
-}
-
-#[test]
-fn effective_fact_plan_skips_config_dependent_domains_without_required_config() {
-    let requested = GraphBuildPlan {
-        routes: true,
-        queues: true,
-        http: true,
-        ..GraphBuildPlan::default()
-    };
-    assert!(effective_ts_fact_plan(requested, None).is_empty());
-
-    let empty = crate::codebase::ts_resolver::normalize_path(&fixture("graph-empty-route-config"));
-    let empty_options = graph_config_options(&empty).unwrap();
-    assert!(effective_ts_fact_plan(requested, Some(&empty_options)).is_empty());
-
-    let explicit =
-        crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
-    let explicit_options = graph_config_options(&explicit).unwrap();
-    let route_and_http = effective_ts_fact_plan(requested, Some(&explicit_options));
-    assert!(route_and_http.route_refs);
-    assert!(route_and_http.backend_routes);
-    assert!(route_and_http.http_calls);
-    assert!(!route_and_http.symbols);
-    assert!(!route_and_http.queue_usage);
-    assert!(!route_and_http.queue_factory);
-
-    let queue_options = GraphConfigOptions {
-        route: crate::codebase::config::RouteOptions::default(),
-        queue: crate::codebase::config::QueueOptions {
-            queue_pattern: "src/**/*.ts".to_string(),
-            factory_specifier: "@app/queue".to_string(),
-            factory_function: "createQueue".to_string(),
-        },
-        http_route: crate::codebase::config::HttpRouteOptions::default(),
-        http_call: crate::codebase::config::HttpCallOptions::default(),
-        project_route_globset: None,
-        test_filter: None,
-        rewrites: vec![],
-        queue_project_factory_names: vec!["createQueue".to_string()],
-        dotnet_projects: vec![],
-        swift_packages: vec![],
-        terraform: Default::default(),
-    };
-    let queue_only = effective_ts_fact_plan(
-        GraphBuildPlan {
-            queues: true,
-            ..GraphBuildPlan::default()
-        },
-        Some(&queue_options),
-    );
-    assert!(queue_only.symbols);
-    assert!(queue_only.queue_usage);
-    assert!(queue_only.queue_factory);
-    assert!(queue_only.queue_project);
 }

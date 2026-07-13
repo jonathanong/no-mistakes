@@ -1,5 +1,6 @@
 fn export_paths(
     graph: &DepGraph,
+    facts: &TsFactMap,
     target: &NodeId,
     target_symbol: &str,
     root: &Path,
@@ -17,8 +18,9 @@ fn export_paths(
                     continue;
                 };
                 if seen.insert(neighbor.clone()) {
-                    if let Some(location) = export_location(file, root, symbol, true).ok().flatten() {
-                        let local_import_export = local_import_export(file, symbol, &current_symbol);
+                    if let Some(location) = export_location(facts, file, root, symbol, true).ok().flatten() {
+                        let local_import_export =
+                            local_import_export(facts, file, symbol, &current_symbol);
                         if location.kind == "re-export" || local_import_export {
                             frontier.push((neighbor.clone(), symbol.clone()));
                             frontier.push((NodeId::File(file.clone()), symbol.clone()));
@@ -33,17 +35,15 @@ fn export_paths(
     (exports.into_iter().collect(), export_nodes)
 }
 
-fn local_import_export(file: &Path, symbol: &str, current_symbol: &str) -> bool {
-    std::fs::read_to_string(file)
-        .ok()
-        .and_then(|source| {
-            let is_tsx = file.extension().and_then(|s| s.to_str()).is_some_and(|ext| {
-                ext.eq_ignore_ascii_case("tsx") || ext.eq_ignore_ascii_case("jsx")
-            });
-            extract_symbols(&source, is_tsx)
-                .ok()
-                .map(|symbols| (source, symbols))
-        })
+fn local_import_export(
+    facts: &TsFactMap,
+    file: &Path,
+    symbol: &str,
+    current_symbol: &str,
+) -> bool {
+    facts
+        .get(file)
+        .and_then(|facts| Some((facts.source.as_ref()?, facts.symbols.as_ref()?)))
         .and_then(|(source, symbols)| {
             let local = symbols.exports.iter().find_map(|export| {
                 if matches!(export.kind, ExportKind::ReExport { .. })
@@ -57,7 +57,7 @@ fn local_import_export(file: &Path, symbol: &str, current_symbol: &str) -> bool 
                 import.local == local && (import.imported == current_symbol || import.imported == "*")
             });
             (direct_import_export
-                || value_alias_export(&source, &symbols.imports, symbol, current_symbol))
+                || value_alias_export(source, &symbols.imports, symbol, current_symbol))
             .then_some(())
         })
         .is_some()

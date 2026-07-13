@@ -2,7 +2,6 @@ use super::{
     import_bindings, named_export_object, objects, project_options_in, shared, sourced_reexport,
     top_level_function_bodies, Ctx, ImportBinding, Options, Scope,
 };
-use crate::ast;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use anyhow::Result;
 use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
@@ -46,17 +45,21 @@ pub(super) fn imported_member_project_options(
     }
     let result = match std::fs::read_to_string(&path) {
         Err(_) => Ok(None),
-        Ok(source) => ast::with_program(&path, &source, |program, source| {
-            exported_member_project_options(
-                program,
-                source,
-                &path,
-                ctx,
-                &import.imported,
-                member,
-                scope,
-            )
-        })
+        Ok(source) => crate::integration_tests::runner_config::with_program(
+            &path,
+            &source,
+            |program, source| {
+                exported_member_project_options(
+                    program,
+                    source,
+                    &path,
+                    ctx,
+                    &import.imported,
+                    member,
+                    scope,
+                )
+            },
+        )
         .and_then(|options| options),
     };
     ctx.seen.remove(&path);

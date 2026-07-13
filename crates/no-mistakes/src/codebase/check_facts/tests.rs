@@ -1,9 +1,16 @@
 use super::{
     collect_check_facts, collect_check_facts_with_graph_files_and_playwright,
-    collect_check_facts_with_playwright, collect_file_facts, CheckFactPlan, PlaywrightFactPlan,
+    collect_check_facts_with_playwright, collect_file_facts, CheckFactMap, CheckFactPlan,
+    PlaywrightFactPlan,
 };
 use std::collections::BTreeMap;
 use std::path::PathBuf;
+
+impl CheckFactMap {
+    pub(crate) fn graph_file_universe_is_complete(&self) -> bool {
+        self.graph_files_complete
+    }
+}
 
 fn fixture_path(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -259,6 +266,17 @@ fn collect_check_facts_parses_once_for_overlapping_fact_categories() {
     assert_eq!(facts.stats.files_discovered, 1);
     assert_eq!(facts.stats.files_parsed, 1);
     assert_eq!(facts.stats.parse_errors, 0);
+    assert!(facts
+        .graph_plan()
+        .covers(crate::codebase::ts_source::facts::TsFactPlan {
+            imports: true,
+            function_calls: true,
+            symbols: true,
+            source: true,
+            queue_project: true,
+            react: true,
+            ..Default::default()
+        }));
     let file_facts = facts.ts.get(&file).expect("file facts are collected");
     assert!(!file_facts.ts.imports.is_empty());
     assert!(file_facts.symbols.is_some());
@@ -325,6 +343,11 @@ fn collect_check_facts_keeps_graph_files_out_of_shared_file_scope() {
     assert!(!graph_only_facts.ts.imports.is_empty());
     assert!(graph_only_facts.ts.queue_project.is_none());
     assert!(graph_only_facts.integration.is_none());
+    assert!(facts
+        .graph_plan()
+        .covers(crate::codebase::ts_source::facts::TsFactPlan::imports()));
+    assert!(!facts.graph_plan().symbols);
+    assert!(!facts.graph_plan().queue_project);
     assert_eq!(facts.stats.files_discovered, 2);
 }
 
@@ -370,4 +393,26 @@ fn collect_check_facts_only_parses_playwright_test_files_for_playwright_facts() 
         .playwright
         .is_some());
     assert!(!facts.ts.contains_key(&invalid_file));
+}
+
+#[test]
+fn playwright_fact_plan_union_preserves_staged_variants_and_source_metadata() {
+    let first = fixture_path("src/everything.tsx");
+    let second = fixture_path("src/widget.tsx");
+    let mut plan = playwright_plan(first.clone());
+    plan.set_source_files(vec![first.clone()]);
+    let mut other = playwright_plan(second.clone());
+    other.set_source_files(vec![second.clone()]);
+
+    plan.include(other);
+
+    assert!(plan.file(&first).is_some());
+    assert!(plan.file(&second).is_some());
+    assert_eq!(
+        plan.source_files().as_ref(),
+        &[
+            crate::codebase::ts_resolver::normalize_path(&first),
+            crate::codebase::ts_resolver::normalize_path(&second),
+        ]
+    );
 }

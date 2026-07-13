@@ -1,0 +1,5 @@
+{
+  "name": "pass4a-shadow",
+  "private": true,
+  "workspaces": ["packages/*"]
+}

@@ -66,12 +66,28 @@ fn target_local_names_skips_type_only_imports_and_empty_export_sets() {
     let mut target_symbols = BTreeMap::from([(target.clone(), BTreeSet::from(["parseDate".to_string()]))]);
     let workspace = crate::codebase::workspaces::WorkspaceMap::default();
 
-    assert!(target_local_names(&symbols, &file, &target_symbols, &tsconfig, &workspace).is_empty());
+    assert!(target_local_names(
+        &symbols,
+        &file,
+        &target_symbols,
+        &tsconfig,
+        &workspace,
+        &HashSet::new()
+    )
+    .is_empty());
 
     symbols.imports[0].is_type_only = false;
     target_symbols.insert(target, BTreeSet::new());
 
-    assert!(target_local_names(&symbols, &file, &target_symbols, &tsconfig, &workspace).is_empty());
+    assert!(target_local_names(
+        &symbols,
+        &file,
+        &target_symbols,
+        &tsconfig,
+        &workspace,
+        &HashSet::new()
+    )
+    .is_empty());
 }
 
 #[test]
@@ -88,7 +104,13 @@ fn signature_target_symbols_keeps_file_entries_and_ignores_non_file_nodes() {
         },
     ]);
 
-    let target_symbols = signature_target_symbols(&target, "parseDate", &export_nodes);
+    let target_symbols = signature_target_symbols(
+        &target,
+        "parseDate",
+        &export_nodes,
+        &HashSet::new(),
+        &TsFactMap::new(),
+    );
 
     assert_eq!(
         target_symbols.get(&target),
@@ -99,106 +121,43 @@ fn signature_target_symbols_keeps_file_entries_and_ignores_non_file_nodes() {
 }
 
 #[test]
-fn signature_target_symbols_preserves_chained_namespace_reexport_names() {
-    let root = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/codebase-analysis/tests-impact-symbol/fixture"),
-    );
-    let target = root.join("utils.mts");
-    let namespace_barrel = root.join("namespace-date-barrel.mts");
-    let outer_barrel = root.join("namespace-outer-date-barrel.mts");
-    let extensionless_barrel = root.join("namespace-extensionless-date-barrel.mts");
-    let export_nodes = BTreeSet::from([
-        NodeId::Symbol {
-            file: namespace_barrel.clone(),
-            symbol: "dates".to_string(),
-        },
-        NodeId::Symbol {
-            file: outer_barrel.clone(),
-            symbol: "outer".to_string(),
-        },
-        NodeId::Symbol {
-            file: extensionless_barrel.clone(),
-            symbol: "extensionlessDates".to_string(),
-        },
-    ]);
+fn pass4b_signature_local_names_resolve_visible_workspace_subpath_fallback() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass4b-shadow");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(&root);
+    let visible = visible_paths
+        .iter()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(path))
+        .collect::<HashSet<_>>();
+    let importer = root.join("impact/importer.ts");
+    let source = std::fs::read_to_string(&importer).unwrap();
+    let symbols = crate::codebase::ts_symbols::extract_symbols(&source, false).unwrap();
+    let target = root.join("packages/pkg/src/feature.ts");
+    let target_symbols = BTreeMap::from([(
+        target,
+        BTreeSet::from(["feature".to_string()]),
+    )]);
+    let tsconfig = crate::codebase::ts_resolver::TsConfig {
+        dir: root.clone(),
+        paths: Vec::new(),
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let workspace = crate::codebase::workspaces::load_from_files(&root, &visible_paths).unwrap();
 
-    let target_symbols = signature_target_symbols(&target, "parseDate", &export_nodes);
-
     assert_eq!(
-        target_symbols.get(&namespace_barrel),
-        Some(&BTreeSet::from(["dates.parseDate".to_string()]))
-    );
-    assert_eq!(
-        target_symbols.get(&outer_barrel),
-        Some(&BTreeSet::from(["outer.dates.parseDate".to_string()]))
-    );
-    assert_eq!(
-        target_symbols.get(&extensionless_barrel),
-        Some(&BTreeSet::from(["extensionlessDates.parseDate".to_string()]))
+        target_local_names(
+            &symbols,
+            &importer,
+            &target_symbols,
+            &tsconfig,
+            &workspace,
+            &visible,
+        ),
+        BTreeSet::from(["feature".to_string()])
     );
 }
 
-#[test]
-fn namespace_target_helpers_handle_defensive_paths() {
-    let root = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/codebase-analysis/tests-impact-symbol/fixture"),
-    );
-    let invalid = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/codebase-analysis/symbols-output/fixture/src/invalid.mts"),
-    );
-    let namespace_barrel = root.join("namespace-date-barrel.mts");
-    let mut symbols = crate::codebase::ts_symbols::FileSymbols::default();
-
-    assert!(!is_namespace_reexport_symbol(&root.join("missing.mts"), "dates"));
-    assert!(!is_namespace_reexport_symbol(&invalid, "dates"));
-    assert!(namespace_tail_applies(
-        &namespace_barrel,
-        &symbols,
-        "dates",
-        "dates.parseDate"
-    ));
-
-    symbols
-        .imports
-        .push(crate::codebase::ts_symbols::NamedImport {
-            source: "./utils.mts".to_string(),
-            imported: "*".to_string(),
-            local: "dates".to_string(),
-            line: 1,
-            is_type_only: false,
-        });
-    assert!(namespace_tail_applies(
-        &namespace_barrel,
-        &symbols,
-        "outer",
-        "dates.parseDate"
-    ));
-    assert!(!source_exports_symbol(Path::new("/"), "./missing.mts", "parseDate"));
-    assert!(!source_exports_symbol(
-        &namespace_barrel,
-        "./missing.mts",
-        "parseDate"
-    ));
-}
-
-#[test]
-fn suggested_test_entries_ignores_file_level_edges_without_file_nodes() {
-    let root = PathBuf::from("/repo");
-    let graph = crate::codebase::dependencies::graph::test_support::from_typed_maps(
-        root.clone(),
-        std::collections::HashMap::new(),
-        std::collections::HashMap::new(),
-    );
-    let entries = vec![NodeEntry {
-        node: NodeId::Module("pkg".to_string()),
-        depth: 1,
-        via: vec![EdgeKind::DynamicImport],
-    }];
-
-    let suggested = suggested_test_entries(&graph, &entries, &[], &root, &BTreeMap::new());
-
-    assert_eq!(suggested, entries);
-}
+mod namespace_helpers;

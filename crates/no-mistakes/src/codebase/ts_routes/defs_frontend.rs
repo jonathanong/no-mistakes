@@ -1,5 +1,4 @@
 use std::path::{Path, PathBuf};
-use walkdir::WalkDir;
 
 const PAGE_STEMS: &[&str] = &["page"];
 const PAGE_EXTS: &[&str] = &["tsx", "ts", "jsx", "js"];
@@ -7,31 +6,11 @@ const PAGE_EXTS: &[&str] = &["tsx", "ts", "jsx", "js"];
 /// Walk `frontend_root` (absolute path) and return `(file_path, route_pattern)` pairs
 /// for all `page.{tsx,ts,jsx,js}` files.
 pub fn collect_frontend_routes_with_files(frontend_root: &Path) -> Vec<(PathBuf, String)> {
-    let mut routes = Vec::new();
-
-    for entry in WalkDir::new(frontend_root)
+    let files: Vec<PathBuf> = crate::codebase::ts_source::discover_visible_paths(frontend_root)
         .into_iter()
-        .filter_map(|e| e.ok())
-    {
-        let path = entry.path();
-        if !path.is_file() {
-            continue;
-        }
-
-        let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
-        let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
-
-        if !PAGE_STEMS.contains(&stem) || !PAGE_EXTS.contains(&ext) {
-            continue;
-        }
-
-        if let Ok(relative) = path.strip_prefix(frontend_root) {
-            routes.push((path.to_path_buf(), path_to_route_pattern(relative)));
-        }
-    }
-
-    routes.sort_by(|a, b| a.1.cmp(&b.1));
-    routes
+        .filter(|path| path.is_file())
+        .collect();
+    collect_frontend_routes_from_files(frontend_root, &files)
 }
 
 /// Collect frontend routes from an already-discovered file list.

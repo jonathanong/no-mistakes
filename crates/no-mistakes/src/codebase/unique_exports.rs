@@ -1,5 +1,5 @@
 use crate::codebase::config::load_codebase_config_with_path;
-use crate::codebase::ts_resolver::{find_tsconfig, load_tsconfig, normalize_path, ImportResolver};
+use crate::codebase::ts_resolver::{normalize_path, ImportResolver};
 use crate::codebase::ts_source::discover_files;
 use crate::codebase::workspaces;
 use anyhow::Result;
@@ -19,7 +19,10 @@ use findings::unique_export_findings;
 use scan::{filter_source_files, sorted_paths};
 use types::{ExportBucket, ExportOccurrence, ExportOrigin, SourceFile};
 pub use types::{UniqueExportFinding, UniqueExportsOptions};
-pub use with_facts::analyze_project_with_facts;
+pub use with_facts::{
+    analyze_project_with_config_and_facts, analyze_project_with_facts,
+    analyze_project_with_prepared_facts, analyze_project_with_prepared_facts_and_inferred,
+};
 
 pub const RULE_ID: &str = "unique-exports";
 
@@ -80,21 +83,6 @@ fn analyze_unique_exports(
     }
 
     unique_export_findings(occurrences, options)
-}
-
-trait DefaultTsConfig {
-    fn unwrap_or_default_for(self, root: &Path) -> crate::codebase::ts_resolver::TsConfig;
-}
-
-impl DefaultTsConfig for Option<crate::codebase::ts_resolver::TsConfig> {
-    fn unwrap_or_default_for(self, root: &Path) -> crate::codebase::ts_resolver::TsConfig {
-        self.unwrap_or_else(|| crate::codebase::ts_resolver::TsConfig {
-            dir: root.to_path_buf(),
-            paths: Vec::new(),
-            paths_dir: root.to_path_buf(),
-            base_url: None,
-        })
-    }
 }
 
 #[cfg(test)]

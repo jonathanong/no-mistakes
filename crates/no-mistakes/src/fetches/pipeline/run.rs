@@ -1,9 +1,9 @@
 use crate::fetches::analyze::resolve::relative_string;
-use crate::fetches::analyze::routes::collect_layout_chain_files;
+use crate::fetches::analyze::routes::collect_layout_chain_files_from_visible;
 use crate::fetches::cli::Cli;
 use crate::fetches::pipeline::aggregate::build_final_report;
 use crate::fetches::pipeline::cache::Cache;
-use crate::fetches::pipeline::route_analysis::{check_route_matches, collect_route_fetches};
+use crate::fetches::pipeline::route_analysis::check_route_matches;
 use crate::fetches::pipeline::target::{resolve_target_file, TargetSpec};
 use crate::fetches::report::types::{FinalReport, RouteReport};
 use anyhow::Result;
@@ -12,12 +12,21 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 pub(crate) fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalReport> {
-    let root = base_root.join(&cli.root);
+    let requested_root = base_root.join(&cli.root);
+    let root = requested_root
+        .canonicalize()
+        .unwrap_or_else(|_| requested_root.clone());
     if !root.is_dir() {
         anyhow::bail!("root directory does not exist: {}", root.display());
     }
 
-    let v2 = no_mistakes::config::v2::load_v2_config(&root, cli.config.as_deref())?;
+    let snapshot = no_mistakes::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let visible_paths = snapshot.paths_for(&root);
+    let v2 = no_mistakes::config::v2::load_v2_config_from_visible(
+        &root,
+        cli.config.as_deref(),
+        &visible_paths,
+    )?;
     let view = no_mistakes::config::v2::ConfigView::new(&v2);
     let frontend_root = root.join(view.nextjs_root());
     if !frontend_root.is_dir() {
@@ -26,8 +35,13 @@ pub(crate) fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalRep
             frontend_root.display()
         );
     }
+    let visible_files = visible_paths
+        .iter()
+        .map(|path| no_mistakes::codebase::ts_resolver::normalize_path(path))
+        .collect::<HashSet<_>>();
     let stems = ["page", "route"];
-    let mut all_routes = routes::collect_routes(&frontend_root, &stems);
+    let mut all_routes =
+        routes::collect_routes_from_visible_paths(&frontend_root, &visible_paths, &stems);
     let virtual_routes = routes::rewrites::expand_rewrites(view.nextjs_rewrites(), &all_routes);
     all_routes.extend(virtual_routes);
 
@@ -35,10 +49,18 @@ pub(crate) fn run_with_base_root(base_root: &Path, cli: &Cli) -> Result<FinalRep
         files: HashMap::new(),
         imports: HashMap::new(),
     };
+    let mut parsed_files = no_mistakes::fetch::ParsedFileCache::default();
 
     let target_specs = resolve_targets(base_root, &root, &cli.targets)?;
-    let (reports, matched_targets) =
-        analyze_routes(all_routes, &target_specs, &frontend_root, &root, &mut cache)?;
+    let (reports, matched_targets) = analyze_routes(
+        all_routes,
+        &target_specs,
+        &frontend_root,
+        &root,
+        &mut cache,
+        &mut parsed_files,
+        &visible_files,
+    )?;
 
     verify_targets_matched(&target_specs, &matched_targets)?;
 
@@ -70,6 +92,8 @@ fn analyze_routes(
     frontend_root: &Path,
     root: &Path,
     cache: &mut Cache,
+    parsed_files: &mut no_mistakes::fetch::ParsedFileCache,
+    visible_files: &HashSet<std::path::PathBuf>,
 ) -> Result<(Vec<RouteReport>, HashSet<String>)> {
     let mut reports = Vec::new();
     let mut matched_targets: HashSet<String> = HashSet::new();
@@ -77,7 +101,7 @@ fn analyze_routes(
     for route in all_routes {
         let route_is_page = route.file.file_stem().and_then(|s| s.to_str()) == Some("page");
         let wrapper_files = if route_is_page {
-            collect_layout_chain_files(&route.file, frontend_root)
+            collect_layout_chain_files_from_visible(&route.file, frontend_root, visible_files)
                 .into_iter()
                 .filter_map(|path| path.canonicalize().ok())
                 .collect::<Vec<_>>()
@@ -85,8 +109,15 @@ fn analyze_routes(
             Vec::new()
         };
 
-        let (matched, newly_matched) =
-            check_route_matches(&route, target_specs, &wrapper_files, cache)?;
+        let (matched, newly_matched) = check_route_matches(
+            &route,
+            target_specs,
+            &wrapper_files,
+            cache,
+            parsed_files,
+            root,
+            visible_files,
+        )?;
 
         for t in newly_matched {
             matched_targets.insert(t);
@@ -96,7 +127,14 @@ fn analyze_routes(
             continue;
         }
 
-        let fetches = collect_route_fetches(&route, frontend_root, root, cache)?;
+        let fetches = no_mistakes::fetch::collect_route_fetches_from_visible_with_facts(
+            &route,
+            frontend_root,
+            root,
+            cache,
+            parsed_files,
+            visible_files,
+        )?;
 
         reports.push(RouteReport {
             route: route.pattern,

@@ -15,6 +15,9 @@ mod registry_extension;
 mod rsc_callers;
 mod server;
 mod swift;
+#[cfg(test)]
+#[path = "test_support/gitignore_fixture.rs"]
+mod test_support;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};

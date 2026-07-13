@@ -52,10 +52,11 @@ pub(crate) struct Options {
     pub(crate) explicit_projects_only: bool,
 }
 
-pub(crate) fn check_with_files(
+pub(crate) fn check_with_files_and_catalog(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
+    catalog: Option<&super::PreparedVitestProjectCatalog>,
 ) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
@@ -70,7 +71,7 @@ pub(crate) fn check_with_files(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, config, &opts, &files, &target_roots)
+            scan(root, config, &opts, &files, &target_roots, catalog)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -84,11 +85,12 @@ fn scan(
     opts: &Options,
     files: &[PathBuf],
     target_roots: &[PathBuf],
+    catalog: Option<&super::PreparedVitestProjectCatalog>,
 ) -> Result<Vec<RuleFinding>> {
     if files.is_empty() {
         return Ok(Vec::new());
     }
-    let projects = vitest_projects(root, config, opts)?;
+    let projects = vitest_projects(root, config, opts, catalog)?;
     if projects.is_empty() {
         return Ok(Vec::new());
     }

@@ -1,16 +1,17 @@
 use super::RuleFinding;
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, NodeId};
 use crate::codebase::dependencies::{relationship_filter, EdgeKind, RelationshipArg};
-use crate::codebase::ts_resolver::{find_tsconfig as ts_find, load_tsconfig, TsConfig};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use helpers::{build_globset, edge_kind_str, repro_command, resolve_root_path};
 use std::collections::HashSet;
 use std::path::Path;
 
+mod config_check;
 mod helpers;
 mod shared;
-pub(crate) use shared::check_with_facts;
+pub(crate) use config_check::check_with_config;
+pub(crate) use shared::{check_with_prepared_facts, check_with_prepared_facts_and_inferred};
 
 pub const RULE_ID: &str = "forbidden-dependencies";
 
@@ -36,38 +37,6 @@ pub fn check(
     check_with_config(root, config, None, tsconfig_path)
 }
 
-/// Same as [`check`], but resolves the `DepGraph`'s `GraphConfigOptions`
-/// (route-consistency, queue-dashboard-reachability, http-route/call-static-
-/// paths, dotnet, swift, terraform) from an explicit `--config` path instead
-/// of always falling back to default discovery. Callers that already have a
-/// `config_path` in scope (the shared-facts path's `run_check_with_facts`,
-/// and its missing-graph-universe fallback) must use this —
-/// otherwise an explicit `--config` changing those settings is silently
-/// ignored for this rule's graph build even though the rest of `check`
-/// honors it.
-pub(crate) fn check_with_config(
-    root: &Path,
-    config: &NoMistakesConfig,
-    config_path: Option<&Path>,
-    tsconfig_path: Option<&Path>,
-) -> Result<Vec<RuleFinding>> {
-    let applications = config.rule_applications(RULE_ID);
-    if applications.is_empty() {
-        return Ok(Vec::new());
-    }
-    let opts_list: Vec<Options> = applications.iter().map(|r| r.rule_options()).collect();
-    let union_allowed = union_allowed_set(&opts_list);
-    let plan = GraphBuildPlan::from_allowed(union_allowed.as_ref());
-    let tsconfig = resolve_tsconfig(root, tsconfig_path)?;
-    let graph = DepGraph::build_with_plan_and_config(root, &tsconfig, plan, config_path)?;
-    let mut findings = Vec::new();
-    for (rule, opts) in applications.iter().zip(opts_list.iter()) {
-        findings.extend(check_rule_application(root, config, rule, opts, &graph)?);
-    }
-    super::sort_findings(&mut findings);
-    Ok(findings)
-}
-
 pub fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     let applications = config.rule_applications(RULE_ID);
     if applications.is_empty() {
@@ -76,21 +45,6 @@ pub fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     let opts_list: Vec<Options> = applications.iter().map(|r| r.rule_options()).collect();
     let union_allowed = union_allowed_set(&opts_list);
     Some(GraphBuildPlan::from_allowed(union_allowed.as_ref()))
-}
-
-pub(crate) fn resolve_tsconfig(root: &Path, tsconfig_path: Option<&Path>) -> Result<TsConfig> {
-    match tsconfig_path {
-        Some(path) => load_tsconfig(path),
-        None => match ts_find(root) {
-            Some(path) => load_tsconfig(&path),
-            None => Ok(TsConfig {
-                dir: root.to_path_buf(),
-                paths: vec![],
-                paths_dir: root.to_path_buf(),
-                base_url: None,
-            }),
-        },
-    }
 }
 
 fn union_allowed_set(opts_list: &[Options]) -> Option<HashSet<EdgeKind>> {
@@ -115,6 +69,7 @@ fn check_rule_application(
     rule: &crate::config::v2::schema::RuleDef,
     opts: &Options,
     graph: &DepGraph,
+    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
 ) -> Result<Vec<RuleFinding>> {
     if opts.roots.is_empty()
         || (opts.forbidden_modules.is_empty() && opts.forbidden_files.is_empty())
@@ -158,7 +113,13 @@ fn check_rule_application(
         }
     };
     let allowed = relationship_filter(&opts.relationships);
-    let source_filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
+    let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
+    let source_filter = super::path_filter::RulePathFilter::new_with_inferred(
+        root,
+        config,
+        rule,
+        &mut inferred_roots,
+    )?;
     let mut findings = Vec::new();
     for root_str in &opts.roots {
         let Some(resolved_path) = resolve_root_path(root, root_str) else {

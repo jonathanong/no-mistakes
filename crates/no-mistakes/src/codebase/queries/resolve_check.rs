@@ -132,7 +132,9 @@ fn compute(args: &ResolveCheckArgs) -> Result<ResolveCheckReport> {
     } else {
         ImportExtractor::for_typescript()?
     };
-    let resolver = ImportResolver::new(&target.tsconfig).without_cache();
+    let resolver = ImportResolver::new(&target.tsconfig)
+        .with_visible(&target.visible_files)
+        .without_cache();
     let imports: Vec<ImportRow> = extractor
         .extract(&source)?
         .iter()

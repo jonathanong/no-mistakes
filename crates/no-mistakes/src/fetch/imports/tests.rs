@@ -152,3 +152,27 @@ fn test_is_import_used() {
     })
     .unwrap();
 }
+
+#[test]
+fn pass4a_ignored_import_candidate_does_not_shadow_visible_route_fallback() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass4a-shadow");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let route = root.join("fetch/nested/route.ts");
+    let target = root.join("fetch/nested/target.ts");
+    let visible_files = crate::codebase::ts_source::discover_visible_paths(&root)
+        .into_iter()
+        .collect();
+
+    let reaches = crate::fetch::import_routes::route_reaches_target_from_visible(
+        &route,
+        &target,
+        &mut HashSet::new(),
+        &mut HashMap::new(),
+        &visible_files,
+    )
+    .unwrap();
+
+    assert!(reaches);
+}

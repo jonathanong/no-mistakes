@@ -1,4 +1,4 @@
-fn signature_impact_graph_plan() -> GraphBuildPlan {
+pub(super) fn signature_impact_graph_plan() -> GraphBuildPlan {
     let mut plan = GraphBuildPlan::imports_and_workspace();
     plan.tests = true;
     plan.with_symbols(true)
@@ -18,6 +18,8 @@ fn signature_target_symbols(
     target_file: &Path,
     target_symbol: &str,
     export_nodes: &BTreeSet<NodeId>,
+    visible_files: &HashSet<PathBuf>,
+    facts: &TsFactMap,
 ) -> BTreeMap<PathBuf, BTreeSet<String>> {
     let mut target_symbols = BTreeMap::from([(
         target_file.to_path_buf(),
@@ -34,11 +36,18 @@ fn signature_target_symbols(
                     let symbol_name = known_symbols
                         .iter()
                         .filter_map(|candidate| {
-                            namespace_reexport_target_symbol(file, symbol, candidate)
+                            namespace_reexport_target_symbol(
+                                facts,
+                                file,
+                                symbol,
+                                candidate,
+                                visible_files,
+                            )
                         })
                         .max_by_key(|candidate| candidate.matches('.').count())
                         .or_else(|| {
-                            (!is_namespace_reexport_symbol(file, symbol)).then(|| symbol.clone())
+                            (!is_namespace_reexport_symbol(facts, file, symbol))
+                                .then(|| symbol.clone())
                         });
                     if let Some(symbol_name) = symbol_name {
                         if target_symbols
@@ -68,6 +77,7 @@ fn suggested_test_entries(
     production_extra_callers: &[CallerEntry],
     root: &Path,
     file_target_symbols: &BTreeMap<String, BTreeSet<String>>,
+    facts: &TsFactMap,
 ) -> Vec<NodeEntry> {
     let mut suggested_entries = entries.to_vec();
     let test_edges = HashSet::from([EdgeKind::TestOf]);
@@ -80,7 +90,9 @@ fn suggested_test_entries(
             let relative_file = relative_slash_path(root, file);
             if file_target_symbols
                 .get(relative_file.as_str())
-                .is_some_and(|symbols| file_entry_uses_any_symbol(root, relative_file.as_str(), symbols))
+                .is_some_and(|symbols| {
+                    file_entry_uses_any_symbol(root, relative_file.as_str(), symbols, facts)
+                })
             {
                 production_files.insert(file.to_path_buf());
             }

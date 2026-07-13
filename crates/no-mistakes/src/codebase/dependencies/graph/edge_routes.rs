@@ -1,12 +1,12 @@
 fn collect_route_edges(
     root: &Path,
     tsconfig: &TsConfig,
+    resolver: &ImportResolver<'_>,
     all_files: &[PathBuf],
     facts: Option<&dyn TsFactLookup>,
     config_options: Option<&GraphConfigOptions>,
 ) -> Vec<Edge> {
     use crate::codebase::ts_routes::defs_frontend;
-    use crate::codebase::ts_resolver::ImportResolver;
     use globset::{GlobBuilder, GlobSetBuilder};
 
     let Some(config_options) = config_options else {
@@ -69,10 +69,8 @@ fn collect_route_edges(
     }
     all_defs.sort();
     all_defs.dedup();
-    let virtual_defs = crate::routes::rewrites::expand_rewrites_as_tuples(
-        &config_options.rewrites,
-        &all_defs,
-    );
+    let virtual_defs =
+        crate::routes::rewrites::expand_rewrites_as_tuples(&config_options.rewrites, &all_defs);
     all_defs.extend(virtual_defs);
     all_defs.sort();
     all_defs.dedup();
@@ -89,8 +87,6 @@ fn collect_route_edges(
     }
     let mut all_patterns: Vec<String> = pattern_to_files.keys().cloned().collect();
     all_patterns.sort();
-    let resolver = ImportResolver::new(tsconfig);
-
     let backend_prefixes = route_backend_prefixes(config_options);
     let backend_exact = opts.backend_exact_paths.clone();
     let has_backend_filter = !backend_prefixes.is_empty() || !backend_exact.is_empty();
@@ -126,27 +122,26 @@ fn collect_route_edges(
         .into_par_iter()
         .flat_map_iter(|path| {
             let mut edges = Vec::new();
-            let mut push_edges_for_refs =
-                |route_patterns: Vec<&str>| {
-                    for route_pattern in route_patterns {
-                        if route_pattern_should_skip(
-                            route_pattern,
-                            &backend_prefixes,
-                            &backend_exact,
-                            has_backend_filter,
-                            opts.frontend_root.is_empty(),
-                        ) {
-                            continue;
-                        }
-                        push_matching_route_edges(
-                            &mut edges,
-                            &path,
-                            route_pattern,
-                            &all_patterns,
-                            &pattern_to_files,
-                        );
+            let mut push_edges_for_refs = |route_patterns: Vec<&str>| {
+                for route_pattern in route_patterns {
+                    if route_pattern_should_skip(
+                        route_pattern,
+                        &backend_prefixes,
+                        &backend_exact,
+                        has_backend_filter,
+                        opts.frontend_root.is_empty(),
+                    ) {
+                        continue;
                     }
-                };
+                    push_matching_route_edges(
+                        &mut edges,
+                        &path,
+                        route_pattern,
+                        &all_patterns,
+                        &pattern_to_files,
+                    );
+                }
+            };
             if let Some(file_facts) = facts.and_then(|facts| facts.get_ts_facts(&path)) {
                 push_edges_for_refs(
                     file_facts
@@ -159,7 +154,7 @@ fn collect_route_edges(
                     &path,
                     file_facts,
                     facts.expect("route facts are available when file facts were found"),
-                    &resolver,
+                    resolver,
                 );
                 push_edges_for_refs(helper_patterns.iter().map(String::as_str).collect());
             }

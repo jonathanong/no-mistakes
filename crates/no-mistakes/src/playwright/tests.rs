@@ -6,6 +6,7 @@ mod fetch_tests;
 mod fsutil_tests;
 mod helper_reference_tests;
 mod output_tests;
+mod pipeline_error_tests;
 mod pipeline_order_tests;
 mod pipeline_tests;
 mod test_support_tests;

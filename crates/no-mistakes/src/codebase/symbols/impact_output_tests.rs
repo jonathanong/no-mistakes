@@ -21,13 +21,18 @@ fn caller_parts_ignores_non_file_backed_nodes() {
 #[test]
 fn export_location_errors_include_file_context() {
     let root = Path::new("/repo");
+    let mut facts = TsFactMap::new();
     let missing = root.join("missing.mts");
-    let missing_err = export_location(&missing, root, "parseDate", false).unwrap_err();
+    let missing_err = export_location(&facts, &missing, root, "parseDate", false).unwrap_err();
     assert!(format!("{missing_err:#}").contains("reading /repo/missing.mts"));
 
     let invalid = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/symbols-output/fixture/src/invalid.mts");
-    let parse_err = export_location(&invalid, root, "parseDate", false).unwrap_err();
+    facts.extend(crate::codebase::ts_source::facts::collect_ts_facts(
+        std::slice::from_ref(&invalid),
+        crate::codebase::ts_source::facts::TsFactPlan::imports_and_symbols(),
+    ));
+    let parse_err = export_location(&facts, &invalid, root, "parseDate", false).unwrap_err();
     assert!(format!("{parse_err:#}").contains("extracting symbols from"));
 }
 
@@ -70,7 +75,14 @@ fn suggested_tests_merges_duplicate_test_files() {
         via: vec!["symbol"],
     }];
 
-    let tests = suggested_tests(&entries, root, &filter, &extra, &BTreeMap::new());
+    let tests = suggested_tests(
+        &entries,
+        root,
+        &filter,
+        &extra,
+        &BTreeMap::new(),
+        &TsFactMap::new(),
+    );
 
     assert_eq!(tests.len(), 1);
     assert_eq!(tests[0].file, "src/date.test.mts");
@@ -102,7 +114,15 @@ fn suggested_tests_filters_file_level_edges_without_matching_target_usage() {
         BTreeSet::from(["parseDate".to_string()]),
     );
 
-    let tests = suggested_tests(&entries, &root, &filter, &[], &file_target_symbols);
+    let facts = impact_test_support::signature_test_facts(&root);
+    let tests = suggested_tests(
+        &entries,
+        &root,
+        &filter,
+        &[],
+        &file_target_symbols,
+        &facts,
+    );
 
     assert!(tests.is_empty());
 }

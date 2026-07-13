@@ -4,9 +4,7 @@ use super::plan::relative_path;
 use super::{PlanArgs, SelectedTest, TestFramework, TestPlan, TestPlanGroupResult, Warning};
 use anyhow::Result;
 use globset::{Glob, GlobSet, GlobSetBuilder};
-use no_mistakes::codebase::dependencies::graph::DepGraph;
-use no_mistakes::codebase::test_discovery::{DiscoveredTests, TestRunner};
-use no_mistakes::codebase::test_filter::TestFileFilter;
+use no_mistakes::codebase::test_discovery::DiscoveredTests;
 use no_mistakes::codebase::workspaces::WorkspaceMap;
 use no_mistakes::config::v2::schema::{
     NoMistakesConfig, TestPlanEnvironment, TestPlanGroup, TestPlanGroupType, TestPlanLimit,
@@ -28,27 +26,26 @@ use fallback::{fallback_plan, FallbackRequest};
 use finalize::{
     empty_group_result, select_limited_group_candidates, sorted_selected_tests, sorted_warnings,
 };
-use hints::build_coverage_hints;
+use hints::build_coverage_hints_from_prepared;
 use lockfile_seeds::{apply_lockfile_seeds, lockfile_seed_candidates};
 use native_fallback::{native_fallback_selection, native_traceable_changed_files};
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn generate_configured_plan(
+pub(crate) fn generate_configured_plan_with_prepared(
     args: &PlanArgs,
     framework: TestFramework,
     root: &Path,
     config: &NoMistakesConfig,
-    tsconfig: &no_mistakes::codebase::dependencies::TsConfig,
     changed_files: &[PathBuf],
     deleted_files: &[PathBuf],
     diff_files: &[DiffFile],
     lockfile_changed_packages: &[(String, String)], // (pkg_name, lockfile_rel)
     workspace_map: &WorkspaceMap,
     forced_fallback: Option<(String, PathBuf)>,
-    unconditional_fallback: bool,
+    discovered_tests: DiscoveredTests,
+    prepared: &super::prepared_plan::PreparedTestPlanRequest,
 ) -> Result<TestPlan> {
     let env = configured_environment(args, framework, config)?;
-    let discovered_tests = discover_framework_tests(root, config, framework, &env)?;
     let all_tests = discovered_tests.tests.clone();
     let all_test_set: HashSet<PathBuf> = all_tests.iter().cloned().collect();
     let effective_limit = override_limit(env.limit.as_ref(), args);
@@ -56,7 +53,7 @@ pub(crate) fn generate_configured_plan(
     let global_limit =
         limit_count(effective_limit.as_ref(), all_tests.len()).unwrap_or(all_tests.len());
 
-    if unconditional_fallback || effective_global_config_fallback(&env, args) {
+    if effective_global_config_fallback(&env, args) {
         if let Some((reason, trigger_file)) = forced_fallback.as_ref() {
             let mut plan = fallback_plan(
                 root,
@@ -97,7 +94,7 @@ pub(crate) fn generate_configured_plan(
     }
 
     if let Some((reason, trigger_file)) =
-        dependency_trigger(root, config, framework, changed_files)?
+        dependency_trigger(root, config, framework, changed_files, prepared)?
     {
         let mut plan = fallback_plan(
             root,
@@ -115,16 +112,10 @@ pub(crate) fn generate_configured_plan(
         return Ok(plan);
     }
 
-    let graph = DepGraph::build(root, tsconfig)?;
-    let test_filter = TestFileFilter::new(root, config);
-    let coverage_hints = build_coverage_hints(
-        root,
-        args.config.as_deref(),
-        config,
-        framework,
-        diff_files,
-        &all_tests,
-    );
+    let graph = prepared.graph()?;
+    let test_filter = prepared.test_filter().clone();
+    let coverage_hints =
+        build_coverage_hints_from_prepared(prepared, config, framework, diff_files, &all_tests);
     let mut selected_map: BTreeMap<PathBuf, SelectedTest> = BTreeMap::new();
     let mut used = HashSet::new();
     let mut group_results = Vec::new();
@@ -138,7 +129,7 @@ pub(crate) fn generate_configured_plan(
         framework,
         root,
         changed_files,
-        &graph,
+        graph,
         &all_tests,
         &all_test_set,
         &test_filter,
@@ -153,7 +144,7 @@ pub(crate) fn generate_configured_plan(
             root,
             lockfile_changed_packages,
             workspace_map,
-            &graph,
+            graph,
             &all_test_set,
             &HashSet::new(), // filter against `used` during injection, not pre-compute
         ))
@@ -185,7 +176,7 @@ pub(crate) fn generate_configured_plan(
             group.type_,
             root,
             changed_files,
-            &graph,
+            graph,
             &all_tests,
             &all_test_set,
             &test_filter,
@@ -295,6 +286,8 @@ pub(crate) fn generate_configured_plan(
             &used,
             &all_tests,
             &discovered_tests,
+            prepared.root_visible_paths(),
+            effective_global_config_fallback(&env, args),
             remaining_global,
         ) {
             for test in &picked {
@@ -435,19 +428,17 @@ fn limit_count(limit: Option<&TestPlanLimit>, total: usize) -> Option<usize> {
     }
 }
 
-fn discover_framework_tests(
-    root: &Path,
-    config: &NoMistakesConfig,
+pub(crate) fn discover_framework_tests_from_prepared(
+    args: &PlanArgs,
     framework: TestFramework,
-    env: &TestPlanEnvironment,
+    prepared: &super::prepared_plan::PreparedTestPlanRequest,
 ) -> Result<DiscoveredTests> {
-    let runner = test_runner(framework);
-    let mut discovered =
-        no_mistakes::codebase::test_discovery::discover_tests(root, config, runner)?;
+    let env = configured_environment(args, framework, &prepared.config)?;
+    let mut discovered = prepared.discover_tests(framework)?;
     let include = compile_globset(&env.include)?;
     let exclude = compile_globset(&env.exclude)?;
     discovered.tests.retain(|path| {
-        let rel = relative_path(root, path);
+        let rel = relative_path(&prepared.root, path);
         include.as_ref().is_none_or(|set| set.is_match(&rel))
             && exclude.as_ref().is_none_or(|set| !set.is_match(&rel))
     });
@@ -456,15 +447,6 @@ fn discover_framework_tests(
         .targets_by_path
         .retain(|path, _| allowed.contains(path));
     Ok(discovered)
-}
-
-fn test_runner(framework: TestFramework) -> TestRunner {
-    match framework {
-        TestFramework::Playwright => TestRunner::Playwright,
-        TestFramework::Vitest => TestRunner::Vitest,
-        TestFramework::Dotnet => TestRunner::Dotnet,
-        TestFramework::Swift => TestRunner::Swift,
-    }
 }
 
 fn attach_targets(plan: &mut TestPlan, root: &Path, discovered: &DiscoveredTests) {

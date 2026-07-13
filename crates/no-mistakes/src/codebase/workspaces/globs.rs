@@ -1,6 +1,16 @@
 pub fn load_workspace_globs(root: &Path) -> Result<Vec<String>> {
-    let pnpm_path = root.join("pnpm-workspace.yaml");
-    if pnpm_path.exists() {
+    let files = crate::codebase::ts_source::discover_visible_paths(root);
+    load_workspace_globs_from_files(root, &files)
+}
+
+#[doc(hidden)]
+pub fn load_workspace_globs_from_files(root: &Path, files: &[PathBuf]) -> Result<Vec<String>> {
+    let visible = files
+        .iter()
+        .map(|path| normalize_path(path))
+        .collect::<std::collections::HashSet<_>>();
+    let pnpm_path = normalize_path(&root.join("pnpm-workspace.yaml"));
+    if visible.contains(&pnpm_path) {
         let content = std::fs::read_to_string(&pnpm_path)?;
         let pnpm_workspace: PnpmWorkspace = serde_yaml::from_str(&content)?;
         return Ok(pnpm_workspace
@@ -8,8 +18,8 @@ pub fn load_workspace_globs(root: &Path) -> Result<Vec<String>> {
             .unwrap_or_else(|| vec!["*".to_string()]));
     }
 
-    let pkg_path = root.join("package.json");
-    if pkg_path.exists() {
+    let pkg_path = normalize_path(&root.join("package.json"));
+    if visible.contains(&pkg_path) {
         let content = std::fs::read_to_string(&pkg_path)?;
         let root_pkg: PackageJson = serde_json::from_str(&content)?;
 
@@ -38,7 +48,7 @@ fn build_glob_set(glob_strs: &[String], excluded: bool) -> globset::GlobSet {
         } else {
             normalized.as_str()
         };
-        let Ok(glob) = Glob::new(pattern) else {
+        let Ok(glob) = GlobBuilder::new(pattern).literal_separator(true).build() else {
             continue;
         };
         builder.add(glob);
@@ -46,45 +56,6 @@ fn build_glob_set(glob_strs: &[String], excluded: bool) -> globset::GlobSet {
     builder
         .build()
         .expect("globset with individually validated globs should build")
-}
-
-fn expand_workspace_globs(root: &Path, glob_strs: &[String]) -> Vec<PathBuf> {
-    let include = build_glob_set(glob_strs, false);
-    let exclude = build_glob_set(glob_strs, true);
-
-    let mut dirs = Vec::new();
-
-    let glob_depth = glob_strs
-        .iter()
-        .filter(|pattern| !pattern.starts_with('!'))
-        .map(|pattern| {
-            let pattern = normalize_workspace_glob(pattern);
-            if pattern.contains("**") {
-                usize::MAX
-            } else {
-                pattern.split('/').count().max(1)
-            }
-        })
-        .max()
-        .unwrap_or(1);
-    for entry in WalkDir::new(root)
-        .min_depth(1)
-        .max_depth(glob_depth)
-        .follow_links(false)
-        .into_iter()
-        .filter_map(|e| e.ok())
-        .filter(|e| e.file_type().is_dir())
-    {
-        let rel = entry
-            .path()
-            .strip_prefix(root)
-            .expect("walkdir entries are rooted under the walk root");
-        if include.is_match(rel) && !exclude.is_match(rel) {
-            dirs.push(entry.into_path());
-        }
-    }
-
-    dirs
 }
 
 fn normalize_workspace_glob(pattern: &str) -> String {

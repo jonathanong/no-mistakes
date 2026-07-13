@@ -4,11 +4,9 @@ use super::*;
 fn graph_config_options_for_plan_returns_none_without_config_driven_edges() {
     let explicit =
         crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
-    assert!(graph_config_options_for_plan(
-        &explicit,
-        GraphBuildPlan::imports_and_workspace()
-    )
-    .is_none());
+    assert!(
+        graph_config_options_for_plan(&explicit, GraphBuildPlan::imports_and_workspace()).is_none()
+    );
 
     assert!(graph_config_options_for_plan(
         &explicit,

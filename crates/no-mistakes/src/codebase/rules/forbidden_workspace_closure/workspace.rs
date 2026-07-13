@@ -17,12 +17,18 @@ pub(super) fn load_workspace(
     }
     let mut packages = BTreeMap::new();
     for target_root in roots {
-        if files.contains(&target_root.join("package.json")) {
-            if let Some(package) = workspaces::load_root_package(target_root)? {
-                packages.insert(package.name.clone(), package);
-            }
-        }
-        for package in workspaces::load_from_files(target_root, files)?.packages {
+        let manifests = files.iter().filter(|path| {
+            path.starts_with(target_root)
+                && path.file_name().and_then(|name| name.to_str()) == Some("package.json")
+        });
+        for manifest in manifests {
+            let Some(package_root) = manifest.parent() else {
+                continue;
+            };
+            let Some(package) = workspaces::load_root_package_from_files(package_root, files)?
+            else {
+                continue;
+            };
             packages.insert(package.name.clone(), package);
         }
     }

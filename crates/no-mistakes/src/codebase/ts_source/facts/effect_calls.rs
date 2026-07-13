@@ -1,69 +1,37 @@
-//! AST extraction for the `effects` query: parse one reachable file and collect
-//! call/constructor sites whose name is in the configured set, with line numbers
-//! and a best-effort enclosing-function (`caller`) attribution.
-
-use std::collections::HashMap;
-use std::path::Path;
-
-use oxc_ast::ast::{CallExpression, Expression, Function, NewExpression, VariableDeclarator};
+use super::EffectCallFact;
+use crate::codebase::ts_source::byte_offset_to_line;
+use oxc_ast::ast::{
+    CallExpression, Expression, Function, NewExpression, Program, VariableDeclarator,
+};
 use oxc_ast_visit::{walk, Visit};
+use std::collections::HashMap;
 
-use crate::codebase::ts_source::{byte_offset_to_line, relative_slash_path};
-
-use super::EffectCallSite;
-
-pub(super) fn scan_file(
-    root: &Path,
-    path: &Path,
-    depth: usize,
+pub(super) fn extract(
+    program: &Program<'_>,
+    source: &str,
     names: &HashMap<String, Option<String>>,
-) -> Vec<EffectCallSite> {
-    let Ok(source) = std::fs::read_to_string(path) else {
-        return Vec::new();
+) -> Vec<EffectCallFact> {
+    let mut visitor = EffectVisitor {
+        source,
+        names,
+        caller_stack: Vec::new(),
+        hits: Vec::new(),
     };
-    let rel = relative_slash_path(root, path);
-    crate::ast::with_program(path, &source, |program, source| {
-        let mut visitor = EffectVisitor {
-            source,
-            names,
-            caller_stack: Vec::new(),
-            hits: Vec::new(),
-        };
-        visitor.visit_program(program);
-        visitor
-            .hits
-            .into_iter()
-            .map(|hit| EffectCallSite {
-                file: rel.clone(),
-                line: hit.line,
-                callee: hit.callee,
-                category: hit.category,
-                caller: hit.caller,
-                depth,
-            })
-            .collect()
-    })
-    .unwrap_or_default()
-}
-
-struct RawHit {
-    line: usize,
-    callee: String,
-    category: Option<String>,
-    caller: Option<String>,
+    visitor.visit_program(program);
+    visitor.hits
 }
 
 struct EffectVisitor<'a> {
     source: &'a str,
     names: &'a HashMap<String, Option<String>>,
     caller_stack: Vec<String>,
-    hits: Vec<RawHit>,
+    hits: Vec<EffectCallFact>,
 }
 
 impl EffectVisitor<'_> {
     fn record(&mut self, callee: &Expression<'_>, byte_offset: u32) {
         if let Some((name, category)) = match_callee(callee, self.names) {
-            self.hits.push(RawHit {
+            self.hits.push(EffectCallFact {
                 line: byte_offset_to_line(self.source, byte_offset as usize) as usize,
                 callee: name,
                 category,
@@ -109,8 +77,6 @@ impl<'a> Visit<'a> for EffectVisitor<'a> {
     }
 }
 
-/// The binding name of a `const NAME = () => ...` / `const NAME = function...`
-/// declarator, used to attribute nested effect calls to a caller.
 fn declarator_function_name(declarator: &VariableDeclarator<'_>) -> Option<String> {
     let is_function = matches!(
         declarator.init,
@@ -145,8 +111,6 @@ fn callee_candidates(expr: &Expression<'_>) -> Vec<String> {
         }
         Expression::StaticMemberExpression(member) => {
             let property = member.property.name.to_string();
-            // Try the qualified `object.property` form before the bare property
-            // so a configured `cache.invalidate` wins over a bare `invalidate`.
             let mut candidates = Vec::new();
             if let Expression::Identifier(object) = &member.object {
                 candidates.push(format!("{}.{}", object.name, property));

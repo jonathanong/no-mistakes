@@ -1,10 +1,13 @@
 use super::checker::{check_dynamic_import, DynamicCheckContext};
-use super::{config, manual_mocks, matching_test_files, reachable, resolve_mock_specifiers};
-use super::{resolve_tsconfig, RuleFinding, RULE_ID};
+use super::{
+    config, manual_mocks, matching_test_files_with_filter, reachable, resolve_mock_specifiers,
+};
+use super::{RuleFinding, RULE_ID};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::runtime::runtime_deps;
 use crate::codebase::ts_resolver::ImportResolver;
+use crate::codebase::ts_resolver::TsConfig;
 use crate::codebase::ts_source::{has_disable_comment, has_disable_file_comment};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -13,6 +16,8 @@ use rayon::prelude::*;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+
+mod setup_mocks;
 
 struct PerTestResult {
     direct_findings: Vec<RuleFinding>,
@@ -26,15 +31,36 @@ pub fn check_with_facts(
     tsconfig_path: Option<&Path>,
     shared: &CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
+    let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
+        tsconfig_path,
+        root,
+        shared.files(),
+    )?;
+    check_with_prepared_facts(root, config, &tsconfig, shared)
+}
+
+#[doc(hidden)]
+pub fn check_with_prepared_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    tsconfig: &TsConfig,
+    shared: &CheckFactMap,
+) -> Result<Vec<RuleFinding>> {
     let files = shared.files().to_vec();
-    let tsconfig = resolve_tsconfig(root, tsconfig_path)?;
-    let resolver = ImportResolver::new(&tsconfig);
+    let graph_files = shared.graph_file_universe().to_vec();
+    let visible_files = shared
+        .graph_file_universe()
+        .iter()
+        .cloned()
+        .collect::<HashSet<_>>();
+    let resolver = ImportResolver::new(tsconfig).with_visible(&visible_files);
     let graph = crate::perf_trace::trace("test_no_unmocked_dynamic_imports.graph_build", || {
-        DepGraph::build_with_plan_file_list_and_check_facts(
+        DepGraph::build_with_plan_file_list_config_and_complete_check_facts(
             root,
-            &tsconfig,
+            tsconfig,
             GraphBuildPlan::imports_and_workspace(),
-            files.clone(),
+            graph_files,
+            None,
             shared,
         )
     })?;
@@ -42,11 +68,12 @@ pub fn check_with_facts(
         crate::perf_trace::trace("test_no_unmocked_dynamic_imports.manual_mocks", || {
             manual_mocks::discover_from_files(root, &files)
         });
-    let test_files = matching_test_files(root, &files, config)?;
-    let setup_data =
-        crate::perf_trace::trace("test_no_unmocked_dynamic_imports.setup_data", || {
-            config::precompute_setup_data(root, config)
+    let prepared =
+        crate::perf_trace::trace("test_no_unmocked_dynamic_imports.prepare_config", || {
+            config::prepare_from_visible(root, config, shared.graph_file_universe())
         })?;
+    let test_files = matching_test_files_with_filter(root, &files, prepared.test_filter());
+    let setup_data = prepared.setup_data();
 
     // Pre-populate the dependency cache for all test files in parallel so that
     // reachable source checks hit the cache instead of re-running BFS per test.
@@ -86,12 +113,8 @@ pub fn check_with_facts(
                 anyhow::bail!("missing dynamic import facts for {}", file.display());
             };
             let mut mocks = manual_mocks.clone();
-            mocks.extend(setup_mocks_with_facts(
-                root,
-                &setup_data,
-                &file,
-                &resolver,
-                shared,
+            mocks.extend(setup_mocks::with_facts(
+                root, setup_data, &file, &resolver, shared,
             )?);
             mocks.extend(resolve_mock_specifiers(
                 &facts.mock_specifiers,
@@ -158,32 +181,4 @@ pub fn check_with_facts(
         .collect();
     findings.sort_by(|a, b| (&a.file, a.line, &a.target).cmp(&(&b.file, b.line, &b.target)));
     Ok(findings)
-}
-
-fn setup_mocks_with_facts(
-    root: &Path,
-    setup_data: &[config::ConfigSetupData],
-    test_file: &Path,
-    resolver: &ImportResolver<'_>,
-    shared: &CheckFactMap,
-) -> Result<HashSet<PathBuf>> {
-    let mut mocks = HashSet::new();
-    let rel_path = crate::codebase::ts_source::relative_slash_path(root, test_file);
-    for setup in config::setup_files_for_test_precomputed(&rel_path, setup_data) {
-        let Some(file_facts) = shared.ts.get(&setup) else {
-            anyhow::bail!("missing shared facts for {}", setup.display());
-        };
-        if let Some(error) = &file_facts.parse_error {
-            anyhow::bail!("failed to parse {}: {error}", setup.display());
-        }
-        let Some(facts) = file_facts.dynamic_imports.as_ref() else {
-            anyhow::bail!("missing dynamic import facts for {}", setup.display());
-        };
-        mocks.extend(resolve_mock_specifiers(
-            &facts.mock_specifiers,
-            &setup,
-            resolver,
-        ));
-    }
-    Ok(mocks)
 }

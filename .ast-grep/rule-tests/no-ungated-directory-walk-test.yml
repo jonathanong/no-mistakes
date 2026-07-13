@@ -2,10 +2,7 @@ id: no-ungated-directory-walk
 valid:
   - |
     fn discover(root: &Path) -> Vec<PathBuf> {
-        match git_visible_files(root) {
-            Some(files) => files.into_iter().map(PathBuf::from).collect(),
-            None => walk_with_ignore_crate(root),
-        }
+        discover_visible_paths(root).into_paths()
     }
   - |
     fn walk_with_ignore_crate(root: &Path) -> Vec<PathBuf> {
@@ -32,4 +29,21 @@ invalid:
             // ...
         }
         Vec::new()
+    }
+  - |
+    fn collect_routes(frontend_root: &Path) -> Vec<Route> {
+        for entry in walkdir::WalkDir::new(frontend_root) {
+            // ...
+        }
+        Vec::new()
+    }
+  - |
+    fn collect_recursive(base: &Path) {
+        let _ = fs::read_dir(base);
+    }
+  - |
+    use std::fs::read_dir;
+
+    fn collect_recursive(base: &Path) {
+        let _ = read_dir(base);
     }

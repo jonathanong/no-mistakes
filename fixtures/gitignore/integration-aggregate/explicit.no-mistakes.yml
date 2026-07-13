@@ -1,0 +1,13 @@
+tests:
+  playwright:
+    configs: explicit-playwright.config.ts
+    projects:
+      explicit-playwright:
+        integration_suites:
+          unit: [aws]
+  vitest:
+    configs: explicit-vitest.config.ts
+    projects:
+      explicit-vitest:
+        integration_suites:
+          unit: [aws]

@@ -2,7 +2,6 @@ use super::super::{
     import_bindings, shared, top_level_function_bodies, Ctx, ExprMap, ImportBinding, Options,
 };
 use super::expression_object;
-use crate::ast;
 use anyhow::Result;
 use oxc_ast::ast::{Declaration, ObjectExpression, Statement};
 use std::collections::BTreeSet;
@@ -28,9 +27,13 @@ fn imported_object_options_from(
     }
     let result = match std::fs::read_to_string(&path) {
         Err(_) => Ok(None),
-        Ok(source) => ast::with_program(&path, &source, |program, source| {
-            exported_object_options(program, source, import.imported.as_str(), &path, ctx)
-        })
+        Ok(source) => crate::integration_tests::runner_config::with_program(
+            &path,
+            &source,
+            |program, source| {
+                exported_object_options(program, source, import.imported.as_str(), &path, ctx)
+            },
+        )
         .and_then(|options| options),
     };
     ctx.seen.remove(&path);

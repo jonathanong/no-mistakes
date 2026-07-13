@@ -1,10 +1,13 @@
 use super::*;
+use super::test_support::*;
 
 mod config_edges;
+mod config_fact_plan;
 mod config_path_full_graph;
 mod config_plan;
 mod config_project_routes;
 mod config_route_helper_depth;
+mod config_route_helper_visibility;
 mod config_route_helpers;
 mod dotnet_edges;
 mod extra;

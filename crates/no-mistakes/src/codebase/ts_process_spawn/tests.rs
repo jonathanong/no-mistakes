@@ -26,6 +26,24 @@ fn fixture_source(name: &str) -> (PathBuf, String) {
 }
 
 #[test]
+fn pass4a_ignored_local_spawn_target_does_not_shadow_visible_root_fallback() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass4a-shadow");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let spawner = root.join("process/nested/spawn.ts");
+    let source = fs::read_to_string(&spawner).unwrap();
+    let visible_files = crate::codebase::ts_source::discover_visible_paths(&root)
+        .into_iter()
+        .collect();
+
+    let edges = extract_spawn_edges_from_visible(&source, &spawner, &root, &visible_files);
+
+    assert_eq!(edges.len(), 1);
+    assert_eq!(edges[0].entry, root.join("worker.ts"));
+}
+
+#[test]
 fn helper_branches_visit_present_optional_values() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/ast-snippets/ts-process-spawn/fixture/project");
@@ -49,6 +67,7 @@ fn helper_branches_visit_present_optional_values() {
         &source,
         &config_path,
         &root,
+        None,
         &mut edges,
     );
 
@@ -62,7 +81,7 @@ fn helper_branches_visit_present_optional_values() {
         .filter_map(|decl| decl.init.as_ref())
         .find(|expr| matches!(expr, Expression::ObjectExpression(_)))
         .expect("fixture must contain an object expression");
-    extract_optional_web_server_entry(Some(config_object), &config_path, &root, &mut edges);
+    extract_optional_web_server_entry(Some(config_object), &config_path, &root, None, &mut edges);
 
     let command_expr = match config_object {
         Expression::ObjectExpression(obj) => obj.properties.iter().find_map(|prop| {

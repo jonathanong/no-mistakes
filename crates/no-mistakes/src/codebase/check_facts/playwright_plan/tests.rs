@@ -1,4 +1,53 @@
-use super::{BTreeMap, BTreeSet, PlaywrightFileFactPlan, PlaywrightOccurrenceKey};
+use super::{
+    BTreeMap, PlaywrightFactPlan, PlaywrightFactSelection, PlaywrightFileFactPlan,
+    PlaywrightOccurrenceKey,
+};
+use crate::playwright::playwright_tests::TestPolicy;
+use std::collections::{BTreeSet, HashMap, HashSet};
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+
+impl PlaywrightFactPlan {
+    pub(crate) fn from_settings(
+        root: &Path,
+        settings: crate::playwright::config::Settings,
+        test_id_attributes_by_path: HashMap<PathBuf, Vec<String>>,
+        scan_html_ids: bool,
+        snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
+    ) -> anyhow::Result<Self> {
+        let navigation_helpers = settings.navigation_helpers.clone();
+        let selector_attributes = settings.selector_attributes.clone();
+        let component_selector_attributes = settings.component_selector_attributes.clone();
+        let html_ids = settings.html_ids;
+        let mut plan = Self::default();
+        plan.add_source_settings(root, settings, scan_html_ids, snapshot)?;
+        for (path, test_id_attributes) in test_id_attributes_by_path {
+            plan.add_file(PlaywrightFactSelection {
+                path,
+                navigation_helpers: &navigation_helpers,
+                selector_attributes: &selector_attributes,
+                component_selector_attributes: &component_selector_attributes,
+                html_ids,
+                test_id_attributes: &test_id_attributes,
+                policy: TestPolicy::default(),
+                demands_text_imports: true,
+            });
+        }
+        Ok(plan)
+    }
+
+    pub(crate) fn set_app_source_files(&mut self, files: impl IntoIterator<Item = PathBuf>) {
+        let files = Arc::new(
+            files
+                .into_iter()
+                .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
+                .collect::<HashSet<_>>(),
+        );
+        for plan in &mut self.source_plans {
+            plan.app_source_files = Arc::clone(&files);
+        }
+    }
+}
 
 impl PlaywrightFileFactPlan {
     pub(crate) fn merged_test_id_attributes(&self) -> Vec<String> {

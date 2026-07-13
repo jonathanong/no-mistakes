@@ -19,73 +19,22 @@ include!("args_test_globs.rs");
 include!("args_relationships.rs");
 
 include!("traversal_entrypoints.rs");
-include!("traversal.rs");
+include!("traversal_validation.rs");
 include!("traversal_queue_roots.rs");
 include!("symbol_resolution.rs");
 include!("shared_traversal.rs");
+include!("shared_traversal_facts.rs");
+include!("shared_traversal_reports.rs");
+include!("shared_traversal_graph.rs");
+include!("shared_traversal_collect.rs");
 include!("output_args.rs");
+include!("run.rs");
+
+#[cfg(test)]
+mod traversal;
 
 #[cfg(test)]
 mod tests;
-
-pub fn run(args: TraverseArgs, direction: Direction) -> Result<()> {
-    let cwd_early = std::env::current_dir().context("reading current directory")?;
-    let mut timings = crate::codebase::timing::PhaseTimings::start();
-
-    let result = collect_and_filter_entries(&args, direction, &cwd_early, &mut timings)?;
-    let output_result = output_results(&args, &result);
-
-    timings.mark("output");
-    if args.timings {
-        timings.print_stderr();
-    }
-
-    output_result?;
-
-    Ok(())
-}
-
-pub fn run_json(args: TraverseArgs, direction: Direction) -> Result<String> {
-    let cwd_early = std::env::current_dir().context("reading current directory")?;
-    let mut timings = crate::codebase::timing::PhaseTimings::start();
-    let result = collect_and_filter_entries(&args, direction, &cwd_early, &mut timings)?;
-    let root_strs = output_root_strings(&args);
-    let mut out = Vec::new();
-    write_output_results(Format::Json, &root_strs, &result, &mut out)?;
-    String::from_utf8(out).context("dependency JSON output must be UTF-8")
-}
-
-pub(crate) fn result_json(args: &TraverseArgs, result: &TraversalResult) -> Result<String> {
-    let root_strs = output_root_strings(args);
-    let mut out = Vec::new();
-    write_output_results(Format::Json, &root_strs, result, &mut out)?;
-    String::from_utf8(out).context("dependency JSON output must be UTF-8")
-}
-
-fn output_results(args: &TraverseArgs, result: &TraversalResult) -> Result<()> {
-    let root_strs = output_root_strings(args);
-
-    let stdout = io::stdout();
-    let stdout_is_terminal = stdout.is_terminal();
-    let mut out = stdout.lock();
-
-    let format = resolve_format(args.json, args.format, stdout_is_terminal);
-    write_output_results(format, &root_strs, result, &mut out)
-}
-
-fn output_root_strings(args: &TraverseArgs) -> Vec<String> {
-    args.files
-        .iter()
-        .enumerate()
-        .map(|(index, file)| {
-            let file = file.display().to_string();
-            match args.file_symbols.get(index).and_then(Option::as_deref) {
-                Some(symbol) => format!("{file}#{symbol}"),
-                None => file,
-            }
-        })
-        .collect()
-}
 
 fn write_output_results(
     format: Format,
@@ -109,67 +58,50 @@ pub(crate) fn collect_and_filter_entries(
 ) -> Result<TraversalResult> {
     let root = resolve_root(args, cwd_early);
     let root = crate::codebase::ts_resolver::normalize_path(&root);
-
-    let tsconfig = resolve_tsconfig(args, &root)?;
-    let graph_files = graph::GraphFiles::discover(&root);
-    let entrypoints = resolve_entrypoints_with_files(
-        &args.files,
-        &args.file_symbols,
-        &args.file_entrypoints_are_structured,
-        &root,
-        cwd_early,
-        &graph_files,
-        args.include_symbols,
-    );
+    let allowed = relationship_filter(&args.relationships);
+    let needs_symbol_facts = args.include_symbols
+        || args.file_symbols.iter().any(Option::is_some)
+        || args.files.iter().enumerate().any(|(index, file)| {
+            !args
+                .file_entrypoints_are_structured
+                .get(index)
+                .copied()
+                .unwrap_or(false)
+                && parse_entrypoint(&file.to_string_lossy()).1.is_some()
+        });
+    let build_plan =
+        graph::GraphBuildPlan::from_allowed(allowed.as_ref()).with_symbols(needs_symbol_facts);
+    let mut shared =
+        SharedTraversalContext::prepare(root, args.tsconfig.as_deref(), None, build_plan)?;
 
     timings.mark("search");
-
-    // Check for #symbol used in Deps direction (unsupported).
-    validate_direction(&direction, &entrypoints)?;
-
-    let allowed = relationship_filter(&args.relationships);
-    let build_plan =
-        graph::GraphBuildPlan::from_allowed(allowed.as_ref()).with_symbols(args.include_symbols);
-    let ctx = TraversalCtx {
-        root: &root,
-        tsconfig: &tsconfig,
-        graph_files: &graph_files,
-        build_plan,
-        allowed: allowed.as_ref(),
-        symbols: args.include_symbols,
-    };
-    let roots: Vec<NodeId> = entrypoints.iter().map(|e| e.node.clone()).collect();
-    let import_only = !args.include_symbols && relationships_are_import_only(&args.relationships);
-
     timings.mark("ingest");
-
-    let entries = get_entries(
-        direction,
-        &roots,
-        &entrypoints,
-        args.depth,
-        import_only,
-        &ctx,
-    )?;
-
+    let result = collect_and_filter_entries_shared(args, direction, cwd_early, &mut shared)?;
     timings.mark("parse");
-
-    let entries = apply_filters(entries, args, &root)?;
-
     timings.mark("analysis");
-
-    Ok(TraversalResult { entries, root })
+    Ok(result)
 }
 
 fn apply_filters(
     entries: Vec<graph::NodeEntry>,
     args: &TraverseArgs,
     root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    tsconfig: &TsConfig,
+    visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
+    prepared_test_projects: Option<&crate::codebase::test_discovery::PreparedTestProjects>,
 ) -> Result<Vec<graph::NodeEntry>> {
     // Build combined filter from --filter and --test globs.
     let mut all_filters = args.filters.clone();
     for framework in &args.tests {
-        all_filters.extend(test_filters(root, framework));
+        all_filters.extend(test_filters_from_prepared(
+            root,
+            framework,
+            config,
+            tsconfig,
+            visible_paths,
+            prepared_test_projects,
+        ));
     }
     let filter = graph::build_filter(&all_filters)?;
     let entries = graph::apply_filter(entries, filter.as_ref(), root);
@@ -184,7 +116,14 @@ fn apply_filters(
     apply_target_module_filters(entries, &args.target_modules)
 }
 
-fn test_filters(root: &Path, framework: &str) -> Vec<String> {
+fn test_filters_from_prepared(
+    root: &Path,
+    framework: &str,
+    config: &crate::config::v2::NoMistakesConfig,
+    tsconfig: &TsConfig,
+    visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
+    prepared_test_projects: Option<&crate::codebase::test_discovery::PreparedTestProjects>,
+) -> Vec<String> {
     let runner = match framework {
         "dotnet" => Some(crate::codebase::test_discovery::TestRunner::Dotnet),
         "vitest" => Some(crate::codebase::test_discovery::TestRunner::Vitest),
@@ -193,12 +132,40 @@ fn test_filters(root: &Path, framework: &str) -> Vec<String> {
         _ => None,
     };
     if let Some(runner) = runner {
-        if let Ok(config) = crate::config::v2::load_v2_config(root, None) {
-            if let Ok(Some(filters)) =
-                crate::codebase::test_discovery::discovered_test_globs(root, &config, runner)
-            {
-                return filters;
+        let root_visible_paths = visible_paths.paths_for(root);
+        let discovered = match prepared_test_projects {
+            Some(prepared) => {
+                crate::codebase::test_discovery::discover_tests_from_prepared_projects(
+                    root,
+                    config,
+                    runner,
+                    prepared,
+                    &root_visible_paths,
+                    tsconfig,
+                )
             }
+            None => crate::codebase::test_discovery::discover_tests_from_visible(
+                root,
+                config,
+                runner,
+                &root_visible_paths,
+                tsconfig,
+            ),
+        };
+        if let Ok(discovered) = discovered {
+            let filters = discovered
+                .tests
+                .iter()
+                .map(|path| {
+                    crate::codebase::test_discovery::literal_path_glob(
+                        &crate::codebase::ts_source::relative_slash_path(root, path),
+                    )
+                })
+                .collect::<Vec<_>>();
+            if filters.is_empty() {
+                return test_globs(framework);
+            }
+            return filters;
         }
     }
     test_globs(framework)

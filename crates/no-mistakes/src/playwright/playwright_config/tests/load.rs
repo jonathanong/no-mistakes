@@ -93,6 +93,18 @@ fn load_many_with_matching_project_filter_selects_named_config() {
 }
 
 #[test]
+fn load_many_with_single_unnamed_config_selects_inner_project() {
+    let dir = fixture_path(&["integration-tests", "basic"]);
+    let config = dir.join("playwright.config.ts");
+
+    let result = load_many(&dir, &[config], Some("pw-unit")).unwrap();
+
+    assert_eq!(result.name, None);
+    assert_eq!(result.projects.len(), 1);
+    assert_eq!(result.projects[0].name.as_deref(), Some("pw-unit"));
+}
+
+#[test]
 fn load_existing_config_reads_and_parses() {
     let dir = fixture_path(&["ast-snippets", "playwright_config", "load-existing"]);
     let config = dir.join("playwright.config.ts");

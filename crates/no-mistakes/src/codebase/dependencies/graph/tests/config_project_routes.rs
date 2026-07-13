@@ -12,6 +12,7 @@ fn project_route_globs_drive_graph_route_edges_without_guardrails() {
     let test_route = root.join("backend/api/users.test.mts");
     let ignored_route = root.join("backend/services/ignored.mts");
     let config_options = graph_config_options(&root).unwrap();
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
 
     let project_route_globset = config_options.project_route_globset.as_ref().unwrap();
     assert!(project_route_globset.is_match("backend/api/users.mts"));
@@ -35,8 +36,14 @@ fn project_route_globs_drive_graph_route_edges_without_guardrails() {
     );
     let facts = collect_ts_facts_with_context(&all_files, fact_plan, &fact_context);
 
-    let route_edges =
-        collect_route_edges(&root, &tsconfig, &all_files, Some(&facts), Some(&config_options));
+    let route_edges = collect_route_edges(
+        &root,
+        &tsconfig,
+        &resolver,
+        &all_files,
+        Some(&facts),
+        Some(&config_options),
+    );
     assert!(route_edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::RouteRef
             && from.as_file() == Some(client.as_path())
@@ -55,6 +62,7 @@ fn project_route_globs_drive_graph_route_edges_without_guardrails() {
     let invalid_legacy_route_edges = collect_route_edges(
         &root,
         &tsconfig,
+        &resolver,
         &all_files,
         Some(&facts),
         Some(&invalid_legacy_options),

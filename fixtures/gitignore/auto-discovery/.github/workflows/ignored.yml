@@ -1,0 +1,6 @@
+# This untracked ignored workflow must stay out of automatic discovery.
+name: Ignored
+on: push
+env:
+  IGNORED_ENV: ignored
+jobs: {}

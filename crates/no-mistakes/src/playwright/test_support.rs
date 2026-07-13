@@ -1,4 +1,15 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+
+pub(crate) fn discover_test_files(
+    root: &Path,
+    settings: &crate::playwright::config::Settings,
+    playwright: &crate::playwright::playwright_config::PlaywrightConfig,
+) -> anyhow::Result<Vec<crate::playwright::analysis::context::DiscoveredTestFile>> {
+    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(root);
+    crate::playwright::analysis::discover::discover_test_files_from_visible(
+        root, settings, playwright, &snapshot,
+    )
+}
 
 pub fn fixture_path(parts: &[&str]) -> PathBuf {
     let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -11,7 +22,7 @@ pub fn fixture_path(parts: &[&str]) -> PathBuf {
     } else {
         path.extend(parts);
     }
-    path
+    crate::codebase::ts_resolver::normalize_path(&path)
 }
 
 pub fn fixture_source(parts: &[&str]) -> String {

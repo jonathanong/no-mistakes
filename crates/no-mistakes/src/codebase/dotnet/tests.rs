@@ -1,6 +1,10 @@
-use super::project::{finalize_project_facts, parse_msbuild_json, parse_project};
+use super::project::{
+    evaluate_project_with_program, finalize_project_facts, parse_msbuild_json,
+    parse_msbuild_output, parse_project,
+};
 use super::project_static::parse_project_static;
 use super::*;
+use std::collections::BTreeSet;
 
 fn fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -170,6 +174,38 @@ fn msbuild_json_parser_ignores_items_without_identity() {
 }
 
 #[test]
+fn msbuild_evaluation_reports_start_status_and_parse_failures() {
+    let project_path = fixture().join("dotnet-clients/src/App/App.csproj");
+    let start_error = evaluate_project_with_program(
+        &project_path,
+        "app",
+        "/definitely-missing-no-mistakes-dotnet",
+    )
+    .expect_err("missing msbuild executable must fail");
+    assert!(start_error.contains("dotnet msbuild failed to start for `app`"));
+
+    let status_error = parse_msbuild_output(
+        &project_path,
+        "app",
+        false,
+        b"",
+        b"synthetic msbuild failure\n",
+    )
+    .expect_err("failed msbuild status must fail");
+    assert_eq!(
+        status_error,
+        "dotnet msbuild failed for `app`: synthetic msbuild failure"
+    );
+
+    let parse_error = parse_msbuild_output(&project_path, "app", true, b"banner only", b"")
+        .expect_err("unparseable successful output must fail");
+    assert_eq!(
+        parse_error,
+        "dotnet msbuild output was not parseable for `app`"
+    );
+}
+
+#[test]
 fn project_finalize_fills_defaults_and_filters_compile_files() {
     let root = normalize_path(&fixture());
     let project_path = normalize_path(&root.join("dotnet-clients/src/Fallback/Fallback.csproj"));
@@ -202,6 +238,42 @@ fn project_finalize_fills_defaults_and_filters_compile_files() {
         facts.compile_files.into_iter().collect::<Vec<_>>(),
         vec![source_file]
     );
+}
+
+#[test]
+fn project_finalize_drops_msbuild_compile_items_missing_from_visible_candidates() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass3-visibility");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let root = normalize_path(fixture.path());
+    let visible_file = root.join("dotnet/Visible.cs");
+    let ignored_file = root.join("dotnet/Ignored.cs");
+    let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let config = DotnetConfigProject {
+        name: "pass3".to_string(),
+        project: "dotnet/Pass3.csproj".to_string(),
+        include: Vec::new(),
+        exclude: Vec::new(),
+        test: false,
+    };
+    let project_path = root.join("dotnet/Pass3.csproj");
+    let project_dir = root.join("dotnet");
+    let mut facts = DotnetProjectFacts {
+        compile_files: BTreeSet::from([visible_file.clone(), ignored_file.clone()]),
+        ..Default::default()
+    };
+
+    finalize_project_facts(
+        &mut facts,
+        &root,
+        &all_files,
+        &config,
+        &project_path,
+        &project_dir,
+    );
+
+    assert!(facts.compile_files.contains(&visible_file));
+    assert!(!facts.compile_files.contains(&ignored_file));
 }
 
 #[test]

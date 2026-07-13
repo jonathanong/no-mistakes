@@ -13,8 +13,7 @@ pub(crate) fn queues_json_impl(options_json: String) -> napi::Result<String> {
     let tsconfig = options.tsconfig.as_deref().map(PathBuf::from);
     let report = crate::queue::analyze_project(&root, tsconfig.as_deref(), &options.filters)
         .map_err(to_napi_error)?;
-    serde_json::to_string_pretty(&report)
-        .map_err(|error| napi::Error::from_reason(error.to_string()))
+    Ok(serde_json::to_string_pretty(&report).expect("queue report serialization never fails"))
 }
 
 pub(crate) fn queue_edges_json_impl(options_json: String) -> napi::Result<String> {
@@ -25,8 +24,7 @@ pub(crate) fn queue_edges_json_impl(options_json: String) -> napi::Result<String
         .map_err(to_napi_error)?;
     let depth = root_scoped_edge_depth(&options.files, options.depth);
     let edges = edge_view(&report.edges, &options.files, depth);
-    serde_json::to_string_pretty(&edges)
-        .map_err(|error| napi::Error::from_reason(error.to_string()))
+    Ok(serde_json::to_string_pretty(&edges).expect("queue edge serialization never fails"))
 }
 
 pub(crate) fn queue_related_json_impl(options_json: String) -> napi::Result<String> {
@@ -42,8 +40,7 @@ pub(crate) fn queue_related_json_impl(options_json: String) -> napi::Result<Stri
         .map_err(to_napi_error)?;
     let direction = parse_queue_direction(options.direction.as_deref()).map_err(to_napi_error)?;
     let edges = crate::queue::related(&report, &options.files, direction);
-    serde_json::to_string_pretty(&edges)
-        .map_err(|error| napi::Error::from_reason(error.to_string()))
+    Ok(serde_json::to_string_pretty(&edges).expect("related queue edge serialization never fails"))
 }
 
 pub(crate) fn queue_check_json_impl(options_json: String) -> napi::Result<String> {
@@ -52,8 +49,8 @@ pub(crate) fn queue_check_json_impl(options_json: String) -> napi::Result<String
     let tsconfig = options.tsconfig.as_deref().map(PathBuf::from);
     let report = crate::queue::analyze_project(&root, tsconfig.as_deref(), &options.filters)
         .map_err(to_napi_error)?;
-    serde_json::to_string_pretty(&report.check)
-        .map_err(|error| napi::Error::from_reason(error.to_string()))
+    Ok(serde_json::to_string_pretty(&report.check)
+        .expect("queue diagnostics serialization never fails"))
 }
 
 pub(crate) fn server_routes_json_impl(options_json: String) -> napi::Result<String> {
@@ -63,8 +60,7 @@ pub(crate) fn server_routes_json_impl(options_json: String) -> napi::Result<Stri
     let report =
         crate::server_routes::analyze_project(&root, tsconfig.as_deref(), &options.filters)
             .map_err(to_napi_error)?;
-    serde_json::to_string_pretty(&report)
-        .map_err(|error| napi::Error::from_reason(error.to_string()))
+    Ok(serde_json::to_string_pretty(&report).expect("server route serialization never fails"))
 }
 
 pub(crate) fn server_route_list_json_impl(options_json: String) -> napi::Result<String> {
@@ -88,8 +84,7 @@ pub(crate) fn server_route_list_json_impl(options_json: String) -> napi::Result<
             })
             .collect()
     };
-    serde_json::to_string_pretty(&routes)
-        .map_err(|error| napi::Error::from_reason(error.to_string()))
+    Ok(serde_json::to_string_pretty(&routes).expect("server route list serialization never fails"))
 }
 
 pub(crate) fn server_route_edges_json_impl(options_json: String) -> napi::Result<String> {
@@ -102,8 +97,7 @@ pub(crate) fn server_route_edges_json_impl(options_json: String) -> napi::Result
     let roots = project_roots(&options);
     let depth = root_scoped_edge_depth(&roots, options.depth);
     let edges = edge_view(&report.edges, &roots, depth);
-    serde_json::to_string_pretty(&edges)
-        .map_err(|error| napi::Error::from_reason(error.to_string()))
+    Ok(serde_json::to_string_pretty(&edges).expect("server route edge serialization never fails"))
 }
 
 pub(crate) fn server_route_related_json_impl(options_json: String) -> napi::Result<String> {
@@ -121,8 +115,8 @@ pub(crate) fn server_route_related_json_impl(options_json: String) -> napi::Resu
             .map_err(to_napi_error)?;
     let direction = parse_server_direction(options.direction.as_deref()).map_err(to_napi_error)?;
     let edges = crate::server_routes::related(&report, &roots, direction);
-    serde_json::to_string_pretty(&edges)
-        .map_err(|error| napi::Error::from_reason(error.to_string()))
+    Ok(serde_json::to_string_pretty(&edges)
+        .expect("related server route edge serialization never fails"))
 }
 
 include!("project_flow_contracts.rs");
@@ -136,8 +130,7 @@ pub(crate) fn react_analyze_json_impl(options_json: String) -> napi::Result<Stri
     let report =
         crate::react_traits::run_analyze(&root, config.as_deref(), &options.targets, options.depth)
             .map_err(to_napi_error)?;
-    serde_json::to_string_pretty(&report)
-        .map_err(|error| napi::Error::from_reason(error.to_string()))
+    Ok(serde_json::to_string_pretty(&report).expect("React analysis serialization never fails"))
 }
 
 pub(crate) fn react_usages_json_impl(options_json: String) -> napi::Result<String> {
@@ -157,8 +150,7 @@ pub(crate) fn react_usages_json_impl(options_json: String) -> napi::Result<Strin
         &include,
     )
     .map_err(to_napi_error)?;
-    serde_json::to_string_pretty(&report)
-        .map_err(|error| napi::Error::from_reason(error.to_string()))
+    Ok(serde_json::to_string_pretty(&report).expect("React usage serialization never fails"))
 }
 
 pub(crate) fn react_check_json_impl(options_json: String) -> napi::Result<String> {
@@ -172,6 +164,5 @@ pub(crate) fn react_check_json_impl(options_json: String) -> napi::Result<String
         options.assert_no_fetch,
     )
     .map_err(to_napi_error)?;
-    serde_json::to_string_pretty(&report)
-        .map_err(|error| napi::Error::from_reason(error.to_string()))
+    Ok(serde_json::to_string_pretty(&report).expect("React check serialization never fails"))
 }

@@ -1,9 +1,7 @@
 use super::{binding_name, AnalysisCollector};
 use crate::integration_tests::calls;
 use crate::integration_tests::types::{FunctionInfo, ImportBinding, ImportedName};
-use oxc_ast::ast::{
-    ExportDefaultDeclarationKind, Expression, Function, ImportDeclarationSpecifier,
-};
+use oxc_ast::ast::{ExportDefaultDeclarationKind, Expression, ImportDeclarationSpecifier};
 use oxc_span::{GetSpan, Span};
 
 impl AnalysisCollector<'_, '_> {
@@ -43,8 +41,7 @@ impl AnalysisCollector<'_, '_> {
                     self.collect_function(
                         id.name.as_str(),
                         function.span(),
-                        function.body_span(),
-                        false,
+                        calls::collect_function_calls(function),
                     );
                     self.result
                         .exports
@@ -77,7 +74,11 @@ impl AnalysisCollector<'_, '_> {
                     .as_ref()
                     .map(|id| id.name.as_str())
                     .unwrap_or("default");
-                self.collect_function(name, function.span(), function.body_span(), false);
+                self.collect_function(
+                    name,
+                    function.span(),
+                    calls::collect_function_calls(function),
+                );
                 self.result
                     .exports
                     .insert("default".to_string(), name.to_string());
@@ -88,12 +89,7 @@ impl AnalysisCollector<'_, '_> {
                     .insert("default".to_string(), identifier.name.to_string());
             }
             ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
-                self.collect_function(
-                    "default",
-                    arrow.span(),
-                    Some(arrow.body.span()),
-                    arrow.expression,
-                );
+                self.collect_function("default", arrow.span(), calls::collect_arrow_calls(arrow));
                 self.result
                     .exports
                     .insert("default".to_string(), "default".to_string());
@@ -105,15 +101,14 @@ impl AnalysisCollector<'_, '_> {
     pub(super) fn collect_init_function(&mut self, name: &str, init: Option<&Expression<'_>>) {
         match init {
             Some(Expression::ArrowFunctionExpression(arrow)) => {
-                self.collect_function(
-                    name,
-                    arrow.span(),
-                    Some(arrow.body.span()),
-                    arrow.expression,
-                );
+                self.collect_function(name, arrow.span(), calls::collect_arrow_calls(arrow));
             }
             Some(Expression::FunctionExpression(function)) => {
-                self.collect_function(name, function.span(), function.body_span(), false);
+                self.collect_function(
+                    name,
+                    function.span(),
+                    calls::collect_function_calls(function),
+                );
             }
             _ => {}
         }
@@ -123,27 +118,14 @@ impl AnalysisCollector<'_, '_> {
         &mut self,
         name: &str,
         function_span: Span,
-        body_span: Option<Span>,
-        expression: bool,
+        function_calls: Vec<crate::integration_tests::types::CallTarget>,
     ) {
         self.result.functions.insert(
             name.to_string(),
             FunctionInfo {
                 integration: calls::integration_annotation_before(self.source, function_span),
-                calls: body_span
-                    .map(|span| calls::collect_calls_in_span(self.source, span, expression))
-                    .unwrap_or_default(),
+                calls: function_calls,
             },
         );
-    }
-}
-
-pub(super) trait FunctionBodySpan {
-    fn body_span(&self) -> Option<Span>;
-}
-
-impl FunctionBodySpan for Function<'_> {
-    fn body_span(&self) -> Option<Span> {
-        self.body.as_ref().map(|body| body.span())
     }
 }

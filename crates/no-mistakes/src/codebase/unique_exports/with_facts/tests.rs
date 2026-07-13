@@ -28,7 +28,7 @@ fn filter_application_files_matches_repository_rule_filters() {
         root.join("test/app.ts"),
     ];
 
-    let filtered = filter_application_files(root, &config, &application, files).unwrap();
+    let filtered = filter_application_files(root, &config, &application, files, None).unwrap();
 
     assert_eq!(filtered, vec![root.join("src/app.ts")]);
 }
@@ -62,7 +62,7 @@ fn filter_application_files_matches_project_and_rule_relative_filters() {
         root.join("web/test/Button.tsx"),
     ];
 
-    let filtered = filter_application_files(root, &config, &application, files).unwrap();
+    let filtered = filter_application_files(root, &config, &application, files, None).unwrap();
 
     assert_eq!(filtered, vec![root.join("web/src/Button.tsx")]);
 }
@@ -101,7 +101,7 @@ fn filter_application_files_skips_invalid_project_filters() {
         root.join("bad-exclude/src/app.ts"),
     ];
 
-    let filtered = filter_application_files(root, &config, &application, files).unwrap();
+    let filtered = filter_application_files(root, &config, &application, files, None).unwrap();
 
     assert!(filtered.is_empty());
 }
@@ -116,9 +116,14 @@ fn filter_application_files_reports_invalid_rule_filters() {
         ..Default::default()
     };
 
-    let error =
-        filter_application_files(root, &config, &application, vec![root.join("src/app.ts")])
-            .unwrap_err();
+    let error = filter_application_files(
+        root,
+        &config,
+        &application,
+        vec![root.join("src/app.ts")],
+        None,
+    )
+    .unwrap_err();
 
     assert!(error
         .to_string()
@@ -130,9 +135,14 @@ fn filter_application_files_reports_invalid_rule_filters() {
         ..Default::default()
     };
 
-    let error =
-        filter_application_files(root, &config, &application, vec![root.join("src/app.ts")])
-            .unwrap_err();
+    let error = filter_application_files(
+        root,
+        &config,
+        &application,
+        vec![root.join("src/app.ts")],
+        None,
+    )
+    .unwrap_err();
 
     assert!(error
         .to_string()

@@ -1,5 +1,7 @@
 use crate::fetch::types::{CacheKind, FetchOccurrence, FetchSide, SourceType};
-use crate::playwright::analysis::fetch::{collect_fetches_for_routes, expand_fetch_edges};
+use crate::playwright::analysis::fetch::{
+    collect_fetches_for_routes_from_snapshot, expand_fetch_edges,
+};
 use crate::playwright::analysis::types::{Edge, FetchIndex};
 use crate::playwright::test_support::fixture_path;
 use crate::routes::Route;
@@ -35,7 +37,9 @@ fn collect_fetches_for_routes_surfaces_route_parse_errors() {
         pattern: "/".to_string(),
     }];
 
-    let err = collect_fetches_for_routes(&routes, &frontend_root, &root).unwrap_err();
+    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(&root);
+    let err = collect_fetches_for_routes_from_snapshot(&routes, &frontend_root, &root, &snapshot)
+        .unwrap_err();
 
     assert!(format!("{err:#}").contains("page.tsx"));
 }

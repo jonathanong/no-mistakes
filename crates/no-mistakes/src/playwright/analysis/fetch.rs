@@ -1,6 +1,6 @@
 use crate::fetch::cache::Cache;
 use crate::fetch::resolve::relative_string;
-use crate::fetch::route_analysis::collect_route_fetches;
+use crate::fetch::route_analysis::collect_route_fetches_from_visible;
 use crate::fetch::types::{FetchOccurrence, FetchSide};
 use crate::playwright::analysis::types::{Edge, FetchIndex, TestRef};
 use crate::routes::Route;
@@ -46,20 +46,74 @@ pub(crate) fn seed_fetch_coverage(fetch_index: &FetchIndex) -> FetchCoverageEntr
         .collect()
 }
 
-pub(crate) fn collect_fetches_for_routes(
+pub(crate) fn collect_fetches_for_routes_from_snapshot(
     routes: &[Route],
     frontend_root: &Path,
     root: &Path,
+    snapshot: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> anyhow::Result<FetchIndex> {
+    let visible_files = snapshot
+        .paths_for(root)
+        .iter()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(path))
+        .collect::<std::collections::HashSet<_>>();
     let mut cache = Cache {
         files: std::collections::HashMap::new(),
         imports: std::collections::HashMap::new(),
     };
     let mut index = FetchIndex::new();
     for route in routes {
-        let fetches = collect_route_fetches(route, frontend_root, root, &mut cache)?;
+        let fetches = collect_route_fetches_from_visible(
+            route,
+            frontend_root,
+            root,
+            &mut cache,
+            &visible_files,
+        )?;
         let rel_file = relative_string(root, &route.file);
         index.insert(rel_file, fetches);
+    }
+    Ok(index)
+}
+
+pub(crate) fn collect_fetches_for_routes_from_snapshot_with_facts(
+    routes: &[Route],
+    frontend_root: &Path,
+    root: &Path,
+    snapshot: &crate::playwright::fsutil::VisiblePathSnapshot,
+    facts: &dyn crate::codebase::dependencies::graph::TsFactLookup,
+) -> anyhow::Result<FetchIndex> {
+    let visible_files = snapshot
+        .paths_for(root)
+        .iter()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(path))
+        .collect::<std::collections::HashSet<_>>();
+    let mut cache = Cache {
+        files: std::collections::HashMap::new(),
+        imports: std::collections::HashMap::new(),
+    };
+    let mut parsed_files = crate::fetch::file_facts::ParsedFileCache::default();
+    for path in facts.playwright_source_files().unwrap_or_default() {
+        match facts.get_playwright_fetch_facts(path) {
+            Some(Ok(file_facts)) => parsed_files.insert(path.clone(), file_facts),
+            Some(Err(error)) => parsed_files.insert_error(path.clone(), error),
+            None => parsed_files.insert_error(
+                path.clone(),
+                format!("missing prepared Playwright facts for {}", path.display()),
+            ),
+        }
+    }
+    let mut index = FetchIndex::new();
+    for route in routes {
+        let fetches = crate::fetch::route_analysis::collect_route_fetches_from_visible_with_facts(
+            route,
+            frontend_root,
+            root,
+            &mut cache,
+            &mut parsed_files,
+            &visible_files,
+        )?;
+        index.insert(relative_string(root, &route.file), fetches);
     }
     Ok(index)
 }

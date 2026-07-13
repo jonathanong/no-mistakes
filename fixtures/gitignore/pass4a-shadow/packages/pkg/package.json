@@ -1,0 +1,11 @@
+{
+  "name": "@fixture/pkg",
+  "module": "./src/module",
+  "main": "./src/main",
+  "imports": {
+    "#module": "./src/module"
+  },
+  "exports": {
+    "./feature": "./src/feature"
+  }
+}

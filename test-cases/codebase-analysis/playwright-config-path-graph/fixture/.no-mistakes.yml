@@ -1,0 +1,7 @@
+tests:
+  playwright:
+    frontendRoot: missing-app
+    configs: missing.playwright.config.mts
+    selectors:
+      testIds:
+        - data-testid

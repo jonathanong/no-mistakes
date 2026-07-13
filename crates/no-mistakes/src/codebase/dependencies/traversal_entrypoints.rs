@@ -9,7 +9,7 @@ fn resolve_entrypoints_with_files(
 ) -> Vec<Entrypoint> {
     let workspace =
         crate::codebase::workspaces::load_from_files(root, graph_files.all()).unwrap_or_default();
-    let root_dependencies = root_dependency_names(root);
+    let root_dependencies = root_dependency_names(root, graph_files.all());
     raw_entrypoints
         .iter()
         .enumerate()
@@ -35,8 +35,13 @@ fn resolve_entrypoints_with_files(
                 }
             };
             let normalized = crate::codebase::ts_resolver::normalize_path(&file);
-            let mut node =
-                resolve_entrypoint_node(&raw_for_node, &normalized, &workspace, &root_dependencies);
+            let mut node = resolve_entrypoint_node(
+                &raw_for_node,
+                &normalized,
+                &workspace,
+                &root_dependencies,
+                graph_files.visible(),
+            );
             let file = match &node {
                 NodeId::File(path) | NodeId::Symbol { file: path, .. } => path.clone(),
                 _ => normalized,
@@ -59,13 +64,16 @@ fn resolve_entrypoint_node(
     path: &Path,
     workspace: &crate::codebase::workspaces::WorkspaceMap,
     root_dependencies: &std::collections::HashSet<String>,
+    visible_files: &std::collections::HashSet<PathBuf>,
 ) -> NodeId {
     if path.is_dir() {
-        if let Some(entry) = package_dir_entry(path, workspace) {
+        if let Some(entry) = package_dir_entry(path, workspace, visible_files) {
             return NodeId::File(entry);
         }
     }
-    if workspace.resolve_specifier(raw).is_none()
+    if workspace
+        .resolve_specifier_from_visible(raw, visible_files)
+        .is_none()
         && raw_package_name(raw).is_some_and(|name| root_dependencies.contains(&name))
     {
         return NodeId::Module(raw.to_string());
@@ -73,7 +81,7 @@ fn resolve_entrypoint_node(
     if path.exists() || raw.starts_with('.') || Path::new(raw).is_absolute() {
         return NodeId::File(path.to_path_buf());
     }
-    if let Some(entry) = workspace.resolve_specifier(raw) {
+    if let Some(entry) = workspace.resolve_specifier_from_visible(raw, visible_files) {
         return NodeId::File(entry);
     }
     if raw_looks_like_source_file(raw, path, root_dependencies) {
@@ -118,8 +126,18 @@ fn raw_package_name(raw: &str) -> Option<String> {
     Some(first.to_string())
 }
 
-fn root_dependency_names(root: &Path) -> std::collections::HashSet<String> {
-    let Ok(source) = std::fs::read_to_string(root.join("package.json")) else {
+fn root_dependency_names(
+    root: &Path,
+    visible_files: &[PathBuf],
+) -> std::collections::HashSet<String> {
+    let manifest = crate::codebase::ts_resolver::normalize_path(&root.join("package.json"));
+    if !visible_files
+        .iter()
+        .any(|path| crate::codebase::ts_resolver::normalize_path(path) == manifest)
+    {
+        return std::collections::HashSet::new();
+    }
+    let Ok(source) = std::fs::read_to_string(manifest) else {
         return std::collections::HashSet::new();
     };
     let Ok(package_json) = serde_json::from_str::<serde_json::Value>(&source) else {
@@ -140,12 +158,16 @@ fn root_dependency_names(root: &Path) -> std::collections::HashSet<String> {
 fn package_dir_entry(
     dir: &Path,
     workspace: &crate::codebase::workspaces::WorkspaceMap,
+    visible_files: &std::collections::HashSet<PathBuf>,
 ) -> Option<PathBuf> {
     workspace
         .packages
         .iter()
         .find(|package| package.dir == dir)
         .and_then(|package| package.entry.clone())
+        .filter(|entry| {
+            visible_files.contains(&crate::codebase::ts_resolver::normalize_path(entry))
+        })
         .or_else(|| {
             [
                 "src/index.mts",
@@ -167,6 +189,6 @@ fn package_dir_entry(
             ]
             .iter()
             .map(|candidate| dir.join(candidate))
-            .find(|candidate| candidate.is_file())
+            .find(|candidate| visible_files.contains(candidate))
         })
 }

@@ -1,0 +1,4 @@
+# This ignored workflow must never enter fallback discovery.
+name: Ignored
+on: push
+jobs: {}

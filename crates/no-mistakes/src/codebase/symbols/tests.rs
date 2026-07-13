@@ -1,5 +1,9 @@
 use super::*;
 
+fn resolve_tsconfig(arg: Option<&Path>, root: &Path) -> Result<TsConfig> {
+    crate::codebase::ts_resolver::resolve_tsconfig(arg, root)
+}
+
 fn fixture_root() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -48,6 +52,38 @@ fn args_for(root: &Path, files: Vec<&str>, format: Format) -> SymbolsArgs {
 
 fn fixture_args(files: Vec<&str>, format: Format) -> SymbolsArgs {
     args_for(&fixture_root(), files, format)
+}
+
+#[test]
+fn pass4b_symbol_listing_skips_ignored_target_for_visible_fallback() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass4b-shadow");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let mut args = args_for(&root, vec!["query/source.ts"], Format::Json);
+    args.include = Include::Both;
+
+    let output = run_capture(args);
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    let reexports: Vec<_> = value["files"][0]["exports"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|export| export["kind"] == "re-export")
+        .collect();
+    assert!(!reexports.is_empty());
+    assert!(
+        reexports
+            .iter()
+            .all(|export| export["reExport"]["resolved"] == "query/target.ts"),
+        "unexpected re-export rows: {reexports:#?}"
+    );
+    assert!(value["files"][0]["imports"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|import| import["resolved"] == "query/target.ts"));
 }
 
 include!("tests_signature_impact.rs");

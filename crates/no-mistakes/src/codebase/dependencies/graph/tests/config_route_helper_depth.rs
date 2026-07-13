@@ -47,21 +47,24 @@ fn route_helper_ref_patterns_stop_at_recursion_depth_limit() {
     let boundary_import = route_helper_import("entityHref", "entityHref", "./depth6");
     let namespace_import = route_helper_import("links", "links", "./namespace-depth6");
 
-    assert!(
-        route_helper_patterns_from_import(&client, "entityHref", &deep_import, &facts, &resolver, 0)
-            .is_none()
-    );
-    assert!(
-        route_helper_patterns_from_import(
-            &client,
-            "entityHref",
-            &boundary_import,
-            &facts,
-            &resolver,
-            4,
-        )
-        .is_none()
-    );
+    assert!(route_helper_patterns_from_import(
+        &client,
+        "entityHref",
+        &deep_import,
+        &facts,
+        &resolver,
+        0
+    )
+    .is_none());
+    assert!(route_helper_patterns_from_import(
+        &client,
+        "entityHref",
+        &boundary_import,
+        &facts,
+        &resolver,
+        4,
+    )
+    .is_none());
     assert_eq!(
         route_helper_patterns_from_import(
             &client,
@@ -73,30 +76,26 @@ fn route_helper_ref_patterns_stop_at_recursion_depth_limit() {
         ),
         Some(vec!["/prefix/*/suffix/*".to_string()])
     );
-    assert!(
-        route_helper_namespace_member_patterns(
-            &client,
-            "links",
-            "entityHref",
-            &namespace_import,
-            &facts,
-            &resolver,
-            4,
-        )
-        .is_none()
-    );
-    assert!(
-        route_helper_namespace_member_patterns(
-            &client,
-            "links",
-            "entityHref",
-            &namespace_import,
-            &facts,
-            &resolver,
-            5,
-        )
-        .is_none()
-    );
+    assert!(route_helper_namespace_member_patterns(
+        &client,
+        "links",
+        "entityHref",
+        &namespace_import,
+        &facts,
+        &resolver,
+        4,
+    )
+    .is_none());
+    assert!(route_helper_namespace_member_patterns(
+        &client,
+        "links",
+        "entityHref",
+        &namespace_import,
+        &facts,
+        &resolver,
+        5,
+    )
+    .is_none());
     assert_eq!(
         route_helper_namespace_member_patterns(
             &client,

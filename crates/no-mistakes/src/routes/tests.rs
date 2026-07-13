@@ -41,6 +41,16 @@ fn write(dir: &Path, path: &str, content: &str) {
 }
 
 #[test]
+fn non_git_route_discovery_applies_gitignore() {
+    let dir = crate::test_support::materialize_gitignore_fixture("non-git-discovery");
+
+    let routes = collect_routes(dir.path(), &["page"]);
+
+    assert!(routes.iter().any(|route| route.pattern == "/app"));
+    assert!(!routes.iter().any(|route| route.pattern == "/ignored"));
+}
+
+#[test]
 fn test_path_to_route_pattern() {
     assert_eq!(path_to_route_pattern(Path::new("page.tsx")), "/");
     assert_eq!(path_to_route_pattern(Path::new("users/page.tsx")), "/users");
@@ -197,17 +207,10 @@ fn collect_routes_excludes_dot_directories_from_git_visible_files() {
     assert_eq!(routes[0].file, dir.path().join("app/page.tsx"));
 }
 
-/// Outside a git repository, `collect_routes` still falls back to the raw
-/// filesystem walk (exercising `collect_routes_by_walk`'s match and
-/// dot-directory-skip logic directly), since there is no git-visible file list to
-/// derive candidates from.
+/// Outside a Git repository, route-specific dot-directory filtering still
+/// applies to the shared ignore-aware candidate list.
 #[test]
-fn collect_routes_falls_back_to_walk_outside_git_repositories() {
-    // `frontend_root` is a non-dot-prefixed subdirectory of the tempdir (rather than
-    // the tempdir itself) because `tempfile::tempdir()` can generate a hidden
-    // (dot-prefixed) directory name on this platform, and `WalkDir`'s `filter_entry`
-    // dot-directory skip applies to the walk root entry too — using the tempdir root
-    // directly here would make the walk vacuously empty regardless of this test.
+fn collect_routes_applies_dot_dir_filter_outside_git() {
     let dir = tempfile::tempdir().unwrap();
     let frontend_root = dir.path().join("app");
     write(&frontend_root, "page.tsx", "");

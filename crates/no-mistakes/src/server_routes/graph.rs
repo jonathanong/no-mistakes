@@ -1,9 +1,11 @@
-use crate::codebase::ts_resolver::{find_tsconfig, load_tsconfig, ImportResolver, TsConfig};
-use crate::config::v2::{load_v2_config, ConfigView};
+use crate::codebase::ts_resolver::{
+    find_tsconfig_from_visible, load_tsconfig, ImportResolver, TsConfig,
+};
+use crate::config::v2::{load_v2_config_from_visible, ConfigView};
 use crate::server_routes::model::{FileFacts, ProjectReport, RouteSite};
 use crate::server_routes::mounts::{prefixes_for, resolve_mounts_with_resolver};
 use crate::server_routes::normalize::{join_paths, normalize_route};
-use crate::server_routes::source::{discover_source_files, relative_string};
+use crate::server_routes::source::{discover_source_files_from_visible, relative_string};
 use crate::server_routes::types::{Diagnostic, Edge, EdgeKind, ServerRoute, Severity, Summary};
 use anyhow::Context;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
@@ -17,29 +19,46 @@ pub enum RelatedDirection {
     Both,
 }
 
+/// Request-scoped server analysis inputs shared by route and contract reports.
+#[doc(hidden)]
+pub struct PreparedServerAnalysis {
+    pub(crate) root: PathBuf,
+    pub(crate) source_files: std::sync::Arc<Vec<PathBuf>>,
+    pub(crate) tsconfig: TsConfig,
+    pub(crate) config: Option<crate::config::v2::NoMistakesConfig>,
+    pub(crate) facts: crate::codebase::ts_source::facts::TsFactMap,
+}
+
+include!("graph_prepare.rs");
+
 pub fn analyze_project(
     root: &Path,
     tsconfig_path: Option<&Path>,
     filters: &[String],
 ) -> anyhow::Result<ProjectReport> {
-    let root = root.canonicalize().unwrap_or(root.to_path_buf());
-    let tsconfig = resolve_tsconfig(&root, tsconfig_path)?;
-    let v2_config = load_v2_config(&root, None).ok();
-    let config_route_filter = v2_config
+    let prepared = prepare_analysis(root, tsconfig_path)?;
+    analyze_project_with_prepared(&prepared, filters)
+}
+
+#[doc(hidden)]
+pub fn analyze_project_with_prepared(
+    prepared: &PreparedServerAnalysis,
+    filters: &[String],
+) -> anyhow::Result<ProjectReport> {
+    let root = &prepared.root;
+    let config_route_filter = prepared
+        .config
         .as_ref()
         .and_then(|config| build_filter(&ConfigView::new(config).server_route_globs()).ok())
         .flatten();
-    let test_filter = v2_config
+    let test_filter = prepared
+        .config
         .as_ref()
-        .map(|config| crate::codebase::test_filter::TestFileFilter::new(&root, config));
-    let extra_skip = v2_config
-        .as_ref()
-        .map(|config| config.filesystem.skip_directories.as_slice())
-        .unwrap_or(&[]);
+        .map(|config| crate::codebase::test_filter::TestFileFilter::new(root, config));
     let filter = build_filter(filters)?;
-    let mut files = Vec::new();
-    for path in discover_source_files(&root, extra_skip) {
-        let rel = path.strip_prefix(&root).unwrap_or(&path);
+    let mut facts = HashMap::new();
+    for path in prepared.source_files.iter() {
+        let rel = path.strip_prefix(root).unwrap_or(path);
         let matches_config = config_route_filter
             .as_ref()
             .map(|filter| filter.is_match(rel))
@@ -50,14 +69,18 @@ pub fn analyze_project(
             .unwrap_or(true);
         let is_test = test_filter
             .as_ref()
-            .is_some_and(|filter| filter.is_match(&root, &path));
+            .is_some_and(|filter| filter.is_match(root, path));
         if matches_config && matches_cli && !is_test {
-            files.push(path);
+            if let Some(routes) = prepared
+                .facts
+                .get(path)
+                .and_then(|facts| facts.server_routes.clone())
+            {
+                facts.insert(path.clone(), routes);
+            }
         }
     }
-
-    let facts = collect_file_facts(&files, &root);
-    Ok(build_report(&root, &facts, &tsconfig))
+    Ok(build_report(root, &facts, &prepared.tsconfig))
 }
 
 pub(crate) fn route_defs_from_files(
@@ -142,31 +165,6 @@ pub(super) fn build_report(
         routes,
         edges,
         diagnostics,
-    }
-}
-
-fn resolve_tsconfig(root: &Path, explicit: Option<&Path>) -> anyhow::Result<TsConfig> {
-    let explicit_path = explicit.is_some();
-    let path = match explicit {
-        Some(path) if path.is_absolute() => Some(path.to_path_buf()),
-        Some(path) => Some(root.join(path)),
-        None => find_tsconfig(root),
-    };
-    match path {
-        Some(path) if explicit_path => {
-            load_tsconfig(&path).context(format!("loading tsconfig {}", path.display()))
-        }
-        Some(path) => Ok(load_tsconfig(&path).unwrap_or_else(|_| empty_tsconfig(root))),
-        None => Ok(empty_tsconfig(root)),
-    }
-}
-
-fn empty_tsconfig(root: &Path) -> TsConfig {
-    TsConfig {
-        dir: root.to_path_buf(),
-        paths_dir: root.to_path_buf(),
-        paths: Vec::new(),
-        base_url: None,
     }
 }
 

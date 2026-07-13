@@ -7,7 +7,7 @@ use serde_json::Value;
 use crate::codebase::dependencies::RelationshipArg;
 use crate::codebase::symbols::{ExportKindArg, Include, SymbolsMode};
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Clone, Default, Deserialize, serde::Serialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ProjectOptions {
     pub(crate) root: Option<String>,
@@ -40,7 +40,7 @@ pub(crate) struct FetchesOptions {
 
 include!("options_ci.rs");
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Clone, Default, Deserialize, serde::Serialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct PlaywrightOptions {
     pub(crate) root: Option<String>,

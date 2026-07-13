@@ -4,6 +4,7 @@ struct ExportEdgeInputs<'a> {
     facts: &'a dyn TsFactLookup,
     resolver: &'a ImportResolver<'a>,
     workspace: &'a crate::codebase::workspaces::WorkspaceMap,
+    visible_files: &'a HashSet<PathBuf>,
 }
 
 fn collect_export_edges(
@@ -60,7 +61,11 @@ fn collect_direct_reexport_edge(
             return;
         }
         if imported == "*" {
-            edges.push((from, NodeId::File(target), symbol_edge_kind(export.is_type_only)));
+            edges.push((
+                from,
+                NodeId::File(target),
+                symbol_edge_kind(export.is_type_only),
+            ));
             return;
         }
         let kind = symbol_edge_kind(
@@ -74,7 +79,14 @@ fn collect_direct_reexport_edge(
             },
             kind,
         ));
-    } else if let Some(target) = inputs.workspace.resolve_specifier_from(source, inputs.path) {
+    } else if let Some(target) = inputs.workspace.resolve_specifier_from_file_visible(
+        source,
+        inputs.path,
+        inputs.visible_files,
+    ) {
+        if !inputs.visible_files.contains(&target) {
+            return;
+        }
         if imported == "*" {
             edges.push((from, NodeId::File(target), EdgeKind::WorkspaceImport));
             return;
@@ -87,8 +99,13 @@ fn collect_direct_reexport_edge(
             },
             EdgeKind::WorkspaceImport,
         ));
-    } else if let Some(node) = bare_module_node(source) {
-        edges.push((from, node, symbol_edge_kind(export.is_type_only)));
+    } else if !inputs
+        .workspace
+        .recognizes_specifier_from(source, inputs.path)
+    {
+        if let Some(node) = bare_module_node(source) {
+            edges.push((from, node, symbol_edge_kind(export.is_type_only)));
+        }
     }
 }
 
@@ -108,12 +125,13 @@ fn collect_export_reference_edges(
             .map(namespace_file_node)
             .or_else(|| {
                 resolve_imported_callee(
-            &local_symbol,
-            imported_symbols,
-            namespace_imports,
-            inputs.facts,
-            inputs.resolver,
-            inputs.workspace,
+                    &local_symbol,
+                    imported_symbols,
+                    namespace_imports,
+                    inputs.facts,
+                    inputs.resolver,
+                    inputs.workspace,
+                    inputs.visible_files,
                 )
             });
         if let Some((target, kind)) = resolved {

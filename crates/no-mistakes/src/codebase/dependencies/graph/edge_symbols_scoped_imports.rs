@@ -3,6 +3,7 @@ fn scoped_import_map(
     path: &Path,
     resolver: &ImportResolver<'_>,
     workspace: &crate::codebase::workspaces::WorkspaceMap,
+    visible_files: &HashSet<PathBuf>,
 ) -> HashMap<String, Vec<(NodeId, EdgeKind)>> {
     const TOP_LEVEL_SIDE_EFFECT_SCOPE: &str = "";
     let mut map: HashMap<String, Vec<(NodeId, EdgeKind)>> = HashMap::new();
@@ -14,9 +15,14 @@ fn scoped_import_map(
         } else {
             continue;
         };
-        let Some((node, kind)) =
-            import_target(&import.specifier, import.kind, path, resolver, workspace)
-        else {
+        let Some((node, kind)) = import_target(
+            &import.specifier,
+            import.kind,
+            path,
+            resolver,
+            workspace,
+            visible_files,
+        ) else {
             continue;
         };
         map.entry(scope.to_string()).or_default().push((node, kind));
@@ -34,6 +40,7 @@ fn import_target(
     path: &Path,
     resolver: &ImportResolver<'_>,
     workspace: &crate::codebase::workspaces::WorkspaceMap,
+    visible_files: &HashSet<PathBuf>,
 ) -> Option<(NodeId, EdgeKind)> {
     let edge_kind = match kind {
         ImportKind::Static => EdgeKind::Import,
@@ -49,8 +56,16 @@ fn import_target(
         };
         return Some((NodeId::File(target), edge_kind));
     }
-    if let Some(target) = workspace.resolve_specifier_from(specifier, path) {
+    if let Some(target) =
+        workspace.resolve_specifier_from_file_visible(specifier, path, visible_files)
+    {
+        if !visible_files.contains(&target) {
+            return None;
+        }
         return Some((NodeId::File(target), EdgeKind::WorkspaceImport));
+    }
+    if workspace.recognizes_specifier_from(specifier, path) {
+        return None;
     }
     bare_module_node(specifier).map(|node| (node, edge_kind))
 }

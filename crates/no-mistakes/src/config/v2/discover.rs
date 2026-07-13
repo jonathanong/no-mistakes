@@ -3,7 +3,9 @@ use globset::GlobBuilder;
 use std::path::{Path, PathBuf};
 
 use super::schema::NoMistakesConfig;
-use crate::config::{parse_config, resolve, CONFIG_EXTENSIONS};
+use crate::config::{
+    find_automatic_config_path, find_automatic_config_path_from_visible, parse_config, resolve,
+};
 
 const V2_STEMS: &[&str] = &[".no-mistakes"];
 
@@ -15,6 +17,26 @@ const V2_STEMS: &[&str] = &[".no-mistakes"];
 /// 2. `.no-mistakes.{yaml,yml,json,jsonc}` in `root`.
 /// 3. Empty default.
 pub fn load_v2_config(root: &Path, cli_config: Option<&Path>) -> Result<NoMistakesConfig> {
+    if cli_config.is_some() {
+        return load_v2_config_from_visible(root, cli_config, &[]);
+    }
+
+    if let Some((path, source)) = find_by_stems(root, V2_STEMS)? {
+        return parse_v2_config(&source, &path);
+    }
+
+    Ok(NoMistakesConfig::default())
+}
+
+/// Load config while reusing a request's canonical visible-path candidates.
+/// Explicit configs deliberately bypass visibility filtering, matching
+/// [`load_v2_config`].
+#[doc(hidden)]
+pub fn load_v2_config_from_visible(
+    root: &Path,
+    cli_config: Option<&Path>,
+    visible_paths: &[PathBuf],
+) -> Result<NoMistakesConfig> {
     if let Some(path) = cli_config {
         let resolved = resolve(root, path);
         if !resolved.exists() {
@@ -24,7 +46,8 @@ pub fn load_v2_config(root: &Path, cli_config: Option<&Path>) -> Result<NoMistak
         return parse_v2_config(&source, &resolved);
     }
 
-    if let Some((path, source)) = find_by_stems(root, V2_STEMS)? {
+    if let Some(path) = find_automatic_config_path_from_visible(root, V2_STEMS, visible_paths)? {
+        let source = std::fs::read_to_string(&path)?;
         return parse_v2_config(&source, &path);
     }
 
@@ -85,32 +108,9 @@ pub fn find_config_root(root: &Path) -> PathBuf {
 }
 
 pub(super) fn find_by_stems(root: &Path, stems: &[&str]) -> Result<Option<(PathBuf, String)>> {
-    let mut found = Vec::new();
-    for stem in stems {
-        for ext in CONFIG_EXTENSIONS {
-            let path = root.join(format!("{stem}.{ext}"));
-            if path.exists() {
-                found.push(path);
-            }
-        }
-        if !found.is_empty() {
-            break;
-        }
-    }
-    match found.len() {
-        0 => Ok(None),
-        1 => {
-            let path = found.remove(0);
-            let source = std::fs::read_to_string(&path)?;
-            Ok(Some((path, source)))
-        }
-        _ => {
-            let files = found
-                .iter()
-                .map(|p| p.display().to_string())
-                .collect::<Vec<_>>()
-                .join(", ");
-            anyhow::bail!("multiple config files found under --root: {files}");
-        }
-    }
+    let Some(path) = find_automatic_config_path(root, stems)? else {
+        return Ok(None);
+    };
+    let source = std::fs::read_to_string(&path)?;
+    Ok(Some((path, source)))
 }

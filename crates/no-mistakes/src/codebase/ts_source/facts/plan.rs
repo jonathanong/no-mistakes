@@ -1,6 +1,24 @@
 use super::TsFactPlan;
 
 impl TsFactPlan {
+    pub fn include(&mut self, other: Self) {
+        self.imports |= other.imports;
+        self.function_calls |= other.function_calls;
+        self.symbols |= other.symbols;
+        self.source |= other.source;
+        self.route_refs |= other.route_refs;
+        self.backend_routes |= other.backend_routes;
+        self.queue_usage |= other.queue_usage;
+        self.queue_factory |= other.queue_factory;
+        self.queue_project |= other.queue_project;
+        self.http_calls |= other.http_calls;
+        self.process_spawns |= other.process_spawns;
+        self.server_routes |= other.server_routes;
+        self.react |= other.react;
+        self.effect_calls |= other.effect_calls;
+        self.rsc_environment |= other.rsc_environment;
+    }
+
     pub fn imports() -> Self {
         Self {
             imports: true,
@@ -33,6 +51,8 @@ impl TsFactPlan {
             && !self.process_spawns
             && !self.server_routes
             && !self.react
+            && !self.effect_calls
+            && !self.rsc_environment
     }
 
     pub fn has_domain_facts(self) -> bool {
@@ -44,6 +64,8 @@ impl TsFactPlan {
             || self.http_calls
             || self.process_spawns
             || self.server_routes
+            || self.effect_calls
+            || self.rsc_environment
     }
 
     pub fn covers(self, required: Self) -> bool {
@@ -60,5 +82,7 @@ impl TsFactPlan {
             && (!required.process_spawns || self.process_spawns)
             && (!required.server_routes || self.server_routes)
             && (!required.react || self.react)
+            && (!required.effect_calls || self.effect_calls)
+            && (!required.rsc_environment || self.rsc_environment)
     }
 }

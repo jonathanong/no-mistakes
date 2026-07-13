@@ -2,19 +2,11 @@ use super::{PlanArgs, Warning};
 use no_mistakes::codebase::lockfile::{self, LockfileDiff};
 use std::path::{Path, PathBuf};
 
+#[derive(Clone)]
 pub(crate) struct LockfileAnalysis {
     pub diff_by_lockfile: Vec<(PathBuf, LockfileDiff)>,
     pub warnings: Vec<Warning>,
     pub fallback_triggered: bool,
-    /// True when diff-only mode triggered the fallback (--diff without --head).
-    /// This kind of fallback is unconditional — it must not be suppressed by
-    /// --global-config-fallback=false because a lockfile change was detected but
-    /// its new content is unreadable, so zero selected tests would be incorrect.
-    pub diff_only_fallback: bool,
-    /// True when a binary lockfile (e.g. bun.lockb) triggered the fallback.
-    /// Binary lockfiles cannot be parsed, so zero selected tests would be
-    /// incorrect; this fallback must not be gated by --global-config-fallback.
-    pub binary_lockfile_fallback: bool,
 }
 
 pub(crate) fn analyze_lockfile_changes(
@@ -25,8 +17,6 @@ pub(crate) fn analyze_lockfile_changes(
     let mut diff_by_lockfile = Vec::new();
     let mut warnings = Vec::new();
     let mut fallback_triggered = false;
-    let mut diff_only_fallback = false;
-    let mut binary_lockfile_fallback = false;
 
     let git_root = find_git_root(root).unwrap_or_else(|| root.to_path_buf());
 
@@ -38,13 +28,12 @@ pub(crate) fn analyze_lockfile_changes(
             warnings.push(Warning {
                 r#type: "lockfile-binary-unsupported".to_string(),
                 message: format!(
-                    "`{}` is a binary lockfile and cannot be analyzed for package changes; falling back to full test suite",
+                    "`{}` is a binary lockfile and cannot be analyzed for package changes; full-suite selection requires global fallback opt-in",
                     rel
                 ),
                 file: rel,
             });
             fallback_triggered = true;
-            binary_lockfile_fallback = true;
             continue;
         }
 
@@ -67,7 +56,7 @@ pub(crate) fn analyze_lockfile_changes(
                         warnings.push(Warning {
                             r#type: "lockfile-no-baseline".to_string(),
                             message: format!(
-                                "Could not read `{}` at head ref `{}`; falling back to full test suite",
+                                "Could not read `{}` at head ref `{}`; full-suite selection requires global fallback opt-in",
                                 rel, head
                             ),
                             file: rel,
@@ -87,13 +76,12 @@ pub(crate) fn analyze_lockfile_changes(
             warnings.push(Warning {
                 r#type: "lockfile-no-baseline".to_string(),
                 message: format!(
-                    "Could not determine new content of `{}` in diff-only mode; falling back to full test suite. Provide `--head` to enable targeted lockfile analysis.",
+                    "Could not determine new content of `{}` in diff-only mode. Provide `--head` to enable targeted lockfile analysis; full-suite selection requires global fallback opt-in.",
                     rel
                 ),
                 file: rel,
             });
             fallback_triggered = true;
-            diff_only_fallback = true;
             continue;
         } else {
             std::fs::read_to_string(file).unwrap_or_default()
@@ -116,7 +104,7 @@ pub(crate) fn analyze_lockfile_changes(
                         warnings.push(Warning {
                             r#type: "lockfile-no-baseline".to_string(),
                             message: format!(
-                                "Could not read `{}` at base ref `{}`; falling back to full test suite",
+                                "Could not read `{}` at base ref `{}`; full-suite selection requires global fallback opt-in",
                                 rel, base
                             ),
                             file: rel,
@@ -136,9 +124,9 @@ pub(crate) fn analyze_lockfile_changes(
             None => {
                 let rel = crate::tests::plan::relative_path(root, file);
                 warnings.push(Warning {
-                    r#type: "lockfile-no-baseline".to_string(),
-                    message: format!(
-                        "Could not determine old content of `{}`; falling back to full test suite. Provide `--base` to enable targeted lockfile analysis.",
+                r#type: "lockfile-no-baseline".to_string(),
+                message: format!(
+                        "Could not determine old content of `{}`. Provide `--base` to enable targeted lockfile analysis; full-suite selection requires global fallback opt-in.",
                         rel
                     ),
                     file: rel,
@@ -152,8 +140,6 @@ pub(crate) fn analyze_lockfile_changes(
         diff_by_lockfile,
         warnings,
         fallback_triggered,
-        diff_only_fallback,
-        binary_lockfile_fallback,
     }
 }
 

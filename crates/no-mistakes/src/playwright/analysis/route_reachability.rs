@@ -1,6 +1,6 @@
 use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use crate::playwright::config;
-use crate::playwright::fsutil::build_globset;
+use crate::playwright::fsutil::{build_globset, walk_files_from_snapshot, VisiblePathSnapshot};
 use crate::playwright::routes;
 use anyhow::Result;
 use rayon::prelude::*;
@@ -10,17 +10,24 @@ use std::sync::Arc;
 
 pub(crate) struct RouteSourceFiles {
     pub(crate) graph_files: Vec<PathBuf>,
+    visible_files: HashSet<PathBuf>,
     selector_rel_by_file: HashMap<PathBuf, Arc<String>>,
 }
 
-pub(crate) fn collect_route_source_files(
+pub(crate) fn collect_route_source_files_from_visible(
     root: &Path,
     settings: &config::Settings,
+    snapshot: &VisiblePathSnapshot,
 ) -> Result<RouteSourceFiles> {
     let include = build_globset(&settings.selector_include)?;
     let exclude = build_globset(&settings.selector_exclude)?;
     let include_all = settings.selector_include.is_empty();
     let normalized_root = crate::codebase::ts_resolver::normalize_path(root);
+    let visible_files = snapshot
+        .paths_for(root)
+        .iter()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(path))
+        .collect::<HashSet<_>>();
     let mut graph_files = BTreeSet::new();
     let mut selector_rel_by_file = HashMap::new();
 
@@ -29,7 +36,7 @@ pub(crate) fn collect_route_source_files(
         if !source_root.exists() {
             continue;
         }
-        for file in crate::playwright::fsutil::walk_files(&source_root) {
+        for file in walk_files_from_snapshot(&source_root, snapshot) {
             if !crate::playwright::selectors::is_source_file(&file) {
                 continue;
             }
@@ -44,6 +51,7 @@ pub(crate) fn collect_route_source_files(
 
     Ok(RouteSourceFiles {
         graph_files: graph_files.into_iter().collect(),
+        visible_files,
         selector_rel_by_file,
     })
 }
@@ -55,32 +63,25 @@ pub(crate) fn collect_route_reachable_files(
     graph: &DepGraph,
     source_files: &RouteSourceFiles,
 ) -> Result<BTreeMap<Arc<String>, BTreeSet<Arc<String>>>> {
-    let route_reachable_files = routes
+    routes
         .par_iter()
         .map(|route| {
             Ok((
                 route_key(root, &route.file),
-                reachable_files(
-                    root,
-                    settings,
-                    &route.file,
-                    &source_files.selector_rel_by_file,
-                    graph,
-                )?,
+                reachable_files(root, settings, &route.file, source_files, graph)?,
             ))
         })
-        .collect::<Result<BTreeMap<_, _>>>()?;
-    Ok(route_reachable_files)
+        .collect::<Result<BTreeMap<_, _>>>()
 }
 
 fn reachable_files(
     root: &Path,
     settings: &config::Settings,
     route_file: &Path,
-    selector_rel_by_file: &HashMap<std::path::PathBuf, Arc<String>>,
+    source_files: &RouteSourceFiles,
     graph: &DepGraph,
 ) -> Result<BTreeSet<Arc<String>>> {
-    let entry_files = route_entry_files(root, settings, route_file)
+    let entry_files = route_entry_files(root, settings, route_file, &source_files.visible_files)
         .into_iter()
         .map(|file| crate::codebase::ts_resolver::normalize_path(&file))
         .collect::<Vec<_>>();
@@ -97,6 +98,7 @@ fn reachable_files(
         .chain(dependencies.iter().filter_map(|entry| entry.node.as_file()))
         .collect::<BTreeSet<_>>();
 
+    // BTreeSet order makes the surfaced parse error deterministic.
     for file in &all_files {
         if let Some(error) = graph.parse_error(file) {
             anyhow::bail!(
@@ -108,11 +110,16 @@ fn reachable_files(
 
     Ok(all_files
         .into_iter()
-        .filter_map(|file| selector_rel_by_file.get(file).cloned())
+        .filter_map(|file| source_files.selector_rel_by_file.get(file).cloned())
         .collect())
 }
 
-fn route_entry_files(root: &Path, settings: &config::Settings, route_file: &Path) -> Vec<PathBuf> {
+fn route_entry_files(
+    root: &Path,
+    settings: &config::Settings,
+    route_file: &Path,
+    visible_files: &HashSet<PathBuf>,
+) -> Vec<PathBuf> {
     let frontend_root = root.join(&settings.frontend_root);
     let mut files = vec![route_file.to_path_buf()];
     files.extend(
@@ -122,7 +129,7 @@ fn route_entry_files(root: &Path, settings: &config::Settings, route_file: &Path
                 matches!(
                     file.file_stem().and_then(|stem| stem.to_str()),
                     Some("layout" | "template")
-                )
+                ) && visible_files.contains(&crate::codebase::ts_resolver::normalize_path(file))
             }),
     );
     files

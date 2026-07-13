@@ -1,3 +1,4 @@
+use super::test_support::load_settings;
 use super::*;
 use crate::playwright::test_support::fixture_path;
 use load::helpers::is_playwright_config_name;
@@ -93,6 +94,85 @@ fn default_playwright_config_discovery_follows_symlinked_config() {
 
     let settings = load_settings(&root, None, &[], None).unwrap();
     assert_eq!(settings.playwright_configs, vec![config]);
+}
+
+#[test]
+fn default_playwright_configs_use_git_visibility_but_explicit_paths_do_not() {
+    let dir = crate::test_support::materialize_gitignore_fixture("auto-discovery");
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_all(dir.path());
+    crate::test_support::git_add_force(dir.path(), &["playwright.tracked-ignored.config.ts"]);
+
+    let settings = load_settings(dir.path(), None, &[], None).unwrap();
+    assert_eq!(
+        settings.playwright_configs,
+        vec![
+            dir.path().join("playwright.config.ts"),
+            dir.path().join("playwright.tracked-ignored.config.ts"),
+        ]
+    );
+
+    let explicit = load_settings(
+        dir.path(),
+        None,
+        &[PathBuf::from("playwright.ignored.config.ts")],
+        None,
+    )
+    .unwrap();
+    assert_eq!(
+        explicit.playwright_configs,
+        vec![dir.path().join("playwright.ignored.config.ts")]
+    );
+
+    let configured = load_settings(
+        dir.path(),
+        Some(Path::new("explicit-playwright.yml")),
+        &[],
+        None,
+    )
+    .unwrap();
+    assert_eq!(
+        configured.playwright_configs,
+        vec![dir.path().join("playwright.ignored.config.ts")]
+    );
+}
+
+#[test]
+fn ignored_automatic_no_mistakes_config_is_skipped_but_explicit_one_is_loaded() {
+    let dir = crate::test_support::materialize_gitignore_fixture("auto-discovery");
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_all(dir.path());
+
+    let automatic = load_settings(dir.path(), None, &[], None).unwrap();
+    assert_eq!(automatic.frontend_root, "app");
+
+    let explicit = load_settings(
+        dir.path(),
+        Some(Path::new("ignored-explicit.yml")),
+        &[],
+        None,
+    )
+    .unwrap();
+    assert_eq!(explicit.frontend_root, "explicit-ignored-app");
+}
+
+#[test]
+fn default_frontend_root_uses_visible_candidates_under_app() {
+    let standalone = crate::test_support::materialize_gitignore_fixture("playwright-frontend-root");
+    let settings = load_settings(standalone.path(), None, &[], None).unwrap();
+    assert_eq!(settings.frontend_root, "web");
+    assert_eq!(settings.selector_roots, vec!["web"]);
+
+    let git = crate::test_support::materialize_gitignore_fixture("playwright-frontend-root");
+    crate::test_support::git_init(git.path());
+    crate::test_support::git_add_all(git.path());
+    let ignored = load_settings(git.path(), None, &[], None).unwrap();
+    assert_eq!(ignored.frontend_root, "web");
+
+    // Tracked ignored files remain visible under Git semantics.
+    crate::test_support::git_add_force(git.path(), &["web/app/page.tsx"]);
+    let tracked = load_settings(git.path(), None, &[], None).unwrap();
+    assert_eq!(tracked.frontend_root, "web/app");
 }
 
 #[test]

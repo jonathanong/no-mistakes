@@ -1,6 +1,6 @@
+use crate::config::resolve;
 use crate::config::v2::schema::{NoMistakesConfig, PlaywrightTestConfig};
 use crate::config::v2::ConfigView;
-use crate::config::{resolve, CONFIG_EXTENSIONS};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
@@ -11,6 +11,7 @@ pub(super) fn playwright_configs_from_v2(
     root: &Path,
     view: &ConfigView,
     cli_playwright_configs: &[PathBuf],
+    visible_paths: &[PathBuf],
 ) -> Result<Vec<PathBuf>> {
     if !cli_playwright_configs.is_empty() {
         return Ok(cli_playwright_configs
@@ -24,7 +25,7 @@ pub(super) fn playwright_configs_from_v2(
             .map(|path| resolve(root, Path::new(path)))
             .collect());
     }
-    find_default_playwright_configs(root)
+    find_default_playwright_configs_from_visible(root, visible_paths)
 }
 
 pub(super) fn has_v2_playwright_settings(config: &NoMistakesConfig) -> bool {
@@ -47,60 +48,21 @@ fn is_v2_playwright_configured(playwright: &PlaywrightTestConfig) -> bool {
         || playwright.ignore_routes.is_some()
 }
 
-pub(super) fn find_by_stems(root: &Path, stems: &[&str]) -> Result<Option<(PathBuf, String)>> {
-    let mut found = Vec::new();
-    for stem in stems {
-        for extension in CONFIG_EXTENSIONS {
-            let path = root.join(format!("{stem}.{extension}"));
-            if path.exists() {
-                found.push(path);
-            }
-        }
-        if !found.is_empty() {
-            break;
-        }
-    }
-    match found.len() {
-        0 => Ok(None),
-        1 => {
-            let path = found.remove(0);
-            let source = std::fs::read_to_string(&path)?;
-            Ok(Some((path, source)))
-        }
-        _ => {
-            let files = found
-                .iter()
-                .map(|path| path.display().to_string())
-                .collect::<Vec<_>>()
-                .join(", ");
-            anyhow::bail!("multiple config files found under --root: {files}");
-        }
-    }
-}
-
-pub(super) fn find_default_playwright_configs(root: &Path) -> Result<Vec<PathBuf>> {
-    if !root.exists() {
-        return Ok(Vec::new());
-    }
-
-    let mut configs = Vec::new();
-    for entry in std::fs::read_dir(root)? {
-        let entry = entry?;
-        let file_name = entry.file_name();
-
-        if !is_playwright_config_name(&file_name) {
-            continue;
-        }
-
-        let path = entry.path();
-        let is_file = entry
-            .file_type()
-            .is_ok_and(|ft| ft.is_file() || (ft.is_symlink() && path.is_file()));
-        if !is_file {
-            continue;
-        }
-        configs.push(path);
-    }
+pub(super) fn find_default_playwright_configs_from_visible(
+    root: &Path,
+    visible_paths: &[PathBuf],
+) -> Result<Vec<PathBuf>> {
+    let root = crate::codebase::ts_resolver::normalize_path(root);
+    let mut configs: Vec<PathBuf> = visible_paths
+        .iter()
+        .filter(|path| {
+            crate::codebase::ts_resolver::normalize_path(path).parent() == Some(root.as_path())
+        })
+        .filter(|path| path.file_name().is_some_and(is_playwright_config_name))
+        // Follow a visible symlink, preserving the existing config-file policy.
+        .filter(|path| path.is_file())
+        .cloned()
+        .collect();
     configs.sort();
     Ok(configs)
 }

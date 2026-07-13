@@ -5,7 +5,7 @@ use super::{
 use crate::config::v2::NoMistakesConfig;
 use std::collections::{BTreeMap, BTreeSet};
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(super) struct RuleSelection {
     pub(super) playwright_project: Option<String>,
     pub(super) coverage: bool,

@@ -23,14 +23,19 @@ pub(super) fn requires_parse(
     plan.imports
         || plan.symbols
         || plan.react
+        || plan.react_usages
         || plan.queue
         || plan.integration
+        || plan
+            .integration_runner_configs
+            .as_ref()
+            .is_some_and(|runner| runner.contains(path))
         || plan.dynamic_imports
         || plan.nextjs_caching
         || plan.storybook
         || !plan.graph.is_empty()
         || match playwright {
-            Some(plan) => plan.file(path).is_some(),
+            Some(plan) => plan.file(path).is_some() || plan.contains_source(path),
             None => false,
         }
         || plan.source

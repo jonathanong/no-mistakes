@@ -1,0 +1,5 @@
+{
+  "name": "gitignore-fixture",
+  "private": true,
+  "workspaces": ["packages/*"]
+}

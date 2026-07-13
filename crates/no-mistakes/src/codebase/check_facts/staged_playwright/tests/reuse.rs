@@ -9,6 +9,145 @@ use crate::playwright::analysis::pipeline_occurrences::{
 use crate::playwright::selectors::compile_selector_regexes;
 
 #[test]
+fn app_and_route_caches_are_isolated_by_exact_project_settings() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase/playwright-cache-scopes"),
+    );
+    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(&root);
+    let mut project_a = occurrence_settings(&[], &["data-testid"]);
+    project_a.project = Some("a".to_string());
+    project_a.selector_roots = vec!["project-a".to_string()];
+    project_a.frontend_root = "frontend-a/app".to_string();
+    let mut project_b = project_a.clone();
+    project_b.project = Some("b".to_string());
+    project_b.selector_roots = vec!["project-b".to_string()];
+    project_b.frontend_root = "frontend-b/app".to_string();
+
+    let mut playwright = PlaywrightFactPlan::from_settings(
+        &root,
+        project_a.clone(),
+        std::collections::HashMap::new(),
+        false,
+        &snapshot,
+    )
+    .unwrap();
+    playwright.include(
+        PlaywrightFactPlan::from_settings(
+            &root,
+            project_b.clone(),
+            std::collections::HashMap::new(),
+            false,
+            &snapshot,
+        )
+        .unwrap(),
+    );
+    let source_files = vec![
+        root.join("project-a/App.tsx"),
+        root.join("project-b/App.tsx"),
+    ];
+    playwright.set_source_files(source_files.clone());
+    let facts = crate::codebase::check_facts::collect_check_facts_with_graph_files_and_playwright(
+        &root,
+        Vec::new(),
+        source_files,
+        CheckFactPlan::default(),
+        Some(playwright),
+    );
+
+    let selectors_a = facts
+        .get_or_compute_app_selector_occurrences(&project_a, false, &|| {
+            unreachable!("project A staged selector cache is ready")
+        })
+        .unwrap();
+    let selectors_b = facts
+        .get_or_compute_app_selector_occurrences(&project_b, false, &|| {
+            unreachable!("project B staged selector cache is ready")
+        })
+        .unwrap();
+    assert_eq!(selectors_a.len(), 1, "{selectors_a:?}");
+    assert_eq!(selectors_b.len(), 1, "{selectors_b:?}");
+    assert!(selectors_a[0].file.ends_with("project-a/App.tsx"));
+    assert!(selectors_b[0].file.ends_with("project-b/App.tsx"));
+
+    let routes_a = crate::playwright::analysis::pipeline_setup::collect_playwright_routes(
+        &root,
+        &project_a,
+        false,
+        true,
+        Some(&facts),
+        &snapshot,
+    )
+    .unwrap();
+    let routes_b = crate::playwright::analysis::pipeline_setup::collect_playwright_routes(
+        &root,
+        &project_b,
+        false,
+        true,
+        Some(&facts),
+        &snapshot,
+    )
+    .unwrap();
+    assert_eq!(routes_a[0].pattern, "/alpha");
+    assert_eq!(routes_b[0].pattern, "/beta");
+}
+
+#[test]
+fn merged_source_plans_preserve_physical_duplicate_selector_occurrences() {
+    let root = root();
+    let path = root.join("graph/duplicate.tsx");
+    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(&root);
+    let settings = occurrence_settings(&[], &["data-a"]);
+    let mut playwright = PlaywrightFactPlan::from_settings(
+        &root,
+        settings.clone(),
+        std::collections::HashMap::new(),
+        false,
+        &snapshot,
+    )
+    .unwrap();
+    playwright.set_source_files(vec![path.clone()]);
+    playwright.set_app_source_files([path.clone()]);
+    playwright.include(playwright.clone());
+
+    let facts = collect_facts(
+        &[],
+        &["graph/duplicate.tsx"],
+        CheckFactPlan::default(),
+        playwright,
+    );
+    let occurrences = facts
+        .get_or_compute_app_selector_occurrences(&settings, false, &|| {
+            unreachable!("staged cache is ready")
+        })
+        .unwrap();
+
+    assert_eq!(occurrences.len(), 2, "{occurrences:?}");
+    assert!(occurrences.iter().all(|selector| selector.file == path));
+}
+
+#[test]
+fn playwright_only_sources_limit_complete_graph_plan_metadata() {
+    let source = root().join("graph/leaf.ts");
+    let mut playwright = PlaywrightFactPlan::default();
+    playwright.set_source_files(vec![source.clone()]);
+    let facts = collect_facts(
+        &[],
+        &[],
+        CheckFactPlan {
+            symbols: true,
+            graph: TsFactPlan::imports(),
+            ..CheckFactPlan::default()
+        },
+        playwright,
+    );
+
+    assert!(facts.graph_file_universe_is_complete());
+    assert_eq!(facts.graph_file_universe(), &[source]);
+    assert_eq!(facts.graph_plan(), TsFactPlan::imports());
+}
+
+#[test]
 fn explicit_imports_collect_each_partition_once_and_reuse_test_facts() {
     let graph = [
         "src/scoped.ts",

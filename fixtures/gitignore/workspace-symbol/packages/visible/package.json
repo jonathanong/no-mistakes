@@ -1,0 +1,4 @@
+{
+  "name": "@fixture/visible",
+  "exports": "./src/index.mts"
+}

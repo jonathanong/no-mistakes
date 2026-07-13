@@ -460,7 +460,8 @@ jobs:
 fn ci_filters_covers_workflow_selection_and_read_errors() {
     let mut config = NoMistakesConfig::default();
     let root = fixture_root("fixture");
-    let (filters, findings) = ci_filters(
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let (filters, findings) = ci_filters_from_snapshot(
         &root,
         &config,
         &[WorkflowSelector {
@@ -468,13 +469,15 @@ fn ci_filters_covers_workflow_selection_and_read_errors() {
             job: String::new(),
             step_id: String::new(),
         }],
+        &snapshot,
     );
     assert!(filters.is_empty());
     assert!(findings.is_empty());
 
     config.ci.workflow_dirs = vec![".github/bad-workflows".to_string()];
     let root = fixture_root("bad-workflow");
-    let (filters, findings) = ci_filters(&root, &config, &[]);
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let (filters, findings) = ci_filters_from_snapshot(&root, &config, &[], &snapshot);
     assert!(filters.is_empty());
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("could not read workflow file"));

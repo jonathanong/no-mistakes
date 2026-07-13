@@ -1,12 +1,7 @@
 use crate::codebase::dependencies::extract::is_indexable;
 use crate::codebase::ts_resolver::normalize_path;
-use crate::codebase::ts_source::discover_files;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
-
-pub fn discover(root: &Path, skip_directories: &[String]) -> HashSet<PathBuf> {
-    discover_from_files(root, &discover_files(root, skip_directories))
-}
 
 pub fn discover_from_files(root: &Path, files: &[PathBuf]) -> HashSet<PathBuf> {
     files

@@ -1,5 +1,4 @@
 use super::shared;
-use crate::ast;
 use crate::codebase::ts_resolver::TsConfig;
 use crate::integration_tests::project_config::prefix_globs;
 use crate::integration_tests::types::ConfigProject;
@@ -49,17 +48,6 @@ struct Options {
     test_ignore: Option<Vec<String>>,
 }
 
-pub(in crate::integration_tests) fn parse_from_path(
-    source: &str,
-    path: &Path,
-    config_dir: &Path,
-    tsconfig: &TsConfig,
-) -> Result<ParsedPlaywrightConfig> {
-    ast::with_program(path, source, |program, source| {
-        parse_program(program, source, path, config_dir, tsconfig)
-    })?
-}
-
 impl ParsedPlaywrightConfig {
     pub(in crate::integration_tests) fn into_projects(
         self,
@@ -85,20 +73,42 @@ impl ParsedPlaywrightConfig {
     }
 }
 
-fn parse_program(
+pub(in crate::integration_tests) fn parse_program(
     program: &Program<'_>,
     source: &str,
     path: &Path,
     config_dir: &Path,
     tsconfig: &TsConfig,
+    visible_files: Option<&std::collections::HashSet<PathBuf>>,
 ) -> Result<ParsedPlaywrightConfig> {
     let bindings = shared::top_level_object_bindings(program);
     let Some(root_object) = shared::default_export_object(program, &bindings) else {
         return Ok(single_project(config_dir, &Options::default(), None));
     };
-    let root_options = project_arrays::root_options(program, root_object, source, path, tsconfig)?;
-    let project_options =
-        project_arrays::project_options(program, root_object, source, path, tsconfig)?;
+    let (root_options, project_options) = match visible_files {
+        Some(visible) => (
+            project_arrays::root_options_from_visible(
+                program,
+                root_object,
+                source,
+                path,
+                tsconfig,
+                visible,
+            )?,
+            project_arrays::project_options_from_visible(
+                program,
+                root_object,
+                source,
+                path,
+                tsconfig,
+                visible,
+            )?,
+        ),
+        None => (
+            project_arrays::root_options(program, root_object, source, path, tsconfig)?,
+            project_arrays::project_options(program, root_object, source, path, tsconfig)?,
+        ),
+    };
     if project_options.is_empty() {
         return Ok(single_project(config_dir, &root_options, None));
     }

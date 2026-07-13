@@ -379,6 +379,7 @@ fn tests_plan_diff_only_mode_without_head_emits_warning() {
         String::from_utf8_lossy(&output.stderr)
     );
     let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(plan["fallback_triggered"], true, "{plan:?}");
     let warnings = plan["warnings"].as_array().unwrap();
     assert!(
         warnings
@@ -388,11 +389,10 @@ fn tests_plan_diff_only_mode_without_head_emits_warning() {
     );
 }
 
-// Covers the fix for plan.rs: lockfile fallback is always honored regardless of
-// --global-config-fallback. Without the fix, a diff-only patch containing only a
-// lockfile change returns zero selected tests when the flag is unset (default).
+// Diff-only lockfile analysis cannot identify changed packages, but it must not
+// select the full suite unless global fallback is explicitly enabled.
 #[test]
-fn tests_plan_diff_only_mode_without_global_fallback_flag_falls_back() {
+fn tests_plan_diff_only_mode_without_global_fallback_flag_does_not_fall_back() {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
     let lock_content = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
@@ -400,7 +400,7 @@ fn tests_plan_diff_only_mode_without_global_fallback_flag_falls_back() {
     setup_git_repo_with_file(root, "pnpm-lock.yaml", lock_content);
     let diff_path = root.join("change.diff");
     std::fs::write(&diff_path, diff_content).unwrap();
-    // No --global-config-fallback flag (default is false)
+    // Explicitly disable global fallback so the policy boundary is regression-tested.
     let output = Command::new(bin())
         .args([
             "tests",
@@ -411,6 +411,7 @@ fn tests_plan_diff_only_mode_without_global_fallback_flag_falls_back() {
             diff_path.to_str().unwrap(),
             "--base",
             "HEAD",
+            "--global-config-fallback=false",
             "--json",
         ])
         .output()
@@ -421,10 +422,7 @@ fn tests_plan_diff_only_mode_without_global_fallback_flag_falls_back() {
         String::from_utf8_lossy(&output.stderr)
     );
     let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    assert!(
-        plan["fallback_triggered"].as_bool().unwrap(),
-        "lockfile fallback should trigger even without --global-config-fallback: {plan:?}"
-    );
+    assert_eq!(plan["fallback_triggered"], false, "{plan:?}");
     let warnings = plan["warnings"].as_array().unwrap();
     assert!(
         warnings

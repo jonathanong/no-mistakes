@@ -178,25 +178,29 @@ fn resolve_helpers_handle_defaults_and_explicit_paths() {
     );
 
     let root = PathBuf::from(fixture_root("simple"));
-    let fallback = options::resolve_tsconfig(&root, None).unwrap();
+    let visible = crate::codebase::ts_source::discover_visible_paths(&root);
+    let fallback = options_test_support::resolve_tsconfig(&root, None, &visible).unwrap();
     assert_eq!(fallback.paths_dir, root);
 
     let ts_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/forbidden-dependencies-passes/fixture");
-    let explicit = options::resolve_tsconfig(&ts_root, Some("tsconfig.json")).unwrap();
+    let visible = crate::codebase::ts_source::discover_visible_paths(&ts_root);
+    let explicit =
+        options_test_support::resolve_tsconfig(&ts_root, Some("tsconfig.json"), &visible).unwrap();
     assert_eq!(
         crate::codebase::ts_resolver::normalize_path(&explicit.dir),
         crate::codebase::ts_resolver::normalize_path(&ts_root)
     );
 
-    let found = options::resolve_tsconfig(&ts_root, None).unwrap();
+    let found = options_test_support::resolve_tsconfig(&ts_root, None, &visible).unwrap();
     assert_eq!(
         crate::codebase::ts_resolver::normalize_path(&found.dir),
         crate::codebase::ts_resolver::normalize_path(&ts_root)
     );
 
     let absolute_path = ts_root.join("tsconfig.json");
-    let absolute = options::resolve_tsconfig(&ts_root, absolute_path.to_str()).unwrap();
+    let absolute =
+        options_test_support::resolve_tsconfig(&ts_root, absolute_path.to_str(), &visible).unwrap();
     assert_eq!(
         crate::codebase::ts_resolver::normalize_path(&absolute.dir),
         crate::codebase::ts_resolver::normalize_path(&ts_root)

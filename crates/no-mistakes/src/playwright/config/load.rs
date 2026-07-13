@@ -1,32 +1,44 @@
 use super::Settings;
+use crate::config::find_automatic_config_path_from_visible;
 use crate::config::resolve;
-use crate::config::v2::schema::NoMistakesConfig;
-use crate::config::v2::{load_v2_config, ConfigView};
+use crate::config::v2::load_v2_config;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 #[path = "load/helpers.rs"]
 pub(super) mod helpers;
-use helpers::{
-    default_selector_attributes, find_by_stems, has_v2_playwright_settings,
-    playwright_configs_from_v2,
-};
+use helpers::{default_selector_attributes, has_v2_playwright_settings};
+
+#[path = "load/loaded_v2.rs"]
+mod loaded_v2;
 
 const V2_STEMS: &[&str] = &[".no-mistakes"];
 
-pub(super) fn load_settings(
+pub(super) fn load_settings_from_visible(
     root: &Path,
     cli_config: Option<&Path>,
     cli_playwright_configs: &[PathBuf],
     cli_project: Option<String>,
+    visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> Result<Settings> {
     if let Some(path) = cli_config {
-        return load_explicit(root, path, cli_playwright_configs, cli_project);
+        return load_explicit(
+            root,
+            path,
+            cli_playwright_configs,
+            cli_project,
+            visible_paths,
+        );
     }
-    if let Some(settings) = load_discovered_v2(root, cli_playwright_configs, cli_project.clone())? {
+    if let Some(settings) = load_discovered_v2(
+        root,
+        cli_playwright_configs,
+        cli_project.clone(),
+        visible_paths,
+    )? {
         return Ok(settings);
     }
-    settings_from_defaults(root, cli_playwright_configs, cli_project)
+    settings_from_defaults(root, cli_playwright_configs, cli_project, visible_paths)
 }
 
 fn load_explicit(
@@ -34,6 +46,7 @@ fn load_explicit(
     path: &Path,
     cli_playwright_configs: &[PathBuf],
     cli_project: Option<String>,
+    visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> Result<Settings> {
     let resolved = resolve(root, path);
     if !resolved.exists() {
@@ -41,86 +54,65 @@ fn load_explicit(
     }
     let v2 = load_v2_config(root, Some(&resolved))?;
     if has_v2_playwright_settings(&v2) {
-        return settings_from_v2(root, &v2, cli_playwright_configs, cli_project);
+        return loaded_v2::settings_from_v2(
+            root,
+            &v2,
+            cli_playwright_configs,
+            cli_project,
+            visible_paths,
+        );
     }
-    settings_from_defaults(root, cli_playwright_configs, cli_project)
+    settings_from_defaults(root, cli_playwright_configs, cli_project, visible_paths)
 }
 
 fn load_discovered_v2(
     root: &Path,
     cli_playwright_configs: &[PathBuf],
     cli_project: Option<String>,
+    visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> Result<Option<Settings>> {
-    let Some((path, _source)) = find_by_stems(root, V2_STEMS)? else {
+    let paths = visible_paths.paths_for(root);
+    let Some(path) = find_automatic_config_path_from_visible(root, V2_STEMS, &paths)? else {
         return Ok(None);
     };
     let v2 = load_v2_config(root, Some(&path))?;
     if has_v2_playwright_settings(&v2) {
-        return settings_from_v2(root, &v2, cli_playwright_configs, cli_project).map(Some);
+        return loaded_v2::settings_from_v2(
+            root,
+            &v2,
+            cli_playwright_configs,
+            cli_project,
+            visible_paths,
+        )
+        .map(Some);
     }
     Ok(None)
 }
 
-fn settings_from_v2(
+pub(super) fn settings_from_loaded_v2(
     root: &Path,
-    config: &NoMistakesConfig,
+    config: &crate::config::v2::schema::NoMistakesConfig,
     cli_playwright_configs: &[PathBuf],
     cli_project: Option<String>,
+    visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> Result<Settings> {
-    let view = ConfigView::new(config);
-    let playwright = &config.tests.playwright;
-    let frontend_root = playwright
-        .frontend_root
-        .clone()
-        .unwrap_or_else(|| default_frontend_root(root, view.nextjs_root()));
-    let playwright_configs = playwright_configs_from_v2(root, &view, cli_playwright_configs)?;
-    let selector_attributes = if view.test_id_attributes().is_empty() {
-        default_selector_attributes()
-    } else {
-        view.test_id_attributes().to_vec()
-    };
-    let selector_roots = if view.selector_roots().is_empty() {
-        vec![frontend_root.clone()]
-    } else {
-        view.selector_roots().to_vec()
-    };
-    let ignore_routes = playwright.ignore_routes.clone().unwrap_or_default();
-    let rewrites = view.nextjs_rewrites().to_vec();
-    Ok(Settings {
-        frontend_root,
-        playwright_configs,
-        project: cli_project,
-        test_include: playwright.test_include.clone(),
-        test_exclude: playwright.test_exclude.clone(),
-        ignore_routes,
-        rewrites,
-        navigation_helpers: playwright.navigation_helpers.clone(),
-        selector_attributes,
-        test_id_attribute_override: playwright.test_id_attribute.clone(),
-        component_selector_attributes: playwright.selectors.component_test_ids.clone(),
-        html_ids: playwright.selectors.html_ids,
-        selector_roots,
-        selector_include: playwright.selector_include.clone(),
-        selector_exclude: playwright.selector_exclude.clone(),
-    })
-}
-
-fn default_frontend_root(root: &Path, nextjs_root: &str) -> String {
-    let app_root = Path::new(nextjs_root).join("app");
-    if root.join(&app_root).is_dir() {
-        app_root.to_string_lossy().into_owned()
-    } else {
-        nextjs_root.to_string()
-    }
+    loaded_v2::settings_from_loaded_v2(
+        root,
+        config,
+        cli_playwright_configs,
+        cli_project,
+        visible_paths,
+    )
 }
 
 fn settings_from_defaults(
     root: &Path,
     cli_playwright_configs: &[PathBuf],
     cli_project: Option<String>,
+    visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> Result<Settings> {
     let playwright_configs = if cli_playwright_configs.is_empty() {
-        helpers::find_default_playwright_configs(root)?
+        helpers::find_default_playwright_configs_from_visible(root, &visible_paths.paths_for(root))?
     } else {
         cli_playwright_configs
             .iter()

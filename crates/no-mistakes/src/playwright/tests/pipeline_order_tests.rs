@@ -1,5 +1,5 @@
-use crate::playwright::analysis::pipeline::analyze_with_policy;
-use crate::playwright::analysis::pipeline_selectors::analyze_selectors_with_policy;
+use crate::playwright::analysis::pipeline::test_support::analyze_with_policy;
+use crate::playwright::analysis::pipeline_selectors::test_support::analyze_selectors_with_policy;
 use crate::playwright::analysis::types::UniqueSelectorPolicy;
 use crate::playwright::playwright_tests::TestPolicy;
 use std::path::PathBuf;
@@ -18,7 +18,7 @@ fn analyze_fixture(
     require_routes: bool,
 ) -> anyhow::Result<crate::playwright::analysis::types::Analysis> {
     let root = fixture(name);
-    let settings = crate::playwright::config::load_settings(&root, None, &[], None)?;
+    let settings = crate::playwright::config::test_support::load_settings(&root, None, &[], None)?;
     let policy = TestPolicy::default();
     let unique = UniqueSelectorPolicy::default();
     if require_routes {
@@ -61,7 +61,8 @@ fn malformed_app_source_precedes_malformed_test_source() {
 #[test]
 fn malformed_route_source_propagates_from_fetch_collection() {
     let root = fixture("malformed-route-fetch");
-    let mut settings = crate::playwright::config::load_settings(&root, None, &[], None).unwrap();
+    let mut settings =
+        crate::playwright::config::test_support::load_settings(&root, None, &[], None).unwrap();
     settings.selector_attributes.clear();
     settings.component_selector_attributes.clear();
     settings.html_ids = false;

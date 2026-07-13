@@ -59,9 +59,10 @@ fn terraform_bare_module_reference_links_module_files() {
     facts
         .module_sources
         .insert("module.net".to_string(), PathBuf::from("/repo/infra/net"));
-    facts
-        .files_by_module
-        .insert(PathBuf::from("/repo/infra/net"), BTreeSet::from([module_file.clone()]));
+    facts.files_by_module.insert(
+        PathBuf::from("/repo/infra/net"),
+        BTreeSet::from([module_file.clone()]),
+    );
     facts.refs_to.insert(
         "module.net".to_string(),
         vec![TerraformRef {
@@ -74,9 +75,11 @@ fn terraform_bare_module_reference_links_module_files() {
 
     let mut edges = Vec::new();
     collect_terraform_output_edges(&facts, &mut edges);
-    assert!(edges.iter().any(|(from, to, kind)| from == &NodeId::File(consumer.clone())
-        && to == &NodeId::File(module_file.clone())
-        && *kind == EdgeKind::TerraformModuleRef));
+    assert!(edges
+        .iter()
+        .any(|(from, to, kind)| from == &NodeId::File(consumer.clone())
+            && to == &NodeId::File(module_file.clone())
+            && *kind == EdgeKind::TerraformModuleRef));
 }
 
 #[test]
@@ -114,9 +117,11 @@ fn terraform_reference_edges_link_split_var_files() {
 
     let mut edges = Vec::new();
     collect_terraform_reference_edges(&facts, &mut edges);
-    assert!(edges.iter().any(|(from, to, kind)| from == &NodeId::File(main_tf.clone())
-        && to == &NodeId::File(vars_tf.clone())
-        && *kind == EdgeKind::TerraformReference));
+    assert!(edges
+        .iter()
+        .any(|(from, to, kind)| from == &NodeId::File(main_tf.clone())
+            && to == &NodeId::File(vars_tf.clone())
+            && *kind == EdgeKind::TerraformReference));
 }
 
 #[test]
@@ -131,7 +136,11 @@ fn terraform_reference_edges_stay_within_a_module() {
     let use1 = PathBuf::from("/repo/m1/use.tf");
     let decl2 = PathBuf::from("/repo/m2/main.tf");
     let mut facts = TerraformFactMap::default();
-    for (path, dir) in [(&decl1, "/repo/m1"), (&use1, "/repo/m1"), (&decl2, "/repo/m2")] {
+    for (path, dir) in [
+        (&decl1, "/repo/m1"),
+        (&use1, "/repo/m1"),
+        (&decl2, "/repo/m2"),
+    ] {
         facts.files.insert(
             path.clone(),
             TerraformFileFacts {
@@ -149,9 +158,10 @@ fn terraform_reference_edges_stay_within_a_module() {
             },
         );
     }
-    facts
-        .declarations
-        .insert("aws_s3_bucket.main".to_string(), BTreeSet::from([decl1.clone(), decl2.clone()]));
+    facts.declarations.insert(
+        "aws_s3_bucket.main".to_string(),
+        BTreeSet::from([decl1.clone(), decl2.clone()]),
+    );
     facts.refs_to.insert(
         "aws_s3_bucket.main".to_string(),
         vec![TerraformRef {
@@ -168,7 +178,8 @@ fn terraform_reference_edges_stay_within_a_module() {
     // The reference resolves only to the same-module declaration, never m2's.
     assert!(edges
         .iter()
-        .any(|(from, to, _)| from == &NodeId::File(use1.clone()) && to == &NodeId::File(decl1.clone())));
+        .any(|(from, to, _)| from == &NodeId::File(use1.clone())
+            && to == &NodeId::File(decl1.clone())));
     assert!(!edges
         .iter()
         .any(|(_, to, _)| to == &NodeId::File(decl2.clone())));

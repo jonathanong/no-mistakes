@@ -29,13 +29,99 @@ fn dependency_trigger_ignores_changed_test_discovery_errors_for_source_changes()
         .projects
         .insert("src".to_string(), TestPlanProjectDependency::All(true));
 
+    let plan_args = PlanArgs {
+        framework: Some(TestFramework::Vitest),
+        root: root.clone(),
+        config: None,
+        tsconfig: None,
+        base: None,
+        head: None,
+        from_git_diff: None,
+        changed_file: vec![root.join("src/component.mts")],
+        changed_files: None,
+        diff: None,
+        diff_stdin: false,
+        diff_command: None,
+        entrypoints: Vec::new(),
+        entrypoint_symbols: Vec::new(),
+        include_symbols: false,
+        diff_content: None,
+        environment: "pre-push".to_string(),
+        limit_percent: None,
+        limit_files: None,
+        global_config_fallback: None,
+        format: None,
+        json: false,
+    };
+    let prepared = crate::tests::prepared_plan::PreparedTestPlanRequest::prepare(&plan_args)
+        .expect("fixture request should prepare");
+
     let trigger = dependency_trigger(
         &root,
         &config,
         TestFramework::Vitest,
         &[root.join("src/component.mts")],
+        &prepared,
     )
     .unwrap();
 
     assert!(trigger.is_some());
+}
+
+#[test]
+fn explicit_ignored_changed_sources_impact_visible_tests_without_ignored_shadows() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("prepared-tsconfig");
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(fixture.path());
+    let diff = "diff --git a/ignored-explicit/Button.tsx b/ignored-explicit/Button.tsx\n\
+                --- a/ignored-explicit/Button.tsx\n\
+                +++ b/ignored-explicit/Button.tsx\n\
+                @@ -1,1 +1,1 @@\n\
+                -export function IgnoredButton() {\n\
+                +export function IgnoredButton() {\n";
+    let inputs = [
+        (vec![PathBuf::from("ignored-explicit/Button.tsx")], None),
+        (Vec::new(), Some(diff.to_string())),
+    ];
+
+    for (changed_file, diff_content) in inputs {
+        let plan = crate::tests::plan::generate_plan(&PlanArgs {
+            framework: None,
+            root: root.clone(),
+            config: None,
+            tsconfig: None,
+            base: None,
+            head: None,
+            from_git_diff: None,
+            changed_file,
+            changed_files: None,
+            diff: None,
+            diff_stdin: false,
+            diff_command: None,
+            entrypoints: Vec::new(),
+            entrypoint_symbols: Vec::new(),
+            include_symbols: false,
+            diff_content,
+            environment: "pre-push".to_string(),
+            limit_percent: None,
+            limit_files: None,
+            global_config_fallback: None,
+            format: None,
+            json: false,
+        })
+        .unwrap();
+        let selected = plan
+            .selected_tests
+            .iter()
+            .map(|test| test.test_file.as_str())
+            .collect::<Vec<_>>();
+
+        assert!(
+            selected.contains(&"tests/ignored-button.test.tsx"),
+            "{selected:#?}"
+        );
+        assert!(
+            !selected.contains(&"ignored-transitive/Button.test.tsx"),
+            "{selected:#?}"
+        );
+    }
 }

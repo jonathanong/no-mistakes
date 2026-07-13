@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use serde_json::{Map, Value};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct AnalyzeProjectOptions {
     pub(super) root: Option<String>,
@@ -12,7 +12,7 @@ pub(super) struct AnalyzeProjectOptions {
     pub(super) reports: Vec<AnalyzeReportRequest>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct AnalyzeReportRequest {
     pub(super) id: Option<String>,

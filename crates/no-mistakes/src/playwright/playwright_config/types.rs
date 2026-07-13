@@ -1,10 +1,12 @@
 use std::path::{Path, PathBuf};
 
+#[derive(Clone)]
 pub struct PlaywrightConfig {
     pub name: Option<String>,
     pub projects: Vec<TestProject>,
 }
 
+#[derive(Clone)]
 pub struct TestProject {
     pub name: Option<String>,
     pub config_dir: PathBuf,

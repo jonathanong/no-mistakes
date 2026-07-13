@@ -1,0 +1,5 @@
+on: push
+jobs:
+  ignored:
+    runs-on: ubuntu-latest
+    steps: []

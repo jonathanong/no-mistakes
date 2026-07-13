@@ -1,7 +1,6 @@
 use super::calls;
 use super::types::{FileAnalysis, FunctionInfo, FunctionKey, TestCase};
 use crate::ast;
-use analysis_helpers::FunctionBodySpan;
 use anyhow::{Context, Result};
 use oxc_ast::ast::{BindingPattern, ModuleExportName, Program, Statement};
 use oxc_ast_visit::{walk, Visit};
@@ -11,9 +10,14 @@ use std::path::{Path, PathBuf};
 
 mod analysis_helpers;
 
-pub(super) fn analyze_files(files: &[PathBuf]) -> Result<BTreeMap<PathBuf, FileAnalysis>> {
-    let mut analyses = BTreeMap::new();
+pub(super) fn analyze_files_with_seed(
+    files: &[PathBuf],
+    mut analyses: BTreeMap<PathBuf, FileAnalysis>,
+) -> Result<BTreeMap<PathBuf, FileAnalysis>> {
     for file in files {
+        if analyses.contains_key(file) {
+            continue;
+        }
         let source = match std::fs::read_to_string(file) {
             Ok(source) => source,
             Err(_) => continue,
@@ -67,8 +71,7 @@ impl<'a> Visit<'a> for AnalysisCollector<'a, '_> {
                         self.collect_function(
                             id.name.as_str(),
                             function.span(),
-                            function.body_span(),
-                            false,
+                            calls::collect_function_calls(function),
                         );
                     }
                 }

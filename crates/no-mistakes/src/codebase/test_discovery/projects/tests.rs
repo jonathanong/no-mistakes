@@ -1,5 +1,33 @@
 use super::*;
 
+fn runner_projects(
+    root: &Path,
+    config: &NoMistakesConfig,
+    runner: TestRunner,
+) -> Result<Vec<ConfigProject>> {
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(root);
+    let tsconfig =
+        crate::codebase::ts_resolver::resolve_tsconfig_from_visible(None, root, &visible_paths)?;
+    runner_projects_from_visible(root, config, runner, &visible_paths, &tsconfig)
+}
+
+fn runner_projects_lossy(
+    root: &Path,
+    config: &NoMistakesConfig,
+    runner: TestRunner,
+) -> Vec<ConfigProject> {
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(root);
+    let tsconfig =
+        crate::codebase::ts_resolver::resolve_tsconfig_from_visible(None, root, &visible_paths)
+            .unwrap_or_else(|_| crate::codebase::ts_resolver::TsConfig {
+                dir: root.to_path_buf(),
+                paths: Vec::new(),
+                paths_dir: root.to_path_buf(),
+                base_url: None,
+            });
+    runner_projects_lossy_from_visible(root, config, runner, &visible_paths, &tsconfig)
+}
+
 fn config_project(config: &str, policy_name: &str, include: &str) -> ConfigProject {
     ConfigProject {
         config: Some(config.to_string()),

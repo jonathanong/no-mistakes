@@ -1,3 +1,6 @@
+#[path = "common/gitignore_fixture.rs"]
+mod gitignore_fixture;
+
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
@@ -326,6 +329,65 @@ fn lockfile_diff_auto_detect_yarn_lock() {
     let arr: Vec<serde_json::Value> = serde_json::from_str(&stdout(&output)).unwrap();
     assert_eq!(arr.len(), 1, "should auto-detect yarn.lock");
     assert_eq!(arr[0]["manager"], "yarn");
+}
+
+#[test]
+fn lockfile_diff_ignores_worktree_lockfile_but_honors_explicit_path() {
+    let fixture = gitignore_fixture::materialize("pass3-visibility");
+    let root = fixture.path();
+    Command::new("git")
+        .args(["init", "-b", "main"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    for (key, value) in [("user.email", "test@test.com"), ("user.name", "Test")] {
+        Command::new("git")
+            .args(["config", key, value])
+            .current_dir(root)
+            .output()
+            .unwrap();
+    }
+    Command::new("git")
+        .args(["add", "."])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    Command::new("git")
+        .args(["commit", "-m", "initial"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+
+    let automatic = run(&[
+        "lockfile",
+        "diff",
+        "--root",
+        root.to_str().unwrap(),
+        "--base",
+        "HEAD",
+    ]);
+    assert!(automatic.status.success());
+    let automatic: Vec<serde_json::Value> = serde_json::from_str(&stdout(&automatic)).unwrap();
+    assert!(automatic.is_empty());
+
+    let explicit = run(&[
+        "lockfile",
+        "diff",
+        "--root",
+        root.to_str().unwrap(),
+        "--base",
+        "HEAD",
+        "--lockfile",
+        "pnpm-lock.yaml",
+    ]);
+    assert!(explicit.status.success());
+    let explicit: Vec<serde_json::Value> = serde_json::from_str(&stdout(&explicit)).unwrap();
+    assert_eq!(explicit.len(), 1);
+    assert!(explicit[0]["added"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|package| package == "lodash"));
 }
 
 // Covers the --head branch where new content is read via git show <head>:.

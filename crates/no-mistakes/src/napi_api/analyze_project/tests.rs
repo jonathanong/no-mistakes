@@ -1,4 +1,6 @@
+use super::legacy_test_support::{graph_report, import_usages_report, prepare_shared_traversal};
 use super::*;
+use crate::codebase::dependencies::Direction;
 use serde_json::{json, Value};
 use std::path::PathBuf;
 
@@ -11,6 +13,21 @@ fn fixture_root(name: &str) -> String {
     )
     .display()
     .to_string()
+}
+
+fn parser_fixture(name: &str) -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/parser-count")
+            .join(name),
+    )
+}
+
+fn queue_fixture() -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/queue-ast-hop/basic/fixture"),
+    )
 }
 
 #[test]
@@ -40,10 +57,178 @@ fn analyze_project_batches_graph_and_queue_reports() {
 }
 
 #[test]
+fn analyze_project_queue_views_share_one_report_and_parse_pass() {
+    let source = queue_fixture();
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let root_json = root.display().to_string();
+    let standalone = [
+        crate::napi_api::queues_json_impl(json!({ "root": root_json }).to_string()).unwrap(),
+        crate::napi_api::queue_edges_json_impl(
+            json!({ "root": root_json, "files": ["enqueue.ts"], "depth": 2 }).to_string(),
+        )
+        .unwrap(),
+        crate::napi_api::queue_related_json_impl(
+            json!({ "root": root_json, "files": ["enqueue.ts"], "direction": "deps" }).to_string(),
+        )
+        .unwrap(),
+        crate::napi_api::queue_check_json_impl(json!({ "root": root_json }).to_string()).unwrap(),
+    ]
+    .map(|value| serde_json::from_str::<Value>(&value).unwrap());
+
+    crate::ast::begin_parse_count(&root);
+    let output = analyze_project_json_impl(
+        json!({
+            "root": root_json,
+            "reports": [
+                { "type": "queues" },
+                { "type": "queueEdges", "files": ["enqueue.ts"], "depth": 2 },
+                { "type": "queueRelated", "files": ["enqueue.ts"], "direction": "deps" },
+                { "type": "queueCheck" }
+            ]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+    let value: Value = serde_json::from_str(&output).unwrap();
+
+    for (index, expected) in standalone.iter().enumerate() {
+        assert_eq!(&value["reports"][index]["result"], expected);
+    }
+    assert!(!counts.is_empty(), "queue fixture must exercise the parser");
+    assert!(counts.values().all(|count| *count == 1), "{counts:#?}");
+}
+
+#[test]
+fn analyze_project_playwright_views_share_one_analysis_with_standalone_parity() {
+    let root = parser_fixture("playwright");
+    let root_json = root.display().to_string();
+    let standalone = [
+        crate::napi_api::playwright_check_json_impl(json!({ "root": root_json }).to_string())
+            .unwrap(),
+        crate::napi_api::playwright_edges_json_impl(json!({ "root": root_json }).to_string())
+            .unwrap(),
+        crate::napi_api::playwright_related_json_impl(
+            json!({ "root": root_json, "files": ["app/page.tsx"] }).to_string(),
+        )
+        .unwrap(),
+        crate::napi_api::playwright_tests_json_impl(
+            json!({ "root": root_json, "files": ["app/page.tsx"] }).to_string(),
+        )
+        .unwrap(),
+    ]
+    .map(|value| serde_json::from_str::<Value>(&value).unwrap());
+
+    let output = analyze_project_json_impl(
+        json!({
+            "root": root_json,
+            "reports": [
+                { "type": "playwrightCheck" },
+                { "type": "playwrightEdges" },
+                { "type": "playwrightRelated", "files": ["app/page.tsx"] },
+                { "type": "playwrightTests", "files": ["app/page.tsx"] }
+            ]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let value: Value = serde_json::from_str(&output).unwrap();
+
+    for (index, expected) in standalone.iter().enumerate() {
+        assert_eq!(&value["reports"][index]["result"], expected);
+    }
+}
+
+#[test]
+fn analyze_project_server_views_share_one_report_with_standalone_parity() {
+    let root = fixture_root("routes/good");
+    let standalone = [
+        crate::napi_api::server_routes_json_impl(json!({ "root": root }).to_string()).unwrap(),
+        crate::napi_api::server_route_list_json_impl(
+            json!({ "root": root, "files": ["/api/v1/users"] }).to_string(),
+        )
+        .unwrap(),
+        crate::napi_api::server_route_edges_json_impl(
+            json!({ "root": root, "files": ["backend/api/v1/users.mts"] }).to_string(),
+        )
+        .unwrap(),
+        crate::napi_api::server_route_related_json_impl(
+            json!({
+                "root": root,
+                "roots": ["backend/api/v1/users.mts"],
+                "direction": "dependents"
+            })
+            .to_string(),
+        )
+        .unwrap(),
+    ]
+    .map(|value| serde_json::from_str::<Value>(&value).unwrap());
+
+    let output = analyze_project_json_impl(
+        json!({
+            "root": root,
+            "reports": [
+                { "type": "serverRoutes" },
+                { "type": "serverRouteList", "files": ["/api/v1/users"] },
+                { "type": "serverRouteEdges", "files": ["backend/api/v1/users.mts"] },
+                {
+                    "type": "serverRouteRelated",
+                    "roots": ["backend/api/v1/users.mts"],
+                    "direction": "dependents"
+                }
+            ]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let value: Value = serde_json::from_str(&output).unwrap();
+
+    for (index, expected) in standalone.iter().enumerate() {
+        assert_eq!(&value["reports"][index]["result"], expected);
+    }
+}
+
+#[test]
+fn analyze_project_related_reports_require_files() {
+    let cases = [
+        (
+            queue_fixture(),
+            "queueRelated",
+            "files must contain at least one file",
+        ),
+        (
+            PathBuf::from(fixture_root("routes/good")),
+            "serverRouteRelated",
+            "files or roots must contain at least one entry",
+        ),
+        (
+            parser_fixture("playwright"),
+            "playwrightRelated",
+            "files must contain at least one file",
+        ),
+    ];
+
+    for (root, report_type, expected) in cases {
+        let error = analyze_project_json_impl(
+            json!({
+                "root": root,
+                "reports": [{ "type": report_type }]
+            })
+            .to_string(),
+        )
+        .unwrap_err();
+        assert!(error.reason.contains(expected), "{report_type}: {error}");
+    }
+}
+
+#[test]
 fn analyze_project_dispatches_all_domain_report_types() {
     for report_type in [
         "symbols",
         "flow",
+        "effects",
+        "rscCallers",
         "importUsages",
         "queueEdges",
         "queueRelated",
@@ -162,10 +347,10 @@ fn graph_report_requires_shared_context() {
 }
 
 #[test]
-fn graph_reports_reject_per_report_scope_overrides() {
-    let error = analyze_project_json_impl(
+fn graph_reports_honor_per_report_scope_overrides() {
+    let output = analyze_project_json_impl(
         json!({
-            "root": fixture_root("simple"),
+            "root": fixture_root("exports"),
             "reports": [{
                 "type": "dependencies",
                 "root": fixture_root("simple"),
@@ -174,8 +359,13 @@ fn graph_reports_reject_per_report_scope_overrides() {
         })
         .to_string(),
     )
-    .unwrap_err();
-    assert!(error.reason.contains("per-report root/tsconfig"));
+    .unwrap();
+    let value: Value = serde_json::from_str(&output).unwrap();
+    assert!(value["reports"][0]["result"]["files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|file| file["path"] == "b.mts"));
 }
 
 #[test]
@@ -286,155 +476,4 @@ fn shared_graph_context_supports_symbol_dependents() {
     assert!(result["files"].is_array());
 }
 
-#[test]
-fn analyze_project_shared_dependencies_uses_symbol_graph_when_included() {
-    let output = analyze_project_json_impl(
-        json!({
-            "root": fixture_root("tests-impact-symbol"),
-            "reports": [{
-                "type": "dependencies",
-                "id": "deps",
-                "includeSymbols": true,
-                "relationships": ["import"],
-                "files": [{ "file": "other.mts", "symbol": "parse" }]
-            }]
-        })
-        .to_string(),
-    )
-    .unwrap();
-    let value: Value = serde_json::from_str(&output).unwrap();
-    let files = value["reports"][0]["result"]["files"].as_array().unwrap();
-
-    assert!(files
-        .iter()
-        .any(|file| file["file"] == "utils.mts" && file["symbol"] == "parseDate"));
-}
-
-#[test]
-fn analyze_project_shared_symbol_graph_does_not_leak_into_plain_reports() {
-    let output = analyze_project_json_impl(
-        json!({
-            "root": fixture_root("tests-impact-symbol"),
-            "reports": [
-                {
-                    "type": "dependencies",
-                    "id": "symbol-deps",
-                    "includeSymbols": true,
-                    "relationships": ["import"],
-                    "files": [{ "file": "other.mts", "symbol": "parse" }]
-                },
-                {
-                    "type": "dependencies",
-                    "id": "plain-deps",
-                    "relationships": ["import"],
-                    "files": ["other.mts"]
-                }
-            ]
-        })
-        .to_string(),
-    )
-    .unwrap();
-    let value: Value = serde_json::from_str(&output).unwrap();
-    let files = value["reports"][1]["result"]["files"].as_array().unwrap();
-
-    assert!(files.iter().any(|file| file["path"] == "utils.mts"));
-    assert!(!files.iter().any(|file| file.get("symbol").is_some()));
-}
-
-#[test]
-fn analyze_project_shared_dependents_uses_symbol_graph_when_included() {
-    let output = analyze_project_json_impl(
-        json!({
-            "root": fixture_root("tests-impact-symbol"),
-            "reports": [{
-                "type": "dependents",
-                "id": "users",
-                "includeSymbols": true,
-                "relationships": ["import"],
-                "files": [{ "file": "utils.mts", "symbol": "parseDate" }]
-            }]
-        })
-        .to_string(),
-    )
-    .unwrap();
-    let value: Value = serde_json::from_str(&output).unwrap();
-    let files = value["reports"][0]["result"]["files"].as_array().unwrap();
-
-    assert!(files
-        .iter()
-        .any(|file| file["file"] == "other.mts" && file["symbol"] == "parse"));
-    assert!(!files
-        .iter()
-        .any(|file| file["path"] == "unrelated-consumer.mts"));
-}
-
-#[test]
-fn analyze_project_dispatches_signature_impact_symbols_report() {
-    let output = analyze_project_json_impl(
-        json!({
-            "root": fixture_root("tests-impact-symbol"),
-            "reports": [{
-                "type": "symbols",
-                "id": "impact",
-                "files": ["utils.mts"],
-                "mode": "signature-impact",
-                "symbol": "parseDate"
-            }]
-        })
-        .to_string(),
-    )
-    .unwrap();
-    let value: Value = serde_json::from_str(&output).unwrap();
-    let result = &value["reports"][0]["result"];
-
-    assert_eq!(value["reports"][0]["id"], "impact");
-    assert_eq!(result["symbol"], "parseDate");
-    assert!(result["testCallers"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|entry| { entry["file"] == "helper-export.test.mts" }));
-}
-
-#[test]
-fn analyze_project_shared_symbol_dependents_expands_file_roots() {
-    let output = analyze_project_json_impl(
-        json!({
-            "root": fixture_root("symbol-export"),
-            "reports": [{
-                "type": "dependents",
-                "id": "users",
-                "includeSymbols": true,
-                "relationships": ["import"],
-                "files": ["file-root-source.mts"]
-            }]
-        })
-        .to_string(),
-    )
-    .unwrap();
-    let value: Value = serde_json::from_str(&output).unwrap();
-    let files = value["reports"][0]["result"]["files"].as_array().unwrap();
-
-    assert!(files
-        .iter()
-        .any(|file| file["path"] == "file-root-consumer.mts"));
-    assert!(files
-        .iter()
-        .any(|file| file["file"] == "file-root-consumer.mts" && file["symbol"] == "value"));
-}
-
-#[test]
-fn tests_impact_api_requires_entrypoints() {
-    let error = crate::napi_api::cli_parity::build_impact_args(
-        crate::napi_api::options::TestsImpactOptions {
-            entrypoints: vec![],
-            include_symbols: false,
-            root: None,
-            config: None,
-            tsconfig: None,
-        },
-    )
-    .unwrap_err();
-
-    assert!(error.to_string().contains("entrypoints is required"));
-}
+include!("tests/symbol_reports.rs");

@@ -1,7 +1,7 @@
 use super::*;
 use crate::server_routes::model::{Binding, FileFacts, ImportBinding, MountSite, RouteSite};
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 mod extra;
 
@@ -10,6 +10,13 @@ fn fixture(name: &str) -> PathBuf {
         .join("../../test-cases/server-ast-routes")
         .join(name)
         .join("fixture")
+}
+
+fn gitignore_fixture() -> tempfile::TempDir {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass3-visibility");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    fixture
 }
 
 #[test]
@@ -157,6 +164,43 @@ fn modular_mounts_apply_prefixes_across_files() {
 }
 
 #[test]
+fn server_routes_ignore_automatic_ignored_tsconfig_and_sources_but_honor_explicit_config() {
+    let fixture = gitignore_fixture();
+    let automatic = analyze_project(fixture.path(), None, &[]).unwrap();
+    assert!(automatic
+        .routes
+        .iter()
+        .any(|route| route.route == "/visible"));
+    assert!(!automatic
+        .routes
+        .iter()
+        .any(|route| route.route == "/api/visible" || route.route == "/ignored"));
+
+    let explicit = analyze_project(fixture.path(), Some(Path::new("tsconfig.json")), &[]).unwrap();
+    assert!(explicit
+        .routes
+        .iter()
+        .any(|route| route.route == "/api/visible"));
+    assert!(!explicit
+        .routes
+        .iter()
+        .any(|route| route.route == "/ignored"));
+}
+
+#[test]
+fn pass5a_prepared_server_routes_match_public_wrapper_output() {
+    let fixture = gitignore_fixture();
+    let public = analyze_project(fixture.path(), None, &[]).unwrap();
+    let prepared = prepare_analysis(fixture.path(), None).unwrap();
+    let reused = analyze_project_with_prepared(&prepared, &[]).unwrap();
+
+    assert_eq!(
+        serde_json::to_value(reused).unwrap(),
+        serde_json::to_value(public).unwrap()
+    );
+}
+
+#[test]
 fn related_dependents_and_both_are_supported() {
     let report = analyze_project(&fixture("mixed"), None, &[]).unwrap();
     let dependents = related(
@@ -286,254 +330,4 @@ fn mount_resolver_covers_local_imported_fallback_and_recursive_prefixes() {
     assert!(prefixes.contains(&"/root/api/nested".to_string()));
 }
 
-#[test]
-fn mount_resolver_ignores_unresolvable_and_non_relative_imports() {
-    let parent = PathBuf::from("/repo/parent.ts");
-    let mut parent_facts = FileFacts::default();
-    parent_facts.mounts.push(MountSite {
-        parent: "api".to_string(),
-        child: "externalRouter".to_string(),
-        prefix: "/external".to_string(),
-    });
-    parent_facts.imports.push(ImportBinding {
-        local: "externalRouter".to_string(),
-        imported: "default".to_string(),
-        source: "pkg".to_string(),
-    });
-
-    let facts = HashMap::from([(parent, parent_facts)]);
-    assert!(super::mounts::test_support::resolve_mounts(&facts).is_empty());
-}
-
-#[test]
-fn mount_resolver_covers_import_binding_fallbacks_and_cycles() {
-    let parent = PathBuf::from("/repo/parent.ts");
-    let local = PathBuf::from("/repo/local.ts");
-    let ambiguous = PathBuf::from("/repo/ambiguous.ts");
-
-    let mut parent_facts = FileFacts::default();
-    parent_facts.bindings.insert(
-        "api".to_string(),
-        Binding {
-            framework: Framework::Express,
-            prefixes: vec![],
-        },
-    );
-    for child in [
-        "sameName",
-        "localExport",
-        "localBinding",
-        "aliasToExport",
-        "aliasToBinding",
-    ] {
-        parent_facts.mounts.push(MountSite {
-            parent: "api".to_string(),
-            child: child.to_string(),
-            prefix: format!("/{child}"),
-        });
-        parent_facts.imports.push(ImportBinding {
-            local: child.to_string(),
-            imported: if child.starts_with("alias") {
-                "missing".to_string()
-            } else {
-                child.to_string()
-            },
-            source: "./local.ts".to_string(),
-        });
-    }
-    parent_facts.mounts.push(MountSite {
-        parent: "api".to_string(),
-        child: "ambiguous".to_string(),
-        prefix: "/ambiguous".to_string(),
-    });
-    parent_facts.imports.push(ImportBinding {
-        local: "ambiguous".to_string(),
-        imported: "missing".to_string(),
-        source: "./ambiguous.ts".to_string(),
-    });
-
-    let mut local_facts = FileFacts::default();
-    local_facts.bindings.insert(
-        "sameName".to_string(),
-        Binding {
-            framework: Framework::Express,
-            prefixes: vec![],
-        },
-    );
-    local_facts.bindings.insert(
-        "localBinding".to_string(),
-        Binding {
-            framework: Framework::Express,
-            prefixes: vec![],
-        },
-    );
-    local_facts.bindings.insert(
-        "aliasToBinding".to_string(),
-        Binding {
-            framework: Framework::Express,
-            prefixes: vec![],
-        },
-    );
-    local_facts
-        .exports
-        .insert("localExport".to_string(), "localBinding".to_string());
-    local_facts
-        .exports
-        .insert("aliasToExport".to_string(), "localBinding".to_string());
-
-    let mut ambiguous_facts = FileFacts::default();
-    ambiguous_facts
-        .exports
-        .insert("one".to_string(), "one".to_string());
-    ambiguous_facts
-        .exports
-        .insert("two".to_string(), "two".to_string());
-
-    let facts = HashMap::from([
-        (parent, parent_facts),
-        (local.clone(), local_facts),
-        (ambiguous, ambiguous_facts),
-    ]);
-    let mounts = super::mounts::test_support::resolve_mounts(&facts);
-    assert!(mounts
-        .iter()
-        .any(|mount| mount.child_file == local && mount.child == "sameName"));
-    assert!(mounts
-        .iter()
-        .any(|mount| mount.child_file == local && mount.child == "localBinding"));
-
-    let site = RouteSite {
-        file: local.clone(),
-        line: 1,
-        binding: "localBinding".to_string(),
-        method: "get".to_string(),
-        raw_path: "/leaf".to_string(),
-        path: "/leaf".to_string(),
-        query_params: Vec::new(),
-        framework: Framework::Express,
-    };
-    let prefixes = super::mounts::prefixes_for(&site, &facts, &mounts);
-    assert!(prefixes.iter().any(|prefix| prefix.contains("localExport")));
-
-    let missing_parent = [super::mounts::ResolvedMount {
-        parent_file: PathBuf::from("/repo/missing.ts"),
-        parent: "missing".to_string(),
-        child_file: local.clone(),
-        child: "localBinding".to_string(),
-        prefix: "/orphan".to_string(),
-    }];
-    let prefixes = super::mounts::prefixes_for(&site, &facts, &missing_parent);
-    assert_eq!(prefixes, vec!["/orphan"]);
-}
-
-#[test]
-fn report_builder_includes_diagnostics_and_dynamic_summary() {
-    let root = PathBuf::from("/repo");
-    let file = root.join("api.ts");
-    let mut facts = FileFacts::default();
-    facts.diagnostics.push((3, "unsupported route".to_string()));
-    facts.bindings.insert(
-        "api".to_string(),
-        Binding {
-            framework: Framework::Express,
-            prefixes: vec![],
-        },
-    );
-    facts.routes.push(RouteSite {
-        file: file.clone(),
-        line: 4,
-        binding: "api".to_string(),
-        method: "get".to_string(),
-        raw_path: "/users/:id".to_string(),
-        path: "/users/:id".to_string(),
-        query_params: Vec::new(),
-        framework: Framework::Express,
-    });
-
-    let report = graph::build_report(
-        &root,
-        &HashMap::from([(file, facts)]),
-        &crate::codebase::ts_resolver::TsConfig {
-            dir: root.clone(),
-            paths_dir: root.clone(),
-            paths: Vec::new(),
-            base_url: None,
-        },
-    );
-    assert_eq!(report.diagnostics[0].file, "api.ts");
-    assert_eq!(report.diagnostics[0].line, 3);
-    assert_eq!(report.summary.dynamic_routes, 1);
-}
-
-#[test]
-fn mount_resolver_covers_single_export_none_and_cycle_guards() {
-    let parent = PathBuf::from("/repo/parent.ts");
-    let child = PathBuf::from("/repo/child.ts");
-
-    let mut parent_facts = FileFacts::default();
-    parent_facts.bindings.insert(
-        "api".to_string(),
-        Binding {
-            framework: Framework::Express,
-            prefixes: vec!["/root".to_string()],
-        },
-    );
-    for local in ["onlyDefault", "ambiguous"] {
-        parent_facts.imports.push(ImportBinding {
-            local: local.to_string(),
-            imported: "default".to_string(),
-            source: "./child.ts".to_string(),
-        });
-        parent_facts.mounts.push(MountSite {
-            parent: "api".to_string(),
-            child: local.to_string(),
-            prefix: format!("/{local}"),
-        });
-    }
-
-    let mut child_facts = FileFacts::default();
-    child_facts.bindings.insert(
-        "actual".to_string(),
-        Binding {
-            framework: Framework::Express,
-            prefixes: vec![],
-        },
-    );
-    child_facts
-        .exports
-        .insert("only".to_string(), "actual".to_string());
-
-    let facts = HashMap::from([(parent.clone(), parent_facts), (child.clone(), child_facts)]);
-    let mounts = super::mounts::test_support::resolve_mounts(&facts);
-    assert!(mounts.iter().any(|mount| mount.child == "actual"));
-
-    let cycle = [
-        super::mounts::ResolvedMount {
-            parent_file: parent.clone(),
-            parent: "api".to_string(),
-            child_file: child.clone(),
-            child: "actual".to_string(),
-            prefix: String::new(),
-        },
-        super::mounts::ResolvedMount {
-            parent_file: child.clone(),
-            parent: "actual".to_string(),
-            child_file: parent.clone(),
-            child: "api".to_string(),
-            prefix: String::new(),
-        },
-    ];
-    let site = RouteSite {
-        file: child,
-        line: 1,
-        binding: "actual".to_string(),
-        method: "get".to_string(),
-        raw_path: "/leaf".to_string(),
-        path: "/leaf".to_string(),
-        query_params: Vec::new(),
-        framework: Framework::Express,
-    };
-    let prefixes = super::mounts::prefixes_for(&site, &facts, &cycle);
-    assert!(prefixes.contains(&"/".to_string()));
-    assert!(prefixes.contains(&"/root".to_string()));
-}
+include!("tests/mounts.rs");

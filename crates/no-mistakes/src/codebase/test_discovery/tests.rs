@@ -11,6 +11,37 @@ fn fixture_root(name: &str) -> PathBuf {
     )
 }
 
+fn runner_projects(
+    root: &Path,
+    config: &NoMistakesConfig,
+    runner: TestRunner,
+) -> Result<Vec<ConfigProject>> {
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(root);
+    let tsconfig = resolve_tsconfig_lossy(root, &visible_paths);
+    projects::runner_projects_from_visible(root, config, runner, &visible_paths, &tsconfig)
+}
+
+fn runner_projects_lossy(
+    root: &Path,
+    config: &NoMistakesConfig,
+    runner: TestRunner,
+) -> Vec<ConfigProject> {
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(root);
+    let tsconfig = resolve_tsconfig_lossy(root, &visible_paths);
+    projects::runner_projects_lossy_from_visible(root, config, runner, &visible_paths, &tsconfig)
+}
+
+fn discover_from_projects(
+    root: &Path,
+    config: &NoMistakesConfig,
+    runner: TestRunner,
+    projects: Vec<ConfigProject>,
+) -> Result<DiscoveredTests> {
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(root);
+    let tsconfig = resolve_tsconfig_lossy(root, &visible_paths);
+    discover_from_projects_from_visible(root, config, runner, projects, &visible_paths, &tsconfig)
+}
+
 #[test]
 fn dotnet_strict_project_discovery_errors_on_missing_projects() {
     let root = fixture_root("dotnet-test-plan");
@@ -25,7 +56,7 @@ fn dotnet_strict_project_discovery_errors_on_missing_projects() {
         },
     );
 
-    let error = projects::runner_projects(&root, &config, TestRunner::Dotnet).unwrap_err();
+    let error = runner_projects(&root, &config, TestRunner::Dotnet).unwrap_err();
     assert!(error
         .to_string()
         .contains("configured dotnet project `missing`"));
@@ -45,7 +76,7 @@ fn dotnet_lossy_project_discovery_skips_missing_projects() {
         },
     );
 
-    let projects = projects::runner_projects_lossy(&root, &config, TestRunner::Dotnet);
+    let projects = runner_projects_lossy(&root, &config, TestRunner::Dotnet);
     assert!(projects
         .iter()
         .any(|project| project.policy_name.as_deref() == Some("app-tests")));
@@ -66,7 +97,7 @@ fn dotnet_project_discovery_honors_include_override() {
         .expect("fixture should define app-tests");
     project.include = vec!["dotnet-clients/tests/App.Tests/ParserEdgeCases.cs".to_string()];
 
-    let projects = projects::runner_projects(&root, &config, TestRunner::Dotnet).unwrap();
+    let projects = runner_projects(&root, &config, TestRunner::Dotnet).unwrap();
     let app_tests = projects
         .iter()
         .find(|project| project.policy_name.as_deref() == Some("app-tests"))
@@ -94,7 +125,7 @@ fn dotnet_project_discovery_falls_back_when_no_xunit_files_are_known() {
         },
     );
 
-    let projects = projects::runner_projects(&root, &config, TestRunner::Dotnet).unwrap();
+    let projects = runner_projects(&root, &config, TestRunner::Dotnet).unwrap();
 
     assert_eq!(projects.len(), 1);
     assert_eq!(
@@ -211,7 +242,7 @@ fn policy_only_project_inherits_single_explicit_runner_config() {
         },
     );
 
-    let projects = projects::runner_projects_lossy(&root, &config, TestRunner::Vitest);
+    let projects = runner_projects_lossy(&root, &config, TestRunner::Vitest);
 
     let project = projects
         .iter()
@@ -240,7 +271,7 @@ fn policy_only_project_does_not_guess_from_multiple_explicit_configs() {
         },
     );
 
-    let projects = projects::runner_projects_lossy(&root, &config, TestRunner::Vitest);
+    let projects = runner_projects_lossy(&root, &config, TestRunner::Vitest);
 
     let project = projects
         .iter()
@@ -288,6 +319,29 @@ fn vitest_config_without_include_uses_globset_compatible_defaults() {
         .collect();
     assert_eq!(rel_tests, vec!["src/default.test.ts"]);
     assert!(!discovered.used_fallback);
+}
+
+#[test]
+fn discovered_test_globs_wraps_discovery_and_omits_empty_results() {
+    let root = fixture_root("test-discovery-vitest-defaults");
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.configs = Some(StringOrList::One("vitest.config.mts".to_string()));
+
+    assert_eq!(
+        discovered_test_globs(&root, &config, TestRunner::Vitest).unwrap(),
+        Some(vec!["src/default.test.ts".to_string()])
+    );
+
+    let empty_root = fixture_root("symbols-output");
+    assert_eq!(
+        discovered_test_globs(
+            &empty_root,
+            &NoMistakesConfig::default(),
+            TestRunner::Vitest,
+        )
+        .unwrap(),
+        None
+    );
 }
 
 #[test]
@@ -351,4 +405,136 @@ fn playwright_fallback_skips_helpers_in_e2e_directories() {
         .collect();
     assert!(rel_tests.contains(&"tests/e2e/home.spec.ts".to_string()));
     assert!(!rel_tests.contains(&"tests/e2e/helpers.ts".to_string()));
+}
+
+#[test]
+fn prepared_projects_share_runner_helpers_with_graph_facts_and_test_filters() {
+    let source = fixture_root("prepared-test-projects");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let visible_paths = snapshot.paths_for(&root);
+    let config =
+        crate::config::v2::load_v2_config_from_visible(&root, None, &visible_paths).unwrap();
+    let tsconfig =
+        crate::codebase::ts_resolver::resolve_tsconfig_from_visible(None, &root, &visible_paths)
+            .unwrap();
+    let graph_files = crate::codebase::dependencies::graph::GraphFiles::from_files(
+        crate::codebase::ts_source::discover_files_from_visible(&root, &[], &visible_paths),
+    );
+    let graph_plan = crate::codebase::dependencies::graph::GraphBuildPlan {
+        imports: true,
+        tests: true,
+        ..Default::default()
+    };
+    let codebase_config = crate::codebase::config::config_from_loaded_v2(&root, None, &config);
+    let preliminary = crate::codebase::dependencies::graph::prepare_graph_config_with_test_filter(
+        &root,
+        graph_plan,
+        &codebase_config,
+        &config,
+        &snapshot,
+        crate::codebase::test_filter::TestFileFilter::fallback_only(),
+    )
+    .unwrap();
+    let (fact_plan, mut fact_context) =
+        crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_prepared(
+            &root,
+            graph_plan,
+            &preliminary,
+        );
+    fact_context.set_visible_files(graph_files.visible().iter().cloned());
+
+    crate::ast::begin_parse_count(&root);
+    let prepared = prepare_test_projects_from_visible(
+        &root,
+        &config,
+        &visible_paths,
+        &tsconfig,
+        graph_files.indexable(),
+        fact_plan,
+        fact_context.clone(),
+    );
+    let config_file = root.join("vitest.config.ts");
+    let helper_file = root.join("vitest.projects.ts");
+    assert!(prepared.graph_facts().contains_key(&config_file));
+    assert!(prepared.graph_facts().contains_key(&helper_file));
+
+    let discovered = discover_tests_from_prepared_projects(
+        &root,
+        &config,
+        TestRunner::Vitest,
+        &prepared,
+        &visible_paths,
+        &tsconfig,
+    )
+    .unwrap();
+    assert!(discovered.tests.contains(&root.join("src/unit.test.ts")));
+    assert!(!discovered
+        .tests
+        .contains(&root.join("src/excluded.test.ts")));
+
+    let test_filter = crate::codebase::test_filter::TestFileFilter::from_prepared_projects(
+        &root,
+        &config,
+        &visible_paths,
+        prepared.project_filters(),
+    );
+    let prepared_graph =
+        crate::codebase::dependencies::graph::prepare_graph_config_with_test_filter(
+            &root,
+            graph_plan,
+            &codebase_config,
+            &config,
+            &snapshot,
+            test_filter,
+        )
+        .unwrap();
+    let mut facts = prepared.graph_facts().clone();
+    let remaining = graph_files
+        .indexable()
+        .iter()
+        .filter(|path| !facts.contains_key(*path))
+        .cloned()
+        .collect::<Vec<_>>();
+    facts.extend(
+        crate::codebase::ts_source::facts::collect_ts_facts_with_context(
+            &remaining,
+            fact_plan,
+            &fact_context,
+        ),
+    );
+    let graph = crate::codebase::dependencies::graph::DepGraph::build_with_plan_files_prepared_config_and_facts(
+        &root,
+        &tsconfig,
+        graph_plan,
+        &graph_files,
+        None,
+        &prepared_graph,
+        Some(&facts),
+    )
+    .unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+
+    let test_edges = [crate::codebase::dependencies::graph::EdgeKind::TestOf].into();
+    let included = graph.deps_of(
+        &[crate::codebase::dependencies::graph::NodeId::File(
+            root.join("src/unit.test.ts"),
+        )],
+        Some(1),
+        Some(&test_edges),
+    );
+    let excluded = graph.deps_of(
+        &[crate::codebase::dependencies::graph::NodeId::File(
+            root.join("src/excluded.test.ts"),
+        )],
+        Some(1),
+        Some(&test_edges),
+    );
+    assert!(included
+        .iter()
+        .any(|entry| { entry.node.as_file() == Some(root.join("src/unit.ts").as_path()) }));
+    assert!(excluded.is_empty());
+    assert_eq!(counts.len(), 6, "{counts:#?}");
+    assert!(counts.values().all(|count| *count == 1), "{counts:#?}");
 }

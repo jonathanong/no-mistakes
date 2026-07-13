@@ -132,6 +132,8 @@ fn test_plan_dotnet_direct_and_coverage_error() {
 #[test]
 fn test_plan_dotnet_falls_back_when_source_graph_is_unconfigured() {
     let root = fixture("dotnet-test-plan").join("dotnet-clients");
+    // A source file without a configured graph can only fall back to the full
+    // suite when the caller explicitly opts in to global fallback behavior.
     let output = run(&[
         "test",
         "plan",
@@ -140,6 +142,8 @@ fn test_plan_dotnet_falls_back_when_source_graph_is_unconfigured() {
         root.to_str().unwrap(),
         "--changed-file",
         "src/App/FeedService.cs",
+        "--global-config-fallback",
+        "true",
         "--json",
     ]);
 
@@ -364,6 +368,8 @@ fn test_plan_dotnet_solution_file_triggers_native_fallback() {
 #[test]
 fn test_plan_dotnet_deleted_native_source_triggers_fallback() {
     let root = fixture("dotnet-scoped-fallback");
+    // Deleted source cannot be associated with a project from current files,
+    // so selecting every discovered test remains an explicit caller choice.
     let output = run(&[
         "test",
         "plan",
@@ -372,6 +378,8 @@ fn test_plan_dotnet_deleted_native_source_triggers_fallback() {
         root.to_str().unwrap(),
         "--diff",
         root.join("delete-app-service.diff").to_str().unwrap(),
+        "--global-config-fallback",
+        "true",
         "--json",
     ]);
 

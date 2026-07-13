@@ -198,8 +198,19 @@ pub(crate) fn resolve_tsconfig(
     root: &Path,
 ) -> Result<no_mistakes::codebase::ts_resolver::TsConfig> {
     match tsconfig_arg {
-        Some(path) => no_mistakes::codebase::ts_resolver::load_tsconfig(path),
-        None => match no_mistakes::codebase::ts_resolver::find_tsconfig(root) {
+        Some(path) => {
+            let path = if path.is_absolute() {
+                path.to_path_buf()
+            } else {
+                root.join(path)
+            };
+            no_mistakes::codebase::ts_resolver::load_tsconfig(&path)
+                .with_context(|| format!("loading tsconfig {}", path.display()))
+        }
+        None => match no_mistakes::codebase::ts_resolver::find_tsconfig_from_visible(
+            root,
+            &no_mistakes::codebase::ts_source::discover_visible_paths(root),
+        ) {
             Some(path) => no_mistakes::codebase::ts_resolver::load_tsconfig(&path),
             None => Ok(no_mistakes::codebase::ts_resolver::TsConfig {
                 dir: root.to_path_buf(),
