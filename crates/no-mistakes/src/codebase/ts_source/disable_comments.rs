@@ -16,24 +16,7 @@ pub(crate) fn is_under_skipped_dir(root: &Path, path: &Path, extra_skip: &HashSe
     })
 }
 
-#[cfg(test)]
-thread_local! {
-    /// Test-only spawn counter for `git ls-files`, incremented once per real
-    /// process spawn. Thread-local (not a process-global `static`) so it is
-    /// unaffected by unrelated tests spawning `git` concurrently on other
-    /// threads — the default test harness runs each `#[test]` fn on its own
-    /// fresh OS thread, so this count starts at 0 and only reflects calls made
-    /// by the current test. Used to prove the `_from_git_files` discovery
-    /// variants actually avoid a second spawn when given an already-fetched
-    /// list, rather than just happening to return the same output (see
-    /// `crates/CLAUDE.md`: "assert on a call count, not value equality").
-    pub(crate) static GIT_LS_FILES_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-}
-
 fn git_ls_files(root: &Path) -> Option<Vec<String>> {
-    #[cfg(test)]
-    GIT_LS_FILES_CALLS.with(|calls| calls.set(calls.get() + 1));
-
     let mut cmd = Command::new("git");
     cmd.current_dir(root);
     cmd.arg("ls-files");
