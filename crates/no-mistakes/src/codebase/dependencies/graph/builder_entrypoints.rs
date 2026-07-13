@@ -5,12 +5,7 @@ impl DepGraph {
 
     pub fn build_with_plan(root: &Path, tsconfig: &TsConfig, plan: GraphBuildPlan) -> Result<Self> {
         let graph_files = GraphFiles::discover(root);
-        Ok(Self::build_with_plan_and_files(
-            root,
-            tsconfig,
-            plan,
-            &graph_files,
-        ))
+        Self::build_with_plan_and_files(root, tsconfig, plan, &graph_files)
     }
 
     pub fn build_with_plan_and_config(
@@ -20,13 +15,13 @@ impl DepGraph {
         config_path: Option<&Path>,
     ) -> Result<Self> {
         let graph_files = GraphFiles::discover(root);
-        Ok(Self::build_with_plan_and_files_config(
+        Self::build_with_plan_and_files_config(
             root,
             tsconfig,
             plan,
             &graph_files,
             config_path,
-        ))
+        )
     }
 
     pub(crate) fn build_with_plan_and_files(
@@ -34,7 +29,7 @@ impl DepGraph {
         tsconfig: &TsConfig,
         plan: GraphBuildPlan,
         graph_files: &GraphFiles,
-    ) -> Self {
+    ) -> Result<Self> {
         Self::build_with_plan_and_files_config(root, tsconfig, plan, graph_files, None)
     }
 
@@ -44,7 +39,7 @@ impl DepGraph {
         plan: GraphBuildPlan,
         graph_files: &GraphFiles,
         config_path: Option<&Path>,
-    ) -> Self {
+    ) -> Result<Self> {
         Self::build_with_plan_files_config_and_facts(
             root,
             tsconfig,
@@ -61,7 +56,7 @@ impl DepGraph {
         plan: GraphBuildPlan,
         graph_files: &GraphFiles,
         facts: Option<&dyn TsFactLookup>,
-    ) -> Self {
+    ) -> Result<Self> {
         Self::build_with_plan_files_config_and_facts(
             root,
             tsconfig,

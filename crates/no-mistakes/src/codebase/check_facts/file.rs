@@ -11,6 +11,10 @@ mod plan;
 
 use plan::{requires_parse, should_store_source, ts_source};
 
+pub(crate) fn is_mdx_file(path: &Path) -> bool {
+    path.extension().and_then(|ext| ext.to_str()) == Some("mdx")
+}
+
 pub(crate) fn collect_file_facts(
     root: &Path,
     path: &Path,

@@ -1,5 +1,6 @@
 use crate::config::v2::schema::RewriteRule;
 use crate::playwright::analysis::pipeline::analyze_with_policy_and_optional_facts;
+use crate::playwright::analysis::pipeline_options::AnalysisOptions;
 use crate::playwright::analysis::types::UniqueSelectorPolicy;
 use crate::playwright::config::Settings;
 use crate::playwright::playwright_tests::TestPolicy;
@@ -47,9 +48,15 @@ fn pipeline_expands_rewrites_into_route_edges() {
         &settings,
         TestPolicy::default(),
         UniqueSelectorPolicy::default(),
-        false,
-        None,
-        None,
+        AnalysisOptions {
+            require_routes: false,
+            skip_test_file_errors: false,
+            facts: None,
+            route_import_candidate: None,
+            graph_file_universe: None,
+            occurrence_selection:
+                crate::playwright::analysis::pipeline_occurrences::CachedOccurrenceSelection::Exact,
+        },
     )
     .unwrap();
     let route_patterns: Vec<&str> = analysis

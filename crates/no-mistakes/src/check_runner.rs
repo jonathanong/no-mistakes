@@ -36,9 +36,21 @@ pub(crate) fn run_all(
     } else {
         None
     };
-    let playwright_fact_plan =
-        no_mistakes::playwright::rules::fact_plan(&root, config_path.as_deref(), &config)
-            .context("failed to prepare Playwright shared facts")?;
+    let playwright_consumers = forbidden_graph_plan
+        .map(
+            |plan| no_mistakes::playwright::rules::PlaywrightFactConsumers {
+                graph_selectors: plan.playwright_selectors,
+                graph_routes: plan.playwright_routes,
+            },
+        )
+        .unwrap_or_default();
+    let playwright_fact_plan = no_mistakes::playwright::rules::fact_plan_for_consumers(
+        &root,
+        config_path.as_deref(),
+        &config,
+        playwright_consumers,
+    )
+    .context("failed to prepare Playwright shared facts")?;
     let playwright_facts_enabled = playwright_fact_plan.is_some();
     let integration_enabled = integration_configured(&config);
     let react_enabled = react_traits::check_enabled(&root, config_path.as_deref(), false)?;
@@ -64,12 +76,6 @@ pub(crate) fn run_all(
             );
         plan.graph = fact_plan;
         plan.graph_context = fact_context;
-    }
-    if playwright_facts_enabled {
-        // Route-import reachability consumes the same repo-wide import facts
-        // as the canonical dependency graph. Function-call facts are not
-        // needed because route imports deliberately remain unpruned.
-        plan.graph.imports = true;
     }
     let needs_shared_facts = plan_requests_facts(&plan) || playwright_fact_plan.is_some();
     if !needs_shared_facts

@@ -111,6 +111,104 @@ fn playwright_route_edges_reuse_shared_route_cache_instead_of_rescanning() {
     );
 }
 
+#[test]
+fn playwright_route_edges_borrow_cached_occurrences_across_repeated_analysis() {
+    use crate::codebase::check_facts::{
+        collect_check_facts_with_graph_files_and_playwright, CheckFactPlan,
+    };
+    use crate::codebase::dependencies::graph::TsFactLookup;
+
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("playwright-route-edges-v2"));
+    let test_file = root.join("tests/e2e/home.spec.ts");
+    let page = root.join("web/app/page.tsx");
+    let all_files = vec![
+        test_file.clone(),
+        page.clone(),
+        root.join("web/app/layout.tsx"),
+        root.join("playwright.config.mts"),
+        root.join(".no-mistakes.yml"),
+    ];
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let playwright = crate::playwright::rules::fact_plan_for_consumers(
+        &root,
+        None,
+        &config,
+        crate::playwright::rules::PlaywrightFactConsumers {
+            graph_selectors: false,
+            graph_routes: true,
+        },
+    )
+    .unwrap()
+    .unwrap();
+    let facts = collect_check_facts_with_graph_files_and_playwright(
+        &root,
+        Vec::new(),
+        all_files.clone(),
+        CheckFactPlan::default(),
+        Some(playwright),
+    );
+    let occurrences = facts
+        .get_playwright_facts(&test_file)
+        .expect("cached Playwright occurrences")
+        .all()
+        .pop()
+        .expect("cached Playwright variant");
+
+    let first = collect_playwright_route_edges(&root, None, &all_files, Some(&facts));
+    let second = collect_playwright_route_edges(&root, None, &all_files, Some(&facts));
+
+    assert_eq!(std::sync::Arc::strong_count(&occurrences.common), 2);
+    assert_eq!(std::sync::Arc::strong_count(&occurrences.variant), 2);
+    assert_eq!(first, second);
+    assert!(first.contains(&(
+        NodeId::File(test_file),
+        NodeId::File(page),
+        EdgeKind::RouteTest,
+    )));
+}
+
+#[test]
+fn playwright_route_edges_honor_cached_parse_errors_without_rereading_disk() {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    struct CachedParseErrorFacts {
+        test_file: PathBuf,
+        parse_error_lookups: AtomicUsize,
+    }
+
+    impl TsFactLookup for CachedParseErrorFacts {
+        fn get_ts_facts(&self, _path: &Path) -> Option<&TsFileFacts> {
+            None
+        }
+
+        fn get_playwright_parse_error(&self, path: &Path) -> Option<&str> {
+            self.parse_error_lookups.fetch_add(1, Ordering::Relaxed);
+            (path == self.test_file).then_some("cached Playwright parse error")
+        }
+    }
+
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase/dependencies/playwright-cached-parse-error/fixture"),
+    );
+    let test_file = root.join("tests/e2e/home.spec.ts");
+    let page = root.join("web/app/page.tsx");
+    let facts = CachedParseErrorFacts {
+        test_file: test_file.clone(),
+        parse_error_lookups: AtomicUsize::new(0),
+    };
+
+    let edges = collect_playwright_route_edges(
+        &root,
+        None,
+        &[test_file, page],
+        Some(&facts),
+    );
+
+    assert!(edges.is_empty(), "cached error must suppress the on-disk route edge");
+    assert_eq!(facts.parse_error_lookups.load(Ordering::Relaxed), 1);
+}
+
 /// Regression test (Codex review finding): `collect_playwright_route_edges` must load
 /// Playwright settings from the same `config_path` its caller resolves, not a hardcoded `None`
 /// — `get_or_compute_playwright_routes` is an unkeyed cache, so if this producer's settings

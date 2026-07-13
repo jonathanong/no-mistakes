@@ -28,8 +28,9 @@ fn collect_for_test(
     settings: &Settings,
     routes: &[routes::Route],
 ) -> anyhow::Result<BTreeMap<Arc<String>, BTreeSet<Arc<String>>>> {
-    let tsconfig =
-        crate::playwright::analysis::pipeline_setup::load_route_import_tsconfig(root, settings)?;
+    let tsconfig = crate::playwright::analysis::pipeline_text_setup::load_route_import_tsconfig(
+        root, settings,
+    )?;
     let source_files = collect_route_source_files(root, settings)?;
     let mut graph_file_paths = crate::codebase::dependencies::graph::GraphFiles::discover(root)
         .all()
@@ -50,7 +51,7 @@ fn collect_for_test(
             &graph_files,
             None,
             None,
-        );
+        )?;
     collect_route_reachable_files(root, settings, routes, &graph, &source_files)
 }
 
@@ -176,10 +177,11 @@ fn standalone_and_shared_fact_route_reachability_match() {
             ..Default::default()
         },
     );
-    let graph = crate::playwright::analysis::pipeline_setup::build_route_import_graph(
+    let graph = crate::playwright::analysis::pipeline_text_setup::build_route_import_graph(
         &root,
         &settings,
         Some(&facts),
+        None,
         &source_files.graph_files,
     )
     .expect("shared-fact graph builds");

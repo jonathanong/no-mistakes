@@ -28,7 +28,7 @@ fn collect_and_merge_all_edges(
     });
 
     crate::perf_trace::trace("graph.route_imports", || {
-        if plan.route_imports || plan.playwright_selectors {
+        if plan.route_imports {
             let route_import_edges = collect_route_import_edges(
                 files,
                 facts.expect("TS import facts are collected for route-import edges"),

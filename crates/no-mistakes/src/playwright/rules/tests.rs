@@ -33,6 +33,13 @@ fn config_with_targeted_rules(rules: Vec<(&str, Vec<&str>)>) -> NoMistakesConfig
     }
 }
 
+fn staged_playwright_fixture() -> std::path::PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase/staged-playwright/fixture"),
+    )
+}
+
 #[test]
 fn configured_is_false_without_playwright_rules() {
     let config = NoMistakesConfig::default();
@@ -263,43 +270,17 @@ fn fact_plan_validates_targeted_playwright_config_names() {
 
 #[test]
 fn fact_plan_merges_test_id_attributes_for_shared_target_files() {
-    let temp = tempfile::tempdir().unwrap();
-    let root = temp.path();
-    fs::create_dir_all(root.join("tests")).unwrap();
-    fs::write(
-        root.join("tests/shared.spec.ts"),
-        "import { test } from '@playwright/test'; test('shared', async ({ page }) => { await page.getByTestId('shared').click(); });",
-    )
-    .unwrap();
-    fs::write(
-        root.join("playwright.a.config.ts"),
-        "export default { name: 'a', testDir: './tests', use: { testIdAttribute: 'data-a' } };",
-    )
-    .unwrap();
-    fs::write(
-        root.join("playwright.b.config.ts"),
-        "export default { name: 'b', testDir: './tests', use: { testIdAttribute: 'data-b' } };",
-    )
-    .unwrap();
-    let mut config = config_with_targeted_rules(vec![
-        (PLAYWRIGHT_UNIQUE_TEST_IDS, vec!["a"]),
-        (PLAYWRIGHT_UNIQUE_HTML_IDS, vec!["b"]),
-    ]);
-    config.tests.playwright.configs = Some(StringOrList::Many(vec![
-        "playwright.a.config.ts".to_string(),
-        "playwright.b.config.ts".to_string(),
-    ]));
+    let root = staged_playwright_fixture();
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
 
-    let plan = fact_plan(root, None, &config).unwrap().unwrap();
-    let attributes = plan
-        .test_id_attributes_by_path
-        .get(&root.join("tests/shared.spec.ts"))
-        .expect("shared test file attributes");
+    let plan = fact_plan(&root, None, &config).unwrap().unwrap();
+    let file_plan = plan
+        .file(&root.join("tests/multi.spec.ts"))
+        .expect("shared test file settings");
+    let attributes = file_plan.merged_test_id_attributes();
 
-    assert_eq!(
-        attributes,
-        &vec!["data-a".to_string(), "data-b".to_string()]
-    );
+    assert_eq!(attributes, vec!["data-a".to_string(), "data-b".to_string()]);
+    assert_eq!(file_plan.selector_extraction_count(), 2);
 }
 
 #[test]

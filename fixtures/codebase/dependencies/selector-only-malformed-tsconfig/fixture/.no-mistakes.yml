@@ -1,0 +1,6 @@
+tests:
+  playwright:
+    frontendRoot: web/app
+    selectorRoots:
+      - web/app
+      - web/components

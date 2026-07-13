@@ -15,19 +15,18 @@ pub(super) fn collect_playwright_selector_edges_with_graph(
     config_path: Option<&Path>,
     all_files: &[PathBuf],
     facts: Option<&dyn TsFactLookup>,
-    partial_graph: &DepGraph,
-    graph_tsconfig: &TsConfig,
-) -> Vec<Edge> {
-    let Ok(analysis) = run_playwright_selector_analysis(
+    partial_graph: Option<&DepGraph>,
+    graph_tsconfig: Option<&TsConfig>,
+) -> Result<Vec<Edge>> {
+    let analysis = run_playwright_selector_analysis(
         root,
         config_path,
         facts,
-        Some(partial_graph),
-        Some(graph_tsconfig),
-    ) else {
-        return vec![];
-    };
-    selector_edges_from_analysis(root, all_files, &analysis)
+        partial_graph,
+        graph_tsconfig,
+        all_files,
+    )?;
+    Ok(selector_edges_from_analysis(root, all_files, &analysis))
 }
 
 fn selector_edges_from_analysis(
@@ -86,6 +85,7 @@ fn run_playwright_selector_analysis(
     facts: Option<&dyn TsFactLookup>,
     partial_graph: Option<&DepGraph>,
     graph_tsconfig: Option<&TsConfig>,
+    graph_file_universe: &[PathBuf],
 ) -> anyhow::Result<crate::playwright::analysis::types::Analysis> {
     // Reuse the same config file the rest of this DepGraph build (and, when
     // called from `check`, the sibling `playwright` rule) resolved settings
@@ -99,16 +99,7 @@ fn run_playwright_selector_analysis(
         allow_skipped_tests: false,
     };
     let unique_policy = crate::playwright::analysis::types::UniqueSelectorPolicy::default();
-    let route_import_graph = match (partial_graph, graph_tsconfig) {
-        (Some(graph), Some(tsconfig))
-            if crate::playwright::analysis::pipeline_setup::load_route_import_tsconfig(
-                root, &settings,
-            )? == *tsconfig =>
-        {
-            Some(graph)
-        }
-        _ => None,
-    };
+    let route_import_candidate = partial_graph.zip(graph_tsconfig);
     // Use the selectors-only pipeline: does not require Next.js routes to exist,
     // so selector edges work for components that have no direct route coverage.
     // Reuse already-collected Playwright test-file facts when the caller has
@@ -121,10 +112,16 @@ fn run_playwright_selector_analysis(
             test_policy,
             unique_policy,
             facts,
-            route_import_graph,
+            route_import_candidate,
+            graph_file_universe,
         ),
         None => crate::playwright::analysis::pipeline_selectors::analyze_selectors_with_policy_and_graph(
-            root, &settings, test_policy, unique_policy, route_import_graph,
+            root,
+            &settings,
+            test_policy,
+            unique_policy,
+            route_import_candidate,
+            graph_file_universe,
         ),
     }
 }

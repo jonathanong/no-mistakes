@@ -76,6 +76,7 @@ fn fact_lookup_defaults_and_sparse_fallback_are_complete() {
 
     assert!(!minimal.covers_ts_fact_plan(TsFactPlan::imports()));
     assert!(minimal.graph_files().is_none());
+    assert!(minimal.get_playwright_parse_error(&primary_path).is_none());
 
     for prefer_fallback in [false, true] {
         let lookup = FallbackTsFactLookup::new(
@@ -90,6 +91,9 @@ fn fact_lookup_defaults_and_sparse_fallback_are_complete() {
         assert!(lookup.covers_ts_fact_plan(TsFactPlan::imports()));
         assert_eq!(lookup.graph_files(), Some([fallback_path.clone()].as_slice()));
         assert!(lookup.get_playwright_facts(&primary_path).is_none());
+        assert!(lookup
+            .get_playwright_parse_error(&primary_path)
+            .is_none());
         assert!(lookup
             .get_or_compute_app_selector_occurrences(false, &|| Ok(Vec::new()))
             .expect("selector occurrences compute")
@@ -118,30 +122,31 @@ fn graph_universe_comparison_rejects_duplicate_false_matches() {
 
 #[test]
 fn sparse_fallback_preserves_check_fact_playwright_data_and_caches() {
-    use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts, PlaywrightTestFacts};
+    use crate::codebase::check_facts::CheckFileFacts;
     use std::cell::Cell;
     use std::sync::Arc;
 
     let primary_path = p("/repo/primary.ts");
     let fallback_path = p("/repo/fallback.ts");
-    let mut primary = CheckFactMap {
-        files: vec![primary_path.clone(), fallback_path.clone()],
-        ..CheckFactMap::default()
-    };
+    let graph_files = [fallback_path.clone(), primary_path.clone()];
+    let mut primary =
+        crate::codebase::check_facts::collect_check_facts_with_graph_files_and_playwright(
+            Path::new("/repo"),
+            vec![primary_path.clone()],
+            graph_files.to_vec(),
+            crate::codebase::check_facts::CheckFactPlan::default(),
+            None,
+        );
     primary.ts.insert(
         primary_path.clone(),
         CheckFileFacts {
-            playwright: Some(PlaywrightTestFacts {
-                urls: Vec::new(),
-                selectors: Vec::new(),
-                text_locators: Vec::new(),
-                helper_references: Vec::new(),
-            }),
+            playwright: Some(
+                crate::codebase::check_facts::PlaywrightTestFacts::empty(),
+            ),
             ..CheckFileFacts::default()
         },
     );
     let fallback = TsFactMap::from([(fallback_path.clone(), TsFileFacts::default())]);
-    let graph_files = [fallback_path.clone(), primary_path.clone()];
     let graph_visible = HashSet::from(graph_files.clone());
     let lookup = FallbackTsFactLookup::new(
         &primary,
@@ -358,7 +363,8 @@ fn route_import_edges_fill_present_but_sparse_check_facts() {
         },
         files,
         &sparse,
-    );
+    )
+    .expect("route-import graph builds");
     let allowed: HashSet<_> = [EdgeKind::RouteImport].into();
     let dependencies = graph.deps_of(
         &[NodeId::File(root.join("web/app/page.tsx"))],
@@ -480,7 +486,8 @@ fn route_import_edges_resolve_from_direct_symlink_target() {
         &graph_files,
         None,
         None,
-    );
+    )
+    .expect("symlink route-import graph builds");
     let allowed = HashSet::from([EdgeKind::RouteImport]);
     let dependencies = graph.deps_of(
         &[NodeId::File(root.join("playwright.config.ts"))],

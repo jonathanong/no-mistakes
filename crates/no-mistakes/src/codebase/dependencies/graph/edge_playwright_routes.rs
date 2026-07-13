@@ -58,17 +58,11 @@ fn collect_playwright_route_edges(
         &settings.component_selector_attributes,
         settings.html_ids,
     );
-    let empty_selector_targets = Vec::new();
     let selector_index = Default::default();
-    let app_text_targets = Vec::new();
-    let route_reachable_files = Default::default();
     let test_analysis = crate::playwright::analysis::context::TestAnalysisContext {
         root,
         route_index: &route_idx,
-        app_selector_targets: &empty_selector_targets,
         selector_index: &selector_index,
-        app_text_targets: &app_text_targets,
-        route_reachable_files: &route_reachable_files,
         navigation_helpers: &settings.navigation_helpers,
         selector_regexes: &selector_regexes,
         test_policy: crate::playwright::playwright_tests::TestPolicy {
@@ -88,19 +82,39 @@ fn collect_playwright_route_edges(
     let test_edges: Vec<crate::playwright::analysis::types::Edge> = test_files
         .par_iter()
         .filter_map(|test_file| {
-            let file_analysis = match facts.and_then(|facts| facts.get_playwright_facts(&test_file.path)) {
-                Some(playwright) => crate::playwright::analysis::test_file::analyze_test_occurrences(
-                    test_file,
-                    &test_analysis,
-                    playwright.urls.clone(),
-                    playwright.selectors.clone(),
-                    playwright.text_locators.clone(),
-                    playwright.helper_references.clone(),
-                ),
-                None => crate::playwright::analysis::test_file::analyze_test_file(test_file, &test_analysis)
-                    .ok()?,
-            };
-            Some(file_analysis.edges)
+            match facts.and_then(|facts| facts.get_playwright_facts(&test_file.path)) {
+                Some(playwright) => {
+                    let attributes = test_file.test_id_attributes();
+                    let key = crate::codebase::check_facts::PlaywrightOccurrenceKey::new(
+                        &settings.navigation_helpers,
+                        &settings.selector_attributes,
+                        &settings.component_selector_attributes,
+                        settings.html_ids,
+                        &attributes,
+                    );
+                    playwright.select(&key).map(|occurrences| {
+                        crate::playwright::analysis::test_file::analyze_test_occurrences(
+                            test_file,
+                            &test_analysis,
+                            &occurrences,
+                        )
+                        .edges
+                    })
+                }
+                None => {
+                    if facts.is_some_and(|facts| {
+                        facts.get_playwright_parse_error(&test_file.path).is_some()
+                    }) {
+                        return None;
+                    }
+                    crate::playwright::analysis::test_file::analyze_test_file(
+                        test_file,
+                        &test_analysis,
+                    )
+                    .ok()
+                    .map(|analysis| analysis.edges)
+                }
+            }
         })
         .flatten()
         .collect();

@@ -37,7 +37,7 @@ pub fn check_with_facts(
             files.clone(),
             shared,
         )
-    });
+    })?;
     let manual_mocks =
         crate::perf_trace::trace("test_no_unmocked_dynamic_imports.manual_mocks", || {
             manual_mocks::discover_from_files(root, &files)

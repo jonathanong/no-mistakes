@@ -6,7 +6,9 @@ fn collect_playwright_selector_edges(
     all_files: &[PathBuf],
     facts: Option<&dyn TsFactLookup>,
 ) -> Vec<Edge> {
-    let Ok(analysis) = run_playwright_selector_analysis(root, config_path, facts, None, None) else {
+    let Ok(analysis) =
+        run_playwright_selector_analysis(root, config_path, facts, None, None, all_files)
+    else {
         return vec![];
     };
     selector_edges_from_analysis(root, all_files, &analysis)
@@ -179,36 +181,35 @@ fn collect_playwright_selector_edges_matches_with_and_without_shared_facts() {
     // additionally requires a Playwright *rule* to be configured — an
     // unrelated, orthogonal gate this fixture intentionally leaves unset.
     let settings = crate::playwright::config::load_settings(&root, None, &[], None).unwrap();
-    let selector_regexes = std::sync::Arc::new(
-        crate::playwright::selectors::compile_selector_regexes_with_html_ids(
-            &settings.selector_attributes,
-            &settings.component_selector_attributes,
-            settings.html_ids,
-        ),
-    );
     let playwright_configs = crate::playwright::playwright_config::load_many(
         &root,
         &settings.playwright_configs,
         settings.project.as_deref(),
     )
     .unwrap();
-    let mut test_id_attributes_by_path = std::collections::HashMap::new();
+    let mut playwright_plan = crate::codebase::check_facts::PlaywrightFactPlan::default();
+    let mut test_count = 0;
     for test_file in
         crate::playwright::analysis::discover::discover_test_files(&root, &settings, &playwright_configs)
             .unwrap()
     {
         let attributes = test_file.test_id_attributes();
-        test_id_attributes_by_path.insert(test_file.path, attributes);
+        playwright_plan.add_file(crate::codebase::check_facts::PlaywrightFactSelection {
+            path: test_file.path,
+            navigation_helpers: &settings.navigation_helpers,
+            selector_attributes: &settings.selector_attributes,
+            component_selector_attributes: &settings.component_selector_attributes,
+            html_ids: settings.html_ids,
+            test_id_attributes: &attributes,
+            policy: crate::playwright::playwright_tests::TestPolicy::default(),
+            demands_text_imports: true,
+        });
+        test_count += 1;
     }
     assert!(
-        !test_id_attributes_by_path.is_empty(),
+        test_count > 0,
         "sanity check: fixture must have discoverable Playwright test files"
     );
-    let playwright_plan = crate::codebase::check_facts::PlaywrightFactPlan {
-        navigation_helpers: settings.navigation_helpers.clone(),
-        selector_regexes,
-        test_id_attributes_by_path: std::sync::Arc::new(test_id_attributes_by_path),
-    };
     let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
     let facts = crate::codebase::check_facts::collect_check_facts_with_playwright(
         &root,
@@ -264,7 +265,7 @@ fn selector_analysis_reuses_matching_route_import_graph() {
         .expect("fixture root resolves");
     let settings = crate::playwright::config::load_settings(&root, None, &[], None)
         .expect("Playwright settings load");
-    let tsconfig = crate::playwright::analysis::pipeline_setup::load_route_import_tsconfig(
+    let tsconfig = crate::playwright::analysis::pipeline_text_setup::load_route_import_tsconfig(
         &root, &settings,
     )
     .expect("route-import tsconfig loads");
@@ -274,10 +275,11 @@ fn selector_analysis_reuses_matching_route_import_graph() {
         graph_files: graph_files.clone(),
         lookups: AtomicUsize::new(0),
     };
-    let graph = crate::playwright::analysis::pipeline_setup::build_route_import_graph(
+    let graph = crate::playwright::analysis::pipeline_text_setup::build_route_import_graph(
         &root,
         &settings,
         Some(&facts),
+        None,
         &graph_files,
     )
     .expect("route-import graph builds");
@@ -289,6 +291,7 @@ fn selector_analysis_reuses_matching_route_import_graph() {
         Some(&facts),
         Some(&graph),
         Some(&tsconfig),
+        &graph_files,
     )
     .expect("selector analysis reuses matching graph");
     assert_eq!(facts.lookups.load(Ordering::Relaxed), 0);
@@ -301,6 +304,7 @@ fn selector_analysis_reuses_matching_route_import_graph() {
         Some(&facts),
         Some(&graph),
         Some(&mismatched_tsconfig),
+        &graph_files,
     )
     .expect("selector analysis rebuilds mismatched graph");
     assert!(facts.lookups.load(Ordering::Relaxed) > 0);

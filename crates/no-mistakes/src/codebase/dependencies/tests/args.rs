@@ -15,6 +15,7 @@ fn build_graph(root: &Path, tsconfig: &crate::codebase::ts_resolver::TsConfig) -
         graph::GraphBuildPlan::all(),
         &graph_files,
     )
+    .expect("test graph builds")
 }
 
 fn fixture_root(name: &str) -> PathBuf {

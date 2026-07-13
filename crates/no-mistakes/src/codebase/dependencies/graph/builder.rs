@@ -15,7 +15,7 @@ impl DepGraph {
         graph_files: &GraphFiles,
         config_path: Option<&Path>,
         facts: Option<&dyn TsFactLookup>,
-    ) -> Self {
+    ) -> Result<Self> {
         let config_options = graph_config_options_for_plan_with_config(root, plan, config_path);
         let resolver = ImportResolver::new(tsconfig).with_visible(graph_files.visible());
         let fact_plan = effective_ts_fact_plan(plan, config_options.as_ref());
@@ -84,8 +84,11 @@ impl DepGraph {
         } else {
             Default::default()
         };
-        let parse_errors = facts
-            .map(|facts| {
+        let parse_errors = if fact_plan.is_empty() {
+            HashMap::new()
+        } else {
+            facts
+                .map(|facts| {
                 files
                     .iter()
                     .filter_map(|path| {
@@ -95,8 +98,9 @@ impl DepGraph {
                             .map(|error| (path.clone(), error.clone()))
                     })
                     .collect()
-            })
-            .unwrap_or_default();
+                })
+                .unwrap_or_default()
+        };
 
         let edge_inputs = GraphEdgeBuildInputs {
             root,
@@ -124,31 +128,21 @@ impl DepGraph {
             reverse,
             parse_errors,
         };
-        crate::perf_trace::trace("graph.playwright_selectors", || {
-            if plan.playwright_selectors {
-                let selector_edges = collect_playwright_selector_edges_with_graph(
+        if plan.playwright_selectors {
+            let selector_edges = crate::perf_trace::trace("graph.playwright_selectors", || {
+                collect_playwright_selector_edges_with_graph(
                     root,
                     config_path,
                     &graph_files.all,
                     facts,
-                    &graph,
-                    tsconfig,
-                );
-                merge_edges(&mut graph.forward, &mut graph.reverse, selector_edges);
-                if !plan.route_imports {
-                    // RouteImport is a hidden prerequisite for selector/text
-                    // analysis. Do not leak its deliberately conservative
-                    // reachability into callers that did not request it.
-                    remove_edges_of_kind(
-                        &mut graph.forward,
-                        &mut graph.reverse,
-                        EdgeKind::RouteImport,
-                    );
-                }
-                sort_adjacency_lists(&mut graph.forward, &mut graph.reverse);
-            }
-        });
-        graph
+                    plan.route_imports.then_some(&graph),
+                    plan.route_imports.then_some(tsconfig),
+                )
+            })?;
+            merge_edges(&mut graph.forward, &mut graph.reverse, selector_edges);
+            sort_adjacency_lists(&mut graph.forward, &mut graph.reverse);
+        }
+        Ok(graph)
     }
 
     pub(crate) fn build_with_plan_file_list_config_and_check_facts(
@@ -158,7 +152,7 @@ impl DepGraph {
         files: Vec<PathBuf>,
         config_path: Option<&Path>,
         facts: &crate::codebase::check_facts::CheckFactMap,
-    ) -> Self {
+    ) -> Result<Self> {
         let graph_files = GraphFiles::from_files(files);
         Self::build_with_plan_files_config_and_facts(
             root,
@@ -176,7 +170,7 @@ impl DepGraph {
         plan: GraphBuildPlan,
         files: Vec<PathBuf>,
         facts: &crate::codebase::check_facts::CheckFactMap,
-    ) -> Self {
+    ) -> Result<Self> {
         Self::build_with_plan_file_list_config_and_check_facts(
             root, tsconfig, plan, files, None, facts,
         )

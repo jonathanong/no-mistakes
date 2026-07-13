@@ -66,6 +66,10 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
         self.primary.get_playwright_facts(path)
     }
 
+    fn get_playwright_parse_error(&self, path: &Path) -> Option<&str> {
+        self.primary.get_playwright_parse_error(path)
+    }
+
     fn get_or_compute_app_selector_occurrences(
         &self,
         scan_html_ids: bool,

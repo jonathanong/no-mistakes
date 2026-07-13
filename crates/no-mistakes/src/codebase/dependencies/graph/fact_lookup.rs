@@ -32,6 +32,13 @@ pub(crate) trait TsFactLookup: Sync {
         None
     }
 
+    /// A cached parser diagnostic for a Playwright test file. Implementations
+    /// that do not retain test parse failures return `None` and callers fall
+    /// back to parsing the file normally.
+    fn get_playwright_parse_error(&self, _path: &Path) -> Option<&str> {
+        None
+    }
+
     /// Get-or-compute the app-wide Playwright selector-occurrence scan
     /// (`collect_app_selector_occurrences`), keyed by `scan_html_ids` — whether
     /// HTML id attributes are included in the scan. Every other input to that
@@ -118,7 +125,8 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
     }
 
     fn graph_files(&self) -> Option<&[PathBuf]> {
-        Some(self.graph_file_universe())
+        self.graph_files_complete
+            .then_some(self.graph_files.as_slice())
     }
 
     fn get_playwright_facts(
@@ -128,6 +136,12 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
         self.ts
             .get(path)
             .and_then(|facts| facts.playwright.as_ref())
+    }
+
+    fn get_playwright_parse_error(&self, path: &Path) -> Option<&str> {
+        self.ts
+            .get(path)
+            .and_then(|facts| facts.parse_error.as_deref())
     }
 
     fn get_or_compute_app_selector_occurrences(

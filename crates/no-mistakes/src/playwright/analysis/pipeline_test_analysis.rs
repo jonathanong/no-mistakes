@@ -1,54 +1,114 @@
-//! Extracted from `pipeline.rs`'s `analyze_with_policy_and_optional_facts`
-//! purely to stay under the 200-code-line-per-file cap after adding
-//! per-step timing there — no behavior change.
-
 use super::context::{DiscoveredTestFile, TestAnalysisContext};
-use super::test_file::{analyze_test_file, analyze_test_occurrences};
+use super::pipeline_occurrences::PreparedTestFile;
+use super::test_occurrence_edges::analyze_direct_test_occurrences;
+use super::text_edges::{append_locator_text_edges, AppTextIndex, TextEdgeContext};
 use super::types::TestFileAnalysis;
-use anyhow::Result;
+use crate::playwright::fsutil::relative_string;
+use crate::playwright::test_file_occurrences::TestFileOccurrences;
 use rayon::prelude::*;
+use std::sync::Arc;
 
-/// Analyze every discovered test file in parallel, reusing already-collected
-/// Playwright facts per file when available (falling back to a full parse +
-/// analysis for files the caller doesn't have facts for).
-pub(crate) fn analyze_test_files(
-    test_files: &[DiscoveredTestFile],
-    test_analysis: &TestAnalysisContext<'_>,
-    facts: Option<&dyn crate::codebase::dependencies::graph::TsFactLookup>,
-) -> Result<TestFileAnalysis> {
-    test_files
-        .par_iter()
-        .try_fold(
-            TestFileAnalysis::default,
-            |mut result, test_file| -> Result<_> {
-                let file_analysis = if let Some(facts) = facts {
-                    match facts.get_playwright_facts(&test_file.path) {
-                        Some(playwright) => analyze_test_occurrences(
-                            test_file,
-                            test_analysis,
-                            playwright.urls.clone(),
-                            playwright.selectors.clone(),
-                            playwright.text_locators.clone(),
-                            playwright.helper_references.clone(),
-                        ),
-                        None => analyze_test_file(test_file, test_analysis)?,
-                    }
-                } else {
-                    analyze_test_file(test_file, test_analysis)?
-                };
-                result.edges.extend(file_analysis.edges);
-                result
-                    .helper_references
-                    .extend(file_analysis.helper_references);
-                Ok(result)
-            },
-        )
-        .try_reduce(
-            TestFileAnalysis::default,
-            |mut left, mut right| -> Result<_> {
-                left.edges.append(&mut right.edges);
-                left.helper_references.append(&mut right.helper_references);
-                Ok(left)
-            },
-        )
+pub(crate) struct PendingTestFileAnalysis {
+    test_file: DiscoveredTestFile,
+    analysis: TestFileAnalysis,
+    occurrences: TestFileOccurrences,
+}
+
+pub(crate) fn analyze_direct_test_files(
+    prepared: Vec<PreparedTestFile>,
+    context: &TestAnalysisContext<'_>,
+) -> Vec<PendingTestFileAnalysis> {
+    prepared
+        .into_par_iter()
+        .map(|prepared| {
+            let analysis = analyze_direct_test_occurrences(
+                &prepared.test_file,
+                context,
+                &prepared.occurrences,
+            );
+            PendingTestFileAnalysis {
+                test_file: prepared.test_file,
+                analysis,
+                occurrences: prepared.occurrences,
+            }
+        })
+        .collect()
+}
+
+pub(crate) fn has_text_locator_candidate(
+    pending: &[PendingTestFileAnalysis],
+    app_text_targets: &[super::text_types::AppTextTarget],
+    app_text_index: &AppTextIndex,
+    test_policy: crate::playwright::playwright_tests::TestPolicy,
+) -> bool {
+    pending.iter().any(|file| {
+        file.occurrences.text_locators().iter().any(|locator| {
+            test_policy.allows(locator.status)
+                && locator.scope
+                    != crate::playwright::playwright_tests::TestOccurrenceScope::TeardownHook
+                && super::text_edges::locator_has_app_text_candidate(
+                    app_text_targets,
+                    app_text_index,
+                    &locator.value,
+                )
+        })
+    })
+}
+
+pub(crate) fn has_route_reachability_demand(
+    root: &std::path::Path,
+    pending: &[PendingTestFileAnalysis],
+    app_text_targets: &[super::text_types::AppTextTarget],
+    app_text_index: &AppTextIndex,
+    test_policy: crate::playwright::playwright_tests::TestPolicy,
+) -> bool {
+    pending.iter().any(|file| {
+        let test_file = relative_string(root, &file.test_file.path);
+        file.occurrences.text_locators().iter().any(|locator| {
+            test_policy.allows(locator.status)
+                && locator.scope
+                    != crate::playwright::playwright_tests::TestOccurrenceScope::TeardownHook
+                && super::text_edges::locator_has_app_text_candidate(
+                    app_text_targets,
+                    app_text_index,
+                    &locator.value,
+                )
+                && file.analysis.edges.iter().any(|edge| {
+                    super::text_edges::route_signal_matches_locator(
+                        edge,
+                        &test_file,
+                        locator.test_name.as_deref(),
+                        &locator.describe_path,
+                        locator.scope,
+                        locator.line,
+                    )
+                })
+        })
+    })
+}
+
+pub(crate) fn finish_test_file_analysis(
+    pending: Vec<PendingTestFileAnalysis>,
+    context: &TestAnalysisContext<'_>,
+    text_context: Option<&TextEdgeContext<'_>>,
+) -> TestFileAnalysis {
+    pending
+        .into_par_iter()
+        .map(|mut pending| {
+            if let Some(text_context) = text_context {
+                append_locator_text_edges(
+                    &mut pending.analysis.edges,
+                    &Arc::new(relative_string(context.root, &pending.test_file.path)),
+                    &pending.test_file.test_id_attributes(),
+                    text_context,
+                    pending.occurrences.text_locators(),
+                );
+            }
+            pending.analysis
+        })
+        .reduce(TestFileAnalysis::default, |mut left, mut right| {
+            left.edges.append(&mut right.edges);
+            left.helper_references.append(&mut right.helper_references);
+            left
+        })
 }

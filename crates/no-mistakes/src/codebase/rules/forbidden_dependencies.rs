@@ -41,7 +41,7 @@ pub fn check(
 /// paths, dotnet, swift, terraform) from an explicit `--config` path instead
 /// of always falling back to default discovery. Callers that already have a
 /// `config_path` in scope (the shared-facts path's `run_check_with_facts`,
-/// and its own parse-error/missing-graph-facts fallback) must use this —
+/// and its missing-graph-universe fallback) must use this —
 /// otherwise an explicit `--config` changing those settings is silently
 /// ignored for this rule's graph build even though the rest of `check`
 /// honors it.

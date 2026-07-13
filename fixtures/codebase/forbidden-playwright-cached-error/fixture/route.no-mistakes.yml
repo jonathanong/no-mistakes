@@ -1,0 +1,13 @@
+tests:
+  playwright:
+    frontendRoot: web/app
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots:
+        - tests/e2e/route.spec.ts
+      forbiddenFiles:
+        - web/app/page.tsx
+      relationships:
+        - route

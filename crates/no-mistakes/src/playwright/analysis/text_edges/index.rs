@@ -3,29 +3,28 @@ use crate::playwright::analysis::text_types::{
 };
 use std::collections::BTreeMap;
 
-pub(super) struct AppTextIndex<'a> {
-    exact: BTreeMap<AppTextIndexKey, Vec<&'a AppTextTarget>>,
-    by_kind_role: BTreeMap<AppTextKindRoleKey, Vec<&'a AppTextTarget>>,
+#[derive(Default)]
+pub(crate) struct AppTextIndex {
+    exact: BTreeMap<AppTextKindRoleKey, BTreeMap<String, Vec<usize>>>,
+    by_kind_role: BTreeMap<AppTextKindRoleKey, Vec<usize>>,
 }
 
-impl<'a> AppTextIndex<'a> {
-    pub(super) fn new(targets: &'a [AppTextTarget]) -> Self {
-        let mut exact: BTreeMap<AppTextIndexKey, Vec<&'a AppTextTarget>> = BTreeMap::new();
-        let mut by_kind_role: BTreeMap<AppTextKindRoleKey, Vec<&'a AppTextTarget>> =
-            BTreeMap::new();
-        for target in targets {
+impl AppTextIndex {
+    pub(crate) fn new(targets: &[AppTextTarget]) -> Self {
+        let mut exact: BTreeMap<AppTextKindRoleKey, BTreeMap<String, Vec<usize>>> = BTreeMap::new();
+        let mut by_kind_role: BTreeMap<AppTextKindRoleKey, Vec<usize>> = BTreeMap::new();
+        for (position, target) in targets.iter().enumerate() {
             let kind_role = AppTextKindRoleKey::from_target(target);
             by_kind_role
                 .entry(kind_role.clone())
                 .or_default()
-                .push(target);
+                .push(position);
             exact
-                .entry(AppTextIndexKey {
-                    kind_role,
-                    text: target.text.clone(),
-                })
+                .entry(kind_role)
                 .or_default()
-                .push(target);
+                .entry(target.text.clone())
+                .or_default()
+                .push(position);
         }
         Self {
             exact,
@@ -33,31 +32,23 @@ impl<'a> AppTextIndex<'a> {
         }
     }
 
-    pub(super) fn candidates(&self, locator: &PlaywrightTextLocator) -> Vec<&'a AppTextTarget> {
+    pub(crate) fn candidates(&self, locator: &PlaywrightTextLocator) -> &[usize] {
         let Some(kind_role) = AppTextKindRoleKey::from_locator(locator) else {
-            return Vec::new();
+            return &[];
         };
         if locator.exact {
             return self
                 .exact
-                .get(&AppTextIndexKey {
-                    kind_role,
-                    text: locator.text.clone(),
-                })
-                .cloned()
+                .get(&kind_role)
+                .and_then(|by_text| by_text.get(locator.text.as_str()))
+                .map(Vec::as_slice)
                 .unwrap_or_default();
         }
         self.by_kind_role
             .get(&kind_role)
-            .cloned()
+            .map(Vec::as_slice)
             .unwrap_or_default()
     }
-}
-
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd)]
-struct AppTextIndexKey {
-    kind_role: AppTextKindRoleKey,
-    text: String,
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd)]

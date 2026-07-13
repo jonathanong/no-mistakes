@@ -1,6 +1,8 @@
 use super::*;
 use std::path::{Path, PathBuf};
 
+mod shared_facts;
+
 fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -37,97 +39,6 @@ fn basic_forbidden_module_fails() {
     assert!(f.message.contains("Reproduce:"));
     assert!(f.message.contains("no-mistakes dependencies"));
     assert!(f.message.contains("--target-module"));
-}
-
-#[test]
-fn shared_facts_path_matches_standalone_check() {
-    let root = fixture("forbidden-dependencies-basic");
-    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-    let graph_plan = graph_plan(&config).expect("fixture config enables forbidden dependencies");
-    let (fact_plan, fact_context) =
-        crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan(&root, graph_plan);
-    let files =
-        crate::codebase::ts_source::discover_files(&root, &config.filesystem.skip_directories);
-    let shared = crate::codebase::check_facts::collect_check_facts(
-        &root,
-        files,
-        crate::codebase::check_facts::CheckFactPlan {
-            graph: fact_plan,
-            graph_context: fact_context,
-            ..Default::default()
-        },
-    );
-
-    let standalone = check(&root, &config, None).unwrap();
-    let with_facts = check_with_facts(&root, &config, None, None, &shared).unwrap();
-
-    assert_eq!(with_facts, standalone);
-}
-
-#[test]
-fn shared_facts_path_rejects_missing_graph_facts() {
-    let root = fixture("forbidden-dependencies-basic");
-    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-    let shared = crate::codebase::check_facts::CheckFactMap::default();
-
-    let error = check_with_facts(&root, &config, None, None, &shared).unwrap_err();
-
-    assert!(
-        format!("{error:#}").contains("missing graph facts"),
-        "expected missing graph facts error, got: {error:#}"
-    );
-}
-
-#[test]
-fn shared_facts_path_falls_back_when_graph_plan_needs_no_ts_facts() {
-    let root = fixture("forbidden-dependencies-package-only");
-    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-    let shared = crate::codebase::check_facts::CheckFactMap::default();
-
-    let findings = check_with_facts(&root, &config, None, None, &shared).unwrap();
-
-    assert!(
-        findings.iter().any(|f| f.rule == RULE_ID),
-        "expected package-only forbidden dependency finding, got: {findings:?}"
-    );
-}
-
-#[test]
-fn shared_facts_path_falls_back_for_parse_errors() {
-    let root = fixture("forbidden-dependencies-parse-error");
-    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-    let graph_plan = graph_plan(&config).expect("fixture config enables forbidden dependencies");
-    let (fact_plan, fact_context) =
-        crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan(&root, graph_plan);
-    let files = crate::codebase::ts_source::discover_files(&root, &[]);
-    let shared = crate::codebase::check_facts::collect_check_facts(
-        &root,
-        files,
-        crate::codebase::check_facts::CheckFactPlan {
-            graph: fact_plan,
-            graph_context: fact_context,
-            ..Default::default()
-        },
-    );
-
-    assert!(shared.stats.parse_errors > 0);
-    let findings = check_with_facts(&root, &config, None, None, &shared).unwrap();
-
-    assert!(
-        findings.iter().any(|f| f.rule == RULE_ID),
-        "expected parse-error fallback to preserve forbidden dependency finding, got: {findings:?}"
-    );
-}
-
-#[test]
-fn graph_plan_and_shared_facts_empty_when_rule_is_not_configured() {
-    let root = fixture("forbidden-dependencies-basic");
-    let config = NoMistakesConfig::default();
-    let shared = crate::codebase::check_facts::CheckFactMap::default();
-
-    assert!(graph_plan(&config).is_none());
-    let findings = check_with_facts(&root, &config, None, None, &shared).unwrap();
-    assert!(findings.is_empty());
 }
 
 #[test]
@@ -477,7 +388,7 @@ fn absolute_root_path_resolves() {
 }
 
 /// Regression test: `check_with_config` (used by both `run_check` and
-/// `check_with_facts`'s parse-error/missing-graph-facts fallbacks) must
+/// `check_with_facts`'s missing-graph-universe fallback) must
 /// resolve the `DepGraph`'s `GraphConfigOptions` from the given
 /// `config_path`, not silently fall back to default discovery — `check`
 /// itself delegates to `check_with_config(.., None, ..)`, so this also

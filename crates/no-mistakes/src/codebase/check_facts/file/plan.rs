@@ -30,7 +30,7 @@ pub(super) fn requires_parse(
         || plan.storybook
         || !plan.graph.is_empty()
         || match playwright {
-            Some(plan) => plan.test_id_attributes_by_path.contains_key(path),
+            Some(plan) => plan.file(path).is_some(),
             None => false,
         }
         || plan.source

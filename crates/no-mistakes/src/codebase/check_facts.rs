@@ -5,11 +5,8 @@ use crate::codebase::storybook::StorybookFileFacts;
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::codebase::ts_symbols::FileSymbols;
 use crate::integration_tests::types::FileAnalysis as IntegrationFileAnalysis;
-use crate::playwright::analysis::text_types::{AppTextTarget, PlaywrightTextLocator};
-use crate::playwright::playwright_tests::TestOccurrence;
-use crate::playwright::selectors::{
-    AppSelector, PlaywrightHelperReference, PlaywrightSelector, SelectorRegexes,
-};
+use crate::playwright::analysis::text_types::AppTextTarget;
+use crate::playwright::selectors::AppSelector;
 use crate::react_traits::analyze::file::FileAnalysis as ReactFileAnalysis;
 use dashmap::DashMap;
 use rayon::prelude::*;
@@ -20,7 +17,15 @@ use std::sync::{Arc, OnceLock};
 mod file;
 mod file_parse_error;
 mod file_playwright;
-pub(crate) use file::collect_file_facts;
+mod playwright_facts;
+mod playwright_plan;
+mod staged_playwright;
+mod stats;
+pub(crate) use file::{collect_file_facts, is_mdx_file};
+pub(crate) use playwright_facts::PlaywrightTestFacts;
+pub use playwright_plan::PlaywrightFactPlan;
+pub(crate) use playwright_plan::{PlaywrightFactSelection, PlaywrightOccurrenceKey};
+pub use stats::CheckFactStats;
 
 #[derive(Clone, Default)]
 pub struct CheckFactPlan {
@@ -39,17 +44,12 @@ pub struct CheckFactPlan {
     pub graph_context: crate::codebase::ts_source::facts::TsFactContext,
 }
 
-#[derive(Clone)]
-pub struct PlaywrightFactPlan {
-    pub(crate) navigation_helpers: Vec<String>,
-    pub(crate) selector_regexes: Arc<SelectorRegexes>,
-    pub(crate) test_id_attributes_by_path: Arc<HashMap<PathBuf, Vec<String>>>,
-}
-
 #[derive(Default)]
 pub struct CheckFactMap {
     pub(crate) files: Vec<PathBuf>,
     pub(crate) graph_files: Vec<PathBuf>,
+    /// Set only by collection with an explicitly supplied graph universe.
+    pub(crate) graph_files_complete: bool,
     pub(crate) ts: HashMap<PathBuf, CheckFileFacts>,
     pub(crate) graph_plan: crate::codebase::ts_source::facts::TsFactPlan,
     pub stats: CheckFactStats,
@@ -83,13 +83,6 @@ pub struct CheckFactMap {
         OnceLock<Result<Arc<crate::codebase::dependencies::graph::RouteReachableFiles>, String>>,
 }
 
-#[derive(Debug, Default, Clone, Copy)]
-pub struct CheckFactStats {
-    pub files_discovered: usize,
-    pub files_parsed: usize,
-    pub parse_errors: usize,
-}
-
 #[derive(Default)]
 pub(crate) struct CheckFileFacts {
     pub ts: TsFileFacts,
@@ -105,23 +98,21 @@ pub(crate) struct CheckFileFacts {
     pub(crate) parsed: bool,
 }
 
-pub(crate) struct PlaywrightTestFacts {
-    pub(crate) urls: Vec<TestOccurrence<String>>,
-    pub(crate) selectors: Vec<TestOccurrence<PlaywrightSelector>>,
-    pub(crate) text_locators: Vec<TestOccurrence<PlaywrightTextLocator>>,
-    pub(crate) helper_references: Vec<TestOccurrence<PlaywrightHelperReference>>,
-}
-
 impl CheckFactMap {
     pub fn files(&self) -> &[PathBuf] {
         &self.files
     }
 
     pub(crate) fn graph_file_universe(&self) -> &[PathBuf] {
-        match self.graph_files.is_empty() {
-            true => &self.files,
-            false => &self.graph_files,
+        if self.graph_files_complete {
+            self.graph_files.as_slice()
+        } else {
+            self.files.as_slice()
         }
+    }
+
+    pub(crate) fn graph_file_universe_is_complete(&self) -> bool {
+        self.graph_files_complete
     }
 
     pub(crate) fn graph_plan(&self) -> crate::codebase::ts_source::facts::TsFactPlan {
@@ -140,7 +131,10 @@ pub fn collect_check_facts_with_graph_files_and_playwright(
     plan: CheckFactPlan,
     playwright: Option<PlaywrightFactPlan>,
 ) -> CheckFactMap {
-    collect_check_facts_inner(root, files, graph_files, plan, playwright)
+    if let Some(playwright) = playwright {
+        return staged_playwright::collect(root, files, graph_files, true, plan, playwright);
+    }
+    collect_check_facts_inner(root, files, graph_files, true, plan, playwright)
 }
 
 pub fn collect_check_facts_with_playwright(
@@ -149,13 +143,17 @@ pub fn collect_check_facts_with_playwright(
     plan: CheckFactPlan,
     playwright: Option<PlaywrightFactPlan>,
 ) -> CheckFactMap {
-    collect_check_facts_inner(root, files, Vec::new(), plan, playwright)
+    if let Some(playwright) = playwright {
+        return staged_playwright::collect(root, files, Vec::new(), false, plan, playwright);
+    }
+    collect_check_facts_inner(root, files, Vec::new(), false, plan, playwright)
 }
 
 fn collect_check_facts_inner(
     root: &Path,
     files: Vec<PathBuf>,
     graph_files: Vec<PathBuf>,
+    graph_files_complete: bool,
     plan: CheckFactPlan,
     playwright: Option<PlaywrightFactPlan>,
 ) -> CheckFactMap {
@@ -187,6 +185,7 @@ fn collect_check_facts_inner(
     CheckFactMap {
         files,
         graph_files,
+        graph_files_complete,
         ts,
         graph_plan: plan.graph,
         stats: CheckFactStats {
@@ -226,10 +225,6 @@ fn graph_only_files(files: &[PathBuf], graph_files: &[PathBuf]) -> Vec<PathBuf> 
         .filter(|path| !scoped.contains(path))
         .cloned()
         .collect()
-}
-
-fn is_mdx_file(path: &Path) -> bool {
-    path.extension().and_then(|ext| ext.to_str()) == Some("mdx")
 }
 
 #[cfg(test)]

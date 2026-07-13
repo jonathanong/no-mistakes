@@ -2,9 +2,8 @@ use super::{
     collect_check_facts, collect_check_facts_with_graph_files_and_playwright,
     collect_check_facts_with_playwright, collect_file_facts, CheckFactPlan, PlaywrightFactPlan,
 };
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::path::PathBuf;
-use std::sync::Arc;
 
 fn fixture_path(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -16,6 +15,21 @@ fn ast_fixture_path(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/ast-snippets/ts-source/fixture/facts")
         .join(name)
+}
+
+fn playwright_plan(path: PathBuf) -> PlaywrightFactPlan {
+    let mut plan = PlaywrightFactPlan::default();
+    plan.add_file(super::PlaywrightFactSelection {
+        path,
+        navigation_helpers: &[],
+        selector_attributes: &["data-testid".to_string()],
+        component_selector_attributes: &BTreeMap::new(),
+        html_ids: false,
+        test_id_attributes: &["data-testid".to_string()],
+        policy: crate::playwright::playwright_tests::TestPolicy::default(),
+        demands_text_imports: true,
+    });
+    plan
 }
 
 #[test]
@@ -53,6 +67,7 @@ fn collect_check_facts_skips_non_indexable_files_with_minimal_plan() {
     assert_eq!(facts.stats.files_discovered, 2);
     assert_eq!(facts.stats.files_parsed, 1);
     assert_eq!(facts.stats.parse_errors, 0);
+    assert_eq!(facts.graph_file_universe(), facts.files());
     assert_eq!(facts.ts.len(), 1);
     let file_facts = facts.ts.get(&file).expect("indexable file is parsed");
     assert!(file_facts.ts.imports.is_empty());
@@ -259,9 +274,6 @@ fn collect_check_facts_parses_once_for_overlapping_fact_categories() {
 fn collect_check_facts_parses_once_for_playwright_and_shared_facts() {
     let root = fixture_path("");
     let file = fixture_path("src/everything.tsx");
-    let mut test_id_attributes_by_path = HashMap::new();
-    test_id_attributes_by_path.insert(file.clone(), vec!["data-testid".to_string()]);
-
     let facts = collect_check_facts_with_playwright(
         &root,
         vec![file.clone()],
@@ -269,17 +281,7 @@ fn collect_check_facts_parses_once_for_playwright_and_shared_facts() {
             react: true,
             ..CheckFactPlan::default()
         },
-        Some(PlaywrightFactPlan {
-            navigation_helpers: Vec::new(),
-            selector_regexes: Arc::new(
-                crate::playwright::selectors::compile_selector_regexes_with_html_ids(
-                    &["data-testid".to_string()],
-                    &Default::default(),
-                    false,
-                ),
-            ),
-            test_id_attributes_by_path: Arc::new(test_id_attributes_by_path),
-        }),
+        Some(playwright_plan(file.clone())),
     );
 
     assert_eq!(facts.stats.files_discovered, 1);
@@ -313,6 +315,10 @@ fn collect_check_facts_keeps_graph_files_out_of_shared_file_scope() {
         facts.graph_file_universe(),
         std::slice::from_ref(&graph_only)
     );
+    assert_eq!(
+        crate::codebase::dependencies::graph::TsFactLookup::graph_files(&facts),
+        Some(std::slice::from_ref(&graph_only))
+    );
     assert!(facts.ts.contains_key(&scoped));
     assert!(facts.ts.contains_key(&graph_only));
     let graph_only_facts = facts.ts.get(&graph_only).expect("graph-only facts");
@@ -323,28 +329,35 @@ fn collect_check_facts_keeps_graph_files_out_of_shared_file_scope() {
 }
 
 #[test]
+fn explicitly_empty_graph_file_universe_is_complete() {
+    let root = fixture_path("");
+    let scoped = fixture_path("src/everything.tsx");
+    let facts = collect_check_facts_with_graph_files_and_playwright(
+        &root,
+        vec![scoped],
+        Vec::new(),
+        CheckFactPlan::default(),
+        None,
+    );
+
+    assert_eq!(
+        crate::codebase::dependencies::graph::TsFactLookup::graph_files(&facts),
+        Some([].as_slice())
+    );
+    assert!(facts.graph_file_universe_is_complete());
+    assert!(facts.graph_file_universe().is_empty());
+}
+
+#[test]
 fn collect_check_facts_only_parses_playwright_test_files_for_playwright_facts() {
     let root = fixture_path("");
     let test_file = fixture_path("src/everything.tsx");
     let invalid_file = fixture_path("src/invalid.ts");
-    let mut test_id_attributes_by_path = HashMap::new();
-    test_id_attributes_by_path.insert(test_file.clone(), vec!["data-testid".to_string()]);
-
     let facts = collect_check_facts_with_playwright(
         &root,
         vec![test_file.clone(), invalid_file.clone()],
         CheckFactPlan::default(),
-        Some(PlaywrightFactPlan {
-            navigation_helpers: Vec::new(),
-            selector_regexes: Arc::new(
-                crate::playwright::selectors::compile_selector_regexes_with_html_ids(
-                    &["data-testid".to_string()],
-                    &Default::default(),
-                    false,
-                ),
-            ),
-            test_id_attributes_by_path: Arc::new(test_id_attributes_by_path),
-        }),
+        Some(playwright_plan(test_file.clone())),
     );
 
     assert_eq!(facts.stats.files_discovered, 2);
@@ -356,11 +369,5 @@ fn collect_check_facts_only_parses_playwright_test_files_for_playwright_facts() 
         .expect("test file facts")
         .playwright
         .is_some());
-    assert!(
-        !facts
-            .ts
-            .get(&invalid_file)
-            .expect("non-playwright file facts")
-            .parsed
-    );
+    assert!(!facts.ts.contains_key(&invalid_file));
 }

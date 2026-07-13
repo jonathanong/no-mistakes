@@ -141,7 +141,6 @@ impl GraphBuildPlan {
         TsFactPlan {
             imports: self.imports
                 || self.route_imports
-                || self.playwright_selectors
                 || self.workspace
                 || self.assets,
             function_calls: self.imports || self.workspace || self.assets || self.symbols,

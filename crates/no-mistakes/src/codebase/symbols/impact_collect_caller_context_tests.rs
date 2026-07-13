@@ -41,7 +41,8 @@ fn prepare_local_caller_context_resolves_workspace_packages_once() {
         &graph_files,
         None,
         Some(&facts as &dyn TsFactLookup),
-    );
+    )
+    .expect("shared-facts graph builds");
     assert!(
         graph.all_files().count() > 0,
         "sanity check: shared facts must still let the graph build succeed"

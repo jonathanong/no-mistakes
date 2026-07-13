@@ -33,7 +33,7 @@ fn resolve_symbol_dependents(
 fn build_dependents_graph(
     ctx: &TraversalCtx<'_>,
     symbol_facts: Option<&crate::codebase::ts_source::facts::TsFactMap>,
-) -> graph::DepGraph {
+) -> Result<graph::DepGraph> {
     match symbol_facts {
         Some(facts) => graph::DepGraph::build_with_plan_files_and_facts(
             ctx.root,
