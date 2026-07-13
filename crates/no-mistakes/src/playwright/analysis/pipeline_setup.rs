@@ -6,19 +6,22 @@
 //! shared `TsFactLookup` when it has one (see `crates/CLAUDE.md`'s
 //! "Duplicate full-repo work across independent call paths").
 
-use crate::codebase::dependencies::graph::{RouteReachableFiles, TsFactLookup};
+use crate::codebase::dependencies::graph::{
+    DepGraph, GraphBuildPlan, GraphFiles, RouteReachableFiles, TsFactLookup,
+};
 use crate::playwright::analysis::app_collect::collect_app_selector_occurrences;
 use crate::playwright::analysis::app_text::collect_app_text_targets;
 use crate::playwright::analysis::context::DiscoveredTestFile;
 use crate::playwright::analysis::discover::discover_test_files;
 use crate::playwright::analysis::route_reachability::collect_route_reachable_files;
+use crate::playwright::analysis::route_reachability::collect_route_source_files;
 use crate::playwright::analysis::text_types::AppTextTarget;
 use crate::playwright::analysis::types::UniqueSelectorPolicy;
 use crate::playwright::config::Settings;
 use crate::playwright::selectors::{self, AppSelector, SelectorRegexes};
 use crate::playwright::{playwright_config, routes};
 use anyhow::Result;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 pub(crate) struct PlaywrightSetup {
@@ -37,6 +40,7 @@ pub(crate) fn build_playwright_setup(
     unique_selector_policy: &UniqueSelectorPolicy,
     require_routes: bool,
     facts: Option<&dyn TsFactLookup>,
+    route_import_graph: Option<&DepGraph>,
 ) -> Result<PlaywrightSetup> {
     let route_root = root.join(&settings.frontend_root);
     let compute_routes = || {
@@ -114,11 +118,37 @@ pub(crate) fn build_playwright_setup(
     let route_reachable_files = if app_text_targets.is_empty() {
         Arc::new(Default::default())
     } else {
+        let compute = || {
+            let source_files = collect_route_source_files(root, settings)?;
+            let supplied_graph = route_import_graph.filter(|graph| {
+                source_files
+                    .graph_files
+                    .iter()
+                    .all(|file| graph.contains_file(file))
+            });
+            let owned_route_import_graph = match supplied_graph {
+                Some(_) => None,
+                None => Some(build_route_import_graph(
+                    root,
+                    settings,
+                    facts,
+                    &source_files.graph_files,
+                )?),
+            };
+            let route_import_graph = supplied_graph
+                .or(owned_route_import_graph.as_ref())
+                .expect("route-import graph is provided or built");
+            collect_route_reachable_files(
+                root,
+                settings,
+                routes.as_slice(),
+                route_import_graph,
+                &source_files,
+            )
+        };
         crate::perf_trace::trace("playwright.route_reachable_files", || match facts {
-            Some(facts) => facts.get_or_compute_route_reachable_files(&|| {
-                collect_route_reachable_files(root, settings, routes.as_slice())
-            }),
-            None => collect_route_reachable_files(root, settings, routes.as_slice()).map(Arc::new),
+            Some(facts) => facts.get_or_compute_route_reachable_files(&compute),
+            None => compute().map(Arc::new),
         })?
     };
 
@@ -131,4 +161,49 @@ pub(crate) fn build_playwright_setup(
         app_text_targets,
         route_reachable_files,
     })
+}
+
+pub(crate) fn build_route_import_graph(
+    root: &Path,
+    settings: &Settings,
+    facts: Option<&dyn TsFactLookup>,
+    route_source_files: &[PathBuf],
+) -> Result<DepGraph> {
+    let tsconfig = load_route_import_tsconfig(root, settings)?;
+    let mut graph_file_paths = facts
+        .and_then(TsFactLookup::graph_files)
+        .map(<[PathBuf]>::to_vec)
+        .unwrap_or_else(|| GraphFiles::discover(root).all().to_vec());
+    graph_file_paths.extend_from_slice(route_source_files);
+    graph_file_paths.sort();
+    graph_file_paths.dedup();
+    let graph_files = GraphFiles::from_files(graph_file_paths);
+    Ok(DepGraph::build_with_plan_files_config_and_facts(
+        root,
+        &tsconfig,
+        GraphBuildPlan {
+            route_imports: true,
+            ..GraphBuildPlan::default()
+        },
+        &graph_files,
+        None,
+        facts,
+    ))
+}
+
+pub(crate) fn load_route_import_tsconfig(
+    root: &Path,
+    settings: &Settings,
+) -> Result<crate::codebase::ts_resolver::TsConfig> {
+    let frontend_root = root.join(&settings.frontend_root);
+    Ok(crate::codebase::ts_resolver::find_tsconfig(&frontend_root)
+        .or_else(|| crate::codebase::ts_resolver::find_tsconfig(root))
+        .map(|path| crate::codebase::ts_resolver::load_tsconfig(&path))
+        .transpose()?
+        .unwrap_or_else(|| crate::codebase::ts_resolver::TsConfig {
+            dir: root.to_path_buf(),
+            paths: Vec::new(),
+            paths_dir: root.to_path_buf(),
+            base_url: None,
+        }))
 }

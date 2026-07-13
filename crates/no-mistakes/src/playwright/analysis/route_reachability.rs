@@ -1,50 +1,60 @@
-use crate::playwright::analysis::app_collect::collect_selector_source_files;
+use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use crate::playwright::config;
 use crate::playwright::fsutil::build_globset;
 use crate::playwright::routes;
 use anyhow::Result;
-use oxc_ast::ast::{ImportOrExportKind, Statement};
 use rayon::prelude::*;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-mod dynamic_imports;
-mod import_cache;
-use import_cache::{get_or_compute_route_imports, RouteImportCache};
+pub(crate) struct RouteSourceFiles {
+    pub(crate) graph_files: Vec<PathBuf>,
+    selector_rel_by_file: HashMap<PathBuf, Arc<String>>,
+}
+
+pub(crate) fn collect_route_source_files(
+    root: &Path,
+    settings: &config::Settings,
+) -> Result<RouteSourceFiles> {
+    let include = build_globset(&settings.selector_include)?;
+    let exclude = build_globset(&settings.selector_exclude)?;
+    let include_all = settings.selector_include.is_empty();
+    let normalized_root = crate::codebase::ts_resolver::normalize_path(root);
+    let mut graph_files = BTreeSet::new();
+    let mut selector_rel_by_file = HashMap::new();
+
+    for selector_root in &settings.selector_roots {
+        let source_root = root.join(selector_root);
+        if !source_root.exists() {
+            continue;
+        }
+        for file in crate::playwright::fsutil::walk_files(&source_root) {
+            if !crate::playwright::selectors::is_source_file(&file) {
+                continue;
+            }
+            let file = crate::codebase::ts_resolver::normalize_path(&file);
+            graph_files.insert(file.clone());
+            let relative = crate::playwright::fsutil::relative_string(&normalized_root, &file);
+            if (include_all || include.is_match(&relative)) && !exclude.is_match(&relative) {
+                selector_rel_by_file.insert(file, Arc::new(relative));
+            }
+        }
+    }
+
+    Ok(RouteSourceFiles {
+        graph_files: graph_files.into_iter().collect(),
+        selector_rel_by_file,
+    })
+}
 
 pub(crate) fn collect_route_reachable_files(
     root: &Path,
     settings: &config::Settings,
     routes: &[routes::Route],
+    graph: &DepGraph,
+    source_files: &RouteSourceFiles,
 ) -> Result<BTreeMap<Arc<String>, BTreeSet<Arc<String>>>> {
-    let include = build_globset(&settings.selector_include)?;
-    let exclude = build_globset(&settings.selector_exclude)?;
-    let include_all = settings.selector_include.is_empty();
-    let selector_files =
-        collect_selector_source_files(root, settings, &include, &exclude, include_all);
-    let selector_rel_by_file: HashMap<_, _> = selector_files
-        .iter()
-        .map(|file| {
-            (
-                crate::codebase::ts_resolver::normalize_path(file),
-                Arc::new(crate::playwright::fsutil::relative_string(root, file)),
-            )
-        })
-        .collect();
-    let frontend_root = root.join(&settings.frontend_root);
-    let tsconfig = crate::codebase::ts_resolver::find_tsconfig(&frontend_root)
-        .or_else(|| crate::codebase::ts_resolver::find_tsconfig(root))
-        .map(|path| crate::codebase::ts_resolver::load_tsconfig(&path))
-        .transpose()?
-        .unwrap_or_else(|| crate::codebase::ts_resolver::TsConfig {
-            dir: root.to_path_buf(),
-            paths: Vec::new(),
-            paths_dir: root.to_path_buf(),
-            base_url: None,
-        });
-    let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
-    let import_cache = RouteImportCache::new();
     let route_reachable_files = routes
         .par_iter()
         .map(|route| {
@@ -54,9 +64,8 @@ pub(crate) fn collect_route_reachable_files(
                     root,
                     settings,
                     &route.file,
-                    &selector_rel_by_file,
-                    &resolver,
-                    &import_cache,
+                    &source_files.selector_rel_by_file,
+                    graph,
                 )?,
             ))
         })
@@ -69,50 +78,38 @@ fn reachable_files(
     settings: &config::Settings,
     route_file: &Path,
     selector_rel_by_file: &HashMap<std::path::PathBuf, Arc<String>>,
-    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
-    import_cache: &RouteImportCache,
+    graph: &DepGraph,
 ) -> Result<BTreeSet<Arc<String>>> {
-    let mut reachable = BTreeSet::new();
-    let mut stack = route_entry_files(root, settings, route_file)
+    let entry_files = route_entry_files(root, settings, route_file)
         .into_iter()
         .map(|file| crate::codebase::ts_resolver::normalize_path(&file))
         .collect::<Vec<_>>();
-    let mut seen = HashSet::new();
+    let roots = entry_files
+        .iter()
+        .cloned()
+        .map(NodeId::File)
+        .collect::<Vec<_>>();
+    let allowed: HashSet<_> = [EdgeKind::RouteImport].into();
+    let dependencies = graph.deps_of(&roots, None, Some(&allowed));
+    let all_files = entry_files
+        .iter()
+        .map(PathBuf::as_path)
+        .chain(dependencies.iter().filter_map(|entry| entry.node.as_file()))
+        .collect::<BTreeSet<_>>();
 
-    while !stack.is_empty() {
-        let frontier: Vec<_> = stack
-            .into_iter()
-            .filter(|file| seen.insert(file.clone()))
-            .collect();
-
-        stack = Vec::new();
-
-        if frontier.is_empty() {
-            break;
-        }
-
-        for file in &frontier {
-            if let Some(rel) = selector_rel_by_file.get(file) {
-                reachable.insert(rel.clone());
-            }
-        }
-
-        let imports_results: Result<Vec<_>> = frontier
-            .par_iter()
-            .map(|file| collect_route_imports(file, resolver, import_cache))
-            .collect();
-
-        let all_imports = imports_results?;
-
-        for imports in all_imports {
-            stack.extend(
-                imports
-                    .iter()
-                    .map(|file| crate::codebase::ts_resolver::normalize_path(file)),
+    for file in &all_files {
+        if let Some(error) = graph.parse_error(file) {
+            anyhow::bail!(
+                "failed to parse route-reachable {}: {error}",
+                file.display()
             );
         }
     }
-    Ok(reachable)
+
+    Ok(all_files
+        .into_iter()
+        .filter_map(|file| selector_rel_by_file.get(file).cloned())
+        .collect())
 }
 
 fn route_entry_files(root: &Path, settings: &config::Settings, route_file: &Path) -> Vec<PathBuf> {
@@ -131,76 +128,8 @@ fn route_entry_files(root: &Path, settings: &config::Settings, route_file: &Path
     files
 }
 
-fn collect_route_imports(
-    path: &Path,
-    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
-    import_cache: &RouteImportCache,
-) -> Result<Arc<Vec<PathBuf>>> {
-    let normalized_path = crate::codebase::ts_resolver::normalize_path(path);
-    get_or_compute_route_imports(import_cache, normalized_path, |normalized_path| {
-        // Preserve the existing symlink behavior for reads and relative import
-        // resolution, but pay for canonicalization only on a cache miss.
-        let abs_path = normalized_path.canonicalize()?;
-        if !is_script_path(&abs_path) {
-            return Ok(Vec::new());
-        }
-
-        let source = std::fs::read_to_string(&abs_path)?;
-        crate::ast::with_program(&abs_path, &source, |program, _source| {
-            collect_route_imports_from_program(&abs_path, program, resolver)
-        })
-    })
-}
-
-fn collect_route_imports_from_program<'a>(
-    abs_path: &Path,
-    program: &oxc_ast::ast::Program<'a>,
-    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
-) -> Vec<PathBuf> {
-    let mut imports = Vec::new();
-    for stmt in &program.body {
-        match stmt {
-            Statement::ImportDeclaration(import)
-                if crate::fetch::import_shape::is_runtime_import(import) =>
-            {
-                if let Some(resolved) = resolver.resolve(import.source.value.as_str(), abs_path) {
-                    imports.push(resolved);
-                }
-            }
-            Statement::ExportNamedDeclaration(export) => {
-                if !crate::fetch::import_shape::is_runtime_export(export) {
-                    continue;
-                }
-                if let Some(source) = &export.source {
-                    if let Some(resolved) = resolver.resolve(source.value.as_str(), abs_path) {
-                        imports.push(resolved);
-                    }
-                }
-            }
-            Statement::ExportAllDeclaration(export) => {
-                if export.export_kind == ImportOrExportKind::Type {
-                    continue;
-                }
-                if let Some(resolved) = resolver.resolve(export.source.value.as_str(), abs_path) {
-                    imports.push(resolved);
-                }
-            }
-            _ => {}
-        }
-    }
-    imports.extend(dynamic_imports::collect(abs_path, program, resolver));
-    imports
-}
-
 fn route_key(root: &Path, file: &Path) -> Arc<String> {
     Arc::new(crate::playwright::fsutil::relative_string(root, file))
-}
-
-fn is_script_path(path: &Path) -> bool {
-    matches!(
-        path.extension().and_then(|extension| extension.to_str()),
-        Some("js" | "jsx" | "ts" | "tsx" | "mjs" | "mts" | "cjs" | "cts")
-    )
 }
 
 #[cfg(test)]

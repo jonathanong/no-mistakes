@@ -4,7 +4,6 @@ struct GraphEdgeBuildInputs<'a> {
     plan: GraphBuildPlan,
     graph_files: &'a GraphFiles,
     config_options: Option<&'a GraphConfigOptions>,
-    config_path: Option<&'a Path>,
 }
 
 fn merge_http_process_edges(

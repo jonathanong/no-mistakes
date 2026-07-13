@@ -121,9 +121,16 @@ fn is_require_resolve_callee(expr: &Expression<'_>) -> bool {
             && member.property.name == "resolve")
 }
 
-fn string_literal_expr<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
-    match expr {
-        Expression::StringLiteral(s) => Some(s.value.as_str()),
+fn static_import_specifier(expr: &Expression<'_>) -> Option<String> {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(expr) {
+        Expression::StringLiteral(s) => Some(s.value.as_str().to_string()),
+        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
+            let mut specifier = String::new();
+            for quasi in &template.quasis {
+                specifier.push_str(quasi.value.cooked.as_ref().unwrap_or(&quasi.value.raw));
+            }
+            Some(specifier)
+        }
         _ => None,
     }
 }

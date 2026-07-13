@@ -13,6 +13,14 @@ config.
 | What this file affects | [`dependents`](dependents.md) |
 | Impact phrased generically | [`related`](related.md) |
 
+Use `--relationship route-import` for the conservative runtime module closure
+used by Playwright route analysis. It includes runtime static imports/re-exports
+and literal dynamic imports without function-reachability pruning, while
+excluding type-only imports and `require()`. This differs from `route`, which
+selects URL-route references, Playwright route tests, and Next.js layouts.
+It is explicit opt-in: omitted relationships and `--relationship all` retain
+the standard call-pruned graph and exclude `route-import`.
+
 ## Examples And Counterexamples
 
 Static graph inputs work best:

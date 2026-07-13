@@ -49,6 +49,7 @@ fn pipeline_expands_rewrites_into_route_edges() {
         UniqueSelectorPolicy::default(),
         false,
         None,
+        None,
     )
     .unwrap();
     let route_patterns: Vec<&str> = analysis

@@ -433,6 +433,7 @@ fn serialized_edge_kinds_are_documented() {
         EdgeKind::Import,
         EdgeKind::TypeImport,
         EdgeKind::DynamicImport,
+        EdgeKind::RouteImport,
         EdgeKind::Require,
         EdgeKind::TestOf,
         EdgeKind::RouteRef,
@@ -463,6 +464,7 @@ fn serialized_edge_kinds_are_documented() {
             EdgeKind::Import => {}
             EdgeKind::TypeImport => {}
             EdgeKind::DynamicImport => {}
+            EdgeKind::RouteImport => {}
             EdgeKind::Require => {}
             EdgeKind::TestOf => {}
             EdgeKind::RouteRef => {}

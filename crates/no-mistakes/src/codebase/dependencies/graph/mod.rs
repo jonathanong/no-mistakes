@@ -33,6 +33,7 @@ include!("lazy_import_neighbors.rs");
 include!("sort.rs");
 include!("edge_import_reachability.rs");
 include!("edge_imports.rs");
+include!("edge_route_imports.rs");
 include!("edge_symbols.rs");
 include!("edge_symbols_call_graph.rs");
 include!("edge_symbols_http.rs");

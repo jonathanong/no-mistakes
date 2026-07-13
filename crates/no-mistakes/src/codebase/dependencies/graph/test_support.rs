@@ -34,6 +34,7 @@ pub(crate) fn from_raw_maps(
         root,
         forward: typed_fwd,
         reverse: typed_rev,
+        parse_errors: HashMap::new(),
     }
 }
 
@@ -43,5 +44,6 @@ pub(crate) fn from_typed_maps(root: PathBuf, forward: EdgeMap, reverse: EdgeMap)
         root,
         forward,
         reverse,
+        parse_errors: HashMap::new(),
     }
 }

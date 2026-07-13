@@ -1,5 +1,17 @@
 // ── EdgeKind::Selector / playwright selector edges ───────────────────────
 
+fn collect_playwright_selector_edges(
+    root: &Path,
+    config_path: Option<&Path>,
+    all_files: &[PathBuf],
+    facts: Option<&dyn TsFactLookup>,
+) -> Vec<Edge> {
+    let Ok(analysis) = run_playwright_selector_analysis(root, config_path, facts, None, None) else {
+        return vec![];
+    };
+    selector_edges_from_analysis(root, all_files, &analysis)
+}
+
 #[test]
 fn selector_dep_edge_maps_selector_edge_to_dep_graph_edge() {
     use crate::playwright::analysis::types::Edge as PwEdge;

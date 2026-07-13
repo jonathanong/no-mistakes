@@ -39,6 +39,7 @@ pub(crate) fn run_all(
     let playwright_fact_plan =
         no_mistakes::playwright::rules::fact_plan(&root, config_path.as_deref(), &config)
             .context("failed to prepare Playwright shared facts")?;
+    let playwright_facts_enabled = playwright_fact_plan.is_some();
     let integration_enabled = integration_configured(&config);
     let react_enabled = react_traits::check_enabled(&root, config_path.as_deref(), false)?;
     let react_warning = None;
@@ -63,6 +64,12 @@ pub(crate) fn run_all(
             );
         plan.graph = fact_plan;
         plan.graph_context = fact_context;
+    }
+    if playwright_facts_enabled {
+        // Route-import reachability consumes the same repo-wide import facts
+        // as the canonical dependency graph. Function-call facts are not
+        // needed because route imports deliberately remain unpruned.
+        plan.graph.imports = true;
     }
     let needs_shared_facts = plan_requests_facts(&plan) || playwright_fact_plan.is_some();
     if !needs_shared_facts
@@ -97,7 +104,7 @@ pub(crate) fn run_all(
         } else {
             Vec::new()
         };
-        let graph_files = if forbidden_graph_plan.is_some() {
+        let graph_files = if forbidden_graph_plan.is_some() || playwright_facts_enabled {
             crate::check_discovery::discover_check_files(
                 &root,
                 &config,

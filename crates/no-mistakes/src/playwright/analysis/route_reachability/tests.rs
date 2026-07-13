@@ -1,9 +1,7 @@
-use super::import_cache::{get_or_compute_route_imports, RouteImportCache};
 use super::*;
 use crate::playwright::config::Settings;
 use std::collections::{BTreeMap, BTreeSet};
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 
 fn settings(selector_include: Vec<String>) -> Settings {
     Settings {
@@ -25,74 +23,93 @@ fn settings(selector_include: Vec<String>) -> Settings {
     }
 }
 
+fn collect_for_test(
+    root: &Path,
+    settings: &Settings,
+    routes: &[routes::Route],
+) -> anyhow::Result<BTreeMap<Arc<String>, BTreeSet<Arc<String>>>> {
+    let tsconfig =
+        crate::playwright::analysis::pipeline_setup::load_route_import_tsconfig(root, settings)?;
+    let source_files = collect_route_source_files(root, settings)?;
+    let mut graph_file_paths = crate::codebase::dependencies::graph::GraphFiles::discover(root)
+        .all()
+        .to_vec();
+    graph_file_paths.extend_from_slice(&source_files.graph_files);
+    graph_file_paths.sort();
+    graph_file_paths.dedup();
+    let graph_files =
+        crate::codebase::dependencies::graph::GraphFiles::from_files(graph_file_paths);
+    let graph =
+        crate::codebase::dependencies::graph::DepGraph::build_with_plan_files_config_and_facts(
+            root,
+            &tsconfig,
+            crate::codebase::dependencies::graph::GraphBuildPlan {
+                route_imports: true,
+                ..Default::default()
+            },
+            &graph_files,
+            None,
+            None,
+        );
+    collect_route_reachable_files(root, settings, routes, &graph, &source_files)
+}
+
+fn root_route(root: &Path) -> routes::Route {
+    routes::Route {
+        file: root.join("web/app/page.tsx"),
+        pattern: "/".to_string(),
+    }
+}
+
 #[test]
 fn route_reachability_honors_selector_include() {
     let root = crate::playwright::test_support::fixture_path(&[
         "nextjs-selectors",
         "selector-text-locator",
     ]);
-    let route = routes::Route {
-        file: root.join("web/app/page.tsx"),
-        pattern: "/".to_string(),
-    };
-
-    let reachable = collect_route_reachable_files(
+    let reachable = collect_for_test(
         &root,
         &settings(vec!["web/app/components/unreachable-*.tsx".to_string()]),
-        &[route],
+        &[root_route(&root)],
     )
     .expect("route reachability should collect");
-
     assert!(reachable
         .get(&Arc::new("web/app/page.tsx".to_string()))
         .is_some_and(BTreeSet::is_empty));
 }
 
 #[test]
-fn route_reachability_resolves_tsconfig_alias_imports() {
+fn route_reachability_resolves_runtime_imports_and_excludes_types() {
     let root = crate::playwright::test_support::fixture_path(&[
         "nextjs-selectors",
         "selector-text-locator",
     ]);
-    let route = routes::Route {
-        file: root.join("web/app/page.tsx"),
-        pattern: "/".to_string(),
-    };
-
-    let reachable =
-        collect_route_reachable_files(&root, &settings(vec![]), &[route]).expect("collects");
-
-    assert!(reachable
-        .get(&Arc::new("web/app/page.tsx".to_string()))
-        .is_some_and(|files| files.contains(&Arc::new(
-            "web/app/components/discuss-button.tsx".to_string()
-        ))));
+    let reachable = collect_for_test(&root, &settings(vec![]), &[root_route(&root)])
+        .expect("route reachability should collect");
     let files = reachable
         .get(&Arc::new("web/app/page.tsx".to_string()))
         .expect("route should have reachable files");
-    assert!(files.contains(&Arc::new(
-        "web/app/components/reexported-button.tsx".to_string()
-    )));
-    assert!(files.contains(&Arc::new(
-        "web/app/components/export-all-button.tsx".to_string()
-    )));
+    for expected in [
+        "web/app/components/discuss-button.tsx",
+        "web/app/components/reexported-button.tsx",
+        "web/app/components/export-all-button.tsx",
+    ] {
+        assert!(
+            files.contains(&Arc::new(expected.to_string())),
+            "missing {expected}"
+        );
+    }
     assert!(!files.contains(&Arc::new(
         "web/app/components/type-only-button.tsx".to_string()
     )));
 }
 
 #[test]
-fn route_reachability_includes_app_router_wrappers() {
+fn route_reachability_includes_layout_and_template_only() {
     let root =
         crate::playwright::test_support::fixture_path(&["nextjs-selectors", "route-wrappers"]);
-    let route = routes::Route {
-        file: root.join("web/app/page.tsx"),
-        pattern: "/".to_string(),
-    };
-
-    let reachable =
-        collect_route_reachable_files(&root, &settings(vec![]), &[route]).expect("collects");
-
+    let reachable = collect_for_test(&root, &settings(vec![]), &[root_route(&root)])
+        .expect("route reachability should collect");
     let files = reachable
         .get(&Arc::new("web/app/page.tsx".to_string()))
         .expect("route should have reachable files");
@@ -103,154 +120,96 @@ fn route_reachability_includes_app_router_wrappers() {
         "web/app/components/template-button.tsx".to_string()
     )));
     assert!(!files.contains(&Arc::new("web/app/components/error-button.tsx".to_string())));
-    assert!(!files.contains(&Arc::new(
-        "web/app/components/not-found-button.tsx".to_string()
-    )));
 }
 
 #[test]
-fn route_reachability_uses_frontend_tsconfig_and_script_imports() {
+fn route_reachability_uses_frontend_tsconfig_and_literal_dynamic_imports() {
     let root =
         crate::playwright::test_support::fixture_path(&["nextjs-selectors", "frontend-tsconfig"]);
-    let route = routes::Route {
-        file: root.join("web/app/page.tsx"),
-        pattern: "/".to_string(),
-    };
-
-    let reachable =
-        collect_route_reachable_files(&root, &settings(vec![]), &[route]).expect("collects");
-
+    let reachable = collect_for_test(&root, &settings(vec![]), &[root_route(&root)])
+        .expect("route reachability should collect");
     let files = reachable
         .get(&Arc::new("web/app/page.tsx".to_string()))
         .expect("route should have reachable files");
-    assert!(files.contains(&Arc::new("web/app/components/alias-button.tsx".to_string())));
-    assert!(files.contains(&Arc::new(
-        "web/app/components/dynamic-button.tsx".to_string()
+    for expected in [
+        "web/app/components/alias-button.tsx",
+        "web/app/components/dynamic-button.tsx",
+        "web/app/components/template-button.tsx",
+        "web/app/components/wrapped-button.tsx",
+        "web/app/components/wrapped-template-button.tsx",
+        "web/app/components/[id]-button.tsx",
+        "web/app/fixtures/fixture-button.tsx",
+        "web/app/components/cycle-a.ts",
+        "web/app/components/cycle-b.ts",
+    ] {
+        assert!(
+            files.contains(&Arc::new(expected.to_string())),
+            "missing {expected}"
+        );
+    }
+    assert!(!files.contains(&Arc::new(
+        "web/app/components/required-button.tsx".to_string()
     )));
-    assert!(files.contains(&Arc::new(
-        "web/app/components/template-button.tsx".to_string()
-    )));
 }
 
 #[test]
-fn route_import_collection_uses_shared_cache_entries() {
-    let root = crate::playwright::test_support::fixture_path(&[
-        "nextjs-selectors",
-        "selector-text-locator",
-    ]);
-    let route_file = root.join("web/app/page.tsx");
-    let cached_import = root.join("web/app/components/cached.tsx");
-    let tsconfig = crate::codebase::ts_resolver::TsConfig {
-        dir: root.clone(),
-        paths: Vec::new(),
-        paths_dir: root.clone(),
-        base_url: None,
-    };
-    let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
-    let import_cache = RouteImportCache::new();
-    let cached = OnceLock::new();
-    cached
-        .set(Ok(Arc::new(vec![cached_import.clone()])))
-        .unwrap();
-    import_cache.insert(
-        crate::codebase::ts_resolver::normalize_path(&route_file),
-        Arc::new(cached),
+fn standalone_and_shared_fact_route_reachability_match() {
+    let root =
+        crate::playwright::test_support::fixture_path(&["nextjs-selectors", "frontend-tsconfig"]);
+    let settings = settings(vec![]);
+    let route = root_route(&root);
+    let standalone = collect_for_test(&root, &settings, std::slice::from_ref(&route))
+        .expect("standalone reachability collects");
+    let source_files = collect_route_source_files(&root, &settings).expect("sources collect");
+    let mut files = crate::codebase::ts_source::discover_files(&root, &[]);
+    files.extend_from_slice(&source_files.graph_files);
+    files.sort();
+    files.dedup();
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        files,
+        crate::codebase::check_facts::CheckFactPlan {
+            graph: crate::codebase::ts_source::facts::TsFactPlan {
+                imports: true,
+                ..Default::default()
+            },
+            ..Default::default()
+        },
     );
+    let graph = crate::playwright::analysis::pipeline_setup::build_route_import_graph(
+        &root,
+        &settings,
+        Some(&facts),
+        &source_files.graph_files,
+    )
+    .expect("shared-fact graph builds");
+    let shared = collect_route_reachable_files(&root, &settings, &[route], &graph, &source_files)
+        .expect("shared reachability collects");
 
-    let imports =
-        collect_route_imports(&route_file, &resolver, &import_cache).expect("imports collect");
-
-    assert_eq!(imports.as_ref(), &vec![cached_import]);
+    assert_eq!(shared, standalone);
 }
 
 #[test]
-fn route_import_collection_computes_shared_cache_entries_once() {
-    let root = crate::playwright::test_support::fixture_path(&[
-        "nextjs-selectors",
-        "selector-text-locator",
-    ]);
-    let route_file = root.join("web/app/page.tsx");
-    let import_cache = RouteImportCache::new();
-    let compute_calls = AtomicUsize::new(0);
-
-    (0..32_usize).into_par_iter().for_each(|_| {
-        let imports =
-            get_or_compute_route_imports(&import_cache, route_file.clone(), |_normalized_path| {
-                compute_calls.fetch_add(1, Ordering::SeqCst);
-                Ok(vec![root.join("web/app/components/discuss-button.tsx")])
-            })
-            .expect("imports should compute");
-        assert_eq!(imports.len(), 1);
-    });
-
-    assert_eq!(compute_calls.load(Ordering::SeqCst), 1);
-}
-
-#[test]
-fn route_import_collection_caches_failed_computations() {
-    let root = crate::playwright::test_support::fixture_path(&[
-        "nextjs-selectors",
-        "selector-text-locator",
-    ]);
-    let route_file = root.join("web/app/page.tsx");
-    let import_cache = RouteImportCache::new();
-    let compute_calls = AtomicUsize::new(0);
-    let error_message = "failed to compute imports";
-
-    (0..32_usize).into_par_iter().for_each(|_| {
-        let error =
-            get_or_compute_route_imports(&import_cache, route_file.clone(), |_normalized_path| {
-                compute_calls.fetch_add(1, Ordering::SeqCst);
-                anyhow::bail!(error_message)
-            })
-            .expect_err("imports should fail");
-        assert_eq!(error.to_string(), error_message);
-    });
-
-    assert_eq!(compute_calls.load(Ordering::SeqCst), 1);
-}
-
-#[test]
-fn route_import_collection_serves_cached_paths_without_filesystem_lookup() {
-    let root = crate::playwright::test_support::fixture_path(&[
-        "nextjs-selectors",
-        "selector-text-locator",
-    ]);
-    let missing_route_file = root.join("web/app/missing.tsx");
-    let cached_import = root.join("web/app/components/discuss-button.tsx");
-    let tsconfig = crate::codebase::ts_resolver::TsConfig {
-        dir: root.clone(),
-        paths: Vec::new(),
-        paths_dir: root,
-        base_url: None,
-    };
-    let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
-    let import_cache = RouteImportCache::new();
-    let cached = OnceLock::new();
-    cached
-        .set(Ok(Arc::new(vec![cached_import.clone()])))
-        .unwrap();
-    import_cache.insert(
-        crate::codebase::ts_resolver::normalize_path(&missing_route_file),
-        Arc::new(cached),
-    );
-
-    let imports = collect_route_imports(&missing_route_file, &resolver, &import_cache)
-        .expect("cached paths should not require filesystem metadata");
-
-    assert_eq!(imports.as_ref(), &vec![cached_import]);
-}
-
-#[test]
-fn route_reachability_surfaces_import_parse_errors() {
+fn route_reachability_surfaces_only_reached_parse_errors() {
     let root =
         crate::playwright::test_support::fixture_path(&["react-traits-components", "bad-file"]);
     let route = routes::Route {
         file: root.join("app/components/Broken.tsx"),
         pattern: "/broken".to_string(),
     };
-
-    let error = collect_route_reachable_files(&root, &settings(vec![]), &[route])
+    let error = collect_for_test(&root, &settings(vec![]), &[route])
         .expect_err("malformed route files should surface import parse errors");
     assert!(error.to_string().contains("Broken.tsx"));
+}
+
+#[test]
+fn route_reachability_ignores_unreached_parse_errors() {
+    let root =
+        crate::playwright::test_support::fixture_path(&["react-traits-components", "bad-file"]);
+    let route = routes::Route {
+        file: root.join("web/app/page.tsx"),
+        pattern: "/".to_string(),
+    };
+    collect_for_test(&root, &settings(vec![]), &[route])
+        .expect("an unrelated malformed source must not fail route reachability");
 }

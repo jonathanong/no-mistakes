@@ -13,8 +13,12 @@ fn http_and_process_relationships_map_to_edge_kinds() {
     assert!(set.contains(&EdgeKind::ProcessSpawn));
     assert!(set.contains(&EdgeKind::AssetImport));
     assert!(set.contains(&EdgeKind::ReactRender));
-    assert!(relationship_filter(&[RelationshipArg::All]).is_none());
-    assert!(relationship_filter(&[]).is_none());
+    assert!(!relationship_filter(&[RelationshipArg::All])
+        .expect("all uses standard edges")
+        .contains(&EdgeKind::RouteImport));
+    assert!(!relationship_filter(&[])
+        .expect("unfiltered traversal uses standard edges")
+        .contains(&EdgeKind::RouteImport));
 }
 
 #[test]
@@ -447,6 +451,7 @@ fn relationship_arg_as_str_all_variants() {
     assert_eq!(RelationshipArg::ImportDynamic.as_str(), "import-dynamic");
     assert_eq!(RelationshipArg::ImportType.as_str(), "import-type");
     assert_eq!(RelationshipArg::ImportRequire.as_str(), "import-require");
+    assert_eq!(RelationshipArg::RouteImport.as_str(), "route-import");
     assert_eq!(RelationshipArg::Workspace.as_str(), "workspace");
     assert_eq!(RelationshipArg::Package.as_str(), "package");
     assert_eq!(RelationshipArg::Test.as_str(), "test");

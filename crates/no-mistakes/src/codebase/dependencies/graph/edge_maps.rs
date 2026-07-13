@@ -30,3 +30,9 @@ fn merge_edges(forward: &mut EdgeMap, reverse: &mut EdgeMap, edges: Vec<Edge>) {
         reverse.entry(to).or_default().push((from, kind));
     }
 }
+
+fn remove_edges_of_kind(forward: &mut EdgeMap, reverse: &mut EdgeMap, kind: EdgeKind) {
+    for edges in forward.values_mut().chain(reverse.values_mut()) {
+        edges.retain(|(_, edge_kind)| *edge_kind != kind);
+    }
+}

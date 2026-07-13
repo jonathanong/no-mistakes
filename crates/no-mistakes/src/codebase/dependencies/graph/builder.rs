@@ -4,6 +4,7 @@ pub struct DepGraph {
     forward: EdgeMap,
     /// reverse: node → nodes that import/reference it (with edge kinds)
     reverse: EdgeMap,
+    parse_errors: HashMap<PathBuf, String>,
 }
 
 impl DepGraph {
@@ -15,6 +16,7 @@ impl DepGraph {
         config_path: Option<&Path>,
         facts: Option<&dyn TsFactLookup>,
     ) -> Self {
+        let caller_facts = facts;
         let config_options = graph_config_options_for_plan_with_config(root, plan, config_path);
         let resolver = ImportResolver::new(tsconfig).with_visible(graph_files.visible());
         let fact_plan = effective_ts_fact_plan(plan, config_options.as_ref());
@@ -28,11 +30,34 @@ impl DepGraph {
         } else {
             None
         };
-        let facts: Option<&dyn TsFactLookup> = facts.or_else(|| {
+        let fallback_facts = (!fact_plan.is_empty()).then_some(facts).flatten().and_then(|facts| {
+            let facts_cover_plan = facts.covers_ts_fact_plan(fact_plan);
+            let missing = graph_files
+                .indexable()
+                .iter()
+                .filter(|path| !facts_cover_plan || facts.get_ts_facts(path).is_none())
+                .cloned()
+                .collect::<Vec<_>>();
+            (!missing.is_empty()).then(|| {
+                collect_ts_facts_with_context(&missing, fact_plan, &fact_context)
+            })
+        });
+        let fallback_lookup = facts.zip(fallback_facts.as_ref()).map(|(primary, fallback)| {
+            FallbackTsFactLookup {
+                primary,
+                fallback,
+                prefer_fallback: !primary.covers_ts_fact_plan(fact_plan),
+            }
+        });
+        let facts: Option<&dyn TsFactLookup> = fallback_lookup
+            .as_ref()
+            .map(|lookup| lookup as &dyn TsFactLookup)
+            .or(facts)
+            .or_else(|| {
             owned_facts
                 .as_ref()
                 .map(|facts| facts as &dyn TsFactLookup)
-        });
+            });
 
         let mut forward: EdgeMap = HashMap::new();
         let mut reverse: EdgeMap = HashMap::new();
@@ -58,6 +83,19 @@ impl DepGraph {
         } else {
             Default::default()
         };
+        let parse_errors = facts
+            .map(|facts| {
+                files
+                    .iter()
+                    .filter_map(|path| {
+                        facts
+                            .get_ts_facts(path)
+                            .and_then(|file_facts| file_facts.parse_error.as_ref())
+                            .map(|error| (path.clone(), error.clone()))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
 
         let edge_inputs = GraphEdgeBuildInputs {
             root,
@@ -65,7 +103,6 @@ impl DepGraph {
             plan,
             graph_files,
             config_options: config_options.as_ref(),
-            config_path,
         };
         collect_and_merge_all_edges(
             &edge_inputs,
@@ -79,11 +116,37 @@ impl DepGraph {
 
         sort_adjacency_lists(&mut forward, &mut reverse);
 
-        Self {
+        let mut graph = Self {
             root: root.to_path_buf(),
             forward,
             reverse,
-        }
+            parse_errors,
+        };
+        crate::perf_trace::trace("graph.playwright_selectors", || {
+            if plan.playwright_selectors {
+                let selector_edges = collect_playwright_selector_edges_with_graph(
+                    root,
+                    config_path,
+                    &graph_files.all,
+                    caller_facts.or(facts),
+                    &graph,
+                    tsconfig,
+                );
+                merge_edges(&mut graph.forward, &mut graph.reverse, selector_edges);
+                if !plan.route_imports {
+                    // RouteImport is a hidden prerequisite for selector/text
+                    // analysis. Do not leak its deliberately conservative
+                    // reachability into callers that did not request it.
+                    remove_edges_of_kind(
+                        &mut graph.forward,
+                        &mut graph.reverse,
+                        EdgeKind::RouteImport,
+                    );
+                }
+                sort_adjacency_lists(&mut graph.forward, &mut graph.reverse);
+            }
+        });
+        graph
     }
 
     pub(crate) fn build_with_plan_file_list_config_and_check_facts(

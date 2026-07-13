@@ -21,6 +21,7 @@ fn package_name_from_spec(spec: &str) -> &str {
 }
 
 include!("core.rs");
+include!("route_import.rs");
 include!("extra_cases.rs");
 include!("extra_playwright_routes.rs");
 include!("extra_selector.rs");

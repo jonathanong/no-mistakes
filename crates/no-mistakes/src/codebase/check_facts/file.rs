@@ -7,6 +7,10 @@ use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::path::Path;
 
+mod plan;
+
+use plan::{requires_parse, should_store_source, ts_source};
+
 pub(crate) fn collect_file_facts(
     root: &Path,
     path: &Path,
@@ -16,8 +20,13 @@ pub(crate) fn collect_file_facts(
     let source = match std::fs::read_to_string(path) {
         Ok(source) => source,
         Err(err) => {
+            let parse_error = format!("failed to read {}: {err}", path.display());
             return Some(CheckFileFacts {
-                parse_error: Some(format!("failed to read {}: {err}", path.display())),
+                ts: TsFileFacts {
+                    parse_error: Some(parse_error.clone()),
+                    ..TsFileFacts::default()
+                },
+                parse_error: Some(parse_error),
                 ..CheckFileFacts::default()
             });
         }
@@ -45,10 +54,15 @@ pub(crate) fn collect_file_facts(
         Ok(source_type) => source_type,
         Err(_) => {
             let stored_source = should_store_source(plan).then_some(source);
+            let parse_error = format!("unsupported file type: {}", path.display());
             return Some(CheckFileFacts {
-                ts: ts_source(stored_source.clone()),
+                ts: TsFileFacts {
+                    parse_error: Some(parse_error.clone()),
+                    source: stored_source.clone(),
+                    ..TsFileFacts::default()
+                },
                 source: stored_source,
-                parse_error: Some(format!("unsupported file type: {}", path.display())),
+                parse_error: Some(parse_error),
                 ..CheckFileFacts::default()
             });
         }
@@ -56,13 +70,20 @@ pub(crate) fn collect_file_facts(
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, &source, source_type).parse();
     if parsed.panicked || !parsed.diagnostics.is_empty() {
-        let parse_error = parsed
-            .diagnostics
-            .first()
-            .map(|error| format!("{error:?}"))
-            .unwrap_or("parser panicked without diagnostic details".to_string());
+        let parse_error = match parsed.diagnostics.first() {
+            Some(error) => format!("parsing {}: {error:?}", path.display()),
+            None => format!(
+                "parsing {}: parser panicked without diagnostic details",
+                path.display()
+            ),
+        };
         let stored_source = should_store_source(plan).then_some(source.clone());
-        let ts = super::file_parse_error::ts_facts(plan, stored_source.clone(), &parsed.program);
+        let ts = super::file_parse_error::ts_facts(
+            plan,
+            stored_source.clone(),
+            &parsed.program,
+            parse_error.clone(),
+        );
         return Some(CheckFileFacts {
             ts,
             source: stored_source,
@@ -127,6 +148,7 @@ pub(crate) fn collect_file_facts(
     let playwright =
         super::file_playwright::collect_playwright_facts(path, program, &source, playwright);
     let ts = TsFileFacts {
+        parse_error: None,
         source: should_store_source(plan).then_some(source.clone()),
         imports: import_facts.imports,
         function_calls: import_facts.function_calls,
@@ -165,37 +187,4 @@ pub(crate) fn collect_file_facts(
         parse_error: None,
         parsed: true,
     })
-}
-
-fn should_store_source(plan: &CheckFactPlan) -> bool {
-    plan.source || plan.raw_source
-}
-
-fn ts_source(source: Option<String>) -> TsFileFacts {
-    TsFileFacts {
-        source,
-        route_helpers: Vec::new(),
-        route_helper_imports: Vec::new(),
-        route_helper_refs: Vec::new(),
-        ..Default::default()
-    }
-}
-
-fn requires_parse(
-    plan: &CheckFactPlan,
-    path: &Path,
-    playwright: Option<&PlaywrightFactPlan>,
-) -> bool {
-    plan.imports
-        || plan.symbols
-        || plan.react
-        || plan.queue
-        || plan.integration
-        || plan.dynamic_imports
-        || plan.nextjs_caching
-        || plan.storybook
-        || !plan.graph.is_empty()
-        || playwright.is_some_and(|plan| plan.test_id_attributes_by_path.contains_key(path))
-        || plan.source
-        || (!plan.raw_source && playwright.is_none())
 }

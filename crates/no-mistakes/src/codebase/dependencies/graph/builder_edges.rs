@@ -17,13 +17,24 @@ fn collect_and_merge_all_edges(
     let plan = edge_inputs.plan;
     let graph_files = edge_inputs.graph_files;
     let config_options = edge_inputs.config_options;
-    let config_path = edge_inputs.config_path;
     let files = &graph_files.indexable;
 
     crate::perf_trace::trace("graph.imports", || {
         if plan.imports {
             let import_edges = collect_import_edges(parsed_imports, resolver, workspace, graph_files);
             merge_edges(forward, reverse, import_edges);
+        }
+    });
+
+    crate::perf_trace::trace("graph.route_imports", || {
+        if plan.route_imports || plan.playwright_selectors {
+            let route_import_edges = collect_route_import_edges(
+                files,
+                facts.expect("TS import facts are collected for route-import edges"),
+                tsconfig,
+                graph_files,
+            );
+            merge_edges(forward, reverse, route_import_edges);
         }
     });
 
@@ -111,14 +122,6 @@ fn collect_and_merge_all_edges(
             let playwright_edges =
                 collect_playwright_route_edges(root, config_path, &graph_files.all, facts);
             merge_edges(forward, reverse, playwright_edges);
-        }
-    });
-
-    crate::perf_trace::trace("graph.playwright_selectors", || {
-        if plan.playwright_selectors {
-            let selector_edges =
-                collect_playwright_selector_edges(root, config_path, &graph_files.all, facts);
-            merge_edges(forward, reverse, selector_edges);
         }
     });
 

@@ -8,6 +8,9 @@ What are you trying to find?
 ├─ Files this file imports (forward graph)
 │   └─ no-mistakes dependencies <file> [--depth N] [--relationship import]
 │
+├─ Runtime modules a Playwright route can conservatively reach
+│   └─ no-mistakes dependencies <route-file> --relationship route-import
+│
 ├─ Files that import this file (reverse graph)
 │   └─ no-mistakes dependents <file> [--depth N] [--relationship import]
 │
@@ -78,6 +81,7 @@ What are you trying to find?
 | `import-type` | Type-only imports only |
 | `import-dynamic` | String-literal dynamic `import()` only |
 | `import-require` | String-literal CommonJS `require()` only |
+| `route-import` | Runtime static imports/re-exports and literal dynamic imports, conservatively including function-scoped imports for Playwright route reachability; excludes type-only imports and `require()` |
 | `workspace` | Cross-package npm workspace imports |
 | `package` | `package.json` dependency declarations to workspace entries or external module nodes |
 | `test` | source/test correspondence, Playwright route tests, Next layouts, and selector coverage |
@@ -152,3 +156,6 @@ See https://github.com/jonathanong/no-mistakes/blob/main/docs/graph-edges.md for
 every edge kind. Dynamic route paths, fetch URLs,
 queue names, process commands, and selector values are not guessed. Text-based
 selector coverage is approximate; exact configured test ID edges are stronger.
+`route-import` and `route` are different: the former follows the conservative
+runtime module closure used by Playwright, while the latter follows URL-route,
+route-test, and layout relationships.

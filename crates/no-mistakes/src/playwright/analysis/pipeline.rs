@@ -29,6 +29,7 @@ pub(crate) fn analyze_with_policy(
         unique_selector_policy,
         true,
         None,
+        None,
     )
 }
 
@@ -46,6 +47,7 @@ pub(crate) fn analyze_with_policy_and_facts(
         unique_selector_policy,
         true,
         Some(facts),
+        None,
     )
 }
 
@@ -56,6 +58,7 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
     mut unique_selector_policy: UniqueSelectorPolicy,
     require_routes: bool,
     facts: Option<&dyn crate::codebase::dependencies::graph::TsFactLookup>,
+    route_import_graph: Option<&crate::codebase::dependencies::graph::DepGraph>,
 ) -> Result<Analysis> {
     unique_selector_policy.configured_html_id_selector = has_configured_html_id_selector(settings);
     let route_root = root.join(&settings.frontend_root);
@@ -65,6 +68,7 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
         &unique_selector_policy,
         require_routes,
         facts,
+        route_import_graph,
     )?;
 
     let route_idx = route_index(root, setup.routes.as_slice());
