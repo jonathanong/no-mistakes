@@ -89,6 +89,9 @@ What are you trying to find?
 | `process` | `spawn`/`exec`/Playwright `webServer` → spawned entry file |
 | `asset` | Explicit non-code asset import |
 | `react` | React component render relationship |
+| `dotnet` | C# `using`/type reference/project reference edges |
+| `swift` | Swift import/type reference/SwiftPM target dependency edges |
+| `terraform` | Terraform/OpenTofu resource, module, and output reference edges |
 | `all` | All of the above (default) |
 
 Repeatable — `--relationship import --relationship workspace` follows both kinds.

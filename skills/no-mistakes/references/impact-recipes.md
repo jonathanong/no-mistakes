@@ -16,6 +16,8 @@ Recipe index:
 - API response-shape fanout audit
 - Package entrypoint and direct-subpath report
 - Shared-helper dependent test discovery
+- Before deleting a test
+- Queue enqueue call-disposition audit
 
 ## React component selector impact
 
@@ -291,3 +293,77 @@ config), or any path matched by the repo's configured
 discovered test set instead of a narrow dependency path. Report that as the
 correct, conservative answer — do not treat `fallback_triggered: true` as a
 tracing failure to work around.
+
+## Before deleting a test
+
+Before deleting a `*.test.*` or `*.mock.test.*` file, confirm the behavior it
+asserts is still covered elsewhere and that nothing else becomes dead as a
+result:
+
+```bash
+no-mistakes dependents backend/services/urls/add-url.mts --test vitest --format paths
+no-mistakes tests impact backend/services/urls/add-url.mts --format paths
+no-mistakes dead-exports backend/services/urls/add-url.fixtures.mts --format json
+```
+
+Read the results as:
+
+- `dependents FILE --test vitest` returns the test files reachable from the
+  production file through the dependency graph, independent of any `testPlan`
+  config — the fastest "what else touches this?" check.
+- `tests impact FILE` returns impacted tests for a fixed changed-file set with
+  no environment/limit/group config applied; compare it against
+  `dependents --test` when the two disagree.
+- `dead-exports <test-only-helper>` flags a fixture, mock, or factory helper
+  that becomes unused once its only importing test is deleted, so it can be
+  removed in the same change instead of left as dead code.
+
+Then use `rg` for the behavior text and invariants that must survive the
+deletion:
+
+```bash
+rg -n 'expect\(|mockResolvedValue|vi\.mock|error message|branch|queue|enqueue' <deleted-test-file>
+```
+
+If the deleted test is the direct behavioral owner of an assertion, add or
+identify a replacement — a sibling unit test or an integration/Playwright test —
+before removing it. `references/tests.md` covers how `tests plan` already
+treats a deleted test file as a changed file for diff-based planning; this
+recipe is for the deliberate "should I delete this" decision, not diff replay.
+
+## Queue enqueue call-disposition audit
+
+Before changing enqueue behavior, or when auditing whether existing queue calls
+are properly handled, map the producer graph and every caller:
+
+```bash
+no-mistakes queues related backend/queues/send-email.mts --direction both --format paths
+no-mistakes importers backend/queues/send-email.mts --format paths
+no-mistakes call-sites backend/queues/send-email.mts enqueueEmail --format json
+```
+
+Read the results as:
+
+- `queues related --direction both` maps the producer/worker graph for the
+  enqueue file. Empty output is not proof of no impact — a project that wraps
+  its queue library behind its own enqueue-helper factory may not be modeled
+  as a queue edge; fall back to `importers`/`call-sites` below.
+- `importers` and `call-sites <file> SYMBOL` find direct callers and their
+  argument shapes, but `call-sites` matches direct-identifier calls only
+  (`enqueueEmail(...)`), not `ns.enqueueEmail()` or aliased indirection — see
+  `references/lightweight-queries.md`.
+
+Then use `rg` on the returned callers to classify each call's disposition —
+awaited, returned, grouped in an awaited `Promise.all`, explicitly discarded
+with `void`, or left floating:
+
+```bash
+rg -n 'await enqueueEmail|return enqueueEmail|void enqueueEmail|Promise\.all[^;]*enqueueEmail' backend web
+```
+
+The regex is a convenience, not authoritative: it can miss multiline or
+aliased calls and produce a false positive when a later expression shares the
+same statement as `Promise.all`. The
+[`no-mistakes/async-call-disposition`](https://github.com/jonathanong/no-mistakes/blob/main/docs/eslint-rules/async-call-disposition.md)
+eslint rule enforces disposition going forward on configured enqueue APIs, but
+it is not a discovery graph — existing callers still need this manual pass.
