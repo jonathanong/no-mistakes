@@ -1,0 +1,8 @@
+checks:
+  commands:
+    - name: eslint
+      include:
+        - "**/*.ts"
+      command:
+        - eslint
+      fileArgs: append

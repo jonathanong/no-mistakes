@@ -1,0 +1,51 @@
+tests:
+  vitest:
+    projects:
+      unit:
+        include:
+          - src/**/*.test.ts
+  playwright:
+    projects:
+      e2e:
+        include:
+          - e2e/**/*.spec.ts
+  swift:
+    packages:
+      - swift/App
+  dotnet:
+    projects:
+      app:
+        project: dotnet/src/App/App.csproj
+      app-tests:
+        project: dotnet/tests/App.Tests/App.Tests.csproj
+        test: true
+
+test_plan:
+  vitest:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies
+  playwright:
+    fullSuiteTriggers:
+      # The shared planner must reuse the Vitest discovery for this lookup.
+      ignoreChangedTests:
+        - vitest
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies
+  swift:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies
+  dotnet:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies

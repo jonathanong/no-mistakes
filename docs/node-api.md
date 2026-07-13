@@ -77,6 +77,27 @@ reports may override `root`, `tsconfig`, and `config`; `reactUsages` accepts
 `root`, `tsconfig`, and `config`. Reports with the same effective scope share
 one prepared analysis, while distinct scopes are prepared independently.
 
+`impactedChecks(options)` shares one in-memory analysis pass across configured
+test frameworks. Pass `timings: true` to include an ordered `timings` array in
+the report:
+
+```js
+const { impactedChecks } = require("no-mistakes");
+
+const report = await impactedChecks({
+  root: process.cwd(),
+  changedFiles: ["src/api.mts"],
+  timings: true,
+});
+
+// report.timings: [{ phase: "prepare", duration_ms: 12 }, ...]
+```
+
+Timing entries use stable phase identifiers and fractional-millisecond
+durations. The lazy `graph` phase is present only when dependency analysis is
+needed. The property is omitted by default. Unlike CLI `--timings`, Node timing
+collection does not print progress to stderr.
+
 ## Agent Defaults
 
 - Pass `root` explicitly.

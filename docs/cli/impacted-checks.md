@@ -8,6 +8,7 @@ config block.
 ```sh
 no-mistakes impacted-checks src/api/handler.ts --format paths
 no-mistakes impacted-checks --base origin/main --json
+no-mistakes impacted-checks src/api/handler.ts --json --timings
 ```
 
 ## Options
@@ -23,23 +24,34 @@ no-mistakes impacted-checks --base origin/main --json
 | `--diff` | Unified diff file. |
 | `--format` | Output format: `json`, `md`, `yml`, `paths`, `human`. |
 | `--json` | Shorthand for `--format json`. |
+| `--timings` | Emit live analysis progress and phase durations to stderr. |
 
 Changed files may also be passed as positional arguments.
 
 ## How it works
 
-- For each configured framework (`vitest`, `playwright`, `swift`), the
-  `tests plan` engine selects impacted tests and attaches concrete
-  `TestExecutionTarget` commands. Each target becomes a `test` check; the
-  emitted commands match `tests plan` exactly.
+- Changed files, repository files, parsed facts, and the dependency graph are
+  prepared once per invocation and reused across the
+  configured frameworks (`dotnet`, `vitest`, `playwright`, and `swift`). Each
+  selected `TestExecutionTarget` becomes a `test` check; emitted commands match
+  `tests plan` exactly.
 - Each `checks.commands` entry whose `include` globs match a changed file
   produces a `generic` check. `fileArgs: append` adds the matched files as
   trailing arguments; `fileArgs: none` runs the command once.
 - Commands are deduped and sorted. If the test-plan engine triggers a
   full-suite fallback (e.g. a global config change), `fallback_triggered` is set.
 
-`--diff-stdin` / `--diff-command` are intentionally unsupported here because the
-inputs are read more than once; use `--diff <file>` instead.
+`--timings` reports the current phase before expensive work starts and prints
+its duration on completion. Stable phase names include `prepare`,
+`discover.<framework>`, `select.<framework>`, `generic-checks`, and `total`, plus
+`graph` when dependency analysis is needed. Phase durations exclude nested work,
+so the first selection phase does not double-count the lazy graph build.
+Diagnostics go only to stderr, so stdout remains byte-compatible and safe to
+parse or pipe. If a phase fails, stderr reports the phase and elapsed time before
+the normal actionable error.
+
+`--diff-stdin` / `--diff-command` are not supported by this command; use a
+reusable `--diff <file>` input instead.
 
 Known limitation: an explicit changed path that is a symlink is canonicalized to
 its target before glob matching (the shared change-collection step resolves
@@ -67,4 +79,6 @@ no-mistakes impacted-checks src/foo.ts --format paths | while read -r cmd; do ev
 }
 ```
 
-Node API: `impactedChecks(options)`.
+Node API: `impactedChecks(options)`. Pass `timings: true` to receive ordered
+`{ phase, duration_ms }` entries in the returned report; Node timing collection
+does not write progress to stderr.

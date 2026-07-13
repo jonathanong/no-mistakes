@@ -67,3 +67,7 @@ harness = false
 [[bench]]
 name = "bench_playwright_load"
 harness = false
+
+[[bench]]
+name = "impacted_checks"
+harness = false

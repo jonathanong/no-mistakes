@@ -47,13 +47,14 @@ const _: fn(PlanArgs) -> Result<ExitCode> = run;
 
 pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     let prepared = super::prepared_plan::PreparedTestPlanRequest::prepare(args)?;
-    generate_plan_with_prepared(prepared.args(), &prepared)
+    generate_plan_with_prepared(prepared.args(), &prepared, None)
 }
 
 /// Generate a framework or union plan from immutable request-scoped inputs.
 pub(crate) fn generate_plan_with_prepared(
     args: &PlanArgs,
     prepared: &super::prepared_plan::PreparedTestPlanRequest,
+    timing: Option<&mut crate::impacted_checks::timing::TimingTracker>,
 ) -> Result<TestPlan> {
     let root = &prepared.root;
     let config = &prepared.config;
@@ -95,6 +96,7 @@ pub(crate) fn generate_plan_with_prepared(
             forced_fallback,
             discovered_tests,
             prepared,
+            timing,
         )?;
         plan.warnings
             .extend(lockfile_analysis.warnings.iter().cloned());

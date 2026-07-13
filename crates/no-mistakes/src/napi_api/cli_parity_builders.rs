@@ -112,6 +112,9 @@ pub(crate) fn build_impacted_checks_args(
         diff_content: options.diff,
         format: None,
         json: false,
+        // N-API timings are collected into the structured response by the
+        // binding; they must never print CLI progress to the Node process.
+        timings: false,
     }
 }
 

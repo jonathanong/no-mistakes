@@ -1,0 +1,41 @@
+tests:
+  vitest:
+    projects:
+      unit:
+        include:
+          - src/**/*.test.ts
+  playwright:
+    projects:
+      e2e:
+        include:
+          - e2e/**/*.spec.ts
+  swift:
+    packages:
+      - swift/App
+  dotnet:
+    projects:
+      app:
+        project: dotnet/src/App/App.csproj
+      app-tests:
+        project: dotnet/tests/App.Tests/App.Tests.csproj
+        test: true
+
+# Intentionally all-only: this fixture proves every framework can finish
+# before the lazy shared graph is initialized.
+test_plan:
+  vitest:
+    environments:
+      pre-push:
+        all: true
+  playwright:
+    environments:
+      pre-push:
+        all: true
+  swift:
+    environments:
+      pre-push:
+        all: true
+  dotnet:
+    environments:
+      pre-push:
+        all: true

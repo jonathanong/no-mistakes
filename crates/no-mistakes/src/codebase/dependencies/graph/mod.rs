@@ -18,6 +18,7 @@ include!("build_plan.rs");
 include!("graph_files.rs");
 include!("files_config.rs");
 include!("files_config_prepared.rs");
+include!("files_config_fact_context.rs");
 include!("files_config_routes.rs");
 include!("edge_maps.rs");
 include!("fact_lookup.rs");

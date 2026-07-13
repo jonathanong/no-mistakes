@@ -182,8 +182,10 @@ no-mistakes server routes --format json
 ```
 
 Prefer `--format json` for agent parsing and `--format paths` for command
-substitution. `--timings` writes phase timings to stderr on graph, queue, and
-server commands.
+substitution. `--timings` writes phase timings to stderr on graph, queue,
+server, and `impacted-checks` commands. `impacted-checks` also reports the
+current phase before expensive analysis and reuses one in-memory graph across
+configured test frameworks.
 
 For repeated graph/symbol/playwright/project queries in the same process,
 prefer `analyzeProject({reports:[…]})` from the async Node API documented at
