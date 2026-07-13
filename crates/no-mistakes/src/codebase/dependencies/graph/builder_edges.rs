@@ -109,7 +109,7 @@ fn collect_and_merge_all_edges(
     crate::perf_trace::trace("graph.playwright_routes", || {
         if plan.playwright_routes {
             let playwright_edges =
-                collect_playwright_route_edges(root, &graph_files.all, facts);
+                collect_playwright_route_edges(root, config_path, &graph_files.all, facts);
             merge_edges(forward, reverse, playwright_edges);
         }
     });

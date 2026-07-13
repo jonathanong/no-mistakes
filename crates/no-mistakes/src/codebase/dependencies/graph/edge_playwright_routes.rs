@@ -6,13 +6,23 @@
 /// does both of these memoized and in parallel via the same `facts`. See
 /// `crates/CLAUDE.md`'s "Duplicate full-repo work across independent call
 /// paths".
+///
+/// `config_path` must match what the `playwright` rule itself resolves
+/// settings from (see `playwright/rules.rs`'s `load_settings` calls) —
+/// `get_or_compute_playwright_routes` is an unkeyed cache, so every caller
+/// within one invocation must load identical settings (in particular
+/// `frontend_root`/`rewrites`) or the shared route list silently reflects
+/// whichever caller happened to populate the cache first, same as the
+/// sibling `collect_playwright_selector_edges` producer already threads it.
 fn collect_playwright_route_edges(
     root: &Path,
+    config_path: Option<&Path>,
     all_files: &[PathBuf],
     facts: Option<&dyn TsFactLookup>,
 ) -> Vec<Edge> {
     let all_file_set: HashSet<PathBuf> = all_files.iter().cloned().collect();
-    let Ok(settings) = crate::playwright::config::load_settings(root, None, &[], None) else {
+    let Ok(settings) = crate::playwright::config::load_settings(root, config_path, &[], None)
+    else {
         return Vec::new();
     };
     let frontend_root = root.join(&settings.frontend_root);
