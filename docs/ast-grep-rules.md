@@ -82,6 +82,31 @@ matching field inside the builder's own body. It will not catch the same side
 effect performed indirectly (a helper method call, `std::mem::replace`,
 `Option::take`, etc.).
 
+### `no-direct-playwright-route-scan`
+
+Flags a direct call to `crate::routes::collect_routes(...)` from
+`codebase/dependencies/graph/**` — the `DepGraph` edge-producer directory.
+`get_or_compute_playwright_routes` (`graph/fact_lookup.rs`) is a *no-key*
+shared cache: every caller within one `no-mistakes check` invocation wants
+the exact same app-wide Playwright route scan, so there is never a
+legitimate reason for an edge producer to call `collect_routes` directly
+instead of going through the shared cache. See `crates/CLAUDE.md`'s "Edge
+producer smell" note — this is the exact shape of the historical
+`collect_playwright_route_edges` bug, which independently re-ran the entire
+app-wide route scan the `playwright` rule's own check pipeline already
+shares.
+
+`edge_playwright_routes.rs` is exempted: it's the one producer that
+legitimately calls `collect_routes` at all, inside the `compute_routes`
+closure passed to `facts.get_or_compute_playwright_routes` (with a
+`None`-facts fallback calling the same closure directly). ast-grep's
+structural matching can't express "this call must be inside a closure passed
+to `get_or_compute_playwright_routes`", so the whole file is allowlisted —
+narrower than the other two rules' allowlists, which exempt specific call
+sites rather than a whole file. A second, unguarded call added anywhere else
+in that file would not be caught by this rule; review that file's diffs by
+hand for this specific regression class.
+
 ## Adding more rules of this shape
 
 1. `ast-grep new rule -y -l rust <id>` from the repo root creates a stub in

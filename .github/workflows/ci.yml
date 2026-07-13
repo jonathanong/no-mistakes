@@ -257,6 +257,9 @@ jobs:
       - name: Run check benchmark
         run: cargo bench -p no-mistakes --bench check -- --noplot
 
+      - name: Run playwright config load benchmark
+        run: cargo bench -p no-mistakes --bench bench_playwright_load -- --noplot
+
       - name: Build release CLI for timing smoke
         run: cargo build --release -p no-mistakes
 

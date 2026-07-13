@@ -1,4 +1,7 @@
-use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, GraphBuildPlan, NodeEntry, NodeId};
+use crate::codebase::dependencies::graph::{
+    ts_fact_plan_and_context_for_plan_with_config, DepGraph, EdgeKind, GraphBuildPlan, GraphFiles,
+    NodeEntry, NodeId, TsFactLookup,
+};
 use crate::codebase::test_filter::TestFileFilter;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::ts_symbols::{extract_symbols, ExportKind};

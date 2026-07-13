@@ -4,26 +4,23 @@
 
 - One pass per invocation: discover the file universe once, parse each TS/JS
   file once for the requested `TsFactPlan`, and reuse `TsFactMap` everywhere.
-- In-memory only: use invocation-scoped fact maps, resolver caches, traversal
-  caches, and forward/reverse dependency maps. Do not add disk caches, daemons,
-  databases, or state that changes later CLI runs.
+- In-memory only: use invocation-scoped fact maps, resolver/traversal caches,
+  and dependency maps. No disk caches, daemons, databases, or cross-run state.
 - Canonical graph: project-level relationships belong in `DepGraph` as typed
   `EdgeKind` edges unless they are purely file-local lint rules.
-- Fully parallel: per-file extraction, edge production, and independent checks
-  should run through rayon or concurrent maps, with deterministic sorting before
-  output.
+- Fully parallel: per-file extraction and independent checks run through
+  rayon or concurrent maps, with deterministic sorting before output.
 - No hardcoded domain defaults: route roots, HTTP prefixes, queue factories, and
   worker locations must be configured instead of inferred from repo conventions.
 
 ### Diagnosing a performance regression
 
-Use `no-mistakes check --timings --verbose-timings` (`crates/no-mistakes/src/perf_trace.rs`)
-before a special instrumented build — it prints a `[timing] <label>: <ms>` line
-per hot path wrapped in `crate::perf_trace::trace(label, || { ... })`
-(`rules.*`, `graph.*`, `playwright.*`). Wrap new hot paths the same way instead
-of a temporary `eprintln!` timer reverted before commit. `cargo bench` in CI is
-diagnostic-only — the real regression-prevention layer is the `ast-grep` rules
-under `.ast-grep/rules/` plus tests proving buggy vs. fixed paths disagree.
+Use `no-mistakes check --timings --verbose-timings` (`perf_trace.rs`) instead of
+a special instrumented build: it prints `[timing] <label>: <ms>` per hot path
+wrapped in `crate::perf_trace::trace(label, || { ... })`. Wrap new hot paths
+the same way, not a temporary `eprintln!` timer. `cargo bench` in CI is
+diagnostic-only — `ast-grep` plus tests proving buggy vs. fixed paths
+disagree is the real regression-prevention layer.
 
 ### Duplicate full-repo work across independent call paths
 
@@ -38,6 +35,16 @@ in the same file needs one) — grep the callee for anything caller-specific
 (e.g. a Playwright project) before assuming "compute once" is safe; a wrong
 key returns silently wrong data. **Regression guard:** assert on a call count,
 not value equality — a non-caching implementation returns the same value too.
+
+**Edge producer smell:** a `builder_edges.rs` producer missing `facts:
+Option<&dyn TsFactLookup>` while siblings have it may duplicate a rule's
+`TsFactLookup`-routed scan, or hand-roll a sequential loop where a shared
+parallel helper exists — keep per-file error tolerance when wiring facts in
+regardless, since an edge producer failing aborts the shared graph, unlike a
+rule failing only its own findings. `git_visible_files`/`git ls-files` is
+equally undeduped (a process spawn per call) — thread one fetch through a
+path that discovers files more than once per invocation, e.g. the additive
+`_from_git_files` variants of `discover_files`/`discover_files_preserving_roots`.
 
 ### Shared state in parallel loops
 
@@ -68,18 +75,14 @@ whether caching happened; assert on the cache's own state (length, hit counter)
 instead.
 
 ```rust
-// Bad – with_visible() bundles an unrelated cache_enabled=false, so every
-// caller that needs a visible-file set (e.g. every DepGraph build) silently
-// loses memoization, even though nothing about resolving from an in-memory
-// visible set makes caching unsafe.
+// Bad – bundles an unrelated cache_enabled=false into an unrelated setter.
 pub fn with_visible(mut self, visible: &'a HashSet<PathBuf>) -> Self {
     self.visible = Some(visible);
     self.cache_enabled = false;
     self
 }
 
-// Good – caching stays on unless a caller explicitly opts out via a separate,
-// clearly-named builder method (`without_cache()`).
+// Good – caching stays on; an opt-out gets its own method (`without_cache()`).
 pub fn with_visible(mut self, visible: &'a HashSet<PathBuf>) -> Self {
     self.visible = Some(visible);
     self
@@ -148,17 +151,14 @@ Prefer, in order:
    (`WalkBuilder`) so `.gitignore` rules apply, not a hardcoded directory denylist.
 
 ```rust
-// Bad – .gitignore-blind; visits every entry under `base`, including large ignored
-// directories that a hardcoded SKIP_DIRS list doesn't know about
+// Bad – .gitignore-blind; visits every entry, including large ignored dirs.
 fn find_dirs_matching(base: &Path, name: &str) -> Vec<PathBuf> {
     let mut out = Vec::new();
     collect_recursive(base, name, &mut out); // raw std::fs::read_dir recursion
     out
 }
 
-// Good – derive from the file list already known to be git-visible; only a
-// non-git fallback needs any filesystem walk, and that walk should still respect
-// .gitignore via the `ignore` crate
+// Good – derive from the git-visible list; non-git fallback uses `ignore`.
 fn find_dirs_matching(base: &Path, name: &str, git_files: Option<&[String]>) -> Vec<PathBuf> {
     match git_files {
         Some(files) => dirs_matching_from_files(base, name, files),

@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# Flags a direct call to `crate::routes::collect_routes(...)` from
+# `codebase/dependencies/graph/**` — the DepGraph edge-producer directory.
+# `get_or_compute_playwright_routes` (`graph/fact_lookup.rs`) is a no-key
+# shared cache: every caller within one `no-mistakes check` invocation wants
+# the exact same app-wide Playwright route scan, so there is never a
+# legitimate reason for an edge producer to call `collect_routes` directly
+# instead of going through the shared cache. See crates/CLAUDE.md's "Edge
+# producer smell" note (under "Duplicate full-repo work across independent
+# call paths") for the full explanation and the historical bug this catches:
+# `collect_playwright_route_edges` independently re-ran the entire app-wide
+# route scan the `playwright` rule's own check pipeline already shares.
+#
+# `edge_playwright_routes.rs` is exempted below because it's the one producer
+# that legitimately needs to compute routes when no shared facts are
+# available at all (a standalone, facts-less graph build) — its only call to
+# `collect_routes` lives inside the `compute_routes` closure passed to
+# `facts.get_or_compute_playwright_routes`, with a `None`-facts fallback that
+# calls the same closure directly. ast-grep's structural matching can't
+# express "this call must be inside a closure passed to
+# get_or_compute_playwright_routes", so the whole file is allowlisted instead
+# — a second, unguarded call added anywhere else in that file would not be
+# caught by this rule. Reviewers should read that file's diff by hand for
+# this specific regression class.
+id: no-direct-playwright-route-scan
+language: rust
+severity: error
+message: >-
+  Direct crate::routes::collect_routes call in a DepGraph edge producer.
+  Route through the shared facts.get_or_compute_playwright_routes cache
+  instead (see crates/CLAUDE.md, "Duplicate full-repo work across
+  independent call paths" / "Edge producer smell") so this doesn't
+  duplicate the playwright rule's own app-wide route scan.
+rule:
+  pattern: crate::routes::collect_routes($$$)
+files:
+  - "crates/no-mistakes/src/codebase/dependencies/graph/**"
+ignores:
+  - "crates/no-mistakes/src/codebase/dependencies/graph/edge_playwright_routes.rs"

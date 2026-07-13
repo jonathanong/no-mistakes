@@ -1,0 +1,30 @@
+id: no-direct-playwright-route-scan
+valid:
+  - |
+    fn build_playwright_setup(root: &Path) -> Result<PlaywrightSetup> {
+        let routes = routes::collect_routes(&route_root);
+        Ok(PlaywrightSetup { routes })
+    }
+  - |
+    fn collect_route_edges(root: &Path, facts: Option<&dyn TsFactLookup>) -> Vec<Edge> {
+        let routes = match facts {
+            Some(facts) => facts.get_or_compute_playwright_routes(&compute_routes),
+            None => Arc::new(compute_routes()),
+        };
+        Vec::new()
+    }
+invalid:
+  # Matches even inside the compute_routes closure that get_or_compute_playwright_routes
+  # eventually calls (ast-grep test doesn't apply the rule's file-level `ignores`, which
+  # only exempts edge_playwright_routes.rs during a real `ast-grep scan`) — this snippet
+  # exists to pin the raw pattern match itself, not the scan-level exemption.
+  - |
+    fn collect_playwright_route_edges(root: &Path, facts: Option<&dyn TsFactLookup>) -> Vec<Edge> {
+        let compute_routes = || crate::routes::collect_routes(&root, &["page"]);
+        Vec::new()
+    }
+  - |
+    fn collect_other_edges(root: &Path, all_files: &[PathBuf]) -> Vec<Edge> {
+        let routes = crate::routes::collect_routes(&root, &["page"]);
+        Vec::new()
+    }

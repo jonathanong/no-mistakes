@@ -135,12 +135,35 @@ pub fn git_visible_files(root: &Path) -> Option<Vec<String>> {
 /// walker outside git repositories so unit tests and ad-hoc directories still
 /// behave sensibly.
 pub fn discover_files(root: &Path, extra_skip: &[String]) -> Vec<PathBuf> {
+    discover_files_from_git_files(root, extra_skip, None)
+}
+
+/// Same as [`discover_files`], but lets a caller reuse a git-visible file list it
+/// already fetched via [`git_visible_files`] instead of spawning `git ls-files`
+/// again for the same root. Pass `git_files: None` to fetch it internally —
+/// identical to calling [`discover_files`] directly. Pass `Some(files)` when the
+/// caller already has the list from an earlier call within the same invocation
+/// (e.g. `no-mistakes check` discovering the same root twice with different
+/// skip-directory filters).
+pub fn discover_files_from_git_files(
+    root: &Path,
+    extra_skip: &[String],
+    git_files: Option<&[String]>,
+) -> Vec<PathBuf> {
     let root = normalize_discovery_path(root);
-    match git_visible_files(&root) {
+    let fetched;
+    let files: Option<&[String]> = match git_files {
+        Some(files) => Some(files),
+        None => {
+            fetched = git_visible_files(&root);
+            fetched.as_deref()
+        }
+    };
+    match files {
         Some(files) => {
             let extra_skip: HashSet<&str> = extra_skip.iter().map(String::as_str).collect();
             files
-                .into_iter()
+                .iter()
                 .map(|rel| normalize_discovery_path(&root.join(rel)))
                 .filter(|p| p.exists())
                 .filter(|p| !is_under_skipped_dir(&root, p, &extra_skip))
