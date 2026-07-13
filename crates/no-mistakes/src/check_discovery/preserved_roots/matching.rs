@@ -1,5 +1,7 @@
+use ignore::WalkBuilder;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
 /// Memoizes `git ls-files` output per discovery base directory so preserved-root
 /// expansion spawns at most one `git ls-files` process per distinct base instead of
@@ -13,11 +15,8 @@ pub(super) type GitFilesCache = HashMap<PathBuf, Option<Vec<String>>>;
 /// by `.gitignore`) when `base` is inside a git repository: a preserved root only
 /// matters if it contains at least one file discovery would otherwise surface, so
 /// deriving candidates from that file list is both correct and avoids any filesystem
-/// walk. This matters because the raw-walk fallback below has no `.gitignore`
-/// awareness beyond the small hardcoded `SKIP_DIRS`/`skip_directories` list, so on
-/// repos with large untracked-and-ignored directories (dependency stores, build
-/// caches) it can visit hundreds of thousands of entries per matching include pattern.
-/// The raw walk is used only outside git repositories (e.g. ad-hoc test fixtures).
+/// walk. Outside git repositories (e.g. ad-hoc test fixtures), the fallback uses
+/// `ignore::WalkBuilder` so ignored dependency stores and build caches are pruned.
 pub(super) fn descendant_dirs_matching_suffix(
     base: &Path,
     suffix: &Path,
@@ -48,11 +47,11 @@ pub(super) fn descendant_dirs_matching_suffix(
     }
 }
 
-/// Same matching + skip-descent semantics as [`collect_descendant_dirs_matching_suffix`],
+/// Same matching + skip-descent semantics as the ignore-aware fallback,
 /// but walks each git-visible file's directory components top-down instead of the
 /// filesystem: a directory is checked against `suffix` and then, if its name is
-/// skip-listed, no directory nested beneath it is considered (mirroring the raw walk's
-/// "check, then don't descend" order) — without any `read_dir` calls.
+/// skip-listed, no directory nested beneath it is considered (mirroring the fallback's
+/// "check, then don't descend" order) — without any filesystem walk.
 pub(super) fn descendant_dirs_matching_suffix_from_files(
     base: &Path,
     suffix: &Path,
@@ -98,41 +97,58 @@ pub(super) fn descendant_dirs_matching_suffix_from_paths<'a>(
     roots
 }
 
-fn collect_descendant_dirs_matching_suffix(
+pub(super) fn collect_descendant_dirs_matching_suffix(
     base: &Path,
     dir: &Path,
     suffix: &Path,
     skip_directories: &[String],
     roots: &mut Vec<PathBuf>,
 ) {
-    let Ok(entries) = std::fs::read_dir(dir) else {
-        return;
-    };
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if !entry
-            .file_type()
-            .ok()
-            .is_some_and(|file_type| file_type.is_dir())
-        {
-            continue;
-        }
-        let name = entry.file_name();
-        let name = name.to_str().unwrap_or_default();
-        let skipped = no_mistakes::codebase::ts_source::is_skipped_dir(name)
-            || skip_directories.iter().any(|skip| skip == name);
-        if path
-            .strip_prefix(base)
-            .ok()
-            .is_some_and(|rel| rel.ends_with(suffix))
-        {
-            roots.push(path.clone());
-        }
-        if skipped {
-            continue;
-        }
-        collect_descendant_dirs_matching_suffix(base, &path, suffix, skip_directories, roots);
-    }
+    let base = base.to_path_buf();
+    let suffix = suffix.to_path_buf();
+    let skip_directories = skip_directories.to_vec();
+    let matches = Arc::new(Mutex::new(Vec::new()));
+    let matches_for_filter = Arc::clone(&matches);
+    let filter_base = base.clone();
+    let filter_suffix = suffix.clone();
+
+    let mut builder = WalkBuilder::new(dir);
+    builder
+        .hidden(true)
+        .require_git(false)
+        .filter_entry(move |entry| {
+            if entry.depth() == 0
+                || !entry
+                    .file_type()
+                    .is_some_and(|file_type| file_type.is_dir())
+            {
+                return true;
+            }
+            let path = entry.path();
+            if path
+                .strip_prefix(&filter_base)
+                .ok()
+                .is_some_and(|rel| rel.ends_with(&filter_suffix))
+            {
+                matches_for_filter
+                    .lock()
+                    .expect("preserved-root match lock should not be poisoned")
+                    .push(path.to_path_buf());
+            }
+            let name = entry.file_name().to_str().unwrap_or_default();
+            !no_mistakes::codebase::ts_source::is_skipped_dir(name)
+                && !skip_directories.iter().any(|skip| skip == name)
+        });
+    for _ in builder.build() {}
+    drop(builder);
+
+    let mut matches = Arc::try_unwrap(matches)
+        .expect("preserved-root walker should release its match collector")
+        .into_inner()
+        .expect("preserved-root match lock should not be poisoned");
+    matches.sort();
+    matches.dedup();
+    roots.extend(matches);
 }
 
 pub(super) fn leading_globstar_literal_prefix(include: &str) -> Option<PathBuf> {
