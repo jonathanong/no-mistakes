@@ -1,0 +1,25 @@
+projects:
+  typed:
+    type: nextjs
+  explicit:
+    root: fixtures/build
+
+rules:
+  - rule: test-email-domain-policy
+    projects:
+      - typed
+      - missing
+    include:
+      - fixtures/**
+      - src/node_modules/foo/**
+    options:
+      bannedDomains:
+        - example.com
+  - rule: test-email-domain-policy
+    projects:
+      - explicit
+    include:
+      - "**/components/**"
+    options:
+      bannedDomains:
+        - example.com

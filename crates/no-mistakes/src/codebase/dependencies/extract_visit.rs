@@ -170,8 +170,8 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_import_expression(&mut self, import: &ImportExpression<'a>) {
-        if let Some(specifier) = string_literal_expr(&import.source) {
-            self.push(specifier, ImportKind::Dynamic, import.span.start as usize);
+        if let Some(specifier) = static_import_specifier(&import.source) {
+            self.push(&specifier, ImportKind::Dynamic, import.span.start as usize);
         }
         walk::walk_import_expression(self, import);
     }

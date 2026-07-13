@@ -38,7 +38,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         &graph_files,
         args.config.as_deref(),
         Some(&facts as &dyn TsFactLookup),
-    );
+    )?;
     let target = NodeId::Symbol {
         file: target_file.clone(),
         symbol: symbol.to_string(),

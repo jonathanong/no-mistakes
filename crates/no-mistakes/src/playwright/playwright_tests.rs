@@ -16,7 +16,7 @@ pub enum TestStatus {
     Skipped,
 }
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Ord, PartialOrd)]
 pub struct TestPolicy {
     pub assert_conditional_tests: bool,
     pub allow_skipped_tests: bool,

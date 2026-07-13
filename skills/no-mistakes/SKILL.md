@@ -101,6 +101,7 @@ scope the review and `rg` to inspect exact argument objects such as
 | Question | Tool |
 | --- | --- |
 | What does this file transitively import? | `no-mistakes dependencies <file>` |
+| What runtime modules can a Playwright route conservatively reach? | `no-mistakes dependencies <route-file> --relationship route-import` |
 | Which files are affected by touching this file? | `no-mistakes dependents <file>` |
 | Which files directly import this one file? (fast) | `no-mistakes importers <file>` |
 | Which files import this named export? | `no-mistakes dependents <file>#SYMBOL` |
@@ -201,7 +202,7 @@ reports. Note: `analyzeProject` does not support `testsPlan`, `fetches`, or
 - `--filter <GLOB>` to include only matching files; repeatable.
 - `--target-module <GLOB>` to include only matching external module nodes (useful with `--relationship package`).
 - `--test vitest|playwright|cargo|dotnet|swift` to filter to test files.
-- `--relationship import|import-static|import-dynamic|import-type|import-require|workspace|package|test|route|queue|md|ci|http|process|asset|react|dotnet|swift|terraform|all`.
+- `--relationship import|import-static|import-dynamic|import-type|import-require|route-import|workspace|package|test|route|queue|md|ci|http|process|asset|react|dotnet|swift|terraform|all`.
 - `--direction deps|dependents|both` for `queues related` and `server related`.
 - `--format json|md|yml|paths|human`, `--json`, `--timings` (stderr), and `--jobs`.
 
@@ -236,7 +237,13 @@ member usage.
 ## Hard Limits
 
 - `baseUrl`-only imports are not resolved; use `compilerOptions.paths`.
-- Dynamic `import()` and `require()` are tracked only with string literals.
+- Dynamic `import()` and `require()` are tracked only with literals.
+- `route-import` is deliberately conservative: it includes runtime static
+  imports/re-exports and literal dynamic imports inside functions, but excludes
+  type-only imports, `require()`, and computed dynamic imports. Use `route` for
+  URL-route, Playwright route-test, and Next.js layout edges instead.
+- `route-import` is explicit opt-in. Omitted relationships and `all` keep the
+  standard call-pruned graph so test impact and dependency checks do not widen.
 - Bare external specifiers such as `react` are terminal module nodes; their
   `node_modules` sources are not parsed. Node built-ins such as `node:path`
   remain excluded from module nodes.

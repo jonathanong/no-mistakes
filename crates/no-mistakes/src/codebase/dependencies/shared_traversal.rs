@@ -47,10 +47,10 @@ impl SharedTraversalContext {
         ));
     }
 
-    fn graph(&mut self) -> &graph::DepGraph {
+    fn graph(&mut self) -> Result<&graph::DepGraph> {
         if self.graph.is_none() {
             self.ensure_facts();
-            self.graph = Some(graph::DepGraph::build_with_plan_files_and_facts(
+            let graph = graph::DepGraph::build_with_plan_files_and_facts(
                 &self.root,
                 &self.tsconfig,
                 self.build_plan,
@@ -58,16 +58,17 @@ impl SharedTraversalContext {
                 self.facts
                     .as_ref()
                     .map(|facts| facts as &dyn graph::TsFactLookup),
-            ));
+            )?;
+            self.graph = Some(graph);
             self.graph_builds += 1;
         }
-        self.graph.as_ref().expect("graph is initialized")
+        Ok(self.graph.as_ref().expect("graph is initialized"))
     }
 
     fn request_graph_without_symbols(
         &mut self,
         allowed: Option<&std::collections::HashSet<EdgeKind>>,
-    ) -> graph::DepGraph {
+    ) -> Result<graph::DepGraph> {
         self.ensure_facts();
         graph::DepGraph::build_with_plan_files_and_facts(
             &self.root,
@@ -125,17 +126,19 @@ pub(crate) fn collect_and_filter_entries_shared(
             allowed.as_ref(),
         ),
         Direction::Deps if shared.build_plan.symbols && !args.include_symbols => shared
-            .request_graph_without_symbols(allowed.as_ref())
+            .request_graph_without_symbols(allowed.as_ref())?
             .deps_of(&roots, args.depth, allowed.as_ref()),
-        Direction::Deps => shared.graph().deps_of(&roots, args.depth, allowed.as_ref()),
+        Direction::Deps => shared
+            .graph()?
+            .deps_of(&roots, args.depth, allowed.as_ref()),
         Direction::Dependents if args.include_symbols => {
-            let graph = shared.graph();
+            let graph = shared.graph()?;
             let roots = roots_with_existing_queue_jobs(&roots, &entrypoints, graph);
             let roots = roots_with_exported_symbol_roots(&roots, graph);
             graph.dependents_of_symbol_nodes(&roots, args.depth, allowed.as_ref())
         }
         Direction::Dependents if any_symbol && shared.build_plan.symbols => {
-            let graph = shared.request_graph_without_symbols(allowed.as_ref());
+            let graph = shared.request_graph_without_symbols(allowed.as_ref())?;
             resolve_symbol_dependents(
                 &root,
                 &entrypoints,
@@ -152,15 +155,17 @@ pub(crate) fn collect_and_filter_entries_shared(
             &entrypoints,
             args.depth,
             allowed.as_ref(),
-            shared.graph(),
+            shared.graph()?,
             symbol_index
                 .as_ref()
                 .expect("symbol index is built for symbol dependents"),
         ),
         Direction::Dependents if shared.build_plan.symbols && !args.include_symbols => shared
-            .request_graph_without_symbols(allowed.as_ref())
+            .request_graph_without_symbols(allowed.as_ref())?
             .dependents_of(&roots, args.depth, allowed.as_ref()),
-        Direction::Dependents => shared.graph().dependents_of(&roots, args.depth, allowed.as_ref()),
+        Direction::Dependents => shared
+            .graph()?
+            .dependents_of(&roots, args.depth, allowed.as_ref()),
     };
     let entries = apply_filters(entries, args, &shared.root)?;
 

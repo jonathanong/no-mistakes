@@ -10,15 +10,30 @@
 /// The direction mirrors `EdgeKind::TestOf` (test depends on source) so that
 /// `dependents_of(app_file)` returns tests that cover it via selector-based
 /// paths, even with no URL-navigation route connecting them.
-pub(super) fn collect_playwright_selector_edges(
+pub(super) fn collect_playwright_selector_edges_with_graph(
     root: &Path,
     config_path: Option<&Path>,
     all_files: &[PathBuf],
     facts: Option<&dyn TsFactLookup>,
+    partial_graph: Option<&DepGraph>,
+    graph_tsconfig: Option<&TsConfig>,
+) -> Result<Vec<Edge>> {
+    let analysis = run_playwright_selector_analysis(
+        root,
+        config_path,
+        facts,
+        partial_graph,
+        graph_tsconfig,
+        all_files,
+    )?;
+    Ok(selector_edges_from_analysis(root, all_files, &analysis))
+}
+
+fn selector_edges_from_analysis(
+    root: &Path,
+    all_files: &[PathBuf],
+    analysis: &crate::playwright::analysis::types::Analysis,
 ) -> Vec<Edge> {
-    let Ok(analysis) = run_playwright_selector_analysis(root, config_path, facts) else {
-        return vec![];
-    };
     // Use the graph's pre-discovered file set to filter: only emit edges whose
     // both endpoints are files the dep-graph already knows about.  This avoids
     // introducing nodes outside the graph's file set and avoids a second
@@ -68,6 +83,9 @@ fn run_playwright_selector_analysis(
     root: &Path,
     config_path: Option<&Path>,
     facts: Option<&dyn TsFactLookup>,
+    partial_graph: Option<&DepGraph>,
+    graph_tsconfig: Option<&TsConfig>,
+    graph_file_universe: &[PathBuf],
 ) -> anyhow::Result<crate::playwright::analysis::types::Analysis> {
     // Reuse the same config file the rest of this DepGraph build (and, when
     // called from `check`, the sibling `playwright` rule) resolved settings
@@ -81,24 +99,29 @@ fn run_playwright_selector_analysis(
         allow_skipped_tests: false,
     };
     let unique_policy = crate::playwright::analysis::types::UniqueSelectorPolicy::default();
+    let route_import_candidate = partial_graph.zip(graph_tsconfig);
     // Use the selectors-only pipeline: does not require Next.js routes to exist,
     // so selector edges work for components that have no direct route coverage.
     // Reuse already-collected Playwright test-file facts when the caller has
     // them (e.g. `check`'s shared CheckFactMap) instead of re-parsing and
     // re-analyzing every test file from scratch.
     match facts {
-        Some(facts) => crate::playwright::analysis::pipeline_selectors::analyze_selectors_with_policy_and_facts(
+        Some(facts) => crate::playwright::analysis::pipeline_selectors::analyze_selectors_with_policy_facts_and_graph(
             root,
             &settings,
             test_policy,
             unique_policy,
             facts,
+            route_import_candidate,
+            graph_file_universe,
         ),
-        None => crate::playwright::analysis::pipeline_selectors::analyze_selectors_with_policy(
+        None => crate::playwright::analysis::pipeline_selectors::analyze_selectors_with_policy_and_graph(
             root,
             &settings,
             test_policy,
             unique_policy,
+            route_import_candidate,
+            graph_file_universe,
         ),
     }
 }

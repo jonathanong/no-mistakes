@@ -36,9 +36,22 @@ pub(crate) fn run_all(
     } else {
         None
     };
-    let playwright_fact_plan =
-        no_mistakes::playwright::rules::fact_plan(&root, config_path.as_deref(), &config)
-            .context("failed to prepare Playwright shared facts")?;
+    let playwright_consumers = forbidden_graph_plan
+        .map(
+            |plan| no_mistakes::playwright::rules::PlaywrightFactConsumers {
+                graph_selectors: plan.playwright_selectors,
+                graph_routes: plan.playwright_routes,
+            },
+        )
+        .unwrap_or_default();
+    let playwright_fact_plan = no_mistakes::playwright::rules::fact_plan_for_consumers(
+        &root,
+        config_path.as_deref(),
+        &config,
+        playwright_consumers,
+    )
+    .context("failed to prepare Playwright shared facts")?;
+    let playwright_facts_enabled = playwright_fact_plan.is_some();
     let integration_enabled = integration_configured(&config);
     let react_enabled = react_traits::check_enabled(&root, config_path.as_deref(), false)?;
     let react_warning = None;
@@ -74,37 +87,35 @@ pub(crate) fn run_all(
     }
     let discover_start = Instant::now();
     let skip_directories = config.filesystem.skip_directories.clone();
-    // Fetch the git-visible file list once and reuse it below for both the
-    // skip-filtered and (when forbidden-dependencies is configured) unfiltered
-    // discover_check_files calls, since they differ only in the in-memory
-    // skip-directory filter applied afterward — not in what `git ls-files`
-    // would return. Without this, each call independently re-spawns `git
-    // ls-files` for the identical root.
-    let git_files = no_mistakes::codebase::ts_source::git_visible_files(&root);
-    let discovered = crate::check_discovery::discover_check_files(
-        &root,
-        &config,
-        &skip_directories,
-        unique_exports_enabled,
-        git_files.as_deref(),
-    );
+    let needs_graph_files =
+        needs_shared_facts && (forbidden_graph_plan.is_some() || playwright_facts_enabled);
+    let (discovered, graph_files) = if needs_graph_files {
+        let views = crate::check_discovery::discover_check_file_views(
+            &root,
+            &config,
+            &skip_directories,
+            unique_exports_enabled,
+        );
+        (views.filesystem, views.graph)
+    } else {
+        let git_files = no_mistakes::codebase::ts_source::git_visible_files(&root);
+        (
+            crate::check_discovery::discover_check_files(
+                &root,
+                &config,
+                &skip_directories,
+                unique_exports_enabled,
+                git_files.as_deref(),
+            ),
+            Vec::new(),
+        )
+    };
     let discover_duration = discover_start.elapsed();
     let facts_start = Instant::now();
     // When only filesystem rules are enabled, no TS/JS parsing is needed.
     let (fs_files, facts) = if needs_shared_facts {
         let fs = if filesystem_rules_enabled {
             discovered.clone()
-        } else {
-            Vec::new()
-        };
-        let graph_files = if forbidden_graph_plan.is_some() {
-            crate::check_discovery::discover_check_files(
-                &root,
-                &config,
-                &[],
-                unique_exports_enabled,
-                git_files.as_deref(),
-            )
         } else {
             Vec::new()
         };

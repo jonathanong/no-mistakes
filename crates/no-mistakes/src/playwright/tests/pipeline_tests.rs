@@ -383,27 +383,13 @@ fn analyze_test_occurrences_skips_non_test_route_inputs() {
         }],
         ..Default::default()
     };
-    let app_selector = selectors::AppSelector {
-        file: root.join("web/app/page.tsx"),
-        attribute: "data-testid".to_string(),
-        value: selectors::AppSelectorValue::Exact("save".to_string()),
-    };
-    let app_selector_targets = vec![context::AppSelectorTarget {
-        selector: &app_selector,
-        app_file: std::sync::Arc::new("web/app/page.tsx".to_string()),
-        value: "save".to_string(),
-    }];
     let selector_regexes =
         selectors::compile_selector_regexes(&["data-testid".to_string()], &BTreeMap::new());
     let selector_index = context::SelectorIndex::default();
-    let reachable = BTreeMap::new();
     let context = TestAnalysisContext {
         root: &root,
         route_index: &route_index,
-        app_selector_targets: &app_selector_targets,
         selector_index: &selector_index,
-        app_text_targets: &[],
-        route_reachable_files: &reachable,
         navigation_helpers: &[],
         selector_regexes: &selector_regexes,
         test_policy: playwright_tests::TestPolicy {
@@ -462,14 +448,16 @@ fn analyze_test_occurrences_skips_non_test_route_inputs() {
         },
     ];
 
-    let analysis = analyze_test_occurrences(
-        &test_file,
-        &context,
-        raw_urls,
-        playwright_selectors,
-        vec![],
-        vec![],
-    );
+    let occurrences = crate::playwright::test_file_occurrences::TestFileOccurrences {
+        variant: std::sync::Arc::new(
+            crate::playwright::test_file_occurrences::VariantOccurrences {
+                urls: raw_urls,
+                selectors: playwright_selectors,
+            },
+        ),
+        common: Default::default(),
+    };
+    let analysis = analyze_test_occurrences(&test_file, &context, &occurrences);
 
     assert!(analysis.edges.is_empty());
 }
@@ -493,10 +481,7 @@ fn analyze_test_file_returns_error_for_missing_file() {
     let context = TestAnalysisContext {
         root: &root,
         route_index: &route_index,
-        app_selector_targets: &[],
         selector_index: &selector_index,
-        app_text_targets: &[],
-        route_reachable_files: &Default::default(),
         navigation_helpers: &[],
         selector_regexes: &selector_regexes,
         test_policy: TestPolicy::default(),
@@ -524,10 +509,7 @@ fn analyze_test_file_returns_error_for_parse_failure() {
     let context = TestAnalysisContext {
         root: &root,
         route_index: &route_index,
-        app_selector_targets: &[],
         selector_index: &selector_index,
-        app_text_targets: &[],
-        route_reachable_files: &Default::default(),
         navigation_helpers: &[],
         selector_regexes: &selector_regexes,
         test_policy: TestPolicy::default(),

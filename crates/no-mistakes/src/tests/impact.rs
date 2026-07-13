@@ -53,15 +53,8 @@ pub fn generate_impact_plan(args: &ImpactArgs) -> Result<TestPlan> {
 
     let config = load_v2_config(&root, args.config.as_deref())?;
     let tsconfig = crate::tests::why::resolve_tsconfig(args.tsconfig.as_deref(), &root)?;
-    let graph = if args.include_symbols {
-        no_mistakes::codebase::dependencies::graph::DepGraph::build_with_plan(
-            root.as_path(),
-            &tsconfig,
-            no_mistakes::codebase::dependencies::graph::GraphBuildPlan::all().with_symbols(true),
-        )?
-    } else {
-        DepGraph::build(root.as_path(), &tsconfig)?
-    };
+    let graph =
+        crate::tests::build_test_impact_graph(root.as_path(), &tsconfig, args.include_symbols)?;
     let test_filter = TestFileFilter::for_impact(root.as_path(), &config);
     let registry_set = compile_registry_globset(&config.tests.impact.registries);
 

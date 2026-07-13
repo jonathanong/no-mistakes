@@ -1,4 +1,13 @@
 impl DepGraph {
+    pub(crate) fn parse_error(&self, path: &Path) -> Option<&str> {
+        self.parse_errors.get(path).map(String::as_str)
+    }
+
+    pub(crate) fn contains_file(&self, path: &Path) -> bool {
+        self.forward.contains_key(&NodeId::File(
+            crate::codebase::ts_resolver::normalize_path(path),
+        ))
+    }
     /// Get the direct dependents (reverse edges) of a single node.
     pub fn dependents_of_node(&self, node: &NodeId) -> Option<&Vec<(NodeId, EdgeKind)>> {
         self.reverse.get(node)

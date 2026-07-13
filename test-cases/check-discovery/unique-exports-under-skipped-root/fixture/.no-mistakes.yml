@@ -1,0 +1,12 @@
+filesystem:
+  skipDirectories:
+    - generated
+
+projects:
+  app:
+    root: fixtures/app
+
+rules:
+  - rule: unique-exports
+    projects:
+      - app

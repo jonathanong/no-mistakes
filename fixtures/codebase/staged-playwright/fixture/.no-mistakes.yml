@@ -1,0 +1,25 @@
+tests:
+  playwright:
+    frontendRoot: graph
+    configs:
+      - playwright.a.config.ts
+      - playwright.b.config.ts
+    testExclude:
+      - tests/malformed.spec.ts
+    selectorRoots:
+      - graph
+    selectors:
+      testIds:
+        - data-default
+        - data-a
+        - data-b
+
+rules:
+  - rule: playwright-unique-test-ids
+    scope: repository
+    tests:
+      playwright: [a]
+  - rule: playwright-unique-html-ids
+    scope: repository
+    tests:
+      playwright: [b]

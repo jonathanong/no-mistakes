@@ -7,6 +7,9 @@ use std::process::Command;
 pub mod facts;
 pub mod jsx;
 
+mod parser_diagnostic;
+pub(crate) use parser_diagnostic::format_parse_diagnostic;
+
 include!("discovery.rs");
 include!("discovery_preserve.rs");
 include!("disable_comments.rs");

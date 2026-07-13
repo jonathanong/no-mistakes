@@ -36,6 +36,9 @@ no-mistakes dependents src/utils.mts --root /path/to/project --test vitest
 # Follow only import edges (skip test/route/queue/md/ci/workspace edges)
 no-mistakes dependents src/utils.mts --root /path/to/project --relationship import
 
+# Find conservative Playwright route-module importers
+no-mistakes dependents web/components/dialog.tsx --root /path/to/project --relationship route-import
+
 # Find tests that would need to run after changing a file
 no-mistakes dependents src/utils.mts --root /path/to/project --test vitest --relationship test
 
@@ -53,7 +56,7 @@ no-mistakes dependents src/utils.mts --root /path/to/project --tsconfig backend/
 | `--filter <GLOB>` | none | Include only matching files (repeatable, OR) |
 | `--target-module <GLOB>` | none | Include only matching external module nodes (repeatable, OR) |
 | `--test <FRAMEWORK>` | none | Expand to well-known test globs: `vitest`, `playwright`, `cargo`, `dotnet`, `swift` (repeatable) |
-| `--relationship <KIND>` | all | Follow only edges of this kind (repeatable, OR). Values: `import`, `import-static`, `import-dynamic`, `import-type`, `import-require`, `workspace`, `package`, `test`, `route`, `queue`, `md`, `ci`, `http`, `process`, `asset`, `react`, `dotnet`, `swift`, `terraform`, `all` |
+| `--relationship <KIND>` | all | Follow only edges of this kind (repeatable, OR). Values: `import`, `import-static`, `import-dynamic`, `import-type`, `import-require`, `route-import`, `workspace`, `package`, `test`, `route`, `queue`, `md`, `ci`, `http`, `process`, `asset`, `react`, `dotnet`, `swift`, `terraform`, `all` |
 | `--format <FORMAT>` | human (TTY) / json (pipe) | Output format: `json`, `md`, `yml`, `paths`, `human` |
 | `--json` | false | Shorthand for `--format json` |
 | `--timings` | false | Emit phase timings on stderr |
@@ -98,6 +101,12 @@ src/other.mts
 ## Notes
 
 - Static imports/re-exports, type-only imports/references, string-literal dynamic `import()`, and string-literal `require()` are tracked under `--relationship import`
+- `--relationship route-import` follows runtime static imports/re-exports and
+  literal dynamic imports without function-reachability pruning. It excludes
+  type-only imports and `require()`. Use `route` for URL-route, Playwright
+  route-test, and Next.js layout edges.
+- `route-import` is excluded from unfiltered traversal and `all`; request it by
+  name because its deliberately conservative closure is an alternate view.
 - Route/queue edges are only active when `.no-mistakes.yml` defines the relevant config
 - `http` edges connect static HTTP client paths, including non-interpolated template literals, to backend route-definition files
 - `process` edges connect `spawn`/`exec`/Playwright `webServer` entries to their entry files

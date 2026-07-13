@@ -56,6 +56,9 @@ pub enum EdgeKind {
     TypeImport,
     /// Runtime dynamic import (`import("...")`).
     DynamicImport,
+    /// Conservative runtime import used for Playwright route reachability.
+    /// Unlike ordinary import edges, function-scoped imports are not pruned.
+    RouteImport,
     /// CommonJS `require("...")` call.
     Require,
     /// Test correspondence: `foo.mts` ↔ `foo.test.mts`.
@@ -120,6 +123,7 @@ impl EdgeKind {
             EdgeKind::Import => "import",
             EdgeKind::TypeImport => "type-import",
             EdgeKind::DynamicImport => "dynamic-import",
+            EdgeKind::RouteImport => "route-import",
             EdgeKind::Require => "require",
             EdgeKind::TestOf => "test",
             EdgeKind::RouteRef => "route",

@@ -41,7 +41,8 @@ fn prepare_local_caller_context_resolves_workspace_packages_once() {
         &graph_files,
         None,
         Some(&facts as &dyn TsFactLookup),
-    );
+    )
+    .expect("shared-facts graph builds");
     assert!(
         graph.all_files().count() > 0,
         "sanity check: shared facts must still let the graph build succeed"
@@ -97,7 +98,7 @@ fn prepare_local_caller_context_never_rederives_its_supplied_inputs() {
             .join("../../test-cases/codebase-analysis/tests-impact-symbol/fixture"),
     );
 
-    let empty_facts: crate::codebase::ts_source::facts::TsFactMap = std::collections::HashMap::new();
+    let empty_facts = crate::codebase::ts_source::facts::TsFactMap::default();
     let context = prepare_local_caller_context(empty_facts, &[], &root);
 
     assert!(

@@ -13,6 +13,7 @@ serialized in JSON/YAML/text output through the `via` field.
 | `type-import` | `TypeImport` | `import`, `import-type` | TS/JS file -> type-only dependency | [`import-forms/type-only.mts`](../test-cases/codebase-analysis/import-forms/fixture/type-only.mts), [`inline-type.mts`](../test-cases/codebase-analysis/import-forms/fixture/inline-type.mts), [`import-type.mts`](../test-cases/codebase-analysis/import-forms/fixture/import-type.mts) |
 | `dynamic-import` | `DynamicImport` | `import`, `import-dynamic` | TS/JS file -> string-literal `import("...")` target | [`import-forms/dynamic.mts`](../test-cases/codebase-analysis/import-forms/fixture/dynamic.mts) |
 | `require` | `Require` | `import`, `import-require` | JS/TS file -> string-literal `require("...")` or `require.resolve("...")` target | [`import-forms/require.js`](../test-cases/codebase-analysis/import-forms/fixture/require.js) |
+| `route-import` | `RouteImport` | `route-import` | TS/JS file -> runtime static import/re-export or literal dynamic-import target, without function-reachability pruning | [`nextjs-selectors/frontend-tsconfig/page.tsx`](../test-cases/nextjs-selectors/frontend-tsconfig/fixture/web/app/page.tsx), asserted by route-reachability tests |
 | `workspace` | `WorkspaceImport` | `workspace` | TS/JS file -> workspace package entry/export/import target | [`cross-boundary-monorepo`](../test-cases/codebase-analysis/cross-boundary-monorepo), [`graph-missing-edges`](../test-cases/codebase-analysis/graph-missing-edges) |
 | `package` | `PackageDependency` | `package` | `package.json` -> declared workspace package entry or external module node | [`graph-modules`](../test-cases/codebase-analysis/graph-modules) |
 | `asset` | `AssetImport` | `asset` | TS/JS file -> explicit relative non-code asset import | [`graph-missing-edges/packages/app/src/entry.mts`](../test-cases/codebase-analysis/graph-missing-edges/fixture/packages/app/src/entry.mts) |
@@ -49,6 +50,7 @@ serialized in JSON/YAML/text output through the `via` field.
 | `import-type` | `type-import` |
 | `import-dynamic` | `dynamic-import` |
 | `import-require` | `require` |
+| `route-import` | `route-import` |
 | `workspace` | `workspace` |
 | `package` | `package` |
 | `test` | `test`, `route-test`, `layout`, `selector` |
@@ -63,7 +65,7 @@ serialized in JSON/YAML/text output through the `via` field.
 | `dotnet` | `dotnet-using`, `dotnet-ref`, `dotnet-project` |
 | `swift` | `swift-import`, `swift-ref`, `swift-package` |
 | `terraform` | `terraform-ref`, `terraform-module`, `terraform-output` |
-| `all` | all edge kinds |
+| `all` | all standard edge kinds; excludes the opt-in `route-import` alternate view |
 
 ## Examples And Counterexamples
 
@@ -81,6 +83,31 @@ const name = "users";
 await import(`./${name}`);
 require(resolvePlugin());
 ```
+
+`route-import` is the conservative runtime-import view used to scope
+Playwright route selector and text analysis. It includes runtime static
+imports/re-exports and literal dynamic imports even when they appear inside a
+function that the ordinary import call graph cannot prove reachable:
+
+```ts
+import { Header } from "./header";
+export { Footer } from "./footer";
+
+function loadDialog() {
+  return import(`./dialog`);
+}
+```
+
+It excludes type-only imports/re-exports, import types, `require()`, and
+computed dynamic imports. Unlike `route`, it describes module reachability
+from route files; it does not describe URL references, route tests, or Next.js
+layouts.
+
+Because this view deliberately ignores ordinary function reachability,
+unfiltered traversal and `--relationship all` exclude it. Request
+`--relationship route-import` explicitly when that conservative closure is the
+question; this keeps existing dependency, forbidden-dependency, and test-impact
+semantics call-pruned.
 
 Static route and HTTP references produce edges:
 
@@ -139,6 +166,9 @@ not assumed to equal a concrete literal route such as `/user/settings`.
 - Function-scoped dynamic `import()` and `require()` edges are pruned unless the
   containing function is statically called, exported, reached through an unknown
   top-level call shape, or contains an unknown call shape in reachable code.
+- `route-import` deliberately does not apply that function-reachability pruning.
+  It remains literal-only, so computed dynamic imports still require an `rg`
+  fallback.
 
 
 Swift endpoint literals such as `Endpoint(path: "/api/items/\(id)")` reuse

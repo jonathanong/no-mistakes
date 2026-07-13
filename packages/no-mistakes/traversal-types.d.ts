@@ -8,6 +8,7 @@ export type Relationship =
   | "import-dynamic"
   | "import-type"
   | "import-require"
+  | "route-import"
   | "workspace"
   | "package"
   | "test"

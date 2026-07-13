@@ -26,10 +26,10 @@ pub(crate) fn check_with_facts(
             plan,
             config_path,
         );
-    if required_graph_plan.is_empty() && shared.graph_files().is_empty() {
-        return super::check_with_config(root, config, config_path, tsconfig_path);
-    }
-    if shared.stats.parse_errors > 0 {
+    if required_graph_plan.is_empty()
+        && !shared.graph_file_universe_is_complete()
+        && shared.graph_file_universe().is_empty()
+    {
         return super::check_with_config(root, config, config_path, tsconfig_path);
     }
     if !shared.graph_plan().covers(required_graph_plan) {
@@ -41,10 +41,10 @@ pub(crate) fn check_with_facts(
         root,
         &tsconfig,
         plan,
-        shared.graph_files().to_vec(),
+        shared.graph_file_universe().to_vec(),
         config_path,
         shared,
-    );
+    )?;
     let mut findings = Vec::new();
     for (rule, opts) in applications.iter().zip(opts_list.iter()) {
         findings.extend(check_rule_application(root, config, rule, opts, &graph)?);

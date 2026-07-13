@@ -6,15 +6,18 @@ pub(crate) fn ts_facts(
     plan: &CheckFactPlan,
     source: Option<String>,
     program: &oxc_ast::ast::Program<'_>,
+    parse_error: String,
 ) -> TsFileFacts {
     if !(plan.imports || plan.graph.imports || plan.graph.function_calls) {
         return TsFileFacts {
+            parse_error: Some(parse_error),
             source,
             ..Default::default()
         };
     }
     let import_facts = extract_import_facts_from_program(program);
     TsFileFacts {
+        parse_error: Some(parse_error),
         source,
         imports: import_facts.imports,
         function_calls: import_facts.function_calls,

@@ -1,9 +1,8 @@
-use crate::playwright::analysis::text_types::AppTextTarget;
 use crate::playwright::playwright_config;
 use crate::playwright::playwright_tests;
 use crate::playwright::selectors;
 use globset::GlobSet;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -32,6 +31,7 @@ pub(crate) struct TestProjectContext {
     pub(crate) test_id_attributes: Vec<String>,
 }
 
+#[derive(Clone)]
 pub(crate) struct DiscoveredTestFile {
     pub(crate) path: PathBuf,
     pub(crate) contexts: Vec<TestProjectContext>,
@@ -47,11 +47,7 @@ pub(crate) struct TestProjectDiscovery {
 pub(crate) struct TestAnalysisContext<'a> {
     pub(crate) root: &'a Path,
     pub(crate) route_index: &'a RouteIndex,
-    pub(crate) app_selector_targets: &'a [AppSelectorTarget<'a>],
     pub(crate) selector_index: &'a SelectorIndex<'a>,
-    pub(crate) app_text_targets: &'a [AppTextTarget],
-    pub(crate) route_reachable_files:
-        &'a BTreeMap<Arc<String>, std::collections::BTreeSet<Arc<String>>>,
     pub(crate) navigation_helpers: &'a [String],
     pub(crate) selector_regexes: &'a selectors::SelectorRegexes,
     pub(crate) test_policy: playwright_tests::TestPolicy,

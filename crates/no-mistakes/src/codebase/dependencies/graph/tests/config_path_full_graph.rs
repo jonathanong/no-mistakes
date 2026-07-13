@@ -55,7 +55,8 @@ fn build_with_plan_file_list_config_and_check_facts_uses_explicit_config_path() 
         all_files.clone(),
         None,
         &shared,
-    );
+    )
+    .expect("default graph builds");
     assert!(
         has_route_ref(&default_graph),
         "default-discovered config (this fixture's own .no-mistakes.yml) should produce the RouteRef edge"
@@ -68,7 +69,8 @@ fn build_with_plan_file_list_config_and_check_facts_uses_explicit_config_path() 
         all_files,
         Some(&empty_config),
         &shared,
-    );
+    )
+    .expect("explicit-config graph builds");
     assert!(
         !has_route_ref(&explicit_graph),
         "passing the explicit empty-pattern config must be honored, not silently ignored in favor of default discovery"

@@ -1,6 +1,9 @@
 use anyhow::Result;
+use no_mistakes::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use no_mistakes::codebase::test_discovery::TestExecutionTarget;
+use no_mistakes::codebase::ts_resolver::TsConfig;
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 use std::process::ExitCode;
 
 pub(crate) mod args;
@@ -90,3 +93,16 @@ pub fn run(args: TestsArgs) -> Result<ExitCode> {
 }
 
 const _: fn(TestsArgs) -> Result<ExitCode> = run;
+
+/// Build the canonical graph shape shared by both test-impact entry points.
+pub(crate) fn build_test_impact_graph(
+    root: &Path,
+    tsconfig: &TsConfig,
+    include_symbols: bool,
+) -> Result<DepGraph> {
+    DepGraph::build_with_plan(
+        root,
+        tsconfig,
+        GraphBuildPlan::test_impact().with_symbols(include_symbols),
+    )
+}

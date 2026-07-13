@@ -23,7 +23,8 @@ fn get_entries_supports_import_only_dependencies() {
         symbols: false,
     };
 
-    let entries = get_entries(Direction::Deps, &roots, &entrypoints, None, true, &ctx);
+    let entries =
+        get_entries(Direction::Deps, &roots, &entrypoints, None, true, &ctx).unwrap();
     assert!(!entries.is_empty());
 }
 
@@ -69,7 +70,8 @@ fn get_entries_supports_symbol_dependents() {
         None,
         false,
         &ctx,
-    );
+    )
+    .unwrap();
     assert!(!entries.is_empty());
 }
 

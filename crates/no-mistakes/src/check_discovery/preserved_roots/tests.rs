@@ -1,3 +1,4 @@
+use super::matching::descendant_dirs_matching_suffix_from_files;
 use super::*;
 use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
@@ -42,6 +43,12 @@ fn write(dir: &Path, path: &str, content: &str) {
     std::fs::write(full, content).unwrap();
 }
 
+fn root_fixture(path: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check-discovery")
+        .join(path)
+}
+
 #[test]
 fn literal_include_prefix_stops_before_brace_alternation() {
     assert_eq!(
@@ -66,12 +73,19 @@ fn literal_include_prefix_stops_before_brace_alternation() {
 fn include_preserved_roots_ignore_unknown_projects() {
     let root = PathBuf::from("/repo");
     let config = NoMistakesConfig {
-        rules: vec![no_mistakes::config::v2::schema::RuleDef {
-            rule: "test-email-domain-policy".to_string(),
-            projects: vec!["missing".to_string()],
-            include: vec!["fixtures/**".to_string()],
-            ..Default::default()
-        }],
+        rules: vec![
+            no_mistakes::config::v2::schema::RuleDef {
+                rule: "test-email-domain-policy".to_string(),
+                projects: vec!["missing".to_string()],
+                include: vec!["fixtures/**".to_string()],
+                ..Default::default()
+            },
+            no_mistakes::config::v2::schema::RuleDef {
+                rule: no_mistakes::codebase::rules::FORBIDDEN_WORKSPACE_CLOSURE.to_string(),
+                projects: vec!["missing".to_string()],
+                ..Default::default()
+            },
+        ],
         ..Default::default()
     };
 
@@ -159,10 +173,8 @@ fn descendant_dirs_matching_suffix_ignores_disk_only_empty_directory() {
     assert!(!roots.contains(&dir.path().join("empty-branch/fixtures")));
 }
 
-/// Outside a git repository, `descendant_dirs_matching_suffix` still falls back to the
-/// raw filesystem walk (exercising `collect_descendant_dirs_matching_suffix`'s match
-/// and skip-descent logic directly), since there is no git-visible file list to derive
-/// candidates from.
+/// Outside a git repository, `descendant_dirs_matching_suffix` falls back to an
+/// ignore-aware walk since there is no git-visible file list to derive candidates.
 #[test]
 fn descendant_dirs_matching_suffix_falls_back_to_walk_outside_git_repositories() {
     let dir = TempDir::new().unwrap();
@@ -182,4 +194,22 @@ fn descendant_dirs_matching_suffix_falls_back_to_walk_outside_git_repositories()
     );
 
     assert_eq!(roots, vec![dir.path().join("backend/components")]);
+}
+
+#[test]
+fn ignore_aware_fallback_prunes_gitignored_nested_suffix() {
+    let root = root_fixture("preserved-roots-ignore-walk");
+    let mut roots = Vec::new();
+
+    // Call the non-Git fallback directly because this checked-in fixture lives
+    // inside the repository that supplies the git-visible fast path.
+    super::matching::collect_descendant_dirs_matching_suffix(
+        &root,
+        &root,
+        Path::new("components"),
+        &[],
+        &mut roots,
+    );
+
+    assert_eq!(roots, vec![root.join("backend/components")]);
 }

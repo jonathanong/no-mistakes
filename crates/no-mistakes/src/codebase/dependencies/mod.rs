@@ -150,7 +150,7 @@ pub(crate) fn collect_and_filter_entries(
         args.depth,
         import_only,
         &ctx,
-    );
+    )?;
 
     timings.mark("parse");
 

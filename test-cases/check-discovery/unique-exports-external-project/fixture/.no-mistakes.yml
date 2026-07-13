@@ -1,0 +1,12 @@
+filesystem:
+  skipDirectories:
+    - generated
+
+projects:
+  external:
+    root: ../external-project/../external-project
+
+rules:
+  - rule: unique-exports
+    projects:
+      - external

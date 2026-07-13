@@ -54,17 +54,24 @@ fn deps_entries(
     import_only: bool,
     roots: &[NodeId],
     ctx: &TraversalCtx<'_>,
-) -> Vec<graph::NodeEntry> {
+) -> Result<Vec<graph::NodeEntry>> {
     if import_only {
-        graph::lazy_import_deps_of_with_files(roots, ctx.root, ctx.tsconfig, depth, ctx.graph_files, ctx.allowed)
+        Ok(graph::lazy_import_deps_of_with_files(
+            roots,
+            ctx.root,
+            ctx.tsconfig,
+            depth,
+            ctx.graph_files,
+            ctx.allowed,
+        ))
     } else {
-        graph::DepGraph::build_with_plan_and_files(
+        Ok(graph::DepGraph::build_with_plan_and_files(
             ctx.root,
             ctx.tsconfig,
             ctx.build_plan,
             ctx.graph_files,
-        )
-        .deps_of(roots, depth, ctx.allowed)
+        )?
+        .deps_of(roots, depth, ctx.allowed))
     }
 }
 
@@ -75,7 +82,7 @@ fn get_entries(
     depth: Option<usize>,
     import_only: bool,
     ctx: &TraversalCtx<'_>,
-) -> Vec<graph::NodeEntry> {
+) -> Result<Vec<graph::NodeEntry>> {
     match direction {
         Direction::Deps => deps_entries(depth, import_only, roots, ctx),
         Direction::Dependents => dependents_entries(entrypoints, roots, depth, ctx),
@@ -87,7 +94,7 @@ fn dependents_entries(
     roots: &[NodeId],
     depth: Option<usize>,
     ctx: &TraversalCtx<'_>,
-) -> Vec<graph::NodeEntry> {
+) -> Result<Vec<graph::NodeEntry>> {
     let any_symbol = entrypoints.iter().any(|e| e.symbol.is_some());
     if ctx.symbols {
         let graph = graph::DepGraph::build_with_plan_and_files(
@@ -95,10 +102,10 @@ fn dependents_entries(
             ctx.tsconfig,
             ctx.build_plan,
             ctx.graph_files,
-        );
+        )?;
         let roots = roots_with_existing_queue_jobs(roots, entrypoints, &graph);
         let roots = roots_with_exported_symbol_roots(&roots, &graph);
-        return graph.dependents_of_symbol_nodes(&roots, depth, ctx.allowed);
+        return Ok(graph.dependents_of_symbol_nodes(&roots, depth, ctx.allowed));
     }
     let symbol_facts = any_symbol.then(|| {
         let mut fact_plan = ctx.build_plan.ts_fact_plan();
@@ -111,22 +118,22 @@ fn dependents_entries(
             &fact_context,
         )
     });
-    let graph = build_dependents_graph(ctx, symbol_facts.as_ref());
+    let graph = build_dependents_graph(ctx, symbol_facts.as_ref())?;
     if any_symbol {
         let facts = symbol_facts
             .as_ref()
             .expect("symbol facts are collected for symbol queries");
         let symbol_index =
             graph::SymbolIndex::build_from_facts(ctx.tsconfig, ctx.graph_files, facts);
-        resolve_symbol_dependents(
+        Ok(resolve_symbol_dependents(
             ctx.root,
             entrypoints,
             depth,
             ctx.allowed,
             &graph,
             &symbol_index,
-        )
+        ))
     } else {
-        graph.dependents_of(roots, depth, ctx.allowed)
+        Ok(graph.dependents_of(roots, depth, ctx.allowed))
     }
 }

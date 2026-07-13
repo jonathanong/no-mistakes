@@ -160,6 +160,7 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
         EdgeKind::Import
         | EdgeKind::TypeImport
         | EdgeKind::DynamicImport
+        | EdgeKind::RouteImport
         | EdgeKind::Require
         | EdgeKind::WorkspaceImport => "dependency",
         EdgeKind::PackageDependency => "package-json dependency",

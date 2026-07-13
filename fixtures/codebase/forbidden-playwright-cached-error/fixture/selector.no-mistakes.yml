@@ -1,0 +1,15 @@
+tests:
+  playwright:
+    frontendRoot: web/app
+    selectorRoots:
+      - web/app
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots:
+        - tests/e2e/selector.spec.ts
+      forbiddenFiles:
+        - web/app/danger-button.tsx
+      relationships:
+        - test

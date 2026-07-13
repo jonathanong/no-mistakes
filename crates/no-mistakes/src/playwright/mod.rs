@@ -11,6 +11,7 @@ mod routes;
 mod rule_findings;
 pub mod rules;
 pub mod selectors;
+pub(crate) mod test_file_occurrences;
 #[cfg(test)]
 mod test_support;
 #[cfg(test)]

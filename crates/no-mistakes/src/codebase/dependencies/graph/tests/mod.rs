@@ -21,6 +21,7 @@ fn package_name_from_spec(spec: &str) -> &str {
 }
 
 include!("core.rs");
+include!("route_import.rs");
 include!("extra_cases.rs");
 include!("extra_playwright_routes.rs");
 include!("extra_selector.rs");
@@ -29,3 +30,6 @@ include!("extra_symbol_defensive.rs");
 include!("extra_symbol_helpers.rs");
 include!("extra_symbol.rs");
 include!("types.rs");
+
+mod selector_fact_plan;
+mod selector_optimization;

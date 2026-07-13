@@ -2,6 +2,7 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct GraphBuildPlan {
     pub imports: bool,
+    pub route_imports: bool,
     pub workspace: bool,
     pub package: bool,
     pub tests: bool,
@@ -26,6 +27,10 @@ impl GraphBuildPlan {
     pub fn all() -> Self {
         Self {
             imports: true,
+            // RouteImport is an alternate, deliberately conservative import
+            // view. Legacy unfiltered traversal must opt in by name instead
+            // of unioning it with ordinary call-pruned imports.
+            route_imports: false,
             workspace: true,
             package: true,
             tests: true,
@@ -43,6 +48,18 @@ impl GraphBuildPlan {
             dotnet: true,
             swift: true,
             terraform: true,
+        }
+    }
+
+    /// Full test-impact graph without conservative route-import reachability.
+    ///
+    /// Playwright selector analysis still uses route-import edges internally,
+    /// but generic test impact must retain ordinary call-scope pruning so an
+    /// import in a never-called loader does not select unrelated tests.
+    pub fn test_impact() -> Self {
+        Self {
+            route_imports: false,
+            ..Self::all()
         }
     }
 
@@ -64,6 +81,7 @@ impl GraphBuildPlan {
                 || allowed.contains(&EdgeKind::TypeImport)
                 || allowed.contains(&EdgeKind::DynamicImport)
                 || allowed.contains(&EdgeKind::Require),
+            route_imports: allowed.contains(&EdgeKind::RouteImport),
             workspace: allowed.contains(&EdgeKind::WorkspaceImport),
             package: allowed.contains(&EdgeKind::PackageDependency),
             tests: allowed.contains(&EdgeKind::TestOf),
@@ -94,6 +112,7 @@ impl GraphBuildPlan {
 
     pub(crate) fn include(&mut self, other: Self) {
         self.imports |= other.imports;
+        self.route_imports |= other.route_imports;
         self.workspace |= other.workspace;
         self.package |= other.package;
         self.tests |= other.tests;
@@ -120,7 +139,10 @@ impl GraphBuildPlan {
 
     pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
         TsFactPlan {
-            imports: self.imports || self.workspace || self.assets,
+            imports: self.imports
+                || self.route_imports
+                || self.workspace
+                || self.assets,
             function_calls: self.imports || self.workspace || self.assets || self.symbols,
             symbols: self.symbols || self.queues,
             react: self.react,

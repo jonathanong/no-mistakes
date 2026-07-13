@@ -28,6 +28,12 @@ const other = await import(moduleName);          // NOT tracked
 
 **Workaround for non-literals:** `rg "import\\(" src/` to find call sites.
 
+`--relationship route-import` uses the same literal-only resolution, but is
+more conservative about execution: it retains literal dynamic imports inside
+functions even when the ordinary import graph cannot prove that the function
+is called. It also includes runtime static imports/re-exports and excludes
+type-only imports and `require()`.
+
 ## CJS require()
 
 String-literal `require("...")` calls are tracked as `require` edges under `--relationship import`. Non-literal calls are not resolved.

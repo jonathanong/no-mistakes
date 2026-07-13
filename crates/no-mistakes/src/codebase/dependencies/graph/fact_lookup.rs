@@ -7,6 +7,18 @@
 pub(crate) trait TsFactLookup: Sync {
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts>;
 
+    /// Whether every returned TS fact was collected with at least this plan.
+    /// A false result makes graph construction fill from source instead of
+    /// mistaking present-but-empty sparse facts for complete import facts.
+    fn covers_ts_fact_plan(&self, _required: TsFactPlan) -> bool {
+        false
+    }
+
+    /// Complete pre-discovered file universe associated with these facts.
+    fn graph_files(&self) -> Option<&[PathBuf]> {
+        None
+    }
+
     /// Already-collected Playwright test-file facts (URLs, selectors, text
     /// locators, helper references), when available. Lets a consumer skip
     /// re-parsing/re-analyzing a test file it already has facts for.
@@ -17,6 +29,13 @@ pub(crate) trait TsFactLookup: Sync {
         &self,
         _path: &Path,
     ) -> Option<&crate::codebase::check_facts::PlaywrightTestFacts> {
+        None
+    }
+
+    /// A cached parser diagnostic for a Playwright test file. Implementations
+    /// that do not retain test parse failures return `None` and callers fall
+    /// back to parsing the file normally.
+    fn get_playwright_parse_error(&self, _path: &Path) -> Option<&str> {
         None
     }
 
@@ -78,6 +97,8 @@ pub(crate) trait TsFactLookup: Sync {
     }
 }
 
+include!("fact_lookup_fallback.rs");
+
 /// `app_file` → set of test-reachable source files that can navigate to it.
 /// Named here (rather than inlined) because both the trait above and
 /// `CheckFactMap`'s cache field need to name the exact same type.
@@ -87,11 +108,25 @@ impl TsFactLookup for TsFactMap {
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
         self.get(path)
     }
+
+    fn covers_ts_fact_plan(&self, required: TsFactPlan) -> bool {
+        self.plan().covers(required)
+    }
 }
 
 impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
         self.ts.get(path).map(|facts| &facts.ts)
+    }
+
+
+    fn covers_ts_fact_plan(&self, required: TsFactPlan) -> bool {
+        self.graph_plan().covers(required)
+    }
+
+    fn graph_files(&self) -> Option<&[PathBuf]> {
+        self.graph_files_complete
+            .then_some(self.graph_files.as_slice())
     }
 
     fn get_playwright_facts(
@@ -101,6 +136,12 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
         self.ts
             .get(path)
             .and_then(|facts| facts.playwright.as_ref())
+    }
+
+    fn get_playwright_parse_error(&self, path: &Path) -> Option<&str> {
+        self.ts
+            .get(path)
+            .and_then(|facts| facts.parse_error.as_deref())
     }
 
     fn get_or_compute_app_selector_occurrences(

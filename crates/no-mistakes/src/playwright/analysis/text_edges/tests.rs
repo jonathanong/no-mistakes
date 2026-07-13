@@ -1,10 +1,36 @@
 use super::*;
-use crate::playwright::analysis::context::{RouteIndex, SelectorIndex, TestAnalysisContext};
 use crate::playwright::analysis::text_types::AppTextKind;
 use crate::playwright::analysis::types::SelectorRef;
 use crate::playwright::playwright_tests::TestOccurrenceScope;
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::Path;
+
+fn route_signal_matches_test(
+    route_test_name: &Option<Arc<String>>,
+    route_describe_path: &Arc<Vec<String>>,
+    route_is_hook: bool,
+    test_name: &Option<Arc<String>>,
+    describe_path: &Arc<Vec<String>>,
+    locator_scope: TestOccurrenceScope,
+) -> bool {
+    let edge = Edge::Route {
+        test_file: Arc::new("tests/app.spec.ts".to_string()),
+        test_name: route_test_name.clone(),
+        describe_path: route_describe_path.clone(),
+        route_file: Arc::new("web/app/page.tsx".to_string()),
+        route: Arc::new("/".to_string()),
+        url: Arc::new("/".to_string()),
+        hook: route_is_hook,
+        line: 1,
+    };
+    route_signal_matches_locator(
+        &edge,
+        "tests/app.spec.ts",
+        test_name.as_deref().map(String::as_str),
+        describe_path,
+        locator_scope,
+        u32::MAX,
+    )
+}
 
 fn text_target(kind: AppTextKind, text: &str, role: Option<&str>, hidden: bool) -> AppTextTarget {
     AppTextTarget {
@@ -148,6 +174,53 @@ fn hook_route_signal_matches_unnamed_test_callbacks() {
 }
 
 #[test]
+fn route_reachability_demand_scope_matches_final_route_reason_scope() {
+    let test_file = Arc::new("tests/app.spec.ts".to_string());
+    let route_file = Arc::new("web/app/page.tsx".to_string());
+    let route = |test_name: Option<&str>, describe_path: &[&str], hook, line| Edge::Route {
+        test_file: test_file.clone(),
+        test_name: test_name.map(|name| Arc::new(name.to_string())),
+        describe_path: Arc::new(describe_path.iter().map(|part| part.to_string()).collect()),
+        route_file: route_file.clone(),
+        route: Arc::new("/".to_string()),
+        url: Arc::new("/".to_string()),
+        hook,
+        line,
+    };
+    let describe_path = vec!["suite".to_string(), "nested".to_string()];
+    let cases = [
+        (
+            route(Some("uses text"), &["suite", "nested"], false, 5),
+            true,
+        ),
+        (
+            route(Some("sibling"), &["suite", "nested"], false, 5),
+            false,
+        ),
+        (
+            route(Some("uses text"), &["suite", "nested"], false, 11),
+            false,
+        ),
+        // beforeEach hooks apply to nested describes regardless of declaration order.
+        (route(None, &["suite"], true, 11), true),
+    ];
+
+    for (edge, expected) in cases {
+        assert_eq!(
+            route_signal_matches_locator(
+                &edge,
+                "tests/app.spec.ts",
+                Some("uses text"),
+                &describe_path,
+                TestOccurrenceScope::Test,
+                10,
+            ),
+            expected,
+        );
+    }
+}
+
+#[test]
 fn adjacent_selector_signal_only_uses_preceding_selectors() {
     let test_file = Arc::new("tests/app.spec.ts".to_string());
     let test_name = Some(Arc::new("uses text locator".to_string()));
@@ -179,16 +252,22 @@ fn adjacent_selector_signal_only_uses_preceding_selectors() {
     assert!(has_adjacent_selector_signal(
         &[selector(10)],
         &test_file,
-        &test_name,
-        &describe_path,
+        &LocatorTestScope {
+            test_name: test_name.as_deref().map(String::as_str),
+            describe_path: &describe_path,
+            scope: TestOccurrenceScope::Test,
+        },
         15,
         &app_text,
     ));
     assert!(!has_adjacent_selector_signal(
         &[selector(16)],
         &test_file,
-        &test_name,
-        &describe_path,
+        &LocatorTestScope {
+            test_name: test_name.as_deref().map(String::as_str),
+            describe_path: &describe_path,
+            scope: TestOccurrenceScope::Test,
+        },
         15,
         &app_text,
     ));
@@ -197,7 +276,6 @@ fn adjacent_selector_signal_only_uses_preceding_selectors() {
 #[test]
 fn adjacent_selector_signal_rejects_file_scope_pairs() {
     let test_file = Arc::new("tests/app.spec.ts".to_string());
-    let test_name = None;
     let describe_path = Arc::new(vec![]);
     let app_file = Arc::new("web/app/page.tsx".to_string());
     let app_text = AppTextTarget {
@@ -226,8 +304,11 @@ fn adjacent_selector_signal_rejects_file_scope_pairs() {
     assert!(!has_adjacent_selector_signal(
         &[selector],
         &test_file,
-        &test_name,
-        &describe_path,
+        &LocatorTestScope {
+            test_name: None,
+            describe_path: &describe_path,
+            scope: TestOccurrenceScope::File,
+        },
         15,
         &app_text,
     ));
@@ -252,25 +333,18 @@ fn hook_route_signal_ignores_declaration_line_order() {
     };
     let mut reachable = BTreeMap::new();
     reachable.insert(route_file.clone(), BTreeSet::from([app_file.clone()]));
-    let route_index = RouteIndex::default();
-    let selector_index = SelectorIndex::default();
-    let selector_regexes =
-        crate::playwright::selectors::compile_selector_regexes(&[], &Default::default());
-    let context = TestAnalysisContext {
-        root: Path::new("/repo"),
-        route_index: &route_index,
-        app_selector_targets: &[],
-        selector_index: &selector_index,
-        app_text_targets: &[],
+    let targets = std::slice::from_ref(&app_text);
+    let index = AppTextIndex::new(targets);
+    let context = TextEdgeContext {
+        app_text_targets: targets,
+        app_text_index: &index,
         route_reachable_files: &reachable,
-        navigation_helpers: &[],
-        selector_regexes: &selector_regexes,
         test_policy: crate::playwright::playwright_tests::TestPolicy::default(),
     };
     let locator_test_name = Some(Arc::new("uses text locator".to_string()));
     let locator_describe_path = Arc::new(vec!["suite".to_string()]);
     let scope = LocatorTestScope {
-        test_name: &locator_test_name,
+        test_name: locator_test_name.as_deref().map(String::as_str),
         describe_path: &locator_describe_path,
         scope: TestOccurrenceScope::Test,
     };
@@ -319,20 +393,13 @@ fn teardown_text_locators_do_not_create_text_edges() {
             value: "cleanup".to_string(),
         }],
     };
-    let route_index = RouteIndex::default();
-    let selector_index = SelectorIndex::default();
     let reachable = BTreeMap::new();
-    let selector_regexes =
-        crate::playwright::selectors::compile_selector_regexes(&[], &Default::default());
-    let context = TestAnalysisContext {
-        root: Path::new("/repo"),
-        route_index: &route_index,
-        app_selector_targets: &[],
-        selector_index: &selector_index,
-        app_text_targets: std::slice::from_ref(&app_text),
+    let targets = std::slice::from_ref(&app_text);
+    let index = AppTextIndex::new(targets);
+    let context = TextEdgeContext {
+        app_text_targets: targets,
+        app_text_index: &index,
         route_reachable_files: &reachable,
-        navigation_helpers: &[],
-        selector_regexes: &selector_regexes,
         test_policy: crate::playwright::playwright_tests::TestPolicy::default(),
     };
     let mut edges = vec![Edge::Selector {
@@ -359,7 +426,7 @@ fn teardown_text_locators_do_not_create_text_edges() {
         &test_file,
         &["data-pw".to_string()],
         &context,
-        vec![crate::playwright::playwright_tests::TestOccurrence {
+        &[crate::playwright::playwright_tests::TestOccurrence {
             value: locator,
             status: crate::playwright::playwright_tests::TestStatus::Active,
             scope: TestOccurrenceScope::TeardownHook,
@@ -415,11 +482,18 @@ fn app_text_index_filters_exact_and_fuzzy_candidates_by_kind_role() {
         exact: true,
         include_hidden: false,
     };
+    let missing = PlaywrightTextLocator {
+        kind: crate::playwright::analysis::text_types::LocatorKind::Text,
+        role: None,
+        text: "Missing".to_string(),
+        locator: "getByText(Missing)".to_string(),
+        exact: true,
+        include_hidden: false,
+    };
 
-    assert_eq!(index.candidates(&exact).len(), 1);
-    assert_eq!(index.candidates(&fuzzy).len(), 1);
-    assert_eq!(index.candidates(&fuzzy)[0].text, "Save now");
-    assert_eq!(index.candidates(&label).len(), 1);
-    assert_eq!(index.candidates(&label)[0].text, "Email");
+    assert_eq!(index.candidates(&exact), &[0]);
+    assert_eq!(index.candidates(&fuzzy), &[2]);
+    assert_eq!(index.candidates(&label), &[3]);
     assert!(index.candidates(&role_without_name).is_empty());
+    assert!(index.candidates(&missing).is_empty());
 }

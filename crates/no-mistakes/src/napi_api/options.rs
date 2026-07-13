@@ -119,6 +119,7 @@ pub(crate) fn parse_relationship(value: &str) -> AnyhowResult<RelationshipArg> {
         "import-dynamic" => Ok(RelationshipArg::ImportDynamic),
         "import-type" => Ok(RelationshipArg::ImportType),
         "import-require" => Ok(RelationshipArg::ImportRequire),
+        "route-import" => Ok(RelationshipArg::RouteImport),
         "workspace" => Ok(RelationshipArg::Workspace),
         "package" => Ok(RelationshipArg::Package),
         "test" => Ok(RelationshipArg::Test),

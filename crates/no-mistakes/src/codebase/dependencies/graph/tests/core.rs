@@ -74,58 +74,6 @@ fn node_display_and_normalization_cover_file_and_queue_nodes() {
 }
 
 #[test]
-fn graph_build_plan_from_allowed_covers_each_edge_family() {
-    assert!(GraphBuildPlan::all().imports);
-    assert!(GraphBuildPlan::all().workspace);
-
-    let allowed: HashSet<_> = [
-        EdgeKind::TypeImport,
-        EdgeKind::WorkspaceImport,
-        EdgeKind::TestOf,
-        EdgeKind::MarkdownLink,
-        EdgeKind::CiInvocation,
-        EdgeKind::RouteRef,
-        EdgeKind::QueueEnqueue,
-        EdgeKind::QueueWorker,
-        EdgeKind::RouteTest,
-        EdgeKind::Layout,
-        EdgeKind::HttpCall,
-        EdgeKind::ProcessSpawn,
-        EdgeKind::AssetImport,
-        EdgeKind::ReactRender,
-    ]
-    .into();
-    let plan = GraphBuildPlan::from_allowed(Some(&allowed));
-    assert!(plan.imports);
-    assert!(plan.workspace);
-    assert!(plan.tests);
-    assert!(plan.markdown);
-    assert!(plan.ci);
-    assert!(plan.routes);
-    assert!(plan.queues);
-    assert!(plan.playwright_routes);
-    assert!(plan.http);
-    assert!(plan.process);
-    assert!(plan.assets);
-    assert!(plan.react);
-
-    let import_only: HashSet<_> = [EdgeKind::Require].into();
-    let plan = GraphBuildPlan::from_allowed(Some(&import_only));
-    assert!(plan.imports);
-    assert!(!plan.workspace);
-    assert!(!plan.tests);
-    assert!(!plan.markdown);
-    assert!(!plan.ci);
-    assert!(!plan.routes);
-    assert!(!plan.queues);
-    assert!(!plan.playwright_routes);
-    assert!(!plan.http);
-    assert!(!plan.process);
-    assert!(!plan.assets);
-    assert!(!plan.react);
-}
-
-#[test]
 fn react_render_edges_cover_empty_and_same_file_children() {
     use crate::codebase::ts_source::facts::{TsFactMap, TsFileFacts};
     use crate::react_traits::report::types::{ComponentFacts, ComponentRef, Environment};

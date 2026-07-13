@@ -94,6 +94,36 @@ fn collect_ts_facts_can_include_source_without_domain_context() {
 }
 
 #[test]
+fn collected_fact_map_retains_its_plan_and_read_errors() {
+    let missing = fixture("missing.ts");
+    let plan = TsFactPlan::imports();
+    let facts = collect_ts_facts(std::slice::from_ref(&missing), plan);
+
+    assert!(facts.plan().covers(plan));
+    assert!(facts[&missing]
+        .parse_error
+        .as_deref()
+        .is_some_and(|error| error.contains("failed to read")));
+}
+
+#[test]
+fn fact_map_supports_hash_map_compatible_iteration() {
+    let path = fixture("imports.ts");
+    let mut facts = TsFactMap::new();
+    facts.insert(path.clone(), TsFileFacts::default());
+
+    assert_eq!((&facts).into_iter().count(), 1);
+    for (_, file_facts) in &mut facts {
+        file_facts.source = Some("updated".to_string());
+    }
+
+    let entries = facts.into_iter().collect::<Vec<_>>();
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].0, path);
+    assert_eq!(entries[0].1.source.as_deref(), Some("updated"));
+}
+
+#[test]
 fn plan_empty_detection_tracks_all_flags() {
     assert!(TsFactPlan::default().is_empty());
 
@@ -188,15 +218,19 @@ fn queue_factory_context_without_glob_matches_all_paths() {
 }
 
 #[test]
-fn collect_ts_facts_skips_non_indexable_and_unreadable_files() {
+fn collect_ts_facts_skips_non_indexable_files_and_preserves_read_errors() {
     let ts = fixture("imports.ts");
     let txt = fixture("plain.txt");
     let missing = fixture("missing.ts");
-    let facts = collect_ts_facts(&[ts.clone(), txt, missing], TsFactPlan::imports());
+    let facts = collect_ts_facts(&[ts.clone(), txt, missing.clone()], TsFactPlan::imports());
 
-    assert_eq!(facts.len(), 1);
+    assert_eq!(facts.len(), 2);
     assert_eq!(facts[&ts].imports.len(), 1);
     assert!(facts[&ts].symbols.is_none());
+    assert!(facts[&missing]
+        .parse_error
+        .as_deref()
+        .is_some_and(|error| error.contains("failed to read")));
 }
 
 #[test]
@@ -230,8 +264,12 @@ fn collect_ts_facts_can_skip_import_collection() {
 #[test]
 fn collect_file_facts_falls_back_to_ts_source_type_for_unknown_extension() {
     let unknown = fixture("unknown-extension.source");
-    let facts = collect_file_facts(&unknown, TsFactPlan::imports(), &TsFactContext::default())
-        .expect("unknown extension fixture should still parse as TypeScript");
+    let facts = super::collect::collect_file_facts(
+        &unknown,
+        TsFactPlan::imports(),
+        &TsFactContext::default(),
+    )
+    .expect("unknown extension fixture should still parse as TypeScript");
 
     assert_eq!(facts.imports.len(), 1);
 }
