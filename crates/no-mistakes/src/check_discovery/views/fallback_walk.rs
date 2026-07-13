@@ -61,13 +61,8 @@ fn visible_entry(
     reopened_roots: &[PathBuf],
     reopened_suffixes: &[PathBuf],
 ) -> bool {
-    if entry.depth() == 0 {
-        return true;
-    }
     let path = entry.path();
-    let Ok(relative) = path.strip_prefix(root) else {
-        return false;
-    };
+    let relative = path.strip_prefix(root).unwrap_or(path);
     if !visible_hidden_path(relative) {
         return false;
     }
@@ -97,9 +92,7 @@ fn visible_hidden_path(relative: &Path) -> bool {
     let mut components = relative
         .components()
         .filter_map(|component| component.as_os_str().to_str());
-    let Some(first) = components.next() else {
-        return true;
-    };
+    let first = components.next().unwrap_or_default();
     if first == ".github" {
         return matches!(components.next(), None | Some("workflows"));
     }

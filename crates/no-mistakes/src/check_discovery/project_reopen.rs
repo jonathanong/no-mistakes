@@ -50,15 +50,16 @@ pub(super) fn unresolved_typed_reopen_suffixes(config: &NoMistakesConfig) -> Vec
         .iter()
         .filter(|rule| rule.enabled && !rule.include.is_empty())
     {
-        for project_name in &rule.projects {
-            let Some(project) = config.projects.get(project_name) else {
-                continue;
-            };
-            let rootless_typed = project.root.is_none()
-                && matches!(
-                    project.type_,
-                    Some(ProjectType::Nextjs | ProjectType::Remix | ProjectType::Vitejs)
-                );
+        for project in rule
+            .projects
+            .iter()
+            .filter_map(|project_name| config.projects.get(project_name))
+        {
+            let typed = matches!(
+                project.type_,
+                Some(ProjectType::Nextjs | ProjectType::Remix | ProjectType::Vitejs)
+            );
+            let rootless_typed = project.root.is_none() && typed;
             if !rootless_typed {
                 continue;
             }

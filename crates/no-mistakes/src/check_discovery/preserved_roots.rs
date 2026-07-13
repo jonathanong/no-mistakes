@@ -34,10 +34,11 @@ pub(super) fn include_patterns_by_base_with_inferred(
                 .entry(root.clone())
                 .or_default()
                 .push(include.clone());
-            for project_name in &rule.projects {
-                let Some(project) = config.projects.get(project_name) else {
-                    continue;
-                };
+            for project in rule
+                .projects
+                .iter()
+                .filter_map(|project_name| config.projects.get(project_name))
+            {
                 if let Some(project_root) = normalized_project_root(&root, project, inferred_roots)
                 {
                     patterns
@@ -88,10 +89,11 @@ fn collect_preserved_roots(
     let mut roots = Vec::new();
     for rule in config.rules.iter().filter(|rule| rule.enabled) {
         if rule.rule == no_mistakes::codebase::rules::FORBIDDEN_WORKSPACE_CLOSURE {
-            for project_name in &rule.projects {
-                let Some(project) = config.projects.get(project_name) else {
-                    continue;
-                };
+            for project in rule
+                .projects
+                .iter()
+                .filter_map(|project_name| config.projects.get(project_name))
+            {
                 if let Some(project_root) = normalized_project_root(root, project, inferred_roots) {
                     roots.push(project_root);
                 }
@@ -99,10 +101,11 @@ fn collect_preserved_roots(
         }
         for include in &rule.include {
             push_include(&mut roots, root, include);
-            for project_name in &rule.projects {
-                let Some(project) = config.projects.get(project_name) else {
-                    continue;
-                };
+            for project in rule
+                .projects
+                .iter()
+                .filter_map(|project_name| config.projects.get(project_name))
+            {
                 if let Some(project_root) = normalized_project_root(root, project, inferred_roots) {
                     push_include(&mut roots, &project_root, include);
                 }

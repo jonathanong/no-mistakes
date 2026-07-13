@@ -126,6 +126,19 @@ fn typed_project_root_resolution_uses_only_precomputed_file_universe() {
 }
 
 #[test]
+fn inferred_roots_classify_tracked_vite_config_content_once() {
+    let root = root_fixture("project-pattern-reopen");
+    let vite_root = root.join("vite-app");
+    let inferred = super::super::views::infer_project_roots_from_files(
+        &root,
+        &[vite_root.join("vite.config.ts")],
+    );
+
+    assert_eq!(inferred.remix, Some(None));
+    assert_eq!(inferred.vitejs, Some(Some(vite_root)));
+}
+
+#[test]
 fn fallback_universe_is_git_free_and_applies_ignore_aware_pruning() {
     let root = root_fixture("external-project-include");
     let config = load_config(&root);

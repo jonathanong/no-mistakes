@@ -72,10 +72,11 @@ fn unique_exports_project_roots_with_inferred(
         if rule.applies_to_repository() {
             roots.push(root.to_path_buf());
         }
-        for project_name in &rule.projects {
-            let Some(project) = config.projects.get(project_name) else {
-                continue;
-            };
+        for project in rule
+            .projects
+            .iter()
+            .filter_map(|project_name| config.projects.get(project_name))
+        {
             if let Some(project_root) = project_root(root, project, inferred_roots) {
                 roots.push(project_root);
             }
@@ -103,10 +104,11 @@ fn preserved_project_roots_with_inferred(
         if !has_project_include && !preserves_project_root {
             continue;
         }
-        for project_name in &rule.projects {
-            let Some(project) = config.projects.get(project_name) else {
-                continue;
-            };
+        for project in rule
+            .projects
+            .iter()
+            .filter_map(|project_name| config.projects.get(project_name))
+        {
             if let Some(project_root) = project_root(root, project, inferred_roots) {
                 roots.push(no_mistakes::codebase::ts_resolver::normalize_path(
                     &project_root,

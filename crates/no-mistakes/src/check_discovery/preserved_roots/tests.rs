@@ -73,12 +73,19 @@ fn literal_include_prefix_stops_before_brace_alternation() {
 fn include_preserved_roots_ignore_unknown_projects() {
     let root = PathBuf::from("/repo");
     let config = NoMistakesConfig {
-        rules: vec![no_mistakes::config::v2::schema::RuleDef {
-            rule: "test-email-domain-policy".to_string(),
-            projects: vec!["missing".to_string()],
-            include: vec!["fixtures/**".to_string()],
-            ..Default::default()
-        }],
+        rules: vec![
+            no_mistakes::config::v2::schema::RuleDef {
+                rule: "test-email-domain-policy".to_string(),
+                projects: vec!["missing".to_string()],
+                include: vec!["fixtures/**".to_string()],
+                ..Default::default()
+            },
+            no_mistakes::config::v2::schema::RuleDef {
+                rule: no_mistakes::codebase::rules::FORBIDDEN_WORKSPACE_CLOSURE.to_string(),
+                projects: vec!["missing".to_string()],
+                ..Default::default()
+            },
+        ],
         ..Default::default()
     };
 
