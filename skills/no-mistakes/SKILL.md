@@ -46,8 +46,9 @@ rerun after creating them):
 See `references/tests.md`.
 For high-signal multi-command workflows around UI selectors, selector-root
 expansion, named-export impact, workflow/static-analysis changes, diff test
-impact planning, API response-shape fanout, package entrypoints, and
-shared-helper dependent tests, see `references/impact-recipes.md`.
+impact planning, API response-shape fanout, package entrypoints,
+shared-helper dependent tests, deleting a test, and queue enqueue call
+disposition, see `references/impact-recipes.md`.
 
 ## Common Failure-Mode Recipes
 
@@ -108,7 +109,7 @@ scope the review and `rg` to inspect exact argument objects such as
 | Where is this function called, and with what argument shapes? | `no-mistakes call-sites <file> SYMBOL` |
 | Do all imports in this file resolve? | `no-mistakes resolve-check <file>` |
 | What must I update before changing this function signature? | `no-mistakes symbols <file> --mode signature-impact --symbol SYMBOL --format json` |
-| What multi-step recipe fits a UI selector, selector-root, named export, workflow/static-analysis, diff test impact, API-shape fanout, package entrypoint, or shared-helper test discovery question? | Read `references/impact-recipes.md` |
+| What multi-step recipe fits a UI selector, selector-root, named export, workflow/static-analysis, diff test impact, API-shape fanout, package entrypoint, shared-helper test discovery, test deletion, or queue call-disposition question? | Read `references/impact-recipes.md` |
 | Which tests should rerun for everything changed in a diff? | `no-mistakes tests plan vitest --from-git-diff <base>...<head> --format paths` |
 | Which tests should rerun? | `no-mistakes tests plan vitest --changed-file <file> --format paths` |
 | Which tests should rerun? (lower-level fallback) | `no-mistakes dependents <file> --test vitest --format paths` |
@@ -218,8 +219,9 @@ member usage.
 - `references/impact-recipes.md`: multi-command recipes for React selector
   impact, selector-root expansion, TS helper impact, workflow/static-analysis
   changes, diff test impact planning, API response-shape fanout audits,
-  package entrypoint/direct-subpath reports, and shared-helper dependent test
-  discovery.
+  package entrypoint/direct-subpath reports, shared-helper dependent test
+  discovery, pre-deletion test coverage checks, and queue enqueue
+  call-disposition audits.
 - `references/symbols.md`: full `symbols` reference.
 - `references/lightweight-queries.md`: full `importers`, `exports-of`,
   `dead-exports`, `call-sites`, and `resolve-check` reference.

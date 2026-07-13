@@ -36,10 +36,10 @@ Key flags:
 - `--changed-files <FILE>` — path to a file containing one changed path per line.
 - `--base <REF>` / `--head <REF>` — compute changed files from a git diff.
 - `--from-git-diff <BASE...HEAD>` — single-argument sugar for `--base`/`--head`;
-  desugars to the same `git diff --name-status <base>...<head>` lookup (three-dot
-  only — bare `<base>` and `<base>...` both default head to `HEAD`; two-dot
-  `<base>..<head>` is rejected since it compares a different baseline). Conflicts
-  with `--base`/`--head`.
+  desugars to the same `git diff --relative --name-status <base>...<head>` lookup
+  (three-dot only — bare `<base>` and `<base>...` both default head to `HEAD`;
+  two-dot `<base>..<head>` is rejected since it compares a different baseline).
+  Conflicts with `--base`/`--head`.
 - `--diff <FILE>` / `--diff-stdin` / `--diff-command <CMD>` — supply a diff
   directly.
 - `--entrypoint <FILE>` — treat a file as the root regardless of changes.
