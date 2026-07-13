@@ -161,6 +161,59 @@ fn route_import_edges_fill_present_but_sparse_check_facts() {
     }));
 }
 
+#[test]
+fn route_import_resolution_tolerates_missing_source_directories() {
+    // Keep this disk-missing source: it covers configured/external graph files
+    // disappearing between discovery and conservative edge construction.
+    let source = PathBuf::from("/no-mistakes-missing-route-import/source.ts");
+    let facts = TsFactMap::from([(
+        source.clone(),
+        TsFileFacts {
+            imports: vec![ExtractedImport {
+                specifier: "./target".to_string(),
+                kind: ImportKind::Static,
+                line: 1,
+                function_scope: None,
+                side_effect_only: true,
+                re_export: false,
+                runtime_reachable: false,
+            }],
+            ..TsFileFacts::default()
+        },
+    )]);
+    let graph_files = GraphFiles::from_files(vec![source.clone()]);
+    let tsconfig = TsConfig {
+        dir: PathBuf::from("/no-mistakes-missing-route-import"),
+        paths_dir: PathBuf::from("/no-mistakes-missing-route-import"),
+        ..TsConfig::default()
+    };
+
+    assert!(collect_route_import_edges(
+        std::slice::from_ref(&source),
+        &facts,
+        &tsconfig,
+        &graph_files,
+    )
+    .is_empty());
+    assert_eq!(
+        route_import_resolution_source(Path::new("/"), &Default::default()),
+        PathBuf::from("/")
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn route_import_resolution_tolerates_broken_source_symlink() {
+    // This tracked fixture must stay broken to exercise canonicalize failure.
+    let broken = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/tests-impact/fixture/broken.test.mts");
+
+    assert_eq!(
+        route_import_resolution_source(&broken, &Default::default()),
+        broken
+    );
+}
+
 #[cfg(unix)]
 #[test]
 fn route_import_resolution_uses_direct_symlink_target() {
