@@ -107,6 +107,7 @@ fn playwright_route_edges_use_app_root_and_filter_graph_files() {
             config,
             root.join(".no-mistakes.yml"),
         ],
+        None,
     );
     assert!(
         edges.contains(&(
@@ -118,13 +119,59 @@ fn playwright_route_edges_use_app_root_and_filter_graph_files() {
     );
     assert!(edges.contains(&(NodeId::File(page.clone()), NodeId::File(layout), EdgeKind::Layout)));
 
-    let filtered_edges =
-        collect_playwright_route_edges(&root, &[test_file, root.join(".no-mistakes.yml")]);
+    let filtered_edges = collect_playwright_route_edges(
+        &root,
+        &[test_file, root.join(".no-mistakes.yml")],
+        None,
+    );
     assert!(
         !filtered_edges.iter().any(|(_, target, kind)| {
             target == &NodeId::File(page.clone()) && *kind == EdgeKind::RouteTest
         }),
         "route edges should not introduce files outside the graph file set"
+    );
+}
+
+/// Regression test for the graph-edge/rule-pipeline route-scan duplication fixed in this
+/// change: `collect_playwright_route_edges` must resolve routes via the shared
+/// `facts.get_or_compute_playwright_routes` cache when a caller has one, not by
+/// independently re-collecting routes from disk. Asserts on a disagreement, not output
+/// equality (`crates/CLAUDE.md`: "assert on a call count, not value equality" / "construct a
+/// case where the two approaches would disagree") — pre-populates the shared cache with an
+/// empty route list, deliberately different from the real `web/app/page.tsx` route this
+/// fixture has on disk. A version that bypasses the cache would still find that real route and
+/// produce a `RouteTest` edge for it; a version that correctly shares the cache must see the
+/// pre-populated empty list and produce no edges at all.
+#[test]
+fn playwright_route_edges_reuse_shared_route_cache_instead_of_rescanning() {
+    use crate::codebase::check_facts::CheckFactMap;
+    use crate::codebase::dependencies::graph::TsFactLookup;
+
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("playwright-route-edges-v2"));
+    let test_file = root.join("tests/e2e/home.spec.ts");
+    let page = root.join("web/app/page.tsx");
+    let layout = root.join("web/app/layout.tsx");
+    let all_files = [
+        test_file,
+        page,
+        layout,
+        root.join("playwright.config.mts"),
+        root.join(".no-mistakes.yml"),
+    ];
+
+    let facts = CheckFactMap::default();
+    // Pre-populate the shared route cache with an empty list before the producer ever runs,
+    // so a correct implementation sees this stale-but-cached value instead of rescanning disk.
+    let prepopulated = facts.get_or_compute_playwright_routes(&Vec::new);
+    assert!(prepopulated.is_empty(), "sanity check on the pre-populated cache value");
+
+    let edges = collect_playwright_route_edges(&root, &all_files, Some(&facts));
+
+    assert!(
+        edges.is_empty(),
+        "expected no edges: the producer must have used the pre-populated (empty) shared \
+         route cache rather than independently rediscovering the real page.tsx route on disk, \
+         got {edges:?}"
     );
 }
 
@@ -156,7 +203,7 @@ fn playwright_route_edges_match_unresolved_interpolations_to_dynamic_segment() {
     ];
     all_files.extend(spec_files.iter().cloned());
 
-    let edges = collect_playwright_route_edges(&root, &all_files);
+    let edges = collect_playwright_route_edges(&root, &all_files, None);
 
     let dynamic_node = NodeId::File(dynamic_page);
     let literal_node = NodeId::File(literal_page);
@@ -184,7 +231,8 @@ fn playwright_route_edges_cover_defensive_config_errors() {
     ] {
         let root = crate::codebase::ts_resolver::normalize_path(&fixture(name));
         assert!(
-            collect_playwright_route_edges(&root, &[root.join("web/app/page.tsx")]).is_empty(),
+            collect_playwright_route_edges(&root, &[root.join("web/app/page.tsx")], None)
+                .is_empty(),
             "{name} should not produce route edges"
         );
     }
