@@ -297,13 +297,11 @@ tracing failure to work around.
 ## Before deleting a test
 
 Before deleting a `*.test.*` or `*.mock.test.*` file, confirm the behavior it
-asserts is still covered elsewhere and that nothing else becomes dead as a
-result:
+asserts is still covered elsewhere:
 
 ```bash
 no-mistakes dependents backend/services/urls/add-url.mts --test vitest --format paths
 no-mistakes tests impact backend/services/urls/add-url.mts --format paths
-no-mistakes dead-exports backend/services/urls/add-url.fixtures.mts --format json
 ```
 
 Read the results as:
@@ -314,9 +312,6 @@ Read the results as:
 - `tests impact FILE` returns impacted tests for a fixed changed-file set with
   no environment/limit/group config applied; compare it against
   `dependents --test` when the two disagree.
-- `dead-exports <test-only-helper>` flags a fixture, mock, or factory helper
-  that becomes unused once its only importing test is deleted, so it can be
-  removed in the same change instead of left as dead code.
 
 Then use `rg` for the behavior text and invariants that must survive the
 deletion:
@@ -327,9 +322,20 @@ rg -n 'expect\(|mockResolvedValue|vi\.mock|error message|branch|queue|enqueue' <
 
 If the deleted test is the direct behavioral owner of an assertion, add or
 identify a replacement — a sibling unit test or an integration/Playwright test —
-before removing it. `tests.md` covers how `tests plan` already treats a
-deleted test file as a changed file for diff-based planning; this recipe is
-for the deliberate "should I delete this" decision, not diff replay.
+before removing it. After deleting (or staging the deletion of) the test file,
+re-check any fixture, mock, or factory helper it imported:
+
+```bash
+no-mistakes dead-exports backend/services/urls/add-url.fixtures.mts --format json
+```
+
+Run `dead-exports` after the deletion, not before: it counts current import
+edges, and the doomed test file is itself still an importer until it is
+actually gone, so checking beforehand under-reports and misses a
+now-orphaned helper. A dead result means the helper should be removed in the
+same change. `tests.md` covers how `tests plan` already treats a deleted test
+file as a changed file for diff-based planning; this recipe is for the
+deliberate "should I delete this" decision, not diff replay.
 
 ## Queue enqueue call-disposition audit
 
@@ -353,17 +359,20 @@ Read the results as:
   (`enqueueEmail(...)`), not `ns.enqueueEmail()` or aliased indirection — see
   `lightweight-queries.md`.
 
-Then use `rg` on the returned callers to classify each call's disposition —
-awaited, returned, grouped in an awaited `Promise.all`, explicitly discarded
-with `void`, or left floating:
+Then classify every call site the `call-sites` JSON returned, not just the
+ones this regex matches — it only finds *handled* dispositions by
+construction, so a bare floating `enqueueEmail(...)` with no wrapper produces
+no match here and must be found by its absence, not its presence:
 
 ```bash
-rg -n 'await enqueueEmail|return enqueueEmail|void enqueueEmail|Promise\.all[^;]*enqueueEmail' backend web
+rg -n 'await enqueueEmail\(|return enqueueEmail\(|void enqueueEmail\(|Promise\.all[^;]*enqueueEmail\(' backend web
 ```
 
-The regex is a convenience, not authoritative: it can miss multiline or
-aliased calls and produce a false positive when a later expression shares the
-same statement as `Promise.all`. The
+Cross-reference this output against the full call-site list: any call site
+`call-sites` reported that this `rg` did not match is a floating-call
+candidate. The regex is a convenience, not authoritative beyond that: it can
+also miss multiline or aliased calls and produce a false positive when a
+later expression shares the same statement as `Promise.all`. The
 [`no-mistakes/async-call-disposition`](https://github.com/jonathanong/no-mistakes/blob/main/docs/eslint-rules/async-call-disposition.md)
 eslint rule enforces disposition going forward on configured enqueue APIs, but
 it is not a discovery graph — existing callers still need this manual pass.
