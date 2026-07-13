@@ -216,12 +216,8 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     }
 
     // 3. Build graph and test filter
-    let graph = DepGraph::build_with_plan(
-        root.as_path(),
-        &tsconfig,
-        no_mistakes::codebase::dependencies::graph::GraphBuildPlan::test_impact()
-            .with_symbols(args.include_symbols),
-    )?;
+    let graph =
+        crate::tests::build_test_impact_graph(root.as_path(), &tsconfig, args.include_symbols)?;
     let workspace_map = no_mistakes::codebase::workspaces::load(&root).unwrap_or_default();
     let test_filter = TestFileFilter::new(root.as_path(), &config);
 

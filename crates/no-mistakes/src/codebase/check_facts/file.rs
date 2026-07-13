@@ -70,13 +70,8 @@ pub(crate) fn collect_file_facts(
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, &source, source_type).parse();
     if parsed.panicked || !parsed.diagnostics.is_empty() {
-        let parse_error = match parsed.diagnostics.first() {
-            Some(error) => format!("parsing {}: {error:?}", path.display()),
-            None => format!(
-                "parsing {}: parser panicked without diagnostic details",
-                path.display()
-            ),
-        };
+        let parse_error =
+            crate::codebase::ts_source::format_parse_diagnostic(path, &parsed.diagnostics);
         let stored_source = should_store_source(plan).then_some(source.clone());
         let ts = super::file_parse_error::ts_facts(
             plan,

@@ -16,7 +16,6 @@ impl DepGraph {
         config_path: Option<&Path>,
         facts: Option<&dyn TsFactLookup>,
     ) -> Self {
-        let caller_facts = facts;
         let config_options = graph_config_options_for_plan_with_config(root, plan, config_path);
         let resolver = ImportResolver::new(tsconfig).with_visible(graph_files.visible());
         let fact_plan = effective_ts_fact_plan(plan, config_options.as_ref());
@@ -43,11 +42,13 @@ impl DepGraph {
             })
         });
         let fallback_lookup = facts.zip(fallback_facts.as_ref()).map(|(primary, fallback)| {
-            FallbackTsFactLookup {
+            FallbackTsFactLookup::new(
                 primary,
                 fallback,
-                prefer_fallback: !primary.covers_ts_fact_plan(fact_plan),
-            }
+                !primary.covers_ts_fact_plan(fact_plan),
+                graph_files.all(),
+                graph_files.visible(),
+            )
         });
         let facts: Option<&dyn TsFactLookup> = fallback_lookup
             .as_ref()
@@ -103,6 +104,7 @@ impl DepGraph {
             plan,
             graph_files,
             config_options: config_options.as_ref(),
+            config_path,
         };
         collect_and_merge_all_edges(
             &edge_inputs,
@@ -128,7 +130,7 @@ impl DepGraph {
                     root,
                     config_path,
                     &graph_files.all,
-                    caller_facts.or(facts),
+                    facts,
                     &graph,
                     tsconfig,
                 );

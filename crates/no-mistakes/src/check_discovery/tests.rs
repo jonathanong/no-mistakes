@@ -149,6 +149,141 @@ fn discover_check_files_preserves_included_fixture_roots() {
 }
 
 #[test]
+fn discover_check_file_views_derive_filesystem_scope_from_complete_universe() {
+    let root = fixture("check-discovery/include-preserved-roots");
+    let config = load_config(&root);
+    let expected_filesystem = discover_check_files(
+        &root,
+        &config,
+        &config.filesystem.skip_directories,
+        false,
+        None,
+    );
+    let expected_graph = discover_check_files(&root, &config, &[], false, None);
+
+    let views =
+        discover_check_file_views(&root, &config, &config.filesystem.skip_directories, false);
+
+    // The graph retains files beneath filesystem-only skips.
+    assert!(views
+        .graph
+        .iter()
+        .any(|path| path.ends_with("generated/fixtures/ignored-users.json")));
+    // The derived filesystem view still preserves explicit include roots.
+    assert!(views
+        .filesystem
+        .iter()
+        .any(|path| path.ends_with("fixtures/users.json")));
+    assert!(views
+        .filesystem
+        .iter()
+        .any(|path| path.ends_with("backend/fixtures/backend-users.json")));
+    assert!(!views
+        .filesystem
+        .iter()
+        .any(|path| path.ends_with("generated/fixtures/ignored-users.json")));
+    assert_eq!(views.filesystem, expected_filesystem);
+    assert_eq!(views.graph, expected_graph);
+}
+
+#[test]
+fn discover_check_file_views_fall_back_outside_git() {
+    let root = fixture("check-discovery/include-preserved-roots");
+    let config = load_config(&root);
+    let expected_filesystem = discover_check_files(
+        &root,
+        &config,
+        &config.filesystem.skip_directories,
+        false,
+        None,
+    );
+    let expected_graph = discover_check_files(&root, &config, &[], false, None);
+
+    let views = super::views::discover_check_file_views_from_git_files(
+        &root,
+        &config,
+        &config.filesystem.skip_directories,
+        false,
+        None,
+    );
+
+    assert_eq!(views.filesystem, expected_filesystem);
+    assert_eq!(views.graph, expected_graph);
+}
+
+#[test]
+fn external_project_discovery_falls_back_to_gitignore_aware_walk() {
+    let root = fixture("check-discovery/include-preserved-roots");
+    let expected = no_mistakes::codebase::ts_source::walk_files(&root, &[]);
+
+    let files = super::views::complete_project_files_from_git(&root, None);
+
+    assert_eq!(files, expected);
+}
+
+#[test]
+fn discover_check_file_views_preserve_unique_export_project_scope() {
+    let root = fixture("check-discovery/unique-exports-under-skipped-root");
+    let config = load_config(&root);
+
+    let views =
+        discover_check_file_views(&root, &config, &config.filesystem.skip_directories, true);
+
+    assert!(views
+        .filesystem
+        .iter()
+        .any(|path| path.ends_with("fixtures/app/src/index.ts")));
+    assert!(!views
+        .filesystem
+        .iter()
+        .any(|path| path.ends_with("fixtures/app/generated/skipped.ts")));
+    assert!(views
+        .graph
+        .iter()
+        .any(|path| path.ends_with("fixtures/app/generated/skipped.ts")));
+}
+
+#[test]
+fn discover_check_file_views_scope_normalized_external_unique_export_project() {
+    let root = fixture("check-discovery/unique-exports-external-project");
+    let config = load_config(&root);
+    let expected_filesystem = discover_check_files(
+        &root,
+        &config,
+        &config.filesystem.skip_directories,
+        true,
+        None,
+    );
+    let expected_graph = discover_check_files(&root, &config, &[], true, None);
+
+    let views =
+        discover_check_file_views(&root, &config, &config.filesystem.skip_directories, true);
+
+    assert_eq!(views.filesystem, expected_filesystem);
+    assert!(views
+        .filesystem
+        .iter()
+        .any(|path| path.ends_with("external-project/src/index.ts")));
+    assert!(!views
+        .filesystem
+        .iter()
+        .any(|path| path.ends_with("external-project/generated/skipped.ts")));
+    assert!(views
+        .graph
+        .iter()
+        .any(|path| path.ends_with("external-project/generated/skipped.ts")));
+    assert!(!views
+        .graph
+        .iter()
+        .any(|path| path.ends_with("unconfigured-project/leak.ts")));
+    assert!(!views
+        .graph
+        .iter()
+        .any(|path| path.ends_with("fixture/fixtures/unrelated.ts")));
+    assert_eq!(views.graph, expected_graph);
+}
+
+#[test]
 fn discover_check_files_preserves_forbidden_workspace_project_roots() {
     let root = fixture("rules/filesystem-dispatch/forbidden-workspace-project-root");
     let config = load_config(&root);

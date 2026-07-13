@@ -72,20 +72,231 @@ fn fact_lookup_defaults_and_sparse_fallback_are_complete() {
     let primary = TsFactMap::from([(primary_path.clone(), TsFileFacts::default())]);
     let fallback = TsFactMap::from([(fallback_path.clone(), TsFileFacts::default())]);
     let minimal = MinimalFacts(primary);
+    let graph_visible = HashSet::from([fallback_path.clone()]);
 
     assert!(!minimal.covers_ts_fact_plan(TsFactPlan::imports()));
     assert!(minimal.graph_files().is_none());
 
     for prefer_fallback in [false, true] {
-        let lookup = FallbackTsFactLookup {
-            primary: &minimal,
-            fallback: &fallback,
+        let lookup = FallbackTsFactLookup::new(
+            &minimal,
+            &fallback,
             prefer_fallback,
-        };
+            std::slice::from_ref(&fallback_path),
+            &graph_visible,
+        );
         assert!(lookup.get_ts_facts(&primary_path).is_some());
         assert!(lookup.get_ts_facts(&fallback_path).is_some());
         assert!(lookup.covers_ts_fact_plan(TsFactPlan::imports()));
+        assert_eq!(lookup.graph_files(), Some([fallback_path.clone()].as_slice()));
+        assert!(lookup.get_playwright_facts(&primary_path).is_none());
+        assert!(lookup
+            .get_or_compute_app_selector_occurrences(false, &|| Ok(Vec::new()))
+            .expect("selector occurrences compute")
+            .is_empty());
+        assert!(lookup
+            .get_or_compute_playwright_routes(&|| Vec::new())
+            .is_empty());
+        assert!(lookup
+            .get_or_compute_app_text_targets(&|| Ok(Vec::new()))
+            .expect("app text targets compute")
+            .is_empty());
+        assert!(lookup
+            .get_or_compute_route_reachable_files(&|| Ok(Default::default()))
+            .expect("route reachability computes")
+            .is_empty());
     }
+}
+
+#[test]
+fn graph_universe_comparison_rejects_duplicate_false_matches() {
+    assert!(!same_graph_universe(
+        &[p("/repo/a.ts"), p("/repo/a.ts")],
+        &HashSet::from([p("/repo/a.ts"), p("/repo/b.ts")]),
+    ));
+}
+
+#[test]
+fn sparse_fallback_preserves_check_fact_playwright_data_and_caches() {
+    use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts, PlaywrightTestFacts};
+    use std::cell::Cell;
+    use std::sync::Arc;
+
+    let primary_path = p("/repo/primary.ts");
+    let fallback_path = p("/repo/fallback.ts");
+    let mut primary = CheckFactMap {
+        files: vec![primary_path.clone(), fallback_path.clone()],
+        ..CheckFactMap::default()
+    };
+    primary.ts.insert(
+        primary_path.clone(),
+        CheckFileFacts {
+            playwright: Some(PlaywrightTestFacts {
+                urls: Vec::new(),
+                selectors: Vec::new(),
+                text_locators: Vec::new(),
+                helper_references: Vec::new(),
+            }),
+            ..CheckFileFacts::default()
+        },
+    );
+    let fallback = TsFactMap::from([(fallback_path.clone(), TsFileFacts::default())]);
+    let graph_files = [fallback_path.clone(), primary_path.clone()];
+    let graph_visible = HashSet::from(graph_files.clone());
+    let lookup = FallbackTsFactLookup::new(
+        &primary,
+        &fallback,
+        true,
+        &graph_files,
+        &graph_visible,
+    );
+
+    assert_eq!(lookup.graph_files(), Some(graph_files.as_slice()));
+    assert!(lookup.get_playwright_facts(&primary_path).is_some());
+    assert!(lookup.get_ts_facts(&fallback_path).is_some());
+
+    let selector_calls = Cell::new(0);
+    let selectors = || {
+        selector_calls.set(selector_calls.get() + 1);
+        Ok(Vec::new())
+    };
+    let first = lookup
+        .get_or_compute_app_selector_occurrences(false, &selectors)
+        .expect("selector occurrences compute");
+    let second = lookup
+        .get_or_compute_app_selector_occurrences(false, &selectors)
+        .expect("selector occurrences cache");
+    assert!(Arc::ptr_eq(&first, &second));
+    assert_eq!(selector_calls.get(), 1);
+
+    let route_calls = Cell::new(0);
+    let routes = || {
+        route_calls.set(route_calls.get() + 1);
+        Vec::new()
+    };
+    let first = lookup.get_or_compute_playwright_routes(&routes);
+    let second = lookup.get_or_compute_playwright_routes(&routes);
+    assert!(Arc::ptr_eq(&first, &second));
+    assert_eq!(route_calls.get(), 1);
+
+    let text_calls = Cell::new(0);
+    let text_targets = || {
+        text_calls.set(text_calls.get() + 1);
+        Ok(Vec::new())
+    };
+    let first = lookup
+        .get_or_compute_app_text_targets(&text_targets)
+        .expect("text targets compute");
+    let second = lookup
+        .get_or_compute_app_text_targets(&text_targets)
+        .expect("text targets cache");
+    assert!(Arc::ptr_eq(&first, &second));
+    assert_eq!(text_calls.get(), 1);
+
+    let reachability_calls = Cell::new(0);
+    let reachability = || {
+        reachability_calls.set(reachability_calls.get() + 1);
+        Ok(Default::default())
+    };
+    let first = lookup
+        .get_or_compute_route_reachable_files(&reachability)
+        .expect("route reachability compute");
+    let second = lookup
+        .get_or_compute_route_reachable_files(&reachability)
+        .expect("route reachability cache");
+    assert!(Arc::ptr_eq(&first, &second));
+    assert_eq!(reachability_calls.get(), 1);
+}
+
+#[test]
+fn sparse_fallback_isolates_playwright_caches_for_a_different_graph_universe() {
+    use crate::codebase::check_facts::CheckFactMap;
+    use std::cell::Cell;
+
+    let primary_path = p("/repo/primary.ts");
+    let graph_path = p("/repo/current-graph.ts");
+    let mut primary = CheckFactMap::default();
+    primary.files.push(primary_path);
+    let fallback = TsFactMap::from([(graph_path.clone(), TsFileFacts::default())]);
+    let graph_visible = HashSet::from([graph_path.clone()]);
+
+    let primary_selector_calls = Cell::new(0);
+    primary
+        .get_or_compute_app_selector_occurrences(false, &|| {
+            primary_selector_calls.set(primary_selector_calls.get() + 1);
+            Ok(Vec::new())
+        })
+        .expect("primary selectors compute");
+    let primary_route_calls = Cell::new(0);
+    primary.get_or_compute_playwright_routes(&|| {
+        primary_route_calls.set(primary_route_calls.get() + 1);
+        Vec::new()
+    });
+    let primary_text_calls = Cell::new(0);
+    primary
+        .get_or_compute_app_text_targets(&|| {
+            primary_text_calls.set(primary_text_calls.get() + 1);
+            Ok(Vec::new())
+        })
+        .expect("primary text targets compute");
+    let primary_reachability_calls = Cell::new(0);
+    primary
+        .get_or_compute_route_reachable_files(&|| {
+            primary_reachability_calls.set(primary_reachability_calls.get() + 1);
+            Ok(Default::default())
+        })
+        .expect("primary reachability computes");
+
+    let lookup = FallbackTsFactLookup::new(
+        &primary,
+        &fallback,
+        true,
+        std::slice::from_ref(&graph_path),
+        &graph_visible,
+    );
+    assert_eq!(lookup.graph_files(), Some([graph_path.clone()].as_slice()));
+
+    let selector_calls = Cell::new(0);
+    for _ in 0..2 {
+        lookup
+            .get_or_compute_app_selector_occurrences(false, &|| {
+                selector_calls.set(selector_calls.get() + 1);
+                Ok(Vec::new())
+            })
+            .expect("isolated selectors compute");
+    }
+    let route_calls = Cell::new(0);
+    for _ in 0..2 {
+        lookup.get_or_compute_playwright_routes(&|| {
+            route_calls.set(route_calls.get() + 1);
+            Vec::new()
+        });
+    }
+    let text_calls = Cell::new(0);
+    let reachability_calls = Cell::new(0);
+    for _ in 0..2 {
+        lookup
+            .get_or_compute_app_text_targets(&|| {
+                text_calls.set(text_calls.get() + 1);
+                Ok(Vec::new())
+            })
+            .expect("isolated text targets compute");
+        lookup
+            .get_or_compute_route_reachable_files(&|| {
+                reachability_calls.set(reachability_calls.get() + 1);
+                Ok(Default::default())
+            })
+            .expect("isolated reachability computes");
+    }
+
+    assert_eq!(selector_calls.get(), 2);
+    assert_eq!(route_calls.get(), 2);
+    assert_eq!(text_calls.get(), 2);
+    assert_eq!(reachability_calls.get(), 2);
+    assert_eq!(primary_selector_calls.get(), 1);
+    assert_eq!(primary_route_calls.get(), 1);
+    assert_eq!(primary_text_calls.get(), 1);
+    assert_eq!(primary_reachability_calls.get(), 1);
 }
 
 #[test]

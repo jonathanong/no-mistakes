@@ -233,6 +233,84 @@ fn collect_playwright_selector_edges_matches_with_and_without_shared_facts() {
     );
 }
 
+#[test]
+fn selector_analysis_reuses_matching_route_import_graph() {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    struct CountingFacts {
+        facts: TsFactMap,
+        graph_files: Vec<PathBuf>,
+        lookups: AtomicUsize,
+    }
+
+    impl TsFactLookup for CountingFacts {
+        fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
+            self.lookups.fetch_add(1, Ordering::Relaxed);
+            self.facts.get(path)
+        }
+
+        fn covers_ts_fact_plan(&self, required: TsFactPlan) -> bool {
+            self.facts.plan().covers(required)
+        }
+
+        fn graph_files(&self) -> Option<&[PathBuf]> {
+            Some(&self.graph_files)
+        }
+    }
+
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/nextjs-selectors/selector-text-locator/fixture")
+        .canonicalize()
+        .expect("fixture root resolves");
+    let settings = crate::playwright::config::load_settings(&root, None, &[], None)
+        .expect("Playwright settings load");
+    let tsconfig = crate::playwright::analysis::pipeline_setup::load_route_import_tsconfig(
+        &root, &settings,
+    )
+    .expect("route-import tsconfig loads");
+    let graph_files = GraphFiles::discover(&root).all().to_vec();
+    let facts = CountingFacts {
+        facts: collect_ts_facts(&graph_files, TsFactPlan::imports()),
+        graph_files: graph_files.clone(),
+        lookups: AtomicUsize::new(0),
+    };
+    let graph = crate::playwright::analysis::pipeline_setup::build_route_import_graph(
+        &root,
+        &settings,
+        Some(&facts),
+        &graph_files,
+    )
+    .expect("route-import graph builds");
+
+    facts.lookups.store(0, Ordering::Relaxed);
+    let matching = run_playwright_selector_analysis(
+        &root,
+        None,
+        Some(&facts),
+        Some(&graph),
+        Some(&tsconfig),
+    )
+    .expect("selector analysis reuses matching graph");
+    assert_eq!(facts.lookups.load(Ordering::Relaxed), 0);
+
+    let mut mismatched_tsconfig = tsconfig.clone();
+    mismatched_tsconfig.paths_dir = root.join("different-paths-root");
+    let mismatched = run_playwright_selector_analysis(
+        &root,
+        None,
+        Some(&facts),
+        Some(&graph),
+        Some(&mismatched_tsconfig),
+    )
+    .expect("selector analysis rebuilds mismatched graph");
+    assert!(facts.lookups.load(Ordering::Relaxed) > 0);
+
+    let matching_edges = selector_edges_from_analysis(&root, &graph_files, &matching);
+    let mismatched_edges = selector_edges_from_analysis(&root, &graph_files, &mismatched);
+    assert!(!matching_edges.is_empty());
+    assert_eq!(matching_edges, mismatched_edges);
+}
+
 /// Regression test: `collect_playwright_selector_edges` must resolve Playwright
 /// settings from the given `config_path`, not silently fall back to
 /// default-discovery. The fixture's default-discovered `.no-mistakes.yml`

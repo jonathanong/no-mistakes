@@ -17,6 +17,7 @@ fn collect_and_merge_all_edges(
     let plan = edge_inputs.plan;
     let graph_files = edge_inputs.graph_files;
     let config_options = edge_inputs.config_options;
+    let config_path = edge_inputs.config_path;
     let files = &graph_files.indexable;
 
     crate::perf_trace::trace("graph.imports", || {

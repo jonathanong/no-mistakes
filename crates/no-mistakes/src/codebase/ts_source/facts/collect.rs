@@ -50,13 +50,10 @@ pub(crate) fn collect_file_facts(
     let source_type = SourceType::from_path(path).unwrap_or_else(|_| SourceType::ts());
     let parsed = Parser::new(&allocator, &source, source_type).parse();
     let parse_error = if parsed.panicked || !parsed.diagnostics.is_empty() {
-        Some(match parsed.diagnostics.first() {
-            Some(error) => format!("parsing {}: {error:?}", path.display()),
-            None => format!(
-                "parsing {}: parser panicked without diagnostic details",
-                path.display()
-            ),
-        })
+        Some(crate::codebase::ts_source::format_parse_diagnostic(
+            path,
+            &parsed.diagnostics,
+        ))
     } else {
         None
     };

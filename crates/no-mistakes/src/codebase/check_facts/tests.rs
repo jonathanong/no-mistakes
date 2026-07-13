@@ -309,7 +309,10 @@ fn collect_check_facts_keeps_graph_files_out_of_shared_file_scope() {
     );
 
     assert_eq!(facts.files(), std::slice::from_ref(&scoped));
-    assert_eq!(facts.graph_files(), std::slice::from_ref(&graph_only));
+    assert_eq!(
+        facts.graph_file_universe(),
+        std::slice::from_ref(&graph_only)
+    );
     assert!(facts.ts.contains_key(&scoped));
     assert!(facts.ts.contains_key(&graph_only));
     let graph_only_facts = facts.ts.get(&graph_only).expect("graph-only facts");

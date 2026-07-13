@@ -90,32 +90,7 @@ pub(crate) trait TsFactLookup: Sync {
     }
 }
 
-/// Adds facts for files missing from a caller-provided sparse lookup while
-/// preserving the caller's app-wide Playwright memoization.
-struct FallbackTsFactLookup<'a> {
-    primary: &'a dyn TsFactLookup,
-    fallback: &'a TsFactMap,
-    prefer_fallback: bool,
-}
-
-impl TsFactLookup for FallbackTsFactLookup<'_> {
-    fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
-        if self.prefer_fallback {
-            self.fallback
-                .get(path)
-                .or_else(|| self.primary.get_ts_facts(path))
-        } else {
-            self.primary
-                .get_ts_facts(path)
-                .or_else(|| self.fallback.get(path))
-        }
-    }
-
-    fn covers_ts_fact_plan(&self, _required: TsFactPlan) -> bool {
-        true
-    }
-
-}
+include!("fact_lookup_fallback.rs");
 
 /// `app_file` → set of test-reachable source files that can navigate to it.
 /// Named here (rather than inlined) because both the trait above and
@@ -143,7 +118,7 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
     }
 
     fn graph_files(&self) -> Option<&[PathBuf]> {
-        Some(self.graph_files())
+        Some(self.graph_file_universe())
     }
 
     fn get_playwright_facts(

@@ -117,7 +117,7 @@ impl CheckFactMap {
         &self.files
     }
 
-    pub(crate) fn graph_files(&self) -> &[PathBuf] {
+    pub(crate) fn graph_file_universe(&self) -> &[PathBuf] {
         match self.graph_files.is_empty() {
             true => &self.files,
             false => &self.graph_files,

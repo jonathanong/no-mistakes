@@ -26,7 +26,7 @@ pub(crate) fn check_with_facts(
             plan,
             config_path,
         );
-    if required_graph_plan.is_empty() && shared.graph_files().is_empty() {
+    if required_graph_plan.is_empty() && shared.graph_file_universe().is_empty() {
         return super::check_with_config(root, config, config_path, tsconfig_path);
     }
     if shared.stats.parse_errors > 0 {
@@ -41,7 +41,7 @@ pub(crate) fn check_with_facts(
         root,
         &tsconfig,
         plan,
-        shared.graph_files().to_vec(),
+        shared.graph_file_universe().to_vec(),
         config_path,
         shared,
     );

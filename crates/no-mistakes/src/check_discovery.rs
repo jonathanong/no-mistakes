@@ -3,6 +3,9 @@ use preserved_roots::include_preserved_roots;
 use std::path::{Path, PathBuf};
 
 mod preserved_roots;
+mod views;
+
+pub(crate) use views::discover_check_file_views;
 
 /// Discovers files for `no-mistakes check`, optionally reusing a git-visible file
 /// list a caller already fetched via `git_visible_files` instead of spawning
@@ -67,6 +70,10 @@ fn unique_exports_project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<P
             }
         }
     }
+    let mut roots: Vec<_> = roots
+        .into_iter()
+        .map(|root| no_mistakes::codebase::ts_resolver::normalize_path(&root))
+        .collect();
     roots.sort();
     roots.dedup();
     roots

@@ -29,7 +29,7 @@ fn collect_route_import_edges(
         .filter_map(|(path, _)| path.parent().map(Path::to_path_buf))
         .collect::<std::collections::BTreeSet<_>>();
     let canonical_directories = source_directories
-        .into_iter()
+        .into_par_iter()
         .filter_map(|directory| match directory.canonicalize() {
             Ok(canonical) => Some((directory, canonical)),
             Err(_) => None,

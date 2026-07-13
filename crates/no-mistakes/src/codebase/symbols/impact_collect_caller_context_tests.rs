@@ -97,7 +97,7 @@ fn prepare_local_caller_context_never_rederives_its_supplied_inputs() {
             .join("../../test-cases/codebase-analysis/tests-impact-symbol/fixture"),
     );
 
-    let empty_facts: crate::codebase::ts_source::facts::TsFactMap = std::collections::HashMap::new();
+    let empty_facts = crate::codebase::ts_source::facts::TsFactMap::default();
     let context = prepare_local_caller_context(empty_facts, &[], &root);
 
     assert!(

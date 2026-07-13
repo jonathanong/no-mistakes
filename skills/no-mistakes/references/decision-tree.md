@@ -96,7 +96,7 @@ What are you trying to find?
 | `dotnet` | C# `using`/type reference/project reference edges |
 | `swift` | Swift import/type reference/SwiftPM target dependency edges |
 | `terraform` | Terraform/OpenTofu resource, module, and output reference edges |
-| `all` | All of the above (default) |
+| `all` | All standard relationships except the opt-in `route-import` relationship (default) |
 
 Repeatable — `--relationship import --relationship workspace` follows both kinds.
 

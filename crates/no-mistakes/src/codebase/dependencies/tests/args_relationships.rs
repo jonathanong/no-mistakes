@@ -35,6 +35,28 @@ fn all_keyword_returns_standard_edges() {
 }
 
 #[test]
+fn standard_edges_include_every_non_opt_in_relationship_mapping() {
+    use clap::ValueEnum as _;
+
+    let standard = relationship_filter(&[]).expect("default relationship set is explicit");
+    for relationship in RelationshipArg::value_variants()
+        .iter()
+        .copied()
+        .filter(|relationship| {
+            !matches!(relationship, RelationshipArg::RouteImport | RelationshipArg::All)
+        })
+    {
+        let edges = relationship_filter(&[relationship]).expect("relationship filter is explicit");
+        for edge in edges {
+            assert!(
+                standard.contains(&edge),
+                "{relationship:?} produces {edge:?}, missing from default relationships"
+            );
+        }
+    }
+}
+
+#[test]
 fn all_and_route_import_are_repeatable_or_filters_in_either_order() {
     for relationships in [
         [RelationshipArg::All, RelationshipArg::RouteImport],
