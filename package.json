@@ -27,14 +27,14 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@emnapi/core": "^1.11.1",
-    "@emnapi/runtime": "^1.11.1",
-    "@vitest/coverage-v8": "^4.1.9",
+    "@emnapi/core": "^1.11.2",
+    "@emnapi/runtime": "^1.11.2",
+    "@vitest/coverage-v8": "^4.1.10",
     "cspell": "^10.0.1",
     "eslint": "^10.6.0",
     "husky": "^9.1.7",
-    "oxfmt": "^0.56.0",
-    "oxlint": "^1.71.0",
+    "oxfmt": "^0.57.0",
+    "oxlint": "^1.72.0",
     "vitest": "^4.1.6"
   },
   "engines": {
