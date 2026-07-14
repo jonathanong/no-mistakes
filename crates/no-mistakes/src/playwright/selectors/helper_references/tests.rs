@@ -25,7 +25,11 @@ test('uses helper', async ({ page }) => {
         std::path::Path::new("helper.ts"),
         source,
         |program, source| {
-            extract_playwright_helper_reference_occurrences_from_program(program, source)
+            extract_playwright_helper_reference_occurrences_from_program(
+                program,
+                source,
+                &Default::default(),
+            )
         },
     )
     .expect("fixture should parse");
@@ -94,7 +98,11 @@ test.afterEach(async ({ page }) => {
         std::path::Path::new("helper-scopes.ts"),
         source,
         |program, source| {
-            extract_playwright_helper_reference_occurrences_from_program(program, source)
+            extract_playwright_helper_reference_occurrences_from_program(
+                program,
+                source,
+                &Default::default(),
+            )
         },
     )
     .expect("fixture should parse");

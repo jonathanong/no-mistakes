@@ -23,6 +23,7 @@ fn selector_occurrences_preserve_file_test_and_hook_scope() {
                 source,
                 &regexes,
                 &["data-testid".to_string()],
+                &[],
             )
         },
     )

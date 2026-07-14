@@ -17,6 +17,7 @@ pub struct Settings {
     pub ignore_routes: Vec<String>,
     pub rewrites: Vec<crate::config::v2::schema::RewriteRule>,
     pub navigation_helpers: Vec<String>,
+    pub selector_wrappers: Vec<crate::config::v2::schema::PlaywrightSelectorWrapper>,
     pub selector_attributes: Vec<String>,
     /// Explicit override for the `getByTestId(...)` attribute, from
     /// `tests.playwright.testIdAttribute`. Use this when the Playwright config's

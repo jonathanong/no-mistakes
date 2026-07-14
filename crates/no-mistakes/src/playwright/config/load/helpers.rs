@@ -40,6 +40,7 @@ fn is_v2_playwright_configured(playwright: &PlaywrightTestConfig) -> bool {
         || playwright.selectors.html_ids
         || !playwright.selectors.test_ids.is_empty()
         || !playwright.selectors.component_test_ids.is_empty()
+        || !playwright.selectors.wrappers.is_empty()
         || !playwright.selector_roots.is_empty()
         || !playwright.selector_include.is_empty()
         || !playwright.selector_exclude.is_empty()

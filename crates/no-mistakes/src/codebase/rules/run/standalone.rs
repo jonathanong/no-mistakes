@@ -33,6 +33,7 @@ pub(super) fn run_check(
         config_path,
         &config,
         Arc::clone(&snapshot),
+        Arc::new(prepared_tsconfig.clone()),
     )?;
     let graph_plan = rule_enabled(&config, FORBIDDEN_DEPENDENCIES)
         .then(|| forbidden_dependencies::graph_plan(&config))

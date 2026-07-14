@@ -24,6 +24,7 @@ pub(crate) use extract_app::extract_app_selectors_from_program_from_visible_defe
 pub use extract_app::extract_app_selectors_with_regexes;
 pub(crate) use extract_app::extract_app_selectors_with_regexes_from_visible;
 pub use extract_app::{collect_app_selectors, extract_app_selectors};
+pub(crate) use extract_playwright::extract_playwright_selector_occurrences_and_wrapper_calls_from_program;
 pub use extract_playwright::extract_playwright_selector_occurrences_from_program;
 pub(crate) use helper_references::extract_playwright_helper_reference_occurrences_from_program;
 pub use regex_mod::compile_selector_regexes;
@@ -131,6 +132,7 @@ pub fn extract_playwright_selectors(
             source,
             &regexes,
             test_id_attributes,
+            &[],
         )
         .into_iter()
         .map(|o| o.value)

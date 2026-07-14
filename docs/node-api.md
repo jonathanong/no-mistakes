@@ -64,6 +64,11 @@ const { analyzeProject, dependents, importUsages, symbols, testsPlan } = require
 | `ci env` | `ciEnv(options)` |
 | `impacted-checks` | `impactedChecks(options)` |
 
+The Playwright APIs load the same selector-wrapper configuration as the CLI.
+Configured wrapper calls therefore appear in `playwrightEdges()` and
+`analyzeProject()` through the existing selector-edge JSON shape; no separate
+Node option or result type is required.
+
 `testsPlan(options)` returns `fallback_triggered` and `fallback_reason` when a
 `dotnet` or `swift` plan has to fall back from native graph tracing to
 framework-scoped discovered tests.

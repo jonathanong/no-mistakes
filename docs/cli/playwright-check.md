@@ -9,10 +9,11 @@ no-mistakes playwright check --root . --json
 Use this when an agent changes pages, selectors, or tests and needs project-wide
 coverage validation.
 
-When an uncovered selector value is present only as a helper-wrapper argument,
-the diagnostic points at that wrapper call, but wrapper calls do not satisfy
-selector coverage. Inline a literal `getByTestId(...)` call or add explicit
-wrapper support.
+Configured selector wrappers satisfy coverage when their declared argument is
+a supported test-ID literal. Wrapper declarations live under
+`tests.playwright.selectors.wrappers` and identify the imported module, export,
+and zero-based argument index. Helper calls without a declaration remain hints
+and do not create coverage.
 
 Shared Playwright options are documented in [`playwright`](playwright.md).
 

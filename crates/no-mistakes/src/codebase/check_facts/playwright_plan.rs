@@ -6,7 +6,9 @@ use std::sync::Arc;
 
 mod files;
 mod merge;
+mod module_resolution;
 mod source;
+pub(crate) use module_resolution::PlaywrightModuleResolution;
 
 #[derive(Clone, Default)]
 pub struct PlaywrightFactPlan {
@@ -16,6 +18,7 @@ pub struct PlaywrightFactPlan {
     config_files: Arc<HashSet<PathBuf>>,
     source_plans: Vec<PlaywrightSourceFactPlan>,
     test_files_by_project: super::PlaywrightTestFilesByProject,
+    module_resolution: Option<Arc<PlaywrightModuleResolution>>,
 }
 
 #[derive(Clone)]
@@ -87,6 +90,7 @@ impl PlaywrightSettingsKey {
 pub(crate) struct PlaywrightFactSelection<'a> {
     pub(crate) path: PathBuf,
     pub(crate) navigation_helpers: &'a [String],
+    pub(crate) selector_wrappers: &'a [crate::config::v2::schema::PlaywrightSelectorWrapper],
     pub(crate) selector_attributes: &'a [String],
     pub(crate) component_selector_attributes: &'a BTreeMap<String, String>,
     pub(crate) html_ids: bool,
@@ -103,6 +107,7 @@ pub(crate) struct PlaywrightFileFactPlan {
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub(crate) struct PlaywrightOccurrenceKey {
     pub(crate) navigation_helpers: Vec<String>,
+    pub(crate) selector_wrappers: Vec<crate::config::v2::schema::PlaywrightSelectorWrapper>,
     pub(crate) selector_attributes: Vec<String>,
     pub(crate) component_selector_attributes: BTreeMap<String, String>,
     pub(crate) html_ids: bool,

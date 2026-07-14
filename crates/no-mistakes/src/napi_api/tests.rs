@@ -37,6 +37,14 @@ fn fixture(category: &str, name: &str) -> String {
     .to_string()
 }
 
+fn saved_fixture(path: &[&str]) -> String {
+    let mut root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures");
+    root.extend(path);
+    crate::codebase::ts_resolver::normalize_path(&root)
+        .display()
+        .to_string()
+}
+
 #[test]
 fn version_returns_crate_version() {
     assert_eq!(version_impl(), env!("CARGO_PKG_VERSION"));
@@ -292,34 +300,6 @@ fn playwright_json_exports_return_analyzer_reports() {
 }
 
 #[test]
-fn playwright_check_napi_parses_each_source_file_once() {
-    let source = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/parser-count/playwright"),
-    );
-    let fixture = crate::test_support::materialize_saved_fixture(&source);
-    let root = fixture.path().canonicalize().unwrap();
-
-    crate::ast::begin_parse_count(&root);
-    let output = playwright_check_json_impl(json!({ "root": root }).to_string()).unwrap();
-    let counts = crate::ast::finish_parse_count(&root);
-    let report: serde_json::Value = serde_json::from_str(&output).unwrap();
-    let expected = [
-        root.join("app/Widget.tsx"),
-        root.join("app/page.tsx"),
-        root.join("playwright.config.ts"),
-        root.join("playwright.helper.ts"),
-        root.join("tests/home.spec.ts"),
-    ];
-
-    assert_eq!(report["summary"]["totalRoutes"], 1);
-    assert_eq!(counts.len(), expected.len(), "{counts:?}");
-    assert!(counts.values().all(|count| *count == 1), "{counts:?}");
-    for file in expected {
-        assert_eq!(counts.get(&file), Some(&1), "{counts:?}");
-    }
-}
-
-#[test]
 fn queues_json_returns_project_report() {
     let options = json!({ "root": fixture_root("queue-dashboard/good") }).to_string();
     let output = queues_json_impl(options).unwrap();
@@ -562,6 +542,7 @@ fn relationship_parser_accepts_conservative_route_import_edges() {
 include!("tests_impact.rs");
 include!("tests_impact_fallback.rs");
 include!("tests_queries.rs");
+include!("tests_playwright.rs");
 
 mod check;
 mod ci;

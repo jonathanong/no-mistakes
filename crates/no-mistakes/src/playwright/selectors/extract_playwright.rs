@@ -1,34 +1,21 @@
-use super::call_shapes::{
-    callee_is_static_member_named, extract_get_by_test_id_call, selector_argument_literals,
-    selector_argument_mode,
-};
-use super::css::{extract_css_attribute_selectors, extract_css_id_selectors};
 use super::types::{PlaywrightSelector, SelectorRegexes};
-use crate::codebase::ts_source::byte_offset_to_line;
 use crate::playwright::playwright_tests;
-use oxc_ast_visit::Visit;
+use oxc_ast::ast::{ForStatement, ForStatementInit, ForStatementLeft, SwitchStatement};
+use oxc_ast_visit::walk;
+use std::collections::HashSet;
 
-pub fn extract_playwright_selector_occurrences_from_program(
-    program: &oxc_ast::ast::Program<'_>,
-    source: &str,
-    regexes: &SelectorRegexes,
-    test_id_attributes: &[String],
-) -> Vec<playwright_tests::TestOccurrence<PlaywrightSelector>> {
-    let mut visitor = PlaywrightSelectorVisitor {
-        source,
-        regexes,
-        test_id_attributes,
-        status: playwright_tests::TestStatus::Active,
-        annotation_status: playwright_tests::TestStatus::Active,
-        selectors: Vec::new(),
-        current_test_name: None,
-        current_scope: playwright_tests::TestOccurrenceScope::File,
-        describe_stack: Vec::new(),
-    };
-    visitor.visit_program(program);
-    playwright_tests::dedup_occurrences_by_identity(&mut visitor.selectors);
-    visitor.selectors
-}
+mod entry;
+mod shadow_bindings;
+mod visitor_calls;
+mod visitor_state;
+mod wrapper_bindings;
+pub(crate) use entry::extract_playwright_selector_occurrences_and_wrapper_calls_from_program;
+pub use entry::extract_playwright_selector_occurrences_from_program;
+use shadow_bindings::{
+    collect_binding_names, collect_direct_lexical_declarations,
+    collect_function_scope_declarations, collect_lexical_variable_names,
+};
+use wrapper_bindings::WrapperBindings;
 
 struct PlaywrightSelectorVisitor<'a, 'r> {
     source: &'a str,
@@ -40,93 +27,15 @@ struct PlaywrightSelectorVisitor<'a, 'r> {
     current_test_name: Option<String>,
     current_scope: playwright_tests::TestOccurrenceScope,
     describe_stack: Vec<String>,
+    wrapper_bindings: WrapperBindings,
+    wrapper_call_offsets: HashSet<u32>,
+    shadow_scopes: Vec<HashSet<String>>,
 }
 
 impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightSelectorVisitor<'a, '_> {
     fn visit_call_expression(&mut self, call: &oxc_ast::ast::CallExpression<'a>) {
-        if callee_is_static_member_named(&call.callee, "getByTestId") {
-            extract_get_by_test_id_call(
-                call,
-                self.source,
-                self.test_id_attributes,
-                &mut |selector| self.insert(selector, call.span.start),
-            );
-        } else if let Some(argument_mode) = selector_argument_mode(&call.callee) {
-            for selector in selector_argument_literals(call, self.source, argument_mode) {
-                extract_css_attribute_selectors(
-                    &selector,
-                    &self.regexes.playwright_attributes,
-                    &mut |selector| self.insert(selector, call.span.start),
-                );
-                if self.regexes.html_ids {
-                    extract_css_id_selectors(&selector, &mut |selector| {
-                        self.insert(selector, call.span.start)
-                    });
-                }
-            }
-        }
-
-        let traversal = playwright_tests::test_callback_traversal(call, self.annotation_status);
-        if let Some((callback_index, callback_status)) = traversal {
-            if let Some(describe) = playwright_tests::describe_name(call) {
-                self.describe_stack.push(describe);
-                for (index, argument) in call.arguments.iter().enumerate() {
-                    if index == callback_index {
-                        self.with_status(callback_status, |visitor| {
-                            visitor
-                                .with_annotation_scope(|visitor| visitor.visit_argument(argument));
-                        });
-                    } else {
-                        self.visit_argument(argument);
-                    }
-                }
-                self.describe_stack.pop();
-            } else {
-                let test_name = playwright_tests::test_callback_identity(call);
-                let previous_test_name = self.current_test_name.clone();
-                let previous_scope = self.current_scope;
-                self.current_test_name = test_name;
-                self.current_scope = playwright_tests::TestOccurrenceScope::Test;
-                for (index, argument) in call.arguments.iter().enumerate() {
-                    if index == callback_index {
-                        self.with_status(callback_status, |visitor| {
-                            visitor
-                                .with_annotation_scope(|visitor| visitor.visit_argument(argument));
-                        });
-                    } else {
-                        self.visit_argument(argument);
-                    }
-                }
-                self.current_test_name = previous_test_name;
-                self.current_scope = previous_scope;
-            }
-        } else {
-            let callback_index = playwright_tests::callback_argument_index(call);
-            if playwright_tests::annotation_status_for_call(call).is_some() {
-                self.apply_annotation_call(call);
-                for (index, argument) in call.arguments.iter().enumerate() {
-                    if Some(index) != callback_index {
-                        self.visit_argument(argument);
-                    }
-                }
-                return;
-            }
-            if let Some((callback_index, hook_kind)) = playwright_tests::hook_callback(call) {
-                let previous_scope = self.current_scope;
-                self.current_scope = match hook_kind {
-                    playwright_tests::HookKind::Setup => {
-                        playwright_tests::TestOccurrenceScope::Hook
-                    }
-                    playwright_tests::HookKind::Teardown => {
-                        playwright_tests::TestOccurrenceScope::TeardownHook
-                    }
-                };
-                self.visit_argument(&call.arguments[callback_index]);
-                self.current_scope = previous_scope;
-                return;
-            }
-            oxc_ast_visit::walk::walk_call_expression(self, call);
-        }
+        self.extract_call_selectors(call);
+        self.traverse_call(call);
     }
 
     fn visit_if_statement(&mut self, statement: &oxc_ast::ast::IfStatement<'a>) {
@@ -159,40 +68,110 @@ impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightSelectorVisitor<'a, '_> {
             visitor.visit_expression(&expression.right)
         });
     }
-}
 
-impl PlaywrightSelectorVisitor<'_, '_> {
-    fn insert(&mut self, value: PlaywrightSelector, byte_offset: u32) {
-        self.selectors.push(playwright_tests::TestOccurrence {
-            value,
-            status: self.status.merge(self.annotation_status),
-            scope: self.current_scope,
-            test_name: self.current_test_name.clone(),
-            describe_path: self.describe_stack.clone(),
-            line: byte_offset_to_line(self.source, byte_offset as usize),
+    fn visit_function(
+        &mut self,
+        function: &oxc_ast::ast::Function<'a>,
+        flags: oxc_syntax::scope::ScopeFlags,
+    ) {
+        let mut shadowed = HashSet::new();
+        if let Some(identifier) = &function.id {
+            shadowed.insert(identifier.name.to_string());
+        }
+        for parameter in &function.params.items {
+            collect_binding_names(&parameter.pattern, &mut shadowed);
+        }
+        if let Some(rest) = &function.params.rest {
+            collect_binding_names(&rest.rest.argument, &mut shadowed);
+        }
+        if let Some(body) = &function.body {
+            collect_function_scope_declarations(&body.statements, &mut shadowed);
+        }
+        self.with_shadow_scope(shadowed, |visitor| {
+            walk::walk_function(visitor, function, flags)
         });
     }
 
-    fn with_status(&mut self, status: playwright_tests::TestStatus, visit: impl FnOnce(&mut Self)) {
-        let previous = self.status;
-        self.status = previous.merge(status);
-        visit(self);
-        self.status = previous;
-    }
-
-    fn with_annotation_scope(&mut self, visit: impl FnOnce(&mut Self)) {
-        let previous = self.annotation_status;
-        self.annotation_status = playwright_tests::TestStatus::Active;
-        visit(self);
-        self.annotation_status = previous;
-    }
-
-    fn apply_annotation_call(&mut self, call: &oxc_ast::ast::CallExpression<'_>) {
-        if let Some(status) = playwright_tests::annotation_status_for_call(call) {
-            let status = playwright_tests::merge_annotation_status(self.status, status);
-            self.annotation_status =
-                playwright_tests::merge_annotation_status(self.annotation_status, status);
+    fn visit_arrow_function_expression(
+        &mut self,
+        arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
+    ) {
+        let mut shadowed = HashSet::new();
+        for parameter in &arrow.params.items {
+            collect_binding_names(&parameter.pattern, &mut shadowed);
         }
+        if let Some(rest) = &arrow.params.rest {
+            collect_binding_names(&rest.rest.argument, &mut shadowed);
+        }
+        collect_function_scope_declarations(&arrow.body.statements, &mut shadowed);
+        self.with_shadow_scope(shadowed, |visitor| {
+            walk::walk_arrow_function_expression(visitor, arrow)
+        });
+    }
+
+    fn visit_block_statement(&mut self, block: &oxc_ast::ast::BlockStatement<'a>) {
+        let mut shadowed = HashSet::new();
+        collect_direct_lexical_declarations(&block.body, &mut shadowed);
+        self.with_shadow_scope(shadowed, |visitor| {
+            walk::walk_block_statement(visitor, block)
+        });
+    }
+
+    fn visit_catch_clause(&mut self, clause: &oxc_ast::ast::CatchClause<'a>) {
+        let mut shadowed = HashSet::new();
+        if let Some(parameter) = &clause.param {
+            collect_binding_names(&parameter.pattern, &mut shadowed);
+        }
+        self.with_shadow_scope(shadowed, |visitor| walk::walk_catch_clause(visitor, clause));
+    }
+
+    fn visit_class(&mut self, class: &oxc_ast::ast::Class<'a>) {
+        let mut shadowed = HashSet::new();
+        if let Some(identifier) = &class.id {
+            shadowed.insert(identifier.name.to_string());
+        }
+        self.with_shadow_scope(shadowed, |visitor| walk::walk_class(visitor, class));
+    }
+
+    fn visit_switch_statement(&mut self, switch: &SwitchStatement<'a>) {
+        self.visit_expression(&switch.discriminant);
+        let mut shadowed = HashSet::new();
+        for case in &switch.cases {
+            collect_direct_lexical_declarations(&case.consequent, &mut shadowed);
+        }
+        self.with_shadow_scope(shadowed, |visitor| {
+            visitor.visit_switch_cases(&switch.cases)
+        });
+    }
+
+    fn visit_for_statement(&mut self, statement: &ForStatement<'a>) {
+        let mut shadowed = HashSet::new();
+        if let Some(ForStatementInit::VariableDeclaration(declaration)) = &statement.init {
+            collect_lexical_variable_names(declaration, &mut shadowed);
+        }
+        self.with_shadow_scope(shadowed, |visitor| {
+            walk::walk_for_statement(visitor, statement)
+        });
+    }
+
+    fn visit_for_in_statement(&mut self, statement: &oxc_ast::ast::ForInStatement<'a>) {
+        let mut shadowed = HashSet::new();
+        if let ForStatementLeft::VariableDeclaration(declaration) = &statement.left {
+            collect_lexical_variable_names(declaration, &mut shadowed);
+        }
+        self.with_shadow_scope(shadowed, |visitor| {
+            walk::walk_for_in_statement(visitor, statement)
+        });
+    }
+
+    fn visit_for_of_statement(&mut self, statement: &oxc_ast::ast::ForOfStatement<'a>) {
+        let mut shadowed = HashSet::new();
+        if let ForStatementLeft::VariableDeclaration(declaration) = &statement.left {
+            collect_lexical_variable_names(declaration, &mut shadowed);
+        }
+        self.with_shadow_scope(shadowed, |visitor| {
+            walk::walk_for_of_statement(visitor, statement)
+        });
     }
 }
 

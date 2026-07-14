@@ -11,33 +11,38 @@ pub(crate) fn collect_playwright_facts(
     source: &str,
     plan: Option<&PlaywrightFactPlan>,
 ) -> Option<PlaywrightTestFacts> {
-    let plan = plan?.file(path)?;
+    let fact_plan = plan?;
+    let plan = fact_plan.file(path)?;
     let common = Arc::new(CommonOccurrences {
         text_locators:
             crate::playwright::selectors::extract_playwright_text_locator_occurrences_from_program(
-                program, source,
-            ),
-        helper_references:
-            crate::playwright::selectors::extract_playwright_helper_reference_occurrences_from_program(
                 program, source,
             ),
     });
     let variants = plan
         .variants()
         .map(|(key, variant)| {
+            let (selectors, wrapper_calls) = crate::playwright::selectors::extract_playwright_selector_occurrences_and_wrapper_calls_from_program(
+                program,
+                source,
+                &variant.selector_regexes,
+                &key.test_id_attributes,
+                &key.selector_wrappers,
+                Some(path),
+                fact_plan.module_resolution(),
+            );
             let occurrences = VariantOccurrences {
                 urls: crate::playwright::playwright_urls::extract_playwright_url_occurrences_from_program(
                     program,
                     source,
                     &key.navigation_helpers,
                 ),
-                selectors:
-                    crate::playwright::selectors::extract_playwright_selector_occurrences_from_program(
-                        program,
-                        source,
-                        &variant.selector_regexes,
-                        &key.test_id_attributes,
-                    ),
+                selectors,
+                helper_references: crate::playwright::selectors::extract_playwright_helper_reference_occurrences_from_program(
+                    program,
+                    source,
+                    &wrapper_calls,
+                ),
             };
             (key.clone(), Arc::new(occurrences))
         })

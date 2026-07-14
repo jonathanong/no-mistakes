@@ -32,11 +32,33 @@ which takes precedence over both.
 
 ## Helper wrappers
 
-Selector coverage does not infer wrapper semantics. If a spec calls a helper such
-as `getAsideLocator(page, 'save')` and that helper internally calls
-`page.getByTestId(dataPw)`, the selector remains uncovered because the literal
-`getByTestId('save')` call is not present in the spec.
+Selector coverage does not infer wrapper bodies. Configure an argument-bearing
+wrapper explicitly when a shared helper represents `getByTestId(...)`:
 
-When an uncovered selector value appears in a helper-wrapper call, the failure
-includes a hint pointing at that call. Fix it by inlining the literal
-`getByTestId(...)` assertion or by adding explicit wrapper support intentionally.
+```yaml
+tests:
+  playwright:
+    selectors:
+      wrappers:
+        - module: "@app/playwright-locators"
+          export: getAsideLocator
+          testIdArgument: 1
+```
+
+After configuration, a static ESM import followed by
+`getAsideLocator(page, 'save')` covers the same selector as
+`page.getByTestId('save')`. Import aliases, default imports, and namespace
+imports are supported. Module identity follows the request's normal
+JavaScript/TypeScript resolution for relative and NodeNext paths, tsconfig
+aliases and `baseUrl`, package `imports`, and workspace exports. Bare packages
+and package subpaths do not depend on npm, pnpm, Yarn, or Bun, and
+`node_modules` is not scanned.
+
+Resolver-equivalent declarations with different `testIdArgument` values are
+ambiguous and do not create coverage.
+
+Helpers without a declaration, shadowed bindings, dynamic arguments, CommonJS
+calls, and invalid wrapper declarations do not create selector coverage. An
+uncovered selector value found in an undeclared helper call still includes a
+hint at that call. Either configure the wrapper or add a literal
+`getByTestId(...)` assertion.

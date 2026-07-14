@@ -216,7 +216,7 @@ impl PreparedTestPlanRequest {
             );
             let playwright = self
                 .prepared_graph_config
-                .playwright_fact_plan(&self.root, &graph_visible_paths)
+                .playwright_fact_plan(&self.root, &self.tsconfig, &graph_visible_paths)
                 .map_err(|error| format!("{error:#}"))?
                 .ok_or_else(|| {
                     "prepared all-edge graph is missing its Playwright fact plan".to_string()

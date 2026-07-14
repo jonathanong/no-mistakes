@@ -1,0 +1,7 @@
+{
+  "name": "@fixture/playwright-tests",
+  "imports": {
+    "#selector-helpers": "./helpers.ts",
+    "#missing-helper": "./missing-helper.ts"
+  }
+}

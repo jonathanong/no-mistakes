@@ -129,6 +129,7 @@ fn settings_from_defaults(
         ignore_routes: Vec::new(),
         rewrites: Vec::new(),
         navigation_helpers: Vec::new(),
+        selector_wrappers: Vec::new(),
         selector_attributes: default_selector_attributes(),
         test_id_attribute_override: None,
         component_selector_attributes: Default::default(),

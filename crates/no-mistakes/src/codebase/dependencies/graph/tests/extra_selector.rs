@@ -149,6 +149,26 @@ fn collect_playwright_selector_edges_returns_edges_for_fixture_with_selectors() 
 }
 
 #[test]
+fn configured_selector_wrappers_create_only_the_declared_selector_edges() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/playwright/selector-wrappers"),
+    );
+    let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let edges = collect_playwright_selector_edges(&root, None, &all_files, None);
+    let app_file = NodeId::File(root.join("web/page.tsx"));
+    let test_file = NodeId::File(root.join("tests/page.spec.ts"));
+
+    let selector_edges = edges
+        .iter()
+        .filter(|(from, to, kind)| {
+            from == &test_file && to == &app_file && *kind == EdgeKind::Selector
+        })
+        .count();
+    assert_eq!(selector_edges, 6, "{edges:#?}");
+}
+
+#[test]
 fn collect_playwright_selector_edges_filters_to_all_files_set() {
     // Passing an empty all_files set should produce no edges even when the
     // analysis finds matches, because the file-set filter drops them.

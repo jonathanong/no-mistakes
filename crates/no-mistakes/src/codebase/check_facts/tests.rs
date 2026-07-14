@@ -44,6 +44,7 @@ fn playwright_plan(path: PathBuf) -> PlaywrightFactPlan {
     plan.add_file(super::PlaywrightFactSelection {
         path,
         navigation_helpers: &[],
+        selector_wrappers: &[],
         selector_attributes: &["data-testid".to_string()],
         component_selector_attributes: &BTreeMap::new(),
         html_ids: false,

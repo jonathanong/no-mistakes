@@ -100,7 +100,13 @@ impl SharedCheckContext {
             .transpose()?;
         if let Some(graph_playwright) = prepared_graph
             .as_ref()
-            .map(|graph| graph.playwright_fact_plan(&root, prepared.visible_paths.as_ref()))
+            .map(|graph| {
+                graph.playwright_fact_plan(
+                    &root,
+                    &prepared.tsconfig,
+                    prepared.visible_paths.as_ref(),
+                )
+            })
             .transpose()?
             .flatten()
         {

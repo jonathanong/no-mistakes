@@ -46,6 +46,7 @@ fn add_test(plan: &mut PlaywrightFactPlan, name: &str, policy: TestPolicy) {
     plan.add_file(PlaywrightFactSelection {
         path: root().join(name),
         navigation_helpers: &[],
+        selector_wrappers: &[],
         selector_attributes: &["data-testid".to_string()],
         component_selector_attributes: &BTreeMap::new(),
         html_ids: false,

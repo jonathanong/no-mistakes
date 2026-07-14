@@ -5,7 +5,9 @@ pub(crate) use crate::playwright::analysis::pipeline_entrypoints::{
 pub(crate) use crate::playwright::analysis::pipeline_facts::{
     standalone_fact_plan, standalone_facts,
 };
-use crate::playwright::analysis::pipeline_occurrences::prepare_test_files;
+use crate::playwright::analysis::pipeline_occurrences::{
+    prepare_test_files, PrepareTestFilesOptions,
+};
 use crate::playwright::analysis::pipeline_options::AnalysisOptions;
 pub(crate) use crate::playwright::analysis::pipeline_selectors::{
     analyze_selectors_with_policy_and_facts_from_snapshot,
@@ -62,15 +64,39 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
     let test_files = discover_playwright_test_files(root, settings, facts, snapshot)?;
     let app_selector_setup =
         collect_app_selectors(root, settings, &unique_selector_policy, facts, snapshot)?;
+    let wrapper_resolution = if settings.selector_wrappers.is_empty() {
+        None
+    } else {
+        let paths = snapshot.paths_for(root);
+        let sources = snapshot.source_store_for(root);
+        let tsconfig = match route_import_candidate {
+            Some((_, tsconfig)) => tsconfig.clone(),
+            None => crate::codebase::ts_resolver::resolve_tsconfig_from_visible_and_sources(
+                None, root, &paths, &sources,
+            )?,
+        };
+        let workspace = crate::codebase::workspaces::load_indexed_from_source_store(root, &sources)
+            .unwrap_or_default();
+        Some(
+            crate::codebase::check_facts::PlaywrightModuleResolution::new(
+                std::sync::Arc::new(tsconfig),
+                std::sync::Arc::new(workspace),
+                std::sync::Arc::new(paths.iter().cloned().collect()),
+            ),
+        )
+    };
     let (prepared, demand) = crate::perf_trace::trace("playwright.test_occurrences", || {
         prepare_test_files(
             test_files,
             settings,
             &selector_regexes,
-            test_policy,
-            skip_test_file_errors,
-            facts,
-            occurrence_selection,
+            PrepareTestFilesOptions {
+                test_policy,
+                skip_test_file_errors,
+                facts,
+                selection: occurrence_selection,
+                module_resolution: wrapper_resolution.as_ref(),
+            },
         )
     })?;
     let routes = match required_routes {
@@ -90,6 +116,7 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
         route_index: &route_idx,
         selector_index: &selector_idx,
         navigation_helpers: &settings.navigation_helpers,
+        selector_wrappers: &settings.selector_wrappers,
         selector_regexes: &selector_regexes,
         test_policy,
     };

@@ -4,7 +4,7 @@ use crate::codebase::ts_resolver::TsConfig;
 use crate::codebase::ts_source::facts::TsFactPlan;
 use crate::playwright::analysis::context::DiscoveredTestFile;
 use crate::playwright::analysis::pipeline_occurrences::{
-    prepare_test_files, CachedOccurrenceSelection,
+    prepare_test_files, CachedOccurrenceSelection, PrepareTestFilesOptions,
 };
 use crate::playwright::selectors::compile_selector_regexes;
 
@@ -224,10 +224,13 @@ fn cached_malformed_test_error_is_reused_or_skipped() {
         vec![test_file()],
         &settings,
         &regexes,
-        TestPolicy::default(),
-        false,
-        Some(&facts),
-        CachedOccurrenceSelection::Exact,
+        PrepareTestFilesOptions {
+            test_policy: TestPolicy::default(),
+            skip_test_file_errors: false,
+            facts: Some(&facts),
+            selection: CachedOccurrenceSelection::Exact,
+            module_resolution: None,
+        },
     )
     .err()
     .expect("public analysis preserves cached parse error");
@@ -236,10 +239,13 @@ fn cached_malformed_test_error_is_reused_or_skipped() {
         vec![test_file()],
         &settings,
         &regexes,
-        TestPolicy::default(),
-        true,
-        Some(&facts),
-        CachedOccurrenceSelection::Exact,
+        PrepareTestFilesOptions {
+            test_policy: TestPolicy::default(),
+            skip_test_file_errors: true,
+            facts: Some(&facts),
+            selection: CachedOccurrenceSelection::Exact,
+            module_resolution: None,
+        },
     )
     .expect("optional graph analysis skips cached parse error");
     assert!(prepared.is_empty());
@@ -247,10 +253,13 @@ fn cached_malformed_test_error_is_reused_or_skipped() {
         vec![test_file()],
         &settings,
         &regexes,
-        TestPolicy::default(),
-        true,
-        None,
-        CachedOccurrenceSelection::Exact,
+        PrepareTestFilesOptions {
+            test_policy: TestPolicy::default(),
+            skip_test_file_errors: true,
+            facts: None,
+            selection: CachedOccurrenceSelection::Exact,
+            module_resolution: None,
+        },
     )
     .expect("optional analysis skips a standalone parse error");
     assert!(standalone_skipped.is_empty());

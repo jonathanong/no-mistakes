@@ -30,7 +30,7 @@ all` output.
 | `queue-enqueue` | `QueueEnqueue` | `queue` | producer file -> virtual queue job node | [`codebase-intel/packages/api/src/send-email.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/send-email.mts) |
 | `queue-worker` | `QueueWorker` | `queue` | virtual queue job node -> worker/processor file | [`codebase-intel/packages/api/src/worker.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/worker.mts) |
 | `route-test` | `RouteTest` | `test`, `route` | Playwright test file -> Next.js page file; navigated paths with unresolved interpolations match dynamic route segments | [`codebase-intel/tests/e2e/users.spec.ts`](../test-cases/codebase-analysis/codebase-intel/fixture/tests/e2e/users.spec.ts), [`playwright-interpolated-routes`](../test-cases/codebase-analysis/playwright-interpolated-routes) |
-| `selector` | `Selector` | `test` | Playwright test file -> app/component file matched by selector analysis | `data-testid`, `data-pw`, configured component props, text/role/label/placeholder locators |
+| `selector` | `Selector` | `test` | Playwright test file -> app/component file matched by selector analysis | `data-testid`, `data-pw`, configured component props, configured imported test-ID wrappers, text/role/label/placeholder locators |
 | `layout` | `Layout` | `test`, `route` | Next.js page file -> inherited layout/template/error/loading/not-found file | [`playwright-impact-routing`](../test-cases/codebase-analysis/playwright-impact-routing) |
 | `react-render` | `ReactRender` | `react` | React component file -> rendered child component file | [`graph-missing-edges/packages/web/app/components/Parent.tsx`](../test-cases/codebase-analysis/graph-missing-edges/fixture/packages/web/app/components/Parent.tsx) |
 | `md` | `MarkdownLink` | `md` | Markdown file -> linked visible file | [`codebase-intel/README.md`](../test-cases/codebase-analysis/codebase-intel/fixture/README.md) |
@@ -164,6 +164,10 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   `route-test` navigation is the documented exception above.)
 - Selector text edges are approximate. Exact selector edges from configured test
   ID attributes are stronger than role/text/label/placeholder matching.
+  Configured selector wrappers produce the same exact edge when their declared
+  argument is a supported literal. Wrapper module identity uses the shared
+  TypeScript/workspace resolver; wrapper bodies and dynamic values are not
+  inferred.
 - `ci` is intentionally narrow: it covers the current workflow-to-Rust-bin
   support and is not a full shell, npm script, or workflow dependency graph.
 - External packages are terminal module nodes. They can be selected as roots,

@@ -27,6 +27,7 @@ fn analyze_test_file_returns_error_for_missing_file() {
         route_index: &route_index,
         selector_index: &selector_index,
         navigation_helpers: &[],
+        selector_wrappers: &[],
         selector_regexes: &selector_regexes,
         test_policy: TestPolicy::default(),
     };
@@ -52,6 +53,7 @@ fn analyze_test_file_returns_error_for_parse_failure() {
         route_index: &route_index,
         selector_index: &selector_index,
         navigation_helpers: &[],
+        selector_wrappers: &[],
         selector_regexes: &selector_regexes,
         test_policy: TestPolicy::default(),
     };
