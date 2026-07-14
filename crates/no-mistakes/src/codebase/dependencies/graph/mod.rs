@@ -13,6 +13,8 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use crate::edge_index::{CanonicalEdge, EdgeIndex};
+
 include!("types.rs");
 include!("build_plan.rs");
 include!("graph_files.rs");

@@ -139,12 +139,9 @@ impl DepGraph {
             &mut forward,
             &mut reverse,
         )?;
-        sort_adjacency_lists(&mut forward, &mut reverse);
-
         let mut graph = Self {
             root: root.to_path_buf(),
-            forward,
-            reverse,
+            edges: edge_index_from_maps(forward, reverse),
             parse_errors,
         };
         if plan.playwright_selectors {
@@ -164,8 +161,7 @@ impl DepGraph {
                     },
                 )
             })?;
-            merge_edges(&mut graph.forward, &mut graph.reverse, selector_edges);
-            sort_adjacency_lists(&mut graph.forward, &mut graph.reverse);
+            graph.merge_canonical_edges(selector_edges);
         }
         Ok(graph)
     }

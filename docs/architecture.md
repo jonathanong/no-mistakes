@@ -89,8 +89,8 @@ Allowed cache shapes:
 
 1. `TsFactMap`: path to parsed source facts.
 2. `GraphFiles.visible`: path membership for resolver and graph checks.
-3. `DepGraph.forward` and `DepGraph.reverse`: the dependency tree in both
-   directions.
+3. `EdgeIndex`: canonical typed edges plus forward and reverse adjacency for
+   dependency, queue, and server-route traversal.
 4. `ImportResolver` cache: resolved import specifier lookups.
 5. Local traversal caches for expensive per-root searches.
 6. Shared raw source buffers when multiple extractors need text.
@@ -126,7 +126,8 @@ Every relationship feature should produce edges into this graph unless there is
 a strong reason it cannot be represented as a source-to-target relationship.
 Queries should prefer graph traversal over bespoke recursive search.
 
-The graph stores both directions:
+The graph stores one request-scoped `EdgeIndex`. It owns and validates canonical
+typed edges while retaining both adjacency directions:
 
 1. `forward`: node to dependencies.
 2. `reverse`: node to dependents.
@@ -134,13 +135,20 @@ The graph stores both directions:
 This double-indexed shape is required. It makes `dependencies`, `dependents`,
 `related`, and focused test selection cheap after the build phase.
 
+Queue and server-route commands project their public DTOs from typed
+relationships and use the same index implementation for traversal. Queue
+Project analysis and dependency-graph Dashboard analysis remain explicit modes:
+they share resolver and relationship infrastructure without silently adopting
+each other's matching rules.
+
 ## Parallel Execution Model
 
-Parallelism is expected at every independent layer:
+Parallelism is used where measurement shows it helps:
 
 1. Per-file fact collection uses `rayon` over files.
-2. Edge producers use `par_iter` or `into_par_iter` when each file can be
-   analyzed independently.
+2. Edge producers may use `par_iter` or `into_par_iter` when each file can be
+   analyzed independently and a representative benchmark clears the speed and
+   peak-memory gates.
 3. Top-level domain checks run concurrently when they consume shared facts.
 4. Traversal pre-computation can run per root when roots are independent.
 5. Expensive caches must be concurrent or thread-local plus merged.
@@ -148,6 +156,12 @@ Parallelism is expected at every independent layer:
 The CLI initializes the global rayon pool from `--jobs`,
 `NO_MISTAKES_JOBS`, or CPU defaults. New commands should use the shared
 initialization path instead of creating ad hoc thread pools.
+
+Visitor fusion requires at least a 5% representative end-to-end improvement.
+Outer graph parallelism requires at least a 10% improvement, no more than 10%
+peak-memory growth, and byte-identical output across thread counts. When a
+candidate misses its gate, keep the simpler existing execution model rather
+than landing speculative concurrency or a larger combined visitor.
 
 Parallel code must still produce deterministic output:
 

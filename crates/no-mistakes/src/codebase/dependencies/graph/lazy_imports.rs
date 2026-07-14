@@ -162,26 +162,3 @@ fn push_route_ref_edge(edges: &mut Vec<Edge>, source: &Path, target: &Path) {
         EdgeKind::RouteRef,
     ));
 }
-
-fn add_distinct_worker_file_edges(
-    forward: &mut EdgeMap,
-    reverse: &mut EdgeMap,
-    worker_file: &PathBuf,
-    processor_file: &PathBuf,
-    queue_job: &NodeId,
-) {
-    if worker_file != processor_file {
-        add_edge(
-            forward,
-            queue_job.clone(),
-            NodeId::File(worker_file.clone()),
-            EdgeKind::QueueWorker,
-        );
-        add_edge(
-            reverse,
-            NodeId::File(worker_file.clone()),
-            queue_job.clone(),
-            EdgeKind::QueueWorker,
-        );
-    }
-}

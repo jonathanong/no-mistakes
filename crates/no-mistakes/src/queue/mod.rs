@@ -5,18 +5,20 @@ mod extract_record;
 mod extract_visitor;
 mod graph;
 mod graph_build;
+mod graph_entities;
 mod graph_model;
 mod graph_related;
+mod graph_resolution;
 mod resolver;
 mod source;
 mod types;
-pub(crate) mod utils;
 
 pub use graph::{
-    analyze_project, analyze_project_with_facts, analyze_project_with_prepared_facts,
+    analyze_project, analyze_project_indexed, analyze_project_with_facts,
+    analyze_project_with_prepared_facts, analyze_project_with_prepared_facts_indexed,
     RelatedDirection,
 };
-pub use graph_model::{CheckFinding, ProjectReport};
+pub use graph_model::{CheckFinding, PreparedProjectReport, ProjectReport};
 pub use graph_related::related;
 pub use source::{discover_source_files, relative_string};
 pub use types::{Diagnostic, Edge, EdgeKind, QueueJobNode, QueueProducer, QueueWorker, Severity};

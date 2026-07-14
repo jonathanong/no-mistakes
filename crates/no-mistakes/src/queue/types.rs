@@ -81,9 +81,25 @@ pub(crate) struct QueueKey {
     pub queue_name: String,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub(crate) struct JobKey {
     pub queue_file: PathBuf,
     pub queue_name: String,
     pub job: String,
+}
+
+/// Canonical, path-based queue relationship node used before any CLI/N-API
+/// rendering. Dashboard graph integration can project this model into its own
+/// shared graph without parsing the public `queueFile#job` string identity.
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub(crate) enum RelationshipNode {
+    File(PathBuf),
+    Job(JobKey),
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub(crate) struct RelationshipEdge {
+    pub from: RelationshipNode,
+    pub to: RelationshipNode,
+    pub kind: EdgeKind,
 }

@@ -1,21 +1,41 @@
-fn add_queue_edges(
+/// A typed relationship produced by the dashboard queue semantics.
+///
+/// This stays separate from `queue::RelationshipEdge`: dashboard analysis only
+/// exposes jobs that have both an enqueue site and a matching worker, whereas
+/// project queue analysis reports its own broader producer/worker model.
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct DashboardQueueRelationship {
+    from: NodeId,
+    to: NodeId,
+    kind: EdgeKind,
+}
+
+impl DashboardQueueRelationship {
+    fn new(from: NodeId, to: NodeId, kind: EdgeKind) -> Self {
+        Self { from, to, kind }
+    }
+
+    fn into_edge(self) -> Edge {
+        (self.from, self.to, self.kind)
+    }
+}
+
+fn collect_dashboard_queue_relationships(
     root: &Path,
     resolver: &ImportResolver<'_>,
     files: &[PathBuf],
     facts: Option<&dyn TsFactLookup>,
     config_options: Option<&GraphConfigOptions>,
-    forward: &mut EdgeMap,
-    reverse: &mut EdgeMap,
-) {
+) -> Vec<DashboardQueueRelationship> {
     use globset::GlobBuilder;
 
     let Some(config_options) = config_options else {
-        return;
+        return Vec::new();
     };
     let opts = &config_options.queue;
 
     if opts.queue_pattern.is_empty() || opts.factory_specifier.is_empty() {
-        return;
+        return Vec::new();
     }
 
     let glob = match GlobBuilder::new(&opts.queue_pattern)
@@ -23,7 +43,7 @@ fn add_queue_edges(
         .build()
     {
         Ok(g) => g,
-        Err(_) => return,
+        Err(_) => return Vec::new(),
     };
     let mut gb = globset::GlobSetBuilder::new();
     gb.add(glob);
@@ -60,7 +80,7 @@ fn add_queue_edges(
     }
 
     if queue_name_to_def.is_empty() {
-        return;
+        return Vec::new();
     }
 
     // Phase 2: For each file, extract queue usage. Collect:
@@ -144,6 +164,7 @@ fn add_queue_edges(
             .push(src.clone());
     }
 
+    let mut relationships = Vec::new();
     for (worker_file, queue_def, processor_file, job_names) in &worker_sites {
         for job in job_names {
             let key = (queue_def.clone(), job.clone());
@@ -156,46 +177,42 @@ fn add_queue_edges(
                 job: job.clone(),
             };
 
-            // Ensure the QueueJob node exists in the forward map.
-            forward.entry(queue_job.clone()).or_default();
-            reverse.entry(queue_job.clone()).or_default();
-
             // Enqueue site → QueueJob.
             for enqueue_file in enqueue_files {
-                add_edge(
-                    forward,
+                relationships.push(DashboardQueueRelationship::new(
                     NodeId::File(enqueue_file.clone()),
                     queue_job.clone(),
                     EdgeKind::QueueEnqueue,
-                );
-                add_edge(
-                    reverse,
-                    queue_job.clone(),
-                    NodeId::File(enqueue_file.clone()),
-                    EdgeKind::QueueEnqueue,
-                );
+                ));
             }
 
             // QueueJob → processor file.
-            add_edge(
-                forward,
+            relationships.push(DashboardQueueRelationship::new(
                 queue_job.clone(),
                 NodeId::File(processor_file.clone()),
                 EdgeKind::QueueWorker,
-            );
-            add_distinct_worker_file_edges(
-                forward,
-                reverse,
-                worker_file,
-                processor_file,
-                &queue_job,
-            );
-            add_edge(
-                reverse,
-                NodeId::File(processor_file.clone()),
-                queue_job.clone(),
-                EdgeKind::QueueWorker,
-            );
+            ));
+            if worker_file != processor_file {
+                relationships.push(DashboardQueueRelationship::new(
+                    queue_job.clone(),
+                    NodeId::File(worker_file.clone()),
+                    EdgeKind::QueueWorker,
+                ));
+            }
         }
     }
+    relationships
+}
+
+fn collect_queue_edges(
+    root: &Path,
+    resolver: &ImportResolver<'_>,
+    files: &[PathBuf],
+    facts: Option<&dyn TsFactLookup>,
+    config_options: Option<&GraphConfigOptions>,
+) -> Vec<Edge> {
+    collect_dashboard_queue_relationships(root, resolver, files, facts, config_options)
+        .into_iter()
+        .map(DashboardQueueRelationship::into_edge)
+        .collect()
 }

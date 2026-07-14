@@ -331,3 +331,20 @@ fn mount_resolver_covers_local_imported_fallback_and_recursive_prefixes() {
 }
 
 include!("tests/mounts.rs");
+
+#[test]
+fn indexed_server_projection_matches_compatibility_projection() {
+    let root = fixture("express");
+    let plain = analyze_project(&root, None, &[]).unwrap();
+    let indexed = analyze_project_indexed(&root, None, &[]).unwrap();
+    assert_eq!(indexed.report().edges, plain.edges);
+    let roots = vec!["backend/api/users.ts".to_string()];
+    assert_eq!(
+        indexed.edge_view(&roots, None),
+        crate::cli::edge_view(&plain.edges, &roots, None)
+    );
+    assert_eq!(
+        indexed.related(&roots, RelatedDirection::Both),
+        related(&plain, &roots, RelatedDirection::Both)
+    );
+}

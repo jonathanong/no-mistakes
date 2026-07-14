@@ -1,9 +1,9 @@
 use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
-use no_mistakes::cli::{edge_view, resolve_root, root_scoped_edge_depth, Format};
+use no_mistakes::cli::{resolve_root, root_scoped_edge_depth, Format};
 use no_mistakes::server_routes::{
-    analyze_project_with_prepared, prepare_analysis, related, Edge, ProjectReport,
-    RelatedDirection, ServerRoute,
+    analyze_project_with_prepared, analyze_project_with_prepared_indexed, prepare_analysis, Edge,
+    ProjectReport, RelatedDirection, ServerRoute,
 };
 use std::collections::BTreeSet;
 use std::path::PathBuf;
@@ -89,25 +89,28 @@ pub(crate) fn run(args: ServerArgs) -> Result<ExitCode> {
     let started = std::time::Instant::now();
     let format = if args.json { Format::Json } else { args.format };
     let prepared = prepare_analysis(&root, args.tsconfig.as_deref())?;
-    let report = analyze_project_with_prepared(&prepared, &args.filters)?;
-    if args.timings {
-        eprintln!(
-            "analysis: {:.3}ms",
-            started.elapsed().as_secs_f64() * 1000.0
-        );
-    }
     match &args.command {
         ServerCommand::Routes { files } => {
+            let report = analyze_project_with_prepared(&prepared, &args.filters)?;
+            print_analysis_timing(args.timings, started);
             print_routes(&report, files, format)?;
         }
         ServerCommand::Edges { roots } => {
-            print_edges(&report, roots, args.depth, format)?;
+            let report = analyze_project_with_prepared_indexed(&prepared, &args.filters)?;
+            print_analysis_timing(args.timings, started);
+            let depth = root_scoped_edge_depth(roots, args.depth);
+            let edges = report.edge_view(roots, depth);
+            print_edges(&edges, format)?;
         }
         ServerCommand::Related { roots, direction } => {
-            let edges = related(&report, roots, (*direction).into());
+            let report = analyze_project_with_prepared_indexed(&prepared, &args.filters)?;
+            print_analysis_timing(args.timings, started);
+            let edges = report.related(roots, (*direction).into());
             print_related(roots, &edges, format)?;
         }
         ServerCommand::Contracts => {
+            let report = analyze_project_with_prepared(&prepared, &args.filters)?;
+            print_analysis_timing(args.timings, started);
             let contracts = no_mistakes::server_routes::analyze_contracts_with_prepared(
                 &prepared,
                 &report,
@@ -117,6 +120,15 @@ pub(crate) fn run(args: ServerArgs) -> Result<ExitCode> {
         }
     }
     Ok(ExitCode::SUCCESS)
+}
+
+fn print_analysis_timing(enabled: bool, started: std::time::Instant) {
+    if enabled {
+        eprintln!(
+            "analysis: {:.3}ms",
+            started.elapsed().as_secs_f64() * 1000.0
+        );
+    }
 }
 
 fn print_routes(report: &ProjectReport, files: &[String], format: Format) -> Result<()> {
@@ -153,26 +165,19 @@ fn print_routes(report: &ProjectReport, files: &[String], format: Format) -> Res
     Ok(())
 }
 
-fn print_edges(
-    report: &ProjectReport,
-    roots: &[String],
-    depth: Option<usize>,
-    format: Format,
-) -> Result<()> {
-    let depth = root_scoped_edge_depth(roots, depth);
-    let edges = edge_view(&report.edges, roots, depth);
+fn print_edges(edges: &[Edge], format: Format) -> Result<()> {
     match format {
-        Format::Json => println!("{}", serde_json::to_string_pretty(&edges)?),
-        Format::Yml => println!("{}", serde_yaml::to_string(&edges)?),
+        Format::Json => println!("{}", serde_json::to_string_pretty(edges)?),
+        Format::Yml => println!("{}", serde_yaml::to_string(edges)?),
         Format::Md => {
             println!("# Server route edges");
-            for edge in &edges {
+            for edge in edges {
                 println!("- `{}` -> `{}` ({})", edge.from, edge.to, edge.kind);
             }
         }
-        Format::Paths => print_edge_paths(&edges),
+        Format::Paths => print_edge_paths(edges),
         Format::Human => {
-            for edge in &edges {
+            for edge in edges {
                 println!("{} -> {}", edge.from, edge.to);
             }
         }

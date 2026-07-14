@@ -1,9 +1,13 @@
+use crate::edge_index::{CanonicalEdge, EdgeIndex, NodeAliases};
 use crate::queue::extract::FileFacts;
 use crate::queue::graph_model::{
-    dedup_sorted, diagnostics, node_name, InternalProducer, InternalWorker, ProjectReport,
+    dedup_sorted, diagnostics, node_name, InternalProducer, InternalWorker, PreparedProjectReport,
+    ProjectReport,
 };
 use crate::queue::source::relative_string;
-use crate::queue::types::{Edge, EdgeKind, JobKey, QueueJobNode, QueueKey};
+use crate::queue::types::{
+    Edge, EdgeKind, JobKey, QueueJobNode, QueueKey, RelationshipEdge, RelationshipNode,
+};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
@@ -13,11 +17,63 @@ pub(super) fn build_report(
     workers: Vec<InternalWorker>,
     facts: &HashMap<PathBuf, FileFacts>,
 ) -> ProjectReport {
+    build_report_and_relationships(root, producers, workers, facts).0
+}
+
+pub(super) fn build_prepared_report(
+    root: &Path,
+    producers: Vec<InternalProducer>,
+    workers: Vec<InternalWorker>,
+    facts: &HashMap<PathBuf, FileFacts>,
+) -> PreparedProjectReport {
+    let (report, mut relationships) =
+        build_report_and_relationships(root, producers, workers, facts);
+    relationships.sort_by_key(|edge| {
+        (
+            public_node(root, &edge.from),
+            public_node(root, &edge.to),
+            edge.kind,
+            edge.clone(),
+        )
+    });
+    relationships.dedup();
+    let mut nodes_by_name = HashMap::<String, Vec<RelationshipNode>>::new();
+    for relationship in &relationships {
+        for node in [&relationship.from, &relationship.to] {
+            let nodes = nodes_by_name.entry(public_node(root, node)).or_default();
+            if !nodes.contains(node) {
+                nodes.push(node.clone());
+            }
+        }
+    }
+    for nodes in nodes_by_name.values_mut() {
+        nodes.sort();
+    }
+    let aliases = NodeAliases::from_groups(nodes_by_name.values().cloned());
+    let index = EdgeIndex::from_edges(
+        relationships
+            .into_iter()
+            .map(|edge| CanonicalEdge::new(edge.from, edge.to, edge.kind)),
+    );
+    PreparedProjectReport {
+        root: root.to_path_buf(),
+        report,
+        index,
+        nodes_by_name,
+        aliases,
+    }
+}
+
+fn build_report_and_relationships(
+    root: &Path,
+    producers: Vec<InternalProducer>,
+    workers: Vec<InternalWorker>,
+    facts: &HashMap<PathBuf, FileFacts>,
+) -> (ProjectReport, Vec<RelationshipEdge>) {
     let producer_index = index_producers(&producers);
     let worker_index = index_workers(&workers);
     let wildcards = wildcard_queues(&workers);
-    let mut jobs = Vec::new();
-    let mut edges = Vec::new();
+    let mut relationships = Vec::new();
     let mut check = Vec::new();
     for (job, producers_for_job) in &producer_index {
         let workers_for_job = worker_index.get(job).cloned().unwrap_or_default();
@@ -29,14 +85,7 @@ pub(super) fn build_report(
             );
             continue;
         }
-        add_matched_job(
-            root,
-            job,
-            producers_for_job,
-            &workers_for_job,
-            &mut jobs,
-            &mut edges,
-        );
+        add_matched_job(job, producers_for_job, &workers_for_job, &mut relationships);
     }
     for worker in &workers {
         for (job, _) in worker.job_keys() {
@@ -45,14 +94,15 @@ pub(super) fn build_report(
             }
         }
     }
-    ProjectReport {
+    let report = ProjectReport {
         producers: producers.iter().map(|p| p.public(root)).collect(),
         workers: workers.iter().map(|w| w.public(root)).collect(),
-        jobs: dedup_sorted(jobs),
-        edges: dedup_sorted(edges),
+        jobs: public_jobs(root, &relationships),
+        edges: public_edges(root, &relationships),
         diagnostics: diagnostics(root, facts, &producers, &workers),
         check: dedup_sorted(check),
-    }
+    };
+    (report, relationships)
 }
 
 fn index_producers(producers: &[InternalProducer]) -> HashMap<JobKey, Vec<&InternalProducer>> {
@@ -86,38 +136,68 @@ fn wildcard_queues(workers: &[InternalWorker]) -> HashSet<QueueKey> {
 }
 
 fn add_matched_job(
-    root: &Path,
     job: &JobKey,
     producers: &[&InternalProducer],
     workers: &[&InternalWorker],
-    jobs: &mut Vec<QueueJobNode>,
-    edges: &mut Vec<Edge>,
+    relationships: &mut Vec<RelationshipEdge>,
 ) {
-    let node = node_name(root, job);
-    jobs.push(QueueJobNode {
-        queue_file: relative_string(root, &job.queue_file),
-        queue_name: job.queue_name.clone(),
-        job: job.job.clone(),
-    });
-    edges.extend(producers.iter().map(|producer| Edge {
-        from: relative_string(root, &producer.site.file),
+    let node = RelationshipNode::Job(job.clone());
+    relationships.extend(producers.iter().map(|producer| RelationshipEdge {
+        from: RelationshipNode::File(producer.site.file.clone()),
         to: node.clone(),
         kind: EdgeKind::QueueEnqueue,
     }));
-    edges.extend(workers.iter().map(|worker| {
-        Edge {
+    relationships.extend(workers.iter().map(|worker| {
+        RelationshipEdge {
             from: node.clone(),
-            to: relative_string(
-                root,
+            to: RelationshipNode::File(
                 worker
                     .site
                     .processor_file
                     .as_ref()
-                    .unwrap_or(&worker.site.file),
+                    .unwrap_or(&worker.site.file)
+                    .clone(),
             ),
             kind: EdgeKind::QueueWorker,
         }
     }));
+}
+
+fn public_jobs(root: &Path, relationships: &[RelationshipEdge]) -> Vec<QueueJobNode> {
+    dedup_sorted(
+        relationships
+            .iter()
+            .flat_map(|edge| [&edge.from, &edge.to])
+            .filter_map(|node| match node {
+                RelationshipNode::File(_) => None,
+                RelationshipNode::Job(job) => Some(QueueJobNode {
+                    queue_file: relative_string(root, &job.queue_file),
+                    queue_name: job.queue_name.clone(),
+                    job: job.job.clone(),
+                }),
+            })
+            .collect(),
+    )
+}
+
+fn public_edges(root: &Path, relationships: &[RelationshipEdge]) -> Vec<Edge> {
+    dedup_sorted(
+        relationships
+            .iter()
+            .map(|edge| Edge {
+                from: public_node(root, &edge.from),
+                to: public_node(root, &edge.to),
+                kind: edge.kind,
+            })
+            .collect(),
+    )
+}
+
+pub(crate) fn public_node(root: &Path, node: &RelationshipNode) -> String {
+    match node {
+        RelationshipNode::File(file) => relative_string(root, file),
+        RelationshipNode::Job(job) => node_name(root, job),
+    }
 }
 
 fn queue_key(job: &JobKey) -> QueueKey {

@@ -2,16 +2,13 @@ fn render_queue_report(
     report_type: &str,
     options: &ProjectOptions,
     report: &crate::queue::ProjectReport,
+    indexed: Option<&crate::queue::PreparedProjectReport>,
 ) -> Result<Value> {
     match report_type {
         "queues" => Ok(json_value(report)),
         "queueEdges" => {
             let depth = crate::cli::root_scoped_edge_depth(&options.files, options.depth);
-            Ok(json_value(&crate::cli::edge_view(
-                &report.edges,
-                &options.files,
-                depth,
-            )))
+            Ok(json_value(&indexed.expect("typed queue traversal is prepared").edge_view(&options.files, depth)))
         }
         "queueRelated" => {
             if options.files.is_empty() {
@@ -19,11 +16,7 @@ fn render_queue_report(
             }
             let direction =
                 crate::napi_api::options::parse_queue_direction(options.direction.as_deref())?;
-            Ok(json_value(&crate::queue::related(
-                report,
-                &options.files,
-                direction,
-            )))
+            Ok(json_value(&indexed.expect("typed queue traversal is prepared").related(&options.files, direction)))
         }
         "queueCheck" => Ok(json_value(&report.check)),
         _ => bail!("unknown queue report type: {report_type}"),
@@ -43,6 +36,7 @@ fn render_server_report(
     options: &ProjectOptions,
     prepared: &crate::server_routes::PreparedServerAnalysis,
     report: &crate::server_routes::ProjectReport,
+    indexed: Option<&crate::server_routes::PreparedProjectReport>,
     filters: &[String],
 ) -> Result<Value> {
     match report_type {
@@ -64,11 +58,7 @@ fn render_server_report(
         "serverRouteEdges" => {
             let roots = crate::napi_api::options::project_roots(options);
             let depth = crate::cli::root_scoped_edge_depth(&roots, options.depth);
-            Ok(json_value(&crate::cli::edge_view(
-                &report.edges,
-                &roots,
-                depth,
-            )))
+            Ok(json_value(&indexed.expect("typed server traversal is prepared").edge_view(&roots, depth)))
         }
         "serverRouteRelated" => {
             let roots = crate::napi_api::options::project_roots(options);
@@ -77,9 +67,7 @@ fn render_server_report(
             }
             let direction =
                 crate::napi_api::options::parse_server_direction(options.direction.as_deref())?;
-            Ok(json_value(&crate::server_routes::related(
-                report, &roots, direction,
-            )))
+            Ok(json_value(&indexed.expect("typed server traversal is prepared").related(&roots, direction)))
         }
         "serverContracts" => {
             let contracts =

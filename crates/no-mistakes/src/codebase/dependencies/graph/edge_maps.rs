@@ -1,7 +1,3 @@
-fn add_edge(map: &mut EdgeMap, from: NodeId, to: NodeId, kind: EdgeKind) {
-    map.entry(from).or_default().push((to, kind));
-}
-
 fn normalize_nodes(nodes: &[NodeId]) -> Vec<NodeId> {
     nodes
         .iter()
@@ -29,4 +25,36 @@ fn merge_edges(forward: &mut EdgeMap, reverse: &mut EdgeMap, edges: Vec<Edge>) {
             .push((to.clone(), kind));
         reverse.entry(to).or_default().push((from, kind));
     }
+}
+
+fn edge_index_from_maps(mut forward: EdgeMap, mut reverse: EdgeMap) -> EdgeIndex<NodeId, EdgeKind> {
+    // Preserve the historical graph-membership boundary: only nodes present in
+    // the forward map count as graph nodes.
+    sort_adjacency_lists(&mut forward, &mut reverse);
+    EdgeIndex::from_adjacency_maps_by(forward, reverse, |left, right| {
+        (
+            node_sort_key(&left.from),
+            &left.from,
+            node_sort_key(&left.to),
+            &left.to,
+            left.kind as u8,
+        )
+            .cmp(&(
+                node_sort_key(&right.from),
+                &right.from,
+                node_sort_key(&right.to),
+                &right.to,
+                right.kind as u8,
+            ))
+    })
+}
+
+fn sort_edge_index_adjacency(index: &mut EdgeIndex<NodeId, EdgeKind>) {
+    index.sort_adjacency_by(|(left_node, left_kind), (right_node, right_kind)| {
+        (node_sort_key(left_node), left_node, *left_kind as u8).cmp(&(
+            node_sort_key(right_node),
+            right_node,
+            *right_kind as u8,
+        ))
+    });
 }

@@ -5,6 +5,13 @@
 external modules, or virtual queue jobs. Every edge has an internal `EdgeKind`,
 serialized in JSON/YAML/text output through the `via` field.
 
+The canonical in-memory edge index is also used by `queues edges|related` and
+`server edges|related`. Those commands retain their existing public edge DTOs:
+queue edges are file -> virtual job -> processor/worker relationships, while
+server edges are route-file -> normalized-route relationships. Server-route
+nodes are intentionally not added to unfiltered `dependencies --relationship
+all` output.
+
 ## Supported Edges
 
 | Serialized `via` | Internal edge kind | Relationship | Direction | Fixture proof |

@@ -14,6 +14,39 @@ pub struct TsFactContext {
     pub http_prefixes: Vec<String>,
     pub effect_functions: HashMap<String, Option<String>>,
     pub visible_files: Option<Arc<HashSet<PathBuf>>>,
+    pub(crate) server_route_filter: Option<ServerRouteFactFilter>,
+}
+
+#[derive(Clone)]
+pub(crate) struct ServerRouteFactFilter {
+    glob: GlobSet,
+    test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
+}
+
+impl std::fmt::Debug for ServerRouteFactFilter {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ServerRouteFactFilter")
+            .field("test_filter", &self.test_filter.is_some())
+            .finish_non_exhaustive()
+    }
+}
+
+impl ServerRouteFactFilter {
+    pub(crate) fn new(
+        glob: GlobSet,
+        test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
+    ) -> Self {
+        Self { glob, test_filter }
+    }
+
+    fn is_match(&self, root: &Path, path: &Path) -> bool {
+        path.strip_prefix(root)
+            .is_ok_and(|rel| self.glob.is_match(rel))
+            && !self
+                .test_filter
+                .as_ref()
+                .is_some_and(|filter| filter.is_match(root, path))
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -51,6 +84,14 @@ impl TsFactContext {
             root: root.to_path_buf(),
             ..Self::default()
         }
+    }
+
+    pub(crate) fn set_server_route_filter(
+        &mut self,
+        glob: GlobSet,
+        test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
+    ) {
+        self.server_route_filter = Some(ServerRouteFactFilter::new(glob, test_filter));
     }
 
     pub fn add_backend_route_extractor(
@@ -105,6 +146,10 @@ impl TsFactContext {
         self.http_prefixes.sort();
         self.http_prefixes.dedup();
         self.effect_functions.extend(other.effect_functions);
+        self.server_route_filter = self
+            .server_route_filter
+            .take()
+            .or(other.server_route_filter);
         let mut visible = self
             .visible_files
             .take()
@@ -116,6 +161,12 @@ impl TsFactContext {
         if !visible.is_empty() {
             self.visible_files = Some(Arc::new(visible));
         }
+    }
+
+    pub(crate) fn matches_server_route(&self, path: &Path) -> bool {
+        self.server_route_filter
+            .as_ref()
+            .is_none_or(|filter| filter.is_match(&self.root, path))
     }
 
     pub fn matches_queue_factory(&self, path: &Path) -> bool {
@@ -144,6 +195,7 @@ impl Default for TsFactContext {
             http_prefixes: Vec::new(),
             effect_functions: HashMap::new(),
             visible_files: None,
+            server_route_filter: None,
         }
     }
 }

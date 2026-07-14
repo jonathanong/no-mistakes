@@ -10,6 +10,7 @@ pub mod cli;
 pub mod codebase;
 pub mod config;
 pub mod data_pw_query;
+pub(crate) mod edge_index;
 pub mod effects_query;
 pub mod fetch;
 mod fetches;

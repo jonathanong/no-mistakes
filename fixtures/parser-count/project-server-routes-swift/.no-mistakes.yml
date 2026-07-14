@@ -1,0 +1,13 @@
+projects:
+  backend:
+    type: server
+    root: backend
+    routes:
+      - api/**
+  swift-client:
+    type: tests
+    root: swift-client
+tests:
+  swift:
+    packages:
+      - swift-client

@@ -197,7 +197,8 @@ fn selector_only_graph_skips_route_import_second_pass() {
     assert_eq!(facts.reachability_scans.load(Ordering::Relaxed), 0);
     assert_graph_selector_edge(&graph, &root, "web/components/save-button.tsx");
     assert!(graph
-        .forward
+        .edges
+        .forward()
         .values()
         .flatten()
         .all(|(_, kind)| *kind != EdgeKind::RouteImport));

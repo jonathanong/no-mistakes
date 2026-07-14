@@ -2,11 +2,14 @@ use crate::codebase::ts_resolver::{
     find_tsconfig_from_visible, load_tsconfig, ImportResolver, TsConfig,
 };
 use crate::config::v2::{load_v2_config_from_visible, ConfigView};
-use crate::server_routes::model::{FileFacts, ProjectReport, RouteSite};
+use crate::edge_index::{CanonicalEdge, EdgeIndex, NodeAliases};
+use crate::server_routes::model::{FileFacts, PreparedProjectReport, ProjectReport, RouteSite};
 use crate::server_routes::mounts::{prefixes_for, resolve_mounts_with_resolver};
 use crate::server_routes::normalize::{join_paths, normalize_route};
 use crate::server_routes::source::{discover_source_files_from_visible, relative_string};
-use crate::server_routes::types::{Diagnostic, Edge, EdgeKind, ServerRoute, Severity, Summary};
+use crate::server_routes::types::{
+    Diagnostic, Edge, EdgeKind, RelationshipEdge, RelationshipNode, ServerRoute, Severity, Summary,
+};
 use anyhow::Context;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use std::collections::{HashMap, HashSet};
@@ -41,10 +44,36 @@ pub fn analyze_project(
 }
 
 #[doc(hidden)]
+pub fn analyze_project_indexed(
+    root: &Path,
+    tsconfig_path: Option<&Path>,
+    filters: &[String],
+) -> anyhow::Result<PreparedProjectReport> {
+    let prepared = prepare_analysis(root, tsconfig_path)?;
+    analyze_project_with_prepared_indexed(&prepared, filters)
+}
+
+#[doc(hidden)]
 pub fn analyze_project_with_prepared(
     prepared: &PreparedServerAnalysis,
     filters: &[String],
 ) -> anyhow::Result<ProjectReport> {
+    analyze_project_with_prepared_inner(prepared, filters, build_report)
+}
+
+#[doc(hidden)]
+pub fn analyze_project_with_prepared_indexed(
+    prepared: &PreparedServerAnalysis,
+    filters: &[String],
+) -> anyhow::Result<PreparedProjectReport> {
+    analyze_project_with_prepared_inner(prepared, filters, build_prepared_report)
+}
+
+fn analyze_project_with_prepared_inner<T>(
+    prepared: &PreparedServerAnalysis,
+    filters: &[String],
+    builder: impl FnOnce(&Path, &HashMap<PathBuf, FileFacts>, &TsConfig) -> T,
+) -> anyhow::Result<T> {
     let root = &prepared.root;
     let config_route_filter = prepared
         .config
@@ -80,7 +109,7 @@ pub fn analyze_project_with_prepared(
             }
         }
     }
-    Ok(build_report(root, &facts, &prepared.tsconfig))
+    Ok(builder(root, &facts, &prepared.tsconfig))
 }
 
 pub(crate) fn route_defs_from_files(
@@ -90,7 +119,25 @@ pub(crate) fn route_defs_from_files(
 ) -> Vec<(PathBuf, String)> {
     let root = root.canonicalize().unwrap_or(root.to_path_buf());
     let facts = collect_file_facts(files, &root);
-    build_report(&root, &facts, tsconfig)
+    build_route_defs(&root, &facts, tsconfig)
+}
+
+pub(crate) fn route_defs_from_prepared_facts(
+    root: &Path,
+    tsconfig: &TsConfig,
+    prepared: impl IntoIterator<Item = (PathBuf, FileFacts)>,
+) -> Vec<(PathBuf, String)> {
+    let root = root.canonicalize().unwrap_or(root.to_path_buf());
+    let facts = prepared.into_iter().collect();
+    build_route_defs(&root, &facts, tsconfig)
+}
+
+fn build_route_defs(
+    root: &Path,
+    facts: &HashMap<PathBuf, FileFacts>,
+    tsconfig: &TsConfig,
+) -> Vec<(PathBuf, String)> {
+    build_report(root, facts, tsconfig)
         .routes
         .into_iter()
         .map(|route| (root.join(route.file), route.route))
@@ -112,83 +159,24 @@ fn collect_file_facts(files: &[PathBuf], root: &Path) -> HashMap<PathBuf, FileFa
         .collect()
 }
 
-pub(super) fn build_report(
-    root: &Path,
-    facts: &HashMap<PathBuf, FileFacts>,
-    tsconfig: &TsConfig,
-) -> ProjectReport {
-    let mut routes = Vec::new();
-    let mut edges = Vec::new();
-    let mut diagnostics = Vec::new();
-    let visible = facts.keys().cloned().collect::<HashSet<_>>();
-    let resolver = ImportResolver::new(tsconfig).with_visible(&visible);
-    let mounts = resolve_mounts_with_resolver(facts, &resolver);
-    for (path, file_facts) in facts {
-        diagnostics.extend(
-            file_facts
-                .diagnostics
-                .iter()
-                .map(|(line, message)| Diagnostic {
-                    severity: Severity::Warning,
-                    file: relative_string(root, path),
-                    line: *line,
-                    message: message.clone(),
-                }),
-        );
-        for site in &file_facts.routes {
-            for route in expand_site(root, site, facts, &mounts) {
-                edges.push(Edge {
-                    from: route.file.clone(),
-                    to: route.route.clone(),
-                    kind: EdgeKind::ServerRoute,
-                });
-                routes.push(route);
-            }
-        }
-    }
-    routes.sort();
-    routes.dedup();
-    edges.sort();
-    edges.dedup();
-    diagnostics.sort();
-    diagnostics.dedup();
-    let dynamic_routes = routes
-        .iter()
-        .filter(|route| route.route.contains('*'))
-        .count();
-    ProjectReport {
-        summary: Summary {
-            total_routes: routes.len(),
-            total_files: facts.len(),
-            dynamic_routes,
-        },
-        routes,
-        edges,
-        diagnostics,
-    }
-}
+include!("graph_report.rs");
 
-fn expand_site(
+pub(crate) fn configure_fact_context(
+    context: &mut crate::codebase::ts_source::facts::TsFactContext,
     root: &Path,
-    site: &RouteSite,
-    facts: &HashMap<PathBuf, FileFacts>,
-    mounts: &[crate::server_routes::mounts::ResolvedMount],
-) -> Vec<ServerRoute> {
-    prefixes_for(site, facts, mounts)
-        .into_iter()
-        .map(|prefix| {
-            let raw_path = join_paths(&prefix, &site.raw_path);
-            ServerRoute {
-                file: relative_string(root, &site.file),
-                line: site.line,
-                method: site.method.clone(),
-                route: normalize_route(&raw_path),
-                raw_path,
-                query_params: site.query_params.clone(),
-                framework: site.framework,
-            }
-        })
-        .collect()
+    config: &crate::config::v2::NoMistakesConfig,
+) {
+    if let Some(glob) = build_filter(&ConfigView::new(config).server_route_globs())
+        .ok()
+        .flatten()
+    {
+        context.set_server_route_filter(
+            glob,
+            Some(crate::codebase::test_filter::TestFileFilter::new(
+                root, config,
+            )),
+        );
+    }
 }
 
 fn build_filter(filters: &[String]) -> anyhow::Result<Option<GlobSet>> {

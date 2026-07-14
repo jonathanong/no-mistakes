@@ -2,8 +2,15 @@ pub struct ImportResolver<'a> {
     tsconfig: &'a TsConfig,
     visible: Option<&'a HashSet<PathBuf>>,
     alias_order: Vec<usize>,
+    policy: ImportResolutionPolicy<'a>,
     cache_enabled: bool,
     cache: DashMap<ResolveKey, Option<PathBuf>>,
+}
+
+#[derive(Clone, Copy)]
+enum ImportResolutionPolicy<'a> {
+    Standard,
+    QueueCompatibility { root: &'a Path },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -25,9 +32,24 @@ impl<'a> ImportResolver<'a> {
             tsconfig,
             visible: None,
             alias_order,
+            policy: ImportResolutionPolicy::Standard,
             cache_enabled: true,
             cache: DashMap::new(),
         }
+    }
+
+    /// Preserve the standalone queue analyzer's historical import resolution.
+    ///
+    /// Queue analysis predates the shared resolver and intentionally resolves
+    /// aliases in config order, accepts any leading-dot relative specifier,
+    /// uses its legacy source candidate order, and treats unresolved bare
+    /// specifiers as project-root-relative paths. Keeping this policy explicit
+    /// prevents those compatibility rules from leaking into other analyzers.
+    pub(crate) fn with_queue_compatibility(mut self, root: &'a Path) -> Self {
+        self.cache.clear();
+        self.alias_order = (0..self.tsconfig.paths.len()).collect();
+        self.policy = ImportResolutionPolicy::QueueCompatibility { root };
+        self
     }
 
     pub fn with_visible(mut self, visible: &'a HashSet<PathBuf>) -> Self {
@@ -79,7 +101,13 @@ impl<'a> ImportResolver<'a> {
     }
 
     fn resolve_uncached(&self, specifier: &str, importing_file: &Path) -> Option<PathBuf> {
-        if specifier.starts_with("./") || specifier.starts_with("../") {
+        let is_relative = match self.policy {
+            ImportResolutionPolicy::Standard => {
+                specifier.starts_with("./") || specifier.starts_with("../")
+            }
+            ImportResolutionPolicy::QueueCompatibility { .. } => specifier.starts_with('.'),
+        };
+        if is_relative {
             let dir = importing_file.parent()?;
             return self.try_path(&dir.join(specifier));
         }
@@ -108,11 +136,18 @@ impl<'a> ImportResolver<'a> {
             }
         }
 
+        if let ImportResolutionPolicy::QueueCompatibility { root } = self.policy {
+            return self.try_path(&root.join(specifier));
+        }
+
         None
     }
 
     /// Try `base` as-is, then with each known extension appended, then as an index file.
     fn try_path(&self, base: &Path) -> Option<PathBuf> {
+        if matches!(self.policy, ImportResolutionPolicy::QueueCompatibility { .. }) {
+            return self.try_queue_compatibility_path(base);
+        }
         let base = normalize_path(base);
         if has_explicit_extension(&base) {
             // NodeNext/ESM: for an emitted `.js`/`.mjs`/`.cjs` specifier:
@@ -149,48 +184,9 @@ impl<'a> ImportResolver<'a> {
         None
     }
 
-    /// Resolve an emitted `.js`/`.mjs`/`.cjs` specifier to its TypeScript source.
-    /// Only checks source files (`.ts`, `.tsx`, `.mts`, `.cts`); does not return
-    /// declarations or `.jsx`. Call `try_emitted_fallback` for those after the
-    /// literal-file check.
-    fn try_emitted_source(&self, base: &Path) -> Option<PathBuf> {
-        let extension = base.extension().and_then(|ext| ext.to_str())?;
-        let stem = self.stem_str(base, extension);
-        emitted_source_candidates(extension).iter().find_map(|ext| {
-            let candidate = PathBuf::from(format!("{stem}{ext}"));
-            self.path_exists(&candidate).then_some(candidate)
-        })
-    }
-
-    /// Resolve an emitted `.js`/`.mjs`/`.cjs` specifier to `.jsx` or a
-    /// declaration file. Only called when neither a TypeScript source nor the
-    /// literal file was found, so the literal always wins over these fallbacks.
-    fn try_emitted_fallback(&self, base: &Path) -> Option<PathBuf> {
-        let extension = base.extension().and_then(|ext| ext.to_str())?;
-        let stem = self.stem_str(base, extension);
-        emitted_fallback_candidates(extension).iter().find_map(|ext| {
-            let candidate = PathBuf::from(format!("{stem}{ext}"));
-            self.path_exists(&candidate).then_some(candidate)
-        })
-    }
-
-    fn stem_str(&self, base: &Path, extension: &str) -> String {
-        let s = base.to_string_lossy();
-        s[..s.len() - extension.len() - 1].to_string()
-    }
-
-    fn path_exists(&self, path: &Path) -> bool {
-        self.visible
-            .map(|visible| visible.contains(path))
-            .unwrap_or_else(|| path.exists())
-    }
-
-    fn path_is_file(&self, path: &Path) -> bool {
-        self.visible
-            .map(|visible| visible.contains(path))
-            .unwrap_or_else(|| path.is_file())
-    }
 }
+
+include!("resolver_paths.rs");
 
 /// Resolve `.` and `..` components without touching the filesystem.
 pub fn normalize_path(path: &Path) -> PathBuf {

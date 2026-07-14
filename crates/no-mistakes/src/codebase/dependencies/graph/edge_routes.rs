@@ -57,6 +57,7 @@ fn collect_route_edges(
             all_files,
             tsconfig,
             project_route_globset.expect("project route globset checked above"),
+            facts,
             config_options.test_filter.as_ref(),
         ));
     }
