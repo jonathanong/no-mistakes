@@ -86,27 +86,6 @@ impl FileInventory {
         Self::from_classified_paths(paths)
     }
 
-    /// Build an inventory from paths that already crossed the discovery
-    /// normalization boundary.
-    #[doc(hidden)]
-    pub fn from_normalized_paths(paths: Vec<PathBuf>) -> Self {
-        let paths = paths
-            .into_iter()
-            .map(|path| {
-                let classification = std::fs::symlink_metadata(&path)
-                    .ok()
-                    .map_or_else(FileClassification::default, |metadata| {
-                        FileClassification::from_file_type(&path, metadata.file_type())
-                    });
-                ClassifiedPath {
-                    path,
-                    classification,
-                }
-            })
-            .collect();
-        Self::from_classified_paths(paths)
-    }
-
     pub(crate) fn from_classified_paths(mut entries: Vec<ClassifiedPath>) -> Self {
         entries.sort_by(|left, right| left.path.cmp(&right.path));
         entries.dedup_by(|left, right| left.path == right.path);

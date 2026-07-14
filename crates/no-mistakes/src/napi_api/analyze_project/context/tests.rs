@@ -6,6 +6,22 @@ use std::cell::Cell;
 use std::collections::HashMap;
 use std::path::Path;
 
+impl super::AnalyzeProjectContext {
+    pub(in crate::napi_api::analyze_project) fn root_source_read_count(&self) -> usize {
+        self.scopes
+            .values()
+            .filter_map(|scope| scope.check.as_ref())
+            .map(|check| {
+                check
+                    .prepared
+                    .visible_paths
+                    .source_store_for(&check.root)
+                    .physical_read_count()
+            })
+            .sum()
+    }
+}
+
 #[test]
 fn aggregate_graph_reports_union_explicit_framework_demand() {
     let options: crate::napi_api::analyze_project::types::AnalyzeProjectOptions =

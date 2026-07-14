@@ -34,11 +34,7 @@ fn relative_visible_paths(
         .paths_for(&root)
         .iter()
         .filter_map(|path| {
-            if let Ok(relative) = path.strip_prefix(&root) {
-                return Some(relative.to_string_lossy().into_owned());
-            }
-            no_mistakes::codebase::ts_resolver::normalize_path(path)
-                .strip_prefix(&root)
+            path.strip_prefix(&root)
                 .ok()
                 .map(|relative| relative.to_string_lossy().into_owned())
         })
