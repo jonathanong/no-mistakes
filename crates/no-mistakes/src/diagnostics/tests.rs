@@ -1,4 +1,5 @@
 use super::context::measure_optional;
+use super::observer::timing_order;
 use super::*;
 use std::sync::Arc;
 use std::time::Duration;
@@ -163,4 +164,73 @@ fn nested_timings_inherit_parallel_context() {
         .timings
         .iter()
         .all(|timing| timing.kind == TimingKind::Parallel));
+}
+#[test]
+fn timing_order_preserves_every_exact_rank() {
+    let expected = [
+        ("discovery", 10),
+        ("read", 20),
+        ("parse", 30),
+        ("manifest", 40),
+        ("resolve", 50),
+        ("search", 60),
+        ("ingest", 61),
+        ("parse+analysis", 62),
+        ("analysis", 63),
+        ("prepare", 100),
+        ("discover.dotnet", 110),
+        ("discover.vitest", 111),
+        ("discover.playwright", 112),
+        ("discover.swift", 113),
+        ("graph", 120),
+        ("select.dotnet", 130),
+        ("select.vitest", 131),
+        ("select.playwright", 132),
+        ("select.swift", 133),
+        ("generic-checks", 140),
+        ("analysis.react", 200),
+        ("analysis.queues", 201),
+        ("analysis.rules", 202),
+        ("analysis.integration", 203),
+        ("analysis.codebase", 204),
+        ("analysis.filesystem_rules", 205),
+        ("output", 900),
+    ];
+
+    for (label, rank) in expected {
+        assert_eq!(timing_order(label), rank, "{label}");
+    }
+}
+
+#[test]
+fn timing_order_preserves_every_prefix_fallback_rank() {
+    let expected = [
+        ("discovery.files", 11),
+        ("read.source", 21),
+        ("parse.source", 31),
+        ("manifest.package", 41),
+        ("resolve.import", 51),
+        ("graph.imports", 301),
+        ("traversal.dependencies", 400),
+        ("analysis.server", 500),
+        ("rules.config", 600),
+        ("playwright.routes", 700),
+    ];
+
+    for (label, rank) in expected {
+        assert_eq!(timing_order(label), rank, "{label}");
+    }
+}
+
+#[test]
+fn timing_order_uses_unknown_fallback_rank() {
+    for label in ["", "other", "discover.unknown"] {
+        assert_eq!(timing_order(label), 800, "{label}");
+    }
+}
+
+#[test]
+fn timing_order_prefers_exact_rank_over_matching_prefix() {
+    assert_eq!(timing_order("analysis.react"), 200);
+    assert_eq!(timing_order("analysis.react.child"), 500);
 }

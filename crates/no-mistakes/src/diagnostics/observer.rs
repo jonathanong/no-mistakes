@@ -1,3 +1,5 @@
+mod timing_order;
+
 use super::context::{measure_optional, with_timing_kind};
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
@@ -152,45 +154,6 @@ impl InvocationObserver {
     }
 }
 
-fn timing_order(label: &str) -> u16 {
-    match label {
-        "discovery" => 10,
-        "read" => 20,
-        "parse" => 30,
-        "manifest" => 40,
-        "resolve" => 50,
-        "search" => 60,
-        "ingest" => 61,
-        "parse+analysis" => 62,
-        "analysis" => 63,
-        "prepare" => 100,
-        "discover.dotnet" => 110,
-        "discover.vitest" => 111,
-        "discover.playwright" => 112,
-        "discover.swift" => 113,
-        "graph" => 120,
-        "select.dotnet" => 130,
-        "select.vitest" => 131,
-        "select.playwright" => 132,
-        "select.swift" => 133,
-        "generic-checks" => 140,
-        "analysis.react" => 200,
-        "analysis.queues" => 201,
-        "analysis.rules" => 202,
-        "analysis.integration" => 203,
-        "analysis.codebase" => 204,
-        "analysis.filesystem_rules" => 205,
-        "output" => 900,
-        label if label.starts_with("discovery.") => 11,
-        label if label.starts_with("read.") => 21,
-        label if label.starts_with("parse.") => 31,
-        label if label.starts_with("manifest.") => 41,
-        label if label.starts_with("resolve.") => 51,
-        label if label.starts_with("graph.") => 301,
-        label if label.starts_with("traversal.") => 400,
-        label if label.starts_with("analysis.") => 500,
-        label if label.starts_with("rules.") => 600,
-        label if label.starts_with("playwright.") => 700,
-        _ => 800,
-    }
+pub(super) fn timing_order(label: &str) -> u16 {
+    timing_order::rank(label)
 }
