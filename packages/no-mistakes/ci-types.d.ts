@@ -25,6 +25,8 @@ export interface ImpactedChecksOptions {
   changedFiles?: string[];
   changedFilesFile?: string;
   diff?: string;
+  /** Include ordered analysis phase timings in the returned report. */
+  timings?: boolean;
 }
 
 export type TriggerMatch = "matched" | "always" | "not-matched" | "no-path-events";
@@ -99,9 +101,16 @@ export interface CheckCommand {
   files?: string[];
 }
 
+export interface ImpactedChecksTiming {
+  phase: string;
+  duration_ms: number;
+}
+
 export interface ImpactedChecksReport {
   changed_files: string[];
   checks: CheckCommand[];
   warnings: Array<{ type: string; message: string; file: string }>;
   fallback_triggered: boolean;
+  /** Present only when `timings: true` was requested. */
+  timings?: ImpactedChecksTiming[];
 }

@@ -12,10 +12,20 @@ use no_mistakes::codebase::workspaces::WorkspaceMap;
 use no_mistakes::config::v2::NoMistakesConfig;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 
 /// Immutable, request-scoped inputs shared by direct test plans and the
 /// multi-framework impacted-check fanout.
+pub(crate) struct PreparedTestPlanInputs {
+    args: PlanArgs,
+    pub(crate) root: PathBuf,
+    pub(crate) visible_paths: Arc<VisiblePathSnapshot>,
+    root_visible_paths: Arc<Vec<PathBuf>>,
+    pub(crate) config: NoMistakesConfig,
+    pub(crate) collected: ChangedFiles,
+}
+
 pub(crate) struct PreparedTestPlanRequest {
     args: PlanArgs,
     pub(crate) root: PathBuf,
@@ -35,9 +45,11 @@ pub(crate) struct PreparedTestPlanRequest {
     test_filter: no_mistakes::codebase::test_filter::TestFileFilter,
     graph: OnceLock<std::result::Result<DepGraph, String>>,
     discovered_tests: Mutex<HashMap<TestFramework, std::result::Result<DiscoveredTests, String>>>,
+    graph_builds: AtomicUsize,
+    framework_discoveries: AtomicUsize,
 }
 
-impl PreparedTestPlanRequest {
+impl PreparedTestPlanInputs {
     pub(crate) fn prepare(args: &PlanArgs) -> Result<Self> {
         let args = resolve_args(args)?;
         let cwd = std::env::current_dir().context("cwd must be accessible")?;
@@ -52,12 +64,36 @@ impl PreparedTestPlanRequest {
             args.config.as_deref(),
             &root_visible_paths,
         )?;
+        let collected = collect_changed_files(&args, &root)?;
+
+        Ok(Self {
+            args,
+            root,
+            visible_paths,
+            root_visible_paths,
+            config,
+            collected,
+        })
+    }
+
+    pub(crate) fn root_visible_paths(&self) -> &[PathBuf] {
+        &self.root_visible_paths
+    }
+
+    pub(crate) fn finish(self) -> Result<PreparedTestPlanRequest> {
+        let Self {
+            args,
+            root,
+            visible_paths,
+            root_visible_paths,
+            config,
+            collected,
+        } = self;
         let tsconfig = no_mistakes::codebase::ts_resolver::resolve_tsconfig_from_visible(
             args.tsconfig.as_deref(),
             &root,
             &root_visible_paths,
         )?;
-        let collected = collect_changed_files(&args, &root)?;
         let changed_files = existing_changed_files(&collected);
         let lockfile_analysis = analyze_lockfile_changes(&args, &root, &collected.files);
         let lockfile_changed_packages = lockfile_packages(&root, &lockfile_analysis);
@@ -126,7 +162,7 @@ impl PreparedTestPlanRequest {
                 test_filter.clone(),
             )?;
 
-        Ok(Self {
+        Ok(PreparedTestPlanRequest {
             args,
             root,
             visible_paths,
@@ -145,7 +181,15 @@ impl PreparedTestPlanRequest {
             test_filter,
             graph: OnceLock::new(),
             discovered_tests: Mutex::new(HashMap::new()),
+            graph_builds: AtomicUsize::new(0),
+            framework_discoveries: AtomicUsize::new(0),
         })
+    }
+}
+
+impl PreparedTestPlanRequest {
+    pub(crate) fn prepare(args: &PlanArgs) -> Result<Self> {
+        PreparedTestPlanInputs::prepare(args)?.finish()
     }
 
     pub(crate) fn args(&self) -> &PlanArgs {
@@ -159,6 +203,7 @@ impl PreparedTestPlanRequest {
     pub(crate) fn graph(&self) -> Result<&DepGraph> {
         self.graph
             .get_or_init(|| {
+            self.graph_builds.fetch_add(1, Ordering::Relaxed);
             let (fact_plan, fact_context) =
                 no_mistakes::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_prepared(
                     &self.root,
@@ -202,6 +247,18 @@ impl PreparedTestPlanRequest {
             .map_err(|error| anyhow::Error::msg(error.clone()))
     }
 
+    pub(crate) fn graph_is_initialized(&self) -> bool {
+        self.graph.get().is_some()
+    }
+
+    pub(crate) fn graph_build_count(&self) -> usize {
+        self.graph_builds.load(Ordering::Relaxed)
+    }
+
+    pub(crate) fn framework_discovery_count(&self) -> usize {
+        self.framework_discoveries.load(Ordering::Relaxed)
+    }
+
     pub(crate) fn test_filter(&self) -> &no_mistakes::codebase::test_filter::TestFileFilter {
         &self.test_filter
     }
@@ -214,6 +271,7 @@ impl PreparedTestPlanRequest {
         cache
             .entry(framework)
             .or_insert_with(|| {
+                self.framework_discoveries.fetch_add(1, Ordering::Relaxed);
                 no_mistakes::codebase::test_discovery::discover_tests_from_prepared_projects(
                     &self.root,
                     &self.config,

@@ -44,6 +44,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
     forced_fallback: Option<(String, PathBuf)>,
     discovered_tests: DiscoveredTests,
     prepared: &super::prepared_plan::PreparedTestPlanRequest,
+    timing: Option<&mut crate::impacted_checks::timing::TimingTracker>,
 ) -> Result<TestPlan> {
     let env = configured_environment(args, framework, config)?;
     let all_tests = discovered_tests.tests.clone();
@@ -112,7 +113,13 @@ pub(crate) fn generate_configured_plan_with_prepared(
         return Ok(plan);
     }
 
-    let graph = prepared.graph()?;
+    let graph = if prepared.graph_is_initialized() {
+        prepared.graph()?
+    } else if let Some(timing) = timing {
+        timing.run_phase("graph", || prepared.graph())?
+    } else {
+        prepared.graph()?
+    };
     let test_filter = prepared.test_filter().clone();
     let coverage_hints =
         build_coverage_hints_from_prepared(prepared, config, framework, diff_files, &all_tests);

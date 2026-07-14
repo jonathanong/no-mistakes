@@ -1,5 +1,8 @@
 use super::frameworks::framework_present;
-use super::generate::{dedupe_checks, dedupe_warnings, generic_checks, plan_args_for};
+use super::generate::{
+    dedupe_checks, dedupe_warnings, generate_impacted_checks_with_stats, generic_checks,
+    plan_args_for,
+};
 use super::*;
 use crate::config::v2::schema::NoMistakesConfig;
 use crate::tests::TestFramework;
@@ -9,6 +12,20 @@ use std::path::Path;
 fn fixture() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/impacted-checks/basic"),
+    )
+}
+
+fn multi_framework_fixture() -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/impacted-checks/multi-framework"),
+    )
+}
+
+fn generic_only_fixture() -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/impacted-checks/generic-only"),
     )
 }
 
@@ -26,6 +43,7 @@ fn args(files: &[&str]) -> ImpactedChecksArgs {
         diff_content: None,
         format: None,
         json: false,
+        timings: false,
     }
 }
 
@@ -47,11 +65,74 @@ fn fanout_args(root: &Path) -> ImpactedChecksArgs {
         diff_content: None,
         format: None,
         json: false,
+        timings: false,
     }
 }
 
 fn command_strings(report: &ImpactedChecksReport) -> Vec<String> {
     report.checks.iter().map(|c| c.command.join(" ")).collect()
+}
+
+#[test]
+fn multi_file_change_selects_all_configured_frameworks() {
+    let mut a = args(&[
+        "src/value.ts",
+        "dotnet/src/App/Value.cs",
+        "swift/App/Sources/App/Value.swift",
+    ]);
+    a.root = multi_framework_fixture();
+
+    let (report, stats) = generate_impacted_checks_with_stats(&a).unwrap();
+
+    assert_eq!(
+        report.changed_files,
+        vec![
+            "dotnet/src/App/Value.cs".to_string(),
+            "src/value.ts".to_string(),
+            "swift/App/Sources/App/Value.swift".to_string(),
+        ]
+    );
+    assert_eq!(
+        command_strings(&report),
+        vec![
+            "dotnet test dotnet/tests/App.Tests/App.Tests.csproj --no-restore".to_string(),
+            "playwright test --project e2e e2e/value\\.spec\\.ts".to_string(),
+            "swift test --package-path swift/App --filter AppTests".to_string(),
+            "vitest --project unit src/value.test.ts".to_string(),
+        ]
+    );
+    assert!(report.warnings.is_empty());
+    assert!(!report.fallback_triggered);
+    assert_eq!(stats.framework_discoveries, 4);
+    assert_eq!(stats.graph_builds, 1);
+}
+
+#[test]
+fn all_environments_skip_the_shared_graph() {
+    let mut a = args(&["src/value.ts"]);
+    a.root = multi_framework_fixture();
+    a.config = Some(a.root.join("all.no-mistakes.yml"));
+
+    let (report, stats) = generate_impacted_checks_with_stats(&a).unwrap();
+
+    assert_eq!(report.checks.len(), 4);
+    assert!(report.fallback_triggered);
+    assert_eq!(stats.framework_discoveries, 4);
+    assert_eq!(stats.graph_builds, 0);
+}
+
+#[test]
+fn generic_only_repository_skips_test_file_discovery_and_graph() {
+    let mut a = args(&["src/value.ts"]);
+    a.root = generic_only_fixture();
+    // Test-only inputs remain irrelevant when no test framework is present.
+    a.tsconfig = Some(a.root.join("missing-tsconfig.json"));
+
+    let (report, stats) = generate_impacted_checks_with_stats(&a).unwrap();
+
+    assert_eq!(command_strings(&report), vec!["eslint src/value.ts"]);
+    assert_eq!(stats.framework_discoveries, 0);
+    assert_eq!(stats.graph_builds, 0);
 }
 
 #[test]
@@ -364,15 +445,17 @@ fn impacted_checks_napi_matches_the_cli_engine_for_multi_framework_fanout() {
 #[test]
 fn impacted_fanout_prepares_and_builds_the_graph_once() {
     let generate = include_str!("generate.rs");
+    let impacted_prepare = include_str!("generate/prepare.rs");
     let prepared = include_str!("../tests/prepared_plan.rs");
     let plan = include_str!("../tests/plan.rs");
 
     assert_eq!(
-        generate
-            .matches("PreparedTestPlanRequest::prepare(&plan_args)")
+        impacted_prepare
+            .matches("PreparedTestPlanInputs::prepare(&plan_args)")
             .count(),
         1
     );
+    assert_eq!(impacted_prepare.matches("inputs.finish()?").count(), 1);
     assert_eq!(generate.matches("generate_plan_with_prepared(").count(), 1);
     assert_eq!(generate.matches("generate_plan(").count(), 0);
     for repeated_prepare in [

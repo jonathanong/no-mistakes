@@ -20,6 +20,15 @@ fn impacted_checks_root() -> String {
     .to_string()
 }
 
+fn impacted_checks_multi_framework_root() -> String {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/impacted-checks/multi-framework"),
+    )
+    .display()
+    .to_string()
+}
+
 #[test]
 fn ci_impact_json_returns_workflows() {
     let options = json!({ "root": ci_graph("triggers"), "files": ["src/app.ts"] }).to_string();
@@ -54,6 +63,76 @@ fn impacted_checks_json_returns_checks() {
         .unwrap()
         .iter()
         .any(|check| check["name"] == "vitest"));
+}
+
+#[test]
+fn impacted_checks_json_timings_are_opt_in_and_ordered() {
+    let root = impacted_checks_multi_framework_root();
+    let changed_files = [
+        "src/value.ts",
+        "dotnet/src/App/Value.cs",
+        "swift/App/Sources/App/Value.swift",
+    ];
+    let plain_options = json!({
+        "root": root,
+        "changedFiles": changed_files,
+    })
+    .to_string();
+    let timed_options = json!({
+        "root": impacted_checks_multi_framework_root(),
+        "changedFiles": changed_files,
+        "timings": true,
+    })
+    .to_string();
+
+    let mut plain: serde_json::Value =
+        serde_json::from_str(&impacted_checks_json_impl(plain_options).unwrap()).unwrap();
+    assert!(plain.get("timings").is_none());
+    let mut timed: serde_json::Value =
+        serde_json::from_str(&impacted_checks_json_impl(timed_options).unwrap()).unwrap();
+    let timings = timed
+        .get("timings")
+        .and_then(serde_json::Value::as_array)
+        .expect("timings should be returned when requested");
+    assert_eq!(
+        timings
+            .iter()
+            .map(|timing| timing["phase"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        vec![
+            "prepare",
+            "discover.dotnet",
+            "discover.vitest",
+            "discover.playwright",
+            "discover.swift",
+            "graph",
+            "select.dotnet",
+            "select.vitest",
+            "select.playwright",
+            "select.swift",
+            "generic-checks",
+            "total",
+        ]
+    );
+    assert!(timings
+        .iter()
+        .all(|timing| timing["duration_ms"].as_f64().is_some()));
+    let total = timings
+        .last()
+        .and_then(|timing| timing["duration_ms"].as_f64())
+        .unwrap();
+    let phase_sum: f64 = timings[..timings.len() - 1]
+        .iter()
+        .map(|timing| timing["duration_ms"].as_f64().unwrap())
+        .sum();
+    assert!(
+        phase_sum <= total + 0.001,
+        "exclusive phase durations must not double-count nested graph work: {phase_sum} > {total}"
+    );
+
+    timed.as_object_mut().unwrap().remove("timings");
+    plain.as_object_mut().unwrap().remove("timings");
+    assert_eq!(timed, plain);
 }
 
 // Omitting `root` exercises the default-root (`"."`) fallback in each entry

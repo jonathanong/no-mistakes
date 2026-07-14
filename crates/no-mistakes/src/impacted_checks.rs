@@ -1,9 +1,10 @@
 //! `no-mistakes impacted-checks <file...>` — the minimal local validation
 //! commands to run for a set of changed files.
 //!
-//! Test commands are derived by reusing one prepared `tests plan` request across
-//! configured frameworks, so emitted runner invocations match `tests plan`
-//! exactly without rebuilding the repository graph for every framework.
+//! Test commands are derived from the same configured-plan engine as
+//! `tests plan`, with one shared file discovery and dependency graph across
+//! frameworks so emitted runner invocations keep exact parity without repeated
+//! repository analysis.
 //! Generic checks (lint, typecheck, …) come from the `checks:` config block,
 //! keyed by file globs.
 
@@ -18,7 +19,9 @@ use std::process::ExitCode;
 
 mod frameworks;
 mod generate;
+pub(crate) mod timing;
 pub use generate::generate_impacted_checks;
+pub(crate) use generate::generate_impacted_checks_with_timing;
 
 #[derive(Args)]
 pub struct ImpactedChecksArgs {
@@ -58,6 +61,18 @@ pub struct ImpactedChecksArgs {
     /// Shorthand for --format json.
     #[arg(long, default_value_t = false, conflicts_with = "format")]
     pub(crate) json: bool,
+    /// Emit live phase progress and timings to stderr.
+    #[arg(long, default_value_t = false)]
+    pub(crate) timings: bool,
+}
+
+/// The elapsed time for one `impacted-checks` analysis phase.
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct ImpactedChecksTiming {
+    /// Stable phase identifier.
+    pub phase: String,
+    /// Fractional milliseconds elapsed in the phase.
+    pub duration_ms: f64,
 }
 
 /// A single validation command to run.
@@ -99,7 +114,15 @@ pub struct ImpactedChecksReport {
 
 pub fn run(args: ImpactedChecksArgs) -> Result<ExitCode> {
     let format = resolve_format(args.json, args.format, std::io::stdout().is_terminal());
-    let report = generate_impacted_checks(&args)?;
+    let mut timings = timing::TimingTracker::new(args.timings, false);
+    let report = match generate_impacted_checks_with_timing(&args, &mut timings) {
+        Ok((report, _)) => report,
+        Err(error) => {
+            timings.fail_total();
+            return Err(error);
+        }
+    };
+    timings.finish_total();
     print!("{}", render(&report, format)?);
     Ok(ExitCode::SUCCESS)
 }

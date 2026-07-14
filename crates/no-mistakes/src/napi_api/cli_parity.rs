@@ -114,9 +114,20 @@ pub(crate) fn ci_env_json_impl(options_json: String) -> napi::Result<String> {
 
 pub(crate) fn impacted_checks_json_impl(options_json: String) -> napi::Result<String> {
     let options = parse_options::<ImpactedChecksOptions>(&options_json)?;
+    let collect_timings = options.timings;
     let args = build_impacted_checks_args(options);
-    let report = crate::impacted_checks::generate_impacted_checks(&args).map_err(to_napi_error)?;
-    to_pretty_json(&report)
+    let mut timing = crate::impacted_checks::timing::TimingTracker::new(false, collect_timings);
+    let (report, _) =
+        crate::impacted_checks::generate_impacted_checks_with_timing(&args, &mut timing)
+            .map_err(to_napi_error)?;
+    timing.finish_total();
+    let Some(timings) = timing.into_timings() else {
+        return to_pretty_json(&report);
+    };
+    let mut value = serde_json::to_value(&report).map_err(|error| to_napi_error(error.into()))?;
+    value["timings"] =
+        serde_json::to_value(timings).map_err(|error| to_napi_error(error.into()))?;
+    to_pretty_json(&value)
 }
 
 pub(crate) fn tests_why_json_impl(options_json: String) -> napi::Result<String> {
