@@ -32,6 +32,9 @@ tests:
         - module: "@fixture/namespace-locators"
           export: ambiguousByTestId
           testIdArgument: 0
+        - module: "./namespace-locators.js"
+          export: ambiguousByTestId
+          testIdArgument: 1
         - module: "./helpers"
           export: getAsideLocator
           testIdArgument: 1
@@ -43,6 +46,9 @@ tests:
         - module: "#selector-helpers"
           export: ambiguousLocator
           testIdArgument: 0
+        - module: "./helpers.js"
+          export: ambiguousLocator
+          testIdArgument: 1
         - module: "../packages/locators/src/aside"
           export: workspaceLocator
           testIdArgument: 1

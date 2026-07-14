@@ -1,3 +1,6 @@
+export type HelperType = unknown
+export type OtherHelperType = unknown
+
 export function getAsideLocator(page: unknown, testId: string, mode?: string) {
   return { page, testId, mode }
 }
