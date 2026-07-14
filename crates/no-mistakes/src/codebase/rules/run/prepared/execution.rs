@@ -1,5 +1,32 @@
 use super::*;
 
+fn storybook_findings(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    tsconfig_path: Option<&Path>,
+    prepared_tsconfig: &crate::codebase::ts_resolver::TsConfig,
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+) -> Result<Vec<RuleFinding>> {
+    match inferred_roots {
+        Some(inferred_roots) => require_storybook_stories::check_with_prepared_facts_and_inferred(
+            root,
+            config,
+            tsconfig_path,
+            prepared_tsconfig,
+            shared,
+            inferred_roots,
+        ),
+        None => require_storybook_stories::check_with_prepared_facts(
+            root,
+            config,
+            tsconfig_path,
+            prepared_tsconfig,
+            shared,
+        ),
+    }
+}
+
 pub(super) fn run(
     inputs: PreparedRulesCheck<'_>,
     dependency_graph: Option<&DepGraph>,
@@ -115,26 +142,14 @@ pub(super) fn run(
         }?);
     }
     if rule_enabled(config, REQUIRE_STORYBOOK_STORIES) {
-        let storybook_findings = match inferred_roots {
-            Some(inferred_roots) => {
-                require_storybook_stories::check_with_prepared_facts_and_inferred(
-                    root,
-                    config,
-                    tsconfig_path,
-                    prepared_tsconfig,
-                    shared,
-                    inferred_roots,
-                )
-            }
-            None => require_storybook_stories::check_with_prepared_facts(
-                root,
-                config,
-                tsconfig_path,
-                prepared_tsconfig,
-                shared,
-            ),
-        }?;
-        findings.extend(storybook_findings);
+        findings.extend(storybook_findings(
+            root,
+            config,
+            tsconfig_path,
+            prepared_tsconfig,
+            shared,
+            inferred_roots,
+        )?);
     }
     if crate::playwright::rules::configured(config) {
         findings.extend(crate::perf_trace::trace(
@@ -156,27 +171,16 @@ pub(super) fn run(
     if rule_enabled(config, FORBIDDEN_DEPENDENCIES) {
         findings.extend(crate::perf_trace::trace(
             "rules.forbidden_dependencies",
-            || match inferred_roots {
-                Some(inferred_roots) => {
-                    forbidden_dependencies::check_with_prepared_facts_and_graph(
-                        root,
-                        config,
-                        config_path,
-                        shared,
-                        prepared_graph,
-                        Some(inferred_roots),
-                        dependency_graph.expect("forbidden-dependencies requires canonical graph"),
-                    )
-                }
-                None => forbidden_dependencies::check_with_prepared_facts_and_graph(
+            || {
+                forbidden_dependencies::check_with_prepared_facts_and_graph(
                     root,
                     config,
                     config_path,
                     shared,
                     prepared_graph,
-                    None,
+                    inferred_roots,
                     dependency_graph.expect("forbidden-dependencies requires canonical graph"),
-                ),
+                )
             },
         )?);
     }

@@ -177,3 +177,27 @@ fn aggregate_storybook_prepares_visible_tsconfig_per_project_root() {
     assert!(prepared.contains("resolve_tsconfig_from_visible"));
     assert!(prepared.contains("shared.files()"));
 }
+
+#[test]
+fn aggregate_rule_coordinator_delegates_variant_dispatch() {
+    let execution = include_str!("../../codebase/rules/run/prepared/execution.rs");
+    let coordinator = execution
+        .split("pub(super) fn run")
+        .nth(1)
+        .expect("prepared rule coordinator");
+    let storybook_block = coordinator
+        .split("if rule_enabled(config, REQUIRE_STORYBOOK_STORIES)")
+        .nth(1)
+        .and_then(|source| {
+            source
+                .split("if crate::playwright::rules::configured")
+                .next()
+        })
+        .expect("Storybook coordinator block");
+
+    // Keep per-rule variant selection out of the aggregate coordinator so its
+    // complexity remains bounded as additional rules are introduced.
+    assert!(execution.contains("fn storybook_findings("));
+    assert_eq!(storybook_block.matches("storybook_findings(").count(), 1);
+    assert!(!storybook_block.contains("check_with_prepared_facts_and_inferred"));
+}
