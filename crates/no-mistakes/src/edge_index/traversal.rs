@@ -1,4 +1,4 @@
-use super::{CanonicalEdge, EdgeDirection, EdgeIndex};
+use super::{CanonicalEdge, EdgeDirection, EdgeIndex, NodeAliases};
 use std::collections::{BTreeSet, HashSet};
 use std::hash::Hash;
 
@@ -16,7 +16,31 @@ where
         direction: EdgeDirection,
         max_depth: Option<usize>,
     ) -> Vec<CanonicalEdge<Node, Kind>> {
-        let mut frontier = roots.iter().cloned().collect::<BTreeSet<_>>();
+        self.traverse_impl(roots, direction, max_depth, None)
+    }
+
+    /// Traverse while treating each mapped node as equivalent to its aliases.
+    ///
+    /// Aliases affect reachability only: returned edges always come from the
+    /// canonical index and never include synthetic equivalence edges.
+    pub(crate) fn traverse_with_aliases(
+        &self,
+        roots: &[Node],
+        direction: EdgeDirection,
+        max_depth: Option<usize>,
+        aliases: &NodeAliases<Node>,
+    ) -> Vec<CanonicalEdge<Node, Kind>> {
+        self.traverse_impl(roots, direction, max_depth, Some(aliases))
+    }
+
+    fn traverse_impl(
+        &self,
+        roots: &[Node],
+        direction: EdgeDirection,
+        max_depth: Option<usize>,
+        aliases: Option<&NodeAliases<Node>>,
+    ) -> Vec<CanonicalEdge<Node, Kind>> {
+        let mut frontier = expand_aliases(roots.iter().cloned(), aliases);
         let mut seen_nodes = frontier.iter().cloned().collect::<HashSet<_>>();
         let mut seen_arcs = HashSet::new();
         let mut emitted_edges = HashSet::new();
@@ -54,7 +78,11 @@ where
                     output.push(projected);
                 }
                 if seen_nodes.insert(to.clone()) {
-                    next.insert(to.clone());
+                    for node in expand_aliases(std::iter::once(to.clone()), aliases) {
+                        if seen_nodes.insert(node.clone()) || node == *to {
+                            next.insert(node);
+                        }
+                    }
                 }
             }
             if next.is_empty() {
@@ -63,5 +91,18 @@ where
             frontier = next;
         }
         output
+    }
+}
+
+fn expand_aliases<Node>(
+    nodes: impl IntoIterator<Item = Node>,
+    aliases: Option<&NodeAliases<Node>>,
+) -> BTreeSet<Node>
+where
+    Node: Clone + Eq + Hash + Ord,
+{
+    match aliases {
+        Some(aliases) => aliases.expand(nodes),
+        None => nodes.into_iter().collect(),
     }
 }

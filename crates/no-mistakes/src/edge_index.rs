@@ -2,8 +2,11 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::hash::Hash;
 
+mod aliases;
 mod build;
 mod traversal;
+
+pub(crate) use aliases::NodeAliases;
 
 #[cfg(test)]
 mod tests;

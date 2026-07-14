@@ -2,7 +2,7 @@ use crate::codebase::ts_resolver::{
     find_tsconfig_from_visible, load_tsconfig, ImportResolver, TsConfig,
 };
 use crate::config::v2::{load_v2_config_from_visible, ConfigView};
-use crate::edge_index::{CanonicalEdge, EdgeIndex};
+use crate::edge_index::{CanonicalEdge, EdgeIndex, NodeAliases};
 use crate::server_routes::model::{FileFacts, PreparedProjectReport, ProjectReport, RouteSite};
 use crate::server_routes::mounts::{prefixes_for, resolve_mounts_with_resolver};
 use crate::server_routes::normalize::{join_paths, normalize_route};

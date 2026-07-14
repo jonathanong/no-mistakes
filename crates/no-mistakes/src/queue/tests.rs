@@ -1,3 +1,4 @@
+mod collisions;
 mod resolver;
 use super::*;
 use crate::queue::extract_model::FileFacts;
@@ -408,7 +409,7 @@ fn custom_factory_respected_in_check_mode_shared_facts() {
 
 #[test]
 fn typed_index_preserves_colliding_file_and_job_nodes() {
-    use crate::edge_index::{CanonicalEdge, EdgeIndex};
+    use crate::edge_index::{CanonicalEdge, EdgeIndex, NodeAliases};
     use crate::queue::graph_model::PreparedProjectReport;
     use crate::queue::types::{JobKey, RelationshipNode};
 
@@ -435,9 +436,10 @@ fn typed_index_preserves_colliding_file_and_job_nodes() {
             CanonicalEdge::new(job.clone(), worker.clone(), EdgeKind::QueueWorker),
         ]),
         nodes_by_name: HashMap::from([
-            ("queues.ts#send".into(), vec![file, job]),
+            ("queues.ts#send".into(), vec![file.clone(), job.clone()]),
             ("worker.ts".into(), vec![worker]),
         ]),
+        aliases: NodeAliases::from_groups([vec![file, job]]),
     };
 
     assert_eq!(

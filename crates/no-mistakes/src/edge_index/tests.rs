@@ -95,6 +95,34 @@ fn unknown_roots_have_no_edges() {
 }
 
 #[test]
+fn aliases_expand_every_reached_frontier_without_synthetic_edges() {
+    let index = index(&[
+        ("p1", "j1", 1),
+        ("j1", "w1", 2),
+        ("p2", "j2", 1),
+        ("j2", "w2", 2),
+    ]);
+    let aliases = NodeAliases::from_groups([vec!["j1".to_owned(), "j2".to_owned()]]);
+
+    assert_eq!(
+        index.traverse_with_aliases(&["p1".into()], EdgeDirection::Dependencies, None, &aliases,),
+        vec![
+            edge("p1", "j1", 1),
+            edge("j1", "w1", 2),
+            edge("j2", "w2", 2)
+        ]
+    );
+    assert_eq!(
+        index.traverse_with_aliases(&["w1".into()], EdgeDirection::Dependents, None, &aliases),
+        vec![
+            edge("w1", "j1", 2),
+            edge("j1", "p1", 1),
+            edge("j2", "p2", 1)
+        ]
+    );
+}
+
+#[test]
 fn both_deduplicates_self_loops_and_reciprocal_projections() {
     let index = index(&[("a", "a", 1), ("a", "b", 2), ("b", "a", 2)]);
     assert_eq!(

@@ -32,6 +32,7 @@ pub(super) fn build_prepared_report(
     for nodes in nodes_by_name.values_mut() {
         nodes.sort();
     }
+    let aliases = NodeAliases::from_groups(nodes_by_name.values().cloned());
     let index = EdgeIndex::from_edges(
         relationships
             .into_iter()
@@ -42,6 +43,7 @@ pub(super) fn build_prepared_report(
         report,
         index,
         nodes_by_name,
+        aliases,
     }
 }
 

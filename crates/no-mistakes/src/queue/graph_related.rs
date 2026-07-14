@@ -22,10 +22,11 @@ impl PreparedProjectReport {
         if roots.is_empty() {
             return self.report.edges.clone();
         }
-        self.project(self.index.traverse(
+        self.project(self.index.traverse_with_aliases(
             &self.typed_roots(roots),
             EdgeDirection::Dependencies,
             depth,
+            &self.aliases,
         ))
     }
 
@@ -35,10 +36,11 @@ impl PreparedProjectReport {
             RelatedDirection::Dependents => EdgeDirection::Dependents,
             RelatedDirection::Both => EdgeDirection::Both,
         };
-        let mut edges = self.project(self.index.traverse(
+        let mut edges = self.project(self.index.traverse_with_aliases(
             &self.typed_roots(roots),
             direction,
             None,
+            &self.aliases,
         ));
         edges.sort();
         edges.dedup();
