@@ -173,6 +173,25 @@ fn fixture_load_covers_entry_resolution_branches() {
     );
 }
 
+#[test]
+fn public_package_wrappers_use_visible_workspace_entries() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/workspaces-entries/fixture"),
+    );
+    let package = load_root_package(&root.join("pkg"))
+        .unwrap()
+        .expect("saved package fixture is visible");
+    assert_eq!(package.name, "@fixtures/exported");
+    assert_eq!(package.entry, Some(root.join("pkg/exported/index.ts")));
+
+    let map = load(&root).unwrap();
+    assert_eq!(
+        map.resolve_specifier_from("@fixtures/exported", &root.join("consumer.ts")),
+        Some(root.join("pkg/exported/index.ts"))
+    );
+}
+
 fn git_init(dir: &Path) {
     let output = std::process::Command::new("git")
         .args(["init", "-q", "--initial-branch=main"])

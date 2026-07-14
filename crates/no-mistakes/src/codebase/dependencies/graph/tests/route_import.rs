@@ -109,6 +109,7 @@ fn fact_lookup_defaults_and_sparse_fallback_are_complete() {
     assert!(!minimal.covers_ts_fact_plan(TsFactPlan::imports()));
     assert!(minimal.graph_files().is_none());
     assert!(minimal.get_playwright_parse_error(&primary_path).is_none());
+    assert!(minimal.get_playwright_fetch_facts(&primary_path).is_none());
 
     for prefer_fallback in [false, true] {
         let lookup = FallbackTsFactLookup::new(

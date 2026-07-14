@@ -1,4 +1,4 @@
-use crate::playwright::playwright_config::load::{load, load_many};
+use crate::playwright::playwright_config::load::{load, load_many, select_loaded};
 use crate::playwright::playwright_config::types::TestProject;
 use crate::playwright::test_support::fixture_path;
 use std::path::{Path, PathBuf};
@@ -79,6 +79,21 @@ fn load_many_with_single_config_without_filter_succeeds() {
     let result = load_many(&dir, &[config], None).unwrap();
     assert_eq!(result.name, None);
     assert_eq!(result.projects.len(), 1);
+}
+
+#[test]
+fn select_loaded_rejects_an_omitted_relative_config() {
+    let dir = fixture_path(&["ast-snippets", "playwright_config", "load-existing"]);
+    let relative = PathBuf::from("playwright.config.ts");
+
+    let error = select_loaded(&dir, std::slice::from_ref(&relative), None, &[])
+        .err()
+        .expect("a requested config must have a corresponding prepared value");
+
+    assert_eq!(
+        error.to_string(),
+        "Playwright config was not prepared: playwright.config.ts"
+    );
 }
 
 #[test]

@@ -103,6 +103,46 @@ fn analyzes_project_from_shared_facts() {
 }
 
 #[test]
+fn prepared_entrypoints_match_shared_fact_analysis() {
+    let root = fixture("unique-exports-basic");
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        files,
+        crate::codebase::check_facts::CheckFactPlan {
+            symbols: true,
+            source: true,
+            ..Default::default()
+        },
+    );
+    let config = load_codebase_config_with_path(&root, None).unwrap();
+    let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
+        Some(Path::new("tsconfig.json")),
+        &root,
+        facts.files(),
+    )
+    .unwrap();
+    let expected =
+        analyze_project_with_facts(&root, None, Some(Path::new("tsconfig.json")), &facts).unwrap();
+
+    let prepared = analyze_project_with_prepared_facts(&root, &config, &tsconfig, &facts).unwrap();
+
+    assert_eq!(prepared, expected);
+
+    // An unconfigured repository exercises the no-application prepared path.
+    let config = crate::codebase::config::Config::default();
+    let inferred = crate::codebase::config::InferredRoots::from_visible(&root, facts.files());
+    let prepared = analyze_project_with_prepared_facts(&root, &config, &tsconfig, &facts).unwrap();
+    let prepared_with_inferred = analyze_project_with_prepared_facts_and_inferred(
+        &root, &config, &tsconfig, &facts, &inferred,
+    )
+    .unwrap();
+
+    assert_eq!(prepared_with_inferred, prepared);
+    assert_eq!(prepared_with_inferred.len(), 2);
+}
+
+#[test]
 fn analyzes_nextjs_project_from_shared_facts() {
     let root = fixture("unique-exports-nextjs");
     let files = crate::codebase::ts_source::discover_files(&root, &[]);

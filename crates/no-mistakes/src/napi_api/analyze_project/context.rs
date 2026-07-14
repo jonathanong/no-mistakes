@@ -20,3 +20,6 @@ include!("context/plan_helpers.rs");
 include!("context/target_helpers.rs");
 include!("context/playwright_helpers.rs");
 include!("context_render.rs");
+
+#[cfg(test)]
+mod tests;

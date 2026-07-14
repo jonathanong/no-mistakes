@@ -44,6 +44,45 @@ fn pass4b_react_graph_facts_skip_ignored_child_for_visible_fallback() {
 }
 
 #[test]
+fn react_graph_facts_support_an_unscoped_context() {
+    let component = fixture("component.tsx");
+    let context = TsFactContext::new(component.parent().unwrap());
+
+    let facts = collect_ts_facts_with_context(
+        std::slice::from_ref(&component),
+        TsFactPlan {
+            react: true,
+            ..TsFactPlan::default()
+        },
+        &context,
+    );
+
+    assert_eq!(facts[&component].react_components.len(), 1);
+}
+
+#[test]
+fn fact_context_include_merges_backend_route_extractors() {
+    let root = fixture("");
+    let mut builder = globset::GlobSetBuilder::new();
+    builder.add(globset::Glob::new("**/*.ts").unwrap());
+    let mut added = TsFactContext::new(&root);
+    added.add_backend_route_extractor(
+        "router".to_string(),
+        "get($ROUTE, $HANDLER)".to_string(),
+        builder.build().unwrap(),
+    );
+    let mut context = TsFactContext::new(&root);
+
+    context.include(added);
+
+    assert_eq!(context.backend_route_extractors.len(), 1);
+    assert_eq!(
+        context.backend_route_extractors[0].register_object,
+        "router"
+    );
+}
+
+#[test]
 fn plan_domain_fact_detection_tracks_domain_flags() {
     assert!(!TsFactPlan::default().has_domain_facts());
     assert!(!TsFactPlan {

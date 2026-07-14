@@ -6,6 +6,9 @@ use super::{
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
+#[path = "tests/patch_coverage.rs"]
+mod patch_coverage;
+
 impl CheckFactMap {
     pub(crate) fn graph_file_universe_is_complete(&self) -> bool {
         self.graph_files_complete

@@ -78,6 +78,45 @@ fn get_entries_supports_symbol_dependents() {
 // ── Integration: build graph from fixture ──────────────────────────────
 
 #[test]
+fn get_entries_supports_plain_dependents_without_symbol_facts() {
+    let root = fixture_root("simple");
+    let entrypoints = resolve_entrypoints(&[PathBuf::from("b.mts")], &root, &root);
+    let roots = entrypoints
+        .iter()
+        .map(|entrypoint| NodeId::File(entrypoint.file.clone()))
+        .collect::<Vec<_>>();
+    let tsconfig = crate::codebase::ts_resolver::TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph_files = graph::GraphFiles::discover(&root);
+    let ctx = TraversalCtx {
+        root: &root,
+        tsconfig: &tsconfig,
+        graph_files: &graph_files,
+        build_plan: graph::GraphBuildPlan::all(),
+        allowed: None,
+        symbols: false,
+    };
+
+    let entries = get_entries(
+        Direction::Dependents,
+        &roots,
+        &entrypoints,
+        None,
+        false,
+        &ctx,
+    )
+    .unwrap();
+
+    assert!(entries
+        .iter()
+        .any(|entry| entry.node.as_file() == Some(root.join("a.mts").as_path())));
+}
+
+#[test]
 fn deps_fixture_simple_json_output() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis")

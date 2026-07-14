@@ -174,3 +174,38 @@ fn nested_root_report_override_succeeds_with_the_top_level_snapshot_scope() {
     assert!(files.iter().any(|file| file["path"] == "ServerWidget.tsx"));
     assert!(Path::new(&nested_root).starts_with(&root));
 }
+
+#[test]
+fn playwright_preparation_surfaces_settings_and_fact_plan_errors() {
+    let root = fixture(&["fixtures", "parser-count", "playwright"]);
+
+    let settings_error = analyze_project_json_impl(
+        json!({
+            "root": root,
+            "reports": [{
+                "type": "playwrightCheck",
+                "config": "missing.no-mistakes.yml"
+            }]
+        })
+        .to_string(),
+    )
+    .expect_err("an explicit missing no-mistakes config must fail preparation");
+    assert!(settings_error
+        .to_string()
+        .contains("config file does not exist"));
+
+    let fact_plan_error = analyze_project_json_impl(
+        json!({
+            "root": root,
+            "reports": [{
+                "type": "playwrightCheck",
+                "playwrightConfig": ["missing.playwright.config.ts"]
+            }]
+        })
+        .to_string(),
+    )
+    .expect_err("an explicit missing Playwright config must fail fact planning");
+    assert!(fact_plan_error
+        .to_string()
+        .contains("Playwright config does not exist"));
+}

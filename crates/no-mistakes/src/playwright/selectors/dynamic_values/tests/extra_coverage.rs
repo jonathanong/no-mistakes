@@ -74,6 +74,90 @@ fn deferred_cross_file_exports_resolve_against_precollected_static_values() {
 }
 
 #[test]
+fn visible_collector_resolves_imported_function_and_object_values() {
+    let page_path = crate::codebase::ts_resolver::normalize_path(&fixture_path(&[
+        "ast-snippets",
+        "selectors",
+        "dynamic-cross-file",
+        "page.tsx",
+    ]));
+    let selectors_path = page_path.with_file_name("selectors.ts");
+    let visible = std::collections::HashSet::from([page_path.clone(), selectors_path]);
+    let source = std::fs::read_to_string(&page_path).unwrap();
+
+    let collected = ast::with_program(&page_path, &source, |program, source| {
+        super::collect_dynamic_identifier_values_with_file_from_visible(
+            program, source, &page_path, &visible,
+        )
+    })
+    .unwrap();
+    let values = collected
+        .into_iter()
+        .flat_map(|entry| entry.values)
+        .collect::<std::collections::HashSet<_>>();
+
+    assert!(values.contains("imported-fn-val"));
+    assert!(values.contains("imported-obj-a"));
+    assert!(values.contains("imported-obj-b"));
+}
+
+#[test]
+fn deferred_collector_preserves_imports_local_returns_and_direct_values() {
+    let imported_path = crate::codebase::ts_resolver::normalize_path(&fixture_path(&[
+        "ast-snippets",
+        "selectors",
+        "dynamic-cross-file",
+        "page.tsx",
+    ]));
+    let selectors_path = imported_path.with_file_name("selectors.ts");
+    let visible = std::collections::HashSet::from([imported_path.clone(), selectors_path]);
+    let source = std::fs::read_to_string(&imported_path).unwrap();
+    let imported = ast::with_program(&imported_path, &source, |program, source| {
+        super::collect_dynamic_identifier_values_with_file_from_visible_deferred(
+            program,
+            source,
+            &imported_path,
+            &visible,
+        )
+    })
+    .unwrap();
+    let imported_values = imported
+        .iter()
+        .flat_map(|entry| entry.values.iter())
+        .collect::<Vec<_>>();
+    assert_eq!(imported_values.len(), 2);
+    assert!(imported_values
+        .iter()
+        .all(|value| value.starts_with("\0no-mistakes-playwright-import:")));
+
+    let local_path = fixture_path(&["ast-snippets", "selectors", "dynamic-function-return.tsx"]);
+    let local_source = std::fs::read_to_string(&local_path).unwrap();
+    let local = ast::with_program(&local_path, &local_source, |program, source| {
+        super::collect_dynamic_identifier_values_with_file_from_visible_deferred(
+            program,
+            source,
+            &local_path,
+            &std::collections::HashSet::new(),
+        )
+    })
+    .unwrap();
+    assert_eq!(local[0].values, ["fn-a", "fn-b"]);
+
+    let literal_path = fixture_path(&["ast-snippets", "selectors", "dynamic-ternary.tsx"]);
+    let literal_source = std::fs::read_to_string(&literal_path).unwrap();
+    let literal = ast::with_program(&literal_path, &literal_source, |program, source| {
+        super::collect_dynamic_identifier_values_with_file_from_visible_deferred(
+            program,
+            source,
+            &literal_path,
+            &std::collections::HashSet::new(),
+        )
+    })
+    .unwrap();
+    assert_eq!(literal[0].values, ["option-a", "option-b"]);
+}
+
+#[test]
 fn static_export_collection_covers_default_and_destructured_declarations() {
     let root = page_extras_path()
         .parent()

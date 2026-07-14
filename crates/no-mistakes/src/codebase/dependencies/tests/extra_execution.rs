@@ -69,11 +69,11 @@ fn shared_traversal_rebuilds_without_symbols_for_plain_reports() {
     .unwrap();
 
     let mut deps = traverse_args(root.clone(), vec![PathBuf::from("source.mts")]);
-    deps.relationships = vec![RelationshipArg::Import];
+    deps.relationships = vec![RelationshipArg::All];
     collect_and_filter_entries_shared(&deps, Direction::Deps, &cwd, &mut shared).unwrap();
 
     let mut dependents = traverse_args(root, vec![PathBuf::from("source.mts")]);
-    dependents.relationships = vec![RelationshipArg::Import];
+    dependents.relationships = vec![RelationshipArg::All];
     collect_and_filter_entries_shared(&dependents, Direction::Dependents, &cwd, &mut shared)
         .unwrap();
 
@@ -138,6 +138,56 @@ fn shared_traversal_initializes_absent_fact_maps_for_empty_and_nonempty_universe
     shared.graph().expect("graph builds from newly collected facts");
     shared.graph().expect("graph is reused after the first build");
     assert_eq!(shared.graph_builds, 1);
+}
+
+#[test]
+fn shared_traversal_extends_absent_facts_and_seeds_cached_program_facts() {
+    let source = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/parser-count/shared-traversal-prepared-projects"),
+    );
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let unit = root.join("src/unit.ts");
+    let excluded = root.join("src/excluded.ts");
+    let missing = root.join("src/missing.ts");
+    let mut shared = SharedTraversalContext::prepare(
+        root.clone(),
+        None,
+        None,
+        graph::GraphBuildPlan {
+            imports: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let check_facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        vec![unit.clone()],
+        crate::codebase::check_facts::CheckFactPlan {
+            graph: crate::codebase::ts_source::facts::TsFactPlan::imports(),
+            ..Default::default()
+        },
+    );
+
+    shared.facts = None;
+    shared.extend_check_facts(&check_facts);
+    assert!(shared.facts.as_ref().unwrap().contains_key(&unit));
+    assert!(!shared.facts.as_ref().unwrap().contains_key(&excluded));
+
+    shared.seed_cached_program_facts(&std::collections::HashSet::from([
+        unit.clone(),
+        excluded.clone(),
+        missing.clone(),
+    ]));
+    let facts = shared.facts.as_ref().unwrap();
+    assert!(facts.contains_key(&unit));
+    assert!(facts.contains_key(&excluded));
+    assert!(!facts.contains_key(&missing));
+
+    shared.facts = None;
+    shared.seed_cached_program_facts(&std::collections::HashSet::from([unit.clone()]));
+    assert!(shared.facts.as_ref().unwrap().contains_key(&unit));
 }
 
 #[test]
