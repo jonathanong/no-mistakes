@@ -287,13 +287,12 @@ Already aligned:
 3. `DepGraph` stores forward and reverse maps.
 4. Many file and edge collectors use `rayon`.
 5. The top-level `check` command shares facts and parallelizes domain checks.
+6. `TsFactPlan` and `TsFileFacts` cover route, queue, HTTP, and process facts,
+   and aggregate consumers reuse them through the unified `TsFactMap`.
 
 Still to converge:
 
-1. Expand `TsFactPlan` and `TsFileFacts` for route, queue, HTTP, process, and
-   other domain-specific facts that currently read source independently.
-2. Make graph construction consume the unified fact map wherever possible.
-3. Keep lazy query paths explicit so they do not become hidden duplicate parse
+1. Keep lazy query paths explicit so they do not become hidden duplicate parse
    passes.
-4. Continue replacing serial shared mutation with concurrent caches or
+2. Continue replacing serial shared mutation with concurrent caches or
    thread-local collection plus deterministic merge.
