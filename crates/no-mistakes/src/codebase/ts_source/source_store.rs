@@ -89,9 +89,11 @@ impl SourceStore {
     }
 
     #[doc(hidden)]
-    pub fn read_path(&self, path: &Path) -> Option<SourceReadOutcome> {
+    pub fn read_path(&self, path: &Path) -> SourceReadOutcome {
         if let Some(id) = self.inventory.id_for_path(path) {
-            return self.read(id);
+            return self
+                .read(id)
+                .expect("inventory IDs always resolve to their source slot");
         }
         let path = super::normalize_discovery_path(path);
         let cell = {
@@ -105,19 +107,17 @@ impl SourceStore {
                     .or_insert_with(|| Arc::new(OnceLock::new())),
             )
         };
-        Some(
-            cell.get_or_init(|| {
-                self.physical_reads.fetch_add(1, Ordering::Relaxed);
-                std::fs::read_to_string(&path)
-                    .map(Arc::<str>::from)
-                    .map_err(Arc::new)
-            })
-            .clone(),
-        )
+        cell.get_or_init(|| {
+            self.physical_reads.fetch_add(1, Ordering::Relaxed);
+            std::fs::read_to_string(&path)
+                .map(Arc::<str>::from)
+                .map_err(Arc::new)
+        })
+        .clone()
     }
 
     #[doc(hidden)]
-    pub fn parse_json_path(&self, path: &Path) -> Option<JsonParseOutcome> {
+    pub fn parse_json_path(&self, path: &Path) -> JsonParseOutcome {
         let path = super::normalize_discovery_path(path);
         let cell = {
             let mut parses = self
@@ -130,21 +130,16 @@ impl SourceStore {
                     .or_insert_with(|| Arc::new(OnceLock::new())),
             )
         };
-        Some(
-            cell.get_or_init(|| {
-                self.json_parse_count.fetch_add(1, Ordering::Relaxed);
-                match self
-                    .read_path(&path)
-                    .expect("normalized paths are accepted")
-                {
-                    Ok(source) => serde_json::from_str(&source)
-                        .map(Arc::new)
-                        .map_err(|error| JsonLoadError::Syntax(Arc::new(error))),
-                    Err(error) => Err(JsonLoadError::Io(error)),
-                }
-            })
-            .clone(),
-        )
+        cell.get_or_init(|| {
+            self.json_parse_count.fetch_add(1, Ordering::Relaxed);
+            match self.read_path(&path) {
+                Ok(source) => serde_json::from_str(&source)
+                    .map(Arc::new)
+                    .map_err(|error| JsonLoadError::Syntax(Arc::new(error))),
+                Err(error) => Err(JsonLoadError::Io(error)),
+            }
+        })
+        .clone()
     }
 
     #[doc(hidden)]

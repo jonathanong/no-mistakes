@@ -1,4 +1,6 @@
-use super::candidates::{collect_shell_files, filtered_shell_files, has_bash_shebang};
+use super::candidates::{
+    collect_shell_files, collect_shell_files_with_sources, filtered_shell_files, has_bash_shebang,
+};
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -36,6 +38,13 @@ fn fixture_root(subpath: &str) -> std::path::PathBuf {
         &Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/shellcheck-runner/fixture")
             .join(subpath),
+    )
+}
+
+fn source_candidates_fixture_root() -> std::path::PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/shellcheck-runner/source-candidates"),
     )
 }
 
@@ -136,6 +145,60 @@ fn collect_shell_files_detects_shebang_in_dir() {
     let files = vec![script.clone()];
     let candidates = collect_shell_files(root, &opts, &files, &[]);
     assert_eq!(candidates, vec![script]);
+}
+
+#[test]
+fn collect_shell_files_with_sources_covers_configured_candidates() {
+    let root = source_candidates_fixture_root();
+    let bash_script = root.join("scripts/deploy");
+    let non_shell_script = root.join("scripts/generate");
+    let extension_script = root.join("scripts/setup.sh");
+    let explicit_script = root.join("explicit");
+    let outside_script = root.join("outside/deploy");
+    let files = vec![
+        bash_script.clone(),
+        non_shell_script,
+        extension_script.clone(),
+        outside_script,
+    ];
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let opts = Options {
+        shell_files: vec!["explicit".to_string()],
+        shebang_dirs: vec!["scripts".to_string()],
+        ..Default::default()
+    };
+
+    let candidates = collect_shell_files_with_sources(&root, &opts, &files, &[], sources.as_ref());
+
+    assert_eq!(
+        candidates,
+        vec![explicit_script, bash_script, extension_script]
+    );
+}
+
+#[test]
+fn collect_shell_files_with_sources_handles_root_and_target_scope() {
+    let root = source_candidates_fixture_root();
+    let root_script = root.join("root-script");
+    let explicit_script = root.join("explicit");
+    let files = vec![root_script.clone()];
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let opts = Options {
+        shell_files: vec!["explicit".to_string(), "missing".to_string()],
+        shebang_dirs: vec![String::new()],
+        ..Default::default()
+    };
+
+    let candidates = collect_shell_files_with_sources(
+        &root,
+        &opts,
+        &files,
+        &[root.join("scripts")],
+        sources.as_ref(),
+    );
+
+    assert_eq!(candidates, vec![root_script]);
+    assert!(!candidates.contains(&explicit_script));
 }
 
 #[test]

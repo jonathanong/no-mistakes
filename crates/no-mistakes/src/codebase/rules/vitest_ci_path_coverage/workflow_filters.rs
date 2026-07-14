@@ -72,10 +72,7 @@ fn ci_filters_from_paths(
         {
             continue;
         }
-        let source = match sources
-            .read_path(&path)
-            .expect("source store accepts supplemental paths")
-        {
+        let source = match sources.read_path(&path) {
             Ok(source) => source,
             Err(error) => {
                 findings.push(workflow_finding(

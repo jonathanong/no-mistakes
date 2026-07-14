@@ -50,7 +50,7 @@ fn source_facts_preserve_owned_public_api_and_reuse_physical_read() {
         std::slice::from_ref(&file),
     ));
     let sources = crate::codebase::ts_source::SourceStore::new(inventory);
-    let expected = sources.read_path(&file).unwrap().unwrap();
+    let expected = sources.read_path(&file).unwrap();
 
     let mut facts = collect_ts_facts_with_context_and_sources(
         std::slice::from_ref(&file),

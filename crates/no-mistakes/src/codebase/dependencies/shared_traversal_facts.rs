@@ -24,7 +24,7 @@ impl SharedTraversalContext {
                         .is_none_or(|facts| !facts.contains_key(*path))
                 })
                 .filter_map(|path| {
-                    let source = sources.read_path(path)?.ok()?;
+                    let source = sources.read_path(path).ok()?;
                     let mut facts = crate::ast::with_program(path, &source, |program, source| {
                         crate::codebase::ts_source::facts::collect_file_facts_from_program(
                             path,

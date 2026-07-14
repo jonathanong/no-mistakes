@@ -31,10 +31,7 @@ pub(super) fn parse_filters_value_with_sources(
     let Some(path) = parsed.as_str() else {
         return Some(parsed);
     };
-    let source = match sources
-        .read_path(&root.join(path))
-        .expect("source store accepts supplemental paths")
-    {
+    let source = match sources.read_path(&root.join(path)) {
         Ok(source) => source,
         Err(error) => {
             findings.push(workflow_finding(

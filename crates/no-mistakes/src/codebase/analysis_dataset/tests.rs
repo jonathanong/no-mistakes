@@ -49,6 +49,17 @@ fn workspace_indexes_are_built_once_and_reused() {
 }
 
 #[test]
+fn nested_roots_reuse_the_request_source_store() {
+    let root = repository_fixture("test-cases/codebase-analysis/large-graph-monorepo/fixture");
+    let dataset = AnalysisDataset::new(&root);
+
+    let request_sources = dataset.sources_for(&root);
+    let nested_sources = dataset.sources_for(&root.join("apps/api"));
+
+    assert!(std::sync::Arc::ptr_eq(&request_sources, &nested_sources));
+}
+
+#[test]
 fn config_parse_failures_are_memoized_exactly_once() {
     let root = repository_fixture("test-cases/impacted-checks/multi-framework");
     let invalid = root.join("invalid.no-mistakes.yml");

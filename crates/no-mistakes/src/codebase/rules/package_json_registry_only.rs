@@ -150,7 +150,7 @@ fn check_package_json_with_sources(
     root: &Path,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
-    let Some(Ok(json)) = sources.parse_json_path(path) else {
+    let Ok(json) = sources.parse_json_path(path) else {
         return Vec::new();
     };
     check_package_json_value(path, root, &json)

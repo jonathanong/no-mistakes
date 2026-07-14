@@ -85,7 +85,7 @@ pub(crate) fn read_source(
     sources: &crate::codebase::ts_source::SourceStore,
     path: &Path,
 ) -> Option<std::sync::Arc<str>> {
-    sources.read_path(path)?.ok()
+    sources.read_path(path).ok()
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]

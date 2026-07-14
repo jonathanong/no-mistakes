@@ -33,7 +33,7 @@ pub fn dependency_entries_from_source_store(
     fields: &[&str],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<PackageDependency> {
-    let Some(Ok(package_json)) = sources.parse_json_path(path) else {
+    let Ok(package_json) = sources.parse_json_path(path) else {
         return Vec::new();
     };
     dependency_entries_from_value(&package_json, fields)

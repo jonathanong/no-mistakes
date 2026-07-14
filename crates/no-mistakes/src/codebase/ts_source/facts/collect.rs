@@ -50,11 +50,7 @@ pub(crate) fn collect_file_facts_with_sources(
     context: &TsFactContext,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Option<TsFileFacts> {
-    let source = match sources.read_path(path).unwrap_or_else(|| {
-        std::fs::read_to_string(path)
-            .map(std::sync::Arc::<str>::from)
-            .map_err(std::sync::Arc::new)
-    }) {
+    let source = match sources.read_path(path) {
         Ok(source) => source,
         Err(error) => {
             return Some(TsFileFacts {

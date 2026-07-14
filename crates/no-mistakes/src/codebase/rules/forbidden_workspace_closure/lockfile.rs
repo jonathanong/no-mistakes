@@ -32,15 +32,12 @@ pub(super) fn lockfile_nodes(
     let dependency_types = dependency_type::validate(dependency_types)?;
     let lockfile_path = absolute_lockfile_path(root, lockfile_base, lockfile);
     let lockfile_root = lockfile_path.parent().unwrap_or(root);
-    let content = sources
-        .read_path(&lockfile_path)
-        .expect("source store accepts supplemental paths")
-        .map_err(|error| {
-            format!(
-                "{RULE_ID}: could not read lockfile {}: {error}",
-                relative_slash_path(root, &lockfile_path)
-            )
-        })?;
+    let content = sources.read_path(&lockfile_path).map_err(|error| {
+        format!(
+            "{RULE_ID}: could not read lockfile {}: {error}",
+            relative_slash_path(root, &lockfile_path)
+        )
+    })?;
     let importers = crate::codebase::lockfile::pnpm::parse_importers(&content);
     if importers.is_empty() {
         return Err(format!(

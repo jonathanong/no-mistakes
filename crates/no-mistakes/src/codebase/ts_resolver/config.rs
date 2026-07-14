@@ -67,7 +67,6 @@ fn load_tsconfig_inner(
     let content = match sources {
         Some(sources) => sources
             .read_path(path)
-            .expect("source stores accept supplemental tsconfig paths")
             .map_err(|error| anyhow::anyhow!("reading {}: {}", path.display(), error))?,
         None => std::sync::Arc::<str>::from(
             std::fs::read_to_string(path).context(format!("reading {}", path.display()))?,

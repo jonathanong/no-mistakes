@@ -75,7 +75,6 @@ pub(crate) fn load_v2_config_from_source_store(
     };
     let source = sources
         .read_path(&path)
-        .expect("source stores accept supplemental config paths")
         .map_err(|error| anyhow::anyhow!("reading {}: {}", path.display(), error))?;
     parse_v2_config(&source, &path)
 }

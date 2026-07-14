@@ -167,7 +167,7 @@ fn package_name_with_sources(
     path: &Path,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Option<String> {
-    let json = sources.parse_json_path(path)?.ok()?;
+    let json = sources.parse_json_path(path).ok()?;
     json.get("name")?.as_str().map(str::to_string)
 }
 

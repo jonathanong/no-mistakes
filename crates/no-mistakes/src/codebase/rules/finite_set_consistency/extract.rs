@@ -36,7 +36,6 @@ pub(super) fn extract_set_with_sources(
     for path in &paths {
         let source = sources
             .read_path(path)
-            .expect("source store accepts supplemental paths")
             .map_err(|error| anyhow::anyhow!(error.to_string()))?;
         values.extend(match spec.kind.as_str() {
             "ts-string-union" => extract_ts_string_union(&source, &spec.target),

@@ -125,7 +125,6 @@ pub(in crate::integration_tests) fn read_request_source(
     match sources {
         Some(sources) => sources
             .read_path(path)
-            .expect("source stores accept supplemental runner config paths")
             .map_err(|error| anyhow::anyhow!("reading {}: {}", path.display(), error)),
         None => std::fs::read_to_string(path)
             .map(std::sync::Arc::<str>::from)

@@ -21,7 +21,7 @@ pub(super) fn cached_config_graph_facts(
             .iter()
             .filter(|path| universe.contains(path))
             .filter_map(|path| {
-                let source = sources.read_path(path)?.ok()?;
+                let source = sources.read_path(path).ok()?;
                 let mut facts = crate::ast::with_program(path, &source, |program, source| {
                     crate::codebase::ts_source::facts::collect_file_facts_from_program(
                         path, plan.graph, &context, source, program, None,

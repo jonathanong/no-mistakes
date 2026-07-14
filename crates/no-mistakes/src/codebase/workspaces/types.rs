@@ -45,14 +45,10 @@ impl WorkspaceSources<'_> {
                 .map(std::sync::Arc::<str>::from)
                 .map_err(Into::into),
             Self::Store(store) => match store.read_path(path) {
-                Some(Ok(source)) => Ok(source),
-                Some(Err(error)) => {
+                Ok(source) => Ok(source),
+                Err(error) => {
                     Err(std::io::Error::new(error.kind(), error.to_string()).into())
                 }
-                None => anyhow::bail!(
-                    "workspace metadata path is absent from the request inventory: {}",
-                    path.display()
-                ),
             },
         }
     }
@@ -64,15 +60,11 @@ impl WorkspaceSources<'_> {
                 Ok(std::sync::Arc::new(serde_json::from_str(&source)?))
             }
             Self::Store(store) => match store.parse_json_path(path) {
-                Some(Ok(value)) => Ok(value),
-                Some(Err(error)) => Err(anyhow::Error::new(error).context(format!(
+                Ok(value) => Ok(value),
+                Err(error) => Err(anyhow::Error::new(error).context(format!(
                     "failed to load workspace manifest {}",
                     path.display()
                 ))),
-                None => anyhow::bail!(
-                    "workspace metadata path is absent from the request inventory: {}",
-                    path.display()
-                ),
             },
         }
     }

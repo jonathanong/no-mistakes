@@ -54,6 +54,7 @@ fn pass4a_ignored_workspace_candidates_do_not_shadow_visible_entry_and_subpath_f
     let visible_files = files.iter().cloned().collect();
 
     let workspace = load_from_files(&root, &files).unwrap();
+    let indexed_workspace = load_indexed_from_files(&root, &files).unwrap();
     let package = workspace
         .packages
         .iter()
@@ -71,4 +72,6 @@ fn pass4a_ignored_workspace_candidates_do_not_shadow_visible_entry_and_subpath_f
     assert!(workspace.recognizes_specifier_from("#module", &importing_file));
     assert!(!workspace.recognizes_specifier_from("#missing", &importing_file));
     assert!(!workspace.recognizes_specifier_from("external-package", &importing_file));
+    assert!(indexed_workspace.recognizes_specifier_from("#module", &importing_file));
+    assert!(!indexed_workspace.recognizes_specifier_from("#missing", &importing_file));
 }

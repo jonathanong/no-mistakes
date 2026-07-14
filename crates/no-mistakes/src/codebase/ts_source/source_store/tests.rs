@@ -19,7 +19,7 @@ fn successful_reads_are_exact_and_memoized_across_threads() {
 
     let sources = (0..16)
         .into_par_iter()
-        .map(|_| store.read_path(&path).unwrap().unwrap())
+        .map(|_| store.read_path(&path).unwrap())
         .collect::<Vec<_>>();
 
     assert_eq!(&*sources[0], "export const alpha = \"α\";\n");
@@ -51,8 +51,8 @@ fn strict_utf8_read_errors_are_cached() {
     let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&directory)));
     let store = SourceStore::new(inventory);
 
-    let first = store.read_path(&directory).unwrap().unwrap_err();
-    let second = store.read_path(&directory).unwrap().unwrap_err();
+    let first = store.read_path(&directory).unwrap_err();
+    let second = store.read_path(&directory).unwrap_err();
 
     assert!(matches!(
         first.kind(),
@@ -70,8 +70,8 @@ fn supplemental_paths_are_memoized_without_changing_the_frozen_inventory() {
     let supplemental = fixture("beta.ts");
 
     assert!(Arc::ptr_eq(store.inventory(), &inventory));
-    let first = store.read_path(&supplemental).unwrap().unwrap();
-    let second = store.read_path(&supplemental).unwrap().unwrap();
+    let first = store.read_path(&supplemental).unwrap();
+    let second = store.read_path(&supplemental).unwrap();
     assert!(Arc::ptr_eq(&first, &second));
     assert_eq!(store.inventory().len(), 1);
     assert_eq!(store.physical_read_count(), 1);
@@ -90,8 +90,10 @@ fn json_load_failures_retain_io_and_syntax_causes() {
     ]));
     let store = SourceStore::new(inventory);
 
-    let first_missing = store.parse_json_path(&missing).unwrap().unwrap_err();
-    let second_missing = store.parse_json_path(&missing).unwrap().unwrap_err();
+    let first_missing = store.parse_json_path(&missing).unwrap_err();
+    let second_missing = store.parse_json_path(&missing).unwrap_err();
+    let first_missing_message = first_missing.to_string();
+    assert!(std::error::Error::source(&first_missing).is_some());
     let super::JsonLoadError::Io(first_io) = first_missing else {
         panic!("missing JSON must retain its filesystem error");
     };
@@ -99,20 +101,22 @@ fn json_load_failures_retain_io_and_syntax_causes() {
         panic!("cached missing JSON must retain its filesystem error");
     };
     assert_eq!(first_io.kind(), ErrorKind::NotFound);
+    assert_eq!(first_missing_message, first_io.to_string());
     assert!(Arc::ptr_eq(&first_io, &second_io));
 
-    let super::JsonLoadError::Syntax(error) =
-        store.parse_json_path(&malformed).unwrap().unwrap_err()
-    else {
+    let syntax = store.parse_json_path(&malformed).unwrap_err();
+    let syntax_message = syntax.to_string();
+    assert!(std::error::Error::source(&syntax).is_some());
+    let super::JsonLoadError::Syntax(error) = syntax else {
         panic!("malformed JSON must retain its syntax error");
     };
+    assert_eq!(syntax_message, error.to_string());
     assert_ne!(
         error.to_string(),
         "EOF while parsing a value at line 1 column 0"
     );
 
-    let super::JsonLoadError::Io(error) = store.parse_json_path(&unreadable).unwrap().unwrap_err()
-    else {
+    let super::JsonLoadError::Io(error) = store.parse_json_path(&unreadable).unwrap_err() else {
         panic!("unreadable JSON must retain its filesystem error");
     };
     assert!(matches!(

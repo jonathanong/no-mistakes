@@ -26,7 +26,7 @@ fn import_neighbors(
     let facts = {
         let source = match fact_source
             .sources
-            .and_then(|sources| sources.read_path(path))
+            .map(|sources| sources.read_path(path))
             .unwrap_or_else(|| {
                 std::fs::read_to_string(path)
                     .map(std::sync::Arc::<str>::from)

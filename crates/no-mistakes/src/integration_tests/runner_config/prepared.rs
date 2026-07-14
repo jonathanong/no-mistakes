@@ -97,7 +97,6 @@ impl PreparedIntegrationRunnerConfigs {
         match &self.sources {
             Some(sources) => sources
                 .read_path(path)
-                .expect("source stores accept supplemental runner config paths")
                 .map_err(|error| anyhow::anyhow!("reading {}: {}", path.display(), error)),
             None => super::cache::read_request_source(path),
         }

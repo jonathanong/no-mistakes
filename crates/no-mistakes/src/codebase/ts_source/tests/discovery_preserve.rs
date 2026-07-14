@@ -169,7 +169,7 @@ fn visible_snapshot_reuses_the_inventory_and_source_store_for_each_scope() {
     let source_path = crate::codebase::ts_source::normalize_discovery_path(
         &request_root.join("web/app/page.tsx"),
     );
-    let first = request_store.read_path(&source_path).unwrap().unwrap();
-    let second = request_store.read_path(&source_path).unwrap().unwrap();
+    let first = request_store.read_path(&source_path).unwrap();
+    let second = request_store.read_path(&source_path).unwrap();
     assert!(std::sync::Arc::ptr_eq(&first, &second));
 }
