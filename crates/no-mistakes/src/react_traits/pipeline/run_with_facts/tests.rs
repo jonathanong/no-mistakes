@@ -37,10 +37,15 @@ fn facts(entries: Vec<(PathBuf, Vec<ComponentFacts>)>) -> CheckFactMap {
             .map(|(path, components)| {
                 (
                     path,
-                    CheckFileFacts {
-                        react: Some(FileAnalysis { components }),
+                    std::sync::Arc::new(CheckFileFacts {
+                        react: Some(
+                            FileAnalysis {
+                                components: components.into(),
+                            }
+                            .into(),
+                        ),
                         ..CheckFileFacts::default()
-                    },
+                    }),
                 )
             })
             .collect::<HashMap<_, _>>(),
@@ -168,7 +173,8 @@ fn run_analyze_inner_with_facts_covers_fallback_missing_cache_and_errors() {
         CheckFileFacts {
             parse_error: Some("syntax error".to_string()),
             ..CheckFileFacts::default()
-        },
+        }
+        .into(),
     );
     let parse_error = run_analyze_inner_with_facts(
         &root,

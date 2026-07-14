@@ -85,6 +85,16 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -98,7 +108,7 @@ pub(crate) fn check_with_files(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files, &target_roots)
+            scan(root, &opts, &files, &target_roots, sources)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -111,13 +121,14 @@ fn scan(
     opts: &Options,
     files: &[PathBuf],
     target_roots: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for policy in &opts.policies {
         let matching = super::matching_files(root, &policy.files, files, target_roots)?;
         for path in matching {
             let rel = relative_slash_path(root, &path);
-            let Ok(source) = std::fs::read_to_string(&path) else {
+            let Some(source) = super::read_source(sources, &path) else {
                 continue;
             };
             let Ok(value) = serde_yaml::from_str::<Value>(&source) else {

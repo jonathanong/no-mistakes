@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 include!("context/check_prepare.rs");
 include!("context/check_run.rs");
 include!("context/scope_prepare.rs");
+include!("context/traversal_report_keys.rs");
 include!("context/scope_graph_reports.rs");
 include!("context/scope_project_reports.rs");
 include!("context/scope_cached_reports.rs");
@@ -21,5 +22,9 @@ include!("context/target_helpers.rs");
 include!("context/playwright_helpers.rs");
 include!("context_render.rs");
 
+#[cfg(test)]
+mod api_tests;
+#[cfg(test)]
+mod scope_helpers_tests;
 #[cfg(test)]
 mod tests;

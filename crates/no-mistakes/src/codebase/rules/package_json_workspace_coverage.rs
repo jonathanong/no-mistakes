@@ -25,6 +25,16 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -38,7 +48,7 @@ pub(crate) fn check_with_files(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files)
+            scan(root, &opts, &files, sources)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -46,17 +56,22 @@ pub(crate) fn check_with_files(
     Ok(findings)
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+fn scan(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     if opts.package_roots.is_empty() {
         return Ok(Vec::new());
     }
 
-    let workspace_dirs: HashSet<String> = workspaces::load_from_files(root, files)?
+    let workspace_dirs: HashSet<String> = workspaces::load_from_source_store(root, sources)?
         .packages
         .iter()
         .map(|pkg| relative_slash_path(root, &pkg.dir))
         .collect();
-    let covered_workspace_dirs = covered_workspace_dirs(root, files)?;
+    let covered_workspace_dirs = covered_workspace_dirs(root, files, sources)?;
     let allowlist: HashSet<String> = opts
         .allowlist
         .iter()
@@ -84,7 +99,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
         {
             continue;
         }
-        if opts.require_named_package && package_name(path).is_none() {
+        if opts.require_named_package && package_name_with_sources(path, sources).is_none() {
             continue;
         }
         findings.push(RuleFinding {
@@ -100,8 +115,12 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
     Ok(findings)
 }
 
-fn covered_workspace_dirs(root: &Path, files: &[PathBuf]) -> Result<HashSet<String>> {
-    let workspace_globs = workspaces::load_workspace_globs_from_files(root, files)?;
+fn covered_workspace_dirs(
+    root: &Path,
+    files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<HashSet<String>> {
+    let workspace_globs = workspaces::load_workspace_globs_from_source_store(root, sources)?;
     let include = build_workspace_globset(&workspace_globs, false)?;
     let exclude = build_workspace_globset(&workspace_globs, true)?;
     Ok(files
@@ -144,9 +163,11 @@ fn normalize_relative_path(path: &str) -> String {
     glob_normalize::normalize(path)
 }
 
-fn package_name(path: &Path) -> Option<String> {
-    let source = std::fs::read_to_string(path).ok()?;
-    let json: serde_json::Value = serde_json::from_str(&source).ok()?;
+fn package_name_with_sources(
+    path: &Path,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Option<String> {
+    let json = sources.parse_json_path(path).ok()?;
     json.get("name")?.as_str().map(str::to_string)
 }
 

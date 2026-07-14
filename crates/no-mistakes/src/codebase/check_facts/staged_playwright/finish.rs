@@ -49,7 +49,10 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         files,
         graph_files,
         graph_files_complete,
-        ts,
+        ts: ts
+            .into_iter()
+            .map(|(path, facts)| (path, Arc::new(facts)))
+            .collect(),
         graph_plan: if has_indexable_graph_only {
             plan.graph
         } else {
@@ -63,9 +66,9 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
             files_parsed,
             parse_errors,
         },
-        app_selector_occurrences_cache,
-        playwright_routes_cache: DashMap::new(),
-        app_text_targets_cache,
-        route_reachable_files_cache: DashMap::new(),
+        app_selector_occurrences_cache: Arc::new(app_selector_occurrences_cache),
+        playwright_routes_cache: Arc::new(DashMap::new()),
+        app_text_targets_cache: Arc::new(app_text_targets_cache),
+        route_reachable_files_cache: Arc::new(DashMap::new()),
     }
 }

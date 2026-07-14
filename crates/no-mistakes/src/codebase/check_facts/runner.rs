@@ -14,6 +14,7 @@ pub(crate) fn collect_prepared_runner_facts(
     plan: &CheckFactPlan,
     graph_plan: &CheckFactPlan,
     playwright: Option<&PlaywrightFactPlan>,
+    sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> (
     (HashMap<PathBuf, CheckFileFacts>, RunnerConfigFacts),
     HashMap<PathBuf, CheckFileFacts>,
@@ -21,13 +22,19 @@ pub(crate) fn collect_prepared_runner_facts(
     let (runner_files, _) = split_runner_config_files(files, plan);
     let (runner_graph_files, _) = split_runner_config_files(graph_only_files, plan);
     let collect = || {
-        let mut facts =
-            super::collect::collect_fact_map_sequential(root, &runner_files, plan, playwright);
-        facts.extend(super::collect::collect_fact_map_sequential(
+        let mut facts = super::collect::collect_fact_map_sequential_with_sources(
+            root,
+            &runner_files,
+            plan,
+            playwright,
+            &sources,
+        );
+        facts.extend(super::collect::collect_fact_map_sequential_with_sources(
             root,
             &runner_graph_files,
             graph_plan,
             playwright,
+            &sources,
         ));
         let mut configs = runner_config_facts(&facts);
         if let Some(runner_plan) = &plan.integration_runner_configs {
@@ -59,7 +66,11 @@ pub(crate) fn collect_prepared_runner_facts(
         graph_plan: graph_plan.clone(),
         playwright: playwright.cloned(),
     };
-    runner_plan.with_request_cache(Some(fact_plan), collect)
+    runner_plan.with_request_cache_and_sources(
+        Some(fact_plan),
+        Some(std::sync::Arc::clone(&sources)),
+        collect,
+    )
 }
 
 fn split_runner_config_files(

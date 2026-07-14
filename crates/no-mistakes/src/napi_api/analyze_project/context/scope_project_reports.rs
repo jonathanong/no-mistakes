@@ -15,11 +15,23 @@ impl PreparedScope {
                 self.react_report(&request.report_type, &parsed)
             }
             "check" => {
+                let dependency_graph = if self
+                    .check
+                    .as_ref()
+                    .and_then(SharedCheckContext::graph_plan)
+                    .is_some()
+                {
+                    Some(self.traversal.canonical_graph()?)
+                } else {
+                    None
+                };
                 let check = self
                     .check
                     .as_ref()
                     .context("check analysis was not prepared")?;
-                Ok(crate::check_runner::json_value(&check.run(&self.facts)?))
+                Ok(crate::check_runner::json_value(
+                    &check.run(&self.facts, dependency_graph.as_ref())?,
+                ))
             }
             _ => unreachable!("project report types are checked before dispatch"),
         }

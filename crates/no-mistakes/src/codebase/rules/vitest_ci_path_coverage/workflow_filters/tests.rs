@@ -1,5 +1,25 @@
 use super::*;
 
+fn ci_filters_from_snapshot(
+    root: &Path,
+    config: &NoMistakesConfig,
+    selectors: &[WorkflowSelector],
+    snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
+) -> (Vec<CiFilter>, Vec<RuleFinding>) {
+    let sources = snapshot.source_store_for(root);
+    ci_filters_from_snapshot_with_sources(root, config, selectors, snapshot, &sources)
+}
+
+fn extract_filters_from_workflow(
+    root: &Path,
+    rel: &str,
+    source: &str,
+    selectors: &[WorkflowSelector],
+) -> (Vec<CiFilter>, Vec<RuleFinding>) {
+    let sources = crate::codebase::rules::source_store_for_files(&[]);
+    extract_filters_from_workflow_with_sources(root, rel, source, selectors, &sources)
+}
+
 fn fixture_root(name: &str) -> std::path::PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))

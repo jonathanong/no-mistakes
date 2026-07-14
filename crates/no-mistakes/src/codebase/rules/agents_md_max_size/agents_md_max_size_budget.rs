@@ -1,16 +1,31 @@
 use super::{Options, DEFAULT_MAX_CHARS, DEFAULT_MAX_LINES, RULE_ID};
 use crate::codebase::rules::RuleFinding;
-use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path};
+use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path, SourceStore};
 use anyhow::Result;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
 pub(super) fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+    let sources = crate::codebase::rules::source_store_for_files(files);
+    scan_with_sources(root, opts, files, &sources)
+}
+
+pub(super) fn scan_with_sources(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    sources: &SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let max_lines = opts.max_lines.unwrap_or(DEFAULT_MAX_LINES);
     let max_chars = opts.max_chars.unwrap_or(DEFAULT_MAX_CHARS);
     let mut findings: Vec<RuleFinding> = files
         .par_iter()
-        .flat_map(|path| check_file(path, root, max_lines, max_chars))
+        .flat_map(|path| {
+            let Some(content) = crate::codebase::rules::read_source(sources, path) else {
+                return Vec::new();
+            };
+            check_content(path, root, max_lines, max_chars, &content)
+        })
         .collect();
     findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
     Ok(findings)
@@ -31,21 +46,19 @@ pub(super) fn scan_advisories(
     Ok(advisories)
 }
 
-pub(super) fn check_file(
+pub(super) fn check_content(
     path: &Path,
     root: &Path,
     max_lines: usize,
     max_chars: usize,
+    content: &str,
 ) -> Vec<RuleFinding> {
-    let Ok(content) = std::fs::read_to_string(path) else {
-        return Vec::new();
-    };
-    if has_disable_file_comment(&content, RULE_ID) {
+    if has_disable_file_comment(content, RULE_ID) {
         return Vec::new();
     }
     let file = relative_slash_path(root, path);
     let mut findings = Vec::new();
-    let line_count = count_lines(&content);
+    let line_count = count_lines(content);
     if line_count > max_lines {
         findings.push(RuleFinding {
             rule: RULE_ID.to_string(),
@@ -66,7 +79,7 @@ pub(super) fn check_file(
             line: 1,
             message: format!(
                 "{} - trim to keep agent context lean",
-                format_char_budget(&content, char_count, max_chars)
+                format_char_budget(content, char_count, max_chars)
             ),
             import: None,
             target: None,

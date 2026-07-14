@@ -2,11 +2,13 @@ struct GraphEdgeBuildInputs<'a> {
     root: &'a Path,
     tsconfig: &'a TsConfig,
     plan: GraphBuildPlan,
+    workspace: Option<&'a crate::codebase::workspaces::IndexedWorkspaceMap>,
     graph_files: &'a GraphFiles,
     config_options: Option<&'a GraphConfigOptions>,
     playwright_settings: Option<&'a crate::playwright::config::Settings>,
     config_path: Option<&'a Path>,
     swift_facts: Option<&'a crate::codebase::swift::SwiftFactMap>,
+    import_resolution_cache: Option<&'a crate::codebase::ts_resolver::ImportResolutionCache>,
 }
 
 fn merge_http_process_edges(

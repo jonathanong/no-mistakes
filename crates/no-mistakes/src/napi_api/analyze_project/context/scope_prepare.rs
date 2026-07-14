@@ -35,14 +35,19 @@ impl PreparedScope {
     ) -> Result<Self> {
         let root = super::options::resolve_root(options.root.as_deref())?;
         let build_plan = graph_build_plan(options)?;
-        let mut traversal = SharedTraversalContext::prepare_with_snapshot(
+        let mut traversal = SharedTraversalContext::prepare_with_snapshot_and_optional_check_plan(
             root.clone(),
             options.tsconfig.as_deref().map(Path::new),
             options.config.as_deref().map(Path::new),
             build_plan,
             visible_paths,
+            options
+                .reports
+                .iter()
+                .any(|request| request.report_type == "check"),
         )?;
-        traversal.add_explicit_roots(&authoritative_report_files(options, &root)?);
+        let authoritative_report_files = authoritative_report_files(options, &root)?;
+        traversal.add_explicit_roots(&authoritative_report_files);
         let check = options
             .reports
             .iter()
@@ -123,35 +128,49 @@ impl PreparedScope {
             .iter()
             .chain(graph_files.iter())
             .collect::<std::collections::HashSet<_>>();
-        let mut supplemental_symbol_files = if check.is_some() {
-            symbol_targets
+        let mut supplemental_report_files = if check.is_some() {
+            authoritative_report_files
                 .into_iter()
                 .filter(|path| !primary_paths.contains(path))
                 .collect::<Vec<_>>()
         } else {
             Vec::new()
         };
-        supplemental_symbol_files.sort();
-        supplemental_symbol_files.dedup();
-        let facts =
-            crate::codebase::check_facts::collect_check_facts_with_graph_files_and_playwright(
+        supplemental_report_files.sort();
+        supplemental_report_files.dedup();
+        let sources = traversal.source_store();
+        let facts = crate::codebase::check_facts::
+            collect_check_facts_with_graph_files_playwright_and_sources(
                 &root,
                 files,
                 graph_files,
                 check_plan,
                 playwright_fact_plan,
+                std::sync::Arc::clone(&sources),
             );
-        let symbol_facts = crate::codebase::check_facts::collect_check_facts(
-            &root,
-            supplemental_symbol_files,
-            report_plan,
-        );
-        traversal.use_check_facts(&facts);
-        traversal.extend_check_facts(&symbol_facts);
+        let symbol_facts = crate::codebase::check_facts::
+            collect_check_facts_with_graph_files_playwright_and_sources(
+                &root,
+                supplemental_report_files,
+                Vec::new(),
+                report_plan,
+                None,
+                sources,
+            );
+        let graph_facts = facts.graph_view_with_supplemental(&symbol_facts);
+        traversal.use_check_facts(&graph_facts);
         // Playwright configs were parsed while preparing the shared report/check view. Seed
-        // traversal facts from that same request-cached program so a later graph report does
-        // not parse the config again merely because configs are outside Playwright fact scope.
+        // traversal facts before the canonical graph so invalidation cannot force a later
+        // TS-only rebuild that loses shared Playwright occurrences.
         traversal.seed_cached_program_facts(&configs);
+        if check
+            .as_ref()
+            .and_then(SharedCheckContext::graph_plan)
+            .is_some()
+        {
+            traversal.prepare_canonical_graph_with_check_facts(&graph_facts)?;
+        }
+        crate::ast::clear_request_parse_cache();
         let server = has_server_report(options).then(|| {
             crate::server_routes::prepare_analysis_with_shared_facts(
                 &root,
@@ -182,24 +201,3 @@ impl PreparedScope {
     }
 }
 
-fn traversal_report_keys(
-    options: &AnalyzeProjectOptions,
-) -> Result<(std::collections::HashSet<String>, std::collections::HashSet<String>)> {
-    let mut queue = std::collections::HashSet::new();
-    let mut server = std::collections::HashSet::new();
-    for request in &options.reports {
-        if !matches!(request.report_type.as_str(),
-            "queueEdges" | "queueRelated" | "serverRouteEdges" | "serverRouteRelated")
-        {
-            continue;
-        }
-        let raw = project_options(request, options)?;
-        let parsed: ProjectOptions = serde_json::from_str(&raw)?;
-        if matches!(request.report_type.as_str(), "queueEdges" | "queueRelated") {
-            queue.insert(canonical_filter_key(&parsed.filters)?);
-        } else {
-            server.insert(canonical_filter_key(&server_filters(&request.report_type, &parsed))?);
-        }
-    }
-    Ok((queue, server))
-}

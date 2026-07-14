@@ -34,8 +34,11 @@ pub(crate) struct DomainCheckInputs<'a> {
     pub(crate) prepared_react: &'a no_mistakes::react_traits::PreparedReactCheck,
     pub(crate) prepared_graph:
         Option<&'a no_mistakes::codebase::dependencies::graph::PreparedGraphConfig>,
+    pub(crate) dependency_graph:
+        Option<std::sync::Arc<no_mistakes::codebase::dependencies::graph::DepGraph>>,
     pub(crate) prepared_tsconfig: &'a no_mistakes::codebase::ts_resolver::TsConfig,
     pub(crate) visible_paths: &'a no_mistakes::codebase::ts_source::VisiblePathSnapshot,
+    pub(crate) sources: std::sync::Arc<no_mistakes::codebase::ts_source::SourceStore>,
     pub(crate) inferred_roots: &'a no_mistakes::codebase::config::InferredRoots,
     pub(crate) config: &'a no_mistakes::config::v2::NoMistakesConfig,
     pub(crate) codebase_config: &'a no_mistakes::codebase::config::Config,
@@ -56,8 +59,10 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
     let prepared_playwright = inputs.prepared_playwright;
     let prepared_react = inputs.prepared_react;
     let prepared_graph = inputs.prepared_graph;
+    let dependency_graph = inputs.dependency_graph;
     let prepared_tsconfig = inputs.prepared_tsconfig;
     let visible_paths = inputs.visible_paths;
+    let sources = inputs.sources;
     let inferred_roots = inputs.inferred_roots;
     let config = inputs.config;
     let codebase_config = inputs.codebase_config;
@@ -73,17 +78,20 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
         || {
             rayon::join(
                 || {
-                    run_rules_check(no_mistakes::codebase::rules::PreparedRulesCheck {
-                        root,
-                        config_path: config_path.as_deref(),
-                        tsconfig_path: tsconfig_path.as_deref(),
-                        shared: facts,
-                        prepared_playwright,
-                        config,
-                        prepared_graph,
-                        prepared_tsconfig,
-                        inferred_roots: Some(inferred_roots),
-                    })
+                    run_rules_check(
+                        no_mistakes::codebase::rules::PreparedRulesCheck {
+                            root,
+                            config_path: config_path.as_deref(),
+                            tsconfig_path: tsconfig_path.as_deref(),
+                            shared: facts,
+                            prepared_playwright,
+                            config,
+                            prepared_graph,
+                            prepared_tsconfig,
+                            inferred_roots: Some(inferred_roots),
+                        },
+                        dependency_graph.as_deref(),
+                    )
                 },
                 || {
                     rayon::join(
@@ -116,6 +124,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                         filesystem_rules_enabled,
                                         &discovered_files,
                                         visible_paths,
+                                        sources,
                                         vitest_projects,
                                     )
                                 },

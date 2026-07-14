@@ -41,7 +41,7 @@ fn component_children(
         let Some(react) = facts.react.as_ref() else {
             continue;
         };
-        for component in &react.components {
+        for component in react.components.iter() {
             let file =
                 relative_slash_path(project_root, &normalize_path(&root.join(&component.file)));
             let key = component_key(&file, &component.name);

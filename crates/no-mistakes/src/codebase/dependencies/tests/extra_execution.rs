@@ -77,7 +77,7 @@ fn shared_traversal_rebuilds_without_symbols_for_plain_reports() {
     collect_and_filter_entries_shared(&dependents, Direction::Dependents, &cwd, &mut shared)
         .unwrap();
 
-    assert_eq!(shared.graph_builds, 0);
+    assert_eq!(shared.graph_builds, 1);
 }
 
 #[test]
@@ -102,7 +102,7 @@ fn shared_traversal_symbol_dependents_use_symbol_free_import_graph_when_preplann
         collect_and_filter_entries_shared(&args, Direction::Dependents, &cwd, &mut shared)
             .unwrap();
 
-    assert_eq!(shared.graph_builds, 0);
+    assert_eq!(shared.graph_builds, 1);
     assert_eq!(result.root, root);
 }
 
@@ -174,6 +174,10 @@ fn shared_traversal_extends_absent_facts_and_seeds_cached_program_facts() {
     shared.extend_check_facts(&check_facts);
     assert!(shared.facts.as_ref().unwrap().contains_key(&unit));
     assert!(!shared.facts.as_ref().unwrap().contains_key(&excluded));
+    assert_eq!(
+        check_facts.ts[&unit].ts.imports.len(),
+        shared.facts.as_ref().unwrap()[&unit].imports.len(),
+    );
 
     shared.seed_cached_program_facts(&std::collections::HashSet::from([
         unit.clone(),
@@ -193,22 +197,26 @@ fn shared_traversal_extends_absent_facts_and_seeds_cached_program_facts() {
 #[test]
 fn traversal_stages_graph_configuration_around_one_prepared_test_project_pass() {
     let shared = include_str!("../shared_traversal.rs");
-    let shared_graph = include_str!("../shared_traversal_graph.rs");
+    let shared_graph = concat!(
+        include_str!("../shared_traversal_graph.rs"),
+        include_str!("../shared_graph_cache.rs"),
+    );
     let standalone = include_str!("../mod.rs");
 
-    assert_eq!(shared.matches("VisiblePathSnapshot::new(&root)").count(), 1);
-    assert_eq!(shared.matches("load_v2_config_from_visible(").count(), 1);
+    assert_eq!(shared.matches("AnalysisDataset::new(&root)").count(), 1);
+    assert_eq!(shared.matches("dataset.config(config_path)?").count(), 1);
+    assert_eq!(shared.matches("dataset.tsconfig(tsconfig_path)?").count(), 1);
     assert_eq!(shared.matches("config_from_loaded_v2(").count(), 1);
     assert_eq!(
         shared
-            .matches("prepare_graph_config_with_test_filter(")
+            .matches("prepare_graph_config_with_test_filter_and_workspace(")
             .count(),
         2
     );
     assert_eq!(shared.matches("TestFileFilter::fallback_only()").count(), 1);
     assert_eq!(
         shared
-            .matches("prepare_test_projects_from_visible(")
+            .matches("prepare_test_projects_from_visible_with_sources(")
             .count(),
         1
     );
@@ -221,9 +229,9 @@ fn traversal_stages_graph_configuration_around_one_prepared_test_project_pass() 
     );
     assert_eq!(
         shared_graph
-            .matches("build_with_plan_files_prepared_config_and_facts(")
+            .matches("build_with_plan_files_prepared_config_facts_and_resolution_cache(")
             .count(),
-        2
+        1
     );
     assert!(!shared.contains("graph_config_options"));
     assert!(!shared.contains("load_v2_config("));
@@ -285,7 +293,14 @@ fn shared_traversal_reuses_runner_helpers_for_lazy_symbols_and_test_filters() {
     let counts = crate::ast::finish_parse_count(&root);
 
     assert!(excluded_result.entries.is_empty());
-    assert_eq!(shared.graph_builds, 0);
+    assert_eq!(shared.graph_builds, 1);
+    assert_eq!(shared.symbol_index_builds, 1);
+    let classifications = shared.import_resolution_cache.classification_count();
+    assert!(classifications > 0);
+    assert!(
+        shared.import_resolution_cache.request_count() > classifications,
+        "graph consumers should reuse request-scoped import classifications"
+    );
     assert_eq!(counts.len(), 6, "{counts:#?}");
     assert!(counts.values().all(|count| *count == 1), "{counts:#?}");
 }
@@ -339,6 +354,8 @@ fn shared_import_only_traversal_parses_only_reachable_files() {
     assert_eq!(counts.len(), 2, "{counts:#?}");
     assert_eq!(shared.facts.as_ref().map(|facts| facts.len()), Some(2));
     assert_eq!(shared.graph_builds, 0);
+    assert_eq!(shared.import_resolution_cache.classification_count(), 1);
+    assert_eq!(shared.import_resolution_cache.request_count(), 1);
 }
 
 #[test]

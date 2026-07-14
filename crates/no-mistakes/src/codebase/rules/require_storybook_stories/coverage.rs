@@ -136,7 +136,7 @@ pub(super) fn all_react_component_keys(
             continue;
         };
         let project_file = relative_slash_path(project_root, path);
-        for component in &react.components {
+        for component in react.components.iter() {
             out.insert(component_key(&project_file, &component.name));
         }
     }

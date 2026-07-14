@@ -152,6 +152,31 @@ fn combined_rust_rules_emit_all_configured_findings() {
     assert!(findings.iter().all(|finding| finding.file == "src/lib.rs"));
 }
 
+#[test]
+fn aggregate_drops_exclusive_rust_sources_without_global_suppression_rereads() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/filesystem-dispatch/rust-combined/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let config_path = root.join(".no-mistakes.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let files = snapshot.paths_for(&root);
+    let sources = snapshot.source_store_for(&root);
+
+    let findings = run_filesystem_rules_with_config_snapshot_catalog_and_sources(
+        &root,
+        &config,
+        &files,
+        &snapshot,
+        None,
+        std::sync::Arc::clone(&sources),
+    )
+    .unwrap();
+
+    assert_eq!(findings.len(), 3, "{findings:#?}");
+    assert_eq!(sources.physical_read_count(), 0);
+}
+
 /// Cover the false branches of the `if rule_enabled(...)` guards for
 /// `RUST_MAX_LINES_PER_FILE` and `RUST_NO_INLINE_TESTS` by running with a
 /// config that omits those two rules, exercising the skip paths.
@@ -167,4 +192,30 @@ fn dispatch_with_files_skips_disabled_rules() {
     let config_path = write_config(tmp.path(), &rules_without_rust);
     let findings = run_filesystem_rules_with_files(tmp.path(), Some(&config_path), &[]).unwrap();
     assert!(findings.is_empty());
+}
+
+#[test]
+fn aggregate_finding_and_suppression_share_one_physical_read() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/no-empty-or-comments-only-files/fixture/fail");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let config_path = root.join(".no-mistakes.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let files = snapshot.paths_for(&root);
+    let sources = snapshot.source_store_for(&root);
+
+    let findings = run_filesystem_rules_with_config_snapshot_catalog_and_sources(
+        &root,
+        &config,
+        &files,
+        &snapshot,
+        None,
+        std::sync::Arc::clone(&sources),
+    )
+    .unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].file, "placeholder.ts");
+    assert_eq!(sources.physical_read_count(), 1);
 }

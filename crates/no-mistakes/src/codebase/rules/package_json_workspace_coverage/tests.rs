@@ -5,6 +5,11 @@ use crate::config::v2::{
 };
 use std::path::Path;
 
+fn package_name(path: &Path) -> Option<String> {
+    let sources = crate::codebase::rules::source_store_for_files(&[path.to_path_buf()]);
+    package_name_with_sources(path, &sources)
+}
+
 fn fixture_root(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &Path::new(env!("CARGO_MANIFEST_DIR"))

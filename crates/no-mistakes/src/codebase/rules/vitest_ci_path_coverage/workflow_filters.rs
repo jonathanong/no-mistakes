@@ -11,7 +11,7 @@ use crate::config::v2::schema::NoMistakesConfig;
 use serde::Deserialize;
 use serde_yaml::Value;
 use std::path::Path;
-use step::{collect_step_filters, StepContext};
+use step::{collect_step_filters_with_sources, StepContext};
 use workflow_paths::{workflow_path_filters, WorkflowPathFilters};
 
 #[cfg(test)]
@@ -40,16 +40,18 @@ impl CiFilter {
     }
 }
 
-pub(super) fn ci_filters_from_snapshot(
+pub(super) fn ci_filters_from_snapshot_with_sources(
     root: &Path,
     config: &NoMistakesConfig,
     selectors: &[WorkflowSelector],
     snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> (Vec<CiFilter>, Vec<RuleFinding>) {
     ci_filters_from_paths(
         root,
         selectors,
         discover_workflow_files_from_snapshot(root, &config.ci, snapshot),
+        sources,
     )
 }
 
@@ -57,6 +59,7 @@ fn ci_filters_from_paths(
     root: &Path,
     selectors: &[WorkflowSelector],
     workflow_files: Vec<std::path::PathBuf>,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> (Vec<CiFilter>, Vec<RuleFinding>) {
     let mut filters = Vec::new();
     let mut findings = Vec::new();
@@ -69,7 +72,7 @@ fn ci_filters_from_paths(
         {
             continue;
         }
-        let source = match std::fs::read_to_string(&path) {
+        let source = match sources.read_path(&path) {
             Ok(source) => source,
             Err(error) => {
                 findings.push(workflow_finding(
@@ -81,7 +84,7 @@ fn ci_filters_from_paths(
             }
         };
         let (workflow_filters, workflow_findings) =
-            extract_filters_from_workflow(root, &rel, &source, selectors);
+            extract_filters_from_workflow_with_sources(root, &rel, &source, selectors, sources);
         filters.extend(workflow_filters);
         findings.extend(workflow_findings);
     }
@@ -89,11 +92,12 @@ fn ci_filters_from_paths(
     (filters, findings)
 }
 
-fn extract_filters_from_workflow(
+fn extract_filters_from_workflow_with_sources(
     root: &Path,
     rel: &str,
     source: &str,
     selectors: &[WorkflowSelector],
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> (Vec<CiFilter>, Vec<RuleFinding>) {
     let value: Value = match serde_yaml::from_str(source) {
         Ok(value) => value,
@@ -130,7 +134,7 @@ fn extract_filters_from_workflow(
             {
                 continue;
             }
-            collect_step_filters(
+            collect_step_filters_with_sources(
                 root,
                 StepContext {
                     rel,
@@ -139,6 +143,7 @@ fn extract_filters_from_workflow(
                     workflow_paths: &workflow_paths,
                 },
                 step,
+                sources,
                 &mut filters,
                 &mut findings,
             );

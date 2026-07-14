@@ -31,6 +31,16 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.rule_options();
@@ -42,7 +52,7 @@ pub(crate) fn check_with_files(
             .cloned()
             .collect();
         let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        findings.extend(scan(root, &opts, &files)?);
+        findings.extend(scan(root, &opts, &files, sources)?);
     }
     super::sort_findings(&mut findings);
     Ok(findings)
@@ -86,43 +96,59 @@ pub(crate) fn has_shell_shebang(content: &str) -> bool {
         || l.starts_with("#!/usr/bin/env bash")
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+fn scan(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let exclude_set = build_exclude_globset(&opts.exclude_paths);
     let cond_set = build_exclude_globset(&opts.conditionally_allowed_workflows);
     let patterns = build_patterns();
 
     let findings: Vec<RuleFinding> = files
         .par_iter()
-        .flat_map(|path| check_file(path, root, &exclude_set, &cond_set, &patterns))
+        .flat_map(|path| {
+            check_file_with_sources(path, root, &exclude_set, &cond_set, &patterns, sources)
+        })
         .collect();
     Ok(findings)
 }
 
-pub(crate) fn check_file(
+fn check_file_with_sources(
     path: &Path,
     root: &Path,
     exclude_set: &GlobSet,
     cond_set: &GlobSet,
     patterns: &[Regex; 3],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Vec<RuleFinding> {
+    let Some(content) = super::read_source(sources, path) else {
+        return Vec::new();
+    };
+    check_source(path, root, exclude_set, cond_set, patterns, &content)
+}
+
+fn check_source(
+    path: &Path,
+    root: &Path,
+    exclude_set: &GlobSet,
+    cond_set: &GlobSet,
+    patterns: &[Regex; 3],
+    content: &str,
 ) -> Vec<RuleFinding> {
     let rel_str = relative_slash_path(root, path);
-
     if exclude_set.is_match(rel_str.as_str()) {
         return Vec::new();
     }
-
-    let Ok(content) = std::fs::read_to_string(path) else {
-        return Vec::new();
-    };
-
     let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
     if !matches!(ext, "sh" | "bash" | "zsh" | "fish" | "yml" | "yaml")
-        && !has_shell_shebang(&content)
+        && !has_shell_shebang(content)
     {
         return Vec::new();
     }
 
-    if cond_set.is_match(rel_str.as_str()) && is_managed_runner_only(&content) {
+    if cond_set.is_match(rel_str.as_str()) && is_managed_runner_only(content) {
         return Vec::new();
     }
 
@@ -130,7 +156,7 @@ pub(crate) fn check_file(
     let mut findings = Vec::new();
 
     for pattern_re in patterns {
-        for mat in pattern_re.find_iter(&content) {
+        for mat in pattern_re.find_iter(content) {
             if is_read_only_config_match(mat.as_str()) {
                 continue;
             }

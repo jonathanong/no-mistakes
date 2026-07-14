@@ -1,7 +1,7 @@
 fn import_neighbors(
     path: &Path,
     resolver: &ImportResolver<'_>,
-    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
     allowed: Option<&HashSet<EdgeKind>>,
     fact_source: LazyImportFacts<'_>,
@@ -24,7 +24,15 @@ fn import_neighbors(
     }
 
     let facts = {
-        let source = match std::fs::read_to_string(path) {
+        let source = match fact_source
+            .sources
+            .map(|sources| sources.read_path(path))
+            .unwrap_or_else(|| {
+                std::fs::read_to_string(path)
+                    .map(std::sync::Arc::<str>::from)
+                    .map_err(std::sync::Arc::new)
+            })
+        {
             Ok(source) => source,
             Err(error) => {
                 return (
@@ -69,7 +77,7 @@ fn import_neighbors_from_facts(
     path: &Path,
     file_facts: &TsFileFacts,
     resolver: &ImportResolver<'_>,
-    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
     allowed: Option<&HashSet<EdgeKind>>,
 ) -> Vec<(NodeId, EdgeKind)> {
@@ -80,26 +88,20 @@ fn import_neighbors_from_facts(
         .filter(|imp| import_is_reachable(imp, file_facts, &reachable))
         .filter_map(|imp| {
             let kind = edge_kind_for_import(imp);
-            if let Some(target) = resolver
-                .resolve(&imp.specifier, path)
-                .filter(|target| graph_files.is_visible(target) && is_indexable(target))
-            {
-                return Some((NodeId::File(target), kind));
+            let classification = resolver.classify_import(
+                &imp.specifier,
+                path,
+                workspace,
+                graph_files.visible(),
+            );
+            if let Some(target) = classification.preferred_path() {
+                return (graph_files.is_visible(target) && is_indexable(target))
+                    .then(|| (NodeId::File(target.to_path_buf()), kind));
             }
-            if workspace
-                .resolve_specifier_from_file_visible(
-                    &imp.specifier,
-                    path,
-                    graph_files.visible(),
-                )
-                .is_some()
-            {
-                return None;
+            if classification.is_unresolved_external() {
+                return bare_module_node(&imp.specifier).map(|module| (module, kind));
             }
-            if workspace.recognizes_specifier_from(&imp.specifier, path) {
-                return None;
-            }
-            bare_module_node(&imp.specifier).map(|module| (module, kind))
+            None
         })
         .filter(|(_, kind)| allowed.is_none_or(|a| a.contains(kind)))
         .collect();

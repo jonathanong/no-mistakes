@@ -5,6 +5,7 @@ pub struct ImportResolver<'a> {
     policy: ImportResolutionPolicy<'a>,
     cache_enabled: bool,
     cache: DashMap<ResolveKey, Option<PathBuf>>,
+    shared_cache: Option<&'a ImportResolutionCache>,
 }
 
 #[derive(Clone, Copy)]
@@ -15,214 +16,54 @@ enum ImportResolutionPolicy<'a> {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct ResolveKey {
-    importing_dir: PathBuf,
+    importing_file: PathBuf,
     specifier: String,
 }
 
-impl<'a> ImportResolver<'a> {
-    pub fn new(tsconfig: &'a TsConfig) -> Self {
-        let mut alias_order: Vec<usize> = (0..tsconfig.paths.len()).collect();
-        alias_order.sort_by(|&a, &b| {
-            let la = tsconfig.paths[a].0.len();
-            let lb = tsconfig.paths[b].0.len();
-            lb.cmp(&la).then(a.cmp(&b))
-        });
-
-        Self {
-            tsconfig,
-            visible: None,
-            alias_order,
-            policy: ImportResolutionPolicy::Standard,
-            cache_enabled: true,
-            cache: DashMap::new(),
-        }
-    }
-
-    /// Preserve the standalone queue analyzer's historical import resolution.
-    ///
-    /// Queue analysis predates the shared resolver and intentionally resolves
-    /// aliases in config order, accepts any leading-dot relative specifier,
-    /// uses its legacy source candidate order, and treats unresolved bare
-    /// specifiers as project-root-relative paths. Keeping this policy explicit
-    /// prevents those compatibility rules from leaking into other analyzers.
-    pub(crate) fn with_queue_compatibility(mut self, root: &'a Path) -> Self {
-        self.cache.clear();
-        self.alias_order = (0..self.tsconfig.paths.len()).collect();
-        self.policy = ImportResolutionPolicy::QueueCompatibility { root };
-        self
-    }
-
-    pub fn with_visible(mut self, visible: &'a HashSet<PathBuf>) -> Self {
-        // Any entries cached before this call were resolved under different
-        // visibility (real filesystem, or an earlier `visible` set) and would
-        // otherwise leak stale answers into the new scope.
-        self.cache.clear();
-        self.visible = Some(visible);
-        self
-    }
-
-    pub fn without_cache(mut self) -> Self {
-        self.cache_enabled = false;
-        self
-    }
-
-    pub(crate) fn visible_files(&self) -> Option<&HashSet<PathBuf>> {
-        self.visible
-    }
-
-    /// Returns `true` if `specifier` matches any configured tsconfig path
-    /// alias pattern, regardless of whether the target exists on disk. Used by
-    /// `resolve-check` to flag a configured alias whose target is missing as a
-    /// real error rather than an external/bare specifier.
-    pub fn matches_alias(&self, specifier: &str) -> bool {
-        self.tsconfig
-            .paths
-            .iter()
-            .any(|(pattern, _)| match_alias(pattern, specifier).is_some())
-    }
-
-    pub fn resolve(&self, specifier: &str, importing_file: &Path) -> Option<PathBuf> {
-        if !self.cache_enabled {
-            return self.resolve_uncached(specifier, importing_file);
-        }
-
-        let importing_dir = importing_file.parent().map(normalize_path)?;
-        let key = ResolveKey {
-            importing_dir,
-            specifier: specifier.to_string(),
-        };
-
-        if let Some(cached) = self.cache.get(&key) {
-            return cached.clone();
-        }
-        let resolved = self.resolve_uncached(specifier, importing_file);
-        self.cache.insert(key, resolved.clone());
-        resolved
-    }
-
-    fn resolve_uncached(&self, specifier: &str, importing_file: &Path) -> Option<PathBuf> {
-        let is_relative = match self.policy {
-            ImportResolutionPolicy::Standard => {
-                specifier.starts_with("./") || specifier.starts_with("../")
-            }
-            ImportResolutionPolicy::QueueCompatibility { .. } => specifier.starts_with('.'),
-        };
-        if is_relative {
-            let dir = importing_file.parent()?;
-            return self.try_path(&dir.join(specifier));
-        }
-
-        for idx in &self.alias_order {
-            let (pattern, replacements) = &self.tsconfig.paths[*idx];
-            if let Some(capture) = match_alias(pattern, specifier) {
-                for replacement in replacements {
-                    let resolved = replacement.replace('*', &capture);
-                    let base = self
-                        .tsconfig
-                        .base_url
-                        .as_ref()
-                        .unwrap_or(&self.tsconfig.paths_dir)
-                        .join(&resolved);
-                    if let Some(p) = self.try_path(&base) {
-                        return Some(p);
-                    }
-                }
-            }
-        }
-
-        if let Some(base_url) = &self.tsconfig.base_url {
-            if let Some(p) = self.try_path(&base_url.join(specifier)) {
-                return Some(p);
-            }
-        }
-
-        if let ImportResolutionPolicy::QueueCompatibility { root } = self.policy {
-            return self.try_path(&root.join(specifier));
-        }
-
-        None
-    }
-
-    /// Try `base` as-is, then with each known extension appended, then as an index file.
-    fn try_path(&self, base: &Path) -> Option<PathBuf> {
-        if matches!(self.policy, ImportResolutionPolicy::QueueCompatibility { .. }) {
-            return self.try_queue_compatibility_path(base);
-        }
-        let base = normalize_path(base);
-        if has_explicit_extension(&base) {
-            // NodeNext/ESM: for an emitted `.js`/`.mjs`/`.cjs` specifier:
-            // 1. TypeScript source (`.ts`/`.tsx`/`.mts`/`.cts`) — highest priority.
-            // 2. Literal file — takes precedence over `.jsx` and declarations.
-            // 3. `.jsx`/`.d.*` fallbacks — only when the literal file is absent.
-            if let Some(source) = self.try_emitted_source(&base) {
-                return Some(source);
-            }
-            if self.path_is_file(&base) {
-                return Some(base);
-            }
-            return self.try_emitted_fallback(&base);
-        }
-        if self.path_is_file(&base) {
-            return Some(base);
-        }
-        let s = base.to_string_lossy();
-
-        for ext in EXTENSIONS {
-            let candidate = PathBuf::from(format!("{}{}", s, ext));
-            if self.path_exists(&candidate) {
-                return Some(candidate);
-            }
-        }
-
-        for ext in EXTENSIONS {
-            let candidate = base.join(format!("index{}", ext));
-            if self.path_exists(&candidate) {
-                return Some(candidate);
-            }
-        }
-
-        None
-    }
-
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ImportClassification {
+    resolver_target: Option<PathBuf>,
+    workspace_target: Option<PathBuf>,
+    workspace_recognized: bool,
 }
 
-include!("resolver_paths.rs");
-
-/// Resolve `.` and `..` components without touching the filesystem.
-pub fn normalize_path(path: &Path) -> PathBuf {
-    use std::path::Component;
-    let mut parts: Vec<Component> = Vec::new();
-    for c in path.components() {
-        match c {
-            Component::CurDir => {}
-            Component::ParentDir => {
-                if matches!(parts.last(), Some(Component::Normal(_))) {
-                    parts.pop();
-                } else {
-                    parts.push(c);
-                }
-            }
-            other => parts.push(other),
-        }
+impl ImportClassification {
+    pub(crate) fn preferred_path(&self) -> Option<&Path> {
+        self.resolver_target
+            .as_deref()
+            .or(self.workspace_target.as_deref())
     }
-    parts.iter().collect()
+
+    pub(crate) fn resolver_path(&self) -> Option<&Path> {
+        self.resolver_target.as_deref()
+    }
+
+    pub(crate) fn workspace_path(&self) -> Option<&Path> {
+        self.workspace_target.as_deref()
+    }
+
+    pub(crate) fn is_unresolved_external(&self) -> bool {
+        self.resolver_target.is_none()
+            && self.workspace_target.is_none()
+            && !self.workspace_recognized
+    }
 }
 
-/// Try to match `specifier` against `pattern` (which may contain a single `*`).
-/// Returns `Some(capture)` where `capture` is what the `*` matched, or `""` for exact.
-fn match_alias(pattern: &str, specifier: &str) -> Option<String> {
-    if let Some(star) = pattern.find('*') {
-        let prefix = &pattern[..star];
-        let suffix = &pattern[star + 1..];
-        if specifier.starts_with(prefix) && specifier.ends_with(suffix) {
-            let cap_end = specifier.len() - suffix.len();
-            let cap_start = prefix.len();
-            return (cap_start <= cap_end).then(|| specifier[cap_start..cap_end].to_string());
-        }
-        None
-    } else if specifier == pattern {
-        Some(String::new())
-    } else {
-        None
+/// Request-scoped memo table shared by graph consumers that classify imports.
+///
+/// The cache owns only resolution outcomes, so sharing it does not make lazy
+/// traversal prepare any other graph consumer.
+#[derive(Default)]
+pub(crate) struct ImportResolutionCache {
+    raw_entries: DashMap<ResolveKey, Option<PathBuf>>,
+    final_entries: DashMap<ResolveKey, ImportClassification>,
+    classifications: std::sync::atomic::AtomicUsize,
+    requests: std::sync::atomic::AtomicUsize,
+}
+
+impl ImportResolutionCache {
+    pub(crate) fn clear(&self) {
+        self.raw_entries.clear();
+        self.final_entries.clear();
     }
 }

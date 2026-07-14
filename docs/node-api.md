@@ -75,7 +75,9 @@ Each `analyzeProject()` report may use its report-specific options. Graph
 reports may override `root`, `tsconfig`, and `config`; `reactUsages` accepts
 `target`, `targets`, `include`, and scope options; and `check` may override
 `root`, `tsconfig`, and `config`. Reports with the same effective scope share
-one prepared analysis, while distinct scopes are prepared independently.
+one request-scoped in-memory dataset. Sources, parsed metadata, and compact file
+facts are reused; each normalized graph or symbol-index plan is built at most
+once for its file universe. Distinct effective scopes are prepared independently.
 
 `impactedChecks(options)` shares one in-memory analysis pass across configured
 test frameworks. Pass `timings: true` to include an ordered `timings` array in

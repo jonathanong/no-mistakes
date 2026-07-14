@@ -49,20 +49,27 @@ pub(crate) struct PlaywrightSettingsKey {
 
 impl PlaywrightSettingsKey {
     pub(crate) fn new(settings: &crate::playwright::config::Settings) -> Self {
+        fn normalized<T: Clone + Ord>(values: &[T]) -> Vec<T> {
+            let mut values = values.to_vec();
+            values.sort();
+            values.dedup();
+            values
+        }
+
         Self {
             frontend_root: settings.frontend_root.clone(),
             playwright_configs: settings.playwright_configs.clone(),
             project: settings.project.clone(),
-            test_include: settings.test_include.clone(),
-            test_exclude: settings.test_exclude.clone(),
-            ignore_routes: settings.ignore_routes.clone(),
+            test_include: normalized(&settings.test_include),
+            test_exclude: normalized(&settings.test_exclude),
+            ignore_routes: normalized(&settings.ignore_routes),
             rewrites: settings
                 .rewrites
                 .iter()
                 .map(|rewrite| (rewrite.source.clone(), rewrite.destination.clone()))
                 .collect(),
-            navigation_helpers: settings.navigation_helpers.clone(),
-            selector_attributes: settings.selector_attributes.clone(),
+            navigation_helpers: normalized(&settings.navigation_helpers),
+            selector_attributes: normalized(&settings.selector_attributes),
             test_id_attribute_override: settings.test_id_attribute_override.clone(),
             component_selector_attributes: settings
                 .component_selector_attributes
@@ -70,9 +77,9 @@ impl PlaywrightSettingsKey {
                 .map(|(component, attribute)| (component.clone(), attribute.clone()))
                 .collect(),
             html_ids: settings.html_ids,
-            selector_roots: settings.selector_roots.clone(),
-            selector_include: settings.selector_include.clone(),
-            selector_exclude: settings.selector_exclude.clone(),
+            selector_roots: normalized(&settings.selector_roots),
+            selector_include: normalized(&settings.selector_include),
+            selector_exclude: normalized(&settings.selector_exclude),
         }
     }
 }

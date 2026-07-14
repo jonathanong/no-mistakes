@@ -443,6 +443,30 @@ fn global_check_reports_unique_exports_without_skip_file_patterns() {
 }
 
 #[test]
+fn global_check_builds_one_canonical_graph_for_combined_graph_rules() {
+    let root = fixture("codebase-analysis", "test-no-unmocked-dynamic-imports");
+    let config = root.join(".no-mistakes-combined.yml");
+    let output = run(&[
+        "check",
+        "--root",
+        root.to_str().unwrap(),
+        "--config",
+        config.to_str().unwrap(),
+        "--verbose-timings",
+    ]);
+    let timings = stderr(&output);
+    assert_eq!(
+        timings.matches("rules.canonical_dependency_graph:").count(),
+        1,
+        "combined graph-backed rules must build one canonical graph: {timings}"
+    );
+    assert!(
+        !timings.contains("test_no_unmocked_dynamic_imports.graph_build:"),
+        "the dynamic-import rule must consume the canonical graph: {timings}"
+    );
+}
+
+#[test]
 fn global_check_runs_test_no_unmocked_dynamic_imports_rule() {
     let root = fixture("codebase-analysis", "test-no-unmocked-dynamic-imports");
     let json = run(&["check", "--root", root.to_str().unwrap(), "--json"]);

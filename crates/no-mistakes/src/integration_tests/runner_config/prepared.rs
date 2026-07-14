@@ -11,64 +11,9 @@ use anyhow::Result;
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 
-pub(crate) fn prepare(
-    root: &Path,
-    config: &NoMistakesConfig,
-    visible_paths: &[PathBuf],
-    tsconfig: &TsConfig,
-) -> PreparedIntegrationRunnerConfigs {
-    let mut specs = Vec::new();
-    add_framework_specs(
-        &mut specs,
-        root,
-        Framework::Playwright,
-        config.tests.playwright.configs.as_ref(),
-        &config.tests.playwright.projects,
-        visible_paths,
-    );
-    add_framework_specs(
-        &mut specs,
-        root,
-        Framework::Vitest,
-        config.tests.vitest.configs.as_ref(),
-        &config.tests.vitest.projects,
-        visible_paths,
-    );
-    PreparedIntegrationRunnerConfigs {
-        root: root.to_path_buf(),
-        specs,
-        tsconfig: tsconfig.clone(),
-        visible_files: visible_paths
-            .iter()
-            .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-            .collect(),
-    }
-}
+mod setup;
 
-fn add_framework_specs(
-    specs: &mut Vec<RunnerConfigSpec>,
-    root: &Path,
-    framework: Framework,
-    configs: Option<&StringOrList>,
-    policies: &BTreeMap<String, TestProjectPolicy>,
-    visible_paths: &[PathBuf],
-) {
-    let needs_projects = policies
-        .values()
-        .any(|policy| !policy.integration_suites.is_empty() && policy.include.is_empty());
-    if !needs_projects {
-        return;
-    }
-    let raw_configs = configs.map_or_else(
-        || project_config::discovered_config_paths(root, framework, visible_paths),
-        StringOrList::values,
-    );
-    specs.extend(raw_configs.into_iter().map(|raw| RunnerConfigSpec {
-        framework,
-        path: crate::codebase::ts_resolver::normalize_path(&root.join(&raw)),
-        raw,
-    }));
-}
+pub(crate) use setup::{prepare, prepare_with_sources};
 
 impl PreparedIntegrationRunnerConfigs {
     pub(crate) fn paths(&self) -> impl Iterator<Item = &PathBuf> {
@@ -148,6 +93,15 @@ impl PreparedIntegrationRunnerConfigs {
         })
     }
 
+    fn read_source(&self, path: &Path) -> Result<std::sync::Arc<str>> {
+        match &self.sources {
+            Some(sources) => sources
+                .read_path(path)
+                .map_err(|error| anyhow::anyhow!("reading {}: {}", path.display(), error)),
+            None => super::cache::read_request_source(path),
+        }
+    }
+
     pub(crate) fn parse_all(&self) -> Result<ParsedRunnerConfigs> {
         self.with_request_cache(None, || self.parse_all_inner()).0
     }
@@ -166,7 +120,7 @@ impl PreparedIntegrationRunnerConfigs {
                     spec.path.display()
                 );
             }
-            let source = std::fs::read_to_string(&spec.path)?;
+            let source = self.read_source(&spec.path)?;
             let facts = with_request_program(&spec.path, &source, |program, source| {
                 self.parse_program(&spec.path, program, source)
                     .expect("runner config path was prepared")
@@ -181,7 +135,7 @@ impl PreparedIntegrationRunnerConfigs {
         if !self.contains(path) || !path.exists() {
             return None;
         }
-        let source = match std::fs::read_to_string(path) {
+        let source = match self.read_source(path) {
             Ok(source) => source,
             Err(error) => return self.parse_error(path, error.to_string()),
         };

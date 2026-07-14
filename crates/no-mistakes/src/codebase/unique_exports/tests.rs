@@ -279,10 +279,11 @@ fn collect_source_files_from_facts_reports_missing_fact_shapes() {
     parse_error.ts.insert(
         file.clone(),
         crate::codebase::check_facts::CheckFileFacts {
-            source: Some("export const Broken =".to_string()),
+            source: Some("export const Broken =".into()),
             parse_error: Some("bad syntax".to_string()),
             ..Default::default()
-        },
+        }
+        .into(),
     );
     assert!(
         scan::collect_source_files_from_facts(&root, &files, &parse_error)
@@ -304,9 +305,10 @@ fn collect_source_files_from_facts_reports_missing_fact_shapes() {
     missing_symbols.ts.insert(
         file,
         crate::codebase::check_facts::CheckFileFacts {
-            source: Some("export const value = 1;".to_string()),
+            source: Some("export const value = 1;".into()),
             ..Default::default()
-        },
+        }
+        .into(),
     );
     assert!(
         scan::collect_source_files_from_facts(&root, &files, &missing_symbols)

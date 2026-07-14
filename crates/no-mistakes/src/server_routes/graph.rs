@@ -155,7 +155,7 @@ fn collect_file_facts(files: &[PathBuf], root: &Path) -> HashMap<PathBuf, FileFa
     );
     facts
         .into_iter()
-        .filter_map(|(path, facts)| facts.server_routes.map(|routes| (path, routes)))
+        .filter_map(|(path, facts)| facts.server_routes.clone().map(|routes| (path, routes)))
         .collect()
 }
 

@@ -1,10 +1,19 @@
-use super::doc_section::scan_doc_section;
+use super::doc_section::scan_doc_section_with_sources;
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
 use std::path::PathBuf;
+
+fn scan_doc_section(
+    root: &std::path::Path,
+    opts: &DocSectionOptions,
+    files: &[PathBuf],
+) -> anyhow::Result<Vec<RuleFinding>> {
+    let sources = crate::codebase::rules::source_store_for_files(files);
+    scan_doc_section_with_sources(root, opts, files, &sources)
+}
 
 fn fixture(path: &str) -> PathBuf {
     let mut parts = path.splitn(3, '/');

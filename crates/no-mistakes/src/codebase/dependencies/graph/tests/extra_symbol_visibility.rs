@@ -14,15 +14,15 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
         base_url: None,
     };
     let resolver = ImportResolver::new(&tsconfig).with_visible(&visible);
-    let workspace = crate::codebase::workspaces::WorkspaceMap {
-        packages: vec![crate::codebase::workspaces::WorkspacePackage {
+    let workspace = crate::codebase::workspaces::IndexedWorkspaceMap::from_packages(vec![
+        crate::codebase::workspaces::WorkspacePackage {
             name: "@fixture/hidden".to_string(),
             dir: p("/repo/packages/core"),
             entry: Some(hidden_target.clone()),
             exports: None,
             imports: None,
-        }],
-    };
+        },
+    ]);
     let symbols = FileSymbols {
         exports: vec![
             Export {

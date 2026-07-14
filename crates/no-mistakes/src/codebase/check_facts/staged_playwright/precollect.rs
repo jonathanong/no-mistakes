@@ -8,6 +8,7 @@ pub(super) fn cached_config_graph_facts(
     graph_files: &[PathBuf],
     plan: &CheckFactPlan,
     playwright: &PlaywrightFactPlan,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> TsFactMap {
     if !crate::ast::request_parse_cache_active() {
         return TsFactMap::new();
@@ -20,14 +21,17 @@ pub(super) fn cached_config_graph_facts(
             .iter()
             .filter(|path| universe.contains(path))
             .filter_map(|path| {
-                let source = std::fs::read_to_string(path).ok()?;
-                crate::ast::with_program(path, &source, |program, source| {
+                let source = sources.read_path(path).ok()?;
+                let mut facts = crate::ast::with_program(path, &source, |program, source| {
                     crate::codebase::ts_source::facts::collect_file_facts_from_program(
                         path, plan.graph, &context, source, program, None,
                     )
                 })
-                .ok()
-                .map(|facts| (path.clone(), facts))
+                .ok()?;
+                if plan.graph.source {
+                    facts.source = Some(source.to_string());
+                }
+                Some((path.clone(), facts))
             }),
         plan.graph,
     )

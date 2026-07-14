@@ -11,7 +11,7 @@ mod config_check;
 mod helpers;
 mod shared;
 pub(crate) use config_check::check_with_config;
-pub(crate) use shared::{check_with_prepared_facts, check_with_prepared_facts_and_inferred};
+pub(crate) use shared::check_with_prepared_facts_and_graph;
 
 pub const RULE_ID: &str = "forbidden-dependencies";
 

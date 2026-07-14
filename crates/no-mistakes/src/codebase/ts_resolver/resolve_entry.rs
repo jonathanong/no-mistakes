@@ -75,6 +75,30 @@ pub fn resolve_tsconfig_from_visible(
     })
 }
 
+#[doc(hidden)]
+pub(crate) fn resolve_tsconfig_from_visible_and_sources(
+    arg: Option<&Path>,
+    root: &Path,
+    visible_paths: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<TsConfig> {
+    let path = if let Some(path) = arg {
+        Some(if path.is_absolute() { path.to_path_buf() } else { root.join(path) })
+    } else {
+        find_tsconfig_from_visible(root, visible_paths)
+    };
+    match path {
+        Some(path) => load_tsconfig_from_source_store(&path, sources)
+            .context(format!("loading tsconfig {}", path.display())),
+        None => Ok(TsConfig {
+            dir: root.to_path_buf(),
+            paths: Vec::new(),
+            paths_dir: root.to_path_buf(),
+            base_url: None,
+        }),
+    }
+}
+
 const EXTENSIONS: &[&str] = &[
     ".mts", ".ts", ".tsx", ".mjs", ".js", ".jsx", ".cjs", ".cts", ".d.ts", ".d.mts", ".d.cts",
 ];

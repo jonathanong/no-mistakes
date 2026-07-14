@@ -53,7 +53,7 @@ pub(super) fn collect_source_files_from_facts(
             rel: relative_slash_path(root, path),
             disabled,
             is_nextjs_project: nextjs_projects.contains_file(path),
-            source,
+            source: source.to_string(),
             symbols,
         });
     }

@@ -36,6 +36,8 @@ mod options_test_support;
 mod options_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_dispatch;
 
 pub(crate) fn analyze_project_json_impl(options_json: String) -> napi::Result<String> {
     let options = parse_options::<AnalyzeProjectOptions>(&options_json)?;

@@ -38,6 +38,9 @@ pub(crate) struct ParsedProgramCache {
     entries: Rc<RefCell<CachedPrograms>>,
 }
 
+#[cfg(test)]
+pub(super) mod tests;
+
 impl ParsedProgramCache {
     pub(crate) fn with_program<T>(
         &self,
@@ -50,6 +53,10 @@ impl ParsedProgramCache {
             Some(error) => Err(error.clone()),
             None => Ok(analyze(&parsed.program, owner.source.as_str())),
         })
+    }
+
+    pub(crate) fn clear(&self) {
+        self.entries.borrow_mut().clear();
     }
 
     fn cached_program(&self, path: &Path, source: &str) -> Result<Rc<CachedProgram>, String> {

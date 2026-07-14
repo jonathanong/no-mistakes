@@ -30,6 +30,16 @@ pub(crate) fn check_required_doc_section_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = crate::codebase::rules::source_store_for_files(all_files);
+    check_required_doc_section_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_required_doc_section_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(REQUIRED_DOC_SECTION_RULE_ID)
         .into_par_iter()
@@ -51,7 +61,7 @@ pub(crate) fn check_required_doc_section_with_files(
                 .collect();
             let files =
                 crate::codebase::rules::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan_doc_section(root, &opts, &files)
+            scan_doc_section_with_sources(root, &opts, &files, sources)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -59,10 +69,11 @@ pub(crate) fn check_required_doc_section_with_files(
     Ok(findings)
 }
 
-pub(crate) fn scan_doc_section(
+pub(super) fn scan_doc_section_with_sources(
     root: &Path,
     opts: &DocSectionOptions,
     files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     if opts.glob.is_empty() || opts.required_heading.is_empty() {
         return Ok(Vec::new());
@@ -80,9 +91,8 @@ pub(crate) fn scan_doc_section(
         if !glob_set.is_match(&rel) {
             continue;
         }
-        let content = match std::fs::read_to_string(file) {
-            Ok(c) => c,
-            Err(_) => continue,
+        let Some(content) = crate::codebase::rules::read_source(sources, file) else {
+            continue;
         };
         let heading_text = opts.required_heading.trim_start_matches('#').trim();
         if !crate::codebase::markdown_sections::has_section(&content, heading_text) {

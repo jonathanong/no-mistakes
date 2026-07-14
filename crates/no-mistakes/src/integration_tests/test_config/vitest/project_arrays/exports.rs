@@ -102,7 +102,7 @@ fn imported_options_lookup(
     if !ctx.seen.insert(path.clone()) {
         return Ok(None);
     }
-    let result = match std::fs::read_to_string(&path) {
+    let result = match crate::integration_tests::runner_config::read_request_source(&path) {
         Err(_) => Ok(None),
         Ok(source) => crate::integration_tests::runner_config::with_program(
             &path,

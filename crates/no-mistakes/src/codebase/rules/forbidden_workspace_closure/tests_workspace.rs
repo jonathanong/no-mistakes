@@ -4,6 +4,15 @@ use crate::config::v2::{
     NoMistakesConfig,
 };
 
+fn load_workspace(
+    root: &Path,
+    target_roots: &[PathBuf],
+    files: &[PathBuf],
+) -> anyhow::Result<crate::codebase::workspaces::WorkspaceMap> {
+    let sources = crate::codebase::rules::source_store_for_files(files);
+    workspace::load_workspace_with_sources(root, target_roots, files, &sources)
+}
+
 fn fixture_root(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -116,7 +125,7 @@ fn load_workspace_defaults_to_repository_root_when_target_roots_are_empty() {
     let root = fixture_root("pass");
     let files = package_files(&root, &["package.json", "packages/app/package.json"]);
 
-    let workspace = workspace::load_workspace(&root, &[], &files).unwrap();
+    let workspace = load_workspace(&root, &[], &files).unwrap();
     let names: Vec<_> = workspace
         .packages
         .iter()

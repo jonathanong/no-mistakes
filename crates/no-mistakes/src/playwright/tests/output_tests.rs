@@ -66,6 +66,21 @@ fn standalone_playwright_report_parses_each_source_file_once() {
 }
 
 #[test]
+fn standalone_playwright_report_releases_cached_asts_before_serialization_returns() {
+    let source = parser_count_fixture();
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+
+    crate::ast::with_request_parse_cache(|| {
+        let output =
+            report_json(PlaywrightReportKind::Check, report_options(root.clone())).unwrap();
+
+        assert!(!output.is_empty());
+        assert_eq!(crate::ast::tests::request_parse_cache_len(), 0);
+    });
+}
+
+#[test]
 fn text_printers_cover_routes_and_selectors() {
     let coverage = CoverageReport {
         summary: Summary {

@@ -18,7 +18,21 @@ pub struct TsConfig {
 /// The directory of whichever config physically contains the winning `paths` block
 /// is stored in `TsConfig::paths_dir` so that alias substitution is anchored there.
 pub fn load_tsconfig(path: &Path) -> Result<TsConfig> {
-    Ok(load_tsconfig_inner(path, &mut std::collections::HashSet::new())?.inner)
+    load_tsconfig_with_sources(path, None)
+}
+
+pub(crate) fn load_tsconfig_from_source_store(
+    path: &Path,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<TsConfig> {
+    load_tsconfig_with_sources(path, Some(sources))
+}
+
+fn load_tsconfig_with_sources(
+    path: &Path,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
+) -> Result<TsConfig> {
+    Ok(load_tsconfig_inner(path, &mut std::collections::HashSet::new(), sources)?.inner)
 }
 
 /// Internal result that carries whether `paths` was *explicitly defined* (even if empty)
@@ -35,6 +49,7 @@ struct TsConfigFound {
 fn load_tsconfig_inner(
     path: &Path,
     visited: &mut std::collections::HashSet<PathBuf>,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<TsConfigFound> {
     let canonical = path
         .canonicalize()
@@ -49,7 +64,14 @@ fn load_tsconfig_inner(
         .context(format!("resolving parent directory for {}", path.display()))?
         .to_path_buf();
 
-    let content = std::fs::read_to_string(path).context(format!("reading {}", path.display()))?;
+    let content = match sources {
+        Some(sources) => sources
+            .read_path(path)
+            .map_err(|error| anyhow::anyhow!("reading {}: {}", path.display(), error))?,
+        None => std::sync::Arc::<str>::from(
+            std::fs::read_to_string(path).context(format!("reading {}", path.display()))?,
+        ),
+    };
 
     let parsed: Option<serde_json::Value> =
         jsonc_parser::parse_to_serde_value(&content, &jsonc_parser::ParseOptions::default())
@@ -136,7 +158,7 @@ fn load_tsconfig_inner(
             } else {
                 base_path
             };
-            let base = load_tsconfig_inner(&base_path, visited)
+            let base = load_tsconfig_inner(&base_path, visited, sources)
                 .context(format!("loading extended tsconfig {}", base_path.display()))?;
             if let Some(base_url) = &base.inner.base_url {
                 inherited_base_url = Some(base_url.clone());

@@ -7,8 +7,14 @@ use std::process::Command;
 pub mod facts;
 pub mod jsx;
 
+mod file_inventory;
 mod parser_diagnostic;
+mod source_store;
+#[doc(hidden)]
+pub use file_inventory::{FileId, FileInventory};
 pub(crate) use parser_diagnostic::format_parse_diagnostic;
+#[doc(hidden)]
+pub use source_store::{JsonLoadError, SourceReadOutcome, SourceStore};
 
 include!("discovery.rs");
 include!("discovery_preserve.rs");

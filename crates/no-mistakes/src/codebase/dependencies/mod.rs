@@ -25,16 +25,23 @@ include!("symbol_resolution.rs");
 include!("shared_traversal.rs");
 include!("shared_traversal_facts.rs");
 include!("shared_traversal_reports.rs");
+include!("shared_graph_cache.rs");
 include!("shared_traversal_graph.rs");
 include!("shared_traversal_collect.rs");
 include!("output_args.rs");
 include!("run.rs");
 
 #[cfg(test)]
+mod shared_traversal_facts_tests;
+#[cfg(test)]
 mod traversal;
 
 #[cfg(test)]
+mod root_dependency_test_helpers;
+#[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod traversal_entrypoint_test_helpers;
 
 fn write_output_results(
     format: Format,

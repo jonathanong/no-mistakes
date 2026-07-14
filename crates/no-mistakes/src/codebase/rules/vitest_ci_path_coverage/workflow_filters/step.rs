@@ -1,4 +1,4 @@
-use super::values::{filter_predicates, parse_filters_value};
+use super::values::{filter_predicates, parse_filters_value_with_sources};
 use super::workflow_paths::WorkflowPathFilters;
 use super::{workflow_finding, CiFilter, RuleFinding};
 use crate::codebase::rules::vitest_ci_path_coverage::globs::{
@@ -14,10 +14,11 @@ pub(super) struct StepContext<'a> {
     pub(super) workflow_paths: &'a WorkflowPathFilters,
 }
 
-pub(super) fn collect_step_filters(
+pub(super) fn collect_step_filters_with_sources(
     root: &Path,
     context: StepContext<'_>,
     step: &Value,
+    sources: &crate::codebase::ts_source::SourceStore,
     filters: &mut Vec<CiFilter>,
     findings: &mut Vec<RuleFinding>,
 ) {
@@ -29,12 +30,13 @@ pub(super) fn collect_step_filters(
         return;
     };
     let quantifier = predicate_quantifier(with);
-    let Some(parsed) = parse_filters_value(
+    let Some(parsed) = parse_filters_value_with_sources(
         root,
         context.rel,
         context.job_id,
         context.step_id,
         raw_filters,
+        sources,
         findings,
     ) else {
         return;

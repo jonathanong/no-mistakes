@@ -43,7 +43,7 @@ pub fn prepare_analysis_with_shared_facts(
     source_files: &[PathBuf],
     shared: &crate::codebase::check_facts::CheckFactMap,
 ) -> PreparedServerAnalysis {
-    let facts = crate::codebase::ts_source::facts::TsFactMap::from_iter_with_plan(
+    let facts = crate::codebase::ts_source::facts::TsFactMap::from_shared_iter_with_plan(
         source_files.iter().filter_map(|path| {
             shared
                 .ts

@@ -1,5 +1,17 @@
 use super::*;
 
+fn parse_filters_value(
+    root: &Path,
+    rel: &str,
+    job_id: &str,
+    step_id: &str,
+    raw_filters: &str,
+    findings: &mut Vec<RuleFinding>,
+) -> Option<Value> {
+    let sources = crate::codebase::rules::source_store_for_files(&[]);
+    parse_filters_value_with_sources(root, rel, job_id, step_id, raw_filters, &sources, findings)
+}
+
 fn fixture_root(name: &str) -> std::path::PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))

@@ -145,18 +145,29 @@ pub fn discover_visible_paths(root: &Path) -> Vec<PathBuf> {
             .hidden(false)
             .require_git(false)
             .build()
-            .filter_map(|entry| entry.ok())
-            .filter(|entry| {
-                entry
-                    .file_type()
-                    .is_some_and(|file_type| file_type.is_file() || file_type.is_symlink())
+            .scan(root.to_path_buf(), |walker_root, entry| {
+                Some(entry.ok().and_then(|entry| {
+                    if entry.depth() == 0 {
+                        *walker_root = entry.path().to_path_buf();
+                    }
+                    entry.file_type().and_then(|file_type| {
+                        (file_type.is_file() || file_type.is_symlink()).then(|| {
+                            rebase_walk_path(root, walker_root, entry.path())
+                        })
+                    })
+                }))
             })
-            .map(|entry| entry.into_path())
-            .collect(),
+            .flatten()
+            .collect()
     };
     paths.sort();
     paths.dedup();
     paths
+}
+
+fn rebase_walk_path(request_root: &Path, walker_root: &Path, path: &Path) -> PathBuf {
+    path.strip_prefix(walker_root)
+        .map_or_else(|_| path.to_path_buf(), |relative| request_root.join(relative))
 }
 
 /// Return git-visible files as absolute paths. Falls back to the ignore-based

@@ -3,7 +3,7 @@ struct ExportEdgeInputs<'a> {
     symbols: &'a crate::codebase::ts_symbols::FileSymbols,
     facts: &'a dyn TsFactLookup,
     resolver: &'a ImportResolver<'a>,
-    workspace: &'a crate::codebase::workspaces::WorkspaceMap,
+    workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
     visible_files: &'a HashSet<PathBuf>,
 }
 

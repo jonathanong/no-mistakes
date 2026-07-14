@@ -15,6 +15,7 @@ struct SharedCheckContext {
     filesystem_rules_enabled: bool,
     forbidden_deps_enabled: bool,
     playwright_rules_enabled: bool,
+    graph_plan: Option<crate::codebase::dependencies::graph::GraphBuildPlan>,
 }
 
 impl SharedCheckContext {
@@ -56,6 +57,7 @@ impl SharedCheckContext {
         let forbidden_graph_plan = forbidden_deps_enabled
             .then(|| crate::codebase::rules::forbidden_dependencies::graph_plan(config))
             .flatten();
+        let graph_plan = crate::codebase::rules::canonical_graph_plan(config);
         let mut playwright_fact_plan = prepared
             .playwright
             .as_ref()
@@ -116,7 +118,7 @@ impl SharedCheckContext {
                     graph_plan,
                     prepared_graph,
                 );
-            plan.graph = fact_plan;
+            plan.graph.include(fact_plan);
             plan.graph_context = fact_context;
         }
         let skip_directories = config.filesystem.skip_directories.clone();
@@ -170,6 +172,7 @@ impl SharedCheckContext {
             filesystem_rules_enabled,
             forbidden_deps_enabled,
             playwright_rules_enabled,
+            graph_plan,
         })
     }
 }

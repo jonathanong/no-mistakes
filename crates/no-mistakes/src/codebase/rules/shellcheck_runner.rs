@@ -13,7 +13,7 @@ const DEFAULT_SEVERITY: &str = "warning";
 const VALID_SEVERITIES: [&str; 4] = ["error", "warning", "info", "style"];
 
 mod candidates;
-use candidates::filtered_shell_files;
+use candidates::{filtered_shell_files, filtered_shell_files_with_sources};
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -55,6 +55,16 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -69,7 +79,7 @@ pub(crate) fn check_with_files(
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
             let rule_filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
-            scan(root, &opts, &files, &target_roots, &rule_filter)
+            scan_with_sources(root, &opts, &files, &target_roots, &rule_filter, sources)
         })
         .collect();
     merge(all)
@@ -89,6 +99,22 @@ fn scan(
     rule_filter: &super::path_filter::RulePathFilter,
 ) -> Result<Vec<RuleFinding>> {
     let shell_candidates = filtered_shell_files(root, opts, files, target_roots, rule_filter);
+    if shell_candidates.is_empty() {
+        return Ok(Vec::new());
+    }
+    run_shellcheck(root, opts, &shell_candidates)
+}
+
+fn scan_with_sources(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    target_roots: &[PathBuf],
+    rule_filter: &super::path_filter::RulePathFilter,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
+    let shell_candidates =
+        filtered_shell_files_with_sources(root, opts, files, target_roots, rule_filter, sources);
     if shell_candidates.is_empty() {
         return Ok(Vec::new());
     }

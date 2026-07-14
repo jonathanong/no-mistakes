@@ -18,6 +18,18 @@ impl TsFactMap {
         Self::with_plan(facts.into_iter().collect(), plan)
     }
 
+    pub(crate) fn from_shared_iter_with_plan(
+        facts: impl IntoIterator<Item = (PathBuf, std::sync::Arc<TsFileFacts>)>,
+        plan: TsFactPlan,
+    ) -> Self {
+        Self::from_iter_with_plan(
+            facts
+                .into_iter()
+                .map(|(path, facts)| (path, std::sync::Arc::unwrap_or_clone(facts))),
+            plan,
+        )
+    }
+
     pub(crate) fn plan(&self) -> TsFactPlan {
         self.plan
     }

@@ -3,6 +3,17 @@ use super::*;
 use std::collections::HashSet;
 use tempfile::TempDir;
 
+impl ImportResolutionCache {
+    pub(crate) fn classification_count(&self) -> usize {
+        self.classifications
+            .load(std::sync::atomic::Ordering::Relaxed)
+    }
+
+    pub(crate) fn request_count(&self) -> usize {
+        self.requests.load(std::sync::atomic::Ordering::Relaxed)
+    }
+}
+
 fn write(path: &Path, content: &str) {
     if let Some(p) = path.parent() {
         std::fs::create_dir_all(p).unwrap();

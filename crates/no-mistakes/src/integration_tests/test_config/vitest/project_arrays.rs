@@ -197,7 +197,7 @@ pub(in crate::integration_tests::test_config::vitest::project_arrays) fn importe
     if !ctx.seen.insert(path.clone()) {
         return Ok(Vec::new());
     }
-    let result = match std::fs::read_to_string(&path) {
+    let result = match crate::integration_tests::runner_config::read_request_source(&path) {
         Err(_) => Ok(Vec::new()),
         Ok(source) => crate::integration_tests::runner_config::with_program(
             &path,

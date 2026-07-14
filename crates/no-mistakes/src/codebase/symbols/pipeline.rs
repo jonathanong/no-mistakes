@@ -34,7 +34,7 @@ pub(crate) fn collect_entries_with_prepared_facts(
                 path,
                 root,
                 &resolver,
-                symbols,
+                symbols.as_ref().clone(),
                 args.include,
                 kind_filter.as_ref(),
             )

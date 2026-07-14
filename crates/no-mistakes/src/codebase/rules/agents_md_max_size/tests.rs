@@ -1,9 +1,21 @@
-use super::agents_md_max_size_budget::{check_file, count_lines};
+use super::agents_md_max_size_budget::{check_content, count_lines};
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
+
+fn check_file(
+    path: &std::path::Path,
+    root: &std::path::Path,
+    max_lines: usize,
+    max_chars: usize,
+) -> Vec<RuleFinding> {
+    let Ok(content) = std::fs::read_to_string(path) else {
+        return Vec::new();
+    };
+    check_content(path, root, max_lines, max_chars, &content)
+}
 
 fn config_with_rule(yaml: &str) -> NoMistakesConfig {
     let mut config = NoMistakesConfig::default();

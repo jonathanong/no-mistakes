@@ -6,57 +6,61 @@ pub(crate) fn collect_and_filter_entries_shared(
 ) -> Result<TraversalResult> {
     let explicit_roots = explicit_existing_entry_files(args, &shared.root, cwd_early);
     shared.add_explicit_roots(&explicit_roots);
-    let entrypoints = resolve_entrypoints_with_files(
-        &args.files,
-        &args.file_symbols,
-        &args.file_entrypoints_are_structured,
-        &shared.root,
-        cwd_early,
-        &shared.graph_files,
-        args.include_symbols,
-    );
+    let workspace = shared.dataset.workspace();
+    let entrypoints = resolve_entrypoints_with_files_and_workspace(EntrypointResolution {
+        raw_entrypoints: &args.files,
+        symbol_entrypoints: &args.file_symbols,
+        structured_entrypoints: &args.file_entrypoints_are_structured,
+        root: &shared.root,
+        cwd: cwd_early,
+        graph_files: &shared.graph_files,
+        include_symbols: args.include_symbols,
+        workspace: &workspace,
+    });
     validate_direction(&direction, &entrypoints)?;
 
     let allowed = relationship_filter(&args.relationships);
-    let roots: Vec<NodeId> = entrypoints.iter().map(|entrypoint| entrypoint.node.clone()).collect();
+    let roots: Vec<NodeId> = entrypoints
+        .iter()
+        .map(|entrypoint| entrypoint.node.clone())
+        .collect();
     let import_only = !args.include_symbols && relationships_are_import_only(&args.relationships);
     let any_symbol = entrypoints
         .iter()
         .any(|entrypoint| entrypoint.symbol.is_some());
-    let symbol_index = if matches!(direction, Direction::Dependents)
-        && any_symbol
-        && !args.include_symbols
-    {
-        shared.ensure_facts();
-        Some(graph::SymbolIndex::build_from_facts(
-            &shared.root,
-            &shared.tsconfig,
-            &shared.graph_files,
-            shared.facts.as_ref().expect("TS facts are initialized"),
-        ))
-    } else {
-        None
-    };
+    let symbol_index =
+        if matches!(direction, Direction::Dependents) && any_symbol && !args.include_symbols {
+            Some(shared.symbol_index()?)
+        } else {
+            None
+        };
     let root = shared.root.clone();
     let entries = match direction {
         Direction::Deps if import_only => {
-            let (entries, collected) = graph::lazy_import_deps_of_with_files_and_facts(
-                &roots,
-                &shared.root,
-                &shared.tsconfig,
-                args.depth,
-                &shared.graph_files,
-                allowed.as_ref(),
-                graph::LazyImportFacts::new(
-                    shared
-                        .facts
-                        .as_ref()
-                        .map(|facts| facts as &dyn graph::TsFactLookup),
-                    shared.fact_plan,
-                    &shared.fact_context,
-                )
-                .retain_collected(),
-            );
+            let sources = shared.dataset.sources_for(&shared.root);
+
+            let (entries, collected) =
+                graph::lazy_import_deps_of_with_files_facts_workspace_and_resolution_cache(
+                    graph::LazyImportBuild {
+                        roots: &roots,
+                        tsconfig: &shared.tsconfig,
+                        max_depth: args.depth,
+                        graph_files: &shared.graph_files,
+                        allowed: allowed.as_ref(),
+                        facts: graph::LazyImportFacts::new(
+                            shared
+                                .facts
+                                .as_ref()
+                                .map(|facts| facts as &dyn graph::TsFactLookup),
+                            shared.fact_plan,
+                            &shared.fact_context,
+                        )
+                        .with_source_store(&sources)
+                        .retain_collected(),
+                        workspace: &workspace,
+                        import_resolution_cache: Some(&shared.import_resolution_cache),
+                    },
+                );
             if !collected.is_empty() {
                 if let Some(facts) = &mut shared.facts {
                     facts.extend(collected);
@@ -68,6 +72,7 @@ pub(crate) fn collect_and_filter_entries_shared(
                         ),
                     );
                 }
+                shared.invalidate_analysis_caches();
             }
             entries
         }
@@ -109,9 +114,11 @@ pub(crate) fn collect_and_filter_entries_shared(
         Direction::Dependents if shared.build_plan.symbols && !args.include_symbols => shared
             .request_graph_without_symbols(allowed.as_ref())?
             .dependents_of(&roots, args.depth, allowed.as_ref()),
-        Direction::Dependents => shared
-            .graph()?
-            .dependents_of(&roots, args.depth, allowed.as_ref()),
+        Direction::Dependents => {
+            shared
+                .graph()?
+                .dependents_of(&roots, args.depth, allowed.as_ref())
+        }
     };
     let entries = apply_filters(
         entries,
@@ -119,7 +126,7 @@ pub(crate) fn collect_and_filter_entries_shared(
         &shared.root,
         &shared.config,
         &shared.tsconfig,
-        shared.visible_paths.as_ref(),
+        shared.dataset.visible_paths(),
         shared.prepared_test_projects.as_ref(),
     )?;
 

@@ -14,15 +14,20 @@ struct RequestCache {
     fact_plan: Option<RunnerConfigFactPlan>,
     helper_fact_paths: HashSet<PathBuf>,
     helper_facts: HashMap<PathBuf, crate::codebase::check_facts::CheckFileFacts>,
+    sources: Option<std::sync::Arc<crate::codebase::ts_source::SourceStore>>,
 }
 
 impl RequestCache {
-    fn new(fact_plan: Option<RunnerConfigFactPlan>) -> Self {
+    fn new(
+        fact_plan: Option<RunnerConfigFactPlan>,
+        sources: Option<std::sync::Arc<crate::codebase::ts_source::SourceStore>>,
+    ) -> Self {
         Self {
             programs: crate::ast::current_request_parse_cache().unwrap_or_default(),
             fact_plan,
             helper_fact_paths: HashSet::new(),
             helper_facts: HashMap::new(),
+            sources,
         }
     }
 }
@@ -42,7 +47,24 @@ impl PreparedIntegrationRunnerConfigs {
         T,
         HashMap<PathBuf, crate::codebase::check_facts::CheckFileFacts>,
     ) {
-        REQUEST_CACHES.with(|caches| caches.borrow_mut().push(RequestCache::new(fact_plan)));
+        self.with_request_cache_and_sources(fact_plan, None, collect)
+    }
+
+    pub(crate) fn with_request_cache_and_sources<T>(
+        &self,
+        fact_plan: Option<RunnerConfigFactPlan>,
+        sources: Option<std::sync::Arc<crate::codebase::ts_source::SourceStore>>,
+        collect: impl FnOnce() -> T,
+    ) -> (
+        T,
+        HashMap<PathBuf, crate::codebase::check_facts::CheckFileFacts>,
+    ) {
+        REQUEST_CACHES.with(|caches| {
+            caches.borrow_mut().push(RequestCache::new(
+                fact_plan,
+                sources.or_else(|| self.sources.clone()),
+            ))
+        });
         let result = collect();
         let helper_facts = REQUEST_CACHES.with(|caches| {
             caches
@@ -61,7 +83,7 @@ pub(super) fn collect_analyses<T>(
     let owns_request_cache = REQUEST_CACHES.with(|caches| {
         let mut caches = caches.borrow_mut();
         if caches.is_empty() {
-            caches.push(RequestCache::new(None));
+            caches.push(RequestCache::new(None, None));
             true
         } else {
             false
@@ -89,6 +111,25 @@ pub(super) fn collect_analyses<T>(
         });
     }
     (result, analyses)
+}
+
+pub(in crate::integration_tests) fn read_request_source(
+    path: &Path,
+) -> Result<std::sync::Arc<str>> {
+    let sources = REQUEST_CACHES.with(|caches| {
+        caches
+            .borrow()
+            .last()
+            .and_then(|request| request.sources.clone())
+    });
+    match sources {
+        Some(sources) => sources
+            .read_path(path)
+            .map_err(|error| anyhow::anyhow!("reading {}: {}", path.display(), error)),
+        None => std::fs::read_to_string(path)
+            .map(std::sync::Arc::<str>::from)
+            .map_err(anyhow::Error::from),
+    }
 }
 
 pub(super) fn with_request_program<T>(
@@ -124,50 +165,10 @@ pub(in crate::integration_tests) fn with_program<T>(
                 );
             }
         });
-        collect_helper_facts(path, program, source);
+        helper_facts::collect_helper_facts(path, program, source);
         analyze(program, source)
     };
     with_request_program(path, source, analyze_program)
 }
 
-fn collect_helper_facts(path: &Path, program: &oxc_ast::ast::Program<'_>, source: &str) {
-    let path = crate::codebase::ts_resolver::normalize_path(path);
-    let request = REQUEST_CACHES.with(|caches| {
-        let mut caches = caches.borrow_mut();
-        let request = caches.last_mut()?;
-        if !request.helper_fact_paths.insert(path.clone()) {
-            return None;
-        }
-        request.fact_plan.clone()
-    });
-    let Some(request) = request else {
-        return;
-    };
-    let (plan, playwright) = if request.primary_files.contains(&path) {
-        (&request.primary_plan, request.playwright.as_ref())
-    } else if request.graph_files.contains(&path) {
-        (&request.graph_plan, request.playwright.as_ref())
-    } else {
-        return;
-    };
-    if plan
-        .integration_runner_configs
-        .as_ref()
-        .is_some_and(|configs| configs.contains(&path))
-    {
-        return;
-    }
-    let facts = crate::codebase::check_facts::collect_file_facts_from_program(
-        &request.root,
-        &path,
-        plan,
-        playwright,
-        source,
-        program,
-    );
-    REQUEST_CACHES.with(|caches| {
-        if let Some(cache) = caches.borrow_mut().last_mut() {
-            cache.helper_facts.insert(path, facts);
-        }
-    });
-}
+mod helper_facts;

@@ -12,17 +12,21 @@ use regex::Regex;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
+mod path;
+pub(super) use path::extract_path_regex_set;
+
 #[derive(Debug, Clone)]
 pub(super) struct ExtractedSet {
     pub(super) file: String,
     pub(super) values: BTreeSet<String>,
 }
 
-pub(super) fn extract_set(
+pub(super) fn extract_set_with_sources(
     root: &Path,
     spec: &SetSpec,
     files: &[PathBuf],
     target_roots: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<ExtractedSet> {
     if spec.kind == "path-regex-capture" {
         return extract_path_regex_set(root, spec, files, target_roots);
@@ -30,7 +34,9 @@ pub(super) fn extract_set(
     let paths = resolve_spec_files(root, &spec.file, target_roots);
     let mut values = BTreeSet::new();
     for path in &paths {
-        let source = std::fs::read_to_string(path)?;
+        let source = sources
+            .read_path(path)
+            .map_err(|error| anyhow::anyhow!(error.to_string()))?;
         values.extend(match spec.kind.as_str() {
             "ts-string-union" => extract_ts_string_union(&source, &spec.target),
             "ts-const-object-keys" => extract_ts_const_object_keys(&source, &spec.target),
@@ -72,48 +78,6 @@ fn resolve_spec_files(root: &Path, file: &str, target_roots: &[PathBuf]) -> Vec<
     } else {
         paths
     }
-}
-
-pub(super) fn extract_path_regex_set(
-    root: &Path,
-    spec: &SetSpec,
-    files: &[PathBuf],
-    target_roots: &[PathBuf],
-) -> Result<ExtractedSet> {
-    let regex = Regex::new(&spec.pattern)?;
-    let mut values = BTreeSet::new();
-    for file in files {
-        for rel in relative_paths_for_matching(root, file, target_roots) {
-            let Some(captures) = regex.captures(&rel) else {
-                continue;
-            };
-            let value = captures
-                .name("value")
-                .or_else(|| captures.get(1))
-                .map(|capture| capture.as_str().to_string());
-            values.extend(value);
-        }
-    }
-    Ok(ExtractedSet {
-        file: match spec.file.is_empty() {
-            true => ".".to_string(),
-            false => spec.file.clone(),
-        },
-        values,
-    })
-}
-
-fn relative_paths_for_matching(root: &Path, file: &Path, target_roots: &[PathBuf]) -> Vec<String> {
-    let mut paths = target_roots
-        .iter()
-        .filter(|target_root| file.starts_with(target_root))
-        .map(|target_root| relative_slash_path(target_root, file))
-        .collect::<Vec<_>>();
-    let repo_rel = relative_slash_path(root, file);
-    if !paths.contains(&repo_rel) {
-        paths.push(repo_rel);
-    }
-    paths
 }
 
 pub(super) fn extract_ts_string_union(source: &str, target: &str) -> BTreeSet<String> {

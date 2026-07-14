@@ -45,7 +45,7 @@ pub(super) fn selected_components(
         if should_skip_file(facts, opts, explicit) {
             continue;
         }
-        for component in &react.components {
+        for component in react.components.iter() {
             let include_by_kind = if component.name == "default" {
                 opts.include_all_react_default_exports
             } else {

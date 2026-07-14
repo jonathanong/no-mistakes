@@ -38,7 +38,7 @@ fn imported_symbol_map(
     path: &Path,
     symbols: &crate::codebase::ts_symbols::FileSymbols,
     resolver: &ImportResolver<'_>,
-    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     visible_files: &HashSet<PathBuf>,
 ) -> HashMap<String, ImportedSymbolTarget> {
     let mut map = HashMap::new();
@@ -89,7 +89,7 @@ fn namespace_import_map(
     path: &Path,
     symbols: &crate::codebase::ts_symbols::FileSymbols,
     resolver: &ImportResolver<'_>,
-    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     visible_files: &HashSet<PathBuf>,
 ) -> HashMap<String, ImportedSymbolTarget> {
     let mut map = HashMap::new();
@@ -142,7 +142,7 @@ fn resolve_imported_callee(
     namespace_imports: &HashMap<String, ImportedSymbolTarget>,
     facts: &dyn TsFactLookup,
     resolver: &ImportResolver<'_>,
-    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     visible_files: &HashSet<PathBuf>,
 ) -> Option<(NodeId, EdgeKind)> {
     if let Some(target) = imported_symbols.get(callee) {

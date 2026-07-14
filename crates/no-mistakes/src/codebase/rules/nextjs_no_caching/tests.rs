@@ -115,7 +115,7 @@ fn fact_runner_ignores_missing_facts_outside_target_roots() {
     let outside = root.join("other/app/bad.ts");
     let facts = CheckFactMap {
         files: vec![outside.clone()],
-        ts: HashMap::from([(outside, CheckFileFacts::default())]),
+        ts: HashMap::from([(outside, std::sync::Arc::new(CheckFileFacts::default()))]),
         ..Default::default()
     };
     let findings = check_with_facts(&root, &config(), &facts).unwrap();
@@ -129,7 +129,10 @@ fn fact_runner_requires_source_and_cache_facts_for_target_files() {
     let inside = root.join("web/app/bad.ts");
     let missing_source = CheckFactMap {
         files: vec![inside.clone()],
-        ts: HashMap::from([(inside.clone(), CheckFileFacts::default())]),
+        ts: HashMap::from([(
+            inside.clone(),
+            std::sync::Arc::new(CheckFileFacts::default()),
+        )]),
         ..Default::default()
     };
     let err = check_with_facts(&root, &config(), &missing_source).unwrap_err();
@@ -140,9 +143,10 @@ fn fact_runner_requires_source_and_cache_facts_for_target_files() {
         ts: HashMap::from([(
             inside,
             CheckFileFacts {
-                source: Some("export const value = 1".to_string()),
+                source: Some("export const value = 1".into()),
                 ..Default::default()
-            },
+            }
+            .into(),
         )]),
         ..Default::default()
     };
@@ -562,15 +566,4 @@ fn extract_ignores_commonjs_config_object_outside_next_config_files() {
     assert!(findings.is_empty());
 }
 
-#[test]
-fn extract_ignores_nested_next_config_binding() {
-    let source = "function build() {\n\
-  const nextConfig = { cacheComponents: true }\n\
-  return nextConfig\n\
-}\n\
-const nextConfig = {}\n\
-export default nextConfig\n";
-    let findings = extract(Path::new("next.config.ts"), source).unwrap();
-
-    assert!(findings.is_empty());
-}
+mod nested;

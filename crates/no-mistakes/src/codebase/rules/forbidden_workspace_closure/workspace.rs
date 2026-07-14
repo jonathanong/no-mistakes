@@ -3,10 +3,11 @@ use anyhow::Result;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-pub(super) fn load_workspace(
+pub(super) fn load_workspace_with_sources(
     root: &Path,
     target_roots: &[PathBuf],
     files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<workspaces::WorkspaceMap> {
     let mut roots: Vec<&Path> = Vec::new();
     roots.push(root);
@@ -25,14 +26,15 @@ pub(super) fn load_workspace(
             let Some(package_root) = manifest.parent() else {
                 continue;
             };
-            let Some(package) = workspaces::load_root_package_from_files(package_root, files)?
+            let Some(package) =
+                workspaces::load_root_package_from_source_store(package_root, files, sources)?
             else {
                 continue;
             };
             packages.insert(package.name.clone(), package);
         }
     }
-    Ok(workspaces::WorkspaceMap {
-        packages: packages.into_values().collect(),
-    })
+    Ok(workspaces::WorkspaceMap::from_packages(
+        packages.into_values().collect(),
+    ))
 }

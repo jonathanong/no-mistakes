@@ -8,6 +8,8 @@ use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "package-json-registry-only";
 
+mod lockfile;
+
 const BLOCKED_PREFIXES: &[&str] = &[
     "git:",
     "git+ssh:",
@@ -27,8 +29,6 @@ const BLOCKED_PREFIXES: &[&str] = &[
 #[rustfmt::skip]
 const DEP_FIELDS: &[&str] = &["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
 
-const BLOCKED_RESOLUTION_KEYS: &[&str] = &["tarball", "repo", "commit", "directory"];
-
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
 pub(crate) struct Options {
@@ -46,6 +46,16 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -60,7 +70,14 @@ pub(crate) fn check_with_files(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            Ok(scan(root, &opts, &files, &target_roots, &rule_filter))
+            Ok(scan(
+                root,
+                &opts,
+                &files,
+                &target_roots,
+                &rule_filter,
+                sources,
+            ))
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -90,6 +107,7 @@ fn scan(
     files: &[PathBuf],
     target_roots: &[PathBuf],
     rule_filter: &super::path_filter::RulePathFilter,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
     let mut findings: Vec<RuleFinding> = files
         .par_iter()
@@ -107,7 +125,7 @@ fn scan(
                         })
                     }))
         })
-        .flat_map(|path| check_package_json(path, root))
+        .flat_map(|path| check_package_json_with_sources(path, root, sources))
         .collect();
     findings.extend(
         target_roots
@@ -119,7 +137,7 @@ fn scan(
                 if !rule_filter.is_match(&lockfile_root.join(lockfile_path)) {
                     return Vec::new();
                 }
-                check_lockfile(root, lockfile_root, opts)
+                lockfile::check(root, lockfile_root, opts, sources)
             })
             .collect::<Vec<_>>(),
     );
@@ -127,13 +145,22 @@ fn scan(
     findings
 }
 
-fn check_package_json(path: &Path, root: &Path) -> Vec<RuleFinding> {
-    let Ok(content) = std::fs::read_to_string(path) else {
+fn check_package_json_with_sources(
+    path: &Path,
+    root: &Path,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Vec<RuleFinding> {
+    let Ok(json) = sources.parse_json_path(path) else {
         return Vec::new();
     };
-    let Ok(json) = serde_json::from_str::<serde_json::Value>(&content) else {
-        return Vec::new();
-    };
+    check_package_json_value(path, root, &json)
+}
+
+fn check_package_json_value(
+    path: &Path,
+    root: &Path,
+    json: &serde_json::Value,
+) -> Vec<RuleFinding> {
     let file = relative_slash_path(root, path);
     let mut findings = Vec::new();
     for field in DEP_FIELDS {
@@ -156,49 +183,6 @@ fn check_package_json(path: &Path, root: &Path) -> Vec<RuleFinding> {
                     import: None,
                     target: None,
                 });
-            }
-        }
-    }
-    findings
-}
-
-fn check_lockfile(root: &Path, lockfile_root: &Path, opts: &Options) -> Vec<RuleFinding> {
-    let Some(lockfile_path) = &opts.lockfile else {
-        return Vec::new();
-    };
-    let lockfile_abs = lockfile_root.join(lockfile_path);
-    let Ok(content) = std::fs::read_to_string(&lockfile_abs) else {
-        return Vec::new();
-    };
-    let Ok(yaml) = serde_yaml::from_str::<serde_yaml::Value>(&content) else {
-        return Vec::new();
-    };
-    let file = relative_slash_path(root, &lockfile_abs);
-    let Some(packages) = yaml.get("packages").and_then(|p| p.as_mapping()) else {
-        return Vec::new();
-    };
-    let mut pairs: Vec<(&serde_yaml::Value, &serde_yaml::Value)> = packages.iter().collect();
-    pairs.sort_by(|(a, _), (b, _)| a.as_str().unwrap_or("").cmp(b.as_str().unwrap_or("")));
-    let mut findings = Vec::new();
-    for (key, pkg_val) in pairs {
-        let pkg_name = key.as_str().unwrap_or("");
-        let Some(resolution) = pkg_val.get("resolution") else {
-            continue;
-        };
-        for &blocked_key in BLOCKED_RESOLUTION_KEYS {
-            if resolution.get(blocked_key).is_some() {
-                findings.push(RuleFinding {
-                    rule: RULE_ID.to_string(),
-                    file: file.clone(),
-                    line: 1,
-                    message: format!(
-                        "{file}: package \"{pkg_name}\" has a non-registry \
-                        resolution ({blocked_key}) \u{2014} only npm registry packages are permitted"
-                    ),
-                    import: None,
-                    target: None,
-                });
-                break;
             }
         }
     }

@@ -6,6 +6,11 @@ use globset::{Glob, GlobSet, GlobSetBuilder};
 use std::collections::HashSet;
 use std::path::Path;
 
+mod normalize;
+use normalize::{
+    glob_escape_literal, is_declaration_file, normalize_glob_template, normalize_relative_pattern,
+};
+
 #[derive(Debug)]
 pub(super) struct SourceInfo {
     pub(super) rel: String,
@@ -160,8 +165,13 @@ pub(super) fn render_template(template: &str, source: &SourceInfo) -> String {
         .replace("{sourceBase}", &source.base)
 }
 
-pub(super) fn file_imports(root: &Path, rel: &str, expected_specifier: &str) -> bool {
-    let Ok(source) = std::fs::read_to_string(root.join(rel)) else {
+pub(super) fn file_imports_with_sources(
+    root: &Path,
+    rel: &str,
+    expected_specifier: &str,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> bool {
+    let Some(source) = crate::codebase::rules::read_source(sources, &root.join(rel)) else {
         return false;
     };
     let extractor = if rel.ends_with(".tsx") || rel.ends_with(".jsx") {
@@ -175,39 +185,4 @@ pub(super) fn file_imports(root: &Path, rel: &str, expected_specifier: &str) -> 
     imports
         .iter()
         .any(|import| import.specifier == expected_specifier)
-}
-
-fn glob_escape_literal(value: &str) -> String {
-    value
-        .chars()
-        .flat_map(|ch| {
-            if matches!(ch, '*' | '?' | '[' | ']' | '{' | '}' | '\\') {
-                vec!['\\', ch]
-            } else {
-                vec![ch]
-            }
-        })
-        .collect()
-}
-
-fn normalize_glob_template(pattern: &str) -> String {
-    normalize_relative_pattern(pattern)
-}
-
-fn normalize_relative_pattern(pattern: &str) -> String {
-    let mut parts = Vec::new();
-    for part in pattern.split('/') {
-        match part {
-            "" | "." => {}
-            ".." => {
-                parts.pop();
-            }
-            _ => parts.push(part),
-        }
-    }
-    parts.join("/")
-}
-
-fn is_declaration_file(rel: &str) -> bool {
-    rel.ends_with(".d.ts") || rel.ends_with(".d.mts") || rel.ends_with(".d.cts")
 }

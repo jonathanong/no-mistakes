@@ -101,11 +101,11 @@ fn analyze_with_facts_falls_back_when_file_facts_do_not_include_playwright() {
     let mut facts = crate::codebase::check_facts::CheckFactMap::default();
     facts.ts.insert(
         root.join("tests/e2e/settings.spec.ts"),
-        crate::codebase::check_facts::CheckFileFacts::default(),
+        crate::codebase::check_facts::CheckFileFacts::default().into(),
     );
     facts.ts.insert(
         root.join("tests/e2e/users.spec.ts"),
-        crate::codebase::check_facts::CheckFileFacts::default(),
+        crate::codebase::check_facts::CheckFileFacts::default().into(),
     );
     let snapshot = VisiblePathSnapshot::new(&root);
 

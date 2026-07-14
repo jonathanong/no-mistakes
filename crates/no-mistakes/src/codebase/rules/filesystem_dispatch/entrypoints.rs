@@ -1,6 +1,4 @@
-use super::{
-    preserved, run_filesystem_rules_with_config_snapshot_and_vitest_catalog, FILESYSTEM_RULE_IDS,
-};
+use super::{preserved, FILESYSTEM_RULE_IDS};
 use crate::codebase::rules::{rule_enabled, RuleFinding};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
@@ -53,7 +51,26 @@ pub fn run_filesystem_rules_with_config_and_snapshot(
     files: &[PathBuf],
     snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
 ) -> Result<Vec<RuleFinding>> {
+    let root = crate::codebase::ts_resolver::normalize_path(root);
     run_filesystem_rules_with_config_snapshot_and_vitest_catalog(
-        root, config, files, snapshot, None,
+        &root, config, files, snapshot, None,
+    )
+}
+
+#[doc(hidden)]
+pub fn run_filesystem_rules_with_config_snapshot_and_vitest_catalog(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    files: &[PathBuf],
+    snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
+    vitest_catalog: Option<&crate::codebase::rules::PreparedVitestProjectCatalog>,
+) -> Result<Vec<RuleFinding>> {
+    super::run_filesystem_rules_with_config_snapshot_catalog_and_sources(
+        root,
+        config,
+        files,
+        snapshot,
+        vitest_catalog,
+        snapshot.source_store_for(root),
     )
 }

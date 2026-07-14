@@ -10,7 +10,12 @@ impl DepGraph {
         let graph_files = edge_inputs.graph_files;
         let config_options = edge_inputs.config_options;
         let config_path = edge_inputs.config_path;
+        let supplied_workspace = edge_inputs.workspace;
         let resolver = ImportResolver::new(tsconfig).with_visible(graph_files.visible());
+        let resolver = match edge_inputs.import_resolution_cache {
+            Some(cache) => resolver.with_shared_cache(cache),
+            None => resolver,
+        };
         let fact_plan = effective_ts_fact_plan(plan, config_options);
         let mut fact_context = ts_fact_context_from_options(root, plan, config_options);
         fact_context.set_visible_files(graph_files.visible().iter().cloned());
@@ -107,11 +112,15 @@ impl DepGraph {
         } else {
             Vec::new()
         };
-        let workspace = if plan.imports || plan.workspace || plan.package || plan.symbols {
-            crate::codebase::workspaces::load_from_files(root, &graph_files.all).unwrap_or_default()
-        } else {
-            Default::default()
-        };
+        let needs_workspace = plan.imports || plan.workspace || plan.package || plan.symbols;
+        let owned_workspace = (needs_workspace && supplied_workspace.is_none()).then(|| {
+            crate::codebase::workspaces::load_indexed_from_files(root, &graph_files.all)
+                .unwrap_or_default()
+        });
+        let empty_workspace = crate::codebase::workspaces::IndexedWorkspaceMap::default();
+        let workspace = supplied_workspace
+            .or(owned_workspace.as_ref())
+            .unwrap_or(&empty_workspace);
         let parse_errors = if fact_plan.is_empty() {
             HashMap::new()
         } else {
@@ -135,7 +144,7 @@ impl DepGraph {
             facts,
             &resolver,
             &parsed_imports,
-            &workspace,
+            workspace,
             &mut forward,
             &mut reverse,
         )?;

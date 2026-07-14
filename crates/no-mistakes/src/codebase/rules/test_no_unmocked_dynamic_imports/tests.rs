@@ -338,10 +338,11 @@ fn reachable_check_shared_skips_dep_with_disable_file_comment() {
     shared_ts.insert(
         dep.clone(),
         crate::codebase::check_facts::CheckFileFacts {
-            source: Some(dep_source),
+            source: Some(dep_source.into()),
             dynamic_imports: Some(dep_facts),
             ..Default::default()
-        },
+        }
+        .into(),
     );
     let shared = crate::codebase::check_facts::CheckFactMap {
         files: vec![dep],
@@ -389,10 +390,11 @@ fn reachable_check_uses_shared_facts_without_disk_read() {
     shared_ts.insert(
         fake_dep.clone(),
         crate::codebase::check_facts::CheckFileFacts {
-            source: Some("export const x = 1".to_string()),
+            source: Some("export const x = 1".into()),
             dynamic_imports: Some(ast::TestFacts::default()),
             ..Default::default()
-        },
+        }
+        .into(),
     );
     let shared = crate::codebase::check_facts::CheckFactMap {
         files: vec![fake_dep.clone()],
@@ -444,7 +446,8 @@ fn reachable_check_falls_back_to_disk_when_dep_facts_incomplete() {
             source: None,
             dynamic_imports: None,
             ..Default::default()
-        },
+        }
+        .into(),
     );
     let shared = crate::codebase::check_facts::CheckFactMap {
         files: vec![dep],

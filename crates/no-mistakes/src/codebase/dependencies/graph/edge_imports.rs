@@ -16,7 +16,7 @@ fn collect_parsed_imports_from_facts<'a>(
 fn collect_import_edges(
     parsed_imports: &ParsedImports<'_>,
     resolver: &ImportResolver<'_>,
-    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
 ) -> Vec<Edge> {
     parsed_imports
@@ -28,27 +28,26 @@ fn collect_import_edges(
                 .filter(|imp| import_is_reachable(imp, facts, reachable))
                 .filter_map(|imp| {
                     let kind = edge_kind_for_import(imp);
-                    if let Some(target) = resolver.resolve(&imp.specifier, path) {
-                        if !graph_files.is_visible(&target) || !is_indexable(&target) {
-                            return None;
-                        }
-                        return Some((NodeId::File((*path).clone()), NodeId::File(target), kind));
+                    let classification = resolver.classify_import(
+                        &imp.specifier,
+                        path,
+                        workspace,
+                        graph_files.visible(),
+                    );
+                    if let Some(target) = classification.resolver_path() {
+                        return (graph_files.is_visible(target) && is_indexable(target)).then(|| {
+                            (
+                                NodeId::File((*path).clone()),
+                                NodeId::File(target.to_path_buf()),
+                                kind,
+                            )
+                        });
                     }
-                    if workspace
-                        .resolve_specifier_from_file_visible(
-                            &imp.specifier,
-                            path,
-                            graph_files.visible(),
-                        )
-                        .is_some()
-                    {
-                        return None;
+                    if classification.is_unresolved_external() {
+                        return bare_module_node(&imp.specifier)
+                            .map(|module| (NodeId::File((*path).clone()), module, kind));
                     }
-                    if workspace.recognizes_specifier_from(&imp.specifier, path) {
-                        return None;
-                    }
-                    bare_module_node(&imp.specifier)
-                        .map(|module| (NodeId::File((*path).clone()), module, kind))
+                    None
                 })
                 .collect::<Vec<_>>()
         })
@@ -87,8 +86,8 @@ fn collect_asset_edges(
 
 fn collect_workspace_edges(
     parsed_imports: &ParsedImports<'_>,
-    _resolver: &ImportResolver<'_>,
-    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    resolver: &ImportResolver<'_>,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
 ) -> Vec<Edge> {
     if workspace.packages.is_empty() {
@@ -107,17 +106,16 @@ fn collect_workspace_edges(
                     if spec.starts_with('.') {
                         return None;
                     }
-                    workspace
-                        .resolve_specifier_from_file_visible(spec, path, graph_files.visible())
-                        .and_then(|entry| {
-                        if !graph_files.is_visible(&entry) {
-                            return None;
-                        }
-                        Some((
-                            NodeId::File((*path).clone()),
-                            NodeId::File(entry),
-                            EdgeKind::WorkspaceImport,
-                        ))
+                    resolver
+                        .classify_import(spec, path, workspace, graph_files.visible())
+                        .workspace_path()
+                        .filter(|entry| graph_files.is_visible(entry))
+                        .map(|entry| {
+                            (
+                                NodeId::File((*path).clone()),
+                                NodeId::File(entry.to_path_buf()),
+                                EdgeKind::WorkspaceImport,
+                            )
                         })
                 })
                 .collect::<Vec<_>>()

@@ -11,7 +11,7 @@ mod yaml;
 use super::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use extract::extract_set;
+use extract::extract_set_with_sources;
 use rayon::prelude::*;
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -52,6 +52,16 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -65,7 +75,7 @@ pub(crate) fn check_with_files(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files, &target_roots)
+            scan(root, &opts, &files, &target_roots, sources)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -78,6 +88,7 @@ fn scan(
     opts: &Options,
     files: &[PathBuf],
     target_roots: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let mut sets = BTreeMap::new();
     for spec in &opts.sets {
@@ -86,7 +97,7 @@ fn scan(
         }
         sets.insert(
             spec.name.clone(),
-            extract_set(root, spec, files, target_roots)?,
+            extract_set_with_sources(root, spec, files, target_roots, sources)?,
         );
     }
 

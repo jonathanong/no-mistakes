@@ -1,6 +1,4 @@
-use super::legacy_test_support::{graph_report, import_usages_report, prepare_shared_traversal};
 use super::*;
-use crate::codebase::dependencies::Direction;
 use serde_json::{json, Value};
 use std::path::PathBuf;
 
@@ -28,6 +26,111 @@ fn queue_fixture() -> PathBuf {
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/queue-ast-hop/basic/fixture"),
     )
+}
+
+#[test]
+fn analyze_project_check_and_graph_report_share_one_canonical_graph() {
+    let options = parse_options::<AnalyzeProjectOptions>(
+        &json!({
+            "root": fixture_root("test-no-unmocked-dynamic-imports"),
+            "config": ".no-mistakes-combined.yml",
+            "reports": [
+                { "type": "check" },
+                {
+                    "type": "dependents",
+                    "files": ["src/unmocked-child.mts"],
+                    "relationships": ["import"]
+                }
+            ]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let mut context = context::AnalyzeProjectContext::prepare(&options).unwrap();
+    for request in &options.reports {
+        run_report(request, &options, &mut context).unwrap();
+    }
+    assert_eq!(context.graph_build_count(), 1);
+}
+
+#[test]
+fn mixed_check_keeps_non_import_edges_from_the_union_graph() {
+    let options = parse_options::<AnalyzeProjectOptions>(
+        &json!({
+            "root": fixture_root("codebase-intel"),
+            "config": ".no-mistakes-union-graph.yml",
+            "reports": [
+                { "type": "check" },
+                {
+                    "type": "dependencies",
+                    "files": ["packages/api/src/send-email.mts"],
+                    "relationships": ["queue"],
+                    "depth": 1
+                }
+            ]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let mut context = context::AnalyzeProjectContext::prepare(&options).unwrap();
+    let results = options
+        .reports
+        .iter()
+        .map(|request| run_report(request, &options, &mut context).unwrap())
+        .collect::<Vec<_>>();
+
+    assert!(
+        results[1]["files"].as_array().unwrap().iter().any(|entry| {
+            entry["queueFile"] == "packages/api/src/emails.mts"
+                && entry["job"] == "sendWelcomeEmail"
+                && entry["via"]
+                    .as_array()
+                    .is_some_and(|via| via.iter().any(|kind| kind == "queue-enqueue"))
+        }),
+        "queue edge missing from union graph: {:#?}",
+        results[1]
+    );
+    assert_eq!(context.graph_build_count(), 1);
+}
+
+#[test]
+fn mixed_check_collects_ignored_explicit_graph_root_facts() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("prepared-tsconfig");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let options = parse_options::<AnalyzeProjectOptions>(
+        &json!({
+            "root": root,
+            "reports": [
+                { "type": "check" },
+                {
+                    "type": "dependencies",
+                    "files": ["ignored-explicit/effect-entry.ts"],
+                    "relationships": ["import"],
+                    "depth": 1
+                }
+            ]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let mut context = context::AnalyzeProjectContext::prepare(&options).unwrap();
+    let results = options
+        .reports
+        .iter()
+        .map(|request| run_report(request, &options, &mut context).unwrap())
+        .collect::<Vec<_>>();
+
+    assert!(
+        results[1]["files"].as_array().unwrap().iter().any(|entry| {
+            entry["path"] == "src/effect.ts"
+                && entry["via"]
+                    .as_array()
+                    .is_some_and(|via| via.iter().any(|kind| kind == "import"))
+        }),
+        "ignored explicit root was not analyzed: {:#?}",
+        results[1]
+    );
+    assert_eq!(context.graph_build_count(), 1);
 }
 
 #[test]
@@ -188,292 +291,3 @@ fn analyze_project_server_views_share_one_report_with_standalone_parity() {
         assert_eq!(&value["reports"][index]["result"], expected);
     }
 }
-
-#[test]
-fn analyze_project_related_reports_require_files() {
-    let cases = [
-        (
-            queue_fixture(),
-            "queueRelated",
-            "files must contain at least one file",
-        ),
-        (
-            PathBuf::from(fixture_root("routes/good")),
-            "serverRouteRelated",
-            "files or roots must contain at least one entry",
-        ),
-        (
-            parser_fixture("playwright"),
-            "playwrightRelated",
-            "files must contain at least one file",
-        ),
-    ];
-
-    for (root, report_type, expected) in cases {
-        let error = analyze_project_json_impl(
-            json!({
-                "root": root,
-                "reports": [{ "type": report_type }]
-            })
-            .to_string(),
-        )
-        .unwrap_err();
-        assert!(error.reason.contains(expected), "{report_type}: {error}");
-    }
-}
-
-#[test]
-fn analyze_project_dispatches_all_domain_report_types() {
-    for report_type in [
-        "symbols",
-        "flow",
-        "effects",
-        "rscCallers",
-        "importUsages",
-        "queueEdges",
-        "queueRelated",
-        "queueCheck",
-        "serverRoutes",
-        "serverRouteList",
-        "serverRouteEdges",
-        "serverRouteRelated",
-        "serverContracts",
-        "reactAnalyze",
-        "reactCheck",
-        "playwrightCheck",
-        "playwrightEdges",
-        "playwrightRelated",
-        "playwrightTests",
-        "check",
-    ] {
-        let result = analyze_project_json_impl(
-            json!({
-                "root": fixture_root("simple"),
-                "reports": [{
-                    "type": report_type,
-                    "id": report_type,
-                    "files": ["a.mts"]
-                }]
-            })
-            .to_string(),
-        );
-        if let Err(error) = result {
-            assert!(
-                !error.reason.contains("unknown analyzeProject report type"),
-                "{report_type} should be recognized"
-            );
-        }
-    }
-}
-
-#[test]
-fn analyze_project_dispatches_import_usages_report() {
-    let output = analyze_project_json_impl(
-        json!({
-            "root": fixture_root("import-usages"),
-            "reports": [{
-                "type": "importUsages",
-                "id": "imports",
-                "filters": ["src/main.mts"]
-            }]
-        })
-        .to_string(),
-    )
-    .unwrap();
-    let value: Value = serde_json::from_str(&output).unwrap();
-
-    assert_eq!(value["reports"][0]["id"], "imports");
-    assert_eq!(value["reports"][0]["type"], "importUsages");
-    assert!(value["reports"][0]["result"]["files"][0]["imports"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|row| row["kind"] == "require-resolve" && row["packageName"] == "@scope/pkg"));
-}
-
-#[test]
-fn import_usages_report_requires_shared_context() {
-    let options = parse_options::<AnalyzeProjectOptions>(
-        &json!({
-            "root": fixture_root("import-usages"),
-            "reports": [{ "type": "importUsages", "filters": ["src/main.mts"] }]
-        })
-        .to_string(),
-    )
-    .unwrap();
-
-    let error = import_usages_report(&options.reports[0], &options, None).unwrap_err();
-    assert!(error.to_string().contains("without traversal context"));
-}
-
-#[test]
-fn analyze_project_rejects_unknown_report_type() {
-    let error = analyze_project_json_impl(
-        json!({
-            "root": fixture_root("simple"),
-            "reports": [{ "type": "missing" }]
-        })
-        .to_string(),
-    )
-    .unwrap_err();
-    assert!(error.reason.contains("unknown analyzeProject report type"));
-}
-
-#[test]
-fn prepare_shared_traversal_skips_non_graph_reports() {
-    let options = parse_options::<AnalyzeProjectOptions>(
-        &json!({
-            "root": fixture_root("simple"),
-            "reports": [{ "type": "queues" }]
-        })
-        .to_string(),
-    )
-    .unwrap();
-    assert!(prepare_shared_traversal(&options).unwrap().is_none());
-}
-
-#[test]
-fn graph_report_requires_shared_context() {
-    let options = parse_options::<AnalyzeProjectOptions>(
-        &json!({
-            "root": fixture_root("simple"),
-            "reports": [{ "type": "dependencies", "files": ["a.mts"] }]
-        })
-        .to_string(),
-    )
-    .unwrap();
-    let error = graph_report(&options.reports[0], &options, Direction::Deps, None).unwrap_err();
-    assert!(error.to_string().contains("without traversal context"));
-}
-
-#[test]
-fn graph_reports_honor_per_report_scope_overrides() {
-    let output = analyze_project_json_impl(
-        json!({
-            "root": fixture_root("exports"),
-            "reports": [{
-                "type": "dependencies",
-                "root": fixture_root("simple"),
-                "files": ["a.mts"]
-            }]
-        })
-        .to_string(),
-    )
-    .unwrap();
-    let value: Value = serde_json::from_str(&output).unwrap();
-    assert!(value["reports"][0]["result"]["files"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|file| file["path"] == "b.mts"));
-}
-
-#[test]
-fn graph_reports_surface_traversal_errors() {
-    let error = analyze_project_json_impl(
-        json!({
-            "root": fixture_root("simple"),
-            "filters": ["["],
-            "reports": [{ "type": "dependencies", "files": ["a.mts"] }]
-        })
-        .to_string(),
-    )
-    .unwrap_err();
-    assert!(error.reason.contains("glob"));
-}
-
-#[test]
-fn shared_graph_context_builds_once_for_multiple_graph_reports() {
-    let options = parse_options::<AnalyzeProjectOptions>(
-        &json!({
-            "root": fixture_root("simple"),
-            "reports": [
-                { "type": "dependencies", "files": ["a.mts"], "relationships": ["import"] },
-                { "type": "dependents", "files": ["b.mts"], "relationships": ["import"] }
-            ]
-        })
-        .to_string(),
-    )
-    .unwrap();
-    let mut shared = prepare_shared_traversal(&options).unwrap().unwrap();
-    for request in &options.reports {
-        let direction = if request.report_type == "dependencies" {
-            Direction::Deps
-        } else {
-            Direction::Dependents
-        };
-        let _ = graph_report(request, &options, direction, Some(&mut shared)).unwrap();
-    }
-    assert_eq!(shared.graph_builds, 1);
-}
-
-#[test]
-fn shared_graph_context_keeps_import_only_dependencies_lazy() {
-    let options = parse_options::<AnalyzeProjectOptions>(
-        &json!({
-            "root": fixture_root("simple"),
-            "reports": [
-                { "type": "dependencies", "files": ["a.mts"], "relationships": ["import"] }
-            ]
-        })
-        .to_string(),
-    )
-    .unwrap();
-    let mut shared = prepare_shared_traversal(&options).unwrap().unwrap();
-    let result = graph_report(
-        &options.reports[0],
-        &options,
-        Direction::Deps,
-        Some(&mut shared),
-    )
-    .unwrap();
-    assert_eq!(shared.graph_builds, 0);
-    assert!(result["files"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|file| { file["path"] == "b.mts" }));
-}
-
-#[test]
-fn shared_import_usages_context_reuses_collected_facts() {
-    let options = parse_options::<AnalyzeProjectOptions>(
-        &json!({
-            "root": fixture_root("import-usages"),
-            "reports": [
-                { "type": "importUsages", "filters": ["src/main.mts"] }
-            ]
-        })
-        .to_string(),
-    )
-    .unwrap();
-    let mut shared = prepare_shared_traversal(&options).unwrap().unwrap();
-    assert!(!shared.facts().is_empty());
-    assert!(!shared.facts().is_empty());
-}
-
-#[test]
-fn shared_graph_context_supports_symbol_dependents() {
-    let options = parse_options::<AnalyzeProjectOptions>(
-        &json!({
-            "root": fixture_root("simple"),
-            "reports": [
-                { "type": "dependents", "files": ["b.mts#b"], "relationships": ["import"] }
-            ]
-        })
-        .to_string(),
-    )
-    .unwrap();
-    let mut shared = prepare_shared_traversal(&options).unwrap().unwrap();
-    let result = graph_report(
-        &options.reports[0],
-        &options,
-        Direction::Dependents,
-        Some(&mut shared),
-    )
-    .unwrap();
-    assert_eq!(shared.graph_builds, 1);
-    assert!(result["files"].is_array());
-}
-
-include!("tests/symbol_reports.rs");

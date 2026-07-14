@@ -20,12 +20,15 @@ pub(crate) type PlaywrightTestFilesByProject = Arc<
     )>,
 >;
 type AppSelectorOccurrencesCache =
-    DashMap<(PlaywrightSettingsKey, bool), Result<Arc<Vec<AppSelector>>, String>>;
-type PlaywrightRoutesCache = DashMap<PlaywrightSettingsKey, Arc<Vec<crate::routes::Route>>>;
-type AppTextTargetsCache = DashMap<PlaywrightSettingsKey, Result<Arc<Vec<AppTextTarget>>, String>>;
-type RouteReachableFilesCache = DashMap<
-    PlaywrightSettingsKey,
-    Result<Arc<crate::codebase::dependencies::graph::RouteReachableFiles>, String>,
+    Arc<DashMap<(PlaywrightSettingsKey, bool), Result<Arc<Vec<AppSelector>>, String>>>;
+type PlaywrightRoutesCache = Arc<DashMap<PlaywrightSettingsKey, Arc<Vec<crate::routes::Route>>>>;
+type AppTextTargetsCache =
+    Arc<DashMap<PlaywrightSettingsKey, Result<Arc<Vec<AppTextTarget>>, String>>>;
+type RouteReachableFilesCache = Arc<
+    DashMap<
+        PlaywrightSettingsKey,
+        Result<Arc<crate::codebase::dependencies::graph::RouteReachableFiles>, String>,
+    >,
 >;
 
 #[derive(Default)]
@@ -33,7 +36,7 @@ pub struct CheckFactMap {
     pub(crate) files: Vec<PathBuf>,
     pub(crate) graph_files: Vec<PathBuf>,
     pub(crate) graph_files_complete: bool,
-    pub(crate) ts: HashMap<PathBuf, CheckFileFacts>,
+    pub(crate) ts: HashMap<PathBuf, Arc<CheckFileFacts>>,
     pub(crate) graph_plan: crate::codebase::ts_source::facts::TsFactPlan,
     pub(crate) integration_runner_configs: std::collections::BTreeMap<
         PathBuf,
@@ -50,10 +53,10 @@ pub struct CheckFactMap {
 
 #[derive(Default)]
 pub(crate) struct CheckFileFacts {
-    pub ts: TsFileFacts,
-    pub source: Option<String>,
-    pub symbols: Option<FileSymbols>,
-    pub react: Option<ReactFileAnalysis>,
+    pub ts: Arc<TsFileFacts>,
+    pub source: Option<Arc<str>>,
+    pub symbols: Option<Arc<FileSymbols>>,
+    pub react: Option<Arc<ReactFileAnalysis>>,
     pub(crate) react_usages: Option<crate::react_traits::pipeline::usages::UsageFileFacts>,
     pub integration: Option<IntegrationFileAnalysis>,
     pub(crate) integration_runner_config:
@@ -85,5 +88,36 @@ impl CheckFactMap {
 
     pub(crate) fn graph_plan(&self) -> crate::codebase::ts_source::facts::TsFactPlan {
         self.graph_plan
+    }
+
+    pub(crate) fn graph_view_with_supplemental(&self, supplemental: &Self) -> Self {
+        let mut graph_files = self.graph_files.clone();
+        graph_files.extend(supplemental.ts.keys().cloned());
+        graph_files.sort();
+        graph_files.dedup();
+        let mut ts = self.ts.clone();
+        ts.extend(
+            supplemental
+                .ts
+                .iter()
+                .map(|(path, facts)| (path.clone(), Arc::clone(facts))),
+        );
+        let mut graph_plan = self.graph_plan;
+        graph_plan.include(supplemental.graph_plan);
+        Self {
+            files: self.files.clone(),
+            graph_files,
+            graph_files_complete: self.graph_files_complete,
+            ts,
+            graph_plan,
+            integration_runner_configs: self.integration_runner_configs.clone(),
+            playwright_source_files: Arc::clone(&self.playwright_source_files),
+            playwright_test_files_by_project: Arc::clone(&self.playwright_test_files_by_project),
+            app_selector_occurrences_cache: Arc::clone(&self.app_selector_occurrences_cache),
+            playwright_routes_cache: Arc::clone(&self.playwright_routes_cache),
+            app_text_targets_cache: Arc::clone(&self.app_text_targets_cache),
+            route_reachable_files_cache: Arc::clone(&self.route_reachable_files_cache),
+            stats: self.stats,
+        }
     }
 }

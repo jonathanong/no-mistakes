@@ -1,4 +1,4 @@
-use super::super::{collect_fact_map, CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
+use super::super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -7,6 +7,7 @@ pub(super) fn collect_test_partition(
     files: &[PathBuf],
     plan: CheckFactPlan,
     playwright: &PlaywrightFactPlan,
+    sources: &crate::codebase::ts_source::SourceStore,
     facts: &mut HashMap<PathBuf, CheckFileFacts>,
 ) {
     let files = files
@@ -14,7 +15,13 @@ pub(super) fn collect_test_partition(
         .filter(|path| !facts.contains_key(*path))
         .cloned()
         .collect::<Vec<_>>();
-    facts.extend(collect_fact_map(root, &files, &plan, Some(playwright)));
+    facts.extend(super::super::collect::collect_fact_map_with_sources(
+        root,
+        &files,
+        &plan,
+        Some(playwright),
+        sources,
+    ));
 }
 
 pub(super) fn with_imports(mut plan: CheckFactPlan) -> CheckFactPlan {
@@ -45,4 +52,14 @@ pub(super) fn needs_scoped_facts(plan: &CheckFactPlan) -> bool {
         || plan.source
         || plan.raw_source
         || !plan.graph.is_empty()
+}
+
+pub(super) fn has_indexable_graph_only(
+    graph_only_files: &[PathBuf],
+    playwright_only_sources: &[PathBuf],
+) -> bool {
+    graph_only_files
+        .iter()
+        .chain(playwright_only_sources)
+        .any(|path| crate::codebase::dependencies::extract::is_indexable(path))
 }

@@ -8,6 +8,15 @@ use std::path::PathBuf;
 mod candidate_files;
 mod strip_helpers;
 
+fn check_file(
+    root: &std::path::Path,
+    path: &std::path::Path,
+    compiled: &CompiledOptions,
+) -> Vec<RuleFinding> {
+    let sources = crate::codebase::rules::source_store_for_files(&[path.to_path_buf()]);
+    check_file_with_sources(root, path, compiled, &sources)
+}
+
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/integration-test-no-mocks/unit-fixture")

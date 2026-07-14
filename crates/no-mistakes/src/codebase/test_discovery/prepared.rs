@@ -16,8 +16,39 @@ pub(crate) fn prepare_test_projects_from_visible(
     graph_plan: crate::codebase::ts_source::facts::TsFactPlan,
     graph_context: crate::codebase::ts_source::facts::TsFactContext,
 ) -> PreparedTestProjects {
-    let runner_configs =
-        crate::integration_tests::runner_config::prepare(root, config, visible_paths, tsconfig);
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(root, visible_paths);
+    prepare_test_projects_from_visible_with_sources(
+        root,
+        config,
+        visible_paths,
+        tsconfig,
+        (graph_indexable_files, graph_plan, graph_context),
+        snapshot.source_store_for(root),
+        true,
+    )
+}
+
+pub(crate) fn prepare_test_projects_from_visible_with_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    visible_paths: &[PathBuf],
+    tsconfig: &crate::codebase::ts_resolver::TsConfig,
+    graph: (
+        &[PathBuf],
+        crate::codebase::ts_source::facts::TsFactPlan,
+        crate::codebase::ts_source::facts::TsFactContext,
+    ),
+    sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
+    collect_graph_facts: bool,
+) -> PreparedTestProjects {
+    let (graph_indexable_files, graph_plan, graph_context) = graph;
+    let runner_configs = crate::integration_tests::runner_config::prepare_with_sources(
+        root,
+        config,
+        visible_paths,
+        tsconfig,
+        sources,
+    );
     let runner_fact_plan = crate::integration_tests::runner_config::RunnerConfigFactPlan {
         root: root.to_path_buf(),
         primary_files: std::collections::HashSet::new(),
@@ -30,22 +61,34 @@ pub(crate) fn prepare_test_projects_from_visible(
         },
         playwright: None,
     };
-    let (projects, helper_facts) = runner_configs.with_request_cache(Some(runner_fact_plan), || {
-        [TestRunner::Dotnet, TestRunner::Vitest, TestRunner::Playwright, TestRunner::Swift]
+    let (projects, helper_facts) =
+        runner_configs.with_request_cache(collect_graph_facts.then_some(runner_fact_plan), || {
+            [
+                TestRunner::Dotnet,
+                TestRunner::Vitest,
+                TestRunner::Playwright,
+                TestRunner::Swift,
+            ]
             .into_iter()
             .map(|runner| {
                 let projects = projects::runner_projects_from_visible(
-                    root, config, runner, visible_paths, tsconfig,
+                    root,
+                    config,
+                    runner,
+                    visible_paths,
+                    tsconfig,
                 )
                 .map_err(|error| format!("{error:#}"));
                 (runner, projects)
             })
             .collect()
-    });
+        });
     PreparedTestProjects {
         projects,
-        graph_facts: crate::codebase::ts_source::facts::TsFactMap::from_iter_with_plan(
-            helper_facts.into_iter().map(|(path, facts)| (path, facts.ts)),
+        graph_facts: crate::codebase::ts_source::facts::TsFactMap::from_shared_iter_with_plan(
+            helper_facts
+                .into_iter()
+                .map(|(path, facts)| (path, facts.ts)),
             graph_plan,
         ),
     }
@@ -64,7 +107,9 @@ impl PreparedTestProjects {
     pub fn project_filters(&self) -> Vec<(TestRunner, ProjectTestFilter)> {
         self.projects
             .iter()
-            .filter_map(|(runner, projects)| projects.as_ref().ok().map(|projects| (*runner, projects)))
+            .filter_map(|(runner, projects)| {
+                projects.as_ref().ok().map(|projects| (*runner, projects))
+            })
             .flat_map(|(runner, projects)| {
                 projects
                     .iter()

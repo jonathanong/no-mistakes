@@ -44,7 +44,7 @@ fn text_locator_edges_match_without_facts_and_with_default_or_sparse_facts() {
     };
     sparse_facts.ts.insert(
         root.join("web/app/components/discuss-button.tsx"),
-        crate::codebase::check_facts::CheckFileFacts::default(),
+        crate::codebase::check_facts::CheckFileFacts::default().into(),
     );
 
     assert!(default_facts.graph_files().is_none());

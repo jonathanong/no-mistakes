@@ -39,6 +39,16 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -52,7 +62,7 @@ pub(crate) fn check_with_files(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files)
+            scan_with_sources(root, &opts, &files, sources)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -60,14 +70,19 @@ pub(crate) fn check_with_files(
     Ok(findings)
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+fn scan_with_sources(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     if opts.banned_domains.is_empty() {
         return Ok(Vec::new());
     }
     let compiled = compile_options(opts)?;
     let mut findings: Vec<RuleFinding> = files
         .par_iter()
-        .flat_map(|path| check_file(root, path, &compiled))
+        .flat_map(|path| check_file_with_sources(root, path, &compiled, sources))
         .collect();
     super::sort_findings(&mut findings);
     Ok(findings)
@@ -103,12 +118,17 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     })
 }
 
-fn check_file(root: &Path, path: &Path, opts: &CompiledOptions) -> Vec<RuleFinding> {
+fn check_file_with_sources(
+    root: &Path,
+    path: &Path,
+    opts: &CompiledOptions,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Vec<RuleFinding> {
     let rel = relative_slash_path(root, path);
     if !opts.extensions.iter().any(|ext| rel.ends_with(ext)) {
         return Vec::new();
     }
-    let Ok(content) = std::fs::read_to_string(path) else {
+    let Some(content) = super::read_source(sources, path) else {
         return Vec::new();
     };
 

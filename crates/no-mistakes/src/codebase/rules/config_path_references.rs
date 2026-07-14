@@ -11,6 +11,9 @@ use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "config-path-references";
 
+mod references;
+use references::reference_exists;
+
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
 pub(crate) struct Options {
@@ -33,6 +36,16 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -46,7 +59,7 @@ pub(crate) fn check_with_files(
                 .cloned()
                 .collect();
             let config_files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &config_files, &files, &target_roots)
+            scan(root, &opts, &config_files, &files, &target_roots, sources)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -60,6 +73,7 @@ fn scan(
     config_candidates: &[PathBuf],
     reference_candidates: &[PathBuf],
     target_roots: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let config_files = super::matching_files(root, &opts.files, config_candidates, target_roots)?;
     let rel_files = reference_candidates
@@ -69,7 +83,7 @@ fn scan(
     let mut findings = Vec::new();
     for path in config_files {
         let rel = relative_slash_path(root, &path);
-        let Ok(source) = std::fs::read_to_string(&path) else {
+        let Some(source) = super::read_source(sources, &path) else {
             continue;
         };
         let Ok(value) = serde_yaml::from_str::<Value>(&source) else {
@@ -111,95 +125,6 @@ fn values_at_key(value: &Value, key: &str) -> Vec<String> {
             .collect(),
         _ => Vec::new(),
     }
-}
-
-fn reference_exists(
-    root: &Path,
-    config_file: &Path,
-    opts: &Options,
-    reference: &str,
-    rel_files: &[String],
-) -> Result<bool> {
-    let base = if opts.base_dir == BaseDir::Root {
-        root.to_path_buf()
-    } else {
-        config_file.parent().unwrap_or(root).to_path_buf()
-    };
-    let target = normalize_path(&base.join(reference));
-    if target.starts_with(root) && target.exists() {
-        return Ok(true);
-    }
-    if opts.allow_globs && has_glob_metachar(reference) {
-        let pattern = reference_pattern(root, config_file, opts, reference);
-        let glob = Glob::new(&pattern)?;
-        let matcher = glob.compile_matcher();
-        return Ok(rel_files.iter().any(|rel| matcher.is_match(rel)));
-    }
-    Ok(false)
-}
-
-fn has_glob_metachar(reference: &str) -> bool {
-    let mut escaped = false;
-    for ch in reference.chars() {
-        if escaped {
-            escaped = false;
-            continue;
-        }
-        if ch == '\\' {
-            escaped = true;
-            continue;
-        }
-        if matches!(ch, '*' | '?' | '{') {
-            return true;
-        }
-    }
-    false
-}
-
-fn reference_pattern(root: &Path, config_file: &Path, opts: &Options, reference: &str) -> String {
-    if opts.base_dir == BaseDir::Root {
-        return normalize_glob_pattern(reference);
-    }
-    let Some(parent) = config_file.parent() else {
-        return normalize_glob_pattern(reference);
-    };
-    let dir = relative_slash_path(root, parent);
-    if dir.is_empty() {
-        normalize_glob_pattern(reference)
-    } else {
-        normalize_glob_pattern(&format!("{}/{reference}", glob_escape_literal(&dir)))
-    }
-}
-
-fn normalize_glob_pattern(pattern: &str) -> String {
-    let mut parts = Vec::new();
-    for part in pattern.split('/') {
-        match part {
-            "" | "." => {}
-            ".." => {
-                if !parts.is_empty() && parts.last() != Some(&"..") {
-                    parts.pop();
-                } else {
-                    parts.push(part);
-                }
-            }
-            _ => parts.push(part),
-        }
-    }
-    parts.join("/")
-}
-
-fn glob_escape_literal(value: &str) -> String {
-    value
-        .chars()
-        .flat_map(|ch| {
-            if matches!(ch, '*' | '?' | '[' | ']' | '{' | '}' | '\\') {
-                vec!['\\', ch]
-            } else {
-                vec![ch]
-            }
-        })
-        .collect()
 }
 
 #[cfg(test)]

@@ -39,9 +39,14 @@ impl SharedCheckContext {
         &self.graph_files
     }
 
+    fn graph_plan(&self) -> Option<crate::codebase::dependencies::graph::GraphBuildPlan> {
+        self.graph_plan
+    }
+
     fn run(
         &self,
         facts: &crate::codebase::check_facts::CheckFactMap,
+        dependency_graph: Option<&std::sync::Arc<crate::codebase::dependencies::graph::DepGraph>>,
     ) -> Result<crate::check_runner::CheckResults> {
         use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
         use crate::codebase::rules::agents_md_max_size::advisories_with_files;
@@ -69,8 +74,10 @@ impl SharedCheckContext {
                 prepared_playwright: self.prepared.playwright.as_ref(),
                 prepared_react: &self.prepared.react,
                 prepared_graph: self.prepared_graph.as_ref(),
+                dependency_graph: dependency_graph.cloned(),
                 prepared_tsconfig: &self.prepared.tsconfig,
                 visible_paths: self.prepared.visible_paths.as_ref(),
+                sources: self.prepared.visible_paths.source_store_for(&self.root),
                 inferred_roots: &self.prepared.inferred_roots,
                 config,
                 codebase_config: &self.prepared.codebase_config,

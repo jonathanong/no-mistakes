@@ -21,9 +21,9 @@ pub(super) fn lockfile_nodes(
     lockfile: &Path,
     workspace: &workspaces::WorkspaceMap,
     manifest_nodes: &BTreeMap<String, PackageNode>,
-    dependency_types: &[&str],
-    start_packages: &[String],
+    request: (&[&str], &[String], &crate::codebase::ts_source::SourceStore),
 ) -> std::result::Result<BTreeMap<String, PackageNode>, String> {
+    let (dependency_types, start_packages, sources) = request;
     if lockfile.file_name().and_then(|name| name.to_str()) != Some("pnpm-lock.yaml") {
         return Err(format!(
             "{RULE_ID}: lockfile currently supports pnpm-lock.yaml only"
@@ -32,7 +32,7 @@ pub(super) fn lockfile_nodes(
     let dependency_types = dependency_type::validate(dependency_types)?;
     let lockfile_path = absolute_lockfile_path(root, lockfile_base, lockfile);
     let lockfile_root = lockfile_path.parent().unwrap_or(root);
-    let content = std::fs::read_to_string(&lockfile_path).map_err(|error| {
+    let content = sources.read_path(&lockfile_path).map_err(|error| {
         format!(
             "{RULE_ID}: could not read lockfile {}: {error}",
             relative_slash_path(root, &lockfile_path)

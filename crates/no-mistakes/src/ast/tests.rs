@@ -48,6 +48,19 @@ fn parsed_program_cache_reuses_parse_and_source_type_errors() {
 }
 
 #[test]
+fn parsed_program_cache_clear_releases_cached_programs() {
+    let cache = ParsedProgramCache::default();
+    let path = Path::new("fixture.ts");
+    cache
+        .with_program(path, "export default {};", |_, _| ())
+        .unwrap();
+    cache.clear();
+    assert!(cache
+        .with_program(path, "export default (", |_, _| ())
+        .is_err());
+}
+
+#[test]
 fn test_span_text() {
     assert_eq!(span_text("abc", Span::new(0, 3)), "abc");
     assert_eq!(span_text("abc", Span::new(0, 0)), "");
@@ -196,4 +209,8 @@ fn test_expression_path() {
         expression_path(statement_expression(&parsed.program.body[0])),
         None
     );
+}
+
+pub(crate) fn request_parse_cache_len() -> usize {
+    super::current_request_parse_cache().map_or(0, |cache| super::parsed_cache::tests::len(&cache))
 }

@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 pub const RULE_ID: &str = "agents-md-max-size";
 
 mod agents_md_max_size_budget;
-use agents_md_max_size_budget::{scan, scan_advisories};
+use agents_md_max_size_budget::{scan, scan_advisories, scan_with_sources};
 
 const DEFAULT_MAX_LINES: usize = 200;
 const DEFAULT_MAX_CHARS: usize = 12_000;
@@ -82,6 +82,16 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let opts = rule.rule_options();
@@ -100,7 +110,7 @@ pub(crate) fn check_with_files(
             .cloned()
             .collect();
         let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        findings.extend(scan(root, &opts, &files)?);
+        findings.extend(scan_with_sources(root, &opts, &files, sources)?);
     }
     super::sort_findings(&mut findings);
     Ok(findings)

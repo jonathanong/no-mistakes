@@ -1,10 +1,22 @@
 use super::{
     collect_check_facts, collect_check_facts_with_graph_files_and_playwright,
-    collect_check_facts_with_playwright, collect_file_facts, CheckFactMap, CheckFactPlan,
-    PlaywrightFactPlan,
+    collect_check_facts_with_playwright, CheckFactMap, CheckFactPlan, PlaywrightFactPlan,
 };
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+
+pub(crate) fn collect_file_facts(
+    root: &Path,
+    path: &Path,
+    plan: &CheckFactPlan,
+    playwright: Option<&PlaywrightFactPlan>,
+) -> Option<super::CheckFileFacts> {
+    let inventory = std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(&[
+        path.to_path_buf(),
+    ]));
+    let sources = crate::codebase::ts_source::SourceStore::new(inventory);
+    super::collect_file_facts_with_sources(root, path, plan, playwright, &sources)
+}
 
 #[path = "tests/patch_coverage.rs"]
 mod patch_coverage;
@@ -159,6 +171,10 @@ fn collect_check_facts_reads_raw_source_without_parsing() {
     assert_eq!(facts.stats.parse_errors, 0);
     assert!(file_facts.source.is_some());
     assert!(file_facts.ts.source.is_some());
+    assert_eq!(
+        file_facts.source.as_deref(),
+        file_facts.ts.source.as_deref(),
+    );
     assert!(file_facts.parse_error.is_none());
 }
 
@@ -281,9 +297,23 @@ fn collect_check_facts_parses_once_for_overlapping_fact_categories() {
             ..Default::default()
         }));
     let file_facts = facts.ts.get(&file).expect("file facts are collected");
+    let prepared_rule_view = std::sync::Arc::clone(file_facts);
+    let prepared_graph_view = facts.ts.get(&file).cloned().unwrap();
+    assert!(std::sync::Arc::ptr_eq(
+        &prepared_rule_view,
+        &prepared_graph_view,
+    ));
     assert!(!file_facts.ts.imports.is_empty());
     assert!(file_facts.symbols.is_some());
     assert!(file_facts.react.is_some());
+    assert_eq!(
+        file_facts.symbols.as_deref(),
+        file_facts.ts.symbols.as_ref(),
+    );
+    assert_eq!(
+        format!("{:?}", file_facts.react.as_ref().unwrap().components),
+        format!("{:?}", file_facts.ts.react_components),
+    );
     assert!(file_facts.ts.queue_project.is_some());
     assert!(file_facts.integration.is_some());
     assert!(file_facts.nextjs_caching.is_some());

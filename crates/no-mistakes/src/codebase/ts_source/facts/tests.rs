@@ -1,4 +1,30 @@
 use super::*;
+use std::path::Path;
+
+fn collect_file_facts(
+    path: &Path,
+    plan: TsFactPlan,
+    context: &TsFactContext,
+) -> Option<TsFileFacts> {
+    let inventory = std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(&[
+        path.to_path_buf(),
+    ]));
+    let sources = crate::codebase::ts_source::SourceStore::new(inventory);
+    super::collect::collect_file_facts_with_sources(path, plan, context, &sources)
+}
+
+impl TsFactMap {
+    pub(crate) fn extend_shared(
+        &mut self,
+        facts: impl IntoIterator<Item = (PathBuf, std::sync::Arc<TsFileFacts>)>,
+    ) {
+        self.facts.extend(
+            facts
+                .into_iter()
+                .map(|(path, facts)| (path, std::sync::Arc::unwrap_or_clone(facts))),
+        );
+    }
+}
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -15,6 +41,37 @@ fn plan_constructors_select_expected_fact_sets() {
     let both = TsFactPlan::imports_and_symbols();
     assert!(both.imports);
     assert!(both.symbols);
+}
+
+#[test]
+fn source_facts_preserve_owned_public_api_and_reuse_physical_read() {
+    let file = fixture("imports.ts");
+    let inventory = std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(
+        std::slice::from_ref(&file),
+    ));
+    let sources = crate::codebase::ts_source::SourceStore::new(inventory);
+    let expected = sources.read_path(&file).unwrap();
+
+    let mut facts = collect_ts_facts_with_context_and_sources(
+        std::slice::from_ref(&file),
+        TsFactPlan {
+            source: true,
+            ..TsFactPlan::default()
+        },
+        &TsFactContext::default(),
+        &sources,
+    );
+
+    let source: &String = facts[&file].source.as_ref().unwrap();
+    assert_eq!(source, expected.as_ref());
+    let symbols: Option<crate::codebase::ts_symbols::FileSymbols> = facts[&file].symbols.clone();
+    assert!(symbols.is_none());
+    let components: &mut Vec<crate::react_traits::report::types::ComponentFacts> =
+        &mut facts.get_mut(&file).unwrap().react_components;
+    components.clear();
+    let owned: Vec<(PathBuf, TsFileFacts)> = facts.into_iter().collect();
+    assert_eq!(owned.len(), 1);
+    assert_eq!(sources.physical_read_count(), 1);
 }
 
 #[test]
@@ -207,7 +264,7 @@ fn fact_map_supports_hash_map_compatible_iteration() {
 
     assert_eq!((&facts).into_iter().count(), 1);
     for (_, file_facts) in &mut facts {
-        file_facts.source = Some("updated".to_string());
+        file_facts.source = Some("updated".into());
     }
 
     let entries = facts.into_iter().collect::<Vec<_>>();
@@ -391,12 +448,8 @@ fn collect_ts_facts_can_skip_import_collection() {
 #[test]
 fn collect_file_facts_falls_back_to_ts_source_type_for_unknown_extension() {
     let unknown = fixture("unknown-extension.source");
-    let facts = super::collect::collect_file_facts(
-        &unknown,
-        TsFactPlan::imports(),
-        &TsFactContext::default(),
-    )
-    .expect("unknown extension fixture should still parse as TypeScript");
+    let facts = collect_file_facts(&unknown, TsFactPlan::imports(), &TsFactContext::default())
+        .expect("unknown extension fixture should still parse as TypeScript");
 
     assert_eq!(facts.imports.len(), 1);
 }

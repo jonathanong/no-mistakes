@@ -110,7 +110,7 @@ pub(crate) fn run_usages_with_loaded_config_and_facts(
             .ts
             .get(&crate::codebase::ts_resolver::normalize_path(&candidate))
             .and_then(|facts| facts.symbols.as_ref())
-            .map(helpers::prop_type_names_from_symbols)
+            .map(|symbols| helpers::prop_type_names_from_symbols(symbols.as_ref()))
             .unwrap_or_default()
     });
     Ok(UsagesReport {

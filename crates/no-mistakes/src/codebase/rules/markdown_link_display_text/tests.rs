@@ -1,5 +1,24 @@
+use super::link_target::{finding_for_link, href_basename, href_destination};
 use super::*;
 use std::path::PathBuf;
+
+fn scan(
+    root: &std::path::Path,
+    opts: &Options,
+    files: &[PathBuf],
+) -> anyhow::Result<Vec<RuleFinding>> {
+    let sources = crate::codebase::rules::source_store_for_files(files);
+    scan_with_sources(root, opts, files, &sources)
+}
+
+fn check_file(
+    root: &std::path::Path,
+    path: &std::path::Path,
+    extensions: &[&str],
+) -> Vec<RuleFinding> {
+    let sources = crate::codebase::rules::source_store_for_files(&[path.to_path_buf()]);
+    check_file_with_sources(root, path, extensions, &sources)
+}
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))

@@ -70,15 +70,17 @@ pub(crate) fn run_queue_check(
 
 pub(crate) fn run_rules_check(
     inputs: rules::PreparedRulesCheck<'_>,
+    dependency_graph: Option<&no_mistakes::codebase::dependencies::graph::DepGraph>,
 ) -> Result<CheckTask<Vec<RuleFinding>>> {
     let start = Instant::now();
-    let (findings, warning) = match rules::run_check_with_config_and_facts_and_playwright(inputs) {
-        Ok(findings) => (findings, None),
-        Err(err) => (
-            Vec::new(),
-            Some(format!("warning: rules check skipped: {err:#}")),
-        ),
-    };
+    let (findings, warning) =
+        match rules::run_check_with_config_facts_playwright_and_graph(inputs, dependency_graph) {
+            Ok(findings) => (findings, None),
+            Err(err) => (
+                Vec::new(),
+                Some(format!("warning: rules check skipped: {err:#}")),
+            ),
+        };
     Ok(CheckTask {
         findings,
         warning,

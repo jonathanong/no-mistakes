@@ -5,9 +5,9 @@ pub(super) fn should_store_source(plan: &CheckFactPlan) -> bool {
     plan.source || plan.raw_source
 }
 
-pub(super) fn ts_source(source: Option<String>) -> TsFileFacts {
+pub(super) fn ts_source(source: Option<std::sync::Arc<str>>) -> TsFileFacts {
     TsFileFacts {
-        source,
+        source: source.as_deref().map(str::to_owned),
         route_helpers: Vec::new(),
         route_helper_imports: Vec::new(),
         route_helper_refs: Vec::new(),

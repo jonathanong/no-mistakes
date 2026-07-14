@@ -22,22 +22,35 @@ pub fn collect_ts_facts_with_context(
     plan: TsFactPlan,
     context: &TsFactContext,
 ) -> TsFactMap {
+    let inventory =
+        std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(files));
+    let sources = crate::codebase::ts_source::SourceStore::new(inventory);
+    collect_ts_facts_with_context_and_sources(files, plan, context, &sources)
+}
+
+pub(crate) fn collect_ts_facts_with_context_and_sources(
+    files: &[PathBuf],
+    plan: TsFactPlan,
+    context: &TsFactContext,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> TsFactMap {
     let facts = files
         .par_iter()
         .filter(|path| is_indexable(path))
         .filter_map(|path| {
-            collect_file_facts(path, plan, context).map(|facts| (path.clone(), facts))
+            collect_file_facts_with_sources(path, plan, context, sources)
+                .map(|facts| (path.clone(), facts))
         })
         .collect();
     TsFactMap::with_plan(facts, plan)
 }
-
-pub(crate) fn collect_file_facts(
+pub(crate) fn collect_file_facts_with_sources(
     path: &Path,
     plan: TsFactPlan,
     context: &TsFactContext,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Option<TsFileFacts> {
-    let source = match std::fs::read_to_string(path) {
+    let source = match sources.read_path(path) {
         Ok(source) => source,
         Err(error) => {
             return Some(TsFileFacts {
@@ -59,14 +72,12 @@ pub(crate) fn collect_file_facts(
     } else {
         None
     };
-    Some(collect_file_facts_from_program(
-        path,
-        plan,
-        context,
-        &source,
-        &parsed.program,
-        parse_error,
-    ))
+    let mut facts =
+        collect_file_facts_from_program(path, plan, context, &source, &parsed.program, parse_error);
+    if plan.source {
+        facts.source = Some(source.to_string());
+    }
+    Some(facts)
 }
 
 pub(crate) fn collect_file_facts_from_program(
@@ -84,7 +95,7 @@ pub(crate) fn collect_file_facts_from_program(
     };
     let symbols = plan
         .symbols
-        .then(|| extract_symbols_from_program(program, source));
+        .then(|| std::sync::Arc::new(extract_symbols_from_program(program, source)));
     let domain = if plan.has_domain_facts() {
         domain::collect_domain_facts(program, path, source, plan, context)
     } else {
@@ -108,18 +119,18 @@ pub(crate) fn collect_file_facts_from_program(
         }
         .components
     } else {
-        Vec::new()
+        Default::default()
     };
     TsFileFacts {
         parse_error,
-        source: plan.source.then(|| source.to_string()),
+        source: plan.source.then(|| source.to_owned()),
         imports: import_facts.imports,
         function_calls: import_facts.function_calls,
         symbol_references: import_facts.symbol_references,
         exported_functions: import_facts.exported_functions,
         unknown_callers: import_facts.unknown_callers,
         has_unknown_top_level_call: import_facts.has_unknown_top_level_call,
-        symbols,
+        symbols: symbols.as_deref().cloned(),
         route_refs: domain.route_refs,
         route_helpers: domain.route_helpers,
         route_helper_imports: domain.route_helper_imports,
@@ -132,7 +143,7 @@ pub(crate) fn collect_file_facts_from_program(
         http_calls: domain.http_calls,
         process_spawns: domain.process_spawns,
         server_routes: domain.server_routes,
-        react_components,
+        react_components: react_components.as_ref().clone(),
         effect_calls: domain.effect_calls,
         rsc_environment: domain.rsc_environment,
     }

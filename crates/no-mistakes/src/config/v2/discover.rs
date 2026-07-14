@@ -54,6 +54,31 @@ pub fn load_v2_config_from_visible(
     Ok(NoMistakesConfig::default())
 }
 
+#[doc(hidden)]
+pub(crate) fn load_v2_config_from_source_store(
+    root: &Path,
+    cli_config: Option<&Path>,
+    visible_paths: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<NoMistakesConfig> {
+    let path = if let Some(path) = cli_config {
+        let resolved = resolve(root, path);
+        if !resolved.exists() {
+            anyhow::bail!("config file does not exist: {}", resolved.display());
+        }
+        Some(resolved)
+    } else {
+        find_automatic_config_path_from_visible(root, V2_STEMS, visible_paths)?
+    };
+    let Some(path) = path else {
+        return Ok(NoMistakesConfig::default());
+    };
+    let source = sources
+        .read_path(&path)
+        .map_err(|error| anyhow::anyhow!("reading {}: {}", path.display(), error))?;
+    parse_v2_config(&source, &path)
+}
+
 fn parse_v2_config(source: &str, path: &Path) -> Result<NoMistakesConfig> {
     let config = parse_config::<NoMistakesConfig>(source, path)?;
     validate_v2_config(&config)?;
