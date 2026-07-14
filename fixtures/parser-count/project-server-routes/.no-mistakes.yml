@@ -1,0 +1,18 @@
+projects:
+  backend:
+    type: server
+    root: backend
+    routes:
+      - api/**
+  swift-client:
+    type: tests
+    root: swift-client
+tests:
+  vitest:
+    suites:
+      - name: backend
+        include:
+          - backend/**/*.test.ts
+  swift:
+    packages:
+      - swift-client

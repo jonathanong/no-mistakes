@@ -458,7 +458,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
         None,
     )
     .is_empty());
-    add_queue_edges(
+    test_support::add_queue_edges(
         &root.join("missing"),
         &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
         &[],

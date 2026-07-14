@@ -32,7 +32,13 @@ fn graph_private_helpers_cover_noop_branches() {
         queue_file: p("/src/queue.mts"),
         job: "send".to_string(),
     };
-    add_distinct_worker_file_edges(&mut forward, &mut reverse, &file, &file, &queue_job);
+    test_support::add_distinct_worker_file_edges(
+        &mut forward,
+        &mut reverse,
+        &file,
+        &file,
+        &queue_job,
+    );
     assert!(forward.is_empty());
     assert!(reverse.is_empty());
 }

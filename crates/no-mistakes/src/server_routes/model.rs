@@ -1,4 +1,5 @@
-use crate::server_routes::types::Framework;
+use crate::edge_index::EdgeIndex;
+use crate::server_routes::types::{EdgeKind, Framework, RelationshipNode};
 use serde::Serialize;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -43,6 +44,21 @@ pub(crate) struct FileFacts {
     pub routes: Vec<RouteSite>,
     pub mounts: Vec<MountSite>,
     pub diagnostics: Vec<(usize, String)>,
+}
+
+#[doc(hidden)]
+#[derive(Debug, Clone)]
+pub struct PreparedProjectReport {
+    pub(crate) root: PathBuf,
+    pub(crate) report: ProjectReport,
+    pub(crate) index: EdgeIndex<RelationshipNode, EdgeKind>,
+    pub(crate) nodes_by_name: HashMap<String, Vec<RelationshipNode>>,
+}
+
+impl PreparedProjectReport {
+    pub fn report(&self) -> &ProjectReport {
+        &self.report
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]

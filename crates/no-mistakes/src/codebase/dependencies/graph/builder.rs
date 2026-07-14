@@ -1,9 +1,6 @@
 pub struct DepGraph {
     root: PathBuf,
-    /// forward: node → nodes it imports/references (with edge kinds)
-    forward: EdgeMap,
-    /// reverse: node → nodes that import/reference it (with edge kinds)
-    reverse: EdgeMap,
+    edges: EdgeIndex<NodeId, EdgeKind>,
     parse_errors: HashMap<PathBuf, String>,
 }
 

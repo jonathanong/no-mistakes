@@ -100,8 +100,7 @@ pub(crate) fn collect_domain_facts<'a>(
     } else {
         Vec::new()
     };
-    let server_routes = plan
-        .server_routes
+    let server_routes = (plan.server_routes && context.matches_server_route(path))
         .then(|| crate::server_routes::extract::extract_program(path, source, program));
     let effect_calls = if plan.effect_calls {
         effect_calls::extract(program, source, &context.effect_functions)

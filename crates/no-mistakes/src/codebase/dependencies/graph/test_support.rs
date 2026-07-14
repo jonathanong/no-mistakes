@@ -2,6 +2,12 @@ use super::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+mod edge_maps;
+
+pub(crate) use edge_maps::add_distinct_worker_file_edges;
+pub(super) use edge_maps::add_queue_edges;
+use edge_maps::edge_index_from_test_maps;
+
 /// Construct a graph directly from pre-built maps for tests.
 pub(crate) fn from_raw_maps(
     root: PathBuf,
@@ -32,8 +38,7 @@ pub(crate) fn from_raw_maps(
         .collect();
     DepGraph {
         root,
-        forward: typed_fwd,
-        reverse: typed_rev,
+        edges: edge_index_from_test_maps(typed_fwd, typed_rev),
         parse_errors: HashMap::new(),
     }
 }
@@ -42,8 +47,7 @@ pub(crate) fn from_raw_maps(
 pub(crate) fn from_typed_maps(root: PathBuf, forward: EdgeMap, reverse: EdgeMap) -> DepGraph {
     DepGraph {
         root,
-        forward,
-        reverse,
+        edges: edge_index_from_test_maps(forward, reverse),
         parse_errors: HashMap::new(),
     }
 }
@@ -138,7 +142,7 @@ pub(super) fn collect_swift_edges(
     all_files: &[PathBuf],
     config_options: Option<&GraphConfigOptions>,
 ) -> Vec<Edge> {
-    collect_swift_edges_with_facts(root, tsconfig, all_files, config_options, None)
+    collect_swift_edges_with_facts(root, tsconfig, all_files, config_options, None, None)
 }
 
 pub(crate) fn ts_fact_context_for_plan(root: &Path, plan: GraphBuildPlan) -> TsFactContext {

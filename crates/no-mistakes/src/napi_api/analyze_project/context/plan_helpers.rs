@@ -68,6 +68,9 @@ fn check_fact_plan(
     if has_server_report(options) {
         graph.0.route_refs = true;
         graph.0.server_routes = true;
+        crate::server_routes::configure_fact_context(
+            &mut graph.1, traversal.root(), traversal.config(),
+        );
     }
     for request in &options.reports {
         if request.report_type == "rscCallers" {

@@ -7,6 +7,9 @@ fn ts_fact_context_from_options(
     let Some(options) = options else {
         return context;
     };
+    if let Some(glob) = options.project_route_globset.clone() {
+        context.set_server_route_filter(glob, options.test_filter.clone());
+    }
     if plan.routes {
         add_backend_route_extractor(
             &mut context,

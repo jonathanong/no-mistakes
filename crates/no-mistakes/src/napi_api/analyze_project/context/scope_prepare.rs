@@ -12,6 +12,10 @@ struct PreparedScope {
     check: Option<SharedCheckContext>,
     playwright: HashMap<String, PreparedPlaywrightView>,
     queue_reports: HashMap<String, crate::queue::ProjectReport>,
+    queue_indexed_reports: HashMap<String, crate::queue::PreparedProjectReport>,
+    queue_traversal_keys: std::collections::HashSet<String>,
+    server_indexed_reports: HashMap<String, crate::server_routes::PreparedProjectReport>,
+    server_traversal_keys: std::collections::HashSet<String>,
     server_reports: HashMap<String, crate::server_routes::ProjectReport>,
     playwright_analyses: HashMap<String, crate::playwright::analysis::types::Analysis>,
     react_analyses: HashMap<String, Vec<crate::react_traits::ComponentFacts>>,
@@ -157,6 +161,7 @@ impl PreparedScope {
                 &facts,
             )
         });
+        let (queue_traversal_keys, server_traversal_keys) = traversal_report_keys(options)?;
         Ok(Self {
             options: options.clone(),
             traversal,
@@ -166,9 +171,35 @@ impl PreparedScope {
             check,
             playwright,
             queue_reports: HashMap::new(),
+            queue_indexed_reports: HashMap::new(),
+            queue_traversal_keys,
+            server_indexed_reports: HashMap::new(),
+            server_traversal_keys,
             server_reports: HashMap::new(),
             playwright_analyses: HashMap::new(),
             react_analyses: HashMap::new(),
         })
     }
+}
+
+fn traversal_report_keys(
+    options: &AnalyzeProjectOptions,
+) -> Result<(std::collections::HashSet<String>, std::collections::HashSet<String>)> {
+    let mut queue = std::collections::HashSet::new();
+    let mut server = std::collections::HashSet::new();
+    for request in &options.reports {
+        if !matches!(request.report_type.as_str(),
+            "queueEdges" | "queueRelated" | "serverRouteEdges" | "serverRouteRelated")
+        {
+            continue;
+        }
+        let raw = project_options(request, options)?;
+        let parsed: ProjectOptions = serde_json::from_str(&raw)?;
+        if matches!(request.report_type.as_str(), "queueEdges" | "queueRelated") {
+            queue.insert(canonical_filter_key(&parsed.filters)?);
+        } else {
+            server.insert(canonical_filter_key(&server_filters(&request.report_type, &parsed))?);
+        }
+    }
+    Ok((queue, server))
 }

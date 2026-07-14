@@ -1,8 +1,8 @@
 use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
-use no_mistakes::cli::{edge_view, resolve_root, root_scoped_edge_depth, Format};
+use no_mistakes::cli::{resolve_root, root_scoped_edge_depth, Format};
 use no_mistakes::queue::{
-    analyze_project, related, CheckFinding, Edge, ProjectReport, RelatedDirection,
+    analyze_project, analyze_project_indexed, CheckFinding, Edge, RelatedDirection,
 };
 use std::collections::BTreeSet;
 use std::path::PathBuf;
@@ -82,24 +82,25 @@ pub(crate) fn run(args: QueuesArgs) -> Result<ExitCode> {
     let root = resolve_root(&args.root, &base);
     let started = std::time::Instant::now();
     let format = if args.json { Format::Json } else { args.format };
-    let report = analyze_project(&root, args.tsconfig.as_deref(), &args.filters)?;
-    if args.timings {
-        eprintln!(
-            "analysis: {:.3}ms",
-            started.elapsed().as_secs_f64() * 1000.0
-        );
-    }
     match &args.command {
         QueuesCommand::Edges { files } => {
-            print_edges(&report, files, args.depth, format)?;
+            let report = analyze_project_indexed(&root, args.tsconfig.as_deref(), &args.filters)?;
+            print_analysis_timing(args.timings, started);
+            let depth = root_scoped_edge_depth(files, args.depth);
+            let edges = report.edge_view(files, depth);
+            print_edges(&edges, format)?;
             Ok(ExitCode::SUCCESS)
         }
         QueuesCommand::Related { files, direction } => {
-            let edges = related(&report, files, (*direction).into());
+            let report = analyze_project_indexed(&root, args.tsconfig.as_deref(), &args.filters)?;
+            print_analysis_timing(args.timings, started);
+            let edges = report.related(files, (*direction).into());
             print_related(files, &edges, format)?;
             Ok(ExitCode::SUCCESS)
         }
         QueuesCommand::Check => {
+            let report = analyze_project(&root, args.tsconfig.as_deref(), &args.filters)?;
+            print_analysis_timing(args.timings, started);
             print_check(&report.check, format)?;
             Ok(if report.check.is_empty() {
                 ExitCode::SUCCESS
@@ -110,26 +111,28 @@ pub(crate) fn run(args: QueuesArgs) -> Result<ExitCode> {
     }
 }
 
-fn print_edges(
-    report: &ProjectReport,
-    files: &[String],
-    depth: Option<usize>,
-    format: Format,
-) -> Result<()> {
-    let depth = root_scoped_edge_depth(files, depth);
-    let edges = edge_view(&report.edges, files, depth);
+fn print_analysis_timing(enabled: bool, started: std::time::Instant) {
+    if enabled {
+        eprintln!(
+            "analysis: {:.3}ms",
+            started.elapsed().as_secs_f64() * 1000.0
+        );
+    }
+}
+
+fn print_edges(edges: &[Edge], format: Format) -> Result<()> {
     match format {
-        Format::Json => println!("{}", serde_json::to_string_pretty(&edges)?),
-        Format::Yml => println!("{}", serde_yaml::to_string(&edges)?),
+        Format::Json => println!("{}", serde_json::to_string_pretty(edges)?),
+        Format::Yml => println!("{}", serde_yaml::to_string(edges)?),
         Format::Md => {
             println!("# Queue edges");
-            for edge in &edges {
+            for edge in edges {
                 println!("- `{}` -> `{}` ({})", edge.from, edge.to, edge.kind);
             }
         }
         Format::Paths => print_edge_paths(&edges),
         Format::Human => {
-            for edge in &edges {
+            for edge in edges {
                 println!("{} -> {}", edge.from, edge.to);
             }
         }

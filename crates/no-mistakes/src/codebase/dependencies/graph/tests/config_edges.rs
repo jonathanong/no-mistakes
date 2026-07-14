@@ -59,7 +59,7 @@ fn graph_collectors_cover_malformed_and_invalid_config_branches() {
 
     let mut forward = EdgeMap::new();
     let mut reverse = EdgeMap::new();
-    add_queue_edges(
+    test_support::add_queue_edges(
         &malformed,
         &resolver,
         &files,
@@ -68,7 +68,7 @@ fn graph_collectors_cover_malformed_and_invalid_config_branches() {
         &mut forward,
         &mut reverse,
     );
-    add_queue_edges(
+    test_support::add_queue_edges(
         &invalid,
         &resolver,
         &files,
@@ -77,7 +77,7 @@ fn graph_collectors_cover_malformed_and_invalid_config_branches() {
         &mut forward,
         &mut reverse,
     );
-    add_queue_edges(
+    test_support::add_queue_edges(
         &empty,
         &resolver,
         &files,
@@ -466,7 +466,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
     };
     let mut forward = EdgeMap::new();
     let mut reverse = EdgeMap::new();
-    add_queue_edges(
+    test_support::add_queue_edges(
         &explicit,
         &resolver,
         &[],

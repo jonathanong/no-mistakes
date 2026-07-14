@@ -45,6 +45,7 @@ fn merge_http_process_edges(
 
 fn merge_swift_edges(
     inputs: &GraphEdgeBuildInputs<'_>,
+    ts_facts: Option<&dyn TsFactLookup>,
     forward: &mut EdgeMap,
     reverse: &mut EdgeMap,
 ) {
@@ -57,6 +58,7 @@ fn merge_swift_edges(
         inputs.tsconfig,
         &inputs.graph_files.all,
         inputs.config_options,
+        ts_facts,
         inputs.swift_facts,
     );
     for (from, to, _) in &swift_edges {
@@ -75,11 +77,8 @@ fn merge_dotnet_edges(
         return;
     }
 
-    let dotnet_edges = collect_dotnet_edges(
-        inputs.root,
-        &inputs.graph_files.all,
-        inputs.config_options,
-    );
+    let dotnet_edges =
+        collect_dotnet_edges(inputs.root, &inputs.graph_files.all, inputs.config_options);
     for (from, to, _) in &dotnet_edges {
         forward.entry(from.clone()).or_default();
         forward.entry(to.clone()).or_default();
@@ -96,11 +95,8 @@ fn merge_terraform_edges(
         return;
     }
 
-    let terraform_edges = collect_terraform_edges(
-        inputs.root,
-        &inputs.graph_files.all,
-        inputs.config_options,
-    );
+    let terraform_edges =
+        collect_terraform_edges(inputs.root, &inputs.graph_files.all, inputs.config_options);
     for (from, to, _) in &terraform_edges {
         forward.entry(from.clone()).or_default();
         forward.entry(to.clone()).or_default();
@@ -111,7 +107,7 @@ fn merge_terraform_edges(
 fn sort_adjacency_lists(forward: &mut EdgeMap, reverse: &mut EdgeMap) {
     // Sort adjacency lists for deterministic BFS output.
     for adj in forward.values_mut().chain(reverse.values_mut()) {
-        adj.sort_by_cached_key(|(n, k)| (node_sort_key(n), *k as u8));
+        adj.sort_by_cached_key(|(n, k)| (node_sort_key(n), n.clone(), *k as u8));
         adj.dedup();
     }
 }

@@ -139,10 +139,7 @@ impl GraphBuildPlan {
 
     pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
         TsFactPlan {
-            imports: self.imports
-                || self.route_imports
-                || self.workspace
-                || self.assets,
+            imports: self.imports || self.route_imports || self.workspace || self.assets,
             function_calls: self.imports || self.workspace || self.assets || self.symbols,
             symbols: self.symbols || self.queues,
             react: self.react,
@@ -168,7 +165,10 @@ fn graph_plan_needs_config(plan: GraphBuildPlan) -> bool {
         || plan.terraform
 }
 
-fn effective_ts_fact_plan(plan: GraphBuildPlan, options: Option<&GraphConfigOptions>) -> TsFactPlan {
+fn effective_ts_fact_plan(
+    plan: GraphBuildPlan,
+    options: Option<&GraphConfigOptions>,
+) -> TsFactPlan {
     let mut fact_plan = plan.ts_fact_plan();
     let route_refs_configured = options.is_some_and(route_ref_facts_configured);
     let route_backend_configured = options.is_some_and(route_backend_facts_configured);
@@ -182,5 +182,8 @@ fn effective_ts_fact_plan(plan: GraphBuildPlan, options: Option<&GraphConfigOpti
     fact_plan.queue_usage &= queue_configured;
     fact_plan.queue_factory &= queue_configured;
     fact_plan.queue_project &= queue_configured;
+    fact_plan.server_routes = options.is_some_and(|options| {
+        options.project_route_globset.is_some() && (plan.routes || plan.swift)
+    });
     fact_plan
 }

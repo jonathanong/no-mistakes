@@ -1,4 +1,4 @@
-use super::same_config_path;
+use super::{canonical_filter_key, same_config_path};
 use std::path::Path;
 
 #[test]
@@ -16,4 +16,18 @@ fn same_config_path_normalizes_relative_paths_and_preserves_optionality() {
         Some(Path::new("no-mistakes.yml")),
         None,
     ));
+}
+
+#[test]
+fn filter_cache_keys_ignore_order_and_duplicates() {
+    let left = vec![
+        "src/**".to_string(),
+        "tests/**".to_string(),
+        "src/**".to_string(),
+    ];
+    let right = vec!["tests/**".to_string(), "src/**".to_string()];
+    assert_eq!(
+        canonical_filter_key(&left).unwrap(),
+        canonical_filter_key(&right).unwrap()
+    );
 }

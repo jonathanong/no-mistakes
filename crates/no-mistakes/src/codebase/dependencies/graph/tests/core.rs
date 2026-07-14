@@ -485,3 +485,52 @@ fn test_graph_methods_lazy() {
         }
     }
 }
+
+#[test]
+fn node_sorting_breaks_display_collisions_by_typed_identity() {
+    // All three targets render as "/repo/item#job"; their typed identity must
+    // still make graph output independent of insertion order.
+    let source = n("/repo/source.ts");
+    let targets = vec![
+        NodeId::File(p("/repo/item#job")),
+        NodeId::Symbol {
+            file: p("/repo/item"),
+            symbol: "job".to_string(),
+        },
+        NodeId::QueueJob {
+            queue_file: p("/repo/item"),
+            job: "job".to_string(),
+        },
+    ];
+
+    let build = |ordered: Vec<NodeId>| {
+        let mut forward = HashMap::new();
+        let mut reverse = HashMap::new();
+        forward.insert(
+            source.clone(),
+            ordered
+                .iter()
+                .cloned()
+                .map(|target| (target, EdgeKind::Import))
+                .collect(),
+        );
+        for target in ordered {
+            reverse
+                .entry(target)
+                .or_insert_with(Vec::new)
+                .push((source.clone(), EdgeKind::Import));
+        }
+        edge_index_from_maps(forward, reverse)
+    };
+
+    let first = build(targets.clone());
+    let second = build(targets.iter().cloned().rev().collect());
+    let expected = targets
+        .into_iter()
+        .map(|target| (target, EdgeKind::Import))
+        .collect::<Vec<_>>();
+
+    assert_eq!(first.forward().get(&source), Some(&expected));
+    assert_eq!(second.forward().get(&source), Some(&expected));
+    assert_eq!(first.edges(), second.edges());
+}

@@ -13,6 +13,10 @@ pub fn prepare_analysis(
         .map(|config| config.filesystem.skip_directories.as_slice())
         .unwrap_or(&[]);
     let source_files = discover_source_files_from_visible(&root, extra_skip, &visible_paths);
+    let mut fact_context = crate::codebase::ts_source::facts::TsFactContext::new(&root);
+    if let Some(config) = &config {
+        configure_fact_context(&mut fact_context, &root, config);
+    }
     let facts = crate::codebase::ts_source::facts::collect_ts_facts_with_context(
         &source_files,
         crate::codebase::ts_source::facts::TsFactPlan {
@@ -20,7 +24,7 @@ pub fn prepare_analysis(
             server_routes: true,
             ..Default::default()
         },
-        &crate::codebase::ts_source::facts::TsFactContext::new(&root),
+        &fact_context,
     );
     Ok(PreparedServerAnalysis {
         root,

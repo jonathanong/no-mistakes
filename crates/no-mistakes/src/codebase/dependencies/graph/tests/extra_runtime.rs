@@ -14,6 +14,7 @@ fn queue_edges_use_precomputed_shared_facts() {
     let send_email = root.join("packages/api/src/send-email.mts");
     let emails = root.join("packages/api/src/emails.mts");
     let processors = root.join("packages/api/src/processors.mts");
+    let worker = root.join("packages/api/src/worker.mts");
     let fact_plan = effective_ts_fact_plan(
         GraphBuildPlan {
             queues: true,
@@ -30,7 +31,46 @@ fn queue_edges_use_precomputed_shared_facts() {
     );
     let facts = collect_ts_facts_with_context(graph_files.indexable(), fact_plan, &fact_context);
 
-    add_queue_edges(
+    let relationships = collect_dashboard_queue_relationships(
+        &root,
+        &resolver,
+        graph_files.indexable(),
+        Some(&facts),
+        config_options.as_ref(),
+    );
+    let queue_job = NodeId::QueueJob {
+        queue_file: emails.clone(),
+        job: "sendWelcomeEmail".to_string(),
+    };
+
+    // Two identical worker registrations intentionally produce two raw copies
+    // of every relationship; the canonical graph index performs deduplication.
+    assert_eq!(
+        relationships
+            .iter()
+            .filter(|edge| {
+                edge.from == NodeId::File(send_email.clone())
+                    && edge.to == queue_job
+                    && edge.kind == EdgeKind::QueueEnqueue
+            })
+            .count(),
+        2
+    );
+    for target in [&processors, &worker] {
+        assert_eq!(
+            relationships
+                .iter()
+                .filter(|edge| {
+                    edge.from == queue_job
+                        && edge.to == NodeId::File(target.clone())
+                        && edge.kind == EdgeKind::QueueWorker
+                })
+                .count(),
+            2
+        );
+    }
+
+    test_support::add_queue_edges(
         &root,
         &resolver,
         graph_files.indexable(),
@@ -119,7 +159,7 @@ fn queue_edges_skip_files_missing_shared_queue_facts() {
     let mut reverse = EdgeMap::new();
     let facts = TsFactMap::new();
 
-    add_queue_edges(
+    test_support::add_queue_edges(
         &root,
         &resolver,
         std::slice::from_ref(&emails),
@@ -140,7 +180,7 @@ fn queue_edges_skip_files_missing_shared_queue_facts() {
         },
     );
     facts.insert(processors.clone(), TsFileFacts::default());
-    add_queue_edges(
+    test_support::add_queue_edges(
         &root,
         &resolver,
         &[emails, processors],

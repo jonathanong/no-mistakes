@@ -83,6 +83,26 @@ fn fact_context_include_merges_backend_route_extractors() {
 }
 
 #[test]
+fn fact_context_include_merges_server_route_filter() {
+    let root = fixture("");
+    let mut builder = globset::GlobSetBuilder::new();
+    builder.add(globset::Glob::new("routes/**").unwrap());
+    let mut added = TsFactContext::new(&root);
+    added.set_server_route_filter(
+        builder.build().unwrap(),
+        Some(crate::codebase::test_filter::TestFileFilter::fallback_only()),
+    );
+    assert!(format!("{added:?}").contains("ServerRouteFactFilter"));
+
+    let mut context = TsFactContext::new(&root);
+    context.include(added);
+
+    assert!(context.matches_server_route(&root.join("routes/users.ts")));
+    assert!(!context.matches_server_route(&root.join("client.ts")));
+    assert!(!context.matches_server_route(&root.join("routes/users.test.ts")));
+}
+
+#[test]
 fn plan_domain_fact_detection_tracks_domain_flags() {
     assert!(!TsFactPlan::default().has_domain_facts());
     assert!(!TsFactPlan {

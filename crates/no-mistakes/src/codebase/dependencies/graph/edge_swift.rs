@@ -3,6 +3,7 @@ fn collect_swift_edges_with_facts(
     tsconfig: &TsConfig,
     all_files: &[PathBuf],
     config_options: Option<&GraphConfigOptions>,
+    ts_facts: Option<&dyn TsFactLookup>,
     prepared_facts: Option<&crate::codebase::swift::SwiftFactMap>,
 ) -> Vec<Edge> {
     let Some(config_options) = config_options else {
@@ -12,11 +13,7 @@ fn collect_swift_edges_with_facts(
         return Vec::new();
     }
     let owned_facts = prepared_facts.is_none().then(|| {
-        crate::codebase::swift::collect_swift_facts(
-            root,
-            all_files,
-            &config_options.swift_packages,
-        )
+        crate::codebase::swift::collect_swift_facts(root, all_files, &config_options.swift_packages)
     });
     let facts = prepared_facts
         .or(owned_facts.as_ref())
@@ -29,7 +26,15 @@ fn collect_swift_edges_with_facts(
     collect_swift_import_edges(facts, &mut edges);
     collect_swift_reference_edges(facts, &mut edges);
     collect_swift_package_edges(facts, &mut edges);
-    collect_swift_http_edges(root, tsconfig, all_files, config_options, facts, &mut edges);
+    collect_swift_http_edges(
+        root,
+        tsconfig,
+        all_files,
+        config_options,
+        ts_facts,
+        facts,
+        &mut edges,
+    );
     edges
 }
 
@@ -68,7 +73,12 @@ fn collect_swift_package_edges(
             for dependency in &target.dependencies {
                 if let Some(dep_files) = facts.files_by_target.get(dependency) {
                     for source in source_files {
-                        push_swift_file_edges(edges, source, dep_files, EdgeKind::SwiftPackageDependency);
+                        push_swift_file_edges(
+                            edges,
+                            source,
+                            dep_files,
+                            EdgeKind::SwiftPackageDependency,
+                        );
                     }
                 }
             }
@@ -81,17 +91,20 @@ fn collect_swift_http_edges(
     tsconfig: &TsConfig,
     all_files: &[PathBuf],
     config_options: &GraphConfigOptions,
+    ts_facts: Option<&dyn TsFactLookup>,
     facts: &crate::codebase::swift::SwiftFactMap,
     edges: &mut Vec<Edge>,
 ) {
-    let route_defs = swift_route_defs(root, tsconfig, all_files, config_options);
+    let route_defs = swift_route_defs(root, tsconfig, all_files, config_options, ts_facts);
     if route_defs.is_empty() {
         return;
     }
     for file in facts.files.values() {
         for path in &file.endpoint_paths {
             for (def_file, def_pattern) in &route_defs {
-                if def_file != &file.path && crate::codebase::ts_routes::matcher::matches(path, def_pattern) {
+                if def_file != &file.path
+                    && crate::codebase::ts_routes::matcher::matches(path, def_pattern)
+                {
                     edges.push((
                         NodeId::File(file.path.clone()),
                         NodeId::File(def_file.clone()),
@@ -108,6 +121,7 @@ fn swift_route_defs(
     tsconfig: &TsConfig,
     all_files: &[PathBuf],
     config_options: &GraphConfigOptions,
+    facts: Option<&dyn TsFactLookup>,
 ) -> Vec<(PathBuf, String)> {
     let mut route_defs = Vec::new();
     if let (Some(backend_pattern), Some(register_object)) = (
@@ -131,10 +145,15 @@ fn swift_route_defs(
             all_files,
             tsconfig,
             route_globset,
+            facts,
             config_options.test_filter.as_ref(),
         ));
     }
-    route_defs.extend(collect_next_route_handler_defs(root, all_files, config_options));
+    route_defs.extend(collect_next_route_handler_defs(
+        root,
+        all_files,
+        config_options,
+    ));
     route_defs.sort();
     route_defs.dedup();
     route_defs

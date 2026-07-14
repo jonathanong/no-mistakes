@@ -1,5 +1,6 @@
 use serde::Serialize;
 use std::fmt;
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -43,6 +44,19 @@ impl fmt::Display for EdgeKind {
 pub struct Edge {
     pub from: String,
     pub to: String,
+    pub kind: EdgeKind,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub(crate) enum RelationshipNode {
+    File(PathBuf),
+    Route(String),
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub(crate) struct RelationshipEdge {
+    pub from: RelationshipNode,
+    pub to: RelationshipNode,
     pub kind: EdgeKind,
 }
 

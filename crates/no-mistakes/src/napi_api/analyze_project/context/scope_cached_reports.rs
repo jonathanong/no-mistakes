@@ -1,45 +1,63 @@
 impl PreparedScope {
     fn queue_report(&mut self, report_type: &str, options: &ProjectOptions) -> Result<Value> {
-        let key = serde_json::to_string(&options.filters)?;
+        let key = canonical_filter_key(&options.filters)?;
+        let traversal = matches!(report_type, "queueEdges" | "queueRelated")
+            || self.queue_traversal_keys.contains(&key);
+        if traversal {
+            if !self.queue_indexed_reports.contains_key(&key) {
+                let report = crate::queue::analyze_project_with_prepared_facts_indexed(
+                    self.traversal.root(), self.traversal.tsconfig(), &options.filters, &self.facts,
+                )?;
+                self.queue_indexed_reports.insert(key.clone(), report);
+            }
+            let indexed = self.queue_indexed_reports.get(&key).expect("typed queue report is cached");
+            let traversal_report = matches!(report_type, "queueEdges" | "queueRelated");
+            return render_queue_report(
+                report_type, options, indexed.report(), traversal_report.then_some(indexed),
+            );
+        }
+        if let Some(indexed) = self.queue_indexed_reports.get(&key) {
+            return render_queue_report(report_type, options, indexed.report(), None);
+        }
         if !self.queue_reports.contains_key(&key) {
             let report = crate::queue::analyze_project_with_prepared_facts(
-                self.traversal.root(),
-                self.traversal.tsconfig(),
-                &options.filters,
-                &self.facts,
+                self.traversal.root(), self.traversal.tsconfig(), &options.filters, &self.facts,
             )?;
             self.queue_reports.insert(key.clone(), report);
         }
         render_queue_report(
-            report_type,
-            options,
-            self.queue_reports
-                .get(&key)
-                .expect("queue report is cached"),
+            report_type, options, self.queue_reports.get(&key).expect("queue report is cached"), None,
         )
     }
 
     fn server_report(&mut self, report_type: &str, options: &ProjectOptions) -> Result<Value> {
-        let prepared = self
-            .server
-            .as_ref()
-            .context("server analysis was not prepared")?;
+        let prepared = self.server.as_ref().context("server analysis was not prepared")?;
         let filters = server_filters(report_type, options);
-        let key = serde_json::to_string(&filters)?;
-        if !self.server_reports.contains_key(&key) {
-            self.server_reports.insert(
-                key.clone(),
-                crate::server_routes::analyze_project_with_prepared(prepared, &filters)?,
+        let key = canonical_filter_key(&filters)?;
+        let traversal = matches!(report_type, "serverRouteEdges" | "serverRouteRelated")
+            || self.server_traversal_keys.contains(&key);
+        if traversal {
+            if !self.server_indexed_reports.contains_key(&key) {
+                let report = crate::server_routes::analyze_project_with_prepared_indexed(prepared, &filters)?;
+                self.server_indexed_reports.insert(key.clone(), report);
+            }
+            let indexed = self.server_indexed_reports.get(&key).expect("typed server report is cached");
+            let traversal_report = matches!(report_type, "serverRouteEdges" | "serverRouteRelated");
+            return render_server_report(
+                report_type, options, prepared, indexed.report(),
+                traversal_report.then_some(indexed), &filters,
             );
         }
+        if let Some(indexed) = self.server_indexed_reports.get(&key) {
+            return render_server_report(report_type, options, prepared, indexed.report(), None, &filters);
+        }
+        if !self.server_reports.contains_key(&key) {
+            let report = crate::server_routes::analyze_project_with_prepared(prepared, &filters)?;
+            self.server_reports.insert(key.clone(), report);
+        }
         render_server_report(
-            report_type,
-            options,
-            prepared,
-            self.server_reports
-                .get(&key)
-                .expect("server report is cached"),
-            &filters,
+            report_type, options, prepared,
+            self.server_reports.get(&key).expect("server report is cached"), None, &filters,
         )
     }
 
@@ -93,4 +111,11 @@ impl PreparedScope {
             )?,
         )?)
     }
+}
+
+fn canonical_filter_key(filters: &[String]) -> Result<String> {
+    let mut filters = filters.to_vec();
+    filters.sort();
+    filters.dedup();
+    Ok(serde_json::to_string(&filters)?)
 }

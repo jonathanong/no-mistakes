@@ -37,12 +37,8 @@ fn collect_and_merge_all_edges(
             let Some(facts) = facts else {
                 anyhow::bail!("TS import facts are required for route-import edges");
             };
-            let route_import_edges = collect_route_import_edges(
-                files,
-                facts,
-                tsconfig,
-                graph_files,
-            );
+            let route_import_edges =
+                collect_route_import_edges(files, facts, tsconfig, graph_files);
             merge_edges(forward, reverse, route_import_edges);
         }
         Ok(())
@@ -136,14 +132,10 @@ fn collect_and_merge_all_edges(
 
     crate::perf_trace::trace("graph.queues", || {
         if plan.queues {
-            add_queue_edges(
-                root,
-                resolver,
-                files,
-                facts,
-                config_options,
+            merge_edges(
                 forward,
                 reverse,
+                collect_queue_edges(root, resolver, files, facts, config_options),
             );
         }
     });
@@ -181,7 +173,7 @@ fn collect_and_merge_all_edges(
         merge_dotnet_edges(edge_inputs, forward, reverse);
     });
     crate::perf_trace::trace("graph.swift", || {
-        merge_swift_edges(edge_inputs, forward, reverse);
+        merge_swift_edges(edge_inputs, facts, forward, reverse);
     });
     crate::perf_trace::trace("graph.terraform", || {
         merge_terraform_edges(edge_inputs, forward, reverse);

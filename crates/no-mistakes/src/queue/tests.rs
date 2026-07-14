@@ -1,10 +1,9 @@
+mod resolver;
 use super::*;
-use crate::queue::extract_helpers::quoted_prefix;
 use crate::queue::extract_model::FileFacts;
 use crate::queue::graph_model::{diagnostics, ProjectReport};
-use crate::queue::resolver::{load_tsconfig_from_visible, resolve_import_inner, TsConfig};
-use crate::queue::source::discover_source_files;
 use crate::queue::types::{Edge, EdgeKind};
+use resolver::extract_file_with_factories;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -13,33 +12,6 @@ fn fixture(name: &str) -> PathBuf {
         .join("../../test-cases/queue-ast-hop")
         .join(name)
         .join("fixture")
-}
-
-fn load_tsconfig(
-    root: &std::path::Path,
-    explicit: Option<&std::path::Path>,
-) -> anyhow::Result<TsConfig> {
-    let visible = crate::codebase::ts_source::discover_visible_paths(root);
-    load_tsconfig_from_visible(root, explicit, &visible)
-}
-
-fn resolve_import(
-    specifier: &str,
-    current_file: &std::path::Path,
-    root: &std::path::Path,
-    tsconfig: &TsConfig,
-) -> Option<PathBuf> {
-    resolve_import_inner(specifier, current_file, root, tsconfig, None)
-}
-
-fn extract_file_with_factories(
-    path: &std::path::Path,
-    factory_names: &[String],
-) -> anyhow::Result<FileFacts> {
-    let source = std::fs::read_to_string(path)?;
-    crate::ast::with_program(path, &source, |program, _| {
-        crate::queue::extract::extract_program_with_factories(path, &source, program, factory_names)
-    })
 }
 
 #[test]
@@ -324,108 +296,6 @@ fn diagnostics_include_parser_warnings_from_facts() {
 }
 
 #[test]
-fn extract_file_records_import_forms_without_queue_semantics() {
-    let root = fixture("syntax");
-    let facts = extract_file_with_factories(&root.join("imports.ts"), &[]).unwrap();
-    assert!(facts
-        .imports
-        .iter()
-        .any(|import| import.imported == "default" && import.local == "Bull"));
-    assert!(facts
-        .imports
-        .iter()
-        .any(|import| import.imported == "legacyName" && import.local == "legacy"));
-}
-
-#[test]
-fn resolver_handles_exact_paths_base_url_and_indexes() {
-    let root = fixture("resolver");
-    let tsconfig = load_tsconfig(&root, Some(&root.join("tsconfig.json"))).unwrap();
-    let current = root.join("src/enqueue.ts");
-    assert_eq!(
-        resolve_import("@queues", &current, &root, &tsconfig),
-        Some(root.join("src/queues/index.ts").canonicalize().unwrap())
-    );
-    assert_eq!(
-        resolve_import("src/processors/worker", &current, &root, &tsconfig),
-        Some(
-            root.join("src/processors/worker.ts")
-                .canonicalize()
-                .unwrap()
-        )
-    );
-    assert_eq!(
-        resolve_import("@queue-dir", &current, &root, &tsconfig),
-        Some(crate::codebase::ts_resolver::normalize_path(
-            &root.join("src/queues/index.ts"),
-        ))
-    );
-    assert_eq!(
-        resolve_import("./direct.ts", &current, &root, &tsconfig),
-        Some(root.join("src/direct.ts").canonicalize().unwrap())
-    );
-}
-
-#[test]
-fn resolver_accepts_jsonc_tsconfig() {
-    let root = fixture("resolver");
-    let tsconfig = load_tsconfig(&root, Some(&root.join("tsconfig-jsonc.json"))).unwrap();
-    let current = root.join("src/enqueue.ts");
-    assert_eq!(
-        resolve_import("@queues", &current, &root, &tsconfig),
-        Some(root.join("src/queues/index.ts").canonicalize().unwrap())
-    );
-}
-
-#[test]
-fn quoted_prefix_returns_partial_value_when_closing_quote_is_absent() {
-    assert_eq!(quoted_prefix("\"partial"), Some("partial".to_string()));
-}
-
-#[test]
-fn resolver_handles_relative_tsconfig_and_fallback_targets() {
-    let root = fixture("resolver");
-    let tsconfig = load_tsconfig(&root, Some(std::path::Path::new("tsconfig.json"))).unwrap();
-    let current = root.join("src/enqueue.ts");
-    assert_eq!(
-        resolve_import("@fallback/worker", &current, &root, &tsconfig),
-        Some(
-            root.join("src/processors/worker.ts")
-                .canonicalize()
-                .unwrap()
-        )
-    );
-}
-
-#[test]
-fn resolver_defaults_when_no_tsconfig_exists() {
-    let config = load_tsconfig(&fixture("basic"), None).unwrap();
-    assert!(config.base_url.is_none());
-    assert!(config.paths.is_empty());
-}
-
-#[test]
-fn invalid_tsconfig_returns_parse_error() {
-    let root = fixture("invalid-tsconfig");
-    let err = load_tsconfig(&root, None).unwrap_err();
-    assert!(!err.to_string().is_empty());
-}
-
-#[test]
-fn discovery_skips_dependency_and_build_directories() {
-    let root = fixture("syntax");
-    let files = discover_source_files(&root);
-    for skipped in ["node_modules", "target", "build"] {
-        assert!(
-            !files
-                .iter()
-                .any(|file| file.to_string_lossy().contains(skipped)),
-            "discovered file under {skipped}"
-        );
-    }
-}
-
-#[test]
 fn missing_root_with_shared_facts_returns_empty_report() {
     let root = fixture("does-not-exist");
     let facts = crate::codebase::check_facts::CheckFactMap::default();
@@ -533,5 +403,73 @@ fn custom_factory_respected_in_check_mode_shared_facts() {
         queue_facts.queue_exports.get("notificationsQueue"),
         Some(&"notifications".to_string()),
         "check-mode should detect factory-created queue bindings when factory names are configured"
+    );
+}
+
+#[test]
+fn typed_index_preserves_colliding_file_and_job_nodes() {
+    use crate::edge_index::{CanonicalEdge, EdgeIndex};
+    use crate::queue::graph_model::PreparedProjectReport;
+    use crate::queue::types::{JobKey, RelationshipNode};
+
+    let root = PathBuf::from("/repo");
+    let file = RelationshipNode::File(root.join("queues.ts#send"));
+    let job = RelationshipNode::Job(JobKey {
+        queue_file: root.join("queues.ts"),
+        queue_name: "queue".into(),
+        job: "send".into(),
+    });
+    let worker = RelationshipNode::File(root.join("worker.ts"));
+    let report = PreparedProjectReport {
+        root,
+        report: ProjectReport {
+            producers: vec![],
+            workers: vec![],
+            jobs: vec![],
+            edges: vec![],
+            diagnostics: vec![],
+            check: vec![],
+        },
+        index: EdgeIndex::from_edges([
+            CanonicalEdge::new(file.clone(), job.clone(), EdgeKind::QueueEnqueue),
+            CanonicalEdge::new(job.clone(), worker.clone(), EdgeKind::QueueWorker),
+        ]),
+        nodes_by_name: HashMap::from([
+            ("queues.ts#send".into(), vec![file, job]),
+            ("worker.ts".into(), vec![worker]),
+        ]),
+    };
+
+    assert_eq!(
+        report.edge_view(&["queues.ts#send".into()], Some(1)),
+        vec![
+            Edge {
+                from: "queues.ts#send".into(),
+                to: "queues.ts#send".into(),
+                kind: EdgeKind::QueueEnqueue
+            },
+            Edge {
+                from: "queues.ts#send".into(),
+                to: "worker.ts".into(),
+                kind: EdgeKind::QueueWorker
+            },
+        ]
+    );
+}
+
+#[test]
+fn indexed_queue_projection_matches_compatibility_projection() {
+    let root = fixture("basic");
+    let plain = analyze_project(&root, None, &[]).unwrap();
+    let indexed = analyze_project_indexed(&root, None, &[]).unwrap();
+    assert_eq!(indexed.report().edges, plain.edges);
+    let roots = vec!["enqueue.ts".to_string()];
+    assert_eq!(
+        indexed.edge_view(&roots, None),
+        crate::cli::edge_view(&plain.edges, &roots, None)
+    );
+    assert_eq!(
+        indexed.related(&roots, RelatedDirection::Both),
+        related(&plain, &roots, RelatedDirection::Both)
     );
 }
