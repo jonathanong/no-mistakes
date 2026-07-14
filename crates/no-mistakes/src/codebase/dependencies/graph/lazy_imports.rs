@@ -1,32 +1,5 @@
 /// Demand-driven import traversal used by `dependencies --relationship import`.
 /// It parses only roots and files reached through static import edges.
-#[derive(Clone, Copy)]
-pub(crate) struct LazyImportFacts<'a> {
-    prepared: Option<&'a dyn TsFactLookup>,
-    collect_plan: TsFactPlan,
-    context: &'a TsFactContext,
-}
-
-impl<'a> LazyImportFacts<'a> {
-    pub(crate) fn new(
-        prepared: Option<&'a dyn TsFactLookup>,
-        collect_plan: TsFactPlan,
-        context: &'a TsFactContext,
-    ) -> Self {
-        Self {
-            prepared,
-            collect_plan,
-            context,
-        }
-    }
-}
-
-struct ExpandedImportNode {
-    node: NodeId,
-    neighbors: Vec<(NodeId, EdgeKind)>,
-    collected: Option<(PathBuf, TsFileFacts)>,
-}
-
 pub fn lazy_import_deps_of(
     roots: &[NodeId],
     root: &Path,
@@ -131,7 +104,11 @@ pub(crate) fn lazy_import_deps_of_with_files_and_facts(
                 ExpandedImportNode {
                     node: node.clone(),
                     neighbors,
-                    collected: collected.map(|facts| (path.to_path_buf(), facts)),
+                    collected: if facts.retain_collected {
+                        collected.map(|facts| (path.to_path_buf(), facts))
+                    } else {
+                        None
+                    },
                 }
             })
             .collect();

@@ -54,7 +54,8 @@ pub(crate) fn collect_and_filter_entries_shared(
                         .map(|facts| facts as &dyn graph::TsFactLookup),
                     shared.fact_plan,
                     &shared.fact_context,
-                ),
+                )
+                .retain_collected(),
             );
             if !collected.is_empty() {
                 if let Some(facts) = &mut shared.facts {
