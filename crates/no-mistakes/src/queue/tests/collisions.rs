@@ -1,4 +1,5 @@
-use crate::queue::{analyze_project, analyze_project_indexed, related, RelatedDirection};
+use crate::queue::types::RelationshipNode;
+use crate::queue::{analyze_project, analyze_project_indexed, related, EdgeKind, RelatedDirection};
 use std::path::PathBuf;
 
 fn fixture() -> PathBuf {
@@ -32,4 +33,19 @@ fn indexed_traversal_expands_colliding_jobs_reached_transitively() {
     );
     assert!(dependents.iter().any(|edge| edge.to == "producer-alpha.ts"));
     assert!(dependents.iter().any(|edge| edge.to == "producer-beta.ts"));
+
+    let queue_order = indexed
+        .index
+        .edges()
+        .iter()
+        .filter_map(|edge| match (&edge.from, &edge.to, edge.kind) {
+            (RelationshipNode::File(file), RelationshipNode::Job(job), EdgeKind::QueueEnqueue)
+                if file.ends_with("producer-shared.ts") =>
+            {
+                Some(job.queue_name.as_str())
+            }
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(queue_order, ["alpha", "beta"]);
 }

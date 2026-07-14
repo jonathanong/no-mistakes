@@ -33,6 +33,7 @@ pub(super) fn build_prepared_report(
             public_node(root, &edge.from),
             public_node(root, &edge.to),
             edge.kind,
+            edge.clone(),
         )
     });
     relationships.dedup();

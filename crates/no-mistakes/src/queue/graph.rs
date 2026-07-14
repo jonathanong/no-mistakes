@@ -124,13 +124,13 @@ fn analyze_project_with_facts_inner<T>(
     let root = root.as_path();
     let tsconfig = load_tsconfig_from_visible(root, tsconfig_path, shared.files())?;
     let filter = build_filter(filters)?;
-    let facts = queue_project_facts_from_shared(shared, filter.as_ref(), root);
-    let visible_files = shared.files().iter().cloned().collect();
-    let queue_defs = queue_definitions(&facts);
-    let resolver = queue_import_resolver(&tsconfig, root, &visible_files);
-    let producers = resolve_producers(&facts, &queue_defs, &resolver);
-    let workers = resolve_workers(&facts, &queue_defs, &resolver);
-    Ok(builder(root, producers, workers, &facts))
+    Ok(resolve_queue_relationships(
+        root,
+        &tsconfig,
+        filter.as_ref(),
+        shared,
+        builder,
+    ))
 }
 
 /// Analyze shared queue facts with a TypeScript config already prepared by the caller.
@@ -179,11 +179,32 @@ fn analyze_project_with_prepared_facts_inner<T>(
     let root = root.canonicalize().unwrap_or(root.to_path_buf());
     let root = root.as_path();
     let filter = build_filter(filters)?;
-    let facts = queue_project_facts_from_shared(shared, filter.as_ref(), root);
+    Ok(resolve_queue_relationships(
+        root,
+        tsconfig,
+        filter.as_ref(),
+        shared,
+        builder,
+    ))
+}
+
+fn resolve_queue_relationships<T>(
+    root: &Path,
+    tsconfig: &crate::codebase::ts_resolver::TsConfig,
+    filter: Option<&globset::GlobSet>,
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    builder: impl FnOnce(
+        &Path,
+        Vec<InternalProducer>,
+        Vec<InternalWorker>,
+        &HashMap<PathBuf, FileFacts>,
+    ) -> T,
+) -> T {
+    let facts = queue_project_facts_from_shared(shared, filter, root);
     let visible_files = shared.files().iter().cloned().collect();
     let queue_defs = queue_definitions(&facts);
     let resolver = queue_import_resolver(tsconfig, root, &visible_files);
     let producers = resolve_producers(&facts, &queue_defs, &resolver);
     let workers = resolve_workers(&facts, &queue_defs, &resolver);
-    Ok(builder(root, producers, workers, &facts))
+    builder(root, producers, workers, &facts)
 }
