@@ -57,15 +57,16 @@ pub(crate) fn collect_and_filter_entries_shared(
                 ),
             );
             if !collected.is_empty() {
-                shared
-                    .facts
-                    .get_or_insert_with(|| {
+                if let Some(facts) = &mut shared.facts {
+                    facts.extend(collected);
+                } else {
+                    shared.facts = Some(
                         crate::codebase::ts_source::facts::TsFactMap::from_iter_with_plan(
-                            std::iter::empty(),
+                            collected,
                             shared.fact_plan,
-                        )
-                    })
-                    .extend(collected);
+                        ),
+                    );
+                }
             }
             entries
         }
