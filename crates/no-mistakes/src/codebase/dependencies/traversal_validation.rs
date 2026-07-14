@@ -26,3 +26,16 @@ fn validate_direction(direction: &Direction, entrypoints: &[Entrypoint]) -> Resu
     }
     Ok(())
 }
+
+pub(crate) fn traversal_needs_symbol_facts(args: &TraverseArgs) -> bool {
+    args.include_symbols
+        || args.file_symbols.iter().any(Option::is_some)
+        || args.files.iter().enumerate().any(|(index, file)| {
+            !args
+                .file_entrypoints_are_structured
+                .get(index)
+                .copied()
+                .unwrap_or(false)
+                && parse_entrypoint(&file.to_string_lossy()).1.is_some()
+        })
+}

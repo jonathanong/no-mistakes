@@ -165,9 +165,13 @@ impl PreparedTestPlanRequest {
                     self.graph_plan,
                     &self.prepared_graph_config,
                 );
+            let graph_visible_paths = VisiblePathSnapshot::from_paths(
+                &self.root,
+                self.graph_files.all(),
+            );
             let playwright = self
                 .prepared_graph_config
-                .playwright_fact_plan(&self.root, &self.visible_paths)
+                .playwright_fact_plan(&self.root, &graph_visible_paths)
                 .map_err(|error| format!("{error:#}"))?
                 .ok_or_else(|| {
                     "prepared all-edge graph is missing its Playwright fact plan".to_string()
@@ -276,6 +280,7 @@ fn test_framework(runner: TestRunner) -> TestFramework {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use no_mistakes::codebase::dependencies::graph::NodeId;
 
     #[test]
     fn non_framework_plan_reuses_prepared_runner_config_facts_and_filter() {
@@ -320,5 +325,51 @@ mod tests {
             .any(|test| test.test_file == "src/unit.test.ts"));
         assert_eq!(counts.len(), 6, "{counts:#?}");
         assert!(counts.values().all(|count| *count == 1), "{counts:#?}");
+    }
+
+    #[test]
+    fn complete_prepared_graph_keeps_standard_skipped_playwright_sources_outside_its_universe() {
+        let source = no_mistakes::codebase::ts_resolver::normalize_path(
+            &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../fixtures/check-discovery/project-pattern-reopen/fixture"),
+        );
+        let fixture = crate::test_support::materialize_saved_fixture(&source);
+        let root = fixture.path().canonicalize().unwrap();
+        let changed = root.join("web/next.config.ts");
+        let args = PlanArgs {
+            framework: Some(TestFramework::Vitest),
+            root: root.clone(),
+            config: None,
+            tsconfig: None,
+            base: None,
+            head: None,
+            from_git_diff: None,
+            changed_file: vec![changed.clone()],
+            changed_files: None,
+            diff: None,
+            diff_stdin: false,
+            diff_command: None,
+            entrypoints: Vec::new(),
+            entrypoint_symbols: Vec::new(),
+            include_symbols: false,
+            diff_content: None,
+            environment: "pre-push".to_string(),
+            limit_percent: None,
+            limit_files: None,
+            global_config_fallback: None,
+            format: None,
+            json: false,
+        };
+
+        let prepared = PreparedTestPlanRequest::prepare(&args).unwrap();
+        crate::ast::begin_parse_count(&root);
+        let graph = prepared.graph().unwrap();
+        let counts = crate::ast::finish_parse_count(&root);
+
+        assert!(graph.dependencies_of_node(&NodeId::File(changed)).is_some());
+        assert!(graph
+            .dependencies_of_node(&NodeId::File(root.join("web/fixtures/included.ts")))
+            .is_none());
+        assert!(!counts.contains_key(&root.join("web/fixtures/included.ts")));
     }
 }

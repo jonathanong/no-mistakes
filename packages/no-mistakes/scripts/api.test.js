@@ -233,6 +233,18 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
     /type: "importUsages"; id\?: string } & Omit<ImportUsagesOptions, "root">/,
   );
   assert.match(
+    analyzeProjectDeclarations,
+    /type BatchedTraverseOptions = TraverseOptions & Pick<ProjectOptions, "config">/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type: "dependencies" \| "dependents" \| "related"; id\?: string } & BatchedTraverseOptions/,
+  );
+  assert.doesNotMatch(
+    analyzeProjectDeclarations,
+    /Omit<\s*TraverseOptions,\s*"root" \| "tsconfig"/,
+  );
+  assert.match(
     readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
     /export function importUsages\(options\?: ImportUsagesOptions\): Promise<ImportUsagesResult>;/,
   );
@@ -248,6 +260,19 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
     analyzeProjectDeclarations,
     /type: "playwrightRelated"; id\?: string } & Omit<PlaywrightRelatedOptions,/,
   );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type BatchedReactUsagesOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "targets" \| "include"[\s\S]*?Required<Pick<ProjectOptions, "target">>/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type: "reactUsages"; id\?: string } & BatchedReactUsagesOptions/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type BatchedCheckOptions = Pick<ProjectOptions, "root" \| "tsconfig" \| "config">/,
+  );
+  assert.match(analyzeProjectDeclarations, /type: "check"; id\?: string } & BatchedCheckOptions/);
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export \* from "\.\/analyze-project-types";/,

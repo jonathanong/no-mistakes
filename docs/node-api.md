@@ -18,9 +18,16 @@ const { analyzeProject, dependents, importUsages, symbols, testsPlan } = require
     root: process.cwd(),
     reports: [
       { type: "importUsages", filters: ["src/**"] },
+      {
+        type: "dependents",
+        root: "packages/api",
+        tsconfig: "tsconfig.json",
+        files: ["src/api.mts#handler"],
+      },
       { type: "symbols", files: ["src/api.mts"], include: "both" },
       { type: "symbols", files: ["src/api.mts"], mode: "signature-impact", symbol: "handler" },
-      { type: "check" },
+      { type: "reactUsages", target: "src/Button.tsx#Button", include: "stories,tests,props" },
+      { type: "check", config: ".no-mistakes.yml" },
     ],
   });
 
@@ -63,6 +70,12 @@ framework-scoped discovered tests.
 
 `check(options)` returns the same structured check report as CLI JSON,
 including `warnings: string[]` for configured checks that could not run.
+
+Each `analyzeProject()` report may use its report-specific options. Graph
+reports may override `root`, `tsconfig`, and `config`; `reactUsages` accepts
+`target`, `targets`, `include`, and scope options; and `check` may override
+`root`, `tsconfig`, and `config`. Reports with the same effective scope share
+one prepared analysis, while distinct scopes are prepared independently.
 
 ## Agent Defaults
 

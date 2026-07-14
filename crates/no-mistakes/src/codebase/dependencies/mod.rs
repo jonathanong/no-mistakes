@@ -59,18 +59,8 @@ pub(crate) fn collect_and_filter_entries(
     let root = resolve_root(args, cwd_early);
     let root = crate::codebase::ts_resolver::normalize_path(&root);
     let allowed = relationship_filter(&args.relationships);
-    let needs_symbol_facts = args.include_symbols
-        || args.file_symbols.iter().any(Option::is_some)
-        || args.files.iter().enumerate().any(|(index, file)| {
-            !args
-                .file_entrypoints_are_structured
-                .get(index)
-                .copied()
-                .unwrap_or(false)
-                && parse_entrypoint(&file.to_string_lossy()).1.is_some()
-        });
-    let build_plan =
-        graph::GraphBuildPlan::from_allowed(allowed.as_ref()).with_symbols(needs_symbol_facts);
+    let build_plan = graph::GraphBuildPlan::from_allowed(allowed.as_ref())
+        .with_symbols(traversal_needs_symbol_facts(args));
     let mut shared =
         SharedTraversalContext::prepare(root, args.tsconfig.as_deref(), None, build_plan)?;
 

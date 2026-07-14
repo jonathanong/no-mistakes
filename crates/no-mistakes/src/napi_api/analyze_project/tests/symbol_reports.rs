@@ -81,6 +81,48 @@ fn analyze_project_shared_dependents_uses_symbol_graph_when_included() {
 }
 
 #[test]
+fn analyze_project_symbol_entrypoints_match_standalone_without_symbol_output() {
+    let root = fixture_root("tests-impact-symbol");
+    let entrypoints = [
+        json!("utils.mts#parseDate"),
+        json!({ "file": "utils.mts", "symbol": "parseDate" }),
+    ];
+
+    for entrypoint in entrypoints {
+        let options = json!({
+            "root": root,
+            "files": [entrypoint],
+            "includeSymbols": false,
+            "relationships": ["import"]
+        });
+        let standalone = crate::napi_api::dependents_json_impl(options.to_string()).unwrap();
+        let output = analyze_project_json_impl(
+            json!({
+                "root": root,
+                "reports": [{
+                    "type": "dependents",
+                    "files": options["files"],
+                    "includeSymbols": false,
+                    "relationships": ["import"]
+                }]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        let standalone: Value = serde_json::from_str(&standalone).unwrap();
+        let output: Value = serde_json::from_str(&output).unwrap();
+        let result = &output["reports"][0]["result"];
+
+        assert_eq!(result, &standalone);
+        assert!(result["files"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|file| file["path"] == "other.mts"));
+    }
+}
+
+#[test]
 fn analyze_project_dispatches_signature_impact_symbols_report() {
     let output = analyze_project_json_impl(
         json!({

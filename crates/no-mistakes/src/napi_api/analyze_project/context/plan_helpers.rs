@@ -5,7 +5,9 @@ fn graph_build_plan(options: &AnalyzeProjectOptions) -> Result<GraphBuildPlan> {
             let args = super::traverse_args(request, options)?;
             let allowed = relationship_filter(&args.relationships);
             plan.include(
-                GraphBuildPlan::from_allowed(allowed.as_ref()).with_symbols(args.include_symbols),
+                GraphBuildPlan::from_allowed(allowed.as_ref()).with_symbols(
+                    crate::codebase::dependencies::traversal_needs_symbol_facts(&args),
+                ),
             );
         } else if request.report_type == "importUsages" {
             plan.include(GraphBuildPlan {

@@ -16,15 +16,19 @@ import type {
 
 type BatchedProjectOptions = Omit<ProjectOptions, "root" | "tsconfig" | "config">;
 type BatchedFlowOptions = Omit<FlowOptions, "root" | "tsconfig" | "config">;
+type BatchedTraverseOptions = TraverseOptions & Pick<ProjectOptions, "config">;
 type BatchedQueueRelatedOptions = BatchedProjectOptions & { files: string[] };
 type BatchedServerRouteRelatedOptions = BatchedProjectOptions &
   ({ files: string[] } | { roots: string[] });
+type BatchedReactUsagesOptions = Pick<
+  ProjectOptions,
+  "root" | "tsconfig" | "config" | "targets" | "include"
+> &
+  Required<Pick<ProjectOptions, "target">>;
+type BatchedCheckOptions = Pick<ProjectOptions, "root" | "tsconfig" | "config">;
 
 export type AnalyzeProjectReportRequest =
-  | ({ type: "dependencies" | "dependents" | "related"; id?: string } & Omit<
-      TraverseOptions,
-      "root" | "tsconfig"
-    >)
+  | ({ type: "dependencies" | "dependents" | "related"; id?: string } & BatchedTraverseOptions)
   | ({ type: "symbols"; id?: string } & (SymbolsListOptions | SymbolsSignatureImpactOptions))
   | ({ type: "importUsages"; id?: string } & Omit<ImportUsagesOptions, "root">)
   | ({ type: "flow"; id?: string } & BatchedFlowOptions)
@@ -42,12 +46,13 @@ export type AnalyzeProjectReportRequest =
       ProjectOptions,
       "targets" | "depth" | "assertNoFetch"
     >)
+  | ({ type: "reactUsages"; id?: string } & BatchedReactUsagesOptions)
   | ({
       type: "playwrightCheck" | "playwrightEdges" | "playwrightTests";
       id?: string;
     } & Omit<PlaywrightOptions, "root" | "config">)
   | ({ type: "playwrightRelated"; id?: string } & Omit<PlaywrightRelatedOptions, "root" | "config">)
-  | { type: "check"; id?: string };
+  | ({ type: "check"; id?: string } & BatchedCheckOptions);
 
 export interface AnalyzeProjectOptions {
   root?: string;
