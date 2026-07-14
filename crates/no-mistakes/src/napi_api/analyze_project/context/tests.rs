@@ -1,7 +1,39 @@
-use super::{cached_analysis, canonical_filter_key, same_config_path, CachedAnalysis};
+use super::{
+    cached_analysis, canonical_filter_key, framework_preparation_plan, graph_build_plan,
+    same_config_path, CachedAnalysis,
+};
 use std::cell::Cell;
 use std::collections::HashMap;
 use std::path::Path;
+
+#[test]
+fn aggregate_graph_reports_union_explicit_framework_demand() {
+    let options: crate::napi_api::analyze_project::types::AnalyzeProjectOptions =
+        serde_json::from_value(serde_json::json!({
+            "reports": [
+                {
+                    "type": "dependencies",
+                    "files": ["src/a.ts"],
+                    "relationships": ["import"],
+                    "tests": ["vitest"]
+                },
+                {
+                    "type": "dependents",
+                    "files": ["src/b.ts"],
+                    "relationships": ["import"],
+                    "tests": ["swift"]
+                }
+            ]
+        }))
+        .unwrap();
+    let graph = graph_build_plan(&options).unwrap();
+    let frameworks = framework_preparation_plan(&options, graph).unwrap();
+
+    assert!(frameworks.contains(crate::codebase::test_discovery::TestRunner::Vitest));
+    assert!(frameworks.contains(crate::codebase::test_discovery::TestRunner::Swift));
+    assert!(!frameworks.contains(crate::codebase::test_discovery::TestRunner::Playwright));
+    assert!(!frameworks.contains(crate::codebase::test_discovery::TestRunner::Dotnet));
+}
 
 #[test]
 fn same_config_path_normalizes_relative_paths_and_preserves_optionality() {

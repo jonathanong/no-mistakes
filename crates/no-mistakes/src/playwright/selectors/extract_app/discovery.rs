@@ -7,13 +7,16 @@ use std::path::{Path, PathBuf};
 /// Uses the shared ignore-aware candidate list, then applies selector-specific
 /// skip-directory and symlink policies.
 pub(super) fn source_file_candidates(frontend_root: &Path) -> Vec<PathBuf> {
-    crate::codebase::ts_source::discover_visible_paths(frontend_root)
+    crate::codebase::ts_source::discover_visible_classified_paths(frontend_root)
         .into_iter()
-        .filter(|path| {
-            path.strip_prefix(frontend_root)
+        .filter(|entry| {
+            entry
+                .path
+                .strip_prefix(frontend_root)
                 .is_ok_and(|rel| !rel_path_under_skipped_dir(rel))
         })
-        .filter(|path| is_file_or_symlinked_file(path))
+        .filter(|entry| entry.classification.target_is_file())
+        .map(|entry| entry.path)
         .collect()
 }
 
@@ -34,13 +37,5 @@ fn rel_path_under_skipped_dir(rel: &Path) -> bool {
 
 /// A regular file, or a symlink whose target resolves to a file — matching
 /// the file-type check a live `WalkDir` walk performs per entry.
-fn is_file_or_symlinked_file(path: &Path) -> bool {
-    match std::fs::symlink_metadata(path) {
-        Ok(metadata) if metadata.is_file() => true,
-        Ok(metadata) if metadata.file_type().is_symlink() => path.is_file(),
-        _ => false,
-    }
-}
-
 #[cfg(test)]
 mod tests;

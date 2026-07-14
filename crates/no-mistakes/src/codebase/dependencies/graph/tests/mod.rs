@@ -20,6 +20,26 @@ fn package_name_from_spec(spec: &str) -> &str {
     }
 }
 
+#[test]
+fn playwright_graph_build_has_one_snapshot_construction_site() {
+    let builder = [
+        include_str!("../builder_core.rs"),
+        include_str!("../builder_edges.rs"),
+    ]
+    .concat();
+
+    assert_eq!(
+        builder.matches("VisiblePathSnapshot::from_paths").count(),
+        1,
+        "route and selector edges must reuse one classified snapshot"
+    );
+    let shared_cache = include_str!("../../shared_graph_cache.rs");
+    assert!(
+        shared_cache.contains("visible_paths: Some(input.visible_paths)"),
+        "shared traversal must pass the canonical request snapshot into graph construction"
+    );
+}
+
 include!("core.rs");
 include!("route_import.rs");
 include!("route_import_prepared.rs");

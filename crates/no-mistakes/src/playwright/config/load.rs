@@ -112,7 +112,7 @@ fn settings_from_defaults(
     visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> Result<Settings> {
     let playwright_configs = if cli_playwright_configs.is_empty() {
-        helpers::find_default_playwright_configs_from_visible(root, &visible_paths.paths_for(root))?
+        helpers::find_default_playwright_configs_from_snapshot(root, visible_paths)?
     } else {
         cli_playwright_configs
             .iter()

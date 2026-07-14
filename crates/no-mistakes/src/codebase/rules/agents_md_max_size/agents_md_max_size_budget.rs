@@ -31,16 +31,20 @@ pub(super) fn scan_with_sources(
     Ok(findings)
 }
 
-pub(super) fn scan_advisories(
+pub(super) fn scan_advisories_with_sources(
     root: &Path,
     opts: &Options,
     files: &[PathBuf],
+    sources: &SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let max_chars = opts.max_chars.unwrap_or(DEFAULT_MAX_CHARS);
     let threshold = opts.advisory_chars_remaining.unwrap_or_default();
     let mut advisories: Vec<RuleFinding> = files
         .par_iter()
-        .filter_map(|path| check_file_advisory(path, root, max_chars, threshold))
+        .filter_map(|path| {
+            let content = crate::codebase::rules::read_source(sources, path)?;
+            check_advisory_content(path, root, max_chars, threshold, &content)
+        })
         .collect();
     advisories.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
     Ok(advisories)
@@ -88,16 +92,14 @@ pub(super) fn check_content(
     findings
 }
 
-fn check_file_advisory(
+fn check_advisory_content(
     path: &Path,
     root: &Path,
     max_chars: usize,
     threshold: usize,
+    content: &str,
 ) -> Option<RuleFinding> {
-    let Ok(content) = std::fs::read_to_string(path) else {
-        return None;
-    };
-    if has_disable_file_comment(&content, RULE_ID) {
+    if has_disable_file_comment(content, RULE_ID) {
         return None;
     }
     let char_count = content.chars().count();
@@ -114,7 +116,7 @@ fn check_file_advisory(
         line: 1,
         message: format!(
             "{} - consider moving detail into linked docs before editing",
-            format_char_budget(&content, char_count, max_chars)
+            format_char_budget(content, char_count, max_chars)
         ),
         import: None,
         target: None,

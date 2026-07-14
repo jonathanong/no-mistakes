@@ -14,7 +14,15 @@ pub fn discover_tests_from_visible(
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> Result<DiscoveredTests> {
     let projects = projects::runner_projects_from_visible(root, config, runner, visible_paths, tsconfig)?;
-    discover_from_projects_from_visible(root, config, runner, projects, visible_paths, tsconfig)
+    discover_from_projects_from_visible(
+        root,
+        config,
+        runner,
+        projects,
+        None,
+        visible_paths,
+        tsconfig,
+    )
 }
 
 #[doc(hidden)]
@@ -26,8 +34,27 @@ pub fn discover_tests_from_prepared_projects(
     visible_paths: &[PathBuf],
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> Result<DiscoveredTests> {
+    // Test planning may inspect a secondary framework only to classify changed test files. Its
+    // explicit policy is sufficient for that ownership check and avoids parsing an unrequested
+    // runner config; requested runners still surface their prepared parse failures.
+    let projects = prepared.requested_projects(runner).transpose()?.unwrap_or_else(|| {
+        projects::explicit_policy_projects(root, config, runner)
+    });
     discover_from_projects_from_visible(
-        root, config, runner, prepared.projects(runner)?, visible_paths, tsconfig,
+        root,
+        config,
+        runner,
+        projects,
+        (runner == TestRunner::Vitest)
+            .then(|| {
+                prepared
+                    .projects_if_prepared(TestRunner::Playwright)
+                    .unwrap_or_else(|| {
+                        projects::explicit_policy_projects(root, config, TestRunner::Playwright)
+                    })
+            }),
+        visible_paths,
+        tsconfig,
     )
 }
 

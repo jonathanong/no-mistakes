@@ -490,7 +490,7 @@ fn impacted_fanout_prepares_and_builds_the_graph_once() {
     assert_eq!(prepared.matches("analyze_lockfile_changes(").count(), 1);
     assert_eq!(
         prepared
-            .matches("build_with_plan_files_prepared_config_and_facts(")
+            .matches("build_with_plan_files_prepared_config_and_all_facts(")
             .count(),
         1
     );

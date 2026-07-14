@@ -78,6 +78,15 @@ impl SharedTraversalContext {
                     .as_ref()
                     .map(|facts| facts as &dyn graph::TsFactLookup),
                 import_resolution_cache: &self.import_resolution_cache,
+                dotnet_facts: self
+                    .prepared_test_projects
+                    .as_ref()
+                    .and_then(|projects| projects.dotnet_facts()),
+                swift_facts: self
+                    .prepared_test_projects
+                    .as_ref()
+                    .and_then(|projects| projects.swift_facts()),
+                visible_paths: self.dataset.visible_paths(),
             })
         });
         self.graph_builds = self.graph_cache.build_count();
@@ -103,6 +112,15 @@ impl SharedTraversalContext {
                 prepared_graph: &self.prepared_graph,
                 facts: Some(facts as &dyn graph::TsFactLookup),
                 import_resolution_cache: &self.import_resolution_cache,
+                dotnet_facts: self
+                    .prepared_test_projects
+                    .as_ref()
+                    .and_then(|projects| projects.dotnet_facts()),
+                swift_facts: self
+                    .prepared_test_projects
+                    .as_ref()
+                    .and_then(|projects| projects.swift_facts()),
+                visible_paths: self.dataset.visible_paths(),
             })
         })?;
         self.graph = Some(graph);

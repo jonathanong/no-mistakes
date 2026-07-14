@@ -40,7 +40,7 @@ pub fn find_queue_name(
 ) -> Option<String> {
     let allocator = Allocator::default();
     let source_type = SourceType::ts();
-    let ret = Parser::new(&allocator, source, source_type).parse();
+    let ret = crate::ast::parse(Path::new("queue-name.ts"), &allocator, source, source_type);
     find_queue_name_from_program(&ret.program, factory_specifier, factory_function)
 }
 
@@ -181,4 +181,3 @@ fn find_queue_name_in_expr(
         _ => None,
     }
 }
-

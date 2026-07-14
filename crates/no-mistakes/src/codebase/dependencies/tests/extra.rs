@@ -277,3 +277,4 @@ fn traverse_args(root: PathBuf, files: Vec<PathBuf>) -> TraverseArgs {
 }
 
 include!("extra_execution.rs");
+include!("extra_execution_output.rs");

@@ -63,9 +63,9 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         dynamic_imports: enabled.dynamic_import_rules || enabled.storybook_stories,
         nextjs_caching: enabled.nextjs_caching,
         storybook: enabled.storybook_stories,
+        server_route_client_boundary: enabled.boundary_rules,
         raw_source: enabled.nextjs_api_routes,
         source: enabled.dynamic_import_rules
-            || enabled.boundary_rules
             || enabled.nextjs_caching
             || enabled.unique_exports
             || enabled.storybook_stories,
@@ -87,6 +87,7 @@ pub(crate) fn plan_requests_facts(plan: &CheckFactPlan) -> bool {
         || plan.dynamic_imports
         || plan.nextjs_caching
         || plan.storybook
+        || plan.server_route_client_boundary
         || plan.raw_source
         || plan.source
         || !plan.graph.is_empty()

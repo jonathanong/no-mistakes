@@ -68,7 +68,7 @@ impl ParsedRunnerConfigs {
 
     pub(crate) fn covers(&self, plan: &PreparedIntegrationRunnerConfigs) -> bool {
         plan.specs.iter().all(|spec| {
-            !spec.path.exists()
+            !plan.visible_files.contains(&spec.path)
                 || self.files.get(&spec.path).is_some_and(|facts| {
                     facts
                         .results
@@ -94,7 +94,7 @@ impl ParsedRunnerConfigs {
     ) -> Result<Vec<ConfigProject>> {
         let mut projects = Vec::new();
         for spec in plan.specs.iter().filter(|spec| spec.framework == framework) {
-            if !spec.path.exists() {
+            if !plan.visible_files.contains(&spec.path) {
                 anyhow::bail!(
                     "{} config does not exist: {}",
                     framework.as_str(),

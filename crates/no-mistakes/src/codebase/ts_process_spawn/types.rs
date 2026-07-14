@@ -28,7 +28,7 @@ pub struct SpawnEdge {
 pub fn extract_spawn_edges(source: &str, file_path: &Path, root: &Path) -> Vec<SpawnEdge> {
     let allocator = Allocator::default();
     let source_type = SourceType::tsx();
-    let ret = Parser::new(&allocator, source, source_type).parse();
+    let ret = crate::ast::parse(file_path, &allocator, source, source_type);
     extract_spawn_edges_from_program(&ret.program, source, file_path, root)
 }
 
@@ -40,7 +40,7 @@ pub(crate) fn extract_spawn_edges_from_visible(
 ) -> Vec<SpawnEdge> {
     let allocator = Allocator::default();
     let source_type = SourceType::tsx();
-    let ret = Parser::new(&allocator, source, source_type).parse();
+    let ret = crate::ast::parse(file_path, &allocator, source, source_type);
     extract_spawn_edges_from_program_from_visible(
         &ret.program,
         source,

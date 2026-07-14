@@ -113,63 +113,6 @@ fn is_github_workflows_prefix(root: &Path, path: &Path) -> bool {
     matches!(components.next(), None | Some("workflows"))
 }
 
-/// Return all tracked and untracked non-ignored files under `root`.
-///
-/// This follows the repo-wide convention that git is the source of truth for
-/// file discovery: tracked files plus untracked files that are not hidden by
-/// `.gitignore`. The result is repo-relative, sorted, and deduplicated.
-pub fn git_visible_files(root: &Path) -> Option<Vec<String>> {
-    git_ls_paths(root).map(|paths| {
-        paths
-            .into_iter()
-            .map(|path| path.to_string_lossy().into_owned())
-            .collect()
-    })
-}
-
-/// Return the filesystem entries Git would make visible under `root`.
-///
-/// Inside a Git worktree this is the tracked plus untracked-nonignored file
-/// list. Outside Git, an `ignore::WalkBuilder` applies `.gitignore`, `.ignore`,
-/// and parent ignore files without requiring repository metadata. Hidden paths
-/// are left visible so each analyzer can preserve its own hidden-directory and
-/// symlink policy after sharing this single candidate-discovery boundary.
-pub fn discover_visible_paths(root: &Path) -> Vec<PathBuf> {
-    let mut paths: Vec<PathBuf> = match git_ls_paths(root) {
-        Some(files) => files
-            .into_iter()
-            .map(|relative| root.join(relative))
-            .filter(|path| std::fs::symlink_metadata(path).is_ok())
-            .collect(),
-        None => WalkBuilder::new(root)
-            .hidden(false)
-            .require_git(false)
-            .build()
-            .scan(root.to_path_buf(), |walker_root, entry| {
-                Some(entry.ok().and_then(|entry| {
-                    if entry.depth() == 0 {
-                        *walker_root = entry.path().to_path_buf();
-                    }
-                    entry.file_type().and_then(|file_type| {
-                        (file_type.is_file() || file_type.is_symlink()).then(|| {
-                            rebase_walk_path(root, walker_root, entry.path())
-                        })
-                    })
-                }))
-            })
-            .flatten()
-            .collect()
-    };
-    paths.sort();
-    paths.dedup();
-    paths
-}
-
-fn rebase_walk_path(request_root: &Path, walker_root: &Path, path: &Path) -> PathBuf {
-    path.strip_prefix(walker_root)
-        .map_or_else(|_| path.to_path_buf(), |relative| request_root.join(relative))
-}
-
 /// Return git-visible files as absolute paths. Falls back to the ignore-based
 /// walker outside git repositories so unit tests and ad-hoc directories still
 /// behave sensibly.
@@ -189,11 +132,23 @@ pub fn discover_files_from_visible(
     let extra_skip: HashSet<&str> = extra_skip.iter().map(String::as_str).collect();
     visible_paths
         .iter()
-        .map(|path| normalize_discovery_path(path))
+        .map(|path| normalized_visible_path(path))
         .filter(|path| path.starts_with(&root))
-        .filter(|path| path.exists())
         .filter(|path| !is_under_skipped_dir(&root, path, &extra_skip))
         .collect()
+}
+
+fn normalized_visible_path(path: &Path) -> PathBuf {
+    if path.components().any(|component| {
+        matches!(
+            component,
+            std::path::Component::CurDir | std::path::Component::ParentDir
+        )
+    }) {
+        normalize_discovery_path(path)
+    } else {
+        path.to_path_buf()
+    }
 }
 
 pub fn discover_source_files(root: &Path, extra_skip: &[String]) -> Vec<PathBuf> {
@@ -218,3 +173,4 @@ pub fn discover_source_files_from_visible(
 }
 
 include!("discovery/helpers.rs");
+include!("discovery/visible.rs");

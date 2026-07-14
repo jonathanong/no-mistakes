@@ -4,7 +4,6 @@ use oxc_ast::ast::{
     Argument, ExportNamedDeclaration, Expression, ObjectPropertyKind, Program, PropertyKey,
     Statement, TryStatement,
 };
-use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::path::{Path, PathBuf};
 include!("ts_process_spawn/types.rs");

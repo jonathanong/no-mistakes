@@ -35,7 +35,8 @@ impl PreparedScope {
     ) -> Result<Self> {
         let root = super::options::resolve_root(options.root.as_deref())?;
         let build_plan = graph_build_plan(options)?;
-        let mut traversal = SharedTraversalContext::prepare_with_snapshot_and_optional_check_plan(
+        let framework_plan = framework_preparation_plan(options, build_plan)?;
+        let mut traversal = SharedTraversalContext::prepare_with_snapshot_check_and_framework_plan(
             root.clone(),
             options.tsconfig.as_deref().map(Path::new),
             options.config.as_deref().map(Path::new),
@@ -45,6 +46,7 @@ impl PreparedScope {
                 .reports
                 .iter()
                 .any(|request| request.report_type == "check"),
+            framework_plan,
         )?;
         let authoritative_report_files = authoritative_report_files(options, &root)?;
         traversal.add_explicit_roots(&authoritative_report_files);
@@ -139,6 +141,9 @@ impl PreparedScope {
         supplemental_report_files.sort();
         supplemental_report_files.dedup();
         let sources = traversal.source_store();
+        let mut supplemental_plan = report_plan;
+        supplemental_plan.dynamic_imports |= check_plan.dynamic_imports;
+        supplemental_plan.source |= check_plan.source;
         let facts = crate::codebase::check_facts::
             collect_check_facts_with_graph_files_playwright_and_sources(
                 &root,
@@ -153,11 +158,12 @@ impl PreparedScope {
                 &root,
                 supplemental_report_files,
                 Vec::new(),
-                report_plan,
+                supplemental_plan,
                 None,
                 sources,
             );
         let graph_facts = facts.graph_view_with_supplemental(&symbol_facts);
+        let facts = facts.scoped_view_with_supplemental(&symbol_facts);
         traversal.use_check_facts(&graph_facts);
         // Playwright configs were parsed while preparing the shared report/check view. Seed
         // traversal facts before the canonical graph so invalidation cannot force a later
@@ -200,4 +206,3 @@ impl PreparedScope {
         })
     }
 }
-

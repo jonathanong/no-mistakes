@@ -1,4 +1,5 @@
 use super::*;
+use oxc_parser::Parser;
 
 #[test]
 fn top_level_type_bindings_shadow_file_fallback_references() {

@@ -116,3 +116,53 @@ fn shared_suppression_only_reads_regular_files() {
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].file, "not-a-file.ts");
 }
+
+#[test]
+#[cfg(unix)]
+fn shared_suppression_reuses_the_lexical_symlink_source_slot() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    let target = root.join("target.ts");
+    let link = root.join("link.ts");
+    std::fs::write(&target, "// no-mistakes-disable-file my-rule\n").unwrap();
+    std::os::unix::fs::symlink(&target, &link).unwrap();
+    let sources = super::source_store_for_files(std::slice::from_ref(&link));
+    assert!(sources.read_path(&link).is_ok());
+
+    let mut findings = vec![RuleFinding {
+        rule: "my-rule".to_string(),
+        file: "link.ts".to_string(),
+        line: 1,
+        message: "symlink".to_string(),
+        import: None,
+        target: None,
+    }];
+    suppress_rule_findings_with_sources(root, &mut findings, &sources);
+
+    assert!(findings.is_empty());
+    assert_eq!(sources.physical_read_count(), 1);
+}
+
+#[test]
+fn shared_suppression_uses_frozen_source_after_file_deletion() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    let path = root.join("safe.ts");
+    std::fs::write(&path, "// no-mistakes-disable-file my-rule\n").unwrap();
+    let sources = super::source_store_for_files(std::slice::from_ref(&path));
+    assert!(sources.read_path(&path).is_ok());
+    std::fs::remove_file(&path).unwrap();
+
+    let mut findings = vec![RuleFinding {
+        rule: "my-rule".to_string(),
+        file: "safe.ts".to_string(),
+        line: 1,
+        message: "deleted".to_string(),
+        import: None,
+        target: None,
+    }];
+    suppress_rule_findings_with_sources(root, &mut findings, &sources);
+
+    assert!(findings.is_empty());
+    assert_eq!(sources.physical_read_count(), 1);
+}

@@ -11,19 +11,22 @@ pub(super) fn runner_reserved_tests_from_visible(
     config: &NoMistakesConfig,
     runner: TestRunner,
     files: &[PathBuf],
+    prepared_projects: Option<Vec<crate::integration_tests::types::ConfigProject>>,
     visible_paths: &[PathBuf],
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> BTreeSet<PathBuf> {
     if runner != TestRunner::Vitest {
         return BTreeSet::new();
     }
-    let playwright_projects = projects::runner_projects_lossy_from_visible(
-        root,
-        config,
-        TestRunner::Playwright,
-        visible_paths,
-        tsconfig,
-    );
+    let playwright_projects = prepared_projects.unwrap_or_else(|| {
+        projects::runner_projects_lossy_from_visible(
+            root,
+            config,
+            TestRunner::Playwright,
+            visible_paths,
+            tsconfig,
+        )
+    });
     if playwright_projects.is_empty() {
         return BTreeSet::new();
     }

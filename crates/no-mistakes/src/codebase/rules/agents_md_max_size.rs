@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 pub const RULE_ID: &str = "agents-md-max-size";
 
 mod agents_md_max_size_budget;
-use agents_md_max_size_budget::{scan, scan_advisories, scan_with_sources};
+use agents_md_max_size_budget::{scan, scan_advisories_with_sources, scan_with_sources};
 
 const DEFAULT_MAX_LINES: usize = 200;
 const DEFAULT_MAX_CHARS: usize = 12_000;
@@ -48,6 +48,25 @@ pub fn advisories_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    advisories_with_files_inner(root, config, all_files, &sources)
+}
+
+pub fn advisories_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
+    advisories_with_files_inner(root, config, all_files, sources)
+}
+
+fn advisories_with_files_inner(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let mut advisories = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.rule_options();
@@ -69,10 +88,10 @@ pub fn advisories_with_files(
             .cloned()
             .collect();
         let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        advisories.extend(scan_advisories(root, &opts, &files)?);
+        advisories.extend(scan_advisories_with_sources(root, &opts, &files, sources)?);
     }
     super::sort_findings(&mut advisories);
-    super::suppress_rule_findings(root, &mut advisories);
+    super::suppress_rule_findings_with_sources(root, &mut advisories, sources);
     Ok(advisories)
 }
 

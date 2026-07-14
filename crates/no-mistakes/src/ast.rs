@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{BinaryExpression, BinaryOperator, Expression, Program, TemplateLiteral};
-use oxc_parser::Parser;
+use oxc_parser::{Parser, ParserReturn};
 use oxc_span::{GetSpan, SourceType, Span};
 use std::cell::RefCell;
 use std::path::Path;
@@ -93,13 +93,33 @@ pub(crate) fn record_parse_path(path: &Path) {
     let mut counts = parse_counts().lock().expect("parse-count mutex poisoned");
     let current_thread = std::thread::current().id();
     for (root, session) in counts.iter_mut() {
-        // Synthetic parses conventionally use relative sentinel paths. Keep them visible to
-        // the owning fixture counter so a parser-reuse regression cannot hide outside the
-        // fixture without collecting unrelated relative-path parses from parallel tests.
-        if path.starts_with(root) || (path.is_relative() && session.owner == current_thread) {
+        // Synthetic parses conventionally use relative sentinel paths and may run on a
+        // worker rather than the thread that opened the request observation. Only the owning
+        // thread may attribute relative sentinels; observed worker parses must use paths rooted
+        // in their request so parallel sessions cannot contaminate one another.
+        let owns_relative_parse = path.is_relative() && session.owner == current_thread;
+        if path.starts_with(root) || owns_relative_parse {
             *session.counts.entry(path.to_path_buf()).or_insert(0) += 1;
         }
     }
+}
+
+/// The single production entrypoint for invoking the OXC parser.
+///
+/// Keeping observation here makes both successful and failed parses visible to
+/// request-scoped instrumentation. Source-only compatibility APIs should pass a
+/// stable, extension-bearing relative sentinel path.
+pub(crate) fn parse<'a>(
+    path: &Path,
+    allocator: &'a Allocator,
+    source: &'a str,
+    source_type: SourceType,
+) -> ParserReturn<'a> {
+    #[cfg(any(test, feature = "test-instrumentation"))]
+    record_parse_path(path);
+    #[cfg(not(any(test, feature = "test-instrumentation")))]
+    let _ = path;
+    Parser::new(allocator, source, source_type).parse()
 }
 
 pub fn with_program<T>(
@@ -112,12 +132,10 @@ pub fn with_program<T>(
             .with_program(path, source, analyze)
             .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()));
     }
-    #[cfg(any(test, feature = "test-instrumentation"))]
-    record_parse_path(path);
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(path)
         .with_context(|| format!("unsupported JavaScript/TypeScript file: {}", path.display()))?;
-    let parsed = Parser::new(&allocator, source, source_type).parse();
+    let parsed = parse(path, &allocator, source, source_type);
 
     if parsed.panicked || !parsed.diagnostics.is_empty() {
         let detail = parsed

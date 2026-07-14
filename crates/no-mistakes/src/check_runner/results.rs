@@ -12,6 +12,7 @@ pub(crate) struct FinalizeInput<'a> {
     pub(crate) root: &'a std::path::Path,
     pub(crate) config: &'a no_mistakes::config::v2::NoMistakesConfig,
     pub(crate) filesystem_files: &'a [std::path::PathBuf],
+    pub(crate) sources: &'a no_mistakes::codebase::ts_source::SourceStore,
     pub(crate) filesystem_rules_enabled: bool,
     pub(crate) react_warning: Option<String>,
     pub(crate) discover_duration: Duration,
@@ -56,6 +57,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         root,
         config,
         filesystem_files,
+        sources,
         filesystem_rules_enabled,
         react_warning,
         discover_duration,
@@ -82,10 +84,11 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     .collect();
     rules.findings.extend(filesystem_rules.findings);
     let advisories = if filesystem_rules_enabled {
-        no_mistakes::codebase::rules::agents_md_max_size::advisories_with_files(
+        no_mistakes::codebase::rules::agents_md_max_size::advisories_with_files_and_sources(
             root,
             config,
             filesystem_files,
+            sources,
         )?
     } else {
         Vec::new()

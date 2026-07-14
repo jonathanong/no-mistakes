@@ -76,7 +76,7 @@ fn generic_fact_rule_runner_checks_server_route_client_boundary() {
         &root,
         files,
         crate::codebase::check_facts::CheckFactPlan {
-            source: true,
+            server_route_client_boundary: true,
             ..Default::default()
         },
     );
@@ -89,6 +89,31 @@ fn generic_fact_rule_runner_checks_server_route_client_boundary() {
     .unwrap();
 
     assert_eq!(findings.len(), 1);
+}
+
+#[test]
+fn prepared_boundary_facts_parse_each_source_once() {
+    let saved = fixture("fail");
+    let materialized = crate::test_support::materialize_saved_fixture(&saved);
+    let root = crate::codebase::ts_resolver::normalize_path(materialized.path());
+    crate::ast::begin_parse_count(&root);
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        files,
+        crate::codebase::check_facts::CheckFactPlan {
+            server_route_client_boundary: true,
+            ..Default::default()
+        },
+    );
+
+    let findings = check_with_facts(&root, &config(), &facts).unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(counts.get(&root.join("backend/api/users.ts")), Some(&1));
+    assert_eq!(counts.get(&root.join("backend/api/client.ts")), Some(&1));
+    assert!(counts.values().all(|count| *count == 1));
 }
 
 #[test]
@@ -189,7 +214,7 @@ fn fact_path_returns_empty_when_route_globs_are_unconfigured() {
         &root,
         files,
         crate::codebase::check_facts::CheckFactPlan {
-            source: true,
+            server_route_client_boundary: true,
             ..Default::default()
         },
     );
@@ -209,7 +234,7 @@ fn fact_path_returns_empty_when_no_route_directory_matches() {
         &root,
         files,
         crate::codebase::check_facts::CheckFactPlan {
-            source: true,
+            server_route_client_boundary: true,
             ..Default::default()
         },
     );
@@ -220,7 +245,7 @@ fn fact_path_returns_empty_when_no_route_directory_matches() {
 }
 
 #[test]
-fn fact_path_errors_when_source_facts_are_missing() {
+fn fact_path_errors_when_boundary_facts_are_missing() {
     let root = fixture("fail");
     let files = crate::codebase::ts_source::discover_files(&root, &[]);
     let facts = crate::codebase::check_facts::collect_check_facts(
@@ -231,7 +256,7 @@ fn fact_path_errors_when_source_facts_are_missing() {
 
     let err = check_with_facts(&root, &config(), &facts).unwrap_err();
 
-    assert!(err.to_string().contains("requires source facts"));
+    assert!(err.to_string().contains("requires boundary facts"));
 }
 
 #[test]
@@ -379,8 +404,10 @@ fn invalid_typescript_is_ignored_by_ast_helpers() {
     let path = fixture("invalid").join("backend/api/broken.ts");
     let source = std::fs::read_to_string(&path).unwrap();
 
-    assert!(!ast::has_server_like_route_call(&path, &source));
-    assert!(ast::client_call_lines(&path, &source).is_empty());
+    assert!(!ast::test_support::has_server_like_route_call(
+        &path, &source
+    ));
+    assert!(ast::test_support::client_call_lines(&path, &source).is_empty());
 }
 
 #[test]
@@ -388,9 +415,11 @@ fn adversarial_client_shapes_are_detected_without_routes() {
     let path = fixture("adversarial").join("backend/api/mixed.ts");
     let source = std::fs::read_to_string(&path).unwrap();
 
-    assert!(!ast::has_server_like_route_call(&path, &source));
+    assert!(!ast::test_support::has_server_like_route_call(
+        &path, &source
+    ));
     assert_eq!(
-        ast::client_call_lines(&path, &source),
+        ast::test_support::client_call_lines(&path, &source),
         vec![11, 13, 14, 17, 29, 36, 39, 48]
     );
 }
@@ -401,9 +430,12 @@ fn ast_helpers_fallback_to_typescript_for_unknown_extensions() {
     let source = std::fs::read_to_string(&source_path).unwrap();
     let unknown_path = Path::new("mixed.unknown");
 
-    assert!(!ast::has_server_like_route_call(unknown_path, &source));
+    assert!(!ast::test_support::has_server_like_route_call(
+        unknown_path,
+        &source
+    ));
     assert_eq!(
-        ast::client_call_lines(unknown_path, &source),
+        ast::test_support::client_call_lines(unknown_path, &source),
         vec![11, 13, 14, 17, 29, 36, 39, 48]
     );
 }
@@ -416,7 +448,7 @@ fn detects_commonjs_clients_and_fact_path() {
         &root,
         files,
         crate::codebase::check_facts::CheckFactPlan {
-            source: true,
+            server_route_client_boundary: true,
             ..Default::default()
         },
     );

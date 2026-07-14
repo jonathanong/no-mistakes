@@ -57,7 +57,13 @@ pub fn extract_symbols(source: &str, is_tsx: bool) -> Result<FileSymbols> {
     } else {
         SourceType::ts()
     };
-    let ret = Parser::new(&allocator, source, source_type).parse();
+    let sentinel = if is_tsx { "symbols.tsx" } else { "symbols.ts" };
+    let ret = crate::ast::parse(
+        std::path::Path::new(sentinel),
+        &allocator,
+        source,
+        source_type,
+    );
     if ret.panicked {
         let detail = ret
             .diagnostics

@@ -19,6 +19,8 @@ pub(crate) fn collect_dotnet_facts(
     all_files: &[PathBuf],
     projects: &[DotnetConfigProject],
 ) -> DotnetFactMap {
+    #[cfg(any(test, feature = "test-instrumentation"))]
+    test_support::record_fact_collection(root);
     if projects.is_empty() {
         return DotnetFactMap::default();
     }
@@ -113,5 +115,7 @@ pub(super) fn msbuild_path(raw: &str) -> PathBuf {
     PathBuf::from(raw.replace('\\', "/"))
 }
 
+#[cfg(any(test, feature = "test-instrumentation"))]
+pub mod test_support;
 #[cfg(test)]
 mod tests;

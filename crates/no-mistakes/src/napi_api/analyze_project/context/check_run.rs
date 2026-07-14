@@ -49,7 +49,7 @@ impl SharedCheckContext {
         dependency_graph: Option<&std::sync::Arc<crate::codebase::dependencies::graph::DepGraph>>,
     ) -> Result<crate::check_runner::CheckResults> {
         use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
-        use crate::codebase::rules::agents_md_max_size::advisories_with_files;
+        use crate::codebase::rules::agents_md_max_size::advisories_with_files_and_sources;
 
         if self.fact_files.is_empty()
             && self.graph_files.is_empty()
@@ -60,6 +60,7 @@ impl SharedCheckContext {
             return Ok(crate::check_runner::empty_results([None]));
         }
         let config = &self.prepared.config;
+        let sources = self.prepared.visible_paths.source_store_for(&self.root);
         let (react, queues, rules, integration, codebase, filesystem_rules) =
             run_domain_checks(DomainCheckInputs {
                 root: &self.root,
@@ -77,7 +78,7 @@ impl SharedCheckContext {
                 dependency_graph: dependency_graph.cloned(),
                 prepared_tsconfig: &self.prepared.tsconfig,
                 visible_paths: self.prepared.visible_paths.as_ref(),
-                sources: self.prepared.visible_paths.source_store_for(&self.root),
+                sources: std::sync::Arc::clone(&sources),
                 inferred_roots: &self.prepared.inferred_roots,
                 config,
                 codebase_config: &self.prepared.codebase_config,
@@ -105,7 +106,7 @@ impl SharedCheckContext {
         .flatten()
         .collect();
         let advisories = if self.filesystem_rules_enabled {
-            advisories_with_files(&self.root, config, &self.fs_files)?
+            advisories_with_files_and_sources(&self.root, config, &self.fs_files, &sources)?
         } else {
             Vec::new()
         };

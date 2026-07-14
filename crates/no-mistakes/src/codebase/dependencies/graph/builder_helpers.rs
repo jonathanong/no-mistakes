@@ -7,8 +7,10 @@ struct GraphEdgeBuildInputs<'a> {
     config_options: Option<&'a GraphConfigOptions>,
     playwright_settings: Option<&'a crate::playwright::config::Settings>,
     config_path: Option<&'a Path>,
+    dotnet_facts: Option<&'a crate::codebase::dotnet::DotnetFactMap>,
     swift_facts: Option<&'a crate::codebase::swift::SwiftFactMap>,
     import_resolution_cache: Option<&'a crate::codebase::ts_resolver::ImportResolutionCache>,
+    visible_paths: Option<&'a crate::codebase::ts_source::VisiblePathSnapshot>,
 }
 
 fn merge_http_process_edges(
@@ -79,8 +81,12 @@ fn merge_dotnet_edges(
         return;
     }
 
-    let dotnet_edges =
-        collect_dotnet_edges(inputs.root, &inputs.graph_files.all, inputs.config_options);
+    let dotnet_edges = collect_dotnet_edges(
+        inputs.root,
+        &inputs.graph_files.all,
+        inputs.config_options,
+        inputs.dotnet_facts,
+    );
     for (from, to, _) in &dotnet_edges {
         forward.entry(from.clone()).or_default();
         forward.entry(to.clone()).or_default();

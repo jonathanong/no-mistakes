@@ -2,6 +2,7 @@ fn collect_dotnet_edges(
     root: &Path,
     all_files: &[PathBuf],
     config_options: Option<&GraphConfigOptions>,
+    prepared_facts: Option<&crate::codebase::dotnet::DotnetFactMap>,
 ) -> Vec<Edge> {
     let Some(config_options) = config_options else {
         return Vec::new();
@@ -9,19 +10,24 @@ fn collect_dotnet_edges(
     if config_options.dotnet_projects.is_empty() {
         return Vec::new();
     }
-    let facts = crate::codebase::dotnet::collect_dotnet_facts(
-        root,
-        all_files,
-        &config_options.dotnet_projects,
-    );
+    let owned_facts = prepared_facts.is_none().then(|| {
+        crate::codebase::dotnet::collect_dotnet_facts(
+            root,
+            all_files,
+            &config_options.dotnet_projects,
+        )
+    });
+    let facts = prepared_facts
+        .or(owned_facts.as_ref())
+        .expect("Dotnet facts are prepared or collected");
     if facts.files.is_empty() {
         return Vec::new();
     }
 
     let mut edges = Vec::new();
-    collect_dotnet_using_edges(&facts, &mut edges);
-    collect_dotnet_reference_edges(&facts, &mut edges);
-    collect_dotnet_project_edges(&facts, &mut edges);
+    collect_dotnet_using_edges(facts, &mut edges);
+    collect_dotnet_reference_edges(facts, &mut edges);
+    collect_dotnet_project_edges(facts, &mut edges);
     edges
 }
 
@@ -59,9 +65,12 @@ fn collect_dotnet_project_edges(
         let Some(source_files) = facts.files_by_project.get(&project.project_path) else {
             continue;
         };
-        let test_files = source_files
-            .iter()
-            .filter(|path| facts.files.get(*path).is_some_and(|file| file.has_xunit_tests));
+        let test_files = source_files.iter().filter(|path| {
+            facts
+                .files
+                .get(*path)
+                .is_some_and(|file| file.has_xunit_tests)
+        });
         for reference in &project.project_references {
             if let Some(target_files) = facts.files_by_project.get(reference) {
                 for source in test_files.clone() {

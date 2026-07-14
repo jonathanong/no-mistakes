@@ -12,7 +12,6 @@ use oxc_ast::ast::{
     VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
-use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::collections::HashSet;
 use std::path::Path;
@@ -91,7 +90,12 @@ impl ImportExtractor {
         } else {
             SourceType::ts()
         };
-        let ret = Parser::new(&allocator, source, source_type).parse();
+        let sentinel = if self.is_tsx {
+            "imports.tsx"
+        } else {
+            "imports.ts"
+        };
+        let ret = crate::ast::parse(Path::new(sentinel), &allocator, source, source_type);
 
         Ok(extract_import_facts_from_program_with_source(&ret.program, source).imports)
     }

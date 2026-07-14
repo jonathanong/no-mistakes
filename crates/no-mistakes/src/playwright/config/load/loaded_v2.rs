@@ -20,7 +20,7 @@ pub(super) fn settings_from_v2(
         .clone()
         .unwrap_or_else(|| default_frontend_root(root, view.nextjs_root(), &root_paths));
     let playwright_configs =
-        helpers::playwright_configs_from_v2(root, &view, cli_playwright_configs, &root_paths)?;
+        helpers::playwright_configs_from_v2(root, &view, cli_playwright_configs, visible_paths)?;
     let selector_attributes = if view.test_id_attributes().is_empty() {
         helpers::default_selector_attributes()
     } else {

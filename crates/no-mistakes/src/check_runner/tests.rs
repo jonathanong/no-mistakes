@@ -330,13 +330,14 @@ fn integration_configured_covers_vitest_and_playwright_suites() {
 }
 
 #[test]
-fn fact_plan_keeps_boundary_only_rules_to_source_facts() {
+fn fact_plan_keeps_boundary_only_rules_to_boundary_facts() {
     let boundary_only = fact_plan(EnabledChecks {
         boundary_rules: true,
         ..Default::default()
     });
 
-    assert!(boundary_only.source);
+    assert!(boundary_only.server_route_client_boundary);
+    assert!(!boundary_only.source);
     assert!(!boundary_only.imports);
     assert!(!boundary_only.dynamic_imports);
 

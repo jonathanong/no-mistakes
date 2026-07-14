@@ -6,7 +6,6 @@ use oxc_ast::ast::{
     JSXAttributeValue, JSXChild, JSXElement, JSXExpression, ObjectPropertyKind, Program,
     PropertyKey, Statement, TemplateLiteral, VariableDeclarationKind,
 };
-use oxc_parser::Parser;
 use oxc_span::SourceType;
 use oxc_syntax::operator::BinaryOperator;
 use std::collections::{BTreeSet, HashMap, HashSet};

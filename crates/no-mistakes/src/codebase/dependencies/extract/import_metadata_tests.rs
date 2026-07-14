@@ -1,4 +1,5 @@
 use super::*;
+use oxc_parser::Parser;
 
 fn ts_extractor() -> ImportExtractor {
     ImportExtractor::for_typescript().unwrap()

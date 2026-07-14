@@ -11,7 +11,7 @@ pub(super) fn playwright_configs_from_v2(
     root: &Path,
     view: &ConfigView,
     cli_playwright_configs: &[PathBuf],
-    visible_paths: &[PathBuf],
+    visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> Result<Vec<PathBuf>> {
     if !cli_playwright_configs.is_empty() {
         return Ok(cli_playwright_configs
@@ -25,7 +25,7 @@ pub(super) fn playwright_configs_from_v2(
             .map(|path| resolve(root, Path::new(path)))
             .collect());
     }
-    find_default_playwright_configs_from_visible(root, visible_paths)
+    find_default_playwright_configs_from_snapshot(root, visible_paths)
 }
 
 pub(super) fn has_v2_playwright_settings(config: &NoMistakesConfig) -> bool {
@@ -49,9 +49,18 @@ fn is_v2_playwright_configured(playwright: &PlaywrightTestConfig) -> bool {
         || playwright.ignore_routes.is_some()
 }
 
-pub(super) fn find_default_playwright_configs_from_visible(
+pub(super) fn find_default_playwright_configs_from_snapshot(
+    root: &Path,
+    snapshot: &crate::playwright::fsutil::VisiblePathSnapshot,
+) -> Result<Vec<PathBuf>> {
+    let sources = snapshot.source_store_for(root);
+    find_default_playwright_configs(root, &sources.inventory().paths(), sources.inventory())
+}
+
+fn find_default_playwright_configs(
     root: &Path,
     visible_paths: &[PathBuf],
+    inventory: &crate::codebase::ts_source::FileInventory,
 ) -> Result<Vec<PathBuf>> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut configs: Vec<PathBuf> = visible_paths
@@ -61,7 +70,11 @@ pub(super) fn find_default_playwright_configs_from_visible(
         })
         .filter(|path| path.file_name().is_some_and(is_playwright_config_name))
         // Follow a visible symlink, preserving the existing config-file policy.
-        .filter(|path| path.is_file())
+        .filter(|path| {
+            inventory
+                .classification_for_path(path)
+                .is_some_and(crate::codebase::ts_source::FileClassification::target_is_file)
+        })
         .cloned()
         .collect();
     configs.sort();

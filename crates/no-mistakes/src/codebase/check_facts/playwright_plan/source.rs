@@ -23,10 +23,12 @@ impl PlaywrightFactPlan {
         scan_html_ids: bool,
         snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
     ) -> anyhow::Result<()> {
-        let visible_files = snapshot
-            .paths_for(root)
+        let sources = snapshot.source_store_for(root);
+        let visible_files = sources
+            .inventory()
+            .paths()
             .iter()
-            .map(|path| crate::codebase::ts_resolver::normalize_path(path))
+            .cloned()
             .collect::<HashSet<_>>();
         let playwright_configs = settings
             .playwright_configs
@@ -38,7 +40,10 @@ impl PlaywrightFactPlan {
             .iter()
             .filter(|path| {
                 crate::codebase::dependencies::extract::is_indexable(path)
-                    && path.is_file()
+                    && sources
+                        .inventory()
+                        .classification_for_path(path)
+                        .is_some_and(crate::codebase::ts_source::FileClassification::target_is_file)
                     && !playwright_configs.contains(*path)
             })
             .cloned()

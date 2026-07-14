@@ -3,15 +3,21 @@
 /// `builder.rs`'s `build_with_plan_files_config_and_facts` purely to stay under
 /// the 200-code-line-per-file cap after adding per-edge-kind timing — no
 /// behavior change, this is the same sequence that used to live inline there.
+struct EdgeMaps<'a> {
+    forward: &'a mut EdgeMap,
+    reverse: &'a mut EdgeMap,
+}
+
 fn collect_and_merge_all_edges(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
+    playwright_snapshot: Option<&crate::playwright::fsutil::VisiblePathSnapshot>,
     facts: Option<&dyn TsFactLookup>,
     resolver: &ImportResolver<'_>,
     parsed_imports: &ParsedImports<'_>,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    forward: &mut EdgeMap,
-    reverse: &mut EdgeMap,
+    maps: EdgeMaps<'_>,
 ) -> Result<()> {
+    let EdgeMaps { forward, reverse } = maps;
     let root = edge_inputs.root;
     let tsconfig = edge_inputs.tsconfig;
     let plan = edge_inputs.plan;
@@ -20,10 +26,6 @@ fn collect_and_merge_all_edges(
     let playwright_settings = edge_inputs.playwright_settings;
     let config_path = edge_inputs.config_path;
     let files = &graph_files.indexable;
-    let playwright_snapshot = (plan.playwright_routes || plan.playwright_selectors).then(|| {
-        crate::playwright::fsutil::VisiblePathSnapshot::from_paths(root, graph_files.all())
-    });
-
     crate::perf_trace::trace("graph.imports", || {
         if plan.imports {
             let import_edges =
@@ -142,7 +144,7 @@ fn collect_and_merge_all_edges(
 
     crate::perf_trace::trace("graph.playwright_routes", || -> Result<()> {
         if plan.playwright_routes {
-            let Some(snapshot) = playwright_snapshot.as_ref() else {
+            let Some(snapshot) = playwright_snapshot else {
                 anyhow::bail!("Playwright graph plan requires a visible-path snapshot");
             };
             let playwright_edges = collect_playwright_route_edges_from_snapshot(

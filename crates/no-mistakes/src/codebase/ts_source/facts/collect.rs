@@ -4,7 +4,6 @@ use crate::codebase::dependencies::extract::{
 };
 use crate::codebase::ts_symbols::extract_symbols_from_program;
 use oxc_allocator::Allocator;
-use oxc_parser::Parser;
 use oxc_span::SourceType;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
@@ -59,11 +58,9 @@ pub(crate) fn collect_file_facts_with_sources(
             });
         }
     };
-    #[cfg(any(test, feature = "test-instrumentation"))]
-    crate::ast::record_parse_path(path);
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(path).unwrap_or_else(|_| SourceType::ts());
-    let parsed = Parser::new(&allocator, &source, source_type).parse();
+    let parsed = crate::ast::parse(path, &allocator, &source, source_type);
     let parse_error = if parsed.panicked || !parsed.diagnostics.is_empty() {
         Some(crate::codebase::ts_source::format_parse_diagnostic(
             path,

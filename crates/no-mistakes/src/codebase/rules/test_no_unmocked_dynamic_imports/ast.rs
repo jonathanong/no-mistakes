@@ -4,7 +4,6 @@ use oxc_ast::ast::{
     Argument, CallExpression, Expression, ImportExpression, Program, TemplateLiteral,
 };
 use oxc_ast_visit::{walk, Visit};
-use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::collections::HashSet;
 use std::path::Path;
@@ -27,7 +26,7 @@ pub fn extract(path: &Path, source: &str) -> Result<TestFacts> {
         "unsupported JavaScript/TypeScript file: {}",
         path.display()
     ))?;
-    let parsed = Parser::new(&allocator, source, source_type).parse();
+    let parsed = crate::ast::parse(path, &allocator, source, source_type);
     Ok(extract_program(source, &parsed.program))
 }
 

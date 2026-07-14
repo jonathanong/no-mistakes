@@ -70,7 +70,7 @@ pub use vitest_project_catalog::{prepare_vitest_project_catalog, PreparedVitestP
 pub(crate) use file_matching::matching_files;
 pub(crate) use suppression::{
     suppress_rule_findings, suppress_rule_findings_with_source,
-    suppress_rule_findings_with_sources_except,
+    suppress_rule_findings_with_sources, suppress_rule_findings_with_sources_except,
 };
 
 pub(crate) fn source_store_for_files(

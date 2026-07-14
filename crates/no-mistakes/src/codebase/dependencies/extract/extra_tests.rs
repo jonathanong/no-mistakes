@@ -1,4 +1,5 @@
 use super::*;
+use oxc_parser::Parser;
 
 #[test]
 fn inline_function_like_members_record_parameters_and_type_parameters() {

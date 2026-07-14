@@ -31,9 +31,8 @@ pub fn discover_files_preserving_roots_from_visible(
         let extra_skip: HashSet<&str> = extra_skip.iter().map(String::as_str).collect();
         return visible_files
             .iter()
-            .map(|path| normalize_discovery_path(path))
+            .map(|path| normalized_visible_path(path))
             .filter(|path| path.starts_with(&root))
-            .filter(|path| path.exists())
             .filter(|path| !is_under_skipped_dir(&root, path, &extra_skip))
             .collect();
     }
@@ -41,9 +40,8 @@ pub fn discover_files_preserving_roots_from_visible(
     let extra_skip: HashSet<&str> = extra_skip.iter().map(String::as_str).collect();
     visible_files
         .iter()
-        .map(|path| normalize_discovery_path(path))
+        .map(|path| normalized_visible_path(path))
         .filter(|path| path.starts_with(&root))
-        .filter(|p| p.exists())
         .filter(|p| {
             !is_under_skipped_dir(&root, p, &extra_skip)
                 || preserved_roots

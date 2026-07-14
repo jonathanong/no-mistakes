@@ -79,6 +79,13 @@ spawns, and future extractors should be visitors/fact producers or graph edge
 producers. They should not be independent full-codebase scanners when their
 input can come from the shared fact pass.
 
+All production OXC parsing goes through the observable parser entrypoint in
+`ast`. Check-only analyses may store compact owned fields in `CheckFileFacts`;
+for example, the server-route client-boundary rule derives its route-shape bit
+and client-call lines from the same `Program` used by graph and React facts.
+Compatibility wrappers may still accept source text, but must delegate to that
+parser entrypoint and then to the corresponding Program-based extractor.
+
 Acceptable exceptions:
 
 1. Non-TS/JS inputs such as Markdown, package manifests, and CI YAML may have

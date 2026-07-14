@@ -1,6 +1,5 @@
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Program;
-use oxc_parser::Parser;
 use oxc_span::SourceType;
 
 mod walk;
@@ -24,7 +23,12 @@ pub struct HttpCall {
 pub fn extract_http_calls(source: &str, prefixes: &[&str]) -> Vec<HttpCall> {
     let allocator = Allocator::default();
     let source_type = SourceType::tsx();
-    let ret = Parser::new(&allocator, source, source_type).parse();
+    let ret = crate::ast::parse(
+        std::path::Path::new("ts-http-calls.tsx"),
+        &allocator,
+        source,
+        source_type,
+    );
     extract_http_calls_from_program(&ret.program, source, prefixes)
 }
 

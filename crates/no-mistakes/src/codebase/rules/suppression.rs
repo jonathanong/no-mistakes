@@ -15,6 +15,14 @@ pub(crate) fn suppress_rule_findings_with_sources_except(
     suppress_rule_findings_inner(root, findings, Some(sources), already_suppressed_rules);
 }
 
+pub(crate) fn suppress_rule_findings_with_sources(
+    root: &Path,
+    findings: &mut Vec<RuleFinding>,
+    sources: &crate::codebase::ts_source::SourceStore,
+) {
+    suppress_rule_findings_inner(root, findings, Some(sources), &[]);
+}
+
 pub(crate) fn suppress_rule_findings_with_source(findings: &mut Vec<RuleFinding>, source: &str) {
     findings.retain(|finding| !finding_is_suppressed(source, finding));
 }
@@ -25,21 +33,37 @@ fn suppress_rule_findings_inner(
     request_sources: Option<&crate::codebase::ts_source::SourceStore>,
     already_suppressed_rules: &[&str],
 ) {
-    let Some(root) = std::fs::canonicalize(root).ok() else {
+    let lexical_root = crate::codebase::ts_source::normalize_discovery_path(root);
+    let canonical_root = request_sources
+        .is_none()
+        .then(|| std::fs::canonicalize(&lexical_root).ok())
+        .flatten();
+    if request_sources.is_none() && canonical_root.is_none() {
         return;
-    };
+    }
     let mut sources: HashMap<String, Option<std::sync::Arc<str>>> = HashMap::new();
     findings.retain(|finding| {
         if already_suppressed_rules.contains(&finding.rule.as_str()) {
             return true;
         }
         let source = sources.entry(finding.file.clone()).or_insert_with(|| {
-            source_path_for_finding(&root, &finding.file).and_then(|path| match request_sources {
+            let relative = safe_relative_finding_path(&finding.file)?;
+            let candidate = lexical_root.join(relative);
+            let path = match request_sources {
+                Some(sources) => sources.validated_regular_path(&lexical_root, &candidate),
+                None => source_path_for_candidate(
+                    canonical_root
+                        .as_deref()
+                        .expect("raw suppression canonicalizes root"),
+                    candidate,
+                ),
+            }?;
+            match request_sources {
                 Some(sources) => super::read_source(sources, &path),
                 None => std::fs::read_to_string(path)
                     .ok()
                     .map(std::sync::Arc::<str>::from),
-            })
+            }
         });
         !source
             .as_deref()
@@ -47,7 +71,7 @@ fn suppress_rule_findings_inner(
     });
 }
 
-fn source_path_for_finding(root: &Path, file: &str) -> Option<PathBuf> {
+fn safe_relative_finding_path(file: &str) -> Option<&Path> {
     let path = Path::new(file);
     if path.is_absolute()
         || path.components().any(|component| {
@@ -61,9 +85,13 @@ fn source_path_for_finding(root: &Path, file: &str) -> Option<PathBuf> {
     {
         return None;
     }
-    let candidate = std::fs::canonicalize(root.join(path)).ok()?;
-    let metadata = std::fs::metadata(&candidate).ok()?;
-    (candidate.starts_with(root) && metadata.is_file()).then_some(candidate)
+    Some(path)
+}
+
+fn source_path_for_candidate(canonical_root: &Path, candidate: PathBuf) -> Option<PathBuf> {
+    let canonical_candidate = std::fs::canonicalize(&candidate).ok()?;
+    let metadata = std::fs::metadata(&canonical_candidate).ok()?;
+    (canonical_candidate.starts_with(canonical_root) && metadata.is_file()).then_some(candidate)
 }
 
 fn finding_is_suppressed(source: &str, finding: &RuleFinding) -> bool {

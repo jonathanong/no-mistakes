@@ -55,6 +55,26 @@ fn preserving_roots_from_visible_reuses_the_supplied_snapshot() {
 }
 
 #[test]
+fn filtered_views_keep_files_deleted_after_the_snapshot() {
+    let dir = TempDir::new().unwrap();
+    let path = dir.path().join("src/main.mts");
+    write(dir.path(), "src/main.mts", "");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
+    let visible = snapshot.paths_for(dir.path());
+    std::fs::remove_file(&path).unwrap();
+
+    // The frozen inventory remains authoritative. SourceStore owns the later
+    // read failure and memoizes it for every consumer in this request.
+    assert_eq!(
+        crate::codebase::ts_source::discover_files_from_visible(dir.path(), &[], &visible),
+        vec![path.clone()]
+    );
+    assert!(snapshot
+        .classification_for(dir.path(), &path)
+        .is_some_and(crate::codebase::ts_source::FileClassification::is_lexical_file));
+}
+
+#[test]
 fn preserved_root_discovery_matches_non_git_hidden_file_semantics() {
     let dir = crate::test_support::materialize_gitignore_fixture("non-git-discovery");
     let visible = crate::codebase::ts_source::discover_files(dir.path(), &[]);
@@ -172,4 +192,28 @@ fn visible_snapshot_reuses_the_inventory_and_source_store_for_each_scope() {
     let first = request_store.read_path(&source_path).unwrap();
     let second = request_store.read_path(&source_path).unwrap();
     assert!(std::sync::Arc::ptr_eq(&first, &second));
+}
+
+#[test]
+fn visible_snapshot_classifies_nested_git_scope_once() {
+    let dir = TempDir::new().unwrap();
+    git_init(dir.path());
+    write(dir.path(), "root.ts", "");
+    git_add_all(dir.path());
+    let nested = dir.path().join("packages/nested");
+    std::fs::create_dir_all(&nested).unwrap();
+    git_init(&nested);
+    write(&nested, "src/nested.ts", "");
+    git_add_all(&nested);
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
+
+    let first = snapshot.source_store_for(&nested);
+    let second = snapshot.source_store_for(&nested);
+    let nested_file = nested.join("src/nested.ts");
+
+    assert!(std::sync::Arc::ptr_eq(&first, &second));
+    assert!(first
+        .inventory()
+        .classification_for_path(&nested_file)
+        .is_some_and(crate::codebase::ts_source::FileClassification::is_lexical_file));
 }

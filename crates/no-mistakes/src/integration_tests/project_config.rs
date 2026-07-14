@@ -45,6 +45,11 @@ pub(crate) fn load_projects_from_visible(
     visible_paths: &[std::path::PathBuf],
     tsconfig: &TsConfig,
 ) -> Result<Vec<ConfigProject>> {
+    // Keep every path used for config-relative glob prefixing in the same
+    // lexical form. Callers may pass roots containing `..`, while the frozen
+    // visible inventory is canonicalized during discovery.
+    let normalized_root = crate::codebase::ts_resolver::normalize_path(root);
+    let root = normalized_root.as_path();
     let visible_files = visible_paths
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
@@ -56,8 +61,8 @@ pub(crate) fn load_projects_from_visible(
     };
     let mut projects = Vec::new();
     for raw in config_values {
-        let path = root.join(&raw);
-        if !path.exists() {
+        let path = crate::codebase::ts_resolver::normalize_path(&root.join(&raw));
+        if !visible_files.contains(&path) {
             anyhow::bail!(
                 "{} config does not exist: {}",
                 framework.as_str(),
@@ -82,7 +87,7 @@ pub(crate) fn load_projects_from_visible(
     Ok(projects)
 }
 
-pub(super) fn discovered_config_paths(
+pub(crate) fn discovered_config_paths(
     root: &Path,
     framework: Framework,
     visible_paths: &[std::path::PathBuf],

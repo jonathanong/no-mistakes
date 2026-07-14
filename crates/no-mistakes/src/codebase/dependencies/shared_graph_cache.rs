@@ -88,6 +88,9 @@ struct CanonicalGraphBuild<'a> {
     prepared_graph: &'a graph::PreparedGraphConfig,
     facts: Option<&'a dyn graph::TsFactLookup>,
     import_resolution_cache: &'a crate::codebase::ts_resolver::ImportResolutionCache,
+    dotnet_facts: Option<&'a crate::codebase::dotnet::DotnetFactMap>,
+    swift_facts: Option<&'a crate::codebase::swift::SwiftFactMap>,
+    visible_paths: &'a crate::codebase::ts_source::VisiblePathSnapshot,
 }
 
 fn build_canonical_graph(input: CanonicalGraphBuild<'_>) -> Result<graph::DepGraph> {
@@ -101,6 +104,9 @@ fn build_canonical_graph(input: CanonicalGraphBuild<'_>) -> Result<graph::DepGra
             prepared: input.prepared_graph,
             facts: input.facts,
             import_resolution_cache: Some(input.import_resolution_cache),
+            dotnet_facts: input.dotnet_facts,
+            swift_facts: input.swift_facts,
+            visible_paths: Some(input.visible_paths),
         },
     )
 }

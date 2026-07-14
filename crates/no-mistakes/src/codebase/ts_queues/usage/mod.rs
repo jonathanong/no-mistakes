@@ -4,7 +4,6 @@ use oxc_ast::ast::{
     Argument, ArrayExpressionElement, CallExpression, Expression, FunctionBody,
     ImportDeclarationSpecifier, ObjectPropertyKind, Program, Statement,
 };
-use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::collections::HashMap;
 include!("types.rs");

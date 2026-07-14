@@ -21,6 +21,7 @@ pub use filters::{fallback_test_path, ProjectTestFilter};
 use ownership::owning_projects;
 pub use targets::TestExecutionTarget;
 pub use types::{DiscoveredTests, TestRunner};
+include!("test_discovery/preparation_plan.rs");
 include!("test_discovery/prepared.rs");
 include!("test_discovery/api.rs");
 
@@ -40,6 +41,7 @@ fn discover_from_projects_from_visible(
     config: &NoMistakesConfig,
     runner: TestRunner,
     projects: Vec<ConfigProject>,
+    prepared_reserved_projects: Option<Vec<ConfigProject>>,
     visible_paths: &[PathBuf],
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> Result<DiscoveredTests> {
@@ -99,6 +101,7 @@ fn discover_from_projects_from_visible(
             targets_by_path,
             project_scoped_paths,
         },
+        prepared_reserved_projects,
         visible_paths,
         tsconfig,
     ))
@@ -129,6 +132,7 @@ fn discover_with_fallback(
     config: &NoMistakesConfig,
     runner: TestRunner,
     state: ProjectDiscoveryState,
+    prepared_reserved_projects: Option<Vec<ConfigProject>>,
     visible_paths: &[PathBuf],
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> DiscoveredTests {
@@ -143,6 +147,7 @@ fn discover_with_fallback(
         config,
         runner,
         &files,
+        prepared_reserved_projects,
         visible_paths,
         tsconfig,
     );

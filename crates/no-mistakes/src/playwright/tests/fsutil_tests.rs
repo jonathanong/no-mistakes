@@ -236,6 +236,25 @@ fn walk_files_prefers_git_visible_files_over_gitignored_directory() {
     assert_eq!(files, vec![".gitignore", "src/App.tsx"]);
 }
 
+#[test]
+#[cfg(unix)]
+fn walk_files_uses_frozen_non_following_symlink_classification() {
+    let dir = TempDir::new().unwrap();
+    write(dir.path(), "src/target.tsx", "");
+    std::os::unix::fs::symlink(
+        dir.path().join("src/target.tsx"),
+        dir.path().join("src/link.tsx"),
+    )
+    .unwrap();
+    let snapshot = VisiblePathSnapshot::new(dir.path());
+    std::fs::remove_file(dir.path().join("src/target.tsx")).unwrap();
+
+    let files = walk_files_from_snapshot(dir.path(), &snapshot);
+
+    assert!(files.contains(&dir.path().join("src/target.tsx")));
+    assert!(!files.contains(&dir.path().join("src/link.tsx")));
+}
+
 /// The git-derived path still applies `is_skipped_dir`: a directory on the
 /// hardcoded denylist must be excluded even when git tracks it directly
 /// (i.e. it is not merely relying on `.gitignore` to prune it).

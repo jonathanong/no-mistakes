@@ -1,7 +1,6 @@
 use anyhow::Context;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Program;
-use oxc_parser::Parser;
 use oxc_span::SourceType;
 use self_cell::self_cell;
 use std::cell::RefCell;
@@ -79,10 +78,8 @@ fn parse_program(path: &Path, source: &str) -> Result<CachedProgram, String> {
         source: source.to_string(),
         source_type,
     };
-    #[cfg(any(test, feature = "test-instrumentation"))]
-    crate::ast::record_parse_path(path);
     CachedProgram::try_new(owner, |owner| {
-        let parsed = Parser::new(&owner.allocator, &owner.source, owner.source_type).parse();
+        let parsed = crate::ast::parse(path, &owner.allocator, &owner.source, owner.source_type);
         let parse_error = if parsed.panicked || !parsed.diagnostics.is_empty() {
             let detail = parsed
                 .diagnostics
