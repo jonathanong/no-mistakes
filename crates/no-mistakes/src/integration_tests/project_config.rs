@@ -2,29 +2,14 @@ use super::test_config;
 use super::types::{ConfigProject, Framework};
 use crate::codebase::ts_resolver::TsConfig;
 use crate::config::v2::schema::StringOrList;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use std::collections::HashSet;
 use std::path::Path;
 
+mod discovery;
 mod globs;
+pub(crate) use discovery::discovered_config_paths;
 pub(crate) use globs::{build_globset, prefix_globs};
-
-const PLAYWRIGHT_CONFIGS: &[&str] = &[
-    "playwright.config.ts",
-    "playwright.config.mts",
-    "playwright.config.cts",
-    "playwright.config.js",
-    "playwright.config.mjs",
-    "playwright.config.cjs",
-];
-const VITEST_CONFIGS: &[&str] = &[
-    "vitest.config.ts",
-    "vitest.config.mts",
-    "vitest.config.cts",
-    "vitest.config.js",
-    "vitest.config.mjs",
-    "vitest.config.cjs",
-];
 
 pub(crate) fn load_projects(
     root: &Path,
@@ -50,12 +35,21 @@ pub(crate) fn load_projects_from_visible(
     // visible inventory is canonicalized during discovery.
     let normalized_root = crate::codebase::ts_resolver::normalize_path(root);
     let root = normalized_root.as_path();
-    let visible_files = visible_paths
+    let mut visible_files = visible_paths
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
         .collect::<HashSet<_>>();
     let config_values = if let Some(configs) = configs {
-        configs.values()
+        let config_values = configs.values();
+        // Explicit runner configs are authoritative even when Git ignores
+        // them. Authorize only those config paths in this local parse view;
+        // ignored helpers remain outside the frozen visible file set.
+        visible_files.extend(
+            config_values
+                .iter()
+                .map(|raw| crate::codebase::ts_resolver::normalize_path(&root.join(raw))),
+        );
+        config_values
     } else {
         discovered_config_paths(root, framework, visible_paths)
     };
@@ -69,7 +63,14 @@ pub(crate) fn load_projects_from_visible(
                 path.display()
             );
         }
-        let source = crate::integration_tests::runner_config::read_request_source(&path)?;
+        let source = crate::integration_tests::runner_config::read_request_source(&path)
+            .with_context(|| {
+                format!(
+                    "{} config does not exist: {}",
+                    framework.as_str(),
+                    path.display()
+                )
+            })?;
         let config_dir = path.parent().unwrap_or(root);
         projects.extend(load_config_projects_inner(
             ConfigProjectInput {
@@ -85,29 +86,6 @@ pub(crate) fn load_projects_from_visible(
         )?);
     }
     Ok(projects)
-}
-
-pub(crate) fn discovered_config_paths(
-    root: &Path,
-    framework: Framework,
-    visible_paths: &[std::path::PathBuf],
-) -> Vec<String> {
-    let names = match framework {
-        Framework::Dotnet => &[],
-        Framework::Playwright => PLAYWRIGHT_CONFIGS,
-        Framework::Vitest => VITEST_CONFIGS,
-        Framework::Swift => &[],
-    };
-    names
-        .iter()
-        .filter(|name| {
-            let candidate = crate::codebase::ts_resolver::normalize_path(&root.join(name));
-            visible_paths
-                .iter()
-                .any(|path| crate::codebase::ts_resolver::normalize_path(path) == candidate)
-        })
-        .map(|name| (*name).to_string())
-        .collect()
 }
 
 pub(super) struct ConfigProjectInput<'a> {

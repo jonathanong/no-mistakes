@@ -18,3 +18,6 @@ rules:
   options:
     backendPrefixes:
     - "/http/"
+tests:
+  playwright:
+    configs: custom-playwright.config.mts

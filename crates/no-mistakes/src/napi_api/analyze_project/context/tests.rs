@@ -47,7 +47,7 @@ fn aggregate_graph_reports_union_explicit_framework_demand() {
 
     assert!(frameworks.contains(crate::codebase::test_discovery::TestRunner::Vitest));
     assert!(frameworks.contains(crate::codebase::test_discovery::TestRunner::Swift));
-    assert!(!frameworks.contains(crate::codebase::test_discovery::TestRunner::Playwright));
+    assert!(frameworks.contains(crate::codebase::test_discovery::TestRunner::Playwright));
     assert!(!frameworks.contains(crate::codebase::test_discovery::TestRunner::Dotnet));
 }
 

@@ -142,3 +142,44 @@ fn vitest_project_discovery_without_playwright_projects_keeps_matching_tests() {
         .collect();
     assert_eq!(rel_tests, vec!["src/utils.mts"]);
 }
+
+#[test]
+fn framework_preparation_plan_expands_only_required_runner_dependencies() {
+    let native_only =
+        FrameworkPreparationPlan::for_graph(crate::codebase::dependencies::graph::GraphBuildPlan {
+            dotnet: true,
+            swift: true,
+            ..Default::default()
+        });
+    assert_eq!(native_only.runners().count(), 0);
+
+    let tests =
+        FrameworkPreparationPlan::for_graph(crate::codebase::dependencies::graph::GraphBuildPlan {
+            tests: true,
+            ..Default::default()
+        });
+    assert_eq!(tests.runners().count(), 4);
+
+    let vitest = FrameworkPreparationPlan::for_runners([TestRunner::Vitest]);
+    assert!(vitest.contains(TestRunner::Vitest));
+    assert!(vitest.contains(TestRunner::Playwright));
+    assert!(!vitest.contains(TestRunner::Dotnet));
+    assert!(!vitest.contains(TestRunner::Swift));
+
+    for graph_plan in [
+        crate::codebase::dependencies::graph::GraphBuildPlan {
+            routes: true,
+            ..Default::default()
+        },
+        crate::codebase::dependencies::graph::GraphBuildPlan {
+            http: true,
+            ..Default::default()
+        },
+    ] {
+        let plan = FrameworkPreparationPlan::for_graph(graph_plan);
+        assert!(plan.contains(TestRunner::Vitest));
+        assert!(plan.contains(TestRunner::Playwright));
+        assert!(!plan.contains(TestRunner::Dotnet));
+        assert!(!plan.contains(TestRunner::Swift));
+    }
+}

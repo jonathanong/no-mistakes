@@ -58,6 +58,15 @@ impl ParsedProgramCache {
         self.entries.borrow_mut().clear();
     }
 
+    pub(crate) fn parse_error(&self, path: &Path) -> Option<String> {
+        let path = crate::codebase::ts_resolver::normalize_path(path);
+        let cached = self.entries.borrow().get(&path)?.clone();
+        match cached {
+            Ok(cached) => cached.with_dependent(|_, parsed| parsed.parse_error.clone()),
+            Err(error) => Some(error),
+        }
+    }
+
     fn cached_program(&self, path: &Path, source: &str) -> Result<Rc<CachedProgram>, String> {
         let path = crate::codebase::ts_resolver::normalize_path(path);
         if let Some(cached) = self.entries.borrow().get(&path) {

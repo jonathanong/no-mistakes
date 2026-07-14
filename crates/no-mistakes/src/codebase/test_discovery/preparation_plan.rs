@@ -11,23 +11,21 @@ pub struct FrameworkPreparationPlan {
 impl FrameworkPreparationPlan {
     #[doc(hidden)]
     pub fn all() -> Self {
-        Self {
-            runners: [
-                TestRunner::Dotnet,
-                TestRunner::Playwright,
-                TestRunner::Vitest,
-                TestRunner::Swift,
-            ]
-            .into_iter()
-            .collect(),
-        }
+        Self::for_runners([
+            TestRunner::Dotnet,
+            TestRunner::Playwright,
+            TestRunner::Vitest,
+            TestRunner::Swift,
+        ])
     }
 
     #[doc(hidden)]
     pub fn for_runners(runners: impl IntoIterator<Item = TestRunner>) -> Self {
-        Self {
-            runners: runners.into_iter().collect(),
+        let mut plan = Self::default();
+        for runner in runners {
+            plan.insert(runner);
         }
+        plan
     }
 
     pub(crate) fn for_graph(plan: crate::codebase::dependencies::graph::GraphBuildPlan) -> Self {
@@ -36,6 +34,11 @@ impl FrameworkPreparationPlan {
         // suite, so this relationship intentionally prepares every runner.
         if plan.tests {
             demand = Self::all();
+        } else if plan.routes || plan.http {
+            // Route extraction must exclude JavaScript test suites. Vitest
+            // ownership also depends on Playwright projects, so the central
+            // runner dependency below prepares both without native runners.
+            demand.insert(TestRunner::Vitest);
         }
         demand
     }
@@ -49,11 +52,16 @@ impl FrameworkPreparationPlan {
     }
 
     pub(crate) fn include(&mut self, other: Self) {
-        self.runners.extend(other.runners);
+        for runner in other.runners {
+            self.insert(runner);
+        }
     }
 
     fn insert(&mut self, runner: TestRunner) {
         self.runners.insert(runner);
+        if runner == TestRunner::Vitest {
+            self.runners.insert(TestRunner::Playwright);
+        }
     }
 
     fn runners(&self) -> impl Iterator<Item = TestRunner> + '_ {

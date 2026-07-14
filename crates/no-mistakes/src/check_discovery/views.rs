@@ -44,7 +44,7 @@ pub(super) fn discover_check_file_views_with_external_lookup(
         Vec::new()
     };
     let mut universe = match root_files {
-        Some(root_files) => existing_git_paths(root, root_files),
+        Some(root_files) => normalized_paths(root, root_files),
         None => walk_ignore_aware_universe(
             root,
             &repository_include_patterns(config),
@@ -76,7 +76,7 @@ pub(super) fn discover_check_file_views_with_external_lookup(
             universe.extend(walk_ignore_aware_universe(project_root, includes, &[], &[]));
         } else {
             match external_git_files(project_root) {
-                Some(files) => universe.extend(existing_git_paths(project_root, files)),
+                Some(files) => universe.extend(normalized_paths(project_root, files)),
                 None => {
                     universe.extend(walk_ignore_aware_universe(project_root, includes, &[], &[]));
                 }
@@ -119,10 +119,9 @@ pub(super) fn discover_check_file_views_with_external_lookup(
     CheckFileViews { filesystem, graph }
 }
 
-fn existing_git_paths(root: &Path, files: Vec<String>) -> Vec<PathBuf> {
+fn normalized_paths(root: &Path, files: Vec<String>) -> Vec<PathBuf> {
     files
         .into_iter()
         .map(|relative| no_mistakes::codebase::ts_resolver::normalize_path(&root.join(relative)))
-        .filter(|path| path.exists())
         .collect()
 }

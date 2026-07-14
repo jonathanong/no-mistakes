@@ -183,6 +183,64 @@ fn discover_check_files_does_not_rescan_repository_root() {
     assert_eq!(files, expected);
 }
 
+#[cfg(unix)]
+#[test]
+fn automatic_check_views_exclude_a_tracked_broken_symlink() {
+    let root = fixture("codebase-analysis/tests-impact");
+    let config = load_config(&root);
+    let broken = root.join("broken.test.mts");
+    let snapshot = no_mistakes::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let sources = snapshot.source_store_for(&root);
+
+    // Keep the lexical entry available for explicit changed-file handling and
+    // memoized failure reporting, but do not treat it as an automatic file.
+    assert!(sources.inventory().paths().contains(&broken));
+    let classification = sources
+        .inventory()
+        .classification_for_path(&broken)
+        .expect("tracked symlink is classified during discovery");
+    assert!(classification.is_lexical_symlink());
+    assert!(!classification.target_is_file());
+
+    let views = discover_check_file_views_from_snapshot(&root, &config, &[], false, &snapshot);
+    assert!(!views.filesystem.contains(&broken));
+    assert!(!views.graph.contains(&broken));
+
+    let first = sources.read_path(&broken).unwrap_err();
+    let second = sources.read_path(&broken).unwrap_err();
+    assert!(std::sync::Arc::ptr_eq(&first, &second));
+    assert_eq!(sources.physical_read_count(), 1);
+}
+
+#[test]
+fn automatic_check_views_keep_a_file_deleted_after_the_snapshot() {
+    let dir = TempDir::new().unwrap();
+    let file = dir.path().join("src/frozen.mts");
+    write(
+        dir.path(),
+        "src/frozen.mts",
+        "export const frozen = true;\n",
+    );
+    let snapshot = no_mistakes::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
+    let sources = snapshot.source_store_for(dir.path());
+    std::fs::remove_file(&file).unwrap();
+
+    let views = discover_check_file_views_from_snapshot(
+        dir.path(),
+        &NoMistakesConfig::default(),
+        &[],
+        false,
+        &snapshot,
+    );
+    assert!(views.filesystem.contains(&file));
+    assert!(views.graph.contains(&file));
+
+    let first = sources.read_path(&file).unwrap_err();
+    let second = sources.read_path(&file).unwrap_err();
+    assert!(std::sync::Arc::ptr_eq(&first, &second));
+    assert_eq!(sources.physical_read_count(), 1);
+}
+
 #[test]
 fn discover_check_files_preserves_included_fixture_roots() {
     let root = fixture("check-discovery/include-preserved-roots");

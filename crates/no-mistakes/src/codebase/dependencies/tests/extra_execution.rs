@@ -350,11 +350,21 @@ fn cli_import_filter_prepares_only_the_requested_framework() {
     args.tests = vec!["vitest".to_string()];
 
     crate::ast::begin_parse_count(&root);
+    crate::codebase::dotnet::test_support::begin_fact_collection_count(&root);
+    crate::codebase::swift::test_support::begin_fact_collection_count(&root);
     collect_and_filter_entries(&args, Direction::Dependents, &cwd, &mut timings).unwrap();
     let counts = crate::ast::finish_parse_count(&root);
 
     assert_eq!(counts.get(&root.join("vitest.config.ts")), Some(&1));
-    assert!(!counts.contains_key(&root.join("playwright.config.ts")));
+    assert_eq!(counts.get(&root.join("playwright.config.ts")), Some(&1));
+    assert_eq!(
+        crate::codebase::dotnet::test_support::finish_fact_collection_count(&root),
+        0
+    );
+    assert_eq!(
+        crate::codebase::swift::test_support::finish_fact_collection_count(&root),
+        0
+    );
 }
 
 #[test]

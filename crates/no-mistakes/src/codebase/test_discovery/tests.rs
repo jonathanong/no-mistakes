@@ -478,21 +478,3 @@ fn framework_preparation_plan_prepares_only_requested_runners() {
     assert_eq!(counts.get(&root.join("vitest.config.ts")), Some(&1));
     assert_eq!(counts.get(&root.join("vitest.projects.ts")), Some(&1));
 }
-
-#[test]
-fn framework_preparation_plan_only_expands_test_relationship_demand() {
-    let native_only =
-        FrameworkPreparationPlan::for_graph(crate::codebase::dependencies::graph::GraphBuildPlan {
-            dotnet: true,
-            swift: true,
-            ..Default::default()
-        });
-    assert_eq!(native_only.runners().count(), 0);
-
-    let tests =
-        FrameworkPreparationPlan::for_graph(crate::codebase::dependencies::graph::GraphBuildPlan {
-            tests: true,
-            ..Default::default()
-        });
-    assert_eq!(tests.runners().count(), 4);
-}
