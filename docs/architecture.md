@@ -96,7 +96,7 @@ Allowed cache shapes:
 
 1. `SourceStore`: file identity to a memoized read result, including failures.
 2. Shared immutable file facts and compatibility views such as `TsFactMap`.
-3. Preclassified filesystem-rule candidates keyed by rule ID.
+3. Pre-classified filesystem-rule candidates keyed by rule ID.
 4. Parsed manifest, workspace, tsconfig, and requested configuration metadata.
 5. Canonical import classifications, including unresolved imports.
 6. `EdgeIndex`: canonical typed edges plus forward and reverse adjacency for dependency, queue, and server-route traversal.
