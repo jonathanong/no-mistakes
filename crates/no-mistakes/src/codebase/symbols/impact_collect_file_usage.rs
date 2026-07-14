@@ -1,46 +1,50 @@
-fn file_entry_uses_any_symbol(root: &Path, file: &str, target_symbols: &BTreeSet<String>) -> bool {
+fn file_entry_uses_any_symbol(
+    root: &Path,
+    file: &str,
+    target_symbols: &BTreeSet<String>,
+    facts: &TsFactMap,
+) -> bool {
     target_symbols
         .iter()
-        .any(|target_symbol| file_entry_uses_symbol(root, file, target_symbol))
+        .any(|target_symbol| file_entry_uses_symbol(root, file, target_symbol, facts))
 }
 
 fn has_file_level_import_edge(via: &[EdgeKind]) -> bool {
     via.contains(&EdgeKind::DynamicImport) || via.contains(&EdgeKind::Require)
 }
 
-fn file_entry_uses_symbol(root: &Path, file: &str, target_symbol: &str) -> bool {
+fn file_entry_uses_symbol(
+    root: &Path,
+    file: &str,
+    target_symbol: &str,
+    facts: &TsFactMap,
+) -> bool {
     let path = root.join(file);
-    let Ok(source) = std::fs::read_to_string(&path) else {
+    let Some(file_facts) = facts.get(&path) else {
         return false;
     };
-    let mut facts_by_file = crate::codebase::ts_source::facts::collect_ts_facts(
-        std::slice::from_ref(&path),
-        crate::codebase::ts_source::facts::TsFactPlan::imports_and_symbols(),
-    );
-    let callees: BTreeSet<String> = facts_by_file
-        .remove(&path)
-        .map(|facts| {
-            facts
-                .function_calls
-                .iter()
-                .chain(facts.symbol_references.iter())
-                .map(|call| call.callee.clone())
-                .collect()
-        })
-        .unwrap_or_default();
-    let module_bindings = dynamic_module_bindings(&source);
-    if direct_dynamic_member_use(&source, target_symbol) {
+    let Some(source) = file_facts.source.as_deref() else {
+        return false;
+    };
+    let callees: BTreeSet<String> = file_facts
+        .function_calls
+        .iter()
+        .chain(file_facts.symbol_references.iter())
+        .map(|call| call.callee.clone())
+        .collect();
+    let module_bindings = dynamic_module_bindings(source);
+    if direct_dynamic_member_use(source, target_symbol) {
         return true;
     }
     if module_bindings.iter().any(|binding| {
         let member = format!("{binding}.{target_symbol}");
-        callees.contains(&member) || source_contains_member_name(&source, &member)
+        callees.contains(&member) || source_contains_member_name(source, &member)
     }) {
         return true;
     }
-    dynamic_symbol_aliases_in_source(&source, target_symbol)
+    dynamic_symbol_aliases_in_source(source, target_symbol)
         .iter()
-        .any(|alias| callees.contains(alias) || source_contains_call_name(&source, alias))
+        .any(|alias| callees.contains(alias) || source_contains_call_name(source, alias))
 }
 
 fn direct_dynamic_member_use(source: &str, target_symbol: &str) -> bool {

@@ -1,8 +1,9 @@
-fn collect_swift_edges(
+fn collect_swift_edges_with_facts(
     root: &Path,
     tsconfig: &TsConfig,
     all_files: &[PathBuf],
     config_options: Option<&GraphConfigOptions>,
+    prepared_facts: Option<&crate::codebase::swift::SwiftFactMap>,
 ) -> Vec<Edge> {
     let Some(config_options) = config_options else {
         return Vec::new();
@@ -10,20 +11,25 @@ fn collect_swift_edges(
     if config_options.swift_packages.is_empty() {
         return Vec::new();
     }
-    let facts = crate::codebase::swift::collect_swift_facts(
-        root,
-        all_files,
-        &config_options.swift_packages,
-    );
+    let owned_facts = prepared_facts.is_none().then(|| {
+        crate::codebase::swift::collect_swift_facts(
+            root,
+            all_files,
+            &config_options.swift_packages,
+        )
+    });
+    let facts = prepared_facts
+        .or(owned_facts.as_ref())
+        .expect("Swift facts are prepared or collected");
     if facts.files.is_empty() {
         return Vec::new();
     }
 
     let mut edges = Vec::new();
-    collect_swift_import_edges(&facts, &mut edges);
-    collect_swift_reference_edges(&facts, &mut edges);
-    collect_swift_package_edges(&facts, &mut edges);
-    collect_swift_http_edges(root, tsconfig, all_files, config_options, &facts, &mut edges);
+    collect_swift_import_edges(facts, &mut edges);
+    collect_swift_reference_edges(facts, &mut edges);
+    collect_swift_package_edges(facts, &mut edges);
+    collect_swift_http_edges(root, tsconfig, all_files, config_options, facts, &mut edges);
     edges
 }
 

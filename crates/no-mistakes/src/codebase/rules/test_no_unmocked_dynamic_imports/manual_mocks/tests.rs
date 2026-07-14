@@ -29,6 +29,7 @@ fn discover_respects_skip_directories() {
             .join("../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports/fixture"),
     );
     let skipped = root.join("skipped").join("ignored.mts");
-    let mocks = discover(&root, &["skipped".to_string()]);
+    let files = crate::codebase::ts_source::discover_files(&root, &["skipped".to_string()]);
+    let mocks = discover_from_files(&root, &files);
     assert!(!mocks.contains(&skipped));
 }

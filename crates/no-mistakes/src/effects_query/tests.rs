@@ -1,8 +1,27 @@
 use super::*;
 
+fn resolve_tsconfig(root: &Path, tsconfig: Option<&Path>) -> Result<TsConfig> {
+    resolve_tsconfig_from_visible(
+        root,
+        tsconfig,
+        &crate::codebase::ts_source::discover_visible_paths(root),
+    )
+}
+
 fn fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/effects/fixture")
+}
+
+fn parser_count_fixture() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/parser-count/effects")
+}
+
+fn gitignore_fixture() -> tempfile::TempDir {
+    let fixture = crate::test_support::materialize_gitignore_fixture("prepared-tsconfig");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    fixture
 }
 
 fn run_kind(categories: &[String]) -> EffectsReport {
@@ -169,6 +188,65 @@ fn absolute_entry_path_is_accepted() {
 }
 
 #[test]
+fn ignored_automatic_tsconfig_does_not_resolve_effect_alias_but_explicit_does() {
+    let fixture = gitignore_fixture();
+    let automatic = run(
+        fixture.path(),
+        None,
+        None,
+        "regression",
+        Path::new("effect-entry.ts"),
+        &[],
+        None,
+    )
+    .unwrap();
+    assert!(automatic.call_sites.is_empty());
+
+    let explicit = run(
+        fixture.path(),
+        None,
+        Some(Path::new("tsconfig.json")),
+        "regression",
+        Path::new("effect-entry.ts"),
+        &[],
+        None,
+    )
+    .unwrap();
+    assert_eq!(explicit.call_sites.len(), 1);
+    assert_eq!(explicit.call_sites[0].file, "src/effect.ts");
+}
+
+#[test]
+fn explicit_ignored_effect_entry_is_authoritative_but_ignored_transitive_is_not() {
+    let fixture = gitignore_fixture();
+    let report = run(
+        fixture.path(),
+        None,
+        None,
+        "regression",
+        Path::new("ignored-explicit/effect-entry.ts"),
+        &[],
+        None,
+    )
+    .unwrap();
+
+    assert!(
+        report
+            .call_sites
+            .iter()
+            .any(|site| site.file == "src/effect.ts"),
+        "{report:#?}"
+    );
+    assert!(
+        report
+            .call_sites
+            .iter()
+            .all(|site| site.file != "ignored-transitive/effect.ts"),
+        "{report:#?}"
+    );
+}
+
+#[test]
 fn explicit_tsconfig_is_honored() {
     let tsconfig = fixture().join("tsconfig.json");
     let report = run(
@@ -224,13 +302,41 @@ fn resolve_tsconfig_defaults_when_absent() {
 }
 
 #[test]
-fn scan_file_ignores_unreadable_path() {
-    let names = std::collections::HashMap::new();
-    assert!(super::extract::scan_file(
-        &fixture(),
-        Path::new("/no/such/effects-file.ts"),
-        0,
-        &names
+fn effects_reuses_one_parse_for_imports_and_effect_calls() {
+    let source = crate::codebase::ts_resolver::normalize_path(&parser_count_fixture());
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    crate::ast::begin_parse_count(&root);
+
+    let report = run(
+        &root,
+        None,
+        None,
+        "storage",
+        Path::new("entry.ts"),
+        &[],
+        None,
     )
-    .is_empty());
+    .unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+
+    assert_eq!(report.call_sites.len(), 1, "{report:#?}");
+    assert_eq!(report.call_sites[0].file, "effect.ts");
+    let files = crate::codebase::dependencies::graph::GraphFiles::from_files(
+        crate::codebase::ts_source::discover_files(&root, &[]),
+    )
+    .indexable()
+    .to_vec();
+    assert_eq!(counts.len(), files.len(), "{counts:#?}");
+    assert!(
+        files.iter().all(|file| counts.get(file) == Some(&1)),
+        "each source file must be parsed once: {counts:#?}"
+    );
+
+    let run_source = include_str!("../effects_query.rs");
+    assert_eq!(
+        run_source.matches("collect_ts_facts_with_context(").count(),
+        1
+    );
+    assert!(!run_source.contains("scan_file("));
 }

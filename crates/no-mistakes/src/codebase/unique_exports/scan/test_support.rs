@@ -7,7 +7,8 @@ use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
 pub(crate) fn collect_source_files(root: &Path, files: &[PathBuf]) -> Result<Vec<SourceFile>> {
-    let nextjs_projects = NextJsProjectLookup::new(root, files);
+    let visible_files = crate::codebase::ts_source::discover_visible_paths(root);
+    let nextjs_projects = NextJsProjectLookup::new(root, files, &visible_files);
     files
         .par_iter()
         .map(|path| {
@@ -37,17 +38,6 @@ pub(crate) fn collect_source_files(root: &Path, files: &[PathBuf]) -> Result<Vec
 }
 
 pub(crate) fn file_is_in_nextjs_project(root: &Path, path: &Path) -> bool {
-    let root = normalize_path(root);
-    let mut current = match path.parent() {
-        Some(parent) => normalize_path(parent),
-        None => root.clone(),
-    };
-    loop {
-        if super::package_json_has_next_dependency(&current.join("package.json")) {
-            return true;
-        }
-        if current == root || !current.pop() {
-            return false;
-        }
-    }
+    let visible_files = crate::codebase::ts_source::discover_visible_paths(root);
+    NextJsProjectLookup::new(root, &[path.to_path_buf()], &visible_files).contains_file(path)
 }

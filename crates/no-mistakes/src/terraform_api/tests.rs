@@ -84,6 +84,21 @@ fn analyze_project_without_config_is_empty() {
     assert!(report.test_for("infra/main.tf").is_empty());
 }
 
+#[test]
+fn analyze_project_uses_one_snapshot_and_one_terraform_fact_collection() {
+    assert!(!report().resource_refs("aws_route53_record.foo").is_empty());
+    let source = include_str!("../terraform_api.rs");
+    let analyze = source
+        .split("pub fn analyze_project(")
+        .nth(1)
+        .and_then(|source| source.split("impl InfraReport").next())
+        .expect("Terraform analyze_project body");
+
+    assert_eq!(analyze.matches("VisiblePathSnapshot::new(").count(), 1);
+    assert_eq!(analyze.matches("discover_files_from_visible(").count(), 1);
+    assert_eq!(analyze.matches("collect_terraform_facts(").count(), 1);
+}
+
 // --- Hand-built reports for branch coverage of the matching modes ---
 
 fn report_with(test: TerraformTestConvention, files: Vec<PathBuf>) -> InfraReport {

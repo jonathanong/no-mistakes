@@ -1,7 +1,8 @@
-use crate::playwright::analysis::app_collect::collect_selector_source_files;
+use crate::playwright::analysis::app_collect::collect_selector_source_files_from_visible;
 use crate::playwright::analysis::text_types::{normalize_locator_text, AppTextKind, AppTextTarget};
 use crate::playwright::analysis::types::SelectorRef;
 use crate::playwright::config::Settings;
+use crate::playwright::fsutil::VisiblePathSnapshot;
 use crate::playwright::fsutil::{build_globset, relative_string};
 use crate::playwright::selectors::scoped_defaults::ScopedStaticIdentifierDefault;
 use anyhow::{Context, Result};
@@ -24,18 +25,26 @@ mod visit_attrs;
 mod visit_helpers;
 use elements::*;
 use extract::extract_app_text_targets;
+pub(crate) use extract::extract_app_text_targets_from_program;
 use jsx_text::*;
 use roles::*;
 
-pub(crate) fn collect_app_text_targets(
+pub(crate) fn collect_app_text_targets_from_visible(
     root: &Path,
     settings: &Settings,
+    snapshot: &VisiblePathSnapshot,
 ) -> Result<Vec<AppTextTarget>> {
     let include = build_globset(&settings.selector_include)?;
     let exclude = build_globset(&settings.selector_exclude)?;
     let include_all = settings.selector_include.is_empty();
-    let source_files =
-        collect_selector_source_files(root, settings, &include, &exclude, include_all);
+    let source_files = collect_selector_source_files_from_visible(
+        root,
+        settings,
+        &include,
+        &exclude,
+        include_all,
+        snapshot,
+    );
 
     let mut targets = source_files
         .par_iter()

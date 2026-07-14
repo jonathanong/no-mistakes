@@ -12,6 +12,12 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::time::Duration;
 
+mod architecture;
+mod integration_gitignore;
+#[cfg(feature = "test-instrumentation")]
+mod prepared_parser_cache;
+mod prepared_tsconfig;
+
 #[test]
 fn empty_results_records_cli_side_channels() {
     let results = results::empty_results([Some("warning".to_string())]);
@@ -74,6 +80,32 @@ fn run_all_includes_playwright_unique_test_id_rules() {
         finding.rule == no_mistakes::playwright::rules::PLAYWRIGHT_UNIQUE_TEST_IDS
             && finding.target.as_deref() == Some("data-testid=save")
     }));
+}
+
+#[test]
+fn run_all_shares_visible_candidates_across_check_phases() {
+    let dir = crate::test_support::materialize_gitignore_fixture("check-runner-snapshot");
+
+    let results = run_all(dir.path().to_path_buf(), None, None).unwrap();
+    let targets = results
+        .rules
+        .iter()
+        .filter_map(|finding| finding.target.as_deref())
+        .collect::<Vec<_>>();
+
+    assert!(targets.contains(&"data-testid=visible-only"), "{targets:?}");
+    assert!(
+        !targets.contains(&"data-testid=ignored-only"),
+        "{targets:?}"
+    );
+}
+
+#[test]
+fn run_all_constructs_one_canonical_root_snapshot() {
+    let source = include_str!("prepared.rs");
+
+    assert_eq!(source.matches("VisiblePathSnapshot::new").count(), 1);
+    assert_eq!(source.matches("discover_visible_paths").count(), 0);
 }
 
 #[test]
@@ -145,12 +177,20 @@ fn run_codebase_check_uses_explicit_tsconfig_with_shared_facts() {
     );
 
     let tsconfig = root.join("tsconfig.json");
-    let results = crate::check_tasks::run_codebase_check(
+    let prepared_tsconfig = no_mistakes::codebase::ts_resolver::load_tsconfig(&tsconfig).unwrap();
+    let loaded_config = no_mistakes::codebase::config::load_codebase_config_with_path(
         &root,
         Some(config.as_path()),
+    )
+    .unwrap();
+    let results = crate::check_tasks::run_codebase_check(
+        &root,
+        &loaded_config,
         Some(tsconfig.as_path()),
+        &prepared_tsconfig,
         true,
         &facts,
+        &no_mistakes::codebase::config::InferredRoots::default(),
     )
     .unwrap();
 
@@ -161,18 +201,10 @@ fn run_codebase_check_uses_explicit_tsconfig_with_shared_facts() {
 fn run_codebase_check_propagates_unique_exports_errors() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/unique-exports-basic/fixture");
-    let facts = no_mistakes::codebase::check_facts::CheckFactMap::default();
-
     let missing_config = root.join("missing.no-mistakes.yml");
-    let error = crate::check_tasks::run_codebase_check(
-        &root,
-        Some(missing_config.as_path()),
-        None,
-        true,
-        &facts,
-    )
-    .err()
-    .expect("expected missing config error");
+    let error = run_all(root, Some(missing_config), None)
+        .err()
+        .expect("expected missing config error");
 
     assert!(error.to_string().contains("missing.no-mistakes.yml"));
 }
@@ -255,6 +287,20 @@ fn run_all_keeps_playwright_graph_files_outside_filesystem_skips() {
 }
 
 #[test]
+fn run_all_dynamic_import_graph_excludes_gitignored_targets() {
+    let dir = crate::test_support::materialize_gitignore_fixture("transitive-visibility");
+    let results = run_all(dir.path().to_path_buf(), None, None).unwrap();
+    let finding = results
+        .rules
+        .iter()
+        .find(|finding| finding.file == "tests/ignored-target.test.ts")
+        .expect("ignored dynamic import remains reportable as unresolved");
+
+    assert_eq!(finding.import.as_deref(), Some("../dynamic/ignored-target"));
+    assert_eq!(finding.target, None);
+}
+
+#[test]
 fn integration_configured_covers_vitest_and_playwright_suites() {
     let empty = no_mistakes::config::v2::NoMistakesConfig::default();
     assert!(!integration_configured(&empty));
@@ -302,6 +348,10 @@ fn fact_plan_keeps_boundary_only_rules_to_source_facts() {
     assert!(dynamic_import_rule.source);
     assert!(dynamic_import_rule.imports);
     assert!(dynamic_import_rule.dynamic_imports);
+    assert_eq!(
+        dynamic_import_rule.graph,
+        no_mistakes::codebase::ts_source::facts::TsFactPlan::imports()
+    );
 
     let nextjs_caching = fact_plan(EnabledChecks {
         nextjs_caching: true,

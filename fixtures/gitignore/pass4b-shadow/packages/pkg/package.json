@@ -1,0 +1,6 @@
+{
+  "name": "@fixture/pkg",
+  "exports": {
+    "./feature": "./src/feature"
+  }
+}

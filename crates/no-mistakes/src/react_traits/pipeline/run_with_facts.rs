@@ -1,8 +1,18 @@
-use crate::react_traits::pipeline::glob::expand_globs;
+use crate::react_traits::pipeline::glob::expand_globs_from_files;
 use crate::react_traits::report::types::{AggregatedFacts, ComponentFacts, FileConfig};
 use anyhow::Result;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
+
+pub(crate) fn run_analyze_with_loaded_config_and_facts(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    targets: &[String],
+    shared: &crate::codebase::check_facts::CheckFactMap,
+) -> Result<Vec<ComponentFacts>> {
+    let file_config = super::check::file_config_from_loaded(config);
+    run_analyze_inner_with_facts(root, &file_config, targets, shared)
+}
 
 pub(crate) fn run_analyze_inner_with_facts(
     root: &Path,
@@ -10,25 +20,23 @@ pub(crate) fn run_analyze_inner_with_facts(
     targets: &[String],
     shared: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<ComponentFacts>> {
-    let files = target_files(root, file_config, targets)?;
-    let file_cache = shared
-        .ts
-        .iter()
-        .filter_map(|(path, facts)| {
-            facts
-                .react
-                .as_ref()
-                .map(|analysis| (path.clone(), analysis.components.clone()))
-        })
-        .collect::<HashMap<_, _>>();
-    let child_path_index = child_path_index(root, &file_cache);
+    let root = crate::codebase::ts_source::normalize_discovery_path(root);
+    let files = target_files(&root, file_config, targets, shared.files())?;
+    let mut file_cache = HashMap::new();
+    let mut parse_errors = HashMap::new();
+    for (path, facts) in &shared.ts {
+        let path = crate::codebase::ts_source::normalize_discovery_path(path);
+        if let Some(analysis) = &facts.react {
+            file_cache.insert(path.clone(), analysis.components.clone());
+        }
+        if let Some(error) = &facts.parse_error {
+            parse_errors.insert(path, error);
+        }
+    }
+    let child_path_index = child_path_index(&root, &file_cache);
     let mut all_results = Vec::new();
     for file in files {
-        if let Some(error) = shared
-            .ts
-            .get(&file)
-            .and_then(|facts| facts.parse_error.as_ref())
-        {
+        if let Some(error) = parse_errors.get(&file) {
             anyhow::bail!("failed to parse {}: {error}", file.display());
         }
         let Some(components) = file_cache.get(&file).cloned() else {
@@ -50,7 +58,12 @@ pub(crate) fn run_analyze_inner_with_facts(
     Ok(all_results)
 }
 
-fn target_files(root: &Path, file_config: &FileConfig, targets: &[String]) -> Result<Vec<PathBuf>> {
+fn target_files(
+    root: &Path,
+    file_config: &FileConfig,
+    targets: &[String],
+    visible_paths: &[PathBuf],
+) -> Result<Vec<PathBuf>> {
     let frontend_root = root.join(file_config.frontend_root.as_deref().unwrap_or("app"));
     let default_targets;
     let targets = if targets.is_empty() {
@@ -64,14 +77,14 @@ fn target_files(root: &Path, file_config: &FileConfig, targets: &[String]) -> Re
     } else {
         targets
     };
-    let from_root = expand_globs(root, targets)?;
+    let from_root = expand_globs_from_files(root, targets, visible_paths)?;
     if !from_root.is_empty() {
         return Ok(from_root);
     }
     if !frontend_root.exists() {
         anyhow::bail!("frontend root not found: {}", frontend_root.display());
     }
-    expand_globs(&frontend_root, targets)
+    expand_globs_from_files(&frontend_root, targets, visible_paths)
 }
 
 fn aggregate_children_cached(
@@ -86,8 +99,11 @@ fn aggregate_children_cached(
         if !visited.insert(key) {
             continue;
         }
+        let normalized_child_file =
+            crate::codebase::ts_source::normalize_discovery_path(Path::new(&child_ref.file));
         let child_facts_opt = child_path_index
             .get(&child_ref.file)
+            .or_else(|| child_path_index.get(normalized_child_file.to_string_lossy().as_ref()))
             .and_then(|path| file_cache.get(path))
             .and_then(|comps| comps.iter().find(|c| c.name == child_ref.name));
         if let Some(child_facts) = child_facts_opt {

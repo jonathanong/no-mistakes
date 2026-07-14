@@ -1,0 +1,18 @@
+projects:
+  visible:
+    type: library
+    root: packages/visible
+  ignored:
+    type: library
+    root: packages/ignored
+rules:
+  - rule: require-storybook-stories
+    projects: [visible]
+    options:
+      stories: ["stories/**/*.stories.tsx"]
+      include_all_react_named_exports: true
+  - rule: require-storybook-stories
+    projects: [ignored]
+    options:
+      stories: ["stories/**/*.stories.tsx"]
+      include_all_react_named_exports: true

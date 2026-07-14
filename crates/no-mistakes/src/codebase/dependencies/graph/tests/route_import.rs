@@ -1,3 +1,29 @@
+fn cache_settings() -> crate::playwright::config::Settings {
+    crate::playwright::config::Settings {
+        frontend_root: ".".to_string(),
+        playwright_configs: Vec::new(),
+        project: None,
+        test_include: Vec::new(),
+        test_exclude: Vec::new(),
+        ignore_routes: Vec::new(),
+        rewrites: Vec::new(),
+        navigation_helpers: Vec::new(),
+        selector_attributes: Vec::new(),
+        test_id_attribute_override: None,
+        component_selector_attributes: std::collections::BTreeMap::new(),
+        html_ids: false,
+        selector_roots: vec![".".to_string()],
+        selector_include: Vec::new(),
+        selector_exclude: Vec::new(),
+    }
+}
+
+fn materialized_frontend_tsconfig_fixture() -> tempfile::TempDir {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/nextjs-selectors/frontend-tsconfig/fixture");
+    crate::test_support::materialize_saved_fixture(&source)
+}
+
 #[test]
 fn graph_build_plan_from_allowed_covers_each_edge_family() {
     assert!(!GraphBuildPlan::test_impact().route_imports);
@@ -70,13 +96,20 @@ fn fact_lookup_defaults_and_sparse_fallback_are_complete() {
     let primary_path = p("/repo/primary.ts");
     let fallback_path = p("/repo/fallback.ts");
     let primary = TsFactMap::from([(primary_path.clone(), TsFileFacts::default())]);
-    let fallback = TsFactMap::from([(fallback_path.clone(), TsFileFacts::default())]);
+    let fallback = TsFactMap::from([(
+        fallback_path.clone(),
+        TsFileFacts {
+            parse_error: Some("fallback parse error".to_string()),
+            ..TsFileFacts::default()
+        },
+    )]);
     let minimal = MinimalFacts(primary);
     let graph_visible = HashSet::from([fallback_path.clone()]);
 
     assert!(!minimal.covers_ts_fact_plan(TsFactPlan::imports()));
     assert!(minimal.graph_files().is_none());
     assert!(minimal.get_playwright_parse_error(&primary_path).is_none());
+    assert!(minimal.get_playwright_fetch_facts(&primary_path).is_none());
 
     for prefer_fallback in [false, true] {
         let lookup = FallbackTsFactLookup::new(
@@ -95,18 +128,18 @@ fn fact_lookup_defaults_and_sparse_fallback_are_complete() {
             .get_playwright_parse_error(&primary_path)
             .is_none());
         assert!(lookup
-            .get_or_compute_app_selector_occurrences(false, &|| Ok(Vec::new()))
+            .get_or_compute_app_selector_occurrences(&cache_settings(), false, &|| Ok(Vec::new()))
             .expect("selector occurrences compute")
             .is_empty());
         assert!(lookup
-            .get_or_compute_playwright_routes(&|| Vec::new())
+            .get_or_compute_playwright_routes(&cache_settings(), &|| Vec::new())
             .is_empty());
         assert!(lookup
-            .get_or_compute_app_text_targets(&|| Ok(Vec::new()))
+            .get_or_compute_app_text_targets(&cache_settings(), &|| Ok(Vec::new()))
             .expect("app text targets compute")
             .is_empty());
         assert!(lookup
-            .get_or_compute_route_reachable_files(&|| Ok(Default::default()))
+            .get_or_compute_route_reachable_files(&cache_settings(), &|| Ok(Default::default()))
             .expect("route reachability computes")
             .is_empty());
     }
@@ -146,7 +179,13 @@ fn sparse_fallback_preserves_check_fact_playwright_data_and_caches() {
             ..CheckFileFacts::default()
         },
     );
-    let fallback = TsFactMap::from([(fallback_path.clone(), TsFileFacts::default())]);
+    let fallback = TsFactMap::from([(
+        fallback_path.clone(),
+        TsFileFacts {
+            parse_error: Some("fallback parse error".to_string()),
+            ..TsFileFacts::default()
+        },
+    )]);
     let graph_visible = HashSet::from(graph_files.clone());
     let lookup = FallbackTsFactLookup::new(
         &primary,
@@ -159,6 +198,16 @@ fn sparse_fallback_preserves_check_fact_playwright_data_and_caches() {
     assert_eq!(lookup.graph_files(), Some(graph_files.as_slice()));
     assert!(lookup.get_playwright_facts(&primary_path).is_some());
     assert!(lookup.get_ts_facts(&fallback_path).is_some());
+    assert_eq!(lookup.playwright_source_files(), Some([].as_slice()));
+    assert!(lookup.get_playwright_test_files(None).is_none());
+    let fetch_facts = lookup
+        .get_playwright_fetch_facts(&fallback_path)
+        .expect("fallback parse error is cached");
+    let error = match fetch_facts {
+        Ok(_) => panic!("fallback parse error must be retained"),
+        Err(error) => error,
+    };
+    assert!(error.contains("fallback parse error"));
 
     let selector_calls = Cell::new(0);
     let selectors = || {
@@ -166,10 +215,10 @@ fn sparse_fallback_preserves_check_fact_playwright_data_and_caches() {
         Ok(Vec::new())
     };
     let first = lookup
-        .get_or_compute_app_selector_occurrences(false, &selectors)
+        .get_or_compute_app_selector_occurrences(&cache_settings(), false, &selectors)
         .expect("selector occurrences compute");
     let second = lookup
-        .get_or_compute_app_selector_occurrences(false, &selectors)
+        .get_or_compute_app_selector_occurrences(&cache_settings(), false, &selectors)
         .expect("selector occurrences cache");
     assert!(Arc::ptr_eq(&first, &second));
     assert_eq!(selector_calls.get(), 1);
@@ -179,8 +228,8 @@ fn sparse_fallback_preserves_check_fact_playwright_data_and_caches() {
         route_calls.set(route_calls.get() + 1);
         Vec::new()
     };
-    let first = lookup.get_or_compute_playwright_routes(&routes);
-    let second = lookup.get_or_compute_playwright_routes(&routes);
+    let first = lookup.get_or_compute_playwright_routes(&cache_settings(), &routes);
+    let second = lookup.get_or_compute_playwright_routes(&cache_settings(), &routes);
     assert!(Arc::ptr_eq(&first, &second));
     assert_eq!(route_calls.get(), 1);
 
@@ -190,10 +239,10 @@ fn sparse_fallback_preserves_check_fact_playwright_data_and_caches() {
         Ok(Vec::new())
     };
     let first = lookup
-        .get_or_compute_app_text_targets(&text_targets)
+        .get_or_compute_app_text_targets(&cache_settings(), &text_targets)
         .expect("text targets compute");
     let second = lookup
-        .get_or_compute_app_text_targets(&text_targets)
+        .get_or_compute_app_text_targets(&cache_settings(), &text_targets)
         .expect("text targets cache");
     assert!(Arc::ptr_eq(&first, &second));
     assert_eq!(text_calls.get(), 1);
@@ -204,13 +253,56 @@ fn sparse_fallback_preserves_check_fact_playwright_data_and_caches() {
         Ok(Default::default())
     };
     let first = lookup
-        .get_or_compute_route_reachable_files(&reachability)
+        .get_or_compute_route_reachable_files(&cache_settings(), &reachability)
         .expect("route reachability compute");
     let second = lookup
-        .get_or_compute_route_reachable_files(&reachability)
+        .get_or_compute_route_reachable_files(&cache_settings(), &reachability)
         .expect("route reachability cache");
     assert!(Arc::ptr_eq(&first, &second));
     assert_eq!(reachability_calls.get(), 1);
+}
+
+#[test]
+fn sparse_fallback_prefers_primary_playwright_fetch_errors_when_requested() {
+    use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
+
+    let path = p("/repo/page.tsx");
+    let mut primary = CheckFactMap {
+        graph_files: vec![path.clone()],
+        graph_files_complete: true,
+        ..CheckFactMap::default()
+    };
+    primary.ts.insert(
+        path.clone(),
+        CheckFileFacts {
+            parse_error: Some("primary parse error".to_string()),
+            ..CheckFileFacts::default()
+        },
+    );
+    let fallback = TsFactMap::from([(
+        path.clone(),
+        TsFileFacts {
+            parse_error: Some("fallback parse error".to_string()),
+            ..TsFileFacts::default()
+        },
+    )]);
+    let lookup = FallbackTsFactLookup::new(
+        &primary,
+        &fallback,
+        false,
+        std::slice::from_ref(&path),
+        &HashSet::from([path.clone()]),
+    );
+
+    let result = lookup
+        .get_playwright_fetch_facts(&path)
+        .expect("matching graph universe reuses per-file fetch facts");
+    let error = match result {
+        Err(error) => error,
+        Ok(_) => panic!("primary parse error must be retained"),
+    };
+    assert!(error.contains("primary parse error"));
+    assert!(!error.contains("fallback parse error"));
 }
 
 #[test]
@@ -227,26 +319,26 @@ fn sparse_fallback_isolates_playwright_caches_for_a_different_graph_universe() {
 
     let primary_selector_calls = Cell::new(0);
     primary
-        .get_or_compute_app_selector_occurrences(false, &|| {
+        .get_or_compute_app_selector_occurrences(&cache_settings(), false, &|| {
             primary_selector_calls.set(primary_selector_calls.get() + 1);
             Ok(Vec::new())
         })
         .expect("primary selectors compute");
     let primary_route_calls = Cell::new(0);
-    primary.get_or_compute_playwright_routes(&|| {
+    primary.get_or_compute_playwright_routes(&cache_settings(), &|| {
         primary_route_calls.set(primary_route_calls.get() + 1);
         Vec::new()
     });
     let primary_text_calls = Cell::new(0);
     primary
-        .get_or_compute_app_text_targets(&|| {
+        .get_or_compute_app_text_targets(&cache_settings(), &|| {
             primary_text_calls.set(primary_text_calls.get() + 1);
             Ok(Vec::new())
         })
         .expect("primary text targets compute");
     let primary_reachability_calls = Cell::new(0);
     primary
-        .get_or_compute_route_reachable_files(&|| {
+        .get_or_compute_route_reachable_files(&cache_settings(), &|| {
             primary_reachability_calls.set(primary_reachability_calls.get() + 1);
             Ok(Default::default())
         })
@@ -260,11 +352,14 @@ fn sparse_fallback_isolates_playwright_caches_for_a_different_graph_universe() {
         &graph_visible,
     );
     assert_eq!(lookup.graph_files(), Some([graph_path.clone()].as_slice()));
+    assert!(lookup.playwright_source_files().is_none());
+    assert!(lookup.get_playwright_test_files(None).is_none());
+    assert!(lookup.get_playwright_fetch_facts(&graph_path).is_none());
 
     let selector_calls = Cell::new(0);
     for _ in 0..2 {
         lookup
-            .get_or_compute_app_selector_occurrences(false, &|| {
+            .get_or_compute_app_selector_occurrences(&cache_settings(), false, &|| {
                 selector_calls.set(selector_calls.get() + 1);
                 Ok(Vec::new())
             })
@@ -272,7 +367,7 @@ fn sparse_fallback_isolates_playwright_caches_for_a_different_graph_universe() {
     }
     let route_calls = Cell::new(0);
     for _ in 0..2 {
-        lookup.get_or_compute_playwright_routes(&|| {
+        lookup.get_or_compute_playwright_routes(&cache_settings(), &|| {
             route_calls.set(route_calls.get() + 1);
             Vec::new()
         });
@@ -281,13 +376,13 @@ fn sparse_fallback_isolates_playwright_caches_for_a_different_graph_universe() {
     let reachability_calls = Cell::new(0);
     for _ in 0..2 {
         lookup
-            .get_or_compute_app_text_targets(&|| {
+            .get_or_compute_app_text_targets(&cache_settings(), &|| {
                 text_calls.set(text_calls.get() + 1);
                 Ok(Vec::new())
             })
             .expect("isolated text targets compute");
         lookup
-            .get_or_compute_route_reachable_files(&|| {
+            .get_or_compute_route_reachable_files(&cache_settings(), &|| {
                 reachability_calls.set(reachability_calls.get() + 1);
                 Ok(Default::default())
             })
@@ -375,127 +470,5 @@ fn route_import_edges_fill_present_but_sparse_check_facts() {
     assert!(dependencies.iter().any(|entry| {
         entry.node.as_file()
             == Some(root.join("web/app/components/wrapped-button.tsx").as_path())
-    }));
-}
-
-#[test]
-fn route_import_resolution_tolerates_missing_source_directories() {
-    // Keep this disk-missing source: it covers configured/external graph files
-    // disappearing between discovery and conservative edge construction.
-    let source = PathBuf::from("/no-mistakes-missing-route-import/source.ts");
-    let facts = TsFactMap::from([(
-        source.clone(),
-        TsFileFacts {
-            imports: vec![ExtractedImport {
-                specifier: "./target".to_string(),
-                kind: ImportKind::Static,
-                line: 1,
-                function_scope: None,
-                side_effect_only: true,
-                re_export: false,
-                runtime_reachable: false,
-            }],
-            ..TsFileFacts::default()
-        },
-    )]);
-    let graph_files = GraphFiles::from_files(vec![source.clone()]);
-    let tsconfig = TsConfig {
-        dir: PathBuf::from("/no-mistakes-missing-route-import"),
-        paths_dir: PathBuf::from("/no-mistakes-missing-route-import"),
-        ..TsConfig::default()
-    };
-
-    assert!(collect_route_import_edges(
-        std::slice::from_ref(&source),
-        &facts,
-        &tsconfig,
-        &graph_files,
-    )
-    .is_empty());
-    assert_eq!(
-        route_import_resolution_source(Path::new("/"), &Default::default()),
-        PathBuf::from("/")
-    );
-}
-
-#[cfg(unix)]
-#[test]
-fn route_import_resolution_tolerates_broken_source_symlink() {
-    // This tracked fixture must stay broken to exercise canonicalize failure.
-    let broken = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/codebase-analysis/tests-impact/fixture/broken.test.mts");
-
-    assert_eq!(
-        route_import_resolution_source(&broken, &Default::default()),
-        broken
-    );
-}
-
-#[cfg(unix)]
-#[test]
-fn route_import_resolution_uses_direct_symlink_target() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/scan-config/symlinked-default-playwright/fixture")
-        .canonicalize()
-        .expect("fixture root resolves");
-    let symlink = root.join("playwright.config.ts");
-    let resolved = route_import_resolution_source(&symlink, &Default::default());
-
-    assert_eq!(resolved, root.join("configs/shared.playwright.config.ts"));
-
-    let real_target = root.join("configs/shared.playwright.config.ts");
-    let graph_files = GraphFiles::from_files(vec![symlink.clone()]);
-    let visible_by_name = std::collections::BTreeMap::from([(
-        real_target
-            .file_name()
-            .expect("target has a name")
-            .to_os_string(),
-        vec![symlink.clone()],
-    )]);
-    assert_eq!(
-        route_import_visible_target(real_target, &graph_files, &visible_by_name),
-        Some(symlink)
-    );
-}
-
-#[cfg(unix)]
-#[test]
-fn route_import_edges_resolve_from_direct_symlink_target() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/scan-config/symlinked-default-playwright/fixture")
-        .canonicalize()
-        .expect("fixture root resolves");
-    let tsconfig = TsConfig {
-        dir: root.clone(),
-        paths_dir: root.clone(),
-        ..Default::default()
-    };
-    let files = vec![
-        root.join("playwright.config.ts"),
-        root.join("configs/route-helper.ts"),
-        root.join("configs/shared.playwright.config.ts"),
-    ];
-    let graph_files = GraphFiles::from_files(files);
-    let graph = DepGraph::build_with_plan_files_config_and_facts(
-        &root,
-        &tsconfig,
-        GraphBuildPlan {
-            route_imports: true,
-            ..Default::default()
-        },
-        &graph_files,
-        None,
-        None,
-    )
-    .expect("symlink route-import graph builds");
-    let allowed = HashSet::from([EdgeKind::RouteImport]);
-    let dependencies = graph.deps_of(
-        &[NodeId::File(root.join("playwright.config.ts"))],
-        None,
-        Some(&allowed),
-    );
-
-    assert!(dependencies.iter().any(|entry| {
-        entry.node.as_file() == Some(root.join("configs/route-helper.ts").as_path())
     }));
 }

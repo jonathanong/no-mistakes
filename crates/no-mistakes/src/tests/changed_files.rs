@@ -9,6 +9,10 @@ use std::path::{Path, PathBuf};
 pub(crate) struct ChangedFiles {
     pub files: Vec<PathBuf>,
     pub deleted: Vec<PathBuf>,
+    /// Existing-file candidates named by caller-controlled file/diff inputs. These paths may
+    /// be authoritative graph roots even when ignored by automatic repository discovery.
+    /// Automatic `--base`/`--head` git-diff results are intentionally excluded.
+    pub authoritative_files: Vec<PathBuf>,
     /// Per-file hunk bodies parsed from the provided unified diff (if any).
     /// Each entry's `path` is the same absolute path that appears in `files`,
     /// so consumers can join on it. Empty when no `--diff*` flag was used.
@@ -18,10 +22,13 @@ pub(crate) struct ChangedFiles {
 pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<ChangedFiles> {
     let mut files = Vec::new();
     let mut deleted = Vec::new();
+    let mut authoritative_files = Vec::new();
     let mut diff_files: Vec<DiffFile> = Vec::new();
 
     for f in &args.changed_file {
-        files.push(resolve_path(f, root));
+        let path = resolve_path(f, root);
+        files.push(path.clone());
+        authoritative_files.push(path);
     }
 
     if let Some(ref path) = args.changed_files {
@@ -31,7 +38,9 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
         for line in content.lines() {
             let line = line.trim();
             if !line.is_empty() {
-                files.push(resolve_path(&PathBuf::from(line), root));
+                let path = resolve_path(&PathBuf::from(line), root);
+                files.push(path.clone());
+                authoritative_files.push(path);
             }
         }
     }
@@ -64,16 +73,12 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
         }
     }
 
+    let explicit_diff_start = files.len();
     collect_diff_files(args, root, &mut files, &mut deleted, &mut diff_files)?;
+    authoritative_files.extend(files[explicit_diff_start..].iter().cloned());
 
-    let mut unique = HashSet::new();
-    let mut result = Vec::new();
-    for f in files {
-        let normalized = no_mistakes::codebase::ts_resolver::normalize_path(&f);
-        if unique.insert(normalized.clone()) {
-            result.push(normalized);
-        }
-    }
+    let result = normalize_unique(files);
+    let authoritative_files = normalize_unique(authoritative_files);
 
     let mut unique_deleted = HashSet::new();
     let mut deleted_result = Vec::new();
@@ -100,8 +105,18 @@ pub(crate) fn collect_changed_files(args: &PlanArgs, root: &Path) -> Result<Chan
     Ok(ChangedFiles {
         files: result,
         deleted: deleted_result,
+        authoritative_files,
         diff_files,
     })
+}
+
+fn normalize_unique(files: Vec<PathBuf>) -> Vec<PathBuf> {
+    let mut unique = HashSet::new();
+    files
+        .into_iter()
+        .map(|path| no_mistakes::codebase::ts_resolver::normalize_path(&path))
+        .filter(|path| unique.insert(path.clone()))
+        .collect()
 }
 
 fn collect_diff_files(

@@ -45,8 +45,8 @@ fn workflow_without_jobs_is_handled() {
 #[test]
 fn scalar_to_string_handles_bool_and_non_scalar() {
     assert_eq!(
-        scalar_to_string(&Value::Bool(true)).as_deref(),
+        super::collect::scalar_to_string(&Value::Bool(true)).as_deref(),
         Some("true")
     );
-    assert!(scalar_to_string(&Value::Null).is_none());
+    assert!(super::collect::scalar_to_string(&Value::Null).is_none());
 }

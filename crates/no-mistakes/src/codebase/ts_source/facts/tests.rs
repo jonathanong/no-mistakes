@@ -18,6 +18,71 @@ fn plan_constructors_select_expected_fact_sets() {
 }
 
 #[test]
+fn pass4b_react_graph_facts_skip_ignored_child_for_visible_fallback() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass4a-shadow");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(&root);
+    let mut context = TsFactContext::new(&root);
+    context.set_visible_files(visible_paths.iter().cloned());
+    let parent = root.join("react/Parent.tsx");
+
+    let facts = collect_ts_facts_with_context(
+        std::slice::from_ref(&parent),
+        TsFactPlan {
+            react: true,
+            ..TsFactPlan::default()
+        },
+        &context,
+    );
+
+    assert_eq!(
+        facts[&parent].react_components[0].children[0].file,
+        "react/Child.ts"
+    );
+}
+
+#[test]
+fn react_graph_facts_support_an_unscoped_context() {
+    let component = fixture("component.tsx");
+    let context = TsFactContext::new(component.parent().unwrap());
+
+    let facts = collect_ts_facts_with_context(
+        std::slice::from_ref(&component),
+        TsFactPlan {
+            react: true,
+            ..TsFactPlan::default()
+        },
+        &context,
+    );
+
+    assert_eq!(facts[&component].react_components.len(), 1);
+}
+
+#[test]
+fn fact_context_include_merges_backend_route_extractors() {
+    let root = fixture("");
+    let mut builder = globset::GlobSetBuilder::new();
+    builder.add(globset::Glob::new("**/*.ts").unwrap());
+    let mut added = TsFactContext::new(&root);
+    added.add_backend_route_extractor(
+        "router".to_string(),
+        "get($ROUTE, $HANDLER)".to_string(),
+        builder.build().unwrap(),
+    );
+    let mut context = TsFactContext::new(&root);
+
+    context.include(added);
+
+    assert_eq!(context.backend_route_extractors.len(), 1);
+    assert_eq!(
+        context.backend_route_extractors[0].register_object,
+        "router"
+    );
+}
+
+#[test]
 fn plan_domain_fact_detection_tracks_domain_flags() {
     assert!(!TsFactPlan::default().has_domain_facts());
     assert!(!TsFactPlan {
@@ -55,6 +120,14 @@ fn plan_domain_fact_detection_tracks_domain_flags() {
         },
         TsFactPlan {
             process_spawns: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
+            effect_calls: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
+            rsc_environment: true,
             ..TsFactPlan::default()
         },
     ] {
@@ -164,9 +237,43 @@ fn plan_empty_detection_tracks_all_flags() {
             process_spawns: true,
             ..TsFactPlan::default()
         },
+        TsFactPlan {
+            effect_calls: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
+            rsc_environment: true,
+            ..TsFactPlan::default()
+        },
     ] {
         assert!(!plan.is_empty());
     }
+}
+
+#[test]
+fn plan_coverage_tracks_effect_and_rsc_facts() {
+    let available = TsFactPlan {
+        effect_calls: true,
+        rsc_environment: true,
+        ..TsFactPlan::default()
+    };
+
+    assert!(available.covers(TsFactPlan {
+        effect_calls: true,
+        ..TsFactPlan::default()
+    }));
+    assert!(available.covers(TsFactPlan {
+        rsc_environment: true,
+        ..TsFactPlan::default()
+    }));
+    assert!(!TsFactPlan::default().covers(TsFactPlan {
+        effect_calls: true,
+        ..TsFactPlan::default()
+    }));
+    assert!(!TsFactPlan::default().covers(TsFactPlan {
+        rsc_environment: true,
+        ..TsFactPlan::default()
+    }));
 }
 
 #[test]

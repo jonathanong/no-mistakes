@@ -33,6 +33,7 @@ fn suggested_tests(
     test_filter: &TestFileFilter,
     extra_callers: &[CallerEntry],
     file_target_symbols: &BTreeMap<String, BTreeSet<String>>,
+    facts: &TsFactMap,
 ) -> Vec<TestSuggestion> {
     let mut by_file: BTreeMap<String, TestSuggestion> = BTreeMap::new();
     for entry in entries {
@@ -50,7 +51,7 @@ fn suggested_tests(
             else {
                 continue;
             };
-            if !file_entry_uses_any_symbol(root, file.as_str(), target_symbols) {
+            if !file_entry_uses_any_symbol(root, file.as_str(), target_symbols, facts) {
                 continue;
             }
         }
@@ -97,22 +98,28 @@ fn warnings(suggested_tests: &[TestSuggestion]) -> Vec<ImpactWarning> {
 }
 
 fn export_location(
+    facts: &TsFactMap,
     file: &Path,
     root: &Path,
     symbol: &str,
     allow_star_reexport: bool,
 ) -> Result<Option<SymbolLocation>> {
-    let source =
-        std::fs::read_to_string(file).with_context(|| format!("reading {}", file.display()))?;
-    let is_tsx = file
-        .extension()
-        .and_then(|s| s.to_str())
-        .is_some_and(|ext| ext.eq_ignore_ascii_case("tsx") || ext.eq_ignore_ascii_case("jsx"));
-    let symbols = extract_symbols(&source, is_tsx)
+    let file_facts = facts
+        .get(file)
+        .with_context(|| format!("reading {}", file.display()))?;
+    if let Some(parse_error) = &file_facts.parse_error {
+        anyhow::bail!(
+            "extracting symbols from {}: {parse_error}",
+            file.display()
+        );
+    }
+    let symbols = file_facts
+        .symbols
+        .as_ref()
         .with_context(|| format!("extracting symbols from {}", file.display()))?;
     Ok(symbols
         .exports
-        .into_iter()
+        .iter()
         .find(|export| export_matches_symbol(&export.kind, &export.name, symbol, allow_star_reexport))
         .map(|export| SymbolLocation {
             file: relative_slash_path(root, file),

@@ -2,16 +2,19 @@ use crate::playwright::analysis::context::{
     DiscoveredTestFile, TestProjectContext, TestProjectDiscovery,
 };
 use crate::playwright::config::Settings;
-use crate::playwright::fsutil::{build_globset, relative_string, slash_path, walk_files};
+use crate::playwright::fsutil::{
+    build_globset, relative_string, slash_path, walk_files_from_snapshot, VisiblePathSnapshot,
+};
 use crate::playwright::playwright_config;
 use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
-pub(crate) fn discover_test_files(
+pub(crate) fn discover_test_files_from_visible(
     root: &Path,
     settings: &Settings,
     playwright: &playwright_config::PlaywrightConfig,
+    snapshot: &VisiblePathSnapshot,
 ) -> Result<Vec<DiscoveredTestFile>> {
     let project_discovery = build_project_discovery(root, settings, playwright)?;
     let all_contexts = test_project_contexts(&project_discovery);
@@ -19,10 +22,13 @@ pub(crate) fn discover_test_files(
         let include = build_globset(&settings.test_include)?;
         let exclude = build_globset(&settings.test_exclude)?;
         let mut files = Vec::new();
-        for path in walk_files(root).into_iter().filter(|path| {
-            let rel = relative_string(root, path);
-            include.is_match(&rel) && !exclude.is_match(&rel)
-        }) {
+        for path in walk_files_from_snapshot(root, snapshot)
+            .into_iter()
+            .filter(|path| {
+                let rel = relative_string(root, path);
+                include.is_match(&rel) && !exclude.is_match(&rel)
+            })
+        {
             let mut contexts = matching_project_contexts(root, &project_discovery, &path);
             if contexts.is_empty() {
                 contexts = all_contexts.clone();
@@ -47,7 +53,7 @@ pub(crate) fn discover_test_files(
     }
 
     for (test_dir, projects) in projects_by_test_dir {
-        for path in walk_files(&test_dir) {
+        for path in walk_files_from_snapshot(&test_dir, snapshot) {
             let rel_root = relative_string(root, &path);
             if yaml_exclude.is_match(&rel_root) {
                 continue;

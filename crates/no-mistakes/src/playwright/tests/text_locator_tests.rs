@@ -1,6 +1,6 @@
 use crate::playwright::analysis::cli_run::run;
 use crate::playwright::analysis::output::build_related_report;
-use crate::playwright::analysis::pipeline::analyze_with_policy;
+use crate::playwright::analysis::pipeline::test_support::analyze_with_policy;
 use crate::playwright::analysis::types::{Analysis, UniqueSelectorPolicy};
 use crate::playwright::cli::{Command, PlaywrightArgs as Cli};
 use crate::playwright::config::Settings;

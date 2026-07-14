@@ -82,6 +82,16 @@ fn collect_frontend_routes_finds_pages() {
 }
 
 #[test]
+fn public_frontend_route_collector_applies_gitignore_outside_git() {
+    let dir = crate::test_support::materialize_gitignore_fixture("non-git-discovery");
+
+    let routes = collect_frontend_routes(dir.path());
+
+    assert!(routes.contains(&"/app".to_string()));
+    assert!(!routes.contains(&"/ignored".to_string()));
+}
+
+#[test]
 fn collect_frontend_routes_from_files_filters_and_sorts_pages() {
     let root = Path::new("/repo/web/app");
     let files = vec![

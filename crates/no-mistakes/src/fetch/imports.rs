@@ -7,18 +7,39 @@ use oxc_ast_visit::{walk, Visit};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
+use crate::fetch::resolve::resolve_import_from_visible;
+
 pub fn collect_imports(
     path: &Path,
     import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
 ) -> Result<Vec<PathBuf>> {
-    let abs_path = path.canonicalize()?;
+    collect_imports_inner(path, import_cache, None)
+}
+
+pub(crate) fn collect_imports_from_visible(
+    path: &Path,
+    import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
+    visible_files: &HashSet<PathBuf>,
+) -> Result<Vec<PathBuf>> {
+    collect_imports_inner(path, import_cache, Some(visible_files))
+}
+
+fn collect_imports_inner(
+    path: &Path,
+    import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
+    visible_files: Option<&HashSet<PathBuf>>,
+) -> Result<Vec<PathBuf>> {
+    let abs_path = match visible_files {
+        Some(_) => crate::codebase::ts_resolver::normalize_path(path),
+        None => path.canonicalize()?,
+    };
     if let Some(cached_imports) = import_cache.get(&abs_path) {
         return Ok(cached_imports.clone());
     }
 
     let source = std::fs::read_to_string(&abs_path)?;
     let imports = ast::with_program(path, &source, |program, _source| {
-        collect_imports_from_program(&abs_path, program, import_cache)
+        collect_imports_from_program_inner(&abs_path, program, import_cache, visible_files)
     })?;
     Ok(imports)
 }
@@ -46,13 +67,42 @@ pub fn collect_runtime_imports_from_program<'a>(
     program: &oxc_ast::ast::Program<'a>,
     referenced_identifiers: &HashSet<String>,
 ) -> Vec<PathBuf> {
+    collect_runtime_imports_from_program_inner(abs_path, program, referenced_identifiers, None)
+}
+
+pub(crate) fn collect_runtime_imports_from_program_from_visible<'a>(
+    abs_path: &Path,
+    program: &oxc_ast::ast::Program<'a>,
+    referenced_identifiers: &HashSet<String>,
+    visible_files: &HashSet<PathBuf>,
+) -> Vec<PathBuf> {
+    collect_runtime_imports_from_program_inner(
+        abs_path,
+        program,
+        referenced_identifiers,
+        Some(visible_files),
+    )
+}
+
+fn collect_runtime_imports_from_program_inner<'a>(
+    abs_path: &Path,
+    program: &oxc_ast::ast::Program<'a>,
+    referenced_identifiers: &HashSet<String>,
+    visible_files: Option<&HashSet<PathBuf>>,
+) -> Vec<PathBuf> {
     let mut imports = Vec::new();
     for stmt in &program.body {
         if let Statement::ImportDeclaration(import) = stmt {
             if !is_runtime_import(import) || !is_import_used(import, referenced_identifiers) {
                 continue;
             }
-            if let Some(resolved) = resolve_import(abs_path, import.source.value.as_str()) {
+            let resolved = match visible_files {
+                Some(visible) => {
+                    resolve_import_from_visible(abs_path, import.source.value.as_str(), visible)
+                }
+                None => resolve_import(abs_path, import.source.value.as_str()),
+            };
+            if let Some(resolved) = resolved {
                 imports.push(resolved);
             }
         }
@@ -91,48 +141,7 @@ pub fn is_import_used(
     false
 }
 
-pub fn collect_imports_from_program<'a>(
-    abs_path: &Path,
-    program: &oxc_ast::ast::Program<'a>,
-    import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
-) -> Vec<PathBuf> {
-    if let Some(cached_imports) = import_cache.get(abs_path) {
-        return cached_imports.clone();
-    }
-
-    let mut imports = Vec::new();
-    for stmt in &program.body {
-        match stmt {
-            Statement::ImportDeclaration(import) if is_runtime_import(import) => {
-                if let Some(resolved) = resolve_import(abs_path, import.source.value.as_str()) {
-                    imports.push(resolved);
-                }
-            }
-            Statement::ExportNamedDeclaration(export) => {
-                if !is_runtime_export(export) {
-                    continue;
-                }
-                if let Some(source) = &export.source {
-                    if let Some(resolved) = resolve_import(abs_path, source.value.as_str()) {
-                        imports.push(resolved);
-                    }
-                }
-            }
-            Statement::ExportAllDeclaration(export) => {
-                if export.export_kind == ImportOrExportKind::Type {
-                    continue;
-                }
-                if let Some(resolved) = resolve_import(abs_path, export.source.value.as_str()) {
-                    imports.push(resolved);
-                }
-            }
-            _ => {}
-        }
-    }
-
-    import_cache.insert(abs_path.to_path_buf(), imports.clone());
-    imports
-}
+include!("imports/program.rs");
 
 #[cfg(test)]
 mod tests;

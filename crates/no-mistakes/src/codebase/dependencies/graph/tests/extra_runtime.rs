@@ -75,7 +75,9 @@ fn process_spawn_edges_cover_source_fallback_without_precomputed_facts() {
     let spawn_target = root.join("packages/api/src/spawn-target.mts");
     let source = std::fs::read_to_string(&spawner).unwrap();
 
-    let edges = collect_process_spawn_edges(&root, None, &[(spawner.clone(), source)], &[]);
+    let visible = HashSet::from([spawn_target.clone()]);
+    let edges =
+        collect_process_spawn_edges(&root, None, &[(spawner.clone(), source)], &[], &visible);
 
     assert!(edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::ProcessSpawn

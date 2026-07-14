@@ -3,6 +3,9 @@ use super::common::{
 };
 use std::collections::BTreeSet;
 
+#[path = "../common/gitignore_fixture.rs"]
+mod gitignore_fixture;
+
 #[test]
 fn import_forms_report_expected_edge_kinds() {
     let root = fixture("import-forms");
@@ -48,6 +51,39 @@ fn import_forms_report_expected_edge_kinds() {
     assert_eq!(
         via_kinds(&dependents, "inline-type.mts"),
         vec!["type-import"]
+    );
+}
+
+#[test]
+fn cli_import_traversal_honors_explicit_ignored_root_but_not_ignored_transitives() {
+    let fixture = gitignore_fixture::materialize("prepared-tsconfig");
+    let init = std::process::Command::new("git")
+        .args(["init", "-q", "--initial-branch=main"])
+        .current_dir(fixture.path())
+        .output()
+        .unwrap();
+    assert!(init.status.success());
+    let add = std::process::Command::new("git")
+        .args(["add", "."])
+        .current_dir(fixture.path())
+        .output()
+        .unwrap();
+    assert!(add.status.success());
+
+    let value = run_json(
+        fixture.path(),
+        &[
+            "dependencies",
+            "--relationship",
+            "import",
+            "ignored-explicit/effect-entry.ts",
+        ],
+    );
+    let paths = file_paths(&value);
+    assert!(paths.contains(&"src/effect.ts".to_string()), "{value:#?}");
+    assert!(
+        !paths.contains(&"ignored-transitive/effect.ts".to_string()),
+        "{value:#?}"
     );
 }
 

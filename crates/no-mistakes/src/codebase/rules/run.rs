@@ -8,46 +8,17 @@ use super::{
 use anyhow::Result;
 use std::path::Path;
 
+mod prepared;
+mod standalone;
+
+pub use prepared::{run_check_with_config_and_facts_and_playwright, PreparedRulesCheck};
+
 pub fn run_check(
     root: &Path,
     config_path: Option<&Path>,
     tsconfig_path: Option<&Path>,
 ) -> Result<Vec<RuleFinding>> {
-    let config = crate::config::v2::load_v2_config(root, config_path)?;
-    if !any_codebase_rule_enabled(&config) {
-        return Ok(Vec::new());
-    }
-    let mut findings = match rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
-        true => test_no_unmocked_dynamic_imports::check(root, &config, tsconfig_path)?,
-        false => Vec::new(),
-    };
-    if rule_enabled(&config, SERVER_ROUTE_CLIENT_BOUNDARY) {
-        findings.extend(server_route_client_boundary::check(root, &config)?);
-    }
-    if rule_enabled(&config, NEXTJS_NO_API_ROUTES) {
-        findings.extend(nextjs_no_api_routes::check(root, &config)?);
-    }
-    if rule_enabled(&config, NEXTJS_NO_CACHING) {
-        findings.extend(nextjs_no_caching::check(root, &config)?);
-    }
-    if rule_enabled(&config, REQUIRE_STORYBOOK_STORIES) {
-        let storybook_findings = require_storybook_stories::check(root, &config, tsconfig_path)?;
-        findings.extend(storybook_findings);
-    }
-    if crate::playwright::rules::configured(&config) {
-        findings.extend(crate::playwright::rules::check(root, config_path, &config)?);
-    }
-    if rule_enabled(&config, FORBIDDEN_DEPENDENCIES) {
-        findings.extend(forbidden_dependencies::check_with_config(
-            root,
-            &config,
-            config_path,
-            tsconfig_path,
-        )?);
-    }
-    suppress_rule_findings(root, &mut findings);
-    sort_findings(&mut findings);
-    Ok(findings)
+    standalone::run_check(root, config_path, tsconfig_path)
 }
 
 pub fn run_check_with_facts(
@@ -56,63 +27,33 @@ pub fn run_check_with_facts(
     tsconfig_path: Option<&Path>,
     shared: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
+    run_check_with_facts_and_playwright(root, config_path, tsconfig_path, shared, None)
+}
+
+pub fn run_check_with_facts_and_playwright(
+    root: &Path,
+    config_path: Option<&Path>,
+    tsconfig_path: Option<&Path>,
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    prepared_playwright: Option<&crate::playwright::rules::PreparedPlaywrightRules>,
+) -> Result<Vec<RuleFinding>> {
     let config = crate::config::v2::load_v2_config(root, config_path)?;
-    if !any_codebase_rule_enabled(&config) {
-        return Ok(Vec::new());
-    }
-    let mut findings = Vec::new();
-    if rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
-        findings.extend(crate::perf_trace::trace(
-            "rules.test_no_unmocked_dynamic_imports",
-            || {
-                test_no_unmocked_dynamic_imports::check_with_facts(
-                    root,
-                    &config,
-                    tsconfig_path,
-                    shared,
-                )
-            },
-        )?);
-    }
-    if rule_enabled(&config, SERVER_ROUTE_CLIENT_BOUNDARY) {
-        let boundary_findings =
-            server_route_client_boundary::check_with_facts(root, &config, shared)?;
-        findings.extend(boundary_findings);
-    }
-    if rule_enabled(&config, NEXTJS_NO_API_ROUTES) {
-        let api_route_findings = nextjs_no_api_routes::check_with_facts(root, &config, shared)?;
-        findings.extend(api_route_findings);
-    }
-    if rule_enabled(&config, NEXTJS_NO_CACHING) {
-        findings.extend(nextjs_no_caching::check_with_facts(root, &config, shared)?);
-    }
-    if rule_enabled(&config, REQUIRE_STORYBOOK_STORIES) {
-        let storybook_findings =
-            require_storybook_stories::check_with_facts(root, &config, tsconfig_path, shared)?;
-        findings.extend(storybook_findings);
-    }
-    if crate::playwright::rules::configured(&config) {
-        findings.extend(crate::perf_trace::trace("rules.playwright", || {
-            crate::playwright::rules::check_with_facts(root, config_path, &config, shared)
-        })?);
-    }
-    if rule_enabled(&config, FORBIDDEN_DEPENDENCIES) {
-        findings.extend(crate::perf_trace::trace(
-            "rules.forbidden_dependencies",
-            || {
-                forbidden_dependencies::check_with_facts(
-                    root,
-                    &config,
-                    config_path,
-                    tsconfig_path,
-                    shared,
-                )
-            },
-        )?);
-    }
-    suppress_rule_findings(root, &mut findings);
-    sort_findings(&mut findings);
-    Ok(findings)
+    let prepared_tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
+        tsconfig_path,
+        root,
+        shared.files(),
+    )?;
+    run_check_with_config_and_facts_and_playwright(PreparedRulesCheck {
+        root,
+        config_path,
+        tsconfig_path,
+        shared,
+        prepared_playwright,
+        config: &config,
+        prepared_graph: None,
+        prepared_tsconfig: &prepared_tsconfig,
+        inferred_roots: None,
+    })
 }
 
 fn any_codebase_rule_enabled(config: &crate::config::v2::NoMistakesConfig) -> bool {

@@ -2,7 +2,7 @@ use super::*;
 use crate::queue::extract_helpers::quoted_prefix;
 use crate::queue::extract_model::FileFacts;
 use crate::queue::graph_model::{diagnostics, ProjectReport};
-use crate::queue::resolver::{load_tsconfig, resolve_import};
+use crate::queue::resolver::{load_tsconfig_from_visible, resolve_import_inner, TsConfig};
 use crate::queue::source::discover_source_files;
 use crate::queue::types::{Edge, EdgeKind};
 use std::collections::HashMap;
@@ -13,6 +13,23 @@ fn fixture(name: &str) -> PathBuf {
         .join("../../test-cases/queue-ast-hop")
         .join(name)
         .join("fixture")
+}
+
+fn load_tsconfig(
+    root: &std::path::Path,
+    explicit: Option<&std::path::Path>,
+) -> anyhow::Result<TsConfig> {
+    let visible = crate::codebase::ts_source::discover_visible_paths(root);
+    load_tsconfig_from_visible(root, explicit, &visible)
+}
+
+fn resolve_import(
+    specifier: &str,
+    current_file: &std::path::Path,
+    root: &std::path::Path,
+    tsconfig: &TsConfig,
+) -> Option<PathBuf> {
+    resolve_import_inner(specifier, current_file, root, tsconfig, None)
 }
 
 fn extract_file_with_factories(
@@ -63,6 +80,20 @@ fn shared_facts_project_reports_queue_edges() {
         .edges
         .iter()
         .any(|edge| edge.from == "queues.ts#sendWelcome" && edge.to == "worker.ts"));
+}
+
+#[test]
+fn pass4a_ignored_queue_module_does_not_shadow_visible_producer_fallback() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass4a-shadow");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+
+    let report = analyze_project(fixture.path(), None, &[]).unwrap();
+
+    assert!(report.producers.iter().any(|producer| {
+        producer.queue_name.as_deref() == Some("visible-emails")
+            && producer.queue_file.as_deref() == Some("queue/queues.ts")
+    }));
 }
 
 #[test]
@@ -243,7 +274,16 @@ fn missing_tsconfig_returns_error() {
         &[],
     )
     .unwrap_err();
-    assert!(err.to_string().contains("No such file") || err.to_string().contains("os error"));
+    let context = err.to_string();
+    assert!(
+        context.contains("loading tsconfig") && context.contains("missing.json"),
+        "{context}"
+    );
+    let chain = format!("{err:#}");
+    assert!(
+        chain.contains("No such file") || chain.contains("os error"),
+        "{chain}"
+    );
 }
 
 #[test]
@@ -316,7 +356,9 @@ fn resolver_handles_exact_paths_base_url_and_indexes() {
     );
     assert_eq!(
         resolve_import("@queue-dir", &current, &root, &tsconfig),
-        Some(root.join("src/queues/index.ts"))
+        Some(crate::codebase::ts_resolver::normalize_path(
+            &root.join("src/queues/index.ts"),
+        ))
     );
     assert_eq!(
         resolve_import("./direct.ts", &current, &root, &tsconfig),
@@ -456,6 +498,18 @@ fn custom_factory_from_v2_config_detected_as_queue_definition() {
         "producer should connect to notifications queue, edges: {:?}",
         report.edges
     );
+}
+
+#[test]
+fn ignored_queue_processor_is_not_resolved_from_disk() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("transitive-visibility");
+
+    let report = analyze_project(fixture.path(), None, &[]).unwrap();
+
+    assert!(report
+        .workers
+        .iter()
+        .any(|worker| worker.file == "queue/worker.ts" && worker.processor_file.is_none()));
 }
 
 #[test]

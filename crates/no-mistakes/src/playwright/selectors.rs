@@ -17,7 +17,12 @@ mod text_locator_calls;
 mod text_locators;
 mod types;
 
+pub(crate) use dynamic_values::cross_file::{
+    collect_static_export_values, resolve_deferred_import, StaticExportValues,
+};
+pub(crate) use extract_app::extract_app_selectors_from_program_from_visible_deferred;
 pub use extract_app::extract_app_selectors_with_regexes;
+pub(crate) use extract_app::extract_app_selectors_with_regexes_from_visible;
 pub use extract_app::{collect_app_selectors, extract_app_selectors};
 pub use extract_playwright::extract_playwright_selector_occurrences_from_program;
 pub(crate) use helper_references::extract_playwright_helper_reference_occurrences_from_program;

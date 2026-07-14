@@ -1,0 +1,7 @@
+[package]
+name = "ignored-root"
+version = "0.1.0"
+
+[[bin]]
+name = "ignored-root"
+path = "src/main.rs"

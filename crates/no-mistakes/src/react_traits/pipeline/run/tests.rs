@@ -1,3 +1,4 @@
+use super::test_support::*;
 use super::*;
 use crate::react_traits::report::types::{ComponentRef, Environment, FetchCall};
 use std::collections::HashMap;
@@ -72,6 +73,34 @@ fn run_analyze_inner_rejects_invalid_target_globs() {
     let err = run_analyze_inner(&root, &file_config, &["[".to_string()], None).unwrap_err();
 
     assert!(format!("{err:#}").contains("["));
+}
+
+#[test]
+fn pass4a_ignored_react_child_does_not_shadow_visible_aggregate_fallback() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass4a-shadow");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let file_config = FileConfig {
+        frontend_root: Some("react".to_string()),
+        assert_no_fetch: None,
+    };
+
+    let report = run_analyze_inner(
+        fixture.path(),
+        &file_config,
+        &["react/**".to_string()],
+        None,
+    )
+    .unwrap();
+    let parent = report
+        .iter()
+        .find(|component| component.file == "react/Parent.tsx")
+        .unwrap();
+
+    assert!(parent
+        .inherited_from_children
+        .as_ref()
+        .is_some_and(|facts| facts.has_state));
 }
 
 fn component(name: &str, file: &str) -> ComponentFacts {

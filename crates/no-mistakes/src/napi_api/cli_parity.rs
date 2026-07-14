@@ -11,13 +11,14 @@ include!("cli_parity_builders.rs");
 
 pub(crate) fn fetches_json_impl(options_json: String) -> napi::Result<String> {
     let options = parse_options::<FetchesOptions>(&options_json)?;
-    let base_root =
-        std::env::current_dir().map_err(|error| napi::Error::from_reason(error.to_string()))?;
+    let base_root = std::env::current_dir()
+        .map_err(anyhow::Error::from)
+        .map_err(to_napi_error)?;
     let args = crate::fetches::FetchesArgs {
         root: options
             .root
             .map(PathBuf::from)
-            .unwrap_or_else(|| ".".into()),
+            .unwrap_or(PathBuf::from(".")),
         config: options.config.map(PathBuf::from),
         format: crate::cli::Format::Json,
         json: true,
@@ -73,7 +74,7 @@ pub(crate) fn tests_targets_json_impl(options_json: String) -> napi::Result<Stri
         root: options
             .root
             .map(PathBuf::from)
-            .unwrap_or_else(|| ".".into()),
+            .unwrap_or(PathBuf::from(".")),
         config: options.config.map(PathBuf::from),
         format: None,
         json: true,
@@ -84,7 +85,7 @@ pub(crate) fn tests_targets_json_impl(options_json: String) -> napi::Result<Stri
 
 pub(crate) fn ci_impact_json_impl(options_json: String) -> napi::Result<String> {
     let options = parse_options::<CiImpactOptions>(&options_json)?;
-    let root = options.root.unwrap_or_else(|| ".".to_string());
+    let root = options.root.unwrap_or(String::from("."));
     let files: Vec<PathBuf> = options.files.into_iter().map(PathBuf::from).collect();
     let report = crate::ci::impact_report(
         Path::new(&root),
@@ -101,7 +102,7 @@ pub(crate) fn ci_env_json_impl(options_json: String) -> napi::Result<String> {
         .var
         .context("var is required")
         .map_err(to_napi_error)?;
-    let root = options.root.unwrap_or_else(|| ".".to_string());
+    let root = options.root.unwrap_or(String::from("."));
     let report = crate::ci::env_report(
         Path::new(&root),
         options.config.as_deref().map(Path::new),
@@ -172,7 +173,7 @@ fn playwright_json(
         root: options
             .root
             .map(PathBuf::from)
-            .unwrap_or_else(|| ".".into()),
+            .unwrap_or(PathBuf::from(".")),
         config: options.config.map(PathBuf::from),
         playwright_config: strings_to_paths(options.playwright_config),
         project: options.project,
@@ -199,5 +200,5 @@ fn load_plan_document(options: TestsPlanDocumentOptions) -> AnyhowResult<crate::
 }
 
 fn to_pretty_json<T: serde::Serialize>(value: &T) -> napi::Result<String> {
-    serde_json::to_string_pretty(value).map_err(|error| napi::Error::from_reason(error.to_string()))
+    Ok(serde_json::to_string_pretty(value).expect("N-API report serialization never fails"))
 }

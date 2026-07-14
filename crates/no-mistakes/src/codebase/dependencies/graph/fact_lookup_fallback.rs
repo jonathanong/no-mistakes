@@ -67,17 +67,71 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
     }
 
     fn get_playwright_parse_error(&self, path: &Path) -> Option<&str> {
-        self.primary.get_playwright_parse_error(path)
+        if self.prefer_fallback {
+            self.fallback
+                .get(path)
+                .and_then(|facts| facts.parse_error.as_deref())
+                .or_else(|| self.primary.get_playwright_parse_error(path))
+        } else {
+            self.primary.get_playwright_parse_error(path).or_else(|| {
+                self.fallback
+                    .get(path)
+                    .and_then(|facts| facts.parse_error.as_deref())
+            })
+        }
+    }
+
+    fn playwright_source_files(&self) -> Option<&[PathBuf]> {
+        if self.reuse_primary_playwright_cache {
+            self.primary.playwright_source_files()
+        } else {
+            None
+        }
+    }
+
+    fn get_playwright_test_files(
+        &self,
+        project: Option<&str>,
+    ) -> Option<Arc<Vec<crate::playwright::analysis::context::DiscoveredTestFile>>> {
+        if self.reuse_primary_playwright_cache {
+            self.primary.get_playwright_test_files(project)
+        } else {
+            None
+        }
+    }
+
+    fn get_playwright_fetch_facts(
+        &self,
+        path: &Path,
+    ) -> Option<Result<crate::fetch::file_facts::ParsedFileFacts, String>> {
+        if !self.reuse_primary_playwright_cache {
+            return None;
+        }
+        let fallback_error = || {
+            self.fallback.get(path).and_then(|facts| {
+                facts.parse_error.as_ref().map(|error| {
+                    Err(format!("failed to parse {}: {error}", path.display()))
+                })
+            })
+        };
+        if self.prefer_fallback {
+            fallback_error().or_else(|| self.primary.get_playwright_fetch_facts(path))
+        } else {
+            self.primary
+                .get_playwright_fetch_facts(path)
+                .or_else(fallback_error)
+        }
     }
 
     fn get_or_compute_app_selector_occurrences(
         &self,
+        settings: &crate::playwright::config::Settings,
         scan_html_ids: bool,
         compute: &dyn Fn() -> Result<Vec<crate::playwright::selectors::AppSelector>>,
     ) -> Result<Arc<Vec<crate::playwright::selectors::AppSelector>>> {
         if self.reuse_primary_playwright_cache {
             self.primary
-                .get_or_compute_app_selector_occurrences(scan_html_ids, compute)
+                .get_or_compute_app_selector_occurrences(settings, scan_html_ids, compute)
         } else {
             compute().map(Arc::new)
         }
@@ -85,10 +139,11 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
 
     fn get_or_compute_playwright_routes(
         &self,
+        settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> Vec<crate::routes::Route>,
     ) -> Arc<Vec<crate::routes::Route>> {
         if self.reuse_primary_playwright_cache {
-            self.primary.get_or_compute_playwright_routes(compute)
+            self.primary.get_or_compute_playwright_routes(settings, compute)
         } else {
             Arc::new(compute())
         }
@@ -96,10 +151,11 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
 
     fn get_or_compute_app_text_targets(
         &self,
+        settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> Result<Vec<crate::playwright::analysis::text_types::AppTextTarget>>,
     ) -> Result<Arc<Vec<crate::playwright::analysis::text_types::AppTextTarget>>> {
         if self.reuse_primary_playwright_cache {
-            self.primary.get_or_compute_app_text_targets(compute)
+            self.primary.get_or_compute_app_text_targets(settings, compute)
         } else {
             compute().map(Arc::new)
         }
@@ -107,10 +163,12 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
 
     fn get_or_compute_route_reachable_files(
         &self,
+        settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> Result<RouteReachableFiles>,
     ) -> Result<Arc<RouteReachableFiles>> {
         if self.reuse_primary_playwright_cache {
-            self.primary.get_or_compute_route_reachable_files(compute)
+            self.primary
+                .get_or_compute_route_reachable_files(settings, compute)
         } else {
             compute().map(Arc::new)
         }

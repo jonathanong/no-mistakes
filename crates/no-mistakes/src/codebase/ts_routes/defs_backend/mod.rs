@@ -1,4 +1,4 @@
-use crate::codebase::ts_source::{byte_offset_to_line, is_skipped_dir};
+use crate::codebase::ts_source::byte_offset_to_line;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     Argument, BindingPattern, Expression, ForStatementInit, ForStatementLeft, Program, Statement,

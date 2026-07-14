@@ -30,6 +30,32 @@ fn test_run_covers_paths_and_yml_formats() {
     }
 }
 
+#[cfg(feature = "test-instrumentation")]
+#[test]
+fn target_matching_and_fetch_analysis_parse_each_fixture_file_once() {
+    let source = fixture("nextjs-fetches", "parse-sharing");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let cli = Cli {
+        root: PathBuf::from("."),
+        config: None,
+        format: Format::Human,
+        json: false,
+        targets: vec!["app/users.ts".to_string()],
+    };
+
+    no_mistakes::ast::begin_parse_count(&root);
+    let report = run_with_base_root(&root, &cli).unwrap();
+    let counts = no_mistakes::ast::finish_parse_count(&root);
+
+    assert_eq!(report.routes.len(), 1);
+    assert_eq!(report.routes[0].route, "/");
+    assert_eq!(report.routes[0].api_calls.len(), 1);
+    assert_eq!(report.routes[0].api_calls[0].path, "/api/users");
+    assert_eq!(counts.len(), 2);
+    assert!(counts.values().all(|count| *count == 1), "{counts:?}");
+}
+
 #[test]
 fn test_run_with_base_root_errors_when_route_target_matcher_fails() {
     let root = tempdir().unwrap();

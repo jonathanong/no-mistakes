@@ -46,6 +46,8 @@ pub(crate) fn collect_file_facts(
             });
         }
     };
+    #[cfg(any(test, feature = "test-instrumentation"))]
+    crate::ast::record_parse_path(path);
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(path).unwrap_or_else(|_| SourceType::ts());
     let parsed = Parser::new(&allocator, &source, source_type).parse();
@@ -57,33 +59,60 @@ pub(crate) fn collect_file_facts(
     } else {
         None
     };
+    Some(collect_file_facts_from_program(
+        path,
+        plan,
+        context,
+        &source,
+        &parsed.program,
+        parse_error,
+    ))
+}
+
+pub(crate) fn collect_file_facts_from_program(
+    path: &Path,
+    plan: TsFactPlan,
+    context: &TsFactContext,
+    source: &str,
+    program: &oxc_ast::ast::Program<'_>,
+    parse_error: Option<String>,
+) -> TsFileFacts {
     let import_facts = if plan.imports || plan.function_calls {
-        extract_import_facts_from_program_with_source(&parsed.program, &source)
+        extract_import_facts_from_program_with_source(program, source)
     } else {
         Default::default()
     };
     let symbols = plan
         .symbols
-        .then(|| extract_symbols_from_program(&parsed.program, &source));
+        .then(|| extract_symbols_from_program(program, source));
     let domain = if plan.has_domain_facts() {
-        domain::collect_domain_facts(&parsed.program, path, &source, plan, context)
+        domain::collect_domain_facts(program, path, source, plan, context)
     } else {
         domain::DomainFacts::default()
     };
     let react_components = if plan.react {
-        crate::react_traits::analyze::file::analyze_program(
-            path,
-            &context.root,
-            &source,
-            &parsed.program,
-        )
+        match context.visible_files.as_deref() {
+            Some(visible) => crate::react_traits::analyze::file::analyze_program_from_visible(
+                path,
+                &context.root,
+                source,
+                program,
+                visible,
+            ),
+            None => crate::react_traits::analyze::file::analyze_program(
+                path,
+                &context.root,
+                source,
+                program,
+            ),
+        }
         .components
     } else {
         Vec::new()
     };
-    Some(TsFileFacts {
+    TsFileFacts {
         parse_error,
-        source: plan.source.then_some(source),
+        source: plan.source.then(|| source.to_string()),
         imports: import_facts.imports,
         function_calls: import_facts.function_calls,
         symbol_references: import_facts.symbol_references,
@@ -104,5 +133,7 @@ pub(crate) fn collect_file_facts(
         process_spawns: domain.process_spawns,
         server_routes: domain.server_routes,
         react_components,
-    })
+        effect_calls: domain.effect_calls,
+        rsc_environment: domain.rsc_environment,
+    }
 }

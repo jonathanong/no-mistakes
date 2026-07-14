@@ -14,6 +14,8 @@ fn has_file(entries: &[NodeEntry], path: &Path) -> bool {
         .any(|entry| entry.node.as_file() == Some(path))
 }
 
+include!("extra_integration.rs");
+
 #[test]
 fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("simple"));
@@ -40,7 +42,8 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
         },
         NodeId::File(a),
     ];
-    let limited = lazy_import_deps_of_with_files(&roots, &root, &tsconfig, Some(1), &graph_files, None);
+    let limited =
+        lazy_import_deps_of_with_files(&roots, &root, &tsconfig, Some(1), &graph_files, None);
     assert!(has_file(&limited, &b));
     assert!(!has_file(&limited, &c));
 
@@ -142,14 +145,14 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
                 dir: root.join("packages/web"),
                 entry: Some(web_entry.clone()),
                 exports: None,
-            imports: None,
+                imports: None,
             },
             crate::codebase::workspaces::WorkspacePackage {
                 name: "@x/hidden".to_string(),
                 dir: root.join("hidden"),
                 entry: Some(root.join("hidden/index.ts")),
                 exports: None,
-            imports: None,
+                imports: None,
             },
         ],
     };
@@ -235,11 +238,18 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         imports: hidden_imports_items,
         ..Default::default()
     };
-    let hidden_imports = vec![(&hidden_imports_path, &hidden_imports_facts, Default::default())];
-    assert!(
-        collect_import_edges(&hidden_imports, &resolver, &Default::default(), &graph_files)
-            .is_empty()
-    );
+    let hidden_imports = vec![(
+        &hidden_imports_path,
+        &hidden_imports_facts,
+        Default::default(),
+    )];
+    assert!(collect_import_edges(
+        &hidden_imports,
+        &resolver,
+        &Default::default(),
+        &graph_files
+    )
+    .is_empty());
     assert_eq!(package_name_from_spec("@scope/pkg/path"), "@scope/pkg");
     assert_eq!(package_name_from_spec("@scope"), "@scope");
 }
@@ -315,8 +325,9 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
     assert!(missing_forward.is_empty());
 
     let nested_root = crate::codebase::ts_resolver::normalize_path(&fixture("cargo-nested-bin"));
+    let nested_visible = HashSet::from([nested_root.join("src/bin/nested/main.rs")]);
     assert_eq!(
-        resolve_cargo_bin_source(&nested_root, "nested", "missing.rs"),
+        resolve_cargo_bin_source(&nested_root, "nested", "missing.rs", &nested_visible),
         Some(nested_root.join("src/bin/nested/main.rs"))
     );
     let mut nested_forward = EdgeMap::new();
@@ -358,16 +369,23 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
     );
     assert!(nested_forward.is_empty());
     let mut bins = CargoBinIndex::default();
+    let empty_visible = HashSet::new();
     add_manifest_bins(
         Path::new("/"),
         "[[bin]]\nname = \"root\"\npath = \"main.rs\"\n",
+        &empty_visible,
         &mut bins,
     );
-    add_manifest_bins(&root.join("Cargo.toml"), "[[bin]", &mut bins);
+    add_manifest_bins(
+        &root.join("Cargo.toml"),
+        "[[bin]",
+        &empty_visible,
+        &mut bins,
+    );
     let outside = collect_cargo_bins(&root, &[PathBuf::from("/outside/Cargo.toml")]);
-    assert!(outside.by_name.contains_key("guardrails"));
+    assert!(outside.by_name.is_empty());
     let missing_member_manifest = collect_cargo_bins(&root, &[root.join("missing/Cargo.toml")]);
-    assert!(missing_member_manifest.by_name.contains_key("guardrails"));
+    assert!(missing_member_manifest.by_name.is_empty());
     let invalid_root = crate::codebase::ts_resolver::normalize_path(&fixture("cargo-invalid"));
     assert!(
         collect_cargo_bins(&invalid_root, &[invalid_root.join("Cargo.toml")])
@@ -402,6 +420,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
         &crate::codebase::workspaces::WorkspaceMap::default(),
         &graph_files,
         None,
+        None,
     )
     .is_empty());
 
@@ -413,16 +432,14 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
                 dir: root.join("packages/missing"),
                 entry: Some(root.join("packages/missing/index.ts")),
                 exports: None,
-            imports: None,
+                imports: None,
             }],
         },
         &graph_files,
     )
     .is_empty());
     assert!(collect_test_edges(Path::new("."), &[PathBuf::from("/")], None).is_empty());
-    assert!(
-        collect_test_edges(Path::new("."), &[PathBuf::from("no-parent.ts")], None).is_empty()
-    );
+    assert!(collect_test_edges(Path::new("."), &[PathBuf::from("no-parent.ts")], None).is_empty());
     assert!(collect_md_edges(&[PathBuf::from("/")], &graph_files).is_empty());
     assert!(collect_md_edges(&[PathBuf::from("README.md")], &graph_files).is_empty());
 
@@ -431,7 +448,15 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
     add_ci_edges(&root.join("missing"), &[], &mut forward, &mut reverse);
     assert!(forward.is_empty());
 
-    assert!(collect_route_edges(&root.join("missing"), &tsconfig, &[], None, None).is_empty());
+    assert!(collect_route_edges(
+        &root.join("missing"),
+        &tsconfig,
+        &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
+        &[],
+        None,
+        None,
+    )
+    .is_empty());
     add_queue_edges(
         &root.join("missing"),
         &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
@@ -445,69 +470,4 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
         collect_http_call_edges(&root.join("missing"), &tsconfig, None, &[], &[], &[], None)
             .is_empty()
     );
-}
-
-#[test]
-fn codebase_intel_graph_emits_queue_http_route_test_and_process_edges() {
-    let (root, _tsconfig, graph) = codebase_intel();
-
-    let send_email = root.join("packages/api/src/send-email.mts");
-    let emails = root.join("packages/api/src/emails.mts");
-    let processors = root.join("packages/api/src/processors.mts");
-    let worker = root.join("packages/api/src/worker.mts");
-    let api_client = root.join("packages/web/src/api-client.tsx");
-    let api_index = root.join("packages/api/src/index.mts");
-    let spec = root.join("tests/e2e/users.spec.ts");
-    let page = root.join("packages/web/app/users/[id]/page.tsx");
-    let spawner = root.join("packages/api/src/spawn-runner.mts");
-    let spawn_target = root.join("packages/api/src/spawn-target.mts");
-
-    let enqueue = graph.deps_of(
-        &[NodeId::File(send_email)],
-        None,
-        Some(&[EdgeKind::QueueEnqueue].into()),
-    );
-    assert!(enqueue.iter().any(|entry| {
-        matches!(
-            &entry.node,
-            NodeId::QueueJob { queue_file, job }
-                if queue_file == &emails && job == "sendWelcomeEmail"
-        )
-    }));
-
-    let queue_job = NodeId::QueueJob {
-        queue_file: emails,
-        job: "sendWelcomeEmail".to_string(),
-    };
-    let workers = graph.deps_of(&[queue_job], None, Some(&[EdgeKind::QueueWorker].into()));
-    assert!(has_file(&workers, &processors));
-    assert!(has_file(&workers, &worker));
-
-    let http = graph.deps_of(
-        &[NodeId::File(api_client.clone())],
-        None,
-        Some(&[EdgeKind::HttpCall].into()),
-    );
-    assert!(has_file(&http, &api_index));
-
-    let route_refs = graph.deps_of(
-        &[NodeId::File(api_client)],
-        None,
-        Some(&[EdgeKind::RouteRef].into()),
-    );
-    assert!(has_file(&route_refs, &api_index));
-
-    let route_tests = graph.deps_of(
-        &[NodeId::File(spec)],
-        None,
-        Some(&[EdgeKind::RouteTest].into()),
-    );
-    assert!(has_file(&route_tests, &page));
-
-    let process = graph.deps_of(
-        &[NodeId::File(spawner)],
-        None,
-        Some(&[EdgeKind::ProcessSpawn].into()),
-    );
-    assert!(has_file(&process, &spawn_target));
 }

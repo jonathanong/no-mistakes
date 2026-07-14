@@ -1,12 +1,24 @@
-fn extract_web_server(expr: &Expression, file_path: &Path, root: &Path, out: &mut Vec<SpawnEdge>) {
+fn extract_web_server(
+    expr: &Expression,
+    file_path: &Path,
+    root: &Path,
+    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    out: &mut Vec<SpawnEdge>,
+) {
     let expr = unwrap_ts_wrappers(expr);
     match expr {
         Expression::ArrayExpression(arr) => {
             for item in &arr.elements {
-                extract_optional_web_server_entry(item.as_expression(), file_path, root, out);
+                extract_optional_web_server_entry(
+                    item.as_expression(),
+                    file_path,
+                    root,
+                    visible_files,
+                    out,
+                );
             }
         }
-        _ => extract_web_server_entry(expr, file_path, root, out),
+        _ => extract_web_server_entry(expr, file_path, root, visible_files, out),
     }
 }
 
@@ -14,15 +26,17 @@ fn extract_optional_web_server_entry(
     expr: Option<&Expression>,
     file_path: &Path,
     root: &Path,
+    visible_files: Option<&std::collections::HashSet<PathBuf>>,
     out: &mut Vec<SpawnEdge>,
 ) {
-    let _ = expr.map(|expr| extract_web_server_entry(expr, file_path, root, out));
+    let _ = expr.map(|expr| extract_web_server_entry(expr, file_path, root, visible_files, out));
 }
 
 fn extract_define_config_web_server(
     call: &oxc_ast::ast::CallExpression,
     file_path: &Path,
     root: &Path,
+    visible_files: Option<&std::collections::HashSet<PathBuf>>,
     out: &mut Vec<SpawnEdge>,
 ) {
     let Some(Argument::ObjectExpression(obj)) = call.arguments.first() else {
@@ -33,7 +47,7 @@ fn extract_define_config_web_server(
         _ => None,
     }) {
         if matches!(&p.key, PropertyKey::StaticIdentifier(id) if id.name.as_str() == "webServer") {
-            extract_web_server(&p.value, file_path, root, out);
+            extract_web_server(&p.value, file_path, root, visible_files, out);
         }
     }
 }
@@ -42,6 +56,7 @@ fn extract_web_server_entry(
     expr: &Expression,
     file_path: &Path,
     root: &Path,
+    visible_files: Option<&std::collections::HashSet<PathBuf>>,
     out: &mut Vec<SpawnEdge>,
 ) {
     let expr = unwrap_ts_wrappers(expr);
@@ -70,7 +85,13 @@ fn extract_web_server_entry(
 
         if let Some(cmd) = command {
             let cwd_str = cwd.as_deref().and_then(|p| p.to_str());
-            if let Some(entry) = resolve_entry_file_from_shell(&cmd, cwd_str, file_path, root) {
+            let entry = match visible_files {
+                Some(visible) => resolve_entry_file_from_shell_from_visible(
+                    &cmd, cwd_str, file_path, root, visible,
+                ),
+                None => resolve_entry_file_from_shell(&cmd, cwd_str, file_path, root),
+            };
+            if let Some(entry) = entry {
                 out.push(SpawnEdge {
                     spawner: file_path.to_path_buf(),
                     entry,
@@ -85,19 +106,22 @@ fn collect_from_export_named(
     source: &str,
     file_path: &Path,
     root: &Path,
+    visible_files: Option<&std::collections::HashSet<PathBuf>>,
     out: &mut Vec<SpawnEdge>,
 ) {
     let Some(decl) = &e.declaration else { return };
     match decl {
         oxc_ast::ast::Declaration::VariableDeclaration(v) => {
             for d in &v.declarations {
-                collect_from_optional_expr(d.init.as_ref(), source, file_path, root, out);
+                collect_from_optional_expr(
+                    d.init.as_ref(), source, file_path, root, visible_files, out,
+                );
             }
         }
         oxc_ast::ast::Declaration::FunctionDeclaration(f) => {
             if let Some(body) = &f.body {
                 for s in &body.statements {
-                    collect_from_stmt(s, source, file_path, root, out);
+                    collect_from_stmt(s, source, file_path, root, visible_files, out);
                 }
             }
         }
@@ -110,19 +134,20 @@ fn collect_from_try_stmt(
     source: &str,
     file_path: &Path,
     root: &Path,
+    visible_files: Option<&std::collections::HashSet<PathBuf>>,
     out: &mut Vec<SpawnEdge>,
 ) {
     for s in &t.block.body {
-        collect_from_stmt(s, source, file_path, root, out);
+        collect_from_stmt(s, source, file_path, root, visible_files, out);
     }
     if let Some(handler) = &t.handler {
         for s in &handler.body.body {
-            collect_from_stmt(s, source, file_path, root, out);
+            collect_from_stmt(s, source, file_path, root, visible_files, out);
         }
     }
     if let Some(finalizer) = &t.finalizer {
         for s in &finalizer.body {
-            collect_from_stmt(s, source, file_path, root, out);
+            collect_from_stmt(s, source, file_path, root, visible_files, out);
         }
     }
 }

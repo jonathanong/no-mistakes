@@ -3,7 +3,8 @@ use super::scoped_defaults::{scoped_static_default_for_identifier, ScopedStaticI
 use super::types::{AppSelectorValue, TemplatePattern};
 use crate::playwright::ast;
 use oxc_span::GetSpan;
-use std::path::Path;
+use std::collections::HashSet;
+use std::path::{Path, PathBuf};
 
 pub(super) fn app_selector_values(
     value: Option<&oxc_ast::ast::JSXAttributeValue<'_>>,
@@ -13,6 +14,46 @@ pub(super) fn app_selector_values(
     dynamic_identifier_values: &[DynamicIdentifierValues],
     program: &oxc_ast::ast::Program<'_>,
 ) -> Vec<AppSelectorValue> {
+    app_selector_values_inner(
+        value,
+        source,
+        file,
+        scoped_static_identifier_defaults,
+        dynamic_identifier_values,
+        program,
+        None,
+    )
+}
+
+pub(super) fn app_selector_values_from_visible(
+    value: Option<&oxc_ast::ast::JSXAttributeValue<'_>>,
+    source: &str,
+    file: &Path,
+    scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
+    dynamic_identifier_values: &[DynamicIdentifierValues],
+    program: &oxc_ast::ast::Program<'_>,
+    visible_files: &HashSet<PathBuf>,
+) -> Vec<AppSelectorValue> {
+    app_selector_values_inner(
+        value,
+        source,
+        file,
+        scoped_static_identifier_defaults,
+        dynamic_identifier_values,
+        program,
+        Some(visible_files),
+    )
+}
+
+fn app_selector_values_inner(
+    value: Option<&oxc_ast::ast::JSXAttributeValue<'_>>,
+    source: &str,
+    file: &Path,
+    scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
+    dynamic_identifier_values: &[DynamicIdentifierValues],
+    program: &oxc_ast::ast::Program<'_>,
+    visible_files: Option<&HashSet<PathBuf>>,
+) -> Vec<AppSelectorValue> {
     let Some(value) = value else {
         return vec![];
     };
@@ -20,25 +61,34 @@ pub(super) fn app_selector_values(
         oxc_ast::ast::JSXAttributeValue::StringLiteral(literal) => {
             vec![AppSelectorValue::Exact(literal.value.to_string())]
         }
-        oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container) => jsx_expression_values(
-            &container.expression,
-            source,
-            file,
-            scoped_static_identifier_defaults,
-            dynamic_identifier_values,
-            program,
-        ),
+        oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container) => {
+            jsx_expression_values_inner(
+                &container.expression,
+                source,
+                file,
+                scoped_static_identifier_defaults,
+                dynamic_identifier_values,
+                program,
+                visible_files,
+            )
+        }
         _ => vec![],
     }
 }
 
-pub(super) fn jsx_expression_values(
+struct SelectorFileContext<'a> {
+    file: &'a Path,
+    visible_files: Option<&'a HashSet<PathBuf>>,
+}
+
+fn jsx_expression_values_inner(
     expression: &oxc_ast::ast::JSXExpression<'_>,
     source: &str,
     file: &Path,
     scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
     dynamic_identifier_values: &[DynamicIdentifierValues],
     program: &oxc_ast::ast::Program<'_>,
+    visible_files: Option<&HashSet<PathBuf>>,
 ) -> Vec<AppSelectorValue> {
     match expression {
         oxc_ast::ast::JSXExpression::StringLiteral(literal) => {
@@ -54,7 +104,10 @@ pub(super) fn jsx_expression_values(
             identifier.name.as_str(),
             identifier.span(),
             source,
-            file,
+            SelectorFileContext {
+                file,
+                visible_files,
+            },
             scoped_static_identifier_defaults,
             dynamic_identifier_values,
             program,
@@ -89,7 +142,7 @@ fn resolve_identifier(
     name: &str,
     span: oxc_span::Span,
     source: &str,
-    file: &Path,
+    file_context: SelectorFileContext<'_>,
     scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
     dynamic_identifier_values: &[DynamicIdentifierValues],
     program: &oxc_ast::ast::Program<'_>,
@@ -105,7 +158,19 @@ fn resolve_identifier(
         dynamic_values::resolve_dynamic_identifier(name, span, dynamic_identifier_values);
     // 3. Try cross-file imports
     if values.is_empty() {
-        values = dynamic_values::cross_file::resolve_imported_values(name, program, file);
+        values = match file_context.visible_files {
+            Some(visible) => dynamic_values::cross_file::resolve_imported_values_from_visible(
+                name,
+                program,
+                file_context.file,
+                visible,
+            ),
+            None => dynamic_values::cross_file::resolve_imported_values(
+                name,
+                program,
+                file_context.file,
+            ),
+        };
     }
     if !values.is_empty() {
         return values.into_iter().map(AppSelectorValue::Exact).collect();

@@ -1,12 +1,5 @@
-fn is_namespace_reexport_symbol(file: &Path, symbol: &str) -> bool {
-    let Ok(source) = std::fs::read_to_string(file) else {
-        return false;
-    };
-    let is_tsx = file
-        .extension()
-        .and_then(|s| s.to_str())
-        .is_some_and(|ext| ext.eq_ignore_ascii_case("tsx") || ext.eq_ignore_ascii_case("jsx"));
-    let Ok(symbols) = extract_symbols(&source, is_tsx) else {
+fn is_namespace_reexport_symbol(facts: &TsFactMap, file: &Path, symbol: &str) -> bool {
+    let Some(symbols) = facts.get(file).and_then(|facts| facts.symbols.as_ref()) else {
         return false;
     };
     symbols.exports.iter().any(|export| {
@@ -22,23 +15,20 @@ fn is_namespace_reexport_symbol(file: &Path, symbol: &str) -> bool {
 }
 
 fn namespace_reexport_target_symbol(
+    facts: &TsFactMap,
     file: &Path,
     symbol: &str,
     target_symbol: &str,
+    visible_files: &HashSet<PathBuf>,
 ) -> Option<String> {
-    let source = std::fs::read_to_string(file).ok()?;
-    let is_tsx = file
-        .extension()
-        .and_then(|s| s.to_str())
-        .is_some_and(|ext| ext.eq_ignore_ascii_case("tsx") || ext.eq_ignore_ascii_case("jsx"));
-    let symbols = extract_symbols(&source, is_tsx).ok()?;
+    let symbols = facts.get(file)?.symbols.as_ref()?;
     if target_symbol
         .strip_prefix(symbol)
         .is_some_and(|tail| tail.starts_with('.'))
     {
         return Some(target_symbol.to_string());
     }
-    if !namespace_tail_applies(file, &symbols, symbol, target_symbol) {
+    if !namespace_tail_applies(facts, file, symbols, symbol, target_symbol, visible_files) {
         return None;
     }
     let local = symbols.exports.iter().find_map(|export| {
@@ -60,7 +50,13 @@ fn namespace_reexport_target_symbol(
             source, imported, ..
         } if imported == "*"
             && export.name == symbol
-            && source_exports_symbol(file, source, namespace_tail_root(target_symbol)) =>
+            && source_exports_symbol(
+                facts,
+                file,
+                source,
+                namespace_tail_root(target_symbol),
+                visible_files,
+            ) =>
         {
             Some(format!("{symbol}.{target_symbol}"))
         }
@@ -75,10 +71,12 @@ fn namespace_tail_root(target_symbol: &str) -> &str {
 }
 
 fn namespace_tail_applies(
+    facts: &TsFactMap,
     file: &Path,
     symbols: &crate::codebase::ts_symbols::FileSymbols,
     symbol: &str,
     target_symbol: &str,
+    visible_files: &HashSet<PathBuf>,
 ) -> bool {
     let Some((first, _)) = target_symbol.split_once('.') else {
         return true;
@@ -100,24 +98,26 @@ fn namespace_tail_applies(
         let ExportKind::ReExport { source, .. } = &export.kind else {
             return false;
         };
-        source_exports_symbol(file, source, first)
+        source_exports_symbol(facts, file, source, first, visible_files)
     })
 }
 
-fn source_exports_symbol(file: &Path, source: &str, symbol: &str) -> bool {
+fn source_exports_symbol(
+    facts: &TsFactMap,
+    file: &Path,
+    source: &str,
+    symbol: &str,
+    visible_files: &HashSet<PathBuf>,
+) -> bool {
     let Some(parent) = file.parent() else {
         return false;
     };
-    let source_file = resolve_relative_source_file(parent, source);
-    let Ok(source) = std::fs::read_to_string(&source_file) else {
+    let Some(source_file) = resolve_relative_source_file(parent, source, visible_files) else {
         return false;
     };
-    let is_tsx = source_file
-        .extension()
-        .and_then(|s| s.to_str())
-        .is_some_and(|ext| ext.eq_ignore_ascii_case("tsx") || ext.eq_ignore_ascii_case("jsx"));
-    extract_symbols(&source, is_tsx)
-        .ok()
+    facts
+        .get(&source_file)
+        .and_then(|facts| facts.symbols.as_ref())
         .is_some_and(|symbols| {
             symbols
                 .exports
@@ -126,16 +126,25 @@ fn source_exports_symbol(file: &Path, source: &str, symbol: &str) -> bool {
         })
 }
 
-fn resolve_relative_source_file(parent: &Path, source: &str) -> PathBuf {
-    let source_file = parent.join(source);
-    if source_file.exists() || source_file.extension().is_some() {
-        return source_file;
+fn resolve_relative_source_file(
+    parent: &Path,
+    source: &str,
+    visible_files: &HashSet<PathBuf>,
+) -> Option<PathBuf> {
+    let source_file = crate::codebase::ts_resolver::normalize_path(&parent.join(source));
+    if visible_files.contains(&source_file) {
+        return Some(source_file);
+    }
+    if source_file.extension().is_some() {
+        return None;
     }
     for extension in ["mts", "ts", "tsx", "mjs", "js", "jsx", "cts", "cjs"] {
-        let candidate = parent.join(format!("{source}.{extension}"));
-        if candidate.exists() {
-            return candidate;
+        let candidate = crate::codebase::ts_resolver::normalize_path(
+            &parent.join(format!("{source}.{extension}")),
+        );
+        if visible_files.contains(&candidate) {
+            return Some(candidate);
         }
     }
-    source_file
+    None
 }

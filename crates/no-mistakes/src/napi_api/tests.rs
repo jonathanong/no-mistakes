@@ -152,6 +152,61 @@ fn symbols_json_returns_structured_results() {
 }
 
 #[test]
+fn pass4b_symbols_cli_and_napi_reports_share_gitignore_visibility() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass4b-shadow");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let root_string = root.display().to_string();
+
+    let cli_output = crate::codebase::symbols::run_json(crate::codebase::symbols::SymbolsArgs {
+        files: vec![PathBuf::from("query/source.ts")],
+        root: Some(root),
+        tsconfig: None,
+        config: None,
+        mode: crate::codebase::symbols::SymbolsMode::List,
+        symbol: None,
+        kinds: Vec::new(),
+        include: crate::codebase::symbols::Include::Both,
+        format: Some(crate::cli::Format::Json),
+        json: true,
+        timings: false,
+    })
+    .unwrap();
+    let napi_output = symbols_json_impl(
+        json!({
+            "root": root_string,
+            "files": ["query/source.ts"],
+            "include": "both",
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let cli_output: serde_json::Value = serde_json::from_str(&cli_output).unwrap();
+    let napi_output: serde_json::Value = serde_json::from_str(&napi_output).unwrap();
+
+    assert_eq!(napi_output, cli_output);
+    let reexports: Vec<_> = napi_output["files"][0]["exports"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|export| export["kind"] == "re-export")
+        .collect();
+    assert!(!reexports.is_empty());
+    assert!(
+        reexports
+            .iter()
+            .all(|export| export["reExport"]["resolved"] == "query/target.ts"),
+        "unexpected re-export rows: {reexports:#?}"
+    );
+    assert!(napi_output["files"][0]["imports"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|import| import["resolved"] == "query/target.ts"));
+}
+
+#[test]
 fn fetches_json_returns_structured_report() {
     let options = json!({ "root": fixture("nextjs-fetches", "next-app") }).to_string();
     let output = fetches_json_impl(options).unwrap();
@@ -234,6 +289,34 @@ fn playwright_json_exports_return_analyzer_reports() {
     assert!(error
         .reason
         .contains("files must contain at least one file"));
+}
+
+#[test]
+fn playwright_check_napi_parses_each_source_file_once() {
+    let source = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/parser-count/playwright"),
+    );
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+
+    crate::ast::begin_parse_count(&root);
+    let output = playwright_check_json_impl(json!({ "root": root }).to_string()).unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+    let report: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let expected = [
+        root.join("app/Widget.tsx"),
+        root.join("app/page.tsx"),
+        root.join("playwright.config.ts"),
+        root.join("playwright.helper.ts"),
+        root.join("tests/home.spec.ts"),
+    ];
+
+    assert_eq!(report["summary"]["totalRoutes"], 1);
+    assert_eq!(counts.len(), expected.len(), "{counts:?}");
+    assert!(counts.values().all(|count| *count == 1), "{counts:?}");
+    for file in expected {
+        assert_eq!(counts.get(&file), Some(&1), "{counts:?}");
+    }
 }
 
 #[test]
@@ -477,6 +560,7 @@ fn relationship_parser_accepts_conservative_route_import_edges() {
 }
 
 include!("tests_impact.rs");
+include!("tests_impact_fallback.rs");
 include!("tests_queries.rs");
 
 mod check;

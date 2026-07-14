@@ -5,8 +5,8 @@ use serde_json::{json, Value};
 
 use super::types::{AnalyzeProjectOptions, AnalyzeReportRequest};
 use crate::napi_api::options::{
-    project_roots, FlowOptions, ImportUsagesOptions, PlaywrightOptions, ProjectOptions,
-    SymbolOptions, TraverseOptions,
+    project_roots, EffectsOptions, FlowOptions, ImportUsagesOptions, PlaywrightOptions,
+    ProjectOptions, RscCallersOptions, SymbolOptions, TraverseOptions,
 };
 
 pub(super) fn symbols_options(
@@ -53,6 +53,24 @@ pub(super) fn playwright_options(
     let value = merged_options(request, options, false, false, true)?;
     let _: PlaywrightOptions = serde_json::from_value(value.clone())?;
     Ok(serde_json::to_string(&value)?)
+}
+
+pub(super) fn effects_options(
+    request: &AnalyzeReportRequest,
+    options: &AnalyzeProjectOptions,
+) -> AnyhowResult<EffectsOptions> {
+    Ok(serde_json::from_value(merged_options(
+        request, options, true, false, true,
+    )?)?)
+}
+
+pub(super) fn rsc_callers_options(
+    request: &AnalyzeReportRequest,
+    options: &AnalyzeProjectOptions,
+) -> AnyhowResult<RscCallersOptions> {
+    Ok(serde_json::from_value(merged_options(
+        request, options, true, false, true,
+    )?)?)
 }
 
 pub(super) fn traverse_options(
@@ -149,30 +167,4 @@ pub(super) fn resolve_root(root: Option<&str>) -> AnyhowResult<PathBuf> {
         None => std::env::current_dir().context("reading current directory")?,
     };
     Ok(crate::codebase::ts_resolver::normalize_path(&root))
-}
-
-pub(super) fn resolve_tsconfig(
-    root: &std::path::Path,
-    explicit: Option<&str>,
-) -> AnyhowResult<crate::codebase::dependencies::TsConfig> {
-    match explicit {
-        Some(path) => {
-            let path = PathBuf::from(path);
-            let path = if path.is_absolute() {
-                path
-            } else {
-                root.join(path)
-            };
-            crate::codebase::ts_resolver::load_tsconfig(&path)
-        }
-        None => match crate::codebase::ts_resolver::find_tsconfig(root) {
-            Some(path) => crate::codebase::ts_resolver::load_tsconfig(&path),
-            None => Ok(crate::codebase::ts_resolver::TsConfig {
-                dir: root.to_path_buf(),
-                paths: vec![],
-                paths_dir: root.to_path_buf(),
-                base_url: None,
-            }),
-        },
-    }
 }

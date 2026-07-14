@@ -1,14 +1,19 @@
 use crate::config::v2::schema::{NoMistakesConfig, TestProjectPolicy};
 use crate::integration_tests::project_config::prefix_globs;
 use crate::integration_tests::types::ConfigProject;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-pub(super) fn swift_projects(root: &Path, config: &NoMistakesConfig) -> Vec<ConfigProject> {
+pub(super) fn swift_projects_from_visible(
+    root: &Path,
+    config: &NoMistakesConfig,
+    visible_paths: &[PathBuf],
+) -> Vec<ConfigProject> {
     let mut projects = Vec::new();
     for package in &config.tests.swift.packages {
         let package_root = root.join(package);
         let package_slash = package.trim_end_matches('/');
-        let package_projects = swift_test_targets_from_package(root, &package_root, package_slash);
+        let package_projects =
+            swift_test_targets_from_package(root, &package_root, package_slash, visible_paths);
         if package_projects.is_empty() {
             projects.push(ConfigProject {
                 config: Some(package_slash.to_string()),
@@ -72,8 +77,16 @@ fn swift_test_targets_from_package(
     root: &Path,
     package_root: &Path,
     package: &str,
+    visible_paths: &[PathBuf],
 ) -> Vec<ConfigProject> {
-    let manifest = package_root.join("Package.swift");
+    let manifest =
+        crate::codebase::ts_resolver::normalize_path(&package_root.join("Package.swift"));
+    if !visible_paths
+        .iter()
+        .any(|path| crate::codebase::ts_resolver::normalize_path(path) == manifest)
+    {
+        return Vec::new();
+    }
     let Ok(source) = std::fs::read_to_string(manifest) else {
         return Vec::new();
     };

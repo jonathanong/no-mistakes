@@ -105,9 +105,13 @@ fn imported_options_lookup(
     }
     let result = match std::fs::read_to_string(&path) {
         Err(_) => Ok(None),
-        Ok(source) => ast::with_program(&path, &source, |program, source| {
-            exported_options_lookup(program, source, &path, ctx, &import.imported)
-        })
+        Ok(source) => crate::integration_tests::runner_config::with_program(
+            &path,
+            &source,
+            |program, source| {
+                exported_options_lookup(program, source, &path, ctx, &import.imported)
+            },
+        )
         .and_then(|options| options),
     };
     ctx.seen.remove(&path);

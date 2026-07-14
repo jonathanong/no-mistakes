@@ -30,27 +30,6 @@ fn resolve_symbol_dependents(
     entries
 }
 
-fn build_dependents_graph(
-    ctx: &TraversalCtx<'_>,
-    symbol_facts: Option<&crate::codebase::ts_source::facts::TsFactMap>,
-) -> Result<graph::DepGraph> {
-    match symbol_facts {
-        Some(facts) => graph::DepGraph::build_with_plan_files_and_facts(
-            ctx.root,
-            ctx.tsconfig,
-            ctx.build_plan,
-            ctx.graph_files,
-            Some(facts as &dyn graph::TsFactLookup),
-        ),
-        None => graph::DepGraph::build_with_plan_and_files(
-            ctx.root,
-            ctx.tsconfig,
-            ctx.build_plan,
-            ctx.graph_files,
-        ),
-    }
-}
-
 fn write_entries(
     format: Format,
     root_strs: &[String],

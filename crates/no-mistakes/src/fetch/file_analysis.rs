@@ -1,8 +1,13 @@
 use crate::ast;
 use crate::fetch::cache::{Cache, CachedFile};
-use crate::fetch::imports::{collect_identifier_references, collect_runtime_imports_from_program};
+use crate::fetch::file_facts::ParsedFileCache;
+use crate::fetch::imports::{
+    collect_identifier_references, collect_runtime_imports_from_program,
+    collect_runtime_imports_from_program_from_visible,
+};
 use crate::fetch::resolve::relative_string;
 use crate::fetch::types::FetchOccurrence;
+use crate::fetch::types::FetchSide;
 use crate::fetch::visitor::FetchVisitor;
 use anyhow::Result;
 use oxc_ast_visit::Visit;
@@ -18,87 +23,117 @@ pub fn analyze_file(
     inherited_is_client: bool,
     inherited_is_route_handler: bool,
 ) -> Result<bool> {
-    if !path.exists() {
+    analyze_file_inner(
+        path,
+        root,
+        visited,
+        fetches,
+        cache,
+        (inherited_is_client, inherited_is_route_handler),
+        None,
+    )
+}
+
+pub(crate) fn analyze_file_from_visible(
+    path: &Path,
+    root: &Path,
+    visited: &mut HashSet<(PathBuf, bool, bool)>,
+    fetches: &mut Vec<FetchOccurrence>,
+    cache: &mut Cache,
+    inherited: (bool, bool),
+    visible_files: &HashSet<PathBuf>,
+) -> Result<bool> {
+    analyze_file_inner(
+        path,
+        root,
+        visited,
+        fetches,
+        cache,
+        inherited,
+        Some(visible_files),
+    )
+}
+
+pub(crate) struct VisibleFileAnalysis<'a> {
+    pub root: &'a Path,
+    pub visited: &'a mut HashSet<(PathBuf, bool, bool)>,
+    pub fetches: &'a mut Vec<FetchOccurrence>,
+    pub cache: &'a mut Cache,
+    pub parsed_files: &'a mut ParsedFileCache,
+    pub visible_files: &'a HashSet<PathBuf>,
+}
+
+pub(crate) fn analyze_file_from_visible_with_facts(
+    path: &Path,
+    inherited: (bool, bool),
+    context: &mut VisibleFileAnalysis<'_>,
+) -> Result<bool> {
+    let VisibleFileAnalysis {
+        root,
+        visited,
+        fetches,
+        cache,
+        parsed_files,
+        visible_files,
+    } = context;
+    let (inherited_is_client, inherited_is_route_handler) = inherited;
+    let abs_path = crate::codebase::ts_resolver::normalize_path(path);
+    if !visible_files.contains(&abs_path) {
         return Ok(false);
     }
-
-    let abs_path = path.canonicalize()?;
     let visit_key = (
         abs_path.clone(),
         inherited_is_client,
         inherited_is_route_handler,
     );
-    if visited.contains(&visit_key) {
+    if !visited.insert(visit_key.clone()) {
         return Ok(false);
     }
-    visited.insert(visit_key);
-
-    let cache_key = (
-        abs_path.clone(),
-        inherited_is_client,
-        inherited_is_route_handler,
-    );
-    if let Some(cached_fetches) = cache.files.get(&cache_key) {
+    if let Some(cached_fetches) = cache.files.get(&visit_key) {
         fetches.extend(cached_fetches.fetches.clone());
         return Ok(cached_fetches.is_client);
     }
 
-    let source = std::fs::read_to_string(&abs_path)?;
-    let rel_file = relative_string(root, &abs_path);
-
-    let mut file_fetches = Vec::new();
-    let is_client = ast::with_program(path, &source, |program, _| -> Result<bool> {
-        let has_use_server_directive = program
-            .directives
-            .iter()
-            .any(|directive| directive.directive == "use server");
-        let has_use_client_directive = program
-            .directives
-            .iter()
-            .any(|directive| directive.directive == "use client");
-        let is_client = !inherited_is_route_handler
-            && !has_use_server_directive
-            && (inherited_is_client || has_use_client_directive);
-        let mut visitor = FetchVisitor::new(
-            &source,
-            rel_file.as_str(),
-            is_client,
-            inherited_is_route_handler,
-        );
-        visitor.visit_program(program);
-        file_fetches.extend(visitor.fetches);
-        let referenced_identifiers = collect_identifier_references(program);
-        let imports =
-            collect_runtime_imports_from_program(&abs_path, program, &referenced_identifiers);
-        for import in imports {
-            match analyze_file(
-                &import,
+    let facts = parsed_files.load(&abs_path, root, &mut cache.imports, visible_files)?;
+    let is_client = !inherited_is_route_handler
+        && !facts.has_use_server_directive
+        && (inherited_is_client || facts.has_use_client_directive);
+    let mut file_fetches = facts.fetches;
+    for fetch in &mut file_fetches {
+        fetch.side = if is_client {
+            FetchSide::Client
+        } else {
+            FetchSide::Server
+        };
+        fetch.rsc = !is_client && !inherited_is_route_handler;
+    }
+    for import in facts.used_imports {
+        analyze_file_from_visible_with_facts(
+            &import,
+            (is_client, inherited_is_route_handler),
+            &mut VisibleFileAnalysis {
                 root,
                 visited,
-                &mut file_fetches,
+                fetches: &mut file_fetches,
                 cache,
-                is_client,
-                inherited_is_route_handler,
-            ) {
-                Ok(_) => {}
-                Err(err) => return Err(err),
-            }
-        }
-        Ok(is_client)
-    })??;
+                parsed_files,
+                visible_files,
+            },
+        )?;
+    }
 
     let cached = CachedFile {
         is_client,
         fetches: file_fetches.clone(),
     };
-    cache.files.insert(cache_key.clone(), cached.clone());
+    cache.files.insert(visit_key, cached.clone());
     if cached.is_client != inherited_is_client {
-        cache.files.insert(
-            (abs_path.clone(), is_client, inherited_is_route_handler),
-            cached,
-        );
+        cache
+            .files
+            .insert((abs_path, is_client, inherited_is_route_handler), cached);
     }
     fetches.extend(file_fetches);
-
     Ok(is_client)
 }
+
+include!("file_analysis/legacy.rs");

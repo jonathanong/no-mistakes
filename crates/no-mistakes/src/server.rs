@@ -2,7 +2,8 @@ use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
 use no_mistakes::cli::{edge_view, resolve_root, root_scoped_edge_depth, Format};
 use no_mistakes::server_routes::{
-    analyze_project, related, Edge, ProjectReport, RelatedDirection, ServerRoute,
+    analyze_project_with_prepared, prepare_analysis, related, Edge, ProjectReport,
+    RelatedDirection, ServerRoute,
 };
 use std::collections::BTreeSet;
 use std::path::PathBuf;
@@ -87,7 +88,8 @@ pub(crate) fn run(args: ServerArgs) -> Result<ExitCode> {
     let root = resolve_root(&args.root, &base);
     let started = std::time::Instant::now();
     let format = if args.json { Format::Json } else { args.format };
-    let report = analyze_project(&root, args.tsconfig.as_deref(), &args.filters)?;
+    let prepared = prepare_analysis(&root, args.tsconfig.as_deref())?;
+    let report = analyze_project_with_prepared(&prepared, &args.filters)?;
     if args.timings {
         eprintln!(
             "analysis: {:.3}ms",
@@ -106,9 +108,8 @@ pub(crate) fn run(args: ServerArgs) -> Result<ExitCode> {
             print_related(roots, &edges, format)?;
         }
         ServerCommand::Contracts => {
-            let contracts = no_mistakes::server_routes::analyze_contracts(
-                &root,
-                args.tsconfig.as_deref(),
+            let contracts = no_mistakes::server_routes::analyze_contracts_with_prepared(
+                &prepared,
                 &report,
                 &args.filters,
             )?;

@@ -1,17 +1,17 @@
-use crate::playwright::analysis::app_collect::collect_app_selector_occurrences;
+use crate::playwright::analysis::app_collect::collect_app_selector_occurrences_from_visible;
 use crate::playwright::analysis::cli_run::run;
 use crate::playwright::analysis::context;
-use crate::playwright::analysis::context::{
-    DiscoveredTestFile, TestAnalysisContext, TestProjectContext,
-};
+use crate::playwright::analysis::context::{DiscoveredTestFile, TestAnalysisContext};
 use crate::playwright::analysis::output::{
     build_related_report, print_edges_text, print_related_text,
 };
-use crate::playwright::analysis::pipeline::{analyze_with_policy, analyze_with_policy_and_facts};
-use crate::playwright::analysis::test_file::{analyze_test_file, analyze_test_occurrences};
+use crate::playwright::analysis::pipeline::analyze_with_policy_and_facts_from_snapshot;
+use crate::playwright::analysis::pipeline::test_support::analyze_with_policy;
+use crate::playwright::analysis::test_file::analyze_test_occurrences;
 use crate::playwright::analysis::types::{Analysis, UniqueSelectorPolicy};
 use crate::playwright::cli::{Command, PlaywrightArgs as Cli};
 use crate::playwright::config::Settings;
+use crate::playwright::fsutil::VisiblePathSnapshot;
 use crate::playwright::playwright_tests;
 use crate::playwright::selectors;
 use crate::playwright::test_support::fixture_path;
@@ -34,7 +34,9 @@ fn collect_app_selectors(
     settings: &Settings,
     selector_regexes: &selectors::SelectorRegexes,
 ) -> Result<Vec<selectors::AppSelector>> {
-    let mut app_selectors = collect_app_selector_occurrences(root, settings, selector_regexes)?;
+    let snapshot = VisiblePathSnapshot::new(root);
+    let mut app_selectors =
+        collect_app_selector_occurrences_from_visible(root, settings, selector_regexes, &snapshot)?;
     app_selectors.sort();
     app_selectors.dedup();
     Ok(app_selectors)
@@ -61,13 +63,15 @@ fn analyze_with_facts_falls_back_when_shared_facts_are_missing() {
         selector_exclude: vec![],
     };
     let facts = crate::codebase::check_facts::CheckFactMap::default();
+    let snapshot = VisiblePathSnapshot::new(&root);
 
-    let analysis = analyze_with_policy_and_facts(
+    let analysis = analyze_with_policy_and_facts_from_snapshot(
         &root,
         &settings,
         playwright_tests::TestPolicy::default(),
         UniqueSelectorPolicy::default(),
         &facts,
+        &snapshot,
     )
     .unwrap();
 
@@ -103,13 +107,15 @@ fn analyze_with_facts_falls_back_when_file_facts_do_not_include_playwright() {
         root.join("tests/e2e/users.spec.ts"),
         crate::codebase::check_facts::CheckFileFacts::default(),
     );
+    let snapshot = VisiblePathSnapshot::new(&root);
 
-    let analysis = analyze_with_policy_and_facts(
+    let analysis = analyze_with_policy_and_facts_from_snapshot(
         &root,
         &settings,
         playwright_tests::TestPolicy::default(),
         UniqueSelectorPolicy::default(),
         &facts,
+        &snapshot,
     )
     .unwrap();
 
@@ -460,64 +466,4 @@ fn analyze_test_occurrences_skips_non_test_route_inputs() {
     let analysis = analyze_test_occurrences(&test_file, &context, &occurrences);
 
     assert!(analysis.edges.is_empty());
-}
-
-#[test]
-fn analyze_test_file_returns_error_for_missing_file() {
-    // Exercises the `?` error branch in analyze_test_file when the file doesn't exist.
-    use crate::playwright::analysis::context::{RouteIndex, SelectorIndex};
-    use crate::playwright::playwright_tests::TestPolicy;
-    let root = fixture_path(&["nextjs-coverage", "covered"]);
-    let test_file = DiscoveredTestFile {
-        path: PathBuf::from("/nonexistent/test.spec.ts"),
-        contexts: vec![TestProjectContext {
-            base_url: None,
-            test_id_attributes: vec!["data-testid".to_string()],
-        }],
-    };
-    let route_index = RouteIndex::default();
-    let selector_index = SelectorIndex::default();
-    let selector_regexes = selectors::compile_selector_regexes(&[], &BTreeMap::new());
-    let context = TestAnalysisContext {
-        root: &root,
-        route_index: &route_index,
-        selector_index: &selector_index,
-        navigation_helpers: &[],
-        selector_regexes: &selector_regexes,
-        test_policy: TestPolicy::default(),
-    };
-    let err = analyze_test_file(&test_file, &context);
-    assert!(err.is_err(), "expected error for non-existent test file");
-}
-
-#[test]
-fn analyze_test_file_returns_error_for_parse_failure() {
-    use crate::playwright::analysis::context::{RouteIndex, SelectorIndex};
-    use crate::playwright::playwright_tests::TestPolicy;
-
-    let root = fixture_path(&["react-traits-components", "bad-file"]);
-    let test_file = DiscoveredTestFile {
-        path: root.join("app/components/Broken.tsx"),
-        contexts: vec![TestProjectContext {
-            base_url: None,
-            test_id_attributes: vec!["data-testid".to_string()],
-        }],
-    };
-    let route_index = RouteIndex::default();
-    let selector_index = SelectorIndex::default();
-    let selector_regexes = selectors::compile_selector_regexes(&[], &BTreeMap::new());
-    let context = TestAnalysisContext {
-        root: &root,
-        route_index: &route_index,
-        selector_index: &selector_index,
-        navigation_helpers: &[],
-        selector_regexes: &selector_regexes,
-        test_policy: TestPolicy::default(),
-    };
-
-    let err = analyze_test_file(&test_file, &context)
-        .err()
-        .expect("expected parse failure");
-
-    assert!(!err.to_string().is_empty());
 }

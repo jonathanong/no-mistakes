@@ -11,7 +11,7 @@ use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::checker::{
     check_dynamic_import, DynamicCheckContext,
 };
-use crate::codebase::ts_resolver::{load_tsconfig, normalize_path, ImportResolver, TsConfig};
+use crate::codebase::ts_resolver::{normalize_path, ImportResolver, TsConfig};
 use crate::codebase::ts_source::{discover_files, has_disable_comment, has_disable_file_comment};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::{Context, Result};
@@ -20,7 +20,7 @@ use runtime::runtime_deps;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-pub use with_facts::check_with_facts;
+pub use with_facts::{check_with_facts, check_with_prepared_facts};
 
 pub const RULE_ID: &str = "test-no-unmocked-dynamic-imports";
 
@@ -30,10 +30,16 @@ pub fn check(
     tsconfig_path: Option<&Path>,
 ) -> Result<Vec<RuleFinding>> {
     let files = discover_files(root, &config.filesystem.skip_directories);
-    let tsconfig = resolve_tsconfig(root, tsconfig_path)?;
-    let graph =
-        DepGraph::build_with_plan(root, &tsconfig, GraphBuildPlan::imports_and_workspace())?;
-    let manual_mocks = manual_mocks::discover(root, &config.filesystem.skip_directories);
+    let tsconfig =
+        crate::codebase::ts_resolver::resolve_tsconfig_from_visible(tsconfig_path, root, &files)?;
+    let graph_files = crate::codebase::dependencies::graph::GraphFiles::from_files(files.clone());
+    let graph = DepGraph::build_with_plan_and_files(
+        root,
+        &tsconfig,
+        GraphBuildPlan::imports_and_workspace(),
+        &graph_files,
+    )?;
+    let manual_mocks = manual_mocks::discover_from_files(root, &files);
     check_inner(root, config, &files, &tsconfig, &graph, &manual_mocks)
 }
 
@@ -45,7 +51,8 @@ pub(super) fn check_inner(
     graph: &DepGraph,
     manual_mocks: &HashSet<PathBuf>,
 ) -> Result<Vec<RuleFinding>> {
-    let resolver = ImportResolver::new(tsconfig);
+    let visible_files = files.iter().cloned().collect::<HashSet<_>>();
+    let resolver = ImportResolver::new(tsconfig).with_visible(&visible_files);
     let dependency_cache: DashMap<PathBuf, Arc<Vec<PathBuf>>> = DashMap::new();
     let file_cache: DashMap<PathBuf, Arc<reachable::CachedFileFacts>> = DashMap::new();
     let mut findings = Vec::new();
@@ -109,21 +116,6 @@ pub(super) fn check_inner(
     );
     findings.sort_by(|a, b| (&a.file, a.line, &a.target).cmp(&(&b.file, b.line, &b.target)));
     Ok(findings)
-}
-
-fn resolve_tsconfig(root: &Path, tsconfig_path: Option<&Path>) -> Result<TsConfig> {
-    match tsconfig_path {
-        Some(path) => load_tsconfig(path),
-        None => match crate::codebase::ts_resolver::find_tsconfig(root) {
-            Some(path) => load_tsconfig(&path),
-            None => Ok(TsConfig {
-                dir: root.to_path_buf(),
-                paths: vec![],
-                paths_dir: root.to_path_buf(),
-                base_url: None,
-            }),
-        },
-    }
 }
 
 fn resolve_mock_specifiers(
@@ -190,14 +182,22 @@ fn matching_test_files(
     config: &NoMistakesConfig,
 ) -> Result<Vec<PathBuf>> {
     let filter = config::test_filter(root, config)?;
-    Ok(files
+    Ok(matching_test_files_with_filter(root, files, &filter))
+}
+
+fn matching_test_files_with_filter(
+    root: &Path,
+    files: &[PathBuf],
+    filter: &config::TestFilter,
+) -> Vec<PathBuf> {
+    files
         .iter()
         .filter(|file| crate::codebase::dependencies::extract::is_indexable(file))
         .filter(|file| {
             filter.is_match(&crate::codebase::ts_source::relative_slash_path(root, file))
         })
         .map(|file| normalize_path(file))
-        .collect())
+        .collect()
 }
 
 #[cfg(test)]

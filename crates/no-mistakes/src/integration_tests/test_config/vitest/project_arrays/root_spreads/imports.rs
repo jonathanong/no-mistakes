@@ -2,7 +2,6 @@ use super::{
     import_bindings, shared, top_level_function_bodies, Ctx, ImportBinding, Options, Scope,
 };
 use super::{imported_reexport, named_export_object, sourced_reexport, star_barrel_sources};
-use crate::ast;
 use anyhow::Result;
 use oxc_ast::ast::Program;
 use std::collections::BTreeSet;
@@ -22,9 +21,20 @@ pub(super) fn imported_project_options(
     }
     let result = match std::fs::read_to_string(&path) {
         Err(_) => Ok(None),
-        Ok(source) => ast::with_program(&path, &source, |program, source| {
-            exported_project_options(program, source, import.imported.as_str(), &path, ctx, scope)
-        })
+        Ok(source) => crate::integration_tests::runner_config::with_program(
+            &path,
+            &source,
+            |program, source| {
+                exported_project_options(
+                    program,
+                    source,
+                    import.imported.as_str(),
+                    &path,
+                    ctx,
+                    scope,
+                )
+            },
+        )
         .and_then(|options| options),
     };
     ctx.seen.remove(&path);

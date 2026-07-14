@@ -4,8 +4,10 @@ use std::path::{Path, PathBuf};
 
 #[path = "config/load.rs"]
 mod load;
+#[cfg(test)]
+pub(crate) mod test_support;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Settings {
     pub frontend_root: String,
     pub playwright_configs: Vec<PathBuf>,
@@ -28,13 +30,36 @@ pub struct Settings {
     pub selector_exclude: Vec<String>,
 }
 
-pub fn load_settings(
+pub(crate) fn load_settings_from_visible(
     root: &Path,
     cli_config: Option<&Path>,
     cli_playwright_configs: &[PathBuf],
     cli_project: Option<String>,
+    visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> Result<Settings> {
-    load::load_settings(root, cli_config, cli_playwright_configs, cli_project)
+    load::load_settings_from_visible(
+        root,
+        cli_config,
+        cli_playwright_configs,
+        cli_project,
+        visible_paths,
+    )
+}
+
+pub(crate) fn settings_from_loaded_v2(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    cli_playwright_configs: &[PathBuf],
+    cli_project: Option<String>,
+    visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
+) -> Result<Settings> {
+    load::settings_from_loaded_v2(
+        root,
+        config,
+        cli_playwright_configs,
+        cli_project,
+        visible_paths,
+    )
 }
 
 pub(crate) fn has_configured_html_id_selector(settings: &Settings) -> bool {

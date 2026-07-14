@@ -1,7 +1,8 @@
 use anyhow::{Context, Result};
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use std::path::{Path, PathBuf};
-use walkdir::WalkDir;
+
+pub(crate) use crate::codebase::ts_source::VisiblePathSnapshot;
 
 pub(crate) fn build_globset(patterns: &[String]) -> Result<GlobSet> {
     let mut builder = GlobSetBuilder::new();
@@ -12,33 +13,31 @@ pub(crate) fn build_globset(patterns: &[String]) -> Result<GlobSet> {
     Ok(builder.build()?)
 }
 
-/// Collect every file under `root`, pruning directories matched by
-/// [`is_skipped_dir`] at any depth.
-///
-/// Prefers the git-visible file list (`git ls-files` plus untracked-but-not-
-/// ignored files) when `root` is inside a git repository: the raw `WalkDir`
-/// fallback below has no `.gitignore` awareness beyond `is_skipped_dir`'s
-/// small hardcoded denylist, so on real repos it can descend into large
-/// untracked-and-ignored directories (dependency stores, build caches) that
-/// `git ls-files` would never surface. The raw walk still runs, unchanged,
-/// outside git repositories (e.g. ad-hoc test fixtures).
-pub(crate) fn walk_files(root: &Path) -> Vec<PathBuf> {
-    let mut files = match no_mistakes::codebase::ts_source::git_visible_files(root) {
-        Some(git_files) => git_visible_matching_files(root, &git_files),
-        None => walk_files_raw(root),
-    };
+/// Collect visible files under `root`, applying Playwright's hardcoded
+/// directory and symlink policies to the shared ignore-aware candidate list.
+pub(crate) fn walk_files_from_snapshot(
+    root: &Path,
+    snapshot: &VisiblePathSnapshot,
+) -> Vec<PathBuf> {
+    let visible_paths = snapshot.paths_for(root);
+    let mut files = visible_matching_files(root, &visible_paths);
     files.sort();
     files
 }
 
-fn git_visible_matching_files(root: &Path, git_files: &[String]) -> Vec<PathBuf> {
-    git_files
+fn visible_matching_files(root: &Path, files: &[PathBuf]) -> Vec<PathBuf> {
+    let normalized_root = crate::codebase::ts_resolver::normalize_path(root);
+    files
         .iter()
-        .filter(|rel| !is_under_skipped_dir(Path::new(rel)))
-        .map(|rel| root.join(rel))
+        .filter(|path| {
+            crate::codebase::ts_resolver::normalize_path(path)
+                .strip_prefix(&normalized_root)
+                .is_ok_and(|rel| !is_under_skipped_dir(rel))
+        })
         // Mirrors `WalkDir`'s default (non-follow-symlink) `file_type().is_file()`
         // check: a symlink to a file is not itself a file entry.
         .filter(|path| std::fs::symlink_metadata(path).is_ok_and(|metadata| metadata.is_file()))
+        .cloned()
         .collect()
 }
 
@@ -53,16 +52,6 @@ fn is_under_skipped_dir(rel: &Path) -> bool {
     })
 }
 
-fn walk_files_raw(root: &Path) -> Vec<PathBuf> {
-    WalkDir::new(root)
-        .into_iter()
-        .filter_entry(|entry| !(entry.file_type().is_dir() && is_skipped_dir(entry.path())))
-        .filter_map(|entry| entry.ok())
-        .filter(|entry| entry.file_type().is_file())
-        .map(|entry| entry.into_path())
-        .collect()
-}
-
 pub(crate) fn is_skipped_dir(path: &Path) -> bool {
     path.file_name()
         .and_then(|name| name.to_str())
@@ -75,7 +64,9 @@ pub(crate) fn is_skipped_dir(path: &Path) -> bool {
 }
 
 pub(crate) fn relative_string(root: &Path, path: &Path) -> String {
-    slash_path(path.strip_prefix(root).unwrap_or(path))
+    let root = crate::codebase::ts_resolver::normalize_path(root);
+    let path = crate::codebase::ts_resolver::normalize_path(path);
+    slash_path(path.strip_prefix(root).unwrap_or(&path))
 }
 
 pub(crate) fn slash_path(path: &Path) -> String {

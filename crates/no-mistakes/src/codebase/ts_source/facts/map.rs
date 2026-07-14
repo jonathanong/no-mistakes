@@ -11,6 +11,13 @@ impl TsFactMap {
         Self { facts, plan }
     }
 
+    pub(crate) fn from_iter_with_plan(
+        facts: impl IntoIterator<Item = (PathBuf, TsFileFacts)>,
+        plan: TsFactPlan,
+    ) -> Self {
+        Self::with_plan(facts.into_iter().collect(), plan)
+    }
+
     pub(crate) fn plan(&self) -> TsFactPlan {
         self.plan
     }

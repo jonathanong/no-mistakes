@@ -123,12 +123,10 @@ fn source_file_candidates_includes_git_tracked_symlink_to_file() {
     assert!(candidates.contains(&dir.path().join("app/linked.tsx")));
 }
 
-/// Outside a git repository, `source_file_candidates` still falls back to
-/// the raw `WalkDir` walk, exercising its skip-dir pruning and file-type
-/// checks directly since there is no git-visible file list to derive
-/// candidates from.
+/// Outside a Git repository, app-selector skip-directory and file-type checks
+/// still apply to the shared ignore-aware candidate list.
 #[test]
-fn source_file_candidates_falls_back_to_walk_outside_git_repositories() {
+fn source_file_candidates_apply_skip_dirs_outside_git_repositories() {
     let dir = TempDir::new().unwrap();
     write(dir.path(), "app/page.tsx", "<div />");
     write(dir.path(), "dist/ignored.tsx", "<div />");
@@ -139,4 +137,14 @@ fn source_file_candidates_falls_back_to_walk_outside_git_repositories() {
     assert!(!candidates
         .iter()
         .any(|path| path.starts_with(dir.path().join("dist"))));
+}
+
+#[test]
+fn source_file_candidates_apply_gitignore_outside_git() {
+    let dir = crate::test_support::materialize_gitignore_fixture("non-git-discovery");
+
+    let candidates = source_file_candidates(dir.path());
+
+    assert!(candidates.contains(&dir.path().join("app/page.tsx")));
+    assert!(!candidates.contains(&dir.path().join("ignored/page.tsx")));
 }

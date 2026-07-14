@@ -12,16 +12,15 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use anyhow::{bail, Result};
-use rayon::prelude::*;
 use serde::Serialize;
 
-use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
+use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, GraphFiles};
 use crate::codebase::dependencies::{EdgeKind, NodeId};
-use crate::codebase::ts_resolver::{find_tsconfig, load_tsconfig, normalize_path, TsConfig};
+use crate::codebase::ts_resolver::{
+    find_tsconfig_from_visible, load_tsconfig, normalize_path, TsConfig,
+};
 use crate::codebase::ts_source::relative_slash_path;
-use crate::config::v2::load_v2_config;
-
-mod extract;
+use crate::config::v2::load_v2_config_from_visible;
 
 /// One matched effect call site.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
@@ -44,6 +43,11 @@ pub struct EffectsReport {
     pub entry: String,
     pub call_sites: Vec<EffectCallSite>,
     pub by_category: BTreeMap<String, usize>,
+}
+
+pub(crate) struct EffectsSelection {
+    kind: String,
+    names: HashMap<String, Option<String>>,
 }
 
 impl EffectsReport {
@@ -72,12 +76,16 @@ fn runtime_edges() -> HashSet<EdgeKind> {
     ])
 }
 
-fn resolve_tsconfig(root: &Path, tsconfig: Option<&Path>) -> Result<TsConfig> {
+fn resolve_tsconfig_from_visible(
+    root: &Path,
+    tsconfig: Option<&Path>,
+    visible_paths: &[PathBuf],
+) -> Result<TsConfig> {
     match tsconfig {
         // Resolve a relative explicit tsconfig against `root`, not the cwd.
         Some(path) if path.is_absolute() => load_tsconfig(path),
         Some(path) => load_tsconfig(&root.join(path)),
-        None => match find_tsconfig(root) {
+        None => match find_tsconfig_from_visible(root, visible_paths) {
             Some(path) => load_tsconfig(&path),
             None => Ok(TsConfig {
                 dir: root.to_path_buf(),
@@ -100,37 +108,14 @@ pub fn run(
     depth: Option<usize>,
 ) -> Result<EffectsReport> {
     let root = normalize_path(root);
-    let config = load_v2_config(&root, config_path)?;
-    let Some(kind_config) = config.effects.get(kind) else {
-        let available: Vec<&str> = config.effects.keys().map(String::as_str).collect();
-        bail!(
-            "unknown effects kind: {kind} (configured kinds: {})",
-            if available.is_empty() {
-                "<none>".to_string()
-            } else {
-                available.join(", ")
-            }
-        );
-    };
-
-    // name -> category label (None for the flat `functions` list).
-    let mut names: HashMap<String, Option<String>> = HashMap::new();
-    for (category, functions) in &kind_config.categories {
-        if !categories.is_empty() && !categories.iter().any(|c| c == category) {
-            continue;
-        }
-        for function in functions {
-            names.insert(function.clone(), Some(category.clone()));
-        }
-    }
-    if categories.is_empty() {
-        for function in &kind_config.functions {
-            names.entry(function.clone()).or_insert(None);
-        }
-    }
-    if names.is_empty() {
-        bail!("effects kind `{kind}` has no functions for the requested categories");
-    }
+    let root = root.canonicalize().unwrap_or(root);
+    let visible_paths = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let root_visible_paths = visible_paths.paths_for(&root);
+    let mut graph_files = GraphFiles::from_files(
+        crate::codebase::ts_source::discover_files_from_visible(&root, &[], &root_visible_paths),
+    );
+    let config = load_v2_config_from_visible(&root, config_path, &root_visible_paths)?;
+    let selection = selection_from_config(&config, kind, categories)?;
 
     let entry_abs = if entry.is_absolute() {
         entry.to_path_buf()
@@ -140,51 +125,48 @@ pub fn run(
     if !entry_abs.is_file() {
         bail!("entry file not found: {}", entry_abs.display());
     }
-    let entry_node = NodeId::File(normalize_path(&entry_abs));
-
-    let tsconfig = resolve_tsconfig(&root, tsconfig)?;
+    graph_files.add_explicit_root(&entry_abs);
+    let tsconfig = resolve_tsconfig_from_visible(&root, tsconfig, graph_files.all())?;
     let allowed = runtime_edges();
     // Build only the runtime-import edges we traverse, not every edge producer
     // (routes, queues, React, Swift, …), which an `effects` query discards.
     let plan = GraphBuildPlan::from_allowed(Some(&allowed));
-    let graph = DepGraph::build_with_plan_and_config(&root, &tsconfig, plan, config_path)?;
-    let reachable = graph.deps_of(std::slice::from_ref(&entry_node), depth, Some(&allowed));
+    let mut fact_context = crate::codebase::ts_source::facts::TsFactContext::new(&root);
+    fact_context.effect_functions = selection.names.clone();
+    fact_context.set_visible_files(graph_files.visible().iter().cloned());
+    let facts = crate::codebase::ts_source::facts::collect_ts_facts_with_context(
+        graph_files.indexable(),
+        crate::codebase::ts_source::facts::TsFactPlan {
+            imports: true,
+            function_calls: true,
+            effect_calls: true,
+            ..Default::default()
+        },
+        &fact_context,
+    );
+    let codebase_config =
+        crate::codebase::config::config_from_loaded_v2(&root, config_path, &config);
+    let prepared_graph = crate::codebase::dependencies::graph::prepare_graph_config(
+        &root,
+        plan,
+        &codebase_config,
+        &config,
+        &visible_paths,
+    )?;
+    let graph = DepGraph::build_with_plan_files_prepared_config_and_facts(
+        &root,
+        &tsconfig,
+        plan,
+        &graph_files,
+        config_path,
+        &prepared_graph,
+        Some(&facts),
+    )?;
 
-    // Map every reachable file (plus the entry itself at depth 0) to its depth.
-    let mut file_depths: HashMap<PathBuf, usize> = HashMap::new();
-    if let NodeId::File(path) = &entry_node {
-        file_depths.insert(path.clone(), 0);
-    }
-    // `deps_of` yields each node once at its minimum depth, so a first-wins
-    // insert preserves the shallowest depth without a redundant merge.
-    for entry in &reachable {
-        if let NodeId::File(path) = &entry.node {
-            file_depths.entry(path.clone()).or_insert(entry.depth);
-        }
-    }
-
-    let mut call_sites: Vec<EffectCallSite> = file_depths
-        .par_iter()
-        .flat_map(|(path, depth)| extract::scan_file(&root, path, *depth, &names))
-        .collect();
-    call_sites.sort();
-
-    let mut by_category: BTreeMap<String, usize> = BTreeMap::new();
-    for site in &call_sites {
-        let label = site
-            .category
-            .clone()
-            .unwrap_or_else(|| "uncategorized".to_string());
-        *by_category.entry(label).or_insert(0) += 1;
-    }
-
-    Ok(EffectsReport {
-        kind: kind.to_string(),
-        entry: relative_slash_path(&root, &entry_abs),
-        call_sites,
-        by_category,
-    })
+    run_with_prepared(&root, &selection, entry, depth, &graph, &facts)
 }
+
+include!("effects_query/prepared.rs");
 
 #[cfg(test)]
 mod tests;

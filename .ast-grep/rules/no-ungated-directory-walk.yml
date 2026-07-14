@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
 #
-# Flags a raw `std::fs::read_dir(...)`/`WalkDir::new(...)` call in production
+# Flags a raw `read_dir(...)`/`WalkDir::new(...)` call in production
 # discovery code. Neither has `.gitignore` awareness beyond whatever directory
 # names get hardcoded into a denylist, so an unguarded walk can descend into
 # huge generated/vendored directories (`node_modules`, `.next`, build output)
@@ -10,62 +10,28 @@
 # fall back to the `ignore` crate's `WalkBuilder` only outside a git repo), and
 # a worked example.
 #
-# `ignores` below is a small, deliberate allowlist of call sites that are
-# either the documented non-git fallback itself, or are genuinely bounded
-# (single-level `read_dir`, or looping over a small explicitly-configured
-# directory list) rather than an unbounded recursive walk over repo-scale
-# content:
-#   - check_discovery/preserved_roots.rs: the documented raw-walk fallback
-#     (`collect_descendant_dirs_matching_suffix`), used only outside git repos.
-#   - codebase/ts_source/discovery.rs: the crate's canonical non-git fallback
-#     path (`walk_files`, via `ignore::WalkBuilder`, not a raw walk at all
-#     today — listed here defensively so a future raw-walk fallback added to
-#     this specific file doesn't need a separate rule change).
-#   - playwright/config/load/helpers.rs: `find_default_playwright_configs`
-#     lists only `root`'s direct children (no recursion) looking for a
-#     playwright config file name.
-#   - codebase/ci_graph/mod.rs: `discover_workflow_files` lists only the
-#     directories in the explicitly configured `ci.workflow_dirs`, one level
-#     each, not the whole repo tree.
-#   - integration_tests/tests/parser_coverage.rs: test-only helper listing a
-#     small checked-in fixture directory, not production discovery code.
-#   - routes.rs, playwright/fsutil.rs, data_pw_query/scan.rs,
-#     react_traits/pipeline/glob.rs, playwright/selectors/extract_app/discovery.rs,
-#     codebase/workspaces/globs.rs: each pairs a git-visible-derived fast path
-#     with the documented raw-walk fallback, used only outside git repos —
-#     same shape as check_discovery/preserved_roots.rs above.
-#   - codebase/ts_routes/defs_frontend.rs, codebase/ts_routes/defs_backend/types.rs:
-#     raw walks reached only via test-only wrappers in production (every real
-#     caller goes through a `_from_files`/`_from_graph_inputs` git-derived
-#     twin) — deliberately left as-is rather than fixed, since no production
-#     command path exercises them; listed here so a future contributor doesn't
-#     need to re-discover that before wiring a real caller to the raw path.
+# The sole exemption is a test-only helper that lists one small checked-in
+# parser fixture directory. Production discovery has no file-level exemptions:
+# even bounded or non-git paths must derive from shared git-visible candidates
+# or use the `ignore` crate so a later edit cannot silently introduce a raw
+# recursive walk in an allowlisted file.
 id: no-ungated-directory-walk
 language: rust
 severity: error
 message: >-
   Raw std::fs::read_dir/WalkDir::new walk with no .gitignore awareness. Prefer
-  deriving matches from the git-visible file list (see
-  no_mistakes::codebase::ts_source::git_visible_files), falling back to
+  deriving matches from the canonical visible-path snapshot (see
+  no_mistakes::codebase::ts_source::discover_visible_paths), falling back to
   ignore::WalkBuilder only outside a git repo. See crates/CLAUDE.md, "Never
   walk the tree without `.gitignore` awareness".
 rule:
   any:
     - pattern: std::fs::read_dir($$$)
+    - pattern: fs::read_dir($$$)
+    - pattern: read_dir($$$)
     - pattern: WalkDir::new($$$)
+    - pattern: walkdir::WalkDir::new($$$)
 files:
   - "crates/no-mistakes/src/**"
 ignores:
-  - "crates/no-mistakes/src/check_discovery/preserved_roots.rs"
-  - "crates/no-mistakes/src/codebase/ts_source/discovery.rs"
-  - "crates/no-mistakes/src/playwright/config/load/helpers.rs"
-  - "crates/no-mistakes/src/codebase/ci_graph/mod.rs"
   - "crates/no-mistakes/src/integration_tests/tests/parser_coverage.rs"
-  - "crates/no-mistakes/src/routes.rs"
-  - "crates/no-mistakes/src/playwright/fsutil.rs"
-  - "crates/no-mistakes/src/data_pw_query/scan.rs"
-  - "crates/no-mistakes/src/react_traits/pipeline/glob.rs"
-  - "crates/no-mistakes/src/playwright/selectors/extract_app/discovery.rs"
-  - "crates/no-mistakes/src/codebase/workspaces/globs.rs"
-  - "crates/no-mistakes/src/codebase/ts_routes/defs_frontend.rs"
-  - "crates/no-mistakes/src/codebase/ts_routes/defs_backend/types.rs"

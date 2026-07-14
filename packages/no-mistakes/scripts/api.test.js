@@ -210,35 +210,71 @@ test("programmatic API proxies object options through async native addon calls",
 });
 
 test("analyzeProject declarations mirror report-specific runtime requirements", () => {
-  const declarations = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
-  assert.match(declarations, /export type SymbolsSignatureImpactOptions = SymbolsOptions & \{/);
+  const traversalDeclarations = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
+  const analyzeProjectDeclarations = readFileSync(
+    join(packageRoot, "analyze-project-types.d.ts"),
+    "utf8",
+  );
+  assert.match(
+    traversalDeclarations,
+    /export type SymbolsSignatureImpactOptions = SymbolsOptions & \{/,
+  );
   assert.match(
     readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
     /export function symbols\(options: SymbolsOptions\): Promise<SymbolsResult \| SignatureImpactResult>;/,
   );
-  assert.match(declarations, /mode: "signature-impact";\n  symbol: string;/);
+  assert.match(traversalDeclarations, /mode: "signature-impact";\n  symbol: string;/);
   assert.match(
-    declarations,
+    analyzeProjectDeclarations,
     /type: "symbols"; id\?: string } & \(SymbolsListOptions \| SymbolsSignatureImpactOptions\)/,
   );
   assert.match(
-    declarations,
+    analyzeProjectDeclarations,
     /type: "importUsages"; id\?: string } & Omit<ImportUsagesOptions, "root">/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type BatchedTraverseOptions = TraverseOptions & Pick<ProjectOptions, "config">/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type: "dependencies" \| "dependents" \| "related"; id\?: string } & BatchedTraverseOptions/,
+  );
+  assert.doesNotMatch(
+    analyzeProjectDeclarations,
+    /Omit<\s*TraverseOptions,\s*"root" \| "tsconfig"/,
   );
   assert.match(
     readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
     /export function importUsages\(options\?: ImportUsagesOptions\): Promise<ImportUsagesResult>;/,
   );
   assert.match(
-    declarations,
+    analyzeProjectDeclarations,
     /type BatchedQueueRelatedOptions = BatchedProjectOptions & \{ files: string\[\] \}/,
   );
   assert.match(
-    declarations,
+    analyzeProjectDeclarations,
     /type BatchedServerRouteRelatedOptions = BatchedProjectOptions &\n  \(\{ files: string\[\] \} \| \{ roots: string\[\] \}\)/,
   );
   assert.match(
-    declarations,
+    analyzeProjectDeclarations,
     /type: "playwrightRelated"; id\?: string } & Omit<PlaywrightRelatedOptions,/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type BatchedReactUsagesOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "targets" \| "include"[\s\S]*?Required<Pick<ProjectOptions, "target">>/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type: "reactUsages"; id\?: string } & BatchedReactUsagesOptions/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type BatchedCheckOptions = Pick<ProjectOptions, "root" \| "tsconfig" \| "config">/,
+  );
+  assert.match(analyzeProjectDeclarations, /type: "check"; id\?: string } & BatchedCheckOptions/);
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export \* from "\.\/analyze-project-types";/,
   );
 });

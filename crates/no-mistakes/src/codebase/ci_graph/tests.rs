@@ -1,5 +1,7 @@
 #![cfg(test)]
 
+mod discovery_visibility;
+
 use super::env_query::{analyze_env, EnvLocationKind, EnvScope};
 use super::impact::analyze_impact;
 use super::model::{PermissionLevel, PermissionSpec};
@@ -375,6 +377,32 @@ fn anchors_and_aliases_resolve() {
 fn discover_skips_missing_dirs() {
     let files = discover_workflow_files(Path::new("/nonexistent-xyz"), &CiConfig::default());
     assert!(files.is_empty());
+}
+
+#[test]
+fn discovery_uses_git_visibility_and_keeps_tracked_ignored_workflows() {
+    let dir = crate::test_support::materialize_gitignore_fixture("auto-discovery");
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_all(dir.path());
+    crate::test_support::git_add_force(dir.path(), &[".github/workflows/tracked-ignored.yml"]);
+
+    let files: Vec<String> = discover_workflow_files(dir.path(), &CiConfig::default())
+        .iter()
+        .map(|path| relative_slash(dir.path(), path))
+        .collect();
+
+    assert!(files.contains(&".github/workflows/visible.yml".to_string()));
+    assert!(files.contains(&".github/workflows/tracked-ignored.yml".to_string()));
+    assert!(files.contains(&".github/workflows/broken.yml".to_string()));
+    assert!(!files.contains(&".github/workflows/ignored.yml".to_string()));
+    assert!(analyze_env(dir.path(), &CiConfig::default(), "IGNORED_ENV")
+        .files
+        .is_empty());
+    assert!(
+        !analyze_env(dir.path(), &CiConfig::default(), "TRACKED_IGNORED_ENV")
+            .files
+            .is_empty()
+    );
 }
 
 #[test]

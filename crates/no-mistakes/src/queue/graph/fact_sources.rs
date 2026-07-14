@@ -43,11 +43,5 @@ fn excluded_by_filter(path: &Path, filter: Option<&globset::GlobSet>, root: &Pat
     filter.is_some_and(|filter| !filter.is_match(path.strip_prefix(root).unwrap_or(path)))
 }
 
-pub(super) fn load_factory_names(root: &Path) -> Vec<String> {
-    crate::config::v2::load_v2_config(root, None)
-        .map(|config| config.queues.factories)
-        .unwrap_or_default()
-}
-
 #[cfg(test)]
 mod tests;

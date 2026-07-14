@@ -32,16 +32,54 @@ pub fn extract_spawn_edges(source: &str, file_path: &Path, root: &Path) -> Vec<S
     extract_spawn_edges_from_program(&ret.program, source, file_path, root)
 }
 
+pub(crate) fn extract_spawn_edges_from_visible(
+    source: &str,
+    file_path: &Path,
+    root: &Path,
+    visible_files: &std::collections::HashSet<PathBuf>,
+) -> Vec<SpawnEdge> {
+    let allocator = Allocator::default();
+    let source_type = SourceType::tsx();
+    let ret = Parser::new(&allocator, source, source_type).parse();
+    extract_spawn_edges_from_program_from_visible(
+        &ret.program,
+        source,
+        file_path,
+        root,
+        visible_files,
+    )
+}
+
 pub fn extract_spawn_edges_from_program<'a>(
     program: &Program<'a>,
     source: &str,
     file_path: &Path,
     root: &Path,
 ) -> Vec<SpawnEdge> {
+    extract_spawn_edges_from_program_inner(program, source, file_path, root, None)
+}
+
+pub(crate) fn extract_spawn_edges_from_program_from_visible<'a>(
+    program: &Program<'a>,
+    source: &str,
+    file_path: &Path,
+    root: &Path,
+    visible_files: &std::collections::HashSet<PathBuf>,
+) -> Vec<SpawnEdge> {
+    extract_spawn_edges_from_program_inner(program, source, file_path, root, Some(visible_files))
+}
+
+fn extract_spawn_edges_from_program_inner<'a>(
+    program: &Program<'a>,
+    source: &str,
+    file_path: &Path,
+    root: &Path,
+    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+) -> Vec<SpawnEdge> {
     let mut results = Vec::new();
 
     for stmt in &program.body {
-        collect_from_stmt(stmt, source, file_path, root, &mut results);
+        collect_from_stmt(stmt, source, file_path, root, visible_files, &mut results);
     }
 
     results

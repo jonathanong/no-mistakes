@@ -68,29 +68,55 @@ pub(in crate::codebase::dotnet) fn finalize_project_facts(
     if facts.compile_files.is_empty() {
         facts.compile_files = default_compile_files(all_files, project_dir);
     }
+    let visible_files: BTreeSet<PathBuf> =
+        all_files.iter().map(|path| normalize_path(path)).collect();
     facts
         .compile_files
-        .retain(|path| path.starts_with(root) && path.exists());
+        .retain(|path| path.starts_with(root) && visible_files.contains(&normalize_path(path)));
 }
 
 fn evaluate_project_with_msbuild(
     project_path: &Path,
     name: &str,
 ) -> Result<DotnetProjectFacts, String> {
-    let output = std::process::Command::new("dotnet")
+    evaluate_project_with_program(project_path, name, "dotnet")
+}
+
+pub(in crate::codebase::dotnet) fn evaluate_project_with_program(
+    project_path: &Path,
+    name: &str,
+    program: &str,
+) -> Result<DotnetProjectFacts, String> {
+    let output = std::process::Command::new(program)
         .arg("msbuild")
         .arg(project_path)
         .arg("-getProperty:AssemblyName,RootNamespace,IsTestProject,TargetFramework,TargetFrameworks")
         .arg("-getItem:Compile,ProjectReference,PackageReference")
         .output()
         .map_err(|error| format!("dotnet msbuild failed to start for `{name}`: {error}"))?;
-    if !output.status.success() {
+    parse_msbuild_output(
+        project_path,
+        name,
+        output.status.success(),
+        &output.stdout,
+        &output.stderr,
+    )
+}
+
+pub(in crate::codebase::dotnet) fn parse_msbuild_output(
+    project_path: &Path,
+    name: &str,
+    success: bool,
+    stdout: &[u8],
+    stderr: &[u8],
+) -> Result<DotnetProjectFacts, String> {
+    if !success {
         return Err(format!(
             "dotnet msbuild failed for `{name}`: {}",
-            String::from_utf8_lossy(&output.stderr).trim()
+            String::from_utf8_lossy(stderr).trim()
         ));
     }
-    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stdout = String::from_utf8_lossy(stdout);
     parse_msbuild_json(project_path, &stdout)
         .ok_or_else(|| format!("dotnet msbuild output was not parseable for `{name}`"))
 }
@@ -105,7 +131,7 @@ pub(in crate::codebase::dotnet) fn parse_msbuild_json(
     let value: serde_json::Value = serde_json::from_str(&trimmed[start..=end]).ok()?;
     let properties = value.get("Properties").or_else(|| value.get("properties"));
     let items = value.get("Items").or_else(|| value.get("items"));
-    let project_dir = project_path.parent().unwrap_or_else(|| Path::new("."));
+    let project_dir = project_path.parent().unwrap_or(Path::new("."));
     let mut facts = DotnetProjectFacts {
         project_path: project_path.to_path_buf(),
         project_dir: project_dir.to_path_buf(),

@@ -1,9 +1,143 @@
-use super::matching::descendant_dirs_matching_suffix_from_files;
 use super::*;
+use ignore::WalkBuilder;
 use no_mistakes::config::v2::NoMistakesConfig;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::{Arc, Mutex};
 use tempfile::TempDir;
+
+type GitFilesCache = HashMap<PathBuf, Option<Vec<String>>>;
+
+fn include_preserved_roots(
+    root: &Path,
+    config: &NoMistakesConfig,
+    skip_directories: &[String],
+) -> Vec<PathBuf> {
+    let mut git_files_cache = GitFilesCache::new();
+    let mut inferred_roots = no_mistakes::codebase::config::InferredRoots::default();
+    collect_preserved_roots(root, config, &mut inferred_roots, |roots, base, include| {
+        push_include_preserved_roots(roots, base, include, skip_directories, &mut git_files_cache);
+    })
+}
+
+fn push_include_preserved_roots(
+    roots: &mut Vec<PathBuf>,
+    base: &Path,
+    include: &str,
+    skip_directories: &[String],
+    git_files_cache: &mut GitFilesCache,
+) {
+    if let Some(prefix) = literal_include_prefix(include) {
+        roots.push(base.join(&prefix));
+    }
+    if let Some(suffix) = leading_globstar_literal_prefix(include) {
+        roots.extend(descendant_dirs_matching_suffix(
+            base,
+            &suffix,
+            skip_directories,
+            git_files_cache,
+        ));
+    }
+}
+
+fn descendant_dirs_matching_suffix(
+    base: &Path,
+    suffix: &Path,
+    skip_directories: &[String],
+    git_files_cache: &mut GitFilesCache,
+) -> Vec<PathBuf> {
+    let git_files = git_files_cache
+        .entry(base.to_path_buf())
+        .or_insert_with(|| no_mistakes::codebase::ts_source::git_visible_files(base));
+    match git_files {
+        Some(files) => descendant_dirs_matching_suffix_from_files(
+            base,
+            suffix,
+            files.as_slice(),
+            skip_directories,
+        ),
+        None => {
+            let mut roots = Vec::new();
+            collect_descendant_dirs_matching_suffix(
+                base,
+                base,
+                suffix,
+                skip_directories,
+                &mut roots,
+            );
+            roots
+        }
+    }
+}
+
+fn descendant_dirs_matching_suffix_from_files(
+    base: &Path,
+    suffix: &Path,
+    files: &[String],
+    skip_directories: &[String],
+) -> Vec<PathBuf> {
+    super::matching::descendant_dirs_matching_suffix_from_paths(
+        base,
+        suffix,
+        files.iter().map(Path::new),
+        skip_directories,
+    )
+}
+
+fn collect_descendant_dirs_matching_suffix(
+    base: &Path,
+    dir: &Path,
+    suffix: &Path,
+    skip_directories: &[String],
+    roots: &mut Vec<PathBuf>,
+) {
+    let base = base.to_path_buf();
+    let suffix = suffix.to_path_buf();
+    let skip_directories = skip_directories.to_vec();
+    let matches = Arc::new(Mutex::new(Vec::new()));
+    let matches_for_filter = Arc::clone(&matches);
+    let filter_base = base.clone();
+    let filter_suffix = suffix.clone();
+
+    let mut builder = WalkBuilder::new(dir);
+    builder
+        .hidden(true)
+        .require_git(false)
+        .filter_entry(move |entry| {
+            if entry.depth() == 0
+                || !entry
+                    .file_type()
+                    .is_some_and(|file_type| file_type.is_dir())
+            {
+                return true;
+            }
+            let path = entry.path();
+            if path
+                .strip_prefix(&filter_base)
+                .ok()
+                .is_some_and(|rel| rel.ends_with(&filter_suffix))
+            {
+                matches_for_filter
+                    .lock()
+                    .expect("preserved-root match lock should not be poisoned")
+                    .push(path.to_path_buf());
+            }
+            let name = entry.file_name().to_str().unwrap_or_default();
+            !no_mistakes::codebase::ts_source::is_skipped_dir(name)
+                && !skip_directories.iter().any(|skip| skip == name)
+        });
+    for _ in builder.build() {}
+    drop(builder);
+
+    let mut matches = Arc::try_unwrap(matches)
+        .expect("preserved-root walker should release its match collector")
+        .into_inner()
+        .expect("preserved-root match lock should not be poisoned");
+    matches.sort();
+    matches.dedup();
+    roots.extend(matches);
+}
 
 fn git_init(dir: &Path) {
     let output = Command::new("git")
@@ -203,13 +337,7 @@ fn ignore_aware_fallback_prunes_gitignored_nested_suffix() {
 
     // Call the non-Git fallback directly because this checked-in fixture lives
     // inside the repository that supplies the git-visible fast path.
-    super::matching::collect_descendant_dirs_matching_suffix(
-        &root,
-        &root,
-        Path::new("components"),
-        &[],
-        &mut roots,
-    );
+    collect_descendant_dirs_matching_suffix(&root, &root, Path::new("components"), &[], &mut roots);
 
     assert_eq!(roots, vec![root.join("backend/components")]);
 }

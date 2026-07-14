@@ -1,11 +1,11 @@
 use crate::playwright::analysis::cli_run::run;
-use crate::playwright::analysis::discover::{build_project_discovery, discover_test_files};
+use crate::playwright::analysis::discover::build_project_discovery;
 use crate::playwright::analysis::output::{build_related_report, print_related_text};
 use crate::playwright::analysis::types::Edge;
 use crate::playwright::cli::{Command, PlaywrightArgs as Cli};
 use crate::playwright::config::Settings;
 use crate::playwright::playwright_config;
-use crate::playwright::test_support::fixture_path;
+use crate::playwright::test_support::{discover_test_files, fixture_path};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 

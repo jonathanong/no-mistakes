@@ -1,5 +1,9 @@
 lockfileVersion: '9.0'
 
+# Keep this snapshot a different byte length from the initial lockfile. The test
+# replaces it immediately after `git commit`, so equal sizes can trigger Git's
+# racy-clean index shortcut and silently skip the intended second commit.
+
 packages:
   lib@1.1.0:
     resolution: {directory: packages/lib, type: directory}

@@ -23,6 +23,16 @@ pub use tests_config::{
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct NoMistakesConfig {
+    /// Legacy React analyzer root retained for compatibility with the
+    /// standalone `react` commands and the aggregate `check` command.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub frontend_root: Option<String>,
+    /// Legacy top-level React no-fetch assertion.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub assert_no_fetch: Option<bool>,
+    /// Legacy nested React analyzer settings.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub react_traits: Option<ReactTraitsConfig>,
     pub filesystem: FilesystemConfig,
     pub infra: InfraConfig,
     pub projects: BTreeMap<String, Project>,
@@ -37,6 +47,13 @@ pub struct NoMistakesConfig {
     pub ci: CiConfig,
     /// Changed-file validation command mappings (`no-mistakes impacted-checks`).
     pub checks: ChecksConfig,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct ReactTraitsConfig {
+    pub frontend_root: Option<String>,
+    pub assert_no_fetch: Option<bool>,
 }
 
 /// One named effect family (e.g. `valkey`) for the `effects` query.

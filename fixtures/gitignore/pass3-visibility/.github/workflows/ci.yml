@@ -1,0 +1,9 @@
+name: CI
+on: push
+jobs:
+  bins:
+    runs-on: ubuntu-latest
+    steps:
+      - run: cargo run --bin visible
+      - run: cargo run --bin ignored
+      - run: cargo run --package ignored-member --bin member

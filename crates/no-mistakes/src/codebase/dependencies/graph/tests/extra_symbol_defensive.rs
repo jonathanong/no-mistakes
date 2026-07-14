@@ -60,6 +60,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         facts: &facts,
         resolver: &resolver,
         workspace: &workspace,
+        visible_files: &visible,
     };
     let mut candidates = Vec::new();
     let mut visited = HashSet::new();
@@ -87,6 +88,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         facts: &facts,
         resolver: &resolver,
         workspace: &workspace,
+        visible_files: &visible,
     };
     let star_self = Export {
         name: "*".to_string(),
@@ -146,9 +148,12 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
             "api",
             "alpha",
             EdgeKind::Import,
-            &facts,
-            &resolver,
-            &workspace
+            ReexportNamespaceInputs {
+                facts: &facts,
+                resolver: &resolver,
+                workspace: &workspace,
+                visible_files: &visible,
+            },
         ),
         Some((
             NodeId::Symbol {
@@ -202,9 +207,12 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
             "api",
             "alpha",
             EdgeKind::Import,
-            &facts,
-            &resolver,
-            &workspace
+            ReexportNamespaceInputs {
+                facts: &facts,
+                resolver: &resolver,
+                workspace: &workspace,
+                visible_files: &visible,
+            },
         ),
         None
     );

@@ -1,4 +1,15 @@
 use super::*;
+
+#[test]
+fn prepared_forbidden_dependencies_never_enters_legacy_discovery_fallback() {
+    let source = include_str!("shared.rs");
+    let body = source
+        .split("fn check_with_optional_inferred(")
+        .nth(1)
+        .expect("prepared forbidden-dependencies body");
+
+    assert!(!body.contains("return super::check_with_config"));
+}
 use std::path::{Path, PathBuf};
 
 mod shared_facts;
@@ -12,6 +23,13 @@ fn fixture(name: &str) -> PathBuf {
     )
 }
 
+fn resolve_tsconfig(
+    root: &Path,
+    explicit: Option<&Path>,
+) -> Result<crate::codebase::ts_resolver::TsConfig> {
+    crate::codebase::ts_resolver::resolve_tsconfig(explicit, root)
+}
+
 fn check_application(root: &Path, opts: &Options, graph: &DepGraph) -> Result<Vec<RuleFinding>> {
     let config = NoMistakesConfig {
         rules: vec![crate::config::v2::schema::RuleDef {
@@ -21,7 +39,18 @@ fn check_application(root: &Path, opts: &Options, graph: &DepGraph) -> Result<Ve
         }],
         ..Default::default()
     };
-    check_rule_application(root, &config, &config.rules[0], opts, graph)
+    check_rule_application(root, &config, &config.rules[0], opts, graph, None)
+}
+
+fn check_with_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    config_path: Option<&Path>,
+    tsconfig_path: Option<&Path>,
+    shared: &crate::codebase::check_facts::CheckFactMap,
+) -> Result<Vec<RuleFinding>> {
+    let tsconfig = resolve_tsconfig(root, tsconfig_path)?;
+    check_with_prepared_facts(root, config, config_path, &tsconfig, shared, None)
 }
 
 #[test]
@@ -328,7 +357,8 @@ fn source_filter_excludes_matching_forbidden_root() {
     )
     .unwrap();
 
-    let findings = check_rule_application(&root, &config, &config.rules[0], &opts, &graph).unwrap();
+    let findings =
+        check_rule_application(&root, &config, &config.rules[0], &opts, &graph, None).unwrap();
 
     assert!(findings.is_empty());
 }

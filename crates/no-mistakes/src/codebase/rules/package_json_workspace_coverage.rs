@@ -101,7 +101,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
 }
 
 fn covered_workspace_dirs(root: &Path, files: &[PathBuf]) -> Result<HashSet<String>> {
-    let workspace_globs = workspaces::load_workspace_globs(root)?;
+    let workspace_globs = workspaces::load_workspace_globs_from_files(root, files)?;
     let include = build_workspace_globset(&workspace_globs, false)?;
     let exclude = build_workspace_globset(&workspace_globs, true)?;
     Ok(files

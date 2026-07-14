@@ -24,31 +24,37 @@ fn prepare_local_caller_context_resolves_workspace_packages_once() {
     );
     let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig(None, &root).unwrap();
     let graph_plan = signature_impact_graph_plan();
-    let graph_files = GraphFiles::discover(&root);
-    let (fact_plan, fact_context) =
-        ts_fact_plan_and_context_for_plan_with_config(&root, graph_plan, None);
-
-    let facts = crate::codebase::ts_source::facts::collect_ts_facts_with_context(
-        graph_files.indexable(),
-        fact_plan,
-        &fact_context,
-    );
-
-    let graph = DepGraph::build_with_plan_files_config_and_facts(
+    let files = crate::codebase::ts_source::discover_visible_paths(&root);
+    let graph_files = GraphFiles::from_files(files.clone());
+    let visible_files = files
+        .iter()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(path))
+        .collect::<HashSet<_>>();
+    let facts = impact_test_support::signature_test_facts(&root);
+    let visible_paths = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &files);
+    let config = NoMistakesConfig::default();
+    let codebase_config = crate::codebase::config::config_from_loaded_v2(&root, None, &config);
+    let prepared_graph = crate::codebase::dependencies::graph::prepare_graph_config(
+        &root,
+        graph_plan,
+        &codebase_config,
+        &config,
+        &visible_paths,
+    )
+    .unwrap();
+    let graph = DepGraph::build_with_plan_files_prepared_config_and_facts(
         &root,
         &tsconfig,
         graph_plan,
         &graph_files,
         None,
-        Some(&facts as &dyn TsFactLookup),
+        &prepared_graph,
+        Some(&facts),
     )
     .expect("shared-facts graph builds");
-    assert!(
-        graph.all_files().count() > 0,
-        "sanity check: shared facts must still let the graph build succeed"
-    );
-
-    let context = prepare_local_caller_context(facts, graph_files.all(), &root);
+    assert!(graph.all_files().count() > 0);
+    let workspace = crate::codebase::workspaces::load_from_files(&root, &files).unwrap();
+    let context = prepare_local_caller_context(&facts, &workspace, &visible_files);
 
     assert!(
         !context.workspace.packages.is_empty(),
@@ -99,7 +105,10 @@ fn prepare_local_caller_context_never_rederives_its_supplied_inputs() {
     );
 
     let empty_facts = crate::codebase::ts_source::facts::TsFactMap::default();
-    let context = prepare_local_caller_context(empty_facts, &[], &root);
+    let empty_workspace = crate::codebase::workspaces::load_from_files(&root, &[]).unwrap();
+    let visible_files = HashSet::new();
+    let context =
+        prepare_local_caller_context(&empty_facts, &empty_workspace, &visible_files);
 
     assert!(
         context.facts.is_empty(),

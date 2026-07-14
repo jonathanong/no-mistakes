@@ -1,6 +1,8 @@
-use crate::playwright::analysis::app_collect::collect_app_selector_occurrences;
+use crate::playwright::analysis::app_collect::collect_app_selector_occurrences_from_visible;
 use crate::playwright::config::Settings;
-use crate::playwright::fsutil::{build_globset, relative_string, walk_files};
+use crate::playwright::fsutil::{
+    build_globset, relative_string, walk_files_from_snapshot, VisiblePathSnapshot,
+};
 use crate::playwright::selectors;
 use crate::playwright::test_support::fixture_path;
 use anyhow::Result;
@@ -58,6 +60,20 @@ fn collect_app_selectors(
     Ok(app_selectors)
 }
 
+fn collect_app_selector_occurrences(
+    root: &Path,
+    settings: &Settings,
+    selector_regexes: &selectors::SelectorRegexes,
+) -> Result<Vec<selectors::AppSelector>> {
+    let snapshot = VisiblePathSnapshot::new(root);
+    collect_app_selector_occurrences_from_visible(root, settings, selector_regexes, &snapshot)
+}
+
+fn walk_files(root: &Path) -> Vec<std::path::PathBuf> {
+    let snapshot = VisiblePathSnapshot::new(root);
+    walk_files_from_snapshot(root, &snapshot)
+}
+
 #[test]
 fn skipped_directories_are_detected() {
     use crate::playwright::fsutil::is_skipped_dir;
@@ -79,6 +95,20 @@ fn walk_files_returns_files_and_skips_configured_directories() {
         .map(|path| relative_string(&root, &path))
         .collect();
     assert_eq!(files, vec!["src/a.ts", "src/b.ts"]);
+}
+
+#[test]
+fn snapshot_from_paths_keeps_caller_candidates_authoritative() {
+    let root = fixture_path(&["ast-snippets", "main", "walk-files"]);
+    let only_candidate = root.join("src/a.ts");
+    let snapshot = VisiblePathSnapshot::from_paths(&root, std::slice::from_ref(&only_candidate));
+
+    assert_eq!(
+        walk_files_from_snapshot(&root, &snapshot),
+        vec![crate::codebase::ts_resolver::normalize_path(
+            &only_candidate
+        )]
+    );
 }
 
 #[test]
@@ -222,11 +252,10 @@ fn walk_files_still_skips_hardcoded_dirs_when_git_tracked() {
     assert_eq!(files, vec!["src/App.tsx"]);
 }
 
-/// Outside a git repository, `walk_files` still falls back to the raw
-/// `WalkDir` walk, since there is no git-visible file list to derive
-/// candidates from.
+/// Outside a Git repository, `walk_files` still applies its hardcoded skip
+/// directories to the shared ignore-aware candidate list.
 #[test]
-fn walk_files_falls_back_to_raw_walk_outside_git_repositories() {
+fn walk_files_applies_skip_dirs_outside_git_repositories() {
     let dir = TempDir::new().unwrap();
     write(dir.path(), "src/App.tsx", "");
     write(dir.path(), "node_modules/pkg/index.tsx", "");
@@ -237,4 +266,48 @@ fn walk_files_falls_back_to_raw_walk_outside_git_repositories() {
         .collect();
 
     assert_eq!(files, vec!["src/App.tsx"]);
+}
+
+#[test]
+fn walk_files_applies_gitignore_outside_git() {
+    let dir = crate::test_support::materialize_gitignore_fixture("non-git-discovery");
+
+    let files: Vec<String> = walk_files(dir.path())
+        .iter()
+        .map(|path| relative_string(dir.path(), path))
+        .collect();
+
+    assert!(files.contains(&"app/page.tsx".to_string()));
+    assert!(!files.contains(&"ignored/page.tsx".to_string()));
+}
+
+#[test]
+fn snapshot_normalizes_parent_components_for_descendant_roots() {
+    let dir = crate::test_support::materialize_gitignore_fixture("non-git-discovery");
+    let snapshot = VisiblePathSnapshot::new(dir.path());
+    let root = dir.path().join("app/../app");
+
+    let files: Vec<String> = walk_files_from_snapshot(&root, &snapshot)
+        .iter()
+        .map(|path| relative_string(dir.path(), path))
+        .collect();
+
+    assert_eq!(files, vec!["app/page.tsx"]);
+}
+
+#[test]
+fn snapshot_discovers_descendant_git_worktrees_independently() {
+    let dir = crate::test_support::materialize_gitignore_fixture("non-git-discovery");
+    let nested = dir.path().join("packages/visible");
+    git_init(&nested);
+    git_add_all(&nested);
+    git_init(dir.path());
+    let snapshot = VisiblePathSnapshot::new(dir.path());
+
+    let files: Vec<String> = walk_files_from_snapshot(&nested, &snapshot)
+        .iter()
+        .map(|path| relative_string(&nested, path))
+        .collect();
+
+    assert_eq!(files, vec!["package.json"]);
 }

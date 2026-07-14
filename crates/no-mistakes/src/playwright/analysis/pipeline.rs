@@ -1,8 +1,15 @@
 use crate::playwright::analysis::context::TestAnalysisContext;
+pub(crate) use crate::playwright::analysis::pipeline_entrypoints::{
+    analyze_with_policy_and_facts_from_snapshot, analyze_with_policy_from_snapshot,
+};
+pub(crate) use crate::playwright::analysis::pipeline_facts::{
+    standalone_fact_plan, standalone_facts,
+};
 use crate::playwright::analysis::pipeline_occurrences::prepare_test_files;
 use crate::playwright::analysis::pipeline_options::AnalysisOptions;
 pub(crate) use crate::playwright::analysis::pipeline_selectors::{
-    analyze_selectors_with_policy, analyze_selectors_with_policy_and_facts,
+    analyze_selectors_with_policy_and_facts_from_snapshot,
+    analyze_selectors_with_policy_from_snapshot,
 };
 use crate::playwright::analysis::pipeline_setup::{
     collect_app_selectors, collect_playwright_routes, discover_playwright_test_files,
@@ -23,52 +30,8 @@ use crate::playwright::{config, playwright_tests, selectors};
 use anyhow::Result;
 use std::path::Path;
 
-pub(crate) fn analyze_with_policy(
-    root: &Path,
-    settings: &config::Settings,
-    test_policy: playwright_tests::TestPolicy,
-    unique_selector_policy: UniqueSelectorPolicy,
-) -> Result<Analysis> {
-    analyze_with_policy_and_optional_facts(
-        root,
-        settings,
-        test_policy,
-        unique_selector_policy,
-        AnalysisOptions {
-            require_routes: true,
-            skip_test_file_errors: false,
-            facts: None,
-            route_import_candidate: None,
-            graph_file_universe: None,
-            occurrence_selection:
-                crate::playwright::analysis::pipeline_occurrences::CachedOccurrenceSelection::Exact,
-        },
-    )
-}
-
-pub(crate) fn analyze_with_policy_and_facts(
-    root: &Path,
-    settings: &config::Settings,
-    test_policy: playwright_tests::TestPolicy,
-    unique_selector_policy: UniqueSelectorPolicy,
-    facts: &dyn crate::codebase::dependencies::graph::TsFactLookup,
-) -> Result<Analysis> {
-    analyze_with_policy_and_optional_facts(
-        root,
-        settings,
-        test_policy,
-        unique_selector_policy,
-        AnalysisOptions {
-            require_routes: true,
-            skip_test_file_errors: false,
-            facts: Some(facts),
-            route_import_candidate: None,
-            graph_file_universe: None,
-            occurrence_selection:
-                crate::playwright::analysis::pipeline_occurrences::CachedOccurrenceSelection::Exact,
-        },
-    )
-}
+#[cfg(test)]
+pub(crate) mod test_support;
 
 pub(crate) fn analyze_with_policy_and_optional_facts(
     root: &Path,
@@ -84,6 +47,7 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
         route_import_candidate,
         graph_file_universe,
         occurrence_selection,
+        snapshot,
     } = options;
     unique_selector_policy.configured_html_id_selector =
         config::has_configured_html_id_selector(settings);
@@ -93,10 +57,11 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
         settings.html_ids,
     );
     let required_routes = require_routes
-        .then(|| collect_playwright_routes(root, settings, true, false, facts))
+        .then(|| collect_playwright_routes(root, settings, true, false, facts, snapshot))
         .transpose()?;
-    let test_files = discover_playwright_test_files(root, settings)?;
-    let app_selector_setup = collect_app_selectors(root, settings, &unique_selector_policy, facts)?;
+    let test_files = discover_playwright_test_files(root, settings, facts, snapshot)?;
+    let app_selector_setup =
+        collect_app_selectors(root, settings, &unique_selector_policy, facts, snapshot)?;
     let (prepared, demand) = crate::perf_trace::trace("playwright.test_occurrences", || {
         prepare_test_files(
             test_files,
@@ -110,7 +75,7 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
     })?;
     let routes = match required_routes {
         Some(routes) => routes,
-        None => collect_playwright_routes(root, settings, false, demand.routes, facts)?,
+        None => collect_playwright_routes(root, settings, false, demand.routes, facts, snapshot)?,
     };
     let setup = PlaywrightSetup {
         routes,
@@ -139,6 +104,7 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
             graph_file_universe,
             route_import_candidate,
             routes: setup.routes.as_slice(),
+            snapshot,
             has_eligible_text_locator: demand.text_locators,
             has_text_candidate: &|app_text_targets, app_text_index| {
                 has_text_locator_candidate(&pending, app_text_targets, app_text_index, test_policy)
@@ -173,5 +139,7 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
         unique_selector_policy,
         setup,
         test_analysis,
+        facts,
+        snapshot,
     )
 }

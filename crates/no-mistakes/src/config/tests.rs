@@ -56,6 +56,32 @@ fn test_load_config_explicit() {
 }
 
 #[test]
+fn pass5a_legacy_visible_loader_matches_discovery_and_honors_explicit_ignored_config() {
+    let dir = crate::test_support::materialize_gitignore_fixture("auto-discovery");
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_all(dir.path());
+    let visible = crate::codebase::ts_source::discover_visible_paths(dir.path());
+
+    let discovered: TestConfig = load_config(dir.path(), None, &["legacy-visible"]).unwrap();
+    let prepared: TestConfig =
+        load_config_from_visible(dir.path(), None, &["legacy-visible"], &visible).unwrap();
+    assert_eq!(prepared.name, discovered.name);
+    assert_eq!(prepared.name, "visible");
+
+    let ignored: TestConfig =
+        load_config_from_visible(dir.path(), None, &["legacy-ignored"], &visible).unwrap();
+    assert_eq!(ignored.name, "");
+    let explicit: TestConfig = load_config_from_visible(
+        dir.path(),
+        Some(Path::new("legacy-ignored.yml")),
+        &["legacy-visible"],
+        &visible,
+    )
+    .unwrap();
+    assert_eq!(explicit.name, "explicit-ignored");
+}
+
+#[test]
 fn test_load_config_multiple_error() {
     let dir = tempdir().unwrap();
     fs::write(dir.path().join("test.yaml"), "name: a\n").unwrap();
@@ -99,7 +125,9 @@ fn test_load_config_read_error() {
     let path = dir.path().join("test.yaml");
     fs::create_dir(&path).unwrap(); // Dir instead of file will cause read error
 
-    let err = load_config::<TestConfig>(dir.path(), None, &["test"])
+    // Automatic discovery only considers visible files. Use an explicit path
+    // to retain coverage for propagating a read error from a directory.
+    let err = load_config::<TestConfig>(dir.path(), Some(Path::new("test.yaml")), &["test"])
         .err()
         .unwrap();
     assert!(err.to_string().contains("directory") || err.to_string().contains("failed"));

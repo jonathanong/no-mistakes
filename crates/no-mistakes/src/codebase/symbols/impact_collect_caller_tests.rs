@@ -39,11 +39,13 @@ fn caller_entries_filters_export_nodes_and_non_file_nodes() {
     let filter = TestFileFilter::new(root, &NoMistakesConfig::default());
     let export_nodes = BTreeSet::from([export_node]);
     let file_target_symbols = BTreeMap::new();
+    let facts = TsFactMap::new();
     let context = CallerEntriesContext {
         root,
         test_filter: &filter,
         export_nodes: &export_nodes,
         file_target_symbols: &file_target_symbols,
+        facts: &facts,
     };
 
     let production = caller_entries(&entries, &context, false, &[]);
@@ -61,11 +63,13 @@ fn caller_entries_merges_duplicate_callers_and_sorts() {
     let filter = TestFileFilter::new(root, &NoMistakesConfig::default());
     let export_nodes = BTreeSet::new();
     let file_target_symbols = BTreeMap::new();
+    let facts = TsFactMap::new();
     let context = CallerEntriesContext {
         root,
         test_filter: &filter,
         export_nodes: &export_nodes,
         file_target_symbols: &file_target_symbols,
+        facts: &facts,
     };
     let entries = vec![
         NodeEntry {
@@ -114,46 +118,56 @@ fn caller_entries_merges_duplicate_callers_and_sorts() {
 fn file_entry_uses_symbol_checks_extracted_and_alias_member_uses() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/tests-impact-symbol/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let facts = impact_test_support::signature_test_facts(&root);
 
     assert!(file_entry_uses_symbol(
         &root,
         "require-caller.mts",
-        "parseDate"
+        "parseDate",
+        &facts,
     ));
     assert!(file_entry_uses_symbol(
         &root,
         "dynamic-import-caller.mts",
-        "parseDate"
+        "parseDate",
+        &facts,
     ));
     assert!(file_entry_uses_symbol(
         &root,
         "dynamic-import-alias-caller.mts",
-        "parseDate"
+        "parseDate",
+        &facts,
     ));
     assert!(!file_entry_uses_symbol(
         &root,
         "dynamic-import-unused.mts",
-        "parseDate"
+        "parseDate",
+        &facts,
     ));
     assert!(!file_entry_uses_symbol(
         &root,
         "dynamic-import-shadowed-member.mts",
-        "parseDate"
+        "parseDate",
+        &facts,
     ));
     assert!(!file_entry_uses_symbol(
         &root,
         "dynamic-import-other-export-name.mts",
-        "parseDate"
+        "parseDate",
+        &facts,
     ));
     assert!(file_entry_uses_symbol(
         &root,
         "dynamic-import-chained-member-caller.mts",
-        "parseDate"
+        "parseDate",
+        &facts,
     ));
     assert!(!file_entry_uses_symbol(
         &root,
         "missing-dynamic-import-caller.mts",
-        "parseDate"
+        "parseDate",
+        &facts,
     ));
 }
 
@@ -173,36 +187,4 @@ fn symbol_aliases_collect_destructured_and_member_assignment_locals() {
     assert!(!aliases.contains("assigned"));
 }
 
-#[test]
-fn dynamic_usage_helpers_ignore_non_module_and_malformed_bindings() {
-    assert!(dynamic_module_bindings("const utils = await import('./utils.mts');").contains("utils"));
-    assert!(dynamic_module_bindings("const readDate = require('./utils.mts').parseDate;").is_empty());
-    assert!(destructured_symbol_aliases("const { parseDate = await import('./utils.mts');", "parseDate").is_empty());
-    assert!(member_assignment_alias("exports.value = utils.parseDate;", "parseDate").is_empty());
-    assert!(member_assignment_alias("const readDate = utils.other;", "parseDate").is_empty());
-    assert!(dynamic_symbol_aliases_in_source("const utils = await import('./utils.mts');", "dates.parseDate").is_empty());
-    assert!(source_contains_member_name("utils.parseDate(value)", "utils.parseDate"));
-    assert!(!source_contains_member_name(
-        "utils.parseDateOld(value)",
-        "utils.parseDate"
-    ));
-    assert!(source_contains_call_name("pd(value)", "pd"));
-    assert!(source_contains_call_name("pd (value)", "pd"));
-    assert!(!source_contains_call_name("otherpd(value)", "pd"));
-}
-
-#[test]
-fn local_callee_matching_accepts_namespace_members() {
-    assert!(matches_local_callee(
-        "dates.parseDate",
-        &BTreeSet::from(["dates".to_string()])
-    ));
-    assert!(matches_local_callee(
-        "parseDate",
-        &BTreeSet::from(["parseDate".to_string()])
-    ));
-    assert!(!matches_local_callee(
-        "updatedDates.parseDate",
-        &BTreeSet::from(["dates".to_string()])
-    ));
-}
+mod usage_helpers;

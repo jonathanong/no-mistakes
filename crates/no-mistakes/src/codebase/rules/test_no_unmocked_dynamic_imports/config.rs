@@ -1,24 +1,19 @@
 mod discovery;
+mod filter;
+mod prepared;
 mod rule_targets;
 
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use discovery::{
     build_globset, build_regexes, config_files, extract_property_strings,
-    extract_test_property_strings, extract_test_regexes,
+    extract_test_property_strings, extract_test_regexes, ConfigFile,
 };
-use globset::GlobSet;
-use regex::Regex;
 use std::path::{Path, PathBuf};
 
-use rule_targets::rule_test_project_globs;
-
-#[derive(Clone)]
-pub struct TestFilter {
-    include: GlobSet,
-    include_regex: Vec<Regex>,
-    exclude: GlobSet,
-}
+pub(crate) use filter::test_filter_from_visible;
+pub use filter::{test_filter, TestFilter};
+pub(super) use prepared::prepare_from_visible;
 
 pub struct ConfigSetupData {
     filter: TestFilter,
@@ -31,71 +26,37 @@ impl ConfigSetupData {
     }
 }
 
-impl TestFilter {
-    pub fn is_match(&self, rel_path: &str) -> bool {
-        let mut included = self.include.is_match(rel_path);
-        if !included {
-            for regex in &self.include_regex {
-                if regex.is_match(rel_path) {
-                    included = true;
-                    break;
-                }
-            }
-        }
-        included && !self.exclude.is_match(rel_path)
-    }
-}
-
-pub fn test_filter(root: &Path, config: &NoMistakesConfig) -> Result<TestFilter> {
-    let (mut includes, mut excludes) = rule_test_project_globs(root, config)?;
-    let has_rule_target_includes = !includes.is_empty();
-    let mut include_regex = Vec::new();
-    let mut config_includes = Vec::new();
-    for config_file in config_files(root, config) {
-        let source = std::fs::read_to_string(&config_file.path)?;
-        let base = config_file.path.parent().unwrap_or(root);
-        config_includes.extend(normalize_matcher_patterns(
-            root,
-            base,
-            extract_test_property_strings(&source, "include"),
-        ));
-        config_includes.extend(normalize_matcher_patterns(
-            root,
-            base,
-            extract_property_strings(&source, "testMatch"),
-        ));
-        include_regex.extend(extract_test_regexes(&source));
-        excludes.extend(normalize_matcher_patterns(
-            root,
-            base,
-            extract_test_property_strings(&source, "exclude"),
-        ));
-    }
-    if has_rule_target_includes {
-        include_regex.clear();
-    } else if !config_includes.is_empty() || !include_regex.is_empty() {
-        includes = config_includes;
-    } else {
-        includes = crate::codebase::dependencies::VITEST_JEST_TEST_GLOBS
-            .iter()
-            .map(|s| (*s).to_string())
-            .collect::<Vec<_>>();
-    }
-    Ok(TestFilter {
-        include: build_globset(&includes)?,
-        include_regex: build_regexes(&include_regex)?,
-        exclude: build_globset(&excludes)?,
-    })
-}
-
 /// Pre-compute per-config filter and setup files once, so the per-test loop can skip
 /// re-reading and re-parsing config files on every iteration.
 pub fn precompute_setup_data(
     root: &Path,
     config: &NoMistakesConfig,
 ) -> Result<Vec<ConfigSetupData>> {
+    precompute_setup_data_from_config_files(root, &config_files(root, config))
+}
+
+fn precompute_setup_data_from_config_files(
+    root: &Path,
+    config_files: &[ConfigFile],
+) -> Result<Vec<ConfigSetupData>> {
+    precompute_setup_data_from_config_files_inner(root, config_files, None)
+}
+
+fn precompute_setup_data_from_config_files_from_visible(
+    root: &Path,
+    config_files: &[ConfigFile],
+    visible_files: &std::collections::HashSet<PathBuf>,
+) -> Result<Vec<ConfigSetupData>> {
+    precompute_setup_data_from_config_files_inner(root, config_files, Some(visible_files))
+}
+
+fn precompute_setup_data_from_config_files_inner(
+    root: &Path,
+    config_files: &[ConfigFile],
+    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+) -> Result<Vec<ConfigSetupData>> {
     let mut result = Vec::new();
-    for config_file in config_files(root, config) {
+    for config_file in config_files {
         let source = std::fs::read_to_string(&config_file.path)?;
         let base = config_file.path.parent().unwrap_or(root);
         let includes = normalize_matcher_patterns(root, base, config_file.includes(&source));
@@ -109,7 +70,8 @@ pub fn precompute_setup_data(
             include_regex: build_regexes(&extract_test_regexes(&source))?,
             exclude: build_globset(&excludes)?,
         };
-        let setup_files = setup_files_from_configs(root, vec![config_file.path])?;
+        let setup_files =
+            setup_files_from_configs_inner(root, vec![config_file.path.clone()], visible_files)?;
         result.push(ConfigSetupData {
             filter,
             setup_files,
@@ -153,7 +115,11 @@ fn normalize_matcher_pattern(root: &Path, base: &Path, pattern: String) -> Strin
     pattern
 }
 
-fn setup_files_from_configs(root: &Path, config_files: Vec<PathBuf>) -> Result<Vec<PathBuf>> {
+fn setup_files_from_configs_inner(
+    root: &Path,
+    config_files: Vec<PathBuf>,
+    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+) -> Result<Vec<PathBuf>> {
     let mut files = Vec::new();
     for config_file in config_files {
         let source = std::fs::read_to_string(&config_file)?;
@@ -163,8 +129,9 @@ fn setup_files_from_configs(root: &Path, config_files: Vec<PathBuf>) -> Result<V
         setups.extend(extract_property_strings(&source, "setupFilesAfterEnv"));
         for setup in setups {
             let path = resolve_setup_file(base, &setup);
-            if path.exists() {
-                files.push(crate::codebase::ts_resolver::normalize_path(&path));
+            let path = crate::codebase::ts_resolver::normalize_path(&path);
+            if visible_files.map_or_else(|| path.exists(), |visible| visible.contains(&path)) {
+                files.push(path);
             }
         }
     }
@@ -183,5 +150,7 @@ fn resolve_setup_file(base: &Path, setup: &str) -> PathBuf {
     crate::config::resolve(base, Path::new(setup))
 }
 
+#[cfg(test)]
+mod prepared_tests;
 #[cfg(test)]
 mod tests;

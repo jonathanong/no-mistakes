@@ -2,6 +2,73 @@ use super::*;
 use crate::tests::{Confidence, ImpactReason};
 
 #[test]
+fn unscoped_native_full_suite_fallback_requires_explicit_opt_in() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/native-fallback-opt-in"),
+    );
+    let test = root.join("Tests/App.Tests/ServiceTests.cs");
+    let all_tests = vec![test.clone()];
+    let discovered = DiscoveredTests {
+        tests: all_tests.clone(),
+        targets_by_path: BTreeMap::new(),
+        used_fallback: false,
+    };
+    let changed = vec![root.join("src/App.cs")];
+    let visible = no_mistakes::codebase::ts_source::discover_visible_paths(&root);
+
+    let disabled = native_fallback_selection(
+        TestFramework::Dotnet,
+        &root,
+        &NoMistakesConfig::default(),
+        &changed,
+        &[],
+        &BTreeMap::new(),
+        &HashSet::new(),
+        &HashSet::new(),
+        &all_tests,
+        &discovered,
+        &visible,
+        false,
+        10,
+    );
+    assert!(disabled.is_none());
+
+    let (_, enabled) = native_fallback_selection(
+        TestFramework::Dotnet,
+        &root,
+        &NoMistakesConfig::default(),
+        &changed,
+        &[],
+        &BTreeMap::new(),
+        &HashSet::new(),
+        &HashSet::new(),
+        &all_tests,
+        &discovered,
+        &visible,
+        true,
+        10,
+    )
+    .expect("explicit opt-in should permit the full-suite native fallback");
+    assert_eq!(enabled.len(), 1);
+    assert_eq!(enabled[0].test_file, "Tests/App.Tests/ServiceTests.cs");
+}
+
+#[test]
+fn dotnet_project_fallback_reuses_prepared_visible_paths() {
+    let source = include_str!("../native_fallback.rs");
+    let body = source
+        .split("fn dotnet_project_fallback_tests(")
+        .nth(1)
+        .and_then(|body| body.split("\nfn dotnet_fallback_tests(").next())
+        .expect("dotnet project fallback body");
+
+    assert!(body.contains("visible_paths"));
+    assert!(!body.contains("discover_files("));
+    assert!(!body.contains("discover_visible_paths("));
+}
+
+#[test]
 fn native_source_detection_handles_backslash_paths() {
     let root = Path::new("/repo");
     let mut config = NoMistakesConfig::default();
@@ -119,6 +186,8 @@ fn native_fallback_does_not_trigger_when_every_candidate_is_already_used() {
         &used,
         &all_tests,
         &discovered,
+        &[],
+        false,
         10,
     )
     .is_none());

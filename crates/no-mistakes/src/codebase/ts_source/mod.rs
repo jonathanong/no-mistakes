@@ -12,6 +12,7 @@ pub(crate) use parser_diagnostic::format_parse_diagnostic;
 
 include!("discovery.rs");
 include!("discovery_preserve.rs");
+include!("visible_snapshot.rs");
 include!("disable_comments.rs");
 include!("comment_parser.rs");
 include!("comment_parser_modes.rs");

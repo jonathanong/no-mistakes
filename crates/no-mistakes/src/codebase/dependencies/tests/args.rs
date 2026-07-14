@@ -1,4 +1,5 @@
 use super::*;
+use super::traversal::*;
 use clap::Parser;
 
 mod extra;
@@ -177,11 +178,25 @@ fn vitest_globs_include_test_mts() {
 #[test]
 fn project_discovery_test_filters_escape_literal_paths_and_fallback_when_empty() {
     let root = fixture_root("test-plan-project-discovery");
-    let globs = test_filters(&root, "playwright");
+    let globs = prepared_test_filters(&root, "playwright");
     assert!(globs.contains(&"e2e/\\[locale\\].pw.ts".to_string()));
 
-    let fallback = test_filters(Path::new("/repo"), "vitest");
+    let fallback = prepared_test_filters(Path::new("/repo"), "vitest");
     assert!(fallback.contains(&"**/*.test.ts".to_string()));
+}
+
+fn prepared_test_filters(root: &Path, framework: &str) -> Vec<String> {
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
+    let visible = snapshot.paths_for(root);
+    let config = crate::config::v2::load_v2_config_from_visible(root, None, &visible)
+        .unwrap_or_default();
+    let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
+        None,
+        root,
+        &visible,
+    )
+    .unwrap();
+    test_filters_from_prepared(root, framework, &config, &tsconfig, &snapshot, None)
 }
 
 #[test]
@@ -397,9 +412,31 @@ fn resolve_entrypoints_treats_missing_source_path_with_existing_parent_as_file_n
 }
 
 #[test]
+fn explicit_directory_does_not_infer_a_gitignored_index_file() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass3-visibility");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let ignored_index = fixture.path().join("explicit-dir/index.ts");
+    assert!(ignored_index.exists());
+
+    let entrypoints = resolve_entrypoints(
+        &[PathBuf::from("explicit-dir")],
+        fixture.path(),
+        fixture.path(),
+    );
+
+    assert_eq!(
+        entrypoints[0].node,
+        graph::NodeId::File(fixture.path().join("explicit-dir"))
+    );
+    assert_ne!(entrypoints[0].file, ignored_index);
+}
+
+#[test]
 fn entrypoint_package_helpers_cover_relative_scoped_and_invalid_roots() {
     let modules_root = fixture_root("graph-modules");
-    let module_dependencies = root_dependency_names(&modules_root);
+    let module_files = graph::GraphFiles::discover(&modules_root);
+    let module_dependencies = root_dependency_names(&modules_root, module_files.all());
     assert_eq!(raw_package_name("./local/file.ts"), None);
     assert_eq!(
         raw_package_name("@scope/pkg/subpath.js").as_deref(),
@@ -411,9 +448,13 @@ fn entrypoint_package_helpers_cover_relative_scoped_and_invalid_roots() {
         &module_dependencies
     ));
 
-    assert!(!root_dependency_names(&fixture_root("simple")).contains("lodash"));
+    let simple_root = fixture_root("simple");
+    let simple_files = graph::GraphFiles::discover(&simple_root);
+    assert!(!root_dependency_names(&simple_root, simple_files.all()).contains("lodash"));
+    let malformed_root = fixture_root("unique-exports-malformed-package");
+    let malformed_files = graph::GraphFiles::discover(&malformed_root);
     assert!(
-        !root_dependency_names(&fixture_root("unique-exports-malformed-package"))
+        !root_dependency_names(&malformed_root, malformed_files.all())
             .contains("lodash")
     );
 }

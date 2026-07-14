@@ -104,7 +104,8 @@ For framework (Playwright/Vitest/Swift) plans the BFS-found tests are injected i
 Full-suite fallback fires only for:
 
 - **Unparsable lockfiles**: diff-only mode without `--head`, binary lockfiles (`bun.lockb`).
-  These are unconditional (do not require `--global-config-fallback`).
+  These select the full suite only when `--global-config-fallback=true` is set (or
+  `globalConfigFallback: true` is set in the selected environment).
 - **Genuinely untraceable deps**: tooling packages (`typescript`, `eslint`, etc.) that have
   no import-graph path to any test file. These fall back only when
   `--global-config-fallback=true` is set (or `globalConfigFallback: true` in the
@@ -114,7 +115,8 @@ This requires `--base` (or another mechanism to supply the old lockfile content)
 Without `--base`, a `lockfile-no-baseline` warning is emitted and `--global-config-fallback=true`
 triggers a full suite run.
 
-Binary lockfiles (`bun.lockb`) cannot be parsed and always trigger a warning + fallback.
+Binary lockfiles (`bun.lockb`) cannot be parsed and always trigger a warning. Full-suite
+selection still requires explicit global fallback opt-in.
 
 ```bash
 # Targeted: only tests affected by lodash version bump run (plain plan)

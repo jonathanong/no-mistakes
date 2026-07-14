@@ -1,6 +1,8 @@
 use super::TsFactPlan;
 use crate::codebase::ts_http_calls::{extract_http_calls_from_program, HttpCall};
-use crate::codebase::ts_process_spawn::{extract_spawn_edges_from_program, SpawnEdge};
+use crate::codebase::ts_process_spawn::{
+    extract_spawn_edges_from_program, extract_spawn_edges_from_program_from_visible, SpawnEdge,
+};
 use crate::codebase::ts_queues::factory::{
     find_create_queue_line_from_program, find_queue_name_from_program,
 };
@@ -14,7 +16,9 @@ use std::path::Path;
 
 #[path = "domain_types.rs"]
 mod domain_types;
-pub use domain_types::{BackendRouteFact, TsFactContext};
+#[path = "effect_calls.rs"]
+mod effect_calls;
+pub use domain_types::{BackendRouteFact, EffectCallFact, RscEnvironmentFact, TsFactContext};
 
 #[derive(Default)]
 pub(crate) struct DomainFacts {
@@ -30,6 +34,8 @@ pub(crate) struct DomainFacts {
     pub http_calls: Vec<HttpCall>,
     pub process_spawns: Vec<SpawnEdge>,
     pub server_routes: Option<crate::server_routes::model::FileFacts>,
+    pub effect_calls: Vec<EffectCallFact>,
+    pub rsc_environment: Option<RscEnvironmentFact>,
 }
 
 pub(crate) fn collect_domain_facts<'a>(
@@ -81,13 +87,30 @@ pub(crate) fn collect_domain_facts<'a>(
         Vec::new()
     };
     let process_spawns = if plan.process_spawns {
-        extract_spawn_edges_from_program(program, source, path, &context.root)
+        match context.visible_files.as_deref() {
+            Some(visible) => extract_spawn_edges_from_program_from_visible(
+                program,
+                source,
+                path,
+                &context.root,
+                visible,
+            ),
+            None => extract_spawn_edges_from_program(program, source, path, &context.root),
+        }
     } else {
         Vec::new()
     };
     let server_routes = plan
         .server_routes
         .then(|| crate::server_routes::extract::extract_program(path, source, program));
+    let effect_calls = if plan.effect_calls {
+        effect_calls::extract(program, source, &context.effect_functions)
+    } else {
+        Vec::new()
+    };
+    let rsc_environment = plan
+        .rsc_environment
+        .then(|| classify_rsc_environment(program));
     DomainFacts {
         route_refs: route_ref_facts.route_refs,
         route_helpers: route_ref_facts.route_helpers,
@@ -101,6 +124,24 @@ pub(crate) fn collect_domain_facts<'a>(
         http_calls,
         process_spawns,
         server_routes,
+        effect_calls,
+        rsc_environment,
+    }
+}
+
+fn classify_rsc_environment(program: &Program<'_>) -> RscEnvironmentFact {
+    let has_use_server = program
+        .directives
+        .iter()
+        .any(|directive| directive.directive == "use server");
+    let has_use_client = program
+        .directives
+        .iter()
+        .any(|directive| directive.directive == "use client");
+    match (has_use_server, has_use_client) {
+        (true, _) => RscEnvironmentFact::Server,
+        (_, true) => RscEnvironmentFact::Client,
+        _ => RscEnvironmentFact::Unknown,
     }
 }
 

@@ -22,13 +22,15 @@ fn dotnet_edges_return_empty_without_config_or_files() {
     assert!(collect_dotnet_edges(&root, &[], None).is_empty());
 
     let mut options = empty_options();
-    options.dotnet_projects.push(crate::codebase::dotnet::DotnetConfigProject {
-        name: "missing".to_string(),
-        project: "Missing.csproj".to_string(),
-        include: Vec::new(),
-        exclude: Vec::new(),
-        test: true,
-    });
+    options
+        .dotnet_projects
+        .push(crate::codebase::dotnet::DotnetConfigProject {
+            name: "missing".to_string(),
+            project: "Missing.csproj".to_string(),
+            include: Vec::new(),
+            exclude: Vec::new(),
+            test: true,
+        });
 
     assert!(collect_dotnet_edges(&root, &[], Some(&options)).is_empty());
 }
@@ -81,4 +83,3 @@ fn dotnet_project_edges_skip_missing_sources_and_references() {
         )]
     );
 }
-

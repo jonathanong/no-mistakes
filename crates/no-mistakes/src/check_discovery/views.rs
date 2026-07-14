@@ -22,42 +22,6 @@ pub(crate) struct CheckFileViews {
     pub(crate) graph: Vec<PathBuf>,
 }
 
-pub(crate) fn discover_check_file_views(
-    root: &Path,
-    config: &NoMistakesConfig,
-    skip_directories: &[String],
-    unique_exports_enabled: bool,
-) -> CheckFileViews {
-    let root = no_mistakes::codebase::ts_resolver::normalize_path(root);
-    let root_files = no_mistakes::codebase::ts_source::git_visible_files(&root);
-    discover_check_file_views_from_git_files(
-        &root,
-        config,
-        skip_directories,
-        unique_exports_enabled,
-        root_files,
-    )
-}
-
-/// Builds both views from one universe per configured base. `root_files: None`
-/// means Git is known unavailable; this function must not retry Git discovery.
-pub(super) fn discover_check_file_views_from_git_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    skip_directories: &[String],
-    unique_exports_enabled: bool,
-    root_files: Option<Vec<String>>,
-) -> CheckFileViews {
-    discover_check_file_views_with_external_lookup(
-        root,
-        config,
-        skip_directories,
-        unique_exports_enabled,
-        root_files,
-        no_mistakes::codebase::ts_source::git_visible_files,
-    )
-}
-
 pub(super) fn discover_check_file_views_with_external_lookup(
     root: &Path,
     config: &NoMistakesConfig,

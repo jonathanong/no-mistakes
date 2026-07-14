@@ -1,8 +1,6 @@
 use super::*;
-use crate::playwright::analysis::pipeline::{
+use crate::playwright::analysis::pipeline_selectors::test_support::{
     analyze_selectors_with_policy, analyze_selectors_with_policy_and_facts,
-};
-use crate::playwright::analysis::pipeline_selectors::{
     analyze_selectors_with_policy_and_graph, analyze_selectors_with_policy_facts_and_graph,
 };
 use crate::playwright::analysis::types::{Edge, UniqueSelectorPolicy};
@@ -48,8 +46,13 @@ fn assert_rule_a_parity(
     let cached = crate::playwright::rules::check_with_facts(root, None, config, facts).unwrap();
     assert_eq!(cached, standalone);
 
-    let settings =
-        crate::playwright::config::load_settings(root, None, &[], Some("a".to_string())).unwrap();
+    let settings = crate::playwright::config::test_support::load_settings(
+        root,
+        None,
+        &[],
+        Some("a".to_string()),
+    )
+    .unwrap();
     let standalone = analyze_selectors_with_policy(
         root,
         &settings,
@@ -74,7 +77,8 @@ fn assert_graph_union_parity(
     graph_files: &[std::path::PathBuf],
     facts: &CheckFactMap,
 ) {
-    let settings = crate::playwright::config::load_settings(root, None, &[], None).unwrap();
+    let settings =
+        crate::playwright::config::test_support::load_settings(root, None, &[], None).unwrap();
     let standalone = analyze_selectors_with_policy_and_graph(
         root,
         &settings,

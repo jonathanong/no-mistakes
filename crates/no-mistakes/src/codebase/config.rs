@@ -10,13 +10,21 @@ use crate::config::v2::{find_config_root, load_v2_config};
 mod conversion;
 #[path = "config/discovery.rs"]
 mod discovery;
+#[path = "config/prepared.rs"]
+mod prepared;
 #[path = "config/project.rs"]
 mod project;
+#[path = "config/project_inference.rs"]
+mod project_inference;
 #[path = "config/rule_application.rs"]
 mod rule_application;
 
-pub use project::{
-    infer_nextjs_root, infer_remix_root, infer_vitejs_root, InferredRoots, ProjectConfig,
+#[doc(hidden)]
+pub use prepared::config_from_loaded_v2;
+pub use project::{InferredRoots, ProjectConfig};
+pub use project_inference::{
+    infer_nextjs_root, infer_nextjs_root_from_visible, infer_remix_root,
+    infer_remix_root_from_visible, infer_vitejs_root, infer_vitejs_root_from_visible,
 };
 pub use rule_application::RuleApplicationConfig;
 

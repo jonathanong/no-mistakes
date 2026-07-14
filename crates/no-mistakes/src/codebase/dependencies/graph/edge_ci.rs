@@ -92,14 +92,18 @@ impl CargoBinIndex {
 }
 
 fn collect_cargo_bins(root: &Path, all_files: &[PathBuf]) -> CargoBinIndex {
-    let root_manifest = root.join("Cargo.toml");
+    let visible_files: HashSet<PathBuf> = all_files.iter().cloned().collect();
+    let root_manifest = crate::codebase::ts_resolver::normalize_path(&root.join("Cargo.toml"));
+    if !visible_files.contains(&root_manifest) {
+        return CargoBinIndex::default();
+    }
     let root_toml = match std::fs::read_to_string(&root_manifest) {
         Ok(s) => s,
         Err(_) => return CargoBinIndex::default(),
     };
 
     let mut bins = CargoBinIndex::default();
-    add_manifest_bins(&root_manifest, &root_toml, &mut bins);
+    add_manifest_bins(&root_manifest, &root_toml, &visible_files, &mut bins);
 
     let members = match crate::codebase::ci_workflows::parse_cargo_workspace_members(&root_toml) {
         Ok(members) => members,
@@ -135,7 +139,7 @@ fn collect_cargo_bins(root: &Path, all_files: &[PathBuf]) -> CargoBinIndex {
         let Ok(cargo_toml) = std::fs::read_to_string(manifest) else {
             continue;
         };
-        add_manifest_bins(manifest, &cargo_toml, &mut bins);
+        add_manifest_bins(manifest, &cargo_toml, &visible_files, &mut bins);
     }
 
     bins
@@ -156,7 +160,12 @@ fn cargo_member_globset(members: &[String]) -> Option<globset::GlobSet> {
     builder.build().ok()
 }
 
-fn add_manifest_bins(manifest: &Path, cargo_toml: &str, bins: &mut CargoBinIndex) {
+fn add_manifest_bins(
+    manifest: &Path,
+    cargo_toml: &str,
+    visible_files: &HashSet<PathBuf>,
+    bins: &mut CargoBinIndex,
+) {
     let Ok(parsed_bins) = crate::codebase::ci_workflows::parse_cargo_bins(cargo_toml) else {
         return;
     };
@@ -167,15 +176,22 @@ fn add_manifest_bins(manifest: &Path, cargo_toml: &str, bins: &mut CargoBinIndex
         return;
     };
     for (name, rel_path) in parsed_bins {
-        if let Some(source_file) = resolve_cargo_bin_source(manifest_dir, &name, &rel_path) {
+        if let Some(source_file) =
+            resolve_cargo_bin_source(manifest_dir, &name, &rel_path, visible_files)
+        {
             bins.insert(package.as_deref(), name, source_file);
         }
     }
 }
 
-fn resolve_cargo_bin_source(manifest_dir: &Path, name: &str, rel_path: &str) -> Option<PathBuf> {
-    let declared = manifest_dir.join(rel_path);
-    if declared.exists() {
+fn resolve_cargo_bin_source(
+    manifest_dir: &Path,
+    name: &str,
+    rel_path: &str,
+    visible_files: &HashSet<PathBuf>,
+) -> Option<PathBuf> {
+    let declared = crate::codebase::ts_resolver::normalize_path(&manifest_dir.join(rel_path));
+    if visible_files.contains(&declared) {
         return Some(declared);
     }
 
@@ -184,7 +200,7 @@ fn resolve_cargo_bin_source(manifest_dir: &Path, name: &str, rel_path: &str) -> 
         .join("bin")
         .join(name)
         .join("main.rs");
-    if nested.exists() {
+    if visible_files.contains(&nested) {
         return Some(nested);
     }
 

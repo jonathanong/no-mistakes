@@ -8,6 +8,17 @@ use no_mistakes::queue::CheckFinding;
 use no_mistakes::react_traits;
 use std::time::Duration;
 
+pub(crate) struct FinalizeInput<'a> {
+    pub(crate) root: &'a std::path::Path,
+    pub(crate) config: &'a no_mistakes::config::v2::NoMistakesConfig,
+    pub(crate) filesystem_files: &'a [std::path::PathBuf],
+    pub(crate) filesystem_rules_enabled: bool,
+    pub(crate) react_warning: Option<String>,
+    pub(crate) discover_duration: Duration,
+    pub(crate) facts_duration: Duration,
+    pub(crate) completed: CompletedDomainChecks,
+}
+
 pub(crate) struct CheckResults {
     pub(crate) react: Vec<react_traits::Violation>,
     pub(crate) queues: Vec<CheckFinding>,
@@ -37,6 +48,66 @@ pub(crate) fn complete_domain_checks(results: DomainResults) -> Result<Completed
         integration: integration?,
         codebase: codebase?,
         filesystem_rules: filesystem_rules?,
+    })
+}
+
+pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckResults> {
+    let FinalizeInput {
+        root,
+        config,
+        filesystem_files,
+        filesystem_rules_enabled,
+        react_warning,
+        discover_duration,
+        facts_duration,
+        completed,
+    } = input;
+    let react = completed.react;
+    let queues = completed.queues;
+    let mut rules = completed.rules;
+    let integration = completed.integration;
+    let codebase = completed.codebase;
+    let filesystem_rules = completed.filesystem_rules;
+    let warnings = [
+        react_warning,
+        react.warning,
+        queues.warning,
+        rules.warning,
+        integration.warning,
+        codebase.warning,
+        filesystem_rules.warning,
+    ]
+    .into_iter()
+    .flatten()
+    .collect();
+    rules.findings.extend(filesystem_rules.findings);
+    let advisories = if filesystem_rules_enabled {
+        no_mistakes::codebase::rules::agents_md_max_size::advisories_with_files(
+            root,
+            config,
+            filesystem_files,
+        )?
+    } else {
+        Vec::new()
+    };
+    Ok(CheckResults {
+        timings: vec![
+            ("discover", discover_duration),
+            ("parse_extract", facts_duration),
+            ("react", react.duration),
+            ("queues", queues.duration),
+            ("rules", rules.duration),
+            ("integration", integration.duration),
+            ("codebase", codebase.duration),
+            ("filesystem_rules", filesystem_rules.duration),
+        ],
+        react: react.findings,
+        queues: queues.findings,
+        rules: rules.findings,
+        integration: integration.findings,
+        codebase: codebase.findings,
+        warnings,
+        advisories,
     })
 }
 

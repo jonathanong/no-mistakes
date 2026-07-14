@@ -30,31 +30,22 @@ pub fn collect_backend_routes_in_dir(
     register_object: &str,
     pattern_globset: &globset::GlobSet,
 ) -> Vec<(PathBuf, String)> {
-    use walkdir::WalkDir;
-    let mut results = Vec::new();
-
-    for entry in WalkDir::new(dir)
+    let files: Vec<PathBuf> = crate::codebase::ts_source::discover_visible_paths(dir)
         .into_iter()
-        .filter_entry(|e| !is_skipped_dir(e.file_name().to_str().unwrap_or("")))
-        .filter_map(|e| e.ok())
-    {
-        let path = entry.path();
-        if !path.is_file() {
-            continue;
-        }
-        let rel = path
-            .strip_prefix(dir)
-            .expect("walkdir entries are rooted under the walk root");
-        if !pattern_globset.is_match(rel) {
-            continue;
-        }
-        let source = std::fs::read_to_string(path).unwrap_or_default();
-        for (route, _line) in extract_backend_routes(&source, register_object) {
-            results.push((path.to_path_buf(), route));
-        }
-    }
-
-    results
+        .filter(|path| {
+            path.strip_prefix(dir)
+                .ok()
+                .and_then(std::path::Path::parent)
+                .is_none_or(|parent| {
+                    parent.components().all(|component| {
+                        !crate::codebase::ts_source::is_skipped_dir(
+                            component.as_os_str().to_str().unwrap_or_default(),
+                        )
+                    })
+                })
+        })
+        .collect();
+    collect_backend_routes_from_files(dir, &files, register_object, pattern_globset)
 }
 
 /// Collect backend route definitions from an already-discovered file list.

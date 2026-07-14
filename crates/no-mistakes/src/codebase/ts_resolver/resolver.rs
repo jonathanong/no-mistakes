@@ -44,6 +44,10 @@ impl<'a> ImportResolver<'a> {
         self
     }
 
+    pub(crate) fn visible_files(&self) -> Option<&HashSet<PathBuf>> {
+        self.visible
+    }
+
     /// Returns `true` if `specifier` matches any configured tsconfig path
     /// alias pattern, regardless of whether the target exists on disk. Used by
     /// `resolve-check` to flag a configured alias whose target is missing as a
@@ -226,4 +230,3 @@ fn match_alias(pattern: &str, specifier: &str) -> Option<String> {
         None
     }
 }
-

@@ -94,8 +94,28 @@ impl DepGraph {
             direct_importers.insert(queue_job);
         }
 
-        let roots: Vec<NodeId> = direct_importers.into_iter().collect();
-        bfs(&roots, &self.reverse, max_depth, allowed)
+        if max_depth == Some(0) {
+            return Vec::new();
+        }
+
+        let mut roots: Vec<NodeId> = direct_importers.into_iter().collect();
+        roots.sort();
+        let mut entries = roots
+            .iter()
+            .cloned()
+            .map(|node| NodeEntry {
+                node,
+                depth: 1,
+                via: vec![EdgeKind::Import],
+            })
+            .collect::<Vec<_>>();
+        let remaining_depth = max_depth.map(|depth| depth.saturating_sub(1));
+        let mut downstream = bfs(&roots, &self.reverse, remaining_depth, allowed);
+        for entry in &mut downstream {
+            entry.depth += 1;
+        }
+        entries.extend(downstream);
+        entries
     }
 
     pub fn root(&self) -> &Path {

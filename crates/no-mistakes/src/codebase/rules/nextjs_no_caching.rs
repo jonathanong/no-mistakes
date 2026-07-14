@@ -42,11 +42,36 @@ pub(crate) fn check_with_facts(
     config: &NoMistakesConfig,
     shared: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
+    check_with_optional_inferred(root, config, shared, None)
+}
+
+pub(crate) fn check_with_facts_and_inferred(
+    root: &Path,
+    config: &NoMistakesConfig,
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    inferred_roots: &crate::codebase::config::InferredRoots,
+) -> Result<Vec<RuleFinding>> {
+    check_with_optional_inferred(root, config, shared, Some(inferred_roots))
+}
+
+fn check_with_optional_inferred(
+    root: &Path,
+    config: &NoMistakesConfig,
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+) -> Result<Vec<RuleFinding>> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut findings = Vec::new();
+    let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
     for rule in config.rule_applications(RULE_ID) {
-        let target_roots = super::target_roots(&root, config, rule);
-        let filter = super::path_filter::RulePathFilter::new(&root, config, rule)?;
+        let target_roots =
+            super::target_roots_with_inferred(&root, config, rule, &mut inferred_roots);
+        let filter = super::path_filter::RulePathFilter::new_with_inferred(
+            &root,
+            config,
+            rule,
+            &mut inferred_roots,
+        )?;
         for path in shared.files() {
             let Some(facts) = shared.ts.get(path) else {
                 continue;
@@ -84,9 +109,16 @@ fn check_files(
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
+    let mut inferred_roots = crate::codebase::config::InferredRoots::default();
     for rule in config.rule_applications(RULE_ID) {
-        let target_roots = super::target_roots(root, config, rule);
-        let filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
+        let target_roots =
+            super::target_roots_with_inferred(root, config, rule, &mut inferred_roots);
+        let filter = super::path_filter::RulePathFilter::new_with_inferred(
+            root,
+            config,
+            rule,
+            &mut inferred_roots,
+        )?;
         findings.extend(
             files
                 .par_iter()

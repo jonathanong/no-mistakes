@@ -31,7 +31,7 @@ stories: ["stories/**/*.stories.tsx"]
     assert!(findings.is_empty());
 
     let facts = CheckFactMap::default();
-    let direct = check_rule(&root, &unknown, &unknown.rules[0], &facts, None).unwrap();
+    let direct = check_with_facts(&root, &unknown, None, &facts).unwrap();
     assert!(direct.is_empty());
 }
 

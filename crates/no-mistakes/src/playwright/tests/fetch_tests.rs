@@ -1,8 +1,28 @@
 use crate::fetch::types::{CacheKind, FetchOccurrence, FetchSide, SourceType};
-use crate::playwright::analysis::fetch::{collect_fetches_for_routes, expand_fetch_edges};
+use crate::playwright::analysis::fetch::{
+    collect_fetches_for_routes_from_snapshot, expand_fetch_edges,
+};
 use crate::playwright::analysis::types::{Edge, FetchIndex};
 use crate::playwright::test_support::fixture_path;
 use crate::routes::Route;
+use std::path::{Path, PathBuf};
+
+struct MissingPreparedFetchFacts {
+    source_files: Vec<PathBuf>,
+}
+
+impl crate::codebase::dependencies::graph::TsFactLookup for MissingPreparedFetchFacts {
+    fn get_ts_facts(
+        &self,
+        _path: &Path,
+    ) -> Option<&crate::codebase::ts_source::facts::TsFileFacts> {
+        None
+    }
+
+    fn playwright_source_files(&self) -> Option<&[PathBuf]> {
+        Some(&self.source_files)
+    }
+}
 
 fn server_fetch(path: &str) -> FetchOccurrence {
     FetchOccurrence {
@@ -35,9 +55,43 @@ fn collect_fetches_for_routes_surfaces_route_parse_errors() {
         pattern: "/".to_string(),
     }];
 
-    let err = collect_fetches_for_routes(&routes, &frontend_root, &root).unwrap_err();
+    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(&root);
+    let err = collect_fetches_for_routes_from_snapshot(&routes, &frontend_root, &root, &snapshot)
+        .unwrap_err();
 
     assert!(format!("{err:#}").contains("page.tsx"));
+}
+
+#[test]
+fn collect_fetches_with_facts_rejects_missing_prepared_source_facts() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/parser-count/playwright"),
+    );
+    let frontend_root = root.join("app");
+    let page = frontend_root.join("page.tsx");
+    let routes = vec![Route {
+        file: page.clone(),
+        pattern: "/".to_string(),
+    }];
+    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(&root);
+    let facts = MissingPreparedFetchFacts {
+        source_files: vec![page.clone()],
+    };
+
+    let error =
+        crate::playwright::analysis::fetch::collect_fetches_for_routes_from_snapshot_with_facts(
+            &routes,
+            &frontend_root,
+            &root,
+            &snapshot,
+            &facts,
+        )
+        .expect_err("a declared source without prepared fetch facts must fail");
+
+    assert_eq!(
+        error.to_string(),
+        format!("missing prepared Playwright facts for {}", page.display())
+    );
 }
 
 #[test]

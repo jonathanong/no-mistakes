@@ -111,6 +111,7 @@ impl TsFactLookup for CountingFacts {
 
     fn get_or_compute_playwright_routes(
         &self,
+        _settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> Vec<crate::routes::Route>,
     ) -> Arc<Vec<crate::routes::Route>> {
         self.route_scans.fetch_add(1, Ordering::Relaxed);
@@ -119,6 +120,7 @@ impl TsFactLookup for CountingFacts {
 
     fn get_or_compute_app_text_targets(
         &self,
+        _settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> anyhow::Result<
             Vec<crate::playwright::analysis::text_types::AppTextTarget>,
         >,
@@ -129,6 +131,7 @@ impl TsFactLookup for CountingFacts {
 
     fn get_or_compute_route_reachable_files(
         &self,
+        _settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> anyhow::Result<RouteReachableFiles>,
     ) -> anyhow::Result<Arc<RouteReachableFiles>> {
         self.reachability_scans.fetch_add(1, Ordering::Relaxed);
@@ -203,10 +206,10 @@ fn selector_only_graph_skips_route_import_second_pass() {
 #[test]
 fn malformed_frontend_tsconfig_does_not_drop_direct_selector_edges() {
     let root = repository_fixture("selector-only-malformed-tsconfig");
-    let settings = crate::playwright::config::load_settings(&root, None, &[], None)
+    let settings = crate::playwright::config::test_support::load_settings(&root, None, &[], None)
         .expect("Playwright settings load");
     let route_tsconfig =
-        crate::playwright::analysis::pipeline_text_setup::load_route_import_tsconfig(
+        crate::playwright::analysis::pipeline_text_test_support::load_route_import_tsconfig(
             &root, &settings,
         );
     assert!(route_tsconfig.is_err());
@@ -269,8 +272,9 @@ fn demanded_app_selector_scan_surfaces_parse_errors() {
 #[test]
 fn demanded_app_text_scan_surfaces_parse_errors() {
     let root = repository_fixture("selector-malformed-app-source");
-    let settings = crate::playwright::config::load_settings(&root, None, &[], None)
+    let settings = crate::playwright::config::test_support::load_settings(&root, None, &[], None)
         .expect("Playwright settings load");
+    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(&root);
 
     let result = crate::playwright::analysis::pipeline_text_setup::build_text_resolution_setup(
         &root,
@@ -280,6 +284,7 @@ fn demanded_app_text_scan_surfaces_parse_errors() {
             graph_file_universe: None,
             route_import_candidate: None,
             routes: &[],
+            snapshot: &snapshot,
             has_eligible_text_locator: true,
             has_text_candidate: &|_, _| false,
             has_route_reachability_demand: &|_, _| false,
@@ -353,7 +358,7 @@ fn same_scope_route_and_text_locator_surface_malformed_route_tsconfig() {
 #[test]
 fn lazy_route_graph_prefers_outer_graph_universe_over_fact_cache_universe() {
     let root = repository_fixture("selector-text-sparse-universe");
-    let settings = crate::playwright::config::load_settings(&root, None, &[], None)
+    let settings = crate::playwright::config::test_support::load_settings(&root, None, &[], None)
         .expect("Playwright settings load");
     let facts = crate::codebase::check_facts::collect_check_facts_with_graph_files_and_playwright(
         &root,
@@ -364,7 +369,7 @@ fn lazy_route_graph_prefers_outer_graph_universe_over_fact_cache_universe() {
     );
     let outer_file = root.join("web/app/components/discuss-button.tsx");
 
-    let graph = crate::playwright::analysis::pipeline_text_setup::build_route_import_graph(
+    let graph = crate::playwright::analysis::pipeline_text_test_support::build_route_import_graph(
         &root,
         &settings,
         Some(&facts),
@@ -379,11 +384,11 @@ fn lazy_route_graph_prefers_outer_graph_universe_over_fact_cache_universe() {
 #[test]
 fn lazy_route_graph_discovers_files_without_a_supplied_universe() {
     let root = repository_fixture("selector-text-sparse-universe");
-    let settings = crate::playwright::config::load_settings(&root, None, &[], None)
+    let settings = crate::playwright::config::test_support::load_settings(&root, None, &[], None)
         .expect("Playwright settings load");
     let component = root.join("web/app/components/discuss-button.tsx");
 
-    let graph = crate::playwright::analysis::pipeline_text_setup::build_route_import_graph(
+    let graph = crate::playwright::analysis::pipeline_text_test_support::build_route_import_graph(
         &root,
         &settings,
         None,

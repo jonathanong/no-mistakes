@@ -162,6 +162,7 @@ fn run_analyze_inner_with_facts_covers_fallback_missing_cache_and_errors() {
 
     let bad_file = root.join("app/components/Child.tsx");
     let mut bad_facts = facts(Vec::new());
+    bad_facts.files.push(bad_file.clone());
     bad_facts.ts.insert(
         bad_file,
         CheckFileFacts {

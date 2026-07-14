@@ -1,0 +1,6 @@
+# Git-visible discovery must retain force-tracked files that match .gitignore.
+name: Tracked ignored
+on: push
+env:
+  TRACKED_IGNORED_ENV: tracked
+jobs: {}

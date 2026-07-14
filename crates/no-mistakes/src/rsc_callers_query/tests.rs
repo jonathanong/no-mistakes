@@ -1,8 +1,57 @@
+use super::test_support::*;
 use super::*;
 
 fn fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/rsc-callers/fixture")
+}
+
+fn parser_count_fixture() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/parser-count/rsc")
+}
+
+#[test]
+fn rsc_callers_reuses_one_parse_for_imports_and_directives() {
+    let source = crate::codebase::ts_resolver::normalize_path(&parser_count_fixture());
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    crate::ast::begin_parse_count(&root);
+
+    let report = run(&root, None, None, Path::new("app/Target.tsx"), None).unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+
+    assert_eq!(report.callers.len(), 2, "{report:#?}");
+    assert_eq!(report.callers[0].file, "app/ServerWidget.tsx");
+    assert_eq!(report.callers[1].file, "app/page.tsx");
+    let files = crate::codebase::dependencies::graph::GraphFiles::from_files(
+        crate::codebase::ts_source::discover_files(&root, &[]),
+    )
+    .indexable()
+    .to_vec();
+    assert_eq!(counts.len(), files.len(), "{counts:#?}");
+    assert!(
+        files.iter().all(|file| counts.get(file) == Some(&1)),
+        "each source file must be parsed once: {counts:#?}"
+    );
+
+    let run_source = include_str!("prepare.rs");
+    assert_eq!(
+        run_source.matches("collect_ts_facts_with_context(").count(),
+        1
+    );
+    let run_body = run_source
+        .split("pub fn run(")
+        .nth(1)
+        .and_then(|body| body.split("pub(crate) fn run_with_prepared").next())
+        .expect("run body");
+    assert!(!run_body.contains("detect_environment("));
+}
+
+fn gitignore_fixture() -> tempfile::TempDir {
+    let fixture = crate::test_support::materialize_gitignore_fixture("prepared-tsconfig");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    fixture
 }
 
 fn run_button(depth: Option<usize>) -> RscCallersReport {
@@ -89,6 +138,54 @@ fn missing_component_errors() {
 fn existing_unimported_component_has_no_callers() {
     let report = run(&fixture(), None, None, Path::new("app/ui/Orphan.tsx"), None).unwrap();
     assert!(report.callers.is_empty());
+}
+
+#[test]
+fn rsc_callers_ignore_automatic_ignored_tsconfig_but_honor_explicit_path() {
+    let fixture = gitignore_fixture();
+    let automatic = run(
+        fixture.path(),
+        None,
+        None,
+        Path::new("src/Button.tsx"),
+        None,
+    )
+    .unwrap();
+    assert!(automatic.callers.is_empty());
+
+    let explicit = run(
+        fixture.path(),
+        None,
+        Some(Path::new("tsconfig.json")),
+        Path::new("src/Button.tsx"),
+        None,
+    )
+    .unwrap();
+    assert!(explicit
+        .callers
+        .iter()
+        .any(|caller| caller.file == "stories/Button.stories.tsx"));
+}
+
+#[test]
+fn explicit_ignored_component_is_authoritative_for_visible_importers() {
+    let fixture = gitignore_fixture();
+    let report = run(
+        fixture.path(),
+        None,
+        None,
+        Path::new("ignored-explicit/Button.tsx"),
+        None,
+    )
+    .unwrap();
+
+    assert!(
+        report
+            .callers
+            .iter()
+            .any(|caller| caller.file == "src/IgnoredButtonUser.tsx"),
+        "{report:#?}"
+    );
 }
 
 #[test]

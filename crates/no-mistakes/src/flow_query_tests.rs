@@ -1,5 +1,13 @@
 use super::*;
 
+fn resolve_tsconfig(root: &Path, explicit: Option<&Path>) -> Result<TsConfig> {
+    resolve_tsconfig_from_visible(
+        root,
+        explicit,
+        &crate::codebase::ts_source::discover_visible_paths(root),
+    )
+}
+
 fn fixture_root(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -7,6 +15,13 @@ fn fixture_root(name: &str) -> PathBuf {
             .join(name)
             .join("fixture"),
     )
+}
+
+fn gitignore_fixture() -> tempfile::TempDir {
+    let fixture = crate::test_support::materialize_gitignore_fixture("prepared-tsconfig");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    fixture
 }
 
 #[test]
@@ -51,6 +66,36 @@ fn flow_query_symbol_dependents_skip_owner_file_bridge() {
         .iter()
         .any(|node| node.id == "utils.mts#parseDate"));
     assert!(!report.nodes.iter().any(|node| node.id == "utils.mts"));
+}
+
+#[test]
+fn flow_ignores_automatic_ignored_tsconfig_but_honors_explicit_path() {
+    let fixture = gitignore_fixture();
+    let options = |tsconfig| FlowOptions {
+        target: "entry.ts".to_string(),
+        root: fixture.path().to_path_buf(),
+        tsconfig,
+        config: None,
+        direction: FlowDirection::Deps,
+        depth: 1,
+        relationships: vec![RelationshipArg::Import],
+    };
+
+    let automatic = run(&options(None)).unwrap();
+    assert!(automatic
+        .nodes
+        .iter()
+        .any(|node| { node.kind == "module" && node.module.as_deref() == Some("@lib/forbidden") }));
+    assert!(!automatic
+        .nodes
+        .iter()
+        .any(|node| node.file.as_deref() == Some("src/forbidden.ts")));
+
+    let explicit = run(&options(Some(PathBuf::from("tsconfig.json")))).unwrap();
+    assert!(explicit
+        .nodes
+        .iter()
+        .any(|node| node.file.as_deref() == Some("src/forbidden.ts")));
 }
 
 #[test]
@@ -116,4 +161,51 @@ fn flow_query_explicit_missing_tsconfig_errors() {
     let error = resolve_tsconfig(&root, Some(Path::new("missing.tsconfig.json"))).unwrap_err();
 
     assert!(error.to_string().contains("missing.tsconfig.json"));
+}
+
+#[test]
+fn flow_prepared_graph_honors_explicit_config_without_nested_discovery() {
+    let root = fixture_root("graph-default-route-config");
+    let empty_config = fixture_root("graph-empty-route-config").join(".no-mistakes.yml");
+    let options = |config| FlowOptions {
+        target: "src/client.ts".to_string(),
+        root: root.clone(),
+        tsconfig: None,
+        config,
+        direction: FlowDirection::Deps,
+        depth: 1,
+        relationships: vec![RelationshipArg::Route],
+    };
+
+    let default = run(&options(None)).unwrap();
+    assert!(default
+        .nodes
+        .iter()
+        .any(|node| node.file.as_deref() == Some("backend/api/users.mts")));
+    let explicit = run(&options(Some(empty_config))).unwrap();
+    assert!(!explicit
+        .nodes
+        .iter()
+        .any(|node| node.file.as_deref() == Some("backend/api/users.mts")));
+
+    let source = include_str!("flow_query.rs");
+    let run_body = source
+        .split("pub fn run(options: &FlowOptions)")
+        .nth(1)
+        .and_then(|source| source.split("include!(\"flow_query_traverse.rs\")").next())
+        .expect("flow run body");
+    assert_eq!(
+        run_body.matches("VisiblePathSnapshot::new(&root)").count(),
+        1
+    );
+    assert_eq!(run_body.matches("load_v2_config_from_visible(").count(), 1);
+    assert_eq!(run_body.matches("config_from_loaded_v2(").count(), 1);
+    assert_eq!(run_body.matches("prepare_graph_config(").count(), 1);
+    assert_eq!(
+        run_body
+            .matches("build_with_plan_files_prepared_config(")
+            .count(),
+        1
+    );
+    assert!(!run_body.contains("build_with_plan_and_files_config("));
 }

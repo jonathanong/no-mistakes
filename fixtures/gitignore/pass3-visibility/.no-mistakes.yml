@@ -1,0 +1,11 @@
+projects:
+  inferred-web:
+    type: nextjs
+
+rules:
+  - rule: forbidden-workspace-closure
+    projects: [inferred-web]
+    include: ["**/fixtures/**"]
+    options:
+      packages: ["@example/web"]
+      forbidden: ["@example/secret"]

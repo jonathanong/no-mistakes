@@ -64,17 +64,25 @@ struct ProjectPathFilter {
 
 impl RulePathFilter {
     pub(crate) fn new(root: &Path, config: &NoMistakesConfig, rule: &RuleDef) -> Result<Self> {
+        let mut inferred_roots = crate::codebase::config::InferredRoots::default();
+        Self::new_with_inferred(root, config, rule, &mut inferred_roots)
+    }
+
+    pub(crate) fn new_with_inferred(
+        root: &Path,
+        config: &NoMistakesConfig,
+        rule: &RuleDef,
+        inferred_roots: &mut crate::codebase::config::InferredRoots,
+    ) -> Result<Self> {
         let root = crate::codebase::ts_resolver::normalize_path(root);
         let include = GlobMatcher::new(&rule.include, &format!("rule `{}` include", rule.rule))?;
         let exclude = GlobMatcher::new(&rule.exclude, &format!("rule `{}` exclude", rule.rule))?;
-        let mut inferred_roots = crate::codebase::config::InferredRoots::default();
         let mut projects = Vec::new();
         for project_name in &rule.projects {
             let Some(project) = config.projects.get(project_name) else {
                 continue;
             };
-            let Some(project_root) =
-                super::target_project_root(&root, project, &mut inferred_roots)
+            let Some(project_root) = super::target_project_root(&root, project, inferred_roots)
             else {
                 continue;
             };

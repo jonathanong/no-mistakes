@@ -51,6 +51,28 @@ fn no_importers_skips_reverse_scan() {
 }
 
 #[test]
+fn pass4b_exports_of_skips_ignored_reexport_for_visible_fallback() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass4b-shadow");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let report = compute(&ExportsOfArgs {
+        file: PathBuf::from("query/source.ts"),
+        root: Some(root),
+        tsconfig: None,
+        no_importers: true,
+        format: None,
+        json: false,
+    })
+    .unwrap();
+
+    assert!(report
+        .exports
+        .iter()
+        .all(|export| export.resolved.as_deref() == Some("query/target.ts")));
+}
+
+#[test]
 fn tags_every_export_kind() {
     let args = ExportsOfArgs {
         file: PathBuf::from("kinds.ts"),

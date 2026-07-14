@@ -1,5 +1,5 @@
 use anyhow::Result;
-use serde::Deserialize;
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 const EXTENSIONS: &[&str] = &["mts", "ts", "tsx", "mjs", "js", "jsx", "cjs", "cts"];
@@ -11,61 +11,46 @@ pub(crate) struct TsConfig {
     pub paths: Vec<(String, Vec<String>)>,
 }
 
-#[derive(Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-struct RawTsConfig {
-    compiler_options: Option<CompilerOptions>,
+impl From<&crate::codebase::ts_resolver::TsConfig> for TsConfig {
+    fn from(config: &crate::codebase::ts_resolver::TsConfig) -> Self {
+        Self {
+            paths_dir: config.paths_dir.clone(),
+            base_url: config.base_url.clone(),
+            paths: config.paths.clone(),
+        }
+    }
 }
 
-#[derive(Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-struct CompilerOptions {
-    base_url: Option<String>,
-    paths: Option<std::collections::BTreeMap<String, Vec<String>>>,
+pub(crate) fn load_tsconfig_from_visible(
+    root: &Path,
+    explicit: Option<&Path>,
+    visible_paths: &[PathBuf],
+) -> Result<TsConfig> {
+    let config =
+        crate::codebase::ts_resolver::resolve_tsconfig_from_visible(explicit, root, visible_paths)?;
+    Ok(TsConfig::from(&config))
 }
 
-pub(crate) fn load_tsconfig(root: &Path, explicit: Option<&Path>) -> Result<TsConfig> {
-    let path = match explicit {
-        Some(path) if path.is_absolute() => Some(path.to_path_buf()),
-        Some(path) => Some(root.join(path)),
-        None => find_tsconfig(root),
-    };
-    let Some(path) = path else {
-        return Ok(TsConfig {
-            paths_dir: root.to_path_buf(),
-            base_url: None,
-            paths: Vec::new(),
-        });
-    };
-    let source = std::fs::read_to_string(&path)?;
-    let raw: RawTsConfig = serde_json::from_value(jsonc_parser::parse_to_serde_value(
-        &source,
-        &jsonc_parser::ParseOptions::default(),
-    )?)?;
-    let dir = path.parent().unwrap_or(root).to_path_buf();
-    let options = raw.compiler_options.unwrap_or_default();
-    let base_url = options.base_url.map(|url| dir.join(url));
-    let paths = options
-        .paths
-        .unwrap_or_default()
-        .into_iter()
-        .collect::<Vec<_>>();
-    Ok(TsConfig {
-        paths_dir: dir,
-        base_url,
-        paths,
-    })
-}
-
-pub(crate) fn resolve_import(
+pub(crate) fn resolve_import_from_visible(
     specifier: &str,
     current_file: &Path,
     root: &Path,
     tsconfig: &TsConfig,
+    visible_files: &HashSet<PathBuf>,
+) -> Option<PathBuf> {
+    resolve_import_inner(specifier, current_file, root, tsconfig, Some(visible_files))
+}
+
+pub(super) fn resolve_import_inner(
+    specifier: &str,
+    current_file: &Path,
+    root: &Path,
+    tsconfig: &TsConfig,
+    visible_files: Option<&HashSet<PathBuf>>,
 ) -> Option<PathBuf> {
     if specifier.starts_with('.') {
         let parent = current_file.parent()?;
-        return resolve_candidate(&parent.join(specifier));
+        return resolve_candidate(&parent.join(specifier), visible_files);
     }
     for (pattern, targets) in &tsconfig.paths {
         if let Some(capture) = match_pattern(pattern, specifier) {
@@ -76,30 +61,18 @@ pub(crate) fn resolve_import(
                     .as_ref()
                     .unwrap_or(&tsconfig.paths_dir)
                     .join(replaced);
-                if let Some(path) = resolve_candidate(&base) {
+                if let Some(path) = resolve_candidate(&base, visible_files) {
                     return Some(path);
                 }
             }
         }
     }
     if let Some(base_url) = &tsconfig.base_url {
-        if let Some(path) = resolve_candidate(&base_url.join(specifier)) {
+        if let Some(path) = resolve_candidate(&base_url.join(specifier), visible_files) {
             return Some(path);
         }
     }
-    resolve_candidate(&root.join(specifier))
-}
-
-fn find_tsconfig(root: &Path) -> Option<PathBuf> {
-    let mut dir = Some(root);
-    while let Some(path) = dir {
-        let candidate = path.join("tsconfig.json");
-        if candidate.exists() {
-            return Some(candidate);
-        }
-        dir = path.parent();
-    }
-    None
+    resolve_candidate(&root.join(specifier), visible_files)
 }
 
 fn match_pattern<'a>(pattern: &str, specifier: &'a str) -> Option<&'a str> {
@@ -110,21 +83,28 @@ fn match_pattern<'a>(pattern: &str, specifier: &'a str) -> Option<&'a str> {
     (pattern == specifier).then_some("")
 }
 
-fn resolve_candidate(path: &Path) -> Option<PathBuf> {
-    if path.is_file() && is_source(path) {
+fn resolve_candidate(path: &Path, visible_files: Option<&HashSet<PathBuf>>) -> Option<PathBuf> {
+    if is_visible_file(path, visible_files) && is_source(path) {
         return Some(path.canonicalize().unwrap_or(path.to_path_buf()));
     }
     for ext in EXTENSIONS {
         let with_ext = path.with_extension(ext);
-        if with_ext.is_file() {
+        if is_visible_file(&with_ext, visible_files) {
             return Some(with_ext.canonicalize().unwrap_or(with_ext));
         }
         let index = path.join(format!("index.{ext}"));
-        if index.is_file() {
-            return Some(index);
+        if is_visible_file(&index, visible_files) {
+            return Some(crate::codebase::ts_resolver::normalize_path(&index));
         }
     }
     None
+}
+
+fn is_visible_file(path: &Path, visible_files: Option<&HashSet<PathBuf>>) -> bool {
+    visible_files.map_or_else(
+        || path.is_file(),
+        |visible| visible.contains(&crate::codebase::ts_resolver::normalize_path(path)),
+    )
 }
 
 fn is_source(path: &Path) -> bool {

@@ -8,15 +8,15 @@
 //! Files with `"use server"` or no directive (App Router defaults to server
 //! components) are reported and traversal continues through them.
 
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use serde::Serialize;
 
-use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
+use crate::codebase::dependencies::graph::DepGraph;
 use crate::codebase::dependencies::{EdgeKind, NodeId};
-use crate::codebase::ts_resolver::{find_tsconfig, load_tsconfig, normalize_path, TsConfig};
+use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::relative_slash_path;
 
 /// React Server Component environment of a file.
@@ -26,6 +26,16 @@ pub enum Environment {
     Server,
     Client,
     Unknown,
+}
+
+impl From<crate::codebase::ts_source::facts::RscEnvironmentFact> for Environment {
+    fn from(value: crate::codebase::ts_source::facts::RscEnvironmentFact) -> Self {
+        match value {
+            crate::codebase::ts_source::facts::RscEnvironmentFact::Server => Self::Server,
+            crate::codebase::ts_source::facts::RscEnvironmentFact::Client => Self::Client,
+            crate::codebase::ts_source::facts::RscEnvironmentFact::Unknown => Self::Unknown,
+        }
+    }
 }
 
 /// File "kind" in App Router terms.
@@ -74,22 +84,8 @@ const PAGE_STEMS: &[&str] = &[
     "not-found",
 ];
 
-fn resolve_tsconfig(root: &Path, tsconfig: Option<&Path>) -> Result<TsConfig> {
-    match tsconfig {
-        // Resolve a relative explicit tsconfig against `root`, not the cwd.
-        Some(path) if path.is_absolute() => load_tsconfig(path),
-        Some(path) => load_tsconfig(&root.join(path)),
-        None => match find_tsconfig(root) {
-            Some(path) => load_tsconfig(&path),
-            None => Ok(TsConfig {
-                dir: root.to_path_buf(),
-                paths: vec![],
-                paths_dir: root.to_path_buf(),
-                base_url: None,
-            }),
-        },
-    }
-}
+mod prepare;
+pub use prepare::run;
 
 fn runtime_edge(kind: EdgeKind) -> bool {
     matches!(
@@ -111,15 +107,13 @@ fn runtime_edges() -> HashSet<EdgeKind> {
     ])
 }
 
-/// Run the `rsc-callers` query.
-pub fn run(
+pub(crate) fn run_with_prepared(
     root: &Path,
-    config_path: Option<&Path>,
-    tsconfig: Option<&Path>,
     component: &Path,
     depth: Option<usize>,
+    graph: &DepGraph,
+    facts: &crate::codebase::ts_source::facts::TsFactMap,
 ) -> Result<RscCallersReport> {
-    let root = normalize_path(root);
     let component_abs = if component.is_absolute() {
         component.to_path_buf()
     } else {
@@ -130,14 +124,6 @@ pub fn run(
     }
     let component_node = NodeId::File(normalize_path(&component_abs));
 
-    let tsconfig = resolve_tsconfig(&root, tsconfig)?;
-    let allowed = runtime_edges();
-    // Build only import-edge producers; rsc-callers traverses runtime imports
-    // exclusively, so building route/queue/React/Swift/Terraform edges is waste.
-    let plan = GraphBuildPlan::from_allowed(Some(&allowed));
-    let graph = DepGraph::build_with_plan_and_config(&root, &tsconfig, plan, config_path)?;
-
-    let mut env_cache: HashMap<PathBuf, Environment> = HashMap::new();
     let mut visited: HashSet<NodeId> = HashSet::new();
     let mut callers: Vec<RscCaller> = Vec::new();
     let mut queue: VecDeque<(NodeId, usize)> = VecDeque::new();
@@ -158,9 +144,11 @@ pub fn run(
             if !visited.insert(importer.clone()) {
                 continue;
             }
-            let environment = *env_cache
-                .entry(path.to_path_buf())
-                .or_insert_with(|| detect_environment(path));
+            let environment = facts
+                .get(path)
+                .and_then(|file| file.rsc_environment)
+                .map(Environment::from)
+                .unwrap_or(Environment::Unknown);
             let importer_depth = node_depth + 1;
             // `--depth` is a hard result limit: a caller beyond it is not reported.
             if depth.is_some_and(|max| importer_depth > max) {
@@ -171,7 +159,7 @@ pub fn run(
                 continue;
             }
             callers.push(RscCaller {
-                file: relative_slash_path(&root, path),
+                file: relative_slash_path(root, path),
                 kind: caller_kind(path),
                 environment,
                 depth: importer_depth,
@@ -186,32 +174,13 @@ pub fn run(
     callers.dedup();
 
     Ok(RscCallersReport {
-        component: relative_slash_path(&root, &component_abs),
+        component: relative_slash_path(root, &component_abs),
         callers,
     })
 }
 
-fn detect_environment(path: &Path) -> Environment {
-    let Ok(source) = std::fs::read_to_string(path) else {
-        return Environment::Unknown;
-    };
-    crate::ast::with_program(path, &source, |program, _| {
-        let has_use_server = program
-            .directives
-            .iter()
-            .any(|directive| directive.directive == "use server");
-        let has_use_client = program
-            .directives
-            .iter()
-            .any(|directive| directive.directive == "use client");
-        match (has_use_server, has_use_client) {
-            (true, _) => Environment::Server,
-            (_, true) => Environment::Client,
-            _ => Environment::Unknown,
-        }
-    })
-    .unwrap_or(Environment::Unknown)
-}
+#[cfg(test)]
+mod test_support;
 
 fn caller_kind(path: &Path) -> CallerKind {
     let stem = path

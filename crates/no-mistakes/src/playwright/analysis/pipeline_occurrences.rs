@@ -64,7 +64,10 @@ pub(crate) fn prepare_test_files(
                             if skip_test_file_errors {
                                 return Ok(None);
                             }
-                            return Err(anyhow::Error::msg(error.to_string()));
+                            return Err(anyhow::anyhow!(
+                                "failed to parse {}: {error}",
+                                test_file.path.display()
+                            ));
                         }
                         match extract_test_file_occurrences(
                             &test_file,

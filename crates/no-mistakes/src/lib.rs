@@ -29,6 +29,8 @@ pub mod rsc_callers_query;
 pub mod server_routes;
 pub mod swift_api;
 pub mod terraform_api;
+#[cfg(test)]
+pub(crate) mod test_support;
 mod tests;
 pub use ci::{run as ci_run, CiArgs};
 pub use impacted_checks::{run as impacted_checks_run, ImpactedChecksArgs};

@@ -171,8 +171,11 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
 
     let edges = collect_symbol_edges(
         Path::new("/repo"),
-        &[p("/repo/src/missing.mts"), no_symbols, current.clone()],
-        std::slice::from_ref(&current),
+        SymbolGraphFiles {
+            indexable: &[p("/repo/src/missing.mts"), no_symbols, current.clone()],
+            all: std::slice::from_ref(&current),
+            visible: &visible,
+        },
         &facts,
         &resolver,
         &Default::default(),
@@ -237,7 +240,8 @@ fn symbol_import_target_helpers_cover_node_kinds() {
             ImportKind::Static,
             &current,
             &resolver,
-            &workspace
+            &workspace,
+            &visible,
         ),
         Some((NodeId::File(source.clone()), EdgeKind::Import))
     );
@@ -247,7 +251,8 @@ fn symbol_import_target_helpers_cover_node_kinds() {
             ImportKind::Type,
             &current,
             &resolver,
-            &workspace
+            &workspace,
+            &visible,
         ),
         Some((NodeId::File(source.clone()), EdgeKind::TypeImport))
     );
@@ -257,7 +262,8 @@ fn symbol_import_target_helpers_cover_node_kinds() {
             ImportKind::Require,
             &current,
             &resolver,
-            &workspace
+            &workspace,
+            &visible,
         ),
         Some((NodeId::File(source), EdgeKind::Require))
     );
@@ -267,12 +273,20 @@ fn symbol_import_target_helpers_cover_node_kinds() {
             ImportKind::Static,
             &current,
             &resolver,
-            &workspace
+            &workspace,
+            &visible,
         ),
         Some((NodeId::File(asset), EdgeKind::AssetImport))
     );
     assert_eq!(
-        import_target("zod", ImportKind::Dynamic, &current, &resolver, &workspace),
+        import_target(
+            "zod",
+            ImportKind::Dynamic,
+            &current,
+            &resolver,
+            &workspace,
+            &visible,
+        ),
         Some((NodeId::Module("zod".to_string()), EdgeKind::DynamicImport))
     );
     assert_eq!(
@@ -281,7 +295,8 @@ fn symbol_import_target_helpers_cover_node_kinds() {
             ImportKind::Static,
             &current,
             &resolver,
-            &workspace
+            &workspace,
+            &visible,
         ),
         None
     );
@@ -291,39 +306,43 @@ fn symbol_import_target_helpers_cover_node_kinds() {
             ExtractedImport {
                 specifier: "./source.mts".to_string(),
                 kind: ImportKind::Static,
-        line: 1,
+                line: 1,
                 function_scope: Some("run".to_string()),
-        side_effect_only: false,
-        re_export: false,
-        runtime_reachable: false,
+                side_effect_only: false,
+                re_export: false,
+                runtime_reachable: false,
             },
             ExtractedImport {
                 specifier: "./missing.mts".to_string(),
                 kind: ImportKind::Static,
-        line: 1,
+                line: 1,
                 function_scope: Some("run".to_string()),
-        side_effect_only: false,
-        re_export: false,
-        runtime_reachable: false,
+                side_effect_only: false,
+                re_export: false,
+                runtime_reachable: false,
             },
             ExtractedImport {
                 specifier: "react".to_string(),
                 kind: ImportKind::Type,
-        line: 1,
+                line: 1,
                 function_scope: None,
-        side_effect_only: false,
-        re_export: false,
-        runtime_reachable: false,
+                side_effect_only: false,
+                re_export: false,
+                runtime_reachable: false,
             },
         ],
         &current,
         &resolver,
         &workspace,
+        &visible,
     );
 
     assert_eq!(
         scoped.get("run"),
-        Some(&vec![(NodeId::File(p("/repo/src/source.mts")), EdgeKind::Import)])
+        Some(&vec![(
+            NodeId::File(p("/repo/src/source.mts")),
+            EdgeKind::Import
+        )])
     );
 }
 
@@ -358,12 +377,8 @@ fn symbol_bfs_skips_initial_owner_and_honors_limits() {
     assert_eq!(unfiltered.len(), 1);
     assert_eq!(unfiltered[0].node, NodeId::File(dep));
 
-    let limited = bfs_skipping_symbol_owner_files(
-        std::slice::from_ref(&symbol),
-        &edges,
-        Some(0),
-        None,
-    );
+    let limited =
+        bfs_skipping_symbol_owner_files(std::slice::from_ref(&symbol), &edges, Some(0), None);
     assert!(limited.is_empty());
 
     let file_start = NodeId::File(owner);

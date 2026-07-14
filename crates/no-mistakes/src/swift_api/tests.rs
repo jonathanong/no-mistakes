@@ -14,6 +14,32 @@ fn report() -> SwiftReport {
 const ENDPOINT: &str = "swift-clients/core/Sources/VouchaAPI/Endpoint.swift";
 
 #[test]
+fn analyze_project_reuses_one_discovery_and_swift_fact_collection() {
+    assert!(!report().importers(ENDPOINT).is_empty());
+
+    let source = include_str!("../swift_api.rs");
+    let analyze_body = source
+        .split("pub fn analyze_project(root: &Path, config_path: Option<&Path>)")
+        .nth(1)
+        .and_then(|source| source.split("impl SwiftReport").next())
+        .expect("swift analyze_project body");
+
+    assert_eq!(analyze_body.matches("VisiblePathSnapshot::new").count(), 1);
+    assert_eq!(
+        analyze_body.matches("discover_files_from_visible(").count(),
+        1
+    );
+    assert_eq!(analyze_body.matches("collect_swift_facts(").count(), 1);
+    assert_eq!(
+        analyze_body
+            .matches("build_with_plan_files_prepared_config_and_swift_facts(")
+            .count(),
+        1
+    );
+    assert!(!analyze_body.contains("build_with_plan_files_prepared_config("));
+}
+
+#[test]
 fn importers_lists_files_that_import_the_target() {
     let report = report();
     let rows = report.importers(ENDPOINT);
@@ -69,6 +95,28 @@ fn analyze_project_without_packages_has_no_swift_edges() {
 fn analyze_project_propagates_missing_explicit_config() {
     let result = analyze_project(&fixture(), Some(Path::new("/no/such/no-mistakes.yml")));
     assert!(result.is_err());
+}
+
+#[test]
+fn analyze_project_uses_one_snapshot_and_one_swift_fact_collection() {
+    assert!(!report().importers(ENDPOINT).is_empty());
+    let source = include_str!("../swift_api.rs");
+    let analyze = source
+        .split("pub fn analyze_project(")
+        .nth(1)
+        .and_then(|source| source.split("impl SwiftReport").next())
+        .expect("Swift analyze_project body");
+
+    assert_eq!(analyze.matches("VisiblePathSnapshot::new(").count(), 1);
+    assert_eq!(analyze.matches("discover_files_from_visible(").count(), 1);
+    assert_eq!(analyze.matches("collect_swift_facts(").count(), 1);
+    assert_eq!(
+        analyze
+            .matches("build_with_plan_files_prepared_config_and_swift_facts(")
+            .count(),
+        1
+    );
+    assert!(!analyze.contains("build_with_plan_and_config("));
 }
 
 #[test]

@@ -1,0 +1,15 @@
+tests:
+  playwright:
+    configs: playwright.config.ts
+    frontendRoot: app
+    testInclude:
+      - tests/**/*.ts
+    selectorRoots:
+      - app
+    selectors:
+      testIds:
+        - data-testid
+
+rules:
+  - rule: playwright-coverage
+    scope: repository

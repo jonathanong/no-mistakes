@@ -1,9 +1,10 @@
 use super::frameworks::framework_present;
-use super::generate::{dedupe_checks, dedupe_warnings, generic_checks};
+use super::generate::{dedupe_checks, dedupe_warnings, generic_checks, plan_args_for};
 use super::*;
 use crate::config::v2::schema::NoMistakesConfig;
 use crate::tests::TestFramework;
 use std::collections::BTreeSet;
+use std::path::Path;
 
 fn fixture() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -15,6 +16,27 @@ fn args(files: &[&str]) -> ImpactedChecksArgs {
     ImpactedChecksArgs {
         files: files.iter().map(PathBuf::from).collect(),
         root: fixture(),
+        config: None,
+        tsconfig: None,
+        base: None,
+        head: None,
+        changed_file: Vec::new(),
+        changed_files: None,
+        diff: None,
+        diff_content: None,
+        format: None,
+        json: false,
+    }
+}
+
+fn fanout_fixture() -> tempfile::TempDir {
+    crate::test_support::materialize_gitignore_fixture("test-plan-fanout")
+}
+
+fn fanout_args(root: &Path) -> ImpactedChecksArgs {
+    ImpactedChecksArgs {
+        files: vec![PathBuf::from("src/shared.ts")],
+        root: root.to_path_buf(),
         config: None,
         tsconfig: None,
         base: None,
@@ -195,22 +217,26 @@ fn framework_present_detects_config_file() {
             .join("../../test-cases/impacted-checks/autodetect"),
     );
     let config = NoMistakesConfig::default();
+    let visible = crate::codebase::ts_source::discover_visible_paths(&autodetect);
     // vitest.config.mts exists at root → Vitest is present without explicit config.
     assert!(framework_present(
         &autodetect,
         &config,
-        TestFramework::Vitest
+        TestFramework::Vitest,
+        &visible,
     ));
     // No playwright.config / swift config → absent.
     assert!(!framework_present(
         &autodetect,
         &config,
-        TestFramework::Playwright
+        TestFramework::Playwright,
+        &visible,
     ));
     assert!(!framework_present(
         &autodetect,
         &config,
-        TestFramework::Swift
+        TestFramework::Swift,
+        &visible,
     ));
 
     // testPlan full-suite triggers alone mark the framework present (no config
@@ -226,7 +252,41 @@ fn framework_present_detects_config_file() {
     assert!(framework_present(
         &fixture(),
         &plan_config,
-        TestFramework::Vitest
+        TestFramework::Vitest,
+        &[],
+    ));
+}
+
+#[test]
+fn framework_present_ignores_ignored_auto_configs_but_keeps_explicit_config_authority() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass3-visibility");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let visible = crate::codebase::ts_source::discover_visible_paths(fixture.path());
+    let config = NoMistakesConfig::default();
+
+    assert!(!framework_present(
+        fixture.path(),
+        &config,
+        TestFramework::Vitest,
+        &visible,
+    ));
+    assert!(!framework_present(
+        fixture.path(),
+        &config,
+        TestFramework::Playwright,
+        &visible,
+    ));
+
+    let mut explicit = config;
+    explicit.tests.vitest.configs = Some(crate::config::v2::schema::StringOrList::One(
+        "vitest.config.ts".to_string(),
+    ));
+    assert!(framework_present(
+        fixture.path(),
+        &explicit,
+        TestFramework::Vitest,
+        &visible,
     ));
 }
 
@@ -250,4 +310,124 @@ fn dedupe_warnings_collapses_and_sorts() {
     let deduped = dedupe_warnings(vec![warn("b.ts"), warn("a.ts"), warn("b.ts")]);
     assert_eq!(deduped.len(), 2);
     assert_eq!(deduped[0].file, "a.ts");
+}
+
+#[test]
+fn multi_framework_fanout_matches_direct_framework_plans() {
+    let fixture = fanout_fixture();
+    let args = fanout_args(fixture.path());
+    let report = generate_impacted_checks(&args).unwrap();
+
+    let actual: BTreeSet<Vec<String>> = report
+        .checks
+        .iter()
+        .filter(|check| check.kind == CheckKind::Test)
+        .map(|check| check.command.clone())
+        .collect();
+    let mut direct = BTreeSet::new();
+    for framework in [TestFramework::Vitest, TestFramework::Playwright] {
+        let plan = crate::tests::plan::generate_plan(&plan_args_for(&args, Some(framework)))
+            .expect("direct framework plan should succeed");
+        for selected in plan.selected_tests {
+            for target in selected.targets {
+                let mut command = target.base_command;
+                command.extend(target.runner_args);
+                direct.insert(command);
+            }
+        }
+    }
+
+    assert_eq!(actual, direct);
+    assert_eq!(actual.len(), 2, "{actual:?}");
+    assert!(actual
+        .iter()
+        .flatten()
+        .all(|part| !part.contains("ignored")));
+}
+
+#[test]
+fn impacted_checks_napi_matches_the_cli_engine_for_multi_framework_fanout() {
+    let fixture = fanout_fixture();
+    let args = fanout_args(fixture.path());
+    let cli_report = generate_impacted_checks(&args).unwrap();
+    let options = serde_json::json!({
+        "root": fixture.path().display().to_string(),
+        "changedFiles": ["src/shared.ts"],
+    });
+
+    let napi_json = crate::napi_api::impacted_checks_json_impl(options.to_string()).unwrap();
+    let napi_report: serde_json::Value = serde_json::from_str(&napi_json).unwrap();
+
+    assert_eq!(napi_report, serde_json::to_value(cli_report).unwrap());
+}
+
+#[test]
+fn impacted_fanout_prepares_and_builds_the_graph_once() {
+    let generate = include_str!("generate.rs");
+    let prepared = include_str!("../tests/prepared_plan.rs");
+    let plan = include_str!("../tests/plan.rs");
+
+    assert_eq!(
+        generate
+            .matches("PreparedTestPlanRequest::prepare(&plan_args)")
+            .count(),
+        1
+    );
+    assert_eq!(generate.matches("generate_plan_with_prepared(").count(), 1);
+    assert_eq!(generate.matches("generate_plan(").count(), 0);
+    for repeated_prepare in [
+        "collect_changed_files(",
+        "discover_visible_paths(",
+        "load_v2_config(",
+        "resolve_tsconfig(",
+        "analyze_lockfile_changes(",
+    ] {
+        assert_eq!(
+            generate.matches(repeated_prepare).count(),
+            0,
+            "fanout must not call {repeated_prepare}"
+        );
+    }
+
+    assert_eq!(
+        prepared.matches("VisiblePathSnapshot::new(&root)").count(),
+        1
+    );
+    assert_eq!(prepared.matches("load_v2_config_from_visible(").count(), 1);
+    assert_eq!(
+        prepared.matches("resolve_tsconfig_from_visible(").count(),
+        1
+    );
+    assert_eq!(
+        prepared
+            .matches("collect_changed_files(&args, &root)")
+            .count(),
+        1
+    );
+    assert_eq!(prepared.matches("analyze_lockfile_changes(").count(), 1);
+    assert_eq!(
+        prepared
+            .matches("build_with_plan_files_prepared_config_and_facts(")
+            .count(),
+        1
+    );
+    assert_eq!(prepared.matches(".get_or_init(|| {").count(), 1);
+
+    let public_wrapper = plan
+        .split("pub fn generate_plan(args: &PlanArgs)")
+        .nth(1)
+        .and_then(|source| source.split("/// Generate a framework").next())
+        .expect("public test-plan wrapper");
+    assert_eq!(
+        public_wrapper
+            .matches("PreparedTestPlanRequest::prepare(args)")
+            .count(),
+        1
+    );
+    assert_eq!(
+        public_wrapper
+            .matches("generate_plan_with_prepared(")
+            .count(),
+        1
+    );
 }

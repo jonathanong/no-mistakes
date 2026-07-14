@@ -1,4 +1,12 @@
 use super::*;
+
+fn check_with_files(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+) -> Result<Vec<RuleFinding>> {
+    check_with_files_and_catalog(root, config, all_files, None)
+}
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
@@ -42,6 +50,24 @@ fn reports_unmapped_and_ambiguous_vitest_tests() {
     assert!(findings[0].message.contains("multiple Vitest projects"));
     assert_eq!(findings[1].file, "src/unmapped.test.ts");
     assert!(findings[1].message.contains("does not map"));
+}
+
+#[test]
+fn prepared_vitest_catalog_matches_standalone_project_loading() {
+    let root = fixture_root("fixture");
+    let config = load_config(&root);
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let visible = snapshot.paths_for(&root);
+    let tsconfig =
+        crate::codebase::ts_resolver::resolve_tsconfig_from_visible(None, &root, &visible).unwrap();
+    let catalog =
+        super::super::prepare_vitest_project_catalog(&root, &config, &snapshot, &tsconfig);
+
+    let standalone = check_with_files(&root, &config, &files).unwrap();
+    let prepared = check_with_files_and_catalog(&root, &config, &files, Some(&catalog)).unwrap();
+
+    assert_eq!(prepared, standalone);
 }
 
 #[test]

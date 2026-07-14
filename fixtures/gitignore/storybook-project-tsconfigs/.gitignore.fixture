@@ -1,0 +1,2 @@
+# This package's automatic config must not participate in aggregate resolution.
+packages/ignored/tsconfig.json

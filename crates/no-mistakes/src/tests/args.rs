@@ -210,7 +210,7 @@ pub(crate) struct GraphArgs {
     pub(crate) out: Option<PathBuf>,
 }
 
-#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) enum TestFramework {
     Dotnet,
     Playwright,

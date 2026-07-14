@@ -1,0 +1,5 @@
+on: push
+jobs:
+  visible:
+    runs-on: ubuntu-latest
+    steps: []

@@ -146,21 +146,26 @@ fn collect_process_spawn_edges(
     facts: Option<&dyn TsFactLookup>,
     files: &[(PathBuf, String)],
     graph_files: &[PathBuf],
+    visible_files: &HashSet<PathBuf>,
 ) -> Vec<Edge> {
-    use crate::codebase::ts_process_spawn::extract_spawn_edges;
+    use crate::codebase::ts_process_spawn::extract_spawn_edges_from_visible;
 
     if let Some(facts) = facts {
         return graph_files
             .par_iter()
             .filter_map(|path| facts.get_ts_facts(path))
             .flat_map_iter(|file_facts| {
-                file_facts.process_spawns.iter().map(|e| {
+                file_facts
+                    .process_spawns
+                    .iter()
+                    .filter(|edge| visible_files.contains(&edge.entry))
+                    .map(|e| {
                     (
                         NodeId::File(e.spawner.clone()),
                         NodeId::File(e.entry.clone()),
                         EdgeKind::ProcessSpawn,
                     )
-                })
+                    })
             })
             .collect();
     }
@@ -168,8 +173,9 @@ fn collect_process_spawn_edges(
     files
         .par_iter()
         .flat_map_iter(|(spawner, source)| {
-            extract_spawn_edges(source, spawner, root)
+            extract_spawn_edges_from_visible(source, spawner, root, visible_files)
                 .into_iter()
+                .filter(|edge| visible_files.contains(&edge.entry))
                 .map(|e| {
                     (
                         NodeId::File(e.spawner),

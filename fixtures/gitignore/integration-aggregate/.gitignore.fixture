@@ -1,0 +1,8 @@
+# Automatic discovery must not inspect these untracked ignored files.
+playwright.config.mts
+vitest.config.ts
+tsconfig.json
+
+# Explicit tests.*.configs paths remain authoritative even when ignored.
+explicit-playwright.config.ts
+explicit-vitest.config.ts

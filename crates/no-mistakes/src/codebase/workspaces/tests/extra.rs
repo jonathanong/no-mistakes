@@ -1,4 +1,5 @@
 use super::super::*;
+use super::resolve_entry;
 use tempfile::TempDir;
 
 fn pkg(content: &str) -> PackageJson {
@@ -10,7 +11,6 @@ fn workspace_globs_and_expansion_cover_empty_and_outside_paths() {
     let dir = TempDir::new().unwrap();
     super::write(&dir.path().join("package.json"), r#"{"name":"root"}"#);
     assert!(load_workspace_globs(dir.path()).unwrap().is_empty());
-    assert!(expand_workspace_globs(dir.path(), &["[".to_string()]).is_empty());
     assert!(expand_workspace_globs_from_files(dir.path(), &["[".to_string()], &[]).is_empty());
 
     let files = vec![
@@ -173,6 +173,25 @@ fn fixture_load_covers_entry_resolution_branches() {
     );
 }
 
+#[test]
+fn public_package_wrappers_use_visible_workspace_entries() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/workspaces-entries/fixture"),
+    );
+    let package = load_root_package(&root.join("pkg"))
+        .unwrap()
+        .expect("saved package fixture is visible");
+    assert_eq!(package.name, "@fixtures/exported");
+    assert_eq!(package.entry, Some(root.join("pkg/exported/index.ts")));
+
+    let map = load(&root).unwrap();
+    assert_eq!(
+        map.resolve_specifier_from("@fixtures/exported", &root.join("consumer.ts")),
+        Some(root.join("pkg/exported/index.ts"))
+    );
+}
+
 fn git_init(dir: &Path) {
     let output = std::process::Command::new("git")
         .args(["init", "-q", "--initial-branch=main"])
@@ -235,10 +254,10 @@ fn load_does_not_walk_gitignored_directory() {
     assert!(!map.packages.iter().any(|pkg| pkg.name == "@fixtures/trap"));
 }
 
-/// Outside a git repository, `load` still falls back to the raw `expand_workspace_globs`
-/// walk, exercising it directly since there's no git-visible file list to derive from.
+/// Outside a Git repository, workspace expansion uses the shared ignore-aware
+/// candidate list.
 #[test]
-fn load_falls_back_to_walk_outside_git_repositories() {
+fn load_discovers_workspaces_outside_git_repositories() {
     let dir = TempDir::new().unwrap();
     super::write(
         &dir.path().join("package.json"),
@@ -252,4 +271,20 @@ fn load_falls_back_to_walk_outside_git_repositories() {
     let map = load(dir.path()).unwrap();
 
     assert!(map.packages.iter().any(|pkg| pkg.name == "@fixtures/app"));
+}
+
+#[test]
+fn load_applies_gitignore_outside_git() {
+    let dir = crate::test_support::materialize_gitignore_fixture("non-git-discovery");
+
+    let map = load(dir.path()).unwrap();
+
+    assert!(map
+        .packages
+        .iter()
+        .any(|package| package.name == "@fixture/visible"));
+    assert!(!map
+        .packages
+        .iter()
+        .any(|package| package.name == "@fixture/ignored"));
 }

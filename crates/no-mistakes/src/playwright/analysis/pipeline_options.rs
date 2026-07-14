@@ -8,4 +8,7 @@ pub(crate) struct AnalysisOptions<'a> {
     )>,
     pub(crate) graph_file_universe: Option<&'a [std::path::PathBuf]>,
     pub(crate) occurrence_selection: super::pipeline_occurrences::CachedOccurrenceSelection,
+    /// Canonical request-local candidate set. Every filesystem-facing phase
+    /// of Playwright analysis must derive its inputs from this snapshot.
+    pub(crate) snapshot: &'a crate::playwright::fsutil::VisiblePathSnapshot,
 }

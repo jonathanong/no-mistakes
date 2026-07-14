@@ -29,6 +29,18 @@ pub(crate) struct DomainCheckInputs<'a> {
     pub(crate) filesystem_rules_enabled: bool,
     pub(crate) discovered_files: Vec<PathBuf>,
     pub(crate) facts: &'a CheckFactMap,
+    pub(crate) prepared_playwright:
+        Option<&'a no_mistakes::playwright::rules::PreparedPlaywrightRules>,
+    pub(crate) prepared_react: &'a no_mistakes::react_traits::PreparedReactCheck,
+    pub(crate) prepared_graph:
+        Option<&'a no_mistakes::codebase::dependencies::graph::PreparedGraphConfig>,
+    pub(crate) prepared_tsconfig: &'a no_mistakes::codebase::ts_resolver::TsConfig,
+    pub(crate) visible_paths: &'a no_mistakes::codebase::ts_source::VisiblePathSnapshot,
+    pub(crate) inferred_roots: &'a no_mistakes::codebase::config::InferredRoots,
+    pub(crate) config: &'a no_mistakes::config::v2::NoMistakesConfig,
+    pub(crate) codebase_config: &'a no_mistakes::codebase::config::Config,
+    pub(crate) vitest_projects:
+        Option<&'a no_mistakes::codebase::rules::PreparedVitestProjectCatalog>,
 }
 
 pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults {
@@ -41,44 +53,70 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
     let filesystem_rules_enabled = inputs.filesystem_rules_enabled;
     let discovered_files = inputs.discovered_files;
     let facts = inputs.facts;
+    let prepared_playwright = inputs.prepared_playwright;
+    let prepared_react = inputs.prepared_react;
+    let prepared_graph = inputs.prepared_graph;
+    let prepared_tsconfig = inputs.prepared_tsconfig;
+    let visible_paths = inputs.visible_paths;
+    let inferred_roots = inputs.inferred_roots;
+    let config = inputs.config;
+    let codebase_config = inputs.codebase_config;
+    let vitest_projects = inputs.vitest_projects;
 
     let ((react, queues), (rules, (integration, (codebase, filesystem_rules)))) = rayon::join(
         || {
             rayon::join(
-                || run_react_check(root, config_path.as_deref(), react_enabled, facts),
-                || run_queue_check(root, tsconfig_path.as_deref(), queues_enabled, facts),
+                || run_react_check(root, react_enabled, facts, prepared_react),
+                || run_queue_check(root, prepared_tsconfig, queues_enabled, facts),
             )
         },
         || {
             rayon::join(
                 || {
-                    run_rules_check(
+                    run_rules_check(no_mistakes::codebase::rules::PreparedRulesCheck {
                         root,
-                        config_path.as_deref(),
-                        tsconfig_path.as_deref(),
-                        facts,
-                    )
+                        config_path: config_path.as_deref(),
+                        tsconfig_path: tsconfig_path.as_deref(),
+                        shared: facts,
+                        prepared_playwright,
+                        config,
+                        prepared_graph,
+                        prepared_tsconfig,
+                        inferred_roots: Some(inferred_roots),
+                    })
                 },
                 || {
                     rayon::join(
-                        || run_integration_check(root, config_path.as_deref(), facts),
+                        || {
+                            run_integration_check(
+                                root,
+                                config,
+                                facts,
+                                prepared_tsconfig,
+                                visible_paths,
+                            )
+                        },
                         || {
                             rayon::join(
                                 || {
                                     run_codebase_check(
                                         root,
-                                        config_path.as_deref(),
+                                        codebase_config,
                                         tsconfig_path.as_deref(),
+                                        prepared_tsconfig,
                                         unique_exports_enabled,
                                         facts,
+                                        inferred_roots,
                                     )
                                 },
                                 || {
                                     run_filesystem_rules_check(
                                         root,
-                                        config_path.as_deref(),
+                                        config,
                                         filesystem_rules_enabled,
                                         &discovered_files,
+                                        visible_paths,
+                                        vitest_projects,
                                     )
                                 },
                             )

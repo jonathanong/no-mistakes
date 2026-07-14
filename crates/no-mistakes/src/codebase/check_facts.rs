@@ -1,231 +1,35 @@
-use crate::codebase::dependencies::extract::is_indexable;
-use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
-use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts;
-use crate::codebase::storybook::StorybookFileFacts;
-use crate::codebase::ts_source::facts::TsFileFacts;
-use crate::codebase::ts_symbols::FileSymbols;
-use crate::integration_tests::types::FileAnalysis as IntegrationFileAnalysis;
-use crate::playwright::analysis::text_types::AppTextTarget;
-use crate::playwright::selectors::AppSelector;
-use crate::react_traits::analyze::file::FileAnalysis as ReactFileAnalysis;
-use dashmap::DashMap;
-use rayon::prelude::*;
-use std::collections::{BTreeSet, HashMap};
-use std::path::{Path, PathBuf};
-use std::sync::{Arc, OnceLock};
-
+mod aggregate;
+mod collect;
 mod file;
 mod file_parse_error;
 mod file_playwright;
+mod map;
+mod plan;
 mod playwright_facts;
 mod playwright_plan;
+mod runner;
 mod staged_playwright;
 mod stats;
-pub(crate) use file::{collect_file_facts, is_mdx_file};
+
+pub(crate) use aggregate::playwright_aggregate_facts;
+pub use collect::{
+    collect_check_facts, collect_check_facts_with_graph_files_and_playwright,
+    collect_check_facts_with_playwright,
+};
+pub(crate) use collect::{
+    collect_check_facts_with_precollected_graph_facts, collect_fact_map, graph_only_files,
+};
+pub(crate) use file::{collect_file_facts, collect_file_facts_from_program, is_mdx_file};
+pub use map::CheckFactMap;
+pub(crate) use map::{CheckFileFacts, PlaywrightTestFilesByProject};
+pub use plan::CheckFactPlan;
 pub(crate) use playwright_facts::PlaywrightTestFacts;
 pub use playwright_plan::PlaywrightFactPlan;
-pub(crate) use playwright_plan::{PlaywrightFactSelection, PlaywrightOccurrenceKey};
+pub(crate) use playwright_plan::{
+    PlaywrightFactSelection, PlaywrightOccurrenceKey, PlaywrightSettingsKey,
+};
+pub(crate) use runner::{collect_prepared_runner_facts, runner_config_facts, RunnerConfigFacts};
 pub use stats::CheckFactStats;
-
-#[derive(Clone, Default)]
-pub struct CheckFactPlan {
-    pub imports: bool,
-    pub symbols: bool,
-    pub react: bool,
-    pub queue: bool,
-    pub queue_factory_names: Vec<String>,
-    pub integration: bool,
-    pub dynamic_imports: bool,
-    pub nextjs_caching: bool,
-    pub storybook: bool,
-    pub source: bool,
-    pub raw_source: bool,
-    pub graph: crate::codebase::ts_source::facts::TsFactPlan,
-    pub graph_context: crate::codebase::ts_source::facts::TsFactContext,
-}
-
-#[derive(Default)]
-pub struct CheckFactMap {
-    pub(crate) files: Vec<PathBuf>,
-    pub(crate) graph_files: Vec<PathBuf>,
-    /// Set only by collection with an explicitly supplied graph universe.
-    pub(crate) graph_files_complete: bool,
-    pub(crate) ts: HashMap<PathBuf, CheckFileFacts>,
-    pub(crate) graph_plan: crate::codebase::ts_source::facts::TsFactPlan,
-    pub stats: CheckFactStats,
-    /// Memoizes the app-wide Playwright selector-occurrence scan
-    /// (`collect_app_selector_occurrences`), keyed by whether HTML id
-    /// attributes are included (see `TsFactLookup::get_or_compute_app_selector_occurrences`).
-    /// Populated lazily — empty unless a `check` run actually triggers the
-    /// scan from more than one place (e.g. the `playwright` rule and
-    /// `forbidden-dependencies`'s `DepGraph` build in the same invocation).
-    /// Caches the `Result` (errors as `String`, since `anyhow::Error` isn't
-    /// `Clone`) so the fallible compute itself runs inside
-    /// `entry(..).or_insert_with(..)`, not just the insert — otherwise two
-    /// concurrent misses could both pay the full scan before either caches
-    /// it.
-    pub(crate) app_selector_occurrences_cache: DashMap<bool, Result<Arc<Vec<AppSelector>>, String>>,
-    /// Memoizes `routes::collect_routes` + rewrite expansion — see
-    /// `TsFactLookup::get_or_compute_playwright_routes`. Unlike the selector
-    /// scan above this needs no key: every caller within one invocation wants
-    /// the same routes. Infallible, so plain `OnceLock::get_or_init` already
-    /// guards the compute itself.
-    pub(crate) playwright_routes_cache: OnceLock<Arc<Vec<crate::routes::Route>>>,
-    /// Memoizes `collect_app_text_targets` — see
-    /// `TsFactLookup::get_or_compute_app_text_targets`. Caches the `Result`
-    /// for the same reason as `app_selector_occurrences_cache` above.
-    pub(crate) app_text_targets_cache: OnceLock<Result<Arc<Vec<AppTextTarget>>, String>>,
-    /// Memoizes `collect_route_reachable_files` — see
-    /// `TsFactLookup::get_or_compute_route_reachable_files`. The single
-    /// largest cost this cache eliminates in practice; caches the `Result`
-    /// for the same reason as `app_selector_occurrences_cache` above.
-    pub(crate) route_reachable_files_cache:
-        OnceLock<Result<Arc<crate::codebase::dependencies::graph::RouteReachableFiles>, String>>,
-}
-
-#[derive(Default)]
-pub(crate) struct CheckFileFacts {
-    pub ts: TsFileFacts,
-    pub source: Option<String>,
-    pub symbols: Option<FileSymbols>,
-    pub react: Option<ReactFileAnalysis>,
-    pub integration: Option<IntegrationFileAnalysis>,
-    pub dynamic_imports: Option<TestFacts>,
-    pub nextjs_caching: Option<Vec<NextjsCachingFinding>>,
-    pub storybook: Option<StorybookFileFacts>,
-    pub(crate) playwright: Option<PlaywrightTestFacts>,
-    pub parse_error: Option<String>,
-    pub(crate) parsed: bool,
-}
-
-impl CheckFactMap {
-    pub fn files(&self) -> &[PathBuf] {
-        &self.files
-    }
-
-    pub(crate) fn graph_file_universe(&self) -> &[PathBuf] {
-        if self.graph_files_complete {
-            self.graph_files.as_slice()
-        } else {
-            self.files.as_slice()
-        }
-    }
-
-    pub(crate) fn graph_file_universe_is_complete(&self) -> bool {
-        self.graph_files_complete
-    }
-
-    pub(crate) fn graph_plan(&self) -> crate::codebase::ts_source::facts::TsFactPlan {
-        self.graph_plan
-    }
-}
-
-pub fn collect_check_facts(root: &Path, files: Vec<PathBuf>, plan: CheckFactPlan) -> CheckFactMap {
-    collect_check_facts_with_playwright(root, files, plan, None)
-}
-
-pub fn collect_check_facts_with_graph_files_and_playwright(
-    root: &Path,
-    files: Vec<PathBuf>,
-    graph_files: Vec<PathBuf>,
-    plan: CheckFactPlan,
-    playwright: Option<PlaywrightFactPlan>,
-) -> CheckFactMap {
-    if let Some(playwright) = playwright {
-        return staged_playwright::collect(root, files, graph_files, true, plan, playwright);
-    }
-    collect_check_facts_inner(root, files, graph_files, true, plan, playwright)
-}
-
-pub fn collect_check_facts_with_playwright(
-    root: &Path,
-    files: Vec<PathBuf>,
-    plan: CheckFactPlan,
-    playwright: Option<PlaywrightFactPlan>,
-) -> CheckFactMap {
-    if let Some(playwright) = playwright {
-        return staged_playwright::collect(root, files, Vec::new(), false, plan, playwright);
-    }
-    collect_check_facts_inner(root, files, Vec::new(), false, plan, playwright)
-}
-
-fn collect_check_facts_inner(
-    root: &Path,
-    files: Vec<PathBuf>,
-    graph_files: Vec<PathBuf>,
-    graph_files_complete: bool,
-    plan: CheckFactPlan,
-    playwright: Option<PlaywrightFactPlan>,
-) -> CheckFactMap {
-    let graph_only_files = graph_only_files(&files, &graph_files);
-    let stats = CheckFactStats {
-        files_discovered: files.len() + graph_only_files.len(),
-        ..CheckFactStats::default()
-    };
-    let playwright = playwright.as_ref();
-    let mut ts = collect_fact_map(root, &files, &plan, playwright);
-    if !graph_only_files.is_empty() {
-        let graph_plan = CheckFactPlan {
-            graph: plan.graph,
-            graph_context: plan.graph_context.clone(),
-            ..CheckFactPlan::default()
-        };
-        ts.extend(collect_fact_map(root, &graph_only_files, &graph_plan, None));
-    }
-    let mut files_parsed = 0;
-    let mut parse_errors = 0;
-    for facts in ts.values() {
-        if facts.parsed {
-            files_parsed += 1;
-        }
-        if facts.parse_error.is_some() {
-            parse_errors += 1;
-        }
-    }
-    CheckFactMap {
-        files,
-        graph_files,
-        graph_files_complete,
-        ts,
-        graph_plan: plan.graph,
-        stats: CheckFactStats {
-            files_parsed,
-            parse_errors,
-            ..stats
-        },
-        app_selector_occurrences_cache: DashMap::new(),
-        playwright_routes_cache: OnceLock::new(),
-        app_text_targets_cache: OnceLock::new(),
-        route_reachable_files_cache: OnceLock::new(),
-    }
-}
-
-fn collect_fact_map(
-    root: &Path,
-    files: &[PathBuf],
-    plan: &CheckFactPlan,
-    playwright: Option<&PlaywrightFactPlan>,
-) -> HashMap<PathBuf, CheckFileFacts> {
-    files
-        .par_iter()
-        .filter(|path| is_indexable(path) || (plan.storybook && is_mdx_file(path)))
-        .filter_map(|path| {
-            collect_file_facts(root, path, plan, playwright).map(|facts| (path.clone(), facts))
-        })
-        .collect()
-}
-
-fn graph_only_files(files: &[PathBuf], graph_files: &[PathBuf]) -> Vec<PathBuf> {
-    if graph_files.is_empty() {
-        return Vec::new();
-    }
-    let scoped: BTreeSet<&PathBuf> = files.iter().collect();
-    graph_files
-        .iter()
-        .filter(|path| !scoped.contains(path))
-        .cloned()
-        .collect()
-}
 
 #[cfg(test)]
 mod tests;

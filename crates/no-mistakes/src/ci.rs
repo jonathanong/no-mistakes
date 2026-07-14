@@ -3,8 +3,10 @@
 use crate::cli::{resolve_format, Format};
 use crate::codebase::ci_graph::env_query::{CiEnvReport, EnvLocationKind, EnvScope};
 use crate::codebase::ci_graph::impact::CiImpactReport;
-use crate::codebase::ci_graph::{analyze_env, analyze_impact, relative_slash, WorkflowSet};
-use crate::config::v2::load_v2_config;
+use crate::codebase::ci_graph::{
+    analyze_env_from_snapshot, analyze_impact, relative_slash, WorkflowSet,
+};
+use crate::config::v2::load_v2_config_from_visible;
 use anyhow::Result;
 use clap::{Args, Subcommand};
 use std::io::IsTerminal;
@@ -95,8 +97,10 @@ pub fn impact_report(
     files: &[PathBuf],
 ) -> Result<CiImpactReport> {
     let root = resolve_root(root)?;
-    let config = load_v2_config(&root, config)?;
-    let set = WorkflowSet::load(&root, &config.ci);
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let visible_paths = snapshot.paths_for(&root);
+    let config = load_v2_config_from_visible(&root, config, &visible_paths)?;
+    let set = WorkflowSet::load_from_snapshot(&root, &config.ci, &snapshot);
     let changed: Vec<String> = files.iter().map(|file| changed_rel(&root, file)).collect();
     Ok(analyze_impact(&set, &changed))
 }
@@ -104,8 +108,10 @@ pub fn impact_report(
 /// Compute the env report for a variable (shared by CLI and N-API).
 pub fn env_report(root: &Path, config: Option<&Path>, var: &str) -> Result<CiEnvReport> {
     let root = resolve_root(root)?;
-    let config = load_v2_config(&root, config)?;
-    Ok(analyze_env(&root, &config.ci, var))
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let visible_paths = snapshot.paths_for(&root);
+    let config = load_v2_config_from_visible(&root, config, &visible_paths)?;
+    Ok(analyze_env_from_snapshot(&root, &config.ci, var, &snapshot))
 }
 
 fn resolve_root(root: &Path) -> Result<PathBuf> {

@@ -29,6 +29,12 @@ tests:
 
 Selector settings feed Playwright coverage, route impact, and graph edges.
 
+When `tests.playwright.configs` and `--playwright-config` are both omitted,
+`no-mistakes` automatically discovers Git-visible `playwright*.config.*` files
+directly under `--root`. Outside a Git checkout, `.gitignore` and `.ignore`
+files are still applied. Explicit config paths remain authoritative and may
+refer to ignored files.
+
 Dotnet and Swift test plans use explicit config for source-graph targeting.
 `tests.dotnet.projects` or `tests.dotnet.solutions`, and
 `tests.swift.packages`, are the explicit inputs; `no-mistakes` does not infer

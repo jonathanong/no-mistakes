@@ -80,7 +80,7 @@ pub(crate) fn build_import_usages_args(options: ImportUsagesOptions) -> ImportUs
     }
 }
 
-fn build_symbols_args(options: SymbolOptions) -> AnyhowResult<SymbolsArgs> {
+pub(crate) fn build_symbols_args(options: SymbolOptions) -> AnyhowResult<SymbolsArgs> {
     if options.files.is_empty() {
         bail!("files must contain at least one file");
     }

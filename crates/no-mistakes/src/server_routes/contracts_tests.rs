@@ -1,5 +1,48 @@
+use super::test_support::*;
 use super::*;
 use std::path::Path;
+
+#[test]
+fn prepared_routes_and_contracts_share_one_union_fact_parse() {
+    let source = crate::codebase::ts_resolver::normalize_path(
+        &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/parser-count/server-contracts"),
+    );
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    crate::ast::begin_parse_count(&root);
+
+    let prepared = crate::server_routes::graph::prepare_analysis(&root, None).unwrap();
+    let routes =
+        crate::server_routes::graph::analyze_project_with_prepared(&prepared, &[]).unwrap();
+    let contracts = analyze_contracts_with_prepared(&prepared, &routes, &[]).unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+
+    assert_eq!(routes.routes.len(), 1, "{routes:#?}");
+    assert_eq!(contracts.client_refs.len(), 1, "{contracts:#?}");
+    assert_eq!(counts.len(), prepared.source_files.len(), "{counts:#?}");
+    assert!(
+        prepared
+            .source_files
+            .iter()
+            .all(|file| counts.get(file) == Some(&1)),
+        "routes and contracts must share one parse per source: {counts:#?}"
+    );
+
+    let graph = include_str!("graph.rs");
+    let graph_prepare = include_str!("graph_prepare.rs");
+    let contracts_source = include_str!("contracts.rs");
+    assert_eq!(
+        graph.matches("collect_ts_facts_with_context(").count()
+            + graph_prepare
+                .matches("collect_ts_facts_with_context(")
+                .count(),
+        2
+    );
+    assert!(graph.contains("route_refs: true") || graph_prepare.contains("route_refs: true"));
+    assert!(graph.contains("server_routes: true") || graph_prepare.contains("server_routes: true"));
+    assert!(!contracts_source.contains("collect_ts_facts_with_context("));
+}
 
 #[test]
 fn source_file_filter_accepts_matching_root_relative_paths() {
@@ -28,6 +71,44 @@ fn resolve_tsconfig_reports_explicit_relative_load_errors() {
     assert!(error
         .to_string()
         .contains("loading tsconfig /repo/missing-tsconfig.json"));
+}
+
+#[test]
+fn contracts_ignore_automatic_ignored_tsconfig_and_sources_but_honor_explicit_config() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass3-visibility");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let visible = crate::codebase::ts_source::discover_visible_paths(fixture.path());
+
+    let automatic = resolve_tsconfig_from_visible(fixture.path(), None, &visible).unwrap();
+    assert!(automatic.paths.is_empty());
+    let explicit =
+        resolve_tsconfig_from_visible(fixture.path(), Some(Path::new("tsconfig.json")), &visible)
+            .unwrap();
+    assert!(!explicit.paths.is_empty());
+
+    let route_report = ProjectReport {
+        summary: Default::default(),
+        routes: vec![ServerRoute {
+            file: "server/router.ts".to_string(),
+            line: 4,
+            method: "GET".to_string(),
+            route: "/visible".to_string(),
+            raw_path: "/visible".to_string(),
+            query_params: vec!["visible".to_string()],
+            framework: crate::server_routes::types::Framework::Express,
+        }],
+        edges: Vec::new(),
+        diagnostics: Vec::new(),
+    };
+    let report = analyze_contracts(fixture.path(), None, &route_report, &[]).unwrap();
+    assert_eq!(report.client_refs.len(), 1);
+    assert_eq!(report.client_refs[0].file, "client/visible-client.ts");
+    assert_eq!(report.client_refs[0].query_params, vec!["visible"]);
+
+    let prepared = crate::server_routes::graph::prepare_analysis(fixture.path(), None).unwrap();
+    let reused = analyze_contracts_with_prepared(&prepared, &route_report, &[]).unwrap();
+    assert_eq!(reused, report);
 }
 
 #[test]
@@ -111,67 +192,4 @@ fn analyze_contracts_reports_client_query_params_missing_from_server_route() {
     assert_eq!(report.mismatches[0].missing_params, vec!["sort"]);
 }
 
-#[test]
-fn analyze_contracts_matches_same_path_routes_by_fetch_method() {
-    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/server-contracts/mismatch/fixture");
-    let route_report = ProjectReport {
-        summary: Default::default(),
-        routes: vec![
-            ServerRoute {
-                file: "server.ts".to_string(),
-                line: 1,
-                method: "GET".to_string(),
-                route: "/api/users".to_string(),
-                raw_path: "/api/users".to_string(),
-                query_params: vec!["sort".to_string()],
-                framework: crate::server_routes::types::Framework::Express,
-            },
-            ServerRoute {
-                file: "server.ts".to_string(),
-                line: 2,
-                method: "POST".to_string(),
-                route: "/api/users".to_string(),
-                raw_path: "/api/users".to_string(),
-                query_params: vec!["include".to_string()],
-                framework: crate::server_routes::types::Framework::Express,
-            },
-        ],
-        edges: Vec::new(),
-        diagnostics: Vec::new(),
-    };
-
-    let report = analyze_contracts(&root, None, &route_report, &[]).unwrap();
-
-    let mismatch = report
-        .mismatches
-        .iter()
-        .find(|mismatch| mismatch.missing_params == vec!["sort"])
-        .expect("POST fetch should be compared to POST route");
-    assert_eq!(mismatch.matched_route, "/api/users");
-}
-
-#[test]
-fn analyze_contracts_applies_filters_to_client_scan() {
-    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/server-contracts/mismatch/fixture");
-    let route_report = ProjectReport {
-        summary: Default::default(),
-        routes: vec![ServerRoute {
-            file: "server.ts".to_string(),
-            line: 1,
-            method: "GET".to_string(),
-            route: "/api/users".to_string(),
-            raw_path: "/api/users".to_string(),
-            query_params: vec!["include".to_string(), "sort".to_string()],
-            framework: crate::server_routes::types::Framework::Express,
-        }],
-        edges: Vec::new(),
-        diagnostics: Vec::new(),
-    };
-
-    let report = analyze_contracts(&root, None, &route_report, &["links.ts".to_string()]).unwrap();
-
-    assert!(report.client_refs.is_empty());
-    assert!(report.mismatches.is_empty());
-}
+include!("contracts_tests_methods.rs");

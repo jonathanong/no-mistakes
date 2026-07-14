@@ -26,15 +26,20 @@ impl SymbolIndex {
     /// for `file#exportName` queries.
     pub fn build_from_root(root: &Path, tsconfig: &TsConfig) -> Result<Self> {
         let graph_files = GraphFiles::discover(root);
-        Ok(Self::build_from_files(tsconfig, &graph_files))
+        Ok(Self::build_from_files(root, tsconfig, &graph_files))
     }
 
-    pub(crate) fn build_from_files(tsconfig: &TsConfig, graph_files: &GraphFiles) -> Self {
+    pub(crate) fn build_from_files(
+        root: &Path,
+        tsconfig: &TsConfig,
+        graph_files: &GraphFiles,
+    ) -> Self {
         let facts = collect_ts_facts(graph_files.indexable(), TsFactPlan::imports_and_symbols());
-        Self::build_from_facts(tsconfig, graph_files, &facts)
+        Self::build_from_facts(root, tsconfig, graph_files, &facts)
     }
 
     pub(crate) fn build_from_facts(
+        root: &Path,
         tsconfig: &TsConfig,
         graph_files: &GraphFiles,
         facts: &TsFactMap,
@@ -42,6 +47,8 @@ impl SymbolIndex {
         type SymEntry = (PathBuf, String, String, bool);
 
         let resolver = ImportResolver::new(tsconfig).with_visible(graph_files.visible());
+        let workspace = crate::codebase::workspaces::load_from_files(root, graph_files.all())
+            .unwrap_or_default();
 
         let per_file: Vec<(PathBuf, Vec<SymEntry>)> = graph_files
             .indexable()
@@ -51,7 +58,13 @@ impl SymbolIndex {
 
                 let mut imports_for_file = Vec::new();
                 for ni in &symbols.imports {
-                    if let Some(target) = resolver.resolve(&ni.source, path) {
+                    if let Some(target) = resolver.resolve(&ni.source, path).or_else(|| {
+                        workspace.resolve_specifier_from_file_visible(
+                            &ni.source,
+                            path,
+                            graph_files.visible(),
+                        )
+                    }) {
                         imports_for_file.push((
                             target,
                             ni.imported.clone(),
@@ -64,7 +77,13 @@ impl SymbolIndex {
                     if let crate::codebase::ts_symbols::ExportKind::ReExport { source, imported } =
                         &exp.kind
                     {
-                        if let Some(target) = resolver.resolve(source, path) {
+                        if let Some(target) = resolver.resolve(source, path).or_else(|| {
+                            workspace.resolve_specifier_from_file_visible(
+                                source,
+                                path,
+                                graph_files.visible(),
+                            )
+                        }) {
                             imports_for_file.push((
                                 target,
                                 imported.clone(),
@@ -108,4 +127,3 @@ impl SymbolIndex {
         importers
     }
 }
-

@@ -40,16 +40,23 @@ fn shared_facts_path_rejects_missing_graph_facts() {
 }
 
 #[test]
-fn shared_facts_path_falls_back_when_graph_plan_needs_no_ts_facts() {
+fn shared_facts_path_does_not_rediscover_when_graph_plan_needs_no_ts_facts() {
     let root = fixture("forbidden-dependencies-package-only");
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
     let shared = crate::codebase::check_facts::CheckFactMap::default();
 
+    assert!(
+        check(&root, &config, None)
+            .unwrap()
+            .iter()
+            .any(|finding| finding.rule == RULE_ID),
+        "fixture must distinguish standalone discovery from the supplied empty universe"
+    );
     let findings = check_with_facts(&root, &config, None, None, &shared).unwrap();
 
     assert!(
-        findings.iter().any(|f| f.rule == RULE_ID),
-        "expected package-only forbidden dependency finding, got: {findings:?}"
+        findings.is_empty(),
+        "shared analysis must not rediscover files outside its supplied universe: {findings:?}"
     );
 }
 
@@ -173,7 +180,7 @@ fn playwright_graph_consumers_do_not_reread_cached_parse_errors() {
         if selector_consumer {
             assert_eq!(shared.app_selector_occurrences_cache.len(), 1);
         } else {
-            assert!(shared.playwright_routes_cache.get().is_some());
+            assert_eq!(shared.playwright_routes_cache.len(), 1);
         }
     }
 }

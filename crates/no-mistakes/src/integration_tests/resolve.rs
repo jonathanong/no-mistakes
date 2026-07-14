@@ -1,7 +1,7 @@
 use super::types::{
     CallTarget, FileAnalysis, FunctionInfo, FunctionKey, ImportBinding, ImportedName,
 };
-use crate::codebase::ts_resolver::{resolve_import, TsConfig};
+use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
@@ -9,6 +9,7 @@ pub(super) struct ImportResolution<'a> {
     pub analyses: &'a BTreeMap<PathBuf, FileAnalysis>,
     pub export_index: &'a HashMap<(PathBuf, String), FunctionKey>,
     pub tsconfig: &'a TsConfig,
+    pub visible_files: &'a HashSet<PathBuf>,
 }
 
 pub(super) fn build_function_index(
@@ -111,7 +112,7 @@ fn resolve_call(
             let ImportedName::Namespace = binding.imported else {
                 return None;
             };
-            let resolved_file = resolve_import(&binding.source, &caller.file, resolver.tsconfig)?;
+            let resolved_file = resolve_visible_import(&binding.source, &caller.file, resolver)?;
             resolver
                 .export_index
                 .get(&(resolved_file, member.clone()))
@@ -125,7 +126,7 @@ fn resolve_import_binding(
     binding: &ImportBinding,
     resolver: &ImportResolution<'_>,
 ) -> Option<FunctionKey> {
-    let resolved_file = resolve_import(&binding.source, caller_file, resolver.tsconfig)?;
+    let resolved_file = resolve_visible_import(&binding.source, caller_file, resolver)?;
     let imported_name = match &binding.imported {
         ImportedName::Named(name) => name.clone(),
         ImportedName::Default => "default".to_string(),
@@ -135,4 +136,14 @@ fn resolve_import_binding(
         .export_index
         .get(&(resolved_file, imported_name))
         .cloned()
+}
+
+fn resolve_visible_import(
+    source: &str,
+    caller_file: &Path,
+    resolution: &ImportResolution<'_>,
+) -> Option<PathBuf> {
+    ImportResolver::new(resolution.tsconfig)
+        .with_visible(resolution.visible_files)
+        .resolve(source, caller_file)
 }

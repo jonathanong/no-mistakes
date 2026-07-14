@@ -6,7 +6,7 @@ use super::{
     globs::{selected_by, PredicateQuantifier},
     RuleFinding, RULE_ID,
 };
-use crate::codebase::ci_graph::{discover_workflow_files, relative_slash};
+use crate::codebase::ci_graph::{discover_workflow_files_from_snapshot, relative_slash};
 use crate::config::v2::schema::NoMistakesConfig;
 use serde::Deserialize;
 use serde_yaml::Value;
@@ -40,14 +40,27 @@ impl CiFilter {
     }
 }
 
-pub(super) fn ci_filters(
+pub(super) fn ci_filters_from_snapshot(
     root: &Path,
     config: &NoMistakesConfig,
     selectors: &[WorkflowSelector],
+    snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
+) -> (Vec<CiFilter>, Vec<RuleFinding>) {
+    ci_filters_from_paths(
+        root,
+        selectors,
+        discover_workflow_files_from_snapshot(root, &config.ci, snapshot),
+    )
+}
+
+fn ci_filters_from_paths(
+    root: &Path,
+    selectors: &[WorkflowSelector],
+    workflow_files: Vec<std::path::PathBuf>,
 ) -> (Vec<CiFilter>, Vec<RuleFinding>) {
     let mut filters = Vec::new();
     let mut findings = Vec::new();
-    for path in discover_workflow_files(root, &config.ci) {
+    for path in workflow_files {
         let rel = relative_slash(root, &path);
         if !selectors.is_empty()
             && !selectors

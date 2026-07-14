@@ -9,6 +9,7 @@ fn scoped_import_targets_preserve_workspace_edges() {
         base_url: None,
     };
     let resolver = ImportResolver::new(&tsconfig);
+    let visible = HashSet::from([current.clone(), target.clone()]);
     let workspace = crate::codebase::workspaces::WorkspaceMap {
         packages: vec![crate::codebase::workspaces::WorkspacePackage {
             name: "@fixture/core".to_string(),
@@ -26,6 +27,7 @@ fn scoped_import_targets_preserve_workspace_edges() {
             &current,
             &resolver,
             &workspace,
+            &visible,
         ),
         Some((NodeId::File(target.clone()), EdgeKind::WorkspaceImport)),
     );
@@ -34,15 +36,16 @@ fn scoped_import_targets_preserve_workspace_edges() {
         &[ExtractedImport {
             specifier: "@fixture/core".to_string(),
             kind: ImportKind::Dynamic,
-        line: 1,
+            line: 1,
             function_scope: Some("run".to_string()),
-        side_effect_only: false,
-        re_export: false,
-        runtime_reachable: false,
+            side_effect_only: false,
+            re_export: false,
+            runtime_reachable: false,
         }],
         &current,
         &resolver,
         &workspace,
+        &visible,
     );
 
     assert_eq!(

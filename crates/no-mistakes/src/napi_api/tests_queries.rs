@@ -54,6 +54,68 @@ fn resolve_check_json_reports_unresolved() {
 }
 
 #[test]
+fn pass4b_query_cli_and_napi_reports_share_gitignore_visibility() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass4b-shadow");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let root_string = root.display().to_string();
+
+    let cli_exports = crate::codebase::queries::exports_of::run_json(
+        crate::codebase::queries::ExportsOfArgs {
+            file: PathBuf::from("query/source.ts"),
+            no_importers: true,
+            root: Some(root.clone()),
+            tsconfig: None,
+            format: Some(crate::cli::Format::Json),
+            json: true,
+        },
+    )
+    .unwrap();
+    let napi_exports = exports_of_json_impl(
+        json!({
+            "file": "query/source.ts",
+            "noImporters": true,
+            "root": root_string,
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let cli_exports: serde_json::Value = serde_json::from_str(&cli_exports).unwrap();
+    let napi_exports: serde_json::Value = serde_json::from_str(&napi_exports).unwrap();
+    assert_eq!(napi_exports, cli_exports);
+    assert!(napi_exports["exports"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|export| export["resolved"] == "query/target.ts"));
+
+    let cli_resolve = crate::codebase::queries::resolve_check::run_json(
+        crate::codebase::queries::ResolveCheckArgs {
+            file: PathBuf::from("query/source.ts"),
+            root: Some(root),
+            tsconfig: None,
+            format: Some(crate::cli::Format::Json),
+            json: true,
+        },
+    )
+    .unwrap();
+    let napi_resolve = resolve_check_json_impl(
+        json!({ "file": "query/source.ts", "root": root_string }).to_string(),
+    )
+    .unwrap();
+    let cli_resolve: serde_json::Value = serde_json::from_str(&cli_resolve).unwrap();
+    let napi_resolve: serde_json::Value = serde_json::from_str(&napi_resolve).unwrap();
+    assert_eq!(napi_resolve, cli_resolve);
+    assert_eq!(napi_resolve["allResolve"], true);
+    assert!(napi_resolve["imports"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|import| import["resolved"] == "query/target.ts"));
+}
+
+#[test]
 fn query_impls_require_inputs() {
     let missing_file = importers_json_impl(json!({}).to_string()).unwrap_err();
     assert!(missing_file.reason.contains("file is required"));

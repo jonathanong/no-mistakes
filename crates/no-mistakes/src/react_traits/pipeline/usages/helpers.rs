@@ -83,11 +83,17 @@ pub(crate) fn prop_type_names(path: &Path) -> Vec<String> {
     let Ok(symbols) = extract_symbols(&source, is_tsx) else {
         return Vec::new();
     };
+    prop_type_names_from_symbols(&symbols)
+}
+
+pub(crate) fn prop_type_names_from_symbols(
+    symbols: &crate::codebase::ts_symbols::FileSymbols,
+) -> Vec<String> {
     let mut names: Vec<String> = symbols
         .exports
-        .into_iter()
+        .iter()
         .filter(|e| matches!(e.kind, ExportKind::Interface | ExportKind::TypeAlias))
-        .map(|e| e.name)
+        .map(|e| e.name.clone())
         .collect();
     names.sort();
     names.dedup();

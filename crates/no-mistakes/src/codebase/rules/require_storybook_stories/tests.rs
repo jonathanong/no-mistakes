@@ -4,7 +4,7 @@ use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::codebase::storybook::StorybookFileFacts;
 use crate::codebase::ts_resolver::{normalize_path, ImportResolver, TsConfig};
 use crate::codebase::ts_symbols::{Export, ExportKind, FileSymbols};
-use crate::config::v2::schema::{Project, ProjectType, StringOrList};
+use crate::config::v2::schema::{Project, ProjectType, RuleDef, StringOrList};
 use crate::react_traits::report::types::{ComponentFacts, ComponentRef, Environment};
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
@@ -54,6 +54,30 @@ fn empty_resolver(root: &std::path::Path) -> ImportResolver<'static> {
         base_url: None,
     }));
     ImportResolver::new(tsconfig)
+}
+
+#[test]
+fn pass4b_storybook_import_skips_ignored_component_for_visible_fallback() {
+    let fixture = crate::test_support::materialize_gitignore_fixture("pass4b-shadow");
+    crate::test_support::git_init(fixture.path());
+    crate::test_support::git_add_all(fixture.path());
+    let root = normalize_path(fixture.path());
+    let visible = crate::codebase::ts_source::discover_visible_paths(&root)
+        .into_iter()
+        .map(|path| normalize_path(&path))
+        .collect::<HashSet<_>>();
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: Vec::new(),
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let resolver = ImportResolver::new(&tsconfig).with_visible(&visible);
+
+    assert_eq!(
+        resolver.resolve("./Button", &root.join("storybook/Button.stories.ts")),
+        Some(root.join("storybook/Button.ts"))
+    );
 }
 
 fn react_component(name: &str, file: &str, children: Vec<ComponentRef>) -> ComponentFacts {

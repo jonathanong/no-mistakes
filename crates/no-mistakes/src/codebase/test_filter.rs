@@ -21,6 +21,15 @@ struct TestSuiteFilter {
 }
 
 impl TestFileFilter {
+    #[doc(hidden)]
+    pub fn fallback_only() -> Self {
+        Self {
+            always_include: None,
+            config_filter: None,
+            suites: Vec::new(),
+        }
+    }
+
     pub fn new(root: &Path, config: &NoMistakesConfig) -> Self {
         Self {
             always_include: None,
@@ -30,6 +39,31 @@ impl TestFileFilter {
                 )
                 .ok(),
             suites: crate::codebase::test_discovery::project_filters(root, config)
+                .into_iter()
+                .map(|(_runner, filter)| TestSuiteFilter { filter })
+                .collect(),
+        }
+    }
+
+    #[doc(hidden)]
+    pub fn from_prepared_projects(
+        root: &Path,
+        config: &NoMistakesConfig,
+        visible_paths: &[std::path::PathBuf],
+        filters: Vec<(
+            crate::codebase::test_discovery::TestRunner,
+            crate::codebase::test_discovery::ProjectTestFilter,
+        )>,
+    ) -> Self {
+        Self {
+            always_include: None,
+            config_filter: crate::codebase::rules::test_no_unmocked_dynamic_imports::config::test_filter_from_visible(
+                root,
+                config,
+                visible_paths,
+            )
+            .ok(),
+            suites: filters
                 .into_iter()
                 .map(|(_runner, filter)| TestSuiteFilter { filter })
                 .collect(),

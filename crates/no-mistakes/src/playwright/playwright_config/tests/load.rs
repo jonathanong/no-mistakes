@@ -1,4 +1,4 @@
-use crate::playwright::playwright_config::load::{load, load_many};
+use crate::playwright::playwright_config::load::{load, load_many, select_loaded};
 use crate::playwright::playwright_config::types::TestProject;
 use crate::playwright::test_support::fixture_path;
 use std::path::{Path, PathBuf};
@@ -82,6 +82,21 @@ fn load_many_with_single_config_without_filter_succeeds() {
 }
 
 #[test]
+fn select_loaded_rejects_an_omitted_relative_config() {
+    let dir = fixture_path(&["ast-snippets", "playwright_config", "load-existing"]);
+    let relative = PathBuf::from("playwright.config.ts");
+
+    let error = select_loaded(&dir, std::slice::from_ref(&relative), None, &[])
+        .err()
+        .expect("a requested config must have a corresponding prepared value");
+
+    assert_eq!(
+        error.to_string(),
+        "Playwright config was not prepared: playwright.config.ts"
+    );
+}
+
+#[test]
 fn load_many_with_matching_project_filter_selects_named_config() {
     let dir = fixture_path(&["scan-config", "multi-playwright-config"]);
     let config = dir.join("playwright.config.mts");
@@ -90,6 +105,18 @@ fn load_many_with_matching_project_filter_selects_named_config() {
     let result = load_many(&dir, &[config, storybook], Some("web")).unwrap();
     assert_eq!(result.name.as_deref(), Some("web"));
     assert!(!result.projects.is_empty());
+}
+
+#[test]
+fn load_many_with_single_unnamed_config_selects_inner_project() {
+    let dir = fixture_path(&["integration-tests", "basic"]);
+    let config = dir.join("playwright.config.ts");
+
+    let result = load_many(&dir, &[config], Some("pw-unit")).unwrap();
+
+    assert_eq!(result.name, None);
+    assert_eq!(result.projects.len(), 1);
+    assert_eq!(result.projects[0].name.as_deref(), Some("pw-unit"));
 }
 
 #[test]

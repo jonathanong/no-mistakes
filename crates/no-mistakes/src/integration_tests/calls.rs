@@ -1,9 +1,8 @@
 use super::types::CallTarget;
 use crate::ast;
-use oxc_ast::ast::{Argument, CallExpression, Expression};
+use oxc_ast::ast::{Argument, ArrowFunctionExpression, CallExpression, Expression, Function};
 use oxc_ast_visit::Visit;
 use oxc_span::Span;
-use std::path::Path;
 
 mod visitor;
 use visitor::CallCollector;
@@ -97,19 +96,16 @@ pub(super) fn collect_calls(argument: &Argument<'_>) -> Vec<CallTarget> {
     collector.calls
 }
 
-pub(super) fn collect_calls_in_span(source: &str, span: Span, expression: bool) -> Vec<CallTarget> {
-    let body = ast::span_text(source, span);
-    let wrapped = if expression {
-        format!("function __wrapper() {{ return ({body}); }}")
-    } else {
-        format!("function __wrapper() {body}")
-    };
-    ast::with_program(Path::new("function-body.ts"), &wrapped, |program, _| {
-        let mut collector = CallCollector::default();
-        collector.visit_program(program);
-        collector.calls
-    })
-    .unwrap_or_default()
+pub(super) fn collect_function_calls(function: &Function<'_>) -> Vec<CallTarget> {
+    let mut collector = CallCollector::default();
+    collector.visit_function(function, oxc_syntax::scope::ScopeFlags::empty());
+    collector.calls
+}
+
+pub(super) fn collect_arrow_calls(function: &ArrowFunctionExpression<'_>) -> Vec<CallTarget> {
+    let mut collector = CallCollector::default();
+    collector.visit_arrow_function_expression(function);
+    collector.calls
 }
 
 pub(super) fn integration_annotation_before(source: &str, span: Span) -> Option<String> {

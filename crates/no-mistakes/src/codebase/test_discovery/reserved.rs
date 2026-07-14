@@ -6,16 +6,24 @@ use super::filters::ProjectTestFilter;
 use super::projects;
 use super::types::TestRunner;
 
-pub(super) fn runner_reserved_tests(
+pub(super) fn runner_reserved_tests_from_visible(
     root: &Path,
     config: &NoMistakesConfig,
     runner: TestRunner,
     files: &[PathBuf],
+    visible_paths: &[PathBuf],
+    tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> BTreeSet<PathBuf> {
     if runner != TestRunner::Vitest {
         return BTreeSet::new();
     }
-    let playwright_projects = projects::runner_projects_lossy(root, config, TestRunner::Playwright);
+    let playwright_projects = projects::runner_projects_lossy_from_visible(
+        root,
+        config,
+        TestRunner::Playwright,
+        visible_paths,
+        tsconfig,
+    );
     if playwright_projects.is_empty() {
         return BTreeSet::new();
     }

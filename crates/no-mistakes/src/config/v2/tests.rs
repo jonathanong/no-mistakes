@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use super::discover::{find_config_root, load_v2_config};
+use super::discover::{find_config_root, load_v2_config, load_v2_config_from_visible};
 use super::schema::{
     NoMistakesConfig, Project, ProjectType, RewriteRule, RuleDef, StringOrList, TestPlanPercent,
 };
@@ -50,6 +50,30 @@ fn explicit_nonexistent_config_errors() {
         .err()
         .unwrap();
     assert!(err.to_string().contains("does not exist"));
+}
+
+#[test]
+fn ignored_automatic_config_is_skipped_but_explicit_ignored_config_is_loaded() {
+    let dir = crate::test_support::materialize_gitignore_fixture("auto-discovery");
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_all(dir.path());
+
+    let automatic = load_v2_config(dir.path(), None).unwrap();
+    assert_eq!(automatic, NoMistakesConfig::default());
+
+    let visible = crate::codebase::ts_source::discover_visible_paths(dir.path());
+    let automatic_from_visible = load_v2_config_from_visible(dir.path(), None, &visible).unwrap();
+    assert_eq!(automatic_from_visible, NoMistakesConfig::default());
+
+    let explicit = load_v2_config(dir.path(), Some(Path::new("ignored-explicit.yml"))).unwrap();
+    assert_eq!(
+        explicit.tests.playwright.frontend_root.as_deref(),
+        Some("explicit-ignored-app")
+    );
+    let explicit_from_visible =
+        load_v2_config_from_visible(dir.path(), Some(Path::new("ignored-explicit.yml")), &[])
+            .unwrap();
+    assert_eq!(explicit_from_visible, explicit);
 }
 
 // ── v2 format ─────────────────────────────────────────────────────────────────

@@ -1,3 +1,4 @@
+use super::test_support::*;
 use super::*;
 use std::process::Command;
 use tempfile::TempDir;
@@ -146,18 +147,10 @@ fn expand_globs_still_skips_hardcoded_dirs_when_git_tracked() {
     assert_eq!(names, vec!["App.tsx"]);
 }
 
-/// Outside a git repository, `expand_globs` still falls back to the raw
-/// `WalkDir` walk, since there is no git-visible file list to derive
-/// candidates from.
-///
-/// The walk root is nested one level below the `TempDir` itself (rather than
-/// using `dir.path()` directly) because `tempfile` creates directories with a
-/// leading-dot name (e.g. `.tmpXXXXXX`), which `is_skip_dir`'s generic
-/// dot-prefix rule would otherwise prune at the walk's own seed path — a
-/// pre-existing, unrelated quirk of the raw `WalkDir` fallback this test
-/// intentionally avoids triggering.
+/// Outside a Git repository, React-specific skip-directory pruning still
+/// applies to the shared ignore-aware candidate list.
 #[test]
-fn expand_globs_falls_back_to_raw_walk_outside_git_repositories() {
+fn expand_globs_applies_skip_dirs_outside_git_repositories() {
     let dir = TempDir::new().unwrap();
     let root = dir.path().join("project");
     write(&root, "src/App.tsx", "export default function App() {}\n");
@@ -175,4 +168,25 @@ fn expand_globs_falls_back_to_raw_walk_outside_git_repositories() {
         .collect();
 
     assert_eq!(names, vec!["App.tsx"]);
+}
+
+#[test]
+fn expand_globs_applies_gitignore_outside_git() {
+    let dir = crate::test_support::materialize_gitignore_fixture("non-git-discovery");
+
+    let files = expand_globs(dir.path(), &["**/*.tsx".to_string()]).unwrap();
+
+    assert!(files.contains(&dir.path().join("app/page.tsx")));
+    assert!(!files.contains(&dir.path().join("ignored/page.tsx")));
+}
+
+#[test]
+fn expand_globs_accepts_root_with_parent_components() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/react-traits-glob/skip-dot-directories/fixture")
+        .join("src/..");
+
+    let files = expand_globs(&root, &["**/*.tsx".to_string()]).unwrap();
+
+    assert!(files.iter().any(|path| path.ends_with("src/Button.tsx")));
 }

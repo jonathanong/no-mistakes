@@ -34,7 +34,17 @@ fn collect_import_edges(
                         }
                         return Some((NodeId::File((*path).clone()), NodeId::File(target), kind));
                     }
-                    if workspace.resolve_specifier_from(&imp.specifier, path).is_some() {
+                    if workspace
+                        .resolve_specifier_from_file_visible(
+                            &imp.specifier,
+                            path,
+                            graph_files.visible(),
+                        )
+                        .is_some()
+                    {
+                        return None;
+                    }
+                    if workspace.recognizes_specifier_from(&imp.specifier, path) {
                         return None;
                     }
                     bare_module_node(&imp.specifier)
@@ -97,7 +107,9 @@ fn collect_workspace_edges(
                     if spec.starts_with('.') {
                         return None;
                     }
-                    workspace.resolve_specifier_from(spec, path).and_then(|entry| {
+                    workspace
+                        .resolve_specifier_from_file_visible(spec, path, graph_files.visible())
+                        .and_then(|entry| {
                         if !graph_files.is_visible(&entry) {
                             return None;
                         }
@@ -106,7 +118,7 @@ fn collect_workspace_edges(
                             NodeId::File(entry),
                             EdgeKind::WorkspaceImport,
                         ))
-                    })
+                        })
                 })
                 .collect::<Vec<_>>()
         })

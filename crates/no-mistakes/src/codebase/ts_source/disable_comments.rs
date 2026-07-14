@@ -1,4 +1,4 @@
-fn normalize_discovery_path(path: &Path) -> PathBuf {
+pub(crate) fn normalize_discovery_path(path: &Path) -> PathBuf {
     let normalized = crate::codebase::ts_resolver::normalize_path(path);
     if normalized.as_os_str().is_empty() {
         PathBuf::from(".")
@@ -16,28 +16,41 @@ pub(crate) fn is_under_skipped_dir(root: &Path, path: &Path, extra_skip: &HashSe
     })
 }
 
-fn git_ls_files(root: &Path) -> Option<Vec<String>> {
+fn git_ls_paths(root: &Path) -> Option<Vec<PathBuf>> {
     let mut cmd = Command::new("git");
     cmd.current_dir(root);
-    cmd.arg("ls-files");
+    cmd.arg("ls-files").arg("-z");
     cmd.env_remove("GIT_DIR")
         .env_remove("GIT_COMMON_DIR")
         .env_remove("GIT_WORK_TREE")
         .env_remove("GIT_INDEX_FILE");
-    cmd.arg("--cached").arg("--others").arg("--exclude-standard");
+    cmd.arg("--cached")
+        .arg("--others")
+        .arg("--exclude-standard");
     let out = cmd.output().ok()?;
     if !out.status.success() {
         return None;
     }
-    let stdout = String::from_utf8(out.stdout).ok()?;
-    let mut files: Vec<String> = stdout
-        .lines()
-        .filter(|line| !line.is_empty())
-        .map(str::to_string)
+    let mut files: Vec<PathBuf> = out
+        .stdout
+        .split(|byte| *byte == 0)
+        .filter(|path| !path.is_empty())
+        .map(git_output_path)
         .collect();
     files.sort();
     files.dedup();
     Some(files)
+}
+
+#[cfg(unix)]
+fn git_output_path(bytes: &[u8]) -> PathBuf {
+    use std::os::unix::ffi::OsStringExt;
+    std::ffi::OsString::from_vec(bytes.to_vec()).into()
+}
+
+#[cfg(not(unix))]
+fn git_output_path(bytes: &[u8]) -> PathBuf {
+    String::from_utf8_lossy(bytes).into_owned().into()
 }
 
 pub fn byte_offset_to_line(source: &str, byte_offset: usize) -> u32 {

@@ -1,8 +1,3 @@
-pub(crate) fn ts_fact_context_for_plan(root: &Path, plan: GraphBuildPlan) -> TsFactContext {
-    let options = graph_config_options_for_plan(root, plan);
-    ts_fact_context_from_options(root, plan, options.as_ref())
-}
-
 pub fn ts_fact_plan_and_context_for_plan(
     root: &Path,
     plan: GraphBuildPlan,
@@ -60,18 +55,33 @@ fn graph_config_options_with_config(
     }
     .ok()?;
     let v2_config = load_v2_config(root, config_path).ok();
-    let project_route_globs = v2_config
-        .as_ref()
-        .map(|config| ConfigView::new(config).server_route_globs())
-        .unwrap_or_default();
-    let test_filter = v2_config
-        .as_ref()
-        .map(|config| crate::codebase::test_filter::TestFileFilter::new(root, config));
-    let rewrites = v2_config
-        .as_ref()
-        .map(|c| ConfigView::new(c).nextjs_rewrites().to_vec())
-        .unwrap_or_default();
-    Some(GraphConfigOptions {
+    Some(graph_config_options_from_loaded(
+        root,
+        &config,
+        v2_config.as_ref()?,
+    ))
+}
+
+fn graph_config_options_from_loaded(
+    root: &Path,
+    config: &crate::codebase::config::Config,
+    v2_config: &crate::config::v2::NoMistakesConfig,
+) -> GraphConfigOptions {
+    graph_config_options_from_loaded_with_test_filter(root, config, v2_config, None)
+}
+
+fn graph_config_options_from_loaded_with_test_filter(
+    root: &Path,
+    config: &crate::codebase::config::Config,
+    v2_config: &crate::config::v2::NoMistakesConfig,
+    test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
+) -> GraphConfigOptions {
+    let project_route_globs = ConfigView::new(v2_config).server_route_globs();
+    let test_filter = Some(test_filter.unwrap_or_else(|| {
+        crate::codebase::test_filter::TestFileFilter::new(root, v2_config)
+    }));
+    let rewrites = ConfigView::new(v2_config).nextjs_rewrites().to_vec();
+    GraphConfigOptions {
         route: config.rule_options("route-consistency"),
         queue: config.rule_options("queue-dashboard-reachability"),
         http_route: config.rule_options("http-route-static-paths"),
@@ -79,21 +89,10 @@ fn graph_config_options_with_config(
         project_route_globset: compile_project_route_globset(&project_route_globs),
         test_filter,
         rewrites,
-        queue_project_factory_names: v2_config.as_ref().map(|c| c.queues.factories.clone()).unwrap_or_default(),
-        dotnet_projects: v2_config
-            .as_ref()
-            .map(|c| crate::codebase::dotnet::configured_projects(root, &c.tests.dotnet))
-            .unwrap_or_default(),
-        swift_packages: v2_config.as_ref().map(|c| c.tests.swift.packages.clone()).unwrap_or_default(),
-        terraform: v2_config.as_ref().map(|c| c.infra.terraform.clone()).unwrap_or_default(),
-    })
-}
-
-fn graph_config_options_for_plan(root: &Path, plan: GraphBuildPlan) -> Option<GraphConfigOptions> {
-    if graph_plan_needs_config(plan) {
-        graph_config_options(root)
-    } else {
-        None
+        queue_project_factory_names: v2_config.queues.factories.clone(),
+        dotnet_projects: crate::codebase::dotnet::configured_projects(root, &v2_config.tests.dotnet),
+        swift_packages: v2_config.tests.swift.packages.clone(),
+        terraform: v2_config.infra.terraform.clone(),
     }
 }
 

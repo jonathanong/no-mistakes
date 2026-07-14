@@ -55,9 +55,11 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         imports: enabled.dynamic_import_rules,
         symbols: enabled.unique_exports || enabled.storybook_stories,
         react: enabled.react || enabled.storybook_stories,
+        react_usages: false,
         queue: enabled.queue,
         queue_factory_names: enabled.queue_factory_names,
         integration: enabled.integration,
+        integration_runner_configs: None,
         dynamic_imports: enabled.dynamic_import_rules || enabled.storybook_stories,
         nextjs_caching: enabled.nextjs_caching,
         storybook: enabled.storybook_stories,
@@ -67,7 +69,11 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
             || enabled.nextjs_caching
             || enabled.unique_exports
             || enabled.storybook_stories,
-        graph: Default::default(),
+        graph: if enabled.dynamic_import_rules {
+            no_mistakes::codebase::ts_source::facts::TsFactPlan::imports()
+        } else {
+            Default::default()
+        },
         graph_context: Default::default(),
     }
 }

@@ -1,9 +1,8 @@
 use anyhow::Result;
-use globset::{Glob, GlobSetBuilder};
+use globset::{GlobBuilder, GlobSetBuilder};
 use serde::Deserialize;
 use std::cmp::Ordering;
 use std::path::{Path, PathBuf};
-use walkdir::WalkDir;
 
 use crate::codebase::{glob_normalize, ts_resolver::normalize_path};
 include!("workspaces/types.rs");

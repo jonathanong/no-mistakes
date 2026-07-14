@@ -19,7 +19,8 @@ use super::*;
 #[test]
 fn build_with_plan_file_list_config_and_check_facts_uses_explicit_config_path() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
-    let tsconfig = crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
+    let tsconfig =
+        crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
     let empty_config = crate::codebase::ts_resolver::normalize_path(
         &fixture("graph-empty-route-config").join(".no-mistakes.yml"),
     );
@@ -43,9 +44,10 @@ fn build_with_plan_file_list_config_and_check_facts_uses_explicit_config_path() 
     let client = NodeId::File(root.join("src/client.ts"));
     let route = NodeId::File(root.join("backend/api/users.mts"));
     let has_route_ref = |graph: &DepGraph| {
-        graph
-            .dependents_of_node(&route)
-            .is_some_and(|deps| deps.iter().any(|(from, kind)| *from == client && *kind == EdgeKind::RouteRef))
+        graph.dependents_of_node(&route).is_some_and(|deps| {
+            deps.iter()
+                .any(|(from, kind)| *from == client && *kind == EdgeKind::RouteRef)
+        })
     };
 
     let default_graph = DepGraph::build_with_plan_file_list_config_and_check_facts(
@@ -118,4 +120,85 @@ fn ts_fact_plan_and_context_for_plan_with_config_uses_explicit_config_path() {
         explicit_context.backend_route_extractors.is_empty(),
         "passing the explicit empty-pattern config must be honored, not silently ignored in favor of default discovery"
     );
+}
+
+#[test]
+fn prepared_graph_playwright_edges_use_explicit_loaded_config() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture(
+        "playwright-config-path-graph",
+    ));
+    let all_files = GraphFiles::discover(&root).all;
+    let plan = GraphBuildPlan {
+        playwright_routes: true,
+        playwright_selectors: true,
+        ..GraphBuildPlan::default()
+    };
+    let custom_config = root.join("custom.no-mistakes.yml");
+    let loaded = crate::config::v2::load_v2_config(&root, Some(&custom_config)).unwrap();
+    let codebase_config =
+        crate::codebase::config::config_from_loaded_v2(&root, Some(&custom_config), &loaded);
+    let visible = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let prepared = prepare_graph_config(&root, plan, &codebase_config, &loaded, &visible).unwrap();
+    let (graph_fact_plan, graph_context) =
+        ts_fact_plan_and_context_for_plan_with_prepared(&root, plan, &prepared);
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        all_files.clone(),
+        crate::codebase::check_facts::CheckFactPlan {
+            graph: graph_fact_plan,
+            graph_context,
+            ..Default::default()
+        },
+    );
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: Vec::new(),
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan_file_list_prepared_config_and_check_facts(
+        &root,
+        &tsconfig,
+        plan,
+        all_files,
+        Some(&custom_config),
+        &facts,
+        &prepared,
+    )
+    .unwrap();
+
+    let test = NodeId::File(root.join("tests/e2e/app.spec.ts"));
+    let page = NodeId::File(root.join("web/app/page.tsx"));
+    let layout = NodeId::File(root.join("web/app/layout.tsx"));
+    let test_dependencies = graph
+        .dependencies_of_node(&test)
+        .expect("test file is present in prepared graph");
+    assert!(test_dependencies.contains(&(page.clone(), EdgeKind::RouteTest)));
+    assert!(test_dependencies.contains(&(page.clone(), EdgeKind::Selector)));
+    assert!(graph
+        .dependencies_of_node(&page)
+        .is_some_and(|edges| edges.contains(&(layout, EdgeKind::Layout))));
+}
+
+#[test]
+fn playwright_route_edges_use_explicit_config_path() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture(
+        "playwright-config-path-graph",
+    ));
+    let all_files = GraphFiles::discover(&root).all;
+
+    assert!(collect_playwright_route_edges(&root, None, &all_files, None).is_empty());
+
+    let custom_config = root.join("custom.no-mistakes.yml");
+    let edges = collect_playwright_route_edges(
+        &root,
+        Some(&custom_config),
+        &all_files,
+        None,
+    );
+    let test = NodeId::File(root.join("tests/e2e/app.spec.ts"));
+    let page = NodeId::File(root.join("web/app/page.tsx"));
+    let layout = NodeId::File(root.join("web/app/layout.tsx"));
+    assert!(edges.contains(&(test, page.clone(), EdgeKind::RouteTest)));
+    assert!(edges.contains(&(page, layout, EdgeKind::Layout)));
 }

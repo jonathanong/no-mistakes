@@ -2,10 +2,9 @@ use crate::tests::comment::render_markdown_plan;
 use crate::tests::{
     Confidence, ImpactReason, PlanArgs, PlanFormat, SelectedTest, TestPlan, Warning,
 };
-use anyhow::{Context, Result};
+use anyhow::Result;
 use no_mistakes::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use no_mistakes::codebase::test_filter::TestFileFilter;
-use no_mistakes::config::v2::load_v2_config;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -47,81 +46,30 @@ pub(crate) fn run(args: PlanArgs) -> Result<ExitCode> {
 const _: fn(PlanArgs) -> Result<ExitCode> = run;
 
 pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
-    // clap's conflicts_with_all rejects --from-git-diff combined with
-    // --base/--head on the CLI, but the N-API options struct isn't bound by
-    // clap. Guard here too — the single shared entry point both callers
-    // funnel through — so N-API callers who set both get the same parity
-    // error instead of the resolution below silently overwriting base/head.
-    if args.from_git_diff.is_some() && (args.base.is_some() || args.head.is_some()) {
-        anyhow::bail!("--from-git-diff conflicts with --base/--head; provide only one");
-    }
+    let prepared = super::prepared_plan::PreparedTestPlanRequest::prepare(args)?;
+    generate_plan_with_prepared(prepared.args(), &prepared)
+}
 
-    // Resolve --from-git-diff into base/head once, up front, so every
-    // downstream consumer of args.base/args.head sees the same pair —
-    // not just `collect_changed_files`'s own git-diff lookup. Without this,
-    // `analyze_lockfile_changes` (which reads args.base/args.head directly to
-    // `git show` lockfile contents) would see neither set, and a diff that
-    // touches a lockfile would silently lose package-impact tracing under
-    // --from-git-diff even though the changed-file list traced correctly.
-    //
-    // An omitted head (bare `<base>` or trailing `<base>...`) must resolve to
-    // the *literal* ref "HEAD" here, not stay `None`. `collect_changed_files`
-    // treats a `None` head as "HEAD" (`unwrap_or("HEAD")`), but
-    // `analyze_lockfile_changes` treats a `None` head as "read the lockfile
-    // from the working tree" instead — a different interpretation of the
-    // same `None`. Pinning it to `Some("HEAD")` makes both consumers agree,
-    // so `--from-git-diff origin/main` is equivalent to `--from-git-diff
-    // origin/main...HEAD` / `--base origin/main --head HEAD` everywhere, even
-    // when the working tree has uncommitted lockfile changes beyond HEAD.
-    let resolved_args;
-    let args = if let Some(spec) = &args.from_git_diff {
-        let (base, head) = super::changed_files::parse_git_diff_refspec(spec)?;
-        let mut cloned = args.clone();
-        cloned.base = Some(base);
-        cloned.head = Some(head.unwrap_or_else(|| "HEAD".to_string()));
-        cloned.from_git_diff = None;
-        resolved_args = cloned;
-        &resolved_args
-    } else {
-        args
-    };
-
-    let cwd = std::env::current_dir().context("cwd must be accessible")?;
-    let root = no_mistakes::cli::resolve_optional_root(Some(&args.root), &cwd);
-    let root = no_mistakes::codebase::ts_resolver::normalize_path(&root);
-    let root = root.canonicalize().unwrap_or(root);
-
-    let config = load_v2_config(&root, args.config.as_deref())?;
-    let tsconfig = crate::tests::why::resolve_tsconfig(args.tsconfig.as_deref(), &root)?;
-
-    // 1. Collect changed files
-    let collected = super::changed_files::collect_changed_files(args, &root)?;
-    let changed_files = super::changed_files::existing_changed_files(&collected);
+/// Generate a framework or union plan from immutable request-scoped inputs.
+pub(crate) fn generate_plan_with_prepared(
+    args: &PlanArgs,
+    prepared: &super::prepared_plan::PreparedTestPlanRequest,
+) -> Result<TestPlan> {
+    let root = &prepared.root;
+    let config = &prepared.config;
+    let collected = &prepared.collected;
+    let changed_files = &prepared.changed_files;
     let deleted_files = &collected.deleted;
-
-    // 2a. Analyze lockfile changes targeted
-    let lockfile_analysis =
-        super::lockfile_changes::analyze_lockfile_changes(args, &root, &collected.files);
+    let lockfile_analysis = &prepared.lockfile_analysis;
 
     if let Some(framework) = args.framework {
         // Compute lockfile changed packages for BFS tracing in framework plans — same
         // structure as the non-framework §4b path below. Parseable lockfile diffs no
         // longer force an unconditional full-suite fallback; we wire the packages into
         // the configured-plan dependencies group instead.
-        let lockfile_changed_packages: Vec<(String, String)> = lockfile_analysis
-            .diff_by_lockfile
-            .iter()
-            .flat_map(|(lf_path, lf_diff)| {
-                let rel = relative_path(&root, lf_path);
-                lf_diff
-                    .all_changed_names()
-                    .map(|name| (name.to_string(), rel.clone()))
-                    .collect::<Vec<_>>()
-            })
-            .collect();
-        let workspace_map = no_mistakes::codebase::workspaces::load(&root).unwrap_or_default();
-        // fallback_triggered means binary / invalid-ref / diff-only — no parseable diff available
-        let forced_fallback = global_config_trigger(&root, &changed_files).or_else(|| {
+        // fallback_triggered means binary / invalid-ref / diff-only — no parseable diff available.
+        // Full-suite selection still requires the effective global fallback opt-in.
+        let forced_fallback = global_config_trigger(root, changed_files).or_else(|| {
             if lockfile_analysis.fallback_triggered {
                 lockfile_analysis
                     .warnings
@@ -131,69 +79,49 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                 None
             }
         });
-        // Unconditional fallbacks must bypass --global-config-fallback:
-        // - diff-only / binary-lockfile: lockfile unreadable, zero tests would be wrong
-        // Parseable lockfile diffs are handled via BFS seeding (not forced fallback).
-        let unconditional_fallback =
-            lockfile_analysis.diff_only_fallback || lockfile_analysis.binary_lockfile_fallback;
-        let mut plan = super::configured_plan::generate_configured_plan(
+        let discovered_tests = super::configured_plan::discover_framework_tests_from_prepared(
+            args, framework, prepared,
+        )?;
+        let mut plan = super::configured_plan::generate_configured_plan_with_prepared(
             args,
             framework,
-            &root,
-            &config,
-            &tsconfig,
-            &changed_files,
+            root,
+            config,
+            changed_files,
             deleted_files,
             &collected.diff_files,
-            &lockfile_changed_packages,
-            &workspace_map,
+            &prepared.lockfile_changed_packages,
+            &prepared.workspace_map,
             forced_fallback,
-            unconditional_fallback,
+            discovered_tests,
+            prepared,
         )?;
-        plan.warnings.extend(lockfile_analysis.warnings);
+        plan.warnings
+            .extend(lockfile_analysis.warnings.iter().cloned());
         return Ok(plan);
     }
-    let lockfile_changed_packages: Vec<(String, String)> = lockfile_analysis
-        .diff_by_lockfile
-        .iter()
-        .flat_map(|(lockfile_path, lf_diff)| {
-            let rel = relative_path(&root, lockfile_path);
-            lf_diff
-                .all_changed_names()
-                .map(|name| (name.to_string(), rel.clone()))
-                .collect::<Vec<_>>()
-        })
-        .collect();
 
     // 2b. Determine fallback trigger.
     //
-    // Diff-only mode fallback (--diff without --head) and binary-lockfile fallback
-    // are always honored: in both cases a lockfile change was detected but cannot
-    // be parsed, so zero selected tests would be incorrect, and the fallback must
-    // not be suppressed by --global-config-fallback.
-    //
-    // Other lockfile fallbacks (no --base, invalid ref) and global-config triggers
-    // (package.json, tsconfig, etc.) respect the --global-config-fallback flag.
-    let fallback_reason = if lockfile_analysis.diff_only_fallback
-        || lockfile_analysis.binary_lockfile_fallback
-        || (global_config_fallback(args) && lockfile_analysis.fallback_triggered)
-    {
+    // Every full-suite fallback is explicit opt-in, including diff-only and
+    // binary lockfiles whose contents cannot be analyzed.
+    let fallback_reason = if global_config_fallback(args) && lockfile_analysis.fallback_triggered {
         lockfile_analysis
             .warnings
             .first()
             .map(|w| (w.message.clone(), root.join(&w.file)))
     } else if global_config_fallback(args) {
-        global_config_trigger(&root, &changed_files)
+        global_config_trigger(root, changed_files)
     } else {
         None
     };
 
     if let Some((reason, trigger_file)) = fallback_reason {
-        let relative_changed = relative_path(&root, &trigger_file);
-        let all_test_files = discover_all_tests(&root, &config)?;
+        let relative_changed = relative_path(root, &trigger_file);
+        let all_test_files = discover_all_tests_from_prepared(prepared);
         let mut selected_tests = Vec::new();
         for test in all_test_files {
-            let rel_test = relative_path(&root, &test);
+            let rel_test = relative_path(root, &test);
             selected_tests.push(SelectedTest {
                 test_file: rel_test.clone(),
                 confidence: Confidence::High,
@@ -209,24 +137,23 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
         return Ok(TestPlan {
             selected_tests,
             groups: Vec::new(),
-            warnings: lockfile_analysis.warnings,
+            warnings: lockfile_analysis.warnings.clone(),
             fallback_triggered: true,
             fallback_reason: Some(reason),
         });
     }
 
     // 3. Build graph and test filter
-    let graph =
-        crate::tests::build_test_impact_graph(root.as_path(), &tsconfig, args.include_symbols)?;
-    let workspace_map = no_mistakes::codebase::workspaces::load(&root).unwrap_or_default();
-    let test_filter = TestFileFilter::new(root.as_path(), &config);
+    let graph = prepared.graph()?;
+    let workspace_map = &prepared.workspace_map;
+    let test_filter = prepared.test_filter().clone();
 
     let mut selected_map: HashMap<PathBuf, SelectedTest> = HashMap::new();
     let mut warnings = Vec::new();
     let mut warnings_seen = HashSet::new();
 
     // 4. Trace each changed file
-    for changed in &changed_files {
+    for changed in changed_files {
         let basename = changed.file_name().and_then(|n| n.to_str()).unwrap_or("");
         if no_mistakes::codebase::lockfile::detect_manager(basename).is_some()
             || no_mistakes::codebase::lockfile::is_binary_lockfile(basename)
@@ -234,10 +161,10 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
             continue;
         }
 
-        let rel_changed = relative_path(&root, changed);
+        let rel_changed = relative_path(root, changed);
 
         // If the changed file is a test file itself, select it directly
-        if test_filter.is_match(&root, changed) {
+        if test_filter.is_match(root, changed) {
             let entry = selected_map
                 .entry(changed.clone())
                 .or_insert_with(|| SelectedTest {
@@ -259,18 +186,18 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
         }
 
         // Otherwise, run BFS path finder in reverse direction
-        let start_nodes = changed_start_nodes(&graph, changed, args.include_symbols);
+        let start_nodes = changed_start_nodes(graph, changed, args.include_symbols);
 
         for start_node in start_nodes {
             let (reachable_tests, path_parents) =
-                bfs_path_find(&graph, &start_node, &test_filter, &root);
+                bfs_path_find(graph, &start_node, &test_filter, root);
 
             for (test_node, edge_path) in reachable_tests {
                 let test_path = match &test_node {
                     NodeId::File(p) => p.clone(),
                     _ => continue,
                 };
-                let rel_test = relative_path(&root, &test_path);
+                let rel_test = relative_path(root, &test_path);
 
                 // Compute confidence of the path
                 let path_conf = path_confidence(&edge_path);
@@ -278,10 +205,10 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                 // Reconstruct path node chain and collect warnings in a single pass
                 let mut node_chain = Vec::new();
                 let mut curr = test_node.clone();
-                node_chain.push(slash_node_name(&curr, &root));
+                node_chain.push(slash_node_name(&curr, root));
 
                 while let Some((parent, kind)) = path_parents.get(&curr) {
-                    node_chain.push(slash_node_name(parent, &root));
+                    node_chain.push(slash_node_name(parent, root));
 
                     match kind {
                         EdgeKind::DynamicImport => {
@@ -289,9 +216,9 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                                 r#type: "dynamic-import".to_string(),
                                 message: format!(
                                     "Dynamic import in `{}` might not be fully resolved.",
-                                    slash_node_name(&curr, &root)
+                                    slash_node_name(&curr, root)
                                 ),
-                                file: slash_node_name(&curr, &root),
+                                file: slash_node_name(&curr, root),
                             };
                             if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
                                 warnings.push(warn);
@@ -302,10 +229,10 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                                 r#type: "http-call".to_string(),
                                 message: format!(
                                     "Dynamic HTTP call in `{}` to backend `{}`.",
-                                    slash_node_name(&curr, &root),
-                                    slash_node_name(parent, &root)
+                                    slash_node_name(&curr, root),
+                                    slash_node_name(parent, root)
                                 ),
-                                file: slash_node_name(&curr, &root),
+                                file: slash_node_name(&curr, root),
                             };
                             if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
                                 warnings.push(warn);
@@ -316,9 +243,9 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                                 r#type: "process-spawn".to_string(),
                                 message: format!(
                                     "Process spawned in `{}`.",
-                                    slash_node_name(&curr, &root)
+                                    slash_node_name(&curr, root)
                                 ),
-                                file: slash_node_name(&curr, &root),
+                                file: slash_node_name(&curr, root),
                             };
                             if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
                                 warnings.push(warn);
@@ -364,7 +291,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
 
     // 4b. Trace lockfile package dependency changes
     let mut untraceable_lockfile_files: Vec<String> = Vec::new();
-    for (pkg_name, lockfile_rel) in &lockfile_changed_packages {
+    for (pkg_name, lockfile_rel) in &prepared.lockfile_changed_packages {
         // For external packages the graph has Module(name) nodes created from import edges.
         // For workspace packages the graph records File(entry) targets instead
         // (collect_workspace_manifest_edges resolves the specifier to a file). Try the
@@ -383,8 +310,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
             }
         };
 
-        let (reachable_tests, path_parents) =
-            bfs_path_find(&graph, &start_node, &test_filter, &root);
+        let (reachable_tests, path_parents) = bfs_path_find(graph, &start_node, &test_filter, root);
 
         // Package is referenced (e.g. by package.json) but no test file is reachable.
         // Likely a tooling dep (typescript, jest, eslint) whose version bump affects
@@ -401,14 +327,14 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
                 NodeId::File(p) => p.clone(),
                 _ => continue,
             };
-            let rel_test = relative_path(&root, &test_path);
+            let rel_test = relative_path(root, &test_path);
             let path_conf = path_confidence(&edge_path);
 
             let mut node_chain = Vec::new();
             let mut curr = test_node.clone();
-            node_chain.push(slash_node_name(&curr, &root));
+            node_chain.push(slash_node_name(&curr, root));
             while let Some((parent, _)) = path_parents.get(&curr) {
-                node_chain.push(slash_node_name(parent, &root));
+                node_chain.push(slash_node_name(parent, root));
                 curr = parent.clone();
             }
             node_chain.reverse();
@@ -450,11 +376,11 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
             "`{}` changed a transitive dependency; falling back to full test suite",
             file
         );
-        let all_test_files = discover_all_tests(&root, &config)?;
+        let all_test_files = discover_all_tests_from_prepared(prepared);
         let mut selected_tests: Vec<SelectedTest> = all_test_files
             .into_iter()
             .map(|test| {
-                let rel_test = relative_path(&root, &test);
+                let rel_test = relative_path(root, &test);
                 SelectedTest {
                     test_file: rel_test.clone(),
                     confidence: Confidence::High,
@@ -478,7 +404,7 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     }
 
     // Merge lockfile analysis warnings
-    for warn in lockfile_analysis.warnings {
+    for warn in lockfile_analysis.warnings.iter().cloned() {
         if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
             warnings.push(warn);
         }
@@ -487,9 +413,9 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     // 5. Trace deleted files (phantom node lookup in reverse map)
     trace_deleted_files(
         deleted_files,
-        &graph,
+        graph,
         &test_filter,
-        &root,
+        root,
         &mut selected_map,
         &mut warnings,
         &mut warnings_seen,
@@ -499,9 +425,9 @@ pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
     trace_entrypoints(
         &args.entrypoints,
         &args.entrypoint_symbols,
-        &graph,
+        graph,
         &test_filter,
-        &root,
+        root,
         &mut selected_map,
         args.include_symbols,
     )?;
@@ -584,17 +510,17 @@ fn next_project_root(path: &Path) -> bool {
         || path.join("src/pages").is_dir()
 }
 
-fn discover_all_tests(
-    root: &Path,
-    config: &no_mistakes::config::v2::NoMistakesConfig,
-) -> Result<Vec<PathBuf>> {
-    let filter = TestFileFilter::new(root, config);
-    Ok(
-        no_mistakes::codebase::ts_source::discover_files(root, &config.filesystem.skip_directories)
-            .into_iter()
-            .filter(|f| filter.is_match(root, f))
-            .collect(),
+fn discover_all_tests_from_prepared(
+    prepared: &super::prepared_plan::PreparedTestPlanRequest,
+) -> Vec<PathBuf> {
+    no_mistakes::codebase::ts_source::discover_files_from_visible(
+        &prepared.root,
+        &prepared.config.filesystem.skip_directories,
+        prepared.root_visible_paths(),
     )
+    .into_iter()
+    .filter(|file| prepared.test_filter().is_match(&prepared.root, file))
+    .collect()
 }
 
 include!("plan_bfs.rs");

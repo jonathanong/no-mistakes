@@ -1,7 +1,7 @@
-use super::project_config;
 use super::project_config::prefix_globs;
+use super::runner_config::{ParsedRunnerConfigs, PreparedIntegrationRunnerConfigs};
 use super::types::{ConfigProject, EffectiveIntegrationPolicy, Framework, Suite};
-use crate::config::v2::schema::{NoMistakesConfig, StringOrList, TestProjectPolicy};
+use crate::config::v2::schema::{NoMistakesConfig, TestProjectPolicy};
 use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
@@ -34,19 +34,26 @@ pub(super) fn validate_config(config: &NoMistakesConfig) -> Result<()> {
     Ok(())
 }
 
-pub(super) fn configured_suites(root: &Path, config: &NoMistakesConfig) -> Result<Vec<Suite>> {
+pub(super) fn configured_suites_from_runner_configs(
+    root: &Path,
+    config: &NoMistakesConfig,
+    runner_configs: &PreparedIntegrationRunnerConfigs,
+    parsed: &ParsedRunnerConfigs,
+) -> Result<Vec<Suite>> {
     let mut suites = Vec::new();
+    let playwright_projects = parsed.projects_for(runner_configs, Framework::Playwright)?;
     suites.extend(suites_for_framework(
         root,
         Framework::Playwright,
-        config.tests.playwright.configs.as_ref(),
         &config.tests.playwright.projects,
+        &playwright_projects,
     )?);
+    let vitest_projects = parsed.projects_for(runner_configs, Framework::Vitest)?;
     suites.extend(suites_for_framework(
         root,
         Framework::Vitest,
-        config.tests.vitest.configs.as_ref(),
         &config.tests.vitest.projects,
+        &vitest_projects,
     )?);
     Ok(suites)
 }
@@ -54,8 +61,8 @@ pub(super) fn configured_suites(root: &Path, config: &NoMistakesConfig) -> Resul
 fn suites_for_framework(
     root: &Path,
     framework: Framework,
-    configs: Option<&StringOrList>,
     policies: &BTreeMap<String, TestProjectPolicy>,
+    projects: &[ConfigProject],
 ) -> Result<Vec<Suite>> {
     if policies
         .values()
@@ -64,14 +71,6 @@ fn suites_for_framework(
         return Ok(Vec::new());
     }
 
-    let needs_config_projects = policies
-        .values()
-        .any(|policy| !policy.integration_suites.is_empty() && policy.include.is_empty());
-    let projects = if needs_config_projects {
-        project_config::load_projects(root, framework, configs)?
-    } else {
-        Vec::new()
-    };
     let mut suites = Vec::new();
     for (project_name, policy) in policies {
         if policy.integration_suites.is_empty() {
@@ -80,7 +79,7 @@ fn suites_for_framework(
         let configured_project = configured_project(root, project_name, policy);
         let project = match configured_project.as_ref() {
             Some(project) => project,
-            None => exact_project(framework, project_name, &projects)?,
+            None => exact_project(framework, project_name, projects)?,
         };
         let allowed_integrations = policy
             .integration_suites

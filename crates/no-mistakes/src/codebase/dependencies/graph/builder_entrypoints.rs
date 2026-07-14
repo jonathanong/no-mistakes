@@ -50,20 +50,4 @@ impl DepGraph {
         )
     }
 
-    pub(crate) fn build_with_plan_files_and_facts(
-        root: &Path,
-        tsconfig: &TsConfig,
-        plan: GraphBuildPlan,
-        graph_files: &GraphFiles,
-        facts: Option<&dyn TsFactLookup>,
-    ) -> Result<Self> {
-        Self::build_with_plan_files_config_and_facts(
-            root,
-            tsconfig,
-            plan,
-            graph_files,
-            None,
-            facts,
-        )
-    }
 }

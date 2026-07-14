@@ -6,44 +6,11 @@ use no_mistakes::config::v2::NoMistakesConfig;
 use no_mistakes::integration_tests::{self, IntegrationFinding};
 use no_mistakes::queue::CheckFinding;
 use no_mistakes::react_traits;
-use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-const FILESYSTEM_RULE_IDS: &[&str] = &[
-    rules::AGENTS_MD_MAX_SIZE,
-    rules::BANNED_PATHS,
-    rules::github_actions_pinned_hash::RULE_ID,
-    rules::BANNED_RENAMED_FILES,
-    rules::CONFIG_PATH_REFERENCES,
-    rules::DOC_CONSISTENCY,
-    rules::FILE_EXTENSION_POLICY,
-    rules::FINITE_SET_CONSISTENCY,
-    rules::FORBIDDEN_WORKSPACE_CLOSURE,
-    rules::INTEGRATION_TEST_NO_MOCKS,
-    rules::LOCKFILE_ALLOWLIST,
-    rules::MARKDOWN_LINK_DISPLAY_TEXT,
-    rules::NO_EMPTY_OR_COMMENTS_ONLY_FILES,
-    rules::NO_GIT_IDENTITY_MUTATION,
-    rules::PACKAGE_JSON_REGISTRY_ONLY,
-    rules::PACKAGE_JSON_WORKSPACE_COVERAGE,
-    rules::REQUIRED_COMPANION_IMPORTS,
-    rules::REQUIRE_FILES_IN_SUBDIRS,
-    rules::REQUIRE_TEST_PER_SUBDIR,
-    rules::REQUIRED_DOC_SECTION,
-    rules::REQUIRED_LOCAL_DOCS,
-    rules::RUST_MAX_LINES_PER_FILE,
-    rules::RUST_NO_INLINE_ALLOWS,
-    rules::RUST_NO_INLINE_TESTS,
-    rules::SHELLCHECK_RUNNER,
-    rules::STRICT_PACKAGE_LAYOUT,
-    rules::STRUCTURED_CONFIG_POLICY,
-    rules::TEST_EMAIL_DOMAIN_POLICY,
-    rules::TSCONFIG_ALIAS_FOLDER_MAPPING,
-    rules::VITEST_CI_PATH_COVERAGE,
-    rules::VITEST_PROJECT_MAPPING,
-    rules::VITEST_TEST_CORRESPONDENCE,
-    rules::WORKSPACE_PACKAGE_CYCLES,
-];
+mod filesystem;
+
+pub(crate) use filesystem::{filesystem_rules_configured, run_filesystem_rules_check};
 
 pub(crate) struct CheckTask<T> {
     pub(crate) findings: T,
@@ -53,13 +20,13 @@ pub(crate) struct CheckTask<T> {
 
 pub(crate) fn run_react_check(
     root: &std::path::Path,
-    config: Option<&std::path::Path>,
     enabled: bool,
     facts: &CheckFactMap,
+    prepared: &react_traits::PreparedReactCheck,
 ) -> Result<CheckTask<Vec<react_traits::Violation>>> {
     let start = Instant::now();
     let (findings, warning) = if enabled {
-        match react_traits::run_check_with_facts(root, config, &[], false, facts) {
+        match react_traits::run_check_with_prepared_facts(root, &[], facts, prepared) {
             Ok(findings) => (findings, None),
             Err(err) => (
                 Vec::new(),
@@ -78,13 +45,19 @@ pub(crate) fn run_react_check(
 
 pub(crate) fn run_queue_check(
     root: &std::path::Path,
-    tsconfig: Option<&std::path::Path>,
+    prepared_tsconfig: &no_mistakes::codebase::ts_resolver::TsConfig,
     enabled: bool,
     facts: &CheckFactMap,
 ) -> Result<CheckTask<Vec<CheckFinding>>> {
     let start = Instant::now();
     let findings = if enabled {
-        no_mistakes::queue::analyze_project_with_facts(root, tsconfig, &[], facts)?.check
+        no_mistakes::queue::analyze_project_with_prepared_facts(
+            root,
+            prepared_tsconfig,
+            &[],
+            facts,
+        )?
+        .check
     } else {
         Vec::new()
     };
@@ -96,13 +69,10 @@ pub(crate) fn run_queue_check(
 }
 
 pub(crate) fn run_rules_check(
-    root: &std::path::Path,
-    config: Option<&std::path::Path>,
-    tsconfig: Option<&std::path::Path>,
-    facts: &CheckFactMap,
+    inputs: rules::PreparedRulesCheck<'_>,
 ) -> Result<CheckTask<Vec<RuleFinding>>> {
     let start = Instant::now();
-    let (findings, warning) = match rules::run_check_with_facts(root, config, tsconfig, facts) {
+    let (findings, warning) = match rules::run_check_with_config_and_facts_and_playwright(inputs) {
         Ok(findings) => (findings, None),
         Err(err) => (
             Vec::new(),
@@ -118,11 +88,14 @@ pub(crate) fn run_rules_check(
 
 pub(crate) fn run_integration_check(
     root: &std::path::Path,
-    config: Option<&std::path::Path>,
+    config: &NoMistakesConfig,
     facts: &CheckFactMap,
+    tsconfig: &no_mistakes::codebase::ts_resolver::TsConfig,
+    visible_paths: &no_mistakes::codebase::ts_source::VisiblePathSnapshot,
 ) -> Result<CheckTask<Vec<IntegrationFinding>>> {
     let start = Instant::now();
-    let findings = integration_tests::check_with_facts(root, config, facts)?;
+    let findings =
+        integration_tests::check_with_prepared_facts(root, config, facts, tsconfig, visible_paths)?;
     Ok(CheckTask {
         findings,
         warning: None,
@@ -132,14 +105,22 @@ pub(crate) fn run_integration_check(
 
 pub(crate) fn run_codebase_check(
     root: &std::path::Path,
-    config: Option<&std::path::Path>,
-    tsconfig: Option<&std::path::Path>,
+    config: &no_mistakes::codebase::config::Config,
+    _tsconfig: Option<&std::path::Path>,
+    prepared_tsconfig: &no_mistakes::codebase::ts_resolver::TsConfig,
     enabled: bool,
     facts: &CheckFactMap,
+    inferred_roots: &no_mistakes::codebase::config::InferredRoots,
 ) -> Result<CheckTask<Vec<UniqueExportFinding>>> {
     let start = Instant::now();
     let findings = if enabled {
-        unique_exports::analyze_project_with_facts(root, config, tsconfig, facts)?
+        unique_exports::analyze_project_with_prepared_facts_and_inferred(
+            root,
+            config,
+            prepared_tsconfig,
+            facts,
+            inferred_roots,
+        )?
     } else {
         Vec::new()
     };
@@ -155,31 +136,6 @@ pub(crate) fn queues_configured(config: &NoMistakesConfig) -> bool {
         .projects
         .values()
         .any(|project| !project.queues.enqueues.is_empty() || !project.queues.workers.is_empty())
-}
-
-pub(crate) fn run_filesystem_rules_check(
-    root: &std::path::Path,
-    config: Option<&std::path::Path>,
-    enabled: bool,
-    files: &[PathBuf],
-) -> Result<CheckTask<Vec<RuleFinding>>> {
-    let start = Instant::now();
-    let findings = if enabled {
-        rules::run_filesystem_rules_with_files(root, config, files)?
-    } else {
-        Vec::new()
-    };
-    Ok(CheckTask {
-        findings,
-        warning: None,
-        duration: start.elapsed(),
-    })
-}
-
-pub(crate) fn filesystem_rules_configured(config: &NoMistakesConfig) -> bool {
-    FILESYSTEM_RULE_IDS
-        .iter()
-        .any(|rule_id| rule_configured(config, rule_id))
 }
 
 pub(crate) fn forbidden_dependencies_configured(config: &NoMistakesConfig) -> bool {

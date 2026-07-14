@@ -1,10 +1,12 @@
 use super::rule_selections;
 use crate::codebase::check_facts::{PlaywrightFactPlan, PlaywrightFactSelection};
 use crate::config::v2::NoMistakesConfig;
-use crate::playwright::analysis::discover::discover_test_files;
+use crate::playwright::analysis::discover::discover_test_files_from_visible;
 use crate::playwright::{config, playwright_config, playwright_tests};
 use anyhow::Result;
+use std::collections::BTreeMap;
 use std::path::Path;
+use std::sync::Arc;
 
 #[derive(Clone, Copy, Default)]
 pub struct PlaywrightFactConsumers {
@@ -12,23 +14,10 @@ pub struct PlaywrightFactConsumers {
     pub graph_routes: bool,
 }
 
-pub fn fact_plan(
-    root: &Path,
-    config_path: Option<&Path>,
-    config: &NoMistakesConfig,
-) -> Result<Option<PlaywrightFactPlan>> {
-    fact_plan_for_consumers(
-        root,
-        config_path,
-        config,
-        PlaywrightFactConsumers::default(),
-    )
-}
-
 #[doc(hidden)]
 pub fn fact_plan_for_consumers(
     root: &Path,
-    config_path: Option<&Path>,
+    _config_path: Option<&Path>,
     config: &NoMistakesConfig,
     consumers: PlaywrightFactConsumers,
 ) -> Result<Option<PlaywrightFactPlan>> {
@@ -36,51 +25,66 @@ pub fn fact_plan_for_consumers(
     if selections.is_empty() && !consumers.graph_selectors && !consumers.graph_routes {
         return Ok(None);
     }
-    let mut plan = PlaywrightFactPlan::default();
-    for selection in selections {
-        add_settings(
-            root,
-            config_path,
-            selection.playwright_project,
-            true,
-            &mut plan,
-        )?;
-    }
-    if consumers.graph_selectors || consumers.graph_routes {
-        let text = consumers.graph_selectors;
-        add_settings(root, config_path, None, text, &mut plan)?;
-    }
-    Ok(Some(plan))
-}
 
-fn add_settings(
-    root: &Path,
-    config_path: Option<&Path>,
-    project: Option<String>,
-    demands_text_imports: bool,
-    plan: &mut PlaywrightFactPlan,
-) -> Result<()> {
-    let settings = config::load_settings(root, config_path, &[], project)?;
-    let playwright = playwright_config::load_many(
-        root,
-        &settings.playwright_configs,
-        settings.project.as_deref(),
-    )?;
-    for test_file in discover_test_files(root, &settings, &playwright)? {
-        let attributes = test_file.test_id_attributes();
-        plan.add_file(PlaywrightFactSelection {
-            path: test_file.path,
-            navigation_helpers: &settings.navigation_helpers,
-            selector_attributes: &settings.selector_attributes,
-            component_selector_attributes: &settings.component_selector_attributes,
-            html_ids: settings.html_ids,
-            test_id_attributes: &attributes,
-            policy: playwright_tests::TestPolicy {
-                assert_conditional_tests: false,
-                allow_skipped_tests: false,
-            },
-            demands_text_imports,
-        });
+    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(root);
+    let mut prepared = selections
+        .into_iter()
+        .map(|selection| {
+            let settings = config::settings_from_loaded_v2(
+                root,
+                config,
+                &[],
+                selection.playwright_project,
+                &snapshot,
+            )?;
+            Ok((settings, true, selection.unique_html_ids))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    if consumers.graph_selectors || consumers.graph_routes {
+        prepared.push((
+            config::settings_from_loaded_v2(root, config, &[], None, &snapshot)?,
+            consumers.graph_selectors,
+            false,
+        ));
     }
-    Ok(())
+
+    let mut config_paths = prepared
+        .iter()
+        .flat_map(|(settings, _, _)| settings.playwright_configs.iter().cloned())
+        .collect::<Vec<_>>();
+    config_paths.sort();
+    config_paths.dedup();
+    let loaded_configs = playwright_config::load_configs(root, &config_paths)?;
+
+    let mut plan = PlaywrightFactPlan::default();
+    let mut test_files_by_project = BTreeMap::new();
+    for (settings, demands_text_imports, scan_html_ids) in prepared {
+        let playwright = playwright_config::select_loaded(
+            root,
+            &settings.playwright_configs,
+            settings.project.as_deref(),
+            &loaded_configs,
+        )?;
+        let test_files = discover_test_files_from_visible(root, &settings, &playwright, &snapshot)?;
+        for test_file in &test_files {
+            let attributes = test_file.test_id_attributes();
+            plan.add_file(PlaywrightFactSelection {
+                path: test_file.path.clone(),
+                navigation_helpers: &settings.navigation_helpers,
+                selector_attributes: &settings.selector_attributes,
+                component_selector_attributes: &settings.component_selector_attributes,
+                html_ids: settings.html_ids,
+                test_id_attributes: &attributes,
+                policy: playwright_tests::TestPolicy {
+                    assert_conditional_tests: false,
+                    allow_skipped_tests: false,
+                },
+                demands_text_imports,
+            });
+        }
+        plan.add_source_settings(root, settings.clone(), scan_html_ids, &snapshot)?;
+        test_files_by_project.insert(settings.project.clone(), Arc::new(test_files));
+    }
+    plan.set_test_files_by_project(test_files_by_project.into_iter().collect());
+    Ok(Some(plan))
 }

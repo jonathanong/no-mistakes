@@ -2,12 +2,17 @@ use super::*;
 use tempfile::TempDir;
 
 mod extra;
+mod visibility;
 
 fn write(path: &Path, content: &str) {
     if let Some(p) = path.parent() {
         std::fs::create_dir_all(p).unwrap();
     }
     std::fs::write(path, content).unwrap();
+}
+
+fn resolve_entry(dir: &Path, pkg: &PackageJson) -> Option<PathBuf> {
+    resolve_entry_with_visibility(dir, pkg, None)
 }
 
 // ── load with no package.json ─────────────────────────────────────────
@@ -210,7 +215,7 @@ fn resolve_specifier_rejects_unprefixed_subpath_without_exports() {
     };
 
     assert_eq!(map.resolve_specifier("@x/api"), None);
-    assert_eq!(map.packages[0].resolve_subpath("src/public"), None);
+    assert_eq!(map.packages[0].resolve_subpath("src/public", None), None);
 }
 
 // ── entry resolution order ────────────────────────────────────────────
@@ -332,11 +337,11 @@ fn resolve_entry_continues_when_exports_have_no_entry_path() {
 fn load_package_ignores_invalid_json_and_missing_name() {
     let invalid = TempDir::new().unwrap();
     write(&invalid.path().join("package.json"), "{ invalid");
-    assert!(load_package(invalid.path()).unwrap().is_none());
+    assert!(load_package(invalid.path(), None).unwrap().is_none());
 
     let unnamed = TempDir::new().unwrap();
     write(&unnamed.path().join("package.json"), r#"{"name": ""}"#);
-    assert!(load_package(unnamed.path()).unwrap().is_none());
+    assert!(load_package(unnamed.path(), None).unwrap().is_none());
 }
 
 // ── multiple workspaces ───────────────────────────────────────────────

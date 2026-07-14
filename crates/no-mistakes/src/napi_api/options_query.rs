@@ -12,7 +12,7 @@ pub(crate) struct DataPwOptions {
     pub(crate) include: Option<String>,
 }
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Clone, Deserialize, serde::Serialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct EffectsOptions {
     pub(crate) root: Option<String>,
@@ -24,7 +24,7 @@ pub(crate) struct EffectsOptions {
     pub(crate) depth: Option<usize>,
 }
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Clone, Deserialize, serde::Serialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct RscCallersOptions {
     pub(crate) root: Option<String>,

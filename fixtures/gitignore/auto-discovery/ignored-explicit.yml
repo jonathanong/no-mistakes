@@ -1,0 +1,11 @@
+# Explicit config paths remain authoritative even when Git ignores the file.
+tests:
+  playwright:
+    frontendRoot: explicit-ignored-app
+projects:
+  app:
+    root: .
+rules:
+  - rule: unique-exports
+    enabled: false
+    projects: [app]

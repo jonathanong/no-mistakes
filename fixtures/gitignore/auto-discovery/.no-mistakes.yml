@@ -1,0 +1,2 @@
+# Intentionally invalid: automatic config discovery must never parse this ignored file.
+rules: [

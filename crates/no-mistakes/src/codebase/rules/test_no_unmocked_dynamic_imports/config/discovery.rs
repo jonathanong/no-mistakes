@@ -1,13 +1,16 @@
 mod property_strings;
 mod regex_literals;
+mod visible;
 
-use crate::config::v2::{ConfigView, NoMistakesConfig};
+use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 pub(super) use property_strings::extract_property_strings;
 use regex::Regex;
 use regex_literals::extract_test_regex_literals;
 use std::path::{Path, PathBuf};
+
+pub(super) use visible::config_files_from_visible;
 
 #[derive(Clone, Copy)]
 pub(super) enum Runner {
@@ -46,104 +49,8 @@ impl ConfigFile {
 }
 
 pub(super) fn config_files(root: &Path, config: &NoMistakesConfig) -> Vec<ConfigFile> {
-    let view = ConfigView::new(config);
-    let mut configured = expand_config_patterns(
-        root,
-        view.vitest_configs().unwrap_or_default(),
-        Runner::Vitest,
-    );
-    configured.extend(expand_config_patterns(
-        root,
-        view.jest_configs().unwrap_or_default(),
-        Runner::Jest,
-    ));
-    let configured = normalize_configs(configured);
-    if !configured.is_empty() {
-        return configured;
-    }
-    discovered_configs(root)
-}
-
-fn discovered_configs(root: &Path) -> Vec<ConfigFile> {
-    let discovered = [
-        "vitest.config.ts",
-        "vitest.config.mts",
-        "vitest.config.cts",
-        "vitest.config.js",
-        "vitest.config.mjs",
-        "vitest.config.cjs",
-    ]
-    .into_iter()
-    .map(|path| ConfigFile {
-        path: root.join(path),
-        runner: Runner::Vitest,
-    })
-    .chain(jest_config_names().into_iter().map(|path| ConfigFile {
-        path: root.join(path),
-        runner: Runner::Jest,
-    }));
-    normalize_configs(discovered.filter(|config| config.path.exists()).collect())
-}
-
-fn jest_config_names() -> [&'static str; 7] {
-    [
-        "jest.config.ts",
-        "jest.config.mts",
-        "jest.config.cts",
-        "jest.config.js",
-        "jest.config.mjs",
-        "jest.config.cjs",
-        "jest.config.json",
-    ]
-}
-
-fn normalize_configs(configs: Vec<ConfigFile>) -> Vec<ConfigFile> {
-    configs
-        .into_iter()
-        .map(|config| ConfigFile {
-            path: crate::codebase::ts_resolver::normalize_path(&config.path),
-            runner: config.runner,
-        })
-        .collect()
-}
-
-fn expand_config_patterns(root: &Path, patterns: Vec<String>, runner: Runner) -> Vec<ConfigFile> {
-    if patterns.is_empty() {
-        return Vec::new();
-    }
-    let has_globs = patterns.iter().any(|p| is_glob(p));
-    let files = if has_globs {
-        crate::codebase::ts_source::discover_files(root, &[])
-    } else {
-        Vec::new()
-    };
-    let mut configs = Vec::new();
-    for pattern in patterns {
-        if is_glob(&pattern) {
-            if let Ok(glob) = Glob::new(&pattern) {
-                let matcher = glob.compile_matcher();
-                for file in &files {
-                    let rel = crate::codebase::ts_source::relative_slash_path(root, file);
-                    if matcher.is_match(rel) {
-                        configs.push(ConfigFile {
-                            path: file.clone(),
-                            runner,
-                        });
-                    }
-                }
-            }
-        } else {
-            let path = root.join(pattern);
-            if path.exists() {
-                configs.push(ConfigFile { path, runner });
-            }
-        }
-    }
-    configs
-}
-
-fn is_glob(pattern: &str) -> bool {
-    pattern.contains('*') || pattern.contains('?') || pattern.contains('[')
+    let visible_files = crate::codebase::ts_source::discover_files(root, &[]);
+    config_files_from_visible(root, config, &visible_files)
 }
 
 pub(super) fn build_globset(patterns: &[String]) -> Result<GlobSet> {

@@ -16,6 +16,7 @@ pub(crate) mod graph;
 pub(crate) mod impact;
 pub(crate) mod lockfile_changes;
 pub(crate) mod plan;
+pub(crate) mod prepared_plan;
 pub(crate) mod targets;
 pub(crate) mod why;
 

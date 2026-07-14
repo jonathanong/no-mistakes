@@ -1,42 +1,20 @@
 //! File discovery for [`super::collect_app_selectors`].
 
 use std::path::{Path, PathBuf};
-use walkdir::WalkDir;
 
 /// Candidate files under `frontend_root` that may contain app selectors.
 ///
-/// Prefers deriving candidates from the git-visible file list (tracked files
-/// plus untracked files not excluded by `.gitignore`) when `frontend_root` is
-/// inside a git repository, since a raw recursive `WalkDir` walk has no
-/// `.gitignore` awareness beyond [`super::super::is_skipped_dir`]'s small
-/// hardcoded list and can otherwise descend into large untracked-and-ignored
-/// directories (dependency stores, build output) that `git ls-files` would
-/// never surface. See `crates/CLAUDE.md`'s "Never walk the tree without
-/// `.gitignore` awareness". The raw walk is used only outside git
-/// repositories (e.g. ad-hoc test fixtures).
+/// Uses the shared ignore-aware candidate list, then applies selector-specific
+/// skip-directory and symlink policies.
 pub(super) fn source_file_candidates(frontend_root: &Path) -> Vec<PathBuf> {
-    use super::super::is_skipped_dir;
-    match crate::codebase::ts_source::git_visible_files(frontend_root) {
-        Some(files) => files
-            .into_iter()
-            .map(PathBuf::from)
-            .filter(|rel| !rel_path_under_skipped_dir(rel))
-            .map(|rel| frontend_root.join(rel))
-            .filter(|path| is_file_or_symlinked_file(path))
-            .collect(),
-        None => WalkDir::new(frontend_root)
-            .into_iter()
-            .filter_entry(|entry| !is_skipped_dir(entry.path()))
-            .filter_map(|entry| entry.ok())
-            .filter(|entry| {
-                // Use the cached WalkDir file type for regular files, but preserve
-                // the previous Path::is_file behavior for symlinked source files.
-                let file_type = entry.file_type();
-                file_type.is_file() || file_type.is_symlink() && entry.path().is_file()
-            })
-            .map(|entry| entry.path().to_path_buf())
-            .collect(),
-    }
+    crate::codebase::ts_source::discover_visible_paths(frontend_root)
+        .into_iter()
+        .filter(|path| {
+            path.strip_prefix(frontend_root)
+                .is_ok_and(|rel| !rel_path_under_skipped_dir(rel))
+        })
+        .filter(|path| is_file_or_symlinked_file(path))
+        .collect()
 }
 
 /// True if any ancestor directory component of `rel` (a path relative to the

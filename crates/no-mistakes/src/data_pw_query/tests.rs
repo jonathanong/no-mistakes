@@ -45,6 +45,14 @@ fn write(dir: &Path, path: &str, content: &str) {
     std::fs::write(full, content).unwrap();
 }
 
+fn discover_files(root: &Path, extra_skip: &[String]) -> Vec<PathBuf> {
+    discover_files_from_visible_paths(
+        root,
+        &crate::codebase::ts_source::discover_visible_paths(root),
+        extra_skip,
+    )
+}
+
 #[test]
 fn include_parse_default_and_subsets() {
     assert_eq!(
@@ -235,13 +243,10 @@ fn honors_test_exclude_and_selector_include() {
 
 #[test]
 fn is_skip_dir_honors_defaults_and_config() {
-    assert!(is_skip_dir(Path::new("x/node_modules"), &[]));
-    assert!(is_skip_dir(Path::new("x/.cache"), &[]));
-    assert!(is_skip_dir(
-        Path::new("x/generated"),
-        &["generated".to_string()]
-    ));
-    assert!(!is_skip_dir(Path::new("x/app"), &[]));
+    assert!(is_skip_dir_name("node_modules", &[]));
+    assert!(is_skip_dir_name(".cache", &[]));
+    assert!(is_skip_dir_name("generated", &["generated".to_string()]));
+    assert!(!is_skip_dir_name("app", &[]));
 }
 
 #[test]
@@ -348,10 +353,8 @@ fn discover_files_skips_missing_git_tracked_file() {
     assert!(!files.contains(&dir.path().join("app/search.tsx")));
 }
 
-/// Outside a git repository, `discover_files` still falls back to the raw
-/// `WalkDir` walk, exercising `discover_files_via_walk`'s skip-dir pruning
-/// directly since there is no git-visible file list to derive candidates
-/// from.
+/// Outside a Git repository, scanner-specific skip-directory pruning still
+/// applies to the shared ignore-aware candidate list.
 ///
 /// The walk root itself is a plain (non-dot-prefixed) subdirectory rather
 /// than the `TempDir` directly: `tempfile` defaults to a dot-prefixed
@@ -359,7 +362,7 @@ fn discover_files_skips_missing_git_tracked_file() {
 /// directory, which would otherwise prune the walk root before it is ever
 /// descended into — unrelated to the behavior under test here.
 #[test]
-fn discover_files_falls_back_to_walk_outside_git_repositories() {
+fn discover_files_applies_skip_dirs_outside_git_repositories() {
     let temp = TempDir::new().unwrap();
     let dir = temp.path().join("root");
     write(&dir, "app/search.tsx", "<div />");
@@ -369,4 +372,14 @@ fn discover_files_falls_back_to_walk_outside_git_repositories() {
 
     assert!(files.contains(&dir.join("app/search.tsx")));
     assert!(!files.iter().any(|path| path.starts_with(dir.join("dist"))));
+}
+
+#[test]
+fn discover_files_applies_gitignore_outside_git() {
+    let dir = crate::test_support::materialize_gitignore_fixture("non-git-discovery");
+
+    let files = discover_files(dir.path(), &[]);
+
+    assert!(files.contains(&dir.path().join("app/page.tsx")));
+    assert!(!files.contains(&dir.path().join("ignored/page.tsx")));
 }
