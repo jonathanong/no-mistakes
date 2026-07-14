@@ -4,30 +4,75 @@ fn import_neighbors(
     workspace: &crate::codebase::workspaces::WorkspaceMap,
     graph_files: &GraphFiles,
     allowed: Option<&HashSet<EdgeKind>>,
-    prepared: Option<&dyn TsFactLookup>,
-) -> Vec<(NodeId, EdgeKind)> {
-    let owned_facts;
-    let file_facts = if let Some(facts) = prepared.and_then(|facts| facts.get_ts_facts(path)) {
-        facts
-    } else {
+    fact_source: LazyImportFacts<'_>,
+) -> (Vec<(NodeId, EdgeKind)>, Option<TsFileFacts>) {
+    if let Some(facts) = fact_source
+        .prepared
+        .and_then(|facts| facts.get_ts_facts(path))
+    {
+        return (
+            import_neighbors_from_facts(
+                path,
+                facts,
+                resolver,
+                workspace,
+                graph_files,
+                allowed,
+            ),
+            None,
+        );
+    }
+
+    let facts = {
         let source = match std::fs::read_to_string(path) {
             Ok(source) => source,
-            Err(_) => return Vec::new(),
+            Err(error) => {
+                return (
+                    Vec::new(),
+                    Some(TsFileFacts {
+                        parse_error: Some(format!("failed to read {}: {error}", path.display())),
+                        ..TsFileFacts::default()
+                    }),
+                );
+            }
         };
-        let facts = crate::ast::with_program(path, &source, |program, _| {
-            crate::codebase::dependencies::extract::extract_import_facts_from_program(program)
-        })
-        .unwrap_or_default();
-        owned_facts = crate::codebase::ts_source::facts::TsFileFacts {
-            imports: facts.imports,
-            function_calls: facts.function_calls,
-            exported_functions: facts.exported_functions,
-            unknown_callers: facts.unknown_callers,
-            has_unknown_top_level_call: facts.has_unknown_top_level_call,
-            ..Default::default()
-        };
-        &owned_facts
+        match crate::ast::with_program(path, &source, |program, source| {
+            crate::codebase::ts_source::facts::collect_file_facts_from_program(
+                path,
+                fact_source.collect_plan,
+                fact_source.context,
+                source,
+                program,
+                None,
+            )
+        }) {
+            Ok(facts) => facts,
+            Err(error) => TsFileFacts {
+                parse_error: Some(error.to_string()),
+                ..TsFileFacts::default()
+            },
+        }
     };
+
+    let neighbors = import_neighbors_from_facts(
+        path,
+        &facts,
+        resolver,
+        workspace,
+        graph_files,
+        allowed,
+    );
+    (neighbors, Some(facts))
+}
+
+fn import_neighbors_from_facts(
+    path: &Path,
+    file_facts: &TsFileFacts,
+    resolver: &ImportResolver<'_>,
+    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    graph_files: &GraphFiles,
+    allowed: Option<&HashSet<EdgeKind>>,
+) -> Vec<(NodeId, EdgeKind)> {
     let reachable = reachable_function_scopes(file_facts);
     let mut neighbors: Vec<(NodeId, EdgeKind)> = file_facts
         .imports

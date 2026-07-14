@@ -291,6 +291,97 @@ fn shared_traversal_reuses_runner_helpers_for_lazy_symbols_and_test_filters() {
 }
 
 #[test]
+fn shared_import_only_traversal_parses_only_reachable_files() {
+    let source = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/lazy-import/fixture"),
+    );
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let cwd = std::env::current_dir().unwrap();
+    crate::ast::begin_parse_count(&root);
+    let mut shared = SharedTraversalContext::prepare(
+        root.clone(),
+        None,
+        None,
+        graph::GraphBuildPlan {
+            imports: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    // Exercise the first lazy consumer: it must create a sparse fact map, not force a full one.
+    shared.facts = None;
+    let mut args = traverse_args(root.clone(), vec![PathBuf::from("src/a.mts")]);
+    args.relationships = vec![RelationshipArg::Import];
+
+    let result =
+        collect_and_filter_entries_shared(&args, Direction::Deps, &cwd, &mut shared).unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+
+    assert_eq!(
+        result
+            .entries
+            .iter()
+            .filter_map(|entry| entry.node.as_file())
+            .collect::<Vec<_>>(),
+        vec![root.join("src/b.mts").as_path()]
+    );
+    assert_eq!(counts.get(&root.join("src/a.mts")), Some(&1), "{counts:#?}");
+    assert_eq!(counts.get(&root.join("src/b.mts")), Some(&1), "{counts:#?}");
+    // The lazy reader parses immediately after a successful read, so the absence of parse
+    // records also proves that the unreachable component was not read for source analysis.
+    assert!(!counts.contains_key(&root.join("src/unrelated.mts")), "{counts:#?}");
+    assert!(
+        !counts.contains_key(&root.join("src/unrelated-dep.mts")),
+        "{counts:#?}"
+    );
+    assert_eq!(counts.len(), 2, "{counts:#?}");
+    assert_eq!(shared.facts.as_ref().map(|facts| facts.len()), Some(2));
+    assert_eq!(shared.graph_builds, 0);
+}
+
+#[test]
+fn shared_lazy_import_facts_are_reused_by_later_symbol_queries() {
+    let source = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/lazy-import/fixture"),
+    );
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let cwd = std::env::current_dir().unwrap();
+    crate::ast::begin_parse_count(&root);
+    let mut shared = SharedTraversalContext::prepare(
+        root.clone(),
+        None,
+        None,
+        graph::GraphBuildPlan {
+            imports: true,
+            symbols: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let mut args = traverse_args(root.clone(), vec![PathBuf::from("src/a.mts")]);
+    args.relationships = vec![RelationshipArg::Import];
+
+    collect_and_filter_entries_shared(&args, Direction::Deps, &cwd, &mut shared).unwrap();
+
+    let lazy_facts = shared.facts.as_ref().expect("lazy facts are retained");
+    assert!(lazy_facts.contains_key(&root.join("src/a.mts")));
+    assert!(lazy_facts.contains_key(&root.join("src/b.mts")));
+    assert!(!lazy_facts.contains_key(&root.join("src/unrelated.mts")));
+    assert!(!lazy_facts.contains_key(&root.join("src/unrelated-dep.mts")));
+
+    // A later symbol/full-graph consumer fills only the remaining fact entries.
+    assert_eq!(shared.facts().len(), 4);
+    let counts = crate::ast::finish_parse_count(&root);
+    assert_eq!(counts.len(), 4, "{counts:#?}");
+    assert!(counts.values().all(|count| *count == 1), "{counts:#?}");
+    assert_eq!(shared.graph_builds, 0);
+}
+
+#[test]
 fn traversal_queue_root_helpers_cover_missing_deps_and_module_entrypoints() {
     let file = PathBuf::from("/repo/src/queue.ts");
     let roots = vec![
