@@ -169,3 +169,24 @@ fn discovery_skips_dependency_and_build_directories() {
         );
     }
 }
+
+#[test]
+fn queue_compatibility_appends_extensions_to_dotted_import_stems() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/queue/dotted-worker");
+    let config = load_tsconfig(&root, None).unwrap();
+    let importer = root.join("src/enqueue.ts");
+    // `.queue` is part of the stem; replacing it would incorrectly probe `worker.ts`.
+    assert_eq!(
+        resolve_import("./worker.queue", &importer, &root, &config),
+        Some(crate::codebase::ts_resolver::normalize_path(
+            &root.join("src/worker.queue.ts"),
+        )),
+    );
+    // Recognized emitted extensions retain the historical replacement fallback.
+    assert_eq!(
+        resolve_import("./worker.js", &importer, &root, &config),
+        Some(crate::codebase::ts_resolver::normalize_path(
+            &root.join("src/worker.ts"),
+        )),
+    );
+}

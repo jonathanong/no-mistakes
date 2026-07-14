@@ -7,7 +7,13 @@ impl<'a> ImportResolver<'a> {
             return Some(base);
         }
         for extension in QUEUE_EXTENSIONS {
-            let with_extension = base.with_extension(extension);
+            let with_extension = if is_queue_source(&base) {
+                base.with_extension(extension)
+            } else {
+                let mut path = base.as_os_str().to_os_string();
+                path.push(format!(".{extension}"));
+                PathBuf::from(path)
+            };
             if self.path_is_file(&with_extension) {
                 return Some(with_extension);
             }
