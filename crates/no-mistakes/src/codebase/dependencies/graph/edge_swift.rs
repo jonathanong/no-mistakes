@@ -134,7 +134,7 @@ fn swift_route_defs(
                 all_files,
                 &register_object,
                 &gs,
-                None,
+                facts,
                 config_options.test_filter.as_ref(),
             ));
         }

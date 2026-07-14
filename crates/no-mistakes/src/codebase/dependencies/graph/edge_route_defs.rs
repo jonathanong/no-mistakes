@@ -74,7 +74,11 @@ fn collect_backend_routes_from_graph_inputs(
         })
         .cloned()
         .collect();
-    if let Some(facts) = facts {
+    let backend_plan = TsFactPlan {
+        backend_routes: true,
+        ..TsFactPlan::default()
+    };
+    if let Some(facts) = facts.filter(|facts| facts.covers_ts_fact_plan(backend_plan)) {
         return route_files
             .par_iter()
             .filter_map(|path| {
