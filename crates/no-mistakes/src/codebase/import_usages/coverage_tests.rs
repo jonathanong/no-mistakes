@@ -112,6 +112,26 @@ fn scan_roots_filters_and_output_roots_cover_path_branches() {
 }
 
 #[test]
+fn session_scan_roots_reuse_inside_snapshot_and_discover_external_root() {
+    let cwd = std::env::current_dir().unwrap();
+    let root = fixture_root();
+    let external_root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/parser-count/signature-impact"),
+    );
+    let root_main = root.join("src/main.mts");
+    let external_consumer = external_root.join("consumer.mts");
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let mut args = base_args();
+    args.scan_roots = vec![PathBuf::from("src"), root.join("src"), external_root];
+
+    let files = paths::resolve_files_with_session(&session, &args, &root, &cwd).unwrap();
+
+    assert_eq!(files.iter().filter(|path| *path == &root_main).count(), 1);
+    assert!(files.contains(&external_consumer));
+}
+
+#[test]
 fn relative_roots_and_empty_package_segments_are_handled() {
     let mut file_args = base_args();
     file_args.files = vec![PathBuf::from("src/main.mts")];
