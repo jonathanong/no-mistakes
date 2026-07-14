@@ -18,6 +18,7 @@ fn default_settings(selector_attributes: Vec<String>) -> Settings {
         ignore_routes: vec![],
         rewrites: vec![],
         navigation_helpers: vec![],
+        selector_wrappers: vec![],
         selector_attributes,
         test_id_attribute_override: None,
         component_selector_attributes: BTreeMap::new(),

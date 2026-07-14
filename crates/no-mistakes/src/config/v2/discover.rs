@@ -1,5 +1,6 @@
 use anyhow::Result;
 use globset::GlobBuilder;
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use super::schema::NoMistakesConfig;
@@ -114,6 +115,35 @@ fn validate_v2_config(config: &NoMistakesConfig) -> Result<()> {
         validate_globs(&rule.include, &format!("rules[{index}].include"))?;
         validate_globs(&rule.exclude, &format!("rules[{index}].exclude"))?;
     }
+    validate_playwright_selector_wrappers(&config.tests.playwright.selectors.wrappers)?;
+    Ok(())
+}
+
+fn validate_playwright_selector_wrappers(
+    wrappers: &[super::schema::PlaywrightSelectorWrapper],
+) -> Result<()> {
+    let mut arguments_by_export = BTreeMap::new();
+    for (index, wrapper) in wrappers.iter().enumerate() {
+        if wrapper.module.trim().is_empty() {
+            anyhow::bail!("tests.playwright.selectors.wrappers[{index}].module must not be blank");
+        }
+        if wrapper.export.trim().is_empty() {
+            anyhow::bail!("tests.playwright.selectors.wrappers[{index}].export must not be blank");
+        }
+        let identity = (wrapper.module.as_str(), wrapper.export.as_str());
+        if let Some(previous_argument) =
+            arguments_by_export.insert(identity, wrapper.test_id_argument)
+        {
+            if previous_argument != wrapper.test_id_argument {
+                anyhow::bail!(
+                    "tests.playwright.selectors.wrappers configures `{}:{}` with conflicting testIdArgument values {previous_argument} and {}",
+                    wrapper.module,
+                    wrapper.export,
+                    wrapper.test_id_argument
+                );
+            }
+        }
+    }
     Ok(())
 }
 
@@ -139,3 +169,6 @@ pub(super) fn find_by_stems(root: &Path, stems: &[&str]) -> Result<Option<(PathB
     let source = std::fs::read_to_string(&path)?;
     Ok(Some((path, source)))
 }
+
+#[cfg(test)]
+mod tests;

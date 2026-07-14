@@ -59,6 +59,17 @@ pub struct PlaywrightSelectors {
     pub html_ids: bool,
     pub test_ids: Vec<String>,
     pub component_test_ids: BTreeMap<String, String>,
+    pub wrappers: Vec<PlaywrightSelectorWrapper>,
+}
+
+/// A statically imported helper whose configured argument carries the same
+/// selector value as Playwright's `getByTestId(...)`.
+#[derive(Debug, Clone, Deserialize, Serialize, Eq, Ord, PartialEq, PartialOrd)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PlaywrightSelectorWrapper {
+    pub module: String,
+    pub export: String,
+    pub test_id_argument: usize,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

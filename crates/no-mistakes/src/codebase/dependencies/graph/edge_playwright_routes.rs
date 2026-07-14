@@ -86,6 +86,7 @@ fn collect_playwright_route_edges_from_snapshot(
         route_index: &route_idx,
         selector_index: &selector_index,
         navigation_helpers: &settings.navigation_helpers,
+        selector_wrappers: &settings.selector_wrappers,
         selector_regexes: &selector_regexes,
         test_policy: crate::playwright::playwright_tests::TestPolicy {
             assert_conditional_tests: false,
@@ -101,6 +102,7 @@ fn collect_playwright_route_edges_from_snapshot(
                     let attributes = test_file.test_id_attributes();
                     let key = crate::codebase::check_facts::PlaywrightOccurrenceKey::new(
                         &settings.navigation_helpers,
+                        &settings.selector_wrappers,
                         &settings.selector_attributes,
                         &settings.component_selector_attributes,
                         settings.html_ids,

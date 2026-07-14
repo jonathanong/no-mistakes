@@ -1,0 +1,6 @@
+tests:
+  playwright:
+    selectors:
+      wrappers:
+        - module: "@app/locators"
+          export: find

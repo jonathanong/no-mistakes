@@ -40,6 +40,7 @@ pub(super) fn settings_from_v2(
         ignore_routes: playwright.ignore_routes.clone().unwrap_or_default(),
         rewrites: view.nextjs_rewrites().to_vec(),
         navigation_helpers: playwright.navigation_helpers.clone(),
+        selector_wrappers: playwright.selectors.wrappers.clone(),
         selector_attributes,
         test_id_attribute_override: playwright.test_id_attribute.clone(),
         component_selector_attributes: playwright.selectors.component_test_ids.clone(),

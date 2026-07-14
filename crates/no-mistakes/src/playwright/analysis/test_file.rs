@@ -13,6 +13,8 @@ pub(crate) fn analyze_test_file(
         test_file,
         context.navigation_helpers,
         context.selector_regexes,
+        context.selector_wrappers,
+        None,
     )?;
     Ok(analyze_prepared_test_occurrences(
         test_file,

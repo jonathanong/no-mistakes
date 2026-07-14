@@ -25,15 +25,28 @@ pub(crate) enum CachedOccurrenceSelection {
     Exact,
 }
 
+pub(crate) struct PrepareTestFilesOptions<'a> {
+    pub(crate) test_policy: TestPolicy,
+    pub(crate) skip_test_file_errors: bool,
+    pub(crate) facts: Option<&'a dyn crate::codebase::dependencies::graph::TsFactLookup>,
+    pub(crate) selection: CachedOccurrenceSelection,
+    pub(crate) module_resolution:
+        Option<&'a crate::codebase::check_facts::PlaywrightModuleResolution>,
+}
+
 pub(crate) fn prepare_test_files(
     test_files: Vec<DiscoveredTestFile>,
     settings: &crate::playwright::config::Settings,
     selector_regexes: &SelectorRegexes,
-    test_policy: TestPolicy,
-    skip_test_file_errors: bool,
-    facts: Option<&dyn crate::codebase::dependencies::graph::TsFactLookup>,
-    selection: CachedOccurrenceSelection,
+    options: PrepareTestFilesOptions<'_>,
 ) -> Result<(Vec<PreparedTestFile>, TestOccurrenceDemand)> {
+    let PrepareTestFilesOptions {
+        test_policy,
+        skip_test_file_errors,
+        facts,
+        selection,
+        module_resolution,
+    } = options;
     let prepared: Vec<_> = test_files
         .into_par_iter()
         .map(|test_file| {
@@ -44,6 +57,7 @@ pub(crate) fn prepare_test_files(
                             let attributes = test_file.test_id_attributes();
                             let key = PlaywrightOccurrenceKey::new(
                                 &settings.navigation_helpers,
+                                &settings.selector_wrappers,
                                 &settings.selector_attributes,
                                 &settings.component_selector_attributes,
                                 settings.html_ids,
@@ -73,6 +87,8 @@ pub(crate) fn prepare_test_files(
                             &test_file,
                             &settings.navigation_helpers,
                             selector_regexes,
+                            &settings.selector_wrappers,
+                            module_resolution,
                         ) {
                             Ok(occurrences) => vec![occurrences],
                             Err(_) if skip_test_file_errors => return Ok(None),
@@ -117,11 +133,22 @@ pub(crate) fn extract_test_file_occurrences(
     test_file: &DiscoveredTestFile,
     navigation_helpers: &[String],
     selector_regexes: &SelectorRegexes,
+    selector_wrappers: &[crate::config::v2::schema::PlaywrightSelectorWrapper],
+    module_resolution: Option<&crate::codebase::check_facts::PlaywrightModuleResolution>,
 ) -> Result<TestFileOccurrences> {
     let source = std::fs::read_to_string(&test_file.path)
         .context(format!("reading test file {}", test_file.path.display()))?;
     let test_id_attributes = test_file.test_id_attributes();
     crate::playwright::ast::with_program(&test_file.path, &source, |program, source| {
+        let (selectors, wrapper_calls) = crate::playwright::selectors::extract_playwright_selector_occurrences_and_wrapper_calls_from_program(
+            program,
+            source,
+            selector_regexes,
+            &test_id_attributes,
+            selector_wrappers,
+            Some(&test_file.path),
+            module_resolution,
+        );
         TestFileOccurrences {
             variant: Arc::new(VariantOccurrences {
                 urls: crate::playwright::playwright_urls::extract_playwright_url_occurrences_from_program(
@@ -129,18 +156,13 @@ pub(crate) fn extract_test_file_occurrences(
                 source,
                 navigation_helpers,
             ),
-                selectors: crate::playwright::selectors::extract_playwright_selector_occurrences_from_program(
-                program,
-                source,
-                selector_regexes,
-                &test_id_attributes,
-            ),
+                selectors,
+                helper_references: crate::playwright::selectors::extract_playwright_helper_reference_occurrences_from_program(
+                    program, source, &wrapper_calls,
+                ),
             }),
             common: Arc::new(CommonOccurrences {
                 text_locators: crate::playwright::selectors::extract_playwright_text_locator_occurrences_from_program(
-                program, source,
-            ),
-                helper_references: crate::playwright::selectors::extract_playwright_helper_reference_occurrences_from_program(
                 program, source,
             ),
             }),

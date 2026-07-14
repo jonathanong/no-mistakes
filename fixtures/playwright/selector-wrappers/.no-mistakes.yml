@@ -1,0 +1,67 @@
+projects:
+  web:
+    type: nextjs
+    root: web
+
+tests:
+  playwright:
+    frontendRoot: web
+    selectorRoots:
+      - web
+    selectors:
+      testIds:
+        - data-pw
+      wrappers:
+        # NodeNext-style emitted extension resolves to the imported TS helper.
+        - module: "./helpers.js"
+          export: getAsideLocator
+          testIdArgument: 1
+        # These relative identities are imported through tsconfig aliases.
+        - module: "./default-locator"
+          export: default
+          testIdArgument: 0
+        - module: "./namespace-locators"
+          export: byTestId
+          testIdArgument: 1
+        - module: "./namespace-locators"
+          export: getByTestId
+          testIdArgument: 1
+        - module: "./namespace-locators"
+          export: ambiguousByTestId
+          testIdArgument: 1
+        - module: "@fixture/namespace-locators"
+          export: ambiguousByTestId
+          testIdArgument: 0
+        - module: "./namespace-locators.js"
+          export: ambiguousByTestId
+          testIdArgument: 1
+        - module: "./helpers"
+          export: getAsideLocator
+          testIdArgument: 1
+        # These spellings resolve to the same export but intentionally disagree.
+        # Ambiguous resolved declarations must not create selector coverage.
+        - module: "./helpers"
+          export: ambiguousLocator
+          testIdArgument: 1
+        - module: "#selector-helpers"
+          export: ambiguousLocator
+          testIdArgument: 0
+        - module: "./helpers.js"
+          export: ambiguousLocator
+          testIdArgument: 1
+        - module: "../packages/locators/src/aside"
+          export: workspaceLocator
+          testIdArgument: 1
+        # Recognized but unresolved package targets must never create coverage.
+        - module: "#missing-helper"
+          export: missingImportLocator
+          testIdArgument: 1
+        - module: "@fixture/workspace-locators/missing"
+          export: missingWorkspaceLocator
+          testIdArgument: 1
+
+rules:
+  - rule: playwright-coverage
+    tests:
+      playwright:
+        - web

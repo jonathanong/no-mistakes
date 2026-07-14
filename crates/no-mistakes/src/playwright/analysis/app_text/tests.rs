@@ -18,6 +18,7 @@ fn settings() -> Settings {
         ignore_routes: vec![],
         rewrites: vec![],
         navigation_helpers: vec![],
+        selector_wrappers: vec![],
         selector_attributes: vec!["data-pw".to_string()],
         test_id_attribute_override: None,
         component_selector_attributes: BTreeMap::from([(

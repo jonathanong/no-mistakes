@@ -54,9 +54,23 @@ pub fn prepare(
     config: &NoMistakesConfig,
 ) -> Result<Option<PreparedPlaywrightRules>> {
     let snapshot = Arc::new(VisiblePathSnapshot::new(root));
-    prepare_with_settings(root, config, snapshot, |project, snapshot| {
-        config::load_settings_from_visible(root, config_path, &[], project, snapshot)
-    })
+    let paths = snapshot.paths_for(root);
+    let sources = snapshot.source_store_for(root);
+    let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible_and_sources(
+        None, root, &paths, &sources,
+    )?;
+    let workspace = crate::codebase::workspaces::load_indexed_from_source_store(root, &sources)
+        .unwrap_or_default();
+    prepare_with_settings(
+        root,
+        config,
+        snapshot,
+        Arc::new(tsconfig),
+        Arc::new(workspace),
+        |project, snapshot| {
+            config::load_settings_from_visible(root, config_path, &[], project, snapshot)
+        },
+    )
 }
 
 /// Prepare Playwright rule facts from the invocation's canonical candidates.
@@ -66,16 +80,31 @@ pub fn prepare_from_snapshot(
     _config_path: Option<&Path>,
     config: &NoMistakesConfig,
     snapshot: Arc<VisiblePathSnapshot>,
+    tsconfig: Arc<crate::codebase::ts_resolver::TsConfig>,
 ) -> Result<Option<PreparedPlaywrightRules>> {
-    prepare_with_settings(root, config, snapshot, |project, snapshot| {
-        config::settings_from_loaded_v2(root, config, &[], project, snapshot)
-    })
+    let workspace = Arc::new(
+        crate::codebase::workspaces::load_indexed_from_source_store(
+            root,
+            &snapshot.source_store_for(root),
+        )
+        .unwrap_or_default(),
+    );
+    prepare_with_settings(
+        root,
+        config,
+        snapshot,
+        tsconfig,
+        workspace,
+        |project, snapshot| config::settings_from_loaded_v2(root, config, &[], project, snapshot),
+    )
 }
 
 fn prepare_with_settings(
     root: &Path,
     config: &NoMistakesConfig,
     snapshot: Arc<VisiblePathSnapshot>,
+    tsconfig: Arc<crate::codebase::ts_resolver::TsConfig>,
+    workspace: Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
     mut settings_for_project: impl FnMut(
         Option<String>,
         &VisiblePathSnapshot,
@@ -120,6 +149,7 @@ fn prepare_with_settings(
         });
     }
     fact_plan.set_test_files_by_project(test_files_by_project.into_iter().collect());
+    fact_plan.configure_module_resolution(tsconfig, workspace, snapshot.as_ref(), root);
     Ok(Some(PreparedPlaywrightRules {
         snapshot,
         selections: prepared_selections,
@@ -147,6 +177,7 @@ fn add_settings_facts(
         fact_plan.add_file(crate::codebase::check_facts::PlaywrightFactSelection {
             path: test_file.path.clone(),
             navigation_helpers: &settings.navigation_helpers,
+            selector_wrappers: &settings.selector_wrappers,
             selector_attributes: &settings.selector_attributes,
             component_selector_attributes: &settings.component_selector_attributes,
             html_ids: settings.html_ids,

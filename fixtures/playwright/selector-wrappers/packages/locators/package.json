@@ -1,0 +1,7 @@
+{
+  "name": "@fixture/workspace-locators",
+  "exports": {
+    "./aside": "./src/aside.ts",
+    "./missing": "./src/missing.ts"
+  }
+}

@@ -51,7 +51,8 @@ pub use plan::CheckFactPlan;
 pub(crate) use playwright_facts::PlaywrightTestFacts;
 pub use playwright_plan::PlaywrightFactPlan;
 pub(crate) use playwright_plan::{
-    PlaywrightFactSelection, PlaywrightOccurrenceKey, PlaywrightSettingsKey,
+    PlaywrightFactSelection, PlaywrightModuleResolution, PlaywrightOccurrenceKey,
+    PlaywrightSettingsKey,
 };
 pub(crate) use runner::{collect_prepared_runner_facts, runner_config_facts, RunnerConfigFacts};
 pub use stats::CheckFactStats;

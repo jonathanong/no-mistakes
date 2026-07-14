@@ -344,6 +344,7 @@ fn extract_test_selector_pairs(
             source,
             regexes,
             test_id_attributes,
+            &[],
         )
     }) {
         Ok(occurrences) => occurrences,

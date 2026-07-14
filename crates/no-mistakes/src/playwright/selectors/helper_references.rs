@@ -10,6 +10,7 @@ use classifier::is_helper_reference_call;
 pub fn extract_playwright_helper_reference_occurrences_from_program(
     program: &oxc_ast::ast::Program<'_>,
     source: &str,
+    excluded_call_offsets: &std::collections::HashSet<u32>,
 ) -> Vec<playwright_tests::TestOccurrence<super::types::PlaywrightHelperReference>> {
     let mut visitor = PlaywrightHelperReferenceVisitor {
         source,
@@ -19,6 +20,7 @@ pub fn extract_playwright_helper_reference_occurrences_from_program(
         current_test_name: None,
         current_scope: playwright_tests::TestOccurrenceScope::File,
         describe_stack: Vec::new(),
+        excluded_call_offsets,
     };
     visitor.visit_program(program);
     playwright_tests::dedup_occurrences_by_identity(&mut visitor.references);
@@ -33,15 +35,18 @@ struct PlaywrightHelperReferenceVisitor<'a> {
     current_test_name: Option<String>,
     current_scope: playwright_tests::TestOccurrenceScope,
     describe_stack: Vec<String>,
+    excluded_call_offsets: &'a std::collections::HashSet<u32>,
 }
 
 impl<'a> oxc_ast_visit::Visit<'a> for PlaywrightHelperReferenceVisitor<'a> {
     fn visit_call_expression(&mut self, call: &oxc_ast::ast::CallExpression<'a>) {
-        if let Some(path) = ast::expression_path(&call.callee) {
-            if is_helper_reference_call(&call.callee, &path) {
-                let call_display = format!("{}(...)", path.join("."));
-                for value in helper_argument_literals(call, self.source) {
-                    self.insert(value, call_display.clone(), call.span.start);
+        if !self.excluded_call_offsets.contains(&call.span.start) {
+            if let Some(path) = ast::expression_path(&call.callee) {
+                if is_helper_reference_call(&call.callee, &path) {
+                    let call_display = format!("{}(...)", path.join("."));
+                    for value in helper_argument_literals(call, self.source) {
+                        self.insert(value, call_display.clone(), call.span.start);
+                    }
                 }
             }
         }

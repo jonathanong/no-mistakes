@@ -59,9 +59,21 @@ fn aggregate_playwright_rule_parses_each_source_file_once() {
     );
 
     crate::ast::begin_parse_count(&root);
-    let prepared = prepare_from_snapshot(&root, None, &config, std::sync::Arc::clone(&snapshot))
-        .unwrap()
-        .expect("fixture enables a Playwright rule");
+    let paths = snapshot.paths_for(&root);
+    let sources = snapshot.source_store_for(&root);
+    let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible_and_sources(
+        None, &root, &paths, &sources,
+    )
+    .unwrap();
+    let prepared = prepare_from_snapshot(
+        &root,
+        None,
+        &config,
+        std::sync::Arc::clone(&snapshot),
+        std::sync::Arc::new(tsconfig),
+    )
+    .unwrap()
+    .expect("fixture enables a Playwright rule");
     let facts = crate::codebase::check_facts::collect_check_facts_with_graph_files_and_playwright(
         &root,
         files,

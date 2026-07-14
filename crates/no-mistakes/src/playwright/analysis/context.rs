@@ -49,6 +49,7 @@ pub(crate) struct TestAnalysisContext<'a> {
     pub(crate) route_index: &'a RouteIndex,
     pub(crate) selector_index: &'a SelectorIndex<'a>,
     pub(crate) navigation_helpers: &'a [String],
+    pub(crate) selector_wrappers: &'a [crate::config::v2::schema::PlaywrightSelectorWrapper],
     pub(crate) selector_regexes: &'a selectors::SelectorRegexes,
     pub(crate) test_policy: playwright_tests::TestPolicy,
 }

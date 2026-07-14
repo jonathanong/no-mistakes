@@ -67,11 +67,21 @@ pub(super) fn extract_get_by_test_id_call(
     attributes: &[String],
     insert: &mut impl FnMut(super::types::PlaywrightSelector),
 ) {
-    use super::types::SelectorMatcher;
-
     let Some(argument) = call.arguments.first() else {
         return;
     };
+
+    extract_test_id_argument(argument, source, attributes, "getByTestId", insert);
+}
+
+pub(super) fn extract_test_id_argument(
+    argument: &oxc_ast::ast::Argument<'_>,
+    source: &str,
+    attributes: &[String],
+    call_name: &str,
+    insert: &mut impl FnMut(super::types::PlaywrightSelector),
+) {
+    use super::types::SelectorMatcher;
 
     let matcher = match argument {
         oxc_ast::ast::Argument::StringLiteral(literal) => Some((
@@ -121,7 +131,7 @@ pub(super) fn extract_get_by_test_id_call(
     for attribute in attributes {
         insert(super::types::PlaywrightSelector {
             attribute: attribute.clone(),
-            selector: format!("getByTestId({display})"),
+            selector: format!("{call_name}({display})"),
             matcher: matcher.clone(),
         });
     }

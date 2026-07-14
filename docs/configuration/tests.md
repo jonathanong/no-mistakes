@@ -120,6 +120,40 @@ report every `getByTestId` selector as uncovered. Declaring
 coverage match `getByTestId('x')` against `data-pw="x"`. See
 [`playwright-coverage`](../rules/playwright-coverage.md).
 
+## Selector wrappers
+
+Declare a statically imported helper when one of its arguments carries the same
+test ID as `getByTestId(...)`:
+
+```yaml
+tests:
+  playwright:
+    selectors:
+      wrappers:
+        - module: "@app/playwright-locators"
+          export: getAsideLocator
+          testIdArgument: 1 # zero-based: the second argument
+```
+
+With that configuration, an imported call such as
+`getAsideLocator(page, 'save')` covers the same selector as
+`page.getByTestId('save')`. `module` is a normal JavaScript module specifier.
+The configured module and static import are compared through the request's
+TypeScript and workspace resolver, including relative and NodeNext paths,
+`baseUrl`/`paths`, package `imports`, and workspace package exports. This is
+independent of npm, pnpm, Yarn, or Bun. External packages remain terminal
+module identities; `no-mistakes` does not scan `node_modules` or inspect helper
+bodies.
+
+If two declarations resolve to the same imported export but disagree on
+`testIdArgument`, that binding is ambiguous and does not create coverage.
+
+Only static ESM named, aliased, default, and namespace imports are recognized.
+The configured argument uses the same supported forms and interpolation
+behavior as `getByTestId`: a string, a template literal, or a regular
+expression. Identifier and call-expression values, CommonJS `require`, dynamic
+imports, and shadowed local bindings do not create coverage.
+
 ## `tests.impact`
 
 Opt-in knobs for the [`tests impact`](../cli/tests-impact.md) query. Both lists

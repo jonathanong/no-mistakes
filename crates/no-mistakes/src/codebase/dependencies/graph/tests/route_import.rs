@@ -8,6 +8,7 @@ fn cache_settings() -> crate::playwright::config::Settings {
         ignore_routes: Vec::new(),
         rewrites: Vec::new(),
         navigation_helpers: Vec::new(),
+        selector_wrappers: Vec::new(),
         selector_attributes: Vec::new(),
         test_id_attribute_override: None,
         component_selector_attributes: std::collections::BTreeMap::new(),

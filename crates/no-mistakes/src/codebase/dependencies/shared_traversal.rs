@@ -169,6 +169,10 @@ impl SharedTraversalContext {
         &self.tsconfig
     }
 
+    pub(crate) fn workspace(&self) -> &crate::codebase::workspaces::IndexedWorkspaceMap {
+        self.prepared_graph.workspace()
+    }
+
     pub(crate) fn graph_files(&self) -> &graph::GraphFiles {
         &self.graph_files
     }

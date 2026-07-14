@@ -48,6 +48,7 @@ pub(crate) fn prepare_from_shared(
         config_path,
         &config,
         Arc::clone(&visible_paths),
+        Arc::new(tsconfig.clone()),
     )
     .context("failed to prepare Playwright shared facts")?;
     let react = no_mistakes::react_traits::prepare_check_from_loaded_config(&config, false);

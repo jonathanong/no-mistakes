@@ -13,6 +13,24 @@ fn missing_default_config_uses_defaults() {
     assert!(settings.component_selector_attributes.is_empty());
     assert!(!settings.html_ids);
     assert_eq!(settings.selector_roots, vec!["app"]);
+    assert!(settings.selector_wrappers.is_empty());
+}
+
+#[test]
+fn selector_wrappers_activate_and_load_v2_playwright_settings() {
+    let root = fixture_path(&["scan-config", "missing-default"]);
+    let mut config = crate::config::v2::schema::NoMistakesConfig::default();
+    let wrapper = crate::config::v2::schema::PlaywrightSelectorWrapper {
+        module: "@app/playwright-locators".to_string(),
+        export: "getAsideLocator".to_string(),
+        test_id_argument: 1,
+    };
+    config.tests.playwright.selectors.wrappers = vec![wrapper.clone()];
+    let visible = crate::playwright::fsutil::VisiblePathSnapshot::new(&root);
+
+    let settings = settings_from_loaded_v2(&root, &config, &[], None, &visible).unwrap();
+
+    assert_eq!(settings.selector_wrappers, vec![wrapper]);
 }
 
 #[test]

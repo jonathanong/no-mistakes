@@ -21,6 +21,17 @@ fn fixture(sub: &str) -> std::path::PathBuf {
         .join("fixture")
 }
 
+fn saved_fixture(path: &[&str]) -> std::path::PathBuf {
+    let mut root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("fixtures");
+    root.extend(path);
+    root
+}
+
 // ── discovery ─────────────────────────────────────────────────────────────────
 
 #[test]
@@ -104,6 +115,25 @@ fn multi_project_config_parsed() {
     assert_eq!(pw.selectors.test_ids, vec!["data-testid", "data-pw"]);
     assert_eq!(pw.selectors.component_test_ids["dataPw"], "data-pw");
     assert_eq!(pw.selector_roots, vec!["web/app", "web/components"]);
+}
+
+#[test]
+fn selector_wrapper_config_rejects_missing_unknown_negative_and_conflicting_fields() {
+    let cases = [
+        ("missing", "testIdArgument"),
+        ("unknown", "unknown field"),
+        ("negative", "expected usize"),
+        ("conflict", "conflicting testIdArgument values"),
+    ];
+    for (name, expected) in cases {
+        let error = load_v2_config(
+            &saved_fixture(&["playwright", "selector-wrapper-config-invalid", name]),
+            None,
+        )
+        .unwrap_err();
+        let error = format!("{error:#}");
+        assert!(error.contains(expected), "{name}: {error}");
+    }
 }
 
 #[test]

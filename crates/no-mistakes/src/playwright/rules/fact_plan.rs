@@ -71,6 +71,7 @@ pub fn fact_plan_for_consumers(
             plan.add_file(PlaywrightFactSelection {
                 path: test_file.path.clone(),
                 navigation_helpers: &settings.navigation_helpers,
+                selector_wrappers: &settings.selector_wrappers,
                 selector_attributes: &settings.selector_attributes,
                 component_selector_attributes: &settings.component_selector_attributes,
                 html_ids: settings.html_ids,

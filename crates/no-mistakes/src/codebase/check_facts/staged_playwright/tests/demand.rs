@@ -95,6 +95,7 @@ fn route_only_variant_caches_urls_without_upgrading_text_imports() {
     playwright.add_file(PlaywrightFactSelection {
         path: root().join("tests/route-text.spec.ts"),
         navigation_helpers: &[],
+        selector_wrappers: &[],
         selector_attributes: &["data-testid".to_string()],
         component_selector_attributes: &BTreeMap::new(),
         html_ids: false,

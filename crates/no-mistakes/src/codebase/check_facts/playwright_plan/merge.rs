@@ -5,6 +5,9 @@ use std::sync::Arc;
 impl PlaywrightFactPlan {
     #[doc(hidden)]
     pub fn include(&mut self, other: Self) {
+        if self.module_resolution.is_none() {
+            self.module_resolution = other.module_resolution.clone();
+        }
         for (path, other_file) in other.files {
             let file = self
                 .files
@@ -50,7 +53,7 @@ impl PlaywrightFactPlan {
         let Some(existing) = self
             .source_plans
             .iter_mut()
-            .find(|existing| existing.settings == source_plan.settings)
+            .find(|existing| existing.settings_key == source_plan.settings_key)
         else {
             self.source_plans.push(source_plan);
             return;

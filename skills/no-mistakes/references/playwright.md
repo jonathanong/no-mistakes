@@ -47,10 +47,12 @@ no-mistakes playwright check --assert-unique-test-ids --json
 
 Node API: `playwrightCheck(options)`.
 
-If an uncovered selector value appears only in a helper-wrapper call such as
-`getAsideLocator(page, 'save')`, `playwright check` reports that location as a
-hint. The wrapper still does not count as selector coverage; use a literal
-`getByTestId('save')` call or add explicit wrapper support.
+If a shared helper carries a test ID argument, declare it under
+`tests.playwright.selectors.wrappers` with its JavaScript `module`, imported
+`export`, and zero-based `testIdArgument`. Static ESM named, aliased, default,
+and namespace imports then count like `getByTestId(...)`. Unconfigured helper
+calls remain hints; dynamic values, shadowed bindings, CommonJS, and helper-body
+inference do not count.
 
 ## `playwright related`
 

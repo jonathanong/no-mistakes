@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@fixture/default-locator": ["tests/default-locator.ts"],
+      "@fixture/namespace-locators": ["tests/namespace-locators.ts"],
+      "@missing/*": ["tests/missing/*"]
+    }
+  }
+}

@@ -1,0 +1,8 @@
+tests:
+  playwright:
+    selectors:
+      wrappers:
+        - module: "@app/locators"
+          export: find
+          testIdArgument: 0
+          argument: 1

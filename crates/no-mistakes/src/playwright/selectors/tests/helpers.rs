@@ -43,6 +43,7 @@ pub(super) fn extract_playwright_selectors_with_regexes(
             source,
             regexes,
             test_id_attributes,
+            &[],
         )
         .into_iter()
         .map(|o| o.value)
@@ -63,6 +64,7 @@ pub(super) fn extract_playwright_selector_occurrences(
             source,
             &regexes,
             test_id_attributes,
+            &[],
         ) {
             let selector = (occurrence.value.selector, occurrence.status);
             if !selectors.contains(&selector) {

@@ -16,8 +16,9 @@ mod tests_config;
 pub use ci_checks::{CheckCommandDef, CheckFileArgs, ChecksConfig, CiConfig};
 pub use infra_config::{InfraConfig, TerraformConfig, TerraformTestConvention};
 pub use tests_config::{
-    DotnetConfig, DotnetProjectConfig, ImpactConfig, JestConfig, PlaywrightSelectors,
-    PlaywrightTestConfig, StorybookConfig, SwiftConfig, TestProjectPolicy, Tests, VitestConfig,
+    DotnetConfig, DotnetProjectConfig, ImpactConfig, JestConfig, PlaywrightSelectorWrapper,
+    PlaywrightSelectors, PlaywrightTestConfig, StorybookConfig, SwiftConfig, TestProjectPolicy,
+    Tests, VitestConfig,
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

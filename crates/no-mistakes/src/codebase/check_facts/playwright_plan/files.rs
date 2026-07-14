@@ -55,6 +55,7 @@ impl PlaywrightFileFactPlan {
     fn merge(&mut self, selection: &PlaywrightFactSelection<'_>) {
         let key = PlaywrightOccurrenceKey::new(
             selection.navigation_helpers,
+            selection.selector_wrappers,
             selection.selector_attributes,
             selection.component_selector_attributes,
             selection.html_ids,
@@ -86,6 +87,7 @@ impl PlaywrightFileFactPlan {
 impl PlaywrightOccurrenceKey {
     pub(crate) fn new(
         navigation_helpers: &[String],
+        selector_wrappers: &[crate::config::v2::schema::PlaywrightSelectorWrapper],
         selector_attributes: &[String],
         component_selector_attributes: &BTreeMap<String, String>,
         html_ids: bool,
@@ -93,6 +95,7 @@ impl PlaywrightOccurrenceKey {
     ) -> Self {
         Self {
             navigation_helpers: sorted(navigation_helpers),
+            selector_wrappers: sorted(selector_wrappers),
             selector_attributes: sorted(selector_attributes),
             component_selector_attributes: component_selector_attributes.clone(),
             html_ids,

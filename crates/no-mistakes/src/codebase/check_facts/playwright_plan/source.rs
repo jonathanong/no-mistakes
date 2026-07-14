@@ -84,7 +84,7 @@ impl PlaywrightFactPlan {
         let Some(mut source_plan) = self
             .source_plans
             .iter()
-            .find(|source_plan| source_plan.settings.as_ref() == settings)
+            .find(|source_plan| source_plan.settings_key == PlaywrightSettingsKey::new(settings))
             .cloned()
         else {
             return;

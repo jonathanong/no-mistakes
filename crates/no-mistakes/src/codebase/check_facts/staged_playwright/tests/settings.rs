@@ -1,7 +1,7 @@
 use super::*;
 use crate::playwright::analysis::context::{DiscoveredTestFile, TestProjectContext};
 use crate::playwright::analysis::pipeline_occurrences::{
-    prepare_test_files, CachedOccurrenceSelection,
+    prepare_test_files, CachedOccurrenceSelection, PrepareTestFilesOptions,
 };
 use crate::playwright::playwright_tests::TestStatus;
 use crate::playwright::selectors::compile_selector_regexes;
@@ -76,10 +76,13 @@ fn assert_missing_variant_is_an_error(facts: &CheckFactMap, path: &std::path::Pa
         }],
         &settings,
         &regexes,
-        TestPolicy::default(),
-        false,
-        Some(facts),
-        CachedOccurrenceSelection::Exact,
+        PrepareTestFilesOptions {
+            test_policy: TestPolicy::default(),
+            skip_test_file_errors: false,
+            facts: Some(facts),
+            selection: CachedOccurrenceSelection::Exact,
+            module_resolution: None,
+        },
     )
     .err()
     .unwrap();
@@ -100,6 +103,7 @@ fn add_variant(
     plan.add_file(PlaywrightFactSelection {
         path: path.to_path_buf(),
         navigation_helpers: &[helper.to_string()],
+        selector_wrappers: &[],
         selector_attributes: &[attribute.to_string()],
         component_selector_attributes: &component_attributes,
         html_ids: false,
@@ -133,10 +137,13 @@ fn prepare(
         }],
         &settings,
         &regexes,
-        TestPolicy::default(),
-        false,
-        Some(facts),
-        CachedOccurrenceSelection::Exact,
+        PrepareTestFilesOptions {
+            test_policy: TestPolicy::default(),
+            skip_test_file_errors: false,
+            facts: Some(facts),
+            selection: CachedOccurrenceSelection::Exact,
+            module_resolution: None,
+        },
     )
     .unwrap()
     .0

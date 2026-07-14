@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 mod entrypoints;
 mod finish;
 mod helpers;
+mod module_resolution;
 mod partitions;
 mod precollect;
 
@@ -20,9 +21,10 @@ pub(super) fn collect_with_sources(
     root: &Path,
     file_scope: (Vec<PathBuf>, Vec<PathBuf>, bool),
     plan: CheckFactPlan,
-    playwright: PlaywrightFactPlan,
+    mut playwright: PlaywrightFactPlan,
     sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> CheckFactMap {
+    module_resolution::initialize_if_missing(root, &mut playwright, &sources);
     let (files, graph_files, graph_files_complete) = file_scope;
     let precollected_ts =
         cached_config_graph_facts(&files, &graph_files, &plan, &playwright, &sources);

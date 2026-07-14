@@ -12,17 +12,25 @@ impl PreparedGraphConfig {
     pub fn playwright_fact_plan(
         &self,
         root: &Path,
+        tsconfig: &crate::codebase::ts_resolver::TsConfig,
         visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
     ) -> anyhow::Result<Option<crate::codebase::check_facts::PlaywrightFactPlan>> {
         self.playwright_settings
             .as_ref()
             .map(|settings| {
-                crate::playwright::analysis::pipeline::standalone_fact_plan(
+                let mut plan = crate::playwright::analysis::pipeline::standalone_fact_plan(
                     root,
                     settings,
                     crate::playwright::analysis::types::UniqueSelectorPolicy::default(),
                     visible_paths,
-                )
+                )?;
+                plan.configure_module_resolution(
+                    std::sync::Arc::new(tsconfig.clone()),
+                    std::sync::Arc::clone(&self.workspace),
+                    visible_paths,
+                    root,
+                );
+                Ok(plan)
             })
             .transpose()
     }

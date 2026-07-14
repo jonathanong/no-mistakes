@@ -11,7 +11,22 @@ pub(crate) fn standalone_facts(
     unique_selector_policy: UniqueSelectorPolicy,
     snapshot: &VisiblePathSnapshot,
 ) -> Result<crate::codebase::check_facts::CheckFactMap> {
-    let fact_plan = standalone_fact_plan(root, settings, unique_selector_policy, snapshot)?;
+    let mut fact_plan = standalone_fact_plan(root, settings, unique_selector_policy, snapshot)?;
+    if !settings.selector_wrappers.is_empty() {
+        let paths = snapshot.paths_for(root);
+        let sources = snapshot.source_store_for(root);
+        let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible_and_sources(
+            None, root, &paths, &sources,
+        )?;
+        let workspace = crate::codebase::workspaces::load_indexed_from_source_store(root, &sources)
+            .unwrap_or_default();
+        fact_plan.configure_module_resolution(
+            std::sync::Arc::new(tsconfig),
+            std::sync::Arc::new(workspace),
+            snapshot,
+            root,
+        );
+    }
     let mut files = snapshot
         .paths_for(root)
         .iter()
@@ -54,6 +69,7 @@ pub(crate) fn standalone_fact_plan(
         fact_plan.add_file(crate::codebase::check_facts::PlaywrightFactSelection {
             path: test_file.path.clone(),
             navigation_helpers: &settings.navigation_helpers,
+            selector_wrappers: &settings.selector_wrappers,
             selector_attributes: &settings.selector_attributes,
             component_selector_attributes: &settings.component_selector_attributes,
             html_ids: settings.html_ids,

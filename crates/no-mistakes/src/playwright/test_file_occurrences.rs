@@ -6,13 +6,13 @@ use std::sync::Arc;
 #[derive(Default)]
 pub(crate) struct CommonOccurrences {
     pub(crate) text_locators: Vec<TestOccurrence<PlaywrightTextLocator>>,
-    pub(crate) helper_references: Vec<TestOccurrence<PlaywrightHelperReference>>,
 }
 
 #[derive(Default)]
 pub(crate) struct VariantOccurrences {
     pub(crate) urls: Vec<TestOccurrence<String>>,
     pub(crate) selectors: Vec<TestOccurrence<PlaywrightSelector>>,
+    pub(crate) helper_references: Vec<TestOccurrence<PlaywrightHelperReference>>,
 }
 
 #[derive(Clone, Default)]
@@ -35,6 +35,6 @@ impl TestFileOccurrences {
     }
 
     pub(crate) fn helper_references(&self) -> &[TestOccurrence<PlaywrightHelperReference>] {
-        &self.common.helper_references
+        &self.variant.helper_references
     }
 }
