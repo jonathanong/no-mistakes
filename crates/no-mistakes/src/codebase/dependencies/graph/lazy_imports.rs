@@ -1,59 +1,21 @@
-/// Demand-driven import traversal used by `dependencies --relationship import`.
-/// It parses only roots and files reached through static import edges.
-pub fn lazy_import_deps_of(
-    roots: &[NodeId],
-    root: &Path,
-    tsconfig: &TsConfig,
-    max_depth: Option<usize>,
-) -> Result<Vec<NodeEntry>> {
-    let mut graph_files = GraphFiles::discover(root);
-    for path in roots.iter().filter_map(NodeId::as_file) {
-        graph_files.add_explicit_root(path);
-    }
-    Ok(lazy_import_deps_of_with_files(
+pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_and_resolution_cache(
+    input: LazyImportBuild<'_>,
+) -> (Vec<NodeEntry>, Vec<(PathBuf, TsFileFacts)>) {
+    let LazyImportBuild {
         roots,
-        root,
-        tsconfig,
-        max_depth,
-        &graph_files,
-        None,
-    ))
-}
-
-pub(crate) fn lazy_import_deps_of_with_files(
-    roots: &[NodeId],
-    root: &Path,
-    tsconfig: &TsConfig,
-    max_depth: Option<usize>,
-    graph_files: &GraphFiles,
-    allowed: Option<&HashSet<EdgeKind>>,
-) -> Vec<NodeEntry> {
-    let context = TsFactContext::new(root);
-    lazy_import_deps_of_with_files_and_facts(
-        roots,
-        root,
         tsconfig,
         max_depth,
         graph_files,
         allowed,
-        LazyImportFacts::new(None, TsFactPlan::imports(), &context),
-    )
-    .0
-}
-
-pub(crate) fn lazy_import_deps_of_with_files_and_facts(
-    roots: &[NodeId],
-    root: &Path,
-    tsconfig: &TsConfig,
-    max_depth: Option<usize>,
-    graph_files: &GraphFiles,
-    allowed: Option<&HashSet<EdgeKind>>,
-    facts: LazyImportFacts<'_>,
-) -> (Vec<NodeEntry>, Vec<(PathBuf, TsFileFacts)>) {
+        facts,
+        workspace,
+        import_resolution_cache,
+    } = input;
     let resolver = ImportResolver::new(tsconfig).with_visible(&graph_files.visible);
-    let workspace =
-        crate::codebase::workspaces::load_from_files(root, graph_files.all()).unwrap_or_default();
-
+    let resolver = match import_resolution_cache {
+        Some(cache) => resolver.with_shared_cache(cache),
+        None => resolver,
+    };
     let mut visited: HashSet<NodeId> = HashSet::new();
     let mut frontier: Vec<NodeId> = Vec::new();
     let mut result: Vec<NodeEntry> = Vec::new();
@@ -93,14 +55,8 @@ pub(crate) fn lazy_import_deps_of_with_files_and_facts(
                         collected: None,
                     };
                 }
-                let (neighbors, collected) = import_neighbors(
-                    path,
-                    &resolver,
-                    &workspace,
-                    graph_files,
-                    allowed,
-                    facts,
-                );
+                let (neighbors, collected) =
+                    import_neighbors(path, &resolver, workspace, graph_files, allowed, facts);
                 ExpandedImportNode {
                     node: node.clone(),
                     neighbors,

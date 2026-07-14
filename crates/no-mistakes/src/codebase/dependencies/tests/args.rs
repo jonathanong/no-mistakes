@@ -1,3 +1,5 @@
+use super::root_dependency_test_helpers::root_dependency_names;
+use super::traversal_entrypoint_test_helpers::resolve_entrypoints_with_files;
 use super::*;
 use super::traversal::*;
 use clap::Parser;

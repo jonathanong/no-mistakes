@@ -385,7 +385,7 @@ fn ignored_queue_processor_is_not_resolved_from_disk() {
 
 #[test]
 fn custom_factory_respected_in_check_mode_shared_facts() {
-    use crate::codebase::check_facts::{collect_file_facts, CheckFactPlan};
+    use crate::codebase::check_facts::{tests::collect_file_facts, CheckFactPlan};
 
     let root = fixture("custom-factory");
     let queue_file = root.join("queues/notifications.ts");
@@ -399,6 +399,7 @@ fn custom_factory_respected_in_check_mode_shared_facts() {
     let queue_facts = facts
         .ts
         .queue_project
+        .clone()
         .expect("queue facts should be present");
     assert_eq!(
         queue_facts.queue_exports.get("notificationsQueue"),

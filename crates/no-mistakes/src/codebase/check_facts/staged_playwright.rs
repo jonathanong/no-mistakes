@@ -2,45 +2,48 @@ use super::{CheckFactMap, CheckFactPlan, PlaywrightFactPlan};
 use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
 
+mod entrypoints;
 mod finish;
 mod helpers;
 mod partitions;
 mod precollect;
 
+pub(super) use entrypoints::collect_with_precollected_ts;
 use finish::{finish_map, FinishMapInput};
-use helpers::{collect_test_partition, graph_plan, needs_scoped_facts, with_imports};
+use helpers::{
+    collect_test_partition, graph_plan, has_indexable_graph_only, needs_scoped_facts, with_imports,
+};
 use partitions::FilePartitions;
 use precollect::cached_config_graph_facts;
 
-pub(super) fn collect(
+pub(super) fn collect_with_sources(
     root: &Path,
-    files: Vec<PathBuf>,
-    graph_files: Vec<PathBuf>,
-    graph_files_complete: bool,
+    file_scope: (Vec<PathBuf>, Vec<PathBuf>, bool),
     plan: CheckFactPlan,
     playwright: PlaywrightFactPlan,
+    sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> CheckFactMap {
-    let precollected_ts = cached_config_graph_facts(&files, &graph_files, &plan, &playwright);
-    collect_with_precollected_ts(
+    let (files, graph_files, graph_files_complete) = file_scope;
+    let precollected_ts =
+        cached_config_graph_facts(&files, &graph_files, &plan, &playwright, &sources);
+    collect_with_precollected_ts_and_sources(
         root,
-        files,
-        graph_files,
-        graph_files_complete,
+        (files, graph_files, graph_files_complete),
         plan,
         playwright,
         precollected_ts,
+        sources,
     )
 }
-
-pub(super) fn collect_with_precollected_ts(
+pub(super) fn collect_with_precollected_ts_and_sources(
     root: &Path,
-    files: Vec<PathBuf>,
-    graph_files: Vec<PathBuf>,
-    graph_files_complete: bool,
+    file_scope: (Vec<PathBuf>, Vec<PathBuf>, bool),
     mut plan: CheckFactPlan,
     playwright: PlaywrightFactPlan,
     precollected_ts: crate::codebase::ts_source::facts::TsFactMap,
+    sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> CheckFactMap {
+    let (files, graph_files, graph_files_complete) = file_scope;
     assert!(
         precollected_ts.is_empty() || precollected_ts.plan().covers(plan.graph),
         "precollected graph facts must cover the staged graph plan"
@@ -49,19 +52,17 @@ pub(super) fn collect_with_precollected_ts(
     let playwright_source_files = playwright.source_files();
     let playwright_test_files_by_project = playwright.test_files_by_project();
     let graph_only_files = super::graph_only_files(&files, &graph_files);
-    let has_indexable_graph_only = graph_only_files
-        .iter()
-        .chain(partitions.playwright_only_sources.iter())
-        .any(|path| crate::codebase::dependencies::extract::is_indexable(path));
+    let has_indexable_graph_only =
+        has_indexable_graph_only(&graph_only_files, &partitions.playwright_only_sources);
     let mut ts = precollected_ts
         .into_iter()
         .map(|(path, ts)| {
             let parse_error = ts.parse_error.clone();
-            let source = ts.source.clone();
+            let source = ts.source.as_deref().map(std::sync::Arc::<str>::from);
             (
                 path,
                 super::CheckFileFacts {
-                    ts,
+                    ts: ts.into(),
                     source,
                     parse_error,
                     parsed: true,
@@ -93,6 +94,7 @@ pub(super) fn collect_with_precollected_ts(
             &runner_plan,
             &graph_fact_plan,
             Some(&playwright),
+            std::sync::Arc::clone(&sources),
         );
     ts.extend(collected);
     ts.extend(helper_facts);
@@ -101,6 +103,7 @@ pub(super) fn collect_with_precollected_ts(
         &partitions.scoped_tests,
         with_imports(plan.clone()),
         &playwright,
+        &sources,
         &mut ts,
     );
     collect_test_partition(
@@ -108,6 +111,7 @@ pub(super) fn collect_with_precollected_ts(
         &partitions.graph_tests,
         with_imports(graph_plan(&plan)),
         &playwright,
+        &sources,
         &mut ts,
     );
     collect_test_partition(
@@ -115,6 +119,7 @@ pub(super) fn collect_with_precollected_ts(
         &partitions.playwright_only_tests,
         with_imports(CheckFactPlan::default()),
         &playwright,
+        &sources,
         &mut ts,
     );
     let playwright_facts = ts
@@ -130,6 +135,7 @@ pub(super) fn collect_with_precollected_ts(
         &partitions.scoped_sources,
         plan.clone(),
         &playwright,
+        &sources,
         &mut ts,
     );
     collect_test_partition(
@@ -137,6 +143,7 @@ pub(super) fn collect_with_precollected_ts(
         &partitions.graph_sources,
         graph_plan(&plan),
         &playwright,
+        &sources,
         &mut ts,
     );
     collect_test_partition(
@@ -144,6 +151,7 @@ pub(super) fn collect_with_precollected_ts(
         &partitions.playwright_only_sources,
         graph_plan(&plan),
         &playwright,
+        &sources,
         &mut ts,
     );
     if needs_scoped_facts(&plan) {
@@ -152,6 +160,7 @@ pub(super) fn collect_with_precollected_ts(
             &partitions.remaining_scoped,
             plan.clone(),
             &playwright,
+            &sources,
             &mut ts,
         );
     }
@@ -161,6 +170,7 @@ pub(super) fn collect_with_precollected_ts(
             &partitions.remaining_graph,
             graph_plan(&plan),
             &playwright,
+            &sources,
             &mut ts,
         );
     }

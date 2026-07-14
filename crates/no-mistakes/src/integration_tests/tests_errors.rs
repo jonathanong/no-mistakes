@@ -75,7 +75,8 @@ fn check_with_facts_reports_dropped_helper_parse_errors() {
         crate::codebase::check_facts::CheckFileFacts {
             parse_error: Some("synthetic helper parse error".to_string()),
             ..Default::default()
-        },
+        }
+        .into(),
     );
 
     let error =

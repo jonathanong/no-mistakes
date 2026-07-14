@@ -7,6 +7,16 @@ fn fixture(name: &str) -> PathBuf {
         .join(name)
 }
 
+fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+    let sources = super::super::source_store_for_files(files);
+    scan_with_sources(root, opts, files, &sources)
+}
+
+fn check_file(root: &Path, path: &Path, opts: &CompiledOptions) -> Vec<RuleFinding> {
+    let sources = super::super::source_store_for_files(&[path.to_path_buf()]);
+    check_file_with_sources(root, path, opts, &sources)
+}
+
 fn compiled() -> CompiledOptions {
     compile_options(&Options {
         banned_domains: vec!["example.com".to_string()],

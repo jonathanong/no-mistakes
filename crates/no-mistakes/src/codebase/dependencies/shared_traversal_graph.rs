@@ -25,11 +25,14 @@ impl SharedTraversalContext {
             });
             return;
         }
-        let collected = crate::codebase::ts_source::facts::collect_ts_facts_with_context(
-            &remaining,
-            self.fact_plan,
-            &self.fact_context,
-        );
+        let sources = self.dataset.sources_for(&self.root);
+        let collected =
+            crate::codebase::ts_source::facts::collect_ts_facts_with_context_and_sources(
+                &remaining,
+                self.fact_plan,
+                &self.fact_context,
+                &sources,
+            );
         self.facts
             .get_or_insert_with(|| {
                 crate::codebase::ts_source::facts::TsFactMap::from_iter_with_plan(
@@ -42,41 +45,97 @@ impl SharedTraversalContext {
 
     fn graph(&mut self) -> Result<&graph::DepGraph> {
         if self.graph.is_none() {
-            self.ensure_facts();
-            let graph = graph::DepGraph::build_with_plan_files_prepared_config_and_facts(
-                &self.root,
-                &self.tsconfig,
-                self.build_plan,
-                &self.graph_files,
-                self.config_path.as_deref(),
-                &self.prepared_graph,
-                self.facts
-                    .as_ref()
-                    .map(|facts| facts as &dyn graph::TsFactLookup),
-            )?;
-            self.graph = Some(graph);
-            self.graph_builds += 1;
+            self.graph = Some(self.request_graph(self.build_plan)?);
         }
         self.graph
-            .as_ref()
+            .as_deref()
             .context("dependency graph was not initialized")
     }
 
     fn request_graph_without_symbols(
         &mut self,
         allowed: Option<&std::collections::HashSet<EdgeKind>>,
-    ) -> Result<graph::DepGraph> {
+    ) -> Result<std::sync::Arc<graph::DepGraph>> {
+        self.request_graph(graph::GraphBuildPlan::from_allowed(allowed))
+    }
+
+    fn request_graph(
+        &mut self,
+        plan: graph::GraphBuildPlan,
+    ) -> Result<std::sync::Arc<graph::DepGraph>> {
         self.ensure_facts();
-        graph::DepGraph::build_with_plan_files_prepared_config_and_facts(
-            &self.root,
-            &self.tsconfig,
-            graph::GraphBuildPlan::from_allowed(allowed),
+        let key = EffectiveGraphPlanKey::new(plan, &self.graph_files, self.analysis_generation);
+        let graph = self.graph_cache.get_or_build(key, || {
+            build_canonical_graph(CanonicalGraphBuild {
+                root: &self.root,
+                tsconfig: &self.tsconfig,
+                plan,
+                graph_files: &self.graph_files,
+                config_path: self.config_path.as_deref(),
+                prepared_graph: &self.prepared_graph,
+                facts: self
+                    .facts
+                    .as_ref()
+                    .map(|facts| facts as &dyn graph::TsFactLookup),
+                import_resolution_cache: &self.import_resolution_cache,
+            })
+        });
+        self.graph_builds = self.graph_cache.build_count();
+        graph
+    }
+
+    pub(crate) fn prepare_canonical_graph_with_check_facts(
+        &mut self,
+        facts: &crate::codebase::check_facts::CheckFactMap,
+    ) -> Result<()> {
+        let key = EffectiveGraphPlanKey::new(
+            self.build_plan,
             &self.graph_files,
-            self.config_path.as_deref(),
-            &self.prepared_graph,
-            self.facts
-                .as_ref()
-                .map(|facts| facts as &dyn graph::TsFactLookup),
-        )
+            self.analysis_generation,
+        );
+        let graph = self.graph_cache.get_or_build(key, || {
+            build_canonical_graph(CanonicalGraphBuild {
+                root: &self.root,
+                tsconfig: &self.tsconfig,
+                plan: self.build_plan,
+                graph_files: &self.graph_files,
+                config_path: self.config_path.as_deref(),
+                prepared_graph: &self.prepared_graph,
+                facts: Some(facts as &dyn graph::TsFactLookup),
+                import_resolution_cache: &self.import_resolution_cache,
+            })
+        })?;
+        self.graph = Some(graph);
+        self.graph_builds = self.graph_cache.build_count();
+        Ok(())
+    }
+
+    fn symbol_index(&mut self) -> Result<std::sync::Arc<graph::SymbolIndex>> {
+        self.ensure_facts();
+        let key = GraphFileUniverseKey::new(&self.graph_files, self.analysis_generation);
+        let workspace = self.dataset.workspace();
+        let index = self.symbol_index_cache.get_or_build(key, || {
+            Ok(
+                graph::SymbolIndex::build_from_facts_workspace_and_resolution_cache(
+                    &self.tsconfig,
+                    &self.graph_files,
+                    self.facts.as_ref().expect("TS facts are initialized"),
+                    &workspace,
+                    Some(&self.import_resolution_cache),
+                ),
+            )
+        });
+        self.symbol_index_builds = self.symbol_index_cache.build_count();
+        index
+    }
+
+    fn invalidate_analysis_caches(&mut self) {
+        self.graph = None;
+        self.analysis_generation = self.analysis_generation.wrapping_add(1);
+        self.graph_cache.clear();
+        self.symbol_index_cache.clear();
     }
 }
+
+#[cfg(test)]
+mod shared_build_cache_tests;

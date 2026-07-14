@@ -63,7 +63,7 @@ fn check_with_optional_inferred(
         let Some(source) = facts.source.as_ref() else {
             bail!("{} requires source facts for {}", RULE_ID, path.display());
         };
-        sources.push(SourceItem::new(path.as_path(), source.as_str()));
+        sources.push(SourceItem::new(path.as_path(), source.as_ref()));
     }
     check_sources(&root, config, &sources, inferred_roots)
 }
@@ -108,7 +108,7 @@ fn check_files(
         config,
         &sources,
         |item| item.path.as_path(),
-        |item| item.source.as_str(),
+        |item| item.source.as_ref(),
         None,
     )
 }

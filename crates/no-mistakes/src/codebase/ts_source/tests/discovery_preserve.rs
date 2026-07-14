@@ -142,3 +142,34 @@ fn visible_snapshot_normalizes_additional_root_discovery_paths() {
         .iter()
         .all(|path| path.starts_with(&normalized_additional)));
 }
+
+#[test]
+fn visible_snapshot_reuses_the_inventory_and_source_store_for_each_scope() {
+    let request_root = fixture("nextjs-selectors/frontend-tsconfig");
+    let nested_root = request_root.join("web");
+    let additional_root = fixture("react-traits-components/bad-file");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&request_root);
+
+    let request_store = snapshot.source_store_for(&request_root);
+    let nested_store = snapshot.source_store_for(&nested_root);
+    let additional_store = snapshot.source_store_for(&additional_root);
+    let repeated_additional_store = snapshot.source_store_for(&additional_root);
+
+    assert!(std::sync::Arc::ptr_eq(&request_store, &nested_store));
+    assert!(std::sync::Arc::ptr_eq(
+        &additional_store,
+        &repeated_additional_store
+    ));
+    assert!(!std::sync::Arc::ptr_eq(&request_store, &additional_store));
+    assert_eq!(
+        snapshot.paths_for(&request_root),
+        request_store.inventory().paths()
+    );
+
+    let source_path = crate::codebase::ts_source::normalize_discovery_path(
+        &request_root.join("web/app/page.tsx"),
+    );
+    let first = request_store.read_path(&source_path).unwrap().unwrap();
+    let second = request_store.read_path(&source_path).unwrap().unwrap();
+    assert!(std::sync::Arc::ptr_eq(&first, &second));
+}

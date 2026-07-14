@@ -46,24 +46,33 @@ pub fn check_with_prepared_facts(
     tsconfig: &TsConfig,
     shared: &CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
+    let graph = crate::perf_trace::trace("test_no_unmocked_dynamic_imports.graph_build", || {
+        DepGraph::build_with_plan_file_list_config_and_complete_check_facts(
+            root,
+            tsconfig,
+            GraphBuildPlan::imports_and_workspace(),
+            shared.graph_file_universe().to_vec(),
+            None,
+            shared,
+        )
+    })?;
+    check_with_prepared_facts_and_graph(root, config, tsconfig, shared, &graph)
+}
+
+pub(crate) fn check_with_prepared_facts_and_graph(
+    root: &Path,
+    config: &NoMistakesConfig,
+    tsconfig: &TsConfig,
+    shared: &CheckFactMap,
+    graph: &DepGraph,
+) -> Result<Vec<RuleFinding>> {
     let files = shared.files().to_vec();
-    let graph_files = shared.graph_file_universe().to_vec();
     let visible_files = shared
         .graph_file_universe()
         .iter()
         .cloned()
         .collect::<HashSet<_>>();
     let resolver = ImportResolver::new(tsconfig).with_visible(&visible_files);
-    let graph = crate::perf_trace::trace("test_no_unmocked_dynamic_imports.graph_build", || {
-        DepGraph::build_with_plan_file_list_config_and_complete_check_facts(
-            root,
-            tsconfig,
-            GraphBuildPlan::imports_and_workspace(),
-            graph_files,
-            None,
-            shared,
-        )
-    })?;
     let manual_mocks =
         crate::perf_trace::trace("test_no_unmocked_dynamic_imports.manual_mocks", || {
             manual_mocks::discover_from_files(root, &files)
@@ -84,7 +93,7 @@ pub fn check_with_prepared_facts(
             test_files.par_iter().for_each(|file| {
                 dependency_cache
                     .entry(file.clone())
-                    .or_insert_with(|| Arc::new(runtime_deps(&graph, file.clone())));
+                    .or_insert_with(|| Arc::new(runtime_deps(graph, file.clone())));
             });
         },
     );
@@ -127,7 +136,7 @@ pub fn check_with_prepared_facts(
                     root,
                     file: &file,
                     resolver: &resolver,
-                    graph: &graph,
+                    graph,
                     mocks: &mocks,
                     dependency_cache: &dependency_cache,
                     findings: &mut local_findings,
@@ -143,7 +152,7 @@ pub fn check_with_prepared_facts(
                     root,
                     config,
                     resolver: &resolver,
-                    graph: &graph,
+                    graph,
                     shared: Some(shared),
                     file_cache: None,
                 },

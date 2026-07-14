@@ -34,6 +34,12 @@ pub(crate) fn request_parse_cache_active() -> bool {
     REQUEST_PARSE_CACHES.with(|caches| !caches.borrow().is_empty())
 }
 
+pub(crate) fn clear_request_parse_cache() {
+    if let Some(cache) = current_request_parse_cache() {
+        cache.clear();
+    }
+}
+
 pub(crate) fn with_request_parse_cache<T>(collect: impl FnOnce() -> T) -> T {
     let cache = current_request_parse_cache().unwrap_or_default();
     REQUEST_PARSE_CACHES.with(|caches| caches.borrow_mut().push(cache));
@@ -205,4 +211,4 @@ pub fn expression_path(expression: &Expression<'_>) -> Option<Vec<String>> {
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

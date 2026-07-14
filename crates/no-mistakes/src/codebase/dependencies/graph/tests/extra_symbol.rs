@@ -238,7 +238,7 @@ fn symbol_import_target_helpers_cover_node_kinds() {
         base_url: None,
     };
     let resolver = ImportResolver::new(&tsconfig).with_visible(&visible);
-    let workspace = crate::codebase::workspaces::WorkspaceMap::default();
+    let workspace = crate::codebase::workspaces::IndexedWorkspaceMap::default();
 
     assert_eq!(
         import_target(

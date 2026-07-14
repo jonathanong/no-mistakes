@@ -34,7 +34,7 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
                 .flat_map(|r| discover_files(r, skip))
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files)
+            scan(root, &opts, &files, None)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = per_rule?.into_iter().flatten().collect();
@@ -46,6 +46,16 @@ pub(crate) fn check_with_files(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
+) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let per_rule: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
@@ -60,7 +70,7 @@ pub(crate) fn check_with_files(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files)
+            scan(root, &opts, &files, Some(sources))
         })
         .collect();
     let mut findings: Vec<RuleFinding> = per_rule?.into_iter().flatten().collect();
@@ -76,7 +86,12 @@ fn effective_extensions(opts: &Options) -> Vec<&str> {
     }
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+fn scan(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
+) -> Result<Vec<RuleFinding>> {
     let extensions = effective_extensions(opts);
     let exempt: HashSet<&str> = opts
         .intentionally_empty
@@ -94,7 +109,10 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
             if !has_ext {
                 return Vec::new();
             }
-            check_file(path, root)
+            match sources {
+                Some(sources) => check_file_with_sources(path, root, sources),
+                None => check_file(path, root),
+            }
         })
         .collect();
     findings.sort_by(|a, b| a.file.cmp(&b.file));
@@ -105,9 +123,24 @@ pub(crate) fn check_file(path: &Path, root: &Path) -> Vec<RuleFinding> {
     let Ok(content) = std::fs::read_to_string(path) else {
         return Vec::new();
     };
+    check_source(path, root, &content)
+}
+
+fn check_file_with_sources(
+    path: &Path,
+    root: &Path,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Vec<RuleFinding> {
+    let Some(content) = super::read_source(sources, path) else {
+        return Vec::new();
+    };
+    check_source(path, root, &content)
+}
+
+fn check_source(path: &Path, root: &Path, content: &str) -> Vec<RuleFinding> {
     let file = relative_slash_path(root, path);
     let ext_no_dot = path.extension().and_then(|e| e.to_str()).unwrap_or("");
-    let message = match classify_content(&content, ext_no_dot) {
+    let message = match classify_content(content, ext_no_dot) {
         ContentKind::HasContent => return Vec::new(),
         ContentKind::Empty => "file is empty",
         ContentKind::CommentsOnly => "file contains only comments — add real content or remove it",

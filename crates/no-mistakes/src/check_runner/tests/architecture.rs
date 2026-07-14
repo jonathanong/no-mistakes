@@ -23,10 +23,10 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
 
     for shared_entrypoint in [
         "run_check_with_prepared_facts",
-        "run_check_with_config_and_facts_and_playwright",
+        "run_check_with_config_facts_playwright_and_graph",
         "check_with_prepared_facts",
         "analyze_project_with_prepared_facts",
-        "run_filesystem_rules_with_config_snapshot_and_vitest_catalog",
+        "run_filesystem_rules_with_config_snapshot_catalog_and_sources",
     ] {
         assert!(
             tasks.contains(shared_entrypoint),
@@ -50,7 +50,10 @@ fn aggregate_framework_root_inference_reuses_precomputed_visible_roots() {
     let prepared = include_str!("../prepared.rs");
     let runner = include_str!("../../check_runner.rs");
     let discovery = include_str!("../../check_discovery.rs");
-    let rules = include_str!("../../codebase/rules/run/prepared.rs");
+    let rules = concat!(
+        include_str!("../../codebase/rules/run/prepared.rs"),
+        include_str!("../../codebase/rules/run/prepared/execution.rs"),
+    );
     let rule_roots = include_str!("../../codebase/rules/mod.rs");
     let unique_exports = include_str!("../../codebase/unique_exports/with_facts/prepared.rs");
     let tasks = check_task_sources();
@@ -92,9 +95,9 @@ fn aggregate_vitest_ci_coverage_reuses_the_request_snapshot() {
         prepared.matches("prepare_vitest_project_catalog(").count(),
         1
     );
-    assert!(tasks.contains("run_filesystem_rules_with_config_snapshot_and_vitest_catalog"));
+    assert!(tasks.contains("run_filesystem_rules_with_config_snapshot_catalog_and_sources"));
     assert!(dispatcher.contains("check_with_files_and_catalog"));
-    assert!(dispatcher.contains("check_with_files_from_snapshot_and_catalog"));
+    assert!(dispatcher.contains("check_with_files_from_snapshot_catalog_and_sources"));
     assert_eq!(catalog.matches("load_projects_from_visible(").count(), 1);
     assert!(!mapping.contains("VisiblePathSnapshot::new"));
     assert!(!coverage.contains("VisiblePathSnapshot::new"));
@@ -129,7 +132,10 @@ fn aggregate_prepared_domains_do_not_reload_the_unified_config() {
     let aggregate = include_str!("../prepared.rs");
     let playwright = include_str!("../../playwright/rules/prepared.rs");
     let graph = include_str!("../../codebase/dependencies/graph/files_config_prepared.rs");
-    let rules = include_str!("../../codebase/rules/run/prepared.rs");
+    let rules = concat!(
+        include_str!("../../codebase/rules/run/prepared.rs"),
+        include_str!("../../codebase/rules/run/prepared/execution.rs"),
+    );
 
     assert_eq!(aggregate.matches("load_v2_config_from_visible(").count(), 1);
     assert!(!aggregate.contains("prepare_check_from_visible"));

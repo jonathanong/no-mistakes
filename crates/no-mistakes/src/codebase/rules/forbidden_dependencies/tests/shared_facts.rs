@@ -162,7 +162,9 @@ fn playwright_graph_consumers_do_not_reread_cached_parse_errors() {
                 playwright,
             );
         let test_file = root.join("tests/e2e").join(test_name);
-        let cached = shared.ts.get_mut(&test_file).expect("planned test facts");
+        let cached =
+            std::sync::Arc::get_mut(shared.ts.get_mut(&test_file).expect("planned test facts"))
+                .expect("test owns the only fact reference");
         cached.playwright = None;
         // Disk deliberately disagrees with this cached error: a reread would create a finding.
         cached.parse_error = Some("cached Playwright parse error".to_string());

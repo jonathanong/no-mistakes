@@ -1,8 +1,41 @@
-struct EffectiveScope {
-    key: String,
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+struct EffectiveScopeKey {
     root: PathBuf,
     tsconfig: Option<PathBuf>,
     config: Option<PathBuf>,
+}
+
+struct EffectiveScope {
+    key: EffectiveScopeKey,
+    root: PathBuf,
+    tsconfig: Option<PathBuf>,
+    config: Option<PathBuf>,
+}
+
+impl EffectiveScope {
+    fn normalize_automatic_paths(
+        mut self,
+        visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
+    ) -> Result<Self> {
+        let paths = visible_paths.paths_for(&self.root);
+        if self.tsconfig.is_none() {
+            self.tsconfig =
+                crate::codebase::ts_resolver::find_tsconfig_from_visible(&self.root, &paths);
+        }
+        if self.config.is_none() {
+            self.config = crate::config::find_automatic_config_path_from_visible(
+                &self.root,
+                &[".no-mistakes"],
+                &paths,
+            )?;
+        }
+        self.key = EffectiveScopeKey {
+            root: self.root.clone(),
+            tsconfig: self.tsconfig.clone(),
+            config: self.config.clone(),
+        };
+        Ok(self)
+    }
 }
 
 fn effective_scope(
@@ -19,11 +52,11 @@ fn effective_scope(
         &root,
         string_option(request, "config")?.or(options.config.as_deref()),
     );
-    let key = serde_json::to_string(&(
-        root.to_string_lossy(),
-        tsconfig.as_ref().map(|path| path.to_string_lossy()),
-        config.as_ref().map(|path| path.to_string_lossy()),
-    ))?;
+    let key = EffectiveScopeKey {
+        root: root.clone(),
+        tsconfig: tsconfig.clone(),
+        config: config.clone(),
+    };
     Ok(EffectiveScope {
         key,
         root,

@@ -79,6 +79,7 @@ fn report_json_with_cache(
         },
         &snapshot,
     )?;
+    crate::ast::clear_request_parse_cache();
 
     match kind {
         PlaywrightReportKind::Check => to_pretty_json(&analysis.coverage),

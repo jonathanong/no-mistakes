@@ -177,7 +177,7 @@ fn sparse_fallback_preserves_check_fact_playwright_data_and_caches() {
                 crate::codebase::check_facts::PlaywrightTestFacts::empty(),
             ),
             ..CheckFileFacts::default()
-        },
+        }.into(),
     );
     let fallback = TsFactMap::from([(
         fallback_path.clone(),
@@ -277,7 +277,7 @@ fn sparse_fallback_prefers_primary_playwright_fetch_errors_when_requested() {
         CheckFileFacts {
             parse_error: Some("primary parse error".to_string()),
             ..CheckFileFacts::default()
-        },
+        }.into(),
     );
     let fallback = TsFactMap::from([(
         path.clone(),

@@ -45,7 +45,7 @@ fn check_with_optional_inferred(
         };
         items.push(SourceItem {
             path: path.as_path(),
-            source: source.as_str(),
+            source: source.as_ref(),
         });
     }
     check_items(
@@ -96,7 +96,7 @@ pub(super) fn check_files(
         config,
         &items,
         |item| item.path.as_path(),
-        |item| item.source.as_str(),
+        |item| item.source.as_ref(),
         None,
     )
 }

@@ -87,9 +87,9 @@ pub(crate) fn run_analyze_inner_from_visible(
     for (file, components) in analyses {
         file_cache.insert(
             crate::codebase::ts_resolver::normalize_path(&file),
-            components.clone(),
+            components.as_ref().clone(),
         );
-        results.extend(components);
+        results.extend(components.iter().cloned());
     }
 
     let mut all_results = Vec::new();
@@ -151,7 +151,7 @@ fn aggregate_children_inner(
             };
             match analysis {
                 Ok(a) => {
-                    file_cache.insert(child_path.clone(), a.components);
+                    file_cache.insert(child_path.clone(), a.components.as_ref().clone());
                 }
                 Err(_) => continue,
             }

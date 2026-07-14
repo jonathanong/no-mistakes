@@ -49,6 +49,16 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -58,7 +68,7 @@ pub(crate) fn check_with_files(
             let skip = super::skip_dir_set(config);
             let files = candidate_files(root, config, all_files, &skip, &target_roots, rule);
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files)
+            scan_with_sources(root, &opts, &files, sources)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -96,11 +106,16 @@ fn has_test_target(rule: &RuleDef) -> bool {
     !rule.tests.vitest.is_empty() || !rule.tests.playwright.is_empty()
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+fn scan_with_sources(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let compiled = compile_options(opts)?;
     let mut findings: Vec<RuleFinding> = files
         .par_iter()
-        .flat_map(|path| check_file(root, path, &compiled))
+        .flat_map(|path| check_file_with_sources(root, path, &compiled, sources))
         .collect();
     super::sort_findings(&mut findings);
     Ok(findings)
@@ -138,8 +153,13 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     })
 }
 
-fn check_file(root: &Path, path: &Path, compiled: &CompiledOptions) -> Vec<RuleFinding> {
-    let Ok(content) = std::fs::read_to_string(path) else {
+fn check_file_with_sources(
+    root: &Path,
+    path: &Path,
+    compiled: &CompiledOptions,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Vec<RuleFinding> {
+    let Some(content) = super::read_source(sources, path) else {
         return Vec::new();
     };
     let rel = relative_slash_path(root, path);

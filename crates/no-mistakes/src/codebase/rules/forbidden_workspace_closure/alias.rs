@@ -21,41 +21,49 @@ pub(super) fn resolved_dependency_name(
     package_name_from_alias_specifier(aliased)
 }
 
-pub(super) fn workspace_dependency_name(
+pub(super) fn resolved_dependency_name_with_sources(
+    specifier: &str,
+    package_dir: &Path,
+    workspace: &workspaces::WorkspaceMap,
+    _sources: &crate::codebase::ts_source::SourceStore,
+) -> Option<String> {
+    resolved_dependency_name(specifier, package_dir, workspace)
+}
+
+pub(super) fn workspace_dependency_name_with_sources(
     dependency_name: &str,
     specifier: &str,
     package_dir: &Path,
     workspace: &workspaces::WorkspaceMap,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Option<String> {
     if let Some(path) = local_path_specifier(specifier) {
         return resolve_workspace_path(path, package_dir, workspace);
     }
     if specifier.starts_with("workspace:") {
-        return resolved_dependency_name(specifier, package_dir, workspace).or_else(|| {
-            workspace_has_package(dependency_name, workspace).then(|| dependency_name.to_string())
-        });
+        return resolved_dependency_name_with_sources(specifier, package_dir, workspace, sources)
+            .or_else(|| {
+                workspace_has_package(dependency_name, workspace)
+                    .then(|| dependency_name.to_string())
+            });
     }
-    workspace_has_matching_range(dependency_name, specifier, workspace)
+    workspace_has_matching_range_with_sources(dependency_name, specifier, workspace, sources)
         .then(|| dependency_name.to_string())
 }
 
 fn workspace_has_package(name: &str, workspace: &workspaces::WorkspaceMap) -> bool {
-    workspace
-        .packages
-        .iter()
-        .any(|package| package.name == name)
+    workspace.package_by_name(name).is_some()
 }
 
-fn workspace_has_matching_range(
+fn workspace_has_matching_range_with_sources(
     name: &str,
     specifier: &str,
     workspace: &workspaces::WorkspaceMap,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> bool {
     workspace
-        .packages
-        .iter()
-        .find(|package| package.name == name)
-        .and_then(|package| workspace_package_version(&package.dir))
+        .package_by_name(name)
+        .and_then(|package| workspace_package_version_with_sources(&package.dir, sources))
         .is_some_and(|version| range_matches_version(specifier, &version))
 }
 
@@ -64,8 +72,11 @@ struct PackageVersion {
     version: Option<String>,
 }
 
-fn workspace_package_version(package_dir: &Path) -> Option<String> {
-    let content = std::fs::read_to_string(package_dir.join("package.json")).ok()?;
+fn workspace_package_version_with_sources(
+    package_dir: &Path,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Option<String> {
+    let content = crate::codebase::rules::read_source(sources, &package_dir.join("package.json"))?;
     serde_json::from_str::<PackageVersion>(&content)
         .ok()
         .and_then(|package| package.version)
@@ -166,8 +177,6 @@ pub(super) fn resolve_workspace_path(
 ) -> Option<String> {
     let target_dir = normalize_path(&base_dir.join(path));
     workspace
-        .packages
-        .iter()
-        .find(|package| package.dir == target_dir)
+        .package_by_dir(&target_dir)
         .map(|package| package.name.clone())
 }

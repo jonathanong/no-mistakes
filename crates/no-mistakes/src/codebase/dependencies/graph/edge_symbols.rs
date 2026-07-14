@@ -3,7 +3,7 @@ fn collect_symbol_edges(
     graph_files: SymbolGraphFiles<'_>,
     facts: &dyn TsFactLookup,
     resolver: &ImportResolver<'_>,
-    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     config_options: Option<&GraphConfigOptions>,
 ) -> Vec<Edge> {
     let SymbolGraphFiles {

@@ -5,6 +5,26 @@ use crate::config::v2::{
 };
 use std::path::Path;
 
+fn check_file(
+    path: &Path,
+    root: &Path,
+    exclude_set: &GlobSet,
+    uses_re: &Regex,
+    sha_re: &Regex,
+    version_re: &Regex,
+) -> Vec<RuleFinding> {
+    let sources = crate::codebase::rules::source_store_for_files(&[path.to_path_buf()]);
+    check_file_with_sources(
+        path,
+        root,
+        exclude_set,
+        uses_re,
+        sha_re,
+        version_re,
+        &sources,
+    )
+}
+
 fn fixture(path: &str) -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/github-actions-pinned-hash/fixture")

@@ -13,7 +13,7 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
-use workflow_filters::{ci_filters_from_snapshot, WorkflowSelector};
+use workflow_filters::{ci_filters_from_snapshot_with_sources, WorkflowSelector};
 
 pub const RULE_ID: &str = "vitest-ci-path-coverage";
 
@@ -45,6 +45,20 @@ pub(crate) fn check_with_files_from_snapshot_and_catalog(
     snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
     catalog: Option<&super::PreparedVitestProjectCatalog>,
 ) -> Result<Vec<RuleFinding>> {
+    let sources = snapshot.source_store_for(root);
+    check_with_files_from_snapshot_catalog_and_sources(
+        root, config, all_files, snapshot, catalog, &sources,
+    )
+}
+
+pub(crate) fn check_with_files_from_snapshot_catalog_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
+    catalog: Option<&super::PreparedVitestProjectCatalog>,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -58,7 +72,14 @@ pub(crate) fn check_with_files_from_snapshot_and_catalog(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan_with_catalog(root, config, &opts, &files, all_files, snapshot, catalog)
+            scan_with_catalog_and_sources(
+                root,
+                config,
+                (&opts, &files, all_files),
+                snapshot,
+                catalog,
+                sources,
+            )
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -66,20 +87,21 @@ pub(crate) fn check_with_files_from_snapshot_and_catalog(
     Ok(findings)
 }
 
-fn scan_with_catalog(
+fn scan_with_catalog_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
-    opts: &Options,
-    files: &[PathBuf],
-    all_files: &[PathBuf],
+    inputs: (&Options, &[PathBuf], &[PathBuf]),
     snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
     catalog: Option<&super::PreparedVitestProjectCatalog>,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
+    let (opts, files, all_files) = inputs;
     if files.is_empty() && all_files.is_empty() {
         return Ok(Vec::new());
     }
 
-    let (filters, mut findings) = ci_filters_from_snapshot(root, config, &opts.workflows, snapshot);
+    let (filters, mut findings) =
+        ci_filters_from_snapshot_with_sources(root, config, &opts.workflows, snapshot, sources);
     let filters_by_name = filters.iter().fold(
         BTreeMap::<&str, Vec<&workflow_filters::CiFilter>>::new(),
         |mut acc, filter| {

@@ -1,0 +1,30 @@
+rules:
+  - rule: route-consistency
+    scope: repository
+    options:
+      backendPattern: packages/api/src/**/*.mts
+      backendRegisterObject: app
+      backendPrefixes:
+        - /api/v1/
+      frontendRoot: packages/web/app
+      scanPatterns:
+        - packages/web/src/**/*.tsx
+
+  - rule: queue-dashboard-reachability
+    scope: repository
+    options:
+      entrypoint: packages/api/src/index.mts
+      queuePattern: packages/api/src/*.mts
+      factorySpecifier: "@data-stores/valkey/glide-mq-factory"
+      factoryFunction: createQueue
+      tsconfig: tsconfig.json
+
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [packages/api/src/index.mts]
+      forbiddenModules: [__never__]
+
+tests:
+  playwright:
+    frontendRoot: packages/web/app

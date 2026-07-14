@@ -90,7 +90,7 @@ impl PreparedScope {
                 )?,
             )?);
         }
-        let key = serde_json::to_string(&options.targets)?;
+        let key = canonical_filter_key(&options.targets)?;
         if !self.react_analyses.contains_key(&key) {
             self.react_analyses.insert(
                 key.clone(),

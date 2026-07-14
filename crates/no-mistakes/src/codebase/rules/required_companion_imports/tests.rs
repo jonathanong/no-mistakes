@@ -15,6 +15,11 @@ fn fixture_root(name: &str) -> PathBuf {
     )
 }
 
+fn file_imports(root: &Path, rel: &str, expected_specifier: &str) -> bool {
+    let sources = crate::codebase::rules::source_store_for_files(&[root.join(rel)]);
+    super::helpers::file_imports_with_sources(root, rel, expected_specifier, &sources)
+}
+
 fn config(yaml: &str) -> NoMistakesConfig {
     let mut config = NoMistakesConfig::default();
     config.rules.push(RuleDef {

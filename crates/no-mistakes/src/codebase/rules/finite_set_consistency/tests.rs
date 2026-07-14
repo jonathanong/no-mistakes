@@ -1,5 +1,5 @@
 use super::extract::{
-    extract_path_regex_set, extract_set, extract_sql_enum, extract_ts_const_object_keys,
+    extract_path_regex_set, extract_sql_enum, extract_ts_const_object_keys,
     extract_ts_const_object_property, extract_ts_string_union,
 };
 use super::*;
@@ -9,6 +9,16 @@ use crate::config::v2::{
 };
 use std::collections::BTreeSet;
 use std::path::Path;
+
+fn extract_set(
+    root: &Path,
+    spec: &SetSpec,
+    files: &[PathBuf],
+    target_roots: &[PathBuf],
+) -> anyhow::Result<super::extract::ExtractedSet> {
+    let sources = crate::codebase::rules::source_store_for_files(files);
+    super::extract::extract_set_with_sources(root, spec, files, target_roots, &sources)
+}
 
 fn fixture_root(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(

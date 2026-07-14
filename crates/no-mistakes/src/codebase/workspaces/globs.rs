@@ -5,33 +5,83 @@ pub fn load_workspace_globs(root: &Path) -> Result<Vec<String>> {
 
 #[doc(hidden)]
 pub fn load_workspace_globs_from_files(root: &Path, files: &[PathBuf]) -> Result<Vec<String>> {
+    Ok(load_workspace_metadata_from_files(root, files, WorkspaceSources::Filesystem)?.globs)
+}
+
+#[doc(hidden)]
+pub(crate) fn load_workspace_globs_from_source_store(
+    root: &Path,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<String>> {
+    let files = sources.inventory().paths();
+    Ok(load_workspace_metadata_from_files(root, &files, WorkspaceSources::Store(sources))?.globs)
+}
+
+struct WorkspaceMetadata {
+    globs: Vec<String>,
+    root_dependency_names: std::collections::HashSet<String>,
+}
+
+fn load_workspace_metadata_from_files(
+    root: &Path,
+    files: &[PathBuf],
+    sources: WorkspaceSources<'_>,
+) -> Result<WorkspaceMetadata> {
     let visible = files
         .iter()
         .map(|path| normalize_path(path))
         .collect::<std::collections::HashSet<_>>();
     let pnpm_path = normalize_path(&root.join("pnpm-workspace.yaml"));
     if visible.contains(&pnpm_path) {
-        let content = std::fs::read_to_string(&pnpm_path)?;
+        let content = sources.read(&pnpm_path)?;
         let pnpm_workspace: PnpmWorkspace = serde_yaml::from_str(&content)?;
-        return Ok(pnpm_workspace
-            .packages
-            .unwrap_or_else(|| vec!["*".to_string()]));
+        let root_dependency_names = load_optional_root_dependency_names(root, &visible, sources);
+        return Ok(WorkspaceMetadata {
+            globs: pnpm_workspace
+                .packages
+                .unwrap_or_else(|| vec!["*".to_string()]),
+            root_dependency_names,
+        });
     }
 
     let pkg_path = normalize_path(&root.join("package.json"));
     if visible.contains(&pkg_path) {
-        let content = std::fs::read_to_string(&pkg_path)?;
-        let root_pkg: PackageJson = serde_json::from_str(&content)?;
+        let value = sources.parse_json(&pkg_path)?;
+        let root_pkg: PackageJson = serde_json::from_value((*value).clone())?;
+        let root_dependency_names = root_pkg.dependency_names();
 
         let workspace_globs = match root_pkg.workspaces {
             Some(WorkspacesField::Array(globs)) => globs,
             Some(WorkspacesField::Object { packages }) => packages,
             None => Vec::new(),
         };
-        return Ok(workspace_globs);
+        return Ok(WorkspaceMetadata {
+            globs: workspace_globs,
+            root_dependency_names,
+        });
     }
 
-    Ok(Vec::new())
+    Ok(WorkspaceMetadata {
+        globs: Vec::new(),
+        root_dependency_names: std::collections::HashSet::new(),
+    })
+}
+
+fn load_optional_root_dependency_names(
+    root: &Path,
+    visible: &std::collections::HashSet<PathBuf>,
+    sources: WorkspaceSources<'_>,
+) -> std::collections::HashSet<String> {
+    let pkg_path = normalize_path(&root.join("package.json"));
+    if !visible.contains(&pkg_path) {
+        return std::collections::HashSet::new();
+    }
+    sources.parse_json(&pkg_path)
+        .ok()
+        .and_then(|value| serde_json::from_value::<PackageJson>((*value).clone()).ok())
+        .map_or_else(std::collections::HashSet::new, |package| {
+            package.dependency_names()
+        })
 }
 
 fn build_glob_set(glob_strs: &[String], excluded: bool) -> globset::GlobSet {

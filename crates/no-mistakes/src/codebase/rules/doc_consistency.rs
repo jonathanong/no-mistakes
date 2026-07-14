@@ -47,6 +47,16 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.rule_options();
@@ -58,13 +68,23 @@ pub(crate) fn check_with_files(
             .cloned()
             .collect();
         let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        findings.extend(scan(root, &opts, &files)?);
+        findings.extend(scan_with_sources(root, &opts, &files, sources)?);
     }
     super::sort_findings(&mut findings);
     Ok(findings)
 }
 
 fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(files);
+    scan_with_sources(root, opts, files, &sources)
+}
+
+fn scan_with_sources(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let rel_set: HashSet<String> = files.iter().map(|p| relative_slash_path(root, p)).collect();
 
     // Check required files (parallel)
@@ -84,7 +104,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
                 });
                 return local;
             }
-            let Ok(content) = std::fs::read_to_string(root.join(req_file)) else {
+            let Some(content) = super::read_source(sources, &root.join(req_file)) else {
                 return local;
             };
             if let Some(heading) = &opts.required_heading {
@@ -127,7 +147,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
         let banned_findings: Vec<RuleFinding> = files
             .par_iter()
             .flat_map(|path| {
-                let Ok(content) = std::fs::read_to_string(path) else {
+                let Some(content) = super::read_source(sources, path) else {
                     return Vec::new();
                 };
                 let rel = relative_slash_path(root, path);

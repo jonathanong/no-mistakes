@@ -26,6 +26,16 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.rule_options();
@@ -37,7 +47,7 @@ pub(crate) fn check_with_files(
             .cloned()
             .collect();
         let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        findings.extend(scan(root, &opts, &files)?);
+        findings.extend(scan(root, &opts, &files, sources)?);
     }
     super::sort_findings(&mut findings);
     Ok(findings)
@@ -62,46 +72,75 @@ pub(crate) fn build_patterns() -> (Regex, Regex, Regex) {
     )
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+fn scan(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let exclude_set = build_exclude_globset(&opts.exclude_paths);
     let (uses_re, sha_re, version_re) = build_patterns();
     let findings: Vec<RuleFinding> = files
         .par_iter()
-        .flat_map(|path| check_file(path, root, &exclude_set, &uses_re, &sha_re, &version_re))
+        .flat_map(|path| {
+            check_file_with_sources(
+                path,
+                root,
+                &exclude_set,
+                &uses_re,
+                &sha_re,
+                &version_re,
+                sources,
+            )
+        })
         .collect();
     Ok(findings)
 }
 
-pub(crate) fn check_file(
+fn check_file_with_sources(
     path: &Path,
     root: &Path,
     exclude_set: &GlobSet,
     uses_re: &Regex,
     sha_re: &Regex,
     version_re: &Regex,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
-    let rel_str = relative_slash_path(root, path);
-
-    if exclude_set.is_match(rel_str.as_str()) {
+    let rel = relative_slash_path(root, path);
+    if exclude_set.is_match(rel.as_str()) {
         return Vec::new();
     }
-
-    let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
-    if !matches!(ext, "yml" | "yaml") {
-        return Vec::new();
-    }
-    let rel = rel_str.as_str();
-    if !rel.starts_with(".github/workflows/")
-        && !(rel.starts_with(".github/actions/")
-            && (rel.ends_with("/action.yml") || rel.ends_with("/action.yaml")))
+    let ext = path.extension().and_then(|extension| extension.to_str());
+    if !matches!(ext, Some("yml" | "yaml"))
+        || (!rel.starts_with(".github/workflows/")
+            && !(rel.starts_with(".github/actions/")
+                && (rel.ends_with("/action.yml") || rel.ends_with("/action.yaml"))))
     {
         return Vec::new();
     }
-
-    let Ok(content) = std::fs::read_to_string(path) else {
+    let Some(content) = super::read_source(sources, path) else {
         return Vec::new();
     };
+    check_source(
+        path,
+        root,
+        exclude_set,
+        uses_re,
+        sha_re,
+        version_re,
+        &content,
+    )
+}
 
+fn check_source(
+    path: &Path,
+    root: &Path,
+    _exclude_set: &GlobSet,
+    uses_re: &Regex,
+    sha_re: &Regex,
+    version_re: &Regex,
+    content: &str,
+) -> Vec<RuleFinding> {
     let file = relative_slash_path(root, path);
     let mut findings = Vec::new();
 

@@ -1,8 +1,10 @@
 mod doc_section;
 mod scan_pkg;
 
-pub(crate) use doc_section::check_required_doc_section_with_files;
 pub use doc_section::{check_required_doc_section, DocSectionOptions};
+pub(crate) use doc_section::{
+    check_required_doc_section_with_files, check_required_doc_section_with_files_and_sources,
+};
 
 use super::RuleFinding;
 use crate::codebase::ts_source::{discover_files, relative_slash_path};

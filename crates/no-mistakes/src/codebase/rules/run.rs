@@ -11,6 +11,9 @@ use std::path::Path;
 mod prepared;
 mod standalone;
 
+pub(crate) use prepared::canonical_graph_plan;
+#[doc(hidden)]
+pub use prepared::run_check_with_config_facts_playwright_and_graph;
 pub use prepared::{run_check_with_config_and_facts_and_playwright, PreparedRulesCheck};
 
 pub fn run_check(

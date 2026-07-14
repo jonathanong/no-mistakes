@@ -19,7 +19,7 @@ pub(super) fn filesystem_rule_target_roots(
     sort_dedup_roots(roots)
 }
 
-fn filesystem_rule_preserved_roots(
+pub(super) fn filesystem_rule_preserved_roots(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
     rule_id: &str,
@@ -67,21 +67,4 @@ fn normalize_rule_root(root: &Path, path: PathBuf) -> PathBuf {
     } else {
         root.join(path)
     }
-}
-
-pub(super) fn filesystem_rule_files(
-    root: &Path,
-    config: &crate::config::v2::NoMistakesConfig,
-    rule_id: &str,
-    files: &[PathBuf],
-) -> Vec<PathBuf> {
-    let preserved_roots = filesystem_rule_preserved_roots(root, config, rule_id);
-    let skip = super::super::skip_dir_set(config);
-    files
-        .iter()
-        .filter(|path| {
-            super::super::file_allowed_by_roots_and_skip(root, &skip, path, &preserved_roots)
-        })
-        .cloned()
-        .collect()
 }

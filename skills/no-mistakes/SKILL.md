@@ -190,7 +190,8 @@ configured test frameworks.
 For repeated graph/symbol/playwright/project queries in the same process,
 prefer `analyzeProject({reports:[…]})` from the async Node API documented at
 https://github.com/jonathanong/no-mistakes/blob/main/docs/node-api.md — it
-shares a single graph build across all requested
+shares one request-scoped analysis dataset and one graph build per normalized
+effective plan and file universe across all requested
 reports. Note: `analyzeProject` does not support `testsPlan`, `fetches`, or
 `lockfileDiff`; call those dedicated Node API functions directly.
 

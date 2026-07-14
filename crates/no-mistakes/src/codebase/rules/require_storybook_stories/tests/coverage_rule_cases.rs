@@ -38,7 +38,8 @@ fn namespace_and_allow_findings_cover_non_matching_edges() {
                     side_effect_imports: vec![],
                 }),
                 ..Default::default()
-            },
+            }
+            .into(),
         )]),
         ..Default::default()
     };

@@ -5,8 +5,8 @@ use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use helpers::{
-    build_companion_globset, build_globset, file_imports, render_template, source_extensions,
-    source_info,
+    build_companion_globset, build_globset, file_imports_with_sources, render_template,
+    source_extensions, source_info,
 };
 use rayon::prelude::*;
 use serde::Deserialize;
@@ -34,6 +34,16 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -48,7 +58,14 @@ pub(crate) fn check_with_files(
                 .collect();
             let source_files =
                 super::path_filter::filter_rule_files(root, config, rule, &candidate_files)?;
-            scan(root, &opts, &source_files, &candidate_files, &target_roots)
+            scan_with_sources(
+                root,
+                &opts,
+                &source_files,
+                &candidate_files,
+                &target_roots,
+                sources,
+            )
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -56,12 +73,13 @@ pub(crate) fn check_with_files(
     Ok(findings)
 }
 
-fn scan(
+fn scan_with_sources(
     root: &Path,
     opts: &Options,
     source_files: &[PathBuf],
     candidate_files: &[PathBuf],
     target_roots: &[PathBuf],
+    source_store: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     if opts.companion_globs.is_empty() || opts.specifier_template.is_empty() {
         return Ok(Vec::new());
@@ -134,7 +152,7 @@ fn scan(
 
         if !companions
             .iter()
-            .any(|rel| file_imports(root, rel, &expected_specifier))
+            .any(|rel| file_imports_with_sources(root, rel, &expected_specifier, source_store))
         {
             findings.push(RuleFinding {
                 rule: RULE_ID.to_string(),

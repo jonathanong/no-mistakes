@@ -3,14 +3,43 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 pub(crate) fn suppress_rule_findings(root: &Path, findings: &mut Vec<RuleFinding>) {
+    suppress_rule_findings_inner(root, findings, None, &[]);
+}
+
+pub(crate) fn suppress_rule_findings_with_sources_except(
+    root: &Path,
+    findings: &mut Vec<RuleFinding>,
+    sources: &crate::codebase::ts_source::SourceStore,
+    already_suppressed_rules: &[&str],
+) {
+    suppress_rule_findings_inner(root, findings, Some(sources), already_suppressed_rules);
+}
+
+pub(crate) fn suppress_rule_findings_with_source(findings: &mut Vec<RuleFinding>, source: &str) {
+    findings.retain(|finding| !finding_is_suppressed(source, finding));
+}
+
+fn suppress_rule_findings_inner(
+    root: &Path,
+    findings: &mut Vec<RuleFinding>,
+    request_sources: Option<&crate::codebase::ts_source::SourceStore>,
+    already_suppressed_rules: &[&str],
+) {
     let Some(root) = std::fs::canonicalize(root).ok() else {
         return;
     };
-    let mut sources: HashMap<String, Option<String>> = HashMap::new();
+    let mut sources: HashMap<String, Option<std::sync::Arc<str>>> = HashMap::new();
     findings.retain(|finding| {
+        if already_suppressed_rules.contains(&finding.rule.as_str()) {
+            return true;
+        }
         let source = sources.entry(finding.file.clone()).or_insert_with(|| {
-            source_path_for_finding(&root, &finding.file)
-                .and_then(|path| std::fs::read_to_string(path).ok())
+            source_path_for_finding(&root, &finding.file).and_then(|path| match request_sources {
+                Some(sources) => super::read_source(sources, &path),
+                None => std::fs::read_to_string(path)
+                    .ok()
+                    .map(std::sync::Arc::<str>::from),
+            })
         });
         !source
             .as_deref()

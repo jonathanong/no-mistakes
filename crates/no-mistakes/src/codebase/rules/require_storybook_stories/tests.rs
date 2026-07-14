@@ -100,8 +100,11 @@ fn react_component(name: &str, file: &str, children: Vec<ComponentRef>) -> Compo
 
 fn react_facts(
     components: Vec<ComponentFacts>,
-) -> crate::react_traits::analyze::file::FileAnalysis {
-    crate::react_traits::analyze::file::FileAnalysis { components }
+) -> std::sync::Arc<crate::react_traits::analyze::file::FileAnalysis> {
+    crate::react_traits::analyze::file::FileAnalysis {
+        components: components.into(),
+    }
+    .into()
 }
 
 mod config_helpers;

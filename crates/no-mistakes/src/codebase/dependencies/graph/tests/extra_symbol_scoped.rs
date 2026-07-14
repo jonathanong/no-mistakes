@@ -10,15 +10,15 @@ fn scoped_import_targets_preserve_workspace_edges() {
     };
     let resolver = ImportResolver::new(&tsconfig);
     let visible = HashSet::from([current.clone(), target.clone()]);
-    let workspace = crate::codebase::workspaces::WorkspaceMap {
-        packages: vec![crate::codebase::workspaces::WorkspacePackage {
+    let workspace = crate::codebase::workspaces::IndexedWorkspaceMap::from_packages(vec![
+        crate::codebase::workspaces::WorkspacePackage {
             name: "@fixture/core".to_string(),
             dir: p("/repo/packages/core"),
             entry: Some(target.clone()),
             exports: None,
             imports: None,
-        }],
-    };
+        },
+    ]);
 
     assert_eq!(
         import_target(

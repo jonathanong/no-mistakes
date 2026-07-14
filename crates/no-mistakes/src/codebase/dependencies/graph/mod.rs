@@ -32,6 +32,7 @@ include!("builder_helpers.rs");
 include!("builder_entrypoints.rs");
 include!("methods_lazy.rs");
 include!("lazy_import_types.rs");
+include!("lazy_import_entrypoints.rs");
 include!("lazy_imports.rs");
 include!("lazy_imports_owner_bridge.rs");
 include!("lazy_import_symbols.rs");

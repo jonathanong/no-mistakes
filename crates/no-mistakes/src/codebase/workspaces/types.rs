@@ -1,148 +1,3 @@
-#[derive(Debug, Clone)]
-pub struct WorkspacePackage {
-    /// The `name` field from the package's `package.json`.
-    pub name: String,
-    /// Absolute path to the package directory.
-    pub dir: PathBuf,
-    /// Resolved absolute path to the package entry file, if any.
-    pub entry: Option<PathBuf>,
-    /// Raw `exports` field from package.json, used for exact and pattern subpath exports.
-    pub exports: Option<serde_json::Value>,
-    /// Raw `imports` field from package.json, used for local `#...` imports.
-    pub imports: Option<serde_json::Value>,
-}
-
-/// All NPM workspace packages resolved from a root `package.json`.
-#[derive(Debug, Default, Clone)]
-pub struct WorkspaceMap {
-    pub packages: Vec<WorkspacePackage>,
-}
-
-impl WorkspaceMap {
-    /// Resolve a workspace package name to its entry file.
-    pub fn resolve_package(&self, name: &str) -> Option<&PathBuf> {
-        self.packages
-            .iter()
-            .find(|package| package.name == name)
-            .and_then(|package| package.entry.as_ref())
-    }
-
-    /// Resolve a bare workspace import specifier to the package entry or an exported subpath.
-    pub fn resolve_specifier(&self, specifier: &str) -> Option<PathBuf> {
-        self.resolve_specifier_inner(specifier, None)
-    }
-
-    pub(crate) fn resolve_specifier_from_visible(
-        &self,
-        specifier: &str,
-        visible_files: &std::collections::HashSet<PathBuf>,
-    ) -> Option<PathBuf> {
-        self.resolve_specifier_inner(specifier, Some(visible_files))
-    }
-
-    fn resolve_specifier_inner(
-        &self,
-        specifier: &str,
-        visible_files: Option<&std::collections::HashSet<PathBuf>>,
-    ) -> Option<PathBuf> {
-        let (name, subpath) = package_name_and_subpath(specifier)?;
-        let package = self.packages.iter().find(|p| p.name == name)?;
-        if subpath.is_none() {
-            return package.entry.clone().filter(|entry| {
-                visible_files.is_none_or(|visible| visible.contains(&normalize_path(entry)))
-            });
-        }
-        package.resolve_subpath(subpath.as_deref()?, visible_files)
-    }
-
-    /// Resolve a package specifier from the importing file's package context.
-    pub fn resolve_specifier_from(
-        &self,
-        specifier: &str,
-        importing_file: &Path,
-    ) -> Option<PathBuf> {
-        self.resolve_specifier_from_inner(specifier, importing_file, None)
-    }
-
-    pub(crate) fn resolve_specifier_from_file_visible(
-        &self,
-        specifier: &str,
-        importing_file: &Path,
-        visible_files: &std::collections::HashSet<PathBuf>,
-    ) -> Option<PathBuf> {
-        self.resolve_specifier_from_inner(specifier, importing_file, Some(visible_files))
-    }
-
-    /// Whether a specifier belongs to this workspace even when its resolved
-    /// target is absent from the visible-file universe. Graph builders use
-    /// this distinction to drop ignored workspace targets instead of
-    /// misclassifying them as external package modules.
-    pub(crate) fn recognizes_specifier_from(
-        &self,
-        specifier: &str,
-        importing_file: &Path,
-    ) -> bool {
-        if specifier.starts_with('#') {
-            return self.nearest_package(importing_file).is_some_and(|package| {
-                package.imports.as_ref().is_some_and(|imports| {
-                    resolve_export_subpath(imports, specifier).is_some()
-                })
-            });
-        }
-        package_name_and_subpath(specifier).is_some_and(|(name, _)| {
-            self.packages.iter().any(|package| package.name == name)
-        })
-    }
-
-    fn resolve_specifier_from_inner(
-        &self,
-        specifier: &str,
-        importing_file: &Path,
-        visible_files: Option<&std::collections::HashSet<PathBuf>>,
-    ) -> Option<PathBuf> {
-        if specifier.starts_with('#') {
-            let package = self.nearest_package(importing_file)?;
-            return package.resolve_import(specifier, visible_files);
-        }
-        self.resolve_specifier_inner(specifier, visible_files)
-    }
-
-    fn nearest_package(&self, importing_file: &Path) -> Option<&WorkspacePackage> {
-        self.packages
-            .iter()
-            .filter(|package| importing_file.starts_with(&package.dir))
-            .max_by_key(|package| package.dir.components().count())
-    }
-}
-
-impl WorkspacePackage {
-    #[inline(never)]
-    fn resolve_subpath(
-        &self,
-        subpath: &str,
-        visible_files: Option<&std::collections::HashSet<PathBuf>>,
-    ) -> Option<PathBuf> {
-        if let Some(exports) = &self.exports {
-            let target = resolve_export_subpath(exports, subpath)?;
-            return resolve_workspace_path(&normalize_path(&self.dir.join(target)), visible_files);
-        }
-
-        let relative = subpath.strip_prefix("./")?;
-        let candidate = normalize_path(&self.dir.join(relative));
-        resolve_workspace_path(&candidate, visible_files)
-    }
-
-    fn resolve_import(
-        &self,
-        specifier: &str,
-        visible_files: Option<&std::collections::HashSet<PathBuf>>,
-    ) -> Option<PathBuf> {
-        let imports = self.imports.as_ref()?;
-        let target = resolve_export_subpath(imports, specifier)?;
-        resolve_workspace_path(&normalize_path(&self.dir.join(target)), visible_files)
-    }
-}
-
 #[derive(Deserialize, Default)]
 struct PackageJson {
     name: Option<String>,
@@ -152,6 +7,75 @@ struct PackageJson {
     exports: Option<serde_json::Value>,
     imports: Option<serde_json::Value>,
     types: Option<String>,
+    dependencies: Option<serde_json::Value>,
+    #[serde(rename = "devDependencies")]
+    dev_dependencies: Option<serde_json::Value>,
+    #[serde(rename = "peerDependencies")]
+    peer_dependencies: Option<serde_json::Value>,
+    #[serde(rename = "optionalDependencies")]
+    optional_dependencies: Option<serde_json::Value>,
+}
+
+impl PackageJson {
+    fn dependency_names(&self) -> std::collections::HashSet<String> {
+        [
+            &self.dependencies,
+            &self.dev_dependencies,
+            &self.peer_dependencies,
+            &self.optional_dependencies,
+        ]
+        .into_iter()
+        .filter_map(|field| field.as_ref()?.as_object())
+        .flat_map(serde_json::Map::keys)
+        .cloned()
+        .collect()
+    }
+}
+
+#[derive(Clone, Copy)]
+enum WorkspaceSources<'a> {
+    Filesystem,
+    Store(&'a crate::codebase::ts_source::SourceStore),
+}
+
+impl WorkspaceSources<'_> {
+    fn read(self, path: &Path) -> Result<std::sync::Arc<str>> {
+        match self {
+            Self::Filesystem => std::fs::read_to_string(path)
+                .map(std::sync::Arc::<str>::from)
+                .map_err(Into::into),
+            Self::Store(store) => match store.read_path(path) {
+                Some(Ok(source)) => Ok(source),
+                Some(Err(error)) => {
+                    Err(std::io::Error::new(error.kind(), error.to_string()).into())
+                }
+                None => anyhow::bail!(
+                    "workspace metadata path is absent from the request inventory: {}",
+                    path.display()
+                ),
+            },
+        }
+    }
+
+    fn parse_json(self, path: &Path) -> Result<std::sync::Arc<serde_json::Value>> {
+        match self {
+            Self::Filesystem => {
+                let source = std::fs::read_to_string(path)?;
+                Ok(std::sync::Arc::new(serde_json::from_str(&source)?))
+            }
+            Self::Store(store) => match store.parse_json_path(path) {
+                Some(Ok(value)) => Ok(value),
+                Some(Err(error)) => Err(anyhow::Error::new(error).context(format!(
+                    "failed to load workspace manifest {}",
+                    path.display()
+                ))),
+                None => anyhow::bail!(
+                    "workspace metadata path is absent from the request inventory: {}",
+                    path.display()
+                ),
+            },
+        }
+    }
 }
 
 #[derive(Deserialize)]
@@ -179,25 +103,99 @@ pub fn load(root: &Path) -> Result<WorkspaceMap> {
 }
 
 pub fn load_from_files(root: &Path, files: &[PathBuf]) -> Result<WorkspaceMap> {
-    let workspace_globs = load_workspace_globs_from_files(root, files)?;
-    let dirs = expand_workspace_globs_from_files(root, &workspace_globs, files);
-    let visible: std::collections::HashSet<PathBuf> = files
-        .iter()
-        .map(|path| normalize_path(path))
-        .collect();
-    load_packages_from_dirs(dirs, &visible)
+    load_indexed_from_files(root, files).map(|indexed| indexed.workspace.as_ref().clone())
 }
 
-fn load_packages_from_dirs(
-    dirs: Vec<PathBuf>,
-    visible_files: &std::collections::HashSet<PathBuf>,
+pub(crate) fn load_indexed_from_files(
+    root: &Path,
+    files: &[PathBuf],
+) -> Result<IndexedWorkspaceMap> {
+    load_from_files_with_sources(root, files, WorkspaceSources::Filesystem)
+}
+
+#[doc(hidden)]
+pub fn load_from_source_store(
+    root: &Path,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<WorkspaceMap> {
+    load_indexed_from_source_store(root, sources).map(|indexed| indexed.workspace.as_ref().clone())
+}
+
+pub(crate) fn load_indexed_from_source_store(
+    root: &Path,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<IndexedWorkspaceMap> {
+    let root = normalize_path(root);
+    let files = sources.inventory().paths();
+    load_from_files_with_sources(&root, &files, WorkspaceSources::Store(sources))
+}
+
+fn load_from_files_with_sources(
+    root: &Path,
+    files: &[PathBuf],
+    sources: WorkspaceSources<'_>,
+) -> Result<IndexedWorkspaceMap> {
+    let metadata = load_workspace_metadata_from_files(root, files, sources)?;
+    let workspace_dirs = expand_workspace_globs_from_files(root, &metadata.globs, files)
+        .into_iter()
+        .map(|path| normalize_path(&path))
+        .collect::<std::collections::HashSet<_>>();
+    let visible = files
+        .iter()
+        .map(|path| normalize_path(path))
+        .collect::<std::collections::HashSet<_>>();
+    let root_manifest = normalize_path(&root.join("package.json"));
+    let mut manifest_paths = visible
+        .iter()
+        .filter(|path| path.file_name().and_then(|name| name.to_str()) == Some("package.json"))
+        .cloned()
+        .collect::<Vec<_>>();
+    manifest_paths.sort();
+
     let mut packages = Vec::new();
-    for dir in dirs {
-        if let Some(pkg) = load_package(&dir, Some(visible_files))? {
-            packages.push(pkg);
+    let mut manifest_dependency_names = std::collections::BTreeMap::new();
+    if visible.contains(&root_manifest) {
+        manifest_dependency_names.insert(
+            root_manifest.clone(),
+            sorted_dependency_names(&metadata.root_dependency_names),
+        );
+    }
+    for manifest in manifest_paths {
+        if manifest == root_manifest {
+            continue;
+        }
+        let dir = manifest
+            .parent()
+            .map(normalize_path)
+            .expect("package manifest has a parent directory");
+        let is_workspace = workspace_dirs.contains(&dir);
+        let value = match sources.parse_json(&manifest) {
+            Ok(value) => value,
+            // Preserve tolerant workspace discovery: one malformed or unreadable
+            // package manifest must not hide valid sibling packages.
+            Err(_) => continue,
+        };
+        let package = serde_json::from_value::<PackageJson>((*value).clone()).unwrap_or_default();
+        manifest_dependency_names.insert(
+            manifest,
+            sorted_dependency_names(&package.dependency_names()),
+        );
+        if is_workspace {
+            if let Some(package) = workspace_package_from_json(&dir, package, Some(&visible)) {
+                packages.push(package);
+            }
         }
     }
 
-    Ok(WorkspaceMap { packages })
+    Ok(IndexedWorkspaceMap::new(
+        WorkspaceMap { packages },
+        metadata.root_dependency_names,
+        manifest_dependency_names,
+    ))
+}
+
+fn sorted_dependency_names(names: &std::collections::HashSet<String>) -> Vec<String> {
+    let mut names = names.iter().cloned().collect::<Vec<_>>();
+    names.sort();
+    names
 }

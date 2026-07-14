@@ -39,6 +39,7 @@ fn run_with_cache(cli: PlaywrightArgs) -> Result<ExitCode> {
         },
         &snapshot,
     )?;
+    crate::ast::clear_request_parse_cache();
     match cli.command {
         Command::Check => {
             if cli.json {

@@ -8,8 +8,8 @@ mod cache;
 mod prepared;
 #[cfg(test)]
 mod tests;
-pub(in crate::integration_tests) use cache::with_program;
-pub(crate) use prepared::prepare;
+pub(in crate::integration_tests) use cache::{read_request_source, with_program};
+pub(crate) use prepared::{prepare, prepare_with_sources};
 
 #[derive(Clone)]
 pub(crate) struct RunnerConfigFactPlan {
@@ -34,6 +34,7 @@ pub struct PreparedIntegrationRunnerConfigs {
     specs: Vec<RunnerConfigSpec>,
     tsconfig: TsConfig,
     visible_files: HashSet<PathBuf>,
+    sources: Option<std::sync::Arc<crate::codebase::ts_source::SourceStore>>,
 }
 
 #[derive(Clone)]

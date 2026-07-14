@@ -31,6 +31,16 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -44,7 +54,7 @@ pub(crate) fn check_with_files(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files)
+            scan_with_sources(root, &opts, &files, sources)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -52,8 +62,13 @@ pub(crate) fn check_with_files(
     Ok(findings)
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
-    let workspace = workspaces::load_from_files(root, files)?;
+fn scan_with_sources(
+    root: &Path,
+    opts: &Options,
+    _files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
+    let workspace = workspaces::load_from_source_store(root, sources)?;
     if workspace.packages.is_empty() {
         return Ok(Vec::new());
     }
@@ -74,7 +89,8 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
         .iter()
         .map(|cycle| canonical_cycle(cycle))
         .collect();
-    let graph = workspace_graph(&workspace, &package_names, &dependency_types);
+    let graph =
+        workspace_graph_with_sources(&workspace, &package_names, &dependency_types, sources);
 
     let mut findings = Vec::new();
     for key in scc::cycle_keys(&graph) {
@@ -113,24 +129,40 @@ fn dependency_types(opts: &Options) -> Vec<&str> {
     }
 }
 
-fn workspace_graph(
+fn workspace_graph_with_sources(
     workspace: &workspaces::WorkspaceMap,
     package_names: &HashSet<&str>,
     dependency_types: &[&str],
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> BTreeMap<String, BTreeSet<String>> {
     let mut graph = BTreeMap::new();
     for package in &workspace.packages {
-        let deps = package_dependencies(&package.dir.join("package.json"), dependency_types)
-            .into_iter()
-            .filter(|dep| package_names.contains(dep.as_str()))
-            .collect();
+        let deps = package_dependencies_with_sources(
+            &package.dir.join("package.json"),
+            dependency_types,
+            sources,
+        )
+        .into_iter()
+        .filter(|dep| package_names.contains(dep.as_str()))
+        .collect();
         graph.insert(package.name.clone(), deps);
     }
     graph
 }
 
-fn package_dependencies(path: &Path, dependency_types: &[&str]) -> BTreeSet<String> {
-    crate::codebase::package_deps::dependency_names(path, dependency_types)
+fn package_dependencies_with_sources(
+    path: &Path,
+    dependency_types: &[&str],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> BTreeSet<String> {
+    crate::codebase::package_deps::dependency_entries_from_source_store(
+        path,
+        dependency_types,
+        sources,
+    )
+    .into_iter()
+    .map(|entry| entry.name)
+    .collect()
 }
 
 pub(super) fn canonical_cycle(cycle: &str) -> String {

@@ -7,6 +7,17 @@ use crate::config::v2::{
 use globset::GlobSet;
 use std::path::Path;
 
+fn check_file(
+    path: &Path,
+    root: &Path,
+    exclude_set: &GlobSet,
+    cond_set: &GlobSet,
+    patterns: &[Regex; 3],
+) -> Vec<RuleFinding> {
+    let sources = crate::codebase::rules::source_store_for_files(&[path.to_path_buf()]);
+    check_file_with_sources(path, root, exclude_set, cond_set, patterns, &sources)
+}
+
 fn fixture(path: &str) -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/no-git-identity-mutation/fixture")

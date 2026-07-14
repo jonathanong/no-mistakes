@@ -27,6 +27,18 @@ pub fn dependency_entries(path: &Path, fields: &[&str]) -> Vec<PackageDependency
     dependency_entries_from_value(&package_json, fields)
 }
 
+#[doc(hidden)]
+pub fn dependency_entries_from_source_store(
+    path: &Path,
+    fields: &[&str],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Vec<PackageDependency> {
+    let Some(Ok(package_json)) = sources.parse_json_path(path) else {
+        return Vec::new();
+    };
+    dependency_entries_from_value(&package_json, fields)
+}
+
 pub fn dependency_entries_from_value(
     package_json: &serde_json::Value,
     fields: &[&str],

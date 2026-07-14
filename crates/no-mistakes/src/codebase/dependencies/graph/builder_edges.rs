@@ -8,7 +8,7 @@ fn collect_and_merge_all_edges(
     facts: Option<&dyn TsFactLookup>,
     resolver: &ImportResolver<'_>,
     parsed_imports: &ParsedImports<'_>,
-    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     forward: &mut EdgeMap,
     reverse: &mut EdgeMap,
 ) -> Result<()> {

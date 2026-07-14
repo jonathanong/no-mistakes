@@ -2,29 +2,48 @@ fn load_package(
     dir: &Path,
     visible_files: Option<&std::collections::HashSet<PathBuf>>,
 ) -> Result<Option<WorkspacePackage>> {
+    load_package_with_sources(dir, visible_files, WorkspaceSources::Filesystem)
+}
+
+fn load_package_with_sources(
+    dir: &Path,
+    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    sources: WorkspaceSources<'_>,
+) -> Result<Option<WorkspacePackage>> {
     let pkg_path = dir.join("package.json");
     if !workspace_path_is_file(&pkg_path, visible_files) {
         return Ok(None);
     }
 
-    let content = std::fs::read_to_string(&pkg_path)?;
-    let pkg: PackageJson = serde_json::from_str(&content).unwrap_or_default();
+    let package = sources
+        .parse_json(&pkg_path)
+        .ok()
+        .and_then(|value| serde_json::from_value((*value).clone()).ok())
+        .unwrap_or_default();
+    Ok(workspace_package_from_json(dir, package, visible_files))
+}
 
-    let name = match pkg.name {
-        Some(ref n) if !n.is_empty() => n.clone(),
-        _ => return Ok(None),
-    };
+fn workspace_package_from_json(
+    dir: &Path,
+    package: PackageJson,
+    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+) -> Option<WorkspacePackage> {
+    let name = package
+        .name
+        .as_ref()
+        .filter(|name| !name.is_empty())?
+        .clone();
 
-    // Resolve the entry file in priority order: exports > module > main > types
-    let entry = resolve_entry_with_visibility(dir, &pkg, visible_files);
+    // Resolve the entry file in priority order: exports > module > main > types.
+    let entry = resolve_entry_with_visibility(dir, &package, visible_files);
 
-    Ok(Some(WorkspacePackage {
+    Some(WorkspacePackage {
         name,
         dir: dir.to_path_buf(),
         entry,
-        exports: pkg.exports.clone(),
-        imports: pkg.imports.clone(),
-    }))
+        exports: package.exports,
+        imports: package.imports,
+    })
 }
 
 pub fn load_root_package(dir: &Path) -> Result<Option<WorkspacePackage>> {
@@ -38,17 +57,27 @@ pub fn load_root_package_from_files(
     files: &[PathBuf],
 ) -> Result<Option<WorkspacePackage>> {
     let manifest = normalize_path(&dir.join("package.json"));
-    if !files
-        .iter()
-        .any(|path| normalize_path(path) == manifest)
-    {
+    if !files.iter().any(|path| normalize_path(path) == manifest) {
         return Ok(None);
     }
-    let visible: std::collections::HashSet<PathBuf> = files
-        .iter()
-        .map(|path| normalize_path(path))
-        .collect();
+    let visible: std::collections::HashSet<PathBuf> =
+        files.iter().map(|path| normalize_path(path)).collect();
     load_package(dir, Some(&visible))
+}
+
+#[doc(hidden)]
+pub fn load_root_package_from_source_store(
+    dir: &Path,
+    files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Option<WorkspacePackage>> {
+    let manifest = normalize_path(&dir.join("package.json"));
+    if !files.iter().any(|path| normalize_path(path) == manifest) {
+        return Ok(None);
+    }
+    let visible: std::collections::HashSet<PathBuf> =
+        files.iter().map(|path| normalize_path(path)).collect();
+    load_package_with_sources(dir, Some(&visible), WorkspaceSources::Store(sources))
 }
 
 fn resolve_entry_with_visibility(
@@ -115,94 +144,4 @@ fn resolve_workspace_path(
         Some(visible) => try_resolve_from_visible(path, visible),
         None => try_resolve(path),
     }
-}
-
-fn exports_to_entry_path(exports: &serde_json::Value) -> Option<String> {
-    match exports {
-        serde_json::Value::String(s) => Some(s.clone()),
-        serde_json::Value::Object(map) => {
-            if let Some(dot) = map.get(".") {
-                return exports_to_entry_path(dot);
-            }
-            ["import", "default", "require", "types"]
-                .iter()
-                .find_map(|key| map.get(*key).and_then(exports_to_entry_path))
-        }
-        _ => None,
-    }
-}
-
-#[inline(never)]
-fn resolve_export_subpath(exports: &serde_json::Value, subpath: &str) -> Option<String> {
-    let serde_json::Value::Object(map) = exports else {
-        return None;
-    };
-
-    if let Some(value) = map.get(subpath) {
-        return exports_to_entry_path(value);
-    }
-
-    let mut patterns = Vec::new();
-    for (pattern, value) in map {
-        if let Some(star_idx) = pattern.find('*') {
-            patterns.push((pattern, value, star_idx));
-        }
-    }
-    patterns.sort_by(compare_export_patterns);
-
-    for (pattern, value, star_idx) in patterns {
-        if pattern[star_idx + 1..].contains('*') {
-            continue;
-        }
-        let prefix = &pattern[..star_idx];
-        let suffix = &pattern[star_idx + 1..];
-        let Some(capture) = subpath
-            .strip_prefix(prefix)
-            .and_then(|rest| rest.strip_suffix(suffix))
-        else {
-            continue;
-        };
-        let Some(target) = exports_to_entry_path(value) else {
-            continue;
-        };
-        if target.matches('*').count() == 1 {
-            return Some(target.replacen('*', capture, 1));
-        }
-    }
-
-    None
-}
-
-fn compare_export_patterns(
-    (a, _, a_star): &(&String, &serde_json::Value, usize),
-    (b, _, b_star): &(&String, &serde_json::Value, usize),
-) -> Ordering {
-    let star_order = b_star.cmp(a_star);
-    if star_order != Ordering::Equal {
-        return star_order;
-    }
-    a.cmp(b)
-}
-
-#[inline(never)]
-fn package_name_and_subpath(specifier: &str) -> Option<(String, Option<String>)> {
-    if specifier.starts_with('.') || specifier.starts_with('/') {
-        return None;
-    }
-
-    let mut parts = specifier.splitn(3, '/');
-    let first = parts.next().unwrap_or("");
-    if first.starts_with('@') {
-        let scope_pkg = parts.next()?;
-        let name_len = first.len() + 1 + scope_pkg.len();
-        let subpath = specifier
-            .get(name_len + 1..)
-            .map(|rest| format!("./{rest}"));
-        return Some((specifier[..name_len].to_string(), subpath));
-    }
-
-    let subpath = specifier
-        .get(first.len() + 1..)
-        .map(|rest| format!("./{rest}"));
-    Some((first.to_string(), subpath))
 }

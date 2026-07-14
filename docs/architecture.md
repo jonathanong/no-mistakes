@@ -4,7 +4,7 @@
 architecture is optimized for AI agents that need reliable project facts while
 spending as few tokens and CPU cycles as possible.
 
-This document codifies the performance architecture behind issues `#126`, `#130`, `#132`, and `#133`.
+This document codifies the performance architecture behind issues `#126`, `#130`, `#132`, `#133`, and `#530`.
 
 ## Core Decisions
 
@@ -26,9 +26,12 @@ from configuration rather than hardcoded repository conventions.
 Each CLI invocation is self-contained:
 
 1. Resolve root, tsconfig, config, entrypoints, and requested relationships.
-2. Discover the visible project files once.
-3. Parse eligible TS/JS files once for the facts required by the invocation.
-4. Build graph edges from those facts and other shared per-run inputs.
+2. Create a request-scoped `AnalysisDataset`, discover visible project files once,
+   and assign stable lexical file identities.
+3. Read each requested file once and parse eligible TS/JS files once for the
+   union of facts required by the invocation.
+4. Build graph edges and symbol indexes once per normalized effective plan and
+   file universe.
 5. Query the graph or shared fact maps.
 6. Emit deterministic output.
 
@@ -43,10 +46,13 @@ The main graph pipeline is centered in `no-mistakes`:
 
 | Stage | Current type/module | Role |
 | --- | --- | --- |
-| File universe | `GraphFiles` | Holds all visible files, indexable TS/JS files, and the visible path set. |
+| Request dataset | `AnalysisDataset` | Owns the immutable request-scoped inventory, sources, and parsed configuration/workspace metadata. |
+| Request analysis | `SharedTraversalContext` | Owns shared immutable facts, the canonical resolver, and normalized graph/symbol caches. |
+| File universe | `FileInventory`, `GraphFiles` | Assigns stable lexical file identities and exposes the selected visible/indexable views. |
+| Source text | `SourceStore` | Lazily memoizes successful and failed reads without changing consumer-specific error policy. |
 | TS/JS facts | `TsFactPlan`, `TsFileFacts`, `TsFactMap` | Selects and stores facts extracted from one OXC parse per source file. |
 | Import resolution | `ImportResolver` | Resolves relative imports and tsconfig aliases using an invocation-scoped cache. |
-| Graph build | `DepGraph`, `GraphBuildPlan` | Builds forward and reverse adjacency maps for selected relationship kinds. |
+| Graph build | `DepGraph`, `GraphBuildPlan` | Builds forward and reverse adjacency maps once per normalized plan and file universe. |
 | Traversal | `deps_of`, `dependents_of`, `related` | Runs BFS over the canonical graph with optional edge and path filters. |
 
 The top-level `check` command also shares precomputed facts across domain
@@ -54,8 +60,8 @@ checks and runs those checks through `rayon::join`.
 
 ## Single-Pass Fact Extraction
 
-`TsFactPlan` is the contract for source parsing. It should grow as new
-domain-specific extraction is needed.
+The effective file fact plan is the contract for source parsing. It merges the
+`TsFactPlan` and check/report demands before any source file is parsed.
 
 Required direction:
 
@@ -67,7 +73,8 @@ Required direction:
 4. Pass `TsFactMap` into graph/check builders instead of letting domains read
    and parse files independently.
 
-Domain modules such as routes, queues, HTTP calls, symbols, imports, process
+The parser allocator and full OXC AST are discarded as soon as compact owned
+facts have been extracted. Domain modules such as routes, queues, HTTP calls, symbols, imports, process
 spawns, and future extractors should be visitors/fact producers or graph edge
 producers. They should not be independent full-codebase scanners when their
 input can come from the shared fact pass.
@@ -83,17 +90,19 @@ Acceptable exceptions:
 
 ## In-Memory Caching
 
-Caches are scoped to one process invocation.
+Caches are scoped to one request dataset and never survive the invocation.
 
 Allowed cache shapes:
 
-1. `TsFactMap`: path to parsed source facts.
-2. `GraphFiles.visible`: path membership for resolver and graph checks.
-3. `EdgeIndex`: canonical typed edges plus forward and reverse adjacency for
-   dependency, queue, and server-route traversal.
-4. `ImportResolver` cache: resolved import specifier lookups.
-5. Local traversal caches for expensive per-root searches.
-6. Shared raw source buffers when multiple extractors need text.
+1. `SourceStore`: file identity to a memoized read result, including failures.
+2. Shared immutable file facts and compatibility views such as `TsFactMap`.
+3. Preclassified filesystem-rule candidates keyed by rule ID.
+4. Parsed manifest, workspace, tsconfig, and requested configuration metadata.
+5. Canonical import classifications, including unresolved imports.
+6. `EdgeIndex`: canonical typed edges plus forward and reverse adjacency for dependency, queue, and server-route traversal.
+7. `GraphFiles.visible`: path membership for resolver and graph checks.
+8. Graph and symbol-index results keyed by normalized plan and file universe.
+9. Local traversal caches for expensive per-root searches.
 
 Disallowed cache shapes:
 
@@ -177,7 +186,8 @@ filters exposed by the CLI:
 
 1. Enable only the edge producers needed by the requested relationships.
 2. Reuse the same discovered file universe for every producer.
-3. Reuse `TsFactMap` when any enabled producer needs TS/JS facts to be parsed.
+3. Reuse the dataset's immutable facts when any enabled producer needs TS/JS
+   facts, and normalize set-like plan fields before cache lookup.
 4. Avoid domain-specific rediscovery.
 
 Adding a relationship kind requires updating:

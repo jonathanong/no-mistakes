@@ -124,6 +124,18 @@ fn discover_files_falls_back_outside_git_repositories() {
 }
 
 #[test]
+fn fallback_walk_paths_keep_the_request_root_spelling() {
+    let request_root = Path::new("/var/folders/project");
+    let walker_root = Path::new("/private/var/folders/project");
+    let walker_path = walker_root.join("ignored-explicit/Button.tsx");
+
+    assert_eq!(
+        crate::codebase::ts_source::rebase_walk_path(request_root, walker_root, &walker_path),
+        request_root.join("ignored-explicit/Button.tsx")
+    );
+}
+
+#[test]
 fn fallback_walk_includes_github_workflows() {
     let dir = fixture("ast-snippets/ts-source/hidden-walk");
 

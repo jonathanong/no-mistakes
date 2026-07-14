@@ -64,7 +64,7 @@ pub(crate) fn load_projects_from_visible(
                 path.display()
             );
         }
-        let source = std::fs::read_to_string(&path)?;
+        let source = crate::integration_tests::runner_config::read_request_source(&path)?;
         let config_dir = path.parent().unwrap_or(root);
         projects.extend(load_config_projects_inner(
             ConfigProjectInput {

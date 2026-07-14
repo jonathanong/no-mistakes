@@ -1,6 +1,6 @@
 use super::{
     BTreeMap, PlaywrightFactPlan, PlaywrightFactSelection, PlaywrightFileFactPlan,
-    PlaywrightOccurrenceKey,
+    PlaywrightOccurrenceKey, PlaywrightSettingsKey,
 };
 use crate::playwright::playwright_tests::TestPolicy;
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -86,4 +86,58 @@ fn occurrence_key_sorts_and_deduplicates_sequence_fields() {
     assert_eq!(key.test_id_attributes, ["data-a", "data-b"]);
     assert_eq!(key.component_selector_attributes["propA"], "data-a");
     assert!(key.html_ids);
+}
+
+#[test]
+fn settings_key_normalizes_set_fields_but_preserves_rewrite_order() {
+    fn settings() -> crate::playwright::config::Settings {
+        crate::playwright::config::Settings {
+            frontend_root: "web".to_string(),
+            playwright_configs: vec![PathBuf::from("b.ts"), PathBuf::from("a.ts")],
+            project: None,
+            test_include: vec!["b".to_string(), "a".to_string(), "b".to_string()],
+            test_exclude: Vec::new(),
+            ignore_routes: Vec::new(),
+            rewrites: vec![
+                crate::config::v2::schema::RewriteRule {
+                    source: "/a".to_string(),
+                    destination: "/b".to_string(),
+                },
+                crate::config::v2::schema::RewriteRule {
+                    source: "/b".to_string(),
+                    destination: "/c".to_string(),
+                },
+            ],
+            navigation_helpers: vec!["z".to_string(), "a".to_string()],
+            selector_attributes: Vec::new(),
+            test_id_attribute_override: None,
+            component_selector_attributes: BTreeMap::new(),
+            html_ids: false,
+            selector_roots: Vec::new(),
+            selector_include: Vec::new(),
+            selector_exclude: Vec::new(),
+        }
+    }
+
+    let first = settings();
+    let mut equivalent = settings();
+    equivalent.test_include.reverse();
+    equivalent.navigation_helpers.reverse();
+    assert_eq!(
+        PlaywrightSettingsKey::new(&first),
+        PlaywrightSettingsKey::new(&equivalent)
+    );
+
+    equivalent.playwright_configs.reverse();
+    assert_ne!(
+        PlaywrightSettingsKey::new(&first),
+        PlaywrightSettingsKey::new(&equivalent)
+    );
+
+    equivalent.playwright_configs.reverse();
+    equivalent.rewrites.reverse();
+    assert_ne!(
+        PlaywrightSettingsKey::new(&first),
+        PlaywrightSettingsKey::new(&equivalent)
+    );
 }

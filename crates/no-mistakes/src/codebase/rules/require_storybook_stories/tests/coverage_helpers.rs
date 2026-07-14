@@ -85,7 +85,7 @@ fn coverage_helpers_handle_unresolved_and_reexport_edges() {
             (
                 component,
                 CheckFileFacts {
-                    symbols: Some(FileSymbols {
+                    symbols: Some(std::sync::Arc::new(FileSymbols {
                         exports: vec![Export {
                             name: "Card".to_string(),
                             local: None,
@@ -94,14 +94,14 @@ fn coverage_helpers_handle_unresolved_and_reexport_edges() {
                             is_type_only: false,
                         }],
                         imports: Vec::new(),
-                    }),
+                    })),
                     ..Default::default()
                 },
             ),
             (
                 reexport.clone(),
                 CheckFileFacts {
-                    symbols: Some(FileSymbols {
+                    symbols: Some(std::sync::Arc::new(FileSymbols {
                         exports: vec![
                             Export {
                                 name: "TypeOnly".to_string(),
@@ -145,14 +145,14 @@ fn coverage_helpers_handle_unresolved_and_reexport_edges() {
                             },
                         ],
                         imports: Vec::new(),
-                    }),
+                    })),
                     ..Default::default()
                 },
             ),
             (
                 cycle.clone(),
                 CheckFileFacts {
-                    symbols: Some(FileSymbols {
+                    symbols: Some(std::sync::Arc::new(FileSymbols {
                         exports: vec![Export {
                             name: "Cycle".to_string(),
                             local: None,
@@ -164,11 +164,14 @@ fn coverage_helpers_handle_unresolved_and_reexport_edges() {
                             is_type_only: false,
                         }],
                         imports: Vec::new(),
-                    }),
+                    })),
                     ..Default::default()
                 },
             ),
-        ]),
+        ])
+        .into_iter()
+        .map(|(path, facts)| (path, std::sync::Arc::new(facts)))
+        .collect(),
         ..Default::default()
     };
 
@@ -216,7 +219,7 @@ fn coverage_helpers_handle_unresolved_and_reexport_edges() {
             (
                 cycle,
                 CheckFileFacts {
-                    symbols: Some(FileSymbols {
+                    symbols: Some(std::sync::Arc::new(FileSymbols {
                         exports: vec![Export {
                             name: "Cycle".to_string(),
                             local: None,
@@ -228,11 +231,14 @@ fn coverage_helpers_handle_unresolved_and_reexport_edges() {
                             is_type_only: false,
                         }],
                         imports: Vec::new(),
-                    }),
+                    })),
                     ..Default::default()
                 },
             ),
-        ]),
+        ])
+        .into_iter()
+        .map(|(path, facts)| (path, std::sync::Arc::new(facts)))
+        .collect(),
         ..Default::default()
     };
     assert!(coverage::directly_covered_components(
@@ -273,7 +279,7 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
                         "External.tsx",
                         Vec::new(),
                     )])),
-                    source: Some("export function External() { return null }".to_string()),
+                    source: Some("export function External() { return null }".into()),
                     ..Default::default()
                 },
             ),
@@ -285,7 +291,7 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
                         "components/Excluded.tsx",
                         Vec::new(),
                     )])),
-                    source: Some("export function Excluded() { return null }".to_string()),
+                    source: Some("export function Excluded() { return null }".into()),
                     ..Default::default()
                 },
             ),
@@ -293,14 +299,14 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
                 parsed_bad,
                 CheckFileFacts {
                     parse_error: Some("bad".to_string()),
-                    source: Some("export function Bad() { return null }".to_string()),
+                    source: Some("export function Bad() { return null }".into()),
                     ..Default::default()
                 },
             ),
             (
                 missing_react,
                 CheckFileFacts {
-                    source: Some("export function MissingReact() { return null }".to_string()),
+                    source: Some("export function MissingReact() { return null }".into()),
                     ..Default::default()
                 },
             ),
@@ -315,7 +321,7 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
                             file: "components/Leaf.tsx".to_string(),
                         }],
                     )])),
-                    symbols: Some(FileSymbols {
+                    symbols: Some(std::sync::Arc::new(FileSymbols {
                         exports: vec![Export {
                             name: "NoSource".to_string(),
                             local: None,
@@ -324,7 +330,7 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
                             is_type_only: false,
                         }],
                         imports: Vec::new(),
-                    }),
+                    })),
                     ..Default::default()
                 },
             ),
@@ -337,10 +343,9 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
                         Vec::new(),
                     )])),
                     source: Some(
-                        "export function Included() { return <div data-story=\"yes\" /> }"
-                            .to_string(),
+                        "export function Included() { return <div data-story=\"yes\" /> }".into(),
                     ),
-                    symbols: Some(FileSymbols {
+                    symbols: Some(std::sync::Arc::new(FileSymbols {
                         exports: vec![Export {
                             name: "Included".to_string(),
                             local: None,
@@ -349,11 +354,14 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
                             is_type_only: false,
                         }],
                         imports: Vec::new(),
-                    }),
+                    })),
                     ..Default::default()
                 },
             ),
-        ]),
+        ])
+        .into_iter()
+        .map(|(path, facts)| (path, std::sync::Arc::new(facts)))
+        .collect(),
         ..Default::default()
     };
     let test_filter = crate::codebase::test_filter::TestFileFilter::new(
@@ -381,7 +389,9 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
         ]
     );
 
-    shared.ts.get_mut(&no_source).unwrap().react = Some(react_facts(vec![react_component(
+    std::sync::Arc::get_mut(shared.ts.get_mut(&no_source).unwrap())
+        .unwrap()
+        .react = Some(react_facts(vec![react_component(
         "NoSource",
         "components/NoSource.tsx",
         Vec::new(),
@@ -446,7 +456,10 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
                     ..Default::default()
                 },
             ),
-        ]),
+        ])
+            .into_iter()
+            .map(|(path, facts)| (path, std::sync::Arc::new(facts)))
+            .collect(),
         ..Default::default()
     };
     let boundary_files =

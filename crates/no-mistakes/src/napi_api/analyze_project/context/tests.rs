@@ -82,3 +82,27 @@ fn report_caches_call_each_analyzer_once_per_canonical_key() {
         assert_eq!(indexed_calls.get(), 1, "{domain} indexed analyzer");
     }
 }
+
+#[test]
+fn omitted_and_explicit_automatic_paths_share_one_scope() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/forbidden-dependencies-passes/fixture"),
+    );
+    let options: super::AnalyzeProjectOptions = serde_json::from_value(serde_json::json!({
+        "root": root,
+        "reports": [
+            { "type": "check" },
+            {
+                "type": "check",
+                "config": ".no-mistakes.yml",
+                "tsconfig": "tsconfig.json"
+            }
+        ]
+    }))
+    .unwrap();
+
+    let context = super::AnalyzeProjectContext::prepare(&options).unwrap();
+    assert_eq!(context.scopes.len(), 1);
+    assert_eq!(context.scope_aliases.len(), 2);
+}

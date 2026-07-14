@@ -6,6 +6,7 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+mod link_target;
 mod parser;
 use parser::{markdown_links_outside_code, InlineLink};
 
@@ -24,6 +25,16 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -37,7 +48,7 @@ pub(crate) fn check_with_files(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files)
+            scan_with_sources(root, &opts, &files, sources)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -45,11 +56,16 @@ pub(crate) fn check_with_files(
     Ok(findings)
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+fn scan_with_sources(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let extensions = effective_extensions(opts);
     let mut findings: Vec<RuleFinding> = files
         .par_iter()
-        .flat_map(|path| check_file(root, path, &extensions))
+        .flat_map(|path| check_file_with_sources(root, path, &extensions, sources))
         .collect();
     super::sort_findings(&mut findings);
     Ok(findings)
@@ -63,153 +79,23 @@ fn effective_extensions(opts: &Options) -> Vec<&str> {
     }
 }
 
-fn check_file(root: &Path, path: &Path, extensions: &[&str]) -> Vec<RuleFinding> {
+fn check_file_with_sources(
+    root: &Path,
+    path: &Path,
+    extensions: &[&str],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Vec<RuleFinding> {
     let rel = relative_slash_path(root, path);
     if !extensions.iter().any(|ext| rel.ends_with(ext)) {
         return Vec::new();
     }
-    let Ok(source) = std::fs::read_to_string(path) else {
+    let Some(source) = super::read_source(sources, path) else {
         return Vec::new();
     };
     markdown_links_outside_code(&source)
         .into_iter()
-        .filter_map(|link| finding_for_link(&rel, &source, link, extensions))
+        .filter_map(|link| link_target::finding_for_link(&rel, &source, link, extensions))
         .collect()
-}
-
-fn finding_for_link(
-    file: &str,
-    source: &str,
-    link: InlineLink,
-    extensions: &[&str],
-) -> Option<RuleFinding> {
-    let text = markdown_unescape(link.text).replace('`', "");
-    if !looks_like_md_filename(&text, extensions) || is_non_local_href(&link.href) {
-        return None;
-    }
-    let basename = href_basename(&link.href)?;
-    if basename == text {
-        return None;
-    }
-    Some(RuleFinding {
-        rule: RULE_ID.to_string(),
-        file: file.to_string(),
-        line: byte_offset_to_line(source, link.offset) as usize,
-        message: format!(
-            "{file}: link text \"{text}\" does not match target basename \"{basename}\""
-        ),
-        import: Some(text),
-        target: Some(basename),
-    })
-}
-
-fn looks_like_md_filename(text: &str, extensions: &[&str]) -> bool {
-    extensions.iter().any(|extension| text.ends_with(extension))
-        && !text.is_empty()
-        && !text
-            .chars()
-            .any(|ch| ch == '/' || ch == '\\' || ch.is_whitespace())
-}
-
-fn href_basename(href: &str) -> Option<String> {
-    let bare = href_destination(href);
-    let before_fragment = bare.split('#').next().unwrap_or_default();
-    let before_query = before_fragment.split('?').next().unwrap_or_default();
-    if before_query.ends_with('/') {
-        return None;
-    }
-    before_query
-        .rsplit('/')
-        .next()
-        .filter(|basename| !basename.is_empty())
-        .map(percent_decode)
-        .map(markdown_unescape)
-}
-
-fn percent_decode(value: &str) -> String {
-    let bytes = value.as_bytes();
-    let mut out = Vec::with_capacity(bytes.len());
-    let mut index = 0usize;
-    while index < bytes.len() {
-        if bytes[index] == b'%' {
-            if let Some(decoded) = decode_hex_byte(bytes.get(index + 1), bytes.get(index + 2)) {
-                out.push(decoded);
-                index += 3;
-                continue;
-            }
-        }
-        out.push(bytes[index]);
-        index += 1;
-    }
-    String::from_utf8(out).unwrap_or_else(|_| value.to_string())
-}
-
-fn markdown_unescape(value: String) -> String {
-    let mut out = String::with_capacity(value.len());
-    let mut chars = value.chars();
-    while let Some(ch) = chars.next() {
-        if ch == '\\' {
-            if let Some(next) = chars.next() {
-                if next.is_ascii_punctuation() {
-                    out.push(next);
-                } else {
-                    out.push(ch);
-                    out.push(next);
-                }
-            } else {
-                out.push(ch);
-            }
-        } else {
-            out.push(ch);
-        }
-    }
-    out
-}
-
-fn decode_hex_byte(high: Option<&u8>, low: Option<&u8>) -> Option<u8> {
-    Some(hex_value(*high?)? * 16 + hex_value(*low?)?)
-}
-
-fn hex_value(byte: u8) -> Option<u8> {
-    match byte {
-        b'0'..=b'9' => Some(byte - b'0'),
-        b'a'..=b'f' => Some(byte - b'a' + 10),
-        b'A'..=b'F' => Some(byte - b'A' + 10),
-        _ => None,
-    }
-}
-
-fn is_non_local_href(href: &str) -> bool {
-    let bare = href_destination(href);
-    bare.starts_with('#') || bare.starts_with("//") || has_url_scheme(bare)
-}
-
-fn has_url_scheme(value: &str) -> bool {
-    let Some(colon) = value.find(':') else {
-        return false;
-    };
-    let scheme = &value[..colon];
-    !scheme.is_empty()
-        && scheme
-            .chars()
-            .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '+' | '-' | '.'))
-        && scheme
-            .chars()
-            .next()
-            .is_some_and(|ch| ch.is_ascii_alphabetic())
-}
-
-fn href_destination(value: &str) -> &str {
-    let trimmed = value.trim();
-    if let Some(rest) = trimmed.strip_prefix('<') {
-        if let Some(end) = rest.find('>') {
-            &rest[..end]
-        } else {
-            trimmed
-        }
-    } else {
-        trimmed.split_ascii_whitespace().next().unwrap_or_default()
-    }
 }
 
 #[cfg(test)]

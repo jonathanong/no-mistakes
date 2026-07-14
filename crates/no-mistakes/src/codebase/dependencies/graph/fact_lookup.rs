@@ -115,7 +115,8 @@ include!("fact_lookup_fallback.rs");
 /// `app_file` → set of test-reachable source files that can navigate to it.
 /// Named here (rather than inlined) because both the trait above and
 /// `CheckFactMap`'s cache field need to name the exact same type.
-pub(crate) type RouteReachableFiles = std::collections::BTreeMap<Arc<String>, std::collections::BTreeSet<Arc<String>>>;
+pub(crate) type RouteReachableFiles =
+    std::collections::BTreeMap<Arc<String>, std::collections::BTreeSet<Arc<String>>>;
 
 impl TsFactLookup for TsFactMap {
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
@@ -127,9 +128,19 @@ impl TsFactLookup for TsFactMap {
     }
 }
 
+fn check_file_facts_for_path<'a>(
+    facts: &'a crate::codebase::check_facts::CheckFactMap,
+    path: &Path,
+) -> Option<&'a std::sync::Arc<crate::codebase::check_facts::CheckFileFacts>> {
+    facts.ts.get(path).or_else(|| {
+        let normalized = crate::codebase::ts_resolver::normalize_path(path);
+        facts.ts.get(&normalized)
+    })
+}
+
 impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
-        self.ts.get(path).map(|facts| &facts.ts)
+        check_file_facts_for_path(self, path).map(|facts| facts.ts.as_ref())
     }
 
     fn covers_ts_fact_plan(&self, required: TsFactPlan) -> bool {
@@ -145,7 +156,7 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
         &self,
         path: &Path,
     ) -> Option<&crate::codebase::check_facts::PlaywrightTestFacts> {
-        self.ts.get(path).and_then(|facts| facts.playwright.as_ref())
+        check_file_facts_for_path(self, path).and_then(|facts| facts.playwright.as_ref())
     }
 
     fn playwright_source_files(&self) -> Option<&[PathBuf]> {
@@ -166,7 +177,7 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
         &self,
         path: &Path,
     ) -> Option<Result<crate::fetch::file_facts::ParsedFileFacts, String>> {
-        let facts = self.ts.get(path)?;
+        let facts = check_file_facts_for_path(self, path)?;
         if let Some(error) = &facts.parse_error {
             return Some(Err(format!("failed to parse {}: {error}", path.display())));
         }
@@ -174,9 +185,7 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
     }
 
     fn get_playwright_parse_error(&self, path: &Path) -> Option<&str> {
-        self.ts
-            .get(path)
-            .and_then(|facts| facts.parse_error.as_deref())
+        check_file_facts_for_path(self, path).and_then(|facts| facts.parse_error.as_deref())
     }
 
     fn get_or_compute_app_selector_occurrences(
@@ -196,7 +205,11 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
                 crate::codebase::check_facts::PlaywrightSettingsKey::new(settings),
                 scan_html_ids,
             ))
-            .or_insert_with(|| compute().map(Arc::new).map_err(|error| format!("{error:#}")))
+            .or_insert_with(|| {
+                compute()
+                    .map(Arc::new)
+                    .map_err(|error| format!("{error:#}"))
+            })
             .clone()
             .map_err(anyhow::Error::msg)
     }
@@ -207,7 +220,9 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
         compute: &dyn Fn() -> Vec<crate::routes::Route>,
     ) -> Arc<Vec<crate::routes::Route>> {
         self.playwright_routes_cache
-            .entry(crate::codebase::check_facts::PlaywrightSettingsKey::new(settings))
+            .entry(crate::codebase::check_facts::PlaywrightSettingsKey::new(
+                settings,
+            ))
             .or_insert_with(|| Arc::new(compute()))
             .clone()
     }
@@ -218,8 +233,14 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
         compute: &dyn Fn() -> Result<Vec<crate::playwright::analysis::text_types::AppTextTarget>>,
     ) -> Result<Arc<Vec<crate::playwright::analysis::text_types::AppTextTarget>>> {
         self.app_text_targets_cache
-            .entry(crate::codebase::check_facts::PlaywrightSettingsKey::new(settings))
-            .or_insert_with(|| compute().map(Arc::new).map_err(|error| format!("{error:#}")))
+            .entry(crate::codebase::check_facts::PlaywrightSettingsKey::new(
+                settings,
+            ))
+            .or_insert_with(|| {
+                compute()
+                    .map(Arc::new)
+                    .map_err(|error| format!("{error:#}"))
+            })
             .clone()
             .map_err(anyhow::Error::msg)
     }
@@ -230,8 +251,14 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
         compute: &dyn Fn() -> Result<RouteReachableFiles>,
     ) -> Result<Arc<RouteReachableFiles>> {
         self.route_reachable_files_cache
-            .entry(crate::codebase::check_facts::PlaywrightSettingsKey::new(settings))
-            .or_insert_with(|| compute().map(Arc::new).map_err(|error| format!("{error:#}")))
+            .entry(crate::codebase::check_facts::PlaywrightSettingsKey::new(
+                settings,
+            ))
+            .or_insert_with(|| {
+                compute()
+                    .map(Arc::new)
+                    .map_err(|error| format!("{error:#}"))
+            })
             .clone()
             .map_err(anyhow::Error::msg)
     }

@@ -48,15 +48,15 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
         base_url: None,
     };
     let resolver = ImportResolver::new(&tsconfig).with_visible(&visible);
-    let workspace = crate::codebase::workspaces::WorkspaceMap {
-        packages: vec![crate::codebase::workspaces::WorkspacePackage {
+    let workspace = crate::codebase::workspaces::IndexedWorkspaceMap::from_packages(vec![
+        crate::codebase::workspaces::WorkspacePackage {
             name: "@fixture/core".to_string(),
             dir: p("/repo/packages/core"),
             entry: Some(workspace_target.clone()),
             exports: None,
             imports: None,
-        }],
-    };
+        },
+    ]);
 
     let symbols = FileSymbols {
         exports: vec![],

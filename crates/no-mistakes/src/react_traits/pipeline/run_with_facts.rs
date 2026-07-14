@@ -42,7 +42,7 @@ pub(crate) fn run_analyze_inner_with_facts(
         let Some(components) = file_cache.get(&file).cloned() else {
             continue;
         };
-        for mut facts in components {
+        for mut facts in components.iter().cloned() {
             let agg = aggregate_children_cached(
                 &facts,
                 &file_cache,
@@ -89,7 +89,7 @@ fn target_files(
 
 fn aggregate_children_cached(
     facts: &ComponentFacts,
-    file_cache: &HashMap<PathBuf, Vec<ComponentFacts>>,
+    file_cache: &HashMap<PathBuf, std::sync::Arc<Vec<ComponentFacts>>>,
     child_path_index: &HashMap<String, PathBuf>,
     visited: &mut HashSet<String>,
 ) -> AggregatedFacts {
@@ -118,7 +118,7 @@ fn aggregate_children_cached(
 
 fn child_path_index(
     root: &Path,
-    file_cache: &HashMap<PathBuf, Vec<ComponentFacts>>,
+    file_cache: &HashMap<PathBuf, std::sync::Arc<Vec<ComponentFacts>>>,
 ) -> HashMap<String, PathBuf> {
     let mut index = HashMap::new();
     for path in file_cache.keys() {

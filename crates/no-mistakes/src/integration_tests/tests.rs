@@ -111,6 +111,7 @@ fn runner_configs_share_one_parse_with_standalone_and_aggregate_source_analysis(
     let root = fixture.path().canonicalize().unwrap();
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
     let visible_paths = snapshot.paths_for(&root);
+    let sources = snapshot.source_store_for(&root);
     let config =
         crate::config::v2::load_v2_config_from_visible(&root, None, &visible_paths).unwrap();
     let tsconfig =
@@ -125,7 +126,13 @@ fn runner_configs_share_one_parse_with_standalone_and_aggregate_source_analysis(
     let standalone = check(&root, None).unwrap();
     let standalone_counts = crate::ast::finish_parse_count(&root);
 
-    let runner_configs = prepare_runner_configs(&root, &config, &visible_paths, &tsconfig);
+    let runner_configs = runner_config::prepare_with_sources(
+        &root,
+        &config,
+        &visible_paths,
+        &tsconfig,
+        std::sync::Arc::clone(&sources),
+    );
     let playwright_settings =
         crate::playwright::config::test_support::load_settings(&root, None, &[], None).unwrap();
     let mut playwright_plan = crate::codebase::check_facts::PlaywrightFactPlan::from_settings(
@@ -139,20 +146,22 @@ fn runner_configs_share_one_parse_with_standalone_and_aggregate_source_analysis(
     playwright_plan.set_source_files(vec![test_file.clone(), helper_file.clone()]);
     playwright_plan.set_app_source_files([helper_file.clone()]);
     crate::ast::begin_parse_count(&root);
-    let shared = crate::codebase::check_facts::collect_check_facts_with_graph_files_and_playwright(
-        &root,
-        vec![test_file.clone(), helper_file.clone()],
-        vec![vitest_config_file.clone(), playwright_config_file.clone()],
-        crate::codebase::check_facts::CheckFactPlan {
-            imports: true,
-            symbols: true,
-            integration: true,
-            integration_runner_configs: Some(std::sync::Arc::new(runner_configs)),
-            graph: crate::codebase::ts_source::facts::TsFactPlan::imports(),
-            ..Default::default()
-        },
-        Some(playwright_plan),
-    );
+    let shared =
+        crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
+            &root,
+            vec![test_file.clone(), helper_file.clone()],
+            vec![vitest_config_file.clone(), playwright_config_file.clone()],
+            crate::codebase::check_facts::CheckFactPlan {
+                imports: true,
+                symbols: true,
+                integration: true,
+                integration_runner_configs: Some(std::sync::Arc::new(runner_configs)),
+                graph: crate::codebase::ts_source::facts::TsFactPlan::imports(),
+                ..Default::default()
+            },
+            Some(playwright_plan),
+            std::sync::Arc::clone(&sources),
+        );
     let aggregate =
         check_with_prepared_facts(&root, &config, &shared, &tsconfig, &snapshot).unwrap();
     let aggregate_counts = crate::ast::finish_parse_count(&root);
@@ -178,6 +187,22 @@ fn runner_configs_share_one_parse_with_standalone_and_aggregate_source_analysis(
     assert_eq!(aggregate_counts.get(&helper_file), Some(&1));
     assert_eq!(aggregate_counts.get(&vitest_config_file), Some(&1));
     assert_eq!(aggregate_counts.get(&playwright_config_file), Some(&1));
+    for path in [
+        &test_file,
+        &helper_file,
+        &vitest_config_file,
+        &playwright_config_file,
+    ] {
+        let before = sources.physical_read_count();
+        let _ = sources.read_path(path);
+        assert_eq!(
+            sources.physical_read_count(),
+            before,
+            "missing source-store read: {}",
+            path.display(),
+        );
+    }
+    assert_eq!(sources.physical_read_count(), 4);
 }
 
 #[test]

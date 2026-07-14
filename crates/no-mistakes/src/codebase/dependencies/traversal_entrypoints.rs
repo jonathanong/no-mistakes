@@ -1,15 +1,28 @@
-fn resolve_entrypoints_with_files(
-    raw_entrypoints: &[PathBuf],
-    symbol_entrypoints: &[Option<String>],
-    structured_entrypoints: &[bool],
-    root: &Path,
-    cwd: &Path,
-    graph_files: &graph::GraphFiles,
+struct EntrypointResolution<'a> {
+    raw_entrypoints: &'a [PathBuf],
+    symbol_entrypoints: &'a [Option<String>],
+    structured_entrypoints: &'a [bool],
+    root: &'a Path,
+    cwd: &'a Path,
+    graph_files: &'a graph::GraphFiles,
     include_symbols: bool,
+    workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+}
+
+fn resolve_entrypoints_with_files_and_workspace(
+    input: EntrypointResolution<'_>,
 ) -> Vec<Entrypoint> {
-    let workspace =
-        crate::codebase::workspaces::load_from_files(root, graph_files.all()).unwrap_or_default();
-    let root_dependencies = root_dependency_names(root, graph_files.all());
+    let EntrypointResolution {
+        raw_entrypoints,
+        symbol_entrypoints,
+        structured_entrypoints,
+        root,
+        cwd,
+        graph_files,
+        include_symbols,
+        workspace,
+    } = input;
+    let root_dependencies = workspace.root_dependency_names();
     raw_entrypoints
         .iter()
         .enumerate()
@@ -38,8 +51,8 @@ fn resolve_entrypoints_with_files(
             let mut node = resolve_entrypoint_node(
                 &raw_for_node,
                 &normalized,
-                &workspace,
-                &root_dependencies,
+                workspace,
+                root_dependencies,
                 graph_files.visible(),
             );
             let file = match &node {
@@ -62,7 +75,7 @@ fn resolve_entrypoints_with_files(
 fn resolve_entrypoint_node(
     raw: &str,
     path: &Path,
-    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     root_dependencies: &std::collections::HashSet<String>,
     visible_files: &std::collections::HashSet<PathBuf>,
 ) -> NodeId {
@@ -98,9 +111,7 @@ fn raw_looks_like_source_file(
     let has_source_extension = Path::new(raw)
         .extension()
         .and_then(std::ffi::OsStr::to_str)
-        .is_some_and(|extension| {
-            crate::codebase::ts_source::TS_JS_EXTENSIONS.contains(&extension)
-        });
+        .is_some_and(|extension| crate::codebase::ts_source::TS_JS_EXTENSIONS.contains(&extension));
     if !has_source_extension {
         return false;
     }
@@ -126,44 +137,13 @@ fn raw_package_name(raw: &str) -> Option<String> {
     Some(first.to_string())
 }
 
-fn root_dependency_names(
-    root: &Path,
-    visible_files: &[PathBuf],
-) -> std::collections::HashSet<String> {
-    let manifest = crate::codebase::ts_resolver::normalize_path(&root.join("package.json"));
-    if !visible_files
-        .iter()
-        .any(|path| crate::codebase::ts_resolver::normalize_path(path) == manifest)
-    {
-        return std::collections::HashSet::new();
-    }
-    let Ok(source) = std::fs::read_to_string(manifest) else {
-        return std::collections::HashSet::new();
-    };
-    let Ok(package_json) = serde_json::from_str::<serde_json::Value>(&source) else {
-        return std::collections::HashSet::new();
-    };
-    [
-        "dependencies",
-        "devDependencies",
-        "peerDependencies",
-        "optionalDependencies",
-    ]
-    .iter()
-    .filter_map(|field| package_json.get(field).and_then(|deps| deps.as_object()))
-    .flat_map(|deps| deps.keys().cloned())
-    .collect()
-}
-
 fn package_dir_entry(
     dir: &Path,
-    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     visible_files: &std::collections::HashSet<PathBuf>,
 ) -> Option<PathBuf> {
     workspace
-        .packages
-        .iter()
-        .find(|package| package.dir == dir)
+        .package_by_dir(dir)
         .and_then(|package| package.entry.clone())
         .filter(|entry| {
             visible_files.contains(&crate::codebase::ts_resolver::normalize_path(entry))

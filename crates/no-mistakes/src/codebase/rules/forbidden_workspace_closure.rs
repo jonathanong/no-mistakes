@@ -44,6 +44,16 @@ pub(crate) fn check_with_files(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
+    let sources = super::source_store_for_files(all_files);
+    check_with_files_and_sources(root, config, all_files, &sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -61,7 +71,7 @@ pub(crate) fn check_with_files(
                 .cloned()
                 .collect();
             let source_filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
-            scan(root, &target_roots, &opts, &files, &source_filter)
+            scan_with_sources(root, &target_roots, &opts, &files, &source_filter, sources)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -69,14 +79,15 @@ pub(crate) fn check_with_files(
     Ok(findings)
 }
 
-fn scan(
+fn scan_with_sources(
     root: &Path,
     target_roots: &[PathBuf],
     opts: &Options,
     files: &[PathBuf],
     source_filter: &super::path_filter::RulePathFilter,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    let workspace = workspace::load_workspace(root, target_roots, files)?;
+    let workspace = workspace::load_workspace_with_sources(root, target_roots, files, sources)?;
     if workspace.packages.is_empty() {
         return Ok(Vec::new());
     }
@@ -97,10 +108,13 @@ fn scan(
         Ok(dependency_types) => dependency_types,
         Err(message) => return Ok(vec![config_finding(&message)]),
     };
-    let mut nodes = manifest::manifest_nodes(&workspace, &dependency_types);
+    let mut nodes = manifest::manifest_nodes_with_sources(&workspace, &dependency_types, sources);
     if let Some(lockfile) = &opts.lockfile {
-        let lockfile_manifest_nodes =
-            manifest::manifest_nodes(&workspace, package_deps::ALL_DEPENDENCY_FIELDS);
+        let lockfile_manifest_nodes = manifest::manifest_nodes_with_sources(
+            &workspace,
+            package_deps::ALL_DEPENDENCY_FIELDS,
+            sources,
+        );
         let lockfile_base = lockfile::base_root(root, target_roots);
         match lockfile::lockfile_nodes(
             root,
@@ -108,8 +122,7 @@ fn scan(
             lockfile,
             &workspace,
             &lockfile_manifest_nodes,
-            &dependency_types,
-            &opts.packages,
+            (&dependency_types, &opts.packages, sources),
         ) {
             Ok(lockfile_backed) => nodes = lockfile_backed,
             Err(message) => return Ok(vec![config_finding(&message)]),

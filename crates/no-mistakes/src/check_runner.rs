@@ -5,7 +5,7 @@ use crate::check_tasks::{
 };
 use anyhow::{Context, Result};
 use enabled::{fact_plan, integration_configured, plan_requests_facts};
-use no_mistakes::codebase::check_facts::collect_check_facts_with_graph_files_and_playwright;
+use no_mistakes::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources;
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -28,7 +28,6 @@ pub(crate) fn run_all(
     let enabled = enabled::ConfiguredChecks::from_config(config);
     let filesystem_rules_enabled = filesystem_rules_configured(config);
     let forbidden_deps_enabled = forbidden_dependencies_configured(config);
-    let playwright_rules_enabled = no_mistakes::playwright::rules::configured(config);
     let forbidden_graph_plan = if forbidden_deps_enabled {
         no_mistakes::codebase::rules::forbidden_dependencies::graph_plan(config)
     } else {
@@ -55,7 +54,6 @@ pub(crate) fn run_all(
     let playwright_facts_enabled = playwright_fact_plan.is_some();
     let integration_enabled = integration_configured(config);
     let react_enabled = prepared.react.enabled();
-    let react_warning = None;
     let mut plan = fact_plan(enabled::EnabledChecks {
         react: react_enabled,
         queue: queues_enabled,
@@ -114,10 +112,10 @@ pub(crate) fn run_all(
         plan_requests_facts(&plan) || playwright_fact_plan.is_some() || forbidden_deps_enabled;
     if !needs_shared_facts
         && !filesystem_rules_enabled
-        && !playwright_rules_enabled
+        && !no_mistakes::playwright::rules::configured(config)
         && !forbidden_deps_enabled
     {
-        return Ok(empty_results([react_warning]));
+        return Ok(empty_results([None]));
     }
     let discover_start = Instant::now();
     let skip_directories = config.filesystem.skip_directories.clone();
@@ -151,12 +149,13 @@ pub(crate) fn run_all(
         } else {
             Vec::new()
         };
-        let f = collect_check_facts_with_graph_files_and_playwright(
+        let f = collect_check_facts_with_graph_files_playwright_and_sources(
             &root,
             discovered,
             graph_files,
             plan,
             playwright_fact_plan,
+            prepared.visible_paths.source_store_for(&root),
         );
         (fs, f)
     } else {
@@ -178,31 +177,32 @@ pub(crate) fn run_all(
             prepared_playwright: prepared.playwright.as_ref(),
             prepared_react: &prepared.react,
             prepared_graph: prepared_graph.as_ref(),
+            dependency_graph: None,
             prepared_tsconfig: &prepared.tsconfig,
             visible_paths: prepared.visible_paths.as_ref(),
+            sources: prepared.visible_paths.source_store_for(&root),
             inferred_roots: &prepared.inferred_roots,
             config,
             codebase_config: &prepared.codebase_config,
             vitest_projects: prepared.vitest_projects.as_ref(),
         });
 
-    let completed = complete_domain_checks((
-        react,
-        queues,
-        rules,
-        integration,
-        codebase,
-        filesystem_rules,
-    ))?;
     results::finalize_domain_checks(results::FinalizeInput {
         root: &root,
         config,
         filesystem_files: &fs_files,
         filesystem_rules_enabled,
-        react_warning,
+        react_warning: None,
         discover_duration,
         facts_duration,
-        completed,
+        completed: complete_domain_checks((
+            react,
+            queues,
+            rules,
+            integration,
+            codebase,
+            filesystem_rules,
+        ))?,
     })
 }
 

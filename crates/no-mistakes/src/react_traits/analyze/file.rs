@@ -15,7 +15,7 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 pub(crate) struct FileAnalysis {
-    pub(crate) components: Vec<ComponentFacts>,
+    pub(crate) components: std::sync::Arc<Vec<ComponentFacts>>,
 }
 
 #[cfg(test)]
@@ -149,5 +149,7 @@ fn analyze_program_inner(
         components
     };
 
-    FileAnalysis { components }
+    FileAnalysis {
+        components: components.into(),
+    }
 }

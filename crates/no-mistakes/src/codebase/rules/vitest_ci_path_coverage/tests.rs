@@ -1,5 +1,16 @@
 use super::*;
 
+fn scan_with_catalog(
+    root: &Path,
+    config: &NoMistakesConfig,
+    inputs: (&Options, &[PathBuf], &[PathBuf]),
+    snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
+    catalog: Option<&super::super::PreparedVitestProjectCatalog>,
+) -> Result<Vec<RuleFinding>> {
+    let sources = snapshot.source_store_for(root);
+    scan_with_catalog_and_sources(root, config, inputs, snapshot, catalog, &sources)
+}
+
 fn scan(
     root: &Path,
     config: &NoMistakesConfig,
@@ -8,7 +19,7 @@ fn scan(
     all_files: &[PathBuf],
     snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
 ) -> Result<Vec<RuleFinding>> {
-    scan_with_catalog(root, config, opts, files, all_files, snapshot, None)
+    scan_with_catalog(root, config, (opts, files, all_files), snapshot, None)
 }
 use crate::codebase::rules::vitest_ci_path_coverage::projects::CoverageSource;
 use crate::config::v2::load_v2_config;

@@ -9,11 +9,11 @@ pub(super) fn queue_project_facts_from_ts(
 ) -> HashMap<PathBuf, FileFacts> {
     ts_facts
         .into_iter()
-        .filter_map(|(path, mut facts)| {
+        .filter_map(|(path, facts)| {
             if excluded_by_filter(&path, filter, root) {
                 return None;
             }
-            facts.queue_project.take().map(|queue| (path, queue))
+            facts.queue_project.clone().map(|queue| (path, queue))
         })
         .collect()
 }

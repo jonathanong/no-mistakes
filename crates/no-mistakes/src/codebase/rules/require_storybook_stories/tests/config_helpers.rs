@@ -271,7 +271,8 @@ fn reachable_story_files_skip_unreadable_story_facts() {
             CheckFileFacts {
                 parse_error: Some("bad syntax".to_string()),
                 ..Default::default()
-            },
+            }
+            .into(),
         )]),
         ..Default::default()
     };
@@ -289,7 +290,8 @@ fn reachable_story_files_skip_unreadable_story_facts() {
         CheckFileFacts {
             storybook: None,
             ..Default::default()
-        },
+        }
+        .into(),
     );
     let files = coverage::reachable_story_files(
         &root,

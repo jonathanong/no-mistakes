@@ -53,9 +53,13 @@ use std::path::{Path, PathBuf};
 pub use filesystem_dispatch::{
     run_filesystem_rules, run_filesystem_rules_with_config,
     run_filesystem_rules_with_config_and_snapshot,
-    run_filesystem_rules_with_config_snapshot_and_vitest_catalog, run_filesystem_rules_with_files,
+    run_filesystem_rules_with_config_snapshot_and_vitest_catalog,
+    run_filesystem_rules_with_config_snapshot_catalog_and_sources, run_filesystem_rules_with_files,
 };
 pub use ids::*;
+pub(crate) use run::canonical_graph_plan;
+#[doc(hidden)]
+pub use run::run_check_with_config_facts_playwright_and_graph;
 pub use run::{
     run_check, run_check_with_config_and_facts_and_playwright, run_check_with_facts,
     run_check_with_facts_and_playwright, PreparedRulesCheck,
@@ -64,7 +68,25 @@ pub use run::{
 pub use vitest_project_catalog::{prepare_vitest_project_catalog, PreparedVitestProjectCatalog};
 
 pub(crate) use file_matching::matching_files;
-pub(crate) use suppression::suppress_rule_findings;
+pub(crate) use suppression::{
+    suppress_rule_findings, suppress_rule_findings_with_source,
+    suppress_rule_findings_with_sources_except,
+};
+
+pub(crate) fn source_store_for_files(
+    files: &[PathBuf],
+) -> std::sync::Arc<crate::codebase::ts_source::SourceStore> {
+    std::sync::Arc::new(crate::codebase::ts_source::SourceStore::new(
+        std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(files)),
+    ))
+}
+
+pub(crate) fn read_source(
+    sources: &crate::codebase::ts_source::SourceStore,
+    path: &Path,
+) -> Option<std::sync::Arc<str>> {
+    sources.read_path(path)?.ok()
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 #[serde(rename_all = "camelCase")]

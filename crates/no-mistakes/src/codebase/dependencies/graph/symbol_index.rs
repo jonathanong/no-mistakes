@@ -44,29 +44,49 @@ impl SymbolIndex {
         graph_files: &GraphFiles,
         facts: &TsFactMap,
     ) -> Self {
-        type SymEntry = (PathBuf, String, String, bool);
-
-        let resolver = ImportResolver::new(tsconfig).with_visible(graph_files.visible());
-        let workspace = crate::codebase::workspaces::load_from_files(root, graph_files.all())
+        let workspace = crate::codebase::workspaces::load_indexed_from_files(root, graph_files.all())
             .unwrap_or_default();
+        Self::build_from_facts_and_workspace(tsconfig, graph_files, facts, &workspace)
+    }
+
+    pub(crate) fn build_from_facts_and_workspace(
+        tsconfig: &TsConfig,
+        graph_files: &GraphFiles,
+        facts: &dyn TsFactLookup,
+        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    ) -> Self {
+        Self::build_from_facts_workspace_and_resolution_cache(
+            tsconfig, graph_files, facts, workspace, None,
+        )
+    }
+
+    pub(crate) fn build_from_facts_workspace_and_resolution_cache(
+        tsconfig: &TsConfig,
+        graph_files: &GraphFiles,
+        facts: &dyn TsFactLookup,
+        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        import_resolution_cache: Option<&crate::codebase::ts_resolver::ImportResolutionCache>,
+    ) -> Self {
+        type SymEntry = (PathBuf, String, String, bool);
+        let resolver = ImportResolver::new(tsconfig).with_visible(graph_files.visible());
+        let resolver = match import_resolution_cache {
+            Some(cache) => resolver.with_shared_cache(cache),
+            None => resolver,
+        };
 
         let per_file: Vec<(PathBuf, Vec<SymEntry>)> = graph_files
             .indexable()
             .par_iter()
             .filter_map(|path| {
-                let symbols = facts.get(path)?.symbols.as_ref()?;
+                let symbols = facts.get_ts_facts(path)?.symbols.as_ref()?;
 
                 let mut imports_for_file = Vec::new();
                 for ni in &symbols.imports {
-                    if let Some(target) = resolver.resolve(&ni.source, path).or_else(|| {
-                        workspace.resolve_specifier_from_file_visible(
-                            &ni.source,
-                            path,
-                            graph_files.visible(),
-                        )
-                    }) {
+                    if let Some(target) = resolver
+                        .classify_import(&ni.source, path, workspace, graph_files.visible())
+                        .preferred_path() {
                         imports_for_file.push((
-                            target,
+                            target.to_path_buf(),
                             ni.imported.clone(),
                             ni.local.clone(),
                             false,
@@ -77,15 +97,11 @@ impl SymbolIndex {
                     if let crate::codebase::ts_symbols::ExportKind::ReExport { source, imported } =
                         &exp.kind
                     {
-                        if let Some(target) = resolver.resolve(source, path).or_else(|| {
-                            workspace.resolve_specifier_from_file_visible(
-                                source,
-                                path,
-                                graph_files.visible(),
-                            )
-                        }) {
+                        if let Some(target) = resolver
+                            .classify_import(source, path, workspace, graph_files.visible())
+                            .preferred_path() {
                             imports_for_file.push((
-                                target,
+                                target.to_path_buf(),
                                 imported.clone(),
                                 exp.name.clone(),
                                 true,

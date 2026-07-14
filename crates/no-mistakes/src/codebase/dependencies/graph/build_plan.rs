@@ -1,5 +1,5 @@
 /// Selects which edge producers run while building a dependency graph.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct GraphBuildPlan {
     pub imports: bool,
     pub route_imports: bool,

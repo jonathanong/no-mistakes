@@ -13,6 +13,10 @@ fn fixture_root(name: &str) -> PathBuf {
     )
 }
 
+fn package_dependencies(path: &Path, dependency_types: &[&str]) -> BTreeSet<String> {
+    crate::codebase::package_deps::dependency_names(path, dependency_types)
+}
+
 fn config(yaml: &str) -> NoMistakesConfig {
     let mut config = NoMistakesConfig::default();
     config.rules.push(RuleDef {

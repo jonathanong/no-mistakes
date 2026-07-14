@@ -7,7 +7,7 @@ fn dynamic_import_fixture() -> std::path::PathBuf {
 fn dynamic_import_test_facts(
     path: &std::path::Path,
     source: &str,
-) -> crate::codebase::check_facts::CheckFileFacts {
+) -> std::sync::Arc<crate::codebase::check_facts::CheckFileFacts> {
     crate::codebase::check_facts::CheckFileFacts {
         ts: crate::codebase::ts_source::facts::TsFileFacts {
             imports: crate::codebase::dependencies::extract::ImportExtractor::for_typescript()
@@ -15,13 +15,15 @@ fn dynamic_import_test_facts(
                 .extract(source)
                 .unwrap(),
             ..Default::default()
-        },
-        source: Some(source.to_string()),
+        }
+        .into(),
+        source: Some(source.into()),
         dynamic_imports: Some(
             test_no_unmocked_dynamic_imports::ast::extract(path, source).unwrap(),
         ),
         ..Default::default()
     }
+    .into()
 }
 
 #[test]
@@ -57,9 +59,10 @@ fn run_check_with_facts_reports_missing_source_and_dynamic_facts() {
     shared.ts.insert(
         test,
         crate::codebase::check_facts::CheckFileFacts {
-            source: Some("it('x', async () => {})".to_string()),
+            source: Some("it('x', async () => {})".into()),
             ..Default::default()
-        },
+        }
+        .into(),
     );
     assert!(format!(
         "{:#}",
@@ -78,10 +81,10 @@ fn run_check_with_facts_skips_disabled_parse_errors() {
         ..Default::default()
     };
     shared.ts.insert(test, crate::codebase::check_facts::CheckFileFacts {
-        source: Some("// no-mistakes-disable-file test-no-unmocked-dynamic-imports\nexport const Broken =".to_string()),
+        source: Some("// no-mistakes-disable-file test-no-unmocked-dynamic-imports\nexport const Broken =".into()),
         parse_error: Some("bad syntax".to_string()),
         ..Default::default()
-    });
+    }.into());
     run_check_with_facts(&root, None, None, &shared).unwrap();
 }
 
@@ -197,7 +200,8 @@ fn run_check_with_facts_reports_missing_setup_fact_shapes() {
         crate::codebase::check_facts::CheckFileFacts {
             parse_error: Some("bad setup".to_string()),
             ..Default::default()
-        },
+        }
+        .into(),
     );
     assert!(run_check_with_facts(&root, None, None, &shared)
         .unwrap_err()
@@ -206,9 +210,10 @@ fn run_check_with_facts_reports_missing_setup_fact_shapes() {
     shared.ts.insert(
         setup,
         crate::codebase::check_facts::CheckFileFacts {
-            source: Some("vi.mock('@lib/setup-target.mts')".to_string()),
+            source: Some("vi.mock('@lib/setup-target.mts')".into()),
             ..Default::default()
-        },
+        }
+        .into(),
     );
     assert!(run_check_with_facts(&root, None, None, &shared)
         .unwrap_err()
@@ -228,10 +233,11 @@ fn run_check_with_facts_reports_test_file_parse_error() {
     shared.ts.insert(
         test,
         crate::codebase::check_facts::CheckFileFacts {
-            source: Some("test('broken', () => {})".to_string()),
+            source: Some("test('broken', () => {})".into()),
             parse_error: Some("syntax error".to_string()),
             ..Default::default()
-        },
+        }
+        .into(),
     );
     assert!(format!(
         "{:#}",

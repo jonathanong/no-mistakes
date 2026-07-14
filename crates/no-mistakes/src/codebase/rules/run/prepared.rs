@@ -5,8 +5,11 @@ use super::{
     NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, REQUIRE_STORYBOOK_STORIES,
     SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
 };
+use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use anyhow::Result;
 use std::path::Path;
+
+mod execution;
 
 /// Preloaded inputs for the aggregate rules check.
 ///
@@ -27,138 +30,31 @@ pub struct PreparedRulesCheck<'a> {
 
 /// Shared-config entry point used by the aggregate `check` command.
 #[doc(hidden)]
+pub(crate) fn canonical_graph_plan(
+    config: &crate::config::v2::NoMistakesConfig,
+) -> Option<GraphBuildPlan> {
+    let mut plan = GraphBuildPlan::default();
+    let mut needed = false;
+    if rule_enabled(config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
+        plan.include(GraphBuildPlan::imports_and_workspace());
+        needed = true;
+    }
+    if let Some(forbidden_plan) = forbidden_dependencies::graph_plan(config) {
+        plan.include(forbidden_plan);
+        needed = true;
+    }
+    needed.then_some(plan)
+}
+
 pub fn run_check_with_config_and_facts_and_playwright(
     inputs: PreparedRulesCheck<'_>,
 ) -> Result<Vec<RuleFinding>> {
-    let PreparedRulesCheck {
-        root,
-        config_path,
-        tsconfig_path,
-        shared,
-        prepared_playwright,
-        config,
-        prepared_graph,
-        prepared_tsconfig,
-        inferred_roots,
-    } = inputs;
-    if !any_codebase_rule_enabled(config) {
-        return Ok(Vec::new());
-    }
-    let mut findings = Vec::new();
-    if rule_enabled(config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
-        findings.extend(crate::perf_trace::trace(
-            "rules.test_no_unmocked_dynamic_imports",
-            || {
-                test_no_unmocked_dynamic_imports::check_with_prepared_facts(
-                    root,
-                    config,
-                    prepared_tsconfig,
-                    shared,
-                )
-            },
-        )?);
-    }
-    if rule_enabled(config, SERVER_ROUTE_CLIENT_BOUNDARY) {
-        let boundary_findings = match inferred_roots {
-            Some(inferred_roots) => server_route_client_boundary::check_with_facts_and_inferred(
-                root,
-                config,
-                shared,
-                inferred_roots,
-            ),
-            None => server_route_client_boundary::check_with_facts(root, config, shared),
-        }?;
-        findings.extend(boundary_findings);
-    }
-    if rule_enabled(config, NEXTJS_NO_API_ROUTES) {
-        let api_route_findings = match inferred_roots {
-            Some(inferred_roots) => nextjs_no_api_routes::check_with_facts_and_inferred(
-                root,
-                config,
-                shared,
-                inferred_roots,
-            ),
-            None => nextjs_no_api_routes::check_with_facts(root, config, shared),
-        }?;
-        findings.extend(api_route_findings);
-    }
-    if rule_enabled(config, NEXTJS_NO_CACHING) {
-        findings.extend(match inferred_roots {
-            Some(inferred_roots) => nextjs_no_caching::check_with_facts_and_inferred(
-                root,
-                config,
-                shared,
-                inferred_roots,
-            ),
-            None => nextjs_no_caching::check_with_facts(root, config, shared),
-        }?);
-    }
-    if rule_enabled(config, REQUIRE_STORYBOOK_STORIES) {
-        let storybook_findings = match inferred_roots {
-            Some(inferred_roots) => {
-                require_storybook_stories::check_with_prepared_facts_and_inferred(
-                    root,
-                    config,
-                    tsconfig_path,
-                    prepared_tsconfig,
-                    shared,
-                    inferred_roots,
-                )
-            }
-            None => require_storybook_stories::check_with_prepared_facts(
-                root,
-                config,
-                tsconfig_path,
-                prepared_tsconfig,
-                shared,
-            ),
-        }?;
-        findings.extend(storybook_findings);
-    }
-    if crate::playwright::rules::configured(config) {
-        findings.extend(crate::perf_trace::trace(
-            "rules.playwright",
-            || match prepared_playwright {
-                Some(prepared) => crate::playwright::rules::check_with_prepared_facts(
-                    root,
-                    config_path,
-                    config,
-                    shared,
-                    prepared,
-                ),
-                None => {
-                    crate::playwright::rules::check_with_facts(root, config_path, config, shared)
-                }
-            },
-        )?);
-    }
-    if rule_enabled(config, FORBIDDEN_DEPENDENCIES) {
-        findings.extend(crate::perf_trace::trace(
-            "rules.forbidden_dependencies",
-            || match inferred_roots {
-                Some(inferred_roots) => {
-                    forbidden_dependencies::check_with_prepared_facts_and_inferred(
-                        root,
-                        config,
-                        config_path,
-                        prepared_tsconfig,
-                        shared,
-                        prepared_graph,
-                        inferred_roots,
-                    )
-                }
-                None => forbidden_dependencies::check_with_prepared_facts(
-                    root,
-                    config,
-                    config_path,
-                    prepared_tsconfig,
-                    shared,
-                    prepared_graph,
-                ),
-            },
-        )?);
-    }
-    suppress_rule_findings(root, &mut findings);
-    sort_findings(&mut findings);
-    Ok(findings)
+    run_check_with_config_facts_playwright_and_graph(inputs, None)
+}
+
+pub fn run_check_with_config_facts_playwright_and_graph(
+    inputs: PreparedRulesCheck<'_>,
+    dependency_graph: Option<&DepGraph>,
+) -> Result<Vec<RuleFinding>> {
+    execution::run(inputs, dependency_graph)
 }

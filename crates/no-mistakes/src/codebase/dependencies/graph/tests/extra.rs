@@ -138,8 +138,7 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         indexable: vec![web_entry.clone()],
         visible: [package.clone(), web_entry.clone()].into(),
     };
-    let workspace = crate::codebase::workspaces::WorkspaceMap {
-        packages: vec![
+    let workspace = crate::codebase::workspaces::IndexedWorkspaceMap::from_packages(vec![
             crate::codebase::workspaces::WorkspacePackage {
                 name: "@x/web".to_string(),
                 dir: root.join("packages/web"),
@@ -154,8 +153,8 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
                 exports: None,
                 imports: None,
             },
-        ],
-    };
+        ])
+        .with_manifest_dependency_names(package.clone(), vec!["@x/web".to_string()]);
 
     let empty_imports = Vec::new();
     assert!(
@@ -417,7 +416,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
     assert!(import_neighbors(
         &root.join("missing.mts"),
         &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
-        &crate::codebase::workspaces::WorkspaceMap::default(),
+        &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
         &graph_files,
         None,
         LazyImportFacts::new(None, TsFactPlan::imports(), &TsFactContext::new(&root)),
@@ -427,15 +426,15 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
 
     assert!(collect_workspace_manifest_edges(
         &[root.join("missing/package.json")],
-        &crate::codebase::workspaces::WorkspaceMap {
-            packages: vec![crate::codebase::workspaces::WorkspacePackage {
+        &crate::codebase::workspaces::IndexedWorkspaceMap::from_packages(vec![
+            crate::codebase::workspaces::WorkspacePackage {
                 name: "@x/missing".to_string(),
                 dir: root.join("packages/missing"),
                 entry: Some(root.join("packages/missing/index.ts")),
                 exports: None,
                 imports: None,
-            }],
-        },
+            },
+        ]),
         &graph_files,
     )
     .is_empty());
@@ -497,7 +496,7 @@ fn lazy_import_facts_memoize_parse_errors() {
     let (neighbors, collected) = import_neighbors(
         &malformed,
         &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
-        &crate::codebase::workspaces::WorkspaceMap::default(),
+        &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
         &graph_files,
         None,
         LazyImportFacts::new(None, TsFactPlan::imports(), &context),

@@ -1,5 +1,6 @@
 pub(super) struct AnalyzeProjectContext {
-    scopes: HashMap<String, PreparedScope>,
+    scopes: HashMap<EffectiveScopeKey, PreparedScope>,
+    scope_aliases: HashMap<EffectiveScopeKey, EffectiveScopeKey>,
 }
 
 impl AnalyzeProjectContext {
@@ -7,17 +8,36 @@ impl AnalyzeProjectContext {
         if options.reports.is_empty() {
             return Ok(Self {
                 scopes: HashMap::new(),
+                scope_aliases: HashMap::new(),
             });
         }
         let master_root = super::options::resolve_root(options.root.as_deref())?;
         let master_snapshot = std::sync::Arc::new(
             crate::codebase::ts_source::VisiblePathSnapshot::new(&master_root),
         );
-        let mut grouped =
-            std::collections::BTreeMap::<String, (EffectiveScope, Vec<AnalyzeReportRequest>)>::new(
-            );
+        let mut visible_by_root = HashMap::new();
+        let mut scope_aliases = HashMap::new();
+        let mut grouped = std::collections::BTreeMap::<
+            EffectiveScopeKey,
+            (EffectiveScope, Vec<AnalyzeReportRequest>),
+        >::new();
         for request in &options.reports {
-            let effective = effective_scope(request, options)?;
+            let raw = effective_scope(request, options)?;
+            let visible_paths = visible_by_root
+                .entry(raw.root.clone())
+                .or_insert_with(|| {
+                    if raw.root.starts_with(&master_root) {
+                        master_snapshot.clone()
+                    } else {
+                        std::sync::Arc::new(crate::codebase::ts_source::VisiblePathSnapshot::new(
+                            &raw.root,
+                        ))
+                    }
+                })
+                .clone();
+            let raw_key = raw.key.clone();
+            let effective = raw.normalize_automatic_paths(&visible_paths)?;
+            scope_aliases.insert(raw_key, effective.key.clone());
             grouped
                 .entry(effective.key.clone())
                 .or_insert_with(|| (effective, Vec::new()))
@@ -26,13 +46,10 @@ impl AnalyzeProjectContext {
         }
         let mut scopes = HashMap::new();
         for (key, (effective, reports)) in grouped {
-            let visible_paths = if effective.root.starts_with(&master_root) {
-                master_snapshot.clone()
-            } else {
-                std::sync::Arc::new(crate::codebase::ts_source::VisiblePathSnapshot::new(
-                    &effective.root,
-                ))
-            };
+            let visible_paths = visible_by_root
+                .get(&effective.root)
+                .cloned()
+                .expect("effective scope snapshot is prepared");
             let scoped_options = AnalyzeProjectOptions {
                 root: Some(effective.root.display().to_string()),
                 tsconfig: effective
@@ -48,7 +65,10 @@ impl AnalyzeProjectContext {
             };
             scopes.insert(key, PreparedScope::prepare(&scoped_options, visible_paths)?);
         }
-        Ok(Self { scopes })
+        Ok(Self {
+            scopes,
+            scope_aliases,
+        })
     }
 
     fn scope_mut(
@@ -56,10 +76,11 @@ impl AnalyzeProjectContext {
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
     ) -> Result<&mut PreparedScope> {
-        let key = effective_scope(request, options)?.key;
+        let raw_key = effective_scope(request, options)?.key;
+        let key = self.scope_aliases.get(&raw_key).unwrap_or(&raw_key).clone();
         self.scopes
             .get_mut(&key)
-            .with_context(|| format!("prepared analyzeProject scope is missing for `{key}`"))
+            .with_context(|| format!("prepared analyzeProject scope is missing for `{key:?}`"))
     }
 
     pub(super) fn graph_report(

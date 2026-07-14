@@ -10,6 +10,8 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+mod scan;
+
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
 struct MaxLinesOptions {
@@ -20,16 +22,18 @@ struct MaxLinesOptions {
 }
 
 #[derive(Default)]
-struct RustWork {
-    max_limits: Vec<usize>,
-    inline_tests: bool,
-    inline_allows: bool,
+pub(super) struct RustWork {
+    pub(super) max_limits: Vec<usize>,
+    pub(super) inline_tests: bool,
+    pub(super) inline_allows: bool,
 }
 
-pub(crate) fn check_with_files(
+pub(crate) fn check_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
+    exclusive_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let mut work = BTreeMap::<PathBuf, RustWork>::new();
     add_max_lines_work(root, config, all_files, &mut work)?;
@@ -38,7 +42,15 @@ pub(crate) fn check_with_files(
 
     let mut findings: Vec<RuleFinding> = work
         .par_iter()
-        .flat_map(|(path, work)| scan_file(root, path, work))
+        .flat_map(|(path, work)| {
+            scan::scan_file(
+                root,
+                path,
+                work,
+                exclusive_files.binary_search(path).is_ok(),
+                sources,
+            )
+        })
         .collect();
     super::sort_findings(&mut findings);
     Ok(findings)
@@ -164,49 +176,6 @@ fn is_excluded(root: &Path, path: &Path, excludes: &[String]) -> bool {
     excludes
         .iter()
         .any(|exclude| rel.contains(exclude.as_str()))
-}
-
-fn scan_file(root: &Path, path: &Path, work: &RustWork) -> Vec<RuleFinding> {
-    let Ok(content) = std::fs::read_to_string(path) else {
-        return Vec::new();
-    };
-
-    let mut findings = Vec::new();
-    for limit in &work.max_limits {
-        if let Some(finding) = rust_max_lines_per_file::check_source(path, root, &content, *limit) {
-            findings.push(finding);
-        }
-    }
-
-    let inline_tests_enabled =
-        work.inline_tests && !has_disable_file_comment(&content, RUST_NO_INLINE_TESTS);
-    let inline_allows_enabled =
-        work.inline_allows && !has_disable_file_comment(&content, RUST_NO_INLINE_ALLOWS);
-    let needs_inline_tests_parse =
-        inline_tests_enabled && content.contains("cfg") && content.contains("test");
-    let needs_inline_allows_parse = inline_allows_enabled && content.contains("allow");
-    if needs_inline_tests_parse || needs_inline_allows_parse {
-        if let Ok(parsed) = syn::parse_file(&content) {
-            if needs_inline_tests_parse {
-                findings.extend(rust_no_inline_tests::findings_from_parsed(
-                    path, root, &parsed,
-                ));
-            }
-            if needs_inline_allows_parse {
-                findings.extend(rust_no_inline_allows::findings_from_parsed(
-                    path, root, &parsed,
-                ));
-            }
-        }
-    }
-
-    dedup_findings(findings)
-}
-
-fn dedup_findings(mut findings: Vec<RuleFinding>) -> Vec<RuleFinding> {
-    findings.sort();
-    findings.dedup();
-    findings
 }
 
 #[cfg(test)]

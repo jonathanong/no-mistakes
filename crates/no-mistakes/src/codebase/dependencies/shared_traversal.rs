@@ -2,7 +2,7 @@ pub(crate) struct SharedTraversalContext {
     root: PathBuf,
     tsconfig: TsConfig,
     graph_files: graph::GraphFiles,
-    visible_paths: std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot>,
+    dataset: crate::codebase::analysis_dataset::AnalysisDataset,
     config: crate::config::v2::NoMistakesConfig,
     config_path: Option<PathBuf>,
     prepared_graph: graph::PreparedGraphConfig,
@@ -12,8 +12,13 @@ pub(crate) struct SharedTraversalContext {
     prepared_test_projects: Option<crate::codebase::test_discovery::PreparedTestProjects>,
     test_filter: crate::codebase::test_filter::TestFileFilter,
     facts: Option<crate::codebase::ts_source::facts::TsFactMap>,
-    graph: Option<graph::DepGraph>,
+    graph: Option<std::sync::Arc<graph::DepGraph>>,
+    graph_cache: SharedBuildCache<EffectiveGraphPlanKey, graph::DepGraph>,
+    symbol_index_cache: SharedBuildCache<GraphFileUniverseKey, graph::SymbolIndex>,
+    import_resolution_cache: crate::codebase::ts_resolver::ImportResolutionCache,
+    analysis_generation: u64,
     pub(crate) graph_builds: usize,
+    pub(crate) symbol_index_builds: usize,
 }
 
 impl SharedTraversalContext {
@@ -23,52 +28,68 @@ impl SharedTraversalContext {
         config_path: Option<&Path>,
         build_plan: graph::GraphBuildPlan,
     ) -> Result<Self> {
-        let visible_paths = std::sync::Arc::new(
-            crate::codebase::ts_source::VisiblePathSnapshot::new(&root),
-        );
-        Self::prepare_with_snapshot(
-            root,
+        Self::prepare_with_dataset(
+            root.clone(),
             tsconfig_path,
             config_path,
             build_plan,
-            visible_paths,
+            crate::codebase::analysis_dataset::AnalysisDataset::new(&root),
+            false,
         )
     }
 
-    pub(crate) fn prepare_with_snapshot(
+    pub(crate) fn prepare_with_snapshot_and_optional_check_plan(
         root: PathBuf,
         tsconfig_path: Option<&Path>,
         config_path: Option<&Path>,
         build_plan: graph::GraphBuildPlan,
         visible_paths: std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot>,
+        include_check_plan: bool,
     ) -> Result<Self> {
-        let root_visible_paths = visible_paths.paths_for(&root);
-        let graph_files = graph::GraphFiles::from_files(
-            crate::codebase::ts_source::discover_files_from_visible(
+        Self::prepare_with_dataset(
+            root.clone(),
+            tsconfig_path,
+            config_path,
+            build_plan,
+            crate::codebase::analysis_dataset::AnalysisDataset::from_snapshot(&root, visible_paths),
+            include_check_plan,
+        )
+    }
+
+    fn prepare_with_dataset(
+        root: PathBuf,
+        tsconfig_path: Option<&Path>,
+        config_path: Option<&Path>,
+        build_plan: graph::GraphBuildPlan,
+        dataset: crate::codebase::analysis_dataset::AnalysisDataset,
+        include_check_plan: bool,
+    ) -> Result<Self> {
+        let root_visible_paths = dataset.paths_for(&root);
+        let graph_files =
+            graph::GraphFiles::from_files(crate::codebase::ts_source::discover_files_from_visible(
                 &root,
                 &[],
                 &root_visible_paths,
-            ),
-        );
-        let config = crate::config::v2::load_v2_config_from_visible(
-            &root,
-            config_path,
-            &root_visible_paths,
-        )?;
-        let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
-            tsconfig_path,
-            &root,
-            &root_visible_paths,
-        )?;
+            ));
+        let config = (*dataset.config(config_path)?).clone();
+        let mut build_plan = build_plan;
+        if include_check_plan {
+            if let Some(check_plan) = crate::codebase::rules::canonical_graph_plan(&config) {
+                build_plan.include(check_plan);
+            }
+        }
+        let tsconfig = (*dataset.tsconfig(tsconfig_path)?).clone();
         let codebase_config =
             crate::codebase::config::config_from_loaded_v2(&root, config_path, &config);
-        let preliminary_graph = graph::prepare_graph_config_with_test_filter(
+        let workspace = dataset.workspace();
+        let preliminary_graph = graph::prepare_graph_config_with_test_filter_and_workspace(
             &root,
             build_plan,
             &codebase_config,
             &config,
-            visible_paths.as_ref(),
+            dataset.visible_paths(),
             crate::codebase::test_filter::TestFileFilter::fallback_only(),
+            std::sync::Arc::clone(&workspace),
         )?;
         let (preliminary_fact_plan, preliminary_fact_context) =
             graph::ts_fact_plan_and_context_for_plan_with_prepared(
@@ -76,15 +97,24 @@ impl SharedTraversalContext {
                 build_plan,
                 &preliminary_graph,
             );
+        let preliminary_graph_files = if include_check_plan {
+            &[][..]
+        } else {
+            graph_files.indexable()
+        };
         let prepared_test_projects =
-            crate::codebase::test_discovery::prepare_test_projects_from_visible(
+            crate::codebase::test_discovery::prepare_test_projects_from_visible_with_sources(
                 &root,
                 &config,
                 &root_visible_paths,
                 &tsconfig,
-                graph_files.indexable(),
-                preliminary_fact_plan,
-                preliminary_fact_context,
+                (
+                    preliminary_graph_files,
+                    preliminary_fact_plan,
+                    preliminary_fact_context,
+                ),
+                dataset.sources_for(&root),
+                !include_check_plan,
             );
         let test_filter = crate::codebase::test_filter::TestFileFilter::from_prepared_projects(
             &root,
@@ -92,26 +122,26 @@ impl SharedTraversalContext {
             &root_visible_paths,
             prepared_test_projects.project_filters(),
         );
-        let prepared_graph = graph::prepare_graph_config_with_test_filter(
+        let prepared_graph = graph::prepare_graph_config_with_test_filter_and_workspace(
             &root,
             build_plan,
             &codebase_config,
             &config,
-            visible_paths.as_ref(),
+            dataset.visible_paths(),
             test_filter.clone(),
+            workspace,
         )?;
-        let (fact_plan, mut fact_context) =
-            graph::ts_fact_plan_and_context_for_plan_with_prepared(
-                &root,
-                build_plan,
-                &prepared_graph,
-            );
+        let (fact_plan, mut fact_context) = graph::ts_fact_plan_and_context_for_plan_with_prepared(
+            &root,
+            build_plan,
+            &prepared_graph,
+        );
         fact_context.set_visible_files(graph_files.visible().iter().cloned());
         Ok(Self {
             root,
             tsconfig,
             graph_files,
-            visible_paths,
+            dataset,
             config,
             config_path: config_path.map(Path::to_path_buf),
             prepared_graph,
@@ -122,7 +152,12 @@ impl SharedTraversalContext {
             prepared_test_projects: Some(prepared_test_projects),
             test_filter,
             graph: None,
+            graph_cache: SharedBuildCache::default(),
+            symbol_index_cache: SharedBuildCache::default(),
+            import_resolution_cache: Default::default(),
+            analysis_generation: 0,
             graph_builds: 0,
+            symbol_index_builds: 0,
         })
     }
 
@@ -138,16 +173,18 @@ impl SharedTraversalContext {
         &self.graph_files
     }
 
-    pub(crate) fn visible_paths(
-        &self,
-    ) -> &crate::codebase::ts_source::VisiblePathSnapshot {
-        self.visible_paths.as_ref()
+    pub(crate) fn visible_paths(&self) -> &crate::codebase::ts_source::VisiblePathSnapshot {
+        self.dataset.visible_paths()
+    }
+
+    pub(crate) fn source_store(&self) -> std::sync::Arc<crate::codebase::ts_source::SourceStore> {
+        self.dataset.sources_for(&self.root)
     }
 
     pub(crate) fn visible_paths_arc(
         &self,
     ) -> std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot> {
-        self.visible_paths.clone()
+        self.dataset.visible_paths_arc()
     }
 
     pub(crate) fn config_path(&self) -> Option<&Path> {
@@ -162,8 +199,11 @@ impl SharedTraversalContext {
         self.build_plan
     }
 
+    pub(crate) fn canonical_graph(&mut self) -> Result<std::sync::Arc<graph::DepGraph>> {
+        self.request_graph(self.build_plan)
+    }
+
     pub(crate) fn prepared_graph(&self) -> &graph::PreparedGraphConfig {
         &self.prepared_graph
     }
-
 }

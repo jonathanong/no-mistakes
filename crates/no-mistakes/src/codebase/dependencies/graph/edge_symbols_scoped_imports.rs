@@ -2,7 +2,7 @@ fn scoped_import_map(
     imports: &[ExtractedImport],
     path: &Path,
     resolver: &ImportResolver<'_>,
-    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     visible_files: &HashSet<PathBuf>,
 ) -> HashMap<String, Vec<(NodeId, EdgeKind)>> {
     const TOP_LEVEL_SIDE_EFFECT_SCOPE: &str = "";
@@ -39,7 +39,7 @@ fn import_target(
     kind: ImportKind,
     path: &Path,
     resolver: &ImportResolver<'_>,
-    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     visible_files: &HashSet<PathBuf>,
 ) -> Option<(NodeId, EdgeKind)> {
     let edge_kind = match kind {

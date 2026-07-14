@@ -23,19 +23,23 @@ pub(crate) fn collect_file_facts_from_program(
         Default::default()
     };
     let symbols = if plan.symbols || plan.graph.symbols {
-        Some(extract_symbols_from_program(program, source))
+        Some(std::sync::Arc::new(extract_symbols_from_program(
+            program, source,
+        )))
     } else {
         None
     };
     let react = if plan.react || plan.graph.react {
-        Some(match plan.graph_context.visible_files.as_deref() {
-            Some(visible) => crate::react_traits::analyze::file::analyze_program_from_visible(
-                path, root, source, program, visible,
-            ),
-            None => {
-                crate::react_traits::analyze::file::analyze_program(path, root, source, program)
-            }
-        })
+        Some(std::sync::Arc::new(
+            match plan.graph_context.visible_files.as_deref() {
+                Some(visible) => crate::react_traits::analyze::file::analyze_program_from_visible(
+                    path, root, source, program, visible,
+                ),
+                None => {
+                    crate::react_traits::analyze::file::analyze_program(path, root, source, program)
+                }
+            },
+        ))
     } else {
         None
     };
@@ -101,8 +105,9 @@ pub(crate) fn collect_file_facts_from_program(
         .map(|_| crate::playwright::selectors::collect_static_export_values(program));
     let playwright =
         super::super::file_playwright::collect_playwright_facts(path, program, source, playwright);
+    let stored_source = should_store_source(plan).then(|| std::sync::Arc::<str>::from(source));
     let ts = TsFileFacts {
-        source: should_store_source(plan).then(|| source.to_string()),
+        source: stored_source.as_deref().map(str::to_owned),
         parse_error: None,
         imports: import_facts.imports,
         function_calls: import_facts.function_calls,
@@ -110,7 +115,7 @@ pub(crate) fn collect_file_facts_from_program(
         exported_functions: import_facts.exported_functions,
         unknown_callers: import_facts.unknown_callers,
         has_unknown_top_level_call: import_facts.has_unknown_top_level_call,
-        symbols: symbols.clone(),
+        symbols: symbols.as_deref().cloned(),
         route_refs: domain.route_refs,
         route_helpers: domain.route_helpers,
         route_helper_imports: domain.route_helper_imports,
@@ -127,12 +132,12 @@ pub(crate) fn collect_file_facts_from_program(
         rsc_environment: domain.rsc_environment,
         react_components: react
             .as_ref()
-            .map(|analysis| analysis.components.clone())
+            .map(|analysis| analysis.components.as_ref().clone())
             .unwrap_or_default(),
     };
     CheckFileFacts {
-        ts,
-        source: should_store_source(plan).then(|| source.to_string()),
+        ts: ts.into(),
+        source: stored_source,
         symbols,
         react,
         react_usages,

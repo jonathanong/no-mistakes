@@ -47,16 +47,18 @@ pub(crate) fn run_filesystem_rules_check(
     enabled: bool,
     files: &[PathBuf],
     visible_paths: &no_mistakes::codebase::ts_source::VisiblePathSnapshot,
+    sources: std::sync::Arc<no_mistakes::codebase::ts_source::SourceStore>,
     vitest_projects: Option<&rules::PreparedVitestProjectCatalog>,
 ) -> Result<CheckTask<Vec<RuleFinding>>> {
     let start = Instant::now();
     let findings = if enabled {
-        rules::run_filesystem_rules_with_config_snapshot_and_vitest_catalog(
+        rules::run_filesystem_rules_with_config_snapshot_catalog_and_sources(
             root,
             config,
             files,
             visible_paths,
             vitest_projects,
+            sources,
         )?
     } else {
         Vec::new()

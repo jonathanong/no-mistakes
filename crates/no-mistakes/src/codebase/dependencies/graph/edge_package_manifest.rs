@@ -1,6 +1,6 @@
 fn collect_workspace_manifest_edges(
     all_files: &[PathBuf],
-    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
 ) -> Vec<Edge> {
     let workspace_entries: HashMap<_, _> = workspace
@@ -20,16 +20,10 @@ fn collect_workspace_manifest_edges(
             if path.file_name().and_then(|name| name.to_str()) != Some("package.json") {
                 return edges;
             }
-            let Ok(source) = std::fs::read_to_string(path) else {
+            let Some(dependency_names) = workspace.manifest_dependency_names(path) else {
                 return edges;
             };
-            let Ok(package_json) = serde_json::from_str::<serde_json::Value>(&source) else {
-                return edges;
-            };
-            for name in crate::codebase::package_deps::dependency_names_from_value(
-                &package_json,
-                crate::codebase::package_deps::ALL_DEPENDENCY_FIELDS,
-            ) {
+            for name in dependency_names {
                 let target = workspace_entries
                     .get(name.as_str())
                     .map(|entry| NodeId::File(entry.clone()))
@@ -44,3 +38,8 @@ fn collect_workspace_manifest_edges(
         })
         .collect()
 }
+
+
+
+#[cfg(test)]
+mod edge_package_manifest_tests;
