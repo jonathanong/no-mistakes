@@ -310,6 +310,8 @@ fn shared_import_only_traversal_parses_only_reachable_files() {
         },
     )
     .unwrap();
+    // Exercise the first lazy consumer: it must create a sparse fact map, not force a full one.
+    shared.facts = None;
     let mut args = traverse_args(root.clone(), vec![PathBuf::from("src/a.mts")]);
     args.relationships = vec![RelationshipArg::Import];
 
@@ -335,6 +337,7 @@ fn shared_import_only_traversal_parses_only_reachable_files() {
         "{counts:#?}"
     );
     assert_eq!(counts.len(), 2, "{counts:#?}");
+    assert_eq!(shared.facts.as_ref().map(|facts| facts.len()), Some(2));
     assert_eq!(shared.graph_builds, 0);
 }
 

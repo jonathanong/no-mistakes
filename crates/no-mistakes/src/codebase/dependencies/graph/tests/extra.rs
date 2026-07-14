@@ -472,3 +472,41 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
             .is_empty()
     );
 }
+
+#[test]
+fn lazy_import_facts_memoize_parse_errors() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../fixtures/codebase/dependencies/selector-malformed-app-source/fixture",
+        ),
+    );
+    let malformed = root.join("web/components/save-button.tsx");
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph_files = GraphFiles {
+        all: vec![malformed.clone()],
+        indexable: vec![malformed.clone()],
+        visible: [malformed.clone()].into(),
+    };
+    let context = TsFactContext::new(&root);
+
+    let (neighbors, collected) = import_neighbors(
+        &malformed,
+        &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
+        &crate::codebase::workspaces::WorkspaceMap::default(),
+        &graph_files,
+        None,
+        LazyImportFacts::new(None, TsFactPlan::imports(), &context),
+    );
+
+    assert!(neighbors.is_empty());
+    assert!(
+        collected
+            .and_then(|facts| facts.parse_error)
+            .is_some_and(|error| error.contains("failed to parse"))
+    );
+}
