@@ -222,3 +222,64 @@ fn run_check_with_facts_reports_missing_forbidden_dependency_graph_facts() {
     let error = run_check_with_facts(&root, None, None, &shared).unwrap_err();
     assert!(format!("{error:#}").contains("missing graph facts"));
 }
+
+#[test]
+fn aggregate_check_propagates_server_route_missing_source_error() {
+    let root = fixture("rules/server-route-client-boundary/fail");
+    let config = root.join("boundary-only.no-mistakes.yml");
+    let shared = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        crate::codebase::ts_source::discover_files(&root, &[]),
+        crate::codebase::check_facts::CheckFactPlan::default(),
+    );
+
+    let error = run_check_with_facts(&root, Some(&config), None, &shared).unwrap_err();
+
+    assert_eq!(
+        error.to_string(),
+        format!(
+            "server-route-client-boundary requires source facts for {}",
+            root.join("backend/api/client.ts").display()
+        )
+    );
+}
+
+#[test]
+fn aggregate_check_propagates_nextjs_api_route_missing_source_error() {
+    let root = fixture("codebase-analysis/no-nextjs-api-routes");
+    let shared = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        crate::codebase::ts_source::discover_files(&root, &[]),
+        crate::codebase::check_facts::CheckFactPlan::default(),
+    );
+
+    let error = run_check_with_facts(&root, None, None, &shared).unwrap_err();
+
+    assert_eq!(
+        error.to_string(),
+        format!(
+            "nextjs-no-api-routes requires source facts for {}",
+            root.join("web/app/api/disabled/route.ts").display()
+        )
+    );
+}
+
+#[test]
+fn aggregate_check_propagates_nextjs_caching_missing_source_error() {
+    let root = fixture("codebase-analysis/no-nextjs-caching");
+    let shared = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        crate::codebase::ts_source::discover_files(&root, &[]),
+        crate::codebase::check_facts::CheckFactPlan::default(),
+    );
+
+    let error = run_check_with_facts(&root, None, None, &shared).unwrap_err();
+
+    assert_eq!(
+        error.to_string(),
+        format!(
+            "nextjs-no-caching requires source facts for {}",
+            root.join("web/app/bad.ts").display()
+        )
+    );
+}

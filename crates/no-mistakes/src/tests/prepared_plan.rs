@@ -159,13 +159,12 @@ impl PreparedTestPlanRequest {
     pub(crate) fn graph(&self) -> Result<&DepGraph> {
         self.graph
             .get_or_init(|| {
-            let (fact_plan, mut fact_context) =
+            let (fact_plan, fact_context) =
                 no_mistakes::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_prepared(
                     &self.root,
                     self.graph_plan,
                     &self.prepared_graph_config,
                 );
-            fact_context.set_visible_files(self.graph_files.visible().iter().cloned());
             let playwright = self
                 .prepared_graph_config
                 .playwright_fact_plan(&self.root, &self.visible_paths)

@@ -109,6 +109,43 @@ fn analyze_project_dispatches_signature_impact_symbols_report() {
 }
 
 #[test]
+fn analyze_project_signature_impact_validates_prepared_inputs() {
+    let root = fixture_root("tests-impact-symbol");
+    let cases = [
+        (
+            json!({
+                "type": "symbols",
+                "files": ["utils.mts", "other.mts"],
+                "mode": "signature-impact",
+                "symbol": "parseDate"
+            }),
+            "exactly one file",
+        ),
+        (
+            json!({
+                "type": "symbols",
+                "files": ["utils.mts"],
+                "mode": "signature-impact"
+            }),
+            "requires --symbol",
+        ),
+    ];
+
+    for (report, expected) in cases {
+        let error = analyze_project_json_impl(
+            json!({
+                "root": root,
+                "reports": [report]
+            })
+            .to_string(),
+        )
+        .unwrap_err();
+
+        assert!(error.to_string().contains(expected), "{error:#}");
+    }
+}
+
+#[test]
 fn analyze_project_shared_symbol_dependents_expands_file_roots() {
     let output = analyze_project_json_impl(
         json!({
