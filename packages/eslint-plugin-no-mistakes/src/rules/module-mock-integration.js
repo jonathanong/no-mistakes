@@ -3,62 +3,27 @@
 const { existsSync, readFileSync } = require("node:fs");
 const { resolve } = require("node:path");
 const { isInternalSpecifier, propertyName } = require("./module-mock-helpers");
+const { analyzeFactory, spreadPreservesRealModule } = require("./module-mock-preserve-factory");
 
-function mockedExportNames(factory) {
+function mockedExportNames(factory, specifier, mock, context) {
   if (!factory) return null;
-  const body = unwrapExpression(factory.type === "ObjectExpression" ? factory : factory.body);
-  const objects = [];
-  if (body?.type === "ObjectExpression") objects.push(body);
-  if (body?.type === "BlockStatement") {
-    for (const statement of body.body) collectReturnedObjects(statement, objects);
-  }
+  const analysis = analyzeFactory(factory, specifier, mock, context);
+  const { objects } = analysis;
   if (objects.length === 0) return null;
   if (objects.some((object) => !object)) return null;
   const names = [];
   for (const object of objects) {
     for (const prop of object.properties) {
-      if (prop.type === "SpreadElement" || prop.computed) return null;
+      if (prop.type === "SpreadElement") {
+        if (!spreadPreservesRealModule(prop, analysis, specifier, mock, context)) return null;
+        continue;
+      }
+      if (prop.computed) return null;
       const name = propertyName(prop.key);
       if (name && name !== "__esModule") names.push(name);
     }
   }
   return names.length > 0 ? names : null;
-}
-
-function unwrapExpression(node) {
-  let current = node;
-  while (
-    current?.type === "TSAsExpression" ||
-    current?.type === "TSSatisfiesExpression" ||
-    current?.type === "TSNonNullExpression" ||
-    current?.type === "TypeCastExpression"
-  ) {
-    current = current.expression;
-  }
-  return current;
-}
-
-function collectReturnedObjects(node, objects) {
-  if (
-    node.type === "FunctionDeclaration" ||
-    node.type === "FunctionExpression" ||
-    node.type === "ArrowFunctionExpression"
-  ) {
-    return;
-  }
-  if (node.type === "ReturnStatement") {
-    const argument = unwrapExpression(node.argument);
-    objects.push(argument?.type === "ObjectExpression" ? argument : null);
-    return;
-  }
-  for (const key of ["block", "body", "consequent", "alternate", "finalizer", "handler"]) {
-    const child = node[key];
-    if (Array.isArray(child)) {
-      for (const item of child) collectReturnedObjects(item, objects);
-    } else if (child?.type) {
-      collectReturnedObjects(child, objects);
-    }
-  }
 }
 
 function integrationSourcePath(specifier, config) {
@@ -119,7 +84,7 @@ function integrationExportNames(specifier, config) {
   return names;
 }
 
-function integrationAllows(specifier, factory, options) {
+function integrationAllows(specifier, factory, mock, context, options) {
   const config = options.integrationExports;
   if (!config) return false;
   const specifierPatterns = config.specifiers ?? [];
@@ -129,7 +94,7 @@ function integrationAllows(specifier, factory, options) {
   ) {
     return false;
   }
-  const mocked = mockedExportNames(factory);
+  const mocked = mockedExportNames(factory, specifier, mock, context);
   if (!mocked) return false;
   const allowed = integrationExportNames(specifier, config);
   if (!allowed) return false;
