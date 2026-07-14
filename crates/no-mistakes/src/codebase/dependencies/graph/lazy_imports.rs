@@ -1,5 +1,32 @@
 /// Demand-driven import traversal used by `dependencies --relationship import`.
 /// It parses only roots and files reached through static import edges.
+#[derive(Clone, Copy)]
+pub(crate) struct LazyImportFacts<'a> {
+    prepared: Option<&'a dyn TsFactLookup>,
+    collect_plan: TsFactPlan,
+    context: &'a TsFactContext,
+}
+
+impl<'a> LazyImportFacts<'a> {
+    pub(crate) fn new(
+        prepared: Option<&'a dyn TsFactLookup>,
+        collect_plan: TsFactPlan,
+        context: &'a TsFactContext,
+    ) -> Self {
+        Self {
+            prepared,
+            collect_plan,
+            context,
+        }
+    }
+}
+
+struct ExpandedImportNode {
+    node: NodeId,
+    neighbors: Vec<(NodeId, EdgeKind)>,
+    collected: Option<(PathBuf, TsFileFacts)>,
+}
+
 pub fn lazy_import_deps_of(
     roots: &[NodeId],
     root: &Path,
@@ -28,6 +55,7 @@ pub(crate) fn lazy_import_deps_of_with_files(
     graph_files: &GraphFiles,
     allowed: Option<&HashSet<EdgeKind>>,
 ) -> Vec<NodeEntry> {
+    let context = TsFactContext::new(root);
     lazy_import_deps_of_with_files_and_facts(
         roots,
         root,
@@ -35,8 +63,9 @@ pub(crate) fn lazy_import_deps_of_with_files(
         max_depth,
         graph_files,
         allowed,
-        None,
+        LazyImportFacts::new(None, TsFactPlan::imports(), &context),
     )
+    .0
 }
 
 pub(crate) fn lazy_import_deps_of_with_files_and_facts(
@@ -46,8 +75,8 @@ pub(crate) fn lazy_import_deps_of_with_files_and_facts(
     max_depth: Option<usize>,
     graph_files: &GraphFiles,
     allowed: Option<&HashSet<EdgeKind>>,
-    facts: Option<&dyn TsFactLookup>,
-) -> Vec<NodeEntry> {
+    facts: LazyImportFacts<'_>,
+) -> (Vec<NodeEntry>, Vec<(PathBuf, TsFileFacts)>) {
     let resolver = ImportResolver::new(tsconfig).with_visible(&graph_files.visible);
     let workspace =
         crate::codebase::workspaces::load_from_files(root, graph_files.all()).unwrap_or_default();
@@ -56,6 +85,7 @@ pub(crate) fn lazy_import_deps_of_with_files_and_facts(
     let mut frontier: Vec<NodeId> = Vec::new();
     let mut result: Vec<NodeEntry> = Vec::new();
     let mut result_idx: HashMap<NodeId, usize> = HashMap::new();
+    let mut collected_facts = Vec::new();
 
     for root in roots {
         if !visited.contains(root) {
@@ -73,35 +103,53 @@ pub(crate) fn lazy_import_deps_of_with_files_and_facts(
             }
         }
 
-        let mut expanded: Vec<(NodeId, Vec<(NodeId, EdgeKind)>)> = frontier
+        let mut expanded: Vec<ExpandedImportNode> = frontier
             .par_iter()
             .map(|node| {
                 let Some(path) = node.as_file() else {
-                    return (node.clone(), Vec::new());
+                    return ExpandedImportNode {
+                        node: node.clone(),
+                        neighbors: Vec::new(),
+                        collected: None,
+                    };
                 };
                 if !graph_files.is_visible(path) || !is_indexable(path) {
-                    return (node.clone(), Vec::new());
+                    return ExpandedImportNode {
+                        node: node.clone(),
+                        neighbors: Vec::new(),
+                        collected: None,
+                    };
                 }
-                (
-                    node.clone(),
-                    import_neighbors(
-                        path,
-                        &resolver,
-                        &workspace,
-                        graph_files,
-                        allowed,
-                        facts,
-                    ),
-                )
+                let (neighbors, collected) = import_neighbors(
+                    path,
+                    &resolver,
+                    &workspace,
+                    graph_files,
+                    allowed,
+                    facts,
+                );
+                ExpandedImportNode {
+                    node: node.clone(),
+                    neighbors,
+                    collected: collected.map(|facts| (path.to_path_buf(), facts)),
+                }
             })
             .collect();
         // ⚡ Bolt: Use `sort_by_cached_key` instead of `sort_by_key` to avoid repeatedly calling
         // `node_sort_key` (which involves allocation and formatting) during the sort operations.
-        expanded.sort_by_cached_key(|(node, _)| node_sort_key(node));
+        expanded.sort_by_cached_key(|expanded| node_sort_key(&expanded.node));
 
         let next_depth = depth + 1;
         let mut next_frontier = Vec::new();
-        for (node, neighbors) in expanded {
+        for expanded in expanded {
+            let ExpandedImportNode {
+                node,
+                neighbors,
+                collected,
+            } = expanded;
+            if let Some(facts) = collected {
+                collected_facts.push(facts);
+            }
             for (neighbor, kind) in neighbors {
                 if is_symbol_owner_bridge(&node, &neighbor) && !root_nodes.contains(&node) {
                     continue;
@@ -127,7 +175,7 @@ pub(crate) fn lazy_import_deps_of_with_files_and_facts(
         depth = next_depth;
     }
 
-    result
+    (result, collected_facts)
 }
 
 fn push_route_ref_edge(edges: &mut Vec<Edge>, source: &Path, target: &Path) {

@@ -420,8 +420,9 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
         &crate::codebase::workspaces::WorkspaceMap::default(),
         &graph_files,
         None,
-        None,
+        LazyImportFacts::new(None, TsFactPlan::imports(), &TsFactContext::new(&root)),
     )
+    .0
     .is_empty());
 
     assert!(collect_workspace_manifest_edges(

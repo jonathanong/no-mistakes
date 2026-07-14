@@ -40,19 +40,34 @@ pub(crate) fn collect_and_filter_entries_shared(
     let root = shared.root.clone();
     let entries = match direction {
         Direction::Deps if import_only => {
-            shared.ensure_facts();
-            graph::lazy_import_deps_of_with_files_and_facts(
+            let (entries, collected) = graph::lazy_import_deps_of_with_files_and_facts(
                 &roots,
                 &shared.root,
                 &shared.tsconfig,
                 args.depth,
                 &shared.graph_files,
                 allowed.as_ref(),
+                graph::LazyImportFacts::new(
+                    shared
+                        .facts
+                        .as_ref()
+                        .map(|facts| facts as &dyn graph::TsFactLookup),
+                    shared.fact_plan,
+                    &shared.fact_context,
+                ),
+            );
+            if !collected.is_empty() {
                 shared
                     .facts
-                    .as_ref()
-                    .map(|facts| facts as &dyn graph::TsFactLookup),
-            )
+                    .get_or_insert_with(|| {
+                        crate::codebase::ts_source::facts::TsFactMap::from_iter_with_plan(
+                            std::iter::empty(),
+                            shared.fact_plan,
+                        )
+                    })
+                    .extend(collected);
+            }
+            entries
         }
         Direction::Deps if shared.build_plan.symbols && !args.include_symbols => shared
             .request_graph_without_symbols(allowed.as_ref())?
