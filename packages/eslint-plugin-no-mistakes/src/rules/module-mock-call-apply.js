@@ -13,11 +13,12 @@ function matchDirectMockCallApply(node, context, methods) {
   const direct = isModuleMockMemberCall({ callee: node.callee.object }, context);
   if (!direct || !methods.has(direct.method)) return null;
   if (propertyName(node.callee.property) === "call") {
-    return { factory: node.arguments[2], specifierNode: node.arguments[1] };
+    return { factory: node.arguments[2], mock: direct, specifierNode: node.arguments[1] };
   }
   const args = node.arguments[1];
   return {
     factory: args?.type === "ArrayExpression" ? args.elements[1] : undefined,
+    mock: direct,
     specifierNode: args?.type === "ArrayExpression" ? args.elements[0] : undefined,
   };
 }

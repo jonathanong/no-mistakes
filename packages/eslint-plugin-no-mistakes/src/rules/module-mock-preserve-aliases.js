@@ -9,6 +9,8 @@ const {
   propertyName,
 } = require("./module-mock-helpers");
 
+const PRESERVE_METHODS = new Set(["mock", "doMock", "unstable_mockModule"]);
+
 function resolveVariable(node, context) {
   let scope = context.sourceCode.getScope(node);
   while (scope) {
@@ -34,7 +36,7 @@ function frameworkMock(object, method, context) {
   return { framework, method, namespace: expressionName(object) };
 }
 
-function createPreserveMockAliases(context) {
+function createMockAliases(context, methods) {
   const aliases = new Map();
 
   function record(name, variable, mock) {
@@ -55,9 +57,7 @@ function createPreserveMockAliases(context) {
 
   return {
     declareImport(local, source, imported) {
-      if (imported !== "mock" && imported !== "doMock" && imported !== "unstable_mockModule") {
-        return;
-      }
+      if (!methods.has(imported)) return;
       record(local.name, resolveVariable(local, context), {
         framework: source,
         method: imported,
@@ -70,15 +70,13 @@ function createPreserveMockAliases(context) {
         for (const property of id.properties) {
           if (property.type !== "Property") continue;
           const method = propertyName(property.key);
-          if (method !== "mock" && method !== "doMock" && method !== "unstable_mockModule") {
-            continue;
-          }
+          if (!methods.has(method)) continue;
           recordPattern(property.value, frameworkMock(init, method, context));
         }
       }
       if (init.type === "MemberExpression" && isFrameworkBinding(init.object, context)) {
         const method = memberPropertyName(init);
-        if (method !== "mock" && method !== "doMock" && method !== "unstable_mockModule") return;
+        if (!methods.has(method)) return;
         recordPattern(id, frameworkMock(init.object, method, context));
       }
     },
@@ -114,7 +112,12 @@ function createPreserveMockAliases(context) {
   };
 }
 
+function createPreserveMockAliases(context) {
+  return createMockAliases(context, PRESERVE_METHODS);
+}
+
 module.exports = {
+  createMockAliases,
   createPreserveMockAliases,
   resolveVariable,
 };

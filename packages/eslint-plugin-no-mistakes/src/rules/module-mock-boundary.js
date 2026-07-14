@@ -5,17 +5,14 @@ const { baselineKey, baselineMap } = require("./module-mock-baseline");
 const { matchDirectMockCallApply } = require("./module-mock-call-apply");
 const { integrationAllows } = require("./module-mock-integration");
 const {
-  collectPatternNames,
   importSpecifierName,
-  isFrameworkBinding,
   isInternalSpecifier,
   isModuleMockMemberCall,
-  memberPropertyName,
   moduleMockSpecifierArgument,
   pathAllowed,
-  propertyName,
   repoRelativeFilename,
 } = require("./module-mock-helpers");
+const { createMockAliases } = require("./module-mock-preserve-aliases");
 
 const MODULE_MOCK_METHODS = new Set([
   "doMock",
@@ -54,16 +51,6 @@ function reportMessage(dynamic, specifier) {
   return `Module mock boundary does not allow mocking internal module "${specifier}".`;
 }
 
-function resolveVariable(node, context) {
-  let scope = context.sourceCode.getScope(node);
-  while (scope) {
-    const variable = scope.variables.find((candidate) => candidate.name === node.name);
-    if (variable) return variable;
-    scope = scope.upper;
-  }
-  return null;
-}
-
 module.exports = rule(
   {
     type: "problem",
@@ -81,42 +68,12 @@ module.exports = rule(
     const options = context.options?.[0] ?? {};
     const filename = context.filename;
     const tracker = createBaselineTracker(filename, options.baseline);
-    const mockAliases = new Map();
+    const mockAliases = createMockAliases(context, MODULE_MOCK_METHODS);
     if (!pathAllowed(filename, options)) return {};
-
-    function declareAlias(id, init) {
-      if (!id || !init) return;
-      if (id.type === "ObjectPattern" && isFrameworkBinding(init, context)) {
-        for (const property of id.properties) {
-          if (property.type !== "Property") continue;
-          const method = propertyName(property.key);
-          if (MODULE_MOCK_METHODS.has(method)) {
-            for (const name of collectPatternNames(property.value)) {
-              mockAliases.set(name, resolveVariable(property.value, context));
-            }
-          }
-        }
-        return;
-      }
-      if (
-        init.type === "MemberExpression" &&
-        memberPropertyName(init) &&
-        MODULE_MOCK_METHODS.has(memberPropertyName(init)) &&
-        isFrameworkBinding(init.object, context)
-      ) {
-        for (const name of collectPatternNames(id))
-          mockAliases.set(name, resolveVariable(id, context));
-      }
-    }
-
-    function isUnshadowedMockAlias(node) {
-      return (
-        node.type === "Identifier" && mockAliases.get(node.name) === resolveVariable(node, context)
-      );
-    }
 
     function reportIfDisallowed(
       node,
+      mock,
       specifierNode = node.arguments[0],
       factory = node.arguments[1],
     ) {
@@ -127,7 +84,7 @@ module.exports = rule(
         return;
       }
       if (!specifier || !isInternalSpecifier(specifier, options)) return;
-      if (integrationAllows(specifier, factory, options)) return;
+      if (integrationAllows(specifier, factory, mock, context, options)) return;
       if (tracker.allowed(specifier)) return;
       context.report({
         node,
@@ -141,54 +98,32 @@ module.exports = rule(
         if (node.source.value !== "vitest" && node.source.value !== "@jest/globals") return;
         for (const specifier of node.specifiers) {
           if (specifier.type !== "ImportSpecifier") continue;
-          if (MODULE_MOCK_METHODS.has(importSpecifierName(specifier))) {
-            mockAliases.set(specifier.local.name, resolveVariable(specifier.local, context));
-          }
+          mockAliases.declareImport(
+            specifier.local,
+            node.source.value,
+            importSpecifierName(specifier),
+          );
         }
       },
       VariableDeclarator(node) {
-        declareAlias(node.id, node.init);
+        mockAliases.declare(node.id, node.init);
       },
       AssignmentExpression(node) {
-        if (node.operator === "=") declareAlias(node.left, node.right);
+        if (node.operator === "=") mockAliases.declare(node.left, node.right);
       },
       CallExpression(node) {
         const memberMock = isModuleMockMemberCall(node, context);
         if (memberMock && MODULE_MOCK_METHODS.has(memberMock.method)) {
-          reportIfDisallowed(node);
+          reportIfDisallowed(node, memberMock);
           return;
         }
         const directCall = matchDirectMockCallApply(node, context, MODULE_MOCK_METHODS);
         if (directCall) {
-          reportIfDisallowed(node, directCall.specifierNode, directCall.factory);
+          reportIfDisallowed(node, directCall.mock, directCall.specifierNode, directCall.factory);
           return;
         }
-        if (isUnshadowedMockAlias(node.callee)) {
-          reportIfDisallowed(node);
-          return;
-        }
-        if (
-          node.callee.type === "MemberExpression" &&
-          propertyName(node.callee.property) === "call" &&
-          node.callee.object.type === "Identifier" &&
-          isUnshadowedMockAlias(node.callee.object)
-        ) {
-          reportIfDisallowed(node, node.arguments[1], node.arguments[2]);
-          return;
-        }
-        if (
-          node.callee.type === "MemberExpression" &&
-          propertyName(node.callee.property) === "apply" &&
-          node.callee.object.type === "Identifier" &&
-          isUnshadowedMockAlias(node.callee.object)
-        ) {
-          const args = node.arguments[1];
-          reportIfDisallowed(
-            node,
-            args?.type === "ArrayExpression" ? args.elements[0] : undefined,
-            args?.type === "ArrayExpression" ? args.elements[1] : undefined,
-          );
-        }
+        const alias = mockAliases.matchCall(node);
+        if (alias) reportIfDisallowed(node, alias.mock, alias.specifierNode, alias.factory);
       },
       "Program:exit"(node) {
         for (const entry of tracker.stale()) {

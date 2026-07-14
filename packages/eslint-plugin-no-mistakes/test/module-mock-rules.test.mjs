@@ -16,6 +16,70 @@ function fixture(name) {
   );
 }
 
+const integrationPreserveFixtureRoot = resolve(
+  __dirname,
+  "../../../fixtures/eslint-plugin/module-mock-integration-preserve",
+);
+
+function integrationPreserveFixture(name) {
+  return readFileSync(resolve(integrationPreserveFixtureRoot, name), "utf8");
+}
+
+function integrationPreserveRules() {
+  const options = {
+    integrationExports: {
+      specifiers: ["@app/**"],
+      sourcePathTemplates: [resolve(integrationPreserveFixtureRoot, "integration.ts")],
+    },
+    internalSpecifiers: ["@app/**"],
+  };
+  return {
+    "no-mistakes/module-mock-boundary": ["error", options],
+    "no-mistakes/module-mock-preserve-exports": ["error", options],
+  };
+}
+
+describe("module mock integration export preservation", () => {
+  it("allows proven real-module spreads through both rules", () => {
+    assert.deepEqual(
+      lint(
+        integrationPreserveFixture("valid.test.ts"),
+        integrationPreserveRules(),
+        "fixtures/module-mock-integration-preserve/valid.test.ts",
+      ),
+      [],
+    );
+  });
+
+  it("fails closed without granting explicit overrides permission", () => {
+    assert.deepEqual(
+      lint(
+        integrationPreserveFixture("invalid.test.ts"),
+        integrationPreserveRules(),
+        "fixtures/module-mock-integration-preserve/invalid.test.ts",
+      )
+        .map((message) => message.messageId)
+        .sort(),
+      [
+        "boundary",
+        "boundary",
+        "boundary",
+        "boundary",
+        "boundary",
+        "boundary",
+        "boundary",
+        "boundary",
+        "preserve",
+        "preserve",
+        "preserve",
+        "preserve",
+        "preserve",
+        "preserve",
+      ],
+    );
+  });
+});
+
 describe("module-mock-preserve-exports", () => {
   it("requires internal mock factories to preserve real exports", () => {
     assert.deepEqual(

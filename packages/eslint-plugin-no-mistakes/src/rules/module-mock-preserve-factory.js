@@ -1,12 +1,16 @@
 "use strict";
 
-const { expressionName, literalString, memberPropertyName } = require("./module-mock-helpers");
+const {
+  frameworkBindingModule,
+  literalString,
+  memberPropertyName,
+} = require("./module-mock-helpers");
 const { resolveVariable } = require("./module-mock-preserve-aliases");
 
-function factoryParamName(factory) {
+function factoryParam(factory) {
   const param = factory?.params?.[0];
   const unwrapped = param?.type === "AssignmentPattern" ? param.left : param;
-  return unwrapped?.type === "Identifier" ? unwrapped.name : undefined;
+  return unwrapped?.type === "Identifier" ? unwrapped : null;
 }
 
 function unwrapExpression(node) {
@@ -30,57 +34,61 @@ function isFunctionNode(node) {
   );
 }
 
-function realModuleCall(call, specifier, paramName, mock) {
+function realModuleCall(call, specifier, paramVariable, mock, context) {
   if (call?.type !== "CallExpression") return false;
   if (call.callee.type === "MemberExpression") {
-    const objectName = expressionName(call.callee.object);
+    const framework = frameworkBindingModule(call.callee.object, context);
     const prop = memberPropertyName(call.callee);
     if (literalString(call.arguments[0]) !== specifier) return false;
-    if (prop === "importActual" && mock.framework === "vitest" && objectName === mock.namespace) {
+    if (prop === "importActual" && mock?.framework === "vitest" && framework === "vitest") {
       return "async";
     }
     if (
       prop === "requireActual" &&
-      mock.framework === "@jest/globals" &&
-      objectName === mock.namespace
+      mock?.framework === "@jest/globals" &&
+      framework === "@jest/globals"
     ) {
       return "sync";
     }
     return false;
   }
-  if (call.callee.type === "Identifier" && paramName && call.callee.name === paramName) {
+  if (
+    call.callee.type === "Identifier" &&
+    paramVariable &&
+    resolveVariable(call.callee, context) === paramVariable
+  ) {
     return "async";
   }
   return false;
 }
 
-function spreadArgumentPreserves(argument, specifier, paramName, mock) {
+function spreadArgumentPreserves(argument, specifier, paramVariable, mock, context) {
   argument = unwrapExpression(argument);
   if (argument?.type === "AwaitExpression") {
-    return Boolean(realModuleCall(argument.argument, specifier, paramName, mock));
+    return Boolean(realModuleCall(argument.argument, specifier, paramVariable, mock, context));
   }
-  return realModuleCall(argument, specifier, paramName, mock) === "sync";
+  return realModuleCall(argument, specifier, paramVariable, mock, context) === "sync";
 }
 
-function collectRealModuleNames(node, realModuleNames, specifier, paramName, mock, context) {
+function collectRealModuleNames(node, realModuleNames, specifier, paramVariable, mock, context) {
   if (isFunctionNode(node)) return;
   if (node.type === "VariableDeclaration" && node.kind === "const") {
     for (const declarator of node.declarations) {
       if (
         declarator.id.type === "Identifier" &&
-        spreadArgumentPreserves(declarator.init, specifier, paramName, mock)
+        spreadArgumentPreserves(declarator.init, specifier, paramVariable, mock, context)
       ) {
         realModuleNames.add(resolveVariable(declarator.id, context));
       }
     }
   }
-  for (const key of ["block", "body", "consequent", "alternate", "finalizer", "handler"]) {
+  for (const key of ["block", "body", "cases", "consequent", "alternate", "finalizer", "handler"]) {
     const child = node[key];
     if (Array.isArray(child)) {
       for (const item of child)
-        collectRealModuleNames(item, realModuleNames, specifier, paramName, mock, context);
+        collectRealModuleNames(item, realModuleNames, specifier, paramVariable, mock, context);
     } else if (child?.type) {
-      collectRealModuleNames(child, realModuleNames, specifier, paramName, mock, context);
+      collectRealModuleNames(child, realModuleNames, specifier, paramVariable, mock, context);
     }
   }
 }
@@ -92,7 +100,7 @@ function collectReturnedObjects(node, objects) {
     objects.push(argument?.type === "ObjectExpression" ? argument : null);
     return;
   }
-  for (const key of ["block", "body", "consequent", "alternate", "finalizer", "handler"]) {
+  for (const key of ["block", "body", "cases", "consequent", "alternate", "finalizer", "handler"]) {
     const child = node[key];
     if (Array.isArray(child)) {
       for (const item of child) collectReturnedObjects(item, objects);
@@ -102,49 +110,49 @@ function collectReturnedObjects(node, objects) {
   }
 }
 
-function analyzeFactoryBody(factory, specifier, paramName, mock, context) {
-  const body = unwrapExpression(factory?.body);
+function analyzeFactory(factory, specifier, mock, context) {
+  const param = mock?.framework === "vitest" ? factoryParam(factory) : null;
+  const paramVariable = param ? resolveVariable(param, context) : null;
+  const body = unwrapExpression(factory?.type === "ObjectExpression" ? factory : factory?.body);
   const objects = [];
   const realModuleNames = new Set();
-  if (!body) return { objects, realModuleNames };
-  if (body.type === "ObjectExpression") return { objects: [body], realModuleNames };
-  if (body.type !== "BlockStatement") return { objects, realModuleNames };
+  const analysis = { objects, paramVariable, realModuleNames };
+  if (!body) return analysis;
+  if (body.type === "ObjectExpression") return { ...analysis, objects: [body] };
+  if (body.type !== "BlockStatement") return analysis;
 
   for (const statement of body.body) {
-    collectRealModuleNames(statement, realModuleNames, specifier, paramName, mock, context);
+    collectRealModuleNames(statement, realModuleNames, specifier, paramVariable, mock, context);
     collectReturnedObjects(statement, objects);
   }
-  return { objects, realModuleNames };
+  return analysis;
 }
 
-function objectSpreadsRealModule(object, specifier, paramName, realModuleNames, mock, context) {
+function spreadPreservesRealModule(prop, analysis, specifier, mock, context) {
+  if (prop.type !== "SpreadElement") return false;
+  const { paramVariable, realModuleNames } = analysis;
+  if (prop.argument.type === "Identifier") {
+    return realModuleNames.has(resolveVariable(prop.argument, context));
+  }
+  return spreadArgumentPreserves(prop.argument, specifier, paramVariable, mock, context);
+}
+
+function objectSpreadsRealModule(object, analysis, specifier, mock, context) {
   return object.properties.some((prop) => {
-    if (prop.type !== "SpreadElement") return false;
-    if (prop.argument.type === "Identifier") {
-      return realModuleNames.has(resolveVariable(prop.argument, context));
-    }
-    return spreadArgumentPreserves(prop.argument, specifier, paramName, mock);
+    return spreadPreservesRealModule(prop, analysis, specifier, mock, context);
   });
 }
 
 function factoryPreservesExports(factory, specifier, mock, context) {
   if (!isFunctionNode(factory)) return false;
-  const paramName = mock.framework === "vitest" ? factoryParamName(factory) : undefined;
-  const { objects, realModuleNames } = analyzeFactoryBody(
-    factory,
-    specifier,
-    paramName,
-    mock,
-    context,
-  );
+  const analysis = analyzeFactory(factory, specifier, mock, context);
+  const { objects } = analysis;
   return (
     objects.length > 0 &&
     objects.every(
-      (object) =>
-        object &&
-        objectSpreadsRealModule(object, specifier, paramName, realModuleNames, mock, context),
+      (object) => object && objectSpreadsRealModule(object, analysis, specifier, mock, context),
     )
   );
 }
 
-module.exports = { factoryPreservesExports };
+module.exports = { analyzeFactory, factoryPreservesExports, spreadPreservesRealModule };
