@@ -78,10 +78,14 @@ where
                     output.push(projected);
                 }
                 if seen_nodes.insert(to.clone()) {
-                    for node in expand_aliases(std::iter::once(to.clone()), aliases) {
-                        if seen_nodes.insert(node.clone()) || node == *to {
-                            next.insert(node);
+                    if let Some(group) = aliases.and_then(|aliases| aliases.group(to)) {
+                        for node in group {
+                            if seen_nodes.insert(node.clone()) || node == to {
+                                next.insert(node.clone());
+                            }
                         }
+                    } else {
+                        next.insert(to.clone());
                     }
                 }
             }

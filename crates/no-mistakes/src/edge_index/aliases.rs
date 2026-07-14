@@ -32,6 +32,12 @@ where
         aliases
     }
 
+    pub(crate) fn group(&self, node: &Node) -> Option<&[Node]> {
+        self.group_by_node
+            .get(node)
+            .map(|&group_id| self.groups[group_id].as_slice())
+    }
+
     pub(crate) fn expand(&self, nodes: impl IntoIterator<Item = Node>) -> BTreeSet<Node> {
         let mut expanded = BTreeSet::new();
         let mut expanded_groups = HashSet::new();
